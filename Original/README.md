@@ -16,6 +16,8 @@ Each game distribution includes the author's manual in `説明書/` (Shift_JIS H
 
 To run NSPW 1.22 on Windows 8 and later (including Windows 11), the DirectPlay Windows feature must be installed. See [DirectPlay.md](DirectPlay.md).
 
+To build the NSPW NET source, the DirectX SDK (June 2006) must be installed. See [DirectXSDK.md](DirectXSDK.md).
+
 ## Links
 - [奈良鹿製作所 (Nara-Shika Seisakusho)](http://narashikabranch.web.fc2.com/): the author's website.
   - [Download page (2.00 and NET 1.10)](http://narashikabranch.web.fc2.com/dl_site_2nd/index.html)
