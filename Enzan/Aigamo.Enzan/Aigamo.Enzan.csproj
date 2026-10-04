@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>preview</LangVersion>
+    <Product>Enzan</Product>
+    <Authors>ycanardeau</Authors>
+    <PackageProjectUrl>https://github.com/ycanardeau/Enzan</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ycanardeau/Enzan</RepositoryUrl>
+    <Description>Enzan is an x86 emulator written in C#.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <NoWarn>1701;1702;1591</NoWarn>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>Aigamo.Enzan.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>Aigamo.Enzan.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aigamo.Extensions.Primitives" Version="2.0.0" />
+    <PackageReference Include="System.Memory" Version="4.6.3" />
+  </ItemGroup>
+
+</Project>
