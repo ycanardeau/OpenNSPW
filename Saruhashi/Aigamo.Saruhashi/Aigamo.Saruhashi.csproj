@@ -1,15 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <LangVersion>preview</LangVersion>
     <Authors>ycanardeau</Authors>
     <Description>Saruhashi is a UI framework for MonoGame.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/ycanardeau/Saruhashi</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ycanardeau/Saruhashi</RepositoryUrl>
-    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>

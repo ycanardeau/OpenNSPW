@@ -2,8 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <LangVersion>preview</LangVersion>
     <Product>Enzan</Product>
     <Authors>ycanardeau</Authors>
     <PackageProjectUrl>https://github.com/ycanardeau/Enzan</PackageProjectUrl>
@@ -11,7 +9,6 @@
     <Description>Enzan is an x86 emulator written in C#.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <NoWarn>1701;1702;1591</NoWarn>
-    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
