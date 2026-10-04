@@ -42,6 +42,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>17.0.37203.1</_ProjectFileVersion>
+    <IncludePath>$(IncludePath);$(DXSDK_DIR)Include</IncludePath>
+    <LibraryPath>$(LibraryPath);$(DXSDK_DIR)Lib\x86</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>.\Release\</OutDir>
@@ -65,7 +67,6 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>C:\Program Files\Microsoft Platform SDK\Include;C:\Program Files\Microsoft DirectX SDK (June 2006)\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -82,10 +83,9 @@
       <Culture>0x0411</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>dsound.lib;ddraw.lib;dinput8.lib;winmm.lib;imm32.lib;comctl32.lib;d3d9.lib;d3dx9.lib;dxerr9.lib;dxguid.lib;odbc32.lib;odbccp32.lib;imm32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>dsound.lib;ddraw.lib;dinput8.lib;winmm.lib;imm32.lib;comctl32.lib;d3d9.lib;d3dx9.lib;dxerr9.lib;legacy_stdio_definitions.lib;$(DXSDK_DIR)Lib\x86\dxguid.lib;odbc32.lib;odbccp32.lib;imm32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release/NSPW_NET.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>C:\Program Files\Microsoft Platform SDK\Lib;C:\Program Files\Microsoft DirectX SDK (June 2006)\Lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\Release/NSPW_NET.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -108,7 +108,6 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>C:\Program Files\Microsoft Platform SDK\Include;C:\Program Files\Microsoft DirectX SDK (June 2006)\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -126,10 +125,9 @@
       <Culture>0x0411</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>dsound.lib;ddraw.lib;dinput8.lib;winmm.lib;comctl32.lib;d3d9.lib;d3dx9.lib;dxerr9.lib;dxguid.lib;odbc32.lib;odbccp32.lib;imm32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>dsound.lib;ddraw.lib;dinput8.lib;winmm.lib;comctl32.lib;d3d9.lib;d3dx9.lib;dxerr9.lib;legacy_stdio_definitions.lib;$(DXSDK_DIR)Lib\x86\dxguid.lib;odbc32.lib;odbccp32.lib;imm32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Debug/NSPW_NET.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>C:\Program Files\Microsoft Platform SDK\Lib;C:\Program Files\Microsoft DirectX SDK (June 2006)\Lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\Debug/NSPW_NET.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
@@ -161,10 +159,7 @@
     <ClCompile Include="win_proc.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="NSPW_NET.RC">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Program Files\Microsoft Platform SDK\Include;C:\Program Files\Microsoft Platform SDK\Include\mfc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Program Files\Microsoft Platform SDK\Include;C:\Program Files\Microsoft Platform SDK\Include\mfc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
+    <ResourceCompile Include="NSPW_NET.RC" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="all_extern.h" />
