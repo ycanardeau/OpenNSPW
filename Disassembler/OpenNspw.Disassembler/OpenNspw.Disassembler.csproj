@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aigamo.Enzan" />
+    <ProjectReference Include="..\..\Enzan\Aigamo.Enzan\Aigamo.Enzan.csproj" />
   </ItemGroup>
 
 </Project>

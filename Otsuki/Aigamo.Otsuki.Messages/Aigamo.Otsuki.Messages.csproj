@@ -12,8 +12,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aigamo.Extensions.Primitives" />
     <PackageReference Include="System.Collections.Immutable" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Aigamo.Extensions.Primitives\Aigamo.Extensions.Primitives\Aigamo.Extensions.Primitives.csproj" />
   </ItemGroup>
 
 </Project>
