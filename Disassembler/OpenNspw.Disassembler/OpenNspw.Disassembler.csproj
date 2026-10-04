@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aigamo.Enzan" Version="1.2.0" />
+    <PackageReference Include="Aigamo.Enzan" />
   </ItemGroup>
 
 </Project>
