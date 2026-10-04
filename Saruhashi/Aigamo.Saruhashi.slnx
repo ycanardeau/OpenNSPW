@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+  </Folder>
+  <Project Path="Aigamo.Saruhashi.MonoGame.Demo/Aigamo.Saruhashi.MonoGame.Demo.csproj" />
+  <Project Path="Aigamo.Saruhashi.MonoGame/Aigamo.Saruhashi.MonoGame.csproj" />
+  <Project Path="Aigamo.Saruhashi/Aigamo.Saruhashi.csproj" />
+</Solution>
