@@ -11,6 +11,7 @@
 
 	<ItemGroup>
 		<PackageVersion Include="Aigamo.MatchGenerator" Version="0.0.0-preview026" />
+		<PackageVersion Include="Aigamo.Results" Version="0.0.0-preview005" />
 	</ItemGroup>
 
 	<ItemGroup>
