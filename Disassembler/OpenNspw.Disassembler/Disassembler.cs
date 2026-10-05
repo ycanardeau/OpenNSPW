@@ -59,8 +59,7 @@ internal sealed class Disassembler
 					isPrefix = false;
 					break;
 			}
-		}
-		while (isPrefix);
+		} while (isPrefix);
 
 		_reader.BaseStream.Position--;
 	}
@@ -92,7 +91,7 @@ internal sealed class Disassembler
 		var factory = instruction.Factories.Count switch
 		{
 			1 => instruction.Factories[0],
-			_ => instruction.Factories[token.Mode.ModRM.Opcode]
+			_ => instruction.Factories[token.Mode.ModRM.Opcode],
 		};
 		if (factory is null)
 			throw new NotImplementedException($"{opcode:X2} /{token.Mode.ModRM.Opcode}");

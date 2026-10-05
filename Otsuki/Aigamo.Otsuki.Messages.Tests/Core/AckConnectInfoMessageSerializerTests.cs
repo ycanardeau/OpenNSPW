@@ -10,11 +10,8 @@ public class AckConnectInfoMessageSerializerTests
 	{
 		yield return new object?[]
 		{
-				new byte[]
-				{
-					0xC3, 0x00, 0x00, 0x00,
-				},
-				new AckConnectInfoMessage(),
+			new byte[] { 0xC3, 0x00, 0x00, 0x00 },
+			new AckConnectInfoMessage(),
 		};
 	}
 

@@ -75,15 +75,16 @@ public sealed record HardDisconnectMessage : IReliableMessage
 		init => ProtocolVersion = ProtocolVersion.WithLowUInt16(value);
 	}
 
-	public override string ToString() => $"{nameof(HardDisconnectMessage)} [" +
-		$"{nameof(Command)}={Command}, " +
-		$"{nameof(Opcode)}={Opcode}, " +
-		$"{nameof(MessageId)}={MessageId}, " +
-		$"{nameof(ResponseId)}={ResponseId}, " +
-		$"{nameof(ProtocolVersion)}={ProtocolVersion}, " +
-		$"{nameof(SessionId)}={SessionId}, " +
-		$"{nameof(Timestamp)}={Timestamp}, " +
-		$"{nameof(Signature)}={Signature}]";
+	public override string ToString() =>
+		$"{nameof(HardDisconnectMessage)} ["
+		+ $"{nameof(Command)}={Command}, "
+		+ $"{nameof(Opcode)}={Opcode}, "
+		+ $"{nameof(MessageId)}={MessageId}, "
+		+ $"{nameof(ResponseId)}={ResponseId}, "
+		+ $"{nameof(ProtocolVersion)}={ProtocolVersion}, "
+		+ $"{nameof(SessionId)}={SessionId}, "
+		+ $"{nameof(Timestamp)}={Timestamp}, "
+		+ $"{nameof(Signature)}={Signature}]";
 }
 
 internal class HardDisconnectMessageSerializer : IReliableMessageSerializer<HardDisconnectMessage>
@@ -92,7 +93,9 @@ internal class HardDisconnectMessageSerializer : IReliableMessageSerializer<Hard
 
 	public virtual HardDisconnectMessage? Read(BinaryReader reader)
 	{
-		var enableSigning = false/* TODO */;
+		var enableSigning =
+			false /* TODO */
+		;
 
 		var command = (PacketCommand)reader.ReadByte();
 
@@ -121,7 +124,9 @@ internal class HardDisconnectMessageSerializer : IReliableMessageSerializer<Hard
 
 	public virtual void Write(BinaryWriter writer, HardDisconnectMessage message)
 	{
-		var enableSigning = false/* TODO */;
+		var enableSigning =
+			false /* TODO */
+		;
 
 		writer.Write((byte)message.Command);
 		writer.Write((byte)message.Opcode);

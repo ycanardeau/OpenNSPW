@@ -4,7 +4,14 @@ namespace Aigamo.Saruhashi;
 
 public class TextRenderer : ITextRenderer
 {
-	public void DrawText(Graphics graphics, string? text, IFont? font, Rectangle bounds, Color foreColor, TextFormatFlags flags)
+	public void DrawText(
+		Graphics graphics,
+		string? text,
+		IFont? font,
+		Rectangle bounds,
+		Color foreColor,
+		TextFormatFlags flags
+	)
 	{
 		if (string.IsNullOrEmpty(text) || foreColor == Color.Transparent)
 			return;

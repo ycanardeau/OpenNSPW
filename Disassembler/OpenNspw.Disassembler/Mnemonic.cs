@@ -59,7 +59,7 @@ internal enum Mnemonic
 	/// Divide.
 	/// </summary>
 	Fdiv,
-	
+
 	/// <summary>
 	/// Reverse divide.
 	/// </summary>

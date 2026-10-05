@@ -4,13 +4,13 @@ namespace Aigamo.Saruhashi;
 
 public sealed class WindowManager
 {
-	public WindowManager(Rectangle bounds, IGraphicsFactory graphicsFactory, IFont? defaultFont = null)
+	public WindowManager(
+		Rectangle bounds,
+		IGraphicsFactory graphicsFactory,
+		IFont? defaultFont = null
+	)
 	{
-		Root = new Control(this)
-		{
-			Bounds = bounds,
-			BackColor = Color.Transparent,
-		};
+		Root = new Control(this) { Bounds = bounds, BackColor = Color.Transparent };
 		GraphicsFactory = graphicsFactory;
 		DefaultFont = defaultFont;
 	}
@@ -28,9 +28,13 @@ public sealed class WindowManager
 	public Control? GetFocus() => Focus;
 
 	public void OnKeyDown(KeyEventArgs e) => FocusOrRoot.HandleKeyDown(e);
+
 	public void OnKeyPress(KeyPressEventArgs e) => FocusOrRoot.HandleKeyPress(e);
+
 	public void OnKeyUp(KeyEventArgs e) => FocusOrRoot.HandleKeyUp(e);
+
 	public void OnMouseDown(MouseEventArgs e) => CaptureOrRoot.HandleMouseDown(e);
+
 	public void OnMouseMove(MouseEventArgs e) => CaptureOrRoot.HandleMouseMove(e);
 
 	public void OnMouseUp(MouseEventArgs e)

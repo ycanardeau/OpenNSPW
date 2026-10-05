@@ -10,5 +10,6 @@ public readonly record struct Sib(byte Value)
 
 	public byte Scale => (byte)((Value >> 6) & 3);
 
-	public override string ToString() => $"[Sib: Value={Value:X2}, Base={Base}, Index={Index}, Scale={Scale}]";
+	public override string ToString() =>
+		$"[Sib: Value={Value:X2}, Base={Base}, Index={Index}, Scale={Scale}]";
 }

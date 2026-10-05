@@ -50,11 +50,7 @@ internal class NameTableVersionMessageSerializer : ICoreMessageSerializer<NameTa
 		var version = reader.ReadInt32();
 		var versionNotUsed = reader.ReadInt32();
 
-		return new()
-		{
-			Version = version,
-			VersionNotUsed = versionNotUsed,
-		};
+		return new() { Version = version, VersionNotUsed = versionNotUsed };
 	}
 
 	public virtual void Write(BinaryWriter writer, NameTableVersionMessage message)

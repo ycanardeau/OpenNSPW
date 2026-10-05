@@ -14,7 +14,8 @@ internal abstract class ScreenBase : Screen
 
 	public override void LoadContent()
 	{
-		var screens = typeof(ScreenBase).Assembly.GetTypes()
+		var screens = typeof(ScreenBase)
+			.Assembly.GetTypes()
 			.Where(t => t.IsSubclassOf(typeof(ScreenBase)))
 			.OrderBy(t => t.ToString().Length)
 			.ThenBy(t => t.ToString());
@@ -27,7 +28,9 @@ internal abstract class ScreenBase : Screen
 			};
 			button.Click += (sender, e) =>
 			{
-				var screen = Activator.CreateInstance(type, WindowManager) as Screen ?? throw new TypeLoadException();
+				var screen =
+					Activator.CreateInstance(type, WindowManager) as Screen
+					?? throw new TypeLoadException();
 				ScreenManager.ReplaceScreen(screen);
 			};
 			WindowManager.Root.Controls.Add(button);

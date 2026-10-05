@@ -10,12 +10,8 @@ public class RequestIntegrityCheckMessageSerializerTests
 	{
 		yield return new object?[]
 		{
-				new byte[]
-				{
-				},
-				new RequestIntegrityCheckMessage
-				{
-				},
+			new byte[] { },
+			new RequestIntegrityCheckMessage { },
 		};
 	}
 

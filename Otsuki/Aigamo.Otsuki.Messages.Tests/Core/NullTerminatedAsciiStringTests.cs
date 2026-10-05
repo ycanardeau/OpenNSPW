@@ -8,7 +8,19 @@ public class NullTerminatedAsciiStringTests
 {
 	private static readonly byte[] _testByteArray = new byte[]
 	{
-			0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x20, 0x57, 0x6F, 0x72, 0x6C, 0x64, 0x21, 0x00,
+		0x48,
+		0x65,
+		0x6C,
+		0x6C,
+		0x6F,
+		0x20,
+		0x57,
+		0x6F,
+		0x72,
+		0x6C,
+		0x64,
+		0x21,
+		0x00,
 	};
 	private static readonly string _testString = "Hello World!";
 
@@ -34,7 +46,12 @@ public class NullTerminatedAsciiStringTests
 	private static IEnumerable<object?[]> Equals_TestData()
 	{
 		yield return new object?[] { _testString, _testString, true };
-		yield return new object?[] { _testString, new NullTerminatedAsciiString("Hello World!"), true };
+		yield return new object?[]
+		{
+			_testString,
+			new NullTerminatedAsciiString("Hello World!"),
+			true,
+		};
 		yield return new object?[] { _testString, "Hello World!", true };
 		yield return new object?[] { _testString, string.Empty, false };
 

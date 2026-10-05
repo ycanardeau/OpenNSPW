@@ -7,7 +7,8 @@ public class RadioButton : ButtonBase
 	private bool _autoCheck = true;
 	private bool _checked;
 
-	public RadioButton() : base()
+	public RadioButton()
+		: base()
 	{
 		IsChecked = () => Checked;
 
@@ -96,7 +97,9 @@ public class RadioButton : ButtonBase
 			if (Capture && WindowManager.WindowFromPoint(PointToScreen(e.Location)) == this)
 			{
 				OnClick(EventArgs.Empty);
-				OnMouseClick(new MouseEventArgs(e.Button, e.Clicks, PointToClient(e.Location), e.Delta));
+				OnMouseClick(
+					new MouseEventArgs(e.Button, e.Clicks, PointToClient(e.Location), e.Delta)
+				);
 			}
 		}
 
@@ -123,7 +126,14 @@ public class RadioButton : ButtonBase
 					CheckBoxState.CheckedDisabled => PushButtonState.Disabled,
 					_ => 0,
 				};
-				ButtonRenderer.DrawButton(e.Graphics, ClientRectangle, GetText(), Font, focused: false, pushButtonState);
+				ButtonRenderer.DrawButton(
+					e.Graphics,
+					ClientRectangle,
+					GetText(),
+					Font,
+					focused: false,
+					pushButtonState
+				);
 				break;
 		}
 
@@ -137,8 +147,8 @@ public class RadioButton : ButtonBase
 
 		if (Checked && Parent != null)
 		{
-			var radioButtons = Parent.Controls
-				.Where(c => c != this && c is RadioButton)
+			var radioButtons = Parent
+				.Controls.Where(c => c != this && c is RadioButton)
 				.Select(c => c as RadioButton)
 				.Where(b => b.AutoCheck && b.Checked);
 			foreach (var b in radioButtons)

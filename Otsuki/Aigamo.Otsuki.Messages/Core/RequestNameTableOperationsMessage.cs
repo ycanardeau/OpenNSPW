@@ -37,7 +37,8 @@ public sealed record RequestNameTableOperationsMessage : ICoreMessage
 	}
 }
 
-internal class RequestNameTableOperationsMessageSerializer : ICoreMessageSerializer<RequestNameTableOperationsMessage>
+internal class RequestNameTableOperationsMessageSerializer
+	: ICoreMessageSerializer<RequestNameTableOperationsMessage>
 {
 	public static RequestNameTableOperationsMessageSerializer Default { get; } = new();
 
@@ -50,11 +51,7 @@ internal class RequestNameTableOperationsMessageSerializer : ICoreMessageSeriali
 		var version = reader.ReadInt32();
 		var versionNotUsed = reader.ReadInt32();
 
-		return new()
-		{
-			Version = version,
-			VersionNotUsed = versionNotUsed,
-		};
+		return new() { Version = version, VersionNotUsed = versionNotUsed };
 	}
 
 	public virtual void Write(BinaryWriter writer, RequestNameTableOperationsMessage message)

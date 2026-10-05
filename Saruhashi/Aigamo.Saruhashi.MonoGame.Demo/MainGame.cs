@@ -48,31 +48,45 @@ public class MainGame : Game
 		_spriteBatch = new SpriteBatch(GraphicsDevice);
 
 		var mouseListener = new SaruhashiMouseListener(_viewportAdapter);
-		var keyboardListener = new KeyboardListener(new KeyboardListenerSettings
-		{
-			InitialDelayMilliseconds = 500,
-			RepeatDelayMilliseconds = 30,
-		});
+		var keyboardListener = new KeyboardListener(
+			new KeyboardListenerSettings
+			{
+				InitialDelayMilliseconds = 500,
+				RepeatDelayMilliseconds = 30,
+			}
+		);
 		Components.Add(new InputListenerComponent(this, mouseListener, keyboardListener));
 
 		using var stream = TitleContainer.OpenStream("Content/Fonts/FreeSans.ttf");
 		var fontSystem = new FontSystem();
 		fontSystem.AddFont(stream);
-		var defaultFont = new DynamicSpriteFontWrapper((DynamicSpriteFont)fontSystem.GetFont(fontSize: 16));
-		_windowManager = new WindowManager(new DrawingRectangle(0, 0, 1024, 768), new MonoGameGraphicsFactory(_spriteBatch, _viewportAdapter), defaultFont);
+		var defaultFont = new DynamicSpriteFontWrapper(
+			(DynamicSpriteFont)fontSystem.GetFont(fontSize: 16)
+		);
+		_windowManager = new WindowManager(
+			new DrawingRectangle(0, 0, 1024, 768),
+			new MonoGameGraphicsFactory(_spriteBatch, _viewportAdapter),
+			defaultFont
+		);
 		mouseListener.MouseDown += (sender, e) => _windowManager.OnMouseDown(e);
 		mouseListener.MouseMove += (sender, e) => _windowManager.OnMouseMove(e);
 		mouseListener.MouseUp += (sender, e) => _windowManager.OnMouseUp(e);
-		keyboardListener.KeyPressed += (sender, e) => _windowManager.OnKeyDown(new KeyEventArgs((SaruhashiKeys)e.Key));
-		keyboardListener.KeyReleased += (sender, e) => _windowManager.OnKeyUp(new KeyEventArgs((SaruhashiKeys)e.Key));
-		Window.TextInput += (sender, e) => _windowManager.OnKeyPress(new KeyPressEventArgs(e.Character));
+		keyboardListener.KeyPressed += (sender, e) =>
+			_windowManager.OnKeyDown(new KeyEventArgs((SaruhashiKeys)e.Key));
+		keyboardListener.KeyReleased += (sender, e) =>
+			_windowManager.OnKeyUp(new KeyEventArgs((SaruhashiKeys)e.Key));
+		Window.TextInput += (sender, e) =>
+			_windowManager.OnKeyPress(new KeyPressEventArgs(e.Character));
 
 		_screenManager.ShowScreen(new Screen1(_windowManager));
 	}
 
 	protected override void Update(GameTime gameTime)
 	{
-		if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(XnaKeys.Escape))
+		if (
+			GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed
+			|| Keyboard.GetState().IsKeyDown(XnaKeys.Escape)
+		)
 			Exit();
 
 		base.Update(gameTime);

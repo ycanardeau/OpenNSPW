@@ -17,7 +17,7 @@ namespace Aigamo.Saruhashi;
 
 public class ListBindingConverter : TypeConverter
 {
-	private static Type[] ctorTypes;  // the list of type of our ctor parameters.
+	private static Type[] ctorTypes; // the list of type of our ctor parameters.
 	private static string[] ctorParamProps; // the name of each property to check to see if we need to init with a ctor.
 
 	/// <summary>
@@ -29,7 +29,17 @@ public class ListBindingConverter : TypeConverter
 		{
 			if (ctorTypes is null)
 			{
-				ctorTypes = new Type[] { typeof(string), typeof(object), typeof(string), typeof(bool), typeof(DataSourceUpdateMode), typeof(object), typeof(string), typeof(IFormatProvider) };
+				ctorTypes = new Type[]
+				{
+					typeof(string),
+					typeof(object),
+					typeof(string),
+					typeof(bool),
+					typeof(DataSourceUpdateMode),
+					typeof(object),
+					typeof(string),
+					typeof(IFormatProvider),
+				};
 			}
 			return ctorTypes;
 		}
@@ -44,7 +54,17 @@ public class ListBindingConverter : TypeConverter
 		{
 			if (ctorParamProps is null)
 			{
-				ctorParamProps = new string[] { null, null, null, "FormattingEnabled", "DataSourceUpdateMode", "NullValue", "FormatString", "FormatInfo", };
+				ctorParamProps = new string[]
+				{
+					null,
+					null,
+					null,
+					"FormattingEnabled",
+					"DataSourceUpdateMode",
+					"NullValue",
+					"FormatString",
+					"FormatInfo",
+				};
 			}
 			return ctorParamProps;
 		}
@@ -70,7 +90,12 @@ public class ListBindingConverter : TypeConverter
 	///  type is string.  If this cannot convert to the desitnation type, this will
 	///  throw a NotSupportedException.
 	/// </summary>
-	public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+	public override object ConvertTo(
+		ITypeDescriptorContext context,
+		CultureInfo culture,
+		object value,
+		Type destinationType
+	)
 	{
 		if (destinationType is null)
 		{
@@ -91,13 +116,18 @@ public class ListBindingConverter : TypeConverter
 	///  for the object.  This is useful for objects that are immutable, but still
 	///  want to provide changable properties.
 	/// </summary>
-	public override object CreateInstance(ITypeDescriptorContext context, IDictionary propertyValues)
+	public override object CreateInstance(
+		ITypeDescriptorContext context,
+		IDictionary propertyValues
+	)
 	{
 		try
 		{
-			return new Binding((string)propertyValues["PropertyName"],
-									   propertyValues["DataSource"],
-							   (string)propertyValues["DataMember"]);
+			return new Binding(
+				(string)propertyValues["PropertyName"],
+				propertyValues["DataSource"],
+				(string)propertyValues["DataMember"]
+			);
 		}
 		catch (InvalidCastException invalidCast)
 		{
@@ -144,7 +174,9 @@ public class ListBindingConverter : TypeConverter
 
 			// get the property and see if it needs to be serialized.
 			//
-			PropertyDescriptor prop = TypeDescriptor.GetProperties(b)[ConstructorParameterProperties[lastItem]];
+			PropertyDescriptor prop = TypeDescriptor.GetProperties(b)[
+				ConstructorParameterProperties[lastItem]
+			];
 			if (prop != null && prop.ShouldSerializeValue(b))
 			{
 				break;
@@ -163,10 +195,9 @@ public class ListBindingConverter : TypeConverter
 		if (ctor is null)
 		{
 			isComplete = false;
-			ctor = typeof(Binding).GetConstructor(new Type[] {
-			   typeof(string),
-			   typeof(object),
-			   typeof(string)});
+			ctor = typeof(Binding).GetConstructor(
+				new Type[] { typeof(string), typeof(object), typeof(string) }
+			);
 		}
 
 		// now fill in the values.
@@ -188,7 +219,9 @@ public class ListBindingConverter : TypeConverter
 					val = b.BindingMemberInfo.BindingMember;
 					break;
 				default:
-					val = TypeDescriptor.GetProperties(b)[ConstructorParameterProperties[i]].GetValue(b);
+					val = TypeDescriptor
+						.GetProperties(b)[ConstructorParameterProperties[i]]
+						.GetValue(b);
 					break;
 			}
 			values[i] = val;

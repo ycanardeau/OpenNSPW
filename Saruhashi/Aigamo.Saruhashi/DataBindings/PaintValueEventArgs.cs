@@ -23,7 +23,12 @@ public class PaintValueEventArgs : EventArgs
 	/// <param name="value">The value to paint.</param>
 	/// <param name="graphics">The <see cref="Drawing.Graphics"/> object with which drawing should be done.</param>
 	/// <param name="bounds">The <see cref="Rectangle"/> that indicates the area in which the drawing should be done.</param>
-	public PaintValueEventArgs(ITypeDescriptorContext context, object value, Graphics graphics, Rectangle bounds)
+	public PaintValueEventArgs(
+		ITypeDescriptorContext context,
+		object value,
+		Graphics graphics,
+		Rectangle bounds
+	)
 	{
 		Context = context;
 		Value = value;

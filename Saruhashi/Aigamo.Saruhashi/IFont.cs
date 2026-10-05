@@ -1,5 +1,3 @@
 namespace Aigamo.Saruhashi;
 
-public interface IFont
-{
-}
+public interface IFont { }

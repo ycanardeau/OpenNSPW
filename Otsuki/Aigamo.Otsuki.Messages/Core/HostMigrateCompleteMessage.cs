@@ -25,7 +25,8 @@ public sealed record HostMigrateCompleteMessage : ICoreMessage
 	}
 }
 
-internal class HostMigrateCompleteMessageSerializer : ICoreMessageSerializer<HostMigrateCompleteMessage>
+internal class HostMigrateCompleteMessageSerializer
+	: ICoreMessageSerializer<HostMigrateCompleteMessage>
 {
 	public static HostMigrateCompleteMessageSerializer Default { get; } = new();
 

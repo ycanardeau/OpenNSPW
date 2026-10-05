@@ -70,14 +70,15 @@ public sealed record ConnectMessage : IReliableMessage
 		init => ProtocolVersion = ProtocolVersion.WithLowUInt16(value);
 	}
 
-	public override string ToString() => $"{nameof(ConnectMessage)} [" +
-		$"{nameof(Command)}={Command}, " +
-		$"{nameof(Opcode)}={Opcode}, " +
-		$"{nameof(MessageId)}={MessageId}, " +
-		$"{nameof(ResponseId)}={ResponseId}, " +
-		$"{nameof(ProtocolVersion)}={ProtocolVersion}, " +
-		$"{nameof(SessionId)}={SessionId}, " +
-		$"{nameof(Timestamp)}={Timestamp}]";
+	public override string ToString() =>
+		$"{nameof(ConnectMessage)} ["
+		+ $"{nameof(Command)}={Command}, "
+		+ $"{nameof(Opcode)}={Opcode}, "
+		+ $"{nameof(MessageId)}={MessageId}, "
+		+ $"{nameof(ResponseId)}={ResponseId}, "
+		+ $"{nameof(ProtocolVersion)}={ProtocolVersion}, "
+		+ $"{nameof(SessionId)}={SessionId}, "
+		+ $"{nameof(Timestamp)}={Timestamp}]";
 }
 
 internal class ConnectMessageSerializer : IReliableMessageSerializer<ConnectMessage>

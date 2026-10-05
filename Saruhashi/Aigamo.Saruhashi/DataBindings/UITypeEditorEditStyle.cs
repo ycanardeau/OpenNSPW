@@ -13,5 +13,5 @@ public enum UITypeEditorEditStyle
 {
 	None = 1,
 	Modal = 2,
-	DropDown = 3
+	DropDown = 3,
 }

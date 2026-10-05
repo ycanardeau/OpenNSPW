@@ -50,11 +50,7 @@ internal class HostMigrateMessageSerializer : ICoreMessageSerializer<HostMigrate
 		var dpnidOldHost = new Dpnid(reader.ReadInt32());
 		var dpnidNewHost = new Dpnid(reader.ReadInt32());
 
-		return new()
-		{
-			DpnidOldHost = dpnidOldHost,
-			DpnidNewHost = dpnidNewHost,
-		};
+		return new() { DpnidOldHost = dpnidOldHost, DpnidNewHost = dpnidNewHost };
 	}
 
 	public virtual void Write(BinaryWriter writer, HostMigrateMessage message)

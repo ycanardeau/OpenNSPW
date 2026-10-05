@@ -28,7 +28,6 @@ internal sealed class SRDescriptionAttribute : DescriptionAttribute
 		}
 	}
 
-	public SRDescriptionAttribute(string description) : base(description)
-	{
-	}
+	public SRDescriptionAttribute(string description)
+		: base(description) { }
 }

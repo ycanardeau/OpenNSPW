@@ -18,7 +18,14 @@ public class Label : Control
 
 	protected override void OnPaint(PaintEventArgs e)
 	{
-		TextRenderer.DrawText(e.Graphics, GetText(), Font, ClientRectangle, ForeColor, TextFormatFlags.Default);
+		TextRenderer.DrawText(
+			e.Graphics,
+			GetText(),
+			Font,
+			ClientRectangle,
+			ForeColor,
+			TextFormatFlags.Default
+		);
 
 		base.OnPaint(e);
 	}

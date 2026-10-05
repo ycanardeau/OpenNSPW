@@ -9,11 +9,13 @@ internal readonly struct ImmutableIPAddress : IEquatable<ImmutableIPAddress>
 {
 	public static readonly ImmutableIPAddress Any = IPAddress.Any.ToImmutableIPAddress();
 	public static readonly ImmutableIPAddress Loopback = IPAddress.Loopback.ToImmutableIPAddress();
-	public static readonly ImmutableIPAddress Broadcast = IPAddress.Broadcast.ToImmutableIPAddress();
+	public static readonly ImmutableIPAddress Broadcast =
+		IPAddress.Broadcast.ToImmutableIPAddress();
 	public static readonly ImmutableIPAddress None = Broadcast;
 
 	public static readonly ImmutableIPAddress IPv6Any = IPAddress.IPv6Any.ToImmutableIPAddress();
-	public static readonly ImmutableIPAddress IPv6Loopback = IPAddress.IPv6Loopback.ToImmutableIPAddress();
+	public static readonly ImmutableIPAddress IPv6Loopback =
+		IPAddress.IPv6Loopback.ToImmutableIPAddress();
 	public static readonly ImmutableIPAddress IPv6None = IPAddress.IPv6None.ToImmutableIPAddress();
 
 	private readonly string? _value;
@@ -23,12 +25,17 @@ internal readonly struct ImmutableIPAddress : IEquatable<ImmutableIPAddress>
 	public IImmutableList<byte> AddressBytes => ToIPAddress().GetAddressBytes().ToImmutableArray();
 	public AddressFamily AddressFamily => ToIPAddress().AddressFamily;
 
-	public static bool operator ==(ImmutableIPAddress left, ImmutableIPAddress right) => left.Equals(right);
-	public static bool operator !=(ImmutableIPAddress left, ImmutableIPAddress right) => !left.Equals(right);
+	public static bool operator ==(ImmutableIPAddress left, ImmutableIPAddress right) =>
+		left.Equals(right);
 
-	public static ImmutableIPAddress Parse(string value) => IPAddress.Parse(value).ToImmutableIPAddress();
+	public static bool operator !=(ImmutableIPAddress left, ImmutableIPAddress right) =>
+		!left.Equals(right);
+
+	public static ImmutableIPAddress Parse(string value) =>
+		IPAddress.Parse(value).ToImmutableIPAddress();
 
 	public bool Equals(ImmutableIPAddress other) => _value == other._value;
+
 	public override bool Equals(object? obj) => obj is ImmutableIPAddress other && Equals(other);
 
 	public override int GetHashCode() => _value?.GetHashCode() ?? 0;
@@ -40,5 +47,6 @@ internal readonly struct ImmutableIPAddress : IEquatable<ImmutableIPAddress>
 
 internal static class IPAddressExtensions
 {
-	public static ImmutableIPAddress ToImmutableIPAddress(this IPAddress value) => new(value.ToString());
+	public static ImmutableIPAddress ToImmutableIPAddress(this IPAddress value) =>
+		new(value.ToString());
 }

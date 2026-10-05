@@ -10,12 +10,8 @@ public class AddPlayerMessageSerializerTests
 	{
 		yield return new object?[]
 		{
-				new byte[]
-				{
-				},
-				new AddPlayerMessage
-				{
-				},
+			new byte[] { },
+			new AddPlayerMessage { },
 		};
 	}
 

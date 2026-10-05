@@ -135,7 +135,12 @@ public sealed class Cpu
 	{
 		var tmp = new Register64((ulong)left.Value + (ulong)right.Value);
 		var result = tmp.Low;
-		Eflags.Update(carry: !tmp.High.IsEmpty, zero: result.IsEmpty, sign: result.Sign, overflow: left.Sign == right.Sign && left.Sign != result.Sign);
+		Eflags.Update(
+			carry: !tmp.High.IsEmpty,
+			zero: result.IsEmpty,
+			sign: result.Sign,
+			overflow: left.Sign == right.Sign && left.Sign != result.Sign
+		);
 		return result;
 	}
 
@@ -143,7 +148,8 @@ public sealed class Cpu
 	/// Add.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Register32 Add(Register32 left, Register8 right) => Add(left, right.SignExtend().SignExtend());
+	public Register32 Add(Register32 left, Register8 right) =>
+		Add(left, right.SignExtend().SignExtend());
 
 	/// <summary>
 	/// Logical AND.
@@ -185,7 +191,8 @@ public sealed class Cpu
 	/// Logical AND.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Register32 And(Register32 left, Register8 right) => And(left, right.SignExtend().SignExtend());
+	public Register32 And(Register32 left, Register8 right) =>
+		And(left, right.SignExtend().SignExtend());
 
 	/// <summary>
 	/// Call procedure.
@@ -236,7 +243,12 @@ public sealed class Cpu
 	{
 		var tmp = new Register64((ulong)value.Value - 1);
 		var result = tmp.Low;
-		Eflags.Update(carry: Eflags.Carry, zero: result.IsEmpty, sign: result.Sign, overflow: value.Sign && value.Sign != result.Sign);
+		Eflags.Update(
+			carry: Eflags.Carry,
+			zero: result.IsEmpty,
+			sign: result.Sign,
+			overflow: value.Sign && value.Sign != result.Sign
+		);
 		return result;
 	}
 
@@ -244,7 +256,8 @@ public sealed class Cpu
 	/// Add.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Register64 Fadd(Register64 left, Register64 right) => Register64.FromDouble(left.ToDouble() + right.ToDouble());
+	public Register64 Fadd(Register64 left, Register64 right) =>
+		Register64.FromDouble(left.ToDouble() + right.ToDouble());
 
 	/// <summary>
 	/// Change sign.
@@ -276,19 +289,22 @@ public sealed class Cpu
 	/// Reverse divide.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Register64 Fdiv(Register64 dividend, Register64 divisor) => Register64.FromDouble(dividend.ToDouble() / divisor.ToDouble());
+	public Register64 Fdiv(Register64 dividend, Register64 divisor) =>
+		Register64.FromDouble(dividend.ToDouble() / divisor.ToDouble());
 
 	/// <summary>
 	/// Reverse divide.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Register64 Fdivr(Register64 divisor, Register64 dividend) => Register64.FromDouble(dividend.ToDouble() / divisor.ToDouble());
+	public Register64 Fdivr(Register64 divisor, Register64 dividend) =>
+		Register64.FromDouble(dividend.ToDouble() / divisor.ToDouble());
 
 	/// <summary>
 	/// Divide.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Register64 Fidiv(Register64 dividend, Register32 divisor) => Register64.FromDouble(dividend.ToDouble() / (int)divisor.Value);
+	public Register64 Fidiv(Register64 dividend, Register32 divisor) =>
+		Register64.FromDouble(dividend.ToDouble() / (int)divisor.Value);
 
 	/// <summary>
 	/// Load integer.
@@ -300,7 +316,8 @@ public sealed class Cpu
 	/// Multiply.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Register64 Fimul(Register64 left, Register32 right) => Register64.FromDouble(left.ToDouble() * (int)right.Value);
+	public Register64 Fimul(Register64 left, Register32 right) =>
+		Register64.FromDouble(left.ToDouble() * (int)right.Value);
 
 	/// <summary>
 	/// Load floating point value.
@@ -318,19 +335,22 @@ public sealed class Cpu
 	/// Partial arctangent.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Register64 Fpatan(Register64 y, Register64 x) => Register64.FromDouble(Math.Atan2(y.ToDouble(), x.ToDouble()));
+	public Register64 Fpatan(Register64 y, Register64 x) =>
+		Register64.FromDouble(Math.Atan2(y.ToDouble(), x.ToDouble()));
 
 	/// <summary>
 	/// Multiply.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Register64 Fmul(Register64 left, Register64 right) => Register64.FromDouble(left.ToDouble() * right.ToDouble());
+	public Register64 Fmul(Register64 left, Register64 right) =>
+		Register64.FromDouble(left.ToDouble() * right.ToDouble());
 
 	/// <summary>
 	/// Multiply.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Register64 Fmul(Register64 left, Register32 right) => Register64.FromDouble(left.ToDouble() * right.ToSingle());
+	public Register64 Fmul(Register64 left, Register32 right) =>
+		Register64.FromDouble(left.ToDouble() * right.ToSingle());
 
 	/// <summary>
 	/// Sine.
@@ -348,13 +368,15 @@ public sealed class Cpu
 	/// Subtract.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Register64 Fsub(Register64 left, Register64 right) => Register64.FromDouble(left.ToDouble() - right.ToDouble());
+	public Register64 Fsub(Register64 left, Register64 right) =>
+		Register64.FromDouble(left.ToDouble() - right.ToDouble());
 
 	/// <summary>
 	/// Reverse subtract.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Register64 Fsubr(Register64 left, Register64 right) => Register64.FromDouble(right.ToDouble() - left.ToDouble());
+	public Register64 Fsubr(Register64 left, Register64 right) =>
+		Register64.FromDouble(right.ToDouble() - left.ToDouble());
 
 	/// <summary>
 	/// Exchange register contents.
@@ -388,7 +410,12 @@ public sealed class Cpu
 		var tmp = new Register64((ulong)((long)(int)Eax.Value * (long)(int)value.Value));
 		Edx = tmp.High;
 		Eax = tmp.Low;
-		Eflags.Update(carry: tmp.Low.SignExtend() != tmp, zero: Eflags.Zero, sign: Eflags.Sign, overflow: tmp.Low.SignExtend() != tmp);
+		Eflags.Update(
+			carry: tmp.Low.SignExtend() != tmp,
+			zero: Eflags.Zero,
+			sign: Eflags.Sign,
+			overflow: tmp.Low.SignExtend() != tmp
+		);
 	}
 
 	/// <summary>
@@ -398,7 +425,12 @@ public sealed class Cpu
 	public Register32 Imul(Register32 left, Register32 right)
 	{
 		var tmp = new Register64((ulong)((long)(int)left.Value * (long)(int)right.Value));
-		Eflags.Update(carry: tmp.Low.SignExtend() != tmp, zero: Eflags.Zero, sign: Eflags.Sign, overflow: tmp.Low.SignExtend() != tmp);
+		Eflags.Update(
+			carry: tmp.Low.SignExtend() != tmp,
+			zero: Eflags.Zero,
+			sign: Eflags.Sign,
+			overflow: tmp.Low.SignExtend() != tmp
+		);
 		return tmp.Low;
 	}
 
@@ -410,7 +442,12 @@ public sealed class Cpu
 	{
 		var tmp = new Register64((ulong)value.Value + 1);
 		var result = tmp.Low;
-		Eflags.Update(carry: Eflags.Carry, zero: result.IsEmpty, sign: result.Sign, overflow: !value.Sign && value.Sign != result.Sign);
+		Eflags.Update(
+			carry: Eflags.Carry,
+			zero: result.IsEmpty,
+			sign: result.Sign,
+			overflow: !value.Sign && value.Sign != result.Sign
+		);
 		return result;
 	}
 
@@ -502,7 +539,12 @@ public sealed class Cpu
 	{
 		var tmp = new Register64((uint)-value.Value);
 		var result = tmp.Low;
-		Eflags.Update(carry: !value.IsEmpty, zero: result.IsEmpty, sign: result.Sign, overflow: value.Sign && result.Sign);
+		Eflags.Update(
+			carry: !value.IsEmpty,
+			zero: result.IsEmpty,
+			sign: result.Sign,
+			overflow: value.Sign && result.Sign
+		);
 		return result;
 	}
 
@@ -522,7 +564,8 @@ public sealed class Cpu
 	/// Logical inclusive OR.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Register32 Or(Register32 left, Register8 right) => Or(left, right.SignExtend().SignExtend());
+	public Register32 Or(Register32 left, Register8 right) =>
+		Or(left, right.SignExtend().SignExtend());
 
 	/// <summary>
 	/// Pop a value from the stack.
@@ -530,7 +573,9 @@ public sealed class Cpu
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Register32 Pop32()
 	{
-		var ret = new Register32(BitConverterExtensions.ToUInt32(Memory.Slice((int)(Esp - Offset).Value).Span));
+		var ret = new Register32(
+			BitConverterExtensions.ToUInt32(Memory.Slice((int)(Esp - Offset).Value).Span)
+		);
 		Esp += new Register32(4);
 		return ret;
 	}
@@ -559,11 +604,16 @@ public sealed class Cpu
 
 		var tmp = new Register32((uint)((int)value.Value >> (count.Value - 1)));
 		var result = new Register32((uint)((int)tmp.Value >> 1));
-		Eflags.Update(carry: (tmp.Value & 1) != 0, zero: result.IsEmpty, sign: result.Sign, overflow: (count.Value & 0x1f) switch
-		{
-			1 => false,
-			_ => Eflags.Overflow
-		});
+		Eflags.Update(
+			carry: (tmp.Value & 1) != 0,
+			zero: result.IsEmpty,
+			sign: result.Sign,
+			overflow: (count.Value & 0x1f) switch
+			{
+				1 => false,
+				_ => Eflags.Overflow,
+			}
+		);
 		return result;
 	}
 
@@ -575,7 +625,12 @@ public sealed class Cpu
 	{
 		var tmp = new Register64((ulong)left.Value - (ulong)(right.Value + (Eflags.Carry ? 1 : 0)));
 		var result = tmp.Low;
-		Eflags.Update(carry: !tmp.High.IsEmpty, zero: result.IsEmpty, sign: result.Sign, overflow: left.Sign != right.Sign && left.Sign != result.Sign);
+		Eflags.Update(
+			carry: !tmp.High.IsEmpty,
+			zero: result.IsEmpty,
+			sign: result.Sign,
+			overflow: left.Sign != right.Sign && left.Sign != result.Sign
+		);
 		return result;
 	}
 
@@ -589,7 +644,8 @@ public sealed class Cpu
 	/// Set byte if greater.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Register8 Setg() => !Eflags.Zero && Eflags.Sign == Eflags.Overflow ? Register8.One : Register8.Empty;
+	public Register8 Setg() =>
+		!Eflags.Zero && Eflags.Sign == Eflags.Overflow ? Register8.One : Register8.Empty;
 
 	/// <summary>
 	/// Left shift.
@@ -602,11 +658,16 @@ public sealed class Cpu
 
 		var tmp = new Register32(value.Value << (count.Value - 1));
 		var result = new Register32(tmp.Value << 1);
-		Eflags.Update(carry: tmp.Sign, zero: result.IsEmpty, sign: result.Sign, overflow: (count.Value & 0x1f) switch
-		{
-			1 => result.Sign ^ tmp.Sign,
-			_ => Eflags.Overflow
-		});
+		Eflags.Update(
+			carry: tmp.Sign,
+			zero: result.IsEmpty,
+			sign: result.Sign,
+			overflow: (count.Value & 0x1f) switch
+			{
+				1 => result.Sign ^ tmp.Sign,
+				_ => Eflags.Overflow,
+			}
+		);
 		return result;
 	}
 
@@ -621,11 +682,16 @@ public sealed class Cpu
 
 		var tmp = new Register32(value.Value >> (count.Value - 1));
 		var result = new Register32(tmp.Value >> 1);
-		Eflags.Update(carry: (tmp.Value & 1) != 0, zero: result.IsEmpty, sign: result.Sign, overflow: (count.Value & 0x1f) switch
-		{
-			1 => value.Sign,
-			_ => Eflags.Overflow
-		});
+		Eflags.Update(
+			carry: (tmp.Value & 1) != 0,
+			zero: result.IsEmpty,
+			sign: result.Sign,
+			overflow: (count.Value & 0x1f) switch
+			{
+				1 => value.Sign,
+				_ => Eflags.Overflow,
+			}
+		);
 		return result;
 	}
 
@@ -637,7 +703,12 @@ public sealed class Cpu
 	{
 		var tmp = new Register32((uint)left.Value - (uint)right.Value);
 		var result = tmp.Low;
-		Eflags.Update(carry: !tmp.High.IsEmpty, zero: result.IsEmpty, sign: result.Sign, overflow: left.Sign != right.Sign && left.Sign != result.Sign);
+		Eflags.Update(
+			carry: !tmp.High.IsEmpty,
+			zero: result.IsEmpty,
+			sign: result.Sign,
+			overflow: left.Sign != right.Sign && left.Sign != result.Sign
+		);
 		return result;
 	}
 
@@ -649,7 +720,12 @@ public sealed class Cpu
 	{
 		var tmp = new Register64((ulong)left.Value - (ulong)right.Value);
 		var result = tmp.Low;
-		Eflags.Update(carry: !tmp.High.IsEmpty, zero: result.IsEmpty, sign: result.Sign, overflow: left.Sign != right.Sign && left.Sign != result.Sign);
+		Eflags.Update(
+			carry: !tmp.High.IsEmpty,
+			zero: result.IsEmpty,
+			sign: result.Sign,
+			overflow: left.Sign != right.Sign && left.Sign != result.Sign
+		);
 		return result;
 	}
 
@@ -657,7 +733,8 @@ public sealed class Cpu
 	/// Subtract.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Register32 Sub(Register32 left, Register8 right) => Sub(left, right.SignExtend().SignExtend());
+	public Register32 Sub(Register32 left, Register8 right) =>
+		Sub(left, right.SignExtend().SignExtend());
 
 	/// <summary>
 	/// Logical compare.

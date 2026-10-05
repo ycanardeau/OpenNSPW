@@ -10,12 +10,8 @@ public class IntegrityCheckMessageSerializerTests
 	{
 		yield return new object?[]
 		{
-				new byte[]
-				{
-				},
-				new IntegrityCheckMessage
-				{
-				},
+			new byte[] { },
+			new IntegrityCheckMessage { },
 		};
 	}
 

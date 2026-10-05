@@ -12,19 +12,19 @@ namespace Aigamo.Saruhashi;
 /// </summary>
 public enum CheckState
 {
-    /// <summary>
-    ///  The control is unchecked.
-    /// </summary>
-    Unchecked = 0,
+	/// <summary>
+	///  The control is unchecked.
+	/// </summary>
+	Unchecked = 0,
 
-    /// <summary>
-    ///  The control is checked.
-    /// </summary>
-    Checked = 1,
+	/// <summary>
+	///  The control is checked.
+	/// </summary>
+	Checked = 1,
 
-    /// <summary>
-    ///  The control is indeterminate. An indeterminate control generally has
-    ///  a shaded appearance.
-    /// </summary>
-    Indeterminate = 2,
+	/// <summary>
+	///  The control is indeterminate. An indeterminate control generally has
+	///  a shaded appearance.
+	/// </summary>
+	Indeterminate = 2,
 }

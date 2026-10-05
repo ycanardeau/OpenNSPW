@@ -93,8 +93,14 @@ public class Register32Tests
 	{
 		Register32.Empty.WithLow(new Register16(0x1234)).Should().Be(new Register32(0x00001234));
 		Register32.Empty.WithLow(new Register16(0x8765)).Should().Be(new Register32(0x00008765));
-		new Register32(0x12340000).WithLow(new Register16(0x5678)).Should().Be(new Register32(0x12345678));
-		new Register32(0x87650000).WithLow(new Register16(0x4321)).Should().Be(new Register32(0x87654321));
+		new Register32(0x12340000)
+			.WithLow(new Register16(0x5678))
+			.Should()
+			.Be(new Register32(0x12345678));
+		new Register32(0x87650000)
+			.WithLow(new Register16(0x4321))
+			.Should()
+			.Be(new Register32(0x87654321));
 	}
 
 	[Fact]
@@ -102,7 +108,13 @@ public class Register32Tests
 	{
 		Register32.Empty.WithHigh(new Register16(0x1234)).Should().Be(new Register32(0x12340000));
 		Register32.Empty.WithHigh(new Register16(0x8765)).Should().Be(new Register32(0x87650000));
-		new Register32(0x00005678).WithHigh(new Register16(0x1234)).Should().Be(new Register32(0x12345678));
-		new Register32(0x00004321).WithHigh(new Register16(0x8765)).Should().Be(new Register32(0x87654321));
+		new Register32(0x00005678)
+			.WithHigh(new Register16(0x1234))
+			.Should()
+			.Be(new Register32(0x12345678));
+		new Register32(0x00004321)
+			.WithHigh(new Register16(0x8765))
+			.Should()
+			.Be(new Register32(0x87654321));
 	}
 }

@@ -19,5 +19,5 @@ public enum CheckBoxState
 	MixedNormal = 9,
 	MixedHot = 10,
 	MixedPressed = 11,
-	MixedDisabled = 12
+	MixedDisabled = 12,
 }

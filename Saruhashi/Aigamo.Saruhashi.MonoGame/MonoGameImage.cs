@@ -60,7 +60,11 @@ public static class MonoGameImage
 		}
 	}
 
-	public static IMonoGameImage Create(Texture2D texture, Color color) => new MonoGameTexture2DImage(texture, color);
-	public static IMonoGameImage Create(Texture2DRegion textureRegion, Color color) => new MonoGameTextureRegion2DImage(textureRegion, color);
+	public static IMonoGameImage Create(Texture2D texture, Color color) =>
+		new MonoGameTexture2DImage(texture, color);
+
+	public static IMonoGameImage Create(Texture2DRegion textureRegion, Color color) =>
+		new MonoGameTextureRegion2DImage(textureRegion, color);
+
 	public static IMonoGameImage Create(Sprite sprite) => new MonoGameSpriteImage(sprite);
 }

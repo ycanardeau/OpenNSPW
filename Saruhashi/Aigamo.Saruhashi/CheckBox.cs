@@ -4,7 +4,8 @@ public class CheckBox : ButtonBase
 {
 	private bool _checked;
 
-	public CheckBox() : base()
+	public CheckBox()
+		: base()
 	{
 		IsChecked = () => Checked;
 
@@ -80,7 +81,9 @@ public class CheckBox : ButtonBase
 			if (Capture && WindowManager.WindowFromPoint(PointToScreen(e.Location)) == this)
 			{
 				OnClick(EventArgs.Empty);
-				OnMouseClick(new MouseEventArgs(e.Button, e.Clicks, PointToClient(e.Location), e.Delta));
+				OnMouseClick(
+					new MouseEventArgs(e.Button, e.Clicks, PointToClient(e.Location), e.Delta)
+				);
 			}
 		}
 
@@ -107,7 +110,14 @@ public class CheckBox : ButtonBase
 					CheckBoxState.CheckedDisabled => PushButtonState.Disabled,
 					_ => 0,
 				};
-				ButtonRenderer.DrawButton(e.Graphics, ClientRectangle, GetText(), Font, focused: false, pushButtonState);
+				ButtonRenderer.DrawButton(
+					e.Graphics,
+					ClientRectangle,
+					GetText(),
+					Font,
+					focused: false,
+					pushButtonState
+				);
 				break;
 		}
 

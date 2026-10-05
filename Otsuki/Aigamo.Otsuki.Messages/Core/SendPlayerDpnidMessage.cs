@@ -43,10 +43,7 @@ internal class SendPlayerDpnidMessageSerializer : ICoreMessageSerializer<SendPla
 
 		var dpnid = new Dpnid(reader.ReadInt32());
 
-		return new()
-		{
-			Dpnid = dpnid,
-		};
+		return new() { Dpnid = dpnid };
 	}
 
 	public virtual void Write(BinaryWriter writer, SendPlayerDpnidMessage message)

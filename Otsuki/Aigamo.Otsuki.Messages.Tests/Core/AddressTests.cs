@@ -12,7 +12,11 @@ public class AddressTests
 	{
 		var address = new Address(IPAddress.Loopback);
 		address.GetComponentString(Address.KeyHostname).Should().Be(IPAddress.Loopback.ToString());
-		address.Url.Should().Be($"x-directplay:/provider=%7BEBFE7BA0-628D-11D2-AE0F-006097B01411%7D;hostname={IPAddress.Loopback}");
+		address
+			.Url.Should()
+			.Be(
+				$"x-directplay:/provider=%7BEBFE7BA0-628D-11D2-AE0F-006097B01411%7D;hostname={IPAddress.Loopback}"
+			);
 	}
 
 	[Fact]
@@ -20,7 +24,11 @@ public class AddressTests
 	{
 		var address = new Address(new IPEndPoint(IPAddress.Loopback, 2310));
 		address.GetComponentString(Address.KeyHostname).Should().Be(IPAddress.Loopback.ToString());
-		address.Url.Should().Be($"x-directplay:/provider=%7BEBFE7BA0-628D-11D2-AE0F-006097B01411%7D;hostname={IPAddress.Loopback};port=2310");
+		address
+			.Url.Should()
+			.Be(
+				$"x-directplay:/provider=%7BEBFE7BA0-628D-11D2-AE0F-006097B01411%7D;hostname={IPAddress.Loopback};port=2310"
+			);
 		address.GetComponentInteger(Address.KeyPort).Should().Be(2310);
 	}
 
@@ -30,7 +38,11 @@ public class AddressTests
 		var address = new Address("localhost", 2310);
 		address.GetComponentString(Address.KeyHostname).Should().Be("localhost");
 		address.GetComponentInteger(Address.KeyPort).Should().Be(2310);
-		address.Url.Should().Be("x-directplay:/provider=%7BEBFE7BA0-628D-11D2-AE0F-006097B01411%7D;hostname=localhost;port=2310");
+		address
+			.Url.Should()
+			.Be(
+				"x-directplay:/provider=%7BEBFE7BA0-628D-11D2-AE0F-006097B01411%7D;hostname=localhost;port=2310"
+			);
 	}
 
 	/*[Fact]
@@ -43,7 +55,8 @@ public class AddressTests
 	public void Url()
 	{
 		var address = new Address();
-		address.Url = "x-directplay:/provider=%7BEBFE7BA0-628D-11D2-AE0F-006097B01411%7D;hostname=localhost;port=2310";
+		address.Url =
+			"x-directplay:/provider=%7BEBFE7BA0-628D-11D2-AE0F-006097B01411%7D;hostname=localhost;port=2310";
 		address.GetComponentGuid(Address.KeyProvider).Should().Be(Address.ServiceProviderTcpIp);
 		address.GetComponentString(Address.KeyHostname).Should().Be("localhost");
 		address.GetComponentInteger(Address.KeyPort).Should().Be(2310);
@@ -54,7 +67,10 @@ public class AddressTests
 	{
 		var address = new Address();
 		address.Invoking(address => address.Url = "abcdef").Should().Throw<UriFormatException>();
-		address.Invoking(address => address.Url = "x-directplay:/=;").Should().Throw<UriFormatException>();
+		address
+			.Invoking(address => address.Url = "x-directplay:/=;")
+			.Should()
+			.Throw<UriFormatException>();
 	}
 
 	/*[Fact]

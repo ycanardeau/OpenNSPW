@@ -16,13 +16,16 @@ public readonly struct AddressingMode
 
 		var hasSib = ModRM.Mod != 3 && ModRM.RM == 4;
 		Sib = hasSib ? new Sib(reader.ReadByte()) : Sib.Empty;
-		var hasDisplacement32 = (ModRM.Mod == 0 && ModRM.RM == 5) || ModRM.Mod == 2 || (ModRM.Mod == 0 && Sib.Base == 5);
+		var hasDisplacement32 =
+			(ModRM.Mod == 0 && ModRM.RM == 5)
+			|| ModRM.Mod == 2
+			|| (ModRM.Mod == 0 && Sib.Base == 5);
 		var hasDisplacement8 = ModRM.Mod == 1;
 		Displacement = true switch
 		{
 			_ when hasDisplacement32 => reader.ReadUInt32(),
 			_ when hasDisplacement8 => reader.ReadByte(),
-			_ => 0
+			_ => 0,
 		};
 	}
 

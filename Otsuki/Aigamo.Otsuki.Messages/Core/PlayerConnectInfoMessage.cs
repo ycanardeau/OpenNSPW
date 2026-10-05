@@ -75,7 +75,9 @@ public sealed record PlayerConnectInfoMessage : ICoreMessage
 	/// <summary>
 	/// A variable-length field that specifies alternative address data used to connect the client. This field's position is determined by <b>dwAlternateAddressDataOffset</b> and the size stated in <b>dwAlternateAddressDataSize</b>. The addresses that are passed into the <b>alternateAddressData</b> field are formatted via the <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/bb72c589-3c28-4e77-ba36-995e1a825e6b">DN_ALTERNATE_ADDRESS</see> structure. Because DN_ALTERNATE_ADDRESS contains its own size, multiple alternate addresses can be passed in by appending the DN_ALTERNATE_ADDRESS structures together. However, the maximum number of alternate addresses that can be passed in at a single time is limited to 12.
 	/// </summary>
-	internal/* TODO: make public */ IImmutableList<AlternateAddress> AlternateAddresses { get; init; } = ImmutableArray<AlternateAddress>.Empty;
+	internal /* TODO: make public */
+	IImmutableList<AlternateAddress> AlternateAddresses { get; init; } =
+		ImmutableArray<AlternateAddress>.Empty;
 
 	/// <summary>
 	/// A variable-length field that contains a 0-terminated byte character array that specifies the client URL. This field's position is determined by <b>dwURLOffset</b> and the size stated in <b>dwURLSize</b>. It is defined in <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/180a7d08-8b45-4b32-a971-4dfc6a19f9ac">DN_ADDRESSING_URL</see>.
@@ -129,7 +131,9 @@ public sealed record PlayerConnectInfoMessage : ICoreMessage
 			builder.AppendLine(string.Join("\n", a.ToString().Split('\n').Select(l => "\t" + l)));
 
 		builder.AppendLine($"\t{nameof(Url)}: {Url}");
-		builder.AppendLine($"\t{nameof(ConnectData)}: {BitConverter.ToString(ConnectData.ToArray())}");
+		builder.AppendLine(
+			$"\t{nameof(ConnectData)}: {BitConverter.ToString(ConnectData.ToArray())}"
+		);
 		builder.AppendLine($"\t{nameof(Password)}: {Password}");
 		builder.AppendLine($"\t{nameof(Data)}: {BitConverter.ToString(Data.ToArray())}");
 		builder.AppendLine($"\t{nameof(Name)}: {Name}");
@@ -170,7 +174,10 @@ internal class PlayerConnectInfoMessageSerializer : ICoreMessageSerializer<Playe
 		{
 			IEnumerable<AlternateAddress> ReadAlternateAddresses()
 			{
-				while (reader.BaseStream.Position < (endOfPacketType + alternateAddressDataOffset + alternateAddressDataSize))
+				while (
+					reader.BaseStream.Position
+					< (endOfPacketType + alternateAddressDataOffset + alternateAddressDataSize)
+				)
 					yield return AlternateAddress.FromBinaryReader(reader);
 			}
 
@@ -232,7 +239,8 @@ internal class PlayerConnectInfoMessageSerializer : ICoreMessageSerializer<Playe
 	{
 		writer.Write((int)message.PacketType);
 		var endOfPacketType = writer.BaseStream.Position;
-		var offset = 88
+		var offset =
+			88
 			+ message.AlternateAddressDataSize
 			+ message.UrlSize
 			+ message.ConnectDataSize

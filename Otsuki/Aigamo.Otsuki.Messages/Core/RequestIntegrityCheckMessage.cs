@@ -37,7 +37,8 @@ public sealed record RequestIntegrityCheckMessage : ICoreMessage
 	}
 }
 
-internal class RequestIntegrityCheckMessageSerializer : ICoreMessageSerializer<RequestIntegrityCheckMessage>
+internal class RequestIntegrityCheckMessageSerializer
+	: ICoreMessageSerializer<RequestIntegrityCheckMessage>
 {
 	public static RequestIntegrityCheckMessageSerializer Default { get; } = new();
 
@@ -50,11 +51,7 @@ internal class RequestIntegrityCheckMessageSerializer : ICoreMessageSerializer<R
 		var requestContext = reader.ReadInt32();
 		var dpnidTarget = new Dpnid(reader.ReadInt32());
 
-		return new()
-		{
-			RequestContext = requestContext,
-			DpnidTarget = dpnidTarget,
-		};
+		return new() { RequestContext = requestContext, DpnidTarget = dpnidTarget };
 	}
 
 	public virtual void Write(BinaryWriter writer, RequestIntegrityCheckMessage message)

@@ -10,12 +10,8 @@ public class InstructedConnectFailedMessageSerializerTests
 	{
 		yield return new object?[]
 		{
-				new byte[]
-				{
-				},
-				new InstructedConnectFailedMessage
-				{
-				},
+			new byte[] { },
+			new InstructedConnectFailedMessage { },
 		};
 	}
 
@@ -32,6 +28,9 @@ public class InstructedConnectFailedMessageSerializerTests
 	[MemberData(nameof(TestData))]
 	internal void Serialize(byte[] expected, InstructedConnectFailedMessage message)
 	{
-		InstructedConnectFailedMessageSerializer.Default.Serialize(message).Should().Equal(expected);
+		InstructedConnectFailedMessageSerializer
+			.Default.Serialize(message)
+			.Should()
+			.Equal(expected);
 	}
 }

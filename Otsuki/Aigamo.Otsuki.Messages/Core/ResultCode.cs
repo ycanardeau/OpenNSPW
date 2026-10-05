@@ -21,6 +21,7 @@ public enum ResultCode
 	NoInterface = unchecked((int)0x80004002),
 	OutOfMemory = unchecked((int)0x8007000E),
 	InvalidPointer = unchecked((int)0x80004003),
+
 	//Pending = unchecked((int)),
 	Aborted = unchecked((int)0x80158030),
 	Addressing = unchecked((int)0x80158040),

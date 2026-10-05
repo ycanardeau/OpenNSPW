@@ -66,5 +66,5 @@ public enum TextFormatFlags
 	/// </remarks>
 	GlyphOverhangPadding = 0x00000000,
 	NoPadding = 0x10000000,
-	LeftAndRightPadding = 0x20000000
+	LeftAndRightPadding = 0x20000000,
 }

@@ -10,25 +10,34 @@ public class HardDisconnectMessageSerializerTests
 	{
 		yield return new object?[]
 		{
-				new byte[]
-				{
-					0x80,
-					0x04,
-					0x0E,
-					0x00,
-					0x06, 0x00, 0x01, 0x00,
-					0x64, 0x07, 0xAE, 0x22,
-					0xD2, 0xB3, 0x10, 0x02,
-				},
-				new HardDisconnectMessage
-				{
-					MessageId = 0x0E,
-					ResponseId = 0x00,
-					ProtocolVersion = 0x00010006,
-					SessionId = new SessionId(0x22AE0764),
-					Timestamp = 0x0210B3D2,
-				},
-				false,
+			new byte[]
+			{
+				0x80,
+				0x04,
+				0x0E,
+				0x00,
+				0x06,
+				0x00,
+				0x01,
+				0x00,
+				0x64,
+				0x07,
+				0xAE,
+				0x22,
+				0xD2,
+				0xB3,
+				0x10,
+				0x02,
+			},
+			new HardDisconnectMessage
+			{
+				MessageId = 0x0E,
+				ResponseId = 0x00,
+				ProtocolVersion = 0x00010006,
+				SessionId = new SessionId(0x22AE0764),
+				Timestamp = 0x0210B3D2,
+			},
+			false,
 		};
 	}
 

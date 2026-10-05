@@ -31,7 +31,8 @@ public sealed record InstructedConnectFailedMessage : ICoreMessage
 	}
 }
 
-internal class InstructedConnectFailedMessageSerializer : ICoreMessageSerializer<InstructedConnectFailedMessage>
+internal class InstructedConnectFailedMessageSerializer
+	: ICoreMessageSerializer<InstructedConnectFailedMessage>
 {
 	public static InstructedConnectFailedMessageSerializer Default { get; } = new();
 
@@ -43,10 +44,7 @@ internal class InstructedConnectFailedMessageSerializer : ICoreMessageSerializer
 
 		var dpnid = new Dpnid(reader.ReadInt32());
 
-		return new()
-		{
-			Dpnid = dpnid,
-		};
+		return new() { Dpnid = dpnid };
 	}
 
 	public virtual void Write(BinaryWriter writer, InstructedConnectFailedMessage message)

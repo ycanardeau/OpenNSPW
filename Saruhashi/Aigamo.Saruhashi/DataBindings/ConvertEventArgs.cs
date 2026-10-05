@@ -6,7 +6,6 @@
 
 #nullable disable
 
-
 namespace Aigamo.Saruhashi;
 
 public class ConvertEventArgs : EventArgs

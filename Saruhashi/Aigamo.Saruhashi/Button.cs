@@ -2,7 +2,8 @@ namespace Aigamo.Saruhashi;
 
 public class Button : ButtonBase
 {
-	public Button() : base()
+	public Button()
+		: base()
 	{
 		SetStyle(ControlStyles.StandardClick, false);
 	}
@@ -28,7 +29,9 @@ public class Button : ButtonBase
 			if (Capture && WindowManager.WindowFromPoint(PointToScreen(e.Location)) == this)
 			{
 				OnClick(EventArgs.Empty);
-				OnMouseClick(new MouseEventArgs(e.Button, e.Clicks, PointToClient(e.Location), e.Delta));
+				OnMouseClick(
+					new MouseEventArgs(e.Button, e.Clicks, PointToClient(e.Location), e.Delta)
+				);
 			}
 		}
 
@@ -37,7 +40,14 @@ public class Button : ButtonBase
 
 	protected override void OnPaint(PaintEventArgs e)
 	{
-		ButtonRenderer.DrawButton(e.Graphics, ClientRectangle, GetText(), Font, focused: false, DetermineState(!MouseIsDown));
+		ButtonRenderer.DrawButton(
+			e.Graphics,
+			ClientRectangle,
+			GetText(),
+			Font,
+			focused: false,
+			DetermineState(!MouseIsDown)
+		);
 
 		base.OnPaint(e);
 	}

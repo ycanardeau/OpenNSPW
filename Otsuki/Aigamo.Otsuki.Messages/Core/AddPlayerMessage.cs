@@ -118,7 +118,8 @@ public sealed record AddPlayerMessage : ICoreMessage
 	public bool GroupAutoDestruct
 	{
 		get => Flags.HasFlag(Flags.GroupAutoDestruct);
-		init => Flags = value ? (Flags | Flags.GroupAutoDestruct) : (Flags & ~Flags.GroupAutoDestruct);
+		init =>
+			Flags = value ? (Flags | Flags.GroupAutoDestruct) : (Flags & ~Flags.GroupAutoDestruct);
 	}
 
 	public bool Peer

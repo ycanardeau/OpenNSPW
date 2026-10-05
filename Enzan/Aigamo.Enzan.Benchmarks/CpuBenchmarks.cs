@@ -40,8 +40,7 @@ public class CpuBenchmarks
 			cpu.Ebx = cpu.Xor(cpu.Ebx, cpu.Eax);
 			cpu.Ebx = cpu.Shl(cpu.Ebx, Register8.One);
 			cpu.Ecx = cpu.Dec(cpu.Ecx);
-		}
-		while (cpu.Jne);
+		} while (cpu.Jne);
 		return cpu.Eax;
 	}
 
@@ -58,8 +57,7 @@ public class CpuBenchmarks
 				cpu.Eax = cpu.Sub(cpu.Eax, cpu.Ebx);
 			cpu.Edx = cpu.Inc(cpu.Edx);
 			cpu.Cmp(cpu.Edx, new Register32(Iterations));
-		}
-		while (cpu.Jl);
+		} while (cpu.Jl);
 		return cpu.Eax;
 	}
 

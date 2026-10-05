@@ -14,5 +14,7 @@ public readonly record struct SessionId(int Value) : IEquatable<SessionId>, IFor
 	}
 
 	public override string ToString() => Value.ToString();
-	public string ToString(string? format, IFormatProvider? provider) => Value.ToString(format, provider);
+
+	public string ToString(string? format, IFormatProvider? provider) =>
+		Value.ToString(format, provider);
 }

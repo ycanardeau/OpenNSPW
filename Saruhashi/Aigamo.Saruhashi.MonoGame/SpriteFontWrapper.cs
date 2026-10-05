@@ -13,7 +13,8 @@ public sealed class SpriteFontWrapper : IMonoGameFont
 		SpriteFont = spriteFont;
 	}
 
-	public void Draw(SpriteBatch spriteBatch, string? text, Vector2 position, XnaColor color) => spriteBatch.DrawString(SpriteFont, text, position, color);
+	public void Draw(SpriteBatch spriteBatch, string? text, Vector2 position, XnaColor color) =>
+		spriteBatch.DrawString(SpriteFont, text, position, color);
 
 	public Vector2 MeasureString(string? text) => SpriteFont.MeasureString(text);
 }

@@ -43,10 +43,7 @@ internal class IntegrityCheckMessageSerializer : ICoreMessageSerializer<Integrit
 
 		var dpnidRequesting = new Dpnid(reader.ReadInt32());
 
-		return new()
-		{
-			DpnidRequesting = dpnidRequesting,
-		};
+		return new() { DpnidRequesting = dpnidRequesting };
 	}
 
 	public virtual void Write(BinaryWriter writer, IntegrityCheckMessage message)

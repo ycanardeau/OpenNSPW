@@ -32,7 +32,9 @@ public sealed record TerminateSessionMessage : ICoreMessage
 	{
 		var builder = new StringBuilder();
 		builder.AppendLine($"{nameof(TerminateSessionMessage)}:");
-		builder.AppendLine($"\t{nameof(TerminateData)}: {BitConverter.ToString(TerminateData.ToArray())}");
+		builder.AppendLine(
+			$"\t{nameof(TerminateData)}: {BitConverter.ToString(TerminateData.ToArray())}"
+		);
 		return builder.ToString();
 	}
 }
@@ -58,10 +60,7 @@ internal class TerminateSessionMessageSerializer : ICoreMessageSerializer<Termin
 			terminateData = reader.ReadBytes(terminateDataSize).ToImmutableArray();
 		}
 
-		return new()
-		{
-			TerminateData = terminateData,
-		};
+		return new() { TerminateData = terminateData };
 	}
 
 	public virtual void Write(BinaryWriter writer, TerminateSessionMessage message)

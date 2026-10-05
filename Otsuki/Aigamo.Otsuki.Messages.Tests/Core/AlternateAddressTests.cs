@@ -10,20 +10,14 @@ public class AlternateAddressTests
 	{
 		yield return new object?[]
 		{
-				new byte[]
-				{
-					7, 0x02, 0x09, 0x06, 127, 0, 0, 1,
-				},
-				new AlternateAddress(ImmutableIPAddress.Loopback, 2310),
+			new byte[] { 7, 0x02, 0x09, 0x06, 127, 0, 0, 1 },
+			new AlternateAddress(ImmutableIPAddress.Loopback, 2310),
 		};
 
 		yield return new object?[]
 		{
-				new byte[]
-				{
-					19, 0x17, 0x09, 0x06, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-				},
-				new AlternateAddress(ImmutableIPAddress.IPv6Loopback, 2310),
+			new byte[] { 19, 0x17, 0x09, 0x06, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+			new AlternateAddress(ImmutableIPAddress.IPv6Loopback, 2310),
 		};
 	}
 

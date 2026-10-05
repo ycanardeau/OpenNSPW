@@ -18,7 +18,8 @@ internal class RelatedPropertyManager : PropertyManager
 	string dataField;
 	PropertyDescriptor fieldInfo;
 
-	internal RelatedPropertyManager(BindingManagerBase parentManager, string dataField) : base(GetCurrentOrNull(parentManager), dataField)
+	internal RelatedPropertyManager(BindingManagerBase parentManager, string dataField)
+		: base(GetCurrentOrNull(parentManager), dataField)
 	{
 		Bind(parentManager, dataField);
 	}
@@ -54,7 +55,9 @@ internal class RelatedPropertyManager : PropertyManager
 		return parentManager.GetListName(listAccessors);
 	}
 
-	internal override PropertyDescriptorCollection GetItemProperties(PropertyDescriptor[] listAccessors)
+	internal override PropertyDescriptorCollection GetItemProperties(
+		PropertyDescriptor[] listAccessors
+	)
 	{
 		PropertyDescriptor[] accessors;
 
@@ -89,23 +92,19 @@ internal class RelatedPropertyManager : PropertyManager
 
 	internal override Type BindType
 	{
-		get
-		{
-			return fieldInfo.PropertyType;
-		}
+		get { return fieldInfo.PropertyType; }
 	}
 
 	public override object Current
 	{
-		get
-		{
-			return (DataSource != null) ? fieldInfo.GetValue(DataSource) : null;
-		}
+		get { return (DataSource != null) ? fieldInfo.GetValue(DataSource) : null; }
 	}
 
-	static private object GetCurrentOrNull(BindingManagerBase parentManager)
+	private static object GetCurrentOrNull(BindingManagerBase parentManager)
 	{
-		bool anyCurrent = (parentManager.Position >= 0 && parentManager.Position < parentManager.Count);
+		bool anyCurrent = (
+			parentManager.Position >= 0 && parentManager.Position < parentManager.Count
+		);
 		return anyCurrent ? parentManager.Current : null;
 	}
 }

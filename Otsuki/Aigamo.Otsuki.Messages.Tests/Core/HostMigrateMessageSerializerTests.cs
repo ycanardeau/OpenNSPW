@@ -10,12 +10,8 @@ public class HostMigrateMessageSerializerTests
 	{
 		yield return new object?[]
 		{
-				new byte[]
-				{
-				},
-				new HostMigrateMessage
-				{
-				},
+			new byte[] { },
+			new HostMigrateMessage { },
 		};
 	}
 

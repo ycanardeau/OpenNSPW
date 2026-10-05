@@ -10,12 +10,8 @@ public class ConnectAttemptFailedMessageSerializerTests
 	{
 		yield return new object?[]
 		{
-				new byte[]
-				{
-				},
-				new ConnectAttemptFailedMessage
-				{
-				},
+			new byte[] { },
+			new ConnectAttemptFailedMessage { },
 		};
 	}
 

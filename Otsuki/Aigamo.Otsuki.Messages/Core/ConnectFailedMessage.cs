@@ -65,11 +65,7 @@ internal class ConnectFailedMessageSerializer : ICoreMessageSerializer<ConnectFa
 			reply = reader.ReadBytes(replySize).ToImmutableArray();
 		}
 
-		return new()
-		{
-			ResultCode = resultCode,
-			Reply = reply,
-		};
+		return new() { ResultCode = resultCode, Reply = reply };
 	}
 
 	public virtual void Write(BinaryWriter writer, ConnectFailedMessage message)

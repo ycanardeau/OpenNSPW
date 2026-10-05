@@ -18,7 +18,11 @@ public class DpnidTests
 	[Fact]
 	public void Ctor_Int_Int_Guid()
 	{
-		var dpnid = new Dpnid(index: 5, version: 10, new Guid(0xA1B2C3D4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+		var dpnid = new Dpnid(
+			index: 5,
+			version: 10,
+			new Guid(0xA1B2C3D4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+		);
 		dpnid.Value.Should().Be(unchecked((int)0xA112C3D1));
 	}
 

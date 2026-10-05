@@ -25,7 +25,8 @@ internal sealed record AlternateAddress
 		Port = port;
 	}
 
-	public AlternateAddress(ImmutableIPEndPoint endPoint) : this(endPoint.Address, endPoint.Port) { }
+	public AlternateAddress(ImmutableIPEndPoint endPoint)
+		: this(endPoint.Address, endPoint.Port) { }
 
 	private AlternateAddress(BinaryReader reader)
 	{
@@ -36,7 +37,7 @@ internal sealed record AlternateAddress
 		{
 			AddressFamily.InterNetwork => reader.ReadBytes(4).ToImmutableArray(),
 			AddressFamily.InterNetworkV6 => reader.ReadBytes(16).ToImmutableArray(),
-			_ => throw new InvalidEnumArgumentException()
+			_ => throw new InvalidEnumArgumentException(),
 		};
 
 		if (size != Size)
@@ -49,7 +50,8 @@ internal sealed record AlternateAddress
 		init => Address = new IPAddress(value.ToArray()).ToImmutableIPAddress();
 	}
 
-	public IImmutableEndPoint EndPoint => new IPEndPoint(Address.ToIPAddress(), Port).ToImmutableIPEndPoint();
+	public IImmutableEndPoint EndPoint =>
+		new IPEndPoint(Address.ToIPAddress(), Port).ToImmutableIPEndPoint();
 
 	public static AlternateAddress FromBinaryReader(BinaryReader reader) => new(reader);
 

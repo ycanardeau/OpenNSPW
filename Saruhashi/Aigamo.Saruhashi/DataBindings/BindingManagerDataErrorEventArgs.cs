@@ -6,15 +6,14 @@
 
 #nullable disable
 
-
 namespace Aigamo.Saruhashi;
 
 public class BindingManagerDataErrorEventArgs : EventArgs
 {
-    public BindingManagerDataErrorEventArgs(Exception exception)
-    {
-        Exception = exception;
-    }
+	public BindingManagerDataErrorEventArgs(Exception exception)
+	{
+		Exception = exception;
+	}
 
-    public Exception Exception { get; }
+	public Exception Exception { get; }
 }

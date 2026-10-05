@@ -23,9 +23,13 @@ internal class ListManagerBindingsCollection : BindingsCollection
 	/// <summary>
 	///  ColumnsCollection constructor.  Used only by DataSource.
 	/// </summary>
-	internal ListManagerBindingsCollection(BindingManagerBase bindingManagerBase) : base()
+	internal ListManagerBindingsCollection(BindingManagerBase bindingManagerBase)
+		: base()
 	{
-		Debug.Assert(bindingManagerBase != null, "How could a listmanagerbindingscollection not have a bindingManagerBase associated with it!");
+		Debug.Assert(
+			bindingManagerBase != null,
+			"How could a listmanagerbindingscollection not have a bindingManagerBase associated with it!"
+		);
 		_bindingManagerBase = bindingManagerBase;
 	}
 

@@ -44,28 +44,34 @@ public class PropertyManager : BindingManagerBase
 			_propInfo = TypeDescriptor.GetProperties(dataSource).Find(_propName, true);
 			if (_propInfo is null)
 			{
-				throw new ArgumentException(string.Format(SR.PropertyManagerPropDoesNotExist, _propName, dataSource.ToString()));
+				throw new ArgumentException(
+					string.Format(
+						SR.PropertyManagerPropDoesNotExist,
+						_propName,
+						dataSource.ToString()
+					)
+				);
 			}
 
 			_propInfo.AddValueChanged(dataSource, new EventHandler(PropertyChanged));
 		}
 	}
 
-	public PropertyManager()
-	{
-	}
+	public PropertyManager() { }
 
-	internal PropertyManager(object dataSource) : base(dataSource)
-	{
-	}
+	internal PropertyManager(object dataSource)
+		: base(dataSource) { }
 
-	internal PropertyManager(object dataSource, string propName) : base()
+	internal PropertyManager(object dataSource, string propName)
+		: base()
 	{
 		_propName = propName;
 		SetDataSource(dataSource);
 	}
 
-	internal override PropertyDescriptorCollection GetItemProperties(PropertyDescriptor[] listAccessors)
+	internal override PropertyDescriptorCollection GetItemProperties(
+		PropertyDescriptor[] listAccessors
+	)
 	{
 		return ListBindingHelper.GetListItemProperties(_dataSource, listAccessors);
 	}
@@ -160,7 +166,7 @@ public class PropertyManager : BindingManagerBase
 	///  Raises the <see cref="BindingManagerBase.CurrentChanged" /> event.
 	/// </summary>
 	/// <param name="ea">The event data.</param>
-	internal protected override void OnCurrentChanged(EventArgs ea)
+	protected internal override void OnCurrentChanged(EventArgs ea)
 	{
 		PushData();
 
@@ -172,7 +178,7 @@ public class PropertyManager : BindingManagerBase
 	///  Raises the <see cref="BindingManagerBase.CurrentItemChanged" /> event.
 	/// </summary>
 	/// <param name="ea">The event data.</param>
-	internal protected override void OnCurrentItemChanged(EventArgs ea)
+	protected internal override void OnCurrentItemChanged(EventArgs ea)
 	{
 		PushData();
 
@@ -190,9 +196,7 @@ public class PropertyManager : BindingManagerBase
 	public override int Position
 	{
 		get => 0;
-		set
-		{
-		}
+		set { }
 	}
 
 	/// <summary>

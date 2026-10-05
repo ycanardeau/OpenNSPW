@@ -21,7 +21,8 @@ public readonly record struct Register16(ushort Value) : IFormattable
 
 	public override string ToString() => Value.ToString();
 
-	public string ToString(string? format, IFormatProvider? provider) => Value.ToString(format, provider);
+	public string ToString(string? format, IFormatProvider? provider) =>
+		Value.ToString(format, provider);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Register32 SignExtend() => new((uint)(short)Value);

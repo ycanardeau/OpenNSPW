@@ -18,7 +18,12 @@ public class SequenceIdTests
 	{
 		yield return new object?[] { _testSequenceId, _testSequenceId, 0 };
 
-		yield return new object?[] { new SequenceId(0), new SequenceId(128), -1/* REVIEW */ };
+		yield return new object?[]
+		{
+			new SequenceId(0),
+			new SequenceId(128),
+			-1, /* REVIEW */
+		};
 		yield return new object?[] { new SequenceId(128), new SequenceId(0), -1 };
 
 		yield return new object?[] { new SequenceId(0), new SequenceId(255), 1 };
@@ -42,7 +47,12 @@ public class SequenceIdTests
 		yield return new object?[] { new SequenceId(128), new SequenceId(127), 1 };
 		yield return new object?[] { new SequenceId(127), new SequenceId(128), -1 };
 
-		yield return new object?[] { new SequenceId(255), new SequenceId(127), -1/* REVIEW */ };
+		yield return new object?[]
+		{
+			new SequenceId(255),
+			new SequenceId(127),
+			-1, /* REVIEW */
+		};
 		yield return new object?[] { new SequenceId(127), new SequenceId(255), -1 };
 
 		yield return new object?[] { new SequenceId(255), new SequenceId(128), 1 };

@@ -8,6 +8,4 @@ namespace Aigamo.Otsuki.Messages;
 /// have any affect on the code's actual thread-safety.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-internal sealed class ThreadUnsafeAttribute : Attribute
-{
-}
+internal sealed class ThreadUnsafeAttribute : Attribute { }

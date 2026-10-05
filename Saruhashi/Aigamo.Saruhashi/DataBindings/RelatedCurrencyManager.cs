@@ -21,9 +21,11 @@ internal class RelatedCurrencyManager : CurrencyManager
 	BindingManagerBase parentManager;
 	string dataField;
 	PropertyDescriptor fieldInfo;
-	static readonly List<BindingManagerBase> IgnoreItemChangedTable = new List<BindingManagerBase>();
+	static readonly List<BindingManagerBase> IgnoreItemChangedTable =
+		new List<BindingManagerBase>();
 
-	internal RelatedCurrencyManager(BindingManagerBase parentManager, string dataField) : base(null)
+	internal RelatedCurrencyManager(BindingManagerBase parentManager, string dataField)
+		: base(null)
 	{
 		Bind(parentManager, dataField);
 	}
@@ -58,7 +60,9 @@ internal class RelatedCurrencyManager : CurrencyManager
 
 			if (bmb is CurrencyManager)
 			{
-				(bmb as CurrencyManager).MetaDataChanged -= new EventHandler(ParentManager_MetaDataChanged);
+				(bmb as CurrencyManager).MetaDataChanged -= new EventHandler(
+					ParentManager_MetaDataChanged
+				);
 			}
 		}
 	}
@@ -71,12 +75,16 @@ internal class RelatedCurrencyManager : CurrencyManager
 
 			if (bmb is CurrencyManager)
 			{
-				(bmb as CurrencyManager).MetaDataChanged += new EventHandler(ParentManager_MetaDataChanged);
+				(bmb as CurrencyManager).MetaDataChanged += new EventHandler(
+					ParentManager_MetaDataChanged
+				);
 			}
 		}
 	}
 
-	internal override PropertyDescriptorCollection GetItemProperties(PropertyDescriptor[] listAccessors)
+	internal override PropertyDescriptorCollection GetItemProperties(
+		PropertyDescriptor[] listAccessors
+	)
 	{
 		PropertyDescriptor[] accessors;
 

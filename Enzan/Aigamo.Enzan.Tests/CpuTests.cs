@@ -196,7 +196,15 @@ public class CpuTests
 	[InlineData(0xFFFFFFFF, 0x7FFFFFFF, 0x7FFFFFFE, true, false, false, false)]
 	[InlineData(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE, true, false, true, false)]
 	#endregion
-	public void Add32Test(uint left, uint right, uint result, bool carry, bool zero, bool sign, bool overflow)
+	public void Add32Test(
+		uint left,
+		uint right,
+		uint result,
+		bool carry,
+		bool zero,
+		bool sign,
+		bool overflow
+	)
 	{
 		_cpu.Add(new Register32(left), new Register32(right)).Should().Be(new Register32(result));
 		_cpu.Eflags.Carry.Should().Be(carry);
@@ -575,7 +583,14 @@ public class CpuTests
 	[InlineData(0xFFFF, 0x7FFF, false, false, true, false)]
 	[InlineData(0xFFFF, 0xFFFF, false, true, false, false)]
 	#endregion
-	public void Cmp16Test(ushort left, ushort right, bool carry, bool zero, bool sign, bool overflow)
+	public void Cmp16Test(
+		ushort left,
+		ushort right,
+		bool carry,
+		bool zero,
+		bool sign,
+		bool overflow
+	)
 	{
 		_cpu.Cmp(new Register16(left), new Register16(right));
 		_cpu.Eflags.Carry.Should().Be(carry);
@@ -720,7 +735,10 @@ public class CpuTests
 	[Fact]
 	public void FaddTest()
 	{
-		_cpu.Fadd(Register64.FromDouble(1234), Register64.FromDouble(5678)).ToDouble().Should().Be(1234.0 + 5678.0);
+		_cpu.Fadd(Register64.FromDouble(1234), Register64.FromDouble(5678))
+			.ToDouble()
+			.Should()
+			.Be(1234.0 + 5678.0);
 	}
 
 	[Fact]
@@ -759,19 +777,28 @@ public class CpuTests
 	[Fact]
 	public void FdivTest()
 	{
-		_cpu.Fdiv(Register64.FromDouble(1234.0), Register64.FromDouble(5678.0)).ToDouble().Should().Be(1234.0 / 5678.0);
+		_cpu.Fdiv(Register64.FromDouble(1234.0), Register64.FromDouble(5678.0))
+			.ToDouble()
+			.Should()
+			.Be(1234.0 / 5678.0);
 	}
-	
+
 	[Fact]
 	public void FdivrTest()
 	{
-		_cpu.Fdivr(Register64.FromDouble(1234.0), Register64.FromDouble(5678.0)).ToDouble().Should().Be(5678.0 / 1234.0);
+		_cpu.Fdivr(Register64.FromDouble(1234.0), Register64.FromDouble(5678.0))
+			.ToDouble()
+			.Should()
+			.Be(5678.0 / 1234.0);
 	}
 
 	[Fact]
 	public void FidivTest()
 	{
-		_cpu.Fidiv(Register64.FromDouble(1234.0), new Register32(5678)).ToDouble().Should().Be(1234.0 / 5678);
+		_cpu.Fidiv(Register64.FromDouble(1234.0), new Register32(5678))
+			.ToDouble()
+			.Should()
+			.Be(1234.0 / 5678);
 	}
 
 	[Fact]
@@ -784,7 +811,10 @@ public class CpuTests
 	[Fact]
 	public void FimulTest()
 	{
-		_cpu.Fimul(Register64.FromDouble(1234.0), new Register32(5678)).ToDouble().Should().Be(1234.0 * 5678);
+		_cpu.Fimul(Register64.FromDouble(1234.0), new Register32(5678))
+			.ToDouble()
+			.Should()
+			.Be(1234.0 * 5678);
 	}
 
 	[Fact]
@@ -797,14 +827,23 @@ public class CpuTests
 	[Fact]
 	public void FpatanTest()
 	{
-		_cpu.Fpatan(Register64.FromDouble(1234.0), Register64.FromDouble(5678.0)).ToDouble().Should().Be(Math.Atan2(1234.0, 5678.0));
+		_cpu.Fpatan(Register64.FromDouble(1234.0), Register64.FromDouble(5678.0))
+			.ToDouble()
+			.Should()
+			.Be(Math.Atan2(1234.0, 5678.0));
 	}
 
 	[Fact]
 	public void FmulTest()
 	{
-		_cpu.Fmul(Register64.FromDouble(1234.0), Register64.FromDouble(5678.0)).ToDouble().Should().Be(1234.0 * 5678.0);
-		_cpu.Fmul(Register64.FromDouble(1234.0), Register32.FromSingle(5678.0f)).ToDouble().Should().Be(1234.0 * 5678.0f);
+		_cpu.Fmul(Register64.FromDouble(1234.0), Register64.FromDouble(5678.0))
+			.ToDouble()
+			.Should()
+			.Be(1234.0 * 5678.0);
+		_cpu.Fmul(Register64.FromDouble(1234.0), Register32.FromSingle(5678.0f))
+			.ToDouble()
+			.Should()
+			.Be(1234.0 * 5678.0f);
 	}
 
 	[Fact]
@@ -816,19 +855,27 @@ public class CpuTests
 	[Fact]
 	public void FsubTest()
 	{
-		_cpu.Fsub(Register64.FromDouble(1234.0), Register64.FromDouble(5678.0)).ToDouble().Should().Be(1234.0 - 5678.0);
+		_cpu.Fsub(Register64.FromDouble(1234.0), Register64.FromDouble(5678.0))
+			.ToDouble()
+			.Should()
+			.Be(1234.0 - 5678.0);
 	}
 
 	[Fact]
 	public void FsubrTest()
 	{
-		_cpu.Fsubr(Register64.FromDouble(1234.0), Register64.FromDouble(5678.0)).ToDouble().Should().Be(5678.0 - 1234.0);
+		_cpu.Fsubr(Register64.FromDouble(1234.0), Register64.FromDouble(5678.0))
+			.ToDouble()
+			.Should()
+			.Be(5678.0 - 1234.0);
 	}
 
 	[Fact]
 	public void FxchTest()
 	{
-		_cpu.Fxch(Register64.FromDouble(1234.0), Register64.FromDouble(5678.0)).Should().Be((Register64.FromDouble(5678.0), Register64.FromDouble(1234.0)));
+		_cpu.Fxch(Register64.FromDouble(1234.0), Register64.FromDouble(5678.0))
+			.Should()
+			.Be((Register64.FromDouble(5678.0), Register64.FromDouble(1234.0)));
 	}
 
 	[Theory]
@@ -860,7 +907,9 @@ public class CpuTests
 	{
 		_cpu.Edx = new Register64(dividend).High;
 		_cpu.Eax = new Register64(dividend).Low;
-		_cpu.Invoking(cpu => cpu.Idiv(new Register32(divisor))).Should().Throw<ArithmeticException>();
+		_cpu.Invoking(cpu => cpu.Idiv(new Register32(divisor)))
+			.Should()
+			.Throw<ArithmeticException>();
 	}
 
 	[Theory]
@@ -1104,7 +1153,9 @@ public class CpuTests
 	#endregion
 	public void Imul32TwoOperandTest(uint left, uint right, ulong result, bool carry, bool overflow)
 	{
-		_cpu.Imul(new Register32(left), new Register32(right)).Should().Be(new Register64(result).Low);
+		_cpu.Imul(new Register32(left), new Register32(right))
+			.Should()
+			.Be(new Register64(result).Low);
 		_cpu.Eflags.Carry.Should().Be(carry);
 		_cpu.Eflags.Overflow.Should().Be(overflow);
 	}
@@ -1370,7 +1421,15 @@ public class CpuTests
 	[InlineData(0xFFFFFFFF, 0x20, 0xFFFFFFFF, null, null, null, null)]
 	[InlineData(0xFFFFFFFF, 0x21, 0xFFFFFFFF, true, false, true, false)]
 	#endregion
-	public void Sar32Test(uint value, byte count, uint result, bool? carry, bool? zero, bool? sign, bool? overflow)
+	public void Sar32Test(
+		uint value,
+		byte count,
+		uint result,
+		bool? carry,
+		bool? zero,
+		bool? sign,
+		bool? overflow
+	)
 	{
 		_cpu.Sar(new Register32(value), new Register8(count)).Should().Be(new Register32(result));
 		if (carry.HasValue)
@@ -1586,7 +1645,16 @@ public class CpuTests
 	[InlineData(true, 0xFFFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, false, false, false, true)]
 	[InlineData(true, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, true, false, true, false)]
 	#endregion
-	public void Sbb32Test(bool borrow, uint left, uint right, uint result, bool carry, bool zero, bool sign, bool overflow)
+	public void Sbb32Test(
+		bool borrow,
+		uint left,
+		uint right,
+		uint result,
+		bool carry,
+		bool zero,
+		bool sign,
+		bool overflow
+	)
 	{
 		_cpu.Eflags.Carry = borrow;
 		_cpu.Sbb(new Register32(left), new Register32(right)).Should().Be(new Register32(result));
@@ -1863,7 +1931,15 @@ public class CpuTests
 	[InlineData(0xFFFFFFFF, 0x20, 0xFFFFFFFF, null, null, null, null)]
 	[InlineData(0xFFFFFFFF, 0x21, 0xFFFFFFFE, null, false, true, false)]
 	#endregion
-	public void Shl32Test(uint value, byte count, uint result, bool? carry, bool? zero, bool? sign, bool? overflow)
+	public void Shl32Test(
+		uint value,
+		byte count,
+		uint result,
+		bool? carry,
+		bool? zero,
+		bool? sign,
+		bool? overflow
+	)
 	{
 		_cpu.Shl(new Register32(value), new Register8(count)).Should().Be(new Register32(result));
 		if (carry.HasValue)
@@ -1919,7 +1995,15 @@ public class CpuTests
 	[InlineData(0xFFFFFFFF, 0x20, 0xFFFFFFFF, null, null, null, null)]
 	[InlineData(0xFFFFFFFF, 0x21, 0x7FFFFFFF, true, false, false, true)]
 	#endregion
-	public void Shr32Test(uint value, byte count, uint result, bool? carry, bool? zero, bool? sign, bool? overflow)
+	public void Shr32Test(
+		uint value,
+		byte count,
+		uint result,
+		bool? carry,
+		bool? zero,
+		bool? sign,
+		bool? overflow
+	)
 	{
 		_cpu.Shr(new Register32(value), new Register8(count)).Should().Be(new Register32(result));
 		if (carry.HasValue)
@@ -1984,7 +2068,15 @@ public class CpuTests
 	[InlineData(0xFFFF, 0x7FFF, 0x8000, false, false, true, false)]
 	[InlineData(0xFFFF, 0xFFFF, 0x0000, false, true, false, false)]
 	#endregion
-	public void Sub16Test(ushort left, ushort right, ushort result, bool carry, bool zero, bool sign, bool overflow)
+	public void Sub16Test(
+		ushort left,
+		ushort right,
+		ushort result,
+		bool carry,
+		bool zero,
+		bool sign,
+		bool overflow
+	)
 	{
 		_cpu.Sub(new Register16(left), new Register16(right)).Should().Be(new Register16(result));
 		_cpu.Eflags.Carry.Should().Be(carry);
@@ -2096,7 +2188,15 @@ public class CpuTests
 	[InlineData(0xFFFFFFFF, 0x7FFFFFFF, 0x80000000, false, false, true, false)]
 	[InlineData(0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, false, true, false, false)]
 	#endregion
-	public void Sub32Test(uint left, uint right, uint result, bool carry, bool zero, bool sign, bool overflow)
+	public void Sub32Test(
+		uint left,
+		uint right,
+		uint result,
+		bool carry,
+		bool zero,
+		bool sign,
+		bool overflow
+	)
 	{
 		_cpu.Sub(new Register32(left), new Register32(right)).Should().Be(new Register32(result));
 		_cpu.Eflags.Carry.Should().Be(carry);

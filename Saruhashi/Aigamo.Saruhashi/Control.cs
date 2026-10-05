@@ -154,7 +154,8 @@ public class Control : IDisposable, IBindableComponent
 		SetStyle(ControlStyles.StandardClick, true);
 	}
 
-	internal Control(WindowManager windowManager) : this()
+	internal Control(WindowManager windowManager)
+		: this()
 	{
 		_windowManager = windowManager;
 	}
@@ -212,7 +213,8 @@ public class Control : IDisposable, IBindableComponent
 	internal Rectangle ClipRectangle => GetClipRectangle(ScreenRectangle);
 	public ControlCollection Controls => _controls ??= new ControlCollection(this);
 	public bool Created => _state.HasFlag(States.Created);
-	public ControlBindingsCollection DataBindings => _bindings ??= new ControlBindingsCollection(this);
+	public ControlBindingsCollection DataBindings =>
+		_bindings ??= new ControlBindingsCollection(this);
 	protected virtual Size DefaultSize => Size.Empty;
 	internal bool DesiredVisibility => GetState(States.Visible);
 
@@ -601,7 +603,9 @@ public class Control : IDisposable, IBindableComponent
 				if (Capture && WindowManager.WindowFromPoint(e.Location) == this)
 				{
 					OnClick(EventArgs.Empty);
-					OnMouseClick(new MouseEventArgs(e.Button, e.Clicks, PointToClient(e.Location), e.Delta));
+					OnMouseClick(
+						new MouseEventArgs(e.Button, e.Clicks, PointToClient(e.Location), e.Delta)
+					);
 				}
 			}
 
@@ -628,9 +632,13 @@ public class Control : IDisposable, IBindableComponent
 	}
 
 	protected virtual void OnClick(EventArgs e) => Click?.Invoke(this, e);
+
 	protected virtual void OnControlAdded(ControlEventArgs e) => ControlAdded?.Invoke(this, e);
+
 	protected virtual void OnControlRemoved(ControlEventArgs e) => ControlRemoved?.Invoke(this, e);
+
 	protected virtual void OnCreateControl() { }
+
 	protected virtual void OnGotFocus(EventArgs e) => GotFocus?.Invoke(this, e);
 
 	protected virtual void OnKeyDown(KeyEventArgs e)
@@ -678,7 +686,10 @@ public class Control : IDisposable, IBindableComponent
 	}
 
 	protected virtual void OnLostFocus(EventArgs e) => LostFocus?.Invoke(this, e);
-	protected virtual void OnMouseCaptureChanged(EventArgs e) => MouseCaptureChanged?.Invoke(this, e);
+
+	protected virtual void OnMouseCaptureChanged(EventArgs e) =>
+		MouseCaptureChanged?.Invoke(this, e);
+
 	protected virtual void OnMouseClick(MouseEventArgs e) => MouseClick?.Invoke(this, e);
 
 	protected virtual void OnMouseDown(MouseEventArgs e)
@@ -689,9 +700,13 @@ public class Control : IDisposable, IBindableComponent
 	}
 
 	protected virtual void OnMouseEnter(EventArgs e) => MouseEnter?.Invoke(this, e);
+
 	protected virtual void OnMouseLeave(EventArgs e) => MouseLeave?.Invoke(this, e);
+
 	protected virtual void OnMouseMove(MouseEventArgs e) => MouseMove?.Invoke(this, e);
+
 	protected virtual void OnMouseUp(MouseEventArgs e) => MouseUp?.Invoke(this, e);
+
 	protected virtual void OnPaint(PaintEventArgs e) => Paint?.Invoke(this, e);
 
 	protected virtual void OnPaintBackground(PaintEventArgs e)
@@ -736,14 +751,20 @@ public class Control : IDisposable, IBindableComponent
 	}
 
 	public Point PointToClient(Point p) => p - (Size)ScreenLocation;
+
 	public Point PointToScreen(Point p) => ScreenLocation + (Size)p;
 
-	public Rectangle RectangleToClient(Rectangle r) => new Rectangle(PointToClient(r.Location), r.Size);
-	public Rectangle RectangleToScreen(Rectangle r) => new Rectangle(PointToScreen(r.Location), r.Size);
+	public Rectangle RectangleToClient(Rectangle r) =>
+		new Rectangle(PointToClient(r.Location), r.Size);
 
-	private protected void SetState(States flag, bool value) => _state = value ? (_state | flag) : (_state & ~flag);
+	public Rectangle RectangleToScreen(Rectangle r) =>
+		new Rectangle(PointToScreen(r.Location), r.Size);
 
-	protected void SetStyle(ControlStyles flag, bool value) => _controlStyle = value ? (_controlStyle | flag) : (_controlStyle & ~flag);
+	private protected void SetState(States flag, bool value) =>
+		_state = value ? (_state | flag) : (_state & ~flag);
+
+	protected void SetStyle(ControlStyles flag, bool value) =>
+		_controlStyle = value ? (_controlStyle | flag) : (_controlStyle & ~flag);
 
 	protected virtual void SetVisibleCore(bool value)
 	{

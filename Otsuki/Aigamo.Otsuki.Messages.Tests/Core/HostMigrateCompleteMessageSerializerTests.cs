@@ -10,11 +10,8 @@ public class HostMigrateCompleteMessageSerializerTests
 	{
 		yield return new object?[]
 		{
-				new byte[]
-				{
-					0xCE, 0x00, 0x00, 0x00,
-				},
-				new HostMigrateCompleteMessage(),
+			new byte[] { 0xCE, 0x00, 0x00, 0x00 },
+			new HostMigrateCompleteMessage(),
 		};
 	}
 

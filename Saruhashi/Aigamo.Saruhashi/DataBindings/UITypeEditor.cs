@@ -26,27 +26,41 @@ public class UITypeEditor
 		Hashtable intrinsicEditors = new Hashtable
 		{
 			// System.ComponentModel type Editors
-			[typeof(DateTime)] = "System.ComponentModel.Design.DateTimeEditor, " + AssemblyRef.SystemDesign,
-			[typeof(Array)] = "System.ComponentModel.Design.ArrayEditor, " + AssemblyRef.SystemDesign,
-			[typeof(IList)] = "System.ComponentModel.Design.CollectionEditor, " + AssemblyRef.SystemDesign,
-			[typeof(ICollection)] = "System.ComponentModel.Design.CollectionEditor, " + AssemblyRef.SystemDesign,
-			[typeof(byte[])] = "System.ComponentModel.Design.BinaryEditor, " + AssemblyRef.SystemDesign,
-			[typeof(Stream)] = "System.ComponentModel.Design.BinaryEditor, " + AssemblyRef.SystemDesign,
+			[typeof(DateTime)] =
+				"System.ComponentModel.Design.DateTimeEditor, " + AssemblyRef.SystemDesign,
+			[typeof(Array)] =
+				"System.ComponentModel.Design.ArrayEditor, " + AssemblyRef.SystemDesign,
+			[typeof(IList)] =
+				"System.ComponentModel.Design.CollectionEditor, " + AssemblyRef.SystemDesign,
+			[typeof(ICollection)] =
+				"System.ComponentModel.Design.CollectionEditor, " + AssemblyRef.SystemDesign,
+			[typeof(byte[])] =
+				"System.ComponentModel.Design.BinaryEditor, " + AssemblyRef.SystemDesign,
+			[typeof(Stream)] =
+				"System.ComponentModel.Design.BinaryEditor, " + AssemblyRef.SystemDesign,
 
 			// System.Windows.Forms type Editors
-			[typeof(string[])] = "System.Windows.Forms.Design.StringArrayEditor, " + AssemblyRef.SystemDesign,
-			[typeof(Collection<string>)] = "System.Windows.Forms.Design.StringCollectionEditor, " + AssemblyRef.SystemDesign,
-			[typeof(StringCollection)] = "System.Windows.Forms.Design.StringCollectionEditor, " + AssemblyRef.SystemDesign,
+			[typeof(string[])] =
+				"System.Windows.Forms.Design.StringArrayEditor, " + AssemblyRef.SystemDesign,
+			[typeof(Collection<string>)] =
+				"System.Windows.Forms.Design.StringCollectionEditor, " + AssemblyRef.SystemDesign,
+			[typeof(StringCollection)] =
+				"System.Windows.Forms.Design.StringCollectionEditor, " + AssemblyRef.SystemDesign,
 
 			// System.Drawing.Design type Editors
-			[typeof(Bitmap)] = "System.Drawing.Design.BitmapEditor, " + AssemblyRef.SystemDrawingDesign,
-			[typeof(Color)] = "System.Drawing.Design.ColorEditor, " + AssemblyRef.SystemDrawingDesign,
-			[typeof(ContentAlignment)] = "System.Drawing.Design.ContentAlignmentEditor, " + AssemblyRef.SystemDrawingDesign,
+			[typeof(Bitmap)] =
+				"System.Drawing.Design.BitmapEditor, " + AssemblyRef.SystemDrawingDesign,
+			[typeof(Color)] =
+				"System.Drawing.Design.ColorEditor, " + AssemblyRef.SystemDrawingDesign,
+			[typeof(ContentAlignment)] =
+				"System.Drawing.Design.ContentAlignmentEditor, " + AssemblyRef.SystemDrawingDesign,
 			[typeof(Font)] = "System.Drawing.Design.FontEditor, " + AssemblyRef.SystemDrawingDesign,
 			// no way to add Font.Name and associate it with FontNameEditor
 			[typeof(Icon)] = "System.Drawing.Design.IconEditor, " + AssemblyRef.SystemDrawingDesign,
-			[typeof(Image)] = "System.Drawing.Design.ImageEditor, " + AssemblyRef.SystemDrawingDesign,
-			[typeof(Metafile)] = "System.Drawing.Design.MetafileEditor, " + AssemblyRef.SystemDrawingDesign,
+			[typeof(Image)] =
+				"System.Drawing.Design.ImageEditor, " + AssemblyRef.SystemDrawingDesign,
+			[typeof(Metafile)] =
+				"System.Drawing.Design.MetafileEditor, " + AssemblyRef.SystemDrawingDesign,
 		};
 
 		// Add our intrinsic editors to TypeDescriptor.
@@ -63,7 +77,8 @@ public class UITypeEditor
 	/// </summary>
 	/// <param name="provider">An <see cref="IServiceProvider" /> that this editor can use to obtain services.</param>
 	/// <param name="value">The object to edit.</param>
-	public object EditValue(IServiceProvider provider, object value) => EditValue(null, provider, value);
+	public object EditValue(IServiceProvider provider, object value) =>
+		EditValue(null, provider, value);
 
 	/// <summary>
 	///  Edits the specified value using the editor style provided by <see cref='UITypeEditor.GetEditStyle()'/>.
@@ -71,7 +86,11 @@ public class UITypeEditor
 	/// <param name="context">The <see cref="ITypeDescriptorContext" /> that can be used to gain additional context information.</param>
 	/// <param name="provider">The <see cref="IServiceProvider" /> that this editor can use to obtain services.</param>
 	/// <param name="value">The object to edit.</param>
-	public virtual object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value) => value;
+	public virtual object EditValue(
+		ITypeDescriptorContext context,
+		IServiceProvider provider,
+		object value
+	) => value;
 
 	/// <summary>
 	///  Gets the <see cref='UITypeEditorEditStyle'/> of the Edit method.
@@ -93,7 +112,8 @@ public class UITypeEditor
 	///  Gets the editing style of the Edit method.
 	/// </summary>
 	/// <param name="context">The <see cref="ITypeDescriptorContext" /> that can be used to gain additional context information. </param>
-	public virtual UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context) => UITypeEditorEditStyle.None;
+	public virtual UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context) =>
+		UITypeEditorEditStyle.None;
 
 	/// <summary>
 	///  Paints a representative value of the specified object to the specified canvas.
@@ -101,7 +121,8 @@ public class UITypeEditor
 	/// <param name="value">The object whose value this type editor will display. </param>
 	/// <param name="canvas">A drawing canvas on which to paint the representation of the object's value. </param>
 	/// <param name="rectangle">A <see cref="Rectangle" /> within whose boundaries to paint the value. </param>
-	public void PaintValue(object value, Graphics canvas, Rectangle rectangle) => PaintValue(new PaintValueEventArgs(null, value, canvas, rectangle));
+	public void PaintValue(object value, Graphics canvas, Rectangle rectangle) =>
+		PaintValue(new PaintValueEventArgs(null, value, canvas, rectangle));
 
 	/// <summary>
 	///  Paints a representative value of the specified object to the specified canvas.

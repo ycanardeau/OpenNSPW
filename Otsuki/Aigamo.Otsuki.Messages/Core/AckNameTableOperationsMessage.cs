@@ -51,7 +51,9 @@ public sealed record AckNameTableOperationsMessage : ICoreMessage
 			var builder = new StringBuilder();
 			builder.AppendLine($"{nameof(Entry)}:");
 			builder.AppendLine($"\t{nameof(MessageId)}: {MessageId}");
-			builder.AppendLine($"\t{nameof(Operation)}: {BitConverter.ToString(Operation.ToArray())}");
+			builder.AppendLine(
+				$"\t{nameof(Operation)}: {BitConverter.ToString(Operation.ToArray())}"
+			);
 			return builder.ToString();
 		}
 	}
@@ -70,16 +72,27 @@ public sealed record AckNameTableOperationsMessage : ICoreMessage
 
 	public IImmutableList<ICoreMessage?> Entries
 	{
-		get => EntriesInternal
-			.Select(entry => CoreMessageSerializer.Default.Deserialize(BitConverter.GetBytes((int)entry.MessageId).Concat(entry.Operation).ToArray()))
-			.ToImmutableArray();
-		init => EntriesInternal = value
-			.Select(entry => new Entry
-			{
-				MessageId = entry?.PacketType ?? 0,
-				Operation = entry is not null ? CoreMessageSerializer.Default.Serialize(entry).Skip(4).ToImmutableArray() : ImmutableArray<byte>.Empty,
-			})
-			.ToImmutableArray();
+		get =>
+			EntriesInternal
+				.Select(entry =>
+					CoreMessageSerializer.Default.Deserialize(
+						BitConverter
+							.GetBytes((int)entry.MessageId)
+							.Concat(entry.Operation)
+							.ToArray()
+					)
+				)
+				.ToImmutableArray();
+		init =>
+			EntriesInternal = value
+				.Select(entry => new Entry
+				{
+					MessageId = entry?.PacketType ?? 0,
+					Operation = entry is not null
+						? CoreMessageSerializer.Default.Serialize(entry).Skip(4).ToImmutableArray()
+						: ImmutableArray<byte>.Empty,
+				})
+				.ToImmutableArray();
 	}
 
 	public AckNameTableOperationsMessage() { }
@@ -91,13 +104,16 @@ public sealed record AckNameTableOperationsMessage : ICoreMessage
 		builder.AppendLine($"\t{nameof(NumEntries)}: {NumEntries}");
 
 		foreach (var e in Entries)
-			builder.AppendLine(string.Join("\n", (e?.ToString() ?? string.Empty).Split('\n').Select(l => "\t" + l)));
+			builder.AppendLine(
+				string.Join("\n", (e?.ToString() ?? string.Empty).Split('\n').Select(l => "\t" + l))
+			);
 
 		return builder.ToString();
 	}
 }
 
-internal class AckNameTableOperationsMessageSerializer : ICoreMessageSerializer<AckNameTableOperationsMessage>
+internal class AckNameTableOperationsMessageSerializer
+	: ICoreMessageSerializer<AckNameTableOperationsMessage>
 {
 	public static AckNameTableOperationsMessageSerializer Default { get; } = new();
 
@@ -133,19 +149,15 @@ internal class AckNameTableOperationsMessageSerializer : ICoreMessageSerializer<
 			};
 		}
 
-		return new()
-		{
-			EntriesInternal = entries.ToImmutableArray(),
-		};
+		return new() { EntriesInternal = entries.ToImmutableArray() };
 	}
 
 	public virtual void Write(BinaryWriter writer, AckNameTableOperationsMessage message)
 	{
 		writer.Write((int)message.PacketType);
 		var endOfPacketType = writer.BaseStream.Position;
-		var offset = 4
-			+ 12 * message.NumEntries
-			+ message.EntriesInternal.Sum(e => e.OperationSize);
+		var offset =
+			4 + 12 * message.NumEntries + message.EntriesInternal.Sum(e => e.OperationSize);
 
 		var operationOffsets = new int[message.NumEntries];
 		for (var i = 0; i < message.NumEntries; i++)

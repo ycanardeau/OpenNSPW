@@ -10,12 +10,8 @@ public class SendPlayerDpnidMessageSerializerTests
 	{
 		yield return new object?[]
 		{
-				new byte[]
-				{
-				},
-				new SendPlayerDpnidMessage
-				{
-				},
+			new byte[] { },
+			new SendPlayerDpnidMessage { },
 		};
 	}
 

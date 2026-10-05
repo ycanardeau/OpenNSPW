@@ -122,13 +122,19 @@ public sealed record DataFrameMessage : IReliableMessage
 	public bool Reliable
 	{
 		get => Command.HasFlag(PacketCommand.Reliable);
-		init => Command = value ? (Command | PacketCommand.Reliable) : (Command & ~PacketCommand.Reliable);
+		init =>
+			Command = value
+				? (Command | PacketCommand.Reliable)
+				: (Command & ~PacketCommand.Reliable);
 	}
 
 	public bool Sequential
 	{
 		get => Command.HasFlag(PacketCommand.Sequential);
-		init => Command = value ? (Command | PacketCommand.Sequential) : (Command & ~PacketCommand.Sequential);
+		init =>
+			Command = value
+				? (Command | PacketCommand.Sequential)
+				: (Command & ~PacketCommand.Sequential);
 	}
 
 	public bool Poll
@@ -140,73 +146,95 @@ public sealed record DataFrameMessage : IReliableMessage
 	public bool NewMessage
 	{
 		get => Command.HasFlag(PacketCommand.NewMessage);
-		init => Command = value ? (Command | PacketCommand.NewMessage) : (Command & ~PacketCommand.NewMessage);
+		init =>
+			Command = value
+				? (Command | PacketCommand.NewMessage)
+				: (Command & ~PacketCommand.NewMessage);
 	}
 
 	public bool EndMessage
 	{
 		get => Command.HasFlag(PacketCommand.EndMessage);
-		init => Command = value ? (Command | PacketCommand.EndMessage) : (Command & ~PacketCommand.EndMessage);
+		init =>
+			Command = value
+				? (Command | PacketCommand.EndMessage)
+				: (Command & ~PacketCommand.EndMessage);
 	}
 
 	public bool User1
 	{
 		get => Command.HasFlag(PacketCommand.User1);
-		init => Command = value ? (Command | PacketCommand.User1) : (Command & ~PacketCommand.User1);
+		init =>
+			Command = value ? (Command | PacketCommand.User1) : (Command & ~PacketCommand.User1);
 	}
 
 	public bool User2
 	{
 		get => Command.HasFlag(PacketCommand.User2);
-		init => Command = value ? (Command | PacketCommand.User2) : (Command & ~PacketCommand.User2);
+		init =>
+			Command = value ? (Command | PacketCommand.User2) : (Command & ~PacketCommand.User2);
 	}
 
 	public bool Retry
 	{
 		get => Control.HasFlag(PacketControl.Retry);
-		init => Control = value ? (Control | PacketControl.Retry) : (Control & ~PacketControl.Retry);
+		init =>
+			Control = value ? (Control | PacketControl.Retry) : (Control & ~PacketControl.Retry);
 	}
 
 	public bool KeepAliveOrCorrelate
 	{
 		get => Control.HasFlag(PacketControl.KeepAliveOrCorrelate);
-		private init => Control = value ? (Control | PacketControl.KeepAliveOrCorrelate) : (Control & ~PacketControl.KeepAliveOrCorrelate);
+		private init =>
+			Control = value
+				? (Control | PacketControl.KeepAliveOrCorrelate)
+				: (Control & ~PacketControl.KeepAliveOrCorrelate);
 	}
 
 	public bool Coalesce
 	{
 		get => Control.HasFlag(PacketControl.Coalesce);
-		init => Control = value ? (Control | PacketControl.Coalesce) : (Control & ~PacketControl.Coalesce);
+		init =>
+			Control = value
+				? (Control | PacketControl.Coalesce)
+				: (Control & ~PacketControl.Coalesce);
 	}
 
 	public bool EndStream
 	{
 		get => Control.HasFlag(PacketControl.EndStream);
-		init => Control = value ? (Control | PacketControl.EndStream) : (Control & ~PacketControl.EndStream);
+		init =>
+			Control = value
+				? (Control | PacketControl.EndStream)
+				: (Control & ~PacketControl.EndStream);
 	}
 
 	public bool Sack1
 	{
 		get => Control.HasFlag(PacketControl.Sack1);
-		private init => Control = value ? (Control | PacketControl.Sack1) : (Control & ~PacketControl.Sack1);
+		private init =>
+			Control = value ? (Control | PacketControl.Sack1) : (Control & ~PacketControl.Sack1);
 	}
 
 	public bool Sack2
 	{
 		get => Control.HasFlag(PacketControl.Sack2);
-		private init => Control = value ? (Control | PacketControl.Sack2) : (Control & ~PacketControl.Sack2);
+		private init =>
+			Control = value ? (Control | PacketControl.Sack2) : (Control & ~PacketControl.Sack2);
 	}
 
 	public bool Send1
 	{
 		get => Control.HasFlag(PacketControl.Send1);
-		private init => Control = value ? (Control | PacketControl.Send1) : (Control & ~PacketControl.Send1);
+		private init =>
+			Control = value ? (Control | PacketControl.Send1) : (Control & ~PacketControl.Send1);
 	}
 
 	public bool Send2
 	{
 		get => Control.HasFlag(PacketControl.Send2);
-		private init => Control = value ? (Control | PacketControl.Send2) : (Control & ~PacketControl.Send2);
+		private init =>
+			Control = value ? (Control | PacketControl.Send2) : (Control & ~PacketControl.Send2);
 	}
 
 	public ulong SackMask
@@ -221,16 +249,17 @@ public sealed record DataFrameMessage : IReliableMessage
 		init => (SendMask1, SendMask2) = (value.LowUInt32, value.HighUInt32);
 	}
 
-	public override string ToString() => $"{nameof(DataFrameMessage)} [" +
-		$"{nameof(Command)}={Command}, " +
-		$"{nameof(Control)}={Control}, " +
-		$"{nameof(SequenceId)}={SequenceId}, " +
-		$"{nameof(NextReceive)}={NextReceive}, " +
-		$"{nameof(SackMask)}={SackMask}, " +
-		$"{nameof(SendMask)}={SendMask}, " +
-		$"{nameof(Signature)}={Signature}, " +
-		$"{nameof(SessionId)}={SessionId}, " +
-		$"{nameof(Payload)}={BitConverter.ToString(Payload.ToArray())}]";
+	public override string ToString() =>
+		$"{nameof(DataFrameMessage)} ["
+		+ $"{nameof(Command)}={Command}, "
+		+ $"{nameof(Control)}={Control}, "
+		+ $"{nameof(SequenceId)}={SequenceId}, "
+		+ $"{nameof(NextReceive)}={NextReceive}, "
+		+ $"{nameof(SackMask)}={SackMask}, "
+		+ $"{nameof(SendMask)}={SendMask}, "
+		+ $"{nameof(Signature)}={Signature}, "
+		+ $"{nameof(SessionId)}={SessionId}, "
+		+ $"{nameof(Payload)}={BitConverter.ToString(Payload.ToArray())}]";
 }
 
 internal class DataFrameMessageSerializer : IReliableMessageSerializer<DataFrameMessage>
@@ -239,7 +268,9 @@ internal class DataFrameMessageSerializer : IReliableMessageSerializer<DataFrame
 
 	public virtual DataFrameMessage? Read(BinaryReader reader)
 	{
-		var enableSigning = false/* TODO */;
+		var enableSigning =
+			false /* TODO */
+		;
 
 		var command = (PacketCommand)reader.ReadByte();
 		var control = (PacketControl)reader.ReadByte();
@@ -250,7 +281,9 @@ internal class DataFrameMessageSerializer : IReliableMessageSerializer<DataFrame
 		var sendMask1 = control.HasFlag(PacketControl.Send1) ? reader.ReadUInt32() : 0;
 		var sendMask2 = control.HasFlag(PacketControl.Send2) ? reader.ReadUInt32() : 0;
 		var signature = enableSigning ? reader.ReadInt64() : 0;
-		var sessionId = control.HasFlag(PacketControl.KeepAliveOrCorrelate) ? new SessionId(reader.ReadInt32()) : SessionId.Empty;
+		var sessionId = control.HasFlag(PacketControl.KeepAliveOrCorrelate)
+			? new SessionId(reader.ReadInt32())
+			: SessionId.Empty;
 
 		static byte[] ReadPayload(Stream source)
 		{
@@ -258,7 +291,9 @@ internal class DataFrameMessageSerializer : IReliableMessageSerializer<DataFrame
 			source.CopyTo(stream);
 			return stream.ToArray();
 		}
-		var payload = !control.HasFlag(PacketControl.KeepAliveOrCorrelate) ? ReadPayload(reader.BaseStream).ToImmutableArray() : ImmutableArray<byte>.Empty;
+		var payload = !control.HasFlag(PacketControl.KeepAliveOrCorrelate)
+			? ReadPayload(reader.BaseStream).ToImmutableArray()
+			: ImmutableArray<byte>.Empty;
 
 		return new()
 		{
@@ -278,7 +313,9 @@ internal class DataFrameMessageSerializer : IReliableMessageSerializer<DataFrame
 
 	public virtual void Write(BinaryWriter writer, DataFrameMessage message)
 	{
-		var enableSigning = false/* TODO */;
+		var enableSigning =
+			false /* TODO */
+		;
 
 		writer.Write((byte)message.Command);
 		writer.Write((byte)message.Control);

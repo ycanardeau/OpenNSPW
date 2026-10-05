@@ -7,7 +7,8 @@ public class Form : Control
 	public event EventHandler? FormClosed;
 	public event EventHandler? Load;
 
-	public Form() : base()
+	public Form()
+		: base()
 	{
 		SetState(States.Visible, false);
 	}
@@ -50,5 +51,6 @@ public class Form : Control
 	}
 
 	protected virtual void OnFormClosed(EventArgs e) => FormClosed?.Invoke(this, e);
+
 	protected virtual void OnLoad(EventArgs e) => Load?.Invoke(this, e);
 }

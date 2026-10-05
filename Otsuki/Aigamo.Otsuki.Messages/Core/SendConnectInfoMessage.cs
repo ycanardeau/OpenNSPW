@@ -103,12 +103,14 @@ public sealed record SendConnectInfoMessage : ICoreMessage
 	/// <summary>
 	/// This field contains a variable-length array of DN_NAMETABLE_ENTRY_INFO structures. The length of this array is described above in the <b>dwEntryCount</b> field. Each entry in this array describes a player or group in the game session. In peer-to-peer mode, the <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/8195991d-b7e3-4435-9e9f-2c3ab57eda8c#gt_96048ee4-02d7-484e-a53b-3b8ed355251d">host</see> MUST transmit entries for all existing participants and the new participant. In <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/8195991d-b7e3-4435-9e9f-2c3ab57eda8c#gt_a907c749-671d-466b-b589-8c6dea31403f">client/server mode</see>, the server MUST transmit only two entries: one for the server player and one for the new participant.
 	/// </summary>
-	public IImmutableList<NameTableEntryInfo> NameTableEntries { get; init; } = ImmutableArray<NameTableEntryInfo>.Empty;
+	public IImmutableList<NameTableEntryInfo> NameTableEntries { get; init; } =
+		ImmutableArray<NameTableEntryInfo>.Empty;
 
 	/// <summary>
 	/// This field contains a variable-length array of DN_NAMETABLE_MEMBERSHIP_INFO structures. The length of this array is described above in the <b>dwMembershipCount</b> field. Each entry in this array describes a player/group combination.
 	/// </summary>
-	public IImmutableList<NameTableMembershipInfo> NameTableMemberships { get; init; } = ImmutableArray<NameTableMembershipInfo>.Empty;
+	public IImmutableList<NameTableMembershipInfo> NameTableMemberships { get; init; } =
+		ImmutableArray<NameTableMembershipInfo>.Empty;
 
 	/// <summary>
 	/// A variable-length field that contains a 0-terminated character array that specifies the application reserved data. This field's position is determined by <b>dwApplicationReservedDataOffset</b> and the size stated in <b>dwApplicationReservedDataSize</b>.
@@ -164,8 +166,12 @@ public sealed record SendConnectInfoMessage : ICoreMessage
 		foreach (var m in NameTableMemberships)
 			builder.AppendLine(string.Join("\n", m.ToString().Split('\n').Select(l => "\t" + l)));
 
-		builder.AppendLine($"\t{nameof(ApplicationReservedData)}: {BitConverter.ToString(ApplicationReservedData.ToArray())}");
-		builder.AppendLine($"\t{nameof(ReservedData)}: {BitConverter.ToString(ReservedData.ToArray())}");
+		builder.AppendLine(
+			$"\t{nameof(ApplicationReservedData)}: {BitConverter.ToString(ApplicationReservedData.ToArray())}"
+		);
+		builder.AppendLine(
+			$"\t{nameof(ReservedData)}: {BitConverter.ToString(ReservedData.ToArray())}"
+		);
 		builder.AppendLine($"\t{nameof(Password)}: {Password}");
 		builder.AppendLine($"\t{nameof(SessionName)}: {SessionName}");
 		builder.AppendLine($"\t{nameof(Reply)}: {BitConverter.ToString(Reply.ToArray())}");
@@ -296,15 +302,23 @@ internal class SendConnectInfoMessageSerializer : ICoreMessageSerializer<SendCon
 		var nameTableMemberships = new NameTableMembershipInfo[membershipCount];
 		for (var i = 0; i < nameTableMemberships.Length; i++)
 		{
-			reader.BaseStream.Seek(endOfPacketType + 108 + 48 * entryCount + 16 * i, SeekOrigin.Begin);
+			reader.BaseStream.Seek(
+				endOfPacketType + 108 + 48 * entryCount + 16 * i,
+				SeekOrigin.Begin
+			);
 			nameTableMemberships[i] = ReadNameTableMembershipInfo(reader);
 		}
 
 		var applicationReservedData = ImmutableArray<byte>.Empty;
 		if (applicationReservedDataOffset != 0)
 		{
-			reader.BaseStream.Seek(endOfPacketType + applicationReservedDataOffset, SeekOrigin.Begin);
-			applicationReservedData = reader.ReadBytes(applicationReservedDataSize).ToImmutableArray();
+			reader.BaseStream.Seek(
+				endOfPacketType + applicationReservedDataOffset,
+				SeekOrigin.Begin
+			);
+			applicationReservedData = reader
+				.ReadBytes(applicationReservedDataSize)
+				.ToImmutableArray();
 		}
 
 		var reservedData = ImmutableArray<byte>.Empty;
@@ -365,7 +379,10 @@ internal class SendConnectInfoMessageSerializer : ICoreMessageSerializer<SendCon
 		writer.Write((int)value.DnetVersion);
 	}
 
-	public virtual void WriteNameTableMembershipInfo(BinaryWriter writer, NameTableMembershipInfo value)
+	public virtual void WriteNameTableMembershipInfo(
+		BinaryWriter writer,
+		NameTableMembershipInfo value
+	)
 	{
 		writer.Write(value.DpnidPlayer.Value);
 		writer.Write(value.DpnidGroup.Value);
@@ -377,7 +394,8 @@ internal class SendConnectInfoMessageSerializer : ICoreMessageSerializer<SendCon
 	{
 		writer.Write((int)message.PacketType);
 		var endOfPacketType = writer.BaseStream.Position;
-		var offset = 108
+		var offset =
+			108
 			+ 48 * message.EntryCount
 			+ 16 * message.MembershipCount
 			+ message.NameTableEntries.Sum(e => e.UrlSize + e.DataSize + e.NameSize)
@@ -423,7 +441,10 @@ internal class SendConnectInfoMessageSerializer : ICoreMessageSerializer<SendCon
 		if (message.ApplicationReservedDataSize != 0)
 		{
 			applicationReservedDataOffset = offset -= message.ApplicationReservedDataSize;
-			writer.BaseStream.Seek(endOfPacketType + applicationReservedDataOffset, SeekOrigin.Begin);
+			writer.BaseStream.Seek(
+				endOfPacketType + applicationReservedDataOffset,
+				SeekOrigin.Begin
+			);
 			writer.Write(message.ApplicationReservedData.ToArray());
 		}
 

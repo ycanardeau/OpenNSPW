@@ -115,8 +115,14 @@ class Program
 		using (var stream = new MemoryStream(File.ReadAllBytes("NSPW_122.exe")))
 		{
 			var reader = new BinaryReader(stream);
-			var disassembler = new Disassembler(reader, subroutine.Start, subroutine.Length, parseContext);
-			while (disassembler.Disassemble()) ;
+			var disassembler = new Disassembler(
+				reader,
+				subroutine.Start,
+				subroutine.Length,
+				parseContext
+			);
+			while (disassembler.Disassemble())
+				;
 
 			var builder = new StringBuilder();
 			foreach (var line in disassembler.Lines)

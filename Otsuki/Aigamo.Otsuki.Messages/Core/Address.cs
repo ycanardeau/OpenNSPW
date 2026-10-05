@@ -61,14 +61,15 @@ internal class Address
 	{
 		get
 		{
-			static string ComponentToString(object value) => value switch
-			{
-				string o => Uri.EscapeDataString(o),
-				int o => o.ToString(),
-				Guid o => Uri.EscapeDataString(o.ToString("B").ToUpper()),
-				byte[] o => HttpUtility.UrlEncode(o).ToUpper(),
-				_ => throw new ArgumentException(),
-			};
+			static string ComponentToString(object value) =>
+				value switch
+				{
+					string o => Uri.EscapeDataString(o),
+					int o => o.ToString(),
+					Guid o => Uri.EscapeDataString(o.ToString("B").ToUpper()),
+					byte[] o => HttpUtility.UrlEncode(o).ToUpper(),
+					_ => throw new ArgumentException(),
+				};
 
 			return $"x-directplay:/{string.Join(";", _components.OrderByDescending(c => c.Key == KeyProvider).Select(c => $"{c.Key}={ComponentToString(c.Value)}").ToArray())}";
 		}
@@ -91,7 +92,11 @@ internal class Address
 			try
 			{
 				_components.Clear();
-				var components = value.Substring("x-directplay:/".Length).Split(';').Select(x => x.Split('=')).Select(x => (Key: x[0], Value: x[1]));
+				var components = value
+					.Substring("x-directplay:/".Length)
+					.Split(';')
+					.Select(x => x.Split('='))
+					.Select(x => (Key: x[0], Value: x[1]));
 				foreach (var (k, v) in components)
 					_components.Add(k, StringToComponent(v));
 			}
@@ -143,6 +148,7 @@ internal class Address
 	public string GetComponentString(string keyName) => (string)_components[keyName];
 
 	public bool Equals(Address address) => Url == address.Url;
+
 	public override bool Equals(object? obj) => obj is Address other && Equals(other);
 
 	public override int GetHashCode() => Url.GetHashCode();

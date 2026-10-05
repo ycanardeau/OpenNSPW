@@ -113,7 +113,8 @@ public sealed record NameTableEntryInfo
 	public bool GroupAutoDestruct
 	{
 		get => Flags.HasFlag(Flags.GroupAutoDestruct);
-		init => Flags = value ? (Flags | Flags.GroupAutoDestruct) : (Flags & ~Flags.GroupAutoDestruct);
+		init =>
+			Flags = value ? (Flags | Flags.GroupAutoDestruct) : (Flags & ~Flags.GroupAutoDestruct);
 	}
 
 	public bool Peer

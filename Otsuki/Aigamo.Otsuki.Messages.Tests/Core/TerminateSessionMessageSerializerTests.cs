@@ -10,12 +10,8 @@ public class TerminateSessionMessageSerializerTests
 	{
 		yield return new object?[]
 		{
-				new byte[]
-				{
-				},
-				new TerminateSessionMessage
-				{
-				},
+			new byte[] { },
+			new TerminateSessionMessage { },
 		};
 	}
 

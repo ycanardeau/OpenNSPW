@@ -167,17 +167,18 @@ public sealed record SackMessage : IReliableMessage
 		init => (SendMask1, SendMask2) = (value.LowUInt32, value.HighUInt32);
 	}
 
-	public override string ToString() => $"{nameof(SackMessage)} [" +
-		$"{nameof(Command)}={Command}, " +
-		$"{nameof(Opcode)}={Opcode}, " +
-		$"{nameof(Flags)}={Flags}, " +
-		$"{nameof(Retry)}={Retry}, " +
-		$"{nameof(NextSend)}={NextSend}, " +
-		$"{nameof(NextReceive)}={NextReceive}, " +
-		$"{nameof(Timestamp)}={Timestamp}, " +
-		$"{nameof(SackMask)}={SackMask}, " +
-		$"{nameof(SendMask)}={SendMask}, " +
-		$"{nameof(Signature)}={Signature}]";
+	public override string ToString() =>
+		$"{nameof(SackMessage)} ["
+		+ $"{nameof(Command)}={Command}, "
+		+ $"{nameof(Opcode)}={Opcode}, "
+		+ $"{nameof(Flags)}={Flags}, "
+		+ $"{nameof(Retry)}={Retry}, "
+		+ $"{nameof(NextSend)}={NextSend}, "
+		+ $"{nameof(NextReceive)}={NextReceive}, "
+		+ $"{nameof(Timestamp)}={Timestamp}, "
+		+ $"{nameof(SackMask)}={SackMask}, "
+		+ $"{nameof(SendMask)}={SendMask}, "
+		+ $"{nameof(Signature)}={Signature}]";
 }
 
 internal class SackMessageSerializer : IReliableMessageSerializer<SackMessage>
@@ -186,7 +187,9 @@ internal class SackMessageSerializer : IReliableMessageSerializer<SackMessage>
 
 	public virtual SackMessage? Read(BinaryReader reader)
 	{
-		var enableSigning = false/* TODO */;
+		var enableSigning =
+			false /* TODO */
+		;
 
 		var command = (PacketCommand)reader.ReadByte();
 
@@ -225,7 +228,9 @@ internal class SackMessageSerializer : IReliableMessageSerializer<SackMessage>
 
 	public virtual void Write(BinaryWriter writer, SackMessage message)
 	{
-		var enableSigning = false/* TODO */;
+		var enableSigning =
+			false /* TODO */
+		;
 
 		writer.Write((byte)message.Command);
 		writer.Write((byte)message.Opcode);

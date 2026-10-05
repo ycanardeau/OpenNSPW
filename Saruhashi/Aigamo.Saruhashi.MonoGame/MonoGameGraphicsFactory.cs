@@ -14,5 +14,6 @@ public sealed class MonoGameGraphicsFactory : IGraphicsFactory
 		ViewportAdapter = viewportAdapter;
 	}
 
-	public Graphics Create(Control control) => new MonoGameGraphics(control, SpriteBatch, ViewportAdapter);
+	public Graphics Create(Control control) =>
+		new MonoGameGraphics(control, SpriteBatch, ViewportAdapter);
 }

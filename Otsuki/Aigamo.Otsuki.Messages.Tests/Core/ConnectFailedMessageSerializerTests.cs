@@ -11,41 +11,86 @@ public class ConnectFailedMessageSerializerTests
 	{
 		yield return new object?[]
 		{
-				new byte[]
-				{
-					0xC5, 0x00, 0x00, 0x00, 0x90, 0x83, 0x15, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				},
-				new ConnectFailedMessage
-				{
-					ResultCode = ResultCode.InvalidInterface,
-					Reply = ImmutableArray<byte>.Empty,
-				},
+			new byte[]
+			{
+				0xC5,
+				0x00,
+				0x00,
+				0x00,
+				0x90,
+				0x83,
+				0x15,
+				0x80,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+			},
+			new ConnectFailedMessage
+			{
+				ResultCode = ResultCode.InvalidInterface,
+				Reply = ImmutableArray<byte>.Empty,
+			},
 		};
 
 		yield return new object?[]
 		{
-				new byte[]
-				{
-					0xC5, 0x00, 0x00, 0x00, 0x00, 0x83, 0x15, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				},
-				new ConnectFailedMessage
-				{
-					ResultCode = ResultCode.InvalidApplication,
-					Reply = ImmutableArray<byte>.Empty,
-				},
+			new byte[]
+			{
+				0xC5,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x83,
+				0x15,
+				0x80,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+			},
+			new ConnectFailedMessage
+			{
+				ResultCode = ResultCode.InvalidApplication,
+				Reply = ImmutableArray<byte>.Empty,
+			},
 		};
 
 		yield return new object?[]
 		{
-				new byte[]
-				{
-					0xC5, 0x00, 0x00, 0x00, 0x10, 0x84, 0x15, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				},
-				new ConnectFailedMessage
-				{
-					ResultCode = ResultCode.InvalidPassword,
-					Reply = ImmutableArray<byte>.Empty,
-				},
+			new byte[]
+			{
+				0xC5,
+				0x00,
+				0x00,
+				0x00,
+				0x10,
+				0x84,
+				0x15,
+				0x80,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+			},
+			new ConnectFailedMessage
+			{
+				ResultCode = ResultCode.InvalidPassword,
+				Reply = ImmutableArray<byte>.Empty,
+			},
 		};
 	}
 

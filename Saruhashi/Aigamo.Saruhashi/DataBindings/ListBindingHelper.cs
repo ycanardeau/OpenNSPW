@@ -66,7 +66,9 @@ public static class ListBindingHelper
 		PropertyDescriptor dmProp = dsProps.Find(dataMember, true);
 		if (dmProp is null)
 		{
-			throw new ArgumentException(string.Format(SR.DataSourceDataMemberPropNotFound, dataMember));
+			throw new ArgumentException(
+				string.Format(SR.DataSourceDataMemberPropNotFound, dataMember)
+			);
 		}
 
 		object currentItem;
@@ -166,7 +168,10 @@ public static class ListBindingHelper
 		return pdc;
 	}
 
-	public static PropertyDescriptorCollection GetListItemProperties(object list, PropertyDescriptor[] listAccessors)
+	public static PropertyDescriptorCollection GetListItemProperties(
+		object list,
+		PropertyDescriptor[] listAccessors
+	)
 	{
 		if (listAccessors is null || listAccessors.Length == 0)
 		{
@@ -191,20 +196,30 @@ public static class ListBindingHelper
 		return GetListItemPropertiesByInstance(target, listAccessors, 0);
 	}
 
-	public static PropertyDescriptorCollection GetListItemProperties(object dataSource, string dataMember, PropertyDescriptor[] listAccessors)
+	public static PropertyDescriptorCollection GetListItemProperties(
+		object dataSource,
+		string dataMember,
+		PropertyDescriptor[] listAccessors
+	)
 	{
 		dataSource = GetList(dataSource);
 
 		if (!string.IsNullOrEmpty(dataMember))
 		{
 			// Find the property on the data source specified by the data member
-			PropertyDescriptorCollection dsProps = ListBindingHelper.GetListItemProperties(dataSource);
+			PropertyDescriptorCollection dsProps = ListBindingHelper.GetListItemProperties(
+				dataSource
+			);
 			PropertyDescriptor dmProp = dsProps.Find(dataMember, true);
 
 			// Add the data member property to the list accessors
 			int len = (listAccessors is null) ? 1 : (listAccessors.Length + 1);
 			PropertyDescriptor[] listAccessors2 = new PropertyDescriptor[len];
-			listAccessors2[0] = dmProp ?? throw new ArgumentException(string.Format(SR.DataSourceDataMemberPropNotFound, dataMember));
+			listAccessors2[0] =
+				dmProp
+				?? throw new ArgumentException(
+					string.Format(SR.DataSourceDataMemberPropNotFound, dataMember)
+				);
 			for (int i = 1; i < len; ++i)
 			{
 				listAccessors2[i] = listAccessors[i - 1];
@@ -361,7 +376,11 @@ public static class ListBindingHelper
 		return name;
 	}
 
-	private static PropertyDescriptorCollection GetListItemPropertiesByType(Type type, PropertyDescriptor[] listAccessors, int startIndex)
+	private static PropertyDescriptorCollection GetListItemPropertiesByType(
+		Type type,
+		PropertyDescriptor[] listAccessors,
+		int startIndex
+	)
 	{
 		PropertyDescriptorCollection pdc = null;
 		if (listAccessors[startIndex] is null)
@@ -395,7 +414,11 @@ public static class ListBindingHelper
 		return pdc;
 	}
 
-	private static PropertyDescriptorCollection GetListItemPropertiesByEnumerable(IEnumerable iEnumerable, PropertyDescriptor[] listAccessors, int startIndex)
+	private static PropertyDescriptorCollection GetListItemPropertiesByEnumerable(
+		IEnumerable iEnumerable,
+		PropertyDescriptor[] listAccessors,
+		int startIndex
+	)
 	{
 		PropertyDescriptorCollection pdc = null;
 		object subList = null;
@@ -423,7 +446,11 @@ public static class ListBindingHelper
 		if (null == subList)
 		{
 			// Can't get shape by Instance, try by Type
-			pdc = GetListItemPropertiesByType(listAccessors[startIndex].PropertyType, listAccessors, startIndex);
+			pdc = GetListItemPropertiesByType(
+				listAccessors[startIndex].PropertyType,
+				listAccessors,
+				startIndex
+			);
 		}
 		else
 		{
@@ -440,7 +467,11 @@ public static class ListBindingHelper
 				else
 				{
 					// Looks like they want more (e.g. Customers.Orders.OrderDetails)
-					pdc = GetListItemPropertiesByEnumerable(ienumerableSubList, listAccessors, startIndex);
+					pdc = GetListItemPropertiesByEnumerable(
+						ienumerableSubList,
+						listAccessors,
+						startIndex
+					);
 				}
 			}
 			else
@@ -459,7 +490,11 @@ public static class ListBindingHelper
 		return (instance != null) ? instance.GetType() : typeof(object);
 	}
 
-	private static PropertyDescriptorCollection GetListItemPropertiesByInstance(object target, PropertyDescriptor[] listAccessors, int startIndex)
+	private static PropertyDescriptorCollection GetListItemPropertiesByInstance(
+		object target,
+		PropertyDescriptor[] listAccessors,
+		int startIndex
+	)
 	{
 		Debug.Assert(listAccessors != null);
 
@@ -479,7 +514,11 @@ public static class ListBindingHelper
 			if (value is null)
 			{
 				// It's null - we can't walk down by Instance so use Type
-				return GetListItemPropertiesByType(listAccessors[startIndex].PropertyType, listAccessors, startIndex);
+				return GetListItemPropertiesByType(
+					listAccessors[startIndex].PropertyType,
+					listAccessors,
+					startIndex
+				);
 			}
 			else
 			{
@@ -507,9 +546,11 @@ public static class ListBindingHelper
 	private static bool IsListBasedType(Type type)
 	{
 		// check for IList, ITypedList, IListSource
-		if (typeof(IList).IsAssignableFrom(type) ||
-			typeof(ITypedList).IsAssignableFrom(type) ||
-			typeof(IListSource).IsAssignableFrom(type))
+		if (
+			typeof(IList).IsAssignableFrom(type)
+			|| typeof(ITypedList).IsAssignableFrom(type)
+			|| typeof(IListSource).IsAssignableFrom(type)
+		)
 		{
 			return true;
 		}
@@ -565,7 +606,10 @@ public static class ListBindingHelper
 
 		for (int idx = 0; idx < props.Length; idx++)
 		{
-			if (props[idx].GetIndexParameters().Length > 0 && props[idx].PropertyType != typeof(object))
+			if (
+				props[idx].GetIndexParameters().Length > 0
+				&& props[idx].PropertyType != typeof(object)
+			)
 			{
 				indexer = props[idx];
 				//Prefer the standard indexer, if there is one
@@ -584,7 +628,9 @@ public static class ListBindingHelper
 		return TypeDescriptor.GetProperties(GetListItemType(type), BrowsableAttributeList);
 	}
 
-	private static PropertyDescriptorCollection GetListItemPropertiesByEnumerable(IEnumerable enumerable)
+	private static PropertyDescriptorCollection GetListItemPropertiesByEnumerable(
+		IEnumerable enumerable
+	)
 	{
 		PropertyDescriptorCollection pdc = null;
 		Type targetType = enumerable.GetType();
@@ -603,7 +649,10 @@ public static class ListBindingHelper
 			{
 				PropertyInfo indexer = GetTypedIndexer(targetType);
 
-				if (indexer != null && !typeof(ICustomTypeDescriptor).IsAssignableFrom(indexer.PropertyType))
+				if (
+					indexer != null
+					&& !typeof(ICustomTypeDescriptor).IsAssignableFrom(indexer.PropertyType)
+				)
 				{
 					Type type = indexer.PropertyType;
 					pdc = TypeDescriptor.GetProperties(type, BrowsableAttributeList);

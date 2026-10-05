@@ -13,9 +13,8 @@ namespace Aigamo.Saruhashi;
 [AttributeUsage(AttributeTargets.All)]
 internal sealed class SRCategoryAttribute : CategoryAttribute
 {
-	public SRCategoryAttribute(string category) : base(category)
-	{
-	}
+	public SRCategoryAttribute(string category)
+		: base(category) { }
 
 	protected override string GetLocalizedString(string value)
 	{

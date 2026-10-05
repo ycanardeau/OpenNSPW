@@ -55,11 +55,28 @@ public class ButtonRenderer : IButtonRenderer
 		}
 	}
 
-	public void DrawButton(Graphics graphics, Rectangle bounds, string? buttonText, IFont? font, bool focused, PushButtonState state)
+	public void DrawButton(
+		Graphics graphics,
+		Rectangle bounds,
+		string? buttonText,
+		IFont? font,
+		bool focused,
+		PushButtonState state
+	)
 	{
 		DrawButton(graphics, bounds, state);
 
-		var foreColor = state == PushButtonState.Disabled ? Color.FromArgb(101, 101, 101) : Color.FromArgb(241, 241, 241);
-		TextRenderer.DrawText(graphics, buttonText, font, bounds, foreColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+		var foreColor =
+			state == PushButtonState.Disabled
+				? Color.FromArgb(101, 101, 101)
+				: Color.FromArgb(241, 241, 241);
+		TextRenderer.DrawText(
+			graphics,
+			buttonText,
+			font,
+			bounds,
+			foreColor,
+			TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter
+		);
 	}
 }
