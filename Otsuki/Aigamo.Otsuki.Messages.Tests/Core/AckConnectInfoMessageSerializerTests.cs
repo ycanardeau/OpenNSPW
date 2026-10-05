@@ -11,13 +11,13 @@ public class AckConnectInfoMessageSerializerTests
 		yield return new object?[]
 		{
 			new byte[] { 0xC3, 0x00, 0x00, 0x00 },
-			new AckConnectInfoMessage(),
+			new CoreMessage.AckConnectInfo(),
 		};
 	}
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, AckConnectInfoMessage expected)
+	internal void Deserialize(byte[] data, CoreMessage.AckConnectInfo expected)
 	{
 		var message = AckConnectInfoMessageSerializer.Default.Deserialize(data);
 		message.PacketType.Should().Be(expected.PacketType);
@@ -25,7 +25,7 @@ public class AckConnectInfoMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, AckConnectInfoMessage message)
+	internal void Serialize(byte[] expected, CoreMessage.AckConnectInfo message)
 	{
 		AckConnectInfoMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}

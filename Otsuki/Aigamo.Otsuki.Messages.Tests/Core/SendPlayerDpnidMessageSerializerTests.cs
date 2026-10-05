@@ -11,13 +11,13 @@ public class SendPlayerDpnidMessageSerializerTests
 		yield return new object?[]
 		{
 			new byte[] { },
-			new SendPlayerDpnidMessage { },
+			new CoreMessage.SendPlayerDpnid { },
 		};
 	}
 
 	[Theory(Skip = "Not implemneted")]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, SendPlayerDpnidMessage expected)
+	internal void Deserialize(byte[] data, CoreMessage.SendPlayerDpnid expected)
 	{
 		var message = SendPlayerDpnidMessageSerializer.Default.Deserialize(data);
 		message.PacketType.Should().Be(expected.PacketType);
@@ -26,7 +26,7 @@ public class SendPlayerDpnidMessageSerializerTests
 
 	[Theory(Skip = "Not implemneted")]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, SendPlayerDpnidMessage message)
+	internal void Serialize(byte[] expected, CoreMessage.SendPlayerDpnid message)
 	{
 		SendPlayerDpnidMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}

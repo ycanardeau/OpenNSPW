@@ -29,13 +29,13 @@ public class InstructConnectMessageSerializerTests
 				0x00,
 				0x00,
 			},
-			new InstructConnectMessage { Dpnid = new Dpnid(0x0FEB7711), Version = 4 },
+			new CoreMessage.InstructConnect { Dpnid = new Dpnid(0x0FEB7711), Version = 4 },
 		};
 	}
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, InstructConnectMessage expected)
+	internal void Deserialize(byte[] data, CoreMessage.InstructConnect expected)
 	{
 		var message = InstructConnectMessageSerializer.Default.Deserialize(data);
 		message.PacketType.Should().Be(expected.PacketType);
@@ -46,7 +46,7 @@ public class InstructConnectMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, InstructConnectMessage message)
+	internal void Serialize(byte[] expected, CoreMessage.InstructConnect message)
 	{
 		InstructConnectMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}

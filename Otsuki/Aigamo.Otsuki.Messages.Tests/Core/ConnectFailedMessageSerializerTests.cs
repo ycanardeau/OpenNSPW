@@ -30,7 +30,7 @@ public class ConnectFailedMessageSerializerTests
 				0x00,
 				0x00,
 			},
-			new ConnectFailedMessage
+			new CoreMessage.ConnectFailed
 			{
 				ResultCode = ResultCode.InvalidInterface,
 				Reply = ImmutableArray<byte>.Empty,
@@ -58,7 +58,7 @@ public class ConnectFailedMessageSerializerTests
 				0x00,
 				0x00,
 			},
-			new ConnectFailedMessage
+			new CoreMessage.ConnectFailed
 			{
 				ResultCode = ResultCode.InvalidApplication,
 				Reply = ImmutableArray<byte>.Empty,
@@ -86,7 +86,7 @@ public class ConnectFailedMessageSerializerTests
 				0x00,
 				0x00,
 			},
-			new ConnectFailedMessage
+			new CoreMessage.ConnectFailed
 			{
 				ResultCode = ResultCode.InvalidPassword,
 				Reply = ImmutableArray<byte>.Empty,
@@ -96,7 +96,7 @@ public class ConnectFailedMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, ConnectFailedMessage expected)
+	internal void Deserialize(byte[] data, CoreMessage.ConnectFailed expected)
 	{
 		var message = ConnectFailedMessageSerializer.Default.Deserialize(data);
 		message.PacketType.Should().Be(expected.PacketType);
@@ -107,7 +107,7 @@ public class ConnectFailedMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, ConnectFailedMessage message)
+	internal void Serialize(byte[] expected, CoreMessage.ConnectFailed message)
 	{
 		ConnectFailedMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}

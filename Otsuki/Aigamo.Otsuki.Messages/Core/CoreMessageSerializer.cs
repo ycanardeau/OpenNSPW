@@ -1,10 +1,10 @@
 namespace Aigamo.Otsuki.Messages.Core;
 
-public class CoreMessageSerializer : ICoreMessageSerializer<ICoreMessage>
+public class CoreMessageSerializer : ICoreMessageSerializer<CoreMessage>
 {
 	public static CoreMessageSerializer Default { get; } = new();
 
-	public virtual ICoreMessage? Deserialize(byte[] data)
+	public virtual CoreMessage? Deserialize(byte[] data)
 	{
 		try
 		{
@@ -67,37 +67,34 @@ public class CoreMessageSerializer : ICoreMessageSerializer<ICoreMessage>
 		}
 	}
 
-	public virtual byte[] Serialize(ICoreMessage message) =>
-		message switch
-		{
-			PlayerConnectInfoMessage m => PlayerConnectInfoMessageSerializer.Default.Serialize(m),
-			ConnectFailedMessage m => ConnectFailedMessageSerializer.Default.Serialize(m),
-			SendConnectInfoMessage m => SendConnectInfoMessageSerializer.Default.Serialize(m),
-			AddPlayerMessage m => AddPlayerMessageSerializer.Default.Serialize(m),
-			AckConnectInfoMessage m => AckConnectInfoMessageSerializer.Default.Serialize(m),
-			InstructConnectMessage m => InstructConnectMessageSerializer.Default.Serialize(m),
-			SendPlayerDpnidMessage m => SendPlayerDpnidMessageSerializer.Default.Serialize(m),
-			InstructedConnectFailedMessage m =>
+	public virtual byte[] Serialize(CoreMessage message) =>
+		message.Match(
+			PlayerConnectInfo: static m => PlayerConnectInfoMessageSerializer.Default.Serialize(m),
+			ConnectFailed: static m => ConnectFailedMessageSerializer.Default.Serialize(m),
+			SendConnectInfo: static m => SendConnectInfoMessageSerializer.Default.Serialize(m),
+			AddPlayer: static m => AddPlayerMessageSerializer.Default.Serialize(m),
+			AckConnectInfo: static m => AckConnectInfoMessageSerializer.Default.Serialize(m),
+			InstructConnect: static m => InstructConnectMessageSerializer.Default.Serialize(m),
+			SendPlayerDpnid: static m => SendPlayerDpnidMessageSerializer.Default.Serialize(m),
+			InstructedConnectFailed: static m =>
 				InstructedConnectFailedMessageSerializer.Default.Serialize(m),
-			ConnectAttemptFailedMessage m =>
+			ConnectAttemptFailed: static m =>
 				ConnectAttemptFailedMessageSerializer.Default.Serialize(m),
-			TerminateSessionMessage m => TerminateSessionMessageSerializer.Default.Serialize(m),
-			DestroyPlayerMessage m => DestroyPlayerMessageSerializer.Default.Serialize(m),
-			HostMigrateMessage m => HostMigrateMessageSerializer.Default.Serialize(m),
-			NameTableVersionMessage m => NameTableVersionMessageSerializer.Default.Serialize(m),
-			ResyncVersionMessage m => ResyncVersionMessageSerializer.Default.Serialize(m),
-			RequestIntegrityCheckMessage m =>
+			TerminateSession: static m => TerminateSessionMessageSerializer.Default.Serialize(m),
+			DestroyPlayer: static m => DestroyPlayerMessageSerializer.Default.Serialize(m),
+			HostMigrate: static m => HostMigrateMessageSerializer.Default.Serialize(m),
+			NameTableVersion: static m => NameTableVersionMessageSerializer.Default.Serialize(m),
+			ResyncVersion: static m => ResyncVersionMessageSerializer.Default.Serialize(m),
+			RequestIntegrityCheck: static m =>
 				RequestIntegrityCheckMessageSerializer.Default.Serialize(m),
-			IntegrityCheckMessage m => IntegrityCheckMessageSerializer.Default.Serialize(m),
-			IntegrityCheckResponseMessage m =>
+			IntegrityCheck: static m => IntegrityCheckMessageSerializer.Default.Serialize(m),
+			IntegrityCheckResponse: static m =>
 				IntegrityCheckResponseMessageSerializer.Default.Serialize(m),
-			RequestNameTableOperationsMessage m =>
+			RequestNameTableOperations: static m =>
 				RequestNameTableOperationsMessageSerializer.Default.Serialize(m),
-			AckNameTableOperationsMessage m =>
+			AckNameTableOperations: static m =>
 				AckNameTableOperationsMessageSerializer.Default.Serialize(m),
-			HostMigrateCompleteMessage m => HostMigrateCompleteMessageSerializer.Default.Serialize(
-				m
-			),
-			_ => throw new ArgumentException(message: null, paramName: nameof(message)),
-		};
+			HostMigrateComplete: static m =>
+				HostMigrateCompleteMessageSerializer.Default.Serialize(m)
+		);
 }

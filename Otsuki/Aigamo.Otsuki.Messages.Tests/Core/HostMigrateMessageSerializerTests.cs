@@ -11,13 +11,13 @@ public class HostMigrateMessageSerializerTests
 		yield return new object?[]
 		{
 			new byte[] { },
-			new HostMigrateMessage { },
+			new CoreMessage.HostMigrate { },
 		};
 	}
 
 	[Theory(Skip = "Not implemneted")]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, HostMigrateMessage expected)
+	internal void Deserialize(byte[] data, CoreMessage.HostMigrate expected)
 	{
 		var message = HostMigrateMessageSerializer.Default.Deserialize(data);
 		message.PacketType.Should().Be(expected.PacketType);
@@ -27,7 +27,7 @@ public class HostMigrateMessageSerializerTests
 
 	[Theory(Skip = "Not implemneted")]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, HostMigrateMessage message)
+	internal void Serialize(byte[] expected, CoreMessage.HostMigrate message)
 	{
 		HostMigrateMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}

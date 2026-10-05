@@ -11,13 +11,13 @@ public class IntegrityCheckResponseMessageSerializerTests
 		yield return new object?[]
 		{
 			new byte[] { },
-			new IntegrityCheckResponseMessage { },
+			new CoreMessage.IntegrityCheckResponse { },
 		};
 	}
 
 	[Theory(Skip = "Not implemneted")]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, IntegrityCheckResponseMessage expected)
+	internal void Deserialize(byte[] data, CoreMessage.IntegrityCheckResponse expected)
 	{
 		var message = IntegrityCheckResponseMessageSerializer.Default.Deserialize(data);
 		message.PacketType.Should().Be(expected.PacketType);
@@ -26,7 +26,7 @@ public class IntegrityCheckResponseMessageSerializerTests
 
 	[Theory(Skip = "Not implemneted")]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, IntegrityCheckResponseMessage message)
+	internal void Serialize(byte[] expected, CoreMessage.IntegrityCheckResponse message)
 	{
 		IntegrityCheckResponseMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}

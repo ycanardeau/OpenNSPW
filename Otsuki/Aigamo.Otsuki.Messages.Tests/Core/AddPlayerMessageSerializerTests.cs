@@ -11,13 +11,13 @@ public class AddPlayerMessageSerializerTests
 		yield return new object?[]
 		{
 			new byte[] { },
-			new AddPlayerMessage { },
+			new CoreMessage.AddPlayer { },
 		};
 	}
 
 	[Theory(Skip = "Not implemneted")]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, AddPlayerMessage expected)
+	internal void Deserialize(byte[] data, CoreMessage.AddPlayer expected)
 	{
 		var message = AddPlayerMessageSerializer.Default.Deserialize(data);
 		message.PacketType.Should().Be(expected.PacketType);
@@ -34,7 +34,7 @@ public class AddPlayerMessageSerializerTests
 
 	[Theory(Skip = "Not implemneted")]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, AddPlayerMessage message)
+	internal void Serialize(byte[] expected, CoreMessage.AddPlayer message)
 	{
 		AddPlayerMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}

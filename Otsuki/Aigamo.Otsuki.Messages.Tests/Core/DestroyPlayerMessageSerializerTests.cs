@@ -33,7 +33,7 @@ public class DestroyPlayerMessageSerializerTests
 				0x00,
 				0x00,
 			},
-			new DestroyPlayerMessage
+			new CoreMessage.DestroyPlayer
 			{
 				DpnidLeaving = new Dpnid(0x118E99EE),
 				Version = 5,
@@ -44,7 +44,7 @@ public class DestroyPlayerMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, DestroyPlayerMessage expected)
+	internal void Deserialize(byte[] data, CoreMessage.DestroyPlayer expected)
 	{
 		var message = DestroyPlayerMessageSerializer.Default.Deserialize(data);
 		message.PacketType.Should().Be(expected.PacketType);
@@ -56,7 +56,7 @@ public class DestroyPlayerMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, DestroyPlayerMessage message)
+	internal void Serialize(byte[] expected, CoreMessage.DestroyPlayer message)
 	{
 		DestroyPlayerMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}

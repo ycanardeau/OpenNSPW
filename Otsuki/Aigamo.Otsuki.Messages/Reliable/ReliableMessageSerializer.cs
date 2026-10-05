@@ -1,10 +1,10 @@
 namespace Aigamo.Otsuki.Messages.Reliable;
 
-public class ReliableMessageSerializer : IReliableMessageSerializer<IReliableMessage>
+public class ReliableMessageSerializer : IReliableMessageSerializer<ReliableMessage>
 {
 	public static ReliableMessageSerializer Default { get; } = new();
 
-	public virtual IReliableMessage? Deserialize(byte[] data)
+	public virtual ReliableMessage? Deserialize(byte[] data)
 	{
 		// OPTIMIZE
 		try
@@ -51,14 +51,12 @@ public class ReliableMessageSerializer : IReliableMessageSerializer<IReliableMes
 		}
 	}
 
-	public virtual byte[] Serialize(IReliableMessage message) =>
-		message switch
-		{
-			ConnectMessage m => ConnectMessageSerializer.Default.Serialize(m),
-			ConnectedMessage m => ConnectedMessageSerializer.Default.Serialize(m),
-			HardDisconnectMessage m => HardDisconnectMessageSerializer.Default.Serialize(m),
-			SackMessage m => SackMessageSerializer.Default.Serialize(m),
-			DataFrameMessage m => DataFrameMessageSerializer.Default.Serialize(m),
-			_ => throw new ArgumentException(message: null, paramName: nameof(message)),
-		};
+	public virtual byte[] Serialize(ReliableMessage message) =>
+		message.Match(
+			DataFrame: static m => DataFrameMessageSerializer.Default.Serialize(m),
+			Connect: static m => ConnectMessageSerializer.Default.Serialize(m),
+			Connected: static m => ConnectedMessageSerializer.Default.Serialize(m),
+			HardDisconnect: static m => HardDisconnectMessageSerializer.Default.Serialize(m),
+			Sack: static m => SackMessageSerializer.Default.Serialize(m)
+		);
 }

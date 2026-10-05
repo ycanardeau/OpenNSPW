@@ -34,9 +34,9 @@ public class ReliableMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, IReliableMessage? expected, bool enableSigning)
+	internal void Deserialize(byte[] data, ReliableMessage? expected, bool enableSigning)
 	{
-		static byte[]? Serialize(IReliableMessage? message) =>
+		static byte[]? Serialize(ReliableMessage? message) =>
 			message is not null ? ReliableMessageSerializer.Default.Serialize(message) : null;
 		Serialize(ReliableMessageSerializer.Default.Deserialize(data))
 			.Should()

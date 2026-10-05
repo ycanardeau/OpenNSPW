@@ -11,13 +11,13 @@ public class RequestNameTableOperationsMessageSerializerTests
 		yield return new object?[]
 		{
 			new byte[] { 0xCB, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-			new RequestNameTableOperationsMessage { Version = 2 },
+			new CoreMessage.RequestNameTableOperations { Version = 2 },
 		};
 	}
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, RequestNameTableOperationsMessage expected)
+	internal void Deserialize(byte[] data, CoreMessage.RequestNameTableOperations expected)
 	{
 		var message = RequestNameTableOperationsMessageSerializer.Default.Deserialize(data);
 		message.PacketType.Should().Be(expected.PacketType);
@@ -27,7 +27,7 @@ public class RequestNameTableOperationsMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, RequestNameTableOperationsMessage message)
+	internal void Serialize(byte[] expected, CoreMessage.RequestNameTableOperations message)
 	{
 		RequestNameTableOperationsMessageSerializer
 			.Default.Serialize(message)

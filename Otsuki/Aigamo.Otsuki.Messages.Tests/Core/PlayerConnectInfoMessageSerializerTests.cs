@@ -135,10 +135,10 @@ public class PlayerConnectInfoMessageSerializerTests
 				0x00,
 				0x00,
 			},
-			new PlayerConnectInfoMessage
+			new CoreMessage.PlayerConnectInfo
 			{
 				Flags = ObjectType.Peer,
-				DnetVersion = (DnetVersion)8,
+				DnetVersion = DnetVersion.DirectX90b,
 				GuidInstance = new Guid("94be8123-a1ab-48fb-a2e7-23859e658936"),
 				GuidApplication = new Guid("61ef80da-691b-4247-9add-1c7bed2bc13e"),
 				AlternateAddresses = new[]
@@ -447,7 +447,7 @@ public class PlayerConnectInfoMessageSerializerTests
 				0x00,
 				0x00,
 			},
-			new PlayerConnectInfoMessage
+			new CoreMessage.PlayerConnectInfo
 			{
 				Flags = ObjectType.Peer,
 				DnetVersion = DnetVersion.DirectX90,
@@ -465,11 +465,133 @@ public class PlayerConnectInfoMessageSerializerTests
 				Name = "TestPlayer",
 			},
 		};
+
+		// DN_INTERNAL_MESSAGE_PLAYER_CONNECT_INFO (dwDNETVersion < 7) has no alternate address fields.
+		yield return new object?[]
+		{
+			new byte[]
+			{
+				0xC1,
+				0x00,
+				0x00,
+				0x00,
+				0x04,
+				0x00,
+				0x00,
+				0x00,
+				0x06,
+				0x00,
+				0x00,
+				0x00,
+				0x50,
+				0x00,
+				0x00,
+				0x00,
+				0x16,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0xC4,
+				0xE2,
+				0x4D,
+				0xEB,
+				0xB2,
+				0x79,
+				0x4A,
+				0x48,
+				0xA1,
+				0xA8,
+				0x7A,
+				0xA7,
+				0x5F,
+				0x55,
+				0x45,
+				0xD4,
+				0x54,
+				0x00,
+				0x65,
+				0x00,
+				0x73,
+				0x00,
+				0x74,
+				0x00,
+				0x50,
+				0x00,
+				0x6C,
+				0x00,
+				0x61,
+				0x00,
+				0x79,
+				0x00,
+				0x65,
+				0x00,
+				0x72,
+				0x00,
+				0x00,
+				0x00,
+			},
+			new CoreMessage.PlayerConnectInfo
+			{
+				Flags = ObjectType.Peer,
+				DnetVersion = DnetVersion.DirectX82,
+				GuidInstance = Guid.Empty,
+				GuidApplication = new Guid("eb4de2c4-79b2-484a-a1a8-7aa75f5545d4"),
+				Name = "TestPlayer",
+			},
+		};
 	}
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, PlayerConnectInfoMessage expected)
+	internal void Deserialize(byte[] data, CoreMessage.PlayerConnectInfo expected)
 	{
 		var message = PlayerConnectInfoMessageSerializer.Default.Deserialize(data);
 		message.PacketType.Should().Be(expected.PacketType);
@@ -497,8 +619,24 @@ public class PlayerConnectInfoMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, PlayerConnectInfoMessage message)
+	internal void Serialize(byte[] expected, CoreMessage.PlayerConnectInfo message)
 	{
 		PlayerConnectInfoMessageSerializer.Default.Serialize(message).Should().Equal(expected);
+	}
+
+	[Fact]
+	internal void Serialize_AlternateAddressesBeforeDirectX90_Throws()
+	{
+		var message = new CoreMessage.PlayerConnectInfo
+		{
+			DnetVersion = DnetVersion.DirectX82,
+			AlternateAddresses = new[]
+			{
+				new AlternateAddress(ImmutableIPAddress.Loopback, 2302),
+			}.ToImmutableArray(),
+		};
+
+		var act = () => PlayerConnectInfoMessageSerializer.Default.Serialize(message);
+		act.Should().Throw<ArgumentException>();
 	}
 }

@@ -29,7 +29,7 @@ public class HardDisconnectMessageSerializerTests
 				0x10,
 				0x02,
 			},
-			new HardDisconnectMessage
+			new ReliableMessage.HardDisconnect
 			{
 				MessageId = 0x0E,
 				ResponseId = 0x00,
@@ -43,7 +43,11 @@ public class HardDisconnectMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, HardDisconnectMessage expected, bool enableSigning)
+	internal void Deserialize(
+		byte[] data,
+		ReliableMessage.HardDisconnect expected,
+		bool enableSigning
+	)
 	{
 		var message = HardDisconnectMessageSerializer.Default.Deserialize(data);
 		message.Command.Should().Be(expected.Command);
@@ -58,7 +62,11 @@ public class HardDisconnectMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, HardDisconnectMessage message, bool enableSigning)
+	internal void Serialize(
+		byte[] expected,
+		ReliableMessage.HardDisconnect message,
+		bool enableSigning
+	)
 	{
 		HardDisconnectMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}

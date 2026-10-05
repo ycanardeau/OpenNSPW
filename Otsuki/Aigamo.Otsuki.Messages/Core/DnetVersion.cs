@@ -33,4 +33,12 @@ public enum DnetVersion
 	/// DirectX 9.0
 	/// </summary>
 	DirectX90 = 0x00000007,
+
+	/// <summary>
+	/// DirectX 9.0
+	/// </summary>
+	/// <remarks>
+	/// The spec lists both 0x00000007 and 0x00000008 as DirectX 9.0.
+	/// </remarks>
+	DirectX90b = 0x00000008,
 }

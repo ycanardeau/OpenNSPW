@@ -29,7 +29,7 @@ public class ConnectedMessageSerializerTests
 				0x04,
 				0x00,
 			},
-			new ConnectedMessage
+			new ReliableMessage.Connected
 			{
 				Poll = true,
 				MessageId = 0x00,
@@ -61,7 +61,7 @@ public class ConnectedMessageSerializerTests
 				0x67,
 				0x23,
 			},
-			new ConnectedMessage
+			new ReliableMessage.Connected
 			{
 				MessageId = 0x01,
 				ResponseId = 0x00,
@@ -92,7 +92,7 @@ public class ConnectedMessageSerializerTests
 				0xa2,
 				0x21,
 			},
-			new ConnectedMessage
+			new ReliableMessage.Connected
 			{
 				Poll = true,
 				MessageId = 0x00,
@@ -124,7 +124,7 @@ public class ConnectedMessageSerializerTests
 				0xa2,
 				0x21,
 			},
-			new ConnectedMessage
+			new ReliableMessage.Connected
 			{
 				MessageId = 0x01,
 				ResponseId = 0x00,
@@ -155,7 +155,7 @@ public class ConnectedMessageSerializerTests
 				0x44,
 				0x02,
 			},
-			new ConnectedMessage
+			new ReliableMessage.Connected
 			{
 				Poll = true,
 				MessageId = 0x11,
@@ -169,7 +169,7 @@ public class ConnectedMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, ConnectedMessage expected)
+	internal void Deserialize(byte[] data, ReliableMessage.Connected expected)
 	{
 		var message = ConnectedMessageSerializer.Default.Deserialize(data);
 		message.Command.Should().Be(expected.Command);
@@ -183,7 +183,7 @@ public class ConnectedMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, ConnectedMessage message)
+	internal void Serialize(byte[] expected, ReliableMessage.Connected message)
 	{
 		ConnectedMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}

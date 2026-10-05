@@ -10,6 +10,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageVersion Include="Aigamo.MatchGenerator" Version="0.0.0-preview026" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageVersion Include="FontStashSharp.MonoGame" Version="1.6.1" />
 		<PackageVersion Include="MonoGame.Content.Builder.Task" Version="3.8.5.1" />
 		<PackageVersion Include="MonoGame.Extended" Version="6.1.1" />

@@ -11,13 +11,13 @@ public class ConnectAttemptFailedMessageSerializerTests
 		yield return new object?[]
 		{
 			new byte[] { },
-			new ConnectAttemptFailedMessage { },
+			new CoreMessage.ConnectAttemptFailed { },
 		};
 	}
 
 	[Theory(Skip = "Not implemneted")]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, ConnectAttemptFailedMessage expected)
+	internal void Deserialize(byte[] data, CoreMessage.ConnectAttemptFailed expected)
 	{
 		var message = ConnectAttemptFailedMessageSerializer.Default.Deserialize(data);
 		message.PacketType.Should().Be(expected.PacketType);
@@ -26,7 +26,7 @@ public class ConnectAttemptFailedMessageSerializerTests
 
 	[Theory(Skip = "Not implemneted")]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, ConnectAttemptFailedMessage message)
+	internal void Serialize(byte[] expected, CoreMessage.ConnectAttemptFailed message)
 	{
 		ConnectAttemptFailedMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}

@@ -11,13 +11,13 @@ public class HostMigrateCompleteMessageSerializerTests
 		yield return new object?[]
 		{
 			new byte[] { 0xCE, 0x00, 0x00, 0x00 },
-			new HostMigrateCompleteMessage(),
+			new CoreMessage.HostMigrateComplete(),
 		};
 	}
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, HostMigrateCompleteMessage expected)
+	internal void Deserialize(byte[] data, CoreMessage.HostMigrateComplete expected)
 	{
 		var message = HostMigrateCompleteMessageSerializer.Default.Deserialize(data);
 		message.PacketType.Should().Be(expected.PacketType);
@@ -25,7 +25,7 @@ public class HostMigrateCompleteMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, HostMigrateCompleteMessage message)
+	internal void Serialize(byte[] expected, CoreMessage.HostMigrateComplete message)
 	{
 		HostMigrateCompleteMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}

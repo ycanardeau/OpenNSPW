@@ -11,7 +11,7 @@ public class SackMessageSerializerTests
 		yield return new object?[]
 		{
 			new byte[] { 0x80, 0x06, 0x01, 0x00, 0x03, 0x06, 0x00, 0x00, 0x07, 0x5D, 0x11, 0x00 },
-			new SackMessage
+			new ReliableMessage.Sack
 			{
 				Response = true,
 				Retry = 0,
@@ -25,7 +25,7 @@ public class SackMessageSerializerTests
 		yield return new object?[]
 		{
 			new byte[] { 0x80, 0x06, 0x01, 0x00, 0x04, 0x04, 0x00, 0x00, 0x64, 0xa2, 0xa2, 0x21 },
-			new SackMessage
+			new ReliableMessage.Sack
 			{
 				Response = true,
 				Retry = 0,
@@ -61,7 +61,7 @@ public class SackMessageSerializerTests
 				0x00,
 				0x00,
 			},
-			new SackMessage
+			new ReliableMessage.Sack
 			{
 				Response = true,
 				Retry = 1,
@@ -77,7 +77,7 @@ public class SackMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, SackMessage expected, bool enableSigning)
+	internal void Deserialize(byte[] data, ReliableMessage.Sack expected, bool enableSigning)
 	{
 		var message = SackMessageSerializer.Default.Deserialize(data);
 		message.Command.Should().Be(expected.Command);
@@ -95,8 +95,44 @@ public class SackMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, SackMessage message, bool enableSigning)
+	internal void Serialize(byte[] expected, ReliableMessage.Sack message, bool enableSigning)
 	{
 		SackMessageSerializer.Default.Serialize(message).Should().Equal(expected);
+	}
+
+	public static IEnumerable<object[]> RoundTripData()
+	{
+		// SACK_MASK1 set with a zero mask.
+		yield return new object[]
+		{
+			new byte[]
+			{
+				0x80,
+				0x06,
+				0x03,
+				0x00,
+				0x03,
+				0x06,
+				0x00,
+				0x00,
+				0x07,
+				0x5D,
+				0x11,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+				0x00,
+			},
+		};
+	}
+
+	[Theory]
+	[MemberData(nameof(RoundTripData))]
+	internal void RoundTrip_PreservesFlagsFromWire(byte[] data)
+	{
+		var message = SackMessageSerializer.Default.Deserialize(data);
+		message!.Flags.Should().Be((SackFlags)data[2]);
+		SackMessageSerializer.Default.Serialize(message).Should().Equal(data);
 	}
 }

@@ -29,7 +29,7 @@ public class ConnectMessageSerializerTests
 				0x67,
 				0x23,
 			},
-			new ConnectMessage
+			new ReliableMessage.Connect
 			{
 				Poll = true,
 				MessageId = 0x00,
@@ -61,7 +61,7 @@ public class ConnectMessageSerializerTests
 				0xa2,
 				0x21,
 			},
-			new ConnectMessage
+			new ReliableMessage.Connect
 			{
 				Poll = true,
 				MessageId = 0,
@@ -93,7 +93,7 @@ public class ConnectMessageSerializerTests
 				0x10,
 				0x02,
 			},
-			new ConnectMessage
+			new ReliableMessage.Connect
 			{
 				Poll = true,
 				MessageId = 0x0E,
@@ -107,7 +107,7 @@ public class ConnectMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, ConnectMessage expected)
+	internal void Deserialize(byte[] data, ReliableMessage.Connect expected)
 	{
 		var message = ConnectMessageSerializer.Default.Deserialize(data);
 		message.Command.Should().Be(expected.Command);
@@ -121,7 +121,7 @@ public class ConnectMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, ConnectMessage message)
+	internal void Serialize(byte[] expected, ReliableMessage.Connect message)
 	{
 		ConnectMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}

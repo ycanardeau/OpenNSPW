@@ -11,13 +11,13 @@ public class TerminateSessionMessageSerializerTests
 		yield return new object?[]
 		{
 			new byte[] { },
-			new TerminateSessionMessage { },
+			new CoreMessage.TerminateSession { },
 		};
 	}
 
 	[Theory(Skip = "Not implemneted")]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, TerminateSessionMessage expected)
+	internal void Deserialize(byte[] data, CoreMessage.TerminateSession expected)
 	{
 		var message = TerminateSessionMessageSerializer.Default.Deserialize(data);
 		message.PacketType.Should().Be(expected.PacketType);
@@ -26,7 +26,7 @@ public class TerminateSessionMessageSerializerTests
 
 	[Theory(Skip = "Not implemneted")]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, TerminateSessionMessage message)
+	internal void Serialize(byte[] expected, CoreMessage.TerminateSession message)
 	{
 		TerminateSessionMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}

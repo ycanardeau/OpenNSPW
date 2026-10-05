@@ -308,12 +308,12 @@ public class AckNameTableOperationsMessageSerializerTests
 				0x00,
 				0x00,
 			},
-			new AckNameTableOperationsMessage
+			new CoreMessage.AckNameTableOperations
 			{
-				Entries = new ICoreMessage?[]
+				Entries = new CoreMessage?[]
 				{
-					new InstructConnectMessage { Dpnid = new Dpnid(3145731), Version = 4 },
-					new AddPlayerMessage
+					new CoreMessage.InstructConnect { Dpnid = new Dpnid(3145731), Version = 4 },
+					new CoreMessage.AddPlayer
 					{
 						Dpnid = new Dpnid(5242885),
 						DpnidOwner = Dpnid.Empty,
@@ -326,7 +326,7 @@ public class AckNameTableOperationsMessageSerializerTests
 						Data = ImmutableArray<byte>.Empty,
 						Name = "14.01:45:32.3590000 (Peer)",
 					},
-					new InstructConnectMessage { Dpnid = new Dpnid(5242885), Version = 6 },
+					new CoreMessage.InstructConnect { Dpnid = new Dpnid(5242885), Version = 6 },
 					null,
 					null,
 				}.ToImmutableArray(),
@@ -336,7 +336,7 @@ public class AckNameTableOperationsMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, AckNameTableOperationsMessage expected)
+	internal void Deserialize(byte[] data, CoreMessage.AckNameTableOperations expected)
 	{
 		var message = AckNameTableOperationsMessageSerializer.Default.Deserialize(data);
 		message.PacketType.Should().Be(expected.PacketType);
@@ -350,7 +350,7 @@ public class AckNameTableOperationsMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, AckNameTableOperationsMessage message)
+	internal void Serialize(byte[] expected, CoreMessage.AckNameTableOperations message)
 	{
 		AckNameTableOperationsMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}

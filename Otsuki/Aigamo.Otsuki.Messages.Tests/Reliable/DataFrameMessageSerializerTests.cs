@@ -13,7 +13,7 @@ public class DataFrameMessageSerializerTests
 		yield return new object?[]
 		{
 			new byte[] { 0x3F, 0x02, 0x00, 0x00, 0xC6, 0xAE, 0xC9, 0x79 },
-			new DataFrameMessage
+			new ReliableMessage.DataFrame
 			{
 				Reliable = true,
 				Sequential = true,
@@ -30,7 +30,7 @@ public class DataFrameMessageSerializerTests
 		yield return new object?[]
 		{
 			new byte[] { 0x3f, 0x02, 0x00, 0x00, 0x7d, 0x99, 0xc5, 0x51 },
-			new DataFrameMessage
+			new ReliableMessage.DataFrame
 			{
 				Reliable = true,
 				Sequential = true,
@@ -85,7 +85,7 @@ public class DataFrameMessageSerializerTests
 				0x21,
 				0x00,
 			},
-			new DataFrameMessage
+			new ReliableMessage.DataFrame
 			{
 				Poll = true,
 				SequenceId = new SequenceId(1),
@@ -105,7 +105,7 @@ public class DataFrameMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, DataFrameMessage expected, bool enableSigning)
+	internal void Deserialize(byte[] data, ReliableMessage.DataFrame expected, bool enableSigning)
 	{
 		var message = DataFrameMessageSerializer.Default.Deserialize(data);
 		message.Command.Should().Be(expected.Command);
@@ -119,8 +119,29 @@ public class DataFrameMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, DataFrameMessage message, bool enableSigning)
+	internal void Serialize(byte[] expected, ReliableMessage.DataFrame message, bool enableSigning)
 	{
 		DataFrameMessageSerializer.Default.Serialize(message).Should().Equal(expected);
+	}
+
+	public static IEnumerable<object[]> RoundTripData()
+	{
+		// PACKET_CONTROL_SACK1 set with a zero mask.
+		yield return new object[]
+		{
+			new byte[] { 0x3F, 0x10, 0x05, 0x07, 0x00, 0x00, 0x00, 0x00, 0xAA, 0xBB },
+		};
+
+		// PACKET_CONTROL_KEEPALIVE_OR_CORRELATE set with a zero session ID.
+		yield return new object[] { new byte[] { 0x27, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 } };
+	}
+
+	[Theory]
+	[MemberData(nameof(RoundTripData))]
+	internal void RoundTrip_PreservesFlagsFromWire(byte[] data)
+	{
+		var message = DataFrameMessageSerializer.Default.Deserialize(data);
+		message!.Control.Should().Be((PacketControl)data[1]);
+		DataFrameMessageSerializer.Default.Serialize(message).Should().Equal(data);
 	}
 }

@@ -386,7 +386,7 @@ public class SendConnectInfoMessageSerializerTests
 				0x00,
 				0x00,
 			},
-			new SendConnectInfoMessage
+			new CoreMessage.SendConnectInfo
 			{
 				Flags = SessionFlags.MigrateHost,
 				MaxPlayers = 0,
@@ -772,7 +772,7 @@ public class SendConnectInfoMessageSerializerTests
 				0x00,
 				0x00,
 			},
-			new SendConnectInfoMessage
+			new CoreMessage.SendConnectInfo
 			{
 				Flags = SessionFlags.NoDpnServer,
 				MaxPlayers = 20,
@@ -819,7 +819,7 @@ public class SendConnectInfoMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, SendConnectInfoMessage expected)
+	internal void Deserialize(byte[] data, CoreMessage.SendConnectInfo expected)
 	{
 		var message = SendConnectInfoMessageSerializer.Default.Deserialize(data);
 		message.PacketType.Should().Be(expected.PacketType);
@@ -853,7 +853,7 @@ public class SendConnectInfoMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, SendConnectInfoMessage message)
+	internal void Serialize(byte[] expected, CoreMessage.SendConnectInfo message)
 	{
 		SendConnectInfoMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}

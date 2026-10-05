@@ -11,13 +11,13 @@ public class NameTableVersionMessageSerializerTests
 		yield return new object?[]
 		{
 			new byte[] { 0xc9, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-			new NameTableVersionMessage { Version = 4 },
+			new CoreMessage.NameTableVersion { Version = 4 },
 		};
 	}
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, NameTableVersionMessage expected)
+	internal void Deserialize(byte[] data, CoreMessage.NameTableVersion expected)
 	{
 		var message = NameTableVersionMessageSerializer.Default.Deserialize(data);
 		message.PacketType.Should().Be(expected.PacketType);
@@ -27,7 +27,7 @@ public class NameTableVersionMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, NameTableVersionMessage message)
+	internal void Serialize(byte[] expected, CoreMessage.NameTableVersion message)
 	{
 		NameTableVersionMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}
