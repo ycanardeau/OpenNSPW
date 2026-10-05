@@ -1,0 +1,13 @@
+{
+	"$schema": "./node_modules/nx/schemas/nx-schema.json",
+	"release": {
+		"projects": ["opennspw"],
+		"version": {
+			"versionActions": "tools/nx/msbuild-version-actions.js"
+		},
+		"changelog": {
+			"automaticFromRef": true
+		}
+	},
+	"analytics": false
+}

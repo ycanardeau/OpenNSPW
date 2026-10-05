@@ -1,0 +1,11 @@
+{
+	"name": "opennspw",
+	"private": true,
+	"nx": {},
+	"scripts": {
+		"release": "nx release --skip-publish"
+	},
+	"devDependencies": {
+		"nx": "23.2.1"
+	}
+}
