@@ -10,7 +10,7 @@ Naval South Pacific War is a real-time strategy game for Windows by Ken-ichi Tok
 | `Nspw122` | NSPW 1.22 (`NSPW_122.exe`). Single-player version, 3rd edition and the final scenario-expansion release (built December 2002). Requires DirectX 7.0a or later. The included note (`皆様へ、.txt`) is left over from 1.20c. |
 | `NSPW_200` | NSPW 2.00 (`NSPW.exe`). Single-player version, rebuilt to run on Windows 7 and later. |
 | `NSPW_NET_110` | NSPW NET 1.10 (`NSPW_NET.exe`). Multiplayer-only version (Naval South Pacific War on the Net), first released in 2002. |
-| `NSPW_NET` | Source code of NSPW NET. Visual C++ 2008 project (`NSPW_NET.vcproj`) targeting Win32 and DirectX, converted to Visual Studio 2022 (`NSPW_NET.vcxproj`). See [`NSPW_NET/CHANGES.md`](NSPW_NET/CHANGES.md) for the changes made to build and run it. |
+| `NSPW_NET` | Source code of NSPW NET. Visual C++ 2008 project (`NSPW_NET.vcproj`) targeting Win32 and DirectX, converted to Visual Studio 2022 (`NSPW_NET.vcxproj`). See [docs/NSPW_NET/CHANGES.md](docs/NSPW_NET/CHANGES.md) for the changes made to build and run it, and [docs/NSPW_NET/Synchronization.md](docs/NSPW_NET/Synchronization.md) for how its multiplayer stays in sync. |
 
 Each game distribution includes the author's manual in `説明書/` (Shift_JIS HTML).
 

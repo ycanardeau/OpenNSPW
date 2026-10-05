@@ -3,8 +3,8 @@ Changes made to the original NSPW NET source so that it builds with Visual Studi
 
 ## Requirements
 - Visual Studio 2022 with the **Desktop development with C++** workload.
-- DirectX SDK (June 2006). See [../DirectXSDK.md](../DirectXSDK.md).
-- The DirectPlay Windows feature to run the game. See [../DirectPlay.md](../DirectPlay.md).
+- DirectX SDK (June 2006). See [../../DirectXSDK.md](../../DirectXSDK.md).
+- The DirectPlay Windows feature to run the game. See [../../DirectPlay.md](../../DirectPlay.md).
 
 ## Project
 - **Converted `NSPW_NET.vcproj` (Visual Studio 2008) to `NSPW_NET.vcxproj` and `NSPW_NET.vcxproj.filters`** with Visual Studio 2022 (platform toolset v143). The original `.vcproj` is kept for reference.
