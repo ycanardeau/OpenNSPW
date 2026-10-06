@@ -3,6 +3,7 @@ using System.Text;
 
 namespace Aigamo.Otsuki.Messages.Core;
 
+[Immutable]
 internal abstract class NullTerminatedString<T> : IEquatable<T>
 	where T : NullTerminatedString<T>
 {
@@ -43,6 +44,7 @@ internal abstract class NullTerminatedString<T> : IEquatable<T>
 	public override int GetHashCode() => ToString().GetHashCode();
 }
 
+[Immutable]
 internal sealed class NullTerminatedAsciiString : NullTerminatedString<NullTerminatedAsciiString>
 {
 	public static readonly NullTerminatedAsciiString Empty = new();
@@ -77,6 +79,7 @@ internal sealed class NullTerminatedAsciiString : NullTerminatedString<NullTermi
 	public override int GetHashCode() => base.GetHashCode();
 }
 
+[Immutable]
 internal sealed class NullTerminatedUnicodeString
 	: NullTerminatedString<NullTerminatedUnicodeString>
 {

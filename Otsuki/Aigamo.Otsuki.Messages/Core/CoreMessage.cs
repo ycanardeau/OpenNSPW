@@ -6,6 +6,7 @@ using Flags = Aigamo.Otsuki.Messages.Core.NameTableEntryFlags;
 namespace Aigamo.Otsuki.Messages.Core;
 
 [GenerateMatch]
+[Immutable]
 public abstract record CoreMessage
 {
 	/// <summary>

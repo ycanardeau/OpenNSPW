@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Aigamo.Extensions.Primitives\Aigamo.Extensions.Primitives\Aigamo.Extensions.Primitives.csproj" />
+    <ProjectReference Include="..\Aigamo.Otsuki.Analyzers\Aigamo.Otsuki.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>
