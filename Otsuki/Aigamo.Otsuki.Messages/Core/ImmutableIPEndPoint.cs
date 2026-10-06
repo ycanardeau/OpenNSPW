@@ -5,11 +5,11 @@ using System.Net.Sockets;
 namespace Aigamo.Otsuki.Messages.Core;
 
 [Immutable]
-internal readonly struct ImmutableIPEndPoint : IImmutableEndPoint, IEquatable<ImmutableIPEndPoint>
+internal readonly struct ImmutableIPEndPoint(string value)
+	: IImmutableEndPoint,
+		IEquatable<ImmutableIPEndPoint>
 {
-	private readonly string? _value;
-
-	public ImmutableIPEndPoint(string value) => _value = value;
+	private readonly string? _value = value;
 
 	public AddressFamily AddressFamily => ToIPEndPoint().AddressFamily;
 	public ImmutableIPAddress Address => ToIPEndPoint().Address.ToImmutableIPAddress();

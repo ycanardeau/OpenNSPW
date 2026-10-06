@@ -3,20 +3,15 @@ using System.Text;
 
 namespace Aigamo.Otsuki.Messages.Core;
 
-internal abstract class NullTerminatedString<T> : IEquatable<T>
+[Immutable]
+internal abstract class NullTerminatedString<T>(byte[] value, Encoding encoding) : IEquatable<T>
 	where T : NullTerminatedString<T>
 {
-	private readonly IImmutableList<byte> _value;
-	private readonly Encoding _encoding;
+	private readonly IImmutableList<byte> _value = value.ToImmutableArray();
+	private readonly Encoding _encoding = encoding;
 
 	protected NullTerminatedString(Encoding encoding)
 		: this(Array.Empty<byte>(), encoding) { }
-
-	protected NullTerminatedString(byte[] value, Encoding encoding)
-	{
-		_value = value.ToImmutableArray();
-		_encoding = encoding;
-	}
 
 	protected NullTerminatedString(string? value, Encoding encoding)
 		: this(
@@ -43,6 +38,7 @@ internal abstract class NullTerminatedString<T> : IEquatable<T>
 	public override int GetHashCode() => ToString().GetHashCode();
 }
 
+[Immutable]
 internal sealed class NullTerminatedAsciiString : NullTerminatedString<NullTerminatedAsciiString>
 {
 	public static readonly NullTerminatedAsciiString Empty = new();
@@ -77,6 +73,7 @@ internal sealed class NullTerminatedAsciiString : NullTerminatedString<NullTermi
 	public override int GetHashCode() => base.GetHashCode();
 }
 
+[Immutable]
 internal sealed class NullTerminatedUnicodeString
 	: NullTerminatedString<NullTerminatedUnicodeString>
 {

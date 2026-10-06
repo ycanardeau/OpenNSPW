@@ -1,11 +1,6 @@
 namespace Aigamo.Saruhashi;
 
-public sealed class ControlEventArgs : EventArgs
+public sealed class ControlEventArgs(Control control) : EventArgs
 {
-	public Control Control { get; }
-
-	public ControlEventArgs(Control control)
-	{
-		Control = control;
-	}
+	public Control Control { get; } = control;
 }

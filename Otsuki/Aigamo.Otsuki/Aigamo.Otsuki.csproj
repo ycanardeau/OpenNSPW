@@ -20,4 +20,12 @@
     <ProjectReference Include="..\Aigamo.Otsuki.Messages\Aigamo.Otsuki.Messages.csproj" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
 </Project>

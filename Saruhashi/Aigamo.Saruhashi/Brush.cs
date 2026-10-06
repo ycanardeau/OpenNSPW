@@ -10,12 +10,7 @@ public abstract class Brush : IDisposable
 	}
 }
 
-public sealed class SolidBrush : Brush
+public sealed class SolidBrush(Color color) : Brush
 {
-	public Color Color { get; }
-
-	public SolidBrush(Color color)
-	{
-		Color = color;
-	}
+	public Color Color { get; } = color;
 }

@@ -17,14 +17,9 @@ namespace Aigamo.Saruhashi;
 [DefaultEvent(nameof(CollectionChanged))]
 [Editor("System.Drawing.Design.UITypeEditor, " + AssemblyRef.SystemDrawing, typeof(UITypeEditor))]
 [TypeConverter("System.Windows.Forms.Design.ControlBindingsConverter, " + AssemblyRef.SystemDesign)]
-public class ControlBindingsCollection : BindingsCollection
+public class ControlBindingsCollection(IBindableComponent control) : BindingsCollection
 {
-	private readonly IBindableComponent _control;
-
-	public ControlBindingsCollection(IBindableComponent control)
-	{
-		_control = control;
-	}
+	private readonly IBindableComponent _control = control;
 
 	public IBindableComponent BindableComponent => _control;
 

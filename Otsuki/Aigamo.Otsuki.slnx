@@ -2,6 +2,8 @@
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
   </Folder>
+  <Project Path="Aigamo.Otsuki.Analyzers.Tests/Aigamo.Otsuki.Analyzers.Tests.csproj" />
+  <Project Path="Aigamo.Otsuki.Analyzers/Aigamo.Otsuki.Analyzers.csproj" />
   <Project Path="Aigamo.Otsuki.ConsoleApp/Aigamo.Otsuki.ConsoleApp.csproj" />
   <Project Path="Aigamo.Otsuki.Messages.Tests/Aigamo.Otsuki.Messages.Tests.csproj" />
   <Project Path="Aigamo.Otsuki.Tests/Aigamo.Otsuki.Tests.csproj" />

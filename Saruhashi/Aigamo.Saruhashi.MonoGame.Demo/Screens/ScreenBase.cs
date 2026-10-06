@@ -3,14 +3,9 @@ using DrawingRectangle = System.Drawing.Rectangle;
 
 namespace Aigamo.Saruhashi.MonoGame.Demo.Screens;
 
-internal abstract class ScreenBase : Screen
+internal abstract class ScreenBase(WindowManager windowManager) : Screen
 {
-	protected WindowManager WindowManager { get; }
-
-	protected ScreenBase(WindowManager windowManager)
-	{
-		WindowManager = windowManager;
-	}
+	protected WindowManager WindowManager { get; } = windowManager;
 
 	public override void LoadContent()
 	{

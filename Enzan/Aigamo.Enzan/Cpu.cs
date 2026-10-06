@@ -6,11 +6,11 @@ using Aigamo.Extensions.Primitives;
 
 namespace Aigamo.Enzan;
 
-public sealed class Cpu
+public sealed class Cpu(Memory<byte> memory, Register32 offset, Action<Register32>? callback = null)
 {
-	public Memory<byte> Memory { get; }
-	public Register32 Offset { get; }
-	public Action<Register32>? Callback { get; }
+	public Memory<byte> Memory { get; } = memory;
+	public Register32 Offset { get; } = offset;
+	public Action<Register32>? Callback { get; } = callback;
 
 	public Register32 Eax { get; set; }
 	public Register32 Ecx { get; set; }
@@ -23,13 +23,6 @@ public sealed class Cpu
 
 	public EflagsRegister Eflags { get; } = new();
 	public Fpu Fpu { get; } = new();
-
-	public Cpu(Memory<byte> memory, Register32 offset, Action<Register32>? callback = null)
-	{
-		Memory = memory;
-		Offset = offset;
-		Callback = callback;
-	}
 
 	public Register16 Ax
 	{

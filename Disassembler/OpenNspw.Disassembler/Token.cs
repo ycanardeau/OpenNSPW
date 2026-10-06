@@ -2,7 +2,13 @@ using Aigamo.Enzan;
 
 namespace OpenNspw.Disassembler;
 
-internal sealed class Token
+internal sealed class Token(
+	BinaryReader reader,
+	AddressingMode mode,
+	bool operandSizeOverride,
+	List<int> labels,
+	ParseContext parseContext
+)
 {
 	private static readonly Dictionary<RegisterCode, string> Register32Names = new()
 	{
@@ -38,27 +44,12 @@ internal sealed class Token
 		{ RegisterCode.Bh, nameof(RegisterCode.Bh) },
 	};
 
-	public BinaryReader Reader { get; }
-	public AddressingMode Mode { get; }
-	public bool OperandSizeOverride { get; set; }
-	public List<int> Labels { get; }
+	public BinaryReader Reader { get; } = reader;
+	public AddressingMode Mode { get; } = mode;
+	public bool OperandSizeOverride { get; set; } = operandSizeOverride;
+	public List<int> Labels { get; } = labels;
 
-	private readonly ParseContext _parseContext;
-
-	public Token(
-		BinaryReader reader,
-		AddressingMode mode,
-		bool operandSizeOverride,
-		List<int> labels,
-		ParseContext parseContext
-	)
-	{
-		Reader = reader;
-		Mode = mode;
-		OperandSizeOverride = operandSizeOverride;
-		Labels = labels;
-		_parseContext = parseContext;
-	}
+	private readonly ParseContext _parseContext = parseContext;
 
 	public int Eip => _parseContext.Offset + (int)Reader.BaseStream.Position;
 

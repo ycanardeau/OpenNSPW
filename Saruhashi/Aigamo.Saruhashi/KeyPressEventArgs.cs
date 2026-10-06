@@ -1,12 +1,7 @@
 namespace Aigamo.Saruhashi;
 
-public sealed class KeyPressEventArgs : EventArgs
+public sealed class KeyPressEventArgs(char keyChar) : EventArgs
 {
-	public char KeyChar { get; set; }
+	public char KeyChar { get; set; } = keyChar;
 	public bool Handled { get; set; }
-
-	public KeyPressEventArgs(char keyChar)
-	{
-		KeyChar = keyChar;
-	}
 }

@@ -6,9 +6,9 @@ using XnaButtonState = Microsoft.Xna.Framework.Input.ButtonState;
 
 namespace Aigamo.Saruhashi.MonoGame;
 
-public class MouseListener : InputListener
+public class MouseListener(ViewportAdapter? viewportAdapter = null) : InputListener
 {
-	public ViewportAdapter? ViewportAdapter { get; }
+	public ViewportAdapter? ViewportAdapter { get; } = viewportAdapter;
 
 	private MouseState _state;
 	private MouseState _previousState;
@@ -16,11 +16,6 @@ public class MouseListener : InputListener
 	public event EventHandler<MouseEventArgs>? MouseDown;
 	public event EventHandler<MouseEventArgs>? MouseMove;
 	public event EventHandler<MouseEventArgs>? MouseUp;
-
-	public MouseListener(ViewportAdapter? viewportAdapter = null)
-	{
-		ViewportAdapter = viewportAdapter;
-	}
 
 	private Point Position => ViewportAdapter?.PointToScreen(_state.Position) ?? _state.Position;
 	private Point PreviousPosition =>

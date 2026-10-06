@@ -11,16 +11,10 @@ public interface IMonoGameImage : IImage
 
 public static class MonoGameImage
 {
-	private sealed class MonoGameTexture2DImage : IMonoGameImage
+	private sealed class MonoGameTexture2DImage(Texture2D texture, Color color) : IMonoGameImage
 	{
-		public Texture2D Texture { get; }
-		public Color Color { get; }
-
-		public MonoGameTexture2DImage(Texture2D texture, Color color)
-		{
-			Texture = texture;
-			Color = color;
-		}
+		public Texture2D Texture { get; } = texture;
+		public Color Color { get; } = color;
 
 		public void Draw(SpriteBatch spriteBatch, Vector2 position)
 		{
@@ -28,16 +22,10 @@ public static class MonoGameImage
 		}
 	}
 
-	private sealed class MonoGameTextureRegion2DImage : IMonoGameImage
+	private sealed class MonoGameTextureRegion2DImage(Texture2DRegion textureRegion, Color color) : IMonoGameImage
 	{
-		public Texture2DRegion TextureRegion { get; }
-		public Color Color { get; }
-
-		public MonoGameTextureRegion2DImage(Texture2DRegion textureRegion, Color color)
-		{
-			TextureRegion = textureRegion;
-			Color = color;
-		}
+		public Texture2DRegion TextureRegion { get; } = textureRegion;
+		public Color Color { get; } = color;
 
 		public void Draw(SpriteBatch spriteBatch, Vector2 position)
 		{
@@ -45,14 +33,9 @@ public static class MonoGameImage
 		}
 	}
 
-	private sealed class MonoGameSpriteImage : IMonoGameImage
+	private sealed class MonoGameSpriteImage(Sprite sprite) : IMonoGameImage
 	{
-		public Sprite Sprite { get; }
-
-		public MonoGameSpriteImage(Sprite sprite)
-		{
-			Sprite = sprite;
-		}
+		public Sprite Sprite { get; } = sprite;
 
 		public void Draw(SpriteBatch spriteBatch, Vector2 position)
 		{

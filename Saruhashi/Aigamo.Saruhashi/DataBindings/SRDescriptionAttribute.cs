@@ -11,7 +11,7 @@ using System.ComponentModel;
 namespace Aigamo.Saruhashi;
 
 [AttributeUsage(AttributeTargets.All)]
-internal sealed class SRDescriptionAttribute : DescriptionAttribute
+internal sealed class SRDescriptionAttribute(string description) : DescriptionAttribute(description)
 {
 	private bool replaced;
 
@@ -27,7 +27,4 @@ internal sealed class SRDescriptionAttribute : DescriptionAttribute
 			return base.Description;
 		}
 	}
-
-	public SRDescriptionAttribute(string description)
-		: base(description) { }
 }

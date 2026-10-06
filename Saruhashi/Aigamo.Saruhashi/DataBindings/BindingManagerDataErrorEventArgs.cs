@@ -8,12 +8,7 @@
 
 namespace Aigamo.Saruhashi;
 
-public class BindingManagerDataErrorEventArgs : EventArgs
+public class BindingManagerDataErrorEventArgs(Exception exception) : EventArgs
 {
-	public BindingManagerDataErrorEventArgs(Exception exception)
-	{
-		Exception = exception;
-	}
-
-	public Exception Exception { get; }
+	public Exception Exception { get; } = exception;
 }
