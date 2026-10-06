@@ -6,16 +6,11 @@ namespace Aigamo.Saruhashi;
 
 public class Control : IDisposable, IBindableComponent
 {
-	public class ControlCollection : IEnumerable<Control>
+	public class ControlCollection(Control owner) : IEnumerable<Control>
 	{
-		public Control Owner { get; }
+		public Control Owner { get; } = owner;
 
 		private protected List<Control> InnerList { get; } = new();
-
-		public ControlCollection(Control owner)
-		{
-			Owner = owner;
-		}
 
 		public IEnumerator<Control> GetEnumerator() => InnerList.GetEnumerator();
 

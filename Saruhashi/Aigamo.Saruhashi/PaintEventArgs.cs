@@ -2,14 +2,8 @@ using System.Drawing;
 
 namespace Aigamo.Saruhashi;
 
-public sealed class PaintEventArgs : EventArgs
+public sealed class PaintEventArgs(Graphics graphics, Rectangle clipRectangle) : EventArgs
 {
-	public Graphics Graphics { get; }
-	public Rectangle ClipRectangle { get; }
-
-	public PaintEventArgs(Graphics graphics, Rectangle clipRectangle)
-	{
-		Graphics = graphics;
-		ClipRectangle = clipRectangle;
-	}
+	public Graphics Graphics { get; } = graphics;
+	public Rectangle ClipRectangle { get; } = clipRectangle;
 }

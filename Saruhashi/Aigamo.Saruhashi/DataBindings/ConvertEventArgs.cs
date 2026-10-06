@@ -8,15 +8,9 @@
 
 namespace Aigamo.Saruhashi;
 
-public class ConvertEventArgs : EventArgs
+public class ConvertEventArgs(object value, Type desiredType) : EventArgs
 {
-	public ConvertEventArgs(object value, Type desiredType)
-	{
-		Value = value;
-		DesiredType = desiredType;
-	}
+	public object Value { get; set; } = value;
 
-	public object Value { get; set; }
-
-	public Type DesiredType { get; }
+	public Type DesiredType { get; } = desiredType;
 }

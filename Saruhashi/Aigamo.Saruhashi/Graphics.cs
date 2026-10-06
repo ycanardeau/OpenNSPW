@@ -2,21 +2,15 @@ using System.Drawing;
 
 namespace Aigamo.Saruhashi;
 
-public abstract class Graphics : IDisposable
+public abstract class Graphics(Control control) : IDisposable
 {
 	private bool _disposed;
 
-	protected Graphics(Control control)
-	{
-		Control = control;
-		Clip = new Region(control.ClipRectangle);
-	}
-
 	~Graphics() => Dispose(false);
 
-	public Region Clip { get; }
+	public Region Clip { get; } = new Region(control.ClipRectangle);
 	public RectangleF ClipBounds => Clip.GetBounds(this);
-	protected internal Control Control { get; }
+	protected internal Control Control { get; } = control;
 
 	public void Dispose()
 	{

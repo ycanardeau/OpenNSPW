@@ -26,7 +26,7 @@ internal enum ChannelStatus
 /// reassembly and graceful disconnects ([MC-DPL8R] sections 3.1.4.3, 3.1.4.4, 3.1.5.2 and 3.1.6).
 /// Owned by <see cref="ConnectionState.Established"/> and only used from the connection's message loop.
 /// </summary>
-internal sealed class ReliableChannel
+internal sealed class ReliableChannel(Connection connection, Handshake handshake)
 {
 	/// <summary>
 	/// From this version on, PACKET_CONTROL_KEEPALIVE_OR_CORRELATE marks a KeepAlive carrying dwSessID.
@@ -56,8 +56,8 @@ internal sealed class ReliableChannel
 		public bool Dropped { get; set; }
 	}
 
-	private readonly Connection _connection;
-	private readonly Handshake _handshake;
+	private readonly Connection _connection = connection;
+	private readonly Handshake _handshake = handshake;
 
 	/// <summary>
 	/// Sent data frames that are not yet acknowledged, in sequence order.
@@ -86,20 +86,13 @@ internal sealed class ReliableChannel
 	private SequenceId _nextSend;
 	private SequenceId _nextReceive;
 	private bool _lastReceivedWasRetry;
-	private TimeSpan _roundTripTime;
+	private TimeSpan _roundTripTime = connection.Profile.InitialRoundTripTime;
 	private bool _reassembling;
 	private bool _reassemblyUser1;
 	private int _reassemblySize;
 	private bool _endStreamQueued;
 	private bool _endStreamAcknowledged;
 	private bool _endStreamReceived;
-
-	public ReliableChannel(Connection connection, Handshake handshake)
-	{
-		_connection = connection;
-		_handshake = handshake;
-		_roundTripTime = connection.Profile.InitialRoundTripTime;
-	}
 
 	/// <summary>
 	/// Bit i acknowledges the frame with sequence ID bNRcv + 1 + i.

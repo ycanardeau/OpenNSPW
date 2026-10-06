@@ -13,27 +13,18 @@ namespace Aigamo.Saruhashi;
 /// <summary>
 ///  Provides information about a Binding Completed event.
 /// </summary>
-public class BindingCompleteEventArgs : CancelEventArgs
+/// <remarks>
+///  Constructor for BindingCompleteEventArgs.
+/// </remarks>
+public class BindingCompleteEventArgs(
+	Binding binding,
+	BindingCompleteState state,
+	BindingCompleteContext context,
+	string errorText,
+	Exception exception,
+	bool cancel
+	) : CancelEventArgs(cancel)
 {
-	/// <summary>
-	///  Constructor for BindingCompleteEventArgs.
-	/// </summary>
-	public BindingCompleteEventArgs(
-		Binding binding,
-		BindingCompleteState state,
-		BindingCompleteContext context,
-		string errorText,
-		Exception exception,
-		bool cancel
-	)
-		: base(cancel)
-	{
-		Binding = binding;
-		BindingCompleteState = state;
-		BindingCompleteContext = context;
-		ErrorText = errorText ?? string.Empty;
-		Exception = exception;
-	}
 
 	/// <summary>
 	///  Constructor for BindingCompleteEventArgs.
@@ -68,13 +59,13 @@ public class BindingCompleteEventArgs : CancelEventArgs
 	)
 		: this(binding, state, context, string.Empty, null, false) { }
 
-	public Binding Binding { get; }
+	public Binding Binding { get; } = binding;
 
-	public BindingCompleteState BindingCompleteState { get; }
+	public BindingCompleteState BindingCompleteState { get; } = state;
 
-	public BindingCompleteContext BindingCompleteContext { get; }
+	public BindingCompleteContext BindingCompleteContext { get; } = context;
 
-	public string ErrorText { get; }
+	public string ErrorText { get; } = errorText ?? string.Empty;
 
-	public Exception Exception { get; }
+	public Exception Exception { get; } = exception;
 }

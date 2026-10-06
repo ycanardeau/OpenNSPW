@@ -2,16 +2,10 @@ using System.Drawing;
 
 namespace Aigamo.Saruhashi;
 
-public sealed class Pen : IDisposable
+public sealed class Pen(Color color, float width = 1) : IDisposable
 {
-	public Color Color { get; }
-	public float Width { get; }
-
-	public Pen(Color color, float width = 1)
-	{
-		Color = color;
-		Width = width;
-	}
+	public Color Color { get; } = color;
+	public float Width { get; } = width;
 
 	public void Dispose()
 	{

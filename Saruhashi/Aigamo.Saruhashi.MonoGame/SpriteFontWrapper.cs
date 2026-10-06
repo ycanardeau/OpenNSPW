@@ -4,14 +4,9 @@ using XnaColor = Microsoft.Xna.Framework.Color;
 
 namespace Aigamo.Saruhashi.MonoGame;
 
-public sealed class SpriteFontWrapper : IMonoGameFont
+public sealed class SpriteFontWrapper(SpriteFont spriteFont) : IMonoGameFont
 {
-	public SpriteFont SpriteFont { get; }
-
-	public SpriteFontWrapper(SpriteFont spriteFont)
-	{
-		SpriteFont = spriteFont;
-	}
+	public SpriteFont SpriteFont { get; } = spriteFont;
 
 	public void Draw(SpriteBatch spriteBatch, string? text, Vector2 position, XnaColor color) =>
 		spriteBatch.DrawString(SpriteFont, text, position, color);

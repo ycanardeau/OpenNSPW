@@ -5,7 +5,7 @@ using System.Net.Sockets;
 namespace Aigamo.Otsuki.Messages.Core;
 
 [Immutable]
-internal readonly struct ImmutableIPAddress : IEquatable<ImmutableIPAddress>
+internal readonly struct ImmutableIPAddress(string value) : IEquatable<ImmutableIPAddress>
 {
 	public static readonly ImmutableIPAddress Any = IPAddress.Any.ToImmutableIPAddress();
 	public static readonly ImmutableIPAddress Loopback = IPAddress.Loopback.ToImmutableIPAddress();
@@ -18,9 +18,7 @@ internal readonly struct ImmutableIPAddress : IEquatable<ImmutableIPAddress>
 		IPAddress.IPv6Loopback.ToImmutableIPAddress();
 	public static readonly ImmutableIPAddress IPv6None = IPAddress.IPv6None.ToImmutableIPAddress();
 
-	private readonly string? _value;
-
-	public ImmutableIPAddress(string value) => _value = value;
+	private readonly string? _value = value;
 
 	public IImmutableList<byte> AddressBytes => ToIPAddress().GetAddressBytes().ToImmutableArray();
 	public AddressFamily AddressFamily => ToIPAddress().AddressFamily;
