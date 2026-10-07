@@ -11,6 +11,13 @@
     <Project Path="Enzan/Aigamo.Enzan.Tests/Aigamo.Enzan.Tests.csproj" />
     <Project Path="Enzan/Aigamo.Enzan/Aigamo.Enzan.csproj" />
   </Folder>
+  <Folder Name="/OpenNSPW/">
+    <Project Path="OpenNSPW/OpenNspw.Desktop/OpenNspw.Desktop.csproj" />
+    <Project Path="OpenNSPW/OpenNspw.DirectPlay/OpenNspw.DirectPlay.csproj" />
+    <Project Path="OpenNSPW/OpenNspw.Porter/OpenNspw.Porter.csproj" />
+    <Project Path="OpenNSPW/OpenNspw.Tests/OpenNspw.Tests.csproj" />
+    <Project Path="OpenNSPW/OpenNspw/OpenNspw.csproj" />
+  </Folder>
   <Folder Name="/Otsuki/">
     <Project Path="Otsuki/Aigamo.Otsuki.Analyzers.Tests/Aigamo.Otsuki.Analyzers.Tests.csproj" />
     <Project Path="Otsuki/Aigamo.Otsuki.Analyzers/Aigamo.Otsuki.Analyzers.csproj" />

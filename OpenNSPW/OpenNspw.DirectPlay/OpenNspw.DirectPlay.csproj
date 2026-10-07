@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <!-- DirectPlay message buffers are unsafe pointers (OpenNspw/dplay8.cs). -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OpenNspw\OpenNspw.csproj" />
+    <ProjectReference Include="..\..\Otsuki\Aigamo.Otsuki\Aigamo.Otsuki.csproj" />
+  </ItemGroup>
+
+</Project>

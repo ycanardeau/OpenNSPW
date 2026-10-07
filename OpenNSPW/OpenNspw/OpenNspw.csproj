@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <!-- The DirectPlay message buffers are unsafe pointers, as in the original (dplay8.cs). -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- The ported code dereferences pointers that may be null, as the original does. -->
+    <Nullable>annotations</Nullable>
+    <!-- The original's compile-time switches (all_head.h) that are set: SND_SW and DBG_MODE. CONN_DBG and LNGG_VER are 0. -->
+    <DefineConstants>$(DefineConstants);SND_SW;DBG_MODE</DefineConstants>
+    <!--
+      The ported files keep the original's names, unused variables and dead code (docs/Porting.md):
+      CS0162: unreachable code, such as `if( 0 && ... )`.
+      CS0168, CS0219: unused local variables.
+      CS8981: lowercase type names, such as the ported files' classes.
+    -->
+    <NoWarn>$(NoWarn);CS0162;CS0168;CS0219;CS8981</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="OpenNspw.all_head" Static="true" />
+    <Using Include="OpenNspw.crt" Static="true" />
+    <Using Include="OpenNspw.ddraw" Static="true" />
+    <Using Include="OpenNspw.dinput" Static="true" />
+    <Using Include="OpenNspw.dmusici" Static="true" />
+    <Using Include="OpenNspw.dplay8" Static="true" />
+    <Using Include="OpenNspw.dsound" Static="true" />
+    <Using Include="OpenNspw.dxutil" Static="true" />
+    <Using Include="OpenNspw.fileapi" Static="true" />
+    <Using Include="OpenNspw.mmsystem" Static="true" />
+    <Using Include="OpenNspw.nspw_math" Static="true" />
+    <Using Include="OpenNspw.resource" Static="true" />
+    <Using Include="OpenNspw.tchar" Static="true" />
+    <Using Include="OpenNspw.windef" Static="true" />
+    <Using Include="OpenNspw.wingdi" Static="true" />
+    <Using Include="OpenNspw.winreg" Static="true" />
+    <Using Include="OpenNspw.winerror" Static="true" />
+    <Using Include="OpenNspw.winuser" Static="true" />
+  </ItemGroup>
+
+  <!-- Win32 handle types that are the same stand-in type. -->
+  <ItemGroup>
+    <Using Include="OpenNspw.HGDIOBJ" Alias="HBITMAP" />
+    <Using Include="OpenNspw.HGDIOBJ" Alias="HBRUSH" />
+    <Using Include="OpenNspw.HGDIOBJ" Alias="HFONT" />
+  </ItemGroup>
+
+</Project>
