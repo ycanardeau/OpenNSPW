@@ -297,3 +297,25 @@ public struct Array20<T> : IInlineArray
 		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 20).ToArray();
 	}
 }
+
+[InlineArray(24)]
+public struct Array24<T> : IInlineArray
+{
+	private T _element0;
+
+	public readonly byte[] ToBytes()
+	{
+		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 24).ToArray();
+	}
+}
+
+[InlineArray(200)]
+public struct Array200<T> : IInlineArray
+{
+	private T _element0;
+
+	public readonly byte[] ToBytes()
+	{
+		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 200).ToArray();
+	}
+}

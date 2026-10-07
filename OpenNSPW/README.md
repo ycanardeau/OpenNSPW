@@ -5,21 +5,37 @@ An exact port of the NSPW NET source ([Original/NSPW_NET](../Original/NSPW_NET))
 | --- | --- |
 | `OpenNspw` | The C# port. One file per C++ file, plus stand-ins for the platform APIs it calls (Win32, DirectPlay 8, DirectSound), with the original APIs' names. |
 | `OpenNspw.DirectPlay` | The DirectPlay 8 stand-ins implemented on [Otsuki](../Otsuki). |
+| `OpenNspw.Desktop` | The game, on MonoGame: runs the port's `WinMain` and shows its frames and dialogs (with [Saruhashi](../Saruhashi)). |
+| `OpenNspw.Porter` | Ports C++ files to the port's conventions, then fixes the compile errors that have a mechanical fix. |
 | `OpenNspw.Reference` | The reference: the unmodified C++ source, compiled in place, plus the tools that record what the tests compare against. Windows only, and not part of `OpenNSPW.slnx`. |
-| `OpenNspw.Tests` | Tests that replay the recordings through the port. They run on any platform. |
+| `OpenNspw.Tests` | Tests that replay the recordings through the port, and play whole games. They run on any platform. |
 
 ## Progress
-| C++ file | Ported |
-| --- | --- |
-| `all_head.h`, `all_typedef.h` | All |
-| `resource.h`, the dialogs of `NSPW_NET.RC` | All |
-| `dplay.cpp` | All |
-| `win_main.cpp`, `draw.cpp` | Globals, except the platform objects whose stand-ins do not exist yet |
-| `demo.cpp` | Globals, `go_cnct_game_setting` |
-| `etc2.cpp` | All except `new_unit_arrived`, `draw_line4` and `draw_line5` |
-| `etc3.cpp` | `make_my_rnd`, `my_rnd`, `rnd`, `set_sprt_data`, `cloud_in_start`, `cloud_cont` |
+Every C++ file is ported. The game runs from the connection dialogs through the title and setting screens into a battle.
 
-Every ported function of the game logic has a function test. `dplay.cpp` is tested by `NetworkTests`: two games in one process connect over loopback UDP through the original's connection dialogs, and exchange the game's messages.
+What is tested:
+
+- **Function tests**: `etc2.cpp` (except `new_unit_arrived`, `draw_line4` and `draw_line5`), and `make_my_rnd` through `cloud_cont` of `etc3.cpp`, against recordings of the reference.
+- **`NetworkTests`**: `dplay.cpp`. Two games in one process connect over loopback UDP through the original's connection dialogs, and exchange the game's messages.
+- **`TitleScreenTests`**: two whole games with the original's data connect, reach the title screen, and play a battle that the host starts by clicking through the setting screens. They check the modes, that both games keep in step, and that no message box shows. They save the frames they reach as PNG files next to the test assembly.
+
+The rest of the game logic is not compared with the reference yet.
+
+Run the commands below from this folder.
+
+## Playing
+```bash
+dotnet run --project OpenNspw.Desktop
+```
+
+The game's data is `Original/NSPW_NET`, or the folder given with `--data <folder>`. Start two of them: one hosts (port `0` picks a free port, `2310` is the original's), and the other joins its address and port. Settings, such as the player name, are kept in `OpenNSPW/settings.json` under the user's application data folder.
+
+## Porting a file
+```bash
+dotnet run --project OpenNspw.Porter -- port OpenNspw ../Original/NSPW_NET/<file>.cpp
+```
+
+This writes `OpenNspw/<file>.cs` and lists the errors left to fix by hand. `fix` instead of `port` runs only the second stage, on C# files of the project.
 
 Run the commands below from this folder.
 
@@ -47,9 +63,13 @@ The reference also runs the game, from `Original/NSPW_NET` as the working direct
 ## Platform stand-ins
 The ported code calls the platform through stand-ins with the original APIs' names and signatures, so its call sites stay as they are:
 
-- **Windows and dialogs** (`winuser.cs`, `NSPW_NET_RC.cs`): `CreateDialog`, `SendDlgItemMessage`, `PostMessage`, `PeekMessage` and the rest keep the state of each dialog and a message queue per game. Nothing is drawn: the desktop app will draw the dialogs, and tests drive them with `ClickDlgItem`, `TypeDlgItemText` and `SelectDlgItem`.
+- **Windows and dialogs** (`winuser.cs`, `NSPW_NET_RC.cs`): `CreateDialog`, `SendDlgItemMessage`, `PostMessage`, `PeekMessage` and the rest keep the state of each dialog and a message queue per game. The stand-ins draw nothing: the desktop app draws the dialogs, and the user's actions on them, like the tests', go through `ClickDlgItem`, `TypeDlgItemText` and `SelectDlgItem` on the game's thread (`PostToGame`).
 - **DirectPlay 8** (`dplay8.cs`): the interfaces, structs and constants of `dplay8.h`. `OpenNspw.DirectPlay` implements them on Otsuki. Messages are delivered by `IDirectPlay8ThreadPool::DoWork`, on the game's thread, as in the original's DoWork mode.
-- **Everything else the game needs from its environment** (`platform.cs`): `INspwPlatform` creates the COM objects, shows message boxes and opens files. Each game has its own, so that two games can run in one process.
+- **DirectDraw and GDI** (`ddraw.cs`, `wingdi.cs`): surfaces are RGB565 pixels in memory, and `Blt`, `BltFast`, `Lock` and `GetDC` work on them. Text is rasterized by the platform. A flip or a blit to the primary surface hands the frame to the platform, which shows it in a window, so the game never runs fullscreen.
+- **DirectInput** (`dinput.cs`): buffered keyboard and mouse devices, fed by `PostKeyboardInput` and `PostMouseInput`.
+- **DirectSound and DirectMusic** (`dsound.cs`, `unknwn.cs`): sound buffers in memory, played by the platform. DirectMusic is initialized but plays nothing, as in the original, whose music code is excluded with `#if 0`.
+- **Files, the registry and the clock** (`fileapi.cs`, `mmsystem.cs`, `winreg.cs`): files of the game's folder, settings and `timeGetTime`, through the platform.
+- **Everything else the game needs from its environment** (`platform.cs`): `INspwPlatform` creates the COM objects, shows message boxes and frames, rasterizes text, plays sounds, keeps settings and opens files. Each game has its own, so that two games can run in one process.
 
 ## Porting conventions
 The ported files read side by side with the C++ files: same order, names, comments, blank lines and formatting. They differ only where C# requires it:
@@ -61,8 +81,12 @@ The ported files read side by side with the C++ files: same order, names, commen
 | `while(1)` | `while(true)` |
 | `#if 0`, `#if 1` | `#if false`, `#if true` |
 | `T a[N]` (global, field or local) | `ArrayN<T> a` (locals: `= default`) |
-| `T *p` parameter, `p->x` | `ref T p`, `p.x` |
+| `T *p` parameter, `p->x` | `ref T p`, `p.x` in the files ported by hand; `T* p`, `p->x` in the files from the porter, which pass `ref *p` where a function takes `ref T` |
 | Implicit narrowing (`short s = i;`, `int i = d;`) | Explicit cast (`(short)i`, `(int)(d)`) |
+| Narrowing compound assignment (`i *= 1.35;`, `s -= i;`) | `i=(int)(i * 1.35);`, `s=(short)(s - i);` |
+| A `#define` in a `.cpp` file | A `public const` |
+| `goto` into a block | A flag, `goto_<label>`, that enters the block and skips to the label |
+| Direct3D declarations, which the game does not use | Commented out |
 | `(a==b)` used as an integer | `(a==b ? 1 : 0)` |
 | A local that can be read uninitialized (MSVC warnings C4700, C4701) | Initialized to zero, marked `/* C4701 */`. The tests avoid the inputs that read it. |
 | A local that shadows a local of an enclosing scope | The outer one is renamed, with a comment |

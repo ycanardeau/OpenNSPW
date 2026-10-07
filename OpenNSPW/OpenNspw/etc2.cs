@@ -17,11 +17,11 @@
 //#include "all_extern.h"
 //#include	"all_forward.h"
 
-// Port of etc2.cpp. So far, all of it is ported except new_unit_arrived, draw_line4 and draw_line5.
+// Port of etc2.cpp.
 
 namespace OpenNspw;
 
-public partial class Nspw
+public unsafe partial class Nspw
 {
 
 
@@ -32,7 +32,262 @@ public partial class Nspw
 //============================================================================
 // 新ユニット登場
 //----------------------------------------------------------------------------
-// void new_unit_arrived(int side, int new_unit_kind ): not yet ported.
+public void new_unit_arrived(int side,int new_unit_kind)
+	{
+	double		rx=default /* C4701 */,ry=default /* C4701 */;
+	double		rx2=default /* C4701 */,ry2=default /* C4701 */;
+	int		kind=default /* C4701 */, kind2,m,i;
+	int		arrived_side;
+
+
+
+
+
+	if( side==1 )
+		{
+		arrived_side=your_side;
+		}
+	else
+		{
+		if(your_side==JPN)
+			arrived_side=USA;
+		else
+			arrived_side=JPN;
+		}
+
+
+
+	kind2=0;
+
+	new_unit_kind--;
+
+	switch(new_unit_kind)
+		{
+		case 0:		kind=BB1;		break;
+		case 1:		kind=CA1;		break;
+		case 2:		kind=DD1;		break;
+		case 3:		kind=SS1;		break;
+		case 4:		kind=CVL1;		break;
+		case 5:		kind=CV1;		break;
+		case 6:		kind=FT1;		break;
+		case 7:		kind=AT1;		break;
+		case 8:		kind=BM1;		break;
+		case 9:		kind=FT1;	kind2=1;			break;
+		case 10:	kind=TR1;	kind2=TR_GF1;		break;
+		case 11:	kind=TR1;	kind2=TR_GF2;		break;
+		case 12:	kind=TR1;	kind2=TR_GF3;		break;
+		case 13:	kind=TR1;	kind2=TR_AP;		break;
+		case 14:	kind=TR1;	kind2=TR_SP;			break;
+
+		case 15:		kind=CA1;	kind2=1;		break;
+		case 16:		kind=DD1;	kind2=1;		break;
+		case 17:		
+			if( arrived_side==JPN ) 
+				kind=BB1;	
+			else
+				kind=CV1;	
+			kind2=1;		
+			break;
+
+		}
+
+
+
+	if(arrived_side==JPN)
+		{
+		switch(map_now)
+			{
+			case 0:		// 南太平洋
+				rx=MAP_LEFT-10;
+				ry=MAP_TOP-rnd(1200);
+				rx2=rx+500;
+				ry2=ry-200;
+rx-=new_unit_kind*80 ;
+				break;
+
+			case 1:		// 中部太平洋
+				rx=MAP_LEFT-10;
+				ry=MAP_BOTTOM+rnd(1200);
+				rx2=rx+500;
+				ry2=ry+200;
+rx-=new_unit_kind*80;
+				break;
+
+			case 2:		// 日本近海
+				rx=MAP_LEFT+rnd(1200);
+				ry=MAP_TOP+10;
+				rx2=rx+200;
+				ry2=ry-500;
+ry+=new_unit_kind*80;
+				break;
+
+			case 3:		// ユーザーマップ
+				switch(rein[arrived_side])
+					{
+					case 0:
+						rx=MAP_LEFT-500;
+						ry=MAP_TOP+500;
+						rx2=rx+1200;
+						ry2=ry-1200-rnd(500);
+						ry-=new_unit_kind*80;
+						break;
+					case 1:
+						rx=MAP_RIGHT+500;
+						ry=MAP_TOP+500;
+						rx2=rx-1200;
+						ry2=ry-1200-rnd(500);
+						ry-=new_unit_kind*80;
+						break;
+					case 2:
+						rx=MAP_RIGHT+500;
+						ry=MAP_BOTTOM-500;
+						rx2=rx-1200;
+						ry2=ry+1200+rnd(500);
+						ry+=new_unit_kind*80;
+						break;
+					case 3:
+						rx=MAP_LEFT-500;
+						ry=MAP_BOTTOM-500;
+						rx2=rx+1200;
+						ry2=ry+1200+rnd(500);
+						ry+=new_unit_kind*80;
+						break;
+					}
+				break;
+
+			}
+		}
+	else
+		{
+		switch(map_now)
+			{
+			case 0:		// 南太平洋
+				rx=MAP_RIGHT-rnd(1200)-100;
+				ry=MAP_BOTTOM-10;
+//rx=0;
+//ry=-1200;
+				rx2=rx-200;
+				ry2=ry+500;
+ry-=new_unit_kind*80;
+				break;
+
+			case 1:		// 中部太平洋
+				rx=MAP_RIGHT+10;
+				ry=rnd(1200);
+				rx2=rx-500;
+				ry2=ry;
+rx+=new_unit_kind*80;
+				break;
+
+			case 2:		// 日本近海
+				rx=MAP_RIGHT-rnd(1200)-100;
+				ry=MAP_BOTTOM-10;
+				rx2=rx-200;
+				ry2=ry+500;
+ry-=new_unit_kind*80;
+				break;
+
+			case 3:		// ユーザーマップ
+				switch(rein[arrived_side])
+					{
+					case 0:
+						rx=MAP_LEFT-500;
+						ry=MAP_TOP+500;
+						rx2=rx+1200;
+						ry2=ry-1200-rnd(500);
+						ry-=new_unit_kind*80;
+						break;
+					case 1:
+						rx=MAP_RIGHT+500;
+						ry=MAP_TOP+500;
+						rx2=rx-1200;
+						ry2=ry-1200-rnd(500);
+						ry-=new_unit_kind*80;
+						break;
+					case 2:
+						rx=MAP_RIGHT+500;
+						ry=MAP_BOTTOM-500;
+						rx2=rx-1200;
+						ry2=ry+1200+rnd(500);
+						ry+=new_unit_kind*80;
+						break;
+					case 3:
+						rx=MAP_LEFT-500;
+						ry=MAP_BOTTOM-500;
+						rx2=rx+1200;
+						ry2=ry+1200+rnd(500);
+						ry+=new_unit_kind*80;
+						break;
+					}
+				break;
+			}
+		}
+
+
+			
+	if( new_unit_kind<=5 || new_unit_kind>=10 )
+		{
+		// 艦船の登場
+//		if(arrived_side==JPN )
+//			m=set_new_unit(JPN,kind,rx,ry,(double)90);
+//		else
+//			m=set_new_unit(USA,kind,rx,ry,(double)90);
+
+		if( arrived_side==JPN )
+			m=set_new_unit_2(JPN,kind,kind2,rx,ry,(double)90);
+		else
+			m=set_new_unit_2(USA,kind,kind2,rx,ry,(double)90);
+
+
+		if(kind==TR1)
+			{
+			// 輸送船の場合、積荷
+			unit[m].arm[0]=kind2;		// 武装品種
+			unit[m].arm[1]=1;			// 数
+			unit[m].arm[4]=1;			// 数 全容量
+			}
+		else
+			{
+			unit[m].arm[1]=unit[m].arm[4]/4;			// 弾薬搭載量
+			unit[m].gas[0]=50;
+			}
+		}
+	else
+		{
+		// 航空機の登場
+
+		for(i=0;i<((kind==AT1 ? 1 : 0)*3)+((kind==FT1 ? 1 : 0)*2)+((kind==BM1 ? 1 : 0)*1)  ;i++)
+			{
+			if( arrived_side==JPN )
+				m=set_new_unit_2(JPN,kind,kind2,rx,ry,(double)90);
+			else
+				m=set_new_unit_2(USA,kind,kind2,rx,ry,(double)90);
+
+			unit[m].pp_x[0]=rx2;
+			unit[m].pp_y[0]=ry2;
+			unit[m].pp_x[1]=MAP_RIGHT+1;			
+			
+			unit[m].info[0]=FLYING;
+			unit[m].spd=1.5;
+
+			unit[m].info[5]=MOVE;				// モード（コンバットメニュー）
+
+			unit[m].gas[0]=50;
+			if(kind==FT1)
+				unit[m].arm[1]=unit[m].arm[1]/3;
+			else
+				unit[m].arm[1]=0;
+			//unit[m].arm[1]=unit[m].arm[4]/4;			// 弾薬搭載量
+
+			
+			rx+=-160+rnd(320);
+			ry+=-160+rnd(320);
+			rx2+=-100+rnd(200);
+			ry2+=-100+rnd(200);
+			}
+		}
+
+	}
 
 
 
@@ -137,7 +392,157 @@ public int		find_out_size( int m , int n)
 //============================================================================
 //絶対スクリーン座標に線を描画する。色付き
 //----------------------------------------------------------------------------
-// void	draw_line4(...), void	draw_line5(...): not yet ported.
+public void	draw_line4(int x1,int y1,int x2,int y2,int right,int bottom,uint rgb)
+	{
+
+	draw_line5( x1, y1, x2, y2, right, bottom , 0xFFFF);
+
+/***
+	int		dstX, dstY,addX,addY;
+	int		ctr,x,y,i;
+	int		cl1, cl2;
+    DDCOLORKEY          ddck;
+
+
+
+	ddck.dwColorSpaceLowValue  = 0xff;
+
+
+	//書き込むＶＲＡＭのアドレスを得る（ロックして書き込めるようにする）
+	memset(&dst_ddsd, 0, sizeof(DDSURFACEDESC));
+	dst_ddsd.dwSize = sizeof(DDSURFACEDESC);
+	IDirectDrawSurface_Lock( lpDDSBack, NULL, (LPDDSURFACEDESC)&dst_ddsd, DDLOCK_WAIT, NULL );
+	dst_vram=dst_ddsd.lpSurface;
+
+
+
+
+	dstX=x2-x1;	dstY=y2-y1;
+
+	if(dstX<0)	{addX=-1;	dstX*=-1;}	else	addX=1;
+	if(dstY<0)	{addY=-1;	dstY*=-1;}	else	addY=1;
+
+	ctr=0;
+	x=x1;	y=y1;
+	if(dstX>=dstY)
+		{
+		for(i=0;i<dstX;i++)
+			{
+			if( x>=0 && y>=0 && x<=right && y<=bottom )
+				{
+				dst_vram[y*dst_ddsd.lPitch+(x)]=ddck.dwColorSpaceLowValue;
+				}
+
+			x+=addX;
+			ctr+=dstY;
+			if(ctr>=dstX)
+				{
+				y+=addY;
+				ctr-=dstX;
+				}
+			}
+		}
+	else
+		{
+		for(i=0;i<dstY;i++)
+			{
+			if( x>=0 && y>=0 && x<=right && y<=bottom )
+				{
+				dst_vram[y*dst_ddsd.lPitch+(x)]=ddck.dwColorSpaceLowValue;
+				}
+
+			y+=addY;
+			ctr+=dstX;
+			if(ctr>=dstY)
+				{
+				x+=addX;
+				ctr-=dstY;
+				}			
+			}
+		}
+	IDirectDrawSurface_Unlock( lpDDSBack, NULL );
+***/
+	}
+
+
+
+
+
+
+//============================================================================
+//絶対スクリーン座標に線を描画する。色付き
+//----------------------------------------------------------------------------
+public void	draw_line5(int x1,int y1,int x2,int y2,int right,int bottom,ushort cl)
+	{
+	int		dstX, dstY,addX,addY;
+	int		ctr,x,y,i;
+	int		cl1, cl2;
+	DDCOLORKEY          ddck;
+	ushort* dst_vram;			//書き込むＶＲＡＭのアドレス
+
+	DDSURFACEDESC2		dst_ddsd;
+
+cl=0xFFFF;
+
+
+	//書き込むＶＲＡＭのアドレスを得る（ロックして書き込めるようにする）
+	memset(&dst_ddsd, 0, (nuint)(sizeof(DDSURFACEDESC2)));
+	dst_ddsd.dwSize = (uint)(sizeof(DDSURFACEDESC2));
+	IDirectDrawSurface_Lock( lpDDSBack, null, &dst_ddsd, DDLOCK_WAIT, null );
+
+	dst_vram=(ushort*)dst_ddsd.lpSurface;
+
+
+
+	dstX=x2-x1;	dstY=y2-y1;
+
+	if(dstX<0)	{addX=-1;	dstX*=-1;}	else	addX=1;
+	if(dstY<0)	{addY=-1;	dstY*=-1;}	else	addY=1;
+
+	ctr=0;
+	x=x1;	y=y1;
+	if(dstX>=dstY)
+		{
+		for(i=0;i<dstX;i++)
+			{
+			if( x>=0 && y>=0 && x<=right && y<=bottom )
+				{
+		//		dst_vram[y*dst_ddsd.lPitch+(x)]=ddck.dwColorSpaceLowValue;
+				dst_vram[y*(dst_ddsd.lPitch/2)+(x)]=cl;
+				}
+
+			x+=addX;
+			ctr+=dstY;
+			if(ctr>=dstX)
+				{
+				y+=addY;
+				ctr-=dstX;
+				}
+			}
+		}
+	else
+		{
+		for(i=0;i<dstY;i++)
+			{
+			if( x>=0 && y>=0 && x<=right && y<=bottom )
+				{
+//				dst_vram[y*dst_ddsd.lPitch+(x)]=ddck.dwColorSpaceLowValue;
+				dst_vram[y*(dst_ddsd.lPitch/2)+(x)]=cl;
+				}
+
+			y+=addY;
+			ctr+=dstX;
+			if(ctr>=dstY)
+				{
+				x+=addX;
+				ctr-=dstY;
+				}			
+			}
+		}
+
+	IDirectDrawSurface_Unlock( lpDDSBack, null );
+
+	}
 //============================================================================
 // 
 //----------------------------------------------------------------------------

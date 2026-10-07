@@ -201,7 +201,7 @@ public class TitleScreenTests
 			}
 
 			Assert.True(DateTime.UtcNow < deadline, "Timed out: " + string.Join("; ", games.Select(g =>
-				$"{g.PlayerName}: dialog {g.Game.g_hDlg?.Id}, players {g.Game.g_dwNumberOfActivePlayers}, mode {g.Game.mode}, frames {g.Platform.FrameCount}, ended {g.Ended}, boxes [{string.Join(", ", g.Platform.MessageBoxes)}]")));
+				$"{g.PlayerName}: dialog {g.Game.g_hDlg?.Id}, players {g.Game.g_dwNumberOfActivePlayers}, mode {g.Game.mode}, rival mode {g.Game.rival_mode}, frames {g.Platform.FrameCount}, ended {g.Ended}, boxes [{string.Join(", ", g.Platform.MessageBoxes)}]")));
 			Thread.Sleep(10);
 		}
 	}
@@ -265,8 +265,23 @@ public class TitleScreenTests
 		file.Write(Chunk("IEND", []));
 	}
 
-	[Fact]
-	public void Two_games_connect_and_reach_the_title_screen()
+	// Clicks the left mouse button at a point of the screen, as the user does.
+	private static void Click(RunningGame game, int x, int y)
+	{
+		game.Game.SetCursorPos(x, y);
+		game.Game.PostMouseInput(0, true);
+		Thread.Sleep(100);
+		game.Game.PostMouseInput(0, false);
+	}
+
+	private static void SaveFrame(RunningGame game, string name)
+	{
+		WritePng(Path.Combine(AppContext.BaseDirectory, name), game.Platform.LastFrame(), SCRN_WIDTH, SCRN_HEIGHT);
+	}
+
+	// Starts two games, the host and the guest, on a copy of the original's data, connects them through the connection
+	// dialogs over loopback, starts them from the host and waits for both to show the title screen. Then plays them.
+	private static void PlayTwoGames(Action<RunningGame, RunningGame> play)
 	{
 		var original = FindOriginalData() ?? throw new InvalidOperationException("Original/NSPW_NET is not found.");
 		var data = Path.Combine(Path.GetTempPath(), $"OpenNspw-{Guid.NewGuid():N}");
@@ -299,16 +314,9 @@ public class TitleScreenTests
 			host.Do(g => g.ClickDlgItem(g.g_hDlg!, IDC_START_GAME));
 			WaitUntil(() => host.Platform.FrameCount > 20 && guest.Platform.FrameCount > 20, host, guest);
 
-			Assert.Equal(DEMO, host.Game.mode);
-			Assert.Equal(DEMO, guest.Game.mode);
-			Assert.Equal(1, host.Game.you_are_host);
-			Assert.Equal(0, guest.Game.you_are_host);
+			play(host, guest);
 			Assert.Empty(host.Platform.MessageBoxes);
 			Assert.Empty(guest.Platform.MessageBoxes);
-
-			var frame = host.Platform.LastFrame();
-			WritePng(Path.Combine(AppContext.BaseDirectory, "title_host.png"), frame, SCRN_WIDTH, SCRN_HEIGHT);
-			Assert.True(frame.Distinct().Count() > 16, "The title screen is drawn.");
 		}
 		finally
 		{
@@ -320,5 +328,46 @@ public class TitleScreenTests
 			{
 			}
 		}
+	}
+
+	[Fact]
+	public void Two_games_connect_and_reach_the_title_screen()
+	{
+		PlayTwoGames((host, guest) =>
+		{
+			Assert.Equal(DEMO, host.Game.mode);
+			Assert.Equal(DEMO, guest.Game.mode);
+			Assert.Equal(1, host.Game.you_are_host);
+			Assert.Equal(0, guest.Game.you_are_host);
+
+			SaveFrame(host, "title_host.png");
+			Assert.True(host.Platform.LastFrame().Distinct().Count() > 16, "The title screen is drawn.");
+		});
+	}
+
+	// The host clicks the title screen, the first scenario and Game Start (demo.cpp), and both games play the battle.
+	[Fact]
+	public void Two_games_start_a_battle()
+	{
+		PlayTwoGames((host, guest) =>
+		{
+			Click(host, 512, 384);
+			WaitUntil(() => host.Game.mode == CNCT_GAME_SETTING && host.Game.rival_mode == CNCT_GAME_SETTING, host, guest);
+			SaveFrame(host, "game_setting_host.png");
+
+			Click(host, 130, 150 + 12);
+			WaitUntil(() => host.Game.mode == CNCT_CNFG_SETTING && host.Game.rival_mode == CNCT_CNFG_SETTING, host, guest);
+			SaveFrame(host, "config_setting_host.png");
+
+			Click(host, 630 - 120 + 10, 700 + 12);
+			WaitUntil(() => host.Game.mode == CMBT && guest.Game.mode == CMBT, host, guest);
+
+			var frames = (host.Platform.FrameCount, guest.Platform.FrameCount);
+			WaitUntil(() => host.Platform.FrameCount > frames.Item1 + 200 && guest.Platform.FrameCount > frames.Item2 + 200, host, guest);
+			SaveFrame(host, "battle_host.png");
+			SaveFrame(guest, "battle_guest.png");
+			Assert.Equal(CMBT, host.Game.mode);
+			Assert.Equal(CMBT, guest.Game.mode);
+		});
 	}
 }

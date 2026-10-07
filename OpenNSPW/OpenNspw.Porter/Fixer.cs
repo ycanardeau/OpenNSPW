@@ -140,6 +140,20 @@ internal sealed partial class Fixer(string projectDirectory, IReadOnlySet<string
 		var expression = node as ExpressionSyntax ?? (node as ArgumentSyntax)?.Expression;
 		switch (d.Id)
 		{
+			// Cannot implicitly convert type in a compound assignment, x op= y: C++ converts x op y back to the type of x.
+			case "CS0029" or "CS0266" when node.FirstAncestorOrSelf<AssignmentExpressionSyntax>() is { } assignment
+				&& !assignment.IsKind(SyntaxKind.SimpleAssignmentExpression)
+				&& (assignment.Span == d.Location.SourceSpan || assignment.Right.Span == d.Location.SourceSpan)
+				&& IsNumeric(model.GetTypeInfo(assignment.Left).Type) && IsNumeric(model.GetTypeInfo(assignment.Right).Type):
+				{
+					var to = model.GetTypeInfo(assignment.Left).Type!;
+					var target = to.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+					var floating = IsFloating(to) || IsFloating(model.GetTypeInfo(assignment.Right).Type);
+					var value = $"{assignment.Left} {assignment.OperatorToken.Text[..^1]} {Wrap(assignment.Right)}";
+					var cast = floating && !IsFloating(to) && to.SpecialType != SpecialType.System_Int32 ? $"({target})(int)" : $"({target})";
+					return (assignment.Span, $"{assignment.Left}={cast}({value})");
+				}
+
 			// Cannot implicitly convert type.
 			case "CS0029" or "CS0266" when expression is not null:
 				{
@@ -188,6 +202,21 @@ internal sealed partial class Fixer(string projectDirectory, IReadOnlySet<string
 					return (binary.Span, $"{leftText} {binary.OperatorToken.Text} {rightText}");
 				}
 
+			// Operator cannot be applied to operands: arithmetic with a comparison, which is 0 or 1 in C++.
+			case "CS0019" when node is BinaryExpressionSyntax binary
+				&& (IsBool(model.GetTypeInfo(binary.Left).Type) || IsBool(model.GetTypeInfo(binary.Right).Type)):
+				{
+					static string AsNumber(ExpressionSyntax e, ITypeSymbol? type)
+					{
+						var inner = e is ParenthesizedExpressionSyntax p ? p.Expression : e;
+						return IsBool(type) ? $"({inner} ? 1 : 0)" : e.ToString();
+					}
+
+					var leftText = AsNumber(binary.Left, model.GetTypeInfo(binary.Left).Type);
+					var rightText = AsNumber(binary.Right, model.GetTypeInfo(binary.Right).Type);
+					return (binary.Span, $"{leftText}{binary.OperatorToken.LeadingTrivia}{binary.OperatorToken.Text}{binary.OperatorToken.TrailingTrivia}{rightText}");
+				}
+
 			// Cannot convert null to a value type.
 			case "CS0037" when expression is not null:
 				{
@@ -233,6 +262,11 @@ internal sealed partial class Fixer(string projectDirectory, IReadOnlySet<string
 					var converted = Convert(argument.Expression, from, parameter?.Type, model);
 					return converted is null ? null : (argument.Expression.Span, converted);
 				}
+
+			// A pointer passed by ref, from &x passed as a pointer p: what p points to is passed by ref.
+			case "CS1503" when node.FirstAncestorOrSelf<ArgumentSyntax>() is { RefKindKeyword.RawKind: (int)SyntaxKind.RefKeyword } argument
+				&& model.GetTypeInfo(argument.Expression).Type is IPointerTypeSymbol:
+				return (argument.Expression.Span, $"*{argument.Expression}");
 
 			// Use of an unassigned local: C++ leaves it uninitialized (C4700, C4701); zero here.
 			case "CS0165" when node is IdentifierNameSyntax name
