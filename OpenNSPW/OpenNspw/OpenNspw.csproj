@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <!--
+      The ported files keep the original's names, unused variables and dead code (docs/Porting.md):
+      CS0162: unreachable code, such as `if( 0 && ... )`.
+      CS0168, CS0219: unused local variables.
+      CS8981: lowercase type names, such as the ported files' classes.
+    -->
+    <NoWarn>$(NoWarn);CS0162;CS0168;CS0219;CS8981</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="OpenNspw.all_head" Static="true" />
+    <Using Include="OpenNspw.crt" Static="true" />
+    <Using Include="OpenNspw.nspw_math" Static="true" />
+    <Using Include="OpenNspw.tchar" Static="true" />
+    <Using Include="OpenNspw.windef" Static="true" />
+  </ItemGroup>
+
+</Project>
