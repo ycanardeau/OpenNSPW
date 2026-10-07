@@ -2,7 +2,7 @@ namespace OpenNspw;
 
 // Stand-ins for the MSVC C runtime functions that the game calls, with the same results.
 
-public static class crt
+public static partial class crt
 {
 	// Unlike Math.Abs, abs(int.MinValue) is int.MinValue, as in C.
 	public static int abs(int x)

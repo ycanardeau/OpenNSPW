@@ -12,15 +12,15 @@
 //                 Ｎａｖａｌ Ｓｏｕｔｈ Ｐａｃｉｆｉｃ Ｗａｒ
 //                             Ｏｎ　ｔｈｅ　Ｎｅｔ
 
-// Port of win_main.cpp. So far only its globals are ported; the platform objects (handles, DirectX interfaces) are
-// left as comments until their stand-ins are ported.
+// Port of win_main.cpp. So far only its globals are ported. The platform objects (handles, DirectX interfaces) whose
+// stand-ins exist are ported; the others are left as comments.
 
 namespace OpenNspw;
 
 public partial class Nspw
 {
 // ウィンドウアプリケーション変数
-//HINSTANCE	hInstApp;
+public object?	hInstApp;
 //HWND	hwndApp;
 //HCURSOR		my_cursor;
 //D3DPRESENT_PARAMETERS d3dpp;
@@ -51,7 +51,7 @@ public int	fullscreen;
 //LPDIRECTSOUND8			lpDS = NULL;
 //LPDIRECTSOUNDBUFFER	lpDSP = NULL;
 
-//LPDIRECTSOUNDBUFFER lpDSB_[NUM_SOUND_EFFECTS][SND_DUP];
+public Array35<Array6<IDirectSoundBuffer>> lpDSB_;	// [NUM_SOUND_EFFECTS][SND_DUP]
 public Array35<short>		snd_;	// [NUM_SOUND_EFFECTS]
 
 
@@ -87,21 +87,21 @@ public Array16<int>	dbg;
 /*
 GUID g_guidApp = { 0x2ae835d, 0x9179, 0x485f, { 0x83, 0x43, 0x90, 0x1d, 0x32, 0x7c, 0xe7, 0x94 } };
 */
-//GUID g_guidApp = { 0x11bc0eb, 0xbdb3, 0x11d6, { 0xba, 0x95, 0x9c, 0xce, 0x36, 0x89, 0x70, 0x55 } };
+public Guid g_guidApp = new( 0x11bc0eb, 0xbdb3, 0x11d6, 0xba, 0x95, 0x9c, 0xce, 0x36, 0x89, 0x70, 0x55 );
 
 
 
-//IDirectPlay8ThreadPool*		g_pThreadPool = NULL;		// DirectPlay threadpool object
-//IDirectPlay8Peer*				g_pDP = NULL;					// DirectPlay peer object
+public IDirectPlay8ThreadPool?		g_pThreadPool = null;		// DirectPlay threadpool object
+public IDirectPlay8Peer?				g_pDP = null;					// DirectPlay peer object
 
 //HKEY								hDPlaySampleRegKey;		// レジストリ
 
-//HWND                       g_hDlg                        = NULL;    // HWND of main dialog
+public HWND?                       g_hDlg                        = null;    // HWND of main dialog
 public int								dlg_answer;
 
 
-//DPNID                      g_dpnidLocalPlayer            = 0;       // DPNID of local player
-//DPNID                      g_dpnidRivalPlayer            = 0;       // DPNID of local player
+public uint                      g_dpnidLocalPlayer            = 0;       // DPNID of local player
+public uint                      g_dpnidRivalPlayer            = 0;       // DPNID of local player
 ////DPNID                      g_dpnidHostPlayer             = 0;       // DPNID of host player
 public uint                      g_dwNumberOfActivePlayers     = 0;       // Number of players currently in game
 public Array256<byte>                      g_strAppName             = TEXT<Array256<byte>>("NSPW NET");
@@ -117,14 +117,14 @@ public Array260<byte>                      g_strRemoteHostname;           // TCP
 
 
 public int                       g_bHostPlayer                 = FALSE;   // TRUE if local player is host
-//GUID*                      g_pCurSPGuid                  = NULL;    // Currently selected guid
-//DPNHANDLE                  g_hConnectAsyncOp             = NULL;    // Async handle for connecting to host
+public Guid?                      g_pCurSPGuid                  = null;    // Currently selected guid
+public uint                  g_hConnectAsyncOp             = 0;    // Async handle for connecting to host
 
-//DPN_BUFFER_DESC bufferDesc;
-//DPNHANDLE hAsync;
+public DPN_BUFFER_DESC bufferDesc;
+public uint hAsync;
 
 // チャット
-//HWND                       hwndChatDlg                        = NULL;    // HWND of chat dialog
+public HWND?                       hwndChatDlg                        = null;    // HWND of chat dialog
 
 
 /////////////////////

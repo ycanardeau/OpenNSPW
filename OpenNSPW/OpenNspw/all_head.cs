@@ -469,7 +469,7 @@ public const int		USA_PLANE_END		= 180;
 //#define PLAYER_RELEASE( pPlayerInfo )   if( pPlayerInfo ) { pPlayerInfo->lRefCount--; if( pPlayerInfo->lRefCount <= 0 ) SAFE_DELETE( pPlayerInfo ); } 	pPlayerInfo = NULL;
 
 public const int MAX_PLAYER_NAME                 = 14;
-//#define WM_APP_UPDATE_STATS             (WM_APP + 0)
+public const uint WM_APP_UPDATE_STATS             = (winuser.WM_APP + 0);
 ////#define WM_APP_DISPLAY_WAVE           (WM_APP + 1)
 public const int DOWORK_TIMESLICE                = 8; // let DirectPlay work for 8 ms at a time
 public const int ADDRESSOVERRIDE_PORT            = 2310;
@@ -533,7 +533,7 @@ public const int		RIVAL_VER			= 501;
 
 //#define		EASY_SEND		DPNSEND_NOCOMPLETE | DPNSEND_NOLOOPBACK
 //#define		MUST_SEND		DPNSEND_NOLOOPBACK | DPNSEND_GUARANTEED
-// Ported with dplay.cpp, with the DirectPlay 8 stand-ins.
+// In dplay8.cs, with the DPNSEND_* values.
 
 
 

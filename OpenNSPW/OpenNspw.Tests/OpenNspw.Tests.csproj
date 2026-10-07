@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <!-- NetworkTests builds DirectPlay messages as the game does, with unsafe pointers. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OpenNspw\OpenNspw.csproj" />
+    <ProjectReference Include="..\OpenNspw.DirectPlay\OpenNspw.DirectPlay.csproj" />
   </ItemGroup>
 
   <!-- Recorded by OpenNspw.Reference/record-functions.ps1. -->

@@ -28,4 +28,8 @@ public static class windef
 	public const int TRUE = 1;
 
 	public const int MAX_PATH = 260;
+
+	public const int IDOK = 1;
+
+	public const int IDCANCEL = 2;
 }

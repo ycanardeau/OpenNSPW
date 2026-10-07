@@ -14,6 +14,12 @@ public static class tchar
 
 	public static readonly Encoding ShiftJis = CreateShiftJis();
 
+	// A string literal passed to a function, as in `SetWindowText( hDlg, TEXT("...") )`.
+	public static string TEXT(string s)
+	{
+		return s;
+	}
+
 	// A char array initialized with a string literal, as in `TCHAR s[N] = TEXT("...")`.
 	public static T TEXT<T>(string s) where T : unmanaged
 	{
