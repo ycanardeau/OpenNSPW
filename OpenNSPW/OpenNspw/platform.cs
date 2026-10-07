@@ -1,12 +1,38 @@
 namespace OpenNspw;
 
 // What the game needs from the platform that the ported code cannot do by itself: creating COM objects (DirectPlay 8),
-// showing message boxes and opening files. The desktop app and the tests provide it.
+// showing message boxes, opening files, the clock, showing frames, rasterizing text, playing sounds and keeping
+// settings (the registry). The desktop app and the tests provide it.
 public interface INspwPlatform
 {
+	// Milliseconds since some fixed time, like timeGetTime.
+	uint timeGetTime();
+
+	// Seconds since 1970, like time(NULL).
+	int time();
+
+	// Shows a frame: what the game flipped or blitted to the primary surface.
+	void Present(DirectDrawSurface7 primary);
+
+	// Rasterizes text in a font of the given height and face (the game uses "", the default Shift_JIS font), or returns
+	// null to draw nothing.
+	TextBitmap? RasterizeText(string text, int height, string faceName);
+
+	// Creates a sound to play from PCM data.
+	ISound? CreateSound(WAVEFORMATEX format, ReadOnlySpan<byte> data);
+
+	// Reads and writes a setting, like the registry values the game keeps under HKEY_CURRENT_USER.
+	string? ReadSetting(string key);
+
+	void WriteSetting(string key, string value);
+
 	// Opens a file of the game, by its path relative to the game's directory with '/' separators. Returns null if the
 	// file cannot be opened.
 	Stream? OpenFile(string path, FileMode mode, FileAccess access, FileShare share);
+
+	// The names of the files in a directory of the game ('/' separators, "" for the game's directory) that match a
+	// pattern such as "*.dat".
+	IReadOnlyList<string> FindFiles(string directory, string pattern);
 
 	// Creates the object of a COM class, like CoCreateInstance. Returns S_OK, or an error such as REGDB_E_CLASSNOTREG.
 	int CoCreateInstance(Guid rclsid, Guid riid, out object? ppv);
@@ -15,7 +41,8 @@ public interface INspwPlatform
 	int MessageBox(HWND? hWnd, string lpText, string lpCaption, uint uType);
 }
 
-// A platform with no COM classes and no files, whose message boxes answer OK. The default, for function tests.
+// A platform with no COM classes, no files, no settings, nothing shown or played, and message boxes that answer OK.
+// The default, for function tests.
 public sealed class NullPlatform : INspwPlatform
 {
 	public static NullPlatform Instance { get; } = new();
@@ -34,6 +61,44 @@ public sealed class NullPlatform : INspwPlatform
 	public Stream? OpenFile(string path, FileMode mode, FileAccess access, FileShare share)
 	{
 		return null;
+	}
+
+	public IReadOnlyList<string> FindFiles(string directory, string pattern)
+	{
+		return [];
+	}
+
+	public uint timeGetTime()
+	{
+		return (uint)Environment.TickCount64;
+	}
+
+	public int time()
+	{
+		return (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+	}
+
+	public void Present(DirectDrawSurface7 primary)
+	{
+	}
+
+	public TextBitmap? RasterizeText(string text, int height, string faceName)
+	{
+		return null;
+	}
+
+	public ISound? CreateSound(WAVEFORMATEX format, ReadOnlySpan<byte> data)
+	{
+		return null;
+	}
+
+	public string? ReadSetting(string key)
+	{
+		return null;
+	}
+
+	public void WriteSetting(string key, string value)
+	{
 	}
 }
 

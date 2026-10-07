@@ -132,7 +132,7 @@ public sealed class DPNMSG_SEND_COMPLETE
 	public uint dwFirstFrameRetryCount;
 }
 
-public interface IDirectPlay8Address
+public interface IDirectPlay8Address : IUnknown
 {
 	int SetSP(Guid? pguidSP);
 
@@ -140,11 +140,9 @@ public interface IDirectPlay8Address
 
 	// pvData is a uint for DPNA_DATATYPE_DWORD and a string for DPNA_DATATYPE_STRING.
 	int AddComponent(string pwszName, object pvData, uint dwDataSize, uint dwDataType);
-
-	uint Release();
 }
 
-public interface IDirectPlay8ThreadPool
+public interface IDirectPlay8ThreadPool : IUnknown
 {
 	int Initialize(object? pvUserContext, PFNDPNMESSAGEHANDLER pfn, uint dwFlags);
 
@@ -153,11 +151,9 @@ public interface IDirectPlay8ThreadPool
 	int SetThreadCount(uint dwProcessorNum, uint dwNumThreads, uint dwFlags);
 
 	int DoWork(uint dwAllowedTimeSlice, uint dwFlags);
-
-	uint Release();
 }
 
-public interface IDirectPlay8Peer
+public interface IDirectPlay8Peer : IUnknown
 {
 	int Initialize(object? pvUserContext, PFNDPNMESSAGEHANDLER pfn, uint dwFlags);
 
@@ -176,8 +172,6 @@ public interface IDirectPlay8Peer
 	int SendTo(uint dpnid, ref DPN_BUFFER_DESC prgBufferDesc, uint cBufferDesc, uint dwTimeOut, object? pvAsyncContext, ref uint phAsyncHandle, uint dwFlags);
 
 	int Close(uint dwFlags);
-
-	uint Release();
 }
 
 public static class dplay8

@@ -20,16 +20,29 @@
   <ItemGroup>
     <Using Include="OpenNspw.all_head" Static="true" />
     <Using Include="OpenNspw.crt" Static="true" />
+    <Using Include="OpenNspw.ddraw" Static="true" />
+    <Using Include="OpenNspw.dinput" Static="true" />
+    <Using Include="OpenNspw.dmusici" Static="true" />
     <Using Include="OpenNspw.dplay8" Static="true" />
     <Using Include="OpenNspw.dsound" Static="true" />
     <Using Include="OpenNspw.dxutil" Static="true" />
     <Using Include="OpenNspw.fileapi" Static="true" />
+    <Using Include="OpenNspw.mmsystem" Static="true" />
     <Using Include="OpenNspw.nspw_math" Static="true" />
     <Using Include="OpenNspw.resource" Static="true" />
     <Using Include="OpenNspw.tchar" Static="true" />
     <Using Include="OpenNspw.windef" Static="true" />
+    <Using Include="OpenNspw.wingdi" Static="true" />
+    <Using Include="OpenNspw.winreg" Static="true" />
     <Using Include="OpenNspw.winerror" Static="true" />
     <Using Include="OpenNspw.winuser" Static="true" />
+  </ItemGroup>
+
+  <!-- Win32 handle types that are the same stand-in type. -->
+  <ItemGroup>
+    <Using Include="OpenNspw.HGDIOBJ" Alias="HBITMAP" />
+    <Using Include="OpenNspw.HGDIOBJ" Alias="HBRUSH" />
+    <Using Include="OpenNspw.HGDIOBJ" Alias="HFONT" />
   </ItemGroup>
 
 </Project>

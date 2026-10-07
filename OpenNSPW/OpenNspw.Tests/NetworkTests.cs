@@ -32,11 +32,31 @@ internal sealed class NetworkTestPlatform : INspwPlatform
 		MessageBoxes.Add(lpText);
 		return IDOK;
 	}
+
+	public IReadOnlyList<string> FindFiles(string directory, string pattern) => NullPlatform.Instance.FindFiles(directory, pattern);
+
+	public uint timeGetTime() => NullPlatform.Instance.timeGetTime();
+
+	public int time() => NullPlatform.Instance.time();
+
+	public void Present(DirectDrawSurface7 primary) => NullPlatform.Instance.Present(primary);
+
+	public TextBitmap? RasterizeText(string text, int height, string faceName) => NullPlatform.Instance.RasterizeText(text, height, faceName);
+
+	public ISound? CreateSound(WAVEFORMATEX format, ReadOnlySpan<byte> data) => NullPlatform.Instance.CreateSound(format, data);
+
+	public string? ReadSetting(string key) => NullPlatform.Instance.ReadSetting(key);
+
+	public void WriteSetting(string key, string value) => NullPlatform.Instance.WriteSetting(key, value);
 }
 
 // A sound buffer that does nothing.
-internal sealed class SilentSoundBuffer : IDirectSoundBuffer
+internal sealed unsafe class SilentSoundBuffer : IDirectSoundBuffer
 {
+	public int Lock(uint dwOffset, uint dwBytes, void** ppvAudioPtr1, uint* pdwAudioBytes1, void** ppvAudioPtr2, uint* pdwAudioBytes2, uint dwFlags) => dsound.DSERR_INVALIDPARAM;
+
+	public int Unlock(void* pvAudioPtr1, uint dwAudioBytes1, void* pvAudioPtr2, uint dwAudioBytes2) => 0;
+
 	public int Play(uint dwReserved1, uint dwPriority, uint dwFlags) => 0;
 
 	public int Stop() => 0;

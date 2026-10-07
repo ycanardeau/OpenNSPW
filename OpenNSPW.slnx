@@ -13,6 +13,7 @@
   </Folder>
   <Folder Name="/OpenNSPW/">
     <Project Path="OpenNSPW/OpenNspw.DirectPlay/OpenNspw.DirectPlay.csproj" />
+    <Project Path="OpenNSPW/OpenNspw.Porter/OpenNspw.Porter.csproj" />
     <Project Path="OpenNSPW/OpenNspw.Tests/OpenNspw.Tests.csproj" />
     <Project Path="OpenNSPW/OpenNspw/OpenNspw.csproj" />
   </Folder>

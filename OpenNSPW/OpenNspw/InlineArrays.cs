@@ -253,3 +253,47 @@ public struct Array4096<T> : IInlineArray
 		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 4096).ToArray();
 	}
 }
+
+[InlineArray(5)]
+public struct Array5<T> : IInlineArray
+{
+	private T _element0;
+
+	public readonly byte[] ToBytes()
+	{
+		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 5).ToArray();
+	}
+}
+
+[InlineArray(7)]
+public struct Array7<T> : IInlineArray
+{
+	private T _element0;
+
+	public readonly byte[] ToBytes()
+	{
+		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 7).ToArray();
+	}
+}
+
+[InlineArray(12)]
+public struct Array12<T> : IInlineArray
+{
+	private T _element0;
+
+	public readonly byte[] ToBytes()
+	{
+		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 12).ToArray();
+	}
+}
+
+[InlineArray(20)]
+public struct Array20<T> : IInlineArray
+{
+	private T _element0;
+
+	public readonly byte[] ToBytes()
+	{
+		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 20).ToArray();
+	}
+}

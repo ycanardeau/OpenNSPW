@@ -4,7 +4,12 @@ namespace OpenNspw;
 // the DirectX SDK samples, so only what the game calls is provided, with the same results.
 public static class dxutil
 {
-	// The Release build's definition: the HRESULT, without a message box.
+	// The Release build's definitions: the HRESULT, without a trace or a message box.
+	public static int DXTRACE_ERR(string str, int hr)
+	{
+		return hr;
+	}
+
 	public static int DXTRACE_ERR_MSGBOX(string str, int hr)
 	{
 		return hr;
