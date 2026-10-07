@@ -35,13 +35,7 @@ internal sealed class GameTestPlatform(string dataDirectory) : INspwPlatform
 	{
 		try
 		{
-			var full = Path.Combine(_dataDirectory, path);
-			if (!File.Exists(full) && mode == FileMode.Open && Directory.Exists(Path.GetDirectoryName(full)))
-			{
-				full = Directory.GetFiles(Path.GetDirectoryName(full)!).FirstOrDefault(f => string.Equals(Path.GetFileName(f), Path.GetFileName(full), StringComparison.OrdinalIgnoreCase)) ?? full;
-			}
-
-			return new FileStream(full, mode, access, share);
+			return new FileStream(GameFiles.Resolve(_dataDirectory, path), mode, access, share);
 		}
 		catch (IOException)
 		{
@@ -49,11 +43,7 @@ internal sealed class GameTestPlatform(string dataDirectory) : INspwPlatform
 		}
 	}
 
-	public IReadOnlyList<string> FindFiles(string directory, string pattern)
-	{
-		var full = Path.Combine(_dataDirectory, directory);
-		return Directory.Exists(full) ? [.. Directory.GetFiles(full, pattern).Select(Path.GetFileName).OfType<string>().Order()] : [];
-	}
+	public IReadOnlyList<string> FindFiles(string directory, string pattern) => GameFiles.Find(_dataDirectory, directory, pattern);
 
 	public int CoCreateInstance(Guid rclsid, Guid riid, out object? ppv) => DirectPlay.CoCreateInstance(rclsid, riid, out ppv);
 
@@ -173,6 +163,30 @@ public class TitleScreenTests
 		return null;
 	}
 
+	// Makes a new, empty directory case-sensitive on Windows, as directories are on Linux, so that the tests find the
+	// game's file names that differ in case from its files (WAV\CLICK1.wav for wav/click1.wav) on every platform.
+	// Directories created in it inherit it. Needs Windows 10 1803 or later with WSL; without it, nothing changes.
+	private static void MakeCaseSensitive(string directory)
+	{
+		if (!OperatingSystem.IsWindows())
+		{
+			return;
+		}
+
+		try
+		{
+			using var fsutil = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("fsutil.exe", ["file", "setCaseSensitiveInfo", directory, "enable"])
+			{
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+			});
+			fsutil?.WaitForExit();
+		}
+		catch (System.ComponentModel.Win32Exception)
+		{
+		}
+	}
+
 	private static void CopyDirectory(string source, string target)
 	{
 		Directory.CreateDirectory(target);
@@ -189,6 +203,9 @@ public class TitleScreenTests
 
 	private static void WaitUntil(Func<bool> condition, params RunningGame[] games)
 	{
+		string Status() => string.Join("; ", games.Select(g =>
+			$"{g.PlayerName}: dialog {g.Game.g_hDlg?.Id}, players {g.Game.g_dwNumberOfActivePlayers}, mode {g.Game.mode}, rival mode {g.Game.rival_mode}, frames {g.Platform.FrameCount}, ended {g.Ended}, boxes [{string.Join(", ", g.Platform.MessageBoxes)}]"));
+
 		var deadline = DateTime.UtcNow + Timeout;
 		while (!condition())
 		{
@@ -198,10 +215,11 @@ public class TitleScreenTests
 				{
 					throw new InvalidOperationException($"{game.PlayerName}'s game failed.", error);
 				}
+
+				Assert.False(game.Ended, $"{game.PlayerName}'s game ended: {Status()}");
 			}
 
-			Assert.True(DateTime.UtcNow < deadline, "Timed out: " + string.Join("; ", games.Select(g =>
-				$"{g.PlayerName}: dialog {g.Game.g_hDlg?.Id}, players {g.Game.g_dwNumberOfActivePlayers}, mode {g.Game.mode}, rival mode {g.Game.rival_mode}, frames {g.Platform.FrameCount}, ended {g.Ended}, boxes [{string.Join(", ", g.Platform.MessageBoxes)}]")));
+			Assert.True(DateTime.UtcNow < deadline, "Timed out: " + Status());
 			Thread.Sleep(10);
 		}
 	}
@@ -285,6 +303,8 @@ public class TitleScreenTests
 	{
 		var original = FindOriginalData() ?? throw new InvalidOperationException("Original/NSPW_NET is not found.");
 		var data = Path.Combine(Path.GetTempPath(), $"OpenNspw-{Guid.NewGuid():N}");
+		Directory.CreateDirectory(data);
+		MakeCaseSensitive(data);
 		CopyDirectory(original, data);
 		try
 		{

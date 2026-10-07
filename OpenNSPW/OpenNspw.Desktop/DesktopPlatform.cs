@@ -83,16 +83,10 @@ internal sealed class DesktopPlatform(string dataDirectory) : INspwPlatform
 	{
 		try
 		{
-			var full = Path.Combine(_dataDirectory, path);
+			var full = GameFiles.Resolve(_dataDirectory, path);
 			if (mode is FileMode.Create or FileMode.CreateNew or FileMode.OpenOrCreate)
 			{
 				Directory.CreateDirectory(Path.GetDirectoryName(full)!);
-			}
-
-			// File names are matched without case, as on Windows.
-			if (!File.Exists(full) && mode == FileMode.Open && Directory.Exists(Path.GetDirectoryName(full)))
-			{
-				full = Directory.GetFiles(Path.GetDirectoryName(full)!).FirstOrDefault(f => string.Equals(Path.GetFileName(f), Path.GetFileName(full), StringComparison.OrdinalIgnoreCase)) ?? full;
 			}
 
 			return new FileStream(full, mode, access, share);
@@ -109,8 +103,7 @@ internal sealed class DesktopPlatform(string dataDirectory) : INspwPlatform
 
 	public IReadOnlyList<string> FindFiles(string directory, string pattern)
 	{
-		var full = Path.Combine(_dataDirectory, directory);
-		return Directory.Exists(full) ? [.. Directory.GetFiles(full, pattern).Select(Path.GetFileName).OfType<string>().Order()] : [];
+		return GameFiles.Find(_dataDirectory, directory, pattern);
 	}
 
 	public int CoCreateInstance(Guid rclsid, Guid riid, out object? ppv)

@@ -41,6 +41,35 @@ public interface INspwPlatform
 	int MessageBox(HWND? hWnd, string lpText, string lpCaption, uint uType);
 }
 
+// The game's files in a directory, with their names matched without case, as on Windows: the game opens WAV\CLICK1.wav,
+// and the file is wav/click1.wav.
+public static class GameFiles
+{
+	// The path of a file or directory of the game: each part of the path is the entry of that name, in any case, or the
+	// name as it is where none exists, for a file or directory to create.
+	public static string Resolve(string dataDirectory, string path)
+	{
+		var full = dataDirectory;
+		foreach (var part in path.Split('/', StringSplitOptions.RemoveEmptyEntries))
+		{
+			var exact = Path.Combine(full, part);
+			full = File.Exists(exact) || Directory.Exists(exact) || !Directory.Exists(full)
+				? exact
+				: Directory.EnumerateFileSystemEntries(full).FirstOrDefault(e => string.Equals(Path.GetFileName(e), part, StringComparison.OrdinalIgnoreCase)) ?? exact;
+		}
+
+		return full;
+	}
+
+	public static IReadOnlyList<string> Find(string dataDirectory, string directory, string pattern)
+	{
+		var full = Resolve(dataDirectory, directory);
+		return Directory.Exists(full)
+			? [.. Directory.GetFiles(full, pattern, new EnumerationOptions { MatchCasing = MatchCasing.CaseInsensitive }).Select(Path.GetFileName).OfType<string>().Order(StringComparer.OrdinalIgnoreCase)]
+			: [];
+	}
+}
+
 // A platform with no COM classes, no files, no settings, nothing shown or played, and message boxes that answer OK.
 // The default, for function tests.
 public sealed class NullPlatform : INspwPlatform
