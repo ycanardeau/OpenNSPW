@@ -29,7 +29,7 @@ public unsafe struct DSBUFFERDESC
 }
 
 // A sound that the platform plays: the data of one sound buffer.
-public interface ISound : IUnknown
+public interface ISound
 {
 	void Play(bool loop);
 

@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\OpenNspw\OpenNspw.csproj" />
     <ProjectReference Include="..\OpenNspw.DirectPlay\OpenNspw.DirectPlay.csproj" />
+    <ProjectReference Include="..\OpenNspw.Desktop\OpenNspw.Desktop.csproj" />
   </ItemGroup>
 
   <!-- Recorded by OpenNspw.Reference/record-functions.ps1. -->

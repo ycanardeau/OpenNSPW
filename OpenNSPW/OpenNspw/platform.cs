@@ -128,9 +128,13 @@ public partial class Nspw(INspwPlatform? platform = null)
 
 	public const uint CLSCTX_INPROC_SERVER = 0x1;
 
+	// DirectMusic's classes are the port's own (unknwn.cs); the platform creates the others.
 	public int CoCreateInstance<T>(Guid rclsid, object? pUnkOuter, uint dwClsContext, Guid riid, out T? ppv) where T : class
 	{
-		var hr = _platform.CoCreateInstance(rclsid, riid, out var obj);
+		object? obj;
+		var hr = rclsid == dmusici.CLSID_DirectMusicLoader ? (obj = new DirectMusicLoader8()) is not null ? winerror.S_OK : 0
+			: rclsid == dmusici.CLSID_DirectMusicPerformance ? (obj = new DirectMusicPerformance8()) is not null ? winerror.S_OK : 0
+			: _platform.CoCreateInstance(rclsid, riid, out obj);
 		ppv = obj as T;
 		return winerror.SUCCEEDED(hr) && ppv is null ? winerror.E_NOINTERFACE : hr;
 	}

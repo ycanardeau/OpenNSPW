@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <IsPackable>false</IsPackable>
+    <!-- The game's surfaces and sounds are native memory (OpenNspw/ddraw.cs, dsound.cs). -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FontStashSharp.MonoGame" />
+    <PackageReference Include="MonoGame.Extended" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OpenNspw\OpenNspw.csproj" />
+    <ProjectReference Include="..\OpenNspw.DirectPlay\OpenNspw.DirectPlay.csproj" />
+    <ProjectReference Include="..\..\Saruhashi\Aigamo.Saruhashi.MonoGame\Aigamo.Saruhashi.MonoGame.csproj" />
+  </ItemGroup>
+
+</Project>
