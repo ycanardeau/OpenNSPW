@@ -19,6 +19,135 @@ namespace OpenNspw;
 public unsafe partial class Nspw
 {
 
+private void SetUnitedStatesArrivalPoint(ref double rx, ref double ry, ref double rx2, ref double ry2, int new_unit_kind, Side arrived_side)
+	{
+	switch(CurrentMap)
+		{
+		case 0:		// 南太平洋
+			rx=MAP_RIGHT-Random(1200)-100;
+			ry=MAP_BOTTOM-10;
+			rx2=rx-200;
+			ry2=ry+500;
+ry-=new_unit_kind*80;
+			break;
+
+		case 1:		// 中部太平洋
+			rx=MAP_RIGHT+10;
+			ry=Random(1200);
+			rx2=rx-500;
+			ry2=ry;
+rx+=new_unit_kind*80;
+			break;
+
+		case 2:		// 日本近海
+			rx=MAP_RIGHT-Random(1200)-100;
+			ry=MAP_BOTTOM-10;
+			rx2=rx-200;
+			ry2=ry+500;
+ry-=new_unit_kind*80;
+			break;
+
+		case 3:		// ユーザーマップ
+			switch(Reinforcements[(int)arrived_side])
+				{
+				case 0:
+					rx=MAP_LEFT-500;
+					ry=MAP_TOP+500;
+					rx2=rx+1200;
+					ry2=ry-1200-Random(500);
+					ry-=new_unit_kind*80;
+					break;
+				case 1:
+					rx=MAP_RIGHT+500;
+					ry=MAP_TOP+500;
+					rx2=rx-1200;
+					ry2=ry-1200-Random(500);
+					ry-=new_unit_kind*80;
+					break;
+				case 2:
+					rx=MAP_RIGHT+500;
+					ry=MAP_BOTTOM-500;
+					rx2=rx-1200;
+					ry2=ry+1200+Random(500);
+					ry+=new_unit_kind*80;
+					break;
+				case 3:
+					rx=MAP_LEFT-500;
+					ry=MAP_BOTTOM-500;
+					rx2=rx+1200;
+					ry2=ry+1200+Random(500);
+					ry+=new_unit_kind*80;
+					break;
+				}
+			break;
+		}
+	}
+
+private void SetJapanArrivalPoint(ref double rx, ref double ry, ref double rx2, ref double ry2, int new_unit_kind, Side arrived_side)
+	{
+	switch(CurrentMap)
+		{
+		case 0:		// 南太平洋
+			rx=MAP_LEFT-10;
+			ry=MAP_TOP-Random(1200);
+			rx2=rx+500;
+			ry2=ry-200;
+rx-=new_unit_kind*80 ;
+			break;
+
+		case 1:		// 中部太平洋
+			rx=MAP_LEFT-10;
+			ry=MAP_BOTTOM+Random(1200);
+			rx2=rx+500;
+			ry2=ry+200;
+rx-=new_unit_kind*80;
+			break;
+
+		case 2:		// 日本近海
+			rx=MAP_LEFT+Random(1200);
+			ry=MAP_TOP+10;
+			rx2=rx+200;
+			ry2=ry-500;
+ry+=new_unit_kind*80;
+			break;
+
+		case 3:		// ユーザーマップ
+			switch(Reinforcements[(int)arrived_side])
+				{
+				case 0:
+					rx=MAP_LEFT-500;
+					ry=MAP_TOP+500;
+					rx2=rx+1200;
+					ry2=ry-1200-Random(500);
+					ry-=new_unit_kind*80;
+					break;
+				case 1:
+					rx=MAP_RIGHT+500;
+					ry=MAP_TOP+500;
+					rx2=rx-1200;
+					ry2=ry-1200-Random(500);
+					ry-=new_unit_kind*80;
+					break;
+				case 2:
+					rx=MAP_RIGHT+500;
+					ry=MAP_BOTTOM-500;
+					rx2=rx-1200;
+					ry2=ry+1200+Random(500);
+					ry+=new_unit_kind*80;
+					break;
+				case 3:
+					rx=MAP_LEFT-500;
+					ry=MAP_BOTTOM-500;
+					rx2=rx+1200;
+					ry2=ry+1200+Random(500);
+					ry+=new_unit_kind*80;
+					break;
+				}
+			break;
+
+		}
+	}
+
 //============================================================================
 // 新ユニット登場
 //----------------------------------------------------------------------------
@@ -78,130 +207,11 @@ public void OnUnitArrived(int side,int new_unit_kind)
 
 	if(arrived_side==Side.Japan)
 		{
-		switch(CurrentMap)
-			{
-			case 0:		// 南太平洋
-				rx=MAP_LEFT-10;
-				ry=MAP_TOP-Random(1200);
-				rx2=rx+500;
-				ry2=ry-200;
-rx-=new_unit_kind*80 ;
-				break;
-
-			case 1:		// 中部太平洋
-				rx=MAP_LEFT-10;
-				ry=MAP_BOTTOM+Random(1200);
-				rx2=rx+500;
-				ry2=ry+200;
-rx-=new_unit_kind*80;
-				break;
-
-			case 2:		// 日本近海
-				rx=MAP_LEFT+Random(1200);
-				ry=MAP_TOP+10;
-				rx2=rx+200;
-				ry2=ry-500;
-ry+=new_unit_kind*80;
-				break;
-
-			case 3:		// ユーザーマップ
-				switch(Reinforcements[(int)arrived_side])
-					{
-					case 0:
-						rx=MAP_LEFT-500;
-						ry=MAP_TOP+500;
-						rx2=rx+1200;
-						ry2=ry-1200-Random(500);
-						ry-=new_unit_kind*80;
-						break;
-					case 1:
-						rx=MAP_RIGHT+500;
-						ry=MAP_TOP+500;
-						rx2=rx-1200;
-						ry2=ry-1200-Random(500);
-						ry-=new_unit_kind*80;
-						break;
-					case 2:
-						rx=MAP_RIGHT+500;
-						ry=MAP_BOTTOM-500;
-						rx2=rx-1200;
-						ry2=ry+1200+Random(500);
-						ry+=new_unit_kind*80;
-						break;
-					case 3:
-						rx=MAP_LEFT-500;
-						ry=MAP_BOTTOM-500;
-						rx2=rx+1200;
-						ry2=ry+1200+Random(500);
-						ry+=new_unit_kind*80;
-						break;
-					}
-				break;
-
-			}
+		SetJapanArrivalPoint(ref rx, ref ry, ref rx2, ref ry2, new_unit_kind, arrived_side);
 		}
 	else
 		{
-		switch(CurrentMap)
-			{
-			case 0:		// 南太平洋
-				rx=MAP_RIGHT-Random(1200)-100;
-				ry=MAP_BOTTOM-10;
-				rx2=rx-200;
-				ry2=ry+500;
-ry-=new_unit_kind*80;
-				break;
-
-			case 1:		// 中部太平洋
-				rx=MAP_RIGHT+10;
-				ry=Random(1200);
-				rx2=rx-500;
-				ry2=ry;
-rx+=new_unit_kind*80;
-				break;
-
-			case 2:		// 日本近海
-				rx=MAP_RIGHT-Random(1200)-100;
-				ry=MAP_BOTTOM-10;
-				rx2=rx-200;
-				ry2=ry+500;
-ry-=new_unit_kind*80;
-				break;
-
-			case 3:		// ユーザーマップ
-				switch(Reinforcements[(int)arrived_side])
-					{
-					case 0:
-						rx=MAP_LEFT-500;
-						ry=MAP_TOP+500;
-						rx2=rx+1200;
-						ry2=ry-1200-Random(500);
-						ry-=new_unit_kind*80;
-						break;
-					case 1:
-						rx=MAP_RIGHT+500;
-						ry=MAP_TOP+500;
-						rx2=rx-1200;
-						ry2=ry-1200-Random(500);
-						ry-=new_unit_kind*80;
-						break;
-					case 2:
-						rx=MAP_RIGHT+500;
-						ry=MAP_BOTTOM-500;
-						rx2=rx-1200;
-						ry2=ry+1200+Random(500);
-						ry+=new_unit_kind*80;
-						break;
-					case 3:
-						rx=MAP_LEFT-500;
-						ry=MAP_BOTTOM-500;
-						rx2=rx+1200;
-						ry2=ry+1200+Random(500);
-						ry+=new_unit_kind*80;
-						break;
-					}
-				break;
-			}
+		SetUnitedStatesArrivalPoint(ref rx, ref ry, ref rx2, ref ry2, new_unit_kind, arrived_side);
 		}
 
 	if( new_unit_kind<=5 || new_unit_kind>=10 )
