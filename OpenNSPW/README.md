@@ -4,6 +4,7 @@ An exact port of the NSPW NET source ([Original/NSPW_NET](../Original/NSPW_NET))
 | Project | Description |
 | --- | --- |
 | `OpenNspw` | The C# port. One file per C++ file, plus stand-ins for the platform APIs it calls (Win32, DirectPlay 8, DirectSound), with the original APIs' names. |
+| `OpenNspw.Benchmarks` | Benchmarks of the game's own work in a battle (simulation and drawing), and of copying the state for the emulator. |
 | `OpenNspw.DirectPlay` | The DirectPlay 8 stand-ins implemented on [Otsuki](../Otsuki). |
 | `OpenNspw.Desktop` | The game, on MonoGame: runs the port's `WinMain` and shows its frames and dialogs (with [Saruhashi](../Saruhashi)). |
 | `OpenNspw.Porter` | Ports C++ files to the port's conventions, then fixes the compile errors that have a mechanical fix. |
@@ -42,6 +43,29 @@ Run the commands below from this folder.
 ## Running the tests
 ```bash
 dotnet test OpenNspw.Tests
+```
+
+## Benchmarks
+```bash
+dotnet run -c Release --project OpenNspw.Benchmarks -- --filter '*'
+```
+
+`BattleBenchmarks` measures the game alone, without a network: one game plays against a rival played in the same process (`ScriptedRival`), which answers each turn as a peer with the same simulation. The game starts through its dialogs, title screen and setting screens, with the original's data, into the first scenario. Both sides then send their ships and planes at each other. The benchmarks start from tick 2000, where the air battle begins:
+
+| Benchmark | What one operation is |
+| --- | --- |
+| `Tick` | A tick of the simulation (`chara_cont` and `cnct_decision`), over 1500 ticks. |
+| `Frame` | A frame at the normal speed (`updateFrame`): input, a tick, drawing the battle and showing it, over 300 frames. |
+| `Draw` | Drawing the battle (`unit_info_cont`, `draw_cmbt_area` and `draw_map`), without the tick. |
+
+Each iteration restores the game's state to tick 2000 first, so each one does the same work. The state an iteration ends with is printed (`// State after an iteration`). It is the same in every iteration and every run, and a version of the game that behaves the same ends with the same state.
+
+`EmulatorCopyBenchmarks` measures copying the state into and out of the emulator's memory around a call into the single-player executable, as in [Refactoring.md](../docs/Refactoring.md#the-emulator). Compare it with `Tick` to see what the copy costs per call.
+
+To compare two versions, such as before and after a refactoring, run the benchmarks in a worktree of each and compare the tables. The state hashes must match; if they do not, the two versions did not do the same work.
+
+```bash
+git worktree add ../OpenNSPW-before <commit>
 ```
 
 ## Recording
