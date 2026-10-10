@@ -547,13 +547,13 @@ return;
 		flg=0;
 		for(n=1;n<=max_unit && flg==0 ;n++)
 			{
-			if( unit[n].used!=0 && unit[n].used==your_side && unit[n].info[0]!=PARKING )
+			if( unit[n].used!=0 && unit[n].used==your_side && unit[n].PlaneState!=UnitState.Parked )
 				{
 				// マイユニットからこのエフェクトが見えるか
 				// 現地点からユニット地点への距離
 
-				wrk_x=unit[n].x;
-				wrk_y=unit[n].y;
+				wrk_x=unit[n].Position.X;
+				wrk_y=unit[n].Position.Y;
 				if( unit[n].kind==UnitKind.Fighter )
 					{	// 航空機の場合はちょっと前へ
 					wrk_x+=cos(unit[n].drctn*a_PI)*FT_EYE;
@@ -621,8 +621,8 @@ return;
 		field_rect.right=CMBT_WIDTH+500;
 		field_rect.bottom=-500;
 			
-		x=(int)(x-cmbt_x);
-		y=(int)(cmbt_y-y);
+		x=(int)(x-CameraPosition.X);
+		y=(int)(CameraPosition.Y-y);
 		if( pt_in_rect3(ref field_rect, (int)x,(int)y )==0 )
 			return;
 		}

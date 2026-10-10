@@ -251,8 +251,7 @@ public const int		TYPE_UNIT_MSG       = 0x11;    // message containing field lay
 // SHIP, PLANE and BASE: UnitCategory.
 
 // 状態
-public const int		FLYING		= 1;
-public const int		PARKING		= 2;
+// FLYING and PARKING: UnitState.
 
 // モード／メニュー
 public const int		MOVE		= 1;

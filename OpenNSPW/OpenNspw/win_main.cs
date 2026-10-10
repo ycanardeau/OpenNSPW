@@ -163,7 +163,7 @@ public int	video_memory;
 public int		anti_air,reveal;
 
 
-public double			cmbt_x,cmbt_y;
+[Original("cmbt_x", "cmbt_y")] public WorldPosition CameraPosition;
 public double			scrn_moving_spd;
 public Array256<UNIT> unit;
 public short			max_unit;
@@ -436,7 +436,7 @@ public void	updateFrame()
 				len = wsprintf(ach, "%d  :%d  :%d  :%d  :%d", unit[the_slct_unit].info[1], unit[the_slct_unit].info[4], unit[the_slct_unit].info[7], unit[the_slct_unit].info[8], unit[81].info[0] );
 				break;
 			case 1:
-				len = wsprintf(ach, "put_trgt %d put_kind %d cmbt_x %d cmbt_y %d crsr_pt.x %d crsr_pt.y %d ",put_trgt, put_kind, (int)cmbt_x, (int)cmbt_y, (int)crsr_pt.x, (int)crsr_pt.y  );
+				len = wsprintf(ach, "put_trgt %d put_kind %d cmbt_x %d cmbt_y %d crsr_pt.x %d crsr_pt.y %d ",put_trgt, put_kind, (int)CameraPosition.X, (int)CameraPosition.Y, (int)crsr_pt.x, (int)crsr_pt.y  );
 				break;
 			case 2:
 				len = wsprintf(ach, "cnct_game=%d you_are_host=%d you_can_order=%d new_pp[1].used=%d",cnct_game,you_are_host,you_can_order,new_pp[1].used);
@@ -456,7 +456,7 @@ public void	updateFrame()
 				break;
 
 			case 7:
-				len = wsprintf(ach, "hp[0]=%d arm[0]=%d", unit[no].hp[0], unit[no].arm[0] );
+				len = wsprintf(ach, "hp[0]=%d arm[0]=%d", unit[no].Hp, unit[no].Weapon );
 				break;
 
 			case 8:

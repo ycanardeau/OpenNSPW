@@ -1185,7 +1185,7 @@ n=the_slct_unit;
 							{
 							for(i=0;i<=max_unit;i++)
 								{
-								if( unit[i].used && unit[i].ctgry==UnitCategory.Plane && unit[i].info[0]==PARKING && unit[i].info[1]==n /*&& rnd(10)==0*/ )
+								if( unit[i].used && unit[i].ctgry==UnitCategory.Plane && unit[i].PlaneState==UnitState.Parked && unit[i].info[1]==n /*&& rnd(10)==0*/ )
 									{
 									unit[i].used=0;
 									unit[unit[i].info[1]].info[1]--;			// 現在格納数
@@ -1266,7 +1266,7 @@ if( map_edit==0 )
 								{
 								for( i=1;i<=max_unit;i++)
 									{
-									if( unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].info[0]==PARKING && unit[i].info[1]==the_slct_unit)
+									if( unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].PlaneState==UnitState.Parked && unit[i].info[1]==the_slct_unit)
 										{
 										unit[i].used=0;
 										}
@@ -1274,7 +1274,7 @@ if( map_edit==0 )
 								}
 
 							// パーキング中の航空機なら駐機数を減らします。
-							if( unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING )
+							if( unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Parked )
 								{
 								unit[unit[the_slct_unit].info[1]].info[1]--;	// 現在格納数
 								}
@@ -1314,24 +1314,24 @@ if( map_edit==0 )
 							{
 							// 艦船および、陸上施設
 
-							wrk_x2=(cmbt_x+crsr_pt.x)/80;
+							wrk_x2=(CameraPosition.X+crsr_pt.x)/80;
 							if(wrk_x2<0)
 								wrk_x2=0-wrk_x2;
 							wrk_x=(int)wrk_x2;
 							if(  (wrk_x2-wrk_x)>=0.5  )
 								wrk_x+=1;
-							if(((cmbt_x+crsr_pt.x)/80)<0)
+							if(((CameraPosition.X+crsr_pt.x)/80)<0)
 								wrk_x=0-wrk_x;
 							wrk_x*=80;
 
 
-							wrk_y2=(cmbt_y-crsr_pt.y)/80;
+							wrk_y2=(CameraPosition.Y-crsr_pt.y)/80;
 							if(wrk_y2<0)
 								wrk_y2=0-wrk_y2;
 							wrk_y=(int)wrk_y2;
 							if(  (wrk_y2-wrk_y)>=0.5  )
 								wrk_y+=1;
-							if(((cmbt_y-crsr_pt.y)/80)<0)
+							if(((CameraPosition.Y-crsr_pt.y)/80)<0)
 								wrk_y=0-wrk_y;
 							wrk_y*=80;
 
@@ -1339,7 +1339,7 @@ if( map_edit==0 )
 							m=0;
 							for(i=1;i<=max_unit;i++)
 								{
-								if( unit[i].used!=0 && unit[i].x==wrk_x && unit[i].y==wrk_y )
+								if( unit[i].used!=0 && unit[i].Position.X==wrk_x && unit[i].Position.Y==wrk_y )
 									{
 									m++;
 									break;
@@ -1356,9 +1356,9 @@ if( map_edit==0 )
 									}
 								if((UnitKind)put_kind==UnitKind.Transport)
 									{
-									unit[m].arm[0]=put_kind_sub;		// 武装品種
-									unit[m].arm[1]=1;			// 数
-									unit[m].arm[4]=1;			// 数 全容量
+									unit[m].Weapon=put_kind_sub;		// 武装品種
+									unit[m].Ammo=1;			// 数
+									unit[m].MaxAmmo=1;			// 数 全容量
 									}
 								}
 							}
@@ -1371,7 +1371,7 @@ if( map_edit==0 )
 #if DBG_MODE
 if( map_edit==0 )
 	{
-	unit[the_slct_unit].hp[0]=0;
+	unit[the_slct_unit].Hp=0;
 	}
 #endif
 					if( map_edit!=0 && mode==GameMode.Battle )
@@ -1400,7 +1400,7 @@ if( map_edit==0 )
 
 				case 0x31:	// 1
 					// ユニットを回転させます。
-					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0  && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING ))
+					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0  && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Parked ))
 						{
 						unit[the_slct_unit].drctn= (int)(unit[the_slct_unit].drctn+45.0)%360 ;
 
@@ -1417,19 +1417,19 @@ if( map_edit==0 )
 						if( unit[the_slct_unit].kind==UnitKind.Attacker )
 							{
 							// 攻撃機の場合。
-							switch( unit[the_slct_unit].arm[0] )
+							switch( unit[the_slct_unit].Weapon )
 								{
 								case NTG:
-									unit[the_slct_unit].arm[0]=BOM;				// 武装品種
-									unit[the_slct_unit].arm[1]=unit[the_slct_unit].arm[4];	// 数
+									unit[the_slct_unit].Weapon=BOM;				// 武装品種
+									unit[the_slct_unit].Ammo=unit[the_slct_unit].MaxAmmo;	// 数
 									break;
 								case BOM:
-									unit[the_slct_unit].arm[0]=TPD;				// 武装品種
-									unit[the_slct_unit].arm[1]=unit[the_slct_unit].arm[4];	// 数
+									unit[the_slct_unit].Weapon=TPD;				// 武装品種
+									unit[the_slct_unit].Ammo=unit[the_slct_unit].MaxAmmo;	// 数
 									break;
 								case TPD:
-									unit[the_slct_unit].arm[0]=NTG;				// 武装品種
-									unit[the_slct_unit].arm[1]=0;	// 数
+									unit[the_slct_unit].Weapon=NTG;				// 武装品種
+									unit[the_slct_unit].Ammo=0;	// 数
 									break;
 								}
 							SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
@@ -1437,19 +1437,19 @@ if( map_edit==0 )
 						else if( unit[the_slct_unit].kind==UnitKind.Bomber )
 							{
 							// 爆撃機の場合。
-							switch( unit[the_slct_unit].arm[0] )
+							switch( unit[the_slct_unit].Weapon )
 								{
 								case NTG:
-									unit[the_slct_unit].arm[0]=BOM;				// 武装品種
-									unit[the_slct_unit].arm[1]=unit[the_slct_unit].arm[4];	// 数
+									unit[the_slct_unit].Weapon=BOM;				// 武装品種
+									unit[the_slct_unit].Ammo=unit[the_slct_unit].MaxAmmo;	// 数
 									break;
 								case BOM:
-									unit[the_slct_unit].arm[0]=TPD;				// 武装品種
-									unit[the_slct_unit].arm[1]=1;	// 数
+									unit[the_slct_unit].Weapon=TPD;				// 武装品種
+									unit[the_slct_unit].Ammo=1;	// 数
 									break;
 								case TPD:
-									unit[the_slct_unit].arm[0]=NTG;				// 武装品種
-									unit[the_slct_unit].arm[1]=0;	// 数
+									unit[the_slct_unit].Weapon=NTG;				// 武装品種
+									unit[the_slct_unit].Ammo=0;	// 数
 									break;
 								}
 							SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
@@ -1457,14 +1457,14 @@ if( map_edit==0 )
 						else if( (unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.LightCarrier) || unit[the_slct_unit].kind==UnitKind.Transport )
 							{
 
-							if(unit[the_slct_unit].gas[0]==-1)
+							if(unit[the_slct_unit].Fuel==-1)
 								{
-								unit[the_slct_unit].gas[0]=100;
+								unit[the_slct_unit].Fuel=100;
 								unit[the_slct_unit].spry=0;
 								}
 							else
 								{
-								unit[the_slct_unit].gas[0]=-1;
+								unit[the_slct_unit].Fuel=-1;
 								unit[the_slct_unit].spry=1;
 								}
 
@@ -1477,11 +1477,11 @@ if( map_edit==0 )
 
 				case 0x33:	// 3
 					// ＨＰを増やす。
-					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING ) )
+					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Parked ) )
 						{
-						if( unit[the_slct_unit].hp[0] < unit[the_slct_unit].hp[1] )
+						if( unit[the_slct_unit].Hp < unit[the_slct_unit].MaxHp )
 							{
-							unit[the_slct_unit].hp[0]++;
+							unit[the_slct_unit].Hp++;
 							SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 							}
 						}
@@ -1490,9 +1490,9 @@ if( map_edit==0 )
 
 				case 0x34:	// 4
 					// ＨＰを増やす。
-					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING ))
+					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Parked ))
 						{
-						unit[the_slct_unit].hp[0]--;
+						unit[the_slct_unit].Hp--;
 						SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 						}
 					break;
@@ -1501,11 +1501,11 @@ if( map_edit==0 )
 
 				case 0x35:	// 5
 					// ガスをふやす
-					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING ))
+					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Parked ))
 						{
-						if( unit[the_slct_unit].gas[0] < 100 )
+						if( unit[the_slct_unit].Fuel < 100 )
 							{
-							unit[the_slct_unit].gas[0]++;
+							unit[the_slct_unit].Fuel++;
 							SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 							}
 						}
@@ -1513,11 +1513,11 @@ if( map_edit==0 )
 
 				case 0x36:	// 6
 					// ガスをへらす
-					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING ))
+					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Parked ))
 						{
-						if( unit[the_slct_unit].gas[0]!=0  )
+						if( unit[the_slct_unit].Fuel!=0  )
 							{
-							unit[the_slct_unit].gas[0]--;
+							unit[the_slct_unit].Fuel--;
 							SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 							}
 						}
@@ -1526,11 +1526,11 @@ if( map_edit==0 )
 
 				case 0x37:	// 7
 					// 弾数をふやす
-					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && unit[the_slct_unit].arm[0]!=NTG  && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING ))
+					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && unit[the_slct_unit].Weapon!=NTG  && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Parked ))
 						{
-						if( unit[the_slct_unit].arm[1]<unit[the_slct_unit].arm[4]  )
+						if( unit[the_slct_unit].Ammo<unit[the_slct_unit].MaxAmmo  )
 							{
-							unit[the_slct_unit].arm[1]++;
+							unit[the_slct_unit].Ammo++;
 							SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 							}
 						}
@@ -1538,11 +1538,11 @@ if( map_edit==0 )
 
 				case 0x38:	// 8
 					// 弾数をへらす
-					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && unit[the_slct_unit].arm[0]!=NTG  && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING ))
+					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && unit[the_slct_unit].Weapon!=NTG  && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Parked ))
 						{
-						if( unit[the_slct_unit].arm[1]!=0  )
+						if( unit[the_slct_unit].Ammo!=0  )
 							{
-							unit[the_slct_unit].arm[1]--;
+							unit[the_slct_unit].Ammo--;
 							SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 							}
 						}

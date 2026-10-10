@@ -51,20 +51,20 @@ public void	cont_upper_effect(RECT* pfield_rect,RECT* pinfo_rect)
 				flg=1;
 			for(n=1;n<=max_unit && flg==0 ;n++)
 				{
-				if( unit[n].used!=0 && unit[n].used==your_side && unit[n].info[0]!=PARKING )
+				if( unit[n].used!=0 && unit[n].used==your_side && unit[n].PlaneState!=UnitState.Parked )
 					{
 					// マイユニットからこのエフェクトが見えるか
 					// 現地点からユニット地点への距離
-					wrk_x=unit[n].x;
-					wrk_y=unit[n].y;
+					wrk_x=unit[n].Position.X;
+					wrk_y=unit[n].Position.Y;
 					if( unit[n].kind==UnitKind.Fighter )
 						{	// 航空機の場合はちょっと前へ
 						wrk_x+=cos(unit[n].drctn*a_PI)*FT_EYE;
 						wrk_y+=sin(unit[n].drctn*a_PI)*FT_EYE;
 						}
 
-					wrk_x=wrk_x-effect[m].x;
-					wrk_y=wrk_y-effect[m].y;
+					wrk_x=wrk_x-effect[m].Position.X;
+					wrk_y=wrk_y-effect[m].Position.Y;
 
 					if(wrk_x==0)	wrk_x=1;
 					if(wrk_y==0)	wrk_y=1;
@@ -131,41 +131,41 @@ public void	cont_upper_effect(RECT* pfield_rect,RECT* pinfo_rect)
 					{
 					case 0:		// 
 						sprt[SUB_UNIT].no=effect[m].no;
-						sprt[SUB_UNIT].x=(int)(effect[m].x-cmbt_x);
-						sprt[SUB_UNIT].y=(int)(cmbt_y-effect[m].y);
+						sprt[SUB_UNIT].x=(int)(effect[m].Position.X-CameraPosition.X);
+						sprt[SUB_UNIT].y=(int)(CameraPosition.Y-effect[m].Position.Y);
 						n=1;
 						break;
 					case 1:		// 対空機関砲弾がヒット
 						sprt[SUB_UNIT].no=effect[m].no+(sprt[SUB_UNIT].os_of_x*(effect[m].info[0]%2));
-						sprt[SUB_UNIT].x=(int)(effect[m].x-cmbt_x);
-						sprt[SUB_UNIT].y=(int)(cmbt_y-effect[m].y);
+						sprt[SUB_UNIT].x=(int)(effect[m].Position.X-CameraPosition.X);
+						sprt[SUB_UNIT].y=(int)(CameraPosition.Y-effect[m].Position.Y);
 						n=1;
 						break;
 					case 2:		//	飛行機からの煙
 						sprt[SUB_UNIT].no=effect[m].no+(sprt[SUB_UNIT].os_of_x*(my_rnd(2)));
-						sprt[SUB_UNIT].x=(int)(effect[m].x-cmbt_x)+my_rnd(10)-5;
-						sprt[SUB_UNIT].y=(int)(cmbt_y-effect[m].y)+my_rnd(10)-5;
+						sprt[SUB_UNIT].x=(int)(effect[m].Position.X-CameraPosition.X)+my_rnd(10)-5;
+						sprt[SUB_UNIT].y=(int)(CameraPosition.Y-effect[m].Position.Y)+my_rnd(10)-5;
 						n=1;
 						break;
 					case 3:		//	駐機場の飛行機用
 						sprt[SUB_UNIT].no=effect[m].no;
-						sprt[SUB_UNIT].x=(int)(effect[m].x);
-						sprt[SUB_UNIT].y=(int)(effect[m].y);
+						sprt[SUB_UNIT].x=(int)(effect[m].Position.X);
+						sprt[SUB_UNIT].y=(int)(effect[m].Position.Y);
 						n=0;
 						break;
 					case 4:		// 雷跡
 						sprt[SUB_UNIT].no=effect[m].no+(sprt[SUB_UNIT].os_of_x*(my_rnd(2)));
-						sprt[SUB_UNIT].x=(int)(effect[m].x-cmbt_x);
-						sprt[SUB_UNIT].y=(int)(cmbt_y-effect[m].y);
+						sprt[SUB_UNIT].x=(int)(effect[m].Position.X-CameraPosition.X);
+						sprt[SUB_UNIT].y=(int)(CameraPosition.Y-effect[m].Position.Y);
 						n=1;
 						break;
 					case 10:	// 対空機関砲
-						draw_line5((int)(effect[m].x-cmbt_x),(int)(cmbt_y-effect[m].y),(int)(effect[m].x2-cmbt_x),(int)(cmbt_y-effect[m].y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
-						draw_line5((int)(effect[m].x-cmbt_x)+1,(int)(cmbt_y-effect[m].y),(int)(effect[m].x2-cmbt_x)+1,(int)(cmbt_y-effect[m].y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
-						draw_line5((int)(effect[m].x-cmbt_x),(int)(cmbt_y-effect[m].y)-1,(int)(effect[m].x2-cmbt_x),(int)(cmbt_y-effect[m].y2)-1,CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
+						draw_line5((int)(effect[m].Position.X-CameraPosition.X),(int)(CameraPosition.Y-effect[m].Position.Y),(int)(effect[m].EndPosition.X-CameraPosition.X),(int)(CameraPosition.Y-effect[m].EndPosition.Y),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
+						draw_line5((int)(effect[m].Position.X-CameraPosition.X)+1,(int)(CameraPosition.Y-effect[m].Position.Y),(int)(effect[m].EndPosition.X-CameraPosition.X)+1,(int)(CameraPosition.Y-effect[m].EndPosition.Y),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
+						draw_line5((int)(effect[m].Position.X-CameraPosition.X),(int)(CameraPosition.Y-effect[m].Position.Y)-1,(int)(effect[m].EndPosition.X-CameraPosition.X),(int)(CameraPosition.Y-effect[m].EndPosition.Y)-1,CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
 						continue;
 					case 11:	// 弾丸
-						draw_line5((int)(effect[m].x-cmbt_x),(int)(cmbt_y-effect[m].y),(int)(effect[m].x2-cmbt_x),(int)(cmbt_y-effect[m].y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
+						draw_line5((int)(effect[m].Position.X-CameraPosition.X),(int)(CameraPosition.Y-effect[m].Position.Y),(int)(effect[m].EndPosition.X-CameraPosition.X),(int)(CameraPosition.Y-effect[m].EndPosition.Y),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
 						//draw_line5((int)(effect[m].x-cmbt_x)+1,(int)(cmbt_y-effect[m].y),(int)(effect[m].x2-cmbt_x)+1,(int)(cmbt_y-effect[m].y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
 						//draw_line5((int)(effect[m].x-cmbt_x),(int)(cmbt_y-effect[m].y)-1,(int)(effect[m].x2-cmbt_x),(int)(cmbt_y-effect[m].y2)-1,CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
 						continue;
@@ -244,20 +244,20 @@ public void cont_lower_effect(RECT* pfield_rect,RECT* pinfo_rect)
 					flg=1;
 				for(n=1;n<=max_unit;n++)
 					{
-					if( unit[n].used!=0 && unit[n].used==your_side && unit[n].info[0]!=PARKING )
+					if( unit[n].used!=0 && unit[n].used==your_side && unit[n].PlaneState!=UnitState.Parked )
 						{
 						// マイユニットからこのエフェクトが見えるか
 						// 現地点からユニット地点への距離
-						wrk_x=unit[n].x;
-						wrk_y=unit[n].y;
+						wrk_x=unit[n].Position.X;
+						wrk_y=unit[n].Position.Y;
 						if( unit[n].kind==UnitKind.Fighter )
 							{	// 航空機の場合はちょっと前へ
 							wrk_x+=cos(unit[n].drctn*a_PI)*FT_EYE;
 							wrk_y+=sin(unit[n].drctn*a_PI)*FT_EYE;
 							}
 
-						wrk_x=wrk_x-effect[m].x;
-						wrk_y=wrk_y-effect[m].y;
+						wrk_x=wrk_x-effect[m].Position.X;
+						wrk_y=wrk_y-effect[m].Position.Y;
 
 						if(wrk_x==0)	wrk_x=1;
 						if(wrk_y==0)	wrk_y=1;
@@ -326,42 +326,42 @@ public void cont_lower_effect(RECT* pfield_rect,RECT* pinfo_rect)
 					{
 					case 0:		// 
 						sprt[SUB_UNIT].no=effect[m].no;//+(os[no1].os_of_x);
-						sprt[SUB_UNIT].x=(int)(effect[m].x-cmbt_x);
-						sprt[SUB_UNIT].y=(int)(cmbt_y-effect[m].y);
+						sprt[SUB_UNIT].x=(int)(effect[m].Position.X-CameraPosition.X);
+						sprt[SUB_UNIT].y=(int)(CameraPosition.Y-effect[m].Position.Y);
 						n=1;
 						break;
 					case 1:		// 対空機関砲弾がヒット
 						sprt[SUB_UNIT].no=effect[m].no+(sprt[SUB_UNIT].os_of_x/*os[no1].os_of_x*/*(effect[m].info[0]%2));
-						sprt[SUB_UNIT].x=(int)(effect[m].x-cmbt_x);
-						sprt[SUB_UNIT].y=(int)(cmbt_y-effect[m].y);
+						sprt[SUB_UNIT].x=(int)(effect[m].Position.X-CameraPosition.X);
+						sprt[SUB_UNIT].y=(int)(CameraPosition.Y-effect[m].Position.Y);
 						n=1;
 						break;
 					case 2:		//	飛行機からの煙
 						sprt[SUB_UNIT].no=effect[m].no+(sprt[SUB_UNIT].os_of_x*(my_rnd(2)));
-						sprt[SUB_UNIT].x=(int)(effect[m].x-cmbt_x)+my_rnd(10)-5;
-						sprt[SUB_UNIT].y=(int)(cmbt_y-effect[m].y)+my_rnd(10)-5;
+						sprt[SUB_UNIT].x=(int)(effect[m].Position.X-CameraPosition.X)+my_rnd(10)-5;
+						sprt[SUB_UNIT].y=(int)(CameraPosition.Y-effect[m].Position.Y)+my_rnd(10)-5;
 						n=1;
 						break;
 					case 3:		//	駐機場の飛行機用
 						sprt[SUB_UNIT].no=effect[m].no;
-						sprt[SUB_UNIT].x=(int)(effect[m].x);
-						sprt[SUB_UNIT].y=(int)(effect[m].y);
+						sprt[SUB_UNIT].x=(int)(effect[m].Position.X);
+						sprt[SUB_UNIT].y=(int)(effect[m].Position.Y);
 						n=0;
 						break;
 					case 4:		// 雷跡、航跡
 						sprt[SUB_UNIT].no=effect[m].no+(sprt[SUB_UNIT].os_of_x*(my_rnd(2)));
-						sprt[SUB_UNIT].x=(int)(effect[m].x-cmbt_x);
-						sprt[SUB_UNIT].y=(int)(cmbt_y-effect[m].y);
+						sprt[SUB_UNIT].x=(int)(effect[m].Position.X-CameraPosition.X);
+						sprt[SUB_UNIT].y=(int)(CameraPosition.Y-effect[m].Position.Y);
 						n=1;
 						break;
 
 
 
 					case 12:	// 矩形
-						draw_line5((int)(effect[m].x-effect[m].x2-cmbt_x),(int)(cmbt_y-effect[m].y-effect[m].y2),(int)(effect[m].x+effect[m].x2-cmbt_x),(int)(cmbt_y-effect[m].y-effect[m].y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
-						draw_line5((int)(effect[m].x+effect[m].x2-cmbt_x),(int)(cmbt_y-effect[m].y-effect[m].y2),(int)(effect[m].x+effect[m].x2-cmbt_x),(int)(cmbt_y-effect[m].y+effect[m].y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);						//draw_line5((int)(effect[m].x-cmbt_x),(int)(cmbt_y-effect[m].y),(int)(effect[m].x2-cmbt_x),(int)(cmbt_y-effect[m].y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
-						draw_line5((int)(effect[m].x-effect[m].x2-cmbt_x),(int)(cmbt_y-effect[m].y+effect[m].y2),(int)(effect[m].x+effect[m].x2-cmbt_x),(int)(cmbt_y-effect[m].y+effect[m].y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);						//draw_line5((int)(effect[m].x-cmbt_x),(int)(cmbt_y-effect[m].y),(int)(effect[m].x2-cmbt_x),(int)(cmbt_y-effect[m].y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
-						draw_line5((int)(effect[m].x-effect[m].x2-cmbt_x),(int)(cmbt_y-effect[m].y+effect[m].y2),(int)(effect[m].x-effect[m].x2-cmbt_x),(int)(cmbt_y-effect[m].y-effect[m].y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);						//draw_line5((int)(effect[m].x-cmbt_x),(int)(cmbt_y-effect[m].y),(int)(effect[m].x2-cmbt_x),(int)(cmbt_y-effect[m].y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
+						draw_line5((int)(effect[m].Position.X-effect[m].EndPosition.X-CameraPosition.X),(int)(CameraPosition.Y-effect[m].Position.Y-effect[m].EndPosition.Y),(int)(effect[m].Position.X+effect[m].EndPosition.X-CameraPosition.X),(int)(CameraPosition.Y-effect[m].Position.Y-effect[m].EndPosition.Y),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
+						draw_line5((int)(effect[m].Position.X+effect[m].EndPosition.X-CameraPosition.X),(int)(CameraPosition.Y-effect[m].Position.Y-effect[m].EndPosition.Y),(int)(effect[m].Position.X+effect[m].EndPosition.X-CameraPosition.X),(int)(CameraPosition.Y-effect[m].Position.Y+effect[m].EndPosition.Y),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);						//draw_line5((int)(effect[m].x-cmbt_x),(int)(cmbt_y-effect[m].y),(int)(effect[m].x2-cmbt_x),(int)(cmbt_y-effect[m].y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
+						draw_line5((int)(effect[m].Position.X-effect[m].EndPosition.X-CameraPosition.X),(int)(CameraPosition.Y-effect[m].Position.Y+effect[m].EndPosition.Y),(int)(effect[m].Position.X+effect[m].EndPosition.X-CameraPosition.X),(int)(CameraPosition.Y-effect[m].Position.Y+effect[m].EndPosition.Y),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);						//draw_line5((int)(effect[m].x-cmbt_x),(int)(cmbt_y-effect[m].y),(int)(effect[m].x2-cmbt_x),(int)(cmbt_y-effect[m].y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
+						draw_line5((int)(effect[m].Position.X-effect[m].EndPosition.X-CameraPosition.X),(int)(CameraPosition.Y-effect[m].Position.Y+effect[m].EndPosition.Y),(int)(effect[m].Position.X-effect[m].EndPosition.X-CameraPosition.X),(int)(CameraPosition.Y-effect[m].Position.Y-effect[m].EndPosition.Y),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);						//draw_line5((int)(effect[m].x-cmbt_x),(int)(cmbt_y-effect[m].y),(int)(effect[m].x2-cmbt_x),(int)(cmbt_y-effect[m].y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
 						continue;
 					}
 				// src_rect は ソースサーフェスのレクタングルです。
@@ -420,8 +420,8 @@ public void	draw_cloud(RECT* pfield_rect)
 		{
 		if( kumo[n].used!=0 )
 			{
-			sprt[MAP_TIP_NRML].x=(int)(kumo[n].x-cmbt_x);
-			sprt[MAP_TIP_NRML].y=(int)(cmbt_y-kumo[n].y);
+			sprt[MAP_TIP_NRML].x=(int)(kumo[n].Position.X-CameraPosition.X);
+			sprt[MAP_TIP_NRML].y=(int)(CameraPosition.Y-kumo[n].Position.Y);
 			sprt[MAP_TIP_NRML].no=2;
 			// src_rect は ソースサーフェスのレクタングルです。
 			src_rect.left = sprt[MAP_TIP_NRML].base_x+(sprt[MAP_TIP_NRML].wd * (sprt[MAP_TIP_NRML].no % sprt[MAP_TIP_NRML].os_of_x));
@@ -474,8 +474,7 @@ public void	be_dstryd(int m)
 		//effect[f].kind=THERE;
 		effect[f].info[0]=220;
 		effect[f].info[1]=0;
-		effect[f].x=unit[m].x;
-		effect[f].y=unit[m].y;
+		effect[f].Position=unit[m].Position;
 		effect[f].no=7;			// ソースファイル上の番号	
 
 		}
@@ -494,8 +493,7 @@ public void	be_dstryd(int m)
 				effect[f].layer=EffectLayer.Lower;	
 				effect[f].info[0]=200+rnd(20);
 				effect[f].info[1]=4;
-				effect[f].x=unit[m].x+rnd(100)-50;
-				effect[f].y=unit[m].y+rnd(100)-50;
+				effect[f].Position = new WorldPosition(unit[m].Position.X+rnd(100)-50, unit[m].Position.Y+rnd(100)-50);
 				effect[f].no=8;			// ソースファイル上の番号	
 				}
 			}
@@ -506,8 +504,7 @@ public void	be_dstryd(int m)
 			effect[f].layer=EffectLayer.Upper;	
 			effect[f].info[0]=150+rnd(20);
 			effect[f].info[1]=4;
-			effect[f].x=unit[m].x+rnd(30)-15;
-			effect[f].y=unit[m].y+rnd(30)-15;
+			effect[f].Position = new WorldPosition(unit[m].Position.X+rnd(30)-15, unit[m].Position.Y+rnd(30)-15);
 			effect[f].no=5+rnd(2);			// ソースファイル上の番号	
 			}
 		// 沈没の爆炎
@@ -517,8 +514,7 @@ public void	be_dstryd(int m)
 			effect[f].layer=EffectLayer.Upper;	
 			effect[f].info[0]=30+rnd(20);
 			effect[f].info[1]=4;
-			effect[f].x=unit[m].x+rnd(40)-20;
-			effect[f].y=unit[m].y+rnd(40)-20;
+			effect[f].Position = new WorldPosition(unit[m].Position.X+rnd(40)-20, unit[m].Position.Y+rnd(40)-20);
 			effect[f].no=9;			// ソースファイル上の番号	
 			}
 		// 沈没の小爆炎
@@ -528,8 +524,7 @@ public void	be_dstryd(int m)
 			effect[f].layer=EffectLayer.Upper;	
 			effect[f].info[0]=40+rnd(20);
 			effect[f].info[1]=4;
-			effect[f].x=unit[m].x+rnd(60)-30;
-			effect[f].y=unit[m].y+rnd(60)-30;
+			effect[f].Position = new WorldPosition(unit[m].Position.X+rnd(60)-30, unit[m].Position.Y+rnd(60)-30);
 			effect[f].no=10;			// ソースファイル上の番号	
 			}
 		}
@@ -545,8 +540,7 @@ public void	be_dstryd(int m)
 				effect[f].layer=EffectLayer.Lower;	
 				effect[f].info[0]=200+rnd(20);
 				effect[f].info[1]=4;
-				effect[f].x=unit[m].x+rnd(100)-50;
-				effect[f].y=unit[m].y+rnd(100)-50;
+				effect[f].Position = new WorldPosition(unit[m].Position.X+rnd(100)-50, unit[m].Position.Y+rnd(100)-50);
 				effect[f].no=8;			// ソースファイル上の番号	
 				}
 			}
@@ -557,8 +551,7 @@ public void	be_dstryd(int m)
 			effect[f].layer=EffectLayer.Upper;	
 			effect[f].info[0]=150+rnd(20);
 			effect[f].info[1]=4;
-			effect[f].x=unit[m].x+rnd(30)-15;
-			effect[f].y=unit[m].y+rnd(30)-15;
+			effect[f].Position = new WorldPosition(unit[m].Position.X+rnd(30)-15, unit[m].Position.Y+rnd(30)-15);
 			effect[f].no=5+rnd(2);			// ソースファイル上の番号	
 			}
 		// 沈没の爆炎
@@ -568,8 +561,7 @@ public void	be_dstryd(int m)
 			effect[f].layer=EffectLayer.Upper;	
 			effect[f].info[0]=30+rnd(20);
 			effect[f].info[1]=4;
-			effect[f].x=unit[m].x+rnd(40)-20;
-			effect[f].y=unit[m].y+rnd(40)-20;
+			effect[f].Position = new WorldPosition(unit[m].Position.X+rnd(40)-20, unit[m].Position.Y+rnd(40)-20);
 			effect[f].no=9;			// ソースファイル上の番号	
 			}
 		// 沈没の小爆炎
@@ -579,8 +571,7 @@ public void	be_dstryd(int m)
 			effect[f].layer=EffectLayer.Upper;	
 			effect[f].info[0]=20+rnd(20);
 			effect[f].info[1]=4;
-			effect[f].x=unit[m].x+rnd(20)-10;
-			effect[f].y=unit[m].y+rnd(20)-10;
+			effect[f].Position = new WorldPosition(unit[m].Position.X+rnd(20)-10, unit[m].Position.Y+rnd(20)-10);
 			effect[f].no=10;			// ソースファイル上の番号	
 			}
 
@@ -635,13 +626,13 @@ public void	draw_cmbt_area()
 
 
 	// カーソルの示す、マップチップの場所
-	map_bld_x=(int)(((crsr_pt.x+40+(int)cmbt_x)-MAP_LEFT)/sprt[MAP_TIP_NRML].wd);
-	map_bld_y=(int)((MAP_TOP-((int)cmbt_y-crsr_pt.y-40 ))/sprt[MAP_TIP_NRML].ht);
+	map_bld_x=(int)(((crsr_pt.x+40+(int)CameraPosition.X)-MAP_LEFT)/sprt[MAP_TIP_NRML].wd);
+	map_bld_y=(int)((MAP_TOP-((int)CameraPosition.Y-crsr_pt.y-40 ))/sprt[MAP_TIP_NRML].ht);
 
 
 	// 標準キャラよう背景の表示
-	cm_scrn_x=(int)((cmbt_x-MAP_LEFT)/sprt[MAP_TIP_NRML].wd);
-	cm_scrn_y=(int)((MAP_TOP-cmbt_y)/sprt[MAP_TIP_NRML].ht);
+	cm_scrn_x=(int)((CameraPosition.X-MAP_LEFT)/sprt[MAP_TIP_NRML].wd);
+	cm_scrn_y=(int)((MAP_TOP-CameraPosition.Y)/sprt[MAP_TIP_NRML].ht);
 
 
 
@@ -655,7 +646,7 @@ public void	draw_cmbt_area()
 				flg=0;
 				for( f=1; f<=max_unit; f++)
 					{
-					if( unit[f].used!=0 && unit[f].used==your_side && unit[f].info[0]!=PARKING /*&& unit[f].spry==0*/ )
+					if( unit[f].used!=0 && unit[f].used==your_side && unit[f].PlaneState!=UnitState.Parked /*&& unit[f].spry==0*/ )
 						{
 						// 現地点からユニット地点への距離
 						//wrk_x=unit[f].x-(cmbt_x-40+(m*sprt[MAP_TIP_NRML].wd));
@@ -664,8 +655,8 @@ public void	draw_cmbt_area()
 						if(unit[f].kind==UnitKind.Fighter /*&& 0*/)
 							{
 							// 戦闘機場合、視点を
-							wrk_x=unit[f].x;
-							wrk_y=unit[f].y;
+							wrk_x=unit[f].Position.X;
+							wrk_y=unit[f].Position.Y;
 							wrk_x+=cos(unit[f].drctn*a_PI)*FT_EYE;
 							wrk_y+=sin(unit[f].drctn*a_PI)*FT_EYE;
 							wrk_x=wrk_x-(((cm_scrn_x+m)*sprt[MAP_TIP_NRML].wd)-MAP_RIGHT);
@@ -673,8 +664,8 @@ public void	draw_cmbt_area()
 							}
 						else
 							{
-							wrk_x=unit[f].x-(((cm_scrn_x+m)*sprt[MAP_TIP_NRML].wd)-MAP_RIGHT);
-							wrk_y=unit[f].y-(MAP_TOP-((cm_scrn_y+n)*sprt[MAP_TIP_NRML].ht));
+							wrk_x=unit[f].Position.X-(((cm_scrn_x+m)*sprt[MAP_TIP_NRML].wd)-MAP_RIGHT);
+							wrk_y=unit[f].Position.Y-(MAP_TOP-((cm_scrn_y+n)*sprt[MAP_TIP_NRML].ht));
 							}
 
 						//((cm_scrn_x+m)*sprt[MAP_TIP_NRML].wd)-MAP_RIGHT
@@ -715,8 +706,8 @@ public void	draw_cmbt_area()
 			sprt[MAP_TIP_NRML].x=(m*sprt[MAP_TIP_NRML].wd);
 			sprt[MAP_TIP_NRML].y=(n*sprt[MAP_TIP_NRML].ht);
 
-			sprt[MAP_TIP_NRML].x-=(int)(cmbt_x-MAP_LEFT)%sprt[MAP_TIP_NRML].wd;
-			sprt[MAP_TIP_NRML].y-=(int)(MAP_TOP-cmbt_y)%sprt[MAP_TIP_NRML].ht;
+			sprt[MAP_TIP_NRML].x-=(int)(CameraPosition.X-MAP_LEFT)%sprt[MAP_TIP_NRML].wd;
+			sprt[MAP_TIP_NRML].y-=(int)(MAP_TOP-CameraPosition.Y)%sprt[MAP_TIP_NRML].ht;
 
 
 			if( cmbt_map[cm_scrn_y+n][cm_scrn_x+m]==0)
@@ -874,8 +865,8 @@ public void	draw_cmbt_area()
 
 		// ユニットを描画します
 		if( unit[m].used!=0 && (unit[m].used==your_side || unit[m].found!=0) && 
-	( ( ( cmbt_x-CMBT_REST<=unit[m].x && cmbt_x+CMBT_WIDTH+CMBT_REST>=unit[m].x) && (cmbt_y+CMBT_REST>=unit[m].y && cmbt_y-CMBT_HEIGHT-CMBT_REST<=unit[m].y) )
-	|| (unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING )
+	( ( ( CameraPosition.X-CMBT_REST<=unit[m].Position.X && CameraPosition.X+CMBT_WIDTH+CMBT_REST>=unit[m].Position.X) && (CameraPosition.Y+CMBT_REST>=unit[m].Position.Y && CameraPosition.Y-CMBT_HEIGHT-CMBT_REST<=unit[m].Position.Y) )
+	|| (unit[m].ctgry==UnitCategory.Plane && unit[m].PlaneState==UnitState.Parked )
 	)
 			)
 			{
@@ -911,7 +902,7 @@ public void	draw_cmbt_area()
 				}
 
 
-			if( unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING)
+			if( unit[m].ctgry==UnitCategory.Plane && unit[m].PlaneState==UnitState.Parked)
 				{
 				if( unit[m].info[1]==unit_info[3] && ((UnitKind)unit_info[0]==UnitKind.Carrier || (UnitKind)unit_info[0]==UnitKind.LightCarrier || (UnitKind)unit_info[0]==UnitKind.AirBase ) )
 					{
@@ -921,8 +912,8 @@ public void	draw_cmbt_area()
 						// 駐機中のの飛行機
 						sprt[no1].no=(unit[m].os_indx_y*8)+unit[m].os_indx_x;
 
-						sprt[no1].x=(int)unit[m].x;
-						sprt[no1].y=(int)unit[m].y;
+						sprt[no1].x=(int)unit[m].Position.X;
+						sprt[no1].y=(int)unit[m].Position.Y;
 
 						// src_rect は ソースサーフェスのレクタングルです。
 						src_rect.left = sprt[no1].base_x+(sprt[no1].wd * (sprt[no1].no % sprt[no1].os_of_x)) +1;
@@ -950,8 +941,8 @@ public void	draw_cmbt_area()
 				}
 			else
 				{
-				sprt[no1].x=(int)(unit[m].x-cmbt_x);
-				sprt[no1].y=(int)(cmbt_y-unit[m].y);
+				sprt[no1].x=(int)(unit[m].Position.X-CameraPosition.X);
+				sprt[no1].y=(int)(CameraPosition.Y-unit[m].Position.Y);
 
 
 				if( unit[m].kind==UnitKind.Submarine && unit[m].info[6]!=0 && game_end==GameResult.None )
@@ -986,9 +977,9 @@ public void	draw_cmbt_area()
 						}
 
 
-					if( map_edit==0 && plane_fling_sound==0 && game_end==GameResult.None && unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==FLYING && (FrameCount%10)==0 )
+					if( map_edit==0 && plane_fling_sound==0 && game_end==GameResult.None && unit[m].ctgry==UnitCategory.Plane && unit[m].PlaneState==UnitState.Flying && (FrameCount%10)==0 )
 						{
-						SoundPlayEffect( 0, PLANE_FLYING ,unit[m].x, unit[m].y);
+						SoundPlayEffect( 0, PLANE_FLYING ,unit[m].Position.X, unit[m].Position.Y);
 						plane_fling_sound=1;
 						}
 
@@ -1004,8 +995,8 @@ public void	draw_cmbt_area()
 			{
 			// カーソルのある場所が
 			// カーソルの示す、マップチップの場所
-			map_bld_x=(int)(((crsr_pt.x+40+(int)cmbt_x)-MAP_LEFT)/sprt[MAP_TIP_NRML].wd);
-			map_bld_y=(int)((MAP_TOP-((int)cmbt_y-crsr_pt.y-40 ))/sprt[MAP_TIP_NRML].ht);
+			map_bld_x=(int)(((crsr_pt.x+40+(int)CameraPosition.X)-MAP_LEFT)/sprt[MAP_TIP_NRML].wd);
+			map_bld_y=(int)((MAP_TOP-((int)CameraPosition.Y-crsr_pt.y-40 ))/sprt[MAP_TIP_NRML].ht);
 			if(
 				cmbt_map[map_bld_y][map_bld_x]==9 || 
 				cmbt_map[map_bld_y][map_bld_x]==8 || 
@@ -1014,8 +1005,8 @@ public void	draw_cmbt_area()
 				cmbt_map[map_bld_y][map_bld_x]==2  
 				)
 				{
-				sprt[no1].x=(((crsr_pt.x+40+(int)(cmbt_x-MAP_LEFT)%sprt[MAP_TIP_NRML].wd)/80)*80)-(int)(cmbt_x-MAP_LEFT)%sprt[MAP_TIP_NRML].wd;
-				sprt[no1].y=(((crsr_pt.y+40+(int)(MAP_TOP-cmbt_y)%sprt[MAP_TIP_NRML].ht)/80)*80)-(int)(MAP_TOP-cmbt_y)%sprt[MAP_TIP_NRML].ht;
+				sprt[no1].x=(((crsr_pt.x+40+(int)(CameraPosition.X-MAP_LEFT)%sprt[MAP_TIP_NRML].wd)/80)*80)-(int)(CameraPosition.X-MAP_LEFT)%sprt[MAP_TIP_NRML].wd;
+				sprt[no1].y=(((crsr_pt.y+40+(int)(MAP_TOP-CameraPosition.Y)%sprt[MAP_TIP_NRML].ht)/80)*80)-(int)(MAP_TOP-CameraPosition.Y)%sprt[MAP_TIP_NRML].ht;
 
 				goto_dca1=true;		// goto		dca1;
 				}
@@ -1037,7 +1028,7 @@ public void	draw_cmbt_area()
 
 
 			//The Slct された機体への移動予定の線引き、
-			if( unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING )
+			if( unit[m].ctgry==UnitCategory.Plane && unit[m].PlaneState==UnitState.Parked )
 				{
 /*
 				continue;
@@ -1049,8 +1040,8 @@ public void	draw_cmbt_area()
 					 || (unit[m].info[5]==RETURN && (unit_info[1]==0) ) )
 						{	
 						// 空母で飛行甲板か格納庫かで航空機を表示するかしない。
-						sprt[no1].x=(int)unit[m].x;
-						sprt[no1].y=(int)unit[m].y;
+						sprt[no1].x=(int)unit[m].Position.X;
+						sprt[no1].y=(int)unit[m].Position.Y;
 /*
 						if(unit_info[1]==0 && unit[m].info[3]>=3 && (int)unit[m].y==sprt[UNIT_INFO_JPN].y+370-120)
 							{
@@ -1070,14 +1061,14 @@ public void	draw_cmbt_area()
 				{		
 				if( unit[m].used!=your_side && unit[m].kind==UnitKind.Submarine && unit[m].info[6]!=0 )
 					{	// およその敵潜航潜水艦
-					sprt[no1].x=(int)(unit[m].info[7]-cmbt_x);
-					sprt[no1].y=(int)(cmbt_y-unit[m].info[8]);
+					sprt[no1].x=(int)(unit[m].info[7]-CameraPosition.X);
+					sprt[no1].y=(int)(CameraPosition.Y-unit[m].info[8]);
 					}
 				else
 					{	// マップ上のユニット
 
-					sprt[no1].x=(int)(unit[m].x-cmbt_x);
-					sprt[no1].y=(int)(cmbt_y-unit[m].y);
+					sprt[no1].x=(int)(unit[m].Position.X-CameraPosition.X);
+					sprt[no1].y=(int)(CameraPosition.Y-unit[m].Position.Y);
 
 					}
 				}
@@ -1101,15 +1092,15 @@ public void	draw_cmbt_area()
 			
 			
 			// クリック選択・非選択
-			if( pt_in_rect(ref wrk_rect,crsr_pt.x,crsr_pt.y)!=0 && !( unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[m].ctgry==UnitCategory.Ship && !(unit[m].kind==UnitKind.Carrier || unit[m].kind==UnitKind.LightCarrier || unit[m].kind==UnitKind.AirBase || unit[the_slct_unit].used!=unit[m].used) ) && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING && unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==FLYING )  && !( unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING && unit[m].stop==0 ) && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING && unit[the_slct_unit].stop==0 ) && !( unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING && unit[m].ctgry==UnitCategory.Ship ) 
-				&& !(unit[the_slct_unit].ctgry==UnitCategory.Ship && unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING)  && !(the_slct_unit!=0 && unit[the_slct_unit].used!=your_side) && !(the_slct_unit!=0 && unit[the_slct_unit].ctgry==UnitCategory.Plane&&unit[m].arm[0]==TUN)
-				 && !(unit[m].info[0]!=PARKING && crsr_pt.x>=CMBT_WIDTH-1) 
+			if( pt_in_rect(ref wrk_rect,crsr_pt.x,crsr_pt.y)!=0 && !( unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[m].ctgry==UnitCategory.Ship && !(unit[m].kind==UnitKind.Carrier || unit[m].kind==UnitKind.LightCarrier || unit[m].kind==UnitKind.AirBase || unit[the_slct_unit].used!=unit[m].used) ) && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Parked && unit[m].ctgry==UnitCategory.Plane && unit[m].PlaneState==UnitState.Flying )  && !( unit[m].ctgry==UnitCategory.Plane && unit[m].PlaneState==UnitState.Parked && unit[m].stop==0 ) && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Parked && unit[the_slct_unit].stop==0 ) && !( unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Parked && unit[m].ctgry==UnitCategory.Ship ) 
+				&& !(unit[the_slct_unit].ctgry==UnitCategory.Ship && unit[m].ctgry==UnitCategory.Plane && unit[m].PlaneState==UnitState.Parked)  && !(the_slct_unit!=0 && unit[the_slct_unit].used!=your_side) && !(the_slct_unit!=0 && unit[the_slct_unit].ctgry==UnitCategory.Plane&&unit[m].Weapon==TUN)
+				 && !(unit[m].PlaneState!=UnitState.Parked && crsr_pt.x>=CMBT_WIDTH-1) 
 				 && !(unit[m].used!=your_side && unit[m].kind==UnitKind.Submarine && unit[m].info[6]!=0)
 				)
 				{
 				if( (FrameCount%2)!=0 )
 					{
-					if( unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING )
+					if( unit[m].ctgry==UnitCategory.Plane && unit[m].PlaneState==UnitState.Parked )
 						{
 						right=SCRN_WIDTH-1; bottom=SCRN_HEIGHT-1;
 						}
@@ -1137,7 +1128,7 @@ public void	draw_cmbt_area()
 						{
 						if( the_slct_unit==0 ) 
 							{
-							if( !(unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING) )
+							if( !(unit[m].ctgry==UnitCategory.Plane && unit[m].PlaneState==UnitState.Parked) )
 								old_the_slct_unit=(short)m;
 
 							set_the_slct_unit( m );
@@ -1157,8 +1148,7 @@ public void	draw_cmbt_area()
 								new_slct[1].sw=1;
 								new_slct[1].the_slct_unit=the_slct_unit;
 								new_slct[1].m=0;
-								new_slct[1].gr_x=cmbt_x+sprt[no1].x;
-								new_slct[1].gr_y=cmbt_y-sprt[no1].y;
+								new_slct[1].GroundPosition = new WorldPosition(CameraPosition.X+sprt[no1].x, CameraPosition.Y-sprt[no1].y);
 								}
 							}
 						}
@@ -1173,7 +1163,7 @@ public void	draw_cmbt_area()
 
 
 			// 選択されてればマークの絵というか枠 
-			if( unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING )
+			if( unit[m].ctgry==UnitCategory.Plane && unit[m].PlaneState==UnitState.Parked )
 				{right=SCRN_WIDTH-1; bottom=SCRN_HEIGHT-1;}
 			else
 				{right=CMBT_WIDTH-1; bottom=CMBT_HEIGHT-1;}
@@ -1198,7 +1188,7 @@ public void	draw_cmbt_area()
 					}
 				}
 
-			if( the_slct_unit!=0 && unit[the_slct_unit].kind==UnitKind.Transport && unit[the_slct_unit].arm[2]==max_unit+1 && m==the_slct_unit )
+			if( the_slct_unit!=0 && unit[the_slct_unit].kind==UnitKind.Transport && unit[the_slct_unit].Target==max_unit+1 && m==the_slct_unit )
 				{
 				// 輸送船の揚陸先のマーク
 				cl=0x1f;
@@ -1209,8 +1199,8 @@ public void	draw_cmbt_area()
 //					sprt[no1].y=cmbt_y-unit[m].y;
 
 
-				dstn_rect.left=(int)(unit[the_slct_unit].info[6]-cmbt_x-40);
-				dstn_rect.top=(int)(cmbt_y-unit[the_slct_unit].info[7]-40);
+				dstn_rect.left=(int)(unit[the_slct_unit].info[6]-CameraPosition.X-40);
+				dstn_rect.top=(int)(CameraPosition.Y-unit[the_slct_unit].info[7]-40);
 				dstn_rect.right=dstn_rect.left+sprt[no1].wd-2;
 				dstn_rect.bottom=dstn_rect.top+sprt[no1].ht-2;
 
@@ -1221,7 +1211,7 @@ public void	draw_cmbt_area()
 
 
 				}
-			else  if( the_slct_unit!=0 && unit[the_slct_unit].arm[2]==m )
+			else  if( the_slct_unit!=0 && unit[the_slct_unit].Target==m )
 				{
 				// 攻撃先 としてのマーク
 				// B=0xF800 R=0x7E0 G=0x1F
@@ -1232,7 +1222,7 @@ public void	draw_cmbt_area()
 				draw_line4(dstn_rect.right-n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 				draw_line4(dstn_rect.left+n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 				}
-			else  if( the_slct_unit!=0 && unit[the_slct_unit].info[1]==m && unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==FLYING)
+			else  if( the_slct_unit!=0 && unit[the_slct_unit].info[1]==m && unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Flying)
 				{
 				// 攻撃先 としてのマーク
 				// B=0xF800 R=0x7E0 G=0x1F
@@ -1249,19 +1239,19 @@ public void	draw_cmbt_area()
 
 
 				// 攻撃先 着艦先 の方向
-			if( unit[m].arm[2]!=0 && unit[m].used==your_side )
+			if( unit[m].Target!=0 && unit[m].used==your_side )
 				{
-				if(  0!=0 && unit[unit[m].arm[2]].kind==UnitKind.Submarine && unit[unit[m].arm[2]].info[6]!=0) 
+				if(  0!=0 && unit[unit[m].Target].kind==UnitKind.Submarine && unit[unit[m].Target].info[6]!=0) 
 					{	// 対潜水艦
-					wrk_x3=unit[unit[m].arm[2]].info[7];
-					wrk_y3=unit[unit[m].arm[2]].info[8];
+					wrk_x3=unit[unit[m].Target].info[7];
+					wrk_y3=unit[unit[m].Target].info[8];
 					}
 				else
 					{	// 対潜航潜水艦以外
 					if( unit[m].kind!=UnitKind.Transport )
 						{
-						wrk_x3=unit[unit[m].arm[2]].x;
-						wrk_y3=unit[unit[m].arm[2]].y;
+						wrk_x3=unit[unit[m].Target].Position.X;
+						wrk_y3=unit[unit[m].Target].Position.Y;
 						}
 					else
 						{
@@ -1271,23 +1261,23 @@ public void	draw_cmbt_area()
 						}
 					}
 
-				if( (unit[unit[m].arm[2]].found!=0 || (unit[m].arm[2]==max_unit+1&&unit[m].kind==UnitKind.Transport) )  && !(unit[unit[m].arm[2]].kind==UnitKind.Submarine && unit[unit[m].arm[2]].info[6]!=0) /*unit[unit[m].arm[2]].kind!=SS1*/  )
+				if( (unit[unit[m].Target].found!=0 || (unit[m].Target==max_unit+1&&unit[m].kind==UnitKind.Transport) )  && !(unit[unit[m].Target].kind==UnitKind.Submarine && unit[unit[m].Target].info[6]!=0) /*unit[unit[m].arm[2]].kind!=SS1*/  )
 					{	// 視認
-					wrk_x=wrk_x3-unit[m].x;
-					wrk_y=wrk_y3-unit[m].y;
+					wrk_x=wrk_x3-unit[m].Position.X;
+					wrk_y=wrk_y3-unit[m].Position.Y;
 					if( wrk_x==0 )	wrk_x=1;
 					if( wrk_y==0 )	wrk_y=1;
 					drctn=atan2(wrk_y,wrk_x)*RAD_to;
 					if(drctn<0)
 						drctn=360+drctn;
 
-					wrk_x=unit[m].x;
-					wrk_y=unit[m].y;
+					wrk_x=unit[m].Position.X;
+					wrk_y=unit[m].Position.Y;
 					wrk_x+=cos(drctn*a_PI)*40;
 					wrk_y+=sin(drctn*a_PI)*40;
 
-					wrk_x2=unit[m].x;
-					wrk_y2=unit[m].y;
+					wrk_x2=unit[m].Position.X;
+					wrk_y2=unit[m].Position.Y;
 					drctn2=drctn;
 					drctn2-=10;
 					if(drctn2<0)
@@ -1295,10 +1285,10 @@ public void	draw_cmbt_area()
 					wrk_x2+=cos(drctn2*a_PI)*20;
 					wrk_y2+=sin(drctn2*a_PI)*20;
 					cl=0x1f;
-					draw_line4((int)(wrk_x-cmbt_x),(int)(cmbt_y-wrk_y),(int)(wrk_x2-cmbt_x),(int)(cmbt_y-wrk_y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+					draw_line4((int)(wrk_x-CameraPosition.X),(int)(CameraPosition.Y-wrk_y),(int)(wrk_x2-CameraPosition.X),(int)(CameraPosition.Y-wrk_y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 
-					wrk_x2=unit[m].x;
-					wrk_y2=unit[m].y;
+					wrk_x2=unit[m].Position.X;
+					wrk_y2=unit[m].Position.Y;
 					drctn2=drctn;
 					drctn2-=350;
 					if(drctn2<0)
@@ -1306,22 +1296,22 @@ public void	draw_cmbt_area()
 					wrk_x2+=cos(drctn2*a_PI)*20;
 					wrk_y2+=sin(drctn2*a_PI)*20;
 					cl=0x1f;
-					draw_line4((int)(wrk_x-cmbt_x),(int)(cmbt_y-wrk_y),(int)(wrk_x2-cmbt_x),(int)(cmbt_y-wrk_y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+					draw_line4((int)(wrk_x-CameraPosition.X),(int)(CameraPosition.Y-wrk_y),(int)(wrk_x2-CameraPosition.X),(int)(CameraPosition.Y-wrk_y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 					}
 				else
 					{	// 視認不可
-					wrk_x=unit[m].x+10+20;
-					wrk_y=unit[m].y+40;
-					wrk_x2=unit[m].x-10+20;
-					wrk_y2=unit[m].y+20;
+					wrk_x=unit[m].Position.X+10+20;
+					wrk_y=unit[m].Position.Y+40;
+					wrk_x2=unit[m].Position.X-10+20;
+					wrk_y2=unit[m].Position.Y+20;
 					cl=0x1f;
-					draw_line4((int)(wrk_x-cmbt_x),(int)(cmbt_y-wrk_y),(int)(wrk_x2-cmbt_x),(int)(cmbt_y-wrk_y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-					wrk_x=unit[m].x-10+20;
-					wrk_y=unit[m].y+40;
-					wrk_x2=unit[m].x+10+20;
-					wrk_y2=unit[m].y+20;
+					draw_line4((int)(wrk_x-CameraPosition.X),(int)(CameraPosition.Y-wrk_y),(int)(wrk_x2-CameraPosition.X),(int)(CameraPosition.Y-wrk_y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+					wrk_x=unit[m].Position.X-10+20;
+					wrk_y=unit[m].Position.Y+40;
+					wrk_x2=unit[m].Position.X+10+20;
+					wrk_y2=unit[m].Position.Y+20;
 					cl=0x1f;
-					draw_line4((int)(wrk_x-cmbt_x),(int)(cmbt_y-wrk_y),(int)(wrk_x2-cmbt_x),(int)(cmbt_y-wrk_y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+					draw_line4((int)(wrk_x-CameraPosition.X),(int)(CameraPosition.Y-wrk_y),(int)(wrk_x2-CameraPosition.X),(int)(CameraPosition.Y-wrk_y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 					}
 				}
 
@@ -1333,7 +1323,7 @@ public void	draw_cmbt_area()
 				// 緊急移動先までの線
 				if( unit[m].em_flg[0]!=0 )
 					{
-					draw_line5((int)(unit[m].x-cmbt_x),(int)(cmbt_y-unit[m].y),(int)(unit[m].em_x-cmbt_x),(int)(cmbt_y-unit[m].em_y),CMBT_WIDTH-1,CMBT_HEIGHT-1,PALT_RED);
+					draw_line5((int)(unit[m].Position.X-CameraPosition.X),(int)(CameraPosition.Y-unit[m].Position.Y),(int)(unit[m].EmergencyDestination.X-CameraPosition.X),(int)(CameraPosition.Y-unit[m].EmergencyDestination.Y),CMBT_WIDTH-1,CMBT_HEIGHT-1,PALT_RED);
 					}
 
 				for(n=0; unit[m].pp_x[n]!=MAP_RIGHT+1; n++)
@@ -1341,10 +1331,10 @@ public void	draw_cmbt_area()
 					cl=0xffff;
 					//cl=0xffff;
 					//cl=(31<<7)|(0); // Ｇ 各値最大３１
-					draw_line4((int)(unit[m].pp_x[n]-cmbt_x)-10,(int)(cmbt_y-unit[m].pp_y[n])-10,(int)(unit[m].pp_x[n]-cmbt_x)+10,(int)(cmbt_y-unit[m].pp_y[n])-10,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-					draw_line4((int)(unit[m].pp_x[n]-cmbt_x)+10,(int)(cmbt_y-unit[m].pp_y[n])-10,(int)(unit[m].pp_x[n]-cmbt_x)+10,(int)(cmbt_y-unit[m].pp_y[n])+10,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-					draw_line4((int)(unit[m].pp_x[n]-cmbt_x)+10,(int)(cmbt_y-unit[m].pp_y[n])+10,(int)(unit[m].pp_x[n]-cmbt_x)-10,(int)(cmbt_y-unit[m].pp_y[n])+10,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-					draw_line4((int)(unit[m].pp_x[n]-cmbt_x)-10,(int)(cmbt_y-unit[m].pp_y[n])+10,(int)(unit[m].pp_x[n]-cmbt_x)-10,(int)(cmbt_y-unit[m].pp_y[n])-10,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+					draw_line4((int)(unit[m].pp_x[n]-CameraPosition.X)-10,(int)(CameraPosition.Y-unit[m].pp_y[n])-10,(int)(unit[m].pp_x[n]-CameraPosition.X)+10,(int)(CameraPosition.Y-unit[m].pp_y[n])-10,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+					draw_line4((int)(unit[m].pp_x[n]-CameraPosition.X)+10,(int)(CameraPosition.Y-unit[m].pp_y[n])-10,(int)(unit[m].pp_x[n]-CameraPosition.X)+10,(int)(CameraPosition.Y-unit[m].pp_y[n])+10,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+					draw_line4((int)(unit[m].pp_x[n]-CameraPosition.X)+10,(int)(CameraPosition.Y-unit[m].pp_y[n])+10,(int)(unit[m].pp_x[n]-CameraPosition.X)-10,(int)(CameraPosition.Y-unit[m].pp_y[n])+10,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+					draw_line4((int)(unit[m].pp_x[n]-CameraPosition.X)-10,(int)(CameraPosition.Y-unit[m].pp_y[n])+10,(int)(unit[m].pp_x[n]-CameraPosition.X)-10,(int)(CameraPosition.Y-unit[m].pp_y[n])-10,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 
 
 					
@@ -1355,16 +1345,16 @@ public void	draw_cmbt_area()
 						{
 						//cl=0x001f;
 						right=CMBT_WIDTH-1; bottom=CMBT_HEIGHT-1;
-						if( unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING )
-							{draw_line4((int)(unit[unit[m].info[1]].x-cmbt_x),(int)(cmbt_y-unit[unit[m].info[1]].y),(int)(unit[m].pp_x[n]-cmbt_x),(int)(cmbt_y-unit[m].pp_y[n]),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));}
+						if( unit[m].ctgry==UnitCategory.Plane && unit[m].PlaneState==UnitState.Parked )
+							{draw_line4((int)(unit[unit[m].info[1]].Position.X-CameraPosition.X),(int)(CameraPosition.Y-unit[unit[m].info[1]].Position.Y),(int)(unit[m].pp_x[n]-CameraPosition.X),(int)(CameraPosition.Y-unit[m].pp_y[n]),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));}
 						else
-							{draw_line4(sprt[no1].x,sprt[no1].y,(int)(unit[m].pp_x[n]-cmbt_x),(int)(cmbt_y-unit[m].pp_y[n]),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));}
+							{draw_line4(sprt[no1].x,sprt[no1].y,(int)(unit[m].pp_x[n]-CameraPosition.X),(int)(CameraPosition.Y-unit[m].pp_y[n]),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));}
 						//draw_line2(os[no1].x,os[no1].y,(int)(unit[m].pp_x[n]-cmbt_x),(int)(cmbt_y-unit[m].pp_y[n]),cl);
 						}
 					else
 						{
 						//cl=0xf800;
-						draw_line4((int)(unit[m].pp_x[n-1]-cmbt_x),(int)(cmbt_y-unit[m].pp_y[n-1]),(int)(unit[m].pp_x[n]-cmbt_x),(int)(cmbt_y-unit[m].pp_y[n]),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+						draw_line4((int)(unit[m].pp_x[n-1]-CameraPosition.X),(int)(CameraPosition.Y-unit[m].pp_y[n-1]),(int)(unit[m].pp_x[n]-CameraPosition.X),(int)(CameraPosition.Y-unit[m].pp_y[n]),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 						}
 					}
 
@@ -1376,26 +1366,25 @@ public void	draw_cmbt_area()
 					{
 					if( new_pp[1].cls!=0 )
 						{
-						if( unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING )
-							draw_line4((int)(unit[unit[m].info[1]].x-cmbt_x),(int)(cmbt_y-unit[unit[m].info[1]].y),(int)(crsr_pt.x),(int)(crsr_pt.y),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+						if( unit[m].ctgry==UnitCategory.Plane && unit[m].PlaneState==UnitState.Parked )
+							draw_line4((int)(unit[unit[m].info[1]].Position.X-CameraPosition.X),(int)(CameraPosition.Y-unit[unit[m].info[1]].Position.Y),(int)(crsr_pt.x),(int)(crsr_pt.y),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 						else
-							draw_line4((int)(unit[m].x-cmbt_x),(int)(cmbt_y-unit[m].y),(int)(crsr_pt.x),(int)(crsr_pt.y),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+							draw_line4((int)(unit[m].Position.X-CameraPosition.X),(int)(CameraPosition.Y-unit[m].Position.Y),(int)(crsr_pt.x),(int)(crsr_pt.y),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 						}
 					else
-						draw_line4((int)(unit[m].pp_x[n-1]-cmbt_x),(int)(cmbt_y-unit[m].pp_y[n-1]),(int)(crsr_pt.x),(int)(crsr_pt.y),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+						draw_line4((int)(unit[m].pp_x[n-1]-CameraPosition.X),(int)(CameraPosition.Y-unit[m].pp_y[n-1]),(int)(crsr_pt.x),(int)(crsr_pt.y),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 					}
 
 
 				// 定点設定
 				if( lc_lf_btn==1 && unit[m].used==your_side && crsr_pt.x < CMBT_WIDTH &&
 					// 発進チェック
-					!(unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING
-					&& ( unit[unit[m].info[1]].info[4]!=0 || unit[unit[m].info[1]].info[8]!=0 || unit[m].arm[3]>0 || unit[unit[m].info[1]].spry!=0 ))
+					!(unit[m].ctgry==UnitCategory.Plane && unit[m].PlaneState==UnitState.Parked
+					&& ( unit[unit[m].info[1]].info[4]!=0 || unit[unit[m].info[1]].info[8]!=0 || unit[m].ReloadTime>0 || unit[unit[m].info[1]].spry!=0 ))
 					&& map_edit==0 )
 					{
 					new_pp[1].used=the_slct_unit;
-					new_pp[1].x=crsr_pt.x+cmbt_x;
-					new_pp[1].y=cmbt_y-crsr_pt.y;
+					new_pp[1].Destination = new WorldPosition(crsr_pt.x+CameraPosition.X, CameraPosition.Y-crsr_pt.y);
 					}
 
 

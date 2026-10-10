@@ -226,17 +226,17 @@ rival_mode=mode;
 					len[0] = wsprintf(ach[0], "軽空母",10);
 					break;
 				case UnitKind.Transport:
-					if(unit[unit_info[3]].arm[1]!=0)
+					if(unit[unit_info[3]].Ammo!=0)
 						{
-						if(unit[unit_info[3]].arm[0]==TR_GF1)
+						if(unit[unit_info[3]].Weapon==TR_GF1)
 							len[0] = wsprintf(ach[0], "輸送船(歩兵基地)",10);
-						else if(unit[unit_info[3]].arm[0]==TR_GF2)
+						else if(unit[unit_info[3]].Weapon==TR_GF2)
 							len[0] = wsprintf(ach[0], "輸送船(トーチカ群)",10);
-						else if(unit[unit_info[3]].arm[0]==TR_GF3)
+						else if(unit[unit_info[3]].Weapon==TR_GF3)
 							len[0] = wsprintf(ach[0], "輸送船(要塞)",10);
-						else if(unit[unit_info[3]].arm[0]==TR_AP)
+						else if(unit[unit_info[3]].Weapon==TR_AP)
 							len[0] = wsprintf(ach[0], "輸送船(航空基地)",10);
-						else if(unit[unit_info[3]].arm[0]==TR_SP)
+						else if(unit[unit_info[3]].Weapon==TR_SP)
 							len[0] = wsprintf(ach[0], "輸送船(軍港)",10);
 						}
 					else
@@ -284,26 +284,26 @@ rival_mode=mode;
 
 
 			// 損傷
-			if( unit[unit_info[3]].used!=0 && ( unit[unit_info[3]].kind==UnitKind.AirBase||unit[unit_info[3]].kind==UnitKind.NavalBase||unit[unit_info[3]].kind==UnitKind.InfantryBase||unit[unit_info[3]].kind==UnitKind.Pillboxes||unit[unit_info[3]].kind==UnitKind.Fortress ) && unit[unit_info[3]].info[0]!=0 && unit[unit_info[3]].hp[0]==unit[unit_info[3]].hp[1]
+			if( unit[unit_info[3]].used!=0 && ( unit[unit_info[3]].kind==UnitKind.AirBase||unit[unit_info[3]].kind==UnitKind.NavalBase||unit[unit_info[3]].kind==UnitKind.InfantryBase||unit[unit_info[3]].kind==UnitKind.Pillboxes||unit[unit_info[3]].kind==UnitKind.Fortress ) && unit[unit_info[3]].info[0]!=0 && unit[unit_info[3]].Hp==unit[unit_info[3]].MaxHp
 				)
 				{
 				len[1] = wsprintf(ach[1], "工事:%d", unit[unit_info[3]].info[0] );
 				}
 			else
 				{
-				if( unit[unit_info[3]].hp[0] <= unit[unit_info[3]].hp[1]*0.2 )
+				if( unit[unit_info[3]].Hp <= unit[unit_info[3]].MaxHp*0.2 )
 					{
 					len[1] = wsprintf(ach[1], "大破");
 					}
-				else if( unit[unit_info[3]].hp[0] <= unit[unit_info[3]].hp[1]*0.5 )
+				else if( unit[unit_info[3]].Hp <= unit[unit_info[3]].MaxHp*0.5 )
 					{
 					len[1] = wsprintf(ach[1], "中破");
 					}
-				else if( unit[unit_info[3]].hp[0] <= unit[unit_info[3]].hp[1]*0.7 )
+				else if( unit[unit_info[3]].Hp <= unit[unit_info[3]].MaxHp*0.7 )
 					{
 					len[1] = wsprintf(ach[1], "小破");
 					}
-				else if( unit[unit_info[3]].hp[0] <= unit[unit_info[3]].hp[1]-1 )
+				else if( unit[unit_info[3]].Hp <= unit[unit_info[3]].MaxHp-1 )
 					{
 					len[1] = wsprintf(ach[1], "軽損傷");
 					}
@@ -314,14 +314,14 @@ rival_mode=mode;
 				}
 
 			// 残弾薬
-			len[2] = wsprintf(ach[2], "弾薬：%d",unit[unit_info[3]].arm[1]);
+			len[2] = wsprintf(ach[2], "弾薬：%d",unit[unit_info[3]].Ammo);
 
 
 			// 残燃料
-			if(unit[unit_info[3]].gas[0]==-1)
+			if(unit[unit_info[3]].Fuel==-1)
 				len[3] = wsprintf(ach[3], "停泊艦船");
 			else
-				len[3] = wsprintf(ach[3], "燃料：%d", (int)(unit[unit_info[3]].gas[0]) );
+				len[3] = wsprintf(ach[3], "燃料：%d", (int)(unit[unit_info[3]].Fuel) );
 
 
 #else
@@ -358,17 +358,17 @@ else
 					break;
 
 				case UnitKind.Transport:
-					if(unit[unit_info[3]].arm[1])
+					if(unit[unit_info[3]].Ammo)
 						{
-						if(unit[unit_info[3]].arm[0]==TR_GF1)
+						if(unit[unit_info[3]].Weapon==TR_GF1)
 							len[0] = wsprintf(ach[0], "Transport(Trenchies)",10);
-						else if(unit[unit_info[3]].arm[0]==TR_GF2)
+						else if(unit[unit_info[3]].Weapon==TR_GF2)
 							len[0] = wsprintf(ach[0], "Transport(Pillboxies)",10);
-						else if(unit[unit_info[3]].arm[0]==TR_GF3)
+						else if(unit[unit_info[3]].Weapon==TR_GF3)
 							len[0] = wsprintf(ach[0], "Transport(Fortress)",10);
-						else if(unit[unit_info[3]].arm[0]==TR_AP)
+						else if(unit[unit_info[3]].Weapon==TR_AP)
 							len[0] = wsprintf(ach[0], "Transport(Airfield)",10);
-						else if(unit[unit_info[3]].arm[0]==TR_SP)
+						else if(unit[unit_info[3]].Weapon==TR_SP)
 							len[0] = wsprintf(ach[0], "Transport(Port)",10);
 						}
 					else
@@ -423,19 +423,19 @@ else
 
 
 			// 損傷
-			if( unit[unit_info[3]].hp[0] <= unit[unit_info[3]].hp[1]*0.2 )
+			if( unit[unit_info[3]].Hp <= unit[unit_info[3]].MaxHp*0.2 )
 				{
 				len[1] = wsprintf(ach[1], "Heavy damaged"/*"大破"*/);
 				}
-			else if( unit[unit_info[3]].hp[0] <= unit[unit_info[3]].hp[1]*0.5 )
+			else if( unit[unit_info[3]].Hp <= unit[unit_info[3]].MaxHp*0.5 )
 				{
 				len[1] = wsprintf(ach[1], "Moderate damaged"/*"中破"*/);
 				}
-			else if( unit[unit_info[3]].hp[0] <= unit[unit_info[3]].hp[1]*0.7 )
+			else if( unit[unit_info[3]].Hp <= unit[unit_info[3]].MaxHp*0.7 )
 				{
 				len[1] = wsprintf(ach[1], "light damaged"/*"小破"*/);
 				}
-			else if( unit[unit_info[3]].hp[0] <= unit[unit_info[3]].hp[1]-1 )
+			else if( unit[unit_info[3]].Hp <= unit[unit_info[3]].MaxHp-1 )
 				{
 				len[1] = wsprintf(ach[1], "A bit of damaged");
 				}
@@ -445,14 +445,14 @@ else
 				}
 
 			// 残弾薬
-			len[2] = wsprintf(ach[2], "Ammo:%d",unit[unit_info[3]].arm[1]);
+			len[2] = wsprintf(ach[2], "Ammo:%d",unit[unit_info[3]].Ammo);
 
 
 			// 残燃料
-			if(unit[unit_info[3]].gas[0]==-1)
+			if(unit[unit_info[3]].Fuel==-1)
 				len[3] = wsprintf(ach[3], "Anchored");
 			else
-				len[3] = wsprintf(ach[3], "Fuel:%d",(int)(unit[unit_info[3]].gas[0]));
+				len[3] = wsprintf(ach[3], "Fuel:%d",(int)(unit[unit_info[3]].Fuel));
 
 				
 
@@ -466,7 +466,7 @@ else
 
 			if( map_edit!=0 )
 				{
-				len[0] = wsprintf(ach[0], "(%d/%d)", unit[unit_info[3]].hp[0], unit[unit_info[3]].hp[1]);
+				len[0] = wsprintf(ach[0], "(%d/%d)", unit[unit_info[3]].Hp, unit[unit_info[3]].MaxHp);
 				SetTextColor(hdc, RGB(255, 255, 0));
 				TextOut(hdc, dstn_rect.left+20+110+55, 10+(1*20), ach[0], len[0]);
 				}
@@ -569,12 +569,12 @@ else
 					if( unit[i].used==your_side && unit[i].kind==UnitKind.NavalBase && unit[i].info[0]==0 )
 						{
 						// ptin dbg
-						wrk_rect.top=(int)unit[i].y+40+240;
-						wrk_rect.right=(int)unit[i].x+40+240;
-						wrk_rect.bottom=(int)unit[i].y-40-240;
-						wrk_rect.left=(int)unit[i].x-40-240;
+						wrk_rect.top=(int)unit[i].Position.Y+40+240;
+						wrk_rect.right=(int)unit[i].Position.X+40+240;
+						wrk_rect.bottom=(int)unit[i].Position.Y-40-240;
+						wrk_rect.left=(int)unit[i].Position.X-40-240;
 
-						if( pt_in_rect3( ref wrk_rect, (int)unit[the_slct_unit].x, (int)unit[the_slct_unit].y )!=0 )
+						if( pt_in_rect3( ref wrk_rect, (int)unit[the_slct_unit].Position.X, (int)unit[the_slct_unit].Position.Y )!=0 )
 							{
 							n=1;
 							menu[0]=10;			// ボタンＣＧのインデックス
@@ -591,13 +591,13 @@ else
 			}
 		else
 			{
-			if( unit[the_slct_unit].info[0]==FLYING )
+			if( unit[the_slct_unit].PlaneState==UnitState.Flying )
 				{	// 飛行中のメニュー
 				n=0;
 				for(g=1;g<=max_unit;g++)
 					{
 					if( unit[g].used!=0 && ( unit[g].ltl_ldr==the_slct_unit || g==the_slct_unit || slct_unit[1][g]!=0) )
-						if( unit[g].info[0]!=FLYING )
+						if( unit[g].PlaneState!=UnitState.Flying )
 							{
 							n=1; break;
 							}
@@ -616,7 +616,7 @@ else
 				}
 			else
 				{	// 収容中のメニュー
-				if( (unit[the_slct_unit].kind==UnitKind.Attacker || unit[the_slct_unit].kind==UnitKind.Bomber ) && unit[the_slct_unit].arm[0]!=TUN )
+				if( (unit[the_slct_unit].kind==UnitKind.Attacker || unit[the_slct_unit].kind==UnitKind.Bomber ) && unit[the_slct_unit].Weapon!=TUN )
 					{
 					if( unit[the_slct_unit].kind==UnitKind.Attacker || unit[the_slct_unit].used==Side.Japan )
 						{
@@ -631,11 +631,11 @@ else
 						menu[0]=8;	menu2[0]=RDY_BOM;
 						menu[1]=9;	menu2[1]=NOTHING;
 						}
-					cmbt_menu_slctd=(short)unit[the_slct_unit].arm[0];
+					cmbt_menu_slctd=(short)unit[the_slct_unit].Weapon;
 
 
 
-					if ( unit[the_slct_unit].arm[1]==0 )
+					if ( unit[the_slct_unit].Ammo==0 )
 						{
 						cmbt_menu_slctd=NTG;
 						}
@@ -1340,14 +1340,14 @@ public void	draw_map()
 
 	// コンバット画面位置の描画
 	my_cl=0;
-	if( cmbt_x >= 0 )
-		dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(cmbt_x))/80)*map_close;
+	if( CameraPosition.X >= 0 )
+		dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(CameraPosition.X))/80)*map_close;
 	else
-		dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(cmbt_x))/80)*map_close;
-	if( cmbt_y >= 0 )
-		dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(cmbt_y))/80)*map_close;
+		dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(CameraPosition.X))/80)*map_close;
+	if( CameraPosition.Y >= 0 )
+		dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(CameraPosition.Y))/80)*map_close;
 	else
-		dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(cmbt_y))/80)*map_close;
+		dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(CameraPosition.Y))/80)*map_close;
 
 	dstn_rect.right=dstn_rect.left+10;
 	dstn_rect.bottom=dstn_rect.top+10;
@@ -1376,16 +1376,15 @@ public void	draw_map()
 
 		if(lf_btn==2)
 			{
-			cmbt_x=MAP_LEFT+(((crsr_pt.x-5-base_x)/map_close)*80);
-			cmbt_y=MAP_TOP-(((crsr_pt.y-5-base_y)/map_close)*80);
-			if(cmbt_y>MAP_TOP)
-				cmbt_y=MAP_TOP;
-			if(cmbt_x>(MAP_RIGHT-CMBT_WIDTH) )		
-				cmbt_x=MAP_RIGHT-CMBT_WIDTH;
-			if(cmbt_y<(MAP_BOTTOM+CMBT_HEIGHT) )
-				cmbt_y=MAP_BOTTOM+CMBT_HEIGHT;
-			if(cmbt_x<MAP_LEFT)		
-				cmbt_x=MAP_LEFT;
+			CameraPosition = new WorldPosition(MAP_LEFT+(((crsr_pt.x-5-base_x)/map_close)*80), MAP_TOP-(((crsr_pt.y-5-base_y)/map_close)*80));
+			if(CameraPosition.Y>MAP_TOP)
+				CameraPosition = new WorldPosition(CameraPosition.X, MAP_TOP);
+			if(CameraPosition.X>(MAP_RIGHT-CMBT_WIDTH) )		
+				CameraPosition = new WorldPosition(MAP_RIGHT-CMBT_WIDTH, CameraPosition.Y);
+			if(CameraPosition.Y<(MAP_BOTTOM+CMBT_HEIGHT) )
+				CameraPosition = new WorldPosition(CameraPosition.X, MAP_BOTTOM+CMBT_HEIGHT);
+			if(CameraPosition.X<MAP_LEFT)		
+				CameraPosition = new WorldPosition(MAP_LEFT, CameraPosition.Y);
 			}
 		}
 
@@ -1413,17 +1412,17 @@ public void	draw_map()
 	for(m=1; m<=max_unit; m++)
 		{
 
-		if( unit[m].used==your_side  &&   !( unit[m].y>MAP_TOP || unit[m].y<MAP_BOTTOM || unit[m].x<MAP_LEFT || unit[m].x>MAP_RIGHT )    && !(unit[m].info[0]==PARKING) && !(unit[m].ctgry==UnitCategory.Plane && (FrameCount%4)==0))
+		if( unit[m].used==your_side  &&   !( unit[m].Position.Y>MAP_TOP || unit[m].Position.Y<MAP_BOTTOM || unit[m].Position.X<MAP_LEFT || unit[m].Position.X>MAP_RIGHT )    && !(unit[m].PlaneState==UnitState.Parked) && !(unit[m].ctgry==UnitCategory.Plane && (FrameCount%4)==0))
 			{
 			// マイユニット
-			if( unit[m].x >= 0 )
-				dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit[m].x-40))/80)*map_close;
+			if( unit[m].Position.X >= 0 )
+				dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit[m].Position.X-40))/80)*map_close;
 			else
-				dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit[m].x-40))/80)*map_close;
-			if( unit[m].y >= 0 )
-				dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit[m].y+40))/80)*map_close;
+				dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit[m].Position.X-40))/80)*map_close;
+			if( unit[m].Position.Y >= 0 )
+				dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit[m].Position.Y+40))/80)*map_close;
 			else
-				dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit[m].y+40))/80)*map_close;
+				dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit[m].Position.Y+40))/80)*map_close;
 
 			dstn_rect.right=dstn_rect.left+2;
 			dstn_rect.bottom=dstn_rect.top+2;
@@ -1446,7 +1445,7 @@ public void	draw_map()
 			}
 
 
-		if( unit[m].used!=0 && unit[m].used!=your_side && !( unit[m].y>MAP_TOP || unit[m].y<MAP_BOTTOM || unit[m].x<MAP_LEFT || unit[m].x>MAP_RIGHT ) && !(unit[m].info[0]==PARKING) && unit[m].found!=0 && !(unit[m].ctgry==UnitCategory.Plane && (FrameCount%4)==0) )
+		if( unit[m].used!=0 && unit[m].used!=your_side && !( unit[m].Position.Y>MAP_TOP || unit[m].Position.Y<MAP_BOTTOM || unit[m].Position.X<MAP_LEFT || unit[m].Position.X>MAP_RIGHT ) && !(unit[m].PlaneState==UnitState.Parked) && unit[m].found!=0 && !(unit[m].ctgry==UnitCategory.Plane && (FrameCount%4)==0) )
 			{
 			// エネユニット
 			if( unit[m].kind==UnitKind.Submarine && unit[m].info[6]!=0 )
@@ -1464,14 +1463,14 @@ public void	draw_map()
 			else
 				{
 				// 艦船基地航空機
-				if( unit[m].x >= 0 )
-					dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit[m].x-40))/80)*map_close;
+				if( unit[m].Position.X >= 0 )
+					dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit[m].Position.X-40))/80)*map_close;
 				else
-					dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit[m].x-40))/80)*map_close;
-				if( unit[m].y >= 0 )
-					dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit[m].y+40))/80)*map_close;
+					dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit[m].Position.X-40))/80)*map_close;
+				if( unit[m].Position.Y >= 0 )
+					dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit[m].Position.Y+40))/80)*map_close;
 				else
-					dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit[m].y+40))/80)*map_close;
+					dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit[m].Position.Y+40))/80)*map_close;
 				}
 			dstn_rect.right=dstn_rect.left+2;
 			dstn_rect.bottom=dstn_rect.top+2;
@@ -1578,7 +1577,7 @@ public void	cnct_unit_info_cont_now()
 			if( menu2==SPRY )
 				{
 				unit[tmp_slct_unit].spry=1;
-				unit[tmp_slct_unit].arm[2]=0;
+				unit[tmp_slct_unit].Target=0;
 
 				// ちょっと一応
 				if( unit[tmp_slct_unit].kind==UnitKind.Carrier || unit[tmp_slct_unit].kind==UnitKind.LightCarrier )
@@ -1603,34 +1602,34 @@ public void	cnct_unit_info_cont_now()
 									{	
 									if(unit[g].kind==UnitKind.Attacker || (unit[g].kind==UnitKind.Bomber && ( (menu2==RDY_TPD && unit[g].used==Side.Japan ) || menu2==RDY_BOM || menu2==NOTHING) ))
 										{		// 収容中の攻撃機だったばあい
-										unit[g].arm[0]=menu2;
+										unit[g].Weapon=menu2;
 
 
 										if(menu2==RDY_TPD)
-											unit[g].arm[1]=1;		// 魚雷の場合は常に１、弾数。
+											unit[g].Ammo=1;		// 魚雷の場合は常に１、弾数。
 										else
-											unit[g].arm[1]=unit[g].arm[4];
+											unit[g].Ammo=unit[g].MaxAmmo;
 
 										if(menu2==NOTHING)
-											unit[g].arm[3]=1;
+											unit[g].ReloadTime=1;
 										else
-											unit[g].arm[3]=RDY_SPAN;
+											unit[g].ReloadTime=RDY_SPAN;
 										}
 									}
 								else
 									{
 //									unit[g].info[5]=menu2;
-									if( (unit[g].kind==UnitKind.Fighter ) && menu2==RETURN  && unit[g].info[0]==FLYING )
+									if( (unit[g].kind==UnitKind.Fighter ) && menu2==RETURN  && unit[g].PlaneState==UnitState.Flying )
 										{
 										unit[g].info[5]=menu2;
 										}
 									if( (unit[g].kind==UnitKind.Attacker || unit[g].kind==UnitKind.Bomber ) && menu2==RETURN )
 										{
-										unit[g].arm[1]=0;		// 帰投選択時に攻撃機なら武装投棄
-										unit[g].arm[2]=0;		// 帰投選択時に攻撃機攻撃目標放棄
+										unit[g].Ammo=0;		// 帰投選択時に攻撃機なら武装投棄
+										unit[g].Target=0;		// 帰投選択時に攻撃機攻撃目標放棄
 										unit[g].info[5]=menu2;
 										}
-									if( unit[g].ctgry==UnitCategory.Plane && menu2==MOVE && unit[g].info[0]==FLYING  )
+									if( unit[g].ctgry==UnitCategory.Plane && menu2==MOVE && unit[g].PlaneState==UnitState.Flying  )
 										{
 										unit[g].info[3]=0;		// 着艦準備をクリア
 										unit[g].info[5]=menu2;

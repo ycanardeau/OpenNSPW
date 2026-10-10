@@ -229,8 +229,7 @@ public void	cloud_in_start()
 		for( m=0;m<3;m++)
 			{
 			kumo[ok[n]].used=1;
-			kumo[ok[n]].x=/*MAP_RIGHT*/base_x+m*80+sub_x;
-			kumo[ok[n]].y=base_y;
+			kumo[ok[n]].Position = new WorldPosition(/*MAP_RIGHT*/base_x+m*80+sub_x, base_y);
 			kumo[ok[n]].kind=1;
 			n++;
 			}
@@ -238,8 +237,7 @@ public void	cloud_in_start()
 		for( m=0;m<5;m++)
 			{
 			kumo[ok[n]].used=1;
-			kumo[ok[n]].x=/*MAP_RIGHT*/base_x+m*80-80+sub_x;
-			kumo[ok[n]].y=base_y+80;
+			kumo[ok[n]].Position = new WorldPosition(/*MAP_RIGHT*/base_x+m*80-80+sub_x, base_y+80);
 			kumo[ok[n]].kind=1;
 			n++;
 			}
@@ -247,8 +245,7 @@ public void	cloud_in_start()
 		for( m=0;m<3;m++)
 			{
 			kumo[ok[n]].used=1;
-			kumo[ok[n]].x=/*MAP_RIGHT*/base_x+m*80+sub_x;
-			kumo[ok[n]].y=base_y+80*2;
+			kumo[ok[n]].Position = new WorldPosition(/*MAP_RIGHT*/base_x+m*80+sub_x, base_y+80*2);
 			kumo[ok[n]].kind=1;
 			n++;
 			}
@@ -278,8 +275,8 @@ public void	cloud_cont()
 			{
 			if( game_end==GameResult.None )
 				{
-				kumo[n].x-=2.0/*2.0*/;
-				if( kumo[n].x < MAP_LEFT )
+				kumo[n].Position = new WorldPosition(kumo[n].Position.X - 2.0/*2.0*/, kumo[n].Position.Y);
+				if( kumo[n].Position.X < MAP_LEFT )
 					kumo[n].used=0;
 				}
 			}
@@ -323,8 +320,7 @@ public void	cloud_cont()
 	for( m=0;m<3;m++)
 		{
 		kumo[ok[n]].used=1;
-		kumo[ok[n]].x=MAP_RIGHT+m*80+sub_x;
-		kumo[ok[n]].y=base_y;
+		kumo[ok[n]].Position = new WorldPosition(MAP_RIGHT+m*80+sub_x, base_y);
 		kumo[ok[n]].kind=1;
 		n++;
 		}
@@ -332,8 +328,7 @@ public void	cloud_cont()
 	for( m=0;m<5;m++)
 		{
 		kumo[ok[n]].used=1;
-		kumo[ok[n]].x=MAP_RIGHT+m*80-80+sub_x;
-		kumo[ok[n]].y=base_y+80;
+		kumo[ok[n]].Position = new WorldPosition(MAP_RIGHT+m*80-80+sub_x, base_y+80);
 		kumo[ok[n]].kind=1;
 		n++;
 		}
@@ -341,8 +336,7 @@ public void	cloud_cont()
 	for( m=0;m<3;m++)
 		{
 		kumo[ok[n]].used=1;
-		kumo[ok[n]].x=MAP_RIGHT+m*80+sub_x;
-		kumo[ok[n]].y=base_y+80*2;
+		kumo[ok[n]].Position = new WorldPosition(MAP_RIGHT+m*80+sub_x, base_y+80*2);
 		kumo[ok[n]].kind=1;
 		n++;
 		}
@@ -381,10 +375,9 @@ public void	cont_fire()
 				{
 				if( fire[m].info[0]<=fire[m].info[1] )
 					{
-					wrk_x=fire[m].x;
-					wrk_y=fire[m].y;
-					fire[m].x+=cos(fire[m].drctn*a_PI)*fire[m].spd;
-					fire[m].y+=sin(fire[m].drctn*a_PI)*fire[m].spd;
+					wrk_x=fire[m].Position.X;
+					wrk_y=fire[m].Position.Y;
+					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
 					fire[m].spd+=fire[m].spd_add;
 			
 
@@ -395,7 +388,7 @@ public void	cont_fire()
 					wrk_r.right=(int)fire[m].info[6]+20;
 					wrk_r.bottom=(int)fire[m].info[7]-20;//(int)fire[m].info[7]+20;
 					wrk_r.left=(int)fire[m].info[6]-20;
-					if( pt_in_rect3(ref wrk_r,(int)fire[m].x,(int)fire[m].y)!=0 )
+					if( pt_in_rect3(ref wrk_r,(int)fire[m].Position.X,(int)fire[m].Position.Y)!=0 )
 						h=1;
 
 					//n=fire[m].used;
@@ -409,11 +402,11 @@ public void	cont_fire()
 							if( unit[n].used!=0 && unit[n].kind>=UnitKind.AirBase && unit[n].kind<=UnitKind.Fortress )
 								{
 								// ptin dbg
-								wrk_r.top=(int)unit[n].y+20;//(int)unit[n].y-20;
-								wrk_r.right=(int)unit[n].x+20;
-								wrk_r.bottom=(int)unit[n].y-20;//(int)unit[n].y+20;
-								wrk_r.left=(int)unit[n].x-20;
-								if( pt_in_rect3(ref wrk_r,(int)fire[m].x,(int)fire[m].y)!=0 )
+								wrk_r.top=(int)unit[n].Position.Y+20;//(int)unit[n].y-20;
+								wrk_r.right=(int)unit[n].Position.X+20;
+								wrk_r.bottom=(int)unit[n].Position.Y-20;//(int)unit[n].y+20;
+								wrk_r.left=(int)unit[n].Position.X-20;
+								if( pt_in_rect3(ref wrk_r,(int)fire[m].Position.X,(int)fire[m].Position.Y)!=0 )
 									{
 									// とにかくほかの地上施設の上
 									h=0;		
@@ -433,26 +426,26 @@ public void	cont_fire()
 								case TR_GF2:
 									f=set_new_unit((Side)fire[m].info[8], UnitKind.Pillboxes,(double)fire[m].info[6],(double)fire[m].info[7],0);
 									unit[f].info[0]=(int)(8000*( fire[m].info[8]==(int)Side.UnitedStates ? 1.0 : 0.8 ));		// 建設期間
-									unit[f].hp[0]/=4;
-									unit[f].hp[1]/=4;
+									unit[f].Hp/=4;
+									unit[f].MaxHp/=4;
 									break;
 								case TR_GF3:
 									f=set_new_unit((Side)fire[m].info[8], UnitKind.Fortress,(double)fire[m].info[6],(double)fire[m].info[7],0);
 									unit[f].info[0]=(int)(15000*( fire[m].info[8]==(int)Side.UnitedStates ? 0.8 : 1.0 ));		// 建設期間
-									unit[f].hp[0]/=4;
-									unit[f].hp[1]/=4;
+									unit[f].Hp/=4;
+									unit[f].MaxHp/=4;
 									break;
 								case TR_AP:
 									f=set_new_unit((Side)fire[m].info[8], UnitKind.AirBase,(double)fire[m].info[6],(double)fire[m].info[7],0);
 									unit[f].info[0]=(int)(10000*( fire[m].info[8]==(int)Side.UnitedStates ? 0.8 : 1.0 ));		// 建設期間
-									unit[f].hp[0]/=4;
-									unit[f].hp[1]/=4;
+									unit[f].Hp/=4;
+									unit[f].MaxHp/=4;
 									break;
 								case TR_SP:
 									f=set_new_unit((Side)fire[m].info[8], UnitKind.NavalBase,(double)fire[m].info[6],(double)fire[m].info[7],0);
 									unit[f].info[0]=(int)(20000*( fire[m].info[8]==(int)Side.UnitedStates ? 0.8 : 1.0 ));		// 建設期間
-									unit[f].hp[0]/=4;
-									unit[f].hp[1]/=4;
+									unit[f].Hp/=4;
+									unit[f].MaxHp/=4;
 									break;
 								}
 							}
@@ -471,8 +464,7 @@ public void	cont_fire()
 							effect[f].info[0]=30;
 							effect[f].info[1]=0;
 
-							effect[f].x=fire[m].x;
-							effect[f].y=fire[m].y;
+							effect[f].Position=fire[m].Position;
 
 							effect[f].no=8;			// ソースファイル上の番号
 							}
@@ -480,10 +472,10 @@ public void	cont_fire()
 
 						if( fire[m].info[0]>=fire[m].info[2] /*&& paint_effect_on*/ )
 							{
-							if(!( fire[m].y>MAP_TOP || fire[m].y<MAP_BOTTOM || fire[m].x<MAP_LEFT || fire[m].x>MAP_RIGHT ))
+							if(!( fire[m].Position.Y>MAP_TOP || fire[m].Position.Y<MAP_BOTTOM || fire[m].Position.X<MAP_LEFT || fire[m].Position.X>MAP_RIGHT ))
 								{
-								cm_scrn_x=(int)((fire[m].x+(sprt[UNIT_JPN].wd/2)-MAP_LEFT)/sprt[MAP_TIP_NRML].wd);
-								cm_scrn_y=(int)((MAP_TOP-fire[m].y+(sprt[UNIT_JPN].ht/2))/sprt[MAP_TIP_NRML].ht);
+								cm_scrn_x=(int)((fire[m].Position.X+(sprt[UNIT_JPN].wd/2)-MAP_LEFT)/sprt[MAP_TIP_NRML].wd);
+								cm_scrn_y=(int)((MAP_TOP-fire[m].Position.Y+(sprt[UNIT_JPN].ht/2))/sprt[MAP_TIP_NRML].ht);
 
 								if( cmbt_map[cm_scrn_y][cm_scrn_x]==0)
 									{
@@ -495,8 +487,7 @@ public void	cont_fire()
 										effect[f].info[0]=30+my_rnd(25);
 										effect[f].info[1]=4;
 
-										effect[f].x=wrk_x;
-										effect[f].y=wrk_y;
+										effect[f].Position = new WorldPosition(wrk_x, wrk_y);
 
 										effect[f].no=8;			// ソースファイル上の番号
 										}
@@ -508,8 +499,7 @@ public void	cont_fire()
 							effect[f].info[0]=1;
 							effect[f].info[1]=0;
 
-							effect[f].x=fire[m].x;
-							effect[f].y=fire[m].y;
+							effect[f].Position=fire[m].Position;
 
 							effect[f].no=36+drctn_for_8((int)(fire[m].drctn));			// ソースファイル上の番号
 
@@ -533,29 +523,28 @@ public void	cont_fire()
 				{
 				if( fire[m].spd>=fire[m].last_spd )
 					{
-					wrk_x=fire[m].x;
-					wrk_y=fire[m].y;
-					fire[m].x+=cos(fire[m].drctn*a_PI)*fire[m].spd;
-					fire[m].y+=sin(fire[m].drctn*a_PI)*fire[m].spd;
+					wrk_x=fire[m].Position.X;
+					wrk_y=fire[m].Position.Y;
+					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
 					fire[m].spd+=fire[m].spd_add;
 
 					n=fire[m].used;						// ターゲットナンバー
 
 					// ptin dbg
-					wrk_rect.top=(int)unit[n].y+10;//(int)unit[n].y-10;
-					wrk_rect.right=(int)unit[n].x+10;
-					wrk_rect.bottom=(int)unit[n].y-10;//(int)unit[n].y+10;
-					wrk_rect.left=(int)unit[n].x-10;
+					wrk_rect.top=(int)unit[n].Position.Y+10;//(int)unit[n].y-10;
+					wrk_rect.right=(int)unit[n].Position.X+10;
+					wrk_rect.bottom=(int)unit[n].Position.Y-10;//(int)unit[n].y+10;
+					wrk_rect.left=(int)unit[n].Position.X-10;
 
 #if true
-					if( pt_in_rect3(ref wrk_rect,(int)fire[m].x,(int)fire[m].y)!=0 )
+					if( pt_in_rect3(ref wrk_rect,(int)fire[m].Position.X,(int)fire[m].Position.Y)!=0 )
 						{
 						// 命中
 						fire[m].used=0;
 						if(anti_air==0)
 							{
 							if( unit[n].kind!=UnitKind.Transport || rnd(4)==0 ) 
-								unit[n].hp[0]-=rtn_damage_pt(m);
+								unit[n].Hp-=rtn_damage_pt(m);
 							}
 
 						f=seek_effect_no();
@@ -565,8 +554,7 @@ public void	cont_fire()
 						effect[f].info[1]=1;	// アニメーションパターン
 						//effect[f].kind=THERE;
 
-						effect[f].x=fire[m].x;
-						effect[f].y=fire[m].y;
+						effect[f].Position=fire[m].Position;
 						effect[f].no=1;			// 弾丸着弾	のソースファイル上の番号
 						}
 					else
@@ -577,8 +565,8 @@ public void	cont_fire()
 							f=seek_effect_no();
 							effect[f].layer=EffectLayer.Upper;	
 							effect[f].info[0]=1;	effect[f].info[1]=11;
-							effect[f].x=fire[m].x;	effect[f].y=fire[m].y;
-							effect[f].x2=wrk_x;		effect[f].y2=wrk_y;
+							effect[f].Position=fire[m].Position;
+							effect[f].EndPosition = new WorldPosition(wrk_x, wrk_y);
 							}
 						}
 #endif
@@ -599,9 +587,8 @@ public void	cont_fire()
 				fire[m].info[0]--;
 				if( fire[m].info[0]!=0/*fire[m].info[1] <= fire[m].info[0]*/ )
 					{	//
-					wrk_x=fire[m].x;	wrk_y=fire[m].y;
-					fire[m].x+=cos(fire[m].drctn*a_PI)*fire[m].spd;
-					fire[m].y+=sin(fire[m].drctn*a_PI)*fire[m].spd;
+					wrk_x=fire[m].Position.X;	wrk_y=fire[m].Position.Y;
+					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
 
 					fire[m].spd+=fire[m].spd_add;		// 弾が減速
 
@@ -610,8 +597,8 @@ public void	cont_fire()
 						f=seek_effect_no();
 						effect[f].layer=EffectLayer.Upper;	
 						effect[f].info[0]=1;	effect[f].info[1]=10;
-						effect[f].x=fire[m].x;	effect[f].y=fire[m].y;
-						effect[f].x2=wrk_x;		effect[f].y2=wrk_y;
+						effect[f].Position=fire[m].Position;
+						effect[f].EndPosition = new WorldPosition(wrk_x, wrk_y);
 
 						effect[f].no=0;			// ソースファイル上の番号
 						}
@@ -623,8 +610,7 @@ public void	cont_fire()
 					}
 				else
 					{	// 炸裂！
-					fire[m].x+=cos(fire[m].drctn*a_PI)*fire[m].spd;
-					fire[m].y+=sin(fire[m].drctn*a_PI)*fire[m].spd;
+					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
 
 
 					// 砲弾炸裂
@@ -634,30 +620,29 @@ public void	cont_fire()
 					effect[f].info[0]=10;
 					effect[f].info[1]=4;	// アニメーションパターン
 
-					effect[f].x=fire[m].x;
-					effect[f].y=fire[m].y;
+					effect[f].Position=fire[m].Position;
 					effect[f].no=0;			// 弾丸着弾	のソースファイル上の番号
 
 
 
 					// ptin dbg
-					wrk_rect.top=(int)fire[m].y+40;//(int)fire[m].y-40;
-					wrk_rect.right=(int)fire[m].x+40;
-					wrk_rect.bottom=(int)fire[m].y-40;//(int)fire[m].y+40;
-					wrk_rect.left=(int)fire[m].x-40;
+					wrk_rect.top=(int)fire[m].Position.Y+40;//(int)fire[m].y-40;
+					wrk_rect.right=(int)fire[m].Position.X+40;
+					wrk_rect.bottom=(int)fire[m].Position.Y-40;//(int)fire[m].y+40;
+					wrk_rect.left=(int)fire[m].Position.X-40;
 
 
 					for(n=1;n<=max_unit;n++)
 						{
-						if( unit[n].used!=0 && unit[n].used==unit[fire[m].used].used && unit[n].ctgry==UnitCategory.Plane && unit[n].info[0]==FLYING )
+						if( unit[n].used!=0 && unit[n].used==unit[fire[m].used].used && unit[n].ctgry==UnitCategory.Plane && unit[n].PlaneState==UnitState.Flying )
 							{
-							if( pt_in_rect3(ref wrk_rect,(int)unit[n].x,(int)unit[n].y)!=0 /*&& unit[n].hp[0]>=unit[m].hp[1]*0.2+1*/ )
+							if( pt_in_rect3(ref wrk_rect,(int)unit[n].Position.X,(int)unit[n].Position.Y)!=0 /*&& unit[n].hp[0]>=unit[m].hp[1]*0.2+1*/ )
 								{
 								// 命中
 								fire[m].used=0;
 								if(anti_air==0 /*&& unit[n].kind==AT1*/ )
 									{
-									unit[n].hp[0]-=rtn_damage_pt(m);
+									unit[n].Hp-=rtn_damage_pt(m);
 									if(unit[n].spd<=unit[n].max_spd )
 										unit[n].drctn=rnd(360);
 									}
@@ -669,8 +654,7 @@ public void	cont_fire()
 								effect[f].info[1]=2;	// アニメーションパターン
 								//effect[f].kind=THERE;
 
-								effect[f].x=unit[n].x;
-								effect[f].y=unit[n].y;
+								effect[f].Position=unit[n].Position;
 								effect[f].no=1;			// 弾丸着弾	のソースファイル上の番号
 								}
 							}
@@ -699,8 +683,7 @@ public void	cont_fire()
 					effect[f].info[0]=30;
 					effect[f].info[1]=4;
 
-					effect[f].x=fire[m].x;
-					effect[f].y=fire[m].y;
+					effect[f].Position=fire[m].Position;
 
 					effect[f].no=7;			// ソースファイル上の番号
 					}
@@ -710,15 +693,14 @@ public void	cont_fire()
 
 					f=seek_effect_no();
 
-					SoundPlayEffect( 0, TPD_HIT1 ,fire[m].x, fire[m].y);
+					SoundPlayEffect( 0, TPD_HIT1 ,fire[m].Position.X, fire[m].Position.Y);
 
 					effect[f].layer=EffectLayer.Lower;	
 
 					effect[f].info[0]=40;
 					effect[f].info[1]=4;	// アニメーションパターン
 
-					effect[f].x=fire[m].x;
-					effect[f].y=fire[m].y;
+					effect[f].Position=fire[m].Position;
 					effect[f].no=11;			//ソースファイル上の番号
 
 					h=0;
@@ -736,7 +718,7 @@ public void	cont_fire()
 					if( h!=0 )
 						{
 						// 命中
-						unit[n].hp[0]-=rtn_damage_pt(m);
+						unit[n].Hp-=rtn_damage_pt(m);
 						}
 					fire[m].used=0;
 					}
@@ -749,9 +731,8 @@ public void	cont_fire()
 				fire[m].info[0]--;
 				if( fire[m].info[0]!=0/*fire[m].info[1] <= fire[m].info[0]*/ )
 					{	//
-					wrk_x=fire[m].x;	wrk_y=fire[m].y;
-					fire[m].x+=cos(fire[m].drctn*a_PI)*fire[m].spd;
-					fire[m].y+=sin(fire[m].drctn*a_PI)*fire[m].spd;
+					wrk_x=fire[m].Position.X;	wrk_y=fire[m].Position.Y;
+					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
 
 					fire[m].spd+=fire[m].spd_add;		// 弾が減速
 					if( 1!=0/*paint_effect_on*/ )
@@ -760,7 +741,7 @@ public void	cont_fire()
 						f=seek_effect_no();
 						effect[f].layer=EffectLayer.Upper;	
 						effect[f].info[0]=1;	effect[f].info[1]=0;
-						effect[f].x=fire[m].x;	effect[f].y=fire[m].y;
+						effect[f].Position=fire[m].Position;
 						effect[f].no=96+drctn_for_8((int)(fire[m].drctn));			// ソースファイル上の番号
 						// 弾の煙
 						f=seek_effect_no();
@@ -768,16 +749,14 @@ public void	cont_fire()
 						effect[f].info[0]=3+my_rnd(3);
 						effect[f].info[1]=4;
 
-						effect[f].x=wrk_x+my_rnd(10)-5;
-						effect[f].y=wrk_y+my_rnd(10)-5;
+						effect[f].Position = new WorldPosition(wrk_x+my_rnd(10)-5, wrk_y+my_rnd(10)-5);
 
 						effect[f].no=2;			// ソースファイル上の番号
 						}
 					}
 				else
 					{	// 炸裂！
-					fire[m].x+=cos(fire[m].drctn*a_PI)*fire[m].spd;
-					fire[m].y+=sin(fire[m].drctn*a_PI)*fire[m].spd;
+					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
 
 
 
@@ -790,8 +769,7 @@ public void	cont_fire()
 					//effect[f].kind=THERE;
 					effect[f].info[0]=80+rnd(80);
 					effect[f].info[1]=2;
-					effect[f].x=fire[m].x;
-					effect[f].y=fire[m].y;
+					effect[f].Position=fire[m].Position;
 					effect[f].no=6;			// ソースファイル上の番号
 
 					// 漠炎
@@ -799,8 +777,7 @@ public void	cont_fire()
 					effect[f].layer=EffectLayer.Lower;	
 					effect[f].info[0]=10;
 					effect[f].info[1]=4;	// アニメーションパターン
-					effect[f].x=fire[m].x;
-					effect[f].y=fire[m].y;
+					effect[f].Position=fire[m].Position;
 					effect[f].no=0;			// 弾丸着弾	のソースファイル上の番号
 
 
@@ -811,23 +788,23 @@ public void	cont_fire()
 					//fire[m].used=0;
 					f=40;
 					// ptin dbg
-					wrk_rect.top=(int)fire[m].y+f;//(int)fire[m].y-f;
-					wrk_rect.right=(int)fire[m].x+f;
-					wrk_rect.bottom=(int)fire[m].y-f;//(int)fire[m].y+f;
-					wrk_rect.left=(int)fire[m].x-f;
+					wrk_rect.top=(int)fire[m].Position.Y+f;//(int)fire[m].y-f;
+					wrk_rect.right=(int)fire[m].Position.X+f;
+					wrk_rect.bottom=(int)fire[m].Position.Y-f;//(int)fire[m].y+f;
+					wrk_rect.left=(int)fire[m].Position.X-f;
 
 
 					for(n=1;n<=max_unit;n++)
 						{
-						if( unit[n].used!=0 && unit[n].used==unit[fire[m].used].used && unit[n].ctgry==UnitCategory.Plane && unit[n].info[0]==FLYING )
+						if( unit[n].used!=0 && unit[n].used==unit[fire[m].used].used && unit[n].ctgry==UnitCategory.Plane && unit[n].PlaneState==UnitState.Flying )
 							{
-							if( pt_in_rect3(ref wrk_rect,(int)unit[n].x,(int)unit[n].y)!=0 && !( unit[n].kind==UnitKind.Bomber && unit[n].used==Side.UnitedStates && rnd(3)!=0 ) )
+							if( pt_in_rect3(ref wrk_rect,(int)unit[n].Position.X,(int)unit[n].Position.Y)!=0 && !( unit[n].kind==UnitKind.Bomber && unit[n].used==Side.UnitedStates && rnd(3)!=0 ) )
 								{
 								// 命中
 								/*fire[m].used=0;*/
 								if(anti_air==0  )
 									{
-									unit[n].hp[0]-=rtn_damage_pt(m);
+									unit[n].Hp-=rtn_damage_pt(m);
 	
 									if(unit[n].spd<=unit[n].max_spd )
 										{
@@ -844,8 +821,7 @@ public void	cont_fire()
 								effect[f].info[1]=2;	// アニメーションパターン
 								//effect[f].kind=THERE;
 
-								effect[f].x=unit[n].x;
-								effect[f].y=unit[n].y;
+								effect[f].Position=unit[n].Position;
 								effect[f].no=1;			// 弾丸着弾	のソースファイル上の番号
 								}
 							}
@@ -865,9 +841,8 @@ public void	cont_fire()
 				fire[m].info[0]--;
 				if( fire[m].info[0]!=0 )
 					{	//
-					wrk_x=fire[m].x;	wrk_y=fire[m].y;
-					fire[m].x+=cos(fire[m].drctn*a_PI)*fire[m].spd;
-					fire[m].y+=sin(fire[m].drctn*a_PI)*fire[m].spd;
+					wrk_x=fire[m].Position.X;	wrk_y=fire[m].Position.Y;
+					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
 					if( fire[m].info[0] > fire[m].info[1] ) 
 						fire[m].spd-=fire[m].spd_add;		// 弾が上昇中
 					else
@@ -878,7 +853,7 @@ public void	cont_fire()
 						f=seek_effect_no();
 						effect[f].layer=EffectLayer.Upper;	
 						effect[f].info[0]=1;	effect[f].info[1]=0;
-						effect[f].x=fire[m].x;	effect[f].y=fire[m].y;
+						effect[f].Position=fire[m].Position;
 						effect[f].no=108+drctn_for_8((int)(fire[m].drctn));			// ソースファイル上の番号
 						// 弾の煙
 						f=seek_effect_no();
@@ -886,25 +861,23 @@ public void	cont_fire()
 						effect[f].info[0]=3+my_rnd(3);
 						effect[f].info[1]=4;
 
-						effect[f].x=wrk_x+my_rnd(10)-5;
-						effect[f].y=wrk_y+my_rnd(10)-5;
+						effect[f].Position = new WorldPosition(wrk_x+my_rnd(10)-5, wrk_y+my_rnd(10)-5);
 
 						effect[f].no=2;			// ソースファイル上の番号
 						}
 					}
 				else
 					{	// 着弾！
-					fire[m].x+=cos(fire[m].drctn*a_PI)*fire[m].spd;
-					fire[m].y+=sin(fire[m].drctn*a_PI)*fire[m].spd;
+					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
 					n=fire[m].used;
 					h=hit_chk(m);
 					fire[m].used=0;
 					if( unit[n].used!=0 && h!=0)
 						{
 						// 命中
-						unit[n].hp[0]-=rtn_damage_pt(m);
+						unit[n].Hp-=rtn_damage_pt(m);
 
-						SoundPlayEffect( 0, TPD_HIT1 ,fire[m].x, fire[m].y);
+						SoundPlayEffect( 0, TPD_HIT1 ,fire[m].Position.X, fire[m].Position.Y);
 
 						f=seek_effect_no();
 						effect[f].layer=EffectLayer.Upper;	
@@ -912,8 +885,7 @@ public void	cont_fire()
 						effect[f].info[0]=40;
 						effect[f].info[1]=4;	// アニメーションパターン
 
-						effect[f].x=fire[m].x;
-						effect[f].y=fire[m].y;
+						effect[f].Position=fire[m].Position;
 
 						//effect[f].x=unit[n].x;
 						//effect[f].y=unit[n].y;
@@ -925,7 +897,7 @@ public void	cont_fire()
 							{
 							for(i=0;i<=max_unit;i++)
 								{
-								if( unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].info[0]==PARKING && unit[i].info[1]==n && rnd(10)==0 )
+								if( unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].PlaneState==UnitState.Parked && unit[i].info[1]==n && rnd(10)==0 )
 									{
 									unit[i].used=0;
 									unit[unit[i].info[1]].info[1]--;	// 現在格納数
@@ -957,7 +929,7 @@ public void	cont_fire()
 					else
 						{	
 						// ハズレ
-						SoundPlayEffect( 0, SPL1 ,fire[m].x, fire[m].y);
+						SoundPlayEffect( 0, SPL1 ,fire[m].Position.X, fire[m].Position.Y);
 
 						f=seek_effect_no();
 						effect[f].layer=EffectLayer.Lower;	
@@ -965,11 +937,10 @@ public void	cont_fire()
 						effect[f].info[0]=40;
 						effect[f].info[1]=4;	// アニメーションパターン
 
-						effect[f].x=fire[m].x;
-						effect[f].y=fire[m].y;
+						effect[f].Position=fire[m].Position;
 
-						wrk_x=fire[m].x;
-						wrk_y=fire[m].y;
+						wrk_x=fire[m].Position.X;
+						wrk_y=fire[m].Position.Y;
 
 						effect[f].no=8;			// 弾丸着弾	のソースファイル上の番号
 						if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
@@ -992,8 +963,8 @@ public void	cont_fire()
 				{
 				if( fire[m].info[0]<=fire[m].info[1] )
 					{
-					wrk_x=fire[m].x;
-					wrk_y=fire[m].y;
+					wrk_x=fire[m].Position.X;
+					wrk_y=fire[m].Position.Y;
 					wrk_x+=cos(fire[m].drctn*a_PI)*-40;
 					wrk_y+=sin(fire[m].drctn*a_PI)*-40;
 					if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
@@ -1008,10 +979,9 @@ public void	cont_fire()
 
 
 
-					wrk_x=fire[m].x;
-					wrk_y=fire[m].y;
-					fire[m].x+=cos(fire[m].drctn*a_PI)*fire[m].spd;
-					fire[m].y+=sin(fire[m].drctn*a_PI)*fire[m].spd;
+					wrk_x=fire[m].Position.X;
+					wrk_y=fire[m].Position.Y;
+					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
 					fire[m].spd+=fire[m].spd_add;
 			
 
@@ -1035,10 +1005,10 @@ public void	cont_fire()
 						{
 						// 命中
 						fire[m].used=0;
-						unit[n].hp[0]-=rtn_damage_pt(m);
+						unit[n].Hp-=rtn_damage_pt(m);
 
 
-						SoundPlayEffect( 0, TPD_HIT1+rnd(2) ,fire[m].x, fire[m].y);
+						SoundPlayEffect( 0, TPD_HIT1+rnd(2) ,fire[m].Position.X, fire[m].Position.Y);
 
 						f=seek_effect_no();
 						effect[f].layer=EffectLayer.Lower;	
@@ -1046,8 +1016,7 @@ public void	cont_fire()
 						effect[f].info[0]=40;
 						effect[f].info[1]=4;	// アニメーションパターン
 
-						effect[f].x=fire[m].x;
-						effect[f].y=fire[m].y;
+						effect[f].Position=fire[m].Position;
 						effect[f].no=11;			// 弾丸着弾	のソースファイル上の番号
 						}
 					else
@@ -1061,8 +1030,7 @@ public void	cont_fire()
 							effect[f].info[0]=30;
 							effect[f].info[1]=0;
 
-							effect[f].x=fire[m].x;
-							effect[f].y=fire[m].y;
+							effect[f].Position=fire[m].Position;
 
 							effect[f].no=8;			// ソースファイル上の番号
 							}
@@ -1074,8 +1042,7 @@ public void	cont_fire()
 							effect[f].info[0]=1;
 							effect[f].info[1]=0;
 
-							effect[f].x=fire[m].x;
-							effect[f].y=fire[m].y;
+							effect[f].Position=fire[m].Position;
 
 							effect[f].no=72+drctn_for_8((int)(fire[m].drctn));			// ソースファイル上の番号
 							if( (cc_count%3)==0)
@@ -1085,8 +1052,7 @@ public void	cont_fire()
 								effect[f].info[0]=30+my_rnd(25);
 								effect[f].info[1]=4;
 
-								effect[f].x=wrk_x+my_rnd(10)-5;
-								effect[f].y=wrk_y+my_rnd(10)-5;
+								effect[f].Position = new WorldPosition(wrk_x+my_rnd(10)-5, wrk_y+my_rnd(10)-5);
 
 								effect[f].no=8;			// ソースファイル上の番号
 								}
@@ -1108,7 +1074,7 @@ public void	cont_fire()
 				fire[m].info[0]++;
 
 				if( fire[m].used==(int)UnitKind.Attacker && fire[m].info[0]==12 )
-					SoundPlayEffect( 0, BOMB_OFF ,fire[m].x, fire[m].y);
+					SoundPlayEffect( 0, BOMB_OFF ,fire[m].Position.X, fire[m].Position.Y);
 
 
 				if( fire[m].info[0]<=fire[m].info[1]  )
@@ -1116,25 +1082,23 @@ public void	cont_fire()
 					if( fire[m].info[0]>=50)
 						{
 						if( fire[m].info[0]==50)
-						SoundPlayEffect( 0, FALL1 ,fire[m].x, fire[m].y);
+						SoundPlayEffect( 0, FALL1 ,fire[m].Position.X, fire[m].Position.Y);
 
-						fire[m].x+=cos(fire[m].drctn*a_PI)*fire[m].spd;
-						fire[m].y+=sin(fire[m].drctn*a_PI)*fire[m].spd;
+						fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
 						fire[m].spd+=fire[m].spd_add;
 						if( 1!=0/*paint_effect_on*/ )
 							{
 							f=seek_effect_no();
 							effect[f].layer=EffectLayer.Upper;	
 							effect[f].info[0]=1;	effect[f].info[1]=0;
-							effect[f].x=fire[m].x;	effect[f].y=fire[m].y;
+							effect[f].Position=fire[m].Position;
 							effect[f].no=84+drctn_for_8((int)(fire[m].drctn));			// ソースファイル上の番号
 							}
 						}
 					}
 				else
 					{	// 着弾！
-					fire[m].x+=cos(fire[m].drctn*a_PI)*fire[m].spd;
-					fire[m].y+=sin(fire[m].drctn*a_PI)*fire[m].spd;
+					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
 					h=0;
 					//n=fire[m].used;
 					for(n=1;n<=max_unit;n++)
@@ -1151,9 +1115,9 @@ public void	cont_fire()
 					if( h!=0 )
 						{
 						// 命中
-						unit[n].hp[0]-=rtn_damage_pt(m);
+						unit[n].Hp-=rtn_damage_pt(m);
 
-						SoundPlayEffect( 0, BOM_HIT1+rnd(2) ,fire[m].x, fire[m].y);
+						SoundPlayEffect( 0, BOM_HIT1+rnd(2) ,fire[m].Position.X, fire[m].Position.Y);
 
 						f=seek_effect_no();
 						effect[f].layer=EffectLayer.Upper;	
@@ -1161,8 +1125,7 @@ public void	cont_fire()
 						effect[f].info[0]=40;
 						effect[f].info[1]=4;	// アニメーションパターン
 
-						effect[f].x=fire[m].x;
-						effect[f].y=fire[m].y;
+						effect[f].Position=fire[m].Position;
 						//effect[f].x=unit[n].x;
 						//effect[f].y=unit[n].y;
 						effect[f].no=1;			// 弾丸着弾	のソースファイル上の番号
@@ -1173,7 +1136,7 @@ public void	cont_fire()
 							{
 							for(i=0;i<=max_unit;i++)
 								{
-								if( unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].info[0]==PARKING && unit[i].info[1]==n && rnd(10)==0 )
+								if( unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].PlaneState==UnitState.Parked && unit[i].info[1]==n && rnd(10)==0 )
 									{
 									unit[i].used=0;
 									unit[unit[i].info[1]].info[1]--;	// 現在格納数
@@ -1211,10 +1174,9 @@ public void	cont_fire()
 						effect[f].info[0]=40;
 						effect[f].info[1]=4;	// アニメーションパターン
 
-						effect[f].x=fire[m].x;
-						effect[f].y=fire[m].y;
-						wrk_x=fire[m].x;
-						wrk_y=fire[m].y;
+						effect[f].Position=fire[m].Position;
+						wrk_x=fire[m].Position.X;
+						wrk_y=fire[m].Position.Y;
 						if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
 							{
 							cm_scrn_x=(int)((wrk_x+(sprt[UNIT_JPN].wd/2)-MAP_LEFT)/sprt[MAP_TIP_NRML].wd);
@@ -1229,12 +1191,12 @@ public void	cont_fire()
 						if( cmbt_map[cm_scrn_y][cm_scrn_x]>=1)
 							{
 							effect[f].no=10;			// 着弾	のソースファイル上の番号
-							SoundPlayEffect( 0, BOM_HIT1 ,fire[m].x, fire[m].y);
+							SoundPlayEffect( 0, BOM_HIT1 ,fire[m].Position.X, fire[m].Position.Y);
 							}
 						else
 							{
 							effect[f].no=8;			// 着弾	のソースファイル上の番号
-							SoundPlayEffect( 0, SPL1 ,fire[m].x, fire[m].y);
+							SoundPlayEffect( 0, SPL1 ,fire[m].Position.X, fire[m].Position.Y);
 							}
 						}
 					}
@@ -1286,7 +1248,7 @@ public void	set_new_ltl_ldr(int m)
 		unit[min_no].is_ltl_ldr=(short)f;
 		unit[min_no].ltl_ldr=0;
 
-		if( unit[min_no].kind==UnitKind.Fighter && (unit[m].kind==UnitKind.Attacker || unit[m].kind==UnitKind.Bomber) && unit[min_no].info[0]==FLYING )
+		if( unit[min_no].kind==UnitKind.Fighter && (unit[m].kind==UnitKind.Attacker || unit[m].kind==UnitKind.Bomber) && unit[min_no].PlaneState==UnitState.Flying )
 			unit[min_no].info[5]=RETURN;		// それまでの隊長がボスだったらきかんしよっと
 
 
@@ -1297,7 +1259,7 @@ public void	set_new_ltl_ldr(int m)
 				{
 				unit[n].ltl_ldr=(short)min_no;			// ｍｉｎ＿ｎｏが新しい隊長機
 
-				if( unit[n].kind==UnitKind.Fighter && (unit[m].kind==UnitKind.Attacker || unit[m].kind==UnitKind.Bomber) && unit[n].info[0]==FLYING )
+				if( unit[n].kind==UnitKind.Fighter && (unit[m].kind==UnitKind.Attacker || unit[m].kind==UnitKind.Bomber) && unit[n].PlaneState==UnitState.Flying )
 					unit[n].info[5]=RETURN;		// それまでの隊長がボスだったらきかんしよっと
 
 				}
@@ -1342,17 +1304,17 @@ public void	cont_unit_effect(int m)
 
 
 
-	if( unit[m].is_ltl_ldr!=0 && unit[m].used==your_side && unit[m].info[0]!=PARKING /*&& paint_effect_on*/ )
+	if( unit[m].is_ltl_ldr!=0 && unit[m].used==your_side && unit[m].PlaneState!=UnitState.Parked /*&& paint_effect_on*/ )
 		{
 		f=seek_effect_no();
 		effect[f].layer=EffectLayer.Upper;	
 		effect[f].info[0]=1;
 		effect[f].info[1]=0;
-		effect[f].x=unit[m].x;
+		effect[f].Position = new WorldPosition(unit[m].Position.X, effect[f].Position.Y);
 		if( unit[m].kind==UnitKind.Attacker || unit[m].kind==UnitKind.Fighter || unit[m].kind==UnitKind.Destroyer || unit[m].kind==UnitKind.Submarine)
-			effect[f].y=unit[m].y+30.0;
+			effect[f].Position = new WorldPosition(effect[f].Position.X, unit[m].Position.Y+30.0);
 		else
-			effect[f].y=unit[m].y+35.0;
+			effect[f].Position = new WorldPosition(effect[f].Position.X, unit[m].Position.Y+35.0);
 
 		// 編隊長の旗
 		effect[f].no=24;			// ソースファイル上の番号
@@ -1363,24 +1325,22 @@ public void	cont_unit_effect(int m)
 	if ( unit[m].ctgry==UnitCategory.Plane )
 		{
 		// 武装の表示
-		if( /*paint_effect_on &&*/ unit[m].arm[1]!=0 && !(unit[m].arm[3]!=0 && (FrameCount%3)==0)&& (unit[m].arm[0]==BOM || unit[m].arm[0]==TPD || unit[m].arm[0]==TUN || unit[m].arm[0]==NTG)  && unit[m].used==your_side && !(unit[m].info[0]==PARKING && unit_info[1]==0) && !( unit[m].info[0]==PARKING && unit[m].info[3]>=3 ) && !( unit[m].info[0]==PARKING && unit[m].info[1]!=unit_info[3]))
+		if( /*paint_effect_on &&*/ unit[m].Ammo!=0 && !(unit[m].ReloadTime!=0 && (FrameCount%3)==0)&& (unit[m].Weapon==BOM || unit[m].Weapon==TPD || unit[m].Weapon==TUN || unit[m].Weapon==NTG)  && unit[m].used==your_side && !(unit[m].PlaneState==UnitState.Parked && unit_info[1]==0) && !( unit[m].PlaneState==UnitState.Parked && unit[m].info[3]>=3 ) && !( unit[m].PlaneState==UnitState.Parked && unit[m].info[1]!=unit_info[3]))
 			{
 			f=seek_effect_no();
 			effect[f].layer=EffectLayer.Lower;	
 			effect[f].info[0]=1;
-			if( unit[m].info[0]==FLYING )
+			if( unit[m].PlaneState==UnitState.Flying )
 				{
 				effect[f].info[1]=0;
-				effect[f].x=unit[m].x;
-				effect[f].y=unit[m].y-25;
+				effect[f].Position = new WorldPosition(unit[m].Position.X, unit[m].Position.Y-25);
 				}
 			else
 				{
 				effect[f].info[1]=3;
-				effect[f].x=unit[m].x;
-				effect[f].y=unit[m].y+25;
+				effect[f].Position = new WorldPosition(unit[m].Position.X, unit[m].Position.Y+25);
 				}
-			switch( unit[m].arm[0] )
+			switch( unit[m].Weapon )
 				{
 				case TPD:
 					effect[f].no=3;			// ソースファイル上の番号
@@ -1395,13 +1355,13 @@ public void	cont_unit_effect(int m)
 			}
 
 
-		if( unit[m].info[0]==PARKING )
+		if( unit[m].PlaneState==UnitState.Parked )
 			{	// 収容後のエフェクト
 
 			}
 		else
 			{	// 飛行中のエフェクト
-			if( unit[m].hp[0]<=0 )
+			if( unit[m].Hp<=0 )
 				{	// 墜落
 				unit[m].used=0;
 
@@ -1415,11 +1375,10 @@ public void	cont_unit_effect(int m)
 				//effect[f].kind=THERE;
 				effect[f].info[0]=80;
 
-				effect[f].x=unit[m].x;
-				effect[f].y=unit[m].y;
+				effect[f].Position=unit[m].Position;
 
-				wrk_x2=unit[m].x;
-				wrk_y2=unit[m].y;
+				wrk_x2=unit[m].Position.X;
+				wrk_y2=unit[m].Position.Y;
 				if(!( wrk_y2>MAP_TOP || wrk_y2<MAP_BOTTOM || wrk_x2<MAP_LEFT || wrk_x2>MAP_RIGHT ))
 					{
 					cm_scrn_x=(int)((wrk_x2+(sprt[UNIT_JPN].wd/2)-MAP_LEFT)/sprt[MAP_TIP_NRML].wd);
@@ -1454,10 +1413,10 @@ public void	cont_unit_effect(int m)
 
 
 				}
-			else if( unit[m].hp[0]<=unit[m].hp[1]*0.2 )
+			else if( unit[m].Hp<=unit[m].MaxHp*0.2 )
 				{
 				// ＨＰはあるが、事実上の墜落、
-				if( unit[m].hp[0]==unit[m].hp[1]*0.2 )
+				if( unit[m].Hp==unit[m].MaxHp*0.2 )
 					{
 					// 飛行機が火を吹く
 					if(unit[m].kind==UnitKind.Bomber)
@@ -1470,8 +1429,7 @@ public void	cont_unit_effect(int m)
 								effect[f].layer=EffectLayer.Upper;	
 								effect[f].info[0]=20+my_rnd(20);
 								effect[f].info[1]=4;
-								effect[f].x=unit[m].x+20-my_rnd(40);
-								effect[f].y=unit[m].y+20-my_rnd(40);
+								effect[f].Position = new WorldPosition(unit[m].Position.X+20-my_rnd(40), unit[m].Position.Y+20-my_rnd(40));
 								effect[f].no=9;				// ソースファイル上の番号	
 								}
 							}
@@ -1482,19 +1440,18 @@ public void	cont_unit_effect(int m)
 						effect[f].layer=EffectLayer.Upper;	
 						effect[f].info[0]=20+my_rnd(20);
 						effect[f].info[1]=4;
-						effect[f].x=unit[m].x;
-						effect[f].y=unit[m].y;
+						effect[f].Position=unit[m].Position;
 						effect[f].no=9;				// ソースファイル上の番号	
 						}
 					if(map_edit==0)
-						unit[m].hp[0]--;
+						unit[m].Hp--;
 					}
 				else
 					{
 					if( rnd(80)==0 )
 						{
 						if(map_edit==0)
-							unit[m].hp[0]--;
+							unit[m].Hp--;
 						}
 
 					if( rnd(5)!=0 && (cc_count%(10))==0 )
@@ -1504,31 +1461,29 @@ public void	cont_unit_effect(int m)
 						//effect[f].kind=THERE;
 						effect[f].info[0]=40+my_rnd(15);
 						effect[f].info[1]=2;
-						effect[f].x=unit[m].x;
-						effect[f].y=unit[m].y;
+						effect[f].Position=unit[m].Position;
 						effect[f].no=6;			// ソースファイル上の番号
 						}
 
 
-					if( rnd(3)==0 && unit[m].hp[0]<=unit[m].hp[1]*0.1 )
+					if( rnd(3)==0 && unit[m].Hp<=unit[m].MaxHp*0.1 )
 						{
 						// 小爆炎
 						f=seek_effect_no();			
 						effect[f].layer=EffectLayer.Upper;	
 						effect[f].info[0]=8+my_rnd(6);
 						effect[f].info[1]=4;
-						effect[f].x=unit[m].x+my_rnd(6)-3;
-						effect[f].y=unit[m].y+my_rnd(6)-3;
+						effect[f].Position = new WorldPosition(unit[m].Position.X+my_rnd(6)-3, unit[m].Position.Y+my_rnd(6)-3);
 						effect[f].no=10;			// ソースファイル上の番号	
 						}
 					}
 				}
-			else if( unit[m].hp[0]<=unit[m].hp[1]*0.3  )
+			else if( unit[m].Hp<=unit[m].MaxHp*0.3  )
 				{
 				if( rnd(500)==0 )
 					{
 					if(map_edit==0)
-						unit[m].hp[0]--;
+						unit[m].Hp--;
 					}
 
 				if( rnd(3)!=0 && (cc_count%(10) )==0 )
@@ -1538,8 +1493,7 @@ public void	cont_unit_effect(int m)
 					//effect[f].kind=THERE;
 					effect[f].info[0]=40+my_rnd(15);
 					effect[f].info[1]=2;
-					effect[f].x=unit[m].x;
-					effect[f].y=unit[m].y;
+					effect[f].Position=unit[m].Position;
 					effect[f].no=6;			// ソースファイル上の番号
 
 
@@ -1550,20 +1504,19 @@ public void	cont_unit_effect(int m)
 						effect[f].layer=EffectLayer.Upper;	
 						effect[f].info[0]=8+my_rnd(6);
 						effect[f].info[1]=4;
-						effect[f].x=unit[m].x+my_rnd(6)-3;
-						effect[f].y=unit[m].y+my_rnd(6)-3;
+						effect[f].Position = new WorldPosition(unit[m].Position.X+my_rnd(6)-3, unit[m].Position.Y+my_rnd(6)-3);
 						effect[f].no=10;			// ソースファイル上の番号	
 						}
 					}
 
 
 				}
-			else if( unit[m].hp[0]<=unit[m].hp[1]*0.5  )
+			else if( unit[m].Hp<=unit[m].MaxHp*0.5  )
 				{
 				if( rnd(500)==0 )
 					{
 					if(map_edit==0)
-						unit[m].hp[0]--;
+						unit[m].Hp--;
 					}
 				if( rnd(2)==1 && (cc_count%10)==0 )
 					{
@@ -1573,8 +1526,7 @@ public void	cont_unit_effect(int m)
 					effect[f].info[0]=40+my_rnd(15);
 					effect[f].info[1]=2;
 
-					effect[f].x=unit[m].x;
-					effect[f].y=unit[m].y;
+					effect[f].Position=unit[m].Position;
 					effect[f].no=6;			// ソースファイル上の番号
 
 					if( rnd(7)==0 )
@@ -1584,14 +1536,13 @@ public void	cont_unit_effect(int m)
 						effect[f].layer=EffectLayer.Upper;	
 						effect[f].info[0]=8+my_rnd(6);
 						effect[f].info[1]=4;
-						effect[f].x=unit[m].x+my_rnd(6)-3;
-						effect[f].y=unit[m].y+my_rnd(6)-3;
+						effect[f].Position = new WorldPosition(unit[m].Position.X+my_rnd(6)-3, unit[m].Position.Y+my_rnd(6)-3);
 						effect[f].no=10;			// ソースファイル上の番号	
 						}
 					}
 
 				}
-			else if( unit[m].hp[0]<=unit[m].hp[1]*0.7  )
+			else if( unit[m].Hp<=unit[m].MaxHp*0.7  )
 				{
 
 				if( rnd(8)==0 && (cc_count%10)==0 )
@@ -1602,8 +1553,7 @@ public void	cont_unit_effect(int m)
 					effect[f].info[0]=40+my_rnd(15);
 					effect[f].info[1]=2;
 
-					effect[f].x=unit[m].x;
-					effect[f].y=unit[m].y;
+					effect[f].Position=unit[m].Position;
 					effect[f].no=6;			// ソースファイル上の番号
 
 
@@ -1624,8 +1574,7 @@ public void	cont_unit_effect(int m)
 			effect[f].info[0]=1;
 
 			effect[f].info[1]=0;
-			effect[f].x=unit[m].x;
-			effect[f].y=unit[m].y-25.0;
+			effect[f].Position = new WorldPosition(unit[m].Position.X, unit[m].Position.Y-25.0);
 
 			effect[f].no=15;			// ソースファイル上の番号
 			}
@@ -1645,8 +1594,7 @@ public void	cont_unit_effect(int m)
 			effect[f].info[0]=1;
 
 			effect[f].info[1]=0;
-			effect[f].x=unit[m].x+18;
-			effect[f].y=unit[m].y+25.0;
+			effect[f].Position = new WorldPosition(unit[m].Position.X+18, unit[m].Position.Y+25.0);
 
 			effect[f].no=27;			// ソースファイル上の番号
 			}
@@ -1658,8 +1606,7 @@ public void	cont_unit_effect(int m)
 			effect[f].info[0]=1;
 
 			effect[f].info[1]=0;
-			effect[f].x=unit[m].x+18;
-			effect[f].y=unit[m].y+25.0;
+			effect[f].Position = new WorldPosition(unit[m].Position.X+18, unit[m].Position.Y+25.0);
 
 			effect[f].no=26;			// ソースファイル上の番号
 			}
@@ -1671,35 +1618,32 @@ public void	cont_unit_effect(int m)
 			effect[f].info[0]=1;
 
 			effect[f].info[1]=0;
-			effect[f].x=unit[m].x+18;
-			effect[f].y=unit[m].y+25.0;
+			effect[f].Position = new WorldPosition(unit[m].Position.X+18, unit[m].Position.Y+25.0);
 
 			effect[f].no=16;			// ソースファイル上の番号
 			}
-		else if( ( unit[m].used==Side.Japan && ( unit[m].kind==UnitKind.Submarine || unit[m].kind==UnitKind.Destroyer || unit[m].kind==UnitKind.Cruiser ) || unit[m].used==Side.UnitedStates && ( unit[m].kind==UnitKind.Submarine || unit[m].kind==UnitKind.Destroyer ) ) && unit[m].spry==0 && unit[m].arm[1]!=0 && !(unit[m].arm[3]!=0 && (FrameCount%2)!=0) && unit[m].arm[1]>=1 && unit[m].used==your_side )
+		else if( ( unit[m].used==Side.Japan && ( unit[m].kind==UnitKind.Submarine || unit[m].kind==UnitKind.Destroyer || unit[m].kind==UnitKind.Cruiser ) || unit[m].used==Side.UnitedStates && ( unit[m].kind==UnitKind.Submarine || unit[m].kind==UnitKind.Destroyer ) ) && unit[m].spry==0 && unit[m].Ammo!=0 && !(unit[m].ReloadTime!=0 && (FrameCount%2)!=0) && unit[m].Ammo>=1 && unit[m].used==your_side )
 			{
 			f=seek_effect_no();
 			effect[f].layer=EffectLayer.Lower;	
 			effect[f].info[0]=1;
 
 			effect[f].info[1]=0;
-			effect[f].x=unit[m].x;
-			effect[f].y=unit[m].y-25.0;
+			effect[f].Position = new WorldPosition(unit[m].Position.X, unit[m].Position.Y-25.0);
 
 			effect[f].no=3;			// ソースファイル上の番号
 			}
 
 
 		// トランスポーターの荷物の表示 
-		if( /*paint_effect_on &&*/ unit[m].kind==UnitKind.Transport && unit[m].spry==0 && unit[m].arm[1]!=0 && !(unit[m].arm[3]!=0 && (FrameCount%2)!=0) && unit[m].used==your_side )
+		if( /*paint_effect_on &&*/ unit[m].kind==UnitKind.Transport && unit[m].spry==0 && unit[m].Ammo!=0 && !(unit[m].ReloadTime!=0 && (FrameCount%2)!=0) && unit[m].used==your_side )
 			{
 			f=seek_effect_no();
 			effect[f].layer=EffectLayer.Lower;	
 			effect[f].info[0]=1;
 
 			effect[f].info[1]=0;
-			effect[f].x=unit[m].x;
-			effect[f].y=unit[m].y-25.0;
+			effect[f].Position = new WorldPosition(unit[m].Position.X, unit[m].Position.Y-25.0);
 
 			//switch( unit[m].arm[0] )
 			//	{
@@ -1719,8 +1663,7 @@ public void	cont_unit_effect(int m)
 			effect[f].layer=EffectLayer.Upper;
 			effect[f].info[0]=1;
 			effect[f].info[1]=0;
-			effect[f].x=unit[m].info[7];
-			effect[f].y=unit[m].info[8];
+			effect[f].Position = new WorldPosition(unit[m].info[7], unit[m].info[8]);
 
 			effect[f].no=60;			// ソースファイル上の番号
 
@@ -1730,10 +1673,8 @@ public void	cont_unit_effect(int m)
 			effect[f].layer=EffectLayer.Lower;
 			effect[f].info[0]=1;
 			effect[f].info[1]=12;
-			effect[f].x=unit[m].info[7];
-			effect[f].y=unit[m].info[8];
-			effect[f].x2=unit[m].info[9];
-			effect[f].y2=unit[m].info[9];
+			effect[f].Position = new WorldPosition(unit[m].info[7], unit[m].info[8]);
+			effect[f].EndPosition = new WorldPosition(unit[m].info[9], unit[m].info[9]);
 /*
 			wrk_rect.top=(int)effect[f].y-unit[m].info[9];
 			wrk_rect.right=(int)effect[f].x+unit[m].info[9];
@@ -1749,7 +1690,7 @@ public void	cont_unit_effect(int m)
 
 		if( unit[m].kind==UnitKind.Submarine && unit[m].info[6]!=0 )
 			{	// 潜航中潜水艦
-			if( unit[m].hp[0]<=0 )
+			if( unit[m].Hp<=0 )
 				{	// 沈没
 				unit[m].used=0;
 				unit[m].found=0;
@@ -1767,12 +1708,12 @@ public void	cont_unit_effect(int m)
 				}
 			else
 				{
-				if( unit[m].hp[0]<=/*unit[m].hp[2]*/unit[m].hp[1]*0.2 )
+				if( unit[m].Hp<=/*unit[m].hp[2]*/unit[m].MaxHp*0.2 )
 					{	// 空気漏れ
 					if( rnd(100)==0 )
 						{
 						if(map_edit==0)
-							unit[m].hp[0]--;
+							unit[m].Hp--;
 						}
 					if( rnd(300)==1 /*&& paint_effect_on*/ )
 						{
@@ -1784,14 +1725,13 @@ public void	cont_unit_effect(int m)
 								effect[f].layer=EffectLayer.Lower;	
 								effect[f].info[0]=100+my_rnd(20);
 								effect[f].info[1]=4;
-								effect[f].x=unit[m].x+my_rnd(40)-20;
-								effect[f].y=unit[m].y+my_rnd(40)-20;
+								effect[f].Position = new WorldPosition(unit[m].Position.X+my_rnd(40)-20, unit[m].Position.Y+my_rnd(40)-20);
 								effect[f].no=8;			// ソースファイル上の番号	
 								}
 							}
 						// ついでに発見される
-						unit[m].info[7]=(int)unit[m].x;
-						unit[m].info[8]=(int)unit[m].y;
+						unit[m].info[7]=(int)unit[m].Position.X;
+						unit[m].info[8]=(int)unit[m].Position.Y;
 
 						unit[m].info[9]=100;
 						unit[m].info[10]=400;
@@ -1801,12 +1741,12 @@ public void	cont_unit_effect(int m)
 					}
 				else
 					{
-					if( unit[m].hp[0]<=unit[m].hp[1]*0.5 )
+					if( unit[m].Hp<=unit[m].MaxHp*0.5 )
 						{	// 空気漏れ
 						if( rnd(1000)==0 )
 							{
 							if(map_edit==0)
-								unit[m].hp[0]--;
+								unit[m].Hp--;
 							}
 						if( rnd(600)==1 /*&& paint_effect_on*/ )
 							{
@@ -1818,15 +1758,14 @@ public void	cont_unit_effect(int m)
 									effect[f].layer=EffectLayer.Lower;	
 									effect[f].info[0]=100+my_rnd(20);
 									effect[f].info[1]=4;
-									effect[f].x=unit[m].x+my_rnd(40)-20;
-									effect[f].y=unit[m].y+my_rnd(40)-20;
+									effect[f].Position = new WorldPosition(unit[m].Position.X+my_rnd(40)-20, unit[m].Position.Y+my_rnd(40)-20);
 									effect[f].no=8;			// ソースファイル上の番号	
 									}
 								}
 
 							// ついでに発見される
-							unit[m].info[7]=(int)unit[m].x;
-							unit[m].info[8]=(int)unit[m].y;
+							unit[m].info[7]=(int)unit[m].Position.X;
+							unit[m].info[8]=(int)unit[m].Position.Y;
 
 							unit[m].info[9]=100;
 							unit[m].info[10]=400;
@@ -1839,10 +1778,10 @@ public void	cont_unit_effect(int m)
 			}
 		else
 			{	// 水上艦船
-			if( unit[m].hp[0]<=0 )
+			if( unit[m].Hp<=0 )
 				{	// 沈没
 
-				SoundPlayEffect( 0, SHIP_SINK1 ,unit[m].x, unit[m].y);
+				SoundPlayEffect( 0, SHIP_SINK1 ,unit[m].Position.X, unit[m].Position.Y);
 
 				unit[m].used=0;
 
@@ -1855,7 +1794,7 @@ public void	cont_unit_effect(int m)
 					{
 					for( i=1;i<=max_unit;i++)
 						{
-						if( unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].info[0]==PARKING && unit[i].info[1]==m)
+						if( unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].PlaneState==UnitState.Parked && unit[i].info[1]==m)
 							{
 							unit[i].used=0;
 							if( the_slct_unit==i)
@@ -1881,12 +1820,12 @@ public void	cont_unit_effect(int m)
 				}
 			else 
 				{
-				if( unit[m].hp[0]<=unit[m].hp[1]*0.2  )
+				if( unit[m].Hp<=unit[m].MaxHp*0.2  )
 					{
 					if( rnd(4000)==0 && unit[m].spry==0 )
 						{
 						if(map_edit==0)
-							unit[m].hp[0]--;
+							unit[m].Hp--;
 						}
 					if( rnd(2)!=0 /*&& paint_effect_on*/ )
 						{
@@ -1895,14 +1834,13 @@ public void	cont_unit_effect(int m)
 						effect[f].info[0]=1;
 						effect[f].info[1]=4;
 
-						effect[f].x=unit[m].x;
-						effect[f].y=unit[m].y;
+						effect[f].Position=unit[m].Position;
 						effect[f].no=9;			// ソースファイル上の番号
 						}
 					}
 				else
 					{
-					if( unit[m].hp[0]<=unit[m].hp[1]*0.5  )
+					if( unit[m].Hp<=unit[m].MaxHp*0.5  )
 						{
 						n=rnd(4);
 						if( /*paint_effect_on &&*/ n==0 )
@@ -1910,7 +1848,7 @@ public void	cont_unit_effect(int m)
 							f=seek_effect_no();
 							effect[f].layer=EffectLayer.Upper;	
 							effect[f].info[0]=1;	effect[f].info[1]=4;
-							effect[f].x=unit[m].x;	effect[f].y=unit[m].y;
+							effect[f].Position=unit[m].Position;
 							effect[f].no=9;			// ソースファイル上の番号
 							}
 						if( /*paint_effect_on &&*/ n==1 )
@@ -1918,18 +1856,18 @@ public void	cont_unit_effect(int m)
 							f=seek_effect_no();
 							effect[f].layer=EffectLayer.Upper;	
 							effect[f].info[0]=1;	effect[f].info[1]=4;
-							effect[f].x=unit[m].x;	effect[f].y=unit[m].y;
+							effect[f].Position=unit[m].Position;
 							effect[f].no=10;			// ソースファイル上の番号
 							}
 						}
 					else
 						{
-						if( rnd(10)==1 /*&& paint_effect_on*/ && unit[m].hp[0]<=unit[m].hp[1]*0.7 )
+						if( rnd(10)==1 /*&& paint_effect_on*/ && unit[m].Hp<=unit[m].MaxHp*0.7 )
 							{
 							f=seek_effect_no();
 							effect[f].layer=EffectLayer.Upper;	
 							effect[f].info[0]=1;	effect[f].info[1]=4;
-							effect[f].x=unit[m].x;	effect[f].y=unit[m].y;
+							effect[f].Position=unit[m].Position;
 							effect[f].no=10;			// ソースファイル上の番号
 							}
 						}
@@ -1946,8 +1884,7 @@ public void	cont_unit_effect(int m)
 			effect[f].layer=EffectLayer.Lower;	
 			effect[f].info[0]=60+my_rnd(60);
 			effect[f].info[1]=4;
-			effect[f].x=unit[m].x;
-			effect[f].y=unit[m].y;
+			effect[f].Position=unit[m].Position;
 
 			drctn=unit[m].drctn;
 			drctn+=180;
@@ -1969,8 +1906,7 @@ public void	cont_unit_effect(int m)
 				}
 
 
-			effect[f].x+=cos(drctn*a_PI)*dstc;
-			effect[f].y+=sin(drctn*a_PI)*dstc;
+			effect[f].Position += new WorldVector(cos(drctn*a_PI)*dstc, sin(drctn*a_PI)*dstc);
 
 			effect[f].no=8;			// ソースファイル上の番号	
 			}
@@ -1989,8 +1925,7 @@ public void	cont_unit_effect(int m)
 			effect[f].info[0]=1;
 
 			effect[f].info[1]=0;
-			effect[f].x=unit[m].x;
-			effect[f].y=unit[m].y-25.0;
+			effect[f].Position = new WorldPosition(unit[m].Position.X, unit[m].Position.Y-25.0);
 
 			effect[f].no=15;			// ソースファイル上の番号
 			}

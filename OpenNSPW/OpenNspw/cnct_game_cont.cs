@@ -322,7 +322,7 @@ public void	cnct_decision()
 						wrk_r.right=(int)(80)+(80*4);
 						wrk_r.bottom=(int)(3440)-(80*4);//(int)(3440)+(80*2);
 						wrk_r.left=(int)(80)-(80*2);
-						if( pt_in_rect3(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0)
+						if( pt_in_rect3(ref wrk_r,(int)unit[i].Position.X,(int)unit[i].Position.Y)!=0)
 							{
 							m++;	// 生きてる基地で指定範囲内に要る
 							}
@@ -352,7 +352,7 @@ public void	cnct_decision()
 						wrk_r.right=(int)(80)+(80*4);
 						wrk_r.bottom=(int)(3440)-(80*4);//(int)(3440)+(80*2);
 						wrk_r.left=(int)(80)-(80*2);
-						if( pt_in_rect3(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0)
+						if( pt_in_rect3(ref wrk_r,(int)unit[i].Position.X,(int)unit[i].Position.Y)!=0)
 							{
 							m++;	// 生きてる基地で指定範囲内に要る
 							}
@@ -368,7 +368,7 @@ public void	cnct_decision()
 						wrk_r.right=(int)(80)+(80*4);
 						wrk_r.bottom=(int)(3440)-(80*4);//(int)(3440)+(80*2);
 						wrk_r.left=(int)(80)-(80*2);
-						if( pt_in_rect3(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0)
+						if( pt_in_rect3(ref wrk_r,(int)unit[i].Position.X,(int)unit[i].Position.Y)!=0)
 							{
 							f++;	// 生きてる基地で指定範囲内に要る
 							}
@@ -398,7 +398,7 @@ public void	cnct_decision()
 						wrk_r.right=(int)(80)+(80*4);
 						wrk_r.bottom=(int)(3440)-(80*4);//(int)(3440)+(80*2);
 						wrk_r.left=(int)(80)-(80*2);
-						if( pt_in_rect3(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0)
+						if( pt_in_rect3(ref wrk_r,(int)unit[i].Position.X,(int)unit[i].Position.Y)!=0)
 							{
 							m++;	// 生きてる基地で指定範囲内に要る
 							}
@@ -414,7 +414,7 @@ public void	cnct_decision()
 						wrk_r.right=(int)(80)+(80*4);
 						wrk_r.bottom=(int)(3440)-(80*4);//(int)(3440)+(80*2);
 						wrk_r.left=(int)(80)-(80*2);
-						if( pt_in_rect3(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0)
+						if( pt_in_rect3(ref wrk_r,(int)unit[i].Position.X,(int)unit[i].Position.Y)!=0)
 							{
 							f++;	// 生きてる基地で指定範囲内に要る
 							}
@@ -456,7 +456,7 @@ public void	cnct_decision()
 						wrk_r.left=(int)(-4080-80);
 
 
-						if( pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0)
+						if( pt_in_rect2(ref wrk_r,(int)unit[i].Position.X,(int)unit[i].Position.Y)!=0)
 							{
 							m++;	// 生きてる基地で指定範囲内に要る
 							}
@@ -472,7 +472,7 @@ public void	cnct_decision()
 						wrk_r.bottom=(int)(-720-160);
 						wrk_r.left=(int)(-4080-80);
 
-						if( pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0)
+						if( pt_in_rect2(ref wrk_r,(int)unit[i].Position.X,(int)unit[i].Position.Y)!=0)
 							{
 							f++;	// 生きてる基地で指定範囲内に要る
 							}
@@ -499,7 +499,7 @@ public void	cnct_decision()
 				wrk_r.left=(int)(-1040);
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==Side.Japan && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
+					if( unit[i].used==Side.Japan && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].Position.X,(int)unit[i].Position.Y)!=0 )
 						{
 						f++;
 						}
@@ -526,14 +526,14 @@ public void	cnct_decision()
 				wrk_r.left=(int)(-1040);
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==Side.Japan && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
+					if( unit[i].used==Side.Japan && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].Position.X,(int)unit[i].Position.Y)!=0 )
 						{
 						f++;
 						}
 					}
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==Side.UnitedStates && ( unit[i].kind==UnitKind.AirBase )  && unit[i].info[0]==0 && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
+					if( unit[i].used==Side.UnitedStates && ( unit[i].kind==UnitKind.AirBase )  && unit[i].info[0]==0 && pt_in_rect2(ref wrk_r,(int)unit[i].Position.X,(int)unit[i].Position.Y)!=0 )
 						{
 						m++;
 						}
@@ -576,7 +576,7 @@ public void	cnct_decision()
 				wrk_r.left=(int)(-4480-80);
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==Side.Japan && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
+					if( unit[i].used==Side.Japan && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].Position.X,(int)unit[i].Position.Y)!=0 )
 						{
 						f++;
 						}
@@ -601,7 +601,7 @@ public void	cnct_decision()
 				wrk_r.left=(int)(-4480-80);
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==Side.Japan && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
+					if( unit[i].used==Side.Japan && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].Position.X,(int)unit[i].Position.Y)!=0 )
 						{
 						f++;
 						}
@@ -620,7 +620,7 @@ public void	cnct_decision()
 				wrk_r.left=(int)(-1040);
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==Side.UnitedStates && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
+					if( unit[i].used==Side.UnitedStates && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].Position.X,(int)unit[i].Position.Y)!=0 )
 						{
 						f++;
 						}
@@ -648,11 +648,11 @@ public void	cnct_decision()
 
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==Side.Japan && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
+					if( unit[i].used==Side.Japan && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].Position.X,(int)unit[i].Position.Y)!=0 )
 						{
 						f++;	//　日本の施設
 						}
-					if( unit[i].used==Side.UnitedStates && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
+					if( unit[i].used==Side.UnitedStates && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].Position.X,(int)unit[i].Position.Y)!=0 )
 						{
 						m++;	//　米の施設
 						}
@@ -805,17 +805,17 @@ public void	set_unit_data(int m)
 
 			unit[m].os_indx_y=0;
 
-			unit[m].arm[0]=GUN;		// 武装品種
-			unit[m].arm[1]=1000;		// 数
-			unit[m].arm[4]=1000;		// 数 全容量
+			unit[m].Weapon=GUN;		// 武装品種
+			unit[m].Ammo=1000;		// 数
+			unit[m].MaxAmmo=1000;		// 数 全容量
 
 
-			unit[m].gas[0]=100;		// 残燃料
-			unit[m].gas[1]=1000;		// 燃料を消費するタイミング
+			unit[m].Fuel=100;		// 残燃料
+			unit[m].FuelInterval=1000;		// 燃料を消費するタイミング
 
 			unit[m].tech=5;			
 
-			unit[m].hp[0]=unit[m].hp[1]=BB1_HP;		// Ｈｐ
+			unit[m].Hp=unit[m].MaxHp=BB1_HP;		// Ｈｐ
 
 			if( unit[m].used==Side.Japan && unit[m].type==1 )
 				{
@@ -824,13 +824,13 @@ public void	set_unit_data(int m)
 				unit[m].a_spd_add*=0.9;
 				unit[m].max_spd*=0.9;
 
-				unit[m].arm[0]=SP_GUN;		// 武装品種
-				unit[m].arm[1]=(int)(unit[m].arm[1] * 1.35);		// 数
-				unit[m].arm[4]=(int)(unit[m].arm[4] * 1.35);		// 数 全容量
+				unit[m].Weapon=SP_GUN;		// 武装品種
+				unit[m].Ammo=(int)(unit[m].Ammo * 1.35);		// 数
+				unit[m].MaxAmmo=(int)(unit[m].MaxAmmo * 1.35);		// 数 全容量
 
-				unit[m].gas[1]*=1.2;		// 残燃料
+				unit[m].FuelInterval*=1.2;		// 残燃料
 
-				unit[m].hp[0]=unit[m].hp[1]=unchecked((int)(BB1_HP*1.4));		// Ｈｐ
+				unit[m].Hp=unit[m].MaxHp=unchecked((int)(BB1_HP*1.4));		// Ｈｐ
 				}
 			break;
 
@@ -842,42 +842,42 @@ public void	set_unit_data(int m)
 
 			unit[m].os_indx_y=1;
 
-			unit[m].arm[0]=GUN;		// 武装品種
+			unit[m].Weapon=GUN;		// 武装品種
 
 			if( unit[m].type!=0  )
 				{
 				if( unit[m].used==Side.Japan )
 					{
-					unit[m].arm[1]=450;		// 数
-					unit[m].arm[4]=450;		// 数 全容量
+					unit[m].Ammo=450;		// 数
+					unit[m].MaxAmmo=450;		// 数 全容量
 					}
 				else
 					{
-					unit[m].arm[1]=500;		// 数
-					unit[m].arm[4]=500;		// 数 全容量
+					unit[m].Ammo=500;		// 数
+					unit[m].MaxAmmo=500;		// 数 全容量
 					}
 				}
 			else
 				{
-				unit[m].arm[1]=600;		// 数
-				unit[m].arm[4]=600;		// 数 全容量
+				unit[m].Ammo=600;		// 数
+				unit[m].MaxAmmo=600;		// 数 全容量
 				}
 
 
 
-			unit[m].gas[0]=100;		// 残燃料
-			unit[m].gas[1]=650;		// 燃料を消費するタイミング
+			unit[m].Fuel=100;		// 残燃料
+			unit[m].FuelInterval=650;		// 燃料を消費するタイミング
 
 			unit[m].tech=5;			
 
-			unit[m].hp[0]=unit[m].hp[1]=CA1_HP;		// Ｈｐ
+			unit[m].Hp=unit[m].MaxHp=CA1_HP;		// Ｈｐ
 			if( unit[m].type!=0 )
 				{
 				if( unit[m].used==Side.UnitedStates )
-					unit[m].hp[1]=(int)(unit[m].hp[1] * 0.9);
+					unit[m].MaxHp=(int)(unit[m].MaxHp * 0.9);
 				else
-					unit[m].hp[1]=(int)(unit[m].hp[1] * 0.8);
-				unit[m].hp[0]=unit[m].hp[1];
+					unit[m].MaxHp=(int)(unit[m].MaxHp * 0.8);
+				unit[m].Hp=unit[m].MaxHp;
 				}
 			break;
 
@@ -889,23 +889,23 @@ public void	set_unit_data(int m)
 
 			unit[m].os_indx_y=2;
 
-			unit[m].arm[0]=GUN;		// 武装品種
-			unit[m].arm[1]=120;		// 数
-			unit[m].arm[4]=120;		// 数 全容量
+			unit[m].Weapon=GUN;		// 武装品種
+			unit[m].Ammo=120;		// 数
+			unit[m].MaxAmmo=120;		// 数 全容量
 
-			unit[m].gas[0]=100;		// 残燃料
-			unit[m].gas[1]=550;		// 燃料を消費するタイミング
+			unit[m].Fuel=100;		// 残燃料
+			unit[m].FuelInterval=550;		// 燃料を消費するタイミング
 
 			unit[m].tech=5;			
 
-			unit[m].hp[0]=unit[m].hp[1]=DD1_HP;		// Ｈｐ
+			unit[m].Hp=unit[m].MaxHp=DD1_HP;		// Ｈｐ
 			if( unit[m].type!=0 )
 				{
 				if( unit[m].used==Side.UnitedStates )
-					unit[m].hp[1]=(int)(unit[m].hp[1] * 0.9);
+					unit[m].MaxHp=(int)(unit[m].MaxHp * 0.9);
 				else
-					unit[m].hp[1]=(int)(unit[m].hp[1] * 0.7);
-				unit[m].hp[0]=unit[m].hp[1];
+					unit[m].MaxHp=(int)(unit[m].MaxHp * 0.7);
+				unit[m].Hp=unit[m].MaxHp;
 				}
 			break;
 
@@ -917,16 +917,16 @@ public void	set_unit_data(int m)
 
 			unit[m].os_indx_y=3;
 
-			unit[m].arm[0]=GUN;		// 武装品種
-			unit[m].arm[1]=25;		// 数
-			unit[m].arm[4]=25;		// 数 全容量
+			unit[m].Weapon=GUN;		// 武装品種
+			unit[m].Ammo=25;		// 数
+			unit[m].MaxAmmo=25;		// 数 全容量
 
-			unit[m].gas[0]=100;		// 残燃料
-			unit[m].gas[1]=1000;		// 燃料を消費するタイミング
+			unit[m].Fuel=100;		// 残燃料
+			unit[m].FuelInterval=1000;		// 燃料を消費するタイミング
 
 			unit[m].tech=5;			
 
-			unit[m].hp[0]=unit[m].hp[1]=SS1_HP;		// Ｈｐ
+			unit[m].Hp=unit[m].MaxHp=SS1_HP;		// Ｈｐ
 			break;
 
 		case UnitKind.Carrier:
@@ -944,16 +944,16 @@ public void	set_unit_data(int m)
 			unit[m].info[4]=0;					// 発進予定機数 ０なら着艦可
 			unit[m].info[5]=MOVE;				// モード（コンバットメニュー）
 
-			unit[m].arm[0]=GUN;	//0;		// 武装品種
-			unit[m].arm[1]=100;		// 数
-			unit[m].arm[4]=100;		// 数 全容量
+			unit[m].Weapon=GUN;	//0;		// 武装品種
+			unit[m].Ammo=100;		// 数
+			unit[m].MaxAmmo=100;		// 数 全容量
 
-			unit[m].gas[0]=100;		// 残燃料
-			unit[m].gas[1]=750;		// 燃料を消費するタイミング
+			unit[m].Fuel=100;		// 残燃料
+			unit[m].FuelInterval=750;		// 燃料を消費するタイミング
 
 			unit[m].tech=5;			
 
-			unit[m].hp[0]=unit[m].hp[1]=CV1_HP+((unit[m].used==Side.UnitedStates ? 1 : 0)*5);		// Ｈｐ
+			unit[m].Hp=unit[m].MaxHp=CV1_HP+((unit[m].used==Side.UnitedStates ? 1 : 0)*5);		// Ｈｐ
 
 			if( unit[m].used==Side.UnitedStates && unit[m].type==1 )
 				{
@@ -964,14 +964,14 @@ public void	set_unit_data(int m)
 
 				unit[m].info[2]=14;					// 最大収容数
 
-				unit[m].arm[0]=GUN;		//0;		// 武装品種
-				unit[m].arm[1]=(int)(unit[m].arm[1] * 1.1);		// 数
-				unit[m].arm[4]=(int)(unit[m].arm[4] * 1.1);		// 数 全容量
+				unit[m].Weapon=GUN;		//0;		// 武装品種
+				unit[m].Ammo=(int)(unit[m].Ammo * 1.1);		// 数
+				unit[m].MaxAmmo=(int)(unit[m].MaxAmmo * 1.1);		// 数 全容量
 
-				unit[m].gas[1]*=1.6;		// 残燃料
+				unit[m].FuelInterval*=1.6;		// 残燃料
 
-				unit[m].hp[0]=(int)(unit[m].hp[0] * 1.15);
-				unit[m].hp[1]=(int)(unit[m].hp[1] * 1.15);		// Ｈｐ
+				unit[m].Hp=(int)(unit[m].Hp * 1.15);
+				unit[m].MaxHp=(int)(unit[m].MaxHp * 1.15);		// Ｈｐ
 				}
 			break;
 
@@ -991,16 +991,16 @@ public void	set_unit_data(int m)
 			unit[m].info[4]=0;					// 発進予定機数 ０なら着艦可
 			unit[m].info[5]=MOVE;				// モード（コンバットメニュー）
 
-			unit[m].arm[0]=GUN;	//0;		// 武装品種
-			unit[m].arm[1]=80;		// 数
-			unit[m].arm[4]=80;		// 数 全容量
+			unit[m].Weapon=GUN;	//0;		// 武装品種
+			unit[m].Ammo=80;		// 数
+			unit[m].MaxAmmo=80;		// 数 全容量
 
-			unit[m].gas[0]=100;		// 残燃料
-			unit[m].gas[1]=700;		// 燃料を消費するタイミング
+			unit[m].Fuel=100;		// 残燃料
+			unit[m].FuelInterval=700;		// 燃料を消費するタイミング
 
 			unit[m].tech=5;			
 
-			unit[m].hp[0]=unit[m].hp[1]=CVL1_HP+((unit[m].used==Side.UnitedStates ? 1 : 0)*5);		// Ｈｐ
+			unit[m].Hp=unit[m].MaxHp=CVL1_HP+((unit[m].used==Side.UnitedStates ? 1 : 0)*5);		// Ｈｐ
 			break;
 
 
@@ -1021,16 +1021,16 @@ public void	set_unit_data(int m)
 						else
 							unit[m].os_indx_y=7;
 
-						unit[m].arm[0]=BLT;		// 武装品種
-						unit[m].arm[1]=35;		// 数
-						unit[m].arm[4]=35;		// 数 全容量
+						unit[m].Weapon=BLT;		// 武装品種
+						unit[m].Ammo=35;		// 数
+						unit[m].MaxAmmo=35;		// 数 全容量
 
-						unit[m].gas[0]=100;		// 残燃料
-						unit[m].gas[1]=80;		// 燃料を消費するタイミング
+						unit[m].Fuel=100;		// 残燃料
+						unit[m].FuelInterval=80;		// 燃料を消費するタイミング
 
 						unit[m].tech=7;			
 
-						unit[m].hp[0]=unit[m].hp[1]=FT1_HP;		// Ｈｐ
+						unit[m].Hp=unit[m].MaxHp=FT1_HP;		// Ｈｐ
 						}
 					else
 						{
@@ -1044,16 +1044,16 @@ public void	set_unit_data(int m)
 						else
 							unit[m].os_indx_y=7;
 
-						unit[m].arm[0]=BLT;		// 武装品種
-						unit[m].arm[1]=40;		// 数
-						unit[m].arm[4]=40;		// 数 全容量
+						unit[m].Weapon=BLT;		// 武装品種
+						unit[m].Ammo=40;		// 数
+						unit[m].MaxAmmo=40;		// 数 全容量
 
-						unit[m].gas[0]=100;		// 残燃料
-						unit[m].gas[1]=60;		// 燃料を消費するタイミング
+						unit[m].Fuel=100;		// 残燃料
+						unit[m].FuelInterval=60;		// 燃料を消費するタイミング
 
 						unit[m].tech=5;			
 
-						unit[m].hp[0]=unit[m].hp[1]=FT1_HP+4;		// Ｈｐ
+						unit[m].Hp=unit[m].MaxHp=FT1_HP+4;		// Ｈｐ
 						}
 
 					break;
@@ -1071,16 +1071,16 @@ public void	set_unit_data(int m)
 
 						unit[m].os_indx_y=14;
 
-						unit[m].arm[0]=BLT;		// 武装品種
-						unit[m].arm[1]=50;		// 数
-						unit[m].arm[4]=50;		// 数 全容量
+						unit[m].Weapon=BLT;		// 武装品種
+						unit[m].Ammo=50;		// 数
+						unit[m].MaxAmmo=50;		// 数 全容量
 
-						unit[m].gas[0]=100;		// 残燃料
-						unit[m].gas[1]=100;		// 燃料を消費するタイミング
+						unit[m].Fuel=100;		// 残燃料
+						unit[m].FuelInterval=100;		// 燃料を消費するタイミング
 
 						unit[m].tech=5;			
 
-						unit[m].hp[0]=unit[m].hp[1]=unchecked((int)(FT1_HP*0.8));		// Ｈｐ
+						unit[m].Hp=unit[m].MaxHp=unchecked((int)(FT1_HP*0.8));		// Ｈｐ
 						}
 					else
 						{
@@ -1091,16 +1091,16 @@ public void	set_unit_data(int m)
 
 						unit[m].os_indx_y=14;
 
-						unit[m].arm[0]=BLT;		// 武装品種
-						unit[m].arm[1]=60;		// 数
-						unit[m].arm[4]=60;		// 数 全容量
+						unit[m].Weapon=BLT;		// 武装品種
+						unit[m].Ammo=60;		// 数
+						unit[m].MaxAmmo=60;		// 数 全容量
 
-						unit[m].gas[0]=100;		// 残燃料
-						unit[m].gas[1]=95;		// 燃料を消費するタイミング
+						unit[m].Fuel=100;		// 残燃料
+						unit[m].FuelInterval=95;		// 燃料を消費するタイミング
 
 						unit[m].tech=5;			
 
-						unit[m].hp[0]=unit[m].hp[1]=unchecked((int)(FT1_HP*2.0));		// Ｈｐ
+						unit[m].Hp=unit[m].MaxHp=unchecked((int)(FT1_HP*2.0));		// Ｈｐ
 						}
 
 
@@ -1114,16 +1114,16 @@ public void	set_unit_data(int m)
 
 						unit[m].os_indx_y=14;
 
-						unit[m].arm[0]=BLT;		// 武装品種
-						unit[m].arm[1]=60;		// 数
-						unit[m].arm[4]=60;		// 数 全容量
+						unit[m].Weapon=BLT;		// 武装品種
+						unit[m].Ammo=60;		// 数
+						unit[m].MaxAmmo=60;		// 数 全容量
 
-						unit[m].gas[0]=100;		// 残燃料
-						unit[m].gas[1]=55;		// 燃料を消費するタイミング
+						unit[m].Fuel=100;		// 残燃料
+						unit[m].FuelInterval=55;		// 燃料を消費するタイミング
 
 						unit[m].tech=5;			
 
-						unit[m].hp[0]=unit[m].hp[1]=FT1_HP*2.0;		// Ｈｐ
+						unit[m].Hp=unit[m].MaxHp=FT1_HP*2.0;		// Ｈｐ
 						}
 					else
 						{
@@ -1134,16 +1134,16 @@ public void	set_unit_data(int m)
 
 						unit[m].os_indx_y=14;
 
-						unit[m].arm[0]=BLT;		// 武装品種
-						unit[m].arm[1]=70;		// 数
-						unit[m].arm[4]=70;		// 数 全容量
+						unit[m].Weapon=BLT;		// 武装品種
+						unit[m].Ammo=70;		// 数
+						unit[m].MaxAmmo=70;		// 数 全容量
 
-						unit[m].gas[0]=100;		// 残燃料
-						unit[m].gas[1]=100;		// 燃料を消費するタイミング
+						unit[m].Fuel=100;		// 残燃料
+						unit[m].FuelInterval=100;		// 燃料を消費するタイミング
 
 						unit[m].tech=5;			
 
-						unit[m].hp[0]=unit[m].hp[1]=FT1_HP*3.0;		// Ｈｐ
+						unit[m].Hp=unit[m].MaxHp=FT1_HP*3.0;		// Ｈｐ
 						}
 #endif
 					break;
@@ -1163,16 +1163,16 @@ public void	set_unit_data(int m)
 				else
 					unit[m].os_indx_y=9;
 
-				unit[m].arm[0]=NTG;		// 武装品種
-				unit[m].arm[1]=0;		// 数
-				unit[m].arm[4]=1;		// 数 全容量
+				unit[m].Weapon=NTG;		// 武装品種
+				unit[m].Ammo=0;		// 数
+				unit[m].MaxAmmo=1;		// 数 全容量
 
-				unit[m].gas[0]=100;		// 残燃料
-				unit[m].gas[1]=85;		// 燃料を消費するタイミング
+				unit[m].Fuel=100;		// 残燃料
+				unit[m].FuelInterval=85;		// 燃料を消費するタイミング
 
 				unit[m].tech=5;			
 
-				unit[m].hp[0]=unit[m].hp[1]=AT1_HP;		// Ｈｐ
+				unit[m].Hp=unit[m].MaxHp=AT1_HP;		// Ｈｐ
 				}
 			else
 				{
@@ -1186,16 +1186,16 @@ public void	set_unit_data(int m)
 				else
 					unit[m].os_indx_y=9;
 
-				unit[m].arm[0]=NTG;		// 武装品種
-				unit[m].arm[1]=0;		// 数
-				unit[m].arm[4]=1;		// 数 全容量
+				unit[m].Weapon=NTG;		// 武装品種
+				unit[m].Ammo=0;		// 数
+				unit[m].MaxAmmo=1;		// 数 全容量
 
-				unit[m].gas[0]=100;		// 残燃料
-				unit[m].gas[1]=70;		// 燃料を消費するタイミング
+				unit[m].Fuel=100;		// 残燃料
+				unit[m].FuelInterval=70;		// 燃料を消費するタイミング
 
 				unit[m].tech=5;			
 
-				unit[m].hp[0]=unit[m].hp[1]=AT1_HP+4;		// Ｈｐ
+				unit[m].Hp=unit[m].MaxHp=AT1_HP+4;		// Ｈｐ
 				}
 
 			break;
@@ -1212,16 +1212,16 @@ public void	set_unit_data(int m)
 
 				unit[m].os_indx_y=12;
 
-				unit[m].arm[0]=NTG;		// 武装品種
-				unit[m].arm[1]=0;		// 数
-				unit[m].arm[4]=9;		// 数 全容量
+				unit[m].Weapon=NTG;		// 武装品種
+				unit[m].Ammo=0;		// 数
+				unit[m].MaxAmmo=9;		// 数 全容量
 
-				unit[m].gas[0]=100;		// 残燃料
-				unit[m].gas[1]=120;		// 燃料を消費するタイミング
+				unit[m].Fuel=100;		// 残燃料
+				unit[m].FuelInterval=120;		// 燃料を消費するタイミング
 
 				unit[m].tech=5;			
 
-				unit[m].hp[0]=unit[m].hp[1]=unchecked((int)(BM1_HP*0.65));		// Ｈｐ
+				unit[m].Hp=unit[m].MaxHp=unchecked((int)(BM1_HP*0.65));		// Ｈｐ
 				}
 			else
 				{	
@@ -1232,16 +1232,16 @@ public void	set_unit_data(int m)
 
 				unit[m].os_indx_y=12;
 
-				unit[m].arm[0]=NTG;		// 武装品種
-				unit[m].arm[1]=0;		// 数
-				unit[m].arm[4]=20;		// 数 全容量
+				unit[m].Weapon=NTG;		// 武装品種
+				unit[m].Ammo=0;		// 数
+				unit[m].MaxAmmo=20;		// 数 全容量
 
-				unit[m].gas[0]=100;		// 残燃料
-				unit[m].gas[1]=220;		// 燃料を消費するタイミング
+				unit[m].Fuel=100;		// 残燃料
+				unit[m].FuelInterval=220;		// 燃料を消費するタイミング
 
 				unit[m].tech=5;			
 
-				unit[m].hp[0]=unit[m].hp[1]=BM1_HP;		// Ｈｐ
+				unit[m].Hp=unit[m].MaxHp=BM1_HP;		// Ｈｐ
 				}
 			break;	
 
@@ -1255,16 +1255,16 @@ public void	set_unit_data(int m)
 
 			unit[m].os_indx_y=13;
 
-			unit[m].arm[0]=NTG;		// 武装品種
-			unit[m].arm[1]=0;		// 数
-			unit[m].arm[4]=0;		// 数 全容量
+			unit[m].Weapon=NTG;		// 武装品種
+			unit[m].Ammo=0;		// 数
+			unit[m].MaxAmmo=0;		// 数 全容量
 
-			unit[m].gas[0]=100;		// 残燃料
-			unit[m].gas[1]=1000;		// 燃料を消費するタイミング
+			unit[m].Fuel=100;		// 残燃料
+			unit[m].FuelInterval=1000;		// 燃料を消費するタイミング
 
 			unit[m].tech=5;			
 
-			unit[m].hp[0]=unit[m].hp[1]=TR1_HP;		// Ｈｐ
+			unit[m].Hp=unit[m].MaxHp=TR1_HP;		// Ｈｐ
 			break;
 
 
@@ -1273,7 +1273,7 @@ public void	set_unit_data(int m)
 
 			unit[m].tech=5;			
 
-			unit[m].hp[0]=unit[m].hp[1]=SP_HP;		// Ｈｐ
+			unit[m].Hp=unit[m].MaxHp=SP_HP;		// Ｈｐ
 
 			unit[m].drctn=90.0;					// ９０がos_indx_x=0;
 			break;
@@ -1288,7 +1288,7 @@ public void	set_unit_data(int m)
 
 			unit[m].tech=5;			
 
-			unit[m].hp[0]=unit[m].hp[1]=AP_HP;		// Ｈｐ
+			unit[m].Hp=unit[m].MaxHp=AP_HP;		// Ｈｐ
 
 
 			unit[m].drctn=90.0-45.0;					// ９０がos_indx_x=0;
@@ -1300,14 +1300,14 @@ public void	set_unit_data(int m)
 		case UnitKind.City:
 			unit[m].os_indx_y=11;
 
-			unit[m].arm[0]=0;		// 武装品種
-			unit[m].arm[1]=0;		// 数
-			unit[m].arm[4]=0;		// 数 全容量
+			unit[m].Weapon=0;		// 武装品種
+			unit[m].Ammo=0;		// 数
+			unit[m].MaxAmmo=0;		// 数 全容量
 
 			unit[m].drctn=0.0;					// ９０がos_indx_x=0;
 
 			unit[m].tech=5;			
-			unit[m].hp[0]=unit[m].hp[1]=CT1_HP;		// Ｈｐ
+			unit[m].Hp=unit[m].MaxHp=CT1_HP;		// Ｈｐ
 			break;
 
 
@@ -1315,14 +1315,14 @@ public void	set_unit_data(int m)
 		case UnitKind.InfantryBase:
 			unit[m].os_indx_y=11;
 
-			unit[m].arm[0]=GUN;		// 武装品種
-			unit[m].arm[1]=700;		// 数
-			unit[m].arm[4]=700;		// 数 全容量
+			unit[m].Weapon=GUN;		// 武装品種
+			unit[m].Ammo=700;		// 数
+			unit[m].MaxAmmo=700;		// 数 全容量
 
 			unit[m].drctn=225.0;					// ９０がos_indx_x=0;
 
 			unit[m].tech=5;			
-			unit[m].hp[0]=unit[m].hp[1]=GF1_HP;		// Ｈｐ
+			unit[m].Hp=unit[m].MaxHp=GF1_HP;		// Ｈｐ
 			break;
 
 
@@ -1330,26 +1330,26 @@ public void	set_unit_data(int m)
 		case UnitKind.Pillboxes:
 			unit[m].os_indx_y=11;
 
-			unit[m].arm[0]=GUN;		// 武装品種
-			unit[m].arm[1]=1500;		// 数
-			unit[m].arm[4]=1500;		// 数 全容量
+			unit[m].Weapon=GUN;		// 武装品種
+			unit[m].Ammo=1500;		// 数
+			unit[m].MaxAmmo=1500;		// 数 全容量
 
 			unit[m].drctn=180.0;					// ９０がos_indx_x=0;
 
 			unit[m].tech=5;			
-			unit[m].hp[0]=unit[m].hp[1]=GF2_HP;		// Ｈｐ
+			unit[m].Hp=unit[m].MaxHp=GF2_HP;		// Ｈｐ
 			break;
 		case UnitKind.Fortress:
 			unit[m].os_indx_y=11;
 
-			unit[m].arm[0]=GUN;		// 武装品種
-			unit[m].arm[1]=2000;		// 数
-			unit[m].arm[4]=2000;		// 数 全容量
+			unit[m].Weapon=GUN;		// 武装品種
+			unit[m].Ammo=2000;		// 数
+			unit[m].MaxAmmo=2000;		// 数 全容量
 
 			unit[m].drctn=135.0;					// ９０がos_indx_x=0;
 
 			unit[m].tech=5;			
-			unit[m].hp[0]=unit[m].hp[1]=GF3_HP;		// Ｈｐ
+			unit[m].Hp=unit[m].MaxHp=GF3_HP;		// Ｈｐ
 			break;
 		}
 
@@ -1380,8 +1380,8 @@ public void	set_unit_data(int m)
 		}
 
 
-	unit[m].pp_x[0]=unit[m].x;
-	unit[m].pp_y[0]=unit[m].y;
+	unit[m].pp_x[0]=unit[m].Position.X;
+	unit[m].pp_y[0]=unit[m].Position.Y;
 	unit[m].pp_x[1]=MAP_RIGHT+1;
 	//unit[m].max_spd*=1.0;
 	}
@@ -1452,8 +1452,7 @@ public int		set_new_unit(Side side,UnitKind kind,double rx,double ry,double drct
 			{
 			// まずクリア
 			unit[m].used=0;
-			unit[m].x=0;
-			unit[m].y=0;
+			unit[m].Position = new WorldPosition(0, 0);
 			unit[m].ctgry=UnitCategory.None;
 			unit[m].kind=0;
 			unit[m].type=0;
@@ -1473,7 +1472,7 @@ public int		set_new_unit(Side side,UnitKind kind,double rx,double ry,double drct
 			unit[m].stop=0;
 			unit[m].spry=0;
 			unit[m].em_flg[0]=unit[m].em_flg[1]=0;
-			unit[m].em_x=unit[m].em_y=0;
+			unit[m].EmergencyDestination=new WorldPosition(0, 0);
 			//unit[m].pp_now=0;
 
 			unit[m].is_ltl_ldr=0;
@@ -1497,8 +1496,7 @@ public int		set_new_unit(Side side,UnitKind kind,double rx,double ry,double drct
 
 			// あきスペース発見
 			unit[m].used=side;
-			unit[m].x=rx;
-			unit[m].y=ry;
+			unit[m].Position = new WorldPosition(rx, ry);
 			unit[m].ctgry=ctgry;
 			unit[m].kind=kind;
 			unit[m].drctn=drctn;
@@ -1572,8 +1570,7 @@ public int		set_new_unit_2(Side side,UnitKind kind,int type,double rx,double ry,
 			{
 			// まずクリア
 			unit[m].used=0;
-			unit[m].x=0;
-			unit[m].y=0;
+			unit[m].Position = new WorldPosition(0, 0);
 			unit[m].ctgry=UnitCategory.None;
 			unit[m].kind=0;
 			unit[m].type=(short)type;
@@ -1593,7 +1590,7 @@ public int		set_new_unit_2(Side side,UnitKind kind,int type,double rx,double ry,
 			unit[m].stop=0;
 			unit[m].spry=0;
 			unit[m].em_flg[0]=unit[m].em_flg[1]=0;
-			unit[m].em_x=unit[m].em_y=0;
+			unit[m].EmergencyDestination=new WorldPosition(0, 0);
 			//unit[m].pp_now=0;
 
 			unit[m].is_ltl_ldr=0;
@@ -1617,11 +1614,10 @@ public int		set_new_unit_2(Side side,UnitKind kind,int type,double rx,double ry,
 
 			// あきスペース発見
 			unit[m].used=side;
-			unit[m].x=rx;
-			unit[m].y=ry;
+			unit[m].Position = new WorldPosition(rx, ry);
 			unit[m].ctgry=ctgry;
 			if(ctgry==UnitCategory.Plane)
-				unit[m].info[0]=FLYING;
+				unit[m].PlaneState=UnitState.Flying;
 			unit[m].kind=kind;
 			unit[m].drctn=drctn;
 			unit[m].spd=0;
@@ -1678,7 +1674,7 @@ public int		set_new_unit_plane(Side side,UnitKind kind,int type,int no,int plane
 			park=0;
 			for(n=1;n<=max_unit;n++)
 				{
-				if( unit[n].used!=0 && unit[n].ctgry==UnitCategory.Plane && unit[n].info[1]==no && unit[n].info[0]==PARKING )
+				if( unit[n].used!=0 && unit[n].ctgry==UnitCategory.Plane && unit[n].info[1]==no && unit[n].PlaneState==UnitState.Parked )
 					{
 					space[unit[n].info[2]]=1;
 					park++;
@@ -1702,12 +1698,11 @@ public int		set_new_unit_plane(Side side,UnitKind kind,int type,int no,int plane
 
 
 			unit[m].used=side;
-			unit[m].x=730;
-			unit[m].y=150;
+			unit[m].Position = new WorldPosition(730, 150);
 			unit[m].ctgry=UnitCategory.Plane;
 			unit[m].kind=kind;
 			unit[m].type=(short)type;
-			unit[m].info[0]=PARKING;
+			unit[m].PlaneState=UnitState.Parked;
 			unit[m].info[1]=no;					// 所属の空母、及び、基地の番号
 			unit[m].info[2]=f;				// 格納庫の位置、及び、その基地の番機番号
 			unit[m].info[3]=0;					// 8
@@ -1726,14 +1721,14 @@ public int		set_new_unit_plane(Side side,UnitKind kind,int type,int no,int plane
 				{
 				if( arm==NTG )
 					{
-					unit[m].arm[0]=arm;		// 武装品種
-					unit[m].arm[1]=0;		// 数
+					unit[m].Weapon=arm;		// 武装品種
+					unit[m].Ammo=0;		// 数
 					//unit[m].arm[4]=1;		// 数
 					}
 				else
 					{
-					unit[m].arm[0]=arm;		// 武装品種
-					unit[m].arm[1]=unit[m].arm[4]/*1*/;		// 数
+					unit[m].Weapon=arm;		// 武装品種
+					unit[m].Ammo=unit[m].MaxAmmo/*1*/;		// 数
 					//unit[m].arm[4]=1;		// 数
 					}
 				}
@@ -2511,23 +2506,23 @@ public void	cnct_sinario_6()
 	rx=-7450;
 	ry=-4550;
 	m=set_new_unit(Side.Japan,UnitKind.Battleship,rx-50,ry,135);
-	unit[m].gas[0]*=0.1;
-	unit[m].arm[1]=(int)(unit[m].arm[4]*0.2);			// 数
+	unit[m].Fuel*=0.1;
+	unit[m].Ammo=(int)(unit[m].MaxAmmo*0.2);			// 数
 	unit[m].spry=1;
 	ry-=150;
 	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,135);
-	unit[m].gas[0]*=0.2;
-	unit[m].arm[1]=(int)(unit[m].arm[4]*0.1);			// 数
+	unit[m].Fuel*=0.2;
+	unit[m].Ammo=(int)(unit[m].MaxAmmo*0.1);			// 数
 	unit[m].spry=1;
 	ry-=150;
 	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,135);
-	unit[m].gas[0]*=0.1;
-	unit[m].arm[1]=(int)(unit[m].arm[4]*0.2);			// 数
+	unit[m].Fuel*=0.1;
+	unit[m].Ammo=(int)(unit[m].MaxAmmo*0.2);			// 数
 	unit[m].spry=1;
 	ry-=150;
 	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx-80,ry,135);
-	unit[m].gas[0]*=0.1;
-	unit[m].arm[1]=(int)(unit[m].arm[4]*0.3);			// 数
+	unit[m].Fuel*=0.1;
+	unit[m].Ammo=(int)(unit[m].MaxAmmo*0.3);			// 数
 	unit[m].spry=1;
 
 
@@ -2537,24 +2532,24 @@ public void	cnct_sinario_6()
 //rx=-800;
 //ry=5500;
 	no=m=set_new_unit(Side.Japan,UnitKind.Transport,rx,ry,270);
-	unit[m].arm[0]=TR_GF1;		// 武装品種
-	unit[m].arm[1]=1;			// 数
-	unit[m].arm[4]=1;			// 数 全容量
-	unit[m].gas[0]*=0.2;
+	unit[m].Weapon=TR_GF1;		// 武装品種
+	unit[m].Ammo=1;			// 数
+	unit[m].MaxAmmo=1;			// 数 全容量
+	unit[m].Fuel*=0.2;
 	unit[m].spry=1;
 	ry-=150;
 	no=m=set_new_unit(Side.Japan,UnitKind.Transport,rx-20,ry,135);
-	unit[m].arm[0]=TR_GF2;		// 武装品種
-	unit[m].arm[1]=1;			// 数
-	unit[m].arm[4]=1;			// 数 全容量
-	unit[m].gas[0]*=0;
+	unit[m].Weapon=TR_GF2;		// 武装品種
+	unit[m].Ammo=1;			// 数
+	unit[m].MaxAmmo=1;			// 数 全容量
+	unit[m].Fuel*=0;
 	unit[m].spry=1;
 	ry-=150;
 	no=m=set_new_unit(Side.Japan,UnitKind.Transport,rx,ry,90);
-	unit[m].arm[0]=TR_GF2;		// 武装品種
-	unit[m].arm[1]=1;			// 数
-	unit[m].arm[4]=1;			// 数 全容量
-	unit[m].gas[0]*=0;
+	unit[m].Weapon=TR_GF2;		// 武装品種
+	unit[m].Ammo=1;			// 数
+	unit[m].MaxAmmo=1;			// 数 全容量
+	unit[m].Fuel*=0;
 	unit[m].spry=1;
 	ry-=150;
 	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx+90,ry-40,90);
@@ -2577,8 +2572,8 @@ m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,135);
 rx=-7600-100;
 ry=-4720;
 m=set_new_unit(Side.Japan,UnitKind.Submarine,rx,ry,135);
-unit[m].gas[0]*=0.1;
-unit[m].arm[1]=unit[m].arm[4]*0.1;			// 数
+unit[m].Fuel*=0.1;
+unit[m].Ammo=unit[m].MaxAmmo*0.1;			// 数
 
 // 戦闘艦船
 rx=-7600;
@@ -2663,23 +2658,23 @@ m=set_new_unit(Side.Japan,UnitKind.Fortress,rx,ry,135);
 //rx=-6500;
 	ry=-3000;
 	no=m=set_new_unit(Side.UnitedStates,UnitKind.Carrier,rx,ry,180);
-	unit[m].gas[0]/=2;
+	unit[m].Fuel/=2;
 	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,10,BOM);
 	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,2,NTG);
 	rx+=150;
 	no=m=set_new_unit(Side.UnitedStates,UnitKind.LightCarrier,rx,ry,180);
-	unit[m].gas[0]/=2;
+	unit[m].Fuel/=2;
 	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,6,BOM);
 	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,2,NTG);
 	rx+=150;
 	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
-	unit[m].gas[0]/=2;
+	unit[m].Fuel/=2;
 	rx+=150;
 	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,180);
-	unit[m].gas[0]/=2;
+	unit[m].Fuel/=2;
 	rx+=150;
 	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
-	unit[m].gas[0]/=2;
+	unit[m].Fuel/=2;
 
 
 
@@ -2768,23 +2763,23 @@ public void	cnct_sinario_7()
 	rx=-7450;
 	ry=-4550;
 	m=set_new_unit(Side.Japan,UnitKind.Battleship,rx-50,ry,135);
-	unit[m].gas[0]*=0.1;
-	unit[m].arm[1]=(int)(unit[m].arm[4]*0.2);			// 数
+	unit[m].Fuel*=0.1;
+	unit[m].Ammo=(int)(unit[m].MaxAmmo*0.2);			// 数
 	unit[m].spry=1;
 	ry-=150;
 	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,135);
-	unit[m].gas[0]*=0.2;
-	unit[m].arm[1]=(int)(unit[m].arm[4]*0.1);			// 数
+	unit[m].Fuel*=0.2;
+	unit[m].Ammo=(int)(unit[m].MaxAmmo*0.1);			// 数
 	unit[m].spry=1;
 	ry-=150;
 	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,135);
-	unit[m].gas[0]*=0.1;
-	unit[m].arm[1]=(int)(unit[m].arm[4]*0.2);			// 数
+	unit[m].Fuel*=0.1;
+	unit[m].Ammo=(int)(unit[m].MaxAmmo*0.2);			// 数
 	unit[m].spry=1;
 	ry-=150;
 	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx-80,ry,135);
-	unit[m].gas[0]*=0.1;
-	unit[m].arm[1]=(int)(unit[m].arm[4]*0.3);			// 数
+	unit[m].Fuel*=0.1;
+	unit[m].Ammo=(int)(unit[m].MaxAmmo*0.3);			// 数
 	unit[m].spry=1;
 
 
@@ -2794,24 +2789,24 @@ public void	cnct_sinario_7()
 //rx=-800;
 //ry=5500;
 	no=m=set_new_unit(Side.Japan,UnitKind.Transport,rx,ry,270);
-	unit[m].arm[0]=TR_GF1;		// 武装品種
-	unit[m].arm[1]=1;			// 数
-	unit[m].arm[4]=1;			// 数 全容量
-	unit[m].gas[0]*=0.2;
+	unit[m].Weapon=TR_GF1;		// 武装品種
+	unit[m].Ammo=1;			// 数
+	unit[m].MaxAmmo=1;			// 数 全容量
+	unit[m].Fuel*=0.2;
 	unit[m].spry=1;
 	ry-=150;
 	no=m=set_new_unit(Side.Japan,UnitKind.Transport,rx-20,ry,135);
-	unit[m].arm[0]=TR_GF2;		// 武装品種
-	unit[m].arm[1]=1;			// 数
-	unit[m].arm[4]=1;			// 数 全容量
-	unit[m].gas[0]*=0;
+	unit[m].Weapon=TR_GF2;		// 武装品種
+	unit[m].Ammo=1;			// 数
+	unit[m].MaxAmmo=1;			// 数 全容量
+	unit[m].Fuel*=0;
 	unit[m].spry=1;
 	ry-=150;
 	no=m=set_new_unit(Side.Japan,UnitKind.Transport,rx,ry,90);
-	unit[m].arm[0]=TR_GF2;		// 武装品種
-	unit[m].arm[1]=1;			// 数
-	unit[m].arm[4]=1;			// 数 全容量
-	unit[m].gas[0]*=0;
+	unit[m].Weapon=TR_GF2;		// 武装品種
+	unit[m].Ammo=1;			// 数
+	unit[m].MaxAmmo=1;			// 数 全容量
+	unit[m].Fuel*=0;
 	unit[m].spry=1;
 	ry-=150;
 	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx+90,ry-40,90);
@@ -2881,23 +2876,23 @@ unit[m].arm[4]=1;			// 数 全容量
 	rx=-3500;
 	ry=-3000;
 	no=m=set_new_unit(Side.UnitedStates,UnitKind.Carrier,rx,ry,180);
-	unit[m].gas[0]/=2;
+	unit[m].Fuel/=2;
 	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,10,BOM);
 	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,2,NTG);
 	rx+=150;
 	no=m=set_new_unit(Side.UnitedStates,UnitKind.LightCarrier,rx,ry,180);
-	unit[m].gas[0]/=2;
+	unit[m].Fuel/=2;
 	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,6,BOM);
 	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,2,NTG);
 	rx+=150;
 	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
-	unit[m].gas[0]/=2;
+	unit[m].Fuel/=2;
 	rx+=150;
 	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,180);
-	unit[m].gas[0]/=2;
+	unit[m].Fuel/=2;
 	rx+=150;
 	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
-	unit[m].gas[0]/=2;
+	unit[m].Fuel/=2;
 
 
 
@@ -4238,9 +4233,9 @@ public void	cnct_sinario_106()
 	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,0);
 	rx-=120;
 	m=set_new_unit(Side.Japan,UnitKind.Transport,rx,ry,0);
-	unit[m].arm[0]=TR_GF1;		// 武装品種
-	unit[m].arm[1]=1;			// 数
-	unit[m].arm[4]=1;			// 数 全容量
+	unit[m].Weapon=TR_GF1;		// 武装品種
+	unit[m].Ammo=1;			// 数
+	unit[m].MaxAmmo=1;			// 数 全容量
 
 
 	// ガダルカナル
@@ -4298,9 +4293,9 @@ public void	cnct_sinario_106()
 	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,180);
 	rx+=150;
 	m=set_new_unit(Side.UnitedStates,UnitKind.Transport,rx,ry,180);
-	unit[m].arm[0]=TR_GF1;		// 武装品種
-	unit[m].arm[1]=1;			// 数
-	unit[m].arm[4]=1;			// 数 全容量
+	unit[m].Weapon=TR_GF1;		// 武装品種
+	unit[m].Ammo=1;			// 数
+	unit[m].MaxAmmo=1;			// 数 全容量
 
 
 
@@ -4403,27 +4398,27 @@ public void	cnct_sinario_999()
 	rx=0;
 	ry=400;
 	m=set_new_unit_2(Side.UnitedStates,UnitKind.Attacker,0,rx,ry,0);
-	unit[m].arm[0]=TPD;		// 武装品種
-	unit[m].arm[1]=unit[m].arm[4]/*1*/;		// 数
+	unit[m].Weapon=TPD;		// 武装品種
+	unit[m].Ammo=unit[m].MaxAmmo/*1*/;		// 数
 	m=set_new_unit_2(Side.UnitedStates,UnitKind.Attacker,0,rx,ry+80*1,0);
-	unit[m].arm[0]=TPD;		// 武装品種
-	unit[m].arm[1]=unit[m].arm[4]/*1*/;		// 数
+	unit[m].Weapon=TPD;		// 武装品種
+	unit[m].Ammo=unit[m].MaxAmmo/*1*/;		// 数
 	m=set_new_unit_2(Side.UnitedStates,UnitKind.Attacker,0,rx,ry+80*2,0);
-	unit[m].arm[0]=TPD;		// 武装品種
-	unit[m].arm[1]=unit[m].arm[4]/*1*/;		// 数
+	unit[m].Weapon=TPD;		// 武装品種
+	unit[m].Ammo=unit[m].MaxAmmo/*1*/;		// 数
 
 
 
 	rx+=800;
 	m=set_new_unit_2(Side.UnitedStates,UnitKind.Attacker,0,rx,ry,0);
-	unit[m].arm[0]=TPD;		// 武装品種
-	unit[m].arm[1]=unit[m].arm[4]/*1*/;		// 数
+	unit[m].Weapon=TPD;		// 武装品種
+	unit[m].Ammo=unit[m].MaxAmmo/*1*/;		// 数
 	m=set_new_unit_2(Side.UnitedStates,UnitKind.Attacker,0,rx,ry+80*1,0);
-	unit[m].arm[0]=TPD;		// 武装品種
-	unit[m].arm[1]=unit[m].arm[4]/*1*/;		// 数
+	unit[m].Weapon=TPD;		// 武装品種
+	unit[m].Ammo=unit[m].MaxAmmo/*1*/;		// 数
 	m=set_new_unit_2(Side.UnitedStates,UnitKind.Attacker,0,rx,ry+80*2,0);
-	unit[m].arm[0]=TPD;		// 武装品種
-	unit[m].arm[1]=unit[m].arm[4]/*1*/;		// 数
+	unit[m].Weapon=TPD;		// 武装品種
+	unit[m].Ammo=unit[m].MaxAmmo/*1*/;		// 数
 #endif
 
 
@@ -4455,19 +4450,19 @@ public void	cnct_sinario_999()
 	// 輸送船団
 	rx-=120;
 	m=set_new_unit(Side.Japan,UnitKind.Transport,rx,ry,135);
-	unit[m].arm[0]=TR_GF1;		// 武装品種
-	unit[m].arm[1]=1;			// 数
-	unit[m].arm[4]=1;			// 数 全容量
+	unit[m].Weapon=TR_GF1;		// 武装品種
+	unit[m].Ammo=1;			// 数
+	unit[m].MaxAmmo=1;			// 数 全容量
 	rx-=120;
 	m=set_new_unit(Side.Japan,UnitKind.Transport,rx,ry,135);
-	unit[m].arm[0]=TR_GF1;		// 武装品種
-	unit[m].arm[1]=1;			// 数
-	unit[m].arm[4]=1;			// 数 全容量
+	unit[m].Weapon=TR_GF1;		// 武装品種
+	unit[m].Ammo=1;			// 数
+	unit[m].MaxAmmo=1;			// 数 全容量
 	rx-=120;
 	m=set_new_unit(Side.Japan,UnitKind.Transport,rx,ry,135);
-	unit[m].arm[0]=TR_GF1;		// 武装品種
-	unit[m].arm[1]=1;			// 数
-	unit[m].arm[4]=1;			// 数 全容量
+	unit[m].Weapon=TR_GF1;		// 武装品種
+	unit[m].Ammo=1;			// 数
+	unit[m].MaxAmmo=1;			// 数 全容量
 #endif
 
 #if false
@@ -4748,8 +4743,7 @@ public void	cnct_game_init()
 		for(n=0; n<KUMO_MAX/*255*/; n++)
 			{
 			kumo[n].used=0;
-			kumo[n].x=0;
-			kumo[n].y=0;
+			kumo[n].Position = new WorldPosition(0, 0);
 			kumo[n].kind=0;
 			}
 
@@ -4776,8 +4770,7 @@ public void	cnct_game_init()
 		rnd_count=0;
 
 
-		cmbt_x=-400;
-		cmbt_y=400;
+		CameraPosition = new WorldPosition(-400, 400);
 
 		dp_flag.dwType = MessageType.SyncFlag;
 		dp_flag.unit_chk=0;
@@ -4882,8 +4875,7 @@ public void	cnct_game_init()
 	for(m=0; m<=255; m++)
 		{
 		unit[m].used=0;
-		unit[m].x=0;
-		unit[m].y=0;
+		unit[m].Position = new WorldPosition(0, 0);
 		unit[m].ctgry=UnitCategory.None;
 		unit[m].kind=0;
 		for(n=0;n<=15;n++)
@@ -4902,7 +4894,7 @@ public void	cnct_game_init()
 		unit[m].stop=0;
 		unit[m].spry=0;
 		unit[m].em_flg[0]=unit[m].em_flg[1]=0;
-		unit[m].em_x=unit[m].em_y=0;
+		unit[m].EmergencyDestination=new WorldPosition(0, 0);
 		//unit[m].pp_now=0;
 
 		unit[m].is_ltl_ldr=0;
@@ -4957,8 +4949,7 @@ public void	cnct_game_init()
 	for(n=0; n<KUMO_MAX/*255*/; n++)
 		{
 		kumo[n].used=0;
-		kumo[n].x=0;
-		kumo[n].y=0;
+		kumo[n].Position = new WorldPosition(0, 0);
 		kumo[n].kind=0;
 		}
 
@@ -5044,8 +5035,7 @@ kumo[0].y=0;
 				your_side=Side.Japan;
 			}
 
-		cmbt_x=-400;
-		cmbt_y=400;
+		CameraPosition = new WorldPosition(-400, 400);
 
 
 		dp_flag.dwType = MessageType.SyncFlag;

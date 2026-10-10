@@ -249,8 +249,8 @@ public class NetworkTests
 		Send(guest, order);
 		PumpUntil(() => host.Game.go_next_2 == 1, host, guest);
 		Assert.Equal(1, host.Game.bf_new_pp[0].used);
-		Assert.Equal(-1234.0, host.Game.bf_new_pp[0].x);
-		Assert.Equal(567.0, host.Game.bf_new_pp[0].y);
+		Assert.Equal(-1234.0, host.Game.bf_new_pp[0].Destination.X);
+		Assert.Equal(567.0, host.Game.bf_new_pp[0].Destination.Y);
 		Assert.Equal(3, host.Game.bf_slct_unit[0][0]);
 		Assert.Equal(7, host.Game.bf_slct_unit[0][JPN_SHIP_END - 1]);
 

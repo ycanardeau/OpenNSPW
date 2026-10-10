@@ -238,8 +238,8 @@ dbg[0]++;
 						// 航空機も艦船もある
 						dp_new_pp.dwType = MessageType.MoveOrder;
 						dp_new_pp.used=(byte)bf_new_pp[1].used;
-						dp_new_pp.x=(short)bf_new_pp[1].x;
-						dp_new_pp.y=(short)bf_new_pp[1].y;
+						dp_new_pp.x=(short)bf_new_pp[1].Destination.X;
+						dp_new_pp.y=(short)bf_new_pp[1].Destination.Y;
 						dp_new_pp.cls=bf_new_pp[1].cls;
 						for( s=0; s<=(USA_PLANE_END/2)-1; s++)
 							{
@@ -256,8 +256,8 @@ dbg[0]++;
 						// 艦船のみ
 						dp_new_pp_ship.dwType = MessageType.MoveShipsOrder;
 						dp_new_pp_ship.used=(byte)bf_new_pp[1].used;
-						dp_new_pp_ship.x=(short)bf_new_pp[1].x;
-						dp_new_pp_ship.y=(short)bf_new_pp[1].y;
+						dp_new_pp_ship.x=(short)bf_new_pp[1].Destination.X;
+						dp_new_pp_ship.y=(short)bf_new_pp[1].Destination.Y;
 						dp_new_pp_ship.cls=bf_new_pp[1].cls;
 						for( s=0; s<=JPN_SHIP_END-1; s++)
 							{
@@ -273,8 +273,8 @@ dbg[0]++;
 						// 航空機のみ
 						dp_new_pp_plane.dwType = MessageType.MovePlanesOrder;
 						dp_new_pp_plane.used=(byte)bf_new_pp[1].used;
-						dp_new_pp_plane.x=(short)bf_new_pp[1].x;
-						dp_new_pp_plane.y=(short)bf_new_pp[1].y;
+						dp_new_pp_plane.x=(short)bf_new_pp[1].Destination.X;
+						dp_new_pp_plane.y=(short)bf_new_pp[1].Destination.Y;
 						dp_new_pp_plane.cls=bf_new_pp[1].cls;
 						for( s=0; s<=(JPN_PLANE_END-JPN_PLANE_START); s++)
 							{
@@ -308,8 +308,8 @@ dbg[0]++;
 						dp_new_slct.sw=bf_new_slct[1].sw;
 						dp_new_slct.the_slct_unit=(byte)bf_new_slct[1].the_slct_unit;
 						dp_new_slct.m=(byte)bf_new_slct[1].m;
-						dp_new_slct.gr_x=(short)bf_new_slct[1].gr_x;
-						dp_new_slct.gr_y=(short)bf_new_slct[1].gr_y;
+						dp_new_slct.gr_x=(short)bf_new_slct[1].GroundPosition.X;
+						dp_new_slct.gr_y=(short)bf_new_slct[1].GroundPosition.Y;
 						for( s=0; s<=(USA_PLANE_END/2)-1; s++)
 							{
 							dp_new_slct.slct_unit[s]=(byte)bf_slct_unit[1][s];
@@ -326,8 +326,8 @@ dbg[0]++;
 						dp_new_slct_ship.sw=bf_new_slct[1].sw;
 						dp_new_slct_ship.the_slct_unit=(byte)bf_new_slct[1].the_slct_unit;
 						dp_new_slct_ship.m=(byte)bf_new_slct[1].m;
-						dp_new_slct_ship.gr_x=(short)bf_new_slct[1].gr_x;
-						dp_new_slct_ship.gr_y=(short)bf_new_slct[1].gr_y;
+						dp_new_slct_ship.gr_x=(short)bf_new_slct[1].GroundPosition.X;
+						dp_new_slct_ship.gr_y=(short)bf_new_slct[1].GroundPosition.Y;
 						for( s=0; s<=JPN_SHIP_END-1; s++)
 							{
 							dp_new_slct_ship.slct_unit[s]=(byte)bf_slct_unit[1][s];
@@ -344,8 +344,8 @@ dbg[0]++;
 						dp_new_slct_plane.sw=bf_new_slct[1].sw;
 						dp_new_slct_plane.the_slct_unit=(byte)bf_new_slct[1].the_slct_unit;
 						dp_new_slct_plane.m=(byte)bf_new_slct[1].m;
-						dp_new_slct_plane.gr_x=(short)bf_new_slct[1].gr_x;
-						dp_new_slct_plane.gr_y=(short)bf_new_slct[1].gr_y;
+						dp_new_slct_plane.gr_x=(short)bf_new_slct[1].GroundPosition.X;
+						dp_new_slct_plane.gr_y=(short)bf_new_slct[1].GroundPosition.Y;
 						for( s=0; s<=JPN_PLANE_END-JPN_PLANE_START; s++)
 							{
 							dp_new_slct_plane.slct_unit[s]=(byte)bf_slct_unit[1][s+JPN_SHIP_END];
@@ -362,8 +362,8 @@ dbg[0]++;
 						dp_new_slct_land.sw=bf_new_slct[1].sw;
 						dp_new_slct_land.the_slct_unit=(byte)bf_new_slct[1].the_slct_unit;
 						dp_new_slct_land.m=(byte)bf_new_slct[1].m;
-						dp_new_slct_land.gr_x=(short)bf_new_slct[1].gr_x;
-						dp_new_slct_land.gr_y=(short)bf_new_slct[1].gr_y;
+						dp_new_slct_land.gr_x=(short)bf_new_slct[1].GroundPosition.X;
+						dp_new_slct_land.gr_y=(short)bf_new_slct[1].GroundPosition.Y;
 //t						hr = lpDirectPlay4A->lpVtbl->Send(lpDirectPlay4A, dpidPlayer, dpidRivalPlayer, DPSEND_GUARANTEED, &dp_new_slct_land, sizeof(_DP_NEW_SLCT_LAND) );
 						bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_SLCT_LAND));
 						bufferDesc.pBufferData  = (byte*) &dp_new_slct_land;
@@ -487,15 +487,15 @@ dbg[0]++;
 			for(e=0; e<=1; e++)
 				{
 				new_pp[e].used=bf_new_pp[e].used;
-				new_pp[e].x=(double)bf_new_pp[e].x;
-				new_pp[e].y=(double)bf_new_pp[e].y;
+				new_pp[e].Destination = new WorldPosition((double)bf_new_pp[e].Destination.X, new_pp[e].Destination.Y);
+				new_pp[e].Destination = new WorldPosition(new_pp[e].Destination.X, (double)bf_new_pp[e].Destination.Y);
 				new_pp[e].cls=bf_new_pp[e].cls;
 
 				new_slct[e].sw=bf_new_slct[e].sw;
 				new_slct[e].the_slct_unit=bf_new_slct[e].the_slct_unit;
 				new_slct[e].m=bf_new_slct[e].m;
-				new_slct[e].gr_x=(short)bf_new_slct[e].gr_x;
-				new_slct[e].gr_y=(short)bf_new_slct[e].gr_y;
+				new_slct[e].GroundPosition = new WorldPosition((short)bf_new_slct[e].GroundPosition.X, new_slct[e].GroundPosition.Y);
+				new_slct[e].GroundPosition = new WorldPosition(new_slct[e].GroundPosition.X, (short)bf_new_slct[e].GroundPosition.Y);
 				}
 
 
@@ -630,10 +630,10 @@ dbg[5]=rnd(100);
 			f=0;
 			for(m=1; m<=max_unit; m++)
 				{
-				if( unit[m].used!=0 && !(unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING) )
+				if( unit[m].used!=0 && !(unit[m].ctgry==UnitCategory.Plane && unit[m].PlaneState==UnitState.Parked) )
 //				if( unit[m].used && /*unit[m].ctgry==PLANE &&*/ unit[m].hp[0]  )
 					{
-					f+=(int)((unit[m].x+unit[m].y+unit[m].drctn)*10000);
+					f+=(int)((unit[m].Position.X+unit[m].Position.Y+unit[m].drctn)*10000);
 					}
 				}
 
@@ -718,11 +718,11 @@ dbg[5]=rnd(100);
 		if( unit[m].used!=0 && ( unit[m].kind==UnitKind.AirBase||unit[m].kind==UnitKind.NavalBase||unit[m].kind==UnitKind.InfantryBase||unit[m].kind==UnitKind.Pillboxes||unit[m].kind==UnitKind.Fortress ) && unit[m].info[0]!=0
 			)
 			{
-			if( unit[m].hp[0]<unit[m].hp[1] )
+			if( unit[m].Hp<unit[m].MaxHp )
 				{
 				// 損傷してればその修理が先。
-				if( (cc_count%220/*80*/)==0 && unit[m].gas[0]>=0 )
-					unit[m].hp[0]++;
+				if( (cc_count%220/*80*/)==0 && unit[m].Fuel>=0 )
+					unit[m].Hp++;
 				}
 			else
 				{
@@ -732,8 +732,8 @@ dbg[5]=rnd(100);
 				if( unit[m].info[0]==0 )
 					{
 					// 完成
-					unit[m].hp[1]*=4;
-					unit[m].hp[0]=unit[m].hp[1];
+					unit[m].MaxHp*=4;
+					unit[m].Hp=unit[m].MaxHp;
 					}
 				}
 			}
@@ -743,21 +743,21 @@ dbg[5]=rnd(100);
 		if( map_edit==0 && unit[m].used!=0 && !(unit[m].kind==UnitKind.AirBase||unit[m].kind==UnitKind.NavalBase||unit[m].kind==UnitKind.City))
 			{
 			// 補給先がちゃんとあるか
-			if( unit[m].ctgry==UnitCategory.Ship && unit[m].spry!=0 && unit[m].gas[0]>=0 )
+			if( unit[m].ctgry==UnitCategory.Ship && unit[m].spry!=0 && unit[m].Fuel>=0 )
 				{
 				// 補給中の艦船
 				// ptin dbg
-				wrk_rect.top=(int)unit[m].y+40+240;  //(int)unit[m].y-40-240;    
-				wrk_rect.right=(int)unit[m].x+40+240;
-				wrk_rect.bottom=(int)unit[m].y-40-240;    //(int)unit[m].y+40+240; 
-				wrk_rect.left=(int)unit[m].x-40-240;
+				wrk_rect.top=(int)unit[m].Position.Y+40+240;  //(int)unit[m].y-40-240;    
+				wrk_rect.right=(int)unit[m].Position.X+40+240;
+				wrk_rect.bottom=(int)unit[m].Position.Y-40-240;    //(int)unit[m].y+40+240; 
+				wrk_rect.left=(int)unit[m].Position.X-40-240;
 				
 				flg=0;
 				for( i=1; i<=max_unit; i++)
 					{
 					if( unit[i].used==unit[m].used && unit[i].kind==UnitKind.NavalBase && unit[i].info[0]==0 )
 						{
-						if( pt_in_rect3( ref wrk_rect, (int)unit[i].x, (int)unit[i].y )!=0 )
+						if( pt_in_rect3( ref wrk_rect, (int)unit[i].Position.X, (int)unit[i].Position.Y )!=0 )
 							{
 							flg=1;
 							break;
@@ -771,25 +771,25 @@ dbg[5]=rnd(100);
 
 
 			// ユニットの補給			
-			if( unit[m].spry!=0 && unit[m].gas[0]>=0 )
+			if( unit[m].spry!=0 && unit[m].Fuel>=0 )
 				{
 				unit[m].spry++;
 
-				if( unit[m].hp[0]<unit[m].hp[1] && (unit[m].spry%200)==199 && unit[m].gas[0]>=0 )
-					{ unit[m].hp[0]++; unit[m].spry=1;}
+				if( unit[m].Hp<unit[m].MaxHp && (unit[m].spry%200)==199 && unit[m].Fuel>=0 )
+					{ unit[m].Hp++; unit[m].spry=1;}
 
-				if( unit[m].hp[0]==unit[m].hp[1] && unit[m].arm[1]<unit[m].arm[4] && (unit[m].spry%10)==9 )
-					{ unit[m].arm[1]++; unit[m].spry=1; }
+				if( unit[m].Hp==unit[m].MaxHp && unit[m].Ammo<unit[m].MaxAmmo && (unit[m].spry%10)==9 )
+					{ unit[m].Ammo++; unit[m].spry=1; }
 
-				if( unit[m].hp[0]==unit[m].hp[1] && unit[m].arm[1]==unit[m].arm[4] && unit[m].gas[0]<100 && (unit[m].spry%20)==19 )
+				if( unit[m].Hp==unit[m].MaxHp && unit[m].Ammo==unit[m].MaxAmmo && unit[m].Fuel<100 && (unit[m].spry%20)==19 )
 					{
-					unit[m].gas[0]++;
-					if(unit[m].gas[0]>100)
-						unit[m].gas[0]=100;
+					unit[m].Fuel++;
+					if(unit[m].Fuel>100)
+						unit[m].Fuel=100;
 					unit[m].spry=1; 
 					}
 
-				if( unit[m].hp[0]==unit[m].hp[1] && unit[m].arm[1]==unit[m].arm[4] && unit[m].gas[0]==100 && (unit[m].spry%100)==99 )
+				if( unit[m].Hp==unit[m].MaxHp && unit[m].Ammo==unit[m].MaxAmmo && unit[m].Fuel==100 && (unit[m].spry%100)==99 )
 					{
 					unit[m].spry=0;
 					}
@@ -797,13 +797,13 @@ dbg[5]=rnd(100);
 
 			//=========		 ユニットの機動制御		=========//
 
-			if(unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING)
+			if(unit[m].ctgry==UnitCategory.Plane && unit[m].PlaneState==UnitState.Parked)
 				{
 				// パーキング中の航空機へ
 				if( unit[m].stop!=0 )
 					{
-					unit[m].pp_x[0]=unit[unit[m].info[1]].x;
-					unit[m].pp_y[0]=unit[unit[m].info[1]].y;
+					unit[m].pp_x[0]=unit[unit[m].info[1]].Position.X;
+					unit[m].pp_y[0]=unit[unit[m].info[1]].Position.Y;
 					}
 				else
 					{
@@ -816,13 +816,13 @@ dbg[5]=rnd(100);
 							unit[unit[m].info[1]].info[4]++;		// 発艦予定の機数を
 							}
 						cv_1=sprt[UNIT_INFO_JPN].x+sprt[UNIT_INFO_JPN].wd/2;
-						if((int)unit[m].x==cv_1 && unit[m].info[3]==1)
+						if((int)unit[m].Position.X==cv_1 && unit[m].info[3]==1)
 							{	
 							unit[m].info[3]=2;
 							unit[m].drctn=270.0;
 							}
 						cv_1=sprt[UNIT_INFO_JPN].y+370;
-						if((int)unit[m].y>=cv_1 && unit[m].info[3]==2)
+						if((int)unit[m].Position.Y>=cv_1 && unit[m].info[3]==2)
 							{
 							unit[m].info[3]=3;
 							unit[m].drctn=90.0;
@@ -832,15 +832,15 @@ dbg[5]=rnd(100);
 
 							if( (unit[unit[m].info[1]].info[11]%2)!=0 )
 								{
-								unit[m].x+=15;
+								unit[m].Position = new WorldPosition(unit[m].Position.X + 15, unit[m].Position.Y);
 								}
 							else
 								{
-								unit[m].x-=15;
+								unit[m].Position = new WorldPosition(unit[m].Position.X - 15, unit[m].Position.Y);
 								}
 							}
 						cv_1=sprt[UNIT_INFO_JPN].y+370-80;
-						if((int)unit[m].y==cv_1 && unit[m].info[3]==3 )
+						if((int)unit[m].Position.Y==cv_1 && unit[m].info[3]==3 )
 							{
 							unit[m].info[3]=4;
 							if( unit[m].kind!=UnitKind.Bomber && !(unit[m].kind==UnitKind.Fighter&&unit[m].type==1) )
@@ -851,7 +851,7 @@ dbg[5]=rnd(100);
 
 
 						cv_1=sprt[UNIT_INFO_JPN].y+370-120;
-						if((int)unit[m].y<=cv_1 && unit[m].info[3]>=4)
+						if((int)unit[m].Position.Y<=cv_1 && unit[m].info[3]>=4)
 							{	// 加速します
 							unit[m].info[4]+=1;
 
@@ -860,19 +860,18 @@ dbg[5]=rnd(100);
 								SoundPlayEffect( 0, TAKE_OFF,(double)(MAP_RIGHT+1), 0);
 								}
 
-							unit[m].x+=cos(unit[m].drctn*a_PI)*(unit[m].info[4]/20);
-							unit[m].y-=sin(unit[m].drctn*a_PI)*(unit[m].info[4]/20);
+							unit[m].Position = new WorldPosition(unit[m].Position.X + (cos(unit[m].drctn*a_PI)*(unit[m].info[4]/20)), unit[m].Position.Y);
+							unit[m].Position = new WorldPosition(unit[m].Position.X, unit[m].Position.Y - (sin(unit[m].drctn*a_PI)*(unit[m].info[4]/20)));
 							}
 
 						cv_1=sprt[UNIT_INFO_JPN].y-30/*+60*/;
-						if((int)unit[m].y<=cv_1 && unit[m].info[3]>=4 )
+						if((int)unit[m].Position.Y<=cv_1 && unit[m].info[3]>=4 )
 							{		// ここで発進はお終い。
 							//unit[m].info[3]=100;			// 発進後の最低直線飛行
 							unit[m].info[3]=0;			// 発進後の最低直線飛行
-							unit[m].info[0]=FLYING;
+							unit[m].PlaneState=UnitState.Flying;
 							//unit[m].info[2]=-1;	// 格納庫の位置、及び、その基地の番機番号
-							unit[m].x=unit[unit[m].info[1]].x;
-							unit[m].y=unit[unit[m].info[1]].y;
+							unit[m].Position = new WorldPosition(unit[unit[m].info[1]].Position.X, unit[unit[m].info[1]].Position.Y);
 							//unit[m].drctn=unit[unit[m].info[1]].drctn;
 							unit[m].spd=1.0;
 							if(unit[unit[m].info[1]].info[4]!=0)
@@ -908,24 +907,24 @@ dbg[5]=rnd(100);
 									break;
 								}
 							}
-						if(unit[m].info[0]==PARKING)
+						if(unit[m].PlaneState==UnitState.Parked)
 							{
-							unit[m].x+=cos(unit[m].drctn*a_PI)*0.8;
-							unit[m].y-=sin(unit[m].drctn*a_PI)*0.8;
+							unit[m].Position = new WorldPosition(unit[m].Position.X + (cos(unit[m].drctn*a_PI)*0.8), unit[m].Position.Y);
+							unit[m].Position = new WorldPosition(unit[m].Position.X, unit[m].Position.Y - (sin(unit[m].drctn*a_PI)*0.8));
 							}
 						}
 					else
 						{
 						// 着陸
 						cv_1=sprt[UNIT_INFO_JPN].y+sprt[UNIT_INFO_JPN].ht-150;
-						if((int)unit[m].y<=cv_1 && unit[m].info[3]==1)
+						if((int)unit[m].Position.Y<=cv_1 && unit[m].info[3]==1)
 							{
 							unit[m].info[3]=2;
 							unit[m].spd=1.5;
 							unit[unit[m].info[1]].info[7]=0;		// その空母の次機着艦許可
 							}
 						cv_1=sprt[UNIT_INFO_JPN].y+sprt[UNIT_INFO_JPN].ht-200;
-						if((int)unit[m].y<=cv_1 && unit[m].info[3]==2)
+						if((int)unit[m].Position.Y<=cv_1 && unit[m].info[3]==2)
 							{
 							unit[m].info[3]=3;
 							unit[m].spd=unit[m].spd/2;
@@ -933,7 +932,7 @@ dbg[5]=rnd(100);
 								unit[m].os_indx_y++;
 							}
 						cv_1=sprt[UNIT_INFO_JPN].y+sprt[UNIT_INFO_JPN].ht-270;
-						if( (int)unit[m].y<=cv_1 && unit[m].info[3]==3 )
+						if( (int)unit[m].Position.Y<=cv_1 && unit[m].info[3]==3 )
 							{
 							// 着艦終了
 							unit[m].info[3]=0;
@@ -944,13 +943,13 @@ dbg[5]=rnd(100);
 							set_pos_of_parking(m);
 							unit[m].stop=1;
 
-							unit[m].arm[0]=TUN;					// 武装品種
-							unit[m].arm[1]=1;						// 数
-							unit[m].arm[3]=TUNE_SPAN+(unit[m].hp[1]-unit[m].hp[0])*(TUNE_SPAN/10)+((unit[m].kind==UnitKind.Bomber ? 1 : 0)*(TUNE_SPAN/3));		// 数
-							unit[m].hp[0]=unit[m].hp[1];
+							unit[m].Weapon=TUN;					// 武装品種
+							unit[m].Ammo=1;						// 数
+							unit[m].ReloadTime=TUNE_SPAN+(unit[m].MaxHp-unit[m].Hp)*(TUNE_SPAN/10)+((unit[m].kind==UnitKind.Bomber ? 1 : 0)*(TUNE_SPAN/3));		// 数
+							unit[m].Hp=unit[m].MaxHp;
 
-							unit[m].pp_x[0]=unit[unit[m].info[1]].x;
-							unit[m].pp_y[0]=unit[unit[m].info[1]].y;
+							unit[m].pp_x[0]=unit[unit[m].info[1]].Position.X;
+							unit[m].pp_y[0]=unit[unit[m].info[1]].Position.Y;
 							unit[m].pp_x[1]=MAP_RIGHT+1;
 
 							f=0;
@@ -965,7 +964,7 @@ dbg[5]=rnd(100);
 							for( i=1; i<=max_unit; i++)
 								{
 								if( i!=m && unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].used==your_side && unit[i].info[3]!=0
-									&& unit[i].info[0]==PARKING && unit[m].info[1]==unit[i].info[1] && unit[i].stop==0 )
+									&& unit[i].PlaneState==UnitState.Parked && unit[m].info[1]==unit[i].info[1] && unit[i].stop==0 )
 									f++;
 								}
 
@@ -978,10 +977,10 @@ else
 	unit[unit[m].info[1]].info[8]=2+f;		// 空母の発進不可の調査のため
 
 							}
-						if(unit[m].info[0]==PARKING)
+						if(unit[m].PlaneState==UnitState.Parked)
 							{
-							unit[m].x+=cos(unit[m].drctn*a_PI)*unit[m].spd;
-							unit[m].y-=sin(unit[m].drctn*a_PI)*unit[m].spd;
+							unit[m].Position = new WorldPosition(unit[m].Position.X + (cos(unit[m].drctn*a_PI)*unit[m].spd), unit[m].Position.Y);
+							unit[m].Position = new WorldPosition(unit[m].Position.X, unit[m].Position.Y - (sin(unit[m].drctn*a_PI)*unit[m].spd));
 							}
 						}
 					}
@@ -1008,7 +1007,7 @@ else
 
 
 							case UnitKind.Transport:
-								if( unit[m].em_flg[0]==0 && unit[m].arm[2]!=0 )
+								if( unit[m].em_flg[0]==0 && unit[m].Target!=0 )
 									set_pos_of_attack_TR1(m);
 								if( unit[m].em_flg[0]==0  )
 									set_pos_of_emrgncy_SHIP(m);
@@ -1023,7 +1022,7 @@ else
 
 							case UnitKind.Fighter:
 								set_pos_of_emrgncy_FT(m);
-								if( unit[m].arm[2]!=0 )
+								if( unit[m].Target!=0 )
 									{
 									set_pos_of_attack_FT(m);	// 攻撃目標あり
 									}
@@ -1039,7 +1038,7 @@ else
 
 							case UnitKind.Attacker:
 							case UnitKind.Bomber:
-								if( unit[m].arm[2]!=0 && unit[m].ltl_ldr==0 )
+								if( unit[m].Target!=0 && unit[m].ltl_ldr==0 )
 									set_pos_of_attack_AT(m);
 								if( unit[m].em_flg[0]==0 )
 									set_pos_of_emrgncy_AT(m);
@@ -1075,7 +1074,7 @@ else
 							wrk_r.bottom=(int)unit[m].pp_y[0]-ON_PP; //(int)unit[m].pp_y[0]+ON_PP;
 							wrk_r.left=(int)unit[m].pp_x[0]-ON_PP;
 
-							if( pt_in_rect3(ref wrk_r,(int)unit[m].x,(int)unit[m].y)!=0 )
+							if( pt_in_rect3(ref wrk_r,(int)unit[m].Position.X,(int)unit[m].Position.Y)!=0 )
 								{
 								if( unit[m].pp_x[1]!=MAP_RIGHT+1 )
 									{
@@ -1126,8 +1125,8 @@ else
 							}
 						else
 							{
-							unit[m].pp_x[0]=unit[m].x;
-							unit[m].pp_y[0]=unit[m].y;
+							unit[m].pp_x[0]=unit[m].Position.X;
+							unit[m].pp_y[0]=unit[m].Position.Y;
 							}
 						}
 					else
@@ -1142,8 +1141,8 @@ else
 							}
 						else
 							{
-							unit[m].pp_x[0]=unit[m].x;
-							unit[m].pp_y[0]=unit[m].y;
+							unit[m].pp_x[0]=unit[m].Position.X;
+							unit[m].pp_y[0]=unit[m].Position.Y;
 							}
 					
 						// ptin dbg
@@ -1154,7 +1153,7 @@ else
 
 //dbg[2]++;
 
-						if( pt_in_rect3(ref wrk_r,(int)unit[m].x,(int)unit[m].y)==0 && unit[m].stop==0)
+						if( pt_in_rect3(ref wrk_r,(int)unit[m].Position.X,(int)unit[m].Position.Y)==0 && unit[m].stop==0)
 							{	// 編隊指定位置に無し
 //dbg[3]++;
 							unit[m].for_ltl_ldr=0;
@@ -1215,30 +1214,30 @@ dbg[4]=unit[unit[m].ltl_ldr].for_form_spd*100000;
 						{
 						// 緊急移動先についているか
 						// ptin dbg
-						wrk_r.top=(int)unit[m].em_y+ON_PP;//(int)unit[m].em_y-ON_PP;
-						wrk_r.right=(int)unit[m].em_x+ON_PP;
-						wrk_r.bottom=(int)unit[m].em_y-ON_PP;//(int)unit[m].em_y+ON_PP;
-						wrk_r.left=(int)unit[m].em_x-ON_PP;
+						wrk_r.top=(int)unit[m].EmergencyDestination.Y+ON_PP;//(int)unit[m].em_y-ON_PP;
+						wrk_r.right=(int)unit[m].EmergencyDestination.X+ON_PP;
+						wrk_r.bottom=(int)unit[m].EmergencyDestination.Y-ON_PP;//(int)unit[m].em_y+ON_PP;
+						wrk_r.left=(int)unit[m].EmergencyDestination.X-ON_PP;
 
-						if( pt_in_rect3(ref wrk_r,(int)unit[m].x,(int)unit[m].y)!=0 )
+						if( pt_in_rect3(ref wrk_r,(int)unit[m].Position.X,(int)unit[m].Position.Y)!=0 )
 							{
 							unit[m].em_flg[0]=0;
 							// 通常移動		直前定点へ！
-							wrk_x=unit[m].pp_x[0]-unit[m].x;
-							wrk_y=unit[m].pp_y[0]-unit[m].y;
+							wrk_x=unit[m].pp_x[0]-unit[m].Position.X;
+							wrk_y=unit[m].pp_y[0]-unit[m].Position.Y;
 							}
 						else
 							{
 							// 緊急移動先がある場合
-							wrk_x=unit[m].em_x-unit[m].x;
-							wrk_y=unit[m].em_y-unit[m].y;
+							wrk_x=unit[m].EmergencyDestination.X-unit[m].Position.X;
+							wrk_y=unit[m].EmergencyDestination.Y-unit[m].Position.Y;
 							}
 						}
 					else
 						{
 						// 通常移動		直前定点へ！
-						wrk_x=unit[m].pp_x[0]-unit[m].x;
-						wrk_y=unit[m].pp_y[0]-unit[m].y;
+						wrk_x=unit[m].pp_x[0]-unit[m].Position.X;
+						wrk_y=unit[m].pp_y[0]-unit[m].Position.Y;
 						}
 
 					pp_drctn=atan2(wrk_y,wrk_x)*RAD_to;
@@ -1253,8 +1252,8 @@ dbg[4]=unit[unit[m].ltl_ldr].for_form_spd*100000;
 					if( unit[m].ctgry==UnitCategory.Ship )
 						{
 						// 艦首方向に他の艦船があるか
-						wrk_x2=unit[m].x;
-						wrk_y2=unit[m].y;
+						wrk_x2=unit[m].Position.X;
+						wrk_y2=unit[m].Position.Y;
 						wrk_x2+=cos(unit[m].drctn*a_PI)*(40+unit[m].max_spd*10/*50*/);
 						wrk_y2+=sin(unit[m].drctn*a_PI)*(40+unit[m].max_spd*10/*50*/);
 						if( /*(cc_count%5 && unit[m].used==cpu_side ) &&*/ !( unit[m].kind==UnitKind.Submarine && unit[m].info[6]!=0 ) )
@@ -1264,10 +1263,10 @@ dbg[4]=unit[unit[m].ltl_ldr].for_form_spd*100000;
 								if(unit[n].used!=0 && m!=n && unit[n].ctgry==UnitCategory.Ship && !(unit[n].kind==UnitKind.Submarine && unit[n].info[6]!=0) /*&& unit[n].kind!=SP && unit[n].kind!=AP*/ && !(unit[n].kind>=UnitKind.AirBase&&unit[n].kind<=UnitKind.Fortress) )
 									{
 									// ptin dbg
-									wrk_r.top=(int)unit[n].y+(sprt[UNIT_JPN].ht/2);//(int)unit[n].y-(sprt[UNIT_JPN].ht/2);
-									wrk_r.right=(int)unit[n].x+(sprt[UNIT_JPN].wd/2);
-									wrk_r.bottom=(int)unit[n].y-(sprt[UNIT_JPN].ht/2);//(int)unit[n].y+(sprt[UNIT_JPN].ht/2);
-									wrk_r.left=(int)unit[n].x-(sprt[UNIT_JPN].wd/2);
+									wrk_r.top=(int)unit[n].Position.Y+(sprt[UNIT_JPN].ht/2);//(int)unit[n].y-(sprt[UNIT_JPN].ht/2);
+									wrk_r.right=(int)unit[n].Position.X+(sprt[UNIT_JPN].wd/2);
+									wrk_r.bottom=(int)unit[n].Position.Y-(sprt[UNIT_JPN].ht/2);//(int)unit[n].y+(sprt[UNIT_JPN].ht/2);
+									wrk_r.left=(int)unit[n].Position.X-(sprt[UNIT_JPN].wd/2);
 
 									if( pt_in_rect3(ref wrk_r,(int)wrk_x2,(int)wrk_y2)!=0)
 										{
@@ -1286,8 +1285,8 @@ dbg[4]=unit[unit[m].ltl_ldr].for_form_spd*100000;
 						// ＰＰ方向に陸地があるか
 						if( land==0 /*&& unit[m].used!=cpu_side*/ )
 							{
-							wrk_x2=unit[m].x;
-							wrk_y2=unit[m].y;
+							wrk_x2=unit[m].Position.X;
+							wrk_y2=unit[m].Position.Y;
 							wrk_x2+=cos(pp_drctn*a_PI)*80;
 							wrk_y2+=sin(pp_drctn*a_PI)*80;
 
@@ -1364,7 +1363,7 @@ dbg[4]=unit[unit[m].ltl_ldr].for_form_spd*100000;
 							{
 
 
-							if((unit[m].max_spd+(unit[m].kind==UnitKind.Fighter && unit[m].arm[2]!=0 ? 1 : 0)*CMBT_SPD)/2 < unit[m].spd  )
+							if((unit[m].max_spd+(unit[m].kind==UnitKind.Fighter && unit[m].Target!=0 ? 1 : 0)*CMBT_SPD)/2 < unit[m].spd  )
 								{
 								unit[m].spd_add=-unit[m].a_spd_add;
 								}
@@ -1383,7 +1382,7 @@ dbg[4]=unit[unit[m].ltl_ldr].for_form_spd*100000;
 
 
 
-								if( ((unit[m].max_spd+(unit[m].kind==UnitKind.Fighter && unit[m].arm[2]!=0 ? 1 : 0)*CMBT_SPD)/3)*2 < unit[m].spd )
+								if( ((unit[m].max_spd+(unit[m].kind==UnitKind.Fighter && unit[m].Target!=0 ? 1 : 0)*CMBT_SPD)/3)*2 < unit[m].spd )
 									{
 									unit[m].spd_add=-unit[m].a_spd_add;
 									}
@@ -1414,11 +1413,11 @@ dbg[4]=unit[unit[m].ltl_ldr].for_form_spd*100000;
 
 										n=0;
 
-										if( unit[m].arm[2]!=0 && unit[unit[m].arm[2]].found!=0 ) //&& unit[m].kind==AT1 )
+										if( unit[m].Target!=0 && unit[unit[m].Target].found!=0 ) //&& unit[m].kind==AT1 )
 											{
 											n=1;
-											wrk_x=unit[unit[m].arm[2]].x-unit[m].x;
-											wrk_y=unit[unit[m].arm[2]].y-unit[m].y;
+											wrk_x=unit[unit[m].Target].Position.X-unit[m].Position.X;
+											wrk_y=unit[unit[m].Target].Position.Y-unit[m].Position.Y;
 
 											drctn=atan2(wrk_y,wrk_x)*RAD_to;
 											if(drctn<0)		drctn=360+drctn;
@@ -1488,7 +1487,7 @@ dbg[4]=unit[m].spd*100000;
 }
 */
 
-				if( unit[m].gas[0]<=0 && (unit[m].ctgry==UnitCategory.Plane || (unit[m].ctgry==UnitCategory.Ship && unit[m].spd>= unit[m].max_spd/10 ) ) )
+				if( unit[m].Fuel<=0 && (unit[m].ctgry==UnitCategory.Plane || (unit[m].ctgry==UnitCategory.Ship && unit[m].spd>= unit[m].max_spd/10 ) ) )
 					unit[m].spd_add=-(unit[m].a_spd_add*2);		// ガス０なら減速へ
 				
 
@@ -1497,18 +1496,18 @@ dbg[4]=unit[m].spd*100000;
 
 
 				// 最高速度の制限
-				if( (unit[m].max_spd+(unit[m].kind==UnitKind.Fighter && unit[m].arm[2]!=0 ? 1 : 0)*CMBT_SPD) < unit[m].spd/*-unit[m].a_spd_add*/ )
+				if( (unit[m].max_spd+(unit[m].kind==UnitKind.Fighter && unit[m].Target!=0 ? 1 : 0)*CMBT_SPD) < unit[m].spd/*-unit[m].a_spd_add*/ )
 					{
 					//unit[m].spd-=unit[m].spd_add;
 					unit[m].spd-=unit[m].a_spd_add*8;
-					if( unit[m].spd < (unit[m].max_spd+(unit[m].kind==UnitKind.Fighter && unit[m].arm[2]!=0 ? 1 : 0)*CMBT_SPD) )
-						unit[m].spd = (unit[m].max_spd+(unit[m].kind==UnitKind.Fighter && unit[m].arm[2]!=0 ? 1 : 0)*CMBT_SPD);
+					if( unit[m].spd < (unit[m].max_spd+(unit[m].kind==UnitKind.Fighter && unit[m].Target!=0 ? 1 : 0)*CMBT_SPD) )
+						unit[m].spd = (unit[m].max_spd+(unit[m].kind==UnitKind.Fighter && unit[m].Target!=0 ? 1 : 0)*CMBT_SPD);
 					}
 
-				if( unit[m].kind==UnitKind.Transport && unit[m].arm[1]!=0 )
+				if( unit[m].kind==UnitKind.Transport && unit[m].Ammo!=0 )
 					{
 					// 輸送船でなんかつんでると最高速度がおちる
-					switch( unit[m].arm[0] )
+					switch( unit[m].Weapon )
 						{
 						case TR_GF1:	wrk_3=1.0;		break;
 						case TR_GF2:	wrk_3=0.9;		break;
@@ -1532,7 +1531,7 @@ dbg[4]=unit[m].spd*100000;
 
 
 
-				if( (unit[m].stop==0 || unit[m].em_flg[0]!=0) &&!(unit[m].gas[0]<=0))
+				if( (unit[m].stop==0 || unit[m].em_flg[0]!=0) &&!(unit[m].Fuel<=0))
 					{
 					if( unit[m].min_spd > unit[m].spd )
 						unit[m].spd=unit[m].min_spd;
@@ -1560,7 +1559,7 @@ dbg[5]=unit[m].spd*100000;
 
 				// 着艦チェック
 				if( unit[m].ctgry==UnitCategory.Plane && unit[m].info[5]==RETURN && unit[m].info[3]==1 && unit[unit[m].info[1]].used!=0 
-					&& unit[unit[m].info[1]].info[7]==0 && !(unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==FLYING && unit[unit[m].info[1]].hp[0]<=unit[unit[m].info[1]].hp[1]*0.2)
+					&& unit[unit[m].info[1]].info[7]==0 && !(unit[m].ctgry==UnitCategory.Plane && unit[m].PlaneState==UnitState.Flying && unit[unit[m].info[1]].Hp<=unit[unit[m].info[1]].MaxHp*0.2)
 					&& !( unit[m].kind==UnitKind.Bomber && (unit[unit[m].info[1]].kind!=UnitKind.AirBase) )
 					&& !( unit[m].kind==UnitKind.Fighter && unit[m].type==1 && (unit[unit[m].info[1]].kind!=UnitKind.AirBase) )
 					&& unit[m].used==unit[unit[m].info[1]].used && unit[unit[m].info[1]].info[0]==0
@@ -1576,12 +1575,12 @@ dbg[5]=unit[m].spd*100000;
 					&& unit[unit[m].info[1]].info[4]<=0 )
 						{
 						// ptin dbg
-						wrk_r.top=(int)unit[unit[m].info[1]].y+ON_PP/2;//(int)unit[unit[m].info[1]].y-ON_PP/2;
-						wrk_r.right=(int)unit[unit[m].info[1]].x+ON_PP/2;
-						wrk_r.bottom=(int)unit[unit[m].info[1]].y-ON_PP/2;//(int)unit[unit[m].info[1]].y+ON_PP/2;
-						wrk_r.left=(int)unit[unit[m].info[1]].x-ON_PP/2;
+						wrk_r.top=(int)unit[unit[m].info[1]].Position.Y+ON_PP/2;//(int)unit[unit[m].info[1]].y-ON_PP/2;
+						wrk_r.right=(int)unit[unit[m].info[1]].Position.X+ON_PP/2;
+						wrk_r.bottom=(int)unit[unit[m].info[1]].Position.Y-ON_PP/2;//(int)unit[unit[m].info[1]].y+ON_PP/2;
+						wrk_r.left=(int)unit[unit[m].info[1]].Position.X-ON_PP/2;
 
-						if( pt_in_rect3(ref wrk_r,(int)unit[m].x,(int)unit[m].y)!=0 )
+						if( pt_in_rect3(ref wrk_r,(int)unit[m].Position.X,(int)unit[m].Position.Y)!=0 )
 							{
 							// 着艦
 							unit[unit[m].info[1]].info[1]++;	// 現在格納数
@@ -1615,13 +1614,12 @@ dbg[5]=unit[m].spd*100000;
 							//unit[m].info[5]=MOVE;				// モード（コンバットメニュー）
 							unit[unit[m].info[1]].info[7]=1;	// 着艦、0許可、1不許可
 							unit[unit[m].info[1]].info[8]=1;	// その空母の次機発進許可	0許可、1不許可
-							unit[m].info[0]=PARKING;
+							unit[m].PlaneState=UnitState.Parked;
 							//set_pos_of_parking(m);
-							unit[m].x=sprt[UNIT_INFO_JPN].x+sprt[UNIT_INFO_JPN].wd/2+(my_rnd(16)-7);
-							unit[m].y=sprt[UNIT_INFO_JPN].y+sprt[UNIT_INFO_JPN].ht+40;
+							unit[m].Position = new WorldPosition(sprt[UNIT_INFO_JPN].x+sprt[UNIT_INFO_JPN].wd/2+(my_rnd(16)-7), sprt[UNIT_INFO_JPN].y+sprt[UNIT_INFO_JPN].ht+40);
 							unit[m].spd=5.0; unit[m].drctn=90.0;
 							
-							unit[m].arm[2]=0;					// 
+							unit[m].Target=0;					// 
 
 							unit[m].em_flg[0]=0;
 //unit[m].arm2[0]=0;
@@ -1644,8 +1642,7 @@ dbg[4]=unit[m].spd*100000;
 
 }
 */
-				unit[m].x+=cos(unit[m].drctn*a_PI)*unit[m].spd;
-				unit[m].y+=sin(unit[m].drctn*a_PI)*unit[m].spd;
+				unit[m].Position += new WorldVector(cos(unit[m].drctn*a_PI)*unit[m].spd, sin(unit[m].drctn*a_PI)*unit[m].spd);
 
 
 /*
@@ -1661,23 +1658,23 @@ dbg[7]=unit[m].spd*100000;
 
 
 				// 燃料消費
-				n=(int)unit[m].gas[1];
-				if( unit[m].kind==UnitKind.Attacker && unit[m].arm[1]!=0 && (unit[m].arm[0]==TPD || unit[m].arm[0]==BOM))
+				n=(int)unit[m].FuelInterval;
+				if( unit[m].kind==UnitKind.Attacker && unit[m].Ammo!=0 && (unit[m].Weapon==TPD || unit[m].Weapon==BOM))
 					n=n-(n/10);
-				if( unit[m].kind==UnitKind.Fighter && unit[m].arm[2]!=0 && unit[m].max_spd < unit[m].spd )
+				if( unit[m].kind==UnitKind.Fighter && unit[m].Target!=0 && unit[m].max_spd < unit[m].spd )
 					n=n-(n/10);
 
 
-				if( unit[m].gas[1]>=1 && (cc_count%n)==0 && unit[m].gas[0]>0 && unit[m].spd>0)
+				if( unit[m].FuelInterval>=1 && (cc_count%n)==0 && unit[m].Fuel>0 && unit[m].spd>0)
 					{
 //					unit[m].gas[0]--;
-					unit[m].gas[0]-=(unit[m].spd/unit[m].max_spd);
-					if(unit[m].gas[0]<0)
-						unit[m].gas[0]=0;
+					unit[m].Fuel-=(unit[m].spd/unit[m].max_spd);
+					if(unit[m].Fuel<0)
+						unit[m].Fuel=0;
 					}
 
-				if( unit[m].gas[0]==0 && unit[m].ctgry==UnitCategory.Plane && unit[m].spd<=0 )
-					unit[m].hp[0]=0;							// 飛行機でガス０なら落ちます
+				if( unit[m].Fuel==0 && unit[m].ctgry==UnitCategory.Plane && unit[m].spd<=0 )
+					unit[m].Hp=0;							// 飛行機でガス０なら落ちます
 				}
 
 					//=========		 潜水艦の浮上		=========//
@@ -1692,51 +1689,51 @@ dbg[7]=unit[m].spd*100000;
 			
 				//=========		 ユニットの攻撃制御		=========//
 				// ターゲットがアウトならターゲットをクリア
-			if( unit[m].arm[2]!=0 && ( ( unit[unit[m].arm[2]].ctgry==UnitCategory.Plane && ( unit[unit[m].arm[2]].hp[0]<=0|| unit[unit[m].arm[2]].info[0]==PARKING )   ) || ( unit[unit[m].arm[2]].ctgry==UnitCategory.Ship && unit[unit[m].arm[2]].hp[0]<=0 ) || (unit[m].kind==UnitKind.Fighter && unit[m].arm[1]<=0) || (unit[unit[m].arm[2]].kind==UnitKind.Submarine && unit[unit[m].arm[2]].info[6]!=0 ) || ( unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING ) ))
+			if( unit[m].Target!=0 && ( ( unit[unit[m].Target].ctgry==UnitCategory.Plane && ( unit[unit[m].Target].Hp<=0|| unit[unit[m].Target].PlaneState==UnitState.Parked )   ) || ( unit[unit[m].Target].ctgry==UnitCategory.Ship && unit[unit[m].Target].Hp<=0 ) || (unit[m].kind==UnitKind.Fighter && unit[m].Ammo<=0) || (unit[unit[m].Target].kind==UnitKind.Submarine && unit[unit[m].Target].info[6]!=0 ) || ( unit[m].ctgry==UnitCategory.Plane && unit[m].PlaneState==UnitState.Parked ) ))
 				{
-				unit[m].arm[2]=0;
+				unit[m].Target=0;
 				}
 			
-			if( unit[m].arm[3]>=1 )
+			if( unit[m].ReloadTime>=1 )
 				{
 				if( !(unit[m].kind==UnitKind.Submarine&&unit[m].stop==0))
-					unit[m].arm[3]--;
-				if( unit[m].arm[3]==0 && (unit[m].arm[0]==TUN||unit[m].arm[0]==NTG) )
+					unit[m].ReloadTime--;
+				if( unit[m].ReloadTime==0 && (unit[m].Weapon==TUN||unit[m].Weapon==NTG) )
 					{
 					if( unit[m].kind==UnitKind.Fighter )
 						{
-						unit[m].arm[0]=BLT;		// 武装品種
-						unit[m].arm[1]=50;		// 数
+						unit[m].Weapon=BLT;		// 武装品種
+						unit[m].Ammo=50;		// 数
 						}
 					else
 						{
-						unit[m].arm[0]=NTG;
-						unit[m].arm[1]=0;
+						unit[m].Weapon=NTG;
+						unit[m].Ammo=0;
 						}
 					
-					unit[m].gas[0]=100;
+					unit[m].Fuel=100;
 					}
 				}
 
 
 			dmg_act=1;
-			if( unit[m].hp[0]<=unit[m].hp[1]*0.3 )
+			if( unit[m].Hp<=unit[m].MaxHp*0.3 )
 				{
 				dmg_act=2;
 				}
 
 
 			// そのユニットの打つ、発射を制御します。  
-			if( map_edit==0 && unit[m].spry==0 && (( unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==FLYING )||( unit[m].ctgry==UnitCategory.Ship)))
+			if( map_edit==0 && unit[m].spry==0 && (( unit[m].ctgry==UnitCategory.Plane && unit[m].PlaneState==UnitState.Flying )||( unit[m].ctgry==UnitCategory.Ship)))
 				{
 				switch( unit[m].kind )
 					{
 					case UnitKind.InfantryBase:
 						// 地上基地は弾が減りません
-						unit[m].arm[1]=unit[m].arm[4];
+						unit[m].Ammo=unit[m].MaxAmmo;
 
 						// 艦砲 自動
-						if( unit[m].arm[1]>=1 && rnd(/*200*/250*dmg_act)==0/*unit[m].rnd_200[0]==cc_count%(200*dmg_act)*/ )
+						if( unit[m].Ammo>=1 && rnd(/*200*/250*dmg_act)==0/*unit[m].rnd_200[0]==cc_count%(200*dmg_act)*/ )
 							{
 							fire_now(m,0,GUN);
 							}
@@ -1746,7 +1743,7 @@ dbg[7]=unit[m].spd*100000;
 						//	fire_now(m,unit[m].arm[2],GUN);
 						//	}
 						// 対空砲弾 自動砲撃
-						if( unit[m].arm[1]>=1 && rnd(200*dmg_act)==0/*unit[m].rnd_150[1]==cc_count%(150*dmg_act)*/ /*&& !(unit[m].used==JPN && rnd(3)!=1)*/)
+						if( unit[m].Ammo>=1 && rnd(200*dmg_act)==0/*unit[m].rnd_150[1]==cc_count%(150*dmg_act)*/ /*&& !(unit[m].used==JPN && rnd(3)!=1)*/)
 							{
 							fire_now(m,0,SHL);
 							}
@@ -1761,9 +1758,9 @@ dbg[7]=unit[m].spd*100000;
 
 					case UnitKind.Pillboxes:
 						// 地上基地は弾が減りません
-						unit[m].arm[1]=unit[m].arm[4];
+						unit[m].Ammo=unit[m].MaxAmmo;
 						// 艦砲 自動
-						if( unit[m].arm[1]>=1 && rnd( 200*dmg_act )==0/*unit[m].rnd_150[0]==cc_count%(150*dmg_act)*/ )
+						if( unit[m].Ammo>=1 && rnd( 200*dmg_act )==0/*unit[m].rnd_150[0]==cc_count%(150*dmg_act)*/ )
 							{
 							fire_now(m,0,GUN);
 							}
@@ -1773,7 +1770,7 @@ dbg[7]=unit[m].spd*100000;
 						//	fire_now(m,unit[m].arm[2],GUN);
 						//	}
 						// 対空砲弾 自動砲撃
-						if( unit[m].arm[1]>=1 && rnd(160*dmg_act)==0/*unit[m].rnd_80[1]==cc_count%(80*dmg_act)*/ /*&& !(unit[m].used==JPN && rnd(3)!=1)*/)
+						if( unit[m].Ammo>=1 && rnd(160*dmg_act)==0/*unit[m].rnd_80[1]==cc_count%(80*dmg_act)*/ /*&& !(unit[m].used==JPN && rnd(3)!=1)*/)
 							{
 							fire_now(m,0,SHL);
 							}
@@ -1792,10 +1789,10 @@ dbg[7]=unit[m].spd*100000;
 
 					case UnitKind.Fortress:
 						// 地上基地は弾が減りません
-						unit[m].arm[1]=unit[m].arm[4];
+						unit[m].Ammo=unit[m].MaxAmmo;
 
 						// 艦砲 自動
-						if( unit[m].arm[1]>=1 && rnd(/*100*/150*dmg_act)==0/*unit[m].rnd_100[0]==cc_count%(100*dmg_act)*/ )
+						if( unit[m].Ammo>=1 && rnd(/*100*/150*dmg_act)==0/*unit[m].rnd_100[0]==cc_count%(100*dmg_act)*/ )
 							{
 							fire_now(m,0,GUN);
 							}
@@ -1805,7 +1802,7 @@ dbg[7]=unit[m].spd*100000;
 						//	fire_now(m,unit[m].arm[2],GUN);
 						//	}
 						// 対空砲弾 自動砲撃
-						if( unit[m].arm[1]>=1 && rnd(120*dmg_act)==0/*unit[m].rnd_80[1]==cc_count%(80*dmg_act)*/ /*&& !(unit[m].used==JPN && rnd(3)!=1)*/)
+						if( unit[m].Ammo>=1 && rnd(120*dmg_act)==0/*unit[m].rnd_80[1]==cc_count%(80*dmg_act)*/ /*&& !(unit[m].used==JPN && rnd(3)!=1)*/)
 							{
 							fire_now(m,0,SHL);
 							}
@@ -1828,22 +1825,22 @@ dbg[7]=unit[m].spd*100000;
 							{
 							// 大和級
 							// 艦砲 自動
-							if( unit[m].arm[1]>=1 && rnd(350*dmg_act)==0 && (unit[m].arm[2]==0 || unit[unit[m].arm[2]].ctgry==UnitCategory.Ship) )
+							if( unit[m].Ammo>=1 && rnd(350*dmg_act)==0 && (unit[m].Target==0 || unit[unit[m].Target].ctgry==UnitCategory.Ship) )
 								{
 								fire_now(m,0,GUN);
 								}
 							// 艦砲　選択
-							if(unit[m].arm[1]>=1 && rnd(300*dmg_act)==0 && unit[m].arm[2]!=0 )
+							if(unit[m].Ammo>=1 && rnd(300*dmg_act)==0 && unit[m].Target!=0 )
 								{
-								fire_now(m,unit[m].arm[2],SP_GUN);
+								fire_now(m,unit[m].Target,SP_GUN);
 								}
 
-							if( unit[m].arm[1]>=1 && rnd(180*dmg_act)==0 && unit[m].arm[2]!=0 )
+							if( unit[m].Ammo>=1 && rnd(180*dmg_act)==0 && unit[m].Target!=0 )
 								{
-								fire_now(m,unit[m].arm[2],SHL);		// 対空砲弾 選択
+								fire_now(m,unit[m].Target,SHL);		// 対空砲弾 選択
 								}
 
-							if( unit[m].arm[1]>=1 && rnd(95*dmg_act)==0 )
+							if( unit[m].Ammo>=1 && rnd(95*dmg_act)==0 )
 								{
 								fire_now(m,0,SHL);							// 対空砲弾 自動砲撃
 								}
@@ -1855,23 +1852,23 @@ dbg[7]=unit[m].spd*100000;
 						else
 							{
 							// 艦砲 自動
-							if( unit[m].arm[1]>=1 && rnd(350*dmg_act)==0 && (unit[m].arm[2]==0 || unit[unit[m].arm[2]].ctgry==UnitCategory.Ship) )
+							if( unit[m].Ammo>=1 && rnd(350*dmg_act)==0 && (unit[m].Target==0 || unit[unit[m].Target].ctgry==UnitCategory.Ship) )
 								{
 								fire_now(m,0,GUN);
 								}
 							// 艦砲　選択
-							if(unit[m].arm[1]>=1 && rnd(300*dmg_act)==0 && unit[m].arm[2]!=0 )
+							if(unit[m].Ammo>=1 && rnd(300*dmg_act)==0 && unit[m].Target!=0 )
 								{
-								fire_now(m,unit[m].arm[2],GUN);
+								fire_now(m,unit[m].Target,GUN);
 								}
 
 
-							if( unit[m].arm[1]>=1 && rnd(190*dmg_act)==0 && unit[m].arm[2]!=0 )
+							if( unit[m].Ammo>=1 && rnd(190*dmg_act)==0 && unit[m].Target!=0 )
 								{
-								fire_now(m,unit[m].arm[2],SHL);		// 対空砲弾 選択
+								fire_now(m,unit[m].Target,SHL);		// 対空砲弾 選択
 								}
 
-							if( unit[m].arm[1]>=1 && rnd(110*dmg_act)==0 )
+							if( unit[m].Ammo>=1 && rnd(110*dmg_act)==0 )
 								{
 								fire_now(m,0,SHL);							// 対空砲弾 自動砲撃
 								}
@@ -1898,37 +1895,37 @@ dbg[7]=unit[m].spd*100000;
 							{
 							// 巡洋艦
 							// 艦砲 自動
-							if( unit[m].arm[1]>=1  && rnd(350*dmg_act)==0  && (unit[m].arm[2]==0 || unit[unit[m].arm[2]].ctgry==UnitCategory.Ship) )
+							if( unit[m].Ammo>=1  && rnd(350*dmg_act)==0  && (unit[m].Target==0 || unit[unit[m].Target].ctgry==UnitCategory.Ship) )
 								{
 								fire_now(m,0,GUN);
 								}
 							// 艦砲 選択
-							if( unit[m].arm[1]>=1  && rnd(300*dmg_act)==0 && unit[m].arm[2]!=0 )
+							if( unit[m].Ammo>=1  && rnd(300*dmg_act)==0 && unit[m].Target!=0 )
 								{
-								fire_now(m,unit[m].arm[2],GUN);
+								fire_now(m,unit[m].Target,GUN);
 								}
 
 
 
 							// 対空砲弾
-							if( unit[m].arm[1]>=1 && rnd(120*dmg_act)==0  )
+							if( unit[m].Ammo>=1 && rnd(120*dmg_act)==0  )
 								{
-								if(unit[m].arm[2]!=0)								// 対空砲弾 選択
-									fire_now(m,unit[m].arm[2],SHL);
+								if(unit[m].Target!=0)								// 対空砲弾 選択
+									fire_now(m,unit[m].Target,SHL);
 								else
 									fire_now(m,0,SHL);							// 対空砲弾 自動砲撃
 								}
 
 
 							// 対空機関砲
-							if( unit[m].arm[1]>=1 && rnd(60*dmg_act)==0 && unit[m].used==Side.UnitedStates )
+							if( unit[m].Ammo>=1 && rnd(60*dmg_act)==0 && unit[m].used==Side.UnitedStates )
 								fire_now(m,0,RAS);
 
 							// 対空機銃 自動
 							if( rnd(10*dmg_act)==0  )
 								fire_now(m,0,BLT);
 							// 魚雷
-							if( unit[m].rnd_40[0]==cc_count%(40*dmg_act) && unit[m].arm[1]>=1 && unit[m].arm[3]<=0 && unit[m].used==Side.Japan )
+							if( unit[m].rnd_40[0]==cc_count%(40*dmg_act) && unit[m].Ammo>=1 && unit[m].ReloadTime<=0 && unit[m].used==Side.Japan )
 								{
 								fire_now(m,0,TPD);
 								}
@@ -1937,28 +1934,28 @@ dbg[7]=unit[m].spd*100000;
 							{
 							// 防空巡洋艦
 							// 艦砲 自動
-							if( unit[m].arm[1]>=1  && rnd(800*dmg_act)==0  && (unit[m].arm[2]==0 || unit[unit[m].arm[2]].ctgry==UnitCategory.Ship) )
+							if( unit[m].Ammo>=1  && rnd(800*dmg_act)==0  && (unit[m].Target==0 || unit[unit[m].Target].ctgry==UnitCategory.Ship) )
 								{
 								fire_now(m,0,GUN);
 								}
 
 
 							// 対空砲弾
-							if( unit[m].arm[1]>=1 && rnd(100*dmg_act)==0 )
+							if( unit[m].Ammo>=1 && rnd(100*dmg_act)==0 )
 								{
 								// 自動
 								fire_now(m,0,SHL);							// 対空砲弾 自動砲撃
 								}
 
-							if( unit[m].arm[1]>=1 && rnd(180*dmg_act)==0 && unit[m].arm[2]!=0 )
+							if( unit[m].Ammo>=1 && rnd(180*dmg_act)==0 && unit[m].Target!=0 )
 								{
 								// 選択
-								fire_now(m,unit[m].arm[2],SHL);
+								fire_now(m,unit[m].Target,SHL);
 								}
 
 
 							// 対空機関砲
-							if( unit[m].arm[1]>=1 && rnd(55*dmg_act)==0 && unit[m].used==Side.UnitedStates )
+							if( unit[m].Ammo>=1 && rnd(55*dmg_act)==0 && unit[m].used==Side.UnitedStates )
 								fire_now(m,0,RAS);
 
 							// 対空機銃 自動
@@ -1971,7 +1968,7 @@ dbg[7]=unit[m].spd*100000;
 
 					case UnitKind.Carrier:
 						// 対空機関砲 
-						if( unit[m].arm[1]>=1 && rnd(80*dmg_act)==0/*unit[m].rnd_80[0]==cc_count%(80*dmg_act)*/ && unit[m].used==Side.UnitedStates )
+						if( unit[m].Ammo>=1 && rnd(80*dmg_act)==0/*unit[m].rnd_80[0]==cc_count%(80*dmg_act)*/ && unit[m].used==Side.UnitedStates )
 							fire_now(m,0,RAS);
 						// 対空機銃
 						if( rnd(15*dmg_act)==0/*unit[m].rnd_10[0]==cc_count%(10*dmg_act)*/)
@@ -1982,19 +1979,19 @@ dbg[7]=unit[m].spd*100000;
 						if( unit[m].type==0 )
 							{
 							// 艦砲 自動
-							if( unit[m].arm[1]>=1 && rnd(200*dmg_act)==0/*unit[m].rnd_200[0]==cc_count%(200*dmg_act)*/ )
+							if( unit[m].Ammo>=1 && rnd(200*dmg_act)==0/*unit[m].rnd_200[0]==cc_count%(200*dmg_act)*/ )
 								{
 								fire_now(m,0,GUN);
 								}
 
 							// 魚雷
-							if( unit[m].rnd_40[0]==cc_count%(40*dmg_act) && unit[m].arm[1]>=1 && unit[m].arm[3]<=0 )
+							if( unit[m].rnd_40[0]==cc_count%(40*dmg_act) && unit[m].Ammo>=1 && unit[m].ReloadTime<=0 )
 								{
 								fire_now(m,0,TPD);
 								}
 
 							// 爆雷
-							if( unit[m].arm[1]>=1 && (cc_count%(35*dmg_act))==0 )
+							if( unit[m].Ammo>=1 && (cc_count%(35*dmg_act))==0 )
 								{
 								fire_now(m,0,ASB);
 								}
@@ -2005,7 +2002,7 @@ dbg[7]=unit[m].spd*100000;
 						else
 							{
 							// 艦砲 自動
-							if( unit[m].arm[1]>=1 && rnd(500*dmg_act)==0 )
+							if( unit[m].Ammo>=1 && rnd(500*dmg_act)==0 )
 								{
 								fire_now(m,0,GUN);
 								}
@@ -2016,7 +2013,7 @@ dbg[7]=unit[m].spd*100000;
 
 
 							// 爆雷
-							if( unit[m].arm[1]>=1 && (cc_count%(25*dmg_act))==0 )
+							if( unit[m].Ammo>=1 && (cc_count%(25*dmg_act))==0 )
 								{
 								fire_now(m,0,ASB);
 								}
@@ -2026,7 +2023,7 @@ dbg[7]=unit[m].spd*100000;
 
 					case UnitKind.LightCarrier:
 						// 対空機関砲
-						if( unit[m].arm[1]>=1 && rnd(100*dmg_act)==0/*unit[m].rnd_100[0]==cc_count%(100*dmg_act)*/ && unit[m].used==Side.UnitedStates )
+						if( unit[m].Ammo>=1 && rnd(100*dmg_act)==0/*unit[m].rnd_100[0]==cc_count%(100*dmg_act)*/ && unit[m].used==Side.UnitedStates )
 							fire_now(m,0,RAS);
 						// 対空機銃
 						if( rnd(20*dmg_act)==0/*unit[m].rnd_30[0]==cc_count%(30*dmg_act)*/ )
@@ -2037,17 +2034,17 @@ dbg[7]=unit[m].spd*100000;
 
 					case UnitKind.Transport:
 						// トランスボーと
-						if( unit[m].arm[0]==TR_SP && unit[m].arm[1]>=1  && unit[m].arm[2]==max_unit+1)
+						if( unit[m].Weapon==TR_SP && unit[m].Ammo>=1  && unit[m].Target==max_unit+1)
 							fire_now(m,0,TR_SP);
-						if( unit[m].arm[0]==TR_AP && unit[m].arm[1]>=1  && unit[m].arm[2]==max_unit+1)
+						if( unit[m].Weapon==TR_AP && unit[m].Ammo>=1  && unit[m].Target==max_unit+1)
 							fire_now(m,0,TR_AP);
 
-						if( unit[m].arm[0]==TR_GF1 && unit[m].arm[1]>=1  && unit[m].arm[2]==max_unit+1)
+						if( unit[m].Weapon==TR_GF1 && unit[m].Ammo>=1  && unit[m].Target==max_unit+1)
 							fire_now(m,0,TR_GF1);
 			
-						if( unit[m].arm[0]==TR_GF2 && unit[m].arm[1]>=1  && unit[m].arm[2]==max_unit+1)
+						if( unit[m].Weapon==TR_GF2 && unit[m].Ammo>=1  && unit[m].Target==max_unit+1)
 							fire_now(m,0,TR_GF2);
-						if( unit[m].arm[0]==TR_GF3 && unit[m].arm[1]>=1  && unit[m].arm[2]==max_unit+1)
+						if( unit[m].Weapon==TR_GF3 && unit[m].Ammo>=1  && unit[m].Target==max_unit+1)
 							fire_now(m,0,TR_GF3);
 
 						break;
@@ -2057,16 +2054,16 @@ dbg[7]=unit[m].spd*100000;
 					case UnitKind.Submarine:
 						// 艦砲 自動
 						// 魚雷
-						if( unit[m].arm[1]>=1 && unit[m].arm[3]<=0 && unit[m].arm[2]!=0 /*&& unit[m].rnd_20[0]==cc_count%(20)*/ )
+						if( unit[m].Ammo>=1 && unit[m].ReloadTime<=0 && unit[m].Target!=0 /*&& unit[m].rnd_20[0]==cc_count%(20)*/ )
 							{
-							fire_now(m,unit[m].arm[2],TPD);
+							fire_now(m,unit[m].Target,TPD);
 							}
 						break;
 
 
 					case UnitKind.Fighter:
 						// 戦闘機の場合は、前方に敵航空機が飛んでればとりあえず撃つ
-						if( unit[m].arm[1]>=1  && ((cc_count+unit[m].rnd_20[0])% (10-(unit[m].type==1 ? 1 : 0)*3 ) )==0 )
+						if( unit[m].Ammo>=1  && ((cc_count+unit[m].rnd_20[0])% (10-(unit[m].type==1 ? 1 : 0)*3 ) )==0 )
 							fire_now(m,0,BLT);
 						break;
 
@@ -2075,20 +2072,20 @@ dbg[7]=unit[m].spd*100000;
 						// 攻撃機の場合は、後方に敵航空機が飛んでればとりあえず撃つ
 						if(rnd(35*dmg_act)==0)
 							fire_now(m,0,BLT);
-						if( unit[m].arm[1]>=1  && unit[m].arm[0]==TPD && unit[m].arm[2]!=0 && unit[m].drctn_add==0 && unit[m].spd>=unit[m].max_spd )
-							fire_now(m,unit[m].arm[2],TPD);
-						if( unit[m].arm[1]>=1  && unit[m].arm[0]==BOM && unit[m].arm[2]!=0  )
-							fire_now(m,unit[m].arm[2],BOM);
+						if( unit[m].Ammo>=1  && unit[m].Weapon==TPD && unit[m].Target!=0 && unit[m].drctn_add==0 && unit[m].spd>=unit[m].max_spd )
+							fire_now(m,unit[m].Target,TPD);
+						if( unit[m].Ammo>=1  && unit[m].Weapon==BOM && unit[m].Target!=0  )
+							fire_now(m,unit[m].Target,BOM);
 						break;
 
 
 					case UnitKind.Bomber:
 						if(rnd(20*dmg_act)==0)
 							fire_now(m,0,BLT);
-						if( unit[m].arm[1]>=1  && unit[m].arm[0]==TPD && unit[m].arm[2]!=0 && unit[m].drctn_add==0 && unit[m].spd>=unit[m].max_spd )
-							fire_now(m,unit[m].arm[2],TPD);
-						if( unit[m].arm[1]>=1  && unit[m].arm[0]==BOM && unit[m].arm[3]==0 && unit[m].drctn_add==0 /*&& !(cc_count%10)*/ )	
-							fire_now(m,unit[m].arm[2],BOM);
+						if( unit[m].Ammo>=1  && unit[m].Weapon==TPD && unit[m].Target!=0 && unit[m].drctn_add==0 && unit[m].spd>=unit[m].max_spd )
+							fire_now(m,unit[m].Target,TPD);
+						if( unit[m].Ammo>=1  && unit[m].Weapon==BOM && unit[m].ReloadTime==0 && unit[m].drctn_add==0 /*&& !(cc_count%10)*/ )	
+							fire_now(m,unit[m].Target,BOM);
 						break;
 
 					}
@@ -2113,8 +2110,8 @@ dbg[7]=unit[m].spd*100000;
 				{
 				if( unit[i].used!=0 && unit[i].used!=your_side && unit[i].kind==UnitKind.Destroyer && unit[m].spry==0 )
 					{
-					wrk_x=unit[m].x-unit[i].x;
-					wrk_y=unit[m].y-unit[i].y;
+					wrk_x=unit[m].Position.X-unit[i].Position.X;
+					wrk_y=unit[m].Position.Y-unit[i].Position.Y;
 
 					if(wrk_x==0)	wrk_x=1;
 					if(wrk_y==0)	wrk_y=1;
@@ -2142,7 +2139,7 @@ dbg[7]=unit[m].spd*100000;
 			if( map_edit==0 && dstc<=400 )
 				{
 				if( (my_rnd(3+(int)(dstc/5)))==0  )
-				SoundPlayEffect( 0, SNR ,unit[m].x, unit[m].y);
+				SoundPlayEffect( 0, SNR ,unit[m].Position.X, unit[m].Position.Y);
 				}
 			}
 		}

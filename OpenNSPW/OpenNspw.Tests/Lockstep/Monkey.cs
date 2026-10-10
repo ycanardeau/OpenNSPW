@@ -54,7 +54,7 @@ internal sealed class Monkey(LockstepGame game, uint seed)
 		{
 			var m = ((_lastShip + i - 1) % USA_SHIP_END) + 1;
 			ref var unit = ref nspw.unit[m];
-			if (unit.used == nspw.your_side && unit.ctgry == UnitCategory.Ship && !(unit.kind >= UnitKind.AirBase && unit.kind <= UnitKind.Fortress) && unit.spry == 0 && unit.hp[0] > 0)
+			if (unit.used == nspw.your_side && unit.ctgry == UnitCategory.Ship && !(unit.kind >= UnitKind.AirBase && unit.kind <= UnitKind.Fortress) && unit.spry == 0 && unit.Hp > 0)
 			{
 				_lastShip = m;
 				return m;
@@ -69,18 +69,18 @@ internal sealed class Monkey(LockstepGame game, uint seed)
 	{
 		var nspw = _game.Game;
 		ref var unit = ref nspw.unit[m];
-		var best = (unit.x, unit.y);
+		var best = (unit.Position.X, unit.Position.Y);
 		var bestDistance = double.MaxValue;
 		for (var n = 1; n <= nspw.max_unit; n++)
 		{
 			ref var other = ref nspw.unit[n];
 			if (other.used != 0 && other.used != nspw.your_side)
 			{
-				var distance = Math.Abs(other.x - unit.x) + Math.Abs(other.y - unit.y);
+				var distance = Math.Abs(other.Position.X - unit.Position.X) + Math.Abs(other.Position.Y - unit.Position.Y);
 				if (distance < bestDistance)
 				{
 					bestDistance = distance;
-					best = (other.x, other.y);
+					best = (other.Position.X, other.Position.Y);
 				}
 			}
 		}
@@ -118,16 +118,16 @@ internal sealed class Monkey(LockstepGame game, uint seed)
 		{
 			ref var unit = ref nspw.unit[m];
 			ref var minimap = ref nspw.sprt[MAP_BASE];
-			var left = Math.Clamp(unit.x - (CMBT_WIDTH / 2), MAP_LEFT, MAP_RIGHT - CMBT_WIDTH);
-			var top = Math.Clamp(unit.y + (CMBT_HEIGHT / 2), MAP_BOTTOM + CMBT_HEIGHT, MAP_TOP);
+			var left = Math.Clamp(unit.Position.X - (CMBT_WIDTH / 2), MAP_LEFT, MAP_RIGHT - CMBT_WIDTH);
+			var top = Math.Clamp(unit.Position.Y + (CMBT_HEIGHT / 2), MAP_BOTTOM + CMBT_HEIGHT, MAP_TOP);
 			return (CMBT_WIDTH + 8 + 5 + (int)((left - MAP_LEFT) / 80), CMBT_HEIGHT - minimap.ht + 8 + 5 + (int)((MAP_TOP - top) / 80));
 		});
-		PressAt(() => ((int)(nspw.unit[m].x - nspw.cmbt_x), (int)(nspw.cmbt_y - nspw.unit[m].y)));
+		PressAt(() => ((int)(nspw.unit[m].Position.X - nspw.CameraPosition.X), (int)(nspw.CameraPosition.Y - nspw.unit[m].Position.Y)));
 		PressAt(() =>
 		{
 			var (x, y) = NearestEnemy(m);
-			var dx = Math.Clamp(x - nspw.cmbt_x, 10, CMBT_WIDTH - 10);
-			var dy = Math.Clamp(nspw.cmbt_y - y, 10, CMBT_HEIGHT - 10);
+			var dx = Math.Clamp(x - nspw.CameraPosition.X, 10, CMBT_WIDTH - 10);
+			var dy = Math.Clamp(nspw.CameraPosition.Y - y, 10, CMBT_HEIGHT - 10);
 			return ((int)dx, (int)dy);
 		});
 	}

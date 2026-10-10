@@ -1389,8 +1389,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 
 				// ホスト、ジョインともここで相手のデータを受け取る。
 				bf_new_pp[0].used=pMsg->used;
-				bf_new_pp[0].x=pMsg->x;
-				bf_new_pp[0].y=pMsg->y;
+				bf_new_pp[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
 				bf_new_pp[0].cls=pMsg->cls;
 				for( s=0; s<=(USA_PLANE_END/2)-1; s++)
 					{
@@ -1403,8 +1402,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				_DP_NEW_PP_SHIP* pMsg = (_DP_NEW_PP_SHIP*) pReceiveMsg.pReceiveData;
 
 				bf_new_pp[0].used=pMsg->used;
-				bf_new_pp[0].x=pMsg->x;
-				bf_new_pp[0].y=pMsg->y;
+				bf_new_pp[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
 				bf_new_pp[0].cls=pMsg->cls;
 				for( s=0; s<=JPN_SHIP_END-1; s++)
 					{
@@ -1418,8 +1416,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 
 				// ホスト、ジョインともここで相手のデータを受け取る。
 				bf_new_pp[0].used=pMsg->used;
-				bf_new_pp[0].x=pMsg->x;
-				bf_new_pp[0].y=pMsg->y;
+				bf_new_pp[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
 				bf_new_pp[0].cls=pMsg->cls;
 				for( s=0; s<=JPN_PLANE_END-JPN_PLANE_START; s++)
 					{
@@ -1435,8 +1432,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				bf_new_slct[0].sw=pMsg->sw;
 				bf_new_slct[0].the_slct_unit=pMsg->the_slct_unit;
 				bf_new_slct[0].m=pMsg->m;
-				bf_new_slct[0].gr_x=pMsg->gr_x;
-				bf_new_slct[0].gr_y=pMsg->gr_y;
+				bf_new_slct[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
 				for( s=0; s<=(USA_PLANE_END/2)-1; s++)
 					{
 					bf_slct_unit[0][s]=pMsg->slct_unit[s];
@@ -1451,8 +1447,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				bf_new_slct[0].sw=pMsg->sw;
 				bf_new_slct[0].the_slct_unit=pMsg->the_slct_unit;
 				bf_new_slct[0].m=pMsg->m;
-				bf_new_slct[0].gr_x=pMsg->gr_x;
-				bf_new_slct[0].gr_y=pMsg->gr_y;
+				bf_new_slct[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
 				for( s=0; s<=JPN_SHIP_END-1; s++)
 					{
 					bf_slct_unit[0][s]=pMsg->slct_unit[s];
@@ -1467,8 +1462,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				bf_new_slct[0].sw=pMsg->sw;
 				bf_new_slct[0].the_slct_unit=pMsg->the_slct_unit;
 				bf_new_slct[0].m=pMsg->m;
-				bf_new_slct[0].gr_x=pMsg->gr_x;
-				bf_new_slct[0].gr_y=pMsg->gr_y;
+				bf_new_slct[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
 				for( s=0; s<=JPN_PLANE_END-JPN_PLANE_START; s++)
 					{
 					bf_slct_unit[0][s+JPN_SHIP_END]=pMsg->slct_unit[s];
@@ -1483,8 +1477,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				bf_new_slct[0].sw=pMsg->sw;
 				bf_new_slct[0].the_slct_unit=pMsg->the_slct_unit;
 				bf_new_slct[0].m=pMsg->m;
-				bf_new_slct[0].gr_x=pMsg->gr_x;
-				bf_new_slct[0].gr_y=pMsg->gr_y;
+				bf_new_slct[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
 				go_next_2=1;
 				}
 			else if( pGenericMsg->dwType == MessageType.MenuOrder )

@@ -15,6 +15,8 @@
 // Port of all_typedef.h. Each struct has the same field order, packing and size as in the 32-bit MSVC build, which
 // LayoutTests checks against the reference.
 
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace OpenNspw;
@@ -36,7 +38,7 @@ struct APP_PLAYER_INFO
 public struct	UNIT		// 全ての艦船、航空機、地図上の位置
 	{
 	public Side					used;					// 使用してるかしてないか オンならその国籍
-	public double				x,y;					// 地図上の位置
+	[Original("x", "y")] public WorldPosition Position;	// 地図上の位置
 	public UnitCategory			ctgry;					// カテゴリー（船とか飛行機とかの）
 	public UnitKind				kind;					// 戦艦だとか空母だとか
 	public short				type;					// 形式
@@ -50,7 +52,7 @@ public struct	UNIT		// 全ての艦船、航空機、地図上の位置
 	public int					mark;					// 選択されているか
 	public Array64<double>		pp_x,pp_y;		// 移動目的地の地図上の位置
 	public Array2<int>			em_flg;					// 緊急時の移動の処理フラグ
-	public double				em_x,em_y;				// 緊急時の移動目的地の地図上の位置
+	[Original("em_x", "em_y")] public WorldPosition EmergencyDestination;	// 緊急時の移動目的地の地図上の位置
 	public double				to_ldr_drctn,to_ldr_dstc;		// 主に艦隊時、リーダとの相対位置。
 	public short				is_ltl_ldr,ltl_ldr,no,for_ltl_ldr;				// 一時的指揮機番号、何番機
 	public double				for_form_spd;			// 編隊を組み場合の遅れているユニットの速度
@@ -77,6 +79,38 @@ public struct	UNIT		// 全ての艦船、航空機、地図上の位置
 	public Array2<short>		rnd_20;				//
 	public Array2<short>		rnd_10;				//
 
+	// The slots of hp, arm and gas by meaning (docs/Refactoring.md, Union slots). They are references to the slots, so
+	// that they can be changed and passed by ref like the slots.
+
+	// The slots of info whose meaning depends on the unit's category or kind.
+
+	// Planes: flying or parked.
+	[UnscopedRef] public ref UnitState PlaneState => ref Unsafe.As<int, UnitState>(ref info[0]);
+
+	// いわゆるヒットポイント
+	[UnscopedRef] public ref int Hp => ref hp[0];
+
+	[UnscopedRef] public ref int MaxHp => ref hp[1];
+
+	// 武装: the kind of weapon (a fire kind).
+	[UnscopedRef] public ref int Weapon => ref arm[0];
+
+	[UnscopedRef] public ref int Ammo => ref arm[1];
+
+	// The number of the unit this one attacks, or 0.
+	[UnscopedRef] public ref int Target => ref arm[2];
+
+	// 再装填時間: the time until the weapon is ready again, also a plane's maintenance time.
+	[UnscopedRef] public ref int ReloadTime => ref arm[3];
+
+	// 全容量
+	[UnscopedRef] public ref int MaxAmmo => ref arm[4];
+
+	// 燃料
+	[UnscopedRef] public ref double Fuel => ref gas[0];
+
+	// 燃料を消費するタイミング: how often fuel is used.
+	[UnscopedRef] public ref double FuelInterval => ref gas[1];
 	}
 
 [StructLayout(LayoutKind.Sequential)]
@@ -87,8 +121,8 @@ public struct	EFFECT							// 雷跡とか爆炎とか
 	public int					kind;
 	public int					no;						// Sprite nuber of its Sprite Source
 	public Array8<int>			info;					// 追加の情報、
-	public double				x,y;					// 地図上の位置
-	public double				x2,y2;					// ＢＬＴ や ＲＡＳ
+	[Original("x", "y")] public WorldPosition Position;	// 地図上の位置
+	[Original("x2", "y2")] public WorldPosition EndPosition;	// ＢＬＴ や ＲＡＳ
 	public int					found;					// 自サイド	からの可視、不可視
 	//BOOL				side;					//
 	}
@@ -100,9 +134,9 @@ public struct	FIRE
 	public int		kind;							// 弾丸(BLT)、爆弾(BOM)、魚雷(TPD)、炸裂弾(SHL)、ＶＴ信管(VTH)だとか、、
 	public Array9<int>	info;
 	public int		no;								// Sprite nuber of its Sprite Source
-	public double	x,y;
+	[Original("x", "y")] public WorldPosition Position;
 	public double	drctn,spd,spd_add,last_spd;
-	public double	last_x,last_y;					// 必要なら、最終目的地
+	[Original("last_x", "last_y")] public WorldPosition Destination;	// 必要なら、最終目的地
 	}
 /*
 // structure used to store DirectPlay information
@@ -118,7 +152,7 @@ typedef struct
 public struct	NEW_PP
 	{
 	public short		used;						//
-	public double	x,y;							//
+	[Original("x", "y")] public WorldPosition Destination;	//
 	public int	cls;
 	}
 
@@ -127,7 +161,7 @@ public struct	NEW_SLCT
 	{
 	public int	sw;								//
 	public short		the_slct_unit,m;			//
-	public double	gr_x,gr_y;						// グランドX，Ｙ
+	[Original("gr_x", "gr_y")] public WorldPosition GroundPosition;	// グランドX，Ｙ
 	}
 
 [StructLayout(LayoutKind.Sequential)]
@@ -141,7 +175,7 @@ public struct	NEW_MENU
 public struct KUMO
 	{
 	public short				used;					// 使用してるかしてないか
-	public double				x,y;					// 地図上の位置
+	[Original("x", "y")] public WorldPosition Position;	// 地図上の位置
 	public int					kind;					// 戦艦だとか空母だとか
 	}
 

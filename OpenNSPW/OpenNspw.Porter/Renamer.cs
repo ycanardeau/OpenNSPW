@@ -17,6 +17,9 @@ namespace OpenNspw.Porter;
 //   T:OpenNspw.UNIT Unit
 //   M:OpenNspw.Nspw.chara_cont UpdateBattle
 //
+// A new name with dots moves the member into a field of a new type: `F:OpenNspw.UNIT.x Position.X` renames each use,
+// `unit[m].x` to `unit[m].Position.X`, but leaves the declaration, which is replaced by hand with the new field.
+//
 // Code in inactive #if blocks and in comments is not renamed.
 internal sealed class Renamer(CSharpProject port, IReadOnlyList<CSharpProject> users, IReadOnlyDictionary<string, string> renames)
 {
@@ -48,6 +51,12 @@ internal sealed class Renamer(CSharpProject port, IReadOnlyList<CSharpProject> u
 		return symbol?.OriginalDefinition.GetDocumentationCommentId() is { } id && _renames.TryGetValue(id, out var name) ? name : null;
 	}
 
+	// The new name of a symbol whose declaration is renamed too: not one that moves into a field of a new type.
+	private string? NewDeclaredName(ISymbol? symbol)
+	{
+		return NewName(symbol) is { } name && !name.Contains('.') ? name : null;
+	}
+
 	// Whether a renamed symbol keeps its old name in [Original]: a member that the tests or the trace tools look up by
 	// its C++ name.
 	private static bool KeepsOriginalName(ISymbol symbol)
@@ -73,7 +82,7 @@ internal sealed class Renamer(CSharpProject port, IReadOnlyList<CSharpProject> u
 			foreach (var field in tree.GetRoot().DescendantNodes().OfType<FieldDeclarationSyntax>())
 			{
 				var variables = field.Declaration.Variables;
-				if (variables.Count < 2 || !variables.Any(v => NewName(model.GetDeclaredSymbol(v)) is not null))
+				if (variables.Count < 2 || !variables.Any(v => NewDeclaredName(model.GetDeclaredSymbol(v)) is not null))
 				{
 					continue;
 				}
@@ -141,7 +150,7 @@ internal sealed class Renamer(CSharpProject port, IReadOnlyList<CSharpProject> u
 				}
 
 				var (token, symbol) = Declared(node, model);
-				if (symbol is not null && NewName(symbol) is { } declaredName)
+				if (symbol is not null && NewDeclaredName(symbol) is { } declaredName)
 				{
 					edits.Add((token.Span, declaredName));
 					if (KeepsOriginalName(symbol) && Original(node, symbol) is { } original)

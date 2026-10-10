@@ -146,7 +146,7 @@ internal sealed class SoloGame : IDisposable
 		for (var m = 1; m <= Game.max_unit; m++)
 		{
 			ref var unit = ref Game.unit[m];
-			if (unit.used == side && unit.ctgry == category && unit.spry == 0 && unit.hp[0] > 0 && !(unit.kind >= UnitKind.AirBase && unit.kind <= UnitKind.Fortress))
+			if (unit.used == side && unit.ctgry == category && unit.spry == 0 && unit.Hp > 0 && !(unit.kind >= UnitKind.AirBase && unit.kind <= UnitKind.Fortress))
 			{
 				units.Add(m);
 			}
@@ -155,9 +155,9 @@ internal sealed class SoloGame : IDisposable
 		return units;
 	}
 
-	private (double X, double Y) Center(List<int> units)
+	private WorldPosition Center(List<int> units)
 	{
-		return (units.Average(m => Game.unit[m].x), units.Average(m => Game.unit[m].y));
+		return new WorldPosition(units.Average(m => Game.unit[m].Position.X), units.Average(m => Game.unit[m].Position.Y));
 	}
 
 	// Selects units as the player does: cancels the selection (a right click), clicks the first unit, then adds the
@@ -210,12 +210,11 @@ internal sealed class SoloGame : IDisposable
 
 	// Orders units of both sides to move: the game's as the player does, by selecting them and clicking the point; the
 	// rival's by its order (DP_NEW_PP). Both orders take effect at the next turn.
-	private void OrderMove(List<int> own, (double X, double Y) ownPoint, List<int> rival, (double X, double Y) rivalPoint)
+	private void OrderMove(List<int> own, WorldPosition ownPoint, List<int> rival, WorldPosition rivalPoint)
 	{
 		Select(own);
 		Game.new_pp[1].used = (short)own[0];
-		Game.new_pp[1].x = ownPoint.X;
-		Game.new_pp[1].y = ownPoint.Y;
+		Game.new_pp[1].Destination = ownPoint;
 		Game.cnct_game_input_cont();
 
 		_platform.Rival!.Order(new _DP_NEW_PP

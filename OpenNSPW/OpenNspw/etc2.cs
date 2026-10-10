@@ -242,14 +242,14 @@ ry-=new_unit_kind*80;
 		if(kind==UnitKind.Transport)
 			{
 			// 輸送船の場合、積荷
-			unit[m].arm[0]=kind2;		// 武装品種
-			unit[m].arm[1]=1;			// 数
-			unit[m].arm[4]=1;			// 数 全容量
+			unit[m].Weapon=kind2;		// 武装品種
+			unit[m].Ammo=1;			// 数
+			unit[m].MaxAmmo=1;			// 数 全容量
 			}
 		else
 			{
-			unit[m].arm[1]=unit[m].arm[4]/4;			// 弾薬搭載量
-			unit[m].gas[0]=50;
+			unit[m].Ammo=unit[m].MaxAmmo/4;			// 弾薬搭載量
+			unit[m].Fuel=50;
 			}
 		}
 	else
@@ -267,16 +267,16 @@ ry-=new_unit_kind*80;
 			unit[m].pp_y[0]=ry2;
 			unit[m].pp_x[1]=MAP_RIGHT+1;			
 			
-			unit[m].info[0]=FLYING;
+			unit[m].PlaneState=UnitState.Flying;
 			unit[m].spd=1.5;
 
 			unit[m].info[5]=MOVE;				// モード（コンバットメニュー）
 
-			unit[m].gas[0]=50;
+			unit[m].Fuel=50;
 			if(kind==UnitKind.Fighter)
-				unit[m].arm[1]=unit[m].arm[1]/3;
+				unit[m].Ammo=unit[m].Ammo/3;
 			else
-				unit[m].arm[1]=0;
+				unit[m].Ammo=0;
 			//unit[m].arm[1]=unit[m].arm[4]/4;			// 弾薬搭載量
 
 			
@@ -685,7 +685,7 @@ public int		seek_parking_no( int m )
 
 	for( i=1; i<=max_unit; i++)
 		{
-		if( unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].info[0]==PARKING 
+		if( unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].PlaneState==UnitState.Parked 
 			&& unit[m].info[1]==unit[i].info[1] )
 			wrk[unit[i].info[2]]++;
 		}
@@ -713,7 +713,7 @@ public int		plane_in_cv( int m )
 	rtn=0;
 	for(i=1;i<=max_unit;i++)
 		{
-		if( unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].info[0]==PARKING && m==unit[i].info[1] )
+		if( unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].PlaneState==UnitState.Parked && m==unit[i].info[1] )
 			rtn++;
 		}
 	return (rtn);
@@ -769,8 +769,7 @@ public void	set_pos_of_parking( int	m )
 
 
 
-	unit[m].x=(double)parking_x;
-	unit[m].y=(double)parking_y;
+	unit[m].Position = new WorldPosition((double)parking_x, (double)parking_y);
 	}
 
 
@@ -819,7 +818,7 @@ public void	set_the_slct_unit (int m)
 			}
 		}
 	// そのユニットをユニットインフォにセットします。
-	if( !(unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING) )
+	if( !(unit[m].ctgry==UnitCategory.Plane && unit[m].PlaneState==UnitState.Parked) )
 		{
 		unit_info[0]=(int)unit[m].kind;
 		unit_info[1]=0;				// 空母なら１で格納庫 ０ で飛行甲板
@@ -1097,8 +1096,8 @@ public void	set_frmtn_of_ships( int s )
 
 
 	// リーダー艦からの方位角を求めます。
-	wrk_x=unit[s].x-unit[unit[s].ltl_ldr].x;
-	wrk_y=unit[s].y-unit[unit[s].ltl_ldr].y;
+	wrk_x=unit[s].Position.X-unit[unit[s].ltl_ldr].Position.X;
+	wrk_y=unit[s].Position.Y-unit[unit[s].ltl_ldr].Position.Y;
 	if(wrk_x==0)	wrk_x=1;
 	if(wrk_y==0)	wrk_y=1;
 
@@ -1139,8 +1138,8 @@ public void	set_frmtn_of_ships( int s )
 	unit[s].to_ldr_drctn=drctn;
 
 	// リーダー艦からの距離を求めます
-	wrk_x=unit[s].x-unit[unit[s].ltl_ldr].x;
-	wrk_y=unit[s].y-unit[unit[s].ltl_ldr].y;
+	wrk_x=unit[s].Position.X-unit[unit[s].ltl_ldr].Position.X;
+	wrk_y=unit[s].Position.Y-unit[unit[s].ltl_ldr].Position.Y;
 	if(wrk_x==0)	wrk_x=1;
 	if(wrk_y==0)	wrk_y=1;
 
@@ -1183,8 +1182,8 @@ public void	set_pos_of_take_down(int n)
 		{
 //		unit[n].pp_x[0]=(double)(unit[n].info[7]+(rnd(200)-100));
 //		unit[n].pp_y[0]=(double)(unit[n].info[8]+(rnd(200)-100));
-		unit[n].pp_x[0]=unit[n].x+(double)(rnd(400)-200);
-		unit[n].pp_y[0]=unit[n].y+(double)(rnd(400)-200);
+		unit[n].pp_x[0]=unit[n].Position.X+(double)(rnd(400)-200);
+		unit[n].pp_y[0]=unit[n].Position.Y+(double)(rnd(400)-200);
 
 		unit[n].pp_x[1]=MAP_RIGHT+1;
 //		unit[n].pp_now=0;
@@ -1232,23 +1231,23 @@ public void	set_pos_of_take_down(int n)
 
 	if( unit[n].kind==UnitKind.Bomber )
 		{
-		unit[n].pp_x[0]=unit[pt].x+cos(angl2*a_PI)*560.0;
-		unit[n].pp_y[0]=unit[pt].y+sin(angl2*a_PI)*560.0;
+		unit[n].pp_x[0]=unit[pt].Position.X+cos(angl2*a_PI)*560.0;
+		unit[n].pp_y[0]=unit[pt].Position.Y+sin(angl2*a_PI)*560.0;
 		}
 	else
 		{
-		unit[n].pp_x[0]=unit[pt].x+cos(angl2*a_PI)*280.0;
-		unit[n].pp_y[0]=unit[pt].y+sin(angl2*a_PI)*280.0;
+		unit[n].pp_x[0]=unit[pt].Position.X+cos(angl2*a_PI)*280.0;
+		unit[n].pp_y[0]=unit[pt].Position.Y+sin(angl2*a_PI)*280.0;
 		}
 
-	unit[n].pp_x[1]=unit[pt].x+cos(angl2*a_PI)*130.0;
-	unit[n].pp_y[1]=unit[pt].y+sin(angl2*a_PI)*130.0;
+	unit[n].pp_x[1]=unit[pt].Position.X+cos(angl2*a_PI)*130.0;
+	unit[n].pp_y[1]=unit[pt].Position.Y+sin(angl2*a_PI)*130.0;
 
-	unit[n].pp_x[2]=unit[pt].x+cos(angl2*a_PI)*10.0;
-	unit[n].pp_y[2]=unit[pt].y+sin(angl2*a_PI)*10.0;
+	unit[n].pp_x[2]=unit[pt].Position.X+cos(angl2*a_PI)*10.0;
+	unit[n].pp_y[2]=unit[pt].Position.Y+sin(angl2*a_PI)*10.0;
 
-	unit[n].pp_x[3]=unit[pt].x+cos(angl*a_PI)*100.0;
-	unit[n].pp_y[3]=unit[pt].y+sin(angl*a_PI)*100.0;
+	unit[n].pp_x[3]=unit[pt].Position.X+cos(angl*a_PI)*100.0;
+	unit[n].pp_y[3]=unit[pt].Position.Y+sin(angl*a_PI)*100.0;
 
 
 	unit[n].pp_x[4]=MAP_RIGHT+1;
@@ -1286,8 +1285,8 @@ public void	cont_pos_of_take_down( int n )
 	if( /*paint_effect_on &&*/ unit[pt].used==0 || pt==0 )
 		{
 		// もどる場所がない場合、あった場所で適当に動く
-		unit[n].pp_x[0]=unit[n].x+(double)(rnd(400)-200);
-		unit[n].pp_y[0]=unit[n].y+(double)(rnd(400)-200);
+		unit[n].pp_x[0]=unit[n].Position.X+(double)(rnd(400)-200);
+		unit[n].pp_y[0]=unit[n].Position.Y+(double)(rnd(400)-200);
 
 		unit[n].pp_x[1]=MAP_RIGHT+1;
 		unit[n].stop=0;
@@ -1341,44 +1340,44 @@ public void	cont_pos_of_take_down( int n )
 			// 全4点を調整			
 			if( unit[n].kind==UnitKind.Bomber )
 				{
-				unit[n].pp_x[0]=unit[pt].x+cos(angl2*a_PI)*560.0;
-				unit[n].pp_y[0]=unit[pt].y+sin(angl2*a_PI)*560.0;
+				unit[n].pp_x[0]=unit[pt].Position.X+cos(angl2*a_PI)*560.0;
+				unit[n].pp_y[0]=unit[pt].Position.Y+sin(angl2*a_PI)*560.0;
 				}
 			else
 				{
-				unit[n].pp_x[0]=unit[pt].x+cos(angl2*a_PI)*280.0;
-				unit[n].pp_y[0]=unit[pt].y+sin(angl2*a_PI)*280.0;
+				unit[n].pp_x[0]=unit[pt].Position.X+cos(angl2*a_PI)*280.0;
+				unit[n].pp_y[0]=unit[pt].Position.Y+sin(angl2*a_PI)*280.0;
 				}
 
-			unit[n].pp_x[1]=unit[pt].x+cos(angl2*a_PI)*130.0;
-			unit[n].pp_y[1]=unit[pt].y+sin(angl2*a_PI)*130.0;
+			unit[n].pp_x[1]=unit[pt].Position.X+cos(angl2*a_PI)*130.0;
+			unit[n].pp_y[1]=unit[pt].Position.Y+sin(angl2*a_PI)*130.0;
 
-			unit[n].pp_x[2]=unit[pt].x+cos(angl2*a_PI)*10.0;
-			unit[n].pp_y[2]=unit[pt].y+sin(angl2*a_PI)*10.0;
+			unit[n].pp_x[2]=unit[pt].Position.X+cos(angl2*a_PI)*10.0;
+			unit[n].pp_y[2]=unit[pt].Position.Y+sin(angl2*a_PI)*10.0;
 
-			unit[n].pp_x[3]=unit[pt].x+cos(angl*a_PI)*100.0;
-			unit[n].pp_y[3]=unit[pt].y+sin(angl*a_PI)*100.0;
+			unit[n].pp_x[3]=unit[pt].Position.X+cos(angl*a_PI)*100.0;
+			unit[n].pp_y[3]=unit[pt].Position.Y+sin(angl*a_PI)*100.0;
 			break;
 		
 		case 3:
 			// 全3点を調整			
-			unit[n].pp_x[0]=unit[pt].x+cos(angl2*a_PI)*130.0;
-			unit[n].pp_y[0]=unit[pt].y+sin(angl2*a_PI)*130.0;
+			unit[n].pp_x[0]=unit[pt].Position.X+cos(angl2*a_PI)*130.0;
+			unit[n].pp_y[0]=unit[pt].Position.Y+sin(angl2*a_PI)*130.0;
 
-			unit[n].pp_x[1]=unit[pt].x+cos(angl2*a_PI)*10.0;
-			unit[n].pp_y[1]=unit[pt].y+sin(angl2*a_PI)*10.0;
+			unit[n].pp_x[1]=unit[pt].Position.X+cos(angl2*a_PI)*10.0;
+			unit[n].pp_y[1]=unit[pt].Position.Y+sin(angl2*a_PI)*10.0;
 
-			unit[n].pp_x[2]=unit[pt].x+cos(angl*a_PI)*100.0;
-			unit[n].pp_y[2]=unit[pt].y+sin(angl*a_PI)*100.0;
+			unit[n].pp_x[2]=unit[pt].Position.X+cos(angl*a_PI)*100.0;
+			unit[n].pp_y[2]=unit[pt].Position.Y+sin(angl*a_PI)*100.0;
 			break;
 
 		case 2:
 			// 全2点を調整			
-			unit[n].pp_x[0]=unit[pt].x+cos(angl2*a_PI)*10.0;
-			unit[n].pp_y[0]=unit[pt].y+sin(angl2*a_PI)*10.0;
+			unit[n].pp_x[0]=unit[pt].Position.X+cos(angl2*a_PI)*10.0;
+			unit[n].pp_y[0]=unit[pt].Position.Y+sin(angl2*a_PI)*10.0;
 
-			unit[n].pp_x[1]=unit[pt].x+cos(angl*a_PI)*100.0;
-			unit[n].pp_y[1]=unit[pt].y+sin(angl*a_PI)*100.0;
+			unit[n].pp_x[1]=unit[pt].Position.X+cos(angl*a_PI)*100.0;
+			unit[n].pp_y[1]=unit[pt].Position.Y+sin(angl*a_PI)*100.0;
 			break;
 		}
 	}
@@ -1487,8 +1486,8 @@ public int		find_out_ss( int m , int n)
 
 
 	// 現地点からユニット地点への距離
-	wrk_x=unit[n].x-unit[m].x;
-	wrk_y=unit[n].y-unit[m].y;
+	wrk_x=unit[n].Position.X-unit[m].Position.X;
+	wrk_y=unit[n].Position.Y-unit[m].Position.Y;
 	if(wrk_x==0)	wrk_x=1;
 	if(wrk_y==0)	wrk_y=1;
 
@@ -1524,8 +1523,8 @@ public int		find_out_ss( int m , int n)
 
 
 		//if( q_size<100 )
-		unit[n].info[7]=(int)(unit[n].x+rnd((q_size2)*2)-q_size2);
-		unit[n].info[8]=(int)(unit[n].y+rnd((q_size2)*2)-q_size2);
+		unit[n].info[7]=(int)(unit[n].Position.X+rnd((q_size2)*2)-q_size2);
+		unit[n].info[8]=(int)(unit[n].Position.Y+rnd((q_size2)*2)-q_size2);
 
 		unit[n].info[9]=q_size;
 		unit[n].info[10]=250+rnd(150);
@@ -1572,24 +1571,24 @@ public void		find_out()
 	// ユニットの見え隠れ
 	for(m=1;m<=max_unit;m++)
 		{
-		if( unit[m].used!=0 && unit[m].used==your_side  && unit[m].info[0]!=PARKING  && unit[m].spry==0 )
+		if( unit[m].used!=0 && unit[m].used==your_side  && unit[m].PlaneState!=UnitState.Parked  && unit[m].spry==0 )
 			{
 			flg1=0;
 			for(n=1;n<=max_unit;n++)
 				{
-				if( unit[n].used!=0 && unit[n].used!=your_side && unit[n].info[0]!=PARKING && (unit[n].found==0 || unit[m].kind==UnitKind.Submarine ) )
+				if( unit[n].used!=0 && unit[n].used!=your_side && unit[n].PlaneState!=UnitState.Parked && (unit[n].found==0 || unit[m].kind==UnitKind.Submarine ) )
 					{
 					// 現地点からユニット地点への距離
-					wrk_x=unit[m].x;
-					wrk_y=unit[m].y;
+					wrk_x=unit[m].Position.X;
+					wrk_y=unit[m].Position.Y;
 
 					if( unit[m].kind==UnitKind.Fighter )
 						{	// 航空機の場合はちょっと前へ
 						wrk_x+=cos(unit[m].drctn*a_PI)*FT_EYE;
 						wrk_y+=sin(unit[m].drctn*a_PI)*FT_EYE;
 						}
-					wrk_x=unit[n].x-wrk_x;
-					wrk_y=unit[n].y-wrk_y;
+					wrk_x=unit[n].Position.X-wrk_x;
+					wrk_y=unit[n].Position.Y-wrk_y;
 
 
 					//wrk_x=unit[n].x-unit[m].x;
@@ -1658,26 +1657,26 @@ public void		find_out()
 
 			}
 
-		if( unit[m].used!=0 && unit[m].used!=your_side  && unit[m].info[0]!=PARKING  && unit[m].spry==0 )
+		if( unit[m].used!=0 && unit[m].used!=your_side  && unit[m].PlaneState!=UnitState.Parked  && unit[m].spry==0 )
 			{
 			flg2=0;
 			for(n=1;n<=max_unit;n++)
 				{
-				if( unit[n].used!=0 && unit[n].used==your_side  && unit[n].info[0]!=PARKING && (unit[n].found==0 || unit[m].kind==UnitKind.Submarine) )
+				if( unit[n].used!=0 && unit[n].used==your_side  && unit[n].PlaneState!=UnitState.Parked && (unit[n].found==0 || unit[m].kind==UnitKind.Submarine) )
 					{
 					// 現地点からユニット地点への距離
 
 
-					wrk_x=unit[m].x;
-					wrk_y=unit[m].y;
+					wrk_x=unit[m].Position.X;
+					wrk_y=unit[m].Position.Y;
 
 					if( unit[m].kind==UnitKind.Fighter )
 						{	// 航空機の場合はちょっと前へ
 						wrk_x+=cos(unit[m].drctn*a_PI)*FT_EYE;
 						wrk_y+=sin(unit[m].drctn*a_PI)*FT_EYE;
 						}
-					wrk_x=unit[n].x-wrk_x;
-					wrk_y=unit[n].y-wrk_y;
+					wrk_x=unit[n].Position.X-wrk_x;
+					wrk_y=unit[n].Position.Y-wrk_y;
 
 					//wrk_x=unit[n].x-unit[m].x;
 					//wrk_y=unit[n].y-unit[m].y;
