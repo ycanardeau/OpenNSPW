@@ -397,7 +397,7 @@ else
 			TextOut(hdc, dstn_rect.left+20+110, 10+(n*20), ach[n], len[n]);
 			}
 
-		if( IsEditingMap!=0 )
+		if( IsEditingMap )
 			{
 			len[0] = wsprintf(ach[0], "(%d/%d)", Units[UnitInfoPanel[3]].Hp, Units[UnitInfoPanel[3]].MaxHp);
 			SetTextColor(hdc, RGB(255, 255, 0));
@@ -562,7 +562,7 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 
 		if( LeftButton==3 && menu2[i]!=CombatMenuSelection && PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
 			{
-			if( CanOrder!=0 )
+			if( CanOrder )
 				{
 				BufferedMenuOrders[1].Menu=menu2[i];
 				BufferedMenuOrders[1].SelectedUnit=SelectedUnit;
@@ -595,8 +595,8 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 						BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
 						}
 					}
-				CanOrder=0;
-				HasOrdered=1;
+				CanOrder=false;
+				HasOrdered=true;
 				PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
 				}
 			}
@@ -1004,11 +1004,11 @@ SupplyCount=10;
 
 			if( SupplyCount==0 )
 				{
-				if(CanOrder==1)
+				if(CanOrder.Value==1)
 					{
 					BufferedArrivedUnits[1]=(short)(SupplyTarget+1);
-					CanOrder=0;
-					HasOrdered=1;
+					CanOrder=false;
+					HasOrdered=true;
 					}
 				else
 					{
@@ -1036,7 +1036,7 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 		SetTextColor(hdc, RGB(255, 0, 0));
 		if( LeftButton==3 )
 			{
-			if( IsEditingMap!=0)
+			if( IsEditingMap)
 				{
 
 				Mode=GameMode.ConfigSetting;
@@ -1050,7 +1050,7 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 					}
 */
 				}
-			else if( CanOrder==1 )
+			else if( CanOrder.Value==1 )
 				{
 	DialogAnswer=MessageType.GoToGameSetting;
 				g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_OK_CANCEL), hwndApp, (DLGPROC)IDD_OK_CANCEL_Proc );
@@ -1063,7 +1063,7 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 		}
 	TextOut(hdc, Sprites[SpriteId.ButtonBase].x+120, ry+20*9+5, ach[0], len[0]);
 
-	if( IsEditingMap==0 )
+	if( !IsEditingMap )
 		{
 #if !LNGG_VER
 		len[0] = wsprintf(ach[0], "リジューム");
@@ -1079,7 +1079,7 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 )
 				{
-				if( CanOrder==1 )
+				if( CanOrder.Value==1 )
 					{
 	DialogAnswer=MessageType.ResumeAndGoToGameSetting;
 					g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_OK_CANCEL), hwndApp, (DLGPROC)IDD_OK_CANCEL_Proc );
@@ -1113,7 +1113,7 @@ you_can_order=1;
 rival_mode=mode;
 #endif
 
-	if( IsEditingMap!=0 )
+	if( IsEditingMap )
 		RivalMode=Mode;
 
 	// ユニットインフォーメィション
@@ -1150,7 +1150,7 @@ rival_mode=mode;
 
 		}
 
-	if(CombatMenuKind!=0 && IsEditingMap==0 )
+	if(CombatMenuKind!=0 && !IsEditingMap )
 		{
 
 		//	スプライトグループ（メニュー）
@@ -1158,7 +1158,7 @@ rival_mode=mode;
 		}
 
 	// ゲームデータ
-	if ( IsEditingMap==0 && IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
+	if ( !IsEditingMap && IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
 		{
 		SetBkMode(hdc, TRANSPARENT);
 		SelectObject(hdc, gameFont_1);
@@ -1189,13 +1189,13 @@ rival_mode=mode;
 		SetBkMode(hdc, TRANSPARENT);
 		SelectObject(hdc, gameFont_1);
 
-		if( IsEditingMap==0 )
+		if( !IsEditingMap )
 			{
 			UpdateSupplyPanel(ref len, ref ach, ref hdc, ref dstn_rect, ry, ref m);
 			}
 		ry+=30;
 
-		if( IsHost!=0 )
+		if( IsHost )
 			{
 			UpdateSystemMenu(ref len, ref ach, ry, ref hdc);
 			}
@@ -1206,7 +1206,7 @@ rival_mode=mode;
 	ry-=30;
 
 	// 補給
-	if( ( SupplyCount==0 || (FrameCount%2)!=0 ) && IsEditingMap==0 )
+	if( ( SupplyCount==0 || (FrameCount%2)!=0 ) && !IsEditingMap )
 		{
 		DrawSupplyTarget(ref m, ref src_rect, ry);
 		}

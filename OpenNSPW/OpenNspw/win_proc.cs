@@ -49,7 +49,7 @@ public void	RestoreSurfaces()
 
 	// クリッパー
 	RELEASE(ref lpDDclip);
-	if(IsFullscreen!=0)
+	if(IsFullscreen)
 		{
 		lpDD.CreateClipper(0,out lpDDclip,null);
 		lpDDclip.SetHWnd(0,hwndApp);
@@ -450,7 +450,7 @@ public nint	IDD_FILE_SAVE_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 //					PostQuitMessage( 0 );		// これでWM_QUITがでるので接続ダイアログループからぬける
 					GetDlgItemText( hWnd, IDC_EDIT, UserScenarioFileName, MAX_PATH );
 
-					if( IsEditingMap!=0 && Mode==GameMode.Battle && UserScenarioFileName[0]!='\0' )
+					if( IsEditingMap && Mode==GameMode.Battle && UserScenarioFileName[0]!='\0' )
 						{
 						// なんかユーザーファイルが選ばれた。
 
@@ -524,7 +524,7 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 				case IDOK:
 					DlgDirSelectEx( hWnd, UserScenarioFileName, sizeof( Array260<byte> ), IDC_LIST );
 
-					if( IsEditingMap!=0 && Mode==GameMode.Battle && UserScenarioFileName[0]!='\0' )
+					if( IsEditingMap && Mode==GameMode.Battle && UserScenarioFileName[0]!='\0' )
 						{
 						wsprintf( temp_buf, "%s", UserScenarioFileName );
 						wsprintf( UserScenarioFileName, "Scenario\\%s", temp_buf );
@@ -537,7 +537,7 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 						wsprintf( temp_buf, "%s", UserScenarioFileName );
 						wsprintf( UserScenarioFileName, "Scenario\\%s", temp_buf );
 
-						if( IsEditingMap==0 )
+						if( !IsEditingMap )
 							{
 							// なんかユーザーファイルが選ばれた。
 							dp_data_20.dwType = MessageType.UserScenarioFileName;
@@ -557,7 +557,7 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 						dp_data_1.data[2] = SupplyRates[0];
 						dp_data_1.data[3] = SupplyRates[1];
 
-						dp_data_1.data[4] = IsDecisionEnabled;
+						dp_data_1.data[4] = IsDecisionEnabled.Value;
 
 						dp_data_1.data[5] = InitialSupplyPoints[0];
 						dp_data_1.data[6] = InitialSupplyPoints[1];
@@ -621,8 +621,8 @@ public nint	IDD_OK_CANCEL_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 				case IDOK:
 
 					BufferedSystemOrders[1]=(byte)DialogAnswer;
-					CanOrder=0;
-					HasOrdered=1;
+					CanOrder=false;
+					HasOrdered=true;
 					PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
 
 					DestroyWindow(hWnd);
@@ -769,22 +769,22 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 				{
 				pDIDevice.Unacquire();
 				pDIDeviceMouse.Unacquire();
-				IsAppActive=0;
+				IsAppActive=false;
 				}
 			else
 				{
 				pDIDevice.Acquire();
 				pDIDeviceMouse.Acquire();
-				IsAppActive=1;
+				IsAppActive=true;
 				}
 
 			break;
 
 		case WM_ACTIVATEAPP:	//ウインドウが選択された時
 			if(wParam == WA_INACTIVE)
-				IsAppActive=0;
+				IsAppActive=false;
 			else
-				IsAppActive=1;
+				IsAppActive=true;
 			break;
 
 		case WM_SIZE:		// ウインドウ起動時にもここにくるようだ。
@@ -808,7 +808,7 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 				{
 
 				case VK_F1:
-					if( IsEditingMap!=0 && Mode==GameMode.Battle )
+					if( IsEditingMap && Mode==GameMode.Battle )
 						{
 						/*g_hDlg =*/ CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_SAVE_Proc );
 
@@ -818,7 +818,7 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					break;
 
 				case VK_F2:
-					if( IsEditingMap!=0 && Mode==GameMode.Battle )
+					if( IsEditingMap && Mode==GameMode.Battle )
 						{
 						Units[SelectedUnit].Side=0;
 						SelectedUnit=0;
@@ -834,7 +834,7 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					break;
 
 				case VK_F3:
-					if( IsEditingMap!=0 && Mode==GameMode.Battle )
+					if( IsEditingMap && Mode==GameMode.Battle )
 						{
 						PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
 						MakeTerrainSurface();
@@ -849,14 +849,14 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					break;
 
 				case VK_F5:
-					if( IsEditingMap!=0 && EditorTarget>1 && Mode==GameMode.Battle )
+					if( IsEditingMap && EditorTarget>1 && Mode==GameMode.Battle )
 						{
 						EditorTarget--;
 						PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
 						}
 
 #if DBG_MODE
-if( IsEditingMap==0 )
+if( !IsEditingMap )
 	{
 	if(LocalSide==Side.Japan)
 		LocalSide=Side.UnitedStates;
@@ -868,7 +868,7 @@ if( IsEditingMap==0 )
 					break;
 
 				case VK_F6:
-					if( IsEditingMap!=0 && Mode==GameMode.Battle )
+					if( IsEditingMap && Mode==GameMode.Battle )
 						{
 						if( EditorTarget<24 )
 							{
@@ -878,7 +878,7 @@ if( IsEditingMap==0 )
 						}
 
 #if DBG_MODE
-if( IsEditingMap==0 )
+if( !IsEditingMap )
 	{
 	Mode=GameMode.GameSetting;
 	LoadScenarioData();
@@ -891,7 +891,7 @@ if( IsEditingMap==0 )
 
 				case VK_F7:
 
-					if( IsEditingMap!=0 && Mode==GameMode.Battle )
+					if( IsEditingMap && Mode==GameMode.Battle )
 						{
 						if( Units[SelectedUnit].IsUsed )
 							{
@@ -928,7 +928,7 @@ if( IsEditingMap==0 )
 					break;
 
 				case VK_F8:
-					if( IsEditingMap!=0 && Mode==GameMode.Battle )
+					if( IsEditingMap && Mode==GameMode.Battle )
 						{
 						if( UnitInfoPanel[1]!=0 && ( Units[PreviousSelectedUnit].Kind==UnitKind.Carrier || Units[PreviousSelectedUnit].Kind==UnitKind.LightCarrier || Units[PreviousSelectedUnit].Kind==UnitKind.AirBase )  && ((UnitKind)EditorKind==UnitKind.Fighter || (UnitKind)EditorKind==UnitKind.Attacker || (UnitKind)EditorKind==UnitKind.Bomber ) )
 							{
@@ -998,12 +998,12 @@ if( IsEditingMap==0 )
 				case VK_F9:
 
 #if DBG_MODE
-if( IsEditingMap==0 )
+if( !IsEditingMap )
 	{
 	Units[SelectedUnit].Hp=0;
 	}
 #endif
-					if( IsEditingMap!=0 && Mode==GameMode.Battle )
+					if( IsEditingMap && Mode==GameMode.Battle )
 						{
 						if(LocalSide==Side.Japan)
 							LocalSide=Side.UnitedStates;
@@ -1017,7 +1017,7 @@ if( IsEditingMap==0 )
 					break;
 
 				case VK_F11:
-					if( IsEditingMap!=0 && Mode==GameMode.Battle )
+					if( IsEditingMap && Mode==GameMode.Battle )
 						{
 						Reinforcements[(int)LocalSide]=Reinforcements[(int)LocalSide]++;
 						Reinforcements[(int)LocalSide]=(byte)(Reinforcements[(int)LocalSide]%4);
@@ -1027,7 +1027,7 @@ if( IsEditingMap==0 )
 
 				case 0x31:	// 1
 					// ユニットを回転させます。
-					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed  && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
+					if( IsEditingMap && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed  && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
 						Units[SelectedUnit].Direction= (int)(Units[SelectedUnit].Direction+45.0)%360 ;
 
@@ -1038,7 +1038,7 @@ if( IsEditingMap==0 )
 
 				case 0x32:	// 2
 					// 航空機の武装を変えます。
-					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed  )
+					if( IsEditingMap && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed  )
 						{
 						if( Units[SelectedUnit].Kind==UnitKind.Attacker )
 							{
@@ -1100,7 +1100,7 @@ if( IsEditingMap==0 )
 
 				case 0x33:	// 3
 					// ＨＰを増やす。
-					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ) )
+					if( IsEditingMap && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ) )
 						{
 						if( Units[SelectedUnit].Hp < Units[SelectedUnit].MaxHp )
 							{
@@ -1112,7 +1112,7 @@ if( IsEditingMap==0 )
 
 				case 0x34:	// 4
 					// ＨＰを増やす。
-					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
+					if( IsEditingMap && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
 						Units[SelectedUnit].Hp--;
 						PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
@@ -1121,7 +1121,7 @@ if( IsEditingMap==0 )
 
 				case 0x35:	// 5
 					// ガスをふやす
-					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
+					if( IsEditingMap && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
 						if( Units[SelectedUnit].Fuel < 100 )
 							{
@@ -1133,7 +1133,7 @@ if( IsEditingMap==0 )
 
 				case 0x36:	// 6
 					// ガスをへらす
-					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
+					if( IsEditingMap && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
 						if( Units[SelectedUnit].Fuel!=0  )
 							{
@@ -1145,7 +1145,7 @@ if( IsEditingMap==0 )
 
 				case 0x37:	// 7
 					// 弾数をふやす
-					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && Units[SelectedUnit].Weapon!=FireKind.Unarmed  && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
+					if( IsEditingMap && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && Units[SelectedUnit].Weapon!=FireKind.Unarmed  && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
 						if( Units[SelectedUnit].Ammo<Units[SelectedUnit].MaxAmmo  )
 							{
@@ -1157,7 +1157,7 @@ if( IsEditingMap==0 )
 
 				case 0x38:	// 8
 					// 弾数をへらす
-					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && Units[SelectedUnit].Weapon!=FireKind.Unarmed  && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
+					if( IsEditingMap && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && Units[SelectedUnit].Weapon!=FireKind.Unarmed  && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
 						if( Units[SelectedUnit].Ammo!=0  )
 							{

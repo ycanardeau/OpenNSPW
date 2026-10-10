@@ -1331,14 +1331,14 @@ private void UpdatePlaneEffects(ref Unit unit, int m)
 					Effects[f].Position=unit.Position;
 					Effects[f].SpriteNumber=9;				// ソースファイル上の番号
 					}
-				if(IsEditingMap==0)
+				if(!IsEditingMap)
 					unit.Hp--;
 				}
 			else
 				{
 				if( Random(80)==0 )
 					{
-					if(IsEditingMap==0)
+					if(!IsEditingMap)
 						unit.Hp--;
 					}
 
@@ -1368,7 +1368,7 @@ private void UpdatePlaneEffects(ref Unit unit, int m)
 			{
 			if( Random(500)==0 )
 				{
-				if(IsEditingMap==0)
+				if(!IsEditingMap)
 					unit.Hp--;
 				}
 
@@ -1398,7 +1398,7 @@ private void UpdatePlaneEffects(ref Unit unit, int m)
 			{
 			if( Random(500)==0 )
 				{
-				if(IsEditingMap==0)
+				if(!IsEditingMap)
 					unit.Hp--;
 				}
 			if( Random(2)==1 && (Tick%10)==0 )
@@ -1568,7 +1568,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 				{	// 空気漏れ
 				if( Random(100)==0 )
 					{
-					if(IsEditingMap==0)
+					if(!IsEditingMap)
 						unit.Hp--;
 					}
 				if( Random(300)==1  )
@@ -1601,7 +1601,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 					{	// 空気漏れ
 					if( Random(1000)==0 )
 						{
-						if(IsEditingMap==0)
+						if(!IsEditingMap)
 							unit.Hp--;
 						}
 					if( Random(600)==1  )
@@ -1677,7 +1677,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 				{
 				if( Random(4000)==0 && !unit.IsSupplying )
 					{
-					if(IsEditingMap==0)
+					if(!IsEditingMap)
 						unit.Hp--;
 					}
 				if( Random(2)!=0  )

@@ -42,6 +42,9 @@ public static partial class crt
 			bool b => b ? 1 : 0,
 			// An enum is passed as its value, as in C.
 			Enum e => Convert.ToInt64(e, CultureInfo.InvariantCulture),
+			// So are the integers used as booleans.
+			Bool32 b => b.Value,
+			Bool8 b => b.Value,
 			_ => throw new ArgumentException($"Not an integer: {value?.GetType()}.", nameof(value)),
 		};
 	}
