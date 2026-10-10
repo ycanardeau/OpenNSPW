@@ -4074,8 +4074,8 @@ public void	InitializeGame()
 #if SND_SW
 		if( IsEditingMap==0 )
 			{
-			lpDSB_[SEA1][0].SetVolume( 0 );
-			lpDSB_[SEA1][0].Play(0,0,DSBPLAY_LOOPING);	// ループする
+			lpDSB_[(int)SoundId.Sea][0].SetVolume( 0 );
+			lpDSB_[(int)SoundId.Sea][0].Play(0,0,DSBPLAY_LOOPING);	// ループする
 			}
 #endif
 
@@ -4200,8 +4200,8 @@ public void	InitializeGame()
 #if SND_SW
 	if( IsEditingMap==0 )
 		{
-		lpDSB_[SEA1][0].SetVolume( 0 );
-		lpDSB_[SEA1][0].Play(0,0,DSBPLAY_LOOPING);	// ループする
+		lpDSB_[(int)SoundId.Sea][0].SetVolume( 0 );
+		lpDSB_[(int)SoundId.Sea][0].Play(0,0,DSBPLAY_LOOPING);	// ループする
 		}
 #endif
 

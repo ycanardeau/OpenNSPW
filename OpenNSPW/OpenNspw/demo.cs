@@ -261,7 +261,7 @@ public void GoToGameSetting()
 		}
 
 #if SND_SW
-	lpDSB_[SEA1][0].Stop();		//
+	lpDSB_[(int)SoundId.Sea][0].Stop();		//
 #endif
 
 HANDLE	hFile;

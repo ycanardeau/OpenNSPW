@@ -14,6 +14,8 @@
 
 // Port of Audio.cpp.
 
+using System.Collections.Immutable;
+
 namespace OpenNspw;
 
 public unsafe partial class Nspw
@@ -53,6 +55,9 @@ public int	InitializeDirectMusic()
 	return TRUE;
 	}
 
+// The names of the sounds' files, WAV\<name>.wav, by SoundId.
+private static readonly ImmutableArray<string> SoundFileNames = ["AA_BLT1", "AA_BLT2", "AA_BLT3", "AA_BLT4", "AA_SHL1", "AA_SHL2", "AA_SHL3", "AA_SHL4", "AA_SHL5", "TPD_HIT1", "TPD_HIT2", "BOM_HIT1", "BOM_HIT2", "SHIP_SINK1", "SHIP_SINK2", "SPL1", "SEA1", "GUN1", "GUN2", "GUN3", "FALL1", "BOMB_OFF", "BB_BOMB", "TPD_LOS", "PLANE_FLYING", "PLANE1", "PLANE2", "TAKE_OFF", "SNR", "CLICK1", "CLICK2"];
+
 /*--------------------------------------------
 	ダイレクトサウンドの初期化とロードの指示
 --------------------------------------------*/
@@ -60,6 +65,7 @@ public int	InitializeDirectMusic()
 public int	InitializeDirectSound()
 	{
 	int		i;
+	int		sound;
 
 	// DirectSound8 の作成
 	if (FAILED(DirectSoundCreate8(null,out lpDS,null)))
@@ -94,327 +100,18 @@ public int	InitializeDirectSound()
 
 // サウンドカードのバッファ性能を調べます。
 
-	//
-	lpDSB_[AA_BLT1][0]= LoadWave("WAV\\AA_BLT1.wav");
-	if (lpDSB_[AA_BLT1][0]==null)
+	for(sound=0;sound<SoundFileNames.Length;sound++)
 		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
+		lpDSB_[sound][0]= LoadWave($"WAV\\{SoundFileNames[sound]}.wav");
+		if (lpDSB_[sound][0]==null)
+			{
+			MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
+			SendMessage(hwndApp,WM_CLOSE,0,0);
+			return FALSE;
+			}
+		for(i=1;i<SND_DUP;i++)
+			lpDS.DuplicateSoundBuffer(lpDSB_[sound][0],out lpDSB_[sound][i]);
 		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[AA_BLT1][0],out lpDSB_[AA_BLT1][i]);
-
-	lpDSB_[AA_BLT2][0]= LoadWave("WAV\\AA_BLT2.wav");
-	if (lpDSB_[AA_BLT2][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[AA_BLT2][0],out lpDSB_[AA_BLT2][i]);
-
-	lpDSB_[AA_BLT3][0]= LoadWave("WAV\\AA_BLT3.wav");
-	if (lpDSB_[AA_BLT3][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[AA_BLT3][0],out lpDSB_[AA_BLT3][i]);
-
-	lpDSB_[AA_BLT4][0]= LoadWave("WAV\\AA_BLT4.wav");
-	if (lpDSB_[AA_BLT4][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[AA_BLT4][0],out lpDSB_[AA_BLT4][i]);
-
-	//
-	lpDSB_[AA_SHL1][0]= LoadWave("WAV\\AA_SHL1.wav");
-	if (lpDSB_[AA_SHL1][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[AA_SHL1][0],out lpDSB_[AA_SHL1][i]);
-
-	lpDSB_[AA_SHL2][0]= LoadWave("WAV\\AA_SHL2.wav");
-	if (lpDSB_[AA_SHL2][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[AA_SHL2][0],out lpDSB_[AA_SHL2][i]);
-
-	lpDSB_[AA_SHL3][0]= LoadWave("WAV\\AA_SHL3.wav");
-	if (lpDSB_[AA_SHL3][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[AA_SHL3][0],out lpDSB_[AA_SHL3][i]);
-
-	lpDSB_[AA_SHL4][0]= LoadWave("WAV\\AA_SHL4.wav");
-	if (lpDSB_[AA_SHL4][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[AA_SHL4][0],out lpDSB_[AA_SHL4][i]);
-
-	lpDSB_[AA_SHL5][0]= LoadWave("WAV\\AA_SHL5.wav");
-	if (lpDSB_[AA_SHL5][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[AA_SHL5][0],out lpDSB_[AA_SHL5][i]);
-
-	//
-	lpDSB_[TPD_HIT1][0]= LoadWave("WAV\\TPD_HIT1.wav");
-	if (lpDSB_[TPD_HIT1][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[TPD_HIT1][0],out lpDSB_[TPD_HIT1][i]);
-
-	lpDSB_[TPD_HIT2][0]= LoadWave("WAV\\TPD_HIT2.wav");
-	if (lpDSB_[TPD_HIT2][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[TPD_HIT2][0],out lpDSB_[TPD_HIT2][i]);
-
-	//
-	lpDSB_[BOM_HIT1][0]= LoadWave("WAV\\BOM_HIT1.wav");
-	if (lpDSB_[BOM_HIT1][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[BOM_HIT1][0],out lpDSB_[BOM_HIT1][i]);
-
-	lpDSB_[BOM_HIT2][0]= LoadWave("WAV\\BOM_HIT2.wav");
-	if (lpDSB_[BOM_HIT2][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[BOM_HIT2][0],out lpDSB_[BOM_HIT2][i]);
-
-	//
-	lpDSB_[SHIP_SINK1][0]= LoadWave("WAV\\SHIP_SINK1.wav");
-	if (lpDSB_[SHIP_SINK1][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[SHIP_SINK1][0],out lpDSB_[SHIP_SINK1][i]);
-
-	lpDSB_[SHIP_SINK2][0]= LoadWave("WAV\\SHIP_SINK2.wav");
-	if (lpDSB_[SHIP_SINK2][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[SHIP_SINK2][0],out lpDSB_[SHIP_SINK2][i]);
-
-	//
-	lpDSB_[SPL1][0]= LoadWave("WAV\\SPL1.wav");
-	if (lpDSB_[SPL1][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[SPL1][0],out lpDSB_[SPL1][i]);
-
-	//
-	lpDSB_[SEA1][0]= LoadWave("WAV\\SEA1.wav");
-	if (lpDSB_[SEA1][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[SEA1][0],out lpDSB_[SEA1][i]);
-
-	//
-	lpDSB_[GUN1][0]= LoadWave("WAV\\GUN1.wav");
-	if (lpDSB_[GUN1][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[GUN1][0],out lpDSB_[GUN1][i]);
-
-	lpDSB_[GUN2][0]= LoadWave("WAV\\GUN2.wav");
-	if (lpDSB_[GUN2][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[GUN2][0],out lpDSB_[GUN2][i]);
-
-	lpDSB_[GUN3][0]= LoadWave("WAV\\GUN3.wav");
-	if (lpDSB_[GUN3][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[GUN3][0],out lpDSB_[GUN3][i]);
-
-	//
-	lpDSB_[FALL1][0]= LoadWave("WAV\\FALL1.wav");
-	if (lpDSB_[FALL1][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[FALL1][0],out lpDSB_[FALL1][i]);
-
-	lpDSB_[BOMB_OFF][0]= LoadWave("WAV\\BOMB_OFF.wav");
-	if (lpDSB_[BOMB_OFF][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[BOMB_OFF][0],out lpDSB_[BOMB_OFF][i]);
-
-	lpDSB_[BB_BOMB][0]= LoadWave("WAV\\BB_BOMB.wav");
-	if (lpDSB_[BB_BOMB][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[BB_BOMB][0],out lpDSB_[BB_BOMB][i]);
-
-	lpDSB_[TPD_LOS][0]= LoadWave("WAV\\TPD_LOS.wav");
-	if (lpDSB_[TPD_LOS][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[TPD_LOS][0],out lpDSB_[TPD_LOS][i]);
-
-	lpDSB_[PLANE_FLYING][0]= LoadWave("WAV\\PLANE_FLYING.wav");
-	if (lpDSB_[PLANE_FLYING][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[PLANE_FLYING][0],out lpDSB_[PLANE_FLYING][i]);
-
-	//
-	lpDSB_[PLANE1][0]= LoadWave("WAV\\PLANE1.wav");
-	if (lpDSB_[PLANE1][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[PLANE1][0],out lpDSB_[PLANE1][i]);
-
-	lpDSB_[PLANE2][0]= LoadWave("WAV\\PLANE2.wav");
-	if (lpDSB_[PLANE2][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[PLANE2][0],out lpDSB_[PLANE2][i]);
-
-	//
-	lpDSB_[TAKE_OFF][0]= LoadWave("WAV\\TAKE_OFF.wav");
-	if (lpDSB_[TAKE_OFF][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[TAKE_OFF][0],out lpDSB_[TAKE_OFF][i]);
-
-	lpDSB_[SNR][0]= LoadWave("WAV\\SNR.wav");
-	if (lpDSB_[SNR][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[SNR][0],out lpDSB_[SNR][i]);
-
-	//
-	lpDSB_[CLICK1][0]= LoadWave("WAV\\CLICK1.wav");
-	if (lpDSB_[CLICK1][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[CLICK1][0],out lpDSB_[CLICK1][i]);
-
-	lpDSB_[CLICK2][0]= LoadWave("WAV\\CLICK2.wav");
-	if (lpDSB_[CLICK2][0]==null)
-		{
-		MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
-		}
-	for(i=1;i<SND_DUP;i++)
-		lpDS.DuplicateSoundBuffer(lpDSB_[CLICK2][0],out lpDSB_[CLICK2][i]);
 
 	return TRUE;
 	}
@@ -444,7 +141,7 @@ public void	PlaySound(IDirectSoundBuffer? the_lpdsb,short* the_snd,int f)
 	主にゲーム中の効果音を鳴らす
 ---------------------------------------------*/
 [Original("SoundPlayEffect")]
-public void PlaySoundEffect(int dwFlags,int no,double x,double y)
+public void PlaySoundEffect(int dwFlags,SoundId no,double x,double y)
 	{
 	RECT	field_rect;
 	double	wrk_x,wrk_y,drctn,dstc;
@@ -541,14 +238,14 @@ return;
 	if(1!=0)
 		{
 
-		lpDSB_[no][NextSoundBuffers[no]].Stop();		//
-		lpDSB_[no][NextSoundBuffers[no]].SetCurrentPosition(0);	// 巻き戻し
+		lpDSB_[(int)no][NextSoundBuffers[(int)no]].Stop();		//
+		lpDSB_[(int)no][NextSoundBuffers[(int)no]].SetCurrentPosition(0);	// 巻き戻し
 
-		lpDSB_[no][NextSoundBuffers[no]].SetVolume( 0 );
-		lpDSB_[no][NextSoundBuffers[no]].Play(0,0,0);		//
+		lpDSB_[(int)no][NextSoundBuffers[(int)no]].SetVolume( 0 );
+		lpDSB_[(int)no][NextSoundBuffers[(int)no]].Play(0,0,0);		//
 
-		NextSoundBuffers[no]++;
-		NextSoundBuffers[no]=(short)(NextSoundBuffers[no]%SND_DUP);
+		NextSoundBuffers[(int)no]++;
+		NextSoundBuffers[(int)no]=(short)(NextSoundBuffers[(int)no]%SND_DUP);
 
 		}
 

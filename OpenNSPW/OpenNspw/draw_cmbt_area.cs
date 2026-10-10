@@ -1011,7 +1011,7 @@ public void	DrawBattleArea()
 		}
 
 	if( lc_ri_btn==1 || lc_lf_btn==1 )
-		PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+		PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
 
 	for( m=0; m<=MaxUnitId; m++)
 		{
@@ -1137,7 +1137,7 @@ public void	DrawBattleArea()
 
 					if( IsEditingMap==0 && plane_fling_sound==0 && Result==GameResult.None && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying && (FrameCount%10)==0 )
 						{
-						PlaySoundEffect( 0, PLANE_FLYING ,unit.Position.X, unit.Position.Y);
+						PlaySoundEffect( 0, SoundId.PlaneFlying ,unit.Position.X, unit.Position.Y);
 						plane_fling_sound=1;
 						}
 

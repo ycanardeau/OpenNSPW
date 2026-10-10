@@ -53,7 +53,7 @@ public void	HandleInput()
 
 					CanOrder=0;
 					HasOrdered=1;
-					PlaySoundEffect( 0, CLICK2 ,(double)(MAP_RIGHT+1), 0);
+					PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
 					}
 				}
 			else
@@ -100,7 +100,7 @@ public void	HandleInput()
 
 					CanOrder=0;
 					HasOrdered=1;
-					PlaySoundEffect( 0, CLICK2 ,(double)(MAP_RIGHT+1), 0);
+					PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
 
 					}
 				}
@@ -151,7 +151,7 @@ public void	HandleInput()
 
 					CanOrder=0;
 					HasOrdered=1;
-					PlaySoundEffect( 0, CLICK2 ,(double)(MAP_RIGHT+1), 0);
+					PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
 					}
 				}
 			else
@@ -230,7 +230,7 @@ public void	HandleInput()
 				}
 			CanOrder=0;
 			HasOrdered=1;
-			PlaySoundEffect( 0, CLICK2 ,(double)(MAP_RIGHT+1), 0);
+			PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
 			}
 		}
 	}

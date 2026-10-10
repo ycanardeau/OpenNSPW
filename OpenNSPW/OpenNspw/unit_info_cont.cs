@@ -597,7 +597,7 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 					}
 				CanOrder=0;
 				HasOrdered=1;
-				PlaySoundEffect( 0, CLICK2 ,(double)(MAP_RIGHT+1), 0);
+				PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
 				}
 			}
 		if( LeftButton==2 && PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && FrameCount%2<1)
@@ -942,7 +942,7 @@ private void UpdateSupplyPanel(ref Array8<int> len, ref Array8<Array128<byte>> a
 
 if(CONN_DBG!=0)
 SupplyCount=10;
-							PlaySoundEffect( 0, CLICK2 ,(double)(MAP_RIGHT+1), 0);
+							PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
 							}
 						}
 					else
@@ -1046,7 +1046,7 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 					{
 //							bf_game_system_menu[1]=GO_GAME_SETTING;
 					go_cnct_game_setting();
-					SoundPlayEffect( NULL, CLICK2 ,(double)(MAP_RIGHT+1), 0);
+					SoundPlayEffect( NULL, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
 					}
 */
 				}

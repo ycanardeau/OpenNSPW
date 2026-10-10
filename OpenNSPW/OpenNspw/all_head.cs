@@ -104,51 +104,7 @@ public const int		SND_DUP		= 6;		// 同時に鳴らせる場合の最大音数
 
 public const int	NUM_SOUND_EFFECTS		= 35;
 
-// enum SND_NO
-// The enumerators are used as ints, so they are ported as constants.
-public const int	AA_BLT1 = 0;
-public const int	AA_BLT2 = 1;
-public const int	AA_BLT3 = 2;
-public const int	AA_BLT4 = 3;
-
-public const int	AA_SHL1 = 4;
-public const int	AA_SHL2 = 5;
-public const int	AA_SHL3 = 6;
-public const int	AA_SHL4 = 7;
-public const int	AA_SHL5 = 8;
-
-public const int	TPD_HIT1 = 9;
-public const int	TPD_HIT2 = 10;
-
-public const int	BOM_HIT1 = 11;
-public const int	BOM_HIT2 = 12;
-
-public const int	SHIP_SINK1 = 13;
-public const int	SHIP_SINK2 = 14;
-
-public const int	SPL1 = 15;
-public const int	SEA1 = 16;
-public const int	GUN1 = 17;
-public const int	GUN2 = 18;
-public const int	GUN3 = 19;
-
-public const int	FALL1 = 20;
-
-public const int	BOMB_OFF = 21;
-public const int	BB_BOMB = 22;
-
-public const int	TPD_LOS = 23;
-
-public const int	PLANE_FLYING = 24;
-public const int	PLANE1 = 25;
-public const int	PLANE2 = 26;
-
-public const int	TAKE_OFF = 27;
-public const int	SNR = 28;
-
-public const int	CLICK1 = 29;
-public const int	CLICK2 = 30;				//30
-public const int	END_OF_SND_NO = 31;
+// enum SND_NO: SoundId.
 
 // BB1, CA1, DD1, SS1, CV1, CVL1, FT1, AT1, BM1, TR1, AP, SP, CT1, MN1, GF1, GF2 and GF3: UnitKind.
 

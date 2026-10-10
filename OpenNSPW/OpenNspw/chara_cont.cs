@@ -678,7 +678,7 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 
 				if( unit.TakeOffRun==40 && unit.Carrier==UnitInfoPanel[3] &&  ((UnitKind)UnitInfoPanel[0]==UnitKind.Carrier || (UnitKind)UnitInfoPanel[0]==UnitKind.LightCarrier || (UnitKind)UnitInfoPanel[0]==UnitKind.AirBase ) )
 					{
-					PlaySoundEffect( 0, TAKE_OFF,(double)(MAP_RIGHT+1), 0);
+					PlaySoundEffect( 0, SoundId.TakeOff,(double)(MAP_RIGHT+1), 0);
 					}
 
 				unit.Position = new WorldPosition(unit.Position.X + (cos(unit.Direction*a_PI)*(unit.TakeOffRun/20)), unit.Position.Y);
@@ -1906,7 +1906,7 @@ public void	UpdateBattle()
 			if( IsEditingMap==0 && dstc<=400 )
 				{
 				if( (SharedRandom(3+(int)(dstc/5)))==0  )
-				PlaySoundEffect( 0, SNR ,unit.Position.X, unit.Position.Y);
+				PlaySoundEffect( 0, SoundId.Sonar ,unit.Position.X, unit.Position.Y);
 				}
 			}
 		}
