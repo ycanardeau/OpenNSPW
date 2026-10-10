@@ -20,6 +20,7 @@ namespace OpenNspw.Porter;
 // - A local declared in the statements and used after them is not extracted.
 // - Declarators keep their comments, such as the port's /* C4701 */ markers.
 // - #if and #endif directives next to the statements move with them, as far as they need to balance.
+// - Comments above the first statement move with it when they are in the given lines.
 // - A local passed by ref that is not definitely assigned before the statements gets `= default`, which changes no value:
 //   the project zeroes its locals. The address of a local passed by ref, &x, becomes Unsafe.AsPointer(ref x), the same
 //   address, cast back to x's type, since x is a local of the caller, which does not move.
@@ -224,6 +225,16 @@ internal sealed class Extractor(CSharpProject project, string file, int firstLin
 		// The text that moves: the lines of the statements, widened so that the #if and #endif directives in it balance,
 		// since a directive next to the statements belongs to the trivia of the tokens around them.
 		var regionStart = text.Lines.GetLineFromPosition(first.SpanStart).Start;
+
+		// The comments above the first statement move with it, if they are in the lines to extract. Comments above
+		// those lines, such as a section's title, stay with the call.
+		foreach (var comment in first.GetLeadingTrivia().Where(t => t.IsKind(SyntaxKind.SingleLineCommentTrivia) || t.IsKind(SyntaxKind.MultiLineCommentTrivia)))
+		{
+			if (comment.SpanStart >= text.Lines[_firstLine - 1].Start)
+			{
+				regionStart = Math.Min(regionStart, text.Lines.GetLineFromPosition(comment.SpanStart).Start);
+			}
+		}
 		var regionEnd = last.FullSpan.End;
 		var directives = tree.GetRoot().DescendantTrivia(descendIntoTrivia: true)
 			.Where(t => t.IsKind(SyntaxKind.IfDirectiveTrivia) || t.IsKind(SyntaxKind.EndIfDirectiveTrivia))
