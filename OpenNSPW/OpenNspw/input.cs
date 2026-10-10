@@ -266,7 +266,7 @@ public void	SetCpuRoute2(int m)
 		for( n=1; n<=MaxUnitId; n++)
 			{
 			ref var other = ref Units[n];
-			if( other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.info[6]!=0)   && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress )  )
+			if( other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.Submerged!=0)   && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress )  )
 				{
 				// ptin dbg
 				wrk_r.top=(int)other.Position.Y+(Sprites[UNIT_JPN].wd/2);
@@ -391,7 +391,7 @@ public void	SetCpuRoute2(int m)
 				// 船に接触するか
 				for( f=1; f<=MaxUnitId && hit==0 ; f++)
 					{
-					if( Units[f].IsUsed && m!=f && Units[f].Category==UnitCategory.Ship && !(Units[f].Kind==UnitKind.Submarine && Units[f].info[6]!=0) && !(Units[f].Kind>=UnitKind.AirBase&&Units[f].Kind<=UnitKind.Fortress) )
+					if( Units[f].IsUsed && m!=f && Units[f].Category==UnitCategory.Ship && !(Units[f].Kind==UnitKind.Submarine && Units[f].Submerged!=0) && !(Units[f].Kind>=UnitKind.AirBase&&Units[f].Kind<=UnitKind.Fortress) )
 						{
 						// ptin dbg
 						wrk_r.top=(int)Units[f].Position.Y+(Sprites[UNIT_JPN].ht/2);
@@ -451,7 +451,7 @@ public void	SetCpuRoute2(int m)
 							for( f=1; f<=MaxUnitId; f++)
 								{
 								ref var other = ref Units[f];
-								if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.info[6]!=0) && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress)  )
+								if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.Submerged!=0) && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress)  )
 									{
 									// ptin dbg
 									wrk_r.top=(int)other.Position.Y+(Sprites[UNIT_JPN].ht/2);
@@ -489,7 +489,7 @@ public void	SetCpuRoute2(int m)
 							for( f=1; f<=MaxUnitId; f++)
 								{
 								ref var other = ref Units[f];
-								if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.info[6]!=0) && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress ) )
+								if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.Submerged!=0) && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress ) )
 									{
 									// ptin dbg
 									wrk_r.top=(int)other.Position.Y+(Sprites[UNIT_JPN].ht/2);
@@ -714,15 +714,15 @@ public void	ApplyOrders()
 					{
 					// 輸送船陸地を選択
 					// 揚陸場所あり
-					if( Units[SelectedUnit].Target!=0 && Units[SelectedUnit].info[6]==(int)SelectOrders[e].GroundPosition.X && Units[SelectedUnit].info[7]==(int)SelectOrders[e].GroundPosition.Y)
+					if( Units[SelectedUnit].Target!=0 && Units[SelectedUnit].LandingX==(int)SelectOrders[e].GroundPosition.X && Units[SelectedUnit].LandingY==(int)SelectOrders[e].GroundPosition.Y)
 						{
 						Units[SelectedUnit].Target=0;
 						}
 					else
 						{
 						Units[SelectedUnit].Target=MaxUnitId+1;
-						Units[SelectedUnit].info[6]=(int)SelectOrders[e].GroundPosition.X;		// 揚陸座標
-						Units[SelectedUnit].info[7]=(int)SelectOrders[e].GroundPosition.Y;
+						Units[SelectedUnit].LandingX=(int)SelectOrders[e].GroundPosition.X;		// 揚陸座標
+						Units[SelectedUnit].LandingY=(int)SelectOrders[e].GroundPosition.Y;
 						}
 					}
 				else

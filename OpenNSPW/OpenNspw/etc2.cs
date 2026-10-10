@@ -292,7 +292,7 @@ public int		GetDetectionSize( int m , int n)
 		case UnitKind.Fortress:		size=GF3_SIGHT;		break;
 		}
 
-	if( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress && unit.info[0]!=0 )
+	if( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress && unit.BuildTime!=0 )
 		{
 		// 工事中は視界を制限
 		size=FT1_SIGHT/2;
@@ -305,11 +305,11 @@ public int		GetDetectionSize( int m , int n)
 		case UnitKind.Cruiser:				break;
 		case UnitKind.Destroyer:				break;
 		case UnitKind.Submarine:
-			if( Units[n].info[6]!=0 )
+			if( Units[n].Submerged!=0 )
 				{	// 潜航中
 				if( unit.Kind!=UnitKind.Destroyer )
 					{
-					if(unit.Kind==UnitKind.NavalBase && unit.info[0]==0 )
+					if(unit.Kind==UnitKind.NavalBase && unit.BuildTime==0 )
 						size=(int)(SP_SIGHT*0.8);
 					else
 						size=0;
@@ -1287,11 +1287,11 @@ public int		DetectSubmarines( int m , int n)
 
 		q_size2=(int)(q_size*( Units[m].Variant==0 ? 0.60 : 0.50 ));
 
-		Units[n].info[7]=(int)(Units[n].Position.X+Random((q_size2)*2)-q_size2);
-		Units[n].info[8]=(int)(Units[n].Position.Y+Random((q_size2)*2)-q_size2);
+		Units[n].ContactX=(int)(Units[n].Position.X+Random((q_size2)*2)-q_size2);
+		Units[n].ContactY=(int)(Units[n].Position.Y+Random((q_size2)*2)-q_size2);
 
-		Units[n].info[9]=q_size;
-		Units[n].info[10]=250+Random(150);
+		Units[n].ContactRadius=q_size;
+		Units[n].ContactTime=250+Random(150);
 		return(1);
 		}
 	else
@@ -1319,8 +1319,8 @@ public void		Detect()
 	for(m=0;m<=MaxUnitId;m++)
 		{
 		ref var unit = ref Units[m];
-		if( unit.info[10]!=0 )
-			unit.info[10]--;
+		if( unit.ContactTime!=0 )
+			unit.ContactTime--;
 		else
 			unit.Found=0;
 		}
@@ -1369,7 +1369,7 @@ public void		Detect()
 					if( (int)dstc<=size && size!=0 )
 						{
 						flg1++;
-						if( other.Kind==UnitKind.Submarine && other.info[6]!=0 )
+						if( other.Kind==UnitKind.Submarine && other.Submerged!=0 )
 							{	// 潜航中潜水艦が発見可能範囲にいる
 							if( DetectSubmarines(m,n)!=0 )
 								{
@@ -1383,7 +1383,7 @@ public void		Detect()
 
 							if( unit.Kind==UnitKind.Submarine && unit.Supply==0 && other.Kind!=UnitKind.Submarine )		// 発見したのが潜水艦の場合。
 								{
-								unit.info[6]=1;		// 潜ります。
+								unit.Submerged=1;		// 潜ります。
 								}
 							}
 						}
@@ -1392,9 +1392,9 @@ public void		Detect()
 
 			if( flg1==0 && unit.Kind==UnitKind.Submarine )		// 潜水艦が発見できなかった
 				{
-				unit.info[6]=0;					// 浮上します。
+				unit.Submerged=0;					// 浮上します。
 				unit.Found=0;					// クリアします。
-				unit.info[10]=0;
+				unit.ContactTime=0;
 				}
 
 			}
@@ -1441,7 +1441,7 @@ public void		Detect()
 					if( (int)dstc<=size && size!=0 )
 						{
 						flg2++;
-						if( other.Kind==UnitKind.Submarine && other.info[6]!=0 )
+						if( other.Kind==UnitKind.Submarine && other.Submerged!=0 )
 							{	// 潜航中潜水艦が発見可能範囲にいる
 							if( DetectSubmarines(m,n)!=0 )
 								{
@@ -1455,7 +1455,7 @@ public void		Detect()
 
 							if( unit.Kind==UnitKind.Submarine && unit.Supply==0 && other.Kind!=UnitKind.Submarine )		// 発見したのが潜水艦の場合。
 								{
-								unit.info[6]=1;
+								unit.Submerged=1;
 								}
 							}
 						}
@@ -1464,9 +1464,9 @@ public void		Detect()
 
 			if( flg2==0 && unit.Kind==UnitKind.Submarine )		// 潜水艦が発見できなかった
 				{
-				unit.info[6]=0;					// 浮上します
+				unit.Submerged=0;					// 浮上します
 				unit.Found=0;					// クリアします。
-				unit.info[10]=0;
+				unit.ContactTime=0;
 				}
 
 			}

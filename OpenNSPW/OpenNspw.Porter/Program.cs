@@ -13,6 +13,8 @@ using OpenNspw.Porter;
 //       order given, each after the projects it uses. The projects must be built.
 //   OpenNspw.Porter split-fields <project directory>
 //       Puts each field of the project on a line of its own (see FieldSplitter).
+//   OpenNspw.Porter extract <project directory> <file> <first line> <last line> <new method>
+//       Extracts the statements between two lines of a file into a new method (see Extractor).
 //   OpenNspw.Porter ref-locals <project directory> [<method>,<method>...]
 //       Gives the element of a table that a loop works on a ref local, and the unit that the int parameter of the named
 //       methods numbers (see RefLocals).
@@ -25,6 +27,12 @@ if (args.Length >= 3 && args[0] == "rename")
 		Console.WriteLine(path);
 	}
 
+	return 0;
+}
+
+if (args.Length == 6 && args[0] == "extract")
+{
+	new Extractor(new CSharpProject(args[1]), args[2], int.Parse(args[3]), int.Parse(args[4]), args[5]).Run();
 	return 0;
 }
 

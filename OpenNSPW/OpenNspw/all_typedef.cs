@@ -117,14 +117,38 @@ public struct	Unit		// 全ての艦船、航空機、地図上の位置
 	// Carriers and air bases: 発艦予定の機数, the planes about to take off; while it is not 0, no plane can land.
 	[UnscopedRef] public ref int PlanesToLaunch => ref info[4];
 
+	// Planes: how far the plane has run along the flight deck to take off, up to 40.
+	[UnscopedRef] public ref int TakeOffRun => ref info[4];
+
 	// How the unit moves.
 	[UnscopedRef] public ref UnitMode Mode => ref Unsafe.As<int, UnitMode>(ref info[5]);
+
+	// Submarines: 1 while submerged (潜航中).
+	[UnscopedRef] public ref int Submerged => ref info[6];
+
+	// Transports: 揚陸座標, where the transport lands its cargo.
+	[UnscopedRef] public ref int LandingX => ref info[6];
+
+	[UnscopedRef] public ref int LandingY => ref info[7];
+
+	// Where the other side last made contact with the unit, how far around it the contact is drawn, and how long it
+	// lasts: Detect counts ContactTime down, and the unit is no longer found when it reaches 0.
+	[UnscopedRef] public ref int ContactX => ref info[7];
+
+	[UnscopedRef] public ref int ContactY => ref info[8];
+
+	[UnscopedRef] public ref int ContactRadius => ref info[9];
+
+	[UnscopedRef] public ref int ContactTime => ref info[10];
 
 	// Carriers and air bases: 着艦, 0 if the next plane may land, 1 if not.
 	[UnscopedRef] public ref int LandingLock => ref info[7];
 
 	// Carriers and air bases: その空母の次機発進許可, 0 if the next plane may take off.
 	[UnscopedRef] public ref int LaunchLock => ref info[8];
+
+	// Carriers: the planes launched, whose parity picks the side of the deck the next one takes off from.
+	[UnscopedRef] public ref int LaunchCount => ref info[11];
 
 	// いわゆるヒットポイント
 	[UnscopedRef] public ref int Hp => ref hp[0];
@@ -165,6 +189,12 @@ public struct	Effect							// 雷跡とか爆炎とか
 	[Original("x2", "y2")] public WorldPosition EndPosition; // ＢＬＴ や ＲＡＳ
 	[Original("found")] public int Visible; // 自サイド	からの可視、不可視
 	//BOOL				side;					//
+
+	// The ticks left until the effect ends.
+	[UnscopedRef] public ref int TimeLeft => ref info[0];
+
+	// アニメーションパターン: how the effect is drawn.
+	[UnscopedRef] public ref int Animation => ref info[1];
 	}
 
 [Original("FIRE")]
@@ -181,6 +211,20 @@ public struct	Fire
 	[Original("spd_add")] public double Acceleration;
 	[Original("last_spd")] public double FinalSpeed;
 	[Original("last_x", "last_y")] public WorldPosition Destination; // 必要なら、最終目的地
+
+	// The ticks the fire has flown, or has left to fly, by its kind.
+	[UnscopedRef] public ref int Ticks => ref info[0];
+
+	// Torpedoes: the ticks before the torpedo can hit.
+	[UnscopedRef] public ref int ArmingTime => ref info[2];
+
+	// Cargo: where the transport lands it.
+	[UnscopedRef] public ref int TargetX => ref info[6];
+
+	[UnscopedRef] public ref int TargetY => ref info[7];
+
+	// The side of the unit that fired, as an int.
+	[UnscopedRef] public ref int ShooterSide => ref info[8];
 	}
 /*
 // structure used to store DirectPlay information

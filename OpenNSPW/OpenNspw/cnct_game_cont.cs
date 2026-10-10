@@ -148,230 +148,228 @@ public void	LoadResume(int type)
 
 	}
 
-//============================================================================
-// デシジョン
-//----------------------------------------------------------------------------
-[Original("cnct_decision")]
-public void	CheckResult()
+private bool CheckResultOfScenario1()
 	{
-	int		i,f,m;
-	RECT	wrk_r;
-
-	Array5<Array128<byte>> ach = default;
-	int	n; Array5<int> len = default;
-	HDC					hdc;
-
-	// 結果途中判定
-	if( Result==GameResult.None && IsDecisionEnabled!=0 )
+	int f;
+	int i;
+	int m;
+	f=0;
+	for( i=1; i<=MaxUnitId; i++ )
 		{
-		switch( ScenarioNumber )
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.Japan && (unit.Kind==UnitKind.Carrier || unit.Kind==UnitKind.LightCarrier) )
+			f++;
+		}
+	m=0;
+	for( i=1; i<=MaxUnitId; i++ )
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.Japan && (unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress ) )
+			m++;
+		}
+	if( f<=0 || m<=0 )
+		{
+		Result=GameResult.UnitedStatesWon;
+		return false;
+		}
+
+	f=0;
+	for( i=1; i<=MaxUnitId; i++)
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.Carrier || unit.Kind==UnitKind.LightCarrier) )
+			f++;
+		}
+	m=0;
+	for( i=1; i<=MaxUnitId; i++)
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress ) )
+			m++;
+		}
+	if( f<=0 || m<=0 )
+		{
+		Result=GameResult.JapanWon;
+		return false;
+		}
+	return true;
+	}
+
+private bool CheckResultOfScenario4()
+	{
+	int f;
+	int i;
+	int m;
+	f=0;
+	for( i=1; i<=MaxUnitId; i++)
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.Japan && (unit.Kind==UnitKind.Battleship || unit.Kind==UnitKind.Cruiser) )
+			f++;
+		}
+	m=0;
+	for( i=1; i<=MaxUnitId; i++ )
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.Japan && (unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress ) )
+			m++;
+		}
+	if( f<=0 || m<=0 )
+		{
+		Result=GameResult.UnitedStatesWon;
+		return false;
+		}
+
+	f=0;
+	for( i=1; i<=MaxUnitId; i++)
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.Battleship || unit.Kind==UnitKind.Cruiser) )
+			f++;
+		}
+	m=0;
+	for( i=1; i<=MaxUnitId; i++ )
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress ) )
+			m++;
+		}
+	if( f<=0 || m<=0 )
+		{
+		Result=GameResult.JapanWon;
+		return false;
+		}
+	return true;
+	}
+
+private bool CheckResultOfScenario6()
+	{
+	int m;
+	int i;
+	RECT wrk_r;
+	m=0;
+	for( i=1; i<=MaxUnitId; i++)
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.UnitedStates && (unit.Kind>=UnitKind.AirBase&&unit.Kind<=UnitKind.Fortress) )
 			{
-			case 1:
-			case 2:
-			case 3:
-				// 空母起動部隊の戦い
-				f=0;
-				for( i=1; i<=MaxUnitId; i++ )
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.Japan && (unit.Kind==UnitKind.Carrier || unit.Kind==UnitKind.LightCarrier) )
-						f++;
-					}
-				m=0;
-				for( i=1; i<=MaxUnitId; i++ )
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.Japan && (unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress ) )
-						m++;
-					}
-				if( f<=0 || m<=0 )
-					{
-					Result=GameResult.UnitedStatesWon;
-					break;
-					}
+			// ミッドウェイ島
+			// ptin debg
+			wrk_r.top=(int)(3440)+(80*2);
+			wrk_r.right=(int)(80)+(80*4);
+			wrk_r.bottom=(int)(3440)-(80*4);
+			wrk_r.left=(int)(80)-(80*2);
+			if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
+				{
+				m++;	// 生きてる基地で指定範囲内に要る
+				}
+			}
+		}
+	if( m==0 )
+		{
+		Result=GameResult.JapanWon;
+		return false;
+		}
+	return true;
+	}
 
-				f=0;
-				for( i=1; i<=MaxUnitId; i++)
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.Carrier || unit.Kind==UnitKind.LightCarrier) )
-						f++;
-					}
-				m=0;
-				for( i=1; i<=MaxUnitId; i++)
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress ) )
-						m++;
-					}
-				if( f<=0 || m<=0 )
-					{
-					Result=GameResult.JapanWon;
-					break;
-					}
-				break;
+private bool CheckResultOfScenario7()
+	{
+	int f;
+	int m;
+	int i;
+	RECT wrk_r;
+	f=0;
+	m=0;
+	for( i=1; i<=MaxUnitId; i++)
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.UnitedStates && (unit.Kind>=UnitKind.AirBase&&unit.Kind<=UnitKind.Fortress) )
+			{
+			// ミッドウェイ島
+			// ptin_dbg
+			wrk_r.top=(int)(3440)+(80*2);
+			wrk_r.right=(int)(80)+(80*4);
+			wrk_r.bottom=(int)(3440)-(80*4);
+			wrk_r.left=(int)(80)-(80*2);
+			if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
+				{
+				m++;	// 生きてる基地で指定範囲内に要る
+				}
+			}
+		}
+	for( i=1; i<=MaxUnitId; i++)
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.Japan && (unit.Kind==UnitKind.Fortress) && unit.BuildTime==0 )
+			{
+			// ミッドウェイ島
+			// ptin dbg
+			wrk_r.top=(int)(3440)+(80*2);
+			wrk_r.right=(int)(80)+(80*4);
+			wrk_r.bottom=(int)(3440)-(80*4);
+			wrk_r.left=(int)(80)-(80*2);
+			if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
+				{
+				f++;	// 生きてる基地で指定範囲内に要る
+				}
+			}
+		}
+	if( m==0 && f!=0)
+		{
+		Result=GameResult.JapanWon;
+		return false;
+		}
+	return true;
+	}
 
-			case 4:
-			case 5:
-				// 艦隊決戦
-				f=0;
-				for( i=1; i<=MaxUnitId; i++)
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.Japan && (unit.Kind==UnitKind.Battleship || unit.Kind==UnitKind.Cruiser) )
-						f++;
-					}
-				m=0;
-				for( i=1; i<=MaxUnitId; i++ )
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.Japan && (unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress ) )
-						m++;
-					}
-				if( f<=0 || m<=0 )
-					{
-					Result=GameResult.UnitedStatesWon;
-					break;
-					}
-
-				f=0;
-				for( i=1; i<=MaxUnitId; i++)
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.Battleship || unit.Kind==UnitKind.Cruiser) )
-						f++;
-					}
-				m=0;
-				for( i=1; i<=MaxUnitId; i++ )
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress ) )
-						m++;
-					}
-				if( f<=0 || m<=0 )
-					{
-					Result=GameResult.JapanWon;
-					break;
-					}
-				break;
-
-			case 6:
-				// ミッドウェイ島攻略
-				m=0;
-				for( i=1; i<=MaxUnitId; i++)
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.UnitedStates && (unit.Kind>=UnitKind.AirBase&&unit.Kind<=UnitKind.Fortress) )
-						{
-						// ミッドウェイ島
-						// ptin debg
-						wrk_r.top=(int)(3440)+(80*2);
-						wrk_r.right=(int)(80)+(80*4);
-						wrk_r.bottom=(int)(3440)-(80*4);
-						wrk_r.left=(int)(80)-(80*2);
-						if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
-							{
-							m++;	// 生きてる基地で指定範囲内に要る
-							}
-						}
-					}
-				if( m==0 )
-					{
-					Result=GameResult.JapanWon;
-					break;
-					}
-
-				break;
-
-			case 7:
-				// ミッドウェイ島攻略
-				f=0;
-				m=0;
-				for( i=1; i<=MaxUnitId; i++)
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.UnitedStates && (unit.Kind>=UnitKind.AirBase&&unit.Kind<=UnitKind.Fortress) )
-						{
-						// ミッドウェイ島
-						// ptin_dbg
-						wrk_r.top=(int)(3440)+(80*2);
-						wrk_r.right=(int)(80)+(80*4);
-						wrk_r.bottom=(int)(3440)-(80*4);
-						wrk_r.left=(int)(80)-(80*2);
-						if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
-							{
-							m++;	// 生きてる基地で指定範囲内に要る
-							}
-						}
-					}
-				for( i=1; i<=MaxUnitId; i++)
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.Japan && (unit.Kind==UnitKind.Fortress) && unit.info[0]==0 )
-						{
-						// ミッドウェイ島
-						// ptin dbg
-						wrk_r.top=(int)(3440)+(80*2);
-						wrk_r.right=(int)(80)+(80*4);
-						wrk_r.bottom=(int)(3440)-(80*4);
-						wrk_r.left=(int)(80)-(80*2);
-						if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
-							{
-							f++;	// 生きてる基地で指定範囲内に要る
-							}
-						}
-					}
-				if( m==0 && f!=0)
-					{
-					Result=GameResult.JapanWon;
-					break;
-					}
-
-				break;
-
-			case 8:
-				// 中部太平洋の戦い
-				f=0;
-				m=0;
-				for( i=1; i<=MaxUnitId; i++)
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.UnitedStates && (unit.Kind>=UnitKind.AirBase&&unit.Kind<=UnitKind.Fortress) )
-						{
-						// ミッドウェイ島
-						// ptin dbg
-						wrk_r.top=(int)(3440)+(80*2);
-						wrk_r.right=(int)(80)+(80*4);
-						wrk_r.bottom=(int)(3440)-(80*4);
-						wrk_r.left=(int)(80)-(80*2);
-						if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
-							{
-							m++;	// 生きてる基地で指定範囲内に要る
-							}
-						}
-					}
-				for( i=1; i<=MaxUnitId; i++)
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.Japan && (unit.Kind==UnitKind.Fortress) && unit.info[0]==0 )
-						{
-						// ミッドウェイ島
-						// ptin_dbg
-						wrk_r.top=(int)(3440)+(80*2);
-						wrk_r.right=(int)(80)+(80*4);
-						wrk_r.bottom=(int)(3440)-(80*4);
-						wrk_r.left=(int)(80)-(80*2);
-						if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
-							{
-							f++;	// 生きてる基地で指定範囲内に要る
-							}
-						}
-					}
-				if( m==0 && f!=0)
-					{
-					Result=GameResult.JapanWon;
-					break;
-					}
+private bool CheckResultOfScenario8()
+	{
+	int f;
+	int m;
+	int i;
+	RECT wrk_r;
+	f=0;
+	m=0;
+	for( i=1; i<=MaxUnitId; i++)
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.UnitedStates && (unit.Kind>=UnitKind.AirBase&&unit.Kind<=UnitKind.Fortress) )
+			{
+			// ミッドウェイ島
+			// ptin dbg
+			wrk_r.top=(int)(3440)+(80*2);
+			wrk_r.right=(int)(80)+(80*4);
+			wrk_r.bottom=(int)(3440)-(80*4);
+			wrk_r.left=(int)(80)-(80*2);
+			if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
+				{
+				m++;	// 生きてる基地で指定範囲内に要る
+				}
+			}
+		}
+	for( i=1; i<=MaxUnitId; i++)
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.Japan && (unit.Kind==UnitKind.Fortress) && unit.BuildTime==0 )
+			{
+			// ミッドウェイ島
+			// ptin_dbg
+			wrk_r.top=(int)(3440)+(80*2);
+			wrk_r.right=(int)(80)+(80*4);
+			wrk_r.bottom=(int)(3440)-(80*4);
+			wrk_r.left=(int)(80)-(80*2);
+			if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
+				{
+				f++;	// 生きてる基地で指定範囲内に要る
+				}
+			}
+		}
+	if( m==0 && f!=0)
+		{
+		Result=GameResult.JapanWon;
+		return false;
+		}
 
 	// ウェーク
 /*
@@ -387,47 +385,382 @@ public void	CheckResult()
 	rx=-4080+80;
 	ry=-720-160;
 */
-				f=0;
-				m=0;
-				for( i=1; i<=MaxUnitId; i++)
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.Japan && (unit.Kind>=UnitKind.AirBase&&unit.Kind<=UnitKind.Fortress) )
-						{
-						// ウェーク
-						wrk_r.top=(int)(-720+80);
-						wrk_r.right=(int)(-4080+80);
-						wrk_r.bottom=(int)(-720-160);
-						wrk_r.left=(int)(-4080-80);
+	f=0;
+	m=0;
+	for( i=1; i<=MaxUnitId; i++)
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.Japan && (unit.Kind>=UnitKind.AirBase&&unit.Kind<=UnitKind.Fortress) )
+			{
+			// ウェーク
+			wrk_r.top=(int)(-720+80);
+			wrk_r.right=(int)(-4080+80);
+			wrk_r.bottom=(int)(-720-160);
+			wrk_r.left=(int)(-4080-80);
 
-						if( PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
-							{
-							m++;	// 生きてる基地で指定範囲内に要る
-							}
-						}
-					}
-				for( i=1; i<=MaxUnitId; i++)
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.Fortress) && unit.info[0]==0 )
-						{
-						// ウェーク
-						wrk_r.top=(int)(-720+80);
-						wrk_r.right=(int)(-4080+80);
-						wrk_r.bottom=(int)(-720-160);
-						wrk_r.left=(int)(-4080-80);
+			if( PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
+				{
+				m++;	// 生きてる基地で指定範囲内に要る
+				}
+			}
+		}
+	for( i=1; i<=MaxUnitId; i++)
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.Fortress) && unit.BuildTime==0 )
+			{
+			// ウェーク
+			wrk_r.top=(int)(-720+80);
+			wrk_r.right=(int)(-4080+80);
+			wrk_r.bottom=(int)(-720-160);
+			wrk_r.left=(int)(-4080-80);
 
-						if( PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
-							{
-							f++;	// 生きてる基地で指定範囲内に要る
-							}
-						}
-					}
-				if( m==0 && f!=0)
-					{
-					Result=GameResult.UnitedStatesWon;
+			if( PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
+				{
+				f++;	// 生きてる基地で指定範囲内に要る
+				}
+			}
+		}
+	if( m==0 && f!=0)
+		{
+		Result=GameResult.UnitedStatesWon;
+		return false;
+		}
+	return true;
+	}
+
+private bool CheckResultOfScenario101()
+	{
+	int f;
+	RECT wrk_r;
+	int i;
+	f=0;
+	// ガダルカナル島
+	wrk_r.top=(int)(-160);
+	wrk_r.right=(int)(-1040+(80*3));
+	wrk_r.bottom=(int)(-160-80);
+	wrk_r.left=(int)(-1040);
+	for( i=1; i<=MaxUnitId; i++)
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+			{
+			f++;
+			}
+		}
+
+	if( f==0 )
+		{
+		Result=GameResult.UnitedStatesWon;
+		return false;
+		}
+	return true;
+	}
+
+private bool CheckResultOfScenario102()
+	{
+	int f;
+	int m;
+	RECT wrk_r;
+	int i;
+	f=0;
+	m=0;
+	// ガダルカナル島
+	wrk_r.top=(int)(-160);
+	wrk_r.right=(int)(-1040+(80*3));
+	wrk_r.bottom=(int)(-160-80);
+	wrk_r.left=(int)(-1040);
+	for( i=1; i<=MaxUnitId; i++)
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+			{
+			f++;
+			}
+		}
+	for( i=1; i<=MaxUnitId; i++)
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.UnitedStates && ( unit.Kind==UnitKind.AirBase )  && unit.BuildTime==0 && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+			{
+			m++;
+			}
+		}
+
+	if( f==0 && m>=2)
+		{
+		Result=GameResult.UnitedStatesWon;
+		return false;
+		}
+	return true;
+	}
+
+private bool CheckResultOfScenario103()
+	{
+	int f;
+	int i;
+	f=0;
+	for( i=1; i<=MaxUnitId; i++)
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.Japan && unit.Kind==UnitKind.City  )
+			{
+			f++;
+			}
+		}
+
+	if( f==0 )
+		{
+		Result=GameResult.UnitedStatesWon;
+		return false;
+		}
+	return true;
+	}
+
+private bool CheckResultOfScenario104()
+	{
+	int f;
+	RECT wrk_r;
+	int i;
+	f=0;
+	// ブーゲンビル島
+	wrk_r.top=(int)(1200+80);
+	wrk_r.right=(int)(-4480+80*5);
+	wrk_r.bottom=(int)(1200-80*3);
+	wrk_r.left=(int)(-4480-80);
+	for( i=1; i<=MaxUnitId; i++)
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+			{
+			f++;
+			}
+		}
+
+	if( f==0 )
+		{
+		Result=GameResult.UnitedStatesWon;
+		return false;
+		}
+	return true;
+	}
+
+private bool CheckResultOfScenario105()
+	{
+	int f;
+	RECT wrk_r;
+	int i;
+	f=0;
+	// ブーゲンビル島
+	wrk_r.top=(int)(1200+80);
+	wrk_r.right=(int)(-4480+80*5);
+	wrk_r.bottom=(int)(1200-80*3);
+	wrk_r.left=(int)(-4480-80);
+	for( i=1; i<=MaxUnitId; i++)
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+			{
+			f++;
+			}
+		}
+	if( f==0 )
+		{
+		Result=GameResult.UnitedStatesWon;
+		return false;
+		}
+
+	f=0;
+	// ガダルカナル島
+	wrk_r.top=(int)(-160);
+	wrk_r.right=(int)(-1040+(80*3));
+	wrk_r.bottom=(int)(-160-80);
+	wrk_r.left=(int)(-1040);
+	for( i=1; i<=MaxUnitId; i++)
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.UnitedStates && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+			{
+			f++;
+			}
+		}
+
+	if( f==0 )
+		{
+		Result=GameResult.JapanWon;
+		return false;
+		}
+	return true;
+	}
+
+private bool CheckResultOfScenario106()
+	{
+	RECT wrk_r;
+	int f;
+	int m;
+	int i;
+	wrk_r.top=(int)(-160);
+	wrk_r.right=(int)(-1040+(80*3));
+	wrk_r.bottom=(int)(-160-80);
+	wrk_r.left=(int)(-1040);
+
+	f=0;
+	m=0;
+
+	for( i=1; i<=MaxUnitId; i++)
+		{
+		ref var unit = ref Units[i];
+		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+			{
+			f++;	//　日本の施設
+			}
+		if( unit.Side==Side.UnitedStates && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+			{
+			m++;	//　米の施設
+			}
+		}
+
+	if( f>=4 && m==0 )
+		{
+		Result=GameResult.JapanWon;
+		return false;
+		}
+	if( f==0 && m>=4 )
+		{
+		Result=GameResult.UnitedStatesWon;
+		return false;
+		}
+	return true;
+	}
+
+private void DrawResult(ref Array5<int> len, ref Array5<Array128<byte>> ach)
+	{
+	HDC hdc;
+	int n;
+	if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
+		{
+		SetBkMode(hdc, TRANSPARENT);
+		SelectObject(hdc, gameFont_1);
+
+#if !LNGG_VER
+		switch( Result )
+			{
+			case GameResult.JapanWon:
+				len[0] = wsprintf(ach[0], "ゲーム終了");
+				len[1] = wsprintf(ach[1], "日本海軍は勝利条件を達成した。");
+				len[2] = wsprintf(ach[2], "日本海軍の勝利");
+				break;
+			case GameResult.UnitedStatesWon:
+				len[0] = wsprintf(ach[0], "ゲーム終了");
+				len[1] = wsprintf(ach[1], "合衆国海軍は勝利条件を達成した。");
+				len[2] = wsprintf(ach[2], "合衆国海軍の勝利");
+				break;
+			case GameResult.JapanLost:
+				len[0] = wsprintf(ach[0], "ゲーム終了");
+				len[1] = wsprintf(ach[1], "日本海軍は勝利条件を達成できなかった。");
+				len[2] = wsprintf(ach[2], "");
+				break;
+			case GameResult.UnitedStatesLost:
+				len[0] = wsprintf(ach[0], "ゲーム終了");
+				len[1] = wsprintf(ach[1], "合衆国海軍は勝利条件を達成できなかった。");
+				len[2] = wsprintf(ach[2], "");
+				break;
+			case GameResult.Draw:
+				len[0] = wsprintf(ach[0], "ゲーム終了");
+				len[1] = wsprintf(ach[1], "日米両海軍は勝利目標を達成できなかった。");
+				len[2] = wsprintf(ach[2], "引き分け。");
+				break;
+			}
+
+#else
+
+		len[0] = wsprintf(ach[0], "Battle is Over.");
+		switch( game_end )
+			{
+			case GameResult.JapanWon:
+				len[1] = wsprintf(ach[1], "Japan Navy got a victory.");
+				len[2] = wsprintf(ach[2], "Japan Navy won.");
+				break;
+			case GameResult.UnitedStatesWon:
+				len[1] = wsprintf(ach[1], "U.S.Navy got a victory.");
+				len[2] = wsprintf(ach[2], "U.S.Navy won.");
+				break;
+			case GameResult.JapanLost:
+				len[1] = wsprintf(ach[1], "Japan Navy lost a victory.");
+				len[2] = wsprintf(ach[2], "");
+				break;
+			case GameResult.UnitedStatesLost:
+				len[1] = wsprintf(ach[1], "U.S.Navy lost a victory.");
+				len[2] = wsprintf(ach[2], "");
+				break;
+			case GameResult.Draw:
+				len[1] = wsprintf(ach[1], "Both of Navies could not get a victory.");
+				len[2] = wsprintf(ach[2], "Draw.");
+				break;
+			}
+
+#endif
+
+//			len[3] = wsprintf(ach[3], "ＥＳＣ：プログラム終了　Ｆ６：シナリオセッティング画面");
+
+		for( n=0; n<=2; n++)
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
+			TextOut(hdc, 300, 300+(n*20), ach[n], len[n]);
+			}
+
+		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
+		}
+	}
+
+//============================================================================
+// デシジョン
+//----------------------------------------------------------------------------
+[Original("cnct_decision")]
+public void	CheckResult()
+	{
+
+	Array5<Array128<byte>> ach = default;
+	 Array5<int> len = default;
+
+	// 結果途中判定
+	if( Result==GameResult.None && IsDecisionEnabled!=0 )
+		{
+		switch( ScenarioNumber )
+			{
+			case 1:
+			case 2:
+			case 3:
+				// 空母起動部隊の戦い
+				if( !CheckResultOfScenario1() )
 					break;
-					}
+				break;
+
+			case 4:
+			case 5:
+				// 艦隊決戦
+				if( !CheckResultOfScenario4() )
+					break;
+				break;
+
+			case 6:
+				// ミッドウェイ島攻略
+				if( !CheckResultOfScenario6() )
+					break;
+
+				break;
+
+			case 7:
+				// ミッドウェイ島攻略
+				if( !CheckResultOfScenario7() )
+					break;
+
+				break;
+
+			case 8:
+				// 中部太平洋の戦い
+				if( !CheckResultOfScenario8() )
+					break;
 				break;
 
 			case 9:
@@ -435,181 +768,38 @@ public void	CheckResult()
 				break;
 
 			case 101:
-				f=0;
-				// ガダルカナル島
-				wrk_r.top=(int)(-160);
-				wrk_r.right=(int)(-1040+(80*3));
-				wrk_r.bottom=(int)(-160-80);
-				wrk_r.left=(int)(-1040);
-				for( i=1; i<=MaxUnitId; i++)
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
-						{
-						f++;
-						}
-					}
-
-				if( f==0 )
-					{
-					Result=GameResult.UnitedStatesWon;
+				if( !CheckResultOfScenario101() )
 					break;
-					}
 
 				break;
 
 			case 102:
-				f=0;
-				m=0;
-				// ガダルカナル島
-				wrk_r.top=(int)(-160);
-				wrk_r.right=(int)(-1040+(80*3));
-				wrk_r.bottom=(int)(-160-80);
-				wrk_r.left=(int)(-1040);
-				for( i=1; i<=MaxUnitId; i++)
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
-						{
-						f++;
-						}
-					}
-				for( i=1; i<=MaxUnitId; i++)
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.UnitedStates && ( unit.Kind==UnitKind.AirBase )  && unit.info[0]==0 && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
-						{
-						m++;
-						}
-					}
-
-				if( f==0 && m>=2)
-					{
-					Result=GameResult.UnitedStatesWon;
+				if( !CheckResultOfScenario102() )
 					break;
-					}
 
 				break;
 
 			case 103:
-				f=0;
-				for( i=1; i<=MaxUnitId; i++)
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.Japan && unit.Kind==UnitKind.City  )
-						{
-						f++;
-						}
-					}
-
-				if( f==0 )
-					{
-					Result=GameResult.UnitedStatesWon;
+				if( !CheckResultOfScenario103() )
 					break;
-					}
 				break;
 
 			case 104:
-				f=0;
-				// ブーゲンビル島
-				wrk_r.top=(int)(1200+80);
-				wrk_r.right=(int)(-4480+80*5);
-				wrk_r.bottom=(int)(1200-80*3);
-				wrk_r.left=(int)(-4480-80);
-				for( i=1; i<=MaxUnitId; i++)
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
-						{
-						f++;
-						}
-					}
-
-				if( f==0 )
-					{
-					Result=GameResult.UnitedStatesWon;
+				if( !CheckResultOfScenario104() )
 					break;
-					}
 
 				break;
 
 			case 105:
-				f=0;
-				// ブーゲンビル島
-				wrk_r.top=(int)(1200+80);
-				wrk_r.right=(int)(-4480+80*5);
-				wrk_r.bottom=(int)(1200-80*3);
-				wrk_r.left=(int)(-4480-80);
-				for( i=1; i<=MaxUnitId; i++)
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
-						{
-						f++;
-						}
-					}
-				if( f==0 )
-					{
-					Result=GameResult.UnitedStatesWon;
+				if( !CheckResultOfScenario105() )
 					break;
-					}
-
-				f=0;
-				// ガダルカナル島
-				wrk_r.top=(int)(-160);
-				wrk_r.right=(int)(-1040+(80*3));
-				wrk_r.bottom=(int)(-160-80);
-				wrk_r.left=(int)(-1040);
-				for( i=1; i<=MaxUnitId; i++)
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.UnitedStates && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
-						{
-						f++;
-						}
-					}
-
-				if( f==0 )
-					{
-					Result=GameResult.JapanWon;
-					break;
-					}
 				break;
 
 			case 106:
 				// ガ島争奪戦。
 				// ガダルカナル島
-				wrk_r.top=(int)(-160);
-				wrk_r.right=(int)(-1040+(80*3));
-				wrk_r.bottom=(int)(-160-80);
-				wrk_r.left=(int)(-1040);
-
-				f=0;
-				m=0;
-
-				for( i=1; i<=MaxUnitId; i++)
-					{
-					ref var unit = ref Units[i];
-					if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
-						{
-						f++;	//　日本の施設
-						}
-					if( unit.Side==Side.UnitedStates && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
-						{
-						m++;	//　米の施設
-						}
-					}
-
-				if( f>=4 && m==0 )
-					{
-					Result=GameResult.JapanWon;
+				if( !CheckResultOfScenario106() )
 					break;
-					}
-				if( f==0 && m>=4 )
-					{
-					Result=GameResult.UnitedStatesWon;
-					break;
-					}
 				break;
 
 			case 995:
@@ -626,80 +816,7 @@ public void	CheckResult()
 	// 結果はっぴょー
 	if( Result!=GameResult.None )
 		{
-		if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
-			{
-			SetBkMode(hdc, TRANSPARENT);
-			SelectObject(hdc, gameFont_1);
-
-#if !LNGG_VER
-			switch( Result )
-				{
-				case GameResult.JapanWon:
-					len[0] = wsprintf(ach[0], "ゲーム終了");
-					len[1] = wsprintf(ach[1], "日本海軍は勝利条件を達成した。");
-					len[2] = wsprintf(ach[2], "日本海軍の勝利");
-					break;
-				case GameResult.UnitedStatesWon:
-					len[0] = wsprintf(ach[0], "ゲーム終了");
-					len[1] = wsprintf(ach[1], "合衆国海軍は勝利条件を達成した。");
-					len[2] = wsprintf(ach[2], "合衆国海軍の勝利");
-					break;
-				case GameResult.JapanLost:
-					len[0] = wsprintf(ach[0], "ゲーム終了");
-					len[1] = wsprintf(ach[1], "日本海軍は勝利条件を達成できなかった。");
-					len[2] = wsprintf(ach[2], "");
-					break;
-				case GameResult.UnitedStatesLost:
-					len[0] = wsprintf(ach[0], "ゲーム終了");
-					len[1] = wsprintf(ach[1], "合衆国海軍は勝利条件を達成できなかった。");
-					len[2] = wsprintf(ach[2], "");
-					break;
-				case GameResult.Draw:
-					len[0] = wsprintf(ach[0], "ゲーム終了");
-					len[1] = wsprintf(ach[1], "日米両海軍は勝利目標を達成できなかった。");
-					len[2] = wsprintf(ach[2], "引き分け。");
-					break;
-				}
-
-#else
-
-			len[0] = wsprintf(ach[0], "Battle is Over.");
-			switch( game_end )
-				{
-				case GameResult.JapanWon:
-					len[1] = wsprintf(ach[1], "Japan Navy got a victory.");
-					len[2] = wsprintf(ach[2], "Japan Navy won.");
-					break;
-				case GameResult.UnitedStatesWon:
-					len[1] = wsprintf(ach[1], "U.S.Navy got a victory.");
-					len[2] = wsprintf(ach[2], "U.S.Navy won.");
-					break;
-				case GameResult.JapanLost:
-					len[1] = wsprintf(ach[1], "Japan Navy lost a victory.");
-					len[2] = wsprintf(ach[2], "");
-					break;
-				case GameResult.UnitedStatesLost:
-					len[1] = wsprintf(ach[1], "U.S.Navy lost a victory.");
-					len[2] = wsprintf(ach[2], "");
-					break;
-				case GameResult.Draw:
-					len[1] = wsprintf(ach[1], "Both of Navies could not get a victory.");
-					len[2] = wsprintf(ach[2], "Draw.");
-					break;
-				}
-
-#endif
-
-//			len[3] = wsprintf(ach[3], "ＥＳＣ：プログラム終了　Ｆ６：シナリオセッティング画面");
-
-			for( n=0; n<=2; n++)
-				{
-				SetTextColor(hdc, RGB(255, 255, 255));
-				TextOut(hdc, 300, 300+(n*20), ach[n], len[n]);
-				}
-
-			IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
-			}
+		DrawResult(ref len, ref ach);
 		}
 
 	}
@@ -856,7 +973,7 @@ public void	SetUnitData(int m)
 			unit.PlaneCount=CountPlanesIn(m);		// 現在収容数(飛行甲板上数も含む)
 			unit.Capacity=12;					// 最大収容数
 			unit.info[3]=0;					//
-			unit.info[4]=0;					// 発進予定機数 ０なら着艦可
+			unit.PlanesToLaunch=0;					// 発進予定機数 ０なら着艦可
 			unit.Mode=UnitMode.Move;				// モード（コンバットメニュー）
 
 			unit.Weapon=FireKind.Gun;	//0;		// 武装品種
@@ -902,7 +1019,7 @@ public void	SetUnitData(int m)
 			unit.PlaneCount=CountPlanesIn(m);		// 現在収容数(飛行甲板上数も含む)
 			unit.Capacity=8;					// 最大収容数
 			unit.info[3]=0;					//
-			unit.info[4]=0;					// 発進予定機数 ０なら着艦可
+			unit.PlanesToLaunch=0;					// 発進予定機数 ０なら着艦可
 			unit.Mode=UnitMode.Move;				// モード（コンバットメニュー）
 
 			unit.Weapon=FireKind.Gun;	//0;		// 武装品種
@@ -1146,7 +1263,7 @@ public void	SetUnitData(int m)
 			unit.PlaneCount=CountPlanesIn(m);		// 現在収容数(飛行甲板上数も含む)
 			unit.Capacity=16;					// 最大収容数
 			unit.info[3]=0;					//
-			unit.info[4]=0;					// 発進予定機数 ０なら着艦可
+			unit.PlanesToLaunch=0;					// 発進予定機数 ０なら着艦可
 			unit.Mode=UnitMode.Move;				// モード（コンバットメニュー）
 
 			unit.Skill=5;
@@ -1513,7 +1630,7 @@ public int		AddPlane(Side side,UnitKind kind,int type,int no,int planes,FireKind
 			Units[m].Carrier=no;					// 所属の空母、及び、基地の番号
 			Units[m].ParkingNumber=f;				// 格納庫の位置、及び、その基地の番機番号
 			Units[m].info[3]=0;					// 8
-			Units[m].info[4]=0;					// 発艦予定の機数
+			Units[m].PlanesToLaunch=0;					// 発艦予定の機数
 			Units[m].Mode=UnitMode.Move;				// モード（コンバットメニュー）
 			SetParkingPosition(m);
 			Units[m].Stop=1;
