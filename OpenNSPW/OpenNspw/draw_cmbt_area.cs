@@ -944,14 +944,266 @@ private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int lc_lf
 		}
 	}
 
+private bool DrawUnitMarks(bool goto_dca1, ref Unit unit, SpriteId sprite, ref int lc_lf_btn, int m, ref int lc_ri_btn)
+	{
+	RECT dstn_rect;
+	RECT wrk_rect;
+	int right;
+	int bottom;
+	int cl;
+	int n;
+	if( !goto_dca1 )
+	{
+
+//				sprite=UNIT_JPN;		//Off Screen Number		日本海軍の表示
+//				sprite=UNIT_USA;		//Off Screen Number		合衆国海軍の表示
+
+	//The Slct された機体への移動予定の線引き、
+	if( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked )
+		{
+
+		if( unit.Carrier==UnitInfoPanel[3] &&  ((UnitKind)UnitInfoPanel[0]==UnitKind.Carrier || (UnitKind)UnitInfoPanel[0]==UnitKind.LightCarrier || (UnitKind)UnitInfoPanel[0]==UnitKind.AirBase ) )
+			{
+			if( ( (unit.Mode<=UnitMode.Slow)  && (UnitInfoPanel[1]==1&&unit.DeckPhase<=2)||(UnitInfoPanel[1]==0&&unit.DeckPhase>=3))
+			 || (unit.Mode==UnitMode.Return && (UnitInfoPanel[1]==0) ) )
+				{
+				// 空母で飛行甲板か格納庫かで航空機を表示するかしない。
+				Sprites[sprite].X=(int)unit.Position.X;
+				Sprites[sprite].Y=(int)unit.Position.Y;
+				}
+			else
+				return false;
+			}
+		else
+			return false;
+
+		}
+	else
+		{
+		if( unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.IsSubmerged )
+			{	// およその敵潜航潜水艦
+			Sprites[sprite].X=(int)(unit.ContactX-CameraPosition.X);
+			Sprites[sprite].Y=(int)(CameraPosition.Y-unit.ContactY);
+			}
+		else
+			{	// マップ上のユニット
+
+			Sprites[sprite].X=(int)(unit.Position.X-CameraPosition.X);
+			Sprites[sprite].Y=(int)(CameraPosition.Y-unit.Position.Y);
+
+			}
+		}
+	}
+
+// dca1:
+	dstn_rect.left=Sprites[sprite].X-Sprites[sprite].CenterX;
+	dstn_rect.top=Sprites[sprite].Y-Sprites[sprite].CenterY;
+	dstn_rect.right=dstn_rect.left+Sprites[sprite].Width-2;
+	dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Height-2;
+
+	wrk_rect.left=dstn_rect.left+20;
+	wrk_rect.top=dstn_rect.top+20;
+	wrk_rect.right=dstn_rect.right-20;
+	wrk_rect.bottom=dstn_rect.bottom-20;
+
+	// クリック選択・非選択
+	if( PointInRect(ref wrk_rect,CursorPosition.x,CursorPosition.y)!=0 && !( Units[SelectedUnit].Category==UnitCategory.Plane && unit.Category==UnitCategory.Ship && !(unit.Kind==UnitKind.Carrier || unit.Kind==UnitKind.LightCarrier || unit.Kind==UnitKind.AirBase || Units[SelectedUnit].Side!=unit.Side) ) && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying )  && !( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked && !unit.IsStopping ) && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked && !Units[SelectedUnit].IsStopping ) && !( Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked && unit.Category==UnitCategory.Ship )
+		&& !(Units[SelectedUnit].Category==UnitCategory.Ship && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked)  && !(SelectedUnit!=0 && Units[SelectedUnit].Side!=LocalSide) && !(SelectedUnit!=0 && Units[SelectedUnit].Category==UnitCategory.Plane&&unit.Weapon==FireKind.Maintenance)
+		 && !(unit.PlaneState!=UnitState.Parked && CursorPosition.x>=CMBT_WIDTH-1)
+		 && !(unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.IsSubmerged)
+		)
+		{
+		HandleUnitClick(ref unit, ref dstn_rect, ref lc_lf_btn, m, sprite);
+		}
+
+	if( m==0 )
+		return false;
+
+	// 選択されてればマークの絵というか枠
+	if( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked )
+		{right=SCRN_WIDTH-1; bottom=SCRN_HEIGHT-1;}
+	else
+		{right=CMBT_WIDTH-1; bottom=CMBT_HEIGHT-1;}
+	cl=0xffff;
+	if( SelectedUnit==m && m!=0)
+		{
+		DrawSelectedUnit(ref dstn_rect, right, bottom);
+		}
+	else
+		{
+		if( Selections[1][m]!=0 )
+			{
+			n=20;
+			DrawLine4(dstn_rect.left+n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.top+n,right,bottom,RGB(255,255,255));
+			DrawLine4(dstn_rect.right-n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.bottom-n,right,bottom,RGB(255,255,255));
+			DrawLine4(dstn_rect.right-n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.bottom-n,right,bottom,RGB(255,255,255));
+			DrawLine4(dstn_rect.left+n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.top+n,right,bottom,RGB(255,255,255));
+			}
+		}
+
+	if( SelectedUnit!=0 && Units[SelectedUnit].Kind==UnitKind.Transport && Units[SelectedUnit].Target==MaxUnitId+1 && m==SelectedUnit )
+		{
+		// 輸送船の揚陸先のマーク
+		DrawLandingPoint(sprite);
+
+		}
+	else  if( SelectedUnit!=0 && Units[SelectedUnit].Target==m )
+		{
+		// 攻撃先 としてのマーク
+		cl=0x1f;
+		n=10+(FrameCount%8)*2;
+		DrawLine4(dstn_rect.left+n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+		DrawLine4(dstn_rect.right-n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+		DrawLine4(dstn_rect.right-n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+		DrawLine4(dstn_rect.left+n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+		}
+	else  if( SelectedUnit!=0 && Units[SelectedUnit].Carrier==m && Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Flying)
+		{
+		// 攻撃先 としてのマーク
+		cl=0x1f;
+		n=15;
+		DrawLine4(dstn_rect.right-n-4,dstn_rect.bottom-n,dstn_rect.left+n+4,dstn_rect.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+		DrawLine4(dstn_rect.right-n-4,dstn_rect.bottom-n+2,dstn_rect.left+n+4,dstn_rect.bottom-n+2,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+		}
+
+		// 攻撃先 着艦先 の方向
+	if( unit.Target!=0 && unit.Side==LocalSide )
+		{
+		DrawTargetLine(ref unit);
+		}
+
+	// 決定された進路線ひき
+	if( SelectedUnit==m && !IsEditingMap )
+		{
+
+		// 緊急移動先までの線
+		DrawPathAndSetDestination(ref unit, sprite, lc_lf_btn, ref lc_ri_btn, m);
+		}
+	return true;
+	}
+
+private void DrawUnit(ref Unit unit, SpriteId sprite, ref RECT src_rect, ref RECT info_rect, ref RECT field_rect, ref int plane_fling_sound)
+	{
+	RECT dstn_rect;
+	switch((int)(unit.Direction/22.5))
+		{
+		case 0: case 15:
+			unit.SpriteColumn=2;
+			break;
+		case 1: case 2:
+			unit.SpriteColumn=1;
+			break;
+		case 3: case 4:
+			unit.SpriteColumn=0;
+			break;
+		case 5: case 6:
+			unit.SpriteColumn=7;
+			break;
+		case 7: case 8:
+			unit.SpriteColumn=6;
+			break;
+		case 9: case 10:
+			unit.SpriteColumn=5;
+			break;
+		case 11: case 12:
+			unit.SpriteColumn=4;
+			break;
+		case 13: case 14:
+			unit.SpriteColumn=3;
+			break;
+		default:
+			unit.SpriteColumn=2;
+			break;
+		}
+
+	if( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked)
+		{
+		if( unit.Carrier==UnitInfoPanel[3] && ((UnitKind)UnitInfoPanel[0]==UnitKind.Carrier || (UnitKind)UnitInfoPanel[0]==UnitKind.LightCarrier || (UnitKind)UnitInfoPanel[0]==UnitKind.AirBase ) )
+			{
+			if( ( (unit.Mode<=UnitMode.Slow) && (UnitInfoPanel[1]==1&&unit.DeckPhase<=2)||(UnitInfoPanel[1]==0&&unit.DeckPhase>=3))
+			 || ( unit.Mode==UnitMode.Return && (UnitInfoPanel[1]==0) ) )
+				{
+				// 駐機中のの飛行機
+				Sprites[sprite].Frame=(unit.SpriteRow*8)+unit.SpriteColumn;
+
+				Sprites[sprite].X=(int)unit.Position.X;
+				Sprites[sprite].Y=(int)unit.Position.Y;
+
+				// src_rect は ソースサーフェスのレクタングルです。
+				src_rect.left = Sprites[sprite].SheetX+(Sprites[sprite].Width * (Sprites[sprite].Frame % Sprites[sprite].FramesPerRow)) +1;
+				src_rect.top = Sprites[sprite].SheetY+(Sprites[sprite].Height* (Sprites[sprite].Frame / Sprites[sprite].FramesPerRow)) +1;
+				src_rect.right = (src_rect.left + Sprites[sprite].Width)-2;
+				src_rect.bottom = (src_rect.top + Sprites[sprite].Height)-2;
+
+				// dstn_rect は ディスティネーションレクタングルです。
+
+				dstn_rect.left=Sprites[sprite].X-Sprites[sprite].CenterX;
+				dstn_rect.top=Sprites[sprite].Y-Sprites[sprite].CenterY;
+				dstn_rect.right=dstn_rect.left+Sprites[sprite].Width-2;
+				dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Height-2;
+
+				if( ClipRects(ref dstn_rect,ref src_rect,ref info_rect)!=0 )
+					{
+					if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref src_rect),DDBLTFAST_SRCCOLORKEY) )
+						{
+						RestoreSurfaces();
+						}
+					}
+				}
+			}
+		}
+	else
+		{
+		Sprites[sprite].X=(int)(unit.Position.X-CameraPosition.X);
+		Sprites[sprite].Y=(int)(CameraPosition.Y-unit.Position.Y);
+
+		if( unit.Kind==UnitKind.Submarine && unit.IsSubmerged && Result==GameResult.None )
+			{	// 潜航潜水艦
+			Sprites[sprite].Frame=((unit.SpriteRow+1)*8)+unit.SpriteColumn;
+			if( unit.Side!=LocalSide )
+				Sprites[sprite].X=-999;				// それが敵潜水艦なら表示を外す
+			}
+		else
+			{
+			Sprites[sprite].Frame=(unit.SpriteRow*8)+unit.SpriteColumn;
+			}
+
+		// src_rect は ソースサーフェスのレクタングルです。
+		src_rect.left = Sprites[sprite].SheetX+(Sprites[sprite].Width * (Sprites[sprite].Frame % Sprites[sprite].FramesPerRow)) +1;
+		src_rect.top = Sprites[sprite].SheetY+(Sprites[sprite].Height* (Sprites[sprite].Frame / Sprites[sprite].FramesPerRow)) +1;
+		src_rect.right = (src_rect.left + Sprites[sprite].Width)-2;
+		src_rect.bottom = (src_rect.top + Sprites[sprite].Height)-2;
+
+		// dstn_rect は ディスティネーションレクタングルです。
+		dstn_rect.left=Sprites[sprite].X-Sprites[sprite].CenterX;
+		dstn_rect.top=Sprites[sprite].Y-Sprites[sprite].CenterY;
+		dstn_rect.right=dstn_rect.left+Sprites[sprite].Width-2;
+		dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Height-2;
+		if( ClipRects(ref dstn_rect,ref src_rect,ref field_rect)!=0 )
+			{
+			if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref src_rect),DDBLTFAST_SRCCOLORKEY) )
+				{
+				RestoreSurfaces();
+				}
+
+			if( !IsEditingMap && plane_fling_sound==0 && Result==GameResult.None && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying && (FrameCount%10)==0 )
+				{
+				PlaySoundEffect( 0, SoundId.PlaneFlying ,unit.Position.X, unit.Position.Y);
+				plane_fling_sound=1;
+				}
+
+			}
+		}
+	}
+
 //============================================================================
 //コンバットエリア描画 同時にユーザー(通信対戦時はホスト)入力を受け付けます
 //----------------------------------------------------------------------------
 [Original("draw_cmbt_area")]
 public void	DrawBattleArea()
 	{
-	RECT	src_rect = default,field_rect,info_rect,dstn_rect,wrk_rect;
-	int	i,m,n,h,s,sign,cl,lc_ri_btn,lc_lf_btn,right,bottom,j,j2; Array2<int> pp_on = default;
+	RECT	src_rect = default,field_rect,info_rect;
+	int	i,m,h,s,sign,lc_ri_btn,lc_lf_btn,j,j2; Array2<int> pp_on = default;
 	SpriteId sprite;
 	int	cm_scrn_x,cm_scrn_y; Array256<int> chk = default;
 
@@ -1032,115 +1284,7 @@ public void	DrawBattleArea()
 	)
 			)
 			{
-			switch((int)(unit.Direction/22.5))
-				{
-				case 0: case 15:
-					unit.SpriteColumn=2;
-					break;
-				case 1: case 2:
-					unit.SpriteColumn=1;
-					break;
-				case 3: case 4:
-					unit.SpriteColumn=0;
-					break;
-				case 5: case 6:
-					unit.SpriteColumn=7;
-					break;
-				case 7: case 8:
-					unit.SpriteColumn=6;
-					break;
-				case 9: case 10:
-					unit.SpriteColumn=5;
-					break;
-				case 11: case 12:
-					unit.SpriteColumn=4;
-					break;
-				case 13: case 14:
-					unit.SpriteColumn=3;
-					break;
-				default:
-					unit.SpriteColumn=2;
-					break;
-				}
-
-			if( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked)
-				{
-				if( unit.Carrier==UnitInfoPanel[3] && ((UnitKind)UnitInfoPanel[0]==UnitKind.Carrier || (UnitKind)UnitInfoPanel[0]==UnitKind.LightCarrier || (UnitKind)UnitInfoPanel[0]==UnitKind.AirBase ) )
-					{
-					if( ( (unit.Mode<=UnitMode.Slow) && (UnitInfoPanel[1]==1&&unit.DeckPhase<=2)||(UnitInfoPanel[1]==0&&unit.DeckPhase>=3))
-					 || ( unit.Mode==UnitMode.Return && (UnitInfoPanel[1]==0) ) )
-						{
-						// 駐機中のの飛行機
-						Sprites[sprite].Frame=(unit.SpriteRow*8)+unit.SpriteColumn;
-
-						Sprites[sprite].X=(int)unit.Position.X;
-						Sprites[sprite].Y=(int)unit.Position.Y;
-
-						// src_rect は ソースサーフェスのレクタングルです。
-						src_rect.left = Sprites[sprite].SheetX+(Sprites[sprite].Width * (Sprites[sprite].Frame % Sprites[sprite].FramesPerRow)) +1;
-						src_rect.top = Sprites[sprite].SheetY+(Sprites[sprite].Height* (Sprites[sprite].Frame / Sprites[sprite].FramesPerRow)) +1;
-						src_rect.right = (src_rect.left + Sprites[sprite].Width)-2;
-						src_rect.bottom = (src_rect.top + Sprites[sprite].Height)-2;
-
-						// dstn_rect は ディスティネーションレクタングルです。
-
-						dstn_rect.left=Sprites[sprite].X-Sprites[sprite].CenterX;
-						dstn_rect.top=Sprites[sprite].Y-Sprites[sprite].CenterY;
-						dstn_rect.right=dstn_rect.left+Sprites[sprite].Width-2;
-						dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Height-2;
-
-						if( ClipRects(ref dstn_rect,ref src_rect,ref info_rect)!=0 )
-							{
-							if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,DDBLTFAST_SRCCOLORKEY) )
-								{
-								RestoreSurfaces();
-								}
-							}
-						}
-					}
-				}
-			else
-				{
-				Sprites[sprite].X=(int)(unit.Position.X-CameraPosition.X);
-				Sprites[sprite].Y=(int)(CameraPosition.Y-unit.Position.Y);
-
-				if( unit.Kind==UnitKind.Submarine && unit.IsSubmerged && Result==GameResult.None )
-					{	// 潜航潜水艦
-					Sprites[sprite].Frame=((unit.SpriteRow+1)*8)+unit.SpriteColumn;
-					if( unit.Side!=LocalSide )
-						Sprites[sprite].X=-999;				// それが敵潜水艦なら表示を外す
-					}
-				else
-					{
-					Sprites[sprite].Frame=(unit.SpriteRow*8)+unit.SpriteColumn;
-					}
-
-				// src_rect は ソースサーフェスのレクタングルです。
-				src_rect.left = Sprites[sprite].SheetX+(Sprites[sprite].Width * (Sprites[sprite].Frame % Sprites[sprite].FramesPerRow)) +1;
-				src_rect.top = Sprites[sprite].SheetY+(Sprites[sprite].Height* (Sprites[sprite].Frame / Sprites[sprite].FramesPerRow)) +1;
-				src_rect.right = (src_rect.left + Sprites[sprite].Width)-2;
-				src_rect.bottom = (src_rect.top + Sprites[sprite].Height)-2;
-
-				// dstn_rect は ディスティネーションレクタングルです。
-				dstn_rect.left=Sprites[sprite].X-Sprites[sprite].CenterX;
-				dstn_rect.top=Sprites[sprite].Y-Sprites[sprite].CenterY;
-				dstn_rect.right=dstn_rect.left+Sprites[sprite].Width-2;
-				dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Height-2;
-				if( ClipRects(ref dstn_rect,ref src_rect,ref field_rect)!=0 )
-					{
-					if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,DDBLTFAST_SRCCOLORKEY) )
-						{
-						RestoreSurfaces();
-						}
-
-					if( !IsEditingMap && plane_fling_sound==0 && Result==GameResult.None && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying && (FrameCount%10)==0 )
-						{
-						PlaySoundEffect( 0, SoundId.PlaneFlying ,unit.Position.X, unit.Position.Y);
-						plane_fling_sound=1;
-						}
-
-					}
-				}
+			DrawUnit(ref unit, sprite, ref src_rect, ref info_rect, ref field_rect, ref plane_fling_sound);
 			}
 
 		var goto_dca1=false;
@@ -1167,133 +1311,8 @@ public void	DrawBattleArea()
 
 		if( goto_dca1 || unit.IsUsed && (unit.Side==LocalSide || unit.IsFound)  )
 			{
-			if( !goto_dca1 )
-			{
-
-//				sprite=UNIT_JPN;		//Off Screen Number		日本海軍の表示
-//				sprite=UNIT_USA;		//Off Screen Number		合衆国海軍の表示
-
-			//The Slct された機体への移動予定の線引き、
-			if( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked )
-				{
-
-				if( unit.Carrier==UnitInfoPanel[3] &&  ((UnitKind)UnitInfoPanel[0]==UnitKind.Carrier || (UnitKind)UnitInfoPanel[0]==UnitKind.LightCarrier || (UnitKind)UnitInfoPanel[0]==UnitKind.AirBase ) )
-					{
-					if( ( (unit.Mode<=UnitMode.Slow)  && (UnitInfoPanel[1]==1&&unit.DeckPhase<=2)||(UnitInfoPanel[1]==0&&unit.DeckPhase>=3))
-					 || (unit.Mode==UnitMode.Return && (UnitInfoPanel[1]==0) ) )
-						{
-						// 空母で飛行甲板か格納庫かで航空機を表示するかしない。
-						Sprites[sprite].X=(int)unit.Position.X;
-						Sprites[sprite].Y=(int)unit.Position.Y;
-						}
-					else
-						continue;
-					}
-				else
-					continue;
-
-				}
-			else
-				{
-				if( unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.IsSubmerged )
-					{	// およその敵潜航潜水艦
-					Sprites[sprite].X=(int)(unit.ContactX-CameraPosition.X);
-					Sprites[sprite].Y=(int)(CameraPosition.Y-unit.ContactY);
-					}
-				else
-					{	// マップ上のユニット
-
-					Sprites[sprite].X=(int)(unit.Position.X-CameraPosition.X);
-					Sprites[sprite].Y=(int)(CameraPosition.Y-unit.Position.Y);
-
-					}
-				}
-			}
-
-// dca1:
-			dstn_rect.left=Sprites[sprite].X-Sprites[sprite].CenterX;
-			dstn_rect.top=Sprites[sprite].Y-Sprites[sprite].CenterY;
-			dstn_rect.right=dstn_rect.left+Sprites[sprite].Width-2;
-			dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Height-2;
-
-			wrk_rect.left=dstn_rect.left+20;
-			wrk_rect.top=dstn_rect.top+20;
-			wrk_rect.right=dstn_rect.right-20;
-			wrk_rect.bottom=dstn_rect.bottom-20;
-
-			// クリック選択・非選択
-			if( PointInRect(ref wrk_rect,CursorPosition.x,CursorPosition.y)!=0 && !( Units[SelectedUnit].Category==UnitCategory.Plane && unit.Category==UnitCategory.Ship && !(unit.Kind==UnitKind.Carrier || unit.Kind==UnitKind.LightCarrier || unit.Kind==UnitKind.AirBase || Units[SelectedUnit].Side!=unit.Side) ) && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying )  && !( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked && !unit.IsStopping ) && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked && !Units[SelectedUnit].IsStopping ) && !( Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked && unit.Category==UnitCategory.Ship )
-				&& !(Units[SelectedUnit].Category==UnitCategory.Ship && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked)  && !(SelectedUnit!=0 && Units[SelectedUnit].Side!=LocalSide) && !(SelectedUnit!=0 && Units[SelectedUnit].Category==UnitCategory.Plane&&unit.Weapon==FireKind.Maintenance)
-				 && !(unit.PlaneState!=UnitState.Parked && CursorPosition.x>=CMBT_WIDTH-1)
-				 && !(unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.IsSubmerged)
-				)
-				{
-				HandleUnitClick(ref unit, ref dstn_rect, ref lc_lf_btn, m, sprite);
-				}
-
-			if( m==0 )
+			if( !DrawUnitMarks(goto_dca1, ref unit, sprite, ref lc_lf_btn, m, ref lc_ri_btn) )
 				continue;
-
-			// 選択されてればマークの絵というか枠
-			if( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked )
-				{right=SCRN_WIDTH-1; bottom=SCRN_HEIGHT-1;}
-			else
-				{right=CMBT_WIDTH-1; bottom=CMBT_HEIGHT-1;}
-			cl=0xffff;
-			if( SelectedUnit==m && m!=0)
-				{
-				DrawSelectedUnit(ref dstn_rect, right, bottom);
-				}
-			else
-				{
-				if( Selections[1][m]!=0 )
-					{
-					n=20;
-					DrawLine4(dstn_rect.left+n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.top+n,right,bottom,RGB(255,255,255));
-					DrawLine4(dstn_rect.right-n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.bottom-n,right,bottom,RGB(255,255,255));
-					DrawLine4(dstn_rect.right-n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.bottom-n,right,bottom,RGB(255,255,255));
-					DrawLine4(dstn_rect.left+n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.top+n,right,bottom,RGB(255,255,255));
-					}
-				}
-
-			if( SelectedUnit!=0 && Units[SelectedUnit].Kind==UnitKind.Transport && Units[SelectedUnit].Target==MaxUnitId+1 && m==SelectedUnit )
-				{
-				// 輸送船の揚陸先のマーク
-				DrawLandingPoint(sprite);
-
-				}
-			else  if( SelectedUnit!=0 && Units[SelectedUnit].Target==m )
-				{
-				// 攻撃先 としてのマーク
-				cl=0x1f;
-				n=10+(FrameCount%8)*2;
-				DrawLine4(dstn_rect.left+n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				DrawLine4(dstn_rect.right-n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				DrawLine4(dstn_rect.right-n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				DrawLine4(dstn_rect.left+n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				}
-			else  if( SelectedUnit!=0 && Units[SelectedUnit].Carrier==m && Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Flying)
-				{
-				// 攻撃先 としてのマーク
-				cl=0x1f;
-				n=15;
-				DrawLine4(dstn_rect.right-n-4,dstn_rect.bottom-n,dstn_rect.left+n+4,dstn_rect.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				DrawLine4(dstn_rect.right-n-4,dstn_rect.bottom-n+2,dstn_rect.left+n+4,dstn_rect.bottom-n+2,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				}
-
-				// 攻撃先 着艦先 の方向
-			if( unit.Target!=0 && unit.Side==LocalSide )
-				{
-				DrawTargetLine(ref unit);
-				}
-
-			// 決定された進路線ひき
-			if( SelectedUnit==m && !IsEditingMap )
-				{
-
-				// 緊急移動先までの線
-				DrawPathAndSetDestination(ref unit, sprite, lc_lf_btn, ref lc_ri_btn, m);
-				}
 			}
 		}
 
