@@ -92,6 +92,99 @@ public int	GetSupplyPointsPerUnit()
 	return 0;
 	}
 
+private void WriteUnitKindName(ref Array8<int> len, ref Array8<Array128<byte>> ach)
+	{
+	switch((UnitKind)UnitInfoPanel[0])
+		{
+		case UnitKind.Battleship:
+			if( Units[UnitInfoPanel[3]].Side==Side.Japan && Units[UnitInfoPanel[3]].Variant==1 )
+				len[0] = wsprintf(ach[0], "大和級戦艦");
+			else
+				len[0] = wsprintf(ach[0], "戦艦",10);
+			break;
+		case UnitKind.Cruiser:
+			if( Units[UnitInfoPanel[3]].Variant==0 )
+				len[0] = wsprintf(ach[0], "巡洋艦",10);
+			else
+			len[0] = wsprintf(ach[0], "防空巡洋艦",10);
+			break;
+
+		case UnitKind.Destroyer:
+			if( Units[UnitInfoPanel[3]].Variant==0 )
+				len[0] = wsprintf(ach[0], "駆逐艦",10);
+			else
+				len[0] = wsprintf(ach[0], "対潜駆逐艦",10);
+			break;
+		case UnitKind.Submarine:
+			len[0] = wsprintf(ach[0], "潜水艦",10);
+			break;
+		case UnitKind.Carrier:
+			if( Units[UnitInfoPanel[3]].Side==Side.UnitedStates && Units[UnitInfoPanel[3]].Variant==1 )
+				len[0] = wsprintf(ach[0], "エセックス型空母",10);
+			else
+				len[0] = wsprintf(ach[0], "正規空母",10);
+			break;
+		case UnitKind.LightCarrier:
+			len[0] = wsprintf(ach[0], "軽空母",10);
+			break;
+		case UnitKind.Transport:
+			if(Units[UnitInfoPanel[3]].Ammo!=0)
+				{
+				if(Units[UnitInfoPanel[3]].Weapon==FireKind.CargoInfantryBase)
+					len[0] = wsprintf(ach[0], "輸送船(歩兵基地)",10);
+				else if(Units[UnitInfoPanel[3]].Weapon==FireKind.CargoPillboxes)
+					len[0] = wsprintf(ach[0], "輸送船(トーチカ群)",10);
+				else if(Units[UnitInfoPanel[3]].Weapon==FireKind.CargoFortress)
+					len[0] = wsprintf(ach[0], "輸送船(要塞)",10);
+				else if(Units[UnitInfoPanel[3]].Weapon==FireKind.CargoAirBase)
+					len[0] = wsprintf(ach[0], "輸送船(航空基地)",10);
+				else if(Units[UnitInfoPanel[3]].Weapon==FireKind.CargoNavalBase)
+					len[0] = wsprintf(ach[0], "輸送船(軍港)",10);
+				}
+			else
+				{
+				len[0] = wsprintf(ach[0], "輸送船",10);
+				}
+			break;
+		case UnitKind.Fighter:
+			if( Units[UnitInfoPanel[3]].Variant==0 )
+				len[0] = wsprintf(ach[0], "戦闘機",10);
+			else
+				len[0] = wsprintf(ach[0], "陸上戦闘機",10);
+			break;
+		case UnitKind.Attacker:
+			len[0] = wsprintf(ach[0], "攻撃機",10);
+			break;
+		case UnitKind.Bomber:
+			len[0] = wsprintf(ach[0], "戦略爆撃機",10);
+			break;
+		case UnitKind.NavalBase:
+			len[0] = wsprintf(ach[0], "軍港",10);
+			break;
+		case UnitKind.AirBase:
+			len[0] = wsprintf(ach[0], "航空基地",10);
+			break;
+		case UnitKind.City:
+			len[0] = wsprintf(ach[0], "都市",10);
+			break;
+		case UnitKind.Mine:
+			len[0] = wsprintf(ach[0], "鉱山",10);
+			break;
+		case UnitKind.InfantryBase:
+			len[0] = wsprintf(ach[0], "歩兵基地",10);
+			break;
+		case UnitKind.Pillboxes:
+			len[0] = wsprintf(ach[0], "トーチカ群",10);
+			break;
+		case UnitKind.Fortress:
+			len[0] = wsprintf(ach[0], "要塞",10);
+			break;
+		default:
+			len[0] = wsprintf(ach[0], "だっちゅーの",10);
+			break;
+		}
+	}
+
 private void DrawUnitDetails(SpriteId sprite, ref RECT src_rect, ref HDC hdc, ref Array8<int> len, ref Array8<Array128<byte>> ach)
 	{
 	RECT dstn_rect;
@@ -137,95 +230,7 @@ private void DrawUnitDetails(SpriteId sprite, ref RECT src_rect, ref HDC hdc, re
 
 #if !LNGG_VER
 		// 艦種
-		switch((UnitKind)UnitInfoPanel[0])
-			{
-			case UnitKind.Battleship:
-				if( Units[UnitInfoPanel[3]].Side==Side.Japan && Units[UnitInfoPanel[3]].Variant==1 )
-					len[0] = wsprintf(ach[0], "大和級戦艦");
-				else
-					len[0] = wsprintf(ach[0], "戦艦",10);
-				break;
-			case UnitKind.Cruiser:
-				if( Units[UnitInfoPanel[3]].Variant==0 )
-					len[0] = wsprintf(ach[0], "巡洋艦",10);
-				else
-				len[0] = wsprintf(ach[0], "防空巡洋艦",10);
-				break;
-
-			case UnitKind.Destroyer:
-				if( Units[UnitInfoPanel[3]].Variant==0 )
-					len[0] = wsprintf(ach[0], "駆逐艦",10);
-				else
-					len[0] = wsprintf(ach[0], "対潜駆逐艦",10);
-				break;
-			case UnitKind.Submarine:
-				len[0] = wsprintf(ach[0], "潜水艦",10);
-				break;
-			case UnitKind.Carrier:
-				if( Units[UnitInfoPanel[3]].Side==Side.UnitedStates && Units[UnitInfoPanel[3]].Variant==1 )
-					len[0] = wsprintf(ach[0], "エセックス型空母",10);
-				else
-					len[0] = wsprintf(ach[0], "正規空母",10);
-				break;
-			case UnitKind.LightCarrier:
-				len[0] = wsprintf(ach[0], "軽空母",10);
-				break;
-			case UnitKind.Transport:
-				if(Units[UnitInfoPanel[3]].Ammo!=0)
-					{
-					if(Units[UnitInfoPanel[3]].Weapon==FireKind.CargoInfantryBase)
-						len[0] = wsprintf(ach[0], "輸送船(歩兵基地)",10);
-					else if(Units[UnitInfoPanel[3]].Weapon==FireKind.CargoPillboxes)
-						len[0] = wsprintf(ach[0], "輸送船(トーチカ群)",10);
-					else if(Units[UnitInfoPanel[3]].Weapon==FireKind.CargoFortress)
-						len[0] = wsprintf(ach[0], "輸送船(要塞)",10);
-					else if(Units[UnitInfoPanel[3]].Weapon==FireKind.CargoAirBase)
-						len[0] = wsprintf(ach[0], "輸送船(航空基地)",10);
-					else if(Units[UnitInfoPanel[3]].Weapon==FireKind.CargoNavalBase)
-						len[0] = wsprintf(ach[0], "輸送船(軍港)",10);
-					}
-				else
-					{
-					len[0] = wsprintf(ach[0], "輸送船",10);
-					}
-				break;
-			case UnitKind.Fighter:
-				if( Units[UnitInfoPanel[3]].Variant==0 )
-					len[0] = wsprintf(ach[0], "戦闘機",10);
-				else
-					len[0] = wsprintf(ach[0], "陸上戦闘機",10);
-				break;
-			case UnitKind.Attacker:
-				len[0] = wsprintf(ach[0], "攻撃機",10);
-				break;
-			case UnitKind.Bomber:
-				len[0] = wsprintf(ach[0], "戦略爆撃機",10);
-				break;
-			case UnitKind.NavalBase:
-				len[0] = wsprintf(ach[0], "軍港",10);
-				break;
-			case UnitKind.AirBase:
-				len[0] = wsprintf(ach[0], "航空基地",10);
-				break;
-			case UnitKind.City:
-				len[0] = wsprintf(ach[0], "都市",10);
-				break;
-			case UnitKind.Mine:
-				len[0] = wsprintf(ach[0], "鉱山",10);
-				break;
-			case UnitKind.InfantryBase:
-				len[0] = wsprintf(ach[0], "歩兵基地",10);
-				break;
-			case UnitKind.Pillboxes:
-				len[0] = wsprintf(ach[0], "トーチカ群",10);
-				break;
-			case UnitKind.Fortress:
-				len[0] = wsprintf(ach[0], "要塞",10);
-				break;
-			default:
-				len[0] = wsprintf(ach[0], "だっちゅーの",10);
-				break;
-			}
+		WriteUnitKindName(ref len, ref ach);
 
 		// 損傷
 		if( Units[UnitInfoPanel[3]].IsUsed && ( Units[UnitInfoPanel[3]].Kind==UnitKind.AirBase||Units[UnitInfoPanel[3]].Kind==UnitKind.NavalBase||Units[UnitInfoPanel[3]].Kind==UnitKind.InfantryBase||Units[UnitInfoPanel[3]].Kind==UnitKind.Pillboxes||Units[UnitInfoPanel[3]].Kind==UnitKind.Fortress ) && Units[UnitInfoPanel[3]].info[0]!=0 && Units[UnitInfoPanel[3]].Hp==Units[UnitInfoPanel[3]].MaxHp
@@ -688,28 +693,8 @@ private void DrawSupplyTarget(ref int m, ref RECT src_rect, int ry)
 		}
 	}
 
-private void UpdateSupplyPanel(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref HDC hdc, ref RECT dstn_rect, int ry, ref int m)
+private void WriteSupplyTargetName(ref Array8<int> len, ref Array8<Array128<byte>> ach)
 	{
-	int start;
-	int end;
-	int g;
-	int n;
-#if !LNGG_VER
-	len[0] = wsprintf(ach[0], "補給割当:%d",SupplyPoints);
-#else
-	len[0] = wsprintf(ach[0], "Supry pts:%d",spry_pt);
-#endif
-	SetTextColor(hdc, RGB(255, 255, 255));
-	TextOut(hdc, dstn_rect.left+120, ry, ach[0], len[0]);
-
-#if !LNGG_VER
-	len[0] = wsprintf(ach[0], "要求対象:");
-#else
-	len[0] = wsprintf(ach[0], "Object:");
-#endif
-	SetTextColor(hdc, RGB(255, 255, 255));
-	TextOut(hdc, dstn_rect.left+120, ry+20*1, ach[0], len[0]);
-
 	switch( SupplyTarget )
 		{
 #if !LNGG_VER
@@ -769,221 +754,255 @@ private void UpdateSupplyPanel(ref Array8<int> len, ref Array8<Array128<byte>> a
 			break;
 #endif
 		}
+	}
+
+private void RequestSupply(ref int m, ref Array8<int> len, ref Array8<Array128<byte>> ach, ref RECT dstn_rect, int ry, ref HDC hdc)
+	{
+	int start;
+	int end;
+	int g;
+	int n;
+	if(LocalSide==Side.Japan)
+		{
+		// 日本サイドのユニット
+		if( SupplyTarget<=5 || SupplyTarget>=10  )
+			{
+			start=JPN_SHIP_START;
+			end=JPN_SHIP_END;
+			g=1;						// 艦船
+			}
+		else
+			{
+			start=JPN_PLANE_START;
+			end=JPN_PLANE_END;
+			g=2;						// 航空機
+			}
+		}
+	else
+		{
+		// 合衆国サイドのユニット
+		if( SupplyTarget<=5 || SupplyTarget>=10  )
+			{
+			start=USA_SHIP_START;
+			end=USA_SHIP_END;
+			g=1;						// 艦船
+			}
+		else
+			{
+			start=USA_PLANE_START;
+			end=USA_PLANE_END;
+			g=2;						// 航空機
+			}
+		}
+
+	n=0;
+	for( m=start; m<=end; m++)
+		{
+		if(!Units[m].IsUsed)
+			{
+			n++;
+			}
+		}
+
+/***
+		case 0:
+			len[0] = wsprintf(ach[0], "全種増援可(%d)",arrival_cont);
+			break;
+		case 1:
+			len[0] = wsprintf(ach[0], "全種増援不可(%d)",arrival_cont);
+			break;
+		case 2:
+			len[0] = wsprintf(ach[0], "輸送船以外可(%d)",arrival_cont);
+			break;
+		case 3:
+			len[0] = wsprintf(ach[0], "輸送船のみ可(%d)",arrival_cont);
+			break;
+		case 4:
+			len[0] = wsprintf(ach[0], "戦闘艦船のみ可(%d)",arrival_cont);
+			break;
+		case 5:
+			len[0] = wsprintf(ach[0], "航空機のみ可(%d)",arrival_cont);
+			break;
+		case 6:
+			len[0] = wsprintf(ach[0], "輸送船(軍港)以外可(%d)",arrival_cont);
+			break;
+***/
+
+	if(	(ArrivalControl!=1) &&
+			(
+				(ArrivalControl==0) ||
+				(ArrivalControl==2 && ( SupplyTarget<=9 || SupplyTarget>=15 ) ) ||
+				(ArrivalControl==3 && SupplyTarget>=10 && SupplyTarget<=14 ) ||
+				(ArrivalControl==4 && (SupplyTarget<=3 || SupplyTarget>=15 ) && !(SupplyTarget==17 && LocalSide==Side.UnitedStates)  ) ||
+				(ArrivalControl==5 && SupplyTarget>=6 && SupplyTarget<=9 ) ||
+				(ArrivalControl==6 && SupplyTarget!=14 )
+			)
+			)
+		{
+
+		if( (g==1 && n!=0 ) || (g==2 && n>=3) )
+			{
+			if( SupplyPoints>=GetSupplyPointsPerUnit() )
+				{
+#if !LNGG_VER
+				len[0] = wsprintf(ach[0], "　要求する");
+#else
+				len[0] = wsprintf(ach[0], "　Request");
+#endif
+				dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120;
+				dstn_rect.top=ry+20*7+5;
+				dstn_rect.right=dstn_rect.left+(len[0]*12);
+				dstn_rect.bottom=dstn_rect.top+18;
+				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+					{
+					SetTextColor(hdc, RGB(255, 0, 0));
+					if( LeftButton==3 && Result==GameResult.None )
+						{
+						SupplyPoints=(short)(SupplyPoints - GetSupplyPointsPerUnit());
+						if(SupplyTarget<=5 || SupplyTarget>=10)
+							SupplyCount=150;				// 艦船
+						else
+							SupplyCount=30;				// 航空機
+
+if(CONN_DBG!=0)
+SupplyCount=10;
+						PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+						}
+					}
+				else
+					{
+					SetTextColor(hdc, RGB(255, 255, 255));
+					}
+				TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
+				}
+			else
+				{
+				SetTextColor(hdc, RGB(255, 255, 255));
+#if !LNGG_VER
+				len[0] = wsprintf(ach[0], "割当点数不足");
+#else
+				len[0] = wsprintf(ach[0], "Shortage of pts");
+#endif
+				TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
+				}
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
+#if !LNGG_VER
+			len[0] = wsprintf(ach[0], "ユニットリミット");
+#else
+			len[0] = wsprintf(ach[0], "Units Max");
+#endif
+			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
+			}
+
+		}
+	else
+		{
+		SetTextColor(hdc, RGB(255, 255, 255));
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "　要求制限");
+#else
+		len[0] = wsprintf(ach[0], "Restricted Unit");
+#endif
+		TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
+		}
+	}
+
+private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref HDC hdc, int ry, ref RECT dstn_rect, ref int m)
+	{
+	len[0] = wsprintf(ach[0], "%d:" ,GetSupplyPointsPerUnit());
+	TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*3+5+10, ach[0], len[0]);
+
+	// The previous kind.
+#if !LNGG_VER
+	len[0] = wsprintf(ach[0], "<<<-前の機種");
+#else
+	len[0] = wsprintf(ach[0], "<<<- Previous");
+#endif
+
+	dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120;
+	dstn_rect.top=ry+20*5+5;
+	dstn_rect.right=dstn_rect.left+(len[0]*12);
+	dstn_rect.bottom=dstn_rect.top+18;
+	if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && SupplyCount==0 )
+		{
+		SetTextColor(hdc, RGB(255, 0, 0));
+		if( LeftButton==3 )
+			{
+			if(SupplyTarget==0)
+				SupplyTarget=17;
+			else
+				SupplyTarget--;
+			}
+		}
+	else
+		{
+		SetTextColor(hdc, RGB(255, 255, 255));
+		}
+
+	TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*5+5, ach[0], len[0]);
+
+	// The next kind.
+#if !LNGG_VER
+	len[0] = wsprintf(ach[0], "次の機種->>>");
+#else
+	len[0] = wsprintf(ach[0], "Next ->>>");
+#endif
+
+	dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120;
+	dstn_rect.top=ry+20*6+5;
+	dstn_rect.right=dstn_rect.left+(len[0]*12);
+	dstn_rect.bottom=dstn_rect.top+18;
+	if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+		{
+		SetTextColor(hdc, RGB(255, 0, 0));
+		if( LeftButton==3 )
+			{
+			if(SupplyTarget==17)
+				SupplyTarget=0;
+			else
+				SupplyTarget++;
+			}
+		}
+	else
+		{
+		SetTextColor(hdc, RGB(255, 255, 255));
+		}
+
+	TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*6+5, ach[0], len[0]);
+
+	// 要求する
+	RequestSupply(ref m, ref len, ref ach, ref dstn_rect, ry, ref hdc);
+	}
+
+private void UpdateSupplyPanel(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref HDC hdc, ref RECT dstn_rect, int ry, ref int m)
+	{
+#if !LNGG_VER
+	len[0] = wsprintf(ach[0], "補給割当:%d",SupplyPoints);
+#else
+	len[0] = wsprintf(ach[0], "Supry pts:%d",spry_pt);
+#endif
+	SetTextColor(hdc, RGB(255, 255, 255));
+	TextOut(hdc, dstn_rect.left+120, ry, ach[0], len[0]);
+
+#if !LNGG_VER
+	len[0] = wsprintf(ach[0], "要求対象:");
+#else
+	len[0] = wsprintf(ach[0], "Object:");
+#endif
+	SetTextColor(hdc, RGB(255, 255, 255));
+	TextOut(hdc, dstn_rect.left+120, ry+20*1, ach[0], len[0]);
+
+	WriteSupplyTargetName(ref len, ref ach);
 	SetTextColor(hdc, RGB(255, 255, 255));
 	TextOut(hdc, dstn_rect.left+120, ry+20*2, ach[0], len[0]);
 
 	if( SupplyCount==0 )
 		{
 		// 値段の表示
-		len[0] = wsprintf(ach[0], "%d:" ,GetSupplyPointsPerUnit());
-		TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*3+5+10, ach[0], len[0]);
-
-		//
-#if !LNGG_VER
-		len[0] = wsprintf(ach[0], "<<<-前の機種");
-#else
-		len[0] = wsprintf(ach[0], "<<<- Previous");
-#endif
-
-		dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120;
-		dstn_rect.top=ry+20*5+5;
-		dstn_rect.right=dstn_rect.left+(len[0]*12);
-		dstn_rect.bottom=dstn_rect.top+18;
-		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && SupplyCount==0 )
-			{
-			SetTextColor(hdc, RGB(255, 0, 0));
-			if( LeftButton==3 )
-				{
-				if(SupplyTarget==0)
-					SupplyTarget=17;
-				else
-					SupplyTarget--;
-				}
-			}
-		else
-			{
-			SetTextColor(hdc, RGB(255, 255, 255));
-			}
-
-		TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*5+5, ach[0], len[0]);
-
-		//
-#if !LNGG_VER
-		len[0] = wsprintf(ach[0], "次の機種->>>");
-#else
-		len[0] = wsprintf(ach[0], "Next ->>>");
-#endif
-
-		dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120;
-		dstn_rect.top=ry+20*6+5;
-		dstn_rect.right=dstn_rect.left+(len[0]*12);
-		dstn_rect.bottom=dstn_rect.top+18;
-		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
-			{
-			SetTextColor(hdc, RGB(255, 0, 0));
-			if( LeftButton==3 )
-				{
-				if(SupplyTarget==17)
-					SupplyTarget=0;
-				else
-					SupplyTarget++;
-				}
-			}
-		else
-			{
-			SetTextColor(hdc, RGB(255, 255, 255));
-			}
-
-		TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*6+5, ach[0], len[0]);
-
-		// 要求する
-
-		if(LocalSide==Side.Japan)
-			{
-			// 日本サイドのユニット
-			if( SupplyTarget<=5 || SupplyTarget>=10  )
-				{
-				start=JPN_SHIP_START;
-				end=JPN_SHIP_END;
-				g=1;						// 艦船
-				}
-			else
-				{
-				start=JPN_PLANE_START;
-				end=JPN_PLANE_END;
-				g=2;						// 航空機
-				}
-			}
-		else
-			{
-			// 合衆国サイドのユニット
-			if( SupplyTarget<=5 || SupplyTarget>=10  )
-				{
-				start=USA_SHIP_START;
-				end=USA_SHIP_END;
-				g=1;						// 艦船
-				}
-			else
-				{
-				start=USA_PLANE_START;
-				end=USA_PLANE_END;
-				g=2;						// 航空機
-				}
-			}
-
-		n=0;
-		for( m=start; m<=end; m++)
-			{
-			if(!Units[m].IsUsed)
-				{
-				n++;
-				}
-			}
-
-/***
-			case 0:
-				len[0] = wsprintf(ach[0], "全種増援可(%d)",arrival_cont);
-				break;
-			case 1:
-				len[0] = wsprintf(ach[0], "全種増援不可(%d)",arrival_cont);
-				break;
-			case 2:
-				len[0] = wsprintf(ach[0], "輸送船以外可(%d)",arrival_cont);
-				break;
-			case 3:
-				len[0] = wsprintf(ach[0], "輸送船のみ可(%d)",arrival_cont);
-				break;
-			case 4:
-				len[0] = wsprintf(ach[0], "戦闘艦船のみ可(%d)",arrival_cont);
-				break;
-			case 5:
-				len[0] = wsprintf(ach[0], "航空機のみ可(%d)",arrival_cont);
-				break;
-			case 6:
-				len[0] = wsprintf(ach[0], "輸送船(軍港)以外可(%d)",arrival_cont);
-				break;
-***/
-
-		if(	(ArrivalControl!=1) &&
-				(
-					(ArrivalControl==0) ||
-					(ArrivalControl==2 && ( SupplyTarget<=9 || SupplyTarget>=15 ) ) ||
-					(ArrivalControl==3 && SupplyTarget>=10 && SupplyTarget<=14 ) ||
-					(ArrivalControl==4 && (SupplyTarget<=3 || SupplyTarget>=15 ) && !(SupplyTarget==17 && LocalSide==Side.UnitedStates)  ) ||
-					(ArrivalControl==5 && SupplyTarget>=6 && SupplyTarget<=9 ) ||
-					(ArrivalControl==6 && SupplyTarget!=14 )
-				)
-				)
-			{
-
-			if( (g==1 && n!=0 ) || (g==2 && n>=3) )
-				{
-				if( SupplyPoints>=GetSupplyPointsPerUnit() )
-					{
-#if !LNGG_VER
-					len[0] = wsprintf(ach[0], "　要求する");
-#else
-					len[0] = wsprintf(ach[0], "　Request");
-#endif
-					dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120;
-					dstn_rect.top=ry+20*7+5;
-					dstn_rect.right=dstn_rect.left+(len[0]*12);
-					dstn_rect.bottom=dstn_rect.top+18;
-					if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
-						{
-						SetTextColor(hdc, RGB(255, 0, 0));
-						if( LeftButton==3 && Result==GameResult.None )
-							{
-							SupplyPoints=(short)(SupplyPoints - GetSupplyPointsPerUnit());
-							if(SupplyTarget<=5 || SupplyTarget>=10)
-								SupplyCount=150;				// 艦船
-							else
-								SupplyCount=30;				// 航空機
-
-if(CONN_DBG!=0)
-SupplyCount=10;
-							PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
-							}
-						}
-					else
-						{
-						SetTextColor(hdc, RGB(255, 255, 255));
-						}
-					TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(255, 255, 255));
-#if !LNGG_VER
-					len[0] = wsprintf(ach[0], "割当点数不足");
-#else
-					len[0] = wsprintf(ach[0], "Shortage of pts");
-#endif
-					TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
-					}
-				}
-			else
-				{
-				SetTextColor(hdc, RGB(255, 255, 255));
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "ユニットリミット");
-#else
-				len[0] = wsprintf(ach[0], "Units Max");
-#endif
-				TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
-				}
-
-			}
-		else
-			{
-			SetTextColor(hdc, RGB(255, 255, 255));
-#if !LNGG_VER
-			len[0] = wsprintf(ach[0], "　要求制限");
-#else
-			len[0] = wsprintf(ach[0], "Restricted Unit");
-#endif
-			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
-			}
+		UpdateSupplyRequest(ref len, ref ach, ref hdc, ry, ref dstn_rect, ref m);
 		}
 	else
 		{
