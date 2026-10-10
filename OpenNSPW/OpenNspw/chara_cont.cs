@@ -983,6 +983,252 @@ dbg[3]=unit[m].max_spd*100000;
 		}
 	}
 
+private void TryLandOnCarrier(ref Unit unit, int m)
+	{
+	RECT wrk_r;
+	int n;
+	if( 0!=0 && Units[unit.Carrier].PlanesToLaunch!=0)
+		{
+		// ほんまにＩｎｆｏ［４］があるんやなチェック
+		}
+
+	if( ToEightDirections((int)unit.Direction)==ToEightDirections((int)Units[unit.Carrier].Direction)
+	&& Units[unit.Carrier].Capacity>Units[unit.Carrier].PlaneCount
+	&& Units[unit.Carrier].PlanesToLaunch<=0 )
+		{
+		// ptin dbg
+		wrk_r.top=(int)Units[unit.Carrier].Position.Y+ON_PP/2;
+		wrk_r.right=(int)Units[unit.Carrier].Position.X+ON_PP/2;
+		wrk_r.bottom=(int)Units[unit.Carrier].Position.Y-ON_PP/2;
+		wrk_r.left=(int)Units[unit.Carrier].Position.X-ON_PP/2;
+
+		if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+			{
+			// 着艦
+			Units[unit.Carrier].PlaneCount++;	// 現在格納数
+			if(m==SelectedUnit)
+				{
+				SelectedUnit=0; PreviousSelectedUnit=(short)unit.Carrier; CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection();
+				}
+			if(m==PreviousSelectedUnit)
+				{
+				PreviousSelectedUnit=(short)unit.Carrier;
+				}
+
+			if(Selections[1][m]!=0)
+				{
+				if(SelectionCount!=0)
+					SelectionCount--;
+				// セレクトの設定番号を連番にする。
+				for(n=1;n<=MaxUnitId;n++)
+					{
+					if( Selections[1][n]>=Selections[1][m]+1 )
+						Selections[1][n]--;
+					}
+				Selections[1][m]=0;
+				}
+
+			//unit[m].info[1]=4;				// 所属の空母、及び、基地の番号
+			unit.ParkingNumber=FindParkingNumber(m);	// 格納庫の位置、及び、その基地の番機番号
+			unit.DeckPhase=1;					// 格納庫、基地での移動情態
+			unit.TakeOffRun=0;					// 減速度をクリア
+			//unit[m].info[5]=MOVE;				// モード（コンバットメニュー）
+			Units[unit.Carrier].LandingLock=1;	// 着艦、0許可、1不許可
+			Units[unit.Carrier].LaunchLock=1;	// その空母の次機発進許可	0許可、1不許可
+			unit.PlaneState=UnitState.Parked;
+			unit.Position = new WorldPosition(Sprites[SpriteId.JapanUnitInfo].X+Sprites[SpriteId.JapanUnitInfo].Width/2+(SharedRandom(16)-7), Sprites[SpriteId.JapanUnitInfo].Y+Sprites[SpriteId.JapanUnitInfo].Height+40);
+			unit.Speed=5.0; unit.Direction=90.0;
+
+			unit.Target=0;					//
+
+			unit.EmergencyFlags[0]=0;
+
+			}
+		}
+	}
+
+private void SetAcceleration(ref Unit unit, double pp_drctn, int land)
+	{
+	int n;
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double dstc;
+	if( unit.Category!=UnitCategory.Plane && (pp_drctn>=80.0 || land!=0 ) )
+		{
+		if( ( unit.MinSpeed ) < unit.Speed || land!=0 )
+			{
+			unit.Acceleration=-unit.AccelerationChange;
+			}
+		else
+			{
+			unit.Acceleration=+unit.AccelerationChange;
+			}
+		}
+	else
+		{
+		if(pp_drctn>=45.0  )
+			{
+
+			if((unit.MaxSpeed+(unit.Kind==UnitKind.Fighter && unit.Target!=0 ? 1 : 0)*CMBT_SPD)/2 < unit.Speed  )
+				{
+				unit.Acceleration=-unit.AccelerationChange;
+				}
+			else
+				{
+				unit.Acceleration=+unit.AccelerationChange;
+				}
+			}
+		else
+			{
+
+			if(pp_drctn>=22.5 )
+				{
+
+				if( ((unit.MaxSpeed+(unit.Kind==UnitKind.Fighter && unit.Target!=0 ? 1 : 0)*CMBT_SPD)/3)*2 < unit.Speed )
+					{
+					unit.Acceleration=-unit.AccelerationChange;
+					}
+				else
+					{
+					unit.Acceleration=+unit.AccelerationChange;
+					}
+				}
+			else
+				{
+
+				if( unit.EmergencyFlags[0]!=0 )
+					{
+					//　緊急移動の場合
+					unit.Acceleration=+unit.AccelerationChange;
+					unit.ForGroupLeader=0;
+					}
+				else
+					{
+					//　通常移動
+					if( unit.ForGroupLeader==1 )
+						{	// 随伴機より。速度落とせの連絡 この場合ｍ番は編隊長
+
+// この時点でfor_form_spdがちがう
+
+						n=0;
+
+						if( unit.Target!=0 && Units[unit.Target].IsFound ) //&& unit[m].kind==AT1 )
+							{
+							n=1;
+							wrk_x=Units[unit.Target].Position.X-unit.Position.X;
+							wrk_y=Units[unit.Target].Position.Y-unit.Position.Y;
+
+							drctn=atan2(wrk_y,wrk_x)*RAD_to;
+							if(drctn<0)		drctn=360+drctn;
+							if(wrk_x<0)		wrk_x=0-wrk_x;
+							if(wrk_y<0)		wrk_y=0-wrk_y;
+							if(drctn>=180)	drctn=drctn-180;
+							if(drctn>=90)	drctn=90-(drctn-90);
+							dstc=(wrk_x)/(CosDegrees(drctn));
+
+							if( dstc<=BB1_SIGHT )
+								{
+								n=1;		// 速度落とす要無し
+								}
+							}
+						if( n==0 && unit.Speed>=(unit.FormationSpeed*(0.60-(unit.Kind==UnitKind.Carrier ? 1 : 0)*0.15 ))+unit.AccelerationChange )
+							{
+							unit.Acceleration=-unit.AccelerationChange;
+							}
+						else
+							{
+							unit.Acceleration=+unit.AccelerationChange;
+
+							}
+
+						unit.ForGroupLeader=0;
+						unit.FormationSpeed=0.0;
+
+						}
+					else
+						{
+						if( unit.ForGroupLeader==2 && unit.MaxSpeed >= Units[unit.GroupLeader].MaxSpeed )
+							{ // 編隊指定位置にいる。編隊Ｌｄｒの速度に合わせよ
+							unit.Speed=Units[unit.GroupLeader].Speed;
+							unit.Acceleration=0;
+							}
+						else
+							{	// 単独機か、連絡無しの指揮機
+							unit.Acceleration=+unit.AccelerationChange;
+							}
+						unit.ForGroupLeader=0;
+						}
+					}
+				}
+			}
+		}
+	}
+
+private void CheckCourseAhead(ref Unit unit, int m, ref int land, double pp_drctn)
+	{
+	double wrk_x2;
+	double wrk_y2;
+	int n;
+	RECT wrk_r;
+	int cm_scrn_x;
+	int cm_scrn_y;
+	wrk_x2=unit.Position.X;
+	wrk_y2=unit.Position.Y;
+	wrk_x2+=CosDegrees(unit.Direction)*(40+unit.MaxSpeed*10);
+	wrk_y2+=SinDegrees(unit.Direction)*(40+unit.MaxSpeed*10);
+	if(  !( unit.Kind==UnitKind.Submarine && unit.IsSubmerged ) )
+		{
+		for( n=1; n<=MaxUnitId; n++)
+			{
+			ref var other = ref Units[n];
+			if(other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged)  && !(other.Kind>=UnitKind.AirBase&&other.Kind<=UnitKind.Fortress) )
+				{
+				// ptin dbg
+				wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].Height/2);
+				wrk_r.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].Width/2);
+				wrk_r.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].Height/2);
+				wrk_r.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].Width/2);
+
+				if( PointInRect3(ref wrk_r,(int)wrk_x2,(int)wrk_y2)!=0)
+					{
+					// 前方に艦船！
+					land=1;
+
+					unit.EmergencyFlags[0]=0;
+
+					break;
+					}
+				}
+			}
+		}
+
+	// ＰＰ方向に陸地があるか
+	if( land==0  )
+		{
+		wrk_x2=unit.Position.X;
+		wrk_y2=unit.Position.Y;
+		wrk_x2+=CosDegrees(pp_drctn)*80;
+		wrk_y2+=SinDegrees(pp_drctn)*80;
+
+		if(!( wrk_y2>MAP_TOP || wrk_y2<MAP_BOTTOM || wrk_x2<MAP_LEFT || wrk_x2>MAP_RIGHT ))
+			{
+			cm_scrn_x=(int)((wrk_x2+(Sprites[SpriteId.JapanUnits].Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
+			cm_scrn_y=(int)((MAP_TOP-wrk_y2+(Sprites[SpriteId.JapanUnits].Height/2))/Sprites[SpriteId.MapTiles].Height);
+			if( MapTiles[cm_scrn_y][cm_scrn_x]>=1 && MapTiles[cm_scrn_y][cm_scrn_x]<=9 )
+				{
+				land=1;
+				}
+			}
+		}
+
+	if( unit.EmergencyFlags[0]!=0 && land!=0)
+		{
+		// 緊急移動の取り消し
+		unit.EmergencyFlags[0]=0;
+		}
+	}
+
 private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 	{
 	RECT wrk_r;
@@ -990,13 +1236,7 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 	double wrk_y;
 	double pp_drctn;
 	int land;
-	double wrk_x2;
-	double wrk_y2;
 	int n;
-	int cm_scrn_x;
-	int cm_scrn_y;
-	double drctn;
-	double dstc;
 	if( (!unit.IsStopping || unit.EmergencyFlags[0]!=0)  && !(unit.Category==UnitCategory.Ship && unit.IsSupplying) )
 		{
 		if( unit.EmergencyFlags[0]!=0	)
@@ -1038,60 +1278,7 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 		if( unit.Category==UnitCategory.Ship )
 			{
 			// 艦首方向に他の艦船があるか
-			wrk_x2=unit.Position.X;
-			wrk_y2=unit.Position.Y;
-			wrk_x2+=CosDegrees(unit.Direction)*(40+unit.MaxSpeed*10);
-			wrk_y2+=SinDegrees(unit.Direction)*(40+unit.MaxSpeed*10);
-			if(  !( unit.Kind==UnitKind.Submarine && unit.IsSubmerged ) )
-				{
-				for( n=1; n<=MaxUnitId; n++)
-					{
-					ref var other = ref Units[n];
-					if(other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged)  && !(other.Kind>=UnitKind.AirBase&&other.Kind<=UnitKind.Fortress) )
-						{
-						// ptin dbg
-						wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].Height/2);
-						wrk_r.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].Width/2);
-						wrk_r.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].Height/2);
-						wrk_r.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].Width/2);
-
-						if( PointInRect3(ref wrk_r,(int)wrk_x2,(int)wrk_y2)!=0)
-							{
-							// 前方に艦船！
-							land=1;
-
-							unit.EmergencyFlags[0]=0;
-
-							break;
-							}
-						}
-					}
-				}
-
-			// ＰＰ方向に陸地があるか
-			if( land==0  )
-				{
-				wrk_x2=unit.Position.X;
-				wrk_y2=unit.Position.Y;
-				wrk_x2+=CosDegrees(pp_drctn)*80;
-				wrk_y2+=SinDegrees(pp_drctn)*80;
-
-				if(!( wrk_y2>MAP_TOP || wrk_y2<MAP_BOTTOM || wrk_x2<MAP_LEFT || wrk_x2>MAP_RIGHT ))
-					{
-					cm_scrn_x=(int)((wrk_x2+(Sprites[SpriteId.JapanUnits].Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
-					cm_scrn_y=(int)((MAP_TOP-wrk_y2+(Sprites[SpriteId.JapanUnits].Height/2))/Sprites[SpriteId.MapTiles].Height);
-					if( MapTiles[cm_scrn_y][cm_scrn_x]>=1 && MapTiles[cm_scrn_y][cm_scrn_x]<=9 )
-						{
-						land=1;
-						}
-					}
-				}
-
-			if( unit.EmergencyFlags[0]!=0 && land!=0)
-				{
-				// 緊急移動の取り消し
-				unit.EmergencyFlags[0]=0;
-				}
+			CheckCourseAhead(ref unit, m, ref land, pp_drctn);
 			}
 
 		pp_drctn=pp_drctn-unit.Direction;
@@ -1125,115 +1312,7 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 			pp_drctn=360.0-pp_drctn;
 
 		// ユニットのスピード
-		if( unit.Category!=UnitCategory.Plane && (pp_drctn>=80.0 || land!=0 ) )
-			{
-			if( ( unit.MinSpeed ) < unit.Speed || land!=0 )
-				{
-				unit.Acceleration=-unit.AccelerationChange;
-				}
-			else
-				{
-				unit.Acceleration=+unit.AccelerationChange;
-				}
-			}
-		else
-			{
-			if(pp_drctn>=45.0  )
-				{
-
-				if((unit.MaxSpeed+(unit.Kind==UnitKind.Fighter && unit.Target!=0 ? 1 : 0)*CMBT_SPD)/2 < unit.Speed  )
-					{
-					unit.Acceleration=-unit.AccelerationChange;
-					}
-				else
-					{
-					unit.Acceleration=+unit.AccelerationChange;
-					}
-				}
-			else
-				{
-
-				if(pp_drctn>=22.5 )
-					{
-
-					if( ((unit.MaxSpeed+(unit.Kind==UnitKind.Fighter && unit.Target!=0 ? 1 : 0)*CMBT_SPD)/3)*2 < unit.Speed )
-						{
-						unit.Acceleration=-unit.AccelerationChange;
-						}
-					else
-						{
-						unit.Acceleration=+unit.AccelerationChange;
-						}
-					}
-				else
-					{
-
-					if( unit.EmergencyFlags[0]!=0 )
-						{
-						//　緊急移動の場合
-						unit.Acceleration=+unit.AccelerationChange;
-						unit.ForGroupLeader=0;
-						}
-					else
-						{
-						//　通常移動
-						if( unit.ForGroupLeader==1 )
-							{	// 随伴機より。速度落とせの連絡 この場合ｍ番は編隊長
-
-// この時点でfor_form_spdがちがう
-
-							n=0;
-
-							if( unit.Target!=0 && Units[unit.Target].IsFound ) //&& unit[m].kind==AT1 )
-								{
-								n=1;
-								wrk_x=Units[unit.Target].Position.X-unit.Position.X;
-								wrk_y=Units[unit.Target].Position.Y-unit.Position.Y;
-
-								drctn=atan2(wrk_y,wrk_x)*RAD_to;
-								if(drctn<0)		drctn=360+drctn;
-								if(wrk_x<0)		wrk_x=0-wrk_x;
-								if(wrk_y<0)		wrk_y=0-wrk_y;
-								if(drctn>=180)	drctn=drctn-180;
-								if(drctn>=90)	drctn=90-(drctn-90);
-								dstc=(wrk_x)/(CosDegrees(drctn));
-
-								if( dstc<=BB1_SIGHT )
-									{
-									n=1;		// 速度落とす要無し
-									}
-								}
-							if( n==0 && unit.Speed>=(unit.FormationSpeed*(0.60-(unit.Kind==UnitKind.Carrier ? 1 : 0)*0.15 ))+unit.AccelerationChange )
-								{
-								unit.Acceleration=-unit.AccelerationChange;
-								}
-							else
-								{
-								unit.Acceleration=+unit.AccelerationChange;
-
-								}
-
-							unit.ForGroupLeader=0;
-							unit.FormationSpeed=0.0;
-
-							}
-						else
-							{
-							if( unit.ForGroupLeader==2 && unit.MaxSpeed >= Units[unit.GroupLeader].MaxSpeed )
-								{ // 編隊指定位置にいる。編隊Ｌｄｒの速度に合わせよ
-								unit.Speed=Units[unit.GroupLeader].Speed;
-								unit.Acceleration=0;
-								}
-							else
-								{	// 単独機か、連絡無しの指揮機
-								unit.Acceleration=+unit.AccelerationChange;
-								}
-							unit.ForGroupLeader=0;
-							}
-						}
-					}
-				}
-			}
+		SetAcceleration(ref unit, pp_drctn, land);
 		}
 	else
 		{
@@ -1305,64 +1384,7 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 		&& unit.Side==Units[unit.Carrier].Side && Units[unit.Carrier].BuildTime==0
 		)
 		{
-		if( 0!=0 && Units[unit.Carrier].PlanesToLaunch!=0)
-			{
-			// ほんまにＩｎｆｏ［４］があるんやなチェック
-			}
-
-		if( ToEightDirections((int)unit.Direction)==ToEightDirections((int)Units[unit.Carrier].Direction)
-		&& Units[unit.Carrier].Capacity>Units[unit.Carrier].PlaneCount
-		&& Units[unit.Carrier].PlanesToLaunch<=0 )
-			{
-			// ptin dbg
-			wrk_r.top=(int)Units[unit.Carrier].Position.Y+ON_PP/2;
-			wrk_r.right=(int)Units[unit.Carrier].Position.X+ON_PP/2;
-			wrk_r.bottom=(int)Units[unit.Carrier].Position.Y-ON_PP/2;
-			wrk_r.left=(int)Units[unit.Carrier].Position.X-ON_PP/2;
-
-			if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
-				{
-				// 着艦
-				Units[unit.Carrier].PlaneCount++;	// 現在格納数
-				if(m==SelectedUnit)
-					{
-					SelectedUnit=0; PreviousSelectedUnit=(short)unit.Carrier; CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection();
-					}
-				if(m==PreviousSelectedUnit)
-					{
-					PreviousSelectedUnit=(short)unit.Carrier;
-					}
-
-				if(Selections[1][m]!=0)
-					{
-					if(SelectionCount!=0)
-						SelectionCount--;
-					// セレクトの設定番号を連番にする。
-					for(n=1;n<=MaxUnitId;n++)
-						{
-						if( Selections[1][n]>=Selections[1][m]+1 )
-							Selections[1][n]--;
-						}
-					Selections[1][m]=0;
-					}
-
-				//unit[m].info[1]=4;				// 所属の空母、及び、基地の番号
-				unit.ParkingNumber=FindParkingNumber(m);	// 格納庫の位置、及び、その基地の番機番号
-				unit.DeckPhase=1;					// 格納庫、基地での移動情態
-				unit.TakeOffRun=0;					// 減速度をクリア
-				//unit[m].info[5]=MOVE;				// モード（コンバットメニュー）
-				Units[unit.Carrier].LandingLock=1;	// 着艦、0許可、1不許可
-				Units[unit.Carrier].LaunchLock=1;	// その空母の次機発進許可	0許可、1不許可
-				unit.PlaneState=UnitState.Parked;
-				unit.Position = new WorldPosition(Sprites[SpriteId.JapanUnitInfo].X+Sprites[SpriteId.JapanUnitInfo].Width/2+(SharedRandom(16)-7), Sprites[SpriteId.JapanUnitInfo].Y+Sprites[SpriteId.JapanUnitInfo].Height+40);
-				unit.Speed=5.0; unit.Direction=90.0;
-
-				unit.Target=0;					//
-
-				unit.EmergencyFlags[0]=0;
-
-				}
-			}
+		TryLandOnCarrier(ref unit, m);
 		}
 
 	// 新座標を設定
