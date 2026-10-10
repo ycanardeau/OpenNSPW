@@ -581,6 +581,17 @@ public static class nspw_math
 		}
 	}
 
+	// The direction of the vector (dx, dy) in degrees, from 0 to 360, as the original computes it everywhere.
+	public static double Direction(double dx, double dy)
+	{
+		double drctn;
+
+		drctn=atan2(dy,dx)*all_head.RAD_to;
+		if(drctn<0)
+			drctn=360+drctn;
+		return drctn;
+	}
+
 	// The length of the vector (dx, dy), as the original computes it everywhere: the angle of the vector, folded into
 	// 0 to 90 degrees, and |dx| divided by its cosine. A dx or dy of 0 counts as 1.
 	public static double Distance(double dx, double dy)
@@ -589,9 +600,7 @@ public static class nspw_math
 
 		if(dx==0)	dx=1;
 		if(dy==0)	dy=1;
-		drctn=atan2(dy,dx)*all_head.RAD_to;
-		if(drctn<0)
-			drctn=360+drctn;
+		drctn=Direction(dx,dy);
 		if(dx<0)
 			dx=0-dx;
 		if(dy<0)

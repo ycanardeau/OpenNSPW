@@ -939,9 +939,7 @@ public void	SetShipFormation( int s )
 	if(wrk_x==0)	wrk_x=1;
 	if(wrk_y==0)	wrk_y=1;
 
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
+	drctn=Direction(wrk_x, wrk_y);
 	switch((int)(Units[Units[s].GroupLeader].Direction/22.5))
 		{
 		case 0: case 15:
@@ -1258,9 +1256,7 @@ public int		DetectSubmarines( int m , int n)
 	if(wrk_x==0)	wrk_x=1;
 	if(wrk_y==0)	wrk_y=1;
 
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
+	drctn=Direction(wrk_x, wrk_y);
 	if(wrk_x<0)
 		wrk_x=0-wrk_x;
 	if(wrk_y<0)
@@ -1346,9 +1342,7 @@ public void		Detect()
 
 					if(wrk_x==0)	wrk_x=1;
 					if(wrk_y==0)	wrk_y=1;
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
+					drctn=Direction(wrk_x, wrk_y);
 					if(wrk_x<0)
 						wrk_x=0-wrk_x;
 					if(wrk_y<0)
@@ -1418,9 +1412,7 @@ public void		Detect()
 					if(wrk_x==0)	wrk_x=1;
 					if(wrk_y==0)	wrk_y=1;
 
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
+					drctn=Direction(wrk_x, wrk_y);
 					if(wrk_x<0)
 						wrk_x=0-wrk_x;
 					if(wrk_y<0)

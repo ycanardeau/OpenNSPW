@@ -1113,8 +1113,7 @@ private void SetAcceleration(ref Unit unit, double pp_drctn, int land)
 							wrk_x=Units[unit.Target].Position.X-unit.Position.X;
 							wrk_y=Units[unit.Target].Position.Y-unit.Position.Y;
 
-							drctn=atan2(wrk_y,wrk_x)*RAD_to;
-							if(drctn<0)		drctn=360+drctn;
+							drctn=Direction(wrk_x, wrk_y);
 							if(wrk_x<0)		wrk_x=0-wrk_x;
 							if(wrk_y<0)		wrk_y=0-wrk_y;
 							if(drctn>=180)	drctn=drctn-180;
@@ -1263,10 +1262,7 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 			wrk_y=unit.PathY[0]-unit.Position.Y;
 			}
 
-		pp_drctn=atan2(wrk_y,wrk_x)*RAD_to;
-
-		if(pp_drctn<0)
-			pp_drctn=360+pp_drctn;
+		pp_drctn=Direction(wrk_x, wrk_y);
 
 		land=0;
 		if( unit.Category==UnitCategory.Ship )

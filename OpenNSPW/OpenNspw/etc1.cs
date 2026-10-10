@@ -248,9 +248,7 @@ private bool LandCargo(ref Unit unit, FireKind kind, int m)
 	int n;
 	wrk_x=(double)unit.LandingX-unit.Position.X;
 	wrk_y=(double)unit.LandingY-unit.Position.Y;
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
+	drctn=Direction(wrk_x, wrk_y);
 	drctn2=drctn;
 	drctn=drctn-unit.Direction;
 	if(drctn<0)
@@ -368,9 +366,7 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double drctn2, re
 			wrk_x=wrk_x2-unit.Position.X;
 			wrk_y=wrk_y2-unit.Position.Y;
 
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
+			drctn=Direction(wrk_x, wrk_y);
 			drctn2=drctn;
 
 			drctn=drctn-unit.Direction;
@@ -540,9 +536,7 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rng,
 			// 攻撃地点から攻撃目標地点への絶対方位、方位角
 			wrk_x=wrk_x-unit.Position.X;
 			wrk_y=wrk_y-unit.Position.Y;
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
+			drctn=Direction(wrk_x, wrk_y);
 			drctn4=drctn;							// 絶対方位
 
 			drctn=drctn-unit.Direction;
@@ -716,9 +710,7 @@ private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double drctn2, Fire
 			wrk_x=wrk_x2-unit.Position.X;
 			wrk_y=wrk_y2-unit.Position.Y;
 
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
+			drctn=Direction(wrk_x, wrk_y);
 			drctn2=drctn;					// 未来位置への絶対角
 
 			drctn=drctn-unit.Direction;
@@ -874,9 +866,7 @@ private bool ShipFireTorpedoAtTarget(int trgt, ref Unit unit, ref double drctn2,
 		wrk_x=wrk_x2-unit.Position.X;
 		wrk_y=wrk_y2-unit.Position.Y;
 
-		drctn=atan2(wrk_y,wrk_x)*RAD_to;
-		if(drctn<0)
-			drctn=360+drctn;
+		drctn=Direction(wrk_x, wrk_y);
 		drctn2=drctn;					// 未来位置への絶対角
 
 		drctn=drctn-unit.Direction;
@@ -1017,9 +1007,7 @@ private bool ShipFireAntiAircraftShellAtTarget(int trgt, ref Unit unit, ref int 
 	wrk_x=wrk_x-unit.Position.X;
 	wrk_y=wrk_y-unit.Position.Y;
 
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
+	drctn=Direction(wrk_x, wrk_y);
 	drctn2=drctn;
 
 	drctn=drctn-unit.Direction;
@@ -1135,9 +1123,7 @@ private bool ShipFireAntiAircraftShellWithoutTarget(ref Unit unit, ref double dr
 			wrk_x=wrk_x2-unit.Position.X;
 			wrk_y=wrk_y2-unit.Position.Y;
 
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
+			drctn=Direction(wrk_x, wrk_y);
 			drctn2=drctn;
 
 			drctn=drctn-unit.Direction;
@@ -1249,9 +1235,7 @@ private bool ShipFireGunAtTarget(int trgt, ref Unit unit, FireKind kind, ref int
 	wrk_x=wrk_x-unit.Position.X;
 	wrk_y=wrk_y-unit.Position.Y;
 
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
+	drctn=Direction(wrk_x, wrk_y);
 	drctn2=drctn;
 
 	drctn=drctn-unit.Direction;
@@ -1407,10 +1391,7 @@ private bool ShipFireBullet(ref int trgt, ref Unit unit, ref double drctn2, Fire
 			wrk_x=other.Position.X-unit.Position.X;
 			wrk_y=other.Position.Y-unit.Position.Y;
 
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-
-			if(drctn<0)
-				drctn=360+drctn;
+			drctn=Direction(wrk_x, wrk_y);
 			drctn2=drctn+(25-Random(50));
 			drctn2=abs((int)drctn2)%360;
 
@@ -1477,10 +1458,7 @@ private bool BomberFireBullet(ref int trgt, ref Unit unit, ref double drctn2, Fi
 			wrk_x=other.Position.X-unit.Position.X;
 			wrk_y=other.Position.Y-unit.Position.Y;
 
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-
-			if(drctn<0)
-				drctn=360+drctn;
+			drctn=Direction(wrk_x, wrk_y);
 			drctn2=drctn+(Random(20)-10);
 			drctn2=abs((int)drctn2)%360;
 
@@ -1552,9 +1530,7 @@ private bool FighterFireBullet(ref int trgt, ref Unit unit, FireKind kind)
 				// 攻撃地点から攻撃目標地点への方位角
 				wrk_x=other.Position.X-unit.Position.X;
 				wrk_y=other.Position.Y-unit.Position.Y;
-				drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				if(drctn<0)
-					drctn=360+drctn;
+				drctn=Direction(wrk_x, wrk_y);
 				drctn=drctn-unit.Direction;
 				if(drctn<0)
 					drctn=360+drctn;
@@ -1633,9 +1609,7 @@ private bool PlaneFireBullet(ref int trgt, ref Unit unit, ref double drctn2, Fir
 			// 攻撃地点から攻撃目標地点への方位角
 			wrk_x=other.Position.X-unit.Position.X;
 			wrk_y=other.Position.Y-unit.Position.Y;
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
+			drctn=Direction(wrk_x, wrk_y);
 
 			drctn2=drctn+(Random(10)-5);
 			if(drctn2>=360)	drctn2=drctn2-360;
@@ -1722,9 +1696,7 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int trgt, ref double drctn2, in
 		wrk_x=trgt_x-unit.Position.X;
 		wrk_y=trgt_y-unit.Position.Y;
 
-		drctn=atan2(wrk_y,wrk_x)*RAD_to;
-		if(drctn<0)
-	drctn=360+drctn;
+		drctn=Direction(wrk_x, wrk_y);
 
 		drctn=drctn-unit.Direction;
 		if(drctn<0)
@@ -1738,9 +1710,7 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int trgt, ref double drctn2, in
 	if(wrk_x==0)	wrk_x=1;
 	if(wrk_y==0)	wrk_y=1;
 
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
+	drctn=Direction(wrk_x, wrk_y);
 	drctn2=drctn;					// 未来位置への絶対角
 	if(wrk_x<0)
 		wrk_x=0-wrk_x;
@@ -1868,9 +1838,7 @@ private bool AttackerDropBomb(ref int trgt, ref Unit unit, ref double drctn2, in
 	wrk_x=wrk_x-unit.Position.X;
 	wrk_y=wrk_y-unit.Position.Y;
 
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
+	drctn=Direction(wrk_x, wrk_y);
 	drctn2=drctn;
 	drctn=drctn-unit.Direction;
 	if(drctn<0)
@@ -2017,9 +1985,7 @@ private bool BomberDropBomb(ref int trgt, ref Unit unit, ref double drctn2, Fire
 			// 攻撃地点から攻撃目標地点への方位角
 			wrk_x=Units[n].Position.X-unit.Position.X;
 			wrk_y=Units[n].Position.Y-unit.Position.Y;
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
+			drctn=Direction(wrk_x, wrk_y);
 			drctn2=drctn;
 
 			drctn2=drctn+(Random(10)-5);
@@ -2494,9 +2460,7 @@ public void	SetFighterAttackDestination(int m)
 	// 自機ｍと敵機ｎの絶対角を調べます。
 	wrk_x=unit.Position.X-Units[n].Position.X;
 	wrk_y=unit.Position.Y-Units[n].Position.Y;
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;					// drctnが絶対角
+	drctn=Direction(wrk_x, wrk_y);					// drctnが絶対角
 
 	drctn=drctn-Units[n].Direction;				// 敵機ｎからの方位角をしらべます。
 	if(drctn<0)
@@ -2506,9 +2470,7 @@ public void	SetFighterAttackDestination(int m)
 		// 敵機が正面に自機を捕らえています。
 		wrk_x=Units[n].Position.X-unit.Position.X;
 		wrk_y=Units[n].Position.Y-unit.Position.Y;
-		drctn=atan2(wrk_y,wrk_x)*RAD_to;
-		if(drctn<0)
-			drctn=360+drctn;					// drctnが絶対角
+		drctn=Direction(wrk_x, wrk_y);					// drctnが絶対角
 
 		drctn=drctn-unit.Direction;				// 自機ｍからの方位角をしらべます。
 		if(drctn<0)
@@ -2583,9 +2545,7 @@ public void	SetAttackerEmergencyDestination(int m)
 			// 攻撃地点から攻撃目標地点への方位角
 			wrk_x=other.Position.X-unit.Position.X;
 			wrk_y=other.Position.Y-unit.Position.Y;
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
+			drctn=Direction(wrk_x, wrk_y);
 
 			drctn=drctn-unit.Direction;
 			if(drctn<0)
@@ -2594,9 +2554,7 @@ public void	SetAttackerEmergencyDestination(int m)
 			// 攻撃目標地点から攻撃地点への方位角
 			wrk_x=unit.Position.X-other.Position.X;
 			wrk_y=unit.Position.Y-other.Position.Y;
-			drctn2=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn2<0)
-				drctn2=360+drctn2;
+			drctn2=Direction(wrk_x, wrk_y);
 
 			drctn2=drctn2-other.Direction;
 			if(drctn2<0)
@@ -2748,9 +2706,7 @@ public void	SetAttackerAttackDestination(int m)
 	wrk_y=Units[n].Position.Y;
 	wrk_x=wrk_x-unit.Position.X;
 	wrk_y=wrk_y-unit.Position.Y;
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
+	drctn=Direction(wrk_x, wrk_y);
 	drctn=drctn-unit.Direction;
 	if(drctn<0)
 		drctn=360+drctn;
@@ -3032,9 +2988,7 @@ private bool EvadePlane(ref Unit other, ref Unit unit)
 		wrk_y=wrk_y-other.Position.Y;
 		if(wrk_x==0)	wrk_x=1;
 		if(wrk_y==0)	wrk_y=1;
-		drctn=atan2(wrk_y,wrk_x)*RAD_to;
-		if(drctn<0)
-			drctn=360+drctn;
+		drctn=Direction(wrk_x, wrk_y);
 		drctn=drctn-other.Direction;
 		if(drctn<0)
 			drctn=360+drctn;
@@ -3087,9 +3041,7 @@ private void EvadeShip(ref Unit other, ref Unit unit)
 		wrk_y=other.Position.Y-unit.Position.Y;
 		if(wrk_x==0)	wrk_x=1;
 		if(wrk_y==0)	wrk_y=1;
-		drctn=atan2(wrk_y,wrk_x)*RAD_to;
-		if(drctn<0)
-			drctn=360+drctn;
+		drctn=Direction(wrk_x, wrk_y);
 
 		if( (unit.Kind==UnitKind.Carrier||unit.Kind==UnitKind.LightCarrier) && unit.GroupLeader==0 && other.IsStopping && Random(3)!=0 )
 			{
@@ -3140,9 +3092,7 @@ private bool EvadeTorpedo(ref Fire fire, ref Unit unit)
 		wrk_y=wrk_y-fire.Position.Y;
 		if(wrk_x==0)	wrk_x=1;
 		if(wrk_y==0)	wrk_y=1;
-		drctn=atan2(wrk_y,wrk_x)*RAD_to;
-		if(drctn<0)
-			drctn=360+drctn;
+		drctn=Direction(wrk_x, wrk_y);
 		drctn=drctn-fire.Direction;
 		if(drctn<0)
 			drctn=360+drctn;
