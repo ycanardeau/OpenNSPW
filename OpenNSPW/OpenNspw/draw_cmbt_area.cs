@@ -1067,7 +1067,7 @@ public void	DrawBattleArea()
 				{
 				if( unit.Carrier==UnitInfoPanel[3] && ((UnitKind)UnitInfoPanel[0]==UnitKind.Carrier || (UnitKind)UnitInfoPanel[0]==UnitKind.LightCarrier || (UnitKind)UnitInfoPanel[0]==UnitKind.AirBase ) )
 					{
-					if( ( (unit.Mode<=UnitMode.Slow) && (UnitInfoPanel[1]==1&&unit.info[3]<=2)||(UnitInfoPanel[1]==0&&unit.info[3]>=3))
+					if( ( (unit.Mode<=UnitMode.Slow) && (UnitInfoPanel[1]==1&&unit.DeckPhase<=2)||(UnitInfoPanel[1]==0&&unit.DeckPhase>=3))
 					 || ( unit.Mode==UnitMode.Return && (UnitInfoPanel[1]==0) ) )
 						{
 						// 駐機中のの飛行機
@@ -1179,7 +1179,7 @@ public void	DrawBattleArea()
 
 				if( unit.Carrier==UnitInfoPanel[3] &&  ((UnitKind)UnitInfoPanel[0]==UnitKind.Carrier || (UnitKind)UnitInfoPanel[0]==UnitKind.LightCarrier || (UnitKind)UnitInfoPanel[0]==UnitKind.AirBase ) )
 					{
-					if( ( (unit.Mode<=UnitMode.Slow)  && (UnitInfoPanel[1]==1&&unit.info[3]<=2)||(UnitInfoPanel[1]==0&&unit.info[3]>=3))
+					if( ( (unit.Mode<=UnitMode.Slow)  && (UnitInfoPanel[1]==1&&unit.DeckPhase<=2)||(UnitInfoPanel[1]==0&&unit.DeckPhase>=3))
 					 || (unit.Mode==UnitMode.Return && (UnitInfoPanel[1]==0) ) )
 						{
 						// 空母で飛行甲板か格納庫かで航空機を表示するかしない。

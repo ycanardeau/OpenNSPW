@@ -306,7 +306,7 @@ private bool LandCargo(ref Unit unit, FireKind kind, int m)
 				Fires[n].Acceleration=+0.0;
 				Fires[n].FinalSpeed=0.0;
 				Fires[n].Ticks=0;
-				Fires[n].info[1]=360;
+				Fires[n].FlightTime=360;
 				Fires[n].TargetX=unit.LandingX;
 				Fires[n].TargetY=unit.LandingY;
 				Fires[n].ShooterSide=(int)unit.Side;
@@ -470,7 +470,7 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double drctn2, re
 			Fires[n].Acceleration=-0.00;
 			Fires[n].FinalSpeed=0;
 			Fires[n].Ticks=(int)(dstc2/Fires[n].Speed);
-			Fires[n].info[1]=0;
+			Fires[n].FlightTime=0;
 			}
 		}
 	return false;
@@ -530,7 +530,7 @@ private bool ShipDropAntiSubmarineBomb(ref int trgt, ref Unit unit, FireKind kin
 					Fires[n].Acceleration=0;
 					Fires[n].FinalSpeed=0;
 					Fires[n].Ticks=0;
-					Fires[n].info[1]=100;
+					Fires[n].FlightTime=100;
 					}
 				return false;
 				}
@@ -724,7 +724,7 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rng,
 				Fires[n].Acceleration=((Fires[n].Speed)/(dstc2/Fires[n].Speed));
 				Fires[n].FinalSpeed=0;
 				Fires[n].Ticks=(int)(dstc2/Fires[n].Speed)+1;
-				Fires[n].info[1]=Fires[n].Ticks/2;
+				Fires[n].FlightTime=Fires[n].Ticks/2;
 
 				}
 			}
@@ -921,7 +921,7 @@ private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double drctn2, Fire
 					Fires[n].Ticks=1;
 				else
 					Fires[n].Ticks=0;
-				Fires[n].info[1]=275+(unit.Side==Side.Japan ? 1 : 0)*110;
+				Fires[n].FlightTime=275+(unit.Side==Side.Japan ? 1 : 0)*110;
 				Fires[n].ArmingTime=30;
 				}
 			}
@@ -1086,7 +1086,7 @@ private bool ShipFireTorpedoAtTarget(int trgt, ref Unit unit, ref double drctn2,
 					Fires[n].Ticks=1;
 				else
 					Fires[n].Ticks=0;
-				Fires[n].info[1]=290+(unit.Side==Side.Japan ? 1 : 0)*110;
+				Fires[n].FlightTime=290+(unit.Side==Side.Japan ? 1 : 0)*110;
 				Fires[n].ArmingTime=30;
 				}
 			}
@@ -1228,7 +1228,7 @@ private bool ShipFireAntiAircraftShellAtTarget(int trgt, ref Unit unit, ref int 
 				Fires[n].Acceleration=-0.00;
 				Fires[n].FinalSpeed=0;
 				Fires[n].Ticks=(int)(dstc2/Fires[n].Speed);
-				Fires[n].info[1]=0;
+				Fires[n].FlightTime=0;
 
 				}
 			}
@@ -1372,7 +1372,7 @@ private bool ShipFireAntiAircraftShellWithoutTarget(ref Unit unit, ref double dr
 				Fires[n].Acceleration=-0.00;
 				Fires[n].FinalSpeed=0;
 				Fires[n].Ticks=(int)(dstc2/Fires[n].Speed);
-				Fires[n].info[1]=0;
+				Fires[n].FlightTime=0;
 				}
 			}
 		}
@@ -1559,7 +1559,7 @@ private bool ShipFireGunAtTarget(int trgt, ref Unit unit, FireKind kind, ref int
 					Fires[n].Acceleration=((Fires[n].Speed)/(dstc2/Fires[n].Speed));
 					Fires[n].FinalSpeed=0;
 					Fires[n].Ticks=(int)(dstc2/Fires[n].Speed);
-					Fires[n].info[1]=Fires[n].Ticks/2;
+					Fires[n].FlightTime=Fires[n].Ticks/2;
 					}
 				else
 					{
@@ -1578,7 +1578,7 @@ private bool ShipFireGunAtTarget(int trgt, ref Unit unit, FireKind kind, ref int
 					Fires[n].Acceleration=-0.00;
 					Fires[n].FinalSpeed=0;
 					Fires[n].Ticks=(int)(dstc2/Fires[n].Speed);
-					Fires[n].info[1]=0;
+					Fires[n].FlightTime=0;
 					}
 
 				}
@@ -2090,7 +2090,7 @@ other.PathX[1]=MAP_RIGHT+1;
 			Fires[n].Acceleration=+0.0;
 			Fires[n].FinalSpeed=0.0;
 			Fires[n].Ticks=0;
-			Fires[n].info[1]=240;
+			Fires[n].FlightTime=240;
 			Fires[n].ArmingTime=15;
 			}
 		}
@@ -2215,12 +2215,12 @@ other.PathX[1]=MAP_RIGHT+1;
 				if(unit.Side==Side.Japan)
 					{
 					Fires[n].Ticks=10;
-					Fires[n].info[1]=68+Random(5);
+					Fires[n].FlightTime=68+Random(5);
 					}
 				else
 					{
 					Fires[n].Ticks=0;
-					Fires[n].info[1]=70;
+					Fires[n].FlightTime=70;
 					}
 
 				}
@@ -2250,12 +2250,12 @@ other.PathX[1]=MAP_RIGHT+1;
 					if(unit.Side==Side.Japan)
 						{
 						Fires[n].Ticks=10;
-						Fires[n].info[1]=75+(5-Random(10));
+						Fires[n].FlightTime=75+(5-Random(10));
 						}
 					else
 						{
 						Fires[n].Ticks=0;
-						Fires[n].info[1]=70+(5-Random(10));
+						Fires[n].FlightTime=70+(5-Random(10));
 						}
 					}
 			}
@@ -2351,7 +2351,7 @@ private bool BomberDropBomb(ref int trgt, ref Unit unit, ref double drctn2, Fire
 			Fires[n].Acceleration=+0.2;
 			Fires[n].FinalSpeed=0.0;
 			Fires[n].Ticks=0;
-			Fires[n].info[1]=70;
+			Fires[n].FlightTime=70;
 			}
 		}
 

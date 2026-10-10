@@ -633,21 +633,21 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 		if( unit.Mode<=UnitMode.Slow  )
 			{
 			// 発進
-			if( unit.info[3]==0)
+			if( unit.DeckPhase==0)
 				{
-				unit.info[3]=1;
+				unit.DeckPhase=1;
 				Units[unit.Carrier].PlanesToLaunch++;		// 発艦予定の機数を
 				}
 			cv_1=Sprites[SpriteId.JapanUnitInfo].x+Sprites[SpriteId.JapanUnitInfo].wd/2;
-			if((int)unit.Position.X==cv_1 && unit.info[3]==1)
+			if((int)unit.Position.X==cv_1 && unit.DeckPhase==1)
 				{
-				unit.info[3]=2;
+				unit.DeckPhase=2;
 				unit.Direction=270.0;
 				}
 			cv_1=Sprites[SpriteId.JapanUnitInfo].y+370;
-			if((int)unit.Position.Y>=cv_1 && unit.info[3]==2)
+			if((int)unit.Position.Y>=cv_1 && unit.DeckPhase==2)
 				{
-				unit.info[3]=3;
+				unit.DeckPhase=3;
 				unit.Direction=90.0;
 
 				Units[unit.Carrier].LaunchCount++;
@@ -663,16 +663,16 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 					}
 				}
 			cv_1=Sprites[SpriteId.JapanUnitInfo].y+370-80;
-			if((int)unit.Position.Y==cv_1 && unit.info[3]==3 )
+			if((int)unit.Position.Y==cv_1 && unit.DeckPhase==3 )
 				{
-				unit.info[3]=4;
+				unit.DeckPhase=4;
 				if( unit.Kind!=UnitKind.Bomber && !(unit.Kind==UnitKind.Fighter&&unit.Variant==1) )
 					unit.SpriteRow--;
 				unit.TakeOffRun=0;
 				}
 
 			cv_1=Sprites[SpriteId.JapanUnitInfo].y+370-120;
-			if((int)unit.Position.Y<=cv_1 && unit.info[3]>=4)
+			if((int)unit.Position.Y<=cv_1 && unit.DeckPhase>=4)
 				{	// 加速します
 				unit.TakeOffRun+=1;
 
@@ -686,10 +686,10 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 				}
 
 			cv_1=Sprites[SpriteId.JapanUnitInfo].y-30/*+60*/;
-			if((int)unit.Position.Y<=cv_1 && unit.info[3]>=4 )
+			if((int)unit.Position.Y<=cv_1 && unit.DeckPhase>=4 )
 				{		// ここで発進はお終い。
 				//unit[m].info[3]=100;			// 発進後の最低直線飛行
-				unit.info[3]=0;			// 発進後の最低直線飛行
+				unit.DeckPhase=0;			// 発進後の最低直線飛行
 				unit.PlaneState=UnitState.Flying;
 				//unit[m].info[2]=-1;	// 格納庫の位置、及び、その基地の番機番号
 				unit.Position = Units[unit.Carrier].Position;
@@ -737,27 +737,27 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 			{
 			// 着陸
 			cv_1=Sprites[SpriteId.JapanUnitInfo].y+Sprites[SpriteId.JapanUnitInfo].ht-150;
-			if((int)unit.Position.Y<=cv_1 && unit.info[3]==1)
+			if((int)unit.Position.Y<=cv_1 && unit.DeckPhase==1)
 				{
-				unit.info[3]=2;
+				unit.DeckPhase=2;
 				unit.Speed=1.5;
 				Units[unit.Carrier].LandingLock=0;		// その空母の次機着艦許可
 				}
 			cv_1=Sprites[SpriteId.JapanUnitInfo].y+Sprites[SpriteId.JapanUnitInfo].ht-200;
-			if((int)unit.Position.Y<=cv_1 && unit.info[3]==2)
+			if((int)unit.Position.Y<=cv_1 && unit.DeckPhase==2)
 				{
-				unit.info[3]=3;
+				unit.DeckPhase=3;
 				unit.Speed=unit.Speed/2;
 				if( unit.Kind!=UnitKind.Bomber && !(unit.Kind==UnitKind.Fighter&&unit.Variant==1) )
 					unit.SpriteRow++;
 				}
 			cv_1=Sprites[SpriteId.JapanUnitInfo].y+Sprites[SpriteId.JapanUnitInfo].ht-270;
-			if( (int)unit.Position.Y<=cv_1 && unit.info[3]==3 )
+			if( (int)unit.Position.Y<=cv_1 && unit.DeckPhase==3 )
 				{
 				// 着艦終了
-				unit.info[3]=0;
+				unit.DeckPhase=0;
 
-				unit.info[9]=0;					// 戦闘機の場合は制空出撃フラグ
+				unit.AirSuperioritySortie=0;					// 戦闘機の場合は制空出撃フラグ
 
 				unit.Mode=UnitMode.Move;				// モード（コンバットメニュー）
 				SetParkingPosition(m);
@@ -776,7 +776,7 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 				for( i=1; i<=MaxUnitId; i++)
 					{
 					ref var other = ref Units[i];
-					if( i!=m && other.IsUsed && other.Category==UnitCategory.Plane && other.Side==LocalSide && other.info[3]!=0
+					if( i!=m && other.IsUsed && other.Category==UnitCategory.Plane && other.Side==LocalSide && other.DeckPhase!=0
 						&& other.PlaneState==UnitState.Parked && unit.Carrier==other.Carrier && !other.IsStopping )
 						f++;
 					}
@@ -866,7 +866,7 @@ private void SteerUnit(ref Unit unit, int m)
 			// 単独、もしくは、編隊長
 			if(!unit.IsStopping )
 				{
-				if(  unit.Category==UnitCategory.Plane && unit.Mode==UnitMode.Return && unit.info[3]==1 )
+				if(  unit.Category==UnitCategory.Plane && unit.Mode==UnitMode.Return && unit.DeckPhase==1 )
 					{
 					UpdateLanding(m);
 					}
@@ -899,7 +899,7 @@ private void SteerUnit(ref Unit unit, int m)
 							{
 							if( unit.Category==UnitCategory.Plane && unit.Mode==UnitMode.Return )
 								{
-								unit.info[3]=1;
+								unit.DeckPhase=1;
 								SetLandingDestination(m);
 								for(n=1;n<=MaxUnitId;n++)
 									{
@@ -1298,7 +1298,7 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 		unit.EmergencyFlags[0]--;
 
 	// 着艦チェック
-	if( unit.Category==UnitCategory.Plane && unit.Mode==UnitMode.Return && unit.info[3]==1 && Units[unit.Carrier].IsUsed
+	if( unit.Category==UnitCategory.Plane && unit.Mode==UnitMode.Return && unit.DeckPhase==1 && Units[unit.Carrier].IsUsed
 		&& Units[unit.Carrier].LandingLock==0 && !(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying && Units[unit.Carrier].Hp<=Units[unit.Carrier].MaxHp*0.2)
 		&& !( unit.Kind==UnitKind.Bomber && (Units[unit.Carrier].Kind!=UnitKind.AirBase) )
 		&& !( unit.Kind==UnitKind.Fighter && unit.Variant==1 && (Units[unit.Carrier].Kind!=UnitKind.AirBase) )
@@ -1348,8 +1348,8 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 
 				//unit[m].info[1]=4;				// 所属の空母、及び、基地の番号
 				unit.ParkingNumber=FindParkingNumber(m);	// 格納庫の位置、及び、その基地の番機番号
-				unit.info[3]=1;					// 格納庫、基地での移動情態
-				unit.info[4]=0;					// 減速度をクリア
+				unit.DeckPhase=1;					// 格納庫、基地での移動情態
+				unit.TakeOffRun=0;					// 減速度をクリア
 				//unit[m].info[5]=MOVE;				// モード（コンバットメニュー）
 				Units[unit.Carrier].LandingLock=1;	// 着艦、0許可、1不許可
 				Units[unit.Carrier].LaunchLock=1;	// その空母の次機発進許可	0許可、1不許可

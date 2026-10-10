@@ -294,7 +294,7 @@ private void UpdateCargo(ref Fire fire, ref int n)
 	int f;
 	int cm_scrn_x;
 	int cm_scrn_y;
-	if( fire.Ticks<=fire.info[1] )
+	if( fire.Ticks<=fire.FlightTime )
 		{
 		wrk_x=fire.Position.X;
 		wrk_y=fire.Position.Y;
@@ -581,7 +581,7 @@ private void UpdateAntiSubmarineBomb(ref Fire fire, ref int n, int m)
 
 		Effects[f].SpriteNumber=7;			// ソースファイル上の番号
 		}
-	if( fire.Ticks==fire.info[1] )
+	if( fire.Ticks==fire.FlightTime )
 		{	// バクハツ！
 
 		f=FindFreeEffect();
@@ -726,7 +726,7 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 		{	//
 		wrk_x=fire.Position.X;	wrk_y=fire.Position.Y;
 		fire.Position += new WorldVector(cos(fire.Direction*a_PI)*fire.Speed, sin(fire.Direction*a_PI)*fire.Speed);
-		if( fire.Ticks > fire.info[1] )
+		if( fire.Ticks > fire.FlightTime )
 			fire.Speed-=fire.Acceleration;		// 弾が上昇中
 		else
 			fire.Speed+=(fire.Acceleration*2.83);		// 弾が降下中
@@ -783,9 +783,9 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 						unit.Side=0;
 						Units[unit.Carrier].PlaneCount--;	// 現在格納数
 
-						if( unit.info[3]>=1 && Units[unit.Carrier].PlanesToLaunch>=1 && unit.Mode<=UnitMode.Slow )
+						if( unit.DeckPhase>=1 && Units[unit.Carrier].PlanesToLaunch>=1 && unit.Mode<=UnitMode.Slow )
 							Units[unit.Carrier].PlanesToLaunch--;		// 発艦予定の機数を
-						if( unit.info[3]>=3 && Units[unit.Carrier].LandingLock>=1  && unit.Mode<=UnitMode.Slow )
+						if( unit.DeckPhase>=3 && Units[unit.Carrier].LandingLock>=1  && unit.Mode<=UnitMode.Slow )
 							Units[unit.Carrier].LandingLock--;		//
 
 						if( unit.Mode==UnitMode.Return )
@@ -845,7 +845,7 @@ private void UpdateTorpedo(ref Fire fire, ref int n, int m)
 	int cm_scrn_y;
 	int h;
 	int f;
-	if( fire.Ticks<=fire.info[1] )
+	if( fire.Ticks<=fire.FlightTime )
 		{
 		wrk_x=fire.Position.X;
 		wrk_y=fire.Position.Y;
@@ -857,7 +857,7 @@ private void UpdateTorpedo(ref Fire fire, ref int n, int m)
 			cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[SpriteId.JapanUnits].ht/2))/Sprites[SpriteId.MapTiles].ht);
 			if( MapTiles[cm_scrn_y][cm_scrn_x]>=1)
 				{
-				fire.Ticks=fire.info[1];
+				fire.Ticks=fire.FlightTime;
 				}
 			}
 
@@ -960,7 +960,7 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 	if( fire.Target==(int)UnitKind.Attacker && fire.Ticks==12 )
 		PlaySoundEffect( 0, SoundId.BombRelease ,fire.Position.X, fire.Position.Y);
 
-	if( fire.Ticks<=fire.info[1]  )
+	if( fire.Ticks<=fire.FlightTime  )
 		{	// 爆弾降下中
 		if( fire.Ticks>=50)
 			{
@@ -1022,9 +1022,9 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 						unit.Side=0;
 						Units[unit.Carrier].PlaneCount--;	// 現在格納数
 
-						if( unit.info[3]>=1 && Units[unit.Carrier].PlanesToLaunch>=1 && unit.Mode<=UnitMode.Slow )
+						if( unit.DeckPhase>=1 && Units[unit.Carrier].PlanesToLaunch>=1 && unit.Mode<=UnitMode.Slow )
 							Units[unit.Carrier].PlanesToLaunch--;		// 発艦予定の機数を
-						if( unit.info[3]>=3 && Units[unit.Carrier].LandingLock>=1  && unit.Mode<=UnitMode.Slow )
+						if( unit.DeckPhase>=3 && Units[unit.Carrier].LandingLock>=1  && unit.Mode<=UnitMode.Slow )
 							Units[unit.Carrier].LandingLock--;		//
 
 						if(  unit.Mode==UnitMode.Return )
@@ -1219,7 +1219,7 @@ private void UpdatePlaneEffects(ref Unit unit, int m)
 	int cm_scrn_x;
 	int cm_scrn_y;
 	int i;
-	if(  unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%3)==0)&& (unit.Weapon==FireKind.Bomb || unit.Weapon==FireKind.Torpedo || unit.Weapon==FireKind.Maintenance || unit.Weapon==FireKind.Unarmed)  && unit.Side==LocalSide && !(unit.PlaneState==UnitState.Parked && UnitInfoPanel[1]==0) && !( unit.PlaneState==UnitState.Parked && unit.info[3]>=3 ) && !( unit.PlaneState==UnitState.Parked && unit.Carrier!=UnitInfoPanel[3]))
+	if(  unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%3)==0)&& (unit.Weapon==FireKind.Bomb || unit.Weapon==FireKind.Torpedo || unit.Weapon==FireKind.Maintenance || unit.Weapon==FireKind.Unarmed)  && unit.Side==LocalSide && !(unit.PlaneState==UnitState.Parked && UnitInfoPanel[1]==0) && !( unit.PlaneState==UnitState.Parked && unit.DeckPhase>=3 ) && !( unit.PlaneState==UnitState.Parked && unit.Carrier!=UnitInfoPanel[3]))
 		{
 		f=FindFreeEffect();
 		Effects[f].Layer=EffectLayer.Lower;

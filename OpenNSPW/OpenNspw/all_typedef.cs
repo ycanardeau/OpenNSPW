@@ -115,6 +115,10 @@ public struct	Unit		// 全ての艦船、航空機、地図上の位置
 	// Planes: 格納庫の位置, the plane's place in its carrier or base.
 	[UnscopedRef] public ref int ParkingNumber => ref info[2];
 
+	// Planes: 格納庫、基地での移動情態, the plane's step on its carrier or base: 1 to 4 and on while it taxies to take
+	// off, 1 (着艦準備, ready to land) to 3 while it lands, and 0 otherwise.
+	[UnscopedRef] public ref int DeckPhase => ref info[3];
+
 	// Carriers and air bases: 最大収容数.
 	[UnscopedRef] public ref int Capacity => ref info[2];
 
@@ -144,6 +148,10 @@ public struct	Unit		// 全ての艦船、航空機、地図上の位置
 	[UnscopedRef] public ref int ContactRadius => ref info[9];
 
 	[UnscopedRef] public ref int ContactTime => ref info[10];
+
+	// Fighters: 制空出撃フラグ, sent out for air superiority. Only cleared, when the fighter has landed; it is the slot
+	// of ContactRadius.
+	[UnscopedRef] public ref int AirSuperioritySortie => ref info[9];
 
 	// Carriers and air bases: 着艦, 0 if the next plane may land, 1 if not.
 	[UnscopedRef] public ref int LandingLock => ref info[7];
@@ -218,6 +226,9 @@ public struct	Fire
 
 	// The ticks the fire has flown, or has left to fly, by its kind.
 	[UnscopedRef] public ref int Ticks => ref info[0];
+
+	// The ticks the fire flies before it lands, bursts or hits, which Ticks counts up to.
+	[UnscopedRef] public ref int FlightTime => ref info[1];
 
 	// Torpedoes: the ticks before the torpedo can hit.
 	[UnscopedRef] public ref int ArmingTime => ref info[2];

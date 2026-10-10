@@ -231,7 +231,7 @@ private void DrawUnitDetails(SpriteId sprite, ref RECT src_rect, ref HDC hdc, re
 		if( Units[UnitInfoPanel[3]].IsUsed && ( Units[UnitInfoPanel[3]].Kind==UnitKind.AirBase||Units[UnitInfoPanel[3]].Kind==UnitKind.NavalBase||Units[UnitInfoPanel[3]].Kind==UnitKind.InfantryBase||Units[UnitInfoPanel[3]].Kind==UnitKind.Pillboxes||Units[UnitInfoPanel[3]].Kind==UnitKind.Fortress ) && Units[UnitInfoPanel[3]].info[0]!=0 && Units[UnitInfoPanel[3]].Hp==Units[UnitInfoPanel[3]].MaxHp
 			)
 			{
-			len[1] = wsprintf(ach[1], "工事:%d", Units[UnitInfoPanel[3]].info[0] );
+			len[1] = wsprintf(ach[1], "工事:%d", Units[UnitInfoPanel[3]].BuildTime );
 			}
 		else
 			{
@@ -1504,7 +1504,7 @@ public void	ApplyUnitInfoInput()
 										}
 									if( unit.Category==UnitCategory.Plane && menu2==CombatMenuItem.Move && unit.PlaneState==UnitState.Flying  )
 										{
-										unit.info[3]=0;		// 着艦準備をクリア
+										unit.DeckPhase=0;		// 着艦準備をクリア
 										unit.Mode=(UnitMode)menu2;
 										}
 									}

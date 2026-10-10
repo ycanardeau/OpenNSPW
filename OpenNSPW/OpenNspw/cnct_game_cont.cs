@@ -1629,13 +1629,13 @@ public int		AddPlane(Side side,UnitKind kind,int type,int no,int planes,FireKind
 			Units[m].PlaneState=UnitState.Parked;
 			Units[m].Carrier=no;					// 所属の空母、及び、基地の番号
 			Units[m].ParkingNumber=f;				// 格納庫の位置、及び、その基地の番機番号
-			Units[m].info[3]=0;					// 8
+			Units[m].DeckPhase=0;					// 8
 			Units[m].PlanesToLaunch=0;					// 発艦予定の機数
 			Units[m].Mode=UnitMode.Move;				// モード（コンバットメニュー）
 			SetParkingPosition(m);
 			Units[m].IsStopping=true;
 
-			Units[Units[m].Carrier].info[1]++;					// 所属の空母、及び、基地の格納数を増やす｡
+			Units[Units[m].Carrier].PlaneCount++;					// 所属の空母、及び、基地の格納数を増やす｡
 
 			SetUnitData(m);
 
