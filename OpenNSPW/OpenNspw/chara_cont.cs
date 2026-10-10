@@ -1408,6 +1408,280 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 		unit.Hp=0;							// 飛行機でガス０なら落ちます
 	}
 
+private void ControlInfantryBaseFiring(ref Unit unit, int dmg_act, int m)
+	{
+	unit.Ammo=unit.MaxAmmo;
+
+	// 艦砲 自動
+	if( unit.Ammo>=1 && Random(250*dmg_act)==0 )
+		{
+		FireWeapons(m,0,FireKind.Gun);
+		}
+	// 艦砲　選択
+	// 対空砲弾 自動砲撃
+	if( unit.Ammo>=1 && Random(200*dmg_act)==0 )
+		{
+		FireWeapons(m,0,FireKind.AntiAircraftShell);
+		}
+	// 対空機関砲 X 2
+	if( Random(180*dmg_act)==0 && unit.Side==Side.UnitedStates )
+		FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
+	// 対空機銃
+	if( Random(10*dmg_act)==0 )
+		FireWeapons(m,0,FireKind.Bullet);
+	}
+
+private void ControlPillboxesFiring(ref Unit unit, int dmg_act, int m)
+	{
+	unit.Ammo=unit.MaxAmmo;
+	// 艦砲 自動
+	if( unit.Ammo>=1 && Random( 200*dmg_act )==0 )
+		{
+		FireWeapons(m,0,FireKind.Gun);
+		}
+	// 艦砲　選択
+	// 対空砲弾 自動砲撃
+	if( unit.Ammo>=1 && Random(160*dmg_act)==0 )
+		{
+		FireWeapons(m,0,FireKind.AntiAircraftShell);
+		}
+	// 対空機関砲
+	if( Random(140*dmg_act)==0 && unit.Side==Side.UnitedStates )
+		{
+		FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
+		}
+	// 対空機銃
+	if( Random(10*dmg_act)==0 )
+		{
+		FireWeapons(m,0,FireKind.Bullet);
+		}
+	}
+
+private void ControlFortressFiring(ref Unit unit, int dmg_act, int m)
+	{
+	unit.Ammo=unit.MaxAmmo;
+
+	// 艦砲 自動
+	if( unit.Ammo>=1 && Random(150*dmg_act)==0 )
+		{
+		FireWeapons(m,0,FireKind.Gun);
+		}
+	// 艦砲　選択
+	// 対空砲弾 自動砲撃
+	if( unit.Ammo>=1 && Random(120*dmg_act)==0 )
+		{
+		FireWeapons(m,0,FireKind.AntiAircraftShell);
+		}
+	// 対空機関砲
+	if( Random(120*dmg_act)==0 && unit.Side==Side.UnitedStates )
+		FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
+	// 対空機関砲 X 2
+	if( Random(160*dmg_act)==0 && unit.Side==Side.UnitedStates )
+		FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
+	// 対空機銃
+	if( Random(8*dmg_act)==0 )
+		FireWeapons(m,0,FireKind.Bullet);
+	}
+
+private void ControlBattleshipFiring(ref Unit unit, int dmg_act, int m)
+	{
+	if( unit.Side==Side.Japan && unit.Variant==1 )
+		{
+		// 大和級
+		// 艦砲 自動
+		if( unit.Ammo>=1 && Random(350*dmg_act)==0 && (unit.Target==0 || Units[unit.Target].Category==UnitCategory.Ship) )
+			{
+			FireWeapons(m,0,FireKind.Gun);
+			}
+		// 艦砲　選択
+		if(unit.Ammo>=1 && Random(300*dmg_act)==0 && unit.Target!=0 )
+			{
+			FireWeapons(m,unit.Target,FireKind.NavalBaseGun);
+			}
+
+		if( unit.Ammo>=1 && Random(180*dmg_act)==0 && unit.Target!=0 )
+			{
+			FireWeapons(m,unit.Target,FireKind.AntiAircraftShell);		// 対空砲弾 選択
+			}
+
+		if( unit.Ammo>=1 && Random(95*dmg_act)==0 )
+			{
+			FireWeapons(m,0,FireKind.AntiAircraftShell);							// 対空砲弾 自動砲撃
+			}
+
+		// 対空機銃
+		if( Random(4*dmg_act)==0 )
+			FireWeapons(m,0,FireKind.Bullet);
+		}
+	else
+		{
+		// 艦砲 自動
+		if( unit.Ammo>=1 && Random(350*dmg_act)==0 && (unit.Target==0 || Units[unit.Target].Category==UnitCategory.Ship) )
+			{
+			FireWeapons(m,0,FireKind.Gun);
+			}
+		// 艦砲　選択
+		if(unit.Ammo>=1 && Random(300*dmg_act)==0 && unit.Target!=0 )
+			{
+			FireWeapons(m,unit.Target,FireKind.Gun);
+			}
+
+		if( unit.Ammo>=1 && Random(190*dmg_act)==0 && unit.Target!=0 )
+			{
+			FireWeapons(m,unit.Target,FireKind.AntiAircraftShell);		// 対空砲弾 選択
+			}
+
+		if( unit.Ammo>=1 && Random(110*dmg_act)==0 )
+			{
+			FireWeapons(m,0,FireKind.AntiAircraftShell);							// 対空砲弾 自動砲撃
+			}
+
+		// 対空機関砲
+		if( Random(60*dmg_act)==0 && unit.Side==Side.UnitedStates )
+			FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
+		// 対空機関砲 X 2
+		if( Random(120*dmg_act)==0 && unit.Side==Side.UnitedStates )
+			FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
+
+		// 対空機銃
+		if( Random(5*dmg_act)==0 )
+			FireWeapons(m,0,FireKind.Bullet);
+		}
+	}
+
+private void ControlCruiserFiring(ref Unit unit, int dmg_act, int m)
+	{
+	if( unit.Variant==0 )
+		{
+		// 巡洋艦
+		// 艦砲 自動
+		if( unit.Ammo>=1  && Random(350*dmg_act)==0  && (unit.Target==0 || Units[unit.Target].Category==UnitCategory.Ship) )
+			{
+			FireWeapons(m,0,FireKind.Gun);
+			}
+		// 艦砲 選択
+		if( unit.Ammo>=1  && Random(300*dmg_act)==0 && unit.Target!=0 )
+			{
+			FireWeapons(m,unit.Target,FireKind.Gun);
+			}
+
+		// 対空砲弾
+		if( unit.Ammo>=1 && Random(120*dmg_act)==0  )
+			{
+			if(unit.Target!=0)								// 対空砲弾 選択
+				FireWeapons(m,unit.Target,FireKind.AntiAircraftShell);
+			else
+				FireWeapons(m,0,FireKind.AntiAircraftShell);							// 対空砲弾 自動砲撃
+			}
+
+		// 対空機関砲
+		if( unit.Ammo>=1 && Random(60*dmg_act)==0 && unit.Side==Side.UnitedStates )
+			FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
+
+		// 対空機銃 自動
+		if( Random(10*dmg_act)==0  )
+			FireWeapons(m,0,FireKind.Bullet);
+		// 魚雷
+		if( unit.Random40[0]==Tick%(40*dmg_act) && unit.Ammo>=1 && unit.ReloadTime<=0 && unit.Side==Side.Japan )
+			{
+			FireWeapons(m,0,FireKind.Torpedo);
+			}
+		}
+	else
+		{
+		// 防空巡洋艦
+		// 艦砲 自動
+		if( unit.Ammo>=1  && Random(800*dmg_act)==0  && (unit.Target==0 || Units[unit.Target].Category==UnitCategory.Ship) )
+			{
+			FireWeapons(m,0,FireKind.Gun);
+			}
+
+		// 対空砲弾
+		if( unit.Ammo>=1 && Random(100*dmg_act)==0 )
+			{
+			// 自動
+			FireWeapons(m,0,FireKind.AntiAircraftShell);							// 対空砲弾 自動砲撃
+			}
+
+		if( unit.Ammo>=1 && Random(180*dmg_act)==0 && unit.Target!=0 )
+			{
+			// 選択
+			FireWeapons(m,unit.Target,FireKind.AntiAircraftShell);
+			}
+
+		// 対空機関砲
+		if( unit.Ammo>=1 && Random(55*dmg_act)==0 && unit.Side==Side.UnitedStates )
+			FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
+
+		// 対空機銃 自動
+		if( Random(10*dmg_act)==0  )
+			FireWeapons(m,0,FireKind.Bullet);
+
+		}
+	}
+
+private void ControlDestroyerFiring(ref Unit unit, int dmg_act, int m)
+	{
+	if( unit.Variant==0 )
+		{
+		// 艦砲 自動
+		if( unit.Ammo>=1 && Random(200*dmg_act)==0 )
+			{
+			FireWeapons(m,0,FireKind.Gun);
+			}
+
+		// 魚雷
+		if( unit.Random40[0]==Tick%(40*dmg_act) && unit.Ammo>=1 && unit.ReloadTime<=0 )
+			{
+			FireWeapons(m,0,FireKind.Torpedo);
+			}
+
+		// 爆雷
+		if( unit.Ammo>=1 && (Tick%(35*dmg_act))==0 )
+			{
+			FireWeapons(m,0,FireKind.AntiSubmarineBomb);
+			}
+		// 対空機銃
+		if( Random(15*dmg_act)==0 )
+			FireWeapons(m,0,FireKind.Bullet);
+		}
+	else
+		{
+		// 艦砲 自動
+		if( unit.Ammo>=1 && Random(500*dmg_act)==0 )
+			{
+			FireWeapons(m,0,FireKind.Gun);
+			}
+
+		// 対空機銃
+		if( Random(20*dmg_act)==0 )
+			FireWeapons(m,0,FireKind.Bullet);
+
+		// 爆雷
+		if( unit.Ammo>=1 && (Tick%(25*dmg_act))==0 )
+			{
+			FireWeapons(m,0,FireKind.AntiSubmarineBomb);
+			}
+
+		}
+	}
+
+private void ControlTransportFiring(ref Unit unit, int m)
+	{
+	if( unit.Weapon==FireKind.CargoNavalBase && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
+		FireWeapons(m,0,FireKind.CargoNavalBase);
+	if( unit.Weapon==FireKind.CargoAirBase && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
+		FireWeapons(m,0,FireKind.CargoAirBase);
+
+	if( unit.Weapon==FireKind.CargoInfantryBase && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
+		FireWeapons(m,0,FireKind.CargoInfantryBase);
+
+	if( unit.Weapon==FireKind.CargoPillboxes && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
+		FireWeapons(m,0,FireKind.CargoPillboxes);
+	if( unit.Weapon==FireKind.CargoFortress && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
+		FireWeapons(m,0,FireKind.CargoFortress);
+	}
+
 private void ControlFiring(ref Unit unit, int dmg_act, int m)
 	{
 	if( !IsEditingMap && !unit.IsSupplying && (( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying )||( unit.Category==UnitCategory.Ship)))
@@ -1416,213 +1690,26 @@ private void ControlFiring(ref Unit unit, int dmg_act, int m)
 			{
 			case UnitKind.InfantryBase:
 				// 地上基地は弾が減りません
-				unit.Ammo=unit.MaxAmmo;
-
-				// 艦砲 自動
-				if( unit.Ammo>=1 && Random(250*dmg_act)==0 )
-					{
-					FireWeapons(m,0,FireKind.Gun);
-					}
-				// 艦砲　選択
-				// 対空砲弾 自動砲撃
-				if( unit.Ammo>=1 && Random(200*dmg_act)==0 )
-					{
-					FireWeapons(m,0,FireKind.AntiAircraftShell);
-					}
-				// 対空機関砲 X 2
-				if( Random(180*dmg_act)==0 && unit.Side==Side.UnitedStates )
-					FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
-				// 対空機銃
-				if( Random(10*dmg_act)==0 )
-					FireWeapons(m,0,FireKind.Bullet);
+				ControlInfantryBaseFiring(ref unit, dmg_act, m);
 				break;
 
 			case UnitKind.Pillboxes:
 				// 地上基地は弾が減りません
-				unit.Ammo=unit.MaxAmmo;
-				// 艦砲 自動
-				if( unit.Ammo>=1 && Random( 200*dmg_act )==0 )
-					{
-					FireWeapons(m,0,FireKind.Gun);
-					}
-				// 艦砲　選択
-				// 対空砲弾 自動砲撃
-				if( unit.Ammo>=1 && Random(160*dmg_act)==0 )
-					{
-					FireWeapons(m,0,FireKind.AntiAircraftShell);
-					}
-				// 対空機関砲
-				if( Random(140*dmg_act)==0 && unit.Side==Side.UnitedStates )
-					{
-					FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
-					}
-				// 対空機銃
-				if( Random(10*dmg_act)==0 )
-					{
-					FireWeapons(m,0,FireKind.Bullet);
-					}
+				ControlPillboxesFiring(ref unit, dmg_act, m);
 				break;
 
 			case UnitKind.Fortress:
 				// 地上基地は弾が減りません
-				unit.Ammo=unit.MaxAmmo;
-
-				// 艦砲 自動
-				if( unit.Ammo>=1 && Random(150*dmg_act)==0 )
-					{
-					FireWeapons(m,0,FireKind.Gun);
-					}
-				// 艦砲　選択
-				// 対空砲弾 自動砲撃
-				if( unit.Ammo>=1 && Random(120*dmg_act)==0 )
-					{
-					FireWeapons(m,0,FireKind.AntiAircraftShell);
-					}
-				// 対空機関砲
-				if( Random(120*dmg_act)==0 && unit.Side==Side.UnitedStates )
-					FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
-				// 対空機関砲 X 2
-				if( Random(160*dmg_act)==0 && unit.Side==Side.UnitedStates )
-					FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
-				// 対空機銃
-				if( Random(8*dmg_act)==0 )
-					FireWeapons(m,0,FireKind.Bullet);
+				ControlFortressFiring(ref unit, dmg_act, m);
 				break;
 
 			case UnitKind.Battleship:
-				if( unit.Side==Side.Japan && unit.Variant==1 )
-					{
-					// 大和級
-					// 艦砲 自動
-					if( unit.Ammo>=1 && Random(350*dmg_act)==0 && (unit.Target==0 || Units[unit.Target].Category==UnitCategory.Ship) )
-						{
-						FireWeapons(m,0,FireKind.Gun);
-						}
-					// 艦砲　選択
-					if(unit.Ammo>=1 && Random(300*dmg_act)==0 && unit.Target!=0 )
-						{
-						FireWeapons(m,unit.Target,FireKind.NavalBaseGun);
-						}
-
-					if( unit.Ammo>=1 && Random(180*dmg_act)==0 && unit.Target!=0 )
-						{
-						FireWeapons(m,unit.Target,FireKind.AntiAircraftShell);		// 対空砲弾 選択
-						}
-
-					if( unit.Ammo>=1 && Random(95*dmg_act)==0 )
-						{
-						FireWeapons(m,0,FireKind.AntiAircraftShell);							// 対空砲弾 自動砲撃
-						}
-
-					// 対空機銃
-					if( Random(4*dmg_act)==0 )
-						FireWeapons(m,0,FireKind.Bullet);
-					}
-				else
-					{
-					// 艦砲 自動
-					if( unit.Ammo>=1 && Random(350*dmg_act)==0 && (unit.Target==0 || Units[unit.Target].Category==UnitCategory.Ship) )
-						{
-						FireWeapons(m,0,FireKind.Gun);
-						}
-					// 艦砲　選択
-					if(unit.Ammo>=1 && Random(300*dmg_act)==0 && unit.Target!=0 )
-						{
-						FireWeapons(m,unit.Target,FireKind.Gun);
-						}
-
-					if( unit.Ammo>=1 && Random(190*dmg_act)==0 && unit.Target!=0 )
-						{
-						FireWeapons(m,unit.Target,FireKind.AntiAircraftShell);		// 対空砲弾 選択
-						}
-
-					if( unit.Ammo>=1 && Random(110*dmg_act)==0 )
-						{
-						FireWeapons(m,0,FireKind.AntiAircraftShell);							// 対空砲弾 自動砲撃
-						}
-
-					// 対空機関砲
-					if( Random(60*dmg_act)==0 && unit.Side==Side.UnitedStates )
-						FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
-					// 対空機関砲 X 2
-					if( Random(120*dmg_act)==0 && unit.Side==Side.UnitedStates )
-						FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
-
-					// 対空機銃
-					if( Random(5*dmg_act)==0 )
-						FireWeapons(m,0,FireKind.Bullet);
-					}
+				ControlBattleshipFiring(ref unit, dmg_act, m);
 
 				break;
 
 			case UnitKind.Cruiser:
-				if( unit.Variant==0 )
-					{
-					// 巡洋艦
-					// 艦砲 自動
-					if( unit.Ammo>=1  && Random(350*dmg_act)==0  && (unit.Target==0 || Units[unit.Target].Category==UnitCategory.Ship) )
-						{
-						FireWeapons(m,0,FireKind.Gun);
-						}
-					// 艦砲 選択
-					if( unit.Ammo>=1  && Random(300*dmg_act)==0 && unit.Target!=0 )
-						{
-						FireWeapons(m,unit.Target,FireKind.Gun);
-						}
-
-					// 対空砲弾
-					if( unit.Ammo>=1 && Random(120*dmg_act)==0  )
-						{
-						if(unit.Target!=0)								// 対空砲弾 選択
-							FireWeapons(m,unit.Target,FireKind.AntiAircraftShell);
-						else
-							FireWeapons(m,0,FireKind.AntiAircraftShell);							// 対空砲弾 自動砲撃
-						}
-
-					// 対空機関砲
-					if( unit.Ammo>=1 && Random(60*dmg_act)==0 && unit.Side==Side.UnitedStates )
-						FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
-
-					// 対空機銃 自動
-					if( Random(10*dmg_act)==0  )
-						FireWeapons(m,0,FireKind.Bullet);
-					// 魚雷
-					if( unit.Random40[0]==Tick%(40*dmg_act) && unit.Ammo>=1 && unit.ReloadTime<=0 && unit.Side==Side.Japan )
-						{
-						FireWeapons(m,0,FireKind.Torpedo);
-						}
-					}
-				else
-					{
-					// 防空巡洋艦
-					// 艦砲 自動
-					if( unit.Ammo>=1  && Random(800*dmg_act)==0  && (unit.Target==0 || Units[unit.Target].Category==UnitCategory.Ship) )
-						{
-						FireWeapons(m,0,FireKind.Gun);
-						}
-
-					// 対空砲弾
-					if( unit.Ammo>=1 && Random(100*dmg_act)==0 )
-						{
-						// 自動
-						FireWeapons(m,0,FireKind.AntiAircraftShell);							// 対空砲弾 自動砲撃
-						}
-
-					if( unit.Ammo>=1 && Random(180*dmg_act)==0 && unit.Target!=0 )
-						{
-						// 選択
-						FireWeapons(m,unit.Target,FireKind.AntiAircraftShell);
-						}
-
-					// 対空機関砲
-					if( unit.Ammo>=1 && Random(55*dmg_act)==0 && unit.Side==Side.UnitedStates )
-						FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
-
-					// 対空機銃 自動
-					if( Random(10*dmg_act)==0  )
-						FireWeapons(m,0,FireKind.Bullet);
-
-					}
+				ControlCruiserFiring(ref unit, dmg_act, m);
 				break;
 
 			case UnitKind.Carrier:
@@ -1635,48 +1722,7 @@ private void ControlFiring(ref Unit unit, int dmg_act, int m)
 				break;
 
 			case UnitKind.Destroyer:
-				if( unit.Variant==0 )
-					{
-					// 艦砲 自動
-					if( unit.Ammo>=1 && Random(200*dmg_act)==0 )
-						{
-						FireWeapons(m,0,FireKind.Gun);
-						}
-
-					// 魚雷
-					if( unit.Random40[0]==Tick%(40*dmg_act) && unit.Ammo>=1 && unit.ReloadTime<=0 )
-						{
-						FireWeapons(m,0,FireKind.Torpedo);
-						}
-
-					// 爆雷
-					if( unit.Ammo>=1 && (Tick%(35*dmg_act))==0 )
-						{
-						FireWeapons(m,0,FireKind.AntiSubmarineBomb);
-						}
-					// 対空機銃
-					if( Random(15*dmg_act)==0 )
-						FireWeapons(m,0,FireKind.Bullet);
-					}
-				else
-					{
-					// 艦砲 自動
-					if( unit.Ammo>=1 && Random(500*dmg_act)==0 )
-						{
-						FireWeapons(m,0,FireKind.Gun);
-						}
-
-					// 対空機銃
-					if( Random(20*dmg_act)==0 )
-						FireWeapons(m,0,FireKind.Bullet);
-
-					// 爆雷
-					if( unit.Ammo>=1 && (Tick%(25*dmg_act))==0 )
-						{
-						FireWeapons(m,0,FireKind.AntiSubmarineBomb);
-						}
-
-					}
+				ControlDestroyerFiring(ref unit, dmg_act, m);
 				break;
 
 			case UnitKind.LightCarrier:
@@ -1690,18 +1736,7 @@ private void ControlFiring(ref Unit unit, int dmg_act, int m)
 
 			case UnitKind.Transport:
 				// トランスボーと
-				if( unit.Weapon==FireKind.CargoNavalBase && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
-					FireWeapons(m,0,FireKind.CargoNavalBase);
-				if( unit.Weapon==FireKind.CargoAirBase && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
-					FireWeapons(m,0,FireKind.CargoAirBase);
-
-				if( unit.Weapon==FireKind.CargoInfantryBase && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
-					FireWeapons(m,0,FireKind.CargoInfantryBase);
-
-				if( unit.Weapon==FireKind.CargoPillboxes && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
-					FireWeapons(m,0,FireKind.CargoPillboxes);
-				if( unit.Weapon==FireKind.CargoFortress && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
-					FireWeapons(m,0,FireKind.CargoFortress);
+				ControlTransportFiring(ref unit, m);
 
 				break;
 
