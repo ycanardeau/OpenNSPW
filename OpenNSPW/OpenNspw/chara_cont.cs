@@ -20,6 +20,40 @@ namespace OpenNspw;
 
 public unsafe partial class Nspw
 {
+// The selections of player e (0 the rival, 1 this player) from their buffer, which holds the ships of the player's
+// side, then its planes, packed together; they go back to the unit numbers of that side, Japan's or the United States'.
+private void UnpackSelections(int e, bool isJapan)
+	{
+	short s;
+
+	if( isJapan )
+		{
+		for(s=0;s<=JPN_SHIP_END-1;s++)
+			{
+			// 水上ユニット
+			Selections[e][s+1]=BufferedSelections[e][s];
+			}
+		for(s=JPN_SHIP_END;s<=(USA_PLANE_END/2)-1;s++)
+			{
+			// 航空ユニット
+			Selections[e][s+JPN_SHIP_END+1]=BufferedSelections[e][s];
+			}
+		}
+	else
+		{
+		for(s=0;s<=JPN_SHIP_END-1;s++)
+			{
+			// 水上ユニット
+			Selections[e][s+JPN_SHIP_END+1]=BufferedSelections[e][s];
+			}
+		for(s=JPN_SHIP_END;s<=(USA_PLANE_END/2)-1;s++)
+			{
+			// 航空ユニット
+			Selections[e][s+(USA_PLANE_END/2)+1]=BufferedSelections[e][s];
+			}
+		}
+	}
+
 private bool ReceiveAndIssueOrders(ref short s, ref Array200<short> bf_2_slct_unit, ref _DP_FLAG dp_flag, ref int f, ref int m)
 	{
 	short bf_the_slct_unit;
@@ -113,65 +147,8 @@ private bool ReceiveAndIssueOrders(ref short s, ref Array200<short> bf_2_slct_un
 		SelectOrders[e].GroundPosition = new WorldPosition(SelectOrders[e].GroundPosition.X, (short)BufferedSelectOrders[e].GroundPosition.Y);
 		}
 
-	e=0;
-	if(LocalSide!=Side.Japan)
-		{
-		// 日本海軍サイド
-		for(s=0;s<=JPN_SHIP_END-1;s++)
-			{
-			// 水上ユニット
-			Selections[e][s+1]=BufferedSelections[e][s];
-			}
-		for(s=JPN_SHIP_END;s<=(USA_PLANE_END/2)-1;s++)
-			{
-			// 航空ユニット
-			Selections[e][s+JPN_SHIP_END+1]=BufferedSelections[e][s];
-			}
-		}
-	else
-		{
-		// 合衆国海軍サイド
-		for(s=0;s<=JPN_SHIP_END-1;s++)
-			{
-			// 水上ユニット
-			Selections[e][s+JPN_SHIP_END+1]=BufferedSelections[e][s];
-			}
-		for(s=JPN_SHIP_END;s<=(USA_PLANE_END/2)-1;s++)
-			{
-			// 航空ユニット
-			Selections[e][s+(USA_PLANE_END/2)+1]=BufferedSelections[e][s];
-			}
-		}
-
-	e=1;
-	if(LocalSide==Side.Japan)
-		{
-		// 日本海軍サイド
-		for(s=0;s<=JPN_SHIP_END-1;s++)
-			{
-			// 水上ユニット
-			Selections[e][s+1]=BufferedSelections[e][s];
-			}
-		for(s=JPN_SHIP_END;s<=(USA_PLANE_END/2)-1;s++)
-			{
-			// 航空ユニット
-			Selections[e][s+JPN_SHIP_END+1]=BufferedSelections[e][s];
-			}
-		}
-	else
-		{
-		// 合衆国海軍サイド
-		for(s=0;s<=JPN_SHIP_END-1;s++)
-			{
-			// 水上ユニット
-			Selections[e][s+JPN_SHIP_END+1]=BufferedSelections[e][s];
-			}
-		for(s=JPN_SHIP_END;s<=(USA_PLANE_END/2)-1;s++)
-			{
-			// 航空ユニット
-			Selections[e][s+(USA_PLANE_END/2)+1]=BufferedSelections[e][s];
-			}
-		}
+	UnpackSelections(0, LocalSide!=Side.Japan);
+	UnpackSelections(1, LocalSide==Side.Japan);
 
 	//
 	ApplyOrders();
