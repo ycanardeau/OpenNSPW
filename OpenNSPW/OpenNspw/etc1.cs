@@ -279,21 +279,22 @@ private bool LandCargo(ref Unit unit, FireKind kind, int m)
 			// 部下、多分戦闘機に帰投命令
 
 			n=FindFreeFire();
+			ref var fire = ref Fires[n];
 			if( n!=0 )
 				{
 				PlaySoundEffect( 0, SoundId.Splash ,unit.Position.X, unit.Position.Y);
-				Fires[n].Target=MaxUnitId+1;
-				Fires[n].Kind=kind;
-				Fires[n].Position=unit.Position;
-				Fires[n].Direction=drctn2;
-				Fires[n].Speed=1.0;
-				Fires[n].Acceleration=+0.0;
-				Fires[n].FinalSpeed=0.0;
-				Fires[n].Ticks=0;
-				Fires[n].FlightTime=360;
-				Fires[n].TargetX=unit.LandingX;
-				Fires[n].TargetY=unit.LandingY;
-				Fires[n].ShooterSide=(int)unit.Side;
+				fire.Target=MaxUnitId+1;
+				fire.Kind=kind;
+				fire.Position=unit.Position;
+				fire.Direction=drctn2;
+				fire.Speed=1.0;
+				fire.Acceleration=+0.0;
+				fire.FinalSpeed=0.0;
+				fire.Ticks=0;
+				fire.FlightTime=360;
+				fire.TargetX=unit.LandingX;
+				fire.TargetY=unit.LandingY;
+				fire.ShooterSide=(int)unit.Side;
 
 				unit.Side=0;
 				unit.Hp=0;
@@ -401,6 +402,7 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double drctn2, re
 		*/
 
 		n=FindFreeFire();
+		ref var fire = ref Fires[n];
 		if( n!=0 )
 			{
 			if(unit.Ammo!=0)
@@ -411,22 +413,22 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double drctn2, re
 			else
 				PlaySoundEffect( 0, SoundId.AntiAircraftShell5 ,unit.Position.X, unit.Position.Y);
 
-			Fires[n].Target=trgt2;
-			Fires[n].Kind=kind;
-			Fires[n].Position=unit.Position;
+			fire.Target=trgt2;
+			fire.Kind=kind;
+			fire.Position=unit.Position;
 
 			drctn3=drctn2+(Random(18)-9);			// 絶対方位
 			if(drctn3>=360)	drctn3=drctn3-360;
 			if(drctn3<0)	drctn3=360+drctn3;
-			Fires[n].Direction=drctn3;
+			fire.Direction=drctn3;
 
 			dstc2=dstc+(Random( ((int)(dstc/5)) )-((int)(dstc/10))   );
 
-			Fires[n].Speed=10.0;
-			Fires[n].Acceleration=-0.00;
-			Fires[n].FinalSpeed=0;
-			Fires[n].Ticks=(int)(dstc2/Fires[n].Speed);
-			Fires[n].FlightTime=0;
+			fire.Speed=10.0;
+			fire.Acceleration=-0.00;
+			fire.FinalSpeed=0;
+			fire.Ticks=(int)(dstc2/fire.Speed);
+			fire.FlightTime=0;
 			}
 		}
 	return false;
@@ -453,6 +455,7 @@ private bool ShipDropAntiSubmarineBomb(ref int trgt, ref Unit unit, FireKind kin
 				{
 				// 投雷
 				n=FindFreeFire();
+				ref var fire = ref Fires[n];
 					if(n!=0)
 					{
 					if(unit.Ammo!=0)
@@ -461,9 +464,9 @@ private bool ShipDropAntiSubmarineBomb(ref int trgt, ref Unit unit, FireKind kin
 						unit.Ammo=0;
 
 					PlaySoundEffect( 0, SoundId.Splash ,unit.Position.X, unit.Position.Y);
-					Fires[n].Target=trgt;
-					Fires[n].Kind=kind;
-					Fires[n].Position=unit.Position;
+					fire.Target=trgt;
+					fire.Kind=kind;
+					fire.Position=unit.Position;
 
 					drctn=unit.Direction;
 					if( unit.Variant==0 )
@@ -471,22 +474,22 @@ private bool ShipDropAntiSubmarineBomb(ref int trgt, ref Unit unit, FireKind kin
 						// ただの駆逐艦
 						drctn+=180;
 						drctn=(int)drctn%360;
-						Fires[n].Position += new WorldVector(CosDegrees(drctn)*20, SinDegrees(drctn)*20);
+						fire.Position += new WorldVector(CosDegrees(drctn)*20, SinDegrees(drctn)*20);
 						}
 					else
 						{
 						// 対潜駆逐艦
 						drctn+=120+Random(3)*60;
 						drctn=(int)drctn%360;
-						Fires[n].Position += new WorldVector(CosDegrees(drctn)*35, SinDegrees(drctn)*35);
+						fire.Position += new WorldVector(CosDegrees(drctn)*35, SinDegrees(drctn)*35);
 						}
 
-					Fires[n].Direction=0;
-					Fires[n].Speed=0;
-					Fires[n].Acceleration=0;
-					Fires[n].FinalSpeed=0;
-					Fires[n].Ticks=0;
-					Fires[n].FlightTime=100;
+					fire.Direction=0;
+					fire.Speed=0;
+					fire.Acceleration=0;
+					fire.FinalSpeed=0;
+					fire.Ticks=0;
+					fire.FlightTime=100;
 					}
 				return false;
 				}
@@ -614,14 +617,15 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rng,
 		for( i=1; i<=f ;i++ )
 			{
 			n=FindFreeFire();
+			ref var fire = ref Fires[n];
 			if( n!=0 )
 				{
 				if(unit.Ammo!=0)
 					unit.Ammo-=GUN_SZ;			// 弾薬消費
 
-				Fires[n].Target=trgt2;
-				Fires[n].Kind=FireKind.Gun;
-				Fires[n].Position=unit.Position;
+				fire.Target=trgt2;
+				fire.Kind=FireKind.Gun;
+				fire.Position=unit.Position;
 
 				if( kind==FireKind.NavalBaseGun )
 					{
@@ -640,18 +644,18 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rng,
 
 				if(drctn3>=360)	drctn3=drctn3-360;
 				if(drctn3<0)	drctn3=360+drctn3;
-				Fires[n].Direction=drctn3;
+				fire.Direction=drctn3;
 
 				if( kind==FireKind.NavalBaseGun )
 					dstc2=dstc2+(Random( ((int)(dstc2/12)) )-((int)(dstc2/24)));
 				else
 					dstc2=dstc2+(Random( ((int)(dstc2/8)) )-((int)(dstc2/16)));
 
-				Fires[n].Speed=10.0;
-				Fires[n].Acceleration=((Fires[n].Speed)/(dstc2/Fires[n].Speed));
-				Fires[n].FinalSpeed=0;
-				Fires[n].Ticks=(int)(dstc2/Fires[n].Speed)+1;
-				Fires[n].FlightTime=Fires[n].Ticks/2;
+				fire.Speed=10.0;
+				fire.Acceleration=((fire.Speed)/(dstc2/fire.Speed));
+				fire.FinalSpeed=0;
+				fire.Ticks=(int)(dstc2/fire.Speed)+1;
+				fire.FlightTime=fire.Ticks/2;
 
 				}
 			}
@@ -799,29 +803,30 @@ private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double drctn2, Fire
 		for( f=0; f<=i; f++)
 			{
 			n=FindFreeFire();
+			ref var fire = ref Fires[n];
 			if( n!=0 )
 				{
-				Fires[n].Target=trgt2;
-				Fires[n].Kind=kind;
-				Fires[n].Position=unit.Position;
+				fire.Target=trgt2;
+				fire.Kind=kind;
+				fire.Position=unit.Position;
 
 				switch( f )
 					{
-					case 0:	Fires[n].Direction=drctn2;	break;
-					case 1:	Fires[n].Direction=drctn2+5;	break;
-					case 2:	Fires[n].Direction=drctn2-5;	break;
+					case 0:	fire.Direction=drctn2;	break;
+					case 1:	fire.Direction=drctn2+5;	break;
+					case 2:	fire.Direction=drctn2-5;	break;
 					}
-				Fires[n].Direction=(int)(Fires[n].Direction)%360;
+				fire.Direction=(int)(fire.Direction)%360;
 
-				Fires[n].Speed=TPD_SPD;
-				Fires[n].Acceleration=+0.0;
-				Fires[n].FinalSpeed=0.0;
+				fire.Speed=TPD_SPD;
+				fire.Acceleration=+0.0;
+				fire.FinalSpeed=0.0;
 				if( unit.Kind==UnitKind.Submarine )
-					Fires[n].Ticks=1;
+					fire.Ticks=1;
 				else
-					Fires[n].Ticks=0;
-				Fires[n].FlightTime=275+(unit.Side==Side.Japan ? 1 : 0)*110;
-				Fires[n].ArmingTime=30;
+					fire.Ticks=0;
+				fire.FlightTime=275+(unit.Side==Side.Japan ? 1 : 0)*110;
+				fire.ArmingTime=30;
 				}
 			}
 		}
@@ -936,29 +941,30 @@ private bool ShipFireTorpedoAtTarget(int trgt, ref Unit unit, ref double drctn2,
 		for( f=0; f<=2; f++)
 			{
 			n=FindFreeFire();
+			ref var fire = ref Fires[n];
 			if( n!=0 )
 				{
-				Fires[n].Target=trgt2;
-				Fires[n].Kind=kind;
-				Fires[n].Position=unit.Position;
+				fire.Target=trgt2;
+				fire.Kind=kind;
+				fire.Position=unit.Position;
 
 				switch( f )
 					{
-					case 0:	Fires[n].Direction=drctn2+5;	break;
-					case 1:	Fires[n].Direction=drctn2;	break;
-					case 2:	Fires[n].Direction=drctn2-5;	break;
+					case 0:	fire.Direction=drctn2+5;	break;
+					case 1:	fire.Direction=drctn2;	break;
+					case 2:	fire.Direction=drctn2-5;	break;
 					}
-				Fires[n].Direction=(int)(Fires[n].Direction)%360;
+				fire.Direction=(int)(fire.Direction)%360;
 
-				Fires[n].Speed=TPD_SPD;
-				Fires[n].Acceleration=+0.0;
-				Fires[n].FinalSpeed=0.0;
+				fire.Speed=TPD_SPD;
+				fire.Acceleration=+0.0;
+				fire.FinalSpeed=0.0;
 				if( unit.Kind==UnitKind.Submarine )
-					Fires[n].Ticks=1;
+					fire.Ticks=1;
 				else
-					Fires[n].Ticks=0;
-				Fires[n].FlightTime=290+(unit.Side==Side.Japan ? 1 : 0)*110;
-				Fires[n].ArmingTime=30;
+					fire.Ticks=0;
+				fire.FlightTime=290+(unit.Side==Side.Japan ? 1 : 0)*110;
+				fire.ArmingTime=30;
 				}
 			}
 
@@ -1049,28 +1055,29 @@ private bool ShipFireAntiAircraftShellAtTarget(int trgt, ref Unit unit, ref int 
 			{
 
 			n=FindFreeFire();
+			ref var fire = ref Fires[n];
 			if( n!=0 )
 				{
 				if(unit.Ammo!=0)
 					unit.Ammo-=SHL_SZ;			// 弾薬消費
-				Fires[n].Target=trgt2;
+				fire.Target=trgt2;
 
-				Fires[n].Kind=FireKind.AntiAircraftShell;
+				fire.Kind=FireKind.AntiAircraftShell;
 
-				Fires[n].Position=unit.Position;
+				fire.Position=unit.Position;
 
 				drctn3=drctn2+(Random(18)-9);			// 絶対方位
 				if(drctn3>=360)	drctn3=drctn3-360;
 				if(drctn3<0)	drctn3=360+drctn3;
-				Fires[n].Direction=drctn3;
+				fire.Direction=drctn3;
 
 				dstc2=dstc+(Random( ((int)(dstc/10)) )-((int)(dstc/20))   );
 
-				Fires[n].Speed=10.0;
-				Fires[n].Acceleration=-0.00;
-				Fires[n].FinalSpeed=0;
-				Fires[n].Ticks=(int)(dstc2/Fires[n].Speed);
-				Fires[n].FlightTime=0;
+				fire.Speed=10.0;
+				fire.Acceleration=-0.00;
+				fire.FinalSpeed=0;
+				fire.Ticks=(int)(dstc2/fire.Speed);
+				fire.FlightTime=0;
 
 				}
 			}
@@ -1166,27 +1173,28 @@ private bool ShipFireAntiAircraftShellWithoutTarget(ref Unit unit, ref double dr
 		for( i=1; i<=f ;i++ )
 			{
 			n=FindFreeFire();
+			ref var fire = ref Fires[n];
 			if( n!=0 )
 				{
 				if(unit.Ammo!=0)
 					unit.Ammo-=SHL_SZ;			// 弾薬消費
 				PlaySoundEffect( 0, SoundId.AntiAircraftShell2 ,unit.Position.X, unit.Position.Y);
-				Fires[n].Target=trgt2;
-				Fires[n].Kind=kind;
-				Fires[n].Position=unit.Position;
+				fire.Target=trgt2;
+				fire.Kind=kind;
+				fire.Position=unit.Position;
 
 				drctn3=drctn2+(Random(18)-9);			// 絶対方位
 				if(drctn3>=360)	drctn3=drctn3-360;
 				if(drctn3<0)	drctn3=360+drctn3;
-				Fires[n].Direction=drctn3;
+				fire.Direction=drctn3;
 
 				dstc2=dstc+(Random( ((int)(dstc/10)) )-((int)(dstc/20))   );
 
-				Fires[n].Speed=10.0;
-				Fires[n].Acceleration=-0.00;
-				Fires[n].FinalSpeed=0;
-				Fires[n].Ticks=(int)(dstc2/Fires[n].Speed);
-				Fires[n].FlightTime=0;
+				fire.Speed=10.0;
+				fire.Acceleration=-0.00;
+				fire.FinalSpeed=0;
+				fire.Ticks=(int)(dstc2/fire.Speed);
+				fire.FlightTime=0;
 				}
 			}
 		}
@@ -1305,16 +1313,17 @@ private bool ShipFireGunAtTarget(int trgt, ref Unit unit, FireKind kind, ref int
 			{
 
 			n=FindFreeFire();
+			ref var fire = ref Fires[n];
 			if( n!=0 )
 				{
 				unit.Ammo-=GUN_SZ;			// 弾薬消費
-				Fires[n].Target=trgt2;
+				fire.Target=trgt2;
 
 				if( Units[trgt2].Category==UnitCategory.Ship )
 					{
-					Fires[n].Kind=FireKind.Gun;
+					fire.Kind=FireKind.Gun;
 
-					Fires[n].Position=unit.Position;
+					fire.Position=unit.Position;
 
 					if( kind==FireKind.NavalBaseGun && 0!=0 )
 						{
@@ -1333,37 +1342,37 @@ private bool ShipFireGunAtTarget(int trgt, ref Unit unit, FireKind kind, ref int
 
 					if(drctn3>=360)	drctn3=drctn3-360;
 					if(drctn3<0)	drctn3=360+drctn3;
-					Fires[n].Direction=drctn3;
+					fire.Direction=drctn3;
 
 					if( kind==FireKind.NavalBaseGun )
 						dstc2=dstc+(Random( ((int)(dstc/12)) )-((int)(dstc/24)));
 					else
 						dstc2=dstc+(Random( ((int)(dstc/8)) )-((int)(dstc/16))   );
 
-					Fires[n].Speed=10.0;
-					Fires[n].Acceleration=((Fires[n].Speed)/(dstc2/Fires[n].Speed));
-					Fires[n].FinalSpeed=0;
-					Fires[n].Ticks=(int)(dstc2/Fires[n].Speed);
-					Fires[n].FlightTime=Fires[n].Ticks/2;
+					fire.Speed=10.0;
+					fire.Acceleration=((fire.Speed)/(dstc2/fire.Speed));
+					fire.FinalSpeed=0;
+					fire.Ticks=(int)(dstc2/fire.Speed);
+					fire.FlightTime=fire.Ticks/2;
 					}
 				else
 					{
-					Fires[n].Kind=FireKind.AntiAircraftShell;
+					fire.Kind=FireKind.AntiAircraftShell;
 
-					Fires[n].Position=unit.Position;
+					fire.Position=unit.Position;
 
 					drctn3=drctn2+(Random(20)-10);			// 絶対方位
 					if(drctn3>=360)	drctn3=drctn3-360;
 					if(drctn3<0)	drctn3=360+drctn3;
-					Fires[n].Direction=drctn3;
+					fire.Direction=drctn3;
 
 					dstc2=dstc+(Random( ((int)(dstc/10)) )-((int)(dstc/20))   );
 
-					Fires[n].Speed=10.0;
-					Fires[n].Acceleration=-0.00;
-					Fires[n].FinalSpeed=0;
-					Fires[n].Ticks=(int)(dstc2/Fires[n].Speed);
-					Fires[n].FlightTime=0;
+					fire.Speed=10.0;
+					fire.Acceleration=-0.00;
+					fire.FinalSpeed=0;
+					fire.Ticks=(int)(dstc2/fire.Speed);
+					fire.FlightTime=0;
 					}
 
 				}
@@ -1424,17 +1433,18 @@ private bool ShipFireBullet(ref int trgt, ref Unit unit, ref double drctn2, Fire
 	if( trgt!=0 )
 		{
 		n=FindFreeFire();
+		ref var fire = ref Fires[n];
 		if( n!=0 )
 			{
 			//unit[m].arm[1]--;			// 弾薬消費
 			PlaySoundEffect( 0, SoundId.AntiAircraftBullet3 ,unit.Position.X, unit.Position.Y);
-			Fires[n].Target=trgt;
-			Fires[n].Kind=kind;
-			Fires[n].Position=unit.Position;
-			Fires[n].Direction=drctn2;
-			Fires[n].Speed=17.0;
-			Fires[n].Acceleration=-0.1;
-			Fires[n].FinalSpeed=15.0;
+			fire.Target=trgt;
+			fire.Kind=kind;
+			fire.Position=unit.Position;
+			fire.Direction=drctn2;
+			fire.Speed=17.0;
+			fire.Acceleration=-0.1;
+			fire.FinalSpeed=15.0;
 			}
 		}
 	return false;
@@ -1490,17 +1500,18 @@ private bool BomberFireBullet(ref int trgt, ref Unit unit, ref double drctn2, Fi
 	if( trgt!=0 )
 		{
 		n=FindFreeFire();
+		ref var fire = ref Fires[n];
 		if( n!=0 )
 			{
 			//unit[m].arm[1]--;			// 弾薬消費
 			PlaySoundEffect( 0, SoundId.AntiAircraftBullet4 ,unit.Position.X, unit.Position.Y);
-			Fires[n].Target=trgt;
-			Fires[n].Kind=kind;
-			Fires[n].Position=unit.Position;
-			Fires[n].Direction=drctn2;
-			Fires[n].Speed=17.0;
-			Fires[n].Acceleration=-0.1;
-			Fires[n].FinalSpeed=15.0;
+			fire.Target=trgt;
+			fire.Kind=kind;
+			fire.Position=unit.Position;
+			fire.Direction=drctn2;
+			fire.Speed=17.0;
+			fire.Acceleration=-0.1;
+			fire.FinalSpeed=15.0;
 			}
 		}
 	return false;
@@ -1563,6 +1574,7 @@ private bool FighterFireBullet(ref int trgt, ref Unit unit, FireKind kind)
 	if( trgt!=0 )
 		{
 		n=FindFreeFire();
+		ref var fire = ref Fires[n];
 		if( n!=0 )
 			{
 			unit.Ammo--;			// 弾薬消費
@@ -1580,13 +1592,13 @@ private bool FighterFireBullet(ref int trgt, ref Unit unit, FireKind kind)
 				PlaySoundEffect( 0, SoundId.AntiAircraftShell4 ,unit.Position.X, unit.Position.Y);
 				}
 
-			Fires[n].Target=trgt;
-			Fires[n].Kind=kind;
-			Fires[n].Position=unit.Position;
-			Fires[n].Direction=unit.Direction;
-			Fires[n].Speed=16.0;
-			Fires[n].Acceleration=-0.1;
-			Fires[n].FinalSpeed=14.0;
+			fire.Target=trgt;
+			fire.Kind=kind;
+			fire.Position=unit.Position;
+			fire.Direction=unit.Direction;
+			fire.Speed=16.0;
+			fire.Acceleration=-0.1;
+			fire.FinalSpeed=14.0;
 			}
 		}
 	return false;
@@ -1631,17 +1643,18 @@ private bool PlaneFireBullet(ref int trgt, ref Unit unit, ref double drctn2, Fir
 	if( trgt!=0 )
 		{
 		n=FindFreeFire();
+		ref var fire = ref Fires[n];
 		if( n!=0 )
 			{
 			//unit[m].arm[1]--;			// 弾薬消費
 			PlaySoundEffect( 0, SoundId.AntiAircraftBullet3 ,unit.Position.X, unit.Position.Y);
-			Fires[n].Target=trgt;
-			Fires[n].Kind=kind;
-			Fires[n].Position=unit.Position;
-			Fires[n].Direction=drctn2;
-			Fires[n].Speed=16.0;
-			Fires[n].Acceleration=-0.1;
-			Fires[n].FinalSpeed=14.0;
+			fire.Target=trgt;
+			fire.Kind=kind;
+			fire.Position=unit.Position;
+			fire.Direction=drctn2;
+			fire.Speed=16.0;
+			fire.Acceleration=-0.1;
+			fire.FinalSpeed=14.0;
 			}
 		}
 	return false;
@@ -1796,19 +1809,20 @@ other.PathX[1]=MAP_RIGHT+1;
 			}
 
 		n=FindFreeFire();
+		ref var fire = ref Fires[n];
 		if( n!=0 )
 			{
 			PlaySoundEffect( 0, SoundId.Splash ,unit.Position.X, unit.Position.Y);
-			Fires[n].Target=trgt;
-			Fires[n].Kind=kind;
-			Fires[n].Position=unit.Position;
-			Fires[n].Direction=(int)unit.Direction;
-			Fires[n].Speed=AIR_TPD_SPD;
-			Fires[n].Acceleration=+0.0;
-			Fires[n].FinalSpeed=0.0;
-			Fires[n].Ticks=0;
-			Fires[n].FlightTime=240;
-			Fires[n].ArmingTime=15;
+			fire.Target=trgt;
+			fire.Kind=kind;
+			fire.Position=unit.Position;
+			fire.Direction=(int)unit.Direction;
+			fire.Speed=AIR_TPD_SPD;
+			fire.Acceleration=+0.0;
+			fire.FinalSpeed=0.0;
+			fire.Ticks=0;
+			fire.FlightTime=240;
+			fire.ArmingTime=15;
 			}
 		}
 	}
@@ -1894,69 +1908,71 @@ other.PathX[1]=MAP_RIGHT+1;
 				}
 
 			n=FindFreeFire();
+			ref var fire = ref Fires[n];
 			if( n!=0 )
 				{
-				Fires[n].Target=(int)UnitKind.Attacker;
-				Fires[n].Kind=kind;
-				Fires[n].Position = new WorldPosition(unit.Position.X+(3-Random(6)), unit.Position.Y+(3-Random(6)));
-				Fires[n].Direction=drctn2;
+				fire.Target=(int)UnitKind.Attacker;
+				fire.Kind=kind;
+				fire.Position = new WorldPosition(unit.Position.X+(3-Random(6)), unit.Position.Y+(3-Random(6)));
+				fire.Direction=drctn2;
 
 				if(unit.Side==Side.Japan)
 					{
-					Fires[n].Position += new WorldVector(CosDegrees(Fires[n].Direction)*(13), SinDegrees(Fires[n].Direction)*(13));
+					fire.Position += new WorldVector(CosDegrees(fire.Direction)*(13), SinDegrees(fire.Direction)*(13));
 					}
 				else
 					{
-					Fires[n].Position += new WorldVector(CosDegrees(Fires[n].Direction)*(130), SinDegrees(Fires[n].Direction)*(130));
+					fire.Position += new WorldVector(CosDegrees(fire.Direction)*(130), SinDegrees(fire.Direction)*(130));
 					}
 
-				Fires[n].Speed=0.3;
-				Fires[n].Acceleration=+0.2;
-				Fires[n].FinalSpeed=0.0;
+				fire.Speed=0.3;
+				fire.Acceleration=+0.2;
+				fire.FinalSpeed=0.0;
 				if(unit.Side==Side.Japan)
 					{
-					Fires[n].Ticks=10;
-					Fires[n].FlightTime=68+Random(5);
+					fire.Ticks=10;
+					fire.FlightTime=68+Random(5);
 					}
 				else
 					{
-					Fires[n].Ticks=0;
-					Fires[n].FlightTime=70;
+					fire.Ticks=0;
+					fire.FlightTime=70;
 					}
 
 				}
 
 				// もう一発
 				n=FindFreeFire();
+				fire = ref Fires[n];
 				if( n!=0 )
 					{
-					Fires[n].Target=trgt;
-					Fires[n].Kind=kind;
-					Fires[n].Position = new WorldPosition(unit.Position.X+(20-Random(40)), unit.Position.Y+(20-Random(40)));
-					Fires[n].Direction=drctn2;
+					fire.Target=trgt;
+					fire.Kind=kind;
+					fire.Position = new WorldPosition(unit.Position.X+(20-Random(40)), unit.Position.Y+(20-Random(40)));
+					fire.Direction=drctn2;
 
 					if(unit.Side==Side.Japan)
 						{
-						Fires[n].Position += new WorldVector(CosDegrees(Fires[n].Direction)*(13), SinDegrees(Fires[n].Direction)*(13));
+						fire.Position += new WorldVector(CosDegrees(fire.Direction)*(13), SinDegrees(fire.Direction)*(13));
 						}
 					else
 						{
-						Fires[n].Position += new WorldVector(CosDegrees(Fires[n].Direction)*(130), SinDegrees(Fires[n].Direction)*(130));
+						fire.Position += new WorldVector(CosDegrees(fire.Direction)*(130), SinDegrees(fire.Direction)*(130));
 						}
 
-					Fires[n].Speed=0.3;
-					Fires[n].Acceleration=+0.2;
-					Fires[n].FinalSpeed=0.0;
+					fire.Speed=0.3;
+					fire.Acceleration=+0.2;
+					fire.FinalSpeed=0.0;
 
 					if(unit.Side==Side.Japan)
 						{
-						Fires[n].Ticks=10;
-						Fires[n].FlightTime=75+(5-Random(10));
+						fire.Ticks=10;
+						fire.FlightTime=75+(5-Random(10));
 						}
 					else
 						{
-						Fires[n].Ticks=0;
-						Fires[n].FlightTime=70+(5-Random(10));
+						fire.Ticks=0;
+						fire.FlightTime=70+(5-Random(10));
 						}
 					}
 			}
@@ -2010,6 +2026,7 @@ private bool BomberDropBomb(ref int trgt, ref Unit unit, ref double drctn2, Fire
 	if( trgt!=0 )
 		{
 		n=FindFreeFire();
+		ref var fire = ref Fires[n];
 		if( n!=0 )
 			{
 			PlaySoundEffect( 0, SoundId.BomberBombRelease ,unit.Position.X, unit.Position.Y);
@@ -2028,15 +2045,15 @@ private bool BomberDropBomb(ref int trgt, ref Unit unit, ref double drctn2, Fire
 			if(unit.Ammo<=0)
 				unit.Mode=UnitMode.Return;		// 航空機はメイン兵器ゼロで帰投
 
-			Fires[n].Target=(int)UnitKind.Bomber;
-			Fires[n].Kind=kind;
-			Fires[n].Position = new WorldPosition(unit.Position.X+((double)(-6+Random(13))), unit.Position.Y+((double)(-6+Random(13))));
-			Fires[n].Direction=drctn2;
-			Fires[n].Speed=0.3;
-			Fires[n].Acceleration=+0.2;
-			Fires[n].FinalSpeed=0.0;
-			Fires[n].Ticks=0;
-			Fires[n].FlightTime=70;
+			fire.Target=(int)UnitKind.Bomber;
+			fire.Kind=kind;
+			fire.Position = new WorldPosition(unit.Position.X+((double)(-6+Random(13))), unit.Position.Y+((double)(-6+Random(13))));
+			fire.Direction=drctn2;
+			fire.Speed=0.3;
+			fire.Acceleration=+0.2;
+			fire.FinalSpeed=0.0;
+			fire.Ticks=0;
+			fire.FlightTime=70;
 			}
 		}
 
