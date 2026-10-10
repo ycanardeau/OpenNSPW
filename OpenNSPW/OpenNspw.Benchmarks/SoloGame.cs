@@ -112,12 +112,12 @@ internal sealed class SoloGame : IDisposable
 		WaitUntil(() => _platform.FrameCount > 20);
 
 		Click(512, 384);
-		WaitUntil(() => Game.mode == CNCT_GAME_SETTING && Game.rival_mode == CNCT_GAME_SETTING);
+		WaitUntil(() => Game.mode == GameMode.GameSetting && Game.rival_mode == GameMode.GameSetting);
 
 		Click(130, 150 + 12);
-		WaitUntil(() => Game.mode == CNCT_CNFG_SETTING && Game.rival_mode == CNCT_CNFG_SETTING);
+		WaitUntil(() => Game.mode == GameMode.ConfigSetting && Game.rival_mode == GameMode.ConfigSetting);
 
-		_platform.ParkAfterFrame = () => Game.mode == CMBT;
+		_platform.ParkAfterFrame = () => Game.mode == GameMode.Battle;
 		Click(630 - 120 + 10, 700 + 12);
 		_platform.WaitUntilParked(Timeout);
 		ThrowIfFailed();
@@ -139,14 +139,14 @@ internal sealed class SoloGame : IDisposable
 		}
 	}
 
-	// The units of a side and category (SHIP or PLANE) that can be given orders (cnct_game_input_cont), by number.
-	private List<int> Units(int side, int category)
+	// The units of a side and category (a ship or a plane) that can be given orders (cnct_game_input_cont), by number.
+	private List<int> Units(Side side, UnitCategory category)
 	{
 		var units = new List<int>();
 		for (var m = 1; m <= Game.max_unit; m++)
 		{
 			ref var unit = ref Game.unit[m];
-			if (unit.used == side && unit.ctgry == category && unit.spry == 0 && unit.hp[0] > 0 && !(unit.kind >= AP && unit.kind <= GF3))
+			if (unit.used == side && unit.ctgry == category && unit.spry == 0 && unit.hp[0] > 0 && !(unit.kind >= UnitKind.AirBase && unit.kind <= UnitKind.Fortress))
 			{
 				units.Add(m);
 			}
@@ -177,7 +177,7 @@ internal sealed class SoloGame : IDisposable
 	// chara_cont reads them into slct_unit[0].
 	private Array90<byte> RivalSelection(List<int> units)
 	{
-		var japan = Game.your_side != JPN;
+		var japan = Game.your_side != Side.Japan;
 		var selection = new Array90<byte>();
 		for (var i = 0; i < units.Count; i++)
 		{
@@ -220,7 +220,7 @@ internal sealed class SoloGame : IDisposable
 
 		_platform.Rival!.Order(new _DP_NEW_PP
 		{
-			dwType = DP_NEW_PP,
+			dwType = MessageType.MoveOrder,
 			used = (byte)rival[0],
 			x = (short)rivalPoint.X,
 			y = (short)rivalPoint.Y,
@@ -232,11 +232,11 @@ internal sealed class SoloGame : IDisposable
 	// Plays the first turns of the battle for both sides: each sends its ships at the other's ships, then its planes.
 	public void SendForcesAtEachOther()
 	{
-		var rivalSide = Game.your_side == JPN ? USA : JPN;
-		var ownShips = Units(Game.your_side, SHIP);
-		var rivalShips = Units(rivalSide, SHIP);
-		var ownPlanes = Units(Game.your_side, PLANE);
-		var rivalPlanes = Units(rivalSide, PLANE);
+		var rivalSide = Game.your_side == Side.Japan ? Side.UnitedStates : Side.Japan;
+		var ownShips = Units(Game.your_side, UnitCategory.Ship);
+		var rivalShips = Units(rivalSide, UnitCategory.Ship);
+		var ownPlanes = Units(Game.your_side, UnitCategory.Plane);
+		var rivalPlanes = Units(rivalSide, UnitCategory.Plane);
 
 		TickUntilTurn();
 		OrderMove(ownShips, Center(rivalShips), rivalShips, Center(ownShips));

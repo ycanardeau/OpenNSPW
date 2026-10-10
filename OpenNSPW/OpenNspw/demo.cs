@@ -59,8 +59,8 @@ public void	demo_func()
 	if((FrameCount%40)==0)
 		{
 		// 自分のモードを相手に伝える。
-		dp_flag.dwType = RIVAL_MODE;
-		dp_flag.rival_mode=mode;
+		dp_flag.dwType = MessageType.RivalMode;
+		dp_flag.rival_mode=(short)mode;
 		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
 		bufferDesc.pBufferData  = (byte*) &dp_flag;
 		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1, 0, null, ref hAsync, EASY_SEND );
@@ -68,7 +68,7 @@ public void	demo_func()
 
 
 		// 自分のバージョンを相手に伝える。
-		dp_data_20.dwType = RIVAL_VER;
+		dp_data_20.dwType = MessageType.RivalVersion;
 		wsprintf( dp_data_20.friend_chat, "%s",VER );
 		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_20));
 		bufferDesc.pBufferData  = (byte*) &dp_data_20;
@@ -215,14 +215,14 @@ public void	demo_func()
 			{
 			go_cnct_game_setting();
 			}
-		else if( g_dwNumberOfActivePlayers==2 && rival_mode==DEMO && you_are_host!=0 )
+		else if( g_dwNumberOfActivePlayers==2 && rival_mode==GameMode.Title && you_are_host!=0 )
 			{
 			go_cnct_game_setting();
 
 			if( 1!=0 )
 				{
-				dp_flag.dwType = GO_GAME_SETTING;
-				dp_flag.rival_mode=mode;
+				dp_flag.dwType = MessageType.GoToGameSetting;
+				dp_flag.rival_mode=(short)mode;
 				bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
 				bufferDesc.pBufferData  = (byte*) &dp_flag;
 				g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1, 0, null, ref hAsync, MUST_SEND );
@@ -359,7 +359,7 @@ public void go_cnct_game_setting()
 	sinario=0;
 
 
-	mode=CNCT_GAME_SETTING;
+	mode=GameMode.GameSetting;
 	host_side=0;
 	decision_sw=1;
 	arrival_cont=0;
@@ -461,7 +461,7 @@ public void	cnct_game_setting()
 		SetBkMode(hdc, TRANSPARENT);
 		SelectObject(hdc, gameFont_1);
 
-if(mode==CNCT_GAME_SETTING)
+if(mode==GameMode.GameSetting)
 		SetTextColor(hdc, RGB(255, 255, 255));
 else
 		SetTextColor(hdc, RGB(126, 126, 126));
@@ -493,7 +493,7 @@ else
 			len[0] = wsprintf(ach[0], "Mission Menu");
 #endif
 
-			if(mode==CNCT_GAME_SETTING)
+			if(mode==GameMode.GameSetting)
 				SetTextColor(hdc, RGB(255, 255, 255));
 			else
 				SetTextColor(hdc, RGB(126, 126, 126));
@@ -606,7 +606,7 @@ else
 #endif
 
 
-			if( you_are_host!=0 && mode==CNCT_GAME_SETTING )
+			if( you_are_host!=0 && mode==GameMode.GameSetting )
 				{
 				for( n=0; n<=m; n++)
 					{
@@ -615,7 +615,7 @@ else
 					dstn_rect.top=150+(n*25);
 					dstn_rect.right=dstn_rect.left+(len[n]*12);
 					dstn_rect.bottom=dstn_rect.top+24;
-					if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==CNCT_GAME_SETTING )
+					if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==GameMode.GameSetting )
 						{
 						SetTextColor(hdc, RGB(255, 0, 0));
 
@@ -646,7 +646,7 @@ TCHAR		temp_buf[MAX_PATH];
 									if( map_edit==0 )
 										{
 										// なんかユーザーファイルが選ばれた。
-										dp_data_20.dwType = USER_SINARIO_FN;
+										dp_data_20.dwType = MessageType.UserScenarioFileName;
 										wsprintf( dp_data_20.friend_chat, "%s",user_sinario_fn );
 										bufferDesc.dwBufferSize = sizeof(_DP_DATA_20);
 										bufferDesc.pBufferData  = (BYTE*)&dp_data_20;
@@ -663,7 +663,7 @@ TCHAR		temp_buf[MAX_PATH];
 
 
 								// ホストの選択状態をゲストにセンドします。
-								dp_data_1.dwType = OUT_GAME_SETTING;
+								dp_data_1.dwType = MessageType.LeaveGameSetting;
 								dp_data_1.data[0] = (short)host_side;
 								dp_data_1.data[1] = sinario;
 
@@ -686,7 +686,7 @@ TCHAR		temp_buf[MAX_PATH];
 
 
 
-								mode=CNCT_CNFG_SETTING;
+								mode=GameMode.ConfigSetting;
 								}
 							}
 						}
@@ -695,10 +695,10 @@ TCHAR		temp_buf[MAX_PATH];
 					TextOut(hdc, 120, 150+(n*25), ach[n], len[n]);
 					}
 
-				if( rival_mode==mode && mode!=CNCT_CNFG_SETTING && (FrameCount%10)==0 )
+				if( rival_mode==mode && mode!=GameMode.ConfigSetting && (FrameCount%10)==0 )
 					{
 					// ホストの選択状態をゲストにセンドします。
-					dp_data_1.dwType = SIDE_AND_SINARIO;
+					dp_data_1.dwType = MessageType.SideAndScenario;
 					dp_data_1.data[0] = (short)host_side;
 					dp_data_1.data[1] = sinario;
 
@@ -724,7 +724,7 @@ TCHAR		temp_buf[MAX_PATH];
 				{
 				for( n=0; n<=m; n++)
 					{
-					if(mode==CNCT_GAME_SETTING)
+					if(mode==GameMode.GameSetting)
 						{
 						if( n+1==sinario%100 )
 							SetTextColor(hdc, RGB(255, 0, 0));
@@ -742,16 +742,16 @@ TCHAR		temp_buf[MAX_PATH];
 					TextOut(hdc, 120, 150+(n*25), ach[n], len[n]);
 					}
 
-				if(join_game_start==OUT_GAME_SETTING && you_are_host==0 && mode==CNCT_GAME_SETTING )
+				if(join_game_start==MessageType.LeaveGameSetting && you_are_host==0 && mode==GameMode.GameSetting )
 					{
 					// ジョインが受け取る
-					mode=CNCT_CNFG_SETTING;
+					mode=GameMode.ConfigSetting;
 					join_game_start=0;
 					}
 				}
 
 
-			if( you_are_host!=0 && mode==CNCT_GAME_SETTING )
+			if( you_are_host!=0 && mode==GameMode.GameSetting )
 				{
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "シナリオ切り替え ->>>");
@@ -764,7 +764,7 @@ TCHAR		temp_buf[MAX_PATH];
 				dstn_rect.top=110;
 				dstn_rect.right=dstn_rect.left+(len[0]*12);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==CNCT_GAME_SETTING )
+				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==GameMode.GameSetting )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
 
@@ -806,24 +806,24 @@ TCHAR		temp_buf[MAX_PATH];
 				dstn_rect.left=80;
 				dstn_rect.top=400;
 
-				if( mode==CNCT_GAME_SETTING )
+				if( mode==GameMode.GameSetting )
 					{
 					dstn_rect.right=dstn_rect.left+(len[0]*12);
 					dstn_rect.bottom=dstn_rect.top+24;
-					if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==CNCT_GAME_SETTING && you_were_host!=0 )
+					if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==GameMode.GameSetting && you_were_host!=0 )
 						{
 						SetTextColor(hdc, RGB(255, 0, 0));
 
 						if( lf_btn==3 )
 							{
 							// ホストの選択状態をゲストにセンドします。
-							dp_data_1.dwType = START_IN_RESUME;
+							dp_data_1.dwType = MessageType.StartFromResume;
 //t							lpDirectPlay4A->lpVtbl->Send(lpDirectPlay4A, dpidPlayer, dpidRivalPlayer,DPSEND_GUARANTEED , &dp_data_1, sizeof(DP_DATA_1) );
 							bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
 							bufferDesc.pBufferData  = (byte*) &dp_data_1;
 							g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
-							mode=CMBT;
+							mode=GameMode.Battle;
 							sinario=-1;		// －１でリジュームを示す
 							}
 						}
@@ -839,9 +839,9 @@ TCHAR		temp_buf[MAX_PATH];
 				}
 			else
 				{
-				if( join_game_start==START_IN_RESUME )
+				if( join_game_start==MessageType.StartFromResume )
 					{
-					mode=CMBT;
+					mode=GameMode.Battle;
 					join_game_start=0;
 					sinario=-1;		// －１でリジュームを示す
 					}
@@ -870,24 +870,24 @@ TCHAR		temp_buf[MAX_PATH];
 				dstn_rect.top=430;
 
 
-				if( mode==CNCT_GAME_SETTING )
+				if( mode==GameMode.GameSetting )
 					{
 					dstn_rect.right=dstn_rect.left+(len[0]*12);
 					dstn_rect.bottom=dstn_rect.top+24;
-					if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==CNCT_GAME_SETTING && exist_auto_save!=0 )
+					if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==GameMode.GameSetting && exist_auto_save!=0 )
 						{
 						SetTextColor(hdc, RGB(255, 0, 0));
 
 						if( lf_btn==3 )
 							{
 							// ホストの選択状態をゲストにセンドします。
-							dp_data_1.dwType = START_IN_AUTOSAVE;
+							dp_data_1.dwType = MessageType.StartFromAutoSave;
 //t							lpDirectPlay4A->lpVtbl->Send(lpDirectPlay4A, dpidPlayer, dpidRivalPlayer,DPSEND_GUARANTEED , &dp_data_1, sizeof(DP_DATA_1) );
 							bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
 							bufferDesc.pBufferData  = (byte*) &dp_data_1;
 							g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
-							mode=CMBT;
+							mode=GameMode.Battle;
 							sinario=-2;		// －２でオートセーブからのスタートを示す
 							}
 						}
@@ -904,9 +904,9 @@ TCHAR		temp_buf[MAX_PATH];
 				}
 			else
 				{
-				if( join_game_start==START_IN_AUTOSAVE )
+				if( join_game_start==MessageType.StartFromAutoSave )
 					{
-					mode=CMBT;
+					mode=GameMode.Battle;
 					join_game_start=0;
 					sinario=-2;		// －２でオートセーブからのスタートを示す
 					}
@@ -918,7 +918,7 @@ TCHAR		temp_buf[MAX_PATH];
 
 			// 操作対象の切り替え
 			rx=80;
-			if( map_edit==0 && you_are_host!=0 && mode==CNCT_GAME_SETTING )
+			if( map_edit==0 && you_are_host!=0 && mode==GameMode.GameSetting )
 				{
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "操作対象の切り替え ->>>");
@@ -930,7 +930,7 @@ TCHAR		temp_buf[MAX_PATH];
 				dstn_rect.top=475;
 				dstn_rect.right=dstn_rect.left+(len[0]*12);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==CNCT_GAME_SETTING )
+				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==GameMode.GameSetting )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
 					if( lf_btn==3 )
@@ -1306,7 +1306,7 @@ TCHAR		temp_buf[MAX_PATH];
 #endif
 
 
-if( mode==CNCT_GAME_SETTING )
+if( mode==GameMode.GameSetting )
 	{
 			for( n=0; n<=6; n++)
 				{
@@ -1328,7 +1328,7 @@ else
 
 			// コンフィギュレーション
 
-if(	mode==CNCT_CNFG_SETTING )
+if(	mode==GameMode.ConfigSetting )
 	{
 			rx=630-120;
 
@@ -1983,7 +1983,7 @@ if(	mode==CNCT_CNFG_SETTING )
 				dstn_rect.top=675;
 				dstn_rect.right=dstn_rect.left+(len[0]*12);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==CNCT_CNFG_SETTING )
+				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==GameMode.ConfigSetting )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
 					if( lf_btn==3 )
@@ -1992,7 +1992,7 @@ if(	mode==CNCT_CNFG_SETTING )
 						go_cnct_game_setting();
 						sinario=(short)m;
 
-						dp_flag.dwType = GO_GAME_SETTING;
+						dp_flag.dwType = MessageType.GoToGameSetting;
 //t						lpDirectPlay4A->lpVtbl->Send(lpDirectPlay4A, dpidPlayer, dpidRivalPlayer, DPSEND_GUARANTEED, &dp_flag, sizeof(_DP_FLAG) );
 
 						bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
@@ -2022,7 +2022,7 @@ if(	mode==CNCT_CNFG_SETTING )
 				dstn_rect.top=700;
 				dstn_rect.right=dstn_rect.left+(len[0]*12);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==CNCT_CNFG_SETTING )
+				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==GameMode.ConfigSetting )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
 					if( lf_btn==3 )
@@ -2031,7 +2031,7 @@ if(	mode==CNCT_CNFG_SETTING )
 						srand( (uint)time( null ) );
 						cnct_game_rnd_sheed=(short)rnd(65536);
 
-						dp_data_1.dwType = OUT_SETUP;
+						dp_data_1.dwType = MessageType.LeaveSetup;
 						dp_data_1.data[0] = cnct_game_rnd_sheed;
 
 						bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
@@ -2039,7 +2039,7 @@ if(	mode==CNCT_CNFG_SETTING )
 						g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
 
-						dp_data_1.dwType = OUT_CNFG_SETTING;
+						dp_data_1.dwType = MessageType.LeaveConfigSetting;
 						dp_data_1.data[0] = (short)host_side;
 						dp_data_1.data[1] = sinario;
 
@@ -2062,7 +2062,7 @@ if(	mode==CNCT_CNFG_SETTING )
 						g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
 
-						mode=CMBT;
+						mode=GameMode.Battle;
 						}
 					}
 				else
@@ -2073,9 +2073,9 @@ if(	mode==CNCT_CNFG_SETTING )
 				}
 			else
 				{
-				if( join_game_start==OUT_CNFG_SETTING )
+				if( join_game_start==MessageType.LeaveConfigSetting )
 					{
-					mode=CMBT;
+					mode=GameMode.Battle;
 					join_game_start=0;
 					}
 				}
@@ -2085,7 +2085,7 @@ if(	mode==CNCT_CNFG_SETTING )
 			if( you_are_host!=0 && rival_mode==mode/*==CNCT_CNFG_SETTING*/ && (FrameCount%10)==0 )
 				{
 				// ホストの選択状態をゲストにセンドします。
-				dp_data_1.dwType = SIDE_AND_SINARIO;
+				dp_data_1.dwType = MessageType.SideAndScenario;
 				dp_data_1.data[0] = (short)host_side;
 				dp_data_1.data[1] = sinario;
 
@@ -2178,7 +2178,7 @@ if(	mode==CNCT_CNFG_SETTING )
 
 
 
-	if( mode==CMBT )
+	if( mode==GameMode.Battle )
 		{
 		cnct_game_init();
 		}
@@ -2186,8 +2186,8 @@ if(	mode==CNCT_CNFG_SETTING )
 		{
 
 		// 現在のモードをライバルに送る。
-		dp_flag.dwType = RIVAL_MODE;
-		dp_flag.rival_mode=mode;
+		dp_flag.dwType = MessageType.RivalMode;
+		dp_flag.rival_mode=(short)mode;
 //t		lpDirectPlay4A->lpVtbl->Send(lpDirectPlay4A, dpidPlayer, dpidRivalPlayer, 0 /*DPSEND_GUARANTEED*/, &dp_flag, sizeof(_DP_FLAG) );
 
 		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
@@ -2309,7 +2309,7 @@ public void	cnct_game_setup()
 
 						rnd_count=0;
 
-						dp_data_1.dwType = OUT_SETUP;
+						dp_data_1.dwType = MessageType.LeaveSetup;
 						wsprintf(dp_data_1.my_name, g_strLocalPlayerName);	
 						dp_data_1.data[0] = cnct_game_rnd_sheed;
 

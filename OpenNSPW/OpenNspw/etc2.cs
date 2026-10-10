@@ -36,8 +36,8 @@ public void new_unit_arrived(int side,int new_unit_kind)
 	{
 	double		rx=default /* C4701 */,ry=default /* C4701 */;
 	double		rx2=default /* C4701 */,ry2=default /* C4701 */;
-	int		kind=default /* C4701 */, kind2,m,i;
-	int		arrived_side;
+	UnitKind	kind=default /* C4701 */; int kind2,m,i;
+	Side		arrived_side;
 
 
 
@@ -49,10 +49,10 @@ public void new_unit_arrived(int side,int new_unit_kind)
 		}
 	else
 		{
-		if(your_side==JPN)
-			arrived_side=USA;
+		if(your_side==Side.Japan)
+			arrived_side=Side.UnitedStates;
 		else
-			arrived_side=JPN;
+			arrived_side=Side.Japan;
 		}
 
 
@@ -63,29 +63,29 @@ public void new_unit_arrived(int side,int new_unit_kind)
 
 	switch(new_unit_kind)
 		{
-		case 0:		kind=BB1;		break;
-		case 1:		kind=CA1;		break;
-		case 2:		kind=DD1;		break;
-		case 3:		kind=SS1;		break;
-		case 4:		kind=CVL1;		break;
-		case 5:		kind=CV1;		break;
-		case 6:		kind=FT1;		break;
-		case 7:		kind=AT1;		break;
-		case 8:		kind=BM1;		break;
-		case 9:		kind=FT1;	kind2=1;			break;
-		case 10:	kind=TR1;	kind2=TR_GF1;		break;
-		case 11:	kind=TR1;	kind2=TR_GF2;		break;
-		case 12:	kind=TR1;	kind2=TR_GF3;		break;
-		case 13:	kind=TR1;	kind2=TR_AP;		break;
-		case 14:	kind=TR1;	kind2=TR_SP;			break;
+		case 0:		kind=UnitKind.Battleship;		break;
+		case 1:		kind=UnitKind.Cruiser;		break;
+		case 2:		kind=UnitKind.Destroyer;		break;
+		case 3:		kind=UnitKind.Submarine;		break;
+		case 4:		kind=UnitKind.LightCarrier;		break;
+		case 5:		kind=UnitKind.Carrier;		break;
+		case 6:		kind=UnitKind.Fighter;		break;
+		case 7:		kind=UnitKind.Attacker;		break;
+		case 8:		kind=UnitKind.Bomber;		break;
+		case 9:		kind=UnitKind.Fighter;	kind2=1;			break;
+		case 10:	kind=UnitKind.Transport;	kind2=TR_GF1;		break;
+		case 11:	kind=UnitKind.Transport;	kind2=TR_GF2;		break;
+		case 12:	kind=UnitKind.Transport;	kind2=TR_GF3;		break;
+		case 13:	kind=UnitKind.Transport;	kind2=TR_AP;		break;
+		case 14:	kind=UnitKind.Transport;	kind2=TR_SP;			break;
 
-		case 15:		kind=CA1;	kind2=1;		break;
-		case 16:		kind=DD1;	kind2=1;		break;
+		case 15:		kind=UnitKind.Cruiser;	kind2=1;		break;
+		case 16:		kind=UnitKind.Destroyer;	kind2=1;		break;
 		case 17:		
-			if( arrived_side==JPN ) 
-				kind=BB1;	
+			if( arrived_side==Side.Japan ) 
+				kind=UnitKind.Battleship;	
 			else
-				kind=CV1;	
+				kind=UnitKind.Carrier;	
 			kind2=1;		
 			break;
 
@@ -93,7 +93,7 @@ public void new_unit_arrived(int side,int new_unit_kind)
 
 
 
-	if(arrived_side==JPN)
+	if(arrived_side==Side.Japan)
 		{
 		switch(map_now)
 			{
@@ -122,7 +122,7 @@ ry+=new_unit_kind*80;
 				break;
 
 			case 3:		// ユーザーマップ
-				switch(rein[arrived_side])
+				switch(rein[(int)arrived_side])
 					{
 					case 0:
 						rx=MAP_LEFT-500;
@@ -188,7 +188,7 @@ ry-=new_unit_kind*80;
 				break;
 
 			case 3:		// ユーザーマップ
-				switch(rein[arrived_side])
+				switch(rein[(int)arrived_side])
 					{
 					case 0:
 						rx=MAP_LEFT-500;
@@ -233,13 +233,13 @@ ry-=new_unit_kind*80;
 //		else
 //			m=set_new_unit(USA,kind,rx,ry,(double)90);
 
-		if( arrived_side==JPN )
-			m=set_new_unit_2(JPN,kind,kind2,rx,ry,(double)90);
+		if( arrived_side==Side.Japan )
+			m=set_new_unit_2(Side.Japan,kind,kind2,rx,ry,(double)90);
 		else
-			m=set_new_unit_2(USA,kind,kind2,rx,ry,(double)90);
+			m=set_new_unit_2(Side.UnitedStates,kind,kind2,rx,ry,(double)90);
 
 
-		if(kind==TR1)
+		if(kind==UnitKind.Transport)
 			{
 			// 輸送船の場合、積荷
 			unit[m].arm[0]=kind2;		// 武装品種
@@ -256,12 +256,12 @@ ry-=new_unit_kind*80;
 		{
 		// 航空機の登場
 
-		for(i=0;i<((kind==AT1 ? 1 : 0)*3)+((kind==FT1 ? 1 : 0)*2)+((kind==BM1 ? 1 : 0)*1)  ;i++)
+		for(i=0;i<((kind==UnitKind.Attacker ? 1 : 0)*3)+((kind==UnitKind.Fighter ? 1 : 0)*2)+((kind==UnitKind.Bomber ? 1 : 0)*1)  ;i++)
 			{
-			if( arrived_side==JPN )
-				m=set_new_unit_2(JPN,kind,kind2,rx,ry,(double)90);
+			if( arrived_side==Side.Japan )
+				m=set_new_unit_2(Side.Japan,kind,kind2,rx,ry,(double)90);
 			else
-				m=set_new_unit_2(USA,kind,kind2,rx,ry,(double)90);
+				m=set_new_unit_2(Side.UnitedStates,kind,kind2,rx,ry,(double)90);
 
 			unit[m].pp_x[0]=rx2;
 			unit[m].pp_y[0]=ry2;
@@ -273,7 +273,7 @@ ry-=new_unit_kind*80;
 			unit[m].info[5]=MOVE;				// モード（コンバットメニュー）
 
 			unit[m].gas[0]=50;
-			if(kind==FT1)
+			if(kind==UnitKind.Fighter)
 				unit[m].arm[1]=unit[m].arm[1]/3;
 			else
 				unit[m].arm[1]=0;
@@ -304,26 +304,26 @@ public int		find_out_size( int m , int n)
 	// 見る側の追加
 	switch( unit[m].kind )
 		{
-		case BB1:		size=BB1_SIGHT;		break;
-		case CA1:		size=CA1_SIGHT;		break;
-		case DD1:		size=DD1_SIGHT;		break;
-		case SS1:		size=SS1_SIGHT;		break;
-		case CV1:		size=CV1_SIGHT;		break;
-		case CVL1:		size=CVL1_SIGHT;	break;
-		case TR1:		size=TR1_SIGHT;		break;
-		case FT1:		size=FT1_SIGHT;		break;
-		case AT1:		size=AT1_SIGHT;		break;
-		case BM1:		size=BM1_SIGHT;		break;
-		case AP: case SP:		size=AP_SIGHT;		break;		
-		case CT1:		size=CT1_SIGHT;		break;
-		case MN1:		size=MN1_SIGHT;		break;
-		case GF1:		size=GF1_SIGHT;		break;
-		case GF2:		size=GF2_SIGHT;		break;
-		case GF3:		size=GF3_SIGHT;		break;
+		case UnitKind.Battleship:		size=BB1_SIGHT;		break;
+		case UnitKind.Cruiser:		size=CA1_SIGHT;		break;
+		case UnitKind.Destroyer:		size=DD1_SIGHT;		break;
+		case UnitKind.Submarine:		size=SS1_SIGHT;		break;
+		case UnitKind.Carrier:		size=CV1_SIGHT;		break;
+		case UnitKind.LightCarrier:		size=CVL1_SIGHT;	break;
+		case UnitKind.Transport:		size=TR1_SIGHT;		break;
+		case UnitKind.Fighter:		size=FT1_SIGHT;		break;
+		case UnitKind.Attacker:		size=AT1_SIGHT;		break;
+		case UnitKind.Bomber:		size=BM1_SIGHT;		break;
+		case UnitKind.AirBase: case UnitKind.NavalBase:		size=AP_SIGHT;		break;		
+		case UnitKind.City:		size=CT1_SIGHT;		break;
+		case UnitKind.Mine:		size=MN1_SIGHT;		break;
+		case UnitKind.InfantryBase:		size=GF1_SIGHT;		break;
+		case UnitKind.Pillboxes:		size=GF2_SIGHT;		break;
+		case UnitKind.Fortress:		size=GF3_SIGHT;		break;
 		}
 
 
-	if( unit[m].kind>=AP && unit[m].kind<=GF3 && unit[m].info[0]!=0 )
+	if( unit[m].kind>=UnitKind.AirBase && unit[m].kind<=UnitKind.Fortress && unit[m].info[0]!=0 )
 		{
 		// 工事中は視界を制限
 		size=FT1_SIGHT/2;
@@ -335,15 +335,15 @@ public int		find_out_size( int m , int n)
 	// 見られる側の追加
 	switch( unit[n].kind )
 		{
-		case BB1:							break;
-		case CA1:		/*size=size*0.9;*/		break;
-		case DD1:		/*size=size*0.8;*/		break;
-		case SS1:
+		case UnitKind.Battleship:							break;
+		case UnitKind.Cruiser:		/*size=size*0.9;*/		break;
+		case UnitKind.Destroyer:		/*size=size*0.8;*/		break;
+		case UnitKind.Submarine:
 			if( unit[n].info[6]!=0 )
 				{	// 潜航中
-				if( unit[m].kind!=DD1 )
+				if( unit[m].kind!=UnitKind.Destroyer )
 					{
-					if(unit[m].kind==SP && unit[m].info[0]==0 )
+					if(unit[m].kind==UnitKind.NavalBase && unit[m].info[0]==0 )
 						size=(int)(SP_SIGHT*0.8);
 					else
 						size=0;
@@ -369,14 +369,14 @@ public int		find_out_size( int m , int n)
 					size=300;		// 潜水艦の見える範囲より小さくする
 				}
 				break;
-		case CV1:				break;
-		case CVL1:				break;
-		case FT1: case AT1:	case BM1:
+		case UnitKind.Carrier:				break;
+		case UnitKind.LightCarrier:				break;
+		case UnitKind.Fighter: case UnitKind.Attacker:	case UnitKind.Bomber:
 			// 航空機は固まっていると見つかりやすい
 			break;
-		case AP: case SP:
+		case UnitKind.AirBase: case UnitKind.NavalBase:
 			break;		
-		case TR1:
+		case UnitKind.Transport:
 			break;
 		}
 	
@@ -685,7 +685,7 @@ public int		seek_parking_no( int m )
 
 	for( i=1; i<=max_unit; i++)
 		{
-		if( unit[i].used!=0 && unit[i].ctgry==PLANE && unit[i].info[0]==PARKING 
+		if( unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].info[0]==PARKING 
 			&& unit[m].info[1]==unit[i].info[1] )
 			wrk[unit[i].info[2]]++;
 		}
@@ -713,7 +713,7 @@ public int		plane_in_cv( int m )
 	rtn=0;
 	for(i=1;i<=max_unit;i++)
 		{
-		if( unit[i].used!=0 && unit[i].ctgry==PLANE && unit[i].info[0]==PARKING && m==unit[i].info[1] )
+		if( unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].info[0]==PARKING && m==unit[i].info[1] )
 			rtn++;
 		}
 	return (rtn);
@@ -732,10 +732,10 @@ public void	set_pos_of_parking( int	m )
 
 
 	// ２列格納
-	if( unit[unit[m].info[1]].kind==AP )
+	if( unit[unit[m].info[1]].kind==UnitKind.AirBase )
 		{	// 陸上基地
 		parking_y=sprt[UNIT_INFO_JPN].y+sprt[UNIT_INFO_JPN].ht-((unit[m].info[2]/2)*40)-100;
-		if( false && unit[m].kind==BM1 )
+		if( false && unit[m].kind==UnitKind.Bomber )
 			w=55;
 		else
 			w=35;
@@ -819,37 +819,37 @@ public void	set_the_slct_unit (int m)
 			}
 		}
 	// そのユニットをユニットインフォにセットします。
-	if( !(unit[m].ctgry==PLANE && unit[m].info[0]==PARKING) )
+	if( !(unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING) )
 		{
-		unit_info[0]=unit[m].kind;
+		unit_info[0]=(int)unit[m].kind;
 		unit_info[1]=0;				// 空母なら１で格納庫 ０ で飛行甲板
 		unit_info[3]=m;				// そのユニットの番号
-		unit_info[4]=unit[m].used;	// そのユニットの国籍
+		unit_info[4]=(int)unit[m].used;	// そのユニットの国籍
 		//unit_info[2]=0;				// 駐機機の発進までのフラグ
-		switch(unit_info[0])
+		switch((UnitKind)unit_info[0])
 			{
-			case BB1:
+			case UnitKind.Battleship:
 				unit_info[2]=0;
 				break;
-			case CA1:
+			case UnitKind.Cruiser:
 				unit_info[2]=1;
 				break;
-			case DD1:
+			case UnitKind.Destroyer:
 				unit_info[2]=2;
 				break;
-			case SS1:
+			case UnitKind.Submarine:
 				unit_info[2]=3;
 				break;
-			case CV1:
+			case UnitKind.Carrier:
 				unit_info[2]=4;
 				break;
-			case CVL1:
+			case UnitKind.LightCarrier:
 				unit_info[2]=5;
 				break;
-			case TR1:
+			case UnitKind.Transport:
 				unit_info[2]=6;
 				break;
-			case AP:
+			case UnitKind.AirBase:
 				unit_info[2]=8;
 				break;
 			default:
@@ -925,7 +925,7 @@ public int		seek_effect_no()
 	rtn=0;
 	for(s=1;s<EFFECT_MAX/*255*/;s++)
 		{
-		if( effect[s].layer==0 )
+		if( effect[s].layer==EffectLayer.None )
 			{
 			rtn=s;
 			break;
@@ -1230,7 +1230,7 @@ public void	set_pos_of_take_down(int n)
 
 
 
-	if( unit[n].kind==BM1 )
+	if( unit[n].kind==UnitKind.Bomber )
 		{
 		unit[n].pp_x[0]=unit[pt].x+cos(angl2*a_PI)*560.0;
 		unit[n].pp_y[0]=unit[pt].y+sin(angl2*a_PI)*560.0;
@@ -1277,7 +1277,7 @@ public void	cont_pos_of_take_down( int n )
 	//pt=4;
 	//pos_of_no=unit[n].no;
 
-	if( !(unit[pt].kind==CV1 || unit[pt].kind==CVL1 || unit[pt].kind==AP) )
+	if( !(unit[pt].kind==UnitKind.Carrier || unit[pt].kind==UnitKind.LightCarrier || unit[pt].kind==UnitKind.AirBase) )
 		{
 		unit[n].info[1]=0;
 		pt=0;
@@ -1339,7 +1339,7 @@ public void	cont_pos_of_take_down( int n )
 		{
 		case 4:
 			// 全4点を調整			
-			if( unit[n].kind==BM1 )
+			if( unit[n].kind==UnitKind.Bomber )
 				{
 				unit[n].pp_x[0]=unit[pt].x+cos(angl2*a_PI)*560.0;
 				unit[n].pp_y[0]=unit[pt].y+sin(angl2*a_PI)*560.0;
@@ -1552,7 +1552,7 @@ public void		find_out()
 
 
 
-	if( reveal!=0 || game_end!=0 )
+	if( reveal!=0 || game_end!=GameResult.None )
 		{
 		for(m=0;m<=max_unit;m++)
 			unit[m].found=1;
@@ -1577,13 +1577,13 @@ public void		find_out()
 			flg1=0;
 			for(n=1;n<=max_unit;n++)
 				{
-				if( unit[n].used!=0 && unit[n].used!=your_side && unit[n].info[0]!=PARKING && (unit[n].found==0 || unit[m].kind==SS1 ) )
+				if( unit[n].used!=0 && unit[n].used!=your_side && unit[n].info[0]!=PARKING && (unit[n].found==0 || unit[m].kind==UnitKind.Submarine ) )
 					{
 					// 現地点からユニット地点への距離
 					wrk_x=unit[m].x;
 					wrk_y=unit[m].y;
 
-					if( unit[m].kind==FT1 )
+					if( unit[m].kind==UnitKind.Fighter )
 						{	// 航空機の場合はちょっと前へ
 						wrk_x+=cos(unit[m].drctn*a_PI)*FT_EYE;
 						wrk_y+=sin(unit[m].drctn*a_PI)*FT_EYE;
@@ -1615,7 +1615,7 @@ public void		find_out()
 					if( (int)dstc<=size && size!=0 )
 						{
 						flg1++;
-						if( unit[n].kind==SS1 && unit[n].info[6]!=0 )
+						if( unit[n].kind==UnitKind.Submarine && unit[n].info[6]!=0 )
 							{	// 潜航中潜水艦が発見可能範囲にいる
 							if( find_out_ss(m,n)!=0 )
 								{
@@ -1624,7 +1624,7 @@ public void		find_out()
 #if false
 								for(s=1; s<=max_unit; s++)
 									{
-									if( unit[s].kind==DD1 && unit[s].em_flg[0] && unit[s].em_flg[1]==n && unit[s].used!=unit[n].used /*&& unit[s].used==cpu_side*/  && unit[s].used )
+									if( unit[s].kind==UnitKind.Destroyer && unit[s].em_flg[0] && unit[s].em_flg[1]==n && unit[s].used!=unit[n].used /*&& unit[s].used==cpu_side*/  && unit[s].used )
 										{
 										// 駆逐艦の対潜水艦起動の再設定
 										unit[s].em_flg[0]=0;
@@ -1640,7 +1640,7 @@ public void		find_out()
 							{	
 							unit[n].found=1;	// 普通のユニットが見つかった場合
 
-							if( unit[m].kind==SS1 && unit[m].spry==0 && unit[n].kind!=SS1 )		// 発見したのが潜水艦の場合。
+							if( unit[m].kind==UnitKind.Submarine && unit[m].spry==0 && unit[n].kind!=UnitKind.Submarine )		// 発見したのが潜水艦の場合。
 								{						
 								unit[m].info[6]=1;		// 潜ります。
 								}
@@ -1649,7 +1649,7 @@ public void		find_out()
 					}
 				}
 
-			if( flg1==0 && unit[m].kind==SS1 )		// 潜水艦が発見できなかった
+			if( flg1==0 && unit[m].kind==UnitKind.Submarine )		// 潜水艦が発見できなかった
 				{
 				unit[m].info[6]=0;					// 浮上します。
 				unit[m].found=0;					// クリアします。
@@ -1663,7 +1663,7 @@ public void		find_out()
 			flg2=0;
 			for(n=1;n<=max_unit;n++)
 				{
-				if( unit[n].used!=0 && unit[n].used==your_side  && unit[n].info[0]!=PARKING && (unit[n].found==0 || unit[m].kind==SS1) )
+				if( unit[n].used!=0 && unit[n].used==your_side  && unit[n].info[0]!=PARKING && (unit[n].found==0 || unit[m].kind==UnitKind.Submarine) )
 					{
 					// 現地点からユニット地点への距離
 
@@ -1671,7 +1671,7 @@ public void		find_out()
 					wrk_x=unit[m].x;
 					wrk_y=unit[m].y;
 
-					if( unit[m].kind==FT1 )
+					if( unit[m].kind==UnitKind.Fighter )
 						{	// 航空機の場合はちょっと前へ
 						wrk_x+=cos(unit[m].drctn*a_PI)*FT_EYE;
 						wrk_y+=sin(unit[m].drctn*a_PI)*FT_EYE;
@@ -1702,7 +1702,7 @@ public void		find_out()
 					if( (int)dstc<=size && size!=0 )
 						{
 						flg2++;
-						if( unit[n].kind==SS1 && unit[n].info[6]!=0 )
+						if( unit[n].kind==UnitKind.Submarine && unit[n].info[6]!=0 )
 							{	// 潜航中潜水艦が発見可能範囲にいる
 							if( find_out_ss(m,n)!=0 )
 								{
@@ -1711,7 +1711,7 @@ public void		find_out()
 #if false
 								for(s=1; s<=max_unit; s++)
 									{
-									if( unit[s].kind==DD1 && unit[s].em_flg[0] && unit[s].em_flg[1]==n && unit[s].used!=unit[n].used /*&& unit[s].used==cpu_side*/ && unit[s].used )
+									if( unit[s].kind==UnitKind.Destroyer && unit[s].em_flg[0] && unit[s].em_flg[1]==n && unit[s].used!=unit[n].used /*&& unit[s].used==cpu_side*/ && unit[s].used )
 										{
 										// 駆逐艦の対潜水艦起動の再設定
 										unit[s].em_flg[0]=0;
@@ -1726,7 +1726,7 @@ public void		find_out()
 							{	// 普通のユニットが見つかった場合
 							unit[n].found=1;
 
-							if( unit[m].kind==SS1 && unit[m].spry==0 && unit[n].kind!=SS1 )		// 発見したのが潜水艦の場合。
+							if( unit[m].kind==UnitKind.Submarine && unit[m].spry==0 && unit[n].kind!=UnitKind.Submarine )		// 発見したのが潜水艦の場合。
 								{						
 								unit[m].info[6]=1;
 								}
@@ -1735,7 +1735,7 @@ public void		find_out()
 					}
 				}
 
-			if( flg2==0 && unit[m].kind==SS1 )		// 潜水艦が発見できなかった
+			if( flg2==0 && unit[m].kind==UnitKind.Submarine )		// 潜水艦が発見できなかった
 				{
 				unit[m].info[6]=0;					// 浮上します
 				unit[m].found=0;					// クリアします。

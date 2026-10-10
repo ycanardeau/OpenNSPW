@@ -32,7 +32,7 @@ public class CharacterizationTests
 		run.Until(() => run.Host.Game.g_dwNumberOfActivePlayers == 2 && run.Guest.Game.g_dwNumberOfActivePlayers == 2 && run.Guest.Game.g_hDlg?.Id == IDD_MAIN_GAME);
 
 		run.Host.Post(g => g.ClickDlgItem(g.g_hDlg!, IDC_START_GAME));
-		run.Until(() => run.Host.Game.mode == DEMO && run.Guest.Game.mode == DEMO);
+		run.Until(() => run.Host.Game.mode == GameMode.Title && run.Guest.Game.mode == GameMode.Title);
 	}
 
 	// Runs a script on two new games, and checks its trace.
@@ -68,11 +68,11 @@ public class CharacterizationTests
 		Connect(run);
 		run.Frames(run.Host, 20);
 		Click(run, run.Host, 512, 384);
-		run.Until(() => run.Host.Game.mode == CNCT_GAME_SETTING && run.Host.Game.rival_mode == CNCT_GAME_SETTING);
+		run.Until(() => run.Host.Game.mode == GameMode.GameSetting && run.Host.Game.rival_mode == GameMode.GameSetting);
 		Click(run, run.Host, 130, 150 + (index * 25) + 12);
-		run.Until(() => run.Host.Game.mode == CNCT_CNFG_SETTING && run.Host.Game.rival_mode == CNCT_CNFG_SETTING);
+		run.Until(() => run.Host.Game.mode == GameMode.ConfigSetting && run.Host.Game.rival_mode == GameMode.ConfigSetting);
 		Click(run, run.Host, 630 - 120 + 10, 700 + 12);
-		run.Until(() => run.Host.Game.mode == CMBT && run.Guest.Game.mode == CMBT);
+		run.Until(() => run.Host.Game.mode == GameMode.Battle && run.Guest.Game.mode == GameMode.Battle);
 	}
 
 	// From the title screen, the host chooses the user scenario at `index` in the list of the load dialog (win_proc.cpp,
@@ -82,7 +82,7 @@ public class CharacterizationTests
 		Connect(run);
 		run.Frames(run.Host, 20);
 		Click(run, run.Host, 512, 384);
-		run.Until(() => run.Host.Game.mode == CNCT_GAME_SETTING && run.Host.Game.rival_mode == CNCT_GAME_SETTING);
+		run.Until(() => run.Host.Game.mode == GameMode.GameSetting && run.Host.Game.rival_mode == GameMode.GameSetting);
 		Click(run, run.Host, 130, 150 + (8 * 25) + 12);
 		run.Until(() => FileDialog(run.Host) is not null);
 		var dialog = FileDialog(run.Host)!;
@@ -91,9 +91,9 @@ public class CharacterizationTests
 			g.SelectDlgItem(dialog, IDC_LIST, index);
 			g.ClickDlgItem(dialog, IDOK);
 		});
-		run.Until(() => run.Host.Game.mode == CNCT_CNFG_SETTING && run.Host.Game.rival_mode == CNCT_CNFG_SETTING);
+		run.Until(() => run.Host.Game.mode == GameMode.ConfigSetting && run.Host.Game.rival_mode == GameMode.ConfigSetting);
 		Click(run, run.Host, 630 - 120 + 10, 700 + 12);
-		run.Until(() => run.Host.Game.mode == CMBT && run.Guest.Game.mode == CMBT);
+		run.Until(() => run.Host.Game.mode == GameMode.Battle && run.Guest.Game.mode == GameMode.Battle);
 	}
 
 	private static HWND? FileDialog(LockstepGame game)
@@ -106,7 +106,7 @@ public class CharacterizationTests
 	{
 		Monkey[] monkeys = [new(run.Host, seed), new(run.Guest, seed + 1000)];
 		var end = run.Host.FrameCount + frames;
-		run.Until(() => run.Host.FrameCount >= end || run.Host.Game.mode != CMBT, frames * 2, () =>
+		run.Until(() => run.Host.FrameCount >= end || run.Host.Game.mode != GameMode.Battle, frames * 2, () =>
 		{
 			foreach (var monkey in monkeys)
 			{
@@ -152,7 +152,7 @@ public class CharacterizationTests
 		{
 			StartBattle(run, index);
 			Battle(run, (uint)(1 + index), 2000);
-			Assert.Equal(CMBT, run.Host.Game.mode);
+			Assert.Equal(GameMode.Battle, run.Host.Game.mode);
 		});
 	}
 

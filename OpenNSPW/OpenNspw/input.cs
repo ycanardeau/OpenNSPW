@@ -41,7 +41,7 @@ public void	cnct_game_input_cont()
 
 
 	e=1;
-	if( new_slct[e].sw!=0 && unit[new_slct[e].the_slct_unit].spry==0 && !(unit[new_slct[e].the_slct_unit].kind>=AP && unit[new_slct[e].the_slct_unit].kind<=GF3/*MN1*/ ))
+	if( new_slct[e].sw!=0 && unit[new_slct[e].the_slct_unit].spry==0 && !(unit[new_slct[e].the_slct_unit].kind>=UnitKind.AirBase && unit[new_slct[e].the_slct_unit].kind<=UnitKind.Fortress/*MN1*/ ))
 		{
 		// ユニット自体をクリックした。
 		the_slct_unit=new_slct[e].the_slct_unit;
@@ -86,7 +86,7 @@ public void	cnct_game_input_cont()
 					bf_new_slct[1].gr_y=new_slct[e].gr_y;
 
 
-					if(your_side==JPN)
+					if(your_side==Side.Japan)
 						{
 						// 日本海軍サイド
 //						for(s=1;s<=20;s++)
@@ -129,7 +129,7 @@ public void	cnct_game_input_cont()
 			}
 		else
 			{
-			if ( unit[the_slct_unit].ctgry==PLANE && (unit[m].kind==CV1 || unit[m].kind==CVL1 || unit[m].kind==AP))
+			if ( unit[the_slct_unit].ctgry==UnitCategory.Plane && (unit[m].kind==UnitKind.Carrier || unit[m].kind==UnitKind.LightCarrier || unit[m].kind==UnitKind.AirBase))
 				{
 				// 航空機の格納先を指定
 				if(you_can_order!=0)
@@ -143,7 +143,7 @@ public void	cnct_game_input_cont()
 					bf_new_slct[1].gr_x=new_slct[e].gr_x;
 					bf_new_slct[1].gr_y=new_slct[e].gr_y;
 
-					if(your_side==JPN)
+					if(your_side==Side.Japan)
 						{
 						// 日本海軍サイド
 //						for(s=1;s<=20;s++)
@@ -185,7 +185,7 @@ public void	cnct_game_input_cont()
 				{
 				if( slct_unit[e][m]==0 )
 					{	// ｍ番号ユニットを新規にセレクトに設定
-					if(!(unit[m].kind>=AP&&unit[m].kind<=GF3) && !(unit[the_slct_unit].kind>=AP && unit[the_slct_unit].kind<=GF3))
+					if(!(unit[m].kind>=UnitKind.AirBase&&unit[m].kind<=UnitKind.Fortress) && !(unit[the_slct_unit].kind>=UnitKind.AirBase && unit[the_slct_unit].kind<=UnitKind.Fortress))
 						{
 						slct_unit_no++; 
 						slct_unit[e][m]=slct_unit_no; 
@@ -207,7 +207,7 @@ public void	cnct_game_input_cont()
 		}
 	else
 		{
-		if( you_can_order!=0 && new_pp[1].used!=0 && unit[new_pp[1].used].spry==0 && !(  unit[new_pp[1].used].kind>=AP && unit[new_pp[1].used].kind<=GF3 /*unit[new_pp[1].used].kind==AP || unit[new_pp[1].used].kind==SP || unit[new_pp[1].used].kind==GF1 ||unit[new_pp[1].used].kind==GF2 || unit[new_pp[1].used].kind==GF3*/ )  && !(unit[new_pp[1].used].ctgry==PLANE && unit[new_pp[1].used].info[0]==PARKING && unit[unit[new_pp[1].used].info[1]].hp[0]<=unit[unit[new_pp[1].used].info[1]].hp[1]*0.2) )
+		if( you_can_order!=0 && new_pp[1].used!=0 && unit[new_pp[1].used].spry==0 && !(  unit[new_pp[1].used].kind>=UnitKind.AirBase && unit[new_pp[1].used].kind<=UnitKind.Fortress /*unit[new_pp[1].used].kind==AP || unit[new_pp[1].used].kind==SP || unit[new_pp[1].used].kind==GF1 ||unit[new_pp[1].used].kind==GF2 || unit[new_pp[1].used].kind==GF3*/ )  && !(unit[new_pp[1].used].ctgry==UnitCategory.Plane && unit[new_pp[1].used].info[0]==PARKING && unit[unit[new_pp[1].used].info[1]].hp[0]<=unit[unit[new_pp[1].used].info[1]].hp[1]*0.2) )
 			{
 			// あるマイユニットに新ＰＰ＿ＸＹが設定された場合
 			// バッファに保存。これを命令をだせるタイミングにnew_ppに代入する。
@@ -217,7 +217,7 @@ public void	cnct_game_input_cont()
 			bf_new_pp[1].cls=new_pp[1].cls;
 
 
-			if(your_side==JPN)
+			if(your_side==Side.Japan)
 				{
 				// 日本海軍サイド
 //				for(s=1;s<=20;s++)
@@ -253,7 +253,7 @@ public void	cnct_game_input_cont()
 
 
 			m=new_pp[e].used;
-			if( unit[m].ctgry==PLANE && unit[m].info[0]==PARKING )
+			if( unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING )
 				{
 				unit[unit[m].info[1]].info[4]=0;	// 空母なら これがオンで発艦中
 				unit[unit[m].info[1]].info[7]=0;	// 空母ならこの数値で甲板上の右左
@@ -308,14 +308,14 @@ public void	set_cpu_root2(int m)
 
 
 	//	ＰＰ０が侵入不可地なら移動無しにしてリターン
-	if( unit[m].ctgry==SHIP  )
+	if( unit[m].ctgry==UnitCategory.Ship  )
 		{
 		// 他の艦船があるか
 		wrk_x2=unit[m].pp_x[0];
 		wrk_y2=unit[m].pp_y[0];
 		for( n=1; n<=max_unit; n++)
 			{
-			if( unit[n].used!=0 && m!=n && unit[n].ctgry==SHIP && !(unit[n].kind==SS1 && unit[n].info[6]!=0)  /*&& unit[n].kind!=SP && unit[n].kind!=AP*/ && !(unit[n].kind>=AP && unit[n].kind<=GF3 )  )
+			if( unit[n].used!=0 && m!=n && unit[n].ctgry==UnitCategory.Ship && !(unit[n].kind==UnitKind.Submarine && unit[n].info[6]!=0)  /*&& unit[n].kind!=SP && unit[n].kind!=AP*/ && !(unit[n].kind>=UnitKind.AirBase && unit[n].kind<=UnitKind.Fortress )  )
 				{
 				// ptin dbg
 				wrk_r.top=(int)unit[n].y+(sprt[UNIT_JPN].wd/2);//(int)unit[n].y-(sprt[UNIT_JPN].wd/2);
@@ -431,7 +431,7 @@ public void	set_cpu_root2(int m)
 
 
 
-		if( unit[m].ctgry==SHIP )
+		if( unit[m].ctgry==UnitCategory.Ship )
 			{
 			// 艦船のルート再計算
 
@@ -466,7 +466,7 @@ public void	set_cpu_root2(int m)
 				// 船に接触するか
 				for( f=1; f<=max_unit && hit==0 ; f++)
 					{
-					if( unit[f].used!=0 && m!=f && unit[f].ctgry==SHIP && !(unit[f].kind==SS1 && unit[f].info[6]!=0) && /*!(unit[f].kind==SP||unit[f].kind==AP)*/!(unit[f].kind>=AP&&unit[f].kind<=GF3) )
+					if( unit[f].used!=0 && m!=f && unit[f].ctgry==UnitCategory.Ship && !(unit[f].kind==UnitKind.Submarine && unit[f].info[6]!=0) && /*!(unit[f].kind==SP||unit[f].kind==AP)*/!(unit[f].kind>=UnitKind.AirBase&&unit[f].kind<=UnitKind.Fortress) )
 						{
 						// ptin dbg
 						wrk_r.top=(int)unit[f].y+(sprt[UNIT_JPN].ht/2);//(int)unit[f].y-(sprt[UNIT_JPN].ht/2);
@@ -529,7 +529,7 @@ public void	set_cpu_root2(int m)
 							// 船に接触するか
 							for( f=1; f<=max_unit; f++)
 								{
-								if( unit[f].used!=0 && m!=f && unit[f].ctgry==SHIP && !(unit[f].kind==SS1 && unit[f].info[6]!=0) && /*!(unit[f].kind==SP||unit[f].kind==AP)*/!(unit[f].kind>=AP && unit[f].kind<=GF3)  )
+								if( unit[f].used!=0 && m!=f && unit[f].ctgry==UnitCategory.Ship && !(unit[f].kind==UnitKind.Submarine && unit[f].info[6]!=0) && /*!(unit[f].kind==SP||unit[f].kind==AP)*/!(unit[f].kind>=UnitKind.AirBase && unit[f].kind<=UnitKind.Fortress)  )
 									{
 									// ptin dbg
 									wrk_r.top=(int)unit[f].y+(sprt[UNIT_JPN].ht/2);//(int)unit[f].y-(sprt[UNIT_JPN].ht/2);
@@ -566,7 +566,7 @@ public void	set_cpu_root2(int m)
 							// 船に接触するか
 							for( f=1; f<=max_unit; f++)
 								{
-								if( unit[f].used!=0 && m!=f && unit[f].ctgry==SHIP && !(unit[f].kind==SS1 && unit[f].info[6]!=0) && /*!(unit[f].kind==SP||unit[f].kind==AP)*/!(unit[f].kind>=AP && unit[f].kind<=GF3 ) )
+								if( unit[f].used!=0 && m!=f && unit[f].ctgry==UnitCategory.Ship && !(unit[f].kind==UnitKind.Submarine && unit[f].info[6]!=0) && /*!(unit[f].kind==SP||unit[f].kind==AP)*/!(unit[f].kind>=UnitKind.AirBase && unit[f].kind<=UnitKind.Fortress ) )
 									{
 									// ptin dbg
 									wrk_r.top=(int)unit[f].y+(sprt[UNIT_JPN].ht/2);//(int)unit[f].y-(sprt[UNIT_JPN].ht/2);
@@ -806,7 +806,7 @@ public void	cnct_game_input_now()
 
 	for(e=0; e<=1; e++)
 		{
-		if( new_slct[e].sw!=0 && unit[new_slct[e].the_slct_unit].spry==0 && !(unit[new_slct[e].the_slct_unit].kind>=AP && unit[new_slct[e].the_slct_unit].kind<=GF3/*MN1*/ ))
+		if( new_slct[e].sw!=0 && unit[new_slct[e].the_slct_unit].spry==0 && !(unit[new_slct[e].the_slct_unit].kind>=UnitKind.AirBase && unit[new_slct[e].the_slct_unit].kind<=UnitKind.Fortress/*MN1*/ ))
 			{
 			// ユニット自体をクリックした。
 			the_slct_unit=new_slct[e].the_slct_unit;
@@ -834,8 +834,8 @@ public void	cnct_game_input_now()
 					// 敵性ユニットを左クリック
 					if( m!=unit[the_slct_unit].arm[2] )
 						{
-						if(!(unit[the_slct_unit].arm[0]==TPD && ( unit[m].kind>=AP && unit[m].kind<=GF3 )) &&
-							!((unit[the_slct_unit].kind==FT1 && ( unit[m].ctgry==SHIP && unit[m].kind!=TR1 ))||(unit[the_slct_unit].kind>=GF1&&unit[the_slct_unit].kind<=GF3)||(unit[the_slct_unit].kind==TR1) ) 
+						if(!(unit[the_slct_unit].arm[0]==TPD && ( unit[m].kind>=UnitKind.AirBase && unit[m].kind<=UnitKind.Fortress )) &&
+							!((unit[the_slct_unit].kind==UnitKind.Fighter && ( unit[m].ctgry==UnitCategory.Ship && unit[m].kind!=UnitKind.Transport ))||(unit[the_slct_unit].kind>=UnitKind.InfantryBase&&unit[the_slct_unit].kind<=UnitKind.Fortress)||(unit[the_slct_unit].kind==UnitKind.Transport) ) 
 							/*&& !( unit[the_slct_unit].ctgry==PLANE && unit[the_slct_unit].info[0]==PARKING )*/
 							)
 							{
@@ -847,7 +847,7 @@ public void	cnct_game_input_now()
 					// 攻撃目標を随伴機にも指定する。
 					for(n=1;n<=max_unit;n++)
 						{
-						if( unit[n].used!=0 && slct_unit[e][n]!=0 && !((unit[n].kind==FT1 && ( unit[unit[the_slct_unit].arm[2]].ctgry==SHIP &&  unit[unit[the_slct_unit].arm[2]].kind!=TR1  ) )||(unit[n].kind>=GF1&&unit[n].kind<=GF3)||(unit[n].kind==TR1)) 
+						if( unit[n].used!=0 && slct_unit[e][n]!=0 && !((unit[n].kind==UnitKind.Fighter && ( unit[unit[the_slct_unit].arm[2]].ctgry==UnitCategory.Ship &&  unit[unit[the_slct_unit].arm[2]].kind!=UnitKind.Transport  ) )||(unit[n].kind>=UnitKind.InfantryBase&&unit[n].kind<=UnitKind.Fortress)||(unit[n].kind==UnitKind.Transport)) 
 							/*&& !( unit[n].ctgry==PLANE && unit[n].info[0]==PARKING )*/
 							)
 							unit[n].arm[2]=unit[the_slct_unit].arm[2];				// 
@@ -856,10 +856,10 @@ public void	cnct_game_input_now()
 				}
 			else
 				{
-				if ( unit[the_slct_unit].ctgry==PLANE /*&& ( unit[n].ctgry==PLANE && unit[n].info[0]==FLYING )*/ && (unit[m].kind==CV1 || unit[m].kind==CVL1 || unit[m].kind==AP))
+				if ( unit[the_slct_unit].ctgry==UnitCategory.Plane /*&& ( unit[n].ctgry==PLANE && unit[n].info[0]==FLYING )*/ && (unit[m].kind==UnitKind.Carrier || unit[m].kind==UnitKind.LightCarrier || unit[m].kind==UnitKind.AirBase))
 					{
 					for(n=1;n<=max_unit;n++)
-						if( unit[n].used!=0 && slct_unit[e][n]!=0 && unit[n].ctgry==PLANE && unit[n].info[0]==FLYING && !(unit[n].kind==BM1&&(unit[m].kind==CV1||unit[m].kind==CVL1)) )
+						if( unit[n].used!=0 && slct_unit[e][n]!=0 && unit[n].ctgry==UnitCategory.Plane && unit[n].info[0]==FLYING && !(unit[n].kind==UnitKind.Bomber&&(unit[m].kind==UnitKind.Carrier||unit[m].kind==UnitKind.LightCarrier)) )
 							unit[n].info[1]=m;					// 所属の空母、及び、基地の番号
 					}
 				else
@@ -867,7 +867,7 @@ public void	cnct_game_input_now()
 					}
 				}
 			}
-		else if( new_pp[e].used!=0 && unit[new_pp[e].used].spry==0 && !( unit[new_pp[e].used].kind>=AP && unit[new_pp[e].used].kind<=GF3 /*unit[new_pp[e].used].kind==AP || unit[new_pp[e].used].kind==SP || unit[new_pp[e].used].kind==GF1 ||unit[new_pp[e].used].kind==GF2 || unit[new_pp[e].used].kind==GF3*/ )  && !(unit[new_pp[e].used].ctgry==PLANE && unit[new_pp[e].used].info[0]==PARKING && unit[unit[new_pp[e].used].info[1]].hp[0]<=unit[unit[new_pp[e].used].info[1]].hp[1]*0.2) )
+		else if( new_pp[e].used!=0 && unit[new_pp[e].used].spry==0 && !( unit[new_pp[e].used].kind>=UnitKind.AirBase && unit[new_pp[e].used].kind<=UnitKind.Fortress /*unit[new_pp[e].used].kind==AP || unit[new_pp[e].used].kind==SP || unit[new_pp[e].used].kind==GF1 ||unit[new_pp[e].used].kind==GF2 || unit[new_pp[e].used].kind==GF3*/ )  && !(unit[new_pp[e].used].ctgry==UnitCategory.Plane && unit[new_pp[e].used].info[0]==PARKING && unit[unit[new_pp[e].used].info[1]].hp[0]<=unit[unit[new_pp[e].used].info[1]].hp[1]*0.2) )
 			{
 			// あるユニットに新ＰＰ＿ＸＹが設定された場合
 
@@ -922,7 +922,7 @@ public void	cnct_game_input_now()
 						unit[s].to_ldr_dstc=0;
 						}
 
-					if( slct_unit[e][s]!=0 && s!=m && !(unit[s].ctgry==PLANE
+					if( slct_unit[e][s]!=0 && s!=m && !(unit[s].ctgry==UnitCategory.Plane
 					   && (unit[s].arm[0]==RDY_TPD||unit[s].arm[0]==RDY_BOM||unit[s].arm[0]==NOTHING) && unit[s].arm[3]!=0 )
 						 )
 						{
@@ -933,7 +933,7 @@ public void	cnct_game_input_now()
 							unit[s].no=slct_unit[e][s];
 							unit[s].is_ltl_ldr=0;
 		
-							if( unit[s].ctgry==SHIP )
+							if( unit[s].ctgry==UnitCategory.Ship )
 								{
 								if( unit[s].ltl_ldr!=m )
 									{
@@ -955,7 +955,7 @@ public void	cnct_game_input_now()
 							unit[s].no=(short)h;
 							unit[s].is_ltl_ldr=0;
 
-							if( unit[s].ctgry==SHIP )
+							if( unit[s].ctgry==UnitCategory.Ship )
 								{
 								if( unit[s].ltl_ldr!=m )
 									{
@@ -976,7 +976,7 @@ public void	cnct_game_input_now()
 					unit[m].is_ltl_ldr=(short)(f+1);		// 小隊機数(指揮機含む)
 					}
 
-				if( unit[m].ctgry==PLANE && unit[m].info[0]==PARKING )
+				if( unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING )
 					{
 					unit[unit[m].info[1]].info[4]=0;	// 空母なら これがオンで発艦中
 					unit[unit[m].info[1]].info[7]=0;	// 空母ならこの数値で甲板上の右左
@@ -1132,7 +1132,7 @@ public void get_input()
 
 
 					case DIK_F:
-						if( mode==CMBT && (od.dwData & (0x80))!=0 )
+						if( mode==GameMode.Battle && (od.dwData & (0x80))!=0 )
 							{
 							if(game_speed<2)
 								game_speed++;
@@ -1144,7 +1144,7 @@ public void get_input()
 						break;
 
 					case DIK_G:
-						if( mode==CMBT && (od.dwData & (0x80))!=0 )
+						if( mode==GameMode.Battle && (od.dwData & (0x80))!=0 )
 							{
 							if(game_speed<=1)
 								game_speed=0;
@@ -1159,7 +1159,7 @@ public void get_input()
 						break;
 		
 					case DIK_R:
-						if( mode==CMBT && (od.dwData & (0x80))!=0 )
+						if( mode==GameMode.Battle && (od.dwData & (0x80))!=0 )
 							{
 							game_speed=1;
 							}

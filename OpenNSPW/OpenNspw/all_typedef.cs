@@ -35,10 +35,10 @@ struct APP_PLAYER_INFO
 [StructLayout(LayoutKind.Sequential)]
 public struct	UNIT		// 全ての艦船、航空機、地図上の位置
 	{
-	public short				used;					// 使用してるかしてないか オンならその国籍
+	public Side					used;					// 使用してるかしてないか オンならその国籍
 	public double				x,y;					// 地図上の位置
-	public int					ctgry;					// カテゴリー（船とか飛行機とかの）
-	public int					kind;					// 戦艦だとか空母だとか
+	public UnitCategory			ctgry;					// カテゴリー（船とか飛行機とかの）
+	public UnitKind				kind;					// 戦艦だとか空母だとか
 	public short				type;					// 形式
 	public Array16<int>			info;				// 追加の情報、航空機なら飛んでるとか、格納庫の中とか
 	public int					os_indx_y;					// 各種パターンの頭の位置（ソースサーフェス）
@@ -82,8 +82,8 @@ public struct	UNIT		// 全ての艦船、航空機、地図上の位置
 [StructLayout(LayoutKind.Sequential)]
 public struct	EFFECT							// 雷跡とか爆炎とか
 	{
-	public short				used;					// 自サイド
-	public short				layer;					// 使用してるかしてないか、アッパーかローワーか
+	public Side					used;					// 自サイド
+	public EffectLayer			layer;					// 使用してるかしてないか、アッパーかローワーか
 	public int					kind;
 	public int					no;						// Sprite nuber of its Sprite Source
 	public Array8<int>			info;					// 追加の情報、
@@ -173,7 +173,7 @@ public struct	SPRT
 public struct GENERICMSG
 	{
 //	BYTE        byType;
-	public uint			dwType;
+	public MessageType			dwType;
 	}
 
 
@@ -191,7 +191,7 @@ public struct UNIT_MSG
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_DATA_1
 	{
-	public uint	dwType;
+	public MessageType	dwType;
 	public Array16<byte>	my_name;
 	public Array10<short>	data;
 	}
@@ -201,7 +201,7 @@ public struct	_DP_DATA_1
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct _DP_NEW_PP
 	{
-	public uint	dwType;
+	public MessageType	dwType;
 
 	// NEW PP
 	public byte	used;							//
@@ -215,7 +215,7 @@ public struct _DP_NEW_PP
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_PP_SHIP
 	{
-	public uint	dwType;
+	public MessageType	dwType;
 
 	// NEW PP
 	public byte	used;							//
@@ -229,7 +229,7 @@ public struct	_DP_NEW_PP_SHIP
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_PP_PLANE
 	{
-	public uint	dwType;
+	public MessageType	dwType;
 
 	// NEW PP
 	public byte	used;							//
@@ -244,7 +244,7 @@ public struct	_DP_NEW_PP_PLANE
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_SLCT
 	{
-	public uint	dwType;
+	public MessageType	dwType;
 
 	// NEW SLCT
 	public int	sw;								//
@@ -256,7 +256,7 @@ public struct	_DP_NEW_SLCT
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_SLCT_SHIP
 	{
-	public uint	dwType;
+	public MessageType	dwType;
 
 	// NEW SLCT
 	public int	sw;								//
@@ -270,7 +270,7 @@ public struct	_DP_NEW_SLCT_SHIP
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_SLCT_PLANE
 	{
-	public uint	dwType;
+	public MessageType	dwType;
 
 	// NEW SLCT
 	public int	sw;								//
@@ -283,7 +283,7 @@ public struct	_DP_NEW_SLCT_PLANE
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_SLCT_LAND
 	{
-	public uint	dwType;
+	public MessageType	dwType;
 
 	// NEW SLCT
 	public int	sw;								//
@@ -298,7 +298,7 @@ public struct	_DP_NEW_SLCT_LAND
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_MENU
 	{
-	public uint	dwType;
+	public MessageType	dwType;
 
 	// NEW MENU
 	public byte		menu;								// これがｓｗの代わり
@@ -313,7 +313,7 @@ public struct	_DP_NEW_MENU
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_FLAG
 	{
-	public uint	dwType;
+	public MessageType	dwType;
 
 
 	public byte	cc_chk;
@@ -333,7 +333,7 @@ public struct	_DP_FLAG
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_DATA_20
 	{
-	public uint	dwType;
+	public MessageType	dwType;
 
 	public Array260<byte>	friend_chat;	// [MAX_PATH/*128*/]
 

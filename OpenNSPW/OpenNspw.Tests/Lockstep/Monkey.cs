@@ -54,7 +54,7 @@ internal sealed class Monkey(LockstepGame game, uint seed)
 		{
 			var m = ((_lastShip + i - 1) % USA_SHIP_END) + 1;
 			ref var unit = ref nspw.unit[m];
-			if (unit.used == nspw.your_side && unit.ctgry == SHIP && !(unit.kind >= AP && unit.kind <= GF3) && unit.spry == 0 && unit.hp[0] > 0)
+			if (unit.used == nspw.your_side && unit.ctgry == UnitCategory.Ship && !(unit.kind >= UnitKind.AirBase && unit.kind <= UnitKind.Fortress) && unit.spry == 0 && unit.hp[0] > 0)
 			{
 				_lastShip = m;
 				return m;

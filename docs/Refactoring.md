@@ -247,14 +247,22 @@ Bugs found in the port after refactoring has started, for example by the referen
 ### 1. Deterministic runner and characterization traces
 The in-memory DirectPlay stand-in, the frame barrier, scripted time and input, the trace format and the scripts, with coverage per function. Tag `exact-port`.
 
+Done, except coverage per function and the tag. See [OpenNSPW/README.md](../OpenNSPW/README.md#characterization-traces). The scripts cover the title screen, three scenarios, and two of the original's user scenarios whose fleets start close enough to fight (`tst3.dat`, `てすと.dat`), with seeded random input and ship orders. The first scenarios' fleets start too far apart to meet within a test's time, and no script launches aircraft yet.
+
 ### 2. Name binding
 `[Original]` on globals, fields and methods, and the binding in the tests through it. No names change yet.
+
+Done.
 
 ### 3. Refactoring tool
 The `rename` command of `OpenNspw.Porter`, driven by the catalog as a file, adding `[Original]`.
 
+Done. It takes documentation comment IDs (`F:OpenNspw.Nspw.unit Units`); the catalog is not a file yet.
+
 ### 4. Enums
 `Side`, `UnitCategory`, `UnitKind`, `UnitState`, `UnitMode`, `CombatMenuItem`, `FireKind`, `EffectLayer`, `GameMode`, `GameResult`, `MessageType`, `SoundId`, the button flags. One enum per commit.
+
+In progress: `UnitCategory`, `GameMode`, `EffectLayer` and `GameResult` are done.
 
 ### 5. Value types
 `WorldPosition`, `WorldVector`, `Angle`, `Point`, `Rect`, with their bit-for-bit tests. Then `Bool32` and `UnitId`, field by field.

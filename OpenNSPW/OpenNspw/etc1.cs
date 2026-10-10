@@ -43,10 +43,10 @@ public int		hit_chk(int m)
 	n=fire[m].used;						// ターゲットナンバー
 	switch( unit[n].kind )
 		{
-		case BB1:	j=16;j2=j/2;	break;
-		case CA1:	j=12;j2=j/2;	break;
-		case DD1:	j=10;j2=j/2;		break;
-		case SS1:	
+		case UnitKind.Battleship:	j=16;j2=j/2;	break;
+		case UnitKind.Cruiser:	j=12;j2=j/2;	break;
+		case UnitKind.Destroyer:	j=10;j2=j/2;		break;
+		case UnitKind.Submarine:	
 			if( unit[n].info[6]!=0 )// 潜航中、あたりがでかくなる
 				{
 				// ptin dbg
@@ -63,12 +63,12 @@ public int		hit_chk(int m)
 				{	j=8/*4*/;j2=j/2;		}
 
 				break;
-		case CV1:	j=14;j2=j/2;	break;
-		case CVL1:	j=12;j2=j/2;	break;
-		case AP:
-		case SP:
-		case GF3:	case GF2:	case	GF1:
-		case CT1:	case MN1:
+		case UnitKind.Carrier:	j=14;j2=j/2;	break;
+		case UnitKind.LightCarrier:	j=12;j2=j/2;	break;
+		case UnitKind.AirBase:
+		case UnitKind.NavalBase:
+		case UnitKind.Fortress:	case UnitKind.Pillboxes:	case	UnitKind.InfantryBase:
+		case UnitKind.City:	case UnitKind.Mine:
 				// ptin dbg
 				wrk_rect.top=(int)unit[n].y+30;//(int)unit[n].y-30;
 				wrk_rect.right=(int)unit[n].x+30;
@@ -80,7 +80,7 @@ public int		hit_chk(int m)
 
 				return	(h);			
 				break;
-		case TR1:	j=12;j2=j/2;	break;
+		case UnitKind.Transport:	j=12;j2=j/2;	break;
 		}
 	h=0;
 	f=drctn_for_8((int)(unit[n].drctn));
@@ -165,10 +165,10 @@ public void		draw_hit_area(int m)
 	n=m;						// ターゲットナンバー
 	switch( unit[n].kind )
 		{
-		case BB1:	j=16;j2=j/2;	break;
-		case CA1:	j=12;j2=j/2;	break;
-		case DD1:	j=6;j2=j/2;	break;
-		case SS1:	
+		case UnitKind.Battleship:	j=16;j2=j/2;	break;
+		case UnitKind.Cruiser:	j=12;j2=j/2;	break;
+		case UnitKind.Destroyer:	j=6;j2=j/2;	break;
+		case UnitKind.Submarine:	
 			if( unit[n].info[6]!=0 )// 潜航中、あたりがでかくなる
 				{
 				wrk_rect.top=(int)unit[n].y-50;
@@ -188,8 +188,8 @@ public void		draw_hit_area(int m)
 
 
 				break;
-		case CV1:	j=14;j2=j/2;	break;
-		case CVL1:	j=12;j2=j/2;	break;
+		case UnitKind.Carrier:	j=14;j2=j/2;	break;
+		case UnitKind.LightCarrier:	j=12;j2=j/2;	break;
 		}
 //	h=0;
 	f=drctn_for_8((int)(unit[n].drctn));
@@ -282,14 +282,14 @@ public void	fire_now(int m,int trgt,int kind)
 
 
 
-	if( (unit[m].kind==SP || unit[m].kind==AP || unit[m].kind==GF1 || unit[m].kind==GF2 || unit[m].kind==GF3) && unit[m].info[0]!=0	)
+	if( (unit[m].kind==UnitKind.NavalBase || unit[m].kind==UnitKind.AirBase || unit[m].kind==UnitKind.InfantryBase || unit[m].kind==UnitKind.Pillboxes || unit[m].kind==UnitKind.Fortress) && unit[m].info[0]!=0	)
 		{
 		//工事中
 		return;
 		}
 
 
-	if( unit[m].ctgry==SHIP )
+	if( unit[m].ctgry==UnitCategory.Ship )
 		{
 		//=========		 艦船の射撃制御		=========//
 		if( kind==TR_SP || kind==TR_AP || kind==TR_GF1 || kind==TR_GF2 || kind==TR_GF3 )
@@ -389,7 +389,7 @@ public void	fire_now(int m,int trgt,int kind)
 						fire[n].info[1]=360;
 						fire[n].info[6]=unit[m].info[6];
 						fire[n].info[7]=unit[m].info[7];
-						fire[n].info[8]=unit[m].used;
+						fire[n].info[8]=(int)unit[m].used;
 
 //if( cnct_game )
 //{
@@ -433,7 +433,7 @@ public void	fire_now(int m,int trgt,int kind)
 			trgt2=0;
 			for(n=1;n<=max_unit;n++)
 				{	//敵を探す。
-				if( unit[n].used!=0 && unit[n].ctgry==PLANE && (((unit[n].kind==AT1||unit[n].kind==FT1) && unit[n].arm[1]!=0 )|| rnd(10)==0 )  && unit[n].info[0]==FLYING && unit[n].used!=unit[m].used && unit[n].found!=0 )
+				if( unit[n].used!=0 && unit[n].ctgry==UnitCategory.Plane && (((unit[n].kind==UnitKind.Attacker||unit[n].kind==UnitKind.Fighter) && unit[n].arm[1]!=0 )|| rnd(10)==0 )  && unit[n].info[0]==FLYING && unit[n].used!=unit[m].used && unit[n].found!=0 )
 				//if( unit[n].used && unit[n].ctgry==PLANE && unit[n].info[0]==FLYING && unit[n].used!=unit[m].used /*&& unit[n].hp[0]>=unit[n].hp[2]+1*/ && unit[n].found )
 					{
 					// 攻撃地点から攻撃目標地点への距離
@@ -586,7 +586,7 @@ public void	fire_now(int m,int trgt,int kind)
 			for( n=1; n<=max_unit; n++)
 				{
 				trgt=n;
-				if( unit[trgt].used!=unit[m].used && unit[trgt].kind==SS1 && unit[trgt].info[6]!=0 && unit[trgt].found!=0 )
+				if( unit[trgt].used!=unit[m].used && unit[trgt].kind==UnitKind.Submarine && unit[trgt].info[6]!=0 && unit[trgt].found!=0 )
 					{	// 爆雷
 
 					// ptin dbg
@@ -653,7 +653,7 @@ public void	fire_now(int m,int trgt,int kind)
 			dstc2=2000;
 			for(n=1;n<=max_unit;n++)
 				{	//敵を探す。
-				if( unit[n].used!=0 && unit[n].ctgry==SHIP && !(unit[n].kind==SS1 && unit[n].info[6]!=0 ) && unit[n].used!=unit[m].used && unit[n].found!=0  && unit[n].kind!=CT1 )
+				if( unit[n].used!=0 && unit[n].ctgry==UnitCategory.Ship && !(unit[n].kind==UnitKind.Submarine && unit[n].info[6]!=0 ) && unit[n].used!=unit[m].used && unit[n].found!=0  && unit[n].kind!=UnitKind.City )
 					{
 					// 攻撃地点から攻撃目標地点への距離
 					wrk_x=unit[n].x-unit[m].x;
@@ -722,7 +722,7 @@ public void	fire_now(int m,int trgt,int kind)
 					
 					switch( unit[m].kind )
 						{
-						case BB1:	
+						case UnitKind.Battleship:	
 							if( kind==SP_GUN )
 								{
 								rng=1120; fc[0]=3;fc[1]=4;fc[2]=2;	
@@ -732,16 +732,16 @@ public void	fire_now(int m,int trgt,int kind)
 								rng=600; fc[0]=3;fc[1]=4;fc[2]=2;	
 								}
 							break;
-						case CA1:	rng=500; fc[0]=1;fc[1]=2;fc[2]=1;	break;
-						case DD1:	rng=400; fc[0]=1;fc[1]=1;fc[2]=0;	break;
-						case SS1:	rng=200; fc[0]=1;fc[1]=1;fc[2]=0;	break;
+						case UnitKind.Cruiser:	rng=500; fc[0]=1;fc[1]=2;fc[2]=1;	break;
+						case UnitKind.Destroyer:	rng=400; fc[0]=1;fc[1]=1;fc[2]=0;	break;
+						case UnitKind.Submarine:	rng=200; fc[0]=1;fc[1]=1;fc[2]=0;	break;
 
-						case GF1:	rng=600; fc[0]=1;fc[1]=1;fc[2]=1;	break;
-						case GF2:	rng=800; fc[0]=2;fc[1]=2;fc[2]=2;	break;
-						case GF3:	rng=1000; fc[0]=3;fc[1]=3;fc[2]=3;	break;
+						case UnitKind.InfantryBase:	rng=600; fc[0]=1;fc[1]=1;fc[2]=1;	break;
+						case UnitKind.Pillboxes:	rng=800; fc[0]=2;fc[1]=2;fc[2]=2;	break;
+						case UnitKind.Fortress:	rng=1000; fc[0]=3;fc[1]=3;fc[2]=3;	break;
 						}
 
-					if( (dstc>=(rng*0.3) || (unit[m].kind>=GF1&&unit[m].kind<=GF3) ) && dstc<=rng && dstc2>=dstc )
+					if( (dstc>=(rng*0.3) || (unit[m].kind>=UnitKind.InfantryBase&&unit[m].kind<=UnitKind.Fortress) ) && dstc<=rng && dstc2>=dstc )
 						{	
 						trgt2=n;	
 						dstc2=dstc;
@@ -765,8 +765,8 @@ public void	fire_now(int m,int trgt,int kind)
 
 				switch( unit[m].kind )
 					{
-					case BB1:
-					case GF3:
+					case UnitKind.Battleship:
+					case UnitKind.Fortress:
 						if( kind==SP_GUN )
 							{
 							SoundPlayEffect( 0, GUN3 ,unit[m].x, unit[m].y);	
@@ -774,14 +774,14 @@ public void	fire_now(int m,int trgt,int kind)
 							}
 						SoundPlayEffect( 0, GUN2+rnd(2) ,unit[m].x, unit[m].y);	
 						break;
-					case CA1:	
-					case GF2:	
+					case UnitKind.Cruiser:	
+					case UnitKind.Pillboxes:	
 						SoundPlayEffect( 0, GUN1+rnd(2) ,unit[m].x, unit[m].y);
 						break;
 
-					case DD1:	
-					case SS1:	
-					case GF1:	
+					case UnitKind.Destroyer:	
+					case UnitKind.Submarine:	
+					case UnitKind.InfantryBase:	
 						SoundPlayEffect( 0, GUN1 ,unit[m].x, unit[m].y);
 						break;
 					}
@@ -809,7 +809,7 @@ public void	fire_now(int m,int trgt,int kind)
 							}
 						else
 							{
-							if( rnd(5+(unit[m].kind>=GF1&&unit[m].kind<=GF3 ? 1 : 0)*4  )==0 || ( unit[m].kind==BB1 && rnd( 4 )==0 ) )
+							if( rnd(5+(unit[m].kind>=UnitKind.InfantryBase&&unit[m].kind<=UnitKind.Fortress ? 1 : 0)*4  )==0 || ( unit[m].kind==UnitKind.Battleship && rnd( 4 )==0 ) )
 								drctn3=drctn2+(rnd(7)-3)+(rnd(100)/100);			// 絶対方位
 							else
 								drctn3=drctn2+(rnd(11)-5)+(rnd(100)/100);				// 絶対方位
@@ -850,7 +850,7 @@ public void	fire_now(int m,int trgt,int kind)
 			trgt2=0;
 			for(n=1;n<=max_unit;n++)
 				{	//敵を探す。
-				if( unit[n].used!=0 && unit[n].ctgry==SHIP && !(unit[n].kind==AP||unit[n].kind==SP||unit[n].kind==GF1||unit[n].kind==GF2||unit[n].kind==GF3) && unit[n].used!=unit[m].used && unit[n].found!=0 && !(unit[n].kind==SS1||unit[n].kind==DD1) )
+				if( unit[n].used!=0 && unit[n].ctgry==UnitCategory.Ship && !(unit[n].kind==UnitKind.AirBase||unit[n].kind==UnitKind.NavalBase||unit[n].kind==UnitKind.InfantryBase||unit[n].kind==UnitKind.Pillboxes||unit[n].kind==UnitKind.Fortress) && unit[n].used!=unit[m].used && unit[n].found!=0 && !(unit[n].kind==UnitKind.Submarine||unit[n].kind==UnitKind.Destroyer) )
 					{
 					// 攻撃地点から攻撃目標地点への距離
 					wrk_x=unit[n].x-unit[m].x;
@@ -927,7 +927,7 @@ public void	fire_now(int m,int trgt,int kind)
 
 					
 
-					if( (dstc>=100 && dstc<=(500+(unit[m].used==JPN ? 1 : 0)*100)) && ((drctn3>=45&&drctn3<=135)||(drctn3>=225&&drctn3<=315)) )
+					if( (dstc>=100 && dstc<=(500+(unit[m].used==Side.Japan ? 1 : 0)*100)) && ((drctn3>=45&&drctn3<=135)||(drctn3>=225&&drctn3<=315)) )
 						{
 						// ばってん陸地があるけんしらべる
 						trgt2=n;
@@ -971,9 +971,9 @@ public void	fire_now(int m,int trgt,int kind)
 					unit[m].arm[1]-=TPD_SZ;
 				switch( unit[m].kind )
 					{
-					case CA1:
-					case DD1:		unit[m].arm[3]=RELOAD_TPD_DD;		break;	// 再装填時間
-					case SS1:		unit[m].arm[3]=RELOAD_TPD_SS;		
+					case UnitKind.Cruiser:
+					case UnitKind.Destroyer:		unit[m].arm[3]=RELOAD_TPD_DD;		break;	// 再装填時間
+					case UnitKind.Submarine:		unit[m].arm[3]=RELOAD_TPD_SS;		
 									//撃った瞬間に発見される。
 									unit[m].info[7]=(int)(unit[m].x+rnd((50)*2)-50);
 									unit[m].info[8]=(int)(unit[m].y+rnd((50)*2)-50);
@@ -991,9 +991,9 @@ public void	fire_now(int m,int trgt,int kind)
 					}
 
 
-				if( unit[m].used==JPN  )
+				if( unit[m].used==Side.Japan  )
 					{
-					if(unit[m].kind==DD1)
+					if(unit[m].kind==UnitKind.Destroyer)
 						i=2;						// 日本海軍駆逐艦魚雷３発
 					else
 						i=1;						// 日本海軍巡洋艦魚雷２はつ
@@ -1003,7 +1003,7 @@ public void	fire_now(int m,int trgt,int kind)
 					i=0;						// 合衆国海軍魚雷１発
 					}
 
-				if( unit[m].kind!=SS1 )
+				if( unit[m].kind!=UnitKind.Submarine )
 					SoundPlayEffect( 0, TPD_LOS ,unit[m].x, unit[m].y);
 
 				for( f=0; f<=i; f++)
@@ -1049,11 +1049,11 @@ public void	fire_now(int m,int trgt,int kind)
 						fire[n].spd=TPD_SPD;
 						fire[n].spd_add=+0.0;
 						fire[n].last_spd=0.0;
-						if( unit[m].kind==SS1 )
+						if( unit[m].kind==UnitKind.Submarine )
 							fire[n].info[0]=1;
 						else
 							fire[n].info[0]=0;
-						fire[n].info[1]=275+(unit[m].used==JPN ? 1 : 0)*110;
+						fire[n].info[1]=275+(unit[m].used==Side.Japan ? 1 : 0)*110;
 						fire[n].info[2]=30;
 						}
 					}
@@ -1072,7 +1072,7 @@ public void	fire_now(int m,int trgt,int kind)
 
 			trgt2=0;
 			n=trgt;
-			if( unit[n].used!=0 && unit[n].ctgry==SHIP && !(unit[n].kind==AP||unit[n].kind==SP||unit[n].kind==GF1||unit[n].kind==GF2||unit[n].kind==GF3) && unit[n].used!=unit[m].used && unit[n].found!=0 )
+			if( unit[n].used!=0 && unit[n].ctgry==UnitCategory.Ship && !(unit[n].kind==UnitKind.AirBase||unit[n].kind==UnitKind.NavalBase||unit[n].kind==UnitKind.InfantryBase||unit[n].kind==UnitKind.Pillboxes||unit[n].kind==UnitKind.Fortress) && unit[n].used!=unit[m].used && unit[n].found!=0 )
 				{
 
 	
@@ -1138,7 +1138,7 @@ public void	fire_now(int m,int trgt,int kind)
 				dstc=(wrk_x)/(cos(drctn*a_PI));
 
 				
-				if( (dstc>=100 && dstc<=(550+(unit[m].used==JPN ? 1 : 0)*100)) && (drctn3<=5 || drctn3>=355) )
+				if( (dstc>=100 && dstc<=(550+(unit[m].used==Side.Japan ? 1 : 0)*100)) && (drctn3<=5 || drctn3>=355) )
 					{
 					trgt2=n;	
 					i=(int)(dstc/TPD_SPD);
@@ -1172,8 +1172,8 @@ public void	fire_now(int m,int trgt,int kind)
 					unit[m].arm[1]-=TPD_SZ;
 				switch( unit[m].kind )
 					{
-					case DD1:		unit[m].arm[3]=RELOAD_TPD_DD;		break;	// 再装填時間
-					case SS1:		unit[m].arm[3]=RELOAD_TPD_SS;		
+					case UnitKind.Destroyer:		unit[m].arm[3]=RELOAD_TPD_DD;		break;	// 再装填時間
+					case UnitKind.Submarine:		unit[m].arm[3]=RELOAD_TPD_SS;		
 									//撃った瞬間に発見される。
 									unit[m].info[7]=(int)(unit[m].x+rnd((50)*2)-50);
 									unit[m].info[8]=(int)(unit[m].y+rnd((50)*2)-50);
@@ -1186,7 +1186,7 @@ public void	fire_now(int m,int trgt,int kind)
 					}
 
 
-				if( unit[m].kind!=SS1 )
+				if( unit[m].kind!=UnitKind.Submarine )
 					{
 					SoundPlayEffect( 0, TPD_LOS ,unit[m].x, unit[m].y);
 					}
@@ -1220,11 +1220,11 @@ public void	fire_now(int m,int trgt,int kind)
 						fire[n].spd=TPD_SPD;
 						fire[n].spd_add=+0.0;
 						fire[n].last_spd=0.0;
-						if( unit[m].kind==SS1 )
+						if( unit[m].kind==UnitKind.Submarine )
 							fire[n].info[0]=1;
 						else
 							fire[n].info[0]=0;
-						fire[n].info[1]=290+(unit[m].used==JPN ? 1 : 0)*110;
+						fire[n].info[1]=290+(unit[m].used==Side.Japan ? 1 : 0)*110;
 						fire[n].info[2]=30;
 						}
 					}
@@ -1241,7 +1241,7 @@ public void	fire_now(int m,int trgt,int kind)
 
 
 
-		if( kind==SHL && trgt!=0 && unit[trgt].ctgry==PLANE )	// ターゲットが選択された対空砲
+		if( kind==SHL && trgt!=0 && unit[trgt].ctgry==UnitCategory.Plane )	// ターゲットが選択された対空砲
 			{
 			//	指定射撃
 			if( unit[trgt].found==0 )
@@ -1320,13 +1320,13 @@ public void	fire_now(int m,int trgt,int kind)
 					
 			switch( unit[m].kind )
 				{
-				case BB1:	rng=700; fc[0]=2;fc[1]=3;fc[2]=1;	break;
-				case CA1:	rng=600; fc[0]=1;fc[1]=2;fc[2]=1;	break;
-				case DD1:	rng=300; fc[0]=1;fc[1]=1;fc[2]=0;	break;
+				case UnitKind.Battleship:	rng=700; fc[0]=2;fc[1]=3;fc[2]=1;	break;
+				case UnitKind.Cruiser:	rng=600; fc[0]=1;fc[1]=2;fc[2]=1;	break;
+				case UnitKind.Destroyer:	rng=300; fc[0]=1;fc[1]=1;fc[2]=0;	break;
 
-				case GF1:	rng=500; fc[0]=1;fc[1]=1;fc[2]=1;	break;
-				case GF2:	rng=600; fc[0]=fc[1]=fc[2]=rnd(2)+1;	break;
-				case GF3:	rng=700; fc[0]=fc[1]=fc[2]=rnd(2)+2;	break;
+				case UnitKind.InfantryBase:	rng=500; fc[0]=1;fc[1]=1;fc[2]=1;	break;
+				case UnitKind.Pillboxes:	rng=600; fc[0]=fc[1]=fc[2]=rnd(2)+1;	break;
+				case UnitKind.Fortress:	rng=700; fc[0]=fc[1]=fc[2]=rnd(2)+2;	break;
 				}
 
 
@@ -1397,7 +1397,7 @@ public void	fire_now(int m,int trgt,int kind)
 			trgt2=0;
 			for(n=1;n<=max_unit;n++)
 				{	//敵を探す。
-				if( unit[n].used!=0 && unit[n].ctgry==PLANE && (((unit[n].kind==AT1||unit[n].kind==BM1) && unit[n].arm[1]!=0 )|| rnd(10)==0 )  && unit[n].info[0]==FLYING && unit[n].used!=unit[m].used && unit[n].found!=0 )
+				if( unit[n].used!=0 && unit[n].ctgry==UnitCategory.Plane && (((unit[n].kind==UnitKind.Attacker||unit[n].kind==UnitKind.Bomber) && unit[n].arm[1]!=0 )|| rnd(10)==0 )  && unit[n].info[0]==FLYING && unit[n].used!=unit[m].used && unit[n].found!=0 )
 					{
 					// 攻撃地点から攻撃目標地点への距離
 					wrk_x=unit[n].x-unit[m].x;
@@ -1478,13 +1478,13 @@ public void	fire_now(int m,int trgt,int kind)
 					
 					switch( unit[m].kind )
 						{
-						case BB1:	rng=700; fc[0]=2;fc[1]=3;fc[2]=1;	break;
-						case CA1:	rng=600; fc[0]=1;fc[1]=2;fc[2]=1;	break;
-						case DD1:	rng=300; fc[0]=1;fc[1]=1;fc[2]=0;	break;
+						case UnitKind.Battleship:	rng=700; fc[0]=2;fc[1]=3;fc[2]=1;	break;
+						case UnitKind.Cruiser:	rng=600; fc[0]=1;fc[1]=2;fc[2]=1;	break;
+						case UnitKind.Destroyer:	rng=300; fc[0]=1;fc[1]=1;fc[2]=0;	break;
 
-						case GF1:	rng=500; fc[0]=1;fc[1]=1;fc[2]=1;	break;
-						case GF2:	rng=600; fc[0]=fc[1]=fc[2]=rnd(2)+1;	break;
-						case GF3:	rng=700; fc[0]=fc[1]=fc[2]=rnd(2)+2;	break;
+						case UnitKind.InfantryBase:	rng=500; fc[0]=1;fc[1]=1;fc[2]=1;	break;
+						case UnitKind.Pillboxes:	rng=600; fc[0]=fc[1]=fc[2]=rnd(2)+1;	break;
+						case UnitKind.Fortress:	rng=700; fc[0]=fc[1]=fc[2]=rnd(2)+2;	break;
 						}
 
 						if( dstc>=(rng*0.25) && dstc<=rng )
@@ -1549,7 +1549,7 @@ public void	fire_now(int m,int trgt,int kind)
 
 
 
-		if( ( kind==GUN || kind==SP_GUN ) && trgt!=0 && unit[trgt].ctgry==SHIP )	// ターゲットが選択された砲撃
+		if( ( kind==GUN || kind==SP_GUN ) && trgt!=0 && unit[trgt].ctgry==UnitCategory.Ship )	// ターゲットが選択された砲撃
 			{
 			// 艦砲		指定射撃
 			if( unit[trgt].found==0 )
@@ -1628,7 +1628,7 @@ public void	fire_now(int m,int trgt,int kind)
 			// 水上艦への射程距離
 			switch( unit[m].kind )
 				{
-				case BB1:	
+				case UnitKind.Battleship:	
 					if( kind==SP_GUN )
 						{
 //						rng=750; fc[0]=3;fc[1]=4;fc[2]=2;	
@@ -1640,17 +1640,17 @@ public void	fire_now(int m,int trgt,int kind)
 						}
 //					rng=800; fc[0]=3;fc[1]=5;fc[2]=2;	
 					break;
-				case CA1:	rng=700; fc[0]=2;fc[1]=3;fc[2]=1;	break;
-				case DD1:	rng=400; fc[0]=1;fc[1]=1;fc[2]=0;	break;
-				case SS1:	rng=300; fc[0]=1;fc[1]=1;fc[2]=0;	break;
+				case UnitKind.Cruiser:	rng=700; fc[0]=2;fc[1]=3;fc[2]=1;	break;
+				case UnitKind.Destroyer:	rng=400; fc[0]=1;fc[1]=1;fc[2]=0;	break;
+				case UnitKind.Submarine:	rng=300; fc[0]=1;fc[1]=1;fc[2]=0;	break;
 
-				case GF1:	rng=600; fc[0]=1;fc[1]=1;fc[2]=1;	break;
-				case GF2:	rng=800; fc[0]=2;fc[1]=2;fc[2]=2;	break;
-				case GF3:	rng=1000; fc[0]=3;fc[1]=3;fc[2]=3;	break;
+				case UnitKind.InfantryBase:	rng=600; fc[0]=1;fc[1]=1;fc[2]=1;	break;
+				case UnitKind.Pillboxes:	rng=800; fc[0]=2;fc[1]=2;fc[2]=2;	break;
+				case UnitKind.Fortress:	rng=1000; fc[0]=3;fc[1]=3;fc[2]=3;	break;
 				}
 
 
-			if( (dstc>=150  || (unit[m].kind>=GF1&&unit[m].kind<=GF3) ) && dstc<=rng )
+			if( (dstc>=150  || (unit[m].kind>=UnitKind.InfantryBase&&unit[m].kind<=UnitKind.Fortress) ) && dstc<=rng )
 				{	
 				trgt2=n;	
 				}
@@ -1667,18 +1667,18 @@ public void	fire_now(int m,int trgt,int kind)
 
 				switch( unit[m].kind )
 					{
-					case BB1:	
-					case GF3:
+					case UnitKind.Battleship:	
+					case UnitKind.Fortress:
 						SoundPlayEffect( 0, GUN3 ,unit[m].x, unit[m].y);	
 						break;
-					case CA1:	
-					case GF2:	
+					case UnitKind.Cruiser:	
+					case UnitKind.Pillboxes:	
 						SoundPlayEffect( 0, GUN2 ,unit[m].x, unit[m].y);
 						break;
 
-					case DD1:	
-					case SS1:	
-					case GF1:	
+					case UnitKind.Destroyer:	
+					case UnitKind.Submarine:	
+					case UnitKind.InfantryBase:	
 						SoundPlayEffect( 0, GUN1+rnd(2) ,unit[m].x, unit[m].y);
 						break;
 					}
@@ -1693,7 +1693,7 @@ public void	fire_now(int m,int trgt,int kind)
 						fire[n].used=trgt2;
 
 
-						if( unit[trgt2].ctgry==SHIP )
+						if( unit[trgt2].ctgry==UnitCategory.Ship )
 							{
 							fire[n].kind=GUN/*kind*/;
 	
@@ -1709,7 +1709,7 @@ public void	fire_now(int m,int trgt,int kind)
 								}
 							else
 								{
-								if( rnd(5)==0 || ( unit[m].kind==BB1 && rnd(4)==0 ) )
+								if( rnd(5)==0 || ( unit[m].kind==UnitKind.Battleship && rnd(4)==0 ) )
 									drctn3=drctn2+(rnd(3)-1)+(rnd(100)/100);			// 絶対方位
 								else
 									drctn3=drctn2+(rnd(9)-4)+(rnd(100)/100);				// 絶対方位
@@ -1766,7 +1766,7 @@ public void	fire_now(int m,int trgt,int kind)
 			trgt=0;
 			for(n=1;n<=max_unit;n++)
 				{	//敵を探す。
-				if( unit[n].used!=0 && ( (unit[n].ctgry==PLANE && unit[n].info[0]==FLYING )  || (unit[n].kind>=GF1 && unit[n].kind<=GF3 ) ) && unit[n].kind!=BM1
+				if( unit[n].used!=0 && ( (unit[n].ctgry==UnitCategory.Plane && unit[n].info[0]==FLYING )  || (unit[n].kind>=UnitKind.InfantryBase && unit[n].kind<=UnitKind.Fortress ) ) && unit[n].kind!=UnitKind.Bomber
 				&& unit[n].used!=unit[m].used && unit[n].found!=0 )
 					{
 					// 全方位射撃可能
@@ -1848,16 +1848,16 @@ public void	fire_now(int m,int trgt,int kind)
 
 
 
-	if( unit[m].ctgry==PLANE )
+	if( unit[m].ctgry==UnitCategory.Plane )
 		{
 				//=========		 航空機の射撃制御		=========//
-		if( kind==BLT && unit[m].kind==BM1 )
+		if( kind==BLT && unit[m].kind==UnitKind.Bomber )
 			{
 			// 航空機の全方向対空機銃 
 			trgt=0;
 			for(n=1;n<=max_unit;n++)
 				{	//敵を探す。
-				if( unit[n].used!=0 && unit[n].ctgry==PLANE && unit[n].info[0]==FLYING && unit[n].used!=unit[m].used && unit[n].found!=0 )
+				if( unit[n].used!=0 && unit[n].ctgry==UnitCategory.Plane && unit[n].info[0]==FLYING && unit[n].used!=unit[m].used && unit[n].found!=0 )
 					{
 					// 全方位射撃可能
 					wrk_x=unit[n].x-unit[m].x;
@@ -1933,14 +1933,14 @@ public void	fire_now(int m,int trgt,int kind)
 
 
 
-		if( kind==BLT && unit[m].kind==FT1 )
+		if( kind==BLT && unit[m].kind==UnitKind.Fighter )
 			{
 			// 戦闘機
 			// 前方固定銃
 			trgt=0;		dstc2=5000;
 			for(n=1;n<=max_unit;n++)
 				{	//前方の敵を探す。
-				if( unit[n].used!=0 && (( unit[n].ctgry==PLANE && unit[n].info[0]==FLYING ) || unit[n].kind==TR1 ) && unit[n].used!=unit[m].used )
+				if( unit[n].used!=0 && (( unit[n].ctgry==UnitCategory.Plane && unit[n].info[0]==FLYING ) || unit[n].kind==UnitKind.Transport ) && unit[n].used!=unit[m].used )
 					{
 					// 距離を調べます
 					wrk_x=unit[n].x-unit[m].x;
@@ -1984,7 +1984,7 @@ public void	fire_now(int m,int trgt,int kind)
 						if(unit[m].info[5]==RETURN)
 							{
 #if false
-							if( /*unit[m].used==cpu_side &&*/ unit[m].gas[0]>=(60-(unit[m].used==JPN)*10) && unit[m].arm[1] )
+							if( /*unit[m].used==cpu_side &&*/ unit[m].gas[0]>=(60-(unit[m].used==Side.Japan)*10) && unit[m].arm[1] )
 								{
 								if( dstc<=300 && rnd(10)==0 )
 									{
@@ -1999,7 +1999,7 @@ public void	fire_now(int m,int trgt,int kind)
 							}
 						else
 							{
-							if( dstc<=400+(unit[n].kind==AT1||unit[n].kind==BM1 ? 1 : 0)*250 && rnd(10)==0 )
+							if( dstc<=400+(unit[n].kind==UnitKind.Attacker||unit[n].kind==UnitKind.Bomber ? 1 : 0)*250 && rnd(10)==0 )
 								{
 								if( unit[n].found!=0 )
 									{
@@ -2023,7 +2023,7 @@ public void	fire_now(int m,int trgt,int kind)
 					if(unit[m].type==0)
 						{
 						// 艦上戦闘機
-						if(unit[m].used==JPN)
+						if(unit[m].used==Side.Japan)
 							SoundPlayEffect( 0, AA_BLT1 ,unit[m].x, unit[m].y);
 						else
 							SoundPlayEffect( 0, AA_BLT2 ,unit[m].x, unit[m].y);
@@ -2056,7 +2056,7 @@ public void	fire_now(int m,int trgt,int kind)
 			trgt=0;
 			for(n=1;n<=max_unit;n++)
 				{	//後方の敵を探す。
-				if( unit[n].used!=0 && unit[n].ctgry==PLANE && unit[n].info[0]==FLYING && unit[n].used!=unit[m].used && unit[n].found!=0 )
+				if( unit[n].used!=0 && unit[n].ctgry==UnitCategory.Plane && unit[n].info[0]==FLYING && unit[n].used!=unit[m].used && unit[n].found!=0 )
 					{
 					// 攻撃地点から攻撃目標地点への方位角
 					wrk_x=unit[n].x-unit[m].x;
@@ -2119,7 +2119,7 @@ public void	fire_now(int m,int trgt,int kind)
 
 
 
-			if( kind==TPD && !(unit[trgt].kind>=AP && unit[trgt].kind<=GF3) )
+			if( kind==TPD && !(unit[trgt].kind>=UnitKind.AirBase && unit[trgt].kind<=UnitKind.Fortress) )
 				{
 				// 攻撃機
 				// トゥピード
@@ -2307,7 +2307,7 @@ unit[f].pp_x[1]=MAP_RIGHT+1;
 
 
 
-		if( kind==BOM && unit[m].kind==AT1 )
+		if( kind==BOM && unit[m].kind==UnitKind.Attacker )
 			{
 			// 攻撃機
 			// 爆撃
@@ -2359,12 +2359,12 @@ unit[f].pp_x[1]=MAP_RIGHT+1;
 
 
 //				if( dstc>=170/*40*/ && dstc<=180/*50*/  )
-				if( ( dstc>=170 && dstc<=180 && unit[m].used==USA ) || ( dstc>=35 && dstc<=65 && unit[m].used==JPN ))
+				if( ( dstc>=170 && dstc<=180 && unit[m].used==Side.UnitedStates ) || ( dstc>=35 && dstc<=65 && unit[m].used==Side.Japan ))
 					{
 					// 発射！
 //					SoundPlayEffect( NULL, BOMB_OFF ,unit[m].x, unit[m].y);
 
-					if( unit[m].used==USA )
+					if( unit[m].used==Side.UnitedStates )
 						unit[m].spd+=unit[m].a_spd_add*700;
 					else
 						{
@@ -2409,13 +2409,13 @@ unit[f].pp_x[1]=MAP_RIGHT+1;
 					if( n!=0 )
 						{
 //						fire[n].used=trgt;
-						fire[n].used=AT1;
+						fire[n].used=(int)UnitKind.Attacker;
 						fire[n].kind=kind;
 						fire[n].x=unit[m].x+(3-rnd(6));
 						fire[n].y=unit[m].y+(3-rnd(6));
 						fire[n].drctn=drctn2;
 	
-						if(unit[m].used==JPN)
+						if(unit[m].used==Side.Japan)
 							{
 							fire[n].x+=cos(fire[n].drctn*a_PI)*(13);
 							fire[n].y+=sin(fire[n].drctn*a_PI)*(13);
@@ -2429,7 +2429,7 @@ unit[f].pp_x[1]=MAP_RIGHT+1;
 						fire[n].spd=0.3;
 						fire[n].spd_add=+0.2;
 						fire[n].last_spd=0.0;
-						if(unit[m].used==JPN)
+						if(unit[m].used==Side.Japan)
 							{
 							fire[n].info[0]=10;
 							fire[n].info[1]=68+rnd(5);
@@ -2454,7 +2454,7 @@ unit[f].pp_x[1]=MAP_RIGHT+1;
 							fire[n].y=unit[m].y+(20-rnd(40));
 							fire[n].drctn=drctn2;
 	
-							if(unit[m].used==JPN)
+							if(unit[m].used==Side.Japan)
 								{
 								fire[n].x+=cos(fire[n].drctn*a_PI)*(13);
 								fire[n].y+=sin(fire[n].drctn*a_PI)*(13);
@@ -2469,7 +2469,7 @@ unit[f].pp_x[1]=MAP_RIGHT+1;
 							fire[n].spd_add=+0.2;
 							fire[n].last_spd=0.0;
 
-							if(unit[m].used==JPN)
+							if(unit[m].used==Side.Japan)
 								{
 								fire[n].info[0]=10;
 								fire[n].info[1]=75+(5-rnd(10));
@@ -2486,7 +2486,7 @@ unit[f].pp_x[1]=MAP_RIGHT+1;
 			return;
 			}
 
-		if( kind==BOM && unit[m].kind==BM1 )
+		if( kind==BOM && unit[m].kind==UnitKind.Bomber )
 			{	
 			// 爆撃機
 			// 爆撃
@@ -2497,7 +2497,7 @@ unit[f].pp_x[1]=MAP_RIGHT+1;
 				{	//前方の敵を探す。
 				if(trgt2!=0)
 					{ n=trgt2; trgt=0; }
-				if( unit[n].used!=0 && unit[n].ctgry==SHIP && unit[n].used!=unit[m].used && unit[n].found!=0 )
+				if( unit[n].used!=0 && unit[n].ctgry==UnitCategory.Ship && unit[n].used!=unit[m].used && unit[n].found!=0 )
 					{
 					// 攻撃地点から攻撃目標地点への方位角
 					wrk_x=unit[n].x-unit[m].x;
@@ -2562,7 +2562,7 @@ unit[f].pp_x[1]=MAP_RIGHT+1;
 						unit[m].info[5]=RETURN;		// 航空機はメイン兵器ゼロで帰投
 
 
-					fire[n].used=BM1;
+					fire[n].used=(int)UnitKind.Bomber;
 					fire[n].kind=kind;
 					fire[n].x=unit[m].x+((double)(-6+rnd(13)));
 					fire[n].y=unit[m].y+((double)(-6+rnd(13)));
@@ -2604,7 +2604,7 @@ public void	set_pos_of_dynmc(int n)
 
 
 
-	if( unit[n].ctgry==PLANE )
+	if( unit[n].ctgry==UnitCategory.Plane )
 		{
 	
 		// 航空機編隊の制御
@@ -2620,7 +2620,7 @@ public void	set_pos_of_dynmc(int n)
 
 		pos_of_no=unit[n].no;
 
-		if(unit[pt].ctgry==SHIP)	// こっちは飛行機だが指揮が艦船の場合
+		if(unit[pt].ctgry==UnitCategory.Ship)	// こっちは飛行機だが指揮が艦船の場合
 			{
 			angl=(double)rnd(359);
 			dstc=(double)rnd(500+150);
@@ -2774,7 +2774,7 @@ public void	chk_another_unit(double* rx,double* ry)
 
 	for( n=1; n<=max_unit; n++)
 		{
-		if( unit[n].used!=0 && unit[n].ctgry==SHIP )
+		if( unit[n].used!=0 && unit[n].ctgry==UnitCategory.Ship )
 			{
 			// ptin dbg
 			wrk_r.top=(int)unit[n].y+(sprt[UNIT_JPN].ht/2);//(int)unit[n].y-(sprt[UNIT_JPN].ht/2);
@@ -2800,7 +2800,7 @@ public void	set_pos_of_emrgncy_FT(int m)
 
 #if false
 	// 損傷がひどくなったら逃げよう
-	if( unit[m].kind==FT1 && unit[m].info[5]!=RETURN && unit[m].hp[0]<=unit[m].hp[1]/2 )
+	if( unit[m].kind==UnitKind.Fighter && unit[m].info[5]!=RETURN && unit[m].hp[0]<=unit[m].hp[1]/2 )
 		{
 		unit[m].arm[2]=0;		// ターゲットをクリア
 		unit[m].info[5]=RETURN;		// 航空機はメイン兵器ゼロで帰投
@@ -2818,7 +2818,7 @@ public void	set_pos_of_emrgncy_FT(int m)
 
 
 	// 目標も、爆弾も無く、損傷がひどいかガソリンが切れそうな場合はきとうしよう
-	if( unit[m].kind==FT1 && unit[m].info[5]!=RETURN && (unit[m].gas[0]<=30 || unit[m].hp[0]<=unit[m].hp[1]*0.70 || unit[m].arm[1]<=0 ) )
+	if( unit[m].kind==UnitKind.Fighter && unit[m].info[5]!=RETURN && (unit[m].gas[0]<=30 || unit[m].hp[0]<=unit[m].hp[1]*0.70 || unit[m].arm[1]<=0 ) )
 		{
 		// 発射！
 		unit[m].arm[2]=0;		// ターゲットをクリア
@@ -3005,7 +3005,7 @@ public void	set_pos_of_emrgncy_AT(int m)
 	// 戦闘機から逃げよう
 	for(n=1;n<=max_unit;n++)
 		{	//後方の敵を探す。
-		if( unit[n].used!=0 && unit[n].ctgry==PLANE && unit[n].info[0]==FLYING 
+		if( unit[n].used!=0 && unit[n].ctgry==UnitCategory.Plane && unit[n].info[0]==FLYING 
 		&& unit[n].used!=unit[m].used && unit[n].found!=0 )
 			{
 
@@ -3035,9 +3035,9 @@ public void	set_pos_of_emrgncy_AT(int m)
 
 
 
-			if( ((int)drctn>=150 && (int)drctn<=210 && unit[n].kind==FT1) 
+			if( ((int)drctn>=150 && (int)drctn<=210 && unit[n].kind==UnitKind.Fighter) 
 				|| 
-				( ((int)drctn<=45 || (int)drctn>=315) && ( (int)drctn2>=135 && (int)drctn2<=225)  && unit[n].kind==AT1 && unit[m].arm[2]==0 )
+				( ((int)drctn<=45 || (int)drctn>=315) && ( (int)drctn2>=135 && (int)drctn2<=225)  && unit[n].kind==UnitKind.Attacker && unit[m].arm[2]==0 )
 				/*||
 				(  ( ((int)drctn>=150&&(int)drctn<=210) || ((int)drctn<=45||(int)drctn>=315) )  && unit[n].kind==FT1 && unit[m].kind==BM1) 
 				*/
@@ -3062,7 +3062,7 @@ public void	set_pos_of_emrgncy_AT(int m)
 				if(drctn>=90)
 					drctn=90-(drctn-90);
 				dstc=(wrk_x)/(cos(drctn*a_PI));
-				if( dstc<=250+((unit[n].kind==AT1 ? 1 : 0)*70) )
+				if( dstc<=250+((unit[n].kind==UnitKind.Attacker ? 1 : 0)*70) )
 					{	
 
 					wrk_x=unit[m].x;
@@ -3150,7 +3150,7 @@ public void	set_pos_of_emrgncy_AT(int m)
 
 
 				// 昔の小隊長が攻爆撃機だったら、帰投にしておく
-				if( unit[new_ldr].kind==FT1 && (unit[m].kind==AT1 || unit[m].kind==BM1) /*&& unit[m].info[0]==FLYING*/ && unit[new_ldr].info[0]==FLYING )
+				if( unit[new_ldr].kind==UnitKind.Fighter && (unit[m].kind==UnitKind.Attacker || unit[m].kind==UnitKind.Bomber) /*&& unit[m].info[0]==FLYING*/ && unit[new_ldr].info[0]==FLYING )
 					{
 					unit[new_ldr].info[5]=RETURN;		// それまでの隊長がボスだったらきかんしよっと
 					}
@@ -3163,7 +3163,7 @@ public void	set_pos_of_emrgncy_AT(int m)
 						unit[f].ltl_ldr=(short)new_ldr;
 
 						// 昔の小隊長が攻爆撃機だったら、帰投にしておく
-						if( unit[new_ldr].kind==FT1 && unit[f].kind==FT1 && (unit[m].kind==AT1 || unit[m].kind==BM1) /*&& unit[m].info[0]==FLYING*/&& unit[f].info[0]==FLYING )
+						if( unit[new_ldr].kind==UnitKind.Fighter && unit[f].kind==UnitKind.Fighter && (unit[m].kind==UnitKind.Attacker || unit[m].kind==UnitKind.Bomber) /*&& unit[m].info[0]==FLYING*/&& unit[f].info[0]==FLYING )
 							unit[f].info[5]=RETURN;		// それまでの隊長がボスだったらきかんしよっと
 						}
 
@@ -3251,11 +3251,11 @@ public void	set_pos_of_attack_AT(int m)
 		f=0;
 		for(i=1;i<=max_unit;i++)
 			{
-			if( i!=m && unit[i].used!=0 && unit[i].ltl_ldr==m && unit[i].kind==AT1 )
+			if( i!=m && unit[i].used!=0 && unit[i].ltl_ldr==m && unit[i].kind==UnitKind.Attacker )
 				{
 				f++;
 
-				if( unit[i].kind!=FT1 )
+				if( unit[i].kind!=UnitKind.Fighter )
 					unit[i].ltl_ldr=0; 
 
 				wrk_x=unit[i].x;
@@ -3343,7 +3343,7 @@ public void	set_pos_of_attack_AT(int m)
 				a=0;
 				for(f=1;f<=max_unit;f++)
 					{
- 					if( unit[f].used!=0 && unit[f].kind==FT1 && unit[f].ltl_ldr==m)
+ 					if( unit[f].used!=0 && unit[f].kind==UnitKind.Fighter && unit[f].ltl_ldr==m)
 						{	a++;	}
 					else
 						{
@@ -3564,8 +3564,8 @@ public void	set_pos_of_emrgncy_SHIP(int m)
 	for(n=1;n<=max_unit;n++)
 		{
 		// 艦船によってくる艦船からにげる
-		if( (unit[m].stop!=0 || (unit[m].kind==CV1||unit[m].kind==CVL1)) && unit[n].used!=0 && (unit[n].ctgry==SHIP /*&& unit[n].kind!=AP && unit[n].kind!=SP*/ && !(unit[n].kind>=AP && unit[n].kind<=GF3) ) && 
-		unit[n].kind!=SS1 && unit[n].used!=unit[m].used && unit[n].found!=0 && unit[n].spry<=0 && unit[m].arm[2]==0)
+		if( (unit[m].stop!=0 || (unit[m].kind==UnitKind.Carrier||unit[m].kind==UnitKind.LightCarrier)) && unit[n].used!=0 && (unit[n].ctgry==UnitCategory.Ship /*&& unit[n].kind!=AP && unit[n].kind!=SP*/ && !(unit[n].kind>=UnitKind.AirBase && unit[n].kind<=UnitKind.Fortress) ) && 
+		unit[n].kind!=UnitKind.Submarine && unit[n].used!=unit[m].used && unit[n].found!=0 && unit[n].spry<=0 && unit[m].arm[2]==0)
 			{
 			// 自点と対象点の距離
 			wrk_x=unit[n].x-unit[m].x;
@@ -3598,7 +3598,7 @@ public void	set_pos_of_emrgncy_SHIP(int m)
 				if(drctn<0)
 					drctn=360+drctn;	
 
-				if( (unit[m].kind==CV1||unit[m].kind==CVL1) && unit[m].ltl_ldr==0 && unit[n].stop!=0 && rnd(3)!=0 )
+				if( (unit[m].kind==UnitKind.Carrier||unit[m].kind==UnitKind.LightCarrier) && unit[m].ltl_ldr==0 && unit[n].stop!=0 && rnd(3)!=0 )
 					{
 					if(unit[m].rnd_10[0]<=4)
 						{
@@ -3630,7 +3630,7 @@ public void	set_pos_of_emrgncy_SHIP(int m)
 
 
 		// 艦船によってくる攻撃機から逃げる
-		if( unit[n].used!=0 && (unit[n].kind==AT1 || unit[n].kind==BM1 || ( unit[n].kind==FT1 && unit[m].kind==TR1 ) ) && unit[n].info[0]==FLYING && unit[n].used!=unit[m].used && unit[n].found!=0 
+		if( unit[n].used!=0 && (unit[n].kind==UnitKind.Attacker || unit[n].kind==UnitKind.Bomber || ( unit[n].kind==UnitKind.Fighter && unit[m].kind==UnitKind.Transport ) ) && unit[n].info[0]==FLYING && unit[n].used!=unit[m].used && unit[n].found!=0 
 			)
 			{
 			// 自点と対象点の距離
@@ -3652,7 +3652,7 @@ public void	set_pos_of_emrgncy_SHIP(int m)
 				drctn=90-(drctn-90);
 			dstc=(wrk_x)/(cos(drctn*a_PI));		// 距離
 
-			if( dstc<=600-((unit[n].kind==BM1 ? 1 : 0)*300) && dstc>=40 )
+			if( dstc<=600-((unit[n].kind==UnitKind.Bomber ? 1 : 0)*300) && dstc>=40 )
 				{
 				// 対象ユニットからの自点への方位角
 				wrk_x=unit[m].x;
@@ -3701,14 +3701,14 @@ public void	set_pos_of_emrgncy_SHIP(int m)
 
 
 
-	if( unit[m].kind==DD1 /*&&  unit[m].spd<=unit[m].max_spd*0.9*/ && unit[m].stop==1  /*&& unit[m].used==cpu_side*/ )
+	if( unit[m].kind==UnitKind.Destroyer /*&&  unit[m].spd<=unit[m].max_spd*0.9*/ && unit[m].stop==1  /*&& unit[m].used==cpu_side*/ )
 		{
 		// 駆逐艦の対潜水艦行動、発見された後！
 		if(unit[m].em_flg[0]==0)
 			{
 			for(n=1; n<=max_unit; n++)
 				{
-				if( unit[n].used!=0 && unit[n].kind==SS1 && unit[n].found!=0 && unit[n].used!=unit[m].used )
+				if( unit[n].used!=0 && unit[n].kind==UnitKind.Submarine && unit[n].found!=0 && unit[n].used!=unit[m].used )
 					{
 					// 自点と対象点の距離
 					if( unit[n].info[6]!=0 )

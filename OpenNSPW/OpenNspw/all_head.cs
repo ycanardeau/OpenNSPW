@@ -211,29 +211,7 @@ public const int	END_OF_SND_NO = 31;
 
 
 
-public const int	BB1		= 1;
-public const int	CA1		= 2;
-public const int	DD1		= 3;
-public const int SS1		= 4;
-public const int CV1		= 5;
-public const int CVL1	= 6;
-
-public const int	FT1		= 7;
-public const int	AT1		= 8;
-public const int	BM1		= 9;
-
-public const int TR1		= 10;
-
-
-
-public const int AP		= 11;
-public const int SP		= 12;
-
-public const int CT1		= 13;
-public const int MN1		= 14;
-public const int GF1		= 15;
-public const int GF2		= 16;
-public const int GF3		= 17;
+// BB1, CA1, DD1, SS1, CV1, CVL1, FT1, AT1, BM1, TR1, AP, SP, CT1, MN1, GF1, GF2 and GF3: UnitKind.
 
 
 
@@ -270,9 +248,7 @@ public const int		MAXPLAYERS			= 2;			// max no. players in the session
 public const int		TYPE_UNIT_MSG       = 0x11;    // message containing field layout, sent by host
 
 
-public const int		SHIP		= 1;
-public const int		PLANE		= 2;
-public const int		BASE		= 3;
+// SHIP, PLANE and BASE: UnitCategory.
 
 // 状態
 public const int		FLYING		= 1;
@@ -365,19 +341,13 @@ public const int		TUNE_SPAN	= 900;
 public const int		RDY_SPAN		= 700;
 
 // エフェクト
-public const int		UPPER		= 1;
-public const int		LOWER		= 2;
+// UPPER and LOWER: EffectLayer.
 
 // 国籍
-public const int		JPN					= 1;	// 日本海軍
-public const int		USA					= 2;	// 合衆国海軍
+// JPN and USA: Side.
 
 // 現モード
-public const int		DEMO						= 1;
-public const int		CNCT_GAME_SETUP		= 3;
-public const int		CNCT_GAME_SETTING		= 4;
-public const int		CNCT_CNFG_SETTING		= 5;
-public const int		CMBT						= 10;
+// DEMO, CNCT_GAME_SETUP, CNCT_GAME_SETTING, CNCT_CNFG_SETTING and CMBT: GameMode.
 
 //
 public const double		CMBT_SPD	= 1.5;
@@ -423,12 +393,7 @@ public const int		RELOAD_TPD_SS		= 1500;
 public const int		MAX_TF				= 8;
 
 // 判定
-public const int		JPN_WIN		= 1;
-public const int		USA_WIN		= 2;
-public const int		JPN_LOST	= 3;
-public const int		USA_LOST	= 4;
-
-public const int		DRAW		= 10;
+// JPN_WIN, USA_WIN, JPN_LOST, USA_LOST and DRAW: GameResult.
 
 
 //くも
@@ -490,44 +455,9 @@ public const int	MSG_END = 2;
 
 public const int		NSPW_THE_NET		= 1;
 
-public const int		MY_NAME_IS			= 1;
-public const int		AND_MY_NAME_IS		= 2;
-public const int		OUT_SETUP			= 3;
-public const int		OUT_GAME_SETTING	= 4;
-public const int		SIDE_AND_SINARIO	= 5;
-public const int		GO_GAME_SETTING		= 6;
-public const int		OUT_CNFG_SETTING	= 7;
-
-public const int		RESUME_AND_GO_GAME_SETTING		= 8;
-
-public const int		START_IN_RESUME		= 9;
-
-public const int		START_IN_AUTOSAVE		= 10;
-
-public const int		USER_SINARIO_FN		= 11;
-//#define		SNRO_SEND			12
-
-public const int		DP_NO_ORDER			= 15;
-
-public const int		DP_NEW_PP			= 20;
-public const int		DP_NEW_PP_SHIP		= 21;
-public const int		DP_NEW_PP_PLANE		= 22;
-
-public const int		DP_NEW_SLCT			= 30;
-public const int		DP_NEW_SLCT_SHIP	= 31;
-public const int		DP_NEW_SLCT_PLANE	= 32;
-public const int		DP_NEW_SLCT_LAND	= 33;
-
-public const int		DP_NEW_MENU			= 40;
-public const int		DP_FLAG_1			= 50;
-
-public const int		DP_ARRIVED_UNIT		= 60;
-
-public const int		DP_CHAT_1			= 100;
+// MY_NAME_IS to RIVAL_VER: MessageType.
 public const int		CHAT_DSP_TIME		= 400;
 
-public const int		RIVAL_MODE			= 500;
-public const int		RIVAL_VER			= 501;
 
 
 

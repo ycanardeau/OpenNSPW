@@ -44,10 +44,10 @@ public void	cont_upper_effect(RECT* pfield_rect,RECT* pinfo_rect)
 	no1=7;
 	for( m=1; m<EFFECT_MAX; m++ )
 		{
-		if( effect[m].layer==UPPER )
+		if( effect[m].layer==EffectLayer.Upper )
 			{
 			flg=0;
-			if(game_end!=0)
+			if(game_end!=GameResult.None)
 				flg=1;
 			for(n=1;n<=max_unit && flg==0 ;n++)
 				{
@@ -57,7 +57,7 @@ public void	cont_upper_effect(RECT* pfield_rect,RECT* pinfo_rect)
 					// 現地点からユニット地点への距離
 					wrk_x=unit[n].x;
 					wrk_y=unit[n].y;
-					if( unit[n].kind==FT1 )
+					if( unit[n].kind==UnitKind.Fighter )
 						{	// 航空機の場合はちょっと前へ
 						wrk_x+=cos(unit[n].drctn*a_PI)*FT_EYE;
 						wrk_y+=sin(unit[n].drctn*a_PI)*FT_EYE;
@@ -84,26 +84,26 @@ public void	cont_upper_effect(RECT* pfield_rect,RECT* pinfo_rect)
 
 					switch( unit[n].kind )
 						{
-						case BB1:		size=BB1_SIGHT;		break;
-						case CA1:		size=CA1_SIGHT;		break;
-						case DD1:		size=DD1_SIGHT;		break;
-						case SS1:		size=SS1_SIGHT;		break;
-						case CV1:		size=CV1_SIGHT;		break;
-						case CVL1:		size=CVL1_SIGHT;	break;
-						case TR1:		size=TR1_SIGHT;		break;
-						case FT1:		size=FT1_SIGHT;		break;
-						case AT1:		size=AT1_SIGHT;		break;
-						case BM1:		size=BM1_SIGHT;		break;
-						case AP: case SP:		size=AP_SIGHT;		break;		
-						case CT1:		size=CT1_SIGHT;		break;
-						case MN1:		size=MN1_SIGHT;		break;
-						case GF1:		size=GF1_SIGHT;		break;
-						case GF2:		size=GF2_SIGHT;		break;
-						case GF3:		size=GF3_SIGHT;		break;
+						case UnitKind.Battleship:		size=BB1_SIGHT;		break;
+						case UnitKind.Cruiser:		size=CA1_SIGHT;		break;
+						case UnitKind.Destroyer:		size=DD1_SIGHT;		break;
+						case UnitKind.Submarine:		size=SS1_SIGHT;		break;
+						case UnitKind.Carrier:		size=CV1_SIGHT;		break;
+						case UnitKind.LightCarrier:		size=CVL1_SIGHT;	break;
+						case UnitKind.Transport:		size=TR1_SIGHT;		break;
+						case UnitKind.Fighter:		size=FT1_SIGHT;		break;
+						case UnitKind.Attacker:		size=AT1_SIGHT;		break;
+						case UnitKind.Bomber:		size=BM1_SIGHT;		break;
+						case UnitKind.AirBase: case UnitKind.NavalBase:		size=AP_SIGHT;		break;		
+						case UnitKind.City:		size=CT1_SIGHT;		break;
+						case UnitKind.Mine:		size=MN1_SIGHT;		break;
+						case UnitKind.InfantryBase:		size=GF1_SIGHT;		break;
+						case UnitKind.Pillboxes:		size=GF2_SIGHT;		break;
+						case UnitKind.Fortress:		size=GF3_SIGHT;		break;
 						}
 
 
-					if( unit[n].kind>=AP && unit[n].kind<=GF3 && unit[n].info[0]!=0 )
+					if( unit[n].kind>=UnitKind.AirBase && unit[n].kind<=UnitKind.Fortress && unit[n].info[0]!=0 )
 						{
 						// 工事中は視界を制限
 						size=FT1_SIGHT/2;
@@ -234,13 +234,13 @@ public void cont_lower_effect(RECT* pfield_rect,RECT* pinfo_rect)
 	no1=7;
 	for(m=1;m<EFFECT_MAX/*255*/;m++)
 		{
-		if( effect[m].layer==LOWER )
+		if( effect[m].layer==EffectLayer.Lower )
 			{
-			if( effect[m].info[1]!=3 || game_end!=0 )
+			if( effect[m].info[1]!=3 || game_end!=GameResult.None )
 				{
 				// ユニットインフォ画面以外のエフェクト表示は見える見えないのテストをします。
 				flg=0;
-				if(game_end!=0)
+				if(game_end!=GameResult.None)
 					flg=1;
 				for(n=1;n<=max_unit;n++)
 					{
@@ -250,7 +250,7 @@ public void cont_lower_effect(RECT* pfield_rect,RECT* pinfo_rect)
 						// 現地点からユニット地点への距離
 						wrk_x=unit[n].x;
 						wrk_y=unit[n].y;
-						if( unit[n].kind==FT1 )
+						if( unit[n].kind==UnitKind.Fighter )
 							{	// 航空機の場合はちょっと前へ
 							wrk_x+=cos(unit[n].drctn*a_PI)*FT_EYE;
 							wrk_y+=sin(unit[n].drctn*a_PI)*FT_EYE;
@@ -277,25 +277,25 @@ public void cont_lower_effect(RECT* pfield_rect,RECT* pinfo_rect)
 
 						switch( unit[n].kind )
 							{
-							case BB1:		size=BB1_SIGHT;		break;
-							case CA1:		size=CA1_SIGHT;		break;
-							case DD1:		size=DD1_SIGHT;		break;
-							case SS1:		size=SS1_SIGHT;		break;
-							case CV1:		size=CV1_SIGHT;		break;
-							case CVL1:		size=CVL1_SIGHT;	break;
-							case TR1:		size=TR1_SIGHT;		break;
-							case FT1:		size=FT1_SIGHT;		break;
-							case AT1:		size=AT1_SIGHT;		break;
-							case BM1:		size=BM1_SIGHT;		break;
-							case AP: case SP:		size=AP_SIGHT;		break;		
-							case CT1:		size=CT1_SIGHT;		break;
-							case MN1:		size=MN1_SIGHT;		break;
-							case GF1:		size=GF1_SIGHT;		break;
-							case GF2:		size=GF2_SIGHT;		break;
-							case GF3:		size=GF3_SIGHT;		break;
+							case UnitKind.Battleship:		size=BB1_SIGHT;		break;
+							case UnitKind.Cruiser:		size=CA1_SIGHT;		break;
+							case UnitKind.Destroyer:		size=DD1_SIGHT;		break;
+							case UnitKind.Submarine:		size=SS1_SIGHT;		break;
+							case UnitKind.Carrier:		size=CV1_SIGHT;		break;
+							case UnitKind.LightCarrier:		size=CVL1_SIGHT;	break;
+							case UnitKind.Transport:		size=TR1_SIGHT;		break;
+							case UnitKind.Fighter:		size=FT1_SIGHT;		break;
+							case UnitKind.Attacker:		size=AT1_SIGHT;		break;
+							case UnitKind.Bomber:		size=BM1_SIGHT;		break;
+							case UnitKind.AirBase: case UnitKind.NavalBase:		size=AP_SIGHT;		break;		
+							case UnitKind.City:		size=CT1_SIGHT;		break;
+							case UnitKind.Mine:		size=MN1_SIGHT;		break;
+							case UnitKind.InfantryBase:		size=GF1_SIGHT;		break;
+							case UnitKind.Pillboxes:		size=GF2_SIGHT;		break;
+							case UnitKind.Fortress:		size=GF3_SIGHT;		break;
 							}
 
-						if( unit[n].kind>=AP && unit[n].kind<=GF3 && unit[n].info[0]!=0 )
+						if( unit[n].kind>=UnitKind.AirBase && unit[n].kind<=UnitKind.Fortress && unit[n].info[0]!=0 )
 							{
 							// 工事中は視界を制限
 							size=FT1_SIGHT/2;
@@ -466,11 +466,11 @@ public void	be_dstryd(int m)
 
 
 
-	if( !(unit[m].kind>=AP && unit[m].kind<=GF3 ) )
+	if( !(unit[m].kind>=UnitKind.AirBase && unit[m].kind<=UnitKind.Fortress ) )
 		{
 		// 沈没の水門
 		f=seek_effect_no();
-		effect[f].layer=LOWER;	
+		effect[f].layer=EffectLayer.Lower;	
 		//effect[f].kind=THERE;
 		effect[f].info[0]=220;
 		effect[f].info[1]=0;
@@ -481,17 +481,17 @@ public void	be_dstryd(int m)
 		}
 
 
-	if( unit[m].kind==BB1 || unit[m].kind==CV1 || unit[m].kind==CVL1 || unit[m].kind==SP || unit[m].kind==AP || unit[m].kind==GF3 )
+	if( unit[m].kind==UnitKind.Battleship || unit[m].kind==UnitKind.Carrier || unit[m].kind==UnitKind.LightCarrier || unit[m].kind==UnitKind.NavalBase || unit[m].kind==UnitKind.AirBase || unit[m].kind==UnitKind.Fortress )
 		{
 		// 大型艦船
 		// 沈没の小水紋
 		//if( unit[m].kind!=AP && unit[m].kind!=SP )
-		if( !(unit[m].kind>=AP && unit[m].kind<=GF3 ) )
+		if( !(unit[m].kind>=UnitKind.AirBase && unit[m].kind<=UnitKind.Fortress ) )
 			{
 			for(i=0;i<=7;i++)
 				{
 				f=seek_effect_no();			
-				effect[f].layer=LOWER;	
+				effect[f].layer=EffectLayer.Lower;	
 				effect[f].info[0]=200+rnd(20);
 				effect[f].info[1]=4;
 				effect[f].x=unit[m].x+rnd(100)-50;
@@ -503,7 +503,7 @@ public void	be_dstryd(int m)
 		for(i=0;i<=2;i++)
 			{
 			f=seek_effect_no();			
-			effect[f].layer=UPPER;	
+			effect[f].layer=EffectLayer.Upper;	
 			effect[f].info[0]=150+rnd(20);
 			effect[f].info[1]=4;
 			effect[f].x=unit[m].x+rnd(30)-15;
@@ -514,7 +514,7 @@ public void	be_dstryd(int m)
 		for(i=0;i<=4;i++)
 			{
 			f=seek_effect_no();			
-			effect[f].layer=UPPER;	
+			effect[f].layer=EffectLayer.Upper;	
 			effect[f].info[0]=30+rnd(20);
 			effect[f].info[1]=4;
 			effect[f].x=unit[m].x+rnd(40)-20;
@@ -525,7 +525,7 @@ public void	be_dstryd(int m)
 		for(i=0;i<=4;i++)
 			{
 			f=seek_effect_no();			
-			effect[f].layer=UPPER;	
+			effect[f].layer=EffectLayer.Upper;	
 			effect[f].info[0]=40+rnd(20);
 			effect[f].info[1]=4;
 			effect[f].x=unit[m].x+rnd(60)-30;
@@ -537,12 +537,12 @@ public void	be_dstryd(int m)
 		{
 		// 中小型艦船
 		// 沈没の小水紋
-		if( !(unit[m].kind>=AP && unit[m].kind<=GF3 ) )
+		if( !(unit[m].kind>=UnitKind.AirBase && unit[m].kind<=UnitKind.Fortress ) )
 			{
 			for(i=0;i<=3;i++)
 				{
 				f=seek_effect_no();			
-				effect[f].layer=LOWER;	
+				effect[f].layer=EffectLayer.Lower;	
 				effect[f].info[0]=200+rnd(20);
 				effect[f].info[1]=4;
 				effect[f].x=unit[m].x+rnd(100)-50;
@@ -554,7 +554,7 @@ public void	be_dstryd(int m)
 		for(i=0;i<=1;i++)
 			{
 			f=seek_effect_no();			
-			effect[f].layer=UPPER;	
+			effect[f].layer=EffectLayer.Upper;	
 			effect[f].info[0]=150+rnd(20);
 			effect[f].info[1]=4;
 			effect[f].x=unit[m].x+rnd(30)-15;
@@ -565,7 +565,7 @@ public void	be_dstryd(int m)
 		for(i=0;i<=0;i++)
 			{
 			f=seek_effect_no();			
-			effect[f].layer=UPPER;	
+			effect[f].layer=EffectLayer.Upper;	
 			effect[f].info[0]=30+rnd(20);
 			effect[f].info[1]=4;
 			effect[f].x=unit[m].x+rnd(40)-20;
@@ -576,7 +576,7 @@ public void	be_dstryd(int m)
 		for(i=0;i<=1;i++)
 			{
 			f=seek_effect_no();			
-			effect[f].layer=UPPER;	
+			effect[f].layer=EffectLayer.Upper;	
 			effect[f].info[0]=20+rnd(20);
 			effect[f].info[1]=4;
 			effect[f].x=unit[m].x+rnd(20)-10;
@@ -650,7 +650,7 @@ public void	draw_cmbt_area()
 		{
 		for(n=0;n<=10;n++)
 			{
-			if(  map_edit==0 && /*!reveal &&*/ game_end==0 /*&& FrameRate>=6*/ && cmbt_map[cm_scrn_y+n][cm_scrn_x+m]==0 )
+			if(  map_edit==0 && /*!reveal &&*/ game_end==GameResult.None /*&& FrameRate>=6*/ && cmbt_map[cm_scrn_y+n][cm_scrn_x+m]==0 )
 				{
 				flg=0;
 				for( f=1; f<=max_unit; f++)
@@ -661,7 +661,7 @@ public void	draw_cmbt_area()
 						//wrk_x=unit[f].x-(cmbt_x-40+(m*sprt[MAP_TIP_NRML].wd));
 						//wrk_y=unit[f].y-(cmbt_y+40-(n*sprt[MAP_TIP_NRML].ht));
 
-						if(unit[f].kind==FT1 /*&& 0*/)
+						if(unit[f].kind==UnitKind.Fighter /*&& 0*/)
 							{
 							// 戦闘機場合、視点を
 							wrk_x=unit[f].x;
@@ -837,7 +837,7 @@ public void	draw_cmbt_area()
 	lc_ri_btn=ri_btn;
 	lc_lf_btn=lf_btn;
 
-	if( /*(0 || cnct_game )  &&*/ you_ordered!=0 && game_end==0)
+	if( /*(0 || cnct_game )  &&*/ you_ordered!=0 && game_end==GameResult.None)
 		{
 		lc_ri_btn=0;
 		lc_lf_btn=0;
@@ -863,7 +863,7 @@ public void	draw_cmbt_area()
 
 
 
-		if( unit[m].used==JPN)
+		if( unit[m].used==Side.Japan)
 			no1=UNIT_JPN;		//Off Screen Number		日本海軍の表示
 		else
 			no1=UNIT_USA;		//Off Screen Number		合衆国海軍の表示
@@ -875,7 +875,7 @@ public void	draw_cmbt_area()
 		// ユニットを描画します
 		if( unit[m].used!=0 && (unit[m].used==your_side || unit[m].found!=0) && 
 	( ( ( cmbt_x-CMBT_REST<=unit[m].x && cmbt_x+CMBT_WIDTH+CMBT_REST>=unit[m].x) && (cmbt_y+CMBT_REST>=unit[m].y && cmbt_y-CMBT_HEIGHT-CMBT_REST<=unit[m].y) )
-	|| (unit[m].ctgry==PLANE && unit[m].info[0]==PARKING )
+	|| (unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING )
 	)
 			)
 			{
@@ -911,9 +911,9 @@ public void	draw_cmbt_area()
 				}
 
 
-			if( unit[m].ctgry==PLANE && unit[m].info[0]==PARKING)
+			if( unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING)
 				{
-				if( unit[m].info[1]==unit_info[3] && (unit_info[0]==CV1 || unit_info[0]==CVL1 || unit_info[0]==AP ) )
+				if( unit[m].info[1]==unit_info[3] && ((UnitKind)unit_info[0]==UnitKind.Carrier || (UnitKind)unit_info[0]==UnitKind.LightCarrier || (UnitKind)unit_info[0]==UnitKind.AirBase ) )
 					{
 					if( ( (unit[m].info[5]<=SLOW) && (unit_info[1]==1&&unit[m].info[3]<=2)||(unit_info[1]==0&&unit[m].info[3]>=3)) 
 					 || ( unit[m].info[5]==RETURN && (unit_info[1]==0) ) )
@@ -954,7 +954,7 @@ public void	draw_cmbt_area()
 				sprt[no1].y=(int)(cmbt_y-unit[m].y);
 
 
-				if( unit[m].kind==SS1 && unit[m].info[6]!=0 && game_end==0 )
+				if( unit[m].kind==UnitKind.Submarine && unit[m].info[6]!=0 && game_end==GameResult.None )
 					{	// 潜航潜水艦
 					sprt[no1].no=((unit[m].os_indx_y+1)*8)+unit[m].os_indx_x;	
 					if( unit[m].used!=your_side )
@@ -986,7 +986,7 @@ public void	draw_cmbt_area()
 						}
 
 
-					if( map_edit==0 && plane_fling_sound==0 && game_end==0 && unit[m].ctgry==PLANE && unit[m].info[0]==FLYING && (FrameCount%10)==0 )
+					if( map_edit==0 && plane_fling_sound==0 && game_end==GameResult.None && unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==FLYING && (FrameCount%10)==0 )
 						{
 						SoundPlayEffect( 0, PLANE_FLYING ,unit[m].x, unit[m].y);
 						plane_fling_sound=1;
@@ -1000,7 +1000,7 @@ public void	draw_cmbt_area()
 
 		var goto_dca1=false;	// goto dca1, into the block below, which C# does not allow
 #if true
-		if (  m==0 && the_slct_unit!=0 && unit[the_slct_unit].kind==TR1 && m!=the_slct_unit)
+		if (  m==0 && the_slct_unit!=0 && unit[the_slct_unit].kind==UnitKind.Transport && m!=the_slct_unit)
 			{
 			// カーソルのある場所が
 			// カーソルの示す、マップチップの場所
@@ -1037,13 +1037,13 @@ public void	draw_cmbt_area()
 
 
 			//The Slct された機体への移動予定の線引き、
-			if( unit[m].ctgry==PLANE && unit[m].info[0]==PARKING )
+			if( unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING )
 				{
 /*
 				continue;
 */
 
-				if( unit[m].info[1]==unit_info[3] &&  (unit_info[0]==CV1 || unit_info[0]==CVL1 || unit_info[0]==AP ) )
+				if( unit[m].info[1]==unit_info[3] &&  ((UnitKind)unit_info[0]==UnitKind.Carrier || (UnitKind)unit_info[0]==UnitKind.LightCarrier || (UnitKind)unit_info[0]==UnitKind.AirBase ) )
 					{
 					if( ( (unit[m].info[5]<=SLOW)  && (unit_info[1]==1&&unit[m].info[3]<=2)||(unit_info[1]==0&&unit[m].info[3]>=3)) 
 					 || (unit[m].info[5]==RETURN && (unit_info[1]==0) ) )
@@ -1068,7 +1068,7 @@ public void	draw_cmbt_area()
 				}
 			else
 				{		
-				if( unit[m].used!=your_side && unit[m].kind==SS1 && unit[m].info[6]!=0 )
+				if( unit[m].used!=your_side && unit[m].kind==UnitKind.Submarine && unit[m].info[6]!=0 )
 					{	// およその敵潜航潜水艦
 					sprt[no1].x=(int)(unit[m].info[7]-cmbt_x);
 					sprt[no1].y=(int)(cmbt_y-unit[m].info[8]);
@@ -1101,15 +1101,15 @@ public void	draw_cmbt_area()
 			
 			
 			// クリック選択・非選択
-			if( pt_in_rect(ref wrk_rect,crsr_pt.x,crsr_pt.y)!=0 && !( unit[the_slct_unit].ctgry==PLANE && unit[m].ctgry==SHIP && !(unit[m].kind==CV1 || unit[m].kind==CVL1 || unit[m].kind==AP || unit[the_slct_unit].used!=unit[m].used) ) && !(unit[the_slct_unit].ctgry==PLANE && unit[the_slct_unit].info[0]==PARKING && unit[m].ctgry==PLANE && unit[m].info[0]==FLYING )  && !( unit[m].ctgry==PLANE && unit[m].info[0]==PARKING && unit[m].stop==0 ) && !(unit[the_slct_unit].ctgry==PLANE && unit[the_slct_unit].info[0]==PARKING && unit[the_slct_unit].stop==0 ) && !( unit[the_slct_unit].ctgry==PLANE && unit[the_slct_unit].info[0]==PARKING && unit[m].ctgry==SHIP ) 
-				&& !(unit[the_slct_unit].ctgry==SHIP && unit[m].ctgry==PLANE && unit[m].info[0]==PARKING)  && !(the_slct_unit!=0 && unit[the_slct_unit].used!=your_side) && !(the_slct_unit!=0 && unit[the_slct_unit].ctgry==PLANE&&unit[m].arm[0]==TUN)
+			if( pt_in_rect(ref wrk_rect,crsr_pt.x,crsr_pt.y)!=0 && !( unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[m].ctgry==UnitCategory.Ship && !(unit[m].kind==UnitKind.Carrier || unit[m].kind==UnitKind.LightCarrier || unit[m].kind==UnitKind.AirBase || unit[the_slct_unit].used!=unit[m].used) ) && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING && unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==FLYING )  && !( unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING && unit[m].stop==0 ) && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING && unit[the_slct_unit].stop==0 ) && !( unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING && unit[m].ctgry==UnitCategory.Ship ) 
+				&& !(unit[the_slct_unit].ctgry==UnitCategory.Ship && unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING)  && !(the_slct_unit!=0 && unit[the_slct_unit].used!=your_side) && !(the_slct_unit!=0 && unit[the_slct_unit].ctgry==UnitCategory.Plane&&unit[m].arm[0]==TUN)
 				 && !(unit[m].info[0]!=PARKING && crsr_pt.x>=CMBT_WIDTH-1) 
-				 && !(unit[m].used!=your_side && unit[m].kind==SS1 && unit[m].info[6]!=0)
+				 && !(unit[m].used!=your_side && unit[m].kind==UnitKind.Submarine && unit[m].info[6]!=0)
 				)
 				{
 				if( (FrameCount%2)!=0 )
 					{
-					if( unit[m].ctgry==PLANE && unit[m].info[0]==PARKING )
+					if( unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING )
 						{
 						right=SCRN_WIDTH-1; bottom=SCRN_HEIGHT-1;
 						}
@@ -1137,7 +1137,7 @@ public void	draw_cmbt_area()
 						{
 						if( the_slct_unit==0 ) 
 							{
-							if( !(unit[m].ctgry==PLANE && unit[m].info[0]==PARKING) )
+							if( !(unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING) )
 								old_the_slct_unit=(short)m;
 
 							set_the_slct_unit( m );
@@ -1173,7 +1173,7 @@ public void	draw_cmbt_area()
 
 
 			// 選択されてればマークの絵というか枠 
-			if( unit[m].ctgry==PLANE && unit[m].info[0]==PARKING )
+			if( unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING )
 				{right=SCRN_WIDTH-1; bottom=SCRN_HEIGHT-1;}
 			else
 				{right=CMBT_WIDTH-1; bottom=CMBT_HEIGHT-1;}
@@ -1198,7 +1198,7 @@ public void	draw_cmbt_area()
 					}
 				}
 
-			if( the_slct_unit!=0 && unit[the_slct_unit].kind==TR1 && unit[the_slct_unit].arm[2]==max_unit+1 && m==the_slct_unit )
+			if( the_slct_unit!=0 && unit[the_slct_unit].kind==UnitKind.Transport && unit[the_slct_unit].arm[2]==max_unit+1 && m==the_slct_unit )
 				{
 				// 輸送船の揚陸先のマーク
 				cl=0x1f;
@@ -1232,7 +1232,7 @@ public void	draw_cmbt_area()
 				draw_line4(dstn_rect.right-n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 				draw_line4(dstn_rect.left+n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 				}
-			else  if( the_slct_unit!=0 && unit[the_slct_unit].info[1]==m && unit[the_slct_unit].ctgry==PLANE && unit[the_slct_unit].info[0]==FLYING)
+			else  if( the_slct_unit!=0 && unit[the_slct_unit].info[1]==m && unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==FLYING)
 				{
 				// 攻撃先 としてのマーク
 				// B=0xF800 R=0x7E0 G=0x1F
@@ -1251,14 +1251,14 @@ public void	draw_cmbt_area()
 				// 攻撃先 着艦先 の方向
 			if( unit[m].arm[2]!=0 && unit[m].used==your_side )
 				{
-				if(  0!=0 && unit[unit[m].arm[2]].kind==SS1 && unit[unit[m].arm[2]].info[6]!=0) 
+				if(  0!=0 && unit[unit[m].arm[2]].kind==UnitKind.Submarine && unit[unit[m].arm[2]].info[6]!=0) 
 					{	// 対潜水艦
 					wrk_x3=unit[unit[m].arm[2]].info[7];
 					wrk_y3=unit[unit[m].arm[2]].info[8];
 					}
 				else
 					{	// 対潜航潜水艦以外
-					if( unit[m].kind!=TR1 )
+					if( unit[m].kind!=UnitKind.Transport )
 						{
 						wrk_x3=unit[unit[m].arm[2]].x;
 						wrk_y3=unit[unit[m].arm[2]].y;
@@ -1271,7 +1271,7 @@ public void	draw_cmbt_area()
 						}
 					}
 
-				if( (unit[unit[m].arm[2]].found!=0 || (unit[m].arm[2]==max_unit+1&&unit[m].kind==TR1) )  && !(unit[unit[m].arm[2]].kind==SS1 && unit[unit[m].arm[2]].info[6]!=0) /*unit[unit[m].arm[2]].kind!=SS1*/  )
+				if( (unit[unit[m].arm[2]].found!=0 || (unit[m].arm[2]==max_unit+1&&unit[m].kind==UnitKind.Transport) )  && !(unit[unit[m].arm[2]].kind==UnitKind.Submarine && unit[unit[m].arm[2]].info[6]!=0) /*unit[unit[m].arm[2]].kind!=SS1*/  )
 					{	// 視認
 					wrk_x=wrk_x3-unit[m].x;
 					wrk_y=wrk_y3-unit[m].y;
@@ -1355,7 +1355,7 @@ public void	draw_cmbt_area()
 						{
 						//cl=0x001f;
 						right=CMBT_WIDTH-1; bottom=CMBT_HEIGHT-1;
-						if( unit[m].ctgry==PLANE && unit[m].info[0]==PARKING )
+						if( unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING )
 							{draw_line4((int)(unit[unit[m].info[1]].x-cmbt_x),(int)(cmbt_y-unit[unit[m].info[1]].y),(int)(unit[m].pp_x[n]-cmbt_x),(int)(cmbt_y-unit[m].pp_y[n]),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));}
 						else
 							{draw_line4(sprt[no1].x,sprt[no1].y,(int)(unit[m].pp_x[n]-cmbt_x),(int)(cmbt_y-unit[m].pp_y[n]),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));}
@@ -1376,7 +1376,7 @@ public void	draw_cmbt_area()
 					{
 					if( new_pp[1].cls!=0 )
 						{
-						if( unit[m].ctgry==PLANE && unit[m].info[0]==PARKING )
+						if( unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING )
 							draw_line4((int)(unit[unit[m].info[1]].x-cmbt_x),(int)(cmbt_y-unit[unit[m].info[1]].y),(int)(crsr_pt.x),(int)(crsr_pt.y),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 						else
 							draw_line4((int)(unit[m].x-cmbt_x),(int)(cmbt_y-unit[m].y),(int)(crsr_pt.x),(int)(crsr_pt.y),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
@@ -1389,7 +1389,7 @@ public void	draw_cmbt_area()
 				// 定点設定
 				if( lc_lf_btn==1 && unit[m].used==your_side && crsr_pt.x < CMBT_WIDTH &&
 					// 発進チェック
-					!(unit[m].ctgry==PLANE && unit[m].info[0]==PARKING
+					!(unit[m].ctgry==UnitCategory.Plane && unit[m].info[0]==PARKING
 					&& ( unit[unit[m].info[1]].info[4]!=0 || unit[unit[m].info[1]].info[8]!=0 || unit[m].arm[3]>0 || unit[unit[m].info[1]].spry!=0 ))
 					&& map_edit==0 )
 					{

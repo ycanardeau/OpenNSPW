@@ -216,7 +216,7 @@ public void	cnct_decision()
 
 
 	// 結果途中判定
-	if( game_end==0 && decision_sw!=0 )
+	if( game_end==GameResult.None && decision_sw!=0 )
 		{
 		switch( sinario )
 			{
@@ -227,18 +227,18 @@ public void	cnct_decision()
 				f=0;
 				for( i=1; i<=max_unit; i++ )
 					{
-					if( unit[i].used==JPN && (unit[i].kind==CV1 || unit[i].kind==CVL1) )
+					if( unit[i].used==Side.Japan && (unit[i].kind==UnitKind.Carrier || unit[i].kind==UnitKind.LightCarrier) )
 						f++;
 					}
 				m=0;
 				for( i=1; i<=max_unit; i++ )
 					{
-					if( unit[i].used==JPN && (unit[i].kind==GF1 || unit[i].kind==GF2 || unit[i].kind==GF3 ) )
+					if( unit[i].used==Side.Japan && (unit[i].kind==UnitKind.InfantryBase || unit[i].kind==UnitKind.Pillboxes || unit[i].kind==UnitKind.Fortress ) )
 						m++;
 					}
 				if( f<=0 || m<=0 )
 					{	
-					game_end=USA_WIN;
+					game_end=GameResult.UnitedStatesWon;
 					break;
 					}
 
@@ -249,18 +249,18 @@ public void	cnct_decision()
 				f=0;
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==USA && (unit[i].kind==CV1 || unit[i].kind==CVL1) )
+					if( unit[i].used==Side.UnitedStates && (unit[i].kind==UnitKind.Carrier || unit[i].kind==UnitKind.LightCarrier) )
 						f++;
 					}
 				m=0;
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==USA && (unit[i].kind==GF1 || unit[i].kind==GF2 || unit[i].kind==GF3 ) )
+					if( unit[i].used==Side.UnitedStates && (unit[i].kind==UnitKind.InfantryBase || unit[i].kind==UnitKind.Pillboxes || unit[i].kind==UnitKind.Fortress ) )
 						m++;
 					}
 				if( f<=0 || m<=0 )
 					{	
-					game_end=JPN_WIN;
+					game_end=GameResult.JapanWon;
 					break;
 					}
 				break;
@@ -272,18 +272,18 @@ public void	cnct_decision()
 				f=0;
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==JPN && (unit[i].kind==BB1 || unit[i].kind==CA1) )
+					if( unit[i].used==Side.Japan && (unit[i].kind==UnitKind.Battleship || unit[i].kind==UnitKind.Cruiser) )
 						f++;
 					}
 				m=0;
 				for( i=1; i<=max_unit; i++ )
 					{
-					if( unit[i].used==JPN && (unit[i].kind==GF1 || unit[i].kind==GF2 || unit[i].kind==GF3 ) )
+					if( unit[i].used==Side.Japan && (unit[i].kind==UnitKind.InfantryBase || unit[i].kind==UnitKind.Pillboxes || unit[i].kind==UnitKind.Fortress ) )
 						m++;
 					}
 				if( f<=0 || m<=0 )
 					{	
-					game_end=USA_WIN;
+					game_end=GameResult.UnitedStatesWon;
 					break;
 					}
 
@@ -292,18 +292,18 @@ public void	cnct_decision()
 				f=0;
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==USA && (unit[i].kind==BB1 || unit[i].kind==CA1) )
+					if( unit[i].used==Side.UnitedStates && (unit[i].kind==UnitKind.Battleship || unit[i].kind==UnitKind.Cruiser) )
 						f++;
 					}
 				m=0;
 				for( i=1; i<=max_unit; i++ )
 					{
-					if( unit[i].used==USA && (unit[i].kind==GF1 || unit[i].kind==GF2 || unit[i].kind==GF3 ) )
+					if( unit[i].used==Side.UnitedStates && (unit[i].kind==UnitKind.InfantryBase || unit[i].kind==UnitKind.Pillboxes || unit[i].kind==UnitKind.Fortress ) )
 						m++;
 					}
 				if( f<=0 || m<=0 )
 					{	
-					game_end=JPN_WIN;
+					game_end=GameResult.JapanWon;
 					break;
 					}
 				break;
@@ -314,7 +314,7 @@ public void	cnct_decision()
 				m=0;
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==USA && (unit[i].kind>=AP&&unit[i].kind<=GF3) )
+					if( unit[i].used==Side.UnitedStates && (unit[i].kind>=UnitKind.AirBase&&unit[i].kind<=UnitKind.Fortress) )
 						{
 						// ミッドウェイ島
 						// ptin debg
@@ -330,7 +330,7 @@ public void	cnct_decision()
 					}
 				if( m==0 )
 					{
-					game_end=JPN_WIN;
+					game_end=GameResult.JapanWon;
 					break;
 					}
 
@@ -344,7 +344,7 @@ public void	cnct_decision()
 				m=0;
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==USA && (unit[i].kind>=AP&&unit[i].kind<=GF3) )
+					if( unit[i].used==Side.UnitedStates && (unit[i].kind>=UnitKind.AirBase&&unit[i].kind<=UnitKind.Fortress) )
 						{
 						// ミッドウェイ島
 						// ptin_dbg
@@ -360,7 +360,7 @@ public void	cnct_decision()
 					}
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==JPN && (unit[i].kind==GF3) && unit[i].info[0]==0 )
+					if( unit[i].used==Side.Japan && (unit[i].kind==UnitKind.Fortress) && unit[i].info[0]==0 )
 						{
 						// ミッドウェイ島
 						// ptin dbg
@@ -376,7 +376,7 @@ public void	cnct_decision()
 					}
 				if( m==0 && f!=0)
 					{
-					game_end=JPN_WIN;
+					game_end=GameResult.JapanWon;
 					break;
 					}
 
@@ -390,7 +390,7 @@ public void	cnct_decision()
 				m=0;
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==USA && (unit[i].kind>=AP&&unit[i].kind<=GF3) )
+					if( unit[i].used==Side.UnitedStates && (unit[i].kind>=UnitKind.AirBase&&unit[i].kind<=UnitKind.Fortress) )
 						{
 						// ミッドウェイ島
 						// ptin dbg
@@ -406,7 +406,7 @@ public void	cnct_decision()
 					}
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==JPN && (unit[i].kind==GF3) && unit[i].info[0]==0 )
+					if( unit[i].used==Side.Japan && (unit[i].kind==UnitKind.Fortress) && unit[i].info[0]==0 )
 						{
 						// ミッドウェイ島
 						// ptin_dbg
@@ -422,7 +422,7 @@ public void	cnct_decision()
 					}
 				if( m==0 && f!=0)
 					{
-					game_end=JPN_WIN;
+					game_end=GameResult.JapanWon;
 					break;
 					}
 
@@ -447,7 +447,7 @@ public void	cnct_decision()
 				m=0;
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==JPN && (unit[i].kind>=AP&&unit[i].kind<=GF3) )
+					if( unit[i].used==Side.Japan && (unit[i].kind>=UnitKind.AirBase&&unit[i].kind<=UnitKind.Fortress) )
 						{
 						// ウェーク
 						wrk_r.top=(int)(-720+80);
@@ -464,7 +464,7 @@ public void	cnct_decision()
 					}
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==USA && (unit[i].kind==GF3) && unit[i].info[0]==0 )
+					if( unit[i].used==Side.UnitedStates && (unit[i].kind==UnitKind.Fortress) && unit[i].info[0]==0 )
 						{
 						// ウェーク
 						wrk_r.top=(int)(-720+80);
@@ -480,7 +480,7 @@ public void	cnct_decision()
 					}
 				if( m==0 && f!=0)
 					{
-					game_end=USA_WIN;
+					game_end=GameResult.UnitedStatesWon;
 					break;
 					}
 				break;
@@ -499,7 +499,7 @@ public void	cnct_decision()
 				wrk_r.left=(int)(-1040);
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==JPN && ( unit[i].kind>=AP && unit[i].kind<=GF3 ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
+					if( unit[i].used==Side.Japan && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
 						{
 						f++;
 						}
@@ -507,7 +507,7 @@ public void	cnct_decision()
 
 				if( f==0 )
 					{
-					game_end=USA_WIN;
+					game_end=GameResult.UnitedStatesWon;
 					break;
 					}
 
@@ -526,14 +526,14 @@ public void	cnct_decision()
 				wrk_r.left=(int)(-1040);
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==JPN && ( unit[i].kind>=AP && unit[i].kind<=GF3 ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
+					if( unit[i].used==Side.Japan && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
 						{
 						f++;
 						}
 					}
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==USA && ( unit[i].kind==AP )  && unit[i].info[0]==0 && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
+					if( unit[i].used==Side.UnitedStates && ( unit[i].kind==UnitKind.AirBase )  && unit[i].info[0]==0 && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
 						{
 						m++;
 						}
@@ -541,7 +541,7 @@ public void	cnct_decision()
 
 				if( f==0 && m>=2)
 					{
-					game_end=USA_WIN;
+					game_end=GameResult.UnitedStatesWon;
 					break;
 					}
 
@@ -552,7 +552,7 @@ public void	cnct_decision()
 				f=0;
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==JPN && unit[i].kind==CT1  )
+					if( unit[i].used==Side.Japan && unit[i].kind==UnitKind.City  )
 						{
 						f++;
 						}
@@ -560,7 +560,7 @@ public void	cnct_decision()
 
 				if( f==0 )
 					{
-					game_end=USA_WIN;
+					game_end=GameResult.UnitedStatesWon;
 					break;
 					}
 				break;
@@ -576,7 +576,7 @@ public void	cnct_decision()
 				wrk_r.left=(int)(-4480-80);
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==JPN && ( unit[i].kind>=AP && unit[i].kind<=GF3 ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
+					if( unit[i].used==Side.Japan && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
 						{
 						f++;
 						}
@@ -585,7 +585,7 @@ public void	cnct_decision()
 
 				if( f==0 )
 					{
-					game_end=USA_WIN;
+					game_end=GameResult.UnitedStatesWon;
 					break;
 					}
 
@@ -601,14 +601,14 @@ public void	cnct_decision()
 				wrk_r.left=(int)(-4480-80);
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==JPN && ( unit[i].kind>=AP && unit[i].kind<=GF3 ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
+					if( unit[i].used==Side.Japan && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
 						{
 						f++;
 						}
 					}
 				if( f==0 )
 					{
-					game_end=USA_WIN;
+					game_end=GameResult.UnitedStatesWon;
 					break;
 					}
 
@@ -620,7 +620,7 @@ public void	cnct_decision()
 				wrk_r.left=(int)(-1040);
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==USA && ( unit[i].kind>=AP && unit[i].kind<=GF3 ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
+					if( unit[i].used==Side.UnitedStates && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
 						{
 						f++;
 						}
@@ -628,7 +628,7 @@ public void	cnct_decision()
 
 				if( f==0 )
 					{
-					game_end=JPN_WIN;
+					game_end=GameResult.JapanWon;
 					break;
 					}
 				break;
@@ -648,11 +648,11 @@ public void	cnct_decision()
 
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==JPN && ( unit[i].kind>=AP && unit[i].kind<=GF3 ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
+					if( unit[i].used==Side.Japan && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
 						{
 						f++;	//　日本の施設
 						}
-					if( unit[i].used==USA && ( unit[i].kind>=AP && unit[i].kind<=GF3 ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
+					if( unit[i].used==Side.UnitedStates && ( unit[i].kind>=UnitKind.AirBase && unit[i].kind<=UnitKind.Fortress ) && pt_in_rect2(ref wrk_r,(int)unit[i].x,(int)unit[i].y)!=0 )
 						{
 						m++;	//　米の施設
 						}
@@ -660,12 +660,12 @@ public void	cnct_decision()
 
 				if( f>=4 && m==0 )
 					{
-					game_end=JPN_WIN;
+					game_end=GameResult.JapanWon;
 					break;
 					}
 				if( f==0 && m>=4 )
 					{
-					game_end=USA_WIN;
+					game_end=GameResult.UnitedStatesWon;
 					break;
 					}
 				break;
@@ -676,7 +676,7 @@ public void	cnct_decision()
 				// ミッドウェイを巡る戦い１
 				if( unit[decision_point[0]].used==0 )
 					{
-					game_end=JPN_WIN;
+					game_end=GameResult.JapanWon;
 					break;
 					}
 /***
@@ -693,7 +693,7 @@ public void	cnct_decision()
 
 
 	// 結果はっぴょー
-	if( game_end!=0 )
+	if( game_end!=GameResult.None )
 		{
 #if true
 		if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK ) 
@@ -705,27 +705,27 @@ public void	cnct_decision()
 #if !LNGG_VER
 			switch( game_end )
 				{
-				case JPN_WIN:
+				case GameResult.JapanWon:
 					len[0] = wsprintf(ach[0], "ゲーム終了");
 					len[1] = wsprintf(ach[1], "日本海軍は勝利条件を達成した。");
 					len[2] = wsprintf(ach[2], "日本海軍の勝利");
 					break;
-				case USA_WIN:
+				case GameResult.UnitedStatesWon:
 					len[0] = wsprintf(ach[0], "ゲーム終了");
 					len[1] = wsprintf(ach[1], "合衆国海軍は勝利条件を達成した。");
 					len[2] = wsprintf(ach[2], "合衆国海軍の勝利");
 					break;
-				case JPN_LOST:
+				case GameResult.JapanLost:
 					len[0] = wsprintf(ach[0], "ゲーム終了");
 					len[1] = wsprintf(ach[1], "日本海軍は勝利条件を達成できなかった。");
 					len[2] = wsprintf(ach[2], "");
 					break;
-				case USA_LOST:
+				case GameResult.UnitedStatesLost:
 					len[0] = wsprintf(ach[0], "ゲーム終了");
 					len[1] = wsprintf(ach[1], "合衆国海軍は勝利条件を達成できなかった。");
 					len[2] = wsprintf(ach[2], "");
 					break;
-				case DRAW:
+				case GameResult.Draw:
 					len[0] = wsprintf(ach[0], "ゲーム終了");
 					len[1] = wsprintf(ach[1], "日米両海軍は勝利目標を達成できなかった。");
 					len[2] = wsprintf(ach[2], "引き分け。");
@@ -737,23 +737,23 @@ public void	cnct_decision()
 			len[0] = wsprintf(ach[0], "Battle is Over.");
 			switch( game_end )
 				{
-				case JPN_WIN:
+				case GameResult.JapanWon:
 					len[1] = wsprintf(ach[1], "Japan Navy got a victory.");
 					len[2] = wsprintf(ach[2], "Japan Navy won.");
 					break;
-				case USA_WIN:
+				case GameResult.UnitedStatesWon:
 					len[1] = wsprintf(ach[1], "U.S.Navy got a victory.");
 					len[2] = wsprintf(ach[2], "U.S.Navy won.");
 					break;
-				case JPN_LOST:
+				case GameResult.JapanLost:
 					len[1] = wsprintf(ach[1], "Japan Navy lost a victory.");
 					len[2] = wsprintf(ach[2], "");
 					break;
-				case USA_LOST:
+				case GameResult.UnitedStatesLost:
 					len[1] = wsprintf(ach[1], "U.S.Navy lost a victory.");
 					len[2] = wsprintf(ach[2], "");
 					break;
-				case DRAW:
+				case GameResult.Draw:
 					len[1] = wsprintf(ach[1], "Both of Navies could not get a victory.");
 					len[2] = wsprintf(ach[2], "Draw.");
 					break;
@@ -797,7 +797,7 @@ public void	set_unit_data(int m)
 
 	switch( unit[m].kind )
 		{
-		case BB1:
+		case UnitKind.Battleship:
 			unit[m].a_drctn_add=0.3;
 			unit[m].a_spd_add=0.01;
 			unit[m].min_spd=0.0;
@@ -817,7 +817,7 @@ public void	set_unit_data(int m)
 
 			unit[m].hp[0]=unit[m].hp[1]=BB1_HP;		// Ｈｐ
 
-			if( unit[m].used==JPN && unit[m].type==1 )
+			if( unit[m].used==Side.Japan && unit[m].type==1 )
 				{
 				unit[m].a_drctn_add*=0.9;
 
@@ -834,7 +834,7 @@ public void	set_unit_data(int m)
 				}
 			break;
 
-		case CA1:
+		case UnitKind.Cruiser:
 			unit[m].a_drctn_add=0.5;
 			unit[m].a_spd_add=0.01;
 			unit[m].min_spd=0.0;
@@ -846,7 +846,7 @@ public void	set_unit_data(int m)
 
 			if( unit[m].type!=0  )
 				{
-				if( unit[m].used==JPN )
+				if( unit[m].used==Side.Japan )
 					{
 					unit[m].arm[1]=450;		// 数
 					unit[m].arm[4]=450;		// 数 全容量
@@ -873,7 +873,7 @@ public void	set_unit_data(int m)
 			unit[m].hp[0]=unit[m].hp[1]=CA1_HP;		// Ｈｐ
 			if( unit[m].type!=0 )
 				{
-				if( unit[m].used==USA )
+				if( unit[m].used==Side.UnitedStates )
 					unit[m].hp[1]=(int)(unit[m].hp[1] * 0.9);
 				else
 					unit[m].hp[1]=(int)(unit[m].hp[1] * 0.8);
@@ -881,7 +881,7 @@ public void	set_unit_data(int m)
 				}
 			break;
 
-		case DD1:
+		case UnitKind.Destroyer:
 			unit[m].a_drctn_add=1.3;
 			unit[m].a_spd_add=0.05;
 			unit[m].min_spd=0.0;
@@ -901,7 +901,7 @@ public void	set_unit_data(int m)
 			unit[m].hp[0]=unit[m].hp[1]=DD1_HP;		// Ｈｐ
 			if( unit[m].type!=0 )
 				{
-				if( unit[m].used==USA )
+				if( unit[m].used==Side.UnitedStates )
 					unit[m].hp[1]=(int)(unit[m].hp[1] * 0.9);
 				else
 					unit[m].hp[1]=(int)(unit[m].hp[1] * 0.7);
@@ -909,7 +909,7 @@ public void	set_unit_data(int m)
 				}
 			break;
 
-		case SS1:
+		case UnitKind.Submarine:
 			unit[m].a_drctn_add=0.5;
 			unit[m].a_spd_add=0.02;
 			unit[m].min_spd=0.0;
@@ -929,7 +929,7 @@ public void	set_unit_data(int m)
 			unit[m].hp[0]=unit[m].hp[1]=SS1_HP;		// Ｈｐ
 			break;
 
-		case CV1:
+		case UnitKind.Carrier:
 			unit[m].a_drctn_add=0.3;
 			unit[m].a_spd_add=0.01;
 			unit[m].min_spd=0.0;
@@ -953,9 +953,9 @@ public void	set_unit_data(int m)
 
 			unit[m].tech=5;			
 
-			unit[m].hp[0]=unit[m].hp[1]=CV1_HP+((unit[m].used==USA ? 1 : 0)*5);		// Ｈｐ
+			unit[m].hp[0]=unit[m].hp[1]=CV1_HP+((unit[m].used==Side.UnitedStates ? 1 : 0)*5);		// Ｈｐ
 
-			if( unit[m].used==USA && unit[m].type==1 )
+			if( unit[m].used==Side.UnitedStates && unit[m].type==1 )
 				{
 				unit[m].a_drctn_add*=0.9;
 
@@ -976,7 +976,7 @@ public void	set_unit_data(int m)
 			break;
 
 
-		case CVL1:
+		case UnitKind.LightCarrier:
 			unit[m].a_drctn_add=0.5;
 			unit[m].a_spd_add=0.01;
 			unit[m].min_spd=0.0;
@@ -1000,16 +1000,16 @@ public void	set_unit_data(int m)
 
 			unit[m].tech=5;			
 
-			unit[m].hp[0]=unit[m].hp[1]=CVL1_HP+((unit[m].used==USA ? 1 : 0)*5);		// Ｈｐ
+			unit[m].hp[0]=unit[m].hp[1]=CVL1_HP+((unit[m].used==Side.UnitedStates ? 1 : 0)*5);		// Ｈｐ
 			break;
 
 
-		case FT1:
+		case UnitKind.Fighter:
 			switch( unit[m].type )
 				{
 				case 0:		// 艦上戦闘機
 
-					if(unit[m].used==JPN)
+					if(unit[m].used==Side.Japan)
 						{
 						unit[m].a_drctn_add=4.0;
 						unit[m].a_spd_add=0.01;
@@ -1062,7 +1062,7 @@ public void	set_unit_data(int m)
 				case 1:		// 陸上戦闘機
 #if true
 
-					if(unit[m].used==JPN)
+					if(unit[m].used==Side.Japan)
 						{
 						unit[m].a_drctn_add=1.8;
 						unit[m].a_spd_add=0.008;
@@ -1105,7 +1105,7 @@ public void	set_unit_data(int m)
 
 
 #else
-					if(unit[m].used==JPN)
+					if(unit[m].used==Side.Japan)
 						{
 						unit[m].a_drctn_add=3.0;
 						unit[m].a_spd_add=0.03;
@@ -1150,8 +1150,8 @@ public void	set_unit_data(int m)
 				}
 			break;
 
-		case AT1:
-			if(unit[m].used==JPN)
+		case UnitKind.Attacker:
+			if(unit[m].used==Side.Japan)
 				{	
 				unit[m].a_drctn_add=3.0;
 				unit[m].a_spd_add=0.01;
@@ -1202,8 +1202,8 @@ public void	set_unit_data(int m)
 
 
 
-		case BM1:
-			if(unit[m].used==JPN)
+		case UnitKind.Bomber:
+			if(unit[m].used==Side.Japan)
 				{
 				unit[m].a_drctn_add=2.4;
 				unit[m].a_spd_add=0.005;
@@ -1247,7 +1247,7 @@ public void	set_unit_data(int m)
 
 
 
-		case TR1:
+		case UnitKind.Transport:
 			unit[m].a_drctn_add=0.3;
 			unit[m].a_spd_add=0.01;
 			unit[m].min_spd=0.0;
@@ -1268,7 +1268,7 @@ public void	set_unit_data(int m)
 			break;
 
 
-		case SP:
+		case UnitKind.NavalBase:
 			unit[m].os_indx_y=11;
 
 			unit[m].tech=5;			
@@ -1277,7 +1277,7 @@ public void	set_unit_data(int m)
 
 			unit[m].drctn=90.0;					// ９０がos_indx_x=0;
 			break;
-		case AP:
+		case UnitKind.AirBase:
 			unit[m].os_indx_y=11;
 			unit[m].info[0]=0;					// 
 			unit[m].info[1]=plane_in_cv(m);		// 現在収容数(飛行甲板上数も含む)
@@ -1297,7 +1297,7 @@ public void	set_unit_data(int m)
 
 
 
-		case CT1:
+		case UnitKind.City:
 			unit[m].os_indx_y=11;
 
 			unit[m].arm[0]=0;		// 武装品種
@@ -1312,7 +1312,7 @@ public void	set_unit_data(int m)
 
 
 
-		case GF1:
+		case UnitKind.InfantryBase:
 			unit[m].os_indx_y=11;
 
 			unit[m].arm[0]=GUN;		// 武装品種
@@ -1327,7 +1327,7 @@ public void	set_unit_data(int m)
 
 
 
-		case GF2:
+		case UnitKind.Pillboxes:
 			unit[m].os_indx_y=11;
 
 			unit[m].arm[0]=GUN;		// 武装品種
@@ -1339,7 +1339,7 @@ public void	set_unit_data(int m)
 			unit[m].tech=5;			
 			unit[m].hp[0]=unit[m].hp[1]=GF2_HP;		// Ｈｐ
 			break;
-		case GF3:
+		case UnitKind.Fortress:
 			unit[m].os_indx_y=11;
 
 			unit[m].arm[0]=GUN;		// 武装品種
@@ -1395,19 +1395,19 @@ public void	set_unit_data(int m)
 //============================================================================
 //		
 //----------------------------------------------------------------------------
-public int		set_new_unit(int side,int kind,double rx,double ry,double drctn)
+public int		set_new_unit(Side side,UnitKind kind,double rx,double ry,double drctn)
 	{
-	int	ctgry,start,end,m,n;
+	UnitCategory	ctgry; int start,end,m,n;
 	int	type;
 
 
 
 
 
-	if(kind==AT1||kind==FT1||kind==BM1)
-		ctgry=PLANE;
+	if(kind==UnitKind.Attacker||kind==UnitKind.Fighter||kind==UnitKind.Bomber)
+		ctgry=UnitCategory.Plane;
 	else
-		ctgry=SHIP;
+		ctgry=UnitCategory.Ship;
 
 //	if(kind==BB1||kind==CA1||kind==DD1||kind==SS1||kind==CV1||kind==CVL1||kind==TR1||kind==AP||kind==SP)
 //		ctgry=SHIP;
@@ -1416,10 +1416,10 @@ public int		set_new_unit(int side,int kind,double rx,double ry,double drctn)
 
 
 
-	if(side==JPN)
+	if(side==Side.Japan)
 		{
 		// 日本サイドのユニット
-		if( ctgry==SHIP )
+		if( ctgry==UnitCategory.Ship )
 			{
 			start=JPN_SHIP_START;
 			end=JPN_SHIP_END;
@@ -1433,7 +1433,7 @@ public int		set_new_unit(int side,int kind,double rx,double ry,double drctn)
 	else
 		{
 		// 合衆国サイドのユニット
-		if( ctgry==SHIP )
+		if( ctgry==UnitCategory.Ship )
 			{
 			start=USA_SHIP_START;
 			end=USA_SHIP_END;
@@ -1454,7 +1454,7 @@ public int		set_new_unit(int side,int kind,double rx,double ry,double drctn)
 			unit[m].used=0;
 			unit[m].x=0;
 			unit[m].y=0;
-			unit[m].ctgry=0;
+			unit[m].ctgry=UnitCategory.None;
 			unit[m].kind=0;
 			unit[m].type=0;
 			for(n=0;n<=15;n++)
@@ -1496,7 +1496,7 @@ public int		set_new_unit(int side,int kind,double rx,double ry,double drctn)
 
 
 			// あきスペース発見
-			unit[m].used=(short)side;
+			unit[m].used=side;
 			unit[m].x=rx;
 			unit[m].y=ry;
 			unit[m].ctgry=ctgry;
@@ -1519,15 +1519,15 @@ public int		set_new_unit(int side,int kind,double rx,double ry,double drctn)
 //============================================================================
 //		
 //----------------------------------------------------------------------------
-public int		set_new_unit_2(int side,int kind,int type,double rx,double ry,double drctn)
+public int		set_new_unit_2(Side side,UnitKind kind,int type,double rx,double ry,double drctn)
 	{
-	int	ctgry,start,end,m,n;
+	UnitCategory	ctgry; int start,end,m,n;
 
 
-	if(kind==AT1||kind==FT1||kind==BM1)
-		ctgry=PLANE;
+	if(kind==UnitKind.Attacker||kind==UnitKind.Fighter||kind==UnitKind.Bomber)
+		ctgry=UnitCategory.Plane;
 	else
-		ctgry=SHIP;
+		ctgry=UnitCategory.Ship;
 
 //	if(kind==BB1||kind==CA1||kind==DD1||kind==SS1||kind==CV1||kind==CVL1||kind==TR1||kind==AP||kind==SP)
 //		ctgry=SHIP;
@@ -1536,10 +1536,10 @@ public int		set_new_unit_2(int side,int kind,int type,double rx,double ry,double
 
 
 
-	if(side==JPN)
+	if(side==Side.Japan)
 		{
 		// 日本サイドのユニット
-		if( ctgry==SHIP )
+		if( ctgry==UnitCategory.Ship )
 			{
 			start=JPN_SHIP_START;
 			end=JPN_SHIP_END;
@@ -1553,7 +1553,7 @@ public int		set_new_unit_2(int side,int kind,int type,double rx,double ry,double
 	else
 		{
 		// 合衆国サイドのユニット
-		if( ctgry==SHIP )
+		if( ctgry==UnitCategory.Ship )
 			{
 			start=USA_SHIP_START;
 			end=USA_SHIP_END;
@@ -1574,7 +1574,7 @@ public int		set_new_unit_2(int side,int kind,int type,double rx,double ry,double
 			unit[m].used=0;
 			unit[m].x=0;
 			unit[m].y=0;
-			unit[m].ctgry=0;
+			unit[m].ctgry=UnitCategory.None;
 			unit[m].kind=0;
 			unit[m].type=(short)type;
 			for(n=0;n<=15;n++)
@@ -1616,11 +1616,11 @@ public int		set_new_unit_2(int side,int kind,int type,double rx,double ry,double
 
 
 			// あきスペース発見
-			unit[m].used=(short)side;
+			unit[m].used=side;
 			unit[m].x=rx;
 			unit[m].y=ry;
 			unit[m].ctgry=ctgry;
-			if(ctgry==PLANE)
+			if(ctgry==UnitCategory.Plane)
 				unit[m].info[0]=FLYING;
 			unit[m].kind=kind;
 			unit[m].drctn=drctn;
@@ -1641,16 +1641,16 @@ public int		set_new_unit_2(int side,int kind,int type,double rx,double ry,double
 //============================================================================
 //		
 //----------------------------------------------------------------------------
-public int		set_new_unit_plane(int side,int kind,int type,int no,int planes,int arm)
+public int		set_new_unit_plane(Side side,UnitKind kind,int type,int no,int planes,int arm)
 	{
-	int	ctgry,start,end,m,n,f=default /* C4701 */,park;
+	UnitCategory	ctgry; int start,end,m,n,f=default /* C4701 */,park;
 	Array24<int> space = default;
 
-	ctgry=PLANE;
+	ctgry=UnitCategory.Plane;
 
 
 
-	if(side==JPN)
+	if(side==Side.Japan)
 		{
 		// 日本サイドのユニット
 		start=JPN_PLANE_START;
@@ -1678,7 +1678,7 @@ public int		set_new_unit_plane(int side,int kind,int type,int no,int planes,int 
 			park=0;
 			for(n=1;n<=max_unit;n++)
 				{
-				if( unit[n].used!=0 && unit[n].ctgry==PLANE && unit[n].info[1]==no && unit[n].info[0]==PARKING )
+				if( unit[n].used!=0 && unit[n].ctgry==UnitCategory.Plane && unit[n].info[1]==no && unit[n].info[0]==PARKING )
 					{
 					space[unit[n].info[2]]=1;
 					park++;
@@ -1701,10 +1701,10 @@ public int		set_new_unit_plane(int side,int kind,int type,int no,int planes,int 
 				}
 
 
-			unit[m].used=(short)side;
+			unit[m].used=side;
 			unit[m].x=730;
 			unit[m].y=150;
-			unit[m].ctgry=PLANE;
+			unit[m].ctgry=UnitCategory.Plane;
 			unit[m].kind=kind;
 			unit[m].type=(short)type;
 			unit[m].info[0]=PARKING;
@@ -1722,7 +1722,7 @@ public int		set_new_unit_plane(int side,int kind,int type,int no,int planes,int 
 			set_unit_data(m);
 
 
-			if( kind!=FT1  )
+			if( kind!=UnitKind.Fighter  )
 				{
 				if( arm==NTG )
 					{
@@ -1766,7 +1766,7 @@ public void	cnct_sinario_1()
 
 
 
-	if(mode==CNCT_GAME_SETTING)
+	if(mode==GameMode.GameSetting)
 		{
 		// 増援設定などの設定のみ
 
@@ -1800,29 +1800,29 @@ public void	cnct_sinario_1()
 	/*クエゼリン環礁*/
 	rx=-7120;
 	ry=6720;
-	set_new_unit(JPN,SP,rx,ry,(double)0);
+	set_new_unit(Side.Japan,UnitKind.NavalBase,rx,ry,(double)0);
 
 
 	/*クエゼリン*/
 	rx=-7120-80;
 	ry=6720;
-	set_new_unit(JPN,GF1,rx,ry,(double)0);
+	set_new_unit(Side.Japan,UnitKind.InfantryBase,rx,ry,(double)0);
 
 
 
 	rx=-2500;
 	ry=2500;
 //rx=0;
-	m=set_new_unit(JPN,CV1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Carrier,rx,ry,(double)0);
 	no=m;
-	m=set_new_unit_plane(JPN,AT1,0,no,9,TPD);
-	m=set_new_unit_plane(JPN,FT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,9,TPD);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,3,NTG);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,(double)0);
 
 
 
@@ -1849,12 +1849,12 @@ m=set_new_unit_plane(JPN,AT1,0,no,12,TPD);
 	/*ヌーメア軍港*/
 	rx=5440;
 	ry=-5760;
-	m=set_new_unit(USA,SP,rx,ry,(double)0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.NavalBase,rx,ry,(double)0);
 
 	/*ヌーメア*/
 	rx=5440-80;
 	ry=-5760;
-	m=set_new_unit(USA,GF1,rx,ry,(double)0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.InfantryBase,rx,ry,(double)0);
 
 
 
@@ -1864,19 +1864,19 @@ m=set_new_unit_plane(JPN,AT1,0,no,12,TPD);
 //rx=0;
 //ry=2500;
 
-	m=set_new_unit(USA,CV1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Carrier,rx,ry,(double)180);
 	no=m;
-	m=set_new_unit_plane(USA,AT1,0,no,9,BOM);
-	m=set_new_unit_plane(USA,FT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,9,BOM);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,3,NTG);
 
 	rx+=150;
-	m=set_new_unit(USA,DD1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,(double)180);
 
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,(double)180);
 
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,(double)180);
 
 
 	// マップの作成
@@ -1899,7 +1899,7 @@ public void	cnct_sinario_2()
 //	int		tf_no,unit_no;
 
 
-	if(mode==CNCT_GAME_SETTING)
+	if(mode==GameMode.GameSetting)
 		{
 		// 増援設定などの設定のみ
 
@@ -1933,36 +1933,36 @@ public void	cnct_sinario_2()
 	// トラック島 港
 	rx=-7600;
 	ry=-4720;
-	m=set_new_unit(JPN,SP,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.NavalBase,rx,ry,(double)0);
 
 	// トラック島
 	rx=-7600-80;
 	ry=-4720;
-	m=set_new_unit(JPN,GF1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.InfantryBase,rx,ry,(double)0);
 
 
 	rx=-5000;
 	ry=-2500;
 
-	m=set_new_unit(JPN,CV1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Carrier,rx,ry,0);
 	no=m;
-	m=set_new_unit_plane(JPN,AT1,0,no,9,TPD);
-	m=set_new_unit_plane(JPN,FT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,9,TPD);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,3,NTG);
 	rx-=120;
-	m=set_new_unit(JPN,CVL1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.LightCarrier,rx,ry,(double)0);
 	no=m;
-	m=set_new_unit_plane(JPN,AT1,0,no,6,TPD);
-	m=set_new_unit_plane(JPN,FT1,0,no,2,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,6,TPD);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,2,NTG);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,(double)0);
 
 
 
@@ -1971,38 +1971,38 @@ public void	cnct_sinario_2()
 	// ハワイ港
 	rx=7200;
 	ry=-720;
-	m=set_new_unit(USA,SP,rx,ry,(double)90.0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.NavalBase,rx,ry,(double)90.0);
 
 
 	// ハワイ
 	rx=7200-80;
 	ry=-720+80;
-	m=set_new_unit(USA,GF1,rx,ry,(double)90.0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.InfantryBase,rx,ry,(double)90.0);
 
 
 	rx=5000;
 	ry=2500;
 
-	m=set_new_unit(USA,CV1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Carrier,rx,ry,(double)180);
 	no=m;
-	m=set_new_unit_plane(USA,AT1,0,no,9,BOM);
-	m=set_new_unit_plane(USA,FT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,9,BOM);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,3,NTG);
 
 	rx+=150;
-	m=set_new_unit(USA,CVL1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.LightCarrier,rx,ry,(double)180);
 	no=m;
-	m=set_new_unit_plane(USA,AT1,0,no,6,BOM);
-	m=set_new_unit_plane(USA,FT1,0,no,2,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,6,BOM);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,2,NTG);
 	rx+=150;
-	m=set_new_unit(USA,DD1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,(double)180);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,(double)180);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,(double)180);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,(double)180);
 	rx+=150;
-	m=set_new_unit(USA,DD1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,(double)180);
 
 
 
@@ -2030,7 +2030,7 @@ public void	cnct_sinario_3()
 //	int		tf_no,unit_no;
 	
 
-	if(mode==CNCT_GAME_SETTING)
+	if(mode==GameMode.GameSetting)
 		{
 		// 増援設定などの設定のみ
 
@@ -2083,36 +2083,36 @@ public void	cnct_sinario_3()
 	// 港
 	rx=-7440;
 	ry=4880;
-	m=set_new_unit(JPN,SP,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.NavalBase,rx,ry,(double)0);
 
 	// 横須賀
 	rx=-7440-80;
 	ry=4880+80;
-	m=set_new_unit(JPN,GF1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.InfantryBase,rx,ry,(double)0);
 
 
 
 	rx=-6500;
 	ry=5000;
 
-	m=set_new_unit(JPN,CV1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Carrier,rx,ry,(double)0);
 	no=m;
-	m=set_new_unit_plane(JPN,AT1,0,no,9,TPD);
-	m=set_new_unit_plane(JPN,FT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,9,TPD);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,3,NTG);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,(double)0);
 
 
 	rx-=120;
-	m=set_new_unit(JPN,BB1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Battleship,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,(double)0);
 
 
 
@@ -2125,39 +2125,39 @@ public void	cnct_sinario_3()
 	// パラオ
 	rx=6720-80;
 	ry=-3760;
-	m=set_new_unit(USA,SP,rx,ry,(double)0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.NavalBase,rx,ry,(double)0);
 
 	// パラオ
 	rx=6720-80;
 	ry=-3760+80;
-	m=set_new_unit(USA,GF1,rx,ry,(double)0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.InfantryBase,rx,ry,(double)0);
 
 
 	rx=6500;
 	ry=-5000;
 
-	m=set_new_unit(USA,CV1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Carrier,rx,ry,(double)180);
 	no=m;
-	m=set_new_unit_plane(USA,AT1,0,no,9,BOM);
-	m=set_new_unit_plane(USA,FT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,9,BOM);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,3,NTG);
 
 	rx+=150;
-	m=set_new_unit(USA,DD1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,(double)180);
 
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,(double)180);
 
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,(double)180);
 
 
 
 	rx+=150;
-	m=set_new_unit(USA,BB1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Battleship,rx,ry,(double)180);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,(double)180);
 	rx+=150;
-	m=set_new_unit(USA,DD1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,(double)180);
 
 
 
@@ -2188,7 +2188,7 @@ public void	cnct_sinario_4()
 	// 南太平洋
 	
 
-	if(mode==CNCT_GAME_SETTING)
+	if(mode==GameMode.GameSetting)
 		{
 		// 増援設定などの設定のみ
 
@@ -2221,29 +2221,29 @@ public void	cnct_sinario_4()
 	/*クエゼリン環礁*/
 	rx=-7120;
 	ry=6720;
-	set_new_unit(JPN,SP,rx,ry,(double)0);
+	set_new_unit(Side.Japan,UnitKind.NavalBase,rx,ry,(double)0);
 
 
 	// クエゼリン
 	rx=-7120-80;
 	ry=6720;
-	set_new_unit(JPN,GF1,rx,ry,(double)0);
+	set_new_unit(Side.Japan,UnitKind.InfantryBase,rx,ry,(double)0);
 
 
 	rx=-2500;
 	ry=2500;
 
-	m=set_new_unit(JPN,BB1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Battleship,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,(double)0);
 
 
 
@@ -2252,30 +2252,30 @@ public void	cnct_sinario_4()
 	/*ヌーメア軍港*/
 	rx=5440;
 	ry=-5760;
-	m=set_new_unit(USA,SP,rx,ry,(double)0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.NavalBase,rx,ry,(double)0);
 
 
 	// ヌーメア
 	rx=5440-80;
 	ry=-5760-80;
-	m=set_new_unit(USA,GF1,rx,ry,(double)0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.InfantryBase,rx,ry,(double)0);
 
 
 
 	rx=2500;
 	ry=-2500;
 
-	m=set_new_unit(USA,BB1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Battleship,rx,ry,(double)180);
 	rx+=120;
-	m=set_new_unit(USA,CA1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,(double)180);
 	rx+=120;
-	m=set_new_unit(USA,CA1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,(double)180);
 	rx+=120;
-	m=set_new_unit(USA,DD1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,(double)180);
 	rx+=120;
-	m=set_new_unit(USA,DD1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,(double)180);
 	rx+=120;
-	m=set_new_unit(USA,DD1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,(double)180);
 
 
 
@@ -2305,7 +2305,7 @@ public void	cnct_sinario_5()
 	// 南太平洋
 	
 
-	if(mode==CNCT_GAME_SETTING)
+	if(mode==GameMode.GameSetting)
 		{
 		// 増援設定などの設定のみ
 		// 増援設定などの設定のみ
@@ -2352,39 +2352,39 @@ public void	cnct_sinario_5()
 	/*クエゼリン環礁*/
 	rx=-7120;
 	ry=6720;
-	set_new_unit(JPN,SP,rx,ry,(double)0);
+	set_new_unit(Side.Japan,UnitKind.NavalBase,rx,ry,(double)0);
 
 	// クエゼリン環礁
 	rx=-7120-80;
 	ry=6720;
-	set_new_unit(JPN,GF1,rx,ry,(double)0);
+	set_new_unit(Side.Japan,UnitKind.InfantryBase,rx,ry,(double)0);
 
 
 	rx=-2500;
 	ry=2500;
 
-	m=set_new_unit(JPN,BB1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Battleship,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,BB1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Battleship,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,(double)0);
 
 	rx-=120;
-	m=set_new_unit(JPN,SS1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Submarine,rx,ry,(double)0);
 	rx-=120;
-	m=set_new_unit(JPN,SS1,rx,ry,(double)0);
+	m=set_new_unit(Side.Japan,UnitKind.Submarine,rx,ry,(double)0);
 
 
 	//===============		 合衆国海軍		================
@@ -2392,39 +2392,39 @@ public void	cnct_sinario_5()
 	/*ヌーメア軍港*/
 	rx=5440;
 	ry=-5760;
-	m=set_new_unit(USA,SP,rx,ry,(double)0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.NavalBase,rx,ry,(double)0);
 
 	// ヌーメア軍港
 	rx=5440-80;
 	ry=-5760-80;
-	m=set_new_unit(USA,GF1,rx,ry,(double)0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.InfantryBase,rx,ry,(double)0);
 
 	rx=2500;
 	ry=-2500;
 //rx=0;
 //ry=2500;
-	m=set_new_unit(USA,BB1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Battleship,rx,ry,(double)180);
 	rx+=120;
-	m=set_new_unit(USA,BB1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Battleship,rx,ry,(double)180);
 	rx+=120;
-	m=set_new_unit(USA,CA1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,(double)180);
 	rx+=120;
-	m=set_new_unit(USA,CA1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,(double)180);
 	rx+=120;
-	m=set_new_unit(USA,CA1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,(double)180);
 	rx+=120;
-	m=set_new_unit(USA,DD1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,(double)180);
 	rx+=120;
-	m=set_new_unit(USA,DD1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,(double)180);
 	rx+=120;
-	m=set_new_unit(USA,DD1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,(double)180);
 	rx+=120;
-	m=set_new_unit(USA,DD1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,(double)180);
 
 	rx+=120;
-	m=set_new_unit(USA,SS1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Submarine,rx,ry,(double)180);
 	rx+=120;
-	m=set_new_unit(USA,SS1,rx,ry,(double)180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Submarine,rx,ry,(double)180);
 
 
 	// マップの作成
@@ -2450,7 +2450,7 @@ public void	cnct_sinario_6()
 
 	// ミッドウェイ島攻略１
 	// 中部太平洋
-	if(mode==CNCT_GAME_SETTING)
+	if(mode==GameMode.GameSetting)
 		{
 		// 増援設定などの設定のみ
 		if(host_side==0)
@@ -2495,37 +2495,37 @@ public void	cnct_sinario_6()
 	// トラック
 	rx=-7600;
 	ry=-4720;
-	m=set_new_unit(JPN,SP,rx,ry,135);
+	m=set_new_unit(Side.Japan,UnitKind.NavalBase,rx,ry,135);
 
 	// 空港
 	rx=-7600-80;
 	ry=-4720;
-	no=m=set_new_unit(JPN,AP,rx,ry,135);
+	no=m=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,135);
 	no=m;
-	m=set_new_unit_plane(JPN,AT1,0,no,5,BOM);
-	m=set_new_unit_plane(JPN,FT1,0,no,3,NTG);
-	m=set_new_unit_plane(JPN,AT1,1,no,1,BOM);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,5,BOM);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,3,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,1,no,1,BOM);
 
 
 	// 戦闘艦船
 	rx=-7450;
 	ry=-4550;
-	m=set_new_unit(JPN,BB1,rx-50,ry,135);
+	m=set_new_unit(Side.Japan,UnitKind.Battleship,rx-50,ry,135);
 	unit[m].gas[0]*=0.1;
 	unit[m].arm[1]=(int)(unit[m].arm[4]*0.2);			// 数
 	unit[m].spry=1;
 	ry-=150;
-	m=set_new_unit(JPN,CA1,rx,ry,135);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,135);
 	unit[m].gas[0]*=0.2;
 	unit[m].arm[1]=(int)(unit[m].arm[4]*0.1);			// 数
 	unit[m].spry=1;
 	ry-=150;
-	m=set_new_unit(JPN,CA1,rx,ry,135);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,135);
 	unit[m].gas[0]*=0.1;
 	unit[m].arm[1]=(int)(unit[m].arm[4]*0.2);			// 数
 	unit[m].spry=1;
 	ry-=150;
-	m=set_new_unit(JPN,DD1,rx-80,ry,135);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx-80,ry,135);
 	unit[m].gas[0]*=0.1;
 	unit[m].arm[1]=(int)(unit[m].arm[4]*0.3);			// 数
 	unit[m].spry=1;
@@ -2536,33 +2536,33 @@ public void	cnct_sinario_6()
 	ry=-4690;
 //rx=-800;
 //ry=5500;
-	no=m=set_new_unit(JPN,TR1,rx,ry,270);
+	no=m=set_new_unit(Side.Japan,UnitKind.Transport,rx,ry,270);
 	unit[m].arm[0]=TR_GF1;		// 武装品種
 	unit[m].arm[1]=1;			// 数
 	unit[m].arm[4]=1;			// 数 全容量
 	unit[m].gas[0]*=0.2;
 	unit[m].spry=1;
 	ry-=150;
-	no=m=set_new_unit(JPN,TR1,rx-20,ry,135);
+	no=m=set_new_unit(Side.Japan,UnitKind.Transport,rx-20,ry,135);
 	unit[m].arm[0]=TR_GF2;		// 武装品種
 	unit[m].arm[1]=1;			// 数
 	unit[m].arm[4]=1;			// 数 全容量
 	unit[m].gas[0]*=0;
 	unit[m].spry=1;
 	ry-=150;
-	no=m=set_new_unit(JPN,TR1,rx,ry,90);
+	no=m=set_new_unit(Side.Japan,UnitKind.Transport,rx,ry,90);
 	unit[m].arm[0]=TR_GF2;		// 武装品種
 	unit[m].arm[1]=1;			// 数
 	unit[m].arm[4]=1;			// 数 全容量
 	unit[m].gas[0]*=0;
 	unit[m].spry=1;
 	ry-=150;
-	m=set_new_unit(JPN,CA1,rx+90,ry-40,90);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx+90,ry-40,90);
 
 	// 潜水艦
 	rx=-7800;
 	ry=-2000;
-	m=set_new_unit(JPN,SS1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Submarine,rx,ry,0);
 #endif
 
 
@@ -2571,19 +2571,19 @@ public void	cnct_sinario_6()
 // 戦闘艦船
 rx=-7800-200;
 ry=-2000;
-m=set_new_unit(USA,DD1,rx,ry,135);
+m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,135);
 
 // 戦闘艦船
 rx=-7600-100;
 ry=-4720;
-m=set_new_unit(JPN,SS1,rx,ry,135);
+m=set_new_unit(Side.Japan,UnitKind.Submarine,rx,ry,135);
 unit[m].gas[0]*=0.1;
 unit[m].arm[1]=unit[m].arm[4]*0.1;			// 数
 
 // 戦闘艦船
 rx=-7600;
 ry=-4720-800;
-m=set_new_unit(USA,SS1,rx,ry,135);
+m=set_new_unit(Side.UnitedStates,UnitKind.Submarine,rx,ry,135);
 #endif
 
 
@@ -2592,10 +2592,10 @@ m=set_new_unit(USA,SS1,rx,ry,135);
 	// 空港
 	rx=-7600-80;
 	ry=-4720;
-	no=m=set_new_unit(JPN,AP,rx,ry,135);
+	no=m=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,135);
 	no=m;
-	m=set_new_unit_plane(JPN,AT1,0,no,6,BOM);
-	m=set_new_unit_plane(JPN,FT1,0,no,8,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,6,BOM);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,8,NTG);
 
 
 // 戦闘艦船
@@ -2608,15 +2608,15 @@ m=set_new_unit(USA,BB1,rx,ry,135);
 ry-=80;
 //m=set_new_unit(USA,BB1,rx,ry,135);
 */
-no=m=set_new_unit(USA,CV1,rx,ry,180);
-m=set_new_unit_plane(USA,AT1,0,no,12,BOM);
+no=m=set_new_unit(Side.UnitedStates,UnitKind.Carrier,rx,ry,180);
+m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,12,BOM);
 //m=set_new_unit_plane(USA,FT1,0,no,2,NTG);
 
 
 // 戦闘艦船
 rx=800;
 ry=0;
-m=set_new_unit(JPN,GF3,rx,ry,135);
+m=set_new_unit(Side.Japan,UnitKind.Fortress,rx,ry,135);
 
 #endif
 
@@ -2627,58 +2627,58 @@ m=set_new_unit(JPN,GF3,rx,ry,135);
 	// ハワイ港	
 	rx=7200;
 	ry=-640;
-	m=set_new_unit(USA,SP,rx,ry,90.0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.NavalBase,rx,ry,90.0);
 
 	// ハワイ島 基地
 	rx=7200-80;
 	ry=-640+80*2;
-	m=set_new_unit(USA,GF3,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Fortress,rx,ry,0);
 
 	// ハワイ空港
 	rx=7200;
 	ry=-560;
-	m=set_new_unit(USA,AP,rx,ry,45.0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.AirBase,rx,ry,45.0);
 	no=m;
-	m=set_new_unit_plane(USA,AT1,0,no,1,NTG);
-	m=set_new_unit_plane(USA,FT1,0,no,3,NTG);
-	m=set_new_unit_plane(USA,BM1,0,no,4,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,1,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,3,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Bomber,0,no,4,NTG);
 
 
 
 	// ミッドウェイ島 基地
 	rx=80+160;
 	ry=3440-80;
-	m=set_new_unit(USA,GF2,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Pillboxes,rx,ry,0);
 
 
 	// ミッドウェイ島航空基地 1
 	rx=80;
 	ry=3440;
-	no=set_new_unit(USA,AP,rx,ry,0);
-	m=set_new_unit_plane(USA,FT1,0,no,2,NTG);
-	m=set_new_unit_plane(USA,AT1,0,no,2,NTG);
+	no=set_new_unit(Side.UnitedStates,UnitKind.AirBase,rx,ry,0);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,2,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,2,NTG);
 
 	// 機動部隊
 	rx=-3500;
 //rx=-6500;
 	ry=-3000;
-	no=m=set_new_unit(USA,CV1,rx,ry,180);
+	no=m=set_new_unit(Side.UnitedStates,UnitKind.Carrier,rx,ry,180);
 	unit[m].gas[0]/=2;
-	m=set_new_unit_plane(USA,AT1,0,no,10,BOM);
-	m=set_new_unit_plane(USA,FT1,0,no,2,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,10,BOM);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,2,NTG);
 	rx+=150;
-	no=m=set_new_unit(USA,CVL1,rx,ry,180);
+	no=m=set_new_unit(Side.UnitedStates,UnitKind.LightCarrier,rx,ry,180);
 	unit[m].gas[0]/=2;
-	m=set_new_unit_plane(USA,AT1,0,no,6,BOM);
-	m=set_new_unit_plane(USA,FT1,0,no,2,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,6,BOM);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,2,NTG);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
-	unit[m].gas[0]/=2;
-	rx+=150;
-	m=set_new_unit(USA,DD1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	unit[m].gas[0]/=2;
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,180);
+	unit[m].gas[0]/=2;
+	rx+=150;
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	unit[m].gas[0]/=2;
 
 
@@ -2706,7 +2706,7 @@ public void	cnct_sinario_7()
 
 	// ミッドウェイ島攻略２
 	// 中部太平洋
-	if(mode==CNCT_GAME_SETTING)
+	if(mode==GameMode.GameSetting)
 		{
 		// 増援設定などの設定のみ
 		if(host_side==0)
@@ -2751,38 +2751,38 @@ public void	cnct_sinario_7()
 	// トラック
 	rx=-7600;
 	ry=-4720;
-	m=set_new_unit(JPN,SP,rx,ry,135);
+	m=set_new_unit(Side.Japan,UnitKind.NavalBase,rx,ry,135);
 
 
 	// 空港
 	rx=-7600-80;
 	ry=-4720;
-	no=m=set_new_unit(JPN,AP,rx,ry,135);
+	no=m=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,135);
 	no=m;
-	m=set_new_unit_plane(JPN,AT1,0,no,5,NTG);
-	m=set_new_unit_plane(JPN,FT1,0,no,3,NTG);
-	m=set_new_unit_plane(JPN,AT1,1,no,1,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,5,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,3,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,1,no,1,NTG);
 
 
 	// 戦闘艦船
 	rx=-7450;
 	ry=-4550;
-	m=set_new_unit(JPN,BB1,rx-50,ry,135);
+	m=set_new_unit(Side.Japan,UnitKind.Battleship,rx-50,ry,135);
 	unit[m].gas[0]*=0.1;
 	unit[m].arm[1]=(int)(unit[m].arm[4]*0.2);			// 数
 	unit[m].spry=1;
 	ry-=150;
-	m=set_new_unit(JPN,CA1,rx,ry,135);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,135);
 	unit[m].gas[0]*=0.2;
 	unit[m].arm[1]=(int)(unit[m].arm[4]*0.1);			// 数
 	unit[m].spry=1;
 	ry-=150;
-	m=set_new_unit(JPN,CA1,rx,ry,135);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,135);
 	unit[m].gas[0]*=0.1;
 	unit[m].arm[1]=(int)(unit[m].arm[4]*0.2);			// 数
 	unit[m].spry=1;
 	ry-=150;
-	m=set_new_unit(JPN,DD1,rx-80,ry,135);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx-80,ry,135);
 	unit[m].gas[0]*=0.1;
 	unit[m].arm[1]=(int)(unit[m].arm[4]*0.3);			// 数
 	unit[m].spry=1;
@@ -2793,33 +2793,33 @@ public void	cnct_sinario_7()
 	ry=-4690;
 //rx=-800;
 //ry=5500;
-	no=m=set_new_unit(JPN,TR1,rx,ry,270);
+	no=m=set_new_unit(Side.Japan,UnitKind.Transport,rx,ry,270);
 	unit[m].arm[0]=TR_GF1;		// 武装品種
 	unit[m].arm[1]=1;			// 数
 	unit[m].arm[4]=1;			// 数 全容量
 	unit[m].gas[0]*=0.2;
 	unit[m].spry=1;
 	ry-=150;
-	no=m=set_new_unit(JPN,TR1,rx-20,ry,135);
+	no=m=set_new_unit(Side.Japan,UnitKind.Transport,rx-20,ry,135);
 	unit[m].arm[0]=TR_GF2;		// 武装品種
 	unit[m].arm[1]=1;			// 数
 	unit[m].arm[4]=1;			// 数 全容量
 	unit[m].gas[0]*=0;
 	unit[m].spry=1;
 	ry-=150;
-	no=m=set_new_unit(JPN,TR1,rx,ry,90);
+	no=m=set_new_unit(Side.Japan,UnitKind.Transport,rx,ry,90);
 	unit[m].arm[0]=TR_GF2;		// 武装品種
 	unit[m].arm[1]=1;			// 数
 	unit[m].arm[4]=1;			// 数 全容量
 	unit[m].gas[0]*=0;
 	unit[m].spry=1;
 	ry-=150;
-	m=set_new_unit(JPN,CA1,rx+90,ry-40,90);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx+90,ry-40,90);
 
 	// 潜水艦
 	rx=-7800;
 	ry=-2000;
-	m=set_new_unit(JPN,SS1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Submarine,rx,ry,0);
 
 /*
 rx=-7800+800;
@@ -2846,57 +2846,57 @@ unit[m].arm[4]=1;			// 数 全容量
 	// ハワイ港	
 	rx=7200;
 	ry=-640;
-	m=set_new_unit(USA,SP,rx,ry,90.0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.NavalBase,rx,ry,90.0);
 
 	// ハワイ島 基地
 	rx=7200-80;
 	ry=-640+80*2;
-	m=set_new_unit(USA,GF3,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Fortress,rx,ry,0);
 
 	// ハワイ空港
 	rx=7200;
 	ry=-560;
-	m=set_new_unit(USA,AP,rx,ry,45.0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.AirBase,rx,ry,45.0);
 	no=m;
-	m=set_new_unit_plane(USA,FT1,1,no,3,NTG);
-	m=set_new_unit_plane(USA,BM1,0,no,2,NTG);
-	m=set_new_unit_plane(USA,AT1,0,no,4,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,1,no,3,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Bomber,0,no,2,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,4,NTG);
 
 
 
 	// ミッドウェイ島 基地
 	rx=80+160;
 	ry=3440-80;
-	m=set_new_unit(USA,GF2,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Pillboxes,rx,ry,0);
 
 
 	// ミッドウェイ島航空基地 1
 	rx=80;
 	ry=3440;
-	no=set_new_unit(USA,AP,rx,ry,0);
-	m=set_new_unit_plane(USA,FT1,0,no,2,NTG);
-	m=set_new_unit_plane(USA,AT1,0,no,2,NTG);
+	no=set_new_unit(Side.UnitedStates,UnitKind.AirBase,rx,ry,0);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,2,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,2,NTG);
 
 	// 機動部隊
 	rx=-3500;
 	ry=-3000;
-	no=m=set_new_unit(USA,CV1,rx,ry,180);
+	no=m=set_new_unit(Side.UnitedStates,UnitKind.Carrier,rx,ry,180);
 	unit[m].gas[0]/=2;
-	m=set_new_unit_plane(USA,AT1,0,no,10,BOM);
-	m=set_new_unit_plane(USA,FT1,0,no,2,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,10,BOM);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,2,NTG);
 	rx+=150;
-	no=m=set_new_unit(USA,CVL1,rx,ry,180);
+	no=m=set_new_unit(Side.UnitedStates,UnitKind.LightCarrier,rx,ry,180);
 	unit[m].gas[0]/=2;
-	m=set_new_unit_plane(USA,AT1,0,no,6,BOM);
-	m=set_new_unit_plane(USA,FT1,0,no,2,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,6,BOM);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,2,NTG);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
-	unit[m].gas[0]/=2;
-	rx+=150;
-	m=set_new_unit(USA,DD1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	unit[m].gas[0]/=2;
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,180);
+	unit[m].gas[0]/=2;
+	rx+=150;
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	unit[m].gas[0]/=2;
 
 
@@ -2925,7 +2925,7 @@ public void	cnct_sinario_8()
 
 	// 中部太平洋の戦い
 	// 中部太平洋
-	if(mode==CNCT_GAME_SETTING)
+	if(mode==GameMode.GameSetting)
 		{
 		// 増援設定などの設定のみ
 		if(host_side==0)
@@ -2970,66 +2970,66 @@ public void	cnct_sinario_8()
 	// トラック
 	rx=-7600;
 	ry=-4720;
-	m=set_new_unit(JPN,SP,rx,ry,135);
+	m=set_new_unit(Side.Japan,UnitKind.NavalBase,rx,ry,135);
 
 
 	// 空港
 	rx=-7600-80;
 	ry=-4720;
-	no=set_new_unit(JPN,AP,rx,ry,135);
-	m=set_new_unit_plane(JPN,AT1,0,no,3,NTG);
-	m=set_new_unit_plane(JPN,FT1,0,no,3,NTG);
-	m=set_new_unit_plane(JPN,AT1,1,no,2,NTG);
+	no=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,135);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,3,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,3,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,1,no,2,NTG);
 
 
 	// ウェーク
 	rx=-4080;
 	ry=-720;
-	m=set_new_unit(JPN,AP,rx,ry,180);
+	m=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,180);
 	no=m;
-	m=set_new_unit_plane(JPN,FT1,0,no,6,BOM);
-	m=set_new_unit_plane(JPN,AT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,6,BOM);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,3,NTG);
 
 	rx=-4080+80;
 	ry=-720-160;
-	m=set_new_unit(JPN,GF1,rx,ry,180);
+	m=set_new_unit(Side.Japan,UnitKind.InfantryBase,rx,ry,180);
 
 
 
 	// 機動部隊
 	rx=-7400;
 	ry=-4200;
-	no=set_new_unit(JPN,CV1,rx,ry,90);
-	m=set_new_unit_plane(JPN,AT1,0,no,10,BOM);
-	m=set_new_unit_plane(JPN,FT1,0,no,2,NTG);
+	no=set_new_unit(Side.Japan,UnitKind.Carrier,rx,ry,90);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,10,BOM);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,2,NTG);
 	ry-=90;
-	no=set_new_unit(JPN,CVL1,rx,ry,90);
-	m=set_new_unit_plane(JPN,AT1,0,no,0,BOM);
-	m=set_new_unit_plane(JPN,FT1,3,no,0,NTG);
+	no=set_new_unit(Side.Japan,UnitKind.LightCarrier,rx,ry,90);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,0,BOM);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,3,no,0,NTG);
 	ry-=90;
-	m=set_new_unit(JPN,BB1,rx,ry,90);
+	m=set_new_unit(Side.Japan,UnitKind.Battleship,rx,ry,90);
 	ry-=90;
-	m=set_new_unit(JPN,CA1,rx,ry,90);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,90);
 	ry-=90;
-	m=set_new_unit(JPN,CA1,rx,ry,90);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,90);
 	ry-=90;
-	m=set_new_unit(JPN,DD1,rx,ry,90);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,90);
 
 
 	// 戦闘艦船
 	rx=-7500;
 	ry=-4550;
-	m=set_new_unit(JPN,CA1,rx,ry,45);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,45);
 	ry-=120;
-	m=set_new_unit(JPN,CA1,rx+40,ry,135);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx+40,ry,135);
 	ry-=120;
-	m=set_new_unit(JPN,DD1,rx+20,ry,270);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx+20,ry,270);
 
 
 	// 潜水艦
 	rx=-7800;
 	ry=-5000;
-	m=set_new_unit(JPN,SS1,rx,ry,45);
+	m=set_new_unit(Side.Japan,UnitKind.Submarine,rx,ry,45);
 
 
 
@@ -3039,64 +3039,64 @@ public void	cnct_sinario_8()
 	// ハワイ港	
 	rx=7200;
 	ry=-640;
-	m=set_new_unit(USA,SP,rx,ry,90.0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.NavalBase,rx,ry,90.0);
 	// ハワイ島 基地
 	rx=7200;
 	ry=-640+80;
-	m=set_new_unit(USA,GF3,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Fortress,rx,ry,0);
 	// ハワイ島 空港
 	rx=7200+80;
 	ry=-640+80+80;
-	no=set_new_unit(USA,AP,rx,ry,0);
-	m=set_new_unit_plane(USA,FT1,0,no,5,NTG);
-	m=set_new_unit_plane(USA,AT1,0,no,3,NTG);
-	m=set_new_unit_plane(USA,BM1,0,no,2,NTG);
-	m=set_new_unit_plane(USA,FT1,1,no,2,NTG);
+	no=set_new_unit(Side.UnitedStates,UnitKind.AirBase,rx,ry,0);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,5,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,3,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Bomber,0,no,2,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,1,no,2,NTG);
 
 
 
 	// ミッドウェイ島 基地
 	rx=80+160;
 	ry=3440-80;
-	m=set_new_unit(USA,GF2,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Pillboxes,rx,ry,0);
 
 
 	// ミッドウェイ島航空基地 1
 	rx=80;
 	ry=3440;
-	no=set_new_unit(USA,AP,rx,ry,0);
-	m=set_new_unit_plane(USA,FT1,0,no,2,NTG);
-	m=set_new_unit_plane(USA,AT1,0,no,2,NTG);
+	no=set_new_unit(Side.UnitedStates,UnitKind.AirBase,rx,ry,0);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,2,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,2,NTG);
 
 
 
 	// 機動部隊
 	rx=3500;
 	ry=3000;
-	no=set_new_unit(USA,CV1,rx,ry,180);
-	m=set_new_unit_plane(USA,AT1,0,no,10,BOM);
-	m=set_new_unit_plane(USA,FT1,0,no,2,NTG);
+	no=set_new_unit(Side.UnitedStates,UnitKind.Carrier,rx,ry,180);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,10,BOM);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,2,NTG);
 	rx+=150;
-	no=set_new_unit(USA,CVL1,rx,ry,180);
-	m=set_new_unit_plane(USA,AT1,0,no,6,BOM);
-	m=set_new_unit_plane(USA,FT1,0,no,2,NTG);
+	no=set_new_unit(Side.UnitedStates,UnitKind.LightCarrier,rx,ry,180);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,6,BOM);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,2,NTG);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,DD1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 
 
 
 	// 艦隊
 	rx=7200+140;
 	ry=-640+80;
-	m=set_new_unit(USA,CA1,rx,ry,45);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,45);
 	rx+=120;
-	m=set_new_unit(USA,BB1,rx,ry,45);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Battleship,rx,ry,45);
 	rx+=120;
-	m=set_new_unit(USA,SS1,rx,ry,45);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Submarine,rx,ry,45);
 
 
 
@@ -3127,7 +3127,7 @@ public void	cnct_sinario_9()
 
 
 
-	if(mode==CNCT_GAME_SETTING)
+	if(mode==GameMode.GameSetting)
 		{
 		// 増援設定などの設定のみ
 
@@ -3213,7 +3213,7 @@ public void	cnct_sinario_101()
 	
 
 	// ガダルカナル島を巡る戦い
-	if(mode==CNCT_GAME_SETTING)
+	if(mode==GameMode.GameSetting)
 		{
 		// 増援設定などの設定のみ
 		if(host_side==0)
@@ -3256,53 +3256,53 @@ public void	cnct_sinario_101()
 	// クエゼリン環礁
 	rx=-7120;
 	ry=6640;
-	m=set_new_unit(JPN,SP,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.NavalBase,rx,ry,0);
 
 	// クエゼリン航空基地
 	rx=-7120-80;
 	ry=6640+80;
-	no=set_new_unit(JPN,AP,rx,ry,0);
-	m=set_new_unit_plane(JPN,FT1,1,no,2,NTG);
-	m=set_new_unit_plane(JPN,AT1,0,no,5,NTG);
-	m=set_new_unit_plane(JPN,BM1,0,no,3,NTG);
+	no=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,0);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,1,no,2,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,5,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Bomber,0,no,3,NTG);
 
 	// ラバウル 空港
 	rx=-7520;
 	ry=1840;
-	no=set_new_unit(JPN,AP,rx,ry,0);
-	m=set_new_unit_plane(JPN,AT1,0,no,3,BOM);
-	m=set_new_unit_plane(JPN,BM1,0,no,1,NTG);
-	m=set_new_unit_plane(JPN,FT1,1,no,2,NTG);
+	no=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,0);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,3,BOM);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Bomber,0,no,1,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,1,no,2,NTG);
 
 	// ガダルカナル
 	rx=-880;
 	ry=-240;
-	m=set_new_unit(JPN,GF1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.InfantryBase,rx,ry,0);
 	rx=-880+80;
 	ry=-240;
-	m=set_new_unit(JPN,AP,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,0);
 
 	// 機動部隊
 	rx=-6500;
 	ry=4500;
-	m=set_new_unit(JPN,CV1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Carrier,rx,ry,0);
 	no=m;
-	m=set_new_unit_plane(JPN,AT1,0,no,3,TPD);
-	m=set_new_unit_plane(JPN,FT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,3,TPD);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,3,NTG);
 	rx-=120;
-	m=set_new_unit(JPN,BB1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Battleship,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,BB1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Battleship,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,0);
 
 
 
@@ -3311,37 +3311,37 @@ public void	cnct_sinario_101()
 	/*ヌーメア軍港*/
 	rx=5440;
 	ry=-5800+40;
-	m=set_new_unit(USA,SP,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.NavalBase,rx,ry,0);
 
 
 	/*ヌーメア航空基地*/
 	rx=5280;
 	ry=-5760;
-	m=set_new_unit(USA,AP,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.AirBase,rx,ry,0);
 	no=m;
-	m=set_new_unit_plane(USA,FT1,0,no,4,NTG);
-	m=set_new_unit_plane(USA,AT1,0,no,8,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,4,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,8,NTG);
 
 	/*ヌーメア要塞*/
 	rx=5360;
 	ry=-5760;
-	m=set_new_unit(USA,GF2,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Pillboxes,rx,ry,0);
 
 	// 機動部隊
 	rx=6500;
 	ry=-5000;
-	m=set_new_unit(USA,CV1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Carrier,rx,ry,180);
 	no=m;
-	m=set_new_unit_plane(USA,AT1,0,no,9,BOM);
-	m=set_new_unit_plane(USA,FT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,9,BOM);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,3,NTG);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,BB1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Battleship,rx,ry,180);
 
 
 
@@ -3371,7 +3371,7 @@ public void	cnct_sinario_102()
 	
 
 	// ガダルカナル島を巡る戦い
-	if(mode==CNCT_GAME_SETTING)
+	if(mode==GameMode.GameSetting)
 		{
 		// 増援設定などの設定のみ
 		if(host_side==0)
@@ -3415,90 +3415,90 @@ public void	cnct_sinario_102()
 	/*クエゼリン環礁*/
 	rx=-7120;
 	ry=6640;
-	m=set_new_unit(JPN,SP,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.NavalBase,rx,ry,0);
 
 	// クエゼリン航空基地
 	rx=-7120-80;
 	ry=6640+80;
-	no=set_new_unit(JPN,AP,rx,ry,0);
-	m=set_new_unit_plane(JPN,FT1,1,no,2,NTG);
-	m=set_new_unit_plane(JPN,AT1,0,no,5,NTG);
-	m=set_new_unit_plane(JPN,BM1,0,no,3,NTG);
+	no=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,0);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,1,no,2,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,5,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Bomber,0,no,3,NTG);
 
 	// ラバウル 空港
 	rx=-7520;
 	ry=1840;
-	no=set_new_unit(JPN,AP,rx,ry,0);
-	m=set_new_unit_plane(JPN,AT1,0,no,2,BOM);
-	m=set_new_unit_plane(JPN,FT1,0,no,5,NTG);
+	no=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,0);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,2,BOM);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,5,NTG);
 
 	// ガダルカナル
 	rx=-880;
 	ry=-240;
-	m=set_new_unit(JPN,GF1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.InfantryBase,rx,ry,0);
 	rx=-880+80;
 	ry=-240;
-	m=set_new_unit(JPN,AP,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,0);
 	rx=-880-80;
 	ry=-240+80;
-	m=set_new_unit(JPN,GF2,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Pillboxes,rx,ry,0);
 
 	// 機動部隊
 	rx=-6500;
 	ry=5000;
-	m=set_new_unit(JPN,CV1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Carrier,rx,ry,0);
 	no=m;
-	m=set_new_unit_plane(JPN,AT1,0,no,3,TPD);
-	m=set_new_unit_plane(JPN,FT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,3,TPD);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,3,NTG);
 	rx-=120;
-	m=set_new_unit(JPN,BB1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Battleship,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,SS1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Submarine,rx,ry,0);
 
 
 	//===============		 合衆国海軍		================
 	/*ヌーメア軍港*/
 	rx=5440;
 	ry=-5800+40;
-	m=set_new_unit(USA,SP,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.NavalBase,rx,ry,0);
 
 
 	/*ヌーメア航空基地*/
 	rx=5280;
 	ry=-5760;
-	m=set_new_unit(USA,AP,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.AirBase,rx,ry,0);
 	no=m;
-	m=set_new_unit_plane(USA,FT1,0,no,4,NTG);
-	m=set_new_unit_plane(USA,AT1,0,no,8,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,4,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,8,NTG);
 
 	/*ヌーメア要塞*/
 	rx=5360;
 	ry=-5760;
-	m=set_new_unit(USA,GF2,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Pillboxes,rx,ry,0);
 
 	// 機動部隊
 	rx=6500;
 	ry=-5000;
-	m=set_new_unit(USA,CV1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Carrier,rx,ry,180);
 	no=m;
-	m=set_new_unit_plane(USA,AT1,0,no,9,BOM);
-	m=set_new_unit_plane(USA,FT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,9,BOM);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,3,NTG);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,BB1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Battleship,rx,ry,180);
 
 
 
@@ -3525,7 +3525,7 @@ public void	cnct_sinario_103()
 	
 
 	// 日本近海の戦い
-	if(mode==CNCT_GAME_SETTING)
+	if(mode==GameMode.GameSetting)
 		{
 		// 増援設定などの設定のみ
 		if(host_side==0)
@@ -3570,14 +3570,14 @@ public void	cnct_sinario_103()
 	// 空港
 	rx=-7440;
 	ry=5440;
-	m=set_new_unit(JPN,AP,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,0);
 	no=m;
-	m=set_new_unit_plane(JPN,FT1,0,no,2,NTG);
-	m=set_new_unit_plane(JPN,AT1,0,no,2,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,2,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,2,NTG);
 	// 都市
 	rx=-7440-80*4;
 	ry=5440-80*2;
-	m=set_new_unit(JPN,CT1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.City,rx,ry,0);
 /****	
 	// 都市
 	rx=-7440-80*3;
@@ -3588,7 +3588,7 @@ public void	cnct_sinario_103()
 	// 都市
 	rx=-7440-80*2;
 	ry=5440-80*5;
-	m=set_new_unit(JPN,CT1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.City,rx,ry,0);
 /***
 	// 都市
 	rx=-7440-80*3;
@@ -3598,19 +3598,19 @@ public void	cnct_sinario_103()
 	// 都市
 	rx=-7440-80*3;
 	ry=5440-80*1;
-	m=set_new_unit(JPN,CT1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.City,rx,ry,0);
 
 	// 基地
 	rx=-7440-80*4;
 	ry=5440-80*3;
-	m=set_new_unit(JPN,GF2,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Pillboxes,rx,ry,0);
 
 
 	// 横須賀
 	// 港
 	rx=-7440;
 	ry=4880;
-	m=set_new_unit(JPN,SP,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.NavalBase,rx,ry,0);
 
 
 
@@ -3618,15 +3618,15 @@ public void	cnct_sinario_103()
 	// 空港
 	rx=-8000;
 	ry=2800;
-	m=set_new_unit(JPN,AP,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,0);
 	no=m;
-	m=set_new_unit_plane(JPN,FT1,1,no,4,NTG);
-	m=set_new_unit_plane(JPN,FT1,0,no,2,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,1,no,4,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,2,NTG);
 
 	// 都市
 	rx=-8000-80*2;
 	ry=2800-80*2;
-	m=set_new_unit(JPN,CT1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.City,rx,ry,0);
 
 /****
 	// 都市
@@ -3647,20 +3647,20 @@ public void	cnct_sinario_103()
 	// 呉
 	rx=-8160;
 	ry=1760-240;
-	m=set_new_unit(JPN,SP,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.NavalBase,rx,ry,0);
 
 
 	// 九州の空港
 	rx=-7600;
 	ry=960;
-	m=set_new_unit(JPN,AP,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,0);
 	no=m;
-	m=set_new_unit_plane(JPN,FT1,0,no,4,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,4,NTG);
 
 	// 都市
 	rx=-7600-80*9;
 	ry=960-80*4;
-	m=set_new_unit(JPN,CT1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.City,rx,ry,0);
 /***
 	// 都市
 	rx=-7600-80*9;
@@ -3677,24 +3677,24 @@ public void	cnct_sinario_103()
 	// 空港
 	rx=-1520;
 	ry=4400;
-	m=set_new_unit(JPN,AP,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,0);
 	no=m;
-	m=set_new_unit_plane(JPN,FT1,0,no,5,NTG);
-	m=set_new_unit_plane(JPN,AT1,0,no,2,NTG);
-	m=set_new_unit_plane(JPN,FT1,1,no,2,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,5,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,2,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,1,no,2,NTG);
 
 
 	//沖縄の日本軍基地
 	rx=-5040;
 	ry=-2800;
-	m=set_new_unit(JPN,AP,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,0);
 //	m=set_new_unit(JPN,GF1,rx-80,ry+80,0);
 
 
 	//　台湾
 	rx=-5040+80*2;
 	ry=-7200+80*4;
-	m=set_new_unit(JPN,GF2,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Pillboxes,rx,ry,0);
 
 
 //#define MAP_BOTTOM	-7200
@@ -3702,27 +3702,27 @@ public void	cnct_sinario_103()
 
 	rx=-3500;
 	ry=1500;
-	m=set_new_unit(JPN,CV1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Carrier,rx,ry,0);
 	no=m;
-	m=set_new_unit_plane(JPN,AT1,0,no,6,NTG);
-	m=set_new_unit_plane(JPN,FT1,0,no,2,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,6,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,2,NTG);
 	rx-=150;
-	m=set_new_unit(JPN,CV1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Carrier,rx,ry,0);
 	no=m;
-	m=set_new_unit_plane(JPN,AT1,0,no,4,BOM);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,4,BOM);
 //	m=set_new_unit_plane(JPN,FT1,0,no,4,NTG);
 	rx-=150;
-	m=set_new_unit(JPN,BB1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Battleship,rx,ry,0);
 	rx-=150;
-	m=set_new_unit(JPN,CA1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,0);
 	rx-=150;
-	m=set_new_unit(JPN,CA1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,0);
 	rx-=150;
-	m=set_new_unit(JPN,CA1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,0);
 	rx-=150;
-	m=set_new_unit(JPN,DD1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,0);
 	rx-=150;
-	m=set_new_unit(JPN,DD1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,0);
 
 
 
@@ -3746,8 +3746,8 @@ public void	cnct_sinario_103()
 	// パラオ
 	rx=6720-80;
 	ry=-3760;
-	m=set_new_unit(USA,SP,rx,ry,0);
-	m=set_new_unit(USA,GF2,rx-80,ry+80,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.NavalBase,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Pillboxes,rx-80,ry+80,0);
 
 
 
@@ -3756,32 +3756,32 @@ public void	cnct_sinario_103()
 	// 機動部隊
 	rx=8000;
 	ry=-6500;
-	m=set_new_unit(USA,CV1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Carrier,rx,ry,180);
 	no=m;
-	m=set_new_unit_plane(USA,AT1,0,no,8,BOM);
-	m=set_new_unit_plane(USA,FT1,0,no,4,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,8,BOM);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,4,NTG);
 
 	rx-=150;
-	m=set_new_unit(USA,CVL1,rx,ry,135);
+	m=set_new_unit(Side.UnitedStates,UnitKind.LightCarrier,rx,ry,135);
 	no=m;
-	m=set_new_unit_plane(USA,AT1,0,no,6,BOM);
-	m=set_new_unit_plane(USA,FT1,0,no,2,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,6,BOM);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,2,NTG);
 
 
 	rx-=150;
-	m=set_new_unit(USA,BB1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Battleship,rx,ry,180);
 	rx-=150;
-	m=set_new_unit(USA,BB1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Battleship,rx,ry,180);
 	rx-=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	rx-=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	rx-=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	rx-=150;
-	m=set_new_unit(USA,DD1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,180);
 	rx-=150;
-	m=set_new_unit(USA,DD1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,180);
 
 
 
@@ -3805,7 +3805,7 @@ public void	cnct_sinario_104()
 	
 
 	//南太平洋の戦い１
-	if(mode==CNCT_GAME_SETTING)
+	if(mode==GameMode.GameSetting)
 		{
 		// 増援設定などの設定のみ
 		if(host_side==0)
@@ -3851,68 +3851,68 @@ public void	cnct_sinario_104()
 	/*クエゼリン環礁*/
 	rx=-7120;
 	ry=6640;
-	m=set_new_unit(JPN,SP,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.NavalBase,rx,ry,0);
 
 	// クエゼリン航空基地
 	rx=-7120-80;
 	ry=6640+80;
-	no=set_new_unit(JPN,AP,rx,ry,0);
-	m=set_new_unit_plane(JPN,FT1,1,no,2,NTG);
-	m=set_new_unit_plane(JPN,AT1,0,no,5,NTG);
-	m=set_new_unit_plane(JPN,BM1,0,no,3,NTG);
+	no=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,0);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,1,no,2,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,5,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Bomber,0,no,3,NTG);
 
 	// ブーゲンビル
 	rx=-4480;
 	ry=1200;
-	m=set_new_unit(JPN,GF1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.InfantryBase,rx,ry,0);
 	rx=-4480+80*2;
 	ry=1200-80*2;
-	m=set_new_unit(JPN,GF1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.InfantryBase,rx,ry,0);
 	rx=-4480+80*5;
 	ry=1200-80*3;
-	m=set_new_unit(JPN,GF1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.InfantryBase,rx,ry,0);
 
 
 
 	// ガダルカナル
 	rx=-880;
 	ry=-240;
-	m=set_new_unit(JPN,GF1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.InfantryBase,rx,ry,0);
 	rx=-880+80;
 	ry=-240;
-	m=set_new_unit(JPN,AP,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,0);
 	rx=-880-80;
 	ry=-240+80;
-	m=set_new_unit(JPN,GF1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.InfantryBase,rx,ry,0);
 
 
 	// ラバウル 空港
 	rx=-7520;
 	ry=1840;
-	no=set_new_unit(JPN,AP,rx,ry,0);
-	m=set_new_unit_plane(JPN,AT1,0,no,3,BOM);
-	m=set_new_unit_plane(JPN,BM1,0,no,1,NTG);
-	m=set_new_unit_plane(JPN,FT1,1,no,2,NTG);
+	no=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,0);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,3,BOM);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Bomber,0,no,1,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,1,no,2,NTG);
 
 
 	rx=-6500;
 	ry=5000;
-	m=set_new_unit(JPN,CV1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Carrier,rx,ry,0);
 	no=m;
-	m=set_new_unit_plane(JPN,AT1,0,no,9,TPD);
-	m=set_new_unit_plane(JPN,FT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,9,TPD);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,3,NTG);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,BB1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Battleship,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,0);
 
 
 
@@ -3923,39 +3923,39 @@ public void	cnct_sinario_104()
 	/*ヌーメア軍港*/
 	rx=5440;
 	ry=-5800+40;
-	m=set_new_unit(USA,SP,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.NavalBase,rx,ry,0);
 
 
 	/*ヌーメア航空基地*/
 	rx=5280;
 	ry=-5760;
-	m=set_new_unit(USA,AP,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.AirBase,rx,ry,0);
 	no=m;
-	m=set_new_unit_plane(USA,FT1,0,no,5,NTG);
-	m=set_new_unit_plane(USA,FT1,1,no,3,NTG);
-	m=set_new_unit_plane(USA,AT1,0,no,5,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,5,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,1,no,3,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,5,NTG);
 
 	/*ヌーメア要塞*/
 	rx=5360;
 	ry=-5760;
-	m=set_new_unit(USA,GF1,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.InfantryBase,rx,ry,0);
 
 
 	rx=6500;
 	ry=-5000;
 
-	m=set_new_unit(USA,CV1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Carrier,rx,ry,180);
 	no=m;
-	m=set_new_unit_plane(USA,AT1,0,no,9,BOM);
-	m=set_new_unit_plane(USA,FT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,9,BOM);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,3,NTG);
 	rx+=150;
-	m=set_new_unit(USA,DD1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,BB1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Battleship,rx,ry,180);
 
 /***
 	rx+=150;
@@ -3985,7 +3985,7 @@ public void	cnct_sinario_105()
 	
 
 	//南太平洋の戦い２
-	if(mode==CNCT_GAME_SETTING)
+	if(mode==GameMode.GameSetting)
 		{
 		// 増援設定などの設定のみ
 		if(host_side==0)
@@ -4031,27 +4031,27 @@ public void	cnct_sinario_105()
 	/*クエゼリン環礁*/
 	rx=-7120;
 	ry=6640;
-	m=set_new_unit(JPN,SP,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.NavalBase,rx,ry,0);
 
 	// クエゼリン航空基地
 	rx=-7120-80;
 	ry=6640+80;
-	no=set_new_unit(JPN,AP,rx,ry,0);
-	m=set_new_unit_plane(JPN,FT1,1,no,2,NTG);
-	m=set_new_unit_plane(JPN,AT1,0,no,5,NTG);
-	m=set_new_unit_plane(JPN,BM1,0,no,3,NTG);
+	no=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,0);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,1,no,2,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,5,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Bomber,0,no,3,NTG);
 
 
 	// ブーゲンビル
 	rx=-4480;
 	ry=1200;
-	m=set_new_unit(JPN,GF1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.InfantryBase,rx,ry,0);
 	rx=-4480+80*2;
 	ry=1200-80*2;
-	m=set_new_unit(JPN,GF1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.InfantryBase,rx,ry,0);
 	rx=-4480+80*5;
 	ry=1200-80*3;
-	m=set_new_unit(JPN,GF1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.InfantryBase,rx,ry,0);
 
 
 
@@ -4060,30 +4060,30 @@ public void	cnct_sinario_105()
 	// ラバウル 空港
 	rx=-7520;
 	ry=1840;
-	no=set_new_unit(JPN,AP,rx,ry,0);
-	m=set_new_unit_plane(JPN,AT1,0,no,3,BOM);
-	m=set_new_unit_plane(JPN,BM1,0,no,1,NTG);
-	m=set_new_unit_plane(JPN,FT1,1,no,2,NTG);
+	no=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,0);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,3,BOM);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Bomber,0,no,1,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,1,no,2,NTG);
 
 
 	rx=-6500;
 	ry=5000;
-	m=set_new_unit(JPN,CV1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Carrier,rx,ry,0);
 	no=m;
-	m=set_new_unit_plane(JPN,AT1,0,no,9,TPD);
-	m=set_new_unit_plane(JPN,FT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,9,TPD);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,3,NTG);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,BB1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Battleship,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,0);
 
 
 
@@ -4094,48 +4094,48 @@ public void	cnct_sinario_105()
 	/*ヌーメア軍港*/
 	rx=5440;
 	ry=-5800+40;
-	m=set_new_unit(USA,SP,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.NavalBase,rx,ry,0);
 
 
 	/*ヌーメア航空基地*/
 	rx=5280;
 	ry=-5760;
-	m=set_new_unit(USA,AP,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.AirBase,rx,ry,0);
 	no=m;
-	m=set_new_unit_plane(USA,FT1,0,no,5,NTG);
-	m=set_new_unit_plane(USA,FT1,1,no,3,NTG);
-	m=set_new_unit_plane(USA,AT1,0,no,5,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,5,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,1,no,3,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,5,NTG);
 
 	/*ヌーメア要塞*/
 	rx=5360;
 	ry=-5760;
-	m=set_new_unit(USA,GF1,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.InfantryBase,rx,ry,0);
 
 	// ガダルカナル
 	rx=-880;
 	ry=-240;
-	m=set_new_unit(USA,GF1,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.InfantryBase,rx,ry,0);
 	rx=-880+80;
 	ry=-240;
-	m=set_new_unit(USA,AP,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.AirBase,rx,ry,0);
 
 
 
 	rx=6500;
 	ry=-5000;
 
-	m=set_new_unit(USA,CV1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Carrier,rx,ry,180);
 	no=m;
-	m=set_new_unit_plane(USA,AT1,0,no,9,BOM);
-	m=set_new_unit_plane(USA,FT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,9,BOM);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,3,NTG);
 	rx+=150;
-	m=set_new_unit(USA,DD1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,BB1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Battleship,rx,ry,180);
 
 /***
 	rx+=150;
@@ -4168,7 +4168,7 @@ public void	cnct_sinario_106()
 	
 
 	// ガ島争奪戦
-	if(mode==CNCT_GAME_SETTING)
+	if(mode==GameMode.GameSetting)
 		{
 		// 増援設定などの設定のみ
 		if(host_side==0)
@@ -4214,30 +4214,30 @@ public void	cnct_sinario_106()
 	/*クエゼリン環礁*/
 	rx=-7120;
 	ry=6640;
-	m=set_new_unit(JPN,SP,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.NavalBase,rx,ry,0);
 
 	// クエゼリン航空基地
 	rx=-7120-80;
 	ry=6640+80;
-	no=set_new_unit(JPN,AP,rx,ry,0);
-	m=set_new_unit_plane(JPN,FT1,0,no,2,NTG);
-	m=set_new_unit_plane(JPN,AT1,0,no,3,NTG);
+	no=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,0);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,2,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,3,NTG);
 
 
 	rx=-7000;
 	ry=5000;
-	m=set_new_unit(JPN,CVL1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.LightCarrier,rx,ry,0);
 	no=m;
-	m=set_new_unit_plane(JPN,AT1,0,no,4,NTG);
-	m=set_new_unit_plane(JPN,FT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,4,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,3,NTG);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,TR1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Transport,rx,ry,0);
 	unit[m].arm[0]=TR_GF1;		// 武装品種
 	unit[m].arm[1]=1;			// 数
 	unit[m].arm[4]=1;			// 数 全容量
@@ -4246,13 +4246,13 @@ public void	cnct_sinario_106()
 	// ガダルカナル
 	rx=-880-160;
 	ry=-240+80;
-	m=set_new_unit(JPN,GF1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.InfantryBase,rx,ry,0);
 	rx=-880+80-160;
 	ry=-240+80;
-	m=set_new_unit(JPN,GF1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.InfantryBase,rx,ry,0);
 	rx=-880-160+80;
 	ry=-240;
-	m=set_new_unit(JPN,GF1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.InfantryBase,rx,ry,0);
 
 
 /**
@@ -4271,33 +4271,33 @@ public void	cnct_sinario_106()
 	/*ヌーメア軍港*/
 	rx=5440;
 	ry=-5800+40;
-	m=set_new_unit(USA,SP,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.NavalBase,rx,ry,0);
 
 
 	/*ヌーメア航空基地*/
 	rx=5280;
 	ry=-5760;
-	m=set_new_unit(USA,AP,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.AirBase,rx,ry,0);
 	no=m;
-	m=set_new_unit_plane(USA,FT1,0,no,2,NTG);
-	m=set_new_unit_plane(USA,AT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,2,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,3,NTG);
 
 
 
 	rx=6500;
 	ry=-5000;
-	m=set_new_unit(USA,CVL1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.LightCarrier,rx,ry,180);
 	no=m;
-	m=set_new_unit_plane(USA,AT1,0,no,4,NTG);
-	m=set_new_unit_plane(USA,FT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,4,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,3,NTG);
 	rx+=150;
-	m=set_new_unit(USA,DD1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,DD1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,TR1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Transport,rx,ry,180);
 	unit[m].arm[0]=TR_GF1;		// 武装品種
 	unit[m].arm[1]=1;			// 数
 	unit[m].arm[4]=1;			// 数 全容量
@@ -4307,16 +4307,16 @@ public void	cnct_sinario_106()
 	// ガダルカナル
 	rx=-880;
 	ry=-240;
-	m=set_new_unit(USA,GF1,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.InfantryBase,rx,ry,0);
 	rx=-880+80;
 	ry=-240;
-	m=set_new_unit(USA,AP,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.AirBase,rx,ry,0);
 	rx=-880+80;
 	ry=-240+80;
-	m=set_new_unit(USA,GF1,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.InfantryBase,rx,ry,0);
 	rx=-880;
 	ry=-240+80;
-	m=set_new_unit(USA,GF1,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.InfantryBase,rx,ry,0);
 
 
 
@@ -4346,7 +4346,7 @@ public void	cnct_sinario_999()
 	int		tf_no,unit_no;
 	
 
-	if(mode==CNCT_GAME_SETTING)
+	if(mode==GameMode.GameSetting)
 		{
 		// 増援設定などの設定のみ
 		if(host_side==0)
@@ -4383,45 +4383,45 @@ public void	cnct_sinario_999()
 	// トラック島 港
 	rx=-7600;
 	ry=-4720;
-	m=set_new_unit(JPN,SP,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.NavalBase,rx,ry,0);
 
 
 
 	// 空港
 	rx=-7600-80;
 	ry=-4720;
-	no=m=set_new_unit(JPN,AP,rx,ry,135);
+	no=m=set_new_unit(Side.Japan,UnitKind.AirBase,rx,ry,135);
 	no=m;
-	m=set_new_unit_plane(JPN,AT1,0,no,4,NTG);
-	m=set_new_unit_plane(JPN,FT1,0,no,4,NTG);
-	m=set_new_unit_plane(JPN,FT1,1,no,1,NTG);
-	m=set_new_unit_plane(JPN,BM1,0,no,1,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,4,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,4,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,1,no,1,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Bomber,0,no,1,NTG);
 
 
 
 #if false
 	rx=0;
 	ry=400;
-	m=set_new_unit_2(USA,AT1,0,rx,ry,0);
+	m=set_new_unit_2(Side.UnitedStates,UnitKind.Attacker,0,rx,ry,0);
 	unit[m].arm[0]=TPD;		// 武装品種
 	unit[m].arm[1]=unit[m].arm[4]/*1*/;		// 数
-	m=set_new_unit_2(USA,AT1,0,rx,ry+80*1,0);
+	m=set_new_unit_2(Side.UnitedStates,UnitKind.Attacker,0,rx,ry+80*1,0);
 	unit[m].arm[0]=TPD;		// 武装品種
 	unit[m].arm[1]=unit[m].arm[4]/*1*/;		// 数
-	m=set_new_unit_2(USA,AT1,0,rx,ry+80*2,0);
+	m=set_new_unit_2(Side.UnitedStates,UnitKind.Attacker,0,rx,ry+80*2,0);
 	unit[m].arm[0]=TPD;		// 武装品種
 	unit[m].arm[1]=unit[m].arm[4]/*1*/;		// 数
 
 
 
 	rx+=800;
-	m=set_new_unit_2(USA,AT1,0,rx,ry,0);
+	m=set_new_unit_2(Side.UnitedStates,UnitKind.Attacker,0,rx,ry,0);
 	unit[m].arm[0]=TPD;		// 武装品種
 	unit[m].arm[1]=unit[m].arm[4]/*1*/;		// 数
-	m=set_new_unit_2(USA,AT1,0,rx,ry+80*1,0);
+	m=set_new_unit_2(Side.UnitedStates,UnitKind.Attacker,0,rx,ry+80*1,0);
 	unit[m].arm[0]=TPD;		// 武装品種
 	unit[m].arm[1]=unit[m].arm[4]/*1*/;		// 数
-	m=set_new_unit_2(USA,AT1,0,rx,ry+80*2,0);
+	m=set_new_unit_2(Side.UnitedStates,UnitKind.Attacker,0,rx,ry+80*2,0);
 	unit[m].arm[0]=TPD;		// 武装品種
 	unit[m].arm[1]=unit[m].arm[4]/*1*/;		// 数
 #endif
@@ -4433,38 +4433,38 @@ public void	cnct_sinario_999()
 	ry=-5800;
 
 
-	m=set_new_unit(JPN,CV1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Carrier,rx,ry,0);
 	no=m;
-	m=set_new_unit_plane(JPN,AT1,0,no,9,TPD);
-	m=set_new_unit_plane(JPN,FT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,9,TPD);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,3,NTG);
 	rx-=120;
-	m=set_new_unit(JPN,CVL1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.LightCarrier,rx,ry,0);
 	no=m;
-	m=set_new_unit_plane(JPN,AT1,0,no,6,TPD);
-	m=set_new_unit_plane(JPN,FT1,0,no,2,NTG);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Attacker,0,no,6,TPD);
+	m=set_new_unit_plane(Side.Japan,UnitKind.Fighter,0,no,2,NTG);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,CA1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Cruiser,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,DD1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Destroyer,rx,ry,0);
 	rx-=120;
-	m=set_new_unit(JPN,SS1,rx,ry,0);
+	m=set_new_unit(Side.Japan,UnitKind.Submarine,rx,ry,0);
 
 
 	// 輸送船団
 	rx-=120;
-	m=set_new_unit(JPN,TR1,rx,ry,135);
+	m=set_new_unit(Side.Japan,UnitKind.Transport,rx,ry,135);
 	unit[m].arm[0]=TR_GF1;		// 武装品種
 	unit[m].arm[1]=1;			// 数
 	unit[m].arm[4]=1;			// 数 全容量
 	rx-=120;
-	m=set_new_unit(JPN,TR1,rx,ry,135);
+	m=set_new_unit(Side.Japan,UnitKind.Transport,rx,ry,135);
 	unit[m].arm[0]=TR_GF1;		// 武装品種
 	unit[m].arm[1]=1;			// 数
 	unit[m].arm[4]=1;			// 数 全容量
 	rx-=120;
-	m=set_new_unit(JPN,TR1,rx,ry,135);
+	m=set_new_unit(Side.Japan,UnitKind.Transport,rx,ry,135);
 	unit[m].arm[0]=TR_GF1;		// 武装品種
 	unit[m].arm[1]=1;			// 数
 	unit[m].arm[4]=1;			// 数 全容量
@@ -4473,17 +4473,17 @@ public void	cnct_sinario_999()
 #if false
 	rx=10;
 	ry=200;
-	m=set_new_unit_2(JPN,SS1,0,rx,ry,0);
+	m=set_new_unit_2(Side.Japan,UnitKind.Submarine,0,rx,ry,0);
 	rx+=700;
-	m=set_new_unit_2(JPN,SS1,0,rx,ry,0);
+	m=set_new_unit_2(Side.Japan,UnitKind.Submarine,0,rx,ry,0);
 #endif
 
 
 	rx=0;
 	ry=0;
-	m=set_new_unit_2(JPN,BB1,1,rx,ry,90);
+	m=set_new_unit_2(Side.Japan,UnitKind.Battleship,1,rx,ry,90);
 	ry+=80;
-	m=set_new_unit_2(USA,SS1,0,rx,ry,90);
+	m=set_new_unit_2(Side.UnitedStates,UnitKind.Submarine,0,rx,ry,90);
 
 
 
@@ -4492,34 +4492,34 @@ public void	cnct_sinario_999()
 	// ハワイ港
 	rx=7200;
 	ry=-720;
-	m=set_new_unit(USA,SP,rx,ry,90.0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.NavalBase,rx,ry,90.0);
 
 	// ハワイ空港
 	rx=7200;
 	ry=-560;
-	m=set_new_unit(USA,AP,rx,ry,45.0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.AirBase,rx,ry,45.0);
 	no=m;
-	m=set_new_unit_plane(USA,AT1,0,no,1,NTG);
-	m=set_new_unit_plane(USA,FT1,0,no,3,NTG);
-	m=set_new_unit_plane(USA,BM1,0,no,4,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,1,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,3,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Bomber,0,no,4,NTG);
 
 
 #if false
 	//ミッドウェイ島
 	rx=80;
 	ry=3440;
-	m=set_new_unit(USA,AP,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.AirBase,rx,ry,0);
 
 	decision_point[0]=m;
 
 	no=m;
-	m=set_new_unit_plane(USA,FT1,0,no,4,NTG);
-	m=set_new_unit_plane(USA,FT1,1,no,1,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,4,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,1,no,1,NTG);
 
-	m=set_new_unit_plane(USA,AT1,0,no,5,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,5,NTG);
 	rx=80+160;
 	ry=3440-80;
-	m=set_new_unit(USA,GF2,rx,ry,0);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Pillboxes,rx,ry,0);
 
 
 	rx=5000;
@@ -4527,48 +4527,48 @@ public void	cnct_sinario_999()
 
 
 
-	m=set_new_unit(USA,CV1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Carrier,rx,ry,180);
 	no=m;
-	m=set_new_unit_plane(USA,AT1,0,no,9,BOM);
-	m=set_new_unit_plane(USA,FT1,0,no,3,NTG);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Attacker,0,no,9,BOM);
+	m=set_new_unit_plane(Side.UnitedStates,UnitKind.Fighter,0,no,3,NTG);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,CA1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Cruiser,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,DD1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Destroyer,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,SS1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Submarine,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,SS1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Submarine,rx,ry,180);
 	rx+=150;
-	m=set_new_unit(USA,BB1,rx,ry,180);
+	m=set_new_unit(Side.UnitedStates,UnitKind.Battleship,rx,ry,180);
 #endif
 
 
 #if false
 	rx=0;
 	ry=0;
-	m=set_new_unit_2(JPN,CA1,1,rx,ry,0);
+	m=set_new_unit_2(Side.Japan,UnitKind.Cruiser,1,rx,ry,0);
 //	m=set_new_unit_2(USA,CA1,1,rx,ry+80,0);
 	rx+=800;
-	m=set_new_unit_2(JPN,CA1,0,rx,ry,0);
+	m=set_new_unit_2(Side.Japan,UnitKind.Cruiser,0,rx,ry,0);
 //	m=set_new_unit_2(USA,CA1,0,rx,ry+80,0);
 #endif
 
 #if false
 	rx=5;
 	ry=5;
-	m=set_new_unit_2(USA,DD1,1,rx,ry,0);
+	m=set_new_unit_2(Side.UnitedStates,UnitKind.Destroyer,1,rx,ry,0);
 	rx+=700;
-	m=set_new_unit_2(USA,DD1,0,rx,ry,0);
+	m=set_new_unit_2(Side.UnitedStates,UnitKind.Destroyer,0,rx,ry,0);
 #endif
 
 	rx=700;
 	ry=0;
-	m=set_new_unit_2(USA,BB1,0,rx,ry,90);
+	m=set_new_unit_2(Side.UnitedStates,UnitKind.Battleship,0,rx,ry,90);
 	ry+=80;
-	m=set_new_unit_2(JPN,SS1,0,rx,ry,90);
+	m=set_new_unit_2(Side.Japan,UnitKind.Submarine,0,rx,ry,90);
 
 
 
@@ -4764,7 +4764,7 @@ public void	cnct_game_init()
 		game_speed=1;
 		cc_count=0;
 		FrameCount=0;
-		game_end=0;
+		game_end=GameResult.None;
 
 
 		bf_cc_count[0]=0;
@@ -4779,7 +4779,7 @@ public void	cnct_game_init()
 		cmbt_x=-400;
 		cmbt_y=400;
 
-		dp_flag.dwType = DP_FLAG_1;
+		dp_flag.dwType = MessageType.SyncFlag;
 		dp_flag.unit_chk=0;
 		bf_unit_chk[1]=0;
 		dp_flag.cc_chk=(byte)cc_count;
@@ -4864,7 +4864,7 @@ public void	cnct_game_init()
 	// 全エフェクトのクリア
 	for(m=0; m<EFFECT_MAX/*255*/; m++)
 		{
-		effect[m].layer=0;
+		effect[m].layer=EffectLayer.None;
 		}
 
 	// 全ファイアデータのクリア
@@ -4884,7 +4884,7 @@ public void	cnct_game_init()
 		unit[m].used=0;
 		unit[m].x=0;
 		unit[m].y=0;
-		unit[m].ctgry=0;
+		unit[m].ctgry=UnitCategory.None;
 		unit[m].kind=0;
 		for(n=0;n<=15;n++)
 			unit[m].info[n]=0;
@@ -4983,7 +4983,7 @@ kumo[0].y=0;
 	if( map_edit!=0 )
 		{
 		put_trgt=1;
-		put_kind=BB1;
+		put_kind=(byte)UnitKind.Battleship;
 		}
 
 
@@ -5009,7 +5009,7 @@ kumo[0].y=0;
 	cc_count=0;
 	FrameCount=0;
 
-	game_end=0;
+	game_end=GameResult.None;
 
 	last_tick=timeGetTime();
 	last_tick2=last_tick;
@@ -5032,23 +5032,23 @@ kumo[0].y=0;
 		if(host_side==0)
 			{
 			if(you_are_host!=0)
-				your_side=JPN;
+				your_side=Side.Japan;
 			else
-				your_side=USA;
+				your_side=Side.UnitedStates;
 			}
 		else
 			{
 			if(you_are_host!=0)
-				your_side=USA;
+				your_side=Side.UnitedStates;
 			else
-				your_side=JPN;
+				your_side=Side.Japan;
 			}
 
 		cmbt_x=-400;
 		cmbt_y=400;
 
 
-		dp_flag.dwType = DP_FLAG_1;
+		dp_flag.dwType = MessageType.SyncFlag;
 		dp_flag.unit_chk=0;
 		bf_unit_chk[1]=0;
 		dp_flag.cc_chk=(byte)cc_count;

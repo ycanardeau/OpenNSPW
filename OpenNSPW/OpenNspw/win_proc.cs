@@ -584,7 +584,7 @@ public nint	IDD_FILE_SAVE_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					GetDlgItemText( hWnd, IDC_EDIT, user_sinario_fn, MAX_PATH );
 
 
-					if( map_edit!=0 && mode==CMBT && user_sinario_fn[0]!='\0' )
+					if( map_edit!=0 && mode==GameMode.Battle && user_sinario_fn[0]!='\0' )
 						{
 						// なんかユーザーファイルが選ばれた。
 
@@ -673,7 +673,7 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 				case IDOK:
 					DlgDirSelectEx( hWnd, user_sinario_fn, sizeof( Array260<byte> ), IDC_LIST );
 
-					if( map_edit!=0 && mode==CMBT && user_sinario_fn[0]!='\0' )
+					if( map_edit!=0 && mode==GameMode.Battle && user_sinario_fn[0]!='\0' )
 						{
 						wsprintf( temp_buf, "%s", user_sinario_fn );
 						wsprintf( user_sinario_fn, "Scenario\\%s", temp_buf );
@@ -681,7 +681,7 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 						load_user_map();
 						make_map_cg();
 						}
-					else if( mode==CNCT_GAME_SETTING && user_sinario_fn[0]!='\0' )
+					else if( mode==GameMode.GameSetting && user_sinario_fn[0]!='\0' )
 						{
 						wsprintf( temp_buf, "%s", user_sinario_fn );
 						wsprintf( user_sinario_fn, "Scenario\\%s", temp_buf );
@@ -689,7 +689,7 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 						if( map_edit==0 )
 							{
 							// なんかユーザーファイルが選ばれた。
-							dp_data_20.dwType = USER_SINARIO_FN;
+							dp_data_20.dwType = MessageType.UserScenarioFileName;
 							wsprintf( dp_data_20.friend_chat, "%s",user_sinario_fn );
 							bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_20));
 							bufferDesc.pBufferData  = (byte*)&dp_data_20;
@@ -700,7 +700,7 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 						get_sinario_data();
 
 						// ホストの選択状態をゲストにセンドします。
-						dp_data_1.dwType = OUT_GAME_SETTING;
+						dp_data_1.dwType = MessageType.LeaveGameSetting;
 						dp_data_1.data[0] = (short)host_side;
 						dp_data_1.data[1] = sinario;
 
@@ -725,7 +725,7 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 
 
 
-						mode=CNCT_CNFG_SETTING;
+						mode=GameMode.ConfigSetting;
 						}
 
 
@@ -771,7 +771,7 @@ public nint	IDD_OK_CANCEL_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 		case WM_INITDIALOG:
 //			dlg_answer=0;
 
-			if( dlg_answer==GO_GAME_SETTING )
+			if( dlg_answer==MessageType.GoToGameSetting )
 				SetWindowText(hWnd,"Exit Without Saving?");
 			else
 				SetWindowText(hWnd,"Resume-save and Exit?");
@@ -884,7 +884,7 @@ public nint ChatDlgProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					my_chat_dsp_time=unchecked((byte)CHAT_DSP_TIME);
 
 				// なんか入力があったならセンドする
-					dp_data_20.dwType = DP_CHAT_1;
+					dp_data_20.dwType = MessageType.Chat;
 					for(m=0;m<128;m++)
 						{
 						dp_data_20.friend_chat[m]=my_chat[m];
@@ -1034,7 +1034,7 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 				{
 
 				case VK_F1:
-					if( map_edit!=0 && mode==CMBT )
+					if( map_edit!=0 && mode==GameMode.Battle )
 						{
 						/*g_hDlg =*/ CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_SAVE_Proc );
 #if false
@@ -1065,7 +1065,7 @@ TCHAR		temp_buf[MAX_PATH];
 
 
 				case VK_F2:
-					if( map_edit!=0 && mode==CMBT )
+					if( map_edit!=0 && mode==GameMode.Battle )
 						{
 						unit[the_slct_unit].used=0;
 						the_slct_unit=0; 
@@ -1102,7 +1102,7 @@ TCHAR		temp_buf[MAX_PATH];
 
 
 				case VK_F3:
-					if( map_edit!=0 && mode==CMBT )
+					if( map_edit!=0 && mode==GameMode.Battle )
 						{
 						SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 						make_map_cg();
@@ -1138,7 +1138,7 @@ int	s;
 					break;
 
 				case VK_F5:
-					if( map_edit!=0 && put_trgt>1 && mode==CMBT )
+					if( map_edit!=0 && put_trgt>1 && mode==GameMode.Battle )
 						{
 						put_trgt--;
 						SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
@@ -1149,7 +1149,7 @@ int	s;
 dbg[1]=0;
 					for( i=1; i<=max_unit; i++)
 						{
-						if( unit[i].used && unit[i].ctgry==PLANE && unit[i].used==USA && unit[i].info[1]==46/* && unit[i].info[3]
+						if( unit[i].used && unit[i].ctgry==UnitCategory.Plane && unit[i].used==Side.UnitedStates && unit[i].info[1]==46/* && unit[i].info[3]
 							&& unit[i].info[0]==PARKING && unit[m].info[1]==unit[i].info[1] && unit[i].stop==0*/ )
 							dbg[1]++;
 						}
@@ -1168,7 +1168,7 @@ n=the_slct_unit;
 //						SoundPlayEffect( NULL, TPD_HIT1 ,fire[m].x, fire[m].y);
 
 						f=seek_effect_no();
-						effect[f].layer=UPPER;	
+						effect[f].layer=EffectLayer.Upper;	
 
 						effect[f].info[0]=40;
 						effect[f].info[1]=4;	// アニメーションパターン
@@ -1181,11 +1181,11 @@ n=the_slct_unit;
 
 
 						// 当った的に収納機があれば破壊される場合もある
-						if( unit[n].kind==AP || unit[n].kind==CV1 || unit[n].kind==CVL1 )
+						if( unit[n].kind==UnitKind.AirBase || unit[n].kind==UnitKind.Carrier || unit[n].kind==UnitKind.LightCarrier )
 							{
 							for(i=0;i<=max_unit;i++)
 								{
-								if( unit[i].used && unit[i].ctgry==PLANE && unit[i].info[0]==PARKING && unit[i].info[1]==n /*&& rnd(10)==0*/ )
+								if( unit[i].used && unit[i].ctgry==UnitCategory.Plane && unit[i].info[0]==PARKING && unit[i].info[1]==n /*&& rnd(10)==0*/ )
 									{
 									unit[i].used=0;
 									unit[unit[i].info[1]].info[1]--;			// 現在格納数
@@ -1219,10 +1219,10 @@ n=the_slct_unit;
 #if DBG_MODE
 if( map_edit==0 )
 	{
-	if(your_side==JPN)
-		your_side=USA;
+	if(your_side==Side.Japan)
+		your_side=Side.UnitedStates;
 	else
-		your_side=JPN;
+		your_side=Side.Japan;
 	}
 #endif
 
@@ -1233,7 +1233,7 @@ if( map_edit==0 )
 
 
 				case VK_F6:
-					if( map_edit!=0 && mode==CMBT )
+					if( map_edit!=0 && mode==GameMode.Battle )
 						{
 						if( put_trgt<24 )
 							{
@@ -1245,10 +1245,10 @@ if( map_edit==0 )
 #if DBG_MODE
 if( map_edit==0 )
 	{
-	mode=CNCT_GAME_SETTING;
+	mode=GameMode.GameSetting;
 	get_sinario_data();
 
-	mode=CMBT;
+	mode=GameMode.Battle;
 	cnct_game_init();
 	}
 #endif
@@ -1257,16 +1257,16 @@ if( map_edit==0 )
 
 				case VK_F7:
 
-					if( map_edit!=0 && mode==CMBT )
+					if( map_edit!=0 && mode==GameMode.Battle )
 						{
 						if( unit[the_slct_unit].used!=0 )
 							{
 							// 空母か空港なら搭載ユニットも消す
-							if( unit[the_slct_unit].kind==CV1 || unit[the_slct_unit].kind==CVL1 || unit[the_slct_unit].kind==AP )
+							if( unit[the_slct_unit].kind==UnitKind.Carrier || unit[the_slct_unit].kind==UnitKind.LightCarrier || unit[the_slct_unit].kind==UnitKind.AirBase )
 								{
 								for( i=1;i<=max_unit;i++)
 									{
-									if( unit[i].used!=0 && unit[i].ctgry==PLANE && unit[i].info[0]==PARKING && unit[i].info[1]==the_slct_unit)
+									if( unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].info[0]==PARKING && unit[i].info[1]==the_slct_unit)
 										{
 										unit[i].used=0;
 										}
@@ -1274,7 +1274,7 @@ if( map_edit==0 )
 								}
 
 							// パーキング中の航空機なら駐機数を減らします。
-							if( unit[the_slct_unit].ctgry==PLANE && unit[the_slct_unit].info[0]==PARKING )
+							if( unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING )
 								{
 								unit[unit[the_slct_unit].info[1]].info[1]--;	// 現在格納数
 								}
@@ -1297,15 +1297,15 @@ if( map_edit==0 )
 
 
 				case VK_F8:					
-					if( map_edit!=0 && mode==CMBT )
+					if( map_edit!=0 && mode==GameMode.Battle )
 						{
-						if( unit_info[1]!=0 && ( unit[old_the_slct_unit].kind==CV1 || unit[old_the_slct_unit].kind==CVL1 || unit[old_the_slct_unit].kind==AP )  && (put_kind==FT1 || put_kind==AT1 || put_kind==BM1 ) )
+						if( unit_info[1]!=0 && ( unit[old_the_slct_unit].kind==UnitKind.Carrier || unit[old_the_slct_unit].kind==UnitKind.LightCarrier || unit[old_the_slct_unit].kind==UnitKind.AirBase )  && ((UnitKind)put_kind==UnitKind.Fighter || (UnitKind)put_kind==UnitKind.Attacker || (UnitKind)put_kind==UnitKind.Bomber ) )
 							{
 							// 駐機場への航空機の配置
 							if( /*!( (unit[old_the_slct_unit].kind==CV1 || unit[old_the_slct_unit].kind==CVL1)  && ( put_kind==BM1 || (put_kind==FT1&&put_kind_sub==1) ) )   &&*/
 								unit[old_the_slct_unit].used==your_side
 								)
-								m=set_new_unit_plane(your_side,put_kind,put_kind_sub,old_the_slct_unit,1,NTG);
+								m=set_new_unit_plane(your_side,(UnitKind)put_kind,put_kind_sub,old_the_slct_unit,1,NTG);
 
 							if(m!=0)
 								SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
@@ -1348,13 +1348,13 @@ if( map_edit==0 )
 
 							if( m==0 )
 								{
-								m=set_new_unit_2( your_side, put_kind, put_kind_sub,  wrk_x,  wrk_y, (double)(0+(your_side==USA ? 1 : 0)*180 ) );
+								m=set_new_unit_2( your_side, (UnitKind)put_kind, put_kind_sub,  wrk_x,  wrk_y, (double)(0+(your_side==Side.UnitedStates ? 1 : 0)*180 ) );
 
 								if(m!=0)
 									{
 									SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 									}
-								if(put_kind==TR1)
+								if((UnitKind)put_kind==UnitKind.Transport)
 									{
 									unit[m].arm[0]=put_kind_sub;		// 武装品種
 									unit[m].arm[1]=1;			// 数
@@ -1374,12 +1374,12 @@ if( map_edit==0 )
 	unit[the_slct_unit].hp[0]=0;
 	}
 #endif
-					if( map_edit!=0 && mode==CMBT )
+					if( map_edit!=0 && mode==GameMode.Battle )
 						{
-						if(your_side==JPN)
-							your_side=USA;
+						if(your_side==Side.Japan)
+							your_side=Side.UnitedStates;
 						else
-							your_side=JPN;
+							your_side=Side.Japan;
 						SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 						}
 					break;
@@ -1388,10 +1388,10 @@ if( map_edit==0 )
 					break;
 
 				case VK_F11:
-					if( map_edit!=0 && mode==CMBT )
+					if( map_edit!=0 && mode==GameMode.Battle )
 						{
-						rein[your_side]=rein[your_side]++;
-						rein[your_side]=(byte)(rein[your_side]%4);
+						rein[(int)your_side]=rein[(int)your_side]++;
+						rein[(int)your_side]=(byte)(rein[(int)your_side]%4);
 						SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 						}
 					break;
@@ -1400,7 +1400,7 @@ if( map_edit==0 )
 
 				case 0x31:	// 1
 					// ユニットを回転させます。
-					if( map_edit!=0 && mode==CMBT && unit[the_slct_unit].used!=0  && unit[the_slct_unit].kind>=BB1 && unit[the_slct_unit].kind<=TR1 && !(unit[the_slct_unit].ctgry==PLANE && unit[the_slct_unit].info[0]==PARKING ))
+					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0  && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING ))
 						{
 						unit[the_slct_unit].drctn= (int)(unit[the_slct_unit].drctn+45.0)%360 ;
 
@@ -1412,9 +1412,9 @@ if( map_edit==0 )
 
 				case 0x32:	// 2
 					// 航空機の武装を変えます。
-					if( map_edit!=0 && mode==CMBT && unit[the_slct_unit].used!=0  )
+					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0  )
 						{
-						if( unit[the_slct_unit].kind==AT1 )
+						if( unit[the_slct_unit].kind==UnitKind.Attacker )
 							{
 							// 攻撃機の場合。
 							switch( unit[the_slct_unit].arm[0] )
@@ -1434,7 +1434,7 @@ if( map_edit==0 )
 								}
 							SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 							}
-						else if( unit[the_slct_unit].kind==BM1 )
+						else if( unit[the_slct_unit].kind==UnitKind.Bomber )
 							{
 							// 爆撃機の場合。
 							switch( unit[the_slct_unit].arm[0] )
@@ -1454,7 +1454,7 @@ if( map_edit==0 )
 								}
 							SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 							}
-						else if( (unit[the_slct_unit].kind>=BB1 && unit[the_slct_unit].kind<=CVL1) || unit[the_slct_unit].kind==TR1 )
+						else if( (unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.LightCarrier) || unit[the_slct_unit].kind==UnitKind.Transport )
 							{
 
 							if(unit[the_slct_unit].gas[0]==-1)
@@ -1477,7 +1477,7 @@ if( map_edit==0 )
 
 				case 0x33:	// 3
 					// ＨＰを増やす。
-					if( map_edit!=0 && mode==CMBT && unit[the_slct_unit].used!=0 && !(unit[the_slct_unit].ctgry==PLANE && unit[the_slct_unit].info[0]==PARKING ) )
+					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING ) )
 						{
 						if( unit[the_slct_unit].hp[0] < unit[the_slct_unit].hp[1] )
 							{
@@ -1490,7 +1490,7 @@ if( map_edit==0 )
 
 				case 0x34:	// 4
 					// ＨＰを増やす。
-					if( map_edit!=0 && mode==CMBT && unit[the_slct_unit].used!=0 && !(unit[the_slct_unit].ctgry==PLANE && unit[the_slct_unit].info[0]==PARKING ))
+					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING ))
 						{
 						unit[the_slct_unit].hp[0]--;
 						SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
@@ -1501,7 +1501,7 @@ if( map_edit==0 )
 
 				case 0x35:	// 5
 					// ガスをふやす
-					if( map_edit!=0 && mode==CMBT && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=BB1 && unit[the_slct_unit].kind<=TR1 && !(unit[the_slct_unit].ctgry==PLANE && unit[the_slct_unit].info[0]==PARKING ))
+					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING ))
 						{
 						if( unit[the_slct_unit].gas[0] < 100 )
 							{
@@ -1513,7 +1513,7 @@ if( map_edit==0 )
 
 				case 0x36:	// 6
 					// ガスをへらす
-					if( map_edit!=0 && mode==CMBT && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=BB1 && unit[the_slct_unit].kind<=TR1 && !(unit[the_slct_unit].ctgry==PLANE && unit[the_slct_unit].info[0]==PARKING ))
+					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING ))
 						{
 						if( unit[the_slct_unit].gas[0]!=0  )
 							{
@@ -1526,7 +1526,7 @@ if( map_edit==0 )
 
 				case 0x37:	// 7
 					// 弾数をふやす
-					if( map_edit!=0 && mode==CMBT && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=BB1 && unit[the_slct_unit].kind<=TR1 && unit[the_slct_unit].arm[0]!=NTG  && !(unit[the_slct_unit].ctgry==PLANE && unit[the_slct_unit].info[0]==PARKING ))
+					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && unit[the_slct_unit].arm[0]!=NTG  && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING ))
 						{
 						if( unit[the_slct_unit].arm[1]<unit[the_slct_unit].arm[4]  )
 							{
@@ -1538,7 +1538,7 @@ if( map_edit==0 )
 
 				case 0x38:	// 8
 					// 弾数をへらす
-					if( map_edit!=0 && mode==CMBT && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=BB1 && unit[the_slct_unit].kind<=TR1 && unit[the_slct_unit].arm[0]!=NTG  && !(unit[the_slct_unit].ctgry==PLANE && unit[the_slct_unit].info[0]==PARKING ))
+					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && unit[the_slct_unit].arm[0]!=NTG  && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].info[0]==PARKING ))
 						{
 						if( unit[the_slct_unit].arm[1]!=0  )
 							{

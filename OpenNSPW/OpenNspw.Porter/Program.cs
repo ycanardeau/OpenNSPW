@@ -8,6 +8,20 @@ using OpenNspw.Porter;
 //       (stage 2), and lists the errors left to port by hand.
 //   OpenNspw.Porter fix <port project directory> <C# file>...
 //       Runs stage 2 only, on C# files of the project.
+//   OpenNspw.Porter rename <port project directory> <renames file> <user project directory>...
+//       Renames members of the port and their uses in it and in the projects that use it (see Renamer), in the
+//       order given, each after the projects it uses. The projects must be built.
+
+if (args.Length >= 3 && args[0] == "rename")
+{
+	var renamer = new Renamer(new CSharpProject(args[1]), [.. args[3..].Select(d => new CSharpProject(d))], Renamer.ReadRenames(args[2]));
+	foreach (var path in renamer.Run())
+	{
+		Console.WriteLine(path);
+	}
+
+	return 0;
+}
 
 if (args.Length < 3 || args[0] is not ("port" or "fix"))
 {

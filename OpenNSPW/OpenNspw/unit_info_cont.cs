@@ -42,7 +42,7 @@ public const int		map_close	= 1;
 public int	spry_pt_per_unit()
 	{
 
-	if( your_side==USA )
+	if( your_side==Side.UnitedStates )
 		{
 		switch( spry_trgt )
 			{
@@ -138,7 +138,7 @@ rival_mode=mode;
 
 
 	// ユニットインフォーメィション
-	if( unit_info[4]==JPN )
+	if( unit_info[4]==(int)Side.Japan )
 		no1=UNIT_INFO_JPN;	//	ユニットインフォのｏｓナンバー
 	else
 		no1=UNIT_INFO_USA;	//	ユニットインフォのｏｓナンバー
@@ -150,15 +150,15 @@ rival_mode=mode;
 		sprt[no1].no=unit_info[2];
 		if( unit_info[1]!=0 )
 			{
-			if(unit_info[0]==AP)
+			if((UnitKind)unit_info[0]==UnitKind.AirBase)
 				{
 				sprt[no1].no=9;
 				}
-			if(unit_info[0]==CV1)
+			if((UnitKind)unit_info[0]==UnitKind.Carrier)
 				{
 				sprt[no1].no=10;
 				}
-			if(unit_info[0]==CVL1)
+			if((UnitKind)unit_info[0]==UnitKind.LightCarrier)
 				{
 				sprt[no1].no=11;
 				}
@@ -192,40 +192,40 @@ rival_mode=mode;
 
 #if !LNGG_VER
 			// 艦種
-			switch(unit_info[0])
+			switch((UnitKind)unit_info[0])
 				{
-				case BB1:
-					if( unit[unit_info[3]].used==JPN && unit[unit_info[3]].type==1 )
+				case UnitKind.Battleship:
+					if( unit[unit_info[3]].used==Side.Japan && unit[unit_info[3]].type==1 )
 						len[0] = wsprintf(ach[0], "大和級戦艦");
 					else
 						len[0] = wsprintf(ach[0], "戦艦",10);
 					break;
-				case CA1:
+				case UnitKind.Cruiser:
 					if( unit[unit_info[3]].type==0 )
 						len[0] = wsprintf(ach[0], "巡洋艦",10);
 					else
 					len[0] = wsprintf(ach[0], "防空巡洋艦",10);
 					break;
 
-				case DD1:
+				case UnitKind.Destroyer:
 					if( unit[unit_info[3]].type==0 )
 						len[0] = wsprintf(ach[0], "駆逐艦",10);
 					else
 						len[0] = wsprintf(ach[0], "対潜駆逐艦",10);
 					break;
-				case SS1:
+				case UnitKind.Submarine:
 					len[0] = wsprintf(ach[0], "潜水艦",10);
 					break;
-				case CV1:
-					if( unit[unit_info[3]].used==USA && unit[unit_info[3]].type==1 )
+				case UnitKind.Carrier:
+					if( unit[unit_info[3]].used==Side.UnitedStates && unit[unit_info[3]].type==1 )
 						len[0] = wsprintf(ach[0], "エセックス型空母",10);
 					else
 						len[0] = wsprintf(ach[0], "正規空母",10);
 					break;
-				case CVL1:
+				case UnitKind.LightCarrier:
 					len[0] = wsprintf(ach[0], "軽空母",10);
 					break;
-				case TR1:
+				case UnitKind.Transport:
 					if(unit[unit_info[3]].arm[1]!=0)
 						{
 						if(unit[unit_info[3]].arm[0]==TR_GF1)
@@ -244,37 +244,37 @@ rival_mode=mode;
 						len[0] = wsprintf(ach[0], "輸送船",10);
 						}
 					break;
-				case FT1:
+				case UnitKind.Fighter:
 					if( unit[unit_info[3]].type==0 )
 						len[0] = wsprintf(ach[0], "戦闘機",10);
 					else
 						len[0] = wsprintf(ach[0], "陸上戦闘機",10);
 					break;
-				case AT1:
+				case UnitKind.Attacker:
 					len[0] = wsprintf(ach[0], "攻撃機",10);
 					break;
-				case BM1:
+				case UnitKind.Bomber:
 					len[0] = wsprintf(ach[0], "戦略爆撃機",10);
 					break;
-				case SP:
+				case UnitKind.NavalBase:
 					len[0] = wsprintf(ach[0], "軍港",10);
 					break;
-				case AP:
+				case UnitKind.AirBase:
 					len[0] = wsprintf(ach[0], "航空基地",10);
 					break;
-				case CT1:
+				case UnitKind.City:
 					len[0] = wsprintf(ach[0], "都市",10);
 					break;
-				case MN1:
+				case UnitKind.Mine:
 					len[0] = wsprintf(ach[0], "鉱山",10);
 					break;
-				case GF1:
+				case UnitKind.InfantryBase:
 					len[0] = wsprintf(ach[0], "歩兵基地",10);
 					break;
-				case GF2:
+				case UnitKind.Pillboxes:
 					len[0] = wsprintf(ach[0], "トーチカ群",10);
 					break;
-				case GF3:
+				case UnitKind.Fortress:
 					len[0] = wsprintf(ach[0], "要塞",10);
 					break;
 				default:
@@ -284,7 +284,7 @@ rival_mode=mode;
 
 
 			// 損傷
-			if( unit[unit_info[3]].used!=0 && ( unit[unit_info[3]].kind==AP||unit[unit_info[3]].kind==SP||unit[unit_info[3]].kind==GF1||unit[unit_info[3]].kind==GF2||unit[unit_info[3]].kind==GF3 ) && unit[unit_info[3]].info[0]!=0 && unit[unit_info[3]].hp[0]==unit[unit_info[3]].hp[1]
+			if( unit[unit_info[3]].used!=0 && ( unit[unit_info[3]].kind==UnitKind.AirBase||unit[unit_info[3]].kind==UnitKind.NavalBase||unit[unit_info[3]].kind==UnitKind.InfantryBase||unit[unit_info[3]].kind==UnitKind.Pillboxes||unit[unit_info[3]].kind==UnitKind.Fortress ) && unit[unit_info[3]].info[0]!=0 && unit[unit_info[3]].hp[0]==unit[unit_info[3]].hp[1]
 				)
 				{
 				len[1] = wsprintf(ach[1], "工事:%d", unit[unit_info[3]].info[0] );
@@ -326,38 +326,38 @@ rival_mode=mode;
 
 #else
 			// 艦種
-			switch(unit_info[0])
+			switch((UnitKind)unit_info[0])
 				{
-				case BB1:
-					if( unit[unit_info[3]].used==JPN && unit[unit_info[3]].type==1 )
+				case UnitKind.Battleship:
+					if( unit[unit_info[3]].used==Side.Japan && unit[unit_info[3]].type==1 )
 						len[0] = wsprintf(ach[0], "Type Yamato",10);
 					else
 						len[0] = wsprintf(ach[0], "Battleship",10);
 					break;
-				case CA1:
+				case UnitKind.Cruiser:
 if( unit[unit_info[3]].type==0 )
 					len[0] = wsprintf(ach[0], "Cruiser",10);
 else
 					len[0] = wsprintf(ach[0], "AntiAir Cruiser",10);
 
 					break;
-				case DD1:
+				case UnitKind.Destroyer:
 					len[0] = wsprintf(ach[0], "Destroyer",10);
 					break;
-				case SS1:
+				case UnitKind.Submarine:
 					len[0] = wsprintf(ach[0], "Submarine",10);
 					break;
-				case CV1:
-					if( unit[unit_info[3]].used==USA && unit[unit_info[3]].type==1 )
+				case UnitKind.Carrier:
+					if( unit[unit_info[3]].used==Side.UnitedStates && unit[unit_info[3]].type==1 )
 						len[0] = wsprintf(ach[0], "Type Essex",10);
 					else
 						len[0] = wsprintf(ach[0], "Carrier",10);
 					break;
-				case CVL1:
+				case UnitKind.LightCarrier:
 					len[0] = wsprintf(ach[0], "Lt. Carrier",10);
 					break;
 
-				case TR1:
+				case UnitKind.Transport:
 					if(unit[unit_info[3]].arm[1])
 						{
 						if(unit[unit_info[3]].arm[0]==TR_GF1)
@@ -378,7 +378,7 @@ else
 
 						
 					break;
-				case FT1:
+				case UnitKind.Fighter:
 					if( unit[unit_info[3]].type==0 )
 						len[0] = wsprintf(ach[0], "Car. Fighter",10);
 					else
@@ -386,31 +386,31 @@ else
 					break;
 
 
-				case AT1:
+				case UnitKind.Attacker:
 					len[0] = wsprintf(ach[0], "Car. Bomber",10);
 					break;
-				case BM1:
+				case UnitKind.Bomber:
 					len[0] = wsprintf(ach[0], "Bomber",10);
 					break;
-				case SP:
+				case UnitKind.NavalBase:
 					len[0] = wsprintf(ach[0], "Military port",10);
 					break;
-				case AP:
+				case UnitKind.AirBase:
 					len[0] = wsprintf(ach[0], "Airfield",10);
 					break;
-				case CT1:
+				case UnitKind.City:
 					len[0] = wsprintf(ach[0], "City",10);
 					break;
-				case MN1:
+				case UnitKind.Mine:
 					len[0] = wsprintf(ach[0], "Mine",10);
 					break;
-				case GF1:
+				case UnitKind.InfantryBase:
 					len[0] = wsprintf(ach[0], "Trenchies",10);
 					break;
-				case GF2:
+				case UnitKind.Pillboxes:
 					len[0] = wsprintf(ach[0], "Pillboxies",10);
 					break;
-				case GF3:
+				case UnitKind.Fortress:
 					len[0] = wsprintf(ach[0], "Fortress",10);
 					break;
 				default:
@@ -484,7 +484,7 @@ else
 #if true
 	//	スプライトグループ（メニュー下地）
 	src_rect.left = sprt[BTN_BASE].base_x;
-	src_rect.top = sprt[BTN_BASE].base_y+(sprt[BTN_BASE].ht*(USA==your_side ? 1 : 0));
+	src_rect.top = sprt[BTN_BASE].base_y+(sprt[BTN_BASE].ht*(Side.UnitedStates==your_side ? 1 : 0));
 	src_rect.right = src_rect.left+sprt[BTN_BASE].wd;
 	src_rect.bottom = src_rect.top+sprt[BTN_BASE].ht;
 
@@ -501,7 +501,7 @@ else
 
 
 	no1=BTN_1;	
-	if( unit_info[0]==CV1 || unit_info[0]==CVL1  || unit_info[0]==AP )
+	if( (UnitKind)unit_info[0]==UnitKind.Carrier || (UnitKind)unit_info[0]==UnitKind.LightCarrier  || (UnitKind)unit_info[0]==UnitKind.AirBase )
 		{
 		// 航空母艦の場合切り替えボタンを表示
 		i=0;
@@ -560,13 +560,13 @@ else
 
 
 		n=0;
-		if( unit[the_slct_unit].ctgry==SHIP && !(unit[the_slct_unit].kind==GF1||unit[the_slct_unit].kind==GF2||unit[the_slct_unit].kind==GF3||unit[the_slct_unit].kind==AP) )
+		if( unit[the_slct_unit].ctgry==UnitCategory.Ship && !(unit[the_slct_unit].kind==UnitKind.InfantryBase||unit[the_slct_unit].kind==UnitKind.Pillboxes||unit[the_slct_unit].kind==UnitKind.Fortress||unit[the_slct_unit].kind==UnitKind.AirBase) )
 			{	// 艦船のメニュー
 			if( unit[the_slct_unit].stop!=0 && unit[the_slct_unit].spd==0 )
 				{
 				for( i=1; i<=max_unit; i++)
 					{
-					if( unit[i].used==your_side && unit[i].kind==SP && unit[i].info[0]==0 )
+					if( unit[i].used==your_side && unit[i].kind==UnitKind.NavalBase && unit[i].info[0]==0 )
 						{
 						// ptin dbg
 						wrk_rect.top=(int)unit[i].y+40+240;
@@ -616,9 +616,9 @@ else
 				}
 			else
 				{	// 収容中のメニュー
-				if( (unit[the_slct_unit].kind==AT1 || unit[the_slct_unit].kind==BM1 ) && unit[the_slct_unit].arm[0]!=TUN )
+				if( (unit[the_slct_unit].kind==UnitKind.Attacker || unit[the_slct_unit].kind==UnitKind.Bomber ) && unit[the_slct_unit].arm[0]!=TUN )
 					{
-					if( unit[the_slct_unit].kind==AT1 || unit[the_slct_unit].used==JPN )
+					if( unit[the_slct_unit].kind==UnitKind.Attacker || unit[the_slct_unit].used==Side.Japan )
 						{
 						n=3;			// メニューの数
 						menu[0]=7;	menu2[0]=RDY_TPD;
@@ -669,7 +669,7 @@ else
 					bf_new_menu[1].the_slct_unit=the_slct_unit;
 
 
-					if(your_side==JPN)
+					if(your_side==Side.Japan)
 						{
 						// 日本海軍サイド
 						for(s=1;s<=JPN_SHIP_END;s++)
@@ -814,7 +814,7 @@ else
 			case 16:		len[0] = wsprintf(ach[0], "対潜駆逐艦");		break;
 
 			case 17:
-				if( your_side==JPN )
+				if( your_side==Side.Japan )
 					len[0] = wsprintf(ach[0], "大和級戦艦");
 				else
 					len[0] = wsprintf(ach[0], "エセックス型空母");
@@ -843,7 +843,7 @@ else
 			case 16:	len[0] = wsprintf(ach[0], "AntiSub Cruiser");		break;
 
 			case 17:
-				if( your_side==JPN )
+				if( your_side==Side.Japan )
 					len[0] = wsprintf(ach[0], "Class Yamato");
 				else
 					len[0] = wsprintf(ach[0], "Class Essex");
@@ -926,7 +926,7 @@ else
 
 			// 要求する
 
-			if(your_side==JPN)
+			if(your_side==Side.Japan)
 				{
 				// 日本サイドのユニット
 				if( spry_trgt<=5 || spry_trgt>=10 /*ctgry==SHIP*/ )
@@ -1000,7 +1000,7 @@ else
 						(arrival_cont==0) || 
 						(arrival_cont==2 && ( spry_trgt<=9 || spry_trgt>=15 ) ) || 
 						(arrival_cont==3 && spry_trgt>=10 && spry_trgt<=14 ) || 
-						(arrival_cont==4 && (spry_trgt<=3 || spry_trgt>=15 ) && !(spry_trgt==17 && your_side==USA)  ) || 
+						(arrival_cont==4 && (spry_trgt<=3 || spry_trgt>=15 ) && !(spry_trgt==17 && your_side==Side.UnitedStates)  ) || 
 						(arrival_cont==5 && spry_trgt>=6 && spry_trgt<=9 ) || 
 						(arrival_cont==6 && spry_trgt!=14 ) 
 					) 
@@ -1023,7 +1023,7 @@ else
 						if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
 							{
 							SetTextColor(hdc, RGB(255, 0, 0));
-							if( lf_btn==3 && game_end==0 )
+							if( lf_btn==3 && game_end==GameResult.None )
 								{
 								spry_pt=(short)(spry_pt - spry_pt_per_unit());
 								if(spry_trgt<=5 || spry_trgt>=10)
@@ -1091,7 +1091,7 @@ spry_no_cont=10;
 				}
 
 		
-			if( game_end==0 )
+			if( game_end==GameResult.None )
 				{
 				spry_no_cont--;
 
@@ -1126,7 +1126,7 @@ spry_no_cont=10;
 			dstn_rect.top=ry+20*9+5;
 			dstn_rect.right=dstn_rect.left+(len[0]*12);
 			dstn_rect.bottom=dstn_rect.top+18;
-			if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==CMBT )
+			if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==GameMode.Battle )
 				{
 				SetTextColor(hdc, RGB(255, 0, 0));
 				if( lf_btn==3 )
@@ -1135,7 +1135,7 @@ spry_no_cont=10;
 						{
 
 
-						mode=CNCT_CNFG_SETTING;
+						mode=GameMode.ConfigSetting;
 
 /*
 						if( IDOK==MessageBox( hwndApp,"シナリオ作成を中断しますか？","NSPW on the Net",MB_OKCANCEL|MB_DEFBUTTON2) )
@@ -1148,14 +1148,14 @@ spry_no_cont=10;
 						}
 					else if( you_can_order==1 )
 						{
-	dlg_answer=GO_GAME_SETTING;
+	dlg_answer=MessageType.GoToGameSetting;
 						g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_OK_CANCEL), hwndApp, (DLGPROC)IDD_OK_CANCEL_Proc );
 #if false
 						my_dlg_wait();
 
 						if( dlg_answer )
 							{
-							bf_game_system_menu[1]=GO_GAME_SETTING;
+							bf_game_system_menu[1]=MessageType.GoToGameSetting;
 							you_can_order=0;
 							you_ordered=1;
 							SoundPlayEffect( NULL, CLICK2 ,(double)(MAP_RIGHT+1), 0);
@@ -1182,21 +1182,21 @@ spry_no_cont=10;
 				dstn_rect.top=ry+20*10+5;
 				dstn_rect.right=dstn_rect.left+(len[0]*12);
 				dstn_rect.bottom=dstn_rect.top+18;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==CMBT )
+				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==GameMode.Battle )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
 					if( lf_btn==3 )
 						{
 						if( you_can_order==1 )
 							{
-	dlg_answer=RESUME_AND_GO_GAME_SETTING;
+	dlg_answer=MessageType.ResumeAndGoToGameSetting;
 							g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_OK_CANCEL), hwndApp, (DLGPROC)IDD_OK_CANCEL_Proc );
 #if false
 							my_dlg_wait();
 
 							if( dlg_answer )
 								{
-								bf_game_system_menu[1]=RESUME_AND_GO_GAME_SETTING;
+								bf_game_system_menu[1]=MessageType.ResumeAndGoToGameSetting;
 								you_can_order=0;
 								you_ordered=1;
 								SoundPlayEffect( NULL, CLICK2 ,(double)(MAP_RIGHT+1), 0);
@@ -1222,7 +1222,7 @@ spry_no_cont=10;
 	// 補給
 	if( ( spry_no_cont==0 || (FrameCount%2)!=0 ) && map_edit==0 )
 		{
-		if(your_side==JPN)
+		if(your_side==Side.Japan)
 			no1=UNIT_JPN;		//Off Screen Number		日本海軍の表示
 		else
 			no1=UNIT_USA;		//Off Screen Number		日本海軍の表示
@@ -1244,7 +1244,7 @@ spry_no_cont=10;
 				break;
 
 			case 17:
-				if( your_side==JPN )
+				if( your_side==Side.Japan )
 					m=0;		// 大和
 				else
 					m=6;		// エセックス
@@ -1396,7 +1396,7 @@ public void	draw_map()
 
 	// ユニットの描画
 
-	if( your_side==JPN )
+	if( your_side==Side.Japan )
 		{
 //		my_cl=5457;	en_cl=5416;
 
@@ -1413,7 +1413,7 @@ public void	draw_map()
 	for(m=1; m<=max_unit; m++)
 		{
 
-		if( unit[m].used==your_side  &&   !( unit[m].y>MAP_TOP || unit[m].y<MAP_BOTTOM || unit[m].x<MAP_LEFT || unit[m].x>MAP_RIGHT )    && !(unit[m].info[0]==PARKING) && !(unit[m].ctgry==PLANE && (FrameCount%4)==0))
+		if( unit[m].used==your_side  &&   !( unit[m].y>MAP_TOP || unit[m].y<MAP_BOTTOM || unit[m].x<MAP_LEFT || unit[m].x>MAP_RIGHT )    && !(unit[m].info[0]==PARKING) && !(unit[m].ctgry==UnitCategory.Plane && (FrameCount%4)==0))
 			{
 			// マイユニット
 			if( unit[m].x >= 0 )
@@ -1430,7 +1430,7 @@ public void	draw_map()
 
 
 			src_rect.left = 267;	
-			if( your_side==JPN )
+			if( your_side==Side.Japan )
 				src_rect.top = sprt[MAP_BASE].base_y+16;
 			else
 				src_rect.top = sprt[MAP_BASE].base_y+57;
@@ -1446,10 +1446,10 @@ public void	draw_map()
 			}
 
 
-		if( unit[m].used!=0 && unit[m].used!=your_side && !( unit[m].y>MAP_TOP || unit[m].y<MAP_BOTTOM || unit[m].x<MAP_LEFT || unit[m].x>MAP_RIGHT ) && !(unit[m].info[0]==PARKING) && unit[m].found!=0 && !(unit[m].ctgry==PLANE && (FrameCount%4)==0) )
+		if( unit[m].used!=0 && unit[m].used!=your_side && !( unit[m].y>MAP_TOP || unit[m].y<MAP_BOTTOM || unit[m].x<MAP_LEFT || unit[m].x>MAP_RIGHT ) && !(unit[m].info[0]==PARKING) && unit[m].found!=0 && !(unit[m].ctgry==UnitCategory.Plane && (FrameCount%4)==0) )
 			{
 			// エネユニット
-			if( unit[m].kind==SS1 && unit[m].info[6]!=0 )
+			if( unit[m].kind==UnitKind.Submarine && unit[m].info[6]!=0 )
 				{
 				// 潜航中のおおよそ潜水艦
 				if( unit[m].info[7] >= 0 )
@@ -1477,7 +1477,7 @@ public void	draw_map()
 			dstn_rect.bottom=dstn_rect.top+2;
 
 			src_rect.left = 267;
-			if( your_side==JPN )
+			if( your_side==Side.Japan )
 				src_rect.top = sprt[MAP_BASE].base_y+57;
 			else
 				src_rect.top = sprt[MAP_BASE].base_y+16;
@@ -1581,12 +1581,12 @@ public void	cnct_unit_info_cont_now()
 				unit[tmp_slct_unit].arm[2]=0;
 
 				// ちょっと一応
-				if( unit[tmp_slct_unit].kind==CV1 || unit[tmp_slct_unit].kind==CVL1 )
+				if( unit[tmp_slct_unit].kind==UnitKind.Carrier || unit[tmp_slct_unit].kind==UnitKind.LightCarrier )
 					{
 					unit[tmp_slct_unit].info[7]=0;	// 着艦、0許可、1不許可
 					unit[tmp_slct_unit].info[8]=0;	// その空母の次機発進許可	0許可、1不許可
 					}
-				if( unit[tmp_slct_unit].kind==SS1 )
+				if( unit[tmp_slct_unit].kind==UnitKind.Submarine )
 					unit[tmp_slct_unit].info[6]=0;		// 強制浮上
 				}
 			else
@@ -1598,10 +1598,10 @@ public void	cnct_unit_info_cont_now()
 						// 決定後の書く個別の処理
 						switch( unit[g].kind )
 							{
-							case FT1: case AT1: case BM1:	
+							case UnitKind.Fighter: case UnitKind.Attacker: case UnitKind.Bomber:	
 								if(  menu2==RDY_TPD || menu2==RDY_BOM || menu2==NOTHING  )
 									{	
-									if(unit[g].kind==AT1 || (unit[g].kind==BM1 && ( (menu2==RDY_TPD && unit[g].used==JPN ) || menu2==RDY_BOM || menu2==NOTHING) ))
+									if(unit[g].kind==UnitKind.Attacker || (unit[g].kind==UnitKind.Bomber && ( (menu2==RDY_TPD && unit[g].used==Side.Japan ) || menu2==RDY_BOM || menu2==NOTHING) ))
 										{		// 収容中の攻撃機だったばあい
 										unit[g].arm[0]=menu2;
 
@@ -1620,24 +1620,24 @@ public void	cnct_unit_info_cont_now()
 								else
 									{
 //									unit[g].info[5]=menu2;
-									if( (unit[g].kind==FT1 ) && menu2==RETURN  && unit[g].info[0]==FLYING )
+									if( (unit[g].kind==UnitKind.Fighter ) && menu2==RETURN  && unit[g].info[0]==FLYING )
 										{
 										unit[g].info[5]=menu2;
 										}
-									if( (unit[g].kind==AT1 || unit[g].kind==BM1 ) && menu2==RETURN )
+									if( (unit[g].kind==UnitKind.Attacker || unit[g].kind==UnitKind.Bomber ) && menu2==RETURN )
 										{
 										unit[g].arm[1]=0;		// 帰投選択時に攻撃機なら武装投棄
 										unit[g].arm[2]=0;		// 帰投選択時に攻撃機攻撃目標放棄
 										unit[g].info[5]=menu2;
 										}
-									if( unit[g].ctgry==PLANE && menu2==MOVE && unit[g].info[0]==FLYING  )
+									if( unit[g].ctgry==UnitCategory.Plane && menu2==MOVE && unit[g].info[0]==FLYING  )
 										{
 										unit[g].info[3]=0;		// 着艦準備をクリア
 										unit[g].info[5]=menu2;
 										}
 									}
 								break;
-							case BB1: case CA1: case DD1: case SS1: case CV1: case CVL1:
+							case UnitKind.Battleship: case UnitKind.Cruiser: case UnitKind.Destroyer: case UnitKind.Submarine: case UnitKind.Carrier: case UnitKind.LightCarrier:
 								break;
 							}
 						}

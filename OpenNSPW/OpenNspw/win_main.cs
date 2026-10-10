@@ -103,7 +103,7 @@ public IDirectPlay8Peer? g_pDP = null;					// DirectPlay peer object
 public HKEY								hDPlaySampleRegKey;		// レジストリ
 
 public HWND                       g_hDlg                        = null;    // HWND of main dialog
-public int								dlg_answer;
+public MessageType								dlg_answer;
 
 
 public uint                      g_dpnidLocalPlayer            = 0;       // DPNID of local player
@@ -194,11 +194,11 @@ public Array3<NEW_PP> new_pp;
 public Array3<NEW_SLCT> new_slct;
 public Array3<NEW_MENU> new_menu;
 
-public int	rest_time,game_end; public Array4<int> decision_point;
-public short			your_side;
+public int	rest_time; public GameResult game_end; public Array4<int> decision_point;
+public Side				your_side;
 public short			game_speed;
 
-public short			mode,demo_time,sinario;
+public GameMode		mode; public short demo_time,sinario;
 
 
 public byte			map_edit,put_trgt,put_kind,put_kind_sub;
@@ -225,8 +225,8 @@ public Array3<byte> game_system_menu;
 
 public Array3<Array90<short>> bf_slct_unit;
 public int			go_next_1,go_next_2;
-public int			join_game_start;
-public short			rival_mode;
+public MessageType			join_game_start;
+public GameMode		rival_mode;
 public Array4096<int> my_rnd_sheet;
 public short			my_rnd_pt;
 public short			cnct_game_rnd_sheed;
@@ -303,7 +303,7 @@ public void	updateFrame()
 
 	if( map_edit!=0 )
 		chara_loop=1;
-	else if( mode==CMBT )
+	else if( mode==GameMode.Battle )
 		{
 		if( (key_cndtn&SPACE)!=0 )
 			chara_loop=20;
@@ -334,7 +334,7 @@ public void	updateFrame()
 
 	switch( mode )
 		{
-		case DEMO:
+		case GameMode.Title:
 			// 塗りつぶし
 			ddbltfx.dwFillColor = 0x0000;
 			if( DDERR_SURFACELOST == IDirectDrawSurface_Blt( lpDDSBack,null,null,null,DDBLT_COLORFILL | DDBLT_WAIT,&ddbltfx ))
@@ -346,8 +346,8 @@ public void	updateFrame()
 			demo_func();
 			break;
 
-		case CNCT_GAME_SETTING:
-		case CNCT_CNFG_SETTING:
+		case GameMode.GameSetting:
+		case GameMode.ConfigSetting:
 			// 塗りつぶし
 			ddbltfx.dwFillColor = 0x0300;
 			if( DDERR_SURFACELOST == IDirectDrawSurface_Blt( lpDDSBack,null,null,null,DDBLT_COLORFILL | DDBLT_WAIT,&ddbltfx ))
@@ -360,7 +360,7 @@ public void	updateFrame()
 			cnct_game_setting();
 			break;
 
-		case CMBT:
+		case GameMode.Battle:
 			// 塗りつぶし
 			ddbltfx.dwFillColor = 0x0016;
 			if( DDERR_SURFACELOST == IDirectDrawSurface_Blt( lpDDSBack,null,null,null,DDBLT_COLORFILL | DDBLT_WAIT,&ddbltfx ))
@@ -934,7 +934,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 
 #if true
 
-	mode=DEMO;
+	mode=GameMode.Title;
 
 
 #elif false
@@ -959,11 +959,11 @@ you_are_host=1;
 sinario=999;
 
 
-	mode=CNCT_GAME_SETTING;
+	mode=GameMode.GameSetting;
 	get_sinario_data();
 
 
-	mode=CMBT;
+	mode=GameMode.Battle;
 	cnct_game_init();
 #endif
 

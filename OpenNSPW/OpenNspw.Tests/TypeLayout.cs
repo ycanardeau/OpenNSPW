@@ -9,7 +9,7 @@ namespace OpenNspw.Tests;
 
 internal sealed record FieldLayout(FieldInfo Field, string Name, Type Type, int Offset, int Size);
 
-// A primitive value inside a value of some type: its path (".pp_x[3]"), and where its bytes start.
+// A number inside a value of some type: its path (".pp_x[3]"), and where its bytes start.
 internal sealed record Location(string Path, int Start, Type Type);
 
 // The layout of the port's types, found at run time, and descriptions of their bytes.
@@ -74,15 +74,21 @@ internal static class TypeLayout
 		return FieldsCache.GetOrAdd(type, FindFields);
 	}
 
+	// Whether a value of the type is one number, which an enum is too.
+	public static bool IsScalar(Type type)
+	{
+		return type.IsPrimitive || type.IsEnum;
+	}
+
 	private static bool IsInlineArray(Type type)
 	{
 		return type.IsDefined(typeof(InlineArrayAttribute));
 	}
 
-	// The primitive value that contains the byte at `offset` in a value of `type`.
+	// The number that contains the byte at `offset` in a value of `type`.
 	public static Location Locate(Type type, int offset)
 	{
-		if (type.IsPrimitive)
+		if (IsScalar(type))
 		{
 			return new Location("", 0, type);
 		}
@@ -118,7 +124,7 @@ internal static class TypeLayout
 		return $"{value.ToString("R", CultureInfo.InvariantCulture)} (0x{BitConverter.DoubleToInt64Bits(value):X16})";
 	}
 
-	// The value of a primitive, read from its bytes.
+	// The value of a number, read from its bytes. An enum is formatted as its underlying type.
 	public static string Format(Type type, ReadOnlySpan<byte> bytes)
 	{
 		return Type.GetTypeCode(type) switch

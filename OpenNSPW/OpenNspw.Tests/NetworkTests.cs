@@ -234,16 +234,16 @@ public class NetworkTests
 		using var __ = guest;
 
 		// The checksums of a turn (DP_FLAG_1), as chara_cont sends them.
-		Send(host, new _DP_FLAG { dwType = DP_FLAG_1, cc_chk = 12, unit_chk = 34, rnd_chk = 56, ccc_wait_chk = 1, rival_mode = CMBT });
+		Send(host, new _DP_FLAG { dwType = MessageType.SyncFlag, cc_chk = 12, unit_chk = 34, rnd_chk = 56, ccc_wait_chk = 1, rival_mode = (short)GameMode.Battle });
 		PumpUntil(() => guest.Game.go_next_1 == 1, host, guest);
 		Assert.Equal(12, guest.Game.bf_cc_count[0]);
 		Assert.Equal(34, guest.Game.bf_unit_chk[0]);
 		Assert.Equal(56, guest.Game.bf_rnd_count[0]);
 		Assert.Equal(1, guest.Game.ccc_wait[0]);
-		Assert.Equal(CMBT, guest.Game.rival_mode);
+		Assert.Equal(GameMode.Battle, guest.Game.rival_mode);
 
 		// An order (DP_NEW_PP_SHIP).
-		var order = new _DP_NEW_PP_SHIP { dwType = DP_NEW_PP_SHIP, used = 1, x = -1234, y = 567, cls = 1 };
+		var order = new _DP_NEW_PP_SHIP { dwType = MessageType.MoveShipsOrder, used = 1, x = -1234, y = 567, cls = 1 };
 		order.slct_unit[0] = 3;
 		order.slct_unit[JPN_SHIP_END - 1] = 7;
 		Send(guest, order);
@@ -255,7 +255,7 @@ public class NetworkTests
 		Assert.Equal(7, host.Game.bf_slct_unit[0][JPN_SHIP_END - 1]);
 
 		// A chat message (DP_CHAT_1). CHAT_DSP_TIME (400) does not fit in friend_chat_dsp_time, a BYTE.
-		var chat = new _DP_DATA_20 { dwType = DP_CHAT_1 };
+		var chat = new _DP_DATA_20 { dwType = MessageType.Chat };
 		tchar.ShiftJis.GetBytes("こんにちは").CopyTo(chat.friend_chat);
 		Send(host, chat);
 		PumpUntil(() => guest.Game.friend_chat_dsp_time != 0, host, guest);
@@ -263,8 +263,8 @@ public class NetworkTests
 		Assert.Equal("こんにちは", tchar.ShiftJis.GetString(guest.Game.friend_chat[..10]));
 
 		// The game settings, which the guest only takes in the setting modes.
-		guest.Game.mode = CNCT_GAME_SETTING;
-		var settings = new _DP_DATA_1 { dwType = SIDE_AND_SINARIO };
+		guest.Game.mode = GameMode.GameSetting;
+		var settings = new _DP_DATA_1 { dwType = MessageType.SideAndScenario };
 		for (short i = 0; i < 10; i++)
 		{
 			settings.data[i] = (short)(i + 1);
@@ -280,9 +280,9 @@ public class NetworkTests
 		Assert.Equal(10, guest.Game.rvrs_rule);
 
 		// GO_GAME_SETTING sends a guest on the title screen to the game setting screen (go_cnct_game_setting).
-		guest.Game.mode = DEMO;
-		Send(host, new GENERICMSG { dwType = GO_GAME_SETTING });
-		PumpUntil(() => guest.Game.mode == CNCT_GAME_SETTING, host, guest);
+		guest.Game.mode = GameMode.Title;
+		Send(host, new GENERICMSG { dwType = MessageType.GoToGameSetting });
+		PumpUntil(() => guest.Game.mode == GameMode.GameSetting, host, guest);
 		Assert.Equal(0, guest.Game.sinario);
 		Assert.Equal(1, guest.Game.decision_sw);
 		Assert.Equal(0, guest.Game.exist_auto_save);

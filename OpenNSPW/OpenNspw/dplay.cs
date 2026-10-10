@@ -214,7 +214,7 @@ public nint GreetingDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
 						{
 						// Send a message to all of the players
 						GENERICMSG msgWave;
-						msgWave.dwType = MSG_EXIT_WAITING;
+						msgWave.dwType = (MessageType)MSG_EXIT_WAITING;
 
 //						DPN_BUFFER_DESC bufferDesc;
 						bufferDesc.dwBufferSize = (uint)sizeof(GENERICMSG);
@@ -1277,19 +1277,19 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 			// とりあえず、ジェネラルに入れる。
 			GENERICMSG* pGenericMsg = (GENERICMSG*) pReceiveMsg.pReceiveData;		// pMsg in the original, which the pMsg below shadow
 
-			if( pGenericMsg->dwType == MSG_TST )
+			if( (uint)pGenericMsg->dwType == MSG_TST )
 				{
 				}
-			else if( pGenericMsg->dwType == MSG_EXIT_WAITING )
+			else if( (uint)pGenericMsg->dwType == MSG_EXIT_WAITING )
 				{
 				PostMessage( g_hDlg, WM_COMMAND, IDC_START_GAME, 0 );
 				}
-			else if( pGenericMsg->dwType == RIVAL_MODE )
+			else if( pGenericMsg->dwType == MessageType.RivalMode )
 				{
 				_DP_FLAG* pMsg = (_DP_FLAG*) pReceiveMsg.pReceiveData;
-				rival_mode=pMsg->rival_mode;
+				rival_mode=(GameMode)pMsg->rival_mode;
 				}
-			else if( pGenericMsg->dwType == OUT_SETUP )
+			else if( pGenericMsg->dwType == MessageType.LeaveSetup )
 				{
 				_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
 
@@ -1299,7 +1299,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 //				join_game_start=1;
 				}
 
-			else if (pGenericMsg->dwType == SIDE_AND_SINARIO && ( mode==CNCT_GAME_SETTING || mode==CNCT_CNFG_SETTING ) )
+			else if (pGenericMsg->dwType == MessageType.SideAndScenario && ( mode==GameMode.GameSetting || mode==GameMode.ConfigSetting ) )
 				{
 				_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
 
@@ -1320,7 +1320,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				rvrs_time=pMsg->data[8];
 				rvrs_rule=pMsg->data[9];
 				}
-			else if( pGenericMsg->dwType == OUT_GAME_SETTING && ( mode==CNCT_GAME_SETTING || mode==CNCT_CNFG_SETTING ) )
+			else if( pGenericMsg->dwType == MessageType.LeaveGameSetting && ( mode==GameMode.GameSetting || mode==GameMode.ConfigSetting ) )
 				{
 				_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
 
@@ -1329,7 +1329,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				sinario=pMsg->data[1];
 
 
-				join_game_start=OUT_GAME_SETTING;
+				join_game_start=MessageType.LeaveGameSetting;
 
 				spry_rate[0]=pMsg->data[2];		// Host
 				spry_rate[1]=pMsg->data[3];		// Guest
@@ -1344,7 +1344,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				rvrs_time=pMsg->data[8];
 				rvrs_rule=pMsg->data[9];
 				}
-			else if( pGenericMsg->dwType == OUT_CNFG_SETTING )
+			else if( pGenericMsg->dwType == MessageType.LeaveConfigSetting )
 				{
 				_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
 
@@ -1352,7 +1352,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				host_side=pMsg->data[0];
 				sinario=pMsg->data[1];
 
-				join_game_start=OUT_CNFG_SETTING;
+				join_game_start=MessageType.LeaveConfigSetting;
 
 				spry_rate[0]=pMsg->data[2];		// Host
 				spry_rate[1]=pMsg->data[3];		// Guest
@@ -1367,23 +1367,23 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				rvrs_time=pMsg->data[8];
 				rvrs_rule=pMsg->data[9];
 				}
-			else if( pGenericMsg->dwType == START_IN_RESUME )
+			else if( pGenericMsg->dwType == MessageType.StartFromResume )
 				{
-				join_game_start=START_IN_RESUME;
+				join_game_start=MessageType.StartFromResume;
 
 				}
-			else if( pGenericMsg->dwType == START_IN_AUTOSAVE )
+			else if( pGenericMsg->dwType == MessageType.StartFromAutoSave )
 				{
-				join_game_start=START_IN_AUTOSAVE;
+				join_game_start=MessageType.StartFromAutoSave;
 				}
-			else if( pGenericMsg->dwType == DP_ARRIVED_UNIT )
+			else if( pGenericMsg->dwType == MessageType.UnitArrived )
 				{
 				_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
 
 				bf_arrived_unit[0]=pMsg->data[0];		// 敵が１ユニット増える。
 				go_next_2=1;
 				}
-			else if( pGenericMsg->dwType == DP_NEW_PP )
+			else if( pGenericMsg->dwType == MessageType.MoveOrder )
 				{
 				_DP_NEW_PP* pMsg = (_DP_NEW_PP*) pReceiveMsg.pReceiveData;
 
@@ -1398,7 +1398,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 					}
 				go_next_2=1;
 				}
-			else if( pGenericMsg->dwType == DP_NEW_PP_SHIP )
+			else if( pGenericMsg->dwType == MessageType.MoveShipsOrder )
 				{
 				_DP_NEW_PP_SHIP* pMsg = (_DP_NEW_PP_SHIP*) pReceiveMsg.pReceiveData;
 
@@ -1412,7 +1412,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 					}
 				go_next_2=1;
 				}
-			else if( pGenericMsg->dwType == DP_NEW_PP_PLANE )
+			else if( pGenericMsg->dwType == MessageType.MovePlanesOrder )
 				{
 				_DP_NEW_PP_PLANE* pMsg = (_DP_NEW_PP_PLANE*) pReceiveMsg.pReceiveData;
 
@@ -1427,7 +1427,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 					}
 				go_next_2=1;
 				}
-			else if( pGenericMsg->dwType == DP_NEW_SLCT )
+			else if( pGenericMsg->dwType == MessageType.SelectOrder )
 				{
 				_DP_NEW_SLCT* pMsg = (_DP_NEW_SLCT*) pReceiveMsg.pReceiveData;
 
@@ -1443,7 +1443,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 					}
 				go_next_2=1;
 				}
-			else if( pGenericMsg->dwType == DP_NEW_SLCT_SHIP )
+			else if( pGenericMsg->dwType == MessageType.SelectShipsOrder )
 				{
 				_DP_NEW_SLCT_SHIP* pMsg = (_DP_NEW_SLCT_SHIP*) pReceiveMsg.pReceiveData;
 
@@ -1459,7 +1459,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 					}
 				go_next_2=1;
 				}
-			else if( pGenericMsg->dwType == DP_NEW_SLCT_PLANE )
+			else if( pGenericMsg->dwType == MessageType.SelectPlanesOrder )
 				{
 				_DP_NEW_SLCT_PLANE* pMsg = (_DP_NEW_SLCT_PLANE*) pReceiveMsg.pReceiveData;
 
@@ -1475,7 +1475,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 					}
 				go_next_2=1;
 				}
-			else if( pGenericMsg->dwType == DP_NEW_SLCT_LAND )
+			else if( pGenericMsg->dwType == MessageType.SelectLandOrder )
 				{
 				_DP_NEW_SLCT_LAND* pMsg = (_DP_NEW_SLCT_LAND*) pReceiveMsg.pReceiveData;
 
@@ -1487,7 +1487,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				bf_new_slct[0].gr_y=pMsg->gr_y;
 				go_next_2=1;
 				}
-			else if( pGenericMsg->dwType == DP_NEW_MENU )
+			else if( pGenericMsg->dwType == MessageType.MenuOrder )
 				{
 				_DP_NEW_MENU* pMsg = (_DP_NEW_MENU*) pReceiveMsg.pReceiveData;
 
@@ -1501,12 +1501,12 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 					}
 				go_next_2=1;
 				}
-			else if( pGenericMsg->dwType == DP_NO_ORDER )
+			else if( pGenericMsg->dwType == MessageType.NoOrder )
 				{
 				// ホスト、ジョインともここで相手のデータを受け取る。
 				go_next_2=1;
 				}
-			else if( pGenericMsg->dwType == DP_FLAG_1 )
+			else if( pGenericMsg->dwType == MessageType.SyncFlag )
 				{
 				_DP_FLAG* pMsg = (_DP_FLAG*) pReceiveMsg.pReceiveData;
 
@@ -1518,19 +1518,19 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				bf_rnd_count[0]=pMsg->rnd_chk;
 				ccc_wait[0]=pMsg->ccc_wait_chk;
 
-				rival_mode=pMsg->rival_mode;
+				rival_mode=(GameMode)pMsg->rival_mode;
 				}
-			else if( pGenericMsg->dwType == RIVAL_MODE )
+			else if( pGenericMsg->dwType == MessageType.RivalMode )
 				{
 				_DP_FLAG* pMsg = (_DP_FLAG*) pReceiveMsg.pReceiveData;
 
 				// ホスト、ジョインともここで相手のデータを受け取る。
-				rival_mode=pMsg->rival_mode;
+				rival_mode=(GameMode)pMsg->rival_mode;
 
 				}
-			else if( pGenericMsg->dwType == GO_GAME_SETTING )
+			else if( pGenericMsg->dwType == MessageType.GoToGameSetting )
 				{
-				if( mode==CNCT_CNFG_SETTING || mode==DEMO )
+				if( mode==GameMode.ConfigSetting || mode==GameMode.Title )
 					{
 					// ジョインが受け取る
 					go_cnct_game_setting();
@@ -1539,16 +1539,16 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 					{
 					// ホスト、ジョインともここで相手のデータを受け取る。
 					go_next_2=1;
-					game_system_menu[1]=GO_GAME_SETTING;
+					game_system_menu[1]=(byte)MessageType.GoToGameSetting;
 					}
 				}
-			else if( pGenericMsg->dwType == RESUME_AND_GO_GAME_SETTING )
+			else if( pGenericMsg->dwType == MessageType.ResumeAndGoToGameSetting )
 				{
 				// ジョイン ここで相手のデータを受け取る。
 				go_next_2=1;
-				game_system_menu[1]=RESUME_AND_GO_GAME_SETTING;
+				game_system_menu[1]=(byte)MessageType.ResumeAndGoToGameSetting;
 				}
-			else if( pGenericMsg->dwType == DP_CHAT_1 )
+			else if( pGenericMsg->dwType == MessageType.Chat )
 				{
 				_DP_DATA_20* pMsg = (_DP_DATA_20 *) pReceiveMsg.pReceiveData;
 
@@ -1558,7 +1558,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 					}
 				friend_chat_dsp_time=unchecked((byte)CHAT_DSP_TIME);		// 400 does not fit in a BYTE: 144
 				}
-			else if( pGenericMsg->dwType == RIVAL_VER )
+			else if( pGenericMsg->dwType == MessageType.RivalVersion )
 				{
 				_DP_DATA_20* pMsg = (_DP_DATA_20 *) pReceiveMsg.pReceiveData;
 
@@ -1568,7 +1568,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 					}
 				rival_ver[s]=0;
 				}
-			else if( pGenericMsg->dwType == USER_SINARIO_FN )
+			else if( pGenericMsg->dwType == MessageType.UserScenarioFileName )
 				{
 				_DP_DATA_20* pMsg = (_DP_DATA_20 *) pReceiveMsg.pReceiveData;
 
@@ -1641,12 +1641,12 @@ typedef	struct	_DP_DATA_1
 #if false
 				// アプリケーションの独自のメッセージ
 				lp_dp_data_1 = (DP_DATA_1 *)lpvMsgBuffer;
-				if (lp_dp_data_1->dwType == MY_NAME_IS)
+				if (lp_dp_data_1->dwType == MessageType.MyNameIs)
 					{
 					// ジョインが受け取る
 					wsprintf(g_strLocalRivalPlayerName, lp_dp_data_1->my_name );	
 
-					dp_data_1.dwType = AND_MY_NAME_IS;
+					dp_data_1.dwType = MessageType.AndMyNameIs;
 					wsprintf(dp_data_1.my_name, g_strLocalPlayerName);	
 					
 					hr = lpDirectPlay4A->lpVtbl->Send(lpDirectPlay4A, dpidPlayer, idFrom, DPSEND_GUARANTEED, &dp_data_1, sizeof(DP_DATA_1) );
@@ -1657,7 +1657,7 @@ typedef	struct	_DP_DATA_1
 
 
 				lp_dp_data_1 = (DP_DATA_1 *)lpvMsgBuffer;
-				if (lp_dp_data_1->dwType == AND_MY_NAME_IS)
+				if (lp_dp_data_1->dwType == MessageType.AndMyNameIs)
 					{
 					// ホストが受け取る
 					wsprintf(g_strLocalRivalPlayerName, lp_dp_data_1->my_name );	
@@ -1668,7 +1668,7 @@ typedef	struct	_DP_DATA_1
 
 
 lp_dp_data_1 = (DP_DATA_1 *)lpvMsgBuffer;
-if (lp_dp_data_1->dwType == OUT_SETUP)
+if (lp_dp_data_1->dwType == MessageType.LeaveSetup)
 	{
 	// ジョインが受け取る
 	cnct_game_rnd_sheed=lp_dp_data_1->data[0];
@@ -1679,7 +1679,7 @@ if (lp_dp_data_1->dwType == OUT_SETUP)
 
 
 lp_dp_data_1 = (DP_DATA_1 *)lpvMsgBuffer;
-if (lp_dp_data_1->dwType == SIDE_AND_SINARIO && ( mode==CNCT_GAME_SETTING || mode==CNCT_CNFG_SETTING ) )
+if (lp_dp_data_1->dwType == MessageType.SideAndScenario && ( mode==GameMode.GameSetting || mode==GameMode.ConfigSetting ) )
 	{
 
 	// ジョインが受け取る
@@ -1703,7 +1703,7 @@ if (lp_dp_data_1->dwType == SIDE_AND_SINARIO && ( mode==CNCT_GAME_SETTING || mod
 
 
 lp_dp_data_1 = (DP_DATA_1 *)lpvMsgBuffer;
-if (lp_dp_data_1->dwType == OUT_GAME_SETTING && ( mode==CNCT_GAME_SETTING || mode==CNCT_CNFG_SETTING ))
+if (lp_dp_data_1->dwType == MessageType.LeaveGameSetting && ( mode==GameMode.GameSetting || mode==GameMode.ConfigSetting ))
 	{
 	// ジョインが受け取る
 	host_side=lp_dp_data_1->data[0];
@@ -1711,7 +1711,7 @@ if (lp_dp_data_1->dwType == OUT_GAME_SETTING && ( mode==CNCT_GAME_SETTING || mod
 
 
 	//decision_sw=lp_dp_data_1->data[2];
-	join_game_start=OUT_GAME_SETTING;
+	join_game_start=MessageType.LeaveGameSetting;
 
 	spry_rate[0]=lp_dp_data_1->data[2];		// Host
 	spry_rate[1]=lp_dp_data_1->data[3];		// Guest
@@ -1727,14 +1727,14 @@ if (lp_dp_data_1->dwType == OUT_GAME_SETTING && ( mode==CNCT_GAME_SETTING || mod
 
 
 lp_dp_data_1 = (DP_DATA_1 *)lpvMsgBuffer;
-if (lp_dp_data_1->dwType == OUT_CNFG_SETTING )
+if (lp_dp_data_1->dwType == MessageType.LeaveConfigSetting )
 	{
 	// ジョインが受け取る
 	host_side=lp_dp_data_1->data[0];
 	sinario=lp_dp_data_1->data[1];
 
 	//decision_sw=lp_dp_data_1->data[2];
-	join_game_start=OUT_CNFG_SETTING;
+	join_game_start=MessageType.LeaveConfigSetting;
 
 	spry_rate[0]=lp_dp_data_1->data[2];		// Host
 	spry_rate[1]=lp_dp_data_1->data[3];		// Guest
@@ -1751,23 +1751,23 @@ if (lp_dp_data_1->dwType == OUT_CNFG_SETTING )
 
 
 lp_dp_data_1 = (DP_DATA_1 *)lpvMsgBuffer;
-if ( lp_dp_data_1->dwType == START_IN_RESUME )
+if ( lp_dp_data_1->dwType == MessageType.StartFromResume )
 	{
 	// ジョインが受け取る
-	join_game_start=START_IN_RESUME;
+	join_game_start=MessageType.StartFromResume;
 	}
 
 
 lp_dp_data_1 = (DP_DATA_1 *)lpvMsgBuffer;
-if ( lp_dp_data_1->dwType == START_IN_AUTOSAVE )
+if ( lp_dp_data_1->dwType == MessageType.StartFromAutoSave )
 	{
 	// ジョインが受け取る
-	join_game_start=START_IN_AUTOSAVE;
+	join_game_start=MessageType.StartFromAutoSave;
 	}
 
 
 lp_dp_data_1 = (DP_DATA_1 *)lpvMsgBuffer;
-if (lp_dp_data_1->dwType == DP_ARRIVED_UNIT )
+if (lp_dp_data_1->dwType == MessageType.UnitArrived )
 	{
 	bf_arrived_unit[0]=lp_dp_data_1->data[0];		// 敵が１ユニット増える。
 	go_next_2=1;
@@ -1777,7 +1777,7 @@ if (lp_dp_data_1->dwType == DP_ARRIVED_UNIT )
 
 
 lp_dp_new_pp = (_DP_NEW_PP *)lpvMsgBuffer;
-if (lp_dp_new_pp->dwType == DP_NEW_PP)
+if (lp_dp_new_pp->dwType == MessageType.MoveOrder)
 	{
 	// ホスト、ジョインともここで相手のデータを受け取る。
 	bf_new_pp[0].used=lp_dp_new_pp->used;
@@ -1792,7 +1792,7 @@ if (lp_dp_new_pp->dwType == DP_NEW_PP)
 	}
 
 lp_dp_new_pp_ship = (_DP_NEW_PP_SHIP *)lpvMsgBuffer;
-if (lp_dp_new_pp_ship->dwType == DP_NEW_PP_SHIP)
+if (lp_dp_new_pp_ship->dwType == MessageType.MoveShipsOrder)
 	{
 	// ホスト、ジョインともここで相手のデータを受け取る。
 	bf_new_pp[0].used=lp_dp_new_pp_ship->used;
@@ -1809,7 +1809,7 @@ if (lp_dp_new_pp_ship->dwType == DP_NEW_PP_SHIP)
 
 
 lp_dp_new_pp_plane = (_DP_NEW_PP_PLANE *)lpvMsgBuffer;
-if (lp_dp_new_pp_plane->dwType == DP_NEW_PP_PLANE)
+if (lp_dp_new_pp_plane->dwType == MessageType.MovePlanesOrder)
 	{
 	// ホスト、ジョインともここで相手のデータを受け取る。
 	bf_new_pp[0].used=lp_dp_new_pp_plane->used;
@@ -1826,7 +1826,7 @@ if (lp_dp_new_pp_plane->dwType == DP_NEW_PP_PLANE)
 
 
 lp_dp_new_slct = (_DP_NEW_SLCT *)lpvMsgBuffer;
-if (lp_dp_new_slct->dwType == DP_NEW_SLCT)
+if (lp_dp_new_slct->dwType == MessageType.SelectOrder)
 	{
 	// ホスト、ジョインともここで相手のデータを受け取る。
 	bf_new_slct[0].sw=lp_dp_new_slct->sw;
@@ -1845,7 +1845,7 @@ if (lp_dp_new_slct->dwType == DP_NEW_SLCT)
 
 
 lp_dp_new_slct_ship = (_DP_NEW_SLCT_SHIP *)lpvMsgBuffer;
-if (lp_dp_new_slct_ship->dwType == DP_NEW_SLCT_SHIP)
+if (lp_dp_new_slct_ship->dwType == MessageType.SelectShipsOrder)
 	{
 	// ホスト、ジョインともここで相手のデータを受け取る。
 	bf_new_slct[0].sw=lp_dp_new_slct_ship->sw;
@@ -1861,7 +1861,7 @@ if (lp_dp_new_slct_ship->dwType == DP_NEW_SLCT_SHIP)
 	}
 
 lp_dp_new_slct_plane = (_DP_NEW_SLCT_PLANE *)lpvMsgBuffer;
-if (lp_dp_new_slct_plane->dwType == DP_NEW_SLCT_PLANE)
+if (lp_dp_new_slct_plane->dwType == MessageType.SelectPlanesOrder)
 	{
 	// ホスト、ジョインともここで相手のデータを受け取る。
 	bf_new_slct[0].sw=lp_dp_new_slct_plane->sw;
@@ -1878,7 +1878,7 @@ if (lp_dp_new_slct_plane->dwType == DP_NEW_SLCT_PLANE)
 
 
 lp_dp_new_slct_land = (_DP_NEW_SLCT_LAND *)lpvMsgBuffer;
-if (lp_dp_new_slct_land->dwType == DP_NEW_SLCT_LAND)
+if (lp_dp_new_slct_land->dwType == MessageType.SelectLandOrder)
 	{
 	// ホスト、ジョインともここで相手のデータを受け取る。
 	bf_new_slct[0].sw=lp_dp_new_slct_land->sw;
@@ -1893,7 +1893,7 @@ if (lp_dp_new_slct_land->dwType == DP_NEW_SLCT_LAND)
 
 
 lp_dp_new_menu = (_DP_NEW_MENU *)lpvMsgBuffer;
-if( lp_dp_new_menu->dwType == DP_NEW_MENU )
+if( lp_dp_new_menu->dwType == MessageType.MenuOrder )
 	{
 	// ホスト、ジョインともここで相手のデータを受け取る。
 	bf_new_menu[0].menu=lp_dp_new_menu->menu;
@@ -1910,7 +1910,7 @@ if( lp_dp_new_menu->dwType == DP_NEW_MENU )
 
 
 lp_dp_flag = (_DP_FLAG *)lpvMsgBuffer;
-if (lp_dp_flag->dwType == DP_NO_ORDER )
+if (lp_dp_flag->dwType == MessageType.NoOrder )
 	{
 	// ホスト、ジョインともここで相手のデータを受け取る。
 	go_next_2=1;
@@ -1918,7 +1918,7 @@ if (lp_dp_flag->dwType == DP_NO_ORDER )
 
 
 lp_dp_flag = (_DP_FLAG *)lpvMsgBuffer;
-if ( lp_dp_flag->dwType == DP_FLAG_1 )
+if ( lp_dp_flag->dwType == MessageType.SyncFlag )
 	{
 	// ホスト、ジョインともここで相手のデータを受け取る。
 	go_next_1=1;
@@ -1928,25 +1928,25 @@ if ( lp_dp_flag->dwType == DP_FLAG_1 )
 	bf_rnd_count[0]=lp_dp_flag->rnd_chk;
 	ccc_wait[0]=lp_dp_flag->ccc_wait_chk;
 
-	rival_mode=lp_dp_flag->rival_mode;
+	rival_mode=(GameMode)lp_dp_flag->rival_mode;
 	}
 
 
 
 lp_dp_flag = (_DP_FLAG *)lpvMsgBuffer;
-if ( lp_dp_flag->dwType == RIVAL_MODE )
+if ( lp_dp_flag->dwType == MessageType.RivalMode )
 	{
 	// ホスト、ジョインともここで相手のデータを受け取る。
-	rival_mode=lp_dp_flag->rival_mode;
+	rival_mode=(GameMode)lp_dp_flag->rival_mode;
 	}
 
 
 
 
 lp_dp_flag = (_DP_FLAG *)lpvMsgBuffer;
-if ( lp_dp_flag->dwType == GO_GAME_SETTING )
+if ( lp_dp_flag->dwType == MessageType.GoToGameSetting )
 	{
-	if( mode==CNCT_CNFG_SETTING )
+	if( mode==GameMode.ConfigSetting )
 		{
 		// ジョインが受け取る
 		go_cnct_game_setting();
@@ -1955,23 +1955,23 @@ if ( lp_dp_flag->dwType == GO_GAME_SETTING )
 		{
 		// ホスト、ジョインともここで相手のデータを受け取る。
 		go_next_2=1;
-		game_system_menu[1]=GO_GAME_SETTING;
+		game_system_menu[1]=(byte)MessageType.GoToGameSetting;
 		}
 	}
 
 
 lp_dp_flag = (_DP_FLAG *)lpvMsgBuffer;
-if ( lp_dp_flag->dwType == RESUME_AND_GO_GAME_SETTING )
+if ( lp_dp_flag->dwType == MessageType.ResumeAndGoToGameSetting )
 	{
 	// ジョイン ここで相手のデータを受け取る。
 	go_next_2=1;
-	game_system_menu[1]=RESUME_AND_GO_GAME_SETTING;
+	game_system_menu[1]=(byte)MessageType.ResumeAndGoToGameSetting;
 	}
 
 
 
 lp_dp_data_20 = (DP_DATA_20 *)lpvMsgBuffer;
-if (lp_dp_data_20->dwType == DP_CHAT_1)
+if (lp_dp_data_20->dwType == MessageType.Chat)
 	{
 	// あいてからのチャットメッセージをうけとる
 	for(s=0;s<128;s++)

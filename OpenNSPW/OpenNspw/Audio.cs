@@ -554,7 +554,7 @@ return;
 
 				wrk_x=unit[n].x;
 				wrk_y=unit[n].y;
-				if( unit[n].kind==FT1 )
+				if( unit[n].kind==UnitKind.Fighter )
 					{	// 航空機の場合はちょっと前へ
 					wrk_x+=cos(unit[n].drctn*a_PI)*FT_EYE;
 					wrk_y+=sin(unit[n].drctn*a_PI)*FT_EYE;
@@ -582,22 +582,22 @@ return;
 
 				switch( unit[n].kind )
 					{
-					case BB1:		size=BB1_SIGHT;		break;
-					case CA1:		size=CA1_SIGHT;		break;
-					case DD1:		size=DD1_SIGHT;		break;
-					case SS1:		size=SS1_SIGHT;		break;
-					case CV1:		size=CV1_SIGHT;		break;
-					case CVL1:		size=CVL1_SIGHT;	break;
-					case TR1:		size=TR1_SIGHT;		break;
-					case FT1:		size=FT1_SIGHT;		break;
-					case AT1:		size=AT1_SIGHT;		break;
-					case BM1:		size=BM1_SIGHT;		break;
-					case AP: case SP:		size=AP_SIGHT;		break;		
-					case CT1:		size=CT1_SIGHT;		break;
-					case MN1:		size=MN1_SIGHT;		break;
-					case GF1:		size=GF1_SIGHT;		break;
-					case GF2:		size=GF2_SIGHT;		break;
-					case GF3:		size=GF3_SIGHT;		break;
+					case UnitKind.Battleship:		size=BB1_SIGHT;		break;
+					case UnitKind.Cruiser:		size=CA1_SIGHT;		break;
+					case UnitKind.Destroyer:		size=DD1_SIGHT;		break;
+					case UnitKind.Submarine:		size=SS1_SIGHT;		break;
+					case UnitKind.Carrier:		size=CV1_SIGHT;		break;
+					case UnitKind.LightCarrier:		size=CVL1_SIGHT;	break;
+					case UnitKind.Transport:		size=TR1_SIGHT;		break;
+					case UnitKind.Fighter:		size=FT1_SIGHT;		break;
+					case UnitKind.Attacker:		size=AT1_SIGHT;		break;
+					case UnitKind.Bomber:		size=BM1_SIGHT;		break;
+					case UnitKind.AirBase: case UnitKind.NavalBase:		size=AP_SIGHT;		break;		
+					case UnitKind.City:		size=CT1_SIGHT;		break;
+					case UnitKind.Mine:		size=MN1_SIGHT;		break;
+					case UnitKind.InfantryBase:		size=GF1_SIGHT;		break;
+					case UnitKind.Pillboxes:		size=GF2_SIGHT;		break;
+					case UnitKind.Fortress:		size=GF3_SIGHT;		break;
 					}
 
 

@@ -286,8 +286,8 @@ public class TitleScreenTests
 	{
 		PlayTwoGames((host, guest) =>
 		{
-			Assert.Equal(DEMO, host.Game.mode);
-			Assert.Equal(DEMO, guest.Game.mode);
+			Assert.Equal(GameMode.Title, host.Game.mode);
+			Assert.Equal(GameMode.Title, guest.Game.mode);
 			Assert.Equal(1, host.Game.you_are_host);
 			Assert.Equal(0, guest.Game.you_are_host);
 
@@ -303,22 +303,22 @@ public class TitleScreenTests
 		PlayTwoGames((host, guest) =>
 		{
 			Click(host, 512, 384);
-			WaitUntil(() => host.Game.mode == CNCT_GAME_SETTING && host.Game.rival_mode == CNCT_GAME_SETTING, host, guest);
+			WaitUntil(() => host.Game.mode == GameMode.GameSetting && host.Game.rival_mode == GameMode.GameSetting, host, guest);
 			SaveFrame(host, "game_setting_host.png");
 
 			Click(host, 130, 150 + 12);
-			WaitUntil(() => host.Game.mode == CNCT_CNFG_SETTING && host.Game.rival_mode == CNCT_CNFG_SETTING, host, guest);
+			WaitUntil(() => host.Game.mode == GameMode.ConfigSetting && host.Game.rival_mode == GameMode.ConfigSetting, host, guest);
 			SaveFrame(host, "config_setting_host.png");
 
 			Click(host, 630 - 120 + 10, 700 + 12);
-			WaitUntil(() => host.Game.mode == CMBT && guest.Game.mode == CMBT, host, guest);
+			WaitUntil(() => host.Game.mode == GameMode.Battle && guest.Game.mode == GameMode.Battle, host, guest);
 
 			var frames = (host.Platform.FrameCount, guest.Platform.FrameCount);
 			WaitUntil(() => host.Platform.FrameCount > frames.Item1 + 200 && guest.Platform.FrameCount > frames.Item2 + 200, host, guest);
 			SaveFrame(host, "battle_host.png");
 			SaveFrame(guest, "battle_guest.png");
-			Assert.Equal(CMBT, host.Game.mode);
-			Assert.Equal(CMBT, guest.Game.mode);
+			Assert.Equal(GameMode.Battle, host.Game.mode);
+			Assert.Equal(GameMode.Battle, guest.Game.mode);
 		});
 	}
 }

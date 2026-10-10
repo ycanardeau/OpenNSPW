@@ -54,11 +54,12 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 	private string _localName = string.Empty;
 
 	// Whether a message of this type is what each player sends once per turn, to give an order or none (chara_cont).
-	private static bool IsOrder(uint type)
+	private static bool IsOrder(MessageType type)
 	{
-		return type is DP_NO_ORDER or DP_ARRIVED_UNIT or DP_NEW_PP or DP_NEW_PP_SHIP or DP_NEW_PP_PLANE
-			or DP_NEW_SLCT or DP_NEW_SLCT_SHIP or DP_NEW_SLCT_PLANE or DP_NEW_SLCT_LAND or DP_NEW_MENU
-			or GO_GAME_SETTING or RESUME_AND_GO_GAME_SETTING;
+		return type is MessageType.NoOrder or MessageType.UnitArrived or MessageType.MoveOrder or MessageType.MoveShipsOrder
+			or MessageType.MovePlanesOrder or MessageType.SelectOrder or MessageType.SelectShipsOrder
+			or MessageType.SelectPlanesOrder or MessageType.SelectLandOrder or MessageType.MenuOrder
+			or MessageType.GoToGameSetting or MessageType.ResumeAndGoToGameSetting;
 	}
 
 	private static byte[] ToBytes<T>(T message) where T : unmanaged
@@ -77,17 +78,17 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 	// The rival's message in answer to one of the game's.
 	private byte[]? Answer(byte[] data)
 	{
-		var type = MemoryMarshal.Read<uint>(data);
+		var type = MemoryMarshal.Read<MessageType>(data);
 		if (IsOrder(type))
 		{
 			lock (_lock)
 			{
-				return _orders.TryDequeue(out var order) ? order : ToBytes(new _DP_FLAG { dwType = DP_NO_ORDER });
+				return _orders.TryDequeue(out var order) ? order : ToBytes(new _DP_FLAG { dwType = MessageType.NoOrder });
 			}
 		}
 
 		// The rival is a guest, which leaves its dialog when the host starts the game.
-		return type == MSG_EXIT_WAITING ? null : data;
+		return (uint)type == MSG_EXIT_WAITING ? null : data;
 	}
 
 	// The rival gives an order in its next turn, as a message of the game (such as _DP_NEW_PP_SHIP).

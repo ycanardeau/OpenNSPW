@@ -96,7 +96,7 @@ internal sealed class GameState(ImmutableArray<byte[]> bytes)
 		}
 	}
 
-	// The primitive values of the game's globals that differ from this state, at most `limit` of them.
+	// The numbers in the game's globals that differ from this state, at most `limit` of them.
 	public IReadOnlyList<string> Differences(Nspw game, int limit = 8)
 	{
 		var differences = new List<string>();
@@ -116,7 +116,7 @@ internal sealed class GameState(ImmutableArray<byte[]> bytes)
 
 				var location = TypeLayout.Locate(global.Field.FieldType, global.Offset + offset + mismatch);
 				var start = location.Start - global.Offset;
-				var size = location.Type.IsPrimitive ? TypeLayout.SizeOf(location.Type) : 1;
+				var size = TypeLayout.IsScalar(location.Type) ? TypeLayout.SizeOf(location.Type) : 1;
 				differences.Add(
 					$"{global.Name}{location.Path}: expected {TypeLayout.Format(location.Type, expected.Slice(start, size))}, " +
 					$"actual {TypeLayout.Format(location.Type, actual.Slice(start, size))}");
