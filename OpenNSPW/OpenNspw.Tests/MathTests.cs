@@ -91,4 +91,20 @@ public class MathTests
 			Assert.Equal(BitConverter.DoubleToInt64Bits(InlineDistance(dx, dy)), BitConverter.DoubleToInt64Bits(nspw_math.Distance(dx, dy)));
 		}
 	}
+
+	// Direction gives the same bits as the two statements it replaces.
+	[Fact]
+	public void Direction_is_the_original_computation()
+	{
+		var random = new Random(4);
+		for (var i = 0; i < 100_000; i++)
+		{
+			var dx = (random.NextDouble() - 0.5) * Math.Pow(10, random.Next(-2, 6));
+			var dy = (random.NextDouble() - 0.5) * Math.Pow(10, random.Next(-2, 6));
+			var drctn = nspw_math.atan2(dy, dx) * all_head.RAD_to;
+			if (drctn < 0)
+				drctn = 360 + drctn;
+			Assert.Equal(BitConverter.DoubleToInt64Bits(drctn), BitConverter.DoubleToInt64Bits(nspw_math.Direction(dx, dy)));
+		}
+	}
 }

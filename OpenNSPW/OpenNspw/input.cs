@@ -323,9 +323,7 @@ private void TakeDetour(ref Unit unit, ref int pp_indx, double start_x, double s
 		wrk_y=unit.PathY[pp_indx]-unit.PathY[pp_indx-1];
 		if(wrk_x==0)	wrk_x=1;
 		if(wrk_y==0)	wrk_y=1;
-		drctn1=atan2(wrk_y,wrk_x)*RAD_to;
-		if(drctn1<0)
-			drctn1=360+drctn1;
+		drctn1=Direction(wrk_x, wrk_y);
 		if(drctn1>=360)
 			drctn1=drctn1-360;
 		// 現位置からＰＰ０への角度
@@ -341,9 +339,7 @@ private void TakeDetour(ref Unit unit, ref int pp_indx, double start_x, double s
 			}
 		if(wrk_x==0)	wrk_x=1;
 		if(wrk_y==0)	wrk_y=1;
-		drctn2=atan2(wrk_y,wrk_x)*RAD_to;
-		if(drctn2<0)
-			drctn2=360+drctn2;
+		drctn2=Direction(wrk_x, wrk_y);
 
 		// 方位角 drctn1
 		drctn1=drctn1-drctn2;
@@ -474,9 +470,7 @@ public void	SetCpuRoute2(int m)
 		if(wrk_x==0)	wrk_x=1;
 		if(wrk_y==0)	wrk_y=1;
 
-		pp_drctn=atan2(wrk_y,wrk_x)*RAD_to;
-		if(pp_drctn<0)
-			pp_drctn=360+pp_drctn;
+		pp_drctn=Direction(wrk_x, wrk_y);
 		if(pp_drctn>=360)
 			pp_drctn=pp_drctn-360;
 
