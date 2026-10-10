@@ -638,13 +638,13 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 				unit.DeckPhase=1;
 				Units[unit.Carrier].PlanesToLaunch++;		// 発艦予定の機数を
 				}
-			cv_1=Sprites[SpriteId.JapanUnitInfo].x+Sprites[SpriteId.JapanUnitInfo].wd/2;
+			cv_1=Sprites[SpriteId.JapanUnitInfo].X+Sprites[SpriteId.JapanUnitInfo].Width/2;
 			if((int)unit.Position.X==cv_1 && unit.DeckPhase==1)
 				{
 				unit.DeckPhase=2;
 				unit.Direction=270.0;
 				}
-			cv_1=Sprites[SpriteId.JapanUnitInfo].y+370;
+			cv_1=Sprites[SpriteId.JapanUnitInfo].Y+370;
 			if((int)unit.Position.Y>=cv_1 && unit.DeckPhase==2)
 				{
 				unit.DeckPhase=3;
@@ -662,7 +662,7 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 					unit.Position = new WorldPosition(unit.Position.X - 15, unit.Position.Y);
 					}
 				}
-			cv_1=Sprites[SpriteId.JapanUnitInfo].y+370-80;
+			cv_1=Sprites[SpriteId.JapanUnitInfo].Y+370-80;
 			if((int)unit.Position.Y==cv_1 && unit.DeckPhase==3 )
 				{
 				unit.DeckPhase=4;
@@ -671,7 +671,7 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 				unit.TakeOffRun=0;
 				}
 
-			cv_1=Sprites[SpriteId.JapanUnitInfo].y+370-120;
+			cv_1=Sprites[SpriteId.JapanUnitInfo].Y+370-120;
 			if((int)unit.Position.Y<=cv_1 && unit.DeckPhase>=4)
 				{	// 加速します
 				unit.TakeOffRun+=1;
@@ -685,7 +685,7 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 				unit.Position = new WorldPosition(unit.Position.X, unit.Position.Y - (sin(unit.Direction*a_PI)*(unit.TakeOffRun/20)));
 				}
 
-			cv_1=Sprites[SpriteId.JapanUnitInfo].y-30/*+60*/;
+			cv_1=Sprites[SpriteId.JapanUnitInfo].Y-30/*+60*/;
 			if((int)unit.Position.Y<=cv_1 && unit.DeckPhase>=4 )
 				{		// ここで発進はお終い。
 				//unit[m].info[3]=100;			// 発進後の最低直線飛行
@@ -736,14 +736,14 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 		else
 			{
 			// 着陸
-			cv_1=Sprites[SpriteId.JapanUnitInfo].y+Sprites[SpriteId.JapanUnitInfo].ht-150;
+			cv_1=Sprites[SpriteId.JapanUnitInfo].Y+Sprites[SpriteId.JapanUnitInfo].Height-150;
 			if((int)unit.Position.Y<=cv_1 && unit.DeckPhase==1)
 				{
 				unit.DeckPhase=2;
 				unit.Speed=1.5;
 				Units[unit.Carrier].LandingLock=0;		// その空母の次機着艦許可
 				}
-			cv_1=Sprites[SpriteId.JapanUnitInfo].y+Sprites[SpriteId.JapanUnitInfo].ht-200;
+			cv_1=Sprites[SpriteId.JapanUnitInfo].Y+Sprites[SpriteId.JapanUnitInfo].Height-200;
 			if((int)unit.Position.Y<=cv_1 && unit.DeckPhase==2)
 				{
 				unit.DeckPhase=3;
@@ -751,7 +751,7 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 				if( unit.Kind!=UnitKind.Bomber && !(unit.Kind==UnitKind.Fighter&&unit.Variant==1) )
 					unit.SpriteRow++;
 				}
-			cv_1=Sprites[SpriteId.JapanUnitInfo].y+Sprites[SpriteId.JapanUnitInfo].ht-270;
+			cv_1=Sprites[SpriteId.JapanUnitInfo].Y+Sprites[SpriteId.JapanUnitInfo].Height-270;
 			if( (int)unit.Position.Y<=cv_1 && unit.DeckPhase==3 )
 				{
 				// 着艦終了
@@ -1050,10 +1050,10 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 					if(other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged)  && !(other.Kind>=UnitKind.AirBase&&other.Kind<=UnitKind.Fortress) )
 						{
 						// ptin dbg
-						wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].ht/2);
-						wrk_r.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].wd/2);
-						wrk_r.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].ht/2);
-						wrk_r.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].wd/2);
+						wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].Height/2);
+						wrk_r.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].Width/2);
+						wrk_r.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].Height/2);
+						wrk_r.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].Width/2);
 
 						if( PointInRect3(ref wrk_r,(int)wrk_x2,(int)wrk_y2)!=0)
 							{
@@ -1078,8 +1078,8 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 
 				if(!( wrk_y2>MAP_TOP || wrk_y2<MAP_BOTTOM || wrk_x2<MAP_LEFT || wrk_x2>MAP_RIGHT ))
 					{
-					cm_scrn_x=(int)((wrk_x2+(Sprites[SpriteId.JapanUnits].wd/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].wd);
-					cm_scrn_y=(int)((MAP_TOP-wrk_y2+(Sprites[SpriteId.JapanUnits].ht/2))/Sprites[SpriteId.MapTiles].ht);
+					cm_scrn_x=(int)((wrk_x2+(Sprites[SpriteId.JapanUnits].Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
+					cm_scrn_y=(int)((MAP_TOP-wrk_y2+(Sprites[SpriteId.JapanUnits].Height/2))/Sprites[SpriteId.MapTiles].Height);
 					if( MapTiles[cm_scrn_y][cm_scrn_x]>=1 && MapTiles[cm_scrn_y][cm_scrn_x]<=9 )
 						{
 						land=1;
@@ -1354,7 +1354,7 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 				Units[unit.Carrier].LandingLock=1;	// 着艦、0許可、1不許可
 				Units[unit.Carrier].LaunchLock=1;	// その空母の次機発進許可	0許可、1不許可
 				unit.PlaneState=UnitState.Parked;
-				unit.Position = new WorldPosition(Sprites[SpriteId.JapanUnitInfo].x+Sprites[SpriteId.JapanUnitInfo].wd/2+(SharedRandom(16)-7), Sprites[SpriteId.JapanUnitInfo].y+Sprites[SpriteId.JapanUnitInfo].ht+40);
+				unit.Position = new WorldPosition(Sprites[SpriteId.JapanUnitInfo].X+Sprites[SpriteId.JapanUnitInfo].Width/2+(SharedRandom(16)-7), Sprites[SpriteId.JapanUnitInfo].Y+Sprites[SpriteId.JapanUnitInfo].Height+40);
 				unit.Speed=5.0; unit.Direction=90.0;
 
 				unit.Target=0;					//

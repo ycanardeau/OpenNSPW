@@ -68,17 +68,17 @@ public void	UpdateTitle()
 	ClearFlag=1;
 
 	// ユニットインフォーメィション
-	Sprites[SpriteId.TitleBackground].x=212-50;
-	Sprites[SpriteId.TitleBackground].y=130;
+	Sprites[SpriteId.TitleBackground].X=212-50;
+	Sprites[SpriteId.TitleBackground].Y=130;
 
-	src_rect.left = 	Sprites[SpriteId.TitleBackground].base_x;
-	src_rect.top = Sprites[SpriteId.TitleBackground].base_y;
-	src_rect.right = Sprites[SpriteId.TitleBackground].base_x+Sprites[SpriteId.TitleBackground].wd;
-	src_rect.bottom = Sprites[SpriteId.TitleBackground].base_y+Sprites[SpriteId.TitleBackground].ht;
+	src_rect.left = 	Sprites[SpriteId.TitleBackground].SheetX;
+	src_rect.top = Sprites[SpriteId.TitleBackground].SheetY;
+	src_rect.right = Sprites[SpriteId.TitleBackground].SheetX+Sprites[SpriteId.TitleBackground].Width;
+	src_rect.bottom = Sprites[SpriteId.TitleBackground].SheetY+Sprites[SpriteId.TitleBackground].Height;
 
 	// dstn_rect は ディスティネーションレクタングルです。
-	dstn_rect.left=Sprites[SpriteId.TitleBackground].x;
-	dstn_rect.top=Sprites[SpriteId.TitleBackground].y;
+	dstn_rect.left=Sprites[SpriteId.TitleBackground].X;
+	dstn_rect.top=Sprites[SpriteId.TitleBackground].Y;
 
 	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
 		{

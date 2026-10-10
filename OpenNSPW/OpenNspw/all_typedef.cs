@@ -287,19 +287,20 @@ public struct Cloud
 	[Original("kind")] public int Kind; // 戦艦だとか空母だとか
 	}
 
+[Original("SPRT")]
 [StructLayout(LayoutKind.Sequential)]
-public struct	SPRT
+public struct	Sprite
 	{
-	public int no;
-	public int x;
-	public int y;
-	public int cx;
-	public int cy;
-	public int wd;
-	public int ht;
-	public int base_x;
-	public int base_y;
-	public int os_of_x;
+	[Original("no")] public int Frame;
+	[Original("x")] public int X;
+	[Original("y")] public int Y;
+	[Original("cx")] public int CenterX;
+	[Original("cy")] public int CenterY;
+	[Original("wd")] public int Width;
+	[Original("ht")] public int Height;
+	[Original("base_x")] public int SheetX;
+	[Original("base_y")] public int SheetY;
+	[Original("os_of_x")] public int FramesPerRow;
 	}
 
 // Change compiler pack alignment to be BYTE aligned, and pop the current value
