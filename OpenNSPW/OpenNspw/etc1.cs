@@ -37,7 +37,7 @@ public int		CheckHit(int m)
 		case UnitKind.Cruiser:	j=12;j2=j/2;	break;
 		case UnitKind.Destroyer:	j=10;j2=j/2;		break;
 		case UnitKind.Submarine:
-			if( Units[n].Submerged!=0 )// 潜航中、あたりがでかくなる
+			if( Units[n].IsSubmerged )// 潜航中、あたりがでかくなる
 				{
 				// ptin dbg
 				wrk_rect.top=(int)Units[n].Position.Y+50;
@@ -150,7 +150,7 @@ public void		DrawHitArea(int m)
 		case UnitKind.Cruiser:	j=12;j2=j/2;	break;
 		case UnitKind.Destroyer:	j=6;j2=j/2;	break;
 		case UnitKind.Submarine:
-			if( Units[n].Submerged!=0 )// 潜航中、あたりがでかくなる
+			if( Units[n].IsSubmerged )// 潜航中、あたりがでかくなる
 				{
 				wrk_rect.top=(int)Units[n].Position.Y-50;
 				wrk_rect.right=(int)Units[n].Position.X+50;
@@ -355,7 +355,7 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double drctn2, re
 	for(n=1;n<=MaxUnitId;n++)
 		{
 		ref var other = ref Units[n];	//敵を探す。
-		if( other.IsUsed && other.Category==UnitCategory.Plane && (((other.Kind==UnitKind.Attacker||other.Kind==UnitKind.Fighter) && other.Ammo!=0 )|| Random(10)==0 )  && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.Found!=0 )
+		if( other.IsUsed && other.Category==UnitCategory.Plane && (((other.Kind==UnitKind.Attacker||other.Kind==UnitKind.Fighter) && other.Ammo!=0 )|| Random(10)==0 )  && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.IsFound )
 			{
 			// 攻撃地点から攻撃目標地点への距離
 			wrk_x=other.Position.X-unit.Position.X;
@@ -485,7 +485,7 @@ private bool ShipDropAntiSubmarineBomb(ref int trgt, ref Unit unit, FireKind kin
 	for( n=1; n<=MaxUnitId; n++)
 		{
 		trgt=n;
-		if( Units[trgt].Side!=unit.Side && Units[trgt].Kind==UnitKind.Submarine && Units[trgt].Submerged!=0 && Units[trgt].Found!=0 )
+		if( Units[trgt].Side!=unit.Side && Units[trgt].Kind==UnitKind.Submarine && Units[trgt].IsSubmerged && Units[trgt].IsFound )
 			{	// 爆雷
 
 			// ptin dbg
@@ -561,7 +561,7 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rng,
 	for(n=1;n<=MaxUnitId;n++)
 		{
 		ref var other = ref Units[n];	//敵を探す。
-		if( other.IsUsed && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.Submerged!=0 ) && other.Side!=unit.Side && other.Found!=0  && other.Kind!=UnitKind.City )
+		if( other.IsUsed && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged ) && other.Side!=unit.Side && other.IsFound  && other.Kind!=UnitKind.City )
 			{
 			// 攻撃地点から攻撃目標地点への距離
 			wrk_x=other.Position.X-unit.Position.X;
@@ -753,7 +753,7 @@ private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double drctn2, Fire
 	for(n=1;n<=MaxUnitId;n++)
 		{
 		ref var other = ref Units[n];	//敵を探す。
-		if( other.IsUsed && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.AirBase||other.Kind==UnitKind.NavalBase||other.Kind==UnitKind.InfantryBase||other.Kind==UnitKind.Pillboxes||other.Kind==UnitKind.Fortress) && other.Side!=unit.Side && other.Found!=0 && !(other.Kind==UnitKind.Submarine||other.Kind==UnitKind.Destroyer) )
+		if( other.IsUsed && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.AirBase||other.Kind==UnitKind.NavalBase||other.Kind==UnitKind.InfantryBase||other.Kind==UnitKind.Pillboxes||other.Kind==UnitKind.Fortress) && other.Side!=unit.Side && other.IsFound && !(other.Kind==UnitKind.Submarine||other.Kind==UnitKind.Destroyer) )
 			{
 			// 攻撃地点から攻撃目標地点への距離
 			wrk_x=other.Position.X-unit.Position.X;
@@ -877,7 +877,7 @@ private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double drctn2, Fire
 							unit.ContactRadius=100;
 							unit.ContactTime=300;
 
-							unit.Found=1;
+							unit.IsFound=true;
 
 							break;	// 再装填時間
 			}
@@ -948,7 +948,7 @@ private bool ShipFireTorpedoAtTarget(int trgt, ref Unit unit, ref double drctn2,
 	int cm_scrn_y;
 	trgt2=0;
 	n=trgt;
-	if( Units[n].IsUsed && Units[n].Category==UnitCategory.Ship && !(Units[n].Kind==UnitKind.AirBase||Units[n].Kind==UnitKind.NavalBase||Units[n].Kind==UnitKind.InfantryBase||Units[n].Kind==UnitKind.Pillboxes||Units[n].Kind==UnitKind.Fortress) && Units[n].Side!=unit.Side && Units[n].Found!=0 )
+	if( Units[n].IsUsed && Units[n].Category==UnitCategory.Ship && !(Units[n].Kind==UnitKind.AirBase||Units[n].Kind==UnitKind.NavalBase||Units[n].Kind==UnitKind.InfantryBase||Units[n].Kind==UnitKind.Pillboxes||Units[n].Kind==UnitKind.Fortress) && Units[n].Side!=unit.Side && Units[n].IsFound )
 		{
 
 		// 攻撃地点から攻撃目標地点への距離
@@ -1049,7 +1049,7 @@ private bool ShipFireTorpedoAtTarget(int trgt, ref Unit unit, ref double drctn2,
 							unit.ContactRadius=100;
 							unit.ContactTime=300;
 
-							unit.Found=1;
+							unit.IsFound=true;
 							break;	// 再装填時間
 			}
 
@@ -1112,7 +1112,7 @@ private bool ShipFireAntiAircraftShellAtTarget(int trgt, ref Unit unit, ref int 
 	int f;
 	int i;
 	double dstc2;
-	if( Units[trgt].Found==0 )
+	if( !Units[trgt].IsFound )
 		return false;
 
 	trgt2=0;
@@ -1254,7 +1254,7 @@ private bool ShipFireAntiAircraftShellWithoutTarget(ref Unit unit, ref double dr
 	for(n=1;n<=MaxUnitId;n++)
 		{
 		ref var other = ref Units[n];	//敵を探す。
-		if( other.IsUsed && other.Category==UnitCategory.Plane && (((other.Kind==UnitKind.Attacker||other.Kind==UnitKind.Bomber) && other.Ammo!=0 )|| Random(10)==0 )  && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.Found!=0 )
+		if( other.IsUsed && other.Category==UnitCategory.Plane && (((other.Kind==UnitKind.Attacker||other.Kind==UnitKind.Bomber) && other.Ammo!=0 )|| Random(10)==0 )  && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.IsFound )
 			{
 			// 攻撃地点から攻撃目標地点への距離
 			wrk_x=other.Position.X-unit.Position.X;
@@ -1396,7 +1396,7 @@ private bool ShipFireGunAtTarget(int trgt, ref Unit unit, FireKind kind, ref int
 	int f;
 	int i;
 	double dstc2;
-	if( Units[trgt].Found==0 )
+	if( !Units[trgt].IsFound )
 		return false;
 
 	trgt2=0;
@@ -1600,7 +1600,7 @@ private bool ShipFireBullet(ref int trgt, ref Unit unit, ref double drctn2, Fire
 		{
 		ref var other = ref Units[n];	//敵を探す。
 		if( other.IsUsed && ( (other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying )  || (other.Kind>=UnitKind.InfantryBase && other.Kind<=UnitKind.Fortress ) ) && other.Kind!=UnitKind.Bomber
-		&& other.Side!=unit.Side && other.Found!=0 )
+		&& other.Side!=unit.Side && other.IsFound )
 			{
 			// 全方位射撃可能
 			wrk_x=other.Position.X-unit.Position.X;
@@ -1683,7 +1683,7 @@ private bool BomberFireBullet(ref int trgt, ref Unit unit, ref double drctn2, Fi
 	for(n=1;n<=MaxUnitId;n++)
 		{
 		ref var other = ref Units[n];	//敵を探す。
-		if( other.IsUsed && other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.Found!=0 )
+		if( other.IsUsed && other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.IsFound )
 			{
 			// 全方位射撃可能
 			wrk_x=other.Position.X-unit.Position.X;
@@ -1813,7 +1813,7 @@ private bool FighterFireBullet(ref int trgt, ref Unit unit, FireKind kind)
 					{
 					if( dstc<=400+(other.Kind==UnitKind.Attacker||other.Kind==UnitKind.Bomber ? 1 : 0)*250 && Random(10)==0 )
 						{
-						if( other.Found!=0 )
+						if( other.IsFound )
 							{
 							unit.Target=n;
 							}
@@ -1867,7 +1867,7 @@ private bool PlaneFireBullet(ref int trgt, ref Unit unit, ref double drctn2, Fir
 	for(n=1;n<=MaxUnitId;n++)
 		{
 		ref var other = ref Units[n];	//後方の敵を探す。
-		if( other.IsUsed && other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.Found!=0 )
+		if( other.IsUsed && other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.IsFound )
 			{
 			// 攻撃地点から攻撃目標地点への方位角
 			wrk_x=other.Position.X-unit.Position.X;
@@ -1963,7 +1963,7 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int trgt, ref double drctn2, in
 		}
 
 		// 攻撃地点から攻撃目標地点への方位角
-		if( Units[trgt].Found==0 )
+		if( !Units[trgt].IsFound )
 	return false;
 
 		trgt_x=Units[trgt].Position.X;
@@ -2109,7 +2109,7 @@ private bool AttackerDropBomb(ref int trgt, ref Unit unit, ref double drctn2, in
 	double dstc =default;
 	int f;
 	int n;
-	if( Units[trgt].Found==0 )
+	if( !Units[trgt].IsFound )
 		return false;
 	wrk_x=Units[trgt].Position.X;
 	wrk_y=Units[trgt].Position.Y;
@@ -2279,7 +2279,7 @@ private bool BomberDropBomb(ref int trgt, ref Unit unit, ref double drctn2, Fire
 		{	//前方の敵を探す。
 		if(trgt2!=0)
 			{ n=trgt2; trgt=0; }
-		if( Units[n].IsUsed && Units[n].Category==UnitCategory.Ship && Units[n].Side!=unit.Side && Units[n].Found!=0 )
+		if( Units[n].IsUsed && Units[n].Category==UnitCategory.Ship && Units[n].Side!=unit.Side && Units[n].IsFound )
 			{
 			// 攻撃地点から攻撃目標地点への方位角
 			wrk_x=Units[n].Position.X-unit.Position.X;
@@ -2667,7 +2667,7 @@ public void	SetDynamicDestination(int n)
 			}
 		}
 
-	Units[n].Stop=0;
+	Units[n].IsStopping=false;
 
 	}
 
@@ -2747,7 +2747,7 @@ public void	SetFighterAttackDestination(int m)
 		{
 		unit.EmergencyDestination = new WorldPosition(unit.Position.X+cos(unit.Direction*a_PI)*(100+Random(50)), unit.Position.Y+sin(unit.Direction*a_PI)*(100+Random(50)));
 		unit.EmergencyFlags[0]=100;
-		unit.Stop=0;
+		unit.IsStopping=false;
 		return;
 		}
 
@@ -2851,7 +2851,7 @@ public void	SetFighterAttackDestination(int m)
 
 	unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
 	unit.EmergencyFlags[0]=70+Random(40);
-	unit.Stop=0;
+	unit.IsStopping=false;
 	if(Random(10)==0)
 		PlaySoundEffect( 0, PLANE1+Random(2) ,unit.Position.X, unit.Position.Y);
 
@@ -2872,7 +2872,7 @@ public void	SetAttackerEmergencyDestination(int m)
 		{
 		ref var other = ref Units[n];	//後方の敵を探す。
 		if( other.IsUsed && other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying
-		&& other.Side!=unit.Side && other.Found!=0 )
+		&& other.Side!=unit.Side && other.IsFound )
 			{
 
 			// 攻撃地点から攻撃目標地点への方位角
@@ -3138,7 +3138,7 @@ public void	SetAttackerAttackDestination(int m)
 			wrk_r.right=(int)unit.PathX[0]+35;
 			wrk_r.bottom=(int)unit.PathY[0]-35;
 			wrk_r.left=(int)unit.PathX[0]-35;
-			if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)==0 || Units[n].Found==0)
+			if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)==0 || !Units[n].IsFound)
 				{
 				return;
 				}
@@ -3149,7 +3149,7 @@ public void	SetAttackerAttackDestination(int m)
 			unit.PathX[0]=wrk_x;
 			unit.PathY[0]=wrk_y;
 			unit.PathX[1]=MAP_RIGHT+1;
-			unit.Stop=0;
+			unit.IsStopping=false;
 			}
 		}
 	else if ( dstc >= 40 && (drctn<=45||drctn>=315))
@@ -3171,7 +3171,7 @@ public void	SetAttackerAttackDestination(int m)
 			unit.PathX[0]=wrk_x;
 			unit.PathY[0]=wrk_y;
 			unit.PathX[1]=MAP_RIGHT+1;
-			unit.Stop=0;
+			unit.IsStopping=false;
 			if( unit.IsGroupLeader!=0  )
 				{
 				a=0;
@@ -3202,7 +3202,7 @@ public void	SetAttackerAttackDestination(int m)
 			unit.PathX[0]=unit.Position.X+cos(unit.Direction*a_PI)*(300);
 			unit.PathY[0]=unit.Position.Y+sin(unit.Direction*a_PI)*(300);
 			unit.PathX[1]=MAP_RIGHT+1;
-			unit.Stop=0;
+			unit.IsStopping=false;
 			}
 		}
 	}
@@ -3373,8 +3373,8 @@ public void	SetShipEmergencyDestination(int m)
 		{
 		ref var other = ref Units[n];
 		// 艦船によってくる艦船からにげる
-		if( (unit.Stop!=0 || (unit.Kind==UnitKind.Carrier||unit.Kind==UnitKind.LightCarrier)) && other.IsUsed && (other.Category==UnitCategory.Ship  && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress) ) &&
-		other.Kind!=UnitKind.Submarine && other.Side!=unit.Side && other.Found!=0 && other.Supply<=0 && unit.Target==0)
+		if( (unit.IsStopping || (unit.Kind==UnitKind.Carrier||unit.Kind==UnitKind.LightCarrier)) && other.IsUsed && (other.Category==UnitCategory.Ship  && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress) ) &&
+		other.Kind!=UnitKind.Submarine && other.Side!=unit.Side && other.IsFound && other.SupplyTime<=0 && unit.Target==0)
 			{
 			// 自点と対象点の距離
 			wrk_x=other.Position.X-unit.Position.X;
@@ -3407,7 +3407,7 @@ public void	SetShipEmergencyDestination(int m)
 				if(drctn<0)
 					drctn=360+drctn;
 
-				if( (unit.Kind==UnitKind.Carrier||unit.Kind==UnitKind.LightCarrier) && unit.GroupLeader==0 && other.Stop!=0 && Random(3)!=0 )
+				if( (unit.Kind==UnitKind.Carrier||unit.Kind==UnitKind.LightCarrier) && unit.GroupLeader==0 && other.IsStopping && Random(3)!=0 )
 					{
 					if(unit.Random10[0]<=4)
 						{
@@ -3436,7 +3436,7 @@ public void	SetShipEmergencyDestination(int m)
 			}
 
 		// 艦船によってくる攻撃機から逃げる
-		if( other.IsUsed && (other.Kind==UnitKind.Attacker || other.Kind==UnitKind.Bomber || ( other.Kind==UnitKind.Fighter && unit.Kind==UnitKind.Transport ) ) && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.Found!=0
+		if( other.IsUsed && (other.Kind==UnitKind.Attacker || other.Kind==UnitKind.Bomber || ( other.Kind==UnitKind.Fighter && unit.Kind==UnitKind.Transport ) ) && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.IsFound
 			)
 			{
 			// 自点と対象点の距離
@@ -3502,7 +3502,7 @@ public void	SetShipEmergencyDestination(int m)
 			}
 		}
 
-	if( unit.Kind==UnitKind.Destroyer  && unit.Stop==1   )
+	if( unit.Kind==UnitKind.Destroyer  && unit.IsStopping.Value==1   )
 		{
 		// 駆逐艦の対潜水艦行動、発見された後！
 		if(unit.EmergencyFlags[0]==0)
@@ -3510,10 +3510,10 @@ public void	SetShipEmergencyDestination(int m)
 			for(n=1; n<=MaxUnitId; n++)
 				{
 				ref var other = ref Units[n];
-				if( other.IsUsed && other.Kind==UnitKind.Submarine && other.Found!=0 && other.Side!=unit.Side )
+				if( other.IsUsed && other.Kind==UnitKind.Submarine && other.IsFound && other.Side!=unit.Side )
 					{
 					// 自点と対象点の距離
-					if( other.Submerged!=0 )
+					if( other.IsSubmerged )
 						{
 						// 潜水中
 						wrk_x=other.ContactX-unit.Position.X;

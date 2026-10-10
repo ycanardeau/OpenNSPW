@@ -1046,7 +1046,7 @@ public void	SetUnitData(int m)
 						unit.MinSpeed=0.5;
 						unit.MaxSpeed=2.35;
 
-						if( unit.Stop!=0 )
+						if( unit.IsStopping )
 							unit.SpriteRow=8;
 						else
 							unit.SpriteRow=7;
@@ -1069,7 +1069,7 @@ public void	SetUnitData(int m)
 						unit.MinSpeed=0.5;
 						unit.MaxSpeed=2.5;
 
-						if( unit.Stop!=0 )
+						if( unit.IsStopping )
 							unit.SpriteRow=8;
 						else
 							unit.SpriteRow=7;
@@ -1143,7 +1143,7 @@ public void	SetUnitData(int m)
 				unit.MinSpeed=0.5;
 				unit.MaxSpeed=2.2;
 
-				if( unit.Stop!=0 )
+				if( unit.IsStopping )
 					unit.SpriteRow=10;
 				else
 					unit.SpriteRow=9;
@@ -1166,7 +1166,7 @@ public void	SetUnitData(int m)
 				unit.MinSpeed=0.5;
 				unit.MaxSpeed=2.2;
 
-				if( unit.Stop!=0 )
+				if( unit.IsStopping )
 					unit.SpriteRow=10;
 				else
 					unit.SpriteRow=9;
@@ -1421,8 +1421,8 @@ public int		AddUnit(Side side,UnitKind kind,double rx,double ry,double drctn)
 			Units[m].MinSpeed=0;
 			Units[m].AccelerationChange=0;
 			Units[m].Speed=0;
-			Units[m].Stop=0;
-			Units[m].Supply=0;
+			Units[m].IsStopping=false;
+			Units[m].SupplyTime=0;
 			Units[m].EmergencyFlags[0]=Units[m].EmergencyFlags[1]=0;
 			Units[m].EmergencyDestination=new WorldPosition(0, 0);
 
@@ -1524,8 +1524,8 @@ public int		AddUnit2(Side side,UnitKind kind,int type,double rx,double ry,double
 			Units[m].MinSpeed=0;
 			Units[m].AccelerationChange=0;
 			Units[m].Speed=0;
-			Units[m].Stop=0;
-			Units[m].Supply=0;
+			Units[m].IsStopping=false;
+			Units[m].SupplyTime=0;
 			Units[m].EmergencyFlags[0]=Units[m].EmergencyFlags[1]=0;
 			Units[m].EmergencyDestination=new WorldPosition(0, 0);
 
@@ -1633,7 +1633,7 @@ public int		AddPlane(Side side,UnitKind kind,int type,int no,int planes,FireKind
 			Units[m].PlanesToLaunch=0;					// 発艦予定の機数
 			Units[m].Mode=UnitMode.Move;				// モード（コンバットメニュー）
 			SetParkingPosition(m);
-			Units[m].Stop=1;
+			Units[m].IsStopping=true;
 
 			Units[Units[m].Carrier].info[1]++;					// 所属の空母、及び、基地の格納数を増やす｡
 
@@ -2268,22 +2268,22 @@ public void	SetUpScenario6()
 	m=AddUnit(Side.Japan,UnitKind.Battleship,rx-50,ry,135);
 	Units[m].Fuel*=0.1;
 	Units[m].Ammo=(int)(Units[m].MaxAmmo*0.2);			// 数
-	Units[m].Supply=1;
+	Units[m].SupplyTime=1;
 	ry-=150;
 	m=AddUnit(Side.Japan,UnitKind.Cruiser,rx,ry,135);
 	Units[m].Fuel*=0.2;
 	Units[m].Ammo=(int)(Units[m].MaxAmmo*0.1);			// 数
-	Units[m].Supply=1;
+	Units[m].SupplyTime=1;
 	ry-=150;
 	m=AddUnit(Side.Japan,UnitKind.Cruiser,rx,ry,135);
 	Units[m].Fuel*=0.1;
 	Units[m].Ammo=(int)(Units[m].MaxAmmo*0.2);			// 数
-	Units[m].Supply=1;
+	Units[m].SupplyTime=1;
 	ry-=150;
 	m=AddUnit(Side.Japan,UnitKind.Destroyer,rx-80,ry,135);
 	Units[m].Fuel*=0.1;
 	Units[m].Ammo=(int)(Units[m].MaxAmmo*0.3);			// 数
-	Units[m].Supply=1;
+	Units[m].SupplyTime=1;
 
 	// 輸送船団
 	rx=-7340;
@@ -2293,21 +2293,21 @@ public void	SetUpScenario6()
 	Units[m].Ammo=1;			// 数
 	Units[m].MaxAmmo=1;			// 数 全容量
 	Units[m].Fuel*=0.2;
-	Units[m].Supply=1;
+	Units[m].SupplyTime=1;
 	ry-=150;
 	no=m=AddUnit(Side.Japan,UnitKind.Transport,rx-20,ry,135);
 	Units[m].Weapon=FireKind.CargoPillboxes;		// 武装品種
 	Units[m].Ammo=1;			// 数
 	Units[m].MaxAmmo=1;			// 数 全容量
 	Units[m].Fuel*=0;
-	Units[m].Supply=1;
+	Units[m].SupplyTime=1;
 	ry-=150;
 	no=m=AddUnit(Side.Japan,UnitKind.Transport,rx,ry,90);
 	Units[m].Weapon=FireKind.CargoPillboxes;		// 武装品種
 	Units[m].Ammo=1;			// 数
 	Units[m].MaxAmmo=1;			// 数 全容量
 	Units[m].Fuel*=0;
-	Units[m].Supply=1;
+	Units[m].SupplyTime=1;
 	ry-=150;
 	m=AddUnit(Side.Japan,UnitKind.Cruiser,rx+90,ry-40,90);
 
@@ -2443,22 +2443,22 @@ public void	SetUpScenario7()
 	m=AddUnit(Side.Japan,UnitKind.Battleship,rx-50,ry,135);
 	Units[m].Fuel*=0.1;
 	Units[m].Ammo=(int)(Units[m].MaxAmmo*0.2);			// 数
-	Units[m].Supply=1;
+	Units[m].SupplyTime=1;
 	ry-=150;
 	m=AddUnit(Side.Japan,UnitKind.Cruiser,rx,ry,135);
 	Units[m].Fuel*=0.2;
 	Units[m].Ammo=(int)(Units[m].MaxAmmo*0.1);			// 数
-	Units[m].Supply=1;
+	Units[m].SupplyTime=1;
 	ry-=150;
 	m=AddUnit(Side.Japan,UnitKind.Cruiser,rx,ry,135);
 	Units[m].Fuel*=0.1;
 	Units[m].Ammo=(int)(Units[m].MaxAmmo*0.2);			// 数
-	Units[m].Supply=1;
+	Units[m].SupplyTime=1;
 	ry-=150;
 	m=AddUnit(Side.Japan,UnitKind.Destroyer,rx-80,ry,135);
 	Units[m].Fuel*=0.1;
 	Units[m].Ammo=(int)(Units[m].MaxAmmo*0.3);			// 数
-	Units[m].Supply=1;
+	Units[m].SupplyTime=1;
 
 	// 輸送船団
 	rx=-7340;
@@ -2468,21 +2468,21 @@ public void	SetUpScenario7()
 	Units[m].Ammo=1;			// 数
 	Units[m].MaxAmmo=1;			// 数 全容量
 	Units[m].Fuel*=0.2;
-	Units[m].Supply=1;
+	Units[m].SupplyTime=1;
 	ry-=150;
 	no=m=AddUnit(Side.Japan,UnitKind.Transport,rx-20,ry,135);
 	Units[m].Weapon=FireKind.CargoPillboxes;		// 武装品種
 	Units[m].Ammo=1;			// 数
 	Units[m].MaxAmmo=1;			// 数 全容量
 	Units[m].Fuel*=0;
-	Units[m].Supply=1;
+	Units[m].SupplyTime=1;
 	ry-=150;
 	no=m=AddUnit(Side.Japan,UnitKind.Transport,rx,ry,90);
 	Units[m].Weapon=FireKind.CargoPillboxes;		// 武装品種
 	Units[m].Ammo=1;			// 数
 	Units[m].MaxAmmo=1;			// 数 全容量
 	Units[m].Fuel*=0;
-	Units[m].Supply=1;
+	Units[m].SupplyTime=1;
 	ry-=150;
 	m=AddUnit(Side.Japan,UnitKind.Cruiser,rx+90,ry-40,90);
 
@@ -4125,8 +4125,8 @@ public void	InitializeGame()
 		unit.MinSpeed=0;
 		unit.AccelerationChange=0;
 		unit.Speed=0;
-		unit.Stop=0;
-		unit.Supply=0;
+		unit.IsStopping=false;
+		unit.SupplyTime=0;
 		unit.EmergencyFlags[0]=unit.EmergencyFlags[1]=0;
 		unit.EmergencyDestination=new WorldPosition(0, 0);
 

@@ -565,7 +565,7 @@ private void UpdateSupply(ref Unit unit)
 	RECT wrk_rect;
 	int flg;
 	int i;
-	if( unit.Category==UnitCategory.Ship && unit.Supply!=0 && unit.Fuel>=0 )
+	if( unit.Category==UnitCategory.Ship && unit.IsSupplying && unit.Fuel>=0 )
 		{
 		// 補給中の艦船
 		// ptin dbg
@@ -589,31 +589,31 @@ private void UpdateSupply(ref Unit unit)
 			}
 
 		if( flg==0 )
-			unit.Supply=0;
+			unit.SupplyTime=0;
 		}
 
 	// ユニットの補給
-	if( unit.Supply!=0 && unit.Fuel>=0 )
+	if( unit.IsSupplying && unit.Fuel>=0 )
 		{
-		unit.Supply++;
+		unit.SupplyTime++;
 
-		if( unit.Hp<unit.MaxHp && (unit.Supply%200)==199 && unit.Fuel>=0 )
-			{ unit.Hp++; unit.Supply=1;}
+		if( unit.Hp<unit.MaxHp && (unit.SupplyTime%200)==199 && unit.Fuel>=0 )
+			{ unit.Hp++; unit.SupplyTime=1;}
 
-		if( unit.Hp==unit.MaxHp && unit.Ammo<unit.MaxAmmo && (unit.Supply%10)==9 )
-			{ unit.Ammo++; unit.Supply=1; }
+		if( unit.Hp==unit.MaxHp && unit.Ammo<unit.MaxAmmo && (unit.SupplyTime%10)==9 )
+			{ unit.Ammo++; unit.SupplyTime=1; }
 
-		if( unit.Hp==unit.MaxHp && unit.Ammo==unit.MaxAmmo && unit.Fuel<100 && (unit.Supply%20)==19 )
+		if( unit.Hp==unit.MaxHp && unit.Ammo==unit.MaxAmmo && unit.Fuel<100 && (unit.SupplyTime%20)==19 )
 			{
 			unit.Fuel++;
 			if(unit.Fuel>100)
 				unit.Fuel=100;
-			unit.Supply=1;
+			unit.SupplyTime=1;
 			}
 
-		if( unit.Hp==unit.MaxHp && unit.Ammo==unit.MaxAmmo && unit.Fuel==100 && (unit.Supply%100)==99 )
+		if( unit.Hp==unit.MaxHp && unit.Ammo==unit.MaxAmmo && unit.Fuel==100 && (unit.SupplyTime%100)==99 )
 			{
-			unit.Supply=0;
+			unit.SupplyTime=0;
 			}
 		}
 	}
@@ -623,7 +623,7 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 	int cv_1;
 	int f = default;
 	int i;
-	if( unit.Stop!=0 )
+	if( unit.IsStopping )
 		{
 		unit.PathX[0]=Units[unit.Carrier].Position.X;
 		unit.PathY[0]=Units[unit.Carrier].Position.Y;
@@ -761,7 +761,7 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 
 				unit.Mode=UnitMode.Move;				// モード（コンバットメニュー）
 				SetParkingPosition(m);
-				unit.Stop=1;
+				unit.IsStopping=true;
 
 				unit.Weapon=FireKind.Maintenance;					// 武装品種
 				unit.Ammo=1;						// 数
@@ -777,7 +777,7 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 					{
 					ref var other = ref Units[i];
 					if( i!=m && other.IsUsed && other.Category==UnitCategory.Plane && other.Side==LocalSide && other.info[3]!=0
-						&& other.PlaneState==UnitState.Parked && unit.Carrier==other.Carrier && other.Stop==0 )
+						&& other.PlaneState==UnitState.Parked && unit.Carrier==other.Carrier && !other.IsStopping )
 						f++;
 					}
 
@@ -805,7 +805,7 @@ private void SteerUnit(ref Unit unit, int m)
 	if( 1!=0 )
 		{
 		// 戦闘機動および、緊急移動
-		if( unit.Supply==0 )
+		if( !unit.IsSupplying )
 			{
 			switch( unit.Kind )
 				{
@@ -864,7 +864,7 @@ private void SteerUnit(ref Unit unit, int m)
 		if( unit.GroupLeader==0 )
 			{
 			// 単独、もしくは、編隊長
-			if(unit.Stop==0 )
+			if(!unit.IsStopping )
 				{
 				if(  unit.Category==UnitCategory.Plane && unit.Mode==UnitMode.Return && unit.info[3]==1 )
 					{
@@ -893,7 +893,7 @@ private void SteerUnit(ref Unit unit, int m)
 						// ＰＰの再終点に到着
 						if( unit.Category==UnitCategory.Ship )
 							{
-							unit.Stop=1;
+							unit.IsStopping=true;
 							}
 						else
 							{
@@ -930,7 +930,7 @@ private void SteerUnit(ref Unit unit, int m)
 		else
 			{
 			// 編隊追随機
-			if(unit.Stop==0)
+			if(!unit.IsStopping)
 				{
 				if( (Tick%10)==0 )
 					{
@@ -949,7 +949,7 @@ private void SteerUnit(ref Unit unit, int m)
 			wrk_r.bottom=(int)unit.PathY[0]-30;
 			wrk_r.left=(int)unit.PathX[0]-30;
 
-			if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)==0 && unit.Stop==0)
+			if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)==0 && !unit.IsStopping)
 				{	// 編隊指定位置に無し
 				unit.ForGroupLeader=0;
 				if( Units[unit.GroupLeader].ForGroupLeader==0 )
@@ -972,9 +972,9 @@ dbg[3]=unit[m].max_spd*100000;
 			else
 				{	// 編隊指定位置にあり
 				unit.ForGroupLeader=2;
-				if( unit.Category==UnitCategory.Ship && Units[unit.GroupLeader].Stop==1 )
+				if( unit.Category==UnitCategory.Ship && Units[unit.GroupLeader].IsStopping.Value==1 )
 					{
-					unit.Stop=1;
+					unit.IsStopping=true;
 					}
 
 				}
@@ -997,7 +997,7 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 	int cm_scrn_y;
 	double drctn;
 	double dstc;
-	if( (unit.Stop==0 || unit.EmergencyFlags[0]!=0)  && !(unit.Category==UnitCategory.Ship && unit.Supply!=0) )
+	if( (!unit.IsStopping || unit.EmergencyFlags[0]!=0)  && !(unit.Category==UnitCategory.Ship && unit.IsSupplying) )
 		{
 		if( unit.EmergencyFlags[0]!=0	)
 			{
@@ -1042,12 +1042,12 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 			wrk_y2=unit.Position.Y;
 			wrk_x2+=cos(unit.Direction*a_PI)*(40+unit.MaxSpeed*10);
 			wrk_y2+=sin(unit.Direction*a_PI)*(40+unit.MaxSpeed*10);
-			if(  !( unit.Kind==UnitKind.Submarine && unit.Submerged!=0 ) )
+			if(  !( unit.Kind==UnitKind.Submarine && unit.IsSubmerged ) )
 				{
 				for( n=1; n<=MaxUnitId; n++)
 					{
 					ref var other = ref Units[n];
-					if(other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.Submerged!=0)  && !(other.Kind>=UnitKind.AirBase&&other.Kind<=UnitKind.Fortress) )
+					if(other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged)  && !(other.Kind>=UnitKind.AirBase&&other.Kind<=UnitKind.Fortress) )
 						{
 						// ptin dbg
 						wrk_r.top=(int)other.Position.Y+(Sprites[UNIT_JPN].ht/2);
@@ -1184,7 +1184,7 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 
 							n=0;
 
-							if( unit.Target!=0 && Units[unit.Target].Found!=0 ) //&& unit[m].kind==AT1 )
+							if( unit.Target!=0 && Units[unit.Target].IsFound ) //&& unit[m].kind==AT1 )
 								{
 								n=1;
 								wrk_x=Units[unit.Target].Position.X-unit.Position.X;
@@ -1277,12 +1277,12 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 
 		}
 
-	if(  unit.Kind==UnitKind.Submarine && unit.Submerged==1 && unit.Speed>(unit.MaxSpeed*0.7) )
+	if(  unit.Kind==UnitKind.Submarine && unit.IsSubmerged.Value==1 && unit.Speed>(unit.MaxSpeed*0.7) )
 		{
 		unit.Speed=(unit.MaxSpeed*0.7);
 		}
 
-	if( (unit.Stop==0 || unit.EmergencyFlags[0]!=0) &&!(unit.Fuel<=0))
+	if( (!unit.IsStopping || unit.EmergencyFlags[0]!=0) &&!(unit.Fuel<=0))
 		{
 		if( unit.MinSpeed > unit.Speed )
 			unit.Speed=unit.MinSpeed;
@@ -1388,7 +1388,7 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 
 private void ControlFiring(ref Unit unit, int dmg_act, int m)
 	{
-	if( IsEditingMap==0 && unit.Supply==0 && (( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying )||( unit.Category==UnitCategory.Ship)))
+	if( IsEditingMap==0 && !unit.IsSupplying && (( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying )||( unit.Category==UnitCategory.Ship)))
 		{
 		switch( unit.Kind )
 			{
@@ -1827,14 +1827,14 @@ public void	UpdateBattle()
 
 			//=========		 ユニットの攻撃制御		=========//
 			// ターゲットがアウトならターゲットをクリア
-			if( unit.Target!=0 && ( ( Units[unit.Target].Category==UnitCategory.Plane && ( Units[unit.Target].Hp<=0|| Units[unit.Target].PlaneState==UnitState.Parked )   ) || ( Units[unit.Target].Category==UnitCategory.Ship && Units[unit.Target].Hp<=0 ) || (unit.Kind==UnitKind.Fighter && unit.Ammo<=0) || (Units[unit.Target].Kind==UnitKind.Submarine && Units[unit.Target].Submerged!=0 ) || ( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked ) ))
+			if( unit.Target!=0 && ( ( Units[unit.Target].Category==UnitCategory.Plane && ( Units[unit.Target].Hp<=0|| Units[unit.Target].PlaneState==UnitState.Parked )   ) || ( Units[unit.Target].Category==UnitCategory.Ship && Units[unit.Target].Hp<=0 ) || (unit.Kind==UnitKind.Fighter && unit.Ammo<=0) || (Units[unit.Target].Kind==UnitKind.Submarine && Units[unit.Target].IsSubmerged ) || ( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked ) ))
 				{
 				unit.Target=0;
 				}
 
 			if( unit.ReloadTime>=1 )
 				{
-				if( !(unit.Kind==UnitKind.Submarine&&unit.Stop==0))
+				if( !(unit.Kind==UnitKind.Submarine&&!unit.IsStopping))
 					unit.ReloadTime--;
 				if( unit.ReloadTime==0 && (unit.Weapon==FireKind.Maintenance||unit.Weapon==FireKind.Unarmed) )
 					{
@@ -1870,13 +1870,13 @@ public void	UpdateBattle()
 			}
 
 		// 潜水艦から聞こえれる探知音
-		if( unit.Side==LocalSide && unit.Kind==UnitKind.Submarine && unit.Submerged!=0 && Result==GameResult.None && unit.Supply==0 )
+		if( unit.Side==LocalSide && unit.Kind==UnitKind.Submarine && unit.IsSubmerged && Result==GameResult.None && !unit.IsSupplying )
 			{
 			dstc=500;
 			for( i=1; i<=MaxUnitId; i++)
 				{
 				ref var other = ref Units[i];
-				if( other.IsUsed && other.Side!=LocalSide && other.Kind==UnitKind.Destroyer && unit.Supply==0 )
+				if( other.IsUsed && other.Side!=LocalSide && other.Kind==UnitKind.Destroyer && !unit.IsSupplying )
 					{
 					wrk_x=unit.Position.X-other.Position.X;
 					wrk_y=unit.Position.Y-other.Position.Y;

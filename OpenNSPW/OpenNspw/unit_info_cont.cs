@@ -466,7 +466,7 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 	n=0;
 	if( Units[SelectedUnit].Category==UnitCategory.Ship && !(Units[SelectedUnit].Kind==UnitKind.InfantryBase||Units[SelectedUnit].Kind==UnitKind.Pillboxes||Units[SelectedUnit].Kind==UnitKind.Fortress||Units[SelectedUnit].Kind==UnitKind.AirBase) )
 		{	// 艦船のメニュー
-		if( Units[SelectedUnit].Stop!=0 && Units[SelectedUnit].Speed==0 )
+		if( Units[SelectedUnit].IsStopping && Units[SelectedUnit].Speed==0 )
 			{
 			for( i=1; i<=MaxUnitId; i++)
 				{
@@ -485,7 +485,7 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 						menu[0]=10;			// ボタンＣＧのインデックス
 						menu2[0]=CombatMenuItem.Supply;
 
-						if( Units[SelectedUnit].Supply!=0 )
+						if( Units[SelectedUnit].IsSupplying )
 							CombatMenuSelection=CombatMenuItem.Supply;
 
 						break;
@@ -1336,10 +1336,10 @@ public void	DrawMinimap()
 
 			}
 
-		if( unit.IsUsed && unit.Side!=LocalSide && !( unit.Position.Y>MAP_TOP || unit.Position.Y<MAP_BOTTOM || unit.Position.X<MAP_LEFT || unit.Position.X>MAP_RIGHT ) && !(unit.PlaneState==UnitState.Parked) && unit.Found!=0 && !(unit.Category==UnitCategory.Plane && (FrameCount%4)==0) )
+		if( unit.IsUsed && unit.Side!=LocalSide && !( unit.Position.Y>MAP_TOP || unit.Position.Y<MAP_BOTTOM || unit.Position.X<MAP_LEFT || unit.Position.X>MAP_RIGHT ) && !(unit.PlaneState==UnitState.Parked) && unit.IsFound && !(unit.Category==UnitCategory.Plane && (FrameCount%4)==0) )
 			{
 			// エネユニット
-			if( unit.Kind==UnitKind.Submarine && unit.Submerged!=0 )
+			if( unit.Kind==UnitKind.Submarine && unit.IsSubmerged )
 				{
 				// 潜航中のおおよそ潜水艦
 				if( unit.ContactX >= 0 )
@@ -1449,7 +1449,7 @@ public void	ApplyUnitInfoInput()
 			CombatMenuSelection=menu2;
 			if( menu2==CombatMenuItem.Supply )
 				{
-				Units[tmp_slct_unit].Supply=1;
+				Units[tmp_slct_unit].SupplyTime=1;
 				Units[tmp_slct_unit].Target=0;
 
 				// ちょっと一応
@@ -1459,7 +1459,7 @@ public void	ApplyUnitInfoInput()
 					Units[tmp_slct_unit].LaunchLock=0;	// その空母の次機発進許可	0許可、1不許可
 					}
 				if( Units[tmp_slct_unit].Kind==UnitKind.Submarine )
-					Units[tmp_slct_unit].Submerged=0;		// 強制浮上
+					Units[tmp_slct_unit].IsSubmerged=false;		// 強制浮上
 				}
 			else
 				{

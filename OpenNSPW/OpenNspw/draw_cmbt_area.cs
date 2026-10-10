@@ -800,7 +800,7 @@ private void DrawTargetLine(ref Unit unit)
 	double wrk_y2;
 	double drctn2;
 	int cl;
-	if(  0!=0 && Units[unit.Target].Kind==UnitKind.Submarine && Units[unit.Target].Submerged!=0)
+	if(  0!=0 && Units[unit.Target].Kind==UnitKind.Submarine && Units[unit.Target].IsSubmerged)
 		{	// 対潜水艦
 		wrk_x3=Units[unit.Target].ContactX;
 		wrk_y3=Units[unit.Target].ContactY;
@@ -820,7 +820,7 @@ private void DrawTargetLine(ref Unit unit)
 			}
 		}
 
-	if( (Units[unit.Target].Found!=0 || (unit.Target==MaxUnitId+1&&unit.Kind==UnitKind.Transport) )  && !(Units[unit.Target].Kind==UnitKind.Submarine && Units[unit.Target].Submerged!=0)   )
+	if( (Units[unit.Target].IsFound || (unit.Target==MaxUnitId+1&&unit.Kind==UnitKind.Transport) )  && !(Units[unit.Target].Kind==UnitKind.Submarine && Units[unit.Target].IsSubmerged)   )
 		{	// 視認
 		wrk_x=wrk_x3-unit.Position.X;
 		wrk_y=wrk_y3-unit.Position.Y;
@@ -927,7 +927,7 @@ private void DrawPathAndSetDestination(ref Unit unit, int no1, int lc_lf_btn, re
 	if( lc_lf_btn==1 && unit.Side==LocalSide && CursorPosition.x < CMBT_WIDTH &&
 		// 発進チェック
 		!(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked
-		&& ( Units[unit.Carrier].PlanesToLaunch!=0 || Units[unit.Carrier].LaunchLock!=0 || unit.ReloadTime>0 || Units[unit.Carrier].Supply!=0 ))
+		&& ( Units[unit.Carrier].PlanesToLaunch!=0 || Units[unit.Carrier].LaunchLock!=0 || unit.ReloadTime>0 || Units[unit.Carrier].IsSupplying ))
 		&& IsEditingMap==0 )
 		{
 		MoveOrders[1].Unit=SelectedUnit;
@@ -1028,7 +1028,7 @@ public void	DrawBattleArea()
 			no1=UNIT_USA;		//Off Screen Number		合衆国海軍の表示
 
 		// ユニットを描画します
-		if( unit.IsUsed && (unit.Side==LocalSide || unit.Found!=0) &&
+		if( unit.IsUsed && (unit.Side==LocalSide || unit.IsFound) &&
 	( ( ( CameraPosition.X-CMBT_REST<=unit.Position.X && CameraPosition.X+CMBT_WIDTH+CMBT_REST>=unit.Position.X) && (CameraPosition.Y+CMBT_REST>=unit.Position.Y && CameraPosition.Y-CMBT_HEIGHT-CMBT_REST<=unit.Position.Y) )
 	|| (unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked )
 	)
@@ -1106,7 +1106,7 @@ public void	DrawBattleArea()
 				Sprites[no1].x=(int)(unit.Position.X-CameraPosition.X);
 				Sprites[no1].y=(int)(CameraPosition.Y-unit.Position.Y);
 
-				if( unit.Kind==UnitKind.Submarine && unit.Submerged!=0 && Result==GameResult.None )
+				if( unit.Kind==UnitKind.Submarine && unit.IsSubmerged && Result==GameResult.None )
 					{	// 潜航潜水艦
 					Sprites[no1].no=((unit.SpriteRow+1)*8)+unit.SpriteColumn;
 					if( unit.Side!=LocalSide )
@@ -1167,7 +1167,7 @@ public void	DrawBattleArea()
 				}
 			}
 
-		if( goto_dca1 || unit.IsUsed && (unit.Side==LocalSide || unit.Found!=0)  )
+		if( goto_dca1 || unit.IsUsed && (unit.Side==LocalSide || unit.IsFound)  )
 			{
 			if( !goto_dca1 )
 			{
@@ -1197,7 +1197,7 @@ public void	DrawBattleArea()
 				}
 			else
 				{
-				if( unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.Submerged!=0 )
+				if( unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.IsSubmerged )
 					{	// およその敵潜航潜水艦
 					Sprites[no1].x=(int)(unit.ContactX-CameraPosition.X);
 					Sprites[no1].y=(int)(CameraPosition.Y-unit.ContactY);
@@ -1224,10 +1224,10 @@ public void	DrawBattleArea()
 			wrk_rect.bottom=dstn_rect.bottom-20;
 
 			// クリック選択・非選択
-			if( PointInRect(ref wrk_rect,CursorPosition.x,CursorPosition.y)!=0 && !( Units[SelectedUnit].Category==UnitCategory.Plane && unit.Category==UnitCategory.Ship && !(unit.Kind==UnitKind.Carrier || unit.Kind==UnitKind.LightCarrier || unit.Kind==UnitKind.AirBase || Units[SelectedUnit].Side!=unit.Side) ) && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying )  && !( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked && unit.Stop==0 ) && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked && Units[SelectedUnit].Stop==0 ) && !( Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked && unit.Category==UnitCategory.Ship )
+			if( PointInRect(ref wrk_rect,CursorPosition.x,CursorPosition.y)!=0 && !( Units[SelectedUnit].Category==UnitCategory.Plane && unit.Category==UnitCategory.Ship && !(unit.Kind==UnitKind.Carrier || unit.Kind==UnitKind.LightCarrier || unit.Kind==UnitKind.AirBase || Units[SelectedUnit].Side!=unit.Side) ) && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying )  && !( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked && !unit.IsStopping ) && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked && !Units[SelectedUnit].IsStopping ) && !( Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked && unit.Category==UnitCategory.Ship )
 				&& !(Units[SelectedUnit].Category==UnitCategory.Ship && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked)  && !(SelectedUnit!=0 && Units[SelectedUnit].Side!=LocalSide) && !(SelectedUnit!=0 && Units[SelectedUnit].Category==UnitCategory.Plane&&unit.Weapon==FireKind.Maintenance)
 				 && !(unit.PlaneState!=UnitState.Parked && CursorPosition.x>=CMBT_WIDTH-1)
-				 && !(unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.Submerged!=0)
+				 && !(unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.IsSubmerged)
 				)
 				{
 				HandleUnitClick(ref unit, ref dstn_rect, ref lc_lf_btn, m, no1);

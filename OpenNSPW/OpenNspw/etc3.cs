@@ -600,7 +600,7 @@ private void UpdateAntiSubmarineBomb(ref Fire fire, ref int n, int m)
 		for(n=1;n<=MaxUnitId;n++)
 			{
 			ref var unit = ref Units[n];
-			if( unit.IsUsed && unit.Kind==UnitKind.Submarine && unit.Submerged!=0 )
+			if( unit.IsUsed && unit.Kind==UnitKind.Submarine && unit.IsSubmerged )
 				{
 				fire.Target=n;
 				h=CheckHit(m);
@@ -872,7 +872,7 @@ private void UpdateTorpedo(ref Fire fire, ref int n, int m)
 			for(n=1;n<=MaxUnitId;n++)
 				{
 				ref var unit = ref Units[n];
-				if( unit.IsUsed && unit.Category==UnitCategory.Ship && unit.Kind>=UnitKind.Battleship && unit.Kind<=UnitKind.Transport && !(unit.Kind==UnitKind.Submarine && unit.Submerged!=0))
+				if( unit.IsUsed && unit.Category==UnitCategory.Ship && unit.Kind>=UnitKind.Battleship && unit.Kind<=UnitKind.Transport && !(unit.Kind==UnitKind.Submarine && unit.IsSubmerged))
 					{
 					fire.Target=n;
 					h=CheckHit(m);
@@ -986,7 +986,7 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 		for(n=1;n<=MaxUnitId;n++)
 			{
 			ref var unit = ref Units[n];
-			if( unit.IsUsed && unit.Category==UnitCategory.Ship && !(unit.Kind==UnitKind.Submarine && unit.Submerged!=0))
+			if( unit.IsUsed && unit.Category==UnitCategory.Ship && !(unit.Kind==UnitKind.Submarine && unit.IsSubmerged))
 				{
 				fire.Target=n;
 				h=CheckHit(m);
@@ -1449,7 +1449,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 	int i;
 	double drctn;
 	double dstc;
-	if(  unit.Supply!=0 && (FrameCount%2)!=0 && unit.Side==LocalSide )
+	if(  unit.IsSupplying && (FrameCount%2)!=0 && unit.Side==LocalSide )
 		{
 		f=FindFreeEffect();
 		Effects[f].Layer=EffectLayer.Lower;
@@ -1500,7 +1500,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 
 		Effects[f].SpriteNumber=16;			// ソースファイル上の番号
 		}
-	else if( ( unit.Side==Side.Japan && ( unit.Kind==UnitKind.Submarine || unit.Kind==UnitKind.Destroyer || unit.Kind==UnitKind.Cruiser ) || unit.Side==Side.UnitedStates && ( unit.Kind==UnitKind.Submarine || unit.Kind==UnitKind.Destroyer ) ) && unit.Supply==0 && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%2)!=0) && unit.Ammo>=1 && unit.Side==LocalSide )
+	else if( ( unit.Side==Side.Japan && ( unit.Kind==UnitKind.Submarine || unit.Kind==UnitKind.Destroyer || unit.Kind==UnitKind.Cruiser ) || unit.Side==Side.UnitedStates && ( unit.Kind==UnitKind.Submarine || unit.Kind==UnitKind.Destroyer ) ) && !unit.IsSupplying && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%2)!=0) && unit.Ammo>=1 && unit.Side==LocalSide )
 		{
 		f=FindFreeEffect();
 		Effects[f].Layer=EffectLayer.Lower;
@@ -1513,7 +1513,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 		}
 
 	// トランスポーターの荷物の表示
-	if(  unit.Kind==UnitKind.Transport && unit.Supply==0 && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%2)!=0) && unit.Side==LocalSide )
+	if(  unit.Kind==UnitKind.Transport && !unit.IsSupplying && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%2)!=0) && unit.Side==LocalSide )
 		{
 		f=FindFreeEffect();
 		Effects[f].Layer=EffectLayer.Lower;
@@ -1528,7 +1528,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 //TR_GF1
 
 	// およその敵潜航潜水艦
-	if(  unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.Submerged!=0 && unit.ContactTime!=0 )
+	if(  unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.IsSubmerged && unit.ContactTime!=0 )
 		{
 		f=FindFreeEffect();
 		Effects[f].Layer=EffectLayer.Upper;
@@ -1546,12 +1546,12 @@ private void UpdateShipEffects(ref Unit unit, int m)
 		Effects[f].EndPosition = new WorldPosition(unit.ContactRadius, unit.ContactRadius);
 		}
 
-	if( unit.Kind==UnitKind.Submarine && unit.Submerged!=0 )
+	if( unit.Kind==UnitKind.Submarine && unit.IsSubmerged )
 		{	// 潜航中潜水艦
 		if( unit.Hp<=0 )
 			{	// 沈没
 			unit.Side=0;
-			unit.Found=0;
+			unit.IsFound=false;
 
 			if( UnitInfoPanel[3]==m )
 				UnitInfoPanel[0]=0;				// ユニットインフォをクリア
@@ -1592,7 +1592,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 					unit.ContactRadius=100;
 					unit.ContactTime=400;
 
-					unit.Found=1;
+					unit.IsFound=true;
 					}
 				}
 			else
@@ -1626,7 +1626,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 						unit.ContactRadius=100;
 						unit.ContactTime=400;
 
-						unit.Found=1;
+						unit.IsFound=true;
 						}
 					}
 				}
@@ -1675,7 +1675,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 			{
 			if( unit.Hp<=unit.MaxHp*0.2  )
 				{
-				if( Random(4000)==0 && unit.Supply==0 )
+				if( Random(4000)==0 && !unit.IsSupplying )
 					{
 					if(IsEditingMap==0)
 						unit.Hp--;

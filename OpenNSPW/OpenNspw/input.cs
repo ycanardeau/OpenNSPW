@@ -28,7 +28,7 @@ public void	HandleInput()
 	int	h,m,f,s,n,e; Array256<int> chk = default;
 
 	e=1;
-	if( SelectOrders[e].IsSet!=0 && Units[SelectOrders[e].SelectedUnit].Supply==0 && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress ))
+	if( SelectOrders[e].IsSet!=0 && !Units[SelectOrders[e].SelectedUnit].IsSupplying && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress ))
 		{
 		// ユニット自体をクリックした。
 		SelectedUnit=SelectOrders[e].SelectedUnit;
@@ -180,7 +180,7 @@ public void	HandleInput()
 		}
 	else
 		{
-		if( CanOrder!=0 && MoveOrders[1].Unit!=0 && Units[MoveOrders[1].Unit].Supply==0 && !(  Units[MoveOrders[1].Unit].Kind>=UnitKind.AirBase && Units[MoveOrders[1].Unit].Kind<=UnitKind.Fortress  )  && !(Units[MoveOrders[1].Unit].Category==UnitCategory.Plane && Units[MoveOrders[1].Unit].PlaneState==UnitState.Parked && Units[Units[MoveOrders[1].Unit].Carrier].Hp<=Units[Units[MoveOrders[1].Unit].Carrier].MaxHp*0.2) )
+		if( CanOrder!=0 && MoveOrders[1].Unit!=0 && !Units[MoveOrders[1].Unit].IsSupplying && !(  Units[MoveOrders[1].Unit].Kind>=UnitKind.AirBase && Units[MoveOrders[1].Unit].Kind<=UnitKind.Fortress  )  && !(Units[MoveOrders[1].Unit].Category==UnitCategory.Plane && Units[MoveOrders[1].Unit].PlaneState==UnitState.Parked && Units[Units[MoveOrders[1].Unit].Carrier].Hp<=Units[Units[MoveOrders[1].Unit].Carrier].MaxHp*0.2) )
 			{
 			// あるマイユニットに新ＰＰ＿ＸＹが設定された場合
 			// バッファに保存。これを命令をだせるタイミングにnew_ppに代入する。
@@ -266,7 +266,7 @@ public void	SetCpuRoute2(int m)
 		for( n=1; n<=MaxUnitId; n++)
 			{
 			ref var other = ref Units[n];
-			if( other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.Submerged!=0)   && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress )  )
+			if( other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged)   && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress )  )
 				{
 				// ptin dbg
 				wrk_r.top=(int)other.Position.Y+(Sprites[UNIT_JPN].wd/2);
@@ -391,7 +391,7 @@ public void	SetCpuRoute2(int m)
 				// 船に接触するか
 				for( f=1; f<=MaxUnitId && hit==0 ; f++)
 					{
-					if( Units[f].IsUsed && m!=f && Units[f].Category==UnitCategory.Ship && !(Units[f].Kind==UnitKind.Submarine && Units[f].Submerged!=0) && !(Units[f].Kind>=UnitKind.AirBase&&Units[f].Kind<=UnitKind.Fortress) )
+					if( Units[f].IsUsed && m!=f && Units[f].Category==UnitCategory.Ship && !(Units[f].Kind==UnitKind.Submarine && Units[f].IsSubmerged) && !(Units[f].Kind>=UnitKind.AirBase&&Units[f].Kind<=UnitKind.Fortress) )
 						{
 						// ptin dbg
 						wrk_r.top=(int)Units[f].Position.Y+(Sprites[UNIT_JPN].ht/2);
@@ -451,7 +451,7 @@ public void	SetCpuRoute2(int m)
 							for( f=1; f<=MaxUnitId; f++)
 								{
 								ref var other = ref Units[f];
-								if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.Submerged!=0) && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress)  )
+								if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged) && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress)  )
 									{
 									// ptin dbg
 									wrk_r.top=(int)other.Position.Y+(Sprites[UNIT_JPN].ht/2);
@@ -489,7 +489,7 @@ public void	SetCpuRoute2(int m)
 							for( f=1; f<=MaxUnitId; f++)
 								{
 								ref var other = ref Units[f];
-								if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.Submerged!=0) && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress ) )
+								if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged) && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress ) )
 									{
 									// ptin dbg
 									wrk_r.top=(int)other.Position.Y+(Sprites[UNIT_JPN].ht/2);
@@ -702,7 +702,7 @@ public void	ApplyOrders()
 
 	for(e=0; e<=1; e++)
 		{
-		if( SelectOrders[e].IsSet!=0 && Units[SelectOrders[e].SelectedUnit].Supply==0 && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress ))
+		if( SelectOrders[e].IsSet!=0 && !Units[SelectOrders[e].SelectedUnit].IsSupplying && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress ))
 			{
 			// ユニット自体をクリックした。
 			SelectedUnit=SelectOrders[e].SelectedUnit;
@@ -762,7 +762,7 @@ public void	ApplyOrders()
 					}
 				}
 			}
-		else if( MoveOrders[e].Unit!=0 && Units[MoveOrders[e].Unit].Supply==0 && !( Units[MoveOrders[e].Unit].Kind>=UnitKind.AirBase && Units[MoveOrders[e].Unit].Kind<=UnitKind.Fortress  )  && !(Units[MoveOrders[e].Unit].Category==UnitCategory.Plane && Units[MoveOrders[e].Unit].PlaneState==UnitState.Parked && Units[Units[MoveOrders[e].Unit].Carrier].Hp<=Units[Units[MoveOrders[e].Unit].Carrier].MaxHp*0.2) )
+		else if( MoveOrders[e].Unit!=0 && !Units[MoveOrders[e].Unit].IsSupplying && !( Units[MoveOrders[e].Unit].Kind>=UnitKind.AirBase && Units[MoveOrders[e].Unit].Kind<=UnitKind.Fortress  )  && !(Units[MoveOrders[e].Unit].Category==UnitCategory.Plane && Units[MoveOrders[e].Unit].PlaneState==UnitState.Parked && Units[Units[MoveOrders[e].Unit].Carrier].Hp<=Units[Units[MoveOrders[e].Unit].Carrier].MaxHp*0.2) )
 			{
 			// あるユニットに新ＰＰ＿ＸＹが設定された場合
 
@@ -796,7 +796,7 @@ public void	ApplyOrders()
 				Units[m].GroupLeader=0;
 				Units[m].IsGroupLeader=0;
 				Units[m].FormationNumber=0;
-				Units[m].Stop=0;
+				Units[m].IsStopping=false;
 
 				// 一時的寮機の重複番号阻止
 				for(s=0;s<=MaxUnitId;s++)

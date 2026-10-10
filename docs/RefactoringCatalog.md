@@ -254,7 +254,7 @@ The struct types are renamed (`UNIT` → `Unit`, `FIRE` → `Fire`, `EFFECT` →
 | `a_spd_add` | `AccelerationChange` | `double` | |
 | `min_spd`, `max_spd` | `MinSpeed`, `MaxSpeed` | `double` | |
 | `stop` | `IsStopping` | `Bool32` | Keeps its direction and only slows down. |
-| `spry` | `Supply` | `int` | Supply and repair state (check whether a flag). |
+| `spry` | `SupplyTime` | `int` | Supply and repair (補給と修理): not a flag but a timer, 0 when not supplied, counted up from 1 and back to 1 after each repair or refill. `IsSupplying` tests it against 0. |
 | `mark` | `IsMarked` | `Bool32` | Selected (check). |
 | `pp_x`, `pp_y` | `PathX`, `PathY` | `Array64<double>` | `Path[i]` is a view that reads and writes both as a `WorldPosition`. |
 | `em_flg` | `EmergencyFlags` | `Array2<int>` | |
@@ -284,7 +284,7 @@ The struct types are renamed (`UNIT` → `Unit`, `FIRE` → `Fire`, `EFFECT` →
 | 3 | | `Info3` (check: hangar movement, landing preparation, straight flight after take-off) | |
 | 4 | Carriers: `PlanesToLaunch` (発進予定機数, 0 allows landing) | `Info4` (check) | |
 | 5 | `Mode` (`UnitMode`) | `Mode` | `Mode` |
-| 6 | Submarines: `SubmergedState` (compared with 0 and 1, so not `Bool32` without checking). Transports: `LandingPoint.X` (揚陸座標) | | |
+| 6 | Submarines: `IsSubmerged` (`Bool32`; the one comparison with 1 stays as `IsSubmerged.Value==1`). Transports: `LandingPoint.X` (揚陸座標) | | |
 | 7 | Carriers: `LandingLock` (0 allowed, 1 not; also the deck side, check). Transports: `LandingPoint.Y` | | |
 | 8 | Carriers: `LaunchLock` (0 allowed, 1 not) | | |
 | 9 | | Fighters: `Info9` (制空出撃フラグ, and other uses, check) | |

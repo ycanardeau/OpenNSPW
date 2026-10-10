@@ -51,9 +51,10 @@ public struct	Unit		// 全ての艦船、航空機、地図上の位置
 	[Original("a_spd_add")] public double AccelerationChange;
 	[Original("min_spd")] public double MinSpeed;
 	[Original("max_spd")] public double MaxSpeed;
-	[Original("stop")] public int Stop; // オンで方向変えず、減速のみ
-	[Original("spry")] public int Supply; // 補給と修理
-	[Original("mark")] public int Mark; // 選択されているか
+	[Original("stop")] public Bool32 IsStopping; // オンで方向変えず、減速のみ
+	// 0 if the unit is not being supplied; otherwise the ticks counted up from 1, and back to 1 after each repair or refill.
+	[Original("spry")] public int SupplyTime; // 補給と修理
+	[Original("mark")] public Bool32 IsMarked; // 選択されているか
 	[Original("pp_x")] public Array64<double> PathX; // 移動目的地の地図上の位置
 	[Original("pp_y")] public Array64<double> PathY;
 	[Original("em_flg")] public Array2<int> EmergencyFlags; // 緊急時の移動の処理フラグ
@@ -69,7 +70,7 @@ public struct	Unit		// 全ての艦船、航空機、地図上の位置
 	public Array8<int> arm; // 武装
 	[Original("arm2")] public Array2<int> SubWeapons; // サブ武装
 	public Array8<double> gas; // 燃料
-	[Original("found")] public int Found; // 相手サイドからの可視不可視
+	[Original("found")] public Bool32 IsFound; // 相手サイドからの可視不可視
 	[Original("tech")] public int Skill; // そのユニットの技量
 
 	[Original("rnd_250")] public Array2<short> Random250; // 0-99までの乱数
@@ -90,6 +91,9 @@ public struct	Unit		// 全ての艦船、航空機、地図上の位置
 
 	// Whether the unit is in the battle: an unused unit has no side.
 	public readonly bool IsUsed => Side != Side.None;
+
+	// Whether the unit is being supplied and repaired.
+	public readonly bool IsSupplying => SupplyTime != 0;
 
 	// The slots of hp, arm and gas by meaning (docs/Refactoring.md, Union slots). They are references to the slots, so
 	// that they can be changed and passed by ref like the slots.
@@ -123,8 +127,8 @@ public struct	Unit		// 全ての艦船、航空機、地図上の位置
 	// How the unit moves.
 	[UnscopedRef] public ref UnitMode Mode => ref Unsafe.As<int, UnitMode>(ref info[5]);
 
-	// Submarines: 1 while submerged (潜航中).
-	[UnscopedRef] public ref int Submerged => ref info[6];
+	// Submarines: true while submerged (潜航中).
+	[UnscopedRef] public ref Bool32 IsSubmerged => ref Unsafe.As<int, Bool32>(ref info[6]);
 
 	// Transports: 揚陸座標, where the transport lands its cargo.
 	[UnscopedRef] public ref int LandingX => ref info[6];
@@ -187,7 +191,7 @@ public struct	Effect							// 雷跡とか爆炎とか
 	public Array8<int> info; // 追加の情報、
 	[Original("x", "y")] public WorldPosition Position; // 地図上の位置
 	[Original("x2", "y2")] public WorldPosition EndPosition; // ＢＬＴ や ＲＡＳ
-	[Original("found")] public int Visible; // 自サイド	からの可視、不可視
+	[Original("found")] public Bool32 IsVisible; // 自サイド	からの可視、不可視
 	//BOOL				side;					//
 
 	// The ticks left until the effect ends.

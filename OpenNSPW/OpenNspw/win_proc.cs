@@ -1086,12 +1086,12 @@ if( IsEditingMap==0 )
 							if(Units[SelectedUnit].Fuel==-1)
 								{
 								Units[SelectedUnit].Fuel=100;
-								Units[SelectedUnit].Supply=0;
+								Units[SelectedUnit].SupplyTime=0;
 								}
 							else
 								{
 								Units[SelectedUnit].Fuel=-1;
-								Units[SelectedUnit].Supply=1;
+								Units[SelectedUnit].SupplyTime=1;
 								}
 
 							}

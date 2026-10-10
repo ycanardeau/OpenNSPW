@@ -146,7 +146,7 @@ internal sealed class SoloGame : IDisposable
 		for (var m = 1; m <= Game.MaxUnitId; m++)
 		{
 			ref var unit = ref Game.Units[m];
-			if (unit.Side == side && unit.Category == category && unit.Supply == 0 && unit.Hp > 0 && !(unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress))
+			if (unit.Side == side && unit.Category == category && !unit.IsSupplying && unit.Hp > 0 && !(unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress))
 			{
 				units.Add(m);
 			}

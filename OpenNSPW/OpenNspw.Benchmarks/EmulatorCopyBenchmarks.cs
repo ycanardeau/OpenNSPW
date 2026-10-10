@@ -31,11 +31,11 @@ public class EmulatorCopyBenchmarks
 		return (int)Unsafe.ByteOffset(ref Unsafe.As<Unit, byte>(ref unit), ref Unsafe.As<T, byte>(ref field));
 	}
 
-	// The offsets of gas, Found and Random100 in Unit.
+	// The offsets of gas, IsFound and Random100 in Unit.
 	private static (int Gas, int Found, int Random) UnitOffsets()
 	{
 		var unit = new Unit();
-		return (OffsetOf(ref unit, ref unit.gas), OffsetOf(ref unit, ref unit.Found), OffsetOf(ref unit, ref unit.Random100));
+		return (OffsetOf(ref unit, ref unit.gas), OffsetOf(ref unit, ref unit.IsFound), OffsetOf(ref unit, ref unit.Random100));
 	}
 
 	private static readonly (int Gas, int Found, int Random) Offsets = UnitOffsets();
