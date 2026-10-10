@@ -299,12 +299,13 @@ ry-=new_unit_kind*80;
 [Original("find_out_size")]
 public int		GetDetectionSize( int m , int n)
 	{
+	ref var unit = ref Units[m];
 	int		size=0 /* C4701 */;
 
 
 
 	// 見る側の追加
-	switch( Units[m].Kind )
+	switch( unit.Kind )
 		{
 		case UnitKind.Battleship:		size=BB1_SIGHT;		break;
 		case UnitKind.Cruiser:		size=CA1_SIGHT;		break;
@@ -325,7 +326,7 @@ public int		GetDetectionSize( int m , int n)
 		}
 
 
-	if( Units[m].Kind>=UnitKind.AirBase && Units[m].Kind<=UnitKind.Fortress && Units[m].info[0]!=0 )
+	if( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress && unit.info[0]!=0 )
 		{
 		// 工事中は視界を制限
 		size=FT1_SIGHT/2;
@@ -343,22 +344,22 @@ public int		GetDetectionSize( int m , int n)
 		case UnitKind.Submarine:
 			if( Units[n].info[6]!=0 )
 				{	// 潜航中
-				if( Units[m].Kind!=UnitKind.Destroyer )
+				if( unit.Kind!=UnitKind.Destroyer )
 					{
-					if(Units[m].Kind==UnitKind.NavalBase && Units[m].info[0]==0 )
+					if(unit.Kind==UnitKind.NavalBase && unit.info[0]==0 )
 						size=(int)(SP_SIGHT*0.8);
 					else
 						size=0;
 					}
 				else
 					{	// 駆逐艦
-					if( Units[m].Speed<=Units[m].MaxSpeed/3 )
+					if( unit.Speed<=unit.MaxSpeed/3 )
 						{
-						size=( Units[m].Variant==1 ? 380 : 280);
+						size=( unit.Variant==1 ? 380 : 280);
 						}
 					else
 						{
-						size=( Units[m].Variant==1 ? 270 : 140 );
+						size=( unit.Variant==1 ? 270 : 140 );
 						}
 					if( Units[n].Speed==0 )
 						size+=50;		// 潜水艦の速度によって
@@ -694,9 +695,10 @@ public int		FindParkingNumber( int m )
 
 	for( i=1; i<=MaxUnitId; i++)
 		{
-		if( Units[i].Side!=0 && Units[i].Category==UnitCategory.Plane && Units[i].PlaneState==UnitState.Parked 
-			&& Units[m].info[1]==Units[i].info[1] )
-			wrk[Units[i].info[2]]++;
+		ref var unit = ref Units[i];
+		if( unit.IsUsed && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked 
+			&& Units[m].Carrier==unit.Carrier )
+			wrk[unit.ParkingNumber]++;
 		}
 
 	for(i=0;i<=31;i++)
@@ -723,7 +725,8 @@ public int		CountPlanesIn( int m )
 	rtn=0;
 	for(i=1;i<=MaxUnitId;i++)
 		{
-		if( Units[i].Side!=0 && Units[i].Category==UnitCategory.Plane && Units[i].PlaneState==UnitState.Parked && m==Units[i].info[1] )
+		ref var unit = ref Units[i];
+		if( unit.IsUsed && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked && m==unit.Carrier )
 			rtn++;
 		}
 	return (rtn);
@@ -737,50 +740,51 @@ public int		CountPlanesIn( int m )
 [Original("set_pos_of_parking")]
 public void	SetParkingPosition( int	m )
 	{
+	ref var unit = ref Units[m];
 	int		max,i,w;
 	int		parking_x,parking_y;
 
 
 
 	// ２列格納
-	if( Units[Units[m].info[1]].Kind==UnitKind.AirBase )
+	if( Units[unit.Carrier].Kind==UnitKind.AirBase )
 		{	// 陸上基地
-		parking_y=Sprites[UNIT_INFO_JPN].y+Sprites[UNIT_INFO_JPN].ht-((Units[m].info[2]/2)*40)-100;
-		if( false && Units[m].Kind==UnitKind.Bomber )
+		parking_y=Sprites[UNIT_INFO_JPN].y+Sprites[UNIT_INFO_JPN].ht-((unit.ParkingNumber/2)*40)-100;
+		if( false && unit.Kind==UnitKind.Bomber )
 			w=55;
 		else
 			w=35;
-		if( Units[m].info[2]%2!=0 )
+		if( unit.ParkingNumber%2!=0 )
 			{ // 右側
 			parking_x=Sprites[UNIT_INFO_JPN].x+Sprites[UNIT_INFO_JPN].wd/2-w;
-			Units[m].Direction=270+45;
+			unit.Direction=270+45;
 			parking_y-=18;
 			}
 		else
 			{ // 左側
 			parking_x=Sprites[UNIT_INFO_JPN].x+Sprites[UNIT_INFO_JPN].wd/2+w;
-			Units[m].Direction=180+45;
+			unit.Direction=180+45;
 			}
 		}
 	else
 		{	// 航空母艦
-		parking_y=Sprites[UNIT_INFO_JPN].y+Sprites[UNIT_INFO_JPN].ht-((Units[m].info[2]/2)*40)-100;
-		if( Units[m].info[2]%2!=0 )
+		parking_y=Sprites[UNIT_INFO_JPN].y+Sprites[UNIT_INFO_JPN].ht-((unit.ParkingNumber/2)*40)-100;
+		if( unit.ParkingNumber%2!=0 )
 			{ // 右側
 			parking_x=Sprites[UNIT_INFO_JPN].x+Sprites[UNIT_INFO_JPN].wd/2-25;
-			Units[m].Direction=270+45;
+			unit.Direction=270+45;
 			parking_y-=18;
 			}
 		else
 			{ // 左側
 			parking_x=Sprites[UNIT_INFO_JPN].x+Sprites[UNIT_INFO_JPN].wd/2+25;
-			Units[m].Direction=180+45;
+			unit.Direction=180+45;
 			}
 		}
 
 
 
-	Units[m].Position = new WorldPosition((double)parking_x, (double)parking_y);
+	unit.Position = new WorldPosition((double)parking_x, (double)parking_y);
 	}
 
 
@@ -823,9 +827,10 @@ public void	set_the_slct_unit (int m)
 	// そのユニットの随伴機を枠付けします。
 	for( n=0; n<=MaxUnitId; n++)
 		{
-		if( Units[n].Side!=0 && Units[n].GroupLeader==m )
+		ref var unit = ref Units[n];
+		if( unit.IsUsed && unit.GroupLeader==m )
 			{
-			SelectionCount++; Selections[1][n]=Units[n].FormationNumber; 
+			SelectionCount++; Selections[1][n]=unit.FormationNumber; 
 			}
 		}
 	// そのユニットをユニットインフォにセットします。
@@ -1193,11 +1198,11 @@ public void	SetLandingDestination(int n)
 
 
 
-	pt=Units[n].info[1];
+	pt=Units[n].Carrier;
 	//pt=4;
 	//pos_of_no=unit[n].no;
 
-	if( Units[pt].Side==0 )
+	if( !Units[pt].IsUsed )
 		{
 //		unit[n].pp_x[0]=(double)(unit[n].info[7]+(rnd(200)-100));
 //		unit[n].pp_y[0]=(double)(unit[n].info[8]+(rnd(200)-100));
@@ -1292,17 +1297,17 @@ public void	UpdateLanding( int n )
 
 
 
-	pt=Units[n].info[1];
+	pt=Units[n].Carrier;
 	//pt=4;
 	//pos_of_no=unit[n].no;
 
 	if( !(Units[pt].Kind==UnitKind.Carrier || Units[pt].Kind==UnitKind.LightCarrier || Units[pt].Kind==UnitKind.AirBase) )
 		{
-		Units[n].info[1]=0;
+		Units[n].Carrier=0;
 		pt=0;
 		}
 
-	if( /*paint_effect_on &&*/ Units[pt].Side==0 || pt==0 )
+	if( /*paint_effect_on &&*/ !Units[pt].IsUsed || pt==0 )
 		{
 		// もどる場所がない場合、あった場所で適当に動く
 		Units[n].PathX[0]=Units[n].Position.X+(double)(Random(400)-200);
@@ -1583,34 +1588,37 @@ public void		Detect()
 
 	for(m=0;m<=MaxUnitId;m++)
 		{
-		if( Units[m].info[10]!=0 )
-			Units[m].info[10]--;
+		ref var unit = ref Units[m];
+		if( unit.info[10]!=0 )
+			unit.info[10]--;
 		else
-			Units[m].Found=0;
+			unit.Found=0;
 		}
 
 
 	// ユニットの見え隠れ
 	for(m=1;m<=MaxUnitId;m++)
 		{
-		if( Units[m].Side!=0 && Units[m].Side==LocalSide  && Units[m].PlaneState!=UnitState.Parked  && Units[m].Supply==0 )
+		ref var unit = ref Units[m];
+		if( unit.IsUsed && unit.Side==LocalSide  && unit.PlaneState!=UnitState.Parked  && unit.Supply==0 )
 			{
 			flg1=0;
 			for(n=1;n<=MaxUnitId;n++)
 				{
-				if( Units[n].Side!=0 && Units[n].Side!=LocalSide && Units[n].PlaneState!=UnitState.Parked && (Units[n].Found==0 || Units[m].Kind==UnitKind.Submarine ) )
+				ref var other = ref Units[n];
+				if( other.IsUsed && other.Side!=LocalSide && other.PlaneState!=UnitState.Parked && (other.Found==0 || unit.Kind==UnitKind.Submarine ) )
 					{
 					// 現地点からユニット地点への距離
-					wrk_x=Units[m].Position.X;
-					wrk_y=Units[m].Position.Y;
+					wrk_x=unit.Position.X;
+					wrk_y=unit.Position.Y;
 
-					if( Units[m].Kind==UnitKind.Fighter )
+					if( unit.Kind==UnitKind.Fighter )
 						{	// 航空機の場合はちょっと前へ
-						wrk_x+=cos(Units[m].Direction*a_PI)*FT_EYE;
-						wrk_y+=sin(Units[m].Direction*a_PI)*FT_EYE;
+						wrk_x+=cos(unit.Direction*a_PI)*FT_EYE;
+						wrk_y+=sin(unit.Direction*a_PI)*FT_EYE;
 						}
-					wrk_x=Units[n].Position.X-wrk_x;
-					wrk_y=Units[n].Position.Y-wrk_y;
+					wrk_x=other.Position.X-wrk_x;
+					wrk_y=other.Position.Y-wrk_y;
 
 
 					//wrk_x=unit[n].x-unit[m].x;
@@ -1636,11 +1644,11 @@ public void		Detect()
 					if( (int)dstc<=size && size!=0 )
 						{
 						flg1++;
-						if( Units[n].Kind==UnitKind.Submarine && Units[n].info[6]!=0 )
+						if( other.Kind==UnitKind.Submarine && other.info[6]!=0 )
 							{	// 潜航中潜水艦が発見可能範囲にいる
 							if( DetectSubmarines(m,n)!=0 )
 								{
-								Units[n].Found=1;
+								other.Found=1;
 
 #if false
 								for(s=1; s<=max_unit; s++)
@@ -1659,46 +1667,47 @@ public void		Detect()
 							}
 						else
 							{	
-							Units[n].Found=1;	// 普通のユニットが見つかった場合
+							other.Found=1;	// 普通のユニットが見つかった場合
 
-							if( Units[m].Kind==UnitKind.Submarine && Units[m].Supply==0 && Units[n].Kind!=UnitKind.Submarine )		// 発見したのが潜水艦の場合。
+							if( unit.Kind==UnitKind.Submarine && unit.Supply==0 && other.Kind!=UnitKind.Submarine )		// 発見したのが潜水艦の場合。
 								{						
-								Units[m].info[6]=1;		// 潜ります。
+								unit.info[6]=1;		// 潜ります。
 								}
 							}
 						}
 					}
 				}
 
-			if( flg1==0 && Units[m].Kind==UnitKind.Submarine )		// 潜水艦が発見できなかった
+			if( flg1==0 && unit.Kind==UnitKind.Submarine )		// 潜水艦が発見できなかった
 				{
-				Units[m].info[6]=0;					// 浮上します。
-				Units[m].Found=0;					// クリアします。
-				Units[m].info[10]=0;
+				unit.info[6]=0;					// 浮上します。
+				unit.Found=0;					// クリアします。
+				unit.info[10]=0;
 				}
 
 			}
 
-		if( Units[m].Side!=0 && Units[m].Side!=LocalSide  && Units[m].PlaneState!=UnitState.Parked  && Units[m].Supply==0 )
+		if( unit.IsUsed && unit.Side!=LocalSide  && unit.PlaneState!=UnitState.Parked  && unit.Supply==0 )
 			{
 			flg2=0;
 			for(n=1;n<=MaxUnitId;n++)
 				{
-				if( Units[n].Side!=0 && Units[n].Side==LocalSide  && Units[n].PlaneState!=UnitState.Parked && (Units[n].Found==0 || Units[m].Kind==UnitKind.Submarine) )
+				ref var other = ref Units[n];
+				if( other.IsUsed && other.Side==LocalSide  && other.PlaneState!=UnitState.Parked && (other.Found==0 || unit.Kind==UnitKind.Submarine) )
 					{
 					// 現地点からユニット地点への距離
 
 
-					wrk_x=Units[m].Position.X;
-					wrk_y=Units[m].Position.Y;
+					wrk_x=unit.Position.X;
+					wrk_y=unit.Position.Y;
 
-					if( Units[m].Kind==UnitKind.Fighter )
+					if( unit.Kind==UnitKind.Fighter )
 						{	// 航空機の場合はちょっと前へ
-						wrk_x+=cos(Units[m].Direction*a_PI)*FT_EYE;
-						wrk_y+=sin(Units[m].Direction*a_PI)*FT_EYE;
+						wrk_x+=cos(unit.Direction*a_PI)*FT_EYE;
+						wrk_y+=sin(unit.Direction*a_PI)*FT_EYE;
 						}
-					wrk_x=Units[n].Position.X-wrk_x;
-					wrk_y=Units[n].Position.Y-wrk_y;
+					wrk_x=other.Position.X-wrk_x;
+					wrk_y=other.Position.Y-wrk_y;
 
 					//wrk_x=unit[n].x-unit[m].x;
 					//wrk_y=unit[n].y-unit[m].y;
@@ -1723,11 +1732,11 @@ public void		Detect()
 					if( (int)dstc<=size && size!=0 )
 						{
 						flg2++;
-						if( Units[n].Kind==UnitKind.Submarine && Units[n].info[6]!=0 )
+						if( other.Kind==UnitKind.Submarine && other.info[6]!=0 )
 							{	// 潜航中潜水艦が発見可能範囲にいる
 							if( DetectSubmarines(m,n)!=0 )
 								{
-								Units[n].Found=1;
+								other.Found=1;
 
 #if false
 								for(s=1; s<=max_unit; s++)
@@ -1745,22 +1754,22 @@ public void		Detect()
 							}
 						else
 							{	// 普通のユニットが見つかった場合
-							Units[n].Found=1;
+							other.Found=1;
 
-							if( Units[m].Kind==UnitKind.Submarine && Units[m].Supply==0 && Units[n].Kind!=UnitKind.Submarine )		// 発見したのが潜水艦の場合。
+							if( unit.Kind==UnitKind.Submarine && unit.Supply==0 && other.Kind!=UnitKind.Submarine )		// 発見したのが潜水艦の場合。
 								{						
-								Units[m].info[6]=1;
+								unit.info[6]=1;
 								}
 							}
 						}
 					}
 				}
 
-			if( flg2==0 && Units[m].Kind==UnitKind.Submarine )		// 潜水艦が発見できなかった
+			if( flg2==0 && unit.Kind==UnitKind.Submarine )		// 潜水艦が発見できなかった
 				{
-				Units[m].info[6]=0;					// 浮上します
-				Units[m].Found=0;					// クリアします。
-				Units[m].info[10]=0;
+				unit.info[6]=0;					// 浮上します
+				unit.Found=0;					// クリアします。
+				unit.info[10]=0;
 				}
 
 			}

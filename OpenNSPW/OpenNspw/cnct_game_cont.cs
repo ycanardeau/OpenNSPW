@@ -230,13 +230,15 @@ public void	CheckResult()
 				f=0;
 				for( i=1; i<=MaxUnitId; i++ )
 					{
-					if( Units[i].Side==Side.Japan && (Units[i].Kind==UnitKind.Carrier || Units[i].Kind==UnitKind.LightCarrier) )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.Japan && (unit.Kind==UnitKind.Carrier || unit.Kind==UnitKind.LightCarrier) )
 						f++;
 					}
 				m=0;
 				for( i=1; i<=MaxUnitId; i++ )
 					{
-					if( Units[i].Side==Side.Japan && (Units[i].Kind==UnitKind.InfantryBase || Units[i].Kind==UnitKind.Pillboxes || Units[i].Kind==UnitKind.Fortress ) )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.Japan && (unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress ) )
 						m++;
 					}
 				if( f<=0 || m<=0 )
@@ -252,13 +254,15 @@ public void	CheckResult()
 				f=0;
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==Side.UnitedStates && (Units[i].Kind==UnitKind.Carrier || Units[i].Kind==UnitKind.LightCarrier) )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.Carrier || unit.Kind==UnitKind.LightCarrier) )
 						f++;
 					}
 				m=0;
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==Side.UnitedStates && (Units[i].Kind==UnitKind.InfantryBase || Units[i].Kind==UnitKind.Pillboxes || Units[i].Kind==UnitKind.Fortress ) )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress ) )
 						m++;
 					}
 				if( f<=0 || m<=0 )
@@ -275,13 +279,15 @@ public void	CheckResult()
 				f=0;
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==Side.Japan && (Units[i].Kind==UnitKind.Battleship || Units[i].Kind==UnitKind.Cruiser) )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.Japan && (unit.Kind==UnitKind.Battleship || unit.Kind==UnitKind.Cruiser) )
 						f++;
 					}
 				m=0;
 				for( i=1; i<=MaxUnitId; i++ )
 					{
-					if( Units[i].Side==Side.Japan && (Units[i].Kind==UnitKind.InfantryBase || Units[i].Kind==UnitKind.Pillboxes || Units[i].Kind==UnitKind.Fortress ) )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.Japan && (unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress ) )
 						m++;
 					}
 				if( f<=0 || m<=0 )
@@ -295,13 +301,15 @@ public void	CheckResult()
 				f=0;
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==Side.UnitedStates && (Units[i].Kind==UnitKind.Battleship || Units[i].Kind==UnitKind.Cruiser) )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.Battleship || unit.Kind==UnitKind.Cruiser) )
 						f++;
 					}
 				m=0;
 				for( i=1; i<=MaxUnitId; i++ )
 					{
-					if( Units[i].Side==Side.UnitedStates && (Units[i].Kind==UnitKind.InfantryBase || Units[i].Kind==UnitKind.Pillboxes || Units[i].Kind==UnitKind.Fortress ) )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress ) )
 						m++;
 					}
 				if( f<=0 || m<=0 )
@@ -317,7 +325,8 @@ public void	CheckResult()
 				m=0;
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==Side.UnitedStates && (Units[i].Kind>=UnitKind.AirBase&&Units[i].Kind<=UnitKind.Fortress) )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.UnitedStates && (unit.Kind>=UnitKind.AirBase&&unit.Kind<=UnitKind.Fortress) )
 						{
 						// ミッドウェイ島
 						// ptin debg
@@ -325,7 +334,7 @@ public void	CheckResult()
 						wrk_r.right=(int)(80)+(80*4);
 						wrk_r.bottom=(int)(3440)-(80*4);//(int)(3440)+(80*2);
 						wrk_r.left=(int)(80)-(80*2);
-						if( PointInRect3(ref wrk_r,(int)Units[i].Position.X,(int)Units[i].Position.Y)!=0)
+						if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
 							{
 							m++;	// 生きてる基地で指定範囲内に要る
 							}
@@ -347,7 +356,8 @@ public void	CheckResult()
 				m=0;
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==Side.UnitedStates && (Units[i].Kind>=UnitKind.AirBase&&Units[i].Kind<=UnitKind.Fortress) )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.UnitedStates && (unit.Kind>=UnitKind.AirBase&&unit.Kind<=UnitKind.Fortress) )
 						{
 						// ミッドウェイ島
 						// ptin_dbg
@@ -355,7 +365,7 @@ public void	CheckResult()
 						wrk_r.right=(int)(80)+(80*4);
 						wrk_r.bottom=(int)(3440)-(80*4);//(int)(3440)+(80*2);
 						wrk_r.left=(int)(80)-(80*2);
-						if( PointInRect3(ref wrk_r,(int)Units[i].Position.X,(int)Units[i].Position.Y)!=0)
+						if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
 							{
 							m++;	// 生きてる基地で指定範囲内に要る
 							}
@@ -363,7 +373,8 @@ public void	CheckResult()
 					}
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==Side.Japan && (Units[i].Kind==UnitKind.Fortress) && Units[i].info[0]==0 )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.Japan && (unit.Kind==UnitKind.Fortress) && unit.info[0]==0 )
 						{
 						// ミッドウェイ島
 						// ptin dbg
@@ -371,7 +382,7 @@ public void	CheckResult()
 						wrk_r.right=(int)(80)+(80*4);
 						wrk_r.bottom=(int)(3440)-(80*4);//(int)(3440)+(80*2);
 						wrk_r.left=(int)(80)-(80*2);
-						if( PointInRect3(ref wrk_r,(int)Units[i].Position.X,(int)Units[i].Position.Y)!=0)
+						if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
 							{
 							f++;	// 生きてる基地で指定範囲内に要る
 							}
@@ -393,7 +404,8 @@ public void	CheckResult()
 				m=0;
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==Side.UnitedStates && (Units[i].Kind>=UnitKind.AirBase&&Units[i].Kind<=UnitKind.Fortress) )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.UnitedStates && (unit.Kind>=UnitKind.AirBase&&unit.Kind<=UnitKind.Fortress) )
 						{
 						// ミッドウェイ島
 						// ptin dbg
@@ -401,7 +413,7 @@ public void	CheckResult()
 						wrk_r.right=(int)(80)+(80*4);
 						wrk_r.bottom=(int)(3440)-(80*4);//(int)(3440)+(80*2);
 						wrk_r.left=(int)(80)-(80*2);
-						if( PointInRect3(ref wrk_r,(int)Units[i].Position.X,(int)Units[i].Position.Y)!=0)
+						if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
 							{
 							m++;	// 生きてる基地で指定範囲内に要る
 							}
@@ -409,7 +421,8 @@ public void	CheckResult()
 					}
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==Side.Japan && (Units[i].Kind==UnitKind.Fortress) && Units[i].info[0]==0 )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.Japan && (unit.Kind==UnitKind.Fortress) && unit.info[0]==0 )
 						{
 						// ミッドウェイ島
 						// ptin_dbg
@@ -417,7 +430,7 @@ public void	CheckResult()
 						wrk_r.right=(int)(80)+(80*4);
 						wrk_r.bottom=(int)(3440)-(80*4);//(int)(3440)+(80*2);
 						wrk_r.left=(int)(80)-(80*2);
-						if( PointInRect3(ref wrk_r,(int)Units[i].Position.X,(int)Units[i].Position.Y)!=0)
+						if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
 							{
 							f++;	// 生きてる基地で指定範囲内に要る
 							}
@@ -450,7 +463,8 @@ public void	CheckResult()
 				m=0;
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==Side.Japan && (Units[i].Kind>=UnitKind.AirBase&&Units[i].Kind<=UnitKind.Fortress) )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.Japan && (unit.Kind>=UnitKind.AirBase&&unit.Kind<=UnitKind.Fortress) )
 						{
 						// ウェーク
 						wrk_r.top=(int)(-720+80);
@@ -459,7 +473,7 @@ public void	CheckResult()
 						wrk_r.left=(int)(-4080-80);
 
 
-						if( PointInRect2(ref wrk_r,(int)Units[i].Position.X,(int)Units[i].Position.Y)!=0)
+						if( PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
 							{
 							m++;	// 生きてる基地で指定範囲内に要る
 							}
@@ -467,7 +481,8 @@ public void	CheckResult()
 					}
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==Side.UnitedStates && (Units[i].Kind==UnitKind.Fortress) && Units[i].info[0]==0 )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.Fortress) && unit.info[0]==0 )
 						{
 						// ウェーク
 						wrk_r.top=(int)(-720+80);
@@ -475,7 +490,7 @@ public void	CheckResult()
 						wrk_r.bottom=(int)(-720-160);
 						wrk_r.left=(int)(-4080-80);
 
-						if( PointInRect2(ref wrk_r,(int)Units[i].Position.X,(int)Units[i].Position.Y)!=0)
+						if( PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0)
 							{
 							f++;	// 生きてる基地で指定範囲内に要る
 							}
@@ -502,7 +517,8 @@ public void	CheckResult()
 				wrk_r.left=(int)(-1040);
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==Side.Japan && ( Units[i].Kind>=UnitKind.AirBase && Units[i].Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)Units[i].Position.X,(int)Units[i].Position.Y)!=0 )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
 						{
 						f++;
 						}
@@ -529,14 +545,16 @@ public void	CheckResult()
 				wrk_r.left=(int)(-1040);
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==Side.Japan && ( Units[i].Kind>=UnitKind.AirBase && Units[i].Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)Units[i].Position.X,(int)Units[i].Position.Y)!=0 )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
 						{
 						f++;
 						}
 					}
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==Side.UnitedStates && ( Units[i].Kind==UnitKind.AirBase )  && Units[i].info[0]==0 && PointInRect2(ref wrk_r,(int)Units[i].Position.X,(int)Units[i].Position.Y)!=0 )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.UnitedStates && ( unit.Kind==UnitKind.AirBase )  && unit.info[0]==0 && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
 						{
 						m++;
 						}
@@ -555,7 +573,8 @@ public void	CheckResult()
 				f=0;
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==Side.Japan && Units[i].Kind==UnitKind.City  )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.Japan && unit.Kind==UnitKind.City  )
 						{
 						f++;
 						}
@@ -579,7 +598,8 @@ public void	CheckResult()
 				wrk_r.left=(int)(-4480-80);
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==Side.Japan && ( Units[i].Kind>=UnitKind.AirBase && Units[i].Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)Units[i].Position.X,(int)Units[i].Position.Y)!=0 )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
 						{
 						f++;
 						}
@@ -604,7 +624,8 @@ public void	CheckResult()
 				wrk_r.left=(int)(-4480-80);
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==Side.Japan && ( Units[i].Kind>=UnitKind.AirBase && Units[i].Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)Units[i].Position.X,(int)Units[i].Position.Y)!=0 )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
 						{
 						f++;
 						}
@@ -623,7 +644,8 @@ public void	CheckResult()
 				wrk_r.left=(int)(-1040);
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==Side.UnitedStates && ( Units[i].Kind>=UnitKind.AirBase && Units[i].Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)Units[i].Position.X,(int)Units[i].Position.Y)!=0 )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.UnitedStates && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
 						{
 						f++;
 						}
@@ -651,11 +673,12 @@ public void	CheckResult()
 
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==Side.Japan && ( Units[i].Kind>=UnitKind.AirBase && Units[i].Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)Units[i].Position.X,(int)Units[i].Position.Y)!=0 )
+					ref var unit = ref Units[i];
+					if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
 						{
 						f++;	//　日本の施設
 						}
-					if( Units[i].Side==Side.UnitedStates && ( Units[i].Kind>=UnitKind.AirBase && Units[i].Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)Units[i].Position.X,(int)Units[i].Position.Y)!=0 )
+					if( unit.Side==Side.UnitedStates && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
 						{
 						m++;	//　米の施設
 						}
@@ -677,7 +700,7 @@ public void	CheckResult()
 
 			case 995:
 				// ミッドウェイを巡る戦い１
-				if( Units[DecisionPoints[0]].Side==0 )
+				if( !Units[DecisionPoints[0]].IsUsed )
 					{
 					Result=GameResult.JapanWon;
 					break;
@@ -796,268 +819,269 @@ public void	CheckResult()
 [Original("set_unit_data")]
 public void	SetUnitData(int m)
 	{
+	ref var unit = ref Units[m];
 	int		i;
 
 
-	switch( Units[m].Kind )
+	switch( unit.Kind )
 		{
 		case UnitKind.Battleship:
-			Units[m].TurnRateChange=0.3;
-			Units[m].AccelerationChange=0.01;
-			Units[m].MinSpeed=0.0;
-			Units[m].MaxSpeed=0.7;
+			unit.TurnRateChange=0.3;
+			unit.AccelerationChange=0.01;
+			unit.MinSpeed=0.0;
+			unit.MaxSpeed=0.7;
 
-			Units[m].SpriteRow=0;
+			unit.SpriteRow=0;
 
-			Units[m].Weapon=FireKind.Gun;		// 武装品種
-			Units[m].Ammo=1000;		// 数
-			Units[m].MaxAmmo=1000;		// 数 全容量
+			unit.Weapon=FireKind.Gun;		// 武装品種
+			unit.Ammo=1000;		// 数
+			unit.MaxAmmo=1000;		// 数 全容量
 
 
-			Units[m].Fuel=100;		// 残燃料
-			Units[m].FuelInterval=1000;		// 燃料を消費するタイミング
+			unit.Fuel=100;		// 残燃料
+			unit.FuelInterval=1000;		// 燃料を消費するタイミング
 
-			Units[m].Skill=5;			
+			unit.Skill=5;			
 
-			Units[m].Hp=Units[m].MaxHp=BB1_HP;		// Ｈｐ
+			unit.Hp=unit.MaxHp=BB1_HP;		// Ｈｐ
 
-			if( Units[m].Side==Side.Japan && Units[m].Variant==1 )
+			if( unit.Side==Side.Japan && unit.Variant==1 )
 				{
-				Units[m].TurnRateChange*=0.9;
+				unit.TurnRateChange*=0.9;
 
-				Units[m].AccelerationChange*=0.9;
-				Units[m].MaxSpeed*=0.9;
+				unit.AccelerationChange*=0.9;
+				unit.MaxSpeed*=0.9;
 
-				Units[m].Weapon=FireKind.NavalBaseGun;		// 武装品種
-				Units[m].Ammo=(int)(Units[m].Ammo * 1.35);		// 数
-				Units[m].MaxAmmo=(int)(Units[m].MaxAmmo * 1.35);		// 数 全容量
+				unit.Weapon=FireKind.NavalBaseGun;		// 武装品種
+				unit.Ammo=(int)(unit.Ammo * 1.35);		// 数
+				unit.MaxAmmo=(int)(unit.MaxAmmo * 1.35);		// 数 全容量
 
-				Units[m].FuelInterval*=1.2;		// 残燃料
+				unit.FuelInterval*=1.2;		// 残燃料
 
-				Units[m].Hp=Units[m].MaxHp=unchecked((int)(BB1_HP*1.4));		// Ｈｐ
+				unit.Hp=unit.MaxHp=unchecked((int)(BB1_HP*1.4));		// Ｈｐ
 				}
 			break;
 
 		case UnitKind.Cruiser:
-			Units[m].TurnRateChange=0.5;
-			Units[m].AccelerationChange=0.01;
-			Units[m].MinSpeed=0.0;
-			Units[m].MaxSpeed=0.8;
+			unit.TurnRateChange=0.5;
+			unit.AccelerationChange=0.01;
+			unit.MinSpeed=0.0;
+			unit.MaxSpeed=0.8;
 
-			Units[m].SpriteRow=1;
+			unit.SpriteRow=1;
 
-			Units[m].Weapon=FireKind.Gun;		// 武装品種
+			unit.Weapon=FireKind.Gun;		// 武装品種
 
-			if( Units[m].Variant!=0  )
+			if( unit.Variant!=0  )
 				{
-				if( Units[m].Side==Side.Japan )
+				if( unit.Side==Side.Japan )
 					{
-					Units[m].Ammo=450;		// 数
-					Units[m].MaxAmmo=450;		// 数 全容量
+					unit.Ammo=450;		// 数
+					unit.MaxAmmo=450;		// 数 全容量
 					}
 				else
 					{
-					Units[m].Ammo=500;		// 数
-					Units[m].MaxAmmo=500;		// 数 全容量
+					unit.Ammo=500;		// 数
+					unit.MaxAmmo=500;		// 数 全容量
 					}
 				}
 			else
 				{
-				Units[m].Ammo=600;		// 数
-				Units[m].MaxAmmo=600;		// 数 全容量
+				unit.Ammo=600;		// 数
+				unit.MaxAmmo=600;		// 数 全容量
 				}
 
 
 
-			Units[m].Fuel=100;		// 残燃料
-			Units[m].FuelInterval=650;		// 燃料を消費するタイミング
+			unit.Fuel=100;		// 残燃料
+			unit.FuelInterval=650;		// 燃料を消費するタイミング
 
-			Units[m].Skill=5;			
+			unit.Skill=5;			
 
-			Units[m].Hp=Units[m].MaxHp=CA1_HP;		// Ｈｐ
-			if( Units[m].Variant!=0 )
+			unit.Hp=unit.MaxHp=CA1_HP;		// Ｈｐ
+			if( unit.Variant!=0 )
 				{
-				if( Units[m].Side==Side.UnitedStates )
-					Units[m].MaxHp=(int)(Units[m].MaxHp * 0.9);
+				if( unit.Side==Side.UnitedStates )
+					unit.MaxHp=(int)(unit.MaxHp * 0.9);
 				else
-					Units[m].MaxHp=(int)(Units[m].MaxHp * 0.8);
-				Units[m].Hp=Units[m].MaxHp;
+					unit.MaxHp=(int)(unit.MaxHp * 0.8);
+				unit.Hp=unit.MaxHp;
 				}
 			break;
 
 		case UnitKind.Destroyer:
-			Units[m].TurnRateChange=1.3;
-			Units[m].AccelerationChange=0.05;
-			Units[m].MinSpeed=0.0;
-			Units[m].MaxSpeed=1.00;
+			unit.TurnRateChange=1.3;
+			unit.AccelerationChange=0.05;
+			unit.MinSpeed=0.0;
+			unit.MaxSpeed=1.00;
 
-			Units[m].SpriteRow=2;
+			unit.SpriteRow=2;
 
-			Units[m].Weapon=FireKind.Gun;		// 武装品種
-			Units[m].Ammo=120;		// 数
-			Units[m].MaxAmmo=120;		// 数 全容量
+			unit.Weapon=FireKind.Gun;		// 武装品種
+			unit.Ammo=120;		// 数
+			unit.MaxAmmo=120;		// 数 全容量
 
-			Units[m].Fuel=100;		// 残燃料
-			Units[m].FuelInterval=550;		// 燃料を消費するタイミング
+			unit.Fuel=100;		// 残燃料
+			unit.FuelInterval=550;		// 燃料を消費するタイミング
 
-			Units[m].Skill=5;			
+			unit.Skill=5;			
 
-			Units[m].Hp=Units[m].MaxHp=DD1_HP;		// Ｈｐ
-			if( Units[m].Variant!=0 )
+			unit.Hp=unit.MaxHp=DD1_HP;		// Ｈｐ
+			if( unit.Variant!=0 )
 				{
-				if( Units[m].Side==Side.UnitedStates )
-					Units[m].MaxHp=(int)(Units[m].MaxHp * 0.9);
+				if( unit.Side==Side.UnitedStates )
+					unit.MaxHp=(int)(unit.MaxHp * 0.9);
 				else
-					Units[m].MaxHp=(int)(Units[m].MaxHp * 0.7);
-				Units[m].Hp=Units[m].MaxHp;
+					unit.MaxHp=(int)(unit.MaxHp * 0.7);
+				unit.Hp=unit.MaxHp;
 				}
 			break;
 
 		case UnitKind.Submarine:
-			Units[m].TurnRateChange=0.5;
-			Units[m].AccelerationChange=0.02;
-			Units[m].MinSpeed=0.0;
-			Units[m].MaxSpeed=0.5;
+			unit.TurnRateChange=0.5;
+			unit.AccelerationChange=0.02;
+			unit.MinSpeed=0.0;
+			unit.MaxSpeed=0.5;
 
-			Units[m].SpriteRow=3;
+			unit.SpriteRow=3;
 
-			Units[m].Weapon=FireKind.Gun;		// 武装品種
-			Units[m].Ammo=25;		// 数
-			Units[m].MaxAmmo=25;		// 数 全容量
+			unit.Weapon=FireKind.Gun;		// 武装品種
+			unit.Ammo=25;		// 数
+			unit.MaxAmmo=25;		// 数 全容量
 
-			Units[m].Fuel=100;		// 残燃料
-			Units[m].FuelInterval=1000;		// 燃料を消費するタイミング
+			unit.Fuel=100;		// 残燃料
+			unit.FuelInterval=1000;		// 燃料を消費するタイミング
 
-			Units[m].Skill=5;			
+			unit.Skill=5;			
 
-			Units[m].Hp=Units[m].MaxHp=SS1_HP;		// Ｈｐ
+			unit.Hp=unit.MaxHp=SS1_HP;		// Ｈｐ
 			break;
 
 		case UnitKind.Carrier:
-			Units[m].TurnRateChange=0.3;
-			Units[m].AccelerationChange=0.01;
-			Units[m].MinSpeed=0.0;
-			Units[m].MaxSpeed=0.7;
+			unit.TurnRateChange=0.3;
+			unit.AccelerationChange=0.01;
+			unit.MinSpeed=0.0;
+			unit.MaxSpeed=0.7;
 
-			Units[m].SpriteRow=6;
+			unit.SpriteRow=6;
 
-			Units[m].info[0]=0;					// 
-			Units[m].info[1]=CountPlanesIn(m);		// 現在収容数(飛行甲板上数も含む)
-			Units[m].info[2]=12;					// 最大収容数
-			Units[m].info[3]=0;					// 
-			Units[m].info[4]=0;					// 発進予定機数 ０なら着艦可
-			Units[m].Mode=UnitMode.Move;				// モード（コンバットメニュー）
+			unit.info[0]=0;					// 
+			unit.PlaneCount=CountPlanesIn(m);		// 現在収容数(飛行甲板上数も含む)
+			unit.Capacity=12;					// 最大収容数
+			unit.info[3]=0;					// 
+			unit.info[4]=0;					// 発進予定機数 ０なら着艦可
+			unit.Mode=UnitMode.Move;				// モード（コンバットメニュー）
 
-			Units[m].Weapon=FireKind.Gun;	//0;		// 武装品種
-			Units[m].Ammo=100;		// 数
-			Units[m].MaxAmmo=100;		// 数 全容量
+			unit.Weapon=FireKind.Gun;	//0;		// 武装品種
+			unit.Ammo=100;		// 数
+			unit.MaxAmmo=100;		// 数 全容量
 
-			Units[m].Fuel=100;		// 残燃料
-			Units[m].FuelInterval=750;		// 燃料を消費するタイミング
+			unit.Fuel=100;		// 残燃料
+			unit.FuelInterval=750;		// 燃料を消費するタイミング
 
-			Units[m].Skill=5;			
+			unit.Skill=5;			
 
-			Units[m].Hp=Units[m].MaxHp=CV1_HP+((Units[m].Side==Side.UnitedStates ? 1 : 0)*5);		// Ｈｐ
+			unit.Hp=unit.MaxHp=CV1_HP+((unit.Side==Side.UnitedStates ? 1 : 0)*5);		// Ｈｐ
 
-			if( Units[m].Side==Side.UnitedStates && Units[m].Variant==1 )
+			if( unit.Side==Side.UnitedStates && unit.Variant==1 )
 				{
-				Units[m].TurnRateChange*=0.9;
+				unit.TurnRateChange*=0.9;
 
-				Units[m].AccelerationChange*=0.9;
-				Units[m].MaxSpeed*=0.9;
+				unit.AccelerationChange*=0.9;
+				unit.MaxSpeed*=0.9;
 
-				Units[m].info[2]=14;					// 最大収容数
+				unit.Capacity=14;					// 最大収容数
 
-				Units[m].Weapon=FireKind.Gun;		//0;		// 武装品種
-				Units[m].Ammo=(int)(Units[m].Ammo * 1.1);		// 数
-				Units[m].MaxAmmo=(int)(Units[m].MaxAmmo * 1.1);		// 数 全容量
+				unit.Weapon=FireKind.Gun;		//0;		// 武装品種
+				unit.Ammo=(int)(unit.Ammo * 1.1);		// 数
+				unit.MaxAmmo=(int)(unit.MaxAmmo * 1.1);		// 数 全容量
 
-				Units[m].FuelInterval*=1.6;		// 残燃料
+				unit.FuelInterval*=1.6;		// 残燃料
 
-				Units[m].Hp=(int)(Units[m].Hp * 1.15);
-				Units[m].MaxHp=(int)(Units[m].MaxHp * 1.15);		// Ｈｐ
+				unit.Hp=(int)(unit.Hp * 1.15);
+				unit.MaxHp=(int)(unit.MaxHp * 1.15);		// Ｈｐ
 				}
 			break;
 
 
 		case UnitKind.LightCarrier:
-			Units[m].TurnRateChange=0.5;
-			Units[m].AccelerationChange=0.01;
-			Units[m].MinSpeed=0.0;
-			Units[m].MaxSpeed=0.9;
+			unit.TurnRateChange=0.5;
+			unit.AccelerationChange=0.01;
+			unit.MinSpeed=0.0;
+			unit.MaxSpeed=0.9;
 
-			Units[m].SpriteRow=5;
+			unit.SpriteRow=5;
 
-			Units[m].info[0]=0;					// 
-			Units[m].info[1]=CountPlanesIn(m);		// 現在収容数(飛行甲板上数も含む)
-			Units[m].info[2]=8;					// 最大収容数
-			Units[m].info[3]=0;					// 
-			Units[m].info[4]=0;					// 発進予定機数 ０なら着艦可
-			Units[m].Mode=UnitMode.Move;				// モード（コンバットメニュー）
+			unit.info[0]=0;					// 
+			unit.PlaneCount=CountPlanesIn(m);		// 現在収容数(飛行甲板上数も含む)
+			unit.Capacity=8;					// 最大収容数
+			unit.info[3]=0;					// 
+			unit.info[4]=0;					// 発進予定機数 ０なら着艦可
+			unit.Mode=UnitMode.Move;				// モード（コンバットメニュー）
 
-			Units[m].Weapon=FireKind.Gun;	//0;		// 武装品種
-			Units[m].Ammo=80;		// 数
-			Units[m].MaxAmmo=80;		// 数 全容量
+			unit.Weapon=FireKind.Gun;	//0;		// 武装品種
+			unit.Ammo=80;		// 数
+			unit.MaxAmmo=80;		// 数 全容量
 
-			Units[m].Fuel=100;		// 残燃料
-			Units[m].FuelInterval=700;		// 燃料を消費するタイミング
+			unit.Fuel=100;		// 残燃料
+			unit.FuelInterval=700;		// 燃料を消費するタイミング
 
-			Units[m].Skill=5;			
+			unit.Skill=5;			
 
-			Units[m].Hp=Units[m].MaxHp=CVL1_HP+((Units[m].Side==Side.UnitedStates ? 1 : 0)*5);		// Ｈｐ
+			unit.Hp=unit.MaxHp=CVL1_HP+((unit.Side==Side.UnitedStates ? 1 : 0)*5);		// Ｈｐ
 			break;
 
 
 		case UnitKind.Fighter:
-			switch( Units[m].Variant )
+			switch( unit.Variant )
 				{
 				case 0:		// 艦上戦闘機
 
-					if(Units[m].Side==Side.Japan)
+					if(unit.Side==Side.Japan)
 						{
-						Units[m].TurnRateChange=4.0;
-						Units[m].AccelerationChange=0.01;
-						Units[m].MinSpeed=0.5;
-						Units[m].MaxSpeed=2.35;
+						unit.TurnRateChange=4.0;
+						unit.AccelerationChange=0.01;
+						unit.MinSpeed=0.5;
+						unit.MaxSpeed=2.35;
 
-						if( Units[m].Stop!=0 )
-							Units[m].SpriteRow=8;
+						if( unit.Stop!=0 )
+							unit.SpriteRow=8;
 						else
-							Units[m].SpriteRow=7;
+							unit.SpriteRow=7;
 
-						Units[m].Weapon=FireKind.Bullet;		// 武装品種
-						Units[m].Ammo=35;		// 数
-						Units[m].MaxAmmo=35;		// 数 全容量
+						unit.Weapon=FireKind.Bullet;		// 武装品種
+						unit.Ammo=35;		// 数
+						unit.MaxAmmo=35;		// 数 全容量
 
-						Units[m].Fuel=100;		// 残燃料
-						Units[m].FuelInterval=80;		// 燃料を消費するタイミング
+						unit.Fuel=100;		// 残燃料
+						unit.FuelInterval=80;		// 燃料を消費するタイミング
 
-						Units[m].Skill=7;			
+						unit.Skill=7;			
 
-						Units[m].Hp=Units[m].MaxHp=FT1_HP;		// Ｈｐ
+						unit.Hp=unit.MaxHp=FT1_HP;		// Ｈｐ
 						}
 					else
 						{
-						Units[m].TurnRateChange=2.2;
-						Units[m].AccelerationChange=0.01;
-						Units[m].MinSpeed=0.5;
-						Units[m].MaxSpeed=2.5;
+						unit.TurnRateChange=2.2;
+						unit.AccelerationChange=0.01;
+						unit.MinSpeed=0.5;
+						unit.MaxSpeed=2.5;
 
-						if( Units[m].Stop!=0 )
-							Units[m].SpriteRow=8;
+						if( unit.Stop!=0 )
+							unit.SpriteRow=8;
 						else
-							Units[m].SpriteRow=7;
+							unit.SpriteRow=7;
 
-						Units[m].Weapon=FireKind.Bullet;		// 武装品種
-						Units[m].Ammo=40;		// 数
-						Units[m].MaxAmmo=40;		// 数 全容量
+						unit.Weapon=FireKind.Bullet;		// 武装品種
+						unit.Ammo=40;		// 数
+						unit.MaxAmmo=40;		// 数 全容量
 
-						Units[m].Fuel=100;		// 残燃料
-						Units[m].FuelInterval=60;		// 燃料を消費するタイミング
+						unit.Fuel=100;		// 残燃料
+						unit.FuelInterval=60;		// 燃料を消費するタイミング
 
-						Units[m].Skill=5;			
+						unit.Skill=5;			
 
-						Units[m].Hp=Units[m].MaxHp=FT1_HP+4;		// Ｈｐ
+						unit.Hp=unit.MaxHp=FT1_HP+4;		// Ｈｐ
 						}
 
 					break;
@@ -1066,45 +1090,45 @@ public void	SetUnitData(int m)
 				case 1:		// 陸上戦闘機
 #if true
 
-					if(Units[m].Side==Side.Japan)
+					if(unit.Side==Side.Japan)
 						{
-						Units[m].TurnRateChange=1.8;
-						Units[m].AccelerationChange=0.008;
-						Units[m].MinSpeed=0.5;
-						Units[m].MaxSpeed=2.35;
+						unit.TurnRateChange=1.8;
+						unit.AccelerationChange=0.008;
+						unit.MinSpeed=0.5;
+						unit.MaxSpeed=2.35;
 
-						Units[m].SpriteRow=14;
+						unit.SpriteRow=14;
 
-						Units[m].Weapon=FireKind.Bullet;		// 武装品種
-						Units[m].Ammo=50;		// 数
-						Units[m].MaxAmmo=50;		// 数 全容量
+						unit.Weapon=FireKind.Bullet;		// 武装品種
+						unit.Ammo=50;		// 数
+						unit.MaxAmmo=50;		// 数 全容量
 
-						Units[m].Fuel=100;		// 残燃料
-						Units[m].FuelInterval=100;		// 燃料を消費するタイミング
+						unit.Fuel=100;		// 残燃料
+						unit.FuelInterval=100;		// 燃料を消費するタイミング
 
-						Units[m].Skill=5;			
+						unit.Skill=5;			
 
-						Units[m].Hp=Units[m].MaxHp=unchecked((int)(FT1_HP*0.8));		// Ｈｐ
+						unit.Hp=unit.MaxHp=unchecked((int)(FT1_HP*0.8));		// Ｈｐ
 						}
 					else
 						{
-						Units[m].TurnRateChange=2.0;
-						Units[m].AccelerationChange=0.02;
-						Units[m].MinSpeed=0.5;
-						Units[m].MaxSpeed=2.7;
+						unit.TurnRateChange=2.0;
+						unit.AccelerationChange=0.02;
+						unit.MinSpeed=0.5;
+						unit.MaxSpeed=2.7;
 
-						Units[m].SpriteRow=14;
+						unit.SpriteRow=14;
 
-						Units[m].Weapon=FireKind.Bullet;		// 武装品種
-						Units[m].Ammo=60;		// 数
-						Units[m].MaxAmmo=60;		// 数 全容量
+						unit.Weapon=FireKind.Bullet;		// 武装品種
+						unit.Ammo=60;		// 数
+						unit.MaxAmmo=60;		// 数 全容量
 
-						Units[m].Fuel=100;		// 残燃料
-						Units[m].FuelInterval=95;		// 燃料を消費するタイミング
+						unit.Fuel=100;		// 残燃料
+						unit.FuelInterval=95;		// 燃料を消費するタイミング
 
-						Units[m].Skill=5;			
+						unit.Skill=5;			
 
-						Units[m].Hp=Units[m].MaxHp=unchecked((int)(FT1_HP*2.0));		// Ｈｐ
+						unit.Hp=unit.MaxHp=unchecked((int)(FT1_HP*2.0));		// Ｈｐ
 						}
 
 
@@ -1155,51 +1179,51 @@ public void	SetUnitData(int m)
 			break;
 
 		case UnitKind.Attacker:
-			if(Units[m].Side==Side.Japan)
+			if(unit.Side==Side.Japan)
 				{	
-				Units[m].TurnRateChange=3.0;
-				Units[m].AccelerationChange=0.01;
-				Units[m].MinSpeed=0.5;
-				Units[m].MaxSpeed=2.2;
+				unit.TurnRateChange=3.0;
+				unit.AccelerationChange=0.01;
+				unit.MinSpeed=0.5;
+				unit.MaxSpeed=2.2;
 
-				if( Units[m].Stop!=0 )
-					Units[m].SpriteRow=10;
+				if( unit.Stop!=0 )
+					unit.SpriteRow=10;
 				else
-					Units[m].SpriteRow=9;
+					unit.SpriteRow=9;
 
-				Units[m].Weapon=FireKind.Unarmed;		// 武装品種
-				Units[m].Ammo=0;		// 数
-				Units[m].MaxAmmo=1;		// 数 全容量
+				unit.Weapon=FireKind.Unarmed;		// 武装品種
+				unit.Ammo=0;		// 数
+				unit.MaxAmmo=1;		// 数 全容量
 
-				Units[m].Fuel=100;		// 残燃料
-				Units[m].FuelInterval=85;		// 燃料を消費するタイミング
+				unit.Fuel=100;		// 残燃料
+				unit.FuelInterval=85;		// 燃料を消費するタイミング
 
-				Units[m].Skill=5;			
+				unit.Skill=5;			
 
-				Units[m].Hp=Units[m].MaxHp=AT1_HP;		// Ｈｐ
+				unit.Hp=unit.MaxHp=AT1_HP;		// Ｈｐ
 				}
 			else
 				{
-				Units[m].TurnRateChange=3.0;
-				Units[m].AccelerationChange=0.01;
-				Units[m].MinSpeed=0.5;
-				Units[m].MaxSpeed=2.2;
+				unit.TurnRateChange=3.0;
+				unit.AccelerationChange=0.01;
+				unit.MinSpeed=0.5;
+				unit.MaxSpeed=2.2;
 
-				if( Units[m].Stop!=0 )
-					Units[m].SpriteRow=10;
+				if( unit.Stop!=0 )
+					unit.SpriteRow=10;
 				else
-					Units[m].SpriteRow=9;
+					unit.SpriteRow=9;
 
-				Units[m].Weapon=FireKind.Unarmed;		// 武装品種
-				Units[m].Ammo=0;		// 数
-				Units[m].MaxAmmo=1;		// 数 全容量
+				unit.Weapon=FireKind.Unarmed;		// 武装品種
+				unit.Ammo=0;		// 数
+				unit.MaxAmmo=1;		// 数 全容量
 
-				Units[m].Fuel=100;		// 残燃料
-				Units[m].FuelInterval=70;		// 燃料を消費するタイミング
+				unit.Fuel=100;		// 残燃料
+				unit.FuelInterval=70;		// 燃料を消費するタイミング
 
-				Units[m].Skill=5;			
+				unit.Skill=5;			
 
-				Units[m].Hp=Units[m].MaxHp=AT1_HP+4;		// Ｈｐ
+				unit.Hp=unit.MaxHp=AT1_HP+4;		// Ｈｐ
 				}
 
 			break;
@@ -1207,153 +1231,153 @@ public void	SetUnitData(int m)
 
 
 		case UnitKind.Bomber:
-			if(Units[m].Side==Side.Japan)
+			if(unit.Side==Side.Japan)
 				{
-				Units[m].TurnRateChange=2.4;
-				Units[m].AccelerationChange=0.005;
-				Units[m].MinSpeed=0.5;
-				Units[m].MaxSpeed=1.8;
+				unit.TurnRateChange=2.4;
+				unit.AccelerationChange=0.005;
+				unit.MinSpeed=0.5;
+				unit.MaxSpeed=1.8;
 
-				Units[m].SpriteRow=12;
+				unit.SpriteRow=12;
 
-				Units[m].Weapon=FireKind.Unarmed;		// 武装品種
-				Units[m].Ammo=0;		// 数
-				Units[m].MaxAmmo=9;		// 数 全容量
+				unit.Weapon=FireKind.Unarmed;		// 武装品種
+				unit.Ammo=0;		// 数
+				unit.MaxAmmo=9;		// 数 全容量
 
-				Units[m].Fuel=100;		// 残燃料
-				Units[m].FuelInterval=120;		// 燃料を消費するタイミング
+				unit.Fuel=100;		// 残燃料
+				unit.FuelInterval=120;		// 燃料を消費するタイミング
 
-				Units[m].Skill=5;			
+				unit.Skill=5;			
 
-				Units[m].Hp=Units[m].MaxHp=unchecked((int)(BM1_HP*0.65));		// Ｈｐ
+				unit.Hp=unit.MaxHp=unchecked((int)(BM1_HP*0.65));		// Ｈｐ
 				}
 			else
 				{	
-				Units[m].TurnRateChange=2.0;
-				Units[m].AccelerationChange=0.005;
-				Units[m].MinSpeed=0.5;
-				Units[m].MaxSpeed=1.9;
+				unit.TurnRateChange=2.0;
+				unit.AccelerationChange=0.005;
+				unit.MinSpeed=0.5;
+				unit.MaxSpeed=1.9;
 
-				Units[m].SpriteRow=12;
+				unit.SpriteRow=12;
 
-				Units[m].Weapon=FireKind.Unarmed;		// 武装品種
-				Units[m].Ammo=0;		// 数
-				Units[m].MaxAmmo=20;		// 数 全容量
+				unit.Weapon=FireKind.Unarmed;		// 武装品種
+				unit.Ammo=0;		// 数
+				unit.MaxAmmo=20;		// 数 全容量
 
-				Units[m].Fuel=100;		// 残燃料
-				Units[m].FuelInterval=220;		// 燃料を消費するタイミング
+				unit.Fuel=100;		// 残燃料
+				unit.FuelInterval=220;		// 燃料を消費するタイミング
 
-				Units[m].Skill=5;			
+				unit.Skill=5;			
 
-				Units[m].Hp=Units[m].MaxHp=BM1_HP;		// Ｈｐ
+				unit.Hp=unit.MaxHp=BM1_HP;		// Ｈｐ
 				}
 			break;	
 
 
 
 		case UnitKind.Transport:
-			Units[m].TurnRateChange=0.3;
-			Units[m].AccelerationChange=0.01;
-			Units[m].MinSpeed=0.0;
-			Units[m].MaxSpeed=0.65;
+			unit.TurnRateChange=0.3;
+			unit.AccelerationChange=0.01;
+			unit.MinSpeed=0.0;
+			unit.MaxSpeed=0.65;
 
-			Units[m].SpriteRow=13;
+			unit.SpriteRow=13;
 
-			Units[m].Weapon=FireKind.Unarmed;		// 武装品種
-			Units[m].Ammo=0;		// 数
-			Units[m].MaxAmmo=0;		// 数 全容量
+			unit.Weapon=FireKind.Unarmed;		// 武装品種
+			unit.Ammo=0;		// 数
+			unit.MaxAmmo=0;		// 数 全容量
 
-			Units[m].Fuel=100;		// 残燃料
-			Units[m].FuelInterval=1000;		// 燃料を消費するタイミング
+			unit.Fuel=100;		// 残燃料
+			unit.FuelInterval=1000;		// 燃料を消費するタイミング
 
-			Units[m].Skill=5;			
+			unit.Skill=5;			
 
-			Units[m].Hp=Units[m].MaxHp=TR1_HP;		// Ｈｐ
+			unit.Hp=unit.MaxHp=TR1_HP;		// Ｈｐ
 			break;
 
 
 		case UnitKind.NavalBase:
-			Units[m].SpriteRow=11;
+			unit.SpriteRow=11;
 
-			Units[m].Skill=5;			
+			unit.Skill=5;			
 
-			Units[m].Hp=Units[m].MaxHp=SP_HP;		// Ｈｐ
+			unit.Hp=unit.MaxHp=SP_HP;		// Ｈｐ
 
-			Units[m].Direction=90.0;					// ９０がos_indx_x=0;
+			unit.Direction=90.0;					// ９０がos_indx_x=0;
 			break;
 		case UnitKind.AirBase:
-			Units[m].SpriteRow=11;
-			Units[m].info[0]=0;					// 
-			Units[m].info[1]=CountPlanesIn(m);		// 現在収容数(飛行甲板上数も含む)
-			Units[m].info[2]=16;					// 最大収容数
-			Units[m].info[3]=0;					// 
-			Units[m].info[4]=0;					// 発進予定機数 ０なら着艦可
-			Units[m].Mode=UnitMode.Move;				// モード（コンバットメニュー）
+			unit.SpriteRow=11;
+			unit.info[0]=0;					// 
+			unit.PlaneCount=CountPlanesIn(m);		// 現在収容数(飛行甲板上数も含む)
+			unit.Capacity=16;					// 最大収容数
+			unit.info[3]=0;					// 
+			unit.info[4]=0;					// 発進予定機数 ０なら着艦可
+			unit.Mode=UnitMode.Move;				// モード（コンバットメニュー）
 
-			Units[m].Skill=5;			
+			unit.Skill=5;			
 
-			Units[m].Hp=Units[m].MaxHp=AP_HP;		// Ｈｐ
+			unit.Hp=unit.MaxHp=AP_HP;		// Ｈｐ
 
 
-			Units[m].Direction=90.0-45.0;					// ９０がos_indx_x=0;
+			unit.Direction=90.0-45.0;					// ９０がos_indx_x=0;
 
 			break;
 
 
 
 		case UnitKind.City:
-			Units[m].SpriteRow=11;
+			unit.SpriteRow=11;
 
-			Units[m].Weapon=0;		// 武装品種
-			Units[m].Ammo=0;		// 数
-			Units[m].MaxAmmo=0;		// 数 全容量
+			unit.Weapon=0;		// 武装品種
+			unit.Ammo=0;		// 数
+			unit.MaxAmmo=0;		// 数 全容量
 
-			Units[m].Direction=0.0;					// ９０がos_indx_x=0;
+			unit.Direction=0.0;					// ９０がos_indx_x=0;
 
-			Units[m].Skill=5;			
-			Units[m].Hp=Units[m].MaxHp=CT1_HP;		// Ｈｐ
+			unit.Skill=5;			
+			unit.Hp=unit.MaxHp=CT1_HP;		// Ｈｐ
 			break;
 
 
 
 		case UnitKind.InfantryBase:
-			Units[m].SpriteRow=11;
+			unit.SpriteRow=11;
 
-			Units[m].Weapon=FireKind.Gun;		// 武装品種
-			Units[m].Ammo=700;		// 数
-			Units[m].MaxAmmo=700;		// 数 全容量
+			unit.Weapon=FireKind.Gun;		// 武装品種
+			unit.Ammo=700;		// 数
+			unit.MaxAmmo=700;		// 数 全容量
 
-			Units[m].Direction=225.0;					// ９０がos_indx_x=0;
+			unit.Direction=225.0;					// ９０がos_indx_x=0;
 
-			Units[m].Skill=5;			
-			Units[m].Hp=Units[m].MaxHp=GF1_HP;		// Ｈｐ
+			unit.Skill=5;			
+			unit.Hp=unit.MaxHp=GF1_HP;		// Ｈｐ
 			break;
 
 
 
 		case UnitKind.Pillboxes:
-			Units[m].SpriteRow=11;
+			unit.SpriteRow=11;
 
-			Units[m].Weapon=FireKind.Gun;		// 武装品種
-			Units[m].Ammo=1500;		// 数
-			Units[m].MaxAmmo=1500;		// 数 全容量
+			unit.Weapon=FireKind.Gun;		// 武装品種
+			unit.Ammo=1500;		// 数
+			unit.MaxAmmo=1500;		// 数 全容量
 
-			Units[m].Direction=180.0;					// ９０がos_indx_x=0;
+			unit.Direction=180.0;					// ９０がos_indx_x=0;
 
-			Units[m].Skill=5;			
-			Units[m].Hp=Units[m].MaxHp=GF2_HP;		// Ｈｐ
+			unit.Skill=5;			
+			unit.Hp=unit.MaxHp=GF2_HP;		// Ｈｐ
 			break;
 		case UnitKind.Fortress:
-			Units[m].SpriteRow=11;
+			unit.SpriteRow=11;
 
-			Units[m].Weapon=FireKind.Gun;		// 武装品種
-			Units[m].Ammo=2000;		// 数
-			Units[m].MaxAmmo=2000;		// 数 全容量
+			unit.Weapon=FireKind.Gun;		// 武装品種
+			unit.Ammo=2000;		// 数
+			unit.MaxAmmo=2000;		// 数 全容量
 
-			Units[m].Direction=135.0;					// ９０がos_indx_x=0;
+			unit.Direction=135.0;					// ９０がos_indx_x=0;
 
-			Units[m].Skill=5;			
-			Units[m].Hp=Units[m].MaxHp=GF3_HP;		// Ｈｐ
+			unit.Skill=5;			
+			unit.Hp=unit.MaxHp=GF3_HP;		// Ｈｐ
 			break;
 		}
 
@@ -1365,28 +1389,28 @@ public void	SetUnitData(int m)
 	// 各ユニットの乱数データをセットします。
 	for( i=0; i<=1; i++)
 		{
-		Units[m].Random250[i]=(short)Random(250);
-		Units[m].Random225[i]=(short)Random(225);
+		unit.Random250[i]=(short)Random(250);
+		unit.Random225[i]=(short)Random(225);
 
-		Units[m].Random200[i]=(short)Random(200);
-		Units[m].Random175[i]=(short)Random(175);
-		Units[m].Random150[i]=(short)Random(150);
-		Units[m].Random125[i]=(short)Random(125);
+		unit.Random200[i]=(short)Random(200);
+		unit.Random175[i]=(short)Random(175);
+		unit.Random150[i]=(short)Random(150);
+		unit.Random125[i]=(short)Random(125);
 
-		Units[m].Random100[i]=(short)Random(100);
-		Units[m].Random80[i]=(short)Random(80);
-		Units[m].Random65[i]=(short)Random(65);
-		Units[m].Random50[i]=(short)Random(50);
-		Units[m].Random40[i]=(short)Random(40);
-		Units[m].Random30[i]=(short)Random(30);
-		Units[m].Random20[i]=(short)Random(20);
-		Units[m].Random10[i]=(short)Random(10);
+		unit.Random100[i]=(short)Random(100);
+		unit.Random80[i]=(short)Random(80);
+		unit.Random65[i]=(short)Random(65);
+		unit.Random50[i]=(short)Random(50);
+		unit.Random40[i]=(short)Random(40);
+		unit.Random30[i]=(short)Random(30);
+		unit.Random20[i]=(short)Random(20);
+		unit.Random10[i]=(short)Random(10);
 		}
 
 
-	Units[m].PathX[0]=Units[m].Position.X;
-	Units[m].PathY[0]=Units[m].Position.Y;
-	Units[m].PathX[1]=MAP_RIGHT+1;
+	unit.PathX[0]=unit.Position.X;
+	unit.PathY[0]=unit.Position.Y;
+	unit.PathX[1]=MAP_RIGHT+1;
 	//unit[m].max_spd*=1.0;
 	}
 
@@ -1453,7 +1477,7 @@ public int		AddUnit(Side side,UnitKind kind,double rx,double ry,double drctn)
 
 	for(m=start;m<=end;m++)
 		{
-		if( Units[m].Side==0 )
+		if( !Units[m].IsUsed )
 			{
 			// まずクリア
 			Units[m].Side=0;
@@ -1572,7 +1596,7 @@ public int		AddUnit2(Side side,UnitKind kind,int type,double rx,double ry,double
 
 	for(m=start;m<=end;m++)
 		{
-		if( Units[m].Side==0 )
+		if( !Units[m].IsUsed )
 			{
 			// まずクリア
 			Units[m].Side=0;
@@ -1669,7 +1693,7 @@ public int		AddPlane(Side side,UnitKind kind,int type,int no,int planes,FireKind
 
 	for(m=start;m<=end && planes!=0 ;m++)
 		{
-		if( Units[m].Side==0 )
+		if( !Units[m].IsUsed )
 			{
 			// あきスペース発見
 
@@ -1681,15 +1705,16 @@ public int		AddPlane(Side side,UnitKind kind,int type,int no,int planes,FireKind
 			park=0;
 			for(n=1;n<=MaxUnitId;n++)
 				{
-				if( Units[n].Side!=0 && Units[n].Category==UnitCategory.Plane && Units[n].info[1]==no && Units[n].PlaneState==UnitState.Parked )
+				ref var unit = ref Units[n];
+				if( unit.IsUsed && unit.Category==UnitCategory.Plane && unit.Carrier==no && unit.PlaneState==UnitState.Parked )
 					{
-					space[Units[n].info[2]]=1;
+					space[unit.ParkingNumber]=1;
 					park++;
 					}
 				}	
 
 
-			if( park >= Units[no].info[2] )
+			if( park >= Units[no].Capacity )
 				return (-planes);
 
 
@@ -1710,15 +1735,15 @@ public int		AddPlane(Side side,UnitKind kind,int type,int no,int planes,FireKind
 			Units[m].Kind=kind;
 			Units[m].Variant=(short)type;
 			Units[m].PlaneState=UnitState.Parked;
-			Units[m].info[1]=no;					// 所属の空母、及び、基地の番号
-			Units[m].info[2]=f;				// 格納庫の位置、及び、その基地の番機番号
+			Units[m].Carrier=no;					// 所属の空母、及び、基地の番号
+			Units[m].ParkingNumber=f;				// 格納庫の位置、及び、その基地の番機番号
 			Units[m].info[3]=0;					// 8
 			Units[m].info[4]=0;					// 発艦予定の機数
 			Units[m].Mode=UnitMode.Move;				// モード（コンバットメニュー）
 			SetParkingPosition(m);
 			Units[m].Stop=1;
 
-			Units[Units[m].info[1]].info[1]++;					// 所属の空母、及び、基地の格納数を増やす｡
+			Units[Units[m].Carrier].info[1]++;					// 所属の空母、及び、基地の格納数を増やす｡
 
 
 			SetUnitData(m);
@@ -4768,9 +4793,10 @@ public void	InitializeGame()
 		// 雲のクリア
 		for(n=0; n<KUMO_MAX/*255*/; n++)
 			{
-			Clouds[n].Used=0;
-			Clouds[n].Position = new WorldPosition(0, 0);
-			Clouds[n].Kind=0;
+			ref var cloud = ref Clouds[n];
+			cloud.Used=0;
+			cloud.Position = new WorldPosition(0, 0);
+			cloud.Kind=0;
 			}
 
 		//最初の雲
@@ -4889,9 +4915,10 @@ public void	InitializeGame()
 	// 全ファイアデータのクリア
 	for(m=0; m<FIRE_MAX/*255*/; m++)
 		{
-		Fires[m].Target=0;
+		ref var fire = ref Fires[m];
+		fire.Target=0;
 		for(n=0;n<=7;n++)
-			Fires[m].info[n]=0;
+			fire.info[n]=0;
 		}
 	MaxFireId=0;
 
@@ -4900,46 +4927,47 @@ public void	InitializeGame()
 //if( sinario!=9 )
 	for(m=0; m<=255; m++)
 		{
-		Units[m].Side=0;
-		Units[m].Position = new WorldPosition(0, 0);
-		Units[m].Category=UnitCategory.None;
-		Units[m].Kind=0;
+		ref var unit = ref Units[m];
+		unit.Side=0;
+		unit.Position = new WorldPosition(0, 0);
+		unit.Category=UnitCategory.None;
+		unit.Kind=0;
 		for(n=0;n<=15;n++)
-			Units[m].info[n]=0;
+			unit.info[n]=0;
 
-		Units[m].SpriteRow=0;
-		Units[m].SpriteColumn=0;
-		Units[m].Direction=0;
-		Units[m].TurnRate=0;
-		Units[m].Speed=0;
-		Units[m].Acceleration=0;
-		Units[m].MaxSpeed=0;
-		Units[m].MinSpeed=0;
-		Units[m].AccelerationChange=0;
-		Units[m].Speed=0;
-		Units[m].Stop=0;
-		Units[m].Supply=0;
-		Units[m].EmergencyFlags[0]=Units[m].EmergencyFlags[1]=0;
-		Units[m].EmergencyDestination=new WorldPosition(0, 0);
+		unit.SpriteRow=0;
+		unit.SpriteColumn=0;
+		unit.Direction=0;
+		unit.TurnRate=0;
+		unit.Speed=0;
+		unit.Acceleration=0;
+		unit.MaxSpeed=0;
+		unit.MinSpeed=0;
+		unit.AccelerationChange=0;
+		unit.Speed=0;
+		unit.Stop=0;
+		unit.Supply=0;
+		unit.EmergencyFlags[0]=unit.EmergencyFlags[1]=0;
+		unit.EmergencyDestination=new WorldPosition(0, 0);
 		//unit[m].pp_now=0;
 
-		Units[m].IsGroupLeader=0;
-		Units[m].GroupLeader=0;
-		Units[m].FormationNumber=0;
-		Units[m].ForGroupLeader=0;
+		unit.IsGroupLeader=0;
+		unit.GroupLeader=0;
+		unit.FormationNumber=0;
+		unit.ForGroupLeader=0;
 
-		Units[m].FormationSpeed=0;
+		unit.FormationSpeed=0;
 
 		for(n=0;n<=7;n++)
 			{
-			Units[m].hp[n]=0;
-			Units[m].arm[n]=0;
+			unit.hp[n]=0;
+			unit.arm[n]=0;
 //			unit[m].arm2[n]=0;
-			Units[m].gas[n]=0;
+			unit.gas[n]=0;
 			}
 		Selections[0][m]=0;
 		Selections[1][m]=0;
-		Units[m].Skill=0;
+		unit.Skill=0;
 		}
 
 
@@ -4974,9 +5002,10 @@ public void	InitializeGame()
 	// 雲のクリア
 	for(n=0; n<KUMO_MAX/*255*/; n++)
 		{
-		Clouds[n].Used=0;
-		Clouds[n].Position = new WorldPosition(0, 0);
-		Clouds[n].Kind=0;
+		ref var cloud = ref Clouds[n];
+		cloud.Used=0;
+		cloud.Position = new WorldPosition(0, 0);
+		cloud.Kind=0;
 		}
 
 	//最初の雲

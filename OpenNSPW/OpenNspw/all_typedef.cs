@@ -91,6 +91,9 @@ public struct	Unit		// 全ての艦船、航空機、地図上の位置
 	[Original("rnd_20")] public Array2<short> Random20; //
 	[Original("rnd_10")] public Array2<short> Random10; //
 
+	// Whether the unit is in the battle: an unused unit has no side.
+	public readonly bool IsUsed => Side != Side.None;
+
 	// The slots of hp, arm and gas by meaning (docs/Refactoring.md, Union slots). They are references to the slots, so
 	// that they can be changed and passed by ref like the slots.
 
@@ -99,8 +102,32 @@ public struct	Unit		// 全ての艦船、航空機、地図上の位置
 	// Planes: flying or parked.
 	[UnscopedRef] public ref UnitState PlaneState => ref Unsafe.As<int, UnitState>(ref info[0]);
 
+	// Bases: 建設期間, the time until the base is built, or 0 once it is.
+	[UnscopedRef] public ref int BuildTime => ref info[0];
+
+	// Planes: 所属の空母、及び、基地の番号, the number of the carrier or air base the plane belongs to.
+	[UnscopedRef] public ref int Carrier => ref info[1];
+
+	// Carriers and air bases: 現在収容数, the planes aboard, with those on the flight deck.
+	[UnscopedRef] public ref int PlaneCount => ref info[1];
+
+	// Planes: 格納庫の位置, the plane's place in its carrier or base.
+	[UnscopedRef] public ref int ParkingNumber => ref info[2];
+
+	// Carriers and air bases: 最大収容数.
+	[UnscopedRef] public ref int Capacity => ref info[2];
+
+	// Carriers and air bases: 発艦予定の機数, the planes about to take off; while it is not 0, no plane can land.
+	[UnscopedRef] public ref int PlanesToLaunch => ref info[4];
+
 	// How the unit moves.
 	[UnscopedRef] public ref UnitMode Mode => ref Unsafe.As<int, UnitMode>(ref info[5]);
+
+	// Carriers and air bases: 着艦, 0 if the next plane may land, 1 if not.
+	[UnscopedRef] public ref int LandingLock => ref info[7];
+
+	// Carriers and air bases: その空母の次機発進許可, 0 if the next plane may take off.
+	[UnscopedRef] public ref int LaunchLock => ref info[8];
 
 	// いわゆるヒットポイント
 	[UnscopedRef] public ref int Hp => ref hp[0];

@@ -1266,16 +1266,17 @@ if( IsEditingMap==0 )
 
 					if( IsEditingMap!=0 && Mode==GameMode.Battle )
 						{
-						if( Units[SelectedUnit].Side!=0 )
+						if( Units[SelectedUnit].IsUsed )
 							{
 							// 空母か空港なら搭載ユニットも消す
 							if( Units[SelectedUnit].Kind==UnitKind.Carrier || Units[SelectedUnit].Kind==UnitKind.LightCarrier || Units[SelectedUnit].Kind==UnitKind.AirBase )
 								{
 								for( i=1;i<=MaxUnitId;i++)
 									{
-									if( Units[i].Side!=0 && Units[i].Category==UnitCategory.Plane && Units[i].PlaneState==UnitState.Parked && Units[i].info[1]==SelectedUnit)
+									ref var unit = ref Units[i];
+									if( unit.IsUsed && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked && unit.Carrier==SelectedUnit)
 										{
-										Units[i].Side=0;
+										unit.Side=0;
 										}
 									}
 								}
@@ -1283,7 +1284,7 @@ if( IsEditingMap==0 )
 							// パーキング中の航空機なら駐機数を減らします。
 							if( Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked )
 								{
-								Units[Units[SelectedUnit].info[1]].info[1]--;	// 現在格納数
+								Units[Units[SelectedUnit].Carrier].info[1]--;	// 現在格納数
 								}
 
 
@@ -1346,7 +1347,8 @@ if( IsEditingMap==0 )
 							m=0;
 							for(i=1;i<=MaxUnitId;i++)
 								{
-								if( Units[i].Side!=0 && Units[i].Position.X==wrk_x && Units[i].Position.Y==wrk_y )
+								ref var unit = ref Units[i];
+								if( unit.IsUsed && unit.Position.X==wrk_x && unit.Position.Y==wrk_y )
 									{
 									m++;
 									break;
@@ -1407,7 +1409,7 @@ if( IsEditingMap==0 )
 
 				case 0x31:	// 1
 					// ユニットを回転させます。
-					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].Side!=0  && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
+					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed  && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
 						Units[SelectedUnit].Direction= (int)(Units[SelectedUnit].Direction+45.0)%360 ;
 
@@ -1419,7 +1421,7 @@ if( IsEditingMap==0 )
 
 				case 0x32:	// 2
 					// 航空機の武装を変えます。
-					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].Side!=0  )
+					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed  )
 						{
 						if( Units[SelectedUnit].Kind==UnitKind.Attacker )
 							{
@@ -1484,7 +1486,7 @@ if( IsEditingMap==0 )
 
 				case 0x33:	// 3
 					// ＨＰを増やす。
-					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].Side!=0 && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ) )
+					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ) )
 						{
 						if( Units[SelectedUnit].Hp < Units[SelectedUnit].MaxHp )
 							{
@@ -1497,7 +1499,7 @@ if( IsEditingMap==0 )
 
 				case 0x34:	// 4
 					// ＨＰを増やす。
-					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].Side!=0 && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
+					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
 						Units[SelectedUnit].Hp--;
 						PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
@@ -1508,7 +1510,7 @@ if( IsEditingMap==0 )
 
 				case 0x35:	// 5
 					// ガスをふやす
-					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].Side!=0 && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
+					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
 						if( Units[SelectedUnit].Fuel < 100 )
 							{
@@ -1520,7 +1522,7 @@ if( IsEditingMap==0 )
 
 				case 0x36:	// 6
 					// ガスをへらす
-					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].Side!=0 && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
+					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
 						if( Units[SelectedUnit].Fuel!=0  )
 							{
@@ -1533,7 +1535,7 @@ if( IsEditingMap==0 )
 
 				case 0x37:	// 7
 					// 弾数をふやす
-					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].Side!=0 && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && Units[SelectedUnit].Weapon!=FireKind.Unarmed  && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
+					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && Units[SelectedUnit].Weapon!=FireKind.Unarmed  && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
 						if( Units[SelectedUnit].Ammo<Units[SelectedUnit].MaxAmmo  )
 							{
@@ -1545,7 +1547,7 @@ if( IsEditingMap==0 )
 
 				case 0x38:	// 8
 					// 弾数をへらす
-					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].Side!=0 && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && Units[SelectedUnit].Weapon!=FireKind.Unarmed  && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
+					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && Units[SelectedUnit].Weapon!=FireKind.Unarmed  && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
 						if( Units[SelectedUnit].Ammo!=0  )
 							{

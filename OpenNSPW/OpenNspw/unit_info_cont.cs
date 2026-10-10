@@ -286,7 +286,7 @@ rival_mode=mode;
 
 
 			// 損傷
-			if( Units[UnitInfoPanel[3]].Side!=0 && ( Units[UnitInfoPanel[3]].Kind==UnitKind.AirBase||Units[UnitInfoPanel[3]].Kind==UnitKind.NavalBase||Units[UnitInfoPanel[3]].Kind==UnitKind.InfantryBase||Units[UnitInfoPanel[3]].Kind==UnitKind.Pillboxes||Units[UnitInfoPanel[3]].Kind==UnitKind.Fortress ) && Units[UnitInfoPanel[3]].info[0]!=0 && Units[UnitInfoPanel[3]].Hp==Units[UnitInfoPanel[3]].MaxHp
+			if( Units[UnitInfoPanel[3]].IsUsed && ( Units[UnitInfoPanel[3]].Kind==UnitKind.AirBase||Units[UnitInfoPanel[3]].Kind==UnitKind.NavalBase||Units[UnitInfoPanel[3]].Kind==UnitKind.InfantryBase||Units[UnitInfoPanel[3]].Kind==UnitKind.Pillboxes||Units[UnitInfoPanel[3]].Kind==UnitKind.Fortress ) && Units[UnitInfoPanel[3]].info[0]!=0 && Units[UnitInfoPanel[3]].Hp==Units[UnitInfoPanel[3]].MaxHp
 				)
 				{
 				len[1] = wsprintf(ach[1], "工事:%d", Units[UnitInfoPanel[3]].info[0] );
@@ -568,13 +568,14 @@ else
 				{
 				for( i=1; i<=MaxUnitId; i++)
 					{
-					if( Units[i].Side==LocalSide && Units[i].Kind==UnitKind.NavalBase && Units[i].info[0]==0 )
+					ref var unit = ref Units[i];
+					if( unit.Side==LocalSide && unit.Kind==UnitKind.NavalBase && unit.info[0]==0 )
 						{
 						// ptin dbg
-						wrk_rect.top=(int)Units[i].Position.Y+40+240;
-						wrk_rect.right=(int)Units[i].Position.X+40+240;
-						wrk_rect.bottom=(int)Units[i].Position.Y-40-240;
-						wrk_rect.left=(int)Units[i].Position.X-40-240;
+						wrk_rect.top=(int)unit.Position.Y+40+240;
+						wrk_rect.right=(int)unit.Position.X+40+240;
+						wrk_rect.bottom=(int)unit.Position.Y-40-240;
+						wrk_rect.left=(int)unit.Position.X-40-240;
 
 						if( PointInRect3( ref wrk_rect, (int)Units[SelectedUnit].Position.X, (int)Units[SelectedUnit].Position.Y )!=0 )
 							{
@@ -598,8 +599,9 @@ else
 				n=0;
 				for(g=1;g<=MaxUnitId;g++)
 					{
-					if( Units[g].Side!=0 && ( Units[g].GroupLeader==SelectedUnit || g==SelectedUnit || Selections[1][g]!=0) )
-						if( Units[g].PlaneState!=UnitState.Flying )
+					ref var unit = ref Units[g];
+					if( unit.IsUsed && ( unit.GroupLeader==SelectedUnit || g==SelectedUnit || Selections[1][g]!=0) )
+						if( unit.PlaneState!=UnitState.Flying )
 							{
 							n=1; break;
 							}
@@ -964,7 +966,7 @@ else
 			n=0;
 			for( m=start; m<=end; m++)
 				{
-				if(Units[m].Side==0)
+				if(!Units[m].IsUsed)
 					{
 					n++;
 					}								
@@ -1414,18 +1416,19 @@ public void	DrawMinimap()
 
 	for(m=1; m<=MaxUnitId; m++)
 		{
+		ref var unit = ref Units[m];
 
-		if( Units[m].Side==LocalSide  &&   !( Units[m].Position.Y>MAP_TOP || Units[m].Position.Y<MAP_BOTTOM || Units[m].Position.X<MAP_LEFT || Units[m].Position.X>MAP_RIGHT )    && !(Units[m].PlaneState==UnitState.Parked) && !(Units[m].Category==UnitCategory.Plane && (FrameCount%4)==0))
+		if( unit.Side==LocalSide  &&   !( unit.Position.Y>MAP_TOP || unit.Position.Y<MAP_BOTTOM || unit.Position.X<MAP_LEFT || unit.Position.X>MAP_RIGHT )    && !(unit.PlaneState==UnitState.Parked) && !(unit.Category==UnitCategory.Plane && (FrameCount%4)==0))
 			{
 			// マイユニット
-			if( Units[m].Position.X >= 0 )
-				dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(Units[m].Position.X-40))/80)*map_close;
+			if( unit.Position.X >= 0 )
+				dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*map_close;
 			else
-				dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(Units[m].Position.X-40))/80)*map_close;
-			if( Units[m].Position.Y >= 0 )
-				dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(Units[m].Position.Y+40))/80)*map_close;
+				dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*map_close;
+			if( unit.Position.Y >= 0 )
+				dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*map_close;
 			else
-				dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(Units[m].Position.Y+40))/80)*map_close;
+				dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*map_close;
 
 			dstn_rect.right=dstn_rect.left+2;
 			dstn_rect.bottom=dstn_rect.top+2;
@@ -1448,32 +1451,32 @@ public void	DrawMinimap()
 			}
 
 
-		if( Units[m].Side!=0 && Units[m].Side!=LocalSide && !( Units[m].Position.Y>MAP_TOP || Units[m].Position.Y<MAP_BOTTOM || Units[m].Position.X<MAP_LEFT || Units[m].Position.X>MAP_RIGHT ) && !(Units[m].PlaneState==UnitState.Parked) && Units[m].Found!=0 && !(Units[m].Category==UnitCategory.Plane && (FrameCount%4)==0) )
+		if( unit.IsUsed && unit.Side!=LocalSide && !( unit.Position.Y>MAP_TOP || unit.Position.Y<MAP_BOTTOM || unit.Position.X<MAP_LEFT || unit.Position.X>MAP_RIGHT ) && !(unit.PlaneState==UnitState.Parked) && unit.Found!=0 && !(unit.Category==UnitCategory.Plane && (FrameCount%4)==0) )
 			{
 			// エネユニット
-			if( Units[m].Kind==UnitKind.Submarine && Units[m].info[6]!=0 )
+			if( unit.Kind==UnitKind.Submarine && unit.info[6]!=0 )
 				{
 				// 潜航中のおおよそ潜水艦
-				if( Units[m].info[7] >= 0 )
-					dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(Units[m].info[7]-40))/80)*map_close;
+				if( unit.info[7] >= 0 )
+					dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit.info[7]-40))/80)*map_close;
 				else
-					dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(Units[m].info[7]-40))/80)*map_close;
-				if( Units[m].info[8] >= 0 )
-					dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(Units[m].info[8]+40))/80)*map_close;
+					dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit.info[7]-40))/80)*map_close;
+				if( unit.info[8] >= 0 )
+					dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit.info[8]+40))/80)*map_close;
 				else
-					dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(Units[m].info[8]+40))/80)*map_close;
+					dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit.info[8]+40))/80)*map_close;
 				}
 			else
 				{
 				// 艦船基地航空機
-				if( Units[m].Position.X >= 0 )
-					dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(Units[m].Position.X-40))/80)*map_close;
+				if( unit.Position.X >= 0 )
+					dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*map_close;
 				else
-					dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(Units[m].Position.X-40))/80)*map_close;
-				if( Units[m].Position.Y >= 0 )
-					dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(Units[m].Position.Y+40))/80)*map_close;
+					dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*map_close;
+				if( unit.Position.Y >= 0 )
+					dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*map_close;
 				else
-					dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(Units[m].Position.Y+40))/80)*map_close;
+					dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*map_close;
 				}
 			dstn_rect.right=dstn_rect.left+2;
 			dstn_rect.bottom=dstn_rect.top+2;
@@ -1597,47 +1600,48 @@ public void	ApplyUnitInfoInput()
 				{
 				for(g=1;g<=MaxUnitId;g++)
 					{
-					if( Units[g].Side!=0 && ( Units[g].GroupLeader==tmp_slct_unit || g==tmp_slct_unit || Selections[e][g]!=0) )
+					ref var unit = ref Units[g];
+					if( unit.IsUsed && ( unit.GroupLeader==tmp_slct_unit || g==tmp_slct_unit || Selections[e][g]!=0) )
 						{
 						// 決定後の書く個別の処理
-						switch( Units[g].Kind )
+						switch( unit.Kind )
 							{
 							case UnitKind.Fighter: case UnitKind.Attacker: case UnitKind.Bomber:	
 								if(  menu2==CombatMenuItem.ArmWithTorpedo || menu2==CombatMenuItem.ArmWithBomb || menu2==CombatMenuItem.Disarm  )
 									{	
-									if(Units[g].Kind==UnitKind.Attacker || (Units[g].Kind==UnitKind.Bomber && ( (menu2==CombatMenuItem.ArmWithTorpedo && Units[g].Side==Side.Japan ) || menu2==CombatMenuItem.ArmWithBomb || menu2==CombatMenuItem.Disarm) ))
+									if(unit.Kind==UnitKind.Attacker || (unit.Kind==UnitKind.Bomber && ( (menu2==CombatMenuItem.ArmWithTorpedo && unit.Side==Side.Japan ) || menu2==CombatMenuItem.ArmWithBomb || menu2==CombatMenuItem.Disarm) ))
 										{		// 収容中の攻撃機だったばあい
-										Units[g].Weapon=(FireKind)menu2;
+										unit.Weapon=(FireKind)menu2;
 
 
 										if(menu2==CombatMenuItem.ArmWithTorpedo)
-											Units[g].Ammo=1;		// 魚雷の場合は常に１、弾数。
+											unit.Ammo=1;		// 魚雷の場合は常に１、弾数。
 										else
-											Units[g].Ammo=Units[g].MaxAmmo;
+											unit.Ammo=unit.MaxAmmo;
 
 										if(menu2==CombatMenuItem.Disarm)
-											Units[g].ReloadTime=1;
+											unit.ReloadTime=1;
 										else
-											Units[g].ReloadTime=RDY_SPAN;
+											unit.ReloadTime=RDY_SPAN;
 										}
 									}
 								else
 									{
 //									unit[g].info[5]=menu2;
-									if( (Units[g].Kind==UnitKind.Fighter ) && menu2==CombatMenuItem.Return  && Units[g].PlaneState==UnitState.Flying )
+									if( (unit.Kind==UnitKind.Fighter ) && menu2==CombatMenuItem.Return  && unit.PlaneState==UnitState.Flying )
 										{
-										Units[g].Mode=(UnitMode)menu2;
+										unit.Mode=(UnitMode)menu2;
 										}
-									if( (Units[g].Kind==UnitKind.Attacker || Units[g].Kind==UnitKind.Bomber ) && menu2==CombatMenuItem.Return )
+									if( (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber ) && menu2==CombatMenuItem.Return )
 										{
-										Units[g].Ammo=0;		// 帰投選択時に攻撃機なら武装投棄
-										Units[g].Target=0;		// 帰投選択時に攻撃機攻撃目標放棄
-										Units[g].Mode=(UnitMode)menu2;
+										unit.Ammo=0;		// 帰投選択時に攻撃機なら武装投棄
+										unit.Target=0;		// 帰投選択時に攻撃機攻撃目標放棄
+										unit.Mode=(UnitMode)menu2;
 										}
-									if( Units[g].Category==UnitCategory.Plane && menu2==CombatMenuItem.Move && Units[g].PlaneState==UnitState.Flying  )
+									if( unit.Category==UnitCategory.Plane && menu2==CombatMenuItem.Move && unit.PlaneState==UnitState.Flying  )
 										{
-										Units[g].info[3]=0;		// 着艦準備をクリア
-										Units[g].Mode=(UnitMode)menu2;
+										unit.info[3]=0;		// 着艦準備をクリア
+										unit.Mode=(UnitMode)menu2;
 										}
 									}
 								break;

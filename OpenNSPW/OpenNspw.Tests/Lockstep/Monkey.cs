@@ -74,7 +74,7 @@ internal sealed class Monkey(LockstepGame game, uint seed)
 		for (var n = 1; n <= nspw.MaxUnitId; n++)
 		{
 			ref Unit other = ref nspw.Units[n];
-			if (other.Side != 0 && other.Side != nspw.LocalSide)
+			if (other.IsUsed && other.Side != nspw.LocalSide)
 			{
 				var distance = Math.Abs(other.Position.X - unit.Position.X) + Math.Abs(other.Position.Y - unit.Position.Y);
 				if (distance < bestDistance)

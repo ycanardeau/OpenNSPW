@@ -13,11 +13,25 @@ using OpenNspw.Porter;
 //       order given, each after the projects it uses. The projects must be built.
 //   OpenNspw.Porter split-fields <project directory>
 //       Puts each field of the project on a line of its own (see FieldSplitter).
+//   OpenNspw.Porter ref-locals <project directory> [<method>,<method>...]
+//       Gives the element of a table that a loop works on a ref local, and the unit that the int parameter of the named
+//       methods numbers (see RefLocals).
 
 if (args.Length >= 3 && args[0] == "rename")
 {
 	var renamer = new Renamer(new CSharpProject(args[1]), [.. args[3..].Select(d => new CSharpProject(d))], Renamer.ReadRenames(args[2]));
 	foreach (var path in renamer.Run())
+	{
+		Console.WriteLine(path);
+	}
+
+	return 0;
+}
+
+if (args.Length is 2 or 3 && args[0] == "ref-locals")
+{
+	var methods = args.Length == 3 ? args[2].Split(',').ToHashSet() : [];
+	foreach (var path in new RefLocals(new CSharpProject(args[1]), methods).Run())
 	{
 		Console.WriteLine(path);
 	}

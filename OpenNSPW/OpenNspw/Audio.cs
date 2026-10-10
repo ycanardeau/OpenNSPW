@@ -551,7 +551,7 @@ return;
 		flg=0;
 		for(n=1;n<=MaxUnitId && flg==0 ;n++)
 			{
-			if( Units[n].Side!=0 && Units[n].Side==LocalSide && Units[n].PlaneState!=UnitState.Parked )
+			if( Units[n].IsUsed && Units[n].Side==LocalSide && Units[n].PlaneState!=UnitState.Parked )
 				{
 				// マイユニットからこのエフェクトが見えるか
 				// 現地点からユニット地点への距離
