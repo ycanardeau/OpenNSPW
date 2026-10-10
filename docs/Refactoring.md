@@ -283,6 +283,8 @@ Done for the structs, their fields, the recorded globals and the game's function
 ### 8. Functions
 Per function, starting with the most covered: `ref` locals, local names, iteration helpers, return types, then extracting smaller functions. Commented-out code is removed per file before its functions are refactored.
 
+In progress. The longest functions are split with the `extract` command of `OpenNspw.Porter`: the battle loop (`UpdateBattle`, `MoveUnit`, `ControlFiring`, `SendOrders`), the firing and the fires, the effects, the screens (`UpdateGameSetting`, `UpdateConfigSetting`, `UpdateUnitInfo`, `DrawBattleArea`), the input, the network handler, `SetUnitData` and `InitializeGame`, with copies of the same code made one method where they were the same but for a value (`TakeDetour`, `IsLandAt`, `IsShipAt`, `UnpackSelections`). The original's repeated computations are helpers that compute exactly the same, with bit-for-bit tests: `SinDegrees` and `CosDegrees` (`sin(x*a_PI)`), `Direction` (the angle of a vector from 0 to 360) and `Distance` (the folded angle and `|dx|/cos`), the last placed by the `distances` command where data flow analysis allows it. The `element-refs` command gives new effects and fires `ref` locals. Local names, iteration helpers and return types are not done yet. `LaunchMultiplayerGame` keeps its `goto`s, from the DirectPlay sample. Functions with an inactive `#if LNGG_VER` branch (the English version) keep it.
+
 ### 9. Splitting the partial class
 Into classes by responsibility, with C# conventions and `CLAUDE.md`. The emulator's region table is generated at this point at the latest.
 
