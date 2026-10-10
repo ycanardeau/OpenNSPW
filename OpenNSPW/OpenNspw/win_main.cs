@@ -60,7 +60,7 @@ public HFONT gameFont_2;
 
 // ゲーム用
 [Original("cc_count")] public int Tick;
-[Original("key_cndtn")] public int Buttons; // パッドの状態
+[Original("key_cndtn")] public InputButtons Buttons; // パッドの状態
 
 //POINT	ptCursor;		// 純粋なマウスカーソルの位置
 
@@ -268,7 +268,7 @@ public void	UpdateFrame()
 		chara_loop=1;
 	else if( Mode==GameMode.Battle )
 		{
-		if( (Buttons&SPACE)!=0 )
+		if( Buttons.HasFlag(InputButtons.Space) )
 			chara_loop=20;
 		else
 			chara_loop=GameSpeed;
