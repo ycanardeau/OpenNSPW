@@ -911,7 +911,7 @@ if( IsEditingMap==0 )
 							// パーキング中の航空機なら駐機数を減らします。
 							if( Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked )
 								{
-								Units[Units[SelectedUnit].Carrier].info[1]--;	// 現在格納数
+								Units[Units[SelectedUnit].Carrier].PlaneCount--;	// 現在格納数
 								}
 
 							Units[SelectedUnit].Side=0;

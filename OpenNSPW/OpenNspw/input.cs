@@ -220,8 +220,8 @@ public void	HandleInput()
 			m=MoveOrders[e].Unit;
 			if( Units[m].Category==UnitCategory.Plane && Units[m].PlaneState==UnitState.Parked )
 				{
-				Units[Units[m].Carrier].info[4]=0;	// 空母なら これがオンで発艦中
-				Units[Units[m].Carrier].info[7]=0;	// 空母ならこの数値で甲板上の右左
+				Units[Units[m].Carrier].PlanesToLaunch=0;	// 空母なら これがオンで発艦中
+				Units[Units[m].Carrier].LandingLock=0;	// 空母ならこの数値で甲板上の右左 (the slot of the landing lock now)
 				SelectedUnit=0;
 				CombatMenuKind=0;
 				CombatMenuSelection=CombatMenuItem.None;
@@ -870,8 +870,8 @@ public void	ApplyOrders()
 
 				if( Units[m].Category==UnitCategory.Plane && Units[m].PlaneState==UnitState.Parked )
 					{
-					Units[Units[m].Carrier].info[4]=0;	// 空母なら これがオンで発艦中
-					Units[Units[m].Carrier].info[7]=0;	// 空母ならこの数値で甲板上の右左
+					Units[Units[m].Carrier].PlanesToLaunch=0;	// 空母なら これがオンで発艦中
+					Units[Units[m].Carrier].LandingLock=0;	// 空母ならこの数値で甲板上の右左 (the slot of the landing lock now)
 					}
 
 				for( s=0; s<=MaxUnitId; s++)
