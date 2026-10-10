@@ -3900,11 +3900,11 @@ public void MakeTerrainSurface()
 	RECT	dstn_rect,src_rect;
 
 	// マップデータから陸地をマップに描画します
-	dstn_rect.left=Sprites[SpriteId.Minimap].base_x;
-	dstn_rect.top=Sprites[SpriteId.Minimap].base_y;
+	dstn_rect.left=Sprites[SpriteId.Minimap].SheetX;
+	dstn_rect.top=Sprites[SpriteId.Minimap].SheetY;
 
-	src_rect.left = Sprites[SpriteId.Minimap].base_x+306;
-	src_rect.top = Sprites[SpriteId.Minimap].base_y;
+	src_rect.left = Sprites[SpriteId.Minimap].SheetX+306;
+	src_rect.top = Sprites[SpriteId.Minimap].SheetY;
 	src_rect.right = src_rect.left+255;
 	src_rect.bottom = src_rect.top+199;
 
@@ -3920,11 +3920,11 @@ public void MakeTerrainSurface()
 				{
 
 				// 陸地有り
-				dstn_rect.left=Sprites[SpriteId.Minimap].base_x+8+n-0;
-				dstn_rect.top=Sprites[SpriteId.Minimap].base_y+8+m-0;
+				dstn_rect.left=Sprites[SpriteId.Minimap].SheetX+8+n-0;
+				dstn_rect.top=Sprites[SpriteId.Minimap].SheetY+8+m-0;
 
-				src_rect.left = Sprites[SpriteId.Minimap].base_x+270;
-				src_rect.top = Sprites[SpriteId.Minimap].base_y+110;
+				src_rect.left = Sprites[SpriteId.Minimap].SheetX+270;
+				src_rect.top = Sprites[SpriteId.Minimap].SheetY+110;
 
 				src_rect.right = src_rect.left+2;
 				src_rect.bottom = src_rect.top+2;
