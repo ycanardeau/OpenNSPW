@@ -978,22 +978,7 @@ public void	SetShipFormation( int s )
 	// リーダー艦からの距離を求めます
 	wrk_x=Units[s].Position.X-Units[Units[s].GroupLeader].Position.X;
 	wrk_y=Units[s].Position.Y-Units[Units[s].GroupLeader].Position.Y;
-	if(wrk_x==0)	wrk_x=1;
-	if(wrk_y==0)	wrk_y=1;
-
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
-
-	if(wrk_x<0)
-		wrk_x=0-wrk_x;
-	if(wrk_y<0)
-		wrk_y=0-wrk_y;
-	if(drctn>=180)
-		drctn=drctn-180;
-	if(drctn>=90)
-		drctn=90-(drctn-90);
-	Units[s].DistanceToLeader=(wrk_x)/(CosDegrees(drctn));
+	Units[s].DistanceToLeader=Distance(wrk_x, wrk_y);
 
 	}
 

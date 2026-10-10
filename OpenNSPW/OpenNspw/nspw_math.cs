@@ -580,4 +580,26 @@ public static class nspw_math
 			return (z - pi_lo) - pi;
 		}
 	}
+
+	// The length of the vector (dx, dy), as the original computes it everywhere: the angle of the vector, folded into
+	// 0 to 90 degrees, and |dx| divided by its cosine. A dx or dy of 0 counts as 1.
+	public static double Distance(double dx, double dy)
+	{
+		double drctn;
+
+		if(dx==0)	dx=1;
+		if(dy==0)	dy=1;
+		drctn=atan2(dy,dx)*all_head.RAD_to;
+		if(drctn<0)
+			drctn=360+drctn;
+		if(dx<0)
+			dx=0-dx;
+		if(dy<0)
+			dy=0-dy;
+		if(drctn>=180)
+			drctn=drctn-180;
+		if(drctn>=90)
+			drctn=90-(drctn-90);
+		return dx/CosDegrees(drctn);
+	}
 }

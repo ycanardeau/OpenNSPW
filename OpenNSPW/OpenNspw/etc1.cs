@@ -261,21 +261,7 @@ private bool LandCargo(ref Unit unit, FireKind kind, int m)
 		// 距離を求めます
 		wrk_x=unit.Position.X-(double)unit.LandingX;
 		wrk_y=unit.Position.Y-(double)unit.LandingY;
-		if(wrk_x==0)	wrk_x=1;
-		if(wrk_y==0)	wrk_y=1;
-
-		drctn=atan2(wrk_y,wrk_x)*RAD_to;
-		if(drctn<0)
-			drctn=360+drctn;
-		if(wrk_x<0)
-			wrk_x=0-wrk_x;
-		if(wrk_y<0)
-			wrk_y=0-wrk_y;
-		if(drctn>=180)
-			drctn=drctn-180;
-		if(drctn>=90)
-			drctn=90-(drctn-90);
-		dstc=(wrk_x)/(CosDegrees(drctn));
+		dstc=Distance(wrk_x, wrk_y);
 
 #if NSPW_THE_NET
 		if( dstc>=0 && dstc<=160 )
@@ -360,20 +346,7 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double drctn2, re
 			// 攻撃地点から攻撃目標地点への距離
 			wrk_x=other.Position.X-unit.Position.X;
 			wrk_y=other.Position.Y-unit.Position.Y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			turn=(wrk_x)/(CosDegrees(drctn));
+			turn=Distance(wrk_x, wrk_y);
 			turn=turn/10.0;
 
 			// 攻撃地点から攻撃目標地点への絶対方位、方位角
@@ -408,20 +381,7 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double drctn2, re
 			// 攻撃地点から攻撃目標地点への距離
 			wrk_x=wrk_x2-unit.Position.X;
 			wrk_y=wrk_y2-unit.Position.Y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(CosDegrees(drctn));
+			dstc=Distance(wrk_x, wrk_y);
 
 			if( dstc>=40 && dstc<=300 )
 				{
@@ -566,20 +526,7 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rng,
 			// 攻撃地点から攻撃目標地点への距離
 			wrk_x=other.Position.X-unit.Position.X;
 			wrk_y=other.Position.Y-unit.Position.Y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			turn=(wrk_x)/(CosDegrees(drctn));
+			turn=Distance(wrk_x, wrk_y);
 			turn=turn/10.0;
 
 			// 敵の未来位置を求めます。
@@ -606,21 +553,7 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rng,
 			// 攻撃地点から攻撃目標地点への距離
 			wrk_x=wrk_x2-unit.Position.X;
 			wrk_y=wrk_y2-unit.Position.Y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(CosDegrees(drctn));
+			dstc=Distance(wrk_x, wrk_y);
 
 			switch( unit.Kind )
 				{
@@ -758,20 +691,7 @@ private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double drctn2, Fire
 			// 攻撃地点から攻撃目標地点への距離
 			wrk_x=other.Position.X-unit.Position.X;
 			wrk_y=other.Position.Y-unit.Position.Y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			turn=(wrk_x)/(CosDegrees(drctn));
+			turn=Distance(wrk_x, wrk_y);
 			turn=turn/TPD_SPD;							// 撃つ弾の速度で割る
 
 			// 攻撃地点から攻撃目標地点への絶対方位、方位角
@@ -809,20 +729,7 @@ private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double drctn2, Fire
 			// 攻撃地点から攻撃目標地点への距離
 			wrk_x=wrk_x2-unit.Position.X;
 			wrk_y=wrk_y2-unit.Position.Y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(CosDegrees(drctn));
+			dstc=Distance(wrk_x, wrk_y);
 
 			if( (dstc>=100 && dstc<=(500+(unit.Side==Side.Japan ? 1 : 0)*100)) && ((drctn3>=45&&drctn3<=135)||(drctn3>=225&&drctn3<=315)) )
 				{
@@ -954,20 +861,7 @@ private bool ShipFireTorpedoAtTarget(int trgt, ref Unit unit, ref double drctn2,
 		// 攻撃地点から攻撃目標地点への距離
 		wrk_x=Units[n].Position.X-unit.Position.X;
 		wrk_y=Units[n].Position.Y-unit.Position.Y;
-		if(wrk_x==0)	wrk_x=1;
-		if(wrk_y==0)	wrk_y=1;
-		drctn=atan2(wrk_y,wrk_x)*RAD_to;
-		if(drctn<0)
-			drctn=360+drctn;
-		if(wrk_x<0)
-			wrk_x=0-wrk_x;
-		if(wrk_y<0)
-			wrk_y=0-wrk_y;
-		if(drctn>=180)
-			drctn=drctn-180;
-		if(drctn>=90)
-			drctn=90-(drctn-90);
-		turn=(wrk_x)/(CosDegrees(drctn));
+		turn=Distance(wrk_x, wrk_y);
 		turn=turn/TPD_SPD;							// 撃つ弾の速度で割る
 
 		// 攻撃地点から攻撃目標地点への絶対方位、方位角
@@ -993,20 +887,7 @@ private bool ShipFireTorpedoAtTarget(int trgt, ref Unit unit, ref double drctn2,
 		// 攻撃地点から攻撃目標地点への距離
 		wrk_x=wrk_x2-unit.Position.X;
 		wrk_y=wrk_y2-unit.Position.Y;
-		if(wrk_x==0)	wrk_x=1;
-		if(wrk_y==0)	wrk_y=1;
-		drctn=atan2(wrk_y,wrk_x)*RAD_to;
-		if(drctn<0)
-			drctn=360+drctn;
-		if(wrk_x<0)
-			wrk_x=0-wrk_x;
-		if(wrk_y<0)
-			wrk_y=0-wrk_y;
-		if(drctn>=180)
-			drctn=drctn-180;
-		if(drctn>=90)
-			drctn=90-(drctn-90);
-		dstc=(wrk_x)/(CosDegrees(drctn));
+		dstc=Distance(wrk_x, wrk_y);
 
 		if( (dstc>=100 && dstc<=(550+(unit.Side==Side.Japan ? 1 : 0)*100)) && (drctn3<=5 || drctn3>=355) )
 			{
@@ -1121,20 +1002,7 @@ private bool ShipFireAntiAircraftShellAtTarget(int trgt, ref Unit unit, ref int 
 
 	wrk_x=Units[n].Position.X-unit.Position.X;
 	wrk_y=Units[n].Position.Y-unit.Position.Y;
-	if(wrk_x==0)	wrk_x=1;
-	if(wrk_y==0)	wrk_y=1;
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
-	if(wrk_x<0)
-		wrk_x=0-wrk_x;
-	if(wrk_y<0)
-		wrk_y=0-wrk_y;
-	if(drctn>=180)
-		drctn=drctn-180;
-	if(drctn>=90)
-		drctn=90-(drctn-90);
-	turn=(wrk_x)/(CosDegrees(drctn));
+	turn=Distance(wrk_x, wrk_y);
 	turn=turn/10.0;
 
 	// ターゲットの未来位置を求めます。
@@ -1162,21 +1030,7 @@ private bool ShipFireAntiAircraftShellAtTarget(int trgt, ref Unit unit, ref int 
 	// 攻撃地点から攻撃目標地点への距離
 	wrk_x=wrk_x2-unit.Position.X;
 	wrk_y=wrk_y2-unit.Position.Y;
-	if(wrk_x==0)	wrk_x=1;
-	if(wrk_y==0)	wrk_y=1;
-
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
-	if(wrk_x<0)
-		wrk_x=0-wrk_x;
-	if(wrk_y<0)
-		wrk_y=0-wrk_y;
-	if(drctn>=180)
-		drctn=drctn-180;
-	if(drctn>=90)
-		drctn=90-(drctn-90);
-	dstc=(wrk_x)/(CosDegrees(drctn));
+	dstc=Distance(wrk_x, wrk_y);
 
 	switch( unit.Kind )
 		{
@@ -1259,20 +1113,7 @@ private bool ShipFireAntiAircraftShellWithoutTarget(ref Unit unit, ref double dr
 			// 攻撃地点から攻撃目標地点への距離
 			wrk_x=other.Position.X-unit.Position.X;
 			wrk_y=other.Position.Y-unit.Position.Y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			turn=(wrk_x)/(CosDegrees(drctn));
+			turn=Distance(wrk_x, wrk_y);
 			turn=turn/10.0;
 
 			// 攻撃地点から攻撃目標地点への絶対方位、方位角
@@ -1307,20 +1148,7 @@ private bool ShipFireAntiAircraftShellWithoutTarget(ref Unit unit, ref double dr
 			// 攻撃地点から攻撃目標地点への距離
 			wrk_x=wrk_x2-unit.Position.X;
 			wrk_y=wrk_y2-unit.Position.Y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(CosDegrees(drctn));
+			dstc=Distance(wrk_x, wrk_y);
 
 			switch( unit.Kind )
 				{
@@ -1406,20 +1234,7 @@ private bool ShipFireGunAtTarget(int trgt, ref Unit unit, FireKind kind, ref int
 	// 攻撃地点から攻撃目標地点への距離
 	wrk_x=Units[n].Position.X-unit.Position.X;
 	wrk_y=Units[n].Position.Y-unit.Position.Y;
-	if(wrk_x==0)	wrk_x=1;
-	if(wrk_y==0)	wrk_y=1;
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
-	if(wrk_x<0)
-		wrk_x=0-wrk_x;
-	if(wrk_y<0)
-		wrk_y=0-wrk_y;
-	if(drctn>=180)
-		drctn=drctn-180;
-	if(drctn>=90)
-		drctn=90-(drctn-90);
-	turn=(wrk_x)/(CosDegrees(drctn));
+	turn=Distance(wrk_x, wrk_y);
 	turn=turn/10.0;
 
 	// ターゲットの未来位置を求めます。
@@ -1447,21 +1262,7 @@ private bool ShipFireGunAtTarget(int trgt, ref Unit unit, FireKind kind, ref int
 	// 攻撃地点から攻撃目標地点への距離
 	wrk_x=wrk_x2-unit.Position.X;
 	wrk_y=wrk_y2-unit.Position.Y;
-	if(wrk_x==0)	wrk_x=1;
-	if(wrk_y==0)	wrk_y=1;
-
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
-	if(wrk_x<0)
-		wrk_x=0-wrk_x;
-	if(wrk_y<0)
-		wrk_y=0-wrk_y;
-	if(drctn>=180)
-		drctn=drctn-180;
-	if(drctn>=90)
-		drctn=90-(drctn-90);
-	dstc=(wrk_x)/(CosDegrees(drctn));
+	dstc=Distance(wrk_x, wrk_y);
 
 	// 水上艦への射程距離
 	switch( unit.Kind )
@@ -1616,20 +1417,7 @@ private bool ShipFireBullet(ref int trgt, ref Unit unit, ref double drctn2, Fire
 			// 攻撃地点から攻撃目標地点への距離
 			wrk_x=other.Position.X-unit.Position.X;
 			wrk_y=other.Position.Y-unit.Position.Y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(CosDegrees(drctn));
+			dstc=Distance(wrk_x, wrk_y);
 			if( dstc<=100 )
 				{
 				trgt=n;
@@ -1699,20 +1487,7 @@ private bool BomberFireBullet(ref int trgt, ref Unit unit, ref double drctn2, Fi
 			// 攻撃地点から攻撃目標地点への距離
 			wrk_x=other.Position.X-unit.Position.X;
 			wrk_y=other.Position.Y-unit.Position.Y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(CosDegrees(drctn));
+			dstc=Distance(wrk_x, wrk_y);
 			if( dstc<=100 )
 				{
 				trgt=n;
@@ -1771,21 +1546,7 @@ private bool FighterFireBullet(ref int trgt, ref Unit unit, FireKind kind)
 			// 距離を調べます
 			wrk_x=other.Position.X-unit.Position.X;
 			wrk_y=other.Position.Y-unit.Position.Y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(CosDegrees(drctn));
+			dstc=Distance(wrk_x, wrk_y);
 			if( dstc<=300 && dstc<=dstc2)
 				{
 				// 攻撃地点から攻撃目標地点への方位角
@@ -1887,21 +1648,7 @@ private bool PlaneFireBullet(ref int trgt, ref Unit unit, ref double drctn2, Fir
 				{
 				wrk_x=other.Position.X-unit.Position.X;
 				wrk_y=other.Position.Y-unit.Position.Y;
-				if(wrk_x==0)	wrk_x=1;
-				if(wrk_y==0)	wrk_y=1;
-
-				drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				if(drctn<0)
-					drctn=360+drctn;
-				if(wrk_x<0)
-					wrk_x=0-wrk_x;
-				if(wrk_y<0)
-					wrk_y=0-wrk_y;
-				if(drctn>=180)
-					drctn=drctn-180;
-				if(drctn>=90)
-					drctn=90-(drctn-90);
-				dstc=(wrk_x)/(CosDegrees(drctn));
+				dstc=Distance(wrk_x, wrk_y);
 				if( dstc<=300 )
 					{	trgt=n;	break;	}
 				}
@@ -2134,21 +1881,7 @@ private bool AttackerDropBomb(ref int trgt, ref Unit unit, ref double drctn2, in
 		// 距離を求めます
 		wrk_x=unit.Position.X-wrk_x2;
 		wrk_y=unit.Position.Y-wrk_y2;
-		if(wrk_x==0)	wrk_x=1;
-		if(wrk_y==0)	wrk_y=1;
-
-		drctn=atan2(wrk_y,wrk_x)*RAD_to;
-		if(drctn<0)
-			drctn=360+drctn;
-		if(wrk_x<0)
-			wrk_x=0-wrk_x;
-		if(wrk_y<0)
-			wrk_y=0-wrk_y;
-		if(drctn>=180)
-			drctn=drctn-180;
-		if(drctn>=90)
-			drctn=90-(drctn-90);
-		dstc=(wrk_x)/(CosDegrees(drctn));
+		dstc=Distance(wrk_x, wrk_y);
 
 		if( ( dstc>=170 && dstc<=180 && unit.Side==Side.UnitedStates ) || ( dstc>=35 && dstc<=65 && unit.Side==Side.Japan ))
 			{
@@ -2300,21 +2033,7 @@ private bool BomberDropBomb(ref int trgt, ref Unit unit, ref double drctn2, Fire
 				{
 				wrk_x=Units[n].Position.X-unit.Position.X;
 				wrk_y=Units[n].Position.Y-unit.Position.Y;
-				if(wrk_x==0)	wrk_x=1;
-				if(wrk_y==0)	wrk_y=1;
-
-				drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				if(drctn<0)
-					drctn=360+drctn;
-				if(wrk_x<0)
-					wrk_x=0-wrk_x;
-				if(wrk_y<0)
-					wrk_y=0-wrk_y;
-				if(drctn>=180)
-					drctn=drctn-180;
-				if(drctn>=90)
-					drctn=90-(drctn-90);
-				dstc=(wrk_x)/(CosDegrees(drctn));
+				dstc=Distance(wrk_x, wrk_y);
 				if( dstc>=30 && dstc<=60 )
 					{	trgt=n;	break;	}
 				}
@@ -2800,21 +2519,7 @@ public void	SetFighterAttackDestination(int m)
 			// 自機も敵機を正面に捕らえています
 			wrk_x=Units[n].Position.X-unit.Position.X;
 			wrk_y=Units[n].Position.Y-unit.Position.Y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(CosDegrees(drctn));
+			dstc=Distance(wrk_x, wrk_y);
 			if( dstc>=160 && dstc<=320 )
 				{
 				// さらに、距離が近い よけよう
@@ -2905,21 +2610,7 @@ public void	SetAttackerEmergencyDestination(int m)
 
 				wrk_x=other.Position.X-unit.Position.X;
 				wrk_y=other.Position.Y-unit.Position.Y;
-				if(wrk_x==0)	wrk_x=1;
-				if(wrk_y==0)	wrk_y=1;
-
-				drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				if(drctn<0)
-					drctn=360+drctn;
-				if(wrk_x<0)
-					wrk_x=0-wrk_x;
-				if(wrk_y<0)
-					wrk_y=0-wrk_y;
-				if(drctn>=180)
-					drctn=drctn-180;
-				if(drctn>=90)
-					drctn=90-(drctn-90);
-				dstc=(wrk_x)/(CosDegrees(drctn));
+				dstc=Distance(wrk_x, wrk_y);
 				if( dstc<=250+((other.Kind==UnitKind.Attacker ? 1 : 0)*70) )
 					{
 
@@ -3050,21 +2741,7 @@ public void	SetAttackerAttackDestination(int m)
 	// 現位置から攻撃目標地点への距離
 	wrk_x=Units[n].Position.X-unit.Position.X;
 	wrk_y=Units[n].Position.Y-unit.Position.Y;
-	if(wrk_x==0)	wrk_x=1;
-	if(wrk_y==0)	wrk_y=1;
-
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
-	if(wrk_x<0)
-		wrk_x=0-wrk_x;
-	if(wrk_y<0)
-		wrk_y=0-wrk_y;
-	if(drctn>=180)
-		drctn=drctn-180;
-	if(drctn>=90)
-		drctn=90-(drctn-90);
-	dstc=(wrk_x)/(CosDegrees(drctn));
+	dstc=Distance(wrk_x, wrk_y);
 
 	// 目標ユニットへの方位角を求めます
 	wrk_x=Units[n].Position.X;
@@ -3224,21 +2901,7 @@ public void	SetTransportLandingDestination(int m)
 	// 現位置から攻撃目標地点への距離
 	wrk_x=Units[m].LandingX-Units[m].Position.X;
 	wrk_y=Units[m].LandingY-Units[m].Position.Y;
-	if(wrk_x==0)	wrk_x=1;
-	if(wrk_y==0)	wrk_y=1;
-
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
-	if(wrk_x<0)
-		wrk_x=0-wrk_x;
-	if(wrk_y<0)
-		wrk_y=0-wrk_y;
-	if(drctn>=180)
-		drctn=drctn-180;
-	if(drctn>=90)
-		drctn=90-(drctn-90);
-	dstc=(wrk_x)/(CosDegrees(drctn));
+	dstc=Distance(wrk_x, wrk_y);
 
 	if(dstc<=400)
 		{
@@ -3316,21 +2979,7 @@ private bool HuntSubmarine(ref Unit unit)
 					wrk_y=other.Position.Y-unit.Position.Y;
 					}
 
-				if(wrk_x==0)	wrk_x=1;
-				if(wrk_y==0)	wrk_y=1;
-
-				drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				if(drctn<0)
-					drctn=360+drctn;
-				if(wrk_x<0)
-					wrk_x=0-wrk_x;
-				if(wrk_y<0)
-					wrk_y=0-wrk_y;
-				if(drctn>=180)
-					drctn=drctn-180;
-				if(drctn>=90)
-					drctn=90-(drctn-90);
-				dstc=(wrk_x)/(CosDegrees(drctn));		// 距離
+				dstc=Distance(wrk_x, wrk_y);		// 距離
 
 				if( dstc<=( unit.Variant==1 ? 500 : 400 ) )
 					{
@@ -3372,21 +3021,7 @@ private bool EvadePlane(ref Unit other, ref Unit unit)
 	// 自点と対象点の距離
 	wrk_x=other.Position.X-unit.Position.X;
 	wrk_y=other.Position.Y-unit.Position.Y;
-	if(wrk_x==0)	wrk_x=1;
-	if(wrk_y==0)	wrk_y=1;
-
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
-	if(wrk_x<0)
-		wrk_x=0-wrk_x;
-	if(wrk_y<0)
-		wrk_y=0-wrk_y;
-	if(drctn>=180)
-		drctn=drctn-180;
-	if(drctn>=90)
-		drctn=90-(drctn-90);
-	dstc=(wrk_x)/(CosDegrees(drctn));		// 距離
+	dstc=Distance(wrk_x, wrk_y);		// 距離
 
 	if( dstc<=600-((other.Kind==UnitKind.Bomber ? 1 : 0)*300) && dstc>=40 )
 		{
@@ -3442,21 +3077,7 @@ private void EvadeShip(ref Unit other, ref Unit unit)
 	// 自点と対象点の距離
 	wrk_x=other.Position.X-unit.Position.X;
 	wrk_y=other.Position.Y-unit.Position.Y;
-	if(wrk_x==0)	wrk_x=1;
-	if(wrk_y==0)	wrk_y=1;
-
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
-	if(wrk_x<0)
-		wrk_x=0-wrk_x;
-	if(wrk_y<0)
-		wrk_y=0-wrk_y;
-	if(drctn>=180)
-		drctn=drctn-180;
-	if(drctn>=90)
-		drctn=90-(drctn-90);
-	dstc=(wrk_x)/(CosDegrees(drctn));		// 距離
+	dstc=Distance(wrk_x, wrk_y);		// 距離
 
 	// 見る側
 
@@ -3508,21 +3129,7 @@ private bool EvadeTorpedo(ref Fire fire, ref Unit unit)
 	// 自点と対象点の距離
 	wrk_x=fire.Position.X-unit.Position.X;
 	wrk_y=fire.Position.Y-unit.Position.Y;
-	if(wrk_x==0)	wrk_x=1;
-	if(wrk_y==0)	wrk_y=1;
-
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
-	if(wrk_x<0)
-		wrk_x=0-wrk_x;
-	if(wrk_y<0)
-		wrk_y=0-wrk_y;
-	if(drctn>=180)
-		drctn=drctn-180;
-	if(drctn>=90)
-		drctn=90-(drctn-90);
-	dstc=(wrk_x)/(CosDegrees(drctn));		// 距離
+	dstc=Distance(wrk_x, wrk_y);		// 距離
 
 	if( dstc<=600 && dstc>=40 )
 		{

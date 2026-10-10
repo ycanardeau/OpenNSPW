@@ -57,21 +57,7 @@ public void	UpdateUpperEffects(RECT* pfield_rect,RECT* pinfo_rect)
 					wrk_x=wrk_x-effect.Position.X;
 					wrk_y=wrk_y-effect.Position.Y;
 
-					if(wrk_x==0)	wrk_x=1;
-					if(wrk_y==0)	wrk_y=1;
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
-					if(wrk_x<0)
-						wrk_x=0-wrk_x;
-					if(wrk_y<0)
-						wrk_y=0-wrk_y;
-					if(drctn>=180)
-						drctn=drctn-180;
-					if(drctn>=90)
-						drctn=90-(drctn-90);
-
-					dstc=((wrk_x)/(CosDegrees(drctn)));
+					dstc=Distance(wrk_x, wrk_y);
 
 					switch( Units[n].Kind )
 						{
@@ -231,21 +217,7 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 						wrk_x=wrk_x-effect.Position.X;
 						wrk_y=wrk_y-effect.Position.Y;
 
-						if(wrk_x==0)	wrk_x=1;
-						if(wrk_y==0)	wrk_y=1;
-						drctn=atan2(wrk_y,wrk_x)*RAD_to;
-						if(drctn<0)
-							drctn=360+drctn;
-						if(wrk_x<0)
-							wrk_x=0-wrk_x;
-						if(wrk_y<0)
-							wrk_y=0-wrk_y;
-						if(drctn>=180)
-							drctn=drctn-180;
-						if(drctn>=90)
-							drctn=90-(drctn-90);
-
-						dstc=((wrk_x)/(CosDegrees(drctn)));
+						dstc=Distance(wrk_x, wrk_y);
 
 						switch( unit.Kind )
 							{
@@ -567,21 +539,7 @@ private void DrawMapTiles(int cm_scrn_y, int cm_scrn_x, int map_bld_y, int map_b
 
 						//((cm_scrn_x+m)*sprt[MAP_TIP_NRML].wd)-MAP_RIGHT
 
-						if(wrk_x==0)	wrk_x=1;
-						if(wrk_y==0)	wrk_y=1;
-
-						drctn=atan2(wrk_y,wrk_x)*RAD_to;
-						if(drctn<0)
-							drctn=360+drctn;
-						if(wrk_x<0)
-							wrk_x=0-wrk_x;
-						if(wrk_y<0)
-							wrk_y=0-wrk_y;
-						if(drctn>=180)
-							drctn=drctn-180;
-						if(drctn>=90)
-							drctn=90-(drctn-90);
-						dstc=(wrk_x)/(CosDegrees(drctn));
+						dstc=Distance(wrk_x, wrk_y);
 						if( dstc<=(double)GetDetectionSize(f,0) )
 							{
 							flg=1;

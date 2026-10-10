@@ -174,21 +174,7 @@ return;
 				wrk_x=wrk_x-x;
 				wrk_y=wrk_y-y;
 
-				if(wrk_x==0)	wrk_x=1;
-				if(wrk_y==0)	wrk_y=1;
-				drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				if(drctn<0)
-					drctn=360+drctn;
-				if(wrk_x<0)
-					wrk_x=0-wrk_x;
-				if(wrk_y<0)
-					wrk_y=0-wrk_y;
-				if(drctn>=180)
-					drctn=drctn-180;
-				if(drctn>=90)
-					drctn=90-(drctn-90);
-
-				dstc=((wrk_x)/(CosDegrees(drctn)));
+				dstc=Distance(wrk_x, wrk_y);
 
 				switch( Units[n].Kind )
 					{
