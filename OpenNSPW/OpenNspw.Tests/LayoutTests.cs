@@ -24,12 +24,12 @@ public class LayoutTests
 	public void Struct_has_the_reference_layout(string name)
 	{
 		var reference = ReferenceLayout.Instance.Structs[name];
-		var type = typeof(Nspw).Assembly.GetType($"OpenNspw.{name}", throwOnError: true)!;
+		var type = OriginalNames.FindStruct(name);
 
 		Assert.Equal(reference.Size, TypeLayout.SizeOf(type));
 		Assert.Equal(
 			reference.Fields.OrderBy(f => f.Value.Offset).Select(f => $"{f.Key}: {f.Value.Size} bytes at {f.Value.Offset}"),
-			TypeLayout.FieldsOf(type).Select(f => $"{f.Name}: {f.Size} bytes at {f.Offset}"));
+			TypeLayout.FieldsOf(type).SelectMany(f => OriginalNames.Slices(f.Field, f.Offset)).Select(s => $"{s.Name}: {s.Size} bytes at {s.Offset}"));
 	}
 
 	public static TheoryData<string> Globals => ToTheoryData(ReferenceLayout.Instance.Globals.Select(g => g.Name));
@@ -38,8 +38,7 @@ public class LayoutTests
 	[MemberData(nameof(Globals))]
 	public void Global_has_the_reference_size(string name)
 	{
-		var global = Global.All[Global.Indexes[name]];
-		Assert.Equal(global.Size, TypeLayout.SizeOf(global.Field.FieldType));
+		Assert.Equal(Global.All[Global.Indexes[name]].Size, OriginalNames.FindGlobal(name).Size);
 	}
 
 	[Fact]

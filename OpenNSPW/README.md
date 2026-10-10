@@ -19,6 +19,7 @@ What is tested:
 - **Function tests**: `etc2.cpp` (except `new_unit_arrived`, `draw_line4` and `draw_line5`), and `make_my_rnd` through `cloud_cont` of `etc3.cpp`, against recordings of the reference.
 - **`NetworkTests`**: `dplay.cpp`. Two games in one process connect over loopback UDP through the original's connection dialogs, and exchange the game's messages.
 - **`TitleScreenTests`**: two whole games with the original's data connect, reach the title screen, and play a battle that the host starts by clicking through the setting screens. They check the modes, that both games keep in step, and that no message box shows. They save the frames they reach as PNG files next to the test assembly.
+- **`CharacterizationTests`**: the characterization traces that guard the refactoring (see [docs/Refactoring.md](../docs/Refactoring.md#characterization-traces)). Scripts play two whole games in lockstep: the title screen, the first three scenarios, and the original's user scenarios `tst3.dat` and `てすと.dat`, whose fleets start close enough to fight, with seeded random input on both sides. Each script's trace, the state, output and `rand()` state of both games after every round, must match the one in `OpenNspw.Tests/Traces`, which was recorded from the port itself.
 
 The rest of the game logic is not compared with the reference yet.
 
@@ -44,6 +45,17 @@ Run the commands below from this folder.
 ```bash
 dotnet test OpenNspw.Tests
 ```
+
+### Characterization traces
+The characterization tests run two games in lockstep (`OpenNspw.Tests/Lockstep`): each game runs only while the test steps it, until it ends a frame, sleeps or waits for a message; its clock advances only as it reads it; the two games connect through an in-memory DirectPlay 8; and input arrives only between steps. A run therefore does the same thing every time, on every machine.
+
+A change that keeps behavior leaves every trace unchanged. A change that changes behavior on purpose records the traces again, in the same commit:
+
+```bash
+OPENNSPW_RECORD_TRACES=1 dotnet test OpenNspw.Tests --filter CharacterizationTests
+```
+
+When a run differs from its trace, the test reports the first line that differs and the globals that differ at the next checkpoint.
 
 ## Benchmarks
 ```bash

@@ -149,58 +149,6 @@ public class TitleScreenTests
 {
 	private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(60);
 
-	private static string? FindOriginalData()
-	{
-		for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
-		{
-			var candidate = Path.Combine(directory.FullName, "Original", "NSPW_NET");
-			if (File.Exists(Path.Combine(candidate, "t3.bmp")))
-			{
-				return candidate;
-			}
-		}
-
-		return null;
-	}
-
-	// Makes a new, empty directory case-sensitive on Windows, as directories are on Linux, so that the tests find the
-	// game's file names that differ in case from its files (WAV\CLICK1.wav for wav/click1.wav) on every platform.
-	// Directories created in it inherit it. Needs Windows 10 1803 or later with WSL; without it, nothing changes.
-	private static void MakeCaseSensitive(string directory)
-	{
-		if (!OperatingSystem.IsWindows())
-		{
-			return;
-		}
-
-		try
-		{
-			using var fsutil = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("fsutil.exe", ["file", "setCaseSensitiveInfo", directory, "enable"])
-			{
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-			});
-			fsutil?.WaitForExit();
-		}
-		catch (System.ComponentModel.Win32Exception)
-		{
-		}
-	}
-
-	private static void CopyDirectory(string source, string target)
-	{
-		Directory.CreateDirectory(target);
-		foreach (var file in Directory.GetFiles(source))
-		{
-			File.Copy(file, Path.Combine(target, Path.GetFileName(file)));
-		}
-
-		foreach (var directory in Directory.GetDirectories(source).Where(d => Path.GetFileName(d) is not ("Debug" or "Release" or "Backup")))
-		{
-			CopyDirectory(directory, Path.Combine(target, Path.GetFileName(directory)));
-		}
-	}
-
 	private static void WaitUntil(Func<bool> condition, params RunningGame[] games)
 	{
 		string Status() => string.Join("; ", games.Select(g =>
@@ -301,53 +249,36 @@ public class TitleScreenTests
 	// dialogs over loopback, starts them from the host and waits for both to show the title screen. Then plays them.
 	private static void PlayTwoGames(Action<RunningGame, RunningGame> play)
 	{
-		var original = FindOriginalData() ?? throw new InvalidOperationException("Original/NSPW_NET is not found.");
-		var data = Path.Combine(Path.GetTempPath(), $"OpenNspw-{Guid.NewGuid():N}");
-		Directory.CreateDirectory(data);
-		MakeCaseSensitive(data);
-		CopyDirectory(original, data);
-		try
+		using var data = GameData.CreateCopy();
+		using var host = new RunningGame(data.Path, "Alice");
+		using var guest = new RunningGame(data.Path, "Bob");
+		host.Start();
+		guest.Start();
+		WaitUntil(() => host.Game.g_hDlg?.Id == IDD_ADDRESS_OVERRIDE && guest.Game.g_hDlg?.Id == IDD_ADDRESS_OVERRIDE, host, guest);
+
+		host.Do(g =>
 		{
-			using var host = new RunningGame(data, "Alice");
-			using var guest = new RunningGame(data, "Bob");
-			host.Start();
-			guest.Start();
-			WaitUntil(() => host.Game.g_hDlg?.Id == IDD_ADDRESS_OVERRIDE && guest.Game.g_hDlg?.Id == IDD_ADDRESS_OVERRIDE, host, guest);
+			g.TypeDlgItemText(g.g_hDlg!, IDC_ADDRESS_LINE2, "0");
+			g.ClickDlgItem(g.g_hDlg!, IDOK);
+		});
+		WaitUntil(() => host.Game.g_hDlg?.Id == IDD_MAIN_GAME, host, guest);
+		var port = host.Platform.DirectPlay.Peers.Single().LocalEndPoint!.Port;
 
-			host.Do(g =>
-			{
-				g.TypeDlgItemText(g.g_hDlg!, IDC_ADDRESS_LINE2, "0");
-				g.ClickDlgItem(g.g_hDlg!, IDOK);
-			});
-			WaitUntil(() => host.Game.g_hDlg?.Id == IDD_MAIN_GAME, host, guest);
-			var port = host.Platform.DirectPlay.Peers.Single().LocalEndPoint!.Port;
-
-			guest.Do(g =>
-			{
-				g.ClickDlgItem(g.g_hDlg!, IDC_HOST_SESSION);
-				g.TypeDlgItemText(g.g_hDlg!, IDC_ADDRESS_LINE1, "127.0.0.1");
-				g.TypeDlgItemText(g.g_hDlg!, IDC_ADDRESS_LINE2, $"{port}");
-				g.ClickDlgItem(g.g_hDlg!, IDOK);
-			});
-			WaitUntil(() => host.Game.g_dwNumberOfActivePlayers == 2 && guest.Game.g_dwNumberOfActivePlayers == 2 && guest.Game.g_hDlg?.Id == IDD_MAIN_GAME, host, guest);
-
-			host.Do(g => g.ClickDlgItem(g.g_hDlg!, IDC_START_GAME));
-			WaitUntil(() => host.Platform.FrameCount > 20 && guest.Platform.FrameCount > 20, host, guest);
-
-			play(host, guest);
-			Assert.Empty(host.Platform.MessageBoxes);
-			Assert.Empty(guest.Platform.MessageBoxes);
-		}
-		finally
+		guest.Do(g =>
 		{
-			try
-			{
-				Directory.Delete(data, recursive: true);
-			}
-			catch (IOException)
-			{
-			}
-		}
+			g.ClickDlgItem(g.g_hDlg!, IDC_HOST_SESSION);
+			g.TypeDlgItemText(g.g_hDlg!, IDC_ADDRESS_LINE1, "127.0.0.1");
+			g.TypeDlgItemText(g.g_hDlg!, IDC_ADDRESS_LINE2, $"{port}");
+			g.ClickDlgItem(g.g_hDlg!, IDOK);
+		});
+		WaitUntil(() => host.Game.g_dwNumberOfActivePlayers == 2 && guest.Game.g_dwNumberOfActivePlayers == 2 && guest.Game.g_hDlg?.Id == IDD_MAIN_GAME, host, guest);
+
+		host.Do(g => g.ClickDlgItem(g.g_hDlg!, IDC_START_GAME));
+		WaitUntil(() => host.Platform.FrameCount > 20 && guest.Platform.FrameCount > 20, host, guest);
+
+		play(host, guest);
+		Assert.Empty(host.Platform.MessageBoxes);
+		Assert.Empty(guest.Platform.MessageBoxes);
 	}
 
 	[Fact]
