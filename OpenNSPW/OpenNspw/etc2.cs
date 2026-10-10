@@ -983,7 +983,7 @@ public void	SetShipFormation( int s )
 		drctn=drctn-180;
 	if(drctn>=90)
 		drctn=90-(drctn-90);
-	Units[s].DistanceToLeader=(wrk_x)/(cos(drctn*a_PI));
+	Units[s].DistanceToLeader=(wrk_x)/(CosDegrees(drctn));
 
 	}
 
@@ -1045,23 +1045,23 @@ public void	SetLandingDestination(int n)
 
 	if( Units[n].Kind==UnitKind.Bomber )
 		{
-		Units[n].PathX[0]=Units[pt].Position.X+cos(angl2*a_PI)*560.0;
-		Units[n].PathY[0]=Units[pt].Position.Y+sin(angl2*a_PI)*560.0;
+		Units[n].PathX[0]=Units[pt].Position.X+CosDegrees(angl2)*560.0;
+		Units[n].PathY[0]=Units[pt].Position.Y+SinDegrees(angl2)*560.0;
 		}
 	else
 		{
-		Units[n].PathX[0]=Units[pt].Position.X+cos(angl2*a_PI)*280.0;
-		Units[n].PathY[0]=Units[pt].Position.Y+sin(angl2*a_PI)*280.0;
+		Units[n].PathX[0]=Units[pt].Position.X+CosDegrees(angl2)*280.0;
+		Units[n].PathY[0]=Units[pt].Position.Y+SinDegrees(angl2)*280.0;
 		}
 
-	Units[n].PathX[1]=Units[pt].Position.X+cos(angl2*a_PI)*130.0;
-	Units[n].PathY[1]=Units[pt].Position.Y+sin(angl2*a_PI)*130.0;
+	Units[n].PathX[1]=Units[pt].Position.X+CosDegrees(angl2)*130.0;
+	Units[n].PathY[1]=Units[pt].Position.Y+SinDegrees(angl2)*130.0;
 
-	Units[n].PathX[2]=Units[pt].Position.X+cos(angl2*a_PI)*10.0;
-	Units[n].PathY[2]=Units[pt].Position.Y+sin(angl2*a_PI)*10.0;
+	Units[n].PathX[2]=Units[pt].Position.X+CosDegrees(angl2)*10.0;
+	Units[n].PathY[2]=Units[pt].Position.Y+SinDegrees(angl2)*10.0;
 
-	Units[n].PathX[3]=Units[pt].Position.X+cos(angl*a_PI)*100.0;
-	Units[n].PathY[3]=Units[pt].Position.Y+sin(angl*a_PI)*100.0;
+	Units[n].PathX[3]=Units[pt].Position.X+CosDegrees(angl)*100.0;
+	Units[n].PathY[3]=Units[pt].Position.Y+SinDegrees(angl)*100.0;
 
 	Units[n].PathX[4]=MAP_RIGHT+1;
 	Units[n].IsStopping=false;
@@ -1139,44 +1139,44 @@ public void	UpdateLanding( int n )
 			// 全4点を調整
 			if( Units[n].Kind==UnitKind.Bomber )
 				{
-				Units[n].PathX[0]=Units[pt].Position.X+cos(angl2*a_PI)*560.0;
-				Units[n].PathY[0]=Units[pt].Position.Y+sin(angl2*a_PI)*560.0;
+				Units[n].PathX[0]=Units[pt].Position.X+CosDegrees(angl2)*560.0;
+				Units[n].PathY[0]=Units[pt].Position.Y+SinDegrees(angl2)*560.0;
 				}
 			else
 				{
-				Units[n].PathX[0]=Units[pt].Position.X+cos(angl2*a_PI)*280.0;
-				Units[n].PathY[0]=Units[pt].Position.Y+sin(angl2*a_PI)*280.0;
+				Units[n].PathX[0]=Units[pt].Position.X+CosDegrees(angl2)*280.0;
+				Units[n].PathY[0]=Units[pt].Position.Y+SinDegrees(angl2)*280.0;
 				}
 
-			Units[n].PathX[1]=Units[pt].Position.X+cos(angl2*a_PI)*130.0;
-			Units[n].PathY[1]=Units[pt].Position.Y+sin(angl2*a_PI)*130.0;
+			Units[n].PathX[1]=Units[pt].Position.X+CosDegrees(angl2)*130.0;
+			Units[n].PathY[1]=Units[pt].Position.Y+SinDegrees(angl2)*130.0;
 
-			Units[n].PathX[2]=Units[pt].Position.X+cos(angl2*a_PI)*10.0;
-			Units[n].PathY[2]=Units[pt].Position.Y+sin(angl2*a_PI)*10.0;
+			Units[n].PathX[2]=Units[pt].Position.X+CosDegrees(angl2)*10.0;
+			Units[n].PathY[2]=Units[pt].Position.Y+SinDegrees(angl2)*10.0;
 
-			Units[n].PathX[3]=Units[pt].Position.X+cos(angl*a_PI)*100.0;
-			Units[n].PathY[3]=Units[pt].Position.Y+sin(angl*a_PI)*100.0;
+			Units[n].PathX[3]=Units[pt].Position.X+CosDegrees(angl)*100.0;
+			Units[n].PathY[3]=Units[pt].Position.Y+SinDegrees(angl)*100.0;
 			break;
 
 		case 3:
 			// 全3点を調整
-			Units[n].PathX[0]=Units[pt].Position.X+cos(angl2*a_PI)*130.0;
-			Units[n].PathY[0]=Units[pt].Position.Y+sin(angl2*a_PI)*130.0;
+			Units[n].PathX[0]=Units[pt].Position.X+CosDegrees(angl2)*130.0;
+			Units[n].PathY[0]=Units[pt].Position.Y+SinDegrees(angl2)*130.0;
 
-			Units[n].PathX[1]=Units[pt].Position.X+cos(angl2*a_PI)*10.0;
-			Units[n].PathY[1]=Units[pt].Position.Y+sin(angl2*a_PI)*10.0;
+			Units[n].PathX[1]=Units[pt].Position.X+CosDegrees(angl2)*10.0;
+			Units[n].PathY[1]=Units[pt].Position.Y+SinDegrees(angl2)*10.0;
 
-			Units[n].PathX[2]=Units[pt].Position.X+cos(angl*a_PI)*100.0;
-			Units[n].PathY[2]=Units[pt].Position.Y+sin(angl*a_PI)*100.0;
+			Units[n].PathX[2]=Units[pt].Position.X+CosDegrees(angl)*100.0;
+			Units[n].PathY[2]=Units[pt].Position.Y+SinDegrees(angl)*100.0;
 			break;
 
 		case 2:
 			// 全2点を調整
-			Units[n].PathX[0]=Units[pt].Position.X+cos(angl2*a_PI)*10.0;
-			Units[n].PathY[0]=Units[pt].Position.Y+sin(angl2*a_PI)*10.0;
+			Units[n].PathX[0]=Units[pt].Position.X+CosDegrees(angl2)*10.0;
+			Units[n].PathY[0]=Units[pt].Position.Y+SinDegrees(angl2)*10.0;
 
-			Units[n].PathX[1]=Units[pt].Position.X+cos(angl*a_PI)*100.0;
-			Units[n].PathY[1]=Units[pt].Position.Y+sin(angl*a_PI)*100.0;
+			Units[n].PathX[1]=Units[pt].Position.X+CosDegrees(angl)*100.0;
+			Units[n].PathY[1]=Units[pt].Position.Y+SinDegrees(angl)*100.0;
 			break;
 		}
 	}
@@ -1275,7 +1275,7 @@ public int		DetectSubmarines( int m , int n)
 	if(drctn>=90)
 		drctn=90-(drctn-90);
 
-	q_size=((int)((wrk_x)/(cos(drctn*a_PI))));
+	q_size=((int)((wrk_x)/(CosDegrees(drctn))));
 
 	if( q_size<100 )
 		q_size=100;
@@ -1343,8 +1343,8 @@ public void		Detect()
 
 					if( unit.Kind==UnitKind.Fighter )
 						{	// 航空機の場合はちょっと前へ
-						wrk_x+=cos(unit.Direction*a_PI)*FT_EYE;
-						wrk_y+=sin(unit.Direction*a_PI)*FT_EYE;
+						wrk_x+=CosDegrees(unit.Direction)*FT_EYE;
+						wrk_y+=SinDegrees(unit.Direction)*FT_EYE;
 						}
 					wrk_x=other.Position.X-wrk_x;
 					wrk_y=other.Position.Y-wrk_y;
@@ -1364,7 +1364,7 @@ public void		Detect()
 						drctn=90-(drctn-90);
 
 					size=GetDetectionSize(m,n);
-					dstc=(wrk_x)/(cos(drctn*a_PI));
+					dstc=(wrk_x)/(CosDegrees(drctn));
 
 					if( (int)dstc<=size && size!=0 )
 						{
@@ -1414,8 +1414,8 @@ public void		Detect()
 
 					if( unit.Kind==UnitKind.Fighter )
 						{	// 航空機の場合はちょっと前へ
-						wrk_x+=cos(unit.Direction*a_PI)*FT_EYE;
-						wrk_y+=sin(unit.Direction*a_PI)*FT_EYE;
+						wrk_x+=CosDegrees(unit.Direction)*FT_EYE;
+						wrk_y+=SinDegrees(unit.Direction)*FT_EYE;
 						}
 					wrk_x=other.Position.X-wrk_x;
 					wrk_y=other.Position.Y-wrk_y;
@@ -1436,7 +1436,7 @@ public void		Detect()
 						drctn=90-(drctn-90);
 
 					size=GetDetectionSize(m,n);
-					dstc=(wrk_x)/(cos(drctn*a_PI));
+					dstc=(wrk_x)/(CosDegrees(drctn));
 
 					if( (int)dstc<=size && size!=0 )
 						{

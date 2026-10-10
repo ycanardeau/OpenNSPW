@@ -298,7 +298,7 @@ private void UpdateCargo(ref Fire fire, ref int n)
 		{
 		wrk_x=fire.Position.X;
 		wrk_y=fire.Position.Y;
-		fire.Position += new WorldVector(cos(fire.Direction*a_PI)*fire.Speed, sin(fire.Direction*a_PI)*fire.Speed);
+		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
 		fire.Speed+=fire.Acceleration;
 
 		h=0;
@@ -438,7 +438,7 @@ private void UpdateBullet(ref Fire fire, ref int n, int m)
 		{
 		wrk_x=fire.Position.X;
 		wrk_y=fire.Position.Y;
-		fire.Position += new WorldVector(cos(fire.Direction*a_PI)*fire.Speed, sin(fire.Direction*a_PI)*fire.Speed);
+		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
 		fire.Speed+=fire.Acceleration;
 
 		n=fire.Target;						// ターゲットナンバー
@@ -498,7 +498,7 @@ private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 	if( fire.Ticks!=0 )
 		{	//
 		wrk_x=fire.Position.X;	wrk_y=fire.Position.Y;
-		fire.Position += new WorldVector(cos(fire.Direction*a_PI)*fire.Speed, sin(fire.Direction*a_PI)*fire.Speed);
+		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
 
 		fire.Speed+=fire.Acceleration;		// 弾が減速
 
@@ -516,7 +516,7 @@ private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 		}
 	else
 		{	// 炸裂！
-		fire.Position += new WorldVector(cos(fire.Direction*a_PI)*fire.Speed, sin(fire.Direction*a_PI)*fire.Speed);
+		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
 
 		// 砲弾炸裂
 		f=FindFreeEffect();
@@ -628,7 +628,7 @@ private void UpdateAntiAircraftShell(ref Fire fire, ref int n, int m)
 	if( fire.Ticks!=0 )
 		{	//
 		wrk_x=fire.Position.X;	wrk_y=fire.Position.Y;
-		fire.Position += new WorldVector(cos(fire.Direction*a_PI)*fire.Speed, sin(fire.Direction*a_PI)*fire.Speed);
+		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
 
 		fire.Speed+=fire.Acceleration;		// 弾が減速
 		if( 1!=0 )
@@ -652,7 +652,7 @@ private void UpdateAntiAircraftShell(ref Fire fire, ref int n, int m)
 		}
 	else
 		{	// 炸裂！
-		fire.Position += new WorldVector(cos(fire.Direction*a_PI)*fire.Speed, sin(fire.Direction*a_PI)*fire.Speed);
+		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
 
 		// 砲弾炸裂
 		// 煙
@@ -725,7 +725,7 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 	if( fire.Ticks!=0 )
 		{	//
 		wrk_x=fire.Position.X;	wrk_y=fire.Position.Y;
-		fire.Position += new WorldVector(cos(fire.Direction*a_PI)*fire.Speed, sin(fire.Direction*a_PI)*fire.Speed);
+		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
 		if( fire.Ticks > fire.FlightTime )
 			fire.Speed-=fire.Acceleration;		// 弾が上昇中
 		else
@@ -751,7 +751,7 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 		}
 	else
 		{	// 着弾！
-		fire.Position += new WorldVector(cos(fire.Direction*a_PI)*fire.Speed, sin(fire.Direction*a_PI)*fire.Speed);
+		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
 		n=fire.Target;
 		h=CheckHit(m);
 		fire.Target=0;
@@ -849,8 +849,8 @@ private void UpdateTorpedo(ref Fire fire, ref int n, int m)
 		{
 		wrk_x=fire.Position.X;
 		wrk_y=fire.Position.Y;
-		wrk_x+=cos(fire.Direction*a_PI)*-40;
-		wrk_y+=sin(fire.Direction*a_PI)*-40;
+		wrk_x+=CosDegrees(fire.Direction)*-40;
+		wrk_y+=SinDegrees(fire.Direction)*-40;
 		if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
 			{
 			cm_scrn_x=(int)((wrk_x+(Sprites[SpriteId.JapanUnits].Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
@@ -863,7 +863,7 @@ private void UpdateTorpedo(ref Fire fire, ref int n, int m)
 
 		wrk_x=fire.Position.X;
 		wrk_y=fire.Position.Y;
-		fire.Position += new WorldVector(cos(fire.Direction*a_PI)*fire.Speed, sin(fire.Direction*a_PI)*fire.Speed);
+		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
 		fire.Speed+=fire.Acceleration;
 
 		h=0;
@@ -967,7 +967,7 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 			if( fire.Ticks==50)
 			PlaySoundEffect( 0, SoundId.BombFalling ,fire.Position.X, fire.Position.Y);
 
-			fire.Position += new WorldVector(cos(fire.Direction*a_PI)*fire.Speed, sin(fire.Direction*a_PI)*fire.Speed);
+			fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
 			fire.Speed+=fire.Acceleration;
 			if( 1!=0 )
 				{
@@ -981,7 +981,7 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 		}
 	else
 		{	// 着弾！
-		fire.Position += new WorldVector(cos(fire.Direction*a_PI)*fire.Speed, sin(fire.Direction*a_PI)*fire.Speed);
+		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
 		h=0;
 		for(n=1;n<=MaxUnitId;n++)
 			{
@@ -1757,7 +1757,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 				break;
 			}
 
-		Effects[f].Position += new WorldVector(cos(drctn*a_PI)*dstc, sin(drctn*a_PI)*dstc);
+		Effects[f].Position += new WorldVector(CosDegrees(drctn)*dstc, SinDegrees(drctn)*dstc);
 
 		Effects[f].SpriteNumber=8;			// ソースファイル上の番号
 		}

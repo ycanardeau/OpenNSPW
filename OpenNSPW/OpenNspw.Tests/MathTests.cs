@@ -43,4 +43,18 @@ public class MathTests
 			Assert.True(UlpDistance(nspw_math.atan2(y, x), Math.Atan2(y, x)) <= 1, $"atan2({y:R}, {x:R})");
 		}
 	}
+
+	// SinDegrees and CosDegrees give the same bits as the expressions they replace, for directions in and out of the
+	// range the game keeps them in.
+	[Fact]
+	public void Degrees_are_the_original_expressions()
+	{
+		var random = new Random(2);
+		for (var i = 0; i < 100_000; i++)
+		{
+			var degrees = (random.NextDouble() - 0.25) * 720;
+			Assert.Equal(BitConverter.DoubleToInt64Bits(nspw_math.sin(degrees * all_head.a_PI)), BitConverter.DoubleToInt64Bits(nspw_math.SinDegrees(degrees)));
+			Assert.Equal(BitConverter.DoubleToInt64Bits(nspw_math.cos(degrees * all_head.a_PI)), BitConverter.DoubleToInt64Bits(nspw_math.CosDegrees(degrees)));
+		}
+	}
 }

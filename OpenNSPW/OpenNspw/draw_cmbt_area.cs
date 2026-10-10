@@ -50,8 +50,8 @@ public void	UpdateUpperEffects(RECT* pfield_rect,RECT* pinfo_rect)
 					wrk_y=Units[n].Position.Y;
 					if( Units[n].Kind==UnitKind.Fighter )
 						{	// 航空機の場合はちょっと前へ
-						wrk_x+=cos(Units[n].Direction*a_PI)*FT_EYE;
-						wrk_y+=sin(Units[n].Direction*a_PI)*FT_EYE;
+						wrk_x+=CosDegrees(Units[n].Direction)*FT_EYE;
+						wrk_y+=SinDegrees(Units[n].Direction)*FT_EYE;
 						}
 
 					wrk_x=wrk_x-effect.Position.X;
@@ -71,7 +71,7 @@ public void	UpdateUpperEffects(RECT* pfield_rect,RECT* pinfo_rect)
 					if(drctn>=90)
 						drctn=90-(drctn-90);
 
-					dstc=((wrk_x)/(cos(drctn*a_PI)));
+					dstc=((wrk_x)/(CosDegrees(drctn)));
 
 					switch( Units[n].Kind )
 						{
@@ -224,8 +224,8 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 						wrk_y=unit.Position.Y;
 						if( unit.Kind==UnitKind.Fighter )
 							{	// 航空機の場合はちょっと前へ
-							wrk_x+=cos(unit.Direction*a_PI)*FT_EYE;
-							wrk_y+=sin(unit.Direction*a_PI)*FT_EYE;
+							wrk_x+=CosDegrees(unit.Direction)*FT_EYE;
+							wrk_y+=SinDegrees(unit.Direction)*FT_EYE;
 							}
 
 						wrk_x=wrk_x-effect.Position.X;
@@ -245,7 +245,7 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 						if(drctn>=90)
 							drctn=90-(drctn-90);
 
-						dstc=((wrk_x)/(cos(drctn*a_PI)));
+						dstc=((wrk_x)/(CosDegrees(drctn)));
 
 						switch( unit.Kind )
 							{
@@ -554,8 +554,8 @@ private void DrawMapTiles(int cm_scrn_y, int cm_scrn_x, int map_bld_y, int map_b
 							// 戦闘機場合、視点を
 							wrk_x=Units[f].Position.X;
 							wrk_y=Units[f].Position.Y;
-							wrk_x+=cos(Units[f].Direction*a_PI)*FT_EYE;
-							wrk_y+=sin(Units[f].Direction*a_PI)*FT_EYE;
+							wrk_x+=CosDegrees(Units[f].Direction)*FT_EYE;
+							wrk_y+=SinDegrees(Units[f].Direction)*FT_EYE;
 							wrk_x=wrk_x-(((cm_scrn_x+m)*Sprites[SpriteId.MapTiles].Width)-MAP_RIGHT);
 							wrk_y=wrk_y-(MAP_TOP-((cm_scrn_y+n)*Sprites[SpriteId.MapTiles].Height));
 							}
@@ -581,7 +581,7 @@ private void DrawMapTiles(int cm_scrn_y, int cm_scrn_x, int map_bld_y, int map_b
 							drctn=drctn-180;
 						if(drctn>=90)
 							drctn=90-(drctn-90);
-						dstc=(wrk_x)/(cos(drctn*a_PI));
+						dstc=(wrk_x)/(CosDegrees(drctn));
 						if( dstc<=(double)GetDetectionSize(f,0) )
 							{
 							flg=1;
@@ -829,8 +829,8 @@ private void DrawTargetLine(ref Unit unit)
 
 		wrk_x=unit.Position.X;
 		wrk_y=unit.Position.Y;
-		wrk_x+=cos(drctn*a_PI)*40;
-		wrk_y+=sin(drctn*a_PI)*40;
+		wrk_x+=CosDegrees(drctn)*40;
+		wrk_y+=SinDegrees(drctn)*40;
 
 		wrk_x2=unit.Position.X;
 		wrk_y2=unit.Position.Y;
@@ -838,8 +838,8 @@ private void DrawTargetLine(ref Unit unit)
 		drctn2-=10;
 		if(drctn2<0)
 			drctn2=360+drctn2;
-		wrk_x2+=cos(drctn2*a_PI)*20;
-		wrk_y2+=sin(drctn2*a_PI)*20;
+		wrk_x2+=CosDegrees(drctn2)*20;
+		wrk_y2+=SinDegrees(drctn2)*20;
 		cl=0x1f;
 		DrawLine4((int)(wrk_x-CameraPosition.X),(int)(CameraPosition.Y-wrk_y),(int)(wrk_x2-CameraPosition.X),(int)(CameraPosition.Y-wrk_y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 
@@ -849,8 +849,8 @@ private void DrawTargetLine(ref Unit unit)
 		drctn2-=350;
 		if(drctn2<0)
 			drctn2=360+drctn2;
-		wrk_x2+=cos(drctn2*a_PI)*20;
-		wrk_y2+=sin(drctn2*a_PI)*20;
+		wrk_x2+=CosDegrees(drctn2)*20;
+		wrk_y2+=SinDegrees(drctn2)*20;
 		cl=0x1f;
 		DrawLine4((int)(wrk_x-CameraPosition.X),(int)(CameraPosition.Y-wrk_y),(int)(wrk_x2-CameraPosition.X),(int)(CameraPosition.Y-wrk_y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 		}

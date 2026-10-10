@@ -681,8 +681,8 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 					PlaySoundEffect( 0, SoundId.TakeOff,(double)(MAP_RIGHT+1), 0);
 					}
 
-				unit.Position = new WorldPosition(unit.Position.X + (cos(unit.Direction*a_PI)*(unit.TakeOffRun/20)), unit.Position.Y);
-				unit.Position = new WorldPosition(unit.Position.X, unit.Position.Y - (sin(unit.Direction*a_PI)*(unit.TakeOffRun/20)));
+				unit.Position = new WorldPosition(unit.Position.X + (CosDegrees(unit.Direction)*(unit.TakeOffRun/20)), unit.Position.Y);
+				unit.Position = new WorldPosition(unit.Position.X, unit.Position.Y - (SinDegrees(unit.Direction)*(unit.TakeOffRun/20)));
 				}
 
 			cv_1=Sprites[SpriteId.JapanUnitInfo].Y-30/*+60*/;
@@ -729,8 +729,8 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 				}
 			if(unit.PlaneState==UnitState.Parked)
 				{
-				unit.Position = new WorldPosition(unit.Position.X + (cos(unit.Direction*a_PI)*0.8), unit.Position.Y);
-				unit.Position = new WorldPosition(unit.Position.X, unit.Position.Y - (sin(unit.Direction*a_PI)*0.8));
+				unit.Position = new WorldPosition(unit.Position.X + (CosDegrees(unit.Direction)*0.8), unit.Position.Y);
+				unit.Position = new WorldPosition(unit.Position.X, unit.Position.Y - (SinDegrees(unit.Direction)*0.8));
 				}
 			}
 		else
@@ -791,8 +791,8 @@ else
 				}
 			if(unit.PlaneState==UnitState.Parked)
 				{
-				unit.Position = new WorldPosition(unit.Position.X + (cos(unit.Direction*a_PI)*unit.Speed), unit.Position.Y);
-				unit.Position = new WorldPosition(unit.Position.X, unit.Position.Y - (sin(unit.Direction*a_PI)*unit.Speed));
+				unit.Position = new WorldPosition(unit.Position.X + (CosDegrees(unit.Direction)*unit.Speed), unit.Position.Y);
+				unit.Position = new WorldPosition(unit.Position.X, unit.Position.Y - (SinDegrees(unit.Direction)*unit.Speed));
 				}
 			}
 		}
@@ -1040,8 +1040,8 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 			// 艦首方向に他の艦船があるか
 			wrk_x2=unit.Position.X;
 			wrk_y2=unit.Position.Y;
-			wrk_x2+=cos(unit.Direction*a_PI)*(40+unit.MaxSpeed*10);
-			wrk_y2+=sin(unit.Direction*a_PI)*(40+unit.MaxSpeed*10);
+			wrk_x2+=CosDegrees(unit.Direction)*(40+unit.MaxSpeed*10);
+			wrk_y2+=SinDegrees(unit.Direction)*(40+unit.MaxSpeed*10);
 			if(  !( unit.Kind==UnitKind.Submarine && unit.IsSubmerged ) )
 				{
 				for( n=1; n<=MaxUnitId; n++)
@@ -1073,8 +1073,8 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 				{
 				wrk_x2=unit.Position.X;
 				wrk_y2=unit.Position.Y;
-				wrk_x2+=cos(pp_drctn*a_PI)*80;
-				wrk_y2+=sin(pp_drctn*a_PI)*80;
+				wrk_x2+=CosDegrees(pp_drctn)*80;
+				wrk_y2+=SinDegrees(pp_drctn)*80;
 
 				if(!( wrk_y2>MAP_TOP || wrk_y2<MAP_BOTTOM || wrk_x2<MAP_LEFT || wrk_x2>MAP_RIGHT ))
 					{
@@ -1196,7 +1196,7 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 								if(wrk_y<0)		wrk_y=0-wrk_y;
 								if(drctn>=180)	drctn=drctn-180;
 								if(drctn>=90)	drctn=90-(drctn-90);
-								dstc=(wrk_x)/(cos(drctn*a_PI));
+								dstc=(wrk_x)/(CosDegrees(drctn));
 
 								if( dstc<=BB1_SIGHT )
 									{
@@ -1366,7 +1366,7 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 		}
 
 	// 新座標を設定
-	unit.Position += new WorldVector(cos(unit.Direction*a_PI)*unit.Speed, sin(unit.Direction*a_PI)*unit.Speed);
+	unit.Position += new WorldVector(CosDegrees(unit.Direction)*unit.Speed, SinDegrees(unit.Direction)*unit.Speed);
 
 	// 燃料消費
 	n=(int)unit.FuelInterval;
@@ -1895,7 +1895,7 @@ public void	UpdateBattle()
 					if(drctn>=90)
 						drctn=90-(drctn-90);
 
-					wrk_x2=((wrk_x)/(cos(drctn*a_PI)));
+					wrk_x2=((wrk_x)/(CosDegrees(drctn)));
 					if( dstc>wrk_x2 )
 						{
 						dstc=wrk_x2;

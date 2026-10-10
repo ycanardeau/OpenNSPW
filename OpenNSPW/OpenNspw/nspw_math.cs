@@ -504,6 +504,18 @@ public static class nspw_math
 		}
 	}
 
+	// The sine of an angle in degrees, as the original computes it: sin(degrees*a_PI).
+	public static double SinDegrees(double degrees)
+	{
+		return sin(degrees * all_head.a_PI);
+	}
+
+	// The cosine of an angle in degrees, as the original computes it: cos(degrees*a_PI).
+	public static double CosDegrees(double degrees)
+	{
+		return cos(degrees * all_head.a_PI);
+	}
+
 	public static double atan2(double y, double x)
 	{
 		const double tiny = 1.0e-300;
