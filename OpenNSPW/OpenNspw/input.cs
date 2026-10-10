@@ -19,174 +19,77 @@ namespace OpenNspw;
 public unsafe partial class Nspw
 {
 
-//============================================================================
-// 通信対戦用、入力データの保存、その他
-//----------------------------------------------------------------------------
-[Original("cnct_game_input_cont")]
-public void	HandleInput()
+private void BufferMoveOrder(int e)
 	{
-	int	h,m,f,s,n,e; Array256<int> chk = default;
+	int s;
+	int m;
+	// あるマイユニットに新ＰＰ＿ＸＹが設定された場合
+	// バッファに保存。これを命令をだせるタイミングにnew_ppに代入する。
+	BufferedMoveOrders[1].Unit=MoveOrders[1].Unit;
+	BufferedMoveOrders[1].Destination=MoveOrders[1].Destination;
+	BufferedMoveOrders[1].ClearsPath=MoveOrders[1].ClearsPath;
 
-	e=1;
-	if( SelectOrders[e].IsSet && !Units[SelectOrders[e].SelectedUnit].IsSupplying && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress ))
+	if(LocalSide==Side.Japan)
 		{
-		// ユニット自体をクリックした。
-		SelectedUnit=SelectOrders[e].SelectedUnit;
-		m=SelectOrders[e].Unit;
-
-		if( m==0 || Units[SelectedUnit].Side!=Units[m].Side )
+		// 日本海軍サイド
+		for(s=1;s<=JPN_SHIP_END;s++)
 			{
-			if( m==0 )
-				{
-				// 輸送船陸地を選択
-				// 揚陸場所あり
-
-				if(CanOrder)
-					{
-					SelectedUnit=SelectOrders[e].SelectedUnit;
-					m=SelectOrders[e].Unit;
-
-					BufferedSelectOrders[1].IsSet=SelectOrders[e].IsSet;
-					BufferedSelectOrders[1].SelectedUnit=SelectOrders[e].SelectedUnit;
-					BufferedSelectOrders[1].Unit=SelectOrders[e].Unit;
-					BufferedSelectOrders[1].GroundPosition=SelectOrders[e].GroundPosition;
-
-					CanOrder=false;
-					HasOrdered=true;
-					PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
-					}
-				}
-			else
-				{
-				// 敵性ユニットを左クリック
-				if(CanOrder)
-					{
-					SelectedUnit=SelectOrders[e].SelectedUnit;
-					m=SelectOrders[e].Unit;
-
-					BufferedSelectOrders[1].IsSet=SelectOrders[e].IsSet;
-					BufferedSelectOrders[1].SelectedUnit=SelectOrders[e].SelectedUnit;
-					BufferedSelectOrders[1].Unit=SelectOrders[e].Unit;
-					BufferedSelectOrders[1].GroundPosition=SelectOrders[e].GroundPosition;
-
-					if(LocalSide==Side.Japan)
-						{
-						// 日本海軍サイド
-						for(s=1;s<=JPN_SHIP_END;s++)
-							{
-							// 水上ユニット
-							BufferedSelections[1][s-1]=Selections[1][s];
-							}
-						for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
-							{
-							// 航空ユニット
-							BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-							}
-						}
-					else
-						{
-						// 合衆国海軍サイド
-						for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
-							{
-							// 水上ユニット
-							BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-							}
-						for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
-							{
-							// 航空ユニット
-							BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
-							}
-						}
-
-					CanOrder=false;
-					HasOrdered=true;
-					PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
-
-					}
-				}
+			// 水上ユニット
+			BufferedSelections[1][s-1]=Selections[1][s];
 			}
-		else
+		for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
 			{
-			if ( Units[SelectedUnit].Category==UnitCategory.Plane && (Units[m].Kind==UnitKind.Carrier || Units[m].Kind==UnitKind.LightCarrier || Units[m].Kind==UnitKind.AirBase))
-				{
-				// 航空機の格納先を指定
-				if(CanOrder)
-					{
-					SelectedUnit=SelectOrders[e].SelectedUnit;
-					m=SelectOrders[e].Unit;
-
-					BufferedSelectOrders[1].IsSet=SelectOrders[e].IsSet;
-					BufferedSelectOrders[1].SelectedUnit=SelectOrders[e].SelectedUnit;
-					BufferedSelectOrders[1].Unit=SelectOrders[e].Unit;
-					BufferedSelectOrders[1].GroundPosition=SelectOrders[e].GroundPosition;
-
-					if(LocalSide==Side.Japan)
-						{
-						// 日本海軍サイド
-						for(s=1;s<=JPN_SHIP_END;s++)
-							{
-							// 水上ユニット
-							BufferedSelections[1][s-1]=Selections[1][s];
-							}
-						for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
-							{
-							// 航空ユニット
-							BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-							}
-						}
-					else
-						{
-						// 合衆国海軍サイド
-						for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
-							{
-							// 水上ユニット
-							BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-							}
-						for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
-							{
-							// 航空ユニット
-							BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
-							}
-						}
-
-					CanOrder=false;
-					HasOrdered=true;
-					PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
-					}
-				}
-			else
-				{
-				if( Selections[e][m]==0 )
-					{	// ｍ番号ユニットを新規にセレクトに設定
-					if(!(Units[m].Kind>=UnitKind.AirBase&&Units[m].Kind<=UnitKind.Fortress) && !(Units[SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectedUnit].Kind<=UnitKind.Fortress))
-						{
-						SelectionCount++;
-						Selections[e][m]=SelectionCount;
-						}
-					}
-				else
-					{	// ｍ番号ユニットをセレクトから外す
-					SelectionCount--;
-					// セレクトの設定番号を連番にする。
-					for(n=1;n<=MaxUnitId;n++)
-						{
-						if( Selections[e][n]>=Selections[e][m]+1 )
-							Selections[e][n]--;
-						}
-					Selections[e][m]=0;
-					}
-				}
+			// 航空ユニット
+			BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
 			}
 		}
 	else
 		{
-		if( CanOrder && MoveOrders[1].Unit!=0 && !Units[MoveOrders[1].Unit].IsSupplying && !(  Units[MoveOrders[1].Unit].Kind>=UnitKind.AirBase && Units[MoveOrders[1].Unit].Kind<=UnitKind.Fortress  )  && !(Units[MoveOrders[1].Unit].Category==UnitCategory.Plane && Units[MoveOrders[1].Unit].PlaneState==UnitState.Parked && Units[Units[MoveOrders[1].Unit].Carrier].Hp<=Units[Units[MoveOrders[1].Unit].Carrier].MaxHp*0.2) )
+		// 合衆国海軍サイド
+		for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
 			{
-			// あるマイユニットに新ＰＰ＿ＸＹが設定された場合
-			// バッファに保存。これを命令をだせるタイミングにnew_ppに代入する。
-			BufferedMoveOrders[1].Unit=MoveOrders[1].Unit;
-			BufferedMoveOrders[1].Destination=MoveOrders[1].Destination;
-			BufferedMoveOrders[1].ClearsPath=MoveOrders[1].ClearsPath;
+			// 水上ユニット
+			BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
+			}
+		for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
+			{
+			// 航空ユニット
+			BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
+			}
+		}
+
+	m=MoveOrders[e].Unit;
+	if( Units[m].Category==UnitCategory.Plane && Units[m].PlaneState==UnitState.Parked )
+		{
+		Units[Units[m].Carrier].PlanesToLaunch=0;	// 空母なら これがオンで発艦中
+		Units[Units[m].Carrier].LandingLock=0;	// 空母ならこの数値で甲板上の右左 (the slot of the landing lock now)
+		SelectedUnit=0;
+		CombatMenuKind=0;
+		CombatMenuSelection=CombatMenuItem.None;
+		Selections[1][m]=0;
+		ClearSelection2(1);
+		}
+	CanOrder=false;
+	HasOrdered=true;
+	PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+	}
+
+private void SelectFriendlyTarget(ref int m, int e)
+	{
+	int s;
+	int n;
+	if ( Units[SelectedUnit].Category==UnitCategory.Plane && (Units[m].Kind==UnitKind.Carrier || Units[m].Kind==UnitKind.LightCarrier || Units[m].Kind==UnitKind.AirBase))
+		{
+		// 航空機の格納先を指定
+		if(CanOrder)
+			{
+			SelectedUnit=SelectOrders[e].SelectedUnit;
+			m=SelectOrders[e].Unit;
+
+			BufferedSelectOrders[1].IsSet=SelectOrders[e].IsSet;
+			BufferedSelectOrders[1].SelectedUnit=SelectOrders[e].SelectedUnit;
+			BufferedSelectOrders[1].Unit=SelectOrders[e].Unit;
+			BufferedSelectOrders[1].GroundPosition=SelectOrders[e].GroundPosition;
 
 			if(LocalSide==Side.Japan)
 				{
@@ -217,20 +120,137 @@ public void	HandleInput()
 					}
 				}
 
-			m=MoveOrders[e].Unit;
-			if( Units[m].Category==UnitCategory.Plane && Units[m].PlaneState==UnitState.Parked )
-				{
-				Units[Units[m].Carrier].PlanesToLaunch=0;	// 空母なら これがオンで発艦中
-				Units[Units[m].Carrier].LandingLock=0;	// 空母ならこの数値で甲板上の右左 (the slot of the landing lock now)
-				SelectedUnit=0;
-				CombatMenuKind=0;
-				CombatMenuSelection=CombatMenuItem.None;
-				Selections[1][m]=0;
-				ClearSelection2(1);
-				}
 			CanOrder=false;
 			HasOrdered=true;
 			PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+			}
+		}
+	else
+		{
+		if( Selections[e][m]==0 )
+			{	// ｍ番号ユニットを新規にセレクトに設定
+			if(!(Units[m].Kind>=UnitKind.AirBase&&Units[m].Kind<=UnitKind.Fortress) && !(Units[SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectedUnit].Kind<=UnitKind.Fortress))
+				{
+				SelectionCount++;
+				Selections[e][m]=SelectionCount;
+				}
+			}
+		else
+			{	// ｍ番号ユニットをセレクトから外す
+			SelectionCount--;
+			// セレクトの設定番号を連番にする。
+			for(n=1;n<=MaxUnitId;n++)
+				{
+				if( Selections[e][n]>=Selections[e][m]+1 )
+					Selections[e][n]--;
+				}
+			Selections[e][m]=0;
+			}
+		}
+	}
+
+private void SelectTargetOrLanding(ref int m, int e)
+	{
+	int s;
+	if( m==0 )
+		{
+		// 輸送船陸地を選択
+		// 揚陸場所あり
+
+		if(CanOrder)
+			{
+			SelectedUnit=SelectOrders[e].SelectedUnit;
+			m=SelectOrders[e].Unit;
+
+			BufferedSelectOrders[1].IsSet=SelectOrders[e].IsSet;
+			BufferedSelectOrders[1].SelectedUnit=SelectOrders[e].SelectedUnit;
+			BufferedSelectOrders[1].Unit=SelectOrders[e].Unit;
+			BufferedSelectOrders[1].GroundPosition=SelectOrders[e].GroundPosition;
+
+			CanOrder=false;
+			HasOrdered=true;
+			PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+			}
+		}
+	else
+		{
+		// 敵性ユニットを左クリック
+		if(CanOrder)
+			{
+			SelectedUnit=SelectOrders[e].SelectedUnit;
+			m=SelectOrders[e].Unit;
+
+			BufferedSelectOrders[1].IsSet=SelectOrders[e].IsSet;
+			BufferedSelectOrders[1].SelectedUnit=SelectOrders[e].SelectedUnit;
+			BufferedSelectOrders[1].Unit=SelectOrders[e].Unit;
+			BufferedSelectOrders[1].GroundPosition=SelectOrders[e].GroundPosition;
+
+			if(LocalSide==Side.Japan)
+				{
+				// 日本海軍サイド
+				for(s=1;s<=JPN_SHIP_END;s++)
+					{
+					// 水上ユニット
+					BufferedSelections[1][s-1]=Selections[1][s];
+					}
+				for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
+					{
+					// 航空ユニット
+					BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
+					}
+				}
+			else
+				{
+				// 合衆国海軍サイド
+				for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
+					{
+					// 水上ユニット
+					BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
+					}
+				for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
+					{
+					// 航空ユニット
+					BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
+					}
+				}
+
+			CanOrder=false;
+			HasOrdered=true;
+			PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+
+			}
+		}
+	}
+
+//============================================================================
+// 通信対戦用、入力データの保存、その他
+//----------------------------------------------------------------------------
+[Original("cnct_game_input_cont")]
+public void	HandleInput()
+	{
+	int	h,m,f,e; Array256<int> chk = default;
+
+	e=1;
+	if( SelectOrders[e].IsSet && !Units[SelectOrders[e].SelectedUnit].IsSupplying && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress ))
+		{
+		// ユニット自体をクリックした。
+		SelectedUnit=SelectOrders[e].SelectedUnit;
+		m=SelectOrders[e].Unit;
+
+		if( m==0 || Units[SelectedUnit].Side!=Units[m].Side )
+			{
+			SelectTargetOrLanding(ref m, e);
+			}
+		else
+			{
+			SelectFriendlyTarget(ref m, e);
+			}
+		}
+	else
+		{
+		if( CanOrder && MoveOrders[1].Unit!=0 && !Units[MoveOrders[1].Unit].IsSupplying && !(  Units[MoveOrders[1].Unit].Kind>=UnitKind.AirBase && Units[MoveOrders[1].Unit].Kind<=UnitKind.Fortress  )  && !(Units[MoveOrders[1].Unit].Category==UnitCategory.Plane && Units[MoveOrders[1].Unit].PlaneState==UnitState.Parked && Units[Units[MoveOrders[1].Unit].Carrier].Hp<=Units[Units[MoveOrders[1].Unit].Carrier].MaxHp*0.2) )
+			{
+			BufferMoveOrder(e);
 			}
 		}
 	}
@@ -844,6 +864,191 @@ public void	ScrollBattleArea(int drctn)
 		}
 	}
 
+private void ReadMouse()
+	{
+	int hr;
+
+	// バッファリング・データを取得する
+	while(IsAppActive)
+		{
+		DIDEVICEOBJECTDATA od;
+		uint dwItems = 1;
+		hr = pDIDeviceMouse.GetDeviceData((uint)(sizeof(DIDEVICEOBJECTDATA)),
+							&od, &dwItems, 0);
+		if (hr==DIERR_INPUTLOST)
+			pDIDeviceMouse.Acquire();
+		else if (FAILED(hr) || dwItems == 0)
+	            break;	// データが読めないか、存在しない
+		else
+			{
+			switch (od.dwOfs)
+				{
+
+				// 左ボタンが押された、または離された。
+				case DIMOFS_BUTTON0:
+					if( od.dwData!=0 )
+						{
+						if( LeftButton==0 )
+							LeftButton=1;
+						}
+					else
+						{
+						if( LeftButton!=0 )
+							LeftButton=3;
+						}
+					break;
+
+				// 右ボタンが押された、または離された。
+				case DIMOFS_BUTTON1:
+					if( od.dwData!=0 )
+						{
+						if( RightButton==0 )
+							RightButton=1;
+						}
+					else
+						{
+						if( RightButton!=0 )
+							RightButton=3;
+						}
+					break;
+/*
+				// 中ボタンが押された、または離された。
+				case DIMOFS_BUTTON2:
+					if( od.dwData )
+						key_cndtn|=MS_C_BTN;
+					else
+						{
+						key_cndtn&=~MS_C_BTN;
+						key_cndtn&=~MS_C_BTN2;
+						}
+					break;
+
+				// ５ボタン（右側面）が押された、または離された。
+				case DIMOFS_BUTTON4:
+					if (od.dwData & (0x80) )
+						key_cndtn|=UP_BTN;
+					else
+						key_cndtn&=~UP_BTN;
+					break;
+
+				// ４ボタン（左側面）が押された、または離された。
+				case DIMOFS_BUTTON3:
+					if (od.dwData & (0x80) )
+						key_cndtn|=DOWN_BTN;
+					else
+						key_cndtn&=~DOWN_BTN;
+					break;
+*/
+				}
+			}
+		}
+	}
+
+private void ReadKeyboard()
+	{
+	int hr;
+	int y = 0;
+
+	// バッファリング・データを取得する
+	while(IsAppActive)
+		{
+		DIDEVICEOBJECTDATA od;
+		uint dwItems = 1;
+		hr = pDIDevice.GetDeviceData((uint)(sizeof(DIDEVICEOBJECTDATA)),
+							&od, &dwItems, 0);
+		if (hr==DIERR_INPUTLOST)
+			pDIDevice.Acquire();
+		else if (FAILED(hr) || dwItems == 0)
+	            break;	// データが読めないか、存在しない
+		else
+			{
+
+			switch (od.dwOfs)
+				{
+
+				case DIK_W:
+					if ((od.dwData & (0x80))!=0 )
+						Buttons|=InputButtons.Front;
+					else
+						Buttons&=~InputButtons.Front;
+					break;
+
+				case DIK_S:
+					if ((od.dwData & (0x80))!=0 )
+						Buttons|=InputButtons.Back;
+					else
+						Buttons&=~InputButtons.Back;
+					break;
+
+				case DIK_D:
+					if ((od.dwData & (0x80))!=0 )
+						Buttons|=InputButtons.Right;
+					else
+						Buttons&=~InputButtons.Right;
+					break;
+
+				case DIK_A:
+					if ((od.dwData & (0x80))!=0 )
+						Buttons|=InputButtons.Left;
+					else
+						Buttons&=~InputButtons.Left;
+					break;
+
+				case DIK_SPACE:
+					if ((od.dwData & (0x80))!=0 )
+						Buttons|=InputButtons.Space;
+					else
+						Buttons&=~InputButtons.Space;
+					break;
+
+				case DIK_F:
+					if( Mode==GameMode.Battle && (od.dwData & (0x80))!=0 )
+						{
+						if(GameSpeed<2)
+							GameSpeed++;
+						else if(GameSpeed==2)
+							GameSpeed=4;
+						else if(GameSpeed<300)
+							GameSpeed+=2;
+						}
+					break;
+
+				case DIK_G:
+					if( Mode==GameMode.Battle && (od.dwData & (0x80))!=0 )
+						{
+						if(GameSpeed<=1)
+							GameSpeed=0;
+						else if(GameSpeed<=2)
+							GameSpeed=1;
+						else if(GameSpeed==4)
+							GameSpeed=2;
+						else if(GameSpeed!=0)
+							GameSpeed-=2;
+						}
+
+					break;
+
+				case DIK_R:
+					if( Mode==GameMode.Battle && (od.dwData & (0x80))!=0 )
+						{
+						GameSpeed=1;
+						}
+					break;
+
+				case DIK_RETURN:
+
+					if( !IsEditingMap && hwndChatDlg==null && (od.dwData & (0x80))!=0 )
+						{
+						hwndChatDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_CHAT_DIALOG), hwndApp, ChatDlgProc);
+
+						}
+					break;
+
+				}
+			}
+		}
+	}
+
 /*-------------------------------------------
 	入力フェッチ
 --------------------------------------------*/
@@ -856,107 +1061,7 @@ public void ReadInput()
 	// キーボードの入力チェック
 	if (pDIDevice!=null)
 		{
-		int hr;
-		int y = 0;
-
-		// バッファリング・データを取得する
-		while(IsAppActive)
-			{
-			DIDEVICEOBJECTDATA od;
-			uint dwItems = 1;
-			hr = pDIDevice.GetDeviceData((uint)(sizeof(DIDEVICEOBJECTDATA)),
-								&od, &dwItems, 0);
-			if (hr==DIERR_INPUTLOST)
-				pDIDevice.Acquire();
-			else if (FAILED(hr) || dwItems == 0)
-	            break;	// データが読めないか、存在しない
-			else
-				{
-
-				switch (od.dwOfs)
-					{
-
-					case DIK_W:
-						if ((od.dwData & (0x80))!=0 )
-							Buttons|=InputButtons.Front;
-						else
-							Buttons&=~InputButtons.Front;
-						break;
-
-					case DIK_S:
-						if ((od.dwData & (0x80))!=0 )
-							Buttons|=InputButtons.Back;
-						else
-							Buttons&=~InputButtons.Back;
-						break;
-
-					case DIK_D:
-						if ((od.dwData & (0x80))!=0 )
-							Buttons|=InputButtons.Right;
-						else
-							Buttons&=~InputButtons.Right;
-						break;
-
-					case DIK_A:
-						if ((od.dwData & (0x80))!=0 )
-							Buttons|=InputButtons.Left;
-						else
-							Buttons&=~InputButtons.Left;
-						break;
-
-					case DIK_SPACE:
-						if ((od.dwData & (0x80))!=0 )
-							Buttons|=InputButtons.Space;
-						else
-							Buttons&=~InputButtons.Space;
-						break;
-
-					case DIK_F:
-						if( Mode==GameMode.Battle && (od.dwData & (0x80))!=0 )
-							{
-							if(GameSpeed<2)
-								GameSpeed++;
-							else if(GameSpeed==2)
-								GameSpeed=4;
-							else if(GameSpeed<300)
-								GameSpeed+=2;
-							}
-						break;
-
-					case DIK_G:
-						if( Mode==GameMode.Battle && (od.dwData & (0x80))!=0 )
-							{
-							if(GameSpeed<=1)
-								GameSpeed=0;
-							else if(GameSpeed<=2)
-								GameSpeed=1;
-							else if(GameSpeed==4)
-								GameSpeed=2;
-							else if(GameSpeed!=0)
-								GameSpeed-=2;
-							}
-
-						break;
-
-					case DIK_R:
-						if( Mode==GameMode.Battle && (od.dwData & (0x80))!=0 )
-							{
-							GameSpeed=1;
-							}
-						break;
-
-					case DIK_RETURN:
-
-						if( !IsEditingMap && hwndChatDlg==null && (od.dwData & (0x80))!=0 )
-							{
-							hwndChatDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_CHAT_DIALOG), hwndApp, ChatDlgProc);
-
-							}
-						break;
-
-					}
-				}
-			}
+		ReadKeyboard();
 		}
 
 	flg=0;
@@ -996,82 +1101,7 @@ public void ReadInput()
 	if (pDIDeviceMouse!=null)
 		{
 
-		int hr;
-
-		// バッファリング・データを取得する
-		while(IsAppActive)
-			{
-			DIDEVICEOBJECTDATA od;
-			uint dwItems = 1;
-			hr = pDIDeviceMouse.GetDeviceData((uint)(sizeof(DIDEVICEOBJECTDATA)),
-								&od, &dwItems, 0);
-			if (hr==DIERR_INPUTLOST)
-				pDIDeviceMouse.Acquire();
-			else if (FAILED(hr) || dwItems == 0)
-	            break;	// データが読めないか、存在しない
-			else
-				{
-				switch (od.dwOfs)
-					{
-
-					// 左ボタンが押された、または離された。
-					case DIMOFS_BUTTON0:
-						if( od.dwData!=0 )
-							{
-							if( LeftButton==0 )
-								LeftButton=1;
-							}
-						else
-							{
-							if( LeftButton!=0 )
-								LeftButton=3;
-							}
-						break;
-
-					// 右ボタンが押された、または離された。
-					case DIMOFS_BUTTON1:
-						if( od.dwData!=0 )
-							{
-							if( RightButton==0 )
-								RightButton=1;
-							}
-						else
-							{
-							if( RightButton!=0 )
-								RightButton=3;
-							}
-						break;
-/*
-					// 中ボタンが押された、または離された。
-					case DIMOFS_BUTTON2:
-						if( od.dwData )
-							key_cndtn|=MS_C_BTN;
-						else
-							{
-							key_cndtn&=~MS_C_BTN;
-							key_cndtn&=~MS_C_BTN2;
-							}
-						break;
-
-					// ５ボタン（右側面）が押された、または離された。
-					case DIMOFS_BUTTON4:
-						if (od.dwData & (0x80) )
-							key_cndtn|=UP_BTN;
-						else
-							key_cndtn&=~UP_BTN;
-						break;
-
-					// ４ボタン（左側面）が押された、または離された。
-					case DIMOFS_BUTTON3:
-						if (od.dwData & (0x80) )
-							key_cndtn|=DOWN_BTN;
-						else
-							key_cndtn&=~DOWN_BTN;
-						break;
-*/
-					}
-				}
-			}
+		ReadMouse();
 		}
 
 	// 純粋なマウス位置を取る
