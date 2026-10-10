@@ -18,6 +18,8 @@ using OpenNspw.Porter;
 //   OpenNspw.Porter distances <project directory>
 //       Replaces the original's computations of a distance with calls of Distance where it computes the same (see
 //       Distances).
+//   OpenNspw.Porter element-refs <project directory>
+//       Gives a new effect or fire a ref local (see ElementRefs).
 //   OpenNspw.Porter ref-locals <project directory> [<method>,<method>...]
 //       Gives the element of a table that a loop works on a ref local, and the unit that the int parameter of the named
 //       methods numbers (see RefLocals).
@@ -53,6 +55,16 @@ if (args.Length is 2 or 3 && args[0] == "ref-locals")
 if (args.Length == 2 && args[0] == "distances")
 {
 	foreach (var line in new Distances(new CSharpProject(args[1])).Run())
+	{
+		Console.WriteLine(line);
+	}
+
+	return 0;
+}
+
+if (args.Length == 2 && args[0] == "element-refs")
+{
+	foreach (var line in new ElementRefs(new CSharpProject(args[1])).Run())
 	{
 		Console.WriteLine(line);
 	}
