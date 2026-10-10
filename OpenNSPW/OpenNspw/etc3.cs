@@ -460,13 +460,14 @@ private void UpdateBullet(ref Fire fire, ref int n, int m)
 				}
 
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
+			ref var effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
 
-			Effects[f].TimeLeft=20;
-			Effects[f].Animation=1;	// アニメーションパターン
+			effect.TimeLeft=20;
+			effect.Animation=1;	// アニメーションパターン
 
-			Effects[f].Position=fire.Position;
-			Effects[f].SpriteNumber=1;			// 弾丸着弾	のソースファイル上の番号
+			effect.Position=fire.Position;
+			effect.SpriteNumber=1;			// 弾丸着弾	のソースファイル上の番号
 			}
 		else
 			{
@@ -474,10 +475,11 @@ private void UpdateBullet(ref Fire fire, ref int n, int m)
 				{
 				// 弾丸描画
 				f=FindFreeEffect();
-				Effects[f].Layer=EffectLayer.Upper;
-				Effects[f].TimeLeft=1;	Effects[f].Animation=11;
-				Effects[f].Position=fire.Position;
-				Effects[f].EndPosition = new WorldPosition(wrk_x, wrk_y);
+				ref var effect = ref Effects[f];
+				effect.Layer=EffectLayer.Upper;
+				effect.TimeLeft=1;	effect.Animation=11;
+				effect.Position=fire.Position;
+				effect.EndPosition = new WorldPosition(wrk_x, wrk_y);
 				}
 			}
 
@@ -505,12 +507,13 @@ private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 		if( 1!=0 )
 			{
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
-			Effects[f].TimeLeft=1;	Effects[f].Animation=10;
-			Effects[f].Position=fire.Position;
-			Effects[f].EndPosition = new WorldPosition(wrk_x, wrk_y);
+			ref var effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
+			effect.TimeLeft=1;	effect.Animation=10;
+			effect.Position=fire.Position;
+			effect.EndPosition = new WorldPosition(wrk_x, wrk_y);
 
-			Effects[f].SpriteNumber=0;			// ソースファイル上の番号
+			effect.SpriteNumber=0;			// ソースファイル上の番号
 			}
 
 		}
@@ -520,13 +523,14 @@ private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 
 		// 砲弾炸裂
 		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Lower;
+		ref var effect = ref Effects[f];
+		effect.Layer=EffectLayer.Lower;
 
-		Effects[f].TimeLeft=10;
-		Effects[f].Animation=4;	// アニメーションパターン
+		effect.TimeLeft=10;
+		effect.Animation=4;	// アニメーションパターン
 
-		Effects[f].Position=fire.Position;
-		Effects[f].SpriteNumber=0;			// 弾丸着弾	のソースファイル上の番号
+		effect.Position=fire.Position;
+		effect.SpriteNumber=0;			// 弾丸着弾	のソースファイル上の番号
 
 		// ptin dbg
 		wrk_rect.top=(int)fire.Position.Y+40;
@@ -551,13 +555,14 @@ private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 						}
 
 					f=FindFreeEffect();
-					Effects[f].Layer=EffectLayer.Upper;
+					effect = ref Effects[f];
+					effect.Layer=EffectLayer.Upper;
 
-					Effects[f].TimeLeft=20;
-					Effects[f].Animation=2;	// アニメーションパターン
+					effect.TimeLeft=20;
+					effect.Animation=2;	// アニメーションパターン
 
-					Effects[f].Position=unit.Position;
-					Effects[f].SpriteNumber=1;			// 弾丸着弾	のソースファイル上の番号
+					effect.Position=unit.Position;
+					effect.SpriteNumber=1;			// 弾丸着弾	のソースファイル上の番号
 					}
 				}
 			}
@@ -573,28 +578,30 @@ private void UpdateAntiSubmarineBomb(ref Fire fire, ref int n, int m)
 	if( fire.Ticks==5 )
 		{
 		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Lower;
-		Effects[f].TimeLeft=30;
-		Effects[f].Animation=4;
+		ref var effect = ref Effects[f];
+		effect.Layer=EffectLayer.Lower;
+		effect.TimeLeft=30;
+		effect.Animation=4;
 
-		Effects[f].Position=fire.Position;
+		effect.Position=fire.Position;
 
-		Effects[f].SpriteNumber=7;			// ソースファイル上の番号
+		effect.SpriteNumber=7;			// ソースファイル上の番号
 		}
 	if( fire.Ticks==fire.FlightTime )
 		{	// バクハツ！
 
 		f=FindFreeEffect();
+		ref var effect = ref Effects[f];
 
 		PlaySoundEffect( 0, SoundId.TorpedoHit1 ,fire.Position.X, fire.Position.Y);
 
-		Effects[f].Layer=EffectLayer.Lower;
+		effect.Layer=EffectLayer.Lower;
 
-		Effects[f].TimeLeft=40;
-		Effects[f].Animation=4;	// アニメーションパターン
+		effect.TimeLeft=40;
+		effect.Animation=4;	// アニメーションパターン
 
-		Effects[f].Position=fire.Position;
-		Effects[f].SpriteNumber=11;			//ソースファイル上の番号
+		effect.Position=fire.Position;
+		effect.SpriteNumber=11;			//ソースファイル上の番号
 
 		h=0;
 		for(n=1;n<=MaxUnitId;n++)
@@ -635,19 +642,21 @@ private void UpdateAntiAircraftShell(ref Fire fire, ref int n, int m)
 			{
 			// 弾自体の絵
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
-			Effects[f].TimeLeft=1;	Effects[f].Animation=0;
-			Effects[f].Position=fire.Position;
-			Effects[f].SpriteNumber=96+ToEightDirections((int)(fire.Direction));			// ソースファイル上の番号
+			ref var effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
+			effect.TimeLeft=1;	effect.Animation=0;
+			effect.Position=fire.Position;
+			effect.SpriteNumber=96+ToEightDirections((int)(fire.Direction));			// ソースファイル上の番号
 			// 弾の煙
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
-			Effects[f].TimeLeft=3+SharedRandom(3);
-			Effects[f].Animation=4;
+			effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
+			effect.TimeLeft=3+SharedRandom(3);
+			effect.Animation=4;
 
-			Effects[f].Position = new WorldPosition(wrk_x+SharedRandom(10)-5, wrk_y+SharedRandom(10)-5);
+			effect.Position = new WorldPosition(wrk_x+SharedRandom(10)-5, wrk_y+SharedRandom(10)-5);
 
-			Effects[f].SpriteNumber=2;			// ソースファイル上の番号
+			effect.SpriteNumber=2;			// ソースファイル上の番号
 			}
 		}
 	else
@@ -657,19 +666,21 @@ private void UpdateAntiAircraftShell(ref Fire fire, ref int n, int m)
 		// 砲弾炸裂
 		// 煙
 		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Lower;
-		Effects[f].TimeLeft=80+Random(80);
-		Effects[f].Animation=2;
-		Effects[f].Position=fire.Position;
-		Effects[f].SpriteNumber=6;			// ソースファイル上の番号
+		ref var effect = ref Effects[f];
+		effect.Layer=EffectLayer.Lower;
+		effect.TimeLeft=80+Random(80);
+		effect.Animation=2;
+		effect.Position=fire.Position;
+		effect.SpriteNumber=6;			// ソースファイル上の番号
 
 		// 漠炎
 		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Lower;
-		Effects[f].TimeLeft=10;
-		Effects[f].Animation=4;	// アニメーションパターン
-		Effects[f].Position=fire.Position;
-		Effects[f].SpriteNumber=0;			// 弾丸着弾	のソースファイル上の番号
+		effect = ref Effects[f];
+		effect.Layer=EffectLayer.Lower;
+		effect.TimeLeft=10;
+		effect.Animation=4;	// アニメーションパターン
+		effect.Position=fire.Position;
+		effect.SpriteNumber=0;			// 弾丸着弾	のソースファイル上の番号
 
 		f=40;
 		// ptin dbg
@@ -698,13 +709,14 @@ private void UpdateAntiAircraftShell(ref Fire fire, ref int n, int m)
 						}
 
 					f=FindFreeEffect();
-					Effects[f].Layer=EffectLayer.Upper;
+					effect = ref Effects[f];
+					effect.Layer=EffectLayer.Upper;
 
-					Effects[f].TimeLeft=20;
-					Effects[f].Animation=2;	// アニメーションパターン
+					effect.TimeLeft=20;
+					effect.Animation=2;	// アニメーションパターン
 
-					Effects[f].Position=unit.Position;
-					Effects[f].SpriteNumber=1;			// 弾丸着弾	のソースファイル上の番号
+					effect.Position=unit.Position;
+					effect.SpriteNumber=1;			// 弾丸着弾	のソースファイル上の番号
 					}
 				}
 			}
@@ -734,19 +746,21 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 			{
 			// 弾自体の絵
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
-			Effects[f].TimeLeft=1;	Effects[f].Animation=0;
-			Effects[f].Position=fire.Position;
-			Effects[f].SpriteNumber=108+ToEightDirections((int)(fire.Direction));			// ソースファイル上の番号
+			ref var effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
+			effect.TimeLeft=1;	effect.Animation=0;
+			effect.Position=fire.Position;
+			effect.SpriteNumber=108+ToEightDirections((int)(fire.Direction));			// ソースファイル上の番号
 			// 弾の煙
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
-			Effects[f].TimeLeft=3+SharedRandom(3);
-			Effects[f].Animation=4;
+			effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
+			effect.TimeLeft=3+SharedRandom(3);
+			effect.Animation=4;
 
-			Effects[f].Position = new WorldPosition(wrk_x+SharedRandom(10)-5, wrk_y+SharedRandom(10)-5);
+			effect.Position = new WorldPosition(wrk_x+SharedRandom(10)-5, wrk_y+SharedRandom(10)-5);
 
-			Effects[f].SpriteNumber=2;			// ソースファイル上の番号
+			effect.SpriteNumber=2;			// ソースファイル上の番号
 			}
 		}
 	else
@@ -763,14 +777,15 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 			PlaySoundEffect( 0, SoundId.TorpedoHit1 ,fire.Position.X, fire.Position.Y);
 
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
+			ref var effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
 
-			Effects[f].TimeLeft=40;
-			Effects[f].Animation=4;	// アニメーションパターン
+			effect.TimeLeft=40;
+			effect.Animation=4;	// アニメーションパターン
 
-			Effects[f].Position=fire.Position;
+			effect.Position=fire.Position;
 
-			Effects[f].SpriteNumber=1;			// 弾丸着弾	のソースファイル上の番号
+			effect.SpriteNumber=1;			// 弾丸着弾	のソースファイル上の番号
 
 			// 当った的に収納機があれば破壊される場合もある
 			if( Units[n].Kind==UnitKind.AirBase || Units[n].Kind==UnitKind.Carrier || Units[n].Kind==UnitKind.LightCarrier )
@@ -812,25 +827,26 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 			PlaySoundEffect( 0, SoundId.Splash ,fire.Position.X, fire.Position.Y);
 
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Lower;
+			ref var effect = ref Effects[f];
+			effect.Layer=EffectLayer.Lower;
 
-			Effects[f].TimeLeft=40;
-			Effects[f].Animation=4;	// アニメーションパターン
+			effect.TimeLeft=40;
+			effect.Animation=4;	// アニメーションパターン
 
-			Effects[f].Position=fire.Position;
+			effect.Position=fire.Position;
 
 			wrk_x=fire.Position.X;
 			wrk_y=fire.Position.Y;
 
-			Effects[f].SpriteNumber=8;			// 弾丸着弾	のソースファイル上の番号
+			effect.SpriteNumber=8;			// 弾丸着弾	のソースファイル上の番号
 			if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
 				{
 				cm_scrn_x=(int)((wrk_x+(Sprites[SpriteId.JapanUnits].Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
 				cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[SpriteId.JapanUnits].Height/2))/Sprites[SpriteId.MapTiles].Height);
 				if( MapTiles[cm_scrn_y][cm_scrn_x]>=1)
-					Effects[f].SpriteNumber=10;			// 弾丸着弾	のソースファイル上の番号
+					effect.SpriteNumber=10;			// 弾丸着弾	のソースファイル上の番号
 				else
-					Effects[f].SpriteNumber=8;			// 弾丸着弾	のソースファイル上の番号
+					effect.SpriteNumber=8;			// 弾丸着弾	のソースファイル上の番号
 				}
 
 			}
@@ -891,13 +907,14 @@ private void UpdateTorpedo(ref Fire fire, ref int n, int m)
 			PlaySoundEffect( 0, SoundId.TorpedoHit1+Random(2) ,fire.Position.X, fire.Position.Y);
 
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Lower;
+			ref var effect = ref Effects[f];
+			effect.Layer=EffectLayer.Lower;
 
-			Effects[f].TimeLeft=40;
-			Effects[f].Animation=4;	// アニメーションパターン
+			effect.TimeLeft=40;
+			effect.Animation=4;	// アニメーションパターン
 
-			Effects[f].Position=fire.Position;
-			Effects[f].SpriteNumber=11;			// 弾丸着弾	のソースファイル上の番号
+			effect.Position=fire.Position;
+			effect.SpriteNumber=11;			// 弾丸着弾	のソースファイル上の番号
 			}
 		else
 			{
@@ -906,35 +923,38 @@ private void UpdateTorpedo(ref Fire fire, ref int n, int m)
 			if( fire.Ticks==1 )
 				{
 				f=FindFreeEffect();
-				Effects[f].Layer=EffectLayer.Lower;
-				Effects[f].TimeLeft=30;
-				Effects[f].Animation=0;
+				ref var effect = ref Effects[f];
+				effect.Layer=EffectLayer.Lower;
+				effect.TimeLeft=30;
+				effect.Animation=0;
 
-				Effects[f].Position=fire.Position;
+				effect.Position=fire.Position;
 
-				Effects[f].SpriteNumber=8;			// ソースファイル上の番号
+				effect.SpriteNumber=8;			// ソースファイル上の番号
 				}
 
 			if( fire.Ticks>=fire.ArmingTime  )
 				{
 				f=FindFreeEffect();
-				Effects[f].Layer=EffectLayer.Lower;
-				Effects[f].TimeLeft=1;
-				Effects[f].Animation=0;
+				ref var effect = ref Effects[f];
+				effect.Layer=EffectLayer.Lower;
+				effect.TimeLeft=1;
+				effect.Animation=0;
 
-				Effects[f].Position=fire.Position;
+				effect.Position=fire.Position;
 
-				Effects[f].SpriteNumber=72+ToEightDirections((int)(fire.Direction));			// ソースファイル上の番号
+				effect.SpriteNumber=72+ToEightDirections((int)(fire.Direction));			// ソースファイル上の番号
 				if( (Tick%3)==0)
 					{
 					f=FindFreeEffect();
-					Effects[f].Layer=EffectLayer.Lower;
-					Effects[f].TimeLeft=30+SharedRandom(25);
-					Effects[f].Animation=4;
+					effect = ref Effects[f];
+					effect.Layer=EffectLayer.Lower;
+					effect.TimeLeft=30+SharedRandom(25);
+					effect.Animation=4;
 
-					Effects[f].Position = new WorldPosition(wrk_x+SharedRandom(10)-5, wrk_y+SharedRandom(10)-5);
+					effect.Position = new WorldPosition(wrk_x+SharedRandom(10)-5, wrk_y+SharedRandom(10)-5);
 
-					Effects[f].SpriteNumber=8;			// ソースファイル上の番号
+					effect.SpriteNumber=8;			// ソースファイル上の番号
 					}
 				}
 			}
@@ -972,10 +992,11 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 			if( 1!=0 )
 				{
 				f=FindFreeEffect();
-				Effects[f].Layer=EffectLayer.Upper;
-				Effects[f].TimeLeft=1;	Effects[f].Animation=0;
-				Effects[f].Position=fire.Position;
-				Effects[f].SpriteNumber=84+ToEightDirections((int)(fire.Direction));			// ソースファイル上の番号
+				ref var effect = ref Effects[f];
+				effect.Layer=EffectLayer.Upper;
+				effect.TimeLeft=1;	effect.Animation=0;
+				effect.Position=fire.Position;
+				effect.SpriteNumber=84+ToEightDirections((int)(fire.Direction));			// ソースファイル上の番号
 				}
 			}
 		}
@@ -1003,13 +1024,14 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 			PlaySoundEffect( 0, SoundId.BombHit1+Random(2) ,fire.Position.X, fire.Position.Y);
 
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
+			ref var effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
 
-			Effects[f].TimeLeft=40;
-			Effects[f].Animation=4;	// アニメーションパターン
+			effect.TimeLeft=40;
+			effect.Animation=4;	// アニメーションパターン
 
-			Effects[f].Position=fire.Position;
-			Effects[f].SpriteNumber=1;			// 弾丸着弾	のソースファイル上の番号
+			effect.Position=fire.Position;
+			effect.SpriteNumber=1;			// 弾丸着弾	のソースファイル上の番号
 
 			// 当った的に収納機があれば破壊される場合もある
 			if( Units[n].Kind==UnitKind.AirBase || Units[n].Kind==UnitKind.Carrier || Units[n].Kind==UnitKind.LightCarrier )
@@ -1048,12 +1070,13 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 			// ハズレ
 
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Lower;
+			ref var effect = ref Effects[f];
+			effect.Layer=EffectLayer.Lower;
 
-			Effects[f].TimeLeft=40;
-			Effects[f].Animation=4;	// アニメーションパターン
+			effect.TimeLeft=40;
+			effect.Animation=4;	// アニメーションパターン
 
-			Effects[f].Position=fire.Position;
+			effect.Position=fire.Position;
 			wrk_x=fire.Position.X;
 			wrk_y=fire.Position.Y;
 			if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
@@ -1069,12 +1092,12 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 
 			if( MapTiles[cm_scrn_y][cm_scrn_x]>=1)
 				{
-				Effects[f].SpriteNumber=10;			// 着弾	のソースファイル上の番号
+				effect.SpriteNumber=10;			// 着弾	のソースファイル上の番号
 				PlaySoundEffect( 0, SoundId.BombHit1 ,fire.Position.X, fire.Position.Y);
 				}
 			else
 				{
-				Effects[f].SpriteNumber=8;			// 着弾	のソースファイル上の番号
+				effect.SpriteNumber=8;			// 着弾	のソースファイル上の番号
 				PlaySoundEffect( 0, SoundId.Splash ,fire.Position.X, fire.Position.Y);
 				}
 			}
@@ -1217,12 +1240,13 @@ private void UpdateLightlyDamagedPlane(ref Unit unit)
 	if( Random(8)==0 && (Tick%10)==0 )
 		{
 		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Upper;
-		Effects[f].TimeLeft=40+SharedRandom(15);
-		Effects[f].Animation=2;
+		ref var effect = ref Effects[f];
+		effect.Layer=EffectLayer.Upper;
+		effect.TimeLeft=40+SharedRandom(15);
+		effect.Animation=2;
 
-		Effects[f].Position=unit.Position;
-		Effects[f].SpriteNumber=6;			// ソースファイル上の番号
+		effect.Position=unit.Position;
+		effect.SpriteNumber=6;			// ソースファイル上の番号
 
 		}
 	}
@@ -1238,22 +1262,24 @@ private void UpdateDamagedPlane(ref Unit unit)
 	if( Random(2)==1 && (Tick%10)==0 )
 		{
 		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Upper;
-		Effects[f].TimeLeft=40+SharedRandom(15);
-		Effects[f].Animation=2;
+		ref var effect = ref Effects[f];
+		effect.Layer=EffectLayer.Upper;
+		effect.TimeLeft=40+SharedRandom(15);
+		effect.Animation=2;
 
-		Effects[f].Position=unit.Position;
-		Effects[f].SpriteNumber=6;			// ソースファイル上の番号
+		effect.Position=unit.Position;
+		effect.SpriteNumber=6;			// ソースファイル上の番号
 
 		if( Random(7)==0 )
 			{
 			// 小爆炎
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
-			Effects[f].TimeLeft=8+SharedRandom(6);
-			Effects[f].Animation=4;
-			Effects[f].Position = new WorldPosition(unit.Position.X+SharedRandom(6)-3, unit.Position.Y+SharedRandom(6)-3);
-			Effects[f].SpriteNumber=10;			// ソースファイル上の番号
+			effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
+			effect.TimeLeft=8+SharedRandom(6);
+			effect.Animation=4;
+			effect.Position = new WorldPosition(unit.Position.X+SharedRandom(6)-3, unit.Position.Y+SharedRandom(6)-3);
+			effect.SpriteNumber=10;			// ソースファイル上の番号
 			}
 		}
 	}
@@ -1270,21 +1296,23 @@ private void UpdateHeavilyDamagedPlane(ref Unit unit)
 	if( Random(3)!=0 && (Tick%(10) )==0 )
 		{
 		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Upper;
-		Effects[f].TimeLeft=40+SharedRandom(15);
-		Effects[f].Animation=2;
-		Effects[f].Position=unit.Position;
-		Effects[f].SpriteNumber=6;			// ソースファイル上の番号
+		ref var effect = ref Effects[f];
+		effect.Layer=EffectLayer.Upper;
+		effect.TimeLeft=40+SharedRandom(15);
+		effect.Animation=2;
+		effect.Position=unit.Position;
+		effect.SpriteNumber=6;			// ソースファイル上の番号
 
 		if( Random(5)==0 )
 			{
 			// 小爆炎
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
-			Effects[f].TimeLeft=8+SharedRandom(6);
-			Effects[f].Animation=4;
-			Effects[f].Position = new WorldPosition(unit.Position.X+SharedRandom(6)-3, unit.Position.Y+SharedRandom(6)-3);
-			Effects[f].SpriteNumber=10;			// ソースファイル上の番号
+			effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
+			effect.TimeLeft=8+SharedRandom(6);
+			effect.Animation=4;
+			effect.Position = new WorldPosition(unit.Position.X+SharedRandom(6)-3, unit.Position.Y+SharedRandom(6)-3);
+			effect.SpriteNumber=10;			// ソースファイル上の番号
 			}
 		}
 	}
@@ -1302,24 +1330,26 @@ private void UpdateBurningPlane(ref Unit unit)
 			for(i=0;i<3;i++)
 				{
 				f=FindFreeEffect();
+				ref var effect = ref Effects[f];
 				if( f!=0 )
 					{
-					Effects[f].Layer=EffectLayer.Upper;
-					Effects[f].TimeLeft=20+SharedRandom(20);
-					Effects[f].Animation=4;
-					Effects[f].Position = new WorldPosition(unit.Position.X+20-SharedRandom(40), unit.Position.Y+20-SharedRandom(40));
-					Effects[f].SpriteNumber=9;				// ソースファイル上の番号
+					effect.Layer=EffectLayer.Upper;
+					effect.TimeLeft=20+SharedRandom(20);
+					effect.Animation=4;
+					effect.Position = new WorldPosition(unit.Position.X+20-SharedRandom(40), unit.Position.Y+20-SharedRandom(40));
+					effect.SpriteNumber=9;				// ソースファイル上の番号
 					}
 				}
 			}
 		else
 			{
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
-			Effects[f].TimeLeft=20+SharedRandom(20);
-			Effects[f].Animation=4;
-			Effects[f].Position=unit.Position;
-			Effects[f].SpriteNumber=9;				// ソースファイル上の番号
+			ref var effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
+			effect.TimeLeft=20+SharedRandom(20);
+			effect.Animation=4;
+			effect.Position=unit.Position;
+			effect.SpriteNumber=9;				// ソースファイル上の番号
 			}
 		if(!IsEditingMap)
 			unit.Hp--;
@@ -1335,22 +1365,24 @@ private void UpdateBurningPlane(ref Unit unit)
 		if( Random(5)!=0 && (Tick%(10))==0 )
 			{
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
-			Effects[f].TimeLeft=40+SharedRandom(15);
-			Effects[f].Animation=2;
-			Effects[f].Position=unit.Position;
-			Effects[f].SpriteNumber=6;			// ソースファイル上の番号
+			ref var effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
+			effect.TimeLeft=40+SharedRandom(15);
+			effect.Animation=2;
+			effect.Position=unit.Position;
+			effect.SpriteNumber=6;			// ソースファイル上の番号
 			}
 
 		if( Random(3)==0 && unit.Hp<=unit.MaxHp*0.1 )
 			{
 			// 小爆炎
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
-			Effects[f].TimeLeft=8+SharedRandom(6);
-			Effects[f].Animation=4;
-			Effects[f].Position = new WorldPosition(unit.Position.X+SharedRandom(6)-3, unit.Position.Y+SharedRandom(6)-3);
-			Effects[f].SpriteNumber=10;			// ソースファイル上の番号
+			ref var effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
+			effect.TimeLeft=8+SharedRandom(6);
+			effect.Animation=4;
+			effect.Position = new WorldPosition(unit.Position.X+SharedRandom(6)-3, unit.Position.Y+SharedRandom(6)-3);
+			effect.SpriteNumber=10;			// ソースファイル上の番号
 			}
 		}
 	}
@@ -1368,10 +1400,11 @@ private void CrashPlane(ref Unit unit, int m)
 		UnitInfoPanel[0]=0;				// ユニットインフォをクリア
 
 	f=FindFreeEffect();
-	Effects[f].Layer=EffectLayer.Lower;
-	Effects[f].TimeLeft=80;
+	ref var effect = ref Effects[f];
+	effect.Layer=EffectLayer.Lower;
+	effect.TimeLeft=80;
 
-	Effects[f].Position=unit.Position;
+	effect.Position=unit.Position;
 
 	wrk_x2=unit.Position.X;
 	wrk_y2=unit.Position.Y;
@@ -1388,13 +1421,13 @@ private void CrashPlane(ref Unit unit, int m)
 
 	if( MapTiles[cm_scrn_y][cm_scrn_x]>=1)
 		{
-		Effects[f].SpriteNumber=9;			// ソースファイル上の番号
-		Effects[f].Animation=4;
+		effect.SpriteNumber=9;			// ソースファイル上の番号
+		effect.Animation=4;
 		}
 	else
 		{
-		Effects[f].SpriteNumber=7;			// ソースファイル上の番号
-		Effects[f].Animation=0;
+		effect.SpriteNumber=7;			// ソースファイル上の番号
+		effect.Animation=0;
 		}
 
 	if( SelectedUnit==m )
@@ -1413,28 +1446,29 @@ private void UpdatePlaneEffects(ref Unit unit, int m)
 	if(  unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%3)==0)&& (unit.Weapon==FireKind.Bomb || unit.Weapon==FireKind.Torpedo || unit.Weapon==FireKind.Maintenance || unit.Weapon==FireKind.Unarmed)  && unit.Side==LocalSide && !(unit.PlaneState==UnitState.Parked && UnitInfoPanel[1]==0) && !( unit.PlaneState==UnitState.Parked && unit.DeckPhase>=3 ) && !( unit.PlaneState==UnitState.Parked && unit.Carrier!=UnitInfoPanel[3]))
 		{
 		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Lower;
-		Effects[f].TimeLeft=1;
+		ref var effect = ref Effects[f];
+		effect.Layer=EffectLayer.Lower;
+		effect.TimeLeft=1;
 		if( unit.PlaneState==UnitState.Flying )
 			{
-			Effects[f].Animation=0;
-			Effects[f].Position = new WorldPosition(unit.Position.X, unit.Position.Y-25);
+			effect.Animation=0;
+			effect.Position = new WorldPosition(unit.Position.X, unit.Position.Y-25);
 			}
 		else
 			{
-			Effects[f].Animation=3;
-			Effects[f].Position = new WorldPosition(unit.Position.X, unit.Position.Y+25);
+			effect.Animation=3;
+			effect.Position = new WorldPosition(unit.Position.X, unit.Position.Y+25);
 			}
 		switch( unit.Weapon )
 			{
 			case FireKind.Torpedo:
-				Effects[f].SpriteNumber=3;			// ソースファイル上の番号
+				effect.SpriteNumber=3;			// ソースファイル上の番号
 				break;
 			case FireKind.Bomb:
-				Effects[f].SpriteNumber=4;			// ソースファイル上の番号
+				effect.SpriteNumber=4;			// ソースファイル上の番号
 				break;
 			case FireKind.Maintenance:	case FireKind.Unarmed:
-				Effects[f].SpriteNumber=15;			// ソースファイル上の番号
+				effect.SpriteNumber=15;			// ソースファイル上の番号
 				break;
 			}
 		}
@@ -1481,10 +1515,11 @@ private void LeaveWake(ref Unit unit)
 		{
 		// 航跡のエフェクトを残す
 		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Lower;
-		Effects[f].TimeLeft=60+SharedRandom(60);
-		Effects[f].Animation=4;
-		Effects[f].Position=unit.Position;
+		ref var effect = ref Effects[f];
+		effect.Layer=EffectLayer.Lower;
+		effect.TimeLeft=60+SharedRandom(60);
+		effect.Animation=4;
+		effect.Position=unit.Position;
 
 		drctn=unit.Direction;
 		drctn+=180;
@@ -1505,9 +1540,9 @@ private void LeaveWake(ref Unit unit)
 				break;
 			}
 
-		Effects[f].Position += new WorldVector(CosDegrees(drctn)*dstc, SinDegrees(drctn)*dstc);
+		effect.Position += new WorldVector(CosDegrees(drctn)*dstc, SinDegrees(drctn)*dstc);
 
-		Effects[f].SpriteNumber=8;			// ソースファイル上の番号
+		effect.SpriteNumber=8;			// ソースファイル上の番号
 		}
 	}
 
@@ -1565,12 +1600,13 @@ private void UpdateSurfaceShipEffects(ref Unit unit, int m)
 			if( Random(2)!=0  )
 				{
 				f=FindFreeEffect();
-				Effects[f].Layer=EffectLayer.Upper;
-				Effects[f].TimeLeft=1;
-				Effects[f].Animation=4;
+				ref var effect = ref Effects[f];
+				effect.Layer=EffectLayer.Upper;
+				effect.TimeLeft=1;
+				effect.Animation=4;
 
-				Effects[f].Position=unit.Position;
-				Effects[f].SpriteNumber=9;			// ソースファイル上の番号
+				effect.Position=unit.Position;
+				effect.SpriteNumber=9;			// ソースファイル上の番号
 				}
 			}
 		else
@@ -1581,18 +1617,20 @@ private void UpdateSurfaceShipEffects(ref Unit unit, int m)
 				if(  n==0 )
 					{
 					f=FindFreeEffect();
-					Effects[f].Layer=EffectLayer.Upper;
-					Effects[f].TimeLeft=1;	Effects[f].Animation=4;
-					Effects[f].Position=unit.Position;
-					Effects[f].SpriteNumber=9;			// ソースファイル上の番号
+					ref var effect = ref Effects[f];
+					effect.Layer=EffectLayer.Upper;
+					effect.TimeLeft=1;	effect.Animation=4;
+					effect.Position=unit.Position;
+					effect.SpriteNumber=9;			// ソースファイル上の番号
 					}
 				if(  n==1 )
 					{
 					f=FindFreeEffect();
-					Effects[f].Layer=EffectLayer.Upper;
-					Effects[f].TimeLeft=1;	Effects[f].Animation=4;
-					Effects[f].Position=unit.Position;
-					Effects[f].SpriteNumber=10;			// ソースファイル上の番号
+					ref var effect = ref Effects[f];
+					effect.Layer=EffectLayer.Upper;
+					effect.TimeLeft=1;	effect.Animation=4;
+					effect.Position=unit.Position;
+					effect.SpriteNumber=10;			// ソースファイル上の番号
 					}
 				}
 			else
@@ -1600,10 +1638,11 @@ private void UpdateSurfaceShipEffects(ref Unit unit, int m)
 				if( Random(10)==1  && unit.Hp<=unit.MaxHp*0.7 )
 					{
 					f=FindFreeEffect();
-					Effects[f].Layer=EffectLayer.Upper;
-					Effects[f].TimeLeft=1;	Effects[f].Animation=4;
-					Effects[f].Position=unit.Position;
-					Effects[f].SpriteNumber=10;			// ソースファイル上の番号
+					ref var effect = ref Effects[f];
+					effect.Layer=EffectLayer.Upper;
+					effect.TimeLeft=1;	effect.Animation=4;
+					effect.Position=unit.Position;
+					effect.SpriteNumber=10;			// ソースファイル上の番号
 					}
 				}
 			}
@@ -1642,13 +1681,14 @@ private void UpdateSubmergedSubmarineEffects(ref Unit unit, int m)
 				for(n=0;n<=3;n++)
 					{
 					f=FindFreeEffect();
+					ref var effect = ref Effects[f];
 					if( f!=0 )
 						{
-						Effects[f].Layer=EffectLayer.Lower;
-						Effects[f].TimeLeft=100+SharedRandom(20);
-						Effects[f].Animation=4;
-						Effects[f].Position = new WorldPosition(unit.Position.X+SharedRandom(40)-20, unit.Position.Y+SharedRandom(40)-20);
-						Effects[f].SpriteNumber=8;			// ソースファイル上の番号
+						effect.Layer=EffectLayer.Lower;
+						effect.TimeLeft=100+SharedRandom(20);
+						effect.Animation=4;
+						effect.Position = new WorldPosition(unit.Position.X+SharedRandom(40)-20, unit.Position.Y+SharedRandom(40)-20);
+						effect.SpriteNumber=8;			// ソースファイル上の番号
 						}
 					}
 				// ついでに発見される
@@ -1675,13 +1715,14 @@ private void UpdateSubmergedSubmarineEffects(ref Unit unit, int m)
 					for(n=0;n<=2;n++)
 						{
 						f=FindFreeEffect();
+						ref var effect = ref Effects[f];
 						if( f!=0)
 							{
-							Effects[f].Layer=EffectLayer.Lower;
-							Effects[f].TimeLeft=100+SharedRandom(20);
-							Effects[f].Animation=4;
-							Effects[f].Position = new WorldPosition(unit.Position.X+SharedRandom(40)-20, unit.Position.Y+SharedRandom(40)-20);
-							Effects[f].SpriteNumber=8;			// ソースファイル上の番号
+							effect.Layer=EffectLayer.Lower;
+							effect.TimeLeft=100+SharedRandom(20);
+							effect.Animation=4;
+							effect.Position = new WorldPosition(unit.Position.X+SharedRandom(40)-20, unit.Position.Y+SharedRandom(40)-20);
+							effect.SpriteNumber=8;			// ソースファイル上の番号
 							}
 						}
 
@@ -1705,13 +1746,14 @@ private void UpdateShipEffects(ref Unit unit, int m)
 	if(  unit.IsSupplying && (FrameCount%2)!=0 && unit.Side==LocalSide )
 		{
 		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Lower;
-		Effects[f].TimeLeft=1;
+		ref var effect = ref Effects[f];
+		effect.Layer=EffectLayer.Lower;
+		effect.TimeLeft=1;
 
-		Effects[f].Animation=0;
-		Effects[f].Position = new WorldPosition(unit.Position.X, unit.Position.Y-25.0);
+		effect.Animation=0;
+		effect.Position = new WorldPosition(unit.Position.X, unit.Position.Y-25.0);
 
-		Effects[f].SpriteNumber=15;			// ソースファイル上の番号
+		effect.SpriteNumber=15;			// ソースファイル上の番号
 		}
 
 	// 武装の表示
@@ -1721,61 +1763,66 @@ private void UpdateShipEffects(ref Unit unit, int m)
 		{
 		// 大和級とエセックス
 		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Lower;
-		Effects[f].TimeLeft=1;
+		ref var effect = ref Effects[f];
+		effect.Layer=EffectLayer.Lower;
+		effect.TimeLeft=1;
 
-		Effects[f].Animation=0;
-		Effects[f].Position = new WorldPosition(unit.Position.X+18, unit.Position.Y+25.0);
+		effect.Animation=0;
+		effect.Position = new WorldPosition(unit.Position.X+18, unit.Position.Y+25.0);
 
-		Effects[f].SpriteNumber=27;			// ソースファイル上の番号
+		effect.SpriteNumber=27;			// ソースファイル上の番号
 		}
 	else if( unit.Kind==UnitKind.Destroyer && unit.Variant==1  && unit.Side==LocalSide )
 		{
 		// 対潜駆逐艦
 		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Lower;
-		Effects[f].TimeLeft=1;
+		ref var effect = ref Effects[f];
+		effect.Layer=EffectLayer.Lower;
+		effect.TimeLeft=1;
 
-		Effects[f].Animation=0;
-		Effects[f].Position = new WorldPosition(unit.Position.X+18, unit.Position.Y+25.0);
+		effect.Animation=0;
+		effect.Position = new WorldPosition(unit.Position.X+18, unit.Position.Y+25.0);
 
-		Effects[f].SpriteNumber=26;			// ソースファイル上の番号
+		effect.SpriteNumber=26;			// ソースファイル上の番号
 		}
 	else if( unit.Kind==UnitKind.Cruiser && unit.Variant==1  && unit.Side==LocalSide )
 		{
 		// 防空巡洋艦
 		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Lower;
-		Effects[f].TimeLeft=1;
+		ref var effect = ref Effects[f];
+		effect.Layer=EffectLayer.Lower;
+		effect.TimeLeft=1;
 
-		Effects[f].Animation=0;
-		Effects[f].Position = new WorldPosition(unit.Position.X+18, unit.Position.Y+25.0);
+		effect.Animation=0;
+		effect.Position = new WorldPosition(unit.Position.X+18, unit.Position.Y+25.0);
 
-		Effects[f].SpriteNumber=16;			// ソースファイル上の番号
+		effect.SpriteNumber=16;			// ソースファイル上の番号
 		}
 	else if( ( unit.Side==Side.Japan && ( unit.Kind==UnitKind.Submarine || unit.Kind==UnitKind.Destroyer || unit.Kind==UnitKind.Cruiser ) || unit.Side==Side.UnitedStates && ( unit.Kind==UnitKind.Submarine || unit.Kind==UnitKind.Destroyer ) ) && !unit.IsSupplying && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%2)!=0) && unit.Ammo>=1 && unit.Side==LocalSide )
 		{
 		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Lower;
-		Effects[f].TimeLeft=1;
+		ref var effect = ref Effects[f];
+		effect.Layer=EffectLayer.Lower;
+		effect.TimeLeft=1;
 
-		Effects[f].Animation=0;
-		Effects[f].Position = new WorldPosition(unit.Position.X, unit.Position.Y-25.0);
+		effect.Animation=0;
+		effect.Position = new WorldPosition(unit.Position.X, unit.Position.Y-25.0);
 
-		Effects[f].SpriteNumber=3;			// ソースファイル上の番号
+		effect.SpriteNumber=3;			// ソースファイル上の番号
 		}
 
 	// トランスポーターの荷物の表示
 	if(  unit.Kind==UnitKind.Transport && !unit.IsSupplying && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%2)!=0) && unit.Side==LocalSide )
 		{
 		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Lower;
-		Effects[f].TimeLeft=1;
+		ref var effect = ref Effects[f];
+		effect.Layer=EffectLayer.Lower;
+		effect.TimeLeft=1;
 
-		Effects[f].Animation=0;
-		Effects[f].Position = new WorldPosition(unit.Position.X, unit.Position.Y-25.0);
+		effect.Animation=0;
+		effect.Position = new WorldPosition(unit.Position.X, unit.Position.Y-25.0);
 
-				Effects[f].SpriteNumber=44;			// ソースファイル上の番号
+				effect.SpriteNumber=44;			// ソースファイル上の番号
 		}
 
 //TR_GF1
@@ -1784,19 +1831,21 @@ private void UpdateShipEffects(ref Unit unit, int m)
 	if(  unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.IsSubmerged && unit.ContactTime!=0 )
 		{
 		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Upper;
-		Effects[f].TimeLeft=1;
-		Effects[f].Animation=0;
-		Effects[f].Position = new WorldPosition(unit.ContactX, unit.ContactY);
+		ref var effect = ref Effects[f];
+		effect.Layer=EffectLayer.Upper;
+		effect.TimeLeft=1;
+		effect.Animation=0;
+		effect.Position = new WorldPosition(unit.ContactX, unit.ContactY);
 
-		Effects[f].SpriteNumber=60;			// ソースファイル上の番号
+		effect.SpriteNumber=60;			// ソースファイル上の番号
 
 		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Lower;
-		Effects[f].TimeLeft=1;
-		Effects[f].Animation=12;
-		Effects[f].Position = new WorldPosition(unit.ContactX, unit.ContactY);
-		Effects[f].EndPosition = new WorldPosition(unit.ContactRadius, unit.ContactRadius);
+		effect = ref Effects[f];
+		effect.Layer=EffectLayer.Lower;
+		effect.TimeLeft=1;
+		effect.Animation=12;
+		effect.Position = new WorldPosition(unit.ContactX, unit.ContactY);
+		effect.EndPosition = new WorldPosition(unit.ContactRadius, unit.ContactRadius);
 		}
 
 	if( unit.Kind==UnitKind.Submarine && unit.IsSubmerged )
@@ -1825,17 +1874,18 @@ public void	UpdateUnitEffects(int m)
 	if( unit.IsGroupLeader!=0 && unit.Side==LocalSide && unit.PlaneState!=UnitState.Parked  )
 		{
 		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Upper;
-		Effects[f].TimeLeft=1;
-		Effects[f].Animation=0;
-		Effects[f].Position = new WorldPosition(unit.Position.X, Effects[f].Position.Y);
+		ref var effect = ref Effects[f];
+		effect.Layer=EffectLayer.Upper;
+		effect.TimeLeft=1;
+		effect.Animation=0;
+		effect.Position = new WorldPosition(unit.Position.X, effect.Position.Y);
 		if( unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Fighter || unit.Kind==UnitKind.Destroyer || unit.Kind==UnitKind.Submarine)
-			Effects[f].Position = new WorldPosition(Effects[f].Position.X, unit.Position.Y+30.0);
+			effect.Position = new WorldPosition(effect.Position.X, unit.Position.Y+30.0);
 		else
-			Effects[f].Position = new WorldPosition(Effects[f].Position.X, unit.Position.Y+35.0);
+			effect.Position = new WorldPosition(effect.Position.X, unit.Position.Y+35.0);
 
 		// 編隊長の旗
-		Effects[f].SpriteNumber=24;			// ソースファイル上の番号
+		effect.SpriteNumber=24;			// ソースファイル上の番号
 		}
 
 	// 航空機のユニットエフェクト
@@ -1859,13 +1909,14 @@ public void	UpdateUnitEffects(int m)
 		if(  unit.BuildTime!=0 && (FrameCount%2)!=0 && unit.Side==LocalSide )
 			{
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
-			Effects[f].TimeLeft=1;
+			ref var effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
+			effect.TimeLeft=1;
 
-			Effects[f].Animation=0;
-			Effects[f].Position = new WorldPosition(unit.Position.X, unit.Position.Y-25.0);
+			effect.Animation=0;
+			effect.Position = new WorldPosition(unit.Position.X, unit.Position.Y-25.0);
 
-			Effects[f].SpriteNumber=15;			// ソースファイル上の番号
+			effect.SpriteNumber=15;			// ソースファイル上の番号
 			}
 		}
 

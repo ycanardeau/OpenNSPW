@@ -392,11 +392,12 @@ public void	DrawDestruction(int m)
 		{
 		// 沈没の水門
 		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Lower;
-		Effects[f].TimeLeft=220;
-		Effects[f].Animation=0;
-		Effects[f].Position=Units[m].Position;
-		Effects[f].SpriteNumber=7;			// ソースファイル上の番号
+		ref var effect = ref Effects[f];
+		effect.Layer=EffectLayer.Lower;
+		effect.TimeLeft=220;
+		effect.Animation=0;
+		effect.Position=Units[m].Position;
+		effect.SpriteNumber=7;			// ソースファイル上の番号
 
 		}
 
@@ -409,42 +410,46 @@ public void	DrawDestruction(int m)
 			for(i=0;i<=7;i++)
 				{
 				f=FindFreeEffect();
-				Effects[f].Layer=EffectLayer.Lower;
-				Effects[f].TimeLeft=200+Random(20);
-				Effects[f].Animation=4;
-				Effects[f].Position = new WorldPosition(Units[m].Position.X+Random(100)-50, Units[m].Position.Y+Random(100)-50);
-				Effects[f].SpriteNumber=8;			// ソースファイル上の番号
+				ref var effect = ref Effects[f];
+				effect.Layer=EffectLayer.Lower;
+				effect.TimeLeft=200+Random(20);
+				effect.Animation=4;
+				effect.Position = new WorldPosition(Units[m].Position.X+Random(100)-50, Units[m].Position.Y+Random(100)-50);
+				effect.SpriteNumber=8;			// ソースファイル上の番号
 				}
 			}
 		// 沈没の煙
 		for(i=0;i<=2;i++)
 			{
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
-			Effects[f].TimeLeft=150+Random(20);
-			Effects[f].Animation=4;
-			Effects[f].Position = new WorldPosition(Units[m].Position.X+Random(30)-15, Units[m].Position.Y+Random(30)-15);
-			Effects[f].SpriteNumber=5+Random(2);			// ソースファイル上の番号
+			ref var effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
+			effect.TimeLeft=150+Random(20);
+			effect.Animation=4;
+			effect.Position = new WorldPosition(Units[m].Position.X+Random(30)-15, Units[m].Position.Y+Random(30)-15);
+			effect.SpriteNumber=5+Random(2);			// ソースファイル上の番号
 			}
 		// 沈没の爆炎
 		for(i=0;i<=4;i++)
 			{
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
-			Effects[f].TimeLeft=30+Random(20);
-			Effects[f].Animation=4;
-			Effects[f].Position = new WorldPosition(Units[m].Position.X+Random(40)-20, Units[m].Position.Y+Random(40)-20);
-			Effects[f].SpriteNumber=9;			// ソースファイル上の番号
+			ref var effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
+			effect.TimeLeft=30+Random(20);
+			effect.Animation=4;
+			effect.Position = new WorldPosition(Units[m].Position.X+Random(40)-20, Units[m].Position.Y+Random(40)-20);
+			effect.SpriteNumber=9;			// ソースファイル上の番号
 			}
 		// 沈没の小爆炎
 		for(i=0;i<=4;i++)
 			{
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
-			Effects[f].TimeLeft=40+Random(20);
-			Effects[f].Animation=4;
-			Effects[f].Position = new WorldPosition(Units[m].Position.X+Random(60)-30, Units[m].Position.Y+Random(60)-30);
-			Effects[f].SpriteNumber=10;			// ソースファイル上の番号
+			ref var effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
+			effect.TimeLeft=40+Random(20);
+			effect.Animation=4;
+			effect.Position = new WorldPosition(Units[m].Position.X+Random(60)-30, Units[m].Position.Y+Random(60)-30);
+			effect.SpriteNumber=10;			// ソースファイル上の番号
 			}
 		}
 	else
@@ -456,42 +461,46 @@ public void	DrawDestruction(int m)
 			for(i=0;i<=3;i++)
 				{
 				f=FindFreeEffect();
-				Effects[f].Layer=EffectLayer.Lower;
-				Effects[f].TimeLeft=200+Random(20);
-				Effects[f].Animation=4;
-				Effects[f].Position = new WorldPosition(Units[m].Position.X+Random(100)-50, Units[m].Position.Y+Random(100)-50);
-				Effects[f].SpriteNumber=8;			// ソースファイル上の番号
+				ref var effect = ref Effects[f];
+				effect.Layer=EffectLayer.Lower;
+				effect.TimeLeft=200+Random(20);
+				effect.Animation=4;
+				effect.Position = new WorldPosition(Units[m].Position.X+Random(100)-50, Units[m].Position.Y+Random(100)-50);
+				effect.SpriteNumber=8;			// ソースファイル上の番号
 				}
 			}
 		// 沈没の煙
 		for(i=0;i<=1;i++)
 			{
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
-			Effects[f].TimeLeft=150+Random(20);
-			Effects[f].Animation=4;
-			Effects[f].Position = new WorldPosition(Units[m].Position.X+Random(30)-15, Units[m].Position.Y+Random(30)-15);
-			Effects[f].SpriteNumber=5+Random(2);			// ソースファイル上の番号
+			ref var effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
+			effect.TimeLeft=150+Random(20);
+			effect.Animation=4;
+			effect.Position = new WorldPosition(Units[m].Position.X+Random(30)-15, Units[m].Position.Y+Random(30)-15);
+			effect.SpriteNumber=5+Random(2);			// ソースファイル上の番号
 			}
 		// 沈没の爆炎
 		for(i=0;i<=0;i++)
 			{
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
-			Effects[f].TimeLeft=30+Random(20);
-			Effects[f].Animation=4;
-			Effects[f].Position = new WorldPosition(Units[m].Position.X+Random(40)-20, Units[m].Position.Y+Random(40)-20);
-			Effects[f].SpriteNumber=9;			// ソースファイル上の番号
+			ref var effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
+			effect.TimeLeft=30+Random(20);
+			effect.Animation=4;
+			effect.Position = new WorldPosition(Units[m].Position.X+Random(40)-20, Units[m].Position.Y+Random(40)-20);
+			effect.SpriteNumber=9;			// ソースファイル上の番号
 			}
 		// 沈没の小爆炎
 		for(i=0;i<=1;i++)
 			{
 			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Upper;
-			Effects[f].TimeLeft=20+Random(20);
-			Effects[f].Animation=4;
-			Effects[f].Position = new WorldPosition(Units[m].Position.X+Random(20)-10, Units[m].Position.Y+Random(20)-10);
-			Effects[f].SpriteNumber=10;			// ソースファイル上の番号
+			ref var effect = ref Effects[f];
+			effect.Layer=EffectLayer.Upper;
+			effect.TimeLeft=20+Random(20);
+			effect.Animation=4;
+			effect.Position = new WorldPosition(Units[m].Position.X+Random(20)-10, Units[m].Position.Y+Random(20)-10);
+			effect.SpriteNumber=10;			// ソースファイル上の番号
 			}
 
 		}
