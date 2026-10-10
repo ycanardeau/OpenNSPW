@@ -33,30 +33,7 @@ public const string	CLASS_NAME	= "NSPW_NET";
 
 public const int DIDEVICE_BUFFERSIZE	= 100;				// ダイレクトインプット　デバイスに設定するバッファ・サイズ
 
-public const int FRONT_BTN	= (0x01<<0);
-public const int BACK_BTN	= (0x01<<1);
-public const int RIGHT_BTN	= (0x01<<2);
-public const int LEFT_BTN	= (0x01<<3);
-public const int UP_BTN		= (0x01<<4);
-public const int DOWN_BTN	= (0x01<<5);
-public const int R_TURN_BTN	= (0x01<<6);
-public const int L_TURN_BTN	= (0x01<<7);
-
-public const int MS_R_BTN	= (0x01<<8);
-public const int MS_L_BTN	= (0x01<<9);
-public const int MS_C_BTN	= (0x01<<10);
-
-public const int MS_R_BTN2	= (0x01<<11);
-public const int MS_L_BTN2	= (0x01<<12);
-public const int MS_C_BTN2	= (0x01<<13);
-
-public const int FRONT_BTN2	= (0x01<<14);
-public const int BACK_BTN2	= (0x01<<15);
-public const int SPACE		= (0x01<<16);
-public const int V_KEY		= (0x01<<17);
-
-public const int TOP_VIEW_BTN	= (0x01<<18);
-public const int TOP_VIEW_BTN2	= (0x01<<19);
+// FRONT_BTN ... TOP_VIEW_BTN2: InputButtons.
 
 /*
 

@@ -970,37 +970,37 @@ public void ReadInput()
 
 					case DIK_W:
 						if ((od.dwData & (0x80))!=0 )
-							Buttons|=FRONT_BTN;
+							Buttons|=InputButtons.Front;
 						else
-							Buttons&=~FRONT_BTN;
+							Buttons&=~InputButtons.Front;
 						break;
 
 					case DIK_S:
 						if ((od.dwData & (0x80))!=0 )
-							Buttons|=BACK_BTN;
+							Buttons|=InputButtons.Back;
 						else
-							Buttons&=~BACK_BTN;
+							Buttons&=~InputButtons.Back;
 						break;
 
 					case DIK_D:
 						if ((od.dwData & (0x80))!=0 )
-							Buttons|=RIGHT_BTN;
+							Buttons|=InputButtons.Right;
 						else
-							Buttons&=~RIGHT_BTN;
+							Buttons&=~InputButtons.Right;
 						break;
 
 					case DIK_A:
 						if ((od.dwData & (0x80))!=0 )
-							Buttons|=LEFT_BTN;
+							Buttons|=InputButtons.Left;
 						else
-							Buttons&=~LEFT_BTN;
+							Buttons&=~InputButtons.Left;
 						break;
 
 					case DIK_SPACE:
 						if ((od.dwData & (0x80))!=0 )
-							Buttons|=SPACE;
+							Buttons|=InputButtons.Space;
 						else
-							Buttons&=~SPACE;
+							Buttons&=~InputButtons.Space;
 						break;
 
 					case DIK_F:
@@ -1053,25 +1053,25 @@ public void ReadInput()
 
 	flg=0;
 
-	if( CursorPosition.y<=0 || (Buttons&FRONT_BTN)!=0 )
+	if( CursorPosition.y<=0 || Buttons.HasFlag(InputButtons.Front) )
 		{
 		ScrollBattleArea(1);
 		flg=1;
 		}
 
-	if( CursorPosition.y>=SCRN_HEIGHT-1 || (Buttons&BACK_BTN)!=0 )
+	if( CursorPosition.y>=SCRN_HEIGHT-1 || Buttons.HasFlag(InputButtons.Back) )
 		{
 		ScrollBattleArea(5);
 		flg=1;
 		}
 
-	if( CursorPosition.x>=SCRN_WIDTH-1 || (Buttons&RIGHT_BTN)!=0 )
+	if( CursorPosition.x>=SCRN_WIDTH-1 || Buttons.HasFlag(InputButtons.Right) )
 		{
 		ScrollBattleArea(3);
 		flg=1;
 		}
 
-	if( CursorPosition.x<=0 || (Buttons&LEFT_BTN)!=0)
+	if( CursorPosition.x<=0 || Buttons.HasFlag(InputButtons.Left))
 		{
 		ScrollBattleArea(7);
 		flg=1;
