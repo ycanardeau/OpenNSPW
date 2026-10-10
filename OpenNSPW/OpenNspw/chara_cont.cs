@@ -1932,21 +1932,7 @@ public void	UpdateBattle()
 					wrk_x=unit.Position.X-other.Position.X;
 					wrk_y=unit.Position.Y-other.Position.Y;
 
-					if(wrk_x==0)	wrk_x=1;
-					if(wrk_y==0)	wrk_y=1;
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
-					if(wrk_x<0)
-						wrk_x=0-wrk_x;
-					if(wrk_y<0)
-						wrk_y=0-wrk_y;
-					if(drctn>=180)
-						drctn=drctn-180;
-					if(drctn>=90)
-						drctn=90-(drctn-90);
-
-					wrk_x2=((wrk_x)/(CosDegrees(drctn)));
+					wrk_x2=Distance(wrk_x, wrk_y);
 					if( dstc>wrk_x2 )
 						{
 						dstc=wrk_x2;
