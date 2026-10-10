@@ -246,6 +246,85 @@ public int FrameCount;
 //
 [Original("rival_ver")] public Array16<byte> RivalVersion;
 
+private void DrawRivalChat(ref Array128<byte> ach, ref HDC hdc)
+	{
+	int len;
+	int m;
+	if(RivalChatDisplayTime!=0)
+		{
+		len = wsprintf(ach, RivalChat );
+		TextOut(hdc, 10, 240+170, ach, len);
+		RivalChatDisplayTime--;
+		if(RivalChatDisplayTime==0)
+			{
+			for(m=0;m<128;m++)
+				{
+				RivalChat[m]=0;
+				}
+			}
+		}
+	}
+
+private void DrawMyChat(ref Array128<byte> ach, ref HDC hdc)
+	{
+	int len;
+	int m;
+	if(MyChatDisplayTime!=0)
+		{
+		len = wsprintf(ach, MyChat );
+		TextOut(hdc, 10, 200+170, ach, len);
+		MyChatDisplayTime--;
+		if(MyChatDisplayTime==0)
+			{
+			for(m=0;m<128;m++)
+				{
+				MyChat[m]=0;
+				}
+			}
+		}
+	}
+
+private void DrawDebugInfo(ref int len, ref Array128<byte> ach, int no)
+	{
+	switch( DebugMenu )
+		{
+		case 0:
+			len = wsprintf(ach, "%d  :%d  :%d  :%d  :%d", Units[SelectedUnit].info[1], Units[SelectedUnit].info[4], Units[SelectedUnit].info[7], Units[SelectedUnit].info[8], Units[81].info[0] );
+			break;
+		case 1:
+			len = wsprintf(ach, "put_trgt %d put_kind %d cmbt_x %d cmbt_y %d crsr_pt.x %d crsr_pt.y %d ",EditorTarget, EditorKind, (int)CameraPosition.X, (int)CameraPosition.Y, (int)CursorPosition.x, (int)CursorPosition.y  );
+			break;
+		case 2:
+			len = wsprintf(ach, "cnct_game=%d you_are_host=%d you_can_order=%d new_pp[1].used=%d",IsNetworkGame,IsHost,CanOrder,MoveOrders[1].Unit);
+			break;
+		case 3:
+			len = wsprintf(ach, "you_ordered=%d you_can_order=%d new_pp[1].used=%d",HasOrdered,CanOrder,MoveOrders[1].Unit);
+			break;
+		case 4:
+			len = wsprintf(ach, "game_speed=%d",GameSpeed);
+			break;
+		case 5:
+			len = wsprintf(ach, "CR_X=%02d CR_Y=%02d Ri_btn=%d Lf_btn=%d ", CursorPosition.x,CursorPosition.y, RightButton, LeftButton );
+			break;
+
+		case 6:
+			len = wsprintf(ach, "go_next_1=%d go_next_2=%d", CanAdvance1, CanAdvance2 );
+			break;
+
+		case 7:
+			len = wsprintf(ach, "hp[0]=%d arm[0]=%d", Units[no].Hp, Units[no].Weapon );
+			break;
+
+		case 8:
+			len = wsprintf(ach, "spry_rate[0]=%d [1]=%d  first_sply_pt[0]=%d [1]=%d  rvrs_time=%d _rule=%d", SupplyRates[0], SupplyRates[1], InitialSupplyPoints[0], InitialSupplyPoints[1], SwapTime, SwapRule );
+			break;
+
+		default:
+			DebugMenu=0;
+			break;
+		}
+	}
+
 /////////////////////
 
 /*-------------------------------------------
@@ -257,7 +336,7 @@ public void	UpdateFrame()
 	{
 	DDBLTFX ddbltfx;
 	short		chara_loop;
-	int	i,m;
+	int	i;
 	int	no;
 
 	Now = timeGetTime();
@@ -372,43 +451,7 @@ public void	UpdateFrame()
 		len = wsprintf(ach, "Dbg[5]=%d  bf_cc_count[0]=%d [1]=%d   bf_rnd_count[0]=%d [1]=%d  ccc_wait[0]=%d  [1]=%d " ,DebugValues[5], TickChecksums[0], TickChecksums[1], RandomChecksums[0], RandomChecksums[1], TickWaits[0], TickWaits[1] );
 		TextOut(hdc, 0, 40, ach, len);
 
-		switch( DebugMenu )
-			{
-			case 0:
-				len = wsprintf(ach, "%d  :%d  :%d  :%d  :%d", Units[SelectedUnit].info[1], Units[SelectedUnit].info[4], Units[SelectedUnit].info[7], Units[SelectedUnit].info[8], Units[81].info[0] );
-				break;
-			case 1:
-				len = wsprintf(ach, "put_trgt %d put_kind %d cmbt_x %d cmbt_y %d crsr_pt.x %d crsr_pt.y %d ",EditorTarget, EditorKind, (int)CameraPosition.X, (int)CameraPosition.Y, (int)CursorPosition.x, (int)CursorPosition.y  );
-				break;
-			case 2:
-				len = wsprintf(ach, "cnct_game=%d you_are_host=%d you_can_order=%d new_pp[1].used=%d",IsNetworkGame,IsHost,CanOrder,MoveOrders[1].Unit);
-				break;
-			case 3:
-				len = wsprintf(ach, "you_ordered=%d you_can_order=%d new_pp[1].used=%d",HasOrdered,CanOrder,MoveOrders[1].Unit);
-				break;
-			case 4:
-				len = wsprintf(ach, "game_speed=%d",GameSpeed);
-				break;
-			case 5:
-				len = wsprintf(ach, "CR_X=%02d CR_Y=%02d Ri_btn=%d Lf_btn=%d ", CursorPosition.x,CursorPosition.y, RightButton, LeftButton );
-				break;
-
-			case 6:
-				len = wsprintf(ach, "go_next_1=%d go_next_2=%d", CanAdvance1, CanAdvance2 );
-				break;
-
-			case 7:
-				len = wsprintf(ach, "hp[0]=%d arm[0]=%d", Units[no].Hp, Units[no].Weapon );
-				break;
-
-			case 8:
-				len = wsprintf(ach, "spry_rate[0]=%d [1]=%d  first_sply_pt[0]=%d [1]=%d  rvrs_time=%d _rule=%d", SupplyRates[0], SupplyRates[1], InitialSupplyPoints[0], InitialSupplyPoints[1], SwapTime, SwapRule );
-				break;
-
-			default:
-				DebugMenu=0;
-				break;
-			}
+		DrawDebugInfo(ref len, ref ach, no);
 
 		TextOut(hdc, 0, 60, ach, len);
 #endif
@@ -462,33 +505,9 @@ public void	UpdateFrame()
 
 		SetTextColor(hdc, RGB(255, 255, 0));
 
-		if(MyChatDisplayTime!=0)
-			{
-			len = wsprintf(ach, MyChat );
-			TextOut(hdc, 10, 200+170, ach, len);
-			MyChatDisplayTime--;
-			if(MyChatDisplayTime==0)
-				{
-				for(m=0;m<128;m++)
-					{
-					MyChat[m]=0;
-					}
-				}
-			}
+		DrawMyChat(ref ach, ref hdc);
 
-		if(RivalChatDisplayTime!=0)
-			{
-			len = wsprintf(ach, RivalChat );
-			TextOut(hdc, 10, 240+170, ach, len);
-			RivalChatDisplayTime--;
-			if(RivalChatDisplayTime==0)
-				{
-				for(m=0;m<128;m++)
-					{
-					RivalChat[m]=0;
-					}
-				}
-			}
+		DrawRivalChat(ref ach, ref hdc);
 
 		lpDDSBack.ReleaseDC(hdc);
 		}
