@@ -1,21 +1,16 @@
 //
-//                                    **                                   
-//                                   *  *                                  
-//                                    **  *                                 
-//                                    **   *                                
-//                                    **  *                                 
-//                            *     ******     *                              
-//                            ***   * **     ***                              
-//                              ****  **  ****                                 
-//                             **  ********                                    
-//                                                                       
+//                                    **
+//                                   *  *
+//                                    **  *
+//                                    **   *
+//                                    **  *
+//                            *     ******     *
+//                            ***   * **     ***
+//                              ****  **  ****
+//                             **  ********
+//
 //                 Ｎａｖａｌ Ｓｏｕｔｈ Ｐａｃｉｆｉｃ Ｗａｒ
 //                             Ｏｎ　ｔｈｅ　Ｎｅｔ
-
-
-//#include "all_head.h"
-//#include "all_extern.h"
-//#include	"all_forward.h"
 
 // Port of Audio.cpp.
 
@@ -24,20 +19,12 @@ namespace OpenNspw;
 public unsafe partial class Nspw
 {
 
-
-
-
-
-
 /*--------------------------------------------
 	ダイレクトミュージックの初期化とロードの指示
 --------------------------------------------*/
 [Original("InitDMusic")]
 public int	InitializeDirectMusic()
 	{
-//	int		i;
-
-
 
 	// DirectMusicLoader8 オブジェクトと DirectMusicPerformance8 オブジェクトの作成
 	if (FAILED(CoCreateInstance(CLSID_DirectMusicLoader,null,CLSCTX_INPROC,IID_IDirectMusicLoader8,out lpDML)))
@@ -63,61 +50,8 @@ public int	InitializeDirectMusic()
 		return FALSE;
 		}
 
-//	char dir[MAX_PATH];
-//	WCHAR tmp[MAX_PATH];
-
-
-#if false
-	for(i=0; i<2; i++)
-		{
-		// カレントディレクトリを取得
-		GetCurrentDirectory(MAX_PATH,dir);
-		// UNICODE へ変換
-		MultiByteToWideChar(CP_ACP,0,dir,-1,tmp,MAX_PATH);
-		// 検索ディレクトリを設定
-		lpDML->SetSearchDirectory(GUID_DirectMusicAllTypes,tmp,FALSE);
-
-		// 読み込む MIDI のファイル名 (UNICODEに変換)
-		switch( i )
-			{
-			case 0:
-				MultiByteToWideChar( CP_ACP, 0, "ttl.mid", -1, tmp, MAX_PATH );
-				break;
-
-			case 1:
-				MultiByteToWideChar( CP_ACP, 0, "crs1.mid", -1, tmp, MAX_PATH);
-				break;
-			}
-
-
-		// MIDI の読み込み
-		if (FAILED(lpDML->LoadObjectFromFile(CLSID_DirectMusicSegment,IID_IDirectMusicSegment8,tmp,(void **)&lpSeg[i])))
-			{
-			// 失敗
-			RELEASE(lpDMP);
-			RELEASE(lpDML);
-			printf("MIDI の読み込みに失敗しました。\n");
-			return FALSE;
-			}
-
-		// パフォーマンスにダウンロード
-		lpSeg[i]->Download(lpDMP);
-
-		// ボリューム設定
-		long	nVolume=-700;
-		lpDMP->SetGlobalParam( GUID_PerfMasterVolume, (void *)&nVolume,sizeof(long));
-
-		// 再生区間設定
-		lpSeg[i]->SetLoopPoints( 0,0);
-		lpSeg[i]->SetRepeats( DMUS_SEG_REPEAT_INFINITE );
-		}
-#endif
-
 	return TRUE;
 	}
-
-
-
 
 /*--------------------------------------------
 	ダイレクトサウンドの初期化とロードの指示
@@ -126,8 +60,6 @@ public int	InitializeDirectMusic()
 public int	InitializeDirectSound()
 	{
 	int		i;
-
-
 
 	// DirectSound8 の作成
 	if (FAILED(DirectSoundCreate8(null,out lpDS,null)))
@@ -145,8 +77,6 @@ public int	InitializeDirectSound()
 		return FALSE;
 		}
 
-
-
 	// プライマリ サウンドバッファ作成
 	DSBUFFERDESC desc;
 	ZeroMemory(&desc,(nuint)(sizeof(DSBUFFERDESC)));
@@ -162,7 +92,6 @@ public int	InitializeDirectSound()
 		return FALSE;
 		}
 
-
 // サウンドカードのバッファ性能を調べます。
 
 	//
@@ -176,7 +105,6 @@ public int	InitializeDirectSound()
 	for(i=1;i<SND_DUP;i++)
 		lpDS.DuplicateSoundBuffer(lpDSB_[AA_BLT1][0],out lpDSB_[AA_BLT1][i]);
 
-
 	lpDSB_[AA_BLT2][0]= LoadWave("WAV\\AA_BLT2.wav");
 	if (lpDSB_[AA_BLT2][0]==null)
 		{
@@ -186,7 +114,6 @@ public int	InitializeDirectSound()
 		}
 	for(i=1;i<SND_DUP;i++)
 		lpDS.DuplicateSoundBuffer(lpDSB_[AA_BLT2][0],out lpDSB_[AA_BLT2][i]);
-
 
 	lpDSB_[AA_BLT3][0]= LoadWave("WAV\\AA_BLT3.wav");
 	if (lpDSB_[AA_BLT3][0]==null)
@@ -198,7 +125,6 @@ public int	InitializeDirectSound()
 	for(i=1;i<SND_DUP;i++)
 		lpDS.DuplicateSoundBuffer(lpDSB_[AA_BLT3][0],out lpDSB_[AA_BLT3][i]);
 
-
 	lpDSB_[AA_BLT4][0]= LoadWave("WAV\\AA_BLT4.wav");
 	if (lpDSB_[AA_BLT4][0]==null)
 		{
@@ -208,7 +134,6 @@ public int	InitializeDirectSound()
 		}
 	for(i=1;i<SND_DUP;i++)
 		lpDS.DuplicateSoundBuffer(lpDSB_[AA_BLT4][0],out lpDSB_[AA_BLT4][i]);
-
 
 	//
 	lpDSB_[AA_SHL1][0]= LoadWave("WAV\\AA_SHL1.wav");
@@ -448,7 +373,7 @@ public int	InitializeDirectSound()
 		}
 	for(i=1;i<SND_DUP;i++)
 		lpDS.DuplicateSoundBuffer(lpDSB_[PLANE2][0],out lpDSB_[PLANE2][i]);
-	
+
 	//
 	lpDSB_[TAKE_OFF][0]= LoadWave("WAV\\TAKE_OFF.wav");
 	if (lpDSB_[TAKE_OFF][0]==null)
@@ -459,7 +384,7 @@ public int	InitializeDirectSound()
 		}
 	for(i=1;i<SND_DUP;i++)
 		lpDS.DuplicateSoundBuffer(lpDSB_[TAKE_OFF][0],out lpDSB_[TAKE_OFF][i]);
-	
+
 	lpDSB_[SNR][0]= LoadWave("WAV\\SNR.wav");
 	if (lpDSB_[SNR][0]==null)
 		{
@@ -491,15 +416,8 @@ public int	InitializeDirectSound()
 	for(i=1;i<SND_DUP;i++)
 		lpDS.DuplicateSoundBuffer(lpDSB_[CLICK2][0],out lpDSB_[CLICK2][i]);
 
-
-
-
-
-
 	return TRUE;
 	}
-
-
 
 /*-------------------------------------------
 	主にゲーム中の効果音を鳴らす
@@ -508,22 +426,19 @@ public int	InitializeDirectSound()
 public void	PlaySound(IDirectSoundBuffer? the_lpdsb,short* the_snd,int f)
 	{
 
-
-	the_lpdsb.Stop();		// 
+	the_lpdsb.Stop();		//
 	the_lpdsb.SetCurrentPosition(0);	// 巻き戻し
 
 	if( f<-9600 )
 		f=-9600;
 
 	the_lpdsb.SetVolume( f );
-	the_lpdsb.Play(0,0,0);		// 
+	the_lpdsb.Play(0,0,0);		//
 
 	(*the_snd)++;
 	*the_snd=(short)((*the_snd)%SND_DUP);
 
 	}
-
-
 
 /*-------------------------------------------
 	主にゲーム中の効果音を鳴らす
@@ -531,20 +446,15 @@ public void	PlaySound(IDirectSoundBuffer? the_lpdsb,short* the_snd,int f)
 [Original("SoundPlayEffect")]
 public void PlaySoundEffect(int dwFlags,int no,double x,double y)
 	{
-//	HRESULT     dsrval;
-//	IDirectSoundBuffer *pdsb = lpDSBuffer[no];
 	RECT	field_rect;
 	double	wrk_x,wrk_y,drctn,dstc;
 	int		n,size=default /* C4701 */,flg;
-
 
 #if !SND_SW
 
 return;
 
 #endif
-
-
 
 	if( x!=(double)(MAP_RIGHT+1) )
 		{
@@ -566,7 +476,6 @@ return;
 
 				wrk_x=wrk_x-x;
 				wrk_y=wrk_y-y;
-
 
 				if(wrk_x==0)	wrk_x=1;
 				if(wrk_y==0)	wrk_y=1;
@@ -596,14 +505,13 @@ return;
 					case UnitKind.Fighter:		size=FT1_SIGHT;		break;
 					case UnitKind.Attacker:		size=AT1_SIGHT;		break;
 					case UnitKind.Bomber:		size=BM1_SIGHT;		break;
-					case UnitKind.AirBase: case UnitKind.NavalBase:		size=AP_SIGHT;		break;		
+					case UnitKind.AirBase: case UnitKind.NavalBase:		size=AP_SIGHT;		break;
 					case UnitKind.City:		size=CT1_SIGHT;		break;
 					case UnitKind.Mine:		size=MN1_SIGHT;		break;
 					case UnitKind.InfantryBase:		size=GF1_SIGHT;		break;
 					case UnitKind.Pillboxes:		size=GF2_SIGHT;		break;
 					case UnitKind.Fortress:		size=GF3_SIGHT;		break;
 					}
-
 
 				if( dstc<=size )
 					{
@@ -618,45 +526,31 @@ return;
 			return;
 			}
 
-
 		// ptin dbg
 		field_rect.left=-500;
 		field_rect.top=CMBT_HEIGHT+500;
 		field_rect.right=CMBT_WIDTH+500;
 		field_rect.bottom=-500;
-			
+
 		x=(int)(x-CameraPosition.X);
 		y=(int)(CameraPosition.Y-y);
 		if( PointInRect3(ref field_rect, (int)x,(int)y )==0 )
 			return;
 		}
 
-	if(1!=0/*lpDSBuffer[no]*/)
+	if(1!=0)
 		{
-//		IDirectSoundBuffer_SetCurrentPosition(pdsb, 0);
-//		IDirectSoundBuffer_Play(pdsb, 0, 0, dwFlags);
-//	play_snd( lpDSB_AA_BLT[3][snd_AA_BLT[3]], &snd_AA_BLT[3], 0 );
 
-//		play_snd( lpDSB_[no][snd_[no]], &snd_[no], 0 );
-
-
-		lpDSB_[no][NextSoundBuffers[no]].Stop();		// 
+		lpDSB_[no][NextSoundBuffers[no]].Stop();		//
 		lpDSB_[no][NextSoundBuffers[no]].SetCurrentPosition(0);	// 巻き戻し
 
-//		if( f<-9600 )
-//			f=-9600;
-
-		lpDSB_[no][NextSoundBuffers[no]].SetVolume( 0/*f*/ );
-		lpDSB_[no][NextSoundBuffers[no]].Play(0,0,0);		// 
+		lpDSB_[no][NextSoundBuffers[no]].SetVolume( 0 );
+		lpDSB_[no][NextSoundBuffers[no]].Play(0,0,0);		//
 
 		NextSoundBuffers[no]++;
 		NextSoundBuffers[no]=(short)(NextSoundBuffers[no]%SND_DUP);
 
-
 		}
-
-
-
 
 	}
 }

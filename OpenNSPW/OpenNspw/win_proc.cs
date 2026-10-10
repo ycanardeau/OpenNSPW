@@ -1,21 +1,16 @@
 //
-//                                    **                                   
-//                                   *  *                                  
-//                                    **  *                                 
-//                                    **   *                                
-//                                    **  *                                 
-//                            *     ******     *                              
-//                            ***   * **     ***                              
-//                              ****  **  ****                                 
-//                             **  ********                                    
-//                                                                       
+//                                    **
+//                                   *  *
+//                                    **  *
+//                                    **   *
+//                                    **  *
+//                            *     ******     *
+//                            ***   * **     ***
+//                              ****  **  ****
+//                             **  ********
+//
 //                 Ｎａｖａｌ Ｓｏｕｔｈ Ｐａｃｉｆｉｃ Ｗａｒ
 //                             Ｏｎ　ｔｈｅ　Ｎｅｔ
-
-
-//#include "all_head.h"
-//#include "all_extern.h"
-//#include	"all_forward.h"
 
 // Port of win_proc.cpp.
 
@@ -23,12 +18,6 @@ namespace OpenNspw;
 
 public unsafe partial class Nspw
 {
-
-
-
-
-
-
 
 //============================================================================
 //失ったオブジェクトを再読み込みする
@@ -41,7 +30,6 @@ public void	RestoreSurfaces()
 	IDirectDrawSurface_Restore(lpDDSBack);
 	IDirectDrawSurface_Restore(lpDDS_OS);
 
-
 	RELEASE(ref lpDDS_OS);
 	lpDDS_OS=bitmap_surface("t3.bmp");
 
@@ -53,26 +41,11 @@ public void	RestoreSurfaces()
 	uint KeyColor;
 	KeyColor = ddpf.dwRBitMask | ddpf.dwBBitMask;
 
-
 	// カラーキーを設定
 	DDCOLORKEY key;
 	key.dwColorSpaceLowValue = KeyColor;
 	key.dwColorSpaceHighValue = KeyColor;
 	lpDDS_OS.SetColorKey(DDCKEY_SRCBLT, &key);
-
-/*	
-	if( IDirectDrawSurface_Restore(lpDDSPrimary) == DD_OK )
-		{
-		if( IDirectDrawSurface_Restore(lpDDS_OS) == DD_OK)
-#if LNGG_VER==0
-			DDReLoadBitmap(lpDDS_OS,"tst_cg1.bmp");
-#else
-			DDReLoadBitmap(lpDDS_OS,"tst_cg1_eng.bmp");
-#endif
-		}
-*/
-
-
 
 	// クリッパー
 	RELEASE(ref lpDDclip);
@@ -89,24 +62,11 @@ public void	RestoreSurfaces()
 		lpDDSPrimary.SetClipper(lpDDclip);
 		}
 
-
-
 	// マップを作りなおす
-//	make_map();		
 	MakeTerrainSurface();
 
 	}
 
-
-
-
-
-
-
-
-/*-------------------------------------------
-
---------------------------------------------*/
 [Original("load_user_map")]
 public void	LoadUserMap()
 	{
@@ -115,11 +75,8 @@ public void	LoadUserMap()
 	short	m,n,f,i;
 	Array256<Array256<ushort>> szBuf = default;					// マップ
 
-
-
 	hFile=CreateFile( UserScenarioFileName /*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
 								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
-
 
 	if( hFile != INVALID_HANDLE_VALUE )
 		{
@@ -138,7 +95,6 @@ public void	LoadUserMap()
 
 		ReadFile( hFile, ref Units, (uint)(sizeof(Array256<Unit>)), &dwActBytes, null );
 		ReadFile( hFile, ref Reinforcements, (uint)(sizeof(Array3<byte>)), &dwActBytes, null );
-
 
 		ReadFile( hFile, ref IsDecisionEnabled,  sizeof(byte) , &dwActBytes, null );
 		ReadFile( hFile, ref ArrivalControl, sizeof(byte), &dwActBytes, null );
@@ -149,18 +105,11 @@ public void	LoadUserMap()
 		ReadFile( hFile, ref SwapTime, sizeof(short), &dwActBytes, null );
 		ReadFile( hFile, ref SwapRule, sizeof(short), &dwActBytes, null );
 
-
-
 		CloseHandle(hFile);
 		}
 
 	}
 
-
-
-/*-------------------------------------------
-
---------------------------------------------*/
 [Original("load_it2")]
 public void	LoadScenarioFile2(string str)
 	{
@@ -169,24 +118,15 @@ public void	LoadScenarioFile2(string str)
 	short	m,n,f,i;
 	Array256<Array256<ushort>> szBuf = default;					// マップ
 
-
-
 	if( strcmp ( str,"Map\\South_pacific.dat")==0 )
 		CurrentMap=0;
 	else if( strcmp ( str,"Map\\Middle_pacific.dat")==0 )
 		CurrentMap=1;
-	else /*if( strcmp ( str,"Map\\Japan_off.dat")==0 )*/
+	else
 		CurrentMap=2;
-/*
-	else 
-		map_now=3;
-*/
-
-
 
 	hFile=CreateFile(str, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
 								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
-
 
 	if( hFile != INVALID_HANDLE_VALUE )
 		{
@@ -208,15 +148,6 @@ public void	LoadScenarioFile2(string str)
 
 	}
 
-
-
-
-
-
-
-/*-------------------------------------------
-
---------------------------------------------*/
 [Original("load_it3")]
 public void	LoadScenarioFile3()
 	{
@@ -225,11 +156,8 @@ public void	LoadScenarioFile3()
 	short	m,n,f,i;
 	Array256<Array256<ushort>> szBuf = default;					// マップ
 
-
-
 	hFile=CreateFile( UserScenarioFileName /*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
 								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
-
 
 	if( hFile != INVALID_HANDLE_VALUE )
 		{
@@ -254,12 +182,6 @@ public void	LoadScenarioFile3()
 
 	}
 
-
-
-
-/*-------------------------------------------
-
---------------------------------------------*/
 [Original("save_user_map")]
 public void	SaveUserMap()
 	{
@@ -268,9 +190,7 @@ public void	SaveUserMap()
 	short	m,n,f,i;
 	uint	dwActBytes;
 	Array256<Array256<ushort>> szBuf = default;					// マップ
-	short		data;	
-
-
+	short		data;
 
 	hFile=CreateFile( UserScenarioFileName/*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
 								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
@@ -281,21 +201,18 @@ public void	SaveUserMap()
 
 		SetFilePointer( hFile,0,0,FILE_BEGIN);		// 先頭へ
 
-
 		// マップを記録
 		// データ を バッファへ
 		for(m=0;m<=255;m++)
 			for(n=0;n<=255;n++)
 				szBuf[m][n]=MapTiles[m][n];
-		
-		WriteFile(hFile, ref szBuf,(uint)(sizeof(Array256<Array256<ushort>>)),&dwActBytes,null);	// 書き込み
 
+		WriteFile(hFile, ref szBuf,(uint)(sizeof(Array256<Array256<ushort>>)),&dwActBytes,null);	// 書き込み
 
 		//　ユニット、その他を記録
 		// 書き込み
 		WriteFile(hFile, ref Units,(uint)(sizeof(Array256<Unit>)),&dwActBytes,null);
 		WriteFile(hFile, ref Reinforcements,(uint)(sizeof(Array3<byte>)),&dwActBytes,null);
-
 
 		WriteFile(hFile, ref IsDecisionEnabled,sizeof(byte),&dwActBytes,null);
 		WriteFile(hFile, ref ArrivalControl,sizeof(byte),&dwActBytes,null);
@@ -310,11 +227,6 @@ public void	SaveUserMap()
 		}
 	}
 
-
-
-
-
-
 /*-------------------------------------------
 	終了の処理
 --------------------------------------------*/
@@ -322,20 +234,15 @@ public int EndApp()
 	{
 	int	m,n,i;
 
-	// 
+	//
 	if (gameFont_1)
 		DeleteObject(gameFont_1);
 	if (gameFont_2)
 		DeleteObject(gameFont_2);
 
-
 	// ダイレクトミュージック
-//	lpDMP->CloseDown();
-//	for(i=0; i<4; i++)
-//		RELEASE(lpSeg[i]);
 	RELEASE(ref lpDMP);
 	RELEASE(ref lpDML);
-
 
 	// ダイレクトサウンド
 	for(m=0; m<NUM_SOUND_EFFECTS; m++)
@@ -348,14 +255,12 @@ public int EndApp()
 	RELEASE(ref lpDSP);
 	RELEASE(ref lpDS);
 
-
 	// ダイレクトドロー
 	RELEASE(ref lpDDS_OS);
 	RELEASE(ref lpDDclip);
 	RELEASE(ref lpDDSBack);
 	RELEASE(ref lpDDSPrimary);
 	RELEASE(ref lpDD);
-
 
 	// ダイレクトプレイ
 	if( g_pDP!=null )
@@ -372,42 +277,29 @@ public int EndApp()
 		g_pThreadPool = null;
 		}
 
-
 	// Write information to the registry
 	DXUtil_WriteStringRegKey( hDPlaySampleRegKey, TEXT("Player Name"), LocalPlayerName );
-//	DXUtil_WriteStringRegKey( hDPlaySampleRegKey, TEXT("Session Name"), g_strSessionName );
 	DXUtil_WriteStringRegKey( hDPlaySampleRegKey, TEXT("Preferred Provider"), PreferredProvider );
 	DXUtil_WriteStringRegKey( hDPlaySampleRegKey, TEXT("Remote Hostname"), RemoteHostName );
 
 	RegCloseKey( hDPlaySampleRegKey );
 
-
-
 	// DirectInputのデバイスを解放
 	if (pDIDevice!=null)
-		pDIDevice.Unacquire(); 
+		pDIDevice.Unacquire();
 	RELEASE(ref pDIDevice);
 
 	if (pDIDeviceMouse!=null)
-		pDIDeviceMouse.Unacquire(); 
+		pDIDeviceMouse.Unacquire();
 	RELEASE(ref pDIDeviceMouse);
 
-
 	RELEASE(ref pDInput);
-
 
 	// COM 終了
 	CoUninitialize();
 
-
 	return TRUE;
 	}
-
-
-
-
-
-
 
 /*--------------------------------------------
 	アプリ変数の起動時初期化
@@ -418,49 +310,32 @@ public void	InitializeRegistry()
 
 	Tick=0;
 
-
-
 	/*** フォント設定 ***/
 	if (gameFont_1)
 		DeleteObject(gameFont_1);
 	gameFont_1=CreateFont(16,0,0,0,0,FALSE,FALSE,FALSE,SHIFTJIS_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,null); // フォントオブジェクト
 
-
 	if (gameFont_2)
 		DeleteObject(gameFont_2);
 	gameFont_2=CreateFont(20,0,0,0,0,FALSE,FALSE,FALSE,SHIFTJIS_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,null); // フォントオブジェクト
 
-
-
 	LeftButton=0;	RightButton=0;
-
 
 	UserScenarioFileName[0] = unchecked((byte)'\0');
 
 	}
 
-
-
-
-
-/*--------------------------------------------
-	
----------------------------------------------*/
 public IDirectDrawSurface7? bitmap_surface(string file_name)
 	{
 	HDC hdc;
 	HBITMAP bit;
 	IDirectDrawSurface7? surf;
 
-
-
-
-
 	// lインターフェイスビットマップをロード
 
 	bit=(HBITMAP) LoadImage(null,file_name,IMAGE_BITMAP,0,0,
 								LR_DEFAULTSIZE|LR_LOADFROMFILE);
-	if (!bit) 
+	if (!bit)
 		// ロード失敗、呼び出し側に失敗を返す
 		return null;
 
@@ -480,7 +355,7 @@ public IDirectDrawSurface7? bitmap_surface(string file_name)
 	ddsd.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT ;
 	ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
 	ddsd.dwWidth = (uint)surf_width;
-	ddsd.dwHeight = (uint)surf_height; 
+	ddsd.dwHeight = (uint)surf_height;
 
 	// サーフェスを実際に作成
 
@@ -516,18 +391,9 @@ public IDirectDrawSurface7? bitmap_surface(string file_name)
 		DeleteDC(bit_dc);
 
 		// save the dimensions if rectangle pointer provided
-/*
-		if (dims) 
-			{
-			dims->left=0;
-			dims->top=0;
-			dims->right=surf_width;
-			dims->bottom=surf_height;
-			}
-*/
 	}
 
-	// ビットマップをクリア 
+	// ビットマップをクリア
 
 	DeleteObject(bit);
 
@@ -535,7 +401,6 @@ public IDirectDrawSurface7? bitmap_surface(string file_name)
 
 	return surf;
 	}
-
 
 /*-------------------------------------------
 	　ファイル　ＳＡＶＥ
@@ -545,7 +410,6 @@ public nint	IDD_FILE_SAVE_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	WIN32_FIND_DATA FindFileData;
 	HANDLE hFind;
 	Array260<byte> temp_buf = default;
-
 
 	switch(msg)
 		{
@@ -571,8 +435,6 @@ public nint	IDD_FILE_SAVE_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 			UserScenarioFileName[0] = unchecked((byte)'\0');
 			break;
 
-
-
 		case WM_COMMAND:
 			switch( LOWORD(wParam) )
 				{
@@ -584,41 +446,33 @@ public nint	IDD_FILE_SAVE_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 						}
 					break;
 
-
 				case IDOK:
 //					PostQuitMessage( 0 );		// これでWM_QUITがでるので接続ダイアログループからぬける
 					GetDlgItemText( hWnd, IDC_EDIT, UserScenarioFileName, MAX_PATH );
 
-
 					if( IsEditingMap!=0 && Mode==GameMode.Battle && UserScenarioFileName[0]!='\0' )
 						{
 						// なんかユーザーファイルが選ばれた。
-
 
 int	len;
 						len=wsprintf( temp_buf, "%s", UserScenarioFileName );
 
 						if( !(UserScenarioFileName[len-4]=='.' && UserScenarioFileName[len-3]=='d' && UserScenarioFileName[len-2]=='a' && UserScenarioFileName[len-1]=='t') )
 							wsprintf( temp_buf, "%s.dat", UserScenarioFileName );
-	
-
 
 						wsprintf( UserScenarioFileName, "Scenario\\%s", temp_buf );
 
 						SaveUserMap();
 						}
 
-
 					DestroyWindow(hWnd);
 					break;
-	
 
 				case IDCANCEL:
 //					PostQuitMessage( 0 );		// これでWM_QUITがでるので接続ダイアログループからぬける
 					UserScenarioFileName[0] = unchecked((byte)'\0');
 					DestroyWindow(hWnd);
 					break;
-
 
 				default:
 					return FALSE;
@@ -632,12 +486,6 @@ int	len;
 	return( TRUE );
 	}
 
-
-
-
-
-
-
 /*-------------------------------------------
 	　ファイル　ＬＯＡＤ
 --------------------------------------------*/
@@ -648,8 +496,6 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	_DP_DATA_20		dp_data_20=default;
 	_DP_DATA_1		dp_data_1;
 	Array260<byte> temp_buf = default;
-
-
 
 	switch(msg)
 		{
@@ -671,7 +517,6 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 				}
 			UserScenarioFileName[0] = unchecked((byte)'\0');
 			break;
-
 
 		case WM_COMMAND:
 			switch(wParam)
@@ -702,7 +547,6 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 							g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 							}
 
-
 						LoadScenarioData();
 
 						// ホストの選択状態をゲストにセンドします。
@@ -723,23 +567,16 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 						dp_data_1.data[8] = SwapTime;
 						dp_data_1.data[9] = SwapRule;
 
-
-
 						bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
 						bufferDesc.pBufferData  = (byte*) &dp_data_1;
 						g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
-
-
 						Mode=GameMode.ConfigSetting;
 						}
-
-
 
 					DestroyWindow(hWnd);
 //					PostQuitMessage( 0 );		// これでWM_QUITがでるので接続ダイアログループからぬける
 					break;
-	
 
 				case IDCANCEL:
 					UserScenarioFileName[0] = unchecked((byte)'\0');
@@ -749,7 +586,6 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 
 				case IDC_LIST:
 					break;
-
 
 				default:
 					return FALSE;
@@ -763,10 +599,6 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	return( TRUE );
 	}
 
-
-
-
-
 /*-------------------------------------------
 	　OK　キャンセル
 --------------------------------------------*/
@@ -775,7 +607,6 @@ public nint	IDD_OK_CANCEL_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	switch(msg)
 		{
 		case WM_INITDIALOG:
-//			dlg_answer=0;
 
 			if( DialogAnswer==MessageType.GoToGameSetting )
 				SetWindowText(hWnd,"Exit Without Saving?");
@@ -788,7 +619,6 @@ public nint	IDD_OK_CANCEL_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 			switch(wParam)
 				{
 				case IDOK:
-//					dlg_answer=1;
 
 					BufferedSystemOrders[1]=(byte)DialogAnswer;
 					CanOrder=0;
@@ -799,15 +629,12 @@ public nint	IDD_OK_CANCEL_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					g_hDlg=null;
 //					PostQuitMessage( 0 );		// これでWM_QUITがでるので接続ダイアログループからぬける
 					break;
-	
 
 				case IDCANCEL:
-//					dlg_answer=0;
 					DestroyWindow(hWnd);
 					g_hDlg=null;
 //					PostQuitMessage( 0 );		// これでWM_QUITがでるので接続ダイアログループからぬける
 					break;
-
 
 				default:
 					return FALSE;
@@ -821,8 +648,6 @@ public nint	IDD_OK_CANCEL_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	return( TRUE );
 	}
 
-
-
 /*-------------------------------------------
   マイダイアログのループウェイト
 	事実上のモーダルダイアログ、制御を戻さない
@@ -833,9 +658,6 @@ public void	WaitForDialog()
 	{
 	MSG msg=default;
 	int	wait_for_connect=TRUE;
-
-
-
 
 	while(wait_for_connect!=0)
 		{
@@ -856,25 +678,12 @@ public void	WaitForDialog()
 			}
 		}
 
-
-
 	}
 
-
-
-
-
-/*-------------------------------------------
-
---------------------------------------------*/
 public nint ChatDlgProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	{
-//	TCHAR			my_ctring[MAX_PATH];
 	_DP_DATA_20	dp_data_20=default;
 	int			m;
-
-
-
 
 	switch(msg)
 		{
@@ -886,7 +695,6 @@ public nint ChatDlgProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 				{
 				case IDOK:
 
-//					GetDlgItemText( hWnd, IDC_EDIT1, my_ctring, MAX_PATH );
 					GetDlgItemText( hWnd, IDC_EDIT1, MyChat, MAX_PATH );
 					MyChatDisplayTime=unchecked((byte)CHAT_DSP_TIME);
 
@@ -901,16 +709,12 @@ public nint ChatDlgProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					bufferDesc.pBufferData  = (byte*) &dp_data_20;
 					g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1, 0, null, ref hAsync, MUST_SEND );
 
-
-//					EndDialog( hWnd, 0 );
 					DestroyWindow(hwndChatDlg);
 					hwndChatDlg=null;
 					IsTypingChat=0;
 					break;
-	
 
 				case IDCANCEL:
-//					EndDialog( hWnd, 0 );
 					DestroyWindow(hwndChatDlg);
 					hwndChatDlg=null;
 					IsTypingChat=0;
@@ -920,7 +724,6 @@ public nint ChatDlgProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					return FALSE;
 				}
 			break;
-
 
 		case WM_KEYDOWN:
 			switch(wParam)
@@ -929,7 +732,6 @@ public nint ChatDlgProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					break;
 				case VK_ESCAPE:
 				case VK_F12:
-//					EndDialog( hWnd, 0 );
 					DestroyWindow(hwndChatDlg);
 					hwndChatDlg=null;
 					IsTypingChat=0;
@@ -939,15 +741,12 @@ public nint ChatDlgProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 				}
 			break;
 
-
 		default:
 			return FALSE;
 		}
 
 	return TRUE;
 	}
-
-
 
 /*-------------------------------------------
 	ウィンドウ処理
@@ -959,10 +758,6 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	//OPENFILENAME ofn;		// Unused.
 	Array260<byte> cd_buf = default;			// ユーザーシナリオのファイルネーム
 	uint		nBufferLength;
-
-
-
-
 
 	switch(msg)
 		{
@@ -985,7 +780,6 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 
 			break;
 
-
 		case WM_ACTIVATEAPP:	//ウインドウが選択された時
 			if(wParam == WA_INACTIVE)
 				IsAppActive=0;
@@ -994,47 +788,20 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 			break;
 
 		case WM_SIZE:		// ウインドウ起動時にもここにくるようだ。
-#if false
-			if(wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED)
-				{
-				d3dpp.BackBufferWidth = LOWORD(lParam);
-				d3dpp.BackBufferHeight = HIWORD(lParam);
-				if(pD3DDevice /*&& !sizeMoving*/ )
-					{
-					// ここで強制復元
-					pD3DDevice->Reset(&d3dpp);
-					RELEASE(pD3DXSprite);
-
-//					InitRender();
-
-					D3DXCreateSprite(pD3DDevice,&pD3DXSprite);
-					InvalidateRect(hWnd,NULL,TRUE);
-
-					}
-				}
-#endif
 
 			break;
-
-
-
 
 		case WM_CREATE:			//ウインドウ作成時
 			break;
-
-
 
 		case WM_LBUTTONDOWN:
 			break;
 		case WM_LBUTTONUP:
 			break;
 
-
 		case WM_MOUSEMOVE:
 			// マウスカーソルのウィンドウ上の座標を得る。
 			break;
-
-
 
 		case WM_KEYDOWN:
 			switch(wParam)
@@ -1044,69 +811,27 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					if( IsEditingMap!=0 && Mode==GameMode.Battle )
 						{
 						/*g_hDlg =*/ CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_SAVE_Proc );
-#if false
-						my_dlg_wait();
-
-						if( user_sinario_fn[0]!='\0' )
-							{
-							// なんかユーザーファイルが選ばれた。
-TCHAR		temp_buf[MAX_PATH];
-
-							wsprintf( temp_buf, "%s", user_sinario_fn );
-							wsprintf( user_sinario_fn, "Scenario\\%s", temp_buf );
-
-							save_user_map();
-							}
-#endif
-
 
 						PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 						}
 
-//					play_snd( lpDSB_AA_BLT[3][snd_AA_BLT[3]], &snd_AA_BLT[3], 0 );
-//		SoundPlayEffect( NULL, CLICK1 ,(double)(MAP_RIGHT+1), 0);
-//					if( dbg_menu )
-//						dbg_menu--;
-
 					break;
-
 
 				case VK_F2:
 					if( IsEditingMap!=0 && Mode==GameMode.Battle )
 						{
 						Units[SelectedUnit].Side=0;
-						SelectedUnit=0; 
-						CombatMenuKind=0; 
-						CombatMenuSelection=CombatMenuItem.None; 
+						SelectedUnit=0;
+						CombatMenuKind=0;
+						CombatMenuSelection=CombatMenuItem.None;
 						ClearSelection2(1);
-
 
 						// シナリオ選択がユーザーシナリオならファイル選択します。
 						/*g_hDlg =*/ CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_LOAD_Proc );
-#if false
-						my_dlg_wait();
-
-
-						if( user_sinario_fn[0]!='\0' )
-							{
-							// なんかユーザーファイルが選ばれた。
-
-TCHAR		temp_buf[MAX_PATH];
-							wsprintf( temp_buf, "%s", user_sinario_fn );
-							wsprintf( user_sinario_fn, "Scenario\\%s", temp_buf );
-
-
-							load_user_map();
-							make_map_cg();
-							}
-#endif
-
 
 						PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 						}
 					break;
-
-
 
 				case VK_F3:
 					if( IsEditingMap!=0 && Mode==GameMode.Battle )
@@ -1117,27 +842,6 @@ TCHAR		temp_buf[MAX_PATH];
 					else
 						DebugMenu--;
 
-/*
-int	s;
-
-	dbg[2]=0;
-	for(s=1;s<FIRE_MAX;s++)
-		{
-		if( !fire[s].used )
-			{
-			dbg[2]++;
-			}
-		}
-
-
-
-*/
-
-/*
-					if( dbg[1]==1 )
-						{
-						}
-*/
 					break;
 
 				case VK_F4:
@@ -1151,78 +855,6 @@ int	s;
 						PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 						}
 
-
-#if false
-dbg[1]=0;
-					for( i=1; i<=max_unit; i++)
-						{
-						if( unit[i].used && unit[i].ctgry==UnitCategory.Plane && unit[i].used==Side.UnitedStates && unit[i].info[1]==46/* && unit[i].info[3]
-							&& unit[i].info[0]==PARKING && unit[m].info[1]==unit[i].info[1] && unit[i].stop==0*/ )
-							dbg[1]++;
-						}
-#endif
-
-
-#if false
-
-int	f;
-n=the_slct_unit;
-
-					if( n && unit[n].used )
-						{
-						// 命中
-//						unit[n].hp[0]-=3;
-//						SoundPlayEffect( NULL, TPD_HIT1 ,fire[m].x, fire[m].y);
-
-						f=seek_effect_no();
-						effect[f].layer=EffectLayer.Upper;	
-
-						effect[f].info[0]=40;
-						effect[f].info[1]=4;	// アニメーションパターン
-
-						effect[f].x=unit[n].x;
-						effect[f].y=unit[n].y;
-
-						effect[f].no=1;			// 弾丸着弾	のソースファイル上の番号
-
-
-
-						// 当った的に収納機があれば破壊される場合もある
-						if( unit[n].kind==UnitKind.AirBase || unit[n].kind==UnitKind.Carrier || unit[n].kind==UnitKind.LightCarrier )
-							{
-							for(i=0;i<=max_unit;i++)
-								{
-								if( unit[i].used && unit[i].ctgry==UnitCategory.Plane && unit[i].PlaneState==UnitState.Parked && unit[i].info[1]==n /*&& rnd(10)==0*/ )
-									{
-									unit[i].used=0;
-									unit[unit[i].info[1]].info[1]--;			// 現在格納数
-							
-									if( unit[i].info[3]>=1 && unit[unit[i].info[1]].info[4]>=1 && unit[i].Mode<=UnitMode.Slow )
-										unit[unit[i].info[1]].info[4]--;		// 発艦予定の機数を	
-									if( unit[i].info[3]>=3 && unit[unit[i].info[1]].info[7]>=1 && unit[i].Mode<=UnitMode.Slow )
-										unit[unit[i].info[1]].info[7]--;		// 
-
-
-									if( unit[i].Mode==UnitMode.Return )
-										{
-										if(unit[unit[i].info[1]].info[7])
-											unit[unit[i].info[1]].info[7]=0;	// 着艦、0許可、1不許可
-										if(unit[unit[i].info[1]].info[8])
-											unit[unit[i].info[1]].info[8]=0;	// その空母の次機発進許可	0許可、1不許可
-										}
-
-//									if( the_slct_unit==i )
-//										{ the_slct_unit=0; cmbt_menu_kind=0; cmbt_menu_slctd=0; cls_all_slct_unit_p2(1); }
-
-									break;
-									}
-								}
-
-							}
-						}
-#endif
-
-
 #if DBG_MODE
 if( IsEditingMap==0 )
 	{
@@ -1233,11 +865,7 @@ if( IsEditingMap==0 )
 	}
 #endif
 
-
-//					if( dbg[1]==1 )
-//						reveal=!reveal;
 					break;
-
 
 				case VK_F6:
 					if( IsEditingMap!=0 && Mode==GameMode.Battle )
@@ -1260,7 +888,6 @@ if( IsEditingMap==0 )
 	}
 #endif
 					break;
-
 
 				case VK_F7:
 
@@ -1287,30 +914,26 @@ if( IsEditingMap==0 )
 								Units[Units[SelectedUnit].Carrier].info[1]--;	// 現在格納数
 								}
 
-
-//							unit[old_the_slct_unit].hp[0]=0;
 							Units[SelectedUnit].Side=0;
 
-							SelectedUnit=0; 
-							CombatMenuKind=0; 
-							CombatMenuSelection=CombatMenuItem.None; 
+							SelectedUnit=0;
+							CombatMenuKind=0;
+							CombatMenuSelection=CombatMenuItem.None;
 							ClearSelection2(1);
 
 							PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 							}
 
-
 						}
 					break;
 
-
-				case VK_F8:					
+				case VK_F8:
 					if( IsEditingMap!=0 && Mode==GameMode.Battle )
 						{
 						if( UnitInfoPanel[1]!=0 && ( Units[PreviousSelectedUnit].Kind==UnitKind.Carrier || Units[PreviousSelectedUnit].Kind==UnitKind.LightCarrier || Units[PreviousSelectedUnit].Kind==UnitKind.AirBase )  && ((UnitKind)EditorKind==UnitKind.Fighter || (UnitKind)EditorKind==UnitKind.Attacker || (UnitKind)EditorKind==UnitKind.Bomber ) )
 							{
 							// 駐機場への航空機の配置
-							if( /*!( (unit[old_the_slct_unit].kind==CV1 || unit[old_the_slct_unit].kind==CVL1)  && ( put_kind==BM1 || (put_kind==FT1&&put_kind_sub==1) ) )   &&*/
+							if(
 								Units[PreviousSelectedUnit].Side==LocalSide
 								)
 								m=AddPlane(LocalSide,(UnitKind)EditorKind,EditorVariant,PreviousSelectedUnit,1,FireKind.Unarmed);
@@ -1332,7 +955,6 @@ if( IsEditingMap==0 )
 								wrk_x=0-wrk_x;
 							wrk_x*=80;
 
-
 							wrk_y2=(CameraPosition.Y-CursorPosition.y)/80;
 							if(wrk_y2<0)
 								wrk_y2=0-wrk_y2;
@@ -1342,7 +964,6 @@ if( IsEditingMap==0 )
 							if(((CameraPosition.Y-CursorPosition.y)/80)<0)
 								wrk_y=0-wrk_y;
 							wrk_y*=80;
-
 
 							m=0;
 							for(i=1;i<=MaxUnitId;i++)
@@ -1374,7 +995,6 @@ if( IsEditingMap==0 )
 						}
 					break;
 
-
 				case VK_F9:
 
 #if DBG_MODE
@@ -1405,8 +1025,6 @@ if( IsEditingMap==0 )
 						}
 					break;
 
-
-
 				case 0x31:	// 1
 					// ユニットを回転させます。
 					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed  && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
@@ -1417,7 +1035,6 @@ if( IsEditingMap==0 )
 						}
 
 					break;
-
 
 				case 0x32:	// 2
 					// 航空機の武装を変えます。
@@ -1481,9 +1098,6 @@ if( IsEditingMap==0 )
 						}
 					break;
 
-
-
-
 				case 0x33:	// 3
 					// ＨＰを増やす。
 					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ) )
@@ -1496,7 +1110,6 @@ if( IsEditingMap==0 )
 						}
 					break;
 
-
 				case 0x34:	// 4
 					// ＨＰを増やす。
 					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
@@ -1505,8 +1118,6 @@ if( IsEditingMap==0 )
 						PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 						}
 					break;
-
-
 
 				case 0x35:	// 5
 					// ガスをふやす
@@ -1532,7 +1143,6 @@ if( IsEditingMap==0 )
 						}
 					break;
 
-
 				case 0x37:	// 7
 					// 弾数をふやす
 					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && Units[SelectedUnit].Weapon!=FireKind.Unarmed  && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
@@ -1557,8 +1167,6 @@ if( IsEditingMap==0 )
 						}
 					break;
 
-
-
 				case VK_ESCAPE:
 				case VK_F12:
 					PostMessage(hWnd,WM_CLOSE,0,0);
@@ -1568,20 +1176,7 @@ if( IsEditingMap==0 )
 				}
 			break;
 
-
 		case WM_COMMAND:
-/*
-			switch(LOWORD(wParam))
-				{
-				case FILE_MENU_OPEN:
-					break;
-				case FILE_MENU_EXIT:
-					DestroyWindow(hWnd);
-					break;
-				default:
-					break;
-				}
-*/
 			break;
 
 		case WM_DESTROY:

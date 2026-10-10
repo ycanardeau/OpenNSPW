@@ -1,21 +1,16 @@
 //
-//                                    **                                   
-//                                   *  *                                  
-//                                    **  *                                 
-//                                    **   *                                
-//                                    **  *                                 
-//                            *     ******     *                              
-//                            ***   * **     ***                              
-//                              ****  **  ****                                 
-//                             **  ********                                    
-//                                                                       
+//                                    **
+//                                   *  *
+//                                    **  *
+//                                    **   *
+//                                    **  *
+//                            *     ******     *
+//                            ***   * **     ***
+//                              ****  **  ****
+//                             **  ********
+//
 //                 Ｎａｖａｌ Ｓｏｕｔｈ Ｐａｃｉｆｉｃ Ｗａｒ
 //                             Ｏｎ　ｔｈｅ　Ｎｅｔ
-
-
-//#include "all_head.h"
-//#include	"all_typedef.h"
-//#include	"all_forward.h"
 
 // Port of win_main.cpp.
 
@@ -24,7 +19,6 @@ namespace OpenNspw;
 public unsafe partial class Nspw
 {
 
-
 // ウィンドウアプリケーション変数
 public object? hInstApp;
 public HWND hwndApp;
@@ -32,7 +26,6 @@ public object? my_cursor;
 //D3DPRESENT_PARAMETERS d3dpp;		// Direct3D is not used.
 [Original("appActive")] public int IsAppActive;
 [Original("fullscreen")] public int IsFullscreen;
-
 
 //	DirectXオブジェクト
 
@@ -44,14 +37,11 @@ public IDirectDrawClipper? lpDDclip=null;
 
 public IDirectDrawSurface7? lpDDS_OS=null;
 
-
-
 // DirectInputの変数
 public IDirectInput8? pDInput = null; // DirectInput
 public IDirectInputDevice8? pDIDevice = null; // DirectInputデバイス
 public IDirectInputDevice8? pDIDeviceMouse = null; // DirectInputデバイス
 //DIDEVCAPS				diDevCaps;				// ジョイスティックの能力 (joysticks are not used)
-
 
 // DirectSoundの変数
 public IDirectSound8? lpDS = null;
@@ -60,43 +50,26 @@ public IDirectSoundBuffer? lpDSP = null;
 public Array35<Array6<IDirectSoundBuffer?>> lpDSB_;
 [Original("snd_")] public Array35<short> NextSoundBuffers;
 
-
-
-
 // DirectMusicの変数
 public IDirectMusicLoader8? lpDML = null;
 public IDirectMusicPerformance8? lpDMP = null;
-
-
-
 
 // フォント
 public HFONT gameFont_1;
 public HFONT gameFont_2;
 
-
-
-
 // ゲーム用
 [Original("cc_count")] public int Tick;
 [Original("key_cndtn")] public int Buttons; // パッドの状態
 
-
 //POINT	ptCursor;		// 純粋なマウスカーソルの位置
-
 
 // デバグ
 [Original("dbg_menu")] public int DebugMenu;
 [Original("dbg")] public Array16<int> DebugValues;
 
-
 // 通信対戦用
-/*
-GUID g_guidApp = { 0x2ae835d, 0x9179, 0x485f, { 0x83, 0x43, 0x90, 0x1d, 0x32, 0x7c, 0xe7, 0x94 } };
-*/
 public Guid g_guidApp = new( 0x11bc0eb, 0xbdb3, 0x11d6, 0xba, 0x95, 0x9c, 0xce, 0x36, 0x89, 0x70, 0x55 );
-
-
 
 public IDirectPlay8ThreadPool? g_pThreadPool = null; // DirectPlay threadpool object
 public IDirectPlay8Peer? g_pDP = null; // DirectPlay peer object
@@ -106,22 +79,17 @@ public HKEY hDPlaySampleRegKey; // レジストリ
 public HWND g_hDlg = null; // HWND of main dialog
 [Original("dlg_answer")] public MessageType DialogAnswer;
 
-
 public uint g_dpnidLocalPlayer = 0; // DPNID of local player
 public uint g_dpnidRivalPlayer = 0; // DPNID of local player
 //DPNID                      g_dpnidHostPlayer             = 0;       // DPNID of host player
 [Original("g_dwNumberOfActivePlayers")] public uint ActivePlayerCount = 0; // Number of players currently in game
 [Original("g_strAppName")] public Array256<byte> AppName = TEXT<Array256<byte>>("NSPW NET");
 
-
-
-
 [Original("g_strLocalPlayerName")] public Array260<byte> LocalPlayerName; // Local player name
 [Original("g_strRivalPlayerName")] public Array260<byte> RivalPlayerName =TEXT<Array260<byte>>(" - - - ");          // Rival player name
 //TCHAR                      g_strSessionName[MAX_PATH];              // Session name
 [Original("g_strPreferredProvider")] public Array260<byte> PreferredProvider; // Provider string
 [Original("g_strRemoteHostname")] public Array260<byte> RemoteHostName; // TCP/IP remote host
-
 
 [Original("g_bHostPlayer")] public int IsHostPlayer = FALSE; // TRUE if local player is host
 public Guid? g_pCurSPGuid = null; // Currently selected guid
@@ -133,38 +101,27 @@ public uint hAsync;
 // チャット
 public HWND hwndChatDlg = null; // HWND of chat dialog
 
-
 /////////////////////
 
 // iNSPWからもってきたやつ
 
 [Original("sprt")] public Array25<SPRT> Sprites;
 
-//UINT			timerid;
-//BOOL			post_pending;
 [Original("missed_pending")] public uint MissedPending;
 [Original("a_paint_speed")] public uint PaintSpeed;
 
-//int FrameRate;
 public int FrameCount;
-//int FrameCount0;
-//DWORD FrameTime;
-//DWORD FrameTime0;
 
 //unsigned char		*dst_vram;							//書き込むＶＲＡＭのアドレス
-//DDSURFACEDESC2		dst_ddsd;
 
 //unsigned char		*src_vram;							//読み込むＶＲＡＭのアドレス
-//DDSURFACEDESC		src_ddsd;
 
 [Original("scrn_mode")] public int ScreenMode;
 
 [Original("video_memory")] public int VideoMemory;
 
-
 [Original("anti_air")] public int ShowsAntiAir;
 [Original("reveal")] public int RevealsAll;
-
 
 [Original("cmbt_x", "cmbt_y")] public WorldPosition CameraPosition;
 [Original("scrn_moving_spd")] public double ScrollSpeed;
@@ -179,17 +136,12 @@ public int FrameCount;
 [Original("unit_info")] public Array10<int> UnitInfoPanel;
 [Original("fire")] public Array512<Fire> Fires;
 [Original("max_fire")] public int MaxFireId;
-//BOOL			paint_effect_on;
 [Original("effect")] public Array1024<Effect> Effects;
-
-
 
 [Original("cls_flg")] public short ClearFlag;
 
-
 [Original("cmbt_map")] public Array256<Array256<ushort>> MapTiles; // マップ
 [Original("kumo")] public Array4096<Cloud> Clouds; // 雲
-
 
 [Original("lf_btn")] public short LeftButton;
 [Original("ri_btn")] public short RightButton;
@@ -213,19 +165,16 @@ public int FrameCount;
 [Original("demo_time")] public short TitleTime;
 [Original("sinario")] public short ScenarioNumber;
 
-
 [Original("map_edit")] public byte IsEditingMap;
 [Original("put_trgt")] public byte EditorTarget;
 [Original("put_kind")] public byte EditorKind;
 [Original("put_kind_sub")] public byte EditorVariant;
 [Original("rein")] public Array3<byte> Reinforcements;
 
-
 [Original("user_sinario_fn")] public Array260<byte> UserScenarioFileName; // ユーザーシナリオのファイルネーム
 
 // 通信対戦用
-[Original("cnct_game")] public int			IsNetworkGame;		
-//BOOL			cnct_now;
+[Original("cnct_game")] public int			IsNetworkGame;
 [Original("you_are_host")] public byte IsHost;
 [Original("you_were_host")] public byte WasHost;
 
@@ -282,37 +231,22 @@ public int FrameCount;
 [Original("tick_now")] public uint Now;
 [Original("tick_diff")] public uint Elapsed;
 
-
 // 通信対戦デバグ用
 [Original("first_r_error")] public byte HasSavedDesync;
 
 // チャット用
 [Original("input_chat_now")] public int IsTypingChat=0;
 
-//char			my_chat[128];
-//char			friend_chat[128];
 [Original("my_chat")] public Array260<byte> MyChat;
 [Original("friend_chat")] public Array260<byte> RivalChat;
 
 [Original("my_chat_dsp_time")] public byte MyChatDisplayTime;
 [Original("friend_chat_dsp_time")] public byte RivalChatDisplayTime;
 
-//char			my_string[128];
-//BYTE			my_string_crsr;
-//BYTE			my_string_rpd;
-
 //
 [Original("rival_ver")] public Array16<byte> RivalVersion;
 
 /////////////////////
-
-
-
-
-
-
-
-
 
 /*-------------------------------------------
 	アプリがアクティブの時のアイドリング
@@ -326,11 +260,9 @@ public void	UpdateFrame()
 	int	i,m;
 	int	no;
 
-
 	Now = timeGetTime();
 
 	Elapsed = Now - LastTime2;
-
 
 	if( IsEditingMap!=0 )
 		chara_loop=1;
@@ -344,8 +276,6 @@ public void	UpdateFrame()
 	else
 		chara_loop=1;
 
-
-
 	if( chara_loop==1 && Elapsed<=45+5 )
 		{
 		return;
@@ -354,10 +284,6 @@ public void	UpdateFrame()
 	LastTime2 = timeGetTime();
 
 	ReadInput();		// マウス、キーボード状況取得
-
-
-
-
 
 	// 塗りつぶし
 	ZeroMemory(&ddbltfx,(nuint)(sizeof(DDBLTFX)));
@@ -387,7 +313,6 @@ public void	UpdateFrame()
 				return;
 				}
 
-
 			UpdateGameSetting();
 			break;
 
@@ -399,8 +324,6 @@ public void	UpdateFrame()
 				RestoreSurfaces();
 				return;
 				}
-
-
 
 			for( i=chara_loop; i>=1; i-- )
 				{
@@ -419,7 +342,6 @@ public void	UpdateFrame()
 				HandleInput();
 				}
 
-
 			if(IsEditingMap!=0 )
 				{
 				UpdateMapEditor();
@@ -428,25 +350,20 @@ public void	UpdateFrame()
 			break;
 		}
 
-
-
 	HDC hdc;
 	Array128<byte> ach = default;
 	int len;
 
-	if (DD_OK==lpDDSBack.GetDC(&hdc)) 
+	if (DD_OK==lpDDSBack.GetDC(&hdc))
 		{
 		SetTextColor(hdc,RGB(255,255,255));
 		SetBkMode(hdc, TRANSPARENT);
-//		SelectObject(hdc, AppFont);
-
-
 
 #if DBG_MODE
 
 		no=SelectedUnit;
 
-		len = wsprintf(ach, "dbg[0]=%d [1]=%d [2]=%d [3]=%d [4]=%d  :%d",DebugValues[0],DebugValues[1],DebugValues[2],DebugValues[3],DebugValues[4] ,SelectedUnit /*g_dwNumberOfActivePlayers*/ /*cc_count*/ );
+		len = wsprintf(ach, "dbg[0]=%d [1]=%d [2]=%d [3]=%d [4]=%d  :%d",DebugValues[0],DebugValues[1],DebugValues[2],DebugValues[3],DebugValues[4] ,SelectedUnit   );
 		TextOut(hdc, 0, 0, ach, len);
 
 		len = wsprintf(ach, "unit_out=%d ccc_out=%d rnd_out=%d rnd_count=%d CCC=%d FrameC=%d Sinario=%d host_side=%d rival_mode=%d" ,AreUnitsOutOfSync ,IsTickOutOfSync,IsRandomOutOfSync,RandomCount ,Tick, FrameCount, ScenarioNumber, HostSide, RivalMode);
@@ -455,15 +372,9 @@ public void	UpdateFrame()
 		len = wsprintf(ach, "Dbg[5]=%d  bf_cc_count[0]=%d [1]=%d   bf_rnd_count[0]=%d [1]=%d  ccc_wait[0]=%d  [1]=%d " ,DebugValues[5], TickChecksums[0], TickChecksums[1], RandomChecksums[0], RandomChecksums[1], TickWaits[0], TickWaits[1] );
 		TextOut(hdc, 0, 40, ach, len);
 
-
-
 		switch( DebugMenu )
 			{
 			case 0:
-//				len = wsprintf(ach, "%s", user_sinario_fn );
-//				len = wsprintf(ach, "go_next_1=%d mode=%d rival_mode=%d you_are_host=%d ", go_next_1, mode, rival_mode, you_are_host );
-//		len = wsprintf(ach, "arrival_cont %d", arrival_cont );
-//		len = wsprintf(ach, "num %d", host_side );
 				len = wsprintf(ach, "%d  :%d  :%d  :%d  :%d", Units[SelectedUnit].info[1], Units[SelectedUnit].info[4], Units[SelectedUnit].info[7], Units[SelectedUnit].info[8], Units[81].info[0] );
 				break;
 			case 1:
@@ -502,8 +413,6 @@ public void	UpdateFrame()
 		TextOut(hdc, 0, 60, ach, len);
 #endif
 
-
-
 #if !LNGG_VER
 			if(AreUnitsOutOfSync!=0)
 				{
@@ -520,7 +429,7 @@ public void	UpdateFrame()
 				len = wsprintf(ach, "ランダム同期異常、ゲームを中断されたし。");
 				TextOut(hdc, 0, 140, ach, len);
 				}
-			if( ActivePlayerCount!=2 /*&& ( mode==CMBT || mode==CNCT_GAME_SETTING || mode==CNCT_CNFG_SETTING )*/ )
+			if( ActivePlayerCount!=2  )
 				{
 				len = wsprintf(ach, "接続相手がいなくなりました。");
 				TextOut(hdc, 0, 160, ach, len);
@@ -541,24 +450,17 @@ public void	UpdateFrame()
 				len = wsprintf(ach, "Random synchronisum error! Exit application.");
 				TextOut(hdc, 0, 140, ach, len);
 				}
-			if( cnct_now==0 /*&& ( mode==CMBT || mode==CNCT_GAME_SETTING || mode==CNCT_CNFG_SETTING )*/ )
+			if( cnct_now==0  )
 				{
 				len = wsprintf(ach, "No connection object.");
 				TextOut(hdc, 0, 160, ach, len);
 				}
 #endif
 
-
-
-
-
-
 		SetBkMode(hdc, TRANSPARENT);
 		SelectObject(hdc, gameFont_1);
 
 		SetTextColor(hdc, RGB(255, 255, 0));
-
-
 
 		if(MyChatDisplayTime!=0)
 			{
@@ -574,7 +476,6 @@ public void	UpdateFrame()
 				}
 			}
 
-
 		if(RivalChatDisplayTime!=0)
 			{
 			len = wsprintf(ach, RivalChat );
@@ -589,18 +490,8 @@ public void	UpdateFrame()
 				}
 			}
 
-
 		lpDDSBack.ReleaseDC(hdc);
 		}
-
-
-
-
-
-
-
-
-
 
 	// マウス入力の後処理
 	if(RightButton==1)	RightButton=2;
@@ -611,45 +502,13 @@ public void	UpdateFrame()
 
 	FrameCount++;
 
-
 	// プライマリサーフェスにフリップ
-//	if( DDERR_SURFACELOST == IDirectDrawSurface_Flip(lpDDSPrimary,NULL, DDFLIP_WAIT ))
-//	if( DDERR_SURFACELOST == IDirectDrawSurface_Blt(lpDDSPrimary,NULL,lpDDSBack,NULL,DDBLT_WAIT,NULL ))
-//		restoreAll();
-
-//	lpDDSPrimary->SetClipper(lpDDclip);
-//	lpDDSPrimary->Blt(NULL,lpDDSBack,NULL,DDBLT_WAIT,NULL);
 
 	IDirectDrawSurface_SetClipper(lpDDSPrimary,lpDDclip);
 	if( DDERR_SURFACELOST == IDirectDrawSurface_Blt(lpDDSPrimary,null,lpDDSBack,null,DDBLT_WAIT,null))
 		RestoreSurfaces();
 
-
-
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*--------------------------------------------
 	メイン
@@ -659,14 +518,10 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	MSG msg=default;
 	WNDCLASS wc;
 
-
-
-
 	int	i;
 
 	for(i=0; i<16; i++)
 		DebugValues[i]=0;
-
 
 	IsFullscreen=1;
 	hInstApp=hInst;
@@ -675,25 +530,20 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 
 	// Read persistent state information from registry
 	RegCreateKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\DirectX DirectPlay Samples", 0, null,
-                    REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE, null, 
+                    REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE, null,
                     ref hDPlaySampleRegKey, null );
 
-    DXUtil_ReadStringRegKeyCch( hDPlaySampleRegKey, TEXT("Player Name"), 
+    DXUtil_ReadStringRegKeyCch( hDPlaySampleRegKey, TEXT("Player Name"),
                              LocalPlayerName, MAX_PATH, TEXT("TestPlayer") );
-//    DXUtil_ReadStringRegKeyCch( hDPlaySampleRegKey, TEXT("Session Name"), g_strSessionName, MAX_PATH, TEXT("TestGame") );
-    DXUtil_ReadStringRegKeyCch( hDPlaySampleRegKey, TEXT("Preferred Provider"), 
-                             PreferredProvider, MAX_PATH, 
+    DXUtil_ReadStringRegKeyCch( hDPlaySampleRegKey, TEXT("Preferred Provider"),
+                             PreferredProvider, MAX_PATH,
                              TEXT("DirectPlay8 TCP/IP Service Provider") );
-    DXUtil_ReadStringRegKeyCch( hDPlaySampleRegKey, TEXT("Remote Hostname"), 
-                             RemoteHostName, MAX_PATH, 
+    DXUtil_ReadStringRegKeyCch( hDPlaySampleRegKey, TEXT("Remote Hostname"),
+                             RemoteHostName, MAX_PATH,
                              TEXT("localhost") );
-
 
 	// COM 初期化
 	CoInitializeEx( null, COINIT_MULTITHREADED );
-
-
-
 
 	// Create IDirectPlay8ThreadPool
 	// ＤＰをバックスレッドでなく通常のルーティン処理とするためにこれを設定する。
@@ -713,35 +563,9 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	// Init IDirectPlay8Peer
 	g_pDP.Initialize( null, DirectPlayMessageHandler, DPNINITIALIZE_DISABLEPARAMVAL );
 
-
-
-#if false
-
-	map_edit=1;
-	cnct_game=1;
-	g_bHostPlayer=1;
-	you_are_host=g_bHostPlayer;
-	g_dwNumberOfActivePlayers=2;
-
-#elif false
-
-
-	g_dwNumberOfActivePlayers=2;
-	g_bHostPlayer=1;
-	you_are_host=g_bHostPlayer;
-
-
-#else
-
-//CreateDialog(hInstApp,MAKEINTRESOURCE(IDD_CHAT_DIALOG),NULL/*hwndApp/*hWnd*/,ChatDlgProc);
-//g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_MAIN_GAME), NULL/*hwndApp*/, GreetingDlgProc);
-//CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_CHAT_DIALOG), NULL/*hwndApp*/, GreetingDlgProc);
-
-
 	// Create the initial dialog.
 	// 接続ダイアログ 　オーナーウィンドウが無いため、モーダレスになります。
 	g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_ADDRESS_OVERRIDE), null, OverrideDlgProc);
-
 
 	int    wait_for_connect = TRUE;
 
@@ -780,11 +604,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 
 	IsHost=(byte)IsHostPlayer;
 
-#endif
-
-
 	g_hDlg=null;
-
 
 	// メインウインドウを作成する
 	ZeroMemory(&wc,(nuint)(sizeof(WNDCLASS)));
@@ -793,7 +613,6 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	wc.lpfnWndProc = (WNDPROC)MainWndProc;
 	wc.lpszClassName = CLASS_NAME;
 	wc.hCursor = LoadCursor(null, IDC_ARROW);
-
 
 	RegisterClass(ref wc);
 
@@ -814,53 +633,42 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 		hwndApp = CreateWindow(CLASS_NAME,CAPTION, WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX /*| WS_VISIBLE*/ ,CW_USEDEFAULT,CW_USEDEFAULT,width,height,null,null,hInst,null);
 		}
 
-	ShowWindow(hwndApp,SW_SHOWNORMAL/*nCmdShow*/);
+	ShowWindow(hwndApp,SW_SHOWNORMAL);
 	UpdateWindow(hwndApp);
 
-
-
 	ImmAssociateContext(hwndApp,null);			// 日本語入力機能を通常ゲーム時抑制する。
-
-
 
     int		ddrval;
 
 	// ダイレクトドロウ
     ddrval = DirectDrawCreateEx(null,out lpDD,IID_IDirectDraw7,null);
-    if (ddrval != DD_OK) 
+    if (ddrval != DD_OK)
 		{
 		MessageBox(null,"DirectDrawの作成に失敗","Base",MB_OK | MB_ICONSTOP);
 		return FALSE;
 		}
-
-
 
     // 協調レベルを設定
 	if (IsFullscreen!=0)
 	    ddrval = lpDD.SetCooperativeLevel(hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN );
 	else
 	    ddrval = lpDD.SetCooperativeLevel(hwndApp, DDSCL_NORMAL );
-	if (ddrval != DD_OK) 
+	if (ddrval != DD_OK)
 		{
 		MessageBox(null,"残念！","って言うじゃなーい。",MB_OK | MB_ICONSTOP);
 		return FALSE;
 		}
 
-
-
 	// ディスプレイモードを設定
 	if(IsFullscreen!=0)
 		{
 		ddrval = lpDD.SetDisplayMode( width, height, 16, 0, 0);
-		if (ddrval !=DD_OK) 
+		if (ddrval !=DD_OK)
 			{
 			MessageBox(null,"SetDisplayMode","残念！",MB_OK | MB_ICONSTOP);
 			return FALSE;
 			}
 		}
-
-
-
 
 	// バックバッファをひとつ持つプライマリサーフェスを作成
 	DDSURFACEDESC2 ddsd;
@@ -870,11 +678,11 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	ddsd.dwSize = (uint)(sizeof( DDSURFACEDESC2 ));
 	ddsd.dwFlags = DDSD_CAPS | DDSD_BACKBUFFERCOUNT;
 	ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE |
-						  DDSCAPS_FLIP | 
+						  DDSCAPS_FLIP |
 						  DDSCAPS_COMPLEX;
 	ddsd.dwBackBufferCount = 1;
 	ddrval = lpDD.CreateSurface( &ddsd, out lpDDSPrimary, null );
-	if (ddrval!=DD_OK) 
+	if (ddrval!=DD_OK)
 		{
 		MessageBox(null,"CreateSurface","残念！",MB_OK | MB_ICONSTOP);
 		return FALSE;
@@ -884,15 +692,11 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	ZeroMemory(&ddscaps, (nuint)(sizeof(DDSCAPS2)));
 	ddscaps.dwCaps=DDSCAPS_BACKBUFFER;
 	ddrval=lpDDSPrimary.GetAttachedSurface(&ddscaps,out lpDDSBack);
-	if (ddrval!=DD_OK) 
+	if (ddrval!=DD_OK)
 		{
 		MessageBox(null,"GetAttachedSurface","残念！",MB_OK | MB_ICONSTOP);
 		return FALSE;
 		}
-
-
-
-
 
 	// 最初のイメージをロードし、表示
 	lpDDS_OS=bitmap_surface("t3.bmp");
@@ -901,8 +705,6 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 		MessageBox(null,"bitmap_surface","残念！",MB_OK | MB_ICONSTOP);
 		return FALSE;
 		}
-
-
 
 	// クリッパー
 	if(IsFullscreen!=0)
@@ -918,9 +720,6 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 		lpDDSPrimary.SetClipper(lpDDclip);
 		}
 
-
-
-
 	// ピクセルフォーマットを取得
 	DDPIXELFORMAT ddpf;
 	ddpf.dwSize=(uint)(sizeof(DDPIXELFORMAT));
@@ -929,14 +728,11 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	uint KeyColor;
 	KeyColor = ddpf.dwRBitMask | ddpf.dwBBitMask;
 
-
 	// カラーキーを設定
 	DDCOLORKEY key;
 	key.dwColorSpaceLowValue = KeyColor;
 	key.dwColorSpaceHighValue = KeyColor;
 	lpDDS_OS.SetColorKey(DDCKEY_SRCBLT, &key);
-
-
 
 	if(!InitializeDirectInput())
 		return FALSE;
@@ -947,10 +743,6 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 		return FALSE;
 #endif
 
-
-
-
-
 	// ゲーム変数初期化
 	InitializeRegistry();
 
@@ -960,59 +752,13 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 
 	TitleTime=0;
 
-
-
-
-#if true
-
 	Mode=GameMode.Title;
-
-
-#elif false
-
-	go_cnct_game_setting();
-
-#else
-	// 通信対戦用の初期化
-	cnct_game=0;
-	you_can_order=1;
-	go_next_1=0;
-	go_next_2=0;
-	bf_cc_count[0]=bf_cc_count[1]=0;
-	bf_rnd_count[0]=bf_rnd_count[1]=0;
-
-if( CONN_DBG )
-{
-cnct_game=1;
-you_are_host=1;
-}
-
-sinario=999;
-
-
-	mode=GameMode.GameSetting;
-	get_sinario_data();
-
-
-	mode=GameMode.Battle;
-	cnct_game_init();
-#endif
-
-
-
-
 
 	//メッセージループ
 	while(TRUE!=0)
 		{
-/*
-		if( hwndChatDlg==NULL )
-			crnt_wnd=hwndApp;
-		else
-			crnt_wnd=hwndChatDlg;
-*/
 
-		if( /*hwndChatDlg==NULL &&*/ PeekMessage(ref msg,null,0,0,PM_NOREMOVE)!=0 )
+		if(  PeekMessage(ref msg,null,0,0,PM_NOREMOVE)!=0 )
 			{
 			if(GetMessage(ref msg,null,0,0)==0)
 				break;
@@ -1020,27 +766,11 @@ sinario=999;
 			TranslateMessage(ref msg);
 			DispatchMessage(ref msg);
 			}
-/*
-		else if( hwndChatDlg!=NULL && PeekMessage(&msg,hwndChatDlg,0,0,PM_NOREMOVE) )
-			{
-			GetMessage(&msg,hwndChatDlg,0,0);
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-			}
-*/
-		else 
+		else
 			{
 			if( ( IsAppActive!=0 || hwndChatDlg!=null ) && g_hDlg==null )
 				{
 				UpdateFrame();
-/*
-if( hwndChatDlg!=NULL )
-	{
-	if( PeekMessage(&msg,hwndChatDlg,0,0,PM_REMOVE) )
-		{
-		}
-	}
-*/
 				}
 			else
 				{

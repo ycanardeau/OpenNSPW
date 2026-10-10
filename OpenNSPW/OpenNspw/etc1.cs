@@ -1,21 +1,16 @@
 //
-//                                    **                                   
-//                                   *  *                                  
-//                                    **  *                                 
-//                                    **   *                                
-//                                    **  *                                 
-//                            *     ******     *                              
-//                            ***   * **     ***                              
-//                              ****  **  ****                                 
-//                             **  ********                                    
-//                                                                       
+//                                    **
+//                                   *  *
+//                                    **  *
+//                                    **   *
+//                                    **  *
+//                            *     ******     *
+//                            ***   * **     ***
+//                              ****  **  ****
+//                             **  ********
+//
 //                 Ｎａｖａｌ Ｓｏｕｔｈ Ｐａｃｉｆｉｃ Ｗａｒ
 //                             Ｏｎ　ｔｈｅ　Ｎｅｔ
-
-
-//#include "all_head.h"
-//#include "all_extern.h"
-//#include	"all_forward.h"
 
 // Port of etc1.cpp.
 
@@ -23,12 +18,6 @@ namespace OpenNspw;
 
 public unsafe partial class Nspw
 {
-
-
-
-
-
-
 
 //============================================================================
 // 当たりチェック
@@ -47,21 +36,21 @@ public int		CheckHit(int m)
 		case UnitKind.Battleship:	j=16;j2=j/2;	break;
 		case UnitKind.Cruiser:	j=12;j2=j/2;	break;
 		case UnitKind.Destroyer:	j=10;j2=j/2;		break;
-		case UnitKind.Submarine:	
+		case UnitKind.Submarine:
 			if( Units[n].info[6]!=0 )// 潜航中、あたりがでかくなる
 				{
 				// ptin dbg
-				wrk_rect.top=(int)Units[n].Position.Y+50;//(int)unit[n].y-50;
+				wrk_rect.top=(int)Units[n].Position.Y+50;
 				wrk_rect.right=(int)Units[n].Position.X+50;
-				wrk_rect.bottom=(int)Units[n].Position.Y-50;//(int)unit[n].y+50;
+				wrk_rect.bottom=(int)Units[n].Position.Y-50;
 				wrk_rect.left=(int)Units[n].Position.X-50;
 
 				if( PointInRect3(ref wrk_rect,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
 					h=1;
-				return	(h);			
-				}	
+				return	(h);
+				}
 			else
-				{	j=8/*4*/;j2=j/2;		}
+				{	j=8;j2=j/2;		}
 
 				break;
 		case UnitKind.Carrier:	j=14;j2=j/2;	break;
@@ -71,15 +60,15 @@ public int		CheckHit(int m)
 		case UnitKind.Fortress:	case UnitKind.Pillboxes:	case	UnitKind.InfantryBase:
 		case UnitKind.City:	case UnitKind.Mine:
 				// ptin dbg
-				wrk_rect.top=(int)Units[n].Position.Y+30;//(int)unit[n].y-30;
+				wrk_rect.top=(int)Units[n].Position.Y+30;
 				wrk_rect.right=(int)Units[n].Position.X+30;
-				wrk_rect.bottom=(int)Units[n].Position.Y-30;//(int)unit[n].y+30;
+				wrk_rect.bottom=(int)Units[n].Position.Y-30;
 				wrk_rect.left=(int)Units[n].Position.X-30;
 
 				if( PointInRect3(ref wrk_rect,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
 					h=1;
 
-				return	(h);			
+				return	(h);
 				break;
 		case UnitKind.Transport:	j=12;j2=j/2;	break;
 		}
@@ -91,11 +80,10 @@ public int		CheckHit(int m)
 			for( i=0; i<=4 && h==0 ; i++)
 				{
 				// ptin dbg
-				wrk_rect.top=(int)Units[n].Position.Y+(-j+(i*j2))+j2;//(int)unit[n].y+(-j+(i*j2))-j2;
+				wrk_rect.top=(int)Units[n].Position.Y+(-j+(i*j2))+j2;
 				wrk_rect.right=(int)Units[n].Position.X+(+j-(i*j2))+j2;
-				wrk_rect.bottom=(int)Units[n].Position.Y+(-j+(i*j2))-j2;//(int)unit[n].y+(-j+(i*j2))+j2;
+				wrk_rect.bottom=(int)Units[n].Position.Y+(-j+(i*j2))-j2;
 				wrk_rect.left=(int)Units[n].Position.X+(+j-(i*j2))-j2;
-
 
 				if( PointInRect3(ref wrk_rect,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
 					h=1;
@@ -105,11 +93,10 @@ public int		CheckHit(int m)
 			for( i=0; i<=4 && h==0 ; i++)
 				{
 				// pt in dbg
-				wrk_rect.top=(int)Units[n].Position.Y+(-j+(i*j2))+j2;//(int)unit[n].y+(-j+(i*j2))-j2;
+				wrk_rect.top=(int)Units[n].Position.Y+(-j+(i*j2))+j2;
 				wrk_rect.right=(int)Units[n].Position.X+(-j+(i*j2))+j2;
-				wrk_rect.bottom=(int)Units[n].Position.Y+(-j+(i*j2))-j2;//(int)unit[n].y+(-j+(i*j2))+j2;
+				wrk_rect.bottom=(int)Units[n].Position.Y+(-j+(i*j2))-j2;
 				wrk_rect.left=(int)Units[n].Position.X+(-j+(i*j2))-j2;
-
 
 				if( PointInRect3(ref wrk_rect,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
 					h=1;
@@ -120,9 +107,9 @@ public int		CheckHit(int m)
 			for( i=0; i<=2  && h==0 ; i++)
 				{
 				// ptin dbg
-				wrk_rect.top=(int)Units[n].Position.Y+(-j+(i*j))+j2;//(int)unit[n].y+(-j+(i*j))-j2;
+				wrk_rect.top=(int)Units[n].Position.Y+(-j+(i*j))+j2;
 				wrk_rect.right=(int)Units[n].Position.X+j2;
-				wrk_rect.bottom=(int)Units[n].Position.Y+(-j+(i*j))-j2;//(int)unit[n].y+(-j+(i*j))+j2;
+				wrk_rect.bottom=(int)Units[n].Position.Y+(-j+(i*j))-j2;
 				wrk_rect.left=(int)Units[n].Position.X-j2;
 
 				if( PointInRect3(ref wrk_rect,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
@@ -133,9 +120,9 @@ public int		CheckHit(int m)
 			for( i=0; i<=2  && h==0 ; i++)
 				{
 				// ptin dbg
-				wrk_rect.top=(int)Units[n].Position.Y+j2;//(int)unit[n].y-j2;
+				wrk_rect.top=(int)Units[n].Position.Y+j2;
 				wrk_rect.right=(int)Units[n].Position.X+(-j+(i*j))+j2;
-				wrk_rect.bottom=(int)Units[n].Position.Y-j2;//(int)unit[n].y+j2;
+				wrk_rect.bottom=(int)Units[n].Position.Y-j2;
 				wrk_rect.left=(int)Units[n].Position.X+(-j+(i*j))-j2;
 
 				if( PointInRect3(ref wrk_rect,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
@@ -144,14 +131,8 @@ public int		CheckHit(int m)
 			break;
 		}
 
-
-	//h=0;
 	return	(h);
 	}
-
-
-
-
 
 //============================================================================
 // 当たりチェック
@@ -162,15 +143,13 @@ public void		DrawHitArea(int m)
 	int		n,h,j=default /* C4701 */,j2=default /* C4701 */,f,i;
 	RECT	wrk_rect;
 
-//	h=0;
-
 	n=m;						// ターゲットナンバー
 	switch( Units[n].Kind )
 		{
 		case UnitKind.Battleship:	j=16;j2=j/2;	break;
 		case UnitKind.Cruiser:	j=12;j2=j/2;	break;
 		case UnitKind.Destroyer:	j=6;j2=j/2;	break;
-		case UnitKind.Submarine:	
+		case UnitKind.Submarine:
 			if( Units[n].info[6]!=0 )// 潜航中、あたりがでかくなる
 				{
 				wrk_rect.top=(int)Units[n].Position.Y-50;
@@ -184,21 +163,19 @@ public void		DrawHitArea(int m)
 				DrawLine4((int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),(int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 
 				return;
-				}	
+				}
 			else
 				{	j=4;j2=j/2;		}
-
 
 				break;
 		case UnitKind.Carrier:	j=14;j2=j/2;	break;
 		case UnitKind.LightCarrier:	j=12;j2=j/2;	break;
 		}
-//	h=0;
 	f=ToEightDirections((int)(Units[n].Direction));
 	switch( f )
 		{
 		case 3: case 7:
-			for( i=0; i<=4 /*&& !h*/ ; i++)
+			for( i=0; i<=4  ; i++)
 				{
 				wrk_rect.top=(int)Units[n].Position.Y+(-j+(i*j2))-j2;
 				wrk_rect.right=(int)Units[n].Position.X+(+j-(i*j2))+j2;
@@ -212,7 +189,7 @@ public void		DrawHitArea(int m)
 				}
 			break;
 		case 1: case 5:
-			for( i=0; i<=4 /*&& !h*/ ; i++)
+			for( i=0; i<=4  ; i++)
 				{
 				wrk_rect.top=(int)Units[n].Position.Y+(-j+(i*j2))-j2;
 				wrk_rect.right=(int)Units[n].Position.X+(-j+(i*j2))+j2;
@@ -227,7 +204,7 @@ public void		DrawHitArea(int m)
 
 			break;
 		case 0: case 4:
-			for( i=0; i<=2  /*&& !h*/ ; i++)
+			for( i=0; i<=2   ; i++)
 				{
 				wrk_rect.top=(int)Units[n].Position.Y+(-j+(i*j))-j2;
 				wrk_rect.right=(int)Units[n].Position.X+j2;
@@ -239,11 +216,10 @@ public void		DrawHitArea(int m)
 				DrawLine4((int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),(int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 				DrawLine4((int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),(int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 
-
 				}
 			break;
 		case 2: case 6:
-			for( i=0; i<=2  /*&& !h*/ ; i++)
+			for( i=0; i<=2   ; i++)
 				{
 				wrk_rect.top=(int)Units[n].Position.Y-j2;
 				wrk_rect.right=(int)Units[n].Position.X+(-j+(i*j))+j2;
@@ -259,17 +235,8 @@ public void		DrawHitArea(int m)
 			break;
 		}
 
-
-	return	/*(h)*/;
+	return	;
 	}
-
-
-
-
-
-
-
-
 
 //============================================================================
 // 射撃します。
@@ -283,15 +250,11 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 	RECT		wrk_r;
 	int			cm_scrn_x,cm_scrn_y;
 
-
-
-
 	if( (unit.Kind==UnitKind.NavalBase || unit.Kind==UnitKind.AirBase || unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress) && unit.info[0]!=0	)
 		{
 		//工事中
 		return;
 		}
-
 
 	if( unit.Category==UnitCategory.Ship )
 		{
@@ -304,11 +267,11 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 			wrk_y=(double)unit.info[7]-unit.Position.Y;
 			drctn=atan2(wrk_y,wrk_x)*RAD_to;
 			if(drctn<0)
-				drctn=360+drctn;	
+				drctn=360+drctn;
 			drctn2=drctn;
 			drctn=drctn-unit.Direction;
 			if(drctn<0)
-				drctn=360+drctn;	
+				drctn=360+drctn;
 
 			if( (int)drctn<=45||(int)drctn>=315)
 				{
@@ -341,41 +304,12 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					unit.Ammo=0;		// 残弾が０
 					unit.Target=0;		// ターゲットをクリア
 
-
 					//unit[m].arm[0]=NTG;		//  輸送船はこれやっと来ます、武装品種
 					unit.MaxAmmo=0;		//  輸送船はこれやっと来ます、武装品種
 
-
-
-					//unit[m].used=0;
-
-
 					//unit[m].info[5]=RETURN;		// 航空機はメイン兵器ゼロで帰投
 
-					// 部下、多分戦闘機に帰投命令					
-/*
-					if(unit[m].is_ltl_ldr)
-						{
-						for(f=1;f<=max_unit;f++)
-							{
-							if( unit[f].used && unit[f].ltl_ldr==m )
-								{
-								unit[f].ltl_ldr=0;
-								unit[f].info[5]=RETURN;
-								}
-							}
-
-						unit[m].is_ltl_ldr=0;
-						}
-*/
-/*
-					if( !unit[m].is_ltl_ldr )
-						{
-						unit[m].pp_x[0]=unit[m].x;
-						unit[m].pp_y[0]=unit[m].y;
-						unit[m].pp_x[1]=MAP_RIGHT+1;
-						}
-*/
+					// 部下、多分戦闘機に帰投命令
 
 					n=FindFreeFire();
 					if( n!=0 )
@@ -394,41 +328,31 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 						Fires[n].info[7]=unit.info[7];
 						Fires[n].info[8]=(int)unit.Side;
 
-//if( cnct_game )
-//{
 						unit.Side=0;
 						unit.Hp=0;
 
 						if( UnitInfoPanel[0]!=0 && UnitInfoPanel[3]==m )
 							UnitInfoPanel[0]=0;
 
-
 						if( SelectedUnit==m )
 							{
-							SelectedUnit=0; Selections[1][m]=0;	CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; 
+							SelectedUnit=0; Selections[1][m]=0;	CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None;
 							ClearSelection2(1);
 							BufferedMoveOrders[1].ClearsPath=0;
 
 							if( UnitInfoPanel[3]==m )
 								UnitInfoPanel[0]=0;
 
-//							unit_info[0]=0;//unit[m].kind;
 //							unit_info[1]=0;				// 空母なら１で格納庫 ０ で飛行甲板
 //							unit_info[3]=0;//m;				// そのユニットの番号
 //							unit_info[4]=0;//unit[m].used;	// そのユニットの国籍
 
 							}
-//}
 						}
 					}
 				}
 			return;
 			}
-
-
-
-
-
 
 		if( kind==FireKind.RapidAntiAircraftShell )
 			{
@@ -438,7 +362,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 				{
 				ref var other = ref Units[n];	//敵を探す。
 				if( other.IsUsed && other.Category==UnitCategory.Plane && (((other.Kind==UnitKind.Attacker||other.Kind==UnitKind.Fighter) && other.Ammo!=0 )|| Random(10)==0 )  && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.Found!=0 )
-				//if( unit[n].used && unit[n].ctgry==PLANE && unit[n].info[0]==FLYING && unit[n].used!=unit[m].used /*&& unit[n].hp[0]>=unit[n].hp[2]+1*/ && unit[n].found )
 					{
 					// 攻撃地点から攻撃目標地点への距離
 					wrk_x=other.Position.X-unit.Position.X;
@@ -459,7 +382,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					turn=(wrk_x)/(cos(drctn*a_PI));
 					turn=turn/10.0;
 
-
 					// 攻撃地点から攻撃目標地点への絶対方位、方位角
 					wrk_x=other.Position.X;
 					wrk_y=other.Position.Y;
@@ -474,29 +396,21 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 						wrk_y+=sin(drctn2*a_PI)*(other.Speed);
 						}
 
-
 					wrk_x2=wrk_x;
 					wrk_y2=wrk_y;
 					wrk_x=wrk_x2-unit.Position.X;
 					wrk_y=wrk_y2-unit.Position.Y;
 
-
-
-
-
 					drctn=atan2(wrk_y,wrk_x)*RAD_to;
 					if(drctn<0)
 						drctn=360+drctn;
-					drctn2=drctn;							
-
+					drctn2=drctn;
 
 					drctn=drctn-unit.Direction;
 					if(drctn<0)
-						drctn=360+drctn;				
+						drctn=360+drctn;
 					drctn3=drctn;							// 方位角
 
-
-					
 					// 攻撃地点から攻撃目標地点への距離
 					wrk_x=wrk_x2-unit.Position.X;
 					wrk_y=wrk_y2-unit.Position.Y;
@@ -514,19 +428,11 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					if(drctn>=90)
 						drctn=90-(drctn-90);
 					dstc=(wrk_x)/(cos(drctn*a_PI));
-	
-					/****				
-					switch( unit[m].kind )
+
+					if( dstc>=40 && dstc<=300 )
 						{
-						case BB1:	rng=900; fc[0]=1;fc[1]=2;fc[2]=1;	break;
-						case CA1:	rng=600; fc[0]=1;fc[1]=1;fc[2]=1;	break;
-						case DD1:	rng=300; fc[0]=1;fc[1]=1;fc[2]=0;	break;
-						}
-					****/
-					if( dstc>=40 && dstc<=300/*480*/ )
-						{
-						trgt2=n;	
-						if( 1!=0 /*|| rnd(2)==0*/ )
+						trgt2=n;
+						if( 1!=0  )
 							break;
 						else
 							trgt2=0;
@@ -535,7 +441,7 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 				}
 			if( trgt2!=0 )
 				{
-			
+
 				/*
 				f=fc[2];	// 後面
 				if( drctn3>=315.0 || drctn3<=45.0 )
@@ -543,10 +449,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 				if( (drctn3>=45.0 && drctn3<=135.0) || (drctn3>=225.0 && drctn3<=315.0) )
 					f=fc[1];	// 側面
 				*/
-
-
-				//for( i=1; i<=f ;i++ )
-					//{
 
 				n=FindFreeFire();
 				if( n!=0 )
@@ -564,8 +466,8 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					Fires[n].Position=unit.Position;
 
 					drctn3=drctn2+(Random(18)-9);			// 絶対方位
-					if(drctn3>=360)	drctn3=drctn3-360;				
-					if(drctn3<0)	drctn3=360+drctn3;				
+					if(drctn3>=360)	drctn3=drctn3-360;
+					if(drctn3<0)	drctn3=360+drctn3;
 					Fires[n].Direction=drctn3;
 
 					dstc2=dstc+(Random( ((int)(dstc/5)) )-((int)(dstc/10))   );
@@ -576,13 +478,9 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					Fires[n].info[0]=(int)(dstc2/Fires[n].Speed);
 					Fires[n].info[1]=0;
 					}
-					//}
 				}
 			return;
 			}
-
-
-
 
 		if( kind==FireKind.AntiSubmarineBomb && unit.Speed>=unit.MaxSpeed )
 			{
@@ -593,9 +491,9 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					{	// 爆雷
 
 					// ptin dbg
-					wrk_r.top=(int)Units[trgt].info[8]+Units[trgt].info[9];//(int)unit[trgt].info[8]-unit[trgt].info[9];
+					wrk_r.top=(int)Units[trgt].info[8]+Units[trgt].info[9];
 					wrk_r.right=(int)Units[trgt].info[7]+Units[trgt].info[9];
-					wrk_r.bottom=(int)Units[trgt].info[8]-Units[trgt].info[9];//(int)unit[trgt].info[8]+unit[trgt].info[9];
+					wrk_r.bottom=(int)Units[trgt].info[8]-Units[trgt].info[9];
 					wrk_r.left=(int)Units[trgt].info[7]-Units[trgt].info[9];
 					if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
 						{
@@ -643,9 +541,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 			return;
 			}
 
-
-
-
 		if( ( kind==FireKind.Gun || kind==FireKind.NavalBaseGun ) && trgt==0)	// ターゲットが選択されていない砲撃、
 			{
 			// 艦砲、自動射撃
@@ -675,8 +570,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					turn=(wrk_x)/(cos(drctn*a_PI));
 					turn=turn/10.0;
 
-
-
 					// 敵の未来位置を求めます。
 					wrk_x=other.Position.X;
 					wrk_y=other.Position.Y;
@@ -684,7 +577,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					wrk_y+=sin(other.Direction*a_PI)*(other.Speed*turn);
 					wrk_x2=wrk_x;										// ターゲットの未来位置
 					wrk_y2=wrk_y;
-
 
 					// 攻撃地点から攻撃目標地点への絶対方位、方位角
 					wrk_x=wrk_x-unit.Position.X;
@@ -696,17 +588,14 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 
 					drctn=drctn-unit.Direction;
 					if(drctn<0)
-						drctn=360+drctn;				
+						drctn=360+drctn;
 					drctn5=drctn;							// 方位角
 
-
-					
 					// 攻撃地点から攻撃目標地点への距離
 					wrk_x=wrk_x2-unit.Position.X;
 					wrk_y=wrk_y2-unit.Position.Y;
 					if(wrk_x==0)	wrk_x=1;
 					if(wrk_y==0)	wrk_y=1;
-
 
 					drctn=atan2(wrk_y,wrk_x)*RAD_to;
 					if(drctn<0)
@@ -720,17 +609,17 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					if(drctn>=90)
 						drctn=90-(drctn-90);
 					dstc=(wrk_x)/(cos(drctn*a_PI));
-					
+
 					switch( unit.Kind )
 						{
-						case UnitKind.Battleship:	
+						case UnitKind.Battleship:
 							if( kind==FireKind.NavalBaseGun )
 								{
-								rng=1120; fc[0]=3;fc[1]=4;fc[2]=2;	
+								rng=1120; fc[0]=3;fc[1]=4;fc[2]=2;
 								}
 							else
 								{
-								rng=600; fc[0]=3;fc[1]=4;fc[2]=2;	
+								rng=600; fc[0]=3;fc[1]=4;fc[2]=2;
 								}
 							break;
 						case UnitKind.Cruiser:	rng=500; fc[0]=1;fc[1]=2;fc[2]=1;	break;
@@ -743,17 +632,14 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 						}
 
 					if( (dstc>=(rng*0.3) || (unit.Kind>=UnitKind.InfantryBase&&unit.Kind<=UnitKind.Fortress) ) && dstc<=rng && dstc2>=dstc )
-						{	
-						trgt2=n;	
+						{
+						trgt2=n;
 						dstc2=dstc;
 						drctn2=drctn4;
-						drctn3=drctn5;							
-						//break;	
+						drctn3=drctn5;
 						}
 					}
 				}
-
-
 
 			if( trgt2!=0 )
 				{
@@ -762,7 +648,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					f=fc[0];	// 正面
 				if( (drctn3>=45.0 && drctn3<=135.0) || (drctn3>=225.0 && drctn3<=315.0) )
 					f=fc[1];	// 側面
-			
 
 				switch( unit.Kind )
 					{
@@ -770,23 +655,22 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					case UnitKind.Fortress:
 						if( kind==FireKind.NavalBaseGun )
 							{
-							PlaySoundEffect( 0, GUN3 ,unit.Position.X, unit.Position.Y);	
+							PlaySoundEffect( 0, GUN3 ,unit.Position.X, unit.Position.Y);
 							break;
 							}
-						PlaySoundEffect( 0, GUN2+Random(2) ,unit.Position.X, unit.Position.Y);	
+						PlaySoundEffect( 0, GUN2+Random(2) ,unit.Position.X, unit.Position.Y);
 						break;
-					case UnitKind.Cruiser:	
-					case UnitKind.Pillboxes:	
+					case UnitKind.Cruiser:
+					case UnitKind.Pillboxes:
 						PlaySoundEffect( 0, GUN1+Random(2) ,unit.Position.X, unit.Position.Y);
 						break;
 
-					case UnitKind.Destroyer:	
-					case UnitKind.Submarine:	
-					case UnitKind.InfantryBase:	
+					case UnitKind.Destroyer:
+					case UnitKind.Submarine:
+					case UnitKind.InfantryBase:
 						PlaySoundEffect( 0, GUN1 ,unit.Position.X, unit.Position.Y);
 						break;
 					}
-
 
 				for( i=1; i<=f ;i++ )
 					{
@@ -797,15 +681,15 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 							unit.Ammo-=GUN_SZ;			// 弾薬消費
 
 						Fires[n].Target=trgt2;
-						Fires[n].Kind=FireKind.Gun/*kind*/;
+						Fires[n].Kind=FireKind.Gun;
 						Fires[n].Position=unit.Position;
 
 						if( kind==FireKind.NavalBaseGun )
 							{
 							if( Random(2)==0 )
-								drctn3=drctn2+(double)((double)(Random(50)-25)/10)    /*+(rnd(100)/100)*/;			// 絶対方位
+								drctn3=drctn2+(double)((double)(Random(50)-25)/10)    ;			// 絶対方位
 							else
-								drctn3=drctn2+(double)((double)(Random(80)-40)/10)    /*+(rnd(100)/100)*/;			// 絶対方位
+								drctn3=drctn2+(double)((double)(Random(80)-40)/10)    ;			// 絶対方位
 							}
 						else
 							{
@@ -815,8 +699,8 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 								drctn3=drctn2+(Random(11)-5)+(Random(100)/100);				// 絶対方位
 							}
 
-						if(drctn3>=360)	drctn3=drctn3-360;				
-						if(drctn3<0)	drctn3=360+drctn3;				
+						if(drctn3>=360)	drctn3=drctn3-360;
+						if(drctn3<0)	drctn3=360+drctn3;
 						Fires[n].Direction=drctn3;
 
 						if( kind==FireKind.NavalBaseGun )
@@ -824,14 +708,11 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 						else
 							dstc2=dstc2+(Random( ((int)(dstc2/8)) )-((int)(dstc2/16)));
 
-
 						Fires[n].Speed=10.0;
 						Fires[n].Acceleration=((Fires[n].Speed)/(dstc2/Fires[n].Speed));
 						Fires[n].FinalSpeed=0;
 						Fires[n].info[0]=(int)(dstc2/Fires[n].Speed)+1;
 						Fires[n].info[1]=Fires[n].info[0]/2;
-
-
 
 						}
 					}
@@ -839,14 +720,10 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 			return;
 			}
 
-
-
-
-
 		// 選択でない自動の魚雷、主に駆逐艦
 		if( kind==FireKind.Torpedo && trgt==0)
 			{
-			// 
+			//
 			trgt2=0;
 			for(n=1;n<=MaxUnitId;n++)
 				{
@@ -872,11 +749,10 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					turn=(wrk_x)/(cos(drctn*a_PI));
 					turn=turn/TPD_SPD;							// 撃つ弾の速度で割る
 
-
 					// 攻撃地点から攻撃目標地点への絶対方位、方位角
 					wrk_x=other.Position.X;
 					wrk_y=other.Position.Y;
-					wrk_x+=cos(other.Direction*a_PI)*(other.Speed*turn); 
+					wrk_x+=cos(other.Direction*a_PI)*(other.Speed*turn);
 					wrk_y+=sin(other.Direction*a_PI)*(other.Speed*turn);
 /****
 					drctn=unit[n].drctn_add;
@@ -891,7 +767,7 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 						}
 ***/
 					wrk_x2=wrk_x;					// 標的の未来位置
-					wrk_y2=wrk_y;					// 
+					wrk_y2=wrk_y;					//
 					wrk_x=wrk_x2-unit.Position.X;
 					wrk_y=wrk_y2-unit.Position.Y;
 
@@ -900,14 +776,11 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 						drctn=360+drctn;
 					drctn2=drctn;					// 未来位置への絶対角
 
-
 					drctn=drctn-unit.Direction;
 					if(drctn<0)
-						drctn=360+drctn;				
+						drctn=360+drctn;
 					drctn3=drctn;							// 方位角
 
-
-					
 					// 攻撃地点から攻撃目標地点への距離
 					wrk_x=wrk_x2-unit.Position.X;
 					wrk_y=wrk_y2-unit.Position.Y;
@@ -925,8 +798,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					if(drctn>=90)
 						drctn=90-(drctn-90);
 					dstc=(wrk_x)/(cos(drctn*a_PI));
-
-					
 
 					if( (dstc>=100 && dstc<=(500+(unit.Side==Side.Japan ? 1 : 0)*100)) && ((drctn3>=45&&drctn3<=135)||(drctn3>=225&&drctn3<=315)) )
 						{
@@ -953,7 +824,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 								}
 							}
 
-
 						if(trgt2!=0)
 							{
 							if( Random(3)==0 )
@@ -966,7 +836,7 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 				}
 			if( trgt2!=0 )
 				{
-			
+
 				// 発射！
 				if(unit.Ammo!=0)
 					unit.Ammo-=TPD_SZ;
@@ -974,7 +844,7 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					{
 					case UnitKind.Cruiser:
 					case UnitKind.Destroyer:		unit.ReloadTime=RELOAD_TPD_DD;		break;	// 再装填時間
-					case UnitKind.Submarine:		unit.ReloadTime=RELOAD_TPD_SS;		
+					case UnitKind.Submarine:		unit.ReloadTime=RELOAD_TPD_SS;
 									//撃った瞬間に発見される。
 									unit.info[7]=(int)(unit.Position.X+Random((50)*2)-50);
 									unit.info[8]=(int)(unit.Position.Y+Random((50)*2)-50);
@@ -984,13 +854,8 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 
 									unit.Found=1;
 
-
-
-
-
 									break;	// 再装填時間
 					}
-
 
 				if( unit.Side==Side.Japan  )
 					{
@@ -1012,12 +877,9 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					n=FindFreeFire();
 					if( n!=0 )
 						{
-//						if( unit[m].kind!=SS1 )
-//							SoundPlayEffect( NULL, SPL1 ,unit[m].x, unit[m].y);
 						Fires[n].Target=trgt2;
 						Fires[n].Kind=kind;
 						Fires[n].Position=unit.Position;
-
 
 						switch( f )
 							{
@@ -1027,25 +889,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 							}
 						Fires[n].Direction=(int)(Fires[n].Direction)%360;
 
-
-/*****
-
-						if( unit[m].kind==SS1 )
-							{
-							fire[n].drctn=unit[m].drctn+355.0+(f*5);
-							while(fire[n].drctn>=360)
-								{fire[n].drctn=fire[n].drctn-360;}
-							}
-						else
-							{
-							if( ((int)drctn3>=45&&(int)drctn3<=135) )
-								fire[n].drctn=unit[m].drctn+85.0+(f*5);
-							else
-								fire[n].drctn=unit[m].drctn+265.0+(f*5);
-							if(fire[n].drctn>=360)
-								fire[n].drctn=fire[n].drctn-360;
-							}
-***/
 						Fires[n].Speed=TPD_SPD;
 						Fires[n].Acceleration=+0.0;
 						Fires[n].FinalSpeed=0.0;
@@ -1061,21 +904,16 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 			return;
 			}
 
-
-
-
-
 		// 選択された敵への魚雷、主に、潜水艦
 		if( kind==FireKind.Torpedo && trgt!=0)
 			{
-			// 
+			//
 
 			trgt2=0;
 			n=trgt;
 			if( Units[n].IsUsed && Units[n].Category==UnitCategory.Ship && !(Units[n].Kind==UnitKind.AirBase||Units[n].Kind==UnitKind.NavalBase||Units[n].Kind==UnitKind.InfantryBase||Units[n].Kind==UnitKind.Pillboxes||Units[n].Kind==UnitKind.Fortress) && Units[n].Side!=unit.Side && Units[n].Found!=0 )
 				{
 
-	
 				// 攻撃地点から攻撃目標地点への距離
 				wrk_x=Units[n].Position.X-unit.Position.X;
 				wrk_y=Units[n].Position.Y-unit.Position.Y;
@@ -1095,14 +933,13 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 				turn=(wrk_x)/(cos(drctn*a_PI));
 				turn=turn/TPD_SPD;							// 撃つ弾の速度で割る
 
-
 				// 攻撃地点から攻撃目標地点への絶対方位、方位角
 				wrk_x=Units[n].Position.X;
 				wrk_y=Units[n].Position.Y;
-				wrk_x+=cos(Units[n].Direction*a_PI)*(Units[n].Speed*turn); 
+				wrk_x+=cos(Units[n].Direction*a_PI)*(Units[n].Speed*turn);
 				wrk_y+=sin(Units[n].Direction*a_PI)*(Units[n].Speed*turn);
 				wrk_x2=wrk_x;					// 標的の未来位置
-				wrk_y2=wrk_y;					// 
+				wrk_y2=wrk_y;					//
 				wrk_x=wrk_x2-unit.Position.X;
 				wrk_y=wrk_y2-unit.Position.Y;
 
@@ -1111,14 +948,11 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					drctn=360+drctn;
 				drctn2=drctn;					// 未来位置への絶対角
 
-
 				drctn=drctn-unit.Direction;
 				if(drctn<0)
-					drctn=360+drctn;				
+					drctn=360+drctn;
 				drctn3=drctn;							// 方位角
 
-
-				
 				// 攻撃地点から攻撃目標地点への距離
 				wrk_x=wrk_x2-unit.Position.X;
 				wrk_y=wrk_y2-unit.Position.Y;
@@ -1137,10 +971,9 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					drctn=90-(drctn-90);
 				dstc=(wrk_x)/(cos(drctn*a_PI));
 
-				
 				if( (dstc>=100 && dstc<=(550+(unit.Side==Side.Japan ? 1 : 0)*100)) && (drctn3<=5 || drctn3>=355) )
 					{
-					trgt2=n;	
+					trgt2=n;
 					i=(int)(dstc/TPD_SPD);
 					for(f=1;f<=i;f++)
 						{
@@ -1163,8 +996,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					}
 				}
 
-
-
 			if( trgt2!=0 )
 				{
 				// 発射！
@@ -1173,7 +1004,7 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 				switch( unit.Kind )
 					{
 					case UnitKind.Destroyer:		unit.ReloadTime=RELOAD_TPD_DD;		break;	// 再装填時間
-					case UnitKind.Submarine:		unit.ReloadTime=RELOAD_TPD_SS;		
+					case UnitKind.Submarine:		unit.ReloadTime=RELOAD_TPD_SS;
 									//撃った瞬間に発見される。
 									unit.info[7]=(int)(unit.Position.X+Random((50)*2)-50);
 									unit.info[8]=(int)(unit.Position.Y+Random((50)*2)-50);
@@ -1185,7 +1016,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 									break;	// 再装填時間
 					}
 
-
 				if( unit.Kind!=UnitKind.Submarine )
 					{
 					PlaySoundEffect( 0, TPD_LOS ,unit.Position.X, unit.Position.Y);
@@ -1194,16 +1024,12 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					{
 					unit.Target=0;
 					}
-					
-/*					SoundPlayEffect( NULL, SPL1 ,unit[m].x, unit[m].y);
-*/
+
 				for( f=0; f<=2; f++)
 					{
 					n=FindFreeFire();
 					if( n!=0 )
 						{
-//						if( unit[m].kind!=SS1 )
-//							SoundPlayEffect( NULL, SPL1 ,unit[m].x, unit[m].y);
 						Fires[n].Target=trgt2;
 						Fires[n].Kind=kind;
 						Fires[n].Position=unit.Position;
@@ -1228,17 +1054,9 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 						}
 					}
 
-
-
 				}
 			return;
 			}
-
-
-
-
-
-
 
 		if( kind==FireKind.AntiAircraftShell && trgt!=0 && Units[trgt].Category==UnitCategory.Plane )	// ターゲットが選択された対空砲
 			{
@@ -1276,7 +1094,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 			wrk_x2=wrk_x;										// 未来位置
 			wrk_y2=wrk_y;
 
-			
 			// ターゲットの方位関係を
 			wrk_x=wrk_x-unit.Position.X;
 			wrk_y=wrk_y-unit.Position.Y;
@@ -1284,16 +1101,13 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 			drctn=atan2(wrk_y,wrk_x)*RAD_to;
 			if(drctn<0)
 				drctn=360+drctn;
-			drctn2=drctn;							
-
+			drctn2=drctn;
 
 			drctn=drctn-unit.Direction;
 			if(drctn<0)
-				drctn=360+drctn;				
+				drctn=360+drctn;
 			drctn3=drctn;							// 方位角
 
-
-					
 			// 攻撃地点から攻撃目標地点への距離
 			wrk_x=wrk_x2-unit.Position.X;
 			wrk_y=wrk_y2-unit.Position.Y;
@@ -1313,10 +1127,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 				drctn=90-(drctn-90);
 			dstc=(wrk_x)/(cos(drctn*a_PI));
 
-
-
-
-					
 			switch( unit.Kind )
 				{
 				case UnitKind.Battleship:	rng=700; fc[0]=2;fc[1]=3;fc[2]=1;	break;
@@ -1328,13 +1138,9 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 				case UnitKind.Fortress:	rng=700; fc[0]=fc[1]=fc[2]=Random(2)+2;	break;
 				}
 
-
-
-
-
 			if( dstc>=(rng*0.25) && dstc<=rng )
-				{	
-				trgt2=n;	
+				{
+				trgt2=n;
 				}
 
 			if( trgt2!=0 )
@@ -1344,8 +1150,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					f=fc[0];	// 正面
 				if( (drctn3>=45.0 && drctn3<=135.0) || (drctn3>=225.0 && drctn3<=315.0) )
 					f=fc[1];	// 側面
-			
-
 
 				PlaySoundEffect( 0, AA_SHL2 ,unit.Position.X, unit.Position.Y);
 				for( i=1; i<=f ;i++ )
@@ -1356,18 +1160,15 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 						{
 						if(unit.Ammo!=0)
 							unit.Ammo-=SHL_SZ;			// 弾薬消費
-						//SoundPlayEffect( NULL, GUN1+rnd(3) ,unit[m].x, unit[m].y);
 						Fires[n].Target=trgt2;
-
 
 						Fires[n].Kind=FireKind.AntiAircraftShell;
 
 						Fires[n].Position=unit.Position;
 
-
 						drctn3=drctn2+(Random(18)-9);			// 絶対方位
-						if(drctn3>=360)	drctn3=drctn3-360;				
-						if(drctn3<0)	drctn3=360+drctn3;				
+						if(drctn3>=360)	drctn3=drctn3-360;
+						if(drctn3<0)	drctn3=360+drctn3;
 						Fires[n].Direction=drctn3;
 
 						dstc2=dstc+(Random( ((int)(dstc/10)) )-((int)(dstc/20))   );
@@ -1378,16 +1179,11 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 						Fires[n].info[0]=(int)(dstc2/Fires[n].Speed);
 						Fires[n].info[1]=0;
 
-
 						}
 					}
 				}
 			return;
 			}
-
-
-
-
 
 		if( kind==FireKind.AntiAircraftShell && trgt==0 )
 			{
@@ -1417,7 +1213,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					turn=(wrk_x)/(cos(drctn*a_PI));
 					turn=turn/10.0;
 
-
 					// 攻撃地点から攻撃目標地点への絶対方位、方位角
 					wrk_x=other.Position.X;
 					wrk_y=other.Position.Y;
@@ -1432,29 +1227,21 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 						wrk_y+=sin(drctn2*a_PI)*(other.Speed);
 						}
 
-
 					wrk_x2=wrk_x;
 					wrk_y2=wrk_y;
 					wrk_x=wrk_x2-unit.Position.X;
 					wrk_y=wrk_y2-unit.Position.Y;
 
-
-
-
-
 					drctn=atan2(wrk_y,wrk_x)*RAD_to;
 					if(drctn<0)
 						drctn=360+drctn;
-					drctn2=drctn;							
-
+					drctn2=drctn;
 
 					drctn=drctn-unit.Direction;
 					if(drctn<0)
-						drctn=360+drctn;				
+						drctn=360+drctn;
 					drctn3=drctn;							// 方位角
 
-
-					
 					// 攻撃地点から攻撃目標地点への距離
 					wrk_x=wrk_x2-unit.Position.X;
 					wrk_y=wrk_y2-unit.Position.Y;
@@ -1473,8 +1260,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 						drctn=90-(drctn-90);
 					dstc=(wrk_x)/(cos(drctn*a_PI));
 
-
-					
 					switch( unit.Kind )
 						{
 						case UnitKind.Battleship:	rng=700; fc[0]=2;fc[1]=3;fc[2]=1;	break;
@@ -1490,28 +1275,18 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 							{
 							trgt2=n;
 							break;
-/**
-							if( 1 || rnd(2)==0 )
-								break;
-							else
-								trgt2=0;
-**/
 							}
 					}
 				}
 			if( trgt2!=0 )
 				{
-			
 
 				f=fc[2];	// 後面
 				if( drctn3>=315.0 || drctn3<=45.0 )
 					f=fc[0];	// 正面
 				if( (drctn3>=45.0 && drctn3<=135.0) || (drctn3>=225.0 && drctn3<=315.0) )
 					f=fc[1];	// 側面
-			
 
-
-				//SoundPlayEffect( NULL, AA_SHL2 ,unit[m].x, unit[m].y);
 				for( i=1; i<=f ;i++ )
 					{
 					n=FindFreeFire();
@@ -1525,8 +1300,8 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 						Fires[n].Position=unit.Position;
 
 						drctn3=drctn2+(Random(18)-9);			// 絶対方位
-						if(drctn3>=360)	drctn3=drctn3-360;				
-						if(drctn3<0)	drctn3=360+drctn3;				
+						if(drctn3>=360)	drctn3=drctn3-360;
+						if(drctn3<0)	drctn3=360+drctn3;
 						Fires[n].Direction=drctn3;
 
 						dstc2=dstc+(Random( ((int)(dstc/10)) )-((int)(dstc/20))   );
@@ -1541,11 +1316,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 				}
 			return;
 			}
-
-
-
-
-
 
 		if( ( kind==FireKind.Gun || kind==FireKind.NavalBaseGun ) && trgt!=0 && Units[trgt].Category==UnitCategory.Ship )	// ターゲットが選択された砲撃
 			{
@@ -1584,7 +1354,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 			wrk_x2=wrk_x;										// 未来位置
 			wrk_y2=wrk_y;
 
-	
 			// ターゲットの方位関係を
 			wrk_x=wrk_x-unit.Position.X;
 			wrk_y=wrk_y-unit.Position.Y;
@@ -1592,16 +1361,13 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 			drctn=atan2(wrk_y,wrk_x)*RAD_to;
 			if(drctn<0)
 				drctn=360+drctn;
-			drctn2=drctn;							
-
+			drctn2=drctn;
 
 			drctn=drctn-unit.Direction;
 			if(drctn<0)
-				drctn=360+drctn;				
+				drctn=360+drctn;
 			drctn3=drctn;							// 方位角
 
-
-			
 			// 攻撃地点から攻撃目標地点への距離
 			wrk_x=wrk_x2-unit.Position.X;
 			wrk_y=wrk_y2-unit.Position.Y;
@@ -1621,22 +1387,18 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 				drctn=90-(drctn-90);
 			dstc=(wrk_x)/(cos(drctn*a_PI));
 
-
-
 			// 水上艦への射程距離
 			switch( unit.Kind )
 				{
-				case UnitKind.Battleship:	
+				case UnitKind.Battleship:
 					if( kind==FireKind.NavalBaseGun )
 						{
-//						rng=750; fc[0]=3;fc[1]=4;fc[2]=2;	
-						rng=1120; fc[0]=3;fc[1]=5;fc[2]=2;	
+						rng=1120; fc[0]=3;fc[1]=5;fc[2]=2;
 						}
 					else
 						{
-						rng=800; fc[0]=3;fc[1]=5;fc[2]=2;	
+						rng=800; fc[0]=3;fc[1]=5;fc[2]=2;
 						}
-//					rng=800; fc[0]=3;fc[1]=5;fc[2]=2;	
 					break;
 				case UnitKind.Cruiser:	rng=700; fc[0]=2;fc[1]=3;fc[2]=1;	break;
 				case UnitKind.Destroyer:	rng=400; fc[0]=1;fc[1]=1;fc[2]=0;	break;
@@ -1647,10 +1409,9 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 				case UnitKind.Fortress:	rng=1000; fc[0]=3;fc[1]=3;fc[2]=3;	break;
 				}
 
-
 			if( (dstc>=150  || (unit.Kind>=UnitKind.InfantryBase&&unit.Kind<=UnitKind.Fortress) ) && dstc<=rng )
-				{	
-				trgt2=n;	
+				{
+				trgt2=n;
 				}
 
 			if( trgt2!=0 )
@@ -1660,23 +1421,21 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					f=fc[0];	// 正面
 				if( (drctn3>=45.0 && drctn3<=135.0) || (drctn3>=225.0 && drctn3<=315.0) )
 					f=fc[1];	// 側面
-			
-
 
 				switch( unit.Kind )
 					{
-					case UnitKind.Battleship:	
+					case UnitKind.Battleship:
 					case UnitKind.Fortress:
-						PlaySoundEffect( 0, GUN3 ,unit.Position.X, unit.Position.Y);	
+						PlaySoundEffect( 0, GUN3 ,unit.Position.X, unit.Position.Y);
 						break;
-					case UnitKind.Cruiser:	
-					case UnitKind.Pillboxes:	
+					case UnitKind.Cruiser:
+					case UnitKind.Pillboxes:
 						PlaySoundEffect( 0, GUN2 ,unit.Position.X, unit.Position.Y);
 						break;
 
-					case UnitKind.Destroyer:	
-					case UnitKind.Submarine:	
-					case UnitKind.InfantryBase:	
+					case UnitKind.Destroyer:
+					case UnitKind.Submarine:
+					case UnitKind.InfantryBase:
 						PlaySoundEffect( 0, GUN1+Random(2) ,unit.Position.X, unit.Position.Y);
 						break;
 					}
@@ -1690,19 +1449,18 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 						unit.Ammo-=GUN_SZ;			// 弾薬消費
 						Fires[n].Target=trgt2;
 
-
 						if( Units[trgt2].Category==UnitCategory.Ship )
 							{
-							Fires[n].Kind=FireKind.Gun/*kind*/;
-	
+							Fires[n].Kind=FireKind.Gun;
+
 							Fires[n].Position=unit.Position;
 
 							if( kind==FireKind.NavalBaseGun && 0!=0 )
 								{
 								if( Random(3)!=0 )
-									drctn3=drctn2+(double)((double)(Random(20)-10)/10)    /*+(rnd(100)/100)*/;			// 絶対方位
+									drctn3=drctn2+(double)((double)(Random(20)-10)/10)    ;			// 絶対方位
 								else
-									drctn3=drctn2+(double)((double)(Random(60)-30)/10)    /*+(rnd(100)/100)*/;			// 絶対方位
+									drctn3=drctn2+(double)((double)(Random(60)-30)/10)    ;			// 絶対方位
 								}
 							else
 								{
@@ -1734,8 +1492,8 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 							Fires[n].Position=unit.Position;
 
 							drctn3=drctn2+(Random(20)-10);			// 絶対方位
-							if(drctn3>=360)	drctn3=drctn3-360;				
-							if(drctn3<0)	drctn3=360+drctn3;				
+							if(drctn3>=360)	drctn3=drctn3-360;
+							if(drctn3<0)	drctn3=360+drctn3;
 							Fires[n].Direction=drctn3;
 
 							dstc2=dstc+(Random( ((int)(dstc/10)) )-((int)(dstc/20))   );
@@ -1747,18 +1505,15 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 							Fires[n].info[1]=0;
 							}
 
-
 						}
 					}
 				}
 			return;
 			}
 
-
-
 		if( kind==FireKind.Bullet )
 			{
-			// 艦船の対空機銃 
+			// 艦船の対空機銃
 			trgt=0;
 			for(n=1;n<=MaxUnitId;n++)
 				{
@@ -1771,13 +1526,11 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					wrk_y=other.Position.Y-unit.Position.Y;
 
 					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				
+
 					if(drctn<0)
 						drctn=360+drctn;
 					drctn2=drctn+(25-Random(50));
-//drctn2=drctn+(25);
 					drctn2=abs((int)drctn2)%360;
-
 
 					// 攻撃地点から攻撃目標地点への距離
 					wrk_x=other.Position.X-unit.Position.X;
@@ -1797,10 +1550,9 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 						drctn=90-(drctn-90);
 					dstc=(wrk_x)/(cos(drctn*a_PI));
 					if( dstc<=100 )
-						{	
+						{
 						trgt=n;
 						if(Random(2)==1 )
-//if(1 )
 							break;
 						else
 							trgt=0;
@@ -1808,18 +1560,16 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					else
 						{
 						if( dstc<=300 )
-							{	
+							{
 							trgt=n;
 							if(Random(8)==1 )
-//if( 1 )
-								break;	
+								break;
 							else
 								trgt=0;
 							}
 						}
 					}
 				}
-
 
 			if( trgt!=0 )
 				{
@@ -1841,15 +1591,12 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 			}
 		}
 
-
-
-
 	if( unit.Category==UnitCategory.Plane )
 		{
 				//=========		 航空機の射撃制御		=========//
 		if( kind==FireKind.Bullet && unit.Kind==UnitKind.Bomber )
 			{
-			// 航空機の全方向対空機銃 
+			// 航空機の全方向対空機銃
 			trgt=0;
 			for(n=1;n<=MaxUnitId;n++)
 				{
@@ -1861,12 +1608,11 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					wrk_y=other.Position.Y-unit.Position.Y;
 
 					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				
+
 					if(drctn<0)
 						drctn=360+drctn;
 					drctn2=drctn+(Random(20)-10);
 					drctn2=abs((int)drctn2)%360;
-
 
 					// 攻撃地点から攻撃目標地点への距離
 					wrk_x=other.Position.X-unit.Position.X;
@@ -1886,20 +1632,20 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 						drctn=90-(drctn-90);
 					dstc=(wrk_x)/(cos(drctn*a_PI));
 					if( dstc<=100 )
-						{	
+						{
 						trgt=n;
 						if(Random(2)==1 )
-							break;	
+							break;
 						else
 							trgt=0;
-						}		
+						}
 					else
 						{
 						if( dstc<=300 )
-							{	
+							{
 							trgt=n;
 							if(Random(8)==1 )
-								break;	
+								break;
 							else
 								trgt=0;
 							}
@@ -1924,10 +1670,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 				}
 			return;
 			}
-
-
-
-
 
 		if( kind==FireKind.Bullet && unit.Kind==UnitKind.Fighter )
 			{
@@ -1975,24 +1717,10 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 							}
 						}
 
-
 					if( unit.Target==0 )
 						{
 						if(unit.Mode==UnitMode.Return)
 							{
-#if false
-							if( /*unit[m].used==cpu_side &&*/ unit[m].Fuel>=(60-(unit[m].used==Side.Japan)*10) && unit[m].Ammo )
-								{
-								if( dstc<=300 && rnd(10)==0 )
-									{
-									if( unit[n].found )
-										{
-										unit[m].Target=n;
-										}
-									}
-
-								}
-#endif
 							}
 						else
 							{
@@ -2007,9 +1735,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 						}
 					}
 				}
-
-
-
 
 			if( trgt!=0 )
 				{
@@ -2043,10 +1768,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 			return;
 			}
 
-
-
-
-
 		if( kind==FireKind.Bullet )
 			{
 			trgt=0;
@@ -2060,11 +1781,11 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					wrk_y=other.Position.Y-unit.Position.Y;
 					drctn=atan2(wrk_y,wrk_x)*RAD_to;
 					if(drctn<0)
-						drctn=360+drctn;	
+						drctn=360+drctn;
 
 					drctn2=drctn+(Random(10)-5);
-					if(drctn2>=360)	drctn2=drctn2-360;				
-					if(drctn2<0)	drctn2=360+drctn2;				
+					if(drctn2>=360)	drctn2=drctn2-360;
+					if(drctn2<0)	drctn2=360+drctn2;
 
 					drctn=drctn-unit.Direction;
 					if(drctn<0)
@@ -2112,9 +1833,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 			return;
 			}
 
-
-
-
 			if( kind==FireKind.Torpedo && !(Units[trgt].Kind>=UnitKind.AirBase && Units[trgt].Kind<=UnitKind.Fortress) )
 				{
 				// 攻撃機
@@ -2127,24 +1845,22 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					cm_scrn_x=(int)((unit.Position.X+(Sprites[UNIT_JPN].wd/2)-MAP_LEFT)/Sprites[MAP_TIP_NRML].wd);
 					cm_scrn_y=(int)((MAP_TOP-unit.Position.Y+(Sprites[UNIT_JPN].ht/2))/Sprites[MAP_TIP_NRML].ht);
 
-					if( MapTiles[cm_scrn_y][cm_scrn_x]>=1 
-						|| MapTiles[cm_scrn_y-1][cm_scrn_x-1]>=1 
-						|| MapTiles[cm_scrn_y-1][cm_scrn_x]>=1 
-						|| MapTiles[cm_scrn_y-1][cm_scrn_x+1]>=1 
+					if( MapTiles[cm_scrn_y][cm_scrn_x]>=1
+						|| MapTiles[cm_scrn_y-1][cm_scrn_x-1]>=1
+						|| MapTiles[cm_scrn_y-1][cm_scrn_x]>=1
+						|| MapTiles[cm_scrn_y-1][cm_scrn_x+1]>=1
 
-						|| MapTiles[cm_scrn_y][cm_scrn_x-1]>=1 
-						|| MapTiles[cm_scrn_y][cm_scrn_x+1]>=1 
+						|| MapTiles[cm_scrn_y][cm_scrn_x-1]>=1
+						|| MapTiles[cm_scrn_y][cm_scrn_x+1]>=1
 
-						|| MapTiles[cm_scrn_y+1][cm_scrn_x-1]>=1 
-						|| MapTiles[cm_scrn_y+1][cm_scrn_x]>=1 
-						|| MapTiles[cm_scrn_y+1][cm_scrn_x+1]>=1 
+						|| MapTiles[cm_scrn_y+1][cm_scrn_x-1]>=1
+						|| MapTiles[cm_scrn_y+1][cm_scrn_x]>=1
+						|| MapTiles[cm_scrn_y+1][cm_scrn_x+1]>=1
 						)
 						{
 						return;
 						}
 					}
-
-
 
 			// 攻撃地点から攻撃目標地点への方位角
 			if( Units[trgt].Found==0 )
@@ -2156,18 +1872,16 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 			trgt_x+=cos(Units[trgt].Direction*a_PI)*((AIR_TPD_LOS_DSTC/AIR_TPD_SPD)*Units[trgt].Speed); // とりあえずターン後
 			trgt_y+=sin(Units[trgt].Direction*a_PI)*((AIR_TPD_LOS_DSTC/AIR_TPD_SPD)*Units[trgt].Speed);
 
-
 			wrk_x=trgt_x-unit.Position.X;
 			wrk_y=trgt_y-unit.Position.Y;
 
 			drctn=atan2(wrk_y,wrk_x)*RAD_to;
 			if(drctn<0)
-				drctn=360+drctn;	
+				drctn=360+drctn;
 
 			drctn=drctn-unit.Direction;
 			if(drctn<0)
-				drctn=360+drctn;	
-
+				drctn=360+drctn;
 
 			if( (int)drctn<=45||(int)drctn>=315)
 				{
@@ -2191,10 +1905,6 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 					drctn=90-(drctn-90);
 				dstc=(wrk_x)/(cos(drctn*a_PI));
 
-
-
-
-
 				if( dstc>=100 && dstc<=AIR_TPD_LOS_DSTC )
 					{
 					i=(int)(dstc/2);
@@ -2216,13 +1926,11 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 							}
 						}
 
-
 					// 発射！
 					unit.Ammo=0;		// 魚雷が０
 					unit.Target=0;		// ターゲットをクリア
 
 					unit.Mode=UnitMode.Return;		// 航空機はメイン兵器ゼロで帰投
-
 
 					// 雷撃時に適当に移動さす
 					wrk_x=unit.Position.X;
@@ -2236,20 +1944,13 @@ public void	FireWeapons(int m,int trgt,FireKind kind)
 
 					drctn=(int)(drctn)%360;
 
-
-					wrk_x+=cos(drctn*a_PI)*300; 
+					wrk_x+=cos(drctn*a_PI)*300;
 					wrk_y+=sin(drctn*a_PI)*300;
 
 					unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
 					unit.EmergencyFlags[0]=20+Random(300);
 
-
-					
-
-
-
-
-					// 部下、多分戦闘機に帰投命令					
+					// 部下、多分戦闘機に帰投命令
 					if(unit.IsGroupLeader!=0)
 						{
 						for(f=1;f<=MaxUnitId;f++)
@@ -2270,7 +1971,6 @@ other.PathX[1]=MAP_RIGHT+1;
 						unit.IsGroupLeader=0;
 						}
 
-
 					if( unit.IsGroupLeader==0 )
 						{
 						unit.PathX[0]=unit.Position.X;
@@ -2285,7 +1985,6 @@ other.PathX[1]=MAP_RIGHT+1;
 						Fires[n].Target=trgt;
 						Fires[n].Kind=kind;
 						Fires[n].Position=unit.Position;
-						//fire[n].drctn=(int)(unit[m].drctn+(2-rnd(4)))%360;
 						Fires[n].Direction=(int)unit.Direction;
 						Fires[n].Speed=AIR_TPD_SPD;
 						Fires[n].Acceleration=+0.0;
@@ -2298,9 +1997,6 @@ other.PathX[1]=MAP_RIGHT+1;
 				}
 			return;
 			}
-
-
-
 
 		if( kind==FireKind.Bomb && unit.Kind==UnitKind.Attacker )
 			{
@@ -2316,20 +2012,18 @@ other.PathX[1]=MAP_RIGHT+1;
 
 			wrk_x2=wrk_x;	wrk_y2=wrk_y;
 
-
-
 			wrk_x=wrk_x-unit.Position.X;
 			wrk_y=wrk_y-unit.Position.Y;
 
 			drctn=atan2(wrk_y,wrk_x)*RAD_to;
 			if(drctn<0)
-				drctn=360+drctn;	
+				drctn=360+drctn;
 			drctn2=drctn;
 			drctn=drctn-unit.Direction;
 			if(drctn<0)
-				drctn=360+drctn;	
+				drctn=360+drctn;
 
-			if( (int)drctn<=30/*45*/||(int)drctn>=330/*315*/ )
+			if( (int)drctn<=30||(int)drctn>=330 )
 				{
 				// 距離を求めます
 				wrk_x=unit.Position.X-wrk_x2;
@@ -2350,14 +2044,9 @@ other.PathX[1]=MAP_RIGHT+1;
 					drctn=90-(drctn-90);
 				dstc=(wrk_x)/(cos(drctn*a_PI));
 
-
-
-
-//				if( dstc>=170/*40*/ && dstc<=180/*50*/  )
 				if( ( dstc>=170 && dstc<=180 && unit.Side==Side.UnitedStates ) || ( dstc>=35 && dstc<=65 && unit.Side==Side.Japan ))
 					{
 					// 発射！
-//					SoundPlayEffect( NULL, BOMB_OFF ,unit[m].x, unit[m].y);
 
 					if( unit.Side==Side.UnitedStates )
 						unit.Speed+=unit.AccelerationChange*700;
@@ -2366,19 +2055,18 @@ other.PathX[1]=MAP_RIGHT+1;
 						wrk_x=unit.Position.X;
 						wrk_y=unit.Position.Y;
 						drctn=unit.Direction;
-						wrk_x+=cos(drctn*a_PI)*300; 
+						wrk_x+=cos(drctn*a_PI)*300;
 						wrk_y+=sin(drctn*a_PI)*300;
 						unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
 						unit.EmergencyFlags[0]=150+Random(50);
 						}
 
 					unit.Ammo=0;		// 消費
-					unit.Target=0;		
+					unit.Target=0;
 
 					unit.Mode=UnitMode.Return;		// 航空機はメイン兵器ゼロで帰投
 
-
-					// 部下、多分戦闘機に帰投命令					
+					// 部下、多分戦闘機に帰投命令
 					if(unit.IsGroupLeader!=0)
 						{
 						for(f=1;f<=MaxUnitId;f++)
@@ -2398,17 +2086,14 @@ other.PathX[1]=MAP_RIGHT+1;
 						unit.IsGroupLeader=0;
 						}
 
-
-
 					n=FindFreeFire();
 					if( n!=0 )
 						{
-//						fire[n].used=trgt;
 						Fires[n].Target=(int)UnitKind.Attacker;
 						Fires[n].Kind=kind;
 						Fires[n].Position = new WorldPosition(unit.Position.X+(3-Random(6)), unit.Position.Y+(3-Random(6)));
 						Fires[n].Direction=drctn2;
-	
+
 						if(unit.Side==Side.Japan)
 							{
 							Fires[n].Position += new WorldVector(cos(Fires[n].Direction*a_PI)*(13), sin(Fires[n].Direction*a_PI)*(13));
@@ -2431,11 +2116,9 @@ other.PathX[1]=MAP_RIGHT+1;
 							Fires[n].info[0]=0;
 							Fires[n].info[1]=70;
 							}
-							
+
 						}
 
-//					if( unit[m].used==USA )
-//						{
 						// もう一発
 						n=FindFreeFire();
 						if( n!=0 )
@@ -2444,7 +2127,7 @@ other.PathX[1]=MAP_RIGHT+1;
 							Fires[n].Kind=kind;
 							Fires[n].Position = new WorldPosition(unit.Position.X+(20-Random(40)), unit.Position.Y+(20-Random(40)));
 							Fires[n].Direction=drctn2;
-	
+
 							if(unit.Side==Side.Japan)
 								{
 								Fires[n].Position += new WorldVector(cos(Fires[n].Direction*a_PI)*(13), sin(Fires[n].Direction*a_PI)*(13));
@@ -2469,14 +2152,13 @@ other.PathX[1]=MAP_RIGHT+1;
 								Fires[n].info[1]=70+(5-Random(10));
 								}
 							}
-//						}
 					}
 				}
 			return;
 			}
 
 		if( kind==FireKind.Bomb && unit.Kind==UnitKind.Bomber )
-			{	
+			{
 			// 爆撃機
 			// 爆撃
 			trgt2=0;
@@ -2493,12 +2175,12 @@ other.PathX[1]=MAP_RIGHT+1;
 					wrk_y=Units[n].Position.Y-unit.Position.Y;
 					drctn=atan2(wrk_y,wrk_x)*RAD_to;
 					if(drctn<0)
-						drctn=360+drctn;	
+						drctn=360+drctn;
 					drctn2=drctn;
 
 					drctn2=drctn+(Random(10)-5);
-					if(drctn2>=360)	drctn2=drctn2-360;				
-					if(drctn2<0)	drctn2=360+drctn2;				
+					if(drctn2>=360)	drctn2=drctn2-360;
+					if(drctn2<0)	drctn2=360+drctn2;
 
 					drctn=drctn-unit.Direction;
 					if(drctn<0)
@@ -2541,7 +2223,7 @@ other.PathX[1]=MAP_RIGHT+1;
 					if( unit.Ammo<=0)
 						{
 						unit.Ammo=0;		// 消費
-						unit.Target=0;		
+						unit.Target=0;
 						unit.Mode=UnitMode.Return;		// 航空機はメイン兵器ゼロで帰投
 						}
 
@@ -2549,7 +2231,6 @@ other.PathX[1]=MAP_RIGHT+1;
 
 					if(unit.Ammo<=0)
 						unit.Mode=UnitMode.Return;		// 航空機はメイン兵器ゼロで帰投
-
 
 					Fires[n].Target=(int)UnitKind.Bomber;
 					Fires[n].Kind=kind;
@@ -2563,22 +2244,11 @@ other.PathX[1]=MAP_RIGHT+1;
 					}
 				}
 
-
-
-
 			return;
 			}
 
 		}
 	}
-
-
-
-
-
-
-
-
 
 //============================================================================
 // 編隊のポジションをＰｐ＿ｘｙ「０」にセットします。
@@ -2590,22 +2260,18 @@ public void	SetDynamicDestination(int n)
 	int				pt,pos_of_no,a,b,c;
 	int				nums;
 
-
-
-
 	if( Units[n].Category==UnitCategory.Plane )
 		{
-	
+
 		// 航空機編隊の制御
 
 		pt=Units[n].GroupLeader;
-		
+
 		if(Units[pt].PlaneState==UnitState.Parked && Units[pt].Mode==UnitMode.Return && Units[n].PlaneState==UnitState.Flying )
 			{
 			Units[n].GroupLeader=0;
 			return;
 			}
-
 
 		pos_of_no=Units[n].FormationNumber;
 
@@ -2621,18 +2287,14 @@ public void	SetDynamicDestination(int n)
 			Units[n].PathX[1]=MAP_RIGHT+1;
 			}
 		else
-			{	
+			{
 			// 指揮が通常移動
-			nums=5/*6*/;			// １小隊何機か
+			nums=5;			// １小隊何機か
 
 			// 何番編隊か
 			a=Units[n].FormationNumber/nums;
 			// 何番機か
 			b=Units[n].FormationNumber%nums;
-
-			//if(a==1&&b==1)
-			//	dstc=250+320;
-				
 
 			switch( b )
 				{
@@ -2642,26 +2304,23 @@ public void	SetDynamicDestination(int n)
 				case 1:		// 2番機
 					angl=Units[pt].Direction-90.0-45.0;	dstc=60*0.80;
 					break;
-				case 2:		// 
+				case 2:		//
 					angl=Units[pt].Direction-90.0-45.0-90.0;	dstc=60*0.80;
 					break;
-				case 3:		// 
+				case 3:		//
 					angl=Units[pt].Direction-90.0-45.0;	dstc=120*0.80;
 					break;
-				case 4:		// 
+				case 4:		//
 					angl=Units[pt].Direction-90.0-45.0-90.0;	dstc=120*0.80;
 					break;
-				case 5:		// 
+				case 5:		//
 					angl=Units[pt].Direction-90.0-45.0-45.0;	dstc=100*0.80;
 					break;
 				}
 
-
-
 			// 目的地を決定
 			Units[n].PathX[0]=Units[pt].Position.X+cos(angl*a_PI)*dstc;
 			Units[n].PathY[0]=Units[pt].Position.Y+sin(angl*a_PI)*dstc;
-
 
 			if( a>=0 )
 				{
@@ -2674,40 +2333,38 @@ public void	SetDynamicDestination(int n)
 					case 1:		// 2番編隊
 						angl=Units[pt].Direction-90.0-45.0;	dstc=180*0.80;
 						break;
-					case 2:		// 
+					case 2:		//
 						angl=Units[pt].Direction-90.0-45.0-90.0;	dstc=180*0.80;
 						break;
-					case 3:		// 
+					case 3:		//
 						angl=Units[pt].Direction-90.0-45.0;	dstc=360*0.80;
 						break;
-					case 4:		// 
+					case 4:		//
 						angl=Units[pt].Direction-90.0-45.0-45.0;	dstc=300*0.80;
 						break;
-					case 5:		// 
+					case 5:		//
 						angl=Units[pt].Direction-90.0-45.0-90.0;	dstc=360*0.80;
 						break;
 
-
-					case 6:		// 
+					case 6:		//
 						angl=Units[pt].Direction-90.0-45.0;	dstc=540*0.80;
 						break;
-					case 7:		// 
+					case 7:		//
 						angl=Units[pt].Direction-90.0-45.0-22.5;	dstc=480*0.80;
 						break;
-					case 8:		// 
+					case 8:		//
 						angl=Units[pt].Direction-90.0-45.0-45.0-22.5;	dstc=480*0.80;
 						break;
-					case 9:		// 
+					case 9:		//
 						angl=Units[pt].Direction-90.0-45.0-90.0;		dstc=540*0.80;
 						break;
-					case 10:		// 
+					case 10:		//
 						angl=Units[pt].Direction-90.0-45.0-11.2;		dstc=640*0.80;
 						break;
-					case 11:		// 
+					case 11:		//
 						angl=Units[pt].Direction-90.0-45.0-90.0+11.2;		dstc=640*0.80;
 						break;
 					}
-
 
 				// 目的地を決定
 				Units[n].PathX[0]=Units[n].PathX[0]+cos(angl*a_PI)*dstc;
@@ -2725,30 +2382,20 @@ public void	SetDynamicDestination(int n)
 			angl = angl-360;
 		dstc=Units[n].DistanceToLeader;
 
-
 		Units[n].PathX[0]=Units[pt].Position.X+cos(angl*a_PI)*dstc;
 		Units[n].PathY[0]=Units[pt].Position.Y+sin(angl*a_PI)*dstc;
 		Units[n].PathX[1]=MAP_RIGHT+1;
 
-
-
-		if( 1!=0 /*|| unit[n].used==cpu_side*/ )
+		if( 1!=0  )
 			{
 			//コンピュータの進路計算
 			SetCpuRoute2( n );
 			}
 		}
 
-
-
-
-
-//	unit[n].pp_now=0;
 	Units[n].Stop=0;
 
 	}
-
-
 
 //============================================================================
 // 戦闘機の緊急起動をセット
@@ -2758,18 +2405,16 @@ public void	CheckOtherUnits(double* rx,double* ry)
 	{
 	int		n;
 	double	wrk_x,wrk_y;
-	RECT	wrk_r;	
-
-
+	RECT	wrk_r;
 
 	for( n=1; n<=MaxUnitId; n++)
 		{
 		if( Units[n].IsUsed && Units[n].Category==UnitCategory.Ship )
 			{
 			// ptin dbg
-			wrk_r.top=(int)Units[n].Position.Y+(Sprites[UNIT_JPN].ht/2);//(int)unit[n].y-(sprt[UNIT_JPN].ht/2);
+			wrk_r.top=(int)Units[n].Position.Y+(Sprites[UNIT_JPN].ht/2);
 			wrk_r.right=(int)Units[n].Position.X+(Sprites[UNIT_JPN].wd/2);
-			wrk_r.bottom=(int)Units[n].Position.Y-(Sprites[UNIT_JPN].ht/2);//(int)unit[n].y+(sprt[UNIT_JPN].ht/2);
+			wrk_r.bottom=(int)Units[n].Position.Y-(Sprites[UNIT_JPN].ht/2);
 			wrk_r.left=(int)Units[n].Position.X-(Sprites[UNIT_JPN].wd/2);
 
 			if( PointInRect3(ref wrk_r,(int)*rx,(int)*ry)!=0)
@@ -2781,7 +2426,6 @@ public void	CheckOtherUnits(double* rx,double* ry)
 		}
 	}
 
-
 //============================================================================
 // 戦闘機の緊急起動をセット
 //----------------------------------------------------------------------------
@@ -2789,25 +2433,6 @@ public void	CheckOtherUnits(double* rx,double* ry)
 public void	SetFighterEmergencyDestination(int m)
 	{
 	ref var unit = ref Units[m];
-
-#if false
-	// 損傷がひどくなったら逃げよう
-	if( unit[m].kind==UnitKind.Fighter && unit[m].Mode!=UnitMode.Return && unit[m].Hp<=unit[m].MaxHp/2 )
-		{
-		unit[m].Target=0;		// ターゲットをクリア
-		unit[m].Mode=UnitMode.Return;		// 航空機はメイン兵器ゼロで帰投
-
-		unit[m].ltl_ldr=0;
-
-		if( !unit[m].is_ltl_ldr )
-			{
-			unit[m].pp_x[0]=unit[m].x;
-			unit[m].pp_y[0]=unit[m].y;
-			unit[m].pp_x[1]=MAP_RIGHT+1;
-			}
-		}
-#endif
-
 
 	// 目標も、爆弾も無く、損傷がひどいかガソリンが切れそうな場合はきとうしよう
 	if( unit.Kind==UnitKind.Fighter && unit.Mode!=UnitMode.Return && (unit.Fuel<=30 || unit.Hp<=unit.MaxHp*0.70 || unit.Ammo<=0 ) )
@@ -2826,13 +2451,6 @@ public void	SetFighterEmergencyDestination(int m)
 		}
 	}
 
-
-
-
-
-
-
-
 //============================================================================
 // 戦闘機の攻撃機動をセット
 //----------------------------------------------------------------------------
@@ -2845,11 +2463,10 @@ public void	SetFighterAttackDestination(int m)
 	int				lvl_my,lvl_en,my_tec=default /* C4701 */,en_tec,n;
 	RECT			wrk_r;
 
-
 	// ptin dbg
-	wrk_r.top=(int)unit.EmergencyDestination.Y+35;//(int)unit[m].em_y-35;
+	wrk_r.top=(int)unit.EmergencyDestination.Y+35;
 	wrk_r.right=(int)unit.EmergencyDestination.X+35;
-	wrk_r.bottom=(int)unit.EmergencyDestination.Y-35;//(int)unit[m].em_y+35;
+	wrk_r.bottom=(int)unit.EmergencyDestination.Y-35;
 	wrk_r.left=(int)unit.EmergencyDestination.X-35;
 
 	if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
@@ -2859,10 +2476,6 @@ public void	SetFighterAttackDestination(int m)
 		unit.Stop=0;
 		return;
 		}
-
-
-
-
 
 	trgt=unit.Target;
 	lvl_my=unit.Skill;
@@ -2880,11 +2493,8 @@ public void	SetFighterAttackDestination(int m)
 	if( lvl_my < lvl_en )
 		{	my_tec=40+(lvl_en-lvl_my);	en_tec=10;	}
 
-
 	if( Random(my_tec)!=0 )
 		return;
-
-
 
 	// 正面打ち合いをさけるようにします。
 	n=trgt;
@@ -2932,7 +2542,7 @@ public void	SetFighterAttackDestination(int m)
 				drctn=90-(drctn-90);
 			dstc=(wrk_x)/(cos(drctn*a_PI));
 			if( dstc>=160 && dstc<=320 )
-				{	
+				{
 				// さらに、距離が近い よけよう
 				wrk_x=unit.Position.X;
 				wrk_y=unit.Position.Y;
@@ -2948,8 +2558,7 @@ public void	SetFighterAttackDestination(int m)
 					}
 				em_drctn=(int)em_drctn%360;
 
-
-				wrk_x+=cos(em_drctn*a_PI)*300; 
+				wrk_x+=cos(em_drctn*a_PI)*300;
 				wrk_y+=sin(em_drctn*a_PI)*300;
 
 				unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
@@ -2960,16 +2569,10 @@ public void	SetFighterAttackDestination(int m)
 			}
 		}
 
-
-
-
-
-
-
 	// 敵機の直前にＥｍ＿Ｘｙを設定します。
 	wrk_x=Units[trgt].Position.X;
 	wrk_y=Units[trgt].Position.Y;
-	wrk_x+=cos(Units[trgt].Direction*a_PI)*(Units[trgt].Speed*20.0); 
+	wrk_x+=cos(Units[trgt].Direction*a_PI)*(Units[trgt].Speed*20.0);
 	wrk_y+=sin(Units[trgt].Direction*a_PI)*(Units[trgt].Speed*20.0);
 
 	unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
@@ -2979,9 +2582,6 @@ public void	SetFighterAttackDestination(int m)
 		PlaySoundEffect( 0, PLANE1+Random(2) ,unit.Position.X, unit.Position.Y);
 
 	}
-
-
-
 
 //============================================================================
 // 攻撃機の緊急起動をセット
@@ -2993,13 +2593,11 @@ public void	SetAttackerEmergencyDestination(int m)
 	int		n,g,new_ldr,f;
 	double	em_drctn,wrk_x,wrk_y,drctn,dstc,drctn2;
 
-	
-
 	// 戦闘機から逃げよう
 	for(n=1;n<=MaxUnitId;n++)
 		{
 		ref var other = ref Units[n];	//後方の敵を探す。
-		if( other.IsUsed && other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying 
+		if( other.IsUsed && other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying
 		&& other.Side!=unit.Side && other.Found!=0 )
 			{
 
@@ -3008,36 +2606,28 @@ public void	SetAttackerEmergencyDestination(int m)
 			wrk_y=other.Position.Y-unit.Position.Y;
 			drctn=atan2(wrk_y,wrk_x)*RAD_to;
 			if(drctn<0)
-				drctn=360+drctn;	
+				drctn=360+drctn;
 
 			drctn=drctn-unit.Direction;
 			if(drctn<0)
 				drctn=360+drctn;
-
 
 			// 攻撃目標地点から攻撃地点への方位角
 			wrk_x=unit.Position.X-other.Position.X;
 			wrk_y=unit.Position.Y-other.Position.Y;
 			drctn2=atan2(wrk_y,wrk_x)*RAD_to;
 			if(drctn2<0)
-				drctn2=360+drctn2;	
+				drctn2=360+drctn2;
 
 			drctn2=drctn2-other.Direction;
 			if(drctn2<0)
 				drctn2=360+drctn2;
 
-
-
-
-			if( ((int)drctn>=150 && (int)drctn<=210 && other.Kind==UnitKind.Fighter) 
-				|| 
+			if( ((int)drctn>=150 && (int)drctn<=210 && other.Kind==UnitKind.Fighter)
+				||
 				( ((int)drctn<=45 || (int)drctn>=315) && ( (int)drctn2>=135 && (int)drctn2<=225)  && other.Kind==UnitKind.Attacker && unit.Target==0 )
-				/*||
-				(  ( ((int)drctn>=150&&(int)drctn<=210) || ((int)drctn<=45||(int)drctn>=315) )  && unit[n].kind==FT1 && unit[m].kind==BM1) 
-				*/
 			  )
 				{
-
 
 				wrk_x=other.Position.X-unit.Position.X;
 				wrk_y=other.Position.Y-unit.Position.Y;
@@ -3057,7 +2647,7 @@ public void	SetAttackerEmergencyDestination(int m)
 					drctn=90-(drctn-90);
 				dstc=(wrk_x)/(cos(drctn*a_PI));
 				if( dstc<=250+((other.Kind==UnitKind.Attacker ? 1 : 0)*70) )
-					{	
+					{
 
 					wrk_x=unit.Position.X;
 					wrk_y=unit.Position.Y;
@@ -3071,15 +2661,13 @@ public void	SetAttackerEmergencyDestination(int m)
 							em_drctn-=45+Random(90);
 							break;
 						}
-					/*(int)*/em_drctn=(int)em_drctn%360;
+					em_drctn=(int)em_drctn%360;
 
-
-					wrk_x+=cos(em_drctn*a_PI)*300; 
+					wrk_x+=cos(em_drctn*a_PI)*300;
 					wrk_y+=sin(em_drctn*a_PI)*300;
 
 					unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
 					unit.EmergencyFlags[0]=100;
-
 
 					return;
 					}
@@ -3087,23 +2675,14 @@ public void	SetAttackerEmergencyDestination(int m)
 			}
 		}
 
-
-
-
-
-
-
-
 	// 損傷がひどいかガソリンが切れそうな場合はきとうしよう
-	if( unit.Mode!=UnitMode.Return && (unit.Fuel<=20 || unit.Hp<=unit.MaxHp*0.70 ) 
-		/*&& unit[unit[m].info[1]].used*/
+	if( unit.Mode!=UnitMode.Return && (unit.Fuel<=20 || unit.Hp<=unit.MaxHp*0.70 )
 		)
 		{
 		unit.Ammo=0;		// 魚雷が０
 		unit.Target=0;		// ターゲットをクリア
 
-
-		if(Units[unit.Carrier].IsUsed)		
+		if(Units[unit.Carrier].IsUsed)
 			{
 		unit.Mode=UnitMode.Return;		// 航空機はメイン兵器ゼロで帰投
 
@@ -3142,13 +2721,11 @@ public void	SetAttackerEmergencyDestination(int m)
 				Units[new_ldr].GroupLeader=0;
 				Units[new_ldr].FormationNumber=0;
 
-
 				// 昔の小隊長が攻爆撃機だったら、帰投にしておく
-				if( Units[new_ldr].Kind==UnitKind.Fighter && (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber) /*&& unit[m].info[0]==FLYING*/ && Units[new_ldr].PlaneState==UnitState.Flying )
+				if( Units[new_ldr].Kind==UnitKind.Fighter && (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber)  && Units[new_ldr].PlaneState==UnitState.Flying )
 					{
 					Units[new_ldr].Mode=UnitMode.Return;		// それまでの隊長がボスだったらきかんしよっと
 					}
-
 
 				for(f=1;f<=MaxUnitId;f++)
 					{
@@ -3158,10 +2735,9 @@ public void	SetAttackerEmergencyDestination(int m)
 						other.GroupLeader=(short)new_ldr;
 
 						// 昔の小隊長が攻爆撃機だったら、帰投にしておく
-						if( Units[new_ldr].Kind==UnitKind.Fighter && other.Kind==UnitKind.Fighter && (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber) /*&& unit[m].info[0]==FLYING*/&& other.PlaneState==UnitState.Flying )
+						if( Units[new_ldr].Kind==UnitKind.Fighter && other.Kind==UnitKind.Fighter && (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber) && other.PlaneState==UnitState.Flying )
 							other.Mode=UnitMode.Return;		// それまでの隊長がボスだったらきかんしよっと
 						}
-
 
 					}
 
@@ -3176,18 +2752,12 @@ public void	SetAttackerEmergencyDestination(int m)
 				unit.PathY[0]=unit.Position.Y;
 				unit.PathX[1]=MAP_RIGHT+1;
 
-
 				}
 			}
 			}
 		}
 
 	}
-
-
-
-
-
 
 //============================================================================
 // 攻撃機の攻撃機動をＰｐ＿ｘｙにセット
@@ -3201,10 +2771,7 @@ public void	SetAttackerAttackDestination(int m)
 	int				nums,lvl_jp,lvl_us,jp_tec,us_tec,n,f;
 	RECT			wrk_r;
 
-
-
 	n=unit.Target;				// 攻撃目標
-
 
 	// 現位置から攻撃目標地点への距離
 	wrk_x=Units[n].Position.X-unit.Position.X;
@@ -3225,8 +2792,6 @@ public void	SetAttackerAttackDestination(int m)
 		drctn=90-(drctn-90);
 	dstc=(wrk_x)/(cos(drctn*a_PI));
 
-
-
 	// 目標ユニットへの方位角を求めます
 	wrk_x=Units[n].Position.X;
 	wrk_y=Units[n].Position.Y;
@@ -3234,13 +2799,12 @@ public void	SetAttackerAttackDestination(int m)
 	wrk_y=wrk_y-unit.Position.Y;
 	drctn=atan2(wrk_y,wrk_x)*RAD_to;
 	if(drctn<0)
-		drctn=360+drctn;	
+		drctn=360+drctn;
 	drctn=drctn-unit.Direction;
 	if(drctn<0)
-		drctn=360+drctn;	
+		drctn=360+drctn;
 
-
-	if( dstc<=510 && dstc >= 500  && (drctn<=22.5||drctn>=337.5) /*&& unit[m].no /*&& unit[m].is_ltl_ldr==0*/ /*&& (int)(unit[m].ltl_ldr)*/ )
+	if( dstc<=510 && dstc >= 500  && (drctn<=22.5||drctn>=337.5)   )
 		{
 
 		// リーダー機か単独機のみここに来ます。
@@ -3254,7 +2818,7 @@ public void	SetAttackerAttackDestination(int m)
 				f++;
 
 				if( other.Kind!=UnitKind.Fighter )
-					other.GroupLeader=0; 
+					other.GroupLeader=0;
 
 				wrk_x=other.Position.X;
 				wrk_y=other.Position.Y;
@@ -3277,7 +2841,7 @@ public void	SetAttackerAttackDestination(int m)
 					}
 				drctn=(int)drctn%360;
 
-				wrk_x+=cos(drctn*a_PI)*600; 
+				wrk_x+=cos(drctn*a_PI)*600;
 				wrk_y+=sin(drctn*a_PI)*600;
 
 				other.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
@@ -3290,16 +2854,15 @@ public void	SetAttackerAttackDestination(int m)
 				}
 			}
 
-
 		}
 	else if( dstc >= 400 )
 		{
 		if( unit.PathX[1]==MAP_RIGHT+1 )
 			{
 			// ptin dbg
-			wrk_r.top=(int)unit.PathY[0]+35;//(int)unit[m].pp_y[0]-35;
+			wrk_r.top=(int)unit.PathY[0]+35;
 			wrk_r.right=(int)unit.PathX[0]+35;
-			wrk_r.bottom=(int)unit.PathY[0]-35;//(int)unit[m].pp_y[0]+35;
+			wrk_r.bottom=(int)unit.PathY[0]-35;
 			wrk_r.left=(int)unit.PathX[0]-35;
 			if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)==0 || Units[n].Found==0)
 				{
@@ -3310,7 +2873,7 @@ public void	SetAttackerAttackDestination(int m)
 			wrk_x+=cos(Units[n].Direction*a_PI); // とりあえずターン後
 			wrk_y+=sin(Units[n].Direction*a_PI);
 			unit.PathX[0]=wrk_x;
-			unit.PathY[0]=wrk_y;			
+			unit.PathY[0]=wrk_y;
 			unit.PathX[1]=MAP_RIGHT+1;
 			unit.Stop=0;
 			}
@@ -3324,7 +2887,7 @@ public void	SetAttackerAttackDestination(int m)
 			wrk_r.bottom=(int)unit.PathY[0]+35;
 			wrk_r.left=(int)unit.PathX[0]-35;
 			if(unit.Weapon==FireKind.Torpedo)
-				turn=(/*dstc*/ (AIR_TPD_LOS_DSTC) /AIR_TPD_SPD);		// 投雷距離　÷ 魚雷速度　でターンを求めます
+				turn=( (AIR_TPD_LOS_DSTC) /AIR_TPD_SPD);		// 投雷距離　÷ 魚雷速度　でターンを求めます
 			else
 				turn=70.0;
 			wrk_x=Units[n].Position.X;
@@ -3335,7 +2898,7 @@ public void	SetAttackerAttackDestination(int m)
 			unit.PathY[0]=wrk_y;
 			unit.PathX[1]=MAP_RIGHT+1;
 			unit.Stop=0;
-			if( unit.IsGroupLeader!=0 /*&& unit[m].arm[0]==BOM*/ )
+			if( unit.IsGroupLeader!=0  )
 				{
 				a=0;
 				for(f=1;f<=MaxUnitId;f++)
@@ -3353,12 +2916,12 @@ public void	SetAttackerAttackDestination(int m)
 				}
 			}
 		}
-	else 
+	else
 		{	// 近すぎる場合は離脱
 		// ptin dbg
-		wrk_r.top=(int)unit.PathY[0]+35;//(int)unit[m].pp_y[0]-35;
+		wrk_r.top=(int)unit.PathY[0]+35;
 		wrk_r.right=(int)unit.PathX[0]+35;
-		wrk_r.bottom=(int)unit.PathY[0]-35;//(int)unit[m].pp_y[0]+35;
+		wrk_r.bottom=(int)unit.PathY[0]-35;
 		wrk_r.left=(int)unit.PathX[0]-35;
 		if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
 			{
@@ -3369,12 +2932,6 @@ public void	SetAttackerAttackDestination(int m)
 			}
 		}
 	}
-
-
-
-
-
-
 
 //============================================================================
 // 輸送船の上陸機動をＥｍ＿ｘｙにセット
@@ -3387,12 +2944,8 @@ public void	SetTransportLandingDestination(int m)
 	int				nums,lvl_jp,lvl_us,jp_tec,us_tec,n,f;
 	RECT			wrk_r;
 
-
-
 	if( Random(200)!=0 )
 		return;
-
-
 
 	// 現位置から攻撃目標地点への距離
 	wrk_x=Units[m].info[6]-Units[m].Position.X;
@@ -3420,21 +2973,15 @@ public void	SetTransportLandingDestination(int m)
 		}
 	}
 
-
-
-
-
-
-
 //============================================================================
-// 
+//
 //----------------------------------------------------------------------------
 [Original("em_of_out_of_map")]
 public void ReturnIntoWorld(int m)
 	{
 	ref var unit = ref Units[m];
 	// 展開海域より外れたなら戻る
-	if( 1!=0 /*unit[m].used!=cpu_side*/ )
+	if( 1!=0  )
 		{
 		if( unit.Position.X>MAP_RIGHT )
 			{
@@ -3466,8 +3013,6 @@ public void ReturnIntoWorld(int m)
 		}
 	}
 
-
-
 //============================================================================
 // 艦船の緊急機動をＥｍ＿ｘｙにセット
 //----------------------------------------------------------------------------
@@ -3479,16 +3024,11 @@ public void	SetShipEmergencyDestination(int m)
 	double	em_drctn,wrk_x,wrk_y,drctn,dstc;
 	int		size;
 
-
-
-//return;
-
-
 	for(n=1;n<FIRE_MAX;n++)
 		{
 		ref var fire = ref Fires[n];
 		// 艦船によってくる魚雷から逃げる
-		if( fire.Target!=0 && fire.Kind==FireKind.Torpedo && fire.info[0]>=fire.info[2] /*&& unit[n].found*/ )
+		if( fire.Target!=0 && fire.Kind==FireKind.Torpedo && fire.info[0]>=fire.info[2]  )
 			{
 			// 自点と対象点の距離
 			wrk_x=fire.Position.X-unit.Position.X;
@@ -3520,7 +3060,7 @@ public void	SetShipEmergencyDestination(int m)
 				if(wrk_y==0)	wrk_y=1;
 				drctn=atan2(wrk_y,wrk_x)*RAD_to;
 				if(drctn<0)
-					drctn=360+drctn;	
+					drctn=360+drctn;
 				drctn=drctn-fire.Direction;
 				if(drctn<0)
 					drctn=360+drctn;
@@ -3543,13 +3083,11 @@ public void	SetShipEmergencyDestination(int m)
 
 					em_drctn=(int)em_drctn%360;
 
-
 					wrk_x+=cos(em_drctn*a_PI)*300;
 					wrk_y+=sin(em_drctn*a_PI)*300;
 
 					unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
 					unit.EmergencyFlags[0]=100+Random(150);
-					//unit[m].stop=1;
 
 					return;
 					}
@@ -3557,13 +3095,11 @@ public void	SetShipEmergencyDestination(int m)
 			}
 		}
 
-
-
 	for(n=1;n<=MaxUnitId;n++)
 		{
 		ref var other = ref Units[n];
 		// 艦船によってくる艦船からにげる
-		if( (unit.Stop!=0 || (unit.Kind==UnitKind.Carrier||unit.Kind==UnitKind.LightCarrier)) && other.IsUsed && (other.Category==UnitCategory.Ship /*&& unit[n].kind!=AP && unit[n].kind!=SP*/ && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress) ) && 
+		if( (unit.Stop!=0 || (unit.Kind==UnitKind.Carrier||unit.Kind==UnitKind.LightCarrier)) && other.IsUsed && (other.Category==UnitCategory.Ship  && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress) ) &&
 		other.Kind!=UnitKind.Submarine && other.Side!=unit.Side && other.Found!=0 && other.Supply<=0 && unit.Target==0)
 			{
 			// 自点と対象点の距離
@@ -3586,7 +3122,7 @@ public void	SetShipEmergencyDestination(int m)
 			dstc=(wrk_x)/(cos(drctn*a_PI));		// 距離
 
 			// 見る側
-			
+
 			if( dstc<=(double)( BB1_SIGHT ) )
 				{
 				wrk_x=other.Position.X-unit.Position.X;
@@ -3595,7 +3131,7 @@ public void	SetShipEmergencyDestination(int m)
 				if(wrk_y==0)	wrk_y=1;
 				drctn=atan2(wrk_y,wrk_x)*RAD_to;
 				if(drctn<0)
-					drctn=360+drctn;	
+					drctn=360+drctn;
 
 				if( (unit.Kind==UnitKind.Carrier||unit.Kind==UnitKind.LightCarrier) && unit.GroupLeader==0 && other.Stop!=0 && Random(3)!=0 )
 					{
@@ -3622,13 +3158,11 @@ public void	SetShipEmergencyDestination(int m)
 
 				unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
 				unit.EmergencyFlags[0]=100;
-//unit[m].em_flg[0]=0;
 				}
 			}
 
-
 		// 艦船によってくる攻撃機から逃げる
-		if( other.IsUsed && (other.Kind==UnitKind.Attacker || other.Kind==UnitKind.Bomber || ( other.Kind==UnitKind.Fighter && unit.Kind==UnitKind.Transport ) ) && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.Found!=0 
+		if( other.IsUsed && (other.Kind==UnitKind.Attacker || other.Kind==UnitKind.Bomber || ( other.Kind==UnitKind.Fighter && unit.Kind==UnitKind.Transport ) ) && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.Found!=0
 			)
 			{
 			// 自点と対象点の距離
@@ -3661,7 +3195,7 @@ public void	SetShipEmergencyDestination(int m)
 				if(wrk_y==0)	wrk_y=1;
 				drctn=atan2(wrk_y,wrk_x)*RAD_to;
 				if(drctn<0)
-					drctn=360+drctn;	
+					drctn=360+drctn;
 				drctn=drctn-other.Direction;
 				if(drctn<0)
 					drctn=360+drctn;
@@ -3682,13 +3216,11 @@ public void	SetShipEmergencyDestination(int m)
 						}
 					em_drctn=(int)em_drctn%360;
 
-
 					wrk_x+=cos(em_drctn*a_PI)*300;
 					wrk_y+=sin(em_drctn*a_PI)*300;
 
 					unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
 					unit.EmergencyFlags[0]=200+Random(250);
-					//unit[m].stop=1;
 
 					return;
 					}
@@ -3696,9 +3228,7 @@ public void	SetShipEmergencyDestination(int m)
 			}
 		}
 
-
-
-	if( unit.Kind==UnitKind.Destroyer /*&&  unit[m].spd<=unit[m].max_spd*0.9*/ && unit.Stop==1  /*&& unit[m].used==cpu_side*/ )
+	if( unit.Kind==UnitKind.Destroyer  && unit.Stop==1   )
 		{
 		// 駆逐艦の対潜水艦行動、発見された後！
 		if(unit.EmergencyFlags[0]==0)
@@ -3737,7 +3267,7 @@ public void	SetShipEmergencyDestination(int m)
 					if(drctn>=90)
 						drctn=90-(drctn-90);
 					dstc=(wrk_x)/(cos(drctn*a_PI));		// 距離
-					
+
 					if( dstc<=( unit.Variant==1 ? 500 : 400 ) )
 						{
 						// 近くに潜水艦推定位置
@@ -3749,10 +3279,6 @@ public void	SetShipEmergencyDestination(int m)
 						drctn=atan2(wrk_y,wrk_x)*RAD_to;
 
 						drctn+=20-Random(40);
-/*
-						if(drctn<0)
-							drctn=360+drctn;	
-*/
 
 						em_drctn=(int)drctn%360;
 
@@ -3761,44 +3287,16 @@ public void	SetShipEmergencyDestination(int m)
 						wrk_x+=cos(em_drctn*a_PI)*((dstc)+200);
 						wrk_y+=sin(em_drctn*a_PI)*((dstc)+200);
 
-
 						unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
 						unit.EmergencyFlags[0]=100+Random(250);
-	
-//						unit[m].em_flg[1]=n;
+
 						return;
 						}
 					}
 				}
 			}
 
-#if false
-		else
-			{
-			if( unit[unit[m].em_flg[1]].found==0  )
-				{
-				if( rnd(10)==0 )
-					{
-					unit[m].em_flg[1]=0;
-					}
-				else
-					{
-					unit[m].em_x=unit[unit[m].em_flg[1]].info[7]+(400-rnd(800));
-					unit[m].em_y=unit[unit[m].em_flg[1]].info[8]+(400-rnd(800));
-					unit[m].em_flg[0]=200+rnd(100);
-					}
-				return;
-				}
-			else
-				{
-				unit[m].em_flg[1]=0;	
-				}
-			}
-#endif
-
-
 		}
-
 
 	ReturnIntoWorld(m);
 

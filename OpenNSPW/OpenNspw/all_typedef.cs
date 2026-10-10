@@ -31,9 +31,6 @@ struct APP_PLAYER_INFO
 	};
 */
 
-
-
-
 [Original("UNIT")]
 [StructLayout(LayoutKind.Sequential)]
 public struct	Unit		// 全ての艦船、航空機、地図上の位置
@@ -246,28 +243,17 @@ public struct	SPRT
 	public int os_of_x;
 	}
 
-
-
-
-
-
 // Change compiler pack alignment to be BYTE aligned, and pop the current value
 //#pragma pack( push, 1 )
 
 //struct GAMEMSG_GENERIC
 //struct _GENERICMSG
-//{
-    //DWORD dwType;
-//};
-
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct GENERICMSG
 	{
-//	BYTE        byType;
 	public MessageType dwType;
 	}
-
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct UNIT_MSG
@@ -279,8 +265,6 @@ public struct UNIT_MSG
 	public int cls;
 	}
 
-
-
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_DATA_1
 	{
@@ -288,8 +272,6 @@ public struct	_DP_DATA_1
 	public Array16<byte> my_name;
 	public Array10<short> data;
 	}
-
-
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct _DP_NEW_PP
@@ -304,7 +286,6 @@ public struct _DP_NEW_PP
 	public Array90<byte> slct_unit; // [USA_PLANE_END/2]
 	}
 
-
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_PP_SHIP
 	{
@@ -318,7 +299,6 @@ public struct	_DP_NEW_PP_SHIP
 	public Array40<byte> slct_unit; // [JPN_SHIP_END/*20*/]
 	}
 
-
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_PP_PLANE
 	{
@@ -331,8 +311,6 @@ public struct	_DP_NEW_PP_PLANE
 	public int cls;
 	public Array50<byte> slct_unit; // [JPN_PLANE_END-USA_SHIP_END/*30*/]
 	}
-
-
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_SLCT
@@ -362,8 +340,6 @@ public struct	_DP_NEW_SLCT_SHIP
 	public Array40<byte> slct_unit; // [JPN_SHIP_END/*20*/]
 	}
 
-
-
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_SLCT_PLANE
 	{
@@ -378,7 +354,6 @@ public struct	_DP_NEW_SLCT_PLANE
 	public Array50<byte> slct_unit; // [JPN_PLANE_END-USA_SHIP_END/*30*/]
 	}
 
-
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_SLCT_LAND
 	{
@@ -392,10 +367,6 @@ public struct	_DP_NEW_SLCT_LAND
 	public short gr_y;
 	}
 
-
-
-
-
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_MENU
 	{
@@ -408,14 +379,10 @@ public struct	_DP_NEW_MENU
 	public Array90<byte> slct_unit; // [USA_PLANE_END/2/*50*/]
 	}
 
-
-
-
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_FLAG
 	{
 	public MessageType dwType;
-
 
 	public byte cc_chk;
 	public byte unit_chk;
@@ -427,10 +394,6 @@ public struct	_DP_FLAG
 
 	}
 
-
-
-
-
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_DATA_20
 	{
@@ -439,20 +402,6 @@ public struct	_DP_DATA_20
 	public Array260<byte> friend_chat; // [MAX_PATH/*128*/]
 
 	}
-
-
-#if false
-typedef	struct	//_DP_SNRO_SEND
-	{
-	DWORD	dwType;
-
-	BYTE		cmbt_map[180][240];					// マップ
-	UNIT		unit[USA_PLANE_END+1];
-	BYTE		rein[3];
-
-	} _DP_SNRO_SEND;
-#endif
-
 
 // Pop the old pack alignment
 //#pragma pack( pop )

@@ -1,21 +1,16 @@
 //
-//                                    **                                   
-//                                   *  *                                  
-//                                    **  *                                 
-//                                    **   *                                
-//                                    **  *                                 
-//                            *     ******     *                              
-//                            ***   * **     ***                              
-//                              ****  **  ****                                 
-//                             **  ********                                    
-//                                                                       
+//                                    **
+//                                   *  *
+//                                    **  *
+//                                    **   *
+//                                    **  *
+//                            *     ******     *
+//                            ***   * **     ***
+//                              ****  **  ****
+//                             **  ********
+//
 //                 Ｎａｖａｌ Ｓｏｕｔｈ Ｐａｃｉｆｉｃ Ｗａｒ
 //                             Ｏｎ　ｔｈｅ　Ｎｅｔ
-
-
-//#include "all_head.h"
-//#include "all_extern.h"
-//#include	"all_forward.h"
 
 // Port of demo.cpp.
 
@@ -24,16 +19,7 @@ namespace OpenNspw;
 public unsafe partial class Nspw
 {
 
-
-
-
-//BOOL CALLBACK SvDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
-//BOOL CALLBACK SessionDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
-
-
 [Original("exist_auto_save")] public int	HasAutoSave;
-
-
 
 //============================================================================
 // デモ画面
@@ -50,12 +36,9 @@ public void	UpdateTitle()
 	_DP_FLAG	dp_flag;
 	_DP_DATA_20	dp_data_20=default;
 
-
 #if CONN_DBG
 	rival_mode=mode;
 #endif
-
-
 
 	if((FrameCount%40)==0)
 		{
@@ -66,8 +49,6 @@ public void	UpdateTitle()
 		bufferDesc.pBufferData  = (byte*) &dp_flag;
 		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1, 0, null, ref hAsync, EASY_SEND );
 
-
-
 		// 自分のバージョンを相手に伝える。
 		dp_data_20.dwType = MessageType.RivalVersion;
 		wsprintf( dp_data_20.friend_chat, "%s",VER );
@@ -76,27 +57,18 @@ public void	UpdateTitle()
 		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, EASY_SEND );
 		}
 
-
-
-
 	if( TitleTime==0 )
 		{
 		RivalMode=0;
 		wsprintf(RivalVersion, "- - -" );
 		}
 
-
 	ClearFlag=1;
-
-
-//	key_cont();
-
 
 	// ユニットインフォーメィション
 	Sprites[TTL_BACK].x=212-50;
 	Sprites[TTL_BACK].y=130;
 
-	
 	src_rect.left = 	Sprites[TTL_BACK].base_x;
 	src_rect.top = Sprites[TTL_BACK].base_y;
 	src_rect.right = Sprites[TTL_BACK].base_x+Sprites[TTL_BACK].wd;
@@ -105,21 +77,11 @@ public void	UpdateTitle()
 	// dstn_rect は ディスティネーションレクタングルです。
 	dstn_rect.left=Sprites[TTL_BACK].x;
 	dstn_rect.top=Sprites[TTL_BACK].y;
-	//dstn_rect.right=sprt[TTL_BACK].x+sprt[TTL_BACK].wd/2;
-	//dstn_rect.bottom=sprt[TTL_BACK].y+sprt[TTL_BACK].ht/2;
 
-	
 	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
 		{
 		RestoreSurfaces();
 		}
-
-
-
-
-
-	//draw_line4(10, 10, 200,200,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-
 
 /*****
 	// src_rect は ソースサーフェスのレクタングルです。
@@ -136,27 +98,10 @@ public void	UpdateTitle()
 
 *****/
 
-
-
-
-
-
-		if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK ) 
+		if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
 			{
 			SetBkMode(hdc, TRANSPARENT);
 			SelectObject(hdc, gameFont_2);
-
-/*
-			if( g_dwNumberOfActivePlayers==2 )
-				len[0] = wsprintf(ach[0], "CONNECTED NOW");
-			else
-				len[0] = wsprintf(ach[0], "NO CONNECTED");
-
-			SetTextColor(hdc, RGB(255, 0, 0));
-			TextOut(hdc, 360, 60, ach[0], len[0]);
-*/
-
-
 
 #if !LNGG_VER
 			len[0] = wsprintf(ach[0], "Naval South Pacific War on the Net %s",VER );
@@ -175,8 +120,6 @@ public void	UpdateTitle()
 				TextOut(hdc, 330, 580+(n*23), ach[n], len[n]);
 				}
 
-
-
 			SelectObject(hdc, gameFont_1);
 
 			len[0] = wsprintf(ach[0], "YOUR VERSION = %s",VER );
@@ -187,31 +130,11 @@ public void	UpdateTitle()
 			SetTextColor(hdc, RGB(255, 255, 255));
 			TextOut(hdc, 385, 99, ach[0], len[0]);
 
-
-
-
-
-
-//		len[0] = wsprintf(copy, "[0]=%d  [1]=%d  [2]=%d  [3]=%d" ,ach[3][0],ach[3][1],ach[3][2],ach[3][3] );
-
-#if false
-		len[0] = wsprintf(copy, "my_string_crsr=%d my_string_rpd=%d [0]=%d  [1]=%d  [2]=%d  [3]=%d" ,my_string_crsr,my_string_rpd,my_string[0],my_string[1],my_string[2],my_string[3] );
-		TextOut(hdc, 100, 50, copy, len[0]);
-
-		len[0] = wsprintf(copy, my_string );
-		TextOut(hdc, 100, 100, copy, len[0]);
-#endif
-
 			IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
 			}
 
-
-
-
-
 	if( LeftButton==3 )
 		{
-//		lf_btn=0;
 		if( IsEditingMap!=0 )
 			{
 			GoToGameSetting();
@@ -230,7 +153,6 @@ public void	UpdateTitle()
 
 				//ここにくるのはホストだけ
 				// リジュームデータがホストをやってたかしらべる。
-
 
 				HANDLE	hFile;
 
@@ -255,21 +177,7 @@ public void	UpdateTitle()
 				}
 			}
 
-
-//if( dbg[0]==1 )
-//	{
 //	MessageBox(hwndApp,"bitmap_surface","残念！",MB_OK | MB_ICONSTOP);
-
-//	DialogBox(hInstApp, MAKEINTRESOURCE(IDD_ADDRESS_OVERRIDE), hwndApp, OverrideDlgProc);
-
-
-//	ShowWindow(hwndApp,SW_MINIMIZE);
-
-
-
-//	hwndDlg = CreateDialog(hInst,"SAMPLE_DIALOG",hwndApp,SampleDlgProc);
-
-//	}
 
 /*
 		if( DialogBox(hInstance, MAKEINTRESOURCE(IDD_SPDIALOG), hWnd, (DLGPROC)SvDlgProc) )
@@ -277,19 +185,10 @@ public void	UpdateTitle()
 			// セッション選択のダイアログ・ボックスを表示する
 			if (DialogBox(hInstance, MAKEINTRESOURCE(IDD_SESSIONDLG), hwnd, (DLGPROC)SessionDlgProc))
 */
-//		CoInitialize( NULL );
-//		SetupConnection(hInstance, &DPInfo);
-//		CoUninitialize();
-//		dp_init();
 //		DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_DP), hwnd, cnctn_dialog_proc,
-//							(LPARAM) hInstance);
-		//mode=COMBAT;
-		//game_init();
 		}
 
-
-
-	if( /*demo_time==10 ||*/  RightButton==3 )
+	if(   RightButton==3 )
 		{
 
 		RightButton=0;
@@ -298,8 +197,8 @@ public void	UpdateTitle()
 		// 通信対戦用の初期化
 		mode=CNCT_GAME_SETUP;
 
-		wsprintf(g_strLocalPlayerName, "Player" );	
-		wsprintf(g_strRivalPlayerName, "Player" );	
+		wsprintf(g_strLocalPlayerName, "Player" );
+		wsprintf(g_strRivalPlayerName, "Player" );
 
 		cnct_game=0;
 
@@ -328,38 +227,19 @@ public void	UpdateTitle()
 
 		}
 
-
-
-/*
-mode=SETUP;
-*/
-
 	TitleTime++;
-
-
 
 	}
 
-
-
-
-
-
-
-
-
-
 //============================================================================
-// 
+//
 // コネクトゲームスタートの値
 //----------------------------------------------------------------------------
 [Original("go_cnct_game_setting")]
 public void GoToGameSetting()
 	{
 
-
 	ScenarioNumber=0;
-
 
 	Mode=GameMode.GameSetting;
 	HostSide=0;
@@ -372,20 +252,15 @@ public void GoToGameSetting()
 	InitialSupplyPoints[0]=0;		// Host
 	InitialSupplyPoints[1]=0;		// Guest
 
-
 	if( hwndChatDlg!=null )
 		{
 		DestroyWindow(hwndChatDlg);
 		hwndChatDlg=null;
 		}
 
-
 #if SND_SW
-	lpDSB_[SEA1][0/*snd_[0]*/].Stop();		// 
+	lpDSB_[SEA1][0].Stop();		//
 #endif
-
-
-
 
 HANDLE	hFile;
 
@@ -406,10 +281,6 @@ HANDLE	hFile;
 
 	}
 
-
-
-
-
 //============================================================================
 // 通信対戦セットアップ
 // とりあえず、シナリオとサイドを選んでゲームへ
@@ -424,12 +295,10 @@ public void	UpdateGameSetting()
 	HDC					hdc;
 	Array256<byte> cBuf = default;
 
-
 	_DP_DATA_1		dp_data_1;
 	_DP_DATA_1* lp_dp_data_1;
 	_DP_FLAG			dp_flag;
 	_DP_DATA_20		dp_data_20=default;
-
 
 #if CONN_DBG
 	rival_mode=mode;
@@ -437,29 +306,14 @@ public void	UpdateGameSetting()
 
 	ClearFlag=1;
 
-
-
 	// マウス情報
-/*t
-	GetCursorPos(&crsr_pt);
-	if(!scrn_mode)
-		ScreenToClient(hwnd, &crsr_pt);
-	GetKeyboardState(cBuf);
-*/
-
-
-//you_are_host=1;
-//rival_mode=CNCT_GAME_SETTING;
-
 
 	if( IsEditingMap!=0 )
 		{
 		RivalMode=Mode;
 		}
 
-
-
-	if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK ) 
+	if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
 		{
 		SetBkMode(hdc, TRANSPARENT);
 		SelectObject(hdc, gameFont_1);
@@ -479,16 +333,10 @@ else
 		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
 		}
 
-
-
-//return;
-
-
-		if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK ) 
+		if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
 			{
 			SetBkMode(hdc, TRANSPARENT);
 			SelectObject(hdc, gameFont_1);
-
 
 #if !LNGG_VER
 			len[0] = wsprintf(ach[0], "シナリオ選択画面");
@@ -507,7 +355,7 @@ else
 			if( ScenarioNumber<=99 )
 				{
 				m=0;
-				len[m] = wsprintf(ach[m], "空母機動部隊の戦い１");				
+				len[m] = wsprintf(ach[m], "空母機動部隊の戦い１");
 				m++;
 				len[m] = wsprintf(ach[m], "空母機動部隊の戦い２");
 				m++;
@@ -519,7 +367,7 @@ else
 				len[m] = wsprintf(ach[m], "艦隊決戦２");
 
 				m++;
-				len[m] = wsprintf(ach[m], "ミッドウェイ攻略１");				
+				len[m] = wsprintf(ach[m], "ミッドウェイ攻略１");
 				m++;
 				len[m] = wsprintf(ach[m], "ミッドウェイ攻略２");
 				m++;
@@ -563,7 +411,7 @@ else
 			if( sinario<=99 )
 				{
 				m=0;
-				len[m] = wsprintf(ach[m], "Battle of Carriers 1");				
+				len[m] = wsprintf(ach[m], "Battle of Carriers 1");
 				m++;
 				len[m] = wsprintf(ach[m], "Battle of Carriers 2");
 				m++;
@@ -575,7 +423,7 @@ else
 				len[m] = wsprintf(ach[m], "Fleet Battle 2");
 
 				m++;
-				len[m] = wsprintf(ach[m], "Invasion of Midway 1");				
+				len[m] = wsprintf(ach[m], "Invasion of Midway 1");
 				m++;
 				len[m] = wsprintf(ach[m], "Invasion of Midway 2");
 				m++;
@@ -608,7 +456,6 @@ else
 
 #endif
 
-
 			if( IsHost!=0 && Mode==GameMode.GameSetting )
 				{
 				for( n=0; n<=m; n++)
@@ -625,45 +472,21 @@ else
 						if(ScenarioNumber<=99)
 							ScenarioNumber=(short)(n+1);
 						else if(ScenarioNumber<=199)
-							ScenarioNumber=(short)(n+1+100);//99;
+							ScenarioNumber=(short)(n+1+100);
 						else if(ScenarioNumber<=299)
-							ScenarioNumber=(short)(n+1+200);//199;
+							ScenarioNumber=(short)(n+1+200);
 
 						if( LeftButton==3 )
 							{
 							if( ScenarioNumber==9 )
 								{
 								/*g_hDlg =*/ CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_LOAD_Proc );
-//	return;
 
-#if false
-								my_dlg_wait();
-
-								if( user_sinario_fn[0]!='\0' )
-									{
-TCHAR		temp_buf[MAX_PATH];
-
-									wsprintf( temp_buf, "%s", user_sinario_fn );
-									wsprintf( user_sinario_fn, "Scenario\\%s", temp_buf );
-
-									if( map_edit==0 )
-										{
-										// なんかユーザーファイルが選ばれた。
-										dp_data_20.dwType = MessageType.UserScenarioFileName;
-										wsprintf( dp_data_20.friend_chat, "%s",user_sinario_fn );
-										bufferDesc.dwBufferSize = sizeof(_DP_DATA_20);
-										bufferDesc.pBufferData  = (BYTE*)&dp_data_20;
-										g_pDP->SendTo( g_dpnidRivalPlayer, &bufferDesc, 1,	0, NULL, &hAsync, MUST_SEND );
-										}
-									}
-#endif
 								}
-
 
 							if( ScenarioNumber!=9 || UserScenarioFileName[0]!='\0' )
 								{
 								LoadScenarioData();
-
 
 								// ホストの選択状態をゲストにセンドします。
 								dp_data_1.dwType = MessageType.LeaveGameSetting;
@@ -686,8 +509,6 @@ TCHAR		temp_buf[MAX_PATH];
 								bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
 								bufferDesc.pBufferData  = (byte*) &dp_data_1;
 								g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-
-
 
 								Mode=GameMode.ConfigSetting;
 								}
@@ -753,7 +574,6 @@ TCHAR		temp_buf[MAX_PATH];
 					}
 				}
 
-
 			if( IsHost!=0 && Mode==GameMode.GameSetting )
 				{
 #if !LNGG_VER
@@ -762,7 +582,6 @@ TCHAR		temp_buf[MAX_PATH];
 				len[0] = wsprintf(ach[0], "Page Change ->>>");
 #endif
 
-//				dstn_rect.left=330;
 				dstn_rect.left=250;
 				dstn_rect.top=110;
 				dstn_rect.right=dstn_rect.left+(len[0]*12);
@@ -771,8 +590,6 @@ TCHAR		temp_buf[MAX_PATH];
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
 
-
-#if true
 					if( LeftButton==3 )
 						{
 						if(ScenarioNumber<=99)
@@ -780,15 +597,12 @@ TCHAR		temp_buf[MAX_PATH];
 						else if(ScenarioNumber<=199)
 							ScenarioNumber=1;
 						}
-#endif
 					}
 				else
 					SetTextColor(hdc, RGB(255, 255, 255));
 
 				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 				}
-
-
 
 			// リジュームスタート
 			rx=80;
@@ -821,7 +635,6 @@ TCHAR		temp_buf[MAX_PATH];
 							{
 							// ホストの選択状態をゲストにセンドします。
 							dp_data_1.dwType = MessageType.StartFromResume;
-//t							lpDirectPlay4A->lpVtbl->Send(lpDirectPlay4A, dpidPlayer, dpidRivalPlayer,DPSEND_GUARANTEED , &dp_data_1, sizeof(DP_DATA_1) );
 							bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
 							bufferDesc.pBufferData  = (byte*) &dp_data_1;
 							g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
@@ -850,9 +663,6 @@ TCHAR		temp_buf[MAX_PATH];
 					}
 				}
 
-
-
-
 			// リジュームスタート
 			rx=80;
 			if( IsHost!=0  )
@@ -872,7 +682,6 @@ TCHAR		temp_buf[MAX_PATH];
 				dstn_rect.left=80;
 				dstn_rect.top=430;
 
-
 				if( Mode==GameMode.GameSetting )
 					{
 					dstn_rect.right=dstn_rect.left+(len[0]*12);
@@ -885,7 +694,6 @@ TCHAR		temp_buf[MAX_PATH];
 							{
 							// ホストの選択状態をゲストにセンドします。
 							dp_data_1.dwType = MessageType.StartFromAutoSave;
-//t							lpDirectPlay4A->lpVtbl->Send(lpDirectPlay4A, dpidPlayer, dpidRivalPlayer,DPSEND_GUARANTEED , &dp_data_1, sizeof(DP_DATA_1) );
 							bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
 							bufferDesc.pBufferData  = (byte*) &dp_data_1;
 							g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
@@ -914,10 +722,6 @@ TCHAR		temp_buf[MAX_PATH];
 					ScenarioNumber=-2;		// －２でオートセーブからのスタートを示す
 					}
 				}
-
-
-
-
 
 			// 操作対象の切り替え
 			rx=80;
@@ -963,7 +767,6 @@ TCHAR		temp_buf[MAX_PATH];
 				len[0] = wsprintf(ach[0], "Side: U.S.Navy(Host Player)  Japan Navy(Guest Player)");
 #endif
 				}
-
 
 #if !LNGG_VER
 			switch( ScenarioNumber )
@@ -1048,7 +851,6 @@ TCHAR		temp_buf[MAX_PATH];
 					len[6] = wsprintf(ach[6], "日本軍の勝利、ウェークに同じ条件で米軍の勝利。");
 					break;
 
-
 				case 9:
 					len[1] = wsprintf(ach[1], "ユーザーシナリオでの戦いです。");
 					len[2] = wsprintf(ach[2], "");
@@ -1058,8 +860,6 @@ TCHAR		temp_buf[MAX_PATH];
 					len[5] = wsprintf(ach[5], "勝敗条件：任意に決めてください。");
 					len[6] = wsprintf(ach[6], "");
 					break;
-
-
 
 				case 101:
 					len[1] = wsprintf(ach[1], "ガダルカナル島を巡る戦いです。");
@@ -1120,9 +920,6 @@ TCHAR		temp_buf[MAX_PATH];
 					len[5] = wsprintf(ach[5], "勝敗条件：ガダルカナル島の敵陸上施設全滅と自軍施設");
 					len[6] = wsprintf(ach[6], "が四個以上あれば勝利です。");
 					break;
-
-
-
 
 				default:
 					len[1] = wsprintf(ach[1], "");
@@ -1227,8 +1024,6 @@ TCHAR		temp_buf[MAX_PATH];
 					len[6] = wsprintf(ach[6], "");
 					break;
 
-
-
 				case 101:
 					len[1] = wsprintf(ach[1], "Battles around Guadalcanal.");
 					len[2] = wsprintf(ach[2], "");
@@ -1259,8 +1054,6 @@ TCHAR		temp_buf[MAX_PATH];
 					len[6] = wsprintf(ach[6], "is U.S.Navy's victory.");
 					break;
 
-
-
 				case 104:
 					len[1] = wsprintf(ach[1], "Battle of south pacific.");
 					len[2] = wsprintf(ach[2], "");
@@ -1281,7 +1074,6 @@ TCHAR		temp_buf[MAX_PATH];
 					len[6] = wsprintf(ach[6], "Guadalcanal which U.S.Navy is defending is Japanese victory.");
 					break;
 
-
 				case 106:
 					len[1] = wsprintf(ach[1], "Battles at Guadalcanal.");
 					len[2] = wsprintf(ach[2], "");
@@ -1291,8 +1083,6 @@ TCHAR		temp_buf[MAX_PATH];
 					len[5] = wsprintf(ach[5], "Victory Line : Total annihilation of all of enemy's bases");
 					len[6] = wsprintf(ach[6], "and remaining over 4 of bases on Guadalcanal island ");
 					break;
-
-
 
 				default:
 					len[1] = wsprintf(ach[1], "");
@@ -1305,9 +1095,7 @@ TCHAR		temp_buf[MAX_PATH];
 					break;
 				}
 
-
 #endif
-
 
 if( Mode==GameMode.GameSetting )
 	{
@@ -1326,9 +1114,6 @@ else
 		}
 	}
 
-
-
-
 			// コンフィギュレーション
 
 if(	Mode==GameMode.ConfigSetting )
@@ -1342,15 +1127,12 @@ if(	Mode==GameMode.ConfigSetting )
 #endif
 			SetTextColor(hdc, RGB(255, 255, 255));
 
-
-
 			// 勝敗判定
 			if(IsHost!=0)
 				{
 				dstn_rect.left=rx+50;
 				dstn_rect.top=50;
 				TextOut(hdc, dstn_rect.left, dstn_rect.top+(1*25), ach[0], len[0]);
-
 
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "勝敗判定の切り替え ->>>");
@@ -1397,12 +1179,7 @@ if(	Mode==GameMode.ConfigSetting )
 			SetTextColor(hdc, RGB(255, 255, 255));
 			dstn_rect.left=rx;
 			dstn_rect.top=150;
-			TextOut(hdc, dstn_rect.left, dstn_rect.top/*+(1*25)*/, ach[0], len[0]);
-
-
-
-
-
+			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
 			// 補給割当増加率（ホスト側）
 #if !LNGG_VER
@@ -1442,7 +1219,6 @@ if(	Mode==GameMode.ConfigSetting )
 					}
 				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
-
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "減らす ->>>");
 #else
@@ -1467,22 +1243,14 @@ if(	Mode==GameMode.ConfigSetting )
 					SetTextColor(hdc, RGB(255, 255, 255));
 					}
 
-
 				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 				}
-
 
 			len[0] = wsprintf(ach[0], "%d pts",SupplyRates[0]);
 			SetTextColor(hdc, RGB(255, 255, 255));
 			dstn_rect.left=rx+150;
 			dstn_rect.top=237;
 			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-
-
-
-
-
 
 			// 補給値反転地点
 #if !LNGG_VER
@@ -1522,7 +1290,6 @@ if(	Mode==GameMode.ConfigSetting )
 					}
 				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
-
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "減らす ->>>");
 #else
@@ -1547,10 +1314,8 @@ if(	Mode==GameMode.ConfigSetting )
 					SetTextColor(hdc, RGB(255, 255, 255));
 					}
 
-
 				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 				}
-
 
 #if !LNGG_VER
 			if( SwapTime!=0 )
@@ -1568,12 +1333,6 @@ if(	Mode==GameMode.ConfigSetting )
 			dstn_rect.top=237;
 			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
-
-
-
-
-
-
 			// 補給割当増加率（ゲスト側）
 #if !LNGG_VER
 			len[0] = wsprintf(ach[0], "補給割当増加率（ゲスト側）");
@@ -1587,7 +1346,7 @@ if(	Mode==GameMode.ConfigSetting )
 
 			if( IsHost!=0 )
 				{
-				
+
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "増やす ->>>");
 #else
@@ -1645,13 +1404,6 @@ if(	Mode==GameMode.ConfigSetting )
 			dstn_rect.top=337;
 			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
-
-
-
-
-
-
-
 			// 補給値反転ルール
 			if( SwapTime!=0 )
 				{
@@ -1684,8 +1436,6 @@ if(	Mode==GameMode.ConfigSetting )
 					}
 				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
-
-
 				if( SwapRule==0 )
 					{
 #if !LNGG_VER
@@ -1711,11 +1461,6 @@ if(	Mode==GameMode.ConfigSetting )
 					TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 					}
 				}
-
-
-
-
-
 
 			// 初期補給割当（ホスト側）
 #if !LNGG_VER
@@ -1757,7 +1502,6 @@ if(	Mode==GameMode.ConfigSetting )
 					}
 				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
-
 //				len[0] = wsprintf(ach[0], "減らす ->>>");
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "減らす ->>>");
@@ -1793,9 +1537,6 @@ if(	Mode==GameMode.ConfigSetting )
 			dstn_rect.left=rx+150;
 			dstn_rect.top=437;
 			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-
-
 
 			// 初期補給割当（ゲスト側）
 #if !LNGG_VER
@@ -1837,7 +1578,6 @@ if(	Mode==GameMode.ConfigSetting )
 					}
 				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
-
 //				len[0] = wsprintf(ach[0], "減らす ->>>");
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "減らす ->>>");
@@ -1874,10 +1614,6 @@ if(	Mode==GameMode.ConfigSetting )
 			dstn_rect.top=537;
 			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
-
-
-
-
 			if(IsHost!=0)
 				{
 #if !LNGG_VER
@@ -1907,8 +1643,6 @@ if(	Mode==GameMode.ConfigSetting )
 				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
 				}
-
-
 
 			switch( ArrivalControl )
 				{
@@ -1962,17 +1696,10 @@ if(	Mode==GameMode.ConfigSetting )
 
 				}
 
-
 			SetTextColor(hdc, RGB(255, 255, 255));
 			dstn_rect.left=rx;
 			dstn_rect.top=625;
-			TextOut(hdc, dstn_rect.left, dstn_rect.top/*+(1*25)*/, ach[0], len[0]);
-
-
-
-
-
-
+			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
 			// シナリオセッティングへ戻る
 			if(IsHost!=0)
@@ -1996,7 +1723,6 @@ if(	Mode==GameMode.ConfigSetting )
 						ScenarioNumber=(short)m;
 
 						dp_flag.dwType = MessageType.GoToGameSetting;
-//t						lpDirectPlay4A->lpVtbl->Send(lpDirectPlay4A, dpidPlayer, dpidRivalPlayer, DPSEND_GUARANTEED, &dp_flag, sizeof(_DP_FLAG) );
 
 						bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
 						bufferDesc.pBufferData  = (byte*) &dp_flag;
@@ -2009,9 +1735,6 @@ if(	Mode==GameMode.ConfigSetting )
 					}
 				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 				}
-
-
-
 
 			// 戦闘開始
 			if(IsHost!=0)
@@ -2041,7 +1764,6 @@ if(	Mode==GameMode.ConfigSetting )
 						bufferDesc.pBufferData  = (byte*) &dp_data_1;
 						g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
-
 						dp_data_1.dwType = MessageType.LeaveConfigSetting;
 						dp_data_1.data[0] = (short)HostSide;
 						dp_data_1.data[1] = ScenarioNumber;
@@ -2059,11 +1781,9 @@ if(	Mode==GameMode.ConfigSetting )
 						dp_data_1.data[8] = SwapTime;
 						dp_data_1.data[9] = SwapRule;
 
-
 						bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
 						bufferDesc.pBufferData  = (byte*) &dp_data_1;
 						g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-
 
 						Mode=GameMode.Battle;
 						}
@@ -2083,9 +1803,7 @@ if(	Mode==GameMode.ConfigSetting )
 					}
 				}
 
-
-
-			if( IsHost!=0 && RivalMode==Mode/*==CNCT_CNFG_SETTING*/ && (FrameCount%10)==0 )
+			if( IsHost!=0 && RivalMode==Mode && (FrameCount%10)==0 )
 				{
 				// ホストの選択状態をゲストにセンドします。
 				dp_data_1.dwType = MessageType.SideAndScenario;
@@ -2113,73 +1831,10 @@ if(	Mode==GameMode.ConfigSetting )
 
 	}
 
-
 			IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
 			}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-//	if(0 || cnct_game)
-//		{
-
 //t		key_cont();		// チャット用
-/*
-		if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK ) 
-			{
-			SetBkMode(hdc, TRANSPARENT);
-			SelectObject(hdc, gameFont_1);
-
-			SetTextColor(hdc, RGB(255, 255, 0));
-
-
-
-			if(my_chat_dsp_time)
-				{
-				len[0] = wsprintf(ach[0], my_chat );
-				TextOut(hdc, 10, 200+170, ach[0], len[0]);
-				my_chat_dsp_time--;
-				if(my_chat_dsp_time==0)
-					{
-					for(m=0;m<128;m++)
-						{
-						my_chat[m]=0;
-						}
-					}
-				}
-
-
-			if(friend_chat_dsp_time)
-				{
-				len[0] = wsprintf(ach[0], friend_chat );
-				TextOut(hdc, 10, 240+170, ach[0], len[0]);
-				friend_chat_dsp_time--;
-				if(friend_chat_dsp_time==0)
-					{
-					for(m=0;m<128;m++)
-						{
-						friend_chat[m]=0;
-						}
-					}
-				}
-			}
-		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
-*/
-
-
-//		}
-
-
 
 	if( Mode==GameMode.Battle )
 		{
@@ -2191,18 +1846,12 @@ if(	Mode==GameMode.ConfigSetting )
 		// 現在のモードをライバルに送る。
 		dp_flag.dwType = MessageType.RivalMode;
 		dp_flag.rival_mode=(short)Mode;
-//t		lpDirectPlay4A->lpVtbl->Send(lpDirectPlay4A, dpidPlayer, dpidRivalPlayer, 0 /*DPSEND_GUARANTEED*/, &dp_flag, sizeof(_DP_FLAG) );
 
 		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
 		bufferDesc.pBufferData  = (byte*) &dp_flag;
 		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, EASY_SEND );
 		}
 	}
-
-
-
-
-
 
 //============================================================================
 // 通信対戦セットアップ
@@ -2211,155 +1860,5 @@ if(	Mode==GameMode.ConfigSetting )
 [Original("cnct_game_setup")]
 public void	UpdateSetup()
 	{
-#if false
-	RECT	src_rect,field_rect,dstn_rect;
-	int		m,n,g,no1,i,wrk,wrk2,wrk3,menu[7],menu2[7];
-    char ach[12][128];
-    int len[12];
-	HDC					hdc;
-	BYTE	cBuf[256];
-	DPNAME		dpName;
-	HRESULT 	hr;
-
-
-
-	DP_DATA_1	dp_data_1;
-	DP_DATA_1	*lp_dp_data_1;
-
-
-
-
-	// マウス情報
-	GetCursorPos(&crsr_pt);
-	if(!scrn_mode)
-		ScreenToClient(hwnd, &crsr_pt);
-	GetKeyboardState(cBuf);
-
-
-	if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK ) 
-		{
-		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, gameFont_1);
-
-		SetTextColor(hdc, RGB(255, 255, 255));
-
-#if !LNGG_VER
-		len[0] = wsprintf(ach[0], "通信セットアップ");
-		TextOut(hdc, 300+50, 80-26, ach[0], len[0]);
-		len[0] = wsprintf(ach[0], "Ｆ４：接続解除　Ｆ６：接続ダイアログ");
-		TextOut(hdc, 290, 80-26+26, ach[0], len[0]);
-#else
-		len[0] = wsprintf(ach[0], "Connection set up");
-		TextOut(hdc, 300+50, 80-26, ach[0], len[0]);
-		len[0] = wsprintf(ach[0], "F4: Kill Connection  F6: Connection Dialog");
-		TextOut(hdc, 290, 80-26+26, ach[0], len[0]);
-#endif
-
-
-
-
-
-
-
-
-
-		// あなたの名前
-#if !LNGG_VER
-		len[0] = wsprintf(ach[0], "自分の名前");
-#else
-		len[0] = wsprintf(ach[0], "My name :");
-#endif
-		TextOut(hdc, 200, 120, ach[0], len[0]);
-		len[0] = wsprintf(ach[0], g_strLocalPlayerName);
-		TextOut(hdc, 500, 120, ach[0], len[0]);
-
-		//　対戦相手の名前
-#if !LNGG_VER
-		len[0] = wsprintf(ach[0], "対戦相手の名前");
-#else
-		len[0] = wsprintf(ach[0], "Rival name :");
-#endif
-		TextOut(hdc, 200, 160, ach[0], len[0]);
-		len[0] = wsprintf(ach[0], g_strLocalRivalPlayerName);
-		TextOut(hdc, 500, 160, ach[0], len[0]);
-
-
-
-
-
-
-//		if( 0 || cnct_game  )
-//			{
-			if( cnct_game && you_are_host)
-				{
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "通信対戦開始");
-#else
-				len[0] = wsprintf(ach[0], "- Click to start -");
-#endif
-
-				dstn_rect.left=500;
-				dstn_rect.top=600;
-				dstn_rect.right=dstn_rect.left+(len[0]*12);
-				dstn_rect.bottom=dstn_rect.top+24;
-
-				if( pt_in_rect(&dstn_rect,crsr_pt.x,crsr_pt.y) )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 )
-						{
-						srand( (unsigned)time( NULL ) );
-						cnct_game_rnd_sheed=rnd(65536);
-
-						rnd_count=0;
-
-						dp_data_1.dwType = MessageType.LeaveSetup;
-						wsprintf(dp_data_1.my_name, g_strLocalPlayerName);	
-						dp_data_1.data[0] = cnct_game_rnd_sheed;
-
-//t						lpDirectPlay4A->lpVtbl->Send(lpDirectPlay4A, dpidPlayer, dpidRivalPlayer/*idFrom*/, DPSEND_GUARANTEED, &dp_data_1, sizeof(DP_DATA_1) );
-
-						//sinario=4;
-						//mode=CMBT;
-
-						go_cnct_game_setting();
-
-						// リジュームデータがホストをやってたかしらべる。
-						load_on_resume(1);
-						you_were_host=you_are_host;
-						you_are_host=1;					//ここにくるのはホストだけ
-						sinario=0;
-						}
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(255, 255, 255));
-					}
-
-				TextOut(hdc, 500, 600, ach[0], len[0]);
-				}
-			else
-				{
-				if(join_game_start)
-					{
-					join_game_start=0;
-					go_cnct_game_setting();
-					}
-				}
-//			}
-
-
-
-		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
-		}
-
-
-/**
-	if( mode==CMBT )
-		{
-		game_init();
-		}
-**/
-#endif
 	}
 }

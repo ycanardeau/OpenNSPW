@@ -1,21 +1,16 @@
 //
-//                                    **                                   
-//                                   *  *                                  
-//                                    **  *                                 
-//                                    **   *                                
-//                                    **  *                                 
-//                            *     ******     *                              
-//                            ***   * **     ***                              
-//                              ****  **  ****                                 
-//                             **  ********                                    
-//                                                                       
+//                                    **
+//                                   *  *
+//                                    **  *
+//                                    **   *
+//                                    **  *
+//                            *     ******     *
+//                            ***   * **     ***
+//                              ****  **  ****
+//                             **  ********
+//
 //                 Ｎａｖａｌ Ｓｏｕｔｈ Ｐａｃｉｆｉｃ Ｗａｒ
 //                             Ｏｎ　ｔｈｅ　Ｎｅｔ
-
-
-//#include "all_head.h"
-//#include "all_extern.h"
-//#include	"all_forward.h"
 
 // Port of input.cpp.
 
@@ -23,13 +18,6 @@ namespace OpenNspw;
 
 public unsafe partial class Nspw
 {
-
-
-
-
-
-
-
 
 //============================================================================
 // 通信対戦用、入力データの保存、その他
@@ -39,15 +27,12 @@ public void	HandleInput()
 	{
 	int	h,m,f,s,n,e; Array256<int> chk = default;
 
-
-
 	e=1;
-	if( SelectOrders[e].IsSet!=0 && Units[SelectOrders[e].SelectedUnit].Supply==0 && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress/*MN1*/ ))
+	if( SelectOrders[e].IsSet!=0 && Units[SelectOrders[e].SelectedUnit].Supply==0 && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress ))
 		{
 		// ユニット自体をクリックした。
 		SelectedUnit=SelectOrders[e].SelectedUnit;
 		m=SelectOrders[e].Unit;
-
 
 		if( m==0 || Units[SelectedUnit].Side!=Units[m].Side )
 			{
@@ -84,40 +69,34 @@ public void	HandleInput()
 					BufferedSelectOrders[1].Unit=SelectOrders[e].Unit;
 					BufferedSelectOrders[1].GroundPosition=SelectOrders[e].GroundPosition;
 
-
 					if(LocalSide==Side.Japan)
 						{
 						// 日本海軍サイド
-//						for(s=1;s<=20;s++)
 						for(s=1;s<=JPN_SHIP_END;s++)
 							{
 							// 水上ユニット
 							BufferedSelections[1][s-1]=Selections[1][s];
 							}
-//						for(s=41;s<=70;s++)
 						for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
 							{
 							// 航空ユニット
-							BufferedSelections[1][s-JPN_SHIP_END/*20*/-1]=Selections[1][s];
+							BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
 							}
 						}
 					else
 						{
 						// 合衆国海軍サイド
-//						for(s=21;s<=40;s++)
 						for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
 							{
 							// 水上ユニット
-							BufferedSelections[1][s-JPN_SHIP_END/*20*/-1]=Selections[1][s];
+							BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
 							}
-//						for(s=71;s<=100;s++)
 						for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
 							{
 							// 航空ユニット
-							BufferedSelections[1][s-(USA_PLANE_END/2)/*50*/-1]=Selections[1][s];
+							BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
 							}
 						}
-
 
 					CanOrder=0;
 					HasOrdered=1;
@@ -144,33 +123,29 @@ public void	HandleInput()
 					if(LocalSide==Side.Japan)
 						{
 						// 日本海軍サイド
-//						for(s=1;s<=20;s++)
 						for(s=1;s<=JPN_SHIP_END;s++)
 							{
 							// 水上ユニット
 							BufferedSelections[1][s-1]=Selections[1][s];
 							}
-//						for(s=41;s<=70;s++)
 						for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
 							{
 							// 航空ユニット
-							BufferedSelections[1][s-JPN_SHIP_END/*20*/-1]=Selections[1][s];
+							BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
 							}
 						}
 					else
 						{
 						// 合衆国海軍サイド
-//						for(s=21;s<=40;s++)
 						for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
 							{
 							// 水上ユニット
-							BufferedSelections[1][s-JPN_SHIP_END/*20*/-1]=Selections[1][s];
+							BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
 							}
-//						for(s=71;s<=100;s++)
 						for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
 							{
 							// 航空ユニット
-							BufferedSelections[1][s-(USA_PLANE_END/2)/*50*/-1]=Selections[1][s];
+							BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
 							}
 						}
 
@@ -185,27 +160,27 @@ public void	HandleInput()
 					{	// ｍ番号ユニットを新規にセレクトに設定
 					if(!(Units[m].Kind>=UnitKind.AirBase&&Units[m].Kind<=UnitKind.Fortress) && !(Units[SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectedUnit].Kind<=UnitKind.Fortress))
 						{
-						SelectionCount++; 
-						Selections[e][m]=SelectionCount; 
+						SelectionCount++;
+						Selections[e][m]=SelectionCount;
 						}
 					}
 				else
 					{	// ｍ番号ユニットをセレクトから外す
-					SelectionCount--; 
+					SelectionCount--;
 					// セレクトの設定番号を連番にする。
-					for(n=1;n<=MaxUnitId;n++)				
+					for(n=1;n<=MaxUnitId;n++)
 						{
 						if( Selections[e][n]>=Selections[e][m]+1 )
 							Selections[e][n]--;
 						}
-					Selections[e][m]=0; 
+					Selections[e][m]=0;
 					}
 				}
 			}
 		}
 	else
 		{
-		if( CanOrder!=0 && MoveOrders[1].Unit!=0 && Units[MoveOrders[1].Unit].Supply==0 && !(  Units[MoveOrders[1].Unit].Kind>=UnitKind.AirBase && Units[MoveOrders[1].Unit].Kind<=UnitKind.Fortress /*unit[new_pp[1].used].kind==AP || unit[new_pp[1].used].kind==SP || unit[new_pp[1].used].kind==GF1 ||unit[new_pp[1].used].kind==GF2 || unit[new_pp[1].used].kind==GF3*/ )  && !(Units[MoveOrders[1].Unit].Category==UnitCategory.Plane && Units[MoveOrders[1].Unit].PlaneState==UnitState.Parked && Units[Units[MoveOrders[1].Unit].Carrier].Hp<=Units[Units[MoveOrders[1].Unit].Carrier].MaxHp*0.2) )
+		if( CanOrder!=0 && MoveOrders[1].Unit!=0 && Units[MoveOrders[1].Unit].Supply==0 && !(  Units[MoveOrders[1].Unit].Kind>=UnitKind.AirBase && Units[MoveOrders[1].Unit].Kind<=UnitKind.Fortress  )  && !(Units[MoveOrders[1].Unit].Category==UnitCategory.Plane && Units[MoveOrders[1].Unit].PlaneState==UnitState.Parked && Units[Units[MoveOrders[1].Unit].Carrier].Hp<=Units[Units[MoveOrders[1].Unit].Carrier].MaxHp*0.2) )
 			{
 			// あるマイユニットに新ＰＰ＿ＸＹが設定された場合
 			// バッファに保存。これを命令をだせるタイミングにnew_ppに代入する。
@@ -213,52 +188,45 @@ public void	HandleInput()
 			BufferedMoveOrders[1].Destination=MoveOrders[1].Destination;
 			BufferedMoveOrders[1].ClearsPath=MoveOrders[1].ClearsPath;
 
-
 			if(LocalSide==Side.Japan)
 				{
 				// 日本海軍サイド
-//				for(s=1;s<=20;s++)
 				for(s=1;s<=JPN_SHIP_END;s++)
 					{
 					// 水上ユニット
 					BufferedSelections[1][s-1]=Selections[1][s];
 					}
-//				for(s=41;s<=70;s++)
 				for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
 					{
 					// 航空ユニット
-					BufferedSelections[1][s-JPN_SHIP_END/*20*/-1]=Selections[1][s];
+					BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
 					}
 				}
 			else
 				{
 				// 合衆国海軍サイド
-//				for(s=21;s<=40;s++)
 				for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
 					{
 					// 水上ユニット
-					BufferedSelections[1][s-JPN_SHIP_END/*20*/-1]=Selections[1][s];
+					BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
 					}
-//				for(s=71;s<=100;s++)
 				for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
 					{
 					// 航空ユニット
-					BufferedSelections[1][s-(USA_PLANE_END/2)/*50*/-1]=Selections[1][s];
+					BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
 					}
 				}
-
-
 
 			m=MoveOrders[e].Unit;
 			if( Units[m].Category==UnitCategory.Plane && Units[m].PlaneState==UnitState.Parked )
 				{
 				Units[Units[m].Carrier].info[4]=0;	// 空母なら これがオンで発艦中
 				Units[Units[m].Carrier].info[7]=0;	// 空母ならこの数値で甲板上の右左
-				SelectedUnit=0; 
+				SelectedUnit=0;
 				CombatMenuKind=0;
 				CombatMenuSelection=CombatMenuItem.None;
-				Selections[1][m]=0; 
-				ClearSelection2(1);	
+				Selections[1][m]=0;
+				ClearSelection2(1);
 				}
 			CanOrder=0;
 			HasOrdered=1;
@@ -266,13 +234,6 @@ public void	HandleInput()
 			}
 		}
 	}
-
-
-
-
-
-
-
 
 //============================================================================
 // 通信対戦用、入力データの発動
@@ -289,22 +250,12 @@ public void	SetCpuRoute2(int m)
     Array128<byte> ach = default;
     int len;
 
-
-
-//	if( !fullscreen )
-//		SetWindowText( hwndApp, "in Set_cpu_root2" );
-
-
-
-	//dbg[2]=0;
 	error=0;
 	div=2.0;
 	re_add=160;
 
-
 	drctn_ok1=90.0;
 	drctn_ok2=270.0;
-
 
 	//	ＰＰ０が侵入不可地なら移動無しにしてリターン
 	if( unit.Category==UnitCategory.Ship  )
@@ -315,25 +266,21 @@ public void	SetCpuRoute2(int m)
 		for( n=1; n<=MaxUnitId; n++)
 			{
 			ref var other = ref Units[n];
-			if( other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.info[6]!=0)  /*&& unit[n].kind!=SP && unit[n].kind!=AP*/ && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress )  )
+			if( other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.info[6]!=0)   && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress )  )
 				{
 				// ptin dbg
-				wrk_r.top=(int)other.Position.Y+(Sprites[UNIT_JPN].wd/2);//(int)unit[n].y-(sprt[UNIT_JPN].wd/2);
+				wrk_r.top=(int)other.Position.Y+(Sprites[UNIT_JPN].wd/2);
 				wrk_r.right=(int)other.Position.X+(Sprites[UNIT_JPN].wd/2);
-				wrk_r.bottom=(int)other.Position.Y-(Sprites[UNIT_JPN].wd/2);//(int)unit[n].y+(sprt[UNIT_JPN].wd/2);
+				wrk_r.bottom=(int)other.Position.Y-(Sprites[UNIT_JPN].wd/2);
 				wrk_r.left=(int)other.Position.X-(Sprites[UNIT_JPN].wd/2);
 
 				if( PointInRect3(ref wrk_r,(int)wrk_x2,(int)wrk_y2)!=0)
 					{
 					// 前方に艦船！
-					//unit[m].pp_x[0]=unit[m].x;
-					//unit[m].pp_y[0]=unit[m].y;
-					//unit[m].pp_x[1]=MAP_RIGHT+1;
 					return;
 					}
 				}
 			}
-
 
 		// ＰＰ方向に陸地があるか
 		wrk_x2=unit.PathX[0];
@@ -344,19 +291,11 @@ public void	SetCpuRoute2(int m)
 			cm_scrn_y=(int)((MAP_TOP-wrk_y2+(Sprites[UNIT_JPN].ht/2))/Sprites[MAP_TIP_NRML].ht);
 			if( MapTiles[cm_scrn_y][cm_scrn_x]>=1)
 				{
-				//unit[m].pp_x[0]=unit[m].x;
-				//unit[m].pp_y[0]=unit[m].y;
-				//unit[m].pp_x[1]=MAP_RIGHT+1;
 				return;
 				}
 			}
-	
+
 		}
-
-
-
-
-
 
 	//
 	min_dstc=0;
@@ -364,12 +303,8 @@ public void	SetCpuRoute2(int m)
 	s_pp_y=unit.PathY[0];
 	pp_indx=0;
 
-
-
 	while(pp_indx==0)
 		{
-
-
 
 		// 最終定点への角度と距離
 		if(pp_indx==0)
@@ -383,13 +318,11 @@ public void	SetCpuRoute2(int m)
 			start_y=unit.PathY[pp_indx-1];
 			}
 
-
 		if(min_dstc!=0)
 			{
 			unit.PathX[pp_indx]=s_pp_x;
 			unit.PathY[pp_indx]=s_pp_y;
-			unit.PathX[pp_indx+1]=MAP_RIGHT+1;			
-
+			unit.PathX[pp_indx+1]=MAP_RIGHT+1;
 
 			wrk_x=unit.PathX[pp_indx]-unit.Position.X;
 			wrk_y=unit.PathY[pp_indx]-unit.Position.Y;
@@ -401,8 +334,6 @@ public void	SetCpuRoute2(int m)
 			unit.PathX[pp_indx]+=cos(pp_drctn*a_PI)*(min_dstc);
 			unit.PathY[pp_indx]+=sin(pp_drctn*a_PI)*(min_dstc);
 			}
-
-
 
 		wrk_x=unit.PathX[pp_indx]-start_x;
 		wrk_y=unit.PathY[pp_indx]-start_y;
@@ -426,11 +357,6 @@ public void	SetCpuRoute2(int m)
 			wrk=90-(wrk-90);
 		pp_dstc=(wrk_x)/(cos(wrk*a_PI));
 
-
-
-
-
-
 		if( unit.Category==UnitCategory.Ship )
 			{
 			// 艦船のルート再計算
@@ -443,7 +369,6 @@ public void	SetCpuRoute2(int m)
 					add=1.0;
 				else
 					add=40.0;
-
 
 				chk_dstc+=add;
 
@@ -466,12 +391,12 @@ public void	SetCpuRoute2(int m)
 				// 船に接触するか
 				for( f=1; f<=MaxUnitId && hit==0 ; f++)
 					{
-					if( Units[f].IsUsed && m!=f && Units[f].Category==UnitCategory.Ship && !(Units[f].Kind==UnitKind.Submarine && Units[f].info[6]!=0) && /*!(unit[f].kind==SP||unit[f].kind==AP)*/!(Units[f].Kind>=UnitKind.AirBase&&Units[f].Kind<=UnitKind.Fortress) )
+					if( Units[f].IsUsed && m!=f && Units[f].Category==UnitCategory.Ship && !(Units[f].Kind==UnitKind.Submarine && Units[f].info[6]!=0) && !(Units[f].Kind>=UnitKind.AirBase&&Units[f].Kind<=UnitKind.Fortress) )
 						{
 						// ptin dbg
-						wrk_r.top=(int)Units[f].Position.Y+(Sprites[UNIT_JPN].ht/2);//(int)unit[f].y-(sprt[UNIT_JPN].ht/2);
+						wrk_r.top=(int)Units[f].Position.Y+(Sprites[UNIT_JPN].ht/2);
 						wrk_r.right=(int)Units[f].Position.X+(Sprites[UNIT_JPN].wd/2);
-						wrk_r.bottom=(int)Units[f].Position.Y-(Sprites[UNIT_JPN].ht/2);//(int)unit[f].y+(sprt[UNIT_JPN].ht/2);
+						wrk_r.bottom=(int)Units[f].Position.Y-(Sprites[UNIT_JPN].ht/2);
 						wrk_r.left=(int)Units[f].Position.X-(Sprites[UNIT_JPN].wd/2);
 						if( PointInRect3(ref wrk_r,(int)wrk_x,(int)wrk_y)!=0)
 							{
@@ -480,11 +405,7 @@ public void	SetCpuRoute2(int m)
 						}
 					}
 
-
-
 				}
-			
-
 
 			if( hit==1)
 				{
@@ -530,12 +451,12 @@ public void	SetCpuRoute2(int m)
 							for( f=1; f<=MaxUnitId; f++)
 								{
 								ref var other = ref Units[f];
-								if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.info[6]!=0) && /*!(unit[f].kind==SP||unit[f].kind==AP)*/!(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress)  )
+								if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.info[6]!=0) && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress)  )
 									{
 									// ptin dbg
-									wrk_r.top=(int)other.Position.Y+(Sprites[UNIT_JPN].ht/2);//(int)unit[f].y-(sprt[UNIT_JPN].ht/2);
+									wrk_r.top=(int)other.Position.Y+(Sprites[UNIT_JPN].ht/2);
 									wrk_r.right=(int)other.Position.X+(Sprites[UNIT_JPN].wd/2);
-									wrk_r.bottom=(int)other.Position.Y-(Sprites[UNIT_JPN].ht/2);//(int)unit[f].y+(sprt[UNIT_JPN].ht/2);
+									wrk_r.bottom=(int)other.Position.Y-(Sprites[UNIT_JPN].ht/2);
 									wrk_r.left=(int)other.Position.X-(Sprites[UNIT_JPN].wd/2);
 									if( PointInRect3(ref wrk_r,(int)wrk_x,(int)wrk_y)!=0)
 										{
@@ -568,12 +489,12 @@ public void	SetCpuRoute2(int m)
 							for( f=1; f<=MaxUnitId; f++)
 								{
 								ref var other = ref Units[f];
-								if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.info[6]!=0) && /*!(unit[f].kind==SP||unit[f].kind==AP)*/!(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress ) )
+								if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.info[6]!=0) && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress ) )
 									{
 									// ptin dbg
-									wrk_r.top=(int)other.Position.Y+(Sprites[UNIT_JPN].ht/2);//(int)unit[f].y-(sprt[UNIT_JPN].ht/2);
+									wrk_r.top=(int)other.Position.Y+(Sprites[UNIT_JPN].ht/2);
 									wrk_r.right=(int)other.Position.X+(Sprites[UNIT_JPN].wd/2);
-									wrk_r.bottom=(int)other.Position.Y-(Sprites[UNIT_JPN].ht/2);//(int)unit[f].y+(sprt[UNIT_JPN].ht/2);
+									wrk_r.bottom=(int)other.Position.Y-(Sprites[UNIT_JPN].ht/2);
 									wrk_r.left=(int)other.Position.X-(Sprites[UNIT_JPN].wd/2);
 									if( PointInRect3(ref wrk_r,(int)wrk_x2,(int)wrk_y2)!=0)
 										{
@@ -585,7 +506,6 @@ public void	SetCpuRoute2(int m)
 							}
 						}
 
-
 					if( right==0 && chk_dstc>=pp_dstc)
 						{
 						unit.PathX[pp_indx+1]=unit.PathX[pp_indx];
@@ -593,19 +513,14 @@ public void	SetCpuRoute2(int m)
 						unit.PathX[pp_indx+2]=MAP_RIGHT+1;
 						wrk_x2=start_x;
 						wrk_y2=start_y;
- 
 
 						wrk=chk_dstc/div;
 						if(wrk<40)
 							wrk=40;
-//						if(wrk>2024)
-//							wrk=2024;
 						wrk_x2+=cos(drctn2*a_PI)*wrk;
 						wrk_y2+=sin(drctn2*a_PI)*wrk;
 						unit.PathX[pp_indx]=wrk_x2;
 						unit.PathY[pp_indx]=wrk_y2;
-						
-
 
 						if( pp_indx>=1 )
 							{
@@ -637,9 +552,9 @@ public void	SetCpuRoute2(int m)
 								drctn2=360+drctn2;
 
 							// 方位角 drctn1
-							drctn1=drctn1-drctn2;		
+							drctn1=drctn1-drctn2;
 							if(drctn1<0)
-								drctn1=360+drctn1;				
+								drctn1=360+drctn1;
 							if(drctn1>=360)
 								drctn1=drctn1-360;
 
@@ -668,8 +583,6 @@ public void	SetCpuRoute2(int m)
 						break;
 						}
 
-
-
 					if( left==0 && chk_dstc>=pp_dstc)
 						{
 						unit.PathX[pp_indx+1]=unit.PathX[pp_indx];
@@ -681,14 +594,10 @@ public void	SetCpuRoute2(int m)
 						wrk=chk_dstc/div;
 						if(wrk<40)
 							wrk=40;
-//						if(wrk>2024)
-//							wrk=2024;
 						wrk_x+=cos(drctn1*a_PI)*wrk;
 						wrk_y+=sin(drctn1*a_PI)*wrk;
 						unit.PathX[pp_indx]=wrk_x;
 						unit.PathY[pp_indx]=wrk_y;
-						
-
 
 						if( pp_indx>=1 )
 							{
@@ -720,9 +629,9 @@ public void	SetCpuRoute2(int m)
 								drctn2=360+drctn2;
 
 							// 方位角 drctn1
-							drctn1=drctn1-drctn2;		
+							drctn1=drctn1-drctn2;
 							if(drctn1<0)
-								drctn1=360+drctn1;				
+								drctn1=360+drctn1;
 							if(drctn1>=360)
 								drctn1=drctn1-360;
 
@@ -751,7 +660,6 @@ public void	SetCpuRoute2(int m)
 						break;
 						}
 
-
 					}
 				pp_indx++;
 				}
@@ -777,26 +685,12 @@ public void	SetCpuRoute2(int m)
 			pp_indx=-1;
 			}
 
-
 		len = wsprintf(ach, "in Set_cpu_root2 error=%d" ,error);
-//		if( !fullscreen )
-//			SetWindowText( hwndApp, len );
 
 		}
 
-
-
-
-
-//	if( !fullscreen )
-//		SetWindowText( hwndApp, "out Set_cpu_root2" );
-
-
 	return;
 	}
-
-
-
 
 //============================================================================
 // 通信対戦用、入力データの発動
@@ -806,10 +700,9 @@ public void	ApplyOrders()
 	{
 	int	h,m,f,s,n,e; Array256<int> chk = default;
 
-
 	for(e=0; e<=1; e++)
 		{
-		if( SelectOrders[e].IsSet!=0 && Units[SelectOrders[e].SelectedUnit].Supply==0 && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress/*MN1*/ ))
+		if( SelectOrders[e].IsSet!=0 && Units[SelectOrders[e].SelectedUnit].Supply==0 && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress ))
 			{
 			// ユニット自体をクリックした。
 			SelectedUnit=SelectOrders[e].SelectedUnit;
@@ -838,12 +731,11 @@ public void	ApplyOrders()
 					if( m!=Units[SelectedUnit].Target )
 						{
 						if(!(Units[SelectedUnit].Weapon==FireKind.Torpedo && ( Units[m].Kind>=UnitKind.AirBase && Units[m].Kind<=UnitKind.Fortress )) &&
-							!((Units[SelectedUnit].Kind==UnitKind.Fighter && ( Units[m].Category==UnitCategory.Ship && Units[m].Kind!=UnitKind.Transport ))||(Units[SelectedUnit].Kind>=UnitKind.InfantryBase&&Units[SelectedUnit].Kind<=UnitKind.Fortress)||(Units[SelectedUnit].Kind==UnitKind.Transport) ) 
-							/*&& !( unit[the_slct_unit].ctgry==PLANE && unit[the_slct_unit].info[0]==PARKING )*/
+							!((Units[SelectedUnit].Kind==UnitKind.Fighter && ( Units[m].Category==UnitCategory.Ship && Units[m].Kind!=UnitKind.Transport ))||(Units[SelectedUnit].Kind>=UnitKind.InfantryBase&&Units[SelectedUnit].Kind<=UnitKind.Fortress)||(Units[SelectedUnit].Kind==UnitKind.Transport) )
 							)
 							{
 							Units[SelectedUnit].Target=m;			// 攻撃対象のナンバー
-							}									
+							}
 						}
 					else
 						Units[SelectedUnit].Target=0;			// 攻撃目標ユニットをなくす
@@ -851,16 +743,15 @@ public void	ApplyOrders()
 					for(n=1;n<=MaxUnitId;n++)
 						{
 						ref var unit = ref Units[n];
-						if( unit.IsUsed && Selections[e][n]!=0 && !((unit.Kind==UnitKind.Fighter && ( Units[Units[SelectedUnit].Target].Category==UnitCategory.Ship &&  Units[Units[SelectedUnit].Target].Kind!=UnitKind.Transport  ) )||(unit.Kind>=UnitKind.InfantryBase&&unit.Kind<=UnitKind.Fortress)||(unit.Kind==UnitKind.Transport)) 
-							/*&& !( unit[n].ctgry==PLANE && unit[n].info[0]==PARKING )*/
+						if( unit.IsUsed && Selections[e][n]!=0 && !((unit.Kind==UnitKind.Fighter && ( Units[Units[SelectedUnit].Target].Category==UnitCategory.Ship &&  Units[Units[SelectedUnit].Target].Kind!=UnitKind.Transport  ) )||(unit.Kind>=UnitKind.InfantryBase&&unit.Kind<=UnitKind.Fortress)||(unit.Kind==UnitKind.Transport))
 							)
-							unit.Target=Units[SelectedUnit].Target;				// 
+							unit.Target=Units[SelectedUnit].Target;				//
 						}
 					}
 				}
 			else
 				{
-				if ( Units[SelectedUnit].Category==UnitCategory.Plane /*&& ( unit[n].ctgry==PLANE && unit[n].info[0]==FLYING )*/ && (Units[m].Kind==UnitKind.Carrier || Units[m].Kind==UnitKind.LightCarrier || Units[m].Kind==UnitKind.AirBase))
+				if ( Units[SelectedUnit].Category==UnitCategory.Plane  && (Units[m].Kind==UnitKind.Carrier || Units[m].Kind==UnitKind.LightCarrier || Units[m].Kind==UnitKind.AirBase))
 					{
 					for(n=1;n<=MaxUnitId;n++)
 						if( Units[n].IsUsed && Selections[e][n]!=0 && Units[n].Category==UnitCategory.Plane && Units[n].PlaneState==UnitState.Flying && !(Units[n].Kind==UnitKind.Bomber&&(Units[m].Kind==UnitKind.Carrier||Units[m].Kind==UnitKind.LightCarrier)) )
@@ -871,20 +762,18 @@ public void	ApplyOrders()
 					}
 				}
 			}
-		else if( MoveOrders[e].Unit!=0 && Units[MoveOrders[e].Unit].Supply==0 && !( Units[MoveOrders[e].Unit].Kind>=UnitKind.AirBase && Units[MoveOrders[e].Unit].Kind<=UnitKind.Fortress /*unit[new_pp[e].used].kind==AP || unit[new_pp[e].used].kind==SP || unit[new_pp[e].used].kind==GF1 ||unit[new_pp[e].used].kind==GF2 || unit[new_pp[e].used].kind==GF3*/ )  && !(Units[MoveOrders[e].Unit].Category==UnitCategory.Plane && Units[MoveOrders[e].Unit].PlaneState==UnitState.Parked && Units[Units[MoveOrders[e].Unit].Carrier].Hp<=Units[Units[MoveOrders[e].Unit].Carrier].MaxHp*0.2) )
+		else if( MoveOrders[e].Unit!=0 && Units[MoveOrders[e].Unit].Supply==0 && !( Units[MoveOrders[e].Unit].Kind>=UnitKind.AirBase && Units[MoveOrders[e].Unit].Kind<=UnitKind.Fortress  )  && !(Units[MoveOrders[e].Unit].Category==UnitCategory.Plane && Units[MoveOrders[e].Unit].PlaneState==UnitState.Parked && Units[Units[MoveOrders[e].Unit].Carrier].Hp<=Units[Units[MoveOrders[e].Unit].Carrier].MaxHp*0.2) )
 			{
 			// あるユニットに新ＰＰ＿ＸＹが設定された場合
-
-
 
 			m=MoveOrders[e].Unit;
 			for(n=0; Units[m].PathX[n]!=MAP_RIGHT+1; n++)
 				{}
-			if(MoveOrders[e].ClearsPath!=0 /*|| unit[m].used==cpu_side*/ )
+			if(MoveOrders[e].ClearsPath!=0  )
 				{
 
-				BufferedMoveOrders[e].ClearsPath=0; 
-				MoveOrders[e].ClearsPath=0; 
+				BufferedMoveOrders[e].ClearsPath=0;
+				MoveOrders[e].ClearsPath=0;
 
 				Units[m].PathX[0]=MoveOrders[e].Destination.X;
 				Units[m].PathY[0]=MoveOrders[e].Destination.Y;
@@ -901,7 +790,6 @@ public void	ApplyOrders()
 					Units[m].PathX[n+1]=MAP_RIGHT+1;
 					}
 				}
-
 
 			if( n==1 )
 				{
@@ -932,12 +820,12 @@ public void	ApplyOrders()
 						 )
 						{
 						f++;
-						if(chk[Selections[e][s]]==0)	
+						if(chk[Selections[e][s]]==0)
 							{	// 既に使われた番機無し
 							chk[Selections[e][s]]++;
 							unit.FormationNumber=Selections[e][s];
 							unit.IsGroupLeader=0;
-		
+
 							if( unit.Category==UnitCategory.Ship )
 								{
 								if( unit.GroupLeader!=m )
@@ -948,7 +836,6 @@ public void	ApplyOrders()
 								}
 							else
 								unit.GroupLeader=(short)m;
-
 
 							SetDynamicDestination(s);
 							}
@@ -972,7 +859,7 @@ public void	ApplyOrders()
 								unit.GroupLeader=(short)m;
 
 							SetDynamicDestination(s);
-							}	
+							}
 						}
 					}
 
@@ -998,13 +885,6 @@ public void	ApplyOrders()
 		}
 	}
 
-
-
-
-
-
-
-
 /*-------------------------------------------
 	戦術マップ移動
 --------------------------------------------*/
@@ -1013,11 +893,11 @@ public void	ScrollBattleArea(int drctn)
 	{
 	switch(drctn)
 		{
-		case 1:		// UP 
+		case 1:		// UP
 			ScrollSpeed+=scrn_moving_add;
 			if(ScrollSpeed>=SCRN_MAX_SPD)
-				ScrollSpeed=SCRN_MAX_SPD-1;	
-			CameraPosition = new WorldPosition(CameraPosition.X, CameraPosition.Y + ScrollSpeed);	
+				ScrollSpeed=SCRN_MAX_SPD-1;
+			CameraPosition = new WorldPosition(CameraPosition.X, CameraPosition.Y + ScrollSpeed);
 			if(CameraPosition.Y>MAP_TOP)
 				CameraPosition = new WorldPosition(CameraPosition.X, MAP_TOP);
 			break;
@@ -1026,9 +906,9 @@ public void	ScrollBattleArea(int drctn)
 		case 3:		// RI
 			ScrollSpeed+=scrn_moving_add;
 			if(ScrollSpeed>=SCRN_MAX_SPD)
-				ScrollSpeed=SCRN_MAX_SPD-1;	
+				ScrollSpeed=SCRN_MAX_SPD-1;
 			CameraPosition = new WorldPosition(CameraPosition.X + ScrollSpeed, CameraPosition.Y);
-			if(CameraPosition.X>(MAP_RIGHT-CMBT_WIDTH) )		
+			if(CameraPosition.X>(MAP_RIGHT-CMBT_WIDTH) )
 				CameraPosition = new WorldPosition(MAP_RIGHT-CMBT_WIDTH, CameraPosition.Y);
 			break;
 		case 4:		// RI DW
@@ -1036,7 +916,7 @@ public void	ScrollBattleArea(int drctn)
 		case 5:		// DW
 			ScrollSpeed+=scrn_moving_add;
 			if(ScrollSpeed>=SCRN_MAX_SPD)
-				ScrollSpeed=SCRN_MAX_SPD-1;	
+				ScrollSpeed=SCRN_MAX_SPD-1;
 			CameraPosition = new WorldPosition(CameraPosition.X, CameraPosition.Y - ScrollSpeed);
 			if(CameraPosition.Y<(MAP_BOTTOM+CMBT_HEIGHT) )
 				CameraPosition = new WorldPosition(CameraPosition.X, MAP_BOTTOM+CMBT_HEIGHT);
@@ -1047,16 +927,14 @@ public void	ScrollBattleArea(int drctn)
 			ScrollSpeed+=scrn_moving_add;
 			if(ScrollSpeed>=SCRN_MAX_SPD)
 				ScrollSpeed=SCRN_MAX_SPD-1;
-			CameraPosition = new WorldPosition(CameraPosition.X - ScrollSpeed, CameraPosition.Y);	
-			if(CameraPosition.X<MAP_LEFT)		
+			CameraPosition = new WorldPosition(CameraPosition.X - ScrollSpeed, CameraPosition.Y);
+			if(CameraPosition.X<MAP_LEFT)
 				CameraPosition = new WorldPosition(MAP_LEFT, CameraPosition.Y);
 			break;
 		case 8:		// LF UP
 			break;
 		}
 	}
-
-
 
 /*-------------------------------------------
 	入力フェッチ
@@ -1067,16 +945,7 @@ public void ReadInput()
 
 	int	flg=0;
 
-
-
-
-
-
-
-
-
 	// キーボードの入力チェック
-#if true
 	if (pDIDevice!=null)
 		{
 		int hr;
@@ -1096,7 +965,7 @@ public void ReadInput()
 			else
 				{
 
-				switch (od.dwOfs) 
+				switch (od.dwOfs)
 					{
 
 					case DIK_W:
@@ -1113,7 +982,6 @@ public void ReadInput()
 							Buttons&=~BACK_BTN;
 						break;
 
-
 					case DIK_D:
 						if ((od.dwData & (0x80))!=0 )
 							Buttons|=RIGHT_BTN;
@@ -1128,16 +996,12 @@ public void ReadInput()
 							Buttons&=~LEFT_BTN;
 						break;
 
-
-
 					case DIK_SPACE:
 						if ((od.dwData & (0x80))!=0 )
 							Buttons|=SPACE;
 						else
 							Buttons&=~SPACE;
 						break;
-
-
 
 					case DIK_F:
 						if( Mode==GameMode.Battle && (od.dwData & (0x80))!=0 )
@@ -1157,7 +1021,7 @@ public void ReadInput()
 							if(GameSpeed<=1)
 								GameSpeed=0;
 							else if(GameSpeed<=2)
-								GameSpeed=1;//--;
+								GameSpeed=1;
 							else if(GameSpeed==4)
 								GameSpeed=2;
 							else if(GameSpeed!=0)
@@ -1165,7 +1029,7 @@ public void ReadInput()
 							}
 
 						break;
-		
+
 					case DIK_R:
 						if( Mode==GameMode.Battle && (od.dwData & (0x80))!=0 )
 							{
@@ -1175,121 +1039,19 @@ public void ReadInput()
 
 					case DIK_RETURN:
 
-
 						if( IsEditingMap==0 && hwndChatDlg==null && (od.dwData & (0x80))!=0 )
 							{
-//							if( hwndChatDlg==NULL )
 							hwndChatDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_CHAT_DIALOG), hwndApp, ChatDlgProc);
 
-//	ShowWindow(hwndChatDlg,SW_SHOW);
-
-//							DialogBox(hInstApp,MAKEINTRESOURCE(IDD_CHAT_DIALOG),hwndApp,ChatDlgProc);
 							}
 						break;
 
-/***
-
-
-
-					case DIK_E:
-						if (od.dwData & (0x80) )
-							key_cndtn|=UP_BTN;
-						else
-							key_cndtn&=~UP_BTN;
-						break;
-
-					case DIK_Q:
-						if (od.dwData & (0x80) )
-							key_cndtn|=DOWN_BTN;
-						else
-							key_cndtn&=~DOWN_BTN;
-						break;
-
-
-					case DIK_C:
-						if (od.dwData & (0x80) )
-							key_cndtn|=R_TURN_BTN;
-						else
-							key_cndtn&=~R_TURN_BTN;
-						break;
-
-					case DIK_Z:
-						if (od.dwData & (0x80) )
-							key_cndtn|=L_TURN_BTN;
-						else
-							key_cndtn&=~L_TURN_BTN;
-						break;
-
-
-					case DIK_V:
-						if (od.dwData & (0x80) )
-							key_cndtn|=V_KEY;
-						else
-							key_cndtn&=~V_KEY;
-						break;
-
-					case DIK_F:
-						if( mode==BATTLE && od.dwData & (0x80) )
-							{
-							if(game_speed<2)
-								game_speed++;
-							else if(game_speed==2)
-								game_speed=30;
-							else if(game_speed<300)
-								game_speed+=30;
-							}
-						break;
-
-					case DIK_G:
-						if( mode==BATTLE && od.dwData & (0x80) )
-							{
-							if(game_speed<=1)
-								game_speed=0;
-							else if(game_speed<=2)
-								game_speed--;
-							else if(game_speed==30)
-								game_speed=2;
-							else if(game_speed!=0)
-								game_speed-=30;
-							}
-
-						break;
-		
-					case DIK_R:
-						if( mode==BATTLE && od.dwData & (0x80) )
-							{
-							game_speed=1;
-							}
-						break;
-
-					case DIK_X:
-						if( mode==BATTLE )
-							{
-							if( od.dwData & (0x80) )
-								{
-								if( !(key_cndtn&TOP_VIEW_BTN2) )
-									{
-									key_cndtn^=TOP_VIEW_BTN;
-									key_cndtn|=TOP_VIEW_BTN2;
-									}
-								}
-							else
-								{
-								key_cndtn&=~TOP_VIEW_BTN2;
-								}
-							}
-						break;
-***/
 					}
 				}
 			}
 		}
 
-
-
-
 	flg=0;
-
 
 	if( CursorPosition.y<=0 || (Buttons&FRONT_BTN)!=0 )
 		{
@@ -1315,108 +1077,21 @@ public void ReadInput()
 		flg=1;
 		}
 
-
-/*
-	if( (crsr_pt.x<=0 || cBuf[VK_LEFT]&0x80 || ( cBuf[VK_NUMPAD4]&0x80 && map_edit==0 ) ) && cmbt_x>=MAP_LEFT+1 )
-		{
-		tac_map_scrl(7);
-		flg=1;
-		}
-	if( (crsr_pt.x>=SCRN_WIDTH-1 || cBuf[VK_RIGHT]&0x80 || ( cBuf[VK_NUMPAD6]&0x80 && map_edit==0 )  ) && cmbt_x<=MAP_RIGHT-CMBT_WIDTH-1 )
-		{
-		tac_map_scrl(3);
-		flg=1;
-		}
-	if((crsr_pt.y<=0 || cBuf[VK_UP]&0x80 || ( cBuf[VK_NUMPAD8]&0x80 && map_edit==0 )  ) && cmbt_y<=MAP_TOP-1 )
-		{
-		tac_map_scrl(1);
-		flg=1;
-		}
-	if((crsr_pt.y>=SCRN_HEIGHT-1 || cBuf[VK_DOWN]&0x80 || ( cBuf[VK_NUMPAD2]&0x80 && map_edit==0 )  ) && cmbt_y>=MAP_BOTTOM+CMBT_HEIGHT+1 )
-		{
-		tac_map_scrl(5);
-		flg=1;
-		}
-*/
-
-
-
 	if(flg==0)
 		{
 		ScrollSpeed=0;
 		}
 
-#endif
-
-
-
-
-
 	// マウスボタンの状況記録
-/*
-	if( key_cndtn&MS_L_BTN && !(key_cndtn&MS_L_BTN2) )
-		{
-		key_cndtn|=MS_L_BTN2;
-		}
-	if( key_cndtn&MS_R_BTN && !(key_cndtn&MS_R_BTN2) )
-		{
-		key_cndtn|=MS_R_BTN2;
-		}
-	if( key_cndtn&MS_C_BTN && !(key_cndtn&MS_C_BTN2) )
-		{
-		key_cndtn|=MS_C_BTN2;
-		}
-*/
-
-
 
 	// マウス
 	if (pDIDeviceMouse!=null)
 		{
 
 		int hr;
-//		char CData[256];
-#if false
-		// デバイスの直接データを取得する
-		DIMOUSESTATE2 dims;
-		hr = pDIDeviceMouse->GetDeviceState(sizeof(DIMOUSESTATE2), &dims);
-		if (SUCCEEDED(hr))
-			{
-//			crsr_pos.x+=dims.lX;
-//			crsr_pos.y+=dims.lY;
-
-			if( dims.lZ>0 )
-				{
-				if( key_cndtn&BACK_BTN2 )
-					{
-					key_cndtn&=~BACK_BTN2;
-					key_cndtn&=~FRONT_BTN2;
-					}
-				else
-					{
-					key_cndtn|=FRONT_BTN2;
-					}
-				}
-			else if( dims.lZ<0 )
-				{
-				if( key_cndtn&FRONT_BTN2 )
-					{
-					key_cndtn&=~BACK_BTN2;
-					key_cndtn&=~FRONT_BTN2;
-					}
-				else
-					{
-					key_cndtn|=BACK_BTN2;
-					}
-				}
-
-			}
-		else if (appActive && hr==DIERR_INPUTLOST)
-			pDIDeviceMouse->Acquire();
-#endif
 
 		// バッファリング・データを取得する
-		while(/*g_bActive*/IsAppActive!=0)
+		while(IsAppActive!=0)
 			{
 			DIDEVICEOBJECTDATA od;
 			uint dwItems = 1;
@@ -1428,44 +1103,38 @@ public void ReadInput()
 	            break;	// データが読めないか、存在しない
 			else
 				{
-				switch (od.dwOfs) 
+				switch (od.dwOfs)
 					{
 
-					// 左ボタンが押された、または離された。 
+					// 左ボタンが押された、または離された。
 					case DIMOFS_BUTTON0:
 						if( od.dwData!=0 )
 							{
-//							key_cndtn|=MS_L_BTN;
 							if( LeftButton==0 )
 								LeftButton=1;
 							}
 						else
 							{
-//							key_cndtn&=~MS_L_BTN;
-//							key_cndtn&=~MS_L_BTN2;
 							if( LeftButton!=0 )
 								LeftButton=3;
 							}
 						break;
 
-					// 右ボタンが押された、または離された。 
+					// 右ボタンが押された、または離された。
 					case DIMOFS_BUTTON1:
 						if( od.dwData!=0 )
 							{
-//							key_cndtn|=MS_R_BTN;
 							if( RightButton==0 )
 								RightButton=1;
 							}
 						else
 							{
-//							key_cndtn&=~MS_R_BTN;
-//							key_cndtn&=~MS_R_BTN2;
 							if( RightButton!=0 )
 								RightButton=3;
 							}
 						break;
 /*
-					// 中ボタンが押された、または離された。 
+					// 中ボタンが押された、または離された。
 					case DIMOFS_BUTTON2:
 						if( od.dwData )
 							key_cndtn|=MS_C_BTN;
@@ -1497,72 +1166,16 @@ public void ReadInput()
 			}
 		}
 
-
 	// 純粋なマウス位置を取る
 	GetCursorPos(ref CursorPosition);
 	if( IsFullscreen==0 )
 		ScreenToClient(hwndApp, ref CursorPosition);
 
-
-
-
 	}
-
-
-
-
-
-#if false
-
-void	mouse_cont (void)
-	{
-
-	flg=0;
-
-	if( (crsr_pt.x<=0 || cBuf[VK_LEFT]&0x80 || ( cBuf[VK_NUMPAD4]&0x80 && map_edit==0 ) ) && cmbt_x>=MAP_LEFT+1 )
-		{
-		tac_map_scrl(7);
-		flg=1;
-		}
-	if( (crsr_pt.x>=SCRN_WIDTH-1 || cBuf[VK_RIGHT]&0x80 || ( cBuf[VK_NUMPAD6]&0x80 && map_edit==0 )  ) && cmbt_x<=MAP_RIGHT-CMBT_WIDTH-1 )
-		{
-		tac_map_scrl(3);
-		flg=1;
-		}
-
-
-
-	if((crsr_pt.y<=0 || cBuf[VK_UP]&0x80 || ( cBuf[VK_NUMPAD8]&0x80 && map_edit==0 )  ) && cmbt_y<=MAP_TOP-1 )
-		{
-		tac_map_scrl(1);
-		flg=1;
-		}
-
-	if((crsr_pt.y>=SCRN_HEIGHT-1 || cBuf[VK_DOWN]&0x80 || ( cBuf[VK_NUMPAD2]&0x80 && map_edit==0 )  ) && cmbt_y>=MAP_BOTTOM+CMBT_HEIGHT+1 )
-		{
-		tac_map_scrl(5);
-		flg=1;
-		}
-
-
-	if(!flg)
-		{
-		scrn_moving_spd=0;
-		}
-	}
-
-
-#endif
-
-
-
-
 
 /*-------------------------------------------
 	DirectInput 初期化
 ---------------------------------------------*/
-//BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pContext);
-//BOOL CALLBACK EnumAxesCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOID pvRef);
 
 [Original("InitDInput")]
 public bool InitializeDirectInput()
@@ -1572,18 +1185,17 @@ public bool InitializeDirectInput()
 
 	// *****************************************
 	// DirectInputの作成
-	hr = DirectInput8Create( hInstApp , DIRECTINPUT_VERSION, 
-							IID_IDirectInput8, out pDInput, null); 
-	if (FAILED(hr)) 
+	hr = DirectInput8Create( hInstApp , DIRECTINPUT_VERSION,
+							IID_IDirectInput8, out pDInput, null);
+	if (FAILED(hr))
 	{
 		DXTRACE_ERR("DirectInput8オブジェクトの作成に失敗", hr);
 		return false;
 	}
 
-
 	//*** キーボード
 	// デバイス・オブジェクトを作成
-	hr = pDInput.CreateDevice(GUID_SysKeyboard, out pDIDevice, null); 
+	hr = pDInput.CreateDevice(GUID_SysKeyboard, out pDIDevice, null);
 	if (FAILED(hr)) {
 		DXTRACE_ERR("DirectInputDevice8オブジェクトの作成に失敗", hr);
 	    return false;
@@ -1597,8 +1209,6 @@ public bool InitializeDirectInput()
 		return false;
 	}
 
-
-
 	//モードを設定（フォアグラウンド＆非排他モード）
 	hr = pDIDevice.SetCooperativeLevel(hwndApp, DISCL_NONEXCLUSIVE | DISCL_FOREGROUND);
 	if (FAILED(hr))
@@ -1608,8 +1218,8 @@ public bool InitializeDirectInput()
 	}
 
 	// バッファリング・データを取得するため、バッファ・サイズを設定
-	diprop.diph.dwSize	= (uint)(sizeof(DIPROPDWORD)); 
-	diprop.diph.dwHeaderSize	= (uint)sizeof(DIPROPHEADER); 
+	diprop.diph.dwSize	= (uint)(sizeof(DIPROPDWORD));
+	diprop.diph.dwHeaderSize	= (uint)sizeof(DIPROPHEADER);
 	diprop.diph.dwObj	= 0;
 	diprop.diph.dwHow	= DIPH_DEVICE;
 	diprop.dwData = DIDEVICE_BUFFERSIZE;
@@ -1623,90 +1233,10 @@ public bool InitializeDirectInput()
 	// 入力制御開始
 	pDIDevice.Acquire();
 
-
-
-
-#if false
-	//*** ジョイスティック
-	// デバイスを列挙して作成
-	hr = g_pDInput->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback,
-							NULL, DIEDFL_ATTACHEDONLY);
-	if (FAILED(hr) /*|| g_pDIDeviceJoy==NULL*/ )
-		{
-		DXTRACE_ERR("DirectInputDevice8オブジェクトの作成に失敗", hr);
-		return false;
-		}
-
-
-
-    // Make sure we got a joystick
-    if( NULL == g_pDIDeviceJoy )
-	    {
-        return TRUE;		// ジョイスティックはなし。
-		}
-
-
-	// データ形式を設定
-	hr = g_pDIDeviceJoy->SetDataFormat(&c_dfDIJoystick2);
-	if (FAILED(hr))
-		{
-		DXTRACE_ERR("c_dfDIJoystick2形式の設定に失敗", hr);
-		return false;
-		}
-
-	//モードを設定（フォアグラウンド＆非排他モード）
-	hr = g_pDIDeviceJoy->SetCooperativeLevel(hwndApp, DISCL_NONEXCLUSIVE | DISCL_FOREGROUND);
-	if (FAILED(hr))
-		{
-		DXTRACE_ERR("フォアグラウンド＆非排他モードの設定に失敗", hr);
-		return false;
-		}
-
-	// コールバック関数を使って各軸のモードを設定
-	hr = g_pDIDeviceJoy->EnumObjects(EnumAxesCallback, NULL, DIDFT_AXIS);
-	if (FAILED(hr))
-		{
-		DXTRACE_ERR("軸モードの設定に失敗", hr);
-		return false;
-		}
-
-
-	// 軸モードを設定（絶対値モードに設定。デフォルトなので必ずしも設定は必要ない）
-	//DIPROPDWORD diprop;
-	diprop.diph.dwSize	= sizeof(diprop); 
-	diprop.diph.dwHeaderSize	= (uint)sizeof(DIPROPHEADER); 
-	diprop.diph.dwObj	= 0;
-	diprop.diph.dwHow	= DIPH_DEVICE;
-	diprop.dwData		= DIPROPAXISMODE_ABS;
-	//	diprop.dwData		= DIPROPAXISMODE_REL;	// 相対値モードの場合
-	hr = g_pDIDeviceJoy->SetProperty(DIPROP_AXISMODE, &diprop.diph);
-	if (FAILED(hr))
-		{
-		DXTRACE_ERR("軸モードの設定に失敗", hr);
-		return false;
-		}
-
-	// バッファリング・データを取得するため、バッファ・サイズを設定
-	diprop.dwData = DIDEVICE_BUFFERSIZE;
-	hr = g_pDIDeviceJoy->SetProperty(DIPROP_BUFFERSIZE, &diprop.diph);
-	if (FAILED(hr))
-		{
-		DXTRACE_ERR("バッファ・サイズの設定に失敗", hr);
-		return false;
-		}
-
-
-
-	// 入力制御開始
-	g_pDIDeviceJoy->Acquire();
-#endif
-
-
-
 	//*** マウス
 	// デバイス・オブジェクトを作成
-	hr = pDInput.CreateDevice(GUID_SysMouse, out pDIDeviceMouse, null); 
-	if (FAILED(hr)) 
+	hr = pDInput.CreateDevice(GUID_SysMouse, out pDIDeviceMouse, null);
+	if (FAILED(hr))
 		{
 		DXTRACE_ERR("DirectInputDevice8オブジェクトの作成に失敗", hr);
 	    return false;
@@ -1729,9 +1259,8 @@ public bool InitializeDirectInput()
 	}
 
 	// 軸モードを設定（相対値モードに設定）
-//	DIPROPDWORD diprop;
-	diprop.diph.dwSize	= (uint)(sizeof(DIPROPDWORD)); 
-	diprop.diph.dwHeaderSize	= (uint)sizeof(DIPROPHEADER); 
+	diprop.diph.dwSize	= (uint)(sizeof(DIPROPDWORD));
+	diprop.diph.dwHeaderSize	= (uint)sizeof(DIPROPHEADER);
 	diprop.diph.dwObj	= 0;
 	diprop.diph.dwHow	= DIPH_DEVICE;
 	diprop.dwData		= DIPROPAXISMODE_REL;

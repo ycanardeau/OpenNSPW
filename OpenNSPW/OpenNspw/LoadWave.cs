@@ -1,25 +1,18 @@
 /*
 ** DirectX 8.0 アクションゲームプログラミング
-** 
+**
 ** LoadWave - WAVE ファイルを読み込むためのプログラム
-** 
+**
 ** Copyright (c) 1997-2001 山羊さん
 ** All Rights Reserved.
-** 
+**
 ** mailto:yagi@and.or.jp
 ** http://www.and.or.jp/~yagi/
-** 
+**
 ** このソースコードは WAVE ファイルを簡単に読み込むために提供されています。
 ** 開発者は、アプリケーションのプロジェクトにLoadWave.cppを追加し、LoadWave.hをインクルードすることにより機能を使用することができます。
 ** このソースコードを使用・引用・改変した結果如何なる損害が発生しても、著者および出版社は責任を負いません。
 */
-
-//#include "all_head.h"
-//#include "all_extern.h"
-//#include	"all_forward.h"
-
-
-//#include "LoadWave.h"
 
 // Port of LoadWave.cpp.
 
@@ -28,15 +21,11 @@ namespace OpenNspw;
 public unsafe partial class Nspw
 {
 
-
-
-
 // グローバル変数
 public WAVEFORMATEX* m_pwfx;
 public HMMIO m_hmmioIn;
 public MMCKINFO m_ckIn;
 public MMCKINFO m_ckInRiff;
-
 
 /* WAVE 閉じる */
 public int YWaveClose()
@@ -95,7 +84,7 @@ public int YWaveReadFile(HMMIO hmmioIn,uint cbRead,byte* pbDest,MMCKINFO* pckIn,
 	}
 	uint cbDataIn;
 	cbDataIn = cbRead;
-	if (cbDataIn > pckIn->cksize) 
+	if (cbDataIn > pckIn->cksize)
 	{
 		cbDataIn = pckIn->cksize;
 	}
@@ -211,22 +200,21 @@ public int YReadMMIO(HMMIO hmmioIn,MMCKINFO* pckInRIFF,WAVEFORMATEX** ppwfxInfo)
 		(*ppwfxInfo)->cbSize = cbExtraBytes;
 		if (mmioRead(hmmioIn,(byte*)(((byte*) & ((*ppwfxInfo)->cbSize)) + sizeof(ushort)),cbExtraBytes) != cbExtraBytes)
 		{
-			free(*ppwfxInfo);		// delete *ppwfxInfo;
+			free(*ppwfxInfo);
 			*ppwfxInfo = null;
 			return E_FAIL;
 		}
 	}
 	if (mmioAscend(hmmioIn,&ckIn,0)!=0)
 	{
-		free(*ppwfxInfo);		// delete *ppwfxInfo;
+		free(*ppwfxInfo);
 		*ppwfxInfo = null;
 		return E_FAIL;
 	}
 	return S_OK;
 }
 
-
-// WAVE ファイルの読み込み 
+// WAVE ファイルの読み込み
 public IDirectSoundBuffer? LoadWave(string name)
 {
 	byte* buf;
@@ -251,33 +239,6 @@ public IDirectSoundBuffer? LoadWave(string name)
 		return null;
 	}
 
-
-#if false
-
-	// サウンドバッファの作成
-	ZeroMemory(&desc,sizeof(DSBUFFERDESC));
-	desc.dwSize = sizeof(DSBUFFERDESC);
-//	desc.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS | DSBCAPS_LOCDEFER | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY;
-//	desc.dwFlags = DSBCAPS_LOCDEFER | DSBCAPS_CTRLVOLUME;
-	desc.dwFlags = DSBCAPS_LOCHARDWARE | DSBCAPS_CTRLVOLUME;		// とりあえずハードウェアバッファで試す。
-	desc.dwBufferBytes = readsize;
-	desc.lpwfxFormat = &wf;
-	if (FAILED(lpDS->CreateSoundBuffer(&desc,&lpDSB,NULL)))
-	{
-		ZeroMemory(&desc,sizeof(DSBUFFERDESC));
-		desc.dwSize = sizeof(DSBUFFERDESC);
-		desc.dwFlags = DSBCAPS_LOCSOFTWARE | DSBCAPS_CTRLVOLUME;	// 駄目ならソフトウェアバッファで試す。
-		desc.dwBufferBytes = readsize;
-		desc.lpwfxFormat = &wf;
-
-		if (FAILED(lpDS->CreateSoundBuffer(&desc,&lpDSB,NULL)))
-		{
-			free(buf);	
-			return NULL;
-		}
-	}
-#else
-
 		ZeroMemory(&desc,(nuint)(sizeof(DSBUFFERDESC)));
 		desc.dwSize = (uint)(sizeof(DSBUFFERDESC));
 		desc.dwFlags = /*DSBCAPS_LOCSOFTWARE |*/ DSBCAPS_CTRLVOLUME;	// 駄目ならソフトウェアバッファで試す。
@@ -286,12 +247,9 @@ public IDirectSoundBuffer? LoadWave(string name)
 
 		if (FAILED(lpDS.CreateSoundBuffer(&desc,out lpDSB,null)))
 		{
-			free(buf);	
+			free(buf);
 			return null;
 		}
-
-#endif
-
 
 	// 領域をロック
 	if (FAILED(lpDSB.Lock(0,readsize,&pMem1,&size1,&pMem2,&size2,0)))

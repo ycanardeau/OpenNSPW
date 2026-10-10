@@ -1,21 +1,16 @@
 //
-//                                    **                                   
-//                                   *  *                                  
-//                                    **  *                                 
-//                                    **   *                                
-//                                    **  *                                 
-//                            *     ******     *                              
-//                            ***   * **     ***                              
-//                              ****  **  ****                                 
-//                             **  ********                                    
-//                                                                       
+//                                    **
+//                                   *  *
+//                                    **  *
+//                                    **   *
+//                                    **  *
+//                            *     ******     *
+//                            ***   * **     ***
+//                              ****  **  ****
+//                             **  ********
+//
 //                 Ｎａｖａｌ Ｓｏｕｔｈ Ｐａｃｉｆｉｃ Ｗａｒ
 //                             Ｏｎ　ｔｈｅ　Ｎｅｔ
-
-
-//#include "all_head.h"
-//#include "all_extern.h"
-//#include	"all_forward.h"
 
 // Port of unit_info_cont.cpp.
 
@@ -24,17 +19,7 @@ namespace OpenNspw;
 public unsafe partial class Nspw
 {
 
-
-
 public const int		map_close	= 1;
-
-
-
-
-
-
-
-
 
 //============================================================================
 // 補給ポイントとユニットの値段
@@ -105,15 +90,6 @@ public int	GetSupplyPointsPerUnit()
 	return 0;
 	}
 
-
-
-
-
-
-
-
-
-
 //============================================================================
 //ユニットインフォーメイション
 //----------------------------------------------------------------------------
@@ -126,8 +102,6 @@ public void	UpdateUnitInfo()
     Array8<int> len = default;
 	HDC					hdc;
 	//D3DXVECTOR2 chrPos;		// Direct3D is not used.
-//	RECT	srcRect;
-
 
 #if CONN_DBG
 you_can_order=1;
@@ -137,14 +111,11 @@ rival_mode=mode;
 	if( IsEditingMap!=0 )
 		RivalMode=Mode;
 
-
-
 	// ユニットインフォーメィション
 	if( UnitInfoPanel[4]==(int)Side.Japan )
 		no1=UNIT_INFO_JPN;	//	ユニットインフォのｏｓナンバー
 	else
 		no1=UNIT_INFO_USA;	//	ユニットインフォのｏｓナンバー
-
 
 	if( UnitInfoPanel[0]!=0 )
 		{
@@ -166,13 +137,11 @@ rival_mode=mode;
 				}
 			}
 
-
 		// src_rect は ソースサーフェスのレクタングルです。
 		src_rect.left = Sprites[no1].base_x+(Sprites[no1].wd * (Sprites[no1].no % Sprites[no1].os_of_x))+1;
 		src_rect.top = Sprites[no1].base_y+(Sprites[no1].ht* (Sprites[no1].no / Sprites[no1].os_of_x))+1;
 		src_rect.right = (src_rect.left + Sprites[no1].wd)-3;
 		src_rect.bottom = (src_rect.top + Sprites[no1].ht)-2;
-
 
 		// dstn_rect は ディスティネーションレクタングルです。
 		dstn_rect.left=CMBT_WIDTH;
@@ -181,12 +150,10 @@ rival_mode=mode;
 		dstn_rect.right=dstn_rect.left+Sprites[no1].wd-1+1;
 		dstn_rect.bottom=dstn_rect.top+Sprites[no1].ht-1+1;
 
-
 		IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,DDBLTFAST_WAIT );
-	
 
 		// そのユニットのテキストを表示します。
-		if (IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK ) 
+		if (IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
 			{
 			// draw stats, like frame number and frame rate
 			SetBkMode(hdc, TRANSPARENT);
@@ -284,7 +251,6 @@ rival_mode=mode;
 					break;
 				}
 
-
 			// 損傷
 			if( Units[UnitInfoPanel[3]].IsUsed && ( Units[UnitInfoPanel[3]].Kind==UnitKind.AirBase||Units[UnitInfoPanel[3]].Kind==UnitKind.NavalBase||Units[UnitInfoPanel[3]].Kind==UnitKind.InfantryBase||Units[UnitInfoPanel[3]].Kind==UnitKind.Pillboxes||Units[UnitInfoPanel[3]].Kind==UnitKind.Fortress ) && Units[UnitInfoPanel[3]].info[0]!=0 && Units[UnitInfoPanel[3]].Hp==Units[UnitInfoPanel[3]].MaxHp
 				)
@@ -318,13 +284,11 @@ rival_mode=mode;
 			// 残弾薬
 			len[2] = wsprintf(ach[2], "弾薬：%d",Units[UnitInfoPanel[3]].Ammo);
 
-
 			// 残燃料
 			if(Units[UnitInfoPanel[3]].Fuel==-1)
 				len[3] = wsprintf(ach[3], "停泊艦船");
 			else
 				len[3] = wsprintf(ach[3], "燃料：%d", (int)(Units[UnitInfoPanel[3]].Fuel) );
-
 
 #else
 			// 艦種
@@ -378,7 +342,6 @@ else
 						len[0] = wsprintf(ach[0], "Transport",10);
 						}
 
-						
 					break;
 				case UnitKind.Fighter:
 					if( unit[unit_info[3]].type==0 )
@@ -386,7 +349,6 @@ else
 					else
 						len[0] = wsprintf(ach[0], "Grd. Fighter",10);
 					break;
-
 
 				case UnitKind.Attacker:
 					len[0] = wsprintf(ach[0], "Car. Bomber",10);
@@ -420,10 +382,6 @@ else
 					break;
 				}
 
-
-
-
-
 			// 損傷
 			if( unit[unit_info[3]].Hp <= unit[unit_info[3]].MaxHp*0.2 )
 				{
@@ -449,14 +407,11 @@ else
 			// 残弾薬
 			len[2] = wsprintf(ach[2], "Ammo:%d",unit[unit_info[3]].Ammo);
 
-
 			// 残燃料
 			if(unit[unit_info[3]].Fuel==-1)
 				len[3] = wsprintf(ach[3], "Anchored");
 			else
 				len[3] = wsprintf(ach[3], "Fuel:%d",(int)(unit[unit_info[3]].Fuel));
-
-				
 
 #endif
 
@@ -473,17 +428,10 @@ else
 				TextOut(hdc, dstn_rect.left+20+110+55, 10+(1*20), ach[0], len[0]);
 				}
 
-
-
 			IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
 			}
 		}
 
-
-				
-
-
-#if true
 	//	スプライトグループ（メニュー下地）
 	src_rect.left = Sprites[BTN_BASE].base_x;
 	src_rect.top = Sprites[BTN_BASE].base_y+(Sprites[BTN_BASE].ht*(Side.UnitedStates==LocalSide ? 1 : 0));
@@ -493,16 +441,12 @@ else
 	dstn_rect.left=Sprites[BTN_BASE].x=CMBT_WIDTH;
 	dstn_rect.top=Sprites[BTN_BASE].y=Sprites[UNIT_INFO_JPN].y+Sprites[UNIT_INFO_JPN].ht+20;
 
-	
 	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
 		{
 		RestoreSurfaces();
 		}
 
-
-
-
-	no1=BTN_1;	
+	no1=BTN_1;
 	if( (UnitKind)UnitInfoPanel[0]==UnitKind.Carrier || (UnitKind)UnitInfoPanel[0]==UnitKind.LightCarrier  || (UnitKind)UnitInfoPanel[0]==UnitKind.AirBase )
 		{
 		// 航空母艦の場合切り替えボタンを表示
@@ -516,7 +460,6 @@ else
 		dstn_rect.top=Sprites[UNIT_INFO_JPN].y+Sprites[UNIT_INFO_JPN].ht;
 		dstn_rect.right=dstn_rect.left+(Sprites[no1].wd)-1;
 		dstn_rect.bottom=dstn_rect.top+(Sprites[no1].ht)-1;
-
 
 		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
 			{
@@ -533,7 +476,7 @@ else
 					UnitInfoPanel[1]=1;				// 空母なら１で格納庫 ０ で飛行甲板
 
 					Selections[1][SelectedUnit]=0;	CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None;
-					SelectedUnit=0; 
+					SelectedUnit=0;
 					ClearSelection();
 					}
 				}
@@ -543,7 +486,6 @@ else
 			src_rect.right+=180;	src_rect.left+=180;
 			}
 
-		
 	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
 		{
 		RestoreSurfaces();
@@ -551,15 +493,11 @@ else
 
 		}
 
-
-
-
 	if(CombatMenuKind!=0 && IsEditingMap==0 )
 		{
 
 		//	スプライトグループ（メニュー）
-		no1=BTN_1;	
-
+		no1=BTN_1;
 
 		n=0;
 		if( Units[SelectedUnit].Category==UnitCategory.Ship && !(Units[SelectedUnit].Kind==UnitKind.InfantryBase||Units[SelectedUnit].Kind==UnitKind.Pillboxes||Units[SelectedUnit].Kind==UnitKind.Fortress||Units[SelectedUnit].Kind==UnitKind.AirBase) )
@@ -637,8 +575,6 @@ else
 						}
 					CombatMenuSelection=(CombatMenuItem)Units[SelectedUnit].Weapon;
 
-
-
 					if ( Units[SelectedUnit].Ammo==0 )
 						{
 						CombatMenuSelection=(CombatMenuItem)FireKind.Unarmed;
@@ -646,9 +582,6 @@ else
 					}
 				}
 			}
-
-
-
 
 		for( i=0;i<n;i++ )
 			{
@@ -663,15 +596,12 @@ else
 			dstn_rect.right=dstn_rect.left+Sprites[no1].wd-1;
 			dstn_rect.bottom=dstn_rect.top+Sprites[no1].ht-1;
 
-
-
 			if( LeftButton==3 && menu2[i]!=CombatMenuSelection && PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
 				{
 				if( CanOrder!=0 )
 					{
 					BufferedMenuOrders[1].Menu=menu2[i];
 					BufferedMenuOrders[1].SelectedUnit=SelectedUnit;
-
 
 					if(LocalSide==Side.Japan)
 						{
@@ -684,7 +614,7 @@ else
 						for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
 							{
 							// 航空ユニット
-							BufferedSelections[1][s-JPN_SHIP_END/*20*/-1]=Selections[1][s];
+							BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
 							}
 						}
 					else
@@ -693,12 +623,12 @@ else
 						for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
 							{
 							// 水上ユニット
-							BufferedSelections[1][s-JPN_SHIP_END/*20*/-1]=Selections[1][s];
+							BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
 							}
 						for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
 							{
 							// 航空ユニット
-							BufferedSelections[1][s-(USA_PLANE_END/2)/*50*/-1]=Selections[1][s];
+							BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
 							}
 						}
 					CanOrder=0;
@@ -722,7 +652,7 @@ else
 				src_rect.left=Sprites[no1].base_x+(Sprites[no1].wd*0)+1+180;
 				src_rect.right=src_rect.left+Sprites[no1].wd-1;
 				}
-			
+
 	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
 		{
 		RestoreSurfaces();
@@ -731,14 +661,8 @@ else
 			}
 		}
 
-
-
-
-
-
-
 	// ゲームデータ
-	if ( IsEditingMap==0 && IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK ) 
+	if ( IsEditingMap==0 && IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
 		{
 		SetBkMode(hdc, TRANSPARENT);
 		SelectObject(hdc, gameFont_1);
@@ -747,7 +671,6 @@ else
 		len[0] = wsprintf(ach[0], "スピード : %d",GameSpeed);
 		len[1] = wsprintf(ach[1], "経過時間");
 		len[2] = wsprintf(ach[2], "%d",BattleTime);
-
 
 #else
 		len[0] = wsprintf(ach[0], "SPEED : %d",game_speed);
@@ -763,19 +686,13 @@ else
 		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
 		}
 
-
-
-
-
-
 	// 補給
 	ry=190;
-	if( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK ) 
+	if( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
 		{
 		SetBkMode(hdc, TRANSPARENT);
 		SelectObject(hdc, gameFont_1);
 
-	
 		if( IsEditingMap==0 )
 			{
 
@@ -794,7 +711,7 @@ else
 #endif
 		SetTextColor(hdc, RGB(255, 255, 255));
 		TextOut(hdc, dstn_rect.left+120, ry+20*1, ach[0], len[0]);
-		
+
 		switch( SupplyTarget )
 			{
 #if !LNGG_VER
@@ -824,7 +741,6 @@ else
 					len[0] = wsprintf(ach[0], "エセックス型空母");
 
 				break;
-
 
 #else
 			case 0:		len[0] = wsprintf(ach[0], "Battleship");		break;
@@ -858,13 +774,11 @@ else
 		SetTextColor(hdc, RGB(255, 255, 255));
 		TextOut(hdc, dstn_rect.left+120, ry+20*2, ach[0], len[0]);
 
-
 		if( SupplyCount==0 )
 			{
 			// 値段の表示
 			len[0] = wsprintf(ach[0], "%d:" ,GetSupplyPointsPerUnit());
 			TextOut(hdc, Sprites[BTN_BASE].x+120, ry+20*3+5+10, ach[0], len[0]);
-
 
 			//
 #if !LNGG_VER
@@ -883,7 +797,7 @@ else
 				if( LeftButton==3 )
 					{
 					if(SupplyTarget==0)
-						SupplyTarget=17;//14;
+						SupplyTarget=17;
 					else
 						SupplyTarget--;
 					}
@@ -894,7 +808,6 @@ else
 				}
 
 			TextOut(hdc, Sprites[BTN_BASE].x+120, ry+20*5+5, ach[0], len[0]);
-
 
 			//
 #if !LNGG_VER
@@ -912,7 +825,7 @@ else
 				SetTextColor(hdc, RGB(255, 0, 0));
 				if( LeftButton==3 )
 					{
-					if(SupplyTarget==17/*14*/)
+					if(SupplyTarget==17)
 						SupplyTarget=0;
 					else
 						SupplyTarget++;
@@ -925,15 +838,12 @@ else
 
 			TextOut(hdc, Sprites[BTN_BASE].x+120, ry+20*6+5, ach[0], len[0]);
 
-
-
-
 			// 要求する
 
 			if(LocalSide==Side.Japan)
 				{
 				// 日本サイドのユニット
-				if( SupplyTarget<=5 || SupplyTarget>=10 /*ctgry==SHIP*/ )
+				if( SupplyTarget<=5 || SupplyTarget>=10  )
 					{
 					start=JPN_SHIP_START;
 					end=JPN_SHIP_END;
@@ -949,7 +859,7 @@ else
 			else
 				{
 				// 合衆国サイドのユニット
-				if( SupplyTarget<=5 || SupplyTarget>=10 /*ctgry==SHIP*/ )
+				if( SupplyTarget<=5 || SupplyTarget>=10  )
 					{
 					start=USA_SHIP_START;
 					end=USA_SHIP_END;
@@ -969,11 +879,8 @@ else
 				if(!Units[m].IsUsed)
 					{
 					n++;
-					}								
+					}
 				}
-
-			
-
 
 /***
 				case 0:
@@ -999,15 +906,15 @@ else
 					break;
 ***/
 
-			if(	(ArrivalControl!=1) && 
-					( 
-						(ArrivalControl==0) || 
-						(ArrivalControl==2 && ( SupplyTarget<=9 || SupplyTarget>=15 ) ) || 
-						(ArrivalControl==3 && SupplyTarget>=10 && SupplyTarget<=14 ) || 
-						(ArrivalControl==4 && (SupplyTarget<=3 || SupplyTarget>=15 ) && !(SupplyTarget==17 && LocalSide==Side.UnitedStates)  ) || 
-						(ArrivalControl==5 && SupplyTarget>=6 && SupplyTarget<=9 ) || 
-						(ArrivalControl==6 && SupplyTarget!=14 ) 
-					) 
+			if(	(ArrivalControl!=1) &&
+					(
+						(ArrivalControl==0) ||
+						(ArrivalControl==2 && ( SupplyTarget<=9 || SupplyTarget>=15 ) ) ||
+						(ArrivalControl==3 && SupplyTarget>=10 && SupplyTarget<=14 ) ||
+						(ArrivalControl==4 && (SupplyTarget<=3 || SupplyTarget>=15 ) && !(SupplyTarget==17 && LocalSide==Side.UnitedStates)  ) ||
+						(ArrivalControl==5 && SupplyTarget>=6 && SupplyTarget<=9 ) ||
+						(ArrivalControl==6 && SupplyTarget!=14 )
+					)
 					)
 				{
 
@@ -1034,7 +941,7 @@ else
 									SupplyCount=150;				// 艦船
 								else
 									SupplyCount=30;				// 航空機
-					
+
 if(CONN_DBG!=0)
 SupplyCount=10;
 								PlaySoundEffect( 0, CLICK2 ,(double)(MAP_RIGHT+1), 0);
@@ -1068,7 +975,6 @@ SupplyCount=10;
 					TextOut(hdc, Sprites[BTN_BASE].x+120, ry+20*7+5, ach[0], len[0]);
 					}
 
-
 				}
 			else
 				{
@@ -1094,7 +1000,6 @@ SupplyCount=10;
 #endif
 				}
 
-		
 			if( Result==GameResult.None )
 				{
 				SupplyCount--;
@@ -1117,8 +1022,6 @@ SupplyCount=10;
 			}
 		ry+=30;
 
-
-
 		if( IsHost!=0 )
 			{
 #if !LNGG_VER
@@ -1138,7 +1041,6 @@ SupplyCount=10;
 					if( IsEditingMap!=0)
 						{
 
-
 						Mode=GameMode.ConfigSetting;
 
 /*
@@ -1154,17 +1056,6 @@ SupplyCount=10;
 						{
 	DialogAnswer=MessageType.GoToGameSetting;
 						g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_OK_CANCEL), hwndApp, (DLGPROC)IDD_OK_CANCEL_Proc );
-#if false
-						my_dlg_wait();
-
-						if( dlg_answer )
-							{
-							bf_game_system_menu[1]=MessageType.GoToGameSetting;
-							you_can_order=0;
-							you_ordered=1;
-							SoundPlayEffect( NULL, CLICK2 ,(double)(MAP_RIGHT+1), 0);
-							}
-#endif
 						}
 					}
 				}
@@ -1174,9 +1065,8 @@ SupplyCount=10;
 				}
 			TextOut(hdc, Sprites[BTN_BASE].x+120, ry+20*9+5, ach[0], len[0]);
 
-
 			if( IsEditingMap==0 )
-				{		
+				{
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "リジューム");
 #else
@@ -1195,17 +1085,6 @@ SupplyCount=10;
 							{
 	DialogAnswer=MessageType.ResumeAndGoToGameSetting;
 							g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_OK_CANCEL), hwndApp, (DLGPROC)IDD_OK_CANCEL_Proc );
-#if false
-							my_dlg_wait();
-
-							if( dlg_answer )
-								{
-								bf_game_system_menu[1]=MessageType.ResumeAndGoToGameSetting;
-								you_can_order=0;
-								you_ordered=1;
-								SoundPlayEffect( NULL, CLICK2 ,(double)(MAP_RIGHT+1), 0);
-								}
-#endif
 							}
 						}
 					}
@@ -1220,7 +1099,6 @@ SupplyCount=10;
 		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
 		}
 
-
 	ry-=30;
 
 	// 補給
@@ -1230,7 +1108,6 @@ SupplyCount=10;
 			no1=UNIT_JPN;		//Off Screen Number		日本海軍の表示
 		else
 			no1=UNIT_USA;		//Off Screen Number		日本海軍の表示
-
 
 		n=1;
 		switch( SupplyTarget )
@@ -1255,7 +1132,6 @@ SupplyCount=10;
 				n=7;
 				break;
 
-
 			case 4: case 5: case 6:
 				m=SupplyTarget;
 				m++;
@@ -1271,8 +1147,6 @@ SupplyCount=10;
 		// src_rect は ソースサーフェスのレクタングルです。
 		src_rect.left = Sprites[no1].base_x+(Sprites[no1].wd * ( n )) +1;		// 方向
 
-
-
 		src_rect.top = Sprites[no1].base_y+(Sprites[no1].ht* (m)) +1;		// 機種
 
 		src_rect.right = (src_rect.left + Sprites[no1].wd)-2;
@@ -1287,16 +1161,7 @@ SupplyCount=10;
 			RestoreSurfaces();
 			}
 		}
-#endif
 	}
-
-
-
-
-
-
-
-
 
 //============================================================================
 // ミニマップ
@@ -1307,7 +1172,6 @@ public void	DrawMinimap()
 	RECT	src_rect,field_rect,dstn_rect;
 	int		m,n,base_x,base_y;
 	byte	my_cl, en_cl;
-
 
 	// マップの下地を描画
 	Sprites[MAP_BASE].x=CMBT_WIDTH;
@@ -1321,27 +1185,14 @@ public void	DrawMinimap()
 	// dstn_rect は ディスティネーションレクタングルです。
 	dstn_rect.left=Sprites[MAP_BASE].x;
 	dstn_rect.top=Sprites[MAP_BASE].y;
-	//dstn_rect.right=sprt[TTL_BACK].x+sprt[TTL_BACK].wd/2;
-	//dstn_rect.bottom=sprt[TTL_BACK].y+sprt[TTL_BACK].ht/2;
 
-	
 	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
 		{
 		RestoreSurfaces();
 		}
 
-
 	base_x=Sprites[MAP_BASE].x+8;
 	base_y=Sprites[MAP_BASE].y+8;
-
-
-
-
-
-
-
-
-
 
 	// コンバット画面位置の描画
 	my_cl=0;
@@ -1362,9 +1213,6 @@ public void	DrawMinimap()
 	DrawLine5(dstn_rect.right,dstn_rect.bottom,dstn_rect.left,dstn_rect.bottom,SCRN_WIDTH-1,SCRN_HEIGHT-1,my_cl);
 	DrawLine5(dstn_rect.left,dstn_rect.bottom,dstn_rect.left,dstn_rect.top,SCRN_WIDTH-1,SCRN_HEIGHT-1,my_cl);
 
-
-
-
 	// マップ上のカーソルクリックでの位置指定
 	my_cl=255;
 	if ( CursorPosition.x>=base_x && CursorPosition.x<=base_x+240 && CursorPosition.y>=base_y && CursorPosition.y<=base_y+180 )
@@ -1384,33 +1232,25 @@ public void	DrawMinimap()
 			CameraPosition = new WorldPosition(MAP_LEFT+(((CursorPosition.x-5-base_x)/map_close)*80), MAP_TOP-(((CursorPosition.y-5-base_y)/map_close)*80));
 			if(CameraPosition.Y>MAP_TOP)
 				CameraPosition = new WorldPosition(CameraPosition.X, MAP_TOP);
-			if(CameraPosition.X>(MAP_RIGHT-CMBT_WIDTH) )		
+			if(CameraPosition.X>(MAP_RIGHT-CMBT_WIDTH) )
 				CameraPosition = new WorldPosition(MAP_RIGHT-CMBT_WIDTH, CameraPosition.Y);
 			if(CameraPosition.Y<(MAP_BOTTOM+CMBT_HEIGHT) )
 				CameraPosition = new WorldPosition(CameraPosition.X, MAP_BOTTOM+CMBT_HEIGHT);
-			if(CameraPosition.X<MAP_LEFT)		
+			if(CameraPosition.X<MAP_LEFT)
 				CameraPosition = new WorldPosition(MAP_LEFT, CameraPosition.Y);
 			}
 		}
-
-
-
-
-
 
 	// ユニットの描画
 
 	if( LocalSide==Side.Japan )
 		{
-//		my_cl=5457;	en_cl=5416;
 
 		my_cl=(byte)(Sprites[MAP_BASE].base_y+57);	en_cl=(byte)(Sprites[MAP_BASE].base_y+16);
-
 
 		}
 	else
 		{
-//		en_cl=5457;	my_cl=5416;
 		en_cl=(byte)(Sprites[MAP_BASE].base_y+57);	my_cl=(byte)(Sprites[MAP_BASE].base_y+16);
 		}
 
@@ -1433,8 +1273,7 @@ public void	DrawMinimap()
 			dstn_rect.right=dstn_rect.left+2;
 			dstn_rect.bottom=dstn_rect.top+2;
 
-
-			src_rect.left = 267;	
+			src_rect.left = 267;
 			if( LocalSide==Side.Japan )
 				src_rect.top = Sprites[MAP_BASE].base_y+16;
 			else
@@ -1442,14 +1281,12 @@ public void	DrawMinimap()
 			src_rect.right = src_rect.left+3;
 			src_rect.bottom = src_rect.top+3;
 
-			
 	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
 		{
 		RestoreSurfaces();
 		}
 
 			}
-
 
 		if( unit.IsUsed && unit.Side!=LocalSide && !( unit.Position.Y>MAP_TOP || unit.Position.Y<MAP_BOTTOM || unit.Position.X<MAP_LEFT || unit.Position.X>MAP_RIGHT ) && !(unit.PlaneState==UnitState.Parked) && unit.Found!=0 && !(unit.Category==UnitCategory.Plane && (FrameCount%4)==0) )
 			{
@@ -1489,7 +1326,6 @@ public void	DrawMinimap()
 			src_rect.right = src_rect.left+3;
 			src_rect.bottom = src_rect.top+3;
 
-			
 			if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
 				{
 				RestoreSurfaces();
@@ -1497,10 +1333,6 @@ public void	DrawMinimap()
 			}
 		}
 	}
-
-
-
-
 
 //============================================================================
 // ミニマップ
@@ -1512,7 +1344,6 @@ public void	MakeMinimap()
 	RECT	src_rect,field_rect,dstn_rect;
 	int m,n;
 
-
 	// マップデータから陸地をマップに描画します
 	dstn_rect.left=Sprites[MAP_BASE].base_x;
 	dstn_rect.top=Sprites[MAP_BASE].base_y;
@@ -1522,12 +1353,10 @@ public void	MakeMinimap()
 	src_rect.right = src_rect.left+255;
 	src_rect.bottom = src_rect.top+199;
 
-	
 	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDS_OS, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
 		{
 		RestoreSurfaces();
 		}
-
 
 	for(m=0; m<=179; m++) // 縦の個数	マップの枠 縦１８０ドット
 		for( n=0; n<=239; n++) // 横の個数		マップの枠 横２４０ドット
@@ -1538,15 +1367,12 @@ public void	MakeMinimap()
 				dstn_rect.left=Sprites[MAP_BASE].base_x+8+n-0;
 				dstn_rect.top=Sprites[MAP_BASE].base_y+8+m-0;
 
-//				src_rect.left = 271;
-//				src_rect.top = 5506;
-
 				src_rect.left = Sprites[MAP_BASE].base_x+270;
 				src_rect.top = Sprites[MAP_BASE].base_y+110;
 
 				src_rect.right = src_rect.left+2;
 				src_rect.bottom = src_rect.top+2;
-				
+
 				if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDS_OS, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
 					{
 					RestoreSurfaces();
@@ -1556,12 +1382,6 @@ public void	MakeMinimap()
 			}
 	}
 
-
-
-
-
-
-
 //============================================================================
 //ユニットインフォーメイション
 //----------------------------------------------------------------------------
@@ -1570,13 +1390,10 @@ public void	ApplyUnitInfoInput()
 	{
 	CombatMenuItem	menu2; short e,tmp_slct_unit,g,i;
 
-
 	for(e=0;e<=1;e++)
 		{
 		menu2=BufferedMenuOrders[e].Menu;
 		tmp_slct_unit=BufferedMenuOrders[e].SelectedUnit;
-
-
 
 		// 指揮、随伴ユニットに下命
 		if(menu2!=0)
@@ -1606,13 +1423,12 @@ public void	ApplyUnitInfoInput()
 						// 決定後の書く個別の処理
 						switch( unit.Kind )
 							{
-							case UnitKind.Fighter: case UnitKind.Attacker: case UnitKind.Bomber:	
+							case UnitKind.Fighter: case UnitKind.Attacker: case UnitKind.Bomber:
 								if(  menu2==CombatMenuItem.ArmWithTorpedo || menu2==CombatMenuItem.ArmWithBomb || menu2==CombatMenuItem.Disarm  )
-									{	
+									{
 									if(unit.Kind==UnitKind.Attacker || (unit.Kind==UnitKind.Bomber && ( (menu2==CombatMenuItem.ArmWithTorpedo && unit.Side==Side.Japan ) || menu2==CombatMenuItem.ArmWithBomb || menu2==CombatMenuItem.Disarm) ))
 										{		// 収容中の攻撃機だったばあい
 										unit.Weapon=(FireKind)menu2;
-
 
 										if(menu2==CombatMenuItem.ArmWithTorpedo)
 											unit.Ammo=1;		// 魚雷の場合は常に１、弾数。
@@ -1627,7 +1443,6 @@ public void	ApplyUnitInfoInput()
 									}
 								else
 									{
-//									unit[g].info[5]=menu2;
 									if( (unit.Kind==UnitKind.Fighter ) && menu2==CombatMenuItem.Return  && unit.PlaneState==UnitState.Flying )
 										{
 										unit.Mode=(UnitMode)menu2;
