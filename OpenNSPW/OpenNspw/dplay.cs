@@ -47,7 +47,7 @@ public void WaveToAllPlayers()
 	{
 
 
-	if( g_pThreadPool==null || g_pDP==null || g_dwNumberOfActivePlayers!=0 )
+	if( g_pThreadPool==null || g_pDP==null || ActivePlayerCount!=0 )
 		return;
 
 
@@ -121,16 +121,16 @@ public nint GreetingDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
          SendMessage( hDlg, WM_SETICON, ICON_BIG,   hIcon );  // Set big icon
          SendMessage( hDlg, WM_SETICON, ICON_SMALL, hIcon );  // Set small icon
 
-         if( g_bHostPlayer!=0 )
+         if( IsHostPlayer!=0 )
              SetWindowText( hDlg, TEXT("Host Player") );
          else
              SetWindowText( hDlg, TEXT("Guest Player") );
 
          // Display local player's name
-         SetDlgItemText( hDlg, IDC_PLAYER_NAME, g_strLocalPlayerName );
+         SetDlgItemText( hDlg, IDC_PLAYER_NAME, LocalPlayerName );
 
 			// ライバルプレイヤーネーム
-			SetDlgItemText( hDlg, IDC_PLAYER_NAME2, g_strRivalPlayerName );
+			SetDlgItemText( hDlg, IDC_PLAYER_NAME2, RivalPlayerName );
 
 			// 一応アップデートしときます。
          PostMessage( hDlg, WM_APP_UPDATE_STATS, 0, 0 );
@@ -153,14 +153,14 @@ public nint GreetingDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
 
 
 			// ライバルプレイヤーネーム
-			SetDlgItemText( hDlg, IDC_PLAYER_NAME2, g_strRivalPlayerName );
+			SetDlgItemText( hDlg, IDC_PLAYER_NAME2, RivalPlayerName );
 //			SetDlgItemText( hDlg, IDC_PLAYER_NAME2, *pPlayerInfo->strPlayerName );
 
 
 			// 参加人数によってゲームスタートボタンを有効か無効に。ホストのみ影響。
-			if( g_bHostPlayer!=0 )
+			if( IsHostPlayer!=0 )
 				{
-				if( g_dwNumberOfActivePlayers<2 )
+				if( ActivePlayerCount<2 )
 					EnableWindow( GetDlgItem( hDlg, IDC_START_GAME ), FALSE);
 				else
 					EnableWindow( GetDlgItem( hDlg, IDC_START_GAME ), TRUE);
@@ -210,7 +210,7 @@ public nint GreetingDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
 #endif
 				case IDC_START_GAME:
 
-					if( g_bHostPlayer!=0 )
+					if( IsHostPlayer!=0 )
 						{
 						// Send a message to all of the players
 						GENERICMSG msgWave;
@@ -240,7 +240,7 @@ public nint GreetingDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
 					return TRUE;
 
 				case IDCANCEL:
-					g_dwNumberOfActivePlayers=0;
+					ActivePlayerCount=0;
 //	g_dwNumberOfActivePlayers=2;
 //					EndDialog( hDlg, 0 );
 					DestroyWindow(hDlg);
@@ -457,7 +457,7 @@ public int EnumServiceProviders( HWND hDlg )
     
     // Try to select the default preferred provider
     nIndex = (int)SendDlgItemMessage( hDlg, IDC_SP_COMBO, CB_FINDSTRINGEXACT, -1,
-                                      g_strPreferredProvider );
+                                      PreferredProvider );
     if( nIndex != LB_ERR )
         SendDlgItemMessage( hDlg, IDC_SP_COMBO, CB_SETCURSEL, nIndex, 0 );
     else
@@ -522,7 +522,7 @@ public void SetupAddressFields( HWND hDlg )
             // remote IP in the registry, and should populate that field
             // with the stored value. Default is "localhost".
             if( pGuid == CLSID_DP8SP_TCPIP )
-                SetDlgItemText( hDlg, IDC_ADDRESS_LINE1, g_strRemoteHostname );
+                SetDlgItemText( hDlg, IDC_ADDRESS_LINE1, RemoteHostName );
 
         }
     }
@@ -578,7 +578,7 @@ public int OnInitOverrideDialog( HWND hDlg )
 	CheckDlgButton( hDlg, IDC_HOST_SESSION, BST_CHECKED );
 
 	// ローカルプレイヤーネーム
-	SetDlgItemText( hDlg, IDC_PLAYER_NAME, g_strLocalPlayerName );
+	SetDlgItemText( hDlg, IDC_PLAYER_NAME, LocalPlayerName );
 
 
 
@@ -596,9 +596,9 @@ public int OnInitOverrideDialog( HWND hDlg )
 		}
 
 
-	g_dwNumberOfActivePlayers=0;		
+	ActivePlayerCount=0;		
 //	g_strRivalPlayerName=" XXX ";	
-	sprintf(g_strRivalPlayerName, " - - - " );
+	sprintf(RivalPlayerName, " - - - " );
 
 	return S_OK;
 	}
@@ -638,7 +638,7 @@ public nint OverrideDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
 				{
              MessageBox( null, TEXT("Failed initializing dialog box. ") +
                          TEXT("The sample will now quit."),
-                         g_strAppName, MB_OK | MB_ICONERROR );
+                         AppName, MB_OK | MB_ICONERROR );
 //          EndDialog( hDlg, 0 );
 				DestroyWindow(hDlg);
             PostQuitMessage( 0 );
@@ -672,10 +672,10 @@ public nint OverrideDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
 
 
 					// 接続ダイアログのデータをレジ記録する元データ
-					GetDlgItemText( hDlg, IDC_PLAYER_NAME, g_strLocalPlayerName, MAX_PATH );
+					GetDlgItemText( hDlg, IDC_PLAYER_NAME, LocalPlayerName, MAX_PATH );
 
 					nIndex = (int) SendDlgItemMessage( hDlg, IDC_SP_COMBO, CB_GETCURSEL, 0, 0 );
-					SendDlgItemMessage( hDlg, IDC_SP_COMBO, CB_GETLBTEXT, nIndex, g_strPreferredProvider );
+					SendDlgItemMessage( hDlg, IDC_SP_COMBO, CB_GETLBTEXT, nIndex, PreferredProvider );
 
 					// Disable the OK button while we work.
 					EnableWindow( GetDlgItem( hDlg, IDOK ), FALSE);
@@ -685,7 +685,7 @@ public nint OverrideDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
 						// 設定された接続は失敗した。
 						DXTRACE_ERR_MSGBOX( TEXT("LaunchMultiplayerGame"), hr );
                   MessageBox( null, TEXT("Failed to launch game. "),
-                              g_strAppName, MB_OK | MB_ICONERROR );
+                              AppName, MB_OK | MB_ICONERROR );
 
                   // Renable the OK button.
                   EnableWindow( GetDlgItem( hDlg, IDOK ), TRUE);
@@ -702,10 +702,10 @@ public nint OverrideDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
 						break;
 
 					case IDSNROEDIT:
-						map_edit=1;
-						cnct_game=1;
-						g_bHostPlayer=1;
-						g_dwNumberOfActivePlayers=2;
+						IsEditingMap=1;
+						IsNetworkGame=1;
+						IsHostPlayer=1;
+						ActivePlayerCount=2;
 
 						DestroyWindow(hDlg);
 						PostQuitMessage( 0 );		// これでWM_QUITがでるので接続ダイアログループからぬける
@@ -748,10 +748,10 @@ public int LaunchMultiplayerGame( HWND hDlg )
 	int   nSPIndex  = (int)   SendDlgItemMessage( hDlg, IDC_SP_COMBO, CB_GETCURSEL,   0,        0 );
 	Guid? pSPGuid   = (Guid?) SendDlgItemMessage( hDlg, IDC_SP_COMBO, CB_GETITEMDATA, nSPIndex, 0 );
 
-	g_bHostPlayer = (int)IsDlgButtonChecked( hDlg, IDC_HOST_SESSION );
+	IsHostPlayer = (int)IsDlgButtonChecked( hDlg, IDC_HOST_SESSION );
     
 	// If not the host
-	if( g_bHostPlayer==0 )
+	if( IsHostPlayer==0 )
 		{
 		// ゲストだった場合、ホストのアドレスを作ります。
 		// Create a host address if connecting to a host, 
@@ -822,11 +822,11 @@ public int LaunchMultiplayerGame( HWND hDlg )
 		// the program exits.
 		if( pSPGuid == CLSID_DP8SP_TCPIP )
 			{
-			_tcsncpy( g_strRemoteHostname, strHostname, MAX_PATH );		// ホストネームとなっていてもホストのＩＰアドレスのこと
-			g_strRemoteHostname[MAX_PATH-1] = 0;
+			_tcsncpy( RemoteHostName, strHostname, MAX_PATH );		// ホストネームとなっていてもホストのＩＰアドレスのこと
+			RemoteHostName[MAX_PATH-1] = 0;
 			}
 
-		if( g_bHostPlayer!=0 )
+		if( IsHostPlayer!=0 )
 			{
 			// ホスト選択の場合、ＳＰにポートアドレスを設定
 			if( _tcslen( strPort ) > 0 )
@@ -882,7 +882,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 		Array260<byte> strPhone = default;
 		GetDlgItemText( hDlg, IDC_ADDRESS_LINE1, strPhone, MAX_PATH );
 
-		if( g_bHostPlayer==0 )
+		if( IsHostPlayer==0 )
 			{
 			// Add the phonenumber to pHostAddress
 			if( _tcslen( strPhone ) > 0 )
@@ -923,7 +923,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 	// 自分をＤＰに登録する
 	// Prepare local player name 
 	string wszPeerName;
-	DXUtil_ConvertGenericStringToWideCch( out wszPeerName, g_strLocalPlayerName, MAX_PATH );
+	DXUtil_ConvertGenericStringToWideCch( out wszPeerName, LocalPlayerName, MAX_PATH );
 
 	// Fill in player info structure
 	DPN_PLAYER_INFO dpPlayerInfo = new();
@@ -957,7 +957,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 	//---------------------------------
 	// If we are hosting...
 	//---------------------------------
-	if( g_bHostPlayer!=0 )
+	if( IsHostPlayer!=0 )
 		{
 		// Set the dpnAppDesc.pwszSessionName
 //		TCHAR strSessionName[MAX_PATH];
@@ -1120,8 +1120,8 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 						{
 						// ゲストプレイヤーだった
 						// まず名前を取得
-						sprintf(g_strRivalPlayerName, "%s", strThisPlayerName );
-						g_strRivalPlayerName[ MAX_PATH-1 ] = 0;
+						sprintf(RivalPlayerName, "%s", strThisPlayerName );
+						RivalPlayerName[ MAX_PATH-1 ] = 0;
 
 						// 対戦相手のＤＰＮＩＤを取得
 						g_dpnidRivalPlayer = pCreatePlayerMsg.dpnidPlayer;
@@ -1131,7 +1131,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				SAFE_DELETE_ARRAY( ref pdpPlayerInfo );
 				}
 
-			g_dwNumberOfActivePlayers++;
+			ActivePlayerCount++;
 			if( g_hDlg != null )
 				PostMessage( g_hDlg, WM_APP_UPDATE_STATS, 0, 0 );
 
@@ -1232,10 +1232,10 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
             // Update the number of active players, and 
             // post a message to the dialog thread to update the 
             // UI.
-            g_dwNumberOfActivePlayers--;
+            ActivePlayerCount--;
 				if( g_hDlg != null )
 					{
-					sprintf(g_strRivalPlayerName, " - - - " );
+					sprintf(RivalPlayerName, " - - - " );
 					PostMessage( g_hDlg, WM_APP_UPDATE_STATS, 0, 0 );
 					}
 
@@ -1256,7 +1256,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 			if( g_hDlg != null )
 				{
 				// フルスクリーンの前の接続ダイアログの場合。
-				MessageBox( g_hDlg, TEXT("Session was terminated."), g_strAppName, MB_OK | MB_ICONERROR );
+				MessageBox( g_hDlg, TEXT("Session was terminated."), AppName, MB_OK | MB_ICONERROR );
 				PostMessage( g_hDlg, WM_COMMAND, IDCANCEL, 0 );
 				}
 
@@ -1287,259 +1287,259 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 			else if( pGenericMsg->dwType == MessageType.RivalMode )
 				{
 				_DP_FLAG* pMsg = (_DP_FLAG*) pReceiveMsg.pReceiveData;
-				rival_mode=(GameMode)pMsg->rival_mode;
+				RivalMode=(GameMode)pMsg->rival_mode;
 				}
 			else if( pGenericMsg->dwType == MessageType.LeaveSetup )
 				{
 				_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
 
 				// ジョインが受け取る
-				cnct_game_rnd_sheed=pMsg->data[0];
+				SharedRandomSeed=pMsg->data[0];
 
 //				join_game_start=1;
 				}
 
-			else if (pGenericMsg->dwType == MessageType.SideAndScenario && ( mode==GameMode.GameSetting || mode==GameMode.ConfigSetting ) )
+			else if (pGenericMsg->dwType == MessageType.SideAndScenario && ( Mode==GameMode.GameSetting || Mode==GameMode.ConfigSetting ) )
 				{
 				_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
 
 				// ジョインが受け取る
-				host_side=pMsg->data[0];
-				sinario=pMsg->data[1];
+				HostSide=pMsg->data[0];
+				ScenarioNumber=pMsg->data[1];
 
-				spry_rate[0]=pMsg->data[2];		// Host
-				spry_rate[1]=pMsg->data[3];		// Guest
+				SupplyRates[0]=pMsg->data[2];		// Host
+				SupplyRates[1]=pMsg->data[3];		// Guest
 
-				decision_sw=(byte)pMsg->data[4];
+				IsDecisionEnabled=(byte)pMsg->data[4];
 
-				first_spry_pt[0]=pMsg->data[5];		// Host
-				first_spry_pt[1]=pMsg->data[6];		// Guest
+				InitialSupplyPoints[0]=pMsg->data[5];		// Host
+				InitialSupplyPoints[1]=pMsg->data[6];		// Guest
 
-				arrival_cont=(byte)pMsg->data[7];
+				ArrivalControl=(byte)pMsg->data[7];
 
-				rvrs_time=pMsg->data[8];
-				rvrs_rule=pMsg->data[9];
+				SwapTime=pMsg->data[8];
+				SwapRule=pMsg->data[9];
 				}
-			else if( pGenericMsg->dwType == MessageType.LeaveGameSetting && ( mode==GameMode.GameSetting || mode==GameMode.ConfigSetting ) )
+			else if( pGenericMsg->dwType == MessageType.LeaveGameSetting && ( Mode==GameMode.GameSetting || Mode==GameMode.ConfigSetting ) )
 				{
 				_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
 
 				// ジョインが受け取る
-				host_side=pMsg->data[0];
-				sinario=pMsg->data[1];
+				HostSide=pMsg->data[0];
+				ScenarioNumber=pMsg->data[1];
 
 
-				join_game_start=MessageType.LeaveGameSetting;
+				JoinGameStart=MessageType.LeaveGameSetting;
 
-				spry_rate[0]=pMsg->data[2];		// Host
-				spry_rate[1]=pMsg->data[3];		// Guest
+				SupplyRates[0]=pMsg->data[2];		// Host
+				SupplyRates[1]=pMsg->data[3];		// Guest
 
-				decision_sw=(byte)pMsg->data[4];
+				IsDecisionEnabled=(byte)pMsg->data[4];
 
-				first_spry_pt[0]=pMsg->data[5];		// Host
-				first_spry_pt[1]=pMsg->data[6];		// Guest
+				InitialSupplyPoints[0]=pMsg->data[5];		// Host
+				InitialSupplyPoints[1]=pMsg->data[6];		// Guest
 
-				arrival_cont=(byte)pMsg->data[7];
+				ArrivalControl=(byte)pMsg->data[7];
 
-				rvrs_time=pMsg->data[8];
-				rvrs_rule=pMsg->data[9];
+				SwapTime=pMsg->data[8];
+				SwapRule=pMsg->data[9];
 				}
 			else if( pGenericMsg->dwType == MessageType.LeaveConfigSetting )
 				{
 				_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
 
 				// ジョインが受け取る
-				host_side=pMsg->data[0];
-				sinario=pMsg->data[1];
+				HostSide=pMsg->data[0];
+				ScenarioNumber=pMsg->data[1];
 
-				join_game_start=MessageType.LeaveConfigSetting;
+				JoinGameStart=MessageType.LeaveConfigSetting;
 
-				spry_rate[0]=pMsg->data[2];		// Host
-				spry_rate[1]=pMsg->data[3];		// Guest
+				SupplyRates[0]=pMsg->data[2];		// Host
+				SupplyRates[1]=pMsg->data[3];		// Guest
 
-				decision_sw=(byte)pMsg->data[4];
+				IsDecisionEnabled=(byte)pMsg->data[4];
 
-				first_spry_pt[0]=pMsg->data[5];		// Host
-				first_spry_pt[1]=pMsg->data[6];		// Guest
+				InitialSupplyPoints[0]=pMsg->data[5];		// Host
+				InitialSupplyPoints[1]=pMsg->data[6];		// Guest
 
-				arrival_cont=(byte)pMsg->data[7];
+				ArrivalControl=(byte)pMsg->data[7];
 
-				rvrs_time=pMsg->data[8];
-				rvrs_rule=pMsg->data[9];
+				SwapTime=pMsg->data[8];
+				SwapRule=pMsg->data[9];
 				}
 			else if( pGenericMsg->dwType == MessageType.StartFromResume )
 				{
-				join_game_start=MessageType.StartFromResume;
+				JoinGameStart=MessageType.StartFromResume;
 
 				}
 			else if( pGenericMsg->dwType == MessageType.StartFromAutoSave )
 				{
-				join_game_start=MessageType.StartFromAutoSave;
+				JoinGameStart=MessageType.StartFromAutoSave;
 				}
 			else if( pGenericMsg->dwType == MessageType.UnitArrived )
 				{
 				_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
 
-				bf_arrived_unit[0]=pMsg->data[0];		// 敵が１ユニット増える。
-				go_next_2=1;
+				BufferedArrivedUnits[0]=pMsg->data[0];		// 敵が１ユニット増える。
+				CanAdvance2=1;
 				}
 			else if( pGenericMsg->dwType == MessageType.MoveOrder )
 				{
 				_DP_NEW_PP* pMsg = (_DP_NEW_PP*) pReceiveMsg.pReceiveData;
 
 				// ホスト、ジョインともここで相手のデータを受け取る。
-				bf_new_pp[0].used=pMsg->used;
-				bf_new_pp[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
-				bf_new_pp[0].cls=pMsg->cls;
+				BufferedMoveOrders[0].Unit=pMsg->used;
+				BufferedMoveOrders[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
+				BufferedMoveOrders[0].ClearsPath=pMsg->cls;
 				for( s=0; s<=(USA_PLANE_END/2)-1; s++)
 					{
-					bf_slct_unit[0][s]=pMsg->slct_unit[s];
+					BufferedSelections[0][s]=pMsg->slct_unit[s];
 					}
-				go_next_2=1;
+				CanAdvance2=1;
 				}
 			else if( pGenericMsg->dwType == MessageType.MoveShipsOrder )
 				{
 				_DP_NEW_PP_SHIP* pMsg = (_DP_NEW_PP_SHIP*) pReceiveMsg.pReceiveData;
 
-				bf_new_pp[0].used=pMsg->used;
-				bf_new_pp[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
-				bf_new_pp[0].cls=pMsg->cls;
+				BufferedMoveOrders[0].Unit=pMsg->used;
+				BufferedMoveOrders[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
+				BufferedMoveOrders[0].ClearsPath=pMsg->cls;
 				for( s=0; s<=JPN_SHIP_END-1; s++)
 					{
-					bf_slct_unit[0][s]=pMsg->slct_unit[s];
+					BufferedSelections[0][s]=pMsg->slct_unit[s];
 					}
-				go_next_2=1;
+				CanAdvance2=1;
 				}
 			else if( pGenericMsg->dwType == MessageType.MovePlanesOrder )
 				{
 				_DP_NEW_PP_PLANE* pMsg = (_DP_NEW_PP_PLANE*) pReceiveMsg.pReceiveData;
 
 				// ホスト、ジョインともここで相手のデータを受け取る。
-				bf_new_pp[0].used=pMsg->used;
-				bf_new_pp[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
-				bf_new_pp[0].cls=pMsg->cls;
+				BufferedMoveOrders[0].Unit=pMsg->used;
+				BufferedMoveOrders[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
+				BufferedMoveOrders[0].ClearsPath=pMsg->cls;
 				for( s=0; s<=JPN_PLANE_END-JPN_PLANE_START; s++)
 					{
-					bf_slct_unit[0][s+JPN_SHIP_END]=pMsg->slct_unit[s];
+					BufferedSelections[0][s+JPN_SHIP_END]=pMsg->slct_unit[s];
 					}
-				go_next_2=1;
+				CanAdvance2=1;
 				}
 			else if( pGenericMsg->dwType == MessageType.SelectOrder )
 				{
 				_DP_NEW_SLCT* pMsg = (_DP_NEW_SLCT*) pReceiveMsg.pReceiveData;
 
 				// ホスト、ジョインともここで相手のデータを受け取る。
-				bf_new_slct[0].sw=pMsg->sw;
-				bf_new_slct[0].the_slct_unit=pMsg->the_slct_unit;
-				bf_new_slct[0].m=pMsg->m;
-				bf_new_slct[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
+				BufferedSelectOrders[0].IsSet=pMsg->sw;
+				BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
+				BufferedSelectOrders[0].Unit=pMsg->m;
+				BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
 				for( s=0; s<=(USA_PLANE_END/2)-1; s++)
 					{
-					bf_slct_unit[0][s]=pMsg->slct_unit[s];
+					BufferedSelections[0][s]=pMsg->slct_unit[s];
 					}
-				go_next_2=1;
+				CanAdvance2=1;
 				}
 			else if( pGenericMsg->dwType == MessageType.SelectShipsOrder )
 				{
 				_DP_NEW_SLCT_SHIP* pMsg = (_DP_NEW_SLCT_SHIP*) pReceiveMsg.pReceiveData;
 
 				// ホスト、ジョインともここで相手のデータを受け取る。
-				bf_new_slct[0].sw=pMsg->sw;
-				bf_new_slct[0].the_slct_unit=pMsg->the_slct_unit;
-				bf_new_slct[0].m=pMsg->m;
-				bf_new_slct[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
+				BufferedSelectOrders[0].IsSet=pMsg->sw;
+				BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
+				BufferedSelectOrders[0].Unit=pMsg->m;
+				BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
 				for( s=0; s<=JPN_SHIP_END-1; s++)
 					{
-					bf_slct_unit[0][s]=pMsg->slct_unit[s];
+					BufferedSelections[0][s]=pMsg->slct_unit[s];
 					}
-				go_next_2=1;
+				CanAdvance2=1;
 				}
 			else if( pGenericMsg->dwType == MessageType.SelectPlanesOrder )
 				{
 				_DP_NEW_SLCT_PLANE* pMsg = (_DP_NEW_SLCT_PLANE*) pReceiveMsg.pReceiveData;
 
 				// ホスト、ジョインともここで相手のデータを受け取る。
-				bf_new_slct[0].sw=pMsg->sw;
-				bf_new_slct[0].the_slct_unit=pMsg->the_slct_unit;
-				bf_new_slct[0].m=pMsg->m;
-				bf_new_slct[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
+				BufferedSelectOrders[0].IsSet=pMsg->sw;
+				BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
+				BufferedSelectOrders[0].Unit=pMsg->m;
+				BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
 				for( s=0; s<=JPN_PLANE_END-JPN_PLANE_START; s++)
 					{
-					bf_slct_unit[0][s+JPN_SHIP_END]=pMsg->slct_unit[s];
+					BufferedSelections[0][s+JPN_SHIP_END]=pMsg->slct_unit[s];
 					}
-				go_next_2=1;
+				CanAdvance2=1;
 				}
 			else if( pGenericMsg->dwType == MessageType.SelectLandOrder )
 				{
 				_DP_NEW_SLCT_LAND* pMsg = (_DP_NEW_SLCT_LAND*) pReceiveMsg.pReceiveData;
 
 				// ホスト、ジョインともここで相手のデータを受け取る。
-				bf_new_slct[0].sw=pMsg->sw;
-				bf_new_slct[0].the_slct_unit=pMsg->the_slct_unit;
-				bf_new_slct[0].m=pMsg->m;
-				bf_new_slct[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
-				go_next_2=1;
+				BufferedSelectOrders[0].IsSet=pMsg->sw;
+				BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
+				BufferedSelectOrders[0].Unit=pMsg->m;
+				BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
+				CanAdvance2=1;
 				}
 			else if( pGenericMsg->dwType == MessageType.MenuOrder )
 				{
 				_DP_NEW_MENU* pMsg = (_DP_NEW_MENU*) pReceiveMsg.pReceiveData;
 
 				// ホスト、ジョインともここで相手のデータを受け取る。
-				bf_new_menu[0].menu=pMsg->menu;
-				bf_new_menu[0].the_slct_unit=pMsg->the_slct_unit;
+				BufferedMenuOrders[0].Menu=(CombatMenuItem)pMsg->menu;
+				BufferedMenuOrders[0].SelectedUnit=pMsg->the_slct_unit;
 
 				for( s=0; s<=(USA_PLANE_END/2)-1; s++)
 					{
-					bf_slct_unit[0][s]=pMsg->slct_unit[s];
+					BufferedSelections[0][s]=pMsg->slct_unit[s];
 					}
-				go_next_2=1;
+				CanAdvance2=1;
 				}
 			else if( pGenericMsg->dwType == MessageType.NoOrder )
 				{
 				// ホスト、ジョインともここで相手のデータを受け取る。
-				go_next_2=1;
+				CanAdvance2=1;
 				}
 			else if( pGenericMsg->dwType == MessageType.SyncFlag )
 				{
 				_DP_FLAG* pMsg = (_DP_FLAG*) pReceiveMsg.pReceiveData;
 
 				// ホスト、ジョインともここで相手のデータを受け取る。
-				go_next_1=1;
+				CanAdvance1=1;
 
-				bf_cc_count[0]=pMsg->cc_chk;
-				bf_unit_chk[0]=pMsg->unit_chk;
-				bf_rnd_count[0]=pMsg->rnd_chk;
-				ccc_wait[0]=pMsg->ccc_wait_chk;
+				TickChecksums[0]=pMsg->cc_chk;
+				UnitChecksums[0]=pMsg->unit_chk;
+				RandomChecksums[0]=pMsg->rnd_chk;
+				TickWaits[0]=pMsg->ccc_wait_chk;
 
-				rival_mode=(GameMode)pMsg->rival_mode;
+				RivalMode=(GameMode)pMsg->rival_mode;
 				}
 			else if( pGenericMsg->dwType == MessageType.RivalMode )
 				{
 				_DP_FLAG* pMsg = (_DP_FLAG*) pReceiveMsg.pReceiveData;
 
 				// ホスト、ジョインともここで相手のデータを受け取る。
-				rival_mode=(GameMode)pMsg->rival_mode;
+				RivalMode=(GameMode)pMsg->rival_mode;
 
 				}
 			else if( pGenericMsg->dwType == MessageType.GoToGameSetting )
 				{
-				if( mode==GameMode.ConfigSetting || mode==GameMode.Title )
+				if( Mode==GameMode.ConfigSetting || Mode==GameMode.Title )
 					{
 					// ジョインが受け取る
-					go_cnct_game_setting();
+					GoToGameSetting();
 					}
 				else
 					{
 					// ホスト、ジョインともここで相手のデータを受け取る。
-					go_next_2=1;
-					game_system_menu[1]=(byte)MessageType.GoToGameSetting;
+					CanAdvance2=1;
+					SystemOrders[1]=(byte)MessageType.GoToGameSetting;
 					}
 				}
 			else if( pGenericMsg->dwType == MessageType.ResumeAndGoToGameSetting )
 				{
 				// ジョイン ここで相手のデータを受け取る。
-				go_next_2=1;
-				game_system_menu[1]=(byte)MessageType.ResumeAndGoToGameSetting;
+				CanAdvance2=1;
+				SystemOrders[1]=(byte)MessageType.ResumeAndGoToGameSetting;
 				}
 			else if( pGenericMsg->dwType == MessageType.Chat )
 				{
@@ -1547,9 +1547,9 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 
 				for(s=0;s<MAX_PATH/*128*/;s++)
 					{
-					friend_chat[s]=pMsg->friend_chat[s];
+					RivalChat[s]=pMsg->friend_chat[s];
 					}
-				friend_chat_dsp_time=unchecked((byte)CHAT_DSP_TIME);		// 400 does not fit in a BYTE: 144
+				RivalChatDisplayTime=unchecked((byte)CHAT_DSP_TIME);		// 400 does not fit in a BYTE: 144
 				}
 			else if( pGenericMsg->dwType == MessageType.RivalVersion )
 				{
@@ -1557,9 +1557,9 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 
 				for(s=0;s<15;s++)
 					{
-					rival_ver[s]=pMsg->friend_chat[s];
+					RivalVersion[s]=pMsg->friend_chat[s];
 					}
-				rival_ver[s]=0;
+				RivalVersion[s]=0;
 				}
 			else if( pGenericMsg->dwType == MessageType.UserScenarioFileName )
 				{
@@ -1567,7 +1567,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 
 				for(s=0;s<MAX_PATH;s++)
 					{
-					user_sinario_fn[s]=pMsg->friend_chat[s];
+					UserScenarioFileName[s]=pMsg->friend_chat[s];
 					}
 				}
 #if false
@@ -2018,7 +2018,7 @@ if (lp_dp_data_20->dwType == MessageType.Chat)
 				// sample for simplicity.
 //				DXTRACE_ERR_MSGBOX( TEXT("DPN_MSGID_CONNECT_COMPLETE"), pConnectCompleteMsg->hResultCode );
 				MessageBox( g_hDlg, TEXT("Unable to join game."),
-					 g_strAppName, MB_OK | MB_ICONERROR );
+					 AppName, MB_OK | MB_ICONERROR );
 
 				// Re-enable the OK button.
 				EnableWindow( GetDlgItem( g_hDlg, IDOK ), TRUE);

@@ -262,16 +262,22 @@ Done. It takes documentation comment IDs (`F:OpenNspw.Nspw.unit Units`); the cat
 ### 4. Enums
 `Side`, `UnitCategory`, `UnitKind`, `UnitState`, `UnitMode`, `CombatMenuItem`, `FireKind`, `EffectLayer`, `GameMode`, `GameResult`, `MessageType`, `SoundId`, the button flags. One enum per commit.
 
-In progress: `UnitCategory`, `GameMode`, `EffectLayer` and `GameResult` are done.
+Done, except `SoundId`, `SurfaceId`, `KeyDirection` and the button flags, which wait for step 8 (their values index arrays, such as `lpDSB_` in `InitDSound`, and would need a cast at each index).
 
 ### 5. Value types
 `WorldPosition`, `WorldVector`, `Angle`, `Point`, `Rect`, with their bit-for-bit tests. Then `Bool32` and `UnitId`, field by field.
 
+In progress: `WorldPosition`, a readonly struct, holds every position, and `WorldVector` the moves that add to one. Pairs of assignments of `X` and `Y` are assignments of a position.
+
 ### 6. Union slot accessors
 `hp`, `arm` and `gas` first, whose meanings are clear, then `info[]` of `FIRE`, `EFFECT` and `UNIT`, slot by slot.
 
+In progress: `hp`, `arm` and `gas` are done, and `UNIT.info[0]` of planes (`PlaneState`) and `info[5]` (`Mode`).
+
 ### 7. Renames
 Globals and struct fields, then functions, with the catalog. The ported files' names follow their main function.
+
+Done for the structs, their fields, the recorded globals and the game's functions. The files keep their C++ names until step 9.
 
 ### 8. Functions
 Per function, starting with the most covered: `ref` locals, local names, iteration helpers, return types, then extracting smaller functions. Commented-out code is removed per file before its functions are refactored.

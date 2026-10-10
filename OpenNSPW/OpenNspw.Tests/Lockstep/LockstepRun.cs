@@ -20,7 +20,7 @@ internal sealed class LockstepRun : IDisposable
 	public int Round { get; private set; }
 
 	public string Status => string.Join("; ", Games.Select(g =>
-		$"{g.Name}: dialog {g.Game.g_hDlg?.Id}, players {g.Game.g_dwNumberOfActivePlayers}, mode {g.Game.mode}, rival mode {g.Game.rival_mode}, frames {g.FrameCount}, ended {g.Ended}, boxes [{string.Join(", ", g.MessageBoxes)}]"));
+		$"{g.Name}: dialog {g.Game.g_hDlg?.Id}, players {g.Game.ActivePlayerCount}, mode {g.Game.Mode}, rival mode {g.Game.RivalMode}, frames {g.FrameCount}, ended {g.Ended}, boxes [{string.Join(", ", g.MessageBoxes)}]"));
 
 	public LockstepRun()
 	{

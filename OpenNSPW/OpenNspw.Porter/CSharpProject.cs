@@ -57,6 +57,11 @@ internal sealed partial class CSharpProject(string directory)
 		return defines.Split(';').Select(s => s.Trim()).Where(s => s.Length > 0 && !s.StartsWith('$'));
 	}
 
+	public CSharpParseOptions ParseOptions()
+	{
+		return new CSharpParseOptions(LanguageVersion.Preview, preprocessorSymbols: Symbols());
+	}
+
 	// The project's .cs files and their text.
 	public Dictionary<string, string> ReadFiles()
 	{
@@ -78,7 +83,7 @@ internal sealed partial class CSharpProject(string directory)
 
 	public CSharpCompilation Compile(IReadOnlyDictionary<string, string> files, IEnumerable<MetadataReference> references)
 	{
-		var options = new CSharpParseOptions(LanguageVersion.Preview, preprocessorSymbols: Symbols());
+		var options = ParseOptions();
 		var trees = files.Select(f => CSharpSyntaxTree.ParseText(f.Value, options, f.Key)).ToList();
 		trees.Add(CSharpSyntaxTree.ParseText(GlobalUsings(), options, "GlobalUsings.cs"));
 		return CSharpCompilation.Create(

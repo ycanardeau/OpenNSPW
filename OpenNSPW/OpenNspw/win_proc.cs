@@ -33,7 +33,8 @@ public unsafe partial class Nspw
 //============================================================================
 //失ったオブジェクトを再読み込みする
 //----------------------------------------------------------------------------
-public void	restoreAll()
+[Original("restoreAll")]
+public void	RestoreSurfaces()
 	{
 
 	IDirectDrawSurface_Restore(lpDDSPrimary);
@@ -75,7 +76,7 @@ public void	restoreAll()
 
 	// クリッパー
 	RELEASE(ref lpDDclip);
-	if(fullscreen!=0)
+	if(IsFullscreen!=0)
 		{
 		lpDD.CreateClipper(0,out lpDDclip,null);
 		lpDDclip.SetHWnd(0,hwndApp);
@@ -92,7 +93,7 @@ public void	restoreAll()
 
 	// マップを作りなおす
 //	make_map();		
-	make_map_cg();
+	MakeTerrainSurface();
 
 	}
 
@@ -106,7 +107,8 @@ public void	restoreAll()
 /*-------------------------------------------
 
 --------------------------------------------*/
-public void	load_user_map()
+[Original("load_user_map")]
+public void	LoadUserMap()
 	{
 	Array2<byte> bf = default;
 	HANDLE	hFile;
@@ -115,7 +117,7 @@ public void	load_user_map()
 
 
 
-	hFile=CreateFile( user_sinario_fn /*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
+	hFile=CreateFile( UserScenarioFileName /*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
 								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
 
 
@@ -132,20 +134,20 @@ public void	load_user_map()
 		// データ を バッファへ
 		for(m=0;m<=255;m++)
 			for(n=0;n<=255;n++)
-				cmbt_map[m][n]=szBuf[m][n];
+				MapTiles[m][n]=szBuf[m][n];
 
-		ReadFile( hFile, ref unit, (uint)(sizeof(Array256<UNIT>)), &dwActBytes, null );
-		ReadFile( hFile, ref rein, (uint)(sizeof(Array3<byte>)), &dwActBytes, null );
+		ReadFile( hFile, ref Units, (uint)(sizeof(Array256<Unit>)), &dwActBytes, null );
+		ReadFile( hFile, ref Reinforcements, (uint)(sizeof(Array3<byte>)), &dwActBytes, null );
 
 
-		ReadFile( hFile, ref decision_sw,  sizeof(byte) , &dwActBytes, null );
-		ReadFile( hFile, ref arrival_cont, sizeof(byte), &dwActBytes, null );
+		ReadFile( hFile, ref IsDecisionEnabled,  sizeof(byte) , &dwActBytes, null );
+		ReadFile( hFile, ref ArrivalControl, sizeof(byte), &dwActBytes, null );
 
-		ReadFile( hFile, ref spry_rate, (uint)(sizeof(Array2<short>)), &dwActBytes, null );
-		ReadFile( hFile, ref first_spry_pt, (uint)(sizeof(Array2<short>)), &dwActBytes, null );
+		ReadFile( hFile, ref SupplyRates, (uint)(sizeof(Array2<short>)), &dwActBytes, null );
+		ReadFile( hFile, ref InitialSupplyPoints, (uint)(sizeof(Array2<short>)), &dwActBytes, null );
 
-		ReadFile( hFile, ref rvrs_time, sizeof(short), &dwActBytes, null );
-		ReadFile( hFile, ref rvrs_rule, sizeof(short), &dwActBytes, null );
+		ReadFile( hFile, ref SwapTime, sizeof(short), &dwActBytes, null );
+		ReadFile( hFile, ref SwapRule, sizeof(short), &dwActBytes, null );
 
 
 
@@ -159,7 +161,8 @@ public void	load_user_map()
 /*-------------------------------------------
 
 --------------------------------------------*/
-public void	load_it2(string str)
+[Original("load_it2")]
+public void	LoadScenarioFile2(string str)
 	{
 	Array20<byte> bf = default;
 	HANDLE	hFile;
@@ -169,11 +172,11 @@ public void	load_it2(string str)
 
 
 	if( strcmp ( str,"Map\\South_pacific.dat")==0 )
-		map_now=0;
+		CurrentMap=0;
 	else if( strcmp ( str,"Map\\Middle_pacific.dat")==0 )
-		map_now=1;
+		CurrentMap=1;
 	else /*if( strcmp ( str,"Map\\Japan_off.dat")==0 )*/
-		map_now=2;
+		CurrentMap=2;
 /*
 	else 
 		map_now=3;
@@ -198,7 +201,7 @@ public void	load_it2(string str)
 		// データ を バッファへ
 		for(m=0;m<=255;m++)
 			for(n=0;n<=255;n++)
-				cmbt_map[m][n]=szBuf[m][n];
+				MapTiles[m][n]=szBuf[m][n];
 
 		CloseHandle(hFile);
 		}
@@ -214,7 +217,8 @@ public void	load_it2(string str)
 /*-------------------------------------------
 
 --------------------------------------------*/
-public void	load_it3()
+[Original("load_it3")]
+public void	LoadScenarioFile3()
 	{
 	Array2<byte> bf = default;
 	HANDLE	hFile;
@@ -223,7 +227,7 @@ public void	load_it3()
 
 
 
-	hFile=CreateFile( user_sinario_fn /*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
+	hFile=CreateFile( UserScenarioFileName /*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
 								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
 
 
@@ -240,10 +244,10 @@ public void	load_it3()
 		// データ を バッファへ
 		for(m=0;m<=255;m++)
 			for(n=0;n<=255;n++)
-				cmbt_map[m][n]=szBuf[m][n];
+				MapTiles[m][n]=szBuf[m][n];
 
-		ReadFile( hFile, ref unit, (uint)(sizeof(Array256<UNIT>)), &dwActBytes, null );
-		ReadFile( hFile, ref rein, (uint)(sizeof(Array3<byte>)), &dwActBytes, null );
+		ReadFile( hFile, ref Units, (uint)(sizeof(Array256<Unit>)), &dwActBytes, null );
+		ReadFile( hFile, ref Reinforcements, (uint)(sizeof(Array3<byte>)), &dwActBytes, null );
 
 		CloseHandle(hFile);
 		}
@@ -256,7 +260,8 @@ public void	load_it3()
 /*-------------------------------------------
 
 --------------------------------------------*/
-public void	save_user_map()
+[Original("save_user_map")]
+public void	SaveUserMap()
 	{
 	Array2<byte> bf = default;
 	HANDLE	hFile;
@@ -267,7 +272,7 @@ public void	save_user_map()
 
 
 
-	hFile=CreateFile( user_sinario_fn/*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
+	hFile=CreateFile( UserScenarioFileName/*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
 								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
 
 	if( hFile != INVALID_HANDLE_VALUE )
@@ -281,25 +286,25 @@ public void	save_user_map()
 		// データ を バッファへ
 		for(m=0;m<=255;m++)
 			for(n=0;n<=255;n++)
-				szBuf[m][n]=cmbt_map[m][n];
+				szBuf[m][n]=MapTiles[m][n];
 		
 		WriteFile(hFile, ref szBuf,(uint)(sizeof(Array256<Array256<ushort>>)),&dwActBytes,null);	// 書き込み
 
 
 		//　ユニット、その他を記録
 		// 書き込み
-		WriteFile(hFile, ref unit,(uint)(sizeof(Array256<UNIT>)),&dwActBytes,null);
-		WriteFile(hFile, ref rein,(uint)(sizeof(Array3<byte>)),&dwActBytes,null);
+		WriteFile(hFile, ref Units,(uint)(sizeof(Array256<Unit>)),&dwActBytes,null);
+		WriteFile(hFile, ref Reinforcements,(uint)(sizeof(Array3<byte>)),&dwActBytes,null);
 
 
-		WriteFile(hFile, ref decision_sw,sizeof(byte),&dwActBytes,null);
-		WriteFile(hFile, ref arrival_cont,sizeof(byte),&dwActBytes,null);
+		WriteFile(hFile, ref IsDecisionEnabled,sizeof(byte),&dwActBytes,null);
+		WriteFile(hFile, ref ArrivalControl,sizeof(byte),&dwActBytes,null);
 
-		WriteFile(hFile, ref spry_rate,(uint)(sizeof(Array2<short>)),&dwActBytes,null);
-		WriteFile(hFile, ref first_spry_pt,(uint)(sizeof(Array2<short>)),&dwActBytes,null);
+		WriteFile(hFile, ref SupplyRates,(uint)(sizeof(Array2<short>)),&dwActBytes,null);
+		WriteFile(hFile, ref InitialSupplyPoints,(uint)(sizeof(Array2<short>)),&dwActBytes,null);
 
-		WriteFile(hFile, ref rvrs_time,sizeof(short),&dwActBytes,null);
-		WriteFile(hFile, ref rvrs_rule,sizeof(short),&dwActBytes,null);
+		WriteFile(hFile, ref SwapTime,sizeof(short),&dwActBytes,null);
+		WriteFile(hFile, ref SwapRule,sizeof(short),&dwActBytes,null);
 
 		CloseHandle(hFile);
 		}
@@ -369,10 +374,10 @@ public int EndApp()
 
 
 	// Write information to the registry
-	DXUtil_WriteStringRegKey( hDPlaySampleRegKey, TEXT("Player Name"), g_strLocalPlayerName );
+	DXUtil_WriteStringRegKey( hDPlaySampleRegKey, TEXT("Player Name"), LocalPlayerName );
 //	DXUtil_WriteStringRegKey( hDPlaySampleRegKey, TEXT("Session Name"), g_strSessionName );
-	DXUtil_WriteStringRegKey( hDPlaySampleRegKey, TEXT("Preferred Provider"), g_strPreferredProvider );
-	DXUtil_WriteStringRegKey( hDPlaySampleRegKey, TEXT("Remote Hostname"), g_strRemoteHostname );
+	DXUtil_WriteStringRegKey( hDPlaySampleRegKey, TEXT("Preferred Provider"), PreferredProvider );
+	DXUtil_WriteStringRegKey( hDPlaySampleRegKey, TEXT("Remote Hostname"), RemoteHostName );
 
 	RegCloseKey( hDPlaySampleRegKey );
 
@@ -407,10 +412,11 @@ public int EndApp()
 /*--------------------------------------------
 	アプリ変数の起動時初期化
 ---------------------------------------------*/
-public void	init_apl_reg()
+[Original("init_apl_reg")]
+public void	InitializeRegistry()
 	{
 
-	cc_count=0;
+	Tick=0;
 
 
 
@@ -426,10 +432,10 @@ public void	init_apl_reg()
 
 
 
-	lf_btn=0;	ri_btn=0;
+	LeftButton=0;	RightButton=0;
 
 
-	user_sinario_fn[0] = unchecked((byte)'\0');
+	UserScenarioFileName[0] = unchecked((byte)'\0');
 
 	}
 
@@ -562,7 +568,7 @@ public nint	IDD_FILE_SAVE_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					}
 				FindClose(hFind);
 				}
-			user_sinario_fn[0] = unchecked((byte)'\0');
+			UserScenarioFileName[0] = unchecked((byte)'\0');
 			break;
 
 
@@ -573,33 +579,33 @@ public nint	IDD_FILE_SAVE_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 				case IDC_LIST:
 					if( HIWORD( wParam )==LBN_SELCHANGE )
 						{
-						DlgDirSelectEx( hWnd, user_sinario_fn, sizeof( Array260<byte> ), IDC_LIST );
-						SetDlgItemText( hWnd, IDC_EDIT, user_sinario_fn );
+						DlgDirSelectEx( hWnd, UserScenarioFileName, sizeof( Array260<byte> ), IDC_LIST );
+						SetDlgItemText( hWnd, IDC_EDIT, UserScenarioFileName );
 						}
 					break;
 
 
 				case IDOK:
 //					PostQuitMessage( 0 );		// これでWM_QUITがでるので接続ダイアログループからぬける
-					GetDlgItemText( hWnd, IDC_EDIT, user_sinario_fn, MAX_PATH );
+					GetDlgItemText( hWnd, IDC_EDIT, UserScenarioFileName, MAX_PATH );
 
 
-					if( map_edit!=0 && mode==GameMode.Battle && user_sinario_fn[0]!='\0' )
+					if( IsEditingMap!=0 && Mode==GameMode.Battle && UserScenarioFileName[0]!='\0' )
 						{
 						// なんかユーザーファイルが選ばれた。
 
 
 int	len;
-						len=wsprintf( temp_buf, "%s", user_sinario_fn );
+						len=wsprintf( temp_buf, "%s", UserScenarioFileName );
 
-						if( !(user_sinario_fn[len-4]=='.' && user_sinario_fn[len-3]=='d' && user_sinario_fn[len-2]=='a' && user_sinario_fn[len-1]=='t') )
-							wsprintf( temp_buf, "%s.dat", user_sinario_fn );
+						if( !(UserScenarioFileName[len-4]=='.' && UserScenarioFileName[len-3]=='d' && UserScenarioFileName[len-2]=='a' && UserScenarioFileName[len-1]=='t') )
+							wsprintf( temp_buf, "%s.dat", UserScenarioFileName );
 	
 
 
-						wsprintf( user_sinario_fn, "Scenario\\%s", temp_buf );
+						wsprintf( UserScenarioFileName, "Scenario\\%s", temp_buf );
 
-						save_user_map();
+						SaveUserMap();
 						}
 
 
@@ -609,7 +615,7 @@ int	len;
 
 				case IDCANCEL:
 //					PostQuitMessage( 0 );		// これでWM_QUITがでるので接続ダイアログループからぬける
-					user_sinario_fn[0] = unchecked((byte)'\0');
+					UserScenarioFileName[0] = unchecked((byte)'\0');
 					DestroyWindow(hWnd);
 					break;
 
@@ -663,7 +669,7 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					}
 				FindClose(hFind);
 				}
-			user_sinario_fn[0] = unchecked((byte)'\0');
+			UserScenarioFileName[0] = unchecked((byte)'\0');
 			break;
 
 
@@ -671,51 +677,51 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 			switch(wParam)
 				{
 				case IDOK:
-					DlgDirSelectEx( hWnd, user_sinario_fn, sizeof( Array260<byte> ), IDC_LIST );
+					DlgDirSelectEx( hWnd, UserScenarioFileName, sizeof( Array260<byte> ), IDC_LIST );
 
-					if( map_edit!=0 && mode==GameMode.Battle && user_sinario_fn[0]!='\0' )
+					if( IsEditingMap!=0 && Mode==GameMode.Battle && UserScenarioFileName[0]!='\0' )
 						{
-						wsprintf( temp_buf, "%s", user_sinario_fn );
-						wsprintf( user_sinario_fn, "Scenario\\%s", temp_buf );
+						wsprintf( temp_buf, "%s", UserScenarioFileName );
+						wsprintf( UserScenarioFileName, "Scenario\\%s", temp_buf );
 
-						load_user_map();
-						make_map_cg();
+						LoadUserMap();
+						MakeTerrainSurface();
 						}
-					else if( mode==GameMode.GameSetting && user_sinario_fn[0]!='\0' )
+					else if( Mode==GameMode.GameSetting && UserScenarioFileName[0]!='\0' )
 						{
-						wsprintf( temp_buf, "%s", user_sinario_fn );
-						wsprintf( user_sinario_fn, "Scenario\\%s", temp_buf );
+						wsprintf( temp_buf, "%s", UserScenarioFileName );
+						wsprintf( UserScenarioFileName, "Scenario\\%s", temp_buf );
 
-						if( map_edit==0 )
+						if( IsEditingMap==0 )
 							{
 							// なんかユーザーファイルが選ばれた。
 							dp_data_20.dwType = MessageType.UserScenarioFileName;
-							wsprintf( dp_data_20.friend_chat, "%s",user_sinario_fn );
+							wsprintf( dp_data_20.friend_chat, "%s",UserScenarioFileName );
 							bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_20));
 							bufferDesc.pBufferData  = (byte*)&dp_data_20;
 							g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 							}
 
 
-						get_sinario_data();
+						LoadScenarioData();
 
 						// ホストの選択状態をゲストにセンドします。
 						dp_data_1.dwType = MessageType.LeaveGameSetting;
-						dp_data_1.data[0] = (short)host_side;
-						dp_data_1.data[1] = sinario;
+						dp_data_1.data[0] = (short)HostSide;
+						dp_data_1.data[1] = ScenarioNumber;
 
-						dp_data_1.data[2] = spry_rate[0];
-						dp_data_1.data[3] = spry_rate[1];
+						dp_data_1.data[2] = SupplyRates[0];
+						dp_data_1.data[3] = SupplyRates[1];
 
-						dp_data_1.data[4] = decision_sw;
+						dp_data_1.data[4] = IsDecisionEnabled;
 
-						dp_data_1.data[5] = first_spry_pt[0];
-						dp_data_1.data[6] = first_spry_pt[1];
+						dp_data_1.data[5] = InitialSupplyPoints[0];
+						dp_data_1.data[6] = InitialSupplyPoints[1];
 
-						dp_data_1.data[7] = arrival_cont;
+						dp_data_1.data[7] = ArrivalControl;
 
-						dp_data_1.data[8] = rvrs_time;
-						dp_data_1.data[9] = rvrs_rule;
+						dp_data_1.data[8] = SwapTime;
+						dp_data_1.data[9] = SwapRule;
 
 
 
@@ -725,7 +731,7 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 
 
 
-						mode=GameMode.ConfigSetting;
+						Mode=GameMode.ConfigSetting;
 						}
 
 
@@ -736,7 +742,7 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	
 
 				case IDCANCEL:
-					user_sinario_fn[0] = unchecked((byte)'\0');
+					UserScenarioFileName[0] = unchecked((byte)'\0');
 					DestroyWindow(hWnd);
 //					PostQuitMessage( 0 );		// これでWM_QUITがでるので接続ダイアログループからぬける
 					break;
@@ -771,7 +777,7 @@ public nint	IDD_OK_CANCEL_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 		case WM_INITDIALOG:
 //			dlg_answer=0;
 
-			if( dlg_answer==MessageType.GoToGameSetting )
+			if( DialogAnswer==MessageType.GoToGameSetting )
 				SetWindowText(hWnd,"Exit Without Saving?");
 			else
 				SetWindowText(hWnd,"Resume-save and Exit?");
@@ -784,10 +790,10 @@ public nint	IDD_OK_CANCEL_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 				case IDOK:
 //					dlg_answer=1;
 
-					bf_game_system_menu[1]=(byte)dlg_answer;
-					you_can_order=0;
-					you_ordered=1;
-					SoundPlayEffect( 0, CLICK2 ,(double)(MAP_RIGHT+1), 0);
+					BufferedSystemOrders[1]=(byte)DialogAnswer;
+					CanOrder=0;
+					HasOrdered=1;
+					PlaySoundEffect( 0, CLICK2 ,(double)(MAP_RIGHT+1), 0);
 
 					DestroyWindow(hWnd);
 					g_hDlg=null;
@@ -822,7 +828,8 @@ public nint	IDD_OK_CANCEL_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	事実上のモーダルダイアログ、制御を戻さない
 	にする。
 --------------------------------------------*/
-public void	my_dlg_wait()
+[Original("my_dlg_wait")]
+public void	WaitForDialog()
 	{
 	MSG msg=default;
 	int	wait_for_connect=TRUE;
@@ -872,7 +879,7 @@ public nint ChatDlgProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	switch(msg)
 		{
 		case WM_INITDIALOG:
-			input_chat_now=1;
+			IsTypingChat=1;
 			break;
 		case WM_COMMAND:
 			switch(wParam)
@@ -880,14 +887,14 @@ public nint ChatDlgProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 				case IDOK:
 
 //					GetDlgItemText( hWnd, IDC_EDIT1, my_ctring, MAX_PATH );
-					GetDlgItemText( hWnd, IDC_EDIT1, my_chat, MAX_PATH );
-					my_chat_dsp_time=unchecked((byte)CHAT_DSP_TIME);
+					GetDlgItemText( hWnd, IDC_EDIT1, MyChat, MAX_PATH );
+					MyChatDisplayTime=unchecked((byte)CHAT_DSP_TIME);
 
 				// なんか入力があったならセンドする
 					dp_data_20.dwType = MessageType.Chat;
 					for(m=0;m<128;m++)
 						{
-						dp_data_20.friend_chat[m]=my_chat[m];
+						dp_data_20.friend_chat[m]=MyChat[m];
 						}
 
 					bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_20));
@@ -898,7 +905,7 @@ public nint ChatDlgProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 //					EndDialog( hWnd, 0 );
 					DestroyWindow(hwndChatDlg);
 					hwndChatDlg=null;
-					input_chat_now=0;
+					IsTypingChat=0;
 					break;
 	
 
@@ -906,7 +913,7 @@ public nint ChatDlgProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 //					EndDialog( hWnd, 0 );
 					DestroyWindow(hwndChatDlg);
 					hwndChatDlg=null;
-					input_chat_now=0;
+					IsTypingChat=0;
 					break;
 
 				default:
@@ -925,7 +932,7 @@ public nint ChatDlgProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 //					EndDialog( hWnd, 0 );
 					DestroyWindow(hwndChatDlg);
 					hwndChatDlg=null;
-					input_chat_now=0;
+					IsTypingChat=0;
 					break;
 				default:
 					return FALSE;
@@ -967,13 +974,13 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 				{
 				pDIDevice.Unacquire();
 				pDIDeviceMouse.Unacquire();
-				appActive=0;
+				IsAppActive=0;
 				}
 			else
 				{
 				pDIDevice.Acquire();
 				pDIDeviceMouse.Acquire();
-				appActive=1;
+				IsAppActive=1;
 				}
 
 			break;
@@ -981,9 +988,9 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 
 		case WM_ACTIVATEAPP:	//ウインドウが選択された時
 			if(wParam == WA_INACTIVE)
-				appActive=0;
+				IsAppActive=0;
 			else
-				appActive=1;
+				IsAppActive=1;
 			break;
 
 		case WM_SIZE:		// ウインドウ起動時にもここにくるようだ。
@@ -1034,7 +1041,7 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 				{
 
 				case VK_F1:
-					if( map_edit!=0 && mode==GameMode.Battle )
+					if( IsEditingMap!=0 && Mode==GameMode.Battle )
 						{
 						/*g_hDlg =*/ CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_SAVE_Proc );
 #if false
@@ -1053,7 +1060,7 @@ TCHAR		temp_buf[MAX_PATH];
 #endif
 
 
-						SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+						PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 						}
 
 //					play_snd( lpDSB_AA_BLT[3][snd_AA_BLT[3]], &snd_AA_BLT[3], 0 );
@@ -1065,13 +1072,13 @@ TCHAR		temp_buf[MAX_PATH];
 
 
 				case VK_F2:
-					if( map_edit!=0 && mode==GameMode.Battle )
+					if( IsEditingMap!=0 && Mode==GameMode.Battle )
 						{
-						unit[the_slct_unit].used=0;
-						the_slct_unit=0; 
-						cmbt_menu_kind=0; 
-						cmbt_menu_slctd=0; 
-						cls_all_slct_unit_p2(1);
+						Units[SelectedUnit].Side=0;
+						SelectedUnit=0; 
+						CombatMenuKind=0; 
+						CombatMenuSelection=CombatMenuItem.None; 
+						ClearSelection2(1);
 
 
 						// シナリオ選択がユーザーシナリオならファイル選択します。
@@ -1095,20 +1102,20 @@ TCHAR		temp_buf[MAX_PATH];
 #endif
 
 
-						SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+						PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 						}
 					break;
 
 
 
 				case VK_F3:
-					if( map_edit!=0 && mode==GameMode.Battle )
+					if( IsEditingMap!=0 && Mode==GameMode.Battle )
 						{
-						SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
-						make_map_cg();
+						PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+						MakeTerrainSurface();
 						}
 					else
-						dbg_menu--;
+						DebugMenu--;
 
 /*
 int	s;
@@ -1134,14 +1141,14 @@ int	s;
 					break;
 
 				case VK_F4:
-					dbg_menu++;
+					DebugMenu++;
 					break;
 
 				case VK_F5:
-					if( map_edit!=0 && put_trgt>1 && mode==GameMode.Battle )
+					if( IsEditingMap!=0 && EditorTarget>1 && Mode==GameMode.Battle )
 						{
-						put_trgt--;
-						SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+						EditorTarget--;
+						PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 						}
 
 
@@ -1190,13 +1197,13 @@ n=the_slct_unit;
 									unit[i].used=0;
 									unit[unit[i].info[1]].info[1]--;			// 現在格納数
 							
-									if( unit[i].info[3]>=1 && unit[unit[i].info[1]].info[4]>=1 && unit[i].info[5]<=SLOW )
+									if( unit[i].info[3]>=1 && unit[unit[i].info[1]].info[4]>=1 && unit[i].Mode<=UnitMode.Slow )
 										unit[unit[i].info[1]].info[4]--;		// 発艦予定の機数を	
-									if( unit[i].info[3]>=3 && unit[unit[i].info[1]].info[7]>=1 && unit[i].info[5]<=SLOW )
+									if( unit[i].info[3]>=3 && unit[unit[i].info[1]].info[7]>=1 && unit[i].Mode<=UnitMode.Slow )
 										unit[unit[i].info[1]].info[7]--;		// 
 
 
-									if( unit[i].info[5]==RETURN )
+									if( unit[i].Mode==UnitMode.Return )
 										{
 										if(unit[unit[i].info[1]].info[7])
 											unit[unit[i].info[1]].info[7]=0;	// 着艦、0許可、1不許可
@@ -1217,12 +1224,12 @@ n=the_slct_unit;
 
 
 #if DBG_MODE
-if( map_edit==0 )
+if( IsEditingMap==0 )
 	{
-	if(your_side==Side.Japan)
-		your_side=Side.UnitedStates;
+	if(LocalSide==Side.Japan)
+		LocalSide=Side.UnitedStates;
 	else
-		your_side=Side.Japan;
+		LocalSide=Side.Japan;
 	}
 #endif
 
@@ -1233,23 +1240,23 @@ if( map_edit==0 )
 
 
 				case VK_F6:
-					if( map_edit!=0 && mode==GameMode.Battle )
+					if( IsEditingMap!=0 && Mode==GameMode.Battle )
 						{
-						if( put_trgt<24 )
+						if( EditorTarget<24 )
 							{
-							put_trgt++;
-							SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+							EditorTarget++;
+							PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 							}
 						}
 
 #if DBG_MODE
-if( map_edit==0 )
+if( IsEditingMap==0 )
 	{
-	mode=GameMode.GameSetting;
-	get_sinario_data();
+	Mode=GameMode.GameSetting;
+	LoadScenarioData();
 
-	mode=GameMode.Battle;
-	cnct_game_init();
+	Mode=GameMode.Battle;
+	InitializeGame();
 	}
 #endif
 					break;
@@ -1257,38 +1264,38 @@ if( map_edit==0 )
 
 				case VK_F7:
 
-					if( map_edit!=0 && mode==GameMode.Battle )
+					if( IsEditingMap!=0 && Mode==GameMode.Battle )
 						{
-						if( unit[the_slct_unit].used!=0 )
+						if( Units[SelectedUnit].Side!=0 )
 							{
 							// 空母か空港なら搭載ユニットも消す
-							if( unit[the_slct_unit].kind==UnitKind.Carrier || unit[the_slct_unit].kind==UnitKind.LightCarrier || unit[the_slct_unit].kind==UnitKind.AirBase )
+							if( Units[SelectedUnit].Kind==UnitKind.Carrier || Units[SelectedUnit].Kind==UnitKind.LightCarrier || Units[SelectedUnit].Kind==UnitKind.AirBase )
 								{
-								for( i=1;i<=max_unit;i++)
+								for( i=1;i<=MaxUnitId;i++)
 									{
-									if( unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].PlaneState==UnitState.Parked && unit[i].info[1]==the_slct_unit)
+									if( Units[i].Side!=0 && Units[i].Category==UnitCategory.Plane && Units[i].PlaneState==UnitState.Parked && Units[i].info[1]==SelectedUnit)
 										{
-										unit[i].used=0;
+										Units[i].Side=0;
 										}
 									}
 								}
 
 							// パーキング中の航空機なら駐機数を減らします。
-							if( unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Parked )
+							if( Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked )
 								{
-								unit[unit[the_slct_unit].info[1]].info[1]--;	// 現在格納数
+								Units[Units[SelectedUnit].info[1]].info[1]--;	// 現在格納数
 								}
 
 
 //							unit[old_the_slct_unit].hp[0]=0;
-							unit[the_slct_unit].used=0;
+							Units[SelectedUnit].Side=0;
 
-							the_slct_unit=0; 
-							cmbt_menu_kind=0; 
-							cmbt_menu_slctd=0; 
-							cls_all_slct_unit_p2(1);
+							SelectedUnit=0; 
+							CombatMenuKind=0; 
+							CombatMenuSelection=CombatMenuItem.None; 
+							ClearSelection2(1);
 
-							SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+							PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 							}
 
 
@@ -1297,49 +1304,49 @@ if( map_edit==0 )
 
 
 				case VK_F8:					
-					if( map_edit!=0 && mode==GameMode.Battle )
+					if( IsEditingMap!=0 && Mode==GameMode.Battle )
 						{
-						if( unit_info[1]!=0 && ( unit[old_the_slct_unit].kind==UnitKind.Carrier || unit[old_the_slct_unit].kind==UnitKind.LightCarrier || unit[old_the_slct_unit].kind==UnitKind.AirBase )  && ((UnitKind)put_kind==UnitKind.Fighter || (UnitKind)put_kind==UnitKind.Attacker || (UnitKind)put_kind==UnitKind.Bomber ) )
+						if( UnitInfoPanel[1]!=0 && ( Units[PreviousSelectedUnit].Kind==UnitKind.Carrier || Units[PreviousSelectedUnit].Kind==UnitKind.LightCarrier || Units[PreviousSelectedUnit].Kind==UnitKind.AirBase )  && ((UnitKind)EditorKind==UnitKind.Fighter || (UnitKind)EditorKind==UnitKind.Attacker || (UnitKind)EditorKind==UnitKind.Bomber ) )
 							{
 							// 駐機場への航空機の配置
 							if( /*!( (unit[old_the_slct_unit].kind==CV1 || unit[old_the_slct_unit].kind==CVL1)  && ( put_kind==BM1 || (put_kind==FT1&&put_kind_sub==1) ) )   &&*/
-								unit[old_the_slct_unit].used==your_side
+								Units[PreviousSelectedUnit].Side==LocalSide
 								)
-								m=set_new_unit_plane(your_side,(UnitKind)put_kind,put_kind_sub,old_the_slct_unit,1,NTG);
+								m=AddPlane(LocalSide,(UnitKind)EditorKind,EditorVariant,PreviousSelectedUnit,1,FireKind.Unarmed);
 
 							if(m!=0)
-								SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+								PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 							}
-						else if( unit_info[1]==0 && crsr_pt.x<=CMBT_WIDTH && crsr_pt.y<=CMBT_HEIGHT )
+						else if( UnitInfoPanel[1]==0 && CursorPosition.x<=CMBT_WIDTH && CursorPosition.y<=CMBT_HEIGHT )
 							{
 							// 艦船および、陸上施設
 
-							wrk_x2=(CameraPosition.X+crsr_pt.x)/80;
+							wrk_x2=(CameraPosition.X+CursorPosition.x)/80;
 							if(wrk_x2<0)
 								wrk_x2=0-wrk_x2;
 							wrk_x=(int)wrk_x2;
 							if(  (wrk_x2-wrk_x)>=0.5  )
 								wrk_x+=1;
-							if(((CameraPosition.X+crsr_pt.x)/80)<0)
+							if(((CameraPosition.X+CursorPosition.x)/80)<0)
 								wrk_x=0-wrk_x;
 							wrk_x*=80;
 
 
-							wrk_y2=(CameraPosition.Y-crsr_pt.y)/80;
+							wrk_y2=(CameraPosition.Y-CursorPosition.y)/80;
 							if(wrk_y2<0)
 								wrk_y2=0-wrk_y2;
 							wrk_y=(int)wrk_y2;
 							if(  (wrk_y2-wrk_y)>=0.5  )
 								wrk_y+=1;
-							if(((CameraPosition.Y-crsr_pt.y)/80)<0)
+							if(((CameraPosition.Y-CursorPosition.y)/80)<0)
 								wrk_y=0-wrk_y;
 							wrk_y*=80;
 
 
 							m=0;
-							for(i=1;i<=max_unit;i++)
+							for(i=1;i<=MaxUnitId;i++)
 								{
-								if( unit[i].used!=0 && unit[i].Position.X==wrk_x && unit[i].Position.Y==wrk_y )
+								if( Units[i].Side!=0 && Units[i].Position.X==wrk_x && Units[i].Position.Y==wrk_y )
 									{
 									m++;
 									break;
@@ -1348,17 +1355,17 @@ if( map_edit==0 )
 
 							if( m==0 )
 								{
-								m=set_new_unit_2( your_side, (UnitKind)put_kind, put_kind_sub,  wrk_x,  wrk_y, (double)(0+(your_side==Side.UnitedStates ? 1 : 0)*180 ) );
+								m=AddUnit2( LocalSide, (UnitKind)EditorKind, EditorVariant,  wrk_x,  wrk_y, (double)(0+(LocalSide==Side.UnitedStates ? 1 : 0)*180 ) );
 
 								if(m!=0)
 									{
-									SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+									PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 									}
-								if((UnitKind)put_kind==UnitKind.Transport)
+								if((UnitKind)EditorKind==UnitKind.Transport)
 									{
-									unit[m].Weapon=put_kind_sub;		// 武装品種
-									unit[m].Ammo=1;			// 数
-									unit[m].MaxAmmo=1;			// 数 全容量
+									Units[m].Weapon=(FireKind)EditorVariant;		// 武装品種
+									Units[m].Ammo=1;			// 数
+									Units[m].MaxAmmo=1;			// 数 全容量
 									}
 								}
 							}
@@ -1369,18 +1376,18 @@ if( map_edit==0 )
 				case VK_F9:
 
 #if DBG_MODE
-if( map_edit==0 )
+if( IsEditingMap==0 )
 	{
-	unit[the_slct_unit].Hp=0;
+	Units[SelectedUnit].Hp=0;
 	}
 #endif
-					if( map_edit!=0 && mode==GameMode.Battle )
+					if( IsEditingMap!=0 && Mode==GameMode.Battle )
 						{
-						if(your_side==Side.Japan)
-							your_side=Side.UnitedStates;
+						if(LocalSide==Side.Japan)
+							LocalSide=Side.UnitedStates;
 						else
-							your_side=Side.Japan;
-						SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+							LocalSide=Side.Japan;
+						PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 						}
 					break;
 
@@ -1388,11 +1395,11 @@ if( map_edit==0 )
 					break;
 
 				case VK_F11:
-					if( map_edit!=0 && mode==GameMode.Battle )
+					if( IsEditingMap!=0 && Mode==GameMode.Battle )
 						{
-						rein[(int)your_side]=rein[(int)your_side]++;
-						rein[(int)your_side]=(byte)(rein[(int)your_side]%4);
-						SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+						Reinforcements[(int)LocalSide]=Reinforcements[(int)LocalSide]++;
+						Reinforcements[(int)LocalSide]=(byte)(Reinforcements[(int)LocalSide]%4);
+						PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 						}
 					break;
 
@@ -1400,11 +1407,11 @@ if( map_edit==0 )
 
 				case 0x31:	// 1
 					// ユニットを回転させます。
-					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0  && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Parked ))
+					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].Side!=0  && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
-						unit[the_slct_unit].drctn= (int)(unit[the_slct_unit].drctn+45.0)%360 ;
+						Units[SelectedUnit].Direction= (int)(Units[SelectedUnit].Direction+45.0)%360 ;
 
-						SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+						PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 						}
 
 					break;
@@ -1412,60 +1419,60 @@ if( map_edit==0 )
 
 				case 0x32:	// 2
 					// 航空機の武装を変えます。
-					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0  )
+					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].Side!=0  )
 						{
-						if( unit[the_slct_unit].kind==UnitKind.Attacker )
+						if( Units[SelectedUnit].Kind==UnitKind.Attacker )
 							{
 							// 攻撃機の場合。
-							switch( unit[the_slct_unit].Weapon )
+							switch( Units[SelectedUnit].Weapon )
 								{
-								case NTG:
-									unit[the_slct_unit].Weapon=BOM;				// 武装品種
-									unit[the_slct_unit].Ammo=unit[the_slct_unit].MaxAmmo;	// 数
+								case FireKind.Unarmed:
+									Units[SelectedUnit].Weapon=FireKind.Bomb;				// 武装品種
+									Units[SelectedUnit].Ammo=Units[SelectedUnit].MaxAmmo;	// 数
 									break;
-								case BOM:
-									unit[the_slct_unit].Weapon=TPD;				// 武装品種
-									unit[the_slct_unit].Ammo=unit[the_slct_unit].MaxAmmo;	// 数
+								case FireKind.Bomb:
+									Units[SelectedUnit].Weapon=FireKind.Torpedo;				// 武装品種
+									Units[SelectedUnit].Ammo=Units[SelectedUnit].MaxAmmo;	// 数
 									break;
-								case TPD:
-									unit[the_slct_unit].Weapon=NTG;				// 武装品種
-									unit[the_slct_unit].Ammo=0;	// 数
+								case FireKind.Torpedo:
+									Units[SelectedUnit].Weapon=FireKind.Unarmed;				// 武装品種
+									Units[SelectedUnit].Ammo=0;	// 数
 									break;
 								}
-							SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+							PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 							}
-						else if( unit[the_slct_unit].kind==UnitKind.Bomber )
+						else if( Units[SelectedUnit].Kind==UnitKind.Bomber )
 							{
 							// 爆撃機の場合。
-							switch( unit[the_slct_unit].Weapon )
+							switch( Units[SelectedUnit].Weapon )
 								{
-								case NTG:
-									unit[the_slct_unit].Weapon=BOM;				// 武装品種
-									unit[the_slct_unit].Ammo=unit[the_slct_unit].MaxAmmo;	// 数
+								case FireKind.Unarmed:
+									Units[SelectedUnit].Weapon=FireKind.Bomb;				// 武装品種
+									Units[SelectedUnit].Ammo=Units[SelectedUnit].MaxAmmo;	// 数
 									break;
-								case BOM:
-									unit[the_slct_unit].Weapon=TPD;				// 武装品種
-									unit[the_slct_unit].Ammo=1;	// 数
+								case FireKind.Bomb:
+									Units[SelectedUnit].Weapon=FireKind.Torpedo;				// 武装品種
+									Units[SelectedUnit].Ammo=1;	// 数
 									break;
-								case TPD:
-									unit[the_slct_unit].Weapon=NTG;				// 武装品種
-									unit[the_slct_unit].Ammo=0;	// 数
+								case FireKind.Torpedo:
+									Units[SelectedUnit].Weapon=FireKind.Unarmed;				// 武装品種
+									Units[SelectedUnit].Ammo=0;	// 数
 									break;
 								}
-							SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+							PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 							}
-						else if( (unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.LightCarrier) || unit[the_slct_unit].kind==UnitKind.Transport )
+						else if( (Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.LightCarrier) || Units[SelectedUnit].Kind==UnitKind.Transport )
 							{
 
-							if(unit[the_slct_unit].Fuel==-1)
+							if(Units[SelectedUnit].Fuel==-1)
 								{
-								unit[the_slct_unit].Fuel=100;
-								unit[the_slct_unit].spry=0;
+								Units[SelectedUnit].Fuel=100;
+								Units[SelectedUnit].Supply=0;
 								}
 							else
 								{
-								unit[the_slct_unit].Fuel=-1;
-								unit[the_slct_unit].spry=1;
+								Units[SelectedUnit].Fuel=-1;
+								Units[SelectedUnit].Supply=1;
 								}
 
 							}
@@ -1477,12 +1484,12 @@ if( map_edit==0 )
 
 				case 0x33:	// 3
 					// ＨＰを増やす。
-					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Parked ) )
+					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].Side!=0 && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ) )
 						{
-						if( unit[the_slct_unit].Hp < unit[the_slct_unit].MaxHp )
+						if( Units[SelectedUnit].Hp < Units[SelectedUnit].MaxHp )
 							{
-							unit[the_slct_unit].Hp++;
-							SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+							Units[SelectedUnit].Hp++;
+							PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 							}
 						}
 					break;
@@ -1490,10 +1497,10 @@ if( map_edit==0 )
 
 				case 0x34:	// 4
 					// ＨＰを増やす。
-					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Parked ))
+					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].Side!=0 && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
-						unit[the_slct_unit].Hp--;
-						SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+						Units[SelectedUnit].Hp--;
+						PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 						}
 					break;
 
@@ -1501,24 +1508,24 @@ if( map_edit==0 )
 
 				case 0x35:	// 5
 					// ガスをふやす
-					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Parked ))
+					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].Side!=0 && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
-						if( unit[the_slct_unit].Fuel < 100 )
+						if( Units[SelectedUnit].Fuel < 100 )
 							{
-							unit[the_slct_unit].Fuel++;
-							SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+							Units[SelectedUnit].Fuel++;
+							PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 							}
 						}
 					break;
 
 				case 0x36:	// 6
 					// ガスをへらす
-					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Parked ))
+					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].Side!=0 && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
-						if( unit[the_slct_unit].Fuel!=0  )
+						if( Units[SelectedUnit].Fuel!=0  )
 							{
-							unit[the_slct_unit].Fuel--;
-							SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+							Units[SelectedUnit].Fuel--;
+							PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 							}
 						}
 					break;
@@ -1526,24 +1533,24 @@ if( map_edit==0 )
 
 				case 0x37:	// 7
 					// 弾数をふやす
-					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && unit[the_slct_unit].Weapon!=NTG  && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Parked ))
+					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].Side!=0 && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && Units[SelectedUnit].Weapon!=FireKind.Unarmed  && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
-						if( unit[the_slct_unit].Ammo<unit[the_slct_unit].MaxAmmo  )
+						if( Units[SelectedUnit].Ammo<Units[SelectedUnit].MaxAmmo  )
 							{
-							unit[the_slct_unit].Ammo++;
-							SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+							Units[SelectedUnit].Ammo++;
+							PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 							}
 						}
 					break;
 
 				case 0x38:	// 8
 					// 弾数をへらす
-					if( map_edit!=0 && mode==GameMode.Battle && unit[the_slct_unit].used!=0 && unit[the_slct_unit].kind>=UnitKind.Battleship && unit[the_slct_unit].kind<=UnitKind.Transport && unit[the_slct_unit].Weapon!=NTG  && !(unit[the_slct_unit].ctgry==UnitCategory.Plane && unit[the_slct_unit].PlaneState==UnitState.Parked ))
+					if( IsEditingMap!=0 && Mode==GameMode.Battle && Units[SelectedUnit].Side!=0 && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && Units[SelectedUnit].Weapon!=FireKind.Unarmed  && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
-						if( unit[the_slct_unit].Ammo!=0  )
+						if( Units[SelectedUnit].Ammo!=0  )
 							{
-							unit[the_slct_unit].Ammo--;
-							SoundPlayEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
+							Units[SelectedUnit].Ammo--;
+							PlaySoundEffect( 0, CLICK1 ,(double)(MAP_RIGHT+1), 0);
 							}
 						}
 					break;

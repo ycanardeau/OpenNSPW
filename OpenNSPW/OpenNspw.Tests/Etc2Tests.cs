@@ -18,7 +18,7 @@ public class Etc2Tests
 	[Fact]
 	public void find_out_size()
 	{
-		FunctionTest.Run("etc2", "find_out_size", (game, c) => game.find_out_size(c.IntArg(0), c.IntArg(1)));
+		FunctionTest.Run("etc2", "find_out_size", (game, c) => game.GetDetectionSize(c.IntArg(0), c.IntArg(1)));
 	}
 
 	[Fact]
@@ -27,7 +27,7 @@ public class Etc2Tests
 		FunctionTest.Run("etc2", "pt_in_rect", (game, c) =>
 		{
 			var rect = RectArg(c, 0);
-			return game.pt_in_rect(ref rect, c.IntArg(4), c.IntArg(5));
+			return game.PointInRect(ref rect, c.IntArg(4), c.IntArg(5));
 		});
 	}
 
@@ -37,7 +37,7 @@ public class Etc2Tests
 		FunctionTest.Run("etc2", "pt_in_rect2", (game, c) =>
 		{
 			var rect = RectArg(c, 0);
-			return game.pt_in_rect2(ref rect, c.IntArg(4), c.IntArg(5));
+			return game.PointInRect2(ref rect, c.IntArg(4), c.IntArg(5));
 		});
 	}
 
@@ -47,7 +47,7 @@ public class Etc2Tests
 		FunctionTest.Run("etc2", "pt_in_rect3", (game, c) =>
 		{
 			var rect = RectArg(c, 0);
-			return game.pt_in_rect3(ref rect, c.IntArg(4), c.IntArg(5));
+			return game.PointInRect3(ref rect, c.IntArg(4), c.IntArg(5));
 		});
 	}
 
@@ -59,7 +59,7 @@ public class Etc2Tests
 			var dstn_rect = RectArg(c, 0);
 			var src_rect = RectArg(c, 4);
 			var field_rect = RectArg(c, 8);
-			var result = game.same_rect(ref dstn_rect, ref src_rect, ref field_rect);
+			var result = game.ClipRects(ref dstn_rect, ref src_rect, ref field_rect);
 			Assert.True(
 				c.Outs.Select(o => o.GetInt32()).SequenceEqual(Ints(dstn_rect, src_rect, field_rect)),
 				$"rects after the call: expected [{string.Join(", ", c.Outs)}], actual [{string.Join(", ", Ints(dstn_rect, src_rect, field_rect))}]");
@@ -70,13 +70,13 @@ public class Etc2Tests
 	[Fact]
 	public void seek_parking_no()
 	{
-		FunctionTest.Run("etc2", "seek_parking_no", (game, c) => game.seek_parking_no(c.IntArg(0)));
+		FunctionTest.Run("etc2", "seek_parking_no", (game, c) => game.FindParkingNumber(c.IntArg(0)));
 	}
 
 	[Fact]
 	public void plane_in_cv()
 	{
-		FunctionTest.Run("etc2", "plane_in_cv", (game, c) => game.plane_in_cv(c.IntArg(0)));
+		FunctionTest.Run("etc2", "plane_in_cv", (game, c) => game.CountPlanesIn(c.IntArg(0)));
 	}
 
 	[Fact]
@@ -84,7 +84,7 @@ public class Etc2Tests
 	{
 		FunctionTest.Run("etc2", "set_pos_of_parking", (game, c) =>
 		{
-			game.set_pos_of_parking(c.IntArg(0));
+			game.SetParkingPosition(c.IntArg(0));
 			return null;
 		});
 	}
@@ -104,7 +104,7 @@ public class Etc2Tests
 	{
 		FunctionTest.Run("etc2", "cls_all_slct_unit", (game, c) =>
 		{
-			game.cls_all_slct_unit();
+			game.ClearSelection();
 			return null;
 		});
 	}
@@ -114,7 +114,7 @@ public class Etc2Tests
 	{
 		FunctionTest.Run("etc2", "cls_all_slct_unit_p2", (game, c) =>
 		{
-			game.cls_all_slct_unit_p2(c.IntArg(0));
+			game.ClearSelection2(c.IntArg(0));
 			return null;
 		});
 	}
@@ -122,25 +122,25 @@ public class Etc2Tests
 	[Fact]
 	public void seek_effect_no()
 	{
-		FunctionTest.Run("etc2", "seek_effect_no", (game, c) => game.seek_effect_no());
+		FunctionTest.Run("etc2", "seek_effect_no", (game, c) => game.FindFreeEffect());
 	}
 
 	[Fact]
 	public void seek_fire_no()
 	{
-		FunctionTest.Run("etc2", "seek_fire_no", (game, c) => game.seek_fire_no());
+		FunctionTest.Run("etc2", "seek_fire_no", (game, c) => game.FindFreeFire());
 	}
 
 	[Fact]
 	public void rtn_damage_pt()
 	{
-		FunctionTest.Run("etc2", "rtn_damage_pt", (game, c) => game.rtn_damage_pt(c.IntArg(0)));
+		FunctionTest.Run("etc2", "rtn_damage_pt", (game, c) => game.GetDamagePoints(c.IntArg(0)));
 	}
 
 	[Fact]
 	public void drctn_for_8()
 	{
-		FunctionTest.Run("etc2", "drctn_for_8", (game, c) => game.drctn_for_8(c.IntArg(0)));
+		FunctionTest.Run("etc2", "drctn_for_8", (game, c) => game.ToEightDirections(c.IntArg(0)));
 	}
 
 	[Fact]
@@ -148,7 +148,7 @@ public class Etc2Tests
 	{
 		FunctionTest.Run("etc2", "set_frmtn_of_ships", (game, c) =>
 		{
-			game.set_frmtn_of_ships(c.IntArg(0));
+			game.SetShipFormation(c.IntArg(0));
 			return null;
 		});
 	}
@@ -158,7 +158,7 @@ public class Etc2Tests
 	{
 		FunctionTest.Run("etc2", "set_pos_of_take_down", (game, c) =>
 		{
-			game.set_pos_of_take_down(c.IntArg(0));
+			game.SetLandingDestination(c.IntArg(0));
 			return null;
 		});
 	}
@@ -168,7 +168,7 @@ public class Etc2Tests
 	{
 		FunctionTest.Run("etc2", "cont_pos_of_take_down", (game, c) =>
 		{
-			game.cont_pos_of_take_down(c.IntArg(0));
+			game.UpdateLanding(c.IntArg(0));
 			return null;
 		});
 	}
@@ -176,7 +176,7 @@ public class Etc2Tests
 	[Fact]
 	public void find_out_ss()
 	{
-		FunctionTest.Run("etc2", "find_out_ss", (game, c) => game.find_out_ss(c.IntArg(0), c.IntArg(1)));
+		FunctionTest.Run("etc2", "find_out_ss", (game, c) => game.DetectSubmarines(c.IntArg(0), c.IntArg(1)));
 	}
 
 	[Fact]
@@ -184,7 +184,7 @@ public class Etc2Tests
 	{
 		FunctionTest.Run("etc2", "find_out", (game, c) =>
 		{
-			game.find_out();
+			game.Detect();
 			return null;
 		});
 	}

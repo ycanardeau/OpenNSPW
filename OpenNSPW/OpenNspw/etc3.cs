@@ -35,28 +35,30 @@ public unsafe partial class Nspw
 //============================================================================
 //	マイ乱数を作ります
 //----------------------------------------------------------------------------
-public void	make_my_rnd()
+[Original("make_my_rnd")]
+public void	MakeSharedRandomTable()
 	{
 	short	i;
 
 	for(i=0;i<4096;i++)
 		{
-		my_rnd_sheet[i]=rnd(65536);
+		SharedRandomTable[i]=Random(65536);
 		}
 
-	my_rnd_pt=0;
+	SharedRandomIndex=0;
 	}
 
 
 //============================================================================
 //	
 //----------------------------------------------------------------------------
-public int		my_rnd(int r)
+[Original("my_rnd")]
+public int		SharedRandom(int r)
 	{
-	my_rnd_pt++;
-	my_rnd_pt%=4096;
+	SharedRandomIndex++;
+	SharedRandomIndex%=4096;
 
-	return(my_rnd_sheet[my_rnd_pt]%r);
+	return(SharedRandomTable[SharedRandomIndex]%r);
 	}
 
 
@@ -65,11 +67,12 @@ public int		my_rnd(int r)
 //	
 //----------------------------------------------------------------------------
 
-public int		rnd(int x)
+[Original("rnd")]
+public int		Random(int x)
 	{
 
 
-	rnd_count++;
+	RandomCount++;
 
 	return(rand()%(x));
 	}
@@ -79,16 +82,17 @@ public int		rnd(int x)
 //============================================================================
 // スプライト基礎データ
 //----------------------------------------------------------------------------
-public void		set_sprt_data()
+[Original("set_sprt_data")]
+public void		InitializeSprites()
 	{
 	
 	// タイトル
 
 
-	sprt[TTL_BACK].wd=699;//599;
-	sprt[TTL_BACK].ht=384;//387;
-	sprt[TTL_BACK].base_x=0;
-	sprt[TTL_BACK].base_y=3940;
+	Sprites[TTL_BACK].wd=699;//599;
+	Sprites[TTL_BACK].ht=384;//387;
+	Sprites[TTL_BACK].base_x=0;
+	Sprites[TTL_BACK].base_y=3940;
 /*
 #define	TTL_BACK			0
 #define	UNIT_JPN			1
@@ -103,85 +107,85 @@ public void		set_sprt_data()
 
 */
 	// ユニット
-	sprt[UNIT_JPN].wd=80;
-	sprt[UNIT_JPN].ht=80;
-	sprt[UNIT_JPN].base_x=0;
-	sprt[UNIT_JPN].base_y=1759;
-	sprt[UNIT_JPN].os_of_x=8;
-	sprt[UNIT_JPN].cx=40;
-	sprt[UNIT_JPN].cy=40;
+	Sprites[UNIT_JPN].wd=80;
+	Sprites[UNIT_JPN].ht=80;
+	Sprites[UNIT_JPN].base_x=0;
+	Sprites[UNIT_JPN].base_y=1759;
+	Sprites[UNIT_JPN].os_of_x=8;
+	Sprites[UNIT_JPN].cx=40;
+	Sprites[UNIT_JPN].cy=40;
 
-	sprt[UNIT_USA].wd=80;
-	sprt[UNIT_USA].ht=80;
-	sprt[UNIT_USA].base_x=0;
-	sprt[UNIT_USA].base_y=4550;
-	sprt[UNIT_USA].os_of_x=8;
-	sprt[UNIT_USA].cx=40;
-	sprt[UNIT_USA].cy=40;
+	Sprites[UNIT_USA].wd=80;
+	Sprites[UNIT_USA].ht=80;
+	Sprites[UNIT_USA].base_x=0;
+	Sprites[UNIT_USA].base_y=4550;
+	Sprites[UNIT_USA].os_of_x=8;
+	Sprites[UNIT_USA].cx=40;
+	Sprites[UNIT_USA].cy=40;
 
 	// サブユニット
-	sprt[SUB_UNIT].wd=40;
-	sprt[SUB_UNIT].ht=40;
-	sprt[SUB_UNIT].base_x=0;
-	sprt[SUB_UNIT].base_y=3520;
-	sprt[SUB_UNIT].os_of_x=12;
-	sprt[SUB_UNIT].cx=20;
-	sprt[SUB_UNIT].cy=20;
+	Sprites[SUB_UNIT].wd=40;
+	Sprites[SUB_UNIT].ht=40;
+	Sprites[SUB_UNIT].base_x=0;
+	Sprites[SUB_UNIT].base_y=3520;
+	Sprites[SUB_UNIT].os_of_x=12;
+	Sprites[SUB_UNIT].cx=20;
+	Sprites[SUB_UNIT].cy=20;
 
 	// マップチップ 雲
-	sprt[MAP_TIP_NRML].wd=80;
-	sprt[MAP_TIP_NRML].ht=80;
-	sprt[MAP_TIP_NRML].base_x=0;
-	sprt[MAP_TIP_NRML].base_y=3000;
-	sprt[MAP_TIP_NRML].os_of_x=6;
-	sprt[MAP_TIP_NRML].cx=40;
-	sprt[MAP_TIP_NRML].cy=40;
+	Sprites[MAP_TIP_NRML].wd=80;
+	Sprites[MAP_TIP_NRML].ht=80;
+	Sprites[MAP_TIP_NRML].base_x=0;
+	Sprites[MAP_TIP_NRML].base_y=3000;
+	Sprites[MAP_TIP_NRML].os_of_x=6;
+	Sprites[MAP_TIP_NRML].cx=40;
+	Sprites[MAP_TIP_NRML].cy=40;
 
 	// ユニットインフォ
-	sprt[UNIT_INFO_JPN].x=CMBT_WIDTH;
-	sprt[UNIT_INFO_JPN].y=0;
-	sprt[UNIT_INFO_JPN].wd=120;
-	sprt[UNIT_INFO_JPN].ht=438;
-	sprt[UNIT_INFO_JPN].base_x=0;
-	sprt[UNIT_INFO_JPN].base_y=0;
-	sprt[UNIT_INFO_JPN].os_of_x=6;
-	sprt[UNIT_INFO_JPN].cx=0;
-	sprt[UNIT_INFO_JPN].cy=0;
+	Sprites[UNIT_INFO_JPN].x=CMBT_WIDTH;
+	Sprites[UNIT_INFO_JPN].y=0;
+	Sprites[UNIT_INFO_JPN].wd=120;
+	Sprites[UNIT_INFO_JPN].ht=438;
+	Sprites[UNIT_INFO_JPN].base_x=0;
+	Sprites[UNIT_INFO_JPN].base_y=0;
+	Sprites[UNIT_INFO_JPN].os_of_x=6;
+	Sprites[UNIT_INFO_JPN].cx=0;
+	Sprites[UNIT_INFO_JPN].cy=0;
 
-	sprt[UNIT_INFO_USA].wd=120;
-	sprt[UNIT_INFO_USA].ht=438;
-	sprt[UNIT_INFO_USA].base_x=0;
-	sprt[UNIT_INFO_USA].base_y=878;
-	sprt[UNIT_INFO_USA].os_of_x=6;
-	sprt[UNIT_INFO_USA].cx=0;
-	sprt[UNIT_INFO_USA].cy=0;
-
-	// 操作ボタンベース
-	sprt[BTN_BASE].wd=198;
-	sprt[BTN_BASE].ht=120;
-	sprt[BTN_BASE].base_x=361;
-	sprt[BTN_BASE].base_y=3250;
-	sprt[BTN_BASE].os_of_x=1;
-	sprt[BTN_BASE].cx=0;
-	sprt[BTN_BASE].cy=0;
+	Sprites[UNIT_INFO_USA].wd=120;
+	Sprites[UNIT_INFO_USA].ht=438;
+	Sprites[UNIT_INFO_USA].base_x=0;
+	Sprites[UNIT_INFO_USA].base_y=878;
+	Sprites[UNIT_INFO_USA].os_of_x=6;
+	Sprites[UNIT_INFO_USA].cx=0;
+	Sprites[UNIT_INFO_USA].cy=0;
 
 	// 操作ボタンベース
-	sprt[BTN_1].wd=140;
-	sprt[BTN_1].ht=20;
-	sprt[BTN_1].base_x=0;
-	sprt[BTN_1].base_y=3250;
-	sprt[BTN_1].os_of_x=1;
-	sprt[BTN_1].cx=0;
-	sprt[BTN_1].cy=0;
+	Sprites[BTN_BASE].wd=198;
+	Sprites[BTN_BASE].ht=120;
+	Sprites[BTN_BASE].base_x=361;
+	Sprites[BTN_BASE].base_y=3250;
+	Sprites[BTN_BASE].os_of_x=1;
+	Sprites[BTN_BASE].cx=0;
+	Sprites[BTN_BASE].cy=0;
+
+	// 操作ボタンベース
+	Sprites[BTN_1].wd=140;
+	Sprites[BTN_1].ht=20;
+	Sprites[BTN_1].base_x=0;
+	Sprites[BTN_1].base_y=3250;
+	Sprites[BTN_1].os_of_x=1;
+	Sprites[BTN_1].cx=0;
+	Sprites[BTN_1].cy=0;
 
 	// マップベース
-	sprt[MAP_BASE].wd=256-1;
-	sprt[MAP_BASE].ht=200-1;
-	sprt[MAP_BASE].base_x=0;
-	sprt[MAP_BASE].base_y=4340;
-	sprt[MAP_BASE].os_of_x=1;
-	sprt[MAP_BASE].cx=0;
-	sprt[MAP_BASE].cy=0;
+	Sprites[MAP_BASE].wd=256-1;
+	Sprites[MAP_BASE].ht=200-1;
+	Sprites[MAP_BASE].base_x=0;
+	Sprites[MAP_BASE].base_y=4340;
+	Sprites[MAP_BASE].os_of_x=1;
+	Sprites[MAP_BASE].cx=0;
+	Sprites[MAP_BASE].cy=0;
 
 
 	}
@@ -191,7 +195,8 @@ public void		set_sprt_data()
 //============================================================================
 // 
 //----------------------------------------------------------------------------
-public void	cloud_in_start()
+[Original("cloud_in_start")]
+public void	InitializeClouds()
 	{
 	int	m,n; Array16<int> ok = default;	
 	double	base_x,base_y,sub_x;
@@ -204,7 +209,7 @@ public void	cloud_in_start()
 		n=0;
 		for(m=0; m<KUMO_MAX; m++)
 			{
-			if( kumo[m].used==0 )
+			if( Clouds[m].Used==0 )
 				{
 				ok[n]=m;
 				n++;
@@ -218,35 +223,35 @@ public void	cloud_in_start()
 
 
 
-		base_x=(double)(rnd(abs(MAP_RIGHT)+abs(MAP_LEFT))-abs(MAP_LEFT));
-		base_y=(double)(rnd(abs(MAP_TOP)+abs(MAP_BOTTOM))-abs(MAP_BOTTOM));
+		base_x=(double)(Random(abs(MAP_RIGHT)+abs(MAP_LEFT))-abs(MAP_LEFT));
+		base_y=(double)(Random(abs(MAP_TOP)+abs(MAP_BOTTOM))-abs(MAP_BOTTOM));
 
 
 		//base_y=(double)(MAP_BOTTOM+300);
-		sub_x=(double)( rnd(sprt[MAP_TIP_NRML].wd*4)-sprt[MAP_TIP_NRML].wd*2 );
+		sub_x=(double)( Random(Sprites[MAP_TIP_NRML].wd*4)-Sprites[MAP_TIP_NRML].wd*2 );
 
 		n=0;	
 		for( m=0;m<3;m++)
 			{
-			kumo[ok[n]].used=1;
-			kumo[ok[n]].Position = new WorldPosition(/*MAP_RIGHT*/base_x+m*80+sub_x, base_y);
-			kumo[ok[n]].kind=1;
+			Clouds[ok[n]].Used=1;
+			Clouds[ok[n]].Position = new WorldPosition(/*MAP_RIGHT*/base_x+m*80+sub_x, base_y);
+			Clouds[ok[n]].Kind=1;
 			n++;
 			}
-		sub_x=(double)( rnd(sprt[MAP_TIP_NRML].wd*2)-sprt[MAP_TIP_NRML].wd*2 );
+		sub_x=(double)( Random(Sprites[MAP_TIP_NRML].wd*2)-Sprites[MAP_TIP_NRML].wd*2 );
 		for( m=0;m<5;m++)
 			{
-			kumo[ok[n]].used=1;
-			kumo[ok[n]].Position = new WorldPosition(/*MAP_RIGHT*/base_x+m*80-80+sub_x, base_y+80);
-			kumo[ok[n]].kind=1;
+			Clouds[ok[n]].Used=1;
+			Clouds[ok[n]].Position = new WorldPosition(/*MAP_RIGHT*/base_x+m*80-80+sub_x, base_y+80);
+			Clouds[ok[n]].Kind=1;
 			n++;
 			}
-		sub_x=(double)( rnd(sprt[MAP_TIP_NRML].wd*2)-sprt[MAP_TIP_NRML].wd*2 );
+		sub_x=(double)( Random(Sprites[MAP_TIP_NRML].wd*2)-Sprites[MAP_TIP_NRML].wd*2 );
 		for( m=0;m<3;m++)
 			{
-			kumo[ok[n]].used=1;
-			kumo[ok[n]].Position = new WorldPosition(/*MAP_RIGHT*/base_x+m*80+sub_x, base_y+80*2);
-			kumo[ok[n]].kind=1;
+			Clouds[ok[n]].Used=1;
+			Clouds[ok[n]].Position = new WorldPosition(/*MAP_RIGHT*/base_x+m*80+sub_x, base_y+80*2);
+			Clouds[ok[n]].Kind=1;
 			n++;
 			}
 
@@ -261,7 +266,8 @@ public void	cloud_in_start()
 //============================================================================
 // 
 //----------------------------------------------------------------------------
-public void	cloud_cont()
+[Original("cloud_cont")]
+public void	UpdateClouds()
 	{
 	int	m,n; Array16<int> ok = default;	
 	double	base_y,sub_x;
@@ -271,13 +277,13 @@ public void	cloud_cont()
 	
 	for(n=0;n<KUMO_MAX;n++)
 		{
-		if( kumo[n].used!=0 )
+		if( Clouds[n].Used!=0 )
 			{
-			if( game_end==GameResult.None )
+			if( Result==GameResult.None )
 				{
-				kumo[n].Position = new WorldPosition(kumo[n].Position.X - 2.0/*2.0*/, kumo[n].Position.Y);
-				if( kumo[n].Position.X < MAP_LEFT )
-					kumo[n].used=0;
+				Clouds[n].Position = new WorldPosition(Clouds[n].Position.X - 2.0/*2.0*/, Clouds[n].Position.Y);
+				if( Clouds[n].Position.X < MAP_LEFT )
+					Clouds[n].Used=0;
 				}
 			}
 		}
@@ -298,7 +304,7 @@ public void	cloud_cont()
 	n=0;
 	for(m=0; m<KUMO_MAX; m++)
 		{
-		if( kumo[m].used==0 )
+		if( Clouds[m].Used==0 )
 			{
 			ok[n]=m;
 			n++;
@@ -313,31 +319,31 @@ public void	cloud_cont()
 
 
 
-	base_y=(double)(rnd(abs(MAP_TOP)+abs(MAP_BOTTOM))-abs(MAP_BOTTOM));
+	base_y=(double)(Random(abs(MAP_TOP)+abs(MAP_BOTTOM))-abs(MAP_BOTTOM));
 	//base_y=(double)(MAP_BOTTOM+300);
-	sub_x=(double)( rnd(sprt[MAP_TIP_NRML].wd*4)-sprt[MAP_TIP_NRML].wd*2 );
+	sub_x=(double)( Random(Sprites[MAP_TIP_NRML].wd*4)-Sprites[MAP_TIP_NRML].wd*2 );
 	n=0;	
 	for( m=0;m<3;m++)
 		{
-		kumo[ok[n]].used=1;
-		kumo[ok[n]].Position = new WorldPosition(MAP_RIGHT+m*80+sub_x, base_y);
-		kumo[ok[n]].kind=1;
+		Clouds[ok[n]].Used=1;
+		Clouds[ok[n]].Position = new WorldPosition(MAP_RIGHT+m*80+sub_x, base_y);
+		Clouds[ok[n]].Kind=1;
 		n++;
 		}
-	sub_x=(double)( rnd(sprt[MAP_TIP_NRML].wd*2)-sprt[MAP_TIP_NRML].wd*2 );
+	sub_x=(double)( Random(Sprites[MAP_TIP_NRML].wd*2)-Sprites[MAP_TIP_NRML].wd*2 );
 	for( m=0;m<5;m++)
 		{
-		kumo[ok[n]].used=1;
-		kumo[ok[n]].Position = new WorldPosition(MAP_RIGHT+m*80-80+sub_x, base_y+80);
-		kumo[ok[n]].kind=1;
+		Clouds[ok[n]].Used=1;
+		Clouds[ok[n]].Position = new WorldPosition(MAP_RIGHT+m*80-80+sub_x, base_y+80);
+		Clouds[ok[n]].Kind=1;
 		n++;
 		}
-	sub_x=(double)( rnd(sprt[MAP_TIP_NRML].wd*2)-sprt[MAP_TIP_NRML].wd*2 );
+	sub_x=(double)( Random(Sprites[MAP_TIP_NRML].wd*2)-Sprites[MAP_TIP_NRML].wd*2 );
 	for( m=0;m<3;m++)
 		{
-		kumo[ok[n]].used=1;
-		kumo[ok[n]].Position = new WorldPosition(MAP_RIGHT+m*80+sub_x, base_y+80*2);
-		kumo[ok[n]].kind=1;
+		Clouds[ok[n]].Used=1;
+		Clouds[ok[n]].Position = new WorldPosition(MAP_RIGHT+m*80+sub_x, base_y+80*2);
+		Clouds[ok[n]].Kind=1;
 		n++;
 		}
 
@@ -357,7 +363,8 @@ public void	cloud_cont()
 //============================================================================
 // 
 //----------------------------------------------------------------------------
-public void	cont_fire()
+[Original("cont_fire")]
+public void	UpdateFires()
 	{
 	RECT	wrk_rect,wrk_r;
 	int		m,f,h,cl,n=default /* C4701 */,cm_scrn_x,cm_scrn_y,i;
@@ -368,27 +375,27 @@ public void	cont_fire()
 	// 弾丸、爆弾等の機動、炸裂を制御します。
 	for(m=1;m<FIRE_MAX/*255*/;m++)
 		{
-		if( fire[m].used!=0 )
+		if( Fires[m].Target!=0 )
 			{
 			//	揚陸艇
-			if( fire[m].kind==TR_AP || fire[m].kind==TR_SP || fire[m].kind==TR_GF1 || fire[m].kind==TR_GF2 || fire[m].kind==TR_GF3 )
+			if( Fires[m].Kind==FireKind.CargoAirBase || Fires[m].Kind==FireKind.CargoNavalBase || Fires[m].Kind==FireKind.CargoInfantryBase || Fires[m].Kind==FireKind.CargoPillboxes || Fires[m].Kind==FireKind.CargoFortress )
 				{
-				if( fire[m].info[0]<=fire[m].info[1] )
+				if( Fires[m].info[0]<=Fires[m].info[1] )
 					{
-					wrk_x=fire[m].Position.X;
-					wrk_y=fire[m].Position.Y;
-					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
-					fire[m].spd+=fire[m].spd_add;
+					wrk_x=Fires[m].Position.X;
+					wrk_y=Fires[m].Position.Y;
+					Fires[m].Position += new WorldVector(cos(Fires[m].Direction*a_PI)*Fires[m].Speed, sin(Fires[m].Direction*a_PI)*Fires[m].Speed);
+					Fires[m].Speed+=Fires[m].Acceleration;
 			
 
 					h=0;
 
 					// ptin dbg
-					wrk_r.top=(int)fire[m].info[7]+20;//(int)fire[m].info[7]-20;
-					wrk_r.right=(int)fire[m].info[6]+20;
-					wrk_r.bottom=(int)fire[m].info[7]-20;//(int)fire[m].info[7]+20;
-					wrk_r.left=(int)fire[m].info[6]-20;
-					if( pt_in_rect3(ref wrk_r,(int)fire[m].Position.X,(int)fire[m].Position.Y)!=0 )
+					wrk_r.top=(int)Fires[m].info[7]+20;//(int)fire[m].info[7]-20;
+					wrk_r.right=(int)Fires[m].info[6]+20;
+					wrk_r.bottom=(int)Fires[m].info[7]-20;//(int)fire[m].info[7]+20;
+					wrk_r.left=(int)Fires[m].info[6]-20;
+					if( PointInRect3(ref wrk_r,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
 						h=1;
 
 					//n=fire[m].used;
@@ -397,16 +404,16 @@ public void	cont_fire()
 						{
 						h=1;
 						// 上陸地点到達
-						for(n=1;n<=max_unit && h!=0 ;n++)
+						for(n=1;n<=MaxUnitId && h!=0 ;n++)
 							{
-							if( unit[n].used!=0 && unit[n].kind>=UnitKind.AirBase && unit[n].kind<=UnitKind.Fortress )
+							if( Units[n].Side!=0 && Units[n].Kind>=UnitKind.AirBase && Units[n].Kind<=UnitKind.Fortress )
 								{
 								// ptin dbg
-								wrk_r.top=(int)unit[n].Position.Y+20;//(int)unit[n].y-20;
-								wrk_r.right=(int)unit[n].Position.X+20;
-								wrk_r.bottom=(int)unit[n].Position.Y-20;//(int)unit[n].y+20;
-								wrk_r.left=(int)unit[n].Position.X-20;
-								if( pt_in_rect3(ref wrk_r,(int)fire[m].Position.X,(int)fire[m].Position.Y)!=0 )
+								wrk_r.top=(int)Units[n].Position.Y+20;//(int)unit[n].y-20;
+								wrk_r.right=(int)Units[n].Position.X+20;
+								wrk_r.bottom=(int)Units[n].Position.Y-20;//(int)unit[n].y+20;
+								wrk_r.left=(int)Units[n].Position.X-20;
+								if( PointInRect3(ref wrk_r,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
 									{
 									// とにかくほかの地上施設の上
 									h=0;		
@@ -417,91 +424,91 @@ public void	cont_fire()
 						if(h!=0)
 							{
 							//set_new_unit(fire[m].info[8], fire[m].kind-17 /*GF1*/,(double)fire[m].info[6],(double)fire[m].info[7],0);
-							switch(fire[m].kind)
+							switch(Fires[m].Kind)
 								{
-								case TR_GF1:
-									f=set_new_unit((Side)fire[m].info[8], UnitKind.InfantryBase,(double)fire[m].info[6],(double)fire[m].info[7],0);
-									unit[f].info[0]=0;												// 建設期間
+								case FireKind.CargoInfantryBase:
+									f=AddUnit((Side)Fires[m].info[8], UnitKind.InfantryBase,(double)Fires[m].info[6],(double)Fires[m].info[7],0);
+									Units[f].info[0]=0;												// 建設期間
 									break;
-								case TR_GF2:
-									f=set_new_unit((Side)fire[m].info[8], UnitKind.Pillboxes,(double)fire[m].info[6],(double)fire[m].info[7],0);
-									unit[f].info[0]=(int)(8000*( fire[m].info[8]==(int)Side.UnitedStates ? 1.0 : 0.8 ));		// 建設期間
-									unit[f].Hp/=4;
-									unit[f].MaxHp/=4;
+								case FireKind.CargoPillboxes:
+									f=AddUnit((Side)Fires[m].info[8], UnitKind.Pillboxes,(double)Fires[m].info[6],(double)Fires[m].info[7],0);
+									Units[f].info[0]=(int)(8000*( Fires[m].info[8]==(int)Side.UnitedStates ? 1.0 : 0.8 ));		// 建設期間
+									Units[f].Hp/=4;
+									Units[f].MaxHp/=4;
 									break;
-								case TR_GF3:
-									f=set_new_unit((Side)fire[m].info[8], UnitKind.Fortress,(double)fire[m].info[6],(double)fire[m].info[7],0);
-									unit[f].info[0]=(int)(15000*( fire[m].info[8]==(int)Side.UnitedStates ? 0.8 : 1.0 ));		// 建設期間
-									unit[f].Hp/=4;
-									unit[f].MaxHp/=4;
+								case FireKind.CargoFortress:
+									f=AddUnit((Side)Fires[m].info[8], UnitKind.Fortress,(double)Fires[m].info[6],(double)Fires[m].info[7],0);
+									Units[f].info[0]=(int)(15000*( Fires[m].info[8]==(int)Side.UnitedStates ? 0.8 : 1.0 ));		// 建設期間
+									Units[f].Hp/=4;
+									Units[f].MaxHp/=4;
 									break;
-								case TR_AP:
-									f=set_new_unit((Side)fire[m].info[8], UnitKind.AirBase,(double)fire[m].info[6],(double)fire[m].info[7],0);
-									unit[f].info[0]=(int)(10000*( fire[m].info[8]==(int)Side.UnitedStates ? 0.8 : 1.0 ));		// 建設期間
-									unit[f].Hp/=4;
-									unit[f].MaxHp/=4;
+								case FireKind.CargoAirBase:
+									f=AddUnit((Side)Fires[m].info[8], UnitKind.AirBase,(double)Fires[m].info[6],(double)Fires[m].info[7],0);
+									Units[f].info[0]=(int)(10000*( Fires[m].info[8]==(int)Side.UnitedStates ? 0.8 : 1.0 ));		// 建設期間
+									Units[f].Hp/=4;
+									Units[f].MaxHp/=4;
 									break;
-								case TR_SP:
-									f=set_new_unit((Side)fire[m].info[8], UnitKind.NavalBase,(double)fire[m].info[6],(double)fire[m].info[7],0);
-									unit[f].info[0]=(int)(20000*( fire[m].info[8]==(int)Side.UnitedStates ? 0.8 : 1.0 ));		// 建設期間
-									unit[f].Hp/=4;
-									unit[f].MaxHp/=4;
+								case FireKind.CargoNavalBase:
+									f=AddUnit((Side)Fires[m].info[8], UnitKind.NavalBase,(double)Fires[m].info[6],(double)Fires[m].info[7],0);
+									Units[f].info[0]=(int)(20000*( Fires[m].info[8]==(int)Side.UnitedStates ? 0.8 : 1.0 ));		// 建設期間
+									Units[f].Hp/=4;
+									Units[f].MaxHp/=4;
 									break;
 								}
 							}
-						fire[m].used=0;
+						Fires[m].Target=0;
 
 
 						}
 					else
 						{
 						// 当たってないので
-						fire[m].info[0]++;
-						if( fire[m].info[0]==1 )
+						Fires[m].info[0]++;
+						if( Fires[m].info[0]==1 )
 							{
-							f=seek_effect_no();
-							effect[f].layer=EffectLayer.Lower;	
-							effect[f].info[0]=30;
-							effect[f].info[1]=0;
+							f=FindFreeEffect();
+							Effects[f].Layer=EffectLayer.Lower;	
+							Effects[f].info[0]=30;
+							Effects[f].info[1]=0;
 
-							effect[f].Position=fire[m].Position;
+							Effects[f].Position=Fires[m].Position;
 
-							effect[f].no=8;			// ソースファイル上の番号
+							Effects[f].SpriteNumber=8;			// ソースファイル上の番号
 							}
 
 
-						if( fire[m].info[0]>=fire[m].info[2] /*&& paint_effect_on*/ )
+						if( Fires[m].info[0]>=Fires[m].info[2] /*&& paint_effect_on*/ )
 							{
-							if(!( fire[m].Position.Y>MAP_TOP || fire[m].Position.Y<MAP_BOTTOM || fire[m].Position.X<MAP_LEFT || fire[m].Position.X>MAP_RIGHT ))
+							if(!( Fires[m].Position.Y>MAP_TOP || Fires[m].Position.Y<MAP_BOTTOM || Fires[m].Position.X<MAP_LEFT || Fires[m].Position.X>MAP_RIGHT ))
 								{
-								cm_scrn_x=(int)((fire[m].Position.X+(sprt[UNIT_JPN].wd/2)-MAP_LEFT)/sprt[MAP_TIP_NRML].wd);
-								cm_scrn_y=(int)((MAP_TOP-fire[m].Position.Y+(sprt[UNIT_JPN].ht/2))/sprt[MAP_TIP_NRML].ht);
+								cm_scrn_x=(int)((Fires[m].Position.X+(Sprites[UNIT_JPN].wd/2)-MAP_LEFT)/Sprites[MAP_TIP_NRML].wd);
+								cm_scrn_y=(int)((MAP_TOP-Fires[m].Position.Y+(Sprites[UNIT_JPN].ht/2))/Sprites[MAP_TIP_NRML].ht);
 
-								if( cmbt_map[cm_scrn_y][cm_scrn_x]==0)
+								if( MapTiles[cm_scrn_y][cm_scrn_x]==0)
 									{
 									// 海の上
-									if( (cc_count%5)==0)
+									if( (Tick%5)==0)
 										{
-										f=seek_effect_no();
-										effect[f].layer=EffectLayer.Lower;	
-										effect[f].info[0]=30+my_rnd(25);
-										effect[f].info[1]=4;
+										f=FindFreeEffect();
+										Effects[f].Layer=EffectLayer.Lower;	
+										Effects[f].info[0]=30+SharedRandom(25);
+										Effects[f].info[1]=4;
 
-										effect[f].Position = new WorldPosition(wrk_x, wrk_y);
+										Effects[f].Position = new WorldPosition(wrk_x, wrk_y);
 
-										effect[f].no=8;			// ソースファイル上の番号
+										Effects[f].SpriteNumber=8;			// ソースファイル上の番号
 										}
 									}
 								}
 
-							f=seek_effect_no();
-							effect[f].layer=EffectLayer.Lower;	
-							effect[f].info[0]=1;
-							effect[f].info[1]=0;
+							f=FindFreeEffect();
+							Effects[f].Layer=EffectLayer.Lower;	
+							Effects[f].info[0]=1;
+							Effects[f].info[1]=0;
 
-							effect[f].Position=fire[m].Position;
+							Effects[f].Position=Fires[m].Position;
 
-							effect[f].no=36+drctn_for_8((int)(fire[m].drctn));			// ソースファイル上の番号
+							Effects[f].SpriteNumber=36+ToEightDirections((int)(Fires[m].Direction));			// ソースファイル上の番号
 
 							}
 						}
@@ -509,7 +516,7 @@ public void	cont_fire()
 					}
 				else
 					{
-					fire[m].used=0;
+					Fires[m].Target=0;
 					}
 				}
 
@@ -519,54 +526,54 @@ public void	cont_fire()
 
 
 			// 弾丸
-			if( fire[m].kind==BLT )
+			if( Fires[m].Kind==FireKind.Bullet )
 				{
-				if( fire[m].spd>=fire[m].last_spd )
+				if( Fires[m].Speed>=Fires[m].FinalSpeed )
 					{
-					wrk_x=fire[m].Position.X;
-					wrk_y=fire[m].Position.Y;
-					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
-					fire[m].spd+=fire[m].spd_add;
+					wrk_x=Fires[m].Position.X;
+					wrk_y=Fires[m].Position.Y;
+					Fires[m].Position += new WorldVector(cos(Fires[m].Direction*a_PI)*Fires[m].Speed, sin(Fires[m].Direction*a_PI)*Fires[m].Speed);
+					Fires[m].Speed+=Fires[m].Acceleration;
 
-					n=fire[m].used;						// ターゲットナンバー
+					n=Fires[m].Target;						// ターゲットナンバー
 
 					// ptin dbg
-					wrk_rect.top=(int)unit[n].Position.Y+10;//(int)unit[n].y-10;
-					wrk_rect.right=(int)unit[n].Position.X+10;
-					wrk_rect.bottom=(int)unit[n].Position.Y-10;//(int)unit[n].y+10;
-					wrk_rect.left=(int)unit[n].Position.X-10;
+					wrk_rect.top=(int)Units[n].Position.Y+10;//(int)unit[n].y-10;
+					wrk_rect.right=(int)Units[n].Position.X+10;
+					wrk_rect.bottom=(int)Units[n].Position.Y-10;//(int)unit[n].y+10;
+					wrk_rect.left=(int)Units[n].Position.X-10;
 
 #if true
-					if( pt_in_rect3(ref wrk_rect,(int)fire[m].Position.X,(int)fire[m].Position.Y)!=0 )
+					if( PointInRect3(ref wrk_rect,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
 						{
 						// 命中
-						fire[m].used=0;
-						if(anti_air==0)
+						Fires[m].Target=0;
+						if(ShowsAntiAir==0)
 							{
-							if( unit[n].kind!=UnitKind.Transport || rnd(4)==0 ) 
-								unit[n].Hp-=rtn_damage_pt(m);
+							if( Units[n].Kind!=UnitKind.Transport || Random(4)==0 ) 
+								Units[n].Hp-=GetDamagePoints(m);
 							}
 
-						f=seek_effect_no();
-						effect[f].layer=EffectLayer.Upper;	
+						f=FindFreeEffect();
+						Effects[f].Layer=EffectLayer.Upper;	
 
-						effect[f].info[0]=20;
-						effect[f].info[1]=1;	// アニメーションパターン
+						Effects[f].info[0]=20;
+						Effects[f].info[1]=1;	// アニメーションパターン
 						//effect[f].kind=THERE;
 
-						effect[f].Position=fire[m].Position;
-						effect[f].no=1;			// 弾丸着弾	のソースファイル上の番号
+						Effects[f].Position=Fires[m].Position;
+						Effects[f].SpriteNumber=1;			// 弾丸着弾	のソースファイル上の番号
 						}
 					else
 						{
 						if( 1!=0/*paint_effect_on*/ )
 							{
 							// 弾丸描画
-							f=seek_effect_no();
-							effect[f].layer=EffectLayer.Upper;	
-							effect[f].info[0]=1;	effect[f].info[1]=11;
-							effect[f].Position=fire[m].Position;
-							effect[f].EndPosition = new WorldPosition(wrk_x, wrk_y);
+							f=FindFreeEffect();
+							Effects[f].Layer=EffectLayer.Upper;	
+							Effects[f].info[0]=1;	Effects[f].info[1]=11;
+							Effects[f].Position=Fires[m].Position;
+							Effects[f].EndPosition = new WorldPosition(wrk_x, wrk_y);
 							}
 						}
 #endif
@@ -574,7 +581,7 @@ public void	cont_fire()
 					}
 				else
 					{
-					fire[m].used=0;
+					Fires[m].Target=0;
 					}
 				}
 
@@ -582,25 +589,25 @@ public void	cont_fire()
 
 
 			// 対空機関砲
-			if( fire[m].kind==RAS )
+			if( Fires[m].Kind==FireKind.RapidAntiAircraftShell )
 				{
-				fire[m].info[0]--;
-				if( fire[m].info[0]!=0/*fire[m].info[1] <= fire[m].info[0]*/ )
+				Fires[m].info[0]--;
+				if( Fires[m].info[0]!=0/*fire[m].info[1] <= fire[m].info[0]*/ )
 					{	//
-					wrk_x=fire[m].Position.X;	wrk_y=fire[m].Position.Y;
-					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
+					wrk_x=Fires[m].Position.X;	wrk_y=Fires[m].Position.Y;
+					Fires[m].Position += new WorldVector(cos(Fires[m].Direction*a_PI)*Fires[m].Speed, sin(Fires[m].Direction*a_PI)*Fires[m].Speed);
 
-					fire[m].spd+=fire[m].spd_add;		// 弾が減速
+					Fires[m].Speed+=Fires[m].Acceleration;		// 弾が減速
 
 					if( 1!=0/*paint_effect_on*/ )
 						{
-						f=seek_effect_no();
-						effect[f].layer=EffectLayer.Upper;	
-						effect[f].info[0]=1;	effect[f].info[1]=10;
-						effect[f].Position=fire[m].Position;
-						effect[f].EndPosition = new WorldPosition(wrk_x, wrk_y);
+						f=FindFreeEffect();
+						Effects[f].Layer=EffectLayer.Upper;	
+						Effects[f].info[0]=1;	Effects[f].info[1]=10;
+						Effects[f].Position=Fires[m].Position;
+						Effects[f].EndPosition = new WorldPosition(wrk_x, wrk_y);
 
-						effect[f].no=0;			// ソースファイル上の番号
+						Effects[f].SpriteNumber=0;			// ソースファイル上の番号
 						}
 
 					//draw_line5((int)(fire[m].x-cmbt_x),(int)(cmbt_y-fire[m].y),(int)(wrk_x-cmbt_x),(int)(cmbt_y-wrk_y),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
@@ -610,56 +617,56 @@ public void	cont_fire()
 					}
 				else
 					{	// 炸裂！
-					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
+					Fires[m].Position += new WorldVector(cos(Fires[m].Direction*a_PI)*Fires[m].Speed, sin(Fires[m].Direction*a_PI)*Fires[m].Speed);
 
 
 					// 砲弾炸裂
-					f=seek_effect_no();
-					effect[f].layer=EffectLayer.Lower;	
+					f=FindFreeEffect();
+					Effects[f].Layer=EffectLayer.Lower;	
 
-					effect[f].info[0]=10;
-					effect[f].info[1]=4;	// アニメーションパターン
+					Effects[f].info[0]=10;
+					Effects[f].info[1]=4;	// アニメーションパターン
 
-					effect[f].Position=fire[m].Position;
-					effect[f].no=0;			// 弾丸着弾	のソースファイル上の番号
+					Effects[f].Position=Fires[m].Position;
+					Effects[f].SpriteNumber=0;			// 弾丸着弾	のソースファイル上の番号
 
 
 
 					// ptin dbg
-					wrk_rect.top=(int)fire[m].Position.Y+40;//(int)fire[m].y-40;
-					wrk_rect.right=(int)fire[m].Position.X+40;
-					wrk_rect.bottom=(int)fire[m].Position.Y-40;//(int)fire[m].y+40;
-					wrk_rect.left=(int)fire[m].Position.X-40;
+					wrk_rect.top=(int)Fires[m].Position.Y+40;//(int)fire[m].y-40;
+					wrk_rect.right=(int)Fires[m].Position.X+40;
+					wrk_rect.bottom=(int)Fires[m].Position.Y-40;//(int)fire[m].y+40;
+					wrk_rect.left=(int)Fires[m].Position.X-40;
 
 
-					for(n=1;n<=max_unit;n++)
+					for(n=1;n<=MaxUnitId;n++)
 						{
-						if( unit[n].used!=0 && unit[n].used==unit[fire[m].used].used && unit[n].ctgry==UnitCategory.Plane && unit[n].PlaneState==UnitState.Flying )
+						if( Units[n].Side!=0 && Units[n].Side==Units[Fires[m].Target].Side && Units[n].Category==UnitCategory.Plane && Units[n].PlaneState==UnitState.Flying )
 							{
-							if( pt_in_rect3(ref wrk_rect,(int)unit[n].Position.X,(int)unit[n].Position.Y)!=0 /*&& unit[n].hp[0]>=unit[m].hp[1]*0.2+1*/ )
+							if( PointInRect3(ref wrk_rect,(int)Units[n].Position.X,(int)Units[n].Position.Y)!=0 /*&& unit[n].hp[0]>=unit[m].hp[1]*0.2+1*/ )
 								{
 								// 命中
-								fire[m].used=0;
-								if(anti_air==0 /*&& unit[n].kind==AT1*/ )
+								Fires[m].Target=0;
+								if(ShowsAntiAir==0 /*&& unit[n].kind==AT1*/ )
 									{
-									unit[n].Hp-=rtn_damage_pt(m);
-									if(unit[n].spd<=unit[n].max_spd )
-										unit[n].drctn=rnd(360);
+									Units[n].Hp-=GetDamagePoints(m);
+									if(Units[n].Speed<=Units[n].MaxSpeed )
+										Units[n].Direction=Random(360);
 									}
 
-								f=seek_effect_no();
-								effect[f].layer=EffectLayer.Upper;	
+								f=FindFreeEffect();
+								Effects[f].Layer=EffectLayer.Upper;	
 
-								effect[f].info[0]=20;
-								effect[f].info[1]=2;	// アニメーションパターン
+								Effects[f].info[0]=20;
+								Effects[f].info[1]=2;	// アニメーションパターン
 								//effect[f].kind=THERE;
 
-								effect[f].Position=unit[n].Position;
-								effect[f].no=1;			// 弾丸着弾	のソースファイル上の番号
+								Effects[f].Position=Units[n].Position;
+								Effects[f].SpriteNumber=1;			// 弾丸着弾	のソースファイル上の番号
 								}
 							}
 						}
-					fire[m].used=0;
+					Fires[m].Target=0;
 					}
 				}
 
@@ -673,43 +680,43 @@ public void	cont_fire()
 
 
 			// 対潜水艦爆弾
-			if( fire[m].kind==ASB )
+			if( Fires[m].Kind==FireKind.AntiSubmarineBomb )
 				{
-				fire[m].info[0]++;
-				if( fire[m].info[0]==5 )
+				Fires[m].info[0]++;
+				if( Fires[m].info[0]==5 )
 					{
-					f=seek_effect_no();
-					effect[f].layer=EffectLayer.Lower;	
-					effect[f].info[0]=30;
-					effect[f].info[1]=4;
+					f=FindFreeEffect();
+					Effects[f].Layer=EffectLayer.Lower;	
+					Effects[f].info[0]=30;
+					Effects[f].info[1]=4;
 
-					effect[f].Position=fire[m].Position;
+					Effects[f].Position=Fires[m].Position;
 
-					effect[f].no=7;			// ソースファイル上の番号
+					Effects[f].SpriteNumber=7;			// ソースファイル上の番号
 					}
-				if( fire[m].info[0]==fire[m].info[1] )
+				if( Fires[m].info[0]==Fires[m].info[1] )
 					{	// バクハツ！
 					//unit[n].hp[0]--;
 
-					f=seek_effect_no();
+					f=FindFreeEffect();
 
-					SoundPlayEffect( 0, TPD_HIT1 ,fire[m].Position.X, fire[m].Position.Y);
+					PlaySoundEffect( 0, TPD_HIT1 ,Fires[m].Position.X, Fires[m].Position.Y);
 
-					effect[f].layer=EffectLayer.Lower;	
+					Effects[f].Layer=EffectLayer.Lower;	
 
-					effect[f].info[0]=40;
-					effect[f].info[1]=4;	// アニメーションパターン
+					Effects[f].info[0]=40;
+					Effects[f].info[1]=4;	// アニメーションパターン
 
-					effect[f].Position=fire[m].Position;
-					effect[f].no=11;			//ソースファイル上の番号
+					Effects[f].Position=Fires[m].Position;
+					Effects[f].SpriteNumber=11;			//ソースファイル上の番号
 
 					h=0;
-					for(n=1;n<=max_unit;n++)
+					for(n=1;n<=MaxUnitId;n++)
 						{
-						if( unit[n].used!=0 && unit[n].kind==UnitKind.Submarine && unit[n].info[6]!=0 )
+						if( Units[n].Side!=0 && Units[n].Kind==UnitKind.Submarine && Units[n].info[6]!=0 )
 							{
-							fire[m].used=n;
-							h=hit_chk(m);
+							Fires[m].Target=n;
+							h=CheckHit(m);
 							if( h!=0 )
 								break;
 							}
@@ -718,45 +725,45 @@ public void	cont_fire()
 					if( h!=0 )
 						{
 						// 命中
-						unit[n].Hp-=rtn_damage_pt(m);
+						Units[n].Hp-=GetDamagePoints(m);
 						}
-					fire[m].used=0;
+					Fires[m].Target=0;
 					}
 				}
 
 
 			// 対空砲
-			if( fire[m].kind==SHL )
+			if( Fires[m].Kind==FireKind.AntiAircraftShell )
 				{
-				fire[m].info[0]--;
-				if( fire[m].info[0]!=0/*fire[m].info[1] <= fire[m].info[0]*/ )
+				Fires[m].info[0]--;
+				if( Fires[m].info[0]!=0/*fire[m].info[1] <= fire[m].info[0]*/ )
 					{	//
-					wrk_x=fire[m].Position.X;	wrk_y=fire[m].Position.Y;
-					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
+					wrk_x=Fires[m].Position.X;	wrk_y=Fires[m].Position.Y;
+					Fires[m].Position += new WorldVector(cos(Fires[m].Direction*a_PI)*Fires[m].Speed, sin(Fires[m].Direction*a_PI)*Fires[m].Speed);
 
-					fire[m].spd+=fire[m].spd_add;		// 弾が減速
+					Fires[m].Speed+=Fires[m].Acceleration;		// 弾が減速
 					if( 1!=0/*paint_effect_on*/ )
 						{
 						// 弾自体の絵
-						f=seek_effect_no();
-						effect[f].layer=EffectLayer.Upper;	
-						effect[f].info[0]=1;	effect[f].info[1]=0;
-						effect[f].Position=fire[m].Position;
-						effect[f].no=96+drctn_for_8((int)(fire[m].drctn));			// ソースファイル上の番号
+						f=FindFreeEffect();
+						Effects[f].Layer=EffectLayer.Upper;	
+						Effects[f].info[0]=1;	Effects[f].info[1]=0;
+						Effects[f].Position=Fires[m].Position;
+						Effects[f].SpriteNumber=96+ToEightDirections((int)(Fires[m].Direction));			// ソースファイル上の番号
 						// 弾の煙
-						f=seek_effect_no();
-						effect[f].layer=EffectLayer.Upper;	
-						effect[f].info[0]=3+my_rnd(3);
-						effect[f].info[1]=4;
+						f=FindFreeEffect();
+						Effects[f].Layer=EffectLayer.Upper;	
+						Effects[f].info[0]=3+SharedRandom(3);
+						Effects[f].info[1]=4;
 
-						effect[f].Position = new WorldPosition(wrk_x+my_rnd(10)-5, wrk_y+my_rnd(10)-5);
+						Effects[f].Position = new WorldPosition(wrk_x+SharedRandom(10)-5, wrk_y+SharedRandom(10)-5);
 
-						effect[f].no=2;			// ソースファイル上の番号
+						Effects[f].SpriteNumber=2;			// ソースファイル上の番号
 						}
 					}
 				else
 					{	// 炸裂！
-					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
+					Fires[m].Position += new WorldVector(cos(Fires[m].Direction*a_PI)*Fires[m].Speed, sin(Fires[m].Direction*a_PI)*Fires[m].Speed);
 
 
 
@@ -764,21 +771,21 @@ public void	cont_fire()
 
 					// 砲弾炸裂
 					// 煙
-					f=seek_effect_no();
-					effect[f].layer=EffectLayer.Lower;	
+					f=FindFreeEffect();
+					Effects[f].Layer=EffectLayer.Lower;	
 					//effect[f].kind=THERE;
-					effect[f].info[0]=80+rnd(80);
-					effect[f].info[1]=2;
-					effect[f].Position=fire[m].Position;
-					effect[f].no=6;			// ソースファイル上の番号
+					Effects[f].info[0]=80+Random(80);
+					Effects[f].info[1]=2;
+					Effects[f].Position=Fires[m].Position;
+					Effects[f].SpriteNumber=6;			// ソースファイル上の番号
 
 					// 漠炎
-					f=seek_effect_no();
-					effect[f].layer=EffectLayer.Lower;	
-					effect[f].info[0]=10;
-					effect[f].info[1]=4;	// アニメーションパターン
-					effect[f].Position=fire[m].Position;
-					effect[f].no=0;			// 弾丸着弾	のソースファイル上の番号
+					f=FindFreeEffect();
+					Effects[f].Layer=EffectLayer.Lower;	
+					Effects[f].info[0]=10;
+					Effects[f].info[1]=4;	// アニメーションパターン
+					Effects[f].Position=Fires[m].Position;
+					Effects[f].SpriteNumber=0;			// 弾丸着弾	のソースファイル上の番号
 
 
 
@@ -788,45 +795,45 @@ public void	cont_fire()
 					//fire[m].used=0;
 					f=40;
 					// ptin dbg
-					wrk_rect.top=(int)fire[m].Position.Y+f;//(int)fire[m].y-f;
-					wrk_rect.right=(int)fire[m].Position.X+f;
-					wrk_rect.bottom=(int)fire[m].Position.Y-f;//(int)fire[m].y+f;
-					wrk_rect.left=(int)fire[m].Position.X-f;
+					wrk_rect.top=(int)Fires[m].Position.Y+f;//(int)fire[m].y-f;
+					wrk_rect.right=(int)Fires[m].Position.X+f;
+					wrk_rect.bottom=(int)Fires[m].Position.Y-f;//(int)fire[m].y+f;
+					wrk_rect.left=(int)Fires[m].Position.X-f;
 
 
-					for(n=1;n<=max_unit;n++)
+					for(n=1;n<=MaxUnitId;n++)
 						{
-						if( unit[n].used!=0 && unit[n].used==unit[fire[m].used].used && unit[n].ctgry==UnitCategory.Plane && unit[n].PlaneState==UnitState.Flying )
+						if( Units[n].Side!=0 && Units[n].Side==Units[Fires[m].Target].Side && Units[n].Category==UnitCategory.Plane && Units[n].PlaneState==UnitState.Flying )
 							{
-							if( pt_in_rect3(ref wrk_rect,(int)unit[n].Position.X,(int)unit[n].Position.Y)!=0 && !( unit[n].kind==UnitKind.Bomber && unit[n].used==Side.UnitedStates && rnd(3)!=0 ) )
+							if( PointInRect3(ref wrk_rect,(int)Units[n].Position.X,(int)Units[n].Position.Y)!=0 && !( Units[n].Kind==UnitKind.Bomber && Units[n].Side==Side.UnitedStates && Random(3)!=0 ) )
 								{
 								// 命中
 								/*fire[m].used=0;*/
-								if(anti_air==0  )
+								if(ShowsAntiAir==0  )
 									{
-									unit[n].Hp-=rtn_damage_pt(m);
+									Units[n].Hp-=GetDamagePoints(m);
 	
-									if(unit[n].spd<=unit[n].max_spd )
+									if(Units[n].Speed<=Units[n].MaxSpeed )
 										{
-										unit[n].drctn=rnd(360);
+										Units[n].Direction=Random(360);
 										//unit[n].spd=unit[n].spd/3;
 										}
 
 									}
 
-								f=seek_effect_no();
-								effect[f].layer=EffectLayer.Upper;	
+								f=FindFreeEffect();
+								Effects[f].Layer=EffectLayer.Upper;	
 
-								effect[f].info[0]=20;
-								effect[f].info[1]=2;	// アニメーションパターン
+								Effects[f].info[0]=20;
+								Effects[f].info[1]=2;	// アニメーションパターン
 								//effect[f].kind=THERE;
 
-								effect[f].Position=unit[n].Position;
-								effect[f].no=1;			// 弾丸着弾	のソースファイル上の番号
+								Effects[f].Position=Units[n].Position;
+								Effects[f].SpriteNumber=1;			// 弾丸着弾	のソースファイル上の番号
 								}
 							}
 						}
-					fire[m].used=0;
+					Fires[m].Target=0;
 					}
 				}
 
@@ -836,88 +843,88 @@ public void	cont_fire()
 
 
 			// 艦砲
-			if( fire[m].kind==GUN )
+			if( Fires[m].Kind==FireKind.Gun )
 				{
-				fire[m].info[0]--;
-				if( fire[m].info[0]!=0 )
+				Fires[m].info[0]--;
+				if( Fires[m].info[0]!=0 )
 					{	//
-					wrk_x=fire[m].Position.X;	wrk_y=fire[m].Position.Y;
-					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
-					if( fire[m].info[0] > fire[m].info[1] ) 
-						fire[m].spd-=fire[m].spd_add;		// 弾が上昇中
+					wrk_x=Fires[m].Position.X;	wrk_y=Fires[m].Position.Y;
+					Fires[m].Position += new WorldVector(cos(Fires[m].Direction*a_PI)*Fires[m].Speed, sin(Fires[m].Direction*a_PI)*Fires[m].Speed);
+					if( Fires[m].info[0] > Fires[m].info[1] ) 
+						Fires[m].Speed-=Fires[m].Acceleration;		// 弾が上昇中
 					else
-						fire[m].spd+=(fire[m].spd_add*2.83);		// 弾が降下中
+						Fires[m].Speed+=(Fires[m].Acceleration*2.83);		// 弾が降下中
 					if( 1!=0/*paint_effect_on*/ )
 						{
 						// 弾自体の絵
-						f=seek_effect_no();
-						effect[f].layer=EffectLayer.Upper;	
-						effect[f].info[0]=1;	effect[f].info[1]=0;
-						effect[f].Position=fire[m].Position;
-						effect[f].no=108+drctn_for_8((int)(fire[m].drctn));			// ソースファイル上の番号
+						f=FindFreeEffect();
+						Effects[f].Layer=EffectLayer.Upper;	
+						Effects[f].info[0]=1;	Effects[f].info[1]=0;
+						Effects[f].Position=Fires[m].Position;
+						Effects[f].SpriteNumber=108+ToEightDirections((int)(Fires[m].Direction));			// ソースファイル上の番号
 						// 弾の煙
-						f=seek_effect_no();
-						effect[f].layer=EffectLayer.Upper;	
-						effect[f].info[0]=3+my_rnd(3);
-						effect[f].info[1]=4;
+						f=FindFreeEffect();
+						Effects[f].Layer=EffectLayer.Upper;	
+						Effects[f].info[0]=3+SharedRandom(3);
+						Effects[f].info[1]=4;
 
-						effect[f].Position = new WorldPosition(wrk_x+my_rnd(10)-5, wrk_y+my_rnd(10)-5);
+						Effects[f].Position = new WorldPosition(wrk_x+SharedRandom(10)-5, wrk_y+SharedRandom(10)-5);
 
-						effect[f].no=2;			// ソースファイル上の番号
+						Effects[f].SpriteNumber=2;			// ソースファイル上の番号
 						}
 					}
 				else
 					{	// 着弾！
-					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
-					n=fire[m].used;
-					h=hit_chk(m);
-					fire[m].used=0;
-					if( unit[n].used!=0 && h!=0)
+					Fires[m].Position += new WorldVector(cos(Fires[m].Direction*a_PI)*Fires[m].Speed, sin(Fires[m].Direction*a_PI)*Fires[m].Speed);
+					n=Fires[m].Target;
+					h=CheckHit(m);
+					Fires[m].Target=0;
+					if( Units[n].Side!=0 && h!=0)
 						{
 						// 命中
-						unit[n].Hp-=rtn_damage_pt(m);
+						Units[n].Hp-=GetDamagePoints(m);
 
-						SoundPlayEffect( 0, TPD_HIT1 ,fire[m].Position.X, fire[m].Position.Y);
+						PlaySoundEffect( 0, TPD_HIT1 ,Fires[m].Position.X, Fires[m].Position.Y);
 
-						f=seek_effect_no();
-						effect[f].layer=EffectLayer.Upper;	
+						f=FindFreeEffect();
+						Effects[f].Layer=EffectLayer.Upper;	
 
-						effect[f].info[0]=40;
-						effect[f].info[1]=4;	// アニメーションパターン
+						Effects[f].info[0]=40;
+						Effects[f].info[1]=4;	// アニメーションパターン
 
-						effect[f].Position=fire[m].Position;
+						Effects[f].Position=Fires[m].Position;
 
 						//effect[f].x=unit[n].x;
 						//effect[f].y=unit[n].y;
-						effect[f].no=1;			// 弾丸着弾	のソースファイル上の番号
+						Effects[f].SpriteNumber=1;			// 弾丸着弾	のソースファイル上の番号
 
 
 						// 当った的に収納機があれば破壊される場合もある
-						if( unit[n].kind==UnitKind.AirBase || unit[n].kind==UnitKind.Carrier || unit[n].kind==UnitKind.LightCarrier )
+						if( Units[n].Kind==UnitKind.AirBase || Units[n].Kind==UnitKind.Carrier || Units[n].Kind==UnitKind.LightCarrier )
 							{
-							for(i=0;i<=max_unit;i++)
+							for(i=0;i<=MaxUnitId;i++)
 								{
-								if( unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].PlaneState==UnitState.Parked && unit[i].info[1]==n && rnd(10)==0 )
+								if( Units[i].Side!=0 && Units[i].Category==UnitCategory.Plane && Units[i].PlaneState==UnitState.Parked && Units[i].info[1]==n && Random(10)==0 )
 									{
-									unit[i].used=0;
-									unit[unit[i].info[1]].info[1]--;	// 現在格納数
+									Units[i].Side=0;
+									Units[Units[i].info[1]].info[1]--;	// 現在格納数
 							
-									if( unit[i].info[3]>=1 && unit[unit[i].info[1]].info[4]>=1 && unit[i].info[5]<=SLOW )
-										unit[unit[i].info[1]].info[4]--;		// 発艦予定の機数を	
-									if( unit[i].info[3]>=3 && unit[unit[i].info[1]].info[7]>=1  && unit[i].info[5]<=SLOW )
-										unit[unit[i].info[1]].info[7]--;		// 
+									if( Units[i].info[3]>=1 && Units[Units[i].info[1]].info[4]>=1 && Units[i].Mode<=UnitMode.Slow )
+										Units[Units[i].info[1]].info[4]--;		// 発艦予定の機数を	
+									if( Units[i].info[3]>=3 && Units[Units[i].info[1]].info[7]>=1  && Units[i].Mode<=UnitMode.Slow )
+										Units[Units[i].info[1]].info[7]--;		// 
 
 
-									if( unit[i].info[5]==RETURN )
+									if( Units[i].Mode==UnitMode.Return )
 										{
-										if(unit[unit[i].info[1]].info[7]!=0)
-											unit[unit[i].info[1]].info[7]=0;	// 着艦、0許可、1不許可
-										if(unit[unit[i].info[1]].info[8]!=0)
-											unit[unit[i].info[1]].info[8]=0;	// その空母の次機発進許可	0許可、1不許可
+										if(Units[Units[i].info[1]].info[7]!=0)
+											Units[Units[i].info[1]].info[7]=0;	// 着艦、0許可、1不許可
+										if(Units[Units[i].info[1]].info[8]!=0)
+											Units[Units[i].info[1]].info[8]=0;	// その空母の次機発進許可	0許可、1不許可
 										}
 
-									if( the_slct_unit==i )
-										{ the_slct_unit=0; cmbt_menu_kind=0; cmbt_menu_slctd=0; cls_all_slct_unit_p2(1); }
+									if( SelectedUnit==i )
+										{ SelectedUnit=0; CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection2(1); }
 
 									break;
 									}
@@ -929,28 +936,28 @@ public void	cont_fire()
 					else
 						{	
 						// ハズレ
-						SoundPlayEffect( 0, SPL1 ,fire[m].Position.X, fire[m].Position.Y);
+						PlaySoundEffect( 0, SPL1 ,Fires[m].Position.X, Fires[m].Position.Y);
 
-						f=seek_effect_no();
-						effect[f].layer=EffectLayer.Lower;	
+						f=FindFreeEffect();
+						Effects[f].Layer=EffectLayer.Lower;	
 
-						effect[f].info[0]=40;
-						effect[f].info[1]=4;	// アニメーションパターン
+						Effects[f].info[0]=40;
+						Effects[f].info[1]=4;	// アニメーションパターン
 
-						effect[f].Position=fire[m].Position;
+						Effects[f].Position=Fires[m].Position;
 
-						wrk_x=fire[m].Position.X;
-						wrk_y=fire[m].Position.Y;
+						wrk_x=Fires[m].Position.X;
+						wrk_y=Fires[m].Position.Y;
 
-						effect[f].no=8;			// 弾丸着弾	のソースファイル上の番号
+						Effects[f].SpriteNumber=8;			// 弾丸着弾	のソースファイル上の番号
 						if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
 							{
-							cm_scrn_x=(int)((wrk_x+(sprt[UNIT_JPN].wd/2)-MAP_LEFT)/sprt[MAP_TIP_NRML].wd);
-							cm_scrn_y=(int)((MAP_TOP-wrk_y+(sprt[UNIT_JPN].ht/2))/sprt[MAP_TIP_NRML].ht);
-							if( cmbt_map[cm_scrn_y][cm_scrn_x]>=1)
-								effect[f].no=10;			// 弾丸着弾	のソースファイル上の番号
+							cm_scrn_x=(int)((wrk_x+(Sprites[UNIT_JPN].wd/2)-MAP_LEFT)/Sprites[MAP_TIP_NRML].wd);
+							cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[UNIT_JPN].ht/2))/Sprites[MAP_TIP_NRML].ht);
+							if( MapTiles[cm_scrn_y][cm_scrn_x]>=1)
+								Effects[f].SpriteNumber=10;			// 弾丸着弾	のソースファイル上の番号
 							else
-								effect[f].no=8;			// 弾丸着弾	のソースファイル上の番号
+								Effects[f].SpriteNumber=8;			// 弾丸着弾	のソースファイル上の番号
 							}
 
 						}
@@ -959,42 +966,42 @@ public void	cont_fire()
 
 
 			//	魚雷
-			if( fire[m].kind==TPD )
+			if( Fires[m].Kind==FireKind.Torpedo )
 				{
-				if( fire[m].info[0]<=fire[m].info[1] )
+				if( Fires[m].info[0]<=Fires[m].info[1] )
 					{
-					wrk_x=fire[m].Position.X;
-					wrk_y=fire[m].Position.Y;
-					wrk_x+=cos(fire[m].drctn*a_PI)*-40;
-					wrk_y+=sin(fire[m].drctn*a_PI)*-40;
+					wrk_x=Fires[m].Position.X;
+					wrk_y=Fires[m].Position.Y;
+					wrk_x+=cos(Fires[m].Direction*a_PI)*-40;
+					wrk_y+=sin(Fires[m].Direction*a_PI)*-40;
 					if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
 						{
-						cm_scrn_x=(int)((wrk_x+(sprt[UNIT_JPN].wd/2)-MAP_LEFT)/sprt[MAP_TIP_NRML].wd);
-						cm_scrn_y=(int)((MAP_TOP-wrk_y+(sprt[UNIT_JPN].ht/2))/sprt[MAP_TIP_NRML].ht);
-						if( cmbt_map[cm_scrn_y][cm_scrn_x]>=1)
+						cm_scrn_x=(int)((wrk_x+(Sprites[UNIT_JPN].wd/2)-MAP_LEFT)/Sprites[MAP_TIP_NRML].wd);
+						cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[UNIT_JPN].ht/2))/Sprites[MAP_TIP_NRML].ht);
+						if( MapTiles[cm_scrn_y][cm_scrn_x]>=1)
 							{
-							fire[m].info[0]=fire[m].info[1];
+							Fires[m].info[0]=Fires[m].info[1];
 							}
 						}
 
 
 
-					wrk_x=fire[m].Position.X;
-					wrk_y=fire[m].Position.Y;
-					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
-					fire[m].spd+=fire[m].spd_add;
+					wrk_x=Fires[m].Position.X;
+					wrk_y=Fires[m].Position.Y;
+					Fires[m].Position += new WorldVector(cos(Fires[m].Direction*a_PI)*Fires[m].Speed, sin(Fires[m].Direction*a_PI)*Fires[m].Speed);
+					Fires[m].Speed+=Fires[m].Acceleration;
 			
 
 
 					h=0;
-					if( fire[m].info[0]>=fire[m].info[2] )
+					if( Fires[m].info[0]>=Fires[m].info[2] )
 						{
-						for(n=1;n<=max_unit;n++)
+						for(n=1;n<=MaxUnitId;n++)
 							{
-							if( unit[n].used!=0 && unit[n].ctgry==UnitCategory.Ship && unit[n].kind>=UnitKind.Battleship && unit[n].kind<=UnitKind.Transport && !(unit[n].kind==UnitKind.Submarine && unit[n].info[6]!=0))
+							if( Units[n].Side!=0 && Units[n].Category==UnitCategory.Ship && Units[n].Kind>=UnitKind.Battleship && Units[n].Kind<=UnitKind.Transport && !(Units[n].Kind==UnitKind.Submarine && Units[n].info[6]!=0))
 								{
-								fire[m].used=n;
-								h=hit_chk(m);
+								Fires[m].Target=n;
+								h=CheckHit(m);
 								if( h!=0 )
 									break;
 								}
@@ -1004,57 +1011,57 @@ public void	cont_fire()
 					if( h!=0 )
 						{
 						// 命中
-						fire[m].used=0;
-						unit[n].Hp-=rtn_damage_pt(m);
+						Fires[m].Target=0;
+						Units[n].Hp-=GetDamagePoints(m);
 
 
-						SoundPlayEffect( 0, TPD_HIT1+rnd(2) ,fire[m].Position.X, fire[m].Position.Y);
+						PlaySoundEffect( 0, TPD_HIT1+Random(2) ,Fires[m].Position.X, Fires[m].Position.Y);
 
-						f=seek_effect_no();
-						effect[f].layer=EffectLayer.Lower;	
+						f=FindFreeEffect();
+						Effects[f].Layer=EffectLayer.Lower;	
 
-						effect[f].info[0]=40;
-						effect[f].info[1]=4;	// アニメーションパターン
+						Effects[f].info[0]=40;
+						Effects[f].info[1]=4;	// アニメーションパターン
 
-						effect[f].Position=fire[m].Position;
-						effect[f].no=11;			// 弾丸着弾	のソースファイル上の番号
+						Effects[f].Position=Fires[m].Position;
+						Effects[f].SpriteNumber=11;			// 弾丸着弾	のソースファイル上の番号
 						}
 					else
 						{
 						// 当たってないので
-						fire[m].info[0]++;
-						if( fire[m].info[0]==1 )
+						Fires[m].info[0]++;
+						if( Fires[m].info[0]==1 )
 							{
-							f=seek_effect_no();
-							effect[f].layer=EffectLayer.Lower;	
-							effect[f].info[0]=30;
-							effect[f].info[1]=0;
+							f=FindFreeEffect();
+							Effects[f].Layer=EffectLayer.Lower;	
+							Effects[f].info[0]=30;
+							Effects[f].info[1]=0;
 
-							effect[f].Position=fire[m].Position;
+							Effects[f].Position=Fires[m].Position;
 
-							effect[f].no=8;			// ソースファイル上の番号
+							Effects[f].SpriteNumber=8;			// ソースファイル上の番号
 							}
 
-						if( fire[m].info[0]>=fire[m].info[2] /*&& paint_effect_on*/ )
+						if( Fires[m].info[0]>=Fires[m].info[2] /*&& paint_effect_on*/ )
 							{
-							f=seek_effect_no();
-							effect[f].layer=EffectLayer.Lower;	
-							effect[f].info[0]=1;
-							effect[f].info[1]=0;
+							f=FindFreeEffect();
+							Effects[f].Layer=EffectLayer.Lower;	
+							Effects[f].info[0]=1;
+							Effects[f].info[1]=0;
 
-							effect[f].Position=fire[m].Position;
+							Effects[f].Position=Fires[m].Position;
 
-							effect[f].no=72+drctn_for_8((int)(fire[m].drctn));			// ソースファイル上の番号
-							if( (cc_count%3)==0)
+							Effects[f].SpriteNumber=72+ToEightDirections((int)(Fires[m].Direction));			// ソースファイル上の番号
+							if( (Tick%3)==0)
 								{
-								f=seek_effect_no();
-								effect[f].layer=EffectLayer.Lower;	
-								effect[f].info[0]=30+my_rnd(25);
-								effect[f].info[1]=4;
+								f=FindFreeEffect();
+								Effects[f].Layer=EffectLayer.Lower;	
+								Effects[f].info[0]=30+SharedRandom(25);
+								Effects[f].info[1]=4;
 
-								effect[f].Position = new WorldPosition(wrk_x+my_rnd(10)-5, wrk_y+my_rnd(10)-5);
+								Effects[f].Position = new WorldPosition(wrk_x+SharedRandom(10)-5, wrk_y+SharedRandom(10)-5);
 
-								effect[f].no=8;			// ソースファイル上の番号
+								Effects[f].SpriteNumber=8;			// ソースファイル上の番号
 								}
 							}
 						}
@@ -1062,102 +1069,102 @@ public void	cont_fire()
 					}
 				else
 					{
-					fire[m].used=0;
+					Fires[m].Target=0;
 					}
 				}
 
 
 
 			// 爆撃			
-			if( fire[m].kind==BOM )
+			if( Fires[m].Kind==FireKind.Bomb )
 				{
-				fire[m].info[0]++;
+				Fires[m].info[0]++;
 
-				if( fire[m].used==(int)UnitKind.Attacker && fire[m].info[0]==12 )
-					SoundPlayEffect( 0, BOMB_OFF ,fire[m].Position.X, fire[m].Position.Y);
+				if( Fires[m].Target==(int)UnitKind.Attacker && Fires[m].info[0]==12 )
+					PlaySoundEffect( 0, BOMB_OFF ,Fires[m].Position.X, Fires[m].Position.Y);
 
 
-				if( fire[m].info[0]<=fire[m].info[1]  )
+				if( Fires[m].info[0]<=Fires[m].info[1]  )
 					{	// 爆弾降下中
-					if( fire[m].info[0]>=50)
+					if( Fires[m].info[0]>=50)
 						{
-						if( fire[m].info[0]==50)
-						SoundPlayEffect( 0, FALL1 ,fire[m].Position.X, fire[m].Position.Y);
+						if( Fires[m].info[0]==50)
+						PlaySoundEffect( 0, FALL1 ,Fires[m].Position.X, Fires[m].Position.Y);
 
-						fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
-						fire[m].spd+=fire[m].spd_add;
+						Fires[m].Position += new WorldVector(cos(Fires[m].Direction*a_PI)*Fires[m].Speed, sin(Fires[m].Direction*a_PI)*Fires[m].Speed);
+						Fires[m].Speed+=Fires[m].Acceleration;
 						if( 1!=0/*paint_effect_on*/ )
 							{
-							f=seek_effect_no();
-							effect[f].layer=EffectLayer.Upper;	
-							effect[f].info[0]=1;	effect[f].info[1]=0;
-							effect[f].Position=fire[m].Position;
-							effect[f].no=84+drctn_for_8((int)(fire[m].drctn));			// ソースファイル上の番号
+							f=FindFreeEffect();
+							Effects[f].Layer=EffectLayer.Upper;	
+							Effects[f].info[0]=1;	Effects[f].info[1]=0;
+							Effects[f].Position=Fires[m].Position;
+							Effects[f].SpriteNumber=84+ToEightDirections((int)(Fires[m].Direction));			// ソースファイル上の番号
 							}
 						}
 					}
 				else
 					{	// 着弾！
-					fire[m].Position += new WorldVector(cos(fire[m].drctn*a_PI)*fire[m].spd, sin(fire[m].drctn*a_PI)*fire[m].spd);
+					Fires[m].Position += new WorldVector(cos(Fires[m].Direction*a_PI)*Fires[m].Speed, sin(Fires[m].Direction*a_PI)*Fires[m].Speed);
 					h=0;
 					//n=fire[m].used;
-					for(n=1;n<=max_unit;n++)
+					for(n=1;n<=MaxUnitId;n++)
 						{
-						if( unit[n].used!=0 && unit[n].ctgry==UnitCategory.Ship && !(unit[n].kind==UnitKind.Submarine && unit[n].info[6]!=0))
+						if( Units[n].Side!=0 && Units[n].Category==UnitCategory.Ship && !(Units[n].Kind==UnitKind.Submarine && Units[n].info[6]!=0))
 							{
-							fire[m].used=n;
-							h=hit_chk(m);
+							Fires[m].Target=n;
+							h=CheckHit(m);
 							if( h!=0 )
 								break;
 							}
 						}
-					fire[m].used=0;
+					Fires[m].Target=0;
 					if( h!=0 )
 						{
 						// 命中
-						unit[n].Hp-=rtn_damage_pt(m);
+						Units[n].Hp-=GetDamagePoints(m);
 
-						SoundPlayEffect( 0, BOM_HIT1+rnd(2) ,fire[m].Position.X, fire[m].Position.Y);
+						PlaySoundEffect( 0, BOM_HIT1+Random(2) ,Fires[m].Position.X, Fires[m].Position.Y);
 
-						f=seek_effect_no();
-						effect[f].layer=EffectLayer.Upper;	
+						f=FindFreeEffect();
+						Effects[f].Layer=EffectLayer.Upper;	
 
-						effect[f].info[0]=40;
-						effect[f].info[1]=4;	// アニメーションパターン
+						Effects[f].info[0]=40;
+						Effects[f].info[1]=4;	// アニメーションパターン
 
-						effect[f].Position=fire[m].Position;
+						Effects[f].Position=Fires[m].Position;
 						//effect[f].x=unit[n].x;
 						//effect[f].y=unit[n].y;
-						effect[f].no=1;			// 弾丸着弾	のソースファイル上の番号
+						Effects[f].SpriteNumber=1;			// 弾丸着弾	のソースファイル上の番号
 
 
 						// 当った的に収納機があれば破壊される場合もある
-						if( unit[n].kind==UnitKind.AirBase || unit[n].kind==UnitKind.Carrier || unit[n].kind==UnitKind.LightCarrier )
+						if( Units[n].Kind==UnitKind.AirBase || Units[n].Kind==UnitKind.Carrier || Units[n].Kind==UnitKind.LightCarrier )
 							{
-							for(i=0;i<=max_unit;i++)
+							for(i=0;i<=MaxUnitId;i++)
 								{
-								if( unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].PlaneState==UnitState.Parked && unit[i].info[1]==n && rnd(10)==0 )
+								if( Units[i].Side!=0 && Units[i].Category==UnitCategory.Plane && Units[i].PlaneState==UnitState.Parked && Units[i].info[1]==n && Random(10)==0 )
 									{
-									unit[i].used=0;
-									unit[unit[i].info[1]].info[1]--;	// 現在格納数
+									Units[i].Side=0;
+									Units[Units[i].info[1]].info[1]--;	// 現在格納数
 							
-									if( unit[i].info[3]>=1 && unit[unit[i].info[1]].info[4]>=1 && unit[i].info[5]<=SLOW )
-										unit[unit[i].info[1]].info[4]--;		// 発艦予定の機数を	
-									if( unit[i].info[3]>=3 && unit[unit[i].info[1]].info[7]>=1  && unit[i].info[5]<=SLOW )
-										unit[unit[i].info[1]].info[7]--;		// 
+									if( Units[i].info[3]>=1 && Units[Units[i].info[1]].info[4]>=1 && Units[i].Mode<=UnitMode.Slow )
+										Units[Units[i].info[1]].info[4]--;		// 発艦予定の機数を	
+									if( Units[i].info[3]>=3 && Units[Units[i].info[1]].info[7]>=1  && Units[i].Mode<=UnitMode.Slow )
+										Units[Units[i].info[1]].info[7]--;		// 
 
 
-									if( /*unit[i].info[3]==1 &&*/ unit[i].info[5]==RETURN )
+									if( /*unit[i].info[3]==1 &&*/ Units[i].Mode==UnitMode.Return )
 										{
-										if(unit[unit[i].info[1]].info[7]!=0)
-											unit[unit[i].info[1]].info[7]=0;	// 着艦、0許可、1不許可
-										if(unit[unit[i].info[1]].info[8]!=0)
-											unit[unit[i].info[1]].info[8]=0;	// その空母の次機発進許可	0許可、1不許可
+										if(Units[Units[i].info[1]].info[7]!=0)
+											Units[Units[i].info[1]].info[7]=0;	// 着艦、0許可、1不許可
+										if(Units[Units[i].info[1]].info[8]!=0)
+											Units[Units[i].info[1]].info[8]=0;	// その空母の次機発進許可	0許可、1不許可
 										}
 
 
-									if( the_slct_unit==i )
-										{ the_slct_unit=0; cmbt_menu_kind=0; cmbt_menu_slctd=0; cls_all_slct_unit_p2(1); }
+									if( SelectedUnit==i )
+										{ SelectedUnit=0; CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection2(1); }
 									break;
 									}
 								}
@@ -1168,19 +1175,19 @@ public void	cont_fire()
 						{	
 						// ハズレ
 
-						f=seek_effect_no();
-						effect[f].layer=EffectLayer.Lower;	
+						f=FindFreeEffect();
+						Effects[f].Layer=EffectLayer.Lower;	
 
-						effect[f].info[0]=40;
-						effect[f].info[1]=4;	// アニメーションパターン
+						Effects[f].info[0]=40;
+						Effects[f].info[1]=4;	// アニメーションパターン
 
-						effect[f].Position=fire[m].Position;
-						wrk_x=fire[m].Position.X;
-						wrk_y=fire[m].Position.Y;
+						Effects[f].Position=Fires[m].Position;
+						wrk_x=Fires[m].Position.X;
+						wrk_y=Fires[m].Position.Y;
 						if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
 							{
-							cm_scrn_x=(int)((wrk_x+(sprt[UNIT_JPN].wd/2)-MAP_LEFT)/sprt[MAP_TIP_NRML].wd);
-							cm_scrn_y=(int)((MAP_TOP-wrk_y+(sprt[UNIT_JPN].ht/2))/sprt[MAP_TIP_NRML].ht);
+							cm_scrn_x=(int)((wrk_x+(Sprites[UNIT_JPN].wd/2)-MAP_LEFT)/Sprites[MAP_TIP_NRML].wd);
+							cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[UNIT_JPN].ht/2))/Sprites[MAP_TIP_NRML].ht);
 							}
 						else
 							{
@@ -1188,15 +1195,15 @@ public void	cont_fire()
 							cm_scrn_y=0;
 							}
 	
-						if( cmbt_map[cm_scrn_y][cm_scrn_x]>=1)
+						if( MapTiles[cm_scrn_y][cm_scrn_x]>=1)
 							{
-							effect[f].no=10;			// 着弾	のソースファイル上の番号
-							SoundPlayEffect( 0, BOM_HIT1 ,fire[m].Position.X, fire[m].Position.Y);
+							Effects[f].SpriteNumber=10;			// 着弾	のソースファイル上の番号
+							PlaySoundEffect( 0, BOM_HIT1 ,Fires[m].Position.X, Fires[m].Position.Y);
 							}
 						else
 							{
-							effect[f].no=8;			// 着弾	のソースファイル上の番号
-							SoundPlayEffect( 0, SPL1 ,fire[m].Position.X, fire[m].Position.Y);
+							Effects[f].SpriteNumber=8;			// 着弾	のソースファイル上の番号
+							PlaySoundEffect( 0, SPL1 ,Fires[m].Position.X, Fires[m].Position.Y);
 							}
 						}
 					}
@@ -1214,7 +1221,8 @@ public void	cont_fire()
 //============================================================================
 // 
 //----------------------------------------------------------------------------
-public void	set_new_ltl_ldr(int m)
+[Original("set_new_ltl_ldr")]
+public void	AssignGroupLeader(int m)
 	{
 	int		n,min_no,f,i;
 
@@ -1222,13 +1230,13 @@ public void	set_new_ltl_ldr(int m)
 
 
 	// 部下がまだ生きてるか
-	min_no=max_unit+1;
+	min_no=MaxUnitId+1;
 	f=0;
-	for( n=1; n<=max_unit; n++)
+	for( n=1; n<=MaxUnitId; n++)
 		{
-		if( unit[n].used!=0 && unit[n].ltl_ldr==m )
+		if( Units[n].Side!=0 && Units[n].GroupLeader==m )
 			{
-			if( unit[min_no].no>unit[n].no || min_no==max_unit+1 )
+			if( Units[min_no].FormationNumber>Units[n].FormationNumber || min_no==MaxUnitId+1 )
 				min_no=n;
 
 //			unit[n].no--;
@@ -1244,31 +1252,31 @@ public void	set_new_ltl_ldr(int m)
 
 
 		// 部下が生存
-		unit[min_no].no=0;
-		unit[min_no].is_ltl_ldr=(short)f;
-		unit[min_no].ltl_ldr=0;
+		Units[min_no].FormationNumber=0;
+		Units[min_no].IsGroupLeader=(short)f;
+		Units[min_no].GroupLeader=0;
 
-		if( unit[min_no].kind==UnitKind.Fighter && (unit[m].kind==UnitKind.Attacker || unit[m].kind==UnitKind.Bomber) && unit[min_no].PlaneState==UnitState.Flying )
-			unit[min_no].info[5]=RETURN;		// それまでの隊長がボスだったらきかんしよっと
+		if( Units[min_no].Kind==UnitKind.Fighter && (Units[m].Kind==UnitKind.Attacker || Units[m].Kind==UnitKind.Bomber) && Units[min_no].PlaneState==UnitState.Flying )
+			Units[min_no].Mode=UnitMode.Return;		// それまでの隊長がボスだったらきかんしよっと
 
 
 
-		for( n=1; n<=max_unit; n++)
+		for( n=1; n<=MaxUnitId; n++)
 			{
-			if( unit[n].used!=0 && unit[n].ltl_ldr==m )
+			if( Units[n].Side!=0 && Units[n].GroupLeader==m )
 				{
-				unit[n].ltl_ldr=(short)min_no;			// ｍｉｎ＿ｎｏが新しい隊長機
+				Units[n].GroupLeader=(short)min_no;			// ｍｉｎ＿ｎｏが新しい隊長機
 
-				if( unit[n].kind==UnitKind.Fighter && (unit[m].kind==UnitKind.Attacker || unit[m].kind==UnitKind.Bomber) && unit[n].PlaneState==UnitState.Flying )
-					unit[n].info[5]=RETURN;		// それまでの隊長がボスだったらきかんしよっと
+				if( Units[n].Kind==UnitKind.Fighter && (Units[m].Kind==UnitKind.Attacker || Units[m].Kind==UnitKind.Bomber) && Units[n].PlaneState==UnitState.Flying )
+					Units[n].Mode=UnitMode.Return;		// それまでの隊長がボスだったらきかんしよっと
 
 				}
 			}
 		// ｐｐ＿ｘ、ｙをコピーします。
 		for(i=0;i<=63;i++)
 			{
-			unit[min_no].pp_x[i]=unit[m].pp_x[i];
-			unit[min_no].pp_y[i]=unit[m].pp_y[i];
+			Units[min_no].PathX[i]=Units[m].PathX[i];
+			Units[min_no].PathY[i]=Units[m].PathY[i];
 			}
 		}
 
@@ -1277,9 +1285,9 @@ public void	set_new_ltl_ldr(int m)
 	else if( f==1 )
 		{
 		// 部下がひとつ
-		unit[min_no].no=0;
-		unit[min_no].is_ltl_ldr=0;
-		unit[min_no].ltl_ldr=0;
+		Units[min_no].FormationNumber=0;
+		Units[min_no].IsGroupLeader=0;
+		Units[min_no].GroupLeader=0;
 		}
 	}
 
@@ -1293,7 +1301,8 @@ public void	set_new_ltl_ldr(int m)
 //============================================================================
 // 
 //----------------------------------------------------------------------------
-public void	cont_unit_effect(int m)
+[Original("cont_unit_effect")]
+public void	UpdateUnitEffects(int m)
 	{
 	RECT	wrk_rect;
 	int		f,i,n;
@@ -1304,85 +1313,85 @@ public void	cont_unit_effect(int m)
 
 
 
-	if( unit[m].is_ltl_ldr!=0 && unit[m].used==your_side && unit[m].PlaneState!=UnitState.Parked /*&& paint_effect_on*/ )
+	if( Units[m].IsGroupLeader!=0 && Units[m].Side==LocalSide && Units[m].PlaneState!=UnitState.Parked /*&& paint_effect_on*/ )
 		{
-		f=seek_effect_no();
-		effect[f].layer=EffectLayer.Upper;	
-		effect[f].info[0]=1;
-		effect[f].info[1]=0;
-		effect[f].Position = new WorldPosition(unit[m].Position.X, effect[f].Position.Y);
-		if( unit[m].kind==UnitKind.Attacker || unit[m].kind==UnitKind.Fighter || unit[m].kind==UnitKind.Destroyer || unit[m].kind==UnitKind.Submarine)
-			effect[f].Position = new WorldPosition(effect[f].Position.X, unit[m].Position.Y+30.0);
+		f=FindFreeEffect();
+		Effects[f].Layer=EffectLayer.Upper;	
+		Effects[f].info[0]=1;
+		Effects[f].info[1]=0;
+		Effects[f].Position = new WorldPosition(Units[m].Position.X, Effects[f].Position.Y);
+		if( Units[m].Kind==UnitKind.Attacker || Units[m].Kind==UnitKind.Fighter || Units[m].Kind==UnitKind.Destroyer || Units[m].Kind==UnitKind.Submarine)
+			Effects[f].Position = new WorldPosition(Effects[f].Position.X, Units[m].Position.Y+30.0);
 		else
-			effect[f].Position = new WorldPosition(effect[f].Position.X, unit[m].Position.Y+35.0);
+			Effects[f].Position = new WorldPosition(Effects[f].Position.X, Units[m].Position.Y+35.0);
 
 		// 編隊長の旗
-		effect[f].no=24;			// ソースファイル上の番号
+		Effects[f].SpriteNumber=24;			// ソースファイル上の番号
 		}
 
 
 	// 航空機のユニットエフェクト
-	if ( unit[m].ctgry==UnitCategory.Plane )
+	if ( Units[m].Category==UnitCategory.Plane )
 		{
 		// 武装の表示
-		if( /*paint_effect_on &&*/ unit[m].Ammo!=0 && !(unit[m].ReloadTime!=0 && (FrameCount%3)==0)&& (unit[m].Weapon==BOM || unit[m].Weapon==TPD || unit[m].Weapon==TUN || unit[m].Weapon==NTG)  && unit[m].used==your_side && !(unit[m].PlaneState==UnitState.Parked && unit_info[1]==0) && !( unit[m].PlaneState==UnitState.Parked && unit[m].info[3]>=3 ) && !( unit[m].PlaneState==UnitState.Parked && unit[m].info[1]!=unit_info[3]))
+		if( /*paint_effect_on &&*/ Units[m].Ammo!=0 && !(Units[m].ReloadTime!=0 && (FrameCount%3)==0)&& (Units[m].Weapon==FireKind.Bomb || Units[m].Weapon==FireKind.Torpedo || Units[m].Weapon==FireKind.Maintenance || Units[m].Weapon==FireKind.Unarmed)  && Units[m].Side==LocalSide && !(Units[m].PlaneState==UnitState.Parked && UnitInfoPanel[1]==0) && !( Units[m].PlaneState==UnitState.Parked && Units[m].info[3]>=3 ) && !( Units[m].PlaneState==UnitState.Parked && Units[m].info[1]!=UnitInfoPanel[3]))
 			{
-			f=seek_effect_no();
-			effect[f].layer=EffectLayer.Lower;	
-			effect[f].info[0]=1;
-			if( unit[m].PlaneState==UnitState.Flying )
+			f=FindFreeEffect();
+			Effects[f].Layer=EffectLayer.Lower;	
+			Effects[f].info[0]=1;
+			if( Units[m].PlaneState==UnitState.Flying )
 				{
-				effect[f].info[1]=0;
-				effect[f].Position = new WorldPosition(unit[m].Position.X, unit[m].Position.Y-25);
+				Effects[f].info[1]=0;
+				Effects[f].Position = new WorldPosition(Units[m].Position.X, Units[m].Position.Y-25);
 				}
 			else
 				{
-				effect[f].info[1]=3;
-				effect[f].Position = new WorldPosition(unit[m].Position.X, unit[m].Position.Y+25);
+				Effects[f].info[1]=3;
+				Effects[f].Position = new WorldPosition(Units[m].Position.X, Units[m].Position.Y+25);
 				}
-			switch( unit[m].Weapon )
+			switch( Units[m].Weapon )
 				{
-				case TPD:
-					effect[f].no=3;			// ソースファイル上の番号
+				case FireKind.Torpedo:
+					Effects[f].SpriteNumber=3;			// ソースファイル上の番号
 					break;
-				case BOM:
-					effect[f].no=4;			// ソースファイル上の番号
+				case FireKind.Bomb:
+					Effects[f].SpriteNumber=4;			// ソースファイル上の番号
 					break;
-				case TUN:	case NTG:
-					effect[f].no=15;			// ソースファイル上の番号
+				case FireKind.Maintenance:	case FireKind.Unarmed:
+					Effects[f].SpriteNumber=15;			// ソースファイル上の番号
 					break;
 				}
 			}
 
 
-		if( unit[m].PlaneState==UnitState.Parked )
+		if( Units[m].PlaneState==UnitState.Parked )
 			{	// 収容後のエフェクト
 
 			}
 		else
 			{	// 飛行中のエフェクト
-			if( unit[m].Hp<=0 )
+			if( Units[m].Hp<=0 )
 				{	// 墜落
-				unit[m].used=0;
+				Units[m].Side=0;
 
 
-				if( unit_info[3]==m )
-					unit_info[0]=0;				// ユニットインフォをクリア
+				if( UnitInfoPanel[3]==m )
+					UnitInfoPanel[0]=0;				// ユニットインフォをクリア
 
 
-				f=seek_effect_no();
-				effect[f].layer=EffectLayer.Lower;	
+				f=FindFreeEffect();
+				Effects[f].Layer=EffectLayer.Lower;	
 				//effect[f].kind=THERE;
-				effect[f].info[0]=80;
+				Effects[f].info[0]=80;
 
-				effect[f].Position=unit[m].Position;
+				Effects[f].Position=Units[m].Position;
 
-				wrk_x2=unit[m].Position.X;
-				wrk_y2=unit[m].Position.Y;
+				wrk_x2=Units[m].Position.X;
+				wrk_y2=Units[m].Position.Y;
 				if(!( wrk_y2>MAP_TOP || wrk_y2<MAP_BOTTOM || wrk_x2<MAP_LEFT || wrk_x2>MAP_RIGHT ))
 					{
-					cm_scrn_x=(int)((wrk_x2+(sprt[UNIT_JPN].wd/2)-MAP_LEFT)/sprt[MAP_TIP_NRML].wd);
-					cm_scrn_y=(int)((MAP_TOP-wrk_y2+(sprt[UNIT_JPN].ht/2))/sprt[MAP_TIP_NRML].ht);
+					cm_scrn_x=(int)((wrk_x2+(Sprites[UNIT_JPN].wd/2)-MAP_LEFT)/Sprites[MAP_TIP_NRML].wd);
+					cm_scrn_y=(int)((MAP_TOP-wrk_y2+(Sprites[UNIT_JPN].ht/2))/Sprites[MAP_TIP_NRML].ht);
 					}
 				else
 					{
@@ -1390,171 +1399,171 @@ public void	cont_unit_effect(int m)
 					cm_scrn_y=0;
 					}
 	
-				if( cmbt_map[cm_scrn_y][cm_scrn_x]>=1)
+				if( MapTiles[cm_scrn_y][cm_scrn_x]>=1)
 					{
-					effect[f].no=9;			// ソースファイル上の番号
-					effect[f].info[1]=4;
+					Effects[f].SpriteNumber=9;			// ソースファイル上の番号
+					Effects[f].info[1]=4;
 					}
 				else
 					{
-					effect[f].no=7;			// ソースファイル上の番号
-					effect[f].info[1]=0;
+					Effects[f].SpriteNumber=7;			// ソースファイル上の番号
+					Effects[f].info[1]=0;
 					}
 
 
-				if( the_slct_unit==m )
+				if( SelectedUnit==m )
 					{
-					the_slct_unit=0;
-					cmbt_menu_kind=0; cmbt_menu_slctd=0; cls_all_slct_unit_p2(1);
+					SelectedUnit=0;
+					CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection2(1);
 					}
 
-				if( unit[m].is_ltl_ldr!=0 )
-					set_new_ltl_ldr(m);					// 爆砕されたのがＬＤＲなら、新しいのを決めます。
+				if( Units[m].IsGroupLeader!=0 )
+					AssignGroupLeader(m);					// 爆砕されたのがＬＤＲなら、新しいのを決めます。
 
 
 				}
-			else if( unit[m].Hp<=unit[m].MaxHp*0.2 )
+			else if( Units[m].Hp<=Units[m].MaxHp*0.2 )
 				{
 				// ＨＰはあるが、事実上の墜落、
-				if( unit[m].Hp==unit[m].MaxHp*0.2 )
+				if( Units[m].Hp==Units[m].MaxHp*0.2 )
 					{
 					// 飛行機が火を吹く
-					if(unit[m].kind==UnitKind.Bomber)
+					if(Units[m].Kind==UnitKind.Bomber)
 						{
 						for(i=0;i<3;i++)
 							{
-							f=seek_effect_no();
+							f=FindFreeEffect();
 							if( f!=0 )
 								{
-								effect[f].layer=EffectLayer.Upper;	
-								effect[f].info[0]=20+my_rnd(20);
-								effect[f].info[1]=4;
-								effect[f].Position = new WorldPosition(unit[m].Position.X+20-my_rnd(40), unit[m].Position.Y+20-my_rnd(40));
-								effect[f].no=9;				// ソースファイル上の番号	
+								Effects[f].Layer=EffectLayer.Upper;	
+								Effects[f].info[0]=20+SharedRandom(20);
+								Effects[f].info[1]=4;
+								Effects[f].Position = new WorldPosition(Units[m].Position.X+20-SharedRandom(40), Units[m].Position.Y+20-SharedRandom(40));
+								Effects[f].SpriteNumber=9;				// ソースファイル上の番号	
 								}
 							}
 						}
 					else
 						{
-						f=seek_effect_no();			
-						effect[f].layer=EffectLayer.Upper;	
-						effect[f].info[0]=20+my_rnd(20);
-						effect[f].info[1]=4;
-						effect[f].Position=unit[m].Position;
-						effect[f].no=9;				// ソースファイル上の番号	
+						f=FindFreeEffect();			
+						Effects[f].Layer=EffectLayer.Upper;	
+						Effects[f].info[0]=20+SharedRandom(20);
+						Effects[f].info[1]=4;
+						Effects[f].Position=Units[m].Position;
+						Effects[f].SpriteNumber=9;				// ソースファイル上の番号	
 						}
-					if(map_edit==0)
-						unit[m].Hp--;
+					if(IsEditingMap==0)
+						Units[m].Hp--;
 					}
 				else
 					{
-					if( rnd(80)==0 )
+					if( Random(80)==0 )
 						{
-						if(map_edit==0)
-							unit[m].Hp--;
+						if(IsEditingMap==0)
+							Units[m].Hp--;
 						}
 
-					if( rnd(5)!=0 && (cc_count%(10))==0 )
+					if( Random(5)!=0 && (Tick%(10))==0 )
 						{
-						f=seek_effect_no();
-						effect[f].layer=EffectLayer.Upper;	
+						f=FindFreeEffect();
+						Effects[f].Layer=EffectLayer.Upper;	
 						//effect[f].kind=THERE;
-						effect[f].info[0]=40+my_rnd(15);
-						effect[f].info[1]=2;
-						effect[f].Position=unit[m].Position;
-						effect[f].no=6;			// ソースファイル上の番号
+						Effects[f].info[0]=40+SharedRandom(15);
+						Effects[f].info[1]=2;
+						Effects[f].Position=Units[m].Position;
+						Effects[f].SpriteNumber=6;			// ソースファイル上の番号
 						}
 
 
-					if( rnd(3)==0 && unit[m].Hp<=unit[m].MaxHp*0.1 )
+					if( Random(3)==0 && Units[m].Hp<=Units[m].MaxHp*0.1 )
 						{
 						// 小爆炎
-						f=seek_effect_no();			
-						effect[f].layer=EffectLayer.Upper;	
-						effect[f].info[0]=8+my_rnd(6);
-						effect[f].info[1]=4;
-						effect[f].Position = new WorldPosition(unit[m].Position.X+my_rnd(6)-3, unit[m].Position.Y+my_rnd(6)-3);
-						effect[f].no=10;			// ソースファイル上の番号	
+						f=FindFreeEffect();			
+						Effects[f].Layer=EffectLayer.Upper;	
+						Effects[f].info[0]=8+SharedRandom(6);
+						Effects[f].info[1]=4;
+						Effects[f].Position = new WorldPosition(Units[m].Position.X+SharedRandom(6)-3, Units[m].Position.Y+SharedRandom(6)-3);
+						Effects[f].SpriteNumber=10;			// ソースファイル上の番号	
 						}
 					}
 				}
-			else if( unit[m].Hp<=unit[m].MaxHp*0.3  )
+			else if( Units[m].Hp<=Units[m].MaxHp*0.3  )
 				{
-				if( rnd(500)==0 )
+				if( Random(500)==0 )
 					{
-					if(map_edit==0)
-						unit[m].Hp--;
+					if(IsEditingMap==0)
+						Units[m].Hp--;
 					}
 
-				if( rnd(3)!=0 && (cc_count%(10) )==0 )
+				if( Random(3)!=0 && (Tick%(10) )==0 )
 					{
-					f=seek_effect_no();
-					effect[f].layer=EffectLayer.Upper;	
+					f=FindFreeEffect();
+					Effects[f].Layer=EffectLayer.Upper;	
 					//effect[f].kind=THERE;
-					effect[f].info[0]=40+my_rnd(15);
-					effect[f].info[1]=2;
-					effect[f].Position=unit[m].Position;
-					effect[f].no=6;			// ソースファイル上の番号
+					Effects[f].info[0]=40+SharedRandom(15);
+					Effects[f].info[1]=2;
+					Effects[f].Position=Units[m].Position;
+					Effects[f].SpriteNumber=6;			// ソースファイル上の番号
 
 
-					if( rnd(5)==0 )
+					if( Random(5)==0 )
 						{
 						// 小爆炎
-						f=seek_effect_no();			
-						effect[f].layer=EffectLayer.Upper;	
-						effect[f].info[0]=8+my_rnd(6);
-						effect[f].info[1]=4;
-						effect[f].Position = new WorldPosition(unit[m].Position.X+my_rnd(6)-3, unit[m].Position.Y+my_rnd(6)-3);
-						effect[f].no=10;			// ソースファイル上の番号	
+						f=FindFreeEffect();			
+						Effects[f].Layer=EffectLayer.Upper;	
+						Effects[f].info[0]=8+SharedRandom(6);
+						Effects[f].info[1]=4;
+						Effects[f].Position = new WorldPosition(Units[m].Position.X+SharedRandom(6)-3, Units[m].Position.Y+SharedRandom(6)-3);
+						Effects[f].SpriteNumber=10;			// ソースファイル上の番号	
 						}
 					}
 
 
 				}
-			else if( unit[m].Hp<=unit[m].MaxHp*0.5  )
+			else if( Units[m].Hp<=Units[m].MaxHp*0.5  )
 				{
-				if( rnd(500)==0 )
+				if( Random(500)==0 )
 					{
-					if(map_edit==0)
-						unit[m].Hp--;
+					if(IsEditingMap==0)
+						Units[m].Hp--;
 					}
-				if( rnd(2)==1 && (cc_count%10)==0 )
+				if( Random(2)==1 && (Tick%10)==0 )
 					{
-					f=seek_effect_no();
-					effect[f].layer=EffectLayer.Upper;	
+					f=FindFreeEffect();
+					Effects[f].Layer=EffectLayer.Upper;	
 					//effect[f].kind=THERE;
-					effect[f].info[0]=40+my_rnd(15);
-					effect[f].info[1]=2;
+					Effects[f].info[0]=40+SharedRandom(15);
+					Effects[f].info[1]=2;
 
-					effect[f].Position=unit[m].Position;
-					effect[f].no=6;			// ソースファイル上の番号
+					Effects[f].Position=Units[m].Position;
+					Effects[f].SpriteNumber=6;			// ソースファイル上の番号
 
-					if( rnd(7)==0 )
+					if( Random(7)==0 )
 						{
 						// 小爆炎
-						f=seek_effect_no();			
-						effect[f].layer=EffectLayer.Upper;	
-						effect[f].info[0]=8+my_rnd(6);
-						effect[f].info[1]=4;
-						effect[f].Position = new WorldPosition(unit[m].Position.X+my_rnd(6)-3, unit[m].Position.Y+my_rnd(6)-3);
-						effect[f].no=10;			// ソースファイル上の番号	
+						f=FindFreeEffect();			
+						Effects[f].Layer=EffectLayer.Upper;	
+						Effects[f].info[0]=8+SharedRandom(6);
+						Effects[f].info[1]=4;
+						Effects[f].Position = new WorldPosition(Units[m].Position.X+SharedRandom(6)-3, Units[m].Position.Y+SharedRandom(6)-3);
+						Effects[f].SpriteNumber=10;			// ソースファイル上の番号	
 						}
 					}
 
 				}
-			else if( unit[m].Hp<=unit[m].MaxHp*0.7  )
+			else if( Units[m].Hp<=Units[m].MaxHp*0.7  )
 				{
 
-				if( rnd(8)==0 && (cc_count%10)==0 )
+				if( Random(8)==0 && (Tick%10)==0 )
 					{
-					f=seek_effect_no();
-					effect[f].layer=EffectLayer.Upper;	
+					f=FindFreeEffect();
+					Effects[f].Layer=EffectLayer.Upper;	
 					//effect[f].kind=THERE;
-					effect[f].info[0]=40+my_rnd(15);
-					effect[f].info[1]=2;
+					Effects[f].info[0]=40+SharedRandom(15);
+					Effects[f].info[1]=2;
 
-					effect[f].Position=unit[m].Position;
-					effect[f].no=6;			// ソースファイル上の番号
+					Effects[f].Position=Units[m].Position;
+					Effects[f].SpriteNumber=6;			// ソースファイル上の番号
 
 
 					}
@@ -1564,19 +1573,19 @@ public void	cont_unit_effect(int m)
 
 
 	// 艦船のエフェクト
-	if( unit[m].ctgry==UnitCategory.Ship  )
+	if( Units[m].Category==UnitCategory.Ship  )
 		{
 		// 修理と補給中の表示
-		if( /*paint_effect_on &&*/ unit[m].spry!=0 && (FrameCount%2)!=0 && unit[m].used==your_side )
+		if( /*paint_effect_on &&*/ Units[m].Supply!=0 && (FrameCount%2)!=0 && Units[m].Side==LocalSide )
 			{
-			f=seek_effect_no();
-			effect[f].layer=EffectLayer.Lower;	
-			effect[f].info[0]=1;
+			f=FindFreeEffect();
+			Effects[f].Layer=EffectLayer.Lower;	
+			Effects[f].info[0]=1;
 
-			effect[f].info[1]=0;
-			effect[f].Position = new WorldPosition(unit[m].Position.X, unit[m].Position.Y-25.0);
+			Effects[f].info[1]=0;
+			Effects[f].Position = new WorldPosition(Units[m].Position.X, Units[m].Position.Y-25.0);
 
-			effect[f].no=15;			// ソースファイル上の番号
+			Effects[f].SpriteNumber=15;			// ソースファイル上の番号
 			}
 
 		// 武装の表示
@@ -1586,69 +1595,69 @@ public void	cont_unit_effect(int m)
 
 
 
-		if( ( ( unit[m].used==Side.Japan && unit[m].kind==UnitKind.Battleship ) || ( unit[m].used==Side.UnitedStates && unit[m].kind==UnitKind.Carrier ) ) && unit[m].type==1 && unit[m].used==your_side )
+		if( ( ( Units[m].Side==Side.Japan && Units[m].Kind==UnitKind.Battleship ) || ( Units[m].Side==Side.UnitedStates && Units[m].Kind==UnitKind.Carrier ) ) && Units[m].Variant==1 && Units[m].Side==LocalSide )
 			{
 			// 大和級とエセックス
-			f=seek_effect_no();
-			effect[f].layer=EffectLayer.Lower;	
-			effect[f].info[0]=1;
+			f=FindFreeEffect();
+			Effects[f].Layer=EffectLayer.Lower;	
+			Effects[f].info[0]=1;
 
-			effect[f].info[1]=0;
-			effect[f].Position = new WorldPosition(unit[m].Position.X+18, unit[m].Position.Y+25.0);
+			Effects[f].info[1]=0;
+			Effects[f].Position = new WorldPosition(Units[m].Position.X+18, Units[m].Position.Y+25.0);
 
-			effect[f].no=27;			// ソースファイル上の番号
+			Effects[f].SpriteNumber=27;			// ソースファイル上の番号
 			}
-		else if( unit[m].kind==UnitKind.Destroyer && unit[m].type==1 /*&& unit[m].spry==0 /*&& unit[m].arm[1]>=1*/ && unit[m].used==your_side )
+		else if( Units[m].Kind==UnitKind.Destroyer && Units[m].Variant==1 /*&& unit[m].spry==0 /*&& unit[m].arm[1]>=1*/ && Units[m].Side==LocalSide )
 			{
 			// 対潜駆逐艦
-			f=seek_effect_no();
-			effect[f].layer=EffectLayer.Lower;	
-			effect[f].info[0]=1;
+			f=FindFreeEffect();
+			Effects[f].Layer=EffectLayer.Lower;	
+			Effects[f].info[0]=1;
 
-			effect[f].info[1]=0;
-			effect[f].Position = new WorldPosition(unit[m].Position.X+18, unit[m].Position.Y+25.0);
+			Effects[f].info[1]=0;
+			Effects[f].Position = new WorldPosition(Units[m].Position.X+18, Units[m].Position.Y+25.0);
 
-			effect[f].no=26;			// ソースファイル上の番号
+			Effects[f].SpriteNumber=26;			// ソースファイル上の番号
 			}
-		else if( unit[m].kind==UnitKind.Cruiser && unit[m].type==1 /*&& unit[m].spry==0 /*&& unit[m].arm[1]>=1*/ && unit[m].used==your_side )
+		else if( Units[m].Kind==UnitKind.Cruiser && Units[m].Variant==1 /*&& unit[m].spry==0 /*&& unit[m].arm[1]>=1*/ && Units[m].Side==LocalSide )
 			{
 			// 防空巡洋艦
-			f=seek_effect_no();
-			effect[f].layer=EffectLayer.Lower;	
-			effect[f].info[0]=1;
+			f=FindFreeEffect();
+			Effects[f].Layer=EffectLayer.Lower;	
+			Effects[f].info[0]=1;
 
-			effect[f].info[1]=0;
-			effect[f].Position = new WorldPosition(unit[m].Position.X+18, unit[m].Position.Y+25.0);
+			Effects[f].info[1]=0;
+			Effects[f].Position = new WorldPosition(Units[m].Position.X+18, Units[m].Position.Y+25.0);
 
-			effect[f].no=16;			// ソースファイル上の番号
+			Effects[f].SpriteNumber=16;			// ソースファイル上の番号
 			}
-		else if( ( unit[m].used==Side.Japan && ( unit[m].kind==UnitKind.Submarine || unit[m].kind==UnitKind.Destroyer || unit[m].kind==UnitKind.Cruiser ) || unit[m].used==Side.UnitedStates && ( unit[m].kind==UnitKind.Submarine || unit[m].kind==UnitKind.Destroyer ) ) && unit[m].spry==0 && unit[m].Ammo!=0 && !(unit[m].ReloadTime!=0 && (FrameCount%2)!=0) && unit[m].Ammo>=1 && unit[m].used==your_side )
+		else if( ( Units[m].Side==Side.Japan && ( Units[m].Kind==UnitKind.Submarine || Units[m].Kind==UnitKind.Destroyer || Units[m].Kind==UnitKind.Cruiser ) || Units[m].Side==Side.UnitedStates && ( Units[m].Kind==UnitKind.Submarine || Units[m].Kind==UnitKind.Destroyer ) ) && Units[m].Supply==0 && Units[m].Ammo!=0 && !(Units[m].ReloadTime!=0 && (FrameCount%2)!=0) && Units[m].Ammo>=1 && Units[m].Side==LocalSide )
 			{
-			f=seek_effect_no();
-			effect[f].layer=EffectLayer.Lower;	
-			effect[f].info[0]=1;
+			f=FindFreeEffect();
+			Effects[f].Layer=EffectLayer.Lower;	
+			Effects[f].info[0]=1;
 
-			effect[f].info[1]=0;
-			effect[f].Position = new WorldPosition(unit[m].Position.X, unit[m].Position.Y-25.0);
+			Effects[f].info[1]=0;
+			Effects[f].Position = new WorldPosition(Units[m].Position.X, Units[m].Position.Y-25.0);
 
-			effect[f].no=3;			// ソースファイル上の番号
+			Effects[f].SpriteNumber=3;			// ソースファイル上の番号
 			}
 
 
 		// トランスポーターの荷物の表示 
-		if( /*paint_effect_on &&*/ unit[m].kind==UnitKind.Transport && unit[m].spry==0 && unit[m].Ammo!=0 && !(unit[m].ReloadTime!=0 && (FrameCount%2)!=0) && unit[m].used==your_side )
+		if( /*paint_effect_on &&*/ Units[m].Kind==UnitKind.Transport && Units[m].Supply==0 && Units[m].Ammo!=0 && !(Units[m].ReloadTime!=0 && (FrameCount%2)!=0) && Units[m].Side==LocalSide )
 			{
-			f=seek_effect_no();
-			effect[f].layer=EffectLayer.Lower;	
-			effect[f].info[0]=1;
+			f=FindFreeEffect();
+			Effects[f].Layer=EffectLayer.Lower;	
+			Effects[f].info[0]=1;
 
-			effect[f].info[1]=0;
-			effect[f].Position = new WorldPosition(unit[m].Position.X, unit[m].Position.Y-25.0);
+			Effects[f].info[1]=0;
+			Effects[f].Position = new WorldPosition(Units[m].Position.X, Units[m].Position.Y-25.0);
 
 			//switch( unit[m].arm[0] )
 			//	{
 			//	case TPD:
-					effect[f].no=44;			// ソースファイル上の番号
+					Effects[f].SpriteNumber=44;			// ソースファイル上の番号
 			//		break;
 			//	}
 			}
@@ -1657,24 +1666,24 @@ public void	cont_unit_effect(int m)
 //TR_GF1
 
 		// およその敵潜航潜水艦
-		if( /*paint_effect_on &&*/ unit[m].used!=your_side && unit[m].kind==UnitKind.Submarine && unit[m].info[6]!=0 && unit[m].info[10]!=0 )
+		if( /*paint_effect_on &&*/ Units[m].Side!=LocalSide && Units[m].Kind==UnitKind.Submarine && Units[m].info[6]!=0 && Units[m].info[10]!=0 )
 			{
-			f=seek_effect_no();
-			effect[f].layer=EffectLayer.Upper;
-			effect[f].info[0]=1;
-			effect[f].info[1]=0;
-			effect[f].Position = new WorldPosition(unit[m].info[7], unit[m].info[8]);
+			f=FindFreeEffect();
+			Effects[f].Layer=EffectLayer.Upper;
+			Effects[f].info[0]=1;
+			Effects[f].info[1]=0;
+			Effects[f].Position = new WorldPosition(Units[m].info[7], Units[m].info[8]);
 
-			effect[f].no=60;			// ソースファイル上の番号
+			Effects[f].SpriteNumber=60;			// ソースファイル上の番号
 
 
 
-			f=seek_effect_no();
-			effect[f].layer=EffectLayer.Lower;
-			effect[f].info[0]=1;
-			effect[f].info[1]=12;
-			effect[f].Position = new WorldPosition(unit[m].info[7], unit[m].info[8]);
-			effect[f].EndPosition = new WorldPosition(unit[m].info[9], unit[m].info[9]);
+			f=FindFreeEffect();
+			Effects[f].Layer=EffectLayer.Lower;
+			Effects[f].info[0]=1;
+			Effects[f].info[1]=12;
+			Effects[f].Position = new WorldPosition(Units[m].info[7], Units[m].info[8]);
+			Effects[f].EndPosition = new WorldPosition(Units[m].info[9], Units[m].info[9]);
 /*
 			wrk_rect.top=(int)effect[f].y-unit[m].info[9];
 			wrk_rect.right=(int)effect[f].x+unit[m].info[9];
@@ -1688,89 +1697,89 @@ public void	cont_unit_effect(int m)
 			}
 
 
-		if( unit[m].kind==UnitKind.Submarine && unit[m].info[6]!=0 )
+		if( Units[m].Kind==UnitKind.Submarine && Units[m].info[6]!=0 )
 			{	// 潜航中潜水艦
-			if( unit[m].Hp<=0 )
+			if( Units[m].Hp<=0 )
 				{	// 沈没
-				unit[m].used=0;
-				unit[m].found=0;
+				Units[m].Side=0;
+				Units[m].Found=0;
 
 
-				if( unit_info[3]==m )
-					unit_info[0]=0;				// ユニットインフォをクリア
+				if( UnitInfoPanel[3]==m )
+					UnitInfoPanel[0]=0;				// ユニットインフォをクリア
 
 
-				if( the_slct_unit==m )
+				if( SelectedUnit==m )
 					{
-					the_slct_unit=0;
-					cmbt_menu_kind=0; cmbt_menu_slctd=0; cls_all_slct_unit_p2(1);
+					SelectedUnit=0;
+					CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection2(1);
 					}
 				}
 			else
 				{
-				if( unit[m].Hp<=/*unit[m].hp[2]*/unit[m].MaxHp*0.2 )
+				if( Units[m].Hp<=/*unit[m].hp[2]*/Units[m].MaxHp*0.2 )
 					{	// 空気漏れ
-					if( rnd(100)==0 )
+					if( Random(100)==0 )
 						{
-						if(map_edit==0)
-							unit[m].Hp--;
+						if(IsEditingMap==0)
+							Units[m].Hp--;
 						}
-					if( rnd(300)==1 /*&& paint_effect_on*/ )
+					if( Random(300)==1 /*&& paint_effect_on*/ )
 						{
 						for(n=0;n<=3;n++)
 							{
-							f=seek_effect_no();			
+							f=FindFreeEffect();			
 							if( f!=0 )
 								{
-								effect[f].layer=EffectLayer.Lower;	
-								effect[f].info[0]=100+my_rnd(20);
-								effect[f].info[1]=4;
-								effect[f].Position = new WorldPosition(unit[m].Position.X+my_rnd(40)-20, unit[m].Position.Y+my_rnd(40)-20);
-								effect[f].no=8;			// ソースファイル上の番号	
+								Effects[f].Layer=EffectLayer.Lower;	
+								Effects[f].info[0]=100+SharedRandom(20);
+								Effects[f].info[1]=4;
+								Effects[f].Position = new WorldPosition(Units[m].Position.X+SharedRandom(40)-20, Units[m].Position.Y+SharedRandom(40)-20);
+								Effects[f].SpriteNumber=8;			// ソースファイル上の番号	
 								}
 							}
 						// ついでに発見される
-						unit[m].info[7]=(int)unit[m].Position.X;
-						unit[m].info[8]=(int)unit[m].Position.Y;
+						Units[m].info[7]=(int)Units[m].Position.X;
+						Units[m].info[8]=(int)Units[m].Position.Y;
 
-						unit[m].info[9]=100;
-						unit[m].info[10]=400;
+						Units[m].info[9]=100;
+						Units[m].info[10]=400;
 
-						unit[m].found=1;
+						Units[m].Found=1;
 						}
 					}
 				else
 					{
-					if( unit[m].Hp<=unit[m].MaxHp*0.5 )
+					if( Units[m].Hp<=Units[m].MaxHp*0.5 )
 						{	// 空気漏れ
-						if( rnd(1000)==0 )
+						if( Random(1000)==0 )
 							{
-							if(map_edit==0)
-								unit[m].Hp--;
+							if(IsEditingMap==0)
+								Units[m].Hp--;
 							}
-						if( rnd(600)==1 /*&& paint_effect_on*/ )
+						if( Random(600)==1 /*&& paint_effect_on*/ )
 							{
 							for(n=0;n<=2;n++)
 								{
-								f=seek_effect_no();			
+								f=FindFreeEffect();			
 								if( f!=0)
 									{
-									effect[f].layer=EffectLayer.Lower;	
-									effect[f].info[0]=100+my_rnd(20);
-									effect[f].info[1]=4;
-									effect[f].Position = new WorldPosition(unit[m].Position.X+my_rnd(40)-20, unit[m].Position.Y+my_rnd(40)-20);
-									effect[f].no=8;			// ソースファイル上の番号	
+									Effects[f].Layer=EffectLayer.Lower;	
+									Effects[f].info[0]=100+SharedRandom(20);
+									Effects[f].info[1]=4;
+									Effects[f].Position = new WorldPosition(Units[m].Position.X+SharedRandom(40)-20, Units[m].Position.Y+SharedRandom(40)-20);
+									Effects[f].SpriteNumber=8;			// ソースファイル上の番号	
 									}
 								}
 
 							// ついでに発見される
-							unit[m].info[7]=(int)unit[m].Position.X;
-							unit[m].info[8]=(int)unit[m].Position.Y;
+							Units[m].info[7]=(int)Units[m].Position.X;
+							Units[m].info[8]=(int)Units[m].Position.Y;
 
-							unit[m].info[9]=100;
-							unit[m].info[10]=400;
+							Units[m].info[9]=100;
+							Units[m].info[10]=400;
 
-							unit[m].found=1;
+							Units[m].Found=1;
 							}
 						}
 					}
@@ -1778,29 +1787,29 @@ public void	cont_unit_effect(int m)
 			}
 		else
 			{	// 水上艦船
-			if( unit[m].Hp<=0 )
+			if( Units[m].Hp<=0 )
 				{	// 沈没
 
-				SoundPlayEffect( 0, SHIP_SINK1 ,unit[m].Position.X, unit[m].Position.Y);
+				PlaySoundEffect( 0, SHIP_SINK1 ,Units[m].Position.X, Units[m].Position.Y);
 
-				unit[m].used=0;
+				Units[m].Side=0;
 
 		
-				if( unit_info[3]==m )
-					unit_info[0]=0;
+				if( UnitInfoPanel[3]==m )
+					UnitInfoPanel[0]=0;
 
 				// 空母なら艦載機とユニットインフォを
-				if( unit[m].kind==UnitKind.Carrier || unit[m].kind==UnitKind.LightCarrier || unit[m].kind==UnitKind.AirBase )
+				if( Units[m].Kind==UnitKind.Carrier || Units[m].Kind==UnitKind.LightCarrier || Units[m].Kind==UnitKind.AirBase )
 					{
-					for( i=1;i<=max_unit;i++)
+					for( i=1;i<=MaxUnitId;i++)
 						{
-						if( unit[i].used!=0 && unit[i].ctgry==UnitCategory.Plane && unit[i].PlaneState==UnitState.Parked && unit[i].info[1]==m)
+						if( Units[i].Side!=0 && Units[i].Category==UnitCategory.Plane && Units[i].PlaneState==UnitState.Parked && Units[i].info[1]==m)
 							{
-							unit[i].used=0;
-							if( the_slct_unit==i)
+							Units[i].Side=0;
+							if( SelectedUnit==i)
 								{
-								the_slct_unit=0;
-								cmbt_menu_kind=0; cmbt_menu_slctd=0; cls_all_slct_unit_p2(1);
+								SelectedUnit=0;
+								CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection2(1);
 								}
 							}
 						}
@@ -1808,67 +1817,67 @@ public void	cont_unit_effect(int m)
 
 
 
-				be_dstryd(m);
+				DrawDestruction(m);
 
-				if( the_slct_unit==m )
+				if( SelectedUnit==m )
 					{
-					the_slct_unit=0;
-					cmbt_menu_kind=0; cmbt_menu_slctd=0; cls_all_slct_unit_p2(1);
+					SelectedUnit=0;
+					CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection2(1);
 					}
 
 
 				}
 			else 
 				{
-				if( unit[m].Hp<=unit[m].MaxHp*0.2  )
+				if( Units[m].Hp<=Units[m].MaxHp*0.2  )
 					{
-					if( rnd(4000)==0 && unit[m].spry==0 )
+					if( Random(4000)==0 && Units[m].Supply==0 )
 						{
-						if(map_edit==0)
-							unit[m].Hp--;
+						if(IsEditingMap==0)
+							Units[m].Hp--;
 						}
-					if( rnd(2)!=0 /*&& paint_effect_on*/ )
+					if( Random(2)!=0 /*&& paint_effect_on*/ )
 						{
-						f=seek_effect_no();
-						effect[f].layer=EffectLayer.Upper;	
-						effect[f].info[0]=1;
-						effect[f].info[1]=4;
+						f=FindFreeEffect();
+						Effects[f].Layer=EffectLayer.Upper;	
+						Effects[f].info[0]=1;
+						Effects[f].info[1]=4;
 
-						effect[f].Position=unit[m].Position;
-						effect[f].no=9;			// ソースファイル上の番号
+						Effects[f].Position=Units[m].Position;
+						Effects[f].SpriteNumber=9;			// ソースファイル上の番号
 						}
 					}
 				else
 					{
-					if( unit[m].Hp<=unit[m].MaxHp*0.5  )
+					if( Units[m].Hp<=Units[m].MaxHp*0.5  )
 						{
-						n=rnd(4);
+						n=Random(4);
 						if( /*paint_effect_on &&*/ n==0 )
 							{
-							f=seek_effect_no();
-							effect[f].layer=EffectLayer.Upper;	
-							effect[f].info[0]=1;	effect[f].info[1]=4;
-							effect[f].Position=unit[m].Position;
-							effect[f].no=9;			// ソースファイル上の番号
+							f=FindFreeEffect();
+							Effects[f].Layer=EffectLayer.Upper;	
+							Effects[f].info[0]=1;	Effects[f].info[1]=4;
+							Effects[f].Position=Units[m].Position;
+							Effects[f].SpriteNumber=9;			// ソースファイル上の番号
 							}
 						if( /*paint_effect_on &&*/ n==1 )
 							{
-							f=seek_effect_no();
-							effect[f].layer=EffectLayer.Upper;	
-							effect[f].info[0]=1;	effect[f].info[1]=4;
-							effect[f].Position=unit[m].Position;
-							effect[f].no=10;			// ソースファイル上の番号
+							f=FindFreeEffect();
+							Effects[f].Layer=EffectLayer.Upper;	
+							Effects[f].info[0]=1;	Effects[f].info[1]=4;
+							Effects[f].Position=Units[m].Position;
+							Effects[f].SpriteNumber=10;			// ソースファイル上の番号
 							}
 						}
 					else
 						{
-						if( rnd(10)==1 /*&& paint_effect_on*/ && unit[m].Hp<=unit[m].MaxHp*0.7 )
+						if( Random(10)==1 /*&& paint_effect_on*/ && Units[m].Hp<=Units[m].MaxHp*0.7 )
 							{
-							f=seek_effect_no();
-							effect[f].layer=EffectLayer.Upper;	
-							effect[f].info[0]=1;	effect[f].info[1]=4;
-							effect[f].Position=unit[m].Position;
-							effect[f].no=10;			// ソースファイル上の番号
+							f=FindFreeEffect();
+							Effects[f].Layer=EffectLayer.Upper;	
+							Effects[f].info[0]=1;	Effects[f].info[1]=4;
+							Effects[f].Position=Units[m].Position;
+							Effects[f].SpriteNumber=10;			// ソースファイル上の番号
 							}
 						}
 					}
@@ -1877,20 +1886,20 @@ public void	cont_unit_effect(int m)
 
 
 		// 航跡のエフェクト
-		if( !(unit[m].kind==UnitKind.Submarine||unit[m].kind==UnitKind.NavalBase||unit[m].kind==UnitKind.AirBase||unit[m].kind==UnitKind.City||unit[m].kind==UnitKind.Mine||unit[m].kind==UnitKind.InfantryBase||unit[m].kind==UnitKind.Pillboxes||unit[m].kind==UnitKind.Fortress) && (cc_count%15)==0 && unit[m].spd>=unit[m].max_spd/3 )
+		if( !(Units[m].Kind==UnitKind.Submarine||Units[m].Kind==UnitKind.NavalBase||Units[m].Kind==UnitKind.AirBase||Units[m].Kind==UnitKind.City||Units[m].Kind==UnitKind.Mine||Units[m].Kind==UnitKind.InfantryBase||Units[m].Kind==UnitKind.Pillboxes||Units[m].Kind==UnitKind.Fortress) && (Tick%15)==0 && Units[m].Speed>=Units[m].MaxSpeed/3 )
 			{
 			// 航跡のエフェクトを残す
-			f=seek_effect_no();			
-			effect[f].layer=EffectLayer.Lower;	
-			effect[f].info[0]=60+my_rnd(60);
-			effect[f].info[1]=4;
-			effect[f].Position=unit[m].Position;
+			f=FindFreeEffect();			
+			Effects[f].Layer=EffectLayer.Lower;	
+			Effects[f].info[0]=60+SharedRandom(60);
+			Effects[f].info[1]=4;
+			Effects[f].Position=Units[m].Position;
 
-			drctn=unit[m].drctn;
+			drctn=Units[m].Direction;
 			drctn+=180;
 			drctn=(int)drctn%360;
 
-			switch(unit[m].kind)
+			switch(Units[m].Kind)
 				{
 				case UnitKind.Battleship:	case UnitKind.Carrier:
 					dstc=26;
@@ -1906,28 +1915,28 @@ public void	cont_unit_effect(int m)
 				}
 
 
-			effect[f].Position += new WorldVector(cos(drctn*a_PI)*dstc, sin(drctn*a_PI)*dstc);
+			Effects[f].Position += new WorldVector(cos(drctn*a_PI)*dstc, sin(drctn*a_PI)*dstc);
 
-			effect[f].no=8;			// ソースファイル上の番号	
+			Effects[f].SpriteNumber=8;			// ソースファイル上の番号	
 			}
 		}
 
 
 	// 艦船のエフェクト
-	if( unit[m].kind==UnitKind.InfantryBase || unit[m].kind==UnitKind.Pillboxes || unit[m].kind==UnitKind.Fortress || unit[m].kind==UnitKind.AirBase || unit[m].kind==UnitKind.InfantryBase || unit[m].kind==UnitKind.NavalBase )
+	if( Units[m].Kind==UnitKind.InfantryBase || Units[m].Kind==UnitKind.Pillboxes || Units[m].Kind==UnitKind.Fortress || Units[m].Kind==UnitKind.AirBase || Units[m].Kind==UnitKind.InfantryBase || Units[m].Kind==UnitKind.NavalBase )
 		{
 		// 建設工事中
-		if( /*paint_effect_on &&*/ unit[m].info[0]!=0 && (FrameCount%2)!=0 && unit[m].used==your_side )
+		if( /*paint_effect_on &&*/ Units[m].info[0]!=0 && (FrameCount%2)!=0 && Units[m].Side==LocalSide )
 			{
-			f=seek_effect_no();
+			f=FindFreeEffect();
 //			effect[f].layer=LOWER;	
-			effect[f].layer=EffectLayer.Upper;	
-			effect[f].info[0]=1;
+			Effects[f].Layer=EffectLayer.Upper;	
+			Effects[f].info[0]=1;
 
-			effect[f].info[1]=0;
-			effect[f].Position = new WorldPosition(unit[m].Position.X, unit[m].Position.Y-25.0);
+			Effects[f].info[1]=0;
+			Effects[f].Position = new WorldPosition(Units[m].Position.X, Units[m].Position.Y-25.0);
 
-			effect[f].no=15;			// ソースファイル上の番号
+			Effects[f].SpriteNumber=15;			// ソースファイル上の番号
 			}
 		}
 
@@ -1942,7 +1951,8 @@ public void	cont_unit_effect(int m)
 //============================================================================
 //	
 //----------------------------------------------------------------------------
-public void	edit_now()
+[Original("edit_now")]
+public void	UpdateMapEditor()
 	{
     Array128<byte> ach = default;
     int len;
@@ -1965,20 +1975,20 @@ public void	edit_now()
 		us_plane=0;
 		us_ship=0;
 
-		for(i=1;i<=max_unit;i++)
+		for(i=1;i<=MaxUnitId;i++)
 			{
-			if( unit[i].used!=0 )
+			if( Units[i].Side!=0 )
 				{
-				if( unit[i].used==Side.Japan)
+				if( Units[i].Side==Side.Japan)
 					{
-					if( unit[i].ctgry==UnitCategory.Plane )
+					if( Units[i].Category==UnitCategory.Plane )
 						jp_plane++;
 					else
 						jp_ship++;
 					}
 				else
 					{
-					if( unit[i].ctgry==UnitCategory.Plane )
+					if( Units[i].Category==UnitCategory.Plane )
 						us_plane++;
 					else
 						us_ship++;
@@ -2027,142 +2037,142 @@ public void	edit_now()
 
 
 		// 配置ユニット
-		switch(put_trgt)
+		switch(EditorTarget)
 			{
 			case 1:
 				len= wsprintf(ach, "戦艦",10);
-				put_kind=(byte)UnitKind.Battleship;
-				put_kind_sub=0;
+				EditorKind=(byte)UnitKind.Battleship;
+				EditorVariant=0;
 				break;
 			case 2:
 				len= wsprintf(ach, "巡洋艦",10);
-				put_kind=(byte)UnitKind.Cruiser;
-				put_kind_sub=0;
+				EditorKind=(byte)UnitKind.Cruiser;
+				EditorVariant=0;
 				break;
 			case 3:
 				len= wsprintf(ach, "駆逐艦",10);
-				put_kind=(byte)UnitKind.Destroyer;
-				put_kind_sub=0;
+				EditorKind=(byte)UnitKind.Destroyer;
+				EditorVariant=0;
 				break;
 			case 4:
 				len= wsprintf(ach, "潜水艦",10);
-				put_kind=(byte)UnitKind.Submarine;
-				put_kind_sub=0;
+				EditorKind=(byte)UnitKind.Submarine;
+				EditorVariant=0;
 				break;
 			case 5:
 				len= wsprintf(ach, "正規空母",10);
-				put_kind=(byte)UnitKind.Carrier;
-				put_kind_sub=0;
+				EditorKind=(byte)UnitKind.Carrier;
+				EditorVariant=0;
 				break;
 			case 6:
 				len= wsprintf(ach, "軽空母",10);
-				put_kind=(byte)UnitKind.LightCarrier;
-				put_kind_sub=0;
+				EditorKind=(byte)UnitKind.LightCarrier;
+				EditorVariant=0;
 				break;
 			case 7:
 				len = wsprintf(ach, "輸送船(歩兵基地)",10);
-				put_kind=(byte)UnitKind.Transport;
-				put_kind_sub=TR_GF1;
+				EditorKind=(byte)UnitKind.Transport;
+				EditorVariant=(byte)FireKind.CargoInfantryBase;
 				break;
 			case 8:
 				len = wsprintf(ach, "輸送船(トーチカ群)",10);
-				put_kind=(byte)UnitKind.Transport;
-				put_kind_sub=TR_GF2;
+				EditorKind=(byte)UnitKind.Transport;
+				EditorVariant=(byte)FireKind.CargoPillboxes;
 				break;
 			case 9:
 				len = wsprintf(ach, "輸送船(要塞)",10);
-				put_kind=(byte)UnitKind.Transport;
-				put_kind_sub=TR_GF3;
+				EditorKind=(byte)UnitKind.Transport;
+				EditorVariant=(byte)FireKind.CargoFortress;
 				break;
 			case 10:
 				len = wsprintf(ach, "輸送船(航空基地)",10);
-				put_kind=(byte)UnitKind.Transport;
-				put_kind_sub=TR_AP;
+				EditorKind=(byte)UnitKind.Transport;
+				EditorVariant=(byte)FireKind.CargoAirBase;
 				break;
 			case 11:
 				len = wsprintf(ach, "輸送船(軍港)",10);
-				put_kind=(byte)UnitKind.Transport;
-				put_kind_sub=TR_SP;
+				EditorKind=(byte)UnitKind.Transport;
+				EditorVariant=(byte)FireKind.CargoNavalBase;
 				break;
 
 
 			case 12:
 				len= wsprintf(ach, "軍港",10);
-				put_kind=(byte)UnitKind.NavalBase;
-				put_kind_sub=0;
+				EditorKind=(byte)UnitKind.NavalBase;
+				EditorVariant=0;
 				break;
 			case 13:
 				len= wsprintf(ach, "航空基地",10);
-				put_kind=(byte)UnitKind.AirBase;
-				put_kind_sub=0;
+				EditorKind=(byte)UnitKind.AirBase;
+				EditorVariant=0;
 				break;
 			case 14:
 				len= wsprintf(ach, "都市",10);
-				put_kind=(byte)UnitKind.City;
-				put_kind_sub=0;
+				EditorKind=(byte)UnitKind.City;
+				EditorVariant=0;
 				break;
 			case 15:
 				len= wsprintf(ach, "歩兵基地",10);
-				put_kind=(byte)UnitKind.InfantryBase;
-				put_kind_sub=0;
+				EditorKind=(byte)UnitKind.InfantryBase;
+				EditorVariant=0;
 				break;
 			case 16:
 				len= wsprintf(ach, "トーチカ群",10);
-				put_kind=(byte)UnitKind.Pillboxes;
-				put_kind_sub=0;
+				EditorKind=(byte)UnitKind.Pillboxes;
+				EditorVariant=0;
 				break;
 			case 17:
 				len= wsprintf(ach, "要塞",10);
-				put_kind=(byte)UnitKind.Fortress;
-				put_kind_sub=0;
+				EditorKind=(byte)UnitKind.Fortress;
+				EditorVariant=0;
 				break;
 
 
 
 			case 18:
 				len = wsprintf(ach, "戦闘機",10);
-				put_kind=(byte)UnitKind.Fighter;
-				put_kind_sub=0;
+				EditorKind=(byte)UnitKind.Fighter;
+				EditorVariant=0;
 				break;
 			case 19:
 				len = wsprintf(ach, "陸上戦闘機",10);
-				put_kind=(byte)UnitKind.Fighter;
-				put_kind_sub=1;
+				EditorKind=(byte)UnitKind.Fighter;
+				EditorVariant=1;
 				break;
 			case 20:
 				len= wsprintf(ach, "攻撃機",10);
-				put_kind=(byte)UnitKind.Attacker;
-				put_kind_sub=0;
+				EditorKind=(byte)UnitKind.Attacker;
+				EditorVariant=0;
 				break;
 			case 21:
 				len= wsprintf(ach, "戦略爆撃機",10);
-				put_kind=(byte)UnitKind.Bomber;
-				put_kind_sub=0;
+				EditorKind=(byte)UnitKind.Bomber;
+				EditorVariant=0;
 				break;
 
 
 			case 22:
 				len= wsprintf(ach, "防空巡洋艦",10);
-				put_kind=(byte)UnitKind.Cruiser;
-				put_kind_sub=1;
+				EditorKind=(byte)UnitKind.Cruiser;
+				EditorVariant=1;
 				break;
 			case 23:
 				len= wsprintf(ach, "対潜駆逐艦",10);
-				put_kind=(byte)UnitKind.Destroyer;
-				put_kind_sub=1;
+				EditorKind=(byte)UnitKind.Destroyer;
+				EditorVariant=1;
 				break;
 			case 24:
-				if( your_side==Side.Japan )
+				if( LocalSide==Side.Japan )
 					{
 					len= wsprintf(ach, "大和級戦艦",10);
-					put_kind=(byte)UnitKind.Battleship;
+					EditorKind=(byte)UnitKind.Battleship;
 					}
 				else
 					{
 					len= wsprintf(ach, "エセックス型空母",10);
-					put_kind=(byte)UnitKind.Carrier;
+					EditorKind=(byte)UnitKind.Carrier;
 					}
-				put_kind_sub=1;
+				EditorVariant=1;
 				break;
 
 
@@ -2184,7 +2194,7 @@ public void	edit_now()
 		len = wsprintf(ach, "増援場所:");
 		TextOut(hdc, 0, 660, ach, len);
 
-		switch( rein[(int)your_side] )
+		switch( Reinforcements[(int)LocalSide] )
 			{
 			case 0:
 				len = wsprintf(ach, "左上");
@@ -2243,27 +2253,27 @@ public void	edit_now()
 			case 7:
 				len = wsprintf(ach, "Transport(Trenchies)",10);
 				put_kind=(byte)UnitKind.Transport;
-				put_kind_sub=TR_GF1;
+				put_kind_sub=(byte)FireKind.CargoInfantryBase;
 				break;
 			case 8:
 				len = wsprintf(ach, "Transport(Pillboxes)",10);
 				put_kind=(byte)UnitKind.Transport;
-				put_kind_sub=TR_GF2;
+				put_kind_sub=(byte)FireKind.CargoPillboxes;
 				break;
 			case 9:
 				len = wsprintf(ach, "Transport(Fortress)",10);
 				put_kind=(byte)UnitKind.Transport;
-				put_kind_sub=TR_GF3;
+				put_kind_sub=(byte)FireKind.CargoFortress;
 				break;
 			case 10:
 				len = wsprintf(ach, "Transport(Airfield)",10);
 				put_kind=(byte)UnitKind.Transport;
-				put_kind_sub=TR_AP;
+				put_kind_sub=(byte)FireKind.CargoAirBase;
 				break;
 			case 11:
 				len = wsprintf(ach, "Transport(port)",10);
 				put_kind=(byte)UnitKind.Transport;
-				put_kind_sub=TR_SP;
+				put_kind_sub=(byte)FireKind.CargoNavalBase;
 				break;
 
 

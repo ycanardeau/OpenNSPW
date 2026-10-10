@@ -31,14 +31,15 @@ public unsafe partial class Nspw
 //BOOL CALLBACK SessionDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
 
 
-public int	exist_auto_save;
+[Original("exist_auto_save")] public int	HasAutoSave;
 
 
 
 //============================================================================
 // デモ画面
 //----------------------------------------------------------------------------
-public void	demo_func()
+[Original("demo_func")]
+public void	UpdateTitle()
 	{
 	RECT	src_rect,field_rect,dstn_rect;
 	int	m,n,g,no1,i,wrk,wrk2,wrk3; Array6<int> menu = default; Array6<int> menu2 = default;
@@ -60,7 +61,7 @@ public void	demo_func()
 		{
 		// 自分のモードを相手に伝える。
 		dp_flag.dwType = MessageType.RivalMode;
-		dp_flag.rival_mode=(short)mode;
+		dp_flag.rival_mode=(short)Mode;
 		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
 		bufferDesc.pBufferData  = (byte*) &dp_flag;
 		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1, 0, null, ref hAsync, EASY_SEND );
@@ -78,39 +79,39 @@ public void	demo_func()
 
 
 
-	if( demo_time==0 )
+	if( TitleTime==0 )
 		{
-		rival_mode=0;
-		wsprintf(rival_ver, "- - -" );
+		RivalMode=0;
+		wsprintf(RivalVersion, "- - -" );
 		}
 
 
-	cls_flg=1;
+	ClearFlag=1;
 
 
 //	key_cont();
 
 
 	// ユニットインフォーメィション
-	sprt[TTL_BACK].x=212-50;
-	sprt[TTL_BACK].y=130;
+	Sprites[TTL_BACK].x=212-50;
+	Sprites[TTL_BACK].y=130;
 
 	
-	src_rect.left = 	sprt[TTL_BACK].base_x;
-	src_rect.top = sprt[TTL_BACK].base_y;
-	src_rect.right = sprt[TTL_BACK].base_x+sprt[TTL_BACK].wd;
-	src_rect.bottom = sprt[TTL_BACK].base_y+sprt[TTL_BACK].ht;
+	src_rect.left = 	Sprites[TTL_BACK].base_x;
+	src_rect.top = Sprites[TTL_BACK].base_y;
+	src_rect.right = Sprites[TTL_BACK].base_x+Sprites[TTL_BACK].wd;
+	src_rect.bottom = Sprites[TTL_BACK].base_y+Sprites[TTL_BACK].ht;
 
 	// dstn_rect は ディスティネーションレクタングルです。
-	dstn_rect.left=sprt[TTL_BACK].x;
-	dstn_rect.top=sprt[TTL_BACK].y;
+	dstn_rect.left=Sprites[TTL_BACK].x;
+	dstn_rect.top=Sprites[TTL_BACK].y;
 	//dstn_rect.right=sprt[TTL_BACK].x+sprt[TTL_BACK].wd/2;
 	//dstn_rect.bottom=sprt[TTL_BACK].y+sprt[TTL_BACK].ht/2;
 
 	
 	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
 		{
-		restoreAll();
+		RestoreSurfaces();
 		}
 
 
@@ -182,7 +183,7 @@ public void	demo_func()
 			SetTextColor(hdc, RGB(255, 255, 255));
 			TextOut(hdc, 385, 84, ach[0], len[0]);
 
-			len[0] = wsprintf(ach[0], "RIVAL VERSION = %s",rival_ver );
+			len[0] = wsprintf(ach[0], "RIVAL VERSION = %s",RivalVersion );
 			SetTextColor(hdc, RGB(255, 255, 255));
 			TextOut(hdc, 385, 99, ach[0], len[0]);
 
@@ -208,21 +209,21 @@ public void	demo_func()
 
 
 
-	if( lf_btn==3 )
+	if( LeftButton==3 )
 		{
 //		lf_btn=0;
-		if( map_edit!=0 )
+		if( IsEditingMap!=0 )
 			{
-			go_cnct_game_setting();
+			GoToGameSetting();
 			}
-		else if( g_dwNumberOfActivePlayers==2 && rival_mode==GameMode.Title && you_are_host!=0 )
+		else if( ActivePlayerCount==2 && RivalMode==GameMode.Title && IsHost!=0 )
 			{
-			go_cnct_game_setting();
+			GoToGameSetting();
 
 			if( 1!=0 )
 				{
 				dp_flag.dwType = MessageType.GoToGameSetting;
-				dp_flag.rival_mode=(short)mode;
+				dp_flag.rival_mode=(short)Mode;
 				bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
 				bufferDesc.pBufferData  = (byte*) &dp_flag;
 				g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1, 0, null, ref hAsync, MUST_SEND );
@@ -239,17 +240,17 @@ public void	demo_func()
 				if( INVALID_HANDLE_VALUE==hFile )
 					{
 					// ファイルありませんでした。
-					you_were_host=0;
+					WasHost=0;
 					}
 				else
 					{
 					// ファイルはあった。
-					load_on_resume(1);
-					you_were_host=you_are_host;		// 前回ホストだったら１が代入
+					LoadResume(1);
+					WasHost=IsHost;		// 前回ホストだったら１が代入
 					CloseHandle(hFile);
 					}
-				you_are_host=1;						// ここに来るのはホストなのでこれでいい。
-				sinario=0;
+				IsHost=1;						// ここに来るのはホストなのでこれでいい。
+				ScenarioNumber=0;
 
 				}
 			}
@@ -288,10 +289,10 @@ public void	demo_func()
 
 
 
-	if( /*demo_time==10 ||*/  ri_btn==3 )
+	if( /*demo_time==10 ||*/  RightButton==3 )
 		{
 
-		ri_btn=0;
+		RightButton=0;
 
 /*
 		// 通信対戦用の初期化
@@ -333,7 +334,7 @@ public void	demo_func()
 mode=SETUP;
 */
 
-	demo_time++;
+	TitleTime++;
 
 
 
@@ -352,23 +353,24 @@ mode=SETUP;
 // 
 // コネクトゲームスタートの値
 //----------------------------------------------------------------------------
-public void go_cnct_game_setting()
+[Original("go_cnct_game_setting")]
+public void GoToGameSetting()
 	{
 
 
-	sinario=0;
+	ScenarioNumber=0;
 
 
-	mode=GameMode.GameSetting;
-	host_side=0;
-	decision_sw=1;
-	arrival_cont=0;
+	Mode=GameMode.GameSetting;
+	HostSide=0;
+	IsDecisionEnabled=1;
+	ArrivalControl=0;
 
-	spry_rate[0]=0;		// Host
-	spry_rate[1]=0;		// Guest
+	SupplyRates[0]=0;		// Host
+	SupplyRates[1]=0;		// Guest
 
-	first_spry_pt[0]=0;		// Host
-	first_spry_pt[1]=0;		// Guest
+	InitialSupplyPoints[0]=0;		// Host
+	InitialSupplyPoints[1]=0;		// Guest
 
 
 	if( hwndChatDlg!=null )
@@ -393,12 +395,12 @@ HANDLE	hFile;
 	if( INVALID_HANDLE_VALUE==hFile )
 		{
 		// ファイルありませんでした。
-		exist_auto_save=0;
+		HasAutoSave=0;
 		}
 	else
 		{
 		// ファイルはあった。
-		exist_auto_save=1;
+		HasAutoSave=1;
 		CloseHandle(hFile);
 		}
 
@@ -412,7 +414,8 @@ HANDLE	hFile;
 // 通信対戦セットアップ
 // とりあえず、シナリオとサイドを選んでゲームへ
 //----------------------------------------------------------------------------
-public void	cnct_game_setting()
+[Original("cnct_game_setting")]
+public void	UpdateGameSetting()
 	{
 	RECT	src_rect,field_rect,dstn_rect;
 	int	m=default /* C4701 */,n,g,no1,i,wrk,wrk2,wrk3,flg,rx,ry; Array7<int> menu = default; Array7<int> menu2 = default;
@@ -432,7 +435,7 @@ public void	cnct_game_setting()
 	rival_mode=mode;
 #endif
 
-	cls_flg=1;
+	ClearFlag=1;
 
 
 
@@ -449,9 +452,9 @@ public void	cnct_game_setting()
 //rival_mode=CNCT_GAME_SETTING;
 
 
-	if( map_edit!=0 )
+	if( IsEditingMap!=0 )
 		{
-		rival_mode=mode;
+		RivalMode=Mode;
 		}
 
 
@@ -461,7 +464,7 @@ public void	cnct_game_setting()
 		SetBkMode(hdc, TRANSPARENT);
 		SelectObject(hdc, gameFont_1);
 
-if(mode==GameMode.GameSetting)
+if(Mode==GameMode.GameSetting)
 		SetTextColor(hdc, RGB(255, 255, 255));
 else
 		SetTextColor(hdc, RGB(126, 126, 126));
@@ -493,7 +496,7 @@ else
 			len[0] = wsprintf(ach[0], "Mission Menu");
 #endif
 
-			if(mode==GameMode.GameSetting)
+			if(Mode==GameMode.GameSetting)
 				SetTextColor(hdc, RGB(255, 255, 255));
 			else
 				SetTextColor(hdc, RGB(126, 126, 126));
@@ -501,7 +504,7 @@ else
 			TextOut(hdc, 200, 80, ach[0], len[0]);
 
 #if !LNGG_VER
-			if( sinario<=99 )
+			if( ScenarioNumber<=99 )
 				{
 				m=0;
 				len[m] = wsprintf(ach[m], "空母機動部隊の戦い１");				
@@ -524,7 +527,7 @@ else
 				m++;
 				len[m] = wsprintf(ach[m], "ユーザーシナリオ");
 				}
-			else if(sinario<=199)
+			else if(ScenarioNumber<=199)
 				{
 				m=0;
 				len[m] = wsprintf(ach[m], "ガダルカナルを巡る戦い１");
@@ -542,7 +545,7 @@ else
 				len[m] = wsprintf(ach[m], "ガ島争奪戦");
 
 				}
-			else if(sinario<=299)
+			else if(ScenarioNumber<=299)
 				{
 				m=0;
 				len[m] = wsprintf(ach[m], "硫黄島攻略１");
@@ -606,7 +609,7 @@ else
 #endif
 
 
-			if( you_are_host!=0 && mode==GameMode.GameSetting )
+			if( IsHost!=0 && Mode==GameMode.GameSetting )
 				{
 				for( n=0; n<=m; n++)
 					{
@@ -615,20 +618,20 @@ else
 					dstn_rect.top=150+(n*25);
 					dstn_rect.right=dstn_rect.left+(len[n]*12);
 					dstn_rect.bottom=dstn_rect.top+24;
-					if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==GameMode.GameSetting )
+					if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting )
 						{
 						SetTextColor(hdc, RGB(255, 0, 0));
 
-						if(sinario<=99)
-							sinario=(short)(n+1);
-						else if(sinario<=199)
-							sinario=(short)(n+1+100);//99;
-						else if(sinario<=299)
-							sinario=(short)(n+1+200);//199;
+						if(ScenarioNumber<=99)
+							ScenarioNumber=(short)(n+1);
+						else if(ScenarioNumber<=199)
+							ScenarioNumber=(short)(n+1+100);//99;
+						else if(ScenarioNumber<=299)
+							ScenarioNumber=(short)(n+1+200);//199;
 
-						if( lf_btn==3 )
+						if( LeftButton==3 )
 							{
-							if( sinario==9 )
+							if( ScenarioNumber==9 )
 								{
 								/*g_hDlg =*/ CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_LOAD_Proc );
 //	return;
@@ -657,28 +660,28 @@ TCHAR		temp_buf[MAX_PATH];
 								}
 
 
-							if( sinario!=9 || user_sinario_fn[0]!='\0' )
+							if( ScenarioNumber!=9 || UserScenarioFileName[0]!='\0' )
 								{
-								get_sinario_data();
+								LoadScenarioData();
 
 
 								// ホストの選択状態をゲストにセンドします。
 								dp_data_1.dwType = MessageType.LeaveGameSetting;
-								dp_data_1.data[0] = (short)host_side;
-								dp_data_1.data[1] = sinario;
+								dp_data_1.data[0] = (short)HostSide;
+								dp_data_1.data[1] = ScenarioNumber;
 
-								dp_data_1.data[2] = spry_rate[0];
-								dp_data_1.data[3] = spry_rate[1];
+								dp_data_1.data[2] = SupplyRates[0];
+								dp_data_1.data[3] = SupplyRates[1];
 
-								dp_data_1.data[4] = decision_sw;
+								dp_data_1.data[4] = IsDecisionEnabled;
 
-								dp_data_1.data[5] = first_spry_pt[0];
-								dp_data_1.data[6] = first_spry_pt[1];
+								dp_data_1.data[5] = InitialSupplyPoints[0];
+								dp_data_1.data[6] = InitialSupplyPoints[1];
 
-								dp_data_1.data[7] = arrival_cont;
+								dp_data_1.data[7] = ArrivalControl;
 
-								dp_data_1.data[8] = rvrs_time;
-								dp_data_1.data[9] = rvrs_rule;
+								dp_data_1.data[8] = SwapTime;
+								dp_data_1.data[9] = SwapRule;
 
 								bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
 								bufferDesc.pBufferData  = (byte*) &dp_data_1;
@@ -686,7 +689,7 @@ TCHAR		temp_buf[MAX_PATH];
 
 
 
-								mode=GameMode.ConfigSetting;
+								Mode=GameMode.ConfigSetting;
 								}
 							}
 						}
@@ -695,25 +698,25 @@ TCHAR		temp_buf[MAX_PATH];
 					TextOut(hdc, 120, 150+(n*25), ach[n], len[n]);
 					}
 
-				if( rival_mode==mode && mode!=GameMode.ConfigSetting && (FrameCount%10)==0 )
+				if( RivalMode==Mode && Mode!=GameMode.ConfigSetting && (FrameCount%10)==0 )
 					{
 					// ホストの選択状態をゲストにセンドします。
 					dp_data_1.dwType = MessageType.SideAndScenario;
-					dp_data_1.data[0] = (short)host_side;
-					dp_data_1.data[1] = sinario;
+					dp_data_1.data[0] = (short)HostSide;
+					dp_data_1.data[1] = ScenarioNumber;
 
-					dp_data_1.data[2] = spry_rate[0];
-					dp_data_1.data[3] = spry_rate[1];
+					dp_data_1.data[2] = SupplyRates[0];
+					dp_data_1.data[3] = SupplyRates[1];
 
-					dp_data_1.data[4] = decision_sw;
+					dp_data_1.data[4] = IsDecisionEnabled;
 
-					dp_data_1.data[5] = first_spry_pt[0];
-					dp_data_1.data[6] = first_spry_pt[1];
+					dp_data_1.data[5] = InitialSupplyPoints[0];
+					dp_data_1.data[6] = InitialSupplyPoints[1];
 
-					dp_data_1.data[7] = arrival_cont;
+					dp_data_1.data[7] = ArrivalControl;
 
-					dp_data_1.data[8] = rvrs_time;
-					dp_data_1.data[9] = rvrs_rule;
+					dp_data_1.data[8] = SwapTime;
+					dp_data_1.data[9] = SwapRule;
 
 					bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
 					bufferDesc.pBufferData  = (byte*) &dp_data_1;
@@ -724,16 +727,16 @@ TCHAR		temp_buf[MAX_PATH];
 				{
 				for( n=0; n<=m; n++)
 					{
-					if(mode==GameMode.GameSetting)
+					if(Mode==GameMode.GameSetting)
 						{
-						if( n+1==sinario%100 )
+						if( n+1==ScenarioNumber%100 )
 							SetTextColor(hdc, RGB(255, 0, 0));
 						else
 							SetTextColor(hdc, RGB(255, 255, 255));
 						}
 					else
 						{
-						if( n+1==sinario%100 )
+						if( n+1==ScenarioNumber%100 )
 							SetTextColor(hdc, RGB(126, 0, 0));
 						else
 							SetTextColor(hdc, RGB(126, 126, 126));
@@ -742,16 +745,16 @@ TCHAR		temp_buf[MAX_PATH];
 					TextOut(hdc, 120, 150+(n*25), ach[n], len[n]);
 					}
 
-				if(join_game_start==MessageType.LeaveGameSetting && you_are_host==0 && mode==GameMode.GameSetting )
+				if(JoinGameStart==MessageType.LeaveGameSetting && IsHost==0 && Mode==GameMode.GameSetting )
 					{
 					// ジョインが受け取る
-					mode=GameMode.ConfigSetting;
-					join_game_start=0;
+					Mode=GameMode.ConfigSetting;
+					JoinGameStart=0;
 					}
 				}
 
 
-			if( you_are_host!=0 && mode==GameMode.GameSetting )
+			if( IsHost!=0 && Mode==GameMode.GameSetting )
 				{
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "シナリオ切り替え ->>>");
@@ -764,18 +767,18 @@ TCHAR		temp_buf[MAX_PATH];
 				dstn_rect.top=110;
 				dstn_rect.right=dstn_rect.left+(len[0]*12);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==GameMode.GameSetting )
+				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
 
 
 #if true
-					if( lf_btn==3 )
+					if( LeftButton==3 )
 						{
-						if(sinario<=99)
-							sinario=101;
-						else if(sinario<=199)
-							sinario=1;
+						if(ScenarioNumber<=99)
+							ScenarioNumber=101;
+						else if(ScenarioNumber<=199)
+							ScenarioNumber=1;
 						}
 #endif
 					}
@@ -789,10 +792,10 @@ TCHAR		temp_buf[MAX_PATH];
 
 			// リジュームスタート
 			rx=80;
-			if( you_are_host!=0 )
+			if( IsHost!=0 )
 				{
 #if !LNGG_VER
-				if( you_were_host!=0 )
+				if( WasHost!=0 )
 					len[0] = wsprintf(ach[0], "リジュームスタート ->>>");
 				else
 					len[0] = wsprintf(ach[0], "リジュームデータがホストではない。");
@@ -806,15 +809,15 @@ TCHAR		temp_buf[MAX_PATH];
 				dstn_rect.left=80;
 				dstn_rect.top=400;
 
-				if( mode==GameMode.GameSetting )
+				if( Mode==GameMode.GameSetting )
 					{
 					dstn_rect.right=dstn_rect.left+(len[0]*12);
 					dstn_rect.bottom=dstn_rect.top+24;
-					if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==GameMode.GameSetting && you_were_host!=0 )
+					if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting && WasHost!=0 )
 						{
 						SetTextColor(hdc, RGB(255, 0, 0));
 
-						if( lf_btn==3 )
+						if( LeftButton==3 )
 							{
 							// ホストの選択状態をゲストにセンドします。
 							dp_data_1.dwType = MessageType.StartFromResume;
@@ -823,8 +826,8 @@ TCHAR		temp_buf[MAX_PATH];
 							bufferDesc.pBufferData  = (byte*) &dp_data_1;
 							g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
-							mode=GameMode.Battle;
-							sinario=-1;		// －１でリジュームを示す
+							Mode=GameMode.Battle;
+							ScenarioNumber=-1;		// －１でリジュームを示す
 							}
 						}
 					else
@@ -839,11 +842,11 @@ TCHAR		temp_buf[MAX_PATH];
 				}
 			else
 				{
-				if( join_game_start==MessageType.StartFromResume )
+				if( JoinGameStart==MessageType.StartFromResume )
 					{
-					mode=GameMode.Battle;
-					join_game_start=0;
-					sinario=-1;		// －１でリジュームを示す
+					Mode=GameMode.Battle;
+					JoinGameStart=0;
+					ScenarioNumber=-1;		// －１でリジュームを示す
 					}
 				}
 
@@ -852,10 +855,10 @@ TCHAR		temp_buf[MAX_PATH];
 
 			// リジュームスタート
 			rx=80;
-			if( you_are_host!=0  )
+			if( IsHost!=0  )
 				{
 #if !LNGG_VER
-				if( exist_auto_save!=0 )
+				if( HasAutoSave!=0 )
 					len[0] = wsprintf(ach[0], "オートセーブスタート ->>>");
 				else
 					len[0] = wsprintf(ach[0], "オートセーブファイルは存在しない");
@@ -870,15 +873,15 @@ TCHAR		temp_buf[MAX_PATH];
 				dstn_rect.top=430;
 
 
-				if( mode==GameMode.GameSetting )
+				if( Mode==GameMode.GameSetting )
 					{
 					dstn_rect.right=dstn_rect.left+(len[0]*12);
 					dstn_rect.bottom=dstn_rect.top+24;
-					if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==GameMode.GameSetting && exist_auto_save!=0 )
+					if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting && HasAutoSave!=0 )
 						{
 						SetTextColor(hdc, RGB(255, 0, 0));
 
-						if( lf_btn==3 )
+						if( LeftButton==3 )
 							{
 							// ホストの選択状態をゲストにセンドします。
 							dp_data_1.dwType = MessageType.StartFromAutoSave;
@@ -887,8 +890,8 @@ TCHAR		temp_buf[MAX_PATH];
 							bufferDesc.pBufferData  = (byte*) &dp_data_1;
 							g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
-							mode=GameMode.Battle;
-							sinario=-2;		// －２でオートセーブからのスタートを示す
+							Mode=GameMode.Battle;
+							ScenarioNumber=-2;		// －２でオートセーブからのスタートを示す
 							}
 						}
 					else
@@ -904,11 +907,11 @@ TCHAR		temp_buf[MAX_PATH];
 				}
 			else
 				{
-				if( join_game_start==MessageType.StartFromAutoSave )
+				if( JoinGameStart==MessageType.StartFromAutoSave )
 					{
-					mode=GameMode.Battle;
-					join_game_start=0;
-					sinario=-2;		// －２でオートセーブからのスタートを示す
+					Mode=GameMode.Battle;
+					JoinGameStart=0;
+					ScenarioNumber=-2;		// －２でオートセーブからのスタートを示す
 					}
 				}
 
@@ -918,7 +921,7 @@ TCHAR		temp_buf[MAX_PATH];
 
 			// 操作対象の切り替え
 			rx=80;
-			if( map_edit==0 && you_are_host!=0 && mode==GameMode.GameSetting )
+			if( IsEditingMap==0 && IsHost!=0 && Mode==GameMode.GameSetting )
 				{
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "操作対象の切り替え ->>>");
@@ -930,12 +933,12 @@ TCHAR		temp_buf[MAX_PATH];
 				dstn_rect.top=475;
 				dstn_rect.right=dstn_rect.left+(len[0]*12);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==GameMode.GameSetting )
+				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 )
+					if( LeftButton==3 )
 						{
-						host_side=(host_side==0 ? 1 : 0);
+						HostSide=(HostSide==0 ? 1 : 0);
 						}
 					}
 				else
@@ -944,7 +947,7 @@ TCHAR		temp_buf[MAX_PATH];
 				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 				}
 
-			if(host_side==0)
+			if(HostSide==0)
 				{
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "操作対象：日本海軍（ホスト）、合衆国海軍（ゲスト）");
@@ -963,7 +966,7 @@ TCHAR		temp_buf[MAX_PATH];
 
 
 #if !LNGG_VER
-			switch( sinario )
+			switch( ScenarioNumber )
 				{
 				case 1:
 					len[1] = wsprintf(ach[1], "空母機動部隊同士の戦いです。小規模です。");
@@ -1306,7 +1309,7 @@ TCHAR		temp_buf[MAX_PATH];
 #endif
 
 
-if( mode==GameMode.GameSetting )
+if( Mode==GameMode.GameSetting )
 	{
 			for( n=0; n<=6; n++)
 				{
@@ -1328,7 +1331,7 @@ else
 
 			// コンフィギュレーション
 
-if(	mode==GameMode.ConfigSetting )
+if(	Mode==GameMode.ConfigSetting )
 	{
 			rx=630-120;
 
@@ -1342,7 +1345,7 @@ if(	mode==GameMode.ConfigSetting )
 
 
 			// 勝敗判定
-			if(you_are_host!=0)
+			if(IsHost!=0)
 				{
 				dstn_rect.left=rx+50;
 				dstn_rect.top=50;
@@ -1358,12 +1361,12 @@ if(	mode==GameMode.ConfigSetting )
 				dstn_rect.top=125;
 				dstn_rect.right=dstn_rect.left+(len[0]*12);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
+				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 )
+					if( LeftButton==3 )
 						{
-						decision_sw=(byte)(decision_sw==0 ? 1 : 0);
+						IsDecisionEnabled=(byte)(IsDecisionEnabled==0 ? 1 : 0);
 						}
 					}
 				else
@@ -1375,7 +1378,7 @@ if(	mode==GameMode.ConfigSetting )
 
 				}
 
-			if(decision_sw==0)
+			if(IsDecisionEnabled==0)
 				{
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "勝敗条件は無効");
@@ -1412,7 +1415,7 @@ if(	mode==GameMode.ConfigSetting )
 			dstn_rect.top=200;
 			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
-			if( you_are_host!=0 )
+			if( IsHost!=0 )
 				{
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "増やす ->>>");
@@ -1424,12 +1427,12 @@ if(	mode==GameMode.ConfigSetting )
 				dstn_rect.top=225;
 				dstn_rect.right=dstn_rect.left+(len[0]*10);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
+				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 )
+					if( LeftButton==3 )
 						{
-						spry_rate[0]++;
+						SupplyRates[0]++;
 						flg=1;
 						}
 					}
@@ -1450,12 +1453,12 @@ if(	mode==GameMode.ConfigSetting )
 				dstn_rect.top=250;
 				dstn_rect.right=dstn_rect.left+(len[0]*10);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
+				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 && spry_rate[0]!=0)
+					if( LeftButton==3 && SupplyRates[0]!=0)
 						{
-						spry_rate[0]--;
+						SupplyRates[0]--;
 						flg=1;
 						}
 					}
@@ -1469,7 +1472,7 @@ if(	mode==GameMode.ConfigSetting )
 				}
 
 
-			len[0] = wsprintf(ach[0], "%d pts",spry_rate[0]);
+			len[0] = wsprintf(ach[0], "%d pts",SupplyRates[0]);
 			SetTextColor(hdc, RGB(255, 255, 255));
 			dstn_rect.left=rx+150;
 			dstn_rect.top=237;
@@ -1492,7 +1495,7 @@ if(	mode==GameMode.ConfigSetting )
 			dstn_rect.top=200;
 			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
-			if( you_are_host!=0 )
+			if( IsHost!=0 )
 				{
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "増やす ->>>");
@@ -1504,12 +1507,12 @@ if(	mode==GameMode.ConfigSetting )
 				dstn_rect.top=225;
 				dstn_rect.right=dstn_rect.left+(len[0]*10);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
+				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
-					if( (lf_btn==1||lf_btn==2) )
+					if( (LeftButton==1||LeftButton==2) )
 						{
-						rvrs_time++;
+						SwapTime++;
 						flg=1;
 						}
 					}
@@ -1530,12 +1533,12 @@ if(	mode==GameMode.ConfigSetting )
 				dstn_rect.top=250;
 				dstn_rect.right=dstn_rect.left+(len[0]*10);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
+				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
-					if( (lf_btn==1||lf_btn==2) && rvrs_time!=0)
+					if( (LeftButton==1||LeftButton==2) && SwapTime!=0)
 						{
-						rvrs_time--;
+						SwapTime--;
 						flg=1;
 						}
 					}
@@ -1550,8 +1553,8 @@ if(	mode==GameMode.ConfigSetting )
 
 
 #if !LNGG_VER
-			if( rvrs_time!=0 )
-				len[0] = wsprintf(ach[0], "経過時間 %d",rvrs_time*100);
+			if( SwapTime!=0 )
+				len[0] = wsprintf(ach[0], "経過時間 %d",SwapTime*100);
 			else
 				len[0] = wsprintf(ach[0], "反転無し");
 #else
@@ -1582,7 +1585,7 @@ if(	mode==GameMode.ConfigSetting )
 			dstn_rect.top=300;
 			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
-			if( you_are_host!=0 )
+			if( IsHost!=0 )
 				{
 				
 #if !LNGG_VER
@@ -1595,12 +1598,12 @@ if(	mode==GameMode.ConfigSetting )
 				dstn_rect.top=325;
 				dstn_rect.right=dstn_rect.left+(len[0]*10);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
+				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 )
+					if( LeftButton==3 )
 						{
-						spry_rate[1]++;
+						SupplyRates[1]++;
 						flg=1;
 						}
 					}
@@ -1620,12 +1623,12 @@ if(	mode==GameMode.ConfigSetting )
 				dstn_rect.top=350;
 				dstn_rect.right=dstn_rect.left+(len[0]*10);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
+				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 && spry_rate[1]!=0)
+					if( LeftButton==3 && SupplyRates[1]!=0)
 						{
-						spry_rate[1]--;
+						SupplyRates[1]--;
 						flg=1;
 						}
 					}
@@ -1636,7 +1639,7 @@ if(	mode==GameMode.ConfigSetting )
 				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 				}
 
-			len[0] = wsprintf(ach[0], "%d pts",spry_rate[1]);
+			len[0] = wsprintf(ach[0], "%d pts",SupplyRates[1]);
 			SetTextColor(hdc, RGB(255, 255, 255));
 			dstn_rect.left=rx+150;
 			dstn_rect.top=337;
@@ -1650,10 +1653,10 @@ if(	mode==GameMode.ConfigSetting )
 
 
 			// 補給値反転ルール
-			if( rvrs_time!=0 )
+			if( SwapTime!=0 )
 				{
 #if !LNGG_VER
-				len[0] = wsprintf(ach[0], ( you_are_host!=0 ? "補給値反転ルール->>>" : "補給値反転ルール" ));
+				len[0] = wsprintf(ach[0], ( IsHost!=0 ? "補給値反転ルール->>>" : "補給値反転ルール" ));
 #else
 				len[0] = wsprintf(ach[0], "Reverse rule");
 #endif
@@ -1663,14 +1666,14 @@ if(	mode==GameMode.ConfigSetting )
 				dstn_rect.right=dstn_rect.left+(len[0]*10);
 				dstn_rect.bottom=dstn_rect.top+24;
 
-				if( you_are_host!=0 )
+				if( IsHost!=0 )
 					{
-					if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
+					if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
 						{
 						SetTextColor(hdc, RGB(255, 0, 0));
-						if( lf_btn==3 )
+						if( LeftButton==3 )
 							{
-							rvrs_rule=(short)(rvrs_rule==0 ? 1 : 0);
+							SwapRule=(short)(SwapRule==0 ? 1 : 0);
 							flg=1;
 							}
 						}
@@ -1683,7 +1686,7 @@ if(	mode==GameMode.ConfigSetting )
 
 
 
-				if( rvrs_rule==0 )
+				if( SwapRule==0 )
 					{
 #if !LNGG_VER
 					len[0] = wsprintf(ach[0], "一度だけ");
@@ -1725,7 +1728,7 @@ if(	mode==GameMode.ConfigSetting )
 			dstn_rect.top=400;
 			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
-			if( you_are_host!=0 )
+			if( IsHost!=0 )
 				{
 //				len[0] = wsprintf(ach[0], "増やす ->>>");
 #if !LNGG_VER
@@ -1739,12 +1742,12 @@ if(	mode==GameMode.ConfigSetting )
 				dstn_rect.top=425;
 				dstn_rect.right=dstn_rect.left+(len[0]*10);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
+				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
-					if( (lf_btn==1||lf_btn==2) )
+					if( (LeftButton==1||LeftButton==2) )
 						{
-						first_spry_pt[0]+=50;
+						InitialSupplyPoints[0]+=50;
 						flg=1;
 						}
 					}
@@ -1767,14 +1770,14 @@ if(	mode==GameMode.ConfigSetting )
 				dstn_rect.top=450;
 				dstn_rect.right=dstn_rect.left+(len[0]*10);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
+				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
-					if( (lf_btn==1||lf_btn==2) && first_spry_pt[0]!=0)
+					if( (LeftButton==1||LeftButton==2) && InitialSupplyPoints[0]!=0)
 						{
-						first_spry_pt[0]-=50;
-						if( first_spry_pt[0]<0)
-							first_spry_pt[0]=0;
+						InitialSupplyPoints[0]-=50;
+						if( InitialSupplyPoints[0]<0)
+							InitialSupplyPoints[0]=0;
 						flg=1;
 						}
 					}
@@ -1785,7 +1788,7 @@ if(	mode==GameMode.ConfigSetting )
 				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 				}
 
-			len[0] = wsprintf(ach[0], "%d pts",first_spry_pt[0]);
+			len[0] = wsprintf(ach[0], "%d pts",InitialSupplyPoints[0]);
 			SetTextColor(hdc, RGB(255, 255, 255));
 			dstn_rect.left=rx+150;
 			dstn_rect.top=437;
@@ -1805,7 +1808,7 @@ if(	mode==GameMode.ConfigSetting )
 			dstn_rect.top=500;
 			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
-			if( you_are_host!=0 )
+			if( IsHost!=0 )
 				{
 //				len[0] = wsprintf(ach[0], "増やす ->>>");
 #if !LNGG_VER
@@ -1819,12 +1822,12 @@ if(	mode==GameMode.ConfigSetting )
 				dstn_rect.top=525;
 				dstn_rect.right=dstn_rect.left+(len[0]*10);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
+				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
-					if( (lf_btn==1||lf_btn==2) )
+					if( (LeftButton==1||LeftButton==2) )
 						{
-						first_spry_pt[1]+=50;
+						InitialSupplyPoints[1]+=50;
 						flg=1;
 						}
 					}
@@ -1847,14 +1850,14 @@ if(	mode==GameMode.ConfigSetting )
 				dstn_rect.top=550;
 				dstn_rect.right=dstn_rect.left+(len[0]*10);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
+				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
-					if( (lf_btn==1||lf_btn==2) && first_spry_pt[1]!=0)
+					if( (LeftButton==1||LeftButton==2) && InitialSupplyPoints[1]!=0)
 						{
-						first_spry_pt[1]-=50;
-						if( first_spry_pt[1]<0)
-							first_spry_pt[1]=0;
+						InitialSupplyPoints[1]-=50;
+						if( InitialSupplyPoints[1]<0)
+							InitialSupplyPoints[1]=0;
 						flg=1;
 						}
 					}
@@ -1865,7 +1868,7 @@ if(	mode==GameMode.ConfigSetting )
 				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 				}
 
-			len[0] = wsprintf(ach[0], "%d pts",first_spry_pt[1]);
+			len[0] = wsprintf(ach[0], "%d pts",InitialSupplyPoints[1]);
 			SetTextColor(hdc, RGB(255, 255, 255));
 			dstn_rect.left=rx+150;
 			dstn_rect.top=537;
@@ -1875,7 +1878,7 @@ if(	mode==GameMode.ConfigSetting )
 
 
 
-			if(you_are_host!=0)
+			if(IsHost!=0)
 				{
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "増援ユニット制御 ->>>");
@@ -1886,14 +1889,14 @@ if(	mode==GameMode.ConfigSetting )
 				dstn_rect.top=600;
 				dstn_rect.right=dstn_rect.left+(len[0]*12);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
+				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 )
+					if( LeftButton==3 )
 						{
-						arrival_cont++;
-						if(arrival_cont>=7)
-							arrival_cont=0;
+						ArrivalControl++;
+						if(ArrivalControl>=7)
+							ArrivalControl=0;
 						}
 					}
 				else
@@ -1907,29 +1910,29 @@ if(	mode==GameMode.ConfigSetting )
 
 
 
-			switch( arrival_cont )
+			switch( ArrivalControl )
 				{
 #if !LNGG_VER
 				case 0:
-					len[0] = wsprintf(ach[0], "全種増援可(%d)",arrival_cont);
+					len[0] = wsprintf(ach[0], "全種増援可(%d)",ArrivalControl);
 					break;
 				case 1:
-					len[0] = wsprintf(ach[0], "全種増援不可(%d)",arrival_cont);
+					len[0] = wsprintf(ach[0], "全種増援不可(%d)",ArrivalControl);
 					break;
 				case 2:
-					len[0] = wsprintf(ach[0], "輸送船以外可(%d)",arrival_cont);
+					len[0] = wsprintf(ach[0], "輸送船以外可(%d)",ArrivalControl);
 					break;
 				case 3:
-					len[0] = wsprintf(ach[0], "輸送船のみ可(%d)",arrival_cont);
+					len[0] = wsprintf(ach[0], "輸送船のみ可(%d)",ArrivalControl);
 					break;
 				case 4:
-					len[0] = wsprintf(ach[0], "戦闘艦船のみ可(%d)",arrival_cont);
+					len[0] = wsprintf(ach[0], "戦闘艦船のみ可(%d)",ArrivalControl);
 					break;
 				case 5:
-					len[0] = wsprintf(ach[0], "航空機のみ可(%d)",arrival_cont);
+					len[0] = wsprintf(ach[0], "航空機のみ可(%d)",ArrivalControl);
 					break;
 				case 6:
-					len[0] = wsprintf(ach[0], "輸送船(軍港)以外可(%d)",arrival_cont);
+					len[0] = wsprintf(ach[0], "輸送船(軍港)以外可(%d)",ArrivalControl);
 					break;
 #else
 
@@ -1972,7 +1975,7 @@ if(	mode==GameMode.ConfigSetting )
 
 
 			// シナリオセッティングへ戻る
-			if(you_are_host!=0)
+			if(IsHost!=0)
 				{
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "シナリオセッティングへ戻る->>>");
@@ -1983,14 +1986,14 @@ if(	mode==GameMode.ConfigSetting )
 				dstn_rect.top=675;
 				dstn_rect.right=dstn_rect.left+(len[0]*12);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==GameMode.ConfigSetting )
+				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.ConfigSetting )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 )
+					if( LeftButton==3 )
 						{
-						m=sinario;
-						go_cnct_game_setting();
-						sinario=(short)m;
+						m=ScenarioNumber;
+						GoToGameSetting();
+						ScenarioNumber=(short)m;
 
 						dp_flag.dwType = MessageType.GoToGameSetting;
 //t						lpDirectPlay4A->lpVtbl->Send(lpDirectPlay4A, dpidPlayer, dpidRivalPlayer, DPSEND_GUARANTEED, &dp_flag, sizeof(_DP_FLAG) );
@@ -2011,7 +2014,7 @@ if(	mode==GameMode.ConfigSetting )
 
 
 			// 戦闘開始
-			if(you_are_host!=0)
+			if(IsHost!=0)
 				{
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "ゲームスタート ->>>");
@@ -2022,17 +2025,17 @@ if(	mode==GameMode.ConfigSetting )
 				dstn_rect.top=700;
 				dstn_rect.right=dstn_rect.left+(len[0]*12);
 				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==GameMode.ConfigSetting )
+				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.ConfigSetting )
 					{
 					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 )
+					if( LeftButton==3 )
 						{
 						// ホストの選択状態をゲストにセンドします。
 						srand( (uint)time( null ) );
-						cnct_game_rnd_sheed=(short)rnd(65536);
+						SharedRandomSeed=(short)Random(65536);
 
 						dp_data_1.dwType = MessageType.LeaveSetup;
-						dp_data_1.data[0] = cnct_game_rnd_sheed;
+						dp_data_1.data[0] = SharedRandomSeed;
 
 						bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
 						bufferDesc.pBufferData  = (byte*) &dp_data_1;
@@ -2040,21 +2043,21 @@ if(	mode==GameMode.ConfigSetting )
 
 
 						dp_data_1.dwType = MessageType.LeaveConfigSetting;
-						dp_data_1.data[0] = (short)host_side;
-						dp_data_1.data[1] = sinario;
+						dp_data_1.data[0] = (short)HostSide;
+						dp_data_1.data[1] = ScenarioNumber;
 
-						dp_data_1.data[2] = spry_rate[0];
-						dp_data_1.data[3] = spry_rate[1];
+						dp_data_1.data[2] = SupplyRates[0];
+						dp_data_1.data[3] = SupplyRates[1];
 
-						dp_data_1.data[4] = decision_sw;
+						dp_data_1.data[4] = IsDecisionEnabled;
 
-						dp_data_1.data[5] = first_spry_pt[0];
-						dp_data_1.data[6] = first_spry_pt[1];
+						dp_data_1.data[5] = InitialSupplyPoints[0];
+						dp_data_1.data[6] = InitialSupplyPoints[1];
 
-						dp_data_1.data[7] = arrival_cont;
+						dp_data_1.data[7] = ArrivalControl;
 
-						dp_data_1.data[8] = rvrs_time;
-						dp_data_1.data[9] = rvrs_rule;
+						dp_data_1.data[8] = SwapTime;
+						dp_data_1.data[9] = SwapRule;
 
 
 						bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
@@ -2062,7 +2065,7 @@ if(	mode==GameMode.ConfigSetting )
 						g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
 
-						mode=GameMode.Battle;
+						Mode=GameMode.Battle;
 						}
 					}
 				else
@@ -2073,34 +2076,34 @@ if(	mode==GameMode.ConfigSetting )
 				}
 			else
 				{
-				if( join_game_start==MessageType.LeaveConfigSetting )
+				if( JoinGameStart==MessageType.LeaveConfigSetting )
 					{
-					mode=GameMode.Battle;
-					join_game_start=0;
+					Mode=GameMode.Battle;
+					JoinGameStart=0;
 					}
 				}
 
 
 
-			if( you_are_host!=0 && rival_mode==mode/*==CNCT_CNFG_SETTING*/ && (FrameCount%10)==0 )
+			if( IsHost!=0 && RivalMode==Mode/*==CNCT_CNFG_SETTING*/ && (FrameCount%10)==0 )
 				{
 				// ホストの選択状態をゲストにセンドします。
 				dp_data_1.dwType = MessageType.SideAndScenario;
-				dp_data_1.data[0] = (short)host_side;
-				dp_data_1.data[1] = sinario;
+				dp_data_1.data[0] = (short)HostSide;
+				dp_data_1.data[1] = ScenarioNumber;
 
-				dp_data_1.data[2] = spry_rate[0];
-				dp_data_1.data[3] = spry_rate[1];
+				dp_data_1.data[2] = SupplyRates[0];
+				dp_data_1.data[3] = SupplyRates[1];
 
-				dp_data_1.data[4] = decision_sw;
+				dp_data_1.data[4] = IsDecisionEnabled;
 
-				dp_data_1.data[5] = first_spry_pt[0];
-				dp_data_1.data[6] = first_spry_pt[1];
+				dp_data_1.data[5] = InitialSupplyPoints[0];
+				dp_data_1.data[6] = InitialSupplyPoints[1];
 
-				dp_data_1.data[7] = arrival_cont;
+				dp_data_1.data[7] = ArrivalControl;
 
-				dp_data_1.data[8] = rvrs_time;
-				dp_data_1.data[9] = rvrs_rule;
+				dp_data_1.data[8] = SwapTime;
+				dp_data_1.data[9] = SwapRule;
 
 				bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
 				bufferDesc.pBufferData  = (byte*) &dp_data_1;
@@ -2178,16 +2181,16 @@ if(	mode==GameMode.ConfigSetting )
 
 
 
-	if( mode==GameMode.Battle )
+	if( Mode==GameMode.Battle )
 		{
-		cnct_game_init();
+		InitializeGame();
 		}
-	else if( rival_mode!=0 && (FrameCount%40)==0 )
+	else if( RivalMode!=0 && (FrameCount%40)==0 )
 		{
 
 		// 現在のモードをライバルに送る。
 		dp_flag.dwType = MessageType.RivalMode;
-		dp_flag.rival_mode=(short)mode;
+		dp_flag.rival_mode=(short)Mode;
 //t		lpDirectPlay4A->lpVtbl->Send(lpDirectPlay4A, dpidPlayer, dpidRivalPlayer, 0 /*DPSEND_GUARANTEED*/, &dp_flag, sizeof(_DP_FLAG) );
 
 		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
@@ -2205,7 +2208,8 @@ if(	mode==GameMode.ConfigSetting )
 // 通信対戦セットアップ
 // とにかく互いに通信するまで。
 //----------------------------------------------------------------------------
-public void	cnct_game_setup()
+[Original("cnct_game_setup")]
+public void	UpdateSetup()
 	{
 #if false
 	RECT	src_rect,field_rect,dstn_rect;

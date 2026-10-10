@@ -254,34 +254,10 @@ public const int		TYPE_UNIT_MSG       = 0x11;    // message containing field lay
 // FLYING and PARKING: UnitState.
 
 // モード／メニュー
-public const int		MOVE		= 1;
-public const int		SLOW		= 2;
-public const int		RETURN		= 4;
-public const int		SPRY		= 5;
-
-public const int		RDY_TPD		= 15;
-public const int		RDY_BOM		= 16;
-public const int		NOTHING		= 17;
+// MOVE, SLOW and RETURN: UnitMode and CombatMenuItem. SPRY, RDY_TPD, RDY_BOM and NOTHING: CombatMenuItem.
 
 // ファイアの種類 武装の種類
-public const int		BLT			= 11;	// 弾丸
-public const int		GUN			= 12;	// 対地砲
-public const int		SHL			= 13;	// 対空炸裂弾
-public const int		VTH			= 14;	// 対空炸裂ＶＴ信管弾
-public const int		TPD			= 15;	// 魚雷
-public const int		BOM			= 16;	// 爆弾
-public const int		NTG			= 17;	//
-public const int		TUN			= 18;	// 発進最低整備
-public const int		ASB			= 19;	// 対潜爆弾
-public const int		RAS			= 20;	// 対空機関砲弾　Rapid anti Air Shell
-
-public const int		SP_GUN			= 21;	// 対地砲
-
-public const int		TR_SP		= 30;
-public const int		TR_AP		= 31;
-public const int		TR_GF1		= 32;
-public const int		TR_GF2		= 33;
-public const int		TR_GF3		= 34;
+// BLT to RAS, SP_GUN and TR_SP to TR_GF3: FireKind.
 
 
 

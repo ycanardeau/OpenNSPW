@@ -16,6 +16,7 @@ namespace OpenNspw.Porter;
 //   F:OpenNspw.Nspw.unit Units
 //   T:OpenNspw.UNIT Unit
 //   M:OpenNspw.Nspw.chara_cont UpdateBattle
+//   M:OpenNspw.Nspw.fire_now FireWeapons    (all overloads of a method)
 //
 // A new name with dots moves the member into a field of a new type: `F:OpenNspw.UNIT.x Position.X` renames each use,
 // `unit[m].x` to `unit[m].Position.X`, but leaves the declaration, which is replaced by hand with the new field.
@@ -46,9 +47,16 @@ internal sealed class Renamer(CSharpProject port, IReadOnlyList<CSharpProject> u
 		return text;
 	}
 
+	// A method can also be named without its parameters (M:OpenNspw.Nspw.fire_now), which renames all its overloads.
 	private string? NewName(ISymbol? symbol)
 	{
-		return symbol?.OriginalDefinition.GetDocumentationCommentId() is { } id && _renames.TryGetValue(id, out var name) ? name : null;
+		if (symbol?.OriginalDefinition.GetDocumentationCommentId() is not { } id)
+		{
+			return null;
+		}
+
+		var parameters = id.IndexOf('(');
+		return _renames.TryGetValue(id, out var name) || (parameters > 0 && _renames.TryGetValue(id[..parameters], out name)) ? name : null;
 	}
 
 	// The new name of a symbol whose declaration is renamed too: not one that moves into a field of a new type.

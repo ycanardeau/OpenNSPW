@@ -24,14 +24,15 @@ namespace OpenNspw;
 public unsafe partial class Nspw
 {
 
-public bool g_bDeviceLost = false;						// デバイスの消失フラグ
+[Original("g_bDeviceLost")] public bool IsDeviceLost = false;						// デバイスの消失フラグ
 
 
 
 /*-------------------------------------------
 	アプリがアクティブの時のアイドリング
 --------------------------------------------*/
-public void	draw()
+[Original("draw")]
+public void	Draw()
 	{
 	RECT	src_rect,dstn_rect;
 
@@ -51,7 +52,7 @@ public void	draw()
 
 	// オブジェクトを画面に描画
 
-	lpDDSBack.BltFast(0+cc_count,300,lpDDS_OS,&src_rect, DDBLTFAST_SRCCOLORKEY| DDBLTFAST_WAIT);
+	lpDDSBack.BltFast(0+Tick,300,lpDDS_OS,&src_rect, DDBLTFAST_SRCCOLORKEY| DDBLTFAST_WAIT);
 //	lpDDSBack->BltFast(0+cc_count,300,lpDDS_OS,&src_rect, DDBLTFAST_WAIT);
 //	lpDDSBack->BltFast(300,300,lpDDS_OS,&src_rect, DDBLTFAST_WAIT);
 

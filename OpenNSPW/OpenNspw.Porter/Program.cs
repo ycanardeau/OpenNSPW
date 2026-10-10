@@ -11,11 +11,23 @@ using OpenNspw.Porter;
 //   OpenNspw.Porter rename <port project directory> <renames file> <user project directory>...
 //       Renames members of the port and their uses in it and in the projects that use it (see Renamer), in the
 //       order given, each after the projects it uses. The projects must be built.
+//   OpenNspw.Porter split-fields <project directory>
+//       Puts each field of the project on a line of its own (see FieldSplitter).
 
 if (args.Length >= 3 && args[0] == "rename")
 {
 	var renamer = new Renamer(new CSharpProject(args[1]), [.. args[3..].Select(d => new CSharpProject(d))], Renamer.ReadRenames(args[2]));
 	foreach (var path in renamer.Run())
+	{
+		Console.WriteLine(path);
+	}
+
+	return 0;
+}
+
+if (args.Length == 2 && args[0] == "split-fields")
+{
+	foreach (var path in new FieldSplitter(new CSharpProject(args[1])).Run())
 	{
 		Console.WriteLine(path);
 	}

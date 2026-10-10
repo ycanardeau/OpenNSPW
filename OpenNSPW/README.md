@@ -66,9 +66,9 @@ dotnet run -c Release --project OpenNspw.Benchmarks -- --filter '*'
 
 | Benchmark | What one operation is |
 | --- | --- |
-| `Tick` | A tick of the simulation (`chara_cont` and `cnct_decision`), over 1500 ticks. |
-| `Frame` | A frame at the normal speed (`updateFrame`): input, a tick, drawing the battle and showing it, over 300 frames. |
-| `Draw` | Drawing the battle (`unit_info_cont`, `draw_cmbt_area` and `draw_map`), without the tick. |
+| `Tick` | A tick of the simulation (`UpdateBattle` and `CheckResult`), over 1500 ticks. |
+| `Frame` | A frame at the normal speed (`UpdateFrame`): input, a tick, drawing the battle and showing it, over 300 frames. |
+| `Draw` | Drawing the battle (`UpdateUnitInfo`, `DrawBattleArea` and `DrawMinimap`), without the tick. |
 
 Each iteration restores the game's state to tick 2000 first, so each one does the same work. The state an iteration ends with is printed (`// State after an iteration`). It is the same in every iteration and every run, and a version of the game that behaves the same ends with the same state.
 

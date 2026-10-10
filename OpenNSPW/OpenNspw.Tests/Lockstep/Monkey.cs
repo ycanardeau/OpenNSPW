@@ -53,8 +53,8 @@ internal sealed class Monkey(LockstepGame game, uint seed)
 		for (var i = 1; i <= USA_SHIP_END; i++)
 		{
 			var m = ((_lastShip + i - 1) % USA_SHIP_END) + 1;
-			ref var unit = ref nspw.unit[m];
-			if (unit.used == nspw.your_side && unit.ctgry == UnitCategory.Ship && !(unit.kind >= UnitKind.AirBase && unit.kind <= UnitKind.Fortress) && unit.spry == 0 && unit.Hp > 0)
+			ref Unit unit = ref nspw.Units[m];
+			if (unit.Side == nspw.LocalSide && unit.Category == UnitCategory.Ship && !(unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress) && unit.Supply == 0 && unit.Hp > 0)
 			{
 				_lastShip = m;
 				return m;
@@ -68,13 +68,13 @@ internal sealed class Monkey(LockstepGame game, uint seed)
 	private (double X, double Y) NearestEnemy(int m)
 	{
 		var nspw = _game.Game;
-		ref var unit = ref nspw.unit[m];
+		ref Unit unit = ref nspw.Units[m];
 		var best = (unit.Position.X, unit.Position.Y);
 		var bestDistance = double.MaxValue;
-		for (var n = 1; n <= nspw.max_unit; n++)
+		for (var n = 1; n <= nspw.MaxUnitId; n++)
 		{
-			ref var other = ref nspw.unit[n];
-			if (other.used != 0 && other.used != nspw.your_side)
+			ref Unit other = ref nspw.Units[n];
+			if (other.Side != 0 && other.Side != nspw.LocalSide)
 			{
 				var distance = Math.Abs(other.Position.X - unit.Position.X) + Math.Abs(other.Position.Y - unit.Position.Y);
 				if (distance < bestDistance)
@@ -116,13 +116,13 @@ internal sealed class Monkey(LockstepGame game, uint seed)
 		Press(1, CMBT_WIDTH / 2, CMBT_HEIGHT / 2);
 		PressAt(() =>
 		{
-			ref var unit = ref nspw.unit[m];
-			ref var minimap = ref nspw.sprt[MAP_BASE];
+			ref Unit unit = ref nspw.Units[m];
+			ref var minimap = ref nspw.Sprites[MAP_BASE];
 			var left = Math.Clamp(unit.Position.X - (CMBT_WIDTH / 2), MAP_LEFT, MAP_RIGHT - CMBT_WIDTH);
 			var top = Math.Clamp(unit.Position.Y + (CMBT_HEIGHT / 2), MAP_BOTTOM + CMBT_HEIGHT, MAP_TOP);
 			return (CMBT_WIDTH + 8 + 5 + (int)((left - MAP_LEFT) / 80), CMBT_HEIGHT - minimap.ht + 8 + 5 + (int)((MAP_TOP - top) / 80));
 		});
-		PressAt(() => ((int)(nspw.unit[m].Position.X - nspw.CameraPosition.X), (int)(nspw.CameraPosition.Y - nspw.unit[m].Position.Y)));
+		PressAt(() => ((int)(nspw.Units[m].Position.X - nspw.CameraPosition.X), (int)(nspw.CameraPosition.Y - nspw.Units[m].Position.Y)));
 		PressAt(() =>
 		{
 			var (x, y) = NearestEnemy(m);

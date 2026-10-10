@@ -32,7 +32,8 @@ public unsafe partial class Nspw
 /*--------------------------------------------
 	ダイレクトミュージックの初期化とロードの指示
 --------------------------------------------*/
-public int	InitDMusic()
+[Original("InitDMusic")]
+public int	InitializeDirectMusic()
 	{
 //	int		i;
 
@@ -121,7 +122,8 @@ public int	InitDMusic()
 /*--------------------------------------------
 	ダイレクトサウンドの初期化とロードの指示
 --------------------------------------------*/
-public int	InitDSound()
+[Original("InitDSound")]
+public int	InitializeDirectSound()
 	{
 	int		i;
 
@@ -502,7 +504,8 @@ public int	InitDSound()
 /*-------------------------------------------
 	主にゲーム中の効果音を鳴らす
 ---------------------------------------------*/
-public void	play_snd(IDirectSoundBuffer? the_lpdsb,short* the_snd,int f)
+[Original("play_snd")]
+public void	PlaySound(IDirectSoundBuffer? the_lpdsb,short* the_snd,int f)
 	{
 
 
@@ -525,7 +528,8 @@ public void	play_snd(IDirectSoundBuffer? the_lpdsb,short* the_snd,int f)
 /*-------------------------------------------
 	主にゲーム中の効果音を鳴らす
 ---------------------------------------------*/
-public void SoundPlayEffect(int dwFlags,int no,double x,double y)
+[Original("SoundPlayEffect")]
+public void PlaySoundEffect(int dwFlags,int no,double x,double y)
 	{
 //	HRESULT     dsrval;
 //	IDirectSoundBuffer *pdsb = lpDSBuffer[no];
@@ -545,19 +549,19 @@ return;
 	if( x!=(double)(MAP_RIGHT+1) )
 		{
 		flg=0;
-		for(n=1;n<=max_unit && flg==0 ;n++)
+		for(n=1;n<=MaxUnitId && flg==0 ;n++)
 			{
-			if( unit[n].used!=0 && unit[n].used==your_side && unit[n].PlaneState!=UnitState.Parked )
+			if( Units[n].Side!=0 && Units[n].Side==LocalSide && Units[n].PlaneState!=UnitState.Parked )
 				{
 				// マイユニットからこのエフェクトが見えるか
 				// 現地点からユニット地点への距離
 
-				wrk_x=unit[n].Position.X;
-				wrk_y=unit[n].Position.Y;
-				if( unit[n].kind==UnitKind.Fighter )
+				wrk_x=Units[n].Position.X;
+				wrk_y=Units[n].Position.Y;
+				if( Units[n].Kind==UnitKind.Fighter )
 					{	// 航空機の場合はちょっと前へ
-					wrk_x+=cos(unit[n].drctn*a_PI)*FT_EYE;
-					wrk_y+=sin(unit[n].drctn*a_PI)*FT_EYE;
+					wrk_x+=cos(Units[n].Direction*a_PI)*FT_EYE;
+					wrk_y+=sin(Units[n].Direction*a_PI)*FT_EYE;
 					}
 
 				wrk_x=wrk_x-x;
@@ -580,7 +584,7 @@ return;
 
 				dstc=((wrk_x)/(cos(drctn*a_PI)));
 
-				switch( unit[n].kind )
+				switch( Units[n].Kind )
 					{
 					case UnitKind.Battleship:		size=BB1_SIGHT;		break;
 					case UnitKind.Cruiser:		size=CA1_SIGHT;		break;
@@ -623,7 +627,7 @@ return;
 			
 		x=(int)(x-CameraPosition.X);
 		y=(int)(CameraPosition.Y-y);
-		if( pt_in_rect3(ref field_rect, (int)x,(int)y )==0 )
+		if( PointInRect3(ref field_rect, (int)x,(int)y )==0 )
 			return;
 		}
 
@@ -636,17 +640,17 @@ return;
 //		play_snd( lpDSB_[no][snd_[no]], &snd_[no], 0 );
 
 
-		lpDSB_[no][snd_[no]].Stop();		// 
-		lpDSB_[no][snd_[no]].SetCurrentPosition(0);	// 巻き戻し
+		lpDSB_[no][NextSoundBuffers[no]].Stop();		// 
+		lpDSB_[no][NextSoundBuffers[no]].SetCurrentPosition(0);	// 巻き戻し
 
 //		if( f<-9600 )
 //			f=-9600;
 
-		lpDSB_[no][snd_[no]].SetVolume( 0/*f*/ );
-		lpDSB_[no][snd_[no]].Play(0,0,0);		// 
+		lpDSB_[no][NextSoundBuffers[no]].SetVolume( 0/*f*/ );
+		lpDSB_[no][NextSoundBuffers[no]].Play(0,0,0);		// 
 
-		snd_[no]++;
-		snd_[no]=(short)(snd_[no]%SND_DUP);
+		NextSoundBuffers[no]++;
+		NextSoundBuffers[no]=(short)(NextSoundBuffers[no]%SND_DUP);
 
 
 		}

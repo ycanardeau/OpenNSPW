@@ -34,50 +34,62 @@ struct APP_PLAYER_INFO
 
 
 
+[Original("UNIT")]
 [StructLayout(LayoutKind.Sequential)]
-public struct	UNIT		// 全ての艦船、航空機、地図上の位置
+public struct	Unit		// 全ての艦船、航空機、地図上の位置
 	{
-	public Side					used;					// 使用してるかしてないか オンならその国籍
-	[Original("x", "y")] public WorldPosition Position;	// 地図上の位置
-	public UnitCategory			ctgry;					// カテゴリー（船とか飛行機とかの）
-	public UnitKind				kind;					// 戦艦だとか空母だとか
-	public short				type;					// 形式
-	public Array16<int>			info;				// 追加の情報、航空機なら飛んでるとか、格納庫の中とか
-	public int					os_indx_y;					// 各種パターンの頭の位置（ソースサーフェス）
-	public int					os_indx_x;				// ユニットの向き
-	public double				drctn,drctn_add,a_drctn_add;		// 進行角度 変進角度
-	public double				spd,spd_add,a_spd_add,min_spd,max_spd;			// スピード 速度変更
-	public int					stop;					// オンで方向変えず、減速のみ
-	public int					spry;					// 補給と修理
-	public int					mark;					// 選択されているか
-	public Array64<double>		pp_x,pp_y;		// 移動目的地の地図上の位置
-	public Array2<int>			em_flg;					// 緊急時の移動の処理フラグ
-	[Original("em_x", "em_y")] public WorldPosition EmergencyDestination;	// 緊急時の移動目的地の地図上の位置
-	public double				to_ldr_drctn,to_ldr_dstc;		// 主に艦隊時、リーダとの相対位置。
-	public short				is_ltl_ldr,ltl_ldr,no,for_ltl_ldr;				// 一時的指揮機番号、何番機
-	public double				for_form_spd;			// 編隊を組み場合の遅れているユニットの速度
-	public Array8<int>			hp;					// いわゆるヒットポイント
-	public Array8<int>			arm;					// 武装
-	public Array2<int>			arm2;				// サブ武装
-	public Array8<double>		gas;					// 燃料
-	public int					found;					// 相手サイドからの可視不可視
-	public int					tech;					// そのユニットの技量
+	[Original("used")] public Side Side; // 使用してるかしてないか オンならその国籍
+	[Original("x", "y")] public WorldPosition Position; // 地図上の位置
+	[Original("ctgry")] public UnitCategory Category; // カテゴリー（船とか飛行機とかの）
+	[Original("kind")] public UnitKind Kind; // 戦艦だとか空母だとか
+	[Original("type")] public short Variant; // 形式
+	public Array16<int> info; // 追加の情報、航空機なら飛んでるとか、格納庫の中とか
+	[Original("os_indx_y")] public int SpriteRow; // 各種パターンの頭の位置（ソースサーフェス）
+	[Original("os_indx_x")] public int SpriteColumn; // ユニットの向き
+	[Original("drctn")] public double Direction; // 進行角度 変進角度
+	[Original("drctn_add")] public double TurnRate;
+	[Original("a_drctn_add")] public double TurnRateChange;
+	[Original("spd")] public double Speed; // スピード 速度変更
+	[Original("spd_add")] public double Acceleration;
+	[Original("a_spd_add")] public double AccelerationChange;
+	[Original("min_spd")] public double MinSpeed;
+	[Original("max_spd")] public double MaxSpeed;
+	[Original("stop")] public int Stop; // オンで方向変えず、減速のみ
+	[Original("spry")] public int Supply; // 補給と修理
+	[Original("mark")] public int Mark; // 選択されているか
+	[Original("pp_x")] public Array64<double> PathX; // 移動目的地の地図上の位置
+	[Original("pp_y")] public Array64<double> PathY;
+	[Original("em_flg")] public Array2<int> EmergencyFlags; // 緊急時の移動の処理フラグ
+	[Original("em_x", "em_y")] public WorldPosition EmergencyDestination; // 緊急時の移動目的地の地図上の位置
+	[Original("to_ldr_drctn")] public double DirectionToLeader; // 主に艦隊時、リーダとの相対位置。
+	[Original("to_ldr_dstc")] public double DistanceToLeader;
+	[Original("is_ltl_ldr")] public short IsGroupLeader; // 一時的指揮機番号、何番機
+	[Original("ltl_ldr")] public short GroupLeader;
+	[Original("no")] public short FormationNumber;
+	[Original("for_ltl_ldr")] public short ForGroupLeader;
+	[Original("for_form_spd")] public double FormationSpeed; // 編隊を組み場合の遅れているユニットの速度
+	public Array8<int> hp; // いわゆるヒットポイント
+	public Array8<int> arm; // 武装
+	[Original("arm2")] public Array2<int> SubWeapons; // サブ武装
+	public Array8<double> gas; // 燃料
+	[Original("found")] public int Found; // 相手サイドからの可視不可視
+	[Original("tech")] public int Skill; // そのユニットの技量
 
-	public Array2<short>		rnd_250;				// 0-99までの乱数
-	public Array2<short>		rnd_225;				// 0-99までの乱数
-	public Array2<short>		rnd_200;				// 0-99までの乱数
-	public Array2<short>		rnd_175;				// 0-99までの乱数
-	public Array2<short>		rnd_150;				// 0-99までの乱数
-	public Array2<short>		rnd_125;				// 0-99までの乱数
+	[Original("rnd_250")] public Array2<short> Random250; // 0-99までの乱数
+	[Original("rnd_225")] public Array2<short> Random225; // 0-99までの乱数
+	[Original("rnd_200")] public Array2<short> Random200; // 0-99までの乱数
+	[Original("rnd_175")] public Array2<short> Random175; // 0-99までの乱数
+	[Original("rnd_150")] public Array2<short> Random150; // 0-99までの乱数
+	[Original("rnd_125")] public Array2<short> Random125; // 0-99までの乱数
 
-	public Array2<short>		rnd_100;				// 0-99までの乱数
-	public Array2<short>		rnd_80;				//
-	public Array2<short>		rnd_65;				//
-	public Array2<short>		rnd_50;				//
-	public Array2<short>		rnd_40;				//
-	public Array2<short>		rnd_30;				//
-	public Array2<short>		rnd_20;				//
-	public Array2<short>		rnd_10;				//
+	[Original("rnd_100")] public Array2<short> Random100; // 0-99までの乱数
+	[Original("rnd_80")] public Array2<short> Random80; //
+	[Original("rnd_65")] public Array2<short> Random65; //
+	[Original("rnd_50")] public Array2<short> Random50; //
+	[Original("rnd_40")] public Array2<short> Random40; //
+	[Original("rnd_30")] public Array2<short> Random30; //
+	[Original("rnd_20")] public Array2<short> Random20; //
+	[Original("rnd_10")] public Array2<short> Random10; //
 
 	// The slots of hp, arm and gas by meaning (docs/Refactoring.md, Union slots). They are references to the slots, so
 	// that they can be changed and passed by ref like the slots.
@@ -87,13 +99,16 @@ public struct	UNIT		// 全ての艦船、航空機、地図上の位置
 	// Planes: flying or parked.
 	[UnscopedRef] public ref UnitState PlaneState => ref Unsafe.As<int, UnitState>(ref info[0]);
 
+	// How the unit moves.
+	[UnscopedRef] public ref UnitMode Mode => ref Unsafe.As<int, UnitMode>(ref info[5]);
+
 	// いわゆるヒットポイント
 	[UnscopedRef] public ref int Hp => ref hp[0];
 
 	[UnscopedRef] public ref int MaxHp => ref hp[1];
 
-	// 武装: the kind of weapon (a fire kind).
-	[UnscopedRef] public ref int Weapon => ref arm[0];
+	// 武装: the kind of weapon, viewed as a FireKind.
+	[UnscopedRef] public ref FireKind Weapon => ref Unsafe.As<int, FireKind>(ref arm[0]);
 
 	[UnscopedRef] public ref int Ammo => ref arm[1];
 
@@ -113,30 +128,35 @@ public struct	UNIT		// 全ての艦船、航空機、地図上の位置
 	[UnscopedRef] public ref double FuelInterval => ref gas[1];
 	}
 
+[Original("EFFECT")]
 [StructLayout(LayoutKind.Sequential)]
-public struct	EFFECT							// 雷跡とか爆炎とか
+public struct	Effect							// 雷跡とか爆炎とか
 	{
-	public Side					used;					// 自サイド
-	public EffectLayer			layer;					// 使用してるかしてないか、アッパーかローワーか
-	public int					kind;
-	public int					no;						// Sprite nuber of its Sprite Source
-	public Array8<int>			info;					// 追加の情報、
-	[Original("x", "y")] public WorldPosition Position;	// 地図上の位置
-	[Original("x2", "y2")] public WorldPosition EndPosition;	// ＢＬＴ や ＲＡＳ
-	public int					found;					// 自サイド	からの可視、不可視
+	[Original("used")] public Side Side; // 自サイド
+	[Original("layer")] public EffectLayer Layer; // 使用してるかしてないか、アッパーかローワーか
+	[Original("kind")] public int Kind;
+	[Original("no")] public int SpriteNumber; // Sprite nuber of its Sprite Source
+	public Array8<int> info; // 追加の情報、
+	[Original("x", "y")] public WorldPosition Position; // 地図上の位置
+	[Original("x2", "y2")] public WorldPosition EndPosition; // ＢＬＴ や ＲＡＳ
+	[Original("found")] public int Visible; // 自サイド	からの可視、不可視
 	//BOOL				side;					//
 	}
 
+[Original("FIRE")]
 [StructLayout(LayoutKind.Sequential)]
-public struct	FIRE
+public struct	Fire
 	{
-	public int		used;							// オン、オフ。オンなら、ターゲットのユニット番号（ＢＬＴに必要）
-	public int		kind;							// 弾丸(BLT)、爆弾(BOM)、魚雷(TPD)、炸裂弾(SHL)、ＶＴ信管(VTH)だとか、、
-	public Array9<int>	info;
-	public int		no;								// Sprite nuber of its Sprite Source
+	[Original("used")] public int Target; // オン、オフ。オンなら、ターゲットのユニット番号（ＢＬＴに必要）
+	[Original("kind")] public FireKind Kind; // 弾丸(BLT)、爆弾(BOM)、魚雷(TPD)、炸裂弾(SHL)、ＶＴ信管(VTH)だとか、、
+	public Array9<int> info;
+	[Original("no")] public int SpriteNumber; // Sprite nuber of its Sprite Source
 	[Original("x", "y")] public WorldPosition Position;
-	public double	drctn,spd,spd_add,last_spd;
-	[Original("last_x", "last_y")] public WorldPosition Destination;	// 必要なら、最終目的地
+	[Original("drctn")] public double Direction;
+	[Original("spd")] public double Speed;
+	[Original("spd_add")] public double Acceleration;
+	[Original("last_spd")] public double FinalSpeed;
+	[Original("last_x", "last_y")] public WorldPosition Destination; // 必要なら、最終目的地
 	}
 /*
 // structure used to store DirectPlay information
@@ -148,44 +168,55 @@ typedef struct
 	BOOL				bIsHost;			// TRUE if we are hosting the session
 	} DPLAYINFO, *LPDPLAYINFO;
 */
+[Original("NEW_PP")]
 [StructLayout(LayoutKind.Sequential)]
-public struct	NEW_PP
+public struct	MoveOrder
 	{
-	public short		used;						//
-	[Original("x", "y")] public WorldPosition Destination;	//
-	public int	cls;
+	[Original("used")] public short Unit; //
+	[Original("x", "y")] public WorldPosition Destination; //
+	[Original("cls")] public int ClearsPath;
 	}
 
+[Original("NEW_SLCT")]
 [StructLayout(LayoutKind.Sequential)]
-public struct	NEW_SLCT
+public struct	SelectOrder
 	{
-	public int	sw;								//
-	public short		the_slct_unit,m;			//
-	[Original("gr_x", "gr_y")] public WorldPosition GroundPosition;	// グランドX，Ｙ
+	[Original("sw")] public int IsSet; //
+	[Original("the_slct_unit")] public short SelectedUnit; //
+	[Original("m")] public short Unit;
+	[Original("gr_x", "gr_y")] public WorldPosition GroundPosition; // グランドX，Ｙ
 	}
 
+[Original("NEW_MENU")]
 [StructLayout(LayoutKind.Sequential)]
-public struct	NEW_MENU
+public struct	MenuOrder
 	{
-	public short	menu;							// これがｓｗの代わり
-	public short	the_slct_unit;
+	[Original("menu")] public CombatMenuItem Menu; // これがｓｗの代わり
+	[Original("the_slct_unit")] public short SelectedUnit;
 	}
 
+[Original("KUMO")]
 [StructLayout(LayoutKind.Sequential)]
-public struct KUMO
+public struct Cloud
 	{
-	public short				used;					// 使用してるかしてないか
-	[Original("x", "y")] public WorldPosition Position;	// 地図上の位置
-	public int					kind;					// 戦艦だとか空母だとか
+	[Original("used")] public short Used; // 使用してるかしてないか
+	[Original("x", "y")] public WorldPosition Position; // 地図上の位置
+	[Original("kind")] public int Kind; // 戦艦だとか空母だとか
 	}
 
 [StructLayout(LayoutKind.Sequential)]
 public struct	SPRT
 	{
-	public int		no;
-	public int		x,y,cx,cy;
-	public int		wd,ht,base_x,base_y;
-	public int		os_of_x;
+	public int no;
+	public int x;
+	public int y;
+	public int cx;
+	public int cy;
+	public int wd;
+	public int ht;
+	public int base_x;
+	public int base_y;
+	public int os_of_x;
 	}
 
 
@@ -207,17 +238,18 @@ public struct	SPRT
 public struct GENERICMSG
 	{
 //	BYTE        byType;
-	public MessageType			dwType;
+	public MessageType dwType;
 	}
 
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct UNIT_MSG
 	{
-    public byte		byType;
-	public int			used;							//
-	public double		x,y;							//
-	public int		cls;
+    public byte byType;
+	public int used; //
+	public double x; //
+	public double y;
+	public int cls;
 	}
 
 
@@ -225,9 +257,9 @@ public struct UNIT_MSG
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_DATA_1
 	{
-	public MessageType	dwType;
-	public Array16<byte>	my_name;
-	public Array10<short>	data;
+	public MessageType dwType;
+	public Array16<byte> my_name;
+	public Array10<short> data;
 	}
 
 
@@ -235,42 +267,42 @@ public struct	_DP_DATA_1
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct _DP_NEW_PP
 	{
-	public MessageType	dwType;
+	public MessageType dwType;
 
 	// NEW PP
-	public byte	used;							//
-	public short	x;							//
-	public short	y;							//
-	public int	cls;
-	public Array90<byte>	slct_unit;	// [USA_PLANE_END/2]
+	public byte used; //
+	public short x; //
+	public short y; //
+	public int cls;
+	public Array90<byte> slct_unit; // [USA_PLANE_END/2]
 	}
 
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_PP_SHIP
 	{
-	public MessageType	dwType;
+	public MessageType dwType;
 
 	// NEW PP
-	public byte	used;							//
-	public short	x;							//
-	public short	y;							//
-	public int	cls;
-	public Array40<byte>	slct_unit;	// [JPN_SHIP_END/*20*/]
+	public byte used; //
+	public short x; //
+	public short y; //
+	public int cls;
+	public Array40<byte> slct_unit; // [JPN_SHIP_END/*20*/]
 	}
 
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_PP_PLANE
 	{
-	public MessageType	dwType;
+	public MessageType dwType;
 
 	// NEW PP
-	public byte	used;							//
-	public short	x;							//
-	public short	y;							//
-	public int	cls;
-	public Array50<byte>	slct_unit;	// [JPN_PLANE_END-USA_SHIP_END/*30*/]
+	public byte used; //
+	public short x; //
+	public short y; //
+	public int cls;
+	public Array50<byte> slct_unit; // [JPN_PLANE_END-USA_SHIP_END/*30*/]
 	}
 
 
@@ -278,25 +310,29 @@ public struct	_DP_NEW_PP_PLANE
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_SLCT
 	{
-	public MessageType	dwType;
+	public MessageType dwType;
 
 	// NEW SLCT
-	public int	sw;								//
-	public byte	the_slct_unit,m;				//
-	public short	gr_x,gr_y;						// グランドX，Ｙ
-	public Array90<byte>	slct_unit;	// [USA_PLANE_END/2/*50*/]
+	public int sw; //
+	public byte the_slct_unit; //
+	public byte m;
+	public short gr_x; // グランドX，Ｙ
+	public short gr_y;
+	public Array90<byte> slct_unit; // [USA_PLANE_END/2/*50*/]
 	}
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_SLCT_SHIP
 	{
-	public MessageType	dwType;
+	public MessageType dwType;
 
 	// NEW SLCT
-	public int	sw;								//
-	public byte	the_slct_unit,m;				//
-	public short	gr_x,gr_y;						// グランドX，Ｙ
-	public Array40<byte>	slct_unit;	// [JPN_SHIP_END/*20*/]
+	public int sw; //
+	public byte the_slct_unit; //
+	public byte m;
+	public short gr_x; // グランドX，Ｙ
+	public short gr_y;
+	public Array40<byte> slct_unit; // [JPN_SHIP_END/*20*/]
 	}
 
 
@@ -304,25 +340,29 @@ public struct	_DP_NEW_SLCT_SHIP
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_SLCT_PLANE
 	{
-	public MessageType	dwType;
+	public MessageType dwType;
 
 	// NEW SLCT
-	public int	sw;								//
-	public byte	the_slct_unit,m;				//
-	public short	gr_x,gr_y;						// グランドX，Ｙ
-	public Array50<byte>	slct_unit;	// [JPN_PLANE_END-USA_SHIP_END/*30*/]
+	public int sw; //
+	public byte the_slct_unit; //
+	public byte m;
+	public short gr_x; // グランドX，Ｙ
+	public short gr_y;
+	public Array50<byte> slct_unit; // [JPN_PLANE_END-USA_SHIP_END/*30*/]
 	}
 
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_SLCT_LAND
 	{
-	public MessageType	dwType;
+	public MessageType dwType;
 
 	// NEW SLCT
-	public int	sw;								//
-	public byte	the_slct_unit,m;				//
-	public short	gr_x,gr_y;						// グランドX，Ｙ
+	public int sw; //
+	public byte the_slct_unit; //
+	public byte m;
+	public short gr_x; // グランドX，Ｙ
+	public short gr_y;
 	}
 
 
@@ -332,13 +372,13 @@ public struct	_DP_NEW_SLCT_LAND
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_NEW_MENU
 	{
-	public MessageType	dwType;
+	public MessageType dwType;
 
 	// NEW MENU
-	public byte		menu;								// これがｓｗの代わり
-	public byte		the_slct_unit;
+	public byte menu; // これがｓｗの代わり
+	public byte the_slct_unit;
 
-	public Array90<byte>	slct_unit;	// [USA_PLANE_END/2/*50*/]
+	public Array90<byte> slct_unit; // [USA_PLANE_END/2/*50*/]
 	}
 
 
@@ -347,16 +387,16 @@ public struct	_DP_NEW_MENU
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_FLAG
 	{
-	public MessageType	dwType;
+	public MessageType dwType;
 
 
-	public byte	cc_chk;
-	public byte	unit_chk;
-	public byte	rnd_chk;
+	public byte cc_chk;
+	public byte unit_chk;
+	public byte rnd_chk;
 
-	public byte	ccc_wait_chk;
+	public byte ccc_wait_chk;
 
-	public short	rival_mode;					// お互いのモードを飛ばす
+	public short rival_mode; // お互いのモードを飛ばす
 
 	}
 
@@ -367,9 +407,9 @@ public struct	_DP_FLAG
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct	_DP_DATA_20
 	{
-	public MessageType	dwType;
+	public MessageType dwType;
 
-	public Array260<byte>	friend_chat;	// [MAX_PATH/*128*/]
+	public Array260<byte> friend_chat; // [MAX_PATH/*128*/]
 
 	}
 

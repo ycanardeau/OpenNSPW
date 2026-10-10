@@ -53,7 +53,7 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 	private object? _userContext;
 	private string _localName = string.Empty;
 
-	// Whether a message of this type is what each player sends once per turn, to give an order or none (chara_cont).
+	// Whether a message of this type is what each player sends once per turn, to give an order or none (UpdateBattle).
 	private static bool IsOrder(MessageType type)
 	{
 		return type is MessageType.NoOrder or MessageType.UnitArrived or MessageType.MoveOrder or MessageType.MoveShipsOrder

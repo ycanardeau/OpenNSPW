@@ -73,7 +73,7 @@ internal sealed class SoloGame : IDisposable
 			ThrowIfFailed();
 			if (!_thread.IsAlive || DateTime.UtcNow > deadline)
 			{
-				throw new TimeoutException($"The game did not reach the state: dialog {Game.g_hDlg?.Id}, mode {Game.mode}, frames {_platform.FrameCount}.");
+				throw new TimeoutException($"The game did not reach the state: dialog {Game.g_hDlg?.Id}, mode {Game.Mode}, frames {_platform.FrameCount}.");
 			}
 
 			Thread.Sleep(10);
@@ -106,18 +106,18 @@ internal sealed class SoloGame : IDisposable
 			g.TypeDlgItemText(g.g_hDlg!, IDC_ADDRESS_LINE2, "0");
 			g.ClickDlgItem(g.g_hDlg!, IDOK);
 		});
-		WaitUntil(() => Game.g_hDlg?.Id == IDD_MAIN_GAME && Game.g_dwNumberOfActivePlayers == 2);
+		WaitUntil(() => Game.g_hDlg?.Id == IDD_MAIN_GAME && Game.ActivePlayerCount == 2);
 
 		Do(g => g.ClickDlgItem(g.g_hDlg!, IDC_START_GAME));
 		WaitUntil(() => _platform.FrameCount > 20);
 
 		Click(512, 384);
-		WaitUntil(() => Game.mode == GameMode.GameSetting && Game.rival_mode == GameMode.GameSetting);
+		WaitUntil(() => Game.Mode == GameMode.GameSetting && Game.RivalMode == GameMode.GameSetting);
 
 		Click(130, 150 + 12);
-		WaitUntil(() => Game.mode == GameMode.ConfigSetting && Game.rival_mode == GameMode.ConfigSetting);
+		WaitUntil(() => Game.Mode == GameMode.ConfigSetting && Game.RivalMode == GameMode.ConfigSetting);
 
-		_platform.ParkAfterFrame = () => Game.mode == GameMode.Battle;
+		_platform.ParkAfterFrame = () => Game.Mode == GameMode.Battle;
 		Click(630 - 120 + 10, 700 + 12);
 		_platform.WaitUntilParked(Timeout);
 		ThrowIfFailed();
@@ -139,14 +139,14 @@ internal sealed class SoloGame : IDisposable
 		}
 	}
 
-	// The units of a side and category (a ship or a plane) that can be given orders (cnct_game_input_cont), by number.
+	// The units of a side and category (a ship or a plane) that can be given orders (HandleInput), by number.
 	private List<int> Units(Side side, UnitCategory category)
 	{
 		var units = new List<int>();
-		for (var m = 1; m <= Game.max_unit; m++)
+		for (var m = 1; m <= Game.MaxUnitId; m++)
 		{
-			ref var unit = ref Game.unit[m];
-			if (unit.used == side && unit.ctgry == category && unit.spry == 0 && unit.Hp > 0 && !(unit.kind >= UnitKind.AirBase && unit.kind <= UnitKind.Fortress))
+			ref var unit = ref Game.Units[m];
+			if (unit.Side == side && unit.Category == category && unit.Supply == 0 && unit.Hp > 0 && !(unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress))
 			{
 				units.Add(m);
 			}
@@ -157,27 +157,27 @@ internal sealed class SoloGame : IDisposable
 
 	private WorldPosition Center(List<int> units)
 	{
-		return new WorldPosition(units.Average(m => Game.unit[m].Position.X), units.Average(m => Game.unit[m].Position.Y));
+		return new WorldPosition(units.Average(m => Game.Units[m].Position.X), units.Average(m => Game.Units[m].Position.Y));
 	}
 
 	// Selects units as the player does: cancels the selection (a right click), clicks the first unit, then adds the
 	// others.
 	private void Select(List<int> units)
 	{
-		Game.cls_all_slct_unit_p2(1);
+		Game.ClearSelection2(1);
 		Game.set_the_slct_unit(units[0]);
 		foreach (var m in units.Skip(1))
 		{
-			Game.slct_unit_no++;
-			Game.slct_unit[1][m] = Game.slct_unit_no;
+			Game.SelectionCount++;
+			Game.Selections[1][m] = Game.SelectionCount;
 		}
 	}
 
 	// The selection of the rival's order: its ships, then its planes, each numbered from the first of its side, as
-	// chara_cont reads them into slct_unit[0].
+	// UpdateBattle reads them into Selections[0].
 	private Array90<byte> RivalSelection(List<int> units)
 	{
-		var japan = Game.your_side != Side.Japan;
+		var japan = Game.LocalSide != Side.Japan;
 		var selection = new Array90<byte>();
 		for (var i = 0; i < units.Count; i++)
 		{
@@ -191,21 +191,21 @@ internal sealed class SoloGame : IDisposable
 		return selection;
 	}
 
-	// One tick of the battle, as updateFrame runs it, then the rival's messages.
+	// One tick of the battle, as UpdateFrame runs it, then the rival's messages.
 	public void Tick()
 	{
-		Game.chara_cont();
-		Game.cnct_decision();
+		Game.UpdateBattle();
+		Game.CheckResult();
 		Game.g_pThreadPool!.DoWork(DOWORK_TIMESLICE, 0);
 	}
 
-	// Ticks until the start of the next turn, when the player can give an order (you_can_order).
+	// Ticks until the start of the next turn, when the player can give an order (CanOrder).
 	private void TickUntilTurn()
 	{
 		do
 		{
 			Tick();
-		} while (Game.you_can_order == 0);
+		} while (Game.CanOrder == 0);
 	}
 
 	// Orders units of both sides to move: the game's as the player does, by selecting them and clicking the point; the
@@ -213,9 +213,9 @@ internal sealed class SoloGame : IDisposable
 	private void OrderMove(List<int> own, WorldPosition ownPoint, List<int> rival, WorldPosition rivalPoint)
 	{
 		Select(own);
-		Game.new_pp[1].used = (short)own[0];
-		Game.new_pp[1].Destination = ownPoint;
-		Game.cnct_game_input_cont();
+		Game.MoveOrders[1].Unit = (short)own[0];
+		Game.MoveOrders[1].Destination = ownPoint;
+		Game.HandleInput();
 
 		_platform.Rival!.Order(new _DP_NEW_PP
 		{
@@ -231,10 +231,10 @@ internal sealed class SoloGame : IDisposable
 	// Plays the first turns of the battle for both sides: each sends its ships at the other's ships, then its planes.
 	public void SendForcesAtEachOther()
 	{
-		var rivalSide = Game.your_side == Side.Japan ? Side.UnitedStates : Side.Japan;
-		var ownShips = Units(Game.your_side, UnitCategory.Ship);
+		var rivalSide = Game.LocalSide == Side.Japan ? Side.UnitedStates : Side.Japan;
+		var ownShips = Units(Game.LocalSide, UnitCategory.Ship);
 		var rivalShips = Units(rivalSide, UnitCategory.Ship);
-		var ownPlanes = Units(Game.your_side, UnitCategory.Plane);
+		var ownPlanes = Units(Game.LocalSide, UnitCategory.Plane);
 		var rivalPlanes = Units(rivalSide, UnitCategory.Plane);
 
 		TickUntilTurn();
@@ -243,32 +243,32 @@ internal sealed class SoloGame : IDisposable
 		OrderMove(ownPlanes, Center(rivalShips), rivalPlanes, Center(ownShips));
 	}
 
-	// One frame of the battle at the normal speed: input, a tick, drawing and showing the frame (updateFrame), then the
+	// One frame of the battle at the normal speed: input, a tick, drawing and showing the frame (UpdateFrame), then the
 	// rival's messages, as an iteration of WinMain's loop.
 	public void Frame()
 	{
-		Game.updateFrame();
+		Game.UpdateFrame();
 		Game.g_pThreadPool!.DoWork(DOWORK_TIMESLICE, 0);
 	}
 
 	// The drawing of a frame of the battle, without the tick.
 	public void Draw()
 	{
-		Game.unit_info_cont();
-		Game.draw_cmbt_area();
-		Game.draw_map();
+		Game.UpdateUnitInfo();
+		Game.DrawBattleArea();
+		Game.DrawMinimap();
 	}
 
 	// A hash of the units, fires, effects and clouds, and of the counts of ticks and random numbers.
 	public string StateHash()
 	{
 		using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-		hash.AppendData(MemoryMarshal.AsBytes<UNIT>(Game.unit));
-		hash.AppendData(MemoryMarshal.AsBytes<FIRE>(Game.fire));
-		hash.AppendData(MemoryMarshal.AsBytes<EFFECT>(Game.effect));
-		hash.AppendData(MemoryMarshal.AsBytes<KUMO>(Game.kumo));
-		hash.AppendData(BitConverter.GetBytes(Game.cc_count));
-		hash.AppendData(BitConverter.GetBytes(Game.rnd_count));
+		hash.AppendData(MemoryMarshal.AsBytes<Unit>(Game.Units));
+		hash.AppendData(MemoryMarshal.AsBytes<Fire>(Game.Fires));
+		hash.AppendData(MemoryMarshal.AsBytes<Effect>(Game.Effects));
+		hash.AppendData(MemoryMarshal.AsBytes<Cloud>(Game.Clouds));
+		hash.AppendData(BitConverter.GetBytes(Game.Tick));
+		hash.AppendData(BitConverter.GetBytes(Game.RandomCount));
 		return Convert.ToHexString(hash.GetHashAndReset())[..16];
 	}
 
