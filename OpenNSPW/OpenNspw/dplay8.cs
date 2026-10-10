@@ -228,8 +228,6 @@ public static class dplay8
 	public const string DPNA_KEY_PORT = "port";
 	public const string DPNA_KEY_PHONENUMBER = "phonenumber";
 
-	//#define		EASY_SEND		DPNSEND_NOCOMPLETE | DPNSEND_NOLOOPBACK
-	//#define		MUST_SEND		DPNSEND_NOLOOPBACK | DPNSEND_GUARANTEED
 	// From all_head.h, which needs these values.
 	public const uint EASY_SEND = DPNSEND_NOCOMPLETE | DPNSEND_NOLOOPBACK;
 	public const uint MUST_SEND = DPNSEND_NOLOOPBACK | DPNSEND_GUARANTEED;

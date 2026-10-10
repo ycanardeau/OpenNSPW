@@ -504,6 +504,18 @@ public static class nspw_math
 		}
 	}
 
+	// The sine of an angle in degrees, as the original computes it: sin(degrees*a_PI).
+	public static double SinDegrees(double degrees)
+	{
+		return sin(degrees * all_head.a_PI);
+	}
+
+	// The cosine of an angle in degrees, as the original computes it: cos(degrees*a_PI).
+	public static double CosDegrees(double degrees)
+	{
+		return cos(degrees * all_head.a_PI);
+	}
+
 	public static double atan2(double y, double x)
 	{
 		const double tiny = 1.0e-300;
@@ -567,5 +579,36 @@ public static class nspw_math
 		default:
 			return (z - pi_lo) - pi;
 		}
+	}
+
+	// The direction of the vector (dx, dy) in degrees, from 0 to 360, as the original computes it everywhere.
+	public static double Direction(double dx, double dy)
+	{
+		double drctn;
+
+		drctn=atan2(dy,dx)*all_head.RAD_to;
+		if(drctn<0)
+			drctn=360+drctn;
+		return drctn;
+	}
+
+	// The length of the vector (dx, dy), as the original computes it everywhere: the angle of the vector, folded into
+	// 0 to 90 degrees, and |dx| divided by its cosine. A dx or dy of 0 counts as 1.
+	public static double Distance(double dx, double dy)
+	{
+		double drctn;
+
+		if(dx==0)	dx=1;
+		if(dy==0)	dy=1;
+		drctn=Direction(dx,dy);
+		if(dx<0)
+			dx=0-dx;
+		if(dy<0)
+			dy=0-dy;
+		if(drctn>=180)
+			drctn=drctn-180;
+		if(drctn>=90)
+			drctn=90-(drctn-90);
+		return dx/CosDegrees(drctn);
 	}
 }

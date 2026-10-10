@@ -8,6 +8,79 @@ using OpenNspw.Porter;
 //       (stage 2), and lists the errors left to port by hand.
 //   OpenNspw.Porter fix <port project directory> <C# file>...
 //       Runs stage 2 only, on C# files of the project.
+//   OpenNspw.Porter rename <port project directory> <renames file> <user project directory>...
+//       Renames members of the port and their uses in it and in the projects that use it (see Renamer), in the
+//       order given, each after the projects it uses. The projects must be built.
+//   OpenNspw.Porter split-fields <project directory>
+//       Puts each field of the project on a line of its own (see FieldSplitter).
+//   OpenNspw.Porter extract <project directory> <file> <first line> <last line> <new method>
+//       Extracts the statements between two lines of a file into a new method (see Extractor).
+//   OpenNspw.Porter distances <project directory>
+//       Replaces the original's computations of a distance with calls of Distance where it computes the same (see
+//       Distances).
+//   OpenNspw.Porter element-refs <project directory>
+//       Gives a new effect or fire a ref local (see ElementRefs).
+//   OpenNspw.Porter ref-locals <project directory> [<method>,<method>...]
+//       Gives the element of a table that a loop works on a ref local, and the unit that the int parameter of the named
+//       methods numbers (see RefLocals).
+
+if (args.Length >= 3 && args[0] == "rename")
+{
+	var renamer = new Renamer(new CSharpProject(args[1]), [.. args[3..].Select(d => new CSharpProject(d))], Renamer.ReadRenames(args[2]));
+	foreach (var path in renamer.Run())
+	{
+		Console.WriteLine(path);
+	}
+
+	return 0;
+}
+
+if (args.Length == 6 && args[0] == "extract")
+{
+	new Extractor(new CSharpProject(args[1]), args[2], int.Parse(args[3]), int.Parse(args[4]), args[5]).Run();
+	return 0;
+}
+
+if (args.Length is 2 or 3 && args[0] == "ref-locals")
+{
+	var methods = args.Length == 3 ? args[2].Split(',').ToHashSet() : [];
+	foreach (var path in new RefLocals(new CSharpProject(args[1]), methods).Run())
+	{
+		Console.WriteLine(path);
+	}
+
+	return 0;
+}
+
+if (args.Length == 2 && args[0] == "distances")
+{
+	foreach (var line in new Distances(new CSharpProject(args[1])).Run())
+	{
+		Console.WriteLine(line);
+	}
+
+	return 0;
+}
+
+if (args.Length == 2 && args[0] == "element-refs")
+{
+	foreach (var line in new ElementRefs(new CSharpProject(args[1])).Run())
+	{
+		Console.WriteLine(line);
+	}
+
+	return 0;
+}
+
+if (args.Length == 2 && args[0] == "split-fields")
+{
+	foreach (var path in new FieldSplitter(new CSharpProject(args[1])).Run())
+	{
+		Console.WriteLine(path);
+	}
+
+	return 0;
+}
 
 if (args.Length < 3 || args[0] is not ("port" or "fix"))
 {

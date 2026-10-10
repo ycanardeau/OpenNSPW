@@ -11,51 +11,9 @@ namespace OpenNspw.Porter;
 // time (OpenNSPW/README.md, porting conventions), until none is left. The other errors are reported for porting by hand.
 internal sealed partial class Fixer(string projectDirectory, IReadOnlySet<string> targets)
 {
-	private readonly string _projectDirectory = projectDirectory;
 	private readonly IReadOnlySet<string> _targets = targets;
 
-	private static readonly string[] ImplicitUsings =
-	[
-		"System", "System.IO", "System.Linq", "System.Collections.Generic", "System.Threading", "System.Threading.Tasks",
-	];
-
-	private string GlobalUsings()
-	{
-		var project = File.ReadAllText(Directory.GetFiles(_projectDirectory, "*.csproj").Single());
-		var lines = ImplicitUsings.Select(u => $"global using {u};").ToList();
-		foreach (Match m in Regex.Matches(project, @"<Using Include=""([^""]+)""( Static=""true"")?( Alias=""([^""]+)"")? />"))
-		{
-			lines.Add(m.Groups[4].Success
-				? $"global using {m.Groups[4].Value} = {m.Groups[1].Value};"
-				: m.Groups[2].Success ? $"global using static {m.Groups[1].Value};" : $"global using {m.Groups[1].Value};");
-		}
-
-		return string.Join('\n', lines);
-	}
-
-	private IEnumerable<string> Symbols()
-	{
-		var project = File.ReadAllText(Directory.GetFiles(_projectDirectory, "*.csproj").Single());
-		var defines = Regex.Match(project, @"<DefineConstants>([^<]*)</DefineConstants>").Groups[1].Value;
-		return defines.Split(';').Select(s => s.Trim()).Where(s => s.Length > 0 && !s.StartsWith('$'));
-	}
-
-	private static readonly ImmutableArray<MetadataReference> References =
-	[
-		.. ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!).Split(Path.PathSeparator).Select(p => MetadataReference.CreateFromFile(p)),
-	];
-
-	private CSharpCompilation Compile(IReadOnlyDictionary<string, string> files)
-	{
-		var options = new CSharpParseOptions(LanguageVersion.Preview, preprocessorSymbols: Symbols());
-		var trees = files.Select(f => CSharpSyntaxTree.ParseText(f.Value, options, f.Key)).ToList();
-		trees.Add(CSharpSyntaxTree.ParseText(GlobalUsings(), options, "GlobalUsings.cs"));
-		return CSharpCompilation.Create(
-			"OpenNspw",
-			trees,
-			References,
-			new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true, nullableContextOptions: NullableContextOptions.Annotations));
-	}
+	private readonly CSharpProject _project = new(projectDirectory);
 
 	private static bool IsNumeric(ITypeSymbol? type)
 	{
@@ -319,13 +277,11 @@ internal sealed partial class Fixer(string projectDirectory, IReadOnlySet<string
 	// Fixes the targets until no error has a mechanical fix. Returns the errors left.
 	public IReadOnlyList<Diagnostic> Run(int maxRounds = 60)
 	{
-		var files = Directory.GetFiles(_projectDirectory, "*.cs", SearchOption.AllDirectories)
-			.Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") && !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}"))
-			.ToDictionary(f => f, File.ReadAllText);
+		var files = _project.ReadFiles();
 		IReadOnlyList<Diagnostic> errors = [];
 		for (var round = 0; round < maxRounds; round++)
 		{
-			var compilation = Compile(files);
+			var compilation = _project.Compile(files, CSharpProject.FrameworkReferences);
 			errors = [.. compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error)];
 			var changed = false;
 			foreach (var tree in compilation.SyntaxTrees.Where(t => _targets.Contains(Path.GetFileName(t.FilePath))))

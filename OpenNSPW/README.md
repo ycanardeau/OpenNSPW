@@ -19,6 +19,7 @@ What is tested:
 - **Function tests**: `etc2.cpp` (except `new_unit_arrived`, `draw_line4` and `draw_line5`), and `make_my_rnd` through `cloud_cont` of `etc3.cpp`, against recordings of the reference.
 - **`NetworkTests`**: `dplay.cpp`. Two games in one process connect over loopback UDP through the original's connection dialogs, and exchange the game's messages.
 - **`TitleScreenTests`**: two whole games with the original's data connect, reach the title screen, and play a battle that the host starts by clicking through the setting screens. They check the modes, that both games keep in step, and that no message box shows. They save the frames they reach as PNG files next to the test assembly.
+- **`CharacterizationTests`**: the characterization traces that guard the refactoring (see [docs/Refactoring.md](../docs/Refactoring.md#characterization-traces)). Scripts play two whole games in lockstep: the title screen, the first three scenarios, and the original's user scenarios `tst3.dat` and `てすと.dat`, whose fleets start close enough to fight, with seeded random input on both sides. Each script's trace, the state, output and `rand()` state of both games after every round, must match the one in `OpenNspw.Tests/Traces`, which was recorded from the port itself.
 
 The rest of the game logic is not compared with the reference yet.
 
@@ -45,6 +46,17 @@ Run the commands below from this folder.
 dotnet test OpenNspw.Tests
 ```
 
+### Characterization traces
+The characterization tests run two games in lockstep (`OpenNspw.Tests/Lockstep`): each game runs only while the test steps it, until it ends a frame, sleeps or waits for a message; its clock advances only as it reads it; the two games connect through an in-memory DirectPlay 8; and input arrives only between steps. A run therefore does the same thing every time, on every machine.
+
+A change that keeps behavior leaves every trace unchanged. A change that changes behavior on purpose records the traces again, in the same commit:
+
+```bash
+OPENNSPW_RECORD_TRACES=1 dotnet test OpenNspw.Tests --filter CharacterizationTests
+```
+
+When a run differs from its trace, the test reports the first line that differs and the globals that differ at the next checkpoint.
+
 ## Benchmarks
 ```bash
 dotnet run -c Release --project OpenNspw.Benchmarks -- --filter '*'
@@ -54,9 +66,9 @@ dotnet run -c Release --project OpenNspw.Benchmarks -- --filter '*'
 
 | Benchmark | What one operation is |
 | --- | --- |
-| `Tick` | A tick of the simulation (`chara_cont` and `cnct_decision`), over 1500 ticks. |
-| `Frame` | A frame at the normal speed (`updateFrame`): input, a tick, drawing the battle and showing it, over 300 frames. |
-| `Draw` | Drawing the battle (`unit_info_cont`, `draw_cmbt_area` and `draw_map`), without the tick. |
+| `Tick` | A tick of the simulation (`UpdateBattle` and `CheckResult`), over 1500 ticks. |
+| `Frame` | A frame at the normal speed (`UpdateFrame`): input, a tick, drawing the battle and showing it, over 300 frames. |
+| `Draw` | Drawing the battle (`UpdateUnitInfo`, `DrawBattleArea` and `DrawMinimap`), without the tick. |
 
 Each iteration restores the game's state to tick 2000 first, so each one does the same work. The state an iteration ends with is printed (`// State after an iteration`). It is the same in every iteration and every run, and a version of the game that behaves the same ends with the same state.
 
