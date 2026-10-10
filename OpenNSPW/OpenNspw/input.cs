@@ -28,7 +28,7 @@ public void	HandleInput()
 	int	h,m,f,s,n,e; Array256<int> chk = default;
 
 	e=1;
-	if( SelectOrders[e].IsSet!=0 && !Units[SelectOrders[e].SelectedUnit].IsSupplying && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress ))
+	if( SelectOrders[e].IsSet && !Units[SelectOrders[e].SelectedUnit].IsSupplying && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress ))
 		{
 		// ユニット自体をクリックした。
 		SelectedUnit=SelectOrders[e].SelectedUnit;
@@ -41,7 +41,7 @@ public void	HandleInput()
 				// 輸送船陸地を選択
 				// 揚陸場所あり
 
-				if(CanOrder!=0)
+				if(CanOrder)
 					{
 					SelectedUnit=SelectOrders[e].SelectedUnit;
 					m=SelectOrders[e].Unit;
@@ -51,15 +51,15 @@ public void	HandleInput()
 					BufferedSelectOrders[1].Unit=SelectOrders[e].Unit;
 					BufferedSelectOrders[1].GroundPosition=SelectOrders[e].GroundPosition;
 
-					CanOrder=0;
-					HasOrdered=1;
+					CanOrder=false;
+					HasOrdered=true;
 					PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
 					}
 				}
 			else
 				{
 				// 敵性ユニットを左クリック
-				if(CanOrder!=0)
+				if(CanOrder)
 					{
 					SelectedUnit=SelectOrders[e].SelectedUnit;
 					m=SelectOrders[e].Unit;
@@ -98,8 +98,8 @@ public void	HandleInput()
 							}
 						}
 
-					CanOrder=0;
-					HasOrdered=1;
+					CanOrder=false;
+					HasOrdered=true;
 					PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
 
 					}
@@ -110,7 +110,7 @@ public void	HandleInput()
 			if ( Units[SelectedUnit].Category==UnitCategory.Plane && (Units[m].Kind==UnitKind.Carrier || Units[m].Kind==UnitKind.LightCarrier || Units[m].Kind==UnitKind.AirBase))
 				{
 				// 航空機の格納先を指定
-				if(CanOrder!=0)
+				if(CanOrder)
 					{
 					SelectedUnit=SelectOrders[e].SelectedUnit;
 					m=SelectOrders[e].Unit;
@@ -149,8 +149,8 @@ public void	HandleInput()
 							}
 						}
 
-					CanOrder=0;
-					HasOrdered=1;
+					CanOrder=false;
+					HasOrdered=true;
 					PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
 					}
 				}
@@ -180,7 +180,7 @@ public void	HandleInput()
 		}
 	else
 		{
-		if( CanOrder!=0 && MoveOrders[1].Unit!=0 && !Units[MoveOrders[1].Unit].IsSupplying && !(  Units[MoveOrders[1].Unit].Kind>=UnitKind.AirBase && Units[MoveOrders[1].Unit].Kind<=UnitKind.Fortress  )  && !(Units[MoveOrders[1].Unit].Category==UnitCategory.Plane && Units[MoveOrders[1].Unit].PlaneState==UnitState.Parked && Units[Units[MoveOrders[1].Unit].Carrier].Hp<=Units[Units[MoveOrders[1].Unit].Carrier].MaxHp*0.2) )
+		if( CanOrder && MoveOrders[1].Unit!=0 && !Units[MoveOrders[1].Unit].IsSupplying && !(  Units[MoveOrders[1].Unit].Kind>=UnitKind.AirBase && Units[MoveOrders[1].Unit].Kind<=UnitKind.Fortress  )  && !(Units[MoveOrders[1].Unit].Category==UnitCategory.Plane && Units[MoveOrders[1].Unit].PlaneState==UnitState.Parked && Units[Units[MoveOrders[1].Unit].Carrier].Hp<=Units[Units[MoveOrders[1].Unit].Carrier].MaxHp*0.2) )
 			{
 			// あるマイユニットに新ＰＰ＿ＸＹが設定された場合
 			// バッファに保存。これを命令をだせるタイミングにnew_ppに代入する。
@@ -228,8 +228,8 @@ public void	HandleInput()
 				Selections[1][m]=0;
 				ClearSelection2(1);
 				}
-			CanOrder=0;
-			HasOrdered=1;
+			CanOrder=false;
+			HasOrdered=true;
 			PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
 			}
 		}
@@ -702,7 +702,7 @@ public void	ApplyOrders()
 
 	for(e=0; e<=1; e++)
 		{
-		if( SelectOrders[e].IsSet!=0 && !Units[SelectOrders[e].SelectedUnit].IsSupplying && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress ))
+		if( SelectOrders[e].IsSet && !Units[SelectOrders[e].SelectedUnit].IsSupplying && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress ))
 			{
 			// ユニット自体をクリックした。
 			SelectedUnit=SelectOrders[e].SelectedUnit;
@@ -952,7 +952,7 @@ public void ReadInput()
 		int y = 0;
 
 		// バッファリング・データを取得する
-		while(IsAppActive!=0)
+		while(IsAppActive)
 			{
 			DIDEVICEOBJECTDATA od;
 			uint dwItems = 1;
@@ -1039,7 +1039,7 @@ public void ReadInput()
 
 					case DIK_RETURN:
 
-						if( IsEditingMap==0 && hwndChatDlg==null && (od.dwData & (0x80))!=0 )
+						if( !IsEditingMap && hwndChatDlg==null && (od.dwData & (0x80))!=0 )
 							{
 							hwndChatDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_CHAT_DIALOG), hwndApp, ChatDlgProc);
 
@@ -1091,7 +1091,7 @@ public void ReadInput()
 		int hr;
 
 		// バッファリング・データを取得する
-		while(IsAppActive!=0)
+		while(IsAppActive)
 			{
 			DIDEVICEOBJECTDATA od;
 			uint dwItems = 1;
@@ -1168,7 +1168,7 @@ public void ReadInput()
 
 	// 純粋なマウス位置を取る
 	GetCursorPos(ref CursorPosition);
-	if( IsFullscreen==0 )
+	if( !IsFullscreen )
 		ScreenToClient(hwndApp, ref CursorPosition);
 
 	}

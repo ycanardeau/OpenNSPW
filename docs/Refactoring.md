@@ -166,6 +166,7 @@ New value types replace groups of primitives that are adjacent in the struct, wi
 | `Point` | `int X, Y` | `POINT` |
 | `Rect` | `int Left, Top, Right, Bottom` | `RECT` |
 | `Bool32` | `int Value` | `BOOL` fields that are used as booleans |
+| `Bool8` | `byte Value` | `BYTE` fields that are used as booleans |
 | `UnitId` | `short Value` or `int Value` | Unit numbers (see below) |
 
 Operations on them must compute exactly what the C++ computes, operation by operation:
@@ -262,17 +263,17 @@ Done. It takes documentation comment IDs (`F:OpenNspw.Nspw.unit Units`); the cat
 ### 4. Enums
 `Side`, `UnitCategory`, `UnitKind`, `UnitState`, `UnitMode`, `CombatMenuItem`, `FireKind`, `EffectLayer`, `GameMode`, `GameResult`, `MessageType`, `SoundId`, the button flags. One enum per commit.
 
-Done, except `SoundId`, `SurfaceId`, `KeyDirection` and the button flags, which wait for step 8 (their values index arrays, such as `lpDSB_` in `InitDSound`, and would need a cast at each index).
+Done. `SoundId` indexes the sound buffers with a cast. `SpriteId` indexes `Sprites`, a `SpriteArray` with an indexer by `SpriteId`, so without one. `InputButtons` is the type of `Buttons`. The key directions (`KEY_UP` ...) are not used, and get no enum.
 
 ### 5. Value types
 `WorldPosition`, `WorldVector`, `Angle`, `Point`, `Rect`, with their bit-for-bit tests. Then `Bool32` and `UnitId`, field by field.
 
-In progress: `WorldPosition`, a readonly struct, holds every position, and `WorldVector` the moves that add to one. Pairs of assignments of `X` and `Y` are assignments of a position.
+In progress: `WorldPosition`, a readonly struct, holds every position, and `WorldVector` the moves that add to one. Pairs of assignments of `X` and `Y` are assignments of a position. `Bool32` and `Bool8` hold the flags of the units, the effects, the select orders and the globals.
 
 ### 6. Union slot accessors
 `hp`, `arm` and `gas` first, whose meanings are clear, then `info[]` of `FIRE`, `EFFECT` and `UNIT`, slot by slot.
 
-In progress: `hp`, `arm` and `gas` are done, and `UNIT.info[0]` of planes (`PlaneState`) and `info[5]` (`Mode`).
+Done for the slots whose meaning is known. Code that clears the arrays, the carriers' `info[0]` and `info[3]` (only ever cleared) and a debug display keep `info[n]`.
 
 ### 7. Renames
 Globals and struct fields, then functions, with the catalog. The ported files' names follow their main function.

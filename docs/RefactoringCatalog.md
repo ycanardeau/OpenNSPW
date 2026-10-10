@@ -62,7 +62,8 @@ Each has the layout of the primitives it replaces (see [Refactoring.md](Refactor
 | `Angle` | `double Degrees` | `Sin()`, `Cos()` as `sin(Degrees*a_PI)`, `cos(Degrees*a_PI)`. `FromVector(dx, dy)` as `atan2(dy,dx)*RAD_to`. No normalization that the C++ does not do. |
 | `Point` | `int X, Y` | Replaces `POINT`. |
 | `Rect` | `int Left, Top, Right, Bottom` | Replaces `RECT`. `Contains` only where a `pt_in_rect` variant matches it exactly. |
-| `Bool32` | `int Value` | `implicit operator bool` (`Value != 0`), `True`, `False`. |
+| `Bool32` | `int Value` | `implicit operator bool` (`Value != 0`), and from `bool` (1 or 0). Comparisons with 1 stay as `Value==1`. |
+| `Bool8` | `byte Value` | The same, for a `BYTE` used as a boolean (`you_are_host`, `map_edit`, `decision_sw`, ...). |
 | `UnitId` | `int Value` | `None` (0). Exposed by accessors over `short`, `int` and `byte` storage. `Units[id]` indexer. |
 | `FireId`, `EffectId` | `int Value` | `None` (0), as returned by `seek_fire_no` and `seek_effect_no`. |
 
@@ -332,7 +333,7 @@ The struct types are renamed (`UNIT` → `Unit`, `FIRE` → `Fire`, `EFFECT` →
 The network messages keep their packed layout and get message names: `_DP_NEW_PP` → `MoveOrderMessage`, `_DP_NEW_PP_SHIP` → `MoveShipsOrderMessage`, `_DP_NEW_SLCT_LAND` → `SelectBaseOrderMessage`, `_DP_NEW_MENU` → `MenuOrderMessage`, `_DP_FLAG` → `SyncFlagMessage`, `_DP_DATA_1` → `NameMessage`, `_DP_DATA_20` → `ChatMessage`, `GENERICMSG` → `MessageHeader`. Their fields keep their widths (`byte` unit numbers, `short` coordinates).
 
 ## Globals
-All 119 globals of `Layout.json`, grouped. Arrays indexed by player seem to use `[1]` for the local player and `[0]` for the rival (check per array; `[2]` is unused).
+All 119 globals of `Layout.json`, grouped. The flags among them are `Bool32` (`int`) or `Bool8` (`byte`): `IsAppActive`, `IsFullscreen`, `IsEditingMap`, `IsHost`, `WasHost`, `CanOrder`, `HasOrdered`, `CanAdvance1`, `CanAdvance2`, `IsDecisionEnabled`, `IsTickOutOfSync`, `IsRandomOutOfSync`, `AreUnitsOutOfSync`, `HasSavedDesync`. Arrays indexed by player seem to use `[1]` for the local player and `[0]` for the rival (check per array; `[2]` is unused).
 
 ### Units, fires, effects, map
 | Original | New | Notes |

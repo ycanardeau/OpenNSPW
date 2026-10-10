@@ -264,7 +264,7 @@ public struct	MoveOrder
 [StructLayout(LayoutKind.Sequential)]
 public struct	SelectOrder
 	{
-	[Original("sw")] public int IsSet; //
+	[Original("sw")] public Bool32 IsSet; //
 	[Original("the_slct_unit")] public short SelectedUnit; //
 	[Original("m")] public short Unit;
 	[Original("gr_x", "gr_y")] public WorldPosition GroundPosition; // グランドX，Ｙ

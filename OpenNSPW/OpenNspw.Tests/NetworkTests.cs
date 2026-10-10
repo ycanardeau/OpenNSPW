@@ -235,7 +235,7 @@ public class NetworkTests
 
 		// The checksums of a turn (DP_FLAG_1), as chara_cont sends them.
 		Send(host, new _DP_FLAG { dwType = MessageType.SyncFlag, cc_chk = 12, unit_chk = 34, rnd_chk = 56, ccc_wait_chk = 1, rival_mode = (short)GameMode.Battle });
-		PumpUntil(() => guest.Game.CanAdvance1 == 1, host, guest);
+		PumpUntil(() => guest.Game.CanAdvance1.Value == 1, host, guest);
 		Assert.Equal(12, guest.Game.TickChecksums[0]);
 		Assert.Equal(34, guest.Game.UnitChecksums[0]);
 		Assert.Equal(56, guest.Game.RandomChecksums[0]);
@@ -247,7 +247,7 @@ public class NetworkTests
 		order.slct_unit[0] = 3;
 		order.slct_unit[JPN_SHIP_END - 1] = 7;
 		Send(guest, order);
-		PumpUntil(() => host.Game.CanAdvance2 == 1, host, guest);
+		PumpUntil(() => host.Game.CanAdvance2.Value == 1, host, guest);
 		Assert.Equal(1, host.Game.BufferedMoveOrders[0].Unit);
 		Assert.Equal(-1234.0, host.Game.BufferedMoveOrders[0].Destination.X);
 		Assert.Equal(567.0, host.Game.BufferedMoveOrders[0].Destination.Y);
@@ -275,7 +275,7 @@ public class NetworkTests
 		Assert.Equal(1, guest.Game.HostSide);
 		Assert.Equal(3, guest.Game.SupplyRates[0]);
 		Assert.Equal(4, guest.Game.SupplyRates[1]);
-		Assert.Equal(5, guest.Game.IsDecisionEnabled);
+		Assert.Equal(5, guest.Game.IsDecisionEnabled.Value);
 		Assert.Equal(8, guest.Game.ArrivalControl);
 		Assert.Equal(10, guest.Game.SwapRule);
 
@@ -284,7 +284,7 @@ public class NetworkTests
 		Send(host, new GENERICMSG { dwType = MessageType.GoToGameSetting });
 		PumpUntil(() => guest.Game.Mode == GameMode.GameSetting, host, guest);
 		Assert.Equal(0, guest.Game.ScenarioNumber);
-		Assert.Equal(1, guest.Game.IsDecisionEnabled);
+		Assert.Equal(1, guest.Game.IsDecisionEnabled.Value);
 		Assert.Equal(0, guest.Game.HasAutoSave);
 	}
 

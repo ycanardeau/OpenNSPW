@@ -24,8 +24,8 @@ public object? hInstApp;
 public HWND hwndApp;
 public object? my_cursor;
 //D3DPRESENT_PARAMETERS d3dpp;		// Direct3D is not used.
-[Original("appActive")] public int IsAppActive;
-[Original("fullscreen")] public int IsFullscreen;
+[Original("appActive")] public Bool32 IsAppActive;
+[Original("fullscreen")] public Bool32 IsFullscreen;
 
 //	DirectXオブジェクト
 
@@ -165,7 +165,7 @@ public int FrameCount;
 [Original("demo_time")] public short TitleTime;
 [Original("sinario")] public short ScenarioNumber;
 
-[Original("map_edit")] public byte IsEditingMap;
+[Original("map_edit")] public Bool8 IsEditingMap;
 [Original("put_trgt")] public byte EditorTarget;
 [Original("put_kind")] public byte EditorKind;
 [Original("put_kind_sub")] public byte EditorVariant;
@@ -175,11 +175,11 @@ public int FrameCount;
 
 // 通信対戦用
 [Original("cnct_game")] public int			IsNetworkGame;
-[Original("you_are_host")] public byte IsHost;
-[Original("you_were_host")] public byte WasHost;
+[Original("you_are_host")] public Bool8 IsHost;
+[Original("you_were_host")] public Bool8 WasHost;
 
-[Original("you_can_order")] public int CanOrder;
-[Original("you_ordered")] public int HasOrdered;
+[Original("you_can_order")] public Bool32 CanOrder;
+[Original("you_ordered")] public Bool32 HasOrdered;
 
 [Original("bf_new_pp")] public Array3<MoveOrder> BufferedMoveOrders;
 [Original("bf_new_slct")] public Array3<SelectOrder> BufferedSelectOrders;
@@ -189,8 +189,8 @@ public int FrameCount;
 [Original("game_system_menu")] public Array3<byte> SystemOrders;
 
 [Original("bf_slct_unit")] public Array3<Array90<short>> BufferedSelections;
-[Original("go_next_1")] public int CanAdvance1;
-[Original("go_next_2")] public int CanAdvance2;
+[Original("go_next_1")] public Bool32 CanAdvance1;
+[Original("go_next_2")] public Bool32 CanAdvance2;
 [Original("join_game_start")] public MessageType JoinGameStart;
 [Original("rival_mode")] public GameMode RivalMode;
 [Original("my_rnd_sheet")] public Array4096<int> SharedRandomTable;
@@ -198,16 +198,16 @@ public int FrameCount;
 [Original("cnct_game_rnd_sheed")] public short SharedRandomSeed;
 
 [Original("host_side")] public int HostSide;
-[Original("decision_sw")] public byte IsDecisionEnabled;
+[Original("decision_sw")] public Bool8 IsDecisionEnabled;
 [Original("arrival_cont")] public byte ArrivalControl;
 
 [Original("rnd_count")] public int RandomCount;
 [Original("bf_cc_count")] public Array2<byte> TickChecksums;
 [Original("bf_rnd_count")] public Array2<byte> RandomChecksums;
 [Original("bf_unit_chk")] public Array2<byte> UnitChecksums;
-[Original("ccc_out")] public int IsTickOutOfSync;
-[Original("rnd_out")] public int IsRandomOutOfSync;
-[Original("unit_out")] public int AreUnitsOutOfSync;
+[Original("ccc_out")] public Bool32 IsTickOutOfSync;
+[Original("rnd_out")] public Bool32 IsRandomOutOfSync;
+[Original("unit_out")] public Bool32 AreUnitsOutOfSync;
 [Original("ccc_wait")] public Array2<byte> TickWaits;
 [Original("cnct_loop_ct")] public short TurnCounter;
 [Original("cnct_loop")] public short TurnLength;
@@ -232,7 +232,7 @@ public int FrameCount;
 [Original("tick_diff")] public uint Elapsed;
 
 // 通信対戦デバグ用
-[Original("first_r_error")] public byte HasSavedDesync;
+[Original("first_r_error")] public Bool8 HasSavedDesync;
 
 // チャット用
 [Original("input_chat_now")] public int IsTypingChat=0;
@@ -264,7 +264,7 @@ public void	UpdateFrame()
 
 	Elapsed = Now - LastTime2;
 
-	if( IsEditingMap!=0 )
+	if( IsEditingMap )
 		chara_loop=1;
 	else if( Mode==GameMode.Battle )
 		{
@@ -328,7 +328,7 @@ public void	UpdateFrame()
 			for( i=chara_loop; i>=1; i-- )
 				{
 				UpdateBattle();
-				if( IsEditingMap==0 )
+				if( !IsEditingMap )
 					CheckResult();
 				}
 
@@ -336,13 +336,13 @@ public void	UpdateFrame()
 			DrawBattleArea();
 			DrawMinimap();
 
-			if( IsEditingMap==0 )
+			if( !IsEditingMap )
 				{
 				CheckResult();
 				HandleInput();
 				}
 
-			if(IsEditingMap!=0 )
+			if(IsEditingMap )
 				{
 				UpdateMapEditor();
 				}
@@ -414,17 +414,17 @@ public void	UpdateFrame()
 #endif
 
 #if !LNGG_VER
-			if(AreUnitsOutOfSync!=0)
+			if(AreUnitsOutOfSync)
 				{
 				len = wsprintf(ach, "ユニットデータ同期異常、ゲームを中断されたし。");
 				TextOut(hdc, 0, 100, ach, len);
 				}
-			if(IsTickOutOfSync!=0)
+			if(IsTickOutOfSync)
 				{
 				len = wsprintf(ach, "プログラム同期異常、ゲームを中断されたし。");
 				TextOut(hdc, 0, 120, ach, len);
 				}
-			if(IsRandomOutOfSync!=0)
+			if(IsRandomOutOfSync)
 				{
 				len = wsprintf(ach, "ランダム同期異常、ゲームを中断されたし。");
 				TextOut(hdc, 0, 140, ach, len);
@@ -523,7 +523,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	for(i=0; i<16; i++)
 		DebugValues[i]=0;
 
-	IsFullscreen=1;
+	IsFullscreen=true;
 	hInstApp=hInst;
 
 	InitCommonControls();
@@ -602,7 +602,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 		return (int)msg.wParam;
 		}
 
-	IsHost=(byte)IsHostPlayer;
+	IsHost=new Bool8((byte)IsHostPlayer);
 
 	g_hDlg=null;
 
@@ -618,7 +618,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 
 	int width,height;
 	// ウインドウの大きさを計算
-	if (IsFullscreen!=0)
+	if (IsFullscreen)
 		{
 		// フルスクリーン時はそのままで OK
 		width = WIDTH;
@@ -649,7 +649,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 		}
 
     // 協調レベルを設定
-	if (IsFullscreen!=0)
+	if (IsFullscreen)
 	    ddrval = lpDD.SetCooperativeLevel(hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN );
 	else
 	    ddrval = lpDD.SetCooperativeLevel(hwndApp, DDSCL_NORMAL );
@@ -660,7 +660,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 		}
 
 	// ディスプレイモードを設定
-	if(IsFullscreen!=0)
+	if(IsFullscreen)
 		{
 		ddrval = lpDD.SetDisplayMode( width, height, 16, 0, 0);
 		if (ddrval !=DD_OK)
@@ -707,7 +707,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 		}
 
 	// クリッパー
-	if(IsFullscreen!=0)
+	if(IsFullscreen)
 		{
 		lpDD.CreateClipper(0,out lpDDclip,null);
 		lpDDclip.SetHWnd(0,hwndApp);
@@ -746,7 +746,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	// ゲーム変数初期化
 	InitializeRegistry();
 
-	IsAppActive=1;
+	IsAppActive=true;
 
 	InitializeSprites();
 
@@ -768,7 +768,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 			}
 		else
 			{
-			if( ( IsAppActive!=0 || hwndChatDlg!=null ) && g_hDlg==null )
+			if( ( IsAppActive || hwndChatDlg!=null ) && g_hDlg==null )
 				{
 				UpdateFrame();
 				}

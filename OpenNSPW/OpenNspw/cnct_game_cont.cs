@@ -724,7 +724,7 @@ public void	CheckResult()
 	 Array5<int> len = default;
 
 	// 結果途中判定
-	if( Result==GameResult.None && IsDecisionEnabled!=0 )
+	if( Result==GameResult.None && IsDecisionEnabled )
 		{
 		switch( ScenarioNumber )
 			{
@@ -1687,7 +1687,7 @@ public void	SetUpScenario1()
 		SwapTime=0;
 
 		ArrivalControl=1;
-		IsDecisionEnabled=1;
+		IsDecisionEnabled=true;
 
 		return;
 		}
@@ -1776,7 +1776,7 @@ public void	SetUpScenario2()
 		SwapTime=0;
 
 		ArrivalControl=1;
-		IsDecisionEnabled=1;
+		IsDecisionEnabled=true;
 
 		return;
 		}
@@ -1895,7 +1895,7 @@ public void	SetUpScenario3()
 
 		ArrivalControl=5;
 
-		IsDecisionEnabled=1;
+		IsDecisionEnabled=true;
 
 		return;
 		}
@@ -2006,7 +2006,7 @@ public void	SetUpScenario4()
 		SwapTime=0;
 
 		ArrivalControl=1;
-		IsDecisionEnabled=1;
+		IsDecisionEnabled=true;
 
 		return;
 		}
@@ -2114,7 +2114,7 @@ public void	SetUpScenario5()
 
 		ArrivalControl=3;		// ３：輸送船のみ可
 
-		IsDecisionEnabled=1;
+		IsDecisionEnabled=true;
 
 		return;
 		}
@@ -2240,7 +2240,7 @@ public void	SetUpScenario6()
 
 		ArrivalControl=0;
 
-		IsDecisionEnabled=1;
+		IsDecisionEnabled=true;
 
 		return;
 		}
@@ -2414,7 +2414,7 @@ public void	SetUpScenario7()
 
 		ArrivalControl=0;
 
-		IsDecisionEnabled=1;
+		IsDecisionEnabled=true;
 
 		return;
 		}
@@ -2598,7 +2598,7 @@ public void	SetUpScenario8()
 
 		ArrivalControl=0;
 
-		IsDecisionEnabled=1;
+		IsDecisionEnabled=true;
 
 		return;
 		}
@@ -2834,7 +2834,7 @@ public void	SetUpScenario101()
 
 		ArrivalControl=0;
 
-		IsDecisionEnabled=1;
+		IsDecisionEnabled=true;
 		return;
 		}
 
@@ -2970,7 +2970,7 @@ public void	SetUpScenario102()
 
 		ArrivalControl=0;
 
-		IsDecisionEnabled=1;
+		IsDecisionEnabled=true;
 
 		return;
 		}
@@ -3107,7 +3107,7 @@ public void	SetUpScenario103()
 
 		ArrivalControl=0;
 
-		IsDecisionEnabled=1;
+		IsDecisionEnabled=true;
 
 		return;
 		}
@@ -3351,7 +3351,7 @@ public void	SetUpScenario104()
 
 		ArrivalControl=0;
 
-		IsDecisionEnabled=1;
+		IsDecisionEnabled=true;
 
 		return;
 		}
@@ -3500,7 +3500,7 @@ public void	SetUpScenario105()
 
 		ArrivalControl=0;
 
-		IsDecisionEnabled=1;
+		IsDecisionEnabled=true;
 
 		return;
 		}
@@ -3646,7 +3646,7 @@ public void	SetUpScenario106()
 
 		ArrivalControl=0;
 
-		IsDecisionEnabled=1;
+		IsDecisionEnabled=true;
 
 		return;
 		}
@@ -4032,8 +4032,8 @@ public void	InitializeGame()
 		BufferedMoveOrders[0].Unit=0;						// クリア
 		BufferedMoveOrders[1].Unit=0;						// クリア
 
-		BufferedSelectOrders[0].IsSet=0;						// クリア
-		BufferedSelectOrders[1].IsSet=0;						// クリア
+		BufferedSelectOrders[0].IsSet=false;						// クリア
+		BufferedSelectOrders[1].IsSet=false;						// クリア
 
 		BufferedMenuOrders[0].Menu=CombatMenuItem.None;
 		BufferedMenuOrders[1].Menu=CombatMenuItem.None;
@@ -4072,7 +4072,7 @@ public void	InitializeGame()
 			}
 
 #if SND_SW
-		if( IsEditingMap==0 )
+		if( !IsEditingMap )
 			{
 			lpDSB_[(int)SoundId.Sea][0].SetVolume( 0 );
 			lpDSB_[(int)SoundId.Sea][0].Play(0,0,DSBPLAY_LOOPING);	// ループする
@@ -4186,7 +4186,7 @@ public void	InitializeGame()
 
 	LoadScenarioData();
 
-	if( IsEditingMap!=0 )
+	if( IsEditingMap )
 		{
 		EditorTarget=1;
 		EditorKind=(byte)UnitKind.Battleship;
@@ -4198,7 +4198,7 @@ public void	InitializeGame()
 	RevealsAll=0;		// 0が正常
 
 #if SND_SW
-	if( IsEditingMap==0 )
+	if( !IsEditingMap )
 		{
 		lpDSB_[(int)SoundId.Sea][0].SetVolume( 0 );
 		lpDSB_[(int)SoundId.Sea][0].Play(0,0,DSBPLAY_LOOPING);	// ループする
@@ -4225,14 +4225,14 @@ public void	InitializeGame()
 		//  ゲーム設定
 		if(HostSide==0)
 			{
-			if(IsHost!=0)
+			if(IsHost)
 				LocalSide=Side.Japan;
 			else
 				LocalSide=Side.UnitedStates;
 			}
 		else
 			{
-			if(IsHost!=0)
+			if(IsHost)
 				LocalSide=Side.UnitedStates;
 			else
 				LocalSide=Side.Japan;
@@ -4254,8 +4254,8 @@ public void	InitializeGame()
 		BufferedMoveOrders[0].Unit=0;						// クリア
 		BufferedMoveOrders[1].Unit=0;						// クリア
 
-		BufferedSelectOrders[0].IsSet=0;						// クリア
-		BufferedSelectOrders[1].IsSet=0;						// クリア
+		BufferedSelectOrders[0].IsSet=false;						// クリア
+		BufferedSelectOrders[1].IsSet=false;						// クリア
 
 		BufferedMenuOrders[0].Menu=CombatMenuItem.None;
 		BufferedMenuOrders[1].Menu=CombatMenuItem.None;
@@ -4277,7 +4277,7 @@ public void	InitializeGame()
 
 		AutoSaveTime=0;
 
-		if(IsHost!=0)
+		if(IsHost)
 			SupplyPoints=InitialSupplyPoints[0];
 		else
 			SupplyPoints=InitialSupplyPoints[1];
@@ -4287,7 +4287,7 @@ public void	InitializeGame()
 
 		BattleTime=0;
 
-		if( IsEditingMap==0)
+		if( !IsEditingMap)
 			SaveResume(3);
 
 	}

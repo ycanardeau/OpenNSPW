@@ -205,7 +205,7 @@ internal sealed class SoloGame : IDisposable
 		do
 		{
 			Tick();
-		} while (Game.CanOrder == 0);
+		} while (!Game.CanOrder);
 	}
 
 	// Orders units of both sides to move: the game's as the player does, by selecting them and clicking the point; the

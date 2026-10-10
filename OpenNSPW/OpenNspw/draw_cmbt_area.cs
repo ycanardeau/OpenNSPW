@@ -540,7 +540,7 @@ private void DrawMapTiles(int cm_scrn_y, int cm_scrn_x, int map_bld_y, int map_b
 		{
 		for(n=0;n<=10;n++)
 			{
-			if(  IsEditingMap==0 &&  Result==GameResult.None  && MapTiles[cm_scrn_y+n][cm_scrn_x+m]==0 )
+			if(  !IsEditingMap &&  Result==GameResult.None  && MapTiles[cm_scrn_y+n][cm_scrn_x+m]==0 )
 				{
 				flg=0;
 				for( f=1; f<=MaxUnitId; f++)
@@ -623,7 +623,7 @@ private void DrawMapTiles(int cm_scrn_y, int cm_scrn_x, int map_bld_y, int map_b
 				}
 
 			// マップエディット時のプログ
-			if( IsEditingMap!=0 && (cm_scrn_y+n)==(map_bld_y) && (cm_scrn_x+m)==(map_bld_x) )
+			if( IsEditingMap && (cm_scrn_y+n)==(map_bld_y) && (cm_scrn_x+m)==(map_bld_x) )
 				{
 				if ( (FrameCount%2)!=0 )
 					Sprites[SpriteId.MapTiles].no=3;
@@ -735,19 +735,19 @@ private void HandleUnitClick(ref Unit unit, ref RECT dstn_rect, ref int lc_lf_bt
 
 				set_the_slct_unit( m );
 				}
-			else if(IsEditingMap==0)
+			else if(!IsEditingMap)
 				{
 				if( m!=0  )
 					{
 					// 陸地以外、普通の場合
-					SelectOrders[1].IsSet=1;
+					SelectOrders[1].IsSet=true;
 					SelectOrders[1].SelectedUnit=SelectedUnit;
 					SelectOrders[1].Unit=(short)m;
 					}
 				else
 					{
 					// 陸地指定
-					SelectOrders[1].IsSet=1;
+					SelectOrders[1].IsSet=true;
 					SelectOrders[1].SelectedUnit=SelectedUnit;
 					SelectOrders[1].Unit=0;
 					SelectOrders[1].GroundPosition = new WorldPosition(CameraPosition.X+Sprites[sprite].x, CameraPosition.Y-Sprites[sprite].y);
@@ -925,7 +925,7 @@ private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int lc_lf
 		// 発進チェック
 		!(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked
 		&& ( Units[unit.Carrier].PlanesToLaunch!=0 || Units[unit.Carrier].LaunchLock!=0 || unit.ReloadTime>0 || Units[unit.Carrier].IsSupplying ))
-		&& IsEditingMap==0 )
+		&& !IsEditingMap )
 		{
 		MoveOrders[1].Unit=SelectedUnit;
 		MoveOrders[1].Destination = new WorldPosition(CursorPosition.x+CameraPosition.X, CameraPosition.Y-CursorPosition.y);
@@ -993,16 +993,16 @@ public void	DrawBattleArea()
 	// 自サイドユニットからの距離により、可視不可視
 
 	MoveOrders[0].Unit=0;
-	SelectOrders[0].IsSet=0;
+	SelectOrders[0].IsSet=false;
 
 	MoveOrders[1].Unit=0;
-	SelectOrders[1].IsSet=0;
+	SelectOrders[1].IsSet=false;
 
 	// 標準キャラの表示
 	lc_ri_btn=RightButton;
 	lc_lf_btn=LeftButton;
 
-	if(  HasOrdered!=0 && Result==GameResult.None)
+	if(  HasOrdered && Result==GameResult.None)
 		{
 		lc_ri_btn=0;
 		lc_lf_btn=0;
@@ -1133,7 +1133,7 @@ public void	DrawBattleArea()
 						RestoreSurfaces();
 						}
 
-					if( IsEditingMap==0 && plane_fling_sound==0 && Result==GameResult.None && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying && (FrameCount%10)==0 )
+					if( !IsEditingMap && plane_fling_sound==0 && Result==GameResult.None && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying && (FrameCount%10)==0 )
 						{
 						PlaySoundEffect( 0, SoundId.PlaneFlying ,unit.Position.X, unit.Position.Y);
 						plane_fling_sound=1;
@@ -1288,7 +1288,7 @@ public void	DrawBattleArea()
 				}
 
 			// 決定された進路線ひき
-			if( SelectedUnit==m && IsEditingMap==0 )
+			if( SelectedUnit==m && !IsEditingMap )
 				{
 
 				// 緊急移動先までの線

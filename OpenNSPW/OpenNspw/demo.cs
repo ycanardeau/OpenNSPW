@@ -137,11 +137,11 @@ public void	UpdateTitle()
 
 	if( LeftButton==3 )
 		{
-		if( IsEditingMap!=0 )
+		if( IsEditingMap )
 			{
 			GoToGameSetting();
 			}
-		else if( ActivePlayerCount==2 && RivalMode==GameMode.Title && IsHost!=0 )
+		else if( ActivePlayerCount==2 && RivalMode==GameMode.Title && IsHost )
 			{
 			GoToGameSetting();
 
@@ -164,7 +164,7 @@ public void	UpdateTitle()
 				if( INVALID_HANDLE_VALUE==hFile )
 					{
 					// ファイルありませんでした。
-					WasHost=0;
+					WasHost=false;
 					}
 				else
 					{
@@ -173,7 +173,7 @@ public void	UpdateTitle()
 					WasHost=IsHost;		// 前回ホストだったら１が代入
 					CloseHandle(hFile);
 					}
-				IsHost=1;						// ここに来るのはホストなのでこれでいい。
+				IsHost=true;						// ここに来るのはホストなのでこれでいい。
 				ScenarioNumber=0;
 
 				}
@@ -245,7 +245,7 @@ public void GoToGameSetting()
 
 	Mode=GameMode.GameSetting;
 	HostSide=0;
-	IsDecisionEnabled=1;
+	IsDecisionEnabled=true;
 	ArrivalControl=0;
 
 	SupplyRates[0]=0;		// Host
@@ -285,7 +285,7 @@ HANDLE	hFile;
 private void UpdateDecisionSetting(int rx, ref HDC hdc, ref Array12<Array128<byte>> ach, ref Array12<int> len)
 	{
 	RECT dstn_rect;
-	if(IsHost!=0)
+	if(IsHost)
 		{
 		dstn_rect.left=rx+50;
 		dstn_rect.top=50;
@@ -305,7 +305,7 @@ private void UpdateDecisionSetting(int rx, ref HDC hdc, ref Array12<Array128<byt
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 )
 				{
-				IsDecisionEnabled=(byte)(IsDecisionEnabled==0 ? 1 : 0);
+				IsDecisionEnabled=!IsDecisionEnabled;
 				}
 			}
 		else
@@ -317,7 +317,7 @@ private void UpdateDecisionSetting(int rx, ref HDC hdc, ref Array12<Array128<byt
 
 		}
 
-	if(IsDecisionEnabled==0)
+	if(!IsDecisionEnabled)
 		{
 #if !LNGG_VER
 		len[0] = wsprintf(ach[0], "勝敗条件は無効");
@@ -352,7 +352,7 @@ private void UpdateHostSupplyRateSetting(ref Array12<int> len, ref Array12<Array
 	dstn_rect.top=200;
 	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
-	if( IsHost!=0 )
+	if( IsHost )
 		{
 #if !LNGG_VER
 		len[0] = wsprintf(ach[0], "増やす ->>>");
@@ -426,7 +426,7 @@ private void UpdateSwapTimeSetting(ref Array12<int> len, ref Array12<Array128<by
 	dstn_rect.top=200;
 	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
-	if( IsHost!=0 )
+	if( IsHost )
 		{
 #if !LNGG_VER
 		len[0] = wsprintf(ach[0], "増やす ->>>");
@@ -510,7 +510,7 @@ private void UpdateGuestSupplyRateSetting(ref Array12<int> len, ref Array12<Arra
 	dstn_rect.top=300;
 	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
-	if( IsHost!=0 )
+	if( IsHost )
 		{
 
 #if !LNGG_VER
@@ -577,7 +577,7 @@ private void UpdateSwapRuleSetting(ref Array12<int> len, ref Array12<Array128<by
 	if( SwapTime!=0 )
 		{
 #if !LNGG_VER
-		len[0] = wsprintf(ach[0], ( IsHost!=0 ? "補給値反転ルール->>>" : "補給値反転ルール" ));
+		len[0] = wsprintf(ach[0], ( IsHost ? "補給値反転ルール->>>" : "補給値反転ルール" ));
 #else
 		len[0] = wsprintf(ach[0], "Reverse rule");
 #endif
@@ -587,7 +587,7 @@ private void UpdateSwapRuleSetting(ref Array12<int> len, ref Array12<Array128<by
 		dstn_rect.right=dstn_rect.left+(len[0]*10);
 		dstn_rect.bottom=dstn_rect.top+24;
 
-		if( IsHost!=0 )
+		if( IsHost )
 			{
 			if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
 				{
@@ -645,7 +645,7 @@ private void UpdateHostInitialSupplyPointsSetting(ref Array12<int> len, ref Arra
 	dstn_rect.top=400;
 	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
-	if( IsHost!=0 )
+	if( IsHost )
 		{
 //				len[0] = wsprintf(ach[0], "増やす ->>>");
 #if !LNGG_VER
@@ -724,7 +724,7 @@ private void UpdateGuestInitialSupplyPointsSetting(ref Array12<int> len, ref Arr
 	dstn_rect.top=500;
 	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
-	if( IsHost!=0 )
+	if( IsHost )
 		{
 //				len[0] = wsprintf(ach[0], "増やす ->>>");
 #if !LNGG_VER
@@ -792,7 +792,7 @@ private void UpdateGuestInitialSupplyPointsSetting(ref Array12<int> len, ref Arr
 private void UpdateArrivalControlSetting(ref Array12<int> len, ref Array12<Array128<byte>> ach, int rx, ref HDC hdc)
 	{
 	RECT dstn_rect;
-	if(IsHost!=0)
+	if(IsHost)
 		{
 #if !LNGG_VER
 		len[0] = wsprintf(ach[0], "増援ユニット制御 ->>>");
@@ -883,7 +883,7 @@ private void UpdateBackToScenarioSettingButton(ref Array12<int> len, ref Array12
 	{
 	RECT dstn_rect;
 	int m =default /* C4701 */;
-	if(IsHost!=0)
+	if(IsHost)
 		{
 #if !LNGG_VER
 		len[0] = wsprintf(ach[0], "シナリオセッティングへ戻る->>>");
@@ -920,7 +920,7 @@ private void UpdateBackToScenarioSettingButton(ref Array12<int> len, ref Array12
 private void UpdateStartBattleButton(ref Array12<int> len, ref Array12<Array128<byte>> ach, int rx, ref HDC hdc, ref _DP_DATA_1 dp_data_1)
 	{
 	RECT dstn_rect;
-	if(IsHost!=0)
+	if(IsHost)
 		{
 #if !LNGG_VER
 		len[0] = wsprintf(ach[0], "ゲームスタート ->>>");
@@ -954,7 +954,7 @@ private void UpdateStartBattleButton(ref Array12<int> len, ref Array12<Array128<
 				dp_data_1.data[2] = SupplyRates[0];
 				dp_data_1.data[3] = SupplyRates[1];
 
-				dp_data_1.data[4] = IsDecisionEnabled;
+				dp_data_1.data[4] = IsDecisionEnabled.Value;
 
 				dp_data_1.data[5] = InitialSupplyPoints[0];
 				dp_data_1.data[6] = InitialSupplyPoints[1];
@@ -995,7 +995,7 @@ private void SendHostSettings(ref _DP_DATA_1 dp_data_1)
 	dp_data_1.data[2] = SupplyRates[0];
 	dp_data_1.data[3] = SupplyRates[1];
 
-	dp_data_1.data[4] = IsDecisionEnabled;
+	dp_data_1.data[4] = IsDecisionEnabled.Value;
 
 	dp_data_1.data[5] = InitialSupplyPoints[0];
 	dp_data_1.data[6] = InitialSupplyPoints[1];
@@ -1051,7 +1051,7 @@ private void UpdateConfigSetting(ref Array12<int> len, ref Array12<Array128<byte
 	// 戦闘開始
 	UpdateStartBattleButton(ref len, ref ach, rx, ref hdc, ref dp_data_1);
 
-	if( IsHost!=0 && RivalMode==Mode && (FrameCount%10)==0 )
+	if( IsHost && RivalMode==Mode && (FrameCount%10)==0 )
 		{
 		// ホストの選択状態をゲストにセンドします。
 		SendHostSettings(ref dp_data_1);
@@ -1266,7 +1266,7 @@ private void UpdateScenarioList(int m, ref Array12<int> len, ref HDC hdc, ref _D
 					dp_data_1.data[2] = SupplyRates[0];
 					dp_data_1.data[3] = SupplyRates[1];
 
-					dp_data_1.data[4] = IsDecisionEnabled;
+					dp_data_1.data[4] = IsDecisionEnabled.Value;
 
 					dp_data_1.data[5] = InitialSupplyPoints[0];
 					dp_data_1.data[6] = InitialSupplyPoints[1];
@@ -1299,7 +1299,7 @@ private void UpdateScenarioList(int m, ref Array12<int> len, ref HDC hdc, ref _D
 		dp_data_1.data[2] = SupplyRates[0];
 		dp_data_1.data[3] = SupplyRates[1];
 
-		dp_data_1.data[4] = IsDecisionEnabled;
+		dp_data_1.data[4] = IsDecisionEnabled.Value;
 
 		dp_data_1.data[5] = InitialSupplyPoints[0];
 		dp_data_1.data[6] = InitialSupplyPoints[1];
@@ -1342,7 +1342,7 @@ public void	UpdateGameSetting()
 
 	// マウス情報
 
-	if( IsEditingMap!=0 )
+	if( IsEditingMap )
 		{
 		RivalMode=Mode;
 		}
@@ -1490,7 +1490,7 @@ else
 
 #endif
 
-			if( IsHost!=0 && Mode==GameMode.GameSetting )
+			if( IsHost && Mode==GameMode.GameSetting )
 				{
 				UpdateScenarioList(m, ref len, ref hdc, ref dp_data_1, ref ach);
 				}
@@ -1516,7 +1516,7 @@ else
 					TextOut(hdc, 120, 150+(n*25), ach[n], len[n]);
 					}
 
-				if(JoinGameStart==MessageType.LeaveGameSetting && IsHost==0 && Mode==GameMode.GameSetting )
+				if(JoinGameStart==MessageType.LeaveGameSetting && !IsHost && Mode==GameMode.GameSetting )
 					{
 					// ジョインが受け取る
 					Mode=GameMode.ConfigSetting;
@@ -1524,7 +1524,7 @@ else
 					}
 				}
 
-			if( IsHost!=0 && Mode==GameMode.GameSetting )
+			if( IsHost && Mode==GameMode.GameSetting )
 				{
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "シナリオ切り替え ->>>");
@@ -1556,10 +1556,10 @@ else
 
 			// リジュームスタート
 			rx=80;
-			if( IsHost!=0 )
+			if( IsHost )
 				{
 #if !LNGG_VER
-				if( WasHost!=0 )
+				if( WasHost )
 					len[0] = wsprintf(ach[0], "リジュームスタート ->>>");
 				else
 					len[0] = wsprintf(ach[0], "リジュームデータがホストではない。");
@@ -1577,7 +1577,7 @@ else
 					{
 					dstn_rect.right=dstn_rect.left+(len[0]*12);
 					dstn_rect.bottom=dstn_rect.top+24;
-					if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting && WasHost!=0 )
+					if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting && WasHost )
 						{
 						SetTextColor(hdc, RGB(255, 0, 0));
 
@@ -1615,7 +1615,7 @@ else
 
 			// リジュームスタート
 			rx=80;
-			if( IsHost!=0  )
+			if( IsHost  )
 				{
 #if !LNGG_VER
 				if( HasAutoSave!=0 )
@@ -1675,7 +1675,7 @@ else
 
 			// 操作対象の切り替え
 			rx=80;
-			if( IsEditingMap==0 && IsHost!=0 && Mode==GameMode.GameSetting )
+			if( !IsEditingMap && IsHost && Mode==GameMode.GameSetting )
 				{
 #if !LNGG_VER
 				len[0] = wsprintf(ach[0], "操作対象の切り替え ->>>");

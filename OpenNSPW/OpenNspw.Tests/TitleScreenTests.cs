@@ -288,8 +288,8 @@ public class TitleScreenTests
 		{
 			Assert.Equal(GameMode.Title, host.Game.Mode);
 			Assert.Equal(GameMode.Title, guest.Game.Mode);
-			Assert.Equal(1, host.Game.IsHost);
-			Assert.Equal(0, guest.Game.IsHost);
+			Assert.Equal(1, host.Game.IsHost.Value);
+			Assert.Equal(0, guest.Game.IsHost.Value);
 
 			SaveFrame(host, "title_host.png");
 			Assert.True(host.Platform.LastFrame().Distinct().Count() > 16, "The title screen is drawn.");

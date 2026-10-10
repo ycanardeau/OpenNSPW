@@ -24,22 +24,22 @@ private bool ReceiveAndIssueOrders(ref short s, ref Array200<short> bf_2_slct_un
 	{
 	short bf_the_slct_unit;
 	short e;
-	if( CONN_DBG==0 && CanAdvance2==0)
+	if( CONN_DBG==0 && !CanAdvance2)
 		{
 		if(TickWaits[1]<99)
 			TickWaits[1]++;
 		return false;
 		}
 
-	CanAdvance2=0;
+	CanAdvance2=false;
 
-	if( IsEditingMap==0 && Result==GameResult.None && ActivePlayerCount==2 )
+	if( !IsEditingMap && Result==GameResult.None && ActivePlayerCount==2 )
 		{
 		AutoSaveTime++;
 #if CONN_DBG
 		if(auto_save_time>=90 )
 #else
-		if(AutoSaveTime>=90 && HasSavedDesync==0 )
+		if(AutoSaveTime>=90 && !HasSavedDesync )
 #endif
 			{
 			AutoSaveTime=0;
@@ -60,8 +60,8 @@ private bool ReceiveAndIssueOrders(ref short s, ref Array200<short> bf_2_slct_un
 				SaveResume(1);
 				GoToGameSetting();
 
-				if( IsHost!=0 && WasHost==0 )
-					WasHost=1;
+				if( IsHost && !WasHost )
+					WasHost=true;
 
 				break;
 			}
@@ -187,8 +187,8 @@ private bool ReceiveAndIssueOrders(ref short s, ref Array200<short> bf_2_slct_un
 	BufferedMoveOrders[0].Unit=0;						// クリア
 	BufferedMoveOrders[1].Unit=0;						// クリア
 
-	BufferedSelectOrders[0].IsSet=0;						// クリア
-	BufferedSelectOrders[1].IsSet=0;						// クリア
+	BufferedSelectOrders[0].IsSet=false;						// クリア
+	BufferedSelectOrders[1].IsSet=false;						// クリア
 
 	BufferedMenuOrders[0].Menu=CombatMenuItem.None;
 	BufferedMenuOrders[1].Menu=CombatMenuItem.None;
@@ -208,8 +208,8 @@ private bool ReceiveAndIssueOrders(ref short s, ref Array200<short> bf_2_slct_un
 		BufferedSelections[1][s]=0;
 		}
 
-	CanOrder=1;
-	HasOrdered=0;
+	CanOrder=true;
+	HasOrdered=false;
 
 #if false && CONN_DBG
 dbg[5]=rnd(100);
@@ -261,7 +261,7 @@ private bool SendOrders(ref short s, ref _DP_FLAG dp_flag)
 	_DP_NEW_SLCT_PLANE dp_new_slct_plane;
 	_DP_NEW_SLCT_LAND dp_new_slct_land;
 	_DP_NEW_MENU dp_new_menu;
-	if(  CONN_DBG==0 && CanAdvance1==0 )
+	if(  CONN_DBG==0 && !CanAdvance1 )
 		{
 		return false;
 		}
@@ -285,14 +285,14 @@ DebugValues[0]++;
 
 	if(UnitChecksums[1]==UnitChecksums[0])
 		{
-		AreUnitsOutOfSync=0;
+		AreUnitsOutOfSync=false;
 		}
 	else
 		{
-		AreUnitsOutOfSync=1;
-		if( HasSavedDesync==0 )
+		AreUnitsOutOfSync=true;
+		if( !HasSavedDesync )
 			{
-			HasSavedDesync=1;
+			HasSavedDesync=true;
 #if !CONN_DBG
 			SaveResume(2);
 #endif
@@ -301,14 +301,14 @@ DebugValues[0]++;
 
 	if(TickChecksums[1]==TickChecksums[0])
 		{
-		IsTickOutOfSync=0;
+		IsTickOutOfSync=false;
 		}
 	else
 		{
-		IsTickOutOfSync=1;
-		if( HasSavedDesync==0 )
+		IsTickOutOfSync=true;
+		if( !HasSavedDesync )
 			{
-			HasSavedDesync=1;
+			HasSavedDesync=true;
 #if !CONN_DBG
 			SaveResume(2);
 #endif
@@ -317,14 +317,14 @@ DebugValues[0]++;
 
 	if(RandomChecksums[1]==RandomChecksums[0])
 		{
-		IsRandomOutOfSync=0;
+		IsRandomOutOfSync=false;
 		}
 	else
 		{
-		IsRandomOutOfSync=1;
-		if( HasSavedDesync==0 )
+		IsRandomOutOfSync=true;
+		if( !HasSavedDesync )
 			{
-			HasSavedDesync=1;
+			HasSavedDesync=true;
 #if !CONN_DBG
 			SaveResume(2);
 #endif
@@ -337,9 +337,9 @@ DebugValues[0]++;
 	TickWaits[0]=0;
 	TickWaits[1]=0;
 
-	CanAdvance1=0;
+	CanAdvance1=false;
 
-	if( BufferedMoveOrders[1].Unit==0 && BufferedSelectOrders[1].IsSet==0 && BufferedMenuOrders[1].Menu==CombatMenuItem.None && BufferedSystemOrders[1]==0 && BufferedArrivedUnits[1]==0 )
+	if( BufferedMoveOrders[1].Unit==0 && !BufferedSelectOrders[1].IsSet && BufferedMenuOrders[1].Menu==CombatMenuItem.None && BufferedSystemOrders[1]==0 && BufferedArrivedUnits[1]==0 )
 		{
 		// 命令が無い場合。
 		dp_flag.dwType = MessageType.NoOrder;
@@ -434,7 +434,7 @@ DebugValues[0]++;
 				g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 				}
 			}
-		else if(BufferedSelectOrders[1].IsSet!=0)
+		else if(BufferedSelectOrders[1].IsSet)
 			{
 			// 目標指定
 			ship=0;
@@ -452,7 +452,7 @@ DebugValues[0]++;
 				{
 				// 航空機も艦船もある
 				dp_new_slct.dwType = MessageType.SelectOrder;
-				dp_new_slct.sw=BufferedSelectOrders[1].IsSet;
+				dp_new_slct.sw=BufferedSelectOrders[1].IsSet.Value;
 				dp_new_slct.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
 				dp_new_slct.m=(byte)BufferedSelectOrders[1].Unit;
 				dp_new_slct.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
@@ -469,7 +469,7 @@ DebugValues[0]++;
 				{
 				// 艦船のみ
 				dp_new_slct_ship.dwType = MessageType.SelectShipsOrder;
-				dp_new_slct_ship.sw=BufferedSelectOrders[1].IsSet;
+				dp_new_slct_ship.sw=BufferedSelectOrders[1].IsSet.Value;
 				dp_new_slct_ship.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
 				dp_new_slct_ship.m=(byte)BufferedSelectOrders[1].Unit;
 				dp_new_slct_ship.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
@@ -486,7 +486,7 @@ DebugValues[0]++;
 				{
 				// 航空機のみ
 				dp_new_slct_plane.dwType = MessageType.SelectPlanesOrder;
-				dp_new_slct_plane.sw=BufferedSelectOrders[1].IsSet;
+				dp_new_slct_plane.sw=BufferedSelectOrders[1].IsSet.Value;
 				dp_new_slct_plane.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
 				dp_new_slct_plane.m=(byte)BufferedSelectOrders[1].Unit;
 				dp_new_slct_plane.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
@@ -503,7 +503,7 @@ DebugValues[0]++;
 				{
 				// ユニットに対する指定無し。おそらく輸送船の揚陸先
 				dp_new_slct_land.dwType = MessageType.SelectLandOrder;
-				dp_new_slct_land.sw=BufferedSelectOrders[1].IsSet;
+				dp_new_slct_land.sw=BufferedSelectOrders[1].IsSet.Value;
 				dp_new_slct_land.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
 				dp_new_slct_land.m=(byte)BufferedSelectOrders[1].Unit;
 				dp_new_slct_land.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
@@ -530,7 +530,7 @@ DebugValues[0]++;
 			g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 			}
 		}
-	CanOrder=0;
+	CanOrder=false;
 	return true;
 	}
 
@@ -1388,7 +1388,7 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 
 private void ControlFiring(ref Unit unit, int dmg_act, int m)
 	{
-	if( IsEditingMap==0 && !unit.IsSupplying && (( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying )||( unit.Category==UnitCategory.Ship)))
+	if( !IsEditingMap && !unit.IsSupplying && (( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying )||( unit.Category==UnitCategory.Ship)))
 		{
 		switch( unit.Kind )
 			{
@@ -1741,7 +1741,7 @@ public void	UpdateBattle()
 	if( Mode!=GameMode.Battle )
 		return;
 
-	if( IsEditingMap==0 )
+	if( !IsEditingMap )
 		{
 		/* 入力フェーズ */
 		// 通信対戦時
@@ -1785,7 +1785,7 @@ public void	UpdateBattle()
 	// 補給値のインクリ
 	if( (Tick%300)==0 )
 		{
-		if( IsHost!=0 )
+		if( IsHost )
 			{
 			SupplyPoints+=SupplyRates[0];
 			}
@@ -1804,7 +1804,7 @@ public void	UpdateBattle()
 		// 陸上施設の工事処理
 		BuildBase(ref unit);
 
-		if( IsEditingMap==0 && unit.IsUsed && !(unit.Kind==UnitKind.AirBase||unit.Kind==UnitKind.NavalBase||unit.Kind==UnitKind.City))
+		if( !IsEditingMap && unit.IsUsed && !(unit.Kind==UnitKind.AirBase||unit.Kind==UnitKind.NavalBase||unit.Kind==UnitKind.City))
 			{
 			// 補給先がちゃんとあるか
 			UpdateSupply(ref unit);
@@ -1903,7 +1903,7 @@ public void	UpdateBattle()
 					}
 				}
 
-			if( IsEditingMap==0 && dstc<=400 )
+			if( !IsEditingMap && dstc<=400 )
 				{
 				if( (SharedRandom(3+(int)(dstc/5)))==0  )
 				PlaySoundEffect( 0, SoundId.Sonar ,unit.Position.X, unit.Position.Y);

@@ -584,7 +584,7 @@ public nint OverrideDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
 						break;
 
 					case IDSNROEDIT:
-						IsEditingMap=1;
+						IsEditingMap=true;
 						IsNetworkGame=1;
 						IsHostPlayer=1;
 						ActivePlayerCount=2;
@@ -1058,7 +1058,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				SupplyRates[0]=pMsg->data[2];		// Host
 				SupplyRates[1]=pMsg->data[3];		// Guest
 
-				IsDecisionEnabled=(byte)pMsg->data[4];
+				IsDecisionEnabled=new Bool8((byte)pMsg->data[4]);
 
 				InitialSupplyPoints[0]=pMsg->data[5];		// Host
 				InitialSupplyPoints[1]=pMsg->data[6];		// Guest
@@ -1081,7 +1081,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				SupplyRates[0]=pMsg->data[2];		// Host
 				SupplyRates[1]=pMsg->data[3];		// Guest
 
-				IsDecisionEnabled=(byte)pMsg->data[4];
+				IsDecisionEnabled=new Bool8((byte)pMsg->data[4]);
 
 				InitialSupplyPoints[0]=pMsg->data[5];		// Host
 				InitialSupplyPoints[1]=pMsg->data[6];		// Guest
@@ -1104,7 +1104,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				SupplyRates[0]=pMsg->data[2];		// Host
 				SupplyRates[1]=pMsg->data[3];		// Guest
 
-				IsDecisionEnabled=(byte)pMsg->data[4];
+				IsDecisionEnabled=new Bool8((byte)pMsg->data[4]);
 
 				InitialSupplyPoints[0]=pMsg->data[5];		// Host
 				InitialSupplyPoints[1]=pMsg->data[6];		// Guest
@@ -1128,7 +1128,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
 
 				BufferedArrivedUnits[0]=pMsg->data[0];		// 敵が１ユニット増える。
-				CanAdvance2=1;
+				CanAdvance2=true;
 				}
 			else if( pGenericMsg->dwType == MessageType.MoveOrder )
 				{
@@ -1142,7 +1142,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 					{
 					BufferedSelections[0][s]=pMsg->slct_unit[s];
 					}
-				CanAdvance2=1;
+				CanAdvance2=true;
 				}
 			else if( pGenericMsg->dwType == MessageType.MoveShipsOrder )
 				{
@@ -1155,7 +1155,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 					{
 					BufferedSelections[0][s]=pMsg->slct_unit[s];
 					}
-				CanAdvance2=1;
+				CanAdvance2=true;
 				}
 			else if( pGenericMsg->dwType == MessageType.MovePlanesOrder )
 				{
@@ -1169,14 +1169,14 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 					{
 					BufferedSelections[0][s+JPN_SHIP_END]=pMsg->slct_unit[s];
 					}
-				CanAdvance2=1;
+				CanAdvance2=true;
 				}
 			else if( pGenericMsg->dwType == MessageType.SelectOrder )
 				{
 				_DP_NEW_SLCT* pMsg = (_DP_NEW_SLCT*) pReceiveMsg.pReceiveData;
 
 				// ホスト、ジョインともここで相手のデータを受け取る。
-				BufferedSelectOrders[0].IsSet=pMsg->sw;
+				BufferedSelectOrders[0].IsSet=new Bool32(pMsg->sw);
 				BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
 				BufferedSelectOrders[0].Unit=pMsg->m;
 				BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
@@ -1184,14 +1184,14 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 					{
 					BufferedSelections[0][s]=pMsg->slct_unit[s];
 					}
-				CanAdvance2=1;
+				CanAdvance2=true;
 				}
 			else if( pGenericMsg->dwType == MessageType.SelectShipsOrder )
 				{
 				_DP_NEW_SLCT_SHIP* pMsg = (_DP_NEW_SLCT_SHIP*) pReceiveMsg.pReceiveData;
 
 				// ホスト、ジョインともここで相手のデータを受け取る。
-				BufferedSelectOrders[0].IsSet=pMsg->sw;
+				BufferedSelectOrders[0].IsSet=new Bool32(pMsg->sw);
 				BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
 				BufferedSelectOrders[0].Unit=pMsg->m;
 				BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
@@ -1199,14 +1199,14 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 					{
 					BufferedSelections[0][s]=pMsg->slct_unit[s];
 					}
-				CanAdvance2=1;
+				CanAdvance2=true;
 				}
 			else if( pGenericMsg->dwType == MessageType.SelectPlanesOrder )
 				{
 				_DP_NEW_SLCT_PLANE* pMsg = (_DP_NEW_SLCT_PLANE*) pReceiveMsg.pReceiveData;
 
 				// ホスト、ジョインともここで相手のデータを受け取る。
-				BufferedSelectOrders[0].IsSet=pMsg->sw;
+				BufferedSelectOrders[0].IsSet=new Bool32(pMsg->sw);
 				BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
 				BufferedSelectOrders[0].Unit=pMsg->m;
 				BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
@@ -1214,18 +1214,18 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 					{
 					BufferedSelections[0][s+JPN_SHIP_END]=pMsg->slct_unit[s];
 					}
-				CanAdvance2=1;
+				CanAdvance2=true;
 				}
 			else if( pGenericMsg->dwType == MessageType.SelectLandOrder )
 				{
 				_DP_NEW_SLCT_LAND* pMsg = (_DP_NEW_SLCT_LAND*) pReceiveMsg.pReceiveData;
 
 				// ホスト、ジョインともここで相手のデータを受け取る。
-				BufferedSelectOrders[0].IsSet=pMsg->sw;
+				BufferedSelectOrders[0].IsSet=new Bool32(pMsg->sw);
 				BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
 				BufferedSelectOrders[0].Unit=pMsg->m;
 				BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
-				CanAdvance2=1;
+				CanAdvance2=true;
 				}
 			else if( pGenericMsg->dwType == MessageType.MenuOrder )
 				{
@@ -1239,19 +1239,19 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 					{
 					BufferedSelections[0][s]=pMsg->slct_unit[s];
 					}
-				CanAdvance2=1;
+				CanAdvance2=true;
 				}
 			else if( pGenericMsg->dwType == MessageType.NoOrder )
 				{
 				// ホスト、ジョインともここで相手のデータを受け取る。
-				CanAdvance2=1;
+				CanAdvance2=true;
 				}
 			else if( pGenericMsg->dwType == MessageType.SyncFlag )
 				{
 				_DP_FLAG* pMsg = (_DP_FLAG*) pReceiveMsg.pReceiveData;
 
 				// ホスト、ジョインともここで相手のデータを受け取る。
-				CanAdvance1=1;
+				CanAdvance1=true;
 
 				TickChecksums[0]=pMsg->cc_chk;
 				UnitChecksums[0]=pMsg->unit_chk;
@@ -1278,14 +1278,14 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				else
 					{
 					// ホスト、ジョインともここで相手のデータを受け取る。
-					CanAdvance2=1;
+					CanAdvance2=true;
 					SystemOrders[1]=(byte)MessageType.GoToGameSetting;
 					}
 				}
 			else if( pGenericMsg->dwType == MessageType.ResumeAndGoToGameSetting )
 				{
 				// ジョイン ここで相手のデータを受け取る。
-				CanAdvance2=1;
+				CanAdvance2=true;
 				SystemOrders[1]=(byte)MessageType.ResumeAndGoToGameSetting;
 				}
 			else if( pGenericMsg->dwType == MessageType.Chat )
