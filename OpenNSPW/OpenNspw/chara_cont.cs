@@ -248,19 +248,183 @@ dbg[5]=rnd(100);
 	return true;
 	}
 
-private bool SendOrders(ref short s, ref _DP_FLAG dp_flag)
+private void SendMenuOrder(ref short s)
 	{
-	_DP_DATA_1 dp_data_1;
+	_DP_NEW_MENU dp_new_menu;
+	// メニュー
+	dp_new_menu.dwType = MessageType.MenuOrder;
+
+	dp_new_menu.menu=(byte)BufferedMenuOrders[1].Menu;
+	dp_new_menu.the_slct_unit=(byte)BufferedMenuOrders[1].SelectedUnit;
+
+	for( s=0; s<=(USA_PLANE_END/2)-1; s++)
+		{
+		dp_new_menu.slct_unit[s]=(byte)BufferedSelections[1][s];
+		}
+	bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_MENU));
+	bufferDesc.pBufferData  = (byte*) &dp_new_menu;
+	g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+	}
+
+private void SendSelectOrder(ref short s)
+	{
+	short ship;
+	short plane;
+	_DP_NEW_SLCT dp_new_slct;
+	_DP_NEW_SLCT_SHIP dp_new_slct_ship;
+	_DP_NEW_SLCT_PLANE dp_new_slct_plane;
+	_DP_NEW_SLCT_LAND dp_new_slct_land;
+	// 目標指定
+	ship=0;
+	plane=0;
+	for( s=0; s<=JPN_SHIP_END-1; s++)
+		{
+		ship+=BufferedSelections[1][s];
+		}
+	for( s=JPN_SHIP_END; s<=(USA_PLANE_END/2)-1; s++)
+		{
+		plane+=BufferedSelections[1][s];
+		}
+
+	if(ship!=0 && plane!=0)
+		{
+		// 航空機も艦船もある
+		dp_new_slct.dwType = MessageType.SelectOrder;
+		dp_new_slct.sw=BufferedSelectOrders[1].IsSet.Value;
+		dp_new_slct.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
+		dp_new_slct.m=(byte)BufferedSelectOrders[1].Unit;
+		dp_new_slct.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
+		dp_new_slct.gr_y=(short)BufferedSelectOrders[1].GroundPosition.Y;
+		for( s=0; s<=(USA_PLANE_END/2)-1; s++)
+			{
+			dp_new_slct.slct_unit[s]=(byte)BufferedSelections[1][s];
+			}
+		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_SLCT));
+		bufferDesc.pBufferData  = (byte*) &dp_new_slct;
+		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		}
+	else if( ship!=0 && plane==0 )
+		{
+		// 艦船のみ
+		dp_new_slct_ship.dwType = MessageType.SelectShipsOrder;
+		dp_new_slct_ship.sw=BufferedSelectOrders[1].IsSet.Value;
+		dp_new_slct_ship.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
+		dp_new_slct_ship.m=(byte)BufferedSelectOrders[1].Unit;
+		dp_new_slct_ship.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
+		dp_new_slct_ship.gr_y=(short)BufferedSelectOrders[1].GroundPosition.Y;
+		for( s=0; s<=JPN_SHIP_END-1; s++)
+			{
+			dp_new_slct_ship.slct_unit[s]=(byte)BufferedSelections[1][s];
+			}
+		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_SLCT_SHIP));
+		bufferDesc.pBufferData  = (byte*) &dp_new_slct_ship;
+		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1, 0, null, ref hAsync, MUST_SEND );
+		}
+	else if( ship==0 && plane!=0 )
+		{
+		// 航空機のみ
+		dp_new_slct_plane.dwType = MessageType.SelectPlanesOrder;
+		dp_new_slct_plane.sw=BufferedSelectOrders[1].IsSet.Value;
+		dp_new_slct_plane.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
+		dp_new_slct_plane.m=(byte)BufferedSelectOrders[1].Unit;
+		dp_new_slct_plane.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
+		dp_new_slct_plane.gr_y=(short)BufferedSelectOrders[1].GroundPosition.Y;
+		for( s=0; s<=JPN_PLANE_END-JPN_PLANE_START; s++)
+			{
+			dp_new_slct_plane.slct_unit[s]=(byte)BufferedSelections[1][s+JPN_SHIP_END];
+			}
+		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_SLCT_PLANE));
+		bufferDesc.pBufferData  = (byte*) &dp_new_slct_plane;
+		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		}
+	else if( ship==0 && plane==0 )
+		{
+		// ユニットに対する指定無し。おそらく輸送船の揚陸先
+		dp_new_slct_land.dwType = MessageType.SelectLandOrder;
+		dp_new_slct_land.sw=BufferedSelectOrders[1].IsSet.Value;
+		dp_new_slct_land.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
+		dp_new_slct_land.m=(byte)BufferedSelectOrders[1].Unit;
+		dp_new_slct_land.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
+		dp_new_slct_land.gr_y=(short)BufferedSelectOrders[1].GroundPosition.Y;
+		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_SLCT_LAND));
+		bufferDesc.pBufferData  = (byte*) &dp_new_slct_land;
+		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		}
+	}
+
+private void SendMoveOrder(ref short s)
+	{
 	short ship;
 	short plane;
 	_DP_NEW_PP dp_new_pp;
 	_DP_NEW_PP_SHIP dp_new_pp_ship;
 	_DP_NEW_PP_PLANE dp_new_pp_plane;
-	_DP_NEW_SLCT dp_new_slct;
-	_DP_NEW_SLCT_SHIP dp_new_slct_ship;
-	_DP_NEW_SLCT_PLANE dp_new_slct_plane;
-	_DP_NEW_SLCT_LAND dp_new_slct_land;
-	_DP_NEW_MENU dp_new_menu;
+	// 移動
+	ship=0;
+	plane=0;
+	for( s=0; s<=JPN_SHIP_END-1; s++)
+		{
+		ship+=BufferedSelections[1][s];
+		}
+	for( s=JPN_SHIP_END; s<=(USA_PLANE_END/2)-1; s++)
+		{
+		plane+=BufferedSelections[1][s];
+		}
+
+	if(ship!=0 && plane!=0)
+		{
+		// 航空機も艦船もある
+		dp_new_pp.dwType = MessageType.MoveOrder;
+		dp_new_pp.used=(byte)BufferedMoveOrders[1].Unit;
+		dp_new_pp.x=(short)BufferedMoveOrders[1].Destination.X;
+		dp_new_pp.y=(short)BufferedMoveOrders[1].Destination.Y;
+		dp_new_pp.cls=BufferedMoveOrders[1].ClearsPath;
+		for( s=0; s<=(USA_PLANE_END/2)-1; s++)
+			{
+			dp_new_pp.slct_unit[s]=(byte)BufferedSelections[1][s];
+			}
+		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_PP));
+		bufferDesc.pBufferData  = (byte*) &dp_new_pp;
+		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+
+		}
+	else if( ship!=0 && plane==0 )
+		{
+		// 艦船のみ
+		dp_new_pp_ship.dwType = MessageType.MoveShipsOrder;
+		dp_new_pp_ship.used=(byte)BufferedMoveOrders[1].Unit;
+		dp_new_pp_ship.x=(short)BufferedMoveOrders[1].Destination.X;
+		dp_new_pp_ship.y=(short)BufferedMoveOrders[1].Destination.Y;
+		dp_new_pp_ship.cls=BufferedMoveOrders[1].ClearsPath;
+		for( s=0; s<=JPN_SHIP_END-1; s++)
+			{
+			dp_new_pp_ship.slct_unit[s]=(byte)BufferedSelections[1][s];
+			}
+		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_PP_SHIP));
+		bufferDesc.pBufferData  = (byte*) &dp_new_pp_ship;
+		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		}
+	else if( ship==0 && plane!=0 )
+		{
+		// 航空機のみ
+		dp_new_pp_plane.dwType = MessageType.MovePlanesOrder;
+		dp_new_pp_plane.used=(byte)BufferedMoveOrders[1].Unit;
+		dp_new_pp_plane.x=(short)BufferedMoveOrders[1].Destination.X;
+		dp_new_pp_plane.y=(short)BufferedMoveOrders[1].Destination.Y;
+		dp_new_pp_plane.cls=BufferedMoveOrders[1].ClearsPath;
+		for( s=0; s<=(JPN_PLANE_END-JPN_PLANE_START); s++)
+			{
+			dp_new_pp_plane.slct_unit[s]=(byte)BufferedSelections[1][s+JPN_SHIP_END];
+			}
+		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_PP_PLANE));
+		bufferDesc.pBufferData  = (byte*) &dp_new_pp_plane;
+		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		}
+	}
+
+private bool SendOrders(ref short s, ref _DP_FLAG dp_flag)
+	{
+	_DP_DATA_1 dp_data_1;
 	if(  CONN_DBG==0 && !CanAdvance1 )
 		{
 		return false;
@@ -372,162 +536,15 @@ DebugValues[0]++;
 			}
 		else if(BufferedMoveOrders[1].Unit!=0)
 			{
-			// 移動
-			ship=0;
-			plane=0;
-			for( s=0; s<=JPN_SHIP_END-1; s++)
-				{
-				ship+=BufferedSelections[1][s];
-				}
-			for( s=JPN_SHIP_END; s<=(USA_PLANE_END/2)-1; s++)
-				{
-				plane+=BufferedSelections[1][s];
-				}
-
-			if(ship!=0 && plane!=0)
-				{
-				// 航空機も艦船もある
-				dp_new_pp.dwType = MessageType.MoveOrder;
-				dp_new_pp.used=(byte)BufferedMoveOrders[1].Unit;
-				dp_new_pp.x=(short)BufferedMoveOrders[1].Destination.X;
-				dp_new_pp.y=(short)BufferedMoveOrders[1].Destination.Y;
-				dp_new_pp.cls=BufferedMoveOrders[1].ClearsPath;
-				for( s=0; s<=(USA_PLANE_END/2)-1; s++)
-					{
-					dp_new_pp.slct_unit[s]=(byte)BufferedSelections[1][s];
-					}
-				bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_PP));
-				bufferDesc.pBufferData  = (byte*) &dp_new_pp;
-				g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-
-				}
-			else if( ship!=0 && plane==0 )
-				{
-				// 艦船のみ
-				dp_new_pp_ship.dwType = MessageType.MoveShipsOrder;
-				dp_new_pp_ship.used=(byte)BufferedMoveOrders[1].Unit;
-				dp_new_pp_ship.x=(short)BufferedMoveOrders[1].Destination.X;
-				dp_new_pp_ship.y=(short)BufferedMoveOrders[1].Destination.Y;
-				dp_new_pp_ship.cls=BufferedMoveOrders[1].ClearsPath;
-				for( s=0; s<=JPN_SHIP_END-1; s++)
-					{
-					dp_new_pp_ship.slct_unit[s]=(byte)BufferedSelections[1][s];
-					}
-				bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_PP_SHIP));
-				bufferDesc.pBufferData  = (byte*) &dp_new_pp_ship;
-				g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-				}
-			else if( ship==0 && plane!=0 )
-				{
-				// 航空機のみ
-				dp_new_pp_plane.dwType = MessageType.MovePlanesOrder;
-				dp_new_pp_plane.used=(byte)BufferedMoveOrders[1].Unit;
-				dp_new_pp_plane.x=(short)BufferedMoveOrders[1].Destination.X;
-				dp_new_pp_plane.y=(short)BufferedMoveOrders[1].Destination.Y;
-				dp_new_pp_plane.cls=BufferedMoveOrders[1].ClearsPath;
-				for( s=0; s<=(JPN_PLANE_END-JPN_PLANE_START); s++)
-					{
-					dp_new_pp_plane.slct_unit[s]=(byte)BufferedSelections[1][s+JPN_SHIP_END];
-					}
-				bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_PP_PLANE));
-				bufferDesc.pBufferData  = (byte*) &dp_new_pp_plane;
-				g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-				}
+			SendMoveOrder(ref s);
 			}
 		else if(BufferedSelectOrders[1].IsSet)
 			{
-			// 目標指定
-			ship=0;
-			plane=0;
-			for( s=0; s<=JPN_SHIP_END-1; s++)
-				{
-				ship+=BufferedSelections[1][s];
-				}
-			for( s=JPN_SHIP_END; s<=(USA_PLANE_END/2)-1; s++)
-				{
-				plane+=BufferedSelections[1][s];
-				}
-
-			if(ship!=0 && plane!=0)
-				{
-				// 航空機も艦船もある
-				dp_new_slct.dwType = MessageType.SelectOrder;
-				dp_new_slct.sw=BufferedSelectOrders[1].IsSet.Value;
-				dp_new_slct.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
-				dp_new_slct.m=(byte)BufferedSelectOrders[1].Unit;
-				dp_new_slct.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
-				dp_new_slct.gr_y=(short)BufferedSelectOrders[1].GroundPosition.Y;
-				for( s=0; s<=(USA_PLANE_END/2)-1; s++)
-					{
-					dp_new_slct.slct_unit[s]=(byte)BufferedSelections[1][s];
-					}
-				bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_SLCT));
-				bufferDesc.pBufferData  = (byte*) &dp_new_slct;
-				g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-				}
-			else if( ship!=0 && plane==0 )
-				{
-				// 艦船のみ
-				dp_new_slct_ship.dwType = MessageType.SelectShipsOrder;
-				dp_new_slct_ship.sw=BufferedSelectOrders[1].IsSet.Value;
-				dp_new_slct_ship.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
-				dp_new_slct_ship.m=(byte)BufferedSelectOrders[1].Unit;
-				dp_new_slct_ship.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
-				dp_new_slct_ship.gr_y=(short)BufferedSelectOrders[1].GroundPosition.Y;
-				for( s=0; s<=JPN_SHIP_END-1; s++)
-					{
-					dp_new_slct_ship.slct_unit[s]=(byte)BufferedSelections[1][s];
-					}
-				bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_SLCT_SHIP));
-				bufferDesc.pBufferData  = (byte*) &dp_new_slct_ship;
-				g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1, 0, null, ref hAsync, MUST_SEND );
-				}
-			else if( ship==0 && plane!=0 )
-				{
-				// 航空機のみ
-				dp_new_slct_plane.dwType = MessageType.SelectPlanesOrder;
-				dp_new_slct_plane.sw=BufferedSelectOrders[1].IsSet.Value;
-				dp_new_slct_plane.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
-				dp_new_slct_plane.m=(byte)BufferedSelectOrders[1].Unit;
-				dp_new_slct_plane.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
-				dp_new_slct_plane.gr_y=(short)BufferedSelectOrders[1].GroundPosition.Y;
-				for( s=0; s<=JPN_PLANE_END-JPN_PLANE_START; s++)
-					{
-					dp_new_slct_plane.slct_unit[s]=(byte)BufferedSelections[1][s+JPN_SHIP_END];
-					}
-				bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_SLCT_PLANE));
-				bufferDesc.pBufferData  = (byte*) &dp_new_slct_plane;
-				g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-				}
-			else if( ship==0 && plane==0 )
-				{
-				// ユニットに対する指定無し。おそらく輸送船の揚陸先
-				dp_new_slct_land.dwType = MessageType.SelectLandOrder;
-				dp_new_slct_land.sw=BufferedSelectOrders[1].IsSet.Value;
-				dp_new_slct_land.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
-				dp_new_slct_land.m=(byte)BufferedSelectOrders[1].Unit;
-				dp_new_slct_land.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
-				dp_new_slct_land.gr_y=(short)BufferedSelectOrders[1].GroundPosition.Y;
-				bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_SLCT_LAND));
-				bufferDesc.pBufferData  = (byte*) &dp_new_slct_land;
-				g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-				}
+			SendSelectOrder(ref s);
 			}
 		else if(BufferedMenuOrders[1].Menu!=CombatMenuItem.None)
 			{
-			// メニュー
-			dp_new_menu.dwType = MessageType.MenuOrder;
-
-			dp_new_menu.menu=(byte)BufferedMenuOrders[1].Menu;
-			dp_new_menu.the_slct_unit=(byte)BufferedMenuOrders[1].SelectedUnit;
-
-			for( s=0; s<=(USA_PLANE_END/2)-1; s++)
-				{
-				dp_new_menu.slct_unit[s]=(byte)BufferedSelections[1][s];
-				}
-			bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_MENU));
-			bufferDesc.pBufferData  = (byte*) &dp_new_menu;
-			g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+			SendMenuOrder(ref s);
 			}
 		}
 	CanOrder=false;
