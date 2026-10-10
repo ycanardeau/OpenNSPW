@@ -3287,6 +3287,289 @@ public void ReturnIntoWorld(int m)
 		}
 	}
 
+private bool HuntSubmarine(ref Unit unit)
+	{
+	int n;
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double dstc;
+	double em_drctn;
+	if(unit.EmergencyFlags[0]==0)
+		{
+		for(n=1; n<=MaxUnitId; n++)
+			{
+			ref var other = ref Units[n];
+			if( other.IsUsed && other.Kind==UnitKind.Submarine && other.IsFound && other.Side!=unit.Side )
+				{
+				// 自点と対象点の距離
+				if( other.IsSubmerged )
+					{
+					// 潜水中
+					wrk_x=other.ContactX-unit.Position.X;
+					wrk_y=other.ContactY-unit.Position.Y;
+					}
+				else
+					{
+					// 浮上してます
+					wrk_x=other.Position.X-unit.Position.X;
+					wrk_y=other.Position.Y-unit.Position.Y;
+					}
+
+				if(wrk_x==0)	wrk_x=1;
+				if(wrk_y==0)	wrk_y=1;
+
+				drctn=atan2(wrk_y,wrk_x)*RAD_to;
+				if(drctn<0)
+					drctn=360+drctn;
+				if(wrk_x<0)
+					wrk_x=0-wrk_x;
+				if(wrk_y<0)
+					wrk_y=0-wrk_y;
+				if(drctn>=180)
+					drctn=drctn-180;
+				if(drctn>=90)
+					drctn=90-(drctn-90);
+				dstc=(wrk_x)/(CosDegrees(drctn));		// 距離
+
+				if( dstc<=( unit.Variant==1 ? 500 : 400 ) )
+					{
+					// 近くに潜水艦推定位置
+
+					wrk_x=other.ContactX-unit.Position.X;
+					wrk_y=other.ContactY-unit.Position.Y;
+					if(wrk_x==0)	wrk_x=1;
+					if(wrk_y==0)	wrk_y=1;
+					drctn=atan2(wrk_y,wrk_x)*RAD_to;
+
+					drctn+=20-Random(40);
+
+					em_drctn=(int)drctn%360;
+
+					wrk_x=unit.Position.X;
+					wrk_y=unit.Position.Y;
+					wrk_x+=CosDegrees(em_drctn)*((dstc)+200);
+					wrk_y+=SinDegrees(em_drctn)*((dstc)+200);
+
+					unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
+					unit.EmergencyFlags[0]=100+Random(250);
+
+					return false;
+					}
+				}
+			}
+		}
+	return true;
+	}
+
+private bool EvadePlane(ref Unit other, ref Unit unit)
+	{
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double dstc;
+	double em_drctn;
+	// 自点と対象点の距離
+	wrk_x=other.Position.X-unit.Position.X;
+	wrk_y=other.Position.Y-unit.Position.Y;
+	if(wrk_x==0)	wrk_x=1;
+	if(wrk_y==0)	wrk_y=1;
+
+	drctn=atan2(wrk_y,wrk_x)*RAD_to;
+	if(drctn<0)
+		drctn=360+drctn;
+	if(wrk_x<0)
+		wrk_x=0-wrk_x;
+	if(wrk_y<0)
+		wrk_y=0-wrk_y;
+	if(drctn>=180)
+		drctn=drctn-180;
+	if(drctn>=90)
+		drctn=90-(drctn-90);
+	dstc=(wrk_x)/(CosDegrees(drctn));		// 距離
+
+	if( dstc<=600-((other.Kind==UnitKind.Bomber ? 1 : 0)*300) && dstc>=40 )
+		{
+		// 対象ユニットからの自点への方位角
+		wrk_x=unit.Position.X;
+		wrk_y=unit.Position.Y;
+		wrk_x=wrk_x-other.Position.X;
+		wrk_y=wrk_y-other.Position.Y;
+		if(wrk_x==0)	wrk_x=1;
+		if(wrk_y==0)	wrk_y=1;
+		drctn=atan2(wrk_y,wrk_x)*RAD_to;
+		if(drctn<0)
+			drctn=360+drctn;
+		drctn=drctn-other.Direction;
+		if(drctn<0)
+			drctn=360+drctn;
+		if( drctn<=45 || drctn>=315 )
+			{
+
+			wrk_x=unit.Position.X;
+			wrk_y=unit.Position.Y;
+			em_drctn=unit.Direction;
+			switch(Random(2))
+				{
+				case 0:
+					em_drctn+=45+Random(45+20);
+					break;
+				case 1:
+					em_drctn-=45+Random(45+20);
+					break;
+				}
+			em_drctn=(int)em_drctn%360;
+
+			wrk_x+=CosDegrees(em_drctn)*300;
+			wrk_y+=SinDegrees(em_drctn)*300;
+
+			unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
+			unit.EmergencyFlags[0]=200+Random(250);
+
+			return false;
+			}
+		}
+	return true;
+	}
+
+private void EvadeShip(ref Unit other, ref Unit unit)
+	{
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double dstc;
+	double em_drctn;
+	// 自点と対象点の距離
+	wrk_x=other.Position.X-unit.Position.X;
+	wrk_y=other.Position.Y-unit.Position.Y;
+	if(wrk_x==0)	wrk_x=1;
+	if(wrk_y==0)	wrk_y=1;
+
+	drctn=atan2(wrk_y,wrk_x)*RAD_to;
+	if(drctn<0)
+		drctn=360+drctn;
+	if(wrk_x<0)
+		wrk_x=0-wrk_x;
+	if(wrk_y<0)
+		wrk_y=0-wrk_y;
+	if(drctn>=180)
+		drctn=drctn-180;
+	if(drctn>=90)
+		drctn=90-(drctn-90);
+	dstc=(wrk_x)/(CosDegrees(drctn));		// 距離
+
+	// 見る側
+
+	if( dstc<=(double)( BB1_SIGHT ) )
+		{
+		wrk_x=other.Position.X-unit.Position.X;
+		wrk_y=other.Position.Y-unit.Position.Y;
+		if(wrk_x==0)	wrk_x=1;
+		if(wrk_y==0)	wrk_y=1;
+		drctn=atan2(wrk_y,wrk_x)*RAD_to;
+		if(drctn<0)
+			drctn=360+drctn;
+
+		if( (unit.Kind==UnitKind.Carrier||unit.Kind==UnitKind.LightCarrier) && unit.GroupLeader==0 && other.IsStopping && Random(3)!=0 )
+			{
+			if(unit.Random10[0]<=4)
+				{
+				drctn+=(90+Random(40));
+				}
+			else
+				{
+				drctn-=(90+Random(40));
+				}
+			}
+		else
+			{
+			drctn+=160+Random(40);
+			}
+
+		em_drctn=(int)drctn%360;
+
+		wrk_x=unit.Position.X;
+		wrk_y=unit.Position.Y;
+		wrk_x+=CosDegrees(em_drctn)*300;
+		wrk_y+=SinDegrees(em_drctn)*300;
+
+		unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
+		unit.EmergencyFlags[0]=100;
+		}
+	}
+
+private bool EvadeTorpedo(ref Fire fire, ref Unit unit)
+	{
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double dstc;
+	double em_drctn;
+	// 自点と対象点の距離
+	wrk_x=fire.Position.X-unit.Position.X;
+	wrk_y=fire.Position.Y-unit.Position.Y;
+	if(wrk_x==0)	wrk_x=1;
+	if(wrk_y==0)	wrk_y=1;
+
+	drctn=atan2(wrk_y,wrk_x)*RAD_to;
+	if(drctn<0)
+		drctn=360+drctn;
+	if(wrk_x<0)
+		wrk_x=0-wrk_x;
+	if(wrk_y<0)
+		wrk_y=0-wrk_y;
+	if(drctn>=180)
+		drctn=drctn-180;
+	if(drctn>=90)
+		drctn=90-(drctn-90);
+	dstc=(wrk_x)/(CosDegrees(drctn));		// 距離
+
+	if( dstc<=600 && dstc>=40 )
+		{
+		// 対象ユニットからの自点への方位角
+		wrk_x=unit.Position.X;
+		wrk_y=unit.Position.Y;
+		wrk_x=wrk_x-fire.Position.X;
+		wrk_y=wrk_y-fire.Position.Y;
+		if(wrk_x==0)	wrk_x=1;
+		if(wrk_y==0)	wrk_y=1;
+		drctn=atan2(wrk_y,wrk_x)*RAD_to;
+		if(drctn<0)
+			drctn=360+drctn;
+		drctn=drctn-fire.Direction;
+		if(drctn<0)
+			drctn=360+drctn;
+		if( drctn<=20 || drctn>=340 )
+			{
+
+			wrk_x=unit.Position.X;
+			wrk_y=unit.Position.Y;
+			em_drctn=unit.Direction;
+
+			switch(Random(2))
+				{
+				case 0:
+					em_drctn+=60+Random(30);
+					break;
+				case 1:
+					em_drctn-=60+Random(30);
+					break;
+				}
+
+			em_drctn=(int)em_drctn%360;
+
+			wrk_x+=CosDegrees(em_drctn)*300;
+			wrk_y+=SinDegrees(em_drctn)*300;
+
+			unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
+			unit.EmergencyFlags[0]=100+Random(150);
+
+			return false;
+			}
+		}
+	return true;
+	}
+
 //============================================================================
 // 艦船の緊急機動をＥｍ＿ｘｙにセット
 //----------------------------------------------------------------------------
@@ -3295,7 +3578,6 @@ public void	SetShipEmergencyDestination(int m)
 	{
 	ref var unit = ref Units[m];
 	int		n;
-	double	em_drctn,wrk_x,wrk_y,drctn,dstc;
 	int		size;
 
 	for(n=1;n<FIRE_MAX;n++)
@@ -3304,68 +3586,8 @@ public void	SetShipEmergencyDestination(int m)
 		// 艦船によってくる魚雷から逃げる
 		if( fire.Target!=0 && fire.Kind==FireKind.Torpedo && fire.Ticks>=fire.ArmingTime  )
 			{
-			// 自点と対象点の距離
-			wrk_x=fire.Position.X-unit.Position.X;
-			wrk_y=fire.Position.Y-unit.Position.Y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(CosDegrees(drctn));		// 距離
-
-			if( dstc<=600 && dstc>=40 )
-				{
-				// 対象ユニットからの自点への方位角
-				wrk_x=unit.Position.X;
-				wrk_y=unit.Position.Y;
-				wrk_x=wrk_x-fire.Position.X;
-				wrk_y=wrk_y-fire.Position.Y;
-				if(wrk_x==0)	wrk_x=1;
-				if(wrk_y==0)	wrk_y=1;
-				drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				if(drctn<0)
-					drctn=360+drctn;
-				drctn=drctn-fire.Direction;
-				if(drctn<0)
-					drctn=360+drctn;
-				if( drctn<=20 || drctn>=340 )
-					{
-
-					wrk_x=unit.Position.X;
-					wrk_y=unit.Position.Y;
-					em_drctn=unit.Direction;
-
-					switch(Random(2))
-						{
-						case 0:
-							em_drctn+=60+Random(30);
-							break;
-						case 1:
-							em_drctn-=60+Random(30);
-							break;
-						}
-
-					em_drctn=(int)em_drctn%360;
-
-					wrk_x+=CosDegrees(em_drctn)*300;
-					wrk_y+=SinDegrees(em_drctn)*300;
-
-					unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
-					unit.EmergencyFlags[0]=100+Random(150);
-
-					return;
-					}
-				}
+			if( !EvadeTorpedo(ref fire, ref unit) )
+				return;
 			}
 		}
 
@@ -3376,199 +3598,23 @@ public void	SetShipEmergencyDestination(int m)
 		if( (unit.IsStopping || (unit.Kind==UnitKind.Carrier||unit.Kind==UnitKind.LightCarrier)) && other.IsUsed && (other.Category==UnitCategory.Ship  && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress) ) &&
 		other.Kind!=UnitKind.Submarine && other.Side!=unit.Side && other.IsFound && other.SupplyTime<=0 && unit.Target==0)
 			{
-			// 自点と対象点の距離
-			wrk_x=other.Position.X-unit.Position.X;
-			wrk_y=other.Position.Y-unit.Position.Y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(CosDegrees(drctn));		// 距離
-
-			// 見る側
-
-			if( dstc<=(double)( BB1_SIGHT ) )
-				{
-				wrk_x=other.Position.X-unit.Position.X;
-				wrk_y=other.Position.Y-unit.Position.Y;
-				if(wrk_x==0)	wrk_x=1;
-				if(wrk_y==0)	wrk_y=1;
-				drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				if(drctn<0)
-					drctn=360+drctn;
-
-				if( (unit.Kind==UnitKind.Carrier||unit.Kind==UnitKind.LightCarrier) && unit.GroupLeader==0 && other.IsStopping && Random(3)!=0 )
-					{
-					if(unit.Random10[0]<=4)
-						{
-						drctn+=(90+Random(40));
-						}
-					else
-						{
-						drctn-=(90+Random(40));
-						}
-					}
-				else
-					{
-					drctn+=160+Random(40);
-					}
-
-				em_drctn=(int)drctn%360;
-
-				wrk_x=unit.Position.X;
-				wrk_y=unit.Position.Y;
-				wrk_x+=CosDegrees(em_drctn)*300;
-				wrk_y+=SinDegrees(em_drctn)*300;
-
-				unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
-				unit.EmergencyFlags[0]=100;
-				}
+			EvadeShip(ref other, ref unit);
 			}
 
 		// 艦船によってくる攻撃機から逃げる
 		if( other.IsUsed && (other.Kind==UnitKind.Attacker || other.Kind==UnitKind.Bomber || ( other.Kind==UnitKind.Fighter && unit.Kind==UnitKind.Transport ) ) && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.IsFound
 			)
 			{
-			// 自点と対象点の距離
-			wrk_x=other.Position.X-unit.Position.X;
-			wrk_y=other.Position.Y-unit.Position.Y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(CosDegrees(drctn));		// 距離
-
-			if( dstc<=600-((other.Kind==UnitKind.Bomber ? 1 : 0)*300) && dstc>=40 )
-				{
-				// 対象ユニットからの自点への方位角
-				wrk_x=unit.Position.X;
-				wrk_y=unit.Position.Y;
-				wrk_x=wrk_x-other.Position.X;
-				wrk_y=wrk_y-other.Position.Y;
-				if(wrk_x==0)	wrk_x=1;
-				if(wrk_y==0)	wrk_y=1;
-				drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				if(drctn<0)
-					drctn=360+drctn;
-				drctn=drctn-other.Direction;
-				if(drctn<0)
-					drctn=360+drctn;
-				if( drctn<=45 || drctn>=315 )
-					{
-
-					wrk_x=unit.Position.X;
-					wrk_y=unit.Position.Y;
-					em_drctn=unit.Direction;
-					switch(Random(2))
-						{
-						case 0:
-							em_drctn+=45+Random(45+20);
-							break;
-						case 1:
-							em_drctn-=45+Random(45+20);
-							break;
-						}
-					em_drctn=(int)em_drctn%360;
-
-					wrk_x+=CosDegrees(em_drctn)*300;
-					wrk_y+=SinDegrees(em_drctn)*300;
-
-					unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
-					unit.EmergencyFlags[0]=200+Random(250);
-
-					return;
-					}
-				}
+			if( !EvadePlane(ref other, ref unit) )
+				return;
 			}
 		}
 
 	if( unit.Kind==UnitKind.Destroyer  && unit.IsStopping.Value==1   )
 		{
 		// 駆逐艦の対潜水艦行動、発見された後！
-		if(unit.EmergencyFlags[0]==0)
-			{
-			for(n=1; n<=MaxUnitId; n++)
-				{
-				ref var other = ref Units[n];
-				if( other.IsUsed && other.Kind==UnitKind.Submarine && other.IsFound && other.Side!=unit.Side )
-					{
-					// 自点と対象点の距離
-					if( other.IsSubmerged )
-						{
-						// 潜水中
-						wrk_x=other.ContactX-unit.Position.X;
-						wrk_y=other.ContactY-unit.Position.Y;
-						}
-					else
-						{
-						// 浮上してます
-						wrk_x=other.Position.X-unit.Position.X;
-						wrk_y=other.Position.Y-unit.Position.Y;
-						}
-
-					if(wrk_x==0)	wrk_x=1;
-					if(wrk_y==0)	wrk_y=1;
-
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
-					if(wrk_x<0)
-						wrk_x=0-wrk_x;
-					if(wrk_y<0)
-						wrk_y=0-wrk_y;
-					if(drctn>=180)
-						drctn=drctn-180;
-					if(drctn>=90)
-						drctn=90-(drctn-90);
-					dstc=(wrk_x)/(CosDegrees(drctn));		// 距離
-
-					if( dstc<=( unit.Variant==1 ? 500 : 400 ) )
-						{
-						// 近くに潜水艦推定位置
-
-						wrk_x=other.ContactX-unit.Position.X;
-						wrk_y=other.ContactY-unit.Position.Y;
-						if(wrk_x==0)	wrk_x=1;
-						if(wrk_y==0)	wrk_y=1;
-						drctn=atan2(wrk_y,wrk_x)*RAD_to;
-
-						drctn+=20-Random(40);
-
-						em_drctn=(int)drctn%360;
-
-						wrk_x=unit.Position.X;
-						wrk_y=unit.Position.Y;
-						wrk_x+=CosDegrees(em_drctn)*((dstc)+200);
-						wrk_y+=SinDegrees(em_drctn)*((dstc)+200);
-
-						unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
-						unit.EmergencyFlags[0]=100+Random(250);
-
-						return;
-						}
-					}
-				}
-			}
+		if( !HuntSubmarine(ref unit) )
+			return;
 
 		}
 
