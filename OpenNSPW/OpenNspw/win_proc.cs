@@ -748,13 +748,177 @@ public nint ChatDlgProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	return TRUE;
 	}
 
+private void ChangeEditorUnitWeapon()
+	{
+	if( Units[SelectedUnit].Kind==UnitKind.Attacker )
+		{
+		// 攻撃機の場合。
+		switch( Units[SelectedUnit].Weapon )
+			{
+			case FireKind.Unarmed:
+				Units[SelectedUnit].Weapon=FireKind.Bomb;				// 武装品種
+				Units[SelectedUnit].Ammo=Units[SelectedUnit].MaxAmmo;	// 数
+				break;
+			case FireKind.Bomb:
+				Units[SelectedUnit].Weapon=FireKind.Torpedo;				// 武装品種
+				Units[SelectedUnit].Ammo=Units[SelectedUnit].MaxAmmo;	// 数
+				break;
+			case FireKind.Torpedo:
+				Units[SelectedUnit].Weapon=FireKind.Unarmed;				// 武装品種
+				Units[SelectedUnit].Ammo=0;	// 数
+				break;
+			}
+		PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+		}
+	else if( Units[SelectedUnit].Kind==UnitKind.Bomber )
+		{
+		// 爆撃機の場合。
+		switch( Units[SelectedUnit].Weapon )
+			{
+			case FireKind.Unarmed:
+				Units[SelectedUnit].Weapon=FireKind.Bomb;				// 武装品種
+				Units[SelectedUnit].Ammo=Units[SelectedUnit].MaxAmmo;	// 数
+				break;
+			case FireKind.Bomb:
+				Units[SelectedUnit].Weapon=FireKind.Torpedo;				// 武装品種
+				Units[SelectedUnit].Ammo=1;	// 数
+				break;
+			case FireKind.Torpedo:
+				Units[SelectedUnit].Weapon=FireKind.Unarmed;				// 武装品種
+				Units[SelectedUnit].Ammo=0;	// 数
+				break;
+			}
+		PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+		}
+	else if( (Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.LightCarrier) || Units[SelectedUnit].Kind==UnitKind.Transport )
+		{
+
+		if(Units[SelectedUnit].Fuel==-1)
+			{
+			Units[SelectedUnit].Fuel=100;
+			Units[SelectedUnit].SupplyTime=0;
+			}
+		else
+			{
+			Units[SelectedUnit].Fuel=-1;
+			Units[SelectedUnit].SupplyTime=1;
+			}
+
+		}
+	}
+
+private void PlaceEditorUnit(ref int m)
+	{
+	double wrk_x2;
+	double wrk_x;
+	double wrk_y2;
+	double wrk_y;
+	int i;
+	if( UnitInfoPanel[1]!=0 && ( Units[PreviousSelectedUnit].Kind==UnitKind.Carrier || Units[PreviousSelectedUnit].Kind==UnitKind.LightCarrier || Units[PreviousSelectedUnit].Kind==UnitKind.AirBase )  && ((UnitKind)EditorKind==UnitKind.Fighter || (UnitKind)EditorKind==UnitKind.Attacker || (UnitKind)EditorKind==UnitKind.Bomber ) )
+		{
+		// 駐機場への航空機の配置
+		if(
+			Units[PreviousSelectedUnit].Side==LocalSide
+			)
+			m=AddPlane(LocalSide,(UnitKind)EditorKind,EditorVariant,PreviousSelectedUnit,1,FireKind.Unarmed);
+
+		if(m!=0)
+			PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+		}
+	else if( UnitInfoPanel[1]==0 && CursorPosition.x<=CMBT_WIDTH && CursorPosition.y<=CMBT_HEIGHT )
+		{
+		// 艦船および、陸上施設
+
+		wrk_x2=(CameraPosition.X+CursorPosition.x)/80;
+		if(wrk_x2<0)
+			wrk_x2=0-wrk_x2;
+		wrk_x=(int)wrk_x2;
+		if(  (wrk_x2-wrk_x)>=0.5  )
+			wrk_x+=1;
+		if(((CameraPosition.X+CursorPosition.x)/80)<0)
+			wrk_x=0-wrk_x;
+		wrk_x*=80;
+
+		wrk_y2=(CameraPosition.Y-CursorPosition.y)/80;
+		if(wrk_y2<0)
+			wrk_y2=0-wrk_y2;
+		wrk_y=(int)wrk_y2;
+		if(  (wrk_y2-wrk_y)>=0.5  )
+			wrk_y+=1;
+		if(((CameraPosition.Y-CursorPosition.y)/80)<0)
+			wrk_y=0-wrk_y;
+		wrk_y*=80;
+
+		m=0;
+		for(i=1;i<=MaxUnitId;i++)
+			{
+			ref var unit = ref Units[i];
+			if( unit.IsUsed && unit.Position.X==wrk_x && unit.Position.Y==wrk_y )
+				{
+				m++;
+				break;
+				}
+			}
+
+		if( m==0 )
+			{
+			m=AddUnit2( LocalSide, (UnitKind)EditorKind, EditorVariant,  wrk_x,  wrk_y, (double)(0+(LocalSide==Side.UnitedStates ? 1 : 0)*180 ) );
+
+			if(m!=0)
+				{
+				PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+				}
+			if((UnitKind)EditorKind==UnitKind.Transport)
+				{
+				Units[m].Weapon=(FireKind)EditorVariant;		// 武装品種
+				Units[m].Ammo=1;			// 数
+				Units[m].MaxAmmo=1;			// 数 全容量
+				}
+			}
+		}
+	}
+
+private void DeleteEditorUnit()
+	{
+	int i;
+	if( Units[SelectedUnit].IsUsed )
+		{
+		// 空母か空港なら搭載ユニットも消す
+		if( Units[SelectedUnit].Kind==UnitKind.Carrier || Units[SelectedUnit].Kind==UnitKind.LightCarrier || Units[SelectedUnit].Kind==UnitKind.AirBase )
+			{
+			for( i=1;i<=MaxUnitId;i++)
+				{
+				ref var unit = ref Units[i];
+				if( unit.IsUsed && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked && unit.Carrier==SelectedUnit)
+					{
+					unit.Side=0;
+					}
+				}
+			}
+
+		// パーキング中の航空機なら駐機数を減らします。
+		if( Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked )
+			{
+			Units[Units[SelectedUnit].Carrier].PlaneCount--;	// 現在格納数
+			}
+
+		Units[SelectedUnit].Side=0;
+
+		SelectedUnit=0;
+		CombatMenuKind=0;
+		CombatMenuSelection=CombatMenuItem.None;
+		ClearSelection2(1);
+
+		PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+		}
+	}
+
 /*-------------------------------------------
 	ウィンドウ処理
 --------------------------------------------*/
 public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	{
-	int		m=default /* C4701 */,n,i;
-	double	wrk_x,wrk_y,wrk_x2,wrk_y2;
+	int		m=default /* C4701 */,n;
 	//OPENFILENAME ofn;		// Unused.
 	Array260<byte> cd_buf = default;			// ユーザーシナリオのファイルネーム
 	uint		nBufferLength;
@@ -893,36 +1057,7 @@ if( !IsEditingMap )
 
 					if( IsEditingMap && Mode==GameMode.Battle )
 						{
-						if( Units[SelectedUnit].IsUsed )
-							{
-							// 空母か空港なら搭載ユニットも消す
-							if( Units[SelectedUnit].Kind==UnitKind.Carrier || Units[SelectedUnit].Kind==UnitKind.LightCarrier || Units[SelectedUnit].Kind==UnitKind.AirBase )
-								{
-								for( i=1;i<=MaxUnitId;i++)
-									{
-									ref var unit = ref Units[i];
-									if( unit.IsUsed && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked && unit.Carrier==SelectedUnit)
-										{
-										unit.Side=0;
-										}
-									}
-								}
-
-							// パーキング中の航空機なら駐機数を減らします。
-							if( Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked )
-								{
-								Units[Units[SelectedUnit].Carrier].PlaneCount--;	// 現在格納数
-								}
-
-							Units[SelectedUnit].Side=0;
-
-							SelectedUnit=0;
-							CombatMenuKind=0;
-							CombatMenuSelection=CombatMenuItem.None;
-							ClearSelection2(1);
-
-							PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
-							}
+						DeleteEditorUnit();
 
 						}
 					break;
@@ -930,68 +1065,7 @@ if( !IsEditingMap )
 				case VK_F8:
 					if( IsEditingMap && Mode==GameMode.Battle )
 						{
-						if( UnitInfoPanel[1]!=0 && ( Units[PreviousSelectedUnit].Kind==UnitKind.Carrier || Units[PreviousSelectedUnit].Kind==UnitKind.LightCarrier || Units[PreviousSelectedUnit].Kind==UnitKind.AirBase )  && ((UnitKind)EditorKind==UnitKind.Fighter || (UnitKind)EditorKind==UnitKind.Attacker || (UnitKind)EditorKind==UnitKind.Bomber ) )
-							{
-							// 駐機場への航空機の配置
-							if(
-								Units[PreviousSelectedUnit].Side==LocalSide
-								)
-								m=AddPlane(LocalSide,(UnitKind)EditorKind,EditorVariant,PreviousSelectedUnit,1,FireKind.Unarmed);
-
-							if(m!=0)
-								PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
-							}
-						else if( UnitInfoPanel[1]==0 && CursorPosition.x<=CMBT_WIDTH && CursorPosition.y<=CMBT_HEIGHT )
-							{
-							// 艦船および、陸上施設
-
-							wrk_x2=(CameraPosition.X+CursorPosition.x)/80;
-							if(wrk_x2<0)
-								wrk_x2=0-wrk_x2;
-							wrk_x=(int)wrk_x2;
-							if(  (wrk_x2-wrk_x)>=0.5  )
-								wrk_x+=1;
-							if(((CameraPosition.X+CursorPosition.x)/80)<0)
-								wrk_x=0-wrk_x;
-							wrk_x*=80;
-
-							wrk_y2=(CameraPosition.Y-CursorPosition.y)/80;
-							if(wrk_y2<0)
-								wrk_y2=0-wrk_y2;
-							wrk_y=(int)wrk_y2;
-							if(  (wrk_y2-wrk_y)>=0.5  )
-								wrk_y+=1;
-							if(((CameraPosition.Y-CursorPosition.y)/80)<0)
-								wrk_y=0-wrk_y;
-							wrk_y*=80;
-
-							m=0;
-							for(i=1;i<=MaxUnitId;i++)
-								{
-								ref var unit = ref Units[i];
-								if( unit.IsUsed && unit.Position.X==wrk_x && unit.Position.Y==wrk_y )
-									{
-									m++;
-									break;
-									}
-								}
-
-							if( m==0 )
-								{
-								m=AddUnit2( LocalSide, (UnitKind)EditorKind, EditorVariant,  wrk_x,  wrk_y, (double)(0+(LocalSide==Side.UnitedStates ? 1 : 0)*180 ) );
-
-								if(m!=0)
-									{
-									PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
-									}
-								if((UnitKind)EditorKind==UnitKind.Transport)
-									{
-									Units[m].Weapon=(FireKind)EditorVariant;		// 武装品種
-									Units[m].Ammo=1;			// 数
-									Units[m].MaxAmmo=1;			// 数 全容量
-									}
-								}
-							}
+						PlaceEditorUnit(ref m);
 						}
 					break;
 
@@ -1040,61 +1114,7 @@ if( !IsEditingMap )
 					// 航空機の武装を変えます。
 					if( IsEditingMap && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed  )
 						{
-						if( Units[SelectedUnit].Kind==UnitKind.Attacker )
-							{
-							// 攻撃機の場合。
-							switch( Units[SelectedUnit].Weapon )
-								{
-								case FireKind.Unarmed:
-									Units[SelectedUnit].Weapon=FireKind.Bomb;				// 武装品種
-									Units[SelectedUnit].Ammo=Units[SelectedUnit].MaxAmmo;	// 数
-									break;
-								case FireKind.Bomb:
-									Units[SelectedUnit].Weapon=FireKind.Torpedo;				// 武装品種
-									Units[SelectedUnit].Ammo=Units[SelectedUnit].MaxAmmo;	// 数
-									break;
-								case FireKind.Torpedo:
-									Units[SelectedUnit].Weapon=FireKind.Unarmed;				// 武装品種
-									Units[SelectedUnit].Ammo=0;	// 数
-									break;
-								}
-							PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
-							}
-						else if( Units[SelectedUnit].Kind==UnitKind.Bomber )
-							{
-							// 爆撃機の場合。
-							switch( Units[SelectedUnit].Weapon )
-								{
-								case FireKind.Unarmed:
-									Units[SelectedUnit].Weapon=FireKind.Bomb;				// 武装品種
-									Units[SelectedUnit].Ammo=Units[SelectedUnit].MaxAmmo;	// 数
-									break;
-								case FireKind.Bomb:
-									Units[SelectedUnit].Weapon=FireKind.Torpedo;				// 武装品種
-									Units[SelectedUnit].Ammo=1;	// 数
-									break;
-								case FireKind.Torpedo:
-									Units[SelectedUnit].Weapon=FireKind.Unarmed;				// 武装品種
-									Units[SelectedUnit].Ammo=0;	// 数
-									break;
-								}
-							PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
-							}
-						else if( (Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.LightCarrier) || Units[SelectedUnit].Kind==UnitKind.Transport )
-							{
-
-							if(Units[SelectedUnit].Fuel==-1)
-								{
-								Units[SelectedUnit].Fuel=100;
-								Units[SelectedUnit].SupplyTime=0;
-								}
-							else
-								{
-								Units[SelectedUnit].Fuel=-1;
-								Units[SelectedUnit].SupplyTime=1;
-								}
-
-							}
+						ChangeEditorUnitWeapon();
 						}
 					break;
 
