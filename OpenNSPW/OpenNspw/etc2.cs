@@ -657,35 +657,35 @@ public void	SetParkingPosition( int	m )
 	// ２列格納
 	if( Units[unit.Carrier].Kind==UnitKind.AirBase )
 		{	// 陸上基地
-		parking_y=Sprites[UNIT_INFO_JPN].y+Sprites[UNIT_INFO_JPN].ht-((unit.ParkingNumber/2)*40)-100;
+		parking_y=Sprites[SpriteId.JapanUnitInfo].y+Sprites[SpriteId.JapanUnitInfo].ht-((unit.ParkingNumber/2)*40)-100;
 		if( false && unit.Kind==UnitKind.Bomber )
 			w=55;
 		else
 			w=35;
 		if( unit.ParkingNumber%2!=0 )
 			{ // 右側
-			parking_x=Sprites[UNIT_INFO_JPN].x+Sprites[UNIT_INFO_JPN].wd/2-w;
+			parking_x=Sprites[SpriteId.JapanUnitInfo].x+Sprites[SpriteId.JapanUnitInfo].wd/2-w;
 			unit.Direction=270+45;
 			parking_y-=18;
 			}
 		else
 			{ // 左側
-			parking_x=Sprites[UNIT_INFO_JPN].x+Sprites[UNIT_INFO_JPN].wd/2+w;
+			parking_x=Sprites[SpriteId.JapanUnitInfo].x+Sprites[SpriteId.JapanUnitInfo].wd/2+w;
 			unit.Direction=180+45;
 			}
 		}
 	else
 		{	// 航空母艦
-		parking_y=Sprites[UNIT_INFO_JPN].y+Sprites[UNIT_INFO_JPN].ht-((unit.ParkingNumber/2)*40)-100;
+		parking_y=Sprites[SpriteId.JapanUnitInfo].y+Sprites[SpriteId.JapanUnitInfo].ht-((unit.ParkingNumber/2)*40)-100;
 		if( unit.ParkingNumber%2!=0 )
 			{ // 右側
-			parking_x=Sprites[UNIT_INFO_JPN].x+Sprites[UNIT_INFO_JPN].wd/2-25;
+			parking_x=Sprites[SpriteId.JapanUnitInfo].x+Sprites[SpriteId.JapanUnitInfo].wd/2-25;
 			unit.Direction=270+45;
 			parking_y-=18;
 			}
 		else
 			{ // 左側
-			parking_x=Sprites[UNIT_INFO_JPN].x+Sprites[UNIT_INFO_JPN].wd/2+25;
+			parking_x=Sprites[SpriteId.JapanUnitInfo].x+Sprites[SpriteId.JapanUnitInfo].wd/2+25;
 			unit.Direction=180+45;
 			}
 		}

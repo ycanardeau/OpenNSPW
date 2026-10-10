@@ -269,10 +269,10 @@ public void	SetCpuRoute2(int m)
 			if( other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged)   && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress )  )
 				{
 				// ptin dbg
-				wrk_r.top=(int)other.Position.Y+(Sprites[UNIT_JPN].wd/2);
-				wrk_r.right=(int)other.Position.X+(Sprites[UNIT_JPN].wd/2);
-				wrk_r.bottom=(int)other.Position.Y-(Sprites[UNIT_JPN].wd/2);
-				wrk_r.left=(int)other.Position.X-(Sprites[UNIT_JPN].wd/2);
+				wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].wd/2);
+				wrk_r.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].wd/2);
+				wrk_r.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].wd/2);
+				wrk_r.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].wd/2);
 
 				if( PointInRect3(ref wrk_r,(int)wrk_x2,(int)wrk_y2)!=0)
 					{
@@ -287,8 +287,8 @@ public void	SetCpuRoute2(int m)
 		wrk_y2=unit.PathY[0];
 		if(!( wrk_y2>MAP_TOP || wrk_y2<MAP_BOTTOM || wrk_x2<MAP_LEFT || wrk_x2>MAP_RIGHT ))
 			{
-			cm_scrn_x=(int)((wrk_x2+(Sprites[UNIT_JPN].wd/2)-MAP_LEFT)/Sprites[MAP_TIP_NRML].wd);
-			cm_scrn_y=(int)((MAP_TOP-wrk_y2+(Sprites[UNIT_JPN].ht/2))/Sprites[MAP_TIP_NRML].ht);
+			cm_scrn_x=(int)((wrk_x2+(Sprites[SpriteId.JapanUnits].wd/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].wd);
+			cm_scrn_y=(int)((MAP_TOP-wrk_y2+(Sprites[SpriteId.JapanUnits].ht/2))/Sprites[SpriteId.MapTiles].ht);
 			if( MapTiles[cm_scrn_y][cm_scrn_x]>=1)
 				{
 				return;
@@ -380,8 +380,8 @@ public void	SetCpuRoute2(int m)
 				// 島に接触するか？
 				if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
 					{
-					cm_scrn_x=(int)((wrk_x+(Sprites[UNIT_JPN].wd/2)-MAP_LEFT)/Sprites[MAP_TIP_NRML].wd);
-					cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[UNIT_JPN].ht/2))/Sprites[MAP_TIP_NRML].ht);
+					cm_scrn_x=(int)((wrk_x+(Sprites[SpriteId.JapanUnits].wd/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].wd);
+					cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[SpriteId.JapanUnits].ht/2))/Sprites[SpriteId.MapTiles].ht);
 					if( MapTiles[cm_scrn_y][cm_scrn_x]>=1)
 						{
 						hit=1;		// 島に接触
@@ -394,10 +394,10 @@ public void	SetCpuRoute2(int m)
 					if( Units[f].IsUsed && m!=f && Units[f].Category==UnitCategory.Ship && !(Units[f].Kind==UnitKind.Submarine && Units[f].IsSubmerged) && !(Units[f].Kind>=UnitKind.AirBase&&Units[f].Kind<=UnitKind.Fortress) )
 						{
 						// ptin dbg
-						wrk_r.top=(int)Units[f].Position.Y+(Sprites[UNIT_JPN].ht/2);
-						wrk_r.right=(int)Units[f].Position.X+(Sprites[UNIT_JPN].wd/2);
-						wrk_r.bottom=(int)Units[f].Position.Y-(Sprites[UNIT_JPN].ht/2);
-						wrk_r.left=(int)Units[f].Position.X-(Sprites[UNIT_JPN].wd/2);
+						wrk_r.top=(int)Units[f].Position.Y+(Sprites[SpriteId.JapanUnits].ht/2);
+						wrk_r.right=(int)Units[f].Position.X+(Sprites[SpriteId.JapanUnits].wd/2);
+						wrk_r.bottom=(int)Units[f].Position.Y-(Sprites[SpriteId.JapanUnits].ht/2);
+						wrk_r.left=(int)Units[f].Position.X-(Sprites[SpriteId.JapanUnits].wd/2);
 						if( PointInRect3(ref wrk_r,(int)wrk_x,(int)wrk_y)!=0)
 							{
 							hit=1;		// 船に接触
@@ -439,8 +439,8 @@ public void	SetCpuRoute2(int m)
 							// 島に接触するか？
 							if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
 								{
-								cm_scrn_x=(int)((wrk_x+(Sprites[UNIT_JPN].wd/2)-MAP_LEFT)/Sprites[MAP_TIP_NRML].wd);
-								cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[UNIT_JPN].ht/2))/Sprites[MAP_TIP_NRML].ht);
+								cm_scrn_x=(int)((wrk_x+(Sprites[SpriteId.JapanUnits].wd/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].wd);
+								cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[SpriteId.JapanUnits].ht/2))/Sprites[SpriteId.MapTiles].ht);
 								if( MapTiles[cm_scrn_y][cm_scrn_x]>=1)
 									{
 									left=1;		// 島に接触
@@ -454,10 +454,10 @@ public void	SetCpuRoute2(int m)
 								if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged) && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress)  )
 									{
 									// ptin dbg
-									wrk_r.top=(int)other.Position.Y+(Sprites[UNIT_JPN].ht/2);
-									wrk_r.right=(int)other.Position.X+(Sprites[UNIT_JPN].wd/2);
-									wrk_r.bottom=(int)other.Position.Y-(Sprites[UNIT_JPN].ht/2);
-									wrk_r.left=(int)other.Position.X-(Sprites[UNIT_JPN].wd/2);
+									wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].ht/2);
+									wrk_r.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].wd/2);
+									wrk_r.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].ht/2);
+									wrk_r.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].wd/2);
 									if( PointInRect3(ref wrk_r,(int)wrk_x,(int)wrk_y)!=0)
 										{
 										left=1;		// 船に接触
@@ -477,8 +477,8 @@ public void	SetCpuRoute2(int m)
 							// 島に接触するか？
 							if(!( wrk_y2>MAP_TOP || wrk_y2<MAP_BOTTOM || wrk_x2<MAP_LEFT || wrk_x2>MAP_RIGHT ))
 								{
-								cm_scrn_x=(int)((wrk_x2+(Sprites[UNIT_JPN].wd/2)-MAP_LEFT)/Sprites[MAP_TIP_NRML].wd);
-								cm_scrn_y=(int)((MAP_TOP-wrk_y2+(Sprites[UNIT_JPN].ht/2))/Sprites[MAP_TIP_NRML].ht);
+								cm_scrn_x=(int)((wrk_x2+(Sprites[SpriteId.JapanUnits].wd/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].wd);
+								cm_scrn_y=(int)((MAP_TOP-wrk_y2+(Sprites[SpriteId.JapanUnits].ht/2))/Sprites[SpriteId.MapTiles].ht);
 								if( MapTiles[cm_scrn_y][cm_scrn_x]>=1)
 									{
 									right=1;		// 島に接触
@@ -492,10 +492,10 @@ public void	SetCpuRoute2(int m)
 								if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged) && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress ) )
 									{
 									// ptin dbg
-									wrk_r.top=(int)other.Position.Y+(Sprites[UNIT_JPN].ht/2);
-									wrk_r.right=(int)other.Position.X+(Sprites[UNIT_JPN].wd/2);
-									wrk_r.bottom=(int)other.Position.Y-(Sprites[UNIT_JPN].ht/2);
-									wrk_r.left=(int)other.Position.X-(Sprites[UNIT_JPN].wd/2);
+									wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].ht/2);
+									wrk_r.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].wd/2);
+									wrk_r.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].ht/2);
+									wrk_r.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].wd/2);
 									if( PointInRect3(ref wrk_r,(int)wrk_x2,(int)wrk_y2)!=0)
 										{
 										right=1;		// 船に接触

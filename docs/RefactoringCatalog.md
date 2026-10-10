@@ -167,8 +167,8 @@ The arming entries have the values of the `FireKind`s they set, and the original
 | Enum | From | Notes |
 | --- | --- | --- |
 | `InputButtons : int`, `[Flags]` | `FRONT_BTN` ... `TOP_VIEW_BTN2` | `key_cndtn` |
-| `SoundId : int` | `AA_BLT1` ... `END_OF_SND_NO` | Used as an index into `lpDSB_` and `snd_`, with a cast. |
-| `SurfaceId : int` | `TTL_BACK` ... `MAP_BASE` | Sprite sheets. |
+| `SoundId : int` | `AA_BLT1` ... `CLICK2` | Used as an index into `lpDSB_` and `snd_`, with a cast. The sounds load from `WAV\<original name>.wav`, in this order. |
+| `SpriteId : int` | `TTL_BACK` ... `MAP_BASE` | The entries of `Sprites`, regions of the one offscreen surface (`t3.bmp`). `Sprites` is a `SpriteArray`, an inline array of 25 that can also be indexed by `SpriteId`. |
 | `KeyDirection : int` | `KEY_UP` ... `KEY_LFUP` | Numeric keypad layout (8 is up). |
 
 ## Constants
@@ -324,7 +324,7 @@ The struct types are renamed (`UNIT` → `Unit`, `FIRE` → `Fire`, `EFFECT` →
 | Original | New | Fields |
 | --- | --- | --- |
 | `KUMO` | `Cloud` | `used` → `Used` (`short`), `x`, `y` → `Position`, `kind` → `Kind` |
-| `SPRT` | `Sprite` | `no` → `FrameCount`, `x`, `y` → `Source` (`Point`), `cx`, `cy` → `Center` (`Point`), `wd`, `ht` → `Width`, `Height`, `base_x`, `base_y` → `Origin` (`Point`), `os_of_x` → `FrameOffsetX` (check) |
+| `SPRT` | `Sprite` | `no` → `Frame` (the frame drawn), `x`, `y` → `X`, `Y` (where it is drawn on the screen), `cx`, `cy` → `CenterX`, `CenterY`, `wd`, `ht` → `Width`, `Height` (of a frame), `base_x`, `base_y` → `SheetX`, `SheetY` (where its frames start on the surface), `os_of_x` → `FramesPerRow` |
 | `NEW_PP` | `MoveOrder` | `used` → `Unit` (`short`; check what it holds), `x`, `y` → `Destination`, `cls` → `ClearsPath` (`Bool32`) |
 | `NEW_SLCT` | `SelectOrder` | `sw` → `IsSet`, `the_slct_unit` → `SelectedUnit`, `m` → `Unit`, `gr_x`, `gr_y` → `GroundPosition` |
 | `NEW_MENU` | `MenuOrder` | `menu` → `Menu`, `the_slct_unit` → `SelectedUnit` |

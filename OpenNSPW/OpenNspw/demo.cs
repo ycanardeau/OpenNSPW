@@ -68,17 +68,17 @@ public void	UpdateTitle()
 	ClearFlag=1;
 
 	// ユニットインフォーメィション
-	Sprites[TTL_BACK].x=212-50;
-	Sprites[TTL_BACK].y=130;
+	Sprites[SpriteId.TitleBackground].x=212-50;
+	Sprites[SpriteId.TitleBackground].y=130;
 
-	src_rect.left = 	Sprites[TTL_BACK].base_x;
-	src_rect.top = Sprites[TTL_BACK].base_y;
-	src_rect.right = Sprites[TTL_BACK].base_x+Sprites[TTL_BACK].wd;
-	src_rect.bottom = Sprites[TTL_BACK].base_y+Sprites[TTL_BACK].ht;
+	src_rect.left = 	Sprites[SpriteId.TitleBackground].base_x;
+	src_rect.top = Sprites[SpriteId.TitleBackground].base_y;
+	src_rect.right = Sprites[SpriteId.TitleBackground].base_x+Sprites[SpriteId.TitleBackground].wd;
+	src_rect.bottom = Sprites[SpriteId.TitleBackground].base_y+Sprites[SpriteId.TitleBackground].ht;
 
 	// dstn_rect は ディスティネーションレクタングルです。
-	dstn_rect.left=Sprites[TTL_BACK].x;
-	dstn_rect.top=Sprites[TTL_BACK].y;
+	dstn_rect.left=Sprites[SpriteId.TitleBackground].x;
+	dstn_rect.top=Sprites[SpriteId.TitleBackground].y;
 
 	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
 		{

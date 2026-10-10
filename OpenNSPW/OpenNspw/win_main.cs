@@ -105,7 +105,7 @@ public HWND hwndChatDlg = null; // HWND of chat dialog
 
 // iNSPWからもってきたやつ
 
-[Original("sprt")] public Array25<SPRT> Sprites;
+[Original("sprt")] public SpriteArray Sprites;
 
 [Original("missed_pending")] public uint MissedPending;
 [Original("a_paint_speed")] public uint PaintSpeed;

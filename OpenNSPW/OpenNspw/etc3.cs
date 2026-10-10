@@ -69,90 +69,90 @@ public void		InitializeSprites()
 
 	// タイトル
 
-	Sprites[TTL_BACK].wd=699;
-	Sprites[TTL_BACK].ht=384;
-	Sprites[TTL_BACK].base_x=0;
-	Sprites[TTL_BACK].base_y=3940;
+	Sprites[SpriteId.TitleBackground].wd=699;
+	Sprites[SpriteId.TitleBackground].ht=384;
+	Sprites[SpriteId.TitleBackground].base_x=0;
+	Sprites[SpriteId.TitleBackground].base_y=3940;
 	// ユニット
-	Sprites[UNIT_JPN].wd=80;
-	Sprites[UNIT_JPN].ht=80;
-	Sprites[UNIT_JPN].base_x=0;
-	Sprites[UNIT_JPN].base_y=1759;
-	Sprites[UNIT_JPN].os_of_x=8;
-	Sprites[UNIT_JPN].cx=40;
-	Sprites[UNIT_JPN].cy=40;
+	Sprites[SpriteId.JapanUnits].wd=80;
+	Sprites[SpriteId.JapanUnits].ht=80;
+	Sprites[SpriteId.JapanUnits].base_x=0;
+	Sprites[SpriteId.JapanUnits].base_y=1759;
+	Sprites[SpriteId.JapanUnits].os_of_x=8;
+	Sprites[SpriteId.JapanUnits].cx=40;
+	Sprites[SpriteId.JapanUnits].cy=40;
 
-	Sprites[UNIT_USA].wd=80;
-	Sprites[UNIT_USA].ht=80;
-	Sprites[UNIT_USA].base_x=0;
-	Sprites[UNIT_USA].base_y=4550;
-	Sprites[UNIT_USA].os_of_x=8;
-	Sprites[UNIT_USA].cx=40;
-	Sprites[UNIT_USA].cy=40;
+	Sprites[SpriteId.UnitedStatesUnits].wd=80;
+	Sprites[SpriteId.UnitedStatesUnits].ht=80;
+	Sprites[SpriteId.UnitedStatesUnits].base_x=0;
+	Sprites[SpriteId.UnitedStatesUnits].base_y=4550;
+	Sprites[SpriteId.UnitedStatesUnits].os_of_x=8;
+	Sprites[SpriteId.UnitedStatesUnits].cx=40;
+	Sprites[SpriteId.UnitedStatesUnits].cy=40;
 
 	// サブユニット
-	Sprites[SUB_UNIT].wd=40;
-	Sprites[SUB_UNIT].ht=40;
-	Sprites[SUB_UNIT].base_x=0;
-	Sprites[SUB_UNIT].base_y=3520;
-	Sprites[SUB_UNIT].os_of_x=12;
-	Sprites[SUB_UNIT].cx=20;
-	Sprites[SUB_UNIT].cy=20;
+	Sprites[SpriteId.SubUnits].wd=40;
+	Sprites[SpriteId.SubUnits].ht=40;
+	Sprites[SpriteId.SubUnits].base_x=0;
+	Sprites[SpriteId.SubUnits].base_y=3520;
+	Sprites[SpriteId.SubUnits].os_of_x=12;
+	Sprites[SpriteId.SubUnits].cx=20;
+	Sprites[SpriteId.SubUnits].cy=20;
 
 	// マップチップ 雲
-	Sprites[MAP_TIP_NRML].wd=80;
-	Sprites[MAP_TIP_NRML].ht=80;
-	Sprites[MAP_TIP_NRML].base_x=0;
-	Sprites[MAP_TIP_NRML].base_y=3000;
-	Sprites[MAP_TIP_NRML].os_of_x=6;
-	Sprites[MAP_TIP_NRML].cx=40;
-	Sprites[MAP_TIP_NRML].cy=40;
+	Sprites[SpriteId.MapTiles].wd=80;
+	Sprites[SpriteId.MapTiles].ht=80;
+	Sprites[SpriteId.MapTiles].base_x=0;
+	Sprites[SpriteId.MapTiles].base_y=3000;
+	Sprites[SpriteId.MapTiles].os_of_x=6;
+	Sprites[SpriteId.MapTiles].cx=40;
+	Sprites[SpriteId.MapTiles].cy=40;
 
 	// ユニットインフォ
-	Sprites[UNIT_INFO_JPN].x=CMBT_WIDTH;
-	Sprites[UNIT_INFO_JPN].y=0;
-	Sprites[UNIT_INFO_JPN].wd=120;
-	Sprites[UNIT_INFO_JPN].ht=438;
-	Sprites[UNIT_INFO_JPN].base_x=0;
-	Sprites[UNIT_INFO_JPN].base_y=0;
-	Sprites[UNIT_INFO_JPN].os_of_x=6;
-	Sprites[UNIT_INFO_JPN].cx=0;
-	Sprites[UNIT_INFO_JPN].cy=0;
+	Sprites[SpriteId.JapanUnitInfo].x=CMBT_WIDTH;
+	Sprites[SpriteId.JapanUnitInfo].y=0;
+	Sprites[SpriteId.JapanUnitInfo].wd=120;
+	Sprites[SpriteId.JapanUnitInfo].ht=438;
+	Sprites[SpriteId.JapanUnitInfo].base_x=0;
+	Sprites[SpriteId.JapanUnitInfo].base_y=0;
+	Sprites[SpriteId.JapanUnitInfo].os_of_x=6;
+	Sprites[SpriteId.JapanUnitInfo].cx=0;
+	Sprites[SpriteId.JapanUnitInfo].cy=0;
 
-	Sprites[UNIT_INFO_USA].wd=120;
-	Sprites[UNIT_INFO_USA].ht=438;
-	Sprites[UNIT_INFO_USA].base_x=0;
-	Sprites[UNIT_INFO_USA].base_y=878;
-	Sprites[UNIT_INFO_USA].os_of_x=6;
-	Sprites[UNIT_INFO_USA].cx=0;
-	Sprites[UNIT_INFO_USA].cy=0;
-
-	// 操作ボタンベース
-	Sprites[BTN_BASE].wd=198;
-	Sprites[BTN_BASE].ht=120;
-	Sprites[BTN_BASE].base_x=361;
-	Sprites[BTN_BASE].base_y=3250;
-	Sprites[BTN_BASE].os_of_x=1;
-	Sprites[BTN_BASE].cx=0;
-	Sprites[BTN_BASE].cy=0;
+	Sprites[SpriteId.UnitedStatesUnitInfo].wd=120;
+	Sprites[SpriteId.UnitedStatesUnitInfo].ht=438;
+	Sprites[SpriteId.UnitedStatesUnitInfo].base_x=0;
+	Sprites[SpriteId.UnitedStatesUnitInfo].base_y=878;
+	Sprites[SpriteId.UnitedStatesUnitInfo].os_of_x=6;
+	Sprites[SpriteId.UnitedStatesUnitInfo].cx=0;
+	Sprites[SpriteId.UnitedStatesUnitInfo].cy=0;
 
 	// 操作ボタンベース
-	Sprites[BTN_1].wd=140;
-	Sprites[BTN_1].ht=20;
-	Sprites[BTN_1].base_x=0;
-	Sprites[BTN_1].base_y=3250;
-	Sprites[BTN_1].os_of_x=1;
-	Sprites[BTN_1].cx=0;
-	Sprites[BTN_1].cy=0;
+	Sprites[SpriteId.ButtonBase].wd=198;
+	Sprites[SpriteId.ButtonBase].ht=120;
+	Sprites[SpriteId.ButtonBase].base_x=361;
+	Sprites[SpriteId.ButtonBase].base_y=3250;
+	Sprites[SpriteId.ButtonBase].os_of_x=1;
+	Sprites[SpriteId.ButtonBase].cx=0;
+	Sprites[SpriteId.ButtonBase].cy=0;
+
+	// 操作ボタンベース
+	Sprites[SpriteId.Buttons1].wd=140;
+	Sprites[SpriteId.Buttons1].ht=20;
+	Sprites[SpriteId.Buttons1].base_x=0;
+	Sprites[SpriteId.Buttons1].base_y=3250;
+	Sprites[SpriteId.Buttons1].os_of_x=1;
+	Sprites[SpriteId.Buttons1].cx=0;
+	Sprites[SpriteId.Buttons1].cy=0;
 
 	// マップベース
-	Sprites[MAP_BASE].wd=256-1;
-	Sprites[MAP_BASE].ht=200-1;
-	Sprites[MAP_BASE].base_x=0;
-	Sprites[MAP_BASE].base_y=4340;
-	Sprites[MAP_BASE].os_of_x=1;
-	Sprites[MAP_BASE].cx=0;
-	Sprites[MAP_BASE].cy=0;
+	Sprites[SpriteId.Minimap].wd=256-1;
+	Sprites[SpriteId.Minimap].ht=200-1;
+	Sprites[SpriteId.Minimap].base_x=0;
+	Sprites[SpriteId.Minimap].base_y=4340;
+	Sprites[SpriteId.Minimap].os_of_x=1;
+	Sprites[SpriteId.Minimap].cx=0;
+	Sprites[SpriteId.Minimap].cy=0;
 
 	}
 
@@ -186,7 +186,7 @@ public void	InitializeClouds()
 		base_x=(double)(Random(abs(MAP_RIGHT)+abs(MAP_LEFT))-abs(MAP_LEFT));
 		base_y=(double)(Random(abs(MAP_TOP)+abs(MAP_BOTTOM))-abs(MAP_BOTTOM));
 
-		sub_x=(double)( Random(Sprites[MAP_TIP_NRML].wd*4)-Sprites[MAP_TIP_NRML].wd*2 );
+		sub_x=(double)( Random(Sprites[SpriteId.MapTiles].wd*4)-Sprites[SpriteId.MapTiles].wd*2 );
 
 		n=0;
 		for( m=0;m<3;m++)
@@ -196,7 +196,7 @@ public void	InitializeClouds()
 			Clouds[ok[n]].Kind=1;
 			n++;
 			}
-		sub_x=(double)( Random(Sprites[MAP_TIP_NRML].wd*2)-Sprites[MAP_TIP_NRML].wd*2 );
+		sub_x=(double)( Random(Sprites[SpriteId.MapTiles].wd*2)-Sprites[SpriteId.MapTiles].wd*2 );
 		for( m=0;m<5;m++)
 			{
 			Clouds[ok[n]].Used=1;
@@ -204,7 +204,7 @@ public void	InitializeClouds()
 			Clouds[ok[n]].Kind=1;
 			n++;
 			}
-		sub_x=(double)( Random(Sprites[MAP_TIP_NRML].wd*2)-Sprites[MAP_TIP_NRML].wd*2 );
+		sub_x=(double)( Random(Sprites[SpriteId.MapTiles].wd*2)-Sprites[SpriteId.MapTiles].wd*2 );
 		for( m=0;m<3;m++)
 			{
 			Clouds[ok[n]].Used=1;
@@ -257,7 +257,7 @@ public void	UpdateClouds()
 		return;
 
 	base_y=(double)(Random(abs(MAP_TOP)+abs(MAP_BOTTOM))-abs(MAP_BOTTOM));
-	sub_x=(double)( Random(Sprites[MAP_TIP_NRML].wd*4)-Sprites[MAP_TIP_NRML].wd*2 );
+	sub_x=(double)( Random(Sprites[SpriteId.MapTiles].wd*4)-Sprites[SpriteId.MapTiles].wd*2 );
 	n=0;
 	for( m=0;m<3;m++)
 		{
@@ -266,7 +266,7 @@ public void	UpdateClouds()
 		Clouds[ok[n]].Kind=1;
 		n++;
 		}
-	sub_x=(double)( Random(Sprites[MAP_TIP_NRML].wd*2)-Sprites[MAP_TIP_NRML].wd*2 );
+	sub_x=(double)( Random(Sprites[SpriteId.MapTiles].wd*2)-Sprites[SpriteId.MapTiles].wd*2 );
 	for( m=0;m<5;m++)
 		{
 		Clouds[ok[n]].Used=1;
@@ -274,7 +274,7 @@ public void	UpdateClouds()
 		Clouds[ok[n]].Kind=1;
 		n++;
 		}
-	sub_x=(double)( Random(Sprites[MAP_TIP_NRML].wd*2)-Sprites[MAP_TIP_NRML].wd*2 );
+	sub_x=(double)( Random(Sprites[SpriteId.MapTiles].wd*2)-Sprites[SpriteId.MapTiles].wd*2 );
 	for( m=0;m<3;m++)
 		{
 		Clouds[ok[n]].Used=1;
@@ -389,8 +389,8 @@ private void UpdateCargo(ref Fire fire, ref int n)
 				{
 				if(!( fire.Position.Y>MAP_TOP || fire.Position.Y<MAP_BOTTOM || fire.Position.X<MAP_LEFT || fire.Position.X>MAP_RIGHT ))
 					{
-					cm_scrn_x=(int)((fire.Position.X+(Sprites[UNIT_JPN].wd/2)-MAP_LEFT)/Sprites[MAP_TIP_NRML].wd);
-					cm_scrn_y=(int)((MAP_TOP-fire.Position.Y+(Sprites[UNIT_JPN].ht/2))/Sprites[MAP_TIP_NRML].ht);
+					cm_scrn_x=(int)((fire.Position.X+(Sprites[SpriteId.JapanUnits].wd/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].wd);
+					cm_scrn_y=(int)((MAP_TOP-fire.Position.Y+(Sprites[SpriteId.JapanUnits].ht/2))/Sprites[SpriteId.MapTiles].ht);
 
 					if( MapTiles[cm_scrn_y][cm_scrn_x]==0)
 						{
@@ -825,8 +825,8 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 			Effects[f].SpriteNumber=8;			// 弾丸着弾	のソースファイル上の番号
 			if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
 				{
-				cm_scrn_x=(int)((wrk_x+(Sprites[UNIT_JPN].wd/2)-MAP_LEFT)/Sprites[MAP_TIP_NRML].wd);
-				cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[UNIT_JPN].ht/2))/Sprites[MAP_TIP_NRML].ht);
+				cm_scrn_x=(int)((wrk_x+(Sprites[SpriteId.JapanUnits].wd/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].wd);
+				cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[SpriteId.JapanUnits].ht/2))/Sprites[SpriteId.MapTiles].ht);
 				if( MapTiles[cm_scrn_y][cm_scrn_x]>=1)
 					Effects[f].SpriteNumber=10;			// 弾丸着弾	のソースファイル上の番号
 				else
@@ -853,8 +853,8 @@ private void UpdateTorpedo(ref Fire fire, ref int n, int m)
 		wrk_y+=sin(fire.Direction*a_PI)*-40;
 		if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
 			{
-			cm_scrn_x=(int)((wrk_x+(Sprites[UNIT_JPN].wd/2)-MAP_LEFT)/Sprites[MAP_TIP_NRML].wd);
-			cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[UNIT_JPN].ht/2))/Sprites[MAP_TIP_NRML].ht);
+			cm_scrn_x=(int)((wrk_x+(Sprites[SpriteId.JapanUnits].wd/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].wd);
+			cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[SpriteId.JapanUnits].ht/2))/Sprites[SpriteId.MapTiles].ht);
 			if( MapTiles[cm_scrn_y][cm_scrn_x]>=1)
 				{
 				fire.Ticks=fire.info[1];
@@ -1058,8 +1058,8 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 			wrk_y=fire.Position.Y;
 			if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
 				{
-				cm_scrn_x=(int)((wrk_x+(Sprites[UNIT_JPN].wd/2)-MAP_LEFT)/Sprites[MAP_TIP_NRML].wd);
-				cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[UNIT_JPN].ht/2))/Sprites[MAP_TIP_NRML].ht);
+				cm_scrn_x=(int)((wrk_x+(Sprites[SpriteId.JapanUnits].wd/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].wd);
+				cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[SpriteId.JapanUnits].ht/2))/Sprites[SpriteId.MapTiles].ht);
 				}
 			else
 				{
@@ -1271,8 +1271,8 @@ private void UpdatePlaneEffects(ref Unit unit, int m)
 			wrk_y2=unit.Position.Y;
 			if(!( wrk_y2>MAP_TOP || wrk_y2<MAP_BOTTOM || wrk_x2<MAP_LEFT || wrk_x2>MAP_RIGHT ))
 				{
-				cm_scrn_x=(int)((wrk_x2+(Sprites[UNIT_JPN].wd/2)-MAP_LEFT)/Sprites[MAP_TIP_NRML].wd);
-				cm_scrn_y=(int)((MAP_TOP-wrk_y2+(Sprites[UNIT_JPN].ht/2))/Sprites[MAP_TIP_NRML].ht);
+				cm_scrn_x=(int)((wrk_x2+(Sprites[SpriteId.JapanUnits].wd/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].wd);
+				cm_scrn_y=(int)((MAP_TOP-wrk_y2+(Sprites[SpriteId.JapanUnits].ht/2))/Sprites[SpriteId.MapTiles].ht);
 				}
 			else
 				{
