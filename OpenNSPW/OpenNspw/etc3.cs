@@ -1211,14 +1211,205 @@ public void	AssignGroupLeader(int m)
 		}
 	}
 
-private void UpdatePlaneEffects(ref Unit unit, int m)
+private void UpdateLightlyDamagedPlane(ref Unit unit)
+	{
+	int f;
+	if( Random(8)==0 && (Tick%10)==0 )
+		{
+		f=FindFreeEffect();
+		Effects[f].Layer=EffectLayer.Upper;
+		Effects[f].TimeLeft=40+SharedRandom(15);
+		Effects[f].Animation=2;
+
+		Effects[f].Position=unit.Position;
+		Effects[f].SpriteNumber=6;			// ソースファイル上の番号
+
+		}
+	}
+
+private void UpdateDamagedPlane(ref Unit unit)
+	{
+	int f;
+	if( Random(500)==0 )
+		{
+		if(!IsEditingMap)
+			unit.Hp--;
+		}
+	if( Random(2)==1 && (Tick%10)==0 )
+		{
+		f=FindFreeEffect();
+		Effects[f].Layer=EffectLayer.Upper;
+		Effects[f].TimeLeft=40+SharedRandom(15);
+		Effects[f].Animation=2;
+
+		Effects[f].Position=unit.Position;
+		Effects[f].SpriteNumber=6;			// ソースファイル上の番号
+
+		if( Random(7)==0 )
+			{
+			// 小爆炎
+			f=FindFreeEffect();
+			Effects[f].Layer=EffectLayer.Upper;
+			Effects[f].TimeLeft=8+SharedRandom(6);
+			Effects[f].Animation=4;
+			Effects[f].Position = new WorldPosition(unit.Position.X+SharedRandom(6)-3, unit.Position.Y+SharedRandom(6)-3);
+			Effects[f].SpriteNumber=10;			// ソースファイル上の番号
+			}
+		}
+	}
+
+private void UpdateHeavilyDamagedPlane(ref Unit unit)
+	{
+	int f;
+	if( Random(500)==0 )
+		{
+		if(!IsEditingMap)
+			unit.Hp--;
+		}
+
+	if( Random(3)!=0 && (Tick%(10) )==0 )
+		{
+		f=FindFreeEffect();
+		Effects[f].Layer=EffectLayer.Upper;
+		Effects[f].TimeLeft=40+SharedRandom(15);
+		Effects[f].Animation=2;
+		Effects[f].Position=unit.Position;
+		Effects[f].SpriteNumber=6;			// ソースファイル上の番号
+
+		if( Random(5)==0 )
+			{
+			// 小爆炎
+			f=FindFreeEffect();
+			Effects[f].Layer=EffectLayer.Upper;
+			Effects[f].TimeLeft=8+SharedRandom(6);
+			Effects[f].Animation=4;
+			Effects[f].Position = new WorldPosition(unit.Position.X+SharedRandom(6)-3, unit.Position.Y+SharedRandom(6)-3);
+			Effects[f].SpriteNumber=10;			// ソースファイル上の番号
+			}
+		}
+	}
+
+private void UpdateBurningPlane(ref Unit unit)
+	{
+	int i;
+	int f;
+	// ＨＰはあるが、事実上の墜落、
+	if( unit.Hp==unit.MaxHp*0.2 )
+		{
+		// 飛行機が火を吹く
+		if(unit.Kind==UnitKind.Bomber)
+			{
+			for(i=0;i<3;i++)
+				{
+				f=FindFreeEffect();
+				if( f!=0 )
+					{
+					Effects[f].Layer=EffectLayer.Upper;
+					Effects[f].TimeLeft=20+SharedRandom(20);
+					Effects[f].Animation=4;
+					Effects[f].Position = new WorldPosition(unit.Position.X+20-SharedRandom(40), unit.Position.Y+20-SharedRandom(40));
+					Effects[f].SpriteNumber=9;				// ソースファイル上の番号
+					}
+				}
+			}
+		else
+			{
+			f=FindFreeEffect();
+			Effects[f].Layer=EffectLayer.Upper;
+			Effects[f].TimeLeft=20+SharedRandom(20);
+			Effects[f].Animation=4;
+			Effects[f].Position=unit.Position;
+			Effects[f].SpriteNumber=9;				// ソースファイル上の番号
+			}
+		if(!IsEditingMap)
+			unit.Hp--;
+		}
+	else
+		{
+		if( Random(80)==0 )
+			{
+			if(!IsEditingMap)
+				unit.Hp--;
+			}
+
+		if( Random(5)!=0 && (Tick%(10))==0 )
+			{
+			f=FindFreeEffect();
+			Effects[f].Layer=EffectLayer.Upper;
+			Effects[f].TimeLeft=40+SharedRandom(15);
+			Effects[f].Animation=2;
+			Effects[f].Position=unit.Position;
+			Effects[f].SpriteNumber=6;			// ソースファイル上の番号
+			}
+
+		if( Random(3)==0 && unit.Hp<=unit.MaxHp*0.1 )
+			{
+			// 小爆炎
+			f=FindFreeEffect();
+			Effects[f].Layer=EffectLayer.Upper;
+			Effects[f].TimeLeft=8+SharedRandom(6);
+			Effects[f].Animation=4;
+			Effects[f].Position = new WorldPosition(unit.Position.X+SharedRandom(6)-3, unit.Position.Y+SharedRandom(6)-3);
+			Effects[f].SpriteNumber=10;			// ソースファイル上の番号
+			}
+		}
+	}
+
+private void CrashPlane(ref Unit unit, int m)
 	{
 	int f;
 	double wrk_x2;
 	double wrk_y2;
 	int cm_scrn_x;
 	int cm_scrn_y;
-	int i;
+	unit.Side=0;
+
+	if( UnitInfoPanel[3]==m )
+		UnitInfoPanel[0]=0;				// ユニットインフォをクリア
+
+	f=FindFreeEffect();
+	Effects[f].Layer=EffectLayer.Lower;
+	Effects[f].TimeLeft=80;
+
+	Effects[f].Position=unit.Position;
+
+	wrk_x2=unit.Position.X;
+	wrk_y2=unit.Position.Y;
+	if(!( wrk_y2>MAP_TOP || wrk_y2<MAP_BOTTOM || wrk_x2<MAP_LEFT || wrk_x2>MAP_RIGHT ))
+		{
+		cm_scrn_x=(int)((wrk_x2+(Sprites[SpriteId.JapanUnits].Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
+		cm_scrn_y=(int)((MAP_TOP-wrk_y2+(Sprites[SpriteId.JapanUnits].Height/2))/Sprites[SpriteId.MapTiles].Height);
+		}
+	else
+		{
+		cm_scrn_x=0;
+		cm_scrn_y=0;
+		}
+
+	if( MapTiles[cm_scrn_y][cm_scrn_x]>=1)
+		{
+		Effects[f].SpriteNumber=9;			// ソースファイル上の番号
+		Effects[f].Animation=4;
+		}
+	else
+		{
+		Effects[f].SpriteNumber=7;			// ソースファイル上の番号
+		Effects[f].Animation=0;
+		}
+
+	if( SelectedUnit==m )
+		{
+		SelectedUnit=0;
+		CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection2(1);
+		}
+
+	if( unit.IsGroupLeader!=0 )
+		AssignGroupLeader(m);					// 爆砕されたのがＬＤＲなら、新しいのを決めます。
+	}
+
+private void UpdatePlaneEffects(ref Unit unit, int m)
+	{
+	int f;
 	if(  unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%3)==0)&& (unit.Weapon==FireKind.Bomb || unit.Weapon==FireKind.Torpedo || unit.Weapon==FireKind.Maintenance || unit.Weapon==FireKind.Unarmed)  && unit.Side==LocalSide && !(unit.PlaneState==UnitState.Parked && UnitInfoPanel[1]==0) && !( unit.PlaneState==UnitState.Parked && unit.DeckPhase>=3 ) && !( unit.PlaneState==UnitState.Parked && unit.Carrier!=UnitInfoPanel[3]))
 		{
 		f=FindFreeEffect();
@@ -1256,187 +1447,253 @@ private void UpdatePlaneEffects(ref Unit unit, int m)
 		{	// 飛行中のエフェクト
 		if( unit.Hp<=0 )
 			{	// 墜落
-			unit.Side=0;
-
-			if( UnitInfoPanel[3]==m )
-				UnitInfoPanel[0]=0;				// ユニットインフォをクリア
-
-			f=FindFreeEffect();
-			Effects[f].Layer=EffectLayer.Lower;
-			Effects[f].TimeLeft=80;
-
-			Effects[f].Position=unit.Position;
-
-			wrk_x2=unit.Position.X;
-			wrk_y2=unit.Position.Y;
-			if(!( wrk_y2>MAP_TOP || wrk_y2<MAP_BOTTOM || wrk_x2<MAP_LEFT || wrk_x2>MAP_RIGHT ))
-				{
-				cm_scrn_x=(int)((wrk_x2+(Sprites[SpriteId.JapanUnits].Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
-				cm_scrn_y=(int)((MAP_TOP-wrk_y2+(Sprites[SpriteId.JapanUnits].Height/2))/Sprites[SpriteId.MapTiles].Height);
-				}
-			else
-				{
-				cm_scrn_x=0;
-				cm_scrn_y=0;
-				}
-
-			if( MapTiles[cm_scrn_y][cm_scrn_x]>=1)
-				{
-				Effects[f].SpriteNumber=9;			// ソースファイル上の番号
-				Effects[f].Animation=4;
-				}
-			else
-				{
-				Effects[f].SpriteNumber=7;			// ソースファイル上の番号
-				Effects[f].Animation=0;
-				}
-
-			if( SelectedUnit==m )
-				{
-				SelectedUnit=0;
-				CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection2(1);
-				}
-
-			if( unit.IsGroupLeader!=0 )
-				AssignGroupLeader(m);					// 爆砕されたのがＬＤＲなら、新しいのを決めます。
+			CrashPlane(ref unit, m);
 
 			}
 		else if( unit.Hp<=unit.MaxHp*0.2 )
 			{
-			// ＨＰはあるが、事実上の墜落、
-			if( unit.Hp==unit.MaxHp*0.2 )
-				{
-				// 飛行機が火を吹く
-				if(unit.Kind==UnitKind.Bomber)
-					{
-					for(i=0;i<3;i++)
-						{
-						f=FindFreeEffect();
-						if( f!=0 )
-							{
-							Effects[f].Layer=EffectLayer.Upper;
-							Effects[f].TimeLeft=20+SharedRandom(20);
-							Effects[f].Animation=4;
-							Effects[f].Position = new WorldPosition(unit.Position.X+20-SharedRandom(40), unit.Position.Y+20-SharedRandom(40));
-							Effects[f].SpriteNumber=9;				// ソースファイル上の番号
-							}
-						}
-					}
-				else
-					{
-					f=FindFreeEffect();
-					Effects[f].Layer=EffectLayer.Upper;
-					Effects[f].TimeLeft=20+SharedRandom(20);
-					Effects[f].Animation=4;
-					Effects[f].Position=unit.Position;
-					Effects[f].SpriteNumber=9;				// ソースファイル上の番号
-					}
-				if(!IsEditingMap)
-					unit.Hp--;
-				}
-			else
-				{
-				if( Random(80)==0 )
-					{
-					if(!IsEditingMap)
-						unit.Hp--;
-					}
-
-				if( Random(5)!=0 && (Tick%(10))==0 )
-					{
-					f=FindFreeEffect();
-					Effects[f].Layer=EffectLayer.Upper;
-					Effects[f].TimeLeft=40+SharedRandom(15);
-					Effects[f].Animation=2;
-					Effects[f].Position=unit.Position;
-					Effects[f].SpriteNumber=6;			// ソースファイル上の番号
-					}
-
-				if( Random(3)==0 && unit.Hp<=unit.MaxHp*0.1 )
-					{
-					// 小爆炎
-					f=FindFreeEffect();
-					Effects[f].Layer=EffectLayer.Upper;
-					Effects[f].TimeLeft=8+SharedRandom(6);
-					Effects[f].Animation=4;
-					Effects[f].Position = new WorldPosition(unit.Position.X+SharedRandom(6)-3, unit.Position.Y+SharedRandom(6)-3);
-					Effects[f].SpriteNumber=10;			// ソースファイル上の番号
-					}
-				}
+			UpdateBurningPlane(ref unit);
 			}
 		else if( unit.Hp<=unit.MaxHp*0.3  )
 			{
-			if( Random(500)==0 )
-				{
-				if(!IsEditingMap)
-					unit.Hp--;
-				}
-
-			if( Random(3)!=0 && (Tick%(10) )==0 )
-				{
-				f=FindFreeEffect();
-				Effects[f].Layer=EffectLayer.Upper;
-				Effects[f].TimeLeft=40+SharedRandom(15);
-				Effects[f].Animation=2;
-				Effects[f].Position=unit.Position;
-				Effects[f].SpriteNumber=6;			// ソースファイル上の番号
-
-				if( Random(5)==0 )
-					{
-					// 小爆炎
-					f=FindFreeEffect();
-					Effects[f].Layer=EffectLayer.Upper;
-					Effects[f].TimeLeft=8+SharedRandom(6);
-					Effects[f].Animation=4;
-					Effects[f].Position = new WorldPosition(unit.Position.X+SharedRandom(6)-3, unit.Position.Y+SharedRandom(6)-3);
-					Effects[f].SpriteNumber=10;			// ソースファイル上の番号
-					}
-				}
+			UpdateHeavilyDamagedPlane(ref unit);
 
 			}
 		else if( unit.Hp<=unit.MaxHp*0.5  )
 			{
-			if( Random(500)==0 )
-				{
-				if(!IsEditingMap)
-					unit.Hp--;
-				}
-			if( Random(2)==1 && (Tick%10)==0 )
-				{
-				f=FindFreeEffect();
-				Effects[f].Layer=EffectLayer.Upper;
-				Effects[f].TimeLeft=40+SharedRandom(15);
-				Effects[f].Animation=2;
-
-				Effects[f].Position=unit.Position;
-				Effects[f].SpriteNumber=6;			// ソースファイル上の番号
-
-				if( Random(7)==0 )
-					{
-					// 小爆炎
-					f=FindFreeEffect();
-					Effects[f].Layer=EffectLayer.Upper;
-					Effects[f].TimeLeft=8+SharedRandom(6);
-					Effects[f].Animation=4;
-					Effects[f].Position = new WorldPosition(unit.Position.X+SharedRandom(6)-3, unit.Position.Y+SharedRandom(6)-3);
-					Effects[f].SpriteNumber=10;			// ソースファイル上の番号
-					}
-				}
+			UpdateDamagedPlane(ref unit);
 
 			}
 		else if( unit.Hp<=unit.MaxHp*0.7  )
 			{
 
-			if( Random(8)==0 && (Tick%10)==0 )
+			UpdateLightlyDamagedPlane(ref unit);
+			}
+		}
+	}
+
+private void LeaveWake(ref Unit unit)
+	{
+	int f;
+	double drctn;
+	double dstc;
+	if( !(unit.Kind==UnitKind.Submarine||unit.Kind==UnitKind.NavalBase||unit.Kind==UnitKind.AirBase||unit.Kind==UnitKind.City||unit.Kind==UnitKind.Mine||unit.Kind==UnitKind.InfantryBase||unit.Kind==UnitKind.Pillboxes||unit.Kind==UnitKind.Fortress) && (Tick%15)==0 && unit.Speed>=unit.MaxSpeed/3 )
+		{
+		// 航跡のエフェクトを残す
+		f=FindFreeEffect();
+		Effects[f].Layer=EffectLayer.Lower;
+		Effects[f].TimeLeft=60+SharedRandom(60);
+		Effects[f].Animation=4;
+		Effects[f].Position=unit.Position;
+
+		drctn=unit.Direction;
+		drctn+=180;
+		drctn=(int)drctn%360;
+
+		switch(unit.Kind)
+			{
+			case UnitKind.Battleship:	case UnitKind.Carrier:
+				dstc=26;
+				break;
+
+			case UnitKind.Cruiser:	case UnitKind.LightCarrier:
+				dstc=22;
+				break;
+
+			default:
+				dstc=16;
+				break;
+			}
+
+		Effects[f].Position += new WorldVector(CosDegrees(drctn)*dstc, SinDegrees(drctn)*dstc);
+
+		Effects[f].SpriteNumber=8;			// ソースファイル上の番号
+		}
+	}
+
+private void UpdateSurfaceShipEffects(ref Unit unit, int m)
+	{
+	int i;
+	int f;
+	int n;
+	if( unit.Hp<=0 )
+		{	// 沈没
+
+		PlaySoundEffect( 0, SoundId.ShipSinking1 ,unit.Position.X, unit.Position.Y);
+
+		unit.Side=0;
+
+		if( UnitInfoPanel[3]==m )
+			UnitInfoPanel[0]=0;
+
+		// 空母なら艦載機とユニットインフォを
+		if( unit.Kind==UnitKind.Carrier || unit.Kind==UnitKind.LightCarrier || unit.Kind==UnitKind.AirBase )
+			{
+			for( i=1;i<=MaxUnitId;i++)
+				{
+				ref var other = ref Units[i];
+				if( other.IsUsed && other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Parked && other.Carrier==m)
+					{
+					other.Side=0;
+					if( SelectedUnit==i)
+						{
+						SelectedUnit=0;
+						CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection2(1);
+						}
+					}
+				}
+			}
+
+		DrawDestruction(m);
+
+		if( SelectedUnit==m )
+			{
+			SelectedUnit=0;
+			CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection2(1);
+			}
+
+		}
+	else
+		{
+		if( unit.Hp<=unit.MaxHp*0.2  )
+			{
+			if( Random(4000)==0 && !unit.IsSupplying )
+				{
+				if(!IsEditingMap)
+					unit.Hp--;
+				}
+			if( Random(2)!=0  )
 				{
 				f=FindFreeEffect();
 				Effects[f].Layer=EffectLayer.Upper;
-				Effects[f].TimeLeft=40+SharedRandom(15);
-				Effects[f].Animation=2;
+				Effects[f].TimeLeft=1;
+				Effects[f].Animation=4;
 
 				Effects[f].Position=unit.Position;
-				Effects[f].SpriteNumber=6;			// ソースファイル上の番号
+				Effects[f].SpriteNumber=9;			// ソースファイル上の番号
+				}
+			}
+		else
+			{
+			if( unit.Hp<=unit.MaxHp*0.5  )
+				{
+				n=Random(4);
+				if(  n==0 )
+					{
+					f=FindFreeEffect();
+					Effects[f].Layer=EffectLayer.Upper;
+					Effects[f].TimeLeft=1;	Effects[f].Animation=4;
+					Effects[f].Position=unit.Position;
+					Effects[f].SpriteNumber=9;			// ソースファイル上の番号
+					}
+				if(  n==1 )
+					{
+					f=FindFreeEffect();
+					Effects[f].Layer=EffectLayer.Upper;
+					Effects[f].TimeLeft=1;	Effects[f].Animation=4;
+					Effects[f].Position=unit.Position;
+					Effects[f].SpriteNumber=10;			// ソースファイル上の番号
+					}
+				}
+			else
+				{
+				if( Random(10)==1  && unit.Hp<=unit.MaxHp*0.7 )
+					{
+					f=FindFreeEffect();
+					Effects[f].Layer=EffectLayer.Upper;
+					Effects[f].TimeLeft=1;	Effects[f].Animation=4;
+					Effects[f].Position=unit.Position;
+					Effects[f].SpriteNumber=10;			// ソースファイル上の番号
+					}
+				}
+			}
+		}
+	}
 
+private void UpdateSubmergedSubmarineEffects(ref Unit unit, int m)
+	{
+	int n;
+	int f;
+	if( unit.Hp<=0 )
+		{	// 沈没
+		unit.Side=0;
+		unit.IsFound=false;
+
+		if( UnitInfoPanel[3]==m )
+			UnitInfoPanel[0]=0;				// ユニットインフォをクリア
+
+		if( SelectedUnit==m )
+			{
+			SelectedUnit=0;
+			CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection2(1);
+			}
+		}
+	else
+		{
+		if( unit.Hp<=unit.MaxHp*0.2 )
+			{	// 空気漏れ
+			if( Random(100)==0 )
+				{
+				if(!IsEditingMap)
+					unit.Hp--;
+				}
+			if( Random(300)==1  )
+				{
+				for(n=0;n<=3;n++)
+					{
+					f=FindFreeEffect();
+					if( f!=0 )
+						{
+						Effects[f].Layer=EffectLayer.Lower;
+						Effects[f].TimeLeft=100+SharedRandom(20);
+						Effects[f].Animation=4;
+						Effects[f].Position = new WorldPosition(unit.Position.X+SharedRandom(40)-20, unit.Position.Y+SharedRandom(40)-20);
+						Effects[f].SpriteNumber=8;			// ソースファイル上の番号
+						}
+					}
+				// ついでに発見される
+				unit.ContactX=(int)unit.Position.X;
+				unit.ContactY=(int)unit.Position.Y;
+
+				unit.ContactRadius=100;
+				unit.ContactTime=400;
+
+				unit.IsFound=true;
+				}
+			}
+		else
+			{
+			if( unit.Hp<=unit.MaxHp*0.5 )
+				{	// 空気漏れ
+				if( Random(1000)==0 )
+					{
+					if(!IsEditingMap)
+						unit.Hp--;
+					}
+				if( Random(600)==1  )
+					{
+					for(n=0;n<=2;n++)
+						{
+						f=FindFreeEffect();
+						if( f!=0)
+							{
+							Effects[f].Layer=EffectLayer.Lower;
+							Effects[f].TimeLeft=100+SharedRandom(20);
+							Effects[f].Animation=4;
+							Effects[f].Position = new WorldPosition(unit.Position.X+SharedRandom(40)-20, unit.Position.Y+SharedRandom(40)-20);
+							Effects[f].SpriteNumber=8;			// ソースファイル上の番号
+							}
+						}
+
+					// ついでに発見される
+					unit.ContactX=(int)unit.Position.X;
+					unit.ContactY=(int)unit.Position.Y;
+
+					unit.ContactRadius=100;
+					unit.ContactTime=400;
+
+					unit.IsFound=true;
+					}
 				}
 			}
 		}
@@ -1445,10 +1702,6 @@ private void UpdatePlaneEffects(ref Unit unit, int m)
 private void UpdateShipEffects(ref Unit unit, int m)
 	{
 	int f;
-	int n;
-	int i;
-	double drctn;
-	double dstc;
 	if(  unit.IsSupplying && (FrameCount%2)!=0 && unit.Side==LocalSide )
 		{
 		f=FindFreeEffect();
@@ -1548,219 +1801,15 @@ private void UpdateShipEffects(ref Unit unit, int m)
 
 	if( unit.Kind==UnitKind.Submarine && unit.IsSubmerged )
 		{	// 潜航中潜水艦
-		if( unit.Hp<=0 )
-			{	// 沈没
-			unit.Side=0;
-			unit.IsFound=false;
-
-			if( UnitInfoPanel[3]==m )
-				UnitInfoPanel[0]=0;				// ユニットインフォをクリア
-
-			if( SelectedUnit==m )
-				{
-				SelectedUnit=0;
-				CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection2(1);
-				}
-			}
-		else
-			{
-			if( unit.Hp<=unit.MaxHp*0.2 )
-				{	// 空気漏れ
-				if( Random(100)==0 )
-					{
-					if(!IsEditingMap)
-						unit.Hp--;
-					}
-				if( Random(300)==1  )
-					{
-					for(n=0;n<=3;n++)
-						{
-						f=FindFreeEffect();
-						if( f!=0 )
-							{
-							Effects[f].Layer=EffectLayer.Lower;
-							Effects[f].TimeLeft=100+SharedRandom(20);
-							Effects[f].Animation=4;
-							Effects[f].Position = new WorldPosition(unit.Position.X+SharedRandom(40)-20, unit.Position.Y+SharedRandom(40)-20);
-							Effects[f].SpriteNumber=8;			// ソースファイル上の番号
-							}
-						}
-					// ついでに発見される
-					unit.ContactX=(int)unit.Position.X;
-					unit.ContactY=(int)unit.Position.Y;
-
-					unit.ContactRadius=100;
-					unit.ContactTime=400;
-
-					unit.IsFound=true;
-					}
-				}
-			else
-				{
-				if( unit.Hp<=unit.MaxHp*0.5 )
-					{	// 空気漏れ
-					if( Random(1000)==0 )
-						{
-						if(!IsEditingMap)
-							unit.Hp--;
-						}
-					if( Random(600)==1  )
-						{
-						for(n=0;n<=2;n++)
-							{
-							f=FindFreeEffect();
-							if( f!=0)
-								{
-								Effects[f].Layer=EffectLayer.Lower;
-								Effects[f].TimeLeft=100+SharedRandom(20);
-								Effects[f].Animation=4;
-								Effects[f].Position = new WorldPosition(unit.Position.X+SharedRandom(40)-20, unit.Position.Y+SharedRandom(40)-20);
-								Effects[f].SpriteNumber=8;			// ソースファイル上の番号
-								}
-							}
-
-						// ついでに発見される
-						unit.ContactX=(int)unit.Position.X;
-						unit.ContactY=(int)unit.Position.Y;
-
-						unit.ContactRadius=100;
-						unit.ContactTime=400;
-
-						unit.IsFound=true;
-						}
-					}
-				}
-			}
+		UpdateSubmergedSubmarineEffects(ref unit, m);
 		}
 	else
 		{	// 水上艦船
-		if( unit.Hp<=0 )
-			{	// 沈没
-
-			PlaySoundEffect( 0, SoundId.ShipSinking1 ,unit.Position.X, unit.Position.Y);
-
-			unit.Side=0;
-
-			if( UnitInfoPanel[3]==m )
-				UnitInfoPanel[0]=0;
-
-			// 空母なら艦載機とユニットインフォを
-			if( unit.Kind==UnitKind.Carrier || unit.Kind==UnitKind.LightCarrier || unit.Kind==UnitKind.AirBase )
-				{
-				for( i=1;i<=MaxUnitId;i++)
-					{
-					ref var other = ref Units[i];
-					if( other.IsUsed && other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Parked && other.Carrier==m)
-						{
-						other.Side=0;
-						if( SelectedUnit==i)
-							{
-							SelectedUnit=0;
-							CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection2(1);
-							}
-						}
-					}
-				}
-
-			DrawDestruction(m);
-
-			if( SelectedUnit==m )
-				{
-				SelectedUnit=0;
-				CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection2(1);
-				}
-
-			}
-		else
-			{
-			if( unit.Hp<=unit.MaxHp*0.2  )
-				{
-				if( Random(4000)==0 && !unit.IsSupplying )
-					{
-					if(!IsEditingMap)
-						unit.Hp--;
-					}
-				if( Random(2)!=0  )
-					{
-					f=FindFreeEffect();
-					Effects[f].Layer=EffectLayer.Upper;
-					Effects[f].TimeLeft=1;
-					Effects[f].Animation=4;
-
-					Effects[f].Position=unit.Position;
-					Effects[f].SpriteNumber=9;			// ソースファイル上の番号
-					}
-				}
-			else
-				{
-				if( unit.Hp<=unit.MaxHp*0.5  )
-					{
-					n=Random(4);
-					if(  n==0 )
-						{
-						f=FindFreeEffect();
-						Effects[f].Layer=EffectLayer.Upper;
-						Effects[f].TimeLeft=1;	Effects[f].Animation=4;
-						Effects[f].Position=unit.Position;
-						Effects[f].SpriteNumber=9;			// ソースファイル上の番号
-						}
-					if(  n==1 )
-						{
-						f=FindFreeEffect();
-						Effects[f].Layer=EffectLayer.Upper;
-						Effects[f].TimeLeft=1;	Effects[f].Animation=4;
-						Effects[f].Position=unit.Position;
-						Effects[f].SpriteNumber=10;			// ソースファイル上の番号
-						}
-					}
-				else
-					{
-					if( Random(10)==1  && unit.Hp<=unit.MaxHp*0.7 )
-						{
-						f=FindFreeEffect();
-						Effects[f].Layer=EffectLayer.Upper;
-						Effects[f].TimeLeft=1;	Effects[f].Animation=4;
-						Effects[f].Position=unit.Position;
-						Effects[f].SpriteNumber=10;			// ソースファイル上の番号
-						}
-					}
-				}
-			}
+		UpdateSurfaceShipEffects(ref unit, m);
 		}
 
 	// 航跡のエフェクト
-	if( !(unit.Kind==UnitKind.Submarine||unit.Kind==UnitKind.NavalBase||unit.Kind==UnitKind.AirBase||unit.Kind==UnitKind.City||unit.Kind==UnitKind.Mine||unit.Kind==UnitKind.InfantryBase||unit.Kind==UnitKind.Pillboxes||unit.Kind==UnitKind.Fortress) && (Tick%15)==0 && unit.Speed>=unit.MaxSpeed/3 )
-		{
-		// 航跡のエフェクトを残す
-		f=FindFreeEffect();
-		Effects[f].Layer=EffectLayer.Lower;
-		Effects[f].TimeLeft=60+SharedRandom(60);
-		Effects[f].Animation=4;
-		Effects[f].Position=unit.Position;
-
-		drctn=unit.Direction;
-		drctn+=180;
-		drctn=(int)drctn%360;
-
-		switch(unit.Kind)
-			{
-			case UnitKind.Battleship:	case UnitKind.Carrier:
-				dstc=26;
-				break;
-
-			case UnitKind.Cruiser:	case UnitKind.LightCarrier:
-				dstc=22;
-				break;
-
-			default:
-				dstc=16;
-				break;
-			}
-
-		Effects[f].Position += new WorldVector(CosDegrees(drctn)*dstc, SinDegrees(drctn)*dstc);
-
-		Effects[f].SpriteNumber=8;			// ソースファイル上の番号
-		}
+	LeaveWake(ref unit);
 	}
 
 //============================================================================
