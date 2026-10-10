@@ -1822,6 +1822,148 @@ public void	UpdateUnitEffects(int m)
 
 	}
 
+private void SelectEditorUnit(ref int len, ref Array128<byte> ach)
+	{
+	switch(EditorTarget)
+		{
+		case 1:
+			len= wsprintf(ach, "戦艦",10);
+			EditorKind=(byte)UnitKind.Battleship;
+			EditorVariant=0;
+			break;
+		case 2:
+			len= wsprintf(ach, "巡洋艦",10);
+			EditorKind=(byte)UnitKind.Cruiser;
+			EditorVariant=0;
+			break;
+		case 3:
+			len= wsprintf(ach, "駆逐艦",10);
+			EditorKind=(byte)UnitKind.Destroyer;
+			EditorVariant=0;
+			break;
+		case 4:
+			len= wsprintf(ach, "潜水艦",10);
+			EditorKind=(byte)UnitKind.Submarine;
+			EditorVariant=0;
+			break;
+		case 5:
+			len= wsprintf(ach, "正規空母",10);
+			EditorKind=(byte)UnitKind.Carrier;
+			EditorVariant=0;
+			break;
+		case 6:
+			len= wsprintf(ach, "軽空母",10);
+			EditorKind=(byte)UnitKind.LightCarrier;
+			EditorVariant=0;
+			break;
+		case 7:
+			len = wsprintf(ach, "輸送船(歩兵基地)",10);
+			EditorKind=(byte)UnitKind.Transport;
+			EditorVariant=(byte)FireKind.CargoInfantryBase;
+			break;
+		case 8:
+			len = wsprintf(ach, "輸送船(トーチカ群)",10);
+			EditorKind=(byte)UnitKind.Transport;
+			EditorVariant=(byte)FireKind.CargoPillboxes;
+			break;
+		case 9:
+			len = wsprintf(ach, "輸送船(要塞)",10);
+			EditorKind=(byte)UnitKind.Transport;
+			EditorVariant=(byte)FireKind.CargoFortress;
+			break;
+		case 10:
+			len = wsprintf(ach, "輸送船(航空基地)",10);
+			EditorKind=(byte)UnitKind.Transport;
+			EditorVariant=(byte)FireKind.CargoAirBase;
+			break;
+		case 11:
+			len = wsprintf(ach, "輸送船(軍港)",10);
+			EditorKind=(byte)UnitKind.Transport;
+			EditorVariant=(byte)FireKind.CargoNavalBase;
+			break;
+
+		case 12:
+			len= wsprintf(ach, "軍港",10);
+			EditorKind=(byte)UnitKind.NavalBase;
+			EditorVariant=0;
+			break;
+		case 13:
+			len= wsprintf(ach, "航空基地",10);
+			EditorKind=(byte)UnitKind.AirBase;
+			EditorVariant=0;
+			break;
+		case 14:
+			len= wsprintf(ach, "都市",10);
+			EditorKind=(byte)UnitKind.City;
+			EditorVariant=0;
+			break;
+		case 15:
+			len= wsprintf(ach, "歩兵基地",10);
+			EditorKind=(byte)UnitKind.InfantryBase;
+			EditorVariant=0;
+			break;
+		case 16:
+			len= wsprintf(ach, "トーチカ群",10);
+			EditorKind=(byte)UnitKind.Pillboxes;
+			EditorVariant=0;
+			break;
+		case 17:
+			len= wsprintf(ach, "要塞",10);
+			EditorKind=(byte)UnitKind.Fortress;
+			EditorVariant=0;
+			break;
+
+		case 18:
+			len = wsprintf(ach, "戦闘機",10);
+			EditorKind=(byte)UnitKind.Fighter;
+			EditorVariant=0;
+			break;
+		case 19:
+			len = wsprintf(ach, "陸上戦闘機",10);
+			EditorKind=(byte)UnitKind.Fighter;
+			EditorVariant=1;
+			break;
+		case 20:
+			len= wsprintf(ach, "攻撃機",10);
+			EditorKind=(byte)UnitKind.Attacker;
+			EditorVariant=0;
+			break;
+		case 21:
+			len= wsprintf(ach, "戦略爆撃機",10);
+			EditorKind=(byte)UnitKind.Bomber;
+			EditorVariant=0;
+			break;
+
+		case 22:
+			len= wsprintf(ach, "防空巡洋艦",10);
+			EditorKind=(byte)UnitKind.Cruiser;
+			EditorVariant=1;
+			break;
+		case 23:
+			len= wsprintf(ach, "対潜駆逐艦",10);
+			EditorKind=(byte)UnitKind.Destroyer;
+			EditorVariant=1;
+			break;
+		case 24:
+			if( LocalSide==Side.Japan )
+				{
+				len= wsprintf(ach, "大和級戦艦",10);
+				EditorKind=(byte)UnitKind.Battleship;
+				}
+			else
+				{
+				len= wsprintf(ach, "エセックス型空母",10);
+				EditorKind=(byte)UnitKind.Carrier;
+				}
+			EditorVariant=1;
+			break;
+
+		default:
+			len= wsprintf(ach, "-----",10);
+			break;
+		}
+	}
+
 //============================================================================
 //
 //----------------------------------------------------------------------------
@@ -1901,144 +2043,7 @@ public void	UpdateMapEditor()
 #if !LNGG_VER
 
 		// 配置ユニット
-		switch(EditorTarget)
-			{
-			case 1:
-				len= wsprintf(ach, "戦艦",10);
-				EditorKind=(byte)UnitKind.Battleship;
-				EditorVariant=0;
-				break;
-			case 2:
-				len= wsprintf(ach, "巡洋艦",10);
-				EditorKind=(byte)UnitKind.Cruiser;
-				EditorVariant=0;
-				break;
-			case 3:
-				len= wsprintf(ach, "駆逐艦",10);
-				EditorKind=(byte)UnitKind.Destroyer;
-				EditorVariant=0;
-				break;
-			case 4:
-				len= wsprintf(ach, "潜水艦",10);
-				EditorKind=(byte)UnitKind.Submarine;
-				EditorVariant=0;
-				break;
-			case 5:
-				len= wsprintf(ach, "正規空母",10);
-				EditorKind=(byte)UnitKind.Carrier;
-				EditorVariant=0;
-				break;
-			case 6:
-				len= wsprintf(ach, "軽空母",10);
-				EditorKind=(byte)UnitKind.LightCarrier;
-				EditorVariant=0;
-				break;
-			case 7:
-				len = wsprintf(ach, "輸送船(歩兵基地)",10);
-				EditorKind=(byte)UnitKind.Transport;
-				EditorVariant=(byte)FireKind.CargoInfantryBase;
-				break;
-			case 8:
-				len = wsprintf(ach, "輸送船(トーチカ群)",10);
-				EditorKind=(byte)UnitKind.Transport;
-				EditorVariant=(byte)FireKind.CargoPillboxes;
-				break;
-			case 9:
-				len = wsprintf(ach, "輸送船(要塞)",10);
-				EditorKind=(byte)UnitKind.Transport;
-				EditorVariant=(byte)FireKind.CargoFortress;
-				break;
-			case 10:
-				len = wsprintf(ach, "輸送船(航空基地)",10);
-				EditorKind=(byte)UnitKind.Transport;
-				EditorVariant=(byte)FireKind.CargoAirBase;
-				break;
-			case 11:
-				len = wsprintf(ach, "輸送船(軍港)",10);
-				EditorKind=(byte)UnitKind.Transport;
-				EditorVariant=(byte)FireKind.CargoNavalBase;
-				break;
-
-			case 12:
-				len= wsprintf(ach, "軍港",10);
-				EditorKind=(byte)UnitKind.NavalBase;
-				EditorVariant=0;
-				break;
-			case 13:
-				len= wsprintf(ach, "航空基地",10);
-				EditorKind=(byte)UnitKind.AirBase;
-				EditorVariant=0;
-				break;
-			case 14:
-				len= wsprintf(ach, "都市",10);
-				EditorKind=(byte)UnitKind.City;
-				EditorVariant=0;
-				break;
-			case 15:
-				len= wsprintf(ach, "歩兵基地",10);
-				EditorKind=(byte)UnitKind.InfantryBase;
-				EditorVariant=0;
-				break;
-			case 16:
-				len= wsprintf(ach, "トーチカ群",10);
-				EditorKind=(byte)UnitKind.Pillboxes;
-				EditorVariant=0;
-				break;
-			case 17:
-				len= wsprintf(ach, "要塞",10);
-				EditorKind=(byte)UnitKind.Fortress;
-				EditorVariant=0;
-				break;
-
-			case 18:
-				len = wsprintf(ach, "戦闘機",10);
-				EditorKind=(byte)UnitKind.Fighter;
-				EditorVariant=0;
-				break;
-			case 19:
-				len = wsprintf(ach, "陸上戦闘機",10);
-				EditorKind=(byte)UnitKind.Fighter;
-				EditorVariant=1;
-				break;
-			case 20:
-				len= wsprintf(ach, "攻撃機",10);
-				EditorKind=(byte)UnitKind.Attacker;
-				EditorVariant=0;
-				break;
-			case 21:
-				len= wsprintf(ach, "戦略爆撃機",10);
-				EditorKind=(byte)UnitKind.Bomber;
-				EditorVariant=0;
-				break;
-
-			case 22:
-				len= wsprintf(ach, "防空巡洋艦",10);
-				EditorKind=(byte)UnitKind.Cruiser;
-				EditorVariant=1;
-				break;
-			case 23:
-				len= wsprintf(ach, "対潜駆逐艦",10);
-				EditorKind=(byte)UnitKind.Destroyer;
-				EditorVariant=1;
-				break;
-			case 24:
-				if( LocalSide==Side.Japan )
-					{
-					len= wsprintf(ach, "大和級戦艦",10);
-					EditorKind=(byte)UnitKind.Battleship;
-					}
-				else
-					{
-					len= wsprintf(ach, "エセックス型空母",10);
-					EditorKind=(byte)UnitKind.Carrier;
-					}
-				EditorVariant=1;
-				break;
-
-			default:
-				len= wsprintf(ach, "-----",10);
-				break;
-			}
+		SelectEditorUnit(ref len, ref ach);
 		TextOut(hdc, 120, 640, ach, len);
 
 		len = wsprintf(ach, "配置ユニット:");
