@@ -331,8 +331,8 @@ public void	SetCpuRoute2(int m)
 
 			pp_drctn=atan2(wrk_y,wrk_x)*RAD_to;
 
-			unit.PathX[pp_indx]+=cos(pp_drctn*a_PI)*(min_dstc);
-			unit.PathY[pp_indx]+=sin(pp_drctn*a_PI)*(min_dstc);
+			unit.PathX[pp_indx]+=CosDegrees(pp_drctn)*(min_dstc);
+			unit.PathY[pp_indx]+=SinDegrees(pp_drctn)*(min_dstc);
 			}
 
 		wrk_x=unit.PathX[pp_indx]-start_x;
@@ -355,7 +355,7 @@ public void	SetCpuRoute2(int m)
 			wrk=wrk-180;
 		if(wrk>=90)
 			wrk=90-(wrk-90);
-		pp_dstc=(wrk_x)/(cos(wrk*a_PI));
+		pp_dstc=(wrk_x)/(CosDegrees(wrk));
 
 		if( unit.Category==UnitCategory.Ship )
 			{
@@ -374,8 +374,8 @@ public void	SetCpuRoute2(int m)
 
 				wrk_x=start_x;
 				wrk_y=start_y;
-				wrk_x+=cos(pp_drctn*a_PI)*(chk_dstc);
-				wrk_y+=sin(pp_drctn*a_PI)*(chk_dstc);
+				wrk_x+=CosDegrees(pp_drctn)*(chk_dstc);
+				wrk_y+=SinDegrees(pp_drctn)*(chk_dstc);
 
 				// 島に接触するか？
 				if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
@@ -434,8 +434,8 @@ public void	SetCpuRoute2(int m)
 							// 左回り
 							wrk_x=start_x;
 							wrk_y=start_y;
-							wrk_x+=cos(drctn1*a_PI)*(chk_dstc);
-							wrk_y+=sin(drctn1*a_PI)*(chk_dstc);
+							wrk_x+=CosDegrees(drctn1)*(chk_dstc);
+							wrk_y+=SinDegrees(drctn1)*(chk_dstc);
 							// 島に接触するか？
 							if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
 								{
@@ -472,8 +472,8 @@ public void	SetCpuRoute2(int m)
 							// 右回り
 							wrk_x2=start_x;
 							wrk_y2=start_y;
-							wrk_x2+=cos(drctn2*a_PI)*(chk_dstc);
-							wrk_y2+=sin(drctn2*a_PI)*(chk_dstc);
+							wrk_x2+=CosDegrees(drctn2)*(chk_dstc);
+							wrk_y2+=SinDegrees(drctn2)*(chk_dstc);
 							// 島に接触するか？
 							if(!( wrk_y2>MAP_TOP || wrk_y2<MAP_BOTTOM || wrk_x2<MAP_LEFT || wrk_x2>MAP_RIGHT ))
 								{
@@ -517,8 +517,8 @@ public void	SetCpuRoute2(int m)
 						wrk=chk_dstc/div;
 						if(wrk<40)
 							wrk=40;
-						wrk_x2+=cos(drctn2*a_PI)*wrk;
-						wrk_y2+=sin(drctn2*a_PI)*wrk;
+						wrk_x2+=CosDegrees(drctn2)*wrk;
+						wrk_y2+=SinDegrees(drctn2)*wrk;
 						unit.PathX[pp_indx]=wrk_x2;
 						unit.PathY[pp_indx]=wrk_y2;
 
@@ -594,8 +594,8 @@ public void	SetCpuRoute2(int m)
 						wrk=chk_dstc/div;
 						if(wrk<40)
 							wrk=40;
-						wrk_x+=cos(drctn1*a_PI)*wrk;
-						wrk_y+=sin(drctn1*a_PI)*wrk;
+						wrk_x+=CosDegrees(drctn1)*wrk;
+						wrk_y+=SinDegrees(drctn1)*wrk;
 						unit.PathX[pp_indx]=wrk_x;
 						unit.PathY[pp_indx]=wrk_y;
 

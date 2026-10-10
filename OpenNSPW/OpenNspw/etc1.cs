@@ -275,7 +275,7 @@ private bool LandCargo(ref Unit unit, FireKind kind, int m)
 			drctn=drctn-180;
 		if(drctn>=90)
 			drctn=90-(drctn-90);
-		dstc=(wrk_x)/(cos(drctn*a_PI));
+		dstc=(wrk_x)/(CosDegrees(drctn));
 
 #if NSPW_THE_NET
 		if( dstc>=0 && dstc<=160 )
@@ -373,7 +373,7 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double drctn2, re
 				drctn=drctn-180;
 			if(drctn>=90)
 				drctn=90-(drctn-90);
-			turn=(wrk_x)/(cos(drctn*a_PI));
+			turn=(wrk_x)/(CosDegrees(drctn));
 			turn=turn/10.0;
 
 			// 攻撃地点から攻撃目標地点への絶対方位、方位角
@@ -386,8 +386,8 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double drctn2, re
 				drctn2+=drctn;
 				if(drctn2<0)		drctn2=360+drctn2;
 				if(drctn2>=360)		drctn2=drctn2-360;
-				wrk_x+=cos(drctn2*a_PI)*(other.Speed); // とりあえずターン後
-				wrk_y+=sin(drctn2*a_PI)*(other.Speed);
+				wrk_x+=CosDegrees(drctn2)*(other.Speed); // とりあえずターン後
+				wrk_y+=SinDegrees(drctn2)*(other.Speed);
 				}
 
 			wrk_x2=wrk_x;
@@ -421,7 +421,7 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double drctn2, re
 				drctn=drctn-180;
 			if(drctn>=90)
 				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(cos(drctn*a_PI));
+			dstc=(wrk_x)/(CosDegrees(drctn));
 
 			if( dstc>=40 && dstc<=300 )
 				{
@@ -515,14 +515,14 @@ private bool ShipDropAntiSubmarineBomb(ref int trgt, ref Unit unit, FireKind kin
 						// ただの駆逐艦
 						drctn+=180;
 						drctn=(int)drctn%360;
-						Fires[n].Position += new WorldVector(cos(drctn*a_PI)*20, sin(drctn*a_PI)*20);
+						Fires[n].Position += new WorldVector(CosDegrees(drctn)*20, SinDegrees(drctn)*20);
 						}
 					else
 						{
 						// 対潜駆逐艦
 						drctn+=120+Random(3)*60;
 						drctn=(int)drctn%360;
-						Fires[n].Position += new WorldVector(cos(drctn*a_PI)*35, sin(drctn*a_PI)*35);
+						Fires[n].Position += new WorldVector(CosDegrees(drctn)*35, SinDegrees(drctn)*35);
 						}
 
 					Fires[n].Direction=0;
@@ -579,14 +579,14 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rng,
 				drctn=drctn-180;
 			if(drctn>=90)
 				drctn=90-(drctn-90);
-			turn=(wrk_x)/(cos(drctn*a_PI));
+			turn=(wrk_x)/(CosDegrees(drctn));
 			turn=turn/10.0;
 
 			// 敵の未来位置を求めます。
 			wrk_x=other.Position.X;
 			wrk_y=other.Position.Y;
-			wrk_x+=cos(other.Direction*a_PI)*(other.Speed*turn); // とりあえずターン後
-			wrk_y+=sin(other.Direction*a_PI)*(other.Speed*turn);
+			wrk_x+=CosDegrees(other.Direction)*(other.Speed*turn); // とりあえずターン後
+			wrk_y+=SinDegrees(other.Direction)*(other.Speed*turn);
 			wrk_x2=wrk_x;										// ターゲットの未来位置
 			wrk_y2=wrk_y;
 
@@ -620,7 +620,7 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rng,
 				drctn=drctn-180;
 			if(drctn>=90)
 				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(cos(drctn*a_PI));
+			dstc=(wrk_x)/(CosDegrees(drctn));
 
 			switch( unit.Kind )
 				{
@@ -771,14 +771,14 @@ private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double drctn2, Fire
 				drctn=drctn-180;
 			if(drctn>=90)
 				drctn=90-(drctn-90);
-			turn=(wrk_x)/(cos(drctn*a_PI));
+			turn=(wrk_x)/(CosDegrees(drctn));
 			turn=turn/TPD_SPD;							// 撃つ弾の速度で割る
 
 			// 攻撃地点から攻撃目標地点への絶対方位、方位角
 			wrk_x=other.Position.X;
 			wrk_y=other.Position.Y;
-			wrk_x+=cos(other.Direction*a_PI)*(other.Speed*turn);
-			wrk_y+=sin(other.Direction*a_PI)*(other.Speed*turn);
+			wrk_x+=CosDegrees(other.Direction)*(other.Speed*turn);
+			wrk_y+=SinDegrees(other.Direction)*(other.Speed*turn);
 /****
 			drctn=unit[n].drctn_add;
 			drctn2=unit[n].drctn;
@@ -787,8 +787,8 @@ private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double drctn2, Fire
 				drctn2+=drctn;
 				if(drctn2<0)		drctn2=360+drctn2;
 				if(drctn2>=360)		drctn2=drctn2-360;
-				wrk_x+=cos(drctn2*a_PI)*(unit[n].spd); // とりあえずターン後
-				wrk_y+=sin(drctn2*a_PI)*(unit[n].spd);
+				wrk_x+=CosDegrees(drctn2)*(unit[n].spd); // とりあえずターン後
+				wrk_y+=SinDegrees(drctn2)*(unit[n].spd);
 				}
 ***/
 			wrk_x2=wrk_x;					// 標的の未来位置
@@ -822,7 +822,7 @@ private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double drctn2, Fire
 				drctn=drctn-180;
 			if(drctn>=90)
 				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(cos(drctn*a_PI));
+			dstc=(wrk_x)/(CosDegrees(drctn));
 
 			if( (dstc>=100 && dstc<=(500+(unit.Side==Side.Japan ? 1 : 0)*100)) && ((drctn3>=45&&drctn3<=135)||(drctn3>=225&&drctn3<=315)) )
 				{
@@ -834,8 +834,8 @@ private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double drctn2, Fire
 					{
 					wrk_x=unit.Position.X;
 					wrk_y=unit.Position.Y;
-					wrk_x+=cos(drctn2*a_PI)*(TPD_SPD*f); // とりあえずターン後
-					wrk_y+=sin(drctn2*a_PI)*(TPD_SPD*f);
+					wrk_x+=CosDegrees(drctn2)*(TPD_SPD*f); // とりあえずターン後
+					wrk_y+=SinDegrees(drctn2)*(TPD_SPD*f);
 
 					if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
 						{
@@ -967,14 +967,14 @@ private bool ShipFireTorpedoAtTarget(int trgt, ref Unit unit, ref double drctn2,
 			drctn=drctn-180;
 		if(drctn>=90)
 			drctn=90-(drctn-90);
-		turn=(wrk_x)/(cos(drctn*a_PI));
+		turn=(wrk_x)/(CosDegrees(drctn));
 		turn=turn/TPD_SPD;							// 撃つ弾の速度で割る
 
 		// 攻撃地点から攻撃目標地点への絶対方位、方位角
 		wrk_x=Units[n].Position.X;
 		wrk_y=Units[n].Position.Y;
-		wrk_x+=cos(Units[n].Direction*a_PI)*(Units[n].Speed*turn);
-		wrk_y+=sin(Units[n].Direction*a_PI)*(Units[n].Speed*turn);
+		wrk_x+=CosDegrees(Units[n].Direction)*(Units[n].Speed*turn);
+		wrk_y+=SinDegrees(Units[n].Direction)*(Units[n].Speed*turn);
 		wrk_x2=wrk_x;					// 標的の未来位置
 		wrk_y2=wrk_y;					//
 		wrk_x=wrk_x2-unit.Position.X;
@@ -1006,7 +1006,7 @@ private bool ShipFireTorpedoAtTarget(int trgt, ref Unit unit, ref double drctn2,
 			drctn=drctn-180;
 		if(drctn>=90)
 			drctn=90-(drctn-90);
-		dstc=(wrk_x)/(cos(drctn*a_PI));
+		dstc=(wrk_x)/(CosDegrees(drctn));
 
 		if( (dstc>=100 && dstc<=(550+(unit.Side==Side.Japan ? 1 : 0)*100)) && (drctn3<=5 || drctn3>=355) )
 			{
@@ -1016,8 +1016,8 @@ private bool ShipFireTorpedoAtTarget(int trgt, ref Unit unit, ref double drctn2,
 				{
 				wrk_x=unit.Position.X;
 				wrk_y=unit.Position.Y;
-				wrk_x+=cos(drctn2*a_PI)*(TPD_SPD*f); // とりあえずターン後
-				wrk_y+=sin(drctn2*a_PI)*(TPD_SPD*f);
+				wrk_x+=CosDegrees(drctn2)*(TPD_SPD*f); // とりあえずターン後
+				wrk_y+=SinDegrees(drctn2)*(TPD_SPD*f);
 
 				if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
 					{
@@ -1134,14 +1134,14 @@ private bool ShipFireAntiAircraftShellAtTarget(int trgt, ref Unit unit, ref int 
 		drctn=drctn-180;
 	if(drctn>=90)
 		drctn=90-(drctn-90);
-	turn=(wrk_x)/(cos(drctn*a_PI));
+	turn=(wrk_x)/(CosDegrees(drctn));
 	turn=turn/10.0;
 
 	// ターゲットの未来位置を求めます。
 	wrk_x=Units[n].Position.X;
 	wrk_y=Units[n].Position.Y;
-	wrk_x+=cos(Units[n].Direction*a_PI)*(Units[n].Speed*turn); // ターン後
-	wrk_y+=sin(Units[n].Direction*a_PI)*(Units[n].Speed*turn);
+	wrk_x+=CosDegrees(Units[n].Direction)*(Units[n].Speed*turn); // ターン後
+	wrk_y+=SinDegrees(Units[n].Direction)*(Units[n].Speed*turn);
 	wrk_x2=wrk_x;										// 未来位置
 	wrk_y2=wrk_y;
 
@@ -1176,7 +1176,7 @@ private bool ShipFireAntiAircraftShellAtTarget(int trgt, ref Unit unit, ref int 
 		drctn=drctn-180;
 	if(drctn>=90)
 		drctn=90-(drctn-90);
-	dstc=(wrk_x)/(cos(drctn*a_PI));
+	dstc=(wrk_x)/(CosDegrees(drctn));
 
 	switch( unit.Kind )
 		{
@@ -1272,7 +1272,7 @@ private bool ShipFireAntiAircraftShellWithoutTarget(ref Unit unit, ref double dr
 				drctn=drctn-180;
 			if(drctn>=90)
 				drctn=90-(drctn-90);
-			turn=(wrk_x)/(cos(drctn*a_PI));
+			turn=(wrk_x)/(CosDegrees(drctn));
 			turn=turn/10.0;
 
 			// 攻撃地点から攻撃目標地点への絶対方位、方位角
@@ -1285,8 +1285,8 @@ private bool ShipFireAntiAircraftShellWithoutTarget(ref Unit unit, ref double dr
 				drctn2+=drctn;
 				if(drctn2<0)		drctn2=360+drctn2;
 				if(drctn2>=360)		drctn2=drctn2-360;
-				wrk_x+=cos(drctn2*a_PI)*(other.Speed); // とりあえずターン後
-				wrk_y+=sin(drctn2*a_PI)*(other.Speed);
+				wrk_x+=CosDegrees(drctn2)*(other.Speed); // とりあえずターン後
+				wrk_y+=SinDegrees(drctn2)*(other.Speed);
 				}
 
 			wrk_x2=wrk_x;
@@ -1320,7 +1320,7 @@ private bool ShipFireAntiAircraftShellWithoutTarget(ref Unit unit, ref double dr
 				drctn=drctn-180;
 			if(drctn>=90)
 				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(cos(drctn*a_PI));
+			dstc=(wrk_x)/(CosDegrees(drctn));
 
 			switch( unit.Kind )
 				{
@@ -1419,14 +1419,14 @@ private bool ShipFireGunAtTarget(int trgt, ref Unit unit, FireKind kind, ref int
 		drctn=drctn-180;
 	if(drctn>=90)
 		drctn=90-(drctn-90);
-	turn=(wrk_x)/(cos(drctn*a_PI));
+	turn=(wrk_x)/(CosDegrees(drctn));
 	turn=turn/10.0;
 
 	// ターゲットの未来位置を求めます。
 	wrk_x=Units[n].Position.X;
 	wrk_y=Units[n].Position.Y;
-	wrk_x+=cos(Units[n].Direction*a_PI)*(Units[n].Speed*turn); // ターン後
-	wrk_y+=sin(Units[n].Direction*a_PI)*(Units[n].Speed*turn);
+	wrk_x+=CosDegrees(Units[n].Direction)*(Units[n].Speed*turn); // ターン後
+	wrk_y+=SinDegrees(Units[n].Direction)*(Units[n].Speed*turn);
 	wrk_x2=wrk_x;										// 未来位置
 	wrk_y2=wrk_y;
 
@@ -1461,7 +1461,7 @@ private bool ShipFireGunAtTarget(int trgt, ref Unit unit, FireKind kind, ref int
 		drctn=drctn-180;
 	if(drctn>=90)
 		drctn=90-(drctn-90);
-	dstc=(wrk_x)/(cos(drctn*a_PI));
+	dstc=(wrk_x)/(CosDegrees(drctn));
 
 	// 水上艦への射程距離
 	switch( unit.Kind )
@@ -1629,7 +1629,7 @@ private bool ShipFireBullet(ref int trgt, ref Unit unit, ref double drctn2, Fire
 				drctn=drctn-180;
 			if(drctn>=90)
 				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(cos(drctn*a_PI));
+			dstc=(wrk_x)/(CosDegrees(drctn));
 			if( dstc<=100 )
 				{
 				trgt=n;
@@ -1712,7 +1712,7 @@ private bool BomberFireBullet(ref int trgt, ref Unit unit, ref double drctn2, Fi
 				drctn=drctn-180;
 			if(drctn>=90)
 				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(cos(drctn*a_PI));
+			dstc=(wrk_x)/(CosDegrees(drctn));
 			if( dstc<=100 )
 				{
 				trgt=n;
@@ -1785,7 +1785,7 @@ private bool FighterFireBullet(ref int trgt, ref Unit unit, FireKind kind)
 				drctn=drctn-180;
 			if(drctn>=90)
 				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(cos(drctn*a_PI));
+			dstc=(wrk_x)/(CosDegrees(drctn));
 			if( dstc<=300 && dstc<=dstc2)
 				{
 				// 攻撃地点から攻撃目標地点への方位角
@@ -1901,7 +1901,7 @@ private bool PlaneFireBullet(ref int trgt, ref Unit unit, ref double drctn2, Fir
 					drctn=drctn-180;
 				if(drctn>=90)
 					drctn=90-(drctn-90);
-				dstc=(wrk_x)/(cos(drctn*a_PI));
+				dstc=(wrk_x)/(CosDegrees(drctn));
 				if( dstc<=300 )
 					{	trgt=n;	break;	}
 				}
@@ -1969,8 +1969,8 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int trgt, ref double drctn2, in
 		trgt_x=Units[trgt].Position.X;
 		trgt_y=Units[trgt].Position.Y;
 
-		trgt_x+=cos(Units[trgt].Direction*a_PI)*((AIR_TPD_LOS_DSTC/AIR_TPD_SPD)*Units[trgt].Speed); // とりあえずターン後
-		trgt_y+=sin(Units[trgt].Direction*a_PI)*((AIR_TPD_LOS_DSTC/AIR_TPD_SPD)*Units[trgt].Speed);
+		trgt_x+=CosDegrees(Units[trgt].Direction)*((AIR_TPD_LOS_DSTC/AIR_TPD_SPD)*Units[trgt].Speed); // とりあえずターン後
+		trgt_y+=SinDegrees(Units[trgt].Direction)*((AIR_TPD_LOS_DSTC/AIR_TPD_SPD)*Units[trgt].Speed);
 
 		wrk_x=trgt_x-unit.Position.X;
 		wrk_y=trgt_y-unit.Position.Y;
@@ -2003,7 +2003,7 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int trgt, ref double drctn2, in
 		drctn=drctn-180;
 	if(drctn>=90)
 		drctn=90-(drctn-90);
-	dstc=(wrk_x)/(cos(drctn*a_PI));
+	dstc=(wrk_x)/(CosDegrees(drctn));
 
 	if( dstc>=100 && dstc<=AIR_TPD_LOS_DSTC )
 		{
@@ -2012,8 +2012,8 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int trgt, ref double drctn2, in
 			{
 			wrk_x=unit.Position.X;
 			wrk_y=unit.Position.Y;
-			wrk_x+=cos(drctn2*a_PI)*(2*f); // とりあえずターン後
-			wrk_y+=sin(drctn2*a_PI)*(2*f);
+			wrk_x+=CosDegrees(drctn2)*(2*f); // とりあえずターン後
+			wrk_y+=SinDegrees(drctn2)*(2*f);
 
 			if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
 				{
@@ -2044,8 +2044,8 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int trgt, ref double drctn2, in
 
 		drctn=(int)(drctn)%360;
 
-		wrk_x+=cos(drctn*a_PI)*300;
-		wrk_y+=sin(drctn*a_PI)*300;
+		wrk_x+=CosDegrees(drctn)*300;
+		wrk_y+=SinDegrees(drctn)*300;
 
 		unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
 		unit.EmergencyFlags[0]=20+Random(300);
@@ -2113,8 +2113,8 @@ private bool AttackerDropBomb(ref int trgt, ref Unit unit, ref double drctn2, in
 		return false;
 	wrk_x=Units[trgt].Position.X;
 	wrk_y=Units[trgt].Position.Y;
-	wrk_x+=cos(Units[trgt].Direction*a_PI)*(Units[trgt].Speed*70.0);
-	wrk_y+=sin(Units[trgt].Direction*a_PI)*(Units[trgt].Speed*70.0);
+	wrk_x+=CosDegrees(Units[trgt].Direction)*(Units[trgt].Speed*70.0);
+	wrk_y+=SinDegrees(Units[trgt].Direction)*(Units[trgt].Speed*70.0);
 
 	wrk_x2=wrk_x;	wrk_y2=wrk_y;
 
@@ -2148,7 +2148,7 @@ private bool AttackerDropBomb(ref int trgt, ref Unit unit, ref double drctn2, in
 			drctn=drctn-180;
 		if(drctn>=90)
 			drctn=90-(drctn-90);
-		dstc=(wrk_x)/(cos(drctn*a_PI));
+		dstc=(wrk_x)/(CosDegrees(drctn));
 
 		if( ( dstc>=170 && dstc<=180 && unit.Side==Side.UnitedStates ) || ( dstc>=35 && dstc<=65 && unit.Side==Side.Japan ))
 			{
@@ -2161,8 +2161,8 @@ private bool AttackerDropBomb(ref int trgt, ref Unit unit, ref double drctn2, in
 				wrk_x=unit.Position.X;
 				wrk_y=unit.Position.Y;
 				drctn=unit.Direction;
-				wrk_x+=cos(drctn*a_PI)*300;
-				wrk_y+=sin(drctn*a_PI)*300;
+				wrk_x+=CosDegrees(drctn)*300;
+				wrk_y+=SinDegrees(drctn)*300;
 				unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
 				unit.EmergencyFlags[0]=150+Random(50);
 				}
@@ -2202,11 +2202,11 @@ other.PathX[1]=MAP_RIGHT+1;
 
 				if(unit.Side==Side.Japan)
 					{
-					Fires[n].Position += new WorldVector(cos(Fires[n].Direction*a_PI)*(13), sin(Fires[n].Direction*a_PI)*(13));
+					Fires[n].Position += new WorldVector(CosDegrees(Fires[n].Direction)*(13), SinDegrees(Fires[n].Direction)*(13));
 					}
 				else
 					{
-					Fires[n].Position += new WorldVector(cos(Fires[n].Direction*a_PI)*(130), sin(Fires[n].Direction*a_PI)*(130));
+					Fires[n].Position += new WorldVector(CosDegrees(Fires[n].Direction)*(130), SinDegrees(Fires[n].Direction)*(130));
 					}
 
 				Fires[n].Speed=0.3;
@@ -2236,11 +2236,11 @@ other.PathX[1]=MAP_RIGHT+1;
 
 					if(unit.Side==Side.Japan)
 						{
-						Fires[n].Position += new WorldVector(cos(Fires[n].Direction*a_PI)*(13), sin(Fires[n].Direction*a_PI)*(13));
+						Fires[n].Position += new WorldVector(CosDegrees(Fires[n].Direction)*(13), SinDegrees(Fires[n].Direction)*(13));
 						}
 					else
 						{
-						Fires[n].Position += new WorldVector(cos(Fires[n].Direction*a_PI)*(130), sin(Fires[n].Direction*a_PI)*(130));
+						Fires[n].Position += new WorldVector(CosDegrees(Fires[n].Direction)*(130), SinDegrees(Fires[n].Direction)*(130));
 						}
 
 					Fires[n].Speed=0.3;
@@ -2314,7 +2314,7 @@ private bool BomberDropBomb(ref int trgt, ref Unit unit, ref double drctn2, Fire
 					drctn=drctn-180;
 				if(drctn>=90)
 					drctn=90-(drctn-90);
-				dstc=(wrk_x)/(cos(drctn*a_PI));
+				dstc=(wrk_x)/(CosDegrees(drctn));
 				if( dstc>=30 && dstc<=60 )
 					{	trgt=n;	break;	}
 				}
@@ -2556,8 +2556,8 @@ public void	SetDynamicDestination(int n)
 			Units[n].Mode=UnitMode.Move;
 
 			// 目的地を決定
-			Units[n].PathX[0]=Units[pt].Position.X+cos(angl*a_PI)*dstc;
-			Units[n].PathY[0]=Units[pt].Position.Y+sin(angl*a_PI)*dstc;
+			Units[n].PathX[0]=Units[pt].Position.X+CosDegrees(angl)*dstc;
+			Units[n].PathY[0]=Units[pt].Position.Y+SinDegrees(angl)*dstc;
 			Units[n].PathX[1]=MAP_RIGHT+1;
 			}
 		else
@@ -2593,8 +2593,8 @@ public void	SetDynamicDestination(int n)
 				}
 
 			// 目的地を決定
-			Units[n].PathX[0]=Units[pt].Position.X+cos(angl*a_PI)*dstc;
-			Units[n].PathY[0]=Units[pt].Position.Y+sin(angl*a_PI)*dstc;
+			Units[n].PathX[0]=Units[pt].Position.X+CosDegrees(angl)*dstc;
+			Units[n].PathY[0]=Units[pt].Position.Y+SinDegrees(angl)*dstc;
 
 			if( a>=0 )
 				{
@@ -2641,8 +2641,8 @@ public void	SetDynamicDestination(int n)
 					}
 
 				// 目的地を決定
-				Units[n].PathX[0]=Units[n].PathX[0]+cos(angl*a_PI)*dstc;
-				Units[n].PathY[0]=Units[n].PathY[0]+sin(angl*a_PI)*dstc;
+				Units[n].PathX[0]=Units[n].PathX[0]+CosDegrees(angl)*dstc;
+				Units[n].PathY[0]=Units[n].PathY[0]+SinDegrees(angl)*dstc;
 				Units[n].PathX[1]=MAP_RIGHT+1;
 				}
 			}
@@ -2656,8 +2656,8 @@ public void	SetDynamicDestination(int n)
 			angl = angl-360;
 		dstc=Units[n].DistanceToLeader;
 
-		Units[n].PathX[0]=Units[pt].Position.X+cos(angl*a_PI)*dstc;
-		Units[n].PathY[0]=Units[pt].Position.Y+sin(angl*a_PI)*dstc;
+		Units[n].PathX[0]=Units[pt].Position.X+CosDegrees(angl)*dstc;
+		Units[n].PathY[0]=Units[pt].Position.Y+SinDegrees(angl)*dstc;
 		Units[n].PathX[1]=MAP_RIGHT+1;
 
 		if( 1!=0  )
@@ -2745,7 +2745,7 @@ public void	SetFighterAttackDestination(int m)
 
 	if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
 		{
-		unit.EmergencyDestination = new WorldPosition(unit.Position.X+cos(unit.Direction*a_PI)*(100+Random(50)), unit.Position.Y+sin(unit.Direction*a_PI)*(100+Random(50)));
+		unit.EmergencyDestination = new WorldPosition(unit.Position.X+CosDegrees(unit.Direction)*(100+Random(50)), unit.Position.Y+SinDegrees(unit.Direction)*(100+Random(50)));
 		unit.EmergencyFlags[0]=100;
 		unit.IsStopping=false;
 		return;
@@ -2814,7 +2814,7 @@ public void	SetFighterAttackDestination(int m)
 				drctn=drctn-180;
 			if(drctn>=90)
 				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(cos(drctn*a_PI));
+			dstc=(wrk_x)/(CosDegrees(drctn));
 			if( dstc>=160 && dstc<=320 )
 				{
 				// さらに、距離が近い よけよう
@@ -2832,8 +2832,8 @@ public void	SetFighterAttackDestination(int m)
 					}
 				em_drctn=(int)em_drctn%360;
 
-				wrk_x+=cos(em_drctn*a_PI)*300;
-				wrk_y+=sin(em_drctn*a_PI)*300;
+				wrk_x+=CosDegrees(em_drctn)*300;
+				wrk_y+=SinDegrees(em_drctn)*300;
 
 				unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
 				unit.EmergencyFlags[0]=70+Random(40);
@@ -2846,8 +2846,8 @@ public void	SetFighterAttackDestination(int m)
 	// 敵機の直前にＥｍ＿Ｘｙを設定します。
 	wrk_x=Units[trgt].Position.X;
 	wrk_y=Units[trgt].Position.Y;
-	wrk_x+=cos(Units[trgt].Direction*a_PI)*(Units[trgt].Speed*20.0);
-	wrk_y+=sin(Units[trgt].Direction*a_PI)*(Units[trgt].Speed*20.0);
+	wrk_x+=CosDegrees(Units[trgt].Direction)*(Units[trgt].Speed*20.0);
+	wrk_y+=SinDegrees(Units[trgt].Direction)*(Units[trgt].Speed*20.0);
 
 	unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
 	unit.EmergencyFlags[0]=70+Random(40);
@@ -2919,7 +2919,7 @@ public void	SetAttackerEmergencyDestination(int m)
 					drctn=drctn-180;
 				if(drctn>=90)
 					drctn=90-(drctn-90);
-				dstc=(wrk_x)/(cos(drctn*a_PI));
+				dstc=(wrk_x)/(CosDegrees(drctn));
 				if( dstc<=250+((other.Kind==UnitKind.Attacker ? 1 : 0)*70) )
 					{
 
@@ -2937,8 +2937,8 @@ public void	SetAttackerEmergencyDestination(int m)
 						}
 					em_drctn=(int)em_drctn%360;
 
-					wrk_x+=cos(em_drctn*a_PI)*300;
-					wrk_y+=sin(em_drctn*a_PI)*300;
+					wrk_x+=CosDegrees(em_drctn)*300;
+					wrk_y+=SinDegrees(em_drctn)*300;
 
 					unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
 					unit.EmergencyFlags[0]=100;
@@ -3064,7 +3064,7 @@ public void	SetAttackerAttackDestination(int m)
 		drctn=drctn-180;
 	if(drctn>=90)
 		drctn=90-(drctn-90);
-	dstc=(wrk_x)/(cos(drctn*a_PI));
+	dstc=(wrk_x)/(CosDegrees(drctn));
 
 	// 目標ユニットへの方位角を求めます
 	wrk_x=Units[n].Position.X;
@@ -3115,8 +3115,8 @@ public void	SetAttackerAttackDestination(int m)
 					}
 				drctn=(int)drctn%360;
 
-				wrk_x+=cos(drctn*a_PI)*600;
-				wrk_y+=sin(drctn*a_PI)*600;
+				wrk_x+=CosDegrees(drctn)*600;
+				wrk_y+=SinDegrees(drctn)*600;
 
 				other.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
 				other.EmergencyFlags[0]=10+((1+(other.FormationNumber%5))*20);
@@ -3144,8 +3144,8 @@ public void	SetAttackerAttackDestination(int m)
 				}
 			wrk_x=Units[n].Position.X;
 			wrk_y=Units[n].Position.Y;
-			wrk_x+=cos(Units[n].Direction*a_PI); // とりあえずターン後
-			wrk_y+=sin(Units[n].Direction*a_PI);
+			wrk_x+=CosDegrees(Units[n].Direction); // とりあえずターン後
+			wrk_y+=SinDegrees(Units[n].Direction);
 			unit.PathX[0]=wrk_x;
 			unit.PathY[0]=wrk_y;
 			unit.PathX[1]=MAP_RIGHT+1;
@@ -3166,8 +3166,8 @@ public void	SetAttackerAttackDestination(int m)
 				turn=70.0;
 			wrk_x=Units[n].Position.X;
 			wrk_y=Units[n].Position.Y;
-			wrk_x+=cos(Units[n].Direction*a_PI)*(Units[n].Speed*turn); // とりあえずターン後
-			wrk_y+=sin(Units[n].Direction*a_PI)*(Units[n].Speed*turn);
+			wrk_x+=CosDegrees(Units[n].Direction)*(Units[n].Speed*turn); // とりあえずターン後
+			wrk_y+=SinDegrees(Units[n].Direction)*(Units[n].Speed*turn);
 			unit.PathX[0]=wrk_x;
 			unit.PathY[0]=wrk_y;
 			unit.PathX[1]=MAP_RIGHT+1;
@@ -3199,8 +3199,8 @@ public void	SetAttackerAttackDestination(int m)
 		wrk_r.left=(int)unit.PathX[0]-35;
 		if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
 			{
-			unit.PathX[0]=unit.Position.X+cos(unit.Direction*a_PI)*(300);
-			unit.PathY[0]=unit.Position.Y+sin(unit.Direction*a_PI)*(300);
+			unit.PathX[0]=unit.Position.X+CosDegrees(unit.Direction)*(300);
+			unit.PathY[0]=unit.Position.Y+SinDegrees(unit.Direction)*(300);
 			unit.PathX[1]=MAP_RIGHT+1;
 			unit.IsStopping=false;
 			}
@@ -3238,7 +3238,7 @@ public void	SetTransportLandingDestination(int m)
 		drctn=drctn-180;
 	if(drctn>=90)
 		drctn=90-(drctn-90);
-	dstc=(wrk_x)/(cos(drctn*a_PI));
+	dstc=(wrk_x)/(CosDegrees(drctn));
 
 	if(dstc<=400)
 		{
@@ -3321,7 +3321,7 @@ public void	SetShipEmergencyDestination(int m)
 				drctn=drctn-180;
 			if(drctn>=90)
 				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(cos(drctn*a_PI));		// 距離
+			dstc=(wrk_x)/(CosDegrees(drctn));		// 距離
 
 			if( dstc<=600 && dstc>=40 )
 				{
@@ -3357,8 +3357,8 @@ public void	SetShipEmergencyDestination(int m)
 
 					em_drctn=(int)em_drctn%360;
 
-					wrk_x+=cos(em_drctn*a_PI)*300;
-					wrk_y+=sin(em_drctn*a_PI)*300;
+					wrk_x+=CosDegrees(em_drctn)*300;
+					wrk_y+=SinDegrees(em_drctn)*300;
 
 					unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
 					unit.EmergencyFlags[0]=100+Random(150);
@@ -3393,7 +3393,7 @@ public void	SetShipEmergencyDestination(int m)
 				drctn=drctn-180;
 			if(drctn>=90)
 				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(cos(drctn*a_PI));		// 距離
+			dstc=(wrk_x)/(CosDegrees(drctn));		// 距離
 
 			// 見る側
 
@@ -3427,8 +3427,8 @@ public void	SetShipEmergencyDestination(int m)
 
 				wrk_x=unit.Position.X;
 				wrk_y=unit.Position.Y;
-				wrk_x+=cos(em_drctn*a_PI)*300;
-				wrk_y+=sin(em_drctn*a_PI)*300;
+				wrk_x+=CosDegrees(em_drctn)*300;
+				wrk_y+=SinDegrees(em_drctn)*300;
 
 				unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
 				unit.EmergencyFlags[0]=100;
@@ -3456,7 +3456,7 @@ public void	SetShipEmergencyDestination(int m)
 				drctn=drctn-180;
 			if(drctn>=90)
 				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(cos(drctn*a_PI));		// 距離
+			dstc=(wrk_x)/(CosDegrees(drctn));		// 距離
 
 			if( dstc<=600-((other.Kind==UnitKind.Bomber ? 1 : 0)*300) && dstc>=40 )
 				{
@@ -3490,8 +3490,8 @@ public void	SetShipEmergencyDestination(int m)
 						}
 					em_drctn=(int)em_drctn%360;
 
-					wrk_x+=cos(em_drctn*a_PI)*300;
-					wrk_y+=sin(em_drctn*a_PI)*300;
+					wrk_x+=CosDegrees(em_drctn)*300;
+					wrk_y+=SinDegrees(em_drctn)*300;
 
 					unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
 					unit.EmergencyFlags[0]=200+Random(250);
@@ -3540,7 +3540,7 @@ public void	SetShipEmergencyDestination(int m)
 						drctn=drctn-180;
 					if(drctn>=90)
 						drctn=90-(drctn-90);
-					dstc=(wrk_x)/(cos(drctn*a_PI));		// 距離
+					dstc=(wrk_x)/(CosDegrees(drctn));		// 距離
 
 					if( dstc<=( unit.Variant==1 ? 500 : 400 ) )
 						{
@@ -3558,8 +3558,8 @@ public void	SetShipEmergencyDestination(int m)
 
 						wrk_x=unit.Position.X;
 						wrk_y=unit.Position.Y;
-						wrk_x+=cos(em_drctn*a_PI)*((dstc)+200);
-						wrk_y+=sin(em_drctn*a_PI)*((dstc)+200);
+						wrk_x+=CosDegrees(em_drctn)*((dstc)+200);
+						wrk_y+=SinDegrees(em_drctn)*((dstc)+200);
 
 						unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
 						unit.EmergencyFlags[0]=100+Random(250);

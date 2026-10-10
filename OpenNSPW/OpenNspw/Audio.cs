@@ -167,8 +167,8 @@ return;
 				wrk_y=Units[n].Position.Y;
 				if( Units[n].Kind==UnitKind.Fighter )
 					{	// 航空機の場合はちょっと前へ
-					wrk_x+=cos(Units[n].Direction*a_PI)*FT_EYE;
-					wrk_y+=sin(Units[n].Direction*a_PI)*FT_EYE;
+					wrk_x+=CosDegrees(Units[n].Direction)*FT_EYE;
+					wrk_y+=SinDegrees(Units[n].Direction)*FT_EYE;
 					}
 
 				wrk_x=wrk_x-x;
@@ -188,7 +188,7 @@ return;
 				if(drctn>=90)
 					drctn=90-(drctn-90);
 
-				dstc=((wrk_x)/(cos(drctn*a_PI)));
+				dstc=((wrk_x)/(CosDegrees(drctn)));
 
 				switch( Units[n].Kind )
 					{
