@@ -1315,6 +1315,299 @@ private void UpdateScenarioList(int m, ref Array12<int> len, ref HDC hdc, ref _D
 		}
 	}
 
+private void UpdateSideSetting(ref int rx, ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc)
+	{
+	RECT dstn_rect;
+	rx=80;
+	if( !IsEditingMap && IsHost && Mode==GameMode.GameSetting )
+		{
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "操作対象の切り替え ->>>");
+#else
+		len[0] = wsprintf(ach[0], "Side Change ->>>");
+#endif
+
+		dstn_rect.left=rx;
+		dstn_rect.top=475;
+		dstn_rect.right=dstn_rect.left+(len[0]*12);
+		dstn_rect.bottom=dstn_rect.top+24;
+		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting )
+			{
+			SetTextColor(hdc, RGB(255, 0, 0));
+			if( LeftButton==3 )
+				{
+				HostSide=(HostSide==0 ? 1 : 0);
+				}
+			}
+		else
+			SetTextColor(hdc, RGB(255, 255, 255));
+
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+		}
+
+	if(HostSide==0)
+		{
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "操作対象：日本海軍（ホスト）、合衆国海軍（ゲスト）");
+#else
+		len[0] = wsprintf(ach[0], "Side: Japan Navy(Host Player)  U.S.Navy(Guest Player)");
+#endif
+		}
+	else
+		{
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "操作対象：合衆国海軍（ホスト）、日本海軍（ゲスト）");
+#else
+		len[0] = wsprintf(ach[0], "Side: U.S.Navy(Host Player)  Japan Navy(Guest Player)");
+#endif
+		}
+	}
+
+private void UpdateAutoSaveButton(ref int rx, ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc, ref _DP_DATA_1 dp_data_1)
+	{
+	RECT dstn_rect;
+	rx=80;
+	if( IsHost  )
+		{
+#if !LNGG_VER
+		if( HasAutoSave!=0 )
+			len[0] = wsprintf(ach[0], "オートセーブスタート ->>>");
+		else
+			len[0] = wsprintf(ach[0], "オートセーブファイルは存在しない");
+#else
+		if( exist_auto_save )
+			len[0] = wsprintf(ach[0], "Autosave Start ->>>");
+		else
+			len[0] = wsprintf(ach[0], "No exist of Autosave file");
+#endif
+
+		dstn_rect.left=80;
+		dstn_rect.top=430;
+
+		if( Mode==GameMode.GameSetting )
+			{
+			dstn_rect.right=dstn_rect.left+(len[0]*12);
+			dstn_rect.bottom=dstn_rect.top+24;
+			if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting && HasAutoSave!=0 )
+				{
+				SetTextColor(hdc, RGB(255, 0, 0));
+
+				if( LeftButton==3 )
+					{
+					// ホストの選択状態をゲストにセンドします。
+					dp_data_1.dwType = MessageType.StartFromAutoSave;
+					bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
+					bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref dp_data_1);
+					g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+
+					Mode=GameMode.Battle;
+					ScenarioNumber=-2;		// －２でオートセーブからのスタートを示す
+					}
+				}
+			else
+				{
+				SetTextColor(hdc, RGB(255, 255, 255));
+				}
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(126, 126, 126));
+			}
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+		}
+	else
+		{
+		if( JoinGameStart==MessageType.StartFromAutoSave )
+			{
+			Mode=GameMode.Battle;
+			JoinGameStart=0;
+			ScenarioNumber=-2;		// －２でオートセーブからのスタートを示す
+			}
+		}
+	}
+
+private void UpdateResumeButton(ref int rx, ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc, ref _DP_DATA_1 dp_data_1)
+	{
+	RECT dstn_rect;
+	rx=80;
+	if( IsHost )
+		{
+#if !LNGG_VER
+		if( WasHost )
+			len[0] = wsprintf(ach[0], "リジュームスタート ->>>");
+		else
+			len[0] = wsprintf(ach[0], "リジュームデータがホストではない。");
+#else
+		if( you_were_host )
+			len[0] = wsprintf(ach[0], "Resume Start ->>>");
+		else
+			len[0] = wsprintf(ach[0], "You have no resumed data as your host.");
+#endif
+
+		dstn_rect.left=80;
+		dstn_rect.top=400;
+
+		if( Mode==GameMode.GameSetting )
+			{
+			dstn_rect.right=dstn_rect.left+(len[0]*12);
+			dstn_rect.bottom=dstn_rect.top+24;
+			if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting && WasHost )
+				{
+				SetTextColor(hdc, RGB(255, 0, 0));
+
+				if( LeftButton==3 )
+					{
+					// ホストの選択状態をゲストにセンドします。
+					dp_data_1.dwType = MessageType.StartFromResume;
+					bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
+					bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref dp_data_1);
+					g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+
+					Mode=GameMode.Battle;
+					ScenarioNumber=-1;		// －１でリジュームを示す
+					}
+				}
+			else
+				SetTextColor(hdc, RGB(255, 255, 255));
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(126, 126, 126));
+			}
+
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+		}
+	else
+		{
+		if( JoinGameStart==MessageType.StartFromResume )
+			{
+			Mode=GameMode.Battle;
+			JoinGameStart=0;
+			ScenarioNumber=-1;		// －１でリジュームを示す
+			}
+		}
+	}
+
+private void UpdateScenarioPageButton(ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc)
+	{
+	RECT dstn_rect;
+#if !LNGG_VER
+	len[0] = wsprintf(ach[0], "シナリオ切り替え ->>>");
+#else
+	len[0] = wsprintf(ach[0], "Page Change ->>>");
+#endif
+
+	dstn_rect.left=250;
+	dstn_rect.top=110;
+	dstn_rect.right=dstn_rect.left+(len[0]*12);
+	dstn_rect.bottom=dstn_rect.top+24;
+	if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting )
+		{
+		SetTextColor(hdc, RGB(255, 0, 0));
+
+		if( LeftButton==3 )
+			{
+			if(ScenarioNumber<=99)
+				ScenarioNumber=101;
+			else if(ScenarioNumber<=199)
+				ScenarioNumber=1;
+			}
+		}
+	else
+		SetTextColor(hdc, RGB(255, 255, 255));
+
+	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+	}
+
+private void ShowScenarioList(int m, ref HDC hdc, ref Array12<Array128<byte>> ach, ref Array12<int> len)
+	{
+	int n;
+	for( n=0; n<=m; n++)
+		{
+		if(Mode==GameMode.GameSetting)
+			{
+			if( n+1==ScenarioNumber%100 )
+				SetTextColor(hdc, RGB(255, 0, 0));
+			else
+				SetTextColor(hdc, RGB(255, 255, 255));
+			}
+		else
+			{
+			if( n+1==ScenarioNumber%100 )
+				SetTextColor(hdc, RGB(126, 0, 0));
+			else
+				SetTextColor(hdc, RGB(126, 126, 126));
+			}
+
+		TextOut(hdc, 120, 150+(n*25), ach[n], len[n]);
+		}
+
+	if(JoinGameStart==MessageType.LeaveGameSetting && !IsHost && Mode==GameMode.GameSetting )
+		{
+		// ジョインが受け取る
+		Mode=GameMode.ConfigSetting;
+		JoinGameStart=0;
+		}
+	}
+
+private void ListScenarioNames(ref int m, ref Array12<int> len, ref Array12<Array128<byte>> ach)
+	{
+	if( ScenarioNumber<=99 )
+		{
+		m=0;
+		len[m] = wsprintf(ach[m], "空母機動部隊の戦い１");
+		m++;
+		len[m] = wsprintf(ach[m], "空母機動部隊の戦い２");
+		m++;
+		len[m] = wsprintf(ach[m], "空母機動部隊の戦い３");
+
+		m++;
+		len[m] = wsprintf(ach[m], "艦隊決戦１");
+		m++;
+		len[m] = wsprintf(ach[m], "艦隊決戦２");
+
+		m++;
+		len[m] = wsprintf(ach[m], "ミッドウェイ攻略１");
+		m++;
+		len[m] = wsprintf(ach[m], "ミッドウェイ攻略２");
+		m++;
+		len[m] = wsprintf(ach[m], "中部太平洋の戦い１");
+		m++;
+		len[m] = wsprintf(ach[m], "ユーザーシナリオ");
+		}
+	else if(ScenarioNumber<=199)
+		{
+		m=0;
+		len[m] = wsprintf(ach[m], "ガダルカナルを巡る戦い１");
+		m++;
+		len[m] = wsprintf(ach[m], "ガダルカナルを巡る戦い２");
+
+		m++;
+		len[m] = wsprintf(ach[m], "日本近海の戦い１");
+
+		m++;
+		len[m] = wsprintf(ach[m], "南太平洋の戦い１");
+		m++;
+		len[m] = wsprintf(ach[m], "南太平洋の戦い２");
+		m++;
+		len[m] = wsprintf(ach[m], "ガ島争奪戦");
+
+		}
+	else if(ScenarioNumber<=299)
+		{
+		m=0;
+		len[m] = wsprintf(ach[m], "硫黄島攻略１");
+		m++;
+		len[m] = wsprintf(ach[m], "硫黄島攻略２");
+		m++;
+		len[m] = wsprintf(ach[m], "日本近海の戦い１");
+		m++;
+		len[m] = wsprintf(ach[m], "日本近海の戦い２");
+		m++;
+		len[m] = wsprintf(ach[m], "日本近海の戦い３");
+		}
+	}
+
 //============================================================================
 // 通信対戦セットアップ
 // とりあえず、シナリオとサイドを選んでゲームへ
@@ -1322,8 +1615,8 @@ private void UpdateScenarioList(int m, ref Array12<int> len, ref HDC hdc, ref _D
 [Original("cnct_game_setting")]
 public void	UpdateGameSetting()
 	{
-	RECT	src_rect,field_rect,dstn_rect;
-	int	m=default /* C4701 */,n,g,no1,i,wrk,wrk2,wrk3,rx,ry; Array7<int> menu = default; Array7<int> menu2 = default;
+	RECT	src_rect,field_rect;
+	int	m=default /* C4701 */,n,g,no1,i,wrk,wrk2,wrk3,rx = default,ry; Array7<int> menu = default; Array7<int> menu2 = default;
     Array12<Array128<byte>> ach = default;
     Array12<int> len = default;
 	HDC					hdc;
@@ -1386,60 +1679,7 @@ else
 			TextOut(hdc, 200, 80, ach[0], len[0]);
 
 #if !LNGG_VER
-			if( ScenarioNumber<=99 )
-				{
-				m=0;
-				len[m] = wsprintf(ach[m], "空母機動部隊の戦い１");
-				m++;
-				len[m] = wsprintf(ach[m], "空母機動部隊の戦い２");
-				m++;
-				len[m] = wsprintf(ach[m], "空母機動部隊の戦い３");
-
-				m++;
-				len[m] = wsprintf(ach[m], "艦隊決戦１");
-				m++;
-				len[m] = wsprintf(ach[m], "艦隊決戦２");
-
-				m++;
-				len[m] = wsprintf(ach[m], "ミッドウェイ攻略１");
-				m++;
-				len[m] = wsprintf(ach[m], "ミッドウェイ攻略２");
-				m++;
-				len[m] = wsprintf(ach[m], "中部太平洋の戦い１");
-				m++;
-				len[m] = wsprintf(ach[m], "ユーザーシナリオ");
-				}
-			else if(ScenarioNumber<=199)
-				{
-				m=0;
-				len[m] = wsprintf(ach[m], "ガダルカナルを巡る戦い１");
-				m++;
-				len[m] = wsprintf(ach[m], "ガダルカナルを巡る戦い２");
-
-				m++;
-				len[m] = wsprintf(ach[m], "日本近海の戦い１");
-
-				m++;
-				len[m] = wsprintf(ach[m], "南太平洋の戦い１");
-				m++;
-				len[m] = wsprintf(ach[m], "南太平洋の戦い２");
-				m++;
-				len[m] = wsprintf(ach[m], "ガ島争奪戦");
-
-				}
-			else if(ScenarioNumber<=299)
-				{
-				m=0;
-				len[m] = wsprintf(ach[m], "硫黄島攻略１");
-				m++;
-				len[m] = wsprintf(ach[m], "硫黄島攻略２");
-				m++;
-				len[m] = wsprintf(ach[m], "日本近海の戦い１");
-				m++;
-				len[m] = wsprintf(ach[m], "日本近海の戦い２");
-				m++;
-				len[m] = wsprintf(ach[m], "日本近海の戦い３");
-				}
+			ListScenarioNames(ref m, ref len, ref ach);
 #else
 
 			if( sinario<=99 )
@@ -1496,227 +1736,22 @@ else
 				}
 			else
 				{
-				for( n=0; n<=m; n++)
-					{
-					if(Mode==GameMode.GameSetting)
-						{
-						if( n+1==ScenarioNumber%100 )
-							SetTextColor(hdc, RGB(255, 0, 0));
-						else
-							SetTextColor(hdc, RGB(255, 255, 255));
-						}
-					else
-						{
-						if( n+1==ScenarioNumber%100 )
-							SetTextColor(hdc, RGB(126, 0, 0));
-						else
-							SetTextColor(hdc, RGB(126, 126, 126));
-						}
-
-					TextOut(hdc, 120, 150+(n*25), ach[n], len[n]);
-					}
-
-				if(JoinGameStart==MessageType.LeaveGameSetting && !IsHost && Mode==GameMode.GameSetting )
-					{
-					// ジョインが受け取る
-					Mode=GameMode.ConfigSetting;
-					JoinGameStart=0;
-					}
+				ShowScenarioList(m, ref hdc, ref ach, ref len);
 				}
 
 			if( IsHost && Mode==GameMode.GameSetting )
 				{
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "シナリオ切り替え ->>>");
-#else
-				len[0] = wsprintf(ach[0], "Page Change ->>>");
-#endif
-
-				dstn_rect.left=250;
-				dstn_rect.top=110;
-				dstn_rect.right=dstn_rect.left+(len[0]*12);
-				dstn_rect.bottom=dstn_rect.top+24;
-				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-
-					if( LeftButton==3 )
-						{
-						if(ScenarioNumber<=99)
-							ScenarioNumber=101;
-						else if(ScenarioNumber<=199)
-							ScenarioNumber=1;
-						}
-					}
-				else
-					SetTextColor(hdc, RGB(255, 255, 255));
-
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+				UpdateScenarioPageButton(ref len, ref ach, ref hdc);
 				}
 
 			// リジュームスタート
-			rx=80;
-			if( IsHost )
-				{
-#if !LNGG_VER
-				if( WasHost )
-					len[0] = wsprintf(ach[0], "リジュームスタート ->>>");
-				else
-					len[0] = wsprintf(ach[0], "リジュームデータがホストではない。");
-#else
-				if( you_were_host )
-					len[0] = wsprintf(ach[0], "Resume Start ->>>");
-				else
-					len[0] = wsprintf(ach[0], "You have no resumed data as your host.");
-#endif
+			UpdateResumeButton(ref rx, ref len, ref ach, ref hdc, ref dp_data_1);
 
-				dstn_rect.left=80;
-				dstn_rect.top=400;
-
-				if( Mode==GameMode.GameSetting )
-					{
-					dstn_rect.right=dstn_rect.left+(len[0]*12);
-					dstn_rect.bottom=dstn_rect.top+24;
-					if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting && WasHost )
-						{
-						SetTextColor(hdc, RGB(255, 0, 0));
-
-						if( LeftButton==3 )
-							{
-							// ホストの選択状態をゲストにセンドします。
-							dp_data_1.dwType = MessageType.StartFromResume;
-							bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-							bufferDesc.pBufferData  = (byte*) &dp_data_1;
-							g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-
-							Mode=GameMode.Battle;
-							ScenarioNumber=-1;		// －１でリジュームを示す
-							}
-						}
-					else
-						SetTextColor(hdc, RGB(255, 255, 255));
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(126, 126, 126));
-					}
-
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-				}
-			else
-				{
-				if( JoinGameStart==MessageType.StartFromResume )
-					{
-					Mode=GameMode.Battle;
-					JoinGameStart=0;
-					ScenarioNumber=-1;		// －１でリジュームを示す
-					}
-				}
-
-			// リジュームスタート
-			rx=80;
-			if( IsHost  )
-				{
-#if !LNGG_VER
-				if( HasAutoSave!=0 )
-					len[0] = wsprintf(ach[0], "オートセーブスタート ->>>");
-				else
-					len[0] = wsprintf(ach[0], "オートセーブファイルは存在しない");
-#else
-				if( exist_auto_save )
-					len[0] = wsprintf(ach[0], "Autosave Start ->>>");
-				else
-					len[0] = wsprintf(ach[0], "No exist of Autosave file");
-#endif
-
-				dstn_rect.left=80;
-				dstn_rect.top=430;
-
-				if( Mode==GameMode.GameSetting )
-					{
-					dstn_rect.right=dstn_rect.left+(len[0]*12);
-					dstn_rect.bottom=dstn_rect.top+24;
-					if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting && HasAutoSave!=0 )
-						{
-						SetTextColor(hdc, RGB(255, 0, 0));
-
-						if( LeftButton==3 )
-							{
-							// ホストの選択状態をゲストにセンドします。
-							dp_data_1.dwType = MessageType.StartFromAutoSave;
-							bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-							bufferDesc.pBufferData  = (byte*) &dp_data_1;
-							g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-
-							Mode=GameMode.Battle;
-							ScenarioNumber=-2;		// －２でオートセーブからのスタートを示す
-							}
-						}
-					else
-						{
-						SetTextColor(hdc, RGB(255, 255, 255));
-						}
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(126, 126, 126));
-					}
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-				}
-			else
-				{
-				if( JoinGameStart==MessageType.StartFromAutoSave )
-					{
-					Mode=GameMode.Battle;
-					JoinGameStart=0;
-					ScenarioNumber=-2;		// －２でオートセーブからのスタートを示す
-					}
-				}
+			// オートセーブスタート
+			UpdateAutoSaveButton(ref rx, ref len, ref ach, ref hdc, ref dp_data_1);
 
 			// 操作対象の切り替え
-			rx=80;
-			if( !IsEditingMap && IsHost && Mode==GameMode.GameSetting )
-				{
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "操作対象の切り替え ->>>");
-#else
-				len[0] = wsprintf(ach[0], "Side Change ->>>");
-#endif
-
-				dstn_rect.left=rx;
-				dstn_rect.top=475;
-				dstn_rect.right=dstn_rect.left+(len[0]*12);
-				dstn_rect.bottom=dstn_rect.top+24;
-				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( LeftButton==3 )
-						{
-						HostSide=(HostSide==0 ? 1 : 0);
-						}
-					}
-				else
-					SetTextColor(hdc, RGB(255, 255, 255));
-
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-				}
-
-			if(HostSide==0)
-				{
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "操作対象：日本海軍（ホスト）、合衆国海軍（ゲスト）");
-#else
-				len[0] = wsprintf(ach[0], "Side: Japan Navy(Host Player)  U.S.Navy(Guest Player)");
-#endif
-				}
-			else
-				{
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "操作対象：合衆国海軍（ホスト）、日本海軍（ゲスト）");
-#else
-				len[0] = wsprintf(ach[0], "Side: U.S.Navy(Host Player)  Japan Navy(Guest Player)");
-#endif
-				}
+			UpdateSideSetting(ref rx, ref len, ref ach, ref hdc);
 
 #if !LNGG_VER
 			DrawScenarioDescription(ref len, ref ach);
