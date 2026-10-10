@@ -904,6 +904,243 @@ LCleanReturn:
 	return hr;
 	}
 
+private void ReceiveSideAndScenario(DPNMSG_RECEIVE pReceiveMsg)
+	{
+	_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
+
+	// ジョインが受け取る
+	HostSide=pMsg->data[0];
+	ScenarioNumber=pMsg->data[1];
+
+	SupplyRates[0]=pMsg->data[2];		// Host
+	SupplyRates[1]=pMsg->data[3];		// Guest
+
+	IsDecisionEnabled=new Bool8((byte)pMsg->data[4]);
+
+	InitialSupplyPoints[0]=pMsg->data[5];		// Host
+	InitialSupplyPoints[1]=pMsg->data[6];		// Guest
+
+	ArrivalControl=(byte)pMsg->data[7];
+
+	SwapTime=pMsg->data[8];
+	SwapRule=pMsg->data[9];
+	}
+
+private void ReceiveLeaveGameSetting(DPNMSG_RECEIVE pReceiveMsg)
+	{
+	_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
+
+	// ジョインが受け取る
+	HostSide=pMsg->data[0];
+	ScenarioNumber=pMsg->data[1];
+
+	JoinGameStart=MessageType.LeaveGameSetting;
+
+	SupplyRates[0]=pMsg->data[2];		// Host
+	SupplyRates[1]=pMsg->data[3];		// Guest
+
+	IsDecisionEnabled=new Bool8((byte)pMsg->data[4]);
+
+	InitialSupplyPoints[0]=pMsg->data[5];		// Host
+	InitialSupplyPoints[1]=pMsg->data[6];		// Guest
+
+	ArrivalControl=(byte)pMsg->data[7];
+
+	SwapTime=pMsg->data[8];
+	SwapRule=pMsg->data[9];
+	}
+
+private void ReceiveLeaveConfigSetting(DPNMSG_RECEIVE pReceiveMsg)
+	{
+	_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
+
+	// ジョインが受け取る
+	HostSide=pMsg->data[0];
+	ScenarioNumber=pMsg->data[1];
+
+	JoinGameStart=MessageType.LeaveConfigSetting;
+
+	SupplyRates[0]=pMsg->data[2];		// Host
+	SupplyRates[1]=pMsg->data[3];		// Guest
+
+	IsDecisionEnabled=new Bool8((byte)pMsg->data[4]);
+
+	InitialSupplyPoints[0]=pMsg->data[5];		// Host
+	InitialSupplyPoints[1]=pMsg->data[6];		// Guest
+
+	ArrivalControl=(byte)pMsg->data[7];
+
+	SwapTime=pMsg->data[8];
+	SwapRule=pMsg->data[9];
+	}
+
+private void ReceiveMoveOrder(DPNMSG_RECEIVE pReceiveMsg)
+	{
+	int s;
+	_DP_NEW_PP* pMsg = (_DP_NEW_PP*) pReceiveMsg.pReceiveData;
+
+	// ホスト、ジョインともここで相手のデータを受け取る。
+	BufferedMoveOrders[0].Unit=pMsg->used;
+	BufferedMoveOrders[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
+	BufferedMoveOrders[0].ClearsPath=pMsg->cls;
+	for( s=0; s<=(USA_PLANE_END/2)-1; s++)
+		{
+		BufferedSelections[0][s]=pMsg->slct_unit[s];
+		}
+	CanAdvance2=true;
+	}
+
+private void ReceiveMoveShipsOrder(DPNMSG_RECEIVE pReceiveMsg)
+	{
+	int s;
+	_DP_NEW_PP_SHIP* pMsg = (_DP_NEW_PP_SHIP*) pReceiveMsg.pReceiveData;
+
+	BufferedMoveOrders[0].Unit=pMsg->used;
+	BufferedMoveOrders[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
+	BufferedMoveOrders[0].ClearsPath=pMsg->cls;
+	for( s=0; s<=JPN_SHIP_END-1; s++)
+		{
+		BufferedSelections[0][s]=pMsg->slct_unit[s];
+		}
+	CanAdvance2=true;
+	}
+
+private void ReceiveMovePlanesOrder(DPNMSG_RECEIVE pReceiveMsg)
+	{
+	int s;
+	_DP_NEW_PP_PLANE* pMsg = (_DP_NEW_PP_PLANE*) pReceiveMsg.pReceiveData;
+
+	// ホスト、ジョインともここで相手のデータを受け取る。
+	BufferedMoveOrders[0].Unit=pMsg->used;
+	BufferedMoveOrders[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
+	BufferedMoveOrders[0].ClearsPath=pMsg->cls;
+	for( s=0; s<=JPN_PLANE_END-JPN_PLANE_START; s++)
+		{
+		BufferedSelections[0][s+JPN_SHIP_END]=pMsg->slct_unit[s];
+		}
+	CanAdvance2=true;
+	}
+
+private void ReceiveSelectOrder(DPNMSG_RECEIVE pReceiveMsg)
+	{
+	int s;
+	_DP_NEW_SLCT* pMsg = (_DP_NEW_SLCT*) pReceiveMsg.pReceiveData;
+
+	// ホスト、ジョインともここで相手のデータを受け取る。
+	BufferedSelectOrders[0].IsSet=new Bool32(pMsg->sw);
+	BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
+	BufferedSelectOrders[0].Unit=pMsg->m;
+	BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
+	for( s=0; s<=(USA_PLANE_END/2)-1; s++)
+		{
+		BufferedSelections[0][s]=pMsg->slct_unit[s];
+		}
+	CanAdvance2=true;
+	}
+
+private void ReceiveSelectShipsOrder(DPNMSG_RECEIVE pReceiveMsg)
+	{
+	int s;
+	_DP_NEW_SLCT_SHIP* pMsg = (_DP_NEW_SLCT_SHIP*) pReceiveMsg.pReceiveData;
+
+	// ホスト、ジョインともここで相手のデータを受け取る。
+	BufferedSelectOrders[0].IsSet=new Bool32(pMsg->sw);
+	BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
+	BufferedSelectOrders[0].Unit=pMsg->m;
+	BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
+	for( s=0; s<=JPN_SHIP_END-1; s++)
+		{
+		BufferedSelections[0][s]=pMsg->slct_unit[s];
+		}
+	CanAdvance2=true;
+	}
+
+private void ReceiveSelectPlanesOrder(DPNMSG_RECEIVE pReceiveMsg)
+	{
+	int s;
+	_DP_NEW_SLCT_PLANE* pMsg = (_DP_NEW_SLCT_PLANE*) pReceiveMsg.pReceiveData;
+
+	// ホスト、ジョインともここで相手のデータを受け取る。
+	BufferedSelectOrders[0].IsSet=new Bool32(pMsg->sw);
+	BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
+	BufferedSelectOrders[0].Unit=pMsg->m;
+	BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
+	for( s=0; s<=JPN_PLANE_END-JPN_PLANE_START; s++)
+		{
+		BufferedSelections[0][s+JPN_SHIP_END]=pMsg->slct_unit[s];
+		}
+	CanAdvance2=true;
+	}
+
+private void ReceiveSelectLandOrder(DPNMSG_RECEIVE pReceiveMsg)
+	{
+	_DP_NEW_SLCT_LAND* pMsg = (_DP_NEW_SLCT_LAND*) pReceiveMsg.pReceiveData;
+
+	// ホスト、ジョインともここで相手のデータを受け取る。
+	BufferedSelectOrders[0].IsSet=new Bool32(pMsg->sw);
+	BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
+	BufferedSelectOrders[0].Unit=pMsg->m;
+	BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
+	CanAdvance2=true;
+	}
+
+private void ReceiveMenuOrder(DPNMSG_RECEIVE pReceiveMsg)
+	{
+	int s;
+	_DP_NEW_MENU* pMsg = (_DP_NEW_MENU*) pReceiveMsg.pReceiveData;
+
+	// ホスト、ジョインともここで相手のデータを受け取る。
+	BufferedMenuOrders[0].Menu=(CombatMenuItem)pMsg->menu;
+	BufferedMenuOrders[0].SelectedUnit=pMsg->the_slct_unit;
+
+	for( s=0; s<=(USA_PLANE_END/2)-1; s++)
+		{
+		BufferedSelections[0][s]=pMsg->slct_unit[s];
+		}
+	CanAdvance2=true;
+	}
+
+private void ReceiveSyncFlag(DPNMSG_RECEIVE pReceiveMsg)
+	{
+	_DP_FLAG* pMsg = (_DP_FLAG*) pReceiveMsg.pReceiveData;
+
+	// ホスト、ジョインともここで相手のデータを受け取る。
+	CanAdvance1=true;
+
+	TickChecksums[0]=pMsg->cc_chk;
+	UnitChecksums[0]=pMsg->unit_chk;
+	RandomChecksums[0]=pMsg->rnd_chk;
+	TickWaits[0]=pMsg->ccc_wait_chk;
+
+	RivalMode=(GameMode)pMsg->rival_mode;
+	}
+
+private void ReceiveGoToGameSetting()
+	{
+	if( Mode==GameMode.ConfigSetting || Mode==GameMode.Title )
+		{
+		// ジョインが受け取る
+		GoToGameSetting();
+		}
+	else
+		{
+		// ホスト、ジョインともここで相手のデータを受け取る。
+		CanAdvance2=true;
+		SystemOrders[1]=(byte)MessageType.GoToGameSetting;
+		}
+	}
+
+private void ReceiveUserScenarioFileName(DPNMSG_RECEIVE pReceiveMsg)
+	{
+	int s;
+	_DP_DATA_20* pMsg = (_DP_DATA_20 *) pReceiveMsg.pReceiveData;
+
+	for(s=0;s<MAX_PATH;s++)
+		{
+		UserScenarioFileName[s]=pMsg->friend_chat[s];
+		}
+	}
+
 //-----------------------------------------------------------------------------
 // Name: DirectPlayMessageHandler
 // Desc: Handler for DirectPlay messages.  This function is called by
@@ -1049,70 +1286,15 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 
 			else if (pGenericMsg->dwType == MessageType.SideAndScenario && ( Mode==GameMode.GameSetting || Mode==GameMode.ConfigSetting ) )
 				{
-				_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
-
-				// ジョインが受け取る
-				HostSide=pMsg->data[0];
-				ScenarioNumber=pMsg->data[1];
-
-				SupplyRates[0]=pMsg->data[2];		// Host
-				SupplyRates[1]=pMsg->data[3];		// Guest
-
-				IsDecisionEnabled=new Bool8((byte)pMsg->data[4]);
-
-				InitialSupplyPoints[0]=pMsg->data[5];		// Host
-				InitialSupplyPoints[1]=pMsg->data[6];		// Guest
-
-				ArrivalControl=(byte)pMsg->data[7];
-
-				SwapTime=pMsg->data[8];
-				SwapRule=pMsg->data[9];
+				ReceiveSideAndScenario(pReceiveMsg);
 				}
 			else if( pGenericMsg->dwType == MessageType.LeaveGameSetting && ( Mode==GameMode.GameSetting || Mode==GameMode.ConfigSetting ) )
 				{
-				_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
-
-				// ジョインが受け取る
-				HostSide=pMsg->data[0];
-				ScenarioNumber=pMsg->data[1];
-
-				JoinGameStart=MessageType.LeaveGameSetting;
-
-				SupplyRates[0]=pMsg->data[2];		// Host
-				SupplyRates[1]=pMsg->data[3];		// Guest
-
-				IsDecisionEnabled=new Bool8((byte)pMsg->data[4]);
-
-				InitialSupplyPoints[0]=pMsg->data[5];		// Host
-				InitialSupplyPoints[1]=pMsg->data[6];		// Guest
-
-				ArrivalControl=(byte)pMsg->data[7];
-
-				SwapTime=pMsg->data[8];
-				SwapRule=pMsg->data[9];
+				ReceiveLeaveGameSetting(pReceiveMsg);
 				}
 			else if( pGenericMsg->dwType == MessageType.LeaveConfigSetting )
 				{
-				_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
-
-				// ジョインが受け取る
-				HostSide=pMsg->data[0];
-				ScenarioNumber=pMsg->data[1];
-
-				JoinGameStart=MessageType.LeaveConfigSetting;
-
-				SupplyRates[0]=pMsg->data[2];		// Host
-				SupplyRates[1]=pMsg->data[3];		// Guest
-
-				IsDecisionEnabled=new Bool8((byte)pMsg->data[4]);
-
-				InitialSupplyPoints[0]=pMsg->data[5];		// Host
-				InitialSupplyPoints[1]=pMsg->data[6];		// Guest
-
-				ArrivalControl=(byte)pMsg->data[7];
-
-				SwapTime=pMsg->data[8];
-				SwapRule=pMsg->data[9];
+				ReceiveLeaveConfigSetting(pReceiveMsg);
 				}
 			else if( pGenericMsg->dwType == MessageType.StartFromResume )
 				{
@@ -1132,114 +1314,35 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				}
 			else if( pGenericMsg->dwType == MessageType.MoveOrder )
 				{
-				_DP_NEW_PP* pMsg = (_DP_NEW_PP*) pReceiveMsg.pReceiveData;
-
-				// ホスト、ジョインともここで相手のデータを受け取る。
-				BufferedMoveOrders[0].Unit=pMsg->used;
-				BufferedMoveOrders[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
-				BufferedMoveOrders[0].ClearsPath=pMsg->cls;
-				for( s=0; s<=(USA_PLANE_END/2)-1; s++)
-					{
-					BufferedSelections[0][s]=pMsg->slct_unit[s];
-					}
-				CanAdvance2=true;
+				ReceiveMoveOrder(pReceiveMsg);
 				}
 			else if( pGenericMsg->dwType == MessageType.MoveShipsOrder )
 				{
-				_DP_NEW_PP_SHIP* pMsg = (_DP_NEW_PP_SHIP*) pReceiveMsg.pReceiveData;
-
-				BufferedMoveOrders[0].Unit=pMsg->used;
-				BufferedMoveOrders[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
-				BufferedMoveOrders[0].ClearsPath=pMsg->cls;
-				for( s=0; s<=JPN_SHIP_END-1; s++)
-					{
-					BufferedSelections[0][s]=pMsg->slct_unit[s];
-					}
-				CanAdvance2=true;
+				ReceiveMoveShipsOrder(pReceiveMsg);
 				}
 			else if( pGenericMsg->dwType == MessageType.MovePlanesOrder )
 				{
-				_DP_NEW_PP_PLANE* pMsg = (_DP_NEW_PP_PLANE*) pReceiveMsg.pReceiveData;
-
-				// ホスト、ジョインともここで相手のデータを受け取る。
-				BufferedMoveOrders[0].Unit=pMsg->used;
-				BufferedMoveOrders[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
-				BufferedMoveOrders[0].ClearsPath=pMsg->cls;
-				for( s=0; s<=JPN_PLANE_END-JPN_PLANE_START; s++)
-					{
-					BufferedSelections[0][s+JPN_SHIP_END]=pMsg->slct_unit[s];
-					}
-				CanAdvance2=true;
+				ReceiveMovePlanesOrder(pReceiveMsg);
 				}
 			else if( pGenericMsg->dwType == MessageType.SelectOrder )
 				{
-				_DP_NEW_SLCT* pMsg = (_DP_NEW_SLCT*) pReceiveMsg.pReceiveData;
-
-				// ホスト、ジョインともここで相手のデータを受け取る。
-				BufferedSelectOrders[0].IsSet=new Bool32(pMsg->sw);
-				BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
-				BufferedSelectOrders[0].Unit=pMsg->m;
-				BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
-				for( s=0; s<=(USA_PLANE_END/2)-1; s++)
-					{
-					BufferedSelections[0][s]=pMsg->slct_unit[s];
-					}
-				CanAdvance2=true;
+				ReceiveSelectOrder(pReceiveMsg);
 				}
 			else if( pGenericMsg->dwType == MessageType.SelectShipsOrder )
 				{
-				_DP_NEW_SLCT_SHIP* pMsg = (_DP_NEW_SLCT_SHIP*) pReceiveMsg.pReceiveData;
-
-				// ホスト、ジョインともここで相手のデータを受け取る。
-				BufferedSelectOrders[0].IsSet=new Bool32(pMsg->sw);
-				BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
-				BufferedSelectOrders[0].Unit=pMsg->m;
-				BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
-				for( s=0; s<=JPN_SHIP_END-1; s++)
-					{
-					BufferedSelections[0][s]=pMsg->slct_unit[s];
-					}
-				CanAdvance2=true;
+				ReceiveSelectShipsOrder(pReceiveMsg);
 				}
 			else if( pGenericMsg->dwType == MessageType.SelectPlanesOrder )
 				{
-				_DP_NEW_SLCT_PLANE* pMsg = (_DP_NEW_SLCT_PLANE*) pReceiveMsg.pReceiveData;
-
-				// ホスト、ジョインともここで相手のデータを受け取る。
-				BufferedSelectOrders[0].IsSet=new Bool32(pMsg->sw);
-				BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
-				BufferedSelectOrders[0].Unit=pMsg->m;
-				BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
-				for( s=0; s<=JPN_PLANE_END-JPN_PLANE_START; s++)
-					{
-					BufferedSelections[0][s+JPN_SHIP_END]=pMsg->slct_unit[s];
-					}
-				CanAdvance2=true;
+				ReceiveSelectPlanesOrder(pReceiveMsg);
 				}
 			else if( pGenericMsg->dwType == MessageType.SelectLandOrder )
 				{
-				_DP_NEW_SLCT_LAND* pMsg = (_DP_NEW_SLCT_LAND*) pReceiveMsg.pReceiveData;
-
-				// ホスト、ジョインともここで相手のデータを受け取る。
-				BufferedSelectOrders[0].IsSet=new Bool32(pMsg->sw);
-				BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
-				BufferedSelectOrders[0].Unit=pMsg->m;
-				BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
-				CanAdvance2=true;
+				ReceiveSelectLandOrder(pReceiveMsg);
 				}
 			else if( pGenericMsg->dwType == MessageType.MenuOrder )
 				{
-				_DP_NEW_MENU* pMsg = (_DP_NEW_MENU*) pReceiveMsg.pReceiveData;
-
-				// ホスト、ジョインともここで相手のデータを受け取る。
-				BufferedMenuOrders[0].Menu=(CombatMenuItem)pMsg->menu;
-				BufferedMenuOrders[0].SelectedUnit=pMsg->the_slct_unit;
-
-				for( s=0; s<=(USA_PLANE_END/2)-1; s++)
-					{
-					BufferedSelections[0][s]=pMsg->slct_unit[s];
-					}
-				CanAdvance2=true;
+				ReceiveMenuOrder(pReceiveMsg);
 				}
 			else if( pGenericMsg->dwType == MessageType.NoOrder )
 				{
@@ -1248,17 +1351,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				}
 			else if( pGenericMsg->dwType == MessageType.SyncFlag )
 				{
-				_DP_FLAG* pMsg = (_DP_FLAG*) pReceiveMsg.pReceiveData;
-
-				// ホスト、ジョインともここで相手のデータを受け取る。
-				CanAdvance1=true;
-
-				TickChecksums[0]=pMsg->cc_chk;
-				UnitChecksums[0]=pMsg->unit_chk;
-				RandomChecksums[0]=pMsg->rnd_chk;
-				TickWaits[0]=pMsg->ccc_wait_chk;
-
-				RivalMode=(GameMode)pMsg->rival_mode;
+				ReceiveSyncFlag(pReceiveMsg);
 				}
 			else if( pGenericMsg->dwType == MessageType.RivalMode )
 				{
@@ -1270,17 +1363,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				}
 			else if( pGenericMsg->dwType == MessageType.GoToGameSetting )
 				{
-				if( Mode==GameMode.ConfigSetting || Mode==GameMode.Title )
-					{
-					// ジョインが受け取る
-					GoToGameSetting();
-					}
-				else
-					{
-					// ホスト、ジョインともここで相手のデータを受け取る。
-					CanAdvance2=true;
-					SystemOrders[1]=(byte)MessageType.GoToGameSetting;
-					}
+				ReceiveGoToGameSetting();
 				}
 			else if( pGenericMsg->dwType == MessageType.ResumeAndGoToGameSetting )
 				{
@@ -1310,12 +1393,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				}
 			else if( pGenericMsg->dwType == MessageType.UserScenarioFileName )
 				{
-				_DP_DATA_20* pMsg = (_DP_DATA_20 *) pReceiveMsg.pReceiveData;
-
-				for(s=0;s<MAX_PATH;s++)
-					{
-					UserScenarioFileName[s]=pMsg->friend_chat[s];
-					}
+				ReceiveUserScenarioFileName(pReceiveMsg);
 				}
 
 /*
