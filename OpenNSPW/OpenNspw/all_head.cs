@@ -86,18 +86,7 @@ public const int	CMBT_REST		= 40;
 
 public const int MAX_SPRT		= 25;
 
-// スプライトナンバー
-public const int	TTL_BACK			= 0;
-public const int	UNIT_JPN			= 1;
-public const int	UNIT_USA			= 2;
-public const int	UNIT_INFO_JPN		= 3;
-public const int	UNIT_INFO_USA		= 4;
-public const int	MAP_TIP_NRML		= 5;
-public const int	SUB_UNIT			= 6;
-public const int	BTN_1				= 7;
-public const int	BTN_2				= 8;
-public const int	BTN_BASE			= 9;
-public const int	MAP_BASE			= 10;
+// スプライトナンバー: SpriteId.
 
 // 効果音
 public const int		SND_DUP		= 6;		// 同時に鳴らせる場合の最大音数

@@ -58,7 +58,7 @@ public class EmulatorCopyBenchmarks
 	public void CopyIn()
 	{
 		MemoryMarshal.AsBytes((Span<Array256<ushort>>)_game.MapTiles).CopyTo(At(MapAddress, Unsafe.SizeOf<Array256<Array256<ushort>>>()));
-		MemoryMarshal.AsBytes((Span<SPRT>)_game.Sprites).CopyTo(At(SpriteAddress, Unsafe.SizeOf<Array25<SPRT>>()));
+		MemoryMarshal.AsBytes((Span<SPRT>)_game.Sprites).CopyTo(At(SpriteAddress, Unsafe.SizeOf<SpriteArray>()));
 		var units = MemoryMarshal.AsBytes((Span<Unit>)_game.Units);
 		for (var m = 0; m < UnitCount; m++)
 		{
@@ -74,7 +74,7 @@ public class EmulatorCopyBenchmarks
 	public void CopyOut()
 	{
 		At(MapAddress, Unsafe.SizeOf<Array256<Array256<ushort>>>()).CopyTo(MemoryMarshal.AsBytes((Span<Array256<ushort>>)_game.MapTiles));
-		At(SpriteAddress, Unsafe.SizeOf<Array25<SPRT>>()).CopyTo(MemoryMarshal.AsBytes((Span<SPRT>)_game.Sprites));
+		At(SpriteAddress, Unsafe.SizeOf<SpriteArray>()).CopyTo(MemoryMarshal.AsBytes((Span<SPRT>)_game.Sprites));
 		var units = MemoryMarshal.AsBytes((Span<Unit>)_game.Units);
 		for (var m = 0; m < UnitCount; m++)
 		{
