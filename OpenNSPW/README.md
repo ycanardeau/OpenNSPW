@@ -16,7 +16,7 @@ Every C++ file is ported. The game runs from the connection dialogs through the 
 
 What is tested:
 
-- **Function tests**: `etc2.cpp` (except `new_unit_arrived`, `draw_line4` and `draw_line5`), and `make_my_rnd` through `cloud_cont` of `etc3.cpp`, against recordings of the reference.
+- **Function tests**: `etc2.cpp` (except `new_unit_arrived`, `draw_line4` and `draw_line5`), and `make_my_rnd` through `cloud_cont` of `etc3.cpp`, against recordings of the reference. The tests of the transports' landing (`set_pos_of_attack_TR1`, the transports' branch of `fire_now`, and the landing craft of `cont_fire`) are written, and skipped until their calls are recorded.
 - **`NetworkTests`**: `dplay.cpp`. Two games in one process connect over loopback UDP through the original's connection dialogs, and exchange the game's messages.
 - **`TitleScreenTests`**: two whole games with the original's data connect, reach the title screen, and play a battle that the host starts by clicking through the setting screens. They check the modes, that both games keep in step, and that no message box shows. They save the frames they reach as PNG files next to the test assembly.
 - **`CharacterizationTests`**: the characterization traces that guard the refactoring (see [docs/Refactoring.md](../docs/Refactoring.md#characterization-traces)). Scripts play two whole games in lockstep: the title screen, the first three scenarios, and the original's user scenarios `tst3.dat` and `てすと.dat`, whose fleets start close enough to fight, with seeded random input on both sides, and the host's transports landing their cargo in ミッドウェイ攻略１. Each script's trace, the state, output and `rand()` state of both games after every round, must match the one in `OpenNspw.Tests/Traces`, which was recorded from the port itself, and neither game may detect a desync.
@@ -92,7 +92,7 @@ This builds the reference and writes to `OpenNspw.Tests`:
 - `Layout.json`: the size and field offsets of each struct, the size of each global, and the initial values of the globals, as compiled.
 - `Functions/<file>/<function>.jsonl.gz`: the recorded calls of each tested function (see `OpenNspw.Reference/function_tests.cpp`). The inputs are generated from a fixed seed, so recording again gives the same calls unless the reference changed.
 
-To test a newly ported function, add its recording to `function_tests.cpp`, record, and add a test that calls the port's function to `OpenNspw.Tests`.
+To test a newly ported function, add its recording to `function_tests.cpp`, record, and add a test that calls the port's function to `OpenNspw.Tests`. A test whose calls are not recorded yet is skipped with `FunctionTest.NotRecorded`; remove the `Skip` once they are.
 
 The reference also runs the game, from `Original/NSPW_NET` as the working directory (set as the debugger's working directory in the project). For now it runs fullscreen, like the normal build.
 

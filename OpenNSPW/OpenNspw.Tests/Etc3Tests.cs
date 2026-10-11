@@ -56,4 +56,15 @@ public class Etc3Tests
 			return null;
 		});
 	}
+
+	// The landing craft of cont_fire (TR_SP to TR_GF3).
+	[Fact(Skip = FunctionTest.NotRecorded)]
+	public void cont_fire_TR()
+	{
+		FunctionTest.Run("etc3", "cont_fire_TR", (game, c) =>
+		{
+			game.UpdateFires();
+			return null;
+		});
+	}
 }

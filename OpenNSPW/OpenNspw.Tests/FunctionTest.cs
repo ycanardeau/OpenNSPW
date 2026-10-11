@@ -11,6 +11,9 @@ namespace OpenNspw.Tests;
 // the same bytes, and leave rand() at the same point of its sequence.
 internal static class FunctionTest
 {
+	// The reason a function test is skipped until its calls are recorded, on Windows. Remove the Skip once they are.
+	public const string NotRecorded = "Not recorded yet: run OpenNspw.Reference/record-functions.ps1 on Windows (see OpenNSPW/README.md).";
+
 	private static void CompareReturn(JsonElement? expected, object? actual, List<string> problems)
 	{
 		switch (expected, actual)
