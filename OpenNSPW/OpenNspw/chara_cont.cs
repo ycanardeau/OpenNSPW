@@ -1388,6 +1388,12 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 		TryLandOnCarrier(ref unit, m);
 		}
 
+	// 1.22 (0x402D2B): every 500 ticks, a computer's unit that follows no leader and whose next step is land plans its
+	// route again.
+	if( IsSingleplayer && CpuSide!=Side.None && unit.Side==CpuSide && unit.GroupLeader==0 && Tick%500==0
+		&& IsLandAt(CosDegrees(unit.Direction)*unit.Speed+unit.Position.X, SinDegrees(unit.Direction)*unit.Speed+unit.Position.Y) )
+		RerouteComputerShip(ref unit, m, null);
+
 	// 新座標を設定
 	unit.Position += new WorldVector(CosDegrees(unit.Direction)*unit.Speed, SinDegrees(unit.Direction)*unit.Speed);
 
