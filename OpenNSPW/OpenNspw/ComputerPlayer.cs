@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices;
-
 namespace OpenNspw;
 
 // NSPW 1.22's computer player (docs/ComputerPlayer.md), rewritten from its machine code in place of the emulated
@@ -432,23 +430,20 @@ public unsafe partial class Nspw
 	// Scenario 303: each fleet of the computer targets units 41 to 43 and stops.
 	private void TargetSurrenderedPlanes()
 	{
-		var emulator = Emulator ?? throw new InvalidOperationException("No single-player game is being played.");
 		for (var f = 1; f <= 8; f++)
 		{
-			var fleet = emulator.At(FleetAddress + (uint)(f * FleetSize), FleetSize);
-			var flagship = MemoryMarshal.Read<short>(fleet[FleetFlagshipOffset..]);
-			if (flagship == 0)
+			ref var fleet = ref FleetAt(f);
+			if (fleet.Flagship == 0)
 				continue;
 
-			var targets = MemoryMarshal.Cast<byte, short>(fleet.Slice(FleetTargetsOffset, 18 * sizeof(short)));
-			targets[1] = 41;
-			targets[2] = 42;
-			targets[3] = 43;
-			targets[4] = 0;
-			targets[5] = 0;
-			targets[6] = 0;
-			MemoryMarshal.Write(fleet[FleetBaseOffset..], (short)0);
-			StopWhereItIs(ref Units[flagship]);
+			fleet.Targets[1] = 41;
+			fleet.Targets[2] = 42;
+			fleet.Targets[3] = 43;
+			fleet.Targets[4] = 0;
+			fleet.Targets[5] = 0;
+			fleet.Targets[6] = 0;
+			fleet.Base = 0;
+			StopWhereItIs(ref Units[fleet.Flagship]);
 		}
 	}
 

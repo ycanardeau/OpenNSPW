@@ -29,9 +29,6 @@ public unsafe partial class Nspw
 	private const uint FleetAddress = 0x4867A0;
 	private const int FleetSize = 0x498;
 	private const int FleetCount = 11;
-	private const int FleetFlagshipOffset = 0x002;
-	private const int FleetTargetsOffset = 0x42C;
-	private const int FleetBaseOffset = 0x474;
 	private const int FleetPathEndOffset = 0x478;
 
 	// cmbt_map of 1.22, which load_it2 writes.
@@ -116,6 +113,9 @@ public unsafe partial class Nspw
 	// The emulator of the single-player game being played: a new one for each game, so that 1.22's own globals start as
 	// the executable has them.
 	public Emulator? Emulator;
+
+	// Two doubles in the emulator's memory, for the functions of 1.22 that take pointers to them.
+	private uint _pointAddress;
 
 	// The gas of each unit as it was copied into the emulator, to write back only what the emulated code changed.
 	private readonly int[] _emulatedGas = new int[UnitCount * 8];
@@ -300,6 +300,7 @@ public unsafe partial class Nspw
 		emulator.Cpu.Fpu.Cos = cos;
 		emulator.Cpu.Fpu.Atan2 = atan2;
 		SetNatives(emulator);
+		_pointAddress = emulator.Allocate(2 * sizeof(double));
 		for (var i = 0; i < FleetCount; i++)
 			MemoryMarshal.Write(emulator.At(FleetAddress + (uint)(i * FleetSize + FleetPathEndOffset), sizeof(double)), (double)(MAP_RIGHT + 1));
 		return emulator;
@@ -320,7 +321,8 @@ public unsafe partial class Nspw
 		InitializeGame();
 	}
 
-	// cpu_strtgy: the computer's order of this frame, in new_pp[0] and slct_unit[0].
+	// The emulated cpu_strtgy, which ComputerPlayerTests compares PlanComputerStrategy, its rewrite, with: the computer's
+	// order of this frame, in new_pp[0] and slct_unit[0].
 	public void RunCpuStrategy()
 	{
 		RunEmulated(Functions.CpuStrategy);
@@ -333,10 +335,82 @@ public unsafe partial class Nspw
 		RunEmulated(Functions.Decision);
 	}
 
+	// Entry f of 1.22's table of the computer's fleets, in the emulator's memory.
+	private ref ComputerFleet FleetAt(int f)
+	{
+		var emulator = Emulator ?? throw new InvalidOperationException("No single-player game is being played.");
+		return ref MemoryMarshal.AsRef<ComputerFleet>(emulator.At(FleetAddress + (uint)(f * FleetSize), FleetSize));
+	}
+
+	// The int that an emulated function finds at its stack frame's offset (from ImageBase, where the stack of a call from
+	// the port starts), as the last emulated call left it: what 1.22 reads from a local it did not set.
+	private int StaleEmulatedLocal(uint offset)
+	{
+		var emulator = Emulator ?? throw new InvalidOperationException("No single-player game is being played.");
+		return MemoryMarshal.Read<int>(emulator.At(emulator.ImageBase - offset, sizeof(int)));
+	}
+
+	private static uint Low(double value) => (uint)BitConverter.DoubleToUInt64Bits(value);
+
+	private static uint High(double value) => (uint)(BitConverter.DoubleToUInt64Bits(value) >> 32);
+
+	// sub_403AE0(fleet): the formation of the fleet's members around its flagship.
+	private void RunSetFormation(int fleet)
+	{
+		RunEmulated(Functions.SetFormation, (uint)fleet);
+	}
+
+	// sub_404D80(fleet): shuffles the fleet's targets.
+	private void RunShuffleTargets(int fleet)
+	{
+		RunEmulated(Functions.ShuffleTargets, (uint)fleet);
+	}
+
+	// sub_414DD0(&x, &y): moves the point to a free place for a reinforcement near the east edge of the map.
+	private void RunPlaceReinforcement(ref double x, ref double y)
+	{
+		var emulator = Emulator ?? throw new InvalidOperationException("No single-player game is being played.");
+		MemoryMarshal.Write(emulator.At(_pointAddress, sizeof(double)), x);
+		MemoryMarshal.Write(emulator.At(_pointAddress + sizeof(double), sizeof(double)), y);
+		RunEmulated(Functions.PlaceReinforcement, _pointAddress, _pointAddress + sizeof(double));
+		x = MemoryMarshal.Read<double>(emulator.At(_pointAddress, sizeof(double)));
+		y = MemoryMarshal.Read<double>(emulator.At(_pointAddress + sizeof(double), sizeof(double)));
+	}
+
+	// set_pos_of_parking(m): the position of plane m parked at its carrier or air base.
+	private void RunSetParkingPosition(int m)
+	{
+		RunEmulated(Functions.SetParkingPosition, (uint)m);
+	}
+
 	// set_unit_data(m): the data of unit m by its kind and type, NSPW 1.22's.
 	internal void RunSetUnitData(int m)
 	{
 		RunEmulated(Functions.SetUnitData, (uint)m);
+	}
+
+	// set_new_unit: a new unit of the side and kind at the point, heading in the direction; its number.
+	private short RunAddUnit(Side side, UnitKind kind, double x, double y, double direction)
+	{
+		return (short)RunEmulated(Functions.AddUnit, (uint)side, (uint)kind, Low(x), High(x), Low(y), High(y), Low(direction), High(direction));
+	}
+
+	// sub_41F230(fleet, kind): adds every enemy unit of the kind to the fleet's targets.
+	private void RunAddTargetsOfKind(int fleet, UnitKind kind)
+	{
+		RunEmulated(Functions.AddTargetsOfKind, (uint)fleet, (uint)kind);
+	}
+
+	// sub_41F300(fleet): adds every enemy naval base to the fleet's targets.
+	private void RunAddNavalBaseTargets(int fleet)
+	{
+		RunEmulated(Functions.AddNavalBaseTargets, (uint)fleet);
+	}
+
+	// sub_41F490(fleet): adds every enemy battleship, cruiser and carrier to the fleet's targets.
+	private void RunAddShipTargets(int fleet)
+	{
+		RunEmulated(Functions.AddShipTargets, (uint)fleet);
 	}
 
 	// plane_in_cv(m): the planes of carrier or air base m.
@@ -390,7 +464,7 @@ public unsafe partial class Nspw
 			return;
 
 		if (CpuSide != Side.None)
-			RunCpuStrategy();
+			PlanComputerStrategy();
 
 		if (BufferedArrivedUnits[1] != 0)
 			OnUnitArrived(1, BufferedArrivedUnits[1]);
