@@ -2567,6 +2567,19 @@ public class CpuTests
 	}
 
 	[Fact]
+	public void TranscendentalFunctionsTest()
+	{
+		var cpu = new Cpu(Array.Empty<byte>(), Register32.Empty);
+		cpu.Fpu.Sin = x => x + 1;
+		cpu.Fpu.Cos = x => x + 2;
+		cpu.Fpu.Atan2 = (y, x) => y - x;
+
+		cpu.Fsin(Register64.FromDouble(1)).ToDouble().Should().Be(2);
+		cpu.Fcos(Register64.FromDouble(1)).ToDouble().Should().Be(3);
+		cpu.Fpatan(Register64.FromDouble(5), Register64.FromDouble(3)).ToDouble().Should().Be(2);
+	}
+
+	[Fact]
 	public void StosdTest()
 	{
 		var memory = new byte[12];

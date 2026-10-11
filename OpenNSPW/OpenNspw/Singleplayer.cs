@@ -287,6 +287,11 @@ public unsafe partial class Nspw
 	private Emulator CreateEmulator()
 	{
 		var emulator = new Emulator(SingleplayerExecutable ?? throw new InvalidOperationException("The single-player executable (NSPW_122.exe) is not set."));
+
+		// fsin, fcos and fpatan as the port computes sin, cos and atan2, the same on every platform.
+		emulator.Cpu.Fpu.Sin = sin;
+		emulator.Cpu.Fpu.Cos = cos;
+		emulator.Cpu.Fpu.Atan2 = atan2;
 		SetNatives(emulator);
 		for (var i = 0; i < FleetCount; i++)
 			MemoryMarshal.Write(emulator.At(FleetAddress + (uint)(i * FleetSize + FleetPathEndOffset), sizeof(double)), (double)(MAP_RIGHT + 1));
