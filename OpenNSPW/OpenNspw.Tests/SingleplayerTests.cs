@@ -84,6 +84,39 @@ public class SingleplayerTests
 		Assert.Contains("日本海軍の勝利", run.Player.Texts);
 	}
 
+	// A computer's ship that land blocks plans its route again, as 1.22's chara_cont makes it, instead of stopping until the
+	// computer gives it its next order. In scenario 7, destroyer 3 stopped for 880 frames without it.
+	[Fact]
+	public void TheComputersShipsGoAroundLand()
+	{
+		using var run = new SingleplayerRun(7);
+		var game = run.Game;
+		run.Frames(1);
+		game.SetCursorPos(384, 384);
+		var history = new Dictionary<int, Queue<WorldPosition>>();
+		for (var round = 0; round < 20; round++)
+		{
+			run.Frames(100);
+			for (var m = 1; m <= game.MaxUnitId; m++)
+			{
+				ref var unit = ref game.Units[m];
+				if (unit.Side != game.CpuSide || unit.Category != UnitCategory.Ship || unit.Kind >= UnitKind.AirBase || unit.Hp <= 0)
+				{
+					continue;
+				}
+
+				var positions = history.TryGetValue(m, out var queue) ? queue : history[m] = new Queue<WorldPosition>();
+				positions.Enqueue(unit.Position);
+				if (positions.Count > 6)
+				{
+					var before = positions.Dequeue();
+					var moved = Math.Abs(before.X - unit.Position.X) + Math.Abs(before.Y - unit.Position.Y);
+					Assert.False(moved < 20 && unit.PathX[0] != all_head.MAP_RIGHT + 1, $"Ship {m} stopped at ({unit.Position.X:F0},{unit.Position.Y:F0}) with a path.");
+				}
+			}
+		}
+	}
+
 	// Every scenario plays for a while with the computer, without failing.
 	[Theory]
 	[MemberData(nameof(Scenarios))]

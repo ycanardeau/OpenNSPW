@@ -382,10 +382,43 @@ public unsafe partial class Nspw
 		ClearBufferedOrders();
 	}
 
-	// set_cpu_route(m, 4.0): the route of the computer's ship m to the destination just set as its path.
-	public void SetCpuRoute(int m)
+	// set_cpu_route(m, a): the route of the computer's ship m to the destination of its path, around the land. 1.22
+	// passes 4.0 for a new order, and 1.0 for a ship that is blocked; what the value means is not known yet.
+	public void SetCpuRoute(int m, double a)
 	{
-		var radius = BitConverter.DoubleToUInt64Bits(4.0);
-		RunEmulated(Functions.SetCpuRoute, (uint)m, (uint)radius, (uint)(radius >> 32));
+		var bits = BitConverter.DoubleToUInt64Bits(a);
+		RunEmulated(Functions.SetCpuRoute, (uint)m, (uint)bits, (uint)(bits >> 32));
+	}
+
+	// Whether 1.22 plans the route of the ship itself: a computer's ship that follows no leader.
+	private bool IsComputerShipOnItsOwn(ref Unit unit)
+	{
+		return CpuSide != Side.None && unit.Side == CpuSide && unit.GroupLeader == 0;
+	}
+
+	// 1.22's chara_cont, for a computer's ship whose course ahead is blocked: its path becomes its destination alone, and
+	// set_cpu_route plans it again. When a ship blocks it (shipAhead, that ship's rectangle) and its destination is in that
+	// ship's rectangle, the destination becomes where it is.
+	private void RerouteComputerShip(ref Unit unit, int m, RECT? shipAhead)
+	{
+		int n;
+		for (n = 1; n <= 63 && unit.PathX[n] != MAP_RIGHT + 1; n++)
+		{
+		}
+
+		if (n >= 2)
+		{
+			unit.PathX[0] = unit.PathX[n - 1];
+			unit.PathY[0] = unit.PathY[n - 1];
+			unit.PathX[1] = MAP_RIGHT + 1;
+		}
+		else if (shipAhead is { } rect && PointInRect3(ref rect, (int)unit.PathX[0], (int)unit.PathY[0]) != 0)
+		{
+			unit.PathX[0] = unit.Position.X;
+			unit.PathY[0] = unit.Position.Y;
+			unit.PathX[1] = MAP_RIGHT + 1;
+		}
+
+		SetCpuRoute(m, 1.0);
 	}
 }

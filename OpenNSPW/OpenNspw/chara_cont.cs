@@ -1190,6 +1190,10 @@ private void CheckCourseAhead(ref Unit unit, int m, ref int land, double pp_drct
 
 					unit.EmergencyFlags[0]=0;
 
+					// 1.22: a computer's ship that the ship ahead slows down plans its route again, every 100 ticks.
+					if( IsComputerShipOnItsOwn(ref unit) && (Tick+m)%100==0 && !(unit.MaxSpeed*0.2 < unit.Speed) )
+						RerouteComputerShip(ref unit, m, wrk_r);
+
 					break;
 					}
 				}
@@ -1211,6 +1215,10 @@ private void CheckCourseAhead(ref Unit unit, int m, ref int land, double pp_drct
 			if( MapTiles[cm_scrn_y][cm_scrn_x]>=1 && MapTiles[cm_scrn_y][cm_scrn_x]<=9 )
 				{
 				land=1;
+
+				// 1.22: a computer's ship plans its route around the land again.
+				if( IsComputerShipOnItsOwn(ref unit) && unit.EmergencyFlags[0]==0 )
+					RerouteComputerShip(ref unit, m, null);
 				}
 			}
 		}
