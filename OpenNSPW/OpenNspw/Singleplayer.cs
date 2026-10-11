@@ -29,6 +29,9 @@ public unsafe partial class Nspw
 	private const uint FleetAddress = 0x4867A0;
 	private const int FleetSize = 0x498;
 	private const int FleetCount = 11;
+	private const int FleetFlagshipOffset = 0x002;
+	private const int FleetTargetsOffset = 0x42C;
+	private const int FleetBaseOffset = 0x474;
 	private const int FleetPathEndOffset = 0x478;
 
 	// cmbt_map of 1.22, which load_it2 writes.
@@ -323,7 +326,8 @@ public unsafe partial class Nspw
 		RunEmulated(Functions.CpuStrategy);
 	}
 
-	// decision: the scenario's events and victory conditions, and the result's messages once it has one.
+	// The emulated decision, which ComputerPlayerTests compares Decide, its rewrite, with: the scenario's events and
+	// victory conditions, and the result's messages once it has one.
 	public void RunDecision()
 	{
 		RunEmulated(Functions.Decision);
@@ -333,6 +337,19 @@ public unsafe partial class Nspw
 	internal void RunSetUnitData(int m)
 	{
 		RunEmulated(Functions.SetUnitData, (uint)m);
+	}
+
+	// plane_in_cv(m): the planes of carrier or air base m.
+	private int RunCountPlanesIn(int m)
+	{
+		return (int)RunEmulated(Functions.CountPlanesIn, (uint)m);
+	}
+
+	// set_new_unit_plane: a new plane of the side and kind, of the type, at carrier or air base no, as the port's
+	// AddPlane adds one.
+	private void RunAddPlane(Side side, UnitKind kind, int type, int no, int planes, FireKind arm)
+	{
+		RunEmulated(Functions.AddPlane, (uint)side, (uint)kind, (uint)type, (uint)no, (uint)planes, (uint)arm);
 	}
 
 	// The buffers of the orders, empty, and the player free to give the next: what ReceiveAndIssueOrders leaves after a

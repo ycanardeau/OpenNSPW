@@ -33,9 +33,10 @@ dotnet run --project Disassembler/OpenNspw.Disassembler -- Original/Nspw122/NSPW
 | `scenario_1` to `scenario_10`, `scenario_100` to `scenario_109`, `scenario_200` to `scenario_209`, `scenario_300` to `scenario_306` | `Functions.SetUpScenario` | `InitializeGame`, in place of `get_sinario_data` |
 | `cpu_strtgy`, and the functions only it calls (`sub_403A70`, `sub_403AE0`, `sub_404D80`, `sub_414DD0`, `sub_41F230`, `sub_41F300`, `sub_41F3C0`, `sub_41F490`, `sub_417C10`) | `0x404E30` | `HandleInput`, before the orders are applied |
 | `set_cpu_route` | `0x42DA80` | Rewritten as C# (`PlanComputerRoute`); the emulated original is kept for its test |
-| `decision` | `0x41C3C0` | `CheckResult`, in place of NSPW NET's conditions and result |
+| `decision` | `0x41C3C0` | Rewritten as C# (`Decide`), which `CheckResult` calls in place of NSPW NET's conditions and result; the emulated original is kept for its test |
 | `set_unit_data` | `0x41E150` | By the emulated code, and by `SetUnitData` in a single-player game, for the units the battle creates |
-| `set_new_unit`, `set_new_unit_plane`, `plane_in_cv`, `set_pos_of_parking`, `cls_all_slct_unit_p2`, `pt_in_rect3` | | Only by the emulated code |
+| `set_new_unit_plane`, `plane_in_cv` | `0x41F060`, `0x416F00` | By the emulated code, and by `Decide` |
+| `set_new_unit`, `set_pos_of_parking`, `cls_all_slct_unit_p2`, `pt_in_rect3` | | Only by the emulated code |
 
 `set_cpu_route2` (`0x42ED30`) is translated, but nothing calls it: the port's `SetCpuRoute2`, which NSPW NET calls for every unit, stays.
 
@@ -115,7 +116,7 @@ So in a single-player game (`IsSingleplayer`):
 - `ApplyOrders` clears the path of a computer's unit for every move order (`if( new_pp[e].cls || unit[m].used==cpu_side )`, as 1.22 does and NSPW NET has as a comment), and plans the route of a computer's ship (`set_cpu_route`, rewritten as `PlanComputerRoute`).
 - `CheckCourseAhead` replans a computer's ship that follows no leader, as 1.22's `chara_cont` does (`0x4020DB` and `0x40229D`): when the point 80 ahead toward its path is land, and every 100 ticks while the ship ahead slows it below a fifth of its top speed. Its path becomes its destination alone, and `set_cpu_route` (`PlanComputerRoute`) plans it again. Without it, NSPW NET's steering stops the ship until the computer gives it another order.
 - `UpdateSupply`, `SetShipEmergencyDestination`, `CheckCourseAhead` and `MoveUnit` follow 1.22 where its battle differs from NSPW NET's: [Differences.md](Differences.md) lists every difference found.
-- `CheckResult` calls `decision`, which also shows the result, instead of NSPW NET's conditions.
+- `CheckResult` calls `Decide`, `decision`'s rewrite, which also shows the result, instead of NSPW NET's conditions.
 
 ## Playing
 ```bash
@@ -139,7 +140,7 @@ The executable is `Original/Nspw122/NSPW_122.exe`, or the file given with `--exe
 5. **The single-player game**: the paths above, started from the desktop app with `--singleplayer`. Done.
 6. **Choosing the game**: the desktop app's menu, before the game starts. Done. 1.22's own setting screen, with each scenario's description and victory conditions (also strings of the executable, from `0x43E0C0`), is not.
 7. **Characterization trace** of a single-player game, to guard the refactoring of the code it runs. Not done.
-8. **Rewriting the emulated functions as C#** ([ComputerPlayer.md](ComputerPlayer.md)), each tested against the emulated original. `set_cpu_route` is done. The emulator computes `fsin`, `fcos` and `fpatan` with the port's `sin`, `cos` and `atan2`, so that both give the same results, on every platform.
+8. **Rewriting the emulated functions as C#** ([ComputerPlayer.md](ComputerPlayer.md)), each tested against the emulated original. `set_cpu_route` and `decision` are done. The emulator computes `fsin`, `fcos` and `fpatan` with the port's `sin`, `cos` and `atan2`, so that both give the same results, on every platform.
 
 ## Open questions
 - Whether to show 1.22's own setting screen, or NSPW NET's with 1.22's scenarios.

@@ -727,8 +727,8 @@ public void	CheckResult()
 
 	if( IsSingleplayer )
 		{
-		// 1.22's decision, which also shows the result.
-		RunDecision();
+		// 1.22's decision, rewritten (ComputerPlayer.cs), which also shows the result.
+		Decide();
 		return;
 		}
 

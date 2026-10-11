@@ -6,11 +6,17 @@ public static class Functions
 	// cpu_strtgy(): the computer's orders for this frame.
 	public const uint CpuStrategy = 0x404E30;
 
+	// plane_in_cv(int m): the planes of carrier or air base m.
+	public const uint CountPlanesIn = 0x416F00;
+
 	// decision(): the scenario's events and victory conditions.
 	public const uint Decision = 0x41C3C0;
 
 	// set_unit_data(int m): the data of unit m by its kind and type (speed, HP, weapons, fuel).
 	public const uint SetUnitData = 0x41E150;
+
+	// set_new_unit_plane(int side, int kind, int type, int no, int planes, int arm): a new plane at carrier or air base no.
+	public const uint AddPlane = 0x41F060;
 
 	// set_cpu_route(int m, double): the route of the computer's ship m to its destination.
 	public const uint SetCpuRoute = 0x42DA80;

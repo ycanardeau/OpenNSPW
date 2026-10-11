@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace OpenNspw;
 
 // NSPW 1.22's computer player (docs/ComputerPlayer.md), rewritten from its machine code in place of the emulated
@@ -256,5 +258,607 @@ public unsafe partial class Nspw
 				pp_indx = -1;
 			}
 		}
+	}
+
+	// decision's result once the time is up, and none before.
+	private GameResult AtTimeUp(GameResult result)
+	{
+		return BattleTime == 0 ? result : GameResult.None;
+	}
+
+	private static bool IsOneOf(UnitKind kind, ReadOnlySpan<UnitKind> kinds)
+	{
+		foreach (var k in kinds)
+		{
+			if (kind == k)
+				return true;
+		}
+
+		return false;
+	}
+
+	// The units of the side of one of the kinds.
+	private int CountUnits(Side side, params ReadOnlySpan<UnitKind> kinds)
+	{
+		var count = 0;
+		for (var i = 1; i <= MaxUnitId; i++)
+		{
+			if (Units[i].Side == side && IsOneOf(Units[i].Kind, kinds))
+				count++;
+		}
+
+		return count;
+	}
+
+	// The units of the side whose fuel is -1 or less: those that the scenario placed at anchor.
+	private int CountAnchoredUnits(Side side)
+	{
+		var count = 0;
+		for (var i = 1; i <= MaxUnitId; i++)
+		{
+			if (Units[i].Side == side && (int)Units[i].Fuel <= -1)
+				count++;
+		}
+
+		return count;
+	}
+
+	// The units of the side of one of the kinds in the rectangle, y downward (pt_in_rect3, 0x417BE0) or upward (0x417C10).
+	private int CountUnitsIn(ref RECT rect, bool isUpward, Side side, params ReadOnlySpan<UnitKind> kinds)
+	{
+		var count = 0;
+		for (var i = 1; i <= MaxUnitId; i++)
+		{
+			ref var unit = ref Units[i];
+			if (unit.Side == side && IsOneOf(unit.Kind, kinds))
+			{
+				var isIn = isUpward ? PointInRect2(ref rect, (int)unit.Position.X, (int)unit.Position.Y) : PointInRect(ref rect, (int)unit.Position.X, (int)unit.Position.Y);
+				if (isIn != 0)
+					count++;
+			}
+		}
+
+		return count;
+	}
+
+	// Whether all the ships of the side (but naval bases, when isBaseExcluded) are in the rectangle, y downward, and
+	// there is one.
+	private bool AreAllShipsIn(ref RECT rect, Side side, bool isBaseExcluded)
+	{
+		var count = 0;
+		var inside = 0;
+		for (var i = 1; i <= MaxUnitId; i++)
+		{
+			ref var unit = ref Units[i];
+			if (unit.Side == side && unit.Category == UnitCategory.Ship && !(isBaseExcluded && unit.Kind == UnitKind.NavalBase))
+			{
+				count++;
+				if (PointInRect(ref rect, (int)unit.Position.X, (int)unit.Position.Y) != 0)
+					inside++;
+			}
+		}
+
+		return count != 0 && count == inside;
+	}
+
+	// The square of 160 around the unit's position, y downward.
+	private static RECT SquareAround(ref Unit unit)
+	{
+		var x = (int)unit.Position.X;
+		var y = (int)unit.Position.Y;
+		return new RECT { left = x - 80, top = y - 80, right = x + 80, bottom = y + 80 };
+	}
+
+	// Scenario 205: whether an American bomber is parked at unit m, being serviced.
+	private bool IsBomberServicedAt(int m)
+	{
+		for (var i = 1; i <= MaxUnitId; i++)
+		{
+			ref var unit = ref Units[i];
+			if (unit.Side == Side.UnitedStates && unit.Kind == UnitKind.Bomber && unit.PlaneState == UnitState.Parked && unit.Weapon == FireKind.Maintenance && unit.Carrier == m)
+				return true;
+		}
+
+		return false;
+	}
+
+	// Scenario 205: the bomber must land at decision_point[0] while it has more than a fifth of its HP, and then at
+	// decision_point[2]; decision_point[1] is set once it has landed at the first.
+	private GameResult DecideScenario205()
+	{
+		if (CountUnits(Side.UnitedStates, UnitKind.Bomber) == 0)
+			return GameResult.UnitedStatesLost;
+
+		var landed = DecisionPoints[1];
+		if (landed == 0)
+		{
+			if (IsBomberServicedAt(DecisionPoints[0]))
+			{
+				landed = 1;
+				DecisionPoints[1] = 1;
+			}
+
+			ref var first = ref Units[DecisionPoints[0]];
+			if (!(first.MaxHp * 0.2 < first.Hp))
+				return GameResult.UnitedStatesLost;
+		}
+
+		var result = GameResult.None;
+		if (landed == 1 && IsBomberServicedAt(DecisionPoints[2]))
+			result = GameResult.UnitedStatesWon;
+
+		// Once the time is up, Japan wins, even over the United States' victory.
+		return BattleTime == 0 ? GameResult.JapanWon : result;
+	}
+
+	// Scenario 303: Japan's parked planes at air base m are lost to the United States as it falls to them: those of
+	// type 0 are destroyed, the others change sides. Returns the planes that changed sides.
+	private int SurrenderPlanesAt(int m)
+	{
+		ref var airBase = ref Units[m];
+		var surrendered = 0;
+		for (var k = 1; k <= MaxUnitId; k++)
+		{
+			ref var plane = ref Units[k];
+			if (plane.Side != Side.Japan || plane.Category != UnitCategory.Plane || plane.PlaneState != UnitState.Parked || plane.Carrier != m)
+				continue;
+
+			if (plane.Variant == 0)
+			{
+				plane.Side = Side.None;
+				airBase.PlaneCount--;
+				if (plane.DeckPhase >= 1 && airBase.PlanesToLaunch >= 1 && (int)plane.Mode <= 2)
+					airBase.PlanesToLaunch--;
+
+				if (plane.DeckPhase >= 3 && airBase.LandingLock >= 1 && (int)plane.Mode <= 2)
+					airBase.LandingLock--;
+
+				if (plane.Mode == UnitMode.Return)
+				{
+					airBase.LandingLock = 0;
+					airBase.LaunchLock = 0;
+				}
+			}
+			else
+			{
+				plane.Side = Side.UnitedStates;
+				surrendered++;
+			}
+		}
+
+		return surrendered;
+	}
+
+	// Scenario 303: each fleet of the computer targets units 41 to 43 and stops.
+	private void TargetSurrenderedPlanes()
+	{
+		var emulator = Emulator ?? throw new InvalidOperationException("No single-player game is being played.");
+		for (var f = 1; f <= 8; f++)
+		{
+			var fleet = emulator.At(FleetAddress + (uint)(f * FleetSize), FleetSize);
+			var flagship = MemoryMarshal.Read<short>(fleet[FleetFlagshipOffset..]);
+			if (flagship == 0)
+				continue;
+
+			var targets = MemoryMarshal.Cast<byte, short>(fleet.Slice(FleetTargetsOffset, 18 * sizeof(short)));
+			targets[1] = 41;
+			targets[2] = 42;
+			targets[3] = 43;
+			targets[4] = 0;
+			targets[5] = 0;
+			targets[6] = 0;
+			MemoryMarshal.Write(fleet[FleetBaseOffset..], (short)0);
+			StopWhereItIs(ref Units[flagship]);
+		}
+	}
+
+	// Scenario 303: a transport sinks slowly, the Japanese air bases fall to the American infantry nearby, and fall back
+	// to Japan when it has gone; the United States win when their fighters of type 1 are all parked at unit 21.
+	private GameResult DecideScenario303()
+	{
+		ref var transport = ref Units[DecisionPoints[3]];
+		if (transport.IsUsed && transport.Hp != 0 && transport.Kind == UnitKind.Transport && BattleTime % 10 == 0)
+			transport.Hp--;
+
+		var surrendered = 0;
+		for (var i = 1; i <= MaxUnitId; i++)
+		{
+			if (Units[i].Side != Side.UnitedStates || Units[i].Kind != UnitKind.InfantryBase)
+				continue;
+
+			var square = SquareAround(ref Units[i]);
+			for (var j = 1; j <= MaxUnitId; j++)
+			{
+				ref var airBase = ref Units[j];
+				if (rand() % 200 == 0 && airBase.Side == Side.Japan && airBase.Kind == UnitKind.AirBase && PointInRect(ref square, (int)airBase.Position.X, (int)airBase.Position.Y) != 0)
+				{
+					surrendered += SurrenderPlanesAt(j);
+					airBase.Side = Side.UnitedStates;
+					if (DecisionPoints[0] == 0)
+						DecisionPoints[0] = j;
+					else
+						DecisionPoints[1] = j;
+				}
+			}
+		}
+
+		if (surrendered != 0)
+			TargetSurrenderedPlanes();
+
+		for (var p = 0; p <= 1; p++)
+		{
+			for (var i = 1; i <= MaxUnitId; i++)
+			{
+				if (Units[i].Side != Side.UnitedStates || i != DecisionPoints[p])
+					continue;
+
+				var square = SquareAround(ref Units[i]);
+				if (CountUnitsIn(ref square, false, Side.UnitedStates, UnitKind.InfantryBase) == 0)
+				{
+					DecisionPoints[p] = 0;
+					Units[i].Side = Side.Japan;
+				}
+			}
+		}
+
+		var fighters = 0;
+		var americanFighters = 0;
+		var parkedFighters = 0;
+		for (var i = 1; i <= MaxUnitId; i++)
+		{
+			ref var unit = ref Units[i];
+			if (unit.Kind != UnitKind.Fighter || unit.Variant != 1)
+				continue;
+
+			if (unit.IsUsed)
+				fighters++;
+
+			if (unit.Side == Side.UnitedStates)
+			{
+				americanFighters++;
+				if (unit.PlaneState == UnitState.Parked && unit.IsStopping.Value == 1 && unit.Carrier == 21)
+					parkedFighters++;
+			}
+		}
+
+		if (fighters == 0)
+			return GameResult.UnitedStatesLost;
+
+		if (americanFighters >= 1 && americanFighters == parkedFighters)
+			return GameResult.UnitedStatesWon;
+
+		return AtTimeUp(GameResult.UnitedStatesLost);
+	}
+
+	// decision's victory conditions of the scenario (docs/ComputerPlayer.md, decision): its result, or None.
+	private GameResult DecideScenario()
+	{
+		const Side J = Side.Japan;
+		const Side U = Side.UnitedStates;
+		const UnitKind BB = UnitKind.Battleship;
+		const UnitKind CA = UnitKind.Cruiser;
+		const UnitKind DD = UnitKind.Destroyer;
+		const UnitKind CV = UnitKind.Carrier;
+		const UnitKind CVL = UnitKind.LightCarrier;
+		const UnitKind Fighter = UnitKind.Fighter;
+		const UnitKind Attacker = UnitKind.Attacker;
+		const UnitKind Bomber = UnitKind.Bomber;
+		const UnitKind Infantry = UnitKind.InfantryBase;
+		const UnitKind Pillboxes = UnitKind.Pillboxes;
+		const UnitKind Fortress = UnitKind.Fortress;
+
+		// The island in the west of the map, y upward.
+		var island = new RECT { left = -1040, top = -160, right = -800, bottom = -240 };
+
+		switch (ScenarioNumber)
+		{
+			case 1:
+				return CountUnits(J, BB, CA, DD) > 0 ? AtTimeUp(GameResult.UnitedStatesLost) : GameResult.UnitedStatesWon;
+
+			case 2:
+			{
+				var anchored = CountAnchoredUnits(U);
+				if (anchored == 0)
+					return GameResult.JapanWon;
+
+				return AtTimeUp(anchored > 3 ? GameResult.JapanLost : GameResult.JapanWon);
+			}
+
+			case 3:
+				if (CountUnits(J, CV, CVL) == 0)
+					return GameResult.UnitedStatesWon;
+
+				if (CountUnits(U, Infantry) == 0)
+					return GameResult.JapanWon;
+
+				return CountUnits(U, Attacker, Fighter) > 0 ? AtTimeUp(GameResult.UnitedStatesWon) : GameResult.JapanWon;
+
+			case 4:
+			case 5:
+			case 6:
+			case 105:
+			case 106:
+				if (CountUnits(J, CV, CVL) == 0)
+					return GameResult.UnitedStatesWon;
+
+				return CountUnits(U, CV, CVL) > 0 ? AtTimeUp(GameResult.Draw) : GameResult.JapanWon;
+
+			case 7:
+				if (!Units[DecisionPoints[0]].IsUsed)
+					return GameResult.JapanWon;
+
+				return CountUnits(J, BB, CA, DD, Attacker, Bomber) > 0 ? AtTimeUp(GameResult.UnitedStatesWon) : GameResult.UnitedStatesWon;
+
+			case 8:
+				return CountAnchoredUnits(J) > 0 ? AtTimeUp(GameResult.JapanWon) : GameResult.UnitedStatesWon;
+
+			case 9:
+				if (CountUnits(J, CV, CVL) == 0)
+					return GameResult.UnitedStatesWon;
+
+				return CountUnits(U, CV, CVL) > 0 ? AtTimeUp(GameResult.UnitedStatesWon) : GameResult.JapanWon;
+
+			case 10:
+				if (CountUnits(J, UnitKind.City) == 0)
+					return GameResult.UnitedStatesWon;
+
+				return CountUnits(U, Attacker, Bomber, Fighter) > 0 ? AtTimeUp(GameResult.Draw) : GameResult.JapanWon;
+
+			case 100:
+				if (CountUnits(J, UnitKind.Submarine) == 0 || CountUnits(J, Infantry, Pillboxes, Fortress) == 0)
+					return GameResult.UnitedStatesWon;
+
+				return CountUnits(U, CV, CVL) > 0 ? AtTimeUp(GameResult.Draw) : GameResult.JapanWon;
+
+			case 101:
+			case 102:
+				if (CountUnits(J, BB, CA) == 0)
+					return GameResult.UnitedStatesWon;
+
+				return CountUnits(U, BB, CA) > 0 ? AtTimeUp(GameResult.Draw) : GameResult.JapanWon;
+
+			case 103:
+				if (CountUnits(U, BB, CA) == 0)
+					return GameResult.JapanWon;
+
+				return CountUnits(J, Attacker) > 0 ? AtTimeUp(GameResult.UnitedStatesWon) : GameResult.UnitedStatesWon;
+
+			case 104:
+			{
+				if (CountUnits(U, Infantry, Pillboxes, Fortress) == 0)
+					return GameResult.JapanWon;
+
+				var fueled = 0;
+				for (var i = 1; i <= MaxUnitId; i++)
+				{
+					ref var unit = ref Units[i];
+					if (unit.Side == J && unit.Kind >= BB && unit.Kind <= UnitKind.Transport && (int)unit.Fuel != -1)
+						fueled++;
+				}
+
+				return fueled > 0 ? AtTimeUp(GameResult.UnitedStatesWon) : GameResult.UnitedStatesWon;
+			}
+
+			case 107:
+			{
+				if (CountUnits(J, Bomber) == 0)
+					return GameResult.UnitedStatesWon;
+
+				for (var i = 1; i <= MaxUnitId; i++)
+				{
+					ref var unit = ref Units[i];
+					if (unit.Side == J && unit.Kind == Bomber && unit.PlaneState == UnitState.Parked && unit.Weapon == FireKind.Maintenance)
+						return GameResult.JapanWon;
+				}
+
+				return AtTimeUp(GameResult.JapanWon);
+			}
+
+			case 108:
+				return CountUnits(J, Infantry, Pillboxes) > 0 ? AtTimeUp(GameResult.JapanWon) : GameResult.UnitedStatesWon;
+
+			case 109:
+			{
+				var east = new RECT { left = 7000, top = -8000, right = 9000, bottom = -6000 };
+				if (CountAnchoredUnits(J) == 0 && AreAllShipsIn(ref east, U, false))
+					return GameResult.UnitedStatesWon;
+
+				var american = 0;
+				for (var i = 1; i <= MaxUnitId; i++)
+				{
+					if (Units[i].Side == U)
+						american++;
+				}
+
+				return american == 0 ? GameResult.JapanWon : AtTimeUp(GameResult.UnitedStatesLost);
+			}
+
+			case 200:
+				if (CountUnits(U, UnitKind.AirBase, Infantry, Pillboxes, Fortress) == 0)
+					return GameResult.JapanWon;
+
+				return CountUnits(J, CV) > 0 ? AtTimeUp(GameResult.UnitedStatesWon) : GameResult.UnitedStatesWon;
+
+			case 201:
+				return CountUnits(U, CV, CVL) > 0 ? AtTimeUp(GameResult.UnitedStatesWon) : GameResult.JapanWon;
+
+			case 202:
+				if (CountUnits(U, Bomber) == 0)
+					return GameResult.JapanWon;
+
+				return CountUnits(J, UnitKind.City) > 0 ? AtTimeUp(GameResult.Draw) : GameResult.UnitedStatesWon;
+
+			case 203:
+				if (CountUnits(U, Pillboxes) == 0)
+					return GameResult.JapanWon;
+
+				return CountUnits(J, CV, CVL, BB, CA, UnitKind.Transport) > 4 ? AtTimeUp(GameResult.UnitedStatesWon) : GameResult.UnitedStatesWon;
+
+			case 204:
+				return CountUnitsIn(ref island, true, U, Infantry, Pillboxes, Fortress) == 0 ? GameResult.JapanWon : AtTimeUp(GameResult.UnitedStatesWon);
+
+			case 205:
+				return DecideScenario205();
+
+			case 206:
+				if (CountUnits(J, BB) == 0)
+					return GameResult.UnitedStatesWon;
+
+				return CountUnits(U, Infantry, Pillboxes, Fortress) > 0 ? AtTimeUp(GameResult.Draw) : GameResult.JapanWon;
+
+			case 207:
+			{
+				var harbor = new RECT { left = 4600, top = -3400, right = 6600, bottom = -1400 };
+				if (!Units[DecisionPoints[0]].IsUsed && AreAllShipsIn(ref harbor, U, true))
+					return GameResult.UnitedStatesWon;
+
+				return CountUnits(U, BB, CA) != 0 ? AtTimeUp(GameResult.UnitedStatesLost) : GameResult.JapanWon;
+			}
+
+			case 208:
+				if (CountUnits(J, BB, CA, DD, Attacker, Bomber) == 0)
+					return GameResult.UnitedStatesWon;
+
+				return CountUnits(U, Infantry, Pillboxes) > 0 ? AtTimeUp(GameResult.UnitedStatesWon) : GameResult.JapanWon;
+
+			case 209:
+			{
+				if (BattleTime != 0)
+					return GameResult.None;
+
+				if (CountUnits(U, Pillboxes, Infantry) != 0)
+					return GameResult.JapanLost;
+
+				var midway = new RECT { left = -80, top = 3120, right = 400, bottom = 3600 };
+				var infantry = CountUnits(J, Infantry);
+				return infantry != 0 && infantry == CountUnitsIn(ref midway, false, J, Infantry) ? GameResult.JapanWon : GameResult.JapanLost;
+			}
+
+			case 300:
+			{
+				if (CountUnits(U, Bomber) == 0)
+					return GameResult.UnitedStatesLost;
+
+				if (CountUnits(J, UnitKind.City) > 3)
+					return AtTimeUp(GameResult.UnitedStatesLost);
+
+				var bombers = 0;
+				var away = 0;
+				for (var i = 1; i <= MaxUnitId; i++)
+				{
+					ref var unit = ref Units[i];
+					if (unit.Side == U && unit.Kind == Bomber)
+					{
+						bombers++;
+						if (unit.Position.X < -8400 && unit.Position.Y < -6000)
+							away++;
+					}
+				}
+
+				return bombers == away ? GameResult.UnitedStatesWon : AtTimeUp(GameResult.UnitedStatesLost);
+			}
+
+			case 301:
+			{
+				for (var i = 1; i <= MaxUnitId; i++)
+				{
+					ref var unit = ref Units[i];
+					if (unit.Side == U && IsOneOf(unit.Kind, [Infantry, Pillboxes, Fortress, CV, CVL]) && i != DecisionPoints[0])
+						return AtTimeUp(GameResult.JapanLost);
+				}
+
+				var target = new RECT { left = DecisionPoints[1] - 80, top = DecisionPoints[2] - 80, right = DecisionPoints[1] + 80, bottom = DecisionPoints[2] + 80 };
+				return CountUnitsIn(ref target, false, J, Infantry, Pillboxes, Fortress) > 0 ? GameResult.JapanWon : AtTimeUp(GameResult.JapanLost);
+			}
+
+			case 302:
+				if (!Units[DecisionPoints[0]].IsUsed && !Units[DecisionPoints[1]].IsUsed)
+					return GameResult.JapanWon;
+
+				return CountUnits(J, CV, CVL) > 2 ? AtTimeUp(GameResult.JapanLost) : GameResult.JapanLost;
+
+			case 303:
+				return DecideScenario303();
+
+			case 304:
+				return CountUnits(J, Infantry, Pillboxes, Fortress) > 0 ? AtTimeUp(GameResult.UnitedStatesLost) : GameResult.UnitedStatesWon;
+
+			case 305:
+				if (CountUnits(U, Infantry, Pillboxes, Fortress) == 0)
+					return GameResult.JapanWon;
+
+				return CountUnits(J, BB, CA, DD) == 0 ? GameResult.JapanLost : AtTimeUp(GameResult.JapanLost);
+
+			case 306:
+			{
+				var american = CountUnitsIn(ref island, true, U, Infantry, Pillboxes, Fortress);
+				if (american == 0 && CountUnitsIn(ref island, true, J, Infantry, Pillboxes, Fortress) >= 2)
+					return GameResult.JapanWon;
+
+				return AtTimeUp(american != 0 ? GameResult.UnitedStatesWon : GameResult.JapanLost);
+			}
+
+			default:
+				return GameResult.None;
+		}
+	}
+
+	// decision's reinforcements: a plane, by the chances of its kind in percent, for Japan's unit 1, while it has room.
+	private void ReinforceUnit1(int planes, int attackerChance, int secondChance, UnitKind second, UnitKind third)
+	{
+		if (!Units[1].IsUsed || planes >= Units[1].Capacity)
+			return;
+
+		var r = rand() % 100;
+		var kind = r <= attackerChance ? UnitKind.Attacker : r <= secondChance ? second : third;
+		RunAddPlane(Side.Japan, kind, 0, 1, 1, FireKind.Unarmed);
+	}
+
+	// decision's events of scenarios 204, 301 and 304, which run whether or not the scenario has a result.
+	private void RunScenarioEvents()
+	{
+		switch (ScenarioNumber)
+		{
+			case 204:
+				if (BattleTime % 1250 == 0 || (BattleTime < 13000 && BattleTime % 300 == 0))
+				{
+					var planes = 0;
+					for (var i = 1; i <= MaxUnitId; i++)
+					{
+						ref var unit = ref Units[i];
+						if (unit.Side == Side.Japan && unit.Category == UnitCategory.Plane && unit.Carrier == 1)
+							planes++;
+					}
+
+					ReinforceUnit1(planes, 50, 95, UnitKind.Bomber, UnitKind.Fighter);
+				}
+				break;
+
+			case 301:
+				if (BattleTime % 2500 == 0 && Units[1].IsUsed)
+					ReinforceUnit1(RunCountPlanesIn(1), 60, 98, UnitKind.Fighter, UnitKind.Bomber);
+				break;
+
+			case 304:
+				if (BattleTime % 4500 == 0 && Units[1].IsUsed)
+					ReinforceUnit1(RunCountPlanesIn(1), 75, 98, UnitKind.Fighter, UnitKind.Bomber);
+				break;
+		}
+	}
+
+	// decision (0x41C3C0): the scenario's result, shown once it has one, and its events.
+	public void Decide()
+	{
+		if (Result == GameResult.None)
+			Result = DecideScenario();
+
+		if (Result != GameResult.None)
+		{
+			Array5<Array128<byte>> ach = default;
+			Array5<int> len = default;
+			DrawResult(ref len, ref ach);
+		}
+
+		RunScenarioEvents();
 	}
 }

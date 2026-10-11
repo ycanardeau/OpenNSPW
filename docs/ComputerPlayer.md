@@ -152,7 +152,11 @@ The second argument, a `double` (4.0 for a new order, 1.0 for a blocked ship), i
 Its path becomes its final destination alone, and `set_cpu_route(m, 1.0)` plans it again. The port does this in `CheckCourseAhead`.
 
 ## decision
-`decision` (`0x41C3C0`) checks the scenario's result with a `switch` on `sinario` (scenarios 1 to 10 at `0x41DFCC`, the others through a byte table), and then, if `game_end` is set, shows the result with the messages of `0x4414B0` to `0x4415A4`.
+`decision` (`0x41C3C0`), rewritten as `Decide` (`ComputerPlayer.cs`), runs in three steps:
+
+1. While `game_end` is 0, the scenario's conditions, a `switch` on `sinario` (scenarios 1 to 10 at `0x41DFCC`, the others through a byte table), may set it.
+2. If `game_end` is set, the result's three lines, from the messages of `0x4414B0` to `0x4415A4`, in white at (300, 300), 20 apart: the same as the port's `DrawResult`.
+3. The events of scenarios 204, 301 and 304, with or without a result.
 
 Each scenario counts units by side and kind, and compares the time left (`rest_time`) and `decision_point`. For example, scenario 3: Japan has no carrier (5, 6) left → the United States win; the United States have no infantry base (15) left → Japan wins; then their planes.
 
@@ -195,8 +199,61 @@ The setting screen (`0x40B406`) states each scenario's side and victory conditio
 | 305 | Japan | Destroy the American bases on Okinawa in time |
 | 306 | Japan | Destroy the enemy on Guadalcanal in time, and build at least two ground facilities |
 
-**Not read yet**: the code of each scenario's conditions.
+The code decides as follows, in order; the first condition that holds gives the result. J and U are Japan's and the United States' units; "at the end, R" means R once `rest_time` is 0, and no result before. The results are those of `game_end`: J wins (1), U wins (2), J loses (3), U loses (4), and a draw (10).
+
+| Scenario | Conditions |
+| --- | --- |
+| 1 | J has a battleship, cruiser or destroyer: at the end, U loses; else U wins |
+| 2 | No U unit is anchored (fuel ≤ -1): J wins; at the end, J loses with more than 3 anchored, and wins with 3 or fewer |
+| 3 | J has no carrier: U wins; U has no infantry base: J wins; U has attackers or fighters: at the end, U wins; else J wins |
+| 4, 5, 6, 105, 106 | J has no carrier: U wins; U has a carrier: at the end, a draw; else J wins |
+| 7 | Unit `decision_point[0]` is gone: J wins; J has a battleship, cruiser, destroyer, attacker or bomber: at the end, U wins; else U wins |
+| 8 | J has an anchored unit: at the end, J wins; else U wins |
+| 9 | J has no carrier: U wins; U has a carrier: at the end, U wins; else J wins |
+| 10 | J has no city: U wins; U has attackers, bombers or fighters: at the end, a draw; else J wins |
+| 100 | J has no submarine, or no ground facility (15 to 17): U wins; U has a carrier: at the end, a draw; else J wins |
+| 101, 102 | J has no battleship or cruiser: U wins; U has one: at the end, a draw; else J wins |
+| 103 | U has no battleship or cruiser: J wins; J has an attacker: at the end, U wins; else U wins |
+| 104 | U has no ground facility: J wins; J has a unit of kinds 1 to 10 whose fuel is not -1: at the end, U wins; else U wins |
+| 107 | J has no bomber: U wins; J has a bomber parked and serviced (`arm[0]` 18): J wins; else at the end, J wins |
+| 108 | J has an infantry base or pillboxes: at the end, J wins; else U wins |
+| 109 | No J unit is anchored, and U's ships are all in (7000, -8000)–(9000, -6000): U wins; U has no unit left: J wins; else at the end, U loses |
+| 200 | U has no air base or ground facility: J wins; J has a carrier (5): at the end, U wins; else U wins |
+| 201 | U has a carrier: at the end, U wins; else J wins |
+| 202 | U has no bomber: J wins; J has a city: at the end, a draw; else U wins |
+| 203 | U has no pillboxes: J wins; J has more than 4 carriers, battleships, cruisers and transports: at the end, U wins; else U wins |
+| 204 | U has no ground facility in (-1040, -240)–(-800, -160): J wins; else at the end, U wins |
+| 205 | U has no bomber: U loses. Until `decision_point[1]` is set, it is set to 1 when a U bomber is parked and serviced at unit `decision_point[0]`, and U loses when that unit has a fifth of its HP or less. Then a U bomber parked and serviced at `decision_point[2]` wins for U; but at the end, J wins, even then |
+| 206 | J has no battleship: U wins; U has a ground facility: at the end, a draw; else J wins |
+| 207 | Unit `decision_point[0]` is gone, and U's ships (but naval bases) are all in (4600, -3400)–(6600, -1400): U wins; U has a battleship or cruiser: at the end, U loses; else J wins |
+| 208 | J has no battleship, cruiser, destroyer, attacker or bomber: U wins; U has an infantry base or pillboxes: at the end, U wins; else J wins |
+| 209 | At the end only: U has an infantry base or pillboxes: J loses; J's infantry bases, if any, are all in (-80, 3120)–(400, 3600): J wins; else J loses |
+| 300 | U has no bomber: U loses; J has more than 3 cities: at the end, U loses; U's bombers are all beyond x < -8400 and y < -6000: U wins; else at the end, U loses |
+| 301 | U has a ground facility or carrier, other than unit `decision_point[0]`: at the end, J loses; J has a ground facility within 80 of (`decision_point[1]`, `decision_point[2]`): J wins; else at the end, J loses |
+| 302 | Units `decision_point[0]` and `[1]` are gone: J wins; else J loses, at the end if J has more than 2 carriers, and at once if not |
+| 303 | The events below; then, no J or U fighter of type 1 is left: U loses; U's fighters of type 1 are all parked and stopped at unit 21: U wins; else at the end, U loses |
+| 304 | J has a ground facility: at the end, U loses; else U wins |
+| 305 | U has no ground facility: J wins; J has no battleship, cruiser or destroyer: J loses; else at the end, J loses |
+| 306 | U has no ground facility in (-1040, -240)–(-800, -160), and J has at least two: J wins; else at the end, U wins if U still has one there, and J loses if not |
+
+The rectangles, from their smallest x and y to their largest, include their edges.
+
+Scenario 303's events, before its conditions:
+
+- The transport `decision_point[3]` loses 1 HP every 10 ticks.
+- For each U infantry base, and each unit, one time in 200 (`rand()%200`, drawn for every pair), a J air base within 80 of it falls: its parked J planes of type 0 are destroyed, and the others change sides, and the air base becomes U's, numbered in `decision_point[0]`, or `[1]` if `[0]` is set. If any plane changed sides, each of the computer's fleets 1 to 8 with a flagship targets units 41, 42 and 43, and its flagship stops.
+- An air base in `decision_point[0]` or `[1]` with no U infantry base within 80 goes back to J, and its entry is cleared.
+
+The events of the other scenarios give Japan's unit 1 a plane (`set_new_unit_plane(1, kind, 0, 1, 1, 17)`), unarmed, while it has fewer planes than its capacity (`info[2]`):
+
+| Scenario | When | Planes counted | Kind, by `rand()%100` |
+| --- | --- | --- | --- |
+| 204 | Every 1250 of `rest_time`, and every 300 under 13000 | J's planes based there | Attacker to 50, bomber to 95, else fighter |
+| 301 | Every 2500 | Parked there (`plane_in_cv(1)`) | Attacker to 60, fighter to 98, else bomber |
+| 304 | Every 4500 | Parked there (`plane_in_cv(1)`) | Attacker to 75, fighter to 98, else bomber |
 
 ## Next
-1. Rewrite the functions as C#, each with a test that compares it with the emulated original on states of games and random ones (`ComputerPlayerTests`). The rewrite reads each function in full, and this document gets the details it finds. `set_cpu_route` is done: on 10 scenarios, every ship, at three points of the game, with its own destination and three random ones, the rewrite leaves the units exactly as the original does.
-2. Read `decision`'s code for each scenario as part of its rewrite.
+1. Rewrite the functions as C#, each with a test that compares it with the emulated original on states of games and random ones (`ComputerPlayerTests`). The rewrite reads each function in full, and this document gets the details it finds.
+    - `set_cpu_route` is done: on 10 scenarios, every ship, at three points of the game, with its own destination and three random ones, the rewrite leaves the units exactly as the original does.
+    - `decision` is done, and leaves the units, `game_end`, `decision_point`, the fleet table and `rand()` as the original does: for every scenario's conditions on the states of four games, as they are and changed at random; on and next to the edges of each rectangle; for 205's landings; for 303's air bases; and for the planes of 204, 301 and 304, from many seeds. It still calls `plane_in_cv` and `set_new_unit_plane` in the emulator.
+2. Rewrite the scenarios' setups (`scenario_N`), with `set_new_unit`, `set_new_unit_plane` and 1.22's `set_unit_data`, then `cpu_strtgy`.
