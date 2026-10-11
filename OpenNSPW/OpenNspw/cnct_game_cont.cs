@@ -725,6 +725,13 @@ public void	CheckResult()
 	Array5<Array128<byte>> ach = default;
 	 Array5<int> len = default;
 
+	if( IsSingleplayer )
+		{
+		// 1.22's decision, which also shows the result.
+		RunDecision();
+		return;
+		}
+
 	// 結果途中判定
 	if( Result==GameResult.None && IsDecisionEnabled )
 		{
@@ -4268,7 +4275,10 @@ public void	InitializeGame()
 	for(n=0;n<=3;n++)
 		DecisionPoints[n]=0;
 
-	LoadScenarioData();
+	if( IsSingleplayer )
+		SetUpSingleplayerScenario();
+	else
+		LoadScenarioData();
 
 	if( IsEditingMap )
 		{
@@ -4297,6 +4307,13 @@ public void	InitializeGame()
 
 	LastTime=timeGetTime();
 	LastTime2=LastTime;
+
+	if( IsSingleplayer )
+		{
+		// The scenario has set the sides, the camera and the time limit, and there is no rival.
+		InitializeSingleplayerOrders();
+		return;
+		}
 
 		TickChecksums[0]=0;
 		TickChecksums[1]=0;

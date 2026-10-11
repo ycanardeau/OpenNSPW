@@ -91,29 +91,16 @@ It also keeps the original's file formats: `save_on_resume`, `load_it2`, `load_i
 ### The emulator
 The single-player mode runs code from the single-player executable on [Enzan](../Enzan): the CPU strategy reads and writes the game's state at the addresses of the single-player executable. Enzan's `Cpu` takes one flat `Memory<byte>` with a base address.
 
-The single-player executable's structs are nearly the same as NSPW NET's. Its offsets, as known so far:
-
-| | NSPW NET (`Layout.json`) | Single-player |
-| --- | --- | --- |
-| `UNIT` size | `0x5C0` | `0x598` |
-| `used` to `em_flg`, `em_x`, ... `arm2` | `0x000` to `0x540` | The same offsets |
-| `gas` | `double[8]` at `0x540` | `double[6]` at `0x540` (inferred) |
-| `found`, `tech` | `0x580`, `0x584` | `0x570`, `0x574` (inferred) |
-| `rnd_250` to `rnd_125` | `0x588` to `0x5A0` | None |
-| `rnd_100` to `rnd_10` | `0x5A0` to `0x5C0` | `0x578` to `0x598` |
-| `cmbt_map` | `ushort[256][256]` | The same, at `0x443AA0` |
-| `SPRT` | 40 bytes | The same, at `0x48A200` |
-
-The "inferred" rows follow from the sizes and must be confirmed against the disassembly.
+The single-player executable's structs are the same as NSPW NET's, except `UNIT`, which has no `arm2`, an `int[8]` `gas` where NSPW NET has `double[8]`, and so `found`, `tech` and the `rnd_*` fields `0x28` bytes earlier. [Singleplayer.md](Singleplayer.md#layout) has the layout and the addresses of the globals, read from the disassembly.
 
 With the layout kept, the C# state and the emulator's memory differ only in where each region is, and, for `UNIT`, in three ranges of each unit. Mapping is then mechanical:
 
-- **Copy in and out**: before an emulated call, copy each region into the emulator's memory, and after it, copy it back: `cmbt_map` and `sprt` as one block each, and each unit as three blocks (`0x000`–`0x570`, then `found` and `tech`, then `rnd_100` to `rnd_10`). The regions are a table of address, size, global and field ranges, generated from `Layout.json` and the single-player layout. It is about 400 KB of `memcpy` per call, with no per-field code.
+- **Copy in and out**: before an emulated call, copy each region into the emulator's memory, and after it, copy it back: `cmbt_map` and `sprt` as one block each, and each unit as three blocks (`0x000`–`0x538`, then `found` and `tech`, then `rnd_250` to `rnd_10`), plus `gas`, converted. The regions are a table of address and global. It is about 400 KB of `memcpy` per call, with no per-field code but `gas`. This is what the single-player mode does.
 - **Zero copy**: if copying is measured to be too slow, Enzan's memory becomes an interface with a page table: each page of the emulated address space points at a C# region, through `MemoryMarshal.AsBytes` on the global. Everything except `unit` maps directly. `unit` needs an offset translation per access, from the same table.
 
 Neither needs to know what `info[5]` means, so the C# side can rename and retype freely, as long as the layout holds. Without the layout, the mapping would need a case for each field, including one per meaning of each `info[]` slot, and would break whenever a field moved.
 
-The single-player mode itself (its scenarios, its setting screen, which executable and functions) is designed separately. This document only guarantees that the state stays mappable.
+The single-player mode itself (its scenarios, its setting screen, which executable and functions) is in [Singleplayer.md](Singleplayer.md). This document only guarantees that the state stays mappable.
 
 ## Kinds of change
 Each kind is done across the whole project in its own commits, in the [order below](#implementation-steps). The examples use the names from the catalog.
@@ -299,5 +286,4 @@ Steps 4 to 6 make the largest difference to readability for the least risk, beca
 - Whether the original's Japanese comments are kept as they are, translated, or kept with an English translation next to them.
 - Whether the C++ abbreviations that are well known in the game's community (`BB1`, `CVL1`, `TPD`) are kept in enum members, or spelled out (`Battleship`, `LightCarrier`, `Torpedo`). The catalog proposes spelling them out, with the original in `[Original]`.
 - How much the deterministic runner may change the stand-ins (`Present` blocking, scripted `timeGetTime`), and whether the desktop app should use it for replays.
-- Whether to copy or to map the emulator's memory, which depends on how often the single-player executable's code is called per frame.
-- Which single-player executable the emulator runs (1.22 or 2.00), and the full layout of its structs and globals.
+- Whether mapping the emulator's memory is ever needed: the single-player mode copies, and calls the single-player executable's code about twice a frame.

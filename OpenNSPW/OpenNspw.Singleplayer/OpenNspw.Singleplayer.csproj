@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <!--
+      The translated functions (Subroutines) keep a label for every jump target, and the code after an unconditional
+      jump (docs/Singleplayer.md):
+      CS0162: unreachable code.
+      CS0164: a label that no jump uses.
+    -->
+    <NoWarn>$(NoWarn);CS0162;CS0164</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="OpenNspw.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Enzan\Aigamo.Enzan\Aigamo.Enzan.csproj" />
+  </ItemGroup>
+
+</Project>

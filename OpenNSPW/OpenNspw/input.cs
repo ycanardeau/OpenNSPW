@@ -253,6 +253,9 @@ public void	HandleInput()
 			BufferMoveOrder(e);
 			}
 		}
+
+	if( IsSingleplayer )
+		IssueSingleplayerOrders();
 	}
 
 // Ships: whether the world at a point is land, by the tile of the terrain there. A point outside the world is not.
@@ -691,7 +694,9 @@ public void	ApplyOrders()
 			m=MoveOrders[e].Unit;
 			for(n=0; Units[m].PathX[n]!=MAP_RIGHT+1; n++)
 				{}
-			if(MoveOrders[e].ClearsPath!=0  )
+			// The single-player game: the condition that NSPW NET has as a comment, || unit[m].used==cpu_side, and the
+			// computer's ships' route, as 1.22 has them (docs/Singleplayer.md).
+			if(MoveOrders[e].ClearsPath!=0 || (CpuSide!=Side.None && Units[m].Side==CpuSide) )
 				{
 
 				BufferedMoveOrders[e].ClearsPath=0;
@@ -702,6 +707,8 @@ public void	ApplyOrders()
 				Units[m].PathX[1]=MAP_RIGHT+1;
 				n=1;
 
+				if( CpuSide!=Side.None && Units[m].Side==CpuSide && Units[m].Category!=UnitCategory.Plane )
+					SetCpuRoute(m);
 				}
 			else
 				{

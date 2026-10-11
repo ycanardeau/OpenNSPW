@@ -5,9 +5,9 @@ using BenchmarkDotNet.Attributes;
 namespace OpenNspw.Benchmarks;
 
 // The copy of the game's state into and out of the emulator's memory that the single-player mode makes around a call
-// into the single-player executable (docs/Refactoring.md, The emulator): MapTiles and Sprites as one block each, and each
-// unit as three blocks, at the single-player executable's addresses and offsets. Compare with BattleBenchmarks.Tick to
-// see what copying costs per call, against what a tick costs.
+// into the single-player executable (docs/Singleplayer.md, Copying): MapTiles and Sprites as one block each, and each
+// unit as three blocks and its gas, at the single-player executable's addresses and offsets. Compare with
+// BattleBenchmarks.Tick to see what copying costs per call, against what a tick costs.
 [MemoryDiagnoser]
 public class EmulatorCopyBenchmarks
 {
@@ -15,13 +15,13 @@ public class EmulatorCopyBenchmarks
 	private const int MapAddress = 0x443AA0;
 	private const int SpriteAddress = 0x48A200;
 
-	// Not known yet: after the sprites. The cost of the copy does not depend on it.
-	private const int UnitAddress = 0x48A600;
+	private const int UnitAddress = 0x4916A0;
 
 	private const int UnitCount = 256;
 	private const int UnitSize = 0x598;
-	private const int FoundOffset = 0x570;
-	private const int RandomOffset = 0x578;
+	private const int GasOffset = 0x538;
+	private const int FoundOffset = 0x558;
+	private const int RandomOffset = 0x560;
 
 	// found and tech.
 	private const int FoundSize = 2 * sizeof(int);
@@ -31,19 +31,19 @@ public class EmulatorCopyBenchmarks
 		return (int)Unsafe.ByteOffset(ref Unsafe.As<Unit, byte>(ref unit), ref Unsafe.As<T, byte>(ref field));
 	}
 
-	// The offsets of gas, IsFound and Random100 in Unit.
-	private static (int Gas, int Found, int Random) UnitOffsets()
+	// The offsets of SubWeapons, IsFound and Random250 in Unit.
+	private static (int SubWeapons, int Found, int Random) UnitOffsets()
 	{
 		var unit = new Unit();
-		return (OffsetOf(ref unit, ref unit.gas), OffsetOf(ref unit, ref unit.IsFound), OffsetOf(ref unit, ref unit.Random100));
+		return (OffsetOf(ref unit, ref unit.SubWeapons), OffsetOf(ref unit, ref unit.IsFound), OffsetOf(ref unit, ref unit.Random250));
 	}
 
-	private static readonly (int Gas, int Found, int Random) Offsets = UnitOffsets();
+	private static readonly (int SubWeapons, int Found, int Random) Offsets = UnitOffsets();
 
-	// From Side to the 6 values of gas that the single-player executable has, at the same offsets.
-	private static readonly int FirstBlockSize = Offsets.Gas + 6 * sizeof(double);
+	// From Side to arm, at the same offsets.
+	private static readonly int FirstBlockSize = Offsets.SubWeapons;
 
-	// Random100 to Random10.
+	// Random250 to Random10.
 	private static readonly int RandomSize = Unsafe.SizeOf<Unit>() - Offsets.Random;
 
 	private readonly Nspw _game = new();
@@ -65,6 +65,8 @@ public class EmulatorCopyBenchmarks
 			var unit = units.Slice(m * Unsafe.SizeOf<Unit>(), Unsafe.SizeOf<Unit>());
 			var target = At(UnitAddress + m * UnitSize, UnitSize);
 			unit[..FirstBlockSize].CopyTo(target);
+			for (var i = 0; i < 8; i++)
+				MemoryMarshal.Write(target[(GasOffset + 4 * i)..], (int)_game.Units[m].gas[i]);
 			unit.Slice(Offsets.Found, FoundSize).CopyTo(target[FoundOffset..]);
 			unit.Slice(Offsets.Random, RandomSize).CopyTo(target[RandomOffset..]);
 		}
@@ -81,6 +83,8 @@ public class EmulatorCopyBenchmarks
 			var unit = units.Slice(m * Unsafe.SizeOf<Unit>(), Unsafe.SizeOf<Unit>());
 			var source = At(UnitAddress + m * UnitSize, UnitSize);
 			source[..FirstBlockSize].CopyTo(unit);
+			for (var i = 0; i < 8; i++)
+				_game.Units[m].gas[i] = MemoryMarshal.Read<int>(source[(GasOffset + 4 * i)..]);
 			source.Slice(FoundOffset, FoundSize).CopyTo(unit[Offsets.Found..]);
 			source.Slice(RandomOffset, RandomSize).CopyTo(unit[Offsets.Random..]);
 		}

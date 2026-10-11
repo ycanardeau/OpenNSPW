@@ -472,7 +472,7 @@ public void	UpdateFrame()
 				len = wsprintf(ach, "ランダム同期異常、ゲームを中断されたし。");
 				TextOut(hdc, 0, 140, ach, len);
 				}
-			if( ActivePlayerCount!=2  )
+			if( ActivePlayerCount!=2 && !IsSingleplayer )
 				{
 				len = wsprintf(ach, "接続相手がいなくなりました。");
 				TextOut(hdc, 0, 160, ach, len);
@@ -582,6 +582,11 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	// Init IDirectPlay8Peer
 	g_pDP.Initialize( null, DirectPlayMessageHandler, DPNINITIALIZE_DISABLEPARAMVAL );
 
+	// A single-player game has no rival to connect to.
+	if( IsSingleplayer )
+		IsHostPlayer=TRUE;
+	else
+		{
 	// Create the initial dialog.
 	// 接続ダイアログ 　オーナーウィンドウが無いため、モーダレスになります。
 	g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_ADDRESS_OVERRIDE), null, OverrideDlgProc);
@@ -619,6 +624,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 		EndDialog( g_hDlg, 0 );
 		EndApp( );
 		return (int)msg.wParam;
+		}
 		}
 
 	IsHost=new Bool8((byte)IsHostPlayer);
@@ -772,6 +778,9 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	TitleTime=0;
 
 	Mode=GameMode.Title;
+
+	if( IsSingleplayer )
+		StartSingleplayerGame();
 
 	//メッセージループ
 	while(TRUE!=0)
