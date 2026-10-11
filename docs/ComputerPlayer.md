@@ -3,7 +3,7 @@ What NSPW 1.22's computer does in a single-player game, read from its machine co
 
 The addresses are those of the executable. Unit fields and globals have the names of the NSPW NET source, at 1.22's offsets ([Singleplayer.md](Singleplayer.md#layout)). Distances are in map units (the map is 19200 × 14400, from -9600 to 9600 and from -7200 to 7200); angles are in degrees.
 
-This is a first version. **Not read yet** marks what is still to be read; everything else was read from the disassembly.
+**Not read yet** marks what is still to be read; everything else was read from the disassembly. The rewrite reads each function in full, so the details left out here (exact positions, the formation tables) are in the code at the addresses given.
 
 ## When the computer acts
 | What | When | Function |
@@ -19,16 +19,17 @@ The computer's units are organized in **fleets**: a table of 11 entries of `0x49
 
 | Offset | Type | Contents |
 | --- | --- | --- |
-| `+0x000` | `short` | Whether the fleet must form again (1) |
+| `+0x000` | `short` | Its state: 1, form again; 50, move; 10 is also tested; 0, nothing to do |
 | `+0x002` | `short` | Its flagship (a unit number), or 0 for no fleet |
-| `+0x004` | `short` | Set to 1 when the fleet forms again; meaning not known yet |
-| `+0x006` | `short` | Its state; 50 is checked by the air strikes; not read yet |
-| `+0x008`, `+0x010` | `double` | A point; not read yet |
+| `+0x004` | `short` | Whether the first member becomes the flagship when the members change (1) |
+| `+0x006` | `short` | Its mode: 0, hold; 1, attack its targets; 50, go to its second point (`+0x488`) |
+| `+0x008`, `+0x010` | `double` | The point its flagship aims at |
+| `+0x018`, `+0x218` | `double[64]` | Its path: the next move of its flagship is element 0 |
 | `+0x42C` | `short[18]` | Its targets: enemy unit numbers, from index 1 |
 | `+0x450` | `short[18]` | Its members: unit numbers, the flagship first |
-| `+0x474` | `short` | Cleared when the fleet forms again |
+| `+0x474` | `short` | The naval base it is returning to, or 0 |
 | `+0x478`, `+0x480` | `double` | Its destination; `x` 9601 (`MAP_RIGHT+1`) for none, as `game_init` sets it |
-| `+0x488`, `+0x490` | `double` | A second point; not read yet |
+| `+0x488`, `+0x490` | `double` | Its second point, where mode 50 sends it |
 
 The scenarios build the target lists with these functions, which `cpu_strtgy` also calls when a scenario's events change the plan:
 
@@ -45,19 +46,19 @@ A unit is added once; the list holds 17 at most. `sub_403A70(unit, fleet)` (`0x4
 ## cpu_strtgy
 `cpu_strtgy` (`0x404E30`) first clears the computer's order of the last frame (`cls_all_slct_unit_p2(0)`, `new_pp[0].used=0`). Then:
 
-1. **The scenario's events** (`0x404E93` to `0x405554`): a `switch` on `sinario` runs the events of 7 scenarios, mostly reinforcements created with `set_new_unit` and `set_new_unit_plane` when `rest_time` reaches a threshold, and new targets for their fleets:
+1. **The scenario's events** (`0x404E93` to `0x405554`): a `switch` on `sinario` runs the events of 7 scenarios, each when `rest_time` falls to a threshold, and each once (a flag in the fleet table):
 
-    | Scenario | Code |
-    | --- | --- |
-    | 8 | `0x4051C2` |
-    | 10 | `0x40527F` |
-    | 101, 102 | `0x405127` |
-    | 200 | `0x405348` |
-    | 203 | `0x40547E` |
-    | 208 | `0x405071` |
-    | 209 | `0x404E93` |
+    | Scenario | Code | Events |
+    | --- | --- | --- |
+    | 8 | `0x4051C2` | At 40000, fleet 5 attacks (mode 1) and targets the transports (10); at 50000, fleet 7 too |
+    | 10 | `0x40527F` | At 60000, the American air base of fleet 2 gets 16 strategic bombers with bombs, and fleet 2 attacks the cities (13); at 20000, fleet 4 the same |
+    | 101, 102 | `0x405127` | Each fleet in mode 50 whose enemy still has a naval base (12) targets the naval bases and the battleships, cruisers and carriers |
+    | 200 | `0x405348` | At 50000, fleets 1 and 2 attack the battleships, cruisers and carriers; then fleet 3 goes to its second point (mode 50) |
+    | 203 | `0x40547E` | At 42000, fleet 6 attacks; at 40000, fleet 7 |
+    | 208 | `0x405071` | From 20000, while the Japanese base of fleet 2 has fewer than 16 planes, it gets an attacker or a bomber, with bombs, each time |
+    | 209 | `0x404E93` | At 40000, an American carrier with 12 attackers (bombs), 2 cruisers and 2 destroyers arrive near (8500, 6500), heading 135°, and become fleet 8, which targets the infantry bases (15), then the battleships, cruisers and carriers |
 
-    **Not read yet**: what each one does.
+    The thresholds and fleets are read from the code; the details (positions, counts) are in the code at those addresses.
 
 2. **One fleet**: fleet `FrameCount%10+1`, so each fleet acts every 10 frames. The rest of this section is about that fleet.
 
@@ -79,17 +80,37 @@ A unit is added once; the list holds 17 at most. `sub_403A70(unit, fleet)` (`0x4
     - its target (`arm[2]`) is dropped when the target is dead, a plane, or no longer visible (except for a fighter on escort, `info[9]==1`);
     - an armed ship of the fleet (`arm[1]>=1`, not a carrier or a transport) with no target picks one: in a carrier or transport fleet, twice, a random enemy unit that is visible, not a plane and not a submerged submarine, within 900; in a battle fleet, a random target of the fleet's list, one time in 2, within 1200 (a submarine never targets a ground facility), or else a random enemy unit as above.
 
-8. **The planes of the fleet** (`0x4066ED` to `0x40708A`): the fleet's attackers and bombers (`sub_403A70`) that are flying are sent back to their carrier, one time in 20 when the fleet has no target; **not read yet** in detail.
+8. **The planes of the fleet** (`0x4066ED` to `0x40708A`): the fleet's attackers and bombers (`sub_403A70`) that are flying are sent back to their carrier, one time in 20 when the fleet has no target.
 
 9. **The fleet's movement** (`0x40708A` to `0x4092F0`):
     - Dead units are removed from the target list, and the computer's naval base (12) nearest the flagship is found.
     - **Returning to base** (`+0x474` = that base, and the flagship stops): a carrier with no planes, with no more than 2 attackers (unless its first target is a plane), or at half its HP or less; a transport fleet with no cargo left (`arm[1]`); a battleship, cruiser or destroyer fleet below 65% of its total HP while at least 20000 time is left; any fleet below 20% of its total ammunition, or whose flagship is; a flagship whose fuel (`gas[0]*gas[1]*max_spd*0.9`) would not carry it to the point at `0x499750`, while more than 10000 time is left.
     - **At the base**: once the returning flagship has stopped within ±580 of the base, with no visible enemy ship, surfaced submarine or flying attacker or bomber within 900, the fleet supplies (`spry=1`) and stops returning. A carrier gets its destroyed planes back, rebuilt parked on it (`set_pos_of_parking`, `set_unit_data`); in scenario 204, new attackers with bombs (`set_new_unit_plane`) up to 12.
     - A flagship near the edge of the map (|x| ≥ 9500, |y| ≥ 7100), or whose path leaves the map, stops.
-    - **Choosing a move**: a stopped flagship that is not supplying puts the fleet in state 50 (`+0x000`). In state 50, with a one-point path, it aims (`+0x008`, `+0x010`) at its gun target if visible, else at the target found at step 3, else at the first of the fleet's targets (a plane's carrier for a plane in the air). Transport fleets go to `0x408F8A` (**not read yet**).
-    - **Approaching**, by the kind of the flagship, from the distance and bearing to the aim: a carrier at `0x4086F3`; a submarine that is reloading (`arm[3]`) moves away when within 1500 (bearing + 160 + `rand()%40`, 100 to 300 away), otherwise it closes in from 800 (bearing ± 20, 100 to 600 away), and within 200 it steps 120 along the bearing; the other kinds compare with 7000, 3000, 700, 200 and 100 and move at bearing ± 45, 70, 90 or 115. **Not read yet** in detail.
+    - **Choosing a move**: a stopped flagship that is not supplying puts the fleet in state 50 (`+0x000`). In state 50, with a one-point path, it aims (`+0x008`, `+0x010`) at its gun target if visible, else at the target found at step 3, else at the first of the fleet's targets (a plane's carrier for a plane in the air). Transport fleets, and fleets with nothing to aim at, act by their mode (below).
+    - **Approaching**: the next move (the fleet's path, `+0x018`) is a point at a random bearing and distance from the flagship, by its kind and its distance d to the aim, whose bearing is b:
 
-10. **Air strikes** (`0x4092F0` to `0x409C24`), from the fleet's flagship, against a target whose distance is compared with R, 3550, or 4350 when the computer plays Japan. Which target, and some of the conditions, are **not read yet**; what is read:
+        | Flagship | d | Bearing | Distance |
+        | --- | --- | --- | --- |
+        | Battleship, cruiser, destroyer | 7000 or more | b ± 70 | 1500 to 4500 |
+        | | 3000 to 7000 | b ± 70 | 800 to 1800 |
+        | | 1500 to 3000 | b ± 45 | 400 to 700 |
+        | | 700 to 1500 | b ± 20, or one time in 7 each, 35 to 100 to one side | 200 to 500 |
+        | | under 700 | b ± 20, or 35 to 100 to one side, one time in 3 each | 300 to 500 |
+        | Carrier, light carrier | 7000 or more (7800 for Japan) | b ± 20 | 1500 to 2000 |
+        | | 4500 (5300) to 7000 (7800) | b ± 70 | 1300 to 1800 |
+        | | 3550 (4350) to 4500 (5300) | b ± 20 | 800 to 1100 |
+        | | under 3550 (4350) | b + 115 to 245, away | 1300 to 1800 |
+        | Submarine, reloading (`arm[3]`) | 1500 or less | b + 160 to 200, away | 100 to 300 |
+        | Submarine | 800 or more | b ± 20 | 100 to 600 |
+        | | 200 to 800 | b | 120 |
+
+        A carrier whose attackers are flying home, and that is within 3700 of the aim, moves 500 away from it. A carrier's move is then kept 2150 from every enemy ground facility (11 to 17): the point is turned around the carrier, 500 away, from 45° (or a random 45° to 175°, one time in 10) up to 180°, until it is clear, or else the carrier moves 300 to 1100 away from the facility, at about a right angle to one side.
+    - **With nothing to aim at**, by its mode: in mode 1, a transport fleet goes to its aim point plus a random 100 to 250, and any other fleet wanders 500 around its flagship; in mode 50, the fleet goes to its second point plus a random 300. A returning fleet goes to its base, 100 to 500 to its east and south.
+    - **The order** (`0x40A949`, at the end of `cpu_strtgy`): in state 1, `sub_403AE0(fleet)` sets the members' formation, and the flagship is ordered to where it is, with the members selected, so that they form up on it; in state 50, the live members are selected and the flagship is ordered to the fleet's next move, rounded to a multiple of 80 toward 0. `ApplyOrders` then gives the flagship that path, and `set_cpu_route(m, 4.0)` plans it.
+    - **Formations** (`sub_403AE0`, `0x403AE0`): a carrier among the members becomes the first; each other member gets its leader (`ltl_ldr`), and its bearing (`to_ldr_drctn`, 23° to 337°) and distance (`to_ldr_dstc`, 100 to 390) from it, from one of two tables of formations by the number of members (1 to 6; `0x404D4C` with a carrier, `0x404D64` without).
+
+10. **Air strikes** (`0x4092F0` to `0x409C24`), from the fleet's flagship, against a target whose distance is compared with R, 3550, or 4350 when the computer plays Japan. The target is the one found at step 3, or else the fleet's first target (for an air base, a random one of its targets); the flagship must not be launching (`info[4]<=0`), nor returning to base.
     - **Interception from a carrier**: when the target is an enemy plane in the air, within R (or up to 1.5 R when the flagship is an air base, the fleet's state is 50, or `rest_time` is under 8000), all the ready fighters of the carrier are selected, and the first is ordered to where the target will be: its position plus its heading times its speed times a third of the distance.
     - **Strike from a carrier**: against a target that is not a plane, further out (up to 1.7 R; ground facilities when the flagship is an air base), its ready attackers are selected, with its fighters as escort, and ordered a quarter of the distance ahead of the target, plus a random ±400 when the target is slower than 1.
     - **Strike from an air base** (a flagship of kind 11): when the target is within 20000, its ready strategic bombers (9) are selected, with its fighters and attackers as escort, and ordered to the target plus 1500 times its speed along its heading.
@@ -97,7 +118,9 @@ A unit is added once; the list holds 17 at most. `sub_403A70(unit, fleet)` (`0x4
 
     The order goes in `new_pp[0]`, with the planes numbered in `slct_unit[0]`, as the player's would be.
 
-11. **Not read yet**: `0x409C24` to `0x40A43E` (the same strikes from the fleet's other carriers, it seems), and `0x40A44D` to the end: `sub_414DD0` (`0x414DD0`, three times), reinforcements with `set_new_unit` and `set_new_unit_plane`, and `sub_403AE0` (`0x403AE0`).
+11. **The other carriers** (`0x409C24` to `0x40A43E`): the same strikes, against the same target, from each other carrier (5, 6) of the fleet.
+
+12. **Scenario 304** (`0x40A44D` to `0x40A949`, 日本近海の戦い): when fleet 1 (at 130000) or fleet 2 (at 100000) has no carrier left, it gets a new American carrier with attackers, placed by `sub_414DD0` (`0x414DD0`) near the east edge of the map.
 
 ## set_cpu_route
 `set_cpu_route(m, a)` (`0x42DA80`) plans the route of the computer's ship `m` to `pp_x[0]`, `pp_y[0]`. It is NSPW NET's `set_cpu_root2` (`input.cpp`), with these differences:
@@ -131,13 +154,49 @@ Its path becomes its final destination alone, and `set_cpu_route(m, 1.0)` plans 
 ## decision
 `decision` (`0x41C3C0`) checks the scenario's result with a `switch` on `sinario` (scenarios 1 to 10 at `0x41DFCC`, the others through a byte table), and then, if `game_end` is set, shows the result with the messages of `0x4414B0` to `0x4415A4`.
 
-Each scenario counts units by side and kind, and compares the time left (`rest_time`) and `decision_point`. For example, scenario 3 (ウェーク島防衛): Japan has no carrier (5, 6) left → the United States win; the United States have no infantry base (15) left → Japan wins; and then its air units; **not read yet** in full.
+Each scenario counts units by side and kind, and compares the time left (`rest_time`) and `decision_point`. For example, scenario 3: Japan has no carrier (5, 6) left → the United States win; the United States have no infantry base (15) left → Japan wins; then their planes.
 
-The executable also holds, for each scenario, its description and victory conditions as the setting screen shows them (`0x43E0C0` to `0x441030`, such as 勝敗条件：制限時間内にガダルカナル島の敵を殲滅し…), which tell what `decision` checks.
+The setting screen (`0x40B406`) states each scenario's side and victory conditions, from the strings at `0x43E0C0` to `0x441030`. `decision` implements them; its code is to be read against them, scenario by scenario:
 
-**Not read yet**: the conditions of each scenario.
+| Scenario | Player | Stated conditions |
+| --- | --- | --- |
+| 1 | United States | Win when every target ship is sunk; lose when time runs out |
+| 2 | Japan | Do heavy damage to the American ships in Pearl Harbor; lose when time runs out |
+| 3 | United States | Win by holding Wake's infantry base until the end, or by sinking the enemy carriers; lose with that base or the air units |
+| 4 | Japan | Be the first to sink an enemy carrier; lose when time runs out |
+| 5, 6 | United States | Sink every enemy carrier; lose when time runs out |
+| 7 | United States | Hold Guadalcanal's air base until the end, or destroy the Japanese navy |
+| 8 | Japan | Win when anchored ships remain at the end; lose when they are all sunk |
+| 9 | Japan | Win by destroying every enemy carrier; lose when time runs out or every carrier is lost |
+| 10 | Japan | Japan loses with all its cities, the United States with all their air units; a draw when time runs out |
+| 100 | Japan | Win by sinking an enemy carrier; lose with the base on Guadalcanal or the submarines |
+| 101, 102 | Japan, United States | Win by sinking every enemy battleship and cruiser |
+| 103 | United States | Win by destroying the enemy air units; lose with every ship in Pearl Harbor |
+| 104 | Japan | Destroy the enemy ground forces on Guadalcanal in time; anything else loses |
+| 105, 106 | Japan, United States | Win by destroying the enemy carriers; lose with one's own |
+| 107 | United States | Shoot down the plane carrying Yamamoto |
+| 108 | Japan | Keep at least one base on the islands east of Rabaul until the end |
+| 109 | United States | Sink the carriers, battleships, cruisers and transports at Yokosuka, and return near the start; lose when time runs out |
+| 200 | Japan | Destroy every enemy facility on Guadalcanal; lose when time runs out or with a carrier |
+| 201 | Japan | Sink the American carrier; anything else loses |
+| 202 | United States | Destroy the cities of Tokyo in time |
+| 203 | United States | Sink many enemy ships; lose with Midway's pillboxes |
+| 204 | United States | Hold Guadalcanal's ground facilities until the end |
+| 205 | United States | Land Noumea's strategic bombers at Bougainville's air base, and bring them back to Noumea |
+| 206 | United States | Sink the battleship Yamato; lose when time runs out |
+| 207 | United States | Destroy Rabaul's air base and return near the start; lose with every battleship and cruiser |
+| 208 | United States | Hold Guadalcanal's infantry base until the end, or destroy the enemy |
+| 209 | Japan | Keep a base on Midway at the end, and destroy the enemy ground bases |
+| 300 | United States | Destroy two cities of Tokyo in time, and gather every bomber left at the bottom left of the map |
+| 301 | Japan | Destroy two enemy carriers and Port Moresby's infantry base, pillboxes and fortress in time, keeping the city, with a base built next to it |
+| 302 | Japan | Destroy Midway's ground facilities in time, without losing a carrier |
+| 303 | United States | Not stated |
+| 304 | Japan | Hold the ground facilities until the end |
+| 305 | Japan | Destroy the American bases on Okinawa in time |
+| 306 | Japan | Destroy the enemy on Guadalcanal in time, and build at least two ground facilities |
+
+**Not read yet**: the code of each scenario's conditions.
 
 ## Next
-1. Read the rest of `cpu_strtgy` (steps 8, 9 and 11, the scenario events).
-2. Read `decision`, scenario by scenario, against the victory conditions in the executable.
-3. Rewrite `set_cpu_route` as C#, with a test that compares it with the emulated original on recorded and random states.
+1. Rewrite the functions as C#, starting with `set_cpu_route`, each with a test that compares it with the emulated original on states recorded from games and random ones. The rewrite reads each function in full, and this document gets the details it finds.
+2. Read `decision`'s code for each scenario as part of its rewrite.
