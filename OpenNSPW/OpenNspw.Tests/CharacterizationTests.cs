@@ -115,7 +115,8 @@ public class CharacterizationTests
 		});
 	}
 
-	// Runs a script on two new games, and compares its trace with the committed one.
+	// Runs a script on two new games, and compares its trace with the committed one. Neither game may detect a desync
+	// (first_r_error), which the games check every turn from the checksums they exchange.
 	private static void Check(string name, Action<LockstepRun> script)
 	{
 		using var run = new LockstepRun();
@@ -125,6 +126,8 @@ public class CharacterizationTests
 			script(run);
 			Assert.Empty(run.Host.MessageBoxes);
 			Assert.Empty(run.Guest.MessageBoxes);
+			Assert.False(run.Host.Game.HasSavedDesync, "The host detected a desync.");
+			Assert.False(run.Guest.Game.HasSavedDesync, "The guest detected a desync.");
 		}
 		catch (Exception e)
 		{
