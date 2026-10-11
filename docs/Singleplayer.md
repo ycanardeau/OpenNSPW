@@ -31,12 +31,13 @@ dotnet run --project Disassembler/OpenNspw.Disassembler -- Original/Nspw122/NSPW
 | Function | Address | Called by the port |
 | --- | --- | --- |
 | `scenario_1` to `scenario_10`, `scenario_100` to `scenario_109`, `scenario_200` to `scenario_209`, `scenario_300` to `scenario_306` | `Functions.SetUpScenario` | `InitializeGame`, in place of `get_sinario_data` |
-| `cpu_strtgy`, and the functions only it calls (`sub_403A70`, `sub_403AE0`, `sub_404D80`, `sub_414DD0`, `sub_41F230`, `sub_41F300`, `sub_41F3C0`, `sub_41F490`, `sub_417C10`) | `0x404E30` | `HandleInput`, before the orders are applied |
+| `cpu_strtgy` | `0x404E30` | Rewritten as C# (`PlanComputerStrategy`), which `HandleInput` calls before the orders are applied; the emulated original is kept for its test |
+| `sub_403AE0`, `sub_404D80`, `sub_414DD0`, `sub_41F230`, `sub_41F300`, `sub_41F490`, `set_new_unit`, `set_pos_of_parking` | | By the emulated code, and by `PlanComputerStrategy` |
 | `set_cpu_route` | `0x42DA80` | Rewritten as C# (`PlanComputerRoute`), which `ApplyOrders` calls for a move order of a computer's ship, and `ReplanBlockedRoute` for a blocked one; the emulated original is kept for its test |
 | `decision` | `0x41C3C0` | Rewritten as C# (`Decide`), which `CheckResult` calls in place of NSPW NET's conditions and result; the emulated original is kept for its test |
-| `set_unit_data` | `0x41E150` | By the emulated code, and by `SetUnitData` in a single-player game, for the units the battle creates |
-| `set_new_unit_plane`, `plane_in_cv` | `0x41F060`, `0x416F00` | By the emulated code, and by `Decide` |
-| `set_new_unit`, `set_pos_of_parking`, `cls_all_slct_unit_p2`, `pt_in_rect3` | | Only by the emulated code |
+| `set_unit_data` | `0x41E150` | By the emulated code, and by `SetUnitData` in a single-player game, for the units the battle creates, and by `PlanComputerStrategy` |
+| `set_new_unit_plane`, `plane_in_cv` | `0x41F060`, `0x416F00` | By the emulated code, and by `Decide` and `PlanComputerStrategy` |
+| `sub_41F3C0`, `cls_all_slct_unit_p2`, `pt_in_rect3`, `sub_417C10` | | Only by the emulated code |
 
 `set_cpu_route2` (`0x42ED30`) is translated, and `SetDynamicDestination` calls it (`SetCpuRoute2As122`) for a ship that follows a leader, as 1.22's formation does (`0x414D79`); the port's `SetCpuRoute2`, which NSPW NET calls for every unit, stays for network games.
 
@@ -182,7 +183,7 @@ NSPW NET's debug keys (`DBG_MODE`) work as in a network game, but three are held
 5. **The single-player game**: the paths above, started from the desktop app with `--singleplayer`. Done.
 6. **Setting screen**: choosing single-player and the scenario in the game, as 1.22's setting screen does. Not done.
 7. **Characterization trace** of a single-player game, to guard the refactoring of the code it runs. Traces of 1.22 itself, recorded on Windows, replayed by the port ([Verification.md](Verification.md)): the tools are done; the traces are not recorded yet.
-8. **Rewriting the emulated functions as C#** ([ComputerPlayer.md](ComputerPlayer.md)), each tested against the emulated original. `set_cpu_route` and `decision` are done. The emulator computes `fsin`, `fcos` and `fpatan` with the port's `sin`, `cos` and `atan2`, so that both give the same results, on every platform.
+8. **Rewriting the emulated functions as C#** ([ComputerPlayer.md](ComputerPlayer.md)), each tested against the emulated original. `set_cpu_route`, `decision` and `cpu_strtgy` are done; the scenarios' setups and the functions they share with `cpu_strtgy` still run in the emulator. The emulator computes `fsin`, `fcos` and `fpatan` with the port's `sin`, `cos` and `atan2`, so that both give the same results, on every platform.
 
 ## Open questions
 - Which other differences between 1.22's battle and NSPW NET's ([Differences.md](Differences.md#the-battle)) matter for single-player play.

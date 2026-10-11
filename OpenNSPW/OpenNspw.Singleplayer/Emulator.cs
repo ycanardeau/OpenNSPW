@@ -47,6 +47,9 @@ public sealed class Emulator
 	public Span<byte> At(uint address, int length) =>
 		_memory.AsSpan((int)(address - Start), length);
 
+	// All the memory, from Start: for tests that run code twice from the same state.
+	internal Span<byte> Memory => _memory;
+
 	// Memory after the image that the code of the executable does not use, for the native side.
 	public uint Allocate(int size)
 	{
