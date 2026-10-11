@@ -131,7 +131,7 @@ Each adds from the first empty element of 1 to 17 (18 when there is none) the un
     - fleets 3 and 4, and 5 from 100000, with no more than 2 live members: cruisers and battleships (60 and 40 in 100) until they have 3; a new fleet attacks the land forces (fleet 3 toward (6640, -3760)).
 
 ## set_cpu_route
-`set_cpu_route(m, a)` (`0x42DA80`) plans the route of the computer's ship `m` to `pp_x[0]`, `pp_y[0]`. It is NSPW NET's `set_cpu_root2` (`input.cpp`), with these differences:
+`set_cpu_route(m, a)` (`0x42DA80`), rewritten as `PlanComputerRoute` (`ComputerPlayer.cs`), plans the route of the computer's ship `m` to `pp_x[0]`, `pp_y[0]`. It is NSPW NET's `set_cpu_root2` (`input.cpp`), with these differences:
 
 | | NSPW NET's `set_cpu_root2` | 1.22's `set_cpu_route` |
 | --- | --- | --- |
@@ -261,5 +261,5 @@ The events of the other scenarios give Japan's unit 1 a plane (`set_new_unit_pla
 | 304 | Every 4500 | Parked there (`plane_in_cv(1)`) | Attacker to 75, fighter to 98, else bomber |
 
 ## Next
-1. Rewrite the functions as C#, starting with `set_cpu_route`, each with a test that compares it with the emulated original on states recorded from games and random ones. The rewrite reads each function in full, and this document gets the details it finds.
+1. Rewrite the functions as C#, each with a test that compares it with the emulated original on states of games and random ones (`ComputerPlayerTests`). The rewrite reads each function in full, and this document gets the details it finds. `set_cpu_route` is done: on 10 scenarios, every ship, at three points of the game, with its own destination and three random ones, the rewrite leaves the units exactly as the original does.
 2. Rewrite the scenarios' setups (`scenario_N`).

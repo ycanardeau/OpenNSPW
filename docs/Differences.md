@@ -3,6 +3,8 @@ A single-player game plays a scenario of NSPW 1.22 (`Original/Nspw122/NSPW_122.e
 
 This document lists every difference found between the two, read from 1.22's machine code, with the address where it shows; [Verification.md](Verification.md) checks the port against 1.22 itself. The single-player game follows 1.22 in the first table only; the others are left as NSPW NET has them, so that the port keeps a single battle, the one network games play. It follows 1.22's bugs too, as they change the battle; the code marks each `BUG(1.22)`.
 
+The computer player itself runs 1.22's code, emulated or rewritten as C# and tested against the emulated original ([ComputerPlayer.md](ComputerPlayer.md)), so it has no difference of its own. The differences are in the battle that the computer plays in.
+
 ## Followed in single-player
 | Difference | 1.22 | NSPW NET | Where in the port |
 | --- | --- | --- | --- |

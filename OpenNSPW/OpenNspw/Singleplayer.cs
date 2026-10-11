@@ -672,8 +672,9 @@ public unsafe partial class Nspw
 		RunEmulated(Functions.SetCpuRoute2, (uint)m);
 	}
 
-	// set_cpu_route(m, radius): the route of the computer's ship m to the destination just set as its path; the orders
-	// pass 4.0, the battle 1.0 when the ship is blocked.
+	// The emulated set_cpu_route(m, radius), which ComputerPlayerTests compares PlanComputerRoute, its rewrite, with: the
+	// route of the computer's ship m to the destination just set as its path. The orders pass 4.0, the battle 1.0 when
+	// the ship is blocked, but 1.22 does not use the value.
 	public void SetCpuRoute(int m, double radius)
 	{
 		var bits = BitConverter.DoubleToUInt64Bits(radius);
