@@ -126,7 +126,7 @@ The ported files read side by side with the C++ files: same order, names, commen
 | `(a==b)` used as an integer | `(a==b ? 1 : 0)` |
 | A local that can be read uninitialized (MSVC warnings C4700, C4701) | Initialized to zero, marked `/* C4701 */`. The tests avoid the inputs that read it. |
 | A local that shadows a local of an enclosing scope | The outer one is renamed, with a comment |
-| `#if SND_SW`, `#if CONN_DBG==0`, `#if LNGG_VER==0` | `#if SND_SW`, `#if !CONN_DBG`, `#if !LNGG_VER`: the switches that are 1 (`SND_SW`, `DBG_MODE`) are defined in the project |
+| `#if NSPW_THE_NET`, `#if SND_SW`, `#if CONN_DBG==0`, `#if LNGG_VER==0` | `#if NSPW_THE_NET`, `#if SND_SW`, `#if !CONN_DBG`, `#if !LNGG_VER`: the switches that are 1 (`NSPW_THE_NET`, `SND_SW`, `DBG_MODE`) are defined in the project |
 | Pointers to network messages (`(_DP_FLAG*) pReceiveMsg->pReceiveData`, `(BYTE*) &dp_flag`) | Unsafe pointers, as in C++ |
 | `GUID*`, `HWND`, COM interface pointers | `Guid?`, `HWND?`, `IDirectPlay8Peer?` and so on; `p->f` becomes `p.f` |
 | `TCHAR s[N]` passed to a function | A `Span<byte>`: the stand-ins take char arrays as spans |

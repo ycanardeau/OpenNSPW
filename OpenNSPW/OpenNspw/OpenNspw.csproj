@@ -6,8 +6,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- The ported code dereferences pointers that may be null, as the original does. -->
     <Nullable>annotations</Nullable>
-    <!-- The original's compile-time switches (all_head.h) that are set: SND_SW and DBG_MODE. CONN_DBG and LNGG_VER are 0. -->
-    <DefineConstants>$(DefineConstants);SND_SW;DBG_MODE</DefineConstants>
+    <!-- The original's compile-time switches (all_head.h) that are set: NSPW_THE_NET, SND_SW and DBG_MODE. CONN_DBG and LNGG_VER are 0. -->
+    <DefineConstants>$(DefineConstants);NSPW_THE_NET;SND_SW;DBG_MODE</DefineConstants>
     <!--
       The ported files keep the original's names, unused variables and dead code (docs/Porting.md):
       CS0162: unreachable code, such as `if( 0 && ... )`.
