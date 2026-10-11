@@ -1,5 +1,6 @@
 // Comments from: Intel® 64 and IA-32 Architectures Software Developer Manual: Vol 2
 
+using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Aigamo.Extensions.Primitives;
@@ -587,6 +588,19 @@ public sealed class Cpu(Memory<byte> memory, Register32 offset, Action<Register3
 	}
 
 	/// <summary>
+	/// Repeat store string: fill ECX doublewords at ES:EDI with EAX, upwards.
+	/// </summary>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public void RepStosd()
+	{
+		var destination = Memory.Span.Slice((int)(Edi - Offset).Value, (int)Ecx.Value * 4);
+		for (var i = 0; i < destination.Length; i += 4)
+			BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(i), Eax.Value);
+		Edi += new Register32((uint)destination.Length);
+		Ecx = Register32.Empty;
+	}
+
+	/// <summary>
 	/// Arithmetic right shift.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -686,6 +700,19 @@ public sealed class Cpu(Memory<byte> memory, Register32 offset, Action<Register3
 			}
 		);
 		return result;
+	}
+
+	/// <summary>
+	/// Store string: store EAX at ES:EDI, then move EDI to the next doubleword.
+	/// </summary>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public void Stosd()
+	{
+		BinaryPrimitives.WriteUInt32LittleEndian(
+			Memory.Span.Slice((int)(Edi - Offset).Value),
+			Eax.Value
+		);
+		Edi += new Register32(4);
 	}
 
 	/// <summary>
