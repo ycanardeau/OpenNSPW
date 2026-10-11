@@ -19,6 +19,8 @@ The NSPW NET source has no single-player code: the computer's strategy, the sing
 
 The emulator's memory (`OpenNspw.Singleplayer/Emulator.cs`) is the image from `0x400000` to `0x4F1000`, a stack of 64 KB below it, and 4 KB after it for what the port places there, such as the object behind a COM pointer. Each slot of the import table holds a stub, an address from `0xFFFF0000` that is not in the memory; calling it calls the native function set for that import. An import that has none throws, with its name.
 
+What the emulated functions do is in [ComputerPlayer.md](ComputerPlayer.md).
+
 ## What is emulated
 The Disassembler translates each function to a static method `Sub<address>.Call(Emulator)`, in `OpenNspw.Singleplayer/Subroutines`, and writes the table that finds them by address. `Emulator.Call` dispatches a call to a native function if one is set at its address, and otherwise to the translated function there.
 
