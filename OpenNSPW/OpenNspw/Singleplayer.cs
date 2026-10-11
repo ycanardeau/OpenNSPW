@@ -397,8 +397,8 @@ public unsafe partial class Nspw
 		ClearBufferedOrders();
 	}
 
-	// set_cpu_route(m, a): the route of the computer's ship m to the destination of its path, around the land. 1.22
-	// passes 4.0 for a new order, and 1.0 for a ship that is blocked; what the value means is not known yet.
+	// The emulated set_cpu_route(m, a), which ComputerPlayerTests compares PlanComputerRoute, its rewrite, with. 1.22
+	// passes 4.0 for a new order and 1.0 for a ship that is blocked, but does not use the value.
 	public void SetCpuRoute(int m, double a)
 	{
 		var bits = BitConverter.DoubleToUInt64Bits(a);
@@ -412,7 +412,7 @@ public unsafe partial class Nspw
 	}
 
 	// 1.22's chara_cont, for a computer's ship whose course ahead is blocked: its path becomes its destination alone, and
-	// set_cpu_route plans it again. When a ship blocks it (shipAhead, that ship's rectangle) and its destination is in that
+	// set_cpu_route (PlanComputerRoute) plans it again. When a ship blocks it (shipAhead, that ship's rectangle) and its destination is in that
 	// ship's rectangle, the destination becomes where it is.
 	private void RerouteComputerShip(ref Unit unit, int m, RECT? shipAhead)
 	{
@@ -434,6 +434,6 @@ public unsafe partial class Nspw
 			unit.PathX[1] = MAP_RIGHT + 1;
 		}
 
-		SetCpuRoute(m, 1.0);
+		PlanComputerRoute(m);
 	}
 }

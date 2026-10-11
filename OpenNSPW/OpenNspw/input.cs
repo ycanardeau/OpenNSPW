@@ -708,7 +708,7 @@ public void	ApplyOrders()
 				n=1;
 
 				if( CpuSide!=Side.None && Units[m].Side==CpuSide && Units[m].Category!=UnitCategory.Plane )
-					SetCpuRoute(m, 4.0);
+					PlanComputerRoute(m);
 				}
 			else
 				{

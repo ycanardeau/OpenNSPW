@@ -1,7 +1,7 @@
 # Differences from NSPW 1.22
 The port's battle is NSPW NET's: its movement, combat, supply and steering (`chara_cont` and the functions it calls) come from NSPW NET's source. A single-player game should behave exactly as NSPW 1.22 (`Original/Nspw122/NSPW_122.exe`). This document lists every difference found between the two, with the address in 1.22 where it shows, and whether the single-player game now follows 1.22 (`IsSingleplayer`).
 
-The computer player itself (`cpu_strtgy`, `set_cpu_route`, `decision`) runs 1.22's own code in the emulator ([ComputerPlayer.md](ComputerPlayer.md)), so it has no difference of its own. The differences are in the battle that the computer plays in.
+The computer player itself (`cpu_strtgy`, `set_cpu_route`, `decision`) runs 1.22's code, emulated or rewritten as C# and tested against the emulated original ([ComputerPlayer.md](ComputerPlayer.md)), so it has no difference of its own. The differences are in the battle that the computer plays in.
 
 ## Followed in single-player
 | Difference | 1.22 | NSPW NET | Where in the port |
