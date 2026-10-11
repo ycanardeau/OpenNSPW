@@ -4068,7 +4068,7 @@ private void ClearUnits()
 	PreviousSelectedUnit=0;
 	SelectionCount=0;
 
-	MaxUnitId=USA_PLANE_END;			// とりあえず最大値を入れておく
+	MaxUnitId=(short)USA_PLANE_END;			// とりあえず最大値を入れておく
 
 	ClearFlag=2;
 	}
@@ -4116,7 +4116,7 @@ private void StartFromSave(ref _DP_FLAG dp_flag)
 	SelectedUnit=0;
 	PreviousSelectedUnit=0;
 	SelectionCount=0;
-	MaxUnitId=USA_PLANE_END;			// とりあえず最大値を入れておく
+	MaxUnitId=(short)USA_PLANE_END;			// とりあえず最大値を入れておく
 	ClearFlag=2;
 
 	//
