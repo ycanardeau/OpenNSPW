@@ -52,6 +52,8 @@ internal sealed class NspwGame : Game
 	private readonly DesktopPlatform _platform;
 	private readonly Nspw _game;
 	private readonly Thread _thread;
+	private readonly byte[]? _singleplayerExecutable;
+	private readonly int? _scenario;
 	private SpriteBatch _spriteBatch = default!;
 	private ViewportAdapter _viewportAdapter = default!;
 	private WindowManager _windowManager = default!;
@@ -85,9 +87,9 @@ internal sealed class NspwGame : Game
 		}
 	}
 
-	// singleplayer: NSPW_122.exe and a scenario of it, to play that scenario against the computer (docs/Singleplayer.md)
-	// instead of connecting to a rival.
-	public NspwGame(string dataDirectory, (byte[] Executable, int Scenario)? singleplayer = null)
+	// singleplayerExecutable: NSPW_122.exe, to play its scenarios against the computer (docs/Singleplayer.md), or null.
+	// scenario: the scenario to play at once, or null to choose in the main menu.
+	public NspwGame(string dataDirectory, byte[]? singleplayerExecutable, int? scenario)
 	{
 		_graphics = new GraphicsDeviceManager(this);
 		IsMouseVisible = true;
@@ -95,14 +97,22 @@ internal sealed class NspwGame : Game
 		Window.AllowUserResizing = true;
 		_platform = new DesktopPlatform(dataDirectory);
 		_game = new Nspw(_platform);
-		if (singleplayer is var (executable, scenario))
+		_singleplayerExecutable = singleplayerExecutable;
+		_scenario = scenario;
+		_thread = new Thread(RunGame) { IsBackground = true, Name = "NSPW" };
+	}
+
+	// Starts the game: a single-player game of the scenario, or, without one, a network game.
+	private void StartGame(int? scenario)
+	{
+		if (scenario is { } number)
 		{
 			_game.IsSingleplayer = true;
-			_game.SingleplayerExecutable = executable;
-			_game.ScenarioNumber = (short)scenario;
+			_game.SingleplayerExecutable = _singleplayerExecutable;
+			_game.ScenarioNumber = (short)number;
 		}
 
-		_thread = new Thread(RunGame) { IsBackground = true, Name = "NSPW" };
+		_thread.Start();
 	}
 
 	protected override void Initialize()
@@ -141,7 +151,17 @@ internal sealed class NspwGame : Game
 		Window.TextInput += (_, e) => _windowManager.OnKeyPress(new KeyPressEventArgs(e.Character));
 		_dialogs = new DialogForms(_game, _windowManager);
 
-		_thread.Start();
+		if (_scenario is { } scenario)
+		{
+			StartGame(scenario);
+		}
+		else
+		{
+			var menu = new MainMenu(_windowManager, _singleplayerExecutable is not null);
+			menu.Chosen += (_, chosen) => StartGame(chosen);
+			menu.Quit += (_, _) => Exit();
+			menu.ShowModes();
+		}
 	}
 
 	private void UpdateKeyboard()
@@ -189,7 +209,8 @@ internal sealed class NspwGame : Game
 			Exit();
 		}
 
-		if (IsActive)
+		// Before the game starts, the input is the main menu's only.
+		if (IsActive && _thread.IsAlive)
 		{
 			UpdateKeyboard();
 			UpdateMouse();
@@ -237,7 +258,7 @@ internal sealed class NspwGame : Game
 	// Closing the window closes the game, as closing its window or cancelling its dialog does in the original.
 	protected override void OnExiting(object sender, ExitingEventArgs args)
 	{
-		if (!_gameEnded)
+		if (_thread.IsAlive && !_gameEnded)
 		{
 			if (_game.g_hDlg is { } dialog)
 			{

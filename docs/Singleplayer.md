@@ -105,7 +105,7 @@ Translating unit numbers at the boundary would need to know every field that hol
 
 So in a single-player game (`IsSingleplayer`):
 
-- `WinMain` connects to no one, and starts the battle of `ScenarioNumber` (`StartSingleplayerGame`).
+- `WinMain` connects to no one, and starts the battle of `ScenarioNumber` (`StartSingleplayerGame`), which the host chose before the game started.
 - `InitializeGame` sets up 1.22's scenario instead of NSPW NET's, which sets the sides, the camera and the time limit, and sends nothing.
 - `UpdateBattle` skips the two network phases, and counts `BattleTime` down every tick, as 1.22 counts `rest_time`.
 - `HandleInput` buffers the player's orders as in a network game, then `IssueSingleplayerOrders` gives the orders of this frame: `cpu_strtgy`, then what `ReceiveAndIssueOrders` does for a turn, for the player only, and `ApplyOrders` for both. Orders take effect in the frame they are given, not at the next turn.
@@ -114,13 +114,16 @@ So in a single-player game (`IsSingleplayer`):
 
 ## Playing
 ```bash
-dotnet run --project OpenNSPW/OpenNspw.Desktop -- --singleplayer 3
+dotnet run --project OpenNSPW/OpenNspw.Desktop
 ```
 
-The scenario is one of 1, 2, ..., 10, 100, ..., 109, 200, ..., 209, 300, ..., 306. The executable is `Original/Nspw122/NSPW_122.exe`, or the file given with `--exe`. The graphics, sounds and maps are NSPW NET's.
+The desktop app starts with a menu (`OpenNspw.Desktop/MainMenu.cs`): playing a scenario of 1.22 against the computer, or a network game, whose connection dialog follows. The scenarios are listed in the four collections of 1.22's setting screen, with their titles there (`ScenarioCatalog`). `--singleplayer <scenario>` starts a scenario at once, without the menu.
+
+The executable is `Original/Nspw122/NSPW_122.exe`, or the file given with `--exe`; without it, the menu offers only the network game. The graphics, sounds and maps are NSPW NET's.
 
 ## Tests
 - `EmulatorTests`: every scenario setup runs on the executable alone and places units of both sides.
+- `MainMenuTests`: the desktop app's menu, clicked through.
 - `SingleplayerTests`: whole games, stepped as the characterization tests step them. In scenarios 3 and 4, the computer gives move orders to its own ships, which move, and the time limit counts down. Every scenario plays 3000 frames without failing. A battle is saved as `singleplayer_battle.png` next to the test assembly.
 
 ## Implementation steps
@@ -129,7 +132,7 @@ The scenario is one of 1, 2, ..., 10, 100, ..., 109, 200, ..., 209, 300, ..., 30
 3. **Mapping**: the shared globals and the units, copied in and out. Done.
 4. **Unit ranges**: properties of the game. Done; the characterization traces did not change.
 5. **The single-player game**: the paths above, started from the desktop app with `--singleplayer`. Done.
-6. **Setting screen**: choosing single-player and the scenario in the game, as 1.22's setting screen does. Not done.
+6. **Choosing the game**: the desktop app's menu, before the game starts. Done. 1.22's own setting screen, with each scenario's description and victory conditions (also strings of the executable, from `0x43E0C0`), is not.
 7. **Characterization trace** of a single-player game, to guard the refactoring of the code it runs. Not done.
 
 ## Open questions

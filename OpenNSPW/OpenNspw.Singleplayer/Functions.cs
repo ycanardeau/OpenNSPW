@@ -23,7 +23,7 @@ public static class Functions
 
 	// The scenarios of the single-player executable, by number.
 	public static IReadOnlyList<int> Scenarios { get; } =
-		[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 300, 301, 302, 303, 304, 305, 306];
+		[.. ScenarioCatalog.Collections.SelectMany(c => c.Scenarios).Select(s => s.Number)];
 
 	// scenario_N(): the units and the state of scenario N, as game_init dispatches them by sinario.
 	public static uint SetUpScenario(int scenario) =>

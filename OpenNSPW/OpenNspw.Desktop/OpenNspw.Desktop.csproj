@@ -15,6 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="OpenNspw.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\OpenNspw\OpenNspw.csproj" />
     <ProjectReference Include="..\OpenNspw.DirectPlay\OpenNspw.DirectPlay.csproj" />
     <ProjectReference Include="..\..\Saruhashi\Aigamo.Saruhashi.MonoGame\Aigamo.Saruhashi.MonoGame.csproj" />

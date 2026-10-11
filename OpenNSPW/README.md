@@ -34,13 +34,9 @@ Run the commands below from this folder.
 dotnet run --project OpenNspw.Desktop
 ```
 
-The game's data is `Original/NSPW_NET`, or the folder given with `--data <folder>`. Start two of them: one hosts (port `0` picks a free port, `2310` is the original's), and the other joins its address and port. Settings, such as the player name, are kept in `OpenNSPW/settings.json` under the user's application data folder.
+The game's data is `Original/NSPW_NET`, or the folder given with `--data <folder>`. For a network game, start two of them: one hosts (port `0` picks a free port, `2310` is the original's), and the other joins its address and port. Settings, such as the player name, are kept in `OpenNSPW/settings.json` under the user's application data folder.
 
-To play a scenario of NSPW 1.22 against the computer instead (see [docs/Singleplayer.md](../docs/Singleplayer.md)):
-
-```bash
-dotnet run --project OpenNspw.Desktop -- --singleplayer 3
-```
+The app starts with a menu: a network game, or a scenario of NSPW 1.22 against the computer (see [docs/Singleplayer.md](../docs/Singleplayer.md)). `--singleplayer <scenario>` starts that scenario at once.
 
 ## Porting a file
 ```bash

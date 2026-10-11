@@ -5,8 +5,9 @@ using OpenNspw.Desktop;
 // Plays the port. The game's data (t3.bmp, wav, Map, Scenario, Saved) is in the original's NSPW_NET directory: by
 // default Original/NSPW_NET of this repository, found from the program's directory.
 //
-// With --singleplayer, plays a scenario of NSPW 1.22 against the computer (docs/Singleplayer.md), whose functions run
-// from the single-player executable: by default Original/Nspw122/NSPW_122.exe of this repository.
+// It starts with a menu: a scenario of NSPW 1.22 against the computer (docs/Singleplayer.md), or a network game. The
+// single-player mode runs functions of the single-player executable: by default Original/Nspw122/NSPW_122.exe of this
+// repository. --singleplayer starts that scenario at once.
 
 static string? Option(string[] args, string name)
 {
@@ -41,25 +42,28 @@ if (dataDirectory is null)
 	return 1;
 }
 
-(byte[], int)? singleplayer = null;
+// NSPW_122.exe, for the single-player mode. Without it, only network games can be played.
+var executable = Option(args, "--exe") ?? FindInOriginal("Nspw122", "NSPW_122.exe");
+var singleplayerExecutable = executable is not null && File.Exists(executable) ? File.ReadAllBytes(executable) : null;
+
+int? scenario = null;
 if (Option(args, "--singleplayer") is { } scenarioText)
 {
-	if (!int.TryParse(scenarioText, out var scenario) || !OpenNspw.Singleplayer.Functions.Scenarios.Contains(scenario))
+	if (!int.TryParse(scenarioText, out var number) || !OpenNspw.Singleplayer.Functions.Scenarios.Contains(number))
 	{
 		Console.Error.WriteLine($"Not a scenario of NSPW 1.22: {scenarioText}. The scenarios are {string.Join(", ", OpenNspw.Singleplayer.Functions.Scenarios)}.");
 		return 1;
 	}
 
-	var executable = Option(args, "--exe") ?? FindInOriginal("Nspw122", "NSPW_122.exe");
-	if (executable is null || !File.Exists(executable))
+	if (singleplayerExecutable is null)
 	{
 		Console.Error.WriteLine("The single-player executable (NSPW_122.exe) was not found. Pass it with --exe <file>.");
 		return 1;
 	}
 
-	singleplayer = (File.ReadAllBytes(executable), scenario);
+	scenario = number;
 }
 
-using var game = new NspwGame(dataDirectory, singleplayer);
+using var game = new NspwGame(dataDirectory, singleplayerExecutable, scenario);
 game.Run();
 return 0;
