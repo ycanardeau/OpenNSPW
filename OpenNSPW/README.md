@@ -23,6 +23,8 @@ What is tested:
 
 The rest of the game logic is not compared with the reference yet.
 
+The known bugs, of the port and of the original, and the limits of these tests are in [docs/KnownIssues.md](../docs/KnownIssues.md).
+
 Run the commands below from this folder.
 
 ## Playing
