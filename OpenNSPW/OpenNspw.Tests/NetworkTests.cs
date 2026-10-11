@@ -245,14 +245,14 @@ public class NetworkTests
 		// An order (DP_NEW_PP_SHIP).
 		var order = new _DP_NEW_PP_SHIP { dwType = MessageType.MoveShipsOrder, used = 1, x = -1234, y = 567, cls = 1 };
 		order.slct_unit[0] = 3;
-		order.slct_unit[JPN_SHIP_END - 1] = 7;
+		order.slct_unit[guest.Game.JPN_SHIP_END - 1] = 7;
 		Send(guest, order);
 		PumpUntil(() => host.Game.CanAdvance2.Value == 1, host, guest);
 		Assert.Equal(1, host.Game.BufferedMoveOrders[0].Unit);
 		Assert.Equal(-1234.0, host.Game.BufferedMoveOrders[0].Destination.X);
 		Assert.Equal(567.0, host.Game.BufferedMoveOrders[0].Destination.Y);
 		Assert.Equal(3, host.Game.BufferedSelections[0][0]);
-		Assert.Equal(7, host.Game.BufferedSelections[0][JPN_SHIP_END - 1]);
+		Assert.Equal(7, host.Game.BufferedSelections[0][host.Game.JPN_SHIP_END - 1]);
 
 		// A chat message (DP_CHAT_1). CHAT_DSP_TIME (400) does not fit in friend_chat_dsp_time, a BYTE.
 		var chat = new _DP_DATA_20 { dwType = MessageType.Chat };

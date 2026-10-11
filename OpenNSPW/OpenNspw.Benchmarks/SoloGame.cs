@@ -182,9 +182,9 @@ internal sealed class SoloGame : IDisposable
 		for (var i = 0; i < units.Count; i++)
 		{
 			var m = units[i];
-			var index = m < JPN_PLANE_START
-				? m - (japan ? 1 : USA_SHIP_START)
-				: JPN_SHIP_END + m - (japan ? JPN_PLANE_START : USA_PLANE_START);
+			var index = m < Game.JPN_PLANE_START
+				? m - (japan ? 1 : Game.USA_SHIP_START)
+				: Game.JPN_SHIP_END + m - (japan ? Game.JPN_PLANE_START : Game.USA_PLANE_START);
 			selection[index] = (byte)(i + 1);
 		}
 

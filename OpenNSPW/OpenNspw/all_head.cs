@@ -213,17 +213,7 @@ public const int		KUMO_MAX	= 4096;
 public const int		FIRE_MAX	= 512;
 public const int		EFFECT_MAX	= 1024;
 
-public const int		JPN_SHIP_START		= 1;
-public const int		JPN_SHIP_END		= 40;
-
-public const int		USA_SHIP_START		= 41;
-public const int		USA_SHIP_END		= 80;
-
-public const int		JPN_PLANE_START		= 81;
-public const int		JPN_PLANE_END		= 130;
-
-public const int		USA_PLANE_START		= 131;
-public const int		USA_PLANE_END		= 180;
+// JPN_SHIP_START to USA_PLANE_END: properties of the game (Singleplayer.cs), with these values in a network game.
 
 // ダイレクトプレイ用
 
