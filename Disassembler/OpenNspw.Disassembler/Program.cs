@@ -172,6 +172,8 @@ class Program
 		return $$"""
 			{{Header("")}}
 
+			#nullable enable
+
 			namespace {{Namespace}};
 
 			// The translated functions, by address.
