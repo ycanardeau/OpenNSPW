@@ -277,7 +277,7 @@ public sealed class Cpu(Memory<byte> memory, Register32 offset, Action<Register3
 	/// Cosine.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Register64 Fcos(Register64 value) => Register64.FromDouble(Math.Cos(value.ToDouble()));
+	public Register64 Fcos(Register64 value) => Register64.FromDouble(Fpu.Cos(value.ToDouble()));
 
 	/// <summary>
 	/// Reverse divide.
@@ -330,7 +330,7 @@ public sealed class Cpu(Memory<byte> memory, Register32 offset, Action<Register3
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Register64 Fpatan(Register64 y, Register64 x) =>
-		Register64.FromDouble(Math.Atan2(y.ToDouble(), x.ToDouble()));
+		Register64.FromDouble(Fpu.Atan2(y.ToDouble(), x.ToDouble()));
 
 	/// <summary>
 	/// Multiply.
@@ -350,7 +350,7 @@ public sealed class Cpu(Memory<byte> memory, Register32 offset, Action<Register3
 	/// Sine.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Register64 Fsin(Register64 value) => Register64.FromDouble(Math.Sin(value.ToDouble()));
+	public Register64 Fsin(Register64 value) => Register64.FromDouble(Fpu.Sin(value.ToDouble()));
 
 	/// <summary>
 	/// Store floating point value.
