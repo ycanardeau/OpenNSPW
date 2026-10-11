@@ -17,21 +17,33 @@ internal sealed class TemporaryDirectory(string path) : IDisposable
 	}
 }
 
-// The original's data (Original/NSPW_NET), which whole games run on.
+// The original's data (Original/NSPW_NET), which whole games run on, and the single-player executable
+// (Original/Nspw122), whose functions the single-player mode emulates.
 internal static class GameData
 {
-	private static string? FindOriginal()
+	private static string? FindInOriginal(string folder, string file)
 	{
 		for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
 		{
-			var candidate = System.IO.Path.Combine(directory.FullName, "Original", "NSPW_NET");
-			if (File.Exists(System.IO.Path.Combine(candidate, "t3.bmp")))
+			var candidate = System.IO.Path.Combine(directory.FullName, "Original", folder);
+			if (File.Exists(System.IO.Path.Combine(candidate, file)))
 			{
 				return candidate;
 			}
 		}
 
 		return null;
+	}
+
+	private static string? FindOriginal()
+	{
+		return FindInOriginal("NSPW_NET", "t3.bmp");
+	}
+
+	// Original/Nspw122, with NSPW_122.exe and its Map folder.
+	public static string FindSingleplayer()
+	{
+		return FindInOriginal("Nspw122", "NSPW_122.exe") ?? throw new InvalidOperationException("Original/Nspw122 is not found.");
 	}
 
 	// Makes a new, empty directory case-sensitive on Windows, as directories are on Linux, so that the tests find the

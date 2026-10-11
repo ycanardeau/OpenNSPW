@@ -1788,7 +1788,8 @@ public void	UpdateBattle()
 	if( Mode!=GameMode.Battle )
 		return;
 
-	if( !IsEditingMap )
+	// A single-player game has no turns: it gives its orders every frame (IssueSingleplayerOrders).
+	if( !IsEditingMap && !IsSingleplayer )
 		{
 		/* 入力フェーズ */
 		// 通信対戦時
@@ -1946,6 +1947,10 @@ public void	UpdateBattle()
 
 	// ｆｉｒｅの制御
 	UpdateFires( );
+
+	// 1.22 counts the time limit down, every tick.
+	if( IsSingleplayer && BattleTime>=1 && Result==GameResult.None )
+		BattleTime--;
 
 	}
 }

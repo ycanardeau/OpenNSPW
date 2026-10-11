@@ -85,7 +85,9 @@ internal sealed class NspwGame : Game
 		}
 	}
 
-	public NspwGame(string dataDirectory)
+	// singleplayer: NSPW_122.exe and a scenario of it, to play that scenario against the computer (docs/Singleplayer.md)
+	// instead of connecting to a rival.
+	public NspwGame(string dataDirectory, (byte[] Executable, int Scenario)? singleplayer = null)
 	{
 		_graphics = new GraphicsDeviceManager(this);
 		IsMouseVisible = true;
@@ -93,6 +95,13 @@ internal sealed class NspwGame : Game
 		Window.AllowUserResizing = true;
 		_platform = new DesktopPlatform(dataDirectory);
 		_game = new Nspw(_platform);
+		if (singleplayer is var (executable, scenario))
+		{
+			_game.IsSingleplayer = true;
+			_game.SingleplayerExecutable = executable;
+			_game.ScenarioNumber = (short)scenario;
+		}
+
 		_thread = new Thread(RunGame) { IsBackground = true, Name = "NSPW" };
 	}
 
