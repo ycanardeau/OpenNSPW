@@ -16,88 +16,90 @@ internal static class StringBuilderExtensions
 	}
 }
 
+// OpenNspw.Disassembler <NSPW_122.exe> <output directory>
+//
+// Translates the functions of the single-player executable that OpenNSPW emulates (docs/Singleplayer.md) to C#, one
+// file per function, and writes the table that finds them by address.
 class Program
 {
-	private static readonly Dictionary<string, Subroutine> _subroutines = new();
+	private const string Namespace = "OpenNspw.Singleplayer.Subroutines";
 
-	static void Main(string[] args)
-	{
-		AddSubroutine(new Subroutine("sub_403A70", 0x403A70, 0x70));
-		AddSubroutine(new Subroutine("sub_403AE0", 0x403AE0, 0x126C));
-		AddSubroutine(new Subroutine("cpu_strtgy", 0x404E30, 0x5C8E));
-		AddSubroutine(new Subroutine("sub_404D80", 0x404D80, 0xA3));
-		AddSubroutine(new Subroutine("sub_414DD0", 0x414DD0, 0xEE));
-		AddSubroutine(new Subroutine("decision", 0x41C3C0, 0x1C0A));
-		AddSubroutine(new Subroutine("sub_41F230", 0x41F230, 0xC1));
-		AddSubroutine(new Subroutine("sub_41F3C0", 0x41F3C0, 0xC3));
-		AddSubroutine(new Subroutine("sub_41F490", 0x41F490, 0xD1));
-		AddSubroutine(new Subroutine("scenario_1", 0x42A2E0, 0x3D8));
-		AddSubroutine(new Subroutine("scenario_2", 0x42A6C0, 0x39F));
-		AddSubroutine(new Subroutine("scenario_3", 0x42AA60, 0x223));
-		AddSubroutine(new Subroutine("scenario_4", 0x42AC90, 0x2A7));
-		AddSubroutine(new Subroutine("scenario_5", 0x42AF40, 0x455));
-		AddSubroutine(new Subroutine("scenario_6", 0x42B3A0, 0x4F7));
-		AddSubroutine(new Subroutine("scenario_7", 0x42B8A0, 0xBDF));
-		AddSubroutine(new Subroutine("scenario_8", 0x42C480, 0xA41));
-		AddSubroutine(new Subroutine("scenario_9", 0x42CED0, 0x4EB));
-		AddSubroutine(new Subroutine("scenario_10", 0x42D3C0, 0x6BF));
-		AddSubroutine(new Subroutine("scenario_100", 0x41F570, 0x2B4));
-		AddSubroutine(new Subroutine("scenario_101", 0x41F830, 0x524));
-		AddSubroutine(new Subroutine("scenario_102", 0x41FD60, 0x4FF));
-		AddSubroutine(new Subroutine("scenario_103", 0x420260, 0x558));
-		AddSubroutine(new Subroutine("scenario_104", 0x4207C0, 0x61F));
-		AddSubroutine(new Subroutine("scenario_105", 0x420DE0, 0x523));
-		AddSubroutine(new Subroutine("scenario_106", 0x421310, 0x514));
-		AddSubroutine(new Subroutine("scenario_107", 0x421830, 0x249));
-		AddSubroutine(new Subroutine("scenario_108", 0x423940, 0x862));
-		AddSubroutine(new Subroutine("scenario_109", 0x424DD0, 0x731));
-		AddSubroutine(new Subroutine("scenario_200", 0x421DB0, 0xA61));
-		AddSubroutine(new Subroutine("scenario_201", 0x422820, 0x4EA));
-		AddSubroutine(new Subroutine("scenario_202", 0x422D10, 0x223));
-		AddSubroutine(new Subroutine("scenario_203", 0x422F40, 0xA00));
-		AddSubroutine(new Subroutine("scenario_204", 0x4241B0, 0x5A4));
-		AddSubroutine(new Subroutine("scenario_205", 0x424760, 0x669));
-		AddSubroutine(new Subroutine("scenario_206", 0x421A80, 0x32B));
-		AddSubroutine(new Subroutine("scenario_207", 0x425D60, 0x504));
-		AddSubroutine(new Subroutine("scenario_208", 0x425510, 0x849));
-		AddSubroutine(new Subroutine("scenario_209", 0x426270, 0xB58));
-		AddSubroutine(new Subroutine("scenario_300", 0x426DE0, 0x241));
-		AddSubroutine(new Subroutine("scenario_301", 0x427030, 0x880));
-		AddSubroutine(new Subroutine("scenario_302", 0x4278B0, 0x76A));
-		AddSubroutine(new Subroutine("scenario_303", 0x428020, 0x7B1));
-		AddSubroutine(new Subroutine("scenario_304", 0x4287E0, 0x47A));
-		AddSubroutine(new Subroutine("scenario_305", 0x428C60, 0x6A3));
-		AddSubroutine(new Subroutine("scenario_306", 0x429310, 0x935));
-		AddSubroutine(new Subroutine("set_cpu_route", 0x42DA80, 0x12A7));
-		AddSubroutine(new Subroutine("set_cpu_route2", 0x42ED30, 0x1235));
-		AddSubroutine(new Subroutine("set_unit_data", 0x41E150, 0xC85));
-		AddSubroutine(new Subroutine("set_new_unit", 0x41EE20, 0x23E));
-		AddSubroutine(new Subroutine("set_new_unit_plane", 0x41F060, 0x1D0));
-		AddSubroutine(new Subroutine("set_pos_of_parking", 0x416F40, 0x132));
-		AddSubroutine(new Subroutine("rand", 0x436056, 0x1E));
-		AddSubroutine(new Subroutine("plane_in_cv", 0x416F00, 0x3B));
-		AddSubroutine(new Subroutine("cls_all_slct_unit_p2", 0x417930, 0x25));
-		AddSubroutine(new Subroutine("sub_41F300", 0x41F300, 0xBC));
-		//AddSubroutine(new Subroutine("__ftol", 0x4360C4, 0x27));
-		AddSubroutine(new Subroutine("pt_in_rect3", 0x417BE0, 0x2A));
-		AddSubroutine(new Subroutine("sub_417C10", 0x417C10, 0x2A));
-		//AddSubroutine(new Subroutine("load_it2", 0x432A30, 0x7A));
+	private static readonly Subroutine[] Subroutines =
+	[
+		new("sub_403A70", 0x403A70, 0x70),
+		new("sub_403AE0", 0x403AE0, 0x126C),
+		new("cpu_strtgy", 0x404E30, 0x5C8E),
+		new("sub_404D80", 0x404D80, 0xA3),
+		new("sub_414DD0", 0x414DD0, 0xEE),
+		new("decision", 0x41C3C0, 0x1C0A),
+		new("sub_41F230", 0x41F230, 0xC1),
+		new("sub_41F3C0", 0x41F3C0, 0xC3),
+		new("sub_41F490", 0x41F490, 0xD1),
+		new("scenario_1", 0x42A2E0, 0x3D8),
+		new("scenario_2", 0x42A6C0, 0x39F),
+		new("scenario_3", 0x42AA60, 0x223),
+		new("scenario_4", 0x42AC90, 0x2A7),
+		new("scenario_5", 0x42AF40, 0x455),
+		new("scenario_6", 0x42B3A0, 0x4F7),
+		new("scenario_7", 0x42B8A0, 0xBDF),
+		new("scenario_8", 0x42C480, 0xA41),
+		new("scenario_9", 0x42CED0, 0x4EB),
+		new("scenario_10", 0x42D3C0, 0x6BF),
+		new("scenario_100", 0x41F570, 0x2B4),
+		new("scenario_101", 0x41F830, 0x524),
+		new("scenario_102", 0x41FD60, 0x4FF),
+		new("scenario_103", 0x420260, 0x558),
+		new("scenario_104", 0x4207C0, 0x61F),
+		new("scenario_105", 0x420DE0, 0x523),
+		new("scenario_106", 0x421310, 0x514),
+		new("scenario_107", 0x421830, 0x249),
+		new("scenario_108", 0x423940, 0x862),
+		new("scenario_109", 0x424DD0, 0x731),
+		new("scenario_200", 0x421DB0, 0xA61),
+		new("scenario_201", 0x422820, 0x4EA),
+		new("scenario_202", 0x422D10, 0x223),
+		new("scenario_203", 0x422F40, 0xA00),
+		new("scenario_204", 0x4241B0, 0x5A4),
+		new("scenario_205", 0x424760, 0x669),
+		new("scenario_206", 0x421A80, 0x32B),
+		new("scenario_207", 0x425D60, 0x504),
+		new("scenario_208", 0x425510, 0x849),
+		new("scenario_209", 0x426270, 0xB58),
+		new("scenario_300", 0x426DE0, 0x241),
+		new("scenario_301", 0x427030, 0x880),
+		new("scenario_302", 0x4278B0, 0x76A),
+		new("scenario_303", 0x428020, 0x7B1),
+		new("scenario_304", 0x4287E0, 0x47A),
+		new("scenario_305", 0x428C60, 0x6A3),
+		new("scenario_306", 0x429310, 0x935),
+		new("set_cpu_route", 0x42DA80, 0x12A7),
+		new("set_cpu_route2", 0x42ED30, 0x1235),
+		new("set_unit_data", 0x41E150, 0xC85),
+		new("set_new_unit", 0x41EE20, 0x23E),
+		new("set_new_unit_plane", 0x41F060, 0x1D0),
+		new("set_pos_of_parking", 0x416F40, 0x132),
+		new("plane_in_cv", 0x416F00, 0x3B),
+		new("cls_all_slct_unit_p2", 0x417930, 0x25),
+		new("sub_41F300", 0x41F300, 0xBC),
+		new("pt_in_rect3", 0x417BE0, 0x2A),
+		new("sub_417C10", 0x417C10, 0x2A),
+	];
 
-		foreach (var subroutine in _subroutines.Values)
-		{
-			var code = GenerateCSharpCode(subroutine);
-			File.WriteAllText($"Sub{subroutine.Start:X}.cs", code);
-		}
-	}
+	private static string Header(string description) =>
+		$"""
+			// <auto-generated>
+			// Generated by OpenNspw.Disassembler from NSPW_122.exe{description}. Do not edit; see docs/Singleplayer.md.
+			// </auto-generated>
+			""";
 
-	private static void AddSubroutine(Subroutine s) => _subroutines.Add(s.Name, s);
-
-	private static string GenerateCSharpCode(Subroutine subroutine)
+	private static string GenerateCSharpCode(byte[] executable, Subroutine subroutine)
 	{
 		var emulatorPrefix = "emulator.";
 		var parseContext = new ParseContext
 		{
 			Offset = 0x400000,
+			Start = subroutine.Start,
+			End = subroutine.Start + subroutine.Length,
 			RegisterNameFormat = $"{emulatorPrefix}Cpu.{{0}}",
 			MnemonicFormat = $"{emulatorPrefix}Cpu.{{0}}",
 			Memory8Format = $"{emulatorPrefix}Memory8[{{0}}]",
@@ -112,46 +114,101 @@ class Program
 			Register64Format = $"new Register64({{0}})",
 		};
 
-		using (var stream = new MemoryStream(File.ReadAllBytes("NSPW_122.exe")))
+		using var stream = new MemoryStream(executable);
+		var reader = new BinaryReader(stream);
+		var disassembler = new Disassembler(
+			reader,
+			subroutine.Start,
+			subroutine.Length,
+			parseContext
+		);
+		while (disassembler.Disassemble())
+			;
+
+		var builder = new StringBuilder();
+		foreach (var line in disassembler.Lines)
 		{
-			var reader = new BinaryReader(stream);
-			var disassembler = new Disassembler(
-				reader,
-				subroutine.Start,
-				subroutine.Length,
-				parseContext
-			);
-			while (disassembler.Disassemble())
-				;
-
-			var builder = new StringBuilder();
-			foreach (var line in disassembler.Lines)
+			if (disassembler.Labels.Contains(line.Key))
 			{
-				if (disassembler.Labels.Contains(line.Key))
-				{
-					builder.AppendLineLF();
-					builder.AppendLineLF($"loc_{line.Key:X}:");
-				}
-
-				foreach (var l in line.Value)
-					builder.AppendLineLF($"{l}");
+				builder.AppendLineLF();
+				builder.AppendLineLF($"loc_{line.Key:X}:");
 			}
 
-			var template = $$"""
-				using Aigamo.Enzan;
-
-				namespace OpenNspw.Interop.Subroutines;
-
-				// {{subroutine.Name}}
-				internal static class Sub{{subroutine.Start:X}}
-				{
-					public static void Call(Emulator emulator)
-					{
-				{{string.Join('\n', builder.ToString().Split('\n').Select(l => $"\t\t{l}"))}}
-					}
-				}
-				""";
-			return template;
+			foreach (var l in line.Value)
+				builder.AppendLineLF($"{l}");
 		}
+
+		var body = string.Join(
+			'\n',
+			builder.ToString().TrimEnd('\n').Split('\n').Select(l => l.Length == 0 ? l : $"\t\t{l}")
+		);
+		return $$"""
+			{{Header($": {subroutine.Name} (0x{subroutine.Start:X})")}}
+
+			using Aigamo.Enzan;
+
+			namespace {{Namespace}};
+
+			// {{subroutine.Name}}
+			internal static class Sub{{subroutine.Start:X}}
+			{
+				public static void Call(Emulator emulator)
+				{
+			{{body}}
+				}
+			}
+
+			""";
+	}
+
+	private static string GenerateTable()
+	{
+		var cases = string.Join(
+			'\n',
+			Subroutines
+				.OrderBy(s => s.Start)
+				.Select(s => $"\t\t\t0x{s.Start:X} => Sub{s.Start:X}.Call, // {s.Name}")
+		);
+		return $$"""
+			{{Header("")}}
+
+			namespace {{Namespace}};
+
+			// The translated functions, by address.
+			internal static class SubroutineTable
+			{
+				public static Action<Emulator>? Find(uint address) =>
+					address switch
+					{
+			{{cases}}
+						_ => null,
+					};
+			}
+
+			""";
+	}
+
+	static int Main(string[] args)
+	{
+		if (args.Length != 2)
+		{
+			Console.Error.WriteLine(
+				"Usage: OpenNspw.Disassembler <NSPW_122.exe> <output directory>"
+			);
+			return 1;
+		}
+
+		var executable = File.ReadAllBytes(args[0]);
+		var outputDirectory = args[1];
+		Directory.CreateDirectory(outputDirectory);
+
+		foreach (var subroutine in Subroutines)
+			File.WriteAllText(
+				Path.Combine(outputDirectory, $"Sub{subroutine.Start:X}.cs"),
+				GenerateCSharpCode(executable, subroutine)
+			);
+
+		File.WriteAllText(Path.Combine(outputDirectory, "SubroutineTable.cs"), GenerateTable());
+		return 0;
 	}
 }

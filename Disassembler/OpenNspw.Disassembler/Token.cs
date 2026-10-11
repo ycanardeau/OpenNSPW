@@ -6,6 +6,7 @@ internal sealed class Token(
 	BinaryReader reader,
 	AddressingMode mode,
 	bool operandSizeOverride,
+	bool repeatPrefix,
 	List<int> labels,
 	ParseContext parseContext
 )
@@ -47,11 +48,31 @@ internal sealed class Token(
 	public BinaryReader Reader { get; } = reader;
 	public AddressingMode Mode { get; } = mode;
 	public bool OperandSizeOverride { get; set; } = operandSizeOverride;
+	public bool RepeatPrefix { get; } = repeatPrefix;
 	public List<int> Labels { get; } = labels;
 
 	private readonly ParseContext _parseContext = parseContext;
 
 	public int Eip => _parseContext.Offset + (int)Reader.BaseStream.Position;
+
+	public int Start => _parseContext.Start;
+
+	public int End => _parseContext.End;
+
+	public (int Register, uint Value)? LastComparison
+	{
+		get => _parseContext.LastComparison;
+		set => _parseContext.LastComparison = value;
+	}
+
+	public uint ReadUInt32At(int address)
+	{
+		var position = Reader.BaseStream.Position;
+		Reader.BaseStream.Position = address - _parseContext.Offset;
+		var value = Reader.ReadUInt32();
+		Reader.BaseStream.Position = position;
+		return value;
+	}
 
 	public string GetR32String(RegisterCode registerCode) =>
 		string.Format(_parseContext.RegisterNameFormat, Register32Names[registerCode]);
@@ -128,7 +149,7 @@ internal sealed class Token(
 			{
 				true => Mode.Sib.Base == 5
 					? FormatRegister32(Mode.Displacement.ToNumberLiteralString())
-					: GetR32String(Mode.Sib.Index),
+					: GetR32String(Mode.Sib.Base),
 				false => Mode.Sib.Base == 5
 					? $"{GetR32String(Mode.Sib.Index)} * {FormatRegister32(((int)Math.Pow(2, Mode.Sib.Scale)).ToString())} + {FormatRegister32(Mode.Displacement.ToNumberLiteralString())}"
 					: $"{GetR32String(Mode.Sib.Base)} + {GetR32String(Mode.Sib.Index)} * {FormatRegister32(((int)Math.Pow(2, Mode.Sib.Scale)).ToString())}",
