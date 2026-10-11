@@ -10,8 +10,8 @@ internal delegate Span<byte> GlobalBytes(Nspw game);
 
 internal delegate ref T FieldReference<T>(Nspw game);
 
-// A global of the reference (Layout.json), and the field of the port that holds it.
-internal sealed record Global(string Name, int Size, FieldInfo Field, GlobalBytes Bytes)
+// A global of the reference (Layout.json), and the field of the port that holds it, at an offset (see OriginalNames).
+internal sealed record Global(string Name, int Size, FieldInfo Field, int Offset, GlobalBytes Bytes)
 {
 	private static GlobalBytes Wrap<T>(FieldReference<T> reference) where T : struct
 	{
@@ -35,9 +35,9 @@ internal sealed record Global(string Name, int Size, FieldInfo Field, GlobalByte
 
 	private static Global Create(ReferenceGlobal global)
 	{
-		var field = typeof(Nspw).GetField(global.Name, BindingFlags.Public | BindingFlags.Instance)
-			?? throw new InvalidOperationException($"The port has no global named {global.Name}.");
-		return new Global(global.Name, global.Size, field, CreateBytes(field));
+		var slice = OriginalNames.FindGlobal(global.Name);
+		var bytes = CreateBytes(slice.Field);
+		return new Global(global.Name, global.Size, slice.Field, slice.Offset, game => bytes(game).Slice(slice.Offset, slice.Size));
 	}
 
 	public static ImmutableArray<Global> All { get; } = [.. ReferenceLayout.Instance.Globals.Select(Create)];
@@ -96,7 +96,7 @@ internal sealed class GameState(ImmutableArray<byte[]> bytes)
 		}
 	}
 
-	// The primitive values of the game's globals that differ from this state, at most `limit` of them.
+	// The numbers in the game's globals that differ from this state, at most `limit` of them.
 	public IReadOnlyList<string> Differences(Nspw game, int limit = 8)
 	{
 		var differences = new List<string>();
@@ -114,12 +114,13 @@ internal sealed class GameState(ImmutableArray<byte[]> bytes)
 					break;
 				}
 
-				var location = TypeLayout.Locate(global.Field.FieldType, offset + mismatch);
-				var size = location.Type.IsPrimitive ? TypeLayout.SizeOf(location.Type) : 1;
+				var location = TypeLayout.Locate(global.Field.FieldType, global.Offset + offset + mismatch);
+				var start = location.Start - global.Offset;
+				var size = TypeLayout.IsScalar(location.Type) ? TypeLayout.SizeOf(location.Type) : 1;
 				differences.Add(
-					$"{global.Name}{location.Path}: expected {TypeLayout.Format(location.Type, expected.Slice(location.Start, size))}, " +
-					$"actual {TypeLayout.Format(location.Type, actual.Slice(location.Start, size))}");
-				offset = location.Start + size;
+					$"{global.Name}{location.Path}: expected {TypeLayout.Format(location.Type, expected.Slice(start, size))}, " +
+					$"actual {TypeLayout.Format(location.Type, actual.Slice(start, size))}");
+				offset = start + size;
 			}
 		}
 

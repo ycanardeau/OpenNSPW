@@ -1,21 +1,16 @@
 //
-//                                    **                                   
-//                                   *  *                                  
-//                                    **  *                                 
-//                                    **   *                                
-//                                    **  *                                 
-//                            *     ******     *                              
-//                            ***   * **     ***                              
-//                              ****  **  ****                                 
-//                             **  ********                                    
-//                                                                       
+//                                    **
+//                                   *  *
+//                                    **  *
+//                                    **   *
+//                                    **  *
+//                            *     ******     *
+//                            ***   * **     ***
+//                              ****  **  ****
+//                             **  ********
+//
 //                 Ｎａｖａｌ Ｓｏｕｔｈ Ｐａｃｉｆｉｃ Ｗａｒ
 //                             Ｏｎ　ｔｈｅ　Ｎｅｔ
-
-
-//#include "all_head.h"
-//#include "all_extern.h"
-//#include	"all_forward.h"
 
 // Port of etc1.cpp.
 
@@ -24,79 +19,73 @@ namespace OpenNspw;
 public unsafe partial class Nspw
 {
 
-
-
-
-
-
-
 //============================================================================
 // 当たりチェック
 //----------------------------------------------------------------------------
-public int		hit_chk(int m)
+[Original("hit_chk")]
+public int		CheckHit(int m)
 	{
 	int		n,h,j=default /* C4701 */,j2=default /* C4701 */,f,i;
 	RECT	wrk_rect;
 
 	h=0;
 
-	n=fire[m].used;						// ターゲットナンバー
-	switch( unit[n].kind )
+	n=Fires[m].Target;						// ターゲットナンバー
+	switch( Units[n].Kind )
 		{
-		case BB1:	j=16;j2=j/2;	break;
-		case CA1:	j=12;j2=j/2;	break;
-		case DD1:	j=10;j2=j/2;		break;
-		case SS1:	
-			if( unit[n].info[6]!=0 )// 潜航中、あたりがでかくなる
+		case UnitKind.Battleship:	j=16;j2=j/2;	break;
+		case UnitKind.Cruiser:	j=12;j2=j/2;	break;
+		case UnitKind.Destroyer:	j=10;j2=j/2;		break;
+		case UnitKind.Submarine:
+			if( Units[n].IsSubmerged )// 潜航中、あたりがでかくなる
 				{
 				// ptin dbg
-				wrk_rect.top=(int)unit[n].y+50;//(int)unit[n].y-50;
-				wrk_rect.right=(int)unit[n].x+50;
-				wrk_rect.bottom=(int)unit[n].y-50;//(int)unit[n].y+50;
-				wrk_rect.left=(int)unit[n].x-50;
+				wrk_rect.top=(int)Units[n].Position.Y+50;
+				wrk_rect.right=(int)Units[n].Position.X+50;
+				wrk_rect.bottom=(int)Units[n].Position.Y-50;
+				wrk_rect.left=(int)Units[n].Position.X-50;
 
-				if( pt_in_rect3(ref wrk_rect,(int)fire[m].x,(int)fire[m].y)!=0 )
+				if( PointInRect3(ref wrk_rect,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
 					h=1;
-				return	(h);			
-				}	
+				return	(h);
+				}
 			else
-				{	j=8/*4*/;j2=j/2;		}
+				{	j=8;j2=j/2;		}
 
 				break;
-		case CV1:	j=14;j2=j/2;	break;
-		case CVL1:	j=12;j2=j/2;	break;
-		case AP:
-		case SP:
-		case GF3:	case GF2:	case	GF1:
-		case CT1:	case MN1:
+		case UnitKind.Carrier:	j=14;j2=j/2;	break;
+		case UnitKind.LightCarrier:	j=12;j2=j/2;	break;
+		case UnitKind.AirBase:
+		case UnitKind.NavalBase:
+		case UnitKind.Fortress:	case UnitKind.Pillboxes:	case	UnitKind.InfantryBase:
+		case UnitKind.City:	case UnitKind.Mine:
 				// ptin dbg
-				wrk_rect.top=(int)unit[n].y+30;//(int)unit[n].y-30;
-				wrk_rect.right=(int)unit[n].x+30;
-				wrk_rect.bottom=(int)unit[n].y-30;//(int)unit[n].y+30;
-				wrk_rect.left=(int)unit[n].x-30;
+				wrk_rect.top=(int)Units[n].Position.Y+30;
+				wrk_rect.right=(int)Units[n].Position.X+30;
+				wrk_rect.bottom=(int)Units[n].Position.Y-30;
+				wrk_rect.left=(int)Units[n].Position.X-30;
 
-				if( pt_in_rect3(ref wrk_rect,(int)fire[m].x,(int)fire[m].y)!=0 )
+				if( PointInRect3(ref wrk_rect,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
 					h=1;
 
-				return	(h);			
+				return	(h);
 				break;
-		case TR1:	j=12;j2=j/2;	break;
+		case UnitKind.Transport:	j=12;j2=j/2;	break;
 		}
 	h=0;
-	f=drctn_for_8((int)(unit[n].drctn));
+	f=ToEightDirections((int)(Units[n].Direction));
 	switch( f )
 		{
 		case 3: case 7:
 			for( i=0; i<=4 && h==0 ; i++)
 				{
 				// ptin dbg
-				wrk_rect.top=(int)unit[n].y+(-j+(i*j2))+j2;//(int)unit[n].y+(-j+(i*j2))-j2;
-				wrk_rect.right=(int)unit[n].x+(+j-(i*j2))+j2;
-				wrk_rect.bottom=(int)unit[n].y+(-j+(i*j2))-j2;//(int)unit[n].y+(-j+(i*j2))+j2;
-				wrk_rect.left=(int)unit[n].x+(+j-(i*j2))-j2;
+				wrk_rect.top=(int)Units[n].Position.Y+(-j+(i*j2))+j2;
+				wrk_rect.right=(int)Units[n].Position.X+(+j-(i*j2))+j2;
+				wrk_rect.bottom=(int)Units[n].Position.Y+(-j+(i*j2))-j2;
+				wrk_rect.left=(int)Units[n].Position.X+(+j-(i*j2))-j2;
 
-
-				if( pt_in_rect3(ref wrk_rect,(int)fire[m].x,(int)fire[m].y)!=0 )
+				if( PointInRect3(ref wrk_rect,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
 					h=1;
 				}
 			break;
@@ -104,13 +93,12 @@ public int		hit_chk(int m)
 			for( i=0; i<=4 && h==0 ; i++)
 				{
 				// pt in dbg
-				wrk_rect.top=(int)unit[n].y+(-j+(i*j2))+j2;//(int)unit[n].y+(-j+(i*j2))-j2;
-				wrk_rect.right=(int)unit[n].x+(-j+(i*j2))+j2;
-				wrk_rect.bottom=(int)unit[n].y+(-j+(i*j2))-j2;//(int)unit[n].y+(-j+(i*j2))+j2;
-				wrk_rect.left=(int)unit[n].x+(-j+(i*j2))-j2;
+				wrk_rect.top=(int)Units[n].Position.Y+(-j+(i*j2))+j2;
+				wrk_rect.right=(int)Units[n].Position.X+(-j+(i*j2))+j2;
+				wrk_rect.bottom=(int)Units[n].Position.Y+(-j+(i*j2))-j2;
+				wrk_rect.left=(int)Units[n].Position.X+(-j+(i*j2))-j2;
 
-
-				if( pt_in_rect3(ref wrk_rect,(int)fire[m].x,(int)fire[m].y)!=0 )
+				if( PointInRect3(ref wrk_rect,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
 					h=1;
 				}
 
@@ -119,12 +107,12 @@ public int		hit_chk(int m)
 			for( i=0; i<=2  && h==0 ; i++)
 				{
 				// ptin dbg
-				wrk_rect.top=(int)unit[n].y+(-j+(i*j))+j2;//(int)unit[n].y+(-j+(i*j))-j2;
-				wrk_rect.right=(int)unit[n].x+j2;
-				wrk_rect.bottom=(int)unit[n].y+(-j+(i*j))-j2;//(int)unit[n].y+(-j+(i*j))+j2;
-				wrk_rect.left=(int)unit[n].x-j2;
+				wrk_rect.top=(int)Units[n].Position.Y+(-j+(i*j))+j2;
+				wrk_rect.right=(int)Units[n].Position.X+j2;
+				wrk_rect.bottom=(int)Units[n].Position.Y+(-j+(i*j))-j2;
+				wrk_rect.left=(int)Units[n].Position.X-j2;
 
-				if( pt_in_rect3(ref wrk_rect,(int)fire[m].x,(int)fire[m].y)!=0 )
+				if( PointInRect3(ref wrk_rect,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
 					h=1;
 				}
 			break;
@@ -132,2518 +120,2157 @@ public int		hit_chk(int m)
 			for( i=0; i<=2  && h==0 ; i++)
 				{
 				// ptin dbg
-				wrk_rect.top=(int)unit[n].y+j2;//(int)unit[n].y-j2;
-				wrk_rect.right=(int)unit[n].x+(-j+(i*j))+j2;
-				wrk_rect.bottom=(int)unit[n].y-j2;//(int)unit[n].y+j2;
-				wrk_rect.left=(int)unit[n].x+(-j+(i*j))-j2;
+				wrk_rect.top=(int)Units[n].Position.Y+j2;
+				wrk_rect.right=(int)Units[n].Position.X+(-j+(i*j))+j2;
+				wrk_rect.bottom=(int)Units[n].Position.Y-j2;
+				wrk_rect.left=(int)Units[n].Position.X+(-j+(i*j))-j2;
 
-				if( pt_in_rect3(ref wrk_rect,(int)fire[m].x,(int)fire[m].y)!=0 )
+				if( PointInRect3(ref wrk_rect,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
 					h=1;
 				}
 			break;
 		}
 
-
-	//h=0;
 	return	(h);
 	}
-
-
-
-
 
 //============================================================================
 // 当たりチェック
 //----------------------------------------------------------------------------
-public void		draw_hit_area(int m)
+[Original("draw_hit_area")]
+public void		DrawHitArea(int m)
 	{
 	int		n,h,j=default /* C4701 */,j2=default /* C4701 */,f,i;
 	RECT	wrk_rect;
 
-//	h=0;
-
 	n=m;						// ターゲットナンバー
-	switch( unit[n].kind )
+	switch( Units[n].Kind )
 		{
-		case BB1:	j=16;j2=j/2;	break;
-		case CA1:	j=12;j2=j/2;	break;
-		case DD1:	j=6;j2=j/2;	break;
-		case SS1:	
-			if( unit[n].info[6]!=0 )// 潜航中、あたりがでかくなる
+		case UnitKind.Battleship:	j=16;j2=j/2;	break;
+		case UnitKind.Cruiser:	j=12;j2=j/2;	break;
+		case UnitKind.Destroyer:	j=6;j2=j/2;	break;
+		case UnitKind.Submarine:
+			if( Units[n].IsSubmerged )// 潜航中、あたりがでかくなる
 				{
-				wrk_rect.top=(int)unit[n].y-50;
-				wrk_rect.right=(int)unit[n].x+50;
-				wrk_rect.bottom=(int)unit[n].y+50;
-				wrk_rect.left=(int)unit[n].x-50;
+				wrk_rect.top=(int)Units[n].Position.Y-50;
+				wrk_rect.right=(int)Units[n].Position.X+50;
+				wrk_rect.bottom=(int)Units[n].Position.Y+50;
+				wrk_rect.left=(int)Units[n].Position.X-50;
 
-				draw_line4((int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.top),(int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				draw_line4((int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.top),(int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				draw_line4((int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),(int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				draw_line4((int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),(int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4((int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),(int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4((int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),(int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4((int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),(int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4((int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),(int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 
 				return;
-				}	
+				}
 			else
 				{	j=4;j2=j/2;		}
 
-
 				break;
-		case CV1:	j=14;j2=j/2;	break;
-		case CVL1:	j=12;j2=j/2;	break;
+		case UnitKind.Carrier:	j=14;j2=j/2;	break;
+		case UnitKind.LightCarrier:	j=12;j2=j/2;	break;
 		}
-//	h=0;
-	f=drctn_for_8((int)(unit[n].drctn));
+	f=ToEightDirections((int)(Units[n].Direction));
 	switch( f )
 		{
 		case 3: case 7:
-			for( i=0; i<=4 /*&& !h*/ ; i++)
+			for( i=0; i<=4  ; i++)
 				{
-				wrk_rect.top=(int)unit[n].y+(-j+(i*j2))-j2;
-				wrk_rect.right=(int)unit[n].x+(+j-(i*j2))+j2;
-				wrk_rect.bottom=(int)unit[n].y+(-j+(i*j2))+j2;
-				wrk_rect.left=(int)unit[n].x+(+j-(i*j2))-j2;
+				wrk_rect.top=(int)Units[n].Position.Y+(-j+(i*j2))-j2;
+				wrk_rect.right=(int)Units[n].Position.X+(+j-(i*j2))+j2;
+				wrk_rect.bottom=(int)Units[n].Position.Y+(-j+(i*j2))+j2;
+				wrk_rect.left=(int)Units[n].Position.X+(+j-(i*j2))-j2;
 
-				draw_line4((int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.top),(int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				draw_line4((int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.top),(int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				draw_line4((int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),(int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				draw_line4((int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),(int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4((int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),(int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4((int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),(int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4((int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),(int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4((int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),(int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 				}
 			break;
 		case 1: case 5:
-			for( i=0; i<=4 /*&& !h*/ ; i++)
+			for( i=0; i<=4  ; i++)
 				{
-				wrk_rect.top=(int)unit[n].y+(-j+(i*j2))-j2;
-				wrk_rect.right=(int)unit[n].x+(-j+(i*j2))+j2;
-				wrk_rect.bottom=(int)unit[n].y+(-j+(i*j2))+j2;
-				wrk_rect.left=(int)unit[n].x+(-j+(i*j2))-j2;
+				wrk_rect.top=(int)Units[n].Position.Y+(-j+(i*j2))-j2;
+				wrk_rect.right=(int)Units[n].Position.X+(-j+(i*j2))+j2;
+				wrk_rect.bottom=(int)Units[n].Position.Y+(-j+(i*j2))+j2;
+				wrk_rect.left=(int)Units[n].Position.X+(-j+(i*j2))-j2;
 
-				draw_line4((int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.top),(int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				draw_line4((int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.top),(int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				draw_line4((int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),(int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				draw_line4((int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),(int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4((int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),(int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4((int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),(int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4((int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),(int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4((int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),(int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 				}
 
 			break;
 		case 0: case 4:
-			for( i=0; i<=2  /*&& !h*/ ; i++)
+			for( i=0; i<=2   ; i++)
 				{
-				wrk_rect.top=(int)unit[n].y+(-j+(i*j))-j2;
-				wrk_rect.right=(int)unit[n].x+j2;
-				wrk_rect.bottom=(int)unit[n].y+(-j+(i*j))+j2;
-				wrk_rect.left=(int)unit[n].x-j2;
+				wrk_rect.top=(int)Units[n].Position.Y+(-j+(i*j))-j2;
+				wrk_rect.right=(int)Units[n].Position.X+j2;
+				wrk_rect.bottom=(int)Units[n].Position.Y+(-j+(i*j))+j2;
+				wrk_rect.left=(int)Units[n].Position.X-j2;
 
-				draw_line4((int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.top),(int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				draw_line4((int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.top),(int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				draw_line4((int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),(int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				draw_line4((int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),(int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-
+				DrawLine4((int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),(int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4((int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),(int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4((int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),(int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4((int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),(int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 
 				}
 			break;
 		case 2: case 6:
-			for( i=0; i<=2  /*&& !h*/ ; i++)
+			for( i=0; i<=2   ; i++)
 				{
-				wrk_rect.top=(int)unit[n].y-j2;
-				wrk_rect.right=(int)unit[n].x+(-j+(i*j))+j2;
-				wrk_rect.bottom=(int)unit[n].y+j2;
-				wrk_rect.left=(int)unit[n].x+(-j+(i*j))-j2;
+				wrk_rect.top=(int)Units[n].Position.Y-j2;
+				wrk_rect.right=(int)Units[n].Position.X+(-j+(i*j))+j2;
+				wrk_rect.bottom=(int)Units[n].Position.Y+j2;
+				wrk_rect.left=(int)Units[n].Position.X+(-j+(i*j))-j2;
 
-				draw_line4((int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.top),(int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				draw_line4((int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.top),(int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				draw_line4((int)(wrk_rect.right-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),(int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				draw_line4((int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.bottom),(int)(wrk_rect.left-cmbt_x),(int)(cmbt_y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4((int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),(int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4((int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),(int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4((int)(wrk_rect.right-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),(int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4((int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.bottom),(int)(wrk_rect.left-CameraPosition.X),(int)(CameraPosition.Y-wrk_rect.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 
 				}
 			break;
 		}
 
-
-	return	/*(h)*/;
+	return	;
 	}
 
+private bool LandCargo(ref Unit unit, FireKind kind, int m)
+	{
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double drctn2 =default;
+	double dstc =default;
+	int n;
+	wrk_x=(double)unit.LandingX-unit.Position.X;
+	wrk_y=(double)unit.LandingY-unit.Position.Y;
+	drctn=Direction(wrk_x, wrk_y);
+	drctn2=drctn;
+	drctn=drctn-unit.Direction;
+	if(drctn<0)
+		drctn=360+drctn;
 
+	if( (int)drctn<=45||(int)drctn>=315)
+		{
+		// 距離を求めます
+		wrk_x=unit.Position.X-(double)unit.LandingX;
+		wrk_y=unit.Position.Y-(double)unit.LandingY;
+		dstc=Distance(wrk_x, wrk_y);
 
+#if NSPW_THE_NET
+		if( dstc>=0 && dstc<=160 )
+#else
+		if( dstc>=0 && dstc<=360 )
+#endif
+			{
+			// 発射！
+			unit.Ammo=0;		// 残弾が０
+			unit.Target=0;		// ターゲットをクリア
 
+			//unit[m].arm[0]=NTG;		//  輸送船はこれやっと来ます、武装品種
+			unit.MaxAmmo=0;		//  輸送船はこれやっと来ます、武装品種
 
+			//unit[m].info[5]=RETURN;		// 航空機はメイン兵器ゼロで帰投
 
+			// 部下、多分戦闘機に帰投命令
 
+			n=FindFreeFire();
+			ref var fire = ref Fires[n];
+			if( n!=0 )
+				{
+				PlaySoundEffect( 0, SoundId.Splash ,unit.Position.X, unit.Position.Y);
+				fire.Target=MaxUnitId+1;
+				fire.Kind=kind;
+				fire.Position=unit.Position;
+				fire.Direction=drctn2;
+				fire.Speed=1.0;
+				fire.Acceleration=+0.0;
+				fire.FinalSpeed=0.0;
+				fire.Ticks=0;
+				fire.FlightTime=360;
+				fire.TargetX=unit.LandingX;
+				fire.TargetY=unit.LandingY;
+				fire.ShooterSide=(int)unit.Side;
 
+				unit.Side=0;
+				unit.Hp=0;
+
+				if( UnitInfoPanel[0]!=0 && UnitInfoPanel[3]==m )
+					UnitInfoPanel[0]=0;
+
+				if( SelectedUnit==m )
+					{
+					SelectedUnit=0; Selections[1][m]=0;	CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None;
+					ClearSelection2(1);
+					BufferedMoveOrders[1].ClearsPath=0;
+
+					if( UnitInfoPanel[3]==m )
+						UnitInfoPanel[0]=0;
+
+//							unit_info[1]=0;				// 空母なら１で格納庫 ０ で飛行甲板
+//							unit_info[3]=0;//m;				// そのユニットの番号
+//							unit_info[4]=0;//unit[m].used;	// そのユニットの国籍
+
+					}
+				}
+			}
+		}
+	return false;
+	return true;
+	}
+
+private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double drctn2, ref double dstc, FireKind kind)
+	{
+	int trgt2;
+	int n;
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double turn;
+	int f;
+	double wrk_x2;
+	double wrk_y2;
+	double drctn3 =default;
+	double dstc2;
+	trgt2=0;
+	for(n=1;n<=MaxUnitId;n++)
+		{
+		ref var other = ref Units[n];	//敵を探す。
+		if( other.IsUsed && other.Category==UnitCategory.Plane && (((other.Kind==UnitKind.Attacker||other.Kind==UnitKind.Fighter) && other.Ammo!=0 )|| Random(10)==0 )  && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.IsFound )
+			{
+			// 攻撃地点から攻撃目標地点への距離
+			wrk_x=other.Position.X-unit.Position.X;
+			wrk_y=other.Position.Y-unit.Position.Y;
+			turn=Distance(wrk_x, wrk_y);
+			turn=turn/10.0;
+
+			// 攻撃地点から攻撃目標地点への絶対方位、方位角
+			wrk_x=other.Position.X;
+			wrk_y=other.Position.Y;
+			drctn=other.TurnRate;
+			drctn2=other.Direction;
+			for(f=0;f<=(int)turn;f++)
+				{
+				drctn2+=drctn;
+				if(drctn2<0)		drctn2=360+drctn2;
+				if(drctn2>=360)		drctn2=drctn2-360;
+				wrk_x+=CosDegrees(drctn2)*(other.Speed); // とりあえずターン後
+				wrk_y+=SinDegrees(drctn2)*(other.Speed);
+				}
+
+			wrk_x2=wrk_x;
+			wrk_y2=wrk_y;
+			wrk_x=wrk_x2-unit.Position.X;
+			wrk_y=wrk_y2-unit.Position.Y;
+
+			drctn=Direction(wrk_x, wrk_y);
+			drctn2=drctn;
+
+			drctn=drctn-unit.Direction;
+			if(drctn<0)
+				drctn=360+drctn;
+			drctn3=drctn;							// 方位角
+
+			// 攻撃地点から攻撃目標地点への距離
+			wrk_x=wrk_x2-unit.Position.X;
+			wrk_y=wrk_y2-unit.Position.Y;
+			dstc=Distance(wrk_x, wrk_y);
+
+			if( dstc>=40 && dstc<=300 )
+				{
+				trgt2=n;
+				if( 1!=0  )
+					break;
+				else
+					trgt2=0;
+				}
+			}
+		}
+	if( trgt2!=0 )
+		{
+
+		/*
+		f=fc[2];	// 後面
+		if( drctn3>=315.0 || drctn3<=45.0 )
+			f=fc[0];	// 正面
+		if( (drctn3>=45.0 && drctn3<=135.0) || (drctn3>=225.0 && drctn3<=315.0) )
+			f=fc[1];	// 側面
+		*/
+
+		n=FindFreeFire();
+		ref var fire = ref Fires[n];
+		if( n!=0 )
+			{
+			if(unit.Ammo!=0)
+				unit.Ammo-=RAS_SZ;			// 弾薬消費
+
+			if(SharedRandom(2)!=0 )
+				PlaySoundEffect( 0, SoundId.AntiAircraftShell3 ,unit.Position.X, unit.Position.Y);
+			else
+				PlaySoundEffect( 0, SoundId.AntiAircraftShell5 ,unit.Position.X, unit.Position.Y);
+
+			fire.Target=trgt2;
+			fire.Kind=kind;
+			fire.Position=unit.Position;
+
+			drctn3=drctn2+(Random(18)-9);			// 絶対方位
+			if(drctn3>=360)	drctn3=drctn3-360;
+			if(drctn3<0)	drctn3=360+drctn3;
+			fire.Direction=drctn3;
+
+			dstc2=dstc+(Random( ((int)(dstc/5)) )-((int)(dstc/10))   );
+
+			fire.Speed=10.0;
+			fire.Acceleration=-0.00;
+			fire.FinalSpeed=0;
+			fire.Ticks=(int)(dstc2/fire.Speed);
+			fire.FlightTime=0;
+			}
+		}
+	return false;
+	return true;
+	}
+
+private bool ShipDropAntiSubmarineBomb(ref int trgt, ref Unit unit, FireKind kind)
+	{
+	int n;
+	RECT wrk_r;
+	double drctn;
+	for( n=1; n<=MaxUnitId; n++)
+		{
+		trgt=n;
+		if( Units[trgt].Side!=unit.Side && Units[trgt].Kind==UnitKind.Submarine && Units[trgt].IsSubmerged && Units[trgt].IsFound )
+			{	// 爆雷
+
+			// ptin dbg
+			wrk_r.top=(int)Units[trgt].ContactY+Units[trgt].ContactRadius;
+			wrk_r.right=(int)Units[trgt].ContactX+Units[trgt].ContactRadius;
+			wrk_r.bottom=(int)Units[trgt].ContactY-Units[trgt].ContactRadius;
+			wrk_r.left=(int)Units[trgt].ContactX-Units[trgt].ContactRadius;
+			if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+				{
+				// 投雷
+				n=FindFreeFire();
+				ref var fire = ref Fires[n];
+					if(n!=0)
+					{
+					if(unit.Ammo!=0)
+						unit.Ammo-=ASB_SZ;			// 弾薬消費
+					if(unit.Ammo<0)
+						unit.Ammo=0;
+
+					PlaySoundEffect( 0, SoundId.Splash ,unit.Position.X, unit.Position.Y);
+					fire.Target=trgt;
+					fire.Kind=kind;
+					fire.Position=unit.Position;
+
+					drctn=unit.Direction;
+					if( unit.Variant==0 )
+						{
+						// ただの駆逐艦
+						drctn+=180;
+						drctn=(int)drctn%360;
+						fire.Position += new WorldVector(CosDegrees(drctn)*20, SinDegrees(drctn)*20);
+						}
+					else
+						{
+						// 対潜駆逐艦
+						drctn+=120+Random(3)*60;
+						drctn=(int)drctn%360;
+						fire.Position += new WorldVector(CosDegrees(drctn)*35, SinDegrees(drctn)*35);
+						}
+
+					fire.Direction=0;
+					fire.Speed=0;
+					fire.Acceleration=0;
+					fire.FinalSpeed=0;
+					fire.Ticks=0;
+					fire.FlightTime=100;
+					}
+				return false;
+				}
+			}
+		}
+	return false;
+	return true;
+	}
+
+private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rng, ref Array3<int> fc, ref double drctn2, ref double drctn3)
+	{
+	int trgt2;
+	double dstc2;
+	int n;
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double turn;
+	double wrk_x2;
+	double wrk_y2;
+	double drctn4;
+	double drctn5;
+	double dstc =default;
+	int f;
+	int i;
+	trgt2=0;
+	dstc2=2000;
+	for(n=1;n<=MaxUnitId;n++)
+		{
+		ref var other = ref Units[n];	//敵を探す。
+		if( other.IsUsed && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged ) && other.Side!=unit.Side && other.IsFound  && other.Kind!=UnitKind.City )
+			{
+			// 攻撃地点から攻撃目標地点への距離
+			wrk_x=other.Position.X-unit.Position.X;
+			wrk_y=other.Position.Y-unit.Position.Y;
+			turn=Distance(wrk_x, wrk_y);
+			turn=turn/10.0;
+
+			// 敵の未来位置を求めます。
+			wrk_x=other.Position.X;
+			wrk_y=other.Position.Y;
+			wrk_x+=CosDegrees(other.Direction)*(other.Speed*turn); // とりあえずターン後
+			wrk_y+=SinDegrees(other.Direction)*(other.Speed*turn);
+			wrk_x2=wrk_x;										// ターゲットの未来位置
+			wrk_y2=wrk_y;
+
+			// 攻撃地点から攻撃目標地点への絶対方位、方位角
+			wrk_x=wrk_x-unit.Position.X;
+			wrk_y=wrk_y-unit.Position.Y;
+			drctn=Direction(wrk_x, wrk_y);
+			drctn4=drctn;							// 絶対方位
+
+			drctn=drctn-unit.Direction;
+			if(drctn<0)
+				drctn=360+drctn;
+			drctn5=drctn;							// 方位角
+
+			// 攻撃地点から攻撃目標地点への距離
+			wrk_x=wrk_x2-unit.Position.X;
+			wrk_y=wrk_y2-unit.Position.Y;
+			dstc=Distance(wrk_x, wrk_y);
+
+			switch( unit.Kind )
+				{
+				case UnitKind.Battleship:
+					if( kind==FireKind.NavalBaseGun )
+						{
+						rng=1120; fc[0]=3;fc[1]=4;fc[2]=2;
+						}
+					else
+						{
+						rng=600; fc[0]=3;fc[1]=4;fc[2]=2;
+						}
+					break;
+				case UnitKind.Cruiser:	rng=500; fc[0]=1;fc[1]=2;fc[2]=1;	break;
+				case UnitKind.Destroyer:	rng=400; fc[0]=1;fc[1]=1;fc[2]=0;	break;
+				case UnitKind.Submarine:	rng=200; fc[0]=1;fc[1]=1;fc[2]=0;	break;
+
+				case UnitKind.InfantryBase:	rng=600; fc[0]=1;fc[1]=1;fc[2]=1;	break;
+				case UnitKind.Pillboxes:	rng=800; fc[0]=2;fc[1]=2;fc[2]=2;	break;
+				case UnitKind.Fortress:	rng=1000; fc[0]=3;fc[1]=3;fc[2]=3;	break;
+				}
+
+			if( (dstc>=(rng*0.3) || (unit.Kind>=UnitKind.InfantryBase&&unit.Kind<=UnitKind.Fortress) ) && dstc<=rng && dstc2>=dstc )
+				{
+				trgt2=n;
+				dstc2=dstc;
+				drctn2=drctn4;
+				drctn3=drctn5;
+				}
+			}
+		}
+
+	if( trgt2!=0 )
+		{
+		f=fc[2];	// 後面
+		if( drctn3>=315.0 || drctn3<=45.0 )
+			f=fc[0];	// 正面
+		if( (drctn3>=45.0 && drctn3<=135.0) || (drctn3>=225.0 && drctn3<=315.0) )
+			f=fc[1];	// 側面
+
+		switch( unit.Kind )
+			{
+			case UnitKind.Battleship:
+			case UnitKind.Fortress:
+				if( kind==FireKind.NavalBaseGun )
+					{
+					PlaySoundEffect( 0, SoundId.Gun3 ,unit.Position.X, unit.Position.Y);
+					break;
+					}
+				PlaySoundEffect( 0, SoundId.Gun2+Random(2) ,unit.Position.X, unit.Position.Y);
+				break;
+			case UnitKind.Cruiser:
+			case UnitKind.Pillboxes:
+				PlaySoundEffect( 0, SoundId.Gun1+Random(2) ,unit.Position.X, unit.Position.Y);
+				break;
+
+			case UnitKind.Destroyer:
+			case UnitKind.Submarine:
+			case UnitKind.InfantryBase:
+				PlaySoundEffect( 0, SoundId.Gun1 ,unit.Position.X, unit.Position.Y);
+				break;
+			}
+
+		for( i=1; i<=f ;i++ )
+			{
+			n=FindFreeFire();
+			ref var fire = ref Fires[n];
+			if( n!=0 )
+				{
+				if(unit.Ammo!=0)
+					unit.Ammo-=GUN_SZ;			// 弾薬消費
+
+				fire.Target=trgt2;
+				fire.Kind=FireKind.Gun;
+				fire.Position=unit.Position;
+
+				if( kind==FireKind.NavalBaseGun )
+					{
+					if( Random(2)==0 )
+						drctn3=drctn2+(double)((double)(Random(50)-25)/10)    ;			// 絶対方位
+					else
+						drctn3=drctn2+(double)((double)(Random(80)-40)/10)    ;			// 絶対方位
+					}
+				else
+					{
+					if( Random(5+(unit.Kind>=UnitKind.InfantryBase&&unit.Kind<=UnitKind.Fortress ? 1 : 0)*4  )==0 || ( unit.Kind==UnitKind.Battleship && Random( 4 )==0 ) )
+						drctn3=drctn2+(Random(7)-3)+(Random(100)/100);			// 絶対方位
+					else
+						drctn3=drctn2+(Random(11)-5)+(Random(100)/100);				// 絶対方位
+					}
+
+				if(drctn3>=360)	drctn3=drctn3-360;
+				if(drctn3<0)	drctn3=360+drctn3;
+				fire.Direction=drctn3;
+
+				if( kind==FireKind.NavalBaseGun )
+					dstc2=dstc2+(Random( ((int)(dstc2/12)) )-((int)(dstc2/24)));
+				else
+					dstc2=dstc2+(Random( ((int)(dstc2/8)) )-((int)(dstc2/16)));
+
+				fire.Speed=10.0;
+				fire.Acceleration=((fire.Speed)/(dstc2/fire.Speed));
+				fire.FinalSpeed=0;
+				fire.Ticks=(int)(dstc2/fire.Speed)+1;
+				fire.FlightTime=fire.Ticks/2;
+
+				}
+			}
+		}
+	return false;
+	return true;
+	}
+
+private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double drctn2, FireKind kind)
+	{
+	int trgt2;
+	int n;
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double turn;
+	double wrk_x2;
+	double wrk_y2;
+	double drctn3 =default;
+	double dstc =default;
+	int i;
+	int f;
+	int cm_scrn_x;
+	int cm_scrn_y;
+	trgt2=0;
+	for(n=1;n<=MaxUnitId;n++)
+		{
+		ref var other = ref Units[n];	//敵を探す。
+		if( other.IsUsed && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.AirBase||other.Kind==UnitKind.NavalBase||other.Kind==UnitKind.InfantryBase||other.Kind==UnitKind.Pillboxes||other.Kind==UnitKind.Fortress) && other.Side!=unit.Side && other.IsFound && !(other.Kind==UnitKind.Submarine||other.Kind==UnitKind.Destroyer) )
+			{
+			// 攻撃地点から攻撃目標地点への距離
+			wrk_x=other.Position.X-unit.Position.X;
+			wrk_y=other.Position.Y-unit.Position.Y;
+			turn=Distance(wrk_x, wrk_y);
+			turn=turn/TPD_SPD;							// 撃つ弾の速度で割る
+
+			// 攻撃地点から攻撃目標地点への絶対方位、方位角
+			wrk_x=other.Position.X;
+			wrk_y=other.Position.Y;
+			wrk_x+=CosDegrees(other.Direction)*(other.Speed*turn);
+			wrk_y+=SinDegrees(other.Direction)*(other.Speed*turn);
+/****
+			drctn=unit[n].drctn_add;
+			drctn2=unit[n].drctn;
+			for(f=0;f<=(int)turn;f++)
+				{
+				drctn2+=drctn;
+				if(drctn2<0)		drctn2=360+drctn2;
+				if(drctn2>=360)		drctn2=drctn2-360;
+				wrk_x+=CosDegrees(drctn2)*(unit[n].spd); // とりあえずターン後
+				wrk_y+=SinDegrees(drctn2)*(unit[n].spd);
+				}
+***/
+			wrk_x2=wrk_x;					// 標的の未来位置
+			wrk_y2=wrk_y;					//
+			wrk_x=wrk_x2-unit.Position.X;
+			wrk_y=wrk_y2-unit.Position.Y;
+
+			drctn=Direction(wrk_x, wrk_y);
+			drctn2=drctn;					// 未来位置への絶対角
+
+			drctn=drctn-unit.Direction;
+			if(drctn<0)
+				drctn=360+drctn;
+			drctn3=drctn;							// 方位角
+
+			// 攻撃地点から攻撃目標地点への距離
+			wrk_x=wrk_x2-unit.Position.X;
+			wrk_y=wrk_y2-unit.Position.Y;
+			dstc=Distance(wrk_x, wrk_y);
+
+			if( (dstc>=100 && dstc<=(500+(unit.Side==Side.Japan ? 1 : 0)*100)) && ((drctn3>=45&&drctn3<=135)||(drctn3>=225&&drctn3<=315)) )
+				{
+				// ばってん陸地があるけんしらべる
+				trgt2=n;
+
+				i=(int)(dstc/TPD_SPD);
+				for(f=1;f<=i;f++)
+					{
+					wrk_x=unit.Position.X;
+					wrk_y=unit.Position.Y;
+					wrk_x+=CosDegrees(drctn2)*(TPD_SPD*f); // とりあえずターン後
+					wrk_y+=SinDegrees(drctn2)*(TPD_SPD*f);
+
+					if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
+						{
+						cm_scrn_x=(int)((wrk_x+(Sprites[SpriteId.JapanUnits].Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
+						cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[SpriteId.JapanUnits].Height/2))/Sprites[SpriteId.MapTiles].Height);
+						if( MapTiles[cm_scrn_y][cm_scrn_x]>=1 )
+							{
+							trgt2=0;
+							break;
+							}
+						}
+					}
+
+				if(trgt2!=0)
+					{
+					if( Random(3)==0 )
+						break;
+					else
+						trgt2=0;
+					}
+				}
+			}
+		}
+	if( trgt2!=0 )
+		{
+
+		// 発射！
+		if(unit.Ammo!=0)
+			unit.Ammo-=TPD_SZ;
+		switch( unit.Kind )
+			{
+			case UnitKind.Cruiser:
+			case UnitKind.Destroyer:		unit.ReloadTime=RELOAD_TPD_DD;		break;	// 再装填時間
+			case UnitKind.Submarine:		unit.ReloadTime=RELOAD_TPD_SS;
+							//撃った瞬間に発見される。
+							unit.ContactX=(int)(unit.Position.X+Random((50)*2)-50);
+							unit.ContactY=(int)(unit.Position.Y+Random((50)*2)-50);
+
+							unit.ContactRadius=100;
+							unit.ContactTime=300;
+
+							unit.IsFound=true;
+
+							break;	// 再装填時間
+			}
+
+		if( unit.Side==Side.Japan  )
+			{
+			if(unit.Kind==UnitKind.Destroyer)
+				i=2;						// 日本海軍駆逐艦魚雷３発
+			else
+				i=1;						// 日本海軍巡洋艦魚雷２はつ
+			}
+		else
+			{
+			i=0;						// 合衆国海軍魚雷１発
+			}
+
+		if( unit.Kind!=UnitKind.Submarine )
+			PlaySoundEffect( 0, SoundId.TorpedoLaunch ,unit.Position.X, unit.Position.Y);
+
+		for( f=0; f<=i; f++)
+			{
+			n=FindFreeFire();
+			ref var fire = ref Fires[n];
+			if( n!=0 )
+				{
+				fire.Target=trgt2;
+				fire.Kind=kind;
+				fire.Position=unit.Position;
+
+				switch( f )
+					{
+					case 0:	fire.Direction=drctn2;	break;
+					case 1:	fire.Direction=drctn2+5;	break;
+					case 2:	fire.Direction=drctn2-5;	break;
+					}
+				fire.Direction=(int)(fire.Direction)%360;
+
+				fire.Speed=TPD_SPD;
+				fire.Acceleration=+0.0;
+				fire.FinalSpeed=0.0;
+				if( unit.Kind==UnitKind.Submarine )
+					fire.Ticks=1;
+				else
+					fire.Ticks=0;
+				fire.FlightTime=275+(unit.Side==Side.Japan ? 1 : 0)*110;
+				fire.ArmingTime=30;
+				}
+			}
+		}
+	return false;
+	return true;
+	}
+
+private bool ShipFireTorpedoAtTarget(int trgt, ref Unit unit, ref double drctn2, FireKind kind)
+	{
+	int trgt2;
+	int n;
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double turn;
+	double wrk_x2;
+	double wrk_y2;
+	double drctn3 =default;
+	double dstc =default;
+	int i;
+	int f;
+	int cm_scrn_x;
+	int cm_scrn_y;
+	trgt2=0;
+	n=trgt;
+	if( Units[n].IsUsed && Units[n].Category==UnitCategory.Ship && !(Units[n].Kind==UnitKind.AirBase||Units[n].Kind==UnitKind.NavalBase||Units[n].Kind==UnitKind.InfantryBase||Units[n].Kind==UnitKind.Pillboxes||Units[n].Kind==UnitKind.Fortress) && Units[n].Side!=unit.Side && Units[n].IsFound )
+		{
+
+		// 攻撃地点から攻撃目標地点への距離
+		wrk_x=Units[n].Position.X-unit.Position.X;
+		wrk_y=Units[n].Position.Y-unit.Position.Y;
+		turn=Distance(wrk_x, wrk_y);
+		turn=turn/TPD_SPD;							// 撃つ弾の速度で割る
+
+		// 攻撃地点から攻撃目標地点への絶対方位、方位角
+		wrk_x=Units[n].Position.X;
+		wrk_y=Units[n].Position.Y;
+		wrk_x+=CosDegrees(Units[n].Direction)*(Units[n].Speed*turn);
+		wrk_y+=SinDegrees(Units[n].Direction)*(Units[n].Speed*turn);
+		wrk_x2=wrk_x;					// 標的の未来位置
+		wrk_y2=wrk_y;					//
+		wrk_x=wrk_x2-unit.Position.X;
+		wrk_y=wrk_y2-unit.Position.Y;
+
+		drctn=Direction(wrk_x, wrk_y);
+		drctn2=drctn;					// 未来位置への絶対角
+
+		drctn=drctn-unit.Direction;
+		if(drctn<0)
+			drctn=360+drctn;
+		drctn3=drctn;							// 方位角
+
+		// 攻撃地点から攻撃目標地点への距離
+		wrk_x=wrk_x2-unit.Position.X;
+		wrk_y=wrk_y2-unit.Position.Y;
+		dstc=Distance(wrk_x, wrk_y);
+
+		if( (dstc>=100 && dstc<=(550+(unit.Side==Side.Japan ? 1 : 0)*100)) && (drctn3<=5 || drctn3>=355) )
+			{
+			trgt2=n;
+			i=(int)(dstc/TPD_SPD);
+			for(f=1;f<=i;f++)
+				{
+				wrk_x=unit.Position.X;
+				wrk_y=unit.Position.Y;
+				wrk_x+=CosDegrees(drctn2)*(TPD_SPD*f); // とりあえずターン後
+				wrk_y+=SinDegrees(drctn2)*(TPD_SPD*f);
+
+				if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
+					{
+					cm_scrn_x=(int)((wrk_x+(Sprites[SpriteId.JapanUnits].Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
+					cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[SpriteId.JapanUnits].Height/2))/Sprites[SpriteId.MapTiles].Height);
+					if( MapTiles[cm_scrn_y][cm_scrn_x]>=1 )
+						{
+						trgt2=0;
+						break;
+						}
+					}
+				}
+			}
+		}
+
+	if( trgt2!=0 )
+		{
+		// 発射！
+		if(unit.Ammo!=0)
+			unit.Ammo-=TPD_SZ;
+		switch( unit.Kind )
+			{
+			case UnitKind.Destroyer:		unit.ReloadTime=RELOAD_TPD_DD;		break;	// 再装填時間
+			case UnitKind.Submarine:		unit.ReloadTime=RELOAD_TPD_SS;
+							//撃った瞬間に発見される。
+							unit.ContactX=(int)(unit.Position.X+Random((50)*2)-50);
+							unit.ContactY=(int)(unit.Position.Y+Random((50)*2)-50);
+
+							unit.ContactRadius=100;
+							unit.ContactTime=300;
+
+							unit.IsFound=true;
+							break;	// 再装填時間
+			}
+
+		if( unit.Kind!=UnitKind.Submarine )
+			{
+			PlaySoundEffect( 0, SoundId.TorpedoLaunch ,unit.Position.X, unit.Position.Y);
+			}
+		else
+			{
+			unit.Target=0;
+			}
+
+		for( f=0; f<=2; f++)
+			{
+			n=FindFreeFire();
+			ref var fire = ref Fires[n];
+			if( n!=0 )
+				{
+				fire.Target=trgt2;
+				fire.Kind=kind;
+				fire.Position=unit.Position;
+
+				switch( f )
+					{
+					case 0:	fire.Direction=drctn2+5;	break;
+					case 1:	fire.Direction=drctn2;	break;
+					case 2:	fire.Direction=drctn2-5;	break;
+					}
+				fire.Direction=(int)(fire.Direction)%360;
+
+				fire.Speed=TPD_SPD;
+				fire.Acceleration=+0.0;
+				fire.FinalSpeed=0.0;
+				if( unit.Kind==UnitKind.Submarine )
+					fire.Ticks=1;
+				else
+					fire.Ticks=0;
+				fire.FlightTime=290+(unit.Side==Side.Japan ? 1 : 0)*110;
+				fire.ArmingTime=30;
+				}
+			}
+
+		}
+	return false;
+	return true;
+	}
+
+private bool ShipFireAntiAircraftShellAtTarget(int trgt, ref Unit unit, ref int rng, ref Array3<int> fc)
+	{
+	int trgt2;
+	int n;
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double turn;
+	double wrk_x2;
+	double wrk_y2;
+	double drctn2 =default;
+	double drctn3 =default;
+	double dstc =default;
+	int f;
+	int i;
+	double dstc2;
+	if( !Units[trgt].IsFound )
+		return false;
+
+	trgt2=0;
+	n=trgt;
+	// 攻撃地点から攻撃目標地点への絶対方位、方位角
+
+	wrk_x=Units[n].Position.X-unit.Position.X;
+	wrk_y=Units[n].Position.Y-unit.Position.Y;
+	turn=Distance(wrk_x, wrk_y);
+	turn=turn/10.0;
+
+	// ターゲットの未来位置を求めます。
+	wrk_x=Units[n].Position.X;
+	wrk_y=Units[n].Position.Y;
+	wrk_x+=CosDegrees(Units[n].Direction)*(Units[n].Speed*turn); // ターン後
+	wrk_y+=SinDegrees(Units[n].Direction)*(Units[n].Speed*turn);
+	wrk_x2=wrk_x;										// 未来位置
+	wrk_y2=wrk_y;
+
+	// ターゲットの方位関係を
+	wrk_x=wrk_x-unit.Position.X;
+	wrk_y=wrk_y-unit.Position.Y;
+
+	drctn=Direction(wrk_x, wrk_y);
+	drctn2=drctn;
+
+	drctn=drctn-unit.Direction;
+	if(drctn<0)
+		drctn=360+drctn;
+	drctn3=drctn;							// 方位角
+
+	// 攻撃地点から攻撃目標地点への距離
+	wrk_x=wrk_x2-unit.Position.X;
+	wrk_y=wrk_y2-unit.Position.Y;
+	dstc=Distance(wrk_x, wrk_y);
+
+	switch( unit.Kind )
+		{
+		case UnitKind.Battleship:	rng=700; fc[0]=2;fc[1]=3;fc[2]=1;	break;
+		case UnitKind.Cruiser:	rng=600; fc[0]=1;fc[1]=2;fc[2]=1;	break;
+		case UnitKind.Destroyer:	rng=300; fc[0]=1;fc[1]=1;fc[2]=0;	break;
+
+		case UnitKind.InfantryBase:	rng=500; fc[0]=1;fc[1]=1;fc[2]=1;	break;
+		case UnitKind.Pillboxes:	rng=600; fc[0]=fc[1]=fc[2]=Random(2)+1;	break;
+		case UnitKind.Fortress:	rng=700; fc[0]=fc[1]=fc[2]=Random(2)+2;	break;
+		}
+
+	if( dstc>=(rng*0.25) && dstc<=rng )
+		{
+		trgt2=n;
+		}
+
+	if( trgt2!=0 )
+		{
+		f=fc[2];	// 後面
+		if( drctn3>=315.0 || drctn3<=45.0 )
+			f=fc[0];	// 正面
+		if( (drctn3>=45.0 && drctn3<=135.0) || (drctn3>=225.0 && drctn3<=315.0) )
+			f=fc[1];	// 側面
+
+		PlaySoundEffect( 0, SoundId.AntiAircraftShell2 ,unit.Position.X, unit.Position.Y);
+		for( i=1; i<=f ;i++ )
+			{
+
+			n=FindFreeFire();
+			ref var fire = ref Fires[n];
+			if( n!=0 )
+				{
+				if(unit.Ammo!=0)
+					unit.Ammo-=SHL_SZ;			// 弾薬消費
+				fire.Target=trgt2;
+
+				fire.Kind=FireKind.AntiAircraftShell;
+
+				fire.Position=unit.Position;
+
+				drctn3=drctn2+(Random(18)-9);			// 絶対方位
+				if(drctn3>=360)	drctn3=drctn3-360;
+				if(drctn3<0)	drctn3=360+drctn3;
+				fire.Direction=drctn3;
+
+				dstc2=dstc+(Random( ((int)(dstc/10)) )-((int)(dstc/20))   );
+
+				fire.Speed=10.0;
+				fire.Acceleration=-0.00;
+				fire.FinalSpeed=0;
+				fire.Ticks=(int)(dstc2/fire.Speed);
+				fire.FlightTime=0;
+
+				}
+			}
+		}
+	return false;
+	return true;
+	}
+
+private bool ShipFireAntiAircraftShellWithoutTarget(ref Unit unit, ref double drctn2, ref double drctn3, ref double dstc, ref int rng, ref Array3<int> fc, FireKind kind)
+	{
+	int trgt2;
+	int n;
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double turn;
+	int f;
+	double wrk_x2;
+	double wrk_y2;
+	int i;
+	double dstc2;
+	trgt2=0;
+	for(n=1;n<=MaxUnitId;n++)
+		{
+		ref var other = ref Units[n];	//敵を探す。
+		if( other.IsUsed && other.Category==UnitCategory.Plane && (((other.Kind==UnitKind.Attacker||other.Kind==UnitKind.Bomber) && other.Ammo!=0 )|| Random(10)==0 )  && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.IsFound )
+			{
+			// 攻撃地点から攻撃目標地点への距離
+			wrk_x=other.Position.X-unit.Position.X;
+			wrk_y=other.Position.Y-unit.Position.Y;
+			turn=Distance(wrk_x, wrk_y);
+			turn=turn/10.0;
+
+			// 攻撃地点から攻撃目標地点への絶対方位、方位角
+			wrk_x=other.Position.X;
+			wrk_y=other.Position.Y;
+			drctn=other.TurnRate;
+			drctn2=other.Direction;
+			for(f=0;f<=(int)turn;f++)
+				{
+				drctn2+=drctn;
+				if(drctn2<0)		drctn2=360+drctn2;
+				if(drctn2>=360)		drctn2=drctn2-360;
+				wrk_x+=CosDegrees(drctn2)*(other.Speed); // とりあえずターン後
+				wrk_y+=SinDegrees(drctn2)*(other.Speed);
+				}
+
+			wrk_x2=wrk_x;
+			wrk_y2=wrk_y;
+			wrk_x=wrk_x2-unit.Position.X;
+			wrk_y=wrk_y2-unit.Position.Y;
+
+			drctn=Direction(wrk_x, wrk_y);
+			drctn2=drctn;
+
+			drctn=drctn-unit.Direction;
+			if(drctn<0)
+				drctn=360+drctn;
+			drctn3=drctn;							// 方位角
+
+			// 攻撃地点から攻撃目標地点への距離
+			wrk_x=wrk_x2-unit.Position.X;
+			wrk_y=wrk_y2-unit.Position.Y;
+			dstc=Distance(wrk_x, wrk_y);
+
+			switch( unit.Kind )
+				{
+				case UnitKind.Battleship:	rng=700; fc[0]=2;fc[1]=3;fc[2]=1;	break;
+				case UnitKind.Cruiser:	rng=600; fc[0]=1;fc[1]=2;fc[2]=1;	break;
+				case UnitKind.Destroyer:	rng=300; fc[0]=1;fc[1]=1;fc[2]=0;	break;
+
+				case UnitKind.InfantryBase:	rng=500; fc[0]=1;fc[1]=1;fc[2]=1;	break;
+				case UnitKind.Pillboxes:	rng=600; fc[0]=fc[1]=fc[2]=Random(2)+1;	break;
+				case UnitKind.Fortress:	rng=700; fc[0]=fc[1]=fc[2]=Random(2)+2;	break;
+				}
+
+				if( dstc>=(rng*0.25) && dstc<=rng )
+					{
+					trgt2=n;
+					break;
+					}
+			}
+		}
+	if( trgt2!=0 )
+		{
+
+		f=fc[2];	// 後面
+		if( drctn3>=315.0 || drctn3<=45.0 )
+			f=fc[0];	// 正面
+		if( (drctn3>=45.0 && drctn3<=135.0) || (drctn3>=225.0 && drctn3<=315.0) )
+			f=fc[1];	// 側面
+
+		for( i=1; i<=f ;i++ )
+			{
+			n=FindFreeFire();
+			ref var fire = ref Fires[n];
+			if( n!=0 )
+				{
+				if(unit.Ammo!=0)
+					unit.Ammo-=SHL_SZ;			// 弾薬消費
+				PlaySoundEffect( 0, SoundId.AntiAircraftShell2 ,unit.Position.X, unit.Position.Y);
+				fire.Target=trgt2;
+				fire.Kind=kind;
+				fire.Position=unit.Position;
+
+				drctn3=drctn2+(Random(18)-9);			// 絶対方位
+				if(drctn3>=360)	drctn3=drctn3-360;
+				if(drctn3<0)	drctn3=360+drctn3;
+				fire.Direction=drctn3;
+
+				dstc2=dstc+(Random( ((int)(dstc/10)) )-((int)(dstc/20))   );
+
+				fire.Speed=10.0;
+				fire.Acceleration=-0.00;
+				fire.FinalSpeed=0;
+				fire.Ticks=(int)(dstc2/fire.Speed);
+				fire.FlightTime=0;
+				}
+			}
+		}
+	return false;
+	return true;
+	}
+
+private bool ShipFireGunAtTarget(int trgt, ref Unit unit, FireKind kind, ref int rng, ref Array3<int> fc)
+	{
+	int trgt2;
+	int n;
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double turn;
+	double wrk_x2;
+	double wrk_y2;
+	double drctn2 =default;
+	double drctn3 =default;
+	double dstc =default;
+	int f;
+	int i;
+	double dstc2;
+	if( !Units[trgt].IsFound )
+		return false;
+
+	trgt2=0;
+	n=trgt;
+	// 攻撃地点から攻撃目標地点への絶対方位、方位角
+
+	// 攻撃地点から攻撃目標地点への距離
+	wrk_x=Units[n].Position.X-unit.Position.X;
+	wrk_y=Units[n].Position.Y-unit.Position.Y;
+	turn=Distance(wrk_x, wrk_y);
+	turn=turn/10.0;
+
+	// ターゲットの未来位置を求めます。
+	wrk_x=Units[n].Position.X;
+	wrk_y=Units[n].Position.Y;
+	wrk_x+=CosDegrees(Units[n].Direction)*(Units[n].Speed*turn); // ターン後
+	wrk_y+=SinDegrees(Units[n].Direction)*(Units[n].Speed*turn);
+	wrk_x2=wrk_x;										// 未来位置
+	wrk_y2=wrk_y;
+
+	// ターゲットの方位関係を
+	wrk_x=wrk_x-unit.Position.X;
+	wrk_y=wrk_y-unit.Position.Y;
+
+	drctn=Direction(wrk_x, wrk_y);
+	drctn2=drctn;
+
+	drctn=drctn-unit.Direction;
+	if(drctn<0)
+		drctn=360+drctn;
+	drctn3=drctn;							// 方位角
+
+	// 攻撃地点から攻撃目標地点への距離
+	wrk_x=wrk_x2-unit.Position.X;
+	wrk_y=wrk_y2-unit.Position.Y;
+	dstc=Distance(wrk_x, wrk_y);
+
+	// 水上艦への射程距離
+	switch( unit.Kind )
+		{
+		case UnitKind.Battleship:
+			if( kind==FireKind.NavalBaseGun )
+				{
+				rng=1120; fc[0]=3;fc[1]=5;fc[2]=2;
+				}
+			else
+				{
+				rng=800; fc[0]=3;fc[1]=5;fc[2]=2;
+				}
+			break;
+		case UnitKind.Cruiser:	rng=700; fc[0]=2;fc[1]=3;fc[2]=1;	break;
+		case UnitKind.Destroyer:	rng=400; fc[0]=1;fc[1]=1;fc[2]=0;	break;
+		case UnitKind.Submarine:	rng=300; fc[0]=1;fc[1]=1;fc[2]=0;	break;
+
+		case UnitKind.InfantryBase:	rng=600; fc[0]=1;fc[1]=1;fc[2]=1;	break;
+		case UnitKind.Pillboxes:	rng=800; fc[0]=2;fc[1]=2;fc[2]=2;	break;
+		case UnitKind.Fortress:	rng=1000; fc[0]=3;fc[1]=3;fc[2]=3;	break;
+		}
+
+	if( (dstc>=150  || (unit.Kind>=UnitKind.InfantryBase&&unit.Kind<=UnitKind.Fortress) ) && dstc<=rng )
+		{
+		trgt2=n;
+		}
+
+	if( trgt2!=0 )
+		{
+		f=fc[2];	// 後面
+		if( drctn3>=315.0 || drctn3<=45.0 )
+			f=fc[0];	// 正面
+		if( (drctn3>=45.0 && drctn3<=135.0) || (drctn3>=225.0 && drctn3<=315.0) )
+			f=fc[1];	// 側面
+
+		switch( unit.Kind )
+			{
+			case UnitKind.Battleship:
+			case UnitKind.Fortress:
+				PlaySoundEffect( 0, SoundId.Gun3 ,unit.Position.X, unit.Position.Y);
+				break;
+			case UnitKind.Cruiser:
+			case UnitKind.Pillboxes:
+				PlaySoundEffect( 0, SoundId.Gun2 ,unit.Position.X, unit.Position.Y);
+				break;
+
+			case UnitKind.Destroyer:
+			case UnitKind.Submarine:
+			case UnitKind.InfantryBase:
+				PlaySoundEffect( 0, SoundId.Gun1+Random(2) ,unit.Position.X, unit.Position.Y);
+				break;
+			}
+
+		for( i=1; i<=f ;i++ )
+			{
+
+			n=FindFreeFire();
+			ref var fire = ref Fires[n];
+			if( n!=0 )
+				{
+				unit.Ammo-=GUN_SZ;			// 弾薬消費
+				fire.Target=trgt2;
+
+				if( Units[trgt2].Category==UnitCategory.Ship )
+					{
+					fire.Kind=FireKind.Gun;
+
+					fire.Position=unit.Position;
+
+					if( kind==FireKind.NavalBaseGun && 0!=0 )
+						{
+						if( Random(3)!=0 )
+							drctn3=drctn2+(double)((double)(Random(20)-10)/10)    ;			// 絶対方位
+						else
+							drctn3=drctn2+(double)((double)(Random(60)-30)/10)    ;			// 絶対方位
+						}
+					else
+						{
+						if( Random(5)==0 || ( unit.Kind==UnitKind.Battleship && Random(4)==0 ) )
+							drctn3=drctn2+(Random(3)-1)+(Random(100)/100);			// 絶対方位
+						else
+							drctn3=drctn2+(Random(9)-4)+(Random(100)/100);				// 絶対方位
+						}
+
+					if(drctn3>=360)	drctn3=drctn3-360;
+					if(drctn3<0)	drctn3=360+drctn3;
+					fire.Direction=drctn3;
+
+					if( kind==FireKind.NavalBaseGun )
+						dstc2=dstc+(Random( ((int)(dstc/12)) )-((int)(dstc/24)));
+					else
+						dstc2=dstc+(Random( ((int)(dstc/8)) )-((int)(dstc/16))   );
+
+					fire.Speed=10.0;
+					fire.Acceleration=((fire.Speed)/(dstc2/fire.Speed));
+					fire.FinalSpeed=0;
+					fire.Ticks=(int)(dstc2/fire.Speed);
+					fire.FlightTime=fire.Ticks/2;
+					}
+				else
+					{
+					fire.Kind=FireKind.AntiAircraftShell;
+
+					fire.Position=unit.Position;
+
+					drctn3=drctn2+(Random(20)-10);			// 絶対方位
+					if(drctn3>=360)	drctn3=drctn3-360;
+					if(drctn3<0)	drctn3=360+drctn3;
+					fire.Direction=drctn3;
+
+					dstc2=dstc+(Random( ((int)(dstc/10)) )-((int)(dstc/20))   );
+
+					fire.Speed=10.0;
+					fire.Acceleration=-0.00;
+					fire.FinalSpeed=0;
+					fire.Ticks=(int)(dstc2/fire.Speed);
+					fire.FlightTime=0;
+					}
+
+				}
+			}
+		}
+	return false;
+	return true;
+	}
+
+private bool ShipFireBullet(ref int trgt, ref Unit unit, ref double drctn2, FireKind kind)
+	{
+	int n;
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double dstc =default;
+	trgt=0;
+	for(n=1;n<=MaxUnitId;n++)
+		{
+		ref var other = ref Units[n];	//敵を探す。
+		if( other.IsUsed && ( (other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying )  || (other.Kind>=UnitKind.InfantryBase && other.Kind<=UnitKind.Fortress ) ) && other.Kind!=UnitKind.Bomber
+		&& other.Side!=unit.Side && other.IsFound )
+			{
+			// 全方位射撃可能
+			wrk_x=other.Position.X-unit.Position.X;
+			wrk_y=other.Position.Y-unit.Position.Y;
+
+			drctn=Direction(wrk_x, wrk_y);
+			drctn2=drctn+(25-Random(50));
+			drctn2=abs((int)drctn2)%360;
+
+			// 攻撃地点から攻撃目標地点への距離
+			wrk_x=other.Position.X-unit.Position.X;
+			wrk_y=other.Position.Y-unit.Position.Y;
+			dstc=Distance(wrk_x, wrk_y);
+			if( dstc<=100 )
+				{
+				trgt=n;
+				if(Random(2)==1 )
+					break;
+				else
+					trgt=0;
+				}
+			else
+				{
+				if( dstc<=300 )
+					{
+					trgt=n;
+					if(Random(8)==1 )
+						break;
+					else
+						trgt=0;
+					}
+				}
+			}
+		}
+
+	if( trgt!=0 )
+		{
+		n=FindFreeFire();
+		ref var fire = ref Fires[n];
+		if( n!=0 )
+			{
+			//unit[m].arm[1]--;			// 弾薬消費
+			PlaySoundEffect( 0, SoundId.AntiAircraftBullet3 ,unit.Position.X, unit.Position.Y);
+			fire.Target=trgt;
+			fire.Kind=kind;
+			fire.Position=unit.Position;
+			fire.Direction=drctn2;
+			fire.Speed=17.0;
+			fire.Acceleration=-0.1;
+			fire.FinalSpeed=15.0;
+			}
+		}
+	return false;
+	return true;
+	}
+
+private bool BomberFireBullet(ref int trgt, ref Unit unit, ref double drctn2, FireKind kind)
+	{
+	int n;
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double dstc =default;
+	trgt=0;
+	for(n=1;n<=MaxUnitId;n++)
+		{
+		ref var other = ref Units[n];	//敵を探す。
+		if( other.IsUsed && other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.IsFound )
+			{
+			// 全方位射撃可能
+			wrk_x=other.Position.X-unit.Position.X;
+			wrk_y=other.Position.Y-unit.Position.Y;
+
+			drctn=Direction(wrk_x, wrk_y);
+			drctn2=drctn+(Random(20)-10);
+			drctn2=abs((int)drctn2)%360;
+
+			// 攻撃地点から攻撃目標地点への距離
+			wrk_x=other.Position.X-unit.Position.X;
+			wrk_y=other.Position.Y-unit.Position.Y;
+			dstc=Distance(wrk_x, wrk_y);
+			if( dstc<=100 )
+				{
+				trgt=n;
+				if(Random(2)==1 )
+					break;
+				else
+					trgt=0;
+				}
+			else
+				{
+				if( dstc<=300 )
+					{
+					trgt=n;
+					if(Random(8)==1 )
+						break;
+					else
+						trgt=0;
+					}
+				}
+			}
+		}
+	if( trgt!=0 )
+		{
+		n=FindFreeFire();
+		ref var fire = ref Fires[n];
+		if( n!=0 )
+			{
+			//unit[m].arm[1]--;			// 弾薬消費
+			PlaySoundEffect( 0, SoundId.AntiAircraftBullet4 ,unit.Position.X, unit.Position.Y);
+			fire.Target=trgt;
+			fire.Kind=kind;
+			fire.Position=unit.Position;
+			fire.Direction=drctn2;
+			fire.Speed=17.0;
+			fire.Acceleration=-0.1;
+			fire.FinalSpeed=15.0;
+			}
+		}
+	return false;
+	return true;
+	}
+
+private bool FighterFireBullet(ref int trgt, ref Unit unit, FireKind kind)
+	{
+	double dstc2;
+	int n;
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double dstc =default;
+	trgt=0;		dstc2=5000;
+	for(n=1;n<=MaxUnitId;n++)
+		{
+		ref var other = ref Units[n];	//前方の敵を探す。
+		if( other.IsUsed && (( other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying ) || other.Kind==UnitKind.Transport ) && other.Side!=unit.Side )
+			{
+			// 距離を調べます
+			wrk_x=other.Position.X-unit.Position.X;
+			wrk_y=other.Position.Y-unit.Position.Y;
+			dstc=Distance(wrk_x, wrk_y);
+			if( dstc<=300 && dstc<=dstc2)
+				{
+				// 攻撃地点から攻撃目標地点への方位角
+				wrk_x=other.Position.X-unit.Position.X;
+				wrk_y=other.Position.Y-unit.Position.Y;
+				drctn=Direction(wrk_x, wrk_y);
+				drctn=drctn-unit.Direction;
+				if(drctn<0)
+					drctn=360+drctn;
+				if( ((int)drctn<=10||(int)drctn>=350) && unit.Target!=0 && unit.Target==n )
+					{
+					dstc2=dstc;
+					trgt=n;
+					}
+				}
+
+			if( unit.Target==0 )
+				{
+				if(unit.Mode==UnitMode.Return)
+					{
+					}
+				else
+					{
+					if( dstc<=400+(other.Kind==UnitKind.Attacker||other.Kind==UnitKind.Bomber ? 1 : 0)*250 && Random(10)==0 )
+						{
+						if( other.IsFound )
+							{
+							unit.Target=n;
+							}
+						}
+					}
+				}
+			}
+		}
+
+	if( trgt!=0 )
+		{
+		n=FindFreeFire();
+		ref var fire = ref Fires[n];
+		if( n!=0 )
+			{
+			unit.Ammo--;			// 弾薬消費
+			if(unit.Variant==0)
+				{
+				// 艦上戦闘機
+				if(unit.Side==Side.Japan)
+					PlaySoundEffect( 0, SoundId.AntiAircraftBullet1 ,unit.Position.X, unit.Position.Y);
+				else
+					PlaySoundEffect( 0, SoundId.AntiAircraftBullet2 ,unit.Position.X, unit.Position.Y);
+				}
+			else
+				{
+				// 陸上戦闘機
+				PlaySoundEffect( 0, SoundId.AntiAircraftShell4 ,unit.Position.X, unit.Position.Y);
+				}
+
+			fire.Target=trgt;
+			fire.Kind=kind;
+			fire.Position=unit.Position;
+			fire.Direction=unit.Direction;
+			fire.Speed=16.0;
+			fire.Acceleration=-0.1;
+			fire.FinalSpeed=14.0;
+			}
+		}
+	return false;
+	return true;
+	}
+
+private bool PlaneFireBullet(ref int trgt, ref Unit unit, ref double drctn2, FireKind kind)
+	{
+	int n;
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double dstc =default;
+	trgt=0;
+	for(n=1;n<=MaxUnitId;n++)
+		{
+		ref var other = ref Units[n];	//後方の敵を探す。
+		if( other.IsUsed && other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.IsFound )
+			{
+			// 攻撃地点から攻撃目標地点への方位角
+			wrk_x=other.Position.X-unit.Position.X;
+			wrk_y=other.Position.Y-unit.Position.Y;
+			drctn=Direction(wrk_x, wrk_y);
+
+			drctn2=drctn+(Random(10)-5);
+			if(drctn2>=360)	drctn2=drctn2-360;
+			if(drctn2<0)	drctn2=360+drctn2;
+
+			drctn=drctn-unit.Direction;
+			if(drctn<0)
+				drctn=360+drctn;
+			if( (int)drctn>=150&&(int)drctn<=210 )
+				{
+				wrk_x=other.Position.X-unit.Position.X;
+				wrk_y=other.Position.Y-unit.Position.Y;
+				dstc=Distance(wrk_x, wrk_y);
+				if( dstc<=300 )
+					{	trgt=n;	break;	}
+				}
+			}
+		}
+	if( trgt!=0 )
+		{
+		n=FindFreeFire();
+		ref var fire = ref Fires[n];
+		if( n!=0 )
+			{
+			//unit[m].arm[1]--;			// 弾薬消費
+			PlaySoundEffect( 0, SoundId.AntiAircraftBullet3 ,unit.Position.X, unit.Position.Y);
+			fire.Target=trgt;
+			fire.Kind=kind;
+			fire.Position=unit.Position;
+			fire.Direction=drctn2;
+			fire.Speed=16.0;
+			fire.Acceleration=-0.1;
+			fire.FinalSpeed=14.0;
+			}
+		}
+	return false;
+	return true;
+	}
+
+private bool PlaneDropTorpedo(ref Unit unit, ref int trgt, ref double drctn2, int m, FireKind kind)
+	{
+	int cm_scrn_x;
+	int cm_scrn_y;
+	double trgt_x;
+	double trgt_y;
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double dstc =default;
+	int i;
+	int f;
+	int n;
+	if(!( unit.Position.Y>MAP_TOP || unit.Position.Y<MAP_BOTTOM || unit.Position.X<MAP_LEFT || unit.Position.X>MAP_RIGHT ))
+		{
+		cm_scrn_x=(int)((unit.Position.X+(Sprites[SpriteId.JapanUnits].Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
+		cm_scrn_y=(int)((MAP_TOP-unit.Position.Y+(Sprites[SpriteId.JapanUnits].Height/2))/Sprites[SpriteId.MapTiles].Height);
+
+		if( MapTiles[cm_scrn_y][cm_scrn_x]>=1
+			|| MapTiles[cm_scrn_y-1][cm_scrn_x-1]>=1
+			|| MapTiles[cm_scrn_y-1][cm_scrn_x]>=1
+			|| MapTiles[cm_scrn_y-1][cm_scrn_x+1]>=1
+
+			|| MapTiles[cm_scrn_y][cm_scrn_x-1]>=1
+			|| MapTiles[cm_scrn_y][cm_scrn_x+1]>=1
+
+			|| MapTiles[cm_scrn_y+1][cm_scrn_x-1]>=1
+			|| MapTiles[cm_scrn_y+1][cm_scrn_x]>=1
+			|| MapTiles[cm_scrn_y+1][cm_scrn_x+1]>=1
+			)
+			{
+			return false;
+			}
+		}
+
+		// 攻撃地点から攻撃目標地点への方位角
+		if( !Units[trgt].IsFound )
+	return false;
+
+		trgt_x=Units[trgt].Position.X;
+		trgt_y=Units[trgt].Position.Y;
+
+		trgt_x+=CosDegrees(Units[trgt].Direction)*((AIR_TPD_LOS_DSTC/AIR_TPD_SPD)*Units[trgt].Speed); // とりあえずターン後
+		trgt_y+=SinDegrees(Units[trgt].Direction)*((AIR_TPD_LOS_DSTC/AIR_TPD_SPD)*Units[trgt].Speed);
+
+		wrk_x=trgt_x-unit.Position.X;
+		wrk_y=trgt_y-unit.Position.Y;
+
+		drctn=Direction(wrk_x, wrk_y);
+
+		drctn=drctn-unit.Direction;
+		if(drctn<0)
+	drctn=360+drctn;
+
+		if( (int)drctn<=45||(int)drctn>=315)
+	{
+	// 距離を求めます
+	wrk_x=unit.Position.X-trgt_x;
+	wrk_y=unit.Position.Y-trgt_y;
+	if(wrk_x==0)	wrk_x=1;
+	if(wrk_y==0)	wrk_y=1;
+
+	drctn=Direction(wrk_x, wrk_y);
+	drctn2=drctn;					// 未来位置への絶対角
+	if(wrk_x<0)
+		wrk_x=0-wrk_x;
+	if(wrk_y<0)
+		wrk_y=0-wrk_y;
+	if(drctn>=180)
+		drctn=drctn-180;
+	if(drctn>=90)
+		drctn=90-(drctn-90);
+	dstc=(wrk_x)/(CosDegrees(drctn));
+
+	if( dstc>=100 && dstc<=AIR_TPD_LOS_DSTC )
+		{
+		i=(int)(dstc/2);
+		for(f=1;f<=i;f++)
+			{
+			wrk_x=unit.Position.X;
+			wrk_y=unit.Position.Y;
+			wrk_x+=CosDegrees(drctn2)*(2*f); // とりあえずターン後
+			wrk_y+=SinDegrees(drctn2)*(2*f);
+
+			if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
+				{
+				cm_scrn_x=(int)((wrk_x+(Sprites[SpriteId.JapanUnits].Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
+				cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[SpriteId.JapanUnits].Height/2))/Sprites[SpriteId.MapTiles].Height);
+				if( MapTiles[cm_scrn_y][cm_scrn_x]>=1 )
+					{
+					return false;
+					}
+				}
+			}
+
+		// 発射！
+		unit.Ammo=0;		// 魚雷が０
+		unit.Target=0;		// ターゲットをクリア
+
+		unit.Mode=UnitMode.Return;		// 航空機はメイン兵器ゼロで帰投
+
+		// 雷撃時に適当に移動さす
+		wrk_x=unit.Position.X;
+		wrk_y=unit.Position.Y;
+		drctn=unit.Direction;
+
+		if(Random(2)==0)
+			drctn+=(70-Random(40));
+		else
+			drctn-=(70-Random(40));
+
+		drctn=(int)(drctn)%360;
+
+		wrk_x+=CosDegrees(drctn)*300;
+		wrk_y+=SinDegrees(drctn)*300;
+
+		unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
+		unit.EmergencyFlags[0]=20+Random(300);
+
+		// 部下、多分戦闘機に帰投命令
+		if(unit.IsGroupLeader!=0)
+			{
+			for(f=1;f<=MaxUnitId;f++)
+				{
+				ref var other = ref Units[f];
+				if( other.IsUsed && other.GroupLeader==m && other.PlaneState==UnitState.Flying )
+					{
+					other.GroupLeader=0;
+					other.Mode=UnitMode.Return;
+
+other.PathX[0]=unit.Position.X;
+other.PathY[0]=unit.Position.Y;
+other.PathX[1]=MAP_RIGHT+1;
+
+					}
+				}
+
+			unit.IsGroupLeader=0;
+			}
+
+		if( unit.IsGroupLeader==0 )
+			{
+			unit.PathX[0]=unit.Position.X;
+			unit.PathY[0]=unit.Position.Y;
+			unit.PathX[1]=MAP_RIGHT+1;
+			}
+
+		n=FindFreeFire();
+		ref var fire = ref Fires[n];
+		if( n!=0 )
+			{
+			PlaySoundEffect( 0, SoundId.Splash ,unit.Position.X, unit.Position.Y);
+			fire.Target=trgt;
+			fire.Kind=kind;
+			fire.Position=unit.Position;
+			fire.Direction=(int)unit.Direction;
+			fire.Speed=AIR_TPD_SPD;
+			fire.Acceleration=+0.0;
+			fire.FinalSpeed=0.0;
+			fire.Ticks=0;
+			fire.FlightTime=240;
+			fire.ArmingTime=15;
+			}
+		}
+	}
+		return false;
+	return true;
+	}
+
+private bool AttackerDropBomb(ref int trgt, ref Unit unit, ref double drctn2, int m, FireKind kind)
+	{
+	double wrk_x;
+	double wrk_y;
+	double wrk_x2;
+	double wrk_y2;
+	double drctn;
+	double dstc =default;
+	int f;
+	int n;
+	if( !Units[trgt].IsFound )
+		return false;
+	wrk_x=Units[trgt].Position.X;
+	wrk_y=Units[trgt].Position.Y;
+	wrk_x+=CosDegrees(Units[trgt].Direction)*(Units[trgt].Speed*70.0);
+	wrk_y+=SinDegrees(Units[trgt].Direction)*(Units[trgt].Speed*70.0);
+
+	wrk_x2=wrk_x;	wrk_y2=wrk_y;
+
+	wrk_x=wrk_x-unit.Position.X;
+	wrk_y=wrk_y-unit.Position.Y;
+
+	drctn=Direction(wrk_x, wrk_y);
+	drctn2=drctn;
+	drctn=drctn-unit.Direction;
+	if(drctn<0)
+		drctn=360+drctn;
+
+	if( (int)drctn<=30||(int)drctn>=330 )
+		{
+		// 距離を求めます
+		wrk_x=unit.Position.X-wrk_x2;
+		wrk_y=unit.Position.Y-wrk_y2;
+		dstc=Distance(wrk_x, wrk_y);
+
+		if( ( dstc>=170 && dstc<=180 && unit.Side==Side.UnitedStates ) || ( dstc>=35 && dstc<=65 && unit.Side==Side.Japan ))
+			{
+			// 発射！
+
+			if( unit.Side==Side.UnitedStates )
+				unit.Speed+=unit.AccelerationChange*700;
+			else
+				{
+				wrk_x=unit.Position.X;
+				wrk_y=unit.Position.Y;
+				drctn=unit.Direction;
+				wrk_x+=CosDegrees(drctn)*300;
+				wrk_y+=SinDegrees(drctn)*300;
+				unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
+				unit.EmergencyFlags[0]=150+Random(50);
+				}
+
+			unit.Ammo=0;		// 消費
+			unit.Target=0;
+
+			unit.Mode=UnitMode.Return;		// 航空機はメイン兵器ゼロで帰投
+
+			// 部下、多分戦闘機に帰投命令
+			if(unit.IsGroupLeader!=0)
+				{
+				for(f=1;f<=MaxUnitId;f++)
+					{
+					ref var other = ref Units[f];
+					if( other.IsUsed && other.GroupLeader==m && other.PlaneState==UnitState.Flying)
+						{
+						other.GroupLeader=0;
+						other.Mode=UnitMode.Return;
+
+other.PathX[0]=unit.Position.X;
+other.PathY[0]=unit.Position.Y;
+other.PathX[1]=MAP_RIGHT+1;
+
+						}
+					}
+				unit.IsGroupLeader=0;
+				}
+
+			n=FindFreeFire();
+			ref var fire = ref Fires[n];
+			if( n!=0 )
+				{
+				fire.Target=(int)UnitKind.Attacker;
+				fire.Kind=kind;
+				fire.Position = new WorldPosition(unit.Position.X+(3-Random(6)), unit.Position.Y+(3-Random(6)));
+				fire.Direction=drctn2;
+
+				if(unit.Side==Side.Japan)
+					{
+					fire.Position += new WorldVector(CosDegrees(fire.Direction)*(13), SinDegrees(fire.Direction)*(13));
+					}
+				else
+					{
+					fire.Position += new WorldVector(CosDegrees(fire.Direction)*(130), SinDegrees(fire.Direction)*(130));
+					}
+
+				fire.Speed=0.3;
+				fire.Acceleration=+0.2;
+				fire.FinalSpeed=0.0;
+				if(unit.Side==Side.Japan)
+					{
+					fire.Ticks=10;
+					fire.FlightTime=68+Random(5);
+					}
+				else
+					{
+					fire.Ticks=0;
+					fire.FlightTime=70;
+					}
+
+				}
+
+				// もう一発
+				n=FindFreeFire();
+				fire = ref Fires[n];
+				if( n!=0 )
+					{
+					fire.Target=trgt;
+					fire.Kind=kind;
+					fire.Position = new WorldPosition(unit.Position.X+(20-Random(40)), unit.Position.Y+(20-Random(40)));
+					fire.Direction=drctn2;
+
+					if(unit.Side==Side.Japan)
+						{
+						fire.Position += new WorldVector(CosDegrees(fire.Direction)*(13), SinDegrees(fire.Direction)*(13));
+						}
+					else
+						{
+						fire.Position += new WorldVector(CosDegrees(fire.Direction)*(130), SinDegrees(fire.Direction)*(130));
+						}
+
+					fire.Speed=0.3;
+					fire.Acceleration=+0.2;
+					fire.FinalSpeed=0.0;
+
+					if(unit.Side==Side.Japan)
+						{
+						fire.Ticks=10;
+						fire.FlightTime=75+(5-Random(10));
+						}
+					else
+						{
+						fire.Ticks=0;
+						fire.FlightTime=70+(5-Random(10));
+						}
+					}
+			}
+		}
+	return false;
+	return true;
+	}
+
+private bool BomberDropBomb(ref int trgt, ref Unit unit, ref double drctn2, FireKind kind)
+	{
+	int trgt2;
+	int n;
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double dstc =default;
+	trgt2=0;
+	if(trgt!=0)
+		trgt2=trgt;
+	for(n=1;n<=MaxUnitId;n++)
+		{	//前方の敵を探す。
+		if(trgt2!=0)
+			{ n=trgt2; trgt=0; }
+		if( Units[n].IsUsed && Units[n].Category==UnitCategory.Ship && Units[n].Side!=unit.Side && Units[n].IsFound )
+			{
+			// 攻撃地点から攻撃目標地点への方位角
+			wrk_x=Units[n].Position.X-unit.Position.X;
+			wrk_y=Units[n].Position.Y-unit.Position.Y;
+			drctn=Direction(wrk_x, wrk_y);
+			drctn2=drctn;
+
+			drctn2=drctn+(Random(10)-5);
+			if(drctn2>=360)	drctn2=drctn2-360;
+			if(drctn2<0)	drctn2=360+drctn2;
+
+			drctn=drctn-unit.Direction;
+			if(drctn<0)
+				drctn=360+drctn;
+			if( (int)drctn<=30 || (int)drctn>=330 )
+				{
+				wrk_x=Units[n].Position.X-unit.Position.X;
+				wrk_y=Units[n].Position.Y-unit.Position.Y;
+				dstc=Distance(wrk_x, wrk_y);
+				if( dstc>=30 && dstc<=60 )
+					{	trgt=n;	break;	}
+				}
+			}
+		if( trgt2!=0 )
+			break;
+		}
+	if( trgt!=0 )
+		{
+		n=FindFreeFire();
+		ref var fire = ref Fires[n];
+		if( n!=0 )
+			{
+			PlaySoundEffect( 0, SoundId.BomberBombRelease ,unit.Position.X, unit.Position.Y);
+			if(unit.Ammo!=0)
+				unit.Ammo--;		// 消費
+
+			if( unit.Ammo<=0)
+				{
+				unit.Ammo=0;		// 消費
+				unit.Target=0;
+				unit.Mode=UnitMode.Return;		// 航空機はメイン兵器ゼロで帰投
+				}
+
+			unit.ReloadTime=5;		// 再装填時間
+
+			if(unit.Ammo<=0)
+				unit.Mode=UnitMode.Return;		// 航空機はメイン兵器ゼロで帰投
+
+			fire.Target=(int)UnitKind.Bomber;
+			fire.Kind=kind;
+			fire.Position = new WorldPosition(unit.Position.X+((double)(-6+Random(13))), unit.Position.Y+((double)(-6+Random(13))));
+			fire.Direction=drctn2;
+			fire.Speed=0.3;
+			fire.Acceleration=+0.2;
+			fire.FinalSpeed=0.0;
+			fire.Ticks=0;
+			fire.FlightTime=70;
+			}
+		}
+
+	return false;
+	return true;
+	}
+
+private bool FirePlaneWeapons(FireKind kind, ref Unit unit, ref int trgt, ref double drctn2, int m)
+	{
+
+	double dstc =default;
+
+	if( kind==FireKind.Bullet && unit.Kind==UnitKind.Bomber )
+		{
+		// 航空機の全方向対空機銃
+		if( !BomberFireBullet(ref trgt, ref unit, ref drctn2, kind) )
+			return false;
+		}
+
+	if( kind==FireKind.Bullet && unit.Kind==UnitKind.Fighter )
+		{
+		// 戦闘機
+		// 前方固定銃
+		if( !FighterFireBullet(ref trgt, ref unit, kind) )
+			return false;
+		}
+
+	if( kind==FireKind.Bullet )
+		{
+		if( !PlaneFireBullet(ref trgt, ref unit, ref drctn2, kind) )
+			return false;
+		}
+
+		if( kind==FireKind.Torpedo && !(Units[trgt].Kind>=UnitKind.AirBase && Units[trgt].Kind<=UnitKind.Fortress) )
+			{
+			// 攻撃機
+			// トゥピード
+
+			//地上の上なら投雷しない。
+
+			if( !PlaneDropTorpedo(ref unit, ref trgt, ref drctn2, m, kind) )
+				return false;
+		}
+
+	if( kind==FireKind.Bomb && unit.Kind==UnitKind.Attacker )
+		{
+		// 攻撃機
+		// 爆撃
+		// 攻撃地点から攻撃目標地点への方位角
+		if( !AttackerDropBomb(ref trgt, ref unit, ref drctn2, m, kind) )
+			return false;
+		}
+
+	if( kind==FireKind.Bomb && unit.Kind==UnitKind.Bomber )
+		{
+		// 爆撃機
+		// 爆撃
+		if( !BomberDropBomb(ref trgt, ref unit, ref drctn2, kind) )
+			return false;
+		}
+	return true;
+	}
+
+private bool FireShipWeapons(FireKind kind, ref Unit unit, int m, ref double drctn2, ref double dstc, ref int trgt, ref int rng, ref Array3<int> fc, ref double drctn3)
+	{
+	if( kind==FireKind.CargoNavalBase || kind==FireKind.CargoAirBase || kind==FireKind.CargoInfantryBase || kind==FireKind.CargoPillboxes || kind==FireKind.CargoFortress )
+		{
+		// トランスポート
+		// 攻撃地点から攻撃目標地点への方位角
+		if( !LandCargo(ref unit, kind, m) )
+			return false;
+		}
+
+	if( kind==FireKind.RapidAntiAircraftShell )
+		{
+		// 自動の対空機関砲 Rapid Anti Air Shell
+		if( !ShipFireRapidAntiAircraftShell(ref unit, ref drctn2, ref dstc, kind) )
+			return false;
+		}
+
+	if( kind==FireKind.AntiSubmarineBomb && unit.Speed>=unit.MaxSpeed )
+		{
+		if( !ShipDropAntiSubmarineBomb(ref trgt, ref unit, kind) )
+			return false;
+		}
+
+	if( ( kind==FireKind.Gun || kind==FireKind.NavalBaseGun ) && trgt==0)	// ターゲットが選択されていない砲撃、
+		{
+		// 艦砲、自動射撃
+		if( !ShipFireGunWithoutTarget(ref unit, kind, ref rng, ref fc, ref drctn2, ref drctn3) )
+			return false;
+		}
+
+	// 選択でない自動の魚雷、主に駆逐艦
+	if( kind==FireKind.Torpedo && trgt==0)
+		{
+		//
+		if( !ShipFireTorpedoWithoutTarget(ref unit, ref drctn2, kind) )
+			return false;
+		}
+
+	// 選択された敵への魚雷、主に、潜水艦
+	if( kind==FireKind.Torpedo && trgt!=0)
+		{
+		//
+
+		if( !ShipFireTorpedoAtTarget(trgt, ref unit, ref drctn2, kind) )
+			return false;
+		}
+
+	if( kind==FireKind.AntiAircraftShell && trgt!=0 && Units[trgt].Category==UnitCategory.Plane )	// ターゲットが選択された対空砲
+		{
+		//	指定射撃
+		if( !ShipFireAntiAircraftShellAtTarget(trgt, ref unit, ref rng, ref fc) )
+			return false;
+		}
+
+	if( kind==FireKind.AntiAircraftShell && trgt==0 )
+		{
+		// 自動の対空砲 Anti Air Shell
+		if( !ShipFireAntiAircraftShellWithoutTarget(ref unit, ref drctn2, ref drctn3, ref dstc, ref rng, ref fc, kind) )
+			return false;
+		}
+
+	if( ( kind==FireKind.Gun || kind==FireKind.NavalBaseGun ) && trgt!=0 && Units[trgt].Category==UnitCategory.Ship )	// ターゲットが選択された砲撃
+		{
+		// 艦砲		指定射撃
+		if( !ShipFireGunAtTarget(trgt, ref unit, kind, ref rng, ref fc) )
+			return false;
+		}
+
+	if( kind==FireKind.Bullet )
+		{
+		// 艦船の対空機銃
+		if( !ShipFireBullet(ref trgt, ref unit, ref drctn2, kind) )
+			return false;
+		}
+	return true;
+	}
 
 //============================================================================
 // 射撃します。
 //----------------------------------------------------------------------------
-public void	fire_now(int m,int trgt,int kind)
+[Original("fire_now")]
+public void	FireWeapons(int m,int trgt,FireKind kind)
 	{
-	int	n,f,i,trgt2,rng=default /* C4701 */,s; Array3<int> fc = default;
-	double		turn,wrk_x,wrk_y,drctn,drctn2=default /* C4701 */,drctn3=default /* C4701 */,drctn4,drctn5,dstc=default /* C4701 */,dstc2,dstc3,wrk_x2,wrk_y2,trgt_x,trgt_y;
-	RECT		wrk_r;
-	int			cm_scrn_x,cm_scrn_y;
+	ref var unit = ref Units[m];
+	int	rng=default /* C4701 */,s; Array3<int> fc = default;
+	double		drctn2=default /* C4701 */,drctn3=default /* C4701 */,dstc=default /* C4701 */,dstc3;
 
-
-
-
-	if( (unit[m].kind==SP || unit[m].kind==AP || unit[m].kind==GF1 || unit[m].kind==GF2 || unit[m].kind==GF3) && unit[m].info[0]!=0	)
+	if( (unit.Kind==UnitKind.NavalBase || unit.Kind==UnitKind.AirBase || unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress) && unit.BuildTime!=0	)
 		{
 		//工事中
 		return;
 		}
 
-
-	if( unit[m].ctgry==SHIP )
+	if( unit.Category==UnitCategory.Ship )
 		{
 		//=========		 艦船の射撃制御		=========//
-		if( kind==TR_SP || kind==TR_AP || kind==TR_GF1 || kind==TR_GF2 || kind==TR_GF3 )
-			{
-			// トランスポート
-			// 攻撃地点から攻撃目標地点への方位角
-			wrk_x=(double)unit[m].info[6]-unit[m].x;
-			wrk_y=(double)unit[m].info[7]-unit[m].y;
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;	
-			drctn2=drctn;
-			drctn=drctn-unit[m].drctn;
-			if(drctn<0)
-				drctn=360+drctn;	
-
-			if( (int)drctn<=45||(int)drctn>=315)
-				{
-				// 距離を求めます
-				wrk_x=unit[m].x-(double)unit[m].info[6];
-				wrk_y=unit[m].y-(double)unit[m].info[7];
-				if(wrk_x==0)	wrk_x=1;
-				if(wrk_y==0)	wrk_y=1;
-
-				drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				if(drctn<0)
-					drctn=360+drctn;
-				if(wrk_x<0)
-					wrk_x=0-wrk_x;
-				if(wrk_y<0)
-					wrk_y=0-wrk_y;
-				if(drctn>=180)
-					drctn=drctn-180;
-				if(drctn>=90)
-					drctn=90-(drctn-90);
-				dstc=(wrk_x)/(cos(drctn*a_PI));
-
-#if NSPW_THE_NET
-				if( dstc>=0 && dstc<=160 )
-#else
-				if( dstc>=0 && dstc<=360 )
-#endif
-					{
-					// 発射！
-					unit[m].arm[1]=0;		// 残弾が０
-					unit[m].arm[2]=0;		// ターゲットをクリア
-
-
-					//unit[m].arm[0]=NTG;		//  輸送船はこれやっと来ます、武装品種
-					unit[m].arm[4]=0;		//  輸送船はこれやっと来ます、武装品種
-
-
-
-					//unit[m].used=0;
-
-
-					//unit[m].info[5]=RETURN;		// 航空機はメイン兵器ゼロで帰投
-
-					// 部下、多分戦闘機に帰投命令					
-/*
-					if(unit[m].is_ltl_ldr)
-						{
-						for(f=1;f<=max_unit;f++)
-							{
-							if( unit[f].used && unit[f].ltl_ldr==m )
-								{
-								unit[f].ltl_ldr=0;
-								unit[f].info[5]=RETURN;
-								}
-							}
-
-						unit[m].is_ltl_ldr=0;
-						}
-*/
-/*
-					if( !unit[m].is_ltl_ldr )
-						{
-						unit[m].pp_x[0]=unit[m].x;
-						unit[m].pp_y[0]=unit[m].y;
-						unit[m].pp_x[1]=MAP_RIGHT+1;
-						}
-*/
-
-					n=seek_fire_no();
-					if( n!=0 )
-						{
-						SoundPlayEffect( 0, SPL1 ,unit[m].x, unit[m].y);
-						fire[n].used=max_unit+1;
-						fire[n].kind=kind;
-						fire[n].x=unit[m].x;
-						fire[n].y=unit[m].y;
-						fire[n].drctn=drctn2;
-						fire[n].spd=1.0;
-						fire[n].spd_add=+0.0;
-						fire[n].last_spd=0.0;
-						fire[n].info[0]=0;
-						fire[n].info[1]=360;
-						fire[n].info[6]=unit[m].info[6];
-						fire[n].info[7]=unit[m].info[7];
-						fire[n].info[8]=unit[m].used;
-
-//if( cnct_game )
-//{
-						unit[m].used=0;
-						unit[m].hp[0]=0;
-
-						if( unit_info[0]!=0 && unit_info[3]==m )
-							unit_info[0]=0;
-
-
-						if( the_slct_unit==m )
-							{
-							the_slct_unit=0; slct_unit[1][m]=0;	cmbt_menu_kind=0; cmbt_menu_slctd=0; 
-							cls_all_slct_unit_p2(1);
-							bf_new_pp[1].cls=0;
-
-							if( unit_info[3]==m )
-								unit_info[0]=0;
-
-//							unit_info[0]=0;//unit[m].kind;
-//							unit_info[1]=0;				// 空母なら１で格納庫 ０ で飛行甲板
-//							unit_info[3]=0;//m;				// そのユニットの番号
-//							unit_info[4]=0;//unit[m].used;	// そのユニットの国籍
-
-							}
-//}
-						}
-					}
-				}
+		if( !FireShipWeapons(kind, ref unit, m, ref drctn2, ref dstc, ref trgt, ref rng, ref fc, ref drctn3) )
 			return;
-			}
-
-
-
-
-
-
-		if( kind==RAS )
-			{
-			// 自動の対空機関砲 Rapid Anti Air Shell
-			trgt2=0;
-			for(n=1;n<=max_unit;n++)
-				{	//敵を探す。
-				if( unit[n].used!=0 && unit[n].ctgry==PLANE && (((unit[n].kind==AT1||unit[n].kind==FT1) && unit[n].arm[1]!=0 )|| rnd(10)==0 )  && unit[n].info[0]==FLYING && unit[n].used!=unit[m].used && unit[n].found!=0 )
-				//if( unit[n].used && unit[n].ctgry==PLANE && unit[n].info[0]==FLYING && unit[n].used!=unit[m].used /*&& unit[n].hp[0]>=unit[n].hp[2]+1*/ && unit[n].found )
-					{
-					// 攻撃地点から攻撃目標地点への距離
-					wrk_x=unit[n].x-unit[m].x;
-					wrk_y=unit[n].y-unit[m].y;
-					if(wrk_x==0)	wrk_x=1;
-					if(wrk_y==0)	wrk_y=1;
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
-					if(wrk_x<0)
-						wrk_x=0-wrk_x;
-					if(wrk_y<0)
-						wrk_y=0-wrk_y;
-					if(drctn>=180)
-						drctn=drctn-180;
-					if(drctn>=90)
-						drctn=90-(drctn-90);
-					turn=(wrk_x)/(cos(drctn*a_PI));
-					turn=turn/10.0;
-
-
-					// 攻撃地点から攻撃目標地点への絶対方位、方位角
-					wrk_x=unit[n].x;
-					wrk_y=unit[n].y;
-					drctn=unit[n].drctn_add;
-					drctn2=unit[n].drctn;
-					for(f=0;f<=(int)turn;f++)
-						{
-						drctn2+=drctn;
-						if(drctn2<0)		drctn2=360+drctn2;
-						if(drctn2>=360)		drctn2=drctn2-360;
-						wrk_x+=cos(drctn2*a_PI)*(unit[n].spd); // とりあえずターン後
-						wrk_y+=sin(drctn2*a_PI)*(unit[n].spd);
-						}
-
-
-					wrk_x2=wrk_x;
-					wrk_y2=wrk_y;
-					wrk_x=wrk_x2-unit[m].x;
-					wrk_y=wrk_y2-unit[m].y;
-
-
-
-
-
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
-					drctn2=drctn;							
-
-
-					drctn=drctn-unit[m].drctn;
-					if(drctn<0)
-						drctn=360+drctn;				
-					drctn3=drctn;							// 方位角
-
-
-					
-					// 攻撃地点から攻撃目標地点への距離
-					wrk_x=wrk_x2-unit[m].x;
-					wrk_y=wrk_y2-unit[m].y;
-					if(wrk_x==0)	wrk_x=1;
-					if(wrk_y==0)	wrk_y=1;
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
-					if(wrk_x<0)
-						wrk_x=0-wrk_x;
-					if(wrk_y<0)
-						wrk_y=0-wrk_y;
-					if(drctn>=180)
-						drctn=drctn-180;
-					if(drctn>=90)
-						drctn=90-(drctn-90);
-					dstc=(wrk_x)/(cos(drctn*a_PI));
-	
-					/****				
-					switch( unit[m].kind )
-						{
-						case BB1:	rng=900; fc[0]=1;fc[1]=2;fc[2]=1;	break;
-						case CA1:	rng=600; fc[0]=1;fc[1]=1;fc[2]=1;	break;
-						case DD1:	rng=300; fc[0]=1;fc[1]=1;fc[2]=0;	break;
-						}
-					****/
-					if( dstc>=40 && dstc<=300/*480*/ )
-						{
-						trgt2=n;	
-						if( 1!=0 /*|| rnd(2)==0*/ )
-							break;
-						else
-							trgt2=0;
-						}
-					}
-				}
-			if( trgt2!=0 )
-				{
-			
-				/*
-				f=fc[2];	// 後面
-				if( drctn3>=315.0 || drctn3<=45.0 )
-					f=fc[0];	// 正面
-				if( (drctn3>=45.0 && drctn3<=135.0) || (drctn3>=225.0 && drctn3<=315.0) )
-					f=fc[1];	// 側面
-				*/
-
-
-				//for( i=1; i<=f ;i++ )
-					//{
-
-				n=seek_fire_no();
-				if( n!=0 )
-					{
-					if(unit[m].arm[1]!=0)
-						unit[m].arm[1]-=RAS_SZ;			// 弾薬消費
-
-					if(my_rnd(2)!=0 )
-						SoundPlayEffect( 0, AA_SHL3 ,unit[m].x, unit[m].y);
-					else
-						SoundPlayEffect( 0, AA_SHL5 ,unit[m].x, unit[m].y);
-
-					fire[n].used=trgt2;
-					fire[n].kind=kind;
-					fire[n].x=unit[m].x;
-					fire[n].y=unit[m].y;
-
-					drctn3=drctn2+(rnd(18)-9);			// 絶対方位
-					if(drctn3>=360)	drctn3=drctn3-360;				
-					if(drctn3<0)	drctn3=360+drctn3;				
-					fire[n].drctn=drctn3;
-
-					dstc2=dstc+(rnd( ((int)(dstc/5)) )-((int)(dstc/10))   );
-
-					fire[n].spd=10.0;
-					fire[n].spd_add=-0.00;
-					fire[n].last_spd=0;
-					fire[n].info[0]=(int)(dstc2/fire[n].spd);
-					fire[n].info[1]=0;
-					}
-					//}
-				}
-			return;
-			}
-
-
-
-
-		if( kind==ASB && unit[m].spd>=unit[m].max_spd )
-			{
-			for( n=1; n<=max_unit; n++)
-				{
-				trgt=n;
-				if( unit[trgt].used!=unit[m].used && unit[trgt].kind==SS1 && unit[trgt].info[6]!=0 && unit[trgt].found!=0 )
-					{	// 爆雷
-
-					// ptin dbg
-					wrk_r.top=(int)unit[trgt].info[8]+unit[trgt].info[9];//(int)unit[trgt].info[8]-unit[trgt].info[9];
-					wrk_r.right=(int)unit[trgt].info[7]+unit[trgt].info[9];
-					wrk_r.bottom=(int)unit[trgt].info[8]-unit[trgt].info[9];//(int)unit[trgt].info[8]+unit[trgt].info[9];
-					wrk_r.left=(int)unit[trgt].info[7]-unit[trgt].info[9];
-					if( pt_in_rect3(ref wrk_r,(int)unit[m].x,(int)unit[m].y)!=0 )
-						{
-						// 投雷
-						n=seek_fire_no();
-							if(n!=0)
-							{
-							if(unit[m].arm[1]!=0)
-								unit[m].arm[1]-=ASB_SZ;			// 弾薬消費
-							if(unit[m].arm[1]<0)
-								unit[m].arm[1]=0;
-
-							SoundPlayEffect( 0, SPL1 ,unit[m].x, unit[m].y);
-							fire[n].used=trgt;
-							fire[n].kind=kind;
-							fire[n].x=unit[m].x;
-							fire[n].y=unit[m].y;
-
-							drctn=unit[m].drctn;
-							if( unit[m].type==0 )
-								{
-								// ただの駆逐艦
-								drctn+=180;
-								drctn=(int)drctn%360;
-								fire[n].x+=cos(drctn*a_PI)*20;
-								fire[n].y+=sin(drctn*a_PI)*20;
-								}
-							else
-								{
-								// 対潜駆逐艦
-								drctn+=120+rnd(3)*60;
-								drctn=(int)drctn%360;
-								fire[n].x+=cos(drctn*a_PI)*35;
-								fire[n].y+=sin(drctn*a_PI)*35;
-								}
-
-							fire[n].drctn=0;
-							fire[n].spd=0;
-							fire[n].spd_add=0;
-							fire[n].last_spd=0;
-							fire[n].info[0]=0;
-							fire[n].info[1]=100;
-							}
-						return;
-						}
-					}
-				}
-			return;
-			}
-
-
-
-
-		if( ( kind==GUN || kind==SP_GUN ) && trgt==0)	// ターゲットが選択されていない砲撃、
-			{
-			// 艦砲、自動射撃
-			trgt2=0;
-			dstc2=2000;
-			for(n=1;n<=max_unit;n++)
-				{	//敵を探す。
-				if( unit[n].used!=0 && unit[n].ctgry==SHIP && !(unit[n].kind==SS1 && unit[n].info[6]!=0 ) && unit[n].used!=unit[m].used && unit[n].found!=0  && unit[n].kind!=CT1 )
-					{
-					// 攻撃地点から攻撃目標地点への距離
-					wrk_x=unit[n].x-unit[m].x;
-					wrk_y=unit[n].y-unit[m].y;
-					if(wrk_x==0)	wrk_x=1;
-					if(wrk_y==0)	wrk_y=1;
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
-					if(wrk_x<0)
-						wrk_x=0-wrk_x;
-					if(wrk_y<0)
-						wrk_y=0-wrk_y;
-					if(drctn>=180)
-						drctn=drctn-180;
-					if(drctn>=90)
-						drctn=90-(drctn-90);
-					turn=(wrk_x)/(cos(drctn*a_PI));
-					turn=turn/10.0;
-
-
-
-					// 敵の未来位置を求めます。
-					wrk_x=unit[n].x;
-					wrk_y=unit[n].y;
-					wrk_x+=cos(unit[n].drctn*a_PI)*(unit[n].spd*turn); // とりあえずターン後
-					wrk_y+=sin(unit[n].drctn*a_PI)*(unit[n].spd*turn);
-					wrk_x2=wrk_x;										// ターゲットの未来位置
-					wrk_y2=wrk_y;
-
-
-					// 攻撃地点から攻撃目標地点への絶対方位、方位角
-					wrk_x=wrk_x-unit[m].x;
-					wrk_y=wrk_y-unit[m].y;
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
-					drctn4=drctn;							// 絶対方位
-
-					drctn=drctn-unit[m].drctn;
-					if(drctn<0)
-						drctn=360+drctn;				
-					drctn5=drctn;							// 方位角
-
-
-					
-					// 攻撃地点から攻撃目標地点への距離
-					wrk_x=wrk_x2-unit[m].x;
-					wrk_y=wrk_y2-unit[m].y;
-					if(wrk_x==0)	wrk_x=1;
-					if(wrk_y==0)	wrk_y=1;
-
-
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
-					if(wrk_x<0)
-						wrk_x=0-wrk_x;
-					if(wrk_y<0)
-						wrk_y=0-wrk_y;
-					if(drctn>=180)
-						drctn=drctn-180;
-					if(drctn>=90)
-						drctn=90-(drctn-90);
-					dstc=(wrk_x)/(cos(drctn*a_PI));
-					
-					switch( unit[m].kind )
-						{
-						case BB1:	
-							if( kind==SP_GUN )
-								{
-								rng=1120; fc[0]=3;fc[1]=4;fc[2]=2;	
-								}
-							else
-								{
-								rng=600; fc[0]=3;fc[1]=4;fc[2]=2;	
-								}
-							break;
-						case CA1:	rng=500; fc[0]=1;fc[1]=2;fc[2]=1;	break;
-						case DD1:	rng=400; fc[0]=1;fc[1]=1;fc[2]=0;	break;
-						case SS1:	rng=200; fc[0]=1;fc[1]=1;fc[2]=0;	break;
-
-						case GF1:	rng=600; fc[0]=1;fc[1]=1;fc[2]=1;	break;
-						case GF2:	rng=800; fc[0]=2;fc[1]=2;fc[2]=2;	break;
-						case GF3:	rng=1000; fc[0]=3;fc[1]=3;fc[2]=3;	break;
-						}
-
-					if( (dstc>=(rng*0.3) || (unit[m].kind>=GF1&&unit[m].kind<=GF3) ) && dstc<=rng && dstc2>=dstc )
-						{	
-						trgt2=n;	
-						dstc2=dstc;
-						drctn2=drctn4;
-						drctn3=drctn5;							
-						//break;	
-						}
-					}
-				}
-
-
-
-			if( trgt2!=0 )
-				{
-				f=fc[2];	// 後面
-				if( drctn3>=315.0 || drctn3<=45.0 )
-					f=fc[0];	// 正面
-				if( (drctn3>=45.0 && drctn3<=135.0) || (drctn3>=225.0 && drctn3<=315.0) )
-					f=fc[1];	// 側面
-			
-
-				switch( unit[m].kind )
-					{
-					case BB1:
-					case GF3:
-						if( kind==SP_GUN )
-							{
-							SoundPlayEffect( 0, GUN3 ,unit[m].x, unit[m].y);	
-							break;
-							}
-						SoundPlayEffect( 0, GUN2+rnd(2) ,unit[m].x, unit[m].y);	
-						break;
-					case CA1:	
-					case GF2:	
-						SoundPlayEffect( 0, GUN1+rnd(2) ,unit[m].x, unit[m].y);
-						break;
-
-					case DD1:	
-					case SS1:	
-					case GF1:	
-						SoundPlayEffect( 0, GUN1 ,unit[m].x, unit[m].y);
-						break;
-					}
-
-
-				for( i=1; i<=f ;i++ )
-					{
-					n=seek_fire_no();
-					if( n!=0 )
-						{
-						if(unit[m].arm[1]!=0)
-							unit[m].arm[1]-=GUN_SZ;			// 弾薬消費
-
-						fire[n].used=trgt2;
-						fire[n].kind=GUN/*kind*/;
-						fire[n].x=unit[m].x;
-						fire[n].y=unit[m].y;
-
-						if( kind==SP_GUN )
-							{
-							if( rnd(2)==0 )
-								drctn3=drctn2+(double)((double)(rnd(50)-25)/10)    /*+(rnd(100)/100)*/;			// 絶対方位
-							else
-								drctn3=drctn2+(double)((double)(rnd(80)-40)/10)    /*+(rnd(100)/100)*/;			// 絶対方位
-							}
-						else
-							{
-							if( rnd(5+(unit[m].kind>=GF1&&unit[m].kind<=GF3 ? 1 : 0)*4  )==0 || ( unit[m].kind==BB1 && rnd( 4 )==0 ) )
-								drctn3=drctn2+(rnd(7)-3)+(rnd(100)/100);			// 絶対方位
-							else
-								drctn3=drctn2+(rnd(11)-5)+(rnd(100)/100);				// 絶対方位
-							}
-
-						if(drctn3>=360)	drctn3=drctn3-360;				
-						if(drctn3<0)	drctn3=360+drctn3;				
-						fire[n].drctn=drctn3;
-
-						if( kind==SP_GUN )
-							dstc2=dstc2+(rnd( ((int)(dstc2/12)) )-((int)(dstc2/24)));
-						else
-							dstc2=dstc2+(rnd( ((int)(dstc2/8)) )-((int)(dstc2/16)));
-
-
-						fire[n].spd=10.0;
-						fire[n].spd_add=((fire[n].spd)/(dstc2/fire[n].spd));
-						fire[n].last_spd=0;
-						fire[n].info[0]=(int)(dstc2/fire[n].spd)+1;
-						fire[n].info[1]=fire[n].info[0]/2;
-
-
-
-						}
-					}
-				}
-			return;
-			}
-
-
-
-
-
-		// 選択でない自動の魚雷、主に駆逐艦
-		if( kind==TPD && trgt==0)
-			{
-			// 
-			trgt2=0;
-			for(n=1;n<=max_unit;n++)
-				{	//敵を探す。
-				if( unit[n].used!=0 && unit[n].ctgry==SHIP && !(unit[n].kind==AP||unit[n].kind==SP||unit[n].kind==GF1||unit[n].kind==GF2||unit[n].kind==GF3) && unit[n].used!=unit[m].used && unit[n].found!=0 && !(unit[n].kind==SS1||unit[n].kind==DD1) )
-					{
-					// 攻撃地点から攻撃目標地点への距離
-					wrk_x=unit[n].x-unit[m].x;
-					wrk_y=unit[n].y-unit[m].y;
-					if(wrk_x==0)	wrk_x=1;
-					if(wrk_y==0)	wrk_y=1;
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
-					if(wrk_x<0)
-						wrk_x=0-wrk_x;
-					if(wrk_y<0)
-						wrk_y=0-wrk_y;
-					if(drctn>=180)
-						drctn=drctn-180;
-					if(drctn>=90)
-						drctn=90-(drctn-90);
-					turn=(wrk_x)/(cos(drctn*a_PI));
-					turn=turn/TPD_SPD;							// 撃つ弾の速度で割る
-
-
-					// 攻撃地点から攻撃目標地点への絶対方位、方位角
-					wrk_x=unit[n].x;
-					wrk_y=unit[n].y;
-					wrk_x+=cos(unit[n].drctn*a_PI)*(unit[n].spd*turn); 
-					wrk_y+=sin(unit[n].drctn*a_PI)*(unit[n].spd*turn);
-/****
-					drctn=unit[n].drctn_add;
-					drctn2=unit[n].drctn;
-					for(f=0;f<=(int)turn;f++)
-						{
-						drctn2+=drctn;
-						if(drctn2<0)		drctn2=360+drctn2;
-						if(drctn2>=360)		drctn2=drctn2-360;
-						wrk_x+=cos(drctn2*a_PI)*(unit[n].spd); // とりあえずターン後
-						wrk_y+=sin(drctn2*a_PI)*(unit[n].spd);
-						}
-***/
-					wrk_x2=wrk_x;					// 標的の未来位置
-					wrk_y2=wrk_y;					// 
-					wrk_x=wrk_x2-unit[m].x;
-					wrk_y=wrk_y2-unit[m].y;
-
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
-					drctn2=drctn;					// 未来位置への絶対角
-
-
-					drctn=drctn-unit[m].drctn;
-					if(drctn<0)
-						drctn=360+drctn;				
-					drctn3=drctn;							// 方位角
-
-
-					
-					// 攻撃地点から攻撃目標地点への距離
-					wrk_x=wrk_x2-unit[m].x;
-					wrk_y=wrk_y2-unit[m].y;
-					if(wrk_x==0)	wrk_x=1;
-					if(wrk_y==0)	wrk_y=1;
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
-					if(wrk_x<0)
-						wrk_x=0-wrk_x;
-					if(wrk_y<0)
-						wrk_y=0-wrk_y;
-					if(drctn>=180)
-						drctn=drctn-180;
-					if(drctn>=90)
-						drctn=90-(drctn-90);
-					dstc=(wrk_x)/(cos(drctn*a_PI));
-
-					
-
-					if( (dstc>=100 && dstc<=(500+(unit[m].used==JPN ? 1 : 0)*100)) && ((drctn3>=45&&drctn3<=135)||(drctn3>=225&&drctn3<=315)) )
-						{
-						// ばってん陸地があるけんしらべる
-						trgt2=n;
-
-						i=(int)(dstc/TPD_SPD);
-						for(f=1;f<=i;f++)
-							{
-							wrk_x=unit[m].x;
-							wrk_y=unit[m].y;
-							wrk_x+=cos(drctn2*a_PI)*(TPD_SPD*f); // とりあえずターン後
-							wrk_y+=sin(drctn2*a_PI)*(TPD_SPD*f);
-
-							if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
-								{
-								cm_scrn_x=(int)((wrk_x+(sprt[UNIT_JPN].wd/2)-MAP_LEFT)/sprt[MAP_TIP_NRML].wd);
-								cm_scrn_y=(int)((MAP_TOP-wrk_y+(sprt[UNIT_JPN].ht/2))/sprt[MAP_TIP_NRML].ht);
-								if( cmbt_map[cm_scrn_y][cm_scrn_x]>=1 )
-									{
-									trgt2=0;
-									break;
-									}
-								}
-							}
-
-
-						if(trgt2!=0)
-							{
-							if( rnd(3)==0 )
-								break;
-							else
-								trgt2=0;
-							}
-						}
-					}
-				}
-			if( trgt2!=0 )
-				{
-			
-				// 発射！
-				if(unit[m].arm[1]!=0)
-					unit[m].arm[1]-=TPD_SZ;
-				switch( unit[m].kind )
-					{
-					case CA1:
-					case DD1:		unit[m].arm[3]=RELOAD_TPD_DD;		break;	// 再装填時間
-					case SS1:		unit[m].arm[3]=RELOAD_TPD_SS;		
-									//撃った瞬間に発見される。
-									unit[m].info[7]=(int)(unit[m].x+rnd((50)*2)-50);
-									unit[m].info[8]=(int)(unit[m].y+rnd((50)*2)-50);
-
-									unit[m].info[9]=100;
-									unit[m].info[10]=300;
-
-									unit[m].found=1;
-
-
-
-
-
-									break;	// 再装填時間
-					}
-
-
-				if( unit[m].used==JPN  )
-					{
-					if(unit[m].kind==DD1)
-						i=2;						// 日本海軍駆逐艦魚雷３発
-					else
-						i=1;						// 日本海軍巡洋艦魚雷２はつ
-					}
-				else
-					{
-					i=0;						// 合衆国海軍魚雷１発
-					}
-
-				if( unit[m].kind!=SS1 )
-					SoundPlayEffect( 0, TPD_LOS ,unit[m].x, unit[m].y);
-
-				for( f=0; f<=i; f++)
-					{
-					n=seek_fire_no();
-					if( n!=0 )
-						{
-//						if( unit[m].kind!=SS1 )
-//							SoundPlayEffect( NULL, SPL1 ,unit[m].x, unit[m].y);
-						fire[n].used=trgt2;
-						fire[n].kind=kind;
-						fire[n].x=unit[m].x;
-						fire[n].y=unit[m].y;
-
-
-						switch( f )
-							{
-							case 0:	fire[n].drctn=drctn2;	break;
-							case 1:	fire[n].drctn=drctn2+5;	break;
-							case 2:	fire[n].drctn=drctn2-5;	break;
-							}
-						fire[n].drctn=(int)(fire[n].drctn)%360;
-
-
-/*****
-
-						if( unit[m].kind==SS1 )
-							{
-							fire[n].drctn=unit[m].drctn+355.0+(f*5);
-							while(fire[n].drctn>=360)
-								{fire[n].drctn=fire[n].drctn-360;}
-							}
-						else
-							{
-							if( ((int)drctn3>=45&&(int)drctn3<=135) )
-								fire[n].drctn=unit[m].drctn+85.0+(f*5);
-							else
-								fire[n].drctn=unit[m].drctn+265.0+(f*5);
-							if(fire[n].drctn>=360)
-								fire[n].drctn=fire[n].drctn-360;
-							}
-***/
-						fire[n].spd=TPD_SPD;
-						fire[n].spd_add=+0.0;
-						fire[n].last_spd=0.0;
-						if( unit[m].kind==SS1 )
-							fire[n].info[0]=1;
-						else
-							fire[n].info[0]=0;
-						fire[n].info[1]=275+(unit[m].used==JPN ? 1 : 0)*110;
-						fire[n].info[2]=30;
-						}
-					}
-				}
-			return;
-			}
-
-
-
-
-
-		// 選択された敵への魚雷、主に、潜水艦
-		if( kind==TPD && trgt!=0)
-			{
-			// 
-
-			trgt2=0;
-			n=trgt;
-			if( unit[n].used!=0 && unit[n].ctgry==SHIP && !(unit[n].kind==AP||unit[n].kind==SP||unit[n].kind==GF1||unit[n].kind==GF2||unit[n].kind==GF3) && unit[n].used!=unit[m].used && unit[n].found!=0 )
-				{
-
-	
-				// 攻撃地点から攻撃目標地点への距離
-				wrk_x=unit[n].x-unit[m].x;
-				wrk_y=unit[n].y-unit[m].y;
-				if(wrk_x==0)	wrk_x=1;
-				if(wrk_y==0)	wrk_y=1;
-				drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				if(drctn<0)
-					drctn=360+drctn;
-				if(wrk_x<0)
-					wrk_x=0-wrk_x;
-				if(wrk_y<0)
-					wrk_y=0-wrk_y;
-				if(drctn>=180)
-					drctn=drctn-180;
-				if(drctn>=90)
-					drctn=90-(drctn-90);
-				turn=(wrk_x)/(cos(drctn*a_PI));
-				turn=turn/TPD_SPD;							// 撃つ弾の速度で割る
-
-
-				// 攻撃地点から攻撃目標地点への絶対方位、方位角
-				wrk_x=unit[n].x;
-				wrk_y=unit[n].y;
-				wrk_x+=cos(unit[n].drctn*a_PI)*(unit[n].spd*turn); 
-				wrk_y+=sin(unit[n].drctn*a_PI)*(unit[n].spd*turn);
-				wrk_x2=wrk_x;					// 標的の未来位置
-				wrk_y2=wrk_y;					// 
-				wrk_x=wrk_x2-unit[m].x;
-				wrk_y=wrk_y2-unit[m].y;
-
-				drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				if(drctn<0)
-					drctn=360+drctn;
-				drctn2=drctn;					// 未来位置への絶対角
-
-
-				drctn=drctn-unit[m].drctn;
-				if(drctn<0)
-					drctn=360+drctn;				
-				drctn3=drctn;							// 方位角
-
-
-				
-				// 攻撃地点から攻撃目標地点への距離
-				wrk_x=wrk_x2-unit[m].x;
-				wrk_y=wrk_y2-unit[m].y;
-				if(wrk_x==0)	wrk_x=1;
-				if(wrk_y==0)	wrk_y=1;
-				drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				if(drctn<0)
-					drctn=360+drctn;
-				if(wrk_x<0)
-					wrk_x=0-wrk_x;
-				if(wrk_y<0)
-					wrk_y=0-wrk_y;
-				if(drctn>=180)
-					drctn=drctn-180;
-				if(drctn>=90)
-					drctn=90-(drctn-90);
-				dstc=(wrk_x)/(cos(drctn*a_PI));
-
-				
-				if( (dstc>=100 && dstc<=(550+(unit[m].used==JPN ? 1 : 0)*100)) && (drctn3<=5 || drctn3>=355) )
-					{
-					trgt2=n;	
-					i=(int)(dstc/TPD_SPD);
-					for(f=1;f<=i;f++)
-						{
-						wrk_x=unit[m].x;
-						wrk_y=unit[m].y;
-						wrk_x+=cos(drctn2*a_PI)*(TPD_SPD*f); // とりあえずターン後
-						wrk_y+=sin(drctn2*a_PI)*(TPD_SPD*f);
-
-						if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
-							{
-							cm_scrn_x=(int)((wrk_x+(sprt[UNIT_JPN].wd/2)-MAP_LEFT)/sprt[MAP_TIP_NRML].wd);
-							cm_scrn_y=(int)((MAP_TOP-wrk_y+(sprt[UNIT_JPN].ht/2))/sprt[MAP_TIP_NRML].ht);
-							if( cmbt_map[cm_scrn_y][cm_scrn_x]>=1 )
-								{
-								trgt2=0;
-								break;
-								}
-							}
-						}
-					}
-				}
-
-
-
-			if( trgt2!=0 )
-				{
-				// 発射！
-				if(unit[m].arm[1]!=0)
-					unit[m].arm[1]-=TPD_SZ;
-				switch( unit[m].kind )
-					{
-					case DD1:		unit[m].arm[3]=RELOAD_TPD_DD;		break;	// 再装填時間
-					case SS1:		unit[m].arm[3]=RELOAD_TPD_SS;		
-									//撃った瞬間に発見される。
-									unit[m].info[7]=(int)(unit[m].x+rnd((50)*2)-50);
-									unit[m].info[8]=(int)(unit[m].y+rnd((50)*2)-50);
-
-									unit[m].info[9]=100;
-									unit[m].info[10]=300;
-
-									unit[m].found=1;
-									break;	// 再装填時間
-					}
-
-
-				if( unit[m].kind!=SS1 )
-					{
-					SoundPlayEffect( 0, TPD_LOS ,unit[m].x, unit[m].y);
-					}
-				else
-					{
-					unit[m].arm[2]=0;
-					}
-					
-/*					SoundPlayEffect( NULL, SPL1 ,unit[m].x, unit[m].y);
-*/
-				for( f=0; f<=2; f++)
-					{
-					n=seek_fire_no();
-					if( n!=0 )
-						{
-//						if( unit[m].kind!=SS1 )
-//							SoundPlayEffect( NULL, SPL1 ,unit[m].x, unit[m].y);
-						fire[n].used=trgt2;
-						fire[n].kind=kind;
-						fire[n].x=unit[m].x;
-						fire[n].y=unit[m].y;
-
-						switch( f )
-							{
-							case 0:	fire[n].drctn=drctn2+5;	break;
-							case 1:	fire[n].drctn=drctn2;	break;
-							case 2:	fire[n].drctn=drctn2-5;	break;
-							}
-						fire[n].drctn=(int)(fire[n].drctn)%360;
-
-						fire[n].spd=TPD_SPD;
-						fire[n].spd_add=+0.0;
-						fire[n].last_spd=0.0;
-						if( unit[m].kind==SS1 )
-							fire[n].info[0]=1;
-						else
-							fire[n].info[0]=0;
-						fire[n].info[1]=290+(unit[m].used==JPN ? 1 : 0)*110;
-						fire[n].info[2]=30;
-						}
-					}
-
-
-
-				}
-			return;
-			}
-
-
-
-
-
-
-
-		if( kind==SHL && trgt!=0 && unit[trgt].ctgry==PLANE )	// ターゲットが選択された対空砲
-			{
-			//	指定射撃
-			if( unit[trgt].found==0 )
-				return;
-
-			trgt2=0;
-			n=trgt;
-			// 攻撃地点から攻撃目標地点への絶対方位、方位角
-
-			wrk_x=unit[n].x-unit[m].x;
-			wrk_y=unit[n].y-unit[m].y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			turn=(wrk_x)/(cos(drctn*a_PI));
-			turn=turn/10.0;
-
-			// ターゲットの未来位置を求めます。
-			wrk_x=unit[n].x;
-			wrk_y=unit[n].y;
-			wrk_x+=cos(unit[n].drctn*a_PI)*(unit[n].spd*turn); // ターン後
-			wrk_y+=sin(unit[n].drctn*a_PI)*(unit[n].spd*turn);
-			wrk_x2=wrk_x;										// 未来位置
-			wrk_y2=wrk_y;
-
-			
-			// ターゲットの方位関係を
-			wrk_x=wrk_x-unit[m].x;
-			wrk_y=wrk_y-unit[m].y;
-
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			drctn2=drctn;							
-
-
-			drctn=drctn-unit[m].drctn;
-			if(drctn<0)
-				drctn=360+drctn;				
-			drctn3=drctn;							// 方位角
-
-
-					
-			// 攻撃地点から攻撃目標地点への距離
-			wrk_x=wrk_x2-unit[m].x;
-			wrk_y=wrk_y2-unit[m].y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(cos(drctn*a_PI));
-
-
-
-
-					
-			switch( unit[m].kind )
-				{
-				case BB1:	rng=700; fc[0]=2;fc[1]=3;fc[2]=1;	break;
-				case CA1:	rng=600; fc[0]=1;fc[1]=2;fc[2]=1;	break;
-				case DD1:	rng=300; fc[0]=1;fc[1]=1;fc[2]=0;	break;
-
-				case GF1:	rng=500; fc[0]=1;fc[1]=1;fc[2]=1;	break;
-				case GF2:	rng=600; fc[0]=fc[1]=fc[2]=rnd(2)+1;	break;
-				case GF3:	rng=700; fc[0]=fc[1]=fc[2]=rnd(2)+2;	break;
-				}
-
-
-
-
-
-			if( dstc>=(rng*0.25) && dstc<=rng )
-				{	
-				trgt2=n;	
-				}
-
-			if( trgt2!=0 )
-				{
-				f=fc[2];	// 後面
-				if( drctn3>=315.0 || drctn3<=45.0 )
-					f=fc[0];	// 正面
-				if( (drctn3>=45.0 && drctn3<=135.0) || (drctn3>=225.0 && drctn3<=315.0) )
-					f=fc[1];	// 側面
-			
-
-
-				SoundPlayEffect( 0, AA_SHL2 ,unit[m].x, unit[m].y);
-				for( i=1; i<=f ;i++ )
-					{
-
-					n=seek_fire_no();
-					if( n!=0 )
-						{
-						if(unit[m].arm[1]!=0)
-							unit[m].arm[1]-=SHL_SZ;			// 弾薬消費
-						//SoundPlayEffect( NULL, GUN1+rnd(3) ,unit[m].x, unit[m].y);
-						fire[n].used=trgt2;
-
-
-						fire[n].kind=SHL;
-
-						fire[n].x=unit[m].x;
-						fire[n].y=unit[m].y;
-
-
-						drctn3=drctn2+(rnd(18)-9);			// 絶対方位
-						if(drctn3>=360)	drctn3=drctn3-360;				
-						if(drctn3<0)	drctn3=360+drctn3;				
-						fire[n].drctn=drctn3;
-
-						dstc2=dstc+(rnd( ((int)(dstc/10)) )-((int)(dstc/20))   );
-
-						fire[n].spd=10.0;
-						fire[n].spd_add=-0.00;
-						fire[n].last_spd=0;
-						fire[n].info[0]=(int)(dstc2/fire[n].spd);
-						fire[n].info[1]=0;
-
-
-						}
-					}
-				}
-			return;
-			}
-
-
-
-
-
-		if( kind==SHL && trgt==0 )
-			{
-			// 自動の対空砲 Anti Air Shell
-			trgt2=0;
-			for(n=1;n<=max_unit;n++)
-				{	//敵を探す。
-				if( unit[n].used!=0 && unit[n].ctgry==PLANE && (((unit[n].kind==AT1||unit[n].kind==BM1) && unit[n].arm[1]!=0 )|| rnd(10)==0 )  && unit[n].info[0]==FLYING && unit[n].used!=unit[m].used && unit[n].found!=0 )
-					{
-					// 攻撃地点から攻撃目標地点への距離
-					wrk_x=unit[n].x-unit[m].x;
-					wrk_y=unit[n].y-unit[m].y;
-					if(wrk_x==0)	wrk_x=1;
-					if(wrk_y==0)	wrk_y=1;
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
-					if(wrk_x<0)
-						wrk_x=0-wrk_x;
-					if(wrk_y<0)
-						wrk_y=0-wrk_y;
-					if(drctn>=180)
-						drctn=drctn-180;
-					if(drctn>=90)
-						drctn=90-(drctn-90);
-					turn=(wrk_x)/(cos(drctn*a_PI));
-					turn=turn/10.0;
-
-
-					// 攻撃地点から攻撃目標地点への絶対方位、方位角
-					wrk_x=unit[n].x;
-					wrk_y=unit[n].y;
-					drctn=unit[n].drctn_add;
-					drctn2=unit[n].drctn;
-					for(f=0;f<=(int)turn;f++)
-						{
-						drctn2+=drctn;
-						if(drctn2<0)		drctn2=360+drctn2;
-						if(drctn2>=360)		drctn2=drctn2-360;
-						wrk_x+=cos(drctn2*a_PI)*(unit[n].spd); // とりあえずターン後
-						wrk_y+=sin(drctn2*a_PI)*(unit[n].spd);
-						}
-
-
-					wrk_x2=wrk_x;
-					wrk_y2=wrk_y;
-					wrk_x=wrk_x2-unit[m].x;
-					wrk_y=wrk_y2-unit[m].y;
-
-
-
-
-
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
-					drctn2=drctn;							
-
-
-					drctn=drctn-unit[m].drctn;
-					if(drctn<0)
-						drctn=360+drctn;				
-					drctn3=drctn;							// 方位角
-
-
-					
-					// 攻撃地点から攻撃目標地点への距離
-					wrk_x=wrk_x2-unit[m].x;
-					wrk_y=wrk_y2-unit[m].y;
-					if(wrk_x==0)	wrk_x=1;
-					if(wrk_y==0)	wrk_y=1;
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
-					if(wrk_x<0)
-						wrk_x=0-wrk_x;
-					if(wrk_y<0)
-						wrk_y=0-wrk_y;
-					if(drctn>=180)
-						drctn=drctn-180;
-					if(drctn>=90)
-						drctn=90-(drctn-90);
-					dstc=(wrk_x)/(cos(drctn*a_PI));
-
-
-					
-					switch( unit[m].kind )
-						{
-						case BB1:	rng=700; fc[0]=2;fc[1]=3;fc[2]=1;	break;
-						case CA1:	rng=600; fc[0]=1;fc[1]=2;fc[2]=1;	break;
-						case DD1:	rng=300; fc[0]=1;fc[1]=1;fc[2]=0;	break;
-
-						case GF1:	rng=500; fc[0]=1;fc[1]=1;fc[2]=1;	break;
-						case GF2:	rng=600; fc[0]=fc[1]=fc[2]=rnd(2)+1;	break;
-						case GF3:	rng=700; fc[0]=fc[1]=fc[2]=rnd(2)+2;	break;
-						}
-
-						if( dstc>=(rng*0.25) && dstc<=rng )
-							{
-							trgt2=n;
-							break;
-/**
-							if( 1 || rnd(2)==0 )
-								break;
-							else
-								trgt2=0;
-**/
-							}
-					}
-				}
-			if( trgt2!=0 )
-				{
-			
-
-				f=fc[2];	// 後面
-				if( drctn3>=315.0 || drctn3<=45.0 )
-					f=fc[0];	// 正面
-				if( (drctn3>=45.0 && drctn3<=135.0) || (drctn3>=225.0 && drctn3<=315.0) )
-					f=fc[1];	// 側面
-			
-
-
-				//SoundPlayEffect( NULL, AA_SHL2 ,unit[m].x, unit[m].y);
-				for( i=1; i<=f ;i++ )
-					{
-					n=seek_fire_no();
-					if( n!=0 )
-						{
-						if(unit[m].arm[1]!=0)
-							unit[m].arm[1]-=SHL_SZ;			// 弾薬消費
-						SoundPlayEffect( 0, AA_SHL2 ,unit[m].x, unit[m].y);
-						fire[n].used=trgt2;
-						fire[n].kind=kind;
-						fire[n].x=unit[m].x;
-						fire[n].y=unit[m].y;
-
-						drctn3=drctn2+(rnd(18)-9);			// 絶対方位
-						if(drctn3>=360)	drctn3=drctn3-360;				
-						if(drctn3<0)	drctn3=360+drctn3;				
-						fire[n].drctn=drctn3;
-
-						dstc2=dstc+(rnd( ((int)(dstc/10)) )-((int)(dstc/20))   );
-
-						fire[n].spd=10.0;
-						fire[n].spd_add=-0.00;
-						fire[n].last_spd=0;
-						fire[n].info[0]=(int)(dstc2/fire[n].spd);
-						fire[n].info[1]=0;
-						}
-					}
-				}
-			return;
-			}
-
-
-
-
-
-
-		if( ( kind==GUN || kind==SP_GUN ) && trgt!=0 && unit[trgt].ctgry==SHIP )	// ターゲットが選択された砲撃
-			{
-			// 艦砲		指定射撃
-			if( unit[trgt].found==0 )
-				return;
-
-			trgt2=0;
-			n=trgt;
-			// 攻撃地点から攻撃目標地点への絶対方位、方位角
-
-			// 攻撃地点から攻撃目標地点への距離
-			wrk_x=unit[n].x-unit[m].x;
-			wrk_y=unit[n].y-unit[m].y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			turn=(wrk_x)/(cos(drctn*a_PI));
-			turn=turn/10.0;
-
-			// ターゲットの未来位置を求めます。
-			wrk_x=unit[n].x;
-			wrk_y=unit[n].y;
-			wrk_x+=cos(unit[n].drctn*a_PI)*(unit[n].spd*turn); // ターン後
-			wrk_y+=sin(unit[n].drctn*a_PI)*(unit[n].spd*turn);
-			wrk_x2=wrk_x;										// 未来位置
-			wrk_y2=wrk_y;
-
-	
-			// ターゲットの方位関係を
-			wrk_x=wrk_x-unit[m].x;
-			wrk_y=wrk_y-unit[m].y;
-
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			drctn2=drctn;							
-
-
-			drctn=drctn-unit[m].drctn;
-			if(drctn<0)
-				drctn=360+drctn;				
-			drctn3=drctn;							// 方位角
-
-
-			
-			// 攻撃地点から攻撃目標地点への距離
-			wrk_x=wrk_x2-unit[m].x;
-			wrk_y=wrk_y2-unit[m].y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(cos(drctn*a_PI));
-
-
-
-			// 水上艦への射程距離
-			switch( unit[m].kind )
-				{
-				case BB1:	
-					if( kind==SP_GUN )
-						{
-//						rng=750; fc[0]=3;fc[1]=4;fc[2]=2;	
-						rng=1120; fc[0]=3;fc[1]=5;fc[2]=2;	
-						}
-					else
-						{
-						rng=800; fc[0]=3;fc[1]=5;fc[2]=2;	
-						}
-//					rng=800; fc[0]=3;fc[1]=5;fc[2]=2;	
-					break;
-				case CA1:	rng=700; fc[0]=2;fc[1]=3;fc[2]=1;	break;
-				case DD1:	rng=400; fc[0]=1;fc[1]=1;fc[2]=0;	break;
-				case SS1:	rng=300; fc[0]=1;fc[1]=1;fc[2]=0;	break;
-
-				case GF1:	rng=600; fc[0]=1;fc[1]=1;fc[2]=1;	break;
-				case GF2:	rng=800; fc[0]=2;fc[1]=2;fc[2]=2;	break;
-				case GF3:	rng=1000; fc[0]=3;fc[1]=3;fc[2]=3;	break;
-				}
-
-
-			if( (dstc>=150  || (unit[m].kind>=GF1&&unit[m].kind<=GF3) ) && dstc<=rng )
-				{	
-				trgt2=n;	
-				}
-
-			if( trgt2!=0 )
-				{
-				f=fc[2];	// 後面
-				if( drctn3>=315.0 || drctn3<=45.0 )
-					f=fc[0];	// 正面
-				if( (drctn3>=45.0 && drctn3<=135.0) || (drctn3>=225.0 && drctn3<=315.0) )
-					f=fc[1];	// 側面
-			
-
-
-				switch( unit[m].kind )
-					{
-					case BB1:	
-					case GF3:
-						SoundPlayEffect( 0, GUN3 ,unit[m].x, unit[m].y);	
-						break;
-					case CA1:	
-					case GF2:	
-						SoundPlayEffect( 0, GUN2 ,unit[m].x, unit[m].y);
-						break;
-
-					case DD1:	
-					case SS1:	
-					case GF1:	
-						SoundPlayEffect( 0, GUN1+rnd(2) ,unit[m].x, unit[m].y);
-						break;
-					}
-
-				for( i=1; i<=f ;i++ )
-					{
-
-					n=seek_fire_no();
-					if( n!=0 )
-						{
-						unit[m].arm[1]-=GUN_SZ;			// 弾薬消費
-						fire[n].used=trgt2;
-
-
-						if( unit[trgt2].ctgry==SHIP )
-							{
-							fire[n].kind=GUN/*kind*/;
-	
-							fire[n].x=unit[m].x;
-							fire[n].y=unit[m].y;
-
-							if( kind==SP_GUN && 0!=0 )
-								{
-								if( rnd(3)!=0 )
-									drctn3=drctn2+(double)((double)(rnd(20)-10)/10)    /*+(rnd(100)/100)*/;			// 絶対方位
-								else
-									drctn3=drctn2+(double)((double)(rnd(60)-30)/10)    /*+(rnd(100)/100)*/;			// 絶対方位
-								}
-							else
-								{
-								if( rnd(5)==0 || ( unit[m].kind==BB1 && rnd(4)==0 ) )
-									drctn3=drctn2+(rnd(3)-1)+(rnd(100)/100);			// 絶対方位
-								else
-									drctn3=drctn2+(rnd(9)-4)+(rnd(100)/100);				// 絶対方位
-								}
-
-							if(drctn3>=360)	drctn3=drctn3-360;
-							if(drctn3<0)	drctn3=360+drctn3;
-							fire[n].drctn=drctn3;
-
-							if( kind==SP_GUN )
-								dstc2=dstc+(rnd( ((int)(dstc/12)) )-((int)(dstc/24)));
-							else
-								dstc2=dstc+(rnd( ((int)(dstc/8)) )-((int)(dstc/16))   );
-
-							fire[n].spd=10.0;
-							fire[n].spd_add=((fire[n].spd)/(dstc2/fire[n].spd));
-							fire[n].last_spd=0;
-							fire[n].info[0]=(int)(dstc2/fire[n].spd);
-							fire[n].info[1]=fire[n].info[0]/2;
-							}
-						else
-							{
-							fire[n].kind=SHL;
-
-							fire[n].x=unit[m].x;
-							fire[n].y=unit[m].y;
-
-							drctn3=drctn2+(rnd(20)-10);			// 絶対方位
-							if(drctn3>=360)	drctn3=drctn3-360;				
-							if(drctn3<0)	drctn3=360+drctn3;				
-							fire[n].drctn=drctn3;
-
-							dstc2=dstc+(rnd( ((int)(dstc/10)) )-((int)(dstc/20))   );
-
-							fire[n].spd=10.0;
-							fire[n].spd_add=-0.00;
-							fire[n].last_spd=0;
-							fire[n].info[0]=(int)(dstc2/fire[n].spd);
-							fire[n].info[1]=0;
-							}
-
-
-						}
-					}
-				}
-			return;
-			}
-
-
-
-		if( kind==BLT )
-			{
-			// 艦船の対空機銃 
-			trgt=0;
-			for(n=1;n<=max_unit;n++)
-				{	//敵を探す。
-				if( unit[n].used!=0 && ( (unit[n].ctgry==PLANE && unit[n].info[0]==FLYING )  || (unit[n].kind>=GF1 && unit[n].kind<=GF3 ) ) && unit[n].kind!=BM1
-				&& unit[n].used!=unit[m].used && unit[n].found!=0 )
-					{
-					// 全方位射撃可能
-					wrk_x=unit[n].x-unit[m].x;
-					wrk_y=unit[n].y-unit[m].y;
-
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				
-					if(drctn<0)
-						drctn=360+drctn;
-					drctn2=drctn+(25-rnd(50));
-//drctn2=drctn+(25);
-					drctn2=abs((int)drctn2)%360;
-
-
-					// 攻撃地点から攻撃目標地点への距離
-					wrk_x=unit[n].x-unit[m].x;
-					wrk_y=unit[n].y-unit[m].y;
-					if(wrk_x==0)	wrk_x=1;
-					if(wrk_y==0)	wrk_y=1;
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
-					if(wrk_x<0)
-						wrk_x=0-wrk_x;
-					if(wrk_y<0)
-						wrk_y=0-wrk_y;
-					if(drctn>=180)
-						drctn=drctn-180;
-					if(drctn>=90)
-						drctn=90-(drctn-90);
-					dstc=(wrk_x)/(cos(drctn*a_PI));
-					if( dstc<=100 )
-						{	
-						trgt=n;
-						if(rnd(2)==1 )
-//if(1 )
-							break;
-						else
-							trgt=0;
-						}
-					else
-						{
-						if( dstc<=300 )
-							{	
-							trgt=n;
-							if(rnd(8)==1 )
-//if( 1 )
-								break;	
-							else
-								trgt=0;
-							}
-						}
-					}
-				}
-
-
-			if( trgt!=0 )
-				{
-				n=seek_fire_no();
-				if( n!=0 )
-					{
-					//unit[m].arm[1]--;			// 弾薬消費
-					SoundPlayEffect( 0, AA_BLT3 ,unit[m].x, unit[m].y);
-					fire[n].used=trgt;
-					fire[n].kind=kind;
-					fire[n].x=unit[m].x;
-					fire[n].y=unit[m].y;
-					fire[n].drctn=drctn2;
-					fire[n].spd=17.0;
-					fire[n].spd_add=-0.1;
-					fire[n].last_spd=15.0;
-					}
-				}
-			return;
-			}
 		}
 
-
-
-
-	if( unit[m].ctgry==PLANE )
+	if( unit.Category==UnitCategory.Plane )
 		{
 				//=========		 航空機の射撃制御		=========//
-		if( kind==BLT && unit[m].kind==BM1 )
-			{
-			// 航空機の全方向対空機銃 
-			trgt=0;
-			for(n=1;n<=max_unit;n++)
-				{	//敵を探す。
-				if( unit[n].used!=0 && unit[n].ctgry==PLANE && unit[n].info[0]==FLYING && unit[n].used!=unit[m].used && unit[n].found!=0 )
-					{
-					// 全方位射撃可能
-					wrk_x=unit[n].x-unit[m].x;
-					wrk_y=unit[n].y-unit[m].y;
-
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				
-					if(drctn<0)
-						drctn=360+drctn;
-					drctn2=drctn+(rnd(20)-10);
-					drctn2=abs((int)drctn2)%360;
-
-
-					// 攻撃地点から攻撃目標地点への距離
-					wrk_x=unit[n].x-unit[m].x;
-					wrk_y=unit[n].y-unit[m].y;
-					if(wrk_x==0)	wrk_x=1;
-					if(wrk_y==0)	wrk_y=1;
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
-					if(wrk_x<0)
-						wrk_x=0-wrk_x;
-					if(wrk_y<0)
-						wrk_y=0-wrk_y;
-					if(drctn>=180)
-						drctn=drctn-180;
-					if(drctn>=90)
-						drctn=90-(drctn-90);
-					dstc=(wrk_x)/(cos(drctn*a_PI));
-					if( dstc<=100 )
-						{	
-						trgt=n;
-						if(rnd(2)==1 )
-							break;	
-						else
-							trgt=0;
-						}		
-					else
-						{
-						if( dstc<=300 )
-							{	
-							trgt=n;
-							if(rnd(8)==1 )
-								break;	
-							else
-								trgt=0;
-							}
-						}
-					}
-				}
-			if( trgt!=0 )
-				{
-				n=seek_fire_no();
-				if( n!=0 )
-					{
-					//unit[m].arm[1]--;			// 弾薬消費
-					SoundPlayEffect( 0, AA_BLT4 ,unit[m].x, unit[m].y);
-					fire[n].used=trgt;
-					fire[n].kind=kind;
-					fire[n].x=unit[m].x;
-					fire[n].y=unit[m].y;
-					fire[n].drctn=drctn2;
-					fire[n].spd=17.0;
-					fire[n].spd_add=-0.1;
-					fire[n].last_spd=15.0;
-					}
-				}
+		if( !FirePlaneWeapons(kind, ref unit, ref trgt, ref drctn2, m) )
 			return;
-			}
-
-
-
-
-
-		if( kind==BLT && unit[m].kind==FT1 )
-			{
-			// 戦闘機
-			// 前方固定銃
-			trgt=0;		dstc2=5000;
-			for(n=1;n<=max_unit;n++)
-				{	//前方の敵を探す。
-				if( unit[n].used!=0 && (( unit[n].ctgry==PLANE && unit[n].info[0]==FLYING ) || unit[n].kind==TR1 ) && unit[n].used!=unit[m].used )
-					{
-					// 距離を調べます
-					wrk_x=unit[n].x-unit[m].x;
-					wrk_y=unit[n].y-unit[m].y;
-					if(wrk_x==0)	wrk_x=1;
-					if(wrk_y==0)	wrk_y=1;
-
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
-					if(wrk_x<0)
-						wrk_x=0-wrk_x;
-					if(wrk_y<0)
-						wrk_y=0-wrk_y;
-					if(drctn>=180)
-						drctn=drctn-180;
-					if(drctn>=90)
-						drctn=90-(drctn-90);
-					dstc=(wrk_x)/(cos(drctn*a_PI));
-					if( dstc<=300 && dstc<=dstc2)
-						{
-						// 攻撃地点から攻撃目標地点への方位角
-						wrk_x=unit[n].x-unit[m].x;
-						wrk_y=unit[n].y-unit[m].y;
-						drctn=atan2(wrk_y,wrk_x)*RAD_to;
-						if(drctn<0)
-							drctn=360+drctn;
-						drctn=drctn-unit[m].drctn;
-						if(drctn<0)
-							drctn=360+drctn;
-						if( ((int)drctn<=10||(int)drctn>=350) && unit[m].arm[2]!=0 && unit[m].arm[2]==n )
-							{
-							dstc2=dstc;
-							trgt=n;
-							}
-						}
-
-
-					if( unit[m].arm[2]==0 )
-						{
-						if(unit[m].info[5]==RETURN)
-							{
-#if false
-							if( /*unit[m].used==cpu_side &&*/ unit[m].gas[0]>=(60-(unit[m].used==JPN)*10) && unit[m].arm[1] )
-								{
-								if( dstc<=300 && rnd(10)==0 )
-									{
-									if( unit[n].found )
-										{
-										unit[m].arm[2]=n;
-										}
-									}
-
-								}
-#endif
-							}
-						else
-							{
-							if( dstc<=400+(unit[n].kind==AT1||unit[n].kind==BM1 ? 1 : 0)*250 && rnd(10)==0 )
-								{
-								if( unit[n].found!=0 )
-									{
-									unit[m].arm[2]=n;
-									}
-								}
-							}
-						}
-					}
-				}
-
-
-
-
-			if( trgt!=0 )
-				{
-				n=seek_fire_no();
-				if( n!=0 )
-					{
-					unit[m].arm[1]--;			// 弾薬消費
-					if(unit[m].type==0)
-						{
-						// 艦上戦闘機
-						if(unit[m].used==JPN)
-							SoundPlayEffect( 0, AA_BLT1 ,unit[m].x, unit[m].y);
-						else
-							SoundPlayEffect( 0, AA_BLT2 ,unit[m].x, unit[m].y);
-						}
-					else
-						{
-						// 陸上戦闘機
-						SoundPlayEffect( 0, AA_SHL4 ,unit[m].x, unit[m].y);
-						}
-
-					fire[n].used=trgt;
-					fire[n].kind=kind;
-					fire[n].x=unit[m].x;
-					fire[n].y=unit[m].y;
-					fire[n].drctn=unit[m].drctn;
-					fire[n].spd=16.0;
-					fire[n].spd_add=-0.1;
-					fire[n].last_spd=14.0;
-					}
-				}
-			return;
-			}
-
-
-
-
-
-		if( kind==BLT )
-			{
-			trgt=0;
-			for(n=1;n<=max_unit;n++)
-				{	//後方の敵を探す。
-				if( unit[n].used!=0 && unit[n].ctgry==PLANE && unit[n].info[0]==FLYING && unit[n].used!=unit[m].used && unit[n].found!=0 )
-					{
-					// 攻撃地点から攻撃目標地点への方位角
-					wrk_x=unit[n].x-unit[m].x;
-					wrk_y=unit[n].y-unit[m].y;
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;	
-
-					drctn2=drctn+(rnd(10)-5);
-					if(drctn2>=360)	drctn2=drctn2-360;				
-					if(drctn2<0)	drctn2=360+drctn2;				
-
-					drctn=drctn-unit[m].drctn;
-					if(drctn<0)
-						drctn=360+drctn;
-					if( (int)drctn>=150&&(int)drctn<=210 )
-						{
-						wrk_x=unit[n].x-unit[m].x;
-						wrk_y=unit[n].y-unit[m].y;
-						if(wrk_x==0)	wrk_x=1;
-						if(wrk_y==0)	wrk_y=1;
-
-						drctn=atan2(wrk_y,wrk_x)*RAD_to;
-						if(drctn<0)
-							drctn=360+drctn;
-						if(wrk_x<0)
-							wrk_x=0-wrk_x;
-						if(wrk_y<0)
-							wrk_y=0-wrk_y;
-						if(drctn>=180)
-							drctn=drctn-180;
-						if(drctn>=90)
-							drctn=90-(drctn-90);
-						dstc=(wrk_x)/(cos(drctn*a_PI));
-						if( dstc<=300 )
-							{	trgt=n;	break;	}
-						}
-					}
-				}
-			if( trgt!=0 )
-				{
-				n=seek_fire_no();
-				if( n!=0 )
-					{
-					//unit[m].arm[1]--;			// 弾薬消費
-					SoundPlayEffect( 0, AA_BLT3 ,unit[m].x, unit[m].y);
-					fire[n].used=trgt;
-					fire[n].kind=kind;
-					fire[n].x=unit[m].x;
-					fire[n].y=unit[m].y;
-					fire[n].drctn=drctn2;
-					fire[n].spd=16.0;
-					fire[n].spd_add=-0.1;
-					fire[n].last_spd=14.0;
-					}
-				}
-			return;
-			}
-
-
-
-
-			if( kind==TPD && !(unit[trgt].kind>=AP && unit[trgt].kind<=GF3) )
-				{
-				// 攻撃機
-				// トゥピード
-
-				//地上の上なら投雷しない。
-
-				if(!( unit[m].y>MAP_TOP || unit[m].y<MAP_BOTTOM || unit[m].x<MAP_LEFT || unit[m].x>MAP_RIGHT ))
-					{
-					cm_scrn_x=(int)((unit[m].x+(sprt[UNIT_JPN].wd/2)-MAP_LEFT)/sprt[MAP_TIP_NRML].wd);
-					cm_scrn_y=(int)((MAP_TOP-unit[m].y+(sprt[UNIT_JPN].ht/2))/sprt[MAP_TIP_NRML].ht);
-
-					if( cmbt_map[cm_scrn_y][cm_scrn_x]>=1 
-						|| cmbt_map[cm_scrn_y-1][cm_scrn_x-1]>=1 
-						|| cmbt_map[cm_scrn_y-1][cm_scrn_x]>=1 
-						|| cmbt_map[cm_scrn_y-1][cm_scrn_x+1]>=1 
-
-						|| cmbt_map[cm_scrn_y][cm_scrn_x-1]>=1 
-						|| cmbt_map[cm_scrn_y][cm_scrn_x+1]>=1 
-
-						|| cmbt_map[cm_scrn_y+1][cm_scrn_x-1]>=1 
-						|| cmbt_map[cm_scrn_y+1][cm_scrn_x]>=1 
-						|| cmbt_map[cm_scrn_y+1][cm_scrn_x+1]>=1 
-						)
-						{
-						return;
-						}
-					}
-
-
-
-			// 攻撃地点から攻撃目標地点への方位角
-			if( unit[trgt].found==0 )
-				return;
-
-			trgt_x=unit[trgt].x;
-			trgt_y=unit[trgt].y;
-
-			trgt_x+=cos(unit[trgt].drctn*a_PI)*((AIR_TPD_LOS_DSTC/AIR_TPD_SPD)*unit[trgt].spd); // とりあえずターン後
-			trgt_y+=sin(unit[trgt].drctn*a_PI)*((AIR_TPD_LOS_DSTC/AIR_TPD_SPD)*unit[trgt].spd);
-
-
-			wrk_x=trgt_x-unit[m].x;
-			wrk_y=trgt_y-unit[m].y;
-
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;	
-
-			drctn=drctn-unit[m].drctn;
-			if(drctn<0)
-				drctn=360+drctn;	
-
-
-			if( (int)drctn<=45||(int)drctn>=315)
-				{
-				// 距離を求めます
-				wrk_x=unit[m].x-trgt_x;
-				wrk_y=unit[m].y-trgt_y;
-				if(wrk_x==0)	wrk_x=1;
-				if(wrk_y==0)	wrk_y=1;
-
-				drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				if(drctn<0)
-					drctn=360+drctn;
-	drctn2=drctn;					// 未来位置への絶対角
-				if(wrk_x<0)
-					wrk_x=0-wrk_x;
-				if(wrk_y<0)
-					wrk_y=0-wrk_y;
-				if(drctn>=180)
-					drctn=drctn-180;
-				if(drctn>=90)
-					drctn=90-(drctn-90);
-				dstc=(wrk_x)/(cos(drctn*a_PI));
-
-
-
-
-
-				if( dstc>=100 && dstc<=AIR_TPD_LOS_DSTC )
-					{
-					i=(int)(dstc/2);
-					for(f=1;f<=i;f++)
-						{
-						wrk_x=unit[m].x;
-						wrk_y=unit[m].y;
-						wrk_x+=cos(drctn2*a_PI)*(2*f); // とりあえずターン後
-						wrk_y+=sin(drctn2*a_PI)*(2*f);
-
-						if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
-							{
-							cm_scrn_x=(int)((wrk_x+(sprt[UNIT_JPN].wd/2)-MAP_LEFT)/sprt[MAP_TIP_NRML].wd);
-							cm_scrn_y=(int)((MAP_TOP-wrk_y+(sprt[UNIT_JPN].ht/2))/sprt[MAP_TIP_NRML].ht);
-							if( cmbt_map[cm_scrn_y][cm_scrn_x]>=1 )
-								{
-								return;
-								}
-							}
-						}
-
-
-					// 発射！
-					unit[m].arm[1]=0;		// 魚雷が０
-					unit[m].arm[2]=0;		// ターゲットをクリア
-
-					unit[m].info[5]=RETURN;		// 航空機はメイン兵器ゼロで帰投
-
-
-					// 雷撃時に適当に移動さす
-					wrk_x=unit[m].x;
-					wrk_y=unit[m].y;
-					drctn=unit[m].drctn;
-
-					if(rnd(2)==0)
-						drctn+=(70-rnd(40));
-					else
-						drctn-=(70-rnd(40));
-
-					drctn=(int)(drctn)%360;
-
-
-					wrk_x+=cos(drctn*a_PI)*300; 
-					wrk_y+=sin(drctn*a_PI)*300;
-
-					unit[m].em_x=wrk_x;
-					unit[m].em_y=wrk_y;
-					unit[m].em_flg[0]=20+rnd(300);
-
-
-					
-
-
-
-
-					// 部下、多分戦闘機に帰投命令					
-					if(unit[m].is_ltl_ldr!=0)
-						{
-						for(f=1;f<=max_unit;f++)
-							{
-							if( unit[f].used!=0 && unit[f].ltl_ldr==m && unit[f].info[0]==FLYING )
-								{
-								unit[f].ltl_ldr=0;
-								unit[f].info[5]=RETURN;
-
-unit[f].pp_x[0]=unit[m].x;
-unit[f].pp_y[0]=unit[m].y;
-unit[f].pp_x[1]=MAP_RIGHT+1;
-
-								}
-							}
-
-						unit[m].is_ltl_ldr=0;
-						}
-
-
-					if( unit[m].is_ltl_ldr==0 )
-						{
-						unit[m].pp_x[0]=unit[m].x;
-						unit[m].pp_y[0]=unit[m].y;
-						unit[m].pp_x[1]=MAP_RIGHT+1;
-						}
-
-					n=seek_fire_no();
-					if( n!=0 )
-						{
-						SoundPlayEffect( 0, SPL1 ,unit[m].x, unit[m].y);
-						fire[n].used=trgt;
-						fire[n].kind=kind;
-						fire[n].x=unit[m].x;
-						fire[n].y=unit[m].y;
-						//fire[n].drctn=(int)(unit[m].drctn+(2-rnd(4)))%360;
-						fire[n].drctn=(int)unit[m].drctn;
-						fire[n].spd=AIR_TPD_SPD;
-						fire[n].spd_add=+0.0;
-						fire[n].last_spd=0.0;
-						fire[n].info[0]=0;
-						fire[n].info[1]=240;
-						fire[n].info[2]=15;
-						}
-					}
-				}
-			return;
-			}
-
-
-
-
-		if( kind==BOM && unit[m].kind==AT1 )
-			{
-			// 攻撃機
-			// 爆撃
-			// 攻撃地点から攻撃目標地点への方位角
-			if( unit[trgt].found==0 )
-				return;
-			wrk_x=unit[trgt].x;
-			wrk_y=unit[trgt].y;
-			wrk_x+=cos(unit[trgt].drctn*a_PI)*(unit[trgt].spd*70.0);
-			wrk_y+=sin(unit[trgt].drctn*a_PI)*(unit[trgt].spd*70.0);
-
-			wrk_x2=wrk_x;	wrk_y2=wrk_y;
-
-
-
-			wrk_x=wrk_x-unit[m].x;
-			wrk_y=wrk_y-unit[m].y;
-
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;	
-			drctn2=drctn;
-			drctn=drctn-unit[m].drctn;
-			if(drctn<0)
-				drctn=360+drctn;	
-
-			if( (int)drctn<=30/*45*/||(int)drctn>=330/*315*/ )
-				{
-				// 距離を求めます
-				wrk_x=unit[m].x-wrk_x2;
-				wrk_y=unit[m].y-wrk_y2;
-				if(wrk_x==0)	wrk_x=1;
-				if(wrk_y==0)	wrk_y=1;
-
-				drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				if(drctn<0)
-					drctn=360+drctn;
-				if(wrk_x<0)
-					wrk_x=0-wrk_x;
-				if(wrk_y<0)
-					wrk_y=0-wrk_y;
-				if(drctn>=180)
-					drctn=drctn-180;
-				if(drctn>=90)
-					drctn=90-(drctn-90);
-				dstc=(wrk_x)/(cos(drctn*a_PI));
-
-
-
-
-//				if( dstc>=170/*40*/ && dstc<=180/*50*/  )
-				if( ( dstc>=170 && dstc<=180 && unit[m].used==USA ) || ( dstc>=35 && dstc<=65 && unit[m].used==JPN ))
-					{
-					// 発射！
-//					SoundPlayEffect( NULL, BOMB_OFF ,unit[m].x, unit[m].y);
-
-					if( unit[m].used==USA )
-						unit[m].spd+=unit[m].a_spd_add*700;
-					else
-						{
-						wrk_x=unit[m].x;
-						wrk_y=unit[m].y;
-						drctn=unit[m].drctn;
-						wrk_x+=cos(drctn*a_PI)*300; 
-						wrk_y+=sin(drctn*a_PI)*300;
-						unit[m].em_x=wrk_x;
-						unit[m].em_y=wrk_y;
-						unit[m].em_flg[0]=150+rnd(50);
-						}
-
-					unit[m].arm[1]=0;		// 消費
-					unit[m].arm[2]=0;		
-
-					unit[m].info[5]=RETURN;		// 航空機はメイン兵器ゼロで帰投
-
-
-					// 部下、多分戦闘機に帰投命令					
-					if(unit[m].is_ltl_ldr!=0)
-						{
-						for(f=1;f<=max_unit;f++)
-							{
-							if( unit[f].used!=0 && unit[f].ltl_ldr==m && unit[f].info[0]==FLYING)
-								{
-								unit[f].ltl_ldr=0;
-								unit[f].info[5]=RETURN;
-
-unit[f].pp_x[0]=unit[m].x;
-unit[f].pp_y[0]=unit[m].y;
-unit[f].pp_x[1]=MAP_RIGHT+1;
-
-								}
-							}
-						unit[m].is_ltl_ldr=0;
-						}
-
-
-
-					n=seek_fire_no();
-					if( n!=0 )
-						{
-//						fire[n].used=trgt;
-						fire[n].used=AT1;
-						fire[n].kind=kind;
-						fire[n].x=unit[m].x+(3-rnd(6));
-						fire[n].y=unit[m].y+(3-rnd(6));
-						fire[n].drctn=drctn2;
-	
-						if(unit[m].used==JPN)
-							{
-							fire[n].x+=cos(fire[n].drctn*a_PI)*(13);
-							fire[n].y+=sin(fire[n].drctn*a_PI)*(13);
-							}
-						else
-							{
-							fire[n].x+=cos(fire[n].drctn*a_PI)*(130);
-							fire[n].y+=sin(fire[n].drctn*a_PI)*(130);
-							}
-
-						fire[n].spd=0.3;
-						fire[n].spd_add=+0.2;
-						fire[n].last_spd=0.0;
-						if(unit[m].used==JPN)
-							{
-							fire[n].info[0]=10;
-							fire[n].info[1]=68+rnd(5);
-							}
-						else
-							{
-							fire[n].info[0]=0;
-							fire[n].info[1]=70;
-							}
-							
-						}
-
-//					if( unit[m].used==USA )
-//						{
-						// もう一発
-						n=seek_fire_no();
-						if( n!=0 )
-							{
-							fire[n].used=trgt;
-							fire[n].kind=kind;
-							fire[n].x=unit[m].x+(20-rnd(40));
-							fire[n].y=unit[m].y+(20-rnd(40));
-							fire[n].drctn=drctn2;
-	
-							if(unit[m].used==JPN)
-								{
-								fire[n].x+=cos(fire[n].drctn*a_PI)*(13);
-								fire[n].y+=sin(fire[n].drctn*a_PI)*(13);
-								}
-							else
-								{
-								fire[n].x+=cos(fire[n].drctn*a_PI)*(130);
-								fire[n].y+=sin(fire[n].drctn*a_PI)*(130);
-								}
-
-							fire[n].spd=0.3;
-							fire[n].spd_add=+0.2;
-							fire[n].last_spd=0.0;
-
-							if(unit[m].used==JPN)
-								{
-								fire[n].info[0]=10;
-								fire[n].info[1]=75+(5-rnd(10));
-								}
-							else
-								{
-								fire[n].info[0]=0;
-								fire[n].info[1]=70+(5-rnd(10));
-								}
-							}
-//						}
-					}
-				}
-			return;
-			}
-
-		if( kind==BOM && unit[m].kind==BM1 )
-			{	
-			// 爆撃機
-			// 爆撃
-			trgt2=0;
-			if(trgt!=0)
-				trgt2=trgt;
-			for(n=1;n<=max_unit;n++)
-				{	//前方の敵を探す。
-				if(trgt2!=0)
-					{ n=trgt2; trgt=0; }
-				if( unit[n].used!=0 && unit[n].ctgry==SHIP && unit[n].used!=unit[m].used && unit[n].found!=0 )
-					{
-					// 攻撃地点から攻撃目標地点への方位角
-					wrk_x=unit[n].x-unit[m].x;
-					wrk_y=unit[n].y-unit[m].y;
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;	
-					drctn2=drctn;
-
-					drctn2=drctn+(rnd(10)-5);
-					if(drctn2>=360)	drctn2=drctn2-360;				
-					if(drctn2<0)	drctn2=360+drctn2;				
-
-					drctn=drctn-unit[m].drctn;
-					if(drctn<0)
-						drctn=360+drctn;
-					if( (int)drctn<=30 || (int)drctn>=330 )
-						{
-						wrk_x=unit[n].x-unit[m].x;
-						wrk_y=unit[n].y-unit[m].y;
-						if(wrk_x==0)	wrk_x=1;
-						if(wrk_y==0)	wrk_y=1;
-
-						drctn=atan2(wrk_y,wrk_x)*RAD_to;
-						if(drctn<0)
-							drctn=360+drctn;
-						if(wrk_x<0)
-							wrk_x=0-wrk_x;
-						if(wrk_y<0)
-							wrk_y=0-wrk_y;
-						if(drctn>=180)
-							drctn=drctn-180;
-						if(drctn>=90)
-							drctn=90-(drctn-90);
-						dstc=(wrk_x)/(cos(drctn*a_PI));
-						if( dstc>=30 && dstc<=60 )
-							{	trgt=n;	break;	}
-						}
-					}
-				if( trgt2!=0 )
-					break;
-				}
-			if( trgt!=0 )
-				{
-				n=seek_fire_no();
-				if( n!=0 )
-					{
-					SoundPlayEffect( 0, BB_BOMB ,unit[m].x, unit[m].y);
-					if(unit[m].arm[1]!=0)
-						unit[m].arm[1]--;		// 消費
-
-					if( unit[m].arm[1]<=0)
-						{
-						unit[m].arm[1]=0;		// 消費
-						unit[m].arm[2]=0;		
-						unit[m].info[5]=RETURN;		// 航空機はメイン兵器ゼロで帰投
-						}
-
-					unit[m].arm[3]=5;		// 再装填時間
-
-					if(unit[m].arm[1]<=0)
-						unit[m].info[5]=RETURN;		// 航空機はメイン兵器ゼロで帰投
-
-
-					fire[n].used=BM1;
-					fire[n].kind=kind;
-					fire[n].x=unit[m].x+((double)(-6+rnd(13)));
-					fire[n].y=unit[m].y+((double)(-6+rnd(13)));
-					fire[n].drctn=drctn2;
-					fire[n].spd=0.3;
-					fire[n].spd_add=+0.2;
-					fire[n].last_spd=0.0;
-					fire[n].info[0]=0;
-					fire[n].info[1]=70;
-					}
-				}
-
-
-
-
-			return;
-			}
 
 		}
 	}
 
-
-
-
-
-
-
-
-
 //============================================================================
 // 編隊のポジションをＰｐ＿ｘｙ「０」にセットします。
 //----------------------------------------------------------------------------
-public void	set_pos_of_dynmc(int n)
+[Original("set_pos_of_dynmc")]
+public void	SetDynamicDestination(int n)
 	{
 	double			angl=default /* C4701 */,dstc=default /* C4701 */;
 	int				pt,pos_of_no,a,b,c;
 	int				nums;
 
-
-
-
-	if( unit[n].ctgry==PLANE )
+	if( Units[n].Category==UnitCategory.Plane )
 		{
-	
+
 		// 航空機編隊の制御
 
-		pt=unit[n].ltl_ldr;
-		
-		if(unit[pt].info[0]==PARKING && unit[pt].info[5]==RETURN && unit[n].info[0]==FLYING )
+		pt=Units[n].GroupLeader;
+
+		if(Units[pt].PlaneState==UnitState.Parked && Units[pt].Mode==UnitMode.Return && Units[n].PlaneState==UnitState.Flying )
 			{
-			unit[n].ltl_ldr=0;
+			Units[n].GroupLeader=0;
 			return;
 			}
 
+		pos_of_no=Units[n].FormationNumber;
 
-		pos_of_no=unit[n].no;
-
-		if(unit[pt].ctgry==SHIP)	// こっちは飛行機だが指揮が艦船の場合
+		if(Units[pt].Category==UnitCategory.Ship)	// こっちは飛行機だが指揮が艦船の場合
 			{
-			angl=(double)rnd(359);
-			dstc=(double)rnd(500+150);
-			unit[n].info[5]=MOVE;
+			angl=(double)Random(359);
+			dstc=(double)Random(500+150);
+			Units[n].Mode=UnitMode.Move;
 
 			// 目的地を決定
-			unit[n].pp_x[0]=unit[pt].x+cos(angl*a_PI)*dstc;
-			unit[n].pp_y[0]=unit[pt].y+sin(angl*a_PI)*dstc;
-			unit[n].pp_x[1]=MAP_RIGHT+1;
+			Units[n].PathX[0]=Units[pt].Position.X+CosDegrees(angl)*dstc;
+			Units[n].PathY[0]=Units[pt].Position.Y+SinDegrees(angl)*dstc;
+			Units[n].PathX[1]=MAP_RIGHT+1;
 			}
 		else
-			{	
+			{
 			// 指揮が通常移動
-			nums=5/*6*/;			// １小隊何機か
+			nums=5;			// １小隊何機か
 
 			// 何番編隊か
-			a=unit[n].no/nums;
+			a=Units[n].FormationNumber/nums;
 			// 何番機か
-			b=unit[n].no%nums;
-
-			//if(a==1&&b==1)
-			//	dstc=250+320;
-				
+			b=Units[n].FormationNumber%nums;
 
 			switch( b )
 				{
@@ -2651,28 +2278,25 @@ public void	set_pos_of_dynmc(int n)
 					angl=0;	dstc=0;
 					break;
 				case 1:		// 2番機
-					angl=unit[pt].drctn-90.0-45.0;	dstc=60*0.80;
+					angl=Units[pt].Direction-90.0-45.0;	dstc=60*0.80;
 					break;
-				case 2:		// 
-					angl=unit[pt].drctn-90.0-45.0-90.0;	dstc=60*0.80;
+				case 2:		//
+					angl=Units[pt].Direction-90.0-45.0-90.0;	dstc=60*0.80;
 					break;
-				case 3:		// 
-					angl=unit[pt].drctn-90.0-45.0;	dstc=120*0.80;
+				case 3:		//
+					angl=Units[pt].Direction-90.0-45.0;	dstc=120*0.80;
 					break;
-				case 4:		// 
-					angl=unit[pt].drctn-90.0-45.0-90.0;	dstc=120*0.80;
+				case 4:		//
+					angl=Units[pt].Direction-90.0-45.0-90.0;	dstc=120*0.80;
 					break;
-				case 5:		// 
-					angl=unit[pt].drctn-90.0-45.0-45.0;	dstc=100*0.80;
+				case 5:		//
+					angl=Units[pt].Direction-90.0-45.0-45.0;	dstc=100*0.80;
 					break;
 				}
 
-
-
 			// 目的地を決定
-			unit[n].pp_x[0]=unit[pt].x+cos(angl*a_PI)*dstc;
-			unit[n].pp_y[0]=unit[pt].y+sin(angl*a_PI)*dstc;
-
+			Units[n].PathX[0]=Units[pt].Position.X+CosDegrees(angl)*dstc;
+			Units[n].PathY[0]=Units[pt].Position.Y+SinDegrees(angl)*dstc;
 
 			if( a>=0 )
 				{
@@ -2680,109 +2304,96 @@ public void	set_pos_of_dynmc(int n)
 				switch( a )
 					{
 					case 0:		// 1番編隊
-						angl=unit[pt].drctn;	dstc=35;
+						angl=Units[pt].Direction;	dstc=35;
 						break;
 					case 1:		// 2番編隊
-						angl=unit[pt].drctn-90.0-45.0;	dstc=180*0.80;
+						angl=Units[pt].Direction-90.0-45.0;	dstc=180*0.80;
 						break;
-					case 2:		// 
-						angl=unit[pt].drctn-90.0-45.0-90.0;	dstc=180*0.80;
+					case 2:		//
+						angl=Units[pt].Direction-90.0-45.0-90.0;	dstc=180*0.80;
 						break;
-					case 3:		// 
-						angl=unit[pt].drctn-90.0-45.0;	dstc=360*0.80;
+					case 3:		//
+						angl=Units[pt].Direction-90.0-45.0;	dstc=360*0.80;
 						break;
-					case 4:		// 
-						angl=unit[pt].drctn-90.0-45.0-45.0;	dstc=300*0.80;
+					case 4:		//
+						angl=Units[pt].Direction-90.0-45.0-45.0;	dstc=300*0.80;
 						break;
-					case 5:		// 
-						angl=unit[pt].drctn-90.0-45.0-90.0;	dstc=360*0.80;
+					case 5:		//
+						angl=Units[pt].Direction-90.0-45.0-90.0;	dstc=360*0.80;
 						break;
 
-
-					case 6:		// 
-						angl=unit[pt].drctn-90.0-45.0;	dstc=540*0.80;
+					case 6:		//
+						angl=Units[pt].Direction-90.0-45.0;	dstc=540*0.80;
 						break;
-					case 7:		// 
-						angl=unit[pt].drctn-90.0-45.0-22.5;	dstc=480*0.80;
+					case 7:		//
+						angl=Units[pt].Direction-90.0-45.0-22.5;	dstc=480*0.80;
 						break;
-					case 8:		// 
-						angl=unit[pt].drctn-90.0-45.0-45.0-22.5;	dstc=480*0.80;
+					case 8:		//
+						angl=Units[pt].Direction-90.0-45.0-45.0-22.5;	dstc=480*0.80;
 						break;
-					case 9:		// 
-						angl=unit[pt].drctn-90.0-45.0-90.0;		dstc=540*0.80;
+					case 9:		//
+						angl=Units[pt].Direction-90.0-45.0-90.0;		dstc=540*0.80;
 						break;
-					case 10:		// 
-						angl=unit[pt].drctn-90.0-45.0-11.2;		dstc=640*0.80;
+					case 10:		//
+						angl=Units[pt].Direction-90.0-45.0-11.2;		dstc=640*0.80;
 						break;
-					case 11:		// 
-						angl=unit[pt].drctn-90.0-45.0-90.0+11.2;		dstc=640*0.80;
+					case 11:		//
+						angl=Units[pt].Direction-90.0-45.0-90.0+11.2;		dstc=640*0.80;
 						break;
 					}
 
-
 				// 目的地を決定
-				unit[n].pp_x[0]=unit[n].pp_x[0]+cos(angl*a_PI)*dstc;
-				unit[n].pp_y[0]=unit[n].pp_y[0]+sin(angl*a_PI)*dstc;
-				unit[n].pp_x[1]=MAP_RIGHT+1;
+				Units[n].PathX[0]=Units[n].PathX[0]+CosDegrees(angl)*dstc;
+				Units[n].PathY[0]=Units[n].PathY[0]+SinDegrees(angl)*dstc;
+				Units[n].PathX[1]=MAP_RIGHT+1;
 				}
 			}
 		}
 	else
 		{
 		// 艦隊制御
-		pt=unit[n].ltl_ldr;
-		angl=unit[n].to_ldr_drctn+unit[pt].drctn;
+		pt=Units[n].GroupLeader;
+		angl=Units[n].DirectionToLeader+Units[pt].Direction;
 		if( angl>=360 )
 			angl = angl-360;
-		dstc=unit[n].to_ldr_dstc;
+		dstc=Units[n].DistanceToLeader;
 
+		Units[n].PathX[0]=Units[pt].Position.X+CosDegrees(angl)*dstc;
+		Units[n].PathY[0]=Units[pt].Position.Y+SinDegrees(angl)*dstc;
+		Units[n].PathX[1]=MAP_RIGHT+1;
 
-		unit[n].pp_x[0]=unit[pt].x+cos(angl*a_PI)*dstc;
-		unit[n].pp_y[0]=unit[pt].y+sin(angl*a_PI)*dstc;
-		unit[n].pp_x[1]=MAP_RIGHT+1;
-
-
-
-		if( 1!=0 /*|| unit[n].used==cpu_side*/ )
+		if( 1!=0  )
 			{
 			//コンピュータの進路計算
-			set_cpu_root2( n );
+			SetCpuRoute2( n );
 			}
 		}
 
-
-
-
-
-//	unit[n].pp_now=0;
-	unit[n].stop=0;
+	Units[n].IsStopping=false;
 
 	}
-
-
 
 //============================================================================
 // 戦闘機の緊急起動をセット
 //----------------------------------------------------------------------------
-public void	chk_another_unit(double* rx,double* ry)
+[Original("chk_another_unit")]
+public void	CheckOtherUnits(double* rx,double* ry)
 	{
 	int		n;
 	double	wrk_x,wrk_y;
-	RECT	wrk_r;	
+	RECT	wrk_r;
 
-
-
-	for( n=1; n<=max_unit; n++)
+	for( n=1; n<=MaxUnitId; n++)
 		{
-		if( unit[n].used!=0 && unit[n].ctgry==SHIP )
+		if( Units[n].IsUsed && Units[n].Category==UnitCategory.Ship )
 			{
 			// ptin dbg
-			wrk_r.top=(int)unit[n].y+(sprt[UNIT_JPN].ht/2);//(int)unit[n].y-(sprt[UNIT_JPN].ht/2);
-			wrk_r.right=(int)unit[n].x+(sprt[UNIT_JPN].wd/2);
-			wrk_r.bottom=(int)unit[n].y-(sprt[UNIT_JPN].ht/2);//(int)unit[n].y+(sprt[UNIT_JPN].ht/2);
-			wrk_r.left=(int)unit[n].x-(sprt[UNIT_JPN].wd/2);
+			wrk_r.top=(int)Units[n].Position.Y+(Sprites[SpriteId.JapanUnits].Height/2);
+			wrk_r.right=(int)Units[n].Position.X+(Sprites[SpriteId.JapanUnits].Width/2);
+			wrk_r.bottom=(int)Units[n].Position.Y-(Sprites[SpriteId.JapanUnits].Height/2);
+			wrk_r.left=(int)Units[n].Position.X-(Sprites[SpriteId.JapanUnits].Width/2);
 
-			if( pt_in_rect3(ref wrk_r,(int)*rx,(int)*ry)!=0)
+			if( PointInRect3(ref wrk_r,(int)*rx,(int)*ry)!=0)
 				{
 				n=0;
 				*ry-=80;
@@ -2791,93 +2402,64 @@ public void	chk_another_unit(double* rx,double* ry)
 		}
 	}
 
-
 //============================================================================
 // 戦闘機の緊急起動をセット
 //----------------------------------------------------------------------------
-public void	set_pos_of_emrgncy_FT(int m)
+[Original("set_pos_of_emrgncy_FT")]
+public void	SetFighterEmergencyDestination(int m)
 	{
-
-#if false
-	// 損傷がひどくなったら逃げよう
-	if( unit[m].kind==FT1 && unit[m].info[5]!=RETURN && unit[m].hp[0]<=unit[m].hp[1]/2 )
-		{
-		unit[m].arm[2]=0;		// ターゲットをクリア
-		unit[m].info[5]=RETURN;		// 航空機はメイン兵器ゼロで帰投
-
-		unit[m].ltl_ldr=0;
-
-		if( !unit[m].is_ltl_ldr )
-			{
-			unit[m].pp_x[0]=unit[m].x;
-			unit[m].pp_y[0]=unit[m].y;
-			unit[m].pp_x[1]=MAP_RIGHT+1;
-			}
-		}
-#endif
-
+	ref var unit = ref Units[m];
 
 	// 目標も、爆弾も無く、損傷がひどいかガソリンが切れそうな場合はきとうしよう
-	if( unit[m].kind==FT1 && unit[m].info[5]!=RETURN && (unit[m].gas[0]<=30 || unit[m].hp[0]<=unit[m].hp[1]*0.70 || unit[m].arm[1]<=0 ) )
+	if( unit.Kind==UnitKind.Fighter && unit.Mode!=UnitMode.Return && (unit.Fuel<=30 || unit.Hp<=unit.MaxHp*0.70 || unit.Ammo<=0 ) )
 		{
 		// 発射！
-		unit[m].arm[2]=0;		// ターゲットをクリア
-		unit[m].info[5]=RETURN;		// 航空機はメイン兵器ゼロで帰投
-		unit[m].ltl_ldr=0;
+		unit.Target=0;		// ターゲットをクリア
+		unit.Mode=UnitMode.Return;		// 航空機はメイン兵器ゼロで帰投
+		unit.GroupLeader=0;
 
-		if( unit[m].is_ltl_ldr==0 )
+		if( unit.IsGroupLeader==0 )
 			{
-			unit[m].pp_x[0]=unit[m].x;
-			unit[m].pp_y[0]=unit[m].y;
-			unit[m].pp_x[1]=MAP_RIGHT+1;
+			unit.PathX[0]=unit.Position.X;
+			unit.PathY[0]=unit.Position.Y;
+			unit.PathX[1]=MAP_RIGHT+1;
 			}
 		}
 	}
 
-
-
-
-
-
-
-
 //============================================================================
 // 戦闘機の攻撃機動をセット
 //----------------------------------------------------------------------------
-public void	set_pos_of_attack_FT(int m)
+[Original("set_pos_of_attack_FT")]
+public void	SetFighterAttackDestination(int m)
 	{
+	ref var unit = ref Units[m];
 	double			angl,dstc,wrk_x,wrk_y,drctn,drctn2,em_drctn;
 	int				trgt,pos_of_no,a,b,c;
 	int				lvl_my,lvl_en,my_tec=default /* C4701 */,en_tec,n;
 	RECT			wrk_r;
 
-
 	// ptin dbg
-	wrk_r.top=(int)unit[m].em_y+35;//(int)unit[m].em_y-35;
-	wrk_r.right=(int)unit[m].em_x+35;
-	wrk_r.bottom=(int)unit[m].em_y-35;//(int)unit[m].em_y+35;
-	wrk_r.left=(int)unit[m].em_x-35;
+	wrk_r.top=(int)unit.EmergencyDestination.Y+35;
+	wrk_r.right=(int)unit.EmergencyDestination.X+35;
+	wrk_r.bottom=(int)unit.EmergencyDestination.Y-35;
+	wrk_r.left=(int)unit.EmergencyDestination.X-35;
 
-	if( pt_in_rect3(ref wrk_r,(int)unit[m].x,(int)unit[m].y)!=0 )
+	if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
 		{
-		unit[m].em_x=unit[m].x+cos(unit[m].drctn*a_PI)*(100+rnd(50));
-		unit[m].em_y=unit[m].y+sin(unit[m].drctn*a_PI)*(100+rnd(50));
-		unit[m].em_flg[0]=100;
-		unit[m].stop=0;
+		unit.EmergencyDestination = new WorldPosition(unit.Position.X+CosDegrees(unit.Direction)*(100+Random(50)), unit.Position.Y+SinDegrees(unit.Direction)*(100+Random(50)));
+		unit.EmergencyFlags[0]=100;
+		unit.IsStopping=false;
 		return;
 		}
 
-
-
-
-
-	trgt=unit[m].arm[2];
-	lvl_my=unit[m].tech;
-	lvl_en=unit[trgt].tech;
+	trgt=unit.Target;
+	lvl_my=unit.Skill;
+	lvl_en=Units[trgt].Skill;
 
 	if( lvl_my == lvl_en )
 		{
-		if( ((cc_count)%600)<300 )
+		if( ((Tick)%600)<300 )
 			{lvl_my++;}
 		else
 			{lvl_en++;}
@@ -2887,206 +2469,145 @@ public void	set_pos_of_attack_FT(int m)
 	if( lvl_my < lvl_en )
 		{	my_tec=40+(lvl_en-lvl_my);	en_tec=10;	}
 
-
-	if( rnd(my_tec)!=0 )
+	if( Random(my_tec)!=0 )
 		return;
-
-
 
 	// 正面打ち合いをさけるようにします。
 	n=trgt;
 	// 自機ｍと敵機ｎの絶対角を調べます。
-	wrk_x=unit[m].x-unit[n].x;
-	wrk_y=unit[m].y-unit[n].y;
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;					// drctnが絶対角
+	wrk_x=unit.Position.X-Units[n].Position.X;
+	wrk_y=unit.Position.Y-Units[n].Position.Y;
+	drctn=Direction(wrk_x, wrk_y);					// drctnが絶対角
 
-	drctn=drctn-unit[n].drctn;				// 敵機ｎからの方位角をしらべます。
+	drctn=drctn-Units[n].Direction;				// 敵機ｎからの方位角をしらべます。
 	if(drctn<0)
 		drctn=360+drctn;
 	if( (int)drctn<=5 || (int)drctn>=355 )
 		{
 		// 敵機が正面に自機を捕らえています。
-		wrk_x=unit[n].x-unit[m].x;
-		wrk_y=unit[n].y-unit[m].y;
-		drctn=atan2(wrk_y,wrk_x)*RAD_to;
-		if(drctn<0)
-			drctn=360+drctn;					// drctnが絶対角
+		wrk_x=Units[n].Position.X-unit.Position.X;
+		wrk_y=Units[n].Position.Y-unit.Position.Y;
+		drctn=Direction(wrk_x, wrk_y);					// drctnが絶対角
 
-		drctn=drctn-unit[m].drctn;				// 自機ｍからの方位角をしらべます。
+		drctn=drctn-unit.Direction;				// 自機ｍからの方位角をしらべます。
 		if(drctn<0)
 			drctn=360+drctn;
 
 		if( (int)drctn<=5 || (int)drctn>=355 )
 			{
 			// 自機も敵機を正面に捕らえています
-			wrk_x=unit[n].x-unit[m].x;
-			wrk_y=unit[n].y-unit[m].y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(cos(drctn*a_PI));
+			wrk_x=Units[n].Position.X-unit.Position.X;
+			wrk_y=Units[n].Position.Y-unit.Position.Y;
+			dstc=Distance(wrk_x, wrk_y);
 			if( dstc>=160 && dstc<=320 )
-				{	
+				{
 				// さらに、距離が近い よけよう
-				wrk_x=unit[m].x;
-				wrk_y=unit[m].y;
-				em_drctn=unit[m].drctn;
-				switch( rnd(2) )
+				wrk_x=unit.Position.X;
+				wrk_y=unit.Position.Y;
+				em_drctn=unit.Direction;
+				switch( Random(2) )
 					{
 					case 0:
-						em_drctn+=45+rnd(45);
+						em_drctn+=45+Random(45);
 						break;
 					case 1:
-						em_drctn-=45+rnd(45);
+						em_drctn-=45+Random(45);
 						break;
 					}
 				em_drctn=(int)em_drctn%360;
 
+				wrk_x+=CosDegrees(em_drctn)*300;
+				wrk_y+=SinDegrees(em_drctn)*300;
 
-				wrk_x+=cos(em_drctn*a_PI)*300; 
-				wrk_y+=sin(em_drctn*a_PI)*300;
-
-				unit[m].em_x=wrk_x;
-				unit[m].em_y=wrk_y;
-				unit[m].em_flg[0]=70+rnd(40);
+				unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
+				unit.EmergencyFlags[0]=70+Random(40);
 
 				return;
 				}
 			}
 		}
 
-
-
-
-
-
-
 	// 敵機の直前にＥｍ＿Ｘｙを設定します。
-	wrk_x=unit[trgt].x;
-	wrk_y=unit[trgt].y;
-	wrk_x+=cos(unit[trgt].drctn*a_PI)*(unit[trgt].spd*20.0); 
-	wrk_y+=sin(unit[trgt].drctn*a_PI)*(unit[trgt].spd*20.0);
+	wrk_x=Units[trgt].Position.X;
+	wrk_y=Units[trgt].Position.Y;
+	wrk_x+=CosDegrees(Units[trgt].Direction)*(Units[trgt].Speed*20.0);
+	wrk_y+=SinDegrees(Units[trgt].Direction)*(Units[trgt].Speed*20.0);
 
-	unit[m].em_x=wrk_x;
-	unit[m].em_y=wrk_y;
-	unit[m].em_flg[0]=70+rnd(40);
-	unit[m].stop=0;
-	if(rnd(10)==0)
-		SoundPlayEffect( 0, PLANE1+rnd(2) ,unit[m].x, unit[m].y);
+	unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
+	unit.EmergencyFlags[0]=70+Random(40);
+	unit.IsStopping=false;
+	if(Random(10)==0)
+		PlaySoundEffect( 0, SoundId.Plane1+Random(2) ,unit.Position.X, unit.Position.Y);
 
 	}
-
-
-
 
 //============================================================================
 // 攻撃機の緊急起動をセット
 //----------------------------------------------------------------------------
-public void	set_pos_of_emrgncy_AT(int m)
+[Original("set_pos_of_emrgncy_AT")]
+public void	SetAttackerEmergencyDestination(int m)
 	{
+	ref var unit = ref Units[m];
 	int		n,g,new_ldr,f;
 	double	em_drctn,wrk_x,wrk_y,drctn,dstc,drctn2;
 
-	
-
 	// 戦闘機から逃げよう
-	for(n=1;n<=max_unit;n++)
-		{	//後方の敵を探す。
-		if( unit[n].used!=0 && unit[n].ctgry==PLANE && unit[n].info[0]==FLYING 
-		&& unit[n].used!=unit[m].used && unit[n].found!=0 )
+	for(n=1;n<=MaxUnitId;n++)
+		{
+		ref var other = ref Units[n];	//後方の敵を探す。
+		if( other.IsUsed && other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying
+		&& other.Side!=unit.Side && other.IsFound )
 			{
 
 			// 攻撃地点から攻撃目標地点への方位角
-			wrk_x=unit[n].x-unit[m].x;
-			wrk_y=unit[n].y-unit[m].y;
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;	
+			wrk_x=other.Position.X-unit.Position.X;
+			wrk_y=other.Position.Y-unit.Position.Y;
+			drctn=Direction(wrk_x, wrk_y);
 
-			drctn=drctn-unit[m].drctn;
+			drctn=drctn-unit.Direction;
 			if(drctn<0)
 				drctn=360+drctn;
 
-
 			// 攻撃目標地点から攻撃地点への方位角
-			wrk_x=unit[m].x-unit[n].x;
-			wrk_y=unit[m].y-unit[n].y;
-			drctn2=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn2<0)
-				drctn2=360+drctn2;	
+			wrk_x=unit.Position.X-other.Position.X;
+			wrk_y=unit.Position.Y-other.Position.Y;
+			drctn2=Direction(wrk_x, wrk_y);
 
-			drctn2=drctn2-unit[n].drctn;
+			drctn2=drctn2-other.Direction;
 			if(drctn2<0)
 				drctn2=360+drctn2;
 
-
-
-
-			if( ((int)drctn>=150 && (int)drctn<=210 && unit[n].kind==FT1) 
-				|| 
-				( ((int)drctn<=45 || (int)drctn>=315) && ( (int)drctn2>=135 && (int)drctn2<=225)  && unit[n].kind==AT1 && unit[m].arm[2]==0 )
-				/*||
-				(  ( ((int)drctn>=150&&(int)drctn<=210) || ((int)drctn<=45||(int)drctn>=315) )  && unit[n].kind==FT1 && unit[m].kind==BM1) 
-				*/
+			if( ((int)drctn>=150 && (int)drctn<=210 && other.Kind==UnitKind.Fighter)
+				||
+				( ((int)drctn<=45 || (int)drctn>=315) && ( (int)drctn2>=135 && (int)drctn2<=225)  && other.Kind==UnitKind.Attacker && unit.Target==0 )
 			  )
 				{
 
+				wrk_x=other.Position.X-unit.Position.X;
+				wrk_y=other.Position.Y-unit.Position.Y;
+				dstc=Distance(wrk_x, wrk_y);
+				if( dstc<=250+((other.Kind==UnitKind.Attacker ? 1 : 0)*70) )
+					{
 
-				wrk_x=unit[n].x-unit[m].x;
-				wrk_y=unit[n].y-unit[m].y;
-				if(wrk_x==0)	wrk_x=1;
-				if(wrk_y==0)	wrk_y=1;
-
-				drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				if(drctn<0)
-					drctn=360+drctn;
-				if(wrk_x<0)
-					wrk_x=0-wrk_x;
-				if(wrk_y<0)
-					wrk_y=0-wrk_y;
-				if(drctn>=180)
-					drctn=drctn-180;
-				if(drctn>=90)
-					drctn=90-(drctn-90);
-				dstc=(wrk_x)/(cos(drctn*a_PI));
-				if( dstc<=250+((unit[n].kind==AT1 ? 1 : 0)*70) )
-					{	
-
-					wrk_x=unit[m].x;
-					wrk_y=unit[m].y;
-					em_drctn=unit[m].drctn;
-					switch(rnd(2))
+					wrk_x=unit.Position.X;
+					wrk_y=unit.Position.Y;
+					em_drctn=unit.Direction;
+					switch(Random(2))
 						{
 						case 0:
-							em_drctn+=45+rnd(90);
+							em_drctn+=45+Random(90);
 							break;
 						case 1:
-							em_drctn-=45+rnd(90);
+							em_drctn-=45+Random(90);
 							break;
 						}
-					/*(int)*/em_drctn=(int)em_drctn%360;
+					em_drctn=(int)em_drctn%360;
 
+					wrk_x+=CosDegrees(em_drctn)*300;
+					wrk_y+=SinDegrees(em_drctn)*300;
 
-					wrk_x+=cos(em_drctn*a_PI)*300; 
-					wrk_y+=sin(em_drctn*a_PI)*300;
-
-					unit[m].em_x=wrk_x;
-					unit[m].em_y=wrk_y;
-					unit[m].em_flg[0]=100;
-
+					unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
+					unit.EmergencyFlags[0]=100;
 
 					return;
 					}
@@ -3094,49 +2615,41 @@ public void	set_pos_of_emrgncy_AT(int m)
 			}
 		}
 
-
-
-
-
-
-
-
 	// 損傷がひどいかガソリンが切れそうな場合はきとうしよう
-	if( unit[m].info[5]!=RETURN && (unit[m].gas[0]<=20 || unit[m].hp[0]<=unit[m].hp[1]*0.70 ) 
-		/*&& unit[unit[m].info[1]].used*/
+	if( unit.Mode!=UnitMode.Return && (unit.Fuel<=20 || unit.Hp<=unit.MaxHp*0.70 )
 		)
 		{
-		unit[m].arm[1]=0;		// 魚雷が０
-		unit[m].arm[2]=0;		// ターゲットをクリア
+		unit.Ammo=0;		// 魚雷が０
+		unit.Target=0;		// ターゲットをクリア
 
-
-		if(unit[unit[m].info[1]].used!=0)		
+		if(Units[unit.Carrier].IsUsed)
 			{
-		unit[m].info[5]=RETURN;		// 航空機はメイン兵器ゼロで帰投
+		unit.Mode=UnitMode.Return;		// 航空機はメイン兵器ゼロで帰投
 
-		unit[m].ltl_ldr=0;
+		unit.GroupLeader=0;
 
-		if( unit[m].is_ltl_ldr==0 )
+		if( unit.IsGroupLeader==0 )
 			{
-			unit[m].pp_x[0]=unit[m].x;
-			unit[m].pp_y[0]=unit[m].y;
-			unit[m].pp_x[1]=MAP_RIGHT+1;
+			unit.PathX[0]=unit.Position.X;
+			unit.PathY[0]=unit.Position.Y;
+			unit.PathX[1]=MAP_RIGHT+1;
 			}
 		else
 			{
 
-			n=max_unit+1;
+			n=MaxUnitId+1;
 			g=1;
 			new_ldr=0;
 
-			for(f=1;f<=max_unit;f++)
+			for(f=1;f<=MaxUnitId;f++)
 				{
-				if( unit[f].used!=0 && unit[f].ltl_ldr==m )
+				ref var other = ref Units[f];
+				if( other.IsUsed && other.GroupLeader==m )
 					{
 					g++;
-					if( unit[f].no < n )
+					if( other.FormationNumber < n )
 						{
-						n=unit[f].no;
+						n=other.FormationNumber;
 						new_ldr=f;					// これが新しい隊長番号
 						}
 					}
@@ -3144,43 +2657,40 @@ public void	set_pos_of_emrgncy_AT(int m)
 
 			if(new_ldr!=0 && g>=2 )
 				{
-				unit[new_ldr].is_ltl_ldr=(short)g;
-				unit[new_ldr].ltl_ldr=0;
-				unit[new_ldr].no=0;
-
+				Units[new_ldr].IsGroupLeader=(short)g;
+				Units[new_ldr].GroupLeader=0;
+				Units[new_ldr].FormationNumber=0;
 
 				// 昔の小隊長が攻爆撃機だったら、帰投にしておく
-				if( unit[new_ldr].kind==FT1 && (unit[m].kind==AT1 || unit[m].kind==BM1) /*&& unit[m].info[0]==FLYING*/ && unit[new_ldr].info[0]==FLYING )
+				if( Units[new_ldr].Kind==UnitKind.Fighter && (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber)  && Units[new_ldr].PlaneState==UnitState.Flying )
 					{
-					unit[new_ldr].info[5]=RETURN;		// それまでの隊長がボスだったらきかんしよっと
+					Units[new_ldr].Mode=UnitMode.Return;		// それまでの隊長がボスだったらきかんしよっと
 					}
 
-
-				for(f=1;f<=max_unit;f++)
+				for(f=1;f<=MaxUnitId;f++)
 					{
-					if( unit[f].used!=0 && unit[f].ltl_ldr==m )
+					ref var other = ref Units[f];
+					if( other.IsUsed && other.GroupLeader==m )
 						{
-						unit[f].ltl_ldr=(short)new_ldr;
+						other.GroupLeader=(short)new_ldr;
 
 						// 昔の小隊長が攻爆撃機だったら、帰投にしておく
-						if( unit[new_ldr].kind==FT1 && unit[f].kind==FT1 && (unit[m].kind==AT1 || unit[m].kind==BM1) /*&& unit[m].info[0]==FLYING*/&& unit[f].info[0]==FLYING )
-							unit[f].info[5]=RETURN;		// それまでの隊長がボスだったらきかんしよっと
+						if( Units[new_ldr].Kind==UnitKind.Fighter && other.Kind==UnitKind.Fighter && (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber) && other.PlaneState==UnitState.Flying )
+							other.Mode=UnitMode.Return;		// それまでの隊長がボスだったらきかんしよっと
 						}
-
 
 					}
 
 				for(f=0;f<64;f++)
 					{
-					unit[new_ldr].pp_x[f]=unit[m].pp_x[f];
-					unit[new_ldr].pp_y[f]=unit[m].pp_y[f];
+					Units[new_ldr].PathX[f]=unit.PathX[f];
+					Units[new_ldr].PathY[f]=unit.PathY[f];
 					}
 
 				// 昔の小隊長
-				unit[m].pp_x[0]=unit[m].x;
-				unit[m].pp_y[0]=unit[m].y;
-				unit[m].pp_x[1]=MAP_RIGHT+1;
-
+				unit.PathX[0]=unit.Position.X;
+				unit.PathY[0]=unit.Position.Y;
+				unit.PathX[1]=MAP_RIGHT+1;
 
 				}
 			}
@@ -3189,80 +2699,56 @@ public void	set_pos_of_emrgncy_AT(int m)
 
 	}
 
-
-
-
-
-
 //============================================================================
 // 攻撃機の攻撃機動をＰｐ＿ｘｙにセット
 //----------------------------------------------------------------------------
-public void	set_pos_of_attack_AT(int m)
+[Original("set_pos_of_attack_AT")]
+public void	SetAttackerAttackDestination(int m)
 	{
+	ref var unit = ref Units[m];
 	double			angl,dstc,wrk_x,wrk_y,drctn,drctn2,drctn3,turn;
 	int				trgt,pos_of_no,a,b,c,i;
 	int				nums,lvl_jp,lvl_us,jp_tec,us_tec,n,f;
 	RECT			wrk_r;
 
-
-
-	n=unit[m].arm[2];				// 攻撃目標
-
+	n=unit.Target;				// 攻撃目標
 
 	// 現位置から攻撃目標地点への距離
-	wrk_x=unit[n].x-unit[m].x;
-	wrk_y=unit[n].y-unit[m].y;
-	if(wrk_x==0)	wrk_x=1;
-	if(wrk_y==0)	wrk_y=1;
-
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
-	if(wrk_x<0)
-		wrk_x=0-wrk_x;
-	if(wrk_y<0)
-		wrk_y=0-wrk_y;
-	if(drctn>=180)
-		drctn=drctn-180;
-	if(drctn>=90)
-		drctn=90-(drctn-90);
-	dstc=(wrk_x)/(cos(drctn*a_PI));
-
-
+	wrk_x=Units[n].Position.X-unit.Position.X;
+	wrk_y=Units[n].Position.Y-unit.Position.Y;
+	dstc=Distance(wrk_x, wrk_y);
 
 	// 目標ユニットへの方位角を求めます
-	wrk_x=unit[n].x;
-	wrk_y=unit[n].y;
-	wrk_x=wrk_x-unit[m].x;
-	wrk_y=wrk_y-unit[m].y;
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
+	wrk_x=Units[n].Position.X;
+	wrk_y=Units[n].Position.Y;
+	wrk_x=wrk_x-unit.Position.X;
+	wrk_y=wrk_y-unit.Position.Y;
+	drctn=Direction(wrk_x, wrk_y);
+	drctn=drctn-unit.Direction;
 	if(drctn<0)
-		drctn=360+drctn;	
-	drctn=drctn-unit[m].drctn;
-	if(drctn<0)
-		drctn=360+drctn;	
+		drctn=360+drctn;
 
-
-	if( dstc<=510 && dstc >= 500  && (drctn<=22.5||drctn>=337.5) /*&& unit[m].no /*&& unit[m].is_ltl_ldr==0*/ /*&& (int)(unit[m].ltl_ldr)*/ )
+	if( dstc<=510 && dstc >= 500  && (drctn<=22.5||drctn>=337.5)   )
 		{
 
 		// リーダー機か単独機のみここに来ます。
 
 		f=0;
-		for(i=1;i<=max_unit;i++)
+		for(i=1;i<=MaxUnitId;i++)
 			{
-			if( i!=m && unit[i].used!=0 && unit[i].ltl_ldr==m && unit[i].kind==AT1 )
+			ref var other = ref Units[i];
+			if( i!=m && other.IsUsed && other.GroupLeader==m && other.Kind==UnitKind.Attacker )
 				{
 				f++;
 
-				if( unit[i].kind!=FT1 )
-					unit[i].ltl_ldr=0; 
+				if( other.Kind!=UnitKind.Fighter )
+					other.GroupLeader=0;
 
-				wrk_x=unit[i].x;
-				wrk_y=unit[i].y;
-				drctn=unit[i].drctn;
+				wrk_x=other.Position.X;
+				wrk_y=other.Position.Y;
+				drctn=other.Direction;
 
-				switch( unit[i].no%5 )
+				switch( other.FormationNumber%5 )
 					{
 					case 1:
 						drctn+=315+22.5;
@@ -3279,531 +2765,434 @@ public void	set_pos_of_attack_AT(int m)
 					}
 				drctn=(int)drctn%360;
 
-				wrk_x+=cos(drctn*a_PI)*600; 
-				wrk_y+=sin(drctn*a_PI)*600;
+				wrk_x+=CosDegrees(drctn)*600;
+				wrk_y+=SinDegrees(drctn)*600;
 
-				unit[i].em_x=wrk_x;
-				unit[i].em_y=wrk_y;
-				unit[i].em_flg[0]=10+((1+(unit[i].no%5))*20);
+				other.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
+				other.EmergencyFlags[0]=10+((1+(other.FormationNumber%5))*20);
 
-				unit[i].pp_x[0]=unit[n].x;
-				unit[i].pp_y[0]=unit[n].y;
-				unit[i].pp_x[1]=MAP_RIGHT+1;
+				other.PathX[0]=Units[n].Position.X;
+				other.PathY[0]=Units[n].Position.Y;
+				other.PathX[1]=MAP_RIGHT+1;
 
 				}
 			}
-
 
 		}
 	else if( dstc >= 400 )
 		{
-		if( unit[m].pp_x[1]==MAP_RIGHT+1 )
+		if( unit.PathX[1]==MAP_RIGHT+1 )
 			{
 			// ptin dbg
-			wrk_r.top=(int)unit[m].pp_y[0]+35;//(int)unit[m].pp_y[0]-35;
-			wrk_r.right=(int)unit[m].pp_x[0]+35;
-			wrk_r.bottom=(int)unit[m].pp_y[0]-35;//(int)unit[m].pp_y[0]+35;
-			wrk_r.left=(int)unit[m].pp_x[0]-35;
-			if( pt_in_rect3(ref wrk_r,(int)unit[m].x,(int)unit[m].y)==0 || unit[n].found==0)
+			wrk_r.top=(int)unit.PathY[0]+35;
+			wrk_r.right=(int)unit.PathX[0]+35;
+			wrk_r.bottom=(int)unit.PathY[0]-35;
+			wrk_r.left=(int)unit.PathX[0]-35;
+			if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)==0 || !Units[n].IsFound)
 				{
 				return;
 				}
-			wrk_x=unit[n].x;
-			wrk_y=unit[n].y;
-			wrk_x+=cos(unit[n].drctn*a_PI); // とりあえずターン後
-			wrk_y+=sin(unit[n].drctn*a_PI);
-			unit[m].pp_x[0]=wrk_x;
-			unit[m].pp_y[0]=wrk_y;			
-			unit[m].pp_x[1]=MAP_RIGHT+1;
-			unit[m].stop=0;
+			wrk_x=Units[n].Position.X;
+			wrk_y=Units[n].Position.Y;
+			wrk_x+=CosDegrees(Units[n].Direction); // とりあえずターン後
+			wrk_y+=SinDegrees(Units[n].Direction);
+			unit.PathX[0]=wrk_x;
+			unit.PathY[0]=wrk_y;
+			unit.PathX[1]=MAP_RIGHT+1;
+			unit.IsStopping=false;
 			}
 		}
 	else if ( dstc >= 40 && (drctn<=45||drctn>=315))
 		{
-		if( unit[m].pp_x[1]==MAP_RIGHT+1 )
+		if( unit.PathX[1]==MAP_RIGHT+1 )
 			{
-			wrk_r.top=(int)unit[m].pp_y[0]-35;
-			wrk_r.right=(int)unit[m].pp_x[0]+35;
-			wrk_r.bottom=(int)unit[m].pp_y[0]+35;
-			wrk_r.left=(int)unit[m].pp_x[0]-35;
-			if(unit[m].arm[0]==TPD)
-				turn=(/*dstc*/ (AIR_TPD_LOS_DSTC) /AIR_TPD_SPD);		// 投雷距離　÷ 魚雷速度　でターンを求めます
+			wrk_r.top=(int)unit.PathY[0]-35;
+			wrk_r.right=(int)unit.PathX[0]+35;
+			wrk_r.bottom=(int)unit.PathY[0]+35;
+			wrk_r.left=(int)unit.PathX[0]-35;
+			if(unit.Weapon==FireKind.Torpedo)
+				turn=( (AIR_TPD_LOS_DSTC) /AIR_TPD_SPD);		// 投雷距離　÷ 魚雷速度　でターンを求めます
 			else
 				turn=70.0;
-			wrk_x=unit[n].x;
-			wrk_y=unit[n].y;
-			wrk_x+=cos(unit[n].drctn*a_PI)*(unit[n].spd*turn); // とりあえずターン後
-			wrk_y+=sin(unit[n].drctn*a_PI)*(unit[n].spd*turn);
-			unit[m].pp_x[0]=wrk_x;
-			unit[m].pp_y[0]=wrk_y;
-			unit[m].pp_x[1]=MAP_RIGHT+1;
-			unit[m].stop=0;
-			if( unit[m].is_ltl_ldr!=0 /*&& unit[m].arm[0]==BOM*/ )
+			wrk_x=Units[n].Position.X;
+			wrk_y=Units[n].Position.Y;
+			wrk_x+=CosDegrees(Units[n].Direction)*(Units[n].Speed*turn); // とりあえずターン後
+			wrk_y+=SinDegrees(Units[n].Direction)*(Units[n].Speed*turn);
+			unit.PathX[0]=wrk_x;
+			unit.PathY[0]=wrk_y;
+			unit.PathX[1]=MAP_RIGHT+1;
+			unit.IsStopping=false;
+			if( unit.IsGroupLeader!=0  )
 				{
 				a=0;
-				for(f=1;f<=max_unit;f++)
+				for(f=1;f<=MaxUnitId;f++)
 					{
- 					if( unit[f].used!=0 && unit[f].kind==FT1 && unit[f].ltl_ldr==m)
+ 					ref var other = ref Units[f];
+ 					if( other.IsUsed && other.Kind==UnitKind.Fighter && other.GroupLeader==m)
 						{	a++;	}
 					else
 						{
-						if( unit[f].used!=0 && unit[f].ltl_ldr==m )
-							unit[f].ltl_ldr=0;
+						if( other.IsUsed && other.GroupLeader==m )
+							other.GroupLeader=0;
 						}
 					}
-				unit[m].is_ltl_ldr=(short)a;
+				unit.IsGroupLeader=(short)a;
 				}
 			}
 		}
-	else 
+	else
 		{	// 近すぎる場合は離脱
 		// ptin dbg
-		wrk_r.top=(int)unit[m].pp_y[0]+35;//(int)unit[m].pp_y[0]-35;
-		wrk_r.right=(int)unit[m].pp_x[0]+35;
-		wrk_r.bottom=(int)unit[m].pp_y[0]-35;//(int)unit[m].pp_y[0]+35;
-		wrk_r.left=(int)unit[m].pp_x[0]-35;
-		if( pt_in_rect3(ref wrk_r,(int)unit[m].x,(int)unit[m].y)!=0 )
+		wrk_r.top=(int)unit.PathY[0]+35;
+		wrk_r.right=(int)unit.PathX[0]+35;
+		wrk_r.bottom=(int)unit.PathY[0]-35;
+		wrk_r.left=(int)unit.PathX[0]-35;
+		if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
 			{
-			unit[m].pp_x[0]=unit[m].x+cos(unit[m].drctn*a_PI)*(300);
-			unit[m].pp_y[0]=unit[m].y+sin(unit[m].drctn*a_PI)*(300);
-			unit[m].pp_x[1]=MAP_RIGHT+1;
-			unit[m].stop=0;
+			unit.PathX[0]=unit.Position.X+CosDegrees(unit.Direction)*(300);
+			unit.PathY[0]=unit.Position.Y+SinDegrees(unit.Direction)*(300);
+			unit.PathX[1]=MAP_RIGHT+1;
+			unit.IsStopping=false;
 			}
 		}
 	}
 
-
-
-
-
-
-
 //============================================================================
 // 輸送船の上陸機動をＥｍ＿ｘｙにセット
 //----------------------------------------------------------------------------
-public void	set_pos_of_attack_TR1(int m)
+[Original("set_pos_of_attack_TR1")]
+public void	SetTransportLandingDestination(int m)
 	{
 	double			angl,dstc,wrk_x,wrk_y,drctn,drctn2,drctn3,turn;
 	int				trgt,pos_of_no,a,b,c;
 	int				nums,lvl_jp,lvl_us,jp_tec,us_tec,n,f;
 	RECT			wrk_r;
 
-
-
-	if( rnd(200)!=0 )
+	if( Random(200)!=0 )
 		return;
 
-
-
 	// 現位置から攻撃目標地点への距離
-	wrk_x=unit[m].info[6]-unit[m].x;
-	wrk_y=unit[m].info[7]-unit[m].y;
-	if(wrk_x==0)	wrk_x=1;
-	if(wrk_y==0)	wrk_y=1;
-
-	drctn=atan2(wrk_y,wrk_x)*RAD_to;
-	if(drctn<0)
-		drctn=360+drctn;
-	if(wrk_x<0)
-		wrk_x=0-wrk_x;
-	if(wrk_y<0)
-		wrk_y=0-wrk_y;
-	if(drctn>=180)
-		drctn=drctn-180;
-	if(drctn>=90)
-		drctn=90-(drctn-90);
-	dstc=(wrk_x)/(cos(drctn*a_PI));
+	wrk_x=Units[m].LandingX-Units[m].Position.X;
+	wrk_y=Units[m].LandingY-Units[m].Position.Y;
+	dstc=Distance(wrk_x, wrk_y);
 
 	if(dstc<=400)
 		{
-		unit[m].em_x=unit[m].info[6];
-		unit[m].em_y=unit[m].info[7];
-		unit[m].em_flg[0]=200;
+		Units[m].EmergencyDestination = new WorldPosition(Units[m].LandingX, Units[m].LandingY);
+		Units[m].EmergencyFlags[0]=200;
 		}
 	}
-
-
-
-
-
-
 
 //============================================================================
-// 
+//
 //----------------------------------------------------------------------------
-public void em_of_out_of_map(int m)
+[Original("em_of_out_of_map")]
+public void ReturnIntoWorld(int m)
 	{
+	ref var unit = ref Units[m];
 	// 展開海域より外れたなら戻る
-	if( 1!=0 /*unit[m].used!=cpu_side*/ )
+	if( 1!=0  )
 		{
-		if( unit[m].x>MAP_RIGHT )
+		if( unit.Position.X>MAP_RIGHT )
 			{
-			unit[m].em_x=MAP_RIGHT-40;
-			unit[m].em_y=unit[m].y-100+rnd(200);
-			unit[m].em_flg[0]=50+rnd(200);
+			unit.EmergencyDestination = new WorldPosition(MAP_RIGHT-40, unit.Position.Y-100+Random(200));
+			unit.EmergencyFlags[0]=50+Random(200);
 			return;
 			}
 
-		if( unit[m].x<MAP_LEFT )
+		if( unit.Position.X<MAP_LEFT )
 			{
-			unit[m].em_x=MAP_LEFT+40;
-			unit[m].em_y=unit[m].y-100+rnd(200);
-			unit[m].em_flg[0]=50+rnd(200);
+			unit.EmergencyDestination = new WorldPosition(MAP_LEFT+40, unit.Position.Y-100+Random(200));
+			unit.EmergencyFlags[0]=50+Random(200);
 			return;
 			}
 
-		if( unit[m].y>MAP_TOP )
+		if( unit.Position.Y>MAP_TOP )
 			{
-			unit[m].em_x=unit[m].x-100+rnd(200);
-			unit[m].em_y=MAP_TOP-40;
-			unit[m].em_flg[0]=50+rnd(200);
+			unit.EmergencyDestination = new WorldPosition(unit.Position.X-100+Random(200), MAP_TOP-40);
+			unit.EmergencyFlags[0]=50+Random(200);
 			return;
 			}
 
-		if( unit[m].y<MAP_BOTTOM )
+		if( unit.Position.Y<MAP_BOTTOM )
 			{
-			unit[m].em_x=unit[m].x-100+rnd(200);
-			unit[m].em_y=MAP_BOTTOM+40;
-			unit[m].em_flg[0]=50+rnd(200);
+			unit.EmergencyDestination = new WorldPosition(unit.Position.X-100+Random(200), MAP_BOTTOM+40);
+			unit.EmergencyFlags[0]=50+Random(200);
 			return;
 			}
 		}
 	}
 
+private bool HuntSubmarine(ref Unit unit)
+	{
+	int n;
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double dstc;
+	double em_drctn;
+	if(unit.EmergencyFlags[0]==0)
+		{
+		for(n=1; n<=MaxUnitId; n++)
+			{
+			ref var other = ref Units[n];
+			if( other.IsUsed && other.Kind==UnitKind.Submarine && other.IsFound && other.Side!=unit.Side )
+				{
+				// 自点と対象点の距離
+				if( other.IsSubmerged )
+					{
+					// 潜水中
+					wrk_x=other.ContactX-unit.Position.X;
+					wrk_y=other.ContactY-unit.Position.Y;
+					}
+				else
+					{
+					// 浮上してます
+					wrk_x=other.Position.X-unit.Position.X;
+					wrk_y=other.Position.Y-unit.Position.Y;
+					}
 
+				dstc=Distance(wrk_x, wrk_y);		// 距離
+
+				if( dstc<=( unit.Variant==1 ? 500 : 400 ) )
+					{
+					// 近くに潜水艦推定位置
+
+					wrk_x=other.ContactX-unit.Position.X;
+					wrk_y=other.ContactY-unit.Position.Y;
+					if(wrk_x==0)	wrk_x=1;
+					if(wrk_y==0)	wrk_y=1;
+					drctn=atan2(wrk_y,wrk_x)*RAD_to;
+
+					drctn+=20-Random(40);
+
+					em_drctn=(int)drctn%360;
+
+					wrk_x=unit.Position.X;
+					wrk_y=unit.Position.Y;
+					wrk_x+=CosDegrees(em_drctn)*((dstc)+200);
+					wrk_y+=SinDegrees(em_drctn)*((dstc)+200);
+
+					unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
+					unit.EmergencyFlags[0]=100+Random(250);
+
+					return false;
+					}
+				}
+			}
+		}
+	return true;
+	}
+
+private bool EvadePlane(ref Unit other, ref Unit unit)
+	{
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double dstc;
+	double em_drctn;
+	// 自点と対象点の距離
+	wrk_x=other.Position.X-unit.Position.X;
+	wrk_y=other.Position.Y-unit.Position.Y;
+	dstc=Distance(wrk_x, wrk_y);		// 距離
+
+	if( dstc<=600-((other.Kind==UnitKind.Bomber ? 1 : 0)*300) && dstc>=40 )
+		{
+		// 対象ユニットからの自点への方位角
+		wrk_x=unit.Position.X;
+		wrk_y=unit.Position.Y;
+		wrk_x=wrk_x-other.Position.X;
+		wrk_y=wrk_y-other.Position.Y;
+		if(wrk_x==0)	wrk_x=1;
+		if(wrk_y==0)	wrk_y=1;
+		drctn=Direction(wrk_x, wrk_y);
+		drctn=drctn-other.Direction;
+		if(drctn<0)
+			drctn=360+drctn;
+		if( drctn<=45 || drctn>=315 )
+			{
+
+			wrk_x=unit.Position.X;
+			wrk_y=unit.Position.Y;
+			em_drctn=unit.Direction;
+			switch(Random(2))
+				{
+				case 0:
+					em_drctn+=45+Random(45+20);
+					break;
+				case 1:
+					em_drctn-=45+Random(45+20);
+					break;
+				}
+			em_drctn=(int)em_drctn%360;
+
+			wrk_x+=CosDegrees(em_drctn)*300;
+			wrk_y+=SinDegrees(em_drctn)*300;
+
+			unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
+			unit.EmergencyFlags[0]=200+Random(250);
+
+			return false;
+			}
+		}
+	return true;
+	}
+
+private void EvadeShip(ref Unit other, ref Unit unit)
+	{
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double dstc;
+	double em_drctn;
+	// 自点と対象点の距離
+	wrk_x=other.Position.X-unit.Position.X;
+	wrk_y=other.Position.Y-unit.Position.Y;
+	dstc=Distance(wrk_x, wrk_y);		// 距離
+
+	// 見る側
+
+	if( dstc<=(double)( BB1_SIGHT ) )
+		{
+		wrk_x=other.Position.X-unit.Position.X;
+		wrk_y=other.Position.Y-unit.Position.Y;
+		if(wrk_x==0)	wrk_x=1;
+		if(wrk_y==0)	wrk_y=1;
+		drctn=Direction(wrk_x, wrk_y);
+
+		if( (unit.Kind==UnitKind.Carrier||unit.Kind==UnitKind.LightCarrier) && unit.GroupLeader==0 && other.IsStopping && Random(3)!=0 )
+			{
+			if(unit.Random10[0]<=4)
+				{
+				drctn+=(90+Random(40));
+				}
+			else
+				{
+				drctn-=(90+Random(40));
+				}
+			}
+		else
+			{
+			drctn+=160+Random(40);
+			}
+
+		em_drctn=(int)drctn%360;
+
+		wrk_x=unit.Position.X;
+		wrk_y=unit.Position.Y;
+		wrk_x+=CosDegrees(em_drctn)*300;
+		wrk_y+=SinDegrees(em_drctn)*300;
+
+		unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
+		unit.EmergencyFlags[0]=100;
+		}
+	}
+
+private bool EvadeTorpedo(ref Fire fire, ref Unit unit)
+	{
+	double wrk_x;
+	double wrk_y;
+	double drctn;
+	double dstc;
+	double em_drctn;
+	// 自点と対象点の距離
+	wrk_x=fire.Position.X-unit.Position.X;
+	wrk_y=fire.Position.Y-unit.Position.Y;
+	dstc=Distance(wrk_x, wrk_y);		// 距離
+
+	if( dstc<=600 && dstc>=40 )
+		{
+		// 対象ユニットからの自点への方位角
+		wrk_x=unit.Position.X;
+		wrk_y=unit.Position.Y;
+		wrk_x=wrk_x-fire.Position.X;
+		wrk_y=wrk_y-fire.Position.Y;
+		if(wrk_x==0)	wrk_x=1;
+		if(wrk_y==0)	wrk_y=1;
+		drctn=Direction(wrk_x, wrk_y);
+		drctn=drctn-fire.Direction;
+		if(drctn<0)
+			drctn=360+drctn;
+		if( drctn<=20 || drctn>=340 )
+			{
+
+			wrk_x=unit.Position.X;
+			wrk_y=unit.Position.Y;
+			em_drctn=unit.Direction;
+
+			switch(Random(2))
+				{
+				case 0:
+					em_drctn+=60+Random(30);
+					break;
+				case 1:
+					em_drctn-=60+Random(30);
+					break;
+				}
+
+			em_drctn=(int)em_drctn%360;
+
+			wrk_x+=CosDegrees(em_drctn)*300;
+			wrk_y+=SinDegrees(em_drctn)*300;
+
+			unit.EmergencyDestination = new WorldPosition(wrk_x, wrk_y);
+			unit.EmergencyFlags[0]=100+Random(150);
+
+			return false;
+			}
+		}
+	return true;
+	}
 
 //============================================================================
 // 艦船の緊急機動をＥｍ＿ｘｙにセット
 //----------------------------------------------------------------------------
-public void	set_pos_of_emrgncy_SHIP(int m)
+[Original("set_pos_of_emrgncy_SHIP")]
+public void	SetShipEmergencyDestination(int m)
 	{
+	ref var unit = ref Units[m];
 	int		n;
-	double	em_drctn,wrk_x,wrk_y,drctn,dstc;
 	int		size;
-
-
-
-//return;
-
 
 	for(n=1;n<FIRE_MAX;n++)
 		{
+		ref var fire = ref Fires[n];
 		// 艦船によってくる魚雷から逃げる
-		if( fire[n].used!=0 && fire[n].kind==TPD && fire[n].info[0]>=fire[n].info[2] /*&& unit[n].found*/ )
+		if( fire.Target!=0 && fire.Kind==FireKind.Torpedo && fire.Ticks>=fire.ArmingTime  )
 			{
-			// 自点と対象点の距離
-			wrk_x=fire[n].x-unit[m].x;
-			wrk_y=fire[n].y-unit[m].y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(cos(drctn*a_PI));		// 距離
-
-			if( dstc<=600 && dstc>=40 )
-				{
-				// 対象ユニットからの自点への方位角
-				wrk_x=unit[m].x;
-				wrk_y=unit[m].y;
-				wrk_x=wrk_x-fire[n].x;
-				wrk_y=wrk_y-fire[n].y;
-				if(wrk_x==0)	wrk_x=1;
-				if(wrk_y==0)	wrk_y=1;
-				drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				if(drctn<0)
-					drctn=360+drctn;	
-				drctn=drctn-fire[n].drctn;
-				if(drctn<0)
-					drctn=360+drctn;
-				if( drctn<=20 || drctn>=340 )
-					{
-
-					wrk_x=unit[m].x;
-					wrk_y=unit[m].y;
-					em_drctn=unit[m].drctn;
-
-					switch(rnd(2))
-						{
-						case 0:
-							em_drctn+=60+rnd(30);
-							break;
-						case 1:
-							em_drctn-=60+rnd(30);
-							break;
-						}
-
-					em_drctn=(int)em_drctn%360;
-
-
-					wrk_x+=cos(em_drctn*a_PI)*300;
-					wrk_y+=sin(em_drctn*a_PI)*300;
-
-					unit[m].em_x=wrk_x;
-					unit[m].em_y=wrk_y;
-					unit[m].em_flg[0]=100+rnd(150);
-					//unit[m].stop=1;
-
-					return;
-					}
-				}
+			if( !EvadeTorpedo(ref fire, ref unit) )
+				return;
 			}
 		}
 
-
-
-	for(n=1;n<=max_unit;n++)
+	for(n=1;n<=MaxUnitId;n++)
 		{
+		ref var other = ref Units[n];
 		// 艦船によってくる艦船からにげる
-		if( (unit[m].stop!=0 || (unit[m].kind==CV1||unit[m].kind==CVL1)) && unit[n].used!=0 && (unit[n].ctgry==SHIP /*&& unit[n].kind!=AP && unit[n].kind!=SP*/ && !(unit[n].kind>=AP && unit[n].kind<=GF3) ) && 
-		unit[n].kind!=SS1 && unit[n].used!=unit[m].used && unit[n].found!=0 && unit[n].spry<=0 && unit[m].arm[2]==0)
+		if( (unit.IsStopping || (unit.Kind==UnitKind.Carrier||unit.Kind==UnitKind.LightCarrier)) && other.IsUsed && (other.Category==UnitCategory.Ship  && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress) ) &&
+		other.Kind!=UnitKind.Submarine && other.Side!=unit.Side && other.IsFound && other.SupplyTime<=0 && unit.Target==0)
 			{
-			// 自点と対象点の距離
-			wrk_x=unit[n].x-unit[m].x;
-			wrk_y=unit[n].y-unit[m].y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(cos(drctn*a_PI));		// 距離
-
-			// 見る側
-			
-			if( dstc<=(double)( BB1_SIGHT ) )
-				{
-				wrk_x=unit[n].x-unit[m].x;
-				wrk_y=unit[n].y-unit[m].y;
-				if(wrk_x==0)	wrk_x=1;
-				if(wrk_y==0)	wrk_y=1;
-				drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				if(drctn<0)
-					drctn=360+drctn;	
-
-				if( (unit[m].kind==CV1||unit[m].kind==CVL1) && unit[m].ltl_ldr==0 && unit[n].stop!=0 && rnd(3)!=0 )
-					{
-					if(unit[m].rnd_10[0]<=4)
-						{
-						drctn+=(90+rnd(40));
-						}
-					else
-						{
-						drctn-=(90+rnd(40));
-						}
-					}
-				else
-					{
-					drctn+=160+rnd(40);
-					}
-
-				em_drctn=(int)drctn%360;
-
-				wrk_x=unit[m].x;
-				wrk_y=unit[m].y;
-				wrk_x+=cos(em_drctn*a_PI)*300;
-				wrk_y+=sin(em_drctn*a_PI)*300;
-
-				unit[m].em_x=wrk_x;
-				unit[m].em_y=wrk_y;
-				unit[m].em_flg[0]=100;
-//unit[m].em_flg[0]=0;
-				}
+			EvadeShip(ref other, ref unit);
 			}
-
 
 		// 艦船によってくる攻撃機から逃げる
-		if( unit[n].used!=0 && (unit[n].kind==AT1 || unit[n].kind==BM1 || ( unit[n].kind==FT1 && unit[m].kind==TR1 ) ) && unit[n].info[0]==FLYING && unit[n].used!=unit[m].used && unit[n].found!=0 
+		if( other.IsUsed && (other.Kind==UnitKind.Attacker || other.Kind==UnitKind.Bomber || ( other.Kind==UnitKind.Fighter && unit.Kind==UnitKind.Transport ) ) && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.IsFound
 			)
 			{
-			// 自点と対象点の距離
-			wrk_x=unit[n].x-unit[m].x;
-			wrk_y=unit[n].y-unit[m].y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
-
-			drctn=atan2(wrk_y,wrk_x)*RAD_to;
-			if(drctn<0)
-				drctn=360+drctn;
-			if(wrk_x<0)
-				wrk_x=0-wrk_x;
-			if(wrk_y<0)
-				wrk_y=0-wrk_y;
-			if(drctn>=180)
-				drctn=drctn-180;
-			if(drctn>=90)
-				drctn=90-(drctn-90);
-			dstc=(wrk_x)/(cos(drctn*a_PI));		// 距離
-
-			if( dstc<=600-((unit[n].kind==BM1 ? 1 : 0)*300) && dstc>=40 )
-				{
-				// 対象ユニットからの自点への方位角
-				wrk_x=unit[m].x;
-				wrk_y=unit[m].y;
-				wrk_x=wrk_x-unit[n].x;
-				wrk_y=wrk_y-unit[n].y;
-				if(wrk_x==0)	wrk_x=1;
-				if(wrk_y==0)	wrk_y=1;
-				drctn=atan2(wrk_y,wrk_x)*RAD_to;
-				if(drctn<0)
-					drctn=360+drctn;	
-				drctn=drctn-unit[n].drctn;
-				if(drctn<0)
-					drctn=360+drctn;
-				if( drctn<=45 || drctn>=315 )
-					{
-
-					wrk_x=unit[m].x;
-					wrk_y=unit[m].y;
-					em_drctn=unit[m].drctn;
-					switch(rnd(2))
-						{
-						case 0:
-							em_drctn+=45+rnd(45+20);
-							break;
-						case 1:
-							em_drctn-=45+rnd(45+20);
-							break;
-						}
-					em_drctn=(int)em_drctn%360;
-
-
-					wrk_x+=cos(em_drctn*a_PI)*300;
-					wrk_y+=sin(em_drctn*a_PI)*300;
-
-					unit[m].em_x=wrk_x;
-					unit[m].em_y=wrk_y;
-					unit[m].em_flg[0]=200+rnd(250);
-					//unit[m].stop=1;
-
-					return;
-					}
-				}
+			if( !EvadePlane(ref other, ref unit) )
+				return;
 			}
 		}
 
-
-
-	if( unit[m].kind==DD1 /*&&  unit[m].spd<=unit[m].max_spd*0.9*/ && unit[m].stop==1  /*&& unit[m].used==cpu_side*/ )
+	if( unit.Kind==UnitKind.Destroyer  && unit.IsStopping.Value==1   )
 		{
 		// 駆逐艦の対潜水艦行動、発見された後！
-		if(unit[m].em_flg[0]==0)
-			{
-			for(n=1; n<=max_unit; n++)
-				{
-				if( unit[n].used!=0 && unit[n].kind==SS1 && unit[n].found!=0 && unit[n].used!=unit[m].used )
-					{
-					// 自点と対象点の距離
-					if( unit[n].info[6]!=0 )
-						{
-						// 潜水中
-						wrk_x=unit[n].info[7]-unit[m].x;
-						wrk_y=unit[n].info[8]-unit[m].y;
-						}
-					else
-						{
-						// 浮上してます
-						wrk_x=unit[n].x-unit[m].x;
-						wrk_y=unit[n].y-unit[m].y;
-						}
-
-					if(wrk_x==0)	wrk_x=1;
-					if(wrk_y==0)	wrk_y=1;
-
-					drctn=atan2(wrk_y,wrk_x)*RAD_to;
-					if(drctn<0)
-						drctn=360+drctn;
-					if(wrk_x<0)
-						wrk_x=0-wrk_x;
-					if(wrk_y<0)
-						wrk_y=0-wrk_y;
-					if(drctn>=180)
-						drctn=drctn-180;
-					if(drctn>=90)
-						drctn=90-(drctn-90);
-					dstc=(wrk_x)/(cos(drctn*a_PI));		// 距離
-					
-					if( dstc<=( unit[m].type==1 ? 500 : 400 ) )
-						{
-						// 近くに潜水艦推定位置
-
-						wrk_x=unit[n].info[7]-unit[m].x;
-						wrk_y=unit[n].info[8]-unit[m].y;
-						if(wrk_x==0)	wrk_x=1;
-						if(wrk_y==0)	wrk_y=1;
-						drctn=atan2(wrk_y,wrk_x)*RAD_to;
-
-						drctn+=20-rnd(40);
-/*
-						if(drctn<0)
-							drctn=360+drctn;	
-*/
-
-						em_drctn=(int)drctn%360;
-
-						wrk_x=unit[m].x;
-						wrk_y=unit[m].y;
-						wrk_x+=cos(em_drctn*a_PI)*((dstc)+200);
-						wrk_y+=sin(em_drctn*a_PI)*((dstc)+200);
-
-
-						unit[m].em_x=wrk_x;
-						unit[m].em_y=wrk_y;
-						unit[m].em_flg[0]=100+rnd(250);
-	
-//						unit[m].em_flg[1]=n;
-						return;
-						}
-					}
-				}
-			}
-
-#if false
-		else
-			{
-			if( unit[unit[m].em_flg[1]].found==0  )
-				{
-				if( rnd(10)==0 )
-					{
-					unit[m].em_flg[1]=0;
-					}
-				else
-					{
-					unit[m].em_x=unit[unit[m].em_flg[1]].info[7]+(400-rnd(800));
-					unit[m].em_y=unit[unit[m].em_flg[1]].info[8]+(400-rnd(800));
-					unit[m].em_flg[0]=200+rnd(100);
-					}
-				return;
-				}
-			else
-				{
-				unit[m].em_flg[1]=0;	
-				}
-			}
-#endif
-
+		if( !HuntSubmarine(ref unit) )
+			return;
 
 		}
 
-
-	em_of_out_of_map(m);
+	ReturnIntoWorld(m);
 
 	}
 }

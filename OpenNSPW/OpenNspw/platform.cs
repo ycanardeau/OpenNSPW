@@ -11,6 +11,19 @@ public interface INspwPlatform
 	// Seconds since 1970, like time(NULL).
 	int time();
 
+	// Waits, like Sleep.
+	void Sleep(uint milliseconds)
+	{
+		Thread.Sleep((int)milliseconds);
+	}
+
+	// Waits until a message may have been posted to the game's message queue, like Monitor.Wait(queue). Called with the
+	// queue's lock held, when the queue is empty.
+	void WaitForMessage(object queue)
+	{
+		Monitor.Wait(queue);
+	}
+
 	// Shows a frame: what the game flipped or blitted to the primary surface.
 	void Present(DirectDrawSurface7 primary);
 

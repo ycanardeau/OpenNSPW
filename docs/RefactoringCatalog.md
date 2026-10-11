@@ -62,7 +62,8 @@ Each has the layout of the primitives it replaces (see [Refactoring.md](Refactor
 | `Angle` | `double Degrees` | `Sin()`, `Cos()` as `sin(Degrees*a_PI)`, `cos(Degrees*a_PI)`. `FromVector(dx, dy)` as `atan2(dy,dx)*RAD_to`. No normalization that the C++ does not do. |
 | `Point` | `int X, Y` | Replaces `POINT`. |
 | `Rect` | `int Left, Top, Right, Bottom` | Replaces `RECT`. `Contains` only where a `pt_in_rect` variant matches it exactly. |
-| `Bool32` | `int Value` | `implicit operator bool` (`Value != 0`), `True`, `False`. |
+| `Bool32` | `int Value` | `implicit operator bool` (`Value != 0`), and from `bool` (1 or 0). Comparisons with 1 stay as `Value==1`. |
+| `Bool8` | `byte Value` | The same, for a `BYTE` used as a boolean (`you_are_host`, `map_edit`, `decision_sw`, ...). |
 | `UnitId` | `int Value` | `None` (0). Exposed by accessors over `short`, `int` and `byte` storage. `Units[id]` indexer. |
 | `FireId`, `EffectId` | `int Value` | `None` (0), as returned by `seek_fire_no` and `seek_effect_no`. |
 
@@ -167,8 +168,8 @@ The arming entries have the values of the `FireKind`s they set, and the original
 | Enum | From | Notes |
 | --- | --- | --- |
 | `InputButtons : int`, `[Flags]` | `FRONT_BTN` ... `TOP_VIEW_BTN2` | `key_cndtn` |
-| `SoundId : int` | `AA_BLT1` ... `END_OF_SND_NO` | Used as an index into `lpDSB_` and `snd_`, with a cast. |
-| `SurfaceId : int` | `TTL_BACK` ... `MAP_BASE` | Sprite sheets. |
+| `SoundId : int` | `AA_BLT1` ... `CLICK2` | Used as an index into `lpDSB_` and `snd_`, with a cast. The sounds load from `WAV\<original name>.wav`, in this order. |
+| `SpriteId : int` | `TTL_BACK` ... `MAP_BASE` | The entries of `Sprites`, regions of the one offscreen surface (`t3.bmp`). `Sprites` is a `SpriteArray`, an inline array of 25 that can also be indexed by `SpriteId`. |
 | `KeyDirection : int` | `KEY_UP` ... `KEY_LFUP` | Numeric keypad layout (8 is up). |
 
 ## Constants
@@ -254,7 +255,7 @@ The struct types are renamed (`UNIT` → `Unit`, `FIRE` → `Fire`, `EFFECT` →
 | `a_spd_add` | `AccelerationChange` | `double` | |
 | `min_spd`, `max_spd` | `MinSpeed`, `MaxSpeed` | `double` | |
 | `stop` | `IsStopping` | `Bool32` | Keeps its direction and only slows down. |
-| `spry` | `Supply` | `int` | Supply and repair state (check whether a flag). |
+| `spry` | `SupplyTime` | `int` | Supply and repair (補給と修理): not a flag but a timer, 0 when not supplied, counted up from 1 and back to 1 after each repair or refill. `IsSupplying` tests it against 0. |
 | `mark` | `IsMarked` | `Bool32` | Selected (check). |
 | `pp_x`, `pp_y` | `PathX`, `PathY` | `Array64<double>` | `Path[i]` is a view that reads and writes both as a `WorldPosition`. |
 | `em_flg` | `EmergencyFlags` | `Array2<int>` | |
@@ -284,7 +285,7 @@ The struct types are renamed (`UNIT` → `Unit`, `FIRE` → `Fire`, `EFFECT` →
 | 3 | | `Info3` (check: hangar movement, landing preparation, straight flight after take-off) | |
 | 4 | Carriers: `PlanesToLaunch` (発進予定機数, 0 allows landing) | `Info4` (check) | |
 | 5 | `Mode` (`UnitMode`) | `Mode` | `Mode` |
-| 6 | Submarines: `SubmergedState` (compared with 0 and 1, so not `Bool32` without checking). Transports: `LandingPoint.X` (揚陸座標) | | |
+| 6 | Submarines: `IsSubmerged` (`Bool32`; the one comparison with 1 stays as `IsSubmerged.Value==1`). Transports: `LandingPoint.X` (揚陸座標) | | |
 | 7 | Carriers: `LandingLock` (0 allowed, 1 not; also the deck side, check). Transports: `LandingPoint.Y` | | |
 | 8 | Carriers: `LaunchLock` (0 allowed, 1 not) | | |
 | 9 | | Fighters: `Info9` (制空出撃フラグ, and other uses, check) | |
@@ -324,7 +325,7 @@ The struct types are renamed (`UNIT` → `Unit`, `FIRE` → `Fire`, `EFFECT` →
 | Original | New | Fields |
 | --- | --- | --- |
 | `KUMO` | `Cloud` | `used` → `Used` (`short`), `x`, `y` → `Position`, `kind` → `Kind` |
-| `SPRT` | `Sprite` | `no` → `FrameCount`, `x`, `y` → `Source` (`Point`), `cx`, `cy` → `Center` (`Point`), `wd`, `ht` → `Width`, `Height`, `base_x`, `base_y` → `Origin` (`Point`), `os_of_x` → `FrameOffsetX` (check) |
+| `SPRT` | `Sprite` | `no` → `Frame` (the frame drawn), `x`, `y` → `X`, `Y` (where it is drawn on the screen), `cx`, `cy` → `CenterX`, `CenterY`, `wd`, `ht` → `Width`, `Height` (of a frame), `base_x`, `base_y` → `SheetX`, `SheetY` (where its frames start on the surface), `os_of_x` → `FramesPerRow` |
 | `NEW_PP` | `MoveOrder` | `used` → `Unit` (`short`; check what it holds), `x`, `y` → `Destination`, `cls` → `ClearsPath` (`Bool32`) |
 | `NEW_SLCT` | `SelectOrder` | `sw` → `IsSet`, `the_slct_unit` → `SelectedUnit`, `m` → `Unit`, `gr_x`, `gr_y` → `GroundPosition` |
 | `NEW_MENU` | `MenuOrder` | `menu` → `Menu`, `the_slct_unit` → `SelectedUnit` |
@@ -332,7 +333,7 @@ The struct types are renamed (`UNIT` → `Unit`, `FIRE` → `Fire`, `EFFECT` →
 The network messages keep their packed layout and get message names: `_DP_NEW_PP` → `MoveOrderMessage`, `_DP_NEW_PP_SHIP` → `MoveShipsOrderMessage`, `_DP_NEW_SLCT_LAND` → `SelectBaseOrderMessage`, `_DP_NEW_MENU` → `MenuOrderMessage`, `_DP_FLAG` → `SyncFlagMessage`, `_DP_DATA_1` → `NameMessage`, `_DP_DATA_20` → `ChatMessage`, `GENERICMSG` → `MessageHeader`. Their fields keep their widths (`byte` unit numbers, `short` coordinates).
 
 ## Globals
-All 119 globals of `Layout.json`, grouped. Arrays indexed by player seem to use `[1]` for the local player and `[0]` for the rival (check per array; `[2]` is unused).
+All 119 globals of `Layout.json`, grouped. The flags among them are `Bool32` (`int`) or `Bool8` (`byte`): `IsAppActive`, `IsFullscreen`, `IsEditingMap`, `IsHost`, `WasHost`, `CanOrder`, `HasOrdered`, `CanAdvance1`, `CanAdvance2`, `IsDecisionEnabled`, `IsTickOutOfSync`, `IsRandomOutOfSync`, `AreUnitsOutOfSync`, `HasSavedDesync`. Arrays indexed by player seem to use `[1]` for the local player and `[0]` for the rival (check per array; `[2]` is unused).
 
 ### Units, fires, effects, map
 | Original | New | Notes |

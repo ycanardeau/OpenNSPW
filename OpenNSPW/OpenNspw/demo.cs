@@ -1,21 +1,18 @@
+using System.Runtime.CompilerServices;
+
 //
-//                                    **                                   
-//                                   *  *                                  
-//                                    **  *                                 
-//                                    **   *                                
-//                                    **  *                                 
-//                            *     ******     *                              
-//                            ***   * **     ***                              
-//                              ****  **  ****                                 
-//                             **  ********                                    
-//                                                                       
+//                                    **
+//                                   *  *
+//                                    **  *
+//                                    **   *
+//                                    **  *
+//                            *     ******     *
+//                            ***   * **     ***
+//                              ****  **  ****
+//                             **  ********
+//
 //                 Ｎａｖａｌ Ｓｏｕｔｈ Ｐａｃｉｆｉｃ Ｗａｒ
 //                             Ｏｎ　ｔｈｅ　Ｎｅｔ
-
-
-//#include "all_head.h"
-//#include "all_extern.h"
-//#include	"all_forward.h"
 
 // Port of demo.cpp.
 
@@ -24,21 +21,13 @@ namespace OpenNspw;
 public unsafe partial class Nspw
 {
 
-
-
-
-//BOOL CALLBACK SvDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
-//BOOL CALLBACK SessionDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
-
-
-public int	exist_auto_save;
-
-
+[Original("exist_auto_save")] public int	HasAutoSave;
 
 //============================================================================
 // デモ画面
 //----------------------------------------------------------------------------
-public void	demo_func()
+[Original("demo_func")]
+public void	UpdateTitle()
 	{
 	RECT	src_rect,field_rect,dstn_rect;
 	int	m,n,g,no1,i,wrk,wrk2,wrk3; Array6<int> menu = default; Array6<int> menu2 = default;
@@ -49,76 +38,52 @@ public void	demo_func()
 	_DP_FLAG	dp_flag;
 	_DP_DATA_20	dp_data_20=default;
 
-
 #if CONN_DBG
 	rival_mode=mode;
 #endif
 
-
-
 	if((FrameCount%40)==0)
 		{
 		// 自分のモードを相手に伝える。
-		dp_flag.dwType = RIVAL_MODE;
-		dp_flag.rival_mode=mode;
+		dp_flag.dwType = MessageType.RivalMode;
+		dp_flag.rival_mode=(short)Mode;
 		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
 		bufferDesc.pBufferData  = (byte*) &dp_flag;
 		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1, 0, null, ref hAsync, EASY_SEND );
 
-
-
 		// 自分のバージョンを相手に伝える。
-		dp_data_20.dwType = RIVAL_VER;
+		dp_data_20.dwType = MessageType.RivalVersion;
 		wsprintf( dp_data_20.friend_chat, "%s",VER );
 		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_20));
 		bufferDesc.pBufferData  = (byte*) &dp_data_20;
 		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, EASY_SEND );
 		}
 
-
-
-
-	if( demo_time==0 )
+	if( TitleTime==0 )
 		{
-		rival_mode=0;
-		wsprintf(rival_ver, "- - -" );
+		RivalMode=0;
+		wsprintf(RivalVersion, "- - -" );
 		}
 
-
-	cls_flg=1;
-
-
-//	key_cont();
-
+	ClearFlag=1;
 
 	// ユニットインフォーメィション
-	sprt[TTL_BACK].x=212-50;
-	sprt[TTL_BACK].y=130;
+	Sprites[SpriteId.TitleBackground].X=212-50;
+	Sprites[SpriteId.TitleBackground].Y=130;
 
-	
-	src_rect.left = 	sprt[TTL_BACK].base_x;
-	src_rect.top = sprt[TTL_BACK].base_y;
-	src_rect.right = sprt[TTL_BACK].base_x+sprt[TTL_BACK].wd;
-	src_rect.bottom = sprt[TTL_BACK].base_y+sprt[TTL_BACK].ht;
+	src_rect.left = 	Sprites[SpriteId.TitleBackground].SheetX;
+	src_rect.top = Sprites[SpriteId.TitleBackground].SheetY;
+	src_rect.right = Sprites[SpriteId.TitleBackground].SheetX+Sprites[SpriteId.TitleBackground].Width;
+	src_rect.bottom = Sprites[SpriteId.TitleBackground].SheetY+Sprites[SpriteId.TitleBackground].Height;
 
 	// dstn_rect は ディスティネーションレクタングルです。
-	dstn_rect.left=sprt[TTL_BACK].x;
-	dstn_rect.top=sprt[TTL_BACK].y;
-	//dstn_rect.right=sprt[TTL_BACK].x+sprt[TTL_BACK].wd/2;
-	//dstn_rect.bottom=sprt[TTL_BACK].y+sprt[TTL_BACK].ht/2;
+	dstn_rect.left=Sprites[SpriteId.TitleBackground].X;
+	dstn_rect.top=Sprites[SpriteId.TitleBackground].Y;
 
-	
 	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
 		{
-		restoreAll();
+		RestoreSurfaces();
 		}
-
-
-
-
-
-	//draw_line4(10, 10, 200,200,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-
 
 /*****
 	// src_rect は ソースサーフェスのレクタングルです。
@@ -135,27 +100,10 @@ public void	demo_func()
 
 *****/
 
-
-
-
-
-
-		if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK ) 
+		if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
 			{
 			SetBkMode(hdc, TRANSPARENT);
 			SelectObject(hdc, gameFont_2);
-
-/*
-			if( g_dwNumberOfActivePlayers==2 )
-				len[0] = wsprintf(ach[0], "CONNECTED NOW");
-			else
-				len[0] = wsprintf(ach[0], "NO CONNECTED");
-
-			SetTextColor(hdc, RGB(255, 0, 0));
-			TextOut(hdc, 360, 60, ach[0], len[0]);
-*/
-
-
 
 #if !LNGG_VER
 			len[0] = wsprintf(ach[0], "Naval South Pacific War on the Net %s",VER );
@@ -174,62 +122,39 @@ public void	demo_func()
 				TextOut(hdc, 330, 580+(n*23), ach[n], len[n]);
 				}
 
-
-
 			SelectObject(hdc, gameFont_1);
 
 			len[0] = wsprintf(ach[0], "YOUR VERSION = %s",VER );
 			SetTextColor(hdc, RGB(255, 255, 255));
 			TextOut(hdc, 385, 84, ach[0], len[0]);
 
-			len[0] = wsprintf(ach[0], "RIVAL VERSION = %s",rival_ver );
+			len[0] = wsprintf(ach[0], "RIVAL VERSION = %s",RivalVersion );
 			SetTextColor(hdc, RGB(255, 255, 255));
 			TextOut(hdc, 385, 99, ach[0], len[0]);
-
-
-
-
-
-
-//		len[0] = wsprintf(copy, "[0]=%d  [1]=%d  [2]=%d  [3]=%d" ,ach[3][0],ach[3][1],ach[3][2],ach[3][3] );
-
-#if false
-		len[0] = wsprintf(copy, "my_string_crsr=%d my_string_rpd=%d [0]=%d  [1]=%d  [2]=%d  [3]=%d" ,my_string_crsr,my_string_rpd,my_string[0],my_string[1],my_string[2],my_string[3] );
-		TextOut(hdc, 100, 50, copy, len[0]);
-
-		len[0] = wsprintf(copy, my_string );
-		TextOut(hdc, 100, 100, copy, len[0]);
-#endif
 
 			IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
 			}
 
-
-
-
-
-	if( lf_btn==3 )
+	if( LeftButton==3 )
 		{
-//		lf_btn=0;
-		if( map_edit!=0 )
+		if( IsEditingMap )
 			{
-			go_cnct_game_setting();
+			GoToGameSetting();
 			}
-		else if( g_dwNumberOfActivePlayers==2 && rival_mode==DEMO && you_are_host!=0 )
+		else if( ActivePlayerCount==2 && RivalMode==GameMode.Title && IsHost )
 			{
-			go_cnct_game_setting();
+			GoToGameSetting();
 
 			if( 1!=0 )
 				{
-				dp_flag.dwType = GO_GAME_SETTING;
-				dp_flag.rival_mode=mode;
+				dp_flag.dwType = MessageType.GoToGameSetting;
+				dp_flag.rival_mode=(short)Mode;
 				bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
 				bufferDesc.pBufferData  = (byte*) &dp_flag;
 				g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1, 0, null, ref hAsync, MUST_SEND );
 
 				//ここにくるのはホストだけ
 				// リジュームデータがホストをやってたかしらべる。
-
 
 				HANDLE	hFile;
 
@@ -239,36 +164,22 @@ public void	demo_func()
 				if( INVALID_HANDLE_VALUE==hFile )
 					{
 					// ファイルありませんでした。
-					you_were_host=0;
+					WasHost=false;
 					}
 				else
 					{
 					// ファイルはあった。
-					load_on_resume(1);
-					you_were_host=you_are_host;		// 前回ホストだったら１が代入
+					LoadResume(1);
+					WasHost=IsHost;		// 前回ホストだったら１が代入
 					CloseHandle(hFile);
 					}
-				you_are_host=1;						// ここに来るのはホストなのでこれでいい。
-				sinario=0;
+				IsHost=true;						// ここに来るのはホストなのでこれでいい。
+				ScenarioNumber=0;
 
 				}
 			}
 
-
-//if( dbg[0]==1 )
-//	{
 //	MessageBox(hwndApp,"bitmap_surface","残念！",MB_OK | MB_ICONSTOP);
-
-//	DialogBox(hInstApp, MAKEINTRESOURCE(IDD_ADDRESS_OVERRIDE), hwndApp, OverrideDlgProc);
-
-
-//	ShowWindow(hwndApp,SW_MINIMIZE);
-
-
-
-//	hwndDlg = CreateDialog(hInst,"SAMPLE_DIALOG",hwndApp,SampleDlgProc);
-
-//	}
 
 /*
 		if( DialogBox(hInstance, MAKEINTRESOURCE(IDD_SPDIALOG), hWnd, (DLGPROC)SvDlgProc) )
@@ -276,29 +187,20 @@ public void	demo_func()
 			// セッション選択のダイアログ・ボックスを表示する
 			if (DialogBox(hInstance, MAKEINTRESOURCE(IDD_SESSIONDLG), hwnd, (DLGPROC)SessionDlgProc))
 */
-//		CoInitialize( NULL );
-//		SetupConnection(hInstance, &DPInfo);
-//		CoUninitialize();
-//		dp_init();
 //		DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_DP), hwnd, cnctn_dialog_proc,
-//							(LPARAM) hInstance);
-		//mode=COMBAT;
-		//game_init();
 		}
 
-
-
-	if( /*demo_time==10 ||*/  ri_btn==3 )
+	if(   RightButton==3 )
 		{
 
-		ri_btn=0;
+		RightButton=0;
 
 /*
 		// 通信対戦用の初期化
 		mode=CNCT_GAME_SETUP;
 
-		wsprintf(g_strLocalPlayerName, "Player" );	
-		wsprintf(g_strRivalPlayerName, "Player" );	
+		wsprintf(g_strLocalPlayerName, "Player" );
+		wsprintf(g_strRivalPlayerName, "Player" );
 
 		cnct_game=0;
 
@@ -327,49 +229,30 @@ public void	demo_func()
 
 		}
 
-
-
-/*
-mode=SETUP;
-*/
-
-	demo_time++;
-
-
+	TitleTime++;
 
 	}
 
-
-
-
-
-
-
-
-
-
 //============================================================================
-// 
+//
 // コネクトゲームスタートの値
 //----------------------------------------------------------------------------
-public void go_cnct_game_setting()
+[Original("go_cnct_game_setting")]
+public void GoToGameSetting()
 	{
 
+	ScenarioNumber=0;
 
-	sinario=0;
+	Mode=GameMode.GameSetting;
+	HostSide=0;
+	IsDecisionEnabled=true;
+	ArrivalControl=0;
 
+	SupplyRates[0]=0;		// Host
+	SupplyRates[1]=0;		// Guest
 
-	mode=CNCT_GAME_SETTING;
-	host_side=0;
-	decision_sw=1;
-	arrival_cont=0;
-
-	spry_rate[0]=0;		// Host
-	spry_rate[1]=0;		// Guest
-
-	first_spry_pt[0]=0;		// Host
-	first_spry_pt[1]=0;		// Guest
-
+	InitialSupplyPoints[0]=0;		// Host
+	InitialSupplyPoints[1]=0;		// Guest
 
 	if( hwndChatDlg!=null )
 		{
@@ -377,13 +260,9 @@ public void go_cnct_game_setting()
 		hwndChatDlg=null;
 		}
 
-
 #if SND_SW
-	lpDSB_[SEA1][0/*snd_[0]*/].Stop();		// 
+	lpDSB_[(int)SoundId.Sea][0].Stop();		//
 #endif
-
-
-
 
 HANDLE	hFile;
 
@@ -393,75 +272,1380 @@ HANDLE	hFile;
 	if( INVALID_HANDLE_VALUE==hFile )
 		{
 		// ファイルありませんでした。
-		exist_auto_save=0;
+		HasAutoSave=0;
 		}
 	else
 		{
 		// ファイルはあった。
-		exist_auto_save=1;
+		HasAutoSave=1;
 		CloseHandle(hFile);
 		}
 
 	}
+private void UpdateDecisionSetting(int rx, ref HDC hdc, ref Array12<Array128<byte>> ach, ref Array12<int> len)
+	{
+	RECT dstn_rect;
+	if(IsHost)
+		{
+		dstn_rect.left=rx+50;
+		dstn_rect.top=50;
+		TextOut(hdc, dstn_rect.left, dstn_rect.top+(1*25), ach[0], len[0]);
 
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "勝敗判定の切り替え ->>>");
+#else
+		len[0] = wsprintf(ach[0], "Decision ->>>");
+#endif
+		dstn_rect.left=rx;
+		dstn_rect.top=125;
+		dstn_rect.right=dstn_rect.left+(len[0]*12);
+		dstn_rect.bottom=dstn_rect.top+24;
+		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+			{
+			SetTextColor(hdc, RGB(255, 0, 0));
+			if( LeftButton==3 )
+				{
+				IsDecisionEnabled=!IsDecisionEnabled;
+				}
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
+			}
 
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 
+		}
 
+	if(!IsDecisionEnabled)
+		{
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "勝敗条件は無効");
+#else
+		len[0] = wsprintf(ach[0], "Invalid");
+#endif
+		}
+	else
+		{
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "勝敗条件は有効");
+#else
+		len[0] = wsprintf(ach[0], "Valid");
+#endif
+		}
+	SetTextColor(hdc, RGB(255, 255, 255));
+	dstn_rect.left=rx;
+	dstn_rect.top=150;
+	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+	}
+private void UpdateHostSupplyRateSetting(ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc, int rx)
+	{
+	RECT dstn_rect;
+	int flg;
+#if !LNGG_VER
+	len[0] = wsprintf(ach[0], "補給割当増加率（ホスト側）");
+#else
+	len[0] = wsprintf(ach[0], "increase rate of supply pts(Host)");
+#endif
+	SetTextColor(hdc, RGB(255, 255, 255));
+	dstn_rect.left=rx;
+	dstn_rect.top=200;
+	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+
+	if( IsHost )
+		{
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "増やす ->>>");
+#else
+		len[0] = wsprintf(ach[0], "Increment ->>>");
+#endif
+		SetTextColor(hdc, RGB(255, 255, 255));
+		dstn_rect.left=rx;
+		dstn_rect.top=225;
+		dstn_rect.right=dstn_rect.left+(len[0]*10);
+		dstn_rect.bottom=dstn_rect.top+24;
+		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+			{
+			SetTextColor(hdc, RGB(255, 0, 0));
+			if( LeftButton==3 )
+				{
+				SupplyRates[0]++;
+				flg=1;
+				}
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
+			}
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "減らす ->>>");
+#else
+		len[0] = wsprintf(ach[0], "Decrement ->>>");
+#endif
+		SetTextColor(hdc, RGB(255, 255, 255));
+		dstn_rect.left=rx;
+		dstn_rect.top=250;
+		dstn_rect.right=dstn_rect.left+(len[0]*10);
+		dstn_rect.bottom=dstn_rect.top+24;
+		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+			{
+			SetTextColor(hdc, RGB(255, 0, 0));
+			if( LeftButton==3 && SupplyRates[0]!=0)
+				{
+				SupplyRates[0]--;
+				flg=1;
+				}
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
+			}
+
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+		}
+
+	len[0] = wsprintf(ach[0], "%d pts",SupplyRates[0]);
+	SetTextColor(hdc, RGB(255, 255, 255));
+	dstn_rect.left=rx+150;
+	dstn_rect.top=237;
+	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+	}
+private void UpdateSwapTimeSetting(ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc, int rx)
+	{
+	RECT dstn_rect;
+	int flg;
+#if !LNGG_VER
+	len[0] = wsprintf(ach[0], "補給値反転地点");
+#else
+	len[0] = wsprintf(ach[0], "Reverse of suplly pts");
+#endif
+	SetTextColor(hdc, RGB(255, 255, 255));
+	dstn_rect.left=rx+250;
+	dstn_rect.top=200;
+	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+
+	if( IsHost )
+		{
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "増やす ->>>");
+#else
+		len[0] = wsprintf(ach[0], "Increment ->>>");
+#endif
+		SetTextColor(hdc, RGB(255, 255, 255));
+		dstn_rect.left=rx+250;
+		dstn_rect.top=225;
+		dstn_rect.right=dstn_rect.left+(len[0]*10);
+		dstn_rect.bottom=dstn_rect.top+24;
+		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+			{
+			SetTextColor(hdc, RGB(255, 0, 0));
+			if( (LeftButton==1||LeftButton==2) )
+				{
+				SwapTime++;
+				flg=1;
+				}
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
+			}
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "減らす ->>>");
+#else
+		len[0] = wsprintf(ach[0], "Decrement ->>>");
+#endif
+		SetTextColor(hdc, RGB(255, 255, 255));
+		dstn_rect.left=rx+250;
+		dstn_rect.top=250;
+		dstn_rect.right=dstn_rect.left+(len[0]*10);
+		dstn_rect.bottom=dstn_rect.top+24;
+		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+			{
+			SetTextColor(hdc, RGB(255, 0, 0));
+			if( (LeftButton==1||LeftButton==2) && SwapTime!=0)
+				{
+				SwapTime--;
+				flg=1;
+				}
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
+			}
+
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+		}
+
+#if !LNGG_VER
+	if( SwapTime!=0 )
+		len[0] = wsprintf(ach[0], "経過時間 %d",SwapTime*100);
+	else
+		len[0] = wsprintf(ach[0], "反転無し");
+#else
+	if( rvrs_time )
+		len[0] = wsprintf(ach[0], "TIME: %d",rvrs_time*100);
+	else
+		len[0] = wsprintf(ach[0], "No reverse");
+#endif
+	SetTextColor(hdc, RGB(255, 255, 255));
+	dstn_rect.left=rx+150+250-30;
+	dstn_rect.top=237;
+	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+	}
+private void UpdateGuestSupplyRateSetting(ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc, int rx)
+	{
+	RECT dstn_rect;
+	int flg;
+#if !LNGG_VER
+	len[0] = wsprintf(ach[0], "補給割当増加率（ゲスト側）");
+#else
+	len[0] = wsprintf(ach[0], "Increse rate of supply pts(guest)");
+#endif
+	SetTextColor(hdc, RGB(255, 255, 255));
+	dstn_rect.left=rx;
+	dstn_rect.top=300;
+	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+
+	if( IsHost )
+		{
+
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "増やす ->>>");
+#else
+		len[0] = wsprintf(ach[0], "Increment ->>>");
+#endif
+		SetTextColor(hdc, RGB(255, 255, 255));
+		dstn_rect.left=rx;
+		dstn_rect.top=325;
+		dstn_rect.right=dstn_rect.left+(len[0]*10);
+		dstn_rect.bottom=dstn_rect.top+24;
+		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+			{
+			SetTextColor(hdc, RGB(255, 0, 0));
+			if( LeftButton==3 )
+				{
+				SupplyRates[1]++;
+				flg=1;
+				}
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
+			}
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "減らす ->>>");
+#else
+		len[0] = wsprintf(ach[0], "Decrement ->>>");
+#endif
+		SetTextColor(hdc, RGB(255, 255, 255));
+		dstn_rect.left=rx;
+		dstn_rect.top=350;
+		dstn_rect.right=dstn_rect.left+(len[0]*10);
+		dstn_rect.bottom=dstn_rect.top+24;
+		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+			{
+			SetTextColor(hdc, RGB(255, 0, 0));
+			if( LeftButton==3 && SupplyRates[1]!=0)
+				{
+				SupplyRates[1]--;
+				flg=1;
+				}
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
+			}
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+		}
+
+	len[0] = wsprintf(ach[0], "%d pts",SupplyRates[1]);
+	SetTextColor(hdc, RGB(255, 255, 255));
+	dstn_rect.left=rx+150;
+	dstn_rect.top=337;
+	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+	}
+private void UpdateSwapRuleSetting(ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc, int rx)
+	{
+	RECT dstn_rect;
+	int flg;
+	if( SwapTime!=0 )
+		{
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], ( IsHost ? "補給値反転ルール->>>" : "補給値反転ルール" ));
+#else
+		len[0] = wsprintf(ach[0], "Reverse rule");
+#endif
+		SetTextColor(hdc, RGB(255, 255, 255));
+		dstn_rect.left=rx+250;
+		dstn_rect.top=300;
+		dstn_rect.right=dstn_rect.left+(len[0]*10);
+		dstn_rect.bottom=dstn_rect.top+24;
+
+		if( IsHost )
+			{
+			if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+				{
+				SetTextColor(hdc, RGB(255, 0, 0));
+				if( LeftButton==3 )
+					{
+					SwapRule=(short)(SwapRule==0 ? 1 : 0);
+					flg=1;
+					}
+				}
+			else
+				{
+				SetTextColor(hdc, RGB(255, 255, 255));
+				}
+			}
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+
+		if( SwapRule==0 )
+			{
+#if !LNGG_VER
+			len[0] = wsprintf(ach[0], "一度だけ");
+#else
+			len[0] = wsprintf(ach[0], "Once a game");
+#endif
+			SetTextColor(hdc, RGB(255, 255, 255));
+			dstn_rect.left=rx+250;
+			dstn_rect.top=325;
+			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+			}
+		else
+			{
+#if !LNGG_VER
+			len[0] = wsprintf(ach[0], "指定時間毎");
+#else
+			len[0] = wsprintf(ach[0], "Every specified TIME");
+#endif
+			SetTextColor(hdc, RGB(255, 255, 255));
+			dstn_rect.left=rx+250;
+			dstn_rect.top=325;
+			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+			}
+		}
+	}
+private void UpdateHostInitialSupplyPointsSetting(ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc, int rx)
+	{
+	RECT dstn_rect;
+	int flg;
+#if !LNGG_VER
+	len[0] = wsprintf(ach[0], "初期補給割当（ホスト側）");
+#else
+	len[0] = wsprintf(ach[0], "Supply pts on start(Host)");
+#endif
+	SetTextColor(hdc, RGB(255, 255, 255));
+	dstn_rect.left=rx;
+	dstn_rect.top=400;
+	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+
+	if( IsHost )
+		{
+//				len[0] = wsprintf(ach[0], "増やす ->>>");
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "増やす ->>>");
+#else
+		len[0] = wsprintf(ach[0], "Increment ->>>");
+#endif
+
+		SetTextColor(hdc, RGB(255, 255, 255));
+		dstn_rect.left=rx;
+		dstn_rect.top=425;
+		dstn_rect.right=dstn_rect.left+(len[0]*10);
+		dstn_rect.bottom=dstn_rect.top+24;
+		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+			{
+			SetTextColor(hdc, RGB(255, 0, 0));
+			if( (LeftButton==1||LeftButton==2) )
+				{
+				InitialSupplyPoints[0]+=50;
+				flg=1;
+				}
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
+			}
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+
+//				len[0] = wsprintf(ach[0], "減らす ->>>");
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "減らす ->>>");
+#else
+		len[0] = wsprintf(ach[0], "Decrement ->>>");
+#endif
+
+		SetTextColor(hdc, RGB(255, 255, 255));
+		dstn_rect.left=rx;
+		dstn_rect.top=450;
+		dstn_rect.right=dstn_rect.left+(len[0]*10);
+		dstn_rect.bottom=dstn_rect.top+24;
+		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+			{
+			SetTextColor(hdc, RGB(255, 0, 0));
+			if( (LeftButton==1||LeftButton==2) && InitialSupplyPoints[0]!=0)
+				{
+				InitialSupplyPoints[0]-=50;
+				if( InitialSupplyPoints[0]<0)
+					InitialSupplyPoints[0]=0;
+				flg=1;
+				}
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
+			}
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+		}
+
+	len[0] = wsprintf(ach[0], "%d pts",InitialSupplyPoints[0]);
+	SetTextColor(hdc, RGB(255, 255, 255));
+	dstn_rect.left=rx+150;
+	dstn_rect.top=437;
+	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+	}
+private void UpdateGuestInitialSupplyPointsSetting(ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc, int rx)
+	{
+	RECT dstn_rect;
+	int flg;
+#if !LNGG_VER
+	len[0] = wsprintf(ach[0], "初期補給割当（ゲスト側）");
+#else
+	len[0] = wsprintf(ach[0], "Supply pts on start(Guest)");
+#endif
+	SetTextColor(hdc, RGB(255, 255, 255));
+	dstn_rect.left=rx;
+	dstn_rect.top=500;
+	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+
+	if( IsHost )
+		{
+//				len[0] = wsprintf(ach[0], "増やす ->>>");
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "増やす ->>>");
+#else
+		len[0] = wsprintf(ach[0], "Increment ->>>");
+#endif
+
+		SetTextColor(hdc, RGB(255, 255, 255));
+		dstn_rect.left=rx;
+		dstn_rect.top=525;
+		dstn_rect.right=dstn_rect.left+(len[0]*10);
+		dstn_rect.bottom=dstn_rect.top+24;
+		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+			{
+			SetTextColor(hdc, RGB(255, 0, 0));
+			if( (LeftButton==1||LeftButton==2) )
+				{
+				InitialSupplyPoints[1]+=50;
+				flg=1;
+				}
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
+			}
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+
+//				len[0] = wsprintf(ach[0], "減らす ->>>");
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "減らす ->>>");
+#else
+		len[0] = wsprintf(ach[0], "Decrement ->>>");
+#endif
+
+		SetTextColor(hdc, RGB(255, 255, 255));
+		dstn_rect.left=rx;
+		dstn_rect.top=550;
+		dstn_rect.right=dstn_rect.left+(len[0]*10);
+		dstn_rect.bottom=dstn_rect.top+24;
+		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+			{
+			SetTextColor(hdc, RGB(255, 0, 0));
+			if( (LeftButton==1||LeftButton==2) && InitialSupplyPoints[1]!=0)
+				{
+				InitialSupplyPoints[1]-=50;
+				if( InitialSupplyPoints[1]<0)
+					InitialSupplyPoints[1]=0;
+				flg=1;
+				}
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
+			}
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+		}
+
+	len[0] = wsprintf(ach[0], "%d pts",InitialSupplyPoints[1]);
+	SetTextColor(hdc, RGB(255, 255, 255));
+	dstn_rect.left=rx+150;
+	dstn_rect.top=537;
+	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+	}
+private void UpdateArrivalControlSetting(ref Array12<int> len, ref Array12<Array128<byte>> ach, int rx, ref HDC hdc)
+	{
+	RECT dstn_rect;
+	if(IsHost)
+		{
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "増援ユニット制御 ->>>");
+#else
+		len[0] = wsprintf(ach[0], "Supply unit control ->>>");
+#endif
+		dstn_rect.left=rx;
+		dstn_rect.top=600;
+		dstn_rect.right=dstn_rect.left+(len[0]*12);
+		dstn_rect.bottom=dstn_rect.top+24;
+		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+			{
+			SetTextColor(hdc, RGB(255, 0, 0));
+			if( LeftButton==3 )
+				{
+				ArrivalControl++;
+				if(ArrivalControl>=7)
+					ArrivalControl=0;
+				}
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
+			}
+
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+
+		}
+
+	switch( ArrivalControl )
+		{
+#if !LNGG_VER
+		case 0:
+			len[0] = wsprintf(ach[0], "全種増援可(%d)",ArrivalControl);
+			break;
+		case 1:
+			len[0] = wsprintf(ach[0], "全種増援不可(%d)",ArrivalControl);
+			break;
+		case 2:
+			len[0] = wsprintf(ach[0], "輸送船以外可(%d)",ArrivalControl);
+			break;
+		case 3:
+			len[0] = wsprintf(ach[0], "輸送船のみ可(%d)",ArrivalControl);
+			break;
+		case 4:
+			len[0] = wsprintf(ach[0], "戦闘艦船のみ可(%d)",ArrivalControl);
+			break;
+		case 5:
+			len[0] = wsprintf(ach[0], "航空機のみ可(%d)",ArrivalControl);
+			break;
+		case 6:
+			len[0] = wsprintf(ach[0], "輸送船(軍港)以外可(%d)",ArrivalControl);
+			break;
+#else
+
+		case 0:
+			len[0] = wsprintf(ach[0], "All of possible(%d)",arrival_cont);
+			break;
+		case 1:
+			len[0] = wsprintf(ach[0], "Nothing of possible(%d)",arrival_cont);
+			break;
+		case 2:
+			len[0] = wsprintf(ach[0], "Possible except transpot(%d)",arrival_cont);
+			break;
+		case 3:
+			len[0] = wsprintf(ach[0], "Possible only transport(%d)",arrival_cont);
+			break;
+		case 4:
+			len[0] = wsprintf(ach[0], "Possible only combat fleet(%d)",arrival_cont);
+			break;
+		case 5:
+			len[0] = wsprintf(ach[0], "Possible only Airplane(%d)",arrival_cont);
+			break;
+		case 6:
+			len[0] = wsprintf(ach[0], "Possible except transport(port)(%d)",arrival_cont);
+			break;
+
+#endif
+
+		}
+
+	SetTextColor(hdc, RGB(255, 255, 255));
+	dstn_rect.left=rx;
+	dstn_rect.top=625;
+	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+	}
+private void UpdateBackToScenarioSettingButton(ref Array12<int> len, ref Array12<Array128<byte>> ach, int rx, ref HDC hdc, ref _DP_FLAG dp_flag)
+	{
+	RECT dstn_rect;
+	int m =default /* C4701 */;
+	if(IsHost)
+		{
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "シナリオセッティングへ戻る->>>");
+#else
+		len[0] = wsprintf(ach[0], "Back to mission menu ->>>");
+#endif
+		dstn_rect.left=rx;
+		dstn_rect.top=675;
+		dstn_rect.right=dstn_rect.left+(len[0]*12);
+		dstn_rect.bottom=dstn_rect.top+24;
+		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.ConfigSetting )
+			{
+			SetTextColor(hdc, RGB(255, 0, 0));
+			if( LeftButton==3 )
+				{
+				m=ScenarioNumber;
+				GoToGameSetting();
+				ScenarioNumber=(short)m;
+
+				dp_flag.dwType = MessageType.GoToGameSetting;
+
+				bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
+				bufferDesc.pBufferData  = (byte*) (_DP_FLAG*)Unsafe.AsPointer(ref dp_flag);
+				g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+				}
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
+			}
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+		}
+	}
+private void UpdateStartBattleButton(ref Array12<int> len, ref Array12<Array128<byte>> ach, int rx, ref HDC hdc, ref _DP_DATA_1 dp_data_1)
+	{
+	RECT dstn_rect;
+	if(IsHost)
+		{
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "ゲームスタート ->>>");
+#else
+		len[0] = wsprintf(ach[0], "Game Start ->>>");
+#endif
+		dstn_rect.left=rx;
+		dstn_rect.top=700;
+		dstn_rect.right=dstn_rect.left+(len[0]*12);
+		dstn_rect.bottom=dstn_rect.top+24;
+		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.ConfigSetting )
+			{
+			SetTextColor(hdc, RGB(255, 0, 0));
+			if( LeftButton==3 )
+				{
+				// ホストの選択状態をゲストにセンドします。
+				srand( (uint)time( null ) );
+				SharedRandomSeed=(short)Random(65536);
+
+				dp_data_1.dwType = MessageType.LeaveSetup;
+				dp_data_1.data[0] = SharedRandomSeed;
+
+				bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
+				bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref dp_data_1);
+				g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+
+				dp_data_1.dwType = MessageType.LeaveConfigSetting;
+				dp_data_1.data[0] = (short)HostSide;
+				dp_data_1.data[1] = ScenarioNumber;
+
+				dp_data_1.data[2] = SupplyRates[0];
+				dp_data_1.data[3] = SupplyRates[1];
+
+				dp_data_1.data[4] = IsDecisionEnabled.Value;
+
+				dp_data_1.data[5] = InitialSupplyPoints[0];
+				dp_data_1.data[6] = InitialSupplyPoints[1];
+
+				dp_data_1.data[7] = ArrivalControl;
+
+				dp_data_1.data[8] = SwapTime;
+				dp_data_1.data[9] = SwapRule;
+
+				bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
+				bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref dp_data_1);
+				g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+
+				Mode=GameMode.Battle;
+				}
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
+			}
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+		}
+	else
+		{
+		if( JoinGameStart==MessageType.LeaveConfigSetting )
+			{
+			Mode=GameMode.Battle;
+			JoinGameStart=0;
+			}
+		}
+	}
+private void SendHostSettings(ref _DP_DATA_1 dp_data_1)
+	{
+	dp_data_1.dwType = MessageType.SideAndScenario;
+	dp_data_1.data[0] = (short)HostSide;
+	dp_data_1.data[1] = ScenarioNumber;
+
+	dp_data_1.data[2] = SupplyRates[0];
+	dp_data_1.data[3] = SupplyRates[1];
+
+	dp_data_1.data[4] = IsDecisionEnabled.Value;
+
+	dp_data_1.data[5] = InitialSupplyPoints[0];
+	dp_data_1.data[6] = InitialSupplyPoints[1];
+
+	dp_data_1.data[7] = ArrivalControl;
+
+	dp_data_1.data[8] = SwapTime;
+	dp_data_1.data[9] = SwapRule;
+
+	bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
+	bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref dp_data_1);
+	g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, EASY_SEND );
+	}
+
+private void UpdateConfigSetting(ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc, ref _DP_FLAG dp_flag, ref _DP_DATA_1 dp_data_1)
+	{
+	int rx;
+	rx=630-120;
+
+#if !LNGG_VER
+	len[0] = wsprintf(ach[0], "コンフィギュレーション");
+#else
+	len[0] = wsprintf(ach[0], "Configuration");
+#endif
+	SetTextColor(hdc, RGB(255, 255, 255));
+
+	// 勝敗判定
+	UpdateDecisionSetting(rx, ref hdc, ref ach, ref len);
+
+	// 補給割当増加率（ホスト側）
+	UpdateHostSupplyRateSetting(ref len, ref ach, ref hdc, rx);
+
+	// 補給値反転地点
+	UpdateSwapTimeSetting(ref len, ref ach, ref hdc, rx);
+
+	// 補給割当増加率（ゲスト側）
+	UpdateGuestSupplyRateSetting(ref len, ref ach, ref hdc, rx);
+
+	// 補給値反転ルール
+	UpdateSwapRuleSetting(ref len, ref ach, ref hdc, rx);
+
+	// 初期補給割当（ホスト側）
+	UpdateHostInitialSupplyPointsSetting(ref len, ref ach, ref hdc, rx);
+
+	// 初期補給割当（ゲスト側）
+	UpdateGuestInitialSupplyPointsSetting(ref len, ref ach, ref hdc, rx);
+
+	UpdateArrivalControlSetting(ref len, ref ach, rx, ref hdc);
+
+	// シナリオセッティングへ戻る
+	UpdateBackToScenarioSettingButton(ref len, ref ach, rx, ref hdc, ref dp_flag);
+
+	// 戦闘開始
+	UpdateStartBattleButton(ref len, ref ach, rx, ref hdc, ref dp_data_1);
+
+	if( IsHost && RivalMode==Mode && (FrameCount%10)==0 )
+		{
+		// ホストの選択状態をゲストにセンドします。
+		SendHostSettings(ref dp_data_1);
+		}
+	}
+
+private void DrawScenarioDescription(ref Array12<int> len, ref Array12<Array128<byte>> ach)
+	{
+	switch( ScenarioNumber )
+		{
+		case 1:
+			len[1] = wsprintf(ach[1], "空母機動部隊同士の戦いです。小規模です。");
+			len[2] = wsprintf(ach[2], "");
+			len[3] = wsprintf(ach[3], "");
+			len[4] = wsprintf(ach[4], "");
+
+			len[5] = wsprintf(ach[5], "勝敗条件：敵空母撃沈か敵歩兵基地破壊で勝利");
+			len[6] = wsprintf(ach[6], "");
+			break;
+
+		case 2:
+			len[1] = wsprintf(ach[1], "空母機動部隊同士の戦いです。中規模です。");
+			len[2] = wsprintf(ach[2], "");
+			len[3] = wsprintf(ach[3], "");
+			len[4] = wsprintf(ach[4], "");
+
+			len[5] = wsprintf(ach[5], "勝敗条件：敵空母撃沈か敵歩兵基地破壊で勝利");
+			len[6] = wsprintf(ach[6], "");
+			break;
+
+		case 3:
+			len[1] = wsprintf(ach[1], "空母機動部隊同士の戦いです。大規模です。");
+			len[2] = wsprintf(ach[2], "");
+			len[3] = wsprintf(ach[3], "");
+			len[4] = wsprintf(ach[4], "");
+
+			len[5] = wsprintf(ach[5], "勝敗条件：敵空母撃沈か敵歩兵基地破壊で勝利");
+			len[6] = wsprintf(ach[6], "");
+			break;
+
+		case 4:
+			len[1] = wsprintf(ach[1], "戦闘艦船のみの戦いです。");
+			len[2] = wsprintf(ach[2], "");
+			len[3] = wsprintf(ach[3], "");
+			len[4] = wsprintf(ach[4], "");
+
+			len[5] = wsprintf(ach[5], "勝敗条件：敵軍全ての戦艦、巡洋艦の撃沈、");
+			len[6] = wsprintf(ach[6], "または歩兵基地の破壊で勝利。");
+			break;
+
+		case 5:
+			len[1] = wsprintf(ach[1], "戦闘艦船のみの戦いです。");
+			len[2] = wsprintf(ach[2], "");
+			len[3] = wsprintf(ach[3], "");
+			len[4] = wsprintf(ach[4], "");
+
+			len[5] = wsprintf(ach[5], "勝敗条件：敵軍全ての戦艦、巡洋艦の撃沈、");
+			len[6] = wsprintf(ach[6], "または歩兵基地の破壊で勝利。");
+			break;
+
+		case 6:
+			len[1] = wsprintf(ach[1], "日本海軍によるミッドウェイ島の攻略作戦です。");
+			len[2] = wsprintf(ach[2], "");
+			len[3] = wsprintf(ach[3], "");
+			len[4] = wsprintf(ach[4], "");
+
+			len[5] = wsprintf(ach[5], "勝敗条件：ミッドウェイ島の米軍施設の壊滅で");
+			len[6] = wsprintf(ach[6], "日本海軍の勝利となります。");
+			break;
+
+		case 7:
+			len[1] = wsprintf(ach[1], "日本海軍によるミッドウェイ島の攻略作戦です。");
+			len[2] = wsprintf(ach[2], "");
+			len[3] = wsprintf(ach[3], "");
+			len[4] = wsprintf(ach[4], "");
+
+			len[5] = wsprintf(ach[5], "勝敗条件：ミッドウェイ島の米軍施設の壊滅と、同島に");
+			len[6] = wsprintf(ach[6], "日本軍の要塞を一つ完成で勝利となります。");
+			break;
+
+		case 8:
+			len[1] = wsprintf(ach[1], "中部太平洋での戦闘です。");
+			len[2] = wsprintf(ach[2], "");
+			len[3] = wsprintf(ach[3], "");
+			len[4] = wsprintf(ach[4], "");
+
+			len[5] = wsprintf(ach[5], "勝敗条件：ミッドウェイの米軍施設壊滅と自軍の要塞で");
+			len[6] = wsprintf(ach[6], "日本軍の勝利、ウェークに同じ条件で米軍の勝利。");
+			break;
+
+		case 9:
+			len[1] = wsprintf(ach[1], "ユーザーシナリオでの戦いです。");
+			len[2] = wsprintf(ach[2], "");
+			len[3] = wsprintf(ach[3], "");
+			len[4] = wsprintf(ach[4], "");
+
+			len[5] = wsprintf(ach[5], "勝敗条件：任意に決めてください。");
+			len[6] = wsprintf(ach[6], "");
+			break;
+
+		case 101:
+			len[1] = wsprintf(ach[1], "ガダルカナル島を巡る戦いです。");
+			len[2] = wsprintf(ach[2], "");
+			len[3] = wsprintf(ach[3], "");
+			len[4] = wsprintf(ach[4], "");
+
+			len[5] = wsprintf(ach[5], "勝敗条件：ガダルカナル島の日本軍の陸上施設の");
+			len[6] = wsprintf(ach[6], "壊滅で米海軍の勝利です。");
+			break;
+
+		case 102:
+			len[1] = wsprintf(ach[1], "ガダルカナル島を巡る戦いです。");
+			len[2] = wsprintf(ach[2], "");
+			len[3] = wsprintf(ach[3], "");
+			len[4] = wsprintf(ach[4], "");
+
+			len[5] = wsprintf(ach[5], "勝敗条件：ガダルカナル島の日本軍の陸上施設の壊滅と");
+			len[6] = wsprintf(ach[6], "同島に航空基地の完成で米海軍の勝利です。");
+			break;
+
+		case 103:
+			len[1] = wsprintf(ach[1], "日本近海の戦いです。");
+			len[2] = wsprintf(ach[2], "");
+			len[3] = wsprintf(ach[3], "");
+			len[4] = wsprintf(ach[4], "");
+
+			len[5] = wsprintf(ach[5], "勝敗条件：日本本土の都市を全て壊滅すれば");
+			len[6] = wsprintf(ach[6], "米海軍の勝利です。");
+			break;
+
+		case 104:
+			len[1] = wsprintf(ach[1], "南太平洋の戦いです。");
+			len[2] = wsprintf(ach[2], "");
+			len[3] = wsprintf(ach[3], "");
+			len[4] = wsprintf(ach[4], "");
+
+			len[5] = wsprintf(ach[5], "勝敗条件：ブーゲンビル島の日本軍地上施設");
+			len[6] = wsprintf(ach[6], "壊滅で米海軍の勝利です。");
+			break;
+
+		case 105:
+			len[1] = wsprintf(ach[1], "南太平洋の戦いです。");
+			len[2] = wsprintf(ach[2], "");
+			len[3] = wsprintf(ach[3], "");
+			len[4] = wsprintf(ach[4], "");
+
+			len[5] = wsprintf(ach[5], "勝敗条件：ブーゲンビル島の日本軍施設壊滅で米海軍の勝利、");
+			len[6] = wsprintf(ach[6], "ガダルカナルの米軍施設壊滅で日本海軍の勝利です。");
+			break;
+
+		case 106:
+			len[1] = wsprintf(ach[1], "ガダルカナル島の争奪戦です。");
+			len[2] = wsprintf(ach[2], "");
+			len[3] = wsprintf(ach[3], "");
+			len[4] = wsprintf(ach[4], "");
+
+			len[5] = wsprintf(ach[5], "勝敗条件：ガダルカナル島の敵陸上施設全滅と自軍施設");
+			len[6] = wsprintf(ach[6], "が四個以上あれば勝利です。");
+			break;
+
+		default:
+			len[1] = wsprintf(ach[1], "");
+			len[2] = wsprintf(ach[2], "");
+			len[3] = wsprintf(ach[3], "");
+			len[4] = wsprintf(ach[4], "");
+
+			len[5] = wsprintf(ach[5], "");
+			len[6] = wsprintf(ach[6], "");
+			break;
+		}
+	}
+
+private void UpdateScenarioList(int m, ref Array12<int> len, ref HDC hdc, ref _DP_DATA_1 dp_data_1, ref Array12<Array128<byte>> ach)
+	{
+	int n;
+	RECT dstn_rect;
+	for( n=0; n<=m; n++)
+		{
+		// ptin dbg
+		dstn_rect.left=120;
+		dstn_rect.top=150+(n*25);
+		dstn_rect.right=dstn_rect.left+(len[n]*12);
+		dstn_rect.bottom=dstn_rect.top+24;
+		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting )
+			{
+			SetTextColor(hdc, RGB(255, 0, 0));
+
+			if(ScenarioNumber<=99)
+				ScenarioNumber=(short)(n+1);
+			else if(ScenarioNumber<=199)
+				ScenarioNumber=(short)(n+1+100);
+			else if(ScenarioNumber<=299)
+				ScenarioNumber=(short)(n+1+200);
+
+			if( LeftButton==3 )
+				{
+				if( ScenarioNumber==9 )
+					{
+					/*g_hDlg =*/ CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_LOAD_Proc );
+
+					}
+
+				if( ScenarioNumber!=9 || UserScenarioFileName[0]!='\0' )
+					{
+					LoadScenarioData();
+
+					// ホストの選択状態をゲストにセンドします。
+					dp_data_1.dwType = MessageType.LeaveGameSetting;
+					dp_data_1.data[0] = (short)HostSide;
+					dp_data_1.data[1] = ScenarioNumber;
+
+					dp_data_1.data[2] = SupplyRates[0];
+					dp_data_1.data[3] = SupplyRates[1];
+
+					dp_data_1.data[4] = IsDecisionEnabled.Value;
+
+					dp_data_1.data[5] = InitialSupplyPoints[0];
+					dp_data_1.data[6] = InitialSupplyPoints[1];
+
+					dp_data_1.data[7] = ArrivalControl;
+
+					dp_data_1.data[8] = SwapTime;
+					dp_data_1.data[9] = SwapRule;
+
+					bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
+					bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref dp_data_1);
+					g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+
+					Mode=GameMode.ConfigSetting;
+					}
+				}
+			}
+		else
+			SetTextColor(hdc, RGB(255, 255, 255));
+		TextOut(hdc, 120, 150+(n*25), ach[n], len[n]);
+		}
+
+	if( RivalMode==Mode && Mode!=GameMode.ConfigSetting && (FrameCount%10)==0 )
+		{
+		// ホストの選択状態をゲストにセンドします。
+		dp_data_1.dwType = MessageType.SideAndScenario;
+		dp_data_1.data[0] = (short)HostSide;
+		dp_data_1.data[1] = ScenarioNumber;
+
+		dp_data_1.data[2] = SupplyRates[0];
+		dp_data_1.data[3] = SupplyRates[1];
+
+		dp_data_1.data[4] = IsDecisionEnabled.Value;
+
+		dp_data_1.data[5] = InitialSupplyPoints[0];
+		dp_data_1.data[6] = InitialSupplyPoints[1];
+
+		dp_data_1.data[7] = ArrivalControl;
+
+		dp_data_1.data[8] = SwapTime;
+		dp_data_1.data[9] = SwapRule;
+
+		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
+		bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref dp_data_1);
+		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, EASY_SEND );
+		}
+	}
+
+private void UpdateSideSetting(ref int rx, ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc)
+	{
+	RECT dstn_rect;
+	rx=80;
+	if( !IsEditingMap && IsHost && Mode==GameMode.GameSetting )
+		{
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "操作対象の切り替え ->>>");
+#else
+		len[0] = wsprintf(ach[0], "Side Change ->>>");
+#endif
+
+		dstn_rect.left=rx;
+		dstn_rect.top=475;
+		dstn_rect.right=dstn_rect.left+(len[0]*12);
+		dstn_rect.bottom=dstn_rect.top+24;
+		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting )
+			{
+			SetTextColor(hdc, RGB(255, 0, 0));
+			if( LeftButton==3 )
+				{
+				HostSide=(HostSide==0 ? 1 : 0);
+				}
+			}
+		else
+			SetTextColor(hdc, RGB(255, 255, 255));
+
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+		}
+
+	if(HostSide==0)
+		{
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "操作対象：日本海軍（ホスト）、合衆国海軍（ゲスト）");
+#else
+		len[0] = wsprintf(ach[0], "Side: Japan Navy(Host Player)  U.S.Navy(Guest Player)");
+#endif
+		}
+	else
+		{
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "操作対象：合衆国海軍（ホスト）、日本海軍（ゲスト）");
+#else
+		len[0] = wsprintf(ach[0], "Side: U.S.Navy(Host Player)  Japan Navy(Guest Player)");
+#endif
+		}
+	}
+
+private void UpdateAutoSaveButton(ref int rx, ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc, ref _DP_DATA_1 dp_data_1)
+	{
+	RECT dstn_rect;
+	rx=80;
+	if( IsHost  )
+		{
+#if !LNGG_VER
+		if( HasAutoSave!=0 )
+			len[0] = wsprintf(ach[0], "オートセーブスタート ->>>");
+		else
+			len[0] = wsprintf(ach[0], "オートセーブファイルは存在しない");
+#else
+		if( exist_auto_save )
+			len[0] = wsprintf(ach[0], "Autosave Start ->>>");
+		else
+			len[0] = wsprintf(ach[0], "No exist of Autosave file");
+#endif
+
+		dstn_rect.left=80;
+		dstn_rect.top=430;
+
+		if( Mode==GameMode.GameSetting )
+			{
+			dstn_rect.right=dstn_rect.left+(len[0]*12);
+			dstn_rect.bottom=dstn_rect.top+24;
+			if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting && HasAutoSave!=0 )
+				{
+				SetTextColor(hdc, RGB(255, 0, 0));
+
+				if( LeftButton==3 )
+					{
+					// ホストの選択状態をゲストにセンドします。
+					dp_data_1.dwType = MessageType.StartFromAutoSave;
+					bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
+					bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref dp_data_1);
+					g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+
+					Mode=GameMode.Battle;
+					ScenarioNumber=-2;		// －２でオートセーブからのスタートを示す
+					}
+				}
+			else
+				{
+				SetTextColor(hdc, RGB(255, 255, 255));
+				}
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(126, 126, 126));
+			}
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+		}
+	else
+		{
+		if( JoinGameStart==MessageType.StartFromAutoSave )
+			{
+			Mode=GameMode.Battle;
+			JoinGameStart=0;
+			ScenarioNumber=-2;		// －２でオートセーブからのスタートを示す
+			}
+		}
+	}
+
+private void UpdateResumeButton(ref int rx, ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc, ref _DP_DATA_1 dp_data_1)
+	{
+	RECT dstn_rect;
+	rx=80;
+	if( IsHost )
+		{
+#if !LNGG_VER
+		if( WasHost )
+			len[0] = wsprintf(ach[0], "リジュームスタート ->>>");
+		else
+			len[0] = wsprintf(ach[0], "リジュームデータがホストではない。");
+#else
+		if( you_were_host )
+			len[0] = wsprintf(ach[0], "Resume Start ->>>");
+		else
+			len[0] = wsprintf(ach[0], "You have no resumed data as your host.");
+#endif
+
+		dstn_rect.left=80;
+		dstn_rect.top=400;
+
+		if( Mode==GameMode.GameSetting )
+			{
+			dstn_rect.right=dstn_rect.left+(len[0]*12);
+			dstn_rect.bottom=dstn_rect.top+24;
+			if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting && WasHost )
+				{
+				SetTextColor(hdc, RGB(255, 0, 0));
+
+				if( LeftButton==3 )
+					{
+					// ホストの選択状態をゲストにセンドします。
+					dp_data_1.dwType = MessageType.StartFromResume;
+					bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
+					bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref dp_data_1);
+					g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+
+					Mode=GameMode.Battle;
+					ScenarioNumber=-1;		// －１でリジュームを示す
+					}
+				}
+			else
+				SetTextColor(hdc, RGB(255, 255, 255));
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(126, 126, 126));
+			}
+
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+		}
+	else
+		{
+		if( JoinGameStart==MessageType.StartFromResume )
+			{
+			Mode=GameMode.Battle;
+			JoinGameStart=0;
+			ScenarioNumber=-1;		// －１でリジュームを示す
+			}
+		}
+	}
+
+private void UpdateScenarioPageButton(ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc)
+	{
+	RECT dstn_rect;
+#if !LNGG_VER
+	len[0] = wsprintf(ach[0], "シナリオ切り替え ->>>");
+#else
+	len[0] = wsprintf(ach[0], "Page Change ->>>");
+#endif
+
+	dstn_rect.left=250;
+	dstn_rect.top=110;
+	dstn_rect.right=dstn_rect.left+(len[0]*12);
+	dstn_rect.bottom=dstn_rect.top+24;
+	if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting )
+		{
+		SetTextColor(hdc, RGB(255, 0, 0));
+
+		if( LeftButton==3 )
+			{
+			if(ScenarioNumber<=99)
+				ScenarioNumber=101;
+			else if(ScenarioNumber<=199)
+				ScenarioNumber=1;
+			}
+		}
+	else
+		SetTextColor(hdc, RGB(255, 255, 255));
+
+	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+	}
+
+private void ShowScenarioList(int m, ref HDC hdc, ref Array12<Array128<byte>> ach, ref Array12<int> len)
+	{
+	int n;
+	for( n=0; n<=m; n++)
+		{
+		if(Mode==GameMode.GameSetting)
+			{
+			if( n+1==ScenarioNumber%100 )
+				SetTextColor(hdc, RGB(255, 0, 0));
+			else
+				SetTextColor(hdc, RGB(255, 255, 255));
+			}
+		else
+			{
+			if( n+1==ScenarioNumber%100 )
+				SetTextColor(hdc, RGB(126, 0, 0));
+			else
+				SetTextColor(hdc, RGB(126, 126, 126));
+			}
+
+		TextOut(hdc, 120, 150+(n*25), ach[n], len[n]);
+		}
+
+	if(JoinGameStart==MessageType.LeaveGameSetting && !IsHost && Mode==GameMode.GameSetting )
+		{
+		// ジョインが受け取る
+		Mode=GameMode.ConfigSetting;
+		JoinGameStart=0;
+		}
+	}
+
+private void ListScenarioNames(ref int m, ref Array12<int> len, ref Array12<Array128<byte>> ach)
+	{
+	if( ScenarioNumber<=99 )
+		{
+		m=0;
+		len[m] = wsprintf(ach[m], "空母機動部隊の戦い１");
+		m++;
+		len[m] = wsprintf(ach[m], "空母機動部隊の戦い２");
+		m++;
+		len[m] = wsprintf(ach[m], "空母機動部隊の戦い３");
+
+		m++;
+		len[m] = wsprintf(ach[m], "艦隊決戦１");
+		m++;
+		len[m] = wsprintf(ach[m], "艦隊決戦２");
+
+		m++;
+		len[m] = wsprintf(ach[m], "ミッドウェイ攻略１");
+		m++;
+		len[m] = wsprintf(ach[m], "ミッドウェイ攻略２");
+		m++;
+		len[m] = wsprintf(ach[m], "中部太平洋の戦い１");
+		m++;
+		len[m] = wsprintf(ach[m], "ユーザーシナリオ");
+		}
+	else if(ScenarioNumber<=199)
+		{
+		m=0;
+		len[m] = wsprintf(ach[m], "ガダルカナルを巡る戦い１");
+		m++;
+		len[m] = wsprintf(ach[m], "ガダルカナルを巡る戦い２");
+
+		m++;
+		len[m] = wsprintf(ach[m], "日本近海の戦い１");
+
+		m++;
+		len[m] = wsprintf(ach[m], "南太平洋の戦い１");
+		m++;
+		len[m] = wsprintf(ach[m], "南太平洋の戦い２");
+		m++;
+		len[m] = wsprintf(ach[m], "ガ島争奪戦");
+
+		}
+	else if(ScenarioNumber<=299)
+		{
+		m=0;
+		len[m] = wsprintf(ach[m], "硫黄島攻略１");
+		m++;
+		len[m] = wsprintf(ach[m], "硫黄島攻略２");
+		m++;
+		len[m] = wsprintf(ach[m], "日本近海の戦い１");
+		m++;
+		len[m] = wsprintf(ach[m], "日本近海の戦い２");
+		m++;
+		len[m] = wsprintf(ach[m], "日本近海の戦い３");
+		}
+	}
 
 //============================================================================
 // 通信対戦セットアップ
 // とりあえず、シナリオとサイドを選んでゲームへ
 //----------------------------------------------------------------------------
-public void	cnct_game_setting()
+[Original("cnct_game_setting")]
+public void	UpdateGameSetting()
 	{
-	RECT	src_rect,field_rect,dstn_rect;
-	int	m=default /* C4701 */,n,g,no1,i,wrk,wrk2,wrk3,flg,rx,ry; Array7<int> menu = default; Array7<int> menu2 = default;
+	RECT	src_rect,field_rect;
+	int	m=default /* C4701 */,n,g,no1,i,wrk,wrk2,wrk3,rx = default,ry; Array7<int> menu = default; Array7<int> menu2 = default;
     Array12<Array128<byte>> ach = default;
     Array12<int> len = default;
 	HDC					hdc;
 	Array256<byte> cBuf = default;
 
-
-	_DP_DATA_1		dp_data_1;
+	_DP_DATA_1		dp_data_1 = default;
 	_DP_DATA_1* lp_dp_data_1;
-	_DP_FLAG			dp_flag;
+	_DP_FLAG			dp_flag = default;
 	_DP_DATA_20		dp_data_20=default;
-
 
 #if CONN_DBG
 	rival_mode=mode;
 #endif
 
-	cls_flg=1;
-
-
+	ClearFlag=1;
 
 	// マウス情報
-/*t
-	GetCursorPos(&crsr_pt);
-	if(!scrn_mode)
-		ScreenToClient(hwnd, &crsr_pt);
-	GetKeyboardState(cBuf);
-*/
 
-
-//you_are_host=1;
-//rival_mode=CNCT_GAME_SETTING;
-
-
-	if( map_edit!=0 )
+	if( IsEditingMap )
 		{
-		rival_mode=mode;
+		RivalMode=Mode;
 		}
 
-
-
-	if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK ) 
+	if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
 		{
 		SetBkMode(hdc, TRANSPARENT);
 		SelectObject(hdc, gameFont_1);
 
-if(mode==CNCT_GAME_SETTING)
+if(Mode==GameMode.GameSetting)
 		SetTextColor(hdc, RGB(255, 255, 255));
 else
 		SetTextColor(hdc, RGB(126, 126, 126));
@@ -476,16 +1660,10 @@ else
 		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
 		}
 
-
-
-//return;
-
-
-		if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK ) 
+		if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
 			{
 			SetBkMode(hdc, TRANSPARENT);
 			SelectObject(hdc, gameFont_1);
-
 
 #if !LNGG_VER
 			len[0] = wsprintf(ach[0], "シナリオ選択画面");
@@ -493,7 +1671,7 @@ else
 			len[0] = wsprintf(ach[0], "Mission Menu");
 #endif
 
-			if(mode==CNCT_GAME_SETTING)
+			if(Mode==GameMode.GameSetting)
 				SetTextColor(hdc, RGB(255, 255, 255));
 			else
 				SetTextColor(hdc, RGB(126, 126, 126));
@@ -501,66 +1679,13 @@ else
 			TextOut(hdc, 200, 80, ach[0], len[0]);
 
 #if !LNGG_VER
-			if( sinario<=99 )
-				{
-				m=0;
-				len[m] = wsprintf(ach[m], "空母機動部隊の戦い１");				
-				m++;
-				len[m] = wsprintf(ach[m], "空母機動部隊の戦い２");
-				m++;
-				len[m] = wsprintf(ach[m], "空母機動部隊の戦い３");
-
-				m++;
-				len[m] = wsprintf(ach[m], "艦隊決戦１");
-				m++;
-				len[m] = wsprintf(ach[m], "艦隊決戦２");
-
-				m++;
-				len[m] = wsprintf(ach[m], "ミッドウェイ攻略１");				
-				m++;
-				len[m] = wsprintf(ach[m], "ミッドウェイ攻略２");
-				m++;
-				len[m] = wsprintf(ach[m], "中部太平洋の戦い１");
-				m++;
-				len[m] = wsprintf(ach[m], "ユーザーシナリオ");
-				}
-			else if(sinario<=199)
-				{
-				m=0;
-				len[m] = wsprintf(ach[m], "ガダルカナルを巡る戦い１");
-				m++;
-				len[m] = wsprintf(ach[m], "ガダルカナルを巡る戦い２");
-
-				m++;
-				len[m] = wsprintf(ach[m], "日本近海の戦い１");
-
-				m++;
-				len[m] = wsprintf(ach[m], "南太平洋の戦い１");
-				m++;
-				len[m] = wsprintf(ach[m], "南太平洋の戦い２");
-				m++;
-				len[m] = wsprintf(ach[m], "ガ島争奪戦");
-
-				}
-			else if(sinario<=299)
-				{
-				m=0;
-				len[m] = wsprintf(ach[m], "硫黄島攻略１");
-				m++;
-				len[m] = wsprintf(ach[m], "硫黄島攻略２");
-				m++;
-				len[m] = wsprintf(ach[m], "日本近海の戦い１");
-				m++;
-				len[m] = wsprintf(ach[m], "日本近海の戦い２");
-				m++;
-				len[m] = wsprintf(ach[m], "日本近海の戦い３");
-				}
+			ListScenarioNames(ref m, ref len, ref ach);
 #else
 
 			if( sinario<=99 )
 				{
 				m=0;
-				len[m] = wsprintf(ach[m], "Battle of Carriers 1");				
+				len[m] = wsprintf(ach[m], "Battle of Carriers 1");
 				m++;
 				len[m] = wsprintf(ach[m], "Battle of Carriers 2");
 				m++;
@@ -572,7 +1697,7 @@ else
 				len[m] = wsprintf(ach[m], "Fleet Battle 2");
 
 				m++;
-				len[m] = wsprintf(ach[m], "Invasion of Midway 1");				
+				len[m] = wsprintf(ach[m], "Invasion of Midway 1");
 				m++;
 				len[m] = wsprintf(ach[m], "Invasion of Midway 2");
 				m++;
@@ -605,532 +1730,31 @@ else
 
 #endif
 
-
-			if( you_are_host!=0 && mode==CNCT_GAME_SETTING )
+			if( IsHost && Mode==GameMode.GameSetting )
 				{
-				for( n=0; n<=m; n++)
-					{
-					// ptin dbg
-					dstn_rect.left=120;
-					dstn_rect.top=150+(n*25);
-					dstn_rect.right=dstn_rect.left+(len[n]*12);
-					dstn_rect.bottom=dstn_rect.top+24;
-					if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==CNCT_GAME_SETTING )
-						{
-						SetTextColor(hdc, RGB(255, 0, 0));
-
-						if(sinario<=99)
-							sinario=(short)(n+1);
-						else if(sinario<=199)
-							sinario=(short)(n+1+100);//99;
-						else if(sinario<=299)
-							sinario=(short)(n+1+200);//199;
-
-						if( lf_btn==3 )
-							{
-							if( sinario==9 )
-								{
-								/*g_hDlg =*/ CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_LOAD_Proc );
-//	return;
-
-#if false
-								my_dlg_wait();
-
-								if( user_sinario_fn[0]!='\0' )
-									{
-TCHAR		temp_buf[MAX_PATH];
-
-									wsprintf( temp_buf, "%s", user_sinario_fn );
-									wsprintf( user_sinario_fn, "Scenario\\%s", temp_buf );
-
-									if( map_edit==0 )
-										{
-										// なんかユーザーファイルが選ばれた。
-										dp_data_20.dwType = USER_SINARIO_FN;
-										wsprintf( dp_data_20.friend_chat, "%s",user_sinario_fn );
-										bufferDesc.dwBufferSize = sizeof(_DP_DATA_20);
-										bufferDesc.pBufferData  = (BYTE*)&dp_data_20;
-										g_pDP->SendTo( g_dpnidRivalPlayer, &bufferDesc, 1,	0, NULL, &hAsync, MUST_SEND );
-										}
-									}
-#endif
-								}
-
-
-							if( sinario!=9 || user_sinario_fn[0]!='\0' )
-								{
-								get_sinario_data();
-
-
-								// ホストの選択状態をゲストにセンドします。
-								dp_data_1.dwType = OUT_GAME_SETTING;
-								dp_data_1.data[0] = (short)host_side;
-								dp_data_1.data[1] = sinario;
-
-								dp_data_1.data[2] = spry_rate[0];
-								dp_data_1.data[3] = spry_rate[1];
-
-								dp_data_1.data[4] = decision_sw;
-
-								dp_data_1.data[5] = first_spry_pt[0];
-								dp_data_1.data[6] = first_spry_pt[1];
-
-								dp_data_1.data[7] = arrival_cont;
-
-								dp_data_1.data[8] = rvrs_time;
-								dp_data_1.data[9] = rvrs_rule;
-
-								bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-								bufferDesc.pBufferData  = (byte*) &dp_data_1;
-								g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-
-
-
-								mode=CNCT_CNFG_SETTING;
-								}
-							}
-						}
-					else
-						SetTextColor(hdc, RGB(255, 255, 255));
-					TextOut(hdc, 120, 150+(n*25), ach[n], len[n]);
-					}
-
-				if( rival_mode==mode && mode!=CNCT_CNFG_SETTING && (FrameCount%10)==0 )
-					{
-					// ホストの選択状態をゲストにセンドします。
-					dp_data_1.dwType = SIDE_AND_SINARIO;
-					dp_data_1.data[0] = (short)host_side;
-					dp_data_1.data[1] = sinario;
-
-					dp_data_1.data[2] = spry_rate[0];
-					dp_data_1.data[3] = spry_rate[1];
-
-					dp_data_1.data[4] = decision_sw;
-
-					dp_data_1.data[5] = first_spry_pt[0];
-					dp_data_1.data[6] = first_spry_pt[1];
-
-					dp_data_1.data[7] = arrival_cont;
-
-					dp_data_1.data[8] = rvrs_time;
-					dp_data_1.data[9] = rvrs_rule;
-
-					bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-					bufferDesc.pBufferData  = (byte*) &dp_data_1;
-					g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, EASY_SEND );
-					}
+				UpdateScenarioList(m, ref len, ref hdc, ref dp_data_1, ref ach);
 				}
 			else
 				{
-				for( n=0; n<=m; n++)
-					{
-					if(mode==CNCT_GAME_SETTING)
-						{
-						if( n+1==sinario%100 )
-							SetTextColor(hdc, RGB(255, 0, 0));
-						else
-							SetTextColor(hdc, RGB(255, 255, 255));
-						}
-					else
-						{
-						if( n+1==sinario%100 )
-							SetTextColor(hdc, RGB(126, 0, 0));
-						else
-							SetTextColor(hdc, RGB(126, 126, 126));
-						}
-
-					TextOut(hdc, 120, 150+(n*25), ach[n], len[n]);
-					}
-
-				if(join_game_start==OUT_GAME_SETTING && you_are_host==0 && mode==CNCT_GAME_SETTING )
-					{
-					// ジョインが受け取る
-					mode=CNCT_CNFG_SETTING;
-					join_game_start=0;
-					}
+				ShowScenarioList(m, ref hdc, ref ach, ref len);
 				}
 
-
-			if( you_are_host!=0 && mode==CNCT_GAME_SETTING )
+			if( IsHost && Mode==GameMode.GameSetting )
 				{
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "シナリオ切り替え ->>>");
-#else
-				len[0] = wsprintf(ach[0], "Page Change ->>>");
-#endif
-
-//				dstn_rect.left=330;
-				dstn_rect.left=250;
-				dstn_rect.top=110;
-				dstn_rect.right=dstn_rect.left+(len[0]*12);
-				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==CNCT_GAME_SETTING )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-
-
-#if true
-					if( lf_btn==3 )
-						{
-						if(sinario<=99)
-							sinario=101;
-						else if(sinario<=199)
-							sinario=1;
-						}
-#endif
-					}
-				else
-					SetTextColor(hdc, RGB(255, 255, 255));
-
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+				UpdateScenarioPageButton(ref len, ref ach, ref hdc);
 				}
-
-
 
 			// リジュームスタート
-			rx=80;
-			if( you_are_host!=0 )
-				{
-#if !LNGG_VER
-				if( you_were_host!=0 )
-					len[0] = wsprintf(ach[0], "リジュームスタート ->>>");
-				else
-					len[0] = wsprintf(ach[0], "リジュームデータがホストではない。");
-#else
-				if( you_were_host )
-					len[0] = wsprintf(ach[0], "Resume Start ->>>");
-				else
-					len[0] = wsprintf(ach[0], "You have no resumed data as your host.");
-#endif
+			UpdateResumeButton(ref rx, ref len, ref ach, ref hdc, ref dp_data_1);
 
-				dstn_rect.left=80;
-				dstn_rect.top=400;
-
-				if( mode==CNCT_GAME_SETTING )
-					{
-					dstn_rect.right=dstn_rect.left+(len[0]*12);
-					dstn_rect.bottom=dstn_rect.top+24;
-					if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==CNCT_GAME_SETTING && you_were_host!=0 )
-						{
-						SetTextColor(hdc, RGB(255, 0, 0));
-
-						if( lf_btn==3 )
-							{
-							// ホストの選択状態をゲストにセンドします。
-							dp_data_1.dwType = START_IN_RESUME;
-//t							lpDirectPlay4A->lpVtbl->Send(lpDirectPlay4A, dpidPlayer, dpidRivalPlayer,DPSEND_GUARANTEED , &dp_data_1, sizeof(DP_DATA_1) );
-							bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-							bufferDesc.pBufferData  = (byte*) &dp_data_1;
-							g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-
-							mode=CMBT;
-							sinario=-1;		// －１でリジュームを示す
-							}
-						}
-					else
-						SetTextColor(hdc, RGB(255, 255, 255));
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(126, 126, 126));
-					}
-
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-				}
-			else
-				{
-				if( join_game_start==START_IN_RESUME )
-					{
-					mode=CMBT;
-					join_game_start=0;
-					sinario=-1;		// －１でリジュームを示す
-					}
-				}
-
-
-
-
-			// リジュームスタート
-			rx=80;
-			if( you_are_host!=0  )
-				{
-#if !LNGG_VER
-				if( exist_auto_save!=0 )
-					len[0] = wsprintf(ach[0], "オートセーブスタート ->>>");
-				else
-					len[0] = wsprintf(ach[0], "オートセーブファイルは存在しない");
-#else
-				if( exist_auto_save )
-					len[0] = wsprintf(ach[0], "Autosave Start ->>>");
-				else
-					len[0] = wsprintf(ach[0], "No exist of Autosave file");
-#endif
-
-				dstn_rect.left=80;
-				dstn_rect.top=430;
-
-
-				if( mode==CNCT_GAME_SETTING )
-					{
-					dstn_rect.right=dstn_rect.left+(len[0]*12);
-					dstn_rect.bottom=dstn_rect.top+24;
-					if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==CNCT_GAME_SETTING && exist_auto_save!=0 )
-						{
-						SetTextColor(hdc, RGB(255, 0, 0));
-
-						if( lf_btn==3 )
-							{
-							// ホストの選択状態をゲストにセンドします。
-							dp_data_1.dwType = START_IN_AUTOSAVE;
-//t							lpDirectPlay4A->lpVtbl->Send(lpDirectPlay4A, dpidPlayer, dpidRivalPlayer,DPSEND_GUARANTEED , &dp_data_1, sizeof(DP_DATA_1) );
-							bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-							bufferDesc.pBufferData  = (byte*) &dp_data_1;
-							g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-
-							mode=CMBT;
-							sinario=-2;		// －２でオートセーブからのスタートを示す
-							}
-						}
-					else
-						{
-						SetTextColor(hdc, RGB(255, 255, 255));
-						}
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(126, 126, 126));
-					}
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-				}
-			else
-				{
-				if( join_game_start==START_IN_AUTOSAVE )
-					{
-					mode=CMBT;
-					join_game_start=0;
-					sinario=-2;		// －２でオートセーブからのスタートを示す
-					}
-				}
-
-
-
-
+			// オートセーブスタート
+			UpdateAutoSaveButton(ref rx, ref len, ref ach, ref hdc, ref dp_data_1);
 
 			// 操作対象の切り替え
-			rx=80;
-			if( map_edit==0 && you_are_host!=0 && mode==CNCT_GAME_SETTING )
-				{
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "操作対象の切り替え ->>>");
-#else
-				len[0] = wsprintf(ach[0], "Side Change ->>>");
-#endif
-
-				dstn_rect.left=rx;
-				dstn_rect.top=475;
-				dstn_rect.right=dstn_rect.left+(len[0]*12);
-				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==CNCT_GAME_SETTING )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 )
-						{
-						host_side=(host_side==0 ? 1 : 0);
-						}
-					}
-				else
-					SetTextColor(hdc, RGB(255, 255, 255));
-
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-				}
-
-			if(host_side==0)
-				{
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "操作対象：日本海軍（ホスト）、合衆国海軍（ゲスト）");
-#else
-				len[0] = wsprintf(ach[0], "Side: Japan Navy(Host Player)  U.S.Navy(Guest Player)");
-#endif
-				}
-			else
-				{
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "操作対象：合衆国海軍（ホスト）、日本海軍（ゲスト）");
-#else
-				len[0] = wsprintf(ach[0], "Side: U.S.Navy(Host Player)  Japan Navy(Guest Player)");
-#endif
-				}
-
+			UpdateSideSetting(ref rx, ref len, ref ach, ref hdc);
 
 #if !LNGG_VER
-			switch( sinario )
-				{
-				case 1:
-					len[1] = wsprintf(ach[1], "空母機動部隊同士の戦いです。小規模です。");
-					len[2] = wsprintf(ach[2], "");
-					len[3] = wsprintf(ach[3], "");
-					len[4] = wsprintf(ach[4], "");
-
-					len[5] = wsprintf(ach[5], "勝敗条件：敵空母撃沈か敵歩兵基地破壊で勝利");
-					len[6] = wsprintf(ach[6], "");
-					break;
-
-				case 2:
-					len[1] = wsprintf(ach[1], "空母機動部隊同士の戦いです。中規模です。");
-					len[2] = wsprintf(ach[2], "");
-					len[3] = wsprintf(ach[3], "");
-					len[4] = wsprintf(ach[4], "");
-
-					len[5] = wsprintf(ach[5], "勝敗条件：敵空母撃沈か敵歩兵基地破壊で勝利");
-					len[6] = wsprintf(ach[6], "");
-					break;
-
-				case 3:
-					len[1] = wsprintf(ach[1], "空母機動部隊同士の戦いです。大規模です。");
-					len[2] = wsprintf(ach[2], "");
-					len[3] = wsprintf(ach[3], "");
-					len[4] = wsprintf(ach[4], "");
-
-					len[5] = wsprintf(ach[5], "勝敗条件：敵空母撃沈か敵歩兵基地破壊で勝利");
-					len[6] = wsprintf(ach[6], "");
-					break;
-
-				case 4:
-					len[1] = wsprintf(ach[1], "戦闘艦船のみの戦いです。");
-					len[2] = wsprintf(ach[2], "");
-					len[3] = wsprintf(ach[3], "");
-					len[4] = wsprintf(ach[4], "");
-
-					len[5] = wsprintf(ach[5], "勝敗条件：敵軍全ての戦艦、巡洋艦の撃沈、");
-					len[6] = wsprintf(ach[6], "または歩兵基地の破壊で勝利。");
-					break;
-
-				case 5:
-					len[1] = wsprintf(ach[1], "戦闘艦船のみの戦いです。");
-					len[2] = wsprintf(ach[2], "");
-					len[3] = wsprintf(ach[3], "");
-					len[4] = wsprintf(ach[4], "");
-
-					len[5] = wsprintf(ach[5], "勝敗条件：敵軍全ての戦艦、巡洋艦の撃沈、");
-					len[6] = wsprintf(ach[6], "または歩兵基地の破壊で勝利。");
-					break;
-
-				case 6:
-					len[1] = wsprintf(ach[1], "日本海軍によるミッドウェイ島の攻略作戦です。");
-					len[2] = wsprintf(ach[2], "");
-					len[3] = wsprintf(ach[3], "");
-					len[4] = wsprintf(ach[4], "");
-
-					len[5] = wsprintf(ach[5], "勝敗条件：ミッドウェイ島の米軍施設の壊滅で");
-					len[6] = wsprintf(ach[6], "日本海軍の勝利となります。");
-					break;
-
-				case 7:
-					len[1] = wsprintf(ach[1], "日本海軍によるミッドウェイ島の攻略作戦です。");
-					len[2] = wsprintf(ach[2], "");
-					len[3] = wsprintf(ach[3], "");
-					len[4] = wsprintf(ach[4], "");
-
-					len[5] = wsprintf(ach[5], "勝敗条件：ミッドウェイ島の米軍施設の壊滅と、同島に");
-					len[6] = wsprintf(ach[6], "日本軍の要塞を一つ完成で勝利となります。");
-					break;
-
-				case 8:
-					len[1] = wsprintf(ach[1], "中部太平洋での戦闘です。");
-					len[2] = wsprintf(ach[2], "");
-					len[3] = wsprintf(ach[3], "");
-					len[4] = wsprintf(ach[4], "");
-
-					len[5] = wsprintf(ach[5], "勝敗条件：ミッドウェイの米軍施設壊滅と自軍の要塞で");
-					len[6] = wsprintf(ach[6], "日本軍の勝利、ウェークに同じ条件で米軍の勝利。");
-					break;
-
-
-				case 9:
-					len[1] = wsprintf(ach[1], "ユーザーシナリオでの戦いです。");
-					len[2] = wsprintf(ach[2], "");
-					len[3] = wsprintf(ach[3], "");
-					len[4] = wsprintf(ach[4], "");
-
-					len[5] = wsprintf(ach[5], "勝敗条件：任意に決めてください。");
-					len[6] = wsprintf(ach[6], "");
-					break;
-
-
-
-				case 101:
-					len[1] = wsprintf(ach[1], "ガダルカナル島を巡る戦いです。");
-					len[2] = wsprintf(ach[2], "");
-					len[3] = wsprintf(ach[3], "");
-					len[4] = wsprintf(ach[4], "");
-
-					len[5] = wsprintf(ach[5], "勝敗条件：ガダルカナル島の日本軍の陸上施設の");
-					len[6] = wsprintf(ach[6], "壊滅で米海軍の勝利です。");
-					break;
-
-				case 102:
-					len[1] = wsprintf(ach[1], "ガダルカナル島を巡る戦いです。");
-					len[2] = wsprintf(ach[2], "");
-					len[3] = wsprintf(ach[3], "");
-					len[4] = wsprintf(ach[4], "");
-
-					len[5] = wsprintf(ach[5], "勝敗条件：ガダルカナル島の日本軍の陸上施設の壊滅と");
-					len[6] = wsprintf(ach[6], "同島に航空基地の完成で米海軍の勝利です。");
-					break;
-
-				case 103:
-					len[1] = wsprintf(ach[1], "日本近海の戦いです。");
-					len[2] = wsprintf(ach[2], "");
-					len[3] = wsprintf(ach[3], "");
-					len[4] = wsprintf(ach[4], "");
-
-					len[5] = wsprintf(ach[5], "勝敗条件：日本本土の都市を全て壊滅すれば");
-					len[6] = wsprintf(ach[6], "米海軍の勝利です。");
-					break;
-
-				case 104:
-					len[1] = wsprintf(ach[1], "南太平洋の戦いです。");
-					len[2] = wsprintf(ach[2], "");
-					len[3] = wsprintf(ach[3], "");
-					len[4] = wsprintf(ach[4], "");
-
-					len[5] = wsprintf(ach[5], "勝敗条件：ブーゲンビル島の日本軍地上施設");
-					len[6] = wsprintf(ach[6], "壊滅で米海軍の勝利です。");
-					break;
-
-				case 105:
-					len[1] = wsprintf(ach[1], "南太平洋の戦いです。");
-					len[2] = wsprintf(ach[2], "");
-					len[3] = wsprintf(ach[3], "");
-					len[4] = wsprintf(ach[4], "");
-
-					len[5] = wsprintf(ach[5], "勝敗条件：ブーゲンビル島の日本軍施設壊滅で米海軍の勝利、");
-					len[6] = wsprintf(ach[6], "ガダルカナルの米軍施設壊滅で日本海軍の勝利です。");
-					break;
-
-				case 106:
-					len[1] = wsprintf(ach[1], "ガダルカナル島の争奪戦です。");
-					len[2] = wsprintf(ach[2], "");
-					len[3] = wsprintf(ach[3], "");
-					len[4] = wsprintf(ach[4], "");
-
-					len[5] = wsprintf(ach[5], "勝敗条件：ガダルカナル島の敵陸上施設全滅と自軍施設");
-					len[6] = wsprintf(ach[6], "が四個以上あれば勝利です。");
-					break;
-
-
-
-
-				default:
-					len[1] = wsprintf(ach[1], "");
-					len[2] = wsprintf(ach[2], "");
-					len[3] = wsprintf(ach[3], "");
-					len[4] = wsprintf(ach[4], "");
-
-					len[5] = wsprintf(ach[5], "");
-					len[6] = wsprintf(ach[6], "");
-					break;
-				}
+			DrawScenarioDescription(ref len, ref ach);
 #else
 			switch( sinario )
 				{
@@ -1224,8 +1848,6 @@ TCHAR		temp_buf[MAX_PATH];
 					len[6] = wsprintf(ach[6], "");
 					break;
 
-
-
 				case 101:
 					len[1] = wsprintf(ach[1], "Battles around Guadalcanal.");
 					len[2] = wsprintf(ach[2], "");
@@ -1256,8 +1878,6 @@ TCHAR		temp_buf[MAX_PATH];
 					len[6] = wsprintf(ach[6], "is U.S.Navy's victory.");
 					break;
 
-
-
 				case 104:
 					len[1] = wsprintf(ach[1], "Battle of south pacific.");
 					len[2] = wsprintf(ach[2], "");
@@ -1278,7 +1898,6 @@ TCHAR		temp_buf[MAX_PATH];
 					len[6] = wsprintf(ach[6], "Guadalcanal which U.S.Navy is defending is Japanese victory.");
 					break;
 
-
 				case 106:
 					len[1] = wsprintf(ach[1], "Battles at Guadalcanal.");
 					len[2] = wsprintf(ach[2], "");
@@ -1288,8 +1907,6 @@ TCHAR		temp_buf[MAX_PATH];
 					len[5] = wsprintf(ach[5], "Victory Line : Total annihilation of all of enemy's bases");
 					len[6] = wsprintf(ach[6], "and remaining over 4 of bases on Guadalcanal island ");
 					break;
-
-
 
 				default:
 					len[1] = wsprintf(ach[1], "");
@@ -1302,11 +1919,9 @@ TCHAR		temp_buf[MAX_PATH];
 					break;
 				}
 
-
 #endif
 
-
-if( mode==CNCT_GAME_SETTING )
+if( Mode==GameMode.GameSetting )
 	{
 			for( n=0; n<=6; n++)
 				{
@@ -1323,872 +1938,29 @@ else
 		}
 	}
 
-
-
-
 			// コンフィギュレーション
 
-if(	mode==CNCT_CNFG_SETTING )
+if(	Mode==GameMode.ConfigSetting )
 	{
-			rx=630-120;
-
-#if !LNGG_VER
-			len[0] = wsprintf(ach[0], "コンフィギュレーション");
-#else
-			len[0] = wsprintf(ach[0], "Configuration");
-#endif
-			SetTextColor(hdc, RGB(255, 255, 255));
-
-
-
-			// 勝敗判定
-			if(you_are_host!=0)
-				{
-				dstn_rect.left=rx+50;
-				dstn_rect.top=50;
-				TextOut(hdc, dstn_rect.left, dstn_rect.top+(1*25), ach[0], len[0]);
-
-
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "勝敗判定の切り替え ->>>");
-#else
-				len[0] = wsprintf(ach[0], "Decision ->>>");
-#endif
-				dstn_rect.left=rx;
-				dstn_rect.top=125;
-				dstn_rect.right=dstn_rect.left+(len[0]*12);
-				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 )
-						{
-						decision_sw=(byte)(decision_sw==0 ? 1 : 0);
-						}
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(255, 255, 255));
-					}
-
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-				}
-
-			if(decision_sw==0)
-				{
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "勝敗条件は無効");
-#else
-				len[0] = wsprintf(ach[0], "Invalid");
-#endif
-				}
-			else
-				{
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "勝敗条件は有効");
-#else
-				len[0] = wsprintf(ach[0], "Valid");
-#endif
-				}
-			SetTextColor(hdc, RGB(255, 255, 255));
-			dstn_rect.left=rx;
-			dstn_rect.top=150;
-			TextOut(hdc, dstn_rect.left, dstn_rect.top/*+(1*25)*/, ach[0], len[0]);
-
-
-
-
-
-
-			// 補給割当増加率（ホスト側）
-#if !LNGG_VER
-			len[0] = wsprintf(ach[0], "補給割当増加率（ホスト側）");
-#else
-			len[0] = wsprintf(ach[0], "increase rate of supply pts(Host)");
-#endif
-			SetTextColor(hdc, RGB(255, 255, 255));
-			dstn_rect.left=rx;
-			dstn_rect.top=200;
-			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-			if( you_are_host!=0 )
-				{
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "増やす ->>>");
-#else
-				len[0] = wsprintf(ach[0], "Increment ->>>");
-#endif
-				SetTextColor(hdc, RGB(255, 255, 255));
-				dstn_rect.left=rx;
-				dstn_rect.top=225;
-				dstn_rect.right=dstn_rect.left+(len[0]*10);
-				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 )
-						{
-						spry_rate[0]++;
-						flg=1;
-						}
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(255, 255, 255));
-					}
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "減らす ->>>");
-#else
-				len[0] = wsprintf(ach[0], "Decrement ->>>");
-#endif
-				SetTextColor(hdc, RGB(255, 255, 255));
-				dstn_rect.left=rx;
-				dstn_rect.top=250;
-				dstn_rect.right=dstn_rect.left+(len[0]*10);
-				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 && spry_rate[0]!=0)
-						{
-						spry_rate[0]--;
-						flg=1;
-						}
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(255, 255, 255));
-					}
-
-
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-				}
-
-
-			len[0] = wsprintf(ach[0], "%d pts",spry_rate[0]);
-			SetTextColor(hdc, RGB(255, 255, 255));
-			dstn_rect.left=rx+150;
-			dstn_rect.top=237;
-			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-
-
-
-
-
-
-			// 補給値反転地点
-#if !LNGG_VER
-			len[0] = wsprintf(ach[0], "補給値反転地点");
-#else
-			len[0] = wsprintf(ach[0], "Reverse of suplly pts");
-#endif
-			SetTextColor(hdc, RGB(255, 255, 255));
-			dstn_rect.left=rx+250;
-			dstn_rect.top=200;
-			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-			if( you_are_host!=0 )
-				{
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "増やす ->>>");
-#else
-				len[0] = wsprintf(ach[0], "Increment ->>>");
-#endif
-				SetTextColor(hdc, RGB(255, 255, 255));
-				dstn_rect.left=rx+250;
-				dstn_rect.top=225;
-				dstn_rect.right=dstn_rect.left+(len[0]*10);
-				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( (lf_btn==1||lf_btn==2) )
-						{
-						rvrs_time++;
-						flg=1;
-						}
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(255, 255, 255));
-					}
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "減らす ->>>");
-#else
-				len[0] = wsprintf(ach[0], "Decrement ->>>");
-#endif
-				SetTextColor(hdc, RGB(255, 255, 255));
-				dstn_rect.left=rx+250;
-				dstn_rect.top=250;
-				dstn_rect.right=dstn_rect.left+(len[0]*10);
-				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( (lf_btn==1||lf_btn==2) && rvrs_time!=0)
-						{
-						rvrs_time--;
-						flg=1;
-						}
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(255, 255, 255));
-					}
-
-
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-				}
-
-
-#if !LNGG_VER
-			if( rvrs_time!=0 )
-				len[0] = wsprintf(ach[0], "経過時間 %d",rvrs_time*100);
-			else
-				len[0] = wsprintf(ach[0], "反転無し");
-#else
-			if( rvrs_time )
-				len[0] = wsprintf(ach[0], "TIME: %d",rvrs_time*100);
-			else
-				len[0] = wsprintf(ach[0], "No reverse");
-#endif
-			SetTextColor(hdc, RGB(255, 255, 255));
-			dstn_rect.left=rx+150+250-30;
-			dstn_rect.top=237;
-			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-
-
-
-
-
-
-			// 補給割当増加率（ゲスト側）
-#if !LNGG_VER
-			len[0] = wsprintf(ach[0], "補給割当増加率（ゲスト側）");
-#else
-			len[0] = wsprintf(ach[0], "Increse rate of supply pts(guest)");
-#endif
-			SetTextColor(hdc, RGB(255, 255, 255));
-			dstn_rect.left=rx;
-			dstn_rect.top=300;
-			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-			if( you_are_host!=0 )
-				{
-				
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "増やす ->>>");
-#else
-				len[0] = wsprintf(ach[0], "Increment ->>>");
-#endif
-				SetTextColor(hdc, RGB(255, 255, 255));
-				dstn_rect.left=rx;
-				dstn_rect.top=325;
-				dstn_rect.right=dstn_rect.left+(len[0]*10);
-				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 )
-						{
-						spry_rate[1]++;
-						flg=1;
-						}
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(255, 255, 255));
-					}
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "減らす ->>>");
-#else
-				len[0] = wsprintf(ach[0], "Decrement ->>>");
-#endif
-				SetTextColor(hdc, RGB(255, 255, 255));
-				dstn_rect.left=rx;
-				dstn_rect.top=350;
-				dstn_rect.right=dstn_rect.left+(len[0]*10);
-				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 && spry_rate[1]!=0)
-						{
-						spry_rate[1]--;
-						flg=1;
-						}
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(255, 255, 255));
-					}
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-				}
-
-			len[0] = wsprintf(ach[0], "%d pts",spry_rate[1]);
-			SetTextColor(hdc, RGB(255, 255, 255));
-			dstn_rect.left=rx+150;
-			dstn_rect.top=337;
-			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-
-
-
-
-
-
-
-			// 補給値反転ルール
-			if( rvrs_time!=0 )
-				{
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], ( you_are_host!=0 ? "補給値反転ルール->>>" : "補給値反転ルール" ));
-#else
-				len[0] = wsprintf(ach[0], "Reverse rule");
-#endif
-				SetTextColor(hdc, RGB(255, 255, 255));
-				dstn_rect.left=rx+250;
-				dstn_rect.top=300;
-				dstn_rect.right=dstn_rect.left+(len[0]*10);
-				dstn_rect.bottom=dstn_rect.top+24;
-
-				if( you_are_host!=0 )
-					{
-					if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
-						{
-						SetTextColor(hdc, RGB(255, 0, 0));
-						if( lf_btn==3 )
-							{
-							rvrs_rule=(short)(rvrs_rule==0 ? 1 : 0);
-							flg=1;
-							}
-						}
-					else
-						{
-						SetTextColor(hdc, RGB(255, 255, 255));
-						}
-					}
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-
-
-				if( rvrs_rule==0 )
-					{
-#if !LNGG_VER
-					len[0] = wsprintf(ach[0], "一度だけ");
-#else
-					len[0] = wsprintf(ach[0], "Once a game");
-#endif
-					SetTextColor(hdc, RGB(255, 255, 255));
-					dstn_rect.left=rx+250;
-					dstn_rect.top=325;
-					TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-					}
-				else
-					{
-#if !LNGG_VER
-					len[0] = wsprintf(ach[0], "指定時間毎");
-#else
-					len[0] = wsprintf(ach[0], "Every specified TIME");
-#endif
-					SetTextColor(hdc, RGB(255, 255, 255));
-					dstn_rect.left=rx+250;
-					dstn_rect.top=325;
-					TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-					}
-				}
-
-
-
-
-
-
-			// 初期補給割当（ホスト側）
-#if !LNGG_VER
-			len[0] = wsprintf(ach[0], "初期補給割当（ホスト側）");
-#else
-			len[0] = wsprintf(ach[0], "Supply pts on start(Host)");
-#endif
-			SetTextColor(hdc, RGB(255, 255, 255));
-			dstn_rect.left=rx;
-			dstn_rect.top=400;
-			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-			if( you_are_host!=0 )
-				{
-//				len[0] = wsprintf(ach[0], "増やす ->>>");
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "増やす ->>>");
-#else
-				len[0] = wsprintf(ach[0], "Increment ->>>");
-#endif
-
-				SetTextColor(hdc, RGB(255, 255, 255));
-				dstn_rect.left=rx;
-				dstn_rect.top=425;
-				dstn_rect.right=dstn_rect.left+(len[0]*10);
-				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( (lf_btn==1||lf_btn==2) )
-						{
-						first_spry_pt[0]+=50;
-						flg=1;
-						}
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(255, 255, 255));
-					}
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-
-//				len[0] = wsprintf(ach[0], "減らす ->>>");
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "減らす ->>>");
-#else
-				len[0] = wsprintf(ach[0], "Decrement ->>>");
-#endif
-
-				SetTextColor(hdc, RGB(255, 255, 255));
-				dstn_rect.left=rx;
-				dstn_rect.top=450;
-				dstn_rect.right=dstn_rect.left+(len[0]*10);
-				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( (lf_btn==1||lf_btn==2) && first_spry_pt[0]!=0)
-						{
-						first_spry_pt[0]-=50;
-						if( first_spry_pt[0]<0)
-							first_spry_pt[0]=0;
-						flg=1;
-						}
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(255, 255, 255));
-					}
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-				}
-
-			len[0] = wsprintf(ach[0], "%d pts",first_spry_pt[0]);
-			SetTextColor(hdc, RGB(255, 255, 255));
-			dstn_rect.left=rx+150;
-			dstn_rect.top=437;
-			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-
-
-
-			// 初期補給割当（ゲスト側）
-#if !LNGG_VER
-			len[0] = wsprintf(ach[0], "初期補給割当（ゲスト側）");
-#else
-			len[0] = wsprintf(ach[0], "Supply pts on start(Guest)");
-#endif
-			SetTextColor(hdc, RGB(255, 255, 255));
-			dstn_rect.left=rx;
-			dstn_rect.top=500;
-			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-			if( you_are_host!=0 )
-				{
-//				len[0] = wsprintf(ach[0], "増やす ->>>");
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "増やす ->>>");
-#else
-				len[0] = wsprintf(ach[0], "Increment ->>>");
-#endif
-
-				SetTextColor(hdc, RGB(255, 255, 255));
-				dstn_rect.left=rx;
-				dstn_rect.top=525;
-				dstn_rect.right=dstn_rect.left+(len[0]*10);
-				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( (lf_btn==1||lf_btn==2) )
-						{
-						first_spry_pt[1]+=50;
-						flg=1;
-						}
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(255, 255, 255));
-					}
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-
-//				len[0] = wsprintf(ach[0], "減らす ->>>");
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "減らす ->>>");
-#else
-				len[0] = wsprintf(ach[0], "Decrement ->>>");
-#endif
-
-				SetTextColor(hdc, RGB(255, 255, 255));
-				dstn_rect.left=rx;
-				dstn_rect.top=550;
-				dstn_rect.right=dstn_rect.left+(len[0]*10);
-				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( (lf_btn==1||lf_btn==2) && first_spry_pt[1]!=0)
-						{
-						first_spry_pt[1]-=50;
-						if( first_spry_pt[1]<0)
-							first_spry_pt[1]=0;
-						flg=1;
-						}
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(255, 255, 255));
-					}
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-				}
-
-			len[0] = wsprintf(ach[0], "%d pts",first_spry_pt[1]);
-			SetTextColor(hdc, RGB(255, 255, 255));
-			dstn_rect.left=rx+150;
-			dstn_rect.top=537;
-			TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-
-
-
-
-			if(you_are_host!=0)
-				{
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "増援ユニット制御 ->>>");
-#else
-				len[0] = wsprintf(ach[0], "Supply unit control ->>>");
-#endif
-				dstn_rect.left=rx;
-				dstn_rect.top=600;
-				dstn_rect.right=dstn_rect.left+(len[0]*12);
-				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 )
-						{
-						arrival_cont++;
-						if(arrival_cont>=7)
-							arrival_cont=0;
-						}
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(255, 255, 255));
-					}
-
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-				}
-
-
-
-			switch( arrival_cont )
-				{
-#if !LNGG_VER
-				case 0:
-					len[0] = wsprintf(ach[0], "全種増援可(%d)",arrival_cont);
-					break;
-				case 1:
-					len[0] = wsprintf(ach[0], "全種増援不可(%d)",arrival_cont);
-					break;
-				case 2:
-					len[0] = wsprintf(ach[0], "輸送船以外可(%d)",arrival_cont);
-					break;
-				case 3:
-					len[0] = wsprintf(ach[0], "輸送船のみ可(%d)",arrival_cont);
-					break;
-				case 4:
-					len[0] = wsprintf(ach[0], "戦闘艦船のみ可(%d)",arrival_cont);
-					break;
-				case 5:
-					len[0] = wsprintf(ach[0], "航空機のみ可(%d)",arrival_cont);
-					break;
-				case 6:
-					len[0] = wsprintf(ach[0], "輸送船(軍港)以外可(%d)",arrival_cont);
-					break;
-#else
-
-				case 0:
-					len[0] = wsprintf(ach[0], "All of possible(%d)",arrival_cont);
-					break;
-				case 1:
-					len[0] = wsprintf(ach[0], "Nothing of possible(%d)",arrival_cont);
-					break;
-				case 2:
-					len[0] = wsprintf(ach[0], "Possible except transpot(%d)",arrival_cont);
-					break;
-				case 3:
-					len[0] = wsprintf(ach[0], "Possible only transport(%d)",arrival_cont);
-					break;
-				case 4:
-					len[0] = wsprintf(ach[0], "Possible only combat fleet(%d)",arrival_cont);
-					break;
-				case 5:
-					len[0] = wsprintf(ach[0], "Possible only Airplane(%d)",arrival_cont);
-					break;
-				case 6:
-					len[0] = wsprintf(ach[0], "Possible except transport(port)(%d)",arrival_cont);
-					break;
-
-#endif
-
-				}
-
-
-			SetTextColor(hdc, RGB(255, 255, 255));
-			dstn_rect.left=rx;
-			dstn_rect.top=625;
-			TextOut(hdc, dstn_rect.left, dstn_rect.top/*+(1*25)*/, ach[0], len[0]);
-
-
-
-
-
-
-
-			// シナリオセッティングへ戻る
-			if(you_are_host!=0)
-				{
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "シナリオセッティングへ戻る->>>");
-#else
-				len[0] = wsprintf(ach[0], "Back to mission menu ->>>");
-#endif
-				dstn_rect.left=rx;
-				dstn_rect.top=675;
-				dstn_rect.right=dstn_rect.left+(len[0]*12);
-				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==CNCT_CNFG_SETTING )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 )
-						{
-						m=sinario;
-						go_cnct_game_setting();
-						sinario=(short)m;
-
-						dp_flag.dwType = GO_GAME_SETTING;
-//t						lpDirectPlay4A->lpVtbl->Send(lpDirectPlay4A, dpidPlayer, dpidRivalPlayer, DPSEND_GUARANTEED, &dp_flag, sizeof(_DP_FLAG) );
-
-						bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
-						bufferDesc.pBufferData  = (byte*) &dp_flag;
-						g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-						}
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(255, 255, 255));
-					}
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-				}
-
-
-
-
-			// 戦闘開始
-			if(you_are_host!=0)
-				{
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "ゲームスタート ->>>");
-#else
-				len[0] = wsprintf(ach[0], "Game Start ->>>");
-#endif
-				dstn_rect.left=rx;
-				dstn_rect.top=700;
-				dstn_rect.right=dstn_rect.left+(len[0]*12);
-				dstn_rect.bottom=dstn_rect.top+24;
-				if( pt_in_rect(ref dstn_rect,crsr_pt.x,crsr_pt.y)!=0 && rival_mode==CNCT_CNFG_SETTING )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 )
-						{
-						// ホストの選択状態をゲストにセンドします。
-						srand( (uint)time( null ) );
-						cnct_game_rnd_sheed=(short)rnd(65536);
-
-						dp_data_1.dwType = OUT_SETUP;
-						dp_data_1.data[0] = cnct_game_rnd_sheed;
-
-						bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-						bufferDesc.pBufferData  = (byte*) &dp_data_1;
-						g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-
-
-						dp_data_1.dwType = OUT_CNFG_SETTING;
-						dp_data_1.data[0] = (short)host_side;
-						dp_data_1.data[1] = sinario;
-
-						dp_data_1.data[2] = spry_rate[0];
-						dp_data_1.data[3] = spry_rate[1];
-
-						dp_data_1.data[4] = decision_sw;
-
-						dp_data_1.data[5] = first_spry_pt[0];
-						dp_data_1.data[6] = first_spry_pt[1];
-
-						dp_data_1.data[7] = arrival_cont;
-
-						dp_data_1.data[8] = rvrs_time;
-						dp_data_1.data[9] = rvrs_rule;
-
-
-						bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-						bufferDesc.pBufferData  = (byte*) &dp_data_1;
-						g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-
-
-						mode=CMBT;
-						}
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(255, 255, 255));
-					}
-				TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-				}
-			else
-				{
-				if( join_game_start==OUT_CNFG_SETTING )
-					{
-					mode=CMBT;
-					join_game_start=0;
-					}
-				}
-
-
-
-			if( you_are_host!=0 && rival_mode==mode/*==CNCT_CNFG_SETTING*/ && (FrameCount%10)==0 )
-				{
-				// ホストの選択状態をゲストにセンドします。
-				dp_data_1.dwType = SIDE_AND_SINARIO;
-				dp_data_1.data[0] = (short)host_side;
-				dp_data_1.data[1] = sinario;
-
-				dp_data_1.data[2] = spry_rate[0];
-				dp_data_1.data[3] = spry_rate[1];
-
-				dp_data_1.data[4] = decision_sw;
-
-				dp_data_1.data[5] = first_spry_pt[0];
-				dp_data_1.data[6] = first_spry_pt[1];
-
-				dp_data_1.data[7] = arrival_cont;
-
-				dp_data_1.data[8] = rvrs_time;
-				dp_data_1.data[9] = rvrs_rule;
-
-				bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-				bufferDesc.pBufferData  = (byte*) &dp_data_1;
-				g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, EASY_SEND );
-
-				}
+			UpdateConfigSetting(ref len, ref ach, ref hdc, ref dp_flag, ref dp_data_1);
 
 	}
-
 
 			IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
 			}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-//	if(0 || cnct_game)
-//		{
-
 //t		key_cont();		// チャット用
-/*
-		if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK ) 
-			{
-			SetBkMode(hdc, TRANSPARENT);
-			SelectObject(hdc, gameFont_1);
 
-			SetTextColor(hdc, RGB(255, 255, 0));
-
-
-
-			if(my_chat_dsp_time)
-				{
-				len[0] = wsprintf(ach[0], my_chat );
-				TextOut(hdc, 10, 200+170, ach[0], len[0]);
-				my_chat_dsp_time--;
-				if(my_chat_dsp_time==0)
-					{
-					for(m=0;m<128;m++)
-						{
-						my_chat[m]=0;
-						}
-					}
-				}
-
-
-			if(friend_chat_dsp_time)
-				{
-				len[0] = wsprintf(ach[0], friend_chat );
-				TextOut(hdc, 10, 240+170, ach[0], len[0]);
-				friend_chat_dsp_time--;
-				if(friend_chat_dsp_time==0)
-					{
-					for(m=0;m<128;m++)
-						{
-						friend_chat[m]=0;
-						}
-					}
-				}
-			}
-		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
-*/
-
-
-//		}
-
-
-
-	if( mode==CMBT )
+	if( Mode==GameMode.Battle )
 		{
-		cnct_game_init();
+		InitializeGame();
 		}
-	else if( rival_mode!=0 && (FrameCount%40)==0 )
+	else if( RivalMode!=0 && (FrameCount%40)==0 )
 		{
 
 		// 現在のモードをライバルに送る。
-		dp_flag.dwType = RIVAL_MODE;
-		dp_flag.rival_mode=mode;
-//t		lpDirectPlay4A->lpVtbl->Send(lpDirectPlay4A, dpidPlayer, dpidRivalPlayer, 0 /*DPSEND_GUARANTEED*/, &dp_flag, sizeof(_DP_FLAG) );
+		dp_flag.dwType = MessageType.RivalMode;
+		dp_flag.rival_mode=(short)Mode;
 
 		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
 		bufferDesc.pBufferData  = (byte*) &dp_flag;
@@ -2196,166 +1968,12 @@ if(	mode==CNCT_CNFG_SETTING )
 		}
 	}
 
-
-
-
-
-
 //============================================================================
 // 通信対戦セットアップ
 // とにかく互いに通信するまで。
 //----------------------------------------------------------------------------
-public void	cnct_game_setup()
+[Original("cnct_game_setup")]
+public void	UpdateSetup()
 	{
-#if false
-	RECT	src_rect,field_rect,dstn_rect;
-	int		m,n,g,no1,i,wrk,wrk2,wrk3,menu[7],menu2[7];
-    char ach[12][128];
-    int len[12];
-	HDC					hdc;
-	BYTE	cBuf[256];
-	DPNAME		dpName;
-	HRESULT 	hr;
-
-
-
-	DP_DATA_1	dp_data_1;
-	DP_DATA_1	*lp_dp_data_1;
-
-
-
-
-	// マウス情報
-	GetCursorPos(&crsr_pt);
-	if(!scrn_mode)
-		ScreenToClient(hwnd, &crsr_pt);
-	GetKeyboardState(cBuf);
-
-
-	if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK ) 
-		{
-		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, gameFont_1);
-
-		SetTextColor(hdc, RGB(255, 255, 255));
-
-#if !LNGG_VER
-		len[0] = wsprintf(ach[0], "通信セットアップ");
-		TextOut(hdc, 300+50, 80-26, ach[0], len[0]);
-		len[0] = wsprintf(ach[0], "Ｆ４：接続解除　Ｆ６：接続ダイアログ");
-		TextOut(hdc, 290, 80-26+26, ach[0], len[0]);
-#else
-		len[0] = wsprintf(ach[0], "Connection set up");
-		TextOut(hdc, 300+50, 80-26, ach[0], len[0]);
-		len[0] = wsprintf(ach[0], "F4: Kill Connection  F6: Connection Dialog");
-		TextOut(hdc, 290, 80-26+26, ach[0], len[0]);
-#endif
-
-
-
-
-
-
-
-
-
-		// あなたの名前
-#if !LNGG_VER
-		len[0] = wsprintf(ach[0], "自分の名前");
-#else
-		len[0] = wsprintf(ach[0], "My name :");
-#endif
-		TextOut(hdc, 200, 120, ach[0], len[0]);
-		len[0] = wsprintf(ach[0], g_strLocalPlayerName);
-		TextOut(hdc, 500, 120, ach[0], len[0]);
-
-		//　対戦相手の名前
-#if !LNGG_VER
-		len[0] = wsprintf(ach[0], "対戦相手の名前");
-#else
-		len[0] = wsprintf(ach[0], "Rival name :");
-#endif
-		TextOut(hdc, 200, 160, ach[0], len[0]);
-		len[0] = wsprintf(ach[0], g_strLocalRivalPlayerName);
-		TextOut(hdc, 500, 160, ach[0], len[0]);
-
-
-
-
-
-
-//		if( 0 || cnct_game  )
-//			{
-			if( cnct_game && you_are_host)
-				{
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "通信対戦開始");
-#else
-				len[0] = wsprintf(ach[0], "- Click to start -");
-#endif
-
-				dstn_rect.left=500;
-				dstn_rect.top=600;
-				dstn_rect.right=dstn_rect.left+(len[0]*12);
-				dstn_rect.bottom=dstn_rect.top+24;
-
-				if( pt_in_rect(&dstn_rect,crsr_pt.x,crsr_pt.y) )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( lf_btn==3 )
-						{
-						srand( (unsigned)time( NULL ) );
-						cnct_game_rnd_sheed=rnd(65536);
-
-						rnd_count=0;
-
-						dp_data_1.dwType = OUT_SETUP;
-						wsprintf(dp_data_1.my_name, g_strLocalPlayerName);	
-						dp_data_1.data[0] = cnct_game_rnd_sheed;
-
-//t						lpDirectPlay4A->lpVtbl->Send(lpDirectPlay4A, dpidPlayer, dpidRivalPlayer/*idFrom*/, DPSEND_GUARANTEED, &dp_data_1, sizeof(DP_DATA_1) );
-
-						//sinario=4;
-						//mode=CMBT;
-
-						go_cnct_game_setting();
-
-						// リジュームデータがホストをやってたかしらべる。
-						load_on_resume(1);
-						you_were_host=you_are_host;
-						you_are_host=1;					//ここにくるのはホストだけ
-						sinario=0;
-						}
-					}
-				else
-					{
-					SetTextColor(hdc, RGB(255, 255, 255));
-					}
-
-				TextOut(hdc, 500, 600, ach[0], len[0]);
-				}
-			else
-				{
-				if(join_game_start)
-					{
-					join_game_start=0;
-					go_cnct_game_setting();
-					}
-				}
-//			}
-
-
-
-		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
-		}
-
-
-/**
-	if( mode==CMBT )
-		{
-		game_init();
-		}
-**/
-#endif
 	}
 }

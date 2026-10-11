@@ -295,7 +295,7 @@ public partial class Nspw
 
 	public void Sleep(uint dwMilliseconds)
 	{
-		Thread.Sleep((int)dwMilliseconds);
+		_platform.Sleep(dwMilliseconds);
 	}
 
 	public object? LoadIcon(object? hInstance, int lpIconName)
@@ -474,7 +474,7 @@ public partial class Nspw
 		{
 			while (_messages.Count == 0)
 			{
-				Monitor.Wait(_messages);
+				_platform.WaitForMessage(_messages);
 			}
 
 			lpMsg = _messages.Dequeue();
@@ -488,7 +488,7 @@ public partial class Nspw
 		{
 			while (_messages.Count == 0)
 			{
-				Monitor.Wait(_messages);
+				_platform.WaitForMessage(_messages);
 			}
 		}
 

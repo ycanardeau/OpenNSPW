@@ -100,8 +100,14 @@ public:
 
 	void call()
 	{
+		call(rng_.u32());
+	}
+
+	// call() with a chosen seed, for a function that only does something for some values of rand().
+	void call(unsigned seed)
+	{
 		before_ = nspw_state::take();
-		seed_ = rng_.u32();
+		seed_ = seed;
 		srand(seed_);
 	}
 
@@ -624,6 +630,196 @@ static void record_etc2(recorder &r)
 	});
 }
 
+// A seed whose first rand() is a multiple of `x` in `percent` of the calls, so that a function that acts when
+// rnd(x)==0 acts often enough to be tested.
+static unsigned seed_for_rnd_zero(rng &g, int x, int percent)
+{
+	unsigned seed = g.u32();
+	if (g.chance(percent))
+	{
+		for (;;)
+		{
+			srand(seed);
+			if (rand() % x == 0)
+				break;
+			seed++;
+		}
+	}
+	return seed;
+}
+
+// A distance from a unit to a point, around the distances that the landing code compares with: 160 (NSPW_THE_NET),
+// 360 and 400.
+static double random_landing_distance(rng &g)
+{
+	switch (g.range(0, 9))
+	{
+	case 0: return g.real(150.0, 170.0);
+	case 1: return g.real(350.0, 370.0);
+	case 2: return g.real(390.0, 410.0);
+	case 3: return (double)g.range(0, 3);
+	case 4: return g.real(0.0, 1000.0);
+	default: return g.real(0.0, 450.0);
+	}
+}
+
+// A transport of side `side` at unit m, inside the world, with a landing point (info[6], info[7]) near it, in a
+// direction around its heading (within or beyond the 45 degrees that fire_now accepts).
+static void random_transport(rng &g, int m, int side)
+{
+	unit[m].used = (short)side;
+	unit[m].ctgry = SHIP;
+	unit[m].kind = TR1;
+	unit[m].x = random_coordinate(g, MAP_LEFT + 1000, MAP_RIGHT - 1000);
+	unit[m].y = random_coordinate(g, MAP_BOTTOM + 1000, MAP_TOP - 1000);
+	unit[m].drctn = g.chance(40) ? g.real(0.0, 360.0) : (double)g.range(0, 359);
+	unit[m].spd = g.real(0.0, 1.0);
+	unit[m].arm[0] = g.range(TR_SP, TR_GF3);
+	unit[m].arm[1] = g.range(0, 1);
+	unit[m].arm[2] = g.chance(80) ? max_unit + 1 : g.range(0, max_unit);
+	unit[m].arm[4] = 1;
+
+	const double off = g.chance(70) ? g.real(-60.0, 60.0) : g.real(-180.0, 180.0);
+	const double dstc = random_landing_distance(g);
+	unit[m].info[6] = (int)(unit[m].x + cos((unit[m].drctn + off) * a_PI) * dstc);
+	unit[m].info[7] = (int)(unit[m].y + sin((unit[m].drctn + off) * a_PI) * dstc);
+	if (g.chance(5))
+	{
+		unit[m].info[6] = (int)unit[m].x;
+		unit[m].info[7] = (int)unit[m].y + (g.chance(50) ? 0 : g.range(-2, 2));
+	}
+}
+
+// fire[]: a few fires in use, or all of them, so that seek_fire_no finds a free one or none.
+static void random_fires(rng &g)
+{
+	const int used = g.chance(10) ? FIRE_MAX : g.range(0, 64);
+	for (int s = 1; s < used; s++)
+		fire[s].used = g.range(1, max_unit);
+	for (int i = g.range(0, 4); i > 0 && used > 1; i--)
+		fire[g.range(1, used - 1)].used = 0;
+}
+
+static void record_etc1(recorder &r)
+{
+	r.function("etc1", "set_pos_of_attack_TR1", 1000, [](rng &g, test_case &c) {
+		max_unit = 180;
+		rnd_count = (int)g.u32();
+		const int m = g.range(1, max_unit);
+		random_transport(g, m, g.range(JPN, USA));
+		unit[m].em_flg[0] = 0;
+		c.arg(m);
+		c.call(seed_for_rnd_zero(g, 200, 60));
+		set_pos_of_attack_TR1(m);
+	});
+
+	// The transports' branch of fire_now: the landing craft. your_side is 0, so that SoundPlayEffect hears nothing and
+	// plays no sound.
+	r.function("etc1", "fire_now_TR", 1500, [](rng &g, test_case &c) {
+		max_unit = 180;
+		your_side = 0;
+		const int m = g.range(1, max_unit);
+		random_transport(g, m, g.range(JPN, USA));
+		random_fires(g);
+		if (g.chance(40))
+		{
+			the_slct_unit = (short)m;
+			slct_unit[1][m] = (short)g.range(1, 5);
+			cmbt_menu_kind = (short)g.range(0, 2);
+			cmbt_menu_slctd = (short)g.range(0, 5);
+			bf_new_pp[1].cls = g.range(0, 1);
+		}
+		else if (g.chance(30))
+			the_slct_unit = (short)g.range(1, max_unit);
+		if (g.chance(40))
+		{
+			unit_info[0] = g.range(0, 1) ? TR1 : 0;
+			unit_info[3] = g.chance(70) ? m : g.range(1, max_unit);
+		}
+		const int kind = g.chance(90) ? unit[m].arm[0] : g.range(TR_SP, TR_GF3);
+		c.arg(m);
+		c.arg(0);
+		c.arg(kind);
+		c.call();
+		fire_now(m, 0, kind);
+	});
+}
+
+// Land in cmbt_map: a few islands of tiles 1 to 9, as the maps have.
+static void random_land(rng &g)
+{
+	for (int i = g.range(0, 12); i > 0; i--)
+	{
+		const int cx = g.range(10, 245);
+		const int cy = g.range(10, 245);
+		for (int y = cy - g.range(0, 3); y <= cy + g.range(0, 3); y++)
+			for (int x = cx - g.range(0, 3); x <= cx + g.range(0, 3); x++)
+				cmbt_map[y][x] = (unsigned short)g.range(1, 9);
+	}
+}
+
+// The landing craft of cont_fire (TR_SP to TR_GF3): fires on their way to a landing point (info[6], info[7]),
+// some of them close enough to land, near the facilities of a few units, over land and sea.
+static void record_cont_fire(recorder &r)
+{
+	r.function("etc3", "cont_fire_TR", 1000, [](rng &g, test_case &c) {
+		set_sprt_data();
+		max_unit = 180;
+		your_side = 0;
+		cc_count = g.range(0, 100000);
+		my_rnd_pt = (short)g.range(0, 4095);
+		for (int i = 0; i < 4096; i++)
+			my_rnd_sheet[i] = g.range(0, 32767);
+		random_land(g);
+
+		for (int i = g.range(0, 12); i > 0; i--)
+		{
+			const int n = g.range(1, max_unit);
+			unit[n].used = (short)g.range(JPN, USA);
+			unit[n].ctgry = SHIP;
+			unit[n].kind = g.range(BB1, GF3);
+			unit[n].x = random_coordinate(g, MAP_LEFT + 1000, MAP_RIGHT - 1000);
+			unit[n].y = random_coordinate(g, MAP_BOTTOM + 1000, MAP_TOP - 1000);
+		}
+
+		for (int i = g.range(1, 6); i > 0; i--)
+		{
+			const int f = g.range(1, FIRE_MAX - 1);
+			fire[f].used = max_unit + 1;
+			fire[f].kind = g.range(TR_SP, TR_GF3);
+			fire[f].info[6] = g.range(MAP_LEFT + 1000, MAP_RIGHT - 1000);
+			fire[f].info[7] = g.range(MAP_BOTTOM + 1000, MAP_TOP - 1000);
+			fire[f].info[8] = g.range(JPN, USA);
+			const double dstc = g.chance(50) ? g.real(0.0, 30.0) : random_landing_distance(g);
+			const double drctn = g.real(0.0, 360.0);
+			fire[f].x = fire[f].info[6] + cos(drctn * a_PI) * dstc;
+			fire[f].y = fire[f].info[7] + sin(drctn * a_PI) * dstc;
+			fire[f].drctn = g.chance(70) ? drctn + 180.0 : g.real(0.0, 360.0);
+			fire[f].spd = g.chance(80) ? 1.0 : g.real(0.0, 3.0);
+			fire[f].spd_add = 0.0;
+			fire[f].info[0] = g.chance(80) ? g.range(0, 360) : g.range(355, 365);
+			fire[f].info[1] = 360;
+			fire[f].info[2] = g.range(0, 400);
+			if (g.chance(30))
+			{
+				// A facility at the landing point, where the craft builds nothing.
+				const int n = g.range(1, max_unit);
+				unit[n].used = (short)g.range(JPN, USA);
+				unit[n].kind = g.range(AP, GF3);
+				unit[n].x = fire[f].info[6] + g.range(-30, 30);
+				unit[n].y = fire[f].info[7] + g.range(-30, 30);
+			}
+		}
+
+		const int effects = g.chance(5) ? EFFECT_MAX : g.range(0, 64);
+		for (int s = 0; s < effects; s++)
+			effect[s].layer = (short)g.range(UPPER, LOWER);
+
+		c.call();
+		cont_fire();
+	});
+}
+
 int record_function_tests(const char *directory)
 {
 	CreateDirectoryA(directory, NULL);
@@ -632,7 +828,9 @@ int record_function_tests(const char *directory)
 
 	recorder r(directory);
 	record_math(r);
+	record_etc1(r);
 	record_etc2(r);
 	record_etc3(r);
+	record_cont_fire(r);
 	return r.failed() ? 1 : 0;
 }

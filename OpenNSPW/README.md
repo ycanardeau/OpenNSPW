@@ -16,11 +16,14 @@ Every C++ file is ported. The game runs from the connection dialogs through the 
 
 What is tested:
 
-- **Function tests**: `etc2.cpp` (except `new_unit_arrived`, `draw_line4` and `draw_line5`), and `make_my_rnd` through `cloud_cont` of `etc3.cpp`, against recordings of the reference.
+- **Function tests**: `etc2.cpp` (except `new_unit_arrived`, `draw_line4` and `draw_line5`), and `make_my_rnd` through `cloud_cont` of `etc3.cpp`, against recordings of the reference. The tests of the transports' landing (`set_pos_of_attack_TR1`, the transports' branch of `fire_now`, and the landing craft of `cont_fire`) are written, and skipped until their calls are recorded.
 - **`NetworkTests`**: `dplay.cpp`. Two games in one process connect over loopback UDP through the original's connection dialogs, and exchange the game's messages.
 - **`TitleScreenTests`**: two whole games with the original's data connect, reach the title screen, and play a battle that the host starts by clicking through the setting screens. They check the modes, that both games keep in step, and that no message box shows. They save the frames they reach as PNG files next to the test assembly.
+- **`CharacterizationTests`**: the characterization traces that guard the refactoring (see [docs/Refactoring.md](../docs/Refactoring.md#characterization-traces)). Scripts play two whole games in lockstep: the title screen, the first three scenarios, and the original's user scenarios `tst3.dat` and `てすと.dat`, whose fleets start close enough to fight, with seeded random input on both sides, and the host's transports landing their cargo in ミッドウェイ攻略１. Each script's trace, the state, output and `rand()` state of both games after every round, must match the one in `OpenNspw.Tests/Traces`, which was recorded from the port itself, and neither game may detect a desync.
 
 The rest of the game logic is not compared with the reference yet.
+
+The known bugs, of the port and of the original, and the limits of these tests are in [docs/KnownIssues.md](../docs/KnownIssues.md).
 
 Run the commands below from this folder.
 
@@ -45,6 +48,17 @@ Run the commands below from this folder.
 dotnet test OpenNspw.Tests
 ```
 
+### Characterization traces
+The characterization tests run two games in lockstep (`OpenNspw.Tests/Lockstep`): each game runs only while the test steps it, until it ends a frame, sleeps or waits for a message; its clock advances only as it reads it; the two games connect through an in-memory DirectPlay 8; and input arrives only between steps. A run therefore does the same thing every time, on every machine.
+
+A change that keeps behavior leaves every trace unchanged. A change that changes behavior on purpose records the traces again, in the same commit:
+
+```bash
+OPENNSPW_RECORD_TRACES=1 dotnet test OpenNspw.Tests --filter CharacterizationTests
+```
+
+When a run differs from its trace, the test reports the first line that differs and the globals that differ at the next checkpoint.
+
 ## Benchmarks
 ```bash
 dotnet run -c Release --project OpenNspw.Benchmarks -- --filter '*'
@@ -54,9 +68,9 @@ dotnet run -c Release --project OpenNspw.Benchmarks -- --filter '*'
 
 | Benchmark | What one operation is |
 | --- | --- |
-| `Tick` | A tick of the simulation (`chara_cont` and `cnct_decision`), over 1500 ticks. |
-| `Frame` | A frame at the normal speed (`updateFrame`): input, a tick, drawing the battle and showing it, over 300 frames. |
-| `Draw` | Drawing the battle (`unit_info_cont`, `draw_cmbt_area` and `draw_map`), without the tick. |
+| `Tick` | A tick of the simulation (`UpdateBattle` and `CheckResult`), over 1500 ticks. |
+| `Frame` | A frame at the normal speed (`UpdateFrame`): input, a tick, drawing the battle and showing it, over 300 frames. |
+| `Draw` | Drawing the battle (`UpdateUnitInfo`, `DrawBattleArea` and `DrawMinimap`), without the tick. |
 
 Each iteration restores the game's state to tick 2000 first, so each one does the same work. The state an iteration ends with is printed (`// State after an iteration`). It is the same in every iteration and every run, and a version of the game that behaves the same ends with the same state.
 
@@ -80,7 +94,7 @@ This builds the reference and writes to `OpenNspw.Tests`:
 - `Layout.json`: the size and field offsets of each struct, the size of each global, and the initial values of the globals, as compiled.
 - `Functions/<file>/<function>.jsonl.gz`: the recorded calls of each tested function (see `OpenNspw.Reference/function_tests.cpp`). The inputs are generated from a fixed seed, so recording again gives the same calls unless the reference changed.
 
-To test a newly ported function, add its recording to `function_tests.cpp`, record, and add a test that calls the port's function to `OpenNspw.Tests`.
+To test a newly ported function, add its recording to `function_tests.cpp`, record, and add a test that calls the port's function to `OpenNspw.Tests`. A test whose calls are not recorded yet is skipped with `FunctionTest.NotRecorded`; remove the `Skip` once they are.
 
 The reference also runs the game, from `Original/NSPW_NET` as the working directory (set as the debugger's working directory in the project). For now it runs fullscreen, like the normal build.
 
@@ -114,7 +128,7 @@ The ported files read side by side with the C++ files: same order, names, commen
 | `(a==b)` used as an integer | `(a==b ? 1 : 0)` |
 | A local that can be read uninitialized (MSVC warnings C4700, C4701) | Initialized to zero, marked `/* C4701 */`. The tests avoid the inputs that read it. |
 | A local that shadows a local of an enclosing scope | The outer one is renamed, with a comment |
-| `#if SND_SW`, `#if CONN_DBG==0`, `#if LNGG_VER==0` | `#if SND_SW`, `#if !CONN_DBG`, `#if !LNGG_VER`: the switches that are 1 (`SND_SW`, `DBG_MODE`) are defined in the project |
+| `#if NSPW_THE_NET`, `#if SND_SW`, `#if CONN_DBG==0`, `#if LNGG_VER==0` | `#if NSPW_THE_NET`, `#if SND_SW`, `#if !CONN_DBG`, `#if !LNGG_VER`: the switches that are 1 (`NSPW_THE_NET`, `SND_SW`, `DBG_MODE`) are defined in the project |
 | Pointers to network messages (`(_DP_FLAG*) pReceiveMsg->pReceiveData`, `(BYTE*) &dp_flag`) | Unsafe pointers, as in C++ |
 | `GUID*`, `HWND`, COM interface pointers | `Guid?`, `HWND?`, `IDirectPlay8Peer?` and so on; `p->f` becomes `p.f` |
 | `TCHAR s[N]` passed to a function | A `Span<byte>`: the stand-ins take char arrays as spans |

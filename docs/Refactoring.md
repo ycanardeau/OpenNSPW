@@ -166,6 +166,7 @@ New value types replace groups of primitives that are adjacent in the struct, wi
 | `Point` | `int X, Y` | `POINT` |
 | `Rect` | `int Left, Top, Right, Bottom` | `RECT` |
 | `Bool32` | `int Value` | `BOOL` fields that are used as booleans |
+| `Bool8` | `byte Value` | `BYTE` fields that are used as booleans |
 | `UnitId` | `short Value` or `int Value` | Unit numbers (see below) |
 
 Operations on them must compute exactly what the C++ computes, operation by operation:
@@ -247,26 +248,42 @@ Bugs found in the port after refactoring has started, for example by the referen
 ### 1. Deterministic runner and characterization traces
 The in-memory DirectPlay stand-in, the frame barrier, scripted time and input, the trace format and the scripts, with coverage per function. Tag `exact-port`.
 
+Done, except coverage per function and the tag. See [OpenNSPW/README.md](../OpenNSPW/README.md#characterization-traces). The scripts cover the title screen, three scenarios, and two of the original's user scenarios whose fleets start close enough to fight (`tst3.dat`, `てすと.dat`), with seeded random input and ship orders. The first scenarios' fleets start too far apart to meet within a test's time, and no script launches aircraft yet.
+
 ### 2. Name binding
 `[Original]` on globals, fields and methods, and the binding in the tests through it. No names change yet.
+
+Done.
 
 ### 3. Refactoring tool
 The `rename` command of `OpenNspw.Porter`, driven by the catalog as a file, adding `[Original]`.
 
+Done. It takes documentation comment IDs (`F:OpenNspw.Nspw.unit Units`); the catalog is not a file yet.
+
 ### 4. Enums
 `Side`, `UnitCategory`, `UnitKind`, `UnitState`, `UnitMode`, `CombatMenuItem`, `FireKind`, `EffectLayer`, `GameMode`, `GameResult`, `MessageType`, `SoundId`, the button flags. One enum per commit.
+
+Done. `SoundId` indexes the sound buffers with a cast. `SpriteId` indexes `Sprites`, a `SpriteArray` with an indexer by `SpriteId`, so without one. `InputButtons` is the type of `Buttons`. The key directions (`KEY_UP` ...) are not used, and get no enum.
 
 ### 5. Value types
 `WorldPosition`, `WorldVector`, `Angle`, `Point`, `Rect`, with their bit-for-bit tests. Then `Bool32` and `UnitId`, field by field.
 
+In progress: `WorldPosition`, a readonly struct, holds every position, and `WorldVector` the moves that add to one. Pairs of assignments of `X` and `Y` are assignments of a position. `Bool32` and `Bool8` hold the flags of the units, the effects, the select orders and the globals.
+
 ### 6. Union slot accessors
 `hp`, `arm` and `gas` first, whose meanings are clear, then `info[]` of `FIRE`, `EFFECT` and `UNIT`, slot by slot.
+
+Done for the slots whose meaning is known. Code that clears the arrays, the carriers' `info[0]` and `info[3]` (only ever cleared) and a debug display keep `info[n]`.
 
 ### 7. Renames
 Globals and struct fields, then functions, with the catalog. The ported files' names follow their main function.
 
+Done for the structs, their fields, the recorded globals and the game's functions. The files keep their C++ names until step 9.
+
 ### 8. Functions
 Per function, starting with the most covered: `ref` locals, local names, iteration helpers, return types, then extracting smaller functions. Commented-out code is removed per file before its functions are refactored.
+
+In progress. The longest functions are split with the `extract` command of `OpenNspw.Porter`: the battle loop (`UpdateBattle`, `MoveUnit`, `ControlFiring`, `SendOrders`), the firing and the fires, the effects, the screens (`UpdateGameSetting`, `UpdateConfigSetting`, `UpdateUnitInfo`, `DrawBattleArea`), the input, the network handler, `SetUnitData` and `InitializeGame`, with copies of the same code made one method where they were the same but for a value (`TakeDetour`, `IsLandAt`, `IsShipAt`, `UnpackSelections`). The original's repeated computations are helpers that compute exactly the same, with bit-for-bit tests: `SinDegrees` and `CosDegrees` (`sin(x*a_PI)`), `Direction` (the angle of a vector from 0 to 360) and `Distance` (the folded angle and `|dx|/cos`), the last placed by the `distances` command where data flow analysis allows it. The `element-refs` command gives new effects and fires `ref` locals. Local names, iteration helpers and return types are not done yet. `LaunchMultiplayerGame` keeps its `goto`s, from the DirectPlay sample. Functions with an inactive `#if LNGG_VER` branch (the English version) keep it.
 
 ### 9. Splitting the partial class
 Into classes by responsibility, with C# conventions and `CLAUDE.md`. The emulator's region table is generated at this point at the latest.

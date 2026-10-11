@@ -1,14 +1,15 @@
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace OpenNspw.Tests;
 
-internal sealed record FieldLayout(string Name, Type Type, int Offset, int Size);
+internal sealed record FieldLayout(FieldInfo Field, string Name, Type Type, int Offset, int Size);
 
-// A primitive value inside a value of some type: its path (".pp_x[3]"), and where its bytes start.
+// A number inside a value of some type: its path (".pp_x[3]"), and where its bytes start.
 internal sealed record Location(string Path, int Start, Type Type);
 
 // The layout of the port's types, found at run time, and descriptions of their bytes.
@@ -38,17 +39,28 @@ internal static class TypeLayout
 		return BytesOf(Activator.CreateInstance(type)!).Length;
 	}
 
-	// Finds the offset of each field by filling it with 0xFF in an otherwise zero value.
+	// The offset of a field in its struct, as `&value.field - &value`. Nothing is written, because writing a misaligned
+	// field of a packed struct through reflection crashes on arm64.
+	private static int OffsetOf(FieldInfo field)
+	{
+		var method = new DynamicMethod($"offset_{field.Name}", typeof(int), Type.EmptyTypes, typeof(TypeLayout).Module, skipVisibility: true);
+		var il = method.GetILGenerator();
+		il.DeclareLocal(field.DeclaringType!);
+		il.Emit(OpCodes.Ldloca_S, (byte)0);
+		il.Emit(OpCodes.Ldflda, field);
+		il.Emit(OpCodes.Ldloca_S, (byte)0);
+		il.Emit(OpCodes.Sub);
+		il.Emit(OpCodes.Conv_I4);
+		il.Emit(OpCodes.Ret);
+		return method.CreateDelegate<Func<int>>()();
+	}
+
 	private static IReadOnlyList<FieldLayout> FindFields(Type type)
 	{
 		var fields = new List<FieldLayout>();
 		foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
 		{
-			var value = Activator.CreateInstance(field.FieldType)!;
-			BytesOf(value).Fill(0xFF);
-			var box = Activator.CreateInstance(type)!;
-			field.SetValue(box, value);
-			fields.Add(new FieldLayout(field.Name, field.FieldType, BytesOf(box).IndexOf((byte)0xFF), BytesOf(value).Length));
+			fields.Add(new FieldLayout(field, field.Name, field.FieldType, OffsetOf(field), SizeOf(field.FieldType)));
 		}
 
 		return [.. fields.OrderBy(f => f.Offset)];
@@ -62,15 +74,21 @@ internal static class TypeLayout
 		return FieldsCache.GetOrAdd(type, FindFields);
 	}
 
+	// Whether a value of the type is one number, which an enum is too.
+	public static bool IsScalar(Type type)
+	{
+		return type.IsPrimitive || type.IsEnum;
+	}
+
 	private static bool IsInlineArray(Type type)
 	{
 		return type.IsDefined(typeof(InlineArrayAttribute));
 	}
 
-	// The primitive value that contains the byte at `offset` in a value of `type`.
+	// The number that contains the byte at `offset` in a value of `type`.
 	public static Location Locate(Type type, int offset)
 	{
-		if (type.IsPrimitive)
+		if (IsScalar(type))
 		{
 			return new Location("", 0, type);
 		}
@@ -106,7 +124,7 @@ internal static class TypeLayout
 		return $"{value.ToString("R", CultureInfo.InvariantCulture)} (0x{BitConverter.DoubleToInt64Bits(value):X16})";
 	}
 
-	// The value of a primitive, read from its bytes.
+	// The value of a number, read from its bytes. An enum is formatted as its underlying type.
 	public static string Format(Type type, ReadOnlySpan<byte> bytes)
 	{
 		return Type.GetTypeCode(type) switch

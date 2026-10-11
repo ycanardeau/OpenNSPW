@@ -85,9 +85,9 @@ internal sealed class ConnectingGame : IDisposable
 		Game = new Nspw(Platform);
 
 		// The defaults that WinMain reads from the registry.
-		tchar.ShiftJis.GetBytes(playerName).CopyTo(Game.g_strLocalPlayerName);
-		tchar.ShiftJis.GetBytes("DirectPlay8 TCP/IP Service Provider").CopyTo(Game.g_strPreferredProvider);
-		tchar.ShiftJis.GetBytes("localhost").CopyTo(Game.g_strRemoteHostname);
+		tchar.ShiftJis.GetBytes(playerName).CopyTo(Game.LocalPlayerName);
+		tchar.ShiftJis.GetBytes("DirectPlay8 TCP/IP Service Provider").CopyTo(Game.PreferredProvider);
+		tchar.ShiftJis.GetBytes("localhost").CopyTo(Game.RemoteHostName);
 
 		// Normally created by InitDSound.
 		for (var m = 0; m < NUM_SOUND_EFFECTS; m++)
@@ -186,7 +186,7 @@ public class NetworkTests
 		guest.Game.ClickDlgItem(guest.Dialog, IDOK);
 
 		PumpUntil(
-			() => guest.Dialog.Id == IDD_MAIN_GAME && guest.Game.g_dwNumberOfActivePlayers == 2 && host.Game.g_dwNumberOfActivePlayers == 2,
+			() => guest.Dialog.Id == IDD_MAIN_GAME && guest.Game.ActivePlayerCount == 2 && host.Game.ActivePlayerCount == 2,
 			host,
 			guest);
 		return (host, guest);
@@ -204,11 +204,11 @@ public class NetworkTests
 		PumpUntil(() => host.DialogText(IDC_PLAYER_NAME2) == "Bob", host, guest);
 		Assert.Equal("Alice", host.DialogText(IDC_PLAYER_NAME));
 		Assert.Equal("Alice", guest.DialogText(IDC_PLAYER_NAME2));
-		Assert.Equal("Bob", Encoding.ASCII.GetString(host.Game.g_strRivalPlayerName[..3]));
+		Assert.Equal("Bob", Encoding.ASCII.GetString(host.Game.RivalPlayerName[..3]));
 		Assert.True(host.Game.GetDlgItem(host.Dialog, IDC_START_GAME)!.Enabled);
 		Assert.NotEqual(0u, host.Game.g_dpnidRivalPlayer);
-		Assert.Equal(1, host.Game.g_bHostPlayer);
-		Assert.Equal(0, guest.Game.g_bHostPlayer);
+		Assert.Equal(1, host.Game.IsHostPlayer);
+		Assert.Equal(0, guest.Game.IsHostPlayer);
 
 		// The host starts the game; the guest follows when MSG_EXIT_WAITING arrives.
 		host.Game.ClickDlgItem(host.Dialog, IDC_START_GAME);
@@ -234,58 +234,58 @@ public class NetworkTests
 		using var __ = guest;
 
 		// The checksums of a turn (DP_FLAG_1), as chara_cont sends them.
-		Send(host, new _DP_FLAG { dwType = DP_FLAG_1, cc_chk = 12, unit_chk = 34, rnd_chk = 56, ccc_wait_chk = 1, rival_mode = CMBT });
-		PumpUntil(() => guest.Game.go_next_1 == 1, host, guest);
-		Assert.Equal(12, guest.Game.bf_cc_count[0]);
-		Assert.Equal(34, guest.Game.bf_unit_chk[0]);
-		Assert.Equal(56, guest.Game.bf_rnd_count[0]);
-		Assert.Equal(1, guest.Game.ccc_wait[0]);
-		Assert.Equal(CMBT, guest.Game.rival_mode);
+		Send(host, new _DP_FLAG { dwType = MessageType.SyncFlag, cc_chk = 12, unit_chk = 34, rnd_chk = 56, ccc_wait_chk = 1, rival_mode = (short)GameMode.Battle });
+		PumpUntil(() => guest.Game.CanAdvance1.Value == 1, host, guest);
+		Assert.Equal(12, guest.Game.TickChecksums[0]);
+		Assert.Equal(34, guest.Game.UnitChecksums[0]);
+		Assert.Equal(56, guest.Game.RandomChecksums[0]);
+		Assert.Equal(1, guest.Game.TickWaits[0]);
+		Assert.Equal(GameMode.Battle, guest.Game.RivalMode);
 
 		// An order (DP_NEW_PP_SHIP).
-		var order = new _DP_NEW_PP_SHIP { dwType = DP_NEW_PP_SHIP, used = 1, x = -1234, y = 567, cls = 1 };
+		var order = new _DP_NEW_PP_SHIP { dwType = MessageType.MoveShipsOrder, used = 1, x = -1234, y = 567, cls = 1 };
 		order.slct_unit[0] = 3;
 		order.slct_unit[JPN_SHIP_END - 1] = 7;
 		Send(guest, order);
-		PumpUntil(() => host.Game.go_next_2 == 1, host, guest);
-		Assert.Equal(1, host.Game.bf_new_pp[0].used);
-		Assert.Equal(-1234.0, host.Game.bf_new_pp[0].x);
-		Assert.Equal(567.0, host.Game.bf_new_pp[0].y);
-		Assert.Equal(3, host.Game.bf_slct_unit[0][0]);
-		Assert.Equal(7, host.Game.bf_slct_unit[0][JPN_SHIP_END - 1]);
+		PumpUntil(() => host.Game.CanAdvance2.Value == 1, host, guest);
+		Assert.Equal(1, host.Game.BufferedMoveOrders[0].Unit);
+		Assert.Equal(-1234.0, host.Game.BufferedMoveOrders[0].Destination.X);
+		Assert.Equal(567.0, host.Game.BufferedMoveOrders[0].Destination.Y);
+		Assert.Equal(3, host.Game.BufferedSelections[0][0]);
+		Assert.Equal(7, host.Game.BufferedSelections[0][JPN_SHIP_END - 1]);
 
 		// A chat message (DP_CHAT_1). CHAT_DSP_TIME (400) does not fit in friend_chat_dsp_time, a BYTE.
-		var chat = new _DP_DATA_20 { dwType = DP_CHAT_1 };
+		var chat = new _DP_DATA_20 { dwType = MessageType.Chat };
 		tchar.ShiftJis.GetBytes("こんにちは").CopyTo(chat.friend_chat);
 		Send(host, chat);
-		PumpUntil(() => guest.Game.friend_chat_dsp_time != 0, host, guest);
-		Assert.Equal(144, guest.Game.friend_chat_dsp_time);
-		Assert.Equal("こんにちは", tchar.ShiftJis.GetString(guest.Game.friend_chat[..10]));
+		PumpUntil(() => guest.Game.RivalChatDisplayTime != 0, host, guest);
+		Assert.Equal(144, guest.Game.RivalChatDisplayTime);
+		Assert.Equal("こんにちは", tchar.ShiftJis.GetString(guest.Game.RivalChat[..10]));
 
 		// The game settings, which the guest only takes in the setting modes.
-		guest.Game.mode = CNCT_GAME_SETTING;
-		var settings = new _DP_DATA_1 { dwType = SIDE_AND_SINARIO };
+		guest.Game.Mode = GameMode.GameSetting;
+		var settings = new _DP_DATA_1 { dwType = MessageType.SideAndScenario };
 		for (short i = 0; i < 10; i++)
 		{
 			settings.data[i] = (short)(i + 1);
 		}
 
 		Send(host, settings);
-		PumpUntil(() => guest.Game.sinario == 2, host, guest);
-		Assert.Equal(1, guest.Game.host_side);
-		Assert.Equal(3, guest.Game.spry_rate[0]);
-		Assert.Equal(4, guest.Game.spry_rate[1]);
-		Assert.Equal(5, guest.Game.decision_sw);
-		Assert.Equal(8, guest.Game.arrival_cont);
-		Assert.Equal(10, guest.Game.rvrs_rule);
+		PumpUntil(() => guest.Game.ScenarioNumber == 2, host, guest);
+		Assert.Equal(1, guest.Game.HostSide);
+		Assert.Equal(3, guest.Game.SupplyRates[0]);
+		Assert.Equal(4, guest.Game.SupplyRates[1]);
+		Assert.Equal(5, guest.Game.IsDecisionEnabled.Value);
+		Assert.Equal(8, guest.Game.ArrivalControl);
+		Assert.Equal(10, guest.Game.SwapRule);
 
 		// GO_GAME_SETTING sends a guest on the title screen to the game setting screen (go_cnct_game_setting).
-		guest.Game.mode = DEMO;
-		Send(host, new GENERICMSG { dwType = GO_GAME_SETTING });
-		PumpUntil(() => guest.Game.mode == CNCT_GAME_SETTING, host, guest);
-		Assert.Equal(0, guest.Game.sinario);
-		Assert.Equal(1, guest.Game.decision_sw);
-		Assert.Equal(0, guest.Game.exist_auto_save);
+		guest.Game.Mode = GameMode.Title;
+		Send(host, new GENERICMSG { dwType = MessageType.GoToGameSetting });
+		PumpUntil(() => guest.Game.Mode == GameMode.GameSetting, host, guest);
+		Assert.Equal(0, guest.Game.ScenarioNumber);
+		Assert.Equal(1, guest.Game.IsDecisionEnabled.Value);
+		Assert.Equal(0, guest.Game.HasAutoSave);
 	}
 
 	[Fact]
@@ -295,7 +295,7 @@ public class NetworkTests
 		using var _ = host;
 
 		guest.Dispose();
-		PumpUntil(() => host.Game.g_dwNumberOfActivePlayers == 1, host);
+		PumpUntil(() => host.Game.ActivePlayerCount == 1, host);
 		PumpUntil(() => host.DialogText(IDC_PLAYER_NAME2) == " - - - ", host);
 		Assert.False(host.Game.GetDlgItem(host.Dialog, IDC_START_GAME)!.Enabled);
 	}

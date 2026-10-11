@@ -7,7 +7,7 @@ namespace OpenNspw.Benchmarks;
 // thread can run the game's functions on its state.
 internal sealed class SoloPlatform(string dataDirectory) : INspwPlatform, IDisposable
 {
-	// The time of a frame of the original (updateFrame), at the normal speed.
+	// The time of a frame of the original (UpdateFrame), at the normal speed.
 	private const int FrameMilliseconds = 50 + 5 + 1;
 
 	private readonly string _dataDirectory = dataDirectory;

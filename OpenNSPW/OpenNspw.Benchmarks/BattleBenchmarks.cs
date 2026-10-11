@@ -30,7 +30,7 @@ public class BattleBenchmarks
 	{
 		_game = SoloGame.Start();
 		_game.SendForcesAtEachOther();
-		while (_game.Game.cc_count < StartTick)
+		while (_game.Game.Tick < StartTick)
 		{
 			_game.Tick();
 		}
@@ -65,7 +65,7 @@ public class BattleBenchmarks
 		_game.Dispose();
 	}
 
-	// The simulation: chara_cont and cnct_decision, as updateFrame runs them each tick.
+	// The simulation: UpdateBattle and CheckResult, as UpdateFrame runs them each tick.
 	[Benchmark(OperationsPerInvoke = Ticks)]
 	public void Tick()
 	{
@@ -75,7 +75,7 @@ public class BattleBenchmarks
 		}
 	}
 
-	// A whole frame at the normal speed (updateFrame): input, a tick, drawing the battle and showing the frame.
+	// A whole frame at the normal speed (UpdateFrame): input, a tick, drawing the battle and showing the frame.
 	[Benchmark(OperationsPerInvoke = Frames)]
 	public void Frame()
 	{
@@ -85,7 +85,7 @@ public class BattleBenchmarks
 		}
 	}
 
-	// Drawing the battle (unit_info_cont, draw_cmbt_area and draw_map), the same frame each time.
+	// Drawing the battle (UpdateUnitInfo, DrawBattleArea and DrawMinimap), the same frame each time.
 	[Benchmark(OperationsPerInvoke = Draws)]
 	public void Draw()
 	{
