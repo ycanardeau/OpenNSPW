@@ -6,7 +6,14 @@
     <!-- The game's surfaces and sounds are native memory (OpenNspw/ddraw.cs, dsound.cs). -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- The original's icon (Original/NSPW_NET/NSPW_NET.RC). -->
+    <ApplicationIcon>..\..\Original\NSPW_NET\nspw_icon.ICO</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The window's icon: MonoGame loads it from the resource Icon.bmp, nspw_icon.ICO converted to a 32-bit bitmap. -->
+    <EmbeddedResource Include="Icon.bmp" LogicalName="Icon.bmp" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FontStashSharp.MonoGame" />
