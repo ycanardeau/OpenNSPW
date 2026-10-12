@@ -245,7 +245,7 @@ public unsafe partial class Nspw
 	}
 
 	// Runs a function of 1.22 on the game's state.
-	private uint RunEmulated(uint address, params ReadOnlySpan<uint> arguments)
+	internal uint RunEmulated(uint address, params ReadOnlySpan<uint> arguments)
 	{
 		var emulator =
 			Emulator
@@ -546,7 +546,7 @@ public unsafe partial class Nspw
 	}
 
 	// Entry f of 1.22's table of the computer's fleets, in the emulator's memory.
-	private ref ComputerFleet FleetAt(int f)
+	internal ref ComputerFleet FleetAt(int f)
 	{
 		var emulator =
 			Emulator
@@ -561,19 +561,19 @@ public unsafe partial class Nspw
 	private static uint High(double value) => (uint)(BitConverter.DoubleToUInt64Bits(value) >> 32);
 
 	// sub_403AE0(fleet): the formation of the fleet's members around its flagship.
-	private void RunSetFormation(int fleet)
+	internal void RunSetFormation(int fleet)
 	{
 		RunEmulated(Functions.SetFormation, (uint)fleet);
 	}
 
 	// sub_404D80(fleet): shuffles the fleet's targets.
-	private void RunShuffleTargets(int fleet)
+	internal void RunShuffleTargets(int fleet)
 	{
 		RunEmulated(Functions.ShuffleTargets, (uint)fleet);
 	}
 
 	// sub_414DD0(&x, &y): moves the point to a free place for a reinforcement near the east edge of the map.
-	private void RunPlaceReinforcement(ref double x, ref double y)
+	internal void RunPlaceReinforcement(ref double x, ref double y)
 	{
 		var emulator =
 			Emulator
@@ -586,13 +586,13 @@ public unsafe partial class Nspw
 	}
 
 	// set_pos_of_parking(m): the position of plane m parked at its carrier or air base.
-	private void RunSetParkingPosition(int m)
+	internal void RunSetParkingPosition(int m)
 	{
 		RunEmulated(Functions.SetParkingPosition, (uint)m);
 	}
 
 	// set_new_unit: a new unit of the side and kind at the point, heading in the direction; its number.
-	private short RunAddUnit(Side side, UnitKind kind, double x, double y, double direction)
+	internal short RunAddUnit(Side side, UnitKind kind, double x, double y, double direction)
 	{
 		return (short)RunEmulated(
 			Functions.AddUnit,
@@ -608,32 +608,32 @@ public unsafe partial class Nspw
 	}
 
 	// sub_41F230(fleet, kind): adds every enemy unit of the kind to the fleet's targets.
-	private void RunAddTargetsOfKind(int fleet, UnitKind kind)
+	internal void RunAddTargetsOfKind(int fleet, UnitKind kind)
 	{
 		RunEmulated(Functions.AddTargetsOfKind, (uint)fleet, (uint)kind);
 	}
 
 	// sub_41F300(fleet): adds every enemy naval base to the fleet's targets.
-	private void RunAddNavalBaseTargets(int fleet)
+	internal void RunAddNavalBaseTargets(int fleet)
 	{
 		RunEmulated(Functions.AddNavalBaseTargets, (uint)fleet);
 	}
 
 	// sub_41F490(fleet): adds every enemy battleship, cruiser and carrier to the fleet's targets.
-	private void RunAddShipTargets(int fleet)
+	internal void RunAddShipTargets(int fleet)
 	{
 		RunEmulated(Functions.AddShipTargets, (uint)fleet);
 	}
 
 	// plane_in_cv(m): the planes of carrier or air base m.
-	private int RunCountPlanesIn(int m)
+	internal int RunCountPlanesIn(int m)
 	{
 		return (int)RunEmulated(Functions.CountPlanesIn, (uint)m);
 	}
 
 	// set_new_unit_plane: a new plane of the side and kind, of the type, at carrier or air base no, as the port's
 	// AddPlane adds one.
-	private void RunAddPlane(Side side, UnitKind kind, int type, int no, int planes, FireKind arm)
+	internal void RunAddPlane(Side side, UnitKind kind, int type, int no, int planes, FireKind arm)
 	{
 		RunEmulated(
 			Functions.AddPlane,

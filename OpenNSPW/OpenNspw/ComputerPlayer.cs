@@ -1024,11 +1024,11 @@ public unsafe partial class Nspw
 			r <= attackerChance ? UnitKind.Attacker
 			: r <= secondChance ? second
 			: third;
-		RunAddPlane(Side.Japan, kind, 0, 1, 1, FireKind.Unarmed);
+		AddPlane(Side.Japan, kind, 0, 1, 1, FireKind.Unarmed);
 	}
 
 	// decision's events of scenarios 204, 301 and 304, which run whether or not the scenario has a result.
-	private void RunScenarioEvents()
+	private void ApplyScenarioEvents()
 	{
 		switch (ScenarioNumber)
 		{
@@ -1053,12 +1053,12 @@ public unsafe partial class Nspw
 
 			case 301:
 				if (BattleTime % 2500 == 0 && Units[1].IsUsed)
-					ReinforceUnit1(RunCountPlanesIn(1), 60, 98, UnitKind.Fighter, UnitKind.Bomber);
+					ReinforceUnit1(CountPlanesIn(1), 60, 98, UnitKind.Fighter, UnitKind.Bomber);
 				break;
 
 			case 304:
 				if (BattleTime % 4500 == 0 && Units[1].IsUsed)
-					ReinforceUnit1(RunCountPlanesIn(1), 75, 98, UnitKind.Fighter, UnitKind.Bomber);
+					ReinforceUnit1(CountPlanesIn(1), 75, 98, UnitKind.Fighter, UnitKind.Bomber);
 				break;
 		}
 	}
@@ -1076,6 +1076,6 @@ public unsafe partial class Nspw
 			Renderer.DrawResult(ref len, ref ach);
 		}
 
-		RunScenarioEvents();
+		ApplyScenarioEvents();
 	}
 }

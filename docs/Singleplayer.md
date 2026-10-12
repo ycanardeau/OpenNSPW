@@ -32,11 +32,11 @@ dotnet run --project Disassembler/OpenNspw.Disassembler -- Original/Nspw122/NSPW
 | --- | --- | --- |
 | `scenario_1` to `scenario_10`, `scenario_100` to `scenario_109`, `scenario_200` to `scenario_209`, `scenario_300` to `scenario_306` | `Functions.SetUpScenario` | `InitializeGame`, in place of `get_sinario_data` |
 | `cpu_strtgy` | `0x404E30` | Rewritten as C# (`PlanComputerStrategy`), which `HandleInput` calls before the orders are applied; the emulated original is kept for its test |
-| `sub_403AE0`, `sub_404D80`, `sub_414DD0`, `sub_41F230`, `sub_41F300`, `sub_41F490`, `set_new_unit`, `set_pos_of_parking` | | By the emulated code, and by `PlanComputerStrategy` |
+| `sub_403AE0`, `sub_404D80`, `sub_414DD0`, `sub_41F230`, `sub_41F300`, `sub_41F490` | | Rewritten as C# (`SetFormation`, `ShuffleTargets`, `PlaceReinforcement`, `AddTargets`), called by `PlanComputerStrategy`; the emulated originals are kept for their tests |
 | `set_cpu_route` | `0x42DA80` | Rewritten as C# (`PlanComputerRoute`), which `ApplyOrders` calls for a move order of a computer's ship, and `ReplanBlockedRoute` for a blocked one; the emulated original is kept for its test |
 | `decision` | `0x41C3C0` | Rewritten as C# (`Decide`), which `CheckResult` calls in place of NSPW NET's conditions and result; the emulated original is kept for its test |
-| `set_unit_data` | `0x41E150` | By the emulated code, and by `SetUnitData` in a single-player game, for the units the battle creates, and by `PlanComputerStrategy` |
-| `set_new_unit_plane`, `plane_in_cv` | `0x41F060`, `0x416F00` | By the emulated code, and by `Decide` and `PlanComputerStrategy` |
+| `set_unit_data` | `0x41E150` | Rewritten as C# (`SetUnitData122`), which the port's `SetUnitData` calls in a single-player game: its values are not NSPW NET's |
+| `set_new_unit`, `set_new_unit_plane`, `plane_in_cv`, `set_pos_of_parking` | `0x41EE20`, `0x41F060`, `0x416F00`, `0x416F40` | The port's `AddUnit`, `AddPlane`, `CountPlanesIn` and `SetParkingPosition` do the same in a single-player game (`SharedFunctionTests`); `Decide` and `PlanComputerStrategy` call them |
 | `sub_41F3C0`, `cls_all_slct_unit_p2`, `pt_in_rect3`, `sub_417C10` | | Only by the emulated code |
 
 `set_cpu_route2` (`0x42ED30`) is translated, and `SetDynamicDestination` calls it (`SetCpuRoute2As122`) for a ship that follows a leader, as 1.22's formation does (`0x414D79`); the port's `SetCpuRoute2`, which NSPW NET calls for every unit, stays for network games.
@@ -122,7 +122,7 @@ So in a single-player game (`IsSingleplayer`):
 - The maps and the sounds are 1.22's where they differ from NSPW NET's (`GameFileLayers`, [BundledData.md](BundledData.md)), so that the map on which `set_cpu_route` plans is 1.22's; the three sounds 1.22 does not have are NSPW NET's. The sprite sheet is 1.22's layout of the app's sprite files, with 1.22's land-based fighter of Japan ([GameSprites.md](GameSprites.md)); without them, it is 1.22's `tst_cg1.bmp`.
 - `UpdateSupply` keeps a ship supplying wherever it is, as 1.22's `chara_cont` does (`0x4010BB`), without NSPW NET's check for a naval base within 280: the computer starts supplying once its flagship has stopped within 580 of the base, and that check stopped it at once.
 - `SetShipEmergencyDestination` brings only the player's ships back into the map, and `SteerUnit` no submarine, as 1.22 does (`0x416B35`, `0x401966`): the computer's ships sail on, to its naval bases outside the map, such as scenario 304's.
-- `SetUnitData` runs 1.22's `set_unit_data`, so that the units the battle creates, such as the bases that transports land, have 1.22's data, as the scenario's do; `AddPlane` adds planes to a full carrier, as 1.22's `set_new_unit_plane` does (`0x41F060`).
+- `SetUnitData` runs 1.22's `set_unit_data`, rewritten as `SetUnitData122`, so that the units the battle creates, such as the bases that transports land, have 1.22's data, as the scenario's do; `AddPlane` adds planes to a full carrier, as 1.22's `set_new_unit_plane` does (`0x41F060`).
 - `LandCargo` lands a transport's cargo within 360 of its landing point, as 1.22 does (`0x413003`), where NSPW NET lands it within 160 (`#if NSPW_THE_NET`), and keeps the transport, empty, as 1.22 does (`0x413014` to `0x41312B`), where NSPW NET removes it.
 - `MoveUnit` does not slow a transport with cargo, as 1.22 does not (`0x402955`).
 - `UpdateCargo` completes the base a transport lands at once, with its full HP, as 1.22 does (`0x418E23`), where NSPW NET builds it over 8000 to 20000 ticks from a quarter of its HP.

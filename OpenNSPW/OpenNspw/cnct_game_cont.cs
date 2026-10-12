@@ -1316,7 +1316,7 @@ public unsafe partial class Nspw
 		// the bases that transports land, get them from 1.22's set_unit_data, as the scenario's do.
 		if (IsSingleplayer)
 		{
-			RunSetUnitData(m);
+			SetUnitData122(m);
 			return;
 		}
 
