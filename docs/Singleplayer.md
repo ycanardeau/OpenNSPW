@@ -141,7 +141,6 @@ The executable is `Original/Nspw122/NSPW_122.exe`, or the file given with `--exe
 7. **Characterization trace** of a single-player game, to guard the refactoring of the code it runs. Not done.
 
 ## Open questions
-- Which other differences between 1.22's battle and NSPW NET's matter for single-player play. The landing distance of transports, 360 in 1.22 and 160 in NSPW NET (`#if NSPW_THE_NET` in `etc1.cpp`), is one; the other remains of `cpu_side` in NSPW NET's comments are others.
 - Whether to load the maps from 1.22's own `Map` folder: its `japan_off.dat` differs from NSPW NET's.
 - Whether to show 1.22's own setting screen, or NSPW NET's with 1.22's scenarios.
 - Saving and resuming a single-player game, which would also need the single-player globals of the emulator's memory.

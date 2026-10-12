@@ -1171,14 +1171,25 @@ private void CheckCourseAhead(ref Unit unit, int m, ref int land, double pp_drct
 	int cm_scrn_y;
 	wrk_x2=unit.Position.X;
 	wrk_y2=unit.Position.Y;
-	wrk_x2+=CosDegrees(unit.Direction)*(40+unit.MaxSpeed*10);
-	wrk_y2+=SinDegrees(unit.Direction)*(40+unit.MaxSpeed*10);
+	// 1.22 looks 40 ahead (0x401FAC), and only air bases and naval bases are not in the way (0x40202D), as NSPW NET's
+	// comment keeps it.
+	if( IsSingleplayer )
+		{
+		wrk_x2+=CosDegrees(unit.Direction)*40;
+		wrk_y2+=SinDegrees(unit.Direction)*40;
+		}
+	else
+		{
+		wrk_x2+=CosDegrees(unit.Direction)*(40+unit.MaxSpeed*10);
+		wrk_y2+=SinDegrees(unit.Direction)*(40+unit.MaxSpeed*10);
+		}
 	if(  !( unit.Kind==UnitKind.Submarine && unit.IsSubmerged ) )
 		{
 		for( n=1; n<=MaxUnitId; n++)
 			{
 			ref var other = ref Units[n];
-			if(other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged)  && !(other.Kind>=UnitKind.AirBase&&other.Kind<=UnitKind.Fortress) )
+			var isBase = IsSingleplayer ? other.Kind==UnitKind.AirBase || other.Kind==UnitKind.NavalBase : other.Kind>=UnitKind.AirBase&&other.Kind<=UnitKind.Fortress;
+			if(other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged)  && !isBase )
 				{
 				// ptin dbg
 				wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].Height/2);

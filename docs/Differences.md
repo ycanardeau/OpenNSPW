@@ -13,6 +13,8 @@ The computer player itself (`cpu_strtgy`, `set_cpu_route`, `decision`) runs 1.22
 | Computer's ships blocked by land ahead | Replanned (`set_cpu_route(m, 1.0)`) when the point 80 ahead toward its path is land (`0x40229D`) | Steering stops the ship | `CheckCourseAhead` |
 | Computer's ships slowed by a ship ahead | Replanned every 100 ticks below a fifth of its top speed (`0x4020DB`) | Steering stops the ship | `CheckCourseAhead` |
 | Computer's units about to step on land | Every 500 ticks (`cc_count%500`), a computer's unit with no leader whose next step (its speed along its heading) is land is replanned (`0x402D2B`), planes included | Nothing | `MoveUnit` |
+| Ships ahead | A ship looks 40 ahead (`0x401FAC`); only air bases and naval bases are not in its way (`0x40202D`) | 40 plus ten times its top speed; no base, infantry base or fortress is in the way (kinds 11 to 17) | `CheckCourseAhead` |
+| Transports landing | Land their cargo within 360 of the landing point (`0x413003`) | Within 160 (`#if NSPW_THE_NET`) | `LandCargo` |
 | Move orders of the computer | Clear the unit's path (`if( new_pp[e].cls || unit[m].used==cpu_side )`), and a ship's route is planned by `set_cpu_route` | The same condition is a comment; routes are planned by `set_cpu_root2` | `ApplyOrders` |
 | Orders | Given and applied in the frame they are made | Exchanged by turn over the network | `IssueSingleplayerOrders` |
 | Time | `rest_time` counts down every tick | Counted by the host | `UpdateBattle` |
