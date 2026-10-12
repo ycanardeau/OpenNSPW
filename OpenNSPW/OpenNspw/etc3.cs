@@ -69,8 +69,9 @@ public void		InitializeSprites()
 
 	// タイトル
 
-	Sprites[SpriteId.TitleBackground].Width=699;
-	Sprites[SpriteId.TitleBackground].Height=384;
+	// 1.22's title in its sheet is 599 by 387 (set_sprt_data, 0x432E43); NSPW NET's, 699 by 384.
+	Sprites[SpriteId.TitleBackground].Width=IsSingleplayer ? 599 : 699;
+	Sprites[SpriteId.TitleBackground].Height=IsSingleplayer ? 387 : 384;
 	Sprites[SpriteId.TitleBackground].SheetX=0;
 	Sprites[SpriteId.TitleBackground].SheetY=3940;
 	// ユニット

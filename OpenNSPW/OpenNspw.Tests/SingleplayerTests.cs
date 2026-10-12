@@ -254,6 +254,21 @@ public class SingleplayerTests
 		Assert.Equal(lands, game.Units[transport].Hp == 0);
 	}
 
+	// A single-player game reads 1.22's own files: its japan_off.dat, without the island that NSPW NET's has at tiles 56
+	// to 64 and 164 to 180, and its sprite sheet, whose title is 599 by 387.
+	[Fact]
+	public void TheGameReads122sFiles()
+	{
+		using var run = new SingleplayerRun(202);
+		run.Frames(2);
+		var game = run.Game;
+
+		Assert.Equal(2, game.CurrentMap);
+		Assert.Equal(0, game.MapTiles[164][62]);
+		Assert.Equal(599, game.Sprites[SpriteId.TitleBackground].Width);
+		Assert.Equal("tst_cg1.bmp", game.SpriteSheetName);
+	}
+
 	// A battle as the desktop app shows it, in real time, saved as singleplayer_battle.png next to the test assembly.
 	[Fact]
 	public void TheBattleShows()
@@ -263,6 +278,7 @@ public class SingleplayerTests
 		player.Game.IsSingleplayer = true;
 		player.Game.ScenarioNumber = 3;
 		player.Game.SingleplayerExecutable = File.ReadAllBytes(Path.Combine(GameData.FindSingleplayer(), "NSPW_122.exe"));
+		player.Platform.SingleplayerDirectory = GameData.FindSingleplayer();
 
 		// Away from the edges, which scroll the battle area.
 		player.Game.SetCursorPos(384, 384);

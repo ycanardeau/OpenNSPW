@@ -7,7 +7,8 @@ using OpenNspw.Desktop;
 //
 // It starts with a menu: a scenario of NSPW 1.22 against the computer (docs/Singleplayer.md), or a network game. The
 // single-player mode runs functions of the single-player executable: by default Original/Nspw122/NSPW_122.exe of this
-// repository. --singleplayer starts that scenario at once.
+// repository. It reads the maps, sounds and sprite sheet of the executable's directory, which are 1.22's own, and the
+// game's data for the files 1.22 does not have. --singleplayer starts that scenario at once.
 
 static string? Option(string[] args, string name)
 {
@@ -45,6 +46,7 @@ if (dataDirectory is null)
 // NSPW_122.exe, for the single-player mode. Without it, only network games can be played.
 var executable = Option(args, "--exe") ?? FindInOriginal("Nspw122", "NSPW_122.exe");
 var singleplayerExecutable = executable is not null && File.Exists(executable) ? File.ReadAllBytes(executable) : null;
+var singleplayerDirectory = executable is not null ? Path.GetDirectoryName(Path.GetFullPath(executable)) : null;
 
 int? scenario = null;
 if (Option(args, "--singleplayer") is { } scenarioText)
@@ -64,6 +66,6 @@ if (Option(args, "--singleplayer") is { } scenarioText)
 	scenario = number;
 }
 
-using var game = new NspwGame(dataDirectory, singleplayerExecutable, scenario);
+using var game = new NspwGame(dataDirectory, singleplayerExecutable, singleplayerDirectory, scenario);
 game.Run();
 return 0;

@@ -47,7 +47,7 @@ Native, because they are part of the port's own state or platform:
 | --- | --- |
 | `rand` (`0x436056`) | The port's `rand()`, so that the whole game draws from one sequence, as in the original |
 | `__ftol` (`0x4360C4`) | Truncation of `ST(0)` to `EDX:EAX` |
-| `load_it2` (`0x432A30`) | The port's `LoadScenarioFile2`, by NSPW NET's name of the same file: 1.22 also spells some in lower case (`Map\south_pacific.dat`), and `LoadScenarioFile2` recognizes the map by its name |
+| `load_it2` (`0x432A30`) | The port's `LoadScenarioFile2`, by NSPW NET's name of the same file, which is read from 1.22's directory (Playing): 1.22 also spells some in lower case (`Map\south_pacific.dat`), and `LoadScenarioFile2` recognizes the map by its name |
 | `IDirectDrawSurface7::GetDC` and `ReleaseDC` of `lpDDSBack` (`0x463AAC`), `SetTextColor`, `SetBkMode`, `SelectObject`, `TextOutA`, `wsprintfA` | The port's stand-ins, on its back buffer, so that the messages of `decision` show. `0x491600`, the font that `decision` selects, is the port's `gameFont_1` |
 | `SetWindowTextA` | `set_cpu_route`'s debug output: dropped |
 
@@ -124,7 +124,7 @@ dotnet run --project OpenNSPW/OpenNspw.Desktop
 
 The desktop app starts with a menu (`OpenNspw.Desktop/MainMenu.cs`): playing a scenario of 1.22 against the computer, or a network game, whose connection dialog follows. The scenarios are listed in the four collections of 1.22's setting screen, with their titles there (`ScenarioCatalog`). `--singleplayer <scenario>` starts a scenario at once, without the menu.
 
-The executable is `Original/Nspw122/NSPW_122.exe`, or the file given with `--exe`; without it, the menu offers only the network game. The graphics, sounds and maps are NSPW NET's.
+The executable is `Original/Nspw122/NSPW_122.exe`, or the file given with `--exe`; without it, the menu offers only the network game. A single-player game reads the files of the executable's directory, which are 1.22's own: the maps, the sounds and the sprite sheet (`tst_cg1.bmp`), which differ from NSPW NET's ([Differences.md](Differences.md)). The files that 1.22 does not have, such as the sounds `AA_SHL5`, `SNR` and `CLICK2`, are NSPW NET's (`GameFiles.OpenSingleplayer`).
 
 ## Tests
 - `EmulatorTests`: every scenario setup runs on the executable alone and places units of both sides.
@@ -141,6 +141,5 @@ The executable is `Original/Nspw122/NSPW_122.exe`, or the file given with `--exe
 7. **Characterization trace** of a single-player game, to guard the refactoring of the code it runs. Not done.
 
 ## Open questions
-- Whether to load the maps from 1.22's own `Map` folder: its `japan_off.dat` differs from NSPW NET's.
 - Whether to show 1.22's own setting screen, or NSPW NET's with 1.22's scenarios.
 - Saving and resuming a single-player game, which would also need the single-player globals of the emulator's memory.

@@ -724,7 +724,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 		}
 
 	// 最初のイメージをロードし、表示
-	lpDDS_OS=bitmap_surface("t3.bmp");
+	lpDDS_OS=bitmap_surface(SpriteSheetName);
 	if (lpDDS_OS==null)
 		{
 		MessageBox(null,"bitmap_surface","残念！",MB_OK | MB_ICONSTOP);

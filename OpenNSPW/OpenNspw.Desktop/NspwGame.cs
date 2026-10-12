@@ -53,6 +53,7 @@ internal sealed class NspwGame : Game
 	private readonly Nspw _game;
 	private readonly Thread _thread;
 	private readonly byte[]? _singleplayerExecutable;
+	private readonly string? _singleplayerDirectory;
 	private readonly int? _scenario;
 	private SpriteBatch _spriteBatch = default!;
 	private ViewportAdapter _viewportAdapter = default!;
@@ -88,8 +89,9 @@ internal sealed class NspwGame : Game
 	}
 
 	// singleplayerExecutable: NSPW_122.exe, to play its scenarios against the computer (docs/Singleplayer.md), or null.
+	// singleplayerDirectory: its directory, whose maps, sounds and sprite sheet a single-player game reads, or null.
 	// scenario: the scenario to play at once, or null to choose in the main menu.
-	public NspwGame(string dataDirectory, byte[]? singleplayerExecutable, int? scenario)
+	public NspwGame(string dataDirectory, byte[]? singleplayerExecutable, string? singleplayerDirectory, int? scenario)
 	{
 		_graphics = new GraphicsDeviceManager(this);
 		IsMouseVisible = true;
@@ -98,6 +100,7 @@ internal sealed class NspwGame : Game
 		_platform = new DesktopPlatform(dataDirectory);
 		_game = new Nspw(_platform);
 		_singleplayerExecutable = singleplayerExecutable;
+		_singleplayerDirectory = singleplayerDirectory;
 		_scenario = scenario;
 		_thread = new Thread(RunGame) { IsBackground = true, Name = "NSPW" };
 	}
@@ -109,6 +112,7 @@ internal sealed class NspwGame : Game
 		{
 			_game.IsSingleplayer = true;
 			_game.SingleplayerExecutable = _singleplayerExecutable;
+			_platform.SingleplayerDirectory = _singleplayerDirectory;
 			_game.ScenarioNumber = (short)number;
 		}
 

@@ -20,6 +20,9 @@ The computer player itself (`cpu_strtgy`, `set_cpu_route`, `decision`) runs 1.22
 | Time | `rest_time` counts down every tick | Counted by the host | `UpdateBattle` |
 | Victory | `decision` | NSPW NET's conditions | `CheckResult` |
 | Unit numbers | 20 ships and 30 planes a side | 40 and 50 | `SHIP_LIMIT`, `PLANE_LIMIT` |
+| The map `japan_off.dat` | No island at tiles 56 to 64 across and 164 to 180 down (scenarios 9, 10, 109, 202, 206, 300, 304 and 305) | A small island there | Read from 1.22's directory |
+| The sprite sheet | `tst_cg1.bmp`, of 256 colours: another title, 599 by 387 (`set_sprt_data`, `0x432E43`), and a single-engine land-based fighter for Japan (row 14) | `t3.bmp`: the title of NSPW NET, 699 by 384, a twin-engine fighter, and three more icons among the sub-units | `SpriteSheetName`, `InitializeSprites` |
+| The sounds | `GUN3` and `AA_SHL4` are other sounds; there are no `AA_SHL5`, `SNR` and `CLICK2` | NSPW NET's | Read from 1.22's directory; the three it does not have are NSPW NET's |
 
 The second and fifth rows are why the computer's fleets could not renew: in scenario 304 the American naval base (unit 21) is at x 10600, outside the map. A fleet that has lost its carrier, its ammunition or its fuel returns there (`cpu_strtgy` step 9); there it supplies, which gives back its HP, ammunition and fuel, and step 12 puts a new carrier at its supplying flagship. In the port, the fleet was turned back at the edge, and could not supply away from a base within 280.
 

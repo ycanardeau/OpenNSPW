@@ -23,6 +23,9 @@ internal sealed class GameTestPlatform(string dataDirectory) : INspwPlatform
 
 	public int FrameCount { get; private set; }
 
+	// NSPW 1.22's directory, whose files a single-player game reads instead of the game's own, or null.
+	public string? SingleplayerDirectory { get; set; }
+
 	public ushort[] LastFrame()
 	{
 		lock (_frameLock)
@@ -35,7 +38,7 @@ internal sealed class GameTestPlatform(string dataDirectory) : INspwPlatform
 	{
 		try
 		{
-			return new FileStream(GameFiles.Resolve(_dataDirectory, path), mode, access, share);
+			return GameFiles.OpenSingleplayer(SingleplayerDirectory, path, mode, share) ?? new FileStream(GameFiles.Resolve(_dataDirectory, path), mode, access, share);
 		}
 		catch (IOException)
 		{

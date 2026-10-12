@@ -84,6 +84,10 @@ public unsafe partial class Nspw
 	// Whether this is a single-player game, which numbers its units as 1.22 does.
 	public bool IsSingleplayer;
 
+	// The sprite sheet: 1.22's own (tst_cg1.bmp) in a single-player game, which has another title and other land-based
+	// fighters of Japan, and NSPW NET's otherwise.
+	public string SpriteSheetName => IsSingleplayer ? "tst_cg1.bmp" : "t3.bmp";
+
 	// cpu_side of 1.22: the side the computer plays, or None.
 	public Side CpuSide;
 

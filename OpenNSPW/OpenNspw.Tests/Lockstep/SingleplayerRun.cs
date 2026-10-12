@@ -17,6 +17,7 @@ internal sealed class SingleplayerRun : IDisposable
 		Game.IsSingleplayer = true;
 		Game.ScenarioNumber = (short)scenario;
 		Game.SingleplayerExecutable = File.ReadAllBytes(Path.Combine(GameData.FindSingleplayer(), "NSPW_122.exe"));
+		Player.SingleplayerDirectory = GameData.FindSingleplayer();
 		Player.Start();
 	}
 
