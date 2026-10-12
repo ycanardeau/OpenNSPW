@@ -32,11 +32,11 @@ dotnet run --project Disassembler/OpenNspw.Disassembler -- Original/Nspw122/NSPW
 | --- | --- | --- |
 | `scenario_1` to `scenario_10`, `scenario_100` to `scenario_109`, `scenario_200` to `scenario_209`, `scenario_300` to `scenario_306` | `Functions.SetUpScenario` | `InitializeGame`, in place of `get_sinario_data` |
 | `cpu_strtgy` | `0x404E30` | Rewritten as C# (`PlanComputerStrategy`), which `HandleInput` calls before the orders are applied; the emulated original is kept for its test |
-| `sub_403AE0`, `sub_404D80`, `sub_414DD0`, `sub_41F230`, `sub_41F300`, `sub_41F490`, `set_new_unit`, `set_pos_of_parking` | | By the emulated code, and by `PlanComputerStrategy` |
+| `sub_403AE0`, `sub_404D80`, `sub_414DD0`, `sub_41F230`, `sub_41F300`, `sub_41F490` | | Rewritten as C# (`SetFormation`, `ShuffleTargets`, `PlaceReinforcement`, `AddTargets`), called by `PlanComputerStrategy`; the emulated originals are kept for their tests |
 | `set_cpu_route` | `0x42DA80` | Rewritten as C# (`PlanComputerRoute`); the emulated original is kept for its test |
 | `decision` | `0x41C3C0` | Rewritten as C# (`Decide`), which `CheckResult` calls in place of NSPW NET's conditions and result; the emulated original is kept for its test |
-| `set_unit_data` | `0x41E150` | By the emulated code, and by `SetUnitData` in a single-player game, for the units the battle creates, and by `PlanComputerStrategy` |
-| `set_new_unit_plane`, `plane_in_cv` | `0x41F060`, `0x416F00` | By the emulated code, and by `Decide` and `PlanComputerStrategy` |
+| `set_unit_data` | `0x41E150` | Rewritten as C# (`SetUnitData122`), which the port's `SetUnitData` calls in a single-player game: its values are not NSPW NET's |
+| `set_new_unit`, `set_new_unit_plane`, `plane_in_cv`, `set_pos_of_parking` | `0x41EE20`, `0x41F060`, `0x416F00`, `0x416F40` | The port's `AddUnit`, `AddPlane`, `CountPlanesIn` and `SetParkingPosition` do the same in a single-player game (`SharedFunctionTests`); `Decide` and `PlanComputerStrategy` call them |
 | `sub_41F3C0`, `cls_all_slct_unit_p2`, `pt_in_rect3`, `sub_417C10` | | Only by the emulated code |
 
 `set_cpu_route2` (`0x42ED30`) is translated, but nothing calls it: the port's `SetCpuRoute2`, which NSPW NET calls for every unit, stays.

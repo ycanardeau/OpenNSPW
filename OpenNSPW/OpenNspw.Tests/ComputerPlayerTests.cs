@@ -1078,6 +1078,155 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 		Assert.True(orders > 0);
 	}
 
+	// cpu_strtgy's lists of targets (sub_41F230, sub_41F300, sub_41F490, sub_404D80): for each fleet, its list partly
+	// filled at random, as they leave the fleet table and rand().
+	[Theory]
+	[MemberData(nameof(Scenarios))]
+	public void TargetListsAreAsTheOriginals(int scenario)
+	{
+		using var run = new SingleplayerRun(scenario);
+		var game = run.Game;
+		var random = new Random(scenario);
+		var operations = new List<(string Name, Action Original, Action Rewritten)>();
+		for (var f = 1; f <= 10; f++)
+		{
+			var fleet = f;
+			operations.Add(($"sub_41F300({f})", () => game.RunAddNavalBaseTargets(fleet), () => game.AddNavalBaseTargets(fleet)));
+			operations.Add(($"sub_41F490({f})", () => game.RunAddShipTargets(fleet), () => game.AddShipTargets(fleet)));
+			operations.Add(($"sub_404D80({f})", () => game.RunShuffleTargets(fleet), () => game.ShuffleTargets(fleet)));
+			for (var kind = UnitKind.Battleship; kind <= UnitKind.Fortress; kind++)
+			{
+				var k = kind;
+				operations.Add(($"sub_41F230({f}, {kind})", () => game.RunAddTargetsOfKind(fleet, k), () => game.AddTargetsOfKind(fleet, k)));
+			}
+		}
+
+		for (var point = 0; point < 2; point++)
+		{
+			run.Frames(point == 0 ? 2 : 800);
+			var memory = game.Emulator!.Memory.ToArray();
+			var units = UnitBytes(game);
+			foreach (var (name, original, rewritten) in operations)
+			{
+				for (var variant = 0; variant < 3; variant++)
+				{
+					memory.CopyTo(game.Emulator!.Memory);
+					for (var g = 1; g <= 10; g++)
+					{
+						ref var fleet = ref FleetOf(game, g);
+						var filled = random.Next(0, 19);
+						for (var k = 1; k <= 17; k++)
+						{
+							fleet.Targets[k] = k <= filled ? (short)random.Next(0, game.MaxUnitId + 1) : (short)0;
+						}
+					}
+
+					var before = game.Emulator!.Memory.ToArray();
+					var seed = (uint)random.Next();
+					game.srand(seed);
+					original();
+					var expected = (FleetBytes(game), game.rand());
+					before.CopyTo(game.Emulator!.Memory);
+					game.srand(seed);
+					rewritten();
+					var actual = (FleetBytes(game), game.rand());
+					var differs = expected.Item1.AsSpan().CommonPrefixLength(actual.Item1);
+					Assert.True(differs == expected.Item1.Length, $"{name}, point {point}: fleet {differs / 0x498}, byte 0x{differs % 0x498:X}");
+					Assert.True(expected.Item2 == actual.Item2, $"{name}, point {point}: rand {expected.Item2}/{actual.Item2}");
+					Assert.True(units.AsSpan().SequenceEqual(UnitBytes(game)), $"{name}: the units changed");
+				}
+			}
+
+			memory.CopyTo(game.Emulator!.Memory);
+		}
+	}
+
+	// sub_403AE0's formations: for each fleet, its members (and units added as members) in a random order, as they
+	// leave the units, slct_unit[0] and the fleet table.
+	[Theory]
+	[MemberData(nameof(Scenarios))]
+	public void SetFormationIsTheOriginal(int scenario)
+	{
+		using var run = new SingleplayerRun(scenario);
+		var game = run.Game;
+		var random = new Random(scenario);
+		var cases = 0;
+		for (var point = 0; point < 2; point++)
+		{
+			run.Frames(point == 0 ? 2 : 800);
+			var memory = game.Emulator!.Memory.ToArray();
+			var units = UnitBytes(game);
+			var selections = game.Selections[0];
+			for (var f = 1; f <= 10; f++)
+			{
+				for (var variant = 0; variant < 20; variant++)
+				{
+					memory.CopyTo(game.Emulator!.Memory);
+					Restore(game, units);
+					ref var fleet = ref FleetOf(game, f);
+					var count = random.Next(0, 19);
+					for (var k = 0; k < 18; k++)
+					{
+						fleet.Members[k] = k < count ? (short)random.Next(0, game.MaxUnitId + 1) : (short)0;
+					}
+
+					var before = game.Emulator!.Memory.ToArray();
+					var unitsBefore = UnitBytes(game);
+					game.Selections[0] = selections;
+					game.RunSetFormation(f);
+					var expected = (UnitBytes(game), FleetBytes(game), game.Selections[0].ToBytes());
+					before.CopyTo(game.Emulator!.Memory);
+					Restore(game, unitsBefore);
+					game.Selections[0] = selections;
+					game.SetFormation(f);
+					var actual = (UnitBytes(game), FleetBytes(game), game.Selections[0].ToBytes());
+					var size = System.Runtime.CompilerServices.Unsafe.SizeOf<Unit>();
+					var unitByte = expected.Item1.AsSpan().CommonPrefixLength(actual.Item1);
+					Assert.True(unitByte == expected.Item1.Length, $"Fleet {f}, point {point}, variant {variant}: unit {unitByte / size}, byte 0x{unitByte % size:X}");
+					var fleetByte = expected.Item2.AsSpan().CommonPrefixLength(actual.Item2);
+					Assert.True(fleetByte == expected.Item2.Length, $"Fleet {f}, point {point}, variant {variant}: fleet {fleetByte / 0x498}, byte 0x{fleetByte % 0x498:X}");
+					Assert.True(expected.Item3.AsSpan().SequenceEqual(actual.Item3), $"Fleet {f}, point {point}, variant {variant}: slct_unit[0]");
+					cases++;
+				}
+			}
+
+			memory.CopyTo(game.Emulator!.Memory);
+			Restore(game, units);
+			game.Selections[0] = selections;
+		}
+
+		Assert.True(cases > 0);
+	}
+
+	// sub_414DD0's places of reinforcements: from points on and next to the ships, where it leaves them.
+	[Theory]
+	[MemberData(nameof(Scenarios))]
+	public void PlaceReinforcementIsTheOriginal(int scenario)
+	{
+		using var run = new SingleplayerRun(scenario);
+		var game = run.Game;
+		var random = new Random(scenario);
+		run.Frames(2);
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			if (!game.Units[m].IsUsed || game.Units[m].Category != UnitCategory.Ship)
+			{
+				continue;
+			}
+
+			for (var variant = 0; variant < 5; variant++)
+			{
+				var x = game.Units[m].Position.X + random.Next(-50, 51) + random.NextDouble();
+				var y = game.Units[m].Position.Y + random.Next(-50, 51) + random.NextDouble();
+				var (ex, ey) = (x, y);
+				game.RunPlaceReinforcement(ref ex, ref ey);
+				var (ax, ay) = (x, y);
+				game.PlaceReinforcement(ref ax, ref ay);
+				Assert.True(ex == ax && ey == ay, $"From ({x},{y}): ({ex},{ey})/({ax},{ay})");
+			}
+		}
+	}
+
 	// For each ship and random destinations, at a few points of the game: the units after set_cpu_route.
 	[Theory]
 	[MemberData(nameof(Scenarios))]

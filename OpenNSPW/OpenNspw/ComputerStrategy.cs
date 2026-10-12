@@ -100,6 +100,214 @@ public unsafe partial class Nspw
 		}
 	}
 
+	// sub_41F230, sub_41F300, sub_41F3C0, sub_41F490: adds every enemy unit of the kinds to fleet f's targets, from the
+	// first empty element of 1 to 17, unless it is in elements 1 to 17 already. There is no limit: past element 17, 1.22
+	// writes on into the members.
+	private void AddTargets(int f, Func<UnitKind, bool> isTarget)
+	{
+		ref var fleet = ref FleetAt(f);
+		var next = 1;
+		while (next <= 17 && fleet.Targets[next] != 0)
+			next++;
+
+		for (var i = 1; i <= MaxUnitId; i++)
+		{
+			ref var unit = ref Units[i];
+			if (!unit.IsUsed || unit.Side == CpuSide || !isTarget(unit.Kind))
+				continue;
+
+			var isListed = false;
+			for (var k = 1; k <= 17; k++)
+			{
+				if (fleet.Targets[k] == i)
+					isListed = true;
+			}
+
+			if (!isListed)
+				TargetAt(ref fleet, next++) = (short)i;
+		}
+	}
+
+	internal void AddTargetsOfKind(int f, UnitKind kind) => AddTargets(f, k => k == kind);
+
+	internal void AddNavalBaseTargets(int f) => AddTargets(f, k => k == UnitKind.NavalBase);
+
+	// sub_41F490: the battleships, cruisers and carriers.
+	internal void AddShipTargets(int f) => AddTargets(f, k => k is UnitKind.Battleship or UnitKind.Cruiser or UnitKind.Carrier or UnitKind.LightCarrier);
+
+	// sub_404D80: shuffles fleet f's targets, up to the first empty element, with rand()%18+1 random swaps.
+	internal void ShuffleTargets(int f)
+	{
+		ref var fleet = ref FleetAt(f);
+		var count = 0;
+		if (fleet.Targets[1] != 0)
+		{
+			count = 1;
+			while (TargetAt(ref fleet, count + 1) != 0)
+				count++;
+		}
+
+		if (count <= 1)
+			return;
+
+		for (var swaps = rand() % 18 + 1; swaps > 0; swaps--)
+		{
+			var i = rand() % count + 1;
+			var j = rand() % count + 1;
+			if (i != j)
+				(TargetAt(ref fleet, i), TargetAt(ref fleet, j)) = (TargetAt(ref fleet, j), TargetAt(ref fleet, i));
+		}
+	}
+
+	// sub_414DD0: moves the point 80 down until no ship's square (the size of the units' sprite) covers it.
+	internal void PlaceReinforcement(ref double x, ref double y)
+	{
+		for (var i = 1; i <= MaxUnitId; i++)
+		{
+			ref var unit = ref Units[i];
+			if (!unit.IsUsed || unit.Category != UnitCategory.Ship)
+				continue;
+
+			var unitY = Ftol(unit.Position.Y);
+			var unitX = Ftol(unit.Position.X);
+			var halfHeight = Sprites[SpriteId.JapanUnits].Height / 2;
+			var halfWidth = Sprites[SpriteId.JapanUnits].Width / 2;
+			var square = new RECT { left = unitX - halfWidth, top = unitY - halfHeight, right = unitX + halfWidth, bottom = unitY + halfHeight };
+			if (PointInRect(ref square, Ftol(x), Ftol(y)) != 0)
+			{
+				y = y - 80;
+				i = 0;
+			}
+		}
+	}
+
+	// sub_403AE0's places of the escorts around a fleet's transports or carriers, by their number, 1 to 6: (bearing,
+	// distance) to the flagship.
+	private static readonly (double Bearing, double Distance)[][] EscortPlaces =
+	[
+		[(0, 180)],
+		[(0, 240), (180, 180)],
+		[(0, 300), (135, 260), (225, 260)],
+		[(0, 300), (90, 280), (180, 280), (270, 280)],
+		[(0, 390), (65, 360), (295, 360), (135, 360), (200, 360)],
+		[(23, 390), (337, 390), (90, 360), (270, 360), (140, 360), (220, 360)],
+	];
+
+	// The first six of more than six escorts.
+	private static readonly (double Bearing, double Distance)[] ManyEscortPlaces = [(23, 340), (337, 340), (90, 340), (270, 340), (140, 340), (220, 340)];
+
+	// The places of the second to fourth transports, by their number, 2 to 4.
+	private static readonly (double Bearing, double Distance)[][] TransportPlaces = [[(90, 100)], [(90, 100), (270, 100)], [(90, 100), (90, 200), (270, 100)]];
+
+	// The places of the second to fourth carriers, by their number, 2 to 4.
+	private static readonly (double Bearing, double Distance)[][] CarrierPlaces = [[(202.5, 140)], [(135, 100), (225, 100)], [(135, 100), (225, 100), (180, 220)]];
+
+	private void PlaceInFormation(int m, double bearing, double distance)
+	{
+		Units[m].DirectionToLeader = bearing;
+		Units[m].DistanceToLeader = distance;
+	}
+
+	// sub_403AE0's formation of a fleet led by its transports or carriers (the first members, isLead): the others
+	// escort them; past the sixth escort, they follow at 100 apart, at a bearing by their place's parity.
+	private void FormAroundLeads(ref ComputerFleet fleet, Func<UnitKind, bool> isLead, bool areTransports)
+	{
+		if (fleet.Members[0] == 0)
+			return;
+
+		var leads = 0;
+		var escorts = 0;
+		for (var k = 0; MemberAt(ref fleet, k) != 0; k++)
+		{
+			if (isLead(Units[MemberAt(ref fleet, k)].Kind))
+				leads++;
+			else
+				escorts++;
+		}
+
+		if (leads >= 2 && leads <= 4)
+		{
+			var places = (areTransports ? TransportPlaces : CarrierPlaces)[leads - 2];
+			for (var j = 0; j < places.Length; j++)
+				PlaceInFormation(MemberAt(ref fleet, j + 1), places[j].Bearing, places[j].Distance);
+		}
+
+		if (escorts == 0)
+			return;
+
+		var escortPlaces = escorts <= 6 ? EscortPlaces[escorts - 1] : ManyEscortPlaces;
+		for (var j = 0; j < escortPlaces.Length; j++)
+			PlaceInFormation(MemberAt(ref fleet, leads + j), escortPlaces[j].Bearing, escortPlaces[j].Distance);
+
+		if (escorts <= 6)
+			return;
+
+		for (var k = leads + 6; MemberAt(ref fleet, k) != 0; k++)
+		{
+			var bearing = areTransports ? (k % 2 + 4) * 40 : k % 2 * 40 + 340;
+			PlaceInFormation(MemberAt(ref fleet, k), bearing, 100 * k - 260);
+		}
+	}
+
+	// sub_403AE0: the formation of fleet f, and its live members selected (slct_unit[0]), following the flagship. A live
+	// carrier among the members becomes the first and the flagship; a carrier or transport fleet forms around them; any
+	// other, in line behind the flagship, 180 apart.
+	internal void SetFormation(int f)
+	{
+		ref var fleet = ref FleetAt(f);
+		var carrierAt = -1;
+		if (fleet.Members[0] != 0)
+		{
+			for (var k = 0; MemberAt(ref fleet, k) != 0; k++)
+			{
+				ref var member = ref Units[MemberAt(ref fleet, k)];
+				if (carrierAt == -1 && member.Kind is UnitKind.Carrier or UnitKind.LightCarrier && member.IsUsed)
+					carrierAt = k;
+			}
+		}
+
+		var n = 1;
+		if (carrierAt == -1 && Units[fleet.Members[0]].Kind != UnitKind.Transport)
+		{
+			var distance = 180;
+			for (var k = 1; MemberAt(ref fleet, k) != 0; k++)
+			{
+				int m = MemberAt(ref fleet, k);
+				if (!Units[m].IsUsed)
+					continue;
+
+				Selections[0][m] = (short)n++;
+				Units[m].GroupLeader = fleet.Flagship;
+				PlaceInFormation(m, 180, distance);
+				distance += 180;
+			}
+
+			return;
+		}
+
+		if (carrierAt != -1)
+		{
+			if (carrierAt != 0)
+				(MemberAt(ref fleet, 0), MemberAt(ref fleet, carrierAt)) = (MemberAt(ref fleet, carrierAt), MemberAt(ref fleet, 0));
+			fleet.Flagship = fleet.Members[0];
+			FormAroundLeads(ref fleet, kind => kind is UnitKind.Carrier or UnitKind.LightCarrier, false);
+		}
+		else
+		{
+			FormAroundLeads(ref fleet, kind => kind == UnitKind.Transport, true);
+		}
+
+		for (var k = 1; MemberAt(ref fleet, k) != 0; k++)
+		{
+			int m = MemberAt(ref fleet, k);
+			if (!Units[m].IsUsed)
+				continue;
+
+			Selections[0][m] = (short)n++;
+			Units[m].GroupLeader = fleet.Flagship;
+		}
+	}
+
 	// sub_403A70: whether plane m belongs to fleet f, its carrier or base being the fleet's flagship.
 	private bool IsInFleet(int m, int f)
 	{
@@ -129,7 +337,7 @@ public unsafe partial class Nspw
 	}
 
 	// Step 1: the scenario's events.
-	private void RunComputerEvents()
+	private void ApplyComputerEvents()
 	{
 		switch (ScenarioNumber)
 		{
@@ -139,16 +347,16 @@ public unsafe partial class Nspw
 				if (fleet5.Flagship != 0 && fleet5.Mode == 0 && Units[fleet5.Flagship].IsUsed && BattleTime <= 40000)
 				{
 					fleet5.Mode = 1;
-					RunAddTargetsOfKind(5, UnitKind.Transport);
-					RunShuffleTargets(5);
+					AddTargetsOfKind(5, UnitKind.Transport);
+					ShuffleTargets(5);
 				}
 
 				ref var fleet7 = ref FleetAt(7);
 				if (fleet7.Flagship != 0 && fleet7.Mode == 50 && Units[fleet7.Flagship].IsUsed && BattleTime <= 50000)
 				{
 					fleet7.Mode = 1;
-					RunAddTargetsOfKind(7, UnitKind.Transport);
-					RunShuffleTargets(7);
+					AddTargetsOfKind(7, UnitKind.Transport);
+					ShuffleTargets(7);
 				}
 				break;
 			}
@@ -159,9 +367,9 @@ public unsafe partial class Nspw
 					ref var fleet = ref FleetAt(f);
 					if (fleet.Flagship != 0 && fleet.Mode == 0 && Units[fleet.Flagship].IsUsed && BattleTime <= time)
 					{
-						RunAddPlane(Side.UnitedStates, UnitKind.Bomber, 0, fleet.Flagship, 16, FireKind.Bomb);
+						AddPlane(Side.UnitedStates, UnitKind.Bomber, 0, fleet.Flagship, 16, FireKind.Bomb);
 						fleet.Mode = 1;
-						RunAddTargetsOfKind(f, UnitKind.City);
+						AddTargetsOfKind(f, UnitKind.City);
 					}
 				}
 				break;
@@ -183,9 +391,9 @@ public unsafe partial class Nspw
 					{
 						fleet.RenewsFlagship = 1;
 						fleet.Mode = 1;
-						RunAddNavalBaseTargets(f);
-						RunAddShipTargets(f);
-						RunShuffleTargets(f);
+						AddNavalBaseTargets(f);
+						AddShipTargets(f);
+						ShuffleTargets(f);
 					}
 				}
 				break;
@@ -200,8 +408,8 @@ public unsafe partial class Nspw
 					{
 						fleet.RenewsFlagship = 1;
 						fleet.Mode = 1;
-						RunAddShipTargets(f);
-						RunShuffleTargets(f);
+						AddShipTargets(f);
+						ShuffleTargets(f);
 					}
 				}
 
@@ -255,7 +463,7 @@ public unsafe partial class Nspw
 				}
 
 				if (planes < 16 && planes != 0)
-					RunAddPlane(Side.Japan, rand() % 2 == 0 ? UnitKind.Attacker : UnitKind.Bomber, 0, f2, 1, FireKind.Bomb);
+					AddPlane(Side.Japan, rand() % 2 == 0 ? UnitKind.Attacker : UnitKind.Bomber, 0, f2, 1, FireKind.Bomb);
 				break;
 			}
 
@@ -268,22 +476,22 @@ public unsafe partial class Nspw
 				const double Y = 6500;
 				const double Direction = 135;
 				var x = (double)(rand() % 1000 + 8500);
-				var carrier = RunAddUnit(Side.UnitedStates, UnitKind.Carrier, x, Y, Direction);
+				var carrier = (short)AddUnit(Side.UnitedStates, UnitKind.Carrier, x, Y, Direction);
 				fleet8.Flagship = carrier;
 				fleet8.Members[0] = carrier;
-				RunAddPlane(Side.UnitedStates, UnitKind.Attacker, 0, carrier, 12, FireKind.Bomb);
+				AddPlane(Side.UnitedStates, UnitKind.Attacker, 0, carrier, 12, FireKind.Bomb);
 				var escorts = new[] { UnitKind.Cruiser, UnitKind.Destroyer, UnitKind.Cruiser, UnitKind.Destroyer };
 				for (var i = 0; i < escorts.Length; i++)
 				{
 					x = x + 150;
-					fleet8.Members[i + 1] = RunAddUnit(Side.UnitedStates, escorts[i], x, Y, Direction);
+					fleet8.Members[i + 1] = (short)AddUnit(Side.UnitedStates, escorts[i], x, Y, Direction);
 				}
 
 				fleet8.RenewsFlagship = 1;
 				fleet8.Mode = 1;
-				RunAddTargetsOfKind(8, UnitKind.InfantryBase);
-				RunShuffleTargets(8);
-				RunAddShipTargets(8);
+				AddTargetsOfKind(8, UnitKind.InfantryBase);
+				ShuffleTargets(8);
+				AddShipTargets(8);
 				fleet8.DestinationX = 80;
 				fleet8.DestinationY = 3440;
 				break;
@@ -895,7 +1103,7 @@ public unsafe partial class Nspw
 					planes++;
 			}
 
-			RunAddPlane(Side.Japan, UnitKind.Attacker, 0, carrier, 12 - planes, FireKind.Bomb);
+			AddPlane(Side.Japan, UnitKind.Attacker, 0, carrier, 12 - planes, FireKind.Bomb);
 			return;
 		}
 
@@ -919,10 +1127,10 @@ public unsafe partial class Nspw
 			plane.DeckPhase = 0;
 			plane.TakeOffRun = 0;
 			plane.Mode = UnitMode.Move;
-			RunSetParkingPosition(i);
+			SetParkingPosition(i);
 			plane.IsStopping = true;
 			Units[plane.Carrier].PlaneCount++;
-			RunSetUnitData(i);
+			SetUnitData(i);
 			planes++;
 		}
 	}
@@ -1523,8 +1731,8 @@ public unsafe partial class Nspw
 	// Step 12, scenario 304: a new American unit of the kind near the east edge of the map, from the point.
 	private short AddReinforcement(UnitKind kind, double x, double y)
 	{
-		RunPlaceReinforcement(ref x, ref y);
-		return RunAddUnit(Side.UnitedStates, kind, x, y, 135);
+		PlaceReinforcement(ref x, ref y);
+		return (short)AddUnit(Side.UnitedStates, kind, x, y, 135);
 	}
 
 	// Step 12, scenario 304: fleets 1 and 2 get a new carrier when they have none, and escorts; fleets 3 to 5 new
@@ -1581,14 +1789,14 @@ public unsafe partial class Nspw
 					var carrier = AddReinforcement(UnitKind.Carrier, x, y);
 					fleet.Flagship = carrier;
 					MemberAt(ref fleet, members) = carrier;
-					RunAddPlane(Side.UnitedStates, UnitKind.Attacker, 0, carrier, 10, FireKind.Bomb);
-					RunAddPlane(Side.UnitedStates, UnitKind.Fighter, 0, carrier, 2, FireKind.Unarmed);
+					AddPlane(Side.UnitedStates, UnitKind.Attacker, 0, carrier, 10, FireKind.Bomb);
+					AddPlane(Side.UnitedStates, UnitKind.Fighter, 0, carrier, 2, FireKind.Unarmed);
 					fleet.RenewsFlagship = 1;
 					members++;
 					fleet.Mode = 1;
-					RunAddShipTargets(f);
-					RunAddTargetsOfKind(f, UnitKind.InfantryBase);
-					RunShuffleTargets(f);
+					AddShipTargets(f);
+					AddTargetsOfKind(f, UnitKind.InfantryBase);
+					ShuffleTargets(f);
 					if (f == 1)
 					{
 						ref var fleet1 = ref FleetAt(1);
@@ -1603,10 +1811,10 @@ public unsafe partial class Nspw
 			{
 				var y = (double)(rand() % 7200);
 				var x = 10100.0;
-				RunPlaceReinforcement(ref x, ref y);
+				PlaceReinforcement(ref x, ref y);
 				var r = rand() % 100;
 				var kind = r < 60 ? UnitKind.Cruiser : r < 90 ? UnitKind.Destroyer : UnitKind.Battleship;
-				MemberAt(ref fleet, members) = RunAddUnit(Side.UnitedStates, kind, x, y, 135);
+				MemberAt(ref fleet, members) = (short)AddUnit(Side.UnitedStates, kind, x, y, 135);
 			}
 
 			return;
@@ -1632,19 +1840,19 @@ public unsafe partial class Nspw
 		{
 			var y = (double)(rand() % 7200);
 			var x = 10100.0;
-			RunPlaceReinforcement(ref x, ref y);
+			PlaceReinforcement(ref x, ref y);
 			var kind = rand() % 100 < 60 ? UnitKind.Cruiser : UnitKind.Battleship;
-			var m = RunAddUnit(Side.UnitedStates, kind, x, y, 135);
+			var m = (short)AddUnit(Side.UnitedStates, kind, x, y, 135);
 			if (count == 0)
 			{
 				fleet.Flagship = m;
 				fleet.Members[0] = m;
 				fleet.RenewsFlagship = 1;
 				fleet.Mode = 1;
-				RunAddTargetsOfKind(f, UnitKind.InfantryBase);
-				RunAddTargetsOfKind(f, UnitKind.Pillboxes);
-				RunAddTargetsOfKind(f, UnitKind.Fortress);
-				RunShuffleTargets(f);
+				AddTargetsOfKind(f, UnitKind.InfantryBase);
+				AddTargetsOfKind(f, UnitKind.Pillboxes);
+				AddTargetsOfKind(f, UnitKind.Fortress);
+				ShuffleTargets(f);
 			}
 
 			fleet.Members[count] = m;
@@ -1667,7 +1875,7 @@ public unsafe partial class Nspw
 
 		if (fleet.State == 1)
 		{
-			RunSetFormation(f);
+			SetFormation(f);
 			int leader = fleet.Flagship;
 			MoveOrders[0].Unit = (short)leader;
 			MoveOrders[0].Destination = Units[leader].Position;
@@ -1697,7 +1905,7 @@ public unsafe partial class Nspw
 		var f = FrameCount % 10 + 1;
 		Selections[0] = default;
 		MoveOrders[0].Unit = 0;
-		RunComputerEvents();
+		ApplyComputerEvents();
 
 		ref var fleet = ref FleetAt(f);
 		var near = FindComputersTarget(ref fleet);
