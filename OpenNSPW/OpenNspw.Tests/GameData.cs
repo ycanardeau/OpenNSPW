@@ -66,14 +66,15 @@ internal static class GameData
 			File.Copy(file, System.IO.Path.Combine(target, System.IO.Path.GetFileName(file)));
 		}
 
-		foreach (var directory in Directory.GetDirectories(source).Where(d => System.IO.Path.GetFileName(d) is not ("Debug" or "Release" or "Backup")))
+		foreach (var directory in Directory.GetDirectories(source).Where(d => System.IO.Path.GetFileName(d) is not ("Debug" or "Release" or "Backup" or "Saved")))
 		{
 			CopyDirectory(directory, System.IO.Path.Combine(target, System.IO.Path.GetFileName(directory)));
 		}
 	}
 
 	// A copy of the original's data in a new temporary directory, so that what a game writes (saved games, settings)
-	// does not change the original or other tests.
+	// does not change the original or other tests. Its Saved directory is empty, whatever games have been saved in the
+	// original's, so that the tests run the same everywhere.
 	public static TemporaryDirectory CreateCopy()
 	{
 		var original = FindOriginal() ?? throw new InvalidOperationException("Original/NSPW_NET is not found.");
@@ -81,6 +82,7 @@ internal static class GameData
 		Directory.CreateDirectory(directory.Path);
 		MakeCaseSensitive(directory.Path);
 		CopyDirectory(original, directory.Path);
+		Directory.CreateDirectory(System.IO.Path.Combine(directory.Path, "Saved"));
 		return directory;
 	}
 }
