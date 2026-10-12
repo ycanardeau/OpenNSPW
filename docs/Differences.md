@@ -8,6 +8,8 @@ The computer player itself (`cpu_strtgy`, `set_cpu_route`, `decision`) runs 1.22
 | --- | --- | --- | --- |
 | Supply away from a naval base | A unit supplies (`spry`) wherever it is (`0x4010BB`): nothing checks for a naval base | Supply stops at once unless one of the side's naval bases is within ±280 | `UpdateSupply` |
 | Ships outside the map | Only the player's ships are brought back (`0x416B35`, the end of `set_pos_of_emrgncy_SHIP` at `0x415F40`, which skips the units of `cpu_side`); submarines never (`0x401966`: kind 4 does nothing) | Every ship, and every submarine, gets an emergency move back to 40 inside the edge (`em_of_out_of_map`) | `SetShipEmergencyDestination`, `UpdateUnits` (submarines) |
+| Units' data | `set_unit_data` (`0x41E150`) gives other HP, speeds, weapons and fuel: a battleship has 41 HP and burns fuel every 9000 ticks, a carrier 36 or 41 HP | NSPW NET's values (`SetBattleshipData` and the others): a battleship 40 HP and every 1000 ticks, a carrier 32 or 37 | `SetUnitData` calls 1.22's `set_unit_data` in the emulator, for the units the battle creates, such as the bases that transports land |
+| Planes added to a full carrier | `set_new_unit_plane` (`0x41F060`) adds them: it does not check the carrier's capacity | Returns, the planes not added | `AddPlane` |
 | Computer's ships blocked by land ahead | Replanned (`set_cpu_route(m, 1.0)`) when the point 80 ahead toward its path is land (`0x40229D`) | Steering stops the ship | `CheckCourseAhead` |
 | Computer's ships slowed by a ship ahead | Replanned every 100 ticks below a fifth of its top speed (`0x4020DB`) | Steering stops the ship | `CheckCourseAhead` |
 | Computer's units about to step on land | Every 500 ticks (`cc_count%500`), a computer's unit with no leader whose next step (its speed along its heading) is land is replanned (`0x402D2B`), planes included | Nothing | `MoveUnit` |
@@ -26,6 +28,7 @@ How the off-map rule was found: the port's `em_of_out_of_map` sends a ship to 95
 | --- | --- | --- |
 | `set_pos_of_emrgncy_SHIP` (`0x415F40`) | Its evasions are laid out differently; it sets `em_flg[1]` before the off-map rule (`0x416B2F`) | `SetShipEmergencyDestination`, NSPW NET's, to compare |
 | Reloading and rearming (`0x403043` to `0x4030B6`) | `arm[3]` counts down, a submarine's only while it is stopped; when it reaches 0, a unit being serviced (weapon 17 or 18) gets 100 fuel and, a fighter, bullets (11) and 50 rounds; any other is left unarmed (17), with no ammunition, to be armed | To compare |
+| `set_new_unit_plane` with no parking place left (`0x41F111`) | The place number of the previous plane added, or, for the first, whatever its stack holds | `AddPlane`: 0, or the previous plane's |
 
 ## Not compared yet
 Everything else in 1.22's `chara_cont` (`0x401000`) and the 38 functions it reaches: shooting, hits, detection, planes taking off and landing, and the emergency moves of each kind. They are to be compared with the port function by function; each difference found goes in the tables above.

@@ -1261,6 +1261,14 @@ private void SetTransportData(ref Unit unit)
 [Original("set_unit_data")]
 public void	SetUnitData(int m)
 	{
+	// A single-player game has NSPW 1.22's units, whose data differ from NSPW NET's: those created in the battle, such as
+	// the bases that transports land, get them from 1.22's set_unit_data, as the scenario's do.
+	if( IsSingleplayer )
+		{
+		RunSetUnitData(m);
+		return;
+		}
+
 	ref var unit = ref Units[m];
 	int		i;
 
@@ -1667,7 +1675,8 @@ public int		AddPlane(Side side,UnitKind kind,int type,int no,int planes,FireKind
 					}
 				}
 
-			if( park >= Units[no].Capacity )
+			// 1.22 adds the planes to a full carrier too (0x41F060).
+			if( park >= Units[no].Capacity && !IsSingleplayer )
 				return (-planes);
 
 			for( n=0; n<24; n++)
