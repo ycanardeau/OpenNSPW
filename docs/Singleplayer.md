@@ -34,7 +34,8 @@ dotnet run --project Disassembler/OpenNspw.Disassembler -- Original/Nspw122/NSPW
 | `cpu_strtgy`, and the functions only it calls (`sub_403A70`, `sub_403AE0`, `sub_404D80`, `sub_414DD0`, `sub_41F230`, `sub_41F300`, `sub_41F3C0`, `sub_41F490`, `sub_417C10`) | `0x404E30` | `HandleInput`, before the orders are applied |
 | `set_cpu_route` | `0x42DA80` | `ApplyOrders`, for a move order of a computer's ship |
 | `decision` | `0x41C3C0` | `CheckResult`, in place of NSPW NET's conditions and result |
-| `set_new_unit`, `set_new_unit_plane`, `set_unit_data`, `plane_in_cv`, `set_pos_of_parking`, `cls_all_slct_unit_p2`, `pt_in_rect3` | | Only by the emulated code |
+| `set_unit_data` | `0x41E150` | By the emulated code, and by `SetUnitData` in a single-player game, for the units the battle creates |
+| `set_new_unit`, `set_new_unit_plane`, `plane_in_cv`, `set_pos_of_parking`, `cls_all_slct_unit_p2`, `pt_in_rect3` | | Only by the emulated code |
 
 `set_cpu_route2` (`0x42ED30`) is translated, but nothing calls it: the port's `SetCpuRoute2`, which NSPW NET calls for every unit, stays.
 
@@ -114,6 +115,7 @@ So in a single-player game (`IsSingleplayer`):
 - `ApplyOrders` clears the path of a computer's unit for every move order (`if( new_pp[e].cls || unit[m].used==cpu_side )`, as 1.22 does and NSPW NET has as a comment), and calls `set_cpu_route(m, 4.0)` for a computer's ship.
 - `UpdateSupply` keeps a ship supplying wherever it is, as 1.22's `chara_cont` does (`0x4010BB`), without NSPW NET's check for a naval base within 280: the computer starts supplying once its flagship has stopped within 580 of the base, and that check stopped it at once.
 - `SetShipEmergencyDestination` brings only the player's ships back into the map, and `SteerUnit` no submarine, as 1.22 does (`0x416B35`, `0x401966`): the computer's ships sail on, to its naval bases outside the map, such as scenario 304's.
+- `SetUnitData` runs 1.22's `set_unit_data`, so that the units the battle creates, such as the bases that transports land, have 1.22's data, as the scenario's do; `AddPlane` adds planes to a full carrier, as 1.22's `set_new_unit_plane` does (`0x41F060`).
 - `CheckResult` calls `decision`, which also shows the result, instead of NSPW NET's conditions.
 
 ## Playing
@@ -137,7 +139,6 @@ The scenario is one of 1, 2, ..., 10, 100, ..., 109, 200, ..., 209, 300, ..., 30
 7. **Characterization trace** of a single-player game, to guard the refactoring of the code it runs. Not done.
 
 ## Open questions
-- Whether the port's own `SetUnitData` (used when a unit is created during the battle, outside the emulated code, such as a reinforcement) should call 1.22's in a single-player game.
 - Which other differences between 1.22's battle and NSPW NET's matter for single-player play. The landing distance of transports, 360 in 1.22 and 160 in NSPW NET (`#if NSPW_THE_NET` in `etc1.cpp`), is one; the other remains of `cpu_side` in NSPW NET's comments are others.
 - Whether to load the maps from 1.22's own `Map` folder: its `japan_off.dat` differs from NSPW NET's.
 - Whether to show 1.22's own setting screen, or NSPW NET's with 1.22's scenarios.

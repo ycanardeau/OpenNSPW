@@ -176,6 +176,30 @@ public class SingleplayerTests
 		Assert.Equal(all_head.MAP_RIGHT - 40, game.Units[players].EmergencyDestination.X);
 	}
 
+	// The units that the battle creates in a single-player game, such as the bases that transports land, have NSPW
+	// 1.22's data, from its set_unit_data, as the scenario's have; a full carrier still gets the planes added to it.
+	[Fact]
+	public void UnitsCreatedInTheBattleHave122sData()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+
+		var battleship = game.AddUnit(Side.Japan, UnitKind.Battleship, 0, 0, 0);
+		Assert.NotEqual(0, battleship);
+		Assert.Equal(41, game.Units[battleship].MaxHp);
+		Assert.Equal(9000, game.Units[battleship].FuelInterval);
+
+		var carrier = game.AddUnit(Side.UnitedStates, UnitKind.Carrier, 0, 400, 0);
+		Assert.NotEqual(0, carrier);
+		Assert.Equal(41, game.Units[carrier].MaxHp);
+		Assert.Equal(12, game.Units[carrier].Capacity);
+
+		var planes = game.Units[carrier].PlaneCount;
+		Assert.Equal(1, game.AddPlane(Side.UnitedStates, UnitKind.Attacker, 0, carrier, game.Units[carrier].Capacity + 2, FireKind.Bomb));
+		Assert.Equal(planes + game.Units[carrier].Capacity + 2, game.Units[carrier].PlaneCount);
+	}
+
 	// A battle as the desktop app shows it, in real time, saved as singleplayer_battle.png next to the test assembly.
 	[Fact]
 	public void TheBattleShows()
