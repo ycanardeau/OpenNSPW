@@ -70,6 +70,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 		this[0x99] = new Instruction(cdq_EDX_EAX);
 		this[0xa1] = new Instruction(mov_eAX_moffs1632);
 		this[0xa3] = new Instruction(mov_moffs1632_eAX);
+		this[0xab] = new Instruction(stos_m32_EAX);
 
 		for (var i = 0; i < 8; i++)
 			this[0xb8 + i] = new Instruction(mov_r1632_imm1632);
@@ -164,9 +165,6 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 			null,
 			null
 		);
-
-		this[0xf3] = new Instruction(_ => Enumerable.Repeat("// TODO: f3", 1));
-		this[0xab] = new Instruction(_ => Enumerable.Repeat("// TODO: ab", 1));
 	}
 
 	// 03
@@ -270,11 +268,15 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 			);
 		}
 		else
+		{
+			var value = t.Reader.ReadUInt32();
+			t.LastComparison = ((int)RegisterCode.Eax, value);
 			yield return t.ToStatementLine(
 				Mnemonic.Cmp,
 				t.GetR32String(RegisterCode.Eax),
-				t.ReadInt32AsString()
+				t.FormatRegister32(value.ToNumberLiteralString())
 			);
+		}
 	}
 
 	// 40
@@ -440,7 +442,16 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 			yield return t.ToStatementLine(Mnemonic.Cmp, t.GetRM16String(), t.ReadInt16AsString());
 		}
 		else
-			yield return t.ToStatementLine(Mnemonic.Cmp, t.GetRM32String(), t.ReadInt32AsString());
+		{
+			var value = t.Reader.ReadUInt32();
+			if (t.Mode.ModRM.Mod == 3)
+				t.LastComparison = (t.Mode.ModRM.RM, value);
+			yield return t.ToStatementLine(
+				Mnemonic.Cmp,
+				t.GetRM32String(),
+				t.FormatRegister32(value.ToNumberLiteralString())
+			);
+		}
 	}
 
 	// 83 /0
@@ -476,7 +487,16 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 			yield return t.ToStatementLine(Mnemonic.Cmp, t.GetRM16String(), t.ReadSByteAsString());
 		}
 		else
-			yield return t.ToStatementLine(Mnemonic.Cmp, t.GetRM32String(), t.ReadSByteAsString());
+		{
+			var value = t.Reader.ReadSByte();
+			if (t.Mode.ModRM.Mod == 3)
+				t.LastComparison = (t.Mode.ModRM.RM, (uint)value);
+			yield return t.ToStatementLine(
+				Mnemonic.Cmp,
+				t.GetRM32String(),
+				t.FormatRegister8(value.ToNumberLiteralString())
+			);
+		}
 	}
 
 	// 85
@@ -575,6 +595,12 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 				Mnemonic.Mov,
 				t.GetR32String(RegisterCode.Eax)
 			);
+	}
+
+	// ab
+	private IEnumerable<string> stos_m32_EAX(Token t)
+	{
+		yield return t.ToStatementLine(t.RepeatPrefix ? Mnemonic.RepStosd : Mnemonic.Stosd);
 	}
 
 	// b8
@@ -1138,9 +1164,39 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 	}
 
 	// ff /4
+	// Only the jump through a table of a switch statement, jmp [index*4+table]: the table's entries, read from the
+	// executable, become the cases of a switch. They are as many as the comparison that guards the jump allows, and
+	// stop at the first one that is not an address of the subroutine.
 	private IEnumerable<string> jmp_rm1632(Token t)
 	{
+		if (
+			!(
+				t.Mode.ModRM.Mod == 0
+				&& t.Mode.ModRM.RM == 4
+				&& t.Mode.Sib.Base == 5
+				&& t.Mode.Sib.Scale == 2
+			)
+		)
+			throw new NotImplementedException($"jmp {t.GetRM32String()}");
+
 		t.Labels.Add(t.Eip); // HACK
-		yield return $"// TODO: jmp {t.GetRM32String()}"; // TODO
+		yield return $"// jmp {t.GetRM32String()}";
+		yield return $"switch ({t.GetR32String(t.Mode.Sib.Index)}.Value)";
+		yield return "{";
+		var count =
+			t.LastComparison is { } comparison && comparison.Register == t.Mode.Sib.Index
+				? comparison.Value + 1
+				: uint.MaxValue;
+		for (var i = 0; i < count; i++)
+		{
+			var address = (int)t.ReadUInt32At((int)t.Mode.Displacement + 4 * i);
+			if (address < t.Start || address >= t.End)
+				break;
+
+			t.Labels.Add(address);
+			yield return $"\tcase {i}: goto loc_{address:X};";
+		}
+		yield return "\tdefault: throw new InvalidOperationException();";
+		yield return "}";
 	}
 }

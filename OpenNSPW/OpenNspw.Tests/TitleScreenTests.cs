@@ -188,7 +188,7 @@ public class TitleScreenTests
 	}
 
 	// Writes RGB565 pixels as a PNG file.
-	private static void WritePng(string path, ushort[] pixels, int width, int height)
+	internal static void WritePng(string path, ushort[] pixels, int width, int height)
 	{
 		static byte[] Chunk(string type, byte[] data)
 		{

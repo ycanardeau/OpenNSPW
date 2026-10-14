@@ -10,6 +10,7 @@ internal sealed class Disassembler
 	private readonly BinaryReader _reader;
 
 	private bool _operandSizeOverride;
+	private bool _repeatPrefix;
 	private int _currentAddress;
 	private readonly int _endPosition;
 	private readonly ParseContext _parseContext;
@@ -55,6 +56,10 @@ internal sealed class Disassembler
 					_operandSizeOverride = true;
 					break;
 
+				case 0xf3:
+					_repeatPrefix = true;
+					break;
+
 				default:
 					isPrefix = false;
 					break;
@@ -85,6 +90,7 @@ internal sealed class Disassembler
 			_reader,
 			mode: instruction.HasModRM ? new AddressingMode(_reader) : default,
 			_operandSizeOverride,
+			_repeatPrefix,
 			_labels,
 			_parseContext
 		);
@@ -100,5 +106,7 @@ internal sealed class Disassembler
 		_operandSizeOverride = token.OperandSizeOverride;
 		if (_operandSizeOverride)
 			throw new NotImplementedException();
+
+		_repeatPrefix = false;
 	}
 }

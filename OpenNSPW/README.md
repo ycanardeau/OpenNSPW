@@ -8,6 +8,7 @@ An exact port of the NSPW NET source ([Original/NSPW_NET](../Original/NSPW_NET))
 | `OpenNspw.DirectPlay` | The DirectPlay 8 stand-ins implemented on [Otsuki](../Otsuki). |
 | `OpenNspw.Desktop` | The game, on MonoGame: runs the port's `WinMain` and shows its frames and dialogs (with [Saruhashi](../Saruhashi)). |
 | `OpenNspw.Porter` | Ports C++ files to the port's conventions, then fixes the compile errors that have a mechanical fix. |
+| `OpenNspw.Singleplayer` | The emulator of the single-player executable (NSPW 1.22) on [Enzan](../Enzan), and its functions translated by the [Disassembler](../Disassembler). See [docs/Singleplayer.md](../docs/Singleplayer.md). |
 | `OpenNspw.Reference` | The reference: the unmodified C++ source, compiled in place, plus the tools that record what the tests compare against. Windows only, and not part of `OpenNSPW.slnx`. |
 | `OpenNspw.Tests` | Tests that replay the recordings through the port, and play whole games. They run on any platform. |
 
@@ -20,6 +21,7 @@ What is tested:
 - **`NetworkTests`**: `dplay.cpp`. Two games in one process connect over loopback UDP through the original's connection dialogs, and exchange the game's messages.
 - **`TitleScreenTests`**: two whole games with the original's data connect, reach the title screen, and play a battle that the host starts by clicking through the setting screens. They check the modes, that both games keep in step, and that no message box shows. They save the frames they reach as PNG files next to the test assembly.
 - **`CharacterizationTests`**: the characterization traces that guard the refactoring (see [docs/Refactoring.md](../docs/Refactoring.md#characterization-traces)). Scripts play two whole games in lockstep: the title screen, the first three scenarios, and the original's user scenarios `tst3.dat` and `てすと.dat`, whose fleets start close enough to fight, with seeded random input on both sides, and the host's transports landing their cargo in ミッドウェイ攻略１. Each script's trace, the state, output and `rand()` state of both games after every round, must match the one in `OpenNspw.Tests/Traces`, which was recorded from the port itself, and neither game may detect a desync.
+- **`EmulatorTests`** and **`SingleplayerTests`**: the single-player mode. Every scenario of NSPW 1.22 sets up in the emulator and plays against the computer, which gives orders to its ships.
 
 The rest of the game logic is not compared with the reference yet.
 
@@ -33,6 +35,12 @@ dotnet run --project OpenNspw.Desktop
 ```
 
 The game's data is `Original/NSPW_NET`, or the folder given with `--data <folder>`. Start two of them: one hosts (port `0` picks a free port, `2310` is the original's), and the other joins its address and port. Settings, such as the player name, are kept in `OpenNSPW/settings.json` under the user's application data folder.
+
+To play a scenario of NSPW 1.22 against the computer instead (see [docs/Singleplayer.md](../docs/Singleplayer.md)):
+
+```bash
+dotnet run --project OpenNspw.Desktop -- --singleplayer 3
+```
 
 ## Porting a file
 ```bash

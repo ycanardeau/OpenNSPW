@@ -236,6 +236,11 @@ internal enum Mnemonic
 	Push,
 
 	/// <summary>
+	/// Repeat store string.
+	/// </summary>
+	RepStosd,
+
+	/// <summary>
 	/// Arithmetic right shift.
 	/// </summary>
 	Sar,
@@ -264,6 +269,11 @@ internal enum Mnemonic
 	/// Logical right shift.
 	/// </summary>
 	Shr,
+
+	/// <summary>
+	/// Store string.
+	/// </summary>
+	Stosd,
 
 	/// <summary>
 	/// Subtract.

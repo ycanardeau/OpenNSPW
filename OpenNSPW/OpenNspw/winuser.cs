@@ -389,11 +389,6 @@ public partial class Nspw
 		return hWnd is null ? FALSE : TRUE;
 	}
 
-	public nint DefWindowProc(HWND hWnd, uint Msg, nint wParam, nint lParam)
-	{
-		return 0;
-	}
-
 	public int DestroyWindow(HWND? hWnd)
 	{
 		if (hWnd is null || hWnd.Destroyed)
@@ -409,6 +404,17 @@ public partial class Nspw
 		}
 
 		return TRUE;
+	}
+
+	// As Win32's: WM_CLOSE destroys the window (which WM_DESTROY then reports); the other messages do nothing.
+	public nint DefWindowProc(HWND hWnd, uint Msg, nint wParam, nint lParam)
+	{
+		if (Msg == WM_CLOSE)
+		{
+			DestroyWindow(hWnd);
+		}
+
+		return 0;
 	}
 
 	public int EndDialog(HWND? hDlg, nint nResult)

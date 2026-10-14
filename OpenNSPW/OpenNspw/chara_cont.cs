@@ -33,7 +33,7 @@ private void UnpackSelections(int e, bool isJapan)
 			// 水上ユニット
 			Selections[e][s+1]=BufferedSelections[e][s];
 			}
-		for(s=JPN_SHIP_END;s<=(USA_PLANE_END/2)-1;s++)
+		for(s=(short)JPN_SHIP_END;s<=(USA_PLANE_END/2)-1;s++)
 			{
 			// 航空ユニット
 			Selections[e][s+JPN_SHIP_END+1]=BufferedSelections[e][s];
@@ -46,7 +46,7 @@ private void UnpackSelections(int e, bool isJapan)
 			// 水上ユニット
 			Selections[e][s+JPN_SHIP_END+1]=BufferedSelections[e][s];
 			}
-		for(s=JPN_SHIP_END;s<=(USA_PLANE_END/2)-1;s++)
+		for(s=(short)JPN_SHIP_END;s<=(USA_PLANE_END/2)-1;s++)
 			{
 			// 航空ユニット
 			Selections[e][s+(USA_PLANE_END/2)+1]=BufferedSelections[e][s];
@@ -258,7 +258,7 @@ private void SendSelectOrder(ref short s)
 		{
 		ship+=BufferedSelections[1][s];
 		}
-	for( s=JPN_SHIP_END; s<=(USA_PLANE_END/2)-1; s++)
+	for( s=(short)JPN_SHIP_END; s<=(USA_PLANE_END/2)-1; s++)
 		{
 		plane+=BufferedSelections[1][s];
 		}
@@ -343,7 +343,7 @@ private void SendMoveOrder(ref short s)
 		{
 		ship+=BufferedSelections[1][s];
 		}
-	for( s=JPN_SHIP_END; s<=(USA_PLANE_END/2)-1; s++)
+	for( s=(short)JPN_SHIP_END; s<=(USA_PLANE_END/2)-1; s++)
 		{
 		plane+=BufferedSelections[1][s];
 		}
@@ -1788,7 +1788,8 @@ public void	UpdateBattle()
 	if( Mode!=GameMode.Battle )
 		return;
 
-	if( !IsEditingMap )
+	// A single-player game has no turns: it gives its orders every frame (IssueSingleplayerOrders).
+	if( !IsEditingMap && !IsSingleplayer )
 		{
 		/* 入力フェーズ */
 		// 通信対戦時
@@ -1946,6 +1947,10 @@ public void	UpdateBattle()
 
 	// ｆｉｒｅの制御
 	UpdateFires( );
+
+	// 1.22 counts the time limit down, every tick.
+	if( IsSingleplayer && BattleTime>=1 && Result==GameResult.None )
+		BattleTime--;
 
 	}
 }

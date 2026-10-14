@@ -112,6 +112,9 @@ internal sealed class LockstepGame : INspwPlatform
 
 	public List<string> MessageBoxes { get; } = [];
 
+	// The text the game drew, in order.
+	public List<string> Texts { get; } = [];
+
 	private void Run()
 	{
 		_resume.Wait();
@@ -242,6 +245,7 @@ internal sealed class LockstepGame : INspwPlatform
 	public TextBitmap? RasterizeText(string text, int height, string faceName)
 	{
 		AddOutput($"text {height} {text}");
+		Texts.Add(text);
 		return null;
 	}
 

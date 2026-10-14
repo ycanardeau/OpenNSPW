@@ -24,7 +24,8 @@ public readonly struct AddressingMode
 		Displacement = true switch
 		{
 			_ when hasDisplacement32 => reader.ReadUInt32(),
-			_ when hasDisplacement8 => reader.ReadByte(),
+			// An 8-bit displacement is sign-extended: [ebp-8] is ebp + 0xFFFFFFF8.
+			_ when hasDisplacement8 => (uint)reader.ReadSByte(),
 			_ => 0,
 		};
 	}

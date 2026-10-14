@@ -38,6 +38,10 @@
     <Using Include="OpenNspw.winuser" Static="true" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\OpenNspw.Singleplayer\OpenNspw.Singleplayer.csproj" />
+  </ItemGroup>
+
   <!-- Win32 handle types that are the same stand-in type. -->
   <ItemGroup>
     <Using Include="OpenNspw.HGDIOBJ" Alias="HBITMAP" />

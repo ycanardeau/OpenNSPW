@@ -284,6 +284,11 @@
             Push doubleword onto the stack.
             </summary>
         </member>
+        <member name="M:Aigamo.Enzan.Cpu.RepStosd">
+            <summary>
+            Repeat store string: fill ECX doublewords at ES:EDI with EAX, upwards.
+            </summary>
+        </member>
         <member name="M:Aigamo.Enzan.Cpu.Sar(Aigamo.Enzan.Register32,Aigamo.Enzan.Register8)">
             <summary>
             Arithmetic right shift.
@@ -312,6 +317,11 @@
         <member name="M:Aigamo.Enzan.Cpu.Shr(Aigamo.Enzan.Register32,Aigamo.Enzan.Register8)">
             <summary>
             Logical right shift.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Enzan.Cpu.Stosd">
+            <summary>
+            Store string: store EAX at ES:EDI, then move EDI to the next doubleword.
             </summary>
         </member>
         <member name="M:Aigamo.Enzan.Cpu.Sub(Aigamo.Enzan.Register16,Aigamo.Enzan.Register16)">

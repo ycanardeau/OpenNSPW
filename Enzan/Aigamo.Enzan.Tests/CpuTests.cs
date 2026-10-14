@@ -2567,6 +2567,72 @@ public class CpuTests
 	}
 
 	[Fact]
+	public void TranscendentalFunctionsTest()
+	{
+		var cpu = new Cpu(Array.Empty<byte>(), Register32.Empty);
+		cpu.Fpu.Sin = x => x + 1;
+		cpu.Fpu.Cos = x => x + 2;
+		cpu.Fpu.Atan2 = (y, x) => y - x;
+
+		cpu.Fsin(Register64.FromDouble(1)).ToDouble().Should().Be(2);
+		cpu.Fcos(Register64.FromDouble(1)).ToDouble().Should().Be(3);
+		cpu.Fpatan(Register64.FromDouble(5), Register64.FromDouble(3)).ToDouble().Should().Be(2);
+	}
+
+	[Fact]
+	public void StosdTest()
+	{
+		var memory = new byte[12];
+		var cpu = new Cpu(memory, new Register32(0x1000))
+		{
+			Eax = new Register32(0x31415926),
+			Edi = new Register32(0x1004),
+		};
+
+		cpu.Stosd();
+
+		memory.Should().Equal(0, 0, 0, 0, 0x26, 0x59, 0x41, 0x31, 0, 0, 0, 0);
+		cpu.Edi.Should().Be(new Register32(0x1008));
+	}
+
+	[Fact]
+	public void RepStosdTest()
+	{
+		var memory = Enumerable.Repeat((byte)0xFF, 16).ToArray();
+		var cpu = new Cpu(memory, new Register32(0x1000))
+		{
+			Eax = new Register32(0x31415926),
+			Ecx = new Register32(2),
+			Edi = new Register32(0x1004),
+		};
+
+		cpu.RepStosd();
+
+		memory
+			.Should()
+			.Equal(
+				0xFF,
+				0xFF,
+				0xFF,
+				0xFF,
+				0x26,
+				0x59,
+				0x41,
+				0x31,
+				0x26,
+				0x59,
+				0x41,
+				0x31,
+				0xFF,
+				0xFF,
+				0xFF,
+				0xFF
+			);
+		cpu.Edi.Should().Be(new Register32(0x100C));
+		cpu.Ecx.Should().Be(Register32.Empty);
+	}
+
+	[Fact]
 	public void ToStringTest()
 	{
 		_cpu.Eax = new Register32(0x31415926);
