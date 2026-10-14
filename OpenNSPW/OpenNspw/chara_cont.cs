@@ -559,7 +559,9 @@ private void UpdateSupply(ref Unit unit)
 	RECT wrk_rect;
 	int flg;
 	int i;
-	if( unit.Category==UnitCategory.Ship && unit.IsSupplying && unit.Fuel>=0 )
+	// 1.22 does not check for the naval base (0x4010BB): its computer starts supplying within 580 of it, further than
+	// this allows.
+	if( unit.Category==UnitCategory.Ship && unit.IsSupplying && unit.Fuel>=0 && !IsSingleplayer )
 		{
 		// 補給中の艦船
 		// ptin dbg

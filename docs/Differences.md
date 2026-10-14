@@ -11,6 +11,7 @@ This document lists every difference found between the two, read from 1.22's mac
 | Move orders of the computer | Clear the unit's path (`if( new_pp[e].cls || unit[m].used==cpu_side )`), and a ship's route is planned by `set_cpu_route` | The same condition is a comment; routes are planned by `set_cpu_root2` | `ApplyOrders` |
 | Time | `rest_time` counts down every tick | Counted by the host | `UpdateBattle` |
 | Victory | `decision` | NSPW NET's conditions | `CheckResult` |
+| Supply away from a naval base | A unit supplies (`spry`) wherever it is (`0x4010BB`): nothing checks for a naval base | Supply stops at once unless one of the side's naval bases is within ±280 | `UpdateSupply` |
 
 ## The battle
 What 1.22's `chara_cont` (`0x401000`) and the functions it calls do differently from the port's battle (`UpdateBattle` and the functions it calls), read instruction by instruction.
@@ -18,7 +19,6 @@ What 1.22's `chara_cont` (`0x401000`) and the functions it calls do differently 
 | Difference | 1.22 | NSPW NET |
 | --- | --- | --- |
 | The order of a tick | The tick is counted first, then the clouds (`0x418A20`) and the detection (`0x418230`), then the end of the game is checked (`0x401000` to `0x401039`) | The detection, the tick, the end of the game, the clouds |
-| Supply away from a naval base | A unit supplies (`spry`) wherever it is (`0x4010BB`): nothing checks for a naval base | Supply stops at once unless one of the side's naval bases is within ±280 (`UpdateSupply`) |
 | Ships outside the map | Only the player's ships are brought back (`0x416B35`, the end of `set_pos_of_emrgncy_SHIP` at `0x415F40`, which skips the units of `cpu_side`); submarines never (`0x401966`: kind 4 does nothing) | Every ship, and every submarine, gets an emergency move back to 40 inside the edge (`ReturnIntoWorld`, from `SetShipEmergencyDestination` and `SteerUnit`) |
 | `set_pos_of_emrgncy_SHIP` (`0x415F40`) | Its evasions are laid out differently; it sets `em_flg[1]` before the off-map rule (`0x416B2F`) | `SetShipEmergencyDestination`; not compared yet |
 | Units' data | `set_unit_data` (`0x41E150`) gives other HP, speeds, weapons and fuel: a battleship has 41 HP and burns fuel every 9000 ticks, a carrier 36 or 41 HP | `SetBattleshipData` and the others: a battleship 40 HP and every 1000 ticks, a carrier 32 or 37. The scenarios' units get 1.22's values, from its own setup; the units the battle creates, such as the bases that transports land, get NSPW NET's (`SetUnitData`) |
