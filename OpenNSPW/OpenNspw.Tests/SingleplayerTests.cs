@@ -200,6 +200,27 @@ public class SingleplayerTests
 		Assert.Equal(planes + game.Units[carrier].Capacity + 2, game.Units[carrier].PlaneCount);
 	}
 
+	// A transport lands its cargo within 360 of its landing point, as in 1.22, not 160.
+	[Theory]
+	[InlineData(300, true)]
+	[InlineData(400, false)]
+	public void TransportsLandFrom360(int distance, bool lands)
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var transport = game.AddUnit(Side.Japan, UnitKind.Transport, 0, 0, 0);
+		Assert.NotEqual(0, transport);
+		ref var unit = ref game.Units[transport];
+		unit.Direction = 0;
+		unit.LandingX = (int)unit.Position.X + distance;
+		unit.LandingY = (int)unit.Position.Y;
+
+		game.FireWeapons(transport, 0, FireKind.CargoInfantryBase);
+
+		Assert.Equal(lands, game.Units[transport].Hp == 0);
+	}
+
 	// A battle as the desktop app shows it, in real time, saved as singleplayer_battle.png next to the test assembly.
 	[Fact]
 	public void TheBattleShows()

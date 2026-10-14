@@ -15,6 +15,7 @@ This document lists every difference found between the two, read from 1.22's mac
 | Ships outside the map | Only the player's ships are brought back (`0x416B35`, the end of `set_pos_of_emrgncy_SHIP` at `0x415F40`, which skips the units of `cpu_side`); submarines never (`0x401966`: kind 4 does nothing) | Every ship, and every submarine, gets an emergency move back to 40 inside the edge | `SetShipEmergencyDestination`, `SteerUnit` (submarines) |
 | Units' data | `set_unit_data` (`0x41E150`) gives other HP, speeds, weapons and fuel: a battleship has 41 HP and burns fuel every 9000 ticks, a carrier 36 or 41 HP | `SetBattleshipData` and the others: a battleship 40 HP and every 1000 ticks, a carrier 32 or 37 | `SetUnitData` calls 1.22's `set_unit_data` in the emulator, for the units the battle creates, such as the bases that transports land; the scenarios' units get it from 1.22's own setup |
 | Planes added to a full carrier | `set_new_unit_plane` (`0x41F060`) adds them: it does not check the carrier's capacity | Returns, the planes not added | `AddPlane` |
+| Transports landing | Land their cargo within 360 of the landing point (`0x413003`) | Within 160 (`#if NSPW_THE_NET`) | `LandCargo` |
 
 Supply and ships outside the map together let the computer's fleets renew. In scenario 304 the American naval base (unit 21) is at x 10600, outside the map. A fleet that has lost its carrier, its ammunition or its fuel returns there ([ComputerPlayer.md](ComputerPlayer.md), `cpu_strtgy` step 9); there it supplies, which gives back its HP, ammunition and fuel, and step 12 puts a new carrier at its supplying flagship. NSPW NET's battle would turn the fleet back at the edge, and stop its supply away from a base within 280.
 
@@ -35,7 +36,6 @@ What 1.22's `chara_cont` (`0x401000`) and the functions it calls do differently 
 | Computer's ships slowed by a ship ahead | Replanned every 100 ticks below a fifth of the top speed (`0x4020DB`) | Steering stops the ship (`CheckCourseAhead`) |
 | Computer's units about to step on land | Every 500 ticks (`cc_count%500`), a computer's unit with no leader whose next step (its speed along its heading) is land is replanned (`0x402D2B`), planes included | Nothing (`MoveUnit`) |
 | Ships ahead | A ship looks 40 ahead (`0x401FAC`); only air bases and naval bases are not in its way (`0x40202D`) | 40 plus ten times its top speed; no base, infantry base or fortress is in the way (kinds 11 to 17) (`CheckCourseAhead`) |
-| Transports landing | Land their cargo within 360 of the landing point (`0x413003`) | Within 160 (`#if NSPW_THE_NET`, `LandCargo`) |
 | Transports with cargo | Not slowed (`0x402953`) | Slowed to 0.8 to 1.0 of the top speed |
 | Fuel | An integer (`gas[0]`): 1 every `gas[1]` ticks while moving (`0x402F72`) | A `double`: `Speed/MaxSpeed` every interval |
 | Targets | A submerged submarine stays a target (`0x402FD2`) | Is dropped |
