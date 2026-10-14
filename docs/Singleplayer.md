@@ -117,6 +117,7 @@ So in a single-player game (`IsSingleplayer`):
 - `SetShipEmergencyDestination` brings only the player's ships back into the map, and `SteerUnit` no submarine, as 1.22 does (`0x416B35`, `0x401966`): the computer's ships sail on, to its naval bases outside the map, such as scenario 304's.
 - `SetUnitData` runs 1.22's `set_unit_data`, so that the units the battle creates, such as the bases that transports land, have 1.22's data, as the scenario's do; `AddPlane` adds planes to a full carrier, as 1.22's `set_new_unit_plane` does (`0x41F060`).
 - `LandCargo` lands a transport's cargo within 360 of its landing point, as 1.22 does (`0x413003`), where NSPW NET lands it within 160 (`#if NSPW_THE_NET`).
+- `AttackerDropBomb` releases every attacker's bombs from 170 to 180 of its aim, as 1.22 does (`0x414186`): NSPW NET's Japanese attackers dive to 35 to 65 instead.
 - `CheckResult` calls `decision`, which also shows the result, instead of NSPW NET's conditions.
 
 ## Playing

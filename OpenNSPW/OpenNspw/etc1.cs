@@ -1837,6 +1837,10 @@ private bool AttackerDropBomb(ref int trgt, ref Unit unit, ref double drctn2, in
 	double dstc =default;
 	int f;
 	int n;
+	// NSPW NET's Japanese attackers dive: they release close, pull up and their bombs fall late. 1.22's attackers all
+	// release from 170 and speed up, as NSPW NET's American ones do, and only the Americans' drop a second bomb (0x414186
+	// to 0x4144E0).
+	var dives = unit.Side==Side.Japan && !IsSingleplayer;
 	if( !Units[trgt].IsFound )
 		return false;
 	wrk_x=Units[trgt].Position.X;
@@ -1862,11 +1866,11 @@ private bool AttackerDropBomb(ref int trgt, ref Unit unit, ref double drctn2, in
 		wrk_y=unit.Position.Y-wrk_y2;
 		dstc=Distance(wrk_x, wrk_y);
 
-		if( ( dstc>=170 && dstc<=180 && unit.Side==Side.UnitedStates ) || ( dstc>=35 && dstc<=65 && unit.Side==Side.Japan ))
+		if( ( dstc>=170 && dstc<=180 && !dives ) || ( dstc>=35 && dstc<=65 && dives ))
 			{
 			// 発射！
 
-			if( unit.Side==Side.UnitedStates )
+			if( !dives )
 				unit.Speed+=unit.AccelerationChange*700;
 			else
 				{
@@ -1895,9 +1899,13 @@ private bool AttackerDropBomb(ref int trgt, ref Unit unit, ref double drctn2, in
 						other.GroupLeader=0;
 						other.Mode=UnitMode.Return;
 
+						// 1.22 leaves their path as it is.
+						if( !IsSingleplayer )
+							{
 other.PathX[0]=unit.Position.X;
 other.PathY[0]=unit.Position.Y;
 other.PathX[1]=MAP_RIGHT+1;
+							}
 
 						}
 					}
@@ -1913,7 +1921,7 @@ other.PathX[1]=MAP_RIGHT+1;
 				fire.Position = new WorldPosition(unit.Position.X+(3-Random(6)), unit.Position.Y+(3-Random(6)));
 				fire.Direction=drctn2;
 
-				if(unit.Side==Side.Japan)
+				if(dives)
 					{
 					fire.Position += new WorldVector(CosDegrees(fire.Direction)*(13), SinDegrees(fire.Direction)*(13));
 					}
@@ -1925,7 +1933,7 @@ other.PathX[1]=MAP_RIGHT+1;
 				fire.Speed=0.3;
 				fire.Acceleration=+0.2;
 				fire.FinalSpeed=0.0;
-				if(unit.Side==Side.Japan)
+				if(dives)
 					{
 					fire.Ticks=10;
 					fire.FlightTime=68+Random(5);
@@ -1939,6 +1947,8 @@ other.PathX[1]=MAP_RIGHT+1;
 				}
 
 				// もう一発
+				if( IsSingleplayer && unit.Side!=Side.UnitedStates )
+					return false;
 				n=FindFreeFire();
 				fire = ref Fires[n];
 				if( n!=0 )
@@ -1948,7 +1958,7 @@ other.PathX[1]=MAP_RIGHT+1;
 					fire.Position = new WorldPosition(unit.Position.X+(20-Random(40)), unit.Position.Y+(20-Random(40)));
 					fire.Direction=drctn2;
 
-					if(unit.Side==Side.Japan)
+					if(dives)
 						{
 						fire.Position += new WorldVector(CosDegrees(fire.Direction)*(13), SinDegrees(fire.Direction)*(13));
 						}
@@ -1961,7 +1971,7 @@ other.PathX[1]=MAP_RIGHT+1;
 					fire.Acceleration=+0.2;
 					fire.FinalSpeed=0.0;
 
-					if(unit.Side==Side.Japan)
+					if(dives)
 						{
 						fire.Ticks=10;
 						fire.FlightTime=75+(5-Random(10));
