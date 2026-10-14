@@ -130,6 +130,52 @@ public class SingleplayerTests
 		Assert.Equal(game.Units[m].MaxHp, game.Units[m].Hp);
 	}
 
+	// Outside the map, 1.22 brings back the player's ships only: the computer's sail on, to their naval bases outside it,
+	// such as scenario 304's, where they supply and get new carriers.
+	[Fact]
+	public void OnlyThePlayersShipsComeBackIntoTheMap()
+	{
+		using var run = new SingleplayerRun(4);
+		run.Frames(2);
+		var game = run.Game;
+		int ShipOf(Side side)
+		{
+			for (var i = 1; i <= game.MaxUnitId; i++)
+			{
+				ref var unit = ref game.Units[i];
+				if (unit.Side == side && unit.Kind is UnitKind.Cruiser or UnitKind.Destroyer)
+				{
+					return i;
+				}
+			}
+
+			return 0;
+		}
+
+		var computers = ShipOf(game.CpuSide);
+		var players = ShipOf(game.LocalSide);
+		Assert.NotEqual(0, computers);
+		Assert.NotEqual(0, players);
+		var y = 0.0;
+		foreach (var m in new[] { computers, players })
+		{
+			ref var ship = ref game.Units[m];
+			ship.Position = new WorldPosition(all_head.MAP_RIGHT + 100, y);
+			ship.PathX[0] = all_head.MAP_RIGHT + 800;
+			ship.PathY[0] = y;
+			ship.PathX[1] = all_head.MAP_RIGHT + 1;
+			ship.EmergencyFlags[0] = 0;
+			ship.IsStopping = false;
+			ship.GroupLeader = 0;
+			y += 400;
+		}
+
+		run.Frames(20);
+		Assert.True(game.Units[computers].Position.X > all_head.MAP_RIGHT, $"The computer's ship is at x {game.Units[computers].Position.X}.");
+		Assert.NotEqual(all_head.MAP_RIGHT - 40, game.Units[computers].EmergencyDestination.X);
+		Assert.Equal(all_head.MAP_RIGHT - 40, game.Units[players].EmergencyDestination.X);
+	}
+
 	// A battle as the desktop app shows it, in real time, saved as singleplayer_battle.png next to the test assembly.
 	[Fact]
 	public void TheBattleShows()

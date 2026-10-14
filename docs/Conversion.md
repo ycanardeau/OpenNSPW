@@ -44,5 +44,5 @@ The behavior lives in three forms: 1.22's machine code, the reference; its trans
 | --- | --- |
 | The fighters captured in scenario 303 take off one at a time and cannot change base | NSPW NET's packing of the selection keeps only units with the player's side's numbers ([Differences.md](Differences.md#the-frame-the-input-and-the-drawing)) |
 | Those fighters are drawn as American | 1.22 draws them from Japan's sheet (`0x40E070`: `sinario==303`, `used==2`, `kind==7`, `type==1`) |
-| The computer's fleets cannot renew in scenario 304, and its ships stop at land until their next order | NSPW NET's battle ([Differences.md](Differences.md#the-battle)) |
+| The computer's ships stop at land until their next order | NSPW NET's battle ([Differences.md](Differences.md#the-battle)) |
 | シナリオ選択へ and リジューム do nothing in single-player | They wait for the rival (`RivalMode`), and the system orders go back to NSPW NET's setting screen, which single-player does not have |

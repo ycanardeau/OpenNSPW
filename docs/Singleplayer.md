@@ -113,6 +113,7 @@ So in a single-player game (`IsSingleplayer`):
 - `HandleInput` buffers the player's orders as in a network game, then `IssueSingleplayerOrders` gives the orders of this frame: `cpu_strtgy`, then what `ReceiveAndIssueOrders` does for a turn, for the player only, and `ApplyOrders` for both. Orders take effect in the frame they are given, not at the next turn.
 - `ApplyOrders` clears the path of a computer's unit for every move order (`if( new_pp[e].cls || unit[m].used==cpu_side )`, as 1.22 does and NSPW NET has as a comment), and calls `set_cpu_route(m, 4.0)` for a computer's ship.
 - `UpdateSupply` keeps a ship supplying wherever it is, as 1.22's `chara_cont` does (`0x4010BB`), without NSPW NET's check for a naval base within 280: the computer starts supplying once its flagship has stopped within 580 of the base, and that check stopped it at once.
+- `SetShipEmergencyDestination` brings only the player's ships back into the map, and `SteerUnit` no submarine, as 1.22 does (`0x416B35`, `0x401966`): the computer's ships sail on, to its naval bases outside the map, such as scenario 304's.
 - `CheckResult` calls `decision`, which also shows the result, instead of NSPW NET's conditions.
 
 ## Playing

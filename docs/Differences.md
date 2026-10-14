@@ -12,6 +12,11 @@ This document lists every difference found between the two, read from 1.22's mac
 | Time | `rest_time` counts down every tick | Counted by the host | `UpdateBattle` |
 | Victory | `decision` | NSPW NET's conditions | `CheckResult` |
 | Supply away from a naval base | A unit supplies (`spry`) wherever it is (`0x4010BB`): nothing checks for a naval base | Supply stops at once unless one of the side's naval bases is within ±280 | `UpdateSupply` |
+| Ships outside the map | Only the player's ships are brought back (`0x416B35`, the end of `set_pos_of_emrgncy_SHIP` at `0x415F40`, which skips the units of `cpu_side`); submarines never (`0x401966`: kind 4 does nothing) | Every ship, and every submarine, gets an emergency move back to 40 inside the edge | `SetShipEmergencyDestination`, `SteerUnit` (submarines) |
+
+Supply and ships outside the map together let the computer's fleets renew. In scenario 304 the American naval base (unit 21) is at x 10600, outside the map. A fleet that has lost its carrier, its ammunition or its fuel returns there ([ComputerPlayer.md](ComputerPlayer.md), `cpu_strtgy` step 9); there it supplies, which gives back its HP, ammunition and fuel, and step 12 puts a new carrier at its supplying flagship. NSPW NET's battle would turn the fleet back at the edge, and stop its supply away from a base within 280.
+
+How the off-map rule was found: the port's `em_of_out_of_map` sends a ship to 9560 or 7160 (`MAP_RIGHT-40`, `MAP_TOP-40`). In 1.22 those values are immediate operands (`mov dword ptr [esi+0x491b6c], 0x40c2ac00`, the high half of 9560.0) at `0x416B5C` to `0x416C8B`, after `cmp word ptr [esi+0x4916a0], cpu_side` / `je` at `0x416B3C`, so a search of the data for the doubles does not find them.
 
 ## The battle
 What 1.22's `chara_cont` (`0x401000`) and the functions it calls do differently from the port's battle (`UpdateBattle` and the functions it calls), read instruction by instruction.
@@ -19,7 +24,6 @@ What 1.22's `chara_cont` (`0x401000`) and the functions it calls do differently 
 | Difference | 1.22 | NSPW NET |
 | --- | --- | --- |
 | The order of a tick | The tick is counted first, then the clouds (`0x418A20`) and the detection (`0x418230`), then the end of the game is checked (`0x401000` to `0x401039`) | The detection, the tick, the end of the game, the clouds |
-| Ships outside the map | Only the player's ships are brought back (`0x416B35`, the end of `set_pos_of_emrgncy_SHIP` at `0x415F40`, which skips the units of `cpu_side`); submarines never (`0x401966`: kind 4 does nothing) | Every ship, and every submarine, gets an emergency move back to 40 inside the edge (`ReturnIntoWorld`, from `SetShipEmergencyDestination` and `SteerUnit`) |
 | `set_pos_of_emrgncy_SHIP` (`0x415F40`) | Its evasions are laid out differently; it sets `em_flg[1]` before the off-map rule (`0x416B2F`) | `SetShipEmergencyDestination`; not compared yet |
 | Units' data | `set_unit_data` (`0x41E150`) gives other HP, speeds, weapons and fuel: a battleship has 41 HP and burns fuel every 9000 ticks, a carrier 36 or 41 HP | `SetBattleshipData` and the others: a battleship 40 HP and every 1000 ticks, a carrier 32 or 37. The scenarios' units get 1.22's values, from its own setup; the units the battle creates, such as the bases that transports land, get NSPW NET's (`SetUnitData`) |
 | Planes added to a full carrier | `set_new_unit_plane` (`0x41F060`) adds them: it does not check the carrier's capacity | Returns, the planes not added (`AddPlane`) |
@@ -42,10 +46,6 @@ What 1.22's `chara_cont` (`0x401000`) and the functions it calls do differently 
 | Fires and effects | 255 fires and 255 effects in use at most | 511 and 1023 |
 | The sonar | No sound | Played near the player's submerged submarines, drawing random numbers |
 | Effects | As the effects function (`0x41AEB0`) does them | `UpdateSurfaceShipEffects` and the others, which draw random numbers every tick |
-
-Supply and ships outside the map together are why the computer's fleets cannot renew. In scenario 304 the American naval base (unit 21) is at x 10600, outside the map. A fleet that has lost its carrier, its ammunition or its fuel returns there ([ComputerPlayer.md](ComputerPlayer.md), `cpu_strtgy` step 9); there it supplies, which gives back its HP, ammunition and fuel, and step 12 puts a new carrier at its supplying flagship. NSPW NET's battle turns the fleet back at the edge, and stops its supply away from a base within 280.
-
-How the off-map rule was found: the port's `em_of_out_of_map` sends a ship to 9560 or 7160 (`MAP_RIGHT-40`, `MAP_TOP-40`). In 1.22 those values are immediate operands (`mov dword ptr [esi+0x491b6c], 0x40c2ac00`, the high half of 9560.0) at `0x416B5C` to `0x416C8B`, after `cmp word ptr [esi+0x4916a0], cpu_side` / `je` at `0x416B3C`, so a search of the data for the doubles does not find them.
 
 The rest of the battle (shooting and hits in `fire_now`, `0x40FE10`, the fires in `0x418C30`, the emergency moves of each kind) has not been read. Running a tick of the port's battle and one of 1.22's, emulated, from the same state, and comparing them, would find the remaining differences.
 
