@@ -88,6 +88,8 @@ The main menu, the single-player scenario browser, and the multiplayer host and 
 
 Done. The menus' text is English, as OpenNSPW/OpenNSPW's and the original's dialogs are; what comes from the game, such as the scenarios' titles, is its own Japanese.
 
+The menus have a look of their own (`Controls/Theme.cs`): the navy of a chart table with brass for what can be chosen, a bold font for headings, and a sea chart whose grid drifts under a sweeping radar (`Screens/Backdrop.cs`). The main menu shows the title's picture, slowly zooming, over the menu. The scenario browser shows, for the selected scenario, what NSPW 1.22's setting screen states: the side, the briefing and the victory conditions, read from the executable (`ScenarioSelection`). Each screen can be used with the keyboard as well as the mouse, and fades in from black. The game's own dialogs, such as the one that waits for the rival, are drawn in the same theme.
+
 ### 2. The battle screen's structure
 `MainForm` with the `Battlefield`, the sidebar and the `Radar`, showing the game's own pixels of each area and passing the clicks through. The layout and the screens are in place before anything is redrawn.
 
