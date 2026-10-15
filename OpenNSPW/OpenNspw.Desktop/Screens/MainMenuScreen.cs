@@ -36,7 +36,7 @@ internal sealed class MainMenuScreen(NspwGame game) : Screen(game)
 		var singleplayer = CreateButton(67, "Single Player", (_, _) => Game.ShowScreen(new SingleplayerScreen(Game)));
 		singleplayer.Enabled = Game.HasSingleplayerExecutable;
 		form.Controls.Add(singleplayer);
-		form.Controls.Add(CreateButton(217, "Multiplayer", (_, _) => Game.ShowScreen(new GameScreen(Game, () => Game.StartSession()))));
+		form.Controls.Add(CreateButton(217, "Multiplayer", (_, _) => Game.ShowScreen(new MultiplayerScreen(Game))));
 		form.Controls.Add(CreateButton(817, "Quit", (_, _) => Game.Exit()));
 
 		WindowManager.Root.Controls.Add(form);
