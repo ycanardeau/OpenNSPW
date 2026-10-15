@@ -7,15 +7,24 @@ namespace OpenNspw.Desktop.Controls;
 
 // Hosting or joining a game: the player's name, whether to host, and the address and the port, as the original's
 // connection dialog (IDD_ADDRESS_OVERRIDE) asks for them. The form shows what the dialog has (Fill), and reports what
-// the user does.
+// the user does. Tab moves between the fields, Enter connects and Escape goes back.
 internal sealed class ConnectionForm : Form
 {
-	private readonly EditBox _name;
-	private readonly CheckBoxControl _host;
-	private readonly EditBox _address;
-	private readonly EditBox _port;
-	private readonly Button _connect;
-	private readonly Label _status;
+	private static readonly DrawingRectangle PanelBounds = new(262, 176, 500, 440);
+
+	private readonly UiFonts _fonts;
+	private readonly ActionButton _host;
+	private readonly ActionButton _join;
+	private readonly TextField _name;
+	private readonly TextField _address;
+	private readonly TextField _port;
+	private readonly ActionButton _connect;
+	private bool _isHost;
+	private bool _canConnect;
+
+	// Until the dialog's fields come (Fill), first and after switching hosting, which sets them again: what is typed
+	// before would be lost, so the fields take nothing.
+	private bool _awaitsFill = true;
 
 	public event EventHandler? HostClicked;
 
@@ -27,24 +36,36 @@ internal sealed class ConnectionForm : Form
 
 	public string PlayerName => _name.Text;
 
-	public bool IsHost => _host.Checked;
+	public bool IsHost => _isHost;
 
 	public string Address => _address.Text;
 
 	public string Port => _port.Text;
 
+	// The last message the game showed, such as a failure to connect.
+	public string Status { get; set; } = "";
+
+	private void UpdateControls()
+	{
+		_host.IsPrimary = _isHost;
+		_join.IsPrimary = !_isHost;
+		_host.Enabled = _join.Enabled = _canConnect && !_awaitsFill;
+		_name.Enabled = _port.Enabled = !_awaitsFill;
+		_address.Enabled = !_isHost && !_awaitsFill;
+		_address.Placeholder = _isHost ? "A host listens on its port" : "The host's address";
+		_connect.Enabled = _canConnect && !_awaitsFill;
+		_connect.Text = _awaitsFill ? "…" : !_canConnect ? "Connecting…" : _isHost ? "Host Game" : "Join Game";
+	}
+
 	// Whether the game can connect now: not while it is connecting.
 	public bool CanConnect
 	{
-		get => _connect.Enabled;
-		set => _connect.Enabled = value;
-	}
-
-	// The last message the game showed, such as a failure to connect.
-	public string Status
-	{
-		get => _status.Text;
-		set => _status.Text = value;
+		get => _canConnect;
+		set
+		{
+			_canConnect = value;
+			UpdateControls();
+		}
 	}
 
 	private static Label CreateLabel(DrawingRectangle bounds, string text)
@@ -52,53 +73,63 @@ internal sealed class ConnectionForm : Form
 		return new Label { Bounds = bounds, Text = text, BackColor = DrawingColor.Transparent };
 	}
 
-	private static Button CreateButton(DrawingRectangle bounds, string text, EventHandler onClick)
+	private void Connect()
 	{
-		var button = new Button { Bounds = bounds, Text = text };
-		button.Click += onClick;
-		return button;
+		if (_canConnect && !_awaitsFill)
+			Connecting?.Invoke(this, EventArgs.Empty);
 	}
 
-	// A host listens on its port, at no address of its own.
-	private void UpdateHost()
+	// Switches hosting through the dialog, which sets the address and the port again: the form shows that once Filled.
+	private ActionButton CreateSegment(DrawingRectangle bounds, string text, bool isHost)
 	{
-		_address.Enabled = !_host.Checked;
-		_connect.Text = _host.Checked ? "Host" : "Join";
+		var segment = new ActionButton(_fonts) { Bounds = bounds, Text = text };
+		segment.Click += (_, _) =>
+		{
+			if (_isHost != isHost && !_awaitsFill)
+			{
+				_awaitsFill = true;
+				UpdateControls();
+				HostClicked?.Invoke(this, EventArgs.Empty);
+			}
+		};
+		Controls.Add(segment);
+		return segment;
 	}
 
-	public ConnectionForm()
+	private TextField CreateField(DrawingRectangle bounds)
 	{
+		var field = new TextField(_fonts) { Bounds = bounds };
+		Controls.Add(field);
+		return field;
+	}
+
+	public ConnectionForm(UiFonts fonts)
+	{
+		_fonts = fonts;
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
-		BackColor = Palette.SettingScreen;
+		BackColor = DrawingColor.Transparent;
+		KeyPreview = true;
 
-		Controls.Add(new Label { Bounds = new DrawingRectangle(312, 200, 400, 20), Text = "Multiplayer", ForeColor = DrawingColor.Yellow, BackColor = DrawingColor.Transparent });
+		var (x, width) = (PanelBounds.X + 32, PanelBounds.Width - 64);
+		_host = CreateSegment(new DrawingRectangle(x, PanelBounds.Y + 32, width / 2, 40), "Host", true);
+		_join = CreateSegment(new DrawingRectangle(x + width / 2, PanelBounds.Y + 32, width / 2, 40), "Join", false);
+		_name = CreateField(new DrawingRectangle(x, PanelBounds.Y + 124, width, 40));
+		_address = CreateField(new DrawingRectangle(x, PanelBounds.Y + 206, width, 40));
+		_port = CreateField(new DrawingRectangle(x, PanelBounds.Y + 288, 160, 40));
 
-		Controls.Add(CreateLabel(new DrawingRectangle(312, 260, 110, 20), "Your Name:"));
-		_name = new EditBox { Bounds = new DrawingRectangle(432, 258, 280, 22) };
-		Controls.Add(_name);
-
-		_host = new CheckBoxControl { Bounds = new DrawingRectangle(432, 300, 200, 20), Text = "Host Player", ForeColor = DrawingColor.White, BackColor = DrawingColor.Transparent };
-		_host.Clicked += (_, _) => HostClicked?.Invoke(this, EventArgs.Empty);
-		Controls.Add(_host);
-
-		Controls.Add(CreateLabel(new DrawingRectangle(312, 340, 110, 20), "Address:"));
-		_address = new EditBox { Bounds = new DrawingRectangle(432, 338, 280, 22) };
-		Controls.Add(_address);
-
-		Controls.Add(CreateLabel(new DrawingRectangle(312, 380, 110, 20), "Port:"));
-		_port = new EditBox { Bounds = new DrawingRectangle(432, 378, 100, 22) };
-		Controls.Add(_port);
-
-		_connect = CreateButton(new DrawingRectangle(432, 430, 120, 35), "", (_, _) => Connecting?.Invoke(this, EventArgs.Empty));
+		_connect = new ActionButton(fonts) { Bounds = new DrawingRectangle(x, PanelBounds.Y + 360, width, 48), IsPrimary = true };
+		_connect.Click += (_, _) => Connect();
 		Controls.Add(_connect);
 
-		_status = new Label { Bounds = new DrawingRectangle(312, 490, 400, 60), ForeColor = DrawingColor.Yellow, BackColor = DrawingColor.Transparent };
-		Controls.Add(_status);
+		var back = new ActionButton(fonts) { Bounds = new DrawingRectangle(48, 688, 150, 44), Text = "Back" };
+		back.Click += (_, _) => Canceled?.Invoke(this, EventArgs.Empty);
+		Controls.Add(back);
 
-		Controls.Add(CreateButton(new DrawingRectangle(67, 690, 140, 35), "Back", (_, _) => Canceled?.Invoke(this, EventArgs.Empty)));
-		Controls.Add(CreateButton(new DrawingRectangle(817, 690, 140, 35), "Scenario Editor", (_, _) => EditingScenario?.Invoke(this, EventArgs.Empty)));
+		var editor = new ActionButton(fonts) { Bounds = new DrawingRectangle(796, 688, 180, 44), Text = "Scenario Editor" };
+		editor.Click += (_, _) => EditingScenario?.Invoke(this, EventArgs.Empty);
+		Controls.Add(editor);
 
-		UpdateHost();
+		UpdateControls();
 	}
 
 	// Fills the fields with what the game's dialog has: the saved name and address, and its default port, which it sets
@@ -106,9 +137,63 @@ internal sealed class ConnectionForm : Form
 	public void Fill(string playerName, bool isHost, string address, string port)
 	{
 		_name.Text = playerName;
-		_host.Checked = isHost;
+		_isHost = isHost;
 		_address.Text = address;
 		_port.Text = port;
-		UpdateHost();
+		_awaitsFill = false;
+		UpdateControls();
+	}
+
+	// The fields that take the focus in turn with Tab.
+	private void FocusNextField()
+	{
+		TextField[] fields = _isHost ? [_name, _port] : [_name, _address, _port];
+		var current = Array.FindIndex(fields, f => f.Focused);
+		WindowManager.SetFocus(fields[(current + 1) % fields.Length]);
+	}
+
+	protected override void OnKeyDown(KeyEventArgs e)
+	{
+		base.OnKeyDown(e);
+		switch (e.KeyCode)
+		{
+			case Keys.Tab:
+				FocusNextField();
+				break;
+			case Keys.Enter:
+				Connect();
+				break;
+			case Keys.Escape:
+				Canceled?.Invoke(this, EventArgs.Empty);
+				break;
+		}
+	}
+
+	private void PaintLabel(Aigamo.Saruhashi.Graphics graphics, string text, int y)
+	{
+		Painter.SpacedText(graphics, text, _fonts.Bold(12), Theme.Brass, PanelBounds.X + 32, y, 2);
+	}
+
+	protected override void OnPaint(PaintEventArgs e)
+	{
+		base.OnPaint(e);
+		var g = e.Graphics;
+		Painter.SpacedText(g, "MULTIPLAYER  ·  NSPW ON THE NET 1.10", _fonts.Bold(12), Theme.Brass, 48, 34, 3);
+		Painter.Text(g, "Connect", _fonts.Bold(34), Theme.Text, 48, 52);
+		Painter.Text(g, "Two players: one hosts a game on a port, the other joins it at the host's address.", _fonts.Regular(14), Theme.Muted, 48, 104);
+
+		Painter.Fill(g, PanelBounds, Theme.Alpha(Theme.Panel, 0.9f));
+		Painter.Frame(g, PanelBounds, Theme.Alpha(Theme.Line, 0.9f));
+		Painter.Brackets(g, PanelBounds, 16, Theme.Brass);
+		PaintLabel(g, "PLAYER NAME", PanelBounds.Y + 100);
+		PaintLabel(g, "ADDRESS", PanelBounds.Y + 182);
+		PaintLabel(g, "PORT", PanelBounds.Y + 264);
+
+		if (Status.Length > 0)
+		{
+			var font = _fonts.Regular(15);
+			foreach (var (line, i) in Painter.Wrap(g, Status, font, PanelBounds.Width).Take(3).Select((l, i) => (l, i)))
+				Painter.Text(g, line, font, Theme.Alert, PanelBounds.X, PanelBounds.Bottom + 18 + i * 24);
+		}
 	}
 }

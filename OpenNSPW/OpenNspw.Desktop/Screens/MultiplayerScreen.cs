@@ -10,6 +10,7 @@ internal sealed class MultiplayerScreen(NspwGame game) : Screen(game)
 {
 	private GameSession _session = default!;
 	private ConnectionForm _form = default!;
+	private Backdrop _backdrop = default!;
 	private bool _hasDialog;
 
 	// Whether the game screen has the game, once connected; until then, this screen owns it.
@@ -40,6 +41,8 @@ internal sealed class MultiplayerScreen(NspwGame game) : Screen(game)
 	{
 		if (FindDialog() is not { } dialog)
 		{
+			// The form waits for the fields: it gets them again as they are.
+			_needsFill = true;
 			return;
 		}
 
@@ -87,9 +90,10 @@ internal sealed class MultiplayerScreen(NspwGame game) : Screen(game)
 	public override void LoadContent()
 	{
 		base.LoadContent();
+		_backdrop = new Backdrop(GraphicsDevice);
 		_session = Game.StartSession();
 
-		_form = new ConnectionForm { CanConnect = false };
+		_form = new ConnectionForm(Game.Fonts) { CanConnect = false };
 		_form.HostClicked += (_, _) => ClickHost();
 		_form.Connecting += (_, _) => Connect();
 		_form.EditingScenario += (_, _) => EditScenario();
@@ -102,6 +106,7 @@ internal sealed class MultiplayerScreen(NspwGame game) : Screen(game)
 	public override void UnloadContent()
 	{
 		base.UnloadContent();
+		_backdrop.Dispose();
 		if (!_isHandedOver)
 		{
 			_session.Dispose();
@@ -142,5 +147,10 @@ internal sealed class MultiplayerScreen(NspwGame game) : Screen(game)
 
 		_form.CanConnect = _session.Game.GetDlgItem(dialog, windef.IDOK)?.Enabled == true;
 		_form.Status = _session.LastMessage() ?? "";
+	}
+
+	public override void Draw(GameTime gameTime)
+	{
+		_backdrop.Draw(Game.SpriteBatch, Game.ViewportAdapter, Painter.Now);
 	}
 }
