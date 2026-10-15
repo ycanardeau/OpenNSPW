@@ -165,8 +165,14 @@ internal sealed class CheckBoxControl : DialogControl
 	}
 }
 
+// Transparent: it comes before the controls it groups, so it is drawn over them.
 internal sealed class GroupBoxControl : DialogControl
 {
+	public GroupBoxControl()
+	{
+		BackColor = Color.Transparent;
+	}
+
 	protected override void OnPaint(PaintEventArgs e)
 	{
 		e.Graphics.DrawRectangle(Border, 0, 4, Width - 1, Height - 5);
