@@ -44,7 +44,7 @@ public sealed unsafe class TextRasterizer
 	// The first font of a TrueType collection (.ttc) as a TrueType font file, for loaders that do not read collections.
 	// The collection's table offsets are from the start of the file, so the font's table directory is copied over the
 	// collection's header, which the directories come after; the tables stay where they are.
-	private static byte[] FirstFont(byte[] data)
+	internal static byte[] FirstFont(byte[] data)
 	{
 		if (data.Length < 16 || BinaryPrimitives.ReadUInt32BigEndian(data) != 0x74746366) // 'ttcf'
 		{

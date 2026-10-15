@@ -3,8 +3,10 @@ using Aigamo.Saruhashi.MonoGame;
 using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended;
 using MonoGame.Extended.Input.InputListeners;
 using MonoGame.Extended.ViewportAdapters;
+using OpenNspw.Desktop.Controls;
 using OpenNspw.Desktop.Screens;
 using DrawingRectangle = System.Drawing.Rectangle;
 using SaruhashiKeys = Aigamo.Saruhashi.Keys;
@@ -34,6 +36,10 @@ internal sealed class NspwGame : Game
 	private Screen? _nextScreen;
 	private GameSession? _lastSession;
 
+	// When the screen shown last was shown, to fade it in from black.
+	private float _shownAt;
+	private const float FadeSeconds = 0.35f;
+
 	// The game's data: t3.bmp, wav, Map, Scenario, Saved.
 	public string DataDirectory { get; }
 
@@ -44,6 +50,11 @@ internal sealed class NspwGame : Game
 	public ViewportAdapter ViewportAdapter { get; private set; } = default!;
 
 	public WindowManager WindowManager { get; private set; } = default!;
+
+	public UiFonts Fonts { get; private set; } = default!;
+
+	// The single-player scenario chosen last, to select it again in the browser.
+	public int? LastScenario { get; set; }
 
 	// Whether NSPW_122.exe was found, to play single-player.
 	public bool HasSingleplayerExecutable => _singleplayerExecutablePath is not null;
@@ -100,16 +111,11 @@ internal sealed class NspwGame : Game
 		var keyboardListener = new KeyboardListener(new KeyboardListenerSettings { InitialDelayMilliseconds = 500, RepeatDelayMilliseconds = 30 });
 		Components.Add(new InputListenerComponent(this, mouseListener, keyboardListener));
 
-		var fontSystem = new FontSystem();
-		if (Text.FontData is { } fontData)
-		{
-			fontSystem.AddFont(fontData);
-		}
-
+		Fonts = new UiFonts(Text.FontData);
 		WindowManager = new WindowManager(
 			new DrawingRectangle(0, 0, all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT),
 			new MonoGameGraphicsFactory(SpriteBatch, ViewportAdapter),
-			new DynamicSpriteFontWrapper((DynamicSpriteFont)fontSystem.GetFont(14)));
+			Fonts.Regular(14));
 		mouseListener.MouseDown += (_, e) => WindowManager.OnMouseDown(e);
 		mouseListener.MouseMove += (_, e) => WindowManager.OnMouseMove(e);
 		mouseListener.MouseUp += (_, e) => WindowManager.OnMouseUp(e);
@@ -126,6 +132,7 @@ internal sealed class NspwGame : Game
 		{
 			_nextScreen = null;
 			_screenManager.ReplaceScreen(screen);
+			_shownAt = Painter.Now;
 		}
 
 		base.Update(gameTime);
@@ -136,6 +143,14 @@ internal sealed class NspwGame : Game
 		GraphicsDevice.Clear(Color.Black);
 		base.Draw(gameTime);
 		WindowManager.Draw();
+
+		var fade = 1 - (Painter.Now - _shownAt) / FadeSeconds;
+		if (fade > 0)
+		{
+			SpriteBatch.Begin(transformMatrix: ViewportAdapter.GetScaleMatrix());
+			SpriteBatch.FillRectangle(new RectangleF(0, 0, all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT), Color.Black * fade);
+			SpriteBatch.End();
+		}
 	}
 
 	// Closing the window closes the game being played: its screen disposes it, or, if it was started for a screen not shown
