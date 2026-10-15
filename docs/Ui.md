@@ -29,10 +29,10 @@ The connection dialogs are Win32 dialogs, drawn by `OpenNspw.Desktop` with Saruh
 Single player, multiplayer and quit. The game's thread no longer starts with the app: it starts when a game is chosen, with a new `Nspw`, and returning to the menu ends it (`WM_CLOSE`).
 
 ### Single player
-A scenario browser over NSPW 1.22's scenarios (`Functions.Scenarios`), with their titles. Choosing one starts the game as `--singleplayer` does now, which stays for scripts.
+A scenario browser over NSPW 1.22's scenarios, a set at a time with their headings and titles, as its own scenario selection screen lists them: the strings are read from `NSPW_122.exe` (`ScenarioSelection`). Choosing one starts the game as `--singleplayer` does, which stays for scripts.
 
 ### Multiplayer
-Hosting or joining: the player name, the address and the port. The form fills the original's connection dialog and clicks it (`ClickDlgItem`), as `Dialogs.cs` does now, so the connection is the original's.
+Hosting or joining: the player name, the address and the port, and the original's scenario editor. The form stands in for the original's connection dialog, which the game still creates: the form shows what the dialog has, and fills in and clicks the dialog (`ClickDlgItem`) as the user does, so the connection is the original's. Switching between hosting and joining clicks the dialog's own check box, which sets the address and the port again, as in the original. Once the dialog is gone, the game's waiting dialog follows, drawn by `Dialogs.cs`.
 
 After connecting, the host chooses the scenario and the guest waits, then both choose sides and rules: the original's setting screens (`UpdateGameSetting`). They first stay drawn by the game. Their forms come later, and work like the battle's: functions extracted from the screens' click handling, called by the forms, so the setting messages stay the same.
 
@@ -84,7 +84,9 @@ Skipping step 3 is a later step: each piece of state it writes moves to a functi
 
 ## Implementation steps
 ### 1. Screens
-The main menu, the single-player scenario browser, and the multiplayer host and join form, in `OpenNspw.Desktop`. The game's thread starts from a screen. The setting screens and the battle stay the game's.
+The main menu, the single-player scenario browser, and the multiplayer host and join form, in `OpenNspw.Desktop`. The game's thread starts from a screen (`GameSession`), and the main menu comes back when the game ends. The setting screens and the battle stay the game's.
+
+Done. The menus' text is English, as OpenNSPW/OpenNSPW's and the original's dialogs are; what comes from the game, such as the scenarios' titles, is its own Japanese.
 
 ### 2. The battle screen's structure
 `MainForm` with the `Battlefield`, the sidebar and the `Radar`, showing the game's own pixels of each area and passing the clicks through. The layout and the screens are in place before anything is redrawn.
@@ -109,4 +111,3 @@ Skipping step 3 of the frame when the new UI is on, after moving the state it wr
 - The original's text is Japanese, and OpenNSPW/OpenNSPW's is English. Which should the new UI show?
 - Should the controls live in `OpenNspw.Desktop`, as in OpenNSPW/OpenNSPW, or in a project of their own, so that the tests can use them without MonoGame?
 - Should the new UI add what OpenNSPW/OpenNSPW has and the original does not, such as the game speed keys and scrolling by dragging with the middle button? Scrolling changes only what the player sees. The game speed changes the simulation, so it could only apply to the single-player mode.
-- Where do the single-player scenarios' titles come from: the scenario files of NSPW 1.22, or a table like OpenNSPW/OpenNSPW's?
