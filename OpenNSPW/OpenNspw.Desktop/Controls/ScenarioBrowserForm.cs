@@ -32,7 +32,7 @@ internal sealed class ScenarioBrowserForm : Form
 		}
 	}
 
-	private TextButton CreateScenarioButton(ScenarioTitle scenario, int index)
+	private TextButton CreateScenarioButton(ScenarioEntry scenario, int index)
 	{
 		var button = new TextButton { Location = new DrawingPoint(120, 150 + index * 25), Text = $"{scenario.Number,3}  {scenario.Title}" };
 		button.Click += (_, _) => ScenarioSelected?.Invoke(this, scenario.Number);
