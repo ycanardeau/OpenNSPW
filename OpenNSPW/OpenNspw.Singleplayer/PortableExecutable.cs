@@ -42,6 +42,9 @@ internal sealed class PortableExecutable(
 		return address - section.Address + section.RawOffset;
 	}
 
+	// The offset in the file of an address of the image.
+	public uint FileOffsetOf(uint address) => FileOffset(Sections, ImageBase, address - ImageBase);
+
 	private static List<Import> ReadImports(ReadOnlySpan<byte> file, IReadOnlyList<Section> sections, uint imageBase, uint directory)
 	{
 		var imports = new List<Import>();
