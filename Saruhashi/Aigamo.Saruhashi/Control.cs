@@ -763,11 +763,15 @@ public class Control : IDisposable, IBindableComponent
 
 	protected virtual void SetVisibleCore(bool value)
 	{
-		if (value == Visible)
+		// The control's own visibility, which a hidden parent does not change: hiding a control while its parent is
+		// hidden keeps it hidden once the parent is shown.
+		if (value == DesiredVisibility)
 			return;
 
+		var wasVisible = Visible;
 		SetState(States.Visible, value);
-		OnVisibleChanged(EventArgs.Empty);
+		if (Visible != wasVisible)
+			OnVisibleChanged(EventArgs.Empty);
 	}
 
 	public void Show() => Visible = true;
