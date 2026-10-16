@@ -11,15 +11,16 @@ namespace OpenNspw.Desktop.Controls;
 internal sealed class MainForm : Form
 {
 	private readonly Control _sidebar;
+	private readonly CombatMenu _combatMenu;
 
 	// Puts a part in the sidebar, where it is on the game's screen.
-	private void AddToSidebar(FrameView view)
+	private void AddToSidebar(Control part, DrawingRectangle area)
 	{
-		view.Bounds = new DrawingRectangle(view.Area.X - _sidebar.X, view.Area.Y - _sidebar.Y, view.Area.Width, view.Area.Height);
-		_sidebar.Controls.Add(view);
+		part.Bounds = new DrawingRectangle(area.X - _sidebar.X, area.Y - _sidebar.Y, area.Width, area.Height);
+		_sidebar.Controls.Add(part);
 	}
 
-	public MainForm(GameSession session)
+	public MainForm(GameSession session, UiFonts fonts, BattleArt art)
 	{
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		BackColor = DrawingColor.Transparent;
@@ -35,9 +36,26 @@ internal sealed class MainForm : Form
 		};
 		Controls.Add(_sidebar);
 
-		AddToSidebar(new Deck(session));
-		AddToSidebar(new InfoPanel(session));
-		AddToSidebar(new CombatMenu(session));
-		AddToSidebar(new Radar(session));
+		var deck = new Deck(session);
+		AddToSidebar(deck, deck.Area);
+		var infoPanel = new InfoPanel(session);
+		AddToSidebar(infoPanel, infoPanel.Area);
+		_combatMenu = new CombatMenu(session, fonts, art);
+		AddToSidebar(_combatMenu, CombatMenu.Area);
+		var radar = new Radar(session);
+		AddToSidebar(radar, radar.Area);
+	}
+
+	// Shows the game as it was in the last frame: on the UI's thread, each frame.
+	public void UpdateFrom(BattleSnapshot snapshot)
+	{
+		_combatMenu.UpdateFrom(snapshot);
+	}
+
+	// Whether a point of the screen is on a part that takes its own clicks (with the host's UI's commands), and not the
+	// game's: the mouse's buttons there are not the game's.
+	public bool Owns(System.Drawing.Point point)
+	{
+		return Visible && CombatMenu.Area.Contains(point);
 	}
 }

@@ -17,6 +17,18 @@ internal sealed class BattleSnapshot
 
 	public short CombatMenuKind;
 	public CombatMenuItem CombatMenuSelection;
+
+	// The combat menu's items, as the game showed them in the frame (ShownCombatMenu).
+	public Array6<CombatMenuItem> CombatMenu;
+	public int CombatMenuCount;
+
+	// Whether the player can give the turn's order (CanOrder).
+	public bool CanOrder;
+
+	// The unit whose information the sidebar shows (UnitInfoPanel): [0] its kind, [1] 1 for a carrier's hangar and 0 for
+	// its flight deck, [3] its number, [4] its side.
+	public Array10<int> UnitInfoPanel;
+
 	public Side LocalSide;
 	public int FrameCount;
 	public GameMode Mode;
@@ -38,6 +50,10 @@ internal sealed class BattleSnapshot
 		Selections = game.Selections[1];
 		CombatMenuKind = game.CombatMenuKind;
 		CombatMenuSelection = game.CombatMenuSelection;
+		CombatMenu = game.ShownCombatMenu;
+		CombatMenuCount = game.ShownCombatMenuCount;
+		CanOrder = game.CanOrder;
+		UnitInfoPanel = game.UnitInfoPanel;
 		LocalSide = game.LocalSide;
 		FrameCount = game.FrameCount;
 		Mode = game.Mode;

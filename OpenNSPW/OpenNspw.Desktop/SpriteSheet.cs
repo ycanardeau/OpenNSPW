@@ -7,8 +7,8 @@ namespace OpenNspw.Desktop;
 // The original's sprite sheet (t3.bmp), a 24-bit bitmap taller than a texture may be, read a region at a time.
 internal static class SpriteSheet
 {
-	// The region of the sheet, as a texture.
-	public static Texture2D LoadRegion(GraphicsDevice graphicsDevice, string path, Rectangle region)
+	// Regions of the sheet, as textures, reading it once.
+	public static Texture2D[] LoadRegions(GraphicsDevice graphicsDevice, string path, params Rectangle[] regions)
 	{
 		var file = File.ReadAllBytes(path);
 		var pixelsOffset = BinaryPrimitives.ReadInt32LittleEndian(file.AsSpan(10));
@@ -22,19 +22,31 @@ internal static class SpriteSheet
 
 		// Rows are padded to 4 bytes, and stored bottom-up unless the height is negative.
 		var stride = (width * 3 + 3) & ~3;
-		var colors = new Color[region.Width * region.Height];
-		for (var y = 0; y < region.Height; y++)
+		var textures = new Texture2D[regions.Length];
+		for (var i = 0; i < regions.Length; i++)
 		{
-			var row = height > 0 ? height - 1 - (region.Y + y) : region.Y + y;
-			for (var x = 0; x < region.Width; x++)
+			var region = regions[i];
+			var colors = new Color[region.Width * region.Height];
+			for (var y = 0; y < region.Height; y++)
 			{
-				var offset = pixelsOffset + row * stride + (region.X + x) * 3;
-				colors[y * region.Width + x] = new Color(file[offset + 2], file[offset + 1], file[offset]);
+				var row = height > 0 ? height - 1 - (region.Y + y) : region.Y + y;
+				for (var x = 0; x < region.Width; x++)
+				{
+					var offset = pixelsOffset + row * stride + (region.X + x) * 3;
+					colors[y * region.Width + x] = new Color(file[offset + 2], file[offset + 1], file[offset]);
+				}
 			}
+
+			textures[i] = new Texture2D(graphicsDevice, region.Width, region.Height);
+			textures[i].SetData(colors);
 		}
 
-		var texture = new Texture2D(graphicsDevice, region.Width, region.Height);
-		texture.SetData(colors);
-		return texture;
+		return textures;
+	}
+
+	// The region of the sheet, as a texture.
+	public static Texture2D LoadRegion(GraphicsDevice graphicsDevice, string path, Rectangle region)
+	{
+		return LoadRegions(graphicsDevice, path, region)[0];
 	}
 }

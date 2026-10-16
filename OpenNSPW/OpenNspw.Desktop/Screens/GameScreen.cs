@@ -13,6 +13,7 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 {
 	private readonly Func<GameSession> _startSession = startSession;
 	private GameSession _session = default!;
+	private BattleArt _art = default!;
 	private MainForm _mainForm = default!;
 	private DialogForms _dialogs = default!;
 
@@ -22,7 +23,8 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 		_session = _startSession();
 
 		// Under the dialogs, which are added as they open.
-		_mainForm = new MainForm(_session) { Visible = false };
+		_art = new BattleArt(GraphicsDevice, Game.DataDirectory);
+		_mainForm = new MainForm(_session, Game.Fonts, _art) { Visible = false };
 		WindowManager.Root.Controls.Add(_mainForm);
 		_dialogs = new DialogForms(_session.Game, WindowManager, Game.Fonts);
 	}
@@ -31,6 +33,7 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 	{
 		base.UnloadContent();
 		_session.Dispose();
+		_art.Dispose();
 	}
 
 	public override void Update(GameTime gameTime)
@@ -43,9 +46,10 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 
 		_session.UpdateFrame(GraphicsDevice);
 		_mainForm.Visible = _session.IsBattleFrame;
+		_mainForm.UpdateFrom(_session.Snapshot);
 		if (Game.IsActive)
 		{
-			_session.UpdateInput(Game.ViewportAdapter, _dialogs.Contains);
+			_session.UpdateInput(Game.ViewportAdapter, point => _dialogs.Contains(point) || _mainForm.Owns(point));
 		}
 
 		_dialogs.Update();
