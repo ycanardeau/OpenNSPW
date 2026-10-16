@@ -49,7 +49,7 @@ After connecting, the host chooses the scenario and the sides and the guest wait
 | System menu | sidebar | `UpdateSystemMenu` |
 | `Radar` | sidebar (0, 572, 256, 196) | `DrawMinimap` |
 
-Each control reads the snapshot and calls the commands. The map editor and the chat keep the original's UI at first.
+Each control reads the snapshot and calls the commands. The map editor and the chat's input keep the original's UI at first.
 
 ## The snapshot
 `Units`, `Fires` and `Effects` keep the original's layout, so the snapshot is a copy of their arrays, plus a few globals: `CameraPosition`, `SelectedUnit`, `Selections[1]`, `CombatMenuKind`, `CombatMenuSelection`, `LocalSide`, `FrameCount`, `Mode` and `Result`. The map is copied once per battle. The copy is taken in `Present`, under the lock that guards the frame.
@@ -76,6 +76,8 @@ and `HandleUnitClick` calls it where the branch was.
 With the new UI, step 3 still runs at first: it draws into the back surface, which is not shown, and sees no clicks. This keeps the game the same as with the original's UI, because step 3 does more than handle clicks: `DrawUnit` plays the planes' sound, for example, and what else it writes has not been listed yet.
 
 Skipping step 3 is a later step: each piece of state it writes moves to a function that runs either way, with the traces unchanged, before the drawing is skipped.
+
+Step 7 switches off the drawing rather than step 3 (below): step 3 writes more than first thought, and some of it decides the battle.
 
 ## Tests
 - The extractions keep the characterization traces, as any refactoring does.
@@ -150,6 +152,12 @@ Done; the setting screens are in `demo.cpp`. The title screen, where the host cl
 
 ### 7. Switching the original's UI off
 Skipping step 3 of the frame when the new UI is on, after moving the state it writes out of it.
+
+Done the other way round: step 3 runs as it does, and only its pixels are skipped. What it writes besides the pixels is more than the planes' sound: the effects' drawing takes the shared random numbers for smoke and wakes (`SharedRandom`), as many times as the player sees such effects, and the players' random numbers must stay in step; `DrawBattleArea` clears the turn's orders before taking the clicks; `ListCombatMenu` sets the choice shown; `DrawUnit` sets each unit's sprite column; the chat lines count down as they are drawn. Moving all of it out, unchecked by the traces, would risk the lockstep for little: with the drawing off, what step 3 costs is its logic, which is small.
+
+- **The switch**: a host whose UI draws the battle and the setting screens says so (`Nspw.HostDrawsScreens`, set by `GameSession`). Each frame, as it starts, the game marks its back surface as drawn or not (`DirectDrawSurface7.IsDrawn`), by whether the screen is one the UI draws (`IsHostScreen`): a battle but the map editor's, or a setting screen. A surface that is not drawn takes `Blt`, `BltFast`, `TextOut` and `BitBlt` as before, checking and returning the same, but keeps its pixels. The title screen and the map editor are drawn by the game as before, and the tests, which do not set the switch, run as they did.
+- **The frame**: the UI no longer converts the game's frames on the screens it draws itself (`GameSession.UpdateFrame`).
+- **What the game wrote over its screens**, which the battlefield had stopped showing since step 5: the battle's result (`WriteResult`, extracted from `DrawResult`), the notices that the players are out of step or the rival is gone, and the players' chat, read for the UI (`ReadResult`, `ReadNotices`, `ReadChat`) and shown over the battlefield and the setting form (`GameMessages`).
 
 ## Open questions
 - Should the new UI be the default, with the original's behind `--original-ui`, or the other way round?
