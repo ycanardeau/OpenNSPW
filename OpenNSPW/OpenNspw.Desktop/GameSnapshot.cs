@@ -112,6 +112,9 @@ internal sealed class GameSnapshot
 	// Whether the frame is a setting screen's: the scenarios' or the rules'.
 	public bool IsSetting => Mode is GameMode.GameSetting or GameMode.ConfigSetting;
 
+	// Whether the frame is one that the UI draws in the game's place, and the game does not draw (Nspw.IsHostScreen).
+	public bool IsHostScreen => IsBattle || IsSetting;
+
 	// The setting screens' fields, which the game writes as text only on them.
 	private void CopySettingFrom(Nspw game)
 	{

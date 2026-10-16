@@ -364,6 +364,10 @@ public void	UpdateFrame()
 
 	ReadInput();		// マウス、キーボード状況取得
 
+	// The frames that the host's UI draws in the game's place are run as they are, but not drawn (docs/Ui.md).
+	if( lpDDSBack is DirectDrawSurface7 back )
+		back.IsDrawn = !(HostDrawsScreens && IsHostScreen());
+
 	// 塗りつぶし
 	ZeroMemory(&ddbltfx,(nuint)(sizeof(DDBLTFX)));
 	ddbltfx.dwSize = (uint)(sizeof( DDBLTFX ));

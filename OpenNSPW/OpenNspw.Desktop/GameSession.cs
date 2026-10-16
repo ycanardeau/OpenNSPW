@@ -76,7 +76,7 @@ internal sealed class GameSession : IDisposable
 	public GameSession(string dataDirectory, TextRasterizer text, (byte[] Executable, int Scenario)? singleplayer = null)
 	{
 		_platform = new DesktopPlatform(dataDirectory, text);
-		Game = new Nspw(_platform);
+		Game = new Nspw(_platform) { HostDrawsScreens = true };
 		_platform.CaptureState = () => _captured.CopyFrom(Game);
 		if (singleplayer is var (executable, scenario))
 		{
@@ -180,21 +180,30 @@ internal sealed class GameSession : IDisposable
 		}
 
 		var frameNumber = _platform.CopyFrame(_frameNumber, ref _pixels, out var width, out var height, () => (Snapshot, _captured) = (_captured, Snapshot));
-		if (frameNumber != _frameNumber && width == Frame.Width && height == Frame.Height)
+		if (frameNumber == _frameNumber || width != Frame.Width || height != Frame.Height)
 		{
-			if (_colors.Length != _pixels.Length)
-			{
-				_colors = new Color[_pixels.Length];
-			}
-
-			for (var i = 0; i < _pixels.Length; i++)
-			{
-				_colors[i] = ToColor(_pixels[i]);
-			}
-
-			Frame.SetData(_colors);
-			_frameNumber = frameNumber;
+			return;
 		}
+
+		_frameNumber = frameNumber;
+
+		// The game does not draw the screens that the UI draws in its place (Nspw.HostDrawsScreens).
+		if (Snapshot.IsHostScreen)
+		{
+			return;
+		}
+
+		if (_colors.Length != _pixels.Length)
+		{
+			_colors = new Color[_pixels.Length];
+		}
+
+		for (var i = 0; i < _pixels.Length; i++)
+		{
+			_colors[i] = ToColor(_pixels[i]);
+		}
+
+		Frame.SetData(_colors);
 	}
 
 	// Draws the game's last frame, the whole screen.
