@@ -1,11 +1,14 @@
 namespace OpenNspw;
 
 // Where in a frame a command of the host's UI runs: where the battle takes the mouse's clicks on the battlefield
-// (DrawBattleArea), or on the minimap (DrawMinimap).
+// (DrawBattleArea), on the minimap (DrawMinimap), on the switch of a carrier's view (UpdateDeckView), or on the combat
+// menu (UpdateCombatMenu).
 public enum UiCommandSite
 {
 	Battlefield,
 	Minimap,
+	DeckView,
+	CombatMenu,
 }
 
 // The commands that the host's own UI gives the battle in place of the mouse's clicks (docs/Ui.md). Not part of the
@@ -14,6 +17,11 @@ public enum UiCommandSite
 // ordered with the mouse.
 public unsafe partial class Nspw
 {
+	// The items of the combat menu in the last frame (ListCombatMenu), for the host's UI to show: none if the menu was
+	// not shown.
+	public Array6<CombatMenuItem> ShownCombatMenu;
+	public int ShownCombatMenuCount;
+
 	private readonly Lock _uiCommandsLock = new();
 	private readonly List<(UiCommandSite Site, Action Run)> _uiCommands = [];
 
@@ -102,6 +110,27 @@ public unsafe partial class Nspw
 			}
 	}
 
+	private void RunToggleDeckView()
+	{
+		PlayClickSound();
+		ToggleDeckView();
+	}
+
+	private void RunChooseCombatMenuItem(CombatMenuItem item)
+	{
+		PlayClickSound();
+		var isShown = false;
+		for (var i = 0; i < ShownCombatMenuCount; i++)
+		{
+			isShown |= ShownCombatMenu[i] == item;
+		}
+
+		if( isShown && item!=CombatMenuSelection && CanOrder )
+			{
+			ChooseCombatMenuItem(item);
+			}
+	}
+
 	// The commands of the host's UI, for the battle, in order: given on any thread, run on the game's.
 	public sealed class UiCommands(Nspw game)
 	{
@@ -138,6 +167,19 @@ public unsafe partial class Nspw
 		public void ShowMinimapCell(int column, int row)
 		{
 			_game.QueueUiCommand(UiCommandSite.Minimap, () => _game.ShowMinimapCell(column, row));
+		}
+
+		// A click on the switch of a carrier's or an air base's view, while its information is shown.
+		public void ToggleDeckView()
+		{
+			_game.QueueUiCommand(UiCommandSite.DeckView, _game.RunToggleDeckView);
+		}
+
+		// A click on an item of the combat menu, if the menu shows it, it is not the item chosen already, and the player
+		// can order.
+		public void ChooseCombatMenuItem(CombatMenuItem item)
+		{
+			_game.QueueUiCommand(UiCommandSite.CombatMenu, () => _game.RunChooseCombatMenuItem(item));
 		}
 	}
 

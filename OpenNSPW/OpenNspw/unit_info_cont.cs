@@ -441,6 +441,10 @@ private void ToggleDeckView()
 private void UpdateDeckView(ref RECT src_rect, SpriteId sprite, ref RECT dstn_rect)
 	{
 	int i;
+
+	// The host's UI's commands for the switch (UiCommands.cs).
+	RunUiCommands(UiCommandSite.DeckView, true);
+
 	i=0;
 	src_rect.left = Sprites[sprite].SheetX+(Sprites[sprite].Width*0)+1;
 	src_rect.top = Sprites[sprite].SheetY+(Sprites[sprite].Height*(i+1))+1;
@@ -615,6 +619,11 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 	sprite=SpriteId.Buttons1;
 
 	n=ListCombatMenu(ref menu, ref menu2);
+
+	// The host's UI's commands for the combat menu (UiCommands.cs), on the items it shows.
+	ShownCombatMenu=menu2;
+	ShownCombatMenuCount=n;
+	RunUiCommands(UiCommandSite.CombatMenu, true);
 
 	for( i=0;i<n;i++ )
 		{
@@ -1246,12 +1255,23 @@ rival_mode=mode;
 		UpdateDeckView(ref src_rect, sprite, ref dstn_rect);
 
 		}
+	else
+		{
+		// The host's UI's commands for the switch, which is not shown, are dropped (UiCommands.cs).
+		RunUiCommands(UiCommandSite.DeckView, false);
+		}
 
 	if(CombatMenuKind!=0 && !IsEditingMap )
 		{
 
 		//	スプライトグループ（メニュー）
 		UpdateCombatMenu(ref menu, ref menu2, ref m, ref src_rect, ref dstn_rect);
+		}
+	else
+		{
+		// The host's UI's commands for the combat menu, which is not shown, are dropped (UiCommands.cs).
+		ShownCombatMenuCount=0;
+		RunUiCommands(UiCommandSite.CombatMenu, false);
 		}
 
 	// ゲームデータ
