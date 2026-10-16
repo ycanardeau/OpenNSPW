@@ -66,6 +66,43 @@ public unsafe partial class Nspw
 		return Decode(ach[0], len[0]);
 	}
 
+	// The result of the battle, as the game writes it over the battlefield once it is over (WriteResult), or none.
+	public string[] ReadResult()
+	{
+		if( Result==GameResult.None )
+			return [];
+
+		Array5<int> len = default;
+		Array5<Array128<byte>> ach = default;
+		WriteResult(ref len, ref ach);
+		return [Decode(ach[0], len[0]), Decode(ach[1], len[1]), Decode(ach[2], len[2])];
+	}
+
+	// What the game writes in the screen's top left corner on any screen, as UpdateFrame does: that the players are out
+	// of step, or that the rival is gone.
+	public string[] ReadNotices()
+	{
+		List<string> notices = [];
+		if( AreUnitsOutOfSync )
+			notices.Add("ユニットデータ同期異常、ゲームを中断されたし。");
+		if( IsTickOutOfSync )
+			notices.Add("プログラム同期異常、ゲームを中断されたし。");
+		if( IsRandomOutOfSync )
+			notices.Add("ランダム同期異常、ゲームを中断されたし。");
+		if( ActivePlayerCount!=2 && !IsSingleplayer )
+			notices.Add("接続相手がいなくなりました。");
+		return [.. notices];
+	}
+
+	// The player's and the rival's chat, each while the game shows it (DrawMyChat, DrawRivalChat), or empty.
+	public (string Mine, string Rival) ReadChat()
+	{
+		Array128<byte> ach = default;
+		var mine = MyChatDisplayTime!=0 ? Decode(ach, wsprintf(ach, MyChat)) : "";
+		var rival = RivalChatDisplayTime!=0 ? Decode(ach, wsprintf(ach, RivalChat)) : "";
+		return (mine, rival);
+	}
+
 	// The sprite's column of a unit facing a direction: one of eight, as DrawUnit sets SpriteColumn as it draws it.
 	public static int SpriteColumnOf(double direction)
 	{
