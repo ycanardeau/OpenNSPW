@@ -116,7 +116,7 @@ Done for the battlefield and the radar; the sidebar's clicks are extracted in st
 ### 4. The sidebar
 The deck, the unit details, the combat menu, the supply panel and the system menu as controls, drawn from the snapshot and calling the commands.
 
-Done but for the deck, which draws the units' sprites as the battlefield does, and comes with step 5.
+Done. The deck, which draws the units' sprites as the battlefield does, came with step 5.
 
 - **`CombatMenu`**: the switch of a carrier's or an air base's view (飛行甲板, 格納庫) and the selected unit's orders, in the original buttons' words, over the side's flag. The game records the items it shows (`ShownCombatMenu`), because listing them also sets the choice shown (`ListCombatMenu`).
 - **`InfoPanel`**: the unit's details, the speed and the time, the supply panel and the host's system menu. Its texts are the game's own (`UiState.cs`: `ReadUnitDetails`, `ReadSupplyTargetName`, `ReadSupplyRequestState`).
@@ -124,8 +124,16 @@ Done but for the deck, which draws the units' sprites as the battlefield does, a
 - **Commands**: `ToggleDeckView`, `ChooseCombatMenuItem`, `SelectSupplyTarget`, `RequestSupply`, `ToScenarioSelection` and `Resume`, each run where its click is taken (`UpdateDeckView`, `UpdateCombatMenu`, `UpdateSupplyRequest`, `UpdateSystemMenu`), and dropped where the part is not shown.
 - **The mouse**: a part that draws itself takes its own clicks (`MainForm.Owns`), so the game is not given the presses there; a right click there deselects, as it does anywhere.
 
-### 5. The battlefield and the radar
+### 5. The battlefield, the radar and the deck
 Drawing the map, the units, the effects, the paths and the selection from the snapshot and `t3.bmp`, and selecting, moving and targeting through the commands.
+
+Done. No part of the battle screen shows the game's frame any more (`FrameView` is gone), and the whole screen takes its own clicks.
+
+- **`Battlefield`**: the original's sprites, cut from `t3.bmp` as the original cuts each kind, with magenta as the color key (`BattleArt.Draw`), in the original's order: the tiles the player sees, the lower effects, the ships, the clouds, the planes and the upper effects. The original's white lines become the theme's marks: the selection, the targets' directions, the selected unit's target or landing point, its path and the line to the mouse, and what a click would take. A left click takes the land where the selected transport lands, then the first unit by number whose sprite's middle has the cursor, then gives the selected unit a destination, as `DrawBattleArea` does; the right button deselects.
+- **`Radar`**: the map, a pixel a tile, redrawn when the tiles change; the player's units and the enemy's it has found; the battlefield's box. A click held on it moves the battlefield (`ShowMinimapCell`).
+- **`Deck`**: the unit's picture, or a carrier's or an air base's flight deck or hangar, with the planes parked there and their effects, at the screen positions the game gives them. A click on a parked plane selects it, or makes it the selected unit's target, with `ClickUnit`, which now takes a parked plane on the deck shown (`IsOnShownDeck`).
+- **What the player sees and can click is read on the game's thread** (`UiState.cs`): the tiles and the effects in sight (`ReadSight`, with the conditions of `DrawMapTiles` and the effects' functions), whether a click counts on each unit (`ReadClickable`, `CanClickUnit`), whether one gives a destination (`ReadCanSetDestination`), and the planes on the deck shown (`ReadShownOnDeck`). The snapshot copies them with the sprites, the clouds and the map, every frame: the map is 128 KB, and the map editor changes it.
+- **Not drawn as the original draws them**: the smoke's and the wakes' jitter takes the UI's own random numbers, since the game's would change the simulation; the marks are drawn after all the units rather than with each.
 
 ### 6. The setting screens
 The scenario browser and the side and rules form for multiplayer, through functions extracted from `cnct_game_cont.cpp`.
