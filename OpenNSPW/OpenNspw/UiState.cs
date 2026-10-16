@@ -1,7 +1,7 @@
 namespace OpenNspw;
 
-// What the host's UI shows of the battle that the game writes as text, or works out, as it draws its sidebar
-// (docs/Ui.md). Not part of the original. On the game's thread, as it shows a frame.
+// What the host's UI shows of the battle and the setting screens that the game writes as text, or works out, as it draws
+// them (docs/Ui.md). Not part of the original. On the game's thread, as it shows a frame.
 public unsafe partial class Nspw
 {
 	private static string Decode(ReadOnlySpan<byte> text, int length)
@@ -35,6 +35,35 @@ public unsafe partial class Nspw
 	public SupplyRequestState ReadSupplyRequestState()
 	{
 		return GetSupplyRequestState();
+	}
+
+	// The scenarios of the setting screen's list, on the page of the scenario chosen (ListScenarioNames).
+	public string[] ReadScenarioNames()
+	{
+		Array12<int> len = default;
+		Array12<Array128<byte>> ach = default;
+		var m = -1;
+		ListScenarioNames(ref m, ref len, ref ach);
+		return [.. Enumerable.Range(0, m + 1).Select(n => Decode(ach[n], len[n]))];
+	}
+
+	// What the setting screen says about the scenario chosen, a line each, the victory conditions last
+	// (DrawScenarioDescription).
+	public string[] ReadScenarioDescription()
+	{
+		Array12<int> len = default;
+		Array12<Array128<byte>> ach = default;
+		DrawScenarioDescription(ref len, ref ach);
+		return [.. Enumerable.Range(1, 6).Select(n => Decode(ach[n], len[n]))];
+	}
+
+	// The rule of the reinforcements, in the setting screen's words (WriteArrivalControl).
+	public string ReadArrivalControl()
+	{
+		Array12<int> len = default;
+		Array12<Array128<byte>> ach = default;
+		WriteArrivalControl(ref len, ref ach);
+		return Decode(ach[0], len[0]);
 	}
 
 	// The sprite's column of a unit facing a direction: one of eight, as DrawUnit sets SpriteColumn as it draws it.
