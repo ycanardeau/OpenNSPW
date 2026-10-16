@@ -887,6 +887,21 @@ private SupplyRequestState GetSupplyRequestState()
 		return SupplyRequestState.Restricted;
 	}
 
+// A click that requests the reinforcement chosen in the supply panel, when it can be requested (GetSupplyRequestState)
+// and the battle has no result: it costs its supply points, and comes after a while (SupplyCount).
+private void RequestSupplyUnit()
+	{
+	SupplyPoints=(short)(SupplyPoints - GetSupplyPointsPerUnit());
+	if(SupplyTarget<=5 || SupplyTarget>=10)
+		SupplyCount=150;				// 艦船
+	else
+		SupplyCount=30;				// 航空機
+
+if(CONN_DBG!=0)
+SupplyCount=10;
+	PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+	}
+
 private void RequestSupply(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref RECT dstn_rect, int ry, ref HDC hdc)
 	{
 	switch( GetSupplyRequestState() )
@@ -907,15 +922,7 @@ private void RequestSupply(ref Array8<int> len, ref Array8<Array128<byte>> ach, 
 				SetTextColor(hdc, RGB(255, 0, 0));
 				if( LeftButton==3 && Result==GameResult.None )
 					{
-					SupplyPoints=(short)(SupplyPoints - GetSupplyPointsPerUnit());
-					if(SupplyTarget<=5 || SupplyTarget>=10)
-						SupplyCount=150;				// 艦船
-					else
-						SupplyCount=30;				// 航空機
-
-if(CONN_DBG!=0)
-SupplyCount=10;
-					PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+					RequestSupplyUnit();
 					}
 				}
 			else
