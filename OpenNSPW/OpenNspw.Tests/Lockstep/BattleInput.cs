@@ -121,7 +121,7 @@ internal sealed class CommandInput(LockstepRun run, LockstepGame game) : BattleI
 	public override void ShowMinimapCell(int column, int row)
 	{
 		Run.Frames(Game, 1);
-		Game.Game.Commands.ShowMinimapCell(column, row);
+		Game.Game.Commands.ShowMinimapCell(column, row, isPressed: true);
 		Run.Frames(Game, 1);
 		Run.Frames(Game, 2);
 	}
