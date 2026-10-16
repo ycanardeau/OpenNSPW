@@ -935,6 +935,15 @@ private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int lc_lf
 		}
 	}
 
+// Whether a parked plane is shown, on the flight deck or in the hangar of the carrier or the air base whose information
+// the sidebar shows, as the view is switched (UnitInfoPanel[1]).
+private bool IsOnShownDeck(ref Unit unit)
+	{
+	return unit.Carrier==UnitInfoPanel[3] &&  ((UnitKind)UnitInfoPanel[0]==UnitKind.Carrier || (UnitKind)UnitInfoPanel[0]==UnitKind.LightCarrier || (UnitKind)UnitInfoPanel[0]==UnitKind.AirBase )
+		&& ( ( (unit.Mode<=UnitMode.Slow)  && (UnitInfoPanel[1]==1&&unit.DeckPhase<=2)||(UnitInfoPanel[1]==0&&unit.DeckPhase>=3))
+		 || (unit.Mode==UnitMode.Return && (UnitInfoPanel[1]==0) ) );
+	}
+
 // Whether a left click on the unit counts, as it and the selected unit are: the conditions of DrawUnitMarks's click
 // that are not about where the cursor is. The unit is Units[0] for the land, where the selected transport lands.
 private bool CanClickUnit(ref Unit unit)
@@ -962,17 +971,11 @@ private bool DrawUnitMarks(bool goto_dca1, ref Unit unit, SpriteId sprite, ref i
 	if( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked )
 		{
 
-		if( unit.Carrier==UnitInfoPanel[3] &&  ((UnitKind)UnitInfoPanel[0]==UnitKind.Carrier || (UnitKind)UnitInfoPanel[0]==UnitKind.LightCarrier || (UnitKind)UnitInfoPanel[0]==UnitKind.AirBase ) )
+		if( IsOnShownDeck(ref unit) )
 			{
-			if( ( (unit.Mode<=UnitMode.Slow)  && (UnitInfoPanel[1]==1&&unit.DeckPhase<=2)||(UnitInfoPanel[1]==0&&unit.DeckPhase>=3))
-			 || (unit.Mode==UnitMode.Return && (UnitInfoPanel[1]==0) ) )
-				{
-				// 空母で飛行甲板か格納庫かで航空機を表示するかしない。
-				Sprites[sprite].X=(int)unit.Position.X;
-				Sprites[sprite].Y=(int)unit.Position.Y;
-				}
-			else
-				return false;
+			// 空母で飛行甲板か格納庫かで航空機を表示するかしない。
+			Sprites[sprite].X=(int)unit.Position.X;
+			Sprites[sprite].Y=(int)unit.Position.Y;
 			}
 		else
 			return false;
