@@ -23,6 +23,7 @@ internal sealed class Battlefield : Control
 	private readonly GameSession _session;
 	private readonly UiFonts _fonts;
 	private readonly BattleArt _art;
+	private readonly ScrollAhead _scrollAhead;
 
 	// The jitter of smoke and wakes, which the original draws with the game's random numbers: here only for the look.
 	private readonly Random _jitter = new();
@@ -30,11 +31,20 @@ internal sealed class Battlefield : Control
 	private GameSnapshot _snapshot = new();
 	private DrawingPoint? _mouse;
 
-	public Battlefield(GameSession session, UiFonts fonts, BattleArt art)
+	// Where a drag with the middle button, which scrolls the battlefield, last was.
+	private DrawingPoint? _scrolledTo;
+
+	// While the left button is held after a press on one of the player's units: whether the units brushed are put in the
+	// selection, as the press put that one, or taken out of it; and those brushed so far.
+	private bool? _brushAdds;
+	private readonly HashSet<int> _brushed = [];
+
+	public Battlefield(GameSession session, UiFonts fonts, BattleArt art, ScrollAhead scrollAhead)
 	{
 		_session = session;
 		_fonts = fonts;
 		_art = art;
+		_scrollAhead = scrollAhead;
 		BackColor = System.Drawing.Color.Transparent;
 	}
 
@@ -340,10 +350,46 @@ internal sealed class Battlefield : Control
 			commands.SetDestination(new WorldPosition(point.X + snapshot.CameraPosition.X, snapshot.CameraPosition.Y - point.Y));
 	}
 
+	// The battlefield follows a drag with the middle button, as a chart pushed across the table, at once (ScrollAhead).
+	private void Scroll(DrawingPoint point)
+	{
+		if (_scrolledTo is not { } from || point == from)
+			return;
+
+		_scrollAhead.Scroll(from.X - point.X, from.Y - point.Y);
+		_scrolledTo = point;
+	}
+
+	// Whether a press on unit m starts a brush, and which: on one of the player's units that can be in a formation with
+	// the selected unit, as the game's formations go (IsFormationMate), the press puts it in the selection, or takes it
+	// out; the selected unit itself is let go.
+	private static bool? BrushOf(GameSnapshot snapshot, int m)
+	{
+		ref var unit = ref snapshot.Units[m];
+		var selected = snapshot.SelectedUnit;
+		if (m == selected || unit.Side != snapshot.LocalSide || (unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress)
+			|| (selected != 0 && snapshot.Units[selected].Category != unit.Category))
+			return null;
+
+		return snapshot.Selections[m] == 0;
+	}
+
+	// A unit under the mouse while the left button is held is brushed, once a drag: a click on it puts it in the
+	// selection, or takes it out, as the press did (BrushUnit).
+	private void Brush(DrawingPoint point)
+	{
+		if (_brushAdds is not { } adds || HitUnit(_snapshot, point) is not { } m || !_brushed.Add(m))
+			return;
+
+		_session.Game.Commands.BrushUnit(m, adds);
+	}
+
 	protected override void OnMouseMove(MouseEventArgs e)
 	{
 		base.OnMouseMove(e);
 		_mouse = e.Location;
+		Scroll(e.Location);
+		Brush(e.Location);
 	}
 
 	protected override void OnMouseLeave(EventArgs e)
@@ -356,9 +402,33 @@ internal sealed class Battlefield : Control
 	{
 		base.OnMouseDown(e);
 		if (e.Button == MouseButtons.Left)
+		{
+			var hit = IsLanding(_snapshot, e.Location) ? null : HitUnit(_snapshot, e.Location);
+			_brushAdds = hit is { } m ? BrushOf(_snapshot, m) : null;
+			_brushed.Clear();
+			if (hit is { } pressed)
+				_brushed.Add(pressed);
+
 			TakeClick(e.Location);
+		}
 		else if (e.Button == MouseButtons.Right)
 			_session.Game.Commands.RightClick();
+		else if (e.Button == MouseButtons.Middle)
+			_scrolledTo = e.Location;
+	}
+
+	protected override void OnMouseUp(MouseEventArgs e)
+	{
+		base.OnMouseUp(e);
+		if (e.Button == MouseButtons.Middle)
+		{
+			Scroll(e.Location);
+			_scrolledTo = null;
+		}
+		else if (e.Button == MouseButtons.Left)
+		{
+			_brushAdds = null;
+		}
 	}
 
 	protected override void OnPaint(PaintEventArgs e)

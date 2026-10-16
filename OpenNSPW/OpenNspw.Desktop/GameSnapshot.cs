@@ -38,7 +38,11 @@ internal sealed class GameSnapshot
 	// Whether the next destination starts the selected unit's path again (MoveOrders[1].ClearsPath), or adds to it.
 	public bool ClearsPath;
 	public short MaxUnitId;
+	// Where the game has the battlefield, and where the UI shows it: ahead of the game by the moves it has given and the
+	// game has not taken yet (ScrollAhead); and the last of them that the game has taken (LastCameraMove).
+	public WorldPosition GameCameraPosition;
 	public WorldPosition CameraPosition;
+	public int LastCameraMove;
 	public short SelectedUnit;
 
 	// The local player's selection (Selections[1]): each unit's number in it, or 0.
@@ -148,7 +152,8 @@ internal sealed class GameSnapshot
 		CanSetDestination = game.ReadCanSetDestination();
 		ClearsPath = game.MoveOrders[1].ClearsPath != 0;
 		MaxUnitId = game.MaxUnitId;
-		CameraPosition = game.CameraPosition;
+		GameCameraPosition = CameraPosition = game.CameraPosition;
+		LastCameraMove = game.LastCameraMove;
 		SelectedUnit = game.SelectedUnit;
 		Selections = game.Selections[1];
 		CombatMenuKind = game.CombatMenuKind;

@@ -10,6 +10,7 @@ namespace OpenNspw.Desktop.Controls;
 // clicks with the commands of the host's UI (docs/Ui.md).
 internal sealed class MainForm : Form
 {
+	private readonly ScrollAhead _scrollAhead;
 	private readonly Battlefield _battlefield;
 	private readonly Control _sidebar;
 	private readonly Deck _deck;
@@ -29,7 +30,8 @@ internal sealed class MainForm : Form
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		BackColor = DrawingColor.Transparent;
 
-		_battlefield = new Battlefield(session, fonts, art) { Bounds = Battlefield.Area };
+		_scrollAhead = new ScrollAhead(session);
+		_battlefield = new Battlefield(session, fonts, art, _scrollAhead) { Bounds = Battlefield.Area };
 		Controls.Add(_battlefield);
 
 		_sidebar = new Control
@@ -52,6 +54,7 @@ internal sealed class MainForm : Form
 	// Shows the game as it was in the last frame: on the UI's thread, each frame.
 	public void UpdateFrom(GameSnapshot snapshot)
 	{
+		_scrollAhead.Apply(snapshot);
 		_battlefield.UpdateFrom(snapshot);
 		_deck.UpdateFrom(snapshot);
 		_infoPanel.UpdateFrom(snapshot);
