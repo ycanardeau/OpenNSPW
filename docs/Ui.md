@@ -1,10 +1,10 @@
 # UI
-A proposal for giving the game a UI built with [Saruhashi](../Saruhashi) controls, as [OpenNSPW/OpenNSPW](https://github.com/OpenNSPW/OpenNSPW) has: a main menu, single-player and multiplayer screens, and a battle screen made of a battlefield, a sidebar and a radar.
+A proposal for giving the game a UI built with [Saruhashi](../Saruhashi) controls: a main menu, single-player and multiplayer screens, and a battle screen made of a battlefield, a sidebar and a radar.
 
 This is a proposal, not a final design. [Open questions](#open-questions) lists what still needs to be decided.
 
 ## Background
-OpenNSPW/OpenNSPW is a rewrite. Its UI is a set of screens (`MainMenuScreen`, `SingleplayerScreen`, `MultiplayerScreen`, `GameScreen`) and controls (`MainForm`, `Battlefield`, `Deck`, `Radar`, `ScenarioBrowserForm`). Each control draws the world it is given and dispatches typed orders (`FlightModeOrder`, `AirplaneWeaponOrder`, ...) to it. Drawing, input and the simulation are separate.
+A UI of screens and controls, each drawing what it shows and turning what the player does into orders, keeps drawing, input and the simulation apart.
 
 This port keeps the original's UI, and the original mixes the three. A battle frame (`win_main.cpp`) is:
 
@@ -21,7 +21,7 @@ The connection dialogs are Win32 dialogs, drawn by `OpenNspw.Desktop` with Saruh
 - **The UI reads a snapshot.** The game runs on its own thread. At the end of each frame, the game copies what the UI shows (the units, the fires, the effects, the camera, the selection and the mode) into a snapshot, as it already copies the frame's pixels. The UI draws from the last snapshot.
 - **Commands run on the game's thread**, at step 3 of the next frame, where the original handles its clicks.
 - **The original's UI stays**, behind a switch. The tests, the traces and the exact port use it.
-- **Screens and controls follow OpenNSPW/OpenNSPW's**, with the same names and layout: a 768×768 battlefield and a 256-pixel sidebar on a 1024×768 screen, which is also the original's layout (`CMBT_WIDTH`, `CMBT_HEIGHT`).
+- **The battle screen keeps the original's layout**: a 768×768 battlefield and a 256-pixel sidebar on a 1024×768 screen (`CMBT_WIDTH`, `CMBT_HEIGHT`).
 - **Graphics come from the original's data**: the map, the units and the effects are drawn from `t3.bmp` with the source rectangles the original uses, so no content pipeline is needed.
 
 ## Screens
@@ -37,7 +37,7 @@ Hosting or joining: the player name, the address and the port, and the original'
 After connecting, the host chooses the scenario and the guest waits, then both choose sides and rules: the original's setting screens (`UpdateGameSetting`). They first stay drawn by the game. Their forms come later, and work like the battle's: functions extracted from the screens' click handling, called by the forms, so the setting messages stay the same.
 
 ### Battle
-`MainForm`, as in OpenNSPW/OpenNSPW:
+`MainForm`:
 
 | Control | Bounds | What the original draws there |
 | --- | --- | --- |
@@ -86,7 +86,7 @@ Skipping step 3 is a later step: each piece of state it writes moves to a functi
 ### 1. Screens
 The main menu, the single-player scenario browser, and the multiplayer host and join form, in `OpenNspw.Desktop`. The game's thread starts from a screen (`GameSession`), and the main menu comes back when the game ends. The setting screens and the battle stay the game's.
 
-Done. The menus' text is English, as OpenNSPW/OpenNSPW's and the original's dialogs are; what comes from the game, such as the scenarios' titles, is its own Japanese.
+Done. The menus' text is English, as the original's dialogs are; what comes from the game, such as the scenarios' titles, is its own Japanese.
 
 The menus have a look of their own (`Controls/Theme.cs`): the navy of a chart table with brass for what can be chosen, a bold font for headings, and a sea chart whose grid drifts under a sweeping radar (`Screens/Backdrop.cs`). The main menu shows the title's picture, slowly zooming, over the menu. The scenario browser shows, for the selected scenario, what NSPW 1.22's setting screen states: the side, the briefing and the victory conditions, read from the executable (`ScenarioSelection`). Each screen can be used with the keyboard as well as the mouse, and fades in from black. The game's own dialogs, such as the one that waits for the rival, are drawn in the same theme.
 
@@ -120,6 +120,5 @@ Skipping step 3 of the frame when the new UI is on, after moving the state it wr
 
 ## Open questions
 - Should the new UI be the default, with the original's behind `--original-ui`, or the other way round?
-- The original's text is Japanese, and OpenNSPW/OpenNSPW's is English. Which should the new UI show?
-- Should the controls live in `OpenNspw.Desktop`, as in OpenNSPW/OpenNSPW, or in a project of their own, so that the tests can use them without MonoGame?
-- Should the new UI add what OpenNSPW/OpenNSPW has and the original does not, such as the game speed keys and scrolling by dragging with the middle button? Scrolling changes only what the player sees. The game speed changes the simulation, so it could only apply to the single-player mode.
+- Should the controls live in `OpenNspw.Desktop`, or in a project of their own, so that the tests can use them without MonoGame?
+- Should the new UI add what the original does not have, such as game speed keys and scrolling by dragging with the middle button? Scrolling changes only what the player sees. The game speed changes the simulation, so it could only apply to the single-player mode.
