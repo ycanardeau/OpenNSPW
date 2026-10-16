@@ -3,16 +3,25 @@ using OpenNspw.Singleplayer;
 
 namespace OpenNspw.Desktop.Controls;
 
-// A scenario in the browser's list: its number, its title, and the side it gives the player.
+// A scenario in a list: its number, its title, and the side it gives the player, if it gives one (a multiplayer game's
+// sides are the host's choice).
 internal sealed class ScenarioRow(UiFonts fonts, ScenarioEntry scenario) : FlatButton
 {
 	private readonly UiFonts _fonts = fonts;
+	private string? _fitTitle;
+	private ScenarioEntry _scenario = scenario;
 
-	public ScenarioEntry Scenario { get; } = scenario;
+	public ScenarioEntry Scenario
+	{
+		get => _scenario;
+		set
+		{
+			_scenario = value;
+			_fitTitle = null;
+		}
+	}
 
 	public bool IsSelected { get; set; }
-
-	private string? _fitTitle;
 
 	protected override void PaintButton(PaintEventArgs e)
 	{
@@ -35,7 +44,8 @@ internal sealed class ScenarioRow(UiFonts fonts, ScenarioEntry scenario) : FlatB
 		Painter.Text(g, number, numberFont, Theme.Brass, 54 - Painter.Measure(g, number, numberFont).Width, 13);
 
 		var sideFont = _fonts.Regular(13);
-		var sideWidth = Painter.Measure(g, Scenario.SideName, sideFont).Width;
+		var hasSide = Scenario.SideName.Length != 0;
+		var sideWidth = hasSide ? Painter.Measure(g, Scenario.SideName, sideFont).Width : 0;
 		var sideX = Width - 14 - sideWidth;
 
 		// The title, cut to end before the side's mark; the full title is in the details.
@@ -44,7 +54,10 @@ internal sealed class ScenarioRow(UiFonts fonts, ScenarioEntry scenario) : FlatB
 		_fitTitle ??= Painter.Fit(g, Scenario.Title, titleFont, sideX - 14 - 8 - 72);
 		Painter.Text(g, _fitTitle, titleFont, title, 72, 10);
 
-		Painter.Fill(g, new((int)sideX - 14, 18, 8, 8), Scenario.Side == ScenarioSide.Japan ? Theme.Japan : Theme.UnitedStates);
-		Painter.Text(g, Scenario.SideName, sideFont, Theme.Muted, sideX, 13);
+		if (hasSide)
+		{
+			Painter.Fill(g, new((int)sideX - 14, 18, 8, 8), Scenario.Side == ScenarioSide.Japan ? Theme.Japan : Theme.UnitedStates);
+			Painter.Text(g, Scenario.SideName, sideFont, Theme.Muted, sideX, 13);
+		}
 	}
 }

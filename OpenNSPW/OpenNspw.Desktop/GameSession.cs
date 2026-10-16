@@ -129,23 +129,25 @@ internal sealed class GameSession : IDisposable
 	}
 
 	// The cursor, in game pixels, and the buttons, each on its own.
-	private void UpdateMouse(ViewportAdapter viewportAdapter, Func<DrawingPoint, bool> isOnForm)
+	private void UpdateMouse(ViewportAdapter viewportAdapter, Func<DrawingPoint, bool> isOnForm, DrawingPoint? cursor)
 	{
 		var mouse = Mouse.GetState();
 		var position = viewportAdapter.PointToScreen(mouse.Position);
-		Game.SetCursorPos(position.X, position.Y);
+		var (x, y) = cursor is { } point ? (point.X, point.Y) : (position.X, position.Y);
+		Game.SetCursorPos(x, y);
 		var onForm = isOnForm(new DrawingPoint(position.X, position.Y));
 		UpdateButton(0, mouse.LeftButton, _previousMouse.LeftButton, onForm);
 		UpdateButton(1, mouse.RightButton, _previousMouse.RightButton, onForm);
 		_previousMouse = mouse;
 	}
 
-	// Passes the keyboard and the mouse to the game.
-	public void UpdateInput(ViewportAdapter viewportAdapter, Func<DrawingPoint, bool> isOnForm)
+	// Passes the keyboard and the mouse to the game: the mouse's buttons but where a form of the UI is (isOnForm), and
+	// its position, or `cursor` in its place.
+	public void UpdateInput(ViewportAdapter viewportAdapter, Func<DrawingPoint, bool> isOnForm, DrawingPoint? cursor = null)
 	{
 		ObjectDisposedException.ThrowIf(_isDisposed, this);
 		UpdateKeyboard();
-		UpdateMouse(viewportAdapter, isOnForm);
+		UpdateMouse(viewportAdapter, isOnForm, cursor);
 	}
 
 	private static Color ToColor(ushort pixel)
