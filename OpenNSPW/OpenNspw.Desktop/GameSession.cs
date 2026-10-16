@@ -40,6 +40,9 @@ internal sealed class GameSession : IDisposable
 	private KeyboardState _previousKeyboard;
 	private MouseState _previousMouse;
 	private volatile bool _hasEnded;
+
+	// The state the game copies as it shows a frame (CaptureState), swapped with Snapshot when the UI takes the frame.
+	private BattleSnapshot _captured = new();
 	private bool _isDisposed;
 
 	public Nspw Game { get; }
@@ -74,7 +77,7 @@ internal sealed class GameSession : IDisposable
 	{
 		_platform = new DesktopPlatform(dataDirectory, text);
 		Game = new Nspw(_platform);
-		_platform.IsInBattle = () => Game.Mode == GameMode.Battle && !Game.IsEditingMap;
+		_platform.CaptureState = () => _captured.CopyFrom(Game);
 		if (singleplayer is var (executable, scenario))
 		{
 			Game.IsSingleplayer = true;
@@ -156,8 +159,11 @@ internal sealed class GameSession : IDisposable
 	// The game's last frame, once it has shown one.
 	public Texture2D? Frame { get; private set; }
 
+	// The game's state as it was when it showed the last frame. Read by the UI's thread.
+	public BattleSnapshot Snapshot { get; private set; } = new();
+
 	// Whether the last frame is a battle's: the battlefield, the sidebar and the radar.
-	public bool IsBattleFrame { get; private set; }
+	public bool IsBattleFrame => Snapshot.IsBattle;
 
 	// Takes the game's last frame into `Frame`, if it has shown a new one.
 	public void UpdateFrame(GraphicsDevice graphicsDevice)
@@ -171,7 +177,7 @@ internal sealed class GameSession : IDisposable
 			Frame.SetData(new Color[Frame.Width * Frame.Height]);
 		}
 
-		var frameNumber = _platform.CopyFrame(_frameNumber, ref _pixels, out var width, out var height, out var isBattle);
+		var frameNumber = _platform.CopyFrame(_frameNumber, ref _pixels, out var width, out var height, () => (Snapshot, _captured) = (_captured, Snapshot));
 		if (frameNumber != _frameNumber && width == Frame.Width && height == Frame.Height)
 		{
 			if (_colors.Length != _pixels.Length)
@@ -185,7 +191,6 @@ internal sealed class GameSession : IDisposable
 			}
 
 			Frame.SetData(_colors);
-			IsBattleFrame = isBattle;
 			_frameNumber = frameNumber;
 		}
 	}
