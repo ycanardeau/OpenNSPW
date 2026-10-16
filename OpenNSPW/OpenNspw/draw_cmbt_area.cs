@@ -861,6 +861,15 @@ private void SetDestination(WorldPosition destination)
 	MoveOrders[1].Destination = destination;
 	}
 
+// A right click while unit m is selected: nothing is selected any more.
+private void CancelSelection(int m)
+	{
+	SelectedUnit=0; Selections[1][m]=0;	CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None;
+	ClearSelection2(1);
+
+	BufferedMoveOrders[1].ClearsPath=0;
+	}
+
 private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int lc_lf_btn, ref int lc_ri_btn, int m)
 	{
 	int n;
@@ -921,10 +930,7 @@ private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int lc_lf
 		if( lc_ri_btn==1 )
 			{
 			lc_ri_btn=0;
-			SelectedUnit=0; Selections[1][m]=0;	CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None;
-			ClearSelection2(1);
-
-			BufferedMoveOrders[1].ClearsPath=0;
+			CancelSelection(m);
 			}
 		}
 	}
@@ -1188,6 +1194,16 @@ private void DrawUnit(ref Unit unit, SpriteId sprite, ref RECT src_rect, ref REC
 		}
 	}
 
+// A right click that no selected unit took: the unit selected before is selected again, if nothing is selected and it
+// is still there.
+private void RestoreSelection()
+	{
+	if( SelectedUnit==0 && PreviousSelectedUnit!=0 && Units[PreviousSelectedUnit].IsUsed)
+		{
+		set_the_slct_unit( PreviousSelectedUnit );
+		}
+	}
+
 //============================================================================
 //コンバットエリア描画 同時にユーザー(通信対戦時はホスト)入力を受け付けます
 //----------------------------------------------------------------------------
@@ -1310,10 +1326,7 @@ public void	DrawBattleArea()
 
 	if( lc_ri_btn==1 )
 		{
-		if( SelectedUnit==0 && PreviousSelectedUnit!=0 && Units[PreviousSelectedUnit].IsUsed)
-			{
-			set_the_slct_unit( PreviousSelectedUnit );
-			}
+		RestoreSelection();
 		}
 
 	// アッパーエフェクト
