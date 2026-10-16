@@ -635,6 +635,40 @@ private bool CheckResultOfScenario106()
 	return true;
 	}
 
+// The result of the battle, in ach[0] to ach[2]: that it is over, which side achieved its victory conditions, and the
+// winner.
+private void WriteResult(ref Array5<int> len, ref Array5<Array128<byte>> ach)
+	{
+	switch( Result )
+		{
+		case GameResult.JapanWon:
+			len[0] = wsprintf(ach[0], "ゲーム終了");
+			len[1] = wsprintf(ach[1], "日本海軍は勝利条件を達成した。");
+			len[2] = wsprintf(ach[2], "日本海軍の勝利");
+			break;
+		case GameResult.UnitedStatesWon:
+			len[0] = wsprintf(ach[0], "ゲーム終了");
+			len[1] = wsprintf(ach[1], "合衆国海軍は勝利条件を達成した。");
+			len[2] = wsprintf(ach[2], "合衆国海軍の勝利");
+			break;
+		case GameResult.JapanLost:
+			len[0] = wsprintf(ach[0], "ゲーム終了");
+			len[1] = wsprintf(ach[1], "日本海軍は勝利条件を達成できなかった。");
+			len[2] = wsprintf(ach[2], "");
+			break;
+		case GameResult.UnitedStatesLost:
+			len[0] = wsprintf(ach[0], "ゲーム終了");
+			len[1] = wsprintf(ach[1], "合衆国海軍は勝利条件を達成できなかった。");
+			len[2] = wsprintf(ach[2], "");
+			break;
+		case GameResult.Draw:
+			len[0] = wsprintf(ach[0], "ゲーム終了");
+			len[1] = wsprintf(ach[1], "日米両海軍は勝利目標を達成できなかった。");
+			len[2] = wsprintf(ach[2], "引き分け。");
+			break;
+		}
+	}
+
 private void DrawResult(ref Array5<int> len, ref Array5<Array128<byte>> ach)
 	{
 	HDC hdc;
@@ -645,34 +679,7 @@ private void DrawResult(ref Array5<int> len, ref Array5<Array128<byte>> ach)
 		SelectObject(hdc, gameFont_1);
 
 #if !LNGG_VER
-		switch( Result )
-			{
-			case GameResult.JapanWon:
-				len[0] = wsprintf(ach[0], "ゲーム終了");
-				len[1] = wsprintf(ach[1], "日本海軍は勝利条件を達成した。");
-				len[2] = wsprintf(ach[2], "日本海軍の勝利");
-				break;
-			case GameResult.UnitedStatesWon:
-				len[0] = wsprintf(ach[0], "ゲーム終了");
-				len[1] = wsprintf(ach[1], "合衆国海軍は勝利条件を達成した。");
-				len[2] = wsprintf(ach[2], "合衆国海軍の勝利");
-				break;
-			case GameResult.JapanLost:
-				len[0] = wsprintf(ach[0], "ゲーム終了");
-				len[1] = wsprintf(ach[1], "日本海軍は勝利条件を達成できなかった。");
-				len[2] = wsprintf(ach[2], "");
-				break;
-			case GameResult.UnitedStatesLost:
-				len[0] = wsprintf(ach[0], "ゲーム終了");
-				len[1] = wsprintf(ach[1], "合衆国海軍は勝利条件を達成できなかった。");
-				len[2] = wsprintf(ach[2], "");
-				break;
-			case GameResult.Draw:
-				len[0] = wsprintf(ach[0], "ゲーム終了");
-				len[1] = wsprintf(ach[1], "日米両海軍は勝利目標を達成できなかった。");
-				len[2] = wsprintf(ach[2], "引き分け。");
-				break;
-			}
+		WriteResult(ref len, ref ach);
 
 #else
 
