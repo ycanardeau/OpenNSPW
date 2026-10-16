@@ -76,9 +76,10 @@ internal sealed class InfoPanel : Control
 		_request.Text = RequestText(snapshot);
 		_request.Enabled = isChoosing && snapshot.SupplyRequestState == SupplyRequestState.Available;
 
-		// The system menu is the host's, and takes a click while the rival is in the battle and the player can order.
+		// The system menu is the host's, and takes a click while the rival is in the battle. The click waits for a frame in
+		// which the player can order, which comes and goes with the turns (RunAskSystemMenu).
 		_toScenarioSelection.Visible = _resume.Visible = snapshot.IsHost;
-		_toScenarioSelection.Enabled = _resume.Enabled = snapshot.RivalMode == GameMode.Battle && snapshot.CanOrder;
+		_toScenarioSelection.Enabled = _resume.Enabled = snapshot.RivalMode == GameMode.Battle;
 	}
 
 	protected override void OnMouseDown(MouseEventArgs e)

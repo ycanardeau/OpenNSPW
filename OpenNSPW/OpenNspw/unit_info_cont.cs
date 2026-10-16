@@ -1138,8 +1138,9 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 	{
 	RECT dstn_rect = default;
 
-	// The host's UI's commands for the system menu (UiCommands.cs).
+	// The host's UI's commands for the system menu (UiCommands.cs), which wait for a frame in which they count.
 	RunUiCommands(UiCommandSite.SystemMenu, true);
+	RunWaitingSystemMenu();
 #if !LNGG_VER
 	len[0] = wsprintf(ach[0], "シナリオ選択へ");
 #else
