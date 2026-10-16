@@ -50,7 +50,7 @@ internal sealed class MainForm : Form
 	}
 
 	// Shows the game as it was in the last frame: on the UI's thread, each frame.
-	public void UpdateFrom(BattleSnapshot snapshot)
+	public void UpdateFrom(GameSnapshot snapshot)
 	{
 		_battlefield.UpdateFrom(snapshot);
 		_deck.UpdateFrom(snapshot);

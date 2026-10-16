@@ -42,7 +42,7 @@ internal sealed class GameSession : IDisposable
 	private volatile bool _hasEnded;
 
 	// The state the game copies as it shows a frame (CaptureState), swapped with Snapshot when the UI takes the frame.
-	private BattleSnapshot _captured = new();
+	private GameSnapshot _captured = new();
 	private bool _isDisposed;
 
 	public Nspw Game { get; }
@@ -160,7 +160,7 @@ internal sealed class GameSession : IDisposable
 	public Texture2D? Frame { get; private set; }
 
 	// The game's state as it was when it showed the last frame. Read by the UI's thread.
-	public BattleSnapshot Snapshot { get; private set; } = new();
+	public GameSnapshot Snapshot { get; private set; } = new();
 
 	// Whether the last frame is a battle's: the battlefield, the sidebar and the radar.
 	public bool IsBattleFrame => Snapshot.IsBattle;

@@ -79,7 +79,7 @@ internal sealed class CombatMenu : Control
 	}
 
 	// Shows the game as it was in the last frame: on the UI's thread, each frame.
-	public void UpdateFrom(BattleSnapshot snapshot)
+	public void UpdateFrom(GameSnapshot snapshot)
 	{
 		_side = snapshot.LocalSide;
 

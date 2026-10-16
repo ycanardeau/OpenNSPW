@@ -39,7 +39,7 @@ internal static class UnitMarks
 	}
 
 	// The selected unit's mark, or a mark for a unit in the selection (DrawSelectedUnit, DrawUnitMarks).
-	public static void DrawSelection(SpriteBatch batch, Vector2 center, BattleSnapshot snapshot, int m)
+	public static void DrawSelection(SpriteBatch batch, Vector2 center, GameSnapshot snapshot, int m)
 	{
 		if (m == snapshot.SelectedUnit)
 			DrawBrackets(batch, center, 30, MarkLight);

@@ -1,9 +1,9 @@
 namespace OpenNspw.Desktop;
 
-// What the battle screen shows of the game, as it was when the game showed a frame (docs/Ui.md): copied on the game's
+// What the host's UI shows of the game, as it was when the game showed a frame (docs/Ui.md): copied on the game's
 // thread as it shows the frame, so that the UI reads it while the game goes on. Its fields keep the globals' types and
 // meanings.
-internal sealed class BattleSnapshot
+internal sealed class GameSnapshot
 {
 	public Array256<Unit> Units;
 	public Array512<Fire> Fires;

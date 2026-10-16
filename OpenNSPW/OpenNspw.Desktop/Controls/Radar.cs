@@ -33,7 +33,7 @@ internal sealed class Radar : Control
 	private readonly Color[] _pixels = new Color[Columns * Rows];
 	private readonly ushort[] _tilesShown = new ushort[256 * 256];
 	private bool _hasMap;
-	private BattleSnapshot _snapshot = new();
+	private GameSnapshot _snapshot = new();
 	private bool _isHeld;
 
 	public Radar(GameSession session, BattleArt art)
@@ -43,13 +43,13 @@ internal sealed class Radar : Control
 		BackColor = DrawingColor.Transparent;
 	}
 
-	private static ReadOnlySpan<ushort> Tiles(BattleSnapshot snapshot)
+	private static ReadOnlySpan<ushort> Tiles(GameSnapshot snapshot)
 	{
 		return MemoryMarshal.CreateReadOnlySpan(ref snapshot.MapTiles[0][0], 256 * 256);
 	}
 
 	// Draws the map again when its tiles change: a new battle's, or the map editor's.
-	private void UpdateMap(BattleSnapshot snapshot)
+	private void UpdateMap(GameSnapshot snapshot)
 	{
 		var tiles = Tiles(snapshot);
 		if (_hasMap && tiles.SequenceEqual(_tilesShown))
@@ -67,7 +67,7 @@ internal sealed class Radar : Control
 	}
 
 	// Shows the game as it was in the last frame: on the UI's thread, each frame.
-	public void UpdateFrom(BattleSnapshot snapshot)
+	public void UpdateFrom(GameSnapshot snapshot)
 	{
 		_snapshot = snapshot;
 		UpdateMap(snapshot);
