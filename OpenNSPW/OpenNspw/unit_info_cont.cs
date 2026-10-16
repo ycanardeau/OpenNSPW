@@ -185,6 +185,53 @@ private void WriteUnitKindName(ref Array8<int> len, ref Array8<Array128<byte>> a
 		}
 	}
 
+// The texts of the unit whose information the sidebar shows: [0] its kind, [1] its damage, or its building time,
+// [2] its ammunition and [3] its fuel.
+private void WriteUnitDetails(ref Array8<int> len, ref Array8<Array128<byte>> ach)
+	{
+	// 艦種
+	WriteUnitKindName(ref len, ref ach);
+
+	// 損傷
+	if( Units[UnitInfoPanel[3]].IsUsed && ( Units[UnitInfoPanel[3]].Kind==UnitKind.AirBase||Units[UnitInfoPanel[3]].Kind==UnitKind.NavalBase||Units[UnitInfoPanel[3]].Kind==UnitKind.InfantryBase||Units[UnitInfoPanel[3]].Kind==UnitKind.Pillboxes||Units[UnitInfoPanel[3]].Kind==UnitKind.Fortress ) && Units[UnitInfoPanel[3]].info[0]!=0 && Units[UnitInfoPanel[3]].Hp==Units[UnitInfoPanel[3]].MaxHp
+		)
+		{
+		len[1] = wsprintf(ach[1], "工事:%d", Units[UnitInfoPanel[3]].BuildTime );
+		}
+	else
+		{
+		if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp*0.2 )
+			{
+			len[1] = wsprintf(ach[1], "大破");
+			}
+		else if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp*0.5 )
+			{
+			len[1] = wsprintf(ach[1], "中破");
+			}
+		else if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp*0.7 )
+			{
+			len[1] = wsprintf(ach[1], "小破");
+			}
+		else if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp-1 )
+			{
+			len[1] = wsprintf(ach[1], "軽損傷");
+			}
+		else
+			{
+			len[1] = wsprintf(ach[1], "損傷無");
+			}
+		}
+
+	// 残弾薬
+	len[2] = wsprintf(ach[2], "弾薬：%d",Units[UnitInfoPanel[3]].Ammo);
+
+	// 残燃料
+	if(Units[UnitInfoPanel[3]].Fuel==-1)
+		len[3] = wsprintf(ach[3], "停泊艦船");
+	else
+		len[3] = wsprintf(ach[3], "燃料：%d", (int)(Units[UnitInfoPanel[3]].Fuel) );
+	}
+
 private void DrawUnitDetails(SpriteId sprite, ref RECT src_rect, ref HDC hdc, ref Array8<int> len, ref Array8<Array128<byte>> ach)
 	{
 	RECT dstn_rect;
@@ -229,47 +276,7 @@ private void DrawUnitDetails(SpriteId sprite, ref RECT src_rect, ref HDC hdc, re
 		SelectObject(hdc, gameFont_1);
 
 #if !LNGG_VER
-		// 艦種
-		WriteUnitKindName(ref len, ref ach);
-
-		// 損傷
-		if( Units[UnitInfoPanel[3]].IsUsed && ( Units[UnitInfoPanel[3]].Kind==UnitKind.AirBase||Units[UnitInfoPanel[3]].Kind==UnitKind.NavalBase||Units[UnitInfoPanel[3]].Kind==UnitKind.InfantryBase||Units[UnitInfoPanel[3]].Kind==UnitKind.Pillboxes||Units[UnitInfoPanel[3]].Kind==UnitKind.Fortress ) && Units[UnitInfoPanel[3]].info[0]!=0 && Units[UnitInfoPanel[3]].Hp==Units[UnitInfoPanel[3]].MaxHp
-			)
-			{
-			len[1] = wsprintf(ach[1], "工事:%d", Units[UnitInfoPanel[3]].BuildTime );
-			}
-		else
-			{
-			if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp*0.2 )
-				{
-				len[1] = wsprintf(ach[1], "大破");
-				}
-			else if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp*0.5 )
-				{
-				len[1] = wsprintf(ach[1], "中破");
-				}
-			else if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp*0.7 )
-				{
-				len[1] = wsprintf(ach[1], "小破");
-				}
-			else if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp-1 )
-				{
-				len[1] = wsprintf(ach[1], "軽損傷");
-				}
-			else
-				{
-				len[1] = wsprintf(ach[1], "損傷無");
-				}
-			}
-
-		// 残弾薬
-		len[2] = wsprintf(ach[2], "弾薬：%d",Units[UnitInfoPanel[3]].Ammo);
-
-		// 残燃料
-		if(Units[UnitInfoPanel[3]].Fuel==-1)
-			len[3] = wsprintf(ach[3], "停泊艦船");
-		else
-			len[3] = wsprintf(ach[3], "燃料：%d", (int)(Units[UnitInfoPanel[3]].Fuel) );
+		WriteUnitDetails(ref len, ref ach);
 
 #else
 		// 艦種
