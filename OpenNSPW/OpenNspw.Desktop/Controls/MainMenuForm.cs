@@ -6,7 +6,7 @@ using DrawingSize = System.Drawing.Size;
 namespace OpenNspw.Desktop.Controls;
 
 // The main menu's items, chosen with the mouse or with the arrow keys and Enter, over the title's picture that the
-// screen draws.
+// screen draws; and the switch of the language, in the top right corner.
 internal sealed class MainMenuForm : Form
 {
 	private readonly UiFonts _fonts;
@@ -18,6 +18,8 @@ internal sealed class MainMenuForm : Form
 	public event EventHandler? MultiplayerChosen;
 
 	public event EventHandler? QuitChosen;
+
+	public event EventHandler<Language>? LanguageChosen;
 
 	private void Highlight(int index)
 	{
@@ -42,6 +44,23 @@ internal sealed class MainMenuForm : Form
 		Controls.Add(item);
 	}
 
+	// A tab of the language switch, named in its own language.
+	private void AddLanguage(Language language, int index)
+	{
+		var tab = new TabButton(_fonts)
+		{
+			Bounds = new DrawingRectangle(Width - 64 - (2 - index) * 112, 28, 96, 32),
+			Text = Texts.NameOf(language),
+			IsSelected = Texts.Language == language,
+		};
+		tab.Click += (_, _) =>
+		{
+			if (Texts.Language != language)
+				LanguageChosen?.Invoke(this, language);
+		};
+		Controls.Add(tab);
+	}
+
 	public MainMenuForm(UiFonts fonts, bool canPlaySingleplayer)
 	{
 		_fonts = fonts;
@@ -50,12 +69,14 @@ internal sealed class MainMenuForm : Form
 		KeyPreview = true;
 
 		AddItem(
-			"Single Player",
-			canPlaySingleplayer ? "A scenario of NSPW 1.22, against the computer" : "NSPW_122.exe was not found",
+			Texts.SinglePlayer,
+			canPlaySingleplayer ? Texts.SinglePlayerDescription : Texts.NoSinglePlayer,
 			canPlaySingleplayer,
 			() => SingleplayerChosen);
-		AddItem("Multiplayer", "Host or join a game of NSPW on the Net", true, () => MultiplayerChosen);
-		AddItem("Quit", "Close OpenNSPW", true, () => QuitChosen);
+		AddItem(Texts.Multiplayer, Texts.MultiplayerDescription, true, () => MultiplayerChosen);
+		AddItem(Texts.Quit, Texts.QuitDescription, true, () => QuitChosen);
+		AddLanguage(Language.English, 0);
+		AddLanguage(Language.Japanese, 1);
 	}
 
 	// The next item that can be chosen, from the highlighted one, in a direction.

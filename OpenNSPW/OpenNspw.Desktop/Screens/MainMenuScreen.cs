@@ -15,6 +15,10 @@ internal sealed class MainMenuScreen(NspwGame game) : Screen(game)
 	private Texture2D _title = default!;
 	private Texture2D _fadeDown = default!;
 	private Texture2D _fadeRight = default!;
+	private MainMenuForm _form = default!;
+
+	// Whether the language has changed since the menu was shown: it is shown again in the next update, after the click.
+	private bool _isFormStale;
 
 	// A strip that goes from transparent to the navy of the menus along its length.
 	private Texture2D CreateFade(int width, int height)
@@ -29,6 +33,24 @@ internal sealed class MainMenuScreen(NspwGame game) : Screen(game)
 		return texture;
 	}
 
+	// The menu, in the language chosen.
+	private void ShowForm()
+	{
+		_form = new MainMenuForm(Game.Fonts, Game.HasSingleplayerExecutable);
+		_form.SingleplayerChosen += (_, _) => Game.ShowScreen(new SingleplayerScreen(Game));
+		_form.MultiplayerChosen += (_, _) => Game.ShowScreen(new MultiplayerScreen(Game));
+		_form.QuitChosen += (_, _) => Game.Exit();
+		_form.LanguageChosen += (_, language) =>
+		{
+			Texts.Language = language;
+			UiSettings.SaveLanguage(language);
+			_isFormStale = true;
+		};
+		WindowManager.Root.Controls.Add(_form);
+		_form.Show();
+		_form.Focus();
+	}
+
 	public override void LoadContent()
 	{
 		base.LoadContent();
@@ -36,13 +58,7 @@ internal sealed class MainMenuScreen(NspwGame game) : Screen(game)
 		_fadeDown = CreateFade(1, 256);
 		_fadeRight = CreateFade(256, 1);
 
-		var form = new MainMenuForm(Game.Fonts, Game.HasSingleplayerExecutable);
-		form.SingleplayerChosen += (_, _) => Game.ShowScreen(new SingleplayerScreen(Game));
-		form.MultiplayerChosen += (_, _) => Game.ShowScreen(new MultiplayerScreen(Game));
-		form.QuitChosen += (_, _) => Game.Exit();
-		WindowManager.Root.Controls.Add(form);
-		form.Show();
-		form.Focus();
+		ShowForm();
 	}
 
 	public override void UnloadContent()
@@ -51,6 +67,17 @@ internal sealed class MainMenuScreen(NspwGame game) : Screen(game)
 		_title.Dispose();
 		_fadeDown.Dispose();
 		_fadeRight.Dispose();
+	}
+
+	public override void Update(GameTime gameTime)
+	{
+		base.Update(gameTime);
+		if (_isFormStale)
+		{
+			_isFormStale = false;
+			WindowManager.Root.Controls.Remove(_form);
+			ShowForm();
+		}
 	}
 
 	public override void Draw(GameTime gameTime)

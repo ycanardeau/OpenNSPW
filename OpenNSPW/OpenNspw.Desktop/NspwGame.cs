@@ -67,6 +67,7 @@ internal sealed class NspwGame : Game
 		_singleplayerExecutablePath = singleplayerExecutablePath;
 		_scenario = scenario;
 		DataDirectory = dataDirectory;
+		Texts.Language = UiSettings.LoadLanguage();
 		IsMouseVisible = true;
 		Window.Title = all_head.CAPTION;
 		Window.AllowUserResizing = true;
