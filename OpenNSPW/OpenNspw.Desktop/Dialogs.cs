@@ -289,7 +289,9 @@ internal sealed class DialogForms(Nspw game, WindowManager windowManager, UiFont
 			controls[item] = control;
 		}
 
+		// Over the screen's forms, which were added before: the first of the root's controls is the front.
 		_windowManager.Root.Controls.Add(form);
+		form.BringToFront();
 		form.Visible = true;
 		return (form, controls);
 	}
