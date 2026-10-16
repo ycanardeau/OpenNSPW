@@ -16,6 +16,7 @@ public class MouseListener(ViewportAdapter? viewportAdapter = null) : InputListe
 	public event EventHandler<MouseEventArgs>? MouseDown;
 	public event EventHandler<MouseEventArgs>? MouseMove;
 	public event EventHandler<MouseEventArgs>? MouseUp;
+	public event EventHandler<MouseEventArgs>? MouseWheel;
 
 	private Point Position => ViewportAdapter?.PointToScreen(_state.Position) ?? _state.Position;
 	private Point PreviousPosition =>
@@ -187,6 +188,18 @@ public class MouseListener(ViewportAdapter? viewportAdapter = null) : InputListe
 					clicks: 0,
 					Position.ToDrawingPoint(),
 					delta: 0
+				)
+			);
+
+		// The delta is in the wheel's units, 120 a notch, as Windows gives it.
+		if (_state.ScrollWheelValue != _previousState.ScrollWheelValue)
+			MouseWheel?.Invoke(
+				this,
+				new MouseEventArgs(
+					MouseButtons.None,
+					clicks: 0,
+					Position.ToDrawingPoint(),
+					delta: _state.ScrollWheelValue - _previousState.ScrollWheelValue
 				)
 			);
 
