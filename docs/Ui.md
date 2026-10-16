@@ -1,5 +1,5 @@
 # UI
-A proposal for giving the game a UI built with [Saruhashi](../Saruhashi) controls: a main menu, single-player and multiplayer screens, and a battle screen made of a battlefield, a sidebar and a radar.
+A proposal for giving the game a UI built with [Saruhashi](../Saruhashi) controls: a main menu, single-player and multiplayer screens, and a battle screen made of a battlefield, a sidebar and a minimap.
 
 This is a proposal, not a final design. [Open questions](#open-questions) lists what still needs to be decided.
 
@@ -37,7 +37,7 @@ Hosting or joining: the player name, the address and the port, and the original'
 After connecting, the host chooses the scenario and the sides and the guest waits, then the host sets the rules: the original's setting screens (`UpdateGameSetting`), drawn by `SettingForm` since step 6. It works like the battle screen: functions extracted from the screens' click handling, called through commands, so the setting messages stay the same.
 
 ### Battle
-`MainForm`:
+`BattleForm`:
 
 | Control | Bounds | What the original draws there |
 | --- | --- | --- |
@@ -47,7 +47,7 @@ After connecting, the host chooses the scenario and the sides and the guest wait
 | Combat menu | sidebar, below the deck | `UpdateCombatMenu`: one button per `CombatMenuItem` |
 | Supply panel | sidebar | `UpdateSupplyPanel`, `RequestSupply` |
 | System menu | sidebar | `UpdateSystemMenu` |
-| `Radar` | sidebar (0, 572, 256, 196) | `DrawMinimap` |
+| `Minimap` | sidebar (0, 572, 256, 196) | `DrawMinimap` |
 
 Each control reads the snapshot and calls the commands. The map editor and the chat's input keep the original's UI at first.
 
@@ -93,9 +93,9 @@ Done. The menus' text is English, as the original's dialogs are; what comes from
 The menus have a look of their own (`Controls/Theme.cs`): the navy of a chart table with brass for what can be chosen, a bold font for headings, and a sea chart whose grid drifts under a sweeping radar (`Screens/Backdrop.cs`). The main menu shows the title's picture, slowly zooming, over the menu. The scenario browser shows, for the selected scenario, what NSPW 1.22's setting screen states: the side, the briefing and the victory conditions, read from the executable (`ScenarioSelection`). Each screen can be used with the keyboard as well as the mouse, and fades in from black. The game's own dialogs, such as the one that waits for the rival, are drawn in the same theme.
 
 ### 2. The battle screen's structure
-`MainForm` with the `Battlefield`, the sidebar and the `Radar`, showing the game's own pixels of each area and passing the clicks through. The layout and the screens are in place before anything is redrawn.
+`BattleForm` with the `Battlefield`, the sidebar and the `Minimap`, showing the game's own pixels of each area and passing the clicks through. The layout and the screens are in place before anything is redrawn.
 
-Done. In a battle (not the map editor), `GameScreen` shows `MainForm`, whose parts are `FrameView`s: each shows its rectangle of the game's frame, point-sampled as the frame is. Whether a frame is a battle's is recorded as the game shows it (`DesktopPlatform.IsInBattle`), so the layout goes with the pixels. The parts tile the screen as the original draws it:
+Done. In a battle (not the map editor), `GameScreen` shows `BattleForm`, whose parts are `FrameView`s: each shows its rectangle of the game's frame, point-sampled as the frame is. Whether a frame is a battle's is recorded as the game shows it (`DesktopPlatform.IsInBattle`), so the layout goes with the pixels. The parts tile the screen as the original draws it:
 
 | Part | Rectangle |
 | --- | --- |
@@ -103,12 +103,12 @@ Done. In a battle (not the map editor), `GameScreen` shows `MainForm`, whose par
 | `Deck` | (768, 0, 120, 438) |
 | `InfoPanel` | (888, 0, 136, 438) |
 | `CombatMenu` | (768, 438, 256, 131) |
-| `Radar` | (768, 569, 256, 199) |
+| `Minimap` | (768, 569, 256, 199) |
 
 ### 3. The snapshot and the commands
 The snapshot in `Present`, and the extracted click functions, with the command test.
 
-Done for the battlefield and the radar; the sidebar's clicks are extracted in step 4, as its parts draw themselves.
+Done for the battlefield and the minimap; the sidebar's clicks are extracted in step 4, as its parts draw themselves.
 
 - **The extracted functions**, one refactoring each: `CanClickUnit` and `ClickUnit` (a click on a unit), `CanSetDestination` and `SetDestination` (a click that gives the selected unit a destination), `AimLanding` (the land where a transport lands), `CancelSelection` and `RestoreSelection` (the right button), and `ShowMinimapCell` (a click held on the minimap).
 - **The commands** (`UiCommands.cs`, `game.Commands`): `ClickUnit`, `ClickLand`, `SetDestination`, `RightClick` and `ShowMinimapCell`. The host queues them on any thread. `DrawBattleArea` runs the battlefield's where it takes the mouse's clicks, and drops them as it drops clicks while an order waits for its turn; `DrawMinimap` runs the minimap's where it takes a held click. Each checks what the click checks, plays its sound, and calls the same functions. A parked plane is clicked on the deck, in step 4.
@@ -124,15 +124,15 @@ Done. The deck, which draws the units' sprites as the battlefield does, came wit
 - **`InfoPanel`**: the unit's details, the speed and the time, the supply panel and the host's system menu. Its texts are the game's own (`UiState.cs`: `ReadUnitDetails`, `ReadSupplyTargetName`, `ReadSupplyRequestState`).
 - **Extracted**: `ListCombatMenu`, `ChooseCombatMenuItem`, `ToggleDeckView`, `IsOnShownDeck`, `WriteUnitDetails`, `GetSupplyRequestState`, `RequestSupplyUnit`, `SelectPreviousSupplyTarget`, `SelectNextSupplyTarget` and `AskSystemMenu`.
 - **Commands**: `ToggleDeckView`, `ChooseCombatMenuItem`, `SelectSupplyTarget`, `RequestSupply`, `ToScenarioSelection` and `Resume`, each run where its click is taken (`UpdateDeckView`, `UpdateCombatMenu`, `UpdateSupplyRequest`, `UpdateSystemMenu`), and dropped where the part is not shown.
-- **The mouse**: a part that draws itself takes its own clicks (`MainForm.Owns`), so the game is not given the presses there; a right click there deselects, as it does anywhere.
+- **The mouse**: a part that draws itself takes its own clicks (`BattleForm.Owns`), so the game is not given the presses there; a right click there deselects, as it does anywhere.
 
-### 5. The battlefield, the radar and the deck
+### 5. The battlefield, the minimap and the deck
 Drawing the map, the units, the effects, the paths and the selection from the snapshot and `t3.bmp`, and selecting, moving and targeting through the commands.
 
 Done. No part of the battle screen shows the game's frame any more (`FrameView` is gone), and the whole screen takes its own clicks.
 
 - **`Battlefield`**: the original's sprites, cut from `t3.bmp` as the original cuts each kind, with magenta as the color key (`BattleArt.Draw`), in the original's order: the tiles the player sees, the lower effects, the ships, the clouds, the planes and the upper effects. The original's white lines become the theme's marks: the selection, the targets' directions, the selected unit's target or landing point, its path and the line to the mouse, and what a click would take. A left click takes the land where the selected transport lands, then the first unit by number whose sprite's middle has the cursor, then gives the selected unit a destination, as `DrawBattleArea` does; the right button deselects.
-- **`Radar`**: the map, a pixel a tile, redrawn when the tiles change; the player's units and the enemy's it has found; the battlefield's box. A click held on it moves the battlefield (`ShowMinimapCell`).
+- **`Minimap`**: the map, a pixel a tile, redrawn when the tiles change; the player's units and the enemy's it has found; the battlefield's box. A click held on it moves the battlefield (`ShowMinimapCell`).
 - **`Deck`**: the unit's picture, or a carrier's or an air base's flight deck or hangar, with the planes parked there and their effects, at the screen positions the game gives them. A click on a parked plane selects it, or makes it the selected unit's target, with `ClickUnit`, which now takes a parked plane on the deck shown (`IsOnShownDeck`).
 - **What the player sees and can click is read on the game's thread** (`UiState.cs`): the tiles and the effects in sight (`ReadSight`, with the conditions of `DrawMapTiles` and the effects' functions), whether a click counts on each unit (`ReadClickable`, `CanClickUnit`), whether one gives a destination (`ReadCanSetDestination`), and the planes on the deck shown (`ReadShownOnDeck`). The snapshot copies them with the sprites, the clouds and the map, every frame: the map is 128 KB, and the map editor changes it.
 - **Not drawn as the original draws them**: the smoke's and the wakes' jitter takes the UI's own random numbers, since the game's would change the simulation; the marks are drawn after all the units rather than with each.
@@ -163,10 +163,10 @@ Done the other way round: step 3 runs as it does, and only its pixels are skippe
 What the new UI adds, each a way of giving the original's own clicks or of showing what the player already sees:
 
 - **Scrolling by dragging with the middle button** on the battlefield (`UiCommands.ScrollBattlefield`, `MoveCamera`): the battlefield follows the mouse at once. The game takes each move in its next frame, so the UI shows the moves it has not taken yet on top of the game's camera (`ScrollAhead`, `LastCameraMove`), within the bounds the minimap keeps it in. The camera is only what the player sees, as the screen's edges and the minimap move it.
-- **Selecting units by brushing over them** with the left button held: a press on one of the player's units selects it, or puts it in the selected unit's formation, or takes it out; then each unit the mouse passes over is put in, or taken out, as that press did. Each is a click on the unit (`BrushUnit`, `RunBrushedUnits`), one a frame, as the game takes one click on a unit a frame: the original's own way of making a formation (`SelectFriendlyTarget`), which the next order takes with it. Only units that can be in the selected unit's formation are brushed (`IsFormationMate`): of its category, and no bases; a plane never brushes a carrier, which a click would make it land on.
+- **Selecting units by brushing over them** with the left button held, on the battlefield and on the deck (`UnitBrush`): a press on one of the player's units selects it, or puts it in the selected unit's formation, or takes it out; then each unit the mouse passes over is put in, or taken out, as that press did. Each is a click on the unit (`BrushUnit`, `RunBrushedUnits`), one a frame, as the game takes one click on a unit a frame: the original's own way of making a formation (`SelectFriendlyTarget`), which the next order takes with it. Only units that can be in the selected unit's formation are brushed (`IsFormationMate`): of its category, and no bases; a plane never brushes a carrier, which a click would make it land on; a parked plane brushes the planes parked on the deck shown, a flying one those flying.
 - **The system menu's buttons stay on** while the rival is in the battle: the player can order on and off with the turns, so a click waits, two seconds at most, for a frame in which it counts (`RunWaitingSystemMenu`), as a click given a moment later would.
 - **English and Japanese** (`Texts`, `GameTexts`): the UI starts in the system's language and remembers the one chosen on the main menu (`UiSettings`, `ui.json` beside the game's settings). The UI's own words are in both. What the game writes stays Japanese in the snapshot and is put into English as the UI draws it, in the words of the game's English edition (its `LNGG_VER` code), their spelling and grammar mended; the combat menu's words, which the original draws as pictures of Japanese, are new. The single-player scenarios' titles, briefings and victory conditions, which NSPW_122.exe has only in Japanese, are translated for the UI (`SingleplayerTexts`).
-- **The radar** has no sweep: the minimap shows only the map, the units and the battlefield's box.
+- **The minimap** has no radar sweep: it shows only the map, the units and the battlefield's box.
 
 ## Open questions
 - Should the new UI be the default, with the original's behind `--original-ui`, or the other way round?
