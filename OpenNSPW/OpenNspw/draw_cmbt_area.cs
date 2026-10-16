@@ -1300,8 +1300,9 @@ public void	DrawBattleArea()
 		PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
 
 	// The host's UI's commands for clicks on the battlefield (UiCommands.cs): taken here, as the clicks are, and dropped
-	// as they are while an order waits for its turn.
+	// as they are while an order waits for its turn; the units brushed are clicked, one a frame.
 	RunUiCommands(UiCommandSite.Battlefield, !(HasOrdered && Result==GameResult.None));
+	RunBrushedUnits(!(HasOrdered && Result==GameResult.None));
 
 	for( m=0; m<=MaxUnitId; m++)
 		{
