@@ -787,8 +787,10 @@ private void WriteSupplyTargetName(ref Array8<int> len, ref Array8<Array128<byte
 		}
 	}
 
-private void RequestSupply(ref int m, ref Array8<int> len, ref Array8<Array128<byte>> ach, ref RECT dstn_rect, int ry, ref HDC hdc)
+// Whether the player can request the reinforcement chosen in the supply panel (SupplyTarget), or why not.
+private SupplyRequestState GetSupplyRequestState()
 	{
+	int m;
 	int start;
 	int end;
 	int g;
@@ -874,50 +876,69 @@ private void RequestSupply(ref int m, ref Array8<int> len, ref Array8<Array128<b
 		if( (g==1 && n!=0 ) || (g==2 && n>=3) )
 			{
 			if( SupplyPoints>=GetSupplyPointsPerUnit() )
-				{
+				return SupplyRequestState.Available;
+			else
+				return SupplyRequestState.ShortOfPoints;
+			}
+		else
+			return SupplyRequestState.UnitLimit;
+		}
+	else
+		return SupplyRequestState.Restricted;
+	}
+
+private void RequestSupply(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref RECT dstn_rect, int ry, ref HDC hdc)
+	{
+	switch( GetSupplyRequestState() )
+		{
+		case SupplyRequestState.Available:
+			{
 #if !LNGG_VER
-				len[0] = wsprintf(ach[0], "　要求する");
+			len[0] = wsprintf(ach[0], "　要求する");
 #else
-				len[0] = wsprintf(ach[0], "　Request");
+			len[0] = wsprintf(ach[0], "　Request");
 #endif
-				dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120;
-				dstn_rect.top=ry+20*7+5;
-				dstn_rect.right=dstn_rect.left+(len[0]*12);
-				dstn_rect.bottom=dstn_rect.top+18;
-				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+			dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120;
+			dstn_rect.top=ry+20*7+5;
+			dstn_rect.right=dstn_rect.left+(len[0]*12);
+			dstn_rect.bottom=dstn_rect.top+18;
+			if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+				{
+				SetTextColor(hdc, RGB(255, 0, 0));
+				if( LeftButton==3 && Result==GameResult.None )
 					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( LeftButton==3 && Result==GameResult.None )
-						{
-						SupplyPoints=(short)(SupplyPoints - GetSupplyPointsPerUnit());
-						if(SupplyTarget<=5 || SupplyTarget>=10)
-							SupplyCount=150;				// 艦船
-						else
-							SupplyCount=30;				// 航空機
+					SupplyPoints=(short)(SupplyPoints - GetSupplyPointsPerUnit());
+					if(SupplyTarget<=5 || SupplyTarget>=10)
+						SupplyCount=150;				// 艦船
+					else
+						SupplyCount=30;				// 航空機
 
 if(CONN_DBG!=0)
 SupplyCount=10;
-						PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
-						}
+					PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
 					}
-				else
-					{
-					SetTextColor(hdc, RGB(255, 255, 255));
-					}
-				TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
 				}
 			else
 				{
 				SetTextColor(hdc, RGB(255, 255, 255));
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "割当点数不足");
-#else
-				len[0] = wsprintf(ach[0], "Shortage of pts");
-#endif
-				TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
 				}
+			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
 			}
-		else
+			break;
+
+		case SupplyRequestState.ShortOfPoints:
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
+#if !LNGG_VER
+			len[0] = wsprintf(ach[0], "割当点数不足");
+#else
+			len[0] = wsprintf(ach[0], "Shortage of pts");
+#endif
+			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
+			}
+			break;
+
+		case SupplyRequestState.UnitLimit:
 			{
 			SetTextColor(hdc, RGB(255, 255, 255));
 #if !LNGG_VER
@@ -927,21 +948,22 @@ SupplyCount=10;
 #endif
 			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
 			}
+			break;
 
-		}
-	else
-		{
-		SetTextColor(hdc, RGB(255, 255, 255));
+		case SupplyRequestState.Restricted:
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
 #if !LNGG_VER
-		len[0] = wsprintf(ach[0], "　要求制限");
+			len[0] = wsprintf(ach[0], "　要求制限");
 #else
-		len[0] = wsprintf(ach[0], "Restricted Unit");
+			len[0] = wsprintf(ach[0], "Restricted Unit");
 #endif
-		TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
+			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
+			}
+			break;
 		}
 	}
-
-private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref HDC hdc, int ry, ref RECT dstn_rect, ref int m)
+private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref HDC hdc, int ry, ref RECT dstn_rect)
 	{
 	len[0] = wsprintf(ach[0], "%d:" ,GetSupplyPointsPerUnit());
 	TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*3+5+10, ach[0], len[0]);
@@ -1005,10 +1027,10 @@ private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>>
 	TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*6+5, ach[0], len[0]);
 
 	// 要求する
-	RequestSupply(ref m, ref len, ref ach, ref dstn_rect, ry, ref hdc);
+	RequestSupply(ref len, ref ach, ref dstn_rect, ry, ref hdc);
 	}
 
-private void UpdateSupplyPanel(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref HDC hdc, ref RECT dstn_rect, int ry, ref int m)
+private void UpdateSupplyPanel(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref HDC hdc, ref RECT dstn_rect, int ry)
 	{
 #if !LNGG_VER
 	len[0] = wsprintf(ach[0], "補給割当:%d",SupplyPoints);
@@ -1033,7 +1055,7 @@ private void UpdateSupplyPanel(ref Array8<int> len, ref Array8<Array128<byte>> a
 	if( SupplyCount==0 )
 		{
 		// 値段の表示
-		UpdateSupplyRequest(ref len, ref ach, ref hdc, ry, ref dstn_rect, ref m);
+		UpdateSupplyRequest(ref len, ref ach, ref hdc, ry, ref dstn_rect);
 		}
 	else
 		{
@@ -1241,7 +1263,7 @@ rival_mode=mode;
 
 		if( !IsEditingMap )
 			{
-			UpdateSupplyPanel(ref len, ref ach, ref hdc, ref dstn_rect, ry, ref m);
+			UpdateSupplyPanel(ref len, ref ach, ref hdc, ref dstn_rect, ry);
 			}
 		ry+=30;
 
