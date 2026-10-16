@@ -93,6 +93,16 @@ The menus have a look of their own (`Controls/Theme.cs`): the navy of a chart ta
 ### 2. The battle screen's structure
 `MainForm` with the `Battlefield`, the sidebar and the `Radar`, showing the game's own pixels of each area and passing the clicks through. The layout and the screens are in place before anything is redrawn.
 
+Done. In a battle (not the map editor), `GameScreen` shows `MainForm`, whose parts are `FrameView`s: each shows its rectangle of the game's frame, point-sampled as the frame is. Whether a frame is a battle's is recorded as the game shows it (`DesktopPlatform.IsInBattle`), so the layout goes with the pixels. The parts tile the screen as the original draws it:
+
+| Part | Rectangle |
+| --- | --- |
+| `Battlefield` | (0, 0, 768, 768) |
+| `Deck` | (768, 0, 120, 438) |
+| `InfoPanel` | (888, 0, 136, 438) |
+| `CombatMenu` | (768, 438, 256, 131) |
+| `Radar` | (768, 569, 256, 199) |
+
 ### 3. The snapshot and the commands
 The snapshot in `Present`, and the extracted click functions, with the command test.
 
