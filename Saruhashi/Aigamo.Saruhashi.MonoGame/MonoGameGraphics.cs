@@ -124,6 +124,20 @@ public sealed class MonoGameGraphics : Graphics
 	public override void DrawImage(IImage image, DrawingPoint point) =>
 		DrawImage(image as IMonoGameImage, point);
 
+	/// <summary>
+	/// Draws with the sprite batch directly, with a sampler state of its own, in a batch of its own with the same blending,
+	/// clip and scale: for a control that draws many sprites, such as pixel art with <see cref="SamplerState.PointClamp"/>.
+	/// The drawing gets the batch and where the control's client area is on the screen.
+	/// </summary>
+	public void DrawWith(SamplerState samplerState, Action<SpriteBatch, Vector2> draw)
+	{
+		SpriteBatch.End();
+		Begin(samplerState);
+		draw(SpriteBatch, Control.PointToScreen(DrawingPoint.Empty).ToXnaPoint().ToVector2());
+		SpriteBatch.End();
+		Begin();
+	}
+
 	public override void DrawImage(IImage image, DrawingPointF point) =>
 		DrawImage(image, DrawingPoint.Round(point));
 
