@@ -6,12 +6,13 @@ using DrawingSize = System.Drawing.Size;
 namespace OpenNspw.Desktop.Controls;
 
 // The battle screen, laid out as the original's: the battlefield on the left, and the sidebar with the deck, the unit's
-// information, the combat menu and the radar. Each part shows what the game draws there, until it draws itself
-// (docs/Ui.md).
+// information, the combat menu and the radar. Each part draws from the snapshot what the game draws there, and takes its
+// clicks with the commands of the host's UI (docs/Ui.md).
 internal sealed class MainForm : Form
 {
 	private readonly Battlefield _battlefield;
 	private readonly Control _sidebar;
+	private readonly Deck _deck;
 	private readonly InfoPanel _infoPanel;
 	private readonly CombatMenu _combatMenu;
 	private readonly Radar _radar;
@@ -38,8 +39,8 @@ internal sealed class MainForm : Form
 		};
 		Controls.Add(_sidebar);
 
-		var deck = new Deck(session);
-		AddToSidebar(deck, deck.Area);
+		_deck = new Deck(session, art);
+		AddToSidebar(_deck, Deck.Area);
 		_infoPanel = new InfoPanel(session, fonts);
 		AddToSidebar(_infoPanel, InfoPanel.Area);
 		_combatMenu = new CombatMenu(session, fonts, art);
@@ -52,15 +53,16 @@ internal sealed class MainForm : Form
 	public void UpdateFrom(BattleSnapshot snapshot)
 	{
 		_battlefield.UpdateFrom(snapshot);
+		_deck.UpdateFrom(snapshot);
 		_infoPanel.UpdateFrom(snapshot);
 		_combatMenu.UpdateFrom(snapshot);
 		_radar.UpdateFrom(snapshot);
 	}
 
-	// Whether a point of the screen is on a part that takes its own clicks (with the host's UI's commands), and not the
-	// game's: the mouse's buttons there are not the game's.
+	// Whether a point of the screen is on the battle screen, whose parts take their own clicks (with the host's UI's
+	// commands): the mouse's buttons there are not the game's.
 	public bool Owns(System.Drawing.Point point)
 	{
-		return Visible && (Battlefield.Area.Contains(point) || InfoPanel.Area.Contains(point) || CombatMenu.Area.Contains(point) || Radar.Area.Contains(point));
+		return Visible && ClientRectangle.Contains(point);
 	}
 }
