@@ -1110,6 +1110,14 @@ private void UpdateSupplyPanel(ref Array8<int> len, ref Array8<Array128<byte>> a
 		}
 	}
 
+// A click on an item of the host's system menu (シナリオ選択へ, リジューム), while the player can order: the game asks
+// whether to do it (IDD_OK_CANCEL), and then sends the answer.
+private void AskSystemMenu(MessageType answer)
+	{
+	DialogAnswer=answer;
+	g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_OK_CANCEL), hwndApp, (DLGPROC)IDD_OK_CANCEL_Proc );
+	}
+
 private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ach, int ry, ref HDC hdc)
 	{
 	RECT dstn_rect = default;
@@ -1143,8 +1151,7 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 				}
 			else if( CanOrder.Value==1 )
 				{
-	DialogAnswer=MessageType.GoToGameSetting;
-				g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_OK_CANCEL), hwndApp, (DLGPROC)IDD_OK_CANCEL_Proc );
+				AskSystemMenu(MessageType.GoToGameSetting);
 				}
 			}
 		}
@@ -1172,8 +1179,7 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 				{
 				if( CanOrder.Value==1 )
 					{
-	DialogAnswer=MessageType.ResumeAndGoToGameSetting;
-					g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_OK_CANCEL), hwndApp, (DLGPROC)IDD_OK_CANCEL_Proc );
+					AskSystemMenu(MessageType.ResumeAndGoToGameSetting);
 					}
 				}
 			}
