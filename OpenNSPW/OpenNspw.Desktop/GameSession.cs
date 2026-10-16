@@ -118,25 +118,25 @@ internal sealed class GameSession : IDisposable
 		_previousKeyboard = keyboard;
 	}
 
-	// A press on a form (`isOnForm`, in game pixels) is the form's, not the game's; a release goes to the game anyway.
+	// A button pressed or released: a press on a form (`isOnForm`) is the form's, not the game's; a release goes to the
+	// game anyway, which ignores one it did not see pressed.
+	private void UpdateButton(int button, ButtonState state, ButtonState previous, bool isOnForm)
+	{
+		if (state != previous && (!isOnForm || state == ButtonState.Released))
+		{
+			Game.PostMouseInput(button, state == ButtonState.Pressed);
+		}
+	}
+
+	// The cursor, in game pixels, and the buttons, each on its own.
 	private void UpdateMouse(ViewportAdapter viewportAdapter, Func<DrawingPoint, bool> isOnForm)
 	{
 		var mouse = Mouse.GetState();
 		var position = viewportAdapter.PointToScreen(mouse.Position);
 		Game.SetCursorPos(position.X, position.Y);
-		if (!isOnForm(new DrawingPoint(position.X, position.Y)) || mouse.LeftButton == ButtonState.Released)
-		{
-			if (mouse.LeftButton != _previousMouse.LeftButton)
-			{
-				Game.PostMouseInput(0, mouse.LeftButton == ButtonState.Pressed);
-			}
-
-			if (mouse.RightButton != _previousMouse.RightButton)
-			{
-				Game.PostMouseInput(1, mouse.RightButton == ButtonState.Pressed);
-			}
-		}
-
+		var onForm = isOnForm(new DrawingPoint(position.X, position.Y));
+		UpdateButton(0, mouse.LeftButton, _previousMouse.LeftButton, onForm);
+		UpdateButton(1, mouse.RightButton, _previousMouse.RightButton, onForm);
 		_previousMouse = mouse;
 	}
 
