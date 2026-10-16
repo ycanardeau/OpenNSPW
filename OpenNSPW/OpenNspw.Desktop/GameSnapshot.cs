@@ -110,7 +110,7 @@ internal sealed class GameSnapshot
 	public bool WasHost;
 	public bool HasAutoSave;
 
-	// Whether the frame is a battle's, with the battlefield, the sidebar and the radar: not the map editor's.
+	// Whether the frame is a battle's, with the battlefield, the sidebar and the minimap: not the map editor's.
 	public bool IsBattle => Mode == GameMode.Battle && !IsEditingMap;
 
 	// Whether the frame is a setting screen's: the scenarios' or the rules'.

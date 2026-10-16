@@ -6,9 +6,9 @@ using DrawingSize = System.Drawing.Size;
 namespace OpenNspw.Desktop.Controls;
 
 // The battle screen, laid out as the original's: the battlefield on the left, and the sidebar with the deck, the unit's
-// information, the combat menu and the radar. Each part draws from the snapshot what the game draws there, and takes its
+// information, the combat menu and the minimap. Each part draws from the snapshot what the game draws there, and takes its
 // clicks with the commands of the host's UI (docs/Ui.md).
-internal sealed class MainForm : Form
+internal sealed class BattleForm : Form
 {
 	private readonly ScrollAhead _scrollAhead;
 	private readonly Battlefield _battlefield;
@@ -16,7 +16,7 @@ internal sealed class MainForm : Form
 	private readonly Deck _deck;
 	private readonly InfoPanel _infoPanel;
 	private readonly CombatMenu _combatMenu;
-	private readonly Radar _radar;
+	private readonly Minimap _minimap;
 
 	// Puts a part in the sidebar, where it is on the game's screen.
 	private void AddToSidebar(Control part, DrawingRectangle area)
@@ -25,7 +25,7 @@ internal sealed class MainForm : Form
 		_sidebar.Controls.Add(part);
 	}
 
-	public MainForm(GameSession session, UiFonts fonts, BattleArt art)
+	public BattleForm(GameSession session, UiFonts fonts, BattleArt art)
 	{
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		BackColor = DrawingColor.Transparent;
@@ -47,8 +47,8 @@ internal sealed class MainForm : Form
 		AddToSidebar(_infoPanel, InfoPanel.Area);
 		_combatMenu = new CombatMenu(session, fonts, art);
 		AddToSidebar(_combatMenu, CombatMenu.Area);
-		_radar = new Radar(session, art);
-		AddToSidebar(_radar, Radar.Area);
+		_minimap = new Minimap(session, art);
+		AddToSidebar(_minimap, Minimap.Area);
 	}
 
 	// Shows the game as it was in the last frame: on the UI's thread, each frame.
@@ -59,7 +59,7 @@ internal sealed class MainForm : Form
 		_deck.UpdateFrom(snapshot);
 		_infoPanel.UpdateFrom(snapshot);
 		_combatMenu.UpdateFrom(snapshot);
-		_radar.UpdateFrom(snapshot);
+		_minimap.UpdateFrom(snapshot);
 	}
 
 	// Whether a point of the screen is on the battle screen, whose parts take their own clicks (with the host's UI's

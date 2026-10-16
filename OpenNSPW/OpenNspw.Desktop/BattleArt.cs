@@ -17,13 +17,13 @@ internal sealed class BattleArt : IDisposable
 	private readonly Texture2D[] _flags;
 	private readonly Texture2D[] _sheet;
 
-	// The radar's map, a pixel a tile, which the radar draws as the map's tiles change.
-	public Texture2D RadarMap { get; }
+	// The minimap's map, a pixel a tile, which the minimap draws as the map's tiles change.
+	public Texture2D MinimapTexture { get; }
 
 	public BattleArt(GraphicsDevice graphicsDevice, string dataDirectory)
 	{
 		_flags = SpriteSheet.LoadRegions(graphicsDevice, GameFiles.Resolve(dataDirectory, "t3.bmp"), FlagRegions);
-		RadarMap = new Texture2D(graphicsDevice, 240, 180);
+		MinimapTexture = new Texture2D(graphicsDevice, 240, 180);
 		_sheet = SpriteSheet.LoadRegions(graphicsDevice, GameFiles.Resolve(dataDirectory, "t3.bmp"), SheetPieces, isKeyed: true);
 	}
 
@@ -63,7 +63,7 @@ internal sealed class BattleArt : IDisposable
 			flag.Dispose();
 		}
 
-		RadarMap.Dispose();
+		MinimapTexture.Dispose();
 		foreach (var piece in _sheet)
 		{
 			piece.Dispose();

@@ -3,7 +3,7 @@ using OpenNspw.Desktop.Controls;
 
 namespace OpenNspw.Desktop.Screens;
 
-// A game of the port: in a battle, the battle screen (MainForm); on the setting screens, the setting form (SettingForm);
+// A game of the port: in a battle, the battle screen (BattleForm); on the setting screens, the setting form (SettingForm);
 // on its other screens, its frames as it draws them. Its dialogs are forms (Dialogs.cs). The main menu comes back when
 // the game ends.
 //
@@ -14,7 +14,7 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 	private readonly Func<GameSession> _startSession = startSession;
 	private GameSession _session = default!;
 	private BattleArt _art = default!;
-	private MainForm _mainForm = default!;
+	private BattleForm _battleForm = default!;
 	private SettingForm _settingForm = default!;
 	private Backdrop _backdrop = default!;
 	private DialogForms _dialogs = default!;
@@ -26,8 +26,8 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 
 		// Under the dialogs, which are brought to the front as they open.
 		_art = new BattleArt(GraphicsDevice, Game.DataDirectory);
-		_mainForm = new MainForm(_session, Game.Fonts, _art) { Visible = false };
-		WindowManager.Root.Controls.Add(_mainForm);
+		_battleForm = new BattleForm(_session, Game.Fonts, _art) { Visible = false };
+		WindowManager.Root.Controls.Add(_battleForm);
 		_settingForm = new SettingForm(_session, Game.Fonts) { Visible = false };
 		WindowManager.Root.Controls.Add(_settingForm);
 		_backdrop = new Backdrop(GraphicsDevice);
@@ -52,8 +52,8 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 
 		_session.UpdateFrame(GraphicsDevice);
 		var snapshot = _session.Snapshot;
-		_mainForm.Visible = snapshot.IsBattle;
-		_mainForm.UpdateFrom(snapshot);
+		_battleForm.Visible = snapshot.IsBattle;
+		_battleForm.UpdateFrom(snapshot);
 		if (_settingForm.Visible != snapshot.IsSetting)
 		{
 			_settingForm.Visible = snapshot.IsSetting;
@@ -65,7 +65,7 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 		if (Game.IsActive)
 		{
 			var cursor = _settingForm.Visible ? SettingForm.GameCursor : (System.Drawing.Point?)null;
-			_session.UpdateInput(Game.ViewportAdapter, point => _dialogs.Contains(point) || _mainForm.Owns(point) || _settingForm.Owns(point), cursor);
+			_session.UpdateInput(Game.ViewportAdapter, point => _dialogs.Contains(point) || _battleForm.Owns(point) || _settingForm.Owns(point), cursor);
 		}
 
 		_dialogs.Update();
