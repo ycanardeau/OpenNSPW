@@ -999,6 +999,9 @@ private void SelectNextSupplyTarget()
 
 private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref HDC hdc, int ry, ref RECT dstn_rect)
 	{
+	// The host's UI's commands for the supply panel (UiCommands.cs).
+	RunUiCommands(UiCommandSite.SupplyPanel, true);
+
 	len[0] = wsprintf(ach[0], "%d:" ,GetSupplyPointsPerUnit());
 	TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*3+5+10, ach[0], len[0]);
 
@@ -1087,6 +1090,10 @@ private void UpdateSupplyPanel(ref Array8<int> len, ref Array8<Array128<byte>> a
 		}
 	else
 		{
+		// The host's UI's commands for choosing and requesting, while a reinforcement is coming, are dropped
+		// (UiCommands.cs).
+		RunUiCommands(UiCommandSite.SupplyPanel, false);
+
 		if((FrameCount%2)!=0)
 			{
 #if !LNGG_VER
@@ -1130,6 +1137,9 @@ private void AskSystemMenu(MessageType answer)
 private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ach, int ry, ref HDC hdc)
 	{
 	RECT dstn_rect = default;
+
+	// The host's UI's commands for the system menu (UiCommands.cs).
+	RunUiCommands(UiCommandSite.SystemMenu, true);
 #if !LNGG_VER
 	len[0] = wsprintf(ach[0], "シナリオ選択へ");
 #else
@@ -1310,11 +1320,21 @@ rival_mode=mode;
 			{
 			UpdateSupplyPanel(ref len, ref ach, ref hdc, ref dstn_rect, ry);
 			}
+		else
+			{
+			// The host's UI's commands for the supply panel, which is not shown, are dropped (UiCommands.cs).
+			RunUiCommands(UiCommandSite.SupplyPanel, false);
+			}
 		ry+=30;
 
 		if( IsHost )
 			{
 			UpdateSystemMenu(ref len, ref ach, ry, ref hdc);
+			}
+		else
+			{
+			// The host's UI's commands for the system menu, which only the host has, are dropped (UiCommands.cs).
+			RunUiCommands(UiCommandSite.SystemMenu, false);
 			}
 
 		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);

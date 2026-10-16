@@ -1,14 +1,16 @@
 namespace OpenNspw;
 
 // Where in a frame a command of the host's UI runs: where the battle takes the mouse's clicks on the battlefield
-// (DrawBattleArea), on the minimap (DrawMinimap), on the switch of a carrier's view (UpdateDeckView), or on the combat
-// menu (UpdateCombatMenu).
+// (DrawBattleArea), on the minimap (DrawMinimap), on the switch of a carrier's view (UpdateDeckView), on the combat menu
+// (UpdateCombatMenu), on the supply panel (UpdateSupplyRequest), or on the host's system menu (UpdateSystemMenu).
 public enum UiCommandSite
 {
 	Battlefield,
 	Minimap,
 	DeckView,
 	CombatMenu,
+	SupplyPanel,
+	SystemMenu,
 }
 
 // The commands that the host's own UI gives the battle in place of the mouse's clicks (docs/Ui.md). Not part of the
@@ -131,6 +133,33 @@ public unsafe partial class Nspw
 			}
 	}
 
+	private void RunSelectSupplyTarget(bool next)
+	{
+		PlayClickSound();
+		if( next )
+			SelectNextSupplyTarget();
+		else
+			SelectPreviousSupplyTarget();
+	}
+
+	private void RunRequestSupply()
+	{
+		PlayClickSound();
+		if( GetSupplyRequestState()==SupplyRequestState.Available && Result==GameResult.None )
+			{
+			RequestSupplyUnit();
+			}
+	}
+
+	private void RunAskSystemMenu(MessageType answer)
+	{
+		PlayClickSound();
+		if( RivalMode==GameMode.Battle && !IsEditingMap && CanOrder.Value==1 )
+			{
+			AskSystemMenu(answer);
+			}
+	}
+
 	// The commands of the host's UI, for the battle, in order: given on any thread, run on the game's.
 	public sealed class UiCommands(Nspw game)
 	{
@@ -180,6 +209,31 @@ public unsafe partial class Nspw
 		public void ChooseCombatMenuItem(CombatMenuItem item)
 		{
 			_game.QueueUiCommand(UiCommandSite.CombatMenu, () => _game.RunChooseCombatMenuItem(item));
+		}
+
+		// A click on the previous or the next kind of reinforcement, while none is coming.
+		public void SelectSupplyTarget(bool next)
+		{
+			_game.QueueUiCommand(UiCommandSite.SupplyPanel, () => _game.RunSelectSupplyTarget(next));
+		}
+
+		// A click that requests the chosen reinforcement, if it can be requested (GetSupplyRequestState).
+		public void RequestSupply()
+		{
+			_game.QueueUiCommand(UiCommandSite.SupplyPanel, _game.RunRequestSupply);
+		}
+
+		// The host's system menu: back to the scenario selection (シナリオ選択へ), which the game asks first, while the
+		// rival is in the battle and the player can order.
+		public void ToScenarioSelection()
+		{
+			_game.QueueUiCommand(UiCommandSite.SystemMenu, () => _game.RunAskSystemMenu(MessageType.GoToGameSetting));
+		}
+
+		// The host's system menu: saving the battle to resume it, and back to the scenario selection (リジューム).
+		public void Resume()
+		{
+			_game.QueueUiCommand(UiCommandSite.SystemMenu, () => _game.RunAskSystemMenu(MessageType.ResumeAndGoToGameSetting));
 		}
 	}
 
