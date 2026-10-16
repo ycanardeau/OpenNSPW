@@ -59,12 +59,12 @@ public unsafe partial class Nspw
 		PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
 	}
 
-	// Whether the selected unit is on the battlefield, where its path is drawn and a click gives it a destination
-	// (DrawUnitMarks): selected, the player's, and not a parked plane, which is on the deck.
-	private bool IsSelectedOnBattlefield()
+	// Whether the selected unit is shown, so that its path is drawn and a click gives it a destination or a right click
+	// deselects it (DrawUnitMarks): a parked plane only on the deck shown in the sidebar (IsOnShownDeck).
+	private bool IsSelectedShown()
 	{
 		ref var unit = ref Units[SelectedUnit];
-		return SelectedUnit!=0 && unit.IsUsed && !(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked) && !IsEditingMap;
+		return SelectedUnit!=0 && unit.IsUsed && (!(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked) || IsOnShownDeck(ref unit)) && !IsEditingMap;
 	}
 
 	private void RunClickUnit(int m)
@@ -91,7 +91,7 @@ public unsafe partial class Nspw
 	private void RunSetDestination(WorldPosition destination)
 	{
 		PlayClickSound();
-		if( IsSelectedOnBattlefield() && CanSetDestination(ref Units[SelectedUnit]) )
+		if( IsSelectedShown() && CanSetDestination(ref Units[SelectedUnit]) )
 			{
 			SetDestination(destination);
 			}
@@ -100,7 +100,7 @@ public unsafe partial class Nspw
 	private void RunRightClick()
 	{
 		PlayClickSound();
-		if( IsSelectedOnBattlefield() )
+		if( IsSelectedShown() )
 			{
 			CancelSelection(SelectedUnit);
 			}
