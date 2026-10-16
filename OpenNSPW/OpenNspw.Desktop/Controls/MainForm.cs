@@ -10,6 +10,7 @@ namespace OpenNspw.Desktop.Controls;
 // (docs/Ui.md).
 internal sealed class MainForm : Form
 {
+	private readonly Battlefield _battlefield;
 	private readonly Control _sidebar;
 	private readonly InfoPanel _infoPanel;
 	private readonly CombatMenu _combatMenu;
@@ -27,9 +28,8 @@ internal sealed class MainForm : Form
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		BackColor = DrawingColor.Transparent;
 
-		var battlefield = new Battlefield(session);
-		battlefield.Bounds = battlefield.Area;
-		Controls.Add(battlefield);
+		_battlefield = new Battlefield(session, art) { Bounds = Battlefield.Area };
+		Controls.Add(_battlefield);
 
 		_sidebar = new Control
 		{
@@ -51,6 +51,7 @@ internal sealed class MainForm : Form
 	// Shows the game as it was in the last frame: on the UI's thread, each frame.
 	public void UpdateFrom(BattleSnapshot snapshot)
 	{
+		_battlefield.UpdateFrom(snapshot);
 		_infoPanel.UpdateFrom(snapshot);
 		_combatMenu.UpdateFrom(snapshot);
 		_radar.UpdateFrom(snapshot);
@@ -60,6 +61,6 @@ internal sealed class MainForm : Form
 	// game's: the mouse's buttons there are not the game's.
 	public bool Owns(System.Drawing.Point point)
 	{
-		return Visible && (InfoPanel.Area.Contains(point) || CombatMenu.Area.Contains(point) || Radar.Area.Contains(point));
+		return Visible && (Battlefield.Area.Contains(point) || InfoPanel.Area.Contains(point) || CombatMenu.Area.Contains(point) || Radar.Area.Contains(point));
 	}
 }
