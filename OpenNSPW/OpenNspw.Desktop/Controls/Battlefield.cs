@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
 using static OpenNspw.all_head;
+using static OpenNspw.Desktop.Controls.UnitMarks;
 using DrawingPoint = System.Drawing.Point;
 using DrawingRectangle = System.Drawing.Rectangle;
 
@@ -18,9 +19,6 @@ internal sealed class Battlefield : Control
 
 	// The sea out of the player's sight, which the original leaves undrawn.
 	private static readonly Color Fog = new(8, 18, 34);
-	private static readonly Color Mark = Theme.Brass.ToXnaColor();
-	private static readonly Color MarkLight = Theme.BrassLight.ToXnaColor();
-	private static readonly Color Enemy = Theme.Alert.ToXnaColor();
 
 	private readonly GameSession _session;
 	private readonly BattleArt _art;
@@ -50,24 +48,6 @@ internal sealed class Battlefield : Control
 		return new((int)(x - snapshot.CameraPosition.X), (int)(snapshot.CameraPosition.Y - y));
 	}
 
-	// A frame of a sprite in the sheet, `inset` in from its corner and `shrink` smaller, as each kind is cut (DrawUnit,
-	// UpdateLowerEffects, DrawMapTiles).
-	private static Rectangle Source(BattleSnapshot snapshot, SpriteId id, int frame, int inset, int shrink)
-	{
-		ref var sprite = ref snapshot.Sprites[id];
-		return new(
-			sprite.SheetX + sprite.Width * (frame % sprite.FramesPerRow) + inset,
-			sprite.SheetY + sprite.Height * (frame / sprite.FramesPerRow) + inset,
-			sprite.Width - shrink,
-			sprite.Height - shrink);
-	}
-
-	private void Blit(SpriteBatch batch, Vector2 origin, Rectangle source, Vector2 position)
-	{
-		var (texture, piece) = _art.Sheet(source);
-		batch.Draw(texture, origin + position, piece, Color.White);
-	}
-
 	private static bool IsParkedPlane(ref Unit unit) => unit.Category == UnitCategory.Plane && unit.PlaneState == UnitState.Parked;
 
 	// Whether a unit is on the battlefield as the original draws it there: the player's, or found, near the view, and not
@@ -86,12 +66,6 @@ internal sealed class Battlefield : Control
 		return unit.Side != snapshot.LocalSide && unit.Kind == UnitKind.Submarine && unit.IsSubmerged
 			? ToScreen(snapshot, unit.ContactX, unit.ContactY)
 			: ToScreen(snapshot, unit.Position.X, unit.Position.Y);
-	}
-
-	// Whether a point is in the middle of a sprite at `at`, 20 in from the sides of its 78 by 78 (DrawUnitMarks).
-	private static bool IsInMiddle(Vector2 at, DrawingPoint point)
-	{
-		return point.X >= at.X - 20 && point.X <= at.X + 18 && point.Y >= at.Y - 20 && point.Y <= at.Y + 18;
 	}
 
 	// The unit a left click at a point takes, as the original's loop does (DrawUnitMarks): the first, by number, whose
@@ -151,7 +125,7 @@ internal sealed class Battlefield : Control
 				var tile = snapshot.MapTiles[snapshot.FirstRow + n][snapshot.FirstColumn + m];
 				var frame = tile == 0 ? snapshot.FrameCount / 30 % 2 : 6 + (tile - 1);
 				var position = new Vector2(m * tiles.Width - offsetX - tiles.CenterX, n * tiles.Height - offsetY - tiles.CenterY);
-				Blit(batch, origin, Source(snapshot, SpriteId.MapTiles, frame, 0, 0), position);
+				_art.Draw(batch, tiles, frame, 0, tiles.Width, tiles.Height, origin + position);
 			}
 		}
 	}
@@ -198,7 +172,7 @@ internal sealed class Battlefield : Control
 					continue;
 			}
 
-			Blit(batch, origin, Source(snapshot, SpriteId.SubUnits, frame, 1, 1), at - new Vector2(sprite.CenterX, sprite.CenterY));
+			_art.Draw(batch, sprite, frame, 1, sprite.Width - 1, sprite.Height - 1, origin + at - new Vector2(sprite.CenterX, sprite.CenterY));
 		}
 	}
 
@@ -224,7 +198,7 @@ internal sealed class Battlefield : Control
 
 			ref var sprite = ref snapshot.Sprites[id];
 			var at = ToScreen(snapshot, unit.Position.X, unit.Position.Y) - new Vector2(sprite.CenterX, sprite.CenterY);
-			Blit(batch, origin, Source(snapshot, id, row * 8 + Nspw.SpriteColumnOf(unit.Direction), 1, 2), at);
+			_art.Draw(batch, sprite, row * 8 + Nspw.SpriteColumnOf(unit.Direction), 1, sprite.Width - 2, sprite.Height - 2, origin + at);
 		}
 	}
 
@@ -238,7 +212,7 @@ internal sealed class Battlefield : Control
 				continue;
 
 			var at = ToScreen(snapshot, cloud.Position.X, cloud.Position.Y) - new Vector2(tiles.Width / 2, tiles.Height / 2);
-			Blit(batch, origin, Source(snapshot, SpriteId.MapTiles, 2, 0, 0), at);
+			_art.Draw(batch, tiles, 2, 0, tiles.Width, tiles.Height, origin + at);
 		}
 	}
 
@@ -253,24 +227,6 @@ internal sealed class Battlefield : Control
 
 		DrawClouds(batch, origin, snapshot);
 		DrawUnits(batch, origin, snapshot, firstPlane, snapshot.MaxUnitId);
-	}
-
-	// A square around a point, `half` from it to each side.
-	private static void DrawBox(SpriteBatch batch, Vector2 center, int half, Color color, float thickness = 1)
-	{
-		batch.DrawRectangle(new RectangleF(center.X - half, center.Y - half, half * 2, half * 2), color, thickness);
-	}
-
-	// The corners of a square around a point, as on a chart.
-	private static void DrawBrackets(SpriteBatch batch, Vector2 center, int half, Color color)
-	{
-		const int Length = 8;
-		foreach (var (sx, sy) in new[] { (-1, -1), (1, -1), (-1, 1), (1, 1) })
-		{
-			var corner = center + new Vector2(sx * half, sy * half);
-			batch.DrawLine(corner, corner - new Vector2(sx * Length, 0), color, 2);
-			batch.DrawLine(corner, corner - new Vector2(0, sy * Length), color, 2);
-		}
 	}
 
 	// The direction of a unit's target, or of where a transport lands, or a cross for a target out of sight
@@ -350,11 +306,7 @@ internal sealed class Battlefield : Control
 			if (!unit.IsUsed || !(unit.Side == snapshot.LocalSide || unit.IsFound) || IsParkedPlane(ref unit))
 				continue;
 
-			var at = origin + MarkPosition(snapshot, ref unit);
-			if (m == snapshot.SelectedUnit)
-				DrawBrackets(batch, at, 30, MarkLight);
-			else if (snapshot.Selections[m] != 0)
-				DrawBrackets(batch, at, 20, Mark);
+			DrawSelection(batch, origin + MarkPosition(snapshot, ref unit), snapshot, m);
 
 			if (unit.Target != 0 && unit.Side == snapshot.LocalSide)
 				DrawTargetArrow(batch, origin, snapshot, ref unit);
@@ -374,7 +326,7 @@ internal sealed class Battlefield : Control
 
 	// A left click takes the land where the selected transport lands, then a unit, then gives the selected unit a
 	// destination (DrawBattleArea).
-	private void Click(DrawingPoint point)
+	private void TakeClick(DrawingPoint point)
 	{
 		var snapshot = _snapshot;
 		var commands = _session.Game.Commands;
@@ -402,7 +354,7 @@ internal sealed class Battlefield : Control
 	{
 		base.OnMouseDown(e);
 		if (e.Button == MouseButtons.Left)
-			Click(e.Location);
+			TakeClick(e.Location);
 		else if (e.Button == MouseButtons.Right)
 			_session.Game.Commands.RightClick();
 	}

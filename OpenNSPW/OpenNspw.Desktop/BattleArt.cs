@@ -40,6 +40,19 @@ internal sealed class BattleArt : IDisposable
 		throw new ArgumentOutOfRangeException(nameof(source), source, "Not a region of the sprite sheet.");
 	}
 
+	// A frame of a sprite at a position, cut `inset` in from the frame's corner and `width` by `height`, as the original
+	// cuts each kind (DrawMapTiles, DrawUnit, UpdateLowerEffects, DrawUnitDetails).
+	public void Draw(SpriteBatch batch, in Sprite sprite, int frame, int inset, int width, int height, Vector2 position)
+	{
+		var source = new Rectangle(
+			sprite.SheetX + sprite.Width * (frame % sprite.FramesPerRow) + inset,
+			sprite.SheetY + sprite.Height * (frame / sprite.FramesPerRow) + inset,
+			width,
+			height);
+		var (texture, piece) = Sheet(source);
+		batch.Draw(texture, position, piece, Color.White);
+	}
+
 	// The flag of the side, as the combat menu's background is chosen (UpdateUnitInfo).
 	public Texture2D Flag(Side side) => _flags[side == Side.UnitedStates ? 1 : 0];
 
