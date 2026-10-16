@@ -11,6 +11,29 @@ internal sealed class BattleSnapshot
 
 	// The map's tiles, by row and column (MapTiles): 0 for the sea.
 	public Array256<Array256<ushort>> MapTiles;
+
+	// The sprites' places in the sheet (set_sprt_data), and where the game last put them.
+	public SpriteArray Sprites;
+
+	public Array4096<Cloud> Clouds;
+
+	// The first plane's number, after both sides' ships (JPN_PLANE_START).
+	public int FirstPlane;
+
+	// What the player sees (ReadSight): the 11 by 11 tiles of the battlefield from (FirstColumn, FirstRow) that are drawn,
+	// by row, and the effects drawn.
+	public readonly bool[] SeenTiles = new bool[11 * 11];
+	public int FirstColumn;
+	public int FirstRow;
+	public readonly bool[] SeenEffects = new bool[all_head.EFFECT_MAX];
+
+	// Whether a left click on each unit counts, unit 0 being the land where the selected transport lands (ReadClickable),
+	// and whether one on the battlefield gives the selected unit a destination (ReadCanSetDestination).
+	public readonly bool[] Clickable = new bool[256];
+	public bool CanSetDestination;
+
+	// Whether the next destination starts the selected unit's path again (MoveOrders[1].ClearsPath), or adds to it.
+	public bool ClearsPath;
 	public short MaxUnitId;
 	public WorldPosition CameraPosition;
 	public short SelectedUnit;
@@ -67,6 +90,13 @@ internal sealed class BattleSnapshot
 		Fires = game.Fires;
 		Effects = game.Effects;
 		MapTiles = game.MapTiles;
+		Sprites = game.Sprites;
+		Clouds = game.Clouds;
+		FirstPlane = game.JPN_PLANE_START;
+		game.ReadSight(SeenTiles, out FirstColumn, out FirstRow, SeenEffects);
+		game.ReadClickable(Clickable);
+		CanSetDestination = game.ReadCanSetDestination();
+		ClearsPath = game.MoveOrders[1].ClearsPath != 0;
 		MaxUnitId = game.MaxUnitId;
 		CameraPosition = game.CameraPosition;
 		SelectedUnit = game.SelectedUnit;
