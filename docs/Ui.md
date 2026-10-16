@@ -106,6 +106,13 @@ Done. In a battle (not the map editor), `GameScreen` shows `MainForm`, whose par
 ### 3. The snapshot and the commands
 The snapshot in `Present`, and the extracted click functions, with the command test.
 
+Done for the battlefield and the radar; the sidebar's clicks are extracted in step 4, as its parts draw themselves.
+
+- **The extracted functions**, one refactoring each: `CanClickUnit` and `ClickUnit` (a click on a unit), `CanSetDestination` and `SetDestination` (a click that gives the selected unit a destination), `AimLanding` (the land where a transport lands), `CancelSelection` and `RestoreSelection` (the right button), and `ShowMinimapCell` (a click held on the minimap).
+- **The commands** (`UiCommands.cs`, `game.Commands`): `ClickUnit`, `ClickLand`, `SetDestination`, `RightClick` and `ShowMinimapCell`. The host queues them on any thread. `DrawBattleArea` runs the battlefield's where it takes the mouse's clicks, and drops them as it drops clicks while an order waits for its turn; `DrawMinimap` runs the minimap's where it takes a held click. Each checks what the click checks, plays its sound, and calls the same functions. A parked plane is clicked on the deck, in step 4.
+- **The snapshot** (`BattleSnapshot`): the units, the fires, the effects, the camera, the selection, the combat menu, the side, the mode and the result, copied in `Present` under the frame's lock, and taken by the UI with the frame's pixels. The map is to be copied once per battle, with step 5.
+- **The command test** (`UiCommandTests`): the transports' landing of ミッドウェイ攻略１, then the right button and a click on the selected unit, played once with the mouse (`MouseInput`) and once with the commands (`CommandInput`). The guest's trace must be the same in every round, and so must the host's, but for its output and the mouse's globals (`crsr_pt`, `lf_btn`, `ri_btn`, `sprt`).
+
 ### 4. The sidebar
 The deck, the unit details, the combat menu, the supply panel and the system menu as controls, drawn from the snapshot and calling the commands.
 
