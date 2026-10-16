@@ -29,7 +29,7 @@ internal sealed class MainForm : Form
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		BackColor = DrawingColor.Transparent;
 
-		_battlefield = new Battlefield(session, art) { Bounds = Battlefield.Area };
+		_battlefield = new Battlefield(session, fonts, art) { Bounds = Battlefield.Area };
 		Controls.Add(_battlefield);
 
 		_sidebar = new Control

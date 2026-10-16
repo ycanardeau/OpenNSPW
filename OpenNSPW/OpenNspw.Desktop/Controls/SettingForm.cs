@@ -315,5 +315,7 @@ internal sealed class SettingForm : Form
 		Painter.Fill(g, new(48, 186, 928, 1), Theme.Alpha(Theme.Line, 0.9f));
 		if (IsChoosingScenario)
 			PaintSides(g);
+
+		GameMessages.PaintLines(g, _fonts, _snapshot, 504, 40);
 	}
 }

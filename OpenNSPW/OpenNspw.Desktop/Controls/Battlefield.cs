@@ -21,6 +21,7 @@ internal sealed class Battlefield : Control
 	private static readonly Color Fog = new(8, 18, 34);
 
 	private readonly GameSession _session;
+	private readonly UiFonts _fonts;
 	private readonly BattleArt _art;
 
 	// The jitter of smoke and wakes, which the original draws with the game's random numbers: here only for the look.
@@ -29,9 +30,10 @@ internal sealed class Battlefield : Control
 	private GameSnapshot _snapshot = new();
 	private DrawingPoint? _mouse;
 
-	public Battlefield(GameSession session, BattleArt art)
+	public Battlefield(GameSession session, UiFonts fonts, BattleArt art)
 	{
 		_session = session;
+		_fonts = fonts;
 		_art = art;
 		BackColor = System.Drawing.Color.Transparent;
 	}
@@ -371,5 +373,7 @@ internal sealed class Battlefield : Control
 			DrawEffects(batch, origin, snapshot, EffectLayer.Upper);
 			DrawMarks(batch, origin, snapshot);
 		});
+		GameMessages.PaintLines(e.Graphics, _fonts, snapshot, 16, 16);
+		GameMessages.PaintResult(e.Graphics, _fonts, snapshot, ClientRectangle);
 	}
 }

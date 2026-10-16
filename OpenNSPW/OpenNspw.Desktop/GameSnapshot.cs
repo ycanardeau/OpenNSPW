@@ -83,6 +83,13 @@ internal sealed class GameSnapshot
 	public bool IsEditingMap;
 	public GameResult Result;
 
+	// What the game writes over its screens: the result of the battle once it is over, the notices of the top left
+	// corner, and the players' chat (ReadResult, ReadNotices, ReadChat).
+	public string[] ResultText = [];
+	public string[] Notices = [];
+	public string MyChat = "";
+	public string RivalChat = "";
+
 	// The setting screens (UpdateGameSetting): the scenario chosen, and on the page of its list, the scenarios and what
 	// the screen says about it; the host's side (0 for Japan); the rules, as the host sets them and the guest is sent them;
 	// and whether the host can start from a battle saved.
@@ -163,6 +170,9 @@ internal sealed class GameSnapshot
 		Mode = game.Mode;
 		IsEditingMap = game.IsEditingMap;
 		Result = game.Result;
+		ResultText = game.ReadResult();
+		Notices = game.ReadNotices();
+		(MyChat, RivalChat) = game.ReadChat();
 		if (IsSetting)
 			CopySettingFrom(game);
 	}
