@@ -57,19 +57,25 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 	private ushort[] _frame = [];
 	private int _frameWidth;
 	private int _frameHeight;
+	private bool _isBattleFrame;
 
 	// Incremented for each frame the game shows.
 	public int FrameNumber { get; private set; }
 
+	// Whether the game is in a battle, with the battlefield, the sidebar and the radar on its screen: asked on the game's
+	// thread as it shows each frame, so that it goes with the frame.
+	public Func<bool>? IsInBattle { get; set; }
+
 	public List<string> Messages { get; } = [];
 
 	// Copies the last frame, if it changed since `known`. Returns its number.
-	public int CopyFrame(int known, ref ushort[] pixels, out int width, out int height)
+	public int CopyFrame(int known, ref ushort[] pixels, out int width, out int height, out bool isBattle)
 	{
 		lock (_frameLock)
 		{
 			width = _frameWidth;
 			height = _frameHeight;
+			isBattle = _isBattleFrame;
 			if (known != FrameNumber)
 			{
 				if (pixels.Length != _frame.Length)
@@ -148,6 +154,7 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 			primary.Pixels.CopyTo(_frame);
 			_frameWidth = primary.Width;
 			_frameHeight = primary.Height;
+			_isBattleFrame = IsInBattle?.Invoke() ?? false;
 			FrameNumber++;
 		}
 	}

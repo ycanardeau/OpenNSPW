@@ -34,7 +34,6 @@ internal sealed class GameSession : IDisposable
 
 	private readonly DesktopPlatform _platform;
 	private readonly Thread _thread;
-	private Texture2D? _screen;
 	private ushort[] _pixels = [];
 	private Color[] _colors = [];
 	private int _frameNumber = -1;
@@ -75,6 +74,7 @@ internal sealed class GameSession : IDisposable
 	{
 		_platform = new DesktopPlatform(dataDirectory, text);
 		Game = new Nspw(_platform);
+		_platform.IsInBattle = () => Game.Mode == GameMode.Battle && !Game.IsEditingMap;
 		if (singleplayer is var (executable, scenario))
 		{
 			Game.IsSingleplayer = true;
@@ -153,20 +153,26 @@ internal sealed class GameSession : IDisposable
 		return new Color((r << 3) | (r >> 2), (g << 2) | (g >> 4), (b << 3) | (b >> 2));
 	}
 
-	// Draws the game's last frame.
-	public void Draw(SpriteBatch spriteBatch, ViewportAdapter viewportAdapter)
+	// The game's last frame, once it has shown one.
+	public Texture2D? Frame { get; private set; }
+
+	// Whether the last frame is a battle's: the battlefield, the sidebar and the radar.
+	public bool IsBattleFrame { get; private set; }
+
+	// Takes the game's last frame into `Frame`, if it has shown a new one.
+	public void UpdateFrame(GraphicsDevice graphicsDevice)
 	{
 		ObjectDisposedException.ThrowIf(_isDisposed, this);
-		if (_screen is null)
+		if (Frame is null)
 		{
 			// Black until the game shows its first frame: a new texture holds whatever its memory held, such as the
 			// screen before.
-			_screen = new Texture2D(spriteBatch.GraphicsDevice, all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
-			_screen.SetData(new Color[_screen.Width * _screen.Height]);
+			Frame = new Texture2D(graphicsDevice, all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
+			Frame.SetData(new Color[Frame.Width * Frame.Height]);
 		}
 
-		var frameNumber = _platform.CopyFrame(_frameNumber, ref _pixels, out var width, out var height);
-		if (frameNumber != _frameNumber && width == _screen.Width && height == _screen.Height)
+		var frameNumber = _platform.CopyFrame(_frameNumber, ref _pixels, out var width, out var height, out var isBattle);
+		if (frameNumber != _frameNumber && width == Frame.Width && height == Frame.Height)
 		{
 			if (_colors.Length != _pixels.Length)
 			{
@@ -178,12 +184,23 @@ internal sealed class GameSession : IDisposable
 				_colors[i] = ToColor(_pixels[i]);
 			}
 
-			_screen.SetData(_colors);
+			Frame.SetData(_colors);
+			IsBattleFrame = isBattle;
 			_frameNumber = frameNumber;
+		}
+	}
+
+	// Draws the game's last frame, the whole screen.
+	public void Draw(SpriteBatch spriteBatch, ViewportAdapter viewportAdapter)
+	{
+		ObjectDisposedException.ThrowIf(_isDisposed, this);
+		if (Frame is null)
+		{
+			return;
 		}
 
 		spriteBatch.Begin(transformMatrix: viewportAdapter.GetScaleMatrix(), samplerState: SamplerState.PointClamp);
-		spriteBatch.Draw(_screen, Vector2.Zero, Color.White);
+		spriteBatch.Draw(Frame, Vector2.Zero, Color.White);
 		spriteBatch.End();
 	}
 
@@ -215,6 +232,6 @@ internal sealed class GameSession : IDisposable
 		_isDisposed = true;
 		Close();
 		_platform.StopSounds();
-		_screen?.Dispose();
+		Frame?.Dispose();
 	}
 }
