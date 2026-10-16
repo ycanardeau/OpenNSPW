@@ -970,6 +970,24 @@ private void RequestSupply(ref Array8<int> len, ref Array8<Array128<byte>> ach, 
 			break;
 		}
 	}
+// A click on the previous kind of reinforcement (前の機種), from the first to the last.
+private void SelectPreviousSupplyTarget()
+	{
+	if(SupplyTarget==0)
+		SupplyTarget=17;
+	else
+		SupplyTarget--;
+	}
+
+// A click on the next kind of reinforcement (次の機種), from the last to the first.
+private void SelectNextSupplyTarget()
+	{
+	if(SupplyTarget==17)
+		SupplyTarget=0;
+	else
+		SupplyTarget++;
+	}
+
 private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref HDC hdc, int ry, ref RECT dstn_rect)
 	{
 	len[0] = wsprintf(ach[0], "%d:" ,GetSupplyPointsPerUnit());
@@ -991,10 +1009,7 @@ private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>>
 		SetTextColor(hdc, RGB(255, 0, 0));
 		if( LeftButton==3 )
 			{
-			if(SupplyTarget==0)
-				SupplyTarget=17;
-			else
-				SupplyTarget--;
+			SelectPreviousSupplyTarget();
 			}
 		}
 	else
@@ -1020,10 +1035,7 @@ private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>>
 		SetTextColor(hdc, RGB(255, 0, 0));
 		if( LeftButton==3 )
 			{
-			if(SupplyTarget==17)
-				SupplyTarget=0;
-			else
-				SupplyTarget++;
+			SelectNextSupplyTarget();
 			}
 		}
 	else
