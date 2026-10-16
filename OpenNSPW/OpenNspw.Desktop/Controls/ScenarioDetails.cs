@@ -1,46 +1,40 @@
 using Aigamo.Saruhashi;
 using OpenNspw.Singleplayer;
-using Graphics = Aigamo.Saruhashi.Graphics;
+using DrawingRectangle = System.Drawing.Rectangle;
 
 namespace OpenNspw.Desktop.Controls;
 
-// What NSPW 1.22's setting screen says about a scenario: its side, its briefing, and its victory conditions (勝敗条件),
-// in a panel framed like a chart.
-internal sealed class ScenarioDetails(UiFonts fonts) : Control
+// What NSPW 1.22's setting screen says about a scenario, in a panel framed like a chart: its number, title and side, over
+// its briefing and victory conditions, which scroll (BriefingView).
+internal sealed class ScenarioDetails : Control
 {
 	private const int Padding = 28;
-	private const string ConditionsLabel = "勝敗条件";
 
-	private readonly UiFonts _fonts = fonts;
+	private readonly UiFonts _fonts;
 
-	// The lines as wrapped to the panel's width, for the scenario they were wrapped for.
+	// The title as wrapped to the panel's width, for the scenario it was wrapped for.
 	private ScenarioEntry? _wrappedFor;
 	private List<string> _title = [];
-	private List<string> _briefing = [];
-	private List<string> _conditions = [];
 
-	public ScenarioEntry? Scenario { get; set; }
+	private ScenarioEntry? _scenario;
 
-	// The briefing, and the victory conditions that end it, each as one text: the screen's lines are broken for its own
-	// width.
-	private static (string Briefing, string Conditions) Split(ScenarioEntry scenario)
+	public BriefingView Briefing { get; }
+
+	public ScenarioDetails(UiFonts fonts)
 	{
-		var start = scenario.Briefing.ToList().FindIndex(l => l.StartsWith(ConditionsLabel + "：", StringComparison.Ordinal));
-		if (start < 0)
-			return (string.Concat(scenario.Briefing), "");
-
-		var conditions = string.Concat(scenario.Briefing.Skip(start));
-		return (string.Concat(scenario.Briefing.Take(start)), conditions[(ConditionsLabel.Length + 1)..]);
+		_fonts = fonts;
+		Briefing = new BriefingView(fonts) { BackColor = System.Drawing.Color.Transparent };
+		Controls.Add(Briefing);
 	}
 
-	private void Wrap(Graphics graphics, ScenarioEntry scenario)
+	public ScenarioEntry? Scenario
 	{
-		var width = Width - Padding * 2;
-		var (briefing, conditions) = Split(scenario);
-		_title = Painter.Wrap(graphics, scenario.Title, _fonts.Bold(28), width);
-		_briefing = Painter.Wrap(graphics, briefing, _fonts.Regular(16), width);
-		_conditions = Painter.Wrap(graphics, conditions, _fonts.Regular(16), width - 20);
-		_wrappedFor = scenario;
+		get => _scenario;
+		set
+		{
+			_scenario = value;
+			Briefing.Scenario = value;
+		}
 	}
 
 	protected override void OnPaint(PaintEventArgs e)
@@ -53,7 +47,10 @@ internal sealed class ScenarioDetails(UiFonts fonts) : Control
 			return;
 
 		if (_wrappedFor != scenario)
-			Wrap(g, scenario);
+		{
+			_title = Painter.Wrap(g, scenario.Title, _fonts.Bold(28), Width - Padding * 2);
+			_wrappedFor = scenario;
+		}
 
 		Painter.SpacedText(g, $"SCENARIO {scenario.Number}", _fonts.Bold(12), Theme.Brass, Padding, 26, 3);
 		var y = 46f;
@@ -69,27 +66,11 @@ internal sealed class ScenarioDetails(UiFonts fonts) : Control
 		Painter.Text(g, scenario.SideName, _fonts.Bold(16), Theme.Text, Padding + 90, y);
 		y += 36;
 		Painter.Fill(g, new(Padding, (int)y, Width - Padding * 2, 1), Theme.Alpha(Theme.Line, 0.9f));
-		y += 16;
-
-		foreach (var line in _briefing)
-		{
-			Painter.Text(g, line, _fonts.Regular(16), Theme.Lerp(Theme.Text, Theme.Muted, 0.15f), Padding, y);
-			y += 26;
-		}
-
-		if (_conditions.Count == 0)
-			return;
-
 		y += 12;
-		var box = new System.Drawing.Rectangle(Padding, (int)y, Width - Padding * 2, 40 + _conditions.Count * 26);
-		Painter.Fill(g, box, Theme.Alpha(Theme.Brass, 0.09f));
-		Painter.Fill(g, new(box.X, box.Y, 3, box.Height), Theme.Brass);
-		Painter.Text(g, ConditionsLabel, _fonts.Bold(13), Theme.Brass, box.X + 16, box.Y + 10);
-		y += 34;
-		foreach (var line in _conditions)
-		{
-			Painter.Text(g, line, _fonts.Regular(16), Theme.Text, box.X + 16, y);
-			y += 26;
-		}
+
+		// The briefing takes the rest, under the title, which is one line or two; its scroll bar is in the right margin.
+		var briefing = new DrawingRectangle(Padding, (int)y, Width - Padding * 2 + 14, Height - (int)y - 20);
+		if (Briefing.Bounds != briefing)
+			Briefing.Bounds = briefing;
 	}
 }

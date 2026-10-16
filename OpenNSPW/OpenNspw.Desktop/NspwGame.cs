@@ -119,6 +119,7 @@ internal sealed class NspwGame : Game
 		mouseListener.MouseDown += (_, e) => WindowManager.OnMouseDown(e);
 		mouseListener.MouseMove += (_, e) => WindowManager.OnMouseMove(e);
 		mouseListener.MouseUp += (_, e) => WindowManager.OnMouseUp(e);
+		mouseListener.MouseWheel += (_, e) => WindowManager.OnMouseWheel(e);
 		keyboardListener.KeyPressed += (_, e) => WindowManager.OnKeyDown(new KeyEventArgs((SaruhashiKeys)e.Key));
 		keyboardListener.KeyReleased += (_, e) => WindowManager.OnKeyUp(new KeyEventArgs((SaruhashiKeys)e.Key));
 		Window.TextInput += (_, e) => WindowManager.OnKeyPress(new KeyPressEventArgs(e.Character));

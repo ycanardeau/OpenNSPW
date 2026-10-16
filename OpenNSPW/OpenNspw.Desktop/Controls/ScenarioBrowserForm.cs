@@ -120,6 +120,18 @@ internal sealed class ScenarioBrowserForm : Form
 			case Keys.Right:
 				Select((_page + 1) % _rows.Length, 0);
 				break;
+			case Keys.PageUp:
+				_details.Briefing.ScrollPage(-1);
+				break;
+			case Keys.PageDown:
+				_details.Briefing.ScrollPage(1);
+				break;
+			case Keys.Home:
+				_details.Briefing.ScrollToStart();
+				break;
+			case Keys.End:
+				_details.Briefing.ScrollToEnd();
+				break;
 			case Keys.Enter:
 				Start();
 				break;
@@ -138,7 +150,7 @@ internal sealed class ScenarioBrowserForm : Form
 		Painter.Text(g, SplitHeading(_sets[_page].Heading, _page).Description, _fonts.Regular(14), Theme.Muted, 48, 156);
 		Painter.Fill(g, new(48, 186, 928, 1), Theme.Alpha(Theme.Line, 0.9f));
 
-		const string hint = "↑↓ Scenario    ←→ Set    Enter Start    Esc Back";
+		const string hint = "↑↓ Scenario    ←→ Set    PgUp PgDn Briefing    Enter Start    Esc Back";
 		var hintFont = _fonts.Regular(13);
 		Painter.Text(g, hint, hintFont, Theme.Muted, (Width - Painter.Measure(g, hint, hintFont).Width) / 2, 701);
 	}
