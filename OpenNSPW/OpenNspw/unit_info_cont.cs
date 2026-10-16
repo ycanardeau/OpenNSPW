@@ -1394,6 +1394,9 @@ public void	DrawMinimap()
 			}
 		}
 
+	// The host's UI's commands for clicks held on the minimap (UiCommands.cs).
+	RunUiCommands(UiCommandSite.Minimap, true);
+
 	// ユニットの描画
 
 	if( LocalSide==Side.Japan )

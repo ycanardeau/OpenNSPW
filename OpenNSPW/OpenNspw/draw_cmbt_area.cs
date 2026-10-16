@@ -1299,6 +1299,10 @@ public void	DrawBattleArea()
 	if( lc_ri_btn==1 || lc_lf_btn==1 )
 		PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
 
+	// The host's UI's commands for clicks on the battlefield (UiCommands.cs): taken here, as the clicks are, and dropped
+	// as they are while an order waits for its turn.
+	RunUiCommands(UiCommandSite.Battlefield, !(HasOrdered && Result==GameResult.None));
+
 	for( m=0; m<=MaxUnitId; m++)
 		{
 		ref var unit = ref Units[m];
