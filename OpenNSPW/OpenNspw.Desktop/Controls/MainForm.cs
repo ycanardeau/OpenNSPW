@@ -13,6 +13,7 @@ internal sealed class MainForm : Form
 	private readonly Control _sidebar;
 	private readonly InfoPanel _infoPanel;
 	private readonly CombatMenu _combatMenu;
+	private readonly Radar _radar;
 
 	// Puts a part in the sidebar, where it is on the game's screen.
 	private void AddToSidebar(Control part, DrawingRectangle area)
@@ -43,8 +44,8 @@ internal sealed class MainForm : Form
 		AddToSidebar(_infoPanel, InfoPanel.Area);
 		_combatMenu = new CombatMenu(session, fonts, art);
 		AddToSidebar(_combatMenu, CombatMenu.Area);
-		var radar = new Radar(session);
-		AddToSidebar(radar, radar.Area);
+		_radar = new Radar(session, art);
+		AddToSidebar(_radar, Radar.Area);
 	}
 
 	// Shows the game as it was in the last frame: on the UI's thread, each frame.
@@ -52,12 +53,13 @@ internal sealed class MainForm : Form
 	{
 		_infoPanel.UpdateFrom(snapshot);
 		_combatMenu.UpdateFrom(snapshot);
+		_radar.UpdateFrom(snapshot);
 	}
 
 	// Whether a point of the screen is on a part that takes its own clicks (with the host's UI's commands), and not the
 	// game's: the mouse's buttons there are not the game's.
 	public bool Owns(System.Drawing.Point point)
 	{
-		return Visible && (InfoPanel.Area.Contains(point) || CombatMenu.Area.Contains(point));
+		return Visible && (InfoPanel.Area.Contains(point) || CombatMenu.Area.Contains(point) || Radar.Area.Contains(point));
 	}
 }

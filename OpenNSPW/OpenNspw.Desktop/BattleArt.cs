@@ -12,9 +12,13 @@ internal sealed class BattleArt : IDisposable
 
 	private readonly Texture2D[] _flags;
 
+	// The radar's map, a pixel a tile, which the radar draws as the map's tiles change.
+	public Texture2D RadarMap { get; }
+
 	public BattleArt(GraphicsDevice graphicsDevice, string dataDirectory)
 	{
 		_flags = SpriteSheet.LoadRegions(graphicsDevice, GameFiles.Resolve(dataDirectory, "t3.bmp"), FlagRegions);
+		RadarMap = new Texture2D(graphicsDevice, 240, 180);
 	}
 
 	// The flag of the side, as the combat menu's background is chosen (UpdateUnitInfo).
@@ -26,5 +30,7 @@ internal sealed class BattleArt : IDisposable
 		{
 			flag.Dispose();
 		}
+
+		RadarMap.Dispose();
 	}
 }

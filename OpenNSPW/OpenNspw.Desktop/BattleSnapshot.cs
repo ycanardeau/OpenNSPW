@@ -8,6 +8,9 @@ internal sealed class BattleSnapshot
 	public Array256<Unit> Units;
 	public Array512<Fire> Fires;
 	public Array1024<Effect> Effects;
+
+	// The map's tiles, by row and column (MapTiles): 0 for the sea.
+	public Array256<Array256<ushort>> MapTiles;
 	public short MaxUnitId;
 	public WorldPosition CameraPosition;
 	public short SelectedUnit;
@@ -63,6 +66,7 @@ internal sealed class BattleSnapshot
 		Units = game.Units;
 		Fires = game.Fires;
 		Effects = game.Effects;
+		MapTiles = game.MapTiles;
 		MaxUnitId = game.MaxUnitId;
 		CameraPosition = game.CameraPosition;
 		SelectedUnit = game.SelectedUnit;
