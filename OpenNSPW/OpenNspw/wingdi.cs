@@ -323,6 +323,11 @@ public sealed class Gdi(INspwPlatform platform)
 			return 0;
 		}
 
+		if (!surface.IsDrawn)
+		{
+			return 1;
+		}
+
 		for (var j = 0; j < cy; j++)
 		{
 			var dy = y + j;
@@ -352,6 +357,11 @@ public sealed class Gdi(INspwPlatform platform)
 		if (Get<DeviceContext>(hdc.Value) is not { Surface: { } surface } dc)
 		{
 			return 0;
+		}
+
+		if (!surface.IsDrawn)
+		{
+			return 1;
 		}
 
 		var font = Get<Font>(dc.Font.Value);

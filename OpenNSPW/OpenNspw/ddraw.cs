@@ -265,6 +265,11 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 
 	public IDirectDrawClipper? Clipper { get; private set; }
 
+	// Whether drawing on the surface changes its pixels. If not, Blt, BltFast and GDI's drawing check what they are
+	// given and return what they would, but leave the pixels as they are: for the frames that the host's UI draws in the
+	// game's place (Nspw.HostDrawsScreens). Not part of DirectDraw.
+	public bool IsDrawn { get; set; } = true;
+
 	public ReadOnlySpan<ushort> Pixels => new(_pixels, Width * Height);
 
 	internal Span<ushort> Row(int y)
@@ -340,9 +345,12 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 				return ddraw.DDERR_INVALIDPARAMS;
 			}
 
-			for (var y = d.top; y < d.bottom; y++)
+			if (IsDrawn)
 			{
-				Row(y)[d.left..d.right].Fill((ushort)lpDDBltFx->dwFillColor);
+				for (var y = d.top; y < d.bottom; y++)
+				{
+					Row(y)[d.left..d.right].Fill((ushort)lpDDBltFx->dwFillColor);
+				}
 			}
 		}
 		else
@@ -358,7 +366,10 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 				return ddraw.DDERR_INVALIDRECT;
 			}
 
-			Copy(src, s, d, (dwFlags & ddraw.DDBLT_KEYSRC) != 0);
+			if (IsDrawn)
+			{
+				Copy(src, s, d, (dwFlags & ddraw.DDBLT_KEYSRC) != 0);
+			}
 		}
 
 		Changed();
@@ -379,7 +390,10 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 			return ddraw.DDERR_INVALIDRECT;
 		}
 
-		Copy(src, s, d, (dwTrans & ddraw.DDBLTFAST_SRCCOLORKEY) != 0);
+		if (IsDrawn)
+		{
+			Copy(src, s, d, (dwTrans & ddraw.DDBLTFAST_SRCCOLORKEY) != 0);
+		}
 		Changed();
 		return ddraw.DD_OK;
 	}
