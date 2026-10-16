@@ -554,12 +554,51 @@ private int ListCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu
 	return n;
 	}
 
+// A click on an item of the combat menu, while the player can order (CanOrder): the item is the order of the turn.
+private void ChooseCombatMenuItem(CombatMenuItem item)
+	{
+	int s;
+	BufferedMenuOrders[1].Menu=item;
+	BufferedMenuOrders[1].SelectedUnit=SelectedUnit;
+
+	if(LocalSide==Side.Japan)
+		{
+		// 日本海軍サイド
+		for(s=1;s<=JPN_SHIP_END;s++)
+			{
+			// 水上ユニット
+			BufferedSelections[1][s-1]=Selections[1][s];
+			}
+		for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
+			{
+			// 航空ユニット
+			BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
+			}
+		}
+	else
+		{
+		// 合衆国海軍サイド
+		for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
+			{
+			// 水上ユニット
+			BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
+			}
+		for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
+			{
+			// 航空ユニット
+			BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
+			}
+		}
+	CanOrder=false;
+	HasOrdered=true;
+	PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+	}
+
 private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu2, ref int m, ref RECT src_rect, ref RECT dstn_rect)
 	{
 	SpriteId sprite;
 	int n;
 	int i;
-	int s;
 	sprite=SpriteId.Buttons1;
 
 	n=ListCombatMenu(ref menu, ref menu2);
@@ -581,40 +620,7 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 			{
 			if( CanOrder )
 				{
-				BufferedMenuOrders[1].Menu=menu2[i];
-				BufferedMenuOrders[1].SelectedUnit=SelectedUnit;
-
-				if(LocalSide==Side.Japan)
-					{
-					// 日本海軍サイド
-					for(s=1;s<=JPN_SHIP_END;s++)
-						{
-						// 水上ユニット
-						BufferedSelections[1][s-1]=Selections[1][s];
-						}
-					for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
-						{
-						// 航空ユニット
-						BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-						}
-					}
-				else
-					{
-					// 合衆国海軍サイド
-					for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
-						{
-						// 水上ユニット
-						BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-						}
-					for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
-						{
-						// 航空ユニット
-						BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
-						}
-					}
-				CanOrder=false;
-				HasOrdered=true;
-				PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+				ChooseCombatMenuItem(menu2[i]);
 				}
 			}
 		if( LeftButton==2 && PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && FrameCount%2<1)
