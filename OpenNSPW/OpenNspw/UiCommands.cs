@@ -93,12 +93,15 @@ public unsafe partial class Nspw
 
 	// Whether unit m can be in the formation of the leader, as a click on it with the leader selected puts it there
 	// (SelectFriendlyTarget): the player's, of the same category, and neither of them a base. A plane does not take a
-	// carrier or an air base, which a click would make it land on, nor a ship a plane.
+	// carrier or an air base, which a click would make it land on, nor a ship a plane; a parked plane takes the planes
+	// parked on the deck shown, and a flying one those flying.
 	private bool IsFormationMate(int leader, int m)
 	{
 		ref var unit = ref Units[m];
+		var isParked = unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked;
+		var isLeaderParked = Units[leader].Category==UnitCategory.Plane && Units[leader].PlaneState==UnitState.Parked;
 		return m!=leader && unit.IsUsed && unit.Side==LocalSide && unit.Category==Units[leader].Category
-			&& !(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked)
+			&& isParked==isLeaderParked && (!isParked || IsOnShownDeck(ref unit))
 			&& !(unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress)
 			&& !(Units[leader].Kind>=UnitKind.AirBase && Units[leader].Kind<=UnitKind.Fortress);
 	}
