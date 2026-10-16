@@ -843,6 +843,24 @@ private void DrawTargetLine(ref Unit unit)
 		}
 	}
 
+// Whether the selected unit can be given a destination: it is the player's, it is not a parked plane that cannot take
+// off yet, and the map is not being edited.
+private bool CanSetDestination(ref Unit unit)
+	{
+	return unit.Side==LocalSide &&
+		// 発進チェック
+		!(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked
+		&& ( Units[unit.Carrier].PlanesToLaunch!=0 || Units[unit.Carrier].LaunchLock!=0 || unit.ReloadTime>0 || Units[unit.Carrier].IsSupplying ))
+		&& !IsEditingMap;
+	}
+
+// A left click on the battlefield, that gives the selected unit (CanSetDestination) a destination.
+private void SetDestination(WorldPosition destination)
+	{
+	MoveOrders[1].Unit=SelectedUnit;
+	MoveOrders[1].Destination = destination;
+	}
+
 private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int lc_lf_btn, ref int lc_ri_btn, int m)
 	{
 	int n;
@@ -893,14 +911,9 @@ private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int lc_lf
 		}
 
 	// 定点設定
-	if( lc_lf_btn==1 && unit.Side==LocalSide && CursorPosition.x < CMBT_WIDTH &&
-		// 発進チェック
-		!(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked
-		&& ( Units[unit.Carrier].PlanesToLaunch!=0 || Units[unit.Carrier].LaunchLock!=0 || unit.ReloadTime>0 || Units[unit.Carrier].IsSupplying ))
-		&& !IsEditingMap )
+	if( lc_lf_btn==1 && CursorPosition.x < CMBT_WIDTH && CanSetDestination(ref unit) )
 		{
-		MoveOrders[1].Unit=SelectedUnit;
-		MoveOrders[1].Destination = new WorldPosition(CursorPosition.x+CameraPosition.X, CameraPosition.Y-CursorPosition.y);
+		SetDestination(new WorldPosition(CursorPosition.x+CameraPosition.X, CameraPosition.Y-CursorPosition.y));
 		}
 
 	if( 1!=0 )
