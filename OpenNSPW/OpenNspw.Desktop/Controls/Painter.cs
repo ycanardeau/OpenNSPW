@@ -83,8 +83,10 @@ internal static class Painter
 		}
 	}
 
-	// Breaks text into lines no wider than `width`, between any two characters, as Japanese is broken; a line does not
-	// start with a closing punctuation mark.
+	private static bool IsLatin(char c) => c < 0x80 && c != ' ';
+
+	// Breaks text into lines no wider than `width`: between any two characters, as Japanese is broken, but between words
+	// in Latin text; a line does not start with a closing punctuation mark, nor with a space.
 	public static List<string> Wrap(Graphics graphics, string text, IFont font, float width)
 	{
 		const string noLineStart = "、。，．）」』！？ー…";
@@ -99,8 +101,14 @@ internal static class Painter
 			while (breakAt > start + 1 && noLineStart.Contains(text[breakAt]))
 				breakAt--;
 
-			lines.Add(text[start..breakAt]);
+			var space = text.LastIndexOf(' ', breakAt - 1, breakAt - start);
+			if (IsLatin(text[breakAt]) && IsLatin(text[breakAt - 1]) && space > start)
+				breakAt = space + 1;
+
+			lines.Add(text[start..breakAt].TrimEnd());
 			start = breakAt;
+			while (start < end - 1 && text[start] == ' ')
+				start++;
 		}
 
 		if (start < text.Length)
