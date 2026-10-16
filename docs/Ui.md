@@ -116,6 +116,14 @@ Done for the battlefield and the radar; the sidebar's clicks are extracted in st
 ### 4. The sidebar
 The deck, the unit details, the combat menu, the supply panel and the system menu as controls, drawn from the snapshot and calling the commands.
 
+Done but for the deck, which draws the units' sprites as the battlefield does, and comes with step 5.
+
+- **`CombatMenu`**: the switch of a carrier's or an air base's view (飛行甲板, 格納庫) and the selected unit's orders, in the original buttons' words, over the side's flag. The game records the items it shows (`ShownCombatMenu`), because listing them also sets the choice shown (`ListCombatMenu`).
+- **`InfoPanel`**: the unit's details, the speed and the time, the supply panel and the host's system menu. Its texts are the game's own (`UiState.cs`: `ReadUnitDetails`, `ReadSupplyTargetName`, `ReadSupplyRequestState`).
+- **Extracted**: `ListCombatMenu`, `ChooseCombatMenuItem`, `ToggleDeckView`, `IsOnShownDeck`, `WriteUnitDetails`, `GetSupplyRequestState`, `RequestSupplyUnit`, `SelectPreviousSupplyTarget`, `SelectNextSupplyTarget` and `AskSystemMenu`.
+- **Commands**: `ToggleDeckView`, `ChooseCombatMenuItem`, `SelectSupplyTarget`, `RequestSupply`, `ToScenarioSelection` and `Resume`, each run where its click is taken (`UpdateDeckView`, `UpdateCombatMenu`, `UpdateSupplyRequest`, `UpdateSystemMenu`), and dropped where the part is not shown.
+- **The mouse**: a part that draws itself takes its own clicks (`MainForm.Owns`), so the game is not given the presses there; a right click there deselects, as it does anywhere.
+
 ### 5. The battlefield and the radar
 Drawing the map, the units, the effects, the paths and the selection from the snapshot and `t3.bmp`, and selecting, moving and targeting through the commands.
 
