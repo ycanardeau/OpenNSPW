@@ -458,15 +458,14 @@ private void UpdateDeckView(ref RECT src_rect, SpriteId sprite, ref RECT dstn_re
 	}
 	}
 
-private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu2, ref int m, ref RECT src_rect, ref RECT dstn_rect)
+// The combat menu's items for the selected unit: in `menu`, their buttons' pictures (Buttons1), and in `menu2`, the
+// items. Returns their number. The choice shown (CombatMenuSelection) follows a supplying ship or a parked plane's arms.
+private int ListCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu2)
 	{
-	SpriteId sprite;
 	int n;
 	int i;
 	RECT wrk_rect;
 	int g;
-	int s;
-	sprite=SpriteId.Buttons1;
 
 	n=0;
 	if( Units[SelectedUnit].Category==UnitCategory.Ship && !(Units[SelectedUnit].Kind==UnitKind.InfantryBase||Units[SelectedUnit].Kind==UnitKind.Pillboxes||Units[SelectedUnit].Kind==UnitKind.Fortress||Units[SelectedUnit].Kind==UnitKind.AirBase) )
@@ -551,6 +550,19 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 				}
 			}
 		}
+
+	return n;
+	}
+
+private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu2, ref int m, ref RECT src_rect, ref RECT dstn_rect)
+	{
+	SpriteId sprite;
+	int n;
+	int i;
+	int s;
+	sprite=SpriteId.Buttons1;
+
+	n=ListCombatMenu(ref menu, ref menu2);
 
 	for( i=0;i<n;i++ )
 		{
