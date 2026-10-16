@@ -30,13 +30,13 @@ internal sealed class CombatMenu : Control
 	// The wording of the original's buttons (Buttons1 of t3.bmp).
 	private static string Label(CombatMenuItem item) => item switch
 	{
-		CombatMenuItem.Move => "移動／その他",
-		CombatMenuItem.Slow => "低速移動／その他",
-		CombatMenuItem.Return => "帰投モード",
-		CombatMenuItem.Supply => "修理と補給",
-		CombatMenuItem.ArmWithTorpedo => "雷撃装備",
-		CombatMenuItem.ArmWithBomb => "爆撃装備",
-		CombatMenuItem.Disarm => "装備無し",
+		CombatMenuItem.Move => Texts.Move,
+		CombatMenuItem.Slow => Texts.SlowMove,
+		CombatMenuItem.Return => Texts.ReturnToBase,
+		CombatMenuItem.Supply => Texts.RepairAndSupply,
+		CombatMenuItem.ArmWithTorpedo => Texts.Torpedoes,
+		CombatMenuItem.ArmWithBomb => Texts.Bombs,
+		CombatMenuItem.Disarm => Texts.Unarmed,
 		_ => item.ToString(),
 	};
 
@@ -67,8 +67,8 @@ internal sealed class CombatMenu : Control
 		var commands = session.Game.Commands;
 		_flightDeck = AddButton(fonts, new(6, 2, 120, 17), 12, commands.ToggleDeckView);
 		_hangar = AddButton(fonts, new(130, 2, 120, 17), 12, commands.ToggleDeckView);
-		_flightDeck.Text = "飛行甲板";
-		_hangar.Text = "格納庫";
+		_flightDeck.Text = Texts.FlightDeck;
+		_hangar.Text = Texts.Hangar;
 
 		_items = new ActionButton[3];
 		for (var i = 0; i < _items.Length; i++)

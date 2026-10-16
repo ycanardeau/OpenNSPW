@@ -44,8 +44,9 @@ internal sealed class ScenarioRow(UiFonts fonts, ScenarioEntry scenario) : FlatB
 		Painter.Text(g, number, numberFont, Theme.Brass, 54 - Painter.Measure(g, number, numberFont).Width, 13);
 
 		var sideFont = _fonts.Regular(13);
-		var hasSide = Scenario.SideName.Length != 0;
-		var sideWidth = hasSide ? Painter.Measure(g, Scenario.SideName, sideFont).Width : 0;
+		var sideName = GameTexts.Of(Scenario.SideName);
+		var hasSide = sideName.Length != 0;
+		var sideWidth = hasSide ? Painter.Measure(g, sideName, sideFont).Width : 0;
 		var sideX = Width - 14 - sideWidth;
 
 		// The title, cut to end before the side's mark; the full title is in the details.
@@ -57,7 +58,7 @@ internal sealed class ScenarioRow(UiFonts fonts, ScenarioEntry scenario) : FlatB
 		if (hasSide)
 		{
 			Painter.Fill(g, new((int)sideX - 14, 18, 8, 8), Scenario.Side == ScenarioSide.Japan ? Theme.Japan : Theme.UnitedStates);
-			Painter.Text(g, Scenario.SideName, sideFont, Theme.Muted, sideX, 13);
+			Painter.Text(g, sideName, sideFont, Theme.Muted, sideX, 13);
 		}
 	}
 }

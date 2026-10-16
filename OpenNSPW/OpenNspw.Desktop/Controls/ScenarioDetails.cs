@@ -52,7 +52,7 @@ internal sealed class ScenarioDetails : Control
 			_wrappedFor = scenario;
 		}
 
-		Painter.SpacedText(g, $"SCENARIO {scenario.Number}", _fonts.Bold(12), Theme.Brass, Padding, 26, 3);
+		Painter.SpacedText(g, Texts.ScenarioNumber(scenario.Number), _fonts.Bold(12), Theme.Brass, Padding, 26, 3);
 		var y = 46f;
 		foreach (var line in _title)
 		{
@@ -61,9 +61,9 @@ internal sealed class ScenarioDetails : Control
 		}
 
 		y += 6;
-		Painter.Text(g, "操作対象", _fonts.Regular(14), Theme.Muted, Padding, y + 1);
+		Painter.Text(g, Texts.PlayerSide, _fonts.Regular(14), Theme.Muted, Padding, y + 1);
 		Painter.Fill(g, new(Padding + 72, (int)y + 6, 10, 10), scenario.Side == ScenarioSide.Japan ? Theme.Japan : Theme.UnitedStates);
-		Painter.Text(g, scenario.SideName, _fonts.Bold(16), Theme.Text, Padding + 90, y);
+		Painter.Text(g, GameTexts.Of(scenario.SideName), _fonts.Bold(16), Theme.Text, Padding + 90, y);
 		y += 36;
 		Painter.Fill(g, new(Padding, (int)y, Width - Padding * 2, 1), Theme.Alpha(Theme.Line, 0.9f));
 		y += 12;

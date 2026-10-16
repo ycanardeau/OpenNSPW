@@ -20,11 +20,6 @@ internal sealed class SettingForm : Form
 	// a scenario of the list is chosen. Away from the original's texts and from the screen's edges, which scroll the map.
 	public static readonly DrawingPoint GameCursor = new(1000, 740);
 
-	// The pages of the list (シナリオ切り替え), as the single-player sets are named.
-	private static readonly string[] PageNames = ["第一集", "第二集"];
-
-	private static readonly string[] SideNames = ["日本海軍", "合衆国海軍"];
-
 	private readonly GameSession _session;
 	private readonly UiFonts _fonts;
 	private readonly TabButton[] _tabs;
@@ -98,7 +93,7 @@ internal sealed class SettingForm : Form
 
 	private TabButton CreateTab(int page)
 	{
-		var tab = new TabButton(_fonts) { Bounds = new DrawingRectangle(48 + page * 112, 112, 96, 32), Text = PageNames[page] };
+		var tab = new TabButton(_fonts) { Bounds = new DrawingRectangle(48 + page * 112, 112, 96, 32), Text = Texts.Page(page) };
 		tab.Click += (_, _) => TurnPage(page);
 		Controls.Add(tab);
 		return tab;
@@ -124,7 +119,7 @@ internal sealed class SettingForm : Form
 	private RuleRow CreateChoiceRule(int index, string name, Action change)
 	{
 		var rule = CreateRule(index, name);
-		rule.AddButton("Change", 84, change);
+		rule.AddButton(Texts.Change, 84, change);
 		return rule;
 	}
 
@@ -136,31 +131,31 @@ internal sealed class SettingForm : Form
 		BackColor = DrawingColor.Transparent;
 		KeyPreview = true;
 
-		_tabs = [.. Enumerable.Range(0, PageNames.Length).Select(CreateTab)];
+		_tabs = [.. Enumerable.Range(0, 2).Select(CreateTab)];
 		_rows = [.. Enumerable.Range(0, 9).Select(CreateRow)];
 		_details = new ScenarioDetails(fonts) { Bounds = new DrawingRectangle(504, 200, 472, 460) };
 		Controls.Add(_details);
-		_switchSides = AddButton(new DrawingRectangle(380, 622, 100, 32), "Switch", () => Commands.SwitchSides());
+		_switchSides = AddButton(new DrawingRectangle(380, 622, 100, 32), Texts.Switch, () => Commands.SwitchSides());
 		_switchSides.FontSize = 14;
-		_resume = AddButton(new DrawingRectangle(48, 688, 150, 44), "Resume", () => Commands.StartFromResume());
-		_autoSave = AddButton(new DrawingRectangle(210, 688, 150, 44), "Auto-save", () => Commands.StartFromAutoSave());
-		_next = AddButton(new DrawingRectangle(826, 688, 150, 44), "Next", GoOn);
+		_resume = AddButton(new DrawingRectangle(48, 688, 150, 44), Texts.Resume, () => Commands.StartFromResume());
+		_autoSave = AddButton(new DrawingRectangle(210, 688, 150, 44), Texts.AutoSave, () => Commands.StartFromAutoSave());
+		_next = AddButton(new DrawingRectangle(826, 688, 150, 44), Texts.Next, GoOn);
 		_next.IsPrimary = true;
 
 		// The rules, in the original's order (UpdateConfigSetting).
 		_rules =
 		[
-			CreateChoiceRule(0, "勝敗判定", () => Commands.ToggleDecision()),
-			CreateStepRule(1, "補給割当増加率（ホスト側）", increase => Commands.ChangeSupplyRate(0, increase)),
-			CreateStepRule(2, "補給割当増加率（ゲスト側）", increase => Commands.ChangeSupplyRate(1, increase)),
-			CreateStepRule(3, "補給値反転地点", Commands.ChangeSwapTime),
-			CreateChoiceRule(4, "補給値反転ルール", () => Commands.ToggleSwapRule()),
-			CreateStepRule(5, "初期補給割当（ホスト側）", increase => Commands.ChangeInitialSupplyPoints(0, increase)),
-			CreateStepRule(6, "初期補給割当（ゲスト側）", increase => Commands.ChangeInitialSupplyPoints(1, increase)),
-			CreateChoiceRule(7, "増援ユニット制御", () => Commands.CycleArrivalControl()),
+			CreateChoiceRule(0, Texts.Decision, () => Commands.ToggleDecision()),
+			CreateStepRule(1, Texts.HostSupplyRate, increase => Commands.ChangeSupplyRate(0, increase)),
+			CreateStepRule(2, Texts.GuestSupplyRate, increase => Commands.ChangeSupplyRate(1, increase)),
+			CreateStepRule(3, Texts.SwapTime, Commands.ChangeSwapTime),
+			CreateChoiceRule(4, Texts.SwapRule, () => Commands.ToggleSwapRule()),
+			CreateStepRule(5, Texts.HostInitialSupplyPoints, increase => Commands.ChangeInitialSupplyPoints(0, increase)),
+			CreateStepRule(6, Texts.GuestInitialSupplyPoints, increase => Commands.ChangeInitialSupplyPoints(1, increase)),
+			CreateChoiceRule(7, Texts.ArrivalControl, () => Commands.CycleArrivalControl()),
 		];
-		_back = AddButton(new DrawingRectangle(48, 688, 150, 44), "Back", () => Commands.BackToScenarios());
-		_start = AddButton(new DrawingRectangle(826, 688, 150, 44), "Start", GoOn);
+		_back = AddButton(new DrawingRectangle(48, 688, 150, 44), Texts.Back, () => Commands.BackToScenarios());
+		_start = AddButton(new DrawingRectangle(826, 688, 150, 44), Texts.Start, GoOn);
 		_start.IsPrimary = true;
 	}
 
@@ -174,7 +169,7 @@ internal sealed class SettingForm : Form
 			for (var i = 0; i < _rows.Length; i++)
 			{
 				if (i < _shownNames.Length)
-					_rows[i].Scenario = new ScenarioEntry(first + i, _shownNames[i], ScenarioSide.Japan, "", []);
+					_rows[i].Scenario = new ScenarioEntry(first + i, GameTexts.Of(_shownNames[i]), ScenarioSide.Japan, "", []);
 			}
 		}
 
@@ -204,21 +199,26 @@ internal sealed class SettingForm : Form
 		_shownScenario = shown;
 		var row = ChosenRow;
 		_details.Scenario = row >= 0 && row < _shownNames.Length
-			? new ScenarioEntry(snapshot.ScenarioNumber, _shownNames[row], PlayerSide == 0 ? ScenarioSide.Japan : ScenarioSide.UnitedStates, SideNames[PlayerSide], snapshot.ScenarioDescription)
+			? new ScenarioEntry(
+				snapshot.ScenarioNumber,
+				GameTexts.Of(_shownNames[row]),
+				PlayerSide == 0 ? ScenarioSide.Japan : ScenarioSide.UnitedStates,
+				Texts.SideName(PlayerSide),
+				GameTexts.DescriptionOf(snapshot.ScenarioNumber, snapshot.ScenarioDescription))
 			: null;
 	}
 
 	// The rules' values, in the setting screen's words (UpdateConfigSetting).
 	private void UpdateRules(GameSnapshot snapshot)
 	{
-		_rules[0].Value = snapshot.IsDecisionEnabled ? "勝敗条件は有効" : "勝敗条件は無効";
-		_rules[1].Value = $"{snapshot.SupplyRates[0]} pts";
-		_rules[2].Value = $"{snapshot.SupplyRates[1]} pts";
-		_rules[3].Value = snapshot.SwapTime != 0 ? $"経過時間 {snapshot.SwapTime * 100}" : "反転無し";
-		_rules[4].Value = snapshot.SwapTime == 0 ? "―" : snapshot.SwapRule == 0 ? "一度だけ" : "指定時間毎";
-		_rules[5].Value = $"{snapshot.InitialSupplyPoints[0]} pts";
-		_rules[6].Value = $"{snapshot.InitialSupplyPoints[1]} pts";
-		_rules[7].Value = snapshot.ArrivalControl;
+		_rules[0].Value = Texts.DecisionValue(snapshot.IsDecisionEnabled);
+		_rules[1].Value = Texts.Points(snapshot.SupplyRates[0]);
+		_rules[2].Value = Texts.Points(snapshot.SupplyRates[1]);
+		_rules[3].Value = Texts.SwapTimeValue(snapshot.SwapTime * 100);
+		_rules[4].Value = snapshot.SwapTime == 0 ? "―" : Texts.SwapRuleValue(snapshot.SwapRule);
+		_rules[5].Value = Texts.Points(snapshot.InitialSupplyPoints[0]);
+		_rules[6].Value = Texts.Points(snapshot.InitialSupplyPoints[1]);
+		_rules[7].Value = GameTexts.Of(snapshot.ArrivalControl);
 
 		foreach (var rule in _rules)
 		{
@@ -281,26 +281,26 @@ internal sealed class SettingForm : Form
 	private string Status()
 	{
 		if (!_snapshot.IsHost)
-			return IsChoosingScenario ? "The host is choosing a scenario and the sides." : "The host is setting the rules.";
+			return IsChoosingScenario ? Texts.HostChoosesScenario : Texts.HostSetsRules;
 
 		if (!HasRival)
-			return "Waiting for the guest…";
+			return Texts.WaitingForGuest;
 
 		if (_snapshot.IsEditingMap)
-			return IsChoosingScenario ? "Choose a scenario to edit, then Next." : "Set the rules, then Start.";
+			return IsChoosingScenario ? Texts.ChooseScenarioToEdit : Texts.SetRules;
 
-		return IsChoosingScenario ? "Choose a scenario for both players, then Next." : "Set the rules, then Start.";
+		return IsChoosingScenario ? Texts.ChooseScenario : Texts.SetRules;
 	}
 
 	// The sides, under the list: the host's and the guest's (UpdateSideSetting).
 	private void PaintSides(Aigamo.Saruhashi.Graphics g)
 	{
 		var hostSide = _snapshot.HostSide;
-		Painter.Text(g, "操作対象", _fonts.Regular(13), Theme.Muted, 48, 618);
-		foreach (var (side, player, y) in new[] { (hostSide, "ホスト", 614), (1 - hostSide, "ゲスト", 640) })
+		Painter.Text(g, Texts.PlayerSide, _fonts.Regular(13), Theme.Muted, 48, 618);
+		foreach (var (side, player, y) in new[] { (hostSide, Texts.HostPlayer, 614), (1 - hostSide, Texts.GuestPlayer, 640) })
 		{
 			Painter.Fill(g, new(120, y + 8, 8, 8), side == 0 ? Theme.Japan : Theme.UnitedStates);
-			Painter.Text(g, $"{SideNames[side]}（{player}）", _fonts.Bold(14), Theme.Text, 134, y);
+			Painter.Text(g, Texts.SideOf(side, player), _fonts.Bold(14), Theme.Text, 134, y);
 		}
 	}
 
@@ -308,9 +308,9 @@ internal sealed class SettingForm : Form
 	{
 		base.OnPaint(e);
 		var g = e.Graphics;
-		var kicker = _snapshot.IsEditingMap ? "MAP EDITOR" : _snapshot.IsHost ? "MULTIPLAYER  ·  HOST" : "MULTIPLAYER  ·  GUEST";
+		var kicker = _snapshot.IsEditingMap ? Texts.MapEditorKicker : _snapshot.IsHost ? Texts.HostKicker : Texts.GuestKicker;
 		Painter.SpacedText(g, kicker, _fonts.Bold(12), Theme.Brass, 48, 34, 3);
-		Painter.Text(g, IsChoosingScenario ? "Scenarios" : "Rules", _fonts.Bold(34), Theme.Text, 48, 52);
+		Painter.Text(g, IsChoosingScenario ? Texts.Scenarios : Texts.Rules, _fonts.Bold(34), Theme.Text, 48, 52);
 		Painter.Text(g, Status(), _fonts.Regular(14), Theme.Muted, IsChoosingScenario ? 300 : 48, 156);
 		Painter.Fill(g, new(48, 186, 928, 1), Theme.Alpha(Theme.Line, 0.9f));
 		if (IsChoosingScenario)

@@ -48,21 +48,21 @@ internal sealed class InfoPanel : Control
 
 		var commands = session.Game.Commands;
 		var width = Area.Width - Left * 2;
-		_previous = AddButton(new(Left, SupplyTop + 86, width, 22), "◀ 前の機種", () => commands.SelectSupplyTarget(next: false));
-		_next = AddButton(new(Left, SupplyTop + 112, width, 22), "次の機種 ▶", () => commands.SelectSupplyTarget(next: true));
+		_previous = AddButton(new(Left, SupplyTop + 86, width, 22), Texts.PreviousKind, () => commands.SelectSupplyTarget(next: false));
+		_next = AddButton(new(Left, SupplyTop + 112, width, 22), Texts.NextKind, () => commands.SelectSupplyTarget(next: true));
 		_request = AddButton(new(Left, SupplyTop + 140, width, 28), "", commands.RequestSupply);
 		_request.IsPrimary = true;
-		_toScenarioSelection = AddButton(new(Left, SystemTop + 22, width, 26), "シナリオ選択へ", commands.ToScenarioSelection);
-		_resume = AddButton(new(Left, SystemTop + 54, width, 26), "リジューム", commands.Resume);
+		_toScenarioSelection = AddButton(new(Left, SystemTop + 22, width, 26), Texts.ToMissionMenu, commands.ToScenarioSelection);
+		_resume = AddButton(new(Left, SystemTop + 54, width, 26), Texts.Resume, commands.Resume);
 	}
 
 	// The request's state, in the game's words (RequestSupply), or that one is coming (要求中).
-	private static string RequestText(GameSnapshot snapshot) => snapshot.SupplyCount != 0 ? "要求中" : snapshot.SupplyRequestState switch
+	private static string RequestText(GameSnapshot snapshot) => snapshot.SupplyCount != 0 ? Texts.Coming : snapshot.SupplyRequestState switch
 	{
-		SupplyRequestState.Available => "要求する",
-		SupplyRequestState.ShortOfPoints => "割当点数不足",
-		SupplyRequestState.UnitLimit => "ユニットリミット",
-		_ => "要求制限",
+		SupplyRequestState.Available => Texts.Request,
+		SupplyRequestState.ShortOfPoints => Texts.ShortOfPoints,
+		SupplyRequestState.UnitLimit => Texts.UnitLimit,
+		_ => Texts.Restricted,
 	};
 
 	// Shows the game as it was in the last frame: on the UI's thread, each frame.
@@ -102,28 +102,28 @@ internal sealed class InfoPanel : Control
 		Painter.Fill(g, ClientRectangle, Theme.Navy);
 		Painter.Fill(g, new(0, 0, 1, Height), Theme.Alpha(Theme.Line, 0.9f));
 
-		Painter.SpacedText(g, "UNIT", _fonts.Bold(10), Theme.Brass, Left, 8, 2);
+		Painter.SpacedText(g, Texts.UnitSection, _fonts.Bold(10), Theme.Brass, Left, 8, 2);
 		if (snapshot.UnitDetails.Length == 4)
 		{
-			Painter.Text(g, Painter.Fit(g, snapshot.UnitDetails[0], _fonts.Bold(15), width), _fonts.Bold(15), Theme.BrassLight, Left, 24);
+			Painter.Text(g, Painter.Fit(g, GameTexts.Of(snapshot.UnitDetails[0]), _fonts.Bold(15), width), _fonts.Bold(15), Theme.BrassLight, Left, 24);
 			for (var i = 1; i < 4; i++)
 			{
-				Painter.Text(g, Painter.Fit(g, snapshot.UnitDetails[i], _fonts.Regular(13), width), _fonts.Regular(13), Theme.Text, Left, 30 + i * 18);
+				Painter.Text(g, Painter.Fit(g, GameTexts.Of(snapshot.UnitDetails[i]), _fonts.Regular(13), width), _fonts.Regular(13), Theme.Text, Left, 30 + i * 18);
 			}
 		}
 
-		PaintSection(g, "STATUS", 110);
-		Painter.Text(g, $"スピード  {snapshot.GameSpeed}", _fonts.Regular(13), Theme.Text, Left, 128);
-		Painter.Text(g, $"経過時間  {snapshot.BattleTime}", _fonts.Regular(13), Theme.Text, Left, 146);
+		PaintSection(g, Texts.StatusSection, 110);
+		Painter.Text(g, Texts.Speed(snapshot.GameSpeed), _fonts.Regular(13), Theme.Text, Left, 128);
+		Painter.Text(g, Texts.Time(snapshot.BattleTime), _fonts.Regular(13), Theme.Text, Left, 146);
 
-		PaintSection(g, "SUPPLY", SupplyTop);
-		Painter.Text(g, $"補給割当  {snapshot.SupplyPoints}", _fonts.Regular(13), Theme.Text, Left, SupplyTop + 22);
-		Painter.Text(g, Painter.Fit(g, snapshot.SupplyTargetName, _fonts.Bold(14), width), _fonts.Bold(14), Theme.BrassLight, Left, SupplyTop + 42);
-		Painter.Text(g, $"{snapshot.SupplyCost} 点", _fonts.Regular(13), Theme.Muted, Left, SupplyTop + 62);
+		PaintSection(g, Texts.SupplySection, SupplyTop);
+		Painter.Text(g, Texts.SupplyPoints(snapshot.SupplyPoints), _fonts.Regular(13), Theme.Text, Left, SupplyTop + 22);
+		Painter.Text(g, Painter.Fit(g, GameTexts.Of(snapshot.SupplyTargetName), _fonts.Bold(14), width), _fonts.Bold(14), Theme.BrassLight, Left, SupplyTop + 42);
+		Painter.Text(g, Texts.Cost(snapshot.SupplyCost), _fonts.Regular(13), Theme.Muted, Left, SupplyTop + 62);
 
 		if (snapshot.IsHost)
 		{
-			PaintSection(g, "SYSTEM", SystemTop);
+			PaintSection(g, Texts.SystemSection, SystemTop);
 		}
 	}
 }
