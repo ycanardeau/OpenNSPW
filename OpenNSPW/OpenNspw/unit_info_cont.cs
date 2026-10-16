@@ -413,6 +413,24 @@ else
 		}
 	}
 
+// A click on the switch of a carrier's or an air base's view (切り替え): its hangar instead of its flight deck, which
+// deselects, or its flight deck again.
+private void ToggleDeckView()
+	{
+	if( UnitInfoPanel[1]!=0 )
+		{
+		UnitInfoPanel[1]=0;				// 空母なら１で格納庫 ０ で飛行甲板
+		}
+	else
+		{
+		UnitInfoPanel[1]=1;				// 空母なら１で格納庫 ０ で飛行甲板
+
+		Selections[1][SelectedUnit]=0;	CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None;
+		SelectedUnit=0;
+		ClearSelection();
+		}
+	}
+
 private void UpdateDeckView(ref RECT src_rect, SpriteId sprite, ref RECT dstn_rect)
 	{
 	int i;
@@ -432,19 +450,7 @@ private void UpdateDeckView(ref RECT src_rect, SpriteId sprite, ref RECT dstn_re
 
 		if( LeftButton==3 )
 			{
-
-			if( UnitInfoPanel[1]!=0 )
-				{
-				UnitInfoPanel[1]=0;				// 空母なら１で格納庫 ０ で飛行甲板
-				}
-			else
-				{
-				UnitInfoPanel[1]=1;				// 空母なら１で格納庫 ０ で飛行甲板
-
-				Selections[1][SelectedUnit]=0;	CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None;
-				SelectedUnit=0;
-				ClearSelection();
-				}
+			ToggleDeckView();
 			}
 		}
 	if( LeftButton==2 && PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
