@@ -159,7 +159,16 @@ Done the other way round: step 3 runs as it does, and only its pixels are skippe
 - **The frame**: the UI no longer converts the game's frames on the screens it draws itself (`GameSession.UpdateFrame`).
 - **What the game wrote over its screens**, which the battlefield had stopped showing since step 5: the battle's result (`WriteResult`, extracted from `DrawResult`), the notices that the players are out of step or the rival is gone, and the players' chat, read for the UI (`ReadResult`, `ReadNotices`, `ReadChat`) and shown over the battlefield and the setting form (`GameMessages`).
 
+## Beyond the original
+What the new UI adds, each a way of giving the original's own clicks or of showing what the player already sees:
+
+- **Scrolling by dragging with the middle button** on the battlefield (`UiCommands.ScrollBattlefield`, `MoveCamera`): the battlefield follows the mouse at once. The game takes each move in its next frame, so the UI shows the moves it has not taken yet on top of the game's camera (`ScrollAhead`, `LastCameraMove`), within the bounds the minimap keeps it in. The camera is only what the player sees, as the screen's edges and the minimap move it.
+- **Selecting units by brushing over them** with the left button held: a press on one of the player's units selects it, or puts it in the selected unit's formation, or takes it out; then each unit the mouse passes over is put in, or taken out, as that press did. Each is a click on the unit (`BrushUnit`, `RunBrushedUnits`), one a frame, as the game takes one click on a unit a frame: the original's own way of making a formation (`SelectFriendlyTarget`), which the next order takes with it. Only units that can be in the selected unit's formation are brushed (`IsFormationMate`): of its category, and no bases; a plane never brushes a carrier, which a click would make it land on.
+- **The system menu's buttons stay on** while the rival is in the battle: the player can order on and off with the turns, so a click waits, two seconds at most, for a frame in which it counts (`RunWaitingSystemMenu`), as a click given a moment later would.
+- **English and Japanese** (`Texts`, `GameTexts`): the UI starts in the system's language and remembers the one chosen on the main menu (`UiSettings`, `ui.json` beside the game's settings). The UI's own words are in both. What the game writes stays Japanese in the snapshot and is put into English as the UI draws it, in the words of the game's English edition (its `LNGG_VER` code), their spelling and grammar mended; the combat menu's words, which the original draws as pictures of Japanese, are new. The single-player scenarios' titles, briefings and victory conditions, which NSPW_122.exe has only in Japanese, are translated for the UI (`SingleplayerTexts`).
+- **The radar** has no sweep: the minimap shows only the map, the units and the battlefield's box.
+
 ## Open questions
 - Should the new UI be the default, with the original's behind `--original-ui`, or the other way round?
 - Should the controls live in `OpenNspw.Desktop`, or in a project of their own, so that the tests can use them without MonoGame?
-- Should the new UI add what the original does not have, such as game speed keys and scrolling by dragging with the middle button? Scrolling changes only what the player sees. The game speed changes the simulation, so it could only apply to the single-player mode.
+- Should the new UI add game speed keys? The game speed changes the simulation, so they could only apply to the single-player mode.
