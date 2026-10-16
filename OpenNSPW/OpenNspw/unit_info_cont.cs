@@ -1231,6 +1231,21 @@ rival_mode=mode;
 		}
 	}
 
+// A click held on the minimap, at cell (column, row) of the map: the battlefield shows the map from there, kept within
+// the map.
+private void ShowMinimapCell(int column, int row)
+	{
+	CameraPosition = new WorldPosition(MAP_LEFT+((column/map_close)*80), MAP_TOP-((row/map_close)*80));
+	if(CameraPosition.Y>MAP_TOP)
+		CameraPosition = new WorldPosition(CameraPosition.X, MAP_TOP);
+	if(CameraPosition.X>(MAP_RIGHT-CMBT_WIDTH) )
+		CameraPosition = new WorldPosition(MAP_RIGHT-CMBT_WIDTH, CameraPosition.Y);
+	if(CameraPosition.Y<(MAP_BOTTOM+CMBT_HEIGHT) )
+		CameraPosition = new WorldPosition(CameraPosition.X, MAP_BOTTOM+CMBT_HEIGHT);
+	if(CameraPosition.X<MAP_LEFT)
+		CameraPosition = new WorldPosition(MAP_LEFT, CameraPosition.Y);
+	}
+
 //============================================================================
 // ミニマップ
 //----------------------------------------------------------------------------
@@ -1297,15 +1312,7 @@ public void	DrawMinimap()
 
 		if(LeftButton==2)
 			{
-			CameraPosition = new WorldPosition(MAP_LEFT+(((CursorPosition.x-5-base_x)/map_close)*80), MAP_TOP-(((CursorPosition.y-5-base_y)/map_close)*80));
-			if(CameraPosition.Y>MAP_TOP)
-				CameraPosition = new WorldPosition(CameraPosition.X, MAP_TOP);
-			if(CameraPosition.X>(MAP_RIGHT-CMBT_WIDTH) )
-				CameraPosition = new WorldPosition(MAP_RIGHT-CMBT_WIDTH, CameraPosition.Y);
-			if(CameraPosition.Y<(MAP_BOTTOM+CMBT_HEIGHT) )
-				CameraPosition = new WorldPosition(CameraPosition.X, MAP_BOTTOM+CMBT_HEIGHT);
-			if(CameraPosition.X<MAP_LEFT)
-				CameraPosition = new WorldPosition(MAP_LEFT, CameraPosition.Y);
+			ShowMinimapCell(CursorPosition.x-5-base_x, CursorPosition.y-5-base_y);
 			}
 		}
 
