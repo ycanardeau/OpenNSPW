@@ -68,6 +68,18 @@ public class Control : IDisposable, IBindableComponent
 				Owner.OnControlRemoved(new ControlEventArgs(value));
 			}
 		}
+
+		/// <summary>
+		/// Moves a child to an index in the z-order, where 0 is the front: the child drawn last, over the others, and the
+		/// first to take the mouse. An index out of the collection moves it to the back.
+		/// </summary>
+		public virtual void SetChildIndex(Control child, int newIndex)
+		{
+			if (!InnerList.Remove(child))
+				throw new ArgumentException("Not a child of the control.", nameof(child));
+
+			InnerList.Insert(newIndex < 0 || newIndex > InnerList.Count ? InnerList.Count : newIndex, child);
+		}
 	}
 
 	[Flags]
@@ -282,6 +294,11 @@ public class Control : IDisposable, IBindableComponent
 			}
 		}
 	}
+
+	/// <summary>
+	/// Brings the control to the front of its parent's z-order, over its siblings.
+	/// </summary>
+	public void BringToFront() => _parent?.Controls.SetChildIndex(this, 0);
 
 	private Point ScreenLocation => (Parent?.ScreenLocation ?? Point.Empty) + (Size)Location;
 	private Rectangle ScreenRectangle => new Rectangle(ScreenLocation, Size);
