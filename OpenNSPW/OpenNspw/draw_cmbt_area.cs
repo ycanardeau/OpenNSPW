@@ -661,6 +661,46 @@ private void DrawMapTiles(int cm_scrn_y, int cm_scrn_x, int map_bld_y, int map_b
 		}
 	}
 
+// A left click on unit m, that counts (CanClickUnit): it selects the unit, or the selected unit's target, or, for m 0,
+// the land at `ground` where the selected transport lands.
+private void ClickUnit(int m, WorldPosition ground)
+	{
+	MoveOrders[1].Unit=0;
+
+	if( SelectedUnit==m )
+		{
+		SelectedUnit=0; CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection2(1);
+		}
+	else
+		{
+		if( SelectedUnit==0 )
+			{
+			if( !(Units[m].Category==UnitCategory.Plane && Units[m].PlaneState==UnitState.Parked) )
+				PreviousSelectedUnit=(short)m;
+
+			set_the_slct_unit( m );
+			}
+		else if(!IsEditingMap)
+			{
+			if( m!=0  )
+				{
+				// 陸地以外、普通の場合
+				SelectOrders[1].IsSet=true;
+				SelectOrders[1].SelectedUnit=SelectedUnit;
+				SelectOrders[1].Unit=(short)m;
+				}
+			else
+				{
+				// 陸地指定
+				SelectOrders[1].IsSet=true;
+				SelectOrders[1].SelectedUnit=SelectedUnit;
+				SelectOrders[1].Unit=0;
+				SelectOrders[1].GroundPosition = ground;
+				}
+			}
+		}
+	}
+
 private void HandleUnitClick(ref Unit unit, ref RECT dstn_rect, ref int lc_lf_btn, int m, SpriteId sprite)
 	{
 	int right;
@@ -687,40 +727,7 @@ private void HandleUnitClick(ref Unit unit, ref RECT dstn_rect, ref int lc_lf_bt
 	if( lc_lf_btn==1 )
 		{
 		lc_lf_btn=0;
-		MoveOrders[1].Unit=0;
-
-		if( SelectedUnit==m )
-			{
-			SelectedUnit=0; CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection2(1);
-			}
-		else
-			{
-			if( SelectedUnit==0 )
-				{
-				if( !(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked) )
-					PreviousSelectedUnit=(short)m;
-
-				set_the_slct_unit( m );
-				}
-			else if(!IsEditingMap)
-				{
-				if( m!=0  )
-					{
-					// 陸地以外、普通の場合
-					SelectOrders[1].IsSet=true;
-					SelectOrders[1].SelectedUnit=SelectedUnit;
-					SelectOrders[1].Unit=(short)m;
-					}
-				else
-					{
-					// 陸地指定
-					SelectOrders[1].IsSet=true;
-					SelectOrders[1].SelectedUnit=SelectedUnit;
-					SelectOrders[1].Unit=0;
-					SelectOrders[1].GroundPosition = new WorldPosition(CameraPosition.X+Sprites[sprite].X, CameraPosition.Y-Sprites[sprite].Y);
-					}
-				}
-			}
+		ClickUnit(m, new WorldPosition(CameraPosition.X+Sprites[sprite].X, CameraPosition.Y-Sprites[sprite].Y));
 		}
 	}
 
