@@ -1194,6 +1194,31 @@ private void DrawUnit(ref Unit unit, SpriteId sprite, ref RECT src_rect, ref REC
 		}
 	}
 
+// Whether the selected transport can land on the land at point (x, y) of the battlefield; if so, the landing mark (the
+// sprite's position) is put on the land's tile.
+private bool AimLanding(SpriteId sprite, int x, int y)
+	{
+	int map_bld_x;
+	int map_bld_y;
+	// カーソルの示す、マップチップの場所
+	map_bld_x=(int)(((x+40+(int)CameraPosition.X)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
+	map_bld_y=(int)((MAP_TOP-((int)CameraPosition.Y-y-40 ))/Sprites[SpriteId.MapTiles].Height);
+	if(
+		MapTiles[map_bld_y][map_bld_x]==9 ||
+		MapTiles[map_bld_y][map_bld_x]==8 ||
+		MapTiles[map_bld_y][map_bld_x]==7 ||
+		MapTiles[map_bld_y][map_bld_x]==5 ||
+		MapTiles[map_bld_y][map_bld_x]==2
+		)
+		{
+		Sprites[sprite].X=(((x+40+(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Width)/80)*80)-(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Width;
+		Sprites[sprite].Y=(((y+40+(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Height)/80)*80)-(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Height;
+		return true;
+		}
+
+	return false;
+	}
+
 // A right click that no selected unit took: the unit selected before is selected again, if nothing is selected and it
 // is still there.
 private void RestoreSelection()
@@ -1299,20 +1324,8 @@ public void	DrawBattleArea()
 		if (  m==0 && SelectedUnit!=0 && Units[SelectedUnit].Kind==UnitKind.Transport && m!=SelectedUnit)
 			{
 			// カーソルのある場所が
-			// カーソルの示す、マップチップの場所
-			map_bld_x=(int)(((CursorPosition.x+40+(int)CameraPosition.X)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
-			map_bld_y=(int)((MAP_TOP-((int)CameraPosition.Y-CursorPosition.y-40 ))/Sprites[SpriteId.MapTiles].Height);
-			if(
-				MapTiles[map_bld_y][map_bld_x]==9 ||
-				MapTiles[map_bld_y][map_bld_x]==8 ||
-				MapTiles[map_bld_y][map_bld_x]==7 ||
-				MapTiles[map_bld_y][map_bld_x]==5 ||
-				MapTiles[map_bld_y][map_bld_x]==2
-				)
+			if( AimLanding(sprite, CursorPosition.x, CursorPosition.y) )
 				{
-				Sprites[sprite].X=(((CursorPosition.x+40+(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Width)/80)*80)-(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Width;
-				Sprites[sprite].Y=(((CursorPosition.y+40+(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Height)/80)*80)-(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Height;
-
 				goto_dca1=true;
 				}
 			}
