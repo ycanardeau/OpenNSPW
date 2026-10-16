@@ -29,6 +29,25 @@ internal sealed class BattleSnapshot
 	// its flight deck, [3] its number, [4] its side.
 	public Array10<int> UnitInfoPanel;
 
+	// The texts of the unit whose information the sidebar shows, or none: its kind, its damage, its ammunition and its
+	// fuel (ReadUnitDetails).
+	public string[] UnitDetails = [];
+
+	public short GameSpeed;
+	public int BattleTime;
+
+	// The supply panel: the points to spend, the reinforcement chosen and its cost, whether it can be requested, and the
+	// time until a requested one comes (0 when none is coming).
+	public short SupplyPoints;
+	public short SupplyTarget;
+	public string SupplyTargetName = "";
+	public int SupplyCost;
+	public SupplyRequestState SupplyRequestState;
+	public short SupplyCount;
+
+	public bool IsHost;
+	public GameMode RivalMode;
+
 	public Side LocalSide;
 	public int FrameCount;
 	public GameMode Mode;
@@ -54,6 +73,17 @@ internal sealed class BattleSnapshot
 		CombatMenuCount = game.ShownCombatMenuCount;
 		CanOrder = game.CanOrder;
 		UnitInfoPanel = game.UnitInfoPanel;
+		UnitDetails = game.ReadUnitDetails();
+		GameSpeed = game.GameSpeed;
+		BattleTime = game.BattleTime;
+		SupplyPoints = game.SupplyPoints;
+		SupplyTarget = game.SupplyTarget;
+		SupplyTargetName = game.ReadSupplyTargetName();
+		SupplyCost = game.GetSupplyPointsPerUnit();
+		SupplyRequestState = game.ReadSupplyRequestState();
+		SupplyCount = game.SupplyCount;
+		IsHost = game.IsHost;
+		RivalMode = game.RivalMode;
 		LocalSide = game.LocalSide;
 		FrameCount = game.FrameCount;
 		Mode = game.Mode;

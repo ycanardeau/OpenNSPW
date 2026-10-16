@@ -11,6 +11,7 @@ namespace OpenNspw.Desktop.Controls;
 internal sealed class MainForm : Form
 {
 	private readonly Control _sidebar;
+	private readonly InfoPanel _infoPanel;
 	private readonly CombatMenu _combatMenu;
 
 	// Puts a part in the sidebar, where it is on the game's screen.
@@ -38,8 +39,8 @@ internal sealed class MainForm : Form
 
 		var deck = new Deck(session);
 		AddToSidebar(deck, deck.Area);
-		var infoPanel = new InfoPanel(session);
-		AddToSidebar(infoPanel, infoPanel.Area);
+		_infoPanel = new InfoPanel(session, fonts);
+		AddToSidebar(_infoPanel, InfoPanel.Area);
 		_combatMenu = new CombatMenu(session, fonts, art);
 		AddToSidebar(_combatMenu, CombatMenu.Area);
 		var radar = new Radar(session);
@@ -49,6 +50,7 @@ internal sealed class MainForm : Form
 	// Shows the game as it was in the last frame: on the UI's thread, each frame.
 	public void UpdateFrom(BattleSnapshot snapshot)
 	{
+		_infoPanel.UpdateFrom(snapshot);
 		_combatMenu.UpdateFrom(snapshot);
 	}
 
@@ -56,6 +58,6 @@ internal sealed class MainForm : Form
 	// game's: the mouse's buttons there are not the game's.
 	public bool Owns(System.Drawing.Point point)
 	{
-		return Visible && CombatMenu.Area.Contains(point);
+		return Visible && (InfoPanel.Area.Contains(point) || CombatMenu.Area.Contains(point));
 	}
 }
