@@ -34,7 +34,7 @@ A scenario browser over NSPW 1.22's scenarios, a set at a time with their headin
 ### Multiplayer
 Hosting or joining: the player name, the address and the port, and the original's scenario editor. The form stands in for the original's connection dialog, which the game still creates: the form shows what the dialog has, and fills in and clicks the dialog (`ClickDlgItem`) as the user does, so the connection is the original's. Switching between hosting and joining clicks the dialog's own check box, which sets the address and the port again, as in the original. Once the dialog is gone, the game's waiting dialog follows, drawn by `Dialogs.cs`.
 
-After connecting, the host chooses the scenario and the guest waits, then both choose sides and rules: the original's setting screens (`UpdateGameSetting`). They first stay drawn by the game. Their forms come later, and work like the battle's: functions extracted from the screens' click handling, called by the forms, so the setting messages stay the same.
+After connecting, the host chooses the scenario and the sides and the guest waits, then the host sets the rules: the original's setting screens (`UpdateGameSetting`), drawn by `SettingForm` since step 6. It works like the battle screen: functions extracted from the screens' click handling, called through commands, so the setting messages stay the same.
 
 ### Battle
 `MainForm`:
@@ -137,6 +137,16 @@ Done. No part of the battle screen shows the game's frame any more (`FrameView` 
 
 ### 6. The setting screens
 The scenario browser and the side and rules form for multiplayer, through functions extracted from `cnct_game_cont.cpp`.
+
+Done; the setting screens are in `demo.cpp`. The title screen, where the host clicks to go on, is still the game's.
+
+- **`SettingForm`**: the scenarios, a page at a time (第一集, 第二集), with what the screen says about the one chosen (`ScenarioDetails`), the sides, and the starts from the resume-saved and the auto-saved battles; then the rules, each with its value in the game's words and the host's buttons (`RuleRow`). The guest sees the host's choices as the host sends them, and the host's buttons wait for the guest to be on the same screen, as the original's clicks do. The map editor goes through the same form.
+- **Extracted**: `ChooseScenario` (the original chooses the scenario under the cursor), `LeaveGameSetting`, `TurnScenarioPage`, `SwitchHostSide`, `StartFromResume`, `StartFromAutoSave`, `ToggleDecision`, `IncreaseSupplyRate` and `DecreaseSupplyRate`, `IncreaseSwapTime` and `DecreaseSwapTime`, `ToggleSwapRule`, `IncreaseInitialSupplyPoints` and `DecreaseInitialSupplyPoints`, `CycleArrivalControl`, `BackToScenarioSetting`, `StartBattle`, and `WriteArrivalControl` for its text.
+- **Commands**: run where the screens take their clicks, at three sites: the list (`ScenarioList`), the buttons under it (`ScenarioMenu`) and the rules (`Rules`), each before the periodic message that sends the host's choices, as the clicks are. A site drops the commands of the other screen's sites, so that a click given as a screen goes cannot count on the next one.
+- **The cursor**: the original chooses a scenario by the cursor's place alone, so while the form is shown, the game is given a cursor of its own (`SettingForm.GameCursor`), away from its texts and from the screen's edges, which scroll the map in any mode.
+- **The snapshot** is now `GameSnapshot`, with the setting screens' state and texts (`ReadScenarioNames`, `ReadScenarioDescription`, `ReadArrivalControl`).
+- **The game's dialogs over the screen's forms**: Saruhashi's z-order is WinForms', the first child on top, so the dialogs, added as they open, were under the battle screen, and the system menu's question was hidden while the game waited for it. They are brought to the front (`Control.BringToFront`, new in Saruhashi).
+- **Not the original's**: a held 増やす or 減らす steps the swap time and the initial points every frame in the original; a button steps them once a click.
 
 ### 7. Switching the original's UI off
 Skipping step 3 of the frame when the new UI is on, after moving the state it writes out of it.
