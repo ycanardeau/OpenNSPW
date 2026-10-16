@@ -16,6 +16,8 @@ internal static partial class GameTexts
 		["第二集"] = "Set 2",
 		["第三集"] = "Set 3",
 		["第四集"] = "Set 4",
+		["本ゲームの標準シナリオです。"] = "The game's standard scenarios.",
+		["難易度順には列記されていません"] = "Not listed in order of difficulty.",
 
 		// The units' kinds (WriteUnitKindName, WriteSupplyTargetName).
 		["大和級戦艦"] = "Class Yamato",

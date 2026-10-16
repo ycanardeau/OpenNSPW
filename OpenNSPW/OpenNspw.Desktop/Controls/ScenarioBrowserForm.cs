@@ -147,7 +147,7 @@ internal sealed class ScenarioBrowserForm : Form
 		var g = e.Graphics;
 		Painter.SpacedText(g, Texts.SinglePlayerKicker, _fonts.Bold(12), Theme.Brass, 48, 34, 3);
 		Painter.Text(g, Texts.Scenarios, _fonts.Bold(34), Theme.Text, 48, 52);
-		Painter.Text(g, SplitHeading(_sets[_page].Heading, _page).Description, _fonts.Regular(14), Theme.Muted, 48, 156);
+		Painter.Text(g, GameTexts.Of(SplitHeading(_sets[_page].Heading, _page).Description), _fonts.Regular(14), Theme.Muted, 48, 156);
 		Painter.Fill(g, new(48, 186, 928, 1), Theme.Alpha(Theme.Line, 0.9f));
 
 		var hint = Texts.BrowserHint;
