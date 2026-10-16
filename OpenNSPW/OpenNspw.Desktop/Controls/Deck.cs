@@ -20,6 +20,7 @@ internal sealed class Deck : Control
 
 	private readonly GameSession _session;
 	private readonly BattleArt _art;
+	private readonly UnitBrush _brush;
 	private GameSnapshot _snapshot = new();
 	private DrawingPoint? _mouse;
 
@@ -27,6 +28,7 @@ internal sealed class Deck : Control
 	{
 		_session = session;
 		_art = art;
+		_brush = new UnitBrush(session);
 		BackColor = System.Drawing.Color.Transparent;
 	}
 
@@ -127,6 +129,7 @@ internal sealed class Deck : Control
 	{
 		base.OnMouseMove(e);
 		_mouse = e.Location;
+		_brush.Over(HitPlane(_snapshot, e.Location));
 	}
 
 	protected override void OnMouseLeave(EventArgs e)
@@ -135,15 +138,30 @@ internal sealed class Deck : Control
 		_mouse = null;
 	}
 
-	// A left click takes a parked plane; one elsewhere on the deck is not on the battlefield, and gives no destination
+	// A left click takes a parked plane, and with the button held, brushes the planes parked by it into the selection or
+	// out of it (UnitBrush); one elsewhere on the deck is not on the battlefield, and gives no destination
 	// (DrawPathAndSetDestination). The right button deselects anywhere, as on the battlefield (DrawBattleArea).
 	protected override void OnMouseDown(MouseEventArgs e)
 	{
 		base.OnMouseDown(e);
-		if (e.Button == MouseButtons.Left && HitPlane(_snapshot, e.Location) is { } m)
-			_session.Game.Commands.ClickUnit(m);
+		if (e.Button == MouseButtons.Left)
+		{
+			var m = HitPlane(_snapshot, e.Location);
+			_brush.Press(_snapshot, m);
+			if (m is { } plane)
+				_session.Game.Commands.ClickUnit(plane);
+		}
 		else if (e.Button == MouseButtons.Right)
+		{
 			_session.Game.Commands.RightClick();
+		}
+	}
+
+	protected override void OnMouseUp(MouseEventArgs e)
+	{
+		base.OnMouseUp(e);
+		if (e.Button == MouseButtons.Left)
+			_brush.Release();
 	}
 
 	protected override void OnPaint(PaintEventArgs e)
