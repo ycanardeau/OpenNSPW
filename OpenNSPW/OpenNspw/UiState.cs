@@ -168,6 +168,16 @@ public unsafe partial class Nspw
 			clickable[m]=CanClickUnit(ref Units[m]);
 	}
 
+	// Whether each unit is a parked plane shown on the deck in the sidebar (DrawUnit, IsOnShownDeck).
+	public void ReadShownOnDeck(Span<bool> shown)
+	{
+		for( var m=0; m<=MaxUnitId; m++ )
+			{
+			ref var unit = ref Units[m];
+			shown[m]=unit.IsUsed && (unit.Side==LocalSide || unit.IsFound) && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked && IsOnShownDeck(ref unit);
+			}
+	}
+
 	// Whether a left click on the battlefield gives the selected unit a destination (DrawPathAndSetDestination).
 	public bool ReadCanSetDestination()
 	{

@@ -73,7 +73,7 @@ public unsafe partial class Nspw
 	{
 		PlayClickSound();
 		ref var unit = ref Units[m];
-		if( m!=0 && unit.IsUsed && (unit.Side==LocalSide || unit.IsFound) && !(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked) && CanClickUnit(ref unit) )
+		if( m!=0 && unit.IsUsed && (unit.Side==LocalSide || unit.IsFound) && (!(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked) || IsOnShownDeck(ref unit)) && CanClickUnit(ref unit) )
 			{
 			ClickUnit(m, default);
 			}
@@ -165,8 +165,8 @@ public unsafe partial class Nspw
 	{
 		private readonly Nspw _game = game;
 
-		// A left click on unit m on the battlefield, if the player sees it and the click counts (CanClickUnit). A parked
-		// plane is on the deck, in the sidebar, not on the battlefield.
+		// A left click on unit m on the battlefield, or on a parked plane on the deck shown in the sidebar, if the player
+		// sees it and the click counts (CanClickUnit).
 		public void ClickUnit(int m)
 		{
 			_game.QueueUiCommand(UiCommandSite.Battlefield, () => _game.RunClickUnit(m));

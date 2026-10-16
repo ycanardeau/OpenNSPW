@@ -32,6 +32,9 @@ internal sealed class BattleSnapshot
 	public readonly bool[] Clickable = new bool[256];
 	public bool CanSetDestination;
 
+	// Whether each unit is a parked plane on the deck shown in the sidebar (ReadShownOnDeck).
+	public readonly bool[] ShownOnDeck = new bool[256];
+
 	// Whether the next destination starts the selected unit's path again (MoveOrders[1].ClearsPath), or adds to it.
 	public bool ClearsPath;
 	public short MaxUnitId;
@@ -95,6 +98,7 @@ internal sealed class BattleSnapshot
 		FirstPlane = game.JPN_PLANE_START;
 		game.ReadSight(SeenTiles, out FirstColumn, out FirstRow, SeenEffects);
 		game.ReadClickable(Clickable);
+		game.ReadShownOnDeck(ShownOnDeck);
 		CanSetDestination = game.ReadCanSetDestination();
 		ClearsPath = game.MoveOrders[1].ClearsPath != 0;
 		MaxUnitId = game.MaxUnitId;
