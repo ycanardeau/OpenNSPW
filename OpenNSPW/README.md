@@ -45,6 +45,8 @@ To start a single-player scenario without the menus:
 dotnet run --project OpenNspw.Desktop -- --singleplayer 3
 ```
 
+The text is drawn in fonts that come with the game, so that it looks the same on every platform: BIZ UDGothic for the game's own text and BIZ UDPGothic for the menus, under the SIL Open Font License 1.1 ([OpenNspw.Desktop/Fonts/OFL.txt](OpenNspw.Desktop/Fonts/OFL.txt)).
+
 ## Porting a file
 ```bash
 dotnet run --project OpenNspw.Porter -- port OpenNspw ../Original/NSPW_NET/<file>.cpp

@@ -107,7 +107,7 @@ internal sealed class NspwGame : Game
 		var keyboardListener = new KeyboardListener(new KeyboardListenerSettings { InitialDelayMilliseconds = 500, RepeatDelayMilliseconds = 30 });
 		Components.Add(new InputListenerComponent(this, mouseListener, keyboardListener));
 
-		Fonts = new UIFonts(Text.FontData);
+		Fonts = new UIFonts();
 		WindowManager = new WindowManager(
 			new DrawingRectangle(0, 0, all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT),
 			new MonoGameGraphicsFactory(SpriteBatch, ViewportAdapter),
