@@ -99,7 +99,6 @@ internal sealed class CombatMenu : Control
 				var isChosen = _shown[i] == snapshot.CombatMenuSelection;
 				button.Text = Label(_shown[i]);
 				button.IsPrimary = isChosen;
-				button.Enabled = isChosen || snapshot.CanOrder;
 			}
 		}
 	}

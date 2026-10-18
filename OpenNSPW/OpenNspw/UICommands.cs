@@ -130,19 +130,39 @@ public unsafe partial class Nspw
 		ToggleDeckView();
 	}
 
-	private void RunChooseCombatMenuItem(CombatMenuItem item)
+	// A click on the combat menu that waits for a frame in which it counts, and the frame it was given in.
+	private (CombatMenuItem Item, int Since)? _waitingCombatMenu;
+
+	// The combat menu's click counts while the menu shows the item, it is not the item chosen already, and the player can
+	// order (UpdateCombatMenu). The player can order on and off with the turns, so a click waits for a frame in which it
+	// counts, as a click the player gave a moment later would; for 40 frames at most, two seconds, and while the menu
+	// still shows the item.
+	private void RunWaitingCombatMenu()
 	{
-		PlayClickSound();
+		if( _waitingCombatMenu is not var (item, since) )
+			return;
+
 		var isShown = false;
 		for (var i = 0; i < ShownCombatMenuCount; i++)
 		{
 			isShown |= ShownCombatMenu[i] == item;
 		}
 
-		if( isShown && item!=CombatMenuSelection && CanOrder )
+		if( !isShown || item==CombatMenuSelection || FrameCount-since>40 )
 			{
+			_waitingCombatMenu=null;
+			}
+		else if( CanOrder )
+			{
+			_waitingCombatMenu=null;
 			ChooseCombatMenuItem(item);
 			}
+	}
+
+	private void RunChooseCombatMenuItem(CombatMenuItem item)
+	{
+		PlayClickSound();
+		_waitingCombatMenu=(item, FrameCount);
 	}
 
 	private void RunSelectSupplyTarget(bool next)
@@ -163,13 +183,32 @@ public unsafe partial class Nspw
 			}
 	}
 
+	// A click on the system menu that waits for a frame in which it counts, and the frame it was given in.
+	private (MessageType Answer, int Since)? _waitingSystemMenu;
+
+	// The system menu's click counts while the rival is in the battle and the player can order (UpdateSystemMenu). The
+	// player can order on and off with the turns, so a click waits for a frame in which it counts, as a click the
+	// player gave a moment later would; for 40 frames at most, two seconds.
+	private void RunWaitingSystemMenu()
+	{
+		if( _waitingSystemMenu is not var (answer, since) )
+			return;
+
+		if( RivalMode!=GameMode.Battle || IsEditingMap || FrameCount-since>40 )
+			{
+			_waitingSystemMenu=null;
+			}
+		else if( CanOrder.Value==1 )
+			{
+			_waitingSystemMenu=null;
+			AskSystemMenu(answer);
+			}
+	}
+
 	private void RunAskSystemMenu(MessageType answer)
 	{
 		PlayClickSound();
-		if( RivalMode==GameMode.Battle && !IsEditingMap && CanOrder.Value==1 )
-			{
-			AskSystemMenu(answer);
-			}
+		_waitingSystemMenu=(answer, FrameCount);
 	}
 
 	// Whether the host chooses on the scenarios, the guest being on them too (UpdateScenarioList and the buttons under it).
@@ -369,8 +408,8 @@ public unsafe partial class Nspw
 			_game.QueueUICommand(UICommandSite.DeckView, _game.RunToggleDeckView);
 		}
 
-		// A click on an item of the combat menu, if the menu shows it, it is not the item chosen already, and the player
-		// can order.
+		// A click on an item of the combat menu, if the menu shows it and it is not the item chosen already; it waits for a
+		// frame in which the player can order (RunWaitingCombatMenu).
 		public void ChooseCombatMenuItem(CombatMenuItem item)
 		{
 			_game.QueueUICommand(UICommandSite.CombatMenu, () => _game.RunChooseCombatMenuItem(item));
@@ -389,7 +428,7 @@ public unsafe partial class Nspw
 		}
 
 		// The host's system menu: back to the scenario selection (シナリオ選択へ), which the game asks first, while the
-		// rival is in the battle and the player can order.
+		// rival is in the battle; it waits for a frame in which the player can order (RunWaitingSystemMenu).
 		public void ToScenarioSelection()
 		{
 			_game.QueueUICommand(UICommandSite.SystemMenu, () => _game.RunAskSystemMenu(MessageType.GoToGameSetting));

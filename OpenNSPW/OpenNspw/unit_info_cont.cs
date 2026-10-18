@@ -620,10 +620,12 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 
 	n=ListCombatMenu(ref menu, ref menu2);
 
-	// The host's UI's commands for the combat menu (UICommands.cs), on the items it shows.
+	// The host's UI's commands for the combat menu (UICommands.cs), on the items it shows, which wait for a frame in which
+	// they count.
 	ShownCombatMenu=menu2;
 	ShownCombatMenuCount=n;
 	RunUICommands(UICommandSite.CombatMenu, true);
+	RunWaitingCombatMenu();
 
 	for( i=0;i<n;i++ )
 		{
@@ -1145,8 +1147,9 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 	{
 	RECT dstn_rect = default;
 
-	// The host's UI's commands for the system menu (UICommands.cs).
+	// The host's UI's commands for the system menu (UICommands.cs), which wait for a frame in which they count.
 	RunUICommands(UICommandSite.SystemMenu, true);
+	RunWaitingSystemMenu();
 #if !LNGG_VER
 	len[0] = wsprintf(ach[0], "シナリオ選択へ");
 #else
@@ -1289,6 +1292,7 @@ rival_mode=mode;
 		// The host's UI's commands for the combat menu, which is not shown, are dropped (UICommands.cs).
 		ShownCombatMenuCount=0;
 		RunUICommands(UICommandSite.CombatMenu, false);
+		RunWaitingCombatMenu();
 		}
 
 	// ゲームデータ
