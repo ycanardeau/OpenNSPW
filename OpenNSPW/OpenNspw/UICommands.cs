@@ -91,6 +91,43 @@ public unsafe partial class Nspw
 			}
 	}
 
+	// Whether unit m can be in the formation of the leader, as a click on it with the leader selected puts it there
+	// (SelectFriendlyTarget): the player's, of the same category, and neither of them a base. A plane does not take a
+	// carrier or an air base, which a click would make it land on, nor a ship a plane; a parked plane takes the planes
+	// parked on the deck shown, and a flying one those flying.
+	private bool IsFormationMate(int leader, int m)
+	{
+		ref var unit = ref Units[m];
+		var isParked = unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked;
+		var isLeaderParked = Units[leader].Category==UnitCategory.Plane && Units[leader].PlaneState==UnitState.Parked;
+		return m!=leader && unit.IsUsed && unit.Side==LocalSide && unit.Category==Units[leader].Category
+			&& isParked==isLeaderParked && (!isParked || IsOnShownDeck(ref unit))
+			&& !(unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress)
+			&& !(Units[leader].Kind>=UnitKind.AirBase && Units[leader].Kind<=UnitKind.Fortress);
+	}
+
+	// The units brushed with the left button held (BrushUnit), to put in the selected unit's formation or to take out of
+	// it: a click on each, one a frame, as the game takes one click on a unit a frame (SelectOrders[1]).
+	private readonly Queue<(int Unit, bool IsAdded)> _brushed = new();
+
+	// The next unit brushed that a click still puts in the selection, or takes out of it, as it was brushed for.
+	private void RunBrushedUnits(bool count)
+	{
+		if( !count )
+			return;
+
+		while( _brushed.TryDequeue(out var brushed) )
+			{
+			var (m, isAdded) = brushed;
+			if( SelectedUnit!=0 && IsFormationMate(SelectedUnit, m) && (Selections[1][m]==0)==isAdded && CanClickUnit(ref Units[m]) )
+				{
+				PlayClickSound();
+				ClickUnit(m, default);
+				return;
+				}
+			}
+	}
+
 	private void RunClickLand(int x, int y)
 	{
 		PlayClickSound();
@@ -181,6 +218,21 @@ public unsafe partial class Nspw
 			{
 			RequestSupplyUnit();
 			}
+	}
+
+	// The last move of the battlefield taken (MoveCamera), for the host's UI, which shows the moves it gave before the
+	// game takes them.
+	public int LastCameraMove;
+
+	// Moves the battlefield by (dx, dy) pixels of the screen, kept on the map as the minimap keeps it (ShowMinimapCell).
+	// Not a click of the original: the host's UI scrolls by dragging with the middle button. The camera is only what the
+	// player sees, as the screen's edges and the minimap move it.
+	private void MoveCamera(int dx, int dy, int id)
+	{
+		LastCameraMove = id;
+		CameraPosition = new WorldPosition(
+			Math.Clamp(CameraPosition.X+dx, MAP_LEFT, MAP_RIGHT-CMBT_WIDTH),
+			Math.Clamp(CameraPosition.Y-dy, MAP_BOTTOM+CMBT_HEIGHT, MAP_TOP));
 	}
 
 	// A click on the system menu that waits for a frame in which it counts, and the frame it was given in.
@@ -376,6 +428,13 @@ public unsafe partial class Nspw
 			_game.QueueUICommand(UICommandSite.Battlefield, () => _game.RunClickUnit(m));
 		}
 
+		// Unit m brushed with the left button held, after a press on a unit: put in the selected unit's formation, or
+		// taken out of it, by a click on it, if a click does that.
+		public void BrushUnit(int m, bool isAdded)
+		{
+			_game.QueueUICommand(UICommandSite.Battlefield, () => _game._brushed.Enqueue((m, isAdded)));
+		}
+
 		// A left click on the land at point (x, y) of the battlefield, where the selected transport lands, if it can.
 		public void ClickLand(int x, int y)
 		{
@@ -400,6 +459,13 @@ public unsafe partial class Nspw
 		public void ShowMinimapCell(int column, int row)
 		{
 			_game.QueueUICommand(UICommandSite.Minimap, () => _game.ShowMinimapCell(column, row));
+		}
+
+		// The battlefield moved by (dx, dy) pixels, by a drag with the middle button, the move numbered `id`
+		// (LastCameraMove); run with the minimap's, which move it too.
+		public void ScrollBattlefield(int dx, int dy, int id)
+		{
+			_game.QueueUICommand(UICommandSite.Minimap, () => _game.MoveCamera(dx, dy, id));
 		}
 
 		// A click on the switch of a carrier's or an air base's view, while its information is shown.

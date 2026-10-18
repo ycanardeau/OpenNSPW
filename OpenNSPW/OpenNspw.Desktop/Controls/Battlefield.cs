@@ -23,6 +23,7 @@ internal sealed class Battlefield : Control
 	private readonly GameSession _session;
 	private readonly UIFonts _fonts;
 	private readonly BattleArt _art;
+	private readonly ScrollAhead _scrollAhead;
 
 	// The jitter of smoke and wakes, which the original draws with the game's random numbers: here only for the look.
 	private readonly Random _jitter = new();
@@ -30,11 +31,18 @@ internal sealed class Battlefield : Control
 	private GameSnapshot _snapshot = new();
 	private DrawingPoint? _mouse;
 
-	public Battlefield(GameSession session, UIFonts fonts, BattleArt art)
+	// Where a drag with the middle button, which scrolls the battlefield, last was.
+	private DrawingPoint? _scrolledTo;
+
+	private readonly UnitBrush _brush;
+
+	public Battlefield(GameSession session, UIFonts fonts, BattleArt art, ScrollAhead scrollAhead)
 	{
 		_session = session;
 		_fonts = fonts;
 		_art = art;
+		_scrollAhead = scrollAhead;
+		_brush = new UnitBrush(session);
 		BackColor = System.Drawing.Color.Transparent;
 	}
 
@@ -112,21 +120,22 @@ internal sealed class Battlefield : Control
 		return IsInMiddle(SnapToTile(snapshot, point), point);
 	}
 
+	// The tiles the player sees, each where it is on the map: read around where the game has the battlefield, they are
+	// drawn where the UI shows it, ahead while it is dragged (ScrollAhead).
 	private void DrawTiles(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot)
 	{
 		ref var tiles = ref snapshot.Sprites[SpriteId.MapTiles];
-		var offsetX = (int)(snapshot.CameraPosition.X - MAP_LEFT) % tiles.Width;
-		var offsetY = (int)(MAP_TOP - snapshot.CameraPosition.Y) % tiles.Height;
-		for (var n = 0; n <= 10; n++)
+		for (var n = 0; n < Nspw.SightSize; n++)
 		{
-			for (var m = 0; m <= 10; m++)
+			for (var m = 0; m < Nspw.SightSize; m++)
 			{
-				if (!snapshot.SeenTiles[n * 11 + m])
+				if (!snapshot.SeenTiles[n * Nspw.SightSize + m])
 					continue;
 
-				var tile = snapshot.MapTiles[snapshot.FirstRow + n][snapshot.FirstColumn + m];
+				var (column, row) = (snapshot.FirstColumn + m, snapshot.FirstRow + n);
+				var tile = snapshot.MapTiles[row][column];
 				var frame = tile == 0 ? snapshot.FrameCount / 30 % 2 : 6 + (tile - 1);
-				var position = new Vector2(m * tiles.Width - offsetX - tiles.CenterX, n * tiles.Height - offsetY - tiles.CenterY);
+				var position = ToScreen(snapshot, MAP_LEFT + column * tiles.Width, MAP_TOP - row * tiles.Height) - new Vector2(tiles.CenterX, tiles.CenterY);
 				_art.Draw(batch, tiles, frame, 0, tiles.Width, tiles.Height, origin + position);
 			}
 		}
@@ -340,10 +349,22 @@ internal sealed class Battlefield : Control
 			commands.SetDestination(new WorldPosition(point.X + snapshot.CameraPosition.X, snapshot.CameraPosition.Y - point.Y));
 	}
 
+	// The battlefield follows a drag with the middle button, as a chart pushed across the table, at once (ScrollAhead).
+	private void Scroll(DrawingPoint point)
+	{
+		if (_scrolledTo is not { } from || point == from)
+			return;
+
+		_scrollAhead.Scroll(from.X - point.X, from.Y - point.Y);
+		_scrolledTo = point;
+	}
+
 	protected override void OnMouseMove(MouseEventArgs e)
 	{
 		base.OnMouseMove(e);
 		_mouse = e.Location;
+		Scroll(e.Location);
+		_brush.Over(HitUnit(_snapshot, e.Location));
 	}
 
 	protected override void OnMouseLeave(EventArgs e)
@@ -356,9 +377,28 @@ internal sealed class Battlefield : Control
 	{
 		base.OnMouseDown(e);
 		if (e.Button == MouseButtons.Left)
+		{
+			_brush.Press(_snapshot, IsLanding(_snapshot, e.Location) ? null : HitUnit(_snapshot, e.Location));
 			TakeClick(e.Location);
+		}
 		else if (e.Button == MouseButtons.Right)
 			_session.Game.Commands.RightClick();
+		else if (e.Button == MouseButtons.Middle)
+			_scrolledTo = e.Location;
+	}
+
+	protected override void OnMouseUp(MouseEventArgs e)
+	{
+		base.OnMouseUp(e);
+		if (e.Button == MouseButtons.Middle)
+		{
+			Scroll(e.Location);
+			_scrolledTo = null;
+		}
+		else if (e.Button == MouseButtons.Left)
+		{
+			_brush.Release();
+		}
 	}
 
 	protected override void OnPaint(PaintEventArgs e)

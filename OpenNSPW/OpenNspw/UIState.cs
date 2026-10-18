@@ -217,18 +217,27 @@ public unsafe partial class Nspw
 		return false;
 	}
 
-	// What the player sees on the battlefield: of the 11 by 11 tiles from (firstColumn, firstRow), those drawn (DrawMapTiles:
-	// land, and the sea in sight), and the effects drawn (UpdateLowerEffects, UpdateUpperEffects).
+	// The tiles around the 11 by 11 of the battlefield that ReadSight reads too, on each side: the host's UI shows the
+	// battlefield ahead of the game while it is dragged (ScrollAhead), so it shows tiles the game does not draw.
+	public const int SightMargin = 2;
+
+	// The tiles a side of what ReadSight reads.
+	public const int SightSize = 11 + SightMargin * 2;
+
+	// What the player sees on and around the battlefield: of the SightSize by SightSize tiles from (firstColumn,
+	// firstRow), those drawn (DrawMapTiles: land, and the sea in sight), none off the map's tiles; and the effects drawn
+	// (UpdateLowerEffects, UpdateUpperEffects).
 	public void ReadSight(Span<bool> tiles, out int firstColumn, out int firstRow, Span<bool> effects)
 	{
-		firstColumn=(int)((CameraPosition.X-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
-		firstRow=(int)((MAP_TOP-CameraPosition.Y)/Sprites[SpriteId.MapTiles].Height);
-		for( var n=0; n<=10; n++ )
+		firstColumn=(int)((CameraPosition.X-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width)-SightMargin;
+		firstRow=(int)((MAP_TOP-CameraPosition.Y)/Sprites[SpriteId.MapTiles].Height)-SightMargin;
+		for( var n=0; n<SightSize; n++ )
 			{
-			for( var m=0; m<=10; m++ )
+			for( var m=0; m<SightSize; m++ )
 				{
 				var (column, row) = (firstColumn+m, firstRow+n);
-				tiles[n*11+m] = IsEditingMap || Result!=GameResult.None || MapTiles[row][column]!=0 || IsSeaTileSeen(column, row);
+				tiles[n*SightSize+m] = column is >= 0 and <= 255 && row is >= 0 and <= 255
+					&& ( IsEditingMap || Result!=GameResult.None || MapTiles[row][column]!=0 || IsSeaTileSeen(column, row) );
 				}
 			}
 
