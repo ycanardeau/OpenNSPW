@@ -67,7 +67,8 @@ public unsafe partial class Nspw
 		}
 	}
 
-	// The sound of a click on the battlefield (DrawBattleArea).
+	// The sound of a press of either button, anywhere on the screen, which the game plays where it takes the battlefield's
+	// clicks, unless an order waits for its turn (DrawBattleArea).
 	private void PlayClickSound()
 	{
 		PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
@@ -83,7 +84,6 @@ public unsafe partial class Nspw
 
 	private void RunClickUnit(int m)
 	{
-		PlayClickSound();
 		ref var unit = ref Units[m];
 		if( m!=0 && unit.IsUsed && (unit.Side==LocalSide || unit.IsFound) && (!(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked) || IsOnShownDeck(ref unit)) && CanClickUnit(ref unit) )
 			{
@@ -130,7 +130,6 @@ public unsafe partial class Nspw
 
 	private void RunClickLand(int x, int y)
 	{
-		PlayClickSound();
 		var sprite = Units[0].Side==Side.Japan ? SpriteId.JapanUnits : SpriteId.UnitedStatesUnits;
 		if( SelectedUnit!=0 && Units[SelectedUnit].Kind==UnitKind.Transport && AimLanding(sprite, x, y)
 			&& CanClickUnit(ref Units[0]) && !(Units[0].PlaneState!=UnitState.Parked && x>=CMBT_WIDTH-1) )
@@ -141,7 +140,6 @@ public unsafe partial class Nspw
 
 	private void RunSetDestination(WorldPosition destination)
 	{
-		PlayClickSound();
 		if( IsSelectedShown() && CanSetDestination(ref Units[SelectedUnit]) )
 			{
 			SetDestination(destination);
@@ -150,7 +148,6 @@ public unsafe partial class Nspw
 
 	private void RunRightClick()
 	{
-		PlayClickSound();
 		if( IsSelectedShown() )
 			{
 			CancelSelection(SelectedUnit);
@@ -163,7 +160,6 @@ public unsafe partial class Nspw
 
 	private void RunToggleDeckView()
 	{
-		PlayClickSound();
 		ToggleDeckView();
 	}
 
@@ -198,13 +194,11 @@ public unsafe partial class Nspw
 
 	private void RunChooseCombatMenuItem(CombatMenuItem item)
 	{
-		PlayClickSound();
 		_waitingCombatMenu=(item, FrameCount);
 	}
 
 	private void RunSelectSupplyTarget(bool next)
 	{
-		PlayClickSound();
 		if( next )
 			SelectNextSupplyTarget();
 		else
@@ -213,7 +207,6 @@ public unsafe partial class Nspw
 
 	private void RunRequestSupply()
 	{
-		PlayClickSound();
 		if( GetSupplyRequestState()==SupplyRequestState.Available && Result==GameResult.None )
 			{
 			RequestSupplyUnit();
@@ -259,7 +252,6 @@ public unsafe partial class Nspw
 
 	private void RunAskSystemMenu(MessageType answer)
 	{
-		PlayClickSound();
 		_waitingSystemMenu=(answer, FrameCount);
 	}
 
@@ -421,10 +413,18 @@ public unsafe partial class Nspw
 	{
 		private readonly Nspw _game = game;
 
+		// The press that the command stands for: its sound, at the battlefield's site, as the game plays it for any press,
+		// and drops it as it drops the battlefield's clicks.
+		private void Press()
+		{
+			_game.QueueUICommand(UICommandSite.Battlefield, _game.PlayClickSound);
+		}
+
 		// A left click on unit m on the battlefield, or on a parked plane on the deck shown in the sidebar, if the player
 		// sees it and the click counts (CanClickUnit).
 		public void ClickUnit(int m)
 		{
+			Press();
 			_game.QueueUICommand(UICommandSite.Battlefield, () => _game.RunClickUnit(m));
 		}
 
@@ -438,6 +438,7 @@ public unsafe partial class Nspw
 		// A left click on the land at point (x, y) of the battlefield, where the selected transport lands, if it can.
 		public void ClickLand(int x, int y)
 		{
+			Press();
 			_game.QueueUICommand(UICommandSite.Battlefield, () => _game.RunClickLand(x, y));
 		}
 
@@ -445,6 +446,7 @@ public unsafe partial class Nspw
 		// (CanSetDestination).
 		public void SetDestination(WorldPosition destination)
 		{
+			Press();
 			_game.QueueUICommand(UICommandSite.Battlefield, () => _game.RunSetDestination(destination));
 		}
 
@@ -452,12 +454,16 @@ public unsafe partial class Nspw
 		// before is selected again.
 		public void RightClick()
 		{
+			Press();
 			_game.QueueUICommand(UICommandSite.Battlefield, _game.RunRightClick);
 		}
 
-		// A click held on the minimap, at cell (column, row) of the map.
-		public void ShowMinimapCell(int column, int row)
+		// A click held on the minimap, at cell (column, row) of the map: pressed there, or dragged there.
+		public void ShowMinimapCell(int column, int row, bool isPressed)
 		{
+			if( isPressed )
+				Press();
+
 			_game.QueueUICommand(UICommandSite.Minimap, () => _game.ShowMinimapCell(column, row));
 		}
 
@@ -471,6 +477,7 @@ public unsafe partial class Nspw
 		// A click on the switch of a carrier's or an air base's view, while its information is shown.
 		public void ToggleDeckView()
 		{
+			Press();
 			_game.QueueUICommand(UICommandSite.DeckView, _game.RunToggleDeckView);
 		}
 
@@ -478,18 +485,21 @@ public unsafe partial class Nspw
 		// frame in which the player can order (RunWaitingCombatMenu).
 		public void ChooseCombatMenuItem(CombatMenuItem item)
 		{
+			Press();
 			_game.QueueUICommand(UICommandSite.CombatMenu, () => _game.RunChooseCombatMenuItem(item));
 		}
 
 		// A click on the previous or the next kind of reinforcement, while none is coming.
 		public void SelectSupplyTarget(bool next)
 		{
+			Press();
 			_game.QueueUICommand(UICommandSite.SupplyPanel, () => _game.RunSelectSupplyTarget(next));
 		}
 
 		// A click that requests the chosen reinforcement, if it can be requested (GetSupplyRequestState).
 		public void RequestSupply()
 		{
+			Press();
 			_game.QueueUICommand(UICommandSite.SupplyPanel, _game.RunRequestSupply);
 		}
 
@@ -497,12 +507,14 @@ public unsafe partial class Nspw
 		// rival is in the battle; it waits for a frame in which the player can order (RunWaitingSystemMenu).
 		public void ToScenarioSelection()
 		{
+			Press();
 			_game.QueueUICommand(UICommandSite.SystemMenu, () => _game.RunAskSystemMenu(MessageType.GoToGameSetting));
 		}
 
 		// The host's system menu: saving the battle to resume it, and back to the scenario selection (リジューム).
 		public void Resume()
 		{
+			Press();
 			_game.QueueUICommand(UICommandSite.SystemMenu, () => _game.RunAskSystemMenu(MessageType.ResumeAndGoToGameSetting));
 		}
 

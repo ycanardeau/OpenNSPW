@@ -75,10 +75,10 @@ internal sealed class Minimap : Control
 
 	// The battlefield is moved to where the click is held, if it is on the map: the cursor is the camera's box's
 	// center, 5 from its corner (DrawMinimap).
-	private void ShowPoint(DrawingPoint point)
+	private void ShowPoint(DrawingPoint point, bool isPressed)
 	{
 		if (point.X >= MapLeft && point.X <= MapLeft + Columns && point.Y >= MapTop && point.Y <= MapTop + Rows)
-			_session.Game.Commands.ShowMinimapCell(point.X - 5 - MapLeft, point.Y - 5 - MapTop);
+			_session.Game.Commands.ShowMinimapCell(point.X - 5 - MapLeft, point.Y - 5 - MapTop, isPressed);
 	}
 
 	protected override void OnMouseDown(MouseEventArgs e)
@@ -87,7 +87,7 @@ internal sealed class Minimap : Control
 		if (e.Button == MouseButtons.Left)
 		{
 			_isHeld = true;
-			ShowPoint(e.Location);
+			ShowPoint(e.Location, isPressed: true);
 		}
 		else if (e.Button == MouseButtons.Right)
 		{
@@ -100,7 +100,7 @@ internal sealed class Minimap : Control
 	{
 		base.OnMouseMove(e);
 		if (_isHeld)
-			ShowPoint(e.Location);
+			ShowPoint(e.Location, isPressed: false);
 	}
 
 	protected override void OnMouseUp(MouseEventArgs e)
