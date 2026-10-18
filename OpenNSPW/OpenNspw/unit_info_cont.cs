@@ -185,6 +185,53 @@ private void WriteUnitKindName(ref Array8<int> len, ref Array8<Array128<byte>> a
 		}
 	}
 
+// The texts of the unit whose information the sidebar shows: [0] its kind, [1] its damage, or its building time,
+// [2] its ammunition and [3] its fuel.
+private void WriteUnitDetails(ref Array8<int> len, ref Array8<Array128<byte>> ach)
+	{
+	// 艦種
+	WriteUnitKindName(ref len, ref ach);
+
+	// 損傷
+	if( Units[UnitInfoPanel[3]].IsUsed && ( Units[UnitInfoPanel[3]].Kind==UnitKind.AirBase||Units[UnitInfoPanel[3]].Kind==UnitKind.NavalBase||Units[UnitInfoPanel[3]].Kind==UnitKind.InfantryBase||Units[UnitInfoPanel[3]].Kind==UnitKind.Pillboxes||Units[UnitInfoPanel[3]].Kind==UnitKind.Fortress ) && Units[UnitInfoPanel[3]].info[0]!=0 && Units[UnitInfoPanel[3]].Hp==Units[UnitInfoPanel[3]].MaxHp
+		)
+		{
+		len[1] = wsprintf(ach[1], "工事:%d", Units[UnitInfoPanel[3]].BuildTime );
+		}
+	else
+		{
+		if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp*0.2 )
+			{
+			len[1] = wsprintf(ach[1], "大破");
+			}
+		else if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp*0.5 )
+			{
+			len[1] = wsprintf(ach[1], "中破");
+			}
+		else if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp*0.7 )
+			{
+			len[1] = wsprintf(ach[1], "小破");
+			}
+		else if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp-1 )
+			{
+			len[1] = wsprintf(ach[1], "軽損傷");
+			}
+		else
+			{
+			len[1] = wsprintf(ach[1], "損傷無");
+			}
+		}
+
+	// 残弾薬
+	len[2] = wsprintf(ach[2], "弾薬：%d",Units[UnitInfoPanel[3]].Ammo);
+
+	// 残燃料
+	if(Units[UnitInfoPanel[3]].Fuel==-1)
+		len[3] = wsprintf(ach[3], "停泊艦船");
+	else
+		len[3] = wsprintf(ach[3], "燃料：%d", (int)(Units[UnitInfoPanel[3]].Fuel) );
+	}
+
 private void DrawUnitDetails(SpriteId sprite, ref RECT src_rect, ref HDC hdc, ref Array8<int> len, ref Array8<Array128<byte>> ach)
 	{
 	RECT dstn_rect;
@@ -229,47 +276,7 @@ private void DrawUnitDetails(SpriteId sprite, ref RECT src_rect, ref HDC hdc, re
 		SelectObject(hdc, gameFont_1);
 
 #if !LNGG_VER
-		// 艦種
-		WriteUnitKindName(ref len, ref ach);
-
-		// 損傷
-		if( Units[UnitInfoPanel[3]].IsUsed && ( Units[UnitInfoPanel[3]].Kind==UnitKind.AirBase||Units[UnitInfoPanel[3]].Kind==UnitKind.NavalBase||Units[UnitInfoPanel[3]].Kind==UnitKind.InfantryBase||Units[UnitInfoPanel[3]].Kind==UnitKind.Pillboxes||Units[UnitInfoPanel[3]].Kind==UnitKind.Fortress ) && Units[UnitInfoPanel[3]].info[0]!=0 && Units[UnitInfoPanel[3]].Hp==Units[UnitInfoPanel[3]].MaxHp
-			)
-			{
-			len[1] = wsprintf(ach[1], "工事:%d", Units[UnitInfoPanel[3]].BuildTime );
-			}
-		else
-			{
-			if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp*0.2 )
-				{
-				len[1] = wsprintf(ach[1], "大破");
-				}
-			else if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp*0.5 )
-				{
-				len[1] = wsprintf(ach[1], "中破");
-				}
-			else if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp*0.7 )
-				{
-				len[1] = wsprintf(ach[1], "小破");
-				}
-			else if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp-1 )
-				{
-				len[1] = wsprintf(ach[1], "軽損傷");
-				}
-			else
-				{
-				len[1] = wsprintf(ach[1], "損傷無");
-				}
-			}
-
-		// 残弾薬
-		len[2] = wsprintf(ach[2], "弾薬：%d",Units[UnitInfoPanel[3]].Ammo);
-
-		// 残燃料
-		if(Units[UnitInfoPanel[3]].Fuel==-1)
-			len[3] = wsprintf(ach[3], "停泊艦船");
-		else
-			len[3] = wsprintf(ach[3], "燃料：%d", (int)(Units[UnitInfoPanel[3]].Fuel) );
+		WriteUnitDetails(ref len, ref ach);
 
 #else
 		// 艦種
@@ -413,6 +420,24 @@ else
 		}
 	}
 
+// A click on the switch of a carrier's or an air base's view (切り替え): its hangar instead of its flight deck, which
+// deselects, or its flight deck again.
+private void ToggleDeckView()
+	{
+	if( UnitInfoPanel[1]!=0 )
+		{
+		UnitInfoPanel[1]=0;				// 空母なら１で格納庫 ０ で飛行甲板
+		}
+	else
+		{
+		UnitInfoPanel[1]=1;				// 空母なら１で格納庫 ０ で飛行甲板
+
+		Selections[1][SelectedUnit]=0;	CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None;
+		SelectedUnit=0;
+		ClearSelection();
+		}
+	}
+
 private void UpdateDeckView(ref RECT src_rect, SpriteId sprite, ref RECT dstn_rect)
 	{
 	int i;
@@ -432,19 +457,7 @@ private void UpdateDeckView(ref RECT src_rect, SpriteId sprite, ref RECT dstn_re
 
 		if( LeftButton==3 )
 			{
-
-			if( UnitInfoPanel[1]!=0 )
-				{
-				UnitInfoPanel[1]=0;				// 空母なら１で格納庫 ０ で飛行甲板
-				}
-			else
-				{
-				UnitInfoPanel[1]=1;				// 空母なら１で格納庫 ０ で飛行甲板
-
-				Selections[1][SelectedUnit]=0;	CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None;
-				SelectedUnit=0;
-				ClearSelection();
-				}
+			ToggleDeckView();
 			}
 		}
 	if( LeftButton==2 && PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
@@ -458,15 +471,14 @@ private void UpdateDeckView(ref RECT src_rect, SpriteId sprite, ref RECT dstn_re
 	}
 	}
 
-private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu2, ref int m, ref RECT src_rect, ref RECT dstn_rect)
+// The combat menu's items for the selected unit: in `menu`, their buttons' pictures (Buttons1), and in `menu2`, the
+// items. Returns their number. The choice shown (CombatMenuSelection) follows a supplying ship or a parked plane's arms.
+private int ListCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu2)
 	{
-	SpriteId sprite;
 	int n;
 	int i;
 	RECT wrk_rect;
 	int g;
-	int s;
-	sprite=SpriteId.Buttons1;
 
 	n=0;
 	if( Units[SelectedUnit].Category==UnitCategory.Ship && !(Units[SelectedUnit].Kind==UnitKind.InfantryBase||Units[SelectedUnit].Kind==UnitKind.Pillboxes||Units[SelectedUnit].Kind==UnitKind.Fortress||Units[SelectedUnit].Kind==UnitKind.AirBase) )
@@ -552,6 +564,58 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 			}
 		}
 
+	return n;
+	}
+
+// A click on an item of the combat menu, while the player can order (CanOrder): the item is the order of the turn.
+private void ChooseCombatMenuItem(CombatMenuItem item)
+	{
+	int s;
+	BufferedMenuOrders[1].Menu=item;
+	BufferedMenuOrders[1].SelectedUnit=SelectedUnit;
+
+	if(LocalSide==Side.Japan)
+		{
+		// 日本海軍サイド
+		for(s=1;s<=JPN_SHIP_END;s++)
+			{
+			// 水上ユニット
+			BufferedSelections[1][s-1]=Selections[1][s];
+			}
+		for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
+			{
+			// 航空ユニット
+			BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
+			}
+		}
+	else
+		{
+		// 合衆国海軍サイド
+		for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
+			{
+			// 水上ユニット
+			BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
+			}
+		for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
+			{
+			// 航空ユニット
+			BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
+			}
+		}
+	CanOrder=false;
+	HasOrdered=true;
+	PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+	}
+
+private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu2, ref int m, ref RECT src_rect, ref RECT dstn_rect)
+	{
+	SpriteId sprite;
+	int n;
+	int i;
+	sprite=SpriteId.Buttons1;
+
+	n=ListCombatMenu(ref menu, ref menu2);
+
 	for( i=0;i<n;i++ )
 		{
 		m=menu[i];
@@ -569,40 +633,7 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 			{
 			if( CanOrder )
 				{
-				BufferedMenuOrders[1].Menu=menu2[i];
-				BufferedMenuOrders[1].SelectedUnit=SelectedUnit;
-
-				if(LocalSide==Side.Japan)
-					{
-					// 日本海軍サイド
-					for(s=1;s<=JPN_SHIP_END;s++)
-						{
-						// 水上ユニット
-						BufferedSelections[1][s-1]=Selections[1][s];
-						}
-					for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
-						{
-						// 航空ユニット
-						BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-						}
-					}
-				else
-					{
-					// 合衆国海軍サイド
-					for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
-						{
-						// 水上ユニット
-						BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-						}
-					for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
-						{
-						// 航空ユニット
-						BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
-						}
-					}
-				CanOrder=false;
-				HasOrdered=true;
-				PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+				ChooseCombatMenuItem(menu2[i]);
 				}
 			}
 		if( LeftButton==2 && PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && FrameCount%2<1)
@@ -756,8 +787,10 @@ private void WriteSupplyTargetName(ref Array8<int> len, ref Array8<Array128<byte
 		}
 	}
 
-private void RequestSupply(ref int m, ref Array8<int> len, ref Array8<Array128<byte>> ach, ref RECT dstn_rect, int ry, ref HDC hdc)
+// Whether the player can request the reinforcement chosen in the supply panel (SupplyTarget), or why not.
+private SupplyRequestState GetSupplyRequestState()
 	{
+	int m;
 	int start;
 	int end;
 	int g;
@@ -843,50 +876,76 @@ private void RequestSupply(ref int m, ref Array8<int> len, ref Array8<Array128<b
 		if( (g==1 && n!=0 ) || (g==2 && n>=3) )
 			{
 			if( SupplyPoints>=GetSupplyPointsPerUnit() )
-				{
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "　要求する");
-#else
-				len[0] = wsprintf(ach[0], "　Request");
-#endif
-				dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120;
-				dstn_rect.top=ry+20*7+5;
-				dstn_rect.right=dstn_rect.left+(len[0]*12);
-				dstn_rect.bottom=dstn_rect.top+18;
-				if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
-					{
-					SetTextColor(hdc, RGB(255, 0, 0));
-					if( LeftButton==3 && Result==GameResult.None )
-						{
-						SupplyPoints=(short)(SupplyPoints - GetSupplyPointsPerUnit());
-						if(SupplyTarget<=5 || SupplyTarget>=10)
-							SupplyCount=150;				// 艦船
-						else
-							SupplyCount=30;				// 航空機
+				return SupplyRequestState.Available;
+			else
+				return SupplyRequestState.ShortOfPoints;
+			}
+		else
+			return SupplyRequestState.UnitLimit;
+		}
+	else
+		return SupplyRequestState.Restricted;
+	}
+
+// A click that requests the reinforcement chosen in the supply panel, when it can be requested (GetSupplyRequestState)
+// and the battle has no result: it costs its supply points, and comes after a while (SupplyCount).
+private void RequestSupplyUnit()
+	{
+	SupplyPoints=(short)(SupplyPoints - GetSupplyPointsPerUnit());
+	if(SupplyTarget<=5 || SupplyTarget>=10)
+		SupplyCount=150;				// 艦船
+	else
+		SupplyCount=30;				// 航空機
 
 if(CONN_DBG!=0)
 SupplyCount=10;
-						PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
-						}
-					}
-				else
+	PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+	}
+
+private void RequestSupply(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref RECT dstn_rect, int ry, ref HDC hdc)
+	{
+	switch( GetSupplyRequestState() )
+		{
+		case SupplyRequestState.Available:
+			{
+#if !LNGG_VER
+			len[0] = wsprintf(ach[0], "　要求する");
+#else
+			len[0] = wsprintf(ach[0], "　Request");
+#endif
+			dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120;
+			dstn_rect.top=ry+20*7+5;
+			dstn_rect.right=dstn_rect.left+(len[0]*12);
+			dstn_rect.bottom=dstn_rect.top+18;
+			if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+				{
+				SetTextColor(hdc, RGB(255, 0, 0));
+				if( LeftButton==3 && Result==GameResult.None )
 					{
-					SetTextColor(hdc, RGB(255, 255, 255));
+					RequestSupplyUnit();
 					}
-				TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
 				}
 			else
 				{
 				SetTextColor(hdc, RGB(255, 255, 255));
-#if !LNGG_VER
-				len[0] = wsprintf(ach[0], "割当点数不足");
-#else
-				len[0] = wsprintf(ach[0], "Shortage of pts");
-#endif
-				TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
 				}
+			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
 			}
-		else
+			break;
+
+		case SupplyRequestState.ShortOfPoints:
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
+#if !LNGG_VER
+			len[0] = wsprintf(ach[0], "割当点数不足");
+#else
+			len[0] = wsprintf(ach[0], "Shortage of pts");
+#endif
+			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
+			}
+			break;
+
+		case SupplyRequestState.UnitLimit:
 			{
 			SetTextColor(hdc, RGB(255, 255, 255));
 #if !LNGG_VER
@@ -896,21 +955,40 @@ SupplyCount=10;
 #endif
 			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
 			}
+			break;
 
-		}
-	else
-		{
-		SetTextColor(hdc, RGB(255, 255, 255));
+		case SupplyRequestState.Restricted:
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
 #if !LNGG_VER
-		len[0] = wsprintf(ach[0], "　要求制限");
+			len[0] = wsprintf(ach[0], "　要求制限");
 #else
-		len[0] = wsprintf(ach[0], "Restricted Unit");
+			len[0] = wsprintf(ach[0], "Restricted Unit");
 #endif
-		TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
+			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
+			}
+			break;
 		}
 	}
+// A click on the previous kind of reinforcement (前の機種), from the first to the last.
+private void SelectPreviousSupplyTarget()
+	{
+	if(SupplyTarget==0)
+		SupplyTarget=17;
+	else
+		SupplyTarget--;
+	}
 
-private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref HDC hdc, int ry, ref RECT dstn_rect, ref int m)
+// A click on the next kind of reinforcement (次の機種), from the last to the first.
+private void SelectNextSupplyTarget()
+	{
+	if(SupplyTarget==17)
+		SupplyTarget=0;
+	else
+		SupplyTarget++;
+	}
+
+private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref HDC hdc, int ry, ref RECT dstn_rect)
 	{
 	len[0] = wsprintf(ach[0], "%d:" ,GetSupplyPointsPerUnit());
 	TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*3+5+10, ach[0], len[0]);
@@ -931,10 +1009,7 @@ private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>>
 		SetTextColor(hdc, RGB(255, 0, 0));
 		if( LeftButton==3 )
 			{
-			if(SupplyTarget==0)
-				SupplyTarget=17;
-			else
-				SupplyTarget--;
+			SelectPreviousSupplyTarget();
 			}
 		}
 	else
@@ -960,10 +1035,7 @@ private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>>
 		SetTextColor(hdc, RGB(255, 0, 0));
 		if( LeftButton==3 )
 			{
-			if(SupplyTarget==17)
-				SupplyTarget=0;
-			else
-				SupplyTarget++;
+			SelectNextSupplyTarget();
 			}
 		}
 	else
@@ -974,10 +1046,10 @@ private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>>
 	TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*6+5, ach[0], len[0]);
 
 	// 要求する
-	RequestSupply(ref m, ref len, ref ach, ref dstn_rect, ry, ref hdc);
+	RequestSupply(ref len, ref ach, ref dstn_rect, ry, ref hdc);
 	}
 
-private void UpdateSupplyPanel(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref HDC hdc, ref RECT dstn_rect, int ry, ref int m)
+private void UpdateSupplyPanel(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref HDC hdc, ref RECT dstn_rect, int ry)
 	{
 #if !LNGG_VER
 	len[0] = wsprintf(ach[0], "補給割当:%d",SupplyPoints);
@@ -1002,7 +1074,7 @@ private void UpdateSupplyPanel(ref Array8<int> len, ref Array8<Array128<byte>> a
 	if( SupplyCount==0 )
 		{
 		// 値段の表示
-		UpdateSupplyRequest(ref len, ref ach, ref hdc, ry, ref dstn_rect, ref m);
+		UpdateSupplyRequest(ref len, ref ach, ref hdc, ry, ref dstn_rect);
 		}
 	else
 		{
@@ -1038,6 +1110,14 @@ private void UpdateSupplyPanel(ref Array8<int> len, ref Array8<Array128<byte>> a
 		}
 	}
 
+// A click on an item of the host's system menu (シナリオ選択へ, リジューム), while the player can order: the game asks
+// whether to do it (IDD_OK_CANCEL), and then sends the answer.
+private void AskSystemMenu(MessageType answer)
+	{
+	DialogAnswer=answer;
+	g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_OK_CANCEL), hwndApp, (DLGPROC)IDD_OK_CANCEL_Proc );
+	}
+
 private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ach, int ry, ref HDC hdc)
 	{
 	RECT dstn_rect = default;
@@ -1071,8 +1151,7 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 				}
 			else if( CanOrder.Value==1 )
 				{
-	DialogAnswer=MessageType.GoToGameSetting;
-				g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_OK_CANCEL), hwndApp, (DLGPROC)IDD_OK_CANCEL_Proc );
+				AskSystemMenu(MessageType.GoToGameSetting);
 				}
 			}
 		}
@@ -1100,8 +1179,7 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 				{
 				if( CanOrder.Value==1 )
 					{
-	DialogAnswer=MessageType.ResumeAndGoToGameSetting;
-					g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_OK_CANCEL), hwndApp, (DLGPROC)IDD_OK_CANCEL_Proc );
+					AskSystemMenu(MessageType.ResumeAndGoToGameSetting);
 					}
 				}
 			}
@@ -1210,7 +1288,7 @@ rival_mode=mode;
 
 		if( !IsEditingMap )
 			{
-			UpdateSupplyPanel(ref len, ref ach, ref hdc, ref dstn_rect, ry, ref m);
+			UpdateSupplyPanel(ref len, ref ach, ref hdc, ref dstn_rect, ry);
 			}
 		ry+=30;
 
@@ -1229,6 +1307,21 @@ rival_mode=mode;
 		{
 		DrawSupplyTarget(ref m, ref src_rect, ry);
 		}
+	}
+
+// A click held on the minimap, at cell (column, row) of the map: the battlefield shows the map from there, kept within
+// the map.
+private void ShowMinimapCell(int column, int row)
+	{
+	CameraPosition = new WorldPosition(MAP_LEFT+((column/map_close)*80), MAP_TOP-((row/map_close)*80));
+	if(CameraPosition.Y>MAP_TOP)
+		CameraPosition = new WorldPosition(CameraPosition.X, MAP_TOP);
+	if(CameraPosition.X>(MAP_RIGHT-CMBT_WIDTH) )
+		CameraPosition = new WorldPosition(MAP_RIGHT-CMBT_WIDTH, CameraPosition.Y);
+	if(CameraPosition.Y<(MAP_BOTTOM+CMBT_HEIGHT) )
+		CameraPosition = new WorldPosition(CameraPosition.X, MAP_BOTTOM+CMBT_HEIGHT);
+	if(CameraPosition.X<MAP_LEFT)
+		CameraPosition = new WorldPosition(MAP_LEFT, CameraPosition.Y);
 	}
 
 //============================================================================
@@ -1297,15 +1390,7 @@ public void	DrawMinimap()
 
 		if(LeftButton==2)
 			{
-			CameraPosition = new WorldPosition(MAP_LEFT+(((CursorPosition.x-5-base_x)/map_close)*80), MAP_TOP-(((CursorPosition.y-5-base_y)/map_close)*80));
-			if(CameraPosition.Y>MAP_TOP)
-				CameraPosition = new WorldPosition(CameraPosition.X, MAP_TOP);
-			if(CameraPosition.X>(MAP_RIGHT-CMBT_WIDTH) )
-				CameraPosition = new WorldPosition(MAP_RIGHT-CMBT_WIDTH, CameraPosition.Y);
-			if(CameraPosition.Y<(MAP_BOTTOM+CMBT_HEIGHT) )
-				CameraPosition = new WorldPosition(CameraPosition.X, MAP_BOTTOM+CMBT_HEIGHT);
-			if(CameraPosition.X<MAP_LEFT)
-				CameraPosition = new WorldPosition(MAP_LEFT, CameraPosition.Y);
+			ShowMinimapCell(CursorPosition.x-5-base_x, CursorPosition.y-5-base_y);
 			}
 		}
 
