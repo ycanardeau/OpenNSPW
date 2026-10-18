@@ -42,7 +42,7 @@ internal sealed class GameSession : IDisposable
 	private volatile bool _hasEnded;
 
 	// The state the game copies as it shows a frame (CaptureState), swapped with Snapshot when the UI takes the frame.
-	private BattleSnapshot _captured = new();
+	private GameSnapshot _captured = new();
 	private bool _isDisposed;
 
 	public Nspw Game { get; }
@@ -131,23 +131,25 @@ internal sealed class GameSession : IDisposable
 	}
 
 	// The cursor, in game pixels, and the buttons, each on its own.
-	private void UpdateMouse(ViewportAdapter viewportAdapter, Func<DrawingPoint, bool> isOnForm)
+	private void UpdateMouse(ViewportAdapter viewportAdapter, Func<DrawingPoint, bool> isOnForm, DrawingPoint? cursor)
 	{
 		var mouse = Mouse.GetState();
 		var position = viewportAdapter.PointToScreen(mouse.Position);
-		Game.SetCursorPos(position.X, position.Y);
+		var (x, y) = cursor is { } point ? (point.X, point.Y) : (position.X, position.Y);
+		Game.SetCursorPos(x, y);
 		var onForm = isOnForm(new DrawingPoint(position.X, position.Y));
 		UpdateButton(0, mouse.LeftButton, _previousMouse.LeftButton, onForm);
 		UpdateButton(1, mouse.RightButton, _previousMouse.RightButton, onForm);
 		_previousMouse = mouse;
 	}
 
-	// Passes the keyboard and the mouse to the game.
-	public void UpdateInput(ViewportAdapter viewportAdapter, Func<DrawingPoint, bool> isOnForm)
+	// Passes the keyboard and the mouse to the game: the mouse's buttons but where a form of the UI is (isOnForm), and
+	// its position, or `cursor` in its place.
+	public void UpdateInput(ViewportAdapter viewportAdapter, Func<DrawingPoint, bool> isOnForm, DrawingPoint? cursor = null)
 	{
 		ObjectDisposedException.ThrowIf(_isDisposed, this);
 		UpdateKeyboard();
-		UpdateMouse(viewportAdapter, isOnForm);
+		UpdateMouse(viewportAdapter, isOnForm, cursor);
 	}
 
 	private static Color ToColor(ushort pixel)
@@ -162,7 +164,7 @@ internal sealed class GameSession : IDisposable
 	public Texture2D? Frame { get; private set; }
 
 	// The game's state as it was when it showed the last frame. Read by the UI's thread.
-	public BattleSnapshot Snapshot { get; private set; } = new();
+	public GameSnapshot Snapshot { get; private set; } = new();
 
 	// Whether the last frame is a battle's: the battlefield, the sidebar and the radar.
 	public bool IsBattleFrame => Snapshot.IsBattle;

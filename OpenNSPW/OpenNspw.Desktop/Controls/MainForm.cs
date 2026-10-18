@@ -29,7 +29,7 @@ internal sealed class MainForm : Form
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		BackColor = DrawingColor.Transparent;
 
-		_battlefield = new Battlefield(session, art) { Bounds = Battlefield.Area };
+		_battlefield = new Battlefield(session, fonts, art) { Bounds = Battlefield.Area };
 		Controls.Add(_battlefield);
 
 		_sidebar = new Control
@@ -50,7 +50,7 @@ internal sealed class MainForm : Form
 	}
 
 	// Shows the game as it was in the last frame: on the UI's thread, each frame.
-	public void UpdateFrom(BattleSnapshot snapshot)
+	public void UpdateFrom(GameSnapshot snapshot)
 	{
 		_battlefield.UpdateFrom(snapshot);
 		_deck.UpdateFrom(snapshot);

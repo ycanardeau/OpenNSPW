@@ -1,9 +1,9 @@
 namespace OpenNspw.Desktop;
 
-// What the battle screen shows of the game, as it was when the game showed a frame (docs/UI.md): copied on the game's
+// What the host's UI shows of the game, as it was when the game showed a frame (docs/UI.md): copied on the game's
 // thread as it shows the frame, so that the UI reads it while the game goes on. Its fields keep the globals' types and
 // meanings.
-internal sealed class BattleSnapshot
+internal sealed class GameSnapshot
 {
 	public Array256<Unit> Units;
 	public Array512<Fire> Fires;
@@ -86,8 +86,51 @@ internal sealed class BattleSnapshot
 	public bool IsEditingMap;
 	public GameResult Result;
 
+	// What the game writes over its screens: the result of the battle once it is over, the notices of the top left
+	// corner, and the players' chat (ReadResult, ReadNotices, ReadChat).
+	public string[] ResultText = [];
+	public string[] Notices = [];
+	public string MyChat = "";
+	public string RivalChat = "";
+
+	// The setting screens (UpdateGameSetting): the scenario chosen, and on the page of its list, the scenarios and what
+	// the screen says about it; the host's side (0 for Japan); the rules, as the host sets them and the guest is sent them;
+	// and whether the host can start from a battle saved.
+	public short ScenarioNumber;
+	public string[] ScenarioNames = [];
+	public string[] ScenarioDescription = [];
+	public int HostSide;
+	public bool IsDecisionEnabled;
+	public Array2<short> SupplyRates;
+	public short SwapTime;
+	public short SwapRule;
+	public Array2<short> InitialSupplyPoints;
+	public string ArrivalControl = "";
+	public bool WasHost;
+	public bool HasAutoSave;
+
 	// Whether the frame is a battle's, with the battlefield, the sidebar and the radar: not the map editor's.
 	public bool IsBattle => Mode == GameMode.Battle && !IsEditingMap;
+
+	// Whether the frame is a setting screen's: the scenarios' or the rules'.
+	public bool IsSetting => Mode is GameMode.GameSetting or GameMode.ConfigSetting;
+
+	// The setting screens' fields, which the game writes as text only on them.
+	private void CopySettingFrom(Nspw game)
+	{
+		ScenarioNumber = game.ScenarioNumber;
+		ScenarioNames = game.ReadScenarioNames();
+		ScenarioDescription = game.ReadScenarioDescription();
+		HostSide = game.HostSide;
+		IsDecisionEnabled = game.IsDecisionEnabled;
+		SupplyRates = game.SupplyRates;
+		SwapTime = game.SwapTime;
+		SwapRule = game.SwapRule;
+		InitialSupplyPoints = game.InitialSupplyPoints;
+		ArrivalControl = game.ReadArrivalControl();
+		WasHost = game.WasHost;
+		HasAutoSave = game.HasAutoSave != 0;
+	}
 
 	// On the game's thread.
 	public void CopyFrom(Nspw game)
@@ -132,5 +175,10 @@ internal sealed class BattleSnapshot
 		Mode = game.Mode;
 		IsEditingMap = game.IsEditingMap;
 		Result = game.Result;
+		ResultText = game.ReadResult();
+		Notices = game.ReadNotices();
+		(MyChat, RivalChat) = game.ReadChat();
+		if (IsSetting)
+			CopySettingFrom(game);
 	}
 }

@@ -21,29 +21,31 @@ internal sealed class Battlefield : Control
 	private static readonly Color Fog = new(8, 18, 34);
 
 	private readonly GameSession _session;
+	private readonly UIFonts _fonts;
 	private readonly BattleArt _art;
 
 	// The jitter of smoke and wakes, which the original draws with the game's random numbers: here only for the look.
 	private readonly Random _jitter = new();
 
-	private BattleSnapshot _snapshot = new();
+	private GameSnapshot _snapshot = new();
 	private DrawingPoint? _mouse;
 
-	public Battlefield(GameSession session, BattleArt art)
+	public Battlefield(GameSession session, UIFonts fonts, BattleArt art)
 	{
 		_session = session;
+		_fonts = fonts;
 		_art = art;
 		BackColor = System.Drawing.Color.Transparent;
 	}
 
 	// Shows the game as it was in the last frame: on the UI's thread, each frame.
-	public void UpdateFrom(BattleSnapshot snapshot)
+	public void UpdateFrom(GameSnapshot snapshot)
 	{
 		_snapshot = snapshot;
 	}
 
 	// A point of the world on the battlefield.
-	private static Vector2 ToScreen(BattleSnapshot snapshot, double x, double y)
+	private static Vector2 ToScreen(GameSnapshot snapshot, double x, double y)
 	{
 		return new((int)(x - snapshot.CameraPosition.X), (int)(snapshot.CameraPosition.Y - y));
 	}
@@ -52,7 +54,7 @@ internal sealed class Battlefield : Control
 
 	// Whether a unit is on the battlefield as the original draws it there: the player's, or found, near the view, and not
 	// a parked plane, which is on the deck (DrawBattleArea).
-	private static bool IsDrawn(BattleSnapshot snapshot, ref Unit unit)
+	private static bool IsDrawn(GameSnapshot snapshot, ref Unit unit)
 	{
 		var camera = snapshot.CameraPosition;
 		return unit.IsUsed && (unit.Side == snapshot.LocalSide || unit.IsFound) && !IsParkedPlane(ref unit)
@@ -61,7 +63,7 @@ internal sealed class Battlefield : Control
 	}
 
 	// Where the original puts a unit's marks: an enemy's submerged submarine where it was last made out (DrawUnitMarks).
-	private static Vector2 MarkPosition(BattleSnapshot snapshot, ref Unit unit)
+	private static Vector2 MarkPosition(GameSnapshot snapshot, ref Unit unit)
 	{
 		return unit.Side != snapshot.LocalSide && unit.Kind == UnitKind.Submarine && unit.IsSubmerged
 			? ToScreen(snapshot, unit.ContactX, unit.ContactY)
@@ -70,7 +72,7 @@ internal sealed class Battlefield : Control
 
 	// The unit a left click at a point takes, as the original's loop does (DrawUnitMarks): the first, by number, whose
 	// sprite's middle has the point, and on which a click counts.
-	private static int? HitUnit(BattleSnapshot snapshot, DrawingPoint point)
+	private static int? HitUnit(GameSnapshot snapshot, DrawingPoint point)
 	{
 		if (point.X >= CMBT_WIDTH - 1)
 			return null;
@@ -87,7 +89,7 @@ internal sealed class Battlefield : Control
 	}
 
 	// The tile under a point of the battlefield, where the original puts the landing mark (AimLanding).
-	private static Vector2 SnapToTile(BattleSnapshot snapshot, DrawingPoint point)
+	private static Vector2 SnapToTile(GameSnapshot snapshot, DrawingPoint point)
 	{
 		var offsetX = (int)(snapshot.CameraPosition.X - MAP_LEFT) % 80;
 		var offsetY = (int)(MAP_TOP - snapshot.CameraPosition.Y) % 80;
@@ -96,7 +98,7 @@ internal sealed class Battlefield : Control
 
 	// Whether a left click at a point is on land where the selected transport can land, in the middle of the tile, as the
 	// original takes it before any unit (AimLanding, DrawUnitMarks).
-	private static bool IsLanding(BattleSnapshot snapshot, DrawingPoint point)
+	private static bool IsLanding(GameSnapshot snapshot, DrawingPoint point)
 	{
 		if (snapshot.SelectedUnit == 0 || snapshot.Units[snapshot.SelectedUnit].Kind != UnitKind.Transport || !snapshot.Clickable[0] || point.X >= CMBT_WIDTH - 1)
 			return false;
@@ -110,7 +112,7 @@ internal sealed class Battlefield : Control
 		return IsInMiddle(SnapToTile(snapshot, point), point);
 	}
 
-	private void DrawTiles(SpriteBatch batch, Vector2 origin, BattleSnapshot snapshot)
+	private void DrawTiles(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot)
 	{
 		ref var tiles = ref snapshot.Sprites[SpriteId.MapTiles];
 		var offsetX = (int)(snapshot.CameraPosition.X - MAP_LEFT) % tiles.Width;
@@ -132,7 +134,7 @@ internal sealed class Battlefield : Control
 
 	// The effects of a layer that the player sees (UpdateLowerEffects, UpdateUpperEffects), but the parked planes', which
 	// are on the deck.
-	private void DrawEffects(SpriteBatch batch, Vector2 origin, BattleSnapshot snapshot, EffectLayer layer)
+	private void DrawEffects(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot, EffectLayer layer)
 	{
 		ref var sprite = ref snapshot.Sprites[SpriteId.SubUnits];
 		for (var m = 1; m < EFFECT_MAX; m++)
@@ -178,7 +180,7 @@ internal sealed class Battlefield : Control
 
 	// The units from `first` to `last` on the battlefield, facing as they head; a submerged submarine in its own frame,
 	// and none of the enemy's (DrawUnit).
-	private void DrawUnits(SpriteBatch batch, Vector2 origin, BattleSnapshot snapshot, int first, int last)
+	private void DrawUnits(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot, int first, int last)
 	{
 		for (var m = first; m <= last; m++)
 		{
@@ -202,7 +204,7 @@ internal sealed class Battlefield : Control
 		}
 	}
 
-	private void DrawClouds(SpriteBatch batch, Vector2 origin, BattleSnapshot snapshot)
+	private void DrawClouds(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot)
 	{
 		ref var tiles = ref snapshot.Sprites[SpriteId.MapTiles];
 		for (var n = 0; n < KUMO_MAX; n++)
@@ -218,7 +220,7 @@ internal sealed class Battlefield : Control
 
 	// The ships under the clouds and the planes over them: the original draws the clouds as its loop reaches the first
 	// plane (DrawBattleArea).
-	private void DrawUnitsAndClouds(SpriteBatch batch, Vector2 origin, BattleSnapshot snapshot)
+	private void DrawUnitsAndClouds(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot)
 	{
 		var firstPlane = snapshot.FirstPlane;
 		DrawUnits(batch, origin, snapshot, 1, Math.Min(firstPlane - 1, snapshot.MaxUnitId));
@@ -231,7 +233,7 @@ internal sealed class Battlefield : Control
 
 	// The direction of a unit's target, or of where a transport lands, or a cross for a target out of sight
 	// (DrawTargetLine).
-	private static void DrawTargetArrow(SpriteBatch batch, Vector2 origin, BattleSnapshot snapshot, ref Unit unit)
+	private static void DrawTargetArrow(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot, ref Unit unit)
 	{
 		var at = origin + ToScreen(snapshot, unit.Position.X, unit.Position.Y);
 		ref var target = ref snapshot.Units[unit.Target];
@@ -254,7 +256,7 @@ internal sealed class Battlefield : Control
 
 	// The selected unit's target or landing point, pulsing, its carrier for a flying plane, its emergency course, its path,
 	// and the line from where the next destination adds to it to the mouse (DrawUnitMarks, DrawPathAndSetDestination).
-	private void DrawSelected(SpriteBatch batch, Vector2 origin, BattleSnapshot snapshot)
+	private void DrawSelected(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot)
 	{
 		ref var selected = ref snapshot.Units[snapshot.SelectedUnit];
 		var pulse = 30 - snapshot.FrameCount % 8 * 2;
@@ -298,7 +300,7 @@ internal sealed class Battlefield : Control
 
 	// The marks: the selection, the directions of the player's units' targets, the selected unit's, and what a click at
 	// the mouse would take.
-	private void DrawMarks(SpriteBatch batch, Vector2 origin, BattleSnapshot snapshot)
+	private void DrawMarks(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot)
 	{
 		for (var m = 1; m <= snapshot.MaxUnitId; m++)
 		{
@@ -371,5 +373,7 @@ internal sealed class Battlefield : Control
 			DrawEffects(batch, origin, snapshot, EffectLayer.Upper);
 			DrawMarks(batch, origin, snapshot);
 		});
+		GameMessages.PaintLines(e.Graphics, _fonts, snapshot, 16, 16);
+		GameMessages.PaintResult(e.Graphics, _fonts, snapshot, ClientRectangle);
 	}
 }

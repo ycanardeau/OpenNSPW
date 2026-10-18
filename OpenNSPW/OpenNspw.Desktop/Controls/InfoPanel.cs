@@ -29,7 +29,7 @@ internal sealed class InfoPanel : Control
 	private readonly ActionButton _request;
 	private readonly ActionButton _toScenarioSelection;
 	private readonly ActionButton _resume;
-	private BattleSnapshot _snapshot = new();
+	private GameSnapshot _snapshot = new();
 
 	// The right button deselects anywhere, as on the battlefield (DrawBattleArea): on the column and on its buttons.
 	private void RightClick(MouseEventArgs e)
@@ -66,7 +66,7 @@ internal sealed class InfoPanel : Control
 	}
 
 	// The request's state, in the game's words (RequestSupply), or that one is coming (要求中).
-	private static string RequestText(BattleSnapshot snapshot) => snapshot.SupplyCount != 0 ? "要求中" : snapshot.SupplyRequestState switch
+	private static string RequestText(GameSnapshot snapshot) => snapshot.SupplyCount != 0 ? "要求中" : snapshot.SupplyRequestState switch
 	{
 		SupplyRequestState.Available => "要求する",
 		SupplyRequestState.ShortOfPoints => "割当点数不足",
@@ -75,7 +75,7 @@ internal sealed class InfoPanel : Control
 	};
 
 	// Shows the game as it was in the last frame: on the UI's thread, each frame.
-	public void UpdateFrom(BattleSnapshot snapshot)
+	public void UpdateFrom(GameSnapshot snapshot)
 	{
 		_snapshot = snapshot;
 
@@ -104,7 +104,7 @@ internal sealed class InfoPanel : Control
 
 	// The chosen reinforcement's picture, the player's unit of its kind, between the buttons that choose it, as the last
 	// frame showed it: blinking while one is coming (DrawSupplyTarget).
-	private void DrawSupplyTarget(Aigamo.Saruhashi.Graphics graphics, BattleSnapshot snapshot)
+	private void DrawSupplyTarget(Aigamo.Saruhashi.Graphics graphics, GameSnapshot snapshot)
 	{
 		if (!snapshot.IsSupplyTargetShown)
 			return;

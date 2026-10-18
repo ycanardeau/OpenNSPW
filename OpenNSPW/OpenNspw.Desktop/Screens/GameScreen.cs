@@ -3,9 +3,9 @@ using OpenNspw.Desktop.Controls;
 
 namespace OpenNspw.Desktop.Screens;
 
-// A game of the port: in a battle, the battle screen (MainForm), whose parts show what the game draws in them; on its
-// other screens, its frames as it draws them. Its dialogs are forms (Dialogs.cs). The main menu comes back when the game
-// ends.
+// A game of the port: in a battle, the battle screen (MainForm); on the setting screens, the setting form (SettingForm);
+// on its other screens, its frames as it draws them. Its dialogs are forms (Dialogs.cs). The main menu comes back when
+// the game ends.
 //
 // startSession: starts the game when the screen is shown, or hands over one already started. The screen owns the game
 // from then on, and disposes it when it is unloaded, after its last frame is drawn.
@@ -15,6 +15,8 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 	private GameSession _session = default!;
 	private BattleArt _art = default!;
 	private MainForm _mainForm = default!;
+	private SettingForm _settingForm = default!;
+	private Backdrop _backdrop = default!;
 	private DialogForms _dialogs = default!;
 
 	public override void LoadContent()
@@ -22,10 +24,13 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 		base.LoadContent();
 		_session = _startSession();
 
-		// Under the dialogs, which are added as they open.
+		// Under the dialogs, which are brought to the front as they open.
 		_art = new BattleArt(GraphicsDevice, Game.DataDirectory);
 		_mainForm = new MainForm(_session, Game.Fonts, _art) { Visible = false };
 		WindowManager.Root.Controls.Add(_mainForm);
+		_settingForm = new SettingForm(_session, Game.Fonts) { Visible = false };
+		WindowManager.Root.Controls.Add(_settingForm);
+		_backdrop = new Backdrop(GraphicsDevice);
 		_dialogs = new DialogForms(_session.Game, WindowManager, Game.Fonts);
 	}
 
@@ -34,6 +39,7 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 		base.UnloadContent();
 		_session.Dispose();
 		_art.Dispose();
+		_backdrop.Dispose();
 	}
 
 	public override void Update(GameTime gameTime)
@@ -45,11 +51,21 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 		}
 
 		_session.UpdateFrame(GraphicsDevice);
-		_mainForm.Visible = _session.IsBattleFrame;
-		_mainForm.UpdateFrom(_session.Snapshot);
+		var snapshot = _session.Snapshot;
+		_mainForm.Visible = snapshot.IsBattle;
+		_mainForm.UpdateFrom(snapshot);
+		if (_settingForm.Visible != snapshot.IsSetting)
+		{
+			_settingForm.Visible = snapshot.IsSetting;
+			if (snapshot.IsSetting)
+				_settingForm.Focus();
+		}
+
+		_settingForm.UpdateFrom(snapshot);
 		if (Game.IsActive)
 		{
-			_session.UpdateInput(Game.ViewportAdapter, point => _dialogs.Contains(point) || _mainForm.Owns(point));
+			var cursor = _settingForm.Visible ? SettingForm.GameCursor : (System.Drawing.Point?)null;
+			_session.UpdateInput(Game.ViewportAdapter, point => _dialogs.Contains(point) || _mainForm.Owns(point) || _settingForm.Owns(point), cursor);
 		}
 
 		_dialogs.Update();
@@ -57,7 +73,11 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 
 	public override void Draw(GameTime gameTime)
 	{
-		if (!_session.IsBattleFrame)
+		if (_settingForm.Visible)
+		{
+			_backdrop.Draw(Game.SpriteBatch, Game.ViewportAdapter);
+		}
+		else if (!_session.IsBattleFrame)
 		{
 			_session.Draw(Game.SpriteBatch, Game.ViewportAdapter);
 		}

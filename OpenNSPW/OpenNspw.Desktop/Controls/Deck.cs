@@ -20,7 +20,7 @@ internal sealed class Deck : Control
 
 	private readonly GameSession _session;
 	private readonly BattleArt _art;
-	private BattleSnapshot _snapshot = new();
+	private GameSnapshot _snapshot = new();
 	private DrawingPoint? _mouse;
 
 	public Deck(GameSession session, BattleArt art)
@@ -31,7 +31,7 @@ internal sealed class Deck : Control
 	}
 
 	// Shows the game as it was in the last frame: on the UI's thread, each frame.
-	public void UpdateFrom(BattleSnapshot snapshot)
+	public void UpdateFrom(GameSnapshot snapshot)
 	{
 		_snapshot = snapshot;
 	}
@@ -45,7 +45,7 @@ internal sealed class Deck : Control
 
 	// The parked plane a left click at a point takes, as the original's loop does (DrawUnitMarks): the first, by number,
 	// whose sprite's middle has the point, and on which a click counts.
-	private static int? HitPlane(BattleSnapshot snapshot, DrawingPoint point)
+	private static int? HitPlane(GameSnapshot snapshot, DrawingPoint point)
 	{
 		for (var m = 1; m <= snapshot.MaxUnitId; m++)
 		{
@@ -59,7 +59,7 @@ internal sealed class Deck : Control
 
 	// The unit's picture: its kind's, or for a carrier or an air base, its hangar's when the view is switched to it
 	// (DrawUnitDetails).
-	private void DrawPicture(SpriteBatch batch, Vector2 origin, BattleSnapshot snapshot)
+	private void DrawPicture(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot)
 	{
 		var kind = (UnitKind)snapshot.UnitInfoPanel[0];
 		if (kind == 0)
@@ -77,7 +77,7 @@ internal sealed class Deck : Control
 	}
 
 	// The parked planes' effects of a layer that the player sees (UpdateLowerEffects, UpdateUpperEffects: 駐機場の飛行機用).
-	private void DrawEffects(SpriteBatch batch, Vector2 origin, BattleSnapshot snapshot, EffectLayer layer)
+	private void DrawEffects(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot, EffectLayer layer)
 	{
 		ref var sprite = ref snapshot.Sprites[SpriteId.SubUnits];
 		for (var m = 1; m < EFFECT_MAX; m++)
@@ -92,7 +92,7 @@ internal sealed class Deck : Control
 	}
 
 	// The planes parked on the deck shown, facing as they head (DrawUnit).
-	private void DrawPlanes(SpriteBatch batch, Vector2 origin, BattleSnapshot snapshot)
+	private void DrawPlanes(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot)
 	{
 		for (var m = 1; m <= snapshot.MaxUnitId; m++)
 		{
@@ -107,7 +107,7 @@ internal sealed class Deck : Control
 	}
 
 	// The selection's marks on the planes, and what a click at the mouse would take (DrawUnitMarks).
-	private void DrawMarks(SpriteBatch batch, Vector2 origin, BattleSnapshot snapshot)
+	private void DrawMarks(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot)
 	{
 		for (var m = 1; m <= snapshot.MaxUnitId; m++)
 		{
