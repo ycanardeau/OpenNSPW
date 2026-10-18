@@ -18,6 +18,28 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 	private SettingForm _settingForm = default!;
 	private Backdrop _backdrop = default!;
 	private DialogForms _dialogs = default!;
+	private ConfirmForm _confirmQuit = default!;
+
+	private void HideConfirmQuit()
+	{
+		_confirmQuit.Visible = false;
+		if (_settingForm.Visible)
+			_settingForm.Focus();
+	}
+
+	// Asks before Escape or F12 closes the game, over the screen and its dialogs; the key again cancels.
+	private void ToggleConfirmQuit()
+	{
+		if (_confirmQuit.Visible)
+		{
+			HideConfirmQuit();
+			return;
+		}
+
+		_confirmQuit.BringToFront();
+		_confirmQuit.Visible = true;
+		_confirmQuit.Focus();
+	}
 
 	public override void LoadContent()
 	{
@@ -32,6 +54,15 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 		WindowManager.Root.Controls.Add(_settingForm);
 		_backdrop = new Backdrop(GraphicsDevice);
 		_dialogs = new DialogForms(_session.Game, WindowManager, Game.Fonts);
+
+		_confirmQuit = new ConfirmForm(Game.Fonts, Texts.QuitGameTitle, Texts.QuitGameMessage, Texts.Quit) { Visible = false };
+		_confirmQuit.Confirmed += (_, _) =>
+		{
+			HideConfirmQuit();
+			_session.Quit();
+		};
+		_confirmQuit.Canceled += (_, _) => HideConfirmQuit();
+		WindowManager.Root.Controls.Add(_confirmQuit);
 	}
 
 	public override void UnloadContent()
@@ -65,7 +96,9 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 		if (Game.IsActive)
 		{
 			var cursor = _settingForm.Visible ? SettingForm.GameCursor : (System.Drawing.Point?)null;
-			_session.UpdateInput(Game.ViewportAdapter, point => _dialogs.Contains(point) || _battleForm.Owns(point) || _settingForm.Owns(point), cursor);
+			_session.UpdateInput(Game.ViewportAdapter, point => _confirmQuit.Visible || _dialogs.Contains(point) || _battleForm.Owns(point) || _settingForm.Owns(point), cursor);
+			if (_session.IsQuitRequested)
+				ToggleConfirmQuit();
 		}
 
 		_dialogs.Update();

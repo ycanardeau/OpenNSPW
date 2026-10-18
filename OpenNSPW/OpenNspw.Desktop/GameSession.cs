@@ -104,13 +104,24 @@ internal sealed class GameSession : IDisposable
 		}
 	}
 
+	// The keys that close the game (Escape and F12: WM_CLOSE), which the UI asks about first (Quit).
+	private static bool IsQuitKey(XnaKeys key) => key is XnaKeys.Escape or XnaKeys.F12;
+
+	// Whether a key that closes the game was pressed in the last update: it is held back from the game.
+	public bool IsQuitRequested { get; private set; }
+
 	private void UpdateKeyboard()
 	{
 		var keyboard = Keyboard.GetState();
+		IsQuitRequested = false;
 		foreach (var (key, (dik, vk)) in KeyCodes)
 		{
 			var down = keyboard.IsKeyDown(key);
-			if (down != _previousKeyboard.IsKeyDown(key))
+			if (IsQuitKey(key))
+			{
+				IsQuitRequested |= down && !_previousKeyboard.IsKeyDown(key);
+			}
+			else if (down != _previousKeyboard.IsKeyDown(key))
 			{
 				Game.PostKeyboardInput(dik, down);
 				Game.SetKeyState(Game.hwndApp, vk, down);
@@ -220,6 +231,16 @@ internal sealed class GameSession : IDisposable
 		spriteBatch.Begin(transformMatrix: viewportAdapter.GetScaleMatrix(), samplerState: SamplerState.PointClamp);
 		spriteBatch.Draw(Frame, Vector2.Zero, Color.White);
 		spriteBatch.End();
+	}
+
+	// Gives the game the press of Escape that was held back (IsQuitRequested): the game closes, as in the original.
+	public void Quit()
+	{
+		var (dik, vk) = KeyCodes[XnaKeys.Escape];
+		Game.PostKeyboardInput(dik, true);
+		Game.SetKeyState(Game.hwndApp, vk, true);
+		Game.PostKeyboardInput(dik, false);
+		Game.SetKeyState(Game.hwndApp, vk, false);
 	}
 
 	// Closes the game, as closing its window or cancelling its dialog does in the original. The game ends on its own

@@ -28,6 +28,7 @@ internal static class Texts
 	public static string Multiplayer => Pick("Multiplayer", "マルチプレイ");
 	public static string MultiplayerDescription => Pick("Host or join a game of NSPW on the Net", "NSPW on the Net の対戦をホスト、または参加");
 	public static string Quit => Pick("Quit", "終了");
+	public static string Cancel => Pick("Cancel", "キャンセル");
 	public static string QuitDescription => Pick("Close OpenNSPW", "OpenNSPW を終了します");
 
 	public static string SinglePlayerKicker => Pick("SINGLE PLAYER  ·  NSPW 1.22", "シングルプレイ  ·  NSPW 1.22");
@@ -111,6 +112,12 @@ internal static class Texts
 	public static string Restricted => Pick("Restricted Unit", "要求制限");
 	public static string Coming => Pick("Wait for coming", "要求中");
 	public static string ToMissionMenu => Pick("Mission Menu", "シナリオ選択へ");
+
+	// The question asked before Escape or F12 closes a game.
+	public static string QuitGameTitle => Pick("Quit this game?", "このゲームを終了しますか？");
+	public static string QuitGameMessage => Pick(
+		"You return to the main menu. In a multiplayer game, the connection to the rival is closed.",
+		"メインメニューに戻ります。対戦中の場合は、相手との接続が切れます。");
 
 	// The combat menu, whose buttons the original draws as pictures of Japanese words (Buttons1).
 	public static string FlightDeck => Pick("Flight Deck", "飛行甲板");
