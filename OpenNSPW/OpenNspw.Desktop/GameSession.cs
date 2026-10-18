@@ -110,6 +110,18 @@ internal sealed class GameSession : IDisposable
 	// Whether a key that closes the game was pressed in the last update: it is held back from the game.
 	public bool IsQuitRequested { get; private set; }
 
+	// Whether a key is one of the original's debug keys (DBG_MODE, WndProc) that a single-player game does not get in a
+	// Release build: F5 swaps the side the player plays, which would hand the player the computer's fleet; F6 starts the
+	// scenario again; F9 sinks the selected unit.
+	private bool IsHeldBackDebugKey(XnaKeys key)
+	{
+#if DEBUG
+		return false;
+#else
+		return Game.IsSingleplayer && key is XnaKeys.F5 or XnaKeys.F6 or XnaKeys.F9;
+#endif
+	}
+
 	private void UpdateKeyboard()
 	{
 		var keyboard = Keyboard.GetState();
@@ -121,7 +133,7 @@ internal sealed class GameSession : IDisposable
 			{
 				IsQuitRequested |= down && !_previousKeyboard.IsKeyDown(key);
 			}
-			else if (down != _previousKeyboard.IsKeyDown(key))
+			else if (!IsHeldBackDebugKey(key) && down != _previousKeyboard.IsKeyDown(key))
 			{
 				Game.PostKeyboardInput(dik, down);
 				Game.SetKeyState(Game.hwndApp, vk, down);
