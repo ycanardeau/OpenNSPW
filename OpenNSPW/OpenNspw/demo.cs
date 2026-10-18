@@ -282,6 +282,12 @@ HANDLE	hFile;
 		}
 
 	}
+// A click on the switch of the victory conditions (勝敗判定の切り替え): on, or off.
+private void ToggleDecision()
+	{
+	IsDecisionEnabled=!IsDecisionEnabled;
+	}
+
 private void UpdateDecisionSetting(int rx, ref HDC hdc, ref Array12<Array128<byte>> ach, ref Array12<int> len)
 	{
 	RECT dstn_rect;
@@ -305,7 +311,7 @@ private void UpdateDecisionSetting(int rx, ref HDC hdc, ref Array12<Array128<byt
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 )
 				{
-				IsDecisionEnabled=!IsDecisionEnabled;
+				ToggleDecision();
 				}
 			}
 		else
@@ -338,6 +344,18 @@ private void UpdateDecisionSetting(int rx, ref HDC hdc, ref Array12<Array128<byt
 	dstn_rect.top=150;
 	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 	}
+// A click on 増やす or 減らす of a player's increase of supply points (補給割当増加率): 0 for the host's, 1 for the
+// guest's. A rate is decreased only while it is not 0.
+private void IncreaseSupplyRate(int player)
+	{
+	SupplyRates[player]++;
+	}
+
+private void DecreaseSupplyRate(int player)
+	{
+	SupplyRates[player]--;
+	}
+
 private void UpdateHostSupplyRateSetting(ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc, int rx)
 	{
 	RECT dstn_rect;
@@ -369,7 +387,7 @@ private void UpdateHostSupplyRateSetting(ref Array12<int> len, ref Array12<Array
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 )
 				{
-				SupplyRates[0]++;
+				IncreaseSupplyRate(0);
 				flg=1;
 				}
 			}
@@ -394,7 +412,7 @@ private void UpdateHostSupplyRateSetting(ref Array12<int> len, ref Array12<Array
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 && SupplyRates[0]!=0)
 				{
-				SupplyRates[0]--;
+				DecreaseSupplyRate(0);
 				flg=1;
 				}
 			}
@@ -412,6 +430,18 @@ private void UpdateHostSupplyRateSetting(ref Array12<int> len, ref Array12<Array
 	dstn_rect.top=237;
 	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 	}
+// A frame of a press on 増やす or 減らす of the time at which the supply points' rates swap (補給値反転地点), in hundreds,
+// 0 for never. The time is decreased only while it is not 0.
+private void IncreaseSwapTime()
+	{
+	SwapTime++;
+	}
+
+private void DecreaseSwapTime()
+	{
+	SwapTime--;
+	}
+
 private void UpdateSwapTimeSetting(ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc, int rx)
 	{
 	RECT dstn_rect;
@@ -443,7 +473,7 @@ private void UpdateSwapTimeSetting(ref Array12<int> len, ref Array12<Array128<by
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( (LeftButton==1||LeftButton==2) )
 				{
-				SwapTime++;
+				IncreaseSwapTime();
 				flg=1;
 				}
 			}
@@ -468,7 +498,7 @@ private void UpdateSwapTimeSetting(ref Array12<int> len, ref Array12<Array128<by
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( (LeftButton==1||LeftButton==2) && SwapTime!=0)
 				{
-				SwapTime--;
+				DecreaseSwapTime();
 				flg=1;
 				}
 			}
@@ -528,7 +558,7 @@ private void UpdateGuestSupplyRateSetting(ref Array12<int> len, ref Array12<Arra
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 )
 				{
-				SupplyRates[1]++;
+				IncreaseSupplyRate(1);
 				flg=1;
 				}
 			}
@@ -553,7 +583,7 @@ private void UpdateGuestSupplyRateSetting(ref Array12<int> len, ref Array12<Arra
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 && SupplyRates[1]!=0)
 				{
-				SupplyRates[1]--;
+				DecreaseSupplyRate(1);
 				flg=1;
 				}
 			}
@@ -570,6 +600,12 @@ private void UpdateGuestSupplyRateSetting(ref Array12<int> len, ref Array12<Arra
 	dstn_rect.top=337;
 	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 	}
+// A click on the rule of the swap (補給値反転ルール): once (一度だけ), or every time the time passes (指定時間毎).
+private void ToggleSwapRule()
+	{
+	SwapRule=(short)(SwapRule==0 ? 1 : 0);
+	}
+
 private void UpdateSwapRuleSetting(ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc, int rx)
 	{
 	RECT dstn_rect;
@@ -594,7 +630,7 @@ private void UpdateSwapRuleSetting(ref Array12<int> len, ref Array12<Array128<by
 				SetTextColor(hdc, RGB(255, 0, 0));
 				if( LeftButton==3 )
 					{
-					SwapRule=(short)(SwapRule==0 ? 1 : 0);
+					ToggleSwapRule();
 					flg=1;
 					}
 				}
@@ -631,6 +667,20 @@ private void UpdateSwapRuleSetting(ref Array12<int> len, ref Array12<Array128<by
 			}
 		}
 	}
+// A frame of a press on 増やす or 減らす of a player's supply points at the start (初期補給割当): 0 for the host's, 1 for
+// the guest's, by 50. The points are decreased only while they are not 0.
+private void IncreaseInitialSupplyPoints(int player)
+	{
+	InitialSupplyPoints[player]+=50;
+	}
+
+private void DecreaseInitialSupplyPoints(int player)
+	{
+	InitialSupplyPoints[player]-=50;
+	if( InitialSupplyPoints[player]<0)
+		InitialSupplyPoints[player]=0;
+	}
+
 private void UpdateHostInitialSupplyPointsSetting(ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc, int rx)
 	{
 	RECT dstn_rect;
@@ -664,7 +714,7 @@ private void UpdateHostInitialSupplyPointsSetting(ref Array12<int> len, ref Arra
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( (LeftButton==1||LeftButton==2) )
 				{
-				InitialSupplyPoints[0]+=50;
+				IncreaseInitialSupplyPoints(0);
 				flg=1;
 				}
 			}
@@ -691,9 +741,7 @@ private void UpdateHostInitialSupplyPointsSetting(ref Array12<int> len, ref Arra
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( (LeftButton==1||LeftButton==2) && InitialSupplyPoints[0]!=0)
 				{
-				InitialSupplyPoints[0]-=50;
-				if( InitialSupplyPoints[0]<0)
-					InitialSupplyPoints[0]=0;
+				DecreaseInitialSupplyPoints(0);
 				flg=1;
 				}
 			}
@@ -743,7 +791,7 @@ private void UpdateGuestInitialSupplyPointsSetting(ref Array12<int> len, ref Arr
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( (LeftButton==1||LeftButton==2) )
 				{
-				InitialSupplyPoints[1]+=50;
+				IncreaseInitialSupplyPoints(1);
 				flg=1;
 				}
 			}
@@ -770,9 +818,7 @@ private void UpdateGuestInitialSupplyPointsSetting(ref Array12<int> len, ref Arr
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( (LeftButton==1||LeftButton==2) && InitialSupplyPoints[1]!=0)
 				{
-				InitialSupplyPoints[1]-=50;
-				if( InitialSupplyPoints[1]<0)
-					InitialSupplyPoints[1]=0;
+				DecreaseInitialSupplyPoints(1);
 				flg=1;
 				}
 			}
@@ -789,42 +835,11 @@ private void UpdateGuestInitialSupplyPointsSetting(ref Array12<int> len, ref Arr
 	dstn_rect.top=537;
 	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 	}
-private void UpdateArrivalControlSetting(ref Array12<int> len, ref Array12<Array128<byte>> ach, int rx, ref HDC hdc)
+// The rule of the reinforcements (増援ユニット制御), in ach[0].
+private void WriteArrivalControl(ref Array12<int> len, ref Array12<Array128<byte>> ach)
 	{
-	RECT dstn_rect;
-	if(IsHost)
-		{
-#if !LNGG_VER
-		len[0] = wsprintf(ach[0], "増援ユニット制御 ->>>");
-#else
-		len[0] = wsprintf(ach[0], "Supply unit control ->>>");
-#endif
-		dstn_rect.left=rx;
-		dstn_rect.top=600;
-		dstn_rect.right=dstn_rect.left+(len[0]*12);
-		dstn_rect.bottom=dstn_rect.top+24;
-		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
-			{
-			SetTextColor(hdc, RGB(255, 0, 0));
-			if( LeftButton==3 )
-				{
-				ArrivalControl++;
-				if(ArrivalControl>=7)
-					ArrivalControl=0;
-				}
-			}
-		else
-			{
-			SetTextColor(hdc, RGB(255, 255, 255));
-			}
-
-		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
-
-		}
-
 	switch( ArrivalControl )
 		{
-#if !LNGG_VER
 		case 0:
 			len[0] = wsprintf(ach[0], "全種増援可(%d)",ArrivalControl);
 			break;
@@ -846,8 +861,53 @@ private void UpdateArrivalControlSetting(ref Array12<int> len, ref Array12<Array
 		case 6:
 			len[0] = wsprintf(ach[0], "輸送船(軍港)以外可(%d)",ArrivalControl);
 			break;
-#else
+		}
+	}
 
+// A click on the control of the reinforcements (増援ユニット制御): the next of its 7 rules.
+private void CycleArrivalControl()
+	{
+	ArrivalControl++;
+	if(ArrivalControl>=7)
+		ArrivalControl=0;
+	}
+
+private void UpdateArrivalControlSetting(ref Array12<int> len, ref Array12<Array128<byte>> ach, int rx, ref HDC hdc)
+	{
+	RECT dstn_rect;
+	if(IsHost)
+		{
+#if !LNGG_VER
+		len[0] = wsprintf(ach[0], "増援ユニット制御 ->>>");
+#else
+		len[0] = wsprintf(ach[0], "Supply unit control ->>>");
+#endif
+		dstn_rect.left=rx;
+		dstn_rect.top=600;
+		dstn_rect.right=dstn_rect.left+(len[0]*12);
+		dstn_rect.bottom=dstn_rect.top+24;
+		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+			{
+			SetTextColor(hdc, RGB(255, 0, 0));
+			if( LeftButton==3 )
+				{
+				CycleArrivalControl();
+				}
+			}
+		else
+			{
+			SetTextColor(hdc, RGB(255, 255, 255));
+			}
+
+		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
+
+		}
+
+#if !LNGG_VER
+	WriteArrivalControl(ref len, ref ach);
+#else
+	switch( ArrivalControl )
+		{
 		case 0:
 			len[0] = wsprintf(ach[0], "All of possible(%d)",arrival_cont);
 			break;
@@ -870,19 +930,33 @@ private void UpdateArrivalControlSetting(ref Array12<int> len, ref Array12<Array
 			len[0] = wsprintf(ach[0], "Possible except transport(port)(%d)",arrival_cont);
 			break;
 
-#endif
-
 		}
+#endif
 
 	SetTextColor(hdc, RGB(255, 255, 255));
 	dstn_rect.left=rx;
 	dstn_rect.top=625;
 	TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 	}
+// A click on シナリオセッティングへ戻る, while the guest is on the rules too: both go back to the scenarios, with the
+// scenario kept, and the rules as they are at first (GoToGameSetting).
+private void BackToScenarioSetting(ref _DP_FLAG dp_flag)
+	{
+	int m;
+	m=ScenarioNumber;
+	GoToGameSetting();
+	ScenarioNumber=(short)m;
+
+	dp_flag.dwType = MessageType.GoToGameSetting;
+
+	bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
+	bufferDesc.pBufferData  = (byte*) (_DP_FLAG*)Unsafe.AsPointer(ref dp_flag);
+	g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+	}
+
 private void UpdateBackToScenarioSettingButton(ref Array12<int> len, ref Array12<Array128<byte>> ach, int rx, ref HDC hdc, ref _DP_FLAG dp_flag)
 	{
 	RECT dstn_rect;
-	int m =default /* C4701 */;
 	if(IsHost)
 		{
 #if !LNGG_VER
@@ -899,15 +973,7 @@ private void UpdateBackToScenarioSettingButton(ref Array12<int> len, ref Array12
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 )
 				{
-				m=ScenarioNumber;
-				GoToGameSetting();
-				ScenarioNumber=(short)m;
-
-				dp_flag.dwType = MessageType.GoToGameSetting;
-
-				bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
-				bufferDesc.pBufferData  = (byte*) (_DP_FLAG*)Unsafe.AsPointer(ref dp_flag);
-				g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+				BackToScenarioSetting(ref dp_flag);
 				}
 			}
 		else
@@ -917,6 +983,45 @@ private void UpdateBackToScenarioSettingButton(ref Array12<int> len, ref Array12
 		TextOut(hdc, dstn_rect.left, dstn_rect.top, ach[0], len[0]);
 		}
 	}
+// A click on ゲームスタート, while the guest is on the rules too: the host sends the shared random numbers' seed and
+// the rules, and both go to the battle.
+private void StartBattle(ref _DP_DATA_1 dp_data_1)
+	{
+	// ホストの選択状態をゲストにセンドします。
+	srand( (uint)time( null ) );
+	SharedRandomSeed=(short)Random(65536);
+
+	dp_data_1.dwType = MessageType.LeaveSetup;
+	dp_data_1.data[0] = SharedRandomSeed;
+
+	bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
+	bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref dp_data_1);
+	g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+
+	dp_data_1.dwType = MessageType.LeaveConfigSetting;
+	dp_data_1.data[0] = (short)HostSide;
+	dp_data_1.data[1] = ScenarioNumber;
+
+	dp_data_1.data[2] = SupplyRates[0];
+	dp_data_1.data[3] = SupplyRates[1];
+
+	dp_data_1.data[4] = IsDecisionEnabled.Value;
+
+	dp_data_1.data[5] = InitialSupplyPoints[0];
+	dp_data_1.data[6] = InitialSupplyPoints[1];
+
+	dp_data_1.data[7] = ArrivalControl;
+
+	dp_data_1.data[8] = SwapTime;
+	dp_data_1.data[9] = SwapRule;
+
+	bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
+	bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref dp_data_1);
+	g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+
+	Mode=GameMode.Battle;
+	}
+
 private void UpdateStartBattleButton(ref Array12<int> len, ref Array12<Array128<byte>> ach, int rx, ref HDC hdc, ref _DP_DATA_1 dp_data_1)
 	{
 	RECT dstn_rect;
@@ -936,39 +1041,7 @@ private void UpdateStartBattleButton(ref Array12<int> len, ref Array12<Array128<
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 )
 				{
-				// ホストの選択状態をゲストにセンドします。
-				srand( (uint)time( null ) );
-				SharedRandomSeed=(short)Random(65536);
-
-				dp_data_1.dwType = MessageType.LeaveSetup;
-				dp_data_1.data[0] = SharedRandomSeed;
-
-				bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-				bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref dp_data_1);
-				g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-
-				dp_data_1.dwType = MessageType.LeaveConfigSetting;
-				dp_data_1.data[0] = (short)HostSide;
-				dp_data_1.data[1] = ScenarioNumber;
-
-				dp_data_1.data[2] = SupplyRates[0];
-				dp_data_1.data[3] = SupplyRates[1];
-
-				dp_data_1.data[4] = IsDecisionEnabled.Value;
-
-				dp_data_1.data[5] = InitialSupplyPoints[0];
-				dp_data_1.data[6] = InitialSupplyPoints[1];
-
-				dp_data_1.data[7] = ArrivalControl;
-
-				dp_data_1.data[8] = SwapTime;
-				dp_data_1.data[9] = SwapRule;
-
-				bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-				bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref dp_data_1);
-				g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-
-				Mode=GameMode.Battle;
+				StartBattle(ref dp_data_1);
 				}
 			}
 		else
@@ -1224,6 +1297,57 @@ private void DrawScenarioDescription(ref Array12<int> len, ref Array12<Array128<
 		}
 	}
 
+// The cursor on the n-th scenario of the list: it is the scenario chosen, of the list shown (ListScenarioNames).
+private void ChooseScenario(int n)
+	{
+	if(ScenarioNumber<=99)
+		ScenarioNumber=(short)(n+1);
+	else if(ScenarioNumber<=199)
+		ScenarioNumber=(short)(n+1+100);
+	else if(ScenarioNumber<=299)
+		ScenarioNumber=(short)(n+1+200);
+	}
+
+// A click on the scenario chosen, while the guest is on the scenarios too: the host loads it and sends it with the
+// rules, and both go to the rules; or, for the user's scenario (9), the host picks its file first (IDD_FILE_CONT).
+private void LeaveGameSetting(ref _DP_DATA_1 dp_data_1)
+	{
+	if( ScenarioNumber==9 )
+		{
+		/*g_hDlg =*/ CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_LOAD_Proc );
+
+		}
+
+	if( ScenarioNumber!=9 || UserScenarioFileName[0]!='\0' )
+		{
+		LoadScenarioData();
+
+		// ホストの選択状態をゲストにセンドします。
+		dp_data_1.dwType = MessageType.LeaveGameSetting;
+		dp_data_1.data[0] = (short)HostSide;
+		dp_data_1.data[1] = ScenarioNumber;
+
+		dp_data_1.data[2] = SupplyRates[0];
+		dp_data_1.data[3] = SupplyRates[1];
+
+		dp_data_1.data[4] = IsDecisionEnabled.Value;
+
+		dp_data_1.data[5] = InitialSupplyPoints[0];
+		dp_data_1.data[6] = InitialSupplyPoints[1];
+
+		dp_data_1.data[7] = ArrivalControl;
+
+		dp_data_1.data[8] = SwapTime;
+		dp_data_1.data[9] = SwapRule;
+
+		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
+		bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref dp_data_1);
+		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+
+		Mode=GameMode.ConfigSetting;
+		}
+	}
+
 private void UpdateScenarioList(int m, ref Array12<int> len, ref HDC hdc, ref _DP_DATA_1 dp_data_1, ref Array12<Array128<byte>> ach)
 	{
 	int n;
@@ -1239,49 +1363,11 @@ private void UpdateScenarioList(int m, ref Array12<int> len, ref HDC hdc, ref _D
 			{
 			SetTextColor(hdc, RGB(255, 0, 0));
 
-			if(ScenarioNumber<=99)
-				ScenarioNumber=(short)(n+1);
-			else if(ScenarioNumber<=199)
-				ScenarioNumber=(short)(n+1+100);
-			else if(ScenarioNumber<=299)
-				ScenarioNumber=(short)(n+1+200);
+			ChooseScenario(n);
 
 			if( LeftButton==3 )
 				{
-				if( ScenarioNumber==9 )
-					{
-					/*g_hDlg =*/ CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_LOAD_Proc );
-
-					}
-
-				if( ScenarioNumber!=9 || UserScenarioFileName[0]!='\0' )
-					{
-					LoadScenarioData();
-
-					// ホストの選択状態をゲストにセンドします。
-					dp_data_1.dwType = MessageType.LeaveGameSetting;
-					dp_data_1.data[0] = (short)HostSide;
-					dp_data_1.data[1] = ScenarioNumber;
-
-					dp_data_1.data[2] = SupplyRates[0];
-					dp_data_1.data[3] = SupplyRates[1];
-
-					dp_data_1.data[4] = IsDecisionEnabled.Value;
-
-					dp_data_1.data[5] = InitialSupplyPoints[0];
-					dp_data_1.data[6] = InitialSupplyPoints[1];
-
-					dp_data_1.data[7] = ArrivalControl;
-
-					dp_data_1.data[8] = SwapTime;
-					dp_data_1.data[9] = SwapRule;
-
-					bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-					bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref dp_data_1);
-					g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-
-					Mode=GameMode.ConfigSetting;
-					}
+				LeaveGameSetting(ref dp_data_1);
 				}
 			}
 		else
@@ -1315,6 +1401,12 @@ private void UpdateScenarioList(int m, ref Array12<int> len, ref HDC hdc, ref _D
 		}
 	}
 
+// A click on 操作対象の切り替え: the host and the guest swap their sides.
+private void SwitchHostSide()
+	{
+	HostSide=(HostSide==0 ? 1 : 0);
+	}
+
 private void UpdateSideSetting(ref int rx, ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc)
 	{
 	RECT dstn_rect;
@@ -1336,7 +1428,7 @@ private void UpdateSideSetting(ref int rx, ref Array12<int> len, ref Array12<Arr
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 )
 				{
-				HostSide=(HostSide==0 ? 1 : 0);
+				SwitchHostSide();
 				}
 			}
 		else
@@ -1361,6 +1453,19 @@ private void UpdateSideSetting(ref int rx, ref Array12<int> len, ref Array12<Arr
 		len[0] = wsprintf(ach[0], "Side: U.S.Navy(Host Player)  Japan Navy(Guest Player)");
 #endif
 		}
+	}
+
+// A click on the start from the auto-saved battle (オートセーブスタート), while the guest is on the scenarios too: both go to the battle.
+private void StartFromAutoSave(ref _DP_DATA_1 dp_data_1)
+	{
+	// ホストの選択状態をゲストにセンドします。
+	dp_data_1.dwType = MessageType.StartFromAutoSave;
+	bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
+	bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref dp_data_1);
+	g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+
+	Mode=GameMode.Battle;
+	ScenarioNumber=-2;		// －２でオートセーブからのスタートを示す
 	}
 
 private void UpdateAutoSaveButton(ref int rx, ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc, ref _DP_DATA_1 dp_data_1)
@@ -1394,14 +1499,7 @@ private void UpdateAutoSaveButton(ref int rx, ref Array12<int> len, ref Array12<
 
 				if( LeftButton==3 )
 					{
-					// ホストの選択状態をゲストにセンドします。
-					dp_data_1.dwType = MessageType.StartFromAutoSave;
-					bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-					bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref dp_data_1);
-					g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-
-					Mode=GameMode.Battle;
-					ScenarioNumber=-2;		// －２でオートセーブからのスタートを示す
+					StartFromAutoSave(ref dp_data_1);
 					}
 				}
 			else
@@ -1424,6 +1522,19 @@ private void UpdateAutoSaveButton(ref int rx, ref Array12<int> len, ref Array12<
 			ScenarioNumber=-2;		// －２でオートセーブからのスタートを示す
 			}
 		}
+	}
+
+// A click on the start from the resume-saved battle (リジュームスタート), which the player saved as the host, while the guest is on the scenarios too: both go to the battle.
+private void StartFromResume(ref _DP_DATA_1 dp_data_1)
+	{
+	// ホストの選択状態をゲストにセンドします。
+	dp_data_1.dwType = MessageType.StartFromResume;
+	bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
+	bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref dp_data_1);
+	g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+
+	Mode=GameMode.Battle;
+	ScenarioNumber=-1;		// －１でリジュームを示す
 	}
 
 private void UpdateResumeButton(ref int rx, ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc, ref _DP_DATA_1 dp_data_1)
@@ -1457,14 +1568,7 @@ private void UpdateResumeButton(ref int rx, ref Array12<int> len, ref Array12<Ar
 
 				if( LeftButton==3 )
 					{
-					// ホストの選択状態をゲストにセンドします。
-					dp_data_1.dwType = MessageType.StartFromResume;
-					bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-					bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref dp_data_1);
-					g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
-
-					Mode=GameMode.Battle;
-					ScenarioNumber=-1;		// －１でリジュームを示す
+					StartFromResume(ref dp_data_1);
 					}
 				}
 			else
@@ -1488,6 +1592,15 @@ private void UpdateResumeButton(ref int rx, ref Array12<int> len, ref Array12<Ar
 		}
 	}
 
+// A click on シナリオ切り替え: the other page of the list, with its first scenario chosen.
+private void TurnScenarioPage()
+	{
+	if(ScenarioNumber<=99)
+		ScenarioNumber=101;
+	else if(ScenarioNumber<=199)
+		ScenarioNumber=1;
+	}
+
 private void UpdateScenarioPageButton(ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc)
 	{
 	RECT dstn_rect;
@@ -1507,10 +1620,7 @@ private void UpdateScenarioPageButton(ref Array12<int> len, ref Array12<Array128
 
 		if( LeftButton==3 )
 			{
-			if(ScenarioNumber<=99)
-				ScenarioNumber=101;
-			else if(ScenarioNumber<=199)
-				ScenarioNumber=1;
+			TurnScenarioPage();
 			}
 		}
 	else
