@@ -6,7 +6,7 @@ An exact port of the NSPW NET source ([Original/NSPW_NET](../Original/NSPW_NET))
 | `OpenNspw` | The C# port. One file per C++ file, plus stand-ins for the platform APIs it calls (Win32, DirectPlay 8, DirectSound), with the original APIs' names. |
 | `OpenNspw.Benchmarks` | Benchmarks of the game's own work in a battle (simulation and drawing), and of copying the state for the emulator. |
 | `OpenNspw.DirectPlay` | The DirectPlay 8 stand-ins implemented on [Otsuki](../Otsuki). |
-| `OpenNspw.Desktop` | The game, on MonoGame: runs the port's `WinMain` and shows its frames and dialogs (with [Saruhashi](../Saruhashi)). |
+| `OpenNspw.Desktop` | The game, on MonoGame: its menus (with [Saruhashi](../Saruhashi), see [docs/UI.md](../docs/UI.md)), which run the port's `WinMain` and show its frames and dialogs. |
 | `OpenNspw.Porter` | Ports C++ files to the port's conventions, then fixes the compile errors that have a mechanical fix. |
 | `OpenNspw.Singleplayer` | The emulator of the single-player executable (NSPW 1.22) on [Enzan](../Enzan), and its functions translated by the [Disassembler](../Disassembler). See [docs/Singleplayer.md](../docs/Singleplayer.md). |
 | `OpenNspw.Reference` | The reference: the unmodified C++ source, compiled in place, plus the tools that record what the tests compare against. Windows only, and not part of `OpenNSPW.slnx`. |
@@ -34,9 +34,12 @@ Run the commands below from this folder.
 dotnet run --project OpenNspw.Desktop
 ```
 
-The game's data is `Original/NSPW_NET`, or the folder given with `--data <folder>`. Start two of them: one hosts (port `0` picks a free port, `2310` is the original's), and the other joins its address and port. Settings, such as the player name, are kept in `OpenNSPW/settings.json` under the user's application data folder.
+The game's data is `Original/NSPW_NET`, or the folder given with `--data <folder>`. The game starts at its main menu, and returns to it when a game ends.
 
-To play a scenario of NSPW 1.22 against the computer instead (see [docs/Singleplayer.md](../docs/Singleplayer.md)):
+- **Multiplayer**: start two of them. One hosts (port `0` picks a free port, `2310` is the original's), and the other joins its address and port. **Scenario Editor** opens the original's map editor. Settings, such as the player name, are kept in `OpenNSPW/settings.json` under the user's application data folder.
+- **Single Player**: a scenario of NSPW 1.22 against the computer (see [docs/Singleplayer.md](../docs/Singleplayer.md)), chosen from its scenarios. It needs `Original/Nspw122/NSPW_122.exe`, or the file given with `--exe <file>`.
+
+To start a single-player scenario without the menus:
 
 ```bash
 dotnet run --project OpenNspw.Desktop -- --singleplayer 3
