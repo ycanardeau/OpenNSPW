@@ -1,68 +1,157 @@
 using Aigamo.Saruhashi;
 using OpenNspw.Singleplayer;
 using DrawingColor = System.Drawing.Color;
-using DrawingPoint = System.Drawing.Point;
 using DrawingRectangle = System.Drawing.Rectangle;
 using DrawingSize = System.Drawing.Size;
 
 namespace OpenNspw.Desktop.Controls;
 
-// The scenarios of NSPW 1.22, a set at a time as its scenario selection screen shows them, with its heading.
+// The scenarios of NSPW 1.22, a set at a time, as its scenario selection screen shows them, with what its setting
+// screen says about the one selected. Chosen with the mouse, or with the arrow keys, Enter and Escape.
 internal sealed class ScenarioBrowserForm : Form
 {
-	private readonly Label _heading;
-	private readonly string[] _headings;
-	private readonly TextButton[][] _scenarioButtons;
+	private const int RowHeight = 44;
+
+	private readonly UIFonts _fonts;
+	private readonly IReadOnlyList<ScenarioSet> _sets;
+	private readonly TabButton[] _tabs;
+	private readonly ScenarioRow[][] _rows;
+	private readonly ScenarioDetails _details;
 	private int _page;
+	private int _selected;
 
 	public event EventHandler<int>? ScenarioSelected;
 
 	public event EventHandler? Canceled;
 
-	private void ShowPage(int page)
+	// The selected scenario's number.
+	public int SelectedScenario => _rows[_page][_selected].Scenario.Number;
+
+	// A set's heading, シナリオ選択画面（第一集、本ゲームの標準シナリオです。）, as its name and its description.
+	private static (string Name, string Description) SplitHeading(string heading, int index)
 	{
-		_page = Math.Clamp(page, 0, _scenarioButtons.Length - 1);
-		_heading.Text = _headings[_page];
-		for (var i = 0; i < _scenarioButtons.Length; i++)
+		var open = heading.IndexOf('（');
+		var comma = heading.IndexOf('、', Math.Max(open, 0));
+		var close = heading.LastIndexOf('）');
+		return open >= 0 && comma > open && close > comma
+			? (heading[(open + 1)..comma], heading[(comma + 1)..close])
+			: ($"{index + 1}", heading);
+	}
+
+	private void Select(int page, int index)
+	{
+		_page = Math.Clamp(page, 0, _rows.Length - 1);
+		_selected = Math.Clamp(index, 0, _rows[_page].Length - 1);
+		for (var i = 0; i < _rows.Length; i++)
 		{
-			foreach (var button in _scenarioButtons[i])
+			_tabs[i].IsSelected = i == _page;
+			for (var j = 0; j < _rows[i].Length; j++)
 			{
-				button.Visible = i == _page;
+				_rows[i][j].Visible = i == _page;
+				_rows[i][j].IsSelected = i == _page && j == _selected;
 			}
 		}
+
+		_details.Scenario = _rows[_page][_selected].Scenario;
 	}
 
-	private TextButton CreateScenarioButton(ScenarioTitle scenario, int index)
+	private void Start()
 	{
-		var button = new TextButton { Location = new DrawingPoint(120, 150 + index * 25), Text = $"{scenario.Number,3}  {scenario.Title}" };
-		button.Click += (_, _) => ScenarioSelected?.Invoke(this, scenario.Number);
-		Controls.Add(button);
-		return button;
+		ScenarioSelected?.Invoke(this, SelectedScenario);
 	}
 
-	public ScenarioBrowserForm(IReadOnlyList<ScenarioSet> sets)
+	private ScenarioRow CreateRow(ScenarioEntry scenario, int page, int index)
 	{
+		var row = new ScenarioRow(_fonts, scenario) { Bounds = new DrawingRectangle(48, 200 + index * RowHeight, 432, RowHeight) };
+		row.Click += (_, _) => Select(page, index);
+		Controls.Add(row);
+		return row;
+	}
+
+	private TabButton CreateTab(ScenarioSet set, int page)
+	{
+		var tab = new TabButton(_fonts) { Bounds = new DrawingRectangle(48 + page * 112, 112, 96, 32), Text = SplitHeading(set.Heading, page).Name };
+		tab.Click += (_, _) => Select(page, 0);
+		Controls.Add(tab);
+		return tab;
+	}
+
+	// initialScenario: the scenario to select first, such as the one played last.
+	public ScenarioBrowserForm(UIFonts fonts, IReadOnlyList<ScenarioSet> sets, int? initialScenario)
+	{
+		_fonts = fonts;
+		_sets = sets;
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
-		BackColor = Palette.SettingScreen;
+		BackColor = DrawingColor.Transparent;
+		KeyPreview = true;
 
-		_heading = new Label { Bounds = new DrawingRectangle(120, 80, 784, 20), ForeColor = DrawingColor.Yellow, BackColor = DrawingColor.Transparent };
-		Controls.Add(_heading);
+		_tabs = [.. sets.Select(CreateTab)];
+		_rows = [.. sets.Select((set, page) => set.Scenarios.Select((scenario, index) => CreateRow(scenario, page, index)).ToArray())];
+		_details = new ScenarioDetails(fonts) { Bounds = new DrawingRectangle(504, 200, 472, 460) };
+		Controls.Add(_details);
 
-		var previous = new TextButton { Location = new DrawingPoint(120, 110), Text = "<- Previous" };
-		previous.Click += (_, _) => ShowPage(_page - 1);
-		Controls.Add(previous);
-
-		var next = new TextButton { Location = new DrawingPoint(250, 110), Text = "Next ->" };
-		next.Click += (_, _) => ShowPage(_page + 1);
-		Controls.Add(next);
-
-		_headings = [.. sets.Select(set => set.Heading)];
-		_scenarioButtons = [.. sets.Select(set => set.Scenarios.Select(CreateScenarioButton).ToArray())];
-
-		var back = new Button { Bounds = new DrawingRectangle(67, 690, 140, 35), Text = "Back" };
+		var back = new ActionButton(fonts) { Bounds = new DrawingRectangle(48, 688, 150, 44), Text = "Back" };
 		back.Click += (_, _) => Canceled?.Invoke(this, EventArgs.Empty);
 		Controls.Add(back);
 
-		ShowPage(0);
+		var start = new ActionButton(fonts) { Bounds = new DrawingRectangle(826, 688, 150, 44), Text = "Start", IsPrimary = true };
+		start.Click += (_, _) => Start();
+		Controls.Add(start);
+
+		var initial = sets.SelectMany((set, page) => set.Scenarios.Select((scenario, index) => (scenario.Number, Page: page, Index: index)))
+			.FirstOrDefault(s => s.Number == initialScenario);
+		Select(initial.Page, initial.Index);
+	}
+
+	protected override void OnKeyDown(KeyEventArgs e)
+	{
+		base.OnKeyDown(e);
+		switch (e.KeyCode)
+		{
+			case Keys.Up:
+				Select(_page, (_selected - 1 + _rows[_page].Length) % _rows[_page].Length);
+				break;
+			case Keys.Down:
+				Select(_page, (_selected + 1) % _rows[_page].Length);
+				break;
+			case Keys.Left:
+				Select((_page - 1 + _rows.Length) % _rows.Length, 0);
+				break;
+			case Keys.Right:
+				Select((_page + 1) % _rows.Length, 0);
+				break;
+			case Keys.PageUp:
+				_details.Briefing.ScrollPage(-1);
+				break;
+			case Keys.PageDown:
+				_details.Briefing.ScrollPage(1);
+				break;
+			case Keys.Home:
+				_details.Briefing.ScrollToStart();
+				break;
+			case Keys.End:
+				_details.Briefing.ScrollToEnd();
+				break;
+			case Keys.Enter:
+				Start();
+				break;
+			case Keys.Escape:
+				Canceled?.Invoke(this, EventArgs.Empty);
+				break;
+		}
+	}
+
+	protected override void OnPaint(PaintEventArgs e)
+	{
+		base.OnPaint(e);
+		var g = e.Graphics;
+		Painter.SpacedText(g, "SINGLE PLAYER  ·  NSPW 1.22", _fonts.Bold(12), Theme.Brass, 48, 34, 3);
+		Painter.Text(g, "Scenarios", _fonts.Bold(34), Theme.Text, 48, 52);
+		Painter.Text(g, SplitHeading(_sets[_page].Heading, _page).Description, _fonts.Regular(14), Theme.Muted, 48, 156);
+		Painter.Fill(g, new(48, 186, 928, 1), Theme.Alpha(Theme.Line, 0.9f));
+
+		const string hint = "↑↓ Scenario    ←→ Set    PgUp PgDn Briefing    Enter Start    Esc Back";
+		var hintFont = _fonts.Regular(13);
+		Painter.Text(g, hint, hintFont, Theme.Muted, (Width - Painter.Measure(g, hint, hintFont).Width) / 2, 701);
 	}
 }

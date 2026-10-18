@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended.Input.InputListeners;
 using MonoGame.Extended.ViewportAdapters;
+using OpenNspw.Desktop.Controls;
 using OpenNspw.Desktop.Screens;
 using DrawingRectangle = System.Drawing.Rectangle;
 using SaruhashiKeys = Aigamo.Saruhashi.Keys;
@@ -34,6 +35,7 @@ internal sealed class NspwGame : Game
 	private Screen? _nextScreen;
 	private GameSession? _lastSession;
 
+
 	// The game's data: t3.bmp, wav, Map, Scenario, Saved.
 	public string DataDirectory { get; }
 
@@ -44,6 +46,11 @@ internal sealed class NspwGame : Game
 	public ViewportAdapter ViewportAdapter { get; private set; } = default!;
 
 	public WindowManager WindowManager { get; private set; } = default!;
+
+	public UIFonts Fonts { get; private set; } = default!;
+
+	// The single-player scenario chosen last, to select it again in the browser.
+	public int? LastScenario { get; set; }
 
 	// Whether NSPW_122.exe was found, to play single-player.
 	public bool HasSingleplayerExecutable => _singleplayerExecutablePath is not null;
@@ -100,19 +107,15 @@ internal sealed class NspwGame : Game
 		var keyboardListener = new KeyboardListener(new KeyboardListenerSettings { InitialDelayMilliseconds = 500, RepeatDelayMilliseconds = 30 });
 		Components.Add(new InputListenerComponent(this, mouseListener, keyboardListener));
 
-		var fontSystem = new FontSystem();
-		if (Text.FontData is { } fontData)
-		{
-			fontSystem.AddFont(fontData);
-		}
-
+		Fonts = new UIFonts(Text.FontData);
 		WindowManager = new WindowManager(
 			new DrawingRectangle(0, 0, all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT),
 			new MonoGameGraphicsFactory(SpriteBatch, ViewportAdapter),
-			new DynamicSpriteFontWrapper((DynamicSpriteFont)fontSystem.GetFont(14)));
+			Fonts.Regular(14));
 		mouseListener.MouseDown += (_, e) => WindowManager.OnMouseDown(e);
 		mouseListener.MouseMove += (_, e) => WindowManager.OnMouseMove(e);
 		mouseListener.MouseUp += (_, e) => WindowManager.OnMouseUp(e);
+		mouseListener.MouseWheel += (_, e) => WindowManager.OnMouseWheel(e);
 		keyboardListener.KeyPressed += (_, e) => WindowManager.OnKeyDown(new KeyEventArgs((SaruhashiKeys)e.Key));
 		keyboardListener.KeyReleased += (_, e) => WindowManager.OnKeyUp(new KeyEventArgs((SaruhashiKeys)e.Key));
 		Window.TextInput += (_, e) => WindowManager.OnKeyPress(new KeyPressEventArgs(e.Character));

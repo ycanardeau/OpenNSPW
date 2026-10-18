@@ -17,7 +17,7 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 	{
 		base.LoadContent();
 		_session = _startSession();
-		_dialogs = new DialogForms(_session.Game, WindowManager);
+		_dialogs = new DialogForms(_session.Game, WindowManager, Game.Fonts);
 	}
 
 	public override void UnloadContent()

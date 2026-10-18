@@ -1,5 +1,6 @@
 using System.Drawing;
 using Aigamo.Saruhashi;
+using OpenNspw.Desktop.Controls;
 using Control = Aigamo.Saruhashi.Control;
 using Brush = Aigamo.Saruhashi.Brush;
 using Graphics = Aigamo.Saruhashi.Graphics;
@@ -13,11 +14,17 @@ namespace OpenNspw.Desktop;
 
 internal abstract class DialogControl : Control
 {
-	protected static readonly Brush Window = new SolidBrush(Color.White);
-	protected static readonly Brush WindowText = new SolidBrush(Color.Black);
-	protected static readonly Brush Highlight = new SolidBrush(Color.FromArgb(0, 120, 215));
-	protected static readonly Brush HighlightText = new SolidBrush(Color.White);
-	protected static readonly Pen Border = new(Color.FromArgb(122, 122, 122));
+	protected static readonly Brush Window = new SolidBrush(Theme.Alpha(Theme.Ink, 0.75f));
+	protected static readonly Brush WindowText = new SolidBrush(Theme.Text);
+	protected static readonly Brush Highlight = new SolidBrush(Theme.Brass);
+	protected static readonly Brush HighlightText = new SolidBrush(Theme.Ink);
+	protected static readonly Pen Border = new(Theme.Line);
+
+	// Transparent: each control draws what it fills, over the dialog's panel.
+	protected DialogControl()
+	{
+		BackColor = Color.Transparent;
+	}
 
 	protected void DrawText(Graphics graphics, string text, Brush brush, int x, int y)
 	{
@@ -64,7 +71,7 @@ internal sealed class EditBox : DialogControl
 
 	protected override void OnPaint(PaintEventArgs e)
 	{
-		e.Graphics.FillRectangle(Enabled ? Window : new SolidBrush(Color.FromArgb(240, 240, 240)), ClientRectangle);
+		e.Graphics.FillRectangle(Enabled ? Window : new SolidBrush(Theme.Alpha(Theme.Line, 0.12f)), ClientRectangle);
 		e.Graphics.DrawRectangle(Border, 0, 0, Width - 1, Height - 1);
 		DrawText(e.Graphics, Text + (Focused ? "|" : ""), WindowText, 3, 1);
 	}
@@ -158,21 +165,16 @@ internal sealed class CheckBoxControl : DialogControl
 		e.Graphics.DrawRectangle(Border, 0, y, BoxSize - 1, BoxSize - 1);
 		if (Checked)
 		{
-			e.Graphics.FillRectangle(WindowText, 3, y + 3, BoxSize - 6, BoxSize - 6);
+			e.Graphics.FillRectangle(Highlight, 3, y + 3, BoxSize - 6, BoxSize - 6);
 		}
 
 		DrawText(e.Graphics, Text, new SolidBrush(Enabled ? ForeColor : Color.Gray), BoxSize + 4, 0);
 	}
 }
 
-// Transparent: it comes before the controls it groups, so it is drawn over them.
+// Transparent, as every dialog control is: it comes before the controls it groups, so it is drawn over them.
 internal sealed class GroupBoxControl : DialogControl
 {
-	public GroupBoxControl()
-	{
-		BackColor = Color.Transparent;
-	}
-
 	protected override void OnPaint(PaintEventArgs e)
 	{
 		e.Graphics.DrawRectangle(Border, 0, 4, Width - 1, Height - 5);
@@ -193,7 +195,7 @@ internal sealed class StaticText(bool right) : DialogControl
 
 // The forms that show the game's dialogs (HWND, from NSPW_NET_RC.cs), kept in step with them. What the user does is
 // posted to the game's thread.
-internal sealed class DialogForms(Nspw game, WindowManager windowManager)
+internal sealed class DialogForms(Nspw game, WindowManager windowManager, UIFonts fonts)
 {
 	// The pixels of a dialog unit, for the dialogs' 9-point font.
 	private const float UnitX = 1.5f;
@@ -202,6 +204,7 @@ internal sealed class DialogForms(Nspw game, WindowManager windowManager)
 
 	private readonly Nspw _game = game;
 	private readonly WindowManager _windowManager = windowManager;
+	private readonly UIFonts _fonts = fonts;
 	private readonly Dictionary<HWND, (Form Form, Dictionary<HWND, Control> Controls)> _forms = [];
 
 	private static Rectangle ToPixels(int x, int y, int cx, int cy)
@@ -215,7 +218,7 @@ internal sealed class DialogForms(Nspw game, WindowManager windowManager)
 		switch (template.Kind)
 		{
 			case "PUSHBUTTON" or "DEFPUSHBUTTON":
-				var button = new Button();
+				var button = new ActionButton(_fonts) { IsPrimary = template.Kind == "DEFPUSHBUTTON", FontSize = 13 };
 				button.Click += (_, _) => _game.PostToGame(() => _game.ClickDlgItem(dialog, item.Id));
 				control = button;
 				break;
@@ -262,13 +265,26 @@ internal sealed class DialogForms(Nspw game, WindowManager windowManager)
 		{
 			Size = new Size(size.Width, size.Height + CaptionHeight),
 			Location = new Point((1024 - size.Width) / 2, (768 - size.Height - CaptionHeight) / 2),
+			BackColor = Theme.Panel,
 		};
-		var caption = new StaticText(false) { Location = new Point(6, 3), Size = new Size(size.Width - 12, CaptionHeight - 4) };
+		form.Paint += (_, e) =>
+		{
+			Painter.Frame(e.Graphics, form.ClientRectangle, Theme.Line);
+			Painter.Brackets(e.Graphics, form.ClientRectangle, 10, Theme.Brass);
+		};
+		var caption = new StaticText(false) { Location = new Point(8, 4), Size = new Size(size.Width - 16, CaptionHeight - 4), ForeColor = Theme.Brass };
 		form.Controls.Add(caption);
 		var controls = new Dictionary<HWND, Control> { [dialog] = caption };
 		foreach (var (item, itemTemplate) in dialog.Children.Zip(template.Items))
 		{
 			var control = CreateControl(dialog, item, itemTemplate);
+
+			// A left-aligned text may run to the dialog's edge: the font is wider than the original's.
+			if (itemTemplate.Kind == "LTEXT")
+			{
+				control.Width = Math.Max(control.Width, size.Width - control.X - 8);
+			}
+
 			form.Controls.Add(control);
 			controls[item] = control;
 		}
