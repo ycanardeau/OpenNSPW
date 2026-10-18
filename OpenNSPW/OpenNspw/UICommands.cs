@@ -163,13 +163,31 @@ public unsafe partial class Nspw
 		ToggleDeckView();
 	}
 
+	// The item of the combat menu in effect for the selected unit, as the host's UI shows it chosen: a ship's supply while
+	// it is supplying, a flying plane's mode, a parked plane's arms (ListCombatMenu), or none. The game's own choice
+	// (CombatMenuSelection) is set as an order is given but not as it ends, such as a ship's supply when it is done.
+	private CombatMenuItem ActiveCombatMenuItem()
+	{
+		ref var unit = ref Units[SelectedUnit];
+		if( SelectedUnit==0 )
+			return CombatMenuItem.None;
+
+		if( unit.Category==UnitCategory.Ship )
+			return unit.IsSupplying ? CombatMenuItem.Supply : CombatMenuItem.None;
+
+		if( unit.PlaneState==UnitState.Flying )
+			return (CombatMenuItem)unit.Mode;
+
+		return unit.Ammo==0 ? (CombatMenuItem)FireKind.Unarmed : (CombatMenuItem)unit.Weapon;
+	}
+
 	// A click on the combat menu that waits for a frame in which it counts, and the frame it was given in.
 	private (CombatMenuItem Item, int Since)? _waitingCombatMenu;
 
-	// The combat menu's click counts while the menu shows the item, it is not the item chosen already, and the player can
-	// order (UpdateCombatMenu). The player can order on and off with the turns, so a click waits for a frame in which it
-	// counts, as a click the player gave a moment later would; for 40 frames at most, two seconds, and while the menu
-	// still shows the item.
+	// The combat menu's click counts while the menu shows the item, it is not the item in effect already
+	// (ActiveCombatMenuItem), and the player can order (UpdateCombatMenu). The player can order on and off with the turns,
+	// so a click waits for a frame in which it counts, as a click the player gave a moment later would; for 40 frames at
+	// most, two seconds, and while the menu still shows the item.
 	private void RunWaitingCombatMenu()
 	{
 		if( _waitingCombatMenu is not var (item, since) )
@@ -181,7 +199,7 @@ public unsafe partial class Nspw
 			isShown |= ShownCombatMenu[i] == item;
 		}
 
-		if( !isShown || item==CombatMenuSelection || FrameCount-since>40 )
+		if( !isShown || item==ActiveCombatMenuItem() || FrameCount-since>40 )
 			{
 			_waitingCombatMenu=null;
 			}
@@ -481,8 +499,8 @@ public unsafe partial class Nspw
 			_game.QueueUICommand(UICommandSite.DeckView, _game.RunToggleDeckView);
 		}
 
-		// A click on an item of the combat menu, if the menu shows it and it is not the item chosen already; it waits for a
-		// frame in which the player can order (RunWaitingCombatMenu).
+		// A click on an item of the combat menu, if the menu shows it and it is not the item in effect already; it waits for
+		// a frame in which the player can order (RunWaitingCombatMenu).
 		public void ChooseCombatMenuItem(CombatMenuItem item)
 		{
 			Press();

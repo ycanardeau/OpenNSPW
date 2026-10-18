@@ -266,6 +266,13 @@ public unsafe partial class Nspw
 			}
 	}
 
+	// The item of the combat menu in effect for the selected unit, which the host's UI shows chosen
+	// (ActiveCombatMenuItem).
+	public CombatMenuItem ReadActiveCombatMenuItem()
+	{
+		return ActiveCombatMenuItem();
+	}
+
 	// Whether a left click on the battlefield gives the selected unit a destination (DrawPathAndSetDestination).
 	public bool ReadCanSetDestination()
 	{

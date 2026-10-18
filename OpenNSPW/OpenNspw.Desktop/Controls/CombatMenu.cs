@@ -96,7 +96,7 @@ internal sealed class CombatMenu : Control
 			button.Visible = i < _shown.Length;
 			if (button.Visible)
 			{
-				var isChosen = _shown[i] == snapshot.CombatMenuSelection;
+				var isChosen = _shown[i] == snapshot.ActiveCombatMenuItem;
 				button.Text = Label(_shown[i]);
 				button.IsPrimary = isChosen;
 			}

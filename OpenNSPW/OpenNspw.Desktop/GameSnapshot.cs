@@ -49,7 +49,9 @@ internal sealed class GameSnapshot
 	public Array256<short> Selections;
 
 	public short CombatMenuKind;
-	public CombatMenuItem CombatMenuSelection;
+
+	// The item of the combat menu in effect for the selected unit (ReadActiveCombatMenuItem), which the menu shows chosen.
+	public CombatMenuItem ActiveCombatMenuItem;
 
 	// The combat menu's items, as the game showed them in the frame (ShownCombatMenu).
 	public Array6<CombatMenuItem> CombatMenu;
@@ -160,7 +162,7 @@ internal sealed class GameSnapshot
 		SelectedUnit = game.SelectedUnit;
 		Selections = game.Selections[1];
 		CombatMenuKind = game.CombatMenuKind;
-		CombatMenuSelection = game.CombatMenuSelection;
+		ActiveCombatMenuItem = game.ReadActiveCombatMenuItem();
 		CombatMenu = game.ShownCombatMenu;
 		CombatMenuCount = game.ShownCombatMenuCount;
 		CanOrder = game.CanOrder;
