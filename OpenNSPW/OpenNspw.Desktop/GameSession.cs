@@ -166,7 +166,7 @@ internal sealed class GameSession : IDisposable
 	// The game's state as it was when it showed the last frame. Read by the UI's thread.
 	public GameSnapshot Snapshot { get; private set; } = new();
 
-	// Whether the last frame is a battle's: the battlefield, the sidebar and the radar.
+	// Whether the last frame is a battle's: the battlefield, the sidebar and the minimap.
 	public bool IsBattleFrame => Snapshot.IsBattle;
 
 	// Takes the game's last frame into `Frame`, if it has shown a new one.

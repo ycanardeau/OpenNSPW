@@ -12,7 +12,7 @@ namespace OpenNspw.Desktop.Controls;
 
 // The map of the whole battle (DrawMinimap): a pixel a tile of 80, with the player's units, the enemy's it has found,
 // and where the battlefield is. A click held on it moves the battlefield there, with the commands of the host's UI.
-internal sealed class Radar : Control
+internal sealed class Minimap : Control
 {
 	// The minimap's top: 199 high, at the bottom of the screen.
 	public const int Top = all_head.CMBT_HEIGHT - 199;
@@ -36,10 +36,10 @@ internal sealed class Radar : Control
 	private GameSnapshot _snapshot = new();
 	private bool _isHeld;
 
-	public Radar(GameSession session, BattleArt art)
+	public Minimap(GameSession session, BattleArt art)
 	{
 		_session = session;
-		_map = art.RadarMap;
+		_map = art.MinimapTexture;
 		BackColor = DrawingColor.Transparent;
 	}
 

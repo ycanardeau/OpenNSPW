@@ -13,8 +13,8 @@ namespace OpenNspw.Desktop.Controls;
 // the commands of the host's UI.
 internal sealed class CombatMenu : Control
 {
-	// Where the menu is on the game's screen: from under the deck, with the switch, down to the radar.
-	public static readonly DrawingRectangle Area = new(all_head.CMBT_WIDTH, 438, all_head.SCRN_WIDTH - all_head.CMBT_WIDTH, Radar.Top - 438);
+	// Where the menu is on the game's screen: from under the deck, with the switch, down to the minimap.
+	public static readonly DrawingRectangle Area = new(all_head.CMBT_WIDTH, 438, all_head.SCRN_WIDTH - all_head.CMBT_WIDTH, Minimap.Top - 438);
 
 	// The flag is 20 below the deck (ButtonBase), under the switch.
 	private const int FlagTop = 20;
