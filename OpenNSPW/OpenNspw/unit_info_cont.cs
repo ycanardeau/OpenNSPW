@@ -441,6 +441,10 @@ private void ToggleDeckView()
 private void UpdateDeckView(ref RECT src_rect, SpriteId sprite, ref RECT dstn_rect)
 	{
 	int i;
+
+	// The host's UI's commands for the switch (UICommands.cs).
+	RunUICommands(UICommandSite.DeckView, true);
+
 	i=0;
 	src_rect.left = Sprites[sprite].SheetX+(Sprites[sprite].Width*0)+1;
 	src_rect.top = Sprites[sprite].SheetY+(Sprites[sprite].Height*(i+1))+1;
@@ -615,6 +619,11 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 	sprite=SpriteId.Buttons1;
 
 	n=ListCombatMenu(ref menu, ref menu2);
+
+	// The host's UI's commands for the combat menu (UICommands.cs), on the items it shows.
+	ShownCombatMenu=menu2;
+	ShownCombatMenuCount=n;
+	RunUICommands(UICommandSite.CombatMenu, true);
 
 	for( i=0;i<n;i++ )
 		{
@@ -990,6 +999,9 @@ private void SelectNextSupplyTarget()
 
 private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref HDC hdc, int ry, ref RECT dstn_rect)
 	{
+	// The host's UI's commands for the supply panel (UICommands.cs).
+	RunUICommands(UICommandSite.SupplyPanel, true);
+
 	len[0] = wsprintf(ach[0], "%d:" ,GetSupplyPointsPerUnit());
 	TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*3+5+10, ach[0], len[0]);
 
@@ -1078,6 +1090,10 @@ private void UpdateSupplyPanel(ref Array8<int> len, ref Array8<Array128<byte>> a
 		}
 	else
 		{
+		// The host's UI's commands for choosing and requesting, while a reinforcement is coming, are dropped
+		// (UICommands.cs).
+		RunUICommands(UICommandSite.SupplyPanel, false);
+
 		if((FrameCount%2)!=0)
 			{
 #if !LNGG_VER
@@ -1121,6 +1137,9 @@ private void AskSystemMenu(MessageType answer)
 private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ach, int ry, ref HDC hdc)
 	{
 	RECT dstn_rect = default;
+
+	// The host's UI's commands for the system menu (UICommands.cs).
+	RunUICommands(UICommandSite.SystemMenu, true);
 #if !LNGG_VER
 	len[0] = wsprintf(ach[0], "シナリオ選択へ");
 #else
@@ -1246,12 +1265,23 @@ rival_mode=mode;
 		UpdateDeckView(ref src_rect, sprite, ref dstn_rect);
 
 		}
+	else
+		{
+		// The host's UI's commands for the switch, which is not shown, are dropped (UICommands.cs).
+		RunUICommands(UICommandSite.DeckView, false);
+		}
 
 	if(CombatMenuKind!=0 && !IsEditingMap )
 		{
 
 		//	スプライトグループ（メニュー）
 		UpdateCombatMenu(ref menu, ref menu2, ref m, ref src_rect, ref dstn_rect);
+		}
+	else
+		{
+		// The host's UI's commands for the combat menu, which is not shown, are dropped (UICommands.cs).
+		ShownCombatMenuCount=0;
+		RunUICommands(UICommandSite.CombatMenu, false);
 		}
 
 	// ゲームデータ
@@ -1290,11 +1320,21 @@ rival_mode=mode;
 			{
 			UpdateSupplyPanel(ref len, ref ach, ref hdc, ref dstn_rect, ry);
 			}
+		else
+			{
+			// The host's UI's commands for the supply panel, which is not shown, are dropped (UICommands.cs).
+			RunUICommands(UICommandSite.SupplyPanel, false);
+			}
 		ry+=30;
 
 		if( IsHost )
 			{
 			UpdateSystemMenu(ref len, ref ach, ry, ref hdc);
+			}
+		else
+			{
+			// The host's UI's commands for the system menu, which only the host has, are dropped (UICommands.cs).
+			RunUICommands(UICommandSite.SystemMenu, false);
 			}
 
 		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
@@ -1393,6 +1433,9 @@ public void	DrawMinimap()
 			ShowMinimapCell(CursorPosition.x-5-base_x, CursorPosition.y-5-base_y);
 			}
 		}
+
+	// The host's UI's commands for clicks held on the minimap (UICommands.cs).
+	RunUICommands(UICommandSite.Minimap, true);
 
 	// ユニットの描画
 
