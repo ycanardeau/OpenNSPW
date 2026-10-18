@@ -133,6 +133,7 @@ public class Control : IDisposable, IBindableComponent
 	public event EventHandler? MouseLeave;
 	public event EventHandler<MouseEventArgs>? MouseMove;
 	public event EventHandler<MouseEventArgs>? MouseUp;
+	public event EventHandler<MouseEventArgs>? MouseWheel;
 	public event EventHandler<PaintEventArgs>? Paint;
 	public event EventHandler<PaintEventArgs>? PaintBackground;
 	public event EventHandler? ParentChanged;
@@ -613,6 +614,28 @@ public class Control : IDisposable, IBindableComponent
 		return null;
 	}
 
+	// The wheel turns for the control under the mouse, as it does in Windows 10 and later.
+	internal Control? HandleMouseWheel(MouseEventArgs e)
+	{
+		if (!IsVisible() || !IsEnabled())
+			return null;
+
+		foreach (var c in Controls)
+		{
+			var handler = c.HandleMouseWheel(e);
+			if (handler is not null)
+				return handler;
+		}
+
+		if (ClipRectangle.Contains(e.Location))
+		{
+			OnMouseWheel(new MouseEventArgs(e.Button, e.Clicks, PointToClient(e.Location), e.Delta));
+			return this;
+		}
+
+		return null;
+	}
+
 	public void Hide() => Visible = false;
 
 	protected virtual void OnBindingContextChanged(EventArgs e)
@@ -701,6 +724,8 @@ public class Control : IDisposable, IBindableComponent
 	protected virtual void OnMouseMove(MouseEventArgs e) => MouseMove?.Invoke(this, e);
 
 	protected virtual void OnMouseUp(MouseEventArgs e) => MouseUp?.Invoke(this, e);
+
+	protected virtual void OnMouseWheel(MouseEventArgs e) => MouseWheel?.Invoke(this, e);
 
 	protected virtual void OnPaint(PaintEventArgs e) => Paint?.Invoke(this, e);
 
