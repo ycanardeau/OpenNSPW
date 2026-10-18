@@ -60,6 +60,14 @@ public sealed class MonoGameGraphics : Graphics
 	private DisposableScissor CreateDisposableScissor() =>
 		new(SpriteBatch, DrawingRectangle.Round(ClipBounds).ToXnaRectangle(), ViewportAdapter);
 
+	private void Begin(SamplerState? samplerState = null) =>
+		SpriteBatch.Begin(
+			blendState: BlendState.AlphaBlend,
+			samplerState: samplerState,
+			rasterizerState: s_rasterizerState,
+			transformMatrix: ViewportAdapter?.GetScaleMatrix()
+		);
+
 	public MonoGameGraphics(
 		Control control,
 		SpriteBatch spriteBatch,
@@ -71,11 +79,7 @@ public sealed class MonoGameGraphics : Graphics
 		ViewportAdapter = viewportAdapter;
 
 		_scissor = CreateDisposableScissor();
-		SpriteBatch.Begin(
-			blendState: BlendState.AlphaBlend,
-			rasterizerState: s_rasterizerState,
-			transformMatrix: ViewportAdapter?.GetScaleMatrix()
-		);
+		Begin();
 	}
 
 	private bool _disposed;
@@ -101,11 +105,38 @@ public sealed class MonoGameGraphics : Graphics
 		if (image is null)
 			return;
 
-		image.Draw(SpriteBatch, Control.PointToScreen(point).ToXnaPoint().ToVector2());
+		var position = Control.PointToScreen(point).ToXnaPoint().ToVector2();
+		if (image.SamplerState is not SamplerState samplerState)
+		{
+			image.Draw(SpriteBatch, position);
+			return;
+		}
+
+		// An image with a sampler state of its own is drawn in a batch of its own, with the same blending, clip and
+		// scale.
+		SpriteBatch.End();
+		Begin(samplerState);
+		image.Draw(SpriteBatch, position);
+		SpriteBatch.End();
+		Begin();
 	}
 
 	public override void DrawImage(IImage image, DrawingPoint point) =>
 		DrawImage(image as IMonoGameImage, point);
+
+	/// <summary>
+	/// Draws with the sprite batch directly, with a sampler state of its own, in a batch of its own with the same blending,
+	/// clip and scale: for a control that draws many sprites, such as pixel art with <see cref="SamplerState.PointClamp"/>.
+	/// The drawing gets the batch and where the control's client area is on the screen.
+	/// </summary>
+	public void DrawWith(SamplerState samplerState, Action<SpriteBatch, Vector2> draw)
+	{
+		SpriteBatch.End();
+		Begin(samplerState);
+		draw(SpriteBatch, Control.PointToScreen(DrawingPoint.Empty).ToXnaPoint().ToVector2());
+		SpriteBatch.End();
+		Begin();
+	}
 
 	public override void DrawImage(IImage image, DrawingPointF point) =>
 		DrawImage(image, DrawingPoint.Round(point));
