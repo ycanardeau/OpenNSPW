@@ -1,7 +1,7 @@
 namespace OpenNspw;
 
-// What the host's UI shows of the battle that the game writes as text, or works out, as it draws its sidebar
-// (docs/UI.md). Not part of the original. On the game's thread, as it shows a frame.
+// What the host's UI shows of the battle and the setting screens that the game writes as text, or works out, as it draws
+// them (docs/UI.md). Not part of the original. On the game's thread, as it shows a frame.
 public unsafe partial class Nspw
 {
 	private static string Decode(ReadOnlySpan<byte> text, int length)
@@ -35,6 +35,72 @@ public unsafe partial class Nspw
 	public SupplyRequestState ReadSupplyRequestState()
 	{
 		return GetSupplyRequestState();
+	}
+
+	// The scenarios of the setting screen's list, on the page of the scenario chosen (ListScenarioNames).
+	public string[] ReadScenarioNames()
+	{
+		Array12<int> len = default;
+		Array12<Array128<byte>> ach = default;
+		var m = -1;
+		ListScenarioNames(ref m, ref len, ref ach);
+		return [.. Enumerable.Range(0, m + 1).Select(n => Decode(ach[n], len[n]))];
+	}
+
+	// What the setting screen says about the scenario chosen, a line each, the victory conditions last
+	// (DrawScenarioDescription).
+	public string[] ReadScenarioDescription()
+	{
+		Array12<int> len = default;
+		Array12<Array128<byte>> ach = default;
+		DrawScenarioDescription(ref len, ref ach);
+		return [.. Enumerable.Range(1, 6).Select(n => Decode(ach[n], len[n]))];
+	}
+
+	// The rule of the reinforcements, in the setting screen's words (WriteArrivalControl).
+	public string ReadArrivalControl()
+	{
+		Array12<int> len = default;
+		Array12<Array128<byte>> ach = default;
+		WriteArrivalControl(ref len, ref ach);
+		return Decode(ach[0], len[0]);
+	}
+
+	// The result of the battle, as the game writes it over the battlefield once it is over (WriteResult), or none.
+	public string[] ReadResult()
+	{
+		if( Result==GameResult.None )
+			return [];
+
+		Array5<int> len = default;
+		Array5<Array128<byte>> ach = default;
+		WriteResult(ref len, ref ach);
+		return [Decode(ach[0], len[0]), Decode(ach[1], len[1]), Decode(ach[2], len[2])];
+	}
+
+	// What the game writes in the screen's top left corner on any screen, as UpdateFrame does: that the players are out
+	// of step, or that the rival is gone.
+	public string[] ReadNotices()
+	{
+		List<string> notices = [];
+		if( AreUnitsOutOfSync )
+			notices.Add("ユニットデータ同期異常、ゲームを中断されたし。");
+		if( IsTickOutOfSync )
+			notices.Add("プログラム同期異常、ゲームを中断されたし。");
+		if( IsRandomOutOfSync )
+			notices.Add("ランダム同期異常、ゲームを中断されたし。");
+		if( ActivePlayerCount!=2 && !IsSingleplayer )
+			notices.Add("接続相手がいなくなりました。");
+		return [.. notices];
+	}
+
+	// The player's and the rival's chat, each while the game shows it (DrawMyChat, DrawRivalChat), or empty.
+	public (string Mine, string Rival) ReadChat()
+	{
+		Array128<byte> ach = default;
+		var mine = MyChatDisplayTime!=0 ? Decode(ach, wsprintf(ach, MyChat)) : "";
+		var rival = RivalChatDisplayTime!=0 ? Decode(ach, wsprintf(ach, RivalChat)) : "";
+		return (mine, rival);
 	}
 
 	// The sprite's column of a unit facing a direction: one of eight, as DrawUnit sets SpriteColumn as it draws it.

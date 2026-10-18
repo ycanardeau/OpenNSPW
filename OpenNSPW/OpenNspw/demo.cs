@@ -1124,6 +1124,9 @@ private void UpdateConfigSetting(ref Array12<int> len, ref Array12<Array128<byte
 	// 戦闘開始
 	UpdateStartBattleButton(ref len, ref ach, rx, ref hdc, ref dp_data_1);
 
+	// The host's UI's commands for the rules (UICommands.cs).
+	RunUICommands(UICommandSite.Rules, IsHost);
+
 	if( IsHost && RivalMode==Mode && (FrameCount%10)==0 )
 		{
 		// ホストの選択状態をゲストにセンドします。
@@ -1840,6 +1843,9 @@ else
 
 #endif
 
+			// The host's UI's commands for the list (UICommands.cs).
+			RunUICommands(UICommandSite.ScenarioList, IsHost && Mode==GameMode.GameSetting);
+
 			if( IsHost && Mode==GameMode.GameSetting )
 				{
 				UpdateScenarioList(m, ref len, ref hdc, ref dp_data_1, ref ach);
@@ -1853,6 +1859,9 @@ else
 				{
 				UpdateScenarioPageButton(ref len, ref ach, ref hdc);
 				}
+
+			// The host's UI's commands for the page, the starts from saved battles and the sides (UICommands.cs).
+			RunUICommands(UICommandSite.ScenarioMenu, IsHost && Mode==GameMode.GameSetting);
 
 			// リジュームスタート
 			UpdateResumeButton(ref rx, ref len, ref ach, ref hdc, ref dp_data_1);
@@ -2054,6 +2063,11 @@ if(	Mode==GameMode.ConfigSetting )
 	{
 			UpdateConfigSetting(ref len, ref ach, ref hdc, ref dp_flag, ref dp_data_1);
 
+	}
+else
+	{
+	// The host's UI's commands for the rules, which are not shown, are dropped (UICommands.cs).
+	RunUICommands(UICommandSite.Rules, false);
 	}
 
 			IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
