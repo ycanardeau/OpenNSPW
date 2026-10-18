@@ -34,13 +34,15 @@ internal sealed class GameSession : IDisposable
 
 	private readonly DesktopPlatform _platform;
 	private readonly Thread _thread;
-	private Texture2D? _screen;
 	private ushort[] _pixels = [];
 	private Color[] _colors = [];
 	private int _frameNumber = -1;
 	private KeyboardState _previousKeyboard;
 	private MouseState _previousMouse;
 	private volatile bool _hasEnded;
+
+	// The state the game copies as it shows a frame (CaptureState), swapped with Snapshot when the UI takes the frame.
+	private BattleSnapshot _captured = new();
 	private bool _isDisposed;
 
 	public Nspw Game { get; }
@@ -77,6 +79,7 @@ internal sealed class GameSession : IDisposable
 	{
 		_platform = new DesktopPlatform(dataDirectory, text);
 		Game = new Nspw(_platform);
+		_platform.CaptureState = () => _captured.CopyFrom(Game);
 		if (singleplayer is var (executable, scenario))
 		{
 			Game.IsSingleplayer = true;
@@ -117,25 +120,25 @@ internal sealed class GameSession : IDisposable
 		_previousKeyboard = keyboard;
 	}
 
-	// A press on a form (`isOnForm`, in game pixels) is the form's, not the game's; a release goes to the game anyway.
+	// A button pressed or released: a press on a form (`isOnForm`) is the form's, not the game's; a release goes to the
+	// game anyway, which ignores one it did not see pressed.
+	private void UpdateButton(int button, ButtonState state, ButtonState previous, bool isOnForm)
+	{
+		if (state != previous && (!isOnForm || state == ButtonState.Released))
+		{
+			Game.PostMouseInput(button, state == ButtonState.Pressed);
+		}
+	}
+
+	// The cursor, in game pixels, and the buttons, each on its own.
 	private void UpdateMouse(ViewportAdapter viewportAdapter, Func<DrawingPoint, bool> isOnForm)
 	{
 		var mouse = Mouse.GetState();
 		var position = viewportAdapter.PointToScreen(mouse.Position);
 		Game.SetCursorPos(position.X, position.Y);
-		if (!isOnForm(new DrawingPoint(position.X, position.Y)) || mouse.LeftButton == ButtonState.Released)
-		{
-			if (mouse.LeftButton != _previousMouse.LeftButton)
-			{
-				Game.PostMouseInput(0, mouse.LeftButton == ButtonState.Pressed);
-			}
-
-			if (mouse.RightButton != _previousMouse.RightButton)
-			{
-				Game.PostMouseInput(1, mouse.RightButton == ButtonState.Pressed);
-			}
-		}
-
+		var onForm = isOnForm(new DrawingPoint(position.X, position.Y));
+		UpdateButton(0, mouse.LeftButton, _previousMouse.LeftButton, onForm);
+		UpdateButton(1, mouse.RightButton, _previousMouse.RightButton, onForm);
 		_previousMouse = mouse;
 	}
 
@@ -155,20 +158,29 @@ internal sealed class GameSession : IDisposable
 		return new Color((r << 3) | (r >> 2), (g << 2) | (g >> 4), (b << 3) | (b >> 2));
 	}
 
-	// Draws the game's last frame.
-	public void Draw(SpriteBatch spriteBatch, ViewportAdapter viewportAdapter)
+	// The game's last frame, once it has shown one.
+	public Texture2D? Frame { get; private set; }
+
+	// The game's state as it was when it showed the last frame. Read by the UI's thread.
+	public BattleSnapshot Snapshot { get; private set; } = new();
+
+	// Whether the last frame is a battle's: the battlefield, the sidebar and the radar.
+	public bool IsBattleFrame => Snapshot.IsBattle;
+
+	// Takes the game's last frame into `Frame`, if it has shown a new one.
+	public void UpdateFrame(GraphicsDevice graphicsDevice)
 	{
 		ObjectDisposedException.ThrowIf(_isDisposed, this);
-		if (_screen is null)
+		if (Frame is null)
 		{
 			// Black until the game shows its first frame: a new texture holds whatever its memory held, such as the
 			// screen before.
-			_screen = new Texture2D(spriteBatch.GraphicsDevice, all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
-			_screen.SetData(new Color[_screen.Width * _screen.Height]);
+			Frame = new Texture2D(graphicsDevice, all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
+			Frame.SetData(new Color[Frame.Width * Frame.Height]);
 		}
 
-		var frameNumber = _platform.CopyFrame(_frameNumber, ref _pixels, out var width, out var height);
-		if (frameNumber != _frameNumber && width == _screen.Width && height == _screen.Height)
+		var frameNumber = _platform.CopyFrame(_frameNumber, ref _pixels, out var width, out var height, () => (Snapshot, _captured) = (_captured, Snapshot));
+		if (frameNumber != _frameNumber && width == Frame.Width && height == Frame.Height)
 		{
 			if (_colors.Length != _pixels.Length)
 			{
@@ -180,12 +192,22 @@ internal sealed class GameSession : IDisposable
 				_colors[i] = ToColor(_pixels[i]);
 			}
 
-			_screen.SetData(_colors);
+			Frame.SetData(_colors);
 			_frameNumber = frameNumber;
+		}
+	}
+
+	// Draws the game's last frame, the whole screen.
+	public void Draw(SpriteBatch spriteBatch, ViewportAdapter viewportAdapter)
+	{
+		ObjectDisposedException.ThrowIf(_isDisposed, this);
+		if (Frame is null)
+		{
+			return;
 		}
 
 		spriteBatch.Begin(transformMatrix: viewportAdapter.GetScaleMatrix(), samplerState: SamplerState.PointClamp);
-		spriteBatch.Draw(_screen, Vector2.Zero, Color.White);
+		spriteBatch.Draw(Frame, Vector2.Zero, Color.White);
 		spriteBatch.End();
 	}
 
@@ -224,6 +246,6 @@ internal sealed class GameSession : IDisposable
 
 		_isDisposed = true;
 		Close();
-		_screen?.Dispose();
+		Frame?.Dispose();
 	}
 }

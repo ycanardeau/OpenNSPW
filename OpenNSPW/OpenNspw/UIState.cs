@@ -31,6 +31,19 @@ public unsafe partial class Nspw
 		return Decode(ach[0], len[0]);
 	}
 
+	// Whether the last frame showed the chosen reinforcement's picture (UpdateUnitInfo): in every frame of a battle but
+	// the map editor's, and while one is coming, in every other frame.
+	public bool IsSupplyTargetShown;
+
+	// The frame of the chosen reinforcement's picture on the sheet of the player's units (ChooseSupplyTargetFrame): its
+	// row and its column.
+	public (int Row, int Column) ReadSupplyTargetFrame()
+	{
+		var m = 0;
+		ChooseSupplyTargetFrame(ref m, out var n);
+		return (m, n);
+	}
+
 	// Whether the chosen reinforcement can be requested, or why not (GetSupplyRequestState).
 	public SupplyRequestState ReadSupplyRequestState()
 	{

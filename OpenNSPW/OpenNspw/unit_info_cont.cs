@@ -670,16 +670,10 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 		}
 	}
 
-private void DrawSupplyTarget(ref int m, ref RECT src_rect, int ry)
+// The frame of the reinforcement chosen in the supply panel (SupplyTarget) on the sheet of the player's units: row m, its
+// kind, and column n, its direction.
+private void ChooseSupplyTargetFrame(ref int m, out int n)
 	{
-	SpriteId sprite;
-	int n;
-	RECT dstn_rect = default;
-	if(LocalSide==Side.Japan)
-		sprite=SpriteId.JapanUnits;		//Off Screen Number		日本海軍の表示
-	else
-		sprite=SpriteId.UnitedStatesUnits;		//Off Screen Number		日本海軍の表示
-
 	n=1;
 	switch( SupplyTarget )
 		{
@@ -714,6 +708,19 @@ private void DrawSupplyTarget(ref int m, ref RECT src_rect, int ry)
 			m=13;
 			break;
 		}
+	}
+
+private void DrawSupplyTarget(ref int m, ref RECT src_rect, int ry)
+	{
+	SpriteId sprite;
+	int n;
+	RECT dstn_rect = default;
+	if(LocalSide==Side.Japan)
+		sprite=SpriteId.JapanUnits;		//Off Screen Number		日本海軍の表示
+	else
+		sprite=SpriteId.UnitedStatesUnits;		//Off Screen Number		日本海軍の表示
+
+	ChooseSupplyTargetFrame(ref m, out n);
 
 	// src_rect は ソースサーフェスのレクタングルです。
 	src_rect.left = Sprites[sprite].SheetX+(Sprites[sprite].Width * ( n )) +1;		// 方向
@@ -1343,7 +1350,8 @@ rival_mode=mode;
 	ry-=30;
 
 	// 補給
-	if( ( SupplyCount==0 || (FrameCount%2)!=0 ) && !IsEditingMap )
+	IsSupplyTargetShown = ( SupplyCount==0 || (FrameCount%2)!=0 ) && !IsEditingMap;
+	if( IsSupplyTargetShown )
 		{
 		DrawSupplyTarget(ref m, ref src_rect, ry);
 		}
