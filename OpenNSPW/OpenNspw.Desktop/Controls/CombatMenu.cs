@@ -8,9 +8,9 @@ using DrawingRectangle = System.Drawing.Rectangle;
 
 namespace OpenNspw.Desktop.Controls;
 
-// The selected unit's orders (the combat menu, UpdateCombatMenu) over its side's flag, and the switch of a carrier's or
-// an air base's view between its flight deck and its hangar (UpdateDeckView): drawn from the snapshot, and clicked with
-// the commands of the host's UI.
+// The selected unit's orders (the combat menu, UpdateCombatMenu), or its side's flag while it has none, and the switch
+// of a carrier's or an air base's view between its flight deck and its hangar (UpdateDeckView): drawn from the
+// snapshot, and clicked with the commands of the host's UI.
 internal sealed class CombatMenu : Control
 {
 	// Where the menu is on the game's screen: from under the deck, with the switch, down to the minimap.
@@ -115,11 +115,13 @@ internal sealed class CombatMenu : Control
 		Painter.Fill(g, ClientRectangle, Theme.Navy);
 		Painter.Fill(g, new(0, 0, Width, 1), Theme.Alpha(Theme.Line, 0.9f));
 
-		// The flag, dimmed under the orders.
+		// The side's flag, while the menu shows no orders.
+		if (_shown.Length > 0)
+			return;
+
 		var flag = _art.Flag(_side);
 		var height = Math.Min(flag.Height, Height - FlagTop);
-		var opacity = _shown.Length > 0 ? 0.3f : 0.85f;
 		var region = new Texture2DRegion(flag, 0, 0, flag.Width, height);
-		g.DrawImage(MonoGameImage.Create(region, Color.White * opacity, SamplerState.PointClamp), new DrawingPoint((Width - flag.Width) / 2, FlagTop));
+		g.DrawImage(MonoGameImage.Create(region, Color.White * 0.85f, SamplerState.PointClamp), new DrawingPoint((Width - flag.Width) / 2, FlagTop));
 	}
 }

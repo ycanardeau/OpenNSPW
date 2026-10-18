@@ -26,7 +26,7 @@ internal sealed class Minimap : Control
 	private const int Rows = 180;
 
 	private static readonly Color Sea = new(10, 22, 38);
-	private static readonly Color Land = new(58, 104, 72);
+	private static readonly Color Land = new(104, 150, 96);
 
 	private readonly GameSession _session;
 	private readonly Texture2D _map;

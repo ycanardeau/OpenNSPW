@@ -125,7 +125,7 @@ internal sealed class ConnectionForm : Form
 		back.Click += (_, _) => Canceled?.Invoke(this, EventArgs.Empty);
 		Controls.Add(back);
 
-		var editor = new ActionButton(fonts) { Bounds = new DrawingRectangle(796, 688, 180, 44), Text = Texts.ScenarioEditor };
+		var editor = new ActionButton(fonts) { Bounds = new DrawingRectangle(756, 688, 220, 44), Text = Texts.ScenarioEditor };
 		editor.Click += (_, _) => EditingScenario?.Invoke(this, EventArgs.Empty);
 		Controls.Add(editor);
 
