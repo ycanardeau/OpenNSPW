@@ -434,6 +434,23 @@ public class PeerTests : IAsyncLifetime
 	}
 
 	[Fact]
+	public async Task Close_WhileConnectingCancelsAtOnce()
+	{
+		var joiner = CreatePeer("Joiner");
+		await joiner.Peer.ConnectAsync(
+			Application(),
+			new IPEndPoint(IPAddress.Parse("10.9.9.9"), Peer.DefaultPort)
+		);
+
+		// Well within CloseTimeout (2 seconds): no connection is left to wait for.
+		await joiner.Peer.CloseAsync().WaitAsync(TimeSpan.FromSeconds(1));
+
+		(await joiner.Log.WaitForAsync<PeerEvent.ConnectCompleted>())
+			.Result.Should()
+			.Be(ResultCode.UserCancel);
+	}
+
+	[Fact]
 	public async Task Connect_CanBeRetriedAfterFailure()
 	{
 		var joiner = CreatePeer("Joiner");
