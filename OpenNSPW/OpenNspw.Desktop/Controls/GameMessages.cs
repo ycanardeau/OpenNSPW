@@ -14,7 +14,7 @@ internal static class GameMessages
 	public static void PaintLines(Graphics g, UIFonts fonts, GameSnapshot snapshot, float x, float y)
 	{
 		var font = fonts.Bold(14);
-		var lines = snapshot.Notices.Select(n => (Text: n, Color: Theme.Alert))
+		var lines = snapshot.Notices.Select(n => (Text: GameTexts.Of(n), Color: Theme.Alert))
 			.Append((Text: snapshot.MyChat, Color: Theme.BrassLight))
 			.Append((Text: snapshot.RivalChat, Color: Theme.Text))
 			.Where(l => l.Text.Length != 0)
@@ -44,7 +44,7 @@ internal static class GameMessages
 		var y = panel.Y + 26f;
 		for (var i = 0; i < snapshot.ResultText.Length; i++)
 		{
-			var text = snapshot.ResultText[i];
+			var text = GameTexts.Of(snapshot.ResultText[i]);
 			var width = Painter.Measure(g, text, lineFonts[i]).Width;
 			Painter.Text(g, text, lineFonts[i], colors[i], panel.X + (panel.Width - width) / 2, y);
 			y += i == 0 ? 50 : 34;

@@ -8,7 +8,9 @@ namespace OpenNspw.Desktop.Controls;
 // mouse wheel, by dragging the scroll bar, or a page at a time (ScrollPage).
 internal sealed class BriefingView(UIFonts fonts) : Control
 {
-	private const string ConditionsLabel = "勝敗条件";
+	// How the victory conditions start, in the game's words and in its English edition's.
+	private static readonly string[] ConditionsStarts = ["勝敗条件：", "Victory Line : "];
+
 	private const int LineHeight = 26;
 	private const int ScrollBarWidth = 4;
 	private const int TextRight = 16;
@@ -39,16 +41,24 @@ internal sealed class BriefingView(UIFonts fonts) : Control
 		}
 	}
 
+	// Lines as one text: Japanese lines run on, Latin ones with a space between.
+	private static string Join(IEnumerable<string> lines)
+	{
+		return lines.Where(l => l.Length != 0).Aggregate("", (text, line) =>
+			text.Length != 0 && text[^1] < 0x80 && line[0] < 0x80 ? $"{text} {line}" : text + line);
+	}
+
 	// The briefing, and the victory conditions that end it, each as one text: the screen's lines are broken for its own
 	// width.
 	private static (string Briefing, string Conditions) Split(ScenarioEntry scenario)
 	{
-		var start = scenario.Briefing.ToList().FindIndex(l => l.StartsWith(ConditionsLabel + "：", StringComparison.Ordinal));
+		var lines = scenario.Briefing.ToList();
+		var start = lines.FindIndex(l => ConditionsStarts.Any(s => l.StartsWith(s, StringComparison.Ordinal)));
 		if (start < 0)
-			return (string.Concat(scenario.Briefing), "");
+			return (Join(lines), "");
 
-		var conditions = string.Concat(scenario.Briefing.Skip(start));
-		return (string.Concat(scenario.Briefing.Take(start)), conditions[(ConditionsLabel.Length + 1)..]);
+		var label = ConditionsStarts.First(s => lines[start].StartsWith(s, StringComparison.Ordinal));
+		return (Join(lines.Take(start)), Join(lines.Skip(start))[label.Length..]);
 	}
 
 	private void Wrap(Graphics graphics, ScenarioEntry scenario)
@@ -165,7 +175,7 @@ internal sealed class BriefingView(UIFonts fonts) : Control
 			var box = new System.Drawing.Rectangle(0, (int)y, Width - TextRight, 40 + _conditions.Count * LineHeight);
 			Painter.Fill(g, box, Theme.Alpha(Theme.Brass, 0.09f));
 			Painter.Fill(g, new(box.X, box.Y, 3, box.Height), Theme.Brass);
-			Painter.Text(g, ConditionsLabel, _fonts.Bold(13), Theme.Brass, box.X + 16, box.Y + 10);
+			Painter.Text(g, Texts.VictoryConditions, _fonts.Bold(13), Theme.Brass, box.X + 16, box.Y + 10);
 			y += 34;
 			foreach (var line in _conditions)
 			{

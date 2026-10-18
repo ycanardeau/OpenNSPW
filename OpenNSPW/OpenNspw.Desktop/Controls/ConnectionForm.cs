@@ -52,9 +52,9 @@ internal sealed class ConnectionForm : Form
 		_host.Enabled = _join.Enabled = _canConnect && !_awaitsFill;
 		_name.Enabled = _port.Enabled = !_awaitsFill;
 		_address.Enabled = !_isHost && !_awaitsFill;
-		_address.Placeholder = _isHost ? "A host listens on its port" : "The host's address";
+		_address.Placeholder = _isHost ? Texts.HostAddressPlaceholder : Texts.JoinAddressPlaceholder;
 		_connect.Enabled = _canConnect && !_awaitsFill;
-		_connect.Text = _awaitsFill ? "…" : !_canConnect ? "Connecting…" : _isHost ? "Host Game" : "Join Game";
+		_connect.Text = _awaitsFill ? "…" : !_canConnect ? Texts.Connecting : _isHost ? Texts.HostGame : Texts.JoinGame;
 	}
 
 	// Whether the game can connect now: not while it is connecting.
@@ -111,8 +111,8 @@ internal sealed class ConnectionForm : Form
 		KeyPreview = true;
 
 		var (x, width) = (PanelBounds.X + 32, PanelBounds.Width - 64);
-		_host = CreateSegment(new DrawingRectangle(x, PanelBounds.Y + 32, width / 2, 40), "Host", true);
-		_join = CreateSegment(new DrawingRectangle(x + width / 2, PanelBounds.Y + 32, width / 2, 40), "Join", false);
+		_host = CreateSegment(new DrawingRectangle(x, PanelBounds.Y + 32, width / 2, 40), Texts.Host, true);
+		_join = CreateSegment(new DrawingRectangle(x + width / 2, PanelBounds.Y + 32, width / 2, 40), Texts.Join, false);
 		_name = CreateField(new DrawingRectangle(x, PanelBounds.Y + 124, width, 40));
 		_address = CreateField(new DrawingRectangle(x, PanelBounds.Y + 206, width, 40));
 		_port = CreateField(new DrawingRectangle(x, PanelBounds.Y + 288, 160, 40));
@@ -121,11 +121,11 @@ internal sealed class ConnectionForm : Form
 		_connect.Click += (_, _) => Connect();
 		Controls.Add(_connect);
 
-		var back = new ActionButton(fonts) { Bounds = new DrawingRectangle(48, 688, 150, 44), Text = "Back" };
+		var back = new ActionButton(fonts) { Bounds = new DrawingRectangle(48, 688, 150, 44), Text = Texts.Back };
 		back.Click += (_, _) => Canceled?.Invoke(this, EventArgs.Empty);
 		Controls.Add(back);
 
-		var editor = new ActionButton(fonts) { Bounds = new DrawingRectangle(796, 688, 180, 44), Text = "Scenario Editor" };
+		var editor = new ActionButton(fonts) { Bounds = new DrawingRectangle(796, 688, 180, 44), Text = Texts.ScenarioEditor };
 		editor.Click += (_, _) => EditingScenario?.Invoke(this, EventArgs.Empty);
 		Controls.Add(editor);
 
@@ -178,16 +178,16 @@ internal sealed class ConnectionForm : Form
 	{
 		base.OnPaint(e);
 		var g = e.Graphics;
-		Painter.SpacedText(g, "MULTIPLAYER  ·  NSPW ON THE NET 1.10", _fonts.Bold(12), Theme.Brass, 48, 34, 3);
-		Painter.Text(g, "Connect", _fonts.Bold(34), Theme.Text, 48, 52);
-		Painter.Text(g, "Two players: one hosts a game on a port, the other joins it at the host's address.", _fonts.Regular(14), Theme.Muted, 48, 104);
+		Painter.SpacedText(g, Texts.MultiplayerKicker, _fonts.Bold(12), Theme.Brass, 48, 34, 3);
+		Painter.Text(g, Texts.Connect, _fonts.Bold(34), Theme.Text, 48, 52);
+		Painter.Text(g, Texts.ConnectDescription, _fonts.Regular(14), Theme.Muted, 48, 104);
 
 		Painter.Fill(g, PanelBounds, Theme.Alpha(Theme.Panel, 0.9f));
 		Painter.Frame(g, PanelBounds, Theme.Alpha(Theme.Line, 0.9f));
 		Painter.Brackets(g, PanelBounds, 16, Theme.Brass);
-		PaintLabel(g, "PLAYER NAME", PanelBounds.Y + 100);
-		PaintLabel(g, "ADDRESS", PanelBounds.Y + 182);
-		PaintLabel(g, "PORT", PanelBounds.Y + 264);
+		PaintLabel(g, Texts.PlayerName, PanelBounds.Y + 100);
+		PaintLabel(g, Texts.Address, PanelBounds.Y + 182);
+		PaintLabel(g, Texts.Port, PanelBounds.Y + 264);
 
 		if (Status.Length > 0)
 		{

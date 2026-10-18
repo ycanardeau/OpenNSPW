@@ -70,7 +70,7 @@ internal sealed class ScenarioBrowserForm : Form
 
 	private TabButton CreateTab(ScenarioSet set, int page)
 	{
-		var tab = new TabButton(_fonts) { Bounds = new DrawingRectangle(48 + page * 112, 112, 96, 32), Text = SplitHeading(set.Heading, page).Name };
+		var tab = new TabButton(_fonts) { Bounds = new DrawingRectangle(48 + page * 112, 112, 96, 32), Text = GameTexts.Of(SplitHeading(set.Heading, page).Name) };
 		tab.Click += (_, _) => Select(page, 0);
 		Controls.Add(tab);
 		return tab;
@@ -90,11 +90,11 @@ internal sealed class ScenarioBrowserForm : Form
 		_details = new ScenarioDetails(fonts) { Bounds = new DrawingRectangle(504, 200, 472, 460) };
 		Controls.Add(_details);
 
-		var back = new ActionButton(fonts) { Bounds = new DrawingRectangle(48, 688, 150, 44), Text = "Back" };
+		var back = new ActionButton(fonts) { Bounds = new DrawingRectangle(48, 688, 150, 44), Text = Texts.Back };
 		back.Click += (_, _) => Canceled?.Invoke(this, EventArgs.Empty);
 		Controls.Add(back);
 
-		var start = new ActionButton(fonts) { Bounds = new DrawingRectangle(826, 688, 150, 44), Text = "Start", IsPrimary = true };
+		var start = new ActionButton(fonts) { Bounds = new DrawingRectangle(826, 688, 150, 44), Text = Texts.Start, IsPrimary = true };
 		start.Click += (_, _) => Start();
 		Controls.Add(start);
 
@@ -145,12 +145,12 @@ internal sealed class ScenarioBrowserForm : Form
 	{
 		base.OnPaint(e);
 		var g = e.Graphics;
-		Painter.SpacedText(g, "SINGLE PLAYER  ·  NSPW 1.22", _fonts.Bold(12), Theme.Brass, 48, 34, 3);
-		Painter.Text(g, "Scenarios", _fonts.Bold(34), Theme.Text, 48, 52);
-		Painter.Text(g, SplitHeading(_sets[_page].Heading, _page).Description, _fonts.Regular(14), Theme.Muted, 48, 156);
+		Painter.SpacedText(g, Texts.SinglePlayerKicker, _fonts.Bold(12), Theme.Brass, 48, 34, 3);
+		Painter.Text(g, Texts.Scenarios, _fonts.Bold(34), Theme.Text, 48, 52);
+		Painter.Text(g, GameTexts.Of(SplitHeading(_sets[_page].Heading, _page).Description), _fonts.Regular(14), Theme.Muted, 48, 156);
 		Painter.Fill(g, new(48, 186, 928, 1), Theme.Alpha(Theme.Line, 0.9f));
 
-		const string hint = "↑↓ Scenario    ←→ Set    PgUp PgDn Briefing    Enter Start    Esc Back";
+		var hint = Texts.BrowserHint;
 		var hintFont = _fonts.Regular(13);
 		Painter.Text(g, hint, hintFont, Theme.Muted, (Width - Painter.Measure(g, hint, hintFont).Width) / 2, 701);
 	}
