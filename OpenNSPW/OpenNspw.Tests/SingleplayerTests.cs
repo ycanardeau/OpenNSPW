@@ -462,6 +462,23 @@ public class SingleplayerTests
 		Assert.Equal(size, game.GetDetectionSize(ship, submarine));
 	}
 
+	// 255 fires and 255 effects at most are in use, as in 1.22.
+	[Fact]
+	public void FiresAndEffectsAreLimitedTo255()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		for (var n = 1; n < 256; n++)
+		{
+			game.Fires[n].Target = 1;
+			game.Effects[n].Layer = EffectLayer.Lower;
+		}
+
+		Assert.Equal(0, game.FindFreeFire());
+		Assert.Equal(0, game.FindFreeEffect());
+	}
+
 	// A fighter shoots the flying plane it attacks, but not a transport, as in 1.22.
 	[Theory]
 	[InlineData(UnitKind.Attacker, true)]

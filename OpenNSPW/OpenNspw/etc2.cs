@@ -868,7 +868,8 @@ public int		FindFreeEffect()
 	int		rtn,s;
 
 	rtn=0;
-	for(s=1;s<EFFECT_MAX;s++)
+	// 1.22 has 255 effects in use at most.
+	for(s=1;s<(IsSingleplayer ? 256 : EFFECT_MAX);s++)
 		{
 		if( Effects[s].Layer==EffectLayer.None )
 			{
@@ -889,7 +890,8 @@ public int		FindFreeFire()
 	int		rtn,s;
 
 	rtn=0;
-	for(s=1;s<FIRE_MAX;s++)
+	// 1.22 has 255 fires in use at most.
+	for(s=1;s<(IsSingleplayer ? 256 : FIRE_MAX);s++)
 		{
 		if( Fires[s].Target==0 )
 			{

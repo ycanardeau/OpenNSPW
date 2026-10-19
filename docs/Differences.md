@@ -30,6 +30,7 @@ This document lists every difference found between the two, read from 1.22's mac
 | Ships ahead and the computer's replanning | A ship looks 40 ahead (`0x401FAC`); only air bases and naval bases are not in its way (`0x40202D`). A computer's ship with no leader is replanned (`set_cpu_route(m, 1.0)`) every 100 ticks while a ship in its way has slowed it to a fifth of its top speed (`0x4020DB`), and when the point 80 toward its path is land, unless it is on an emergency move (`0x40229D`); every 500 ticks, a computer's unit with no leader whose next step is land is replanned, planes included (`0x402D2B`) | 40 plus ten times its top speed; no base, infantry base or fortress is in the way (kinds 11 to 17); steering stops the ship until the computer gives it another order; nothing for a step on land | `CheckCourseAhead`, `ReplanBlockedRoute`, `MoveUnit` |
 | A plane landed on deck | Clears its base's launch lock (`info[8]`, `0x4018F1`) | Sets it to 2 plus the number of the player's other planes landing | `UpdateParkedPlane` |
 | The sonar | No sound | Played near the player's submerged submarines, drawing random numbers | `UpdateBattle` |
+| Fires and effects | 255 fires and 255 effects in use at most | 511 and 1023 | `FindFreeFire`, `FindFreeEffect` |
 
 Supply and ships outside the map together let the computer's fleets renew. In scenario 304 the American naval base (unit 21) is at x 10600, outside the map. A fleet that has lost its carrier, its ammunition or its fuel returns there ([ComputerPlayer.md](ComputerPlayer.md), `cpu_strtgy` step 9); there it supplies, which gives back its HP, ammunition and fuel, and step 12 puts a new carrier at its supplying flagship. NSPW NET's battle would turn the fleet back at the edge, and stop its supply away from a base within 280.
 
@@ -47,7 +48,6 @@ What 1.22's `chara_cont` (`0x401000`) and the functions it calls do differently 
 | Returning planes | Adjust their approach to their carrier on the drawn tick only (`0x417530`), whatever its kind | On every tick; a base that is not a carrier or an air base is forgotten |
 | Reloading and rearming (`0x403043` to `0x4030B6`) | `arm[3]` counts down, a submarine's only while it is stopped; when it reaches 0, a unit being serviced (weapon 17 or 18) gets 100 fuel and, a fighter, bullets (11) and 50 rounds; any other is left unarmed (17), with no ammunition, to be armed | Not compared yet |
 | Fuel | An integer (`gas[0]`): 1 every `gas[1]` ticks while moving (`0x402F72`) | A `double`: `Speed/MaxSpeed` every interval |
-| Fires and effects | 255 fires and 255 effects in use at most | 511 and 1023 |
 | Effects | As the effects function (`0x41AEB0`) does them | `UpdateSurfaceShipEffects` and the others, which draw random numbers every tick |
 
 The rest of the battle (shooting and hits in `fire_now`, `0x40FE10`, the fires in `0x418C30`, the emergency moves of each kind) has not been read. Running a tick of the port's battle and one of 1.22's, emulated, from the same state, and comparing them, would find the remaining differences.
