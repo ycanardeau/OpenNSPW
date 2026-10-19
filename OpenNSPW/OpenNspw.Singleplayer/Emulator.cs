@@ -122,12 +122,16 @@ public sealed class Emulator
 			Memory32[new Register32(import.Slot)] = new Register32(stub);
 		}
 
-		// __ftol: ST(0), popped and truncated, in EDX:EAX.
+		// __ftol: ST(0), popped and truncated, in EDX:EAX. Its fistp stores the integer indefinite, 0x8000000000000000,
+		// for a NaN or a value out of range, where a conversion in C# saturates.
 		SetNative(
 			Functions.Ftol,
 			() =>
 			{
-				var value = (ulong)(long)Cpu.Fpu.Stack.Pop().ToDouble();
+				var number = Cpu.Fpu.Stack.Pop().ToDouble();
+				var value = double.IsNaN(number) || number >= 9223372036854775808.0 || number < -9223372036854775808.0
+					? 0x8000000000000000UL
+					: (ulong)(long)number;
 				Cpu.Eax = new Register32((uint)value);
 				Cpu.Edx = new Register32((uint)(value >> 32));
 			}
