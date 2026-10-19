@@ -393,6 +393,32 @@ public class SingleplayerTests
 		Assert.Equal(game.Units[pillboxes].MaxHp, game.Units[pillboxes].Hp);
 	}
 
+	// A transport lands an infantry base, pillboxes or a fortress, but not the naval bases and air bases that 1.22 does not
+	// have.
+	[Theory]
+	[InlineData(FireKind.CargoInfantryBase, true)]
+	[InlineData(FireKind.CargoNavalBase, false)]
+	[InlineData(FireKind.CargoAirBase, false)]
+	public void TransportsLandGroundUnitsOnly(FireKind cargo, bool lands)
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var transport = game.AddUnit(Side.Japan, UnitKind.Transport, 0, 0, 0);
+		Assert.NotEqual(0, transport);
+		ref var unit = ref game.Units[transport];
+		unit.Direction = 0;
+		unit.Weapon = cargo;
+		unit.Ammo = 1;
+		unit.Target = game.MaxUnitId + 1;
+		unit.LandingX = (int)unit.Position.X + 100;
+		unit.LandingY = (int)unit.Position.Y;
+
+		run.Frames(5);
+
+		Assert.Equal(lands, game.Units[transport].Hp == 0);
+	}
+
 	// A fighter shoots the flying plane it attacks, but not a transport, as in 1.22.
 	[Theory]
 	[InlineData(UnitKind.Attacker, true)]

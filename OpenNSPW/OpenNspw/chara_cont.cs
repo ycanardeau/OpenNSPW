@@ -1407,7 +1407,8 @@ private void ControlInfantryBaseFiring(ref Unit unit, int dmg_act, int m)
 	unit.Ammo=unit.MaxAmmo;
 
 	// 艦砲 自動
-	if( unit.Ammo>=1 && Random(250*dmg_act)==0 )
+	// NSPW NET fires 1 in 250 a tick; 1.22, 1 in 200 (0x403140).
+	if( unit.Ammo>=1 && Random((IsSingleplayer ? 200 : 250)*dmg_act)==0 )
 		{
 		FireWeapons(m,0,FireKind.Gun);
 		}
@@ -1429,7 +1430,8 @@ private void ControlPillboxesFiring(ref Unit unit, int dmg_act, int m)
 	{
 	unit.Ammo=unit.MaxAmmo;
 	// 艦砲 自動
-	if( unit.Ammo>=1 && Random( 200*dmg_act )==0 )
+	// NSPW NET fires 1 in 200 a tick; 1.22, 1 in 150 (0x4031DE).
+	if( unit.Ammo>=1 && Random( (IsSingleplayer ? 150 : 200)*dmg_act )==0 )
 		{
 		FireWeapons(m,0,FireKind.Gun);
 		}
@@ -1456,7 +1458,8 @@ private void ControlFortressFiring(ref Unit unit, int dmg_act, int m)
 	unit.Ammo=unit.MaxAmmo;
 
 	// 艦砲 自動
-	if( unit.Ammo>=1 && Random(150*dmg_act)==0 )
+	// NSPW NET fires 1 in 150 a tick; 1.22, 1 in 100 (0x403275).
+	if( unit.Ammo>=1 && Random((IsSingleplayer ? 100 : 150)*dmg_act)==0 )
 		{
 		FireWeapons(m,0,FireKind.Gun);
 		}
@@ -1479,7 +1482,8 @@ private void ControlFortressFiring(ref Unit unit, int dmg_act, int m)
 
 private void ControlBattleshipFiring(ref Unit unit, int dmg_act, int m)
 	{
-	if( unit.Side==Side.Japan && unit.Variant==1 )
+	// 1.22 fires every battleship alike, as NSPW NET does all but the Yamato class (0x40332C).
+	if( unit.Side==Side.Japan && unit.Variant==1 && !IsSingleplayer )
 		{
 		// 大和級
 		// 艦砲 自動
@@ -1545,7 +1549,8 @@ private void ControlBattleshipFiring(ref Unit unit, int dmg_act, int m)
 
 private void ControlCruiserFiring(ref Unit unit, int dmg_act, int m)
 	{
-	if( unit.Variant==0 )
+	// 1.22 has no anti-aircraft cruisers: it fires every cruiser as NSPW NET does its first type (0x40348C).
+	if( unit.Variant==0 || IsSingleplayer )
 		{
 		// 巡洋艦
 		// 艦砲 自動
@@ -1616,7 +1621,8 @@ private void ControlCruiserFiring(ref Unit unit, int dmg_act, int m)
 
 private void ControlDestroyerFiring(ref Unit unit, int dmg_act, int m)
 	{
-	if( unit.Variant==0 )
+	// 1.22 has no second type of destroyer: it fires every destroyer as NSPW NET does its first type (0x403647).
+	if( unit.Variant==0 || IsSingleplayer )
 		{
 		// 艦砲 自動
 		if( unit.Ammo>=1 && Random(200*dmg_act)==0 )
@@ -1662,6 +1668,18 @@ private void ControlDestroyerFiring(ref Unit unit, int dmg_act, int m)
 
 private void ControlTransportFiring(ref Unit unit, int m)
 	{
+	// 1.22's transports land infantry bases, pillboxes and fortresses only (0x403745).
+	if( IsSingleplayer )
+		{
+		if( unit.Weapon==FireKind.CargoInfantryBase && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
+			FireWeapons(m,0,FireKind.CargoInfantryBase);
+		if( unit.Weapon==FireKind.CargoPillboxes && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
+			FireWeapons(m,0,FireKind.CargoPillboxes);
+		if( unit.Weapon==FireKind.CargoFortress && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
+			FireWeapons(m,0,FireKind.CargoFortress);
+		return;
+		}
+
 	if( unit.Weapon==FireKind.CargoNavalBase && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
 		FireWeapons(m,0,FireKind.CargoNavalBase);
 	if( unit.Weapon==FireKind.CargoAirBase && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
@@ -1678,6 +1696,9 @@ private void ControlTransportFiring(ref Unit unit, int m)
 
 private void ControlFiring(ref Unit unit, int dmg_act, int m)
 	{
+	// 1.22 fires nothing for Japan in scenario 1 (0x4030FF).
+	if( IsSingleplayer && ScenarioNumber==1 && unit.Side==Side.Japan )
+		return;
 	if( !IsEditingMap && !unit.IsSupplying && (( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying )||( unit.Category==UnitCategory.Ship)))
 		{
 		switch( unit.Kind )
@@ -1762,7 +1783,8 @@ private void ControlFiring(ref Unit unit, int dmg_act, int m)
 			case UnitKind.Bomber:
 				if(Random(20*dmg_act)==0)
 					FireWeapons(m,0,FireKind.Bullet);
-				if( unit.Ammo>=1  && unit.Weapon==FireKind.Torpedo && unit.Target!=0 && unit.TurnRate==0 && unit.Speed>=unit.MaxSpeed )
+				// 1.22's bombers drop no torpedoes (0x40392C).
+				if( unit.Ammo>=1  && unit.Weapon==FireKind.Torpedo && unit.Target!=0 && unit.TurnRate==0 && unit.Speed>=unit.MaxSpeed && !IsSingleplayer )
 					FireWeapons(m,unit.Target,FireKind.Torpedo);
 				if( unit.Ammo>=1  && unit.Weapon==FireKind.Bomb && unit.ReloadTime==0 && unit.TurnRate==0  )
 					FireWeapons(m,unit.Target,FireKind.Bomb);
