@@ -50,7 +50,7 @@ public int		CheckHit(int m)
 				return	(h);
 				}
 			else
-				{	j=8;j2=j/2;		}
+				{	j=Rules.SurfacedSubmarineHitSize;j2=j/2;		}
 
 				break;
 		case UnitKind.Carrier:	j=14;j2=j/2;	break;

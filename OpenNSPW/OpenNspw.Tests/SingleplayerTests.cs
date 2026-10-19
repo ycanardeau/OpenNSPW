@@ -664,6 +664,31 @@ public class SingleplayerTests
 		Assert.Equal([3, 4, 5], damages.Order());
 	}
 
+	// A fire hits a surfaced submarine within 4 of it, as in 1.22 (0x40F9D6), where NSPW NET's hits within 8.
+	[Fact]
+	public void SurfacedSubmarinesAreHitAsIn122()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		ref var submarine = ref game.Units[1];
+		submarine.Kind = UnitKind.Submarine;
+		submarine.IsSubmerged = false;
+		submarine.Direction = 0.0;
+		game.Fires[1].Target = 1;
+
+		bool Hits(double dx, double dy)
+		{
+			game.Fires[1].Position = new WorldPosition(game.Units[1].Position.X + dx, game.Units[1].Position.Y + dy);
+			return game.CheckHit(1) != 0;
+		}
+
+		Assert.True(Hits(0, 0));
+		Assert.True(Hits(5, 1));
+		Assert.False(Hits(0, 3));
+		Assert.False(Hits(7, 0));
+	}
+
 	// A battle as the desktop app shows it, in real time, saved as singleplayer_battle.png next to the test assembly.
 	[Fact]
 	public void TheBattleShows()
