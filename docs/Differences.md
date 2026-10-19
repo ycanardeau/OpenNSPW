@@ -48,8 +48,9 @@ What 1.22's `chara_cont` (`0x401000`) and the functions it calls do differently 
 | --- | --- | --- |
 | `set_new_unit_plane` with no parking place left (`0x41F111`) | The place number of the previous plane added, or, for the first, whatever its stack holds | `AddPlane`: 0, or the previous plane's |
 | Attackers' approach (`set_pos_of_attack_AT`, `0x415A10`) | No change of formation | At 500 to 510 from the target, the leader sends its attackers off to 600 ahead, fanned by their place in the formation, before they turn to the target |
-| Reloading and rearming (`0x403043` to `0x4030B6`) | `arm[3]` counts down, a submarine's only while it is stopped; when it reaches 0, a unit being serviced (weapon 17 or 18) gets 100 fuel and, a fighter, bullets (11) and 50 rounds; any other is left unarmed (17), with no ammunition, to be armed | Not compared yet |
 | Effects | As the effects function (`0x41AEB0`) does them | `UpdateSurfaceShipEffects` and the others, which draw random numbers every tick |
+
+Compared and the same: reloading and rearming (`0x403043` to `0x4030B6`), the damage that doubles the firing intervals (below 30% of the HP, `0x4030B6`), and the evasions of torpedoes and planes (`set_pos_of_emrgncy_SHIP`, `0x415F4F` to `0x4160FD` and `0x416501` to `0x41688B`).
 
 The rest of the battle (shooting and hits in `fire_now`, `0x40FE10`, the fires in `0x418C30`, the emergency moves of each kind) has not been read. Running a tick of the port's battle and one of 1.22's, emulated, from the same state, and comparing them, would find the remaining differences.
 
