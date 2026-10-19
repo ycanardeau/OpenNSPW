@@ -334,6 +334,12 @@ public unsafe partial class Nspw
 		RunEmulated(Functions.Decision);
 	}
 
+	// set_unit_data(m): the data of unit m by its kind and type, NSPW 1.22's.
+	internal void RunSetUnitData(int m)
+	{
+		RunEmulated(Functions.SetUnitData, (uint)m);
+	}
+
 	// The buffers of the orders, empty, and the player free to give the next: what ReceiveAndIssueOrders leaves after a
 	// turn.
 	private void ClearBufferedOrders()
