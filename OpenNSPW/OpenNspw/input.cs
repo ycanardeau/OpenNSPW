@@ -19,16 +19,11 @@ namespace OpenNspw;
 public unsafe partial class Nspw
 {
 
-private void BufferMoveOrder(int e)
+// The player's selection, kept with an order for the turn that gives it: the ships, then the planes, of the player's
+// side, packed as the network sends them.
+private void BufferSelections()
 	{
 	int s;
-	int m;
-	// あるマイユニットに新ＰＰ＿ＸＹが設定された場合
-	// バッファに保存。これを命令をだせるタイミングにnew_ppに代入する。
-	BufferedMoveOrders[1].Unit=MoveOrders[1].Unit;
-	BufferedMoveOrders[1].Destination=MoveOrders[1].Destination;
-	BufferedMoveOrders[1].ClearsPath=MoveOrders[1].ClearsPath;
-
 	if(LocalSide==Side.Japan)
 		{
 		// 日本海軍サイド
@@ -57,6 +52,18 @@ private void BufferMoveOrder(int e)
 			BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
 			}
 		}
+	}
+
+private void BufferMoveOrder(int e)
+	{
+	int m;
+	// あるマイユニットに新ＰＰ＿ＸＹが設定された場合
+	// バッファに保存。これを命令をだせるタイミングにnew_ppに代入する。
+	BufferedMoveOrders[1].Unit=MoveOrders[1].Unit;
+	BufferedMoveOrders[1].Destination=MoveOrders[1].Destination;
+	BufferedMoveOrders[1].ClearsPath=MoveOrders[1].ClearsPath;
+
+	BufferSelections();
 
 	m=MoveOrders[e].Unit;
 	if( Units[m].Category==UnitCategory.Plane && Units[m].PlaneState==UnitState.Parked )
@@ -76,7 +83,6 @@ private void BufferMoveOrder(int e)
 
 private void SelectFriendlyTarget(ref int m, int e)
 	{
-	int s;
 	int n;
 	if ( Units[SelectedUnit].Category==UnitCategory.Plane && (Units[m].Kind==UnitKind.Carrier || Units[m].Kind==UnitKind.LightCarrier || Units[m].Kind==UnitKind.AirBase))
 		{
@@ -91,34 +97,7 @@ private void SelectFriendlyTarget(ref int m, int e)
 			BufferedSelectOrders[1].Unit=SelectOrders[e].Unit;
 			BufferedSelectOrders[1].GroundPosition=SelectOrders[e].GroundPosition;
 
-			if(LocalSide==Side.Japan)
-				{
-				// 日本海軍サイド
-				for(s=1;s<=JPN_SHIP_END;s++)
-					{
-					// 水上ユニット
-					BufferedSelections[1][s-1]=Selections[1][s];
-					}
-				for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
-					{
-					// 航空ユニット
-					BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-					}
-				}
-			else
-				{
-				// 合衆国海軍サイド
-				for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
-					{
-					// 水上ユニット
-					BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-					}
-				for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
-					{
-					// 航空ユニット
-					BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
-					}
-				}
+			BufferSelections();
 
 			CanOrder=false;
 			HasOrdered=true;
@@ -151,7 +130,6 @@ private void SelectFriendlyTarget(ref int m, int e)
 
 private void SelectTargetOrLanding(ref int m, int e)
 	{
-	int s;
 	if( m==0 )
 		{
 		// 輸送船陸地を選択
@@ -185,34 +163,7 @@ private void SelectTargetOrLanding(ref int m, int e)
 			BufferedSelectOrders[1].Unit=SelectOrders[e].Unit;
 			BufferedSelectOrders[1].GroundPosition=SelectOrders[e].GroundPosition;
 
-			if(LocalSide==Side.Japan)
-				{
-				// 日本海軍サイド
-				for(s=1;s<=JPN_SHIP_END;s++)
-					{
-					// 水上ユニット
-					BufferedSelections[1][s-1]=Selections[1][s];
-					}
-				for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
-					{
-					// 航空ユニット
-					BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-					}
-				}
-			else
-				{
-				// 合衆国海軍サイド
-				for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
-					{
-					// 水上ユニット
-					BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-					}
-				for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
-					{
-					// 航空ユニット
-					BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
-					}
-				}
+			BufferSelections();
 
 			CanOrder=false;
 			HasOrdered=true;

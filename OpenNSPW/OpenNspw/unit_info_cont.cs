@@ -574,38 +574,10 @@ private int ListCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu
 // A click on an item of the combat menu, while the player can order (CanOrder): the item is the order of the turn.
 private void ChooseCombatMenuItem(CombatMenuItem item)
 	{
-	int s;
 	BufferedMenuOrders[1].Menu=item;
 	BufferedMenuOrders[1].SelectedUnit=SelectedUnit;
 
-	if(LocalSide==Side.Japan)
-		{
-		// 日本海軍サイド
-		for(s=1;s<=JPN_SHIP_END;s++)
-			{
-			// 水上ユニット
-			BufferedSelections[1][s-1]=Selections[1][s];
-			}
-		for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
-			{
-			// 航空ユニット
-			BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-			}
-		}
-	else
-		{
-		// 合衆国海軍サイド
-		for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
-			{
-			// 水上ユニット
-			BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-			}
-		for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
-			{
-			// 航空ユニット
-			BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
-			}
-		}
+	BufferSelections();
 	CanOrder=false;
 	HasOrdered=true;
 	PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
