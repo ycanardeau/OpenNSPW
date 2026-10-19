@@ -2566,6 +2566,58 @@ public class CpuTests
 		_cpu.Eflags.Overflow.Should().BeFalse();
 	}
 
+	[Theory]
+	[InlineData(0x7F, 0x0000007F)]
+	[InlineData(0x80, 0xFFFFFF80)]
+	[InlineData(0xFF, 0xFFFFFFFF)]
+	public void Push8Test(byte value, uint pushed)
+	{
+		var memory = new byte[8];
+		var cpu = new Cpu(memory, new Register32(0x1000)) { Esp = new Register32(0x1008) };
+
+		cpu.Push(new Register8(value));
+
+		cpu.Esp.Should().Be(new Register32(0x1004));
+		cpu.Pop32().Should().Be(new Register32(pushed));
+	}
+
+	// x86 masks a shift count to 5 bits.
+	[Theory]
+	[InlineData(0x21, 0x00000002)]
+	[InlineData(0x20, 0x00000001)]
+	public void ShiftCountIsMaskedTest(byte count, uint shifted)
+	{
+		_cpu.Shl(new Register32(1), new Register8(count)).Should().Be(new Register32(shifted));
+		_cpu.Shr(new Register32(4), new Register8(count)).Should().Be(new Register32(shifted == 1 ? 4u : 2u));
+		_cpu.Sar(new Register32(4), new Register8(count)).Should().Be(new Register32(shifted == 1 ? 4u : 2u));
+	}
+
+	// The borrow of sbb counts the carry even when right plus it does not fit in 32 bits.
+	[Fact]
+	public void SbbBorrowTest()
+	{
+		_cpu.Eflags.Carry = true;
+
+		_cpu.Sbb(new Register32(0xFFFFFFFF), new Register32(0xFFFFFFFF)).Should().Be(new Register32(0xFFFFFFFF));
+
+		_cpu.Eflags.Carry.Should().BeTrue();
+		_cpu.Eflags.Zero.Should().BeFalse();
+		_cpu.Eflags.Sign.Should().BeTrue();
+	}
+
+	// An unordered comparison, with a NaN, sets C3, C2 and C0.
+	[Fact]
+	public void FcomUnorderedTest()
+	{
+		_cpu.Fpu.Stack.Push(Register64.FromDouble(double.NaN));
+
+		_cpu.Fcom(Register64.FromDouble(0));
+
+		_cpu.Fpu.Status.C3.Should().BeTrue();
+		_cpu.Fpu.Status.C2.Should().BeTrue();
+		_cpu.Fpu.Status.C0.Should().BeTrue();
+	}
+
 	[Fact]
 	public void TranscendentalFunctionsTest()
 	{
