@@ -266,6 +266,13 @@ public unsafe partial class Nspw
 			}
 	}
 
+	// The sheet each unit is drawn from on the battlefield (GetUnitSprites).
+	public void ReadUnitSprites(Span<SpriteId> sprites)
+	{
+		for( var m=0; m<=MaxUnitId; m++ )
+			sprites[m]=GetUnitSprites(ref Units[m]);
+	}
+
 	// The item of the combat menu in effect for the selected unit, which the host's UI shows chosen
 	// (ActiveCombatMenuItem).
 	public CombatMenuItem ReadActiveCombatMenuItem()

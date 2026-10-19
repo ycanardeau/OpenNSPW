@@ -149,6 +149,28 @@ public class SingleplayerTests
 		Assert.All([41, 42, 43], m => Assert.Equal(21, game.Units[m].Carrier));
 	}
 
+	// In scenario 303 the Americans' fighters of type 1, the ones taken from Japan's air bases, are drawn from Japan's
+	// sheet, as 1.22 draws them, in the game's drawing and in the UI's (ReadUnitSprites).
+	[Fact]
+	public void CapturedFightersAreDrawnAsJapans()
+	{
+		using var run = new SingleplayerRun(303);
+		run.Frames(2);
+		var game = run.Game;
+		ref var fighter = ref game.Units[41];
+		Assert.Equal(UnitKind.Fighter, fighter.Kind);
+		fighter.Side = Side.UnitedStates;
+		fighter.Variant = 1;
+		var sprites = new SpriteId[256];
+
+		game.ReadUnitSprites(sprites);
+
+		Assert.Equal(SpriteId.JapanUnits, sprites[41]);
+		fighter.Variant = 0;
+		game.ReadUnitSprites(sprites);
+		Assert.Equal(SpriteId.UnitedStatesUnits, sprites[41]);
+	}
+
 	// A battle as the desktop app shows it, in real time, saved as singleplayer_battle.png next to the test assembly.
 	[Fact]
 	public void TheBattleShows()

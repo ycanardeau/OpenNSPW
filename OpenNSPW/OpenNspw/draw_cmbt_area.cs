@@ -1232,6 +1232,15 @@ private void RestoreSelection()
 		}
 	}
 
+// The sheet a unit is drawn from: its side's. 1.22 also draws the Americans' fighters of type 1 in scenario 303, the
+// ones taken from Japan's air bases, as Japan's (0x40E070).
+public SpriteId GetUnitSprites(ref Unit unit)
+	{
+	if( unit.Side==Side.Japan || (IsSingleplayer && ScenarioNumber==303 && unit.Side==Side.UnitedStates && unit.Kind==UnitKind.Fighter && unit.Variant==1) )
+		return SpriteId.JapanUnits;		//Off Screen Number		日本海軍の表示
+	return SpriteId.UnitedStatesUnits;		//Off Screen Number		合衆国海軍の表示
+	}
+
 //============================================================================
 //コンバットエリア描画 同時にユーザー(通信対戦時はホスト)入力を受け付けます
 //----------------------------------------------------------------------------
@@ -1313,10 +1322,7 @@ public void	DrawBattleArea()
 			DrawClouds( &field_rect );
 			}
 
-		if( unit.Side==Side.Japan)
-			sprite=SpriteId.JapanUnits;		//Off Screen Number		日本海軍の表示
-		else
-			sprite=SpriteId.UnitedStatesUnits;		//Off Screen Number		合衆国海軍の表示
+		sprite=GetUnitSprites(ref unit);
 
 		// ユニットを描画します
 		if( unit.IsUsed && (unit.Side==LocalSide || unit.IsFound) &&

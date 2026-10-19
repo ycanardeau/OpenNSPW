@@ -58,7 +58,6 @@ The rest of the battle (shooting and hits in `fire_now`, `0x40FE10`, the fires i
 | The frame | A multimedia timer of 88 ms ([below](#122s-frame)); speed + the timer's ticks a frame, none at speed 0 | A frame every 50 ms at least, `GameSpeed` ticks (20 while Space is held) |
 | `decision` | Once a tick, after the drawing for the tick that is drawn, so that its messages show over the battle area | After every tick, and again after the drawing |
 | The speed keys | F7 slower (to 0, which stops the battle), F8 faster (to 99), F9 back to 1 (`0x433AF0` to `0x433B53`) | F, G and R, by steps of 1, 2, 4, 6 and so on to 300, and Space |
-| Captured fighters in scenario 303 | The Americans' fighters of type 1, which `decision` takes with the Japanese air bases, are drawn from Japan's sheet (`0x40E070`: `sinario==303`, `used==2`, `kind==7`, `type==1`) | Every unit is drawn from its side's sheet (`DrawBattleArea`) |
 
 ### 1.22's frame
 1.22 is driven by a multimedia timer, `timeSetEvent(88 × wPeriodMin, wPeriodMin, 0x4329B0, 0, TIME_PERIODIC)` (`0x432960`); with the usual minimum period of 1 ms, every 88 ms. The callback counts the timer's ticks (`0x483B50`) and posts `WM_USER` once; the window procedure handles it (`0x433C61`) by drawing a frame (`0x434570`) and clearing the count.
