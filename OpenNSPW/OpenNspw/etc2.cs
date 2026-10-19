@@ -272,12 +272,60 @@ public void OnUnitArrived(int side,int new_unit_kind)
 
 	}
 
+// 1.22's find_out_size (0x418080): other ranges, none limited while a base is built, and, for a submerged submarine,
+// 80 for any unit but a destroyer (none for a supplying unit, a plane, a transport, a carrier, a light carrier or a
+// battleship), 280 for a destroyer, 140 above a third of its top speed; a surfaced one within half the range, at most
+// 300, also while it supplies.
+private int GetDetectionSizeAs122(int m, int n)
+	{
+	ref var unit = ref Units[m];
+	ref var other = ref Units[n];
+	int size = unit.Kind switch
+		{
+		UnitKind.Battleship => 900,
+		UnitKind.Cruiser or UnitKind.City or UnitKind.Mine => 800,
+		UnitKind.Destroyer or UnitKind.LightCarrier => 700,
+		UnitKind.Submarine or UnitKind.Carrier => 600,
+		UnitKind.Fighter => 500,
+		UnitKind.Attacker or UnitKind.InfantryBase => 1000,
+		UnitKind.Bomber => 1200,
+		UnitKind.Transport => 300,
+		UnitKind.AirBase or UnitKind.NavalBase => 1700,
+		UnitKind.Pillboxes => 1500,
+		UnitKind.Fortress => 2000,
+		_ => 0,
+		};
+
+	if( other.Kind!=UnitKind.Submarine )
+		return size;
+
+	if( !other.IsSubmerged )
+		return Math.Min((int)(size*0.5), 300);
+
+	if( unit.Kind==UnitKind.Destroyer )
+		{
+		size=( unit.MaxSpeed*(1.0/3) < unit.Speed ? 140 : 280 );
+		if( other.Speed==0 )
+			size+=50;
+		return size;
+		}
+
+	// 1.22 also compares the category with 11 to 17, the kinds of the bases, which it never is.
+	if( unit.IsSupplying || unit.Category==UnitCategory.Plane || unit.Kind is UnitKind.Transport or UnitKind.Carrier or UnitKind.LightCarrier or UnitKind.Battleship )
+		return 0;
+
+	return 80;
+	}
+
 //============================================================================
 // 可視不可視のサイズ設定
 //----------------------------------------------------------------------------
 [Original("find_out_size")]
 public int		GetDetectionSize( int m , int n)
 	{
+	if( IsSingleplayer )
+		return GetDetectionSizeAs122(m, n);
+
 	ref var unit = ref Units[m];
 	int		size=0 /* C4701 */;
 
@@ -1271,12 +1319,13 @@ public int		DetectSubmarines( int m , int n)
 	if( q_size<100 )
 		q_size=100;
 
-	if( Random( ( Units[m].Variant==1 ? q_size : q_size )*( 1+(Units[n].Speed==0 ? 1 : 0)*4) )==2 )
+	// 1.22 draws 10 where NSPW NET draws 2, and places the contact within 0.6 of the range whatever the type (0x417FC9).
+	if( Random( ( Units[m].Variant==1 ? q_size : q_size )*( 1+(Units[n].Speed==0 ? 1 : 0)*4) )==(IsSingleplayer ? 10 : 2) )
 		{	// 敵潜水艦探知！
 		if( q_size>150 )
 			q_size=150;
 
-		q_size2=(int)(q_size*( Units[m].Variant==0 ? 0.60 : 0.50 ));
+		q_size2=(int)(q_size*( Units[m].Variant==0 || IsSingleplayer ? 0.60 : 0.50 ));
 
 		Units[n].ContactX=(int)(Units[n].Position.X+Random((q_size2)*2)-q_size2);
 		Units[n].ContactY=(int)(Units[n].Position.Y+Random((q_size2)*2)-q_size2);
@@ -1288,6 +1337,21 @@ public int		DetectSubmarines( int m , int n)
 	else
 		{
 		return(0);
+		}
+	}
+
+// When a submerged submarine is found, 1.22 stops the computer's destroyers that chase it (em_flg[1]) unless they are
+// on its side (0x418724).
+private void StopDestroyersChasing(int n)
+	{
+	for(var m=1;m<=MaxUnitId;m++)
+		{
+		ref var unit = ref Units[m];
+		if( unit.Kind==UnitKind.Destroyer && unit.EmergencyFlags[0]!=0 && unit.EmergencyFlags[1]==n && unit.Side!=Units[n].Side && unit.Side==CpuSide && unit.IsUsed )
+			{
+			unit.EmergencyFlags[0]=0;
+			unit.EmergencyFlags[1]=0;
+			}
 		}
 	}
 
@@ -1320,7 +1384,8 @@ public void		Detect()
 	for(m=1;m<=MaxUnitId;m++)
 		{
 		ref var unit = ref Units[m];
-		if( unit.IsUsed && unit.Side==LocalSide  && unit.PlaneState!=UnitState.Parked  && !unit.IsSupplying )
+		// 1.22's player's units look out while they supply too (0x41829B).
+		if( unit.IsUsed && unit.Side==LocalSide  && unit.PlaneState!=UnitState.Parked  && (!unit.IsSupplying || IsSingleplayer) )
 			{
 			flg1=0;
 			for(n=1;n<=MaxUnitId;n++)
@@ -1364,13 +1429,16 @@ public void		Detect()
 								{
 								other.IsFound=true;
 
+								if( IsSingleplayer )
+									StopDestroyersChasing(n);
 								}
 							}
 						else
 							{
 							other.IsFound=true;	// 普通のユニットが見つかった場合
 
-							if( unit.Kind==UnitKind.Submarine && !unit.IsSupplying && other.Kind!=UnitKind.Submarine )		// 発見したのが潜水艦の場合。
+							// 1.22's submarine dives when it finds any unit, even while it supplies (0x4184DF).
+							if( unit.Kind==UnitKind.Submarine && ( (!unit.IsSupplying && other.Kind!=UnitKind.Submarine) || IsSingleplayer ) )		// 発見したのが潜水艦の場合。
 								{
 								unit.IsSubmerged=true;		// 潜ります。
 								}
@@ -1434,13 +1502,16 @@ public void		Detect()
 								{
 								other.IsFound=true;
 
+								if( IsSingleplayer )
+									StopDestroyersChasing(n);
 								}
 							}
 						else
 							{	// 普通のユニットが見つかった場合
 							other.IsFound=true;
 
-							if( unit.Kind==UnitKind.Submarine && !unit.IsSupplying && other.Kind!=UnitKind.Submarine )		// 発見したのが潜水艦の場合。
+							// 1.22's submarine dives when it finds any unit, even while it supplies (0x4184DF).
+							if( unit.Kind==UnitKind.Submarine && ( (!unit.IsSupplying && other.Kind!=UnitKind.Submarine) || IsSingleplayer ) )		// 発見したのが潜水艦の場合。
 								{
 								unit.IsSubmerged=true;
 								}

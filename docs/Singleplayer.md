@@ -125,6 +125,7 @@ So in a single-player game (`IsSingleplayer`):
 - `ApplyOrders` sends a torpedo plane against any ground unit but an air base or a naval base, as 1.22 does (`0x4305F9`), where NSPW NET refuses them all; neither drops a torpedo on one.
 - `ControlFiring` fires as 1.22 does (`0x4030D8` to `0x40396E`): nothing for Japan in scenario 1, the guns of infantry bases, pillboxes and fortresses 1 in 200, 150 and 100 a tick, every battleship, cruiser and destroyer as NSPW NET does its first type, transports landing ground units only, and no torpedoes from bombers.
 - `UpdateBattle` keeps a submerged submarine as a target, and a parked plane's target, as 1.22 does (`0x402FD2`).
+- `Detect`, `GetDetectionSize` and `DetectSubmarines` find units as 1.22 does (`0x418230`, `0x418080`, `0x417EA0`): with its ranges, the player's supplying units looking out, submarines diving at any unit found, and the computer's destroyers that chase a submarine stopping when it is found. The ranges at which effects show and sounds play are still NSPW NET's.
 - `CheckResult` calls `decision`, which also shows the result, instead of NSPW NET's conditions.
 
 ## Playing

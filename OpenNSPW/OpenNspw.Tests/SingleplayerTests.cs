@@ -419,6 +419,49 @@ public class SingleplayerTests
 		Assert.Equal(lands, game.Units[transport].Hp == 0);
 	}
 
+	// A unit sees as far as in 1.22: a battleship 900, where NSPW NET's sees 800.
+	[Theory]
+	[InlineData(850, true)]
+	[InlineData(950, false)]
+	public void UnitsSeeAsFarAsIn122(int distance, bool found)
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var battleship = game.AddUnit(game.LocalSide, UnitKind.Battleship, -9000, -7000, 0);
+		var cruiser = game.AddUnit(game.CpuSide, UnitKind.Cruiser, -9000 + distance, -7000, 0);
+		Assert.NotEqual(0, battleship);
+		Assert.NotEqual(0, cruiser);
+
+		game.Detect();
+
+		Assert.Equal(found, (bool)game.Units[cruiser].IsFound);
+	}
+
+	// How far a submerged submarine can be found, as in 1.22: by a destroyer within 280, 140 above a third of its top
+	// speed, and 50 more if the submarine is stopped; by a cruiser within 80; by a battleship not at all.
+	[Theory]
+	[InlineData(UnitKind.Destroyer, 0.0, 1.0, 280)]
+	[InlineData(UnitKind.Destroyer, 1.0, 1.0, 140)]
+	[InlineData(UnitKind.Destroyer, 0.0, 0.0, 330)]
+	[InlineData(UnitKind.Cruiser, 0.0, 1.0, 80)]
+	[InlineData(UnitKind.Battleship, 0.0, 1.0, 0)]
+	public void SubmergedSubmarinesAreFoundAsIn122(UnitKind kind, double speed, double submarineSpeed, int size)
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var ship = game.AddUnit(game.LocalSide, kind, -9000, -7000, 0);
+		var submarine = game.AddUnit(game.CpuSide, UnitKind.Submarine, -8900, -7000, 0);
+		Assert.NotEqual(0, ship);
+		Assert.NotEqual(0, submarine);
+		game.Units[ship].Speed = game.Units[ship].MaxSpeed * speed;
+		game.Units[submarine].IsSubmerged = true;
+		game.Units[submarine].Speed = submarineSpeed;
+
+		Assert.Equal(size, game.GetDetectionSize(ship, submarine));
+	}
+
 	// A fighter shoots the flying plane it attacks, but not a transport, as in 1.22.
 	[Theory]
 	[InlineData(UnitKind.Attacker, true)]
