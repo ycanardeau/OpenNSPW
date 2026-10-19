@@ -1683,7 +1683,7 @@ public int		AddPlane(Side side,UnitKind kind,int type,int no,int planes,FireKind
 				}
 
 			// 1.22 adds the planes to a full carrier too (0x41F060).
-			if( park >= Units[no].Capacity && !IsSingleplayer )
+			if( park >= Units[no].Capacity && Rules.FullCarriersRefusePlanes )
 				return (-planes);
 
 			for( n=0; n<24; n++)
@@ -4245,6 +4245,8 @@ public void	InitializeGame()
 	RECT	dstn_rect,src_rect;
 
 	_DP_FLAG	dp_flag = default;
+
+	Rules = IsSingleplayer ? BattleRules.Nspw122 : BattleRules.NspwNet;
 
 	// 乱数の初期化
 	srand( (uint)( SharedRandomSeed ) );

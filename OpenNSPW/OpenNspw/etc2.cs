@@ -323,7 +323,7 @@ private int GetDetectionSizeAs122(int m, int n)
 [Original("find_out_size")]
 public int		GetDetectionSize( int m , int n)
 	{
-	if( IsSingleplayer )
+	if( Rules.HasSightRangesOf122 )
 		return GetDetectionSizeAs122(m, n);
 
 	ref var unit = ref Units[m];
@@ -869,7 +869,7 @@ public int		FindFreeEffect()
 
 	rtn=0;
 	// 1.22 has 255 effects in use at most.
-	for(s=1;s<(IsSingleplayer ? 256 : EFFECT_MAX);s++)
+	for(s=1;s<Rules.EffectLimit;s++)
 		{
 		if( Effects[s].Layer==EffectLayer.None )
 			{
@@ -891,7 +891,7 @@ public int		FindFreeFire()
 
 	rtn=0;
 	// 1.22 has 255 fires in use at most.
-	for(s=1;s<(IsSingleplayer ? 256 : FIRE_MAX);s++)
+	for(s=1;s<Rules.FireLimit;s++)
 		{
 		if( Fires[s].Target==0 )
 			{
@@ -1123,7 +1123,7 @@ public void	UpdateLanding( int n )
 	pt=Units[n].Carrier;
 
 	// 1.22 approaches any base still in use, whatever its kind (0x417555).
-	if( !(Units[pt].Kind==UnitKind.Carrier || Units[pt].Kind==UnitKind.LightCarrier || Units[pt].Kind==UnitKind.AirBase) && !IsSingleplayer )
+	if( !(Units[pt].Kind==UnitKind.Carrier || Units[pt].Kind==UnitKind.LightCarrier || Units[pt].Kind==UnitKind.AirBase) && !Rules.ApproachesOnDrawnTick )
 		{
 		Units[n].Carrier=0;
 		pt=0;
@@ -1323,12 +1323,12 @@ public int		DetectSubmarines( int m , int n)
 		q_size=100;
 
 	// 1.22 draws 10 where NSPW NET draws 2, and places the contact within 0.6 of the range whatever the type (0x417FC9).
-	if( Random( ( Units[m].Variant==1 ? q_size : q_size )*( 1+(Units[n].Speed==0 ? 1 : 0)*4) )==(IsSingleplayer ? 10 : 2) )
+	if( Random( ( Units[m].Variant==1 ? q_size : q_size )*( 1+(Units[n].Speed==0 ? 1 : 0)*4) )==Rules.SubmarineContactDraw )
 		{	// 敵潜水艦探知！
 		if( q_size>150 )
 			q_size=150;
 
-		q_size2=(int)(q_size*( Units[m].Variant==0 || IsSingleplayer ? 0.60 : 0.50 ));
+		q_size2=(int)(q_size*( Units[m].Variant==0 || !Rules.ContactSpreadByType ? 0.60 : 0.50 ));
 
 		Units[n].ContactX=(int)(Units[n].Position.X+Random((q_size2)*2)-q_size2);
 		Units[n].ContactY=(int)(Units[n].Position.Y+Random((q_size2)*2)-q_size2);
@@ -1388,7 +1388,7 @@ public void		Detect()
 		{
 		ref var unit = ref Units[m];
 		// 1.22's player's units look out while they supply too (0x41829B).
-		if( unit.IsUsed && unit.Side==LocalSide  && unit.PlaneState!=UnitState.Parked  && (!unit.IsSupplying || IsSingleplayer) )
+		if( unit.IsUsed && unit.Side==LocalSide  && unit.PlaneState!=UnitState.Parked  && (!unit.IsSupplying || Rules.SupplyingUnitsLookOut) )
 			{
 			flg1=0;
 			for(n=1;n<=MaxUnitId;n++)
@@ -1432,7 +1432,7 @@ public void		Detect()
 								{
 								other.IsFound=true;
 
-								if( IsSingleplayer )
+								if( Rules.FoundSubmarinesStopChasers )
 									StopDestroyersChasing(n);
 								}
 							}
@@ -1441,7 +1441,7 @@ public void		Detect()
 							other.IsFound=true;	// 普通のユニットが見つかった場合
 
 							// 1.22's submarine dives when it finds any unit, even while it supplies (0x4184DF).
-							if( unit.Kind==UnitKind.Submarine && ( (!unit.IsSupplying && other.Kind!=UnitKind.Submarine) || IsSingleplayer ) )		// 発見したのが潜水艦の場合。
+							if( unit.Kind==UnitKind.Submarine && ( (!unit.IsSupplying && other.Kind!=UnitKind.Submarine) || Rules.SubmarinesDiveAtAnyUnit ) )		// 発見したのが潜水艦の場合。
 								{
 								unit.IsSubmerged=true;		// 潜ります。
 								}
@@ -1505,7 +1505,7 @@ public void		Detect()
 								{
 								other.IsFound=true;
 
-								if( IsSingleplayer )
+								if( Rules.FoundSubmarinesStopChasers )
 									StopDestroyersChasing(n);
 								}
 							}
@@ -1514,7 +1514,7 @@ public void		Detect()
 							other.IsFound=true;
 
 							// 1.22's submarine dives when it finds any unit, even while it supplies (0x4184DF).
-							if( unit.Kind==UnitKind.Submarine && ( (!unit.IsSupplying && other.Kind!=UnitKind.Submarine) || IsSingleplayer ) )		// 発見したのが潜水艦の場合。
+							if( unit.Kind==UnitKind.Submarine && ( (!unit.IsSupplying && other.Kind!=UnitKind.Submarine) || Rules.SubmarinesDiveAtAnyUnit ) )		// 発見したのが潜水艦の場合。
 								{
 								unit.IsSubmerged=true;
 								}

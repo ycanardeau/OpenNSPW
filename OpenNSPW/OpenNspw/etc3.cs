@@ -62,7 +62,7 @@ public int		Random(int x)
 
 // A random number for an effect. NSPW NET draws them from SharedRandom, so that network games stay in step whatever
 // their effects; 1.22 draws them from rand, as all the others.
-public int EffectRandom(int r) => IsSingleplayer ? Random(r) : SharedRandom(r);
+public int EffectRandom(int r) => Rules.EffectsDrawFromRand ? Random(r) : SharedRandom(r);
 
 //============================================================================
 // スプライト基礎データ
@@ -349,7 +349,7 @@ private void UpdateCargo(ref Fire fire, ref int n)
 						break;
 					case FireKind.CargoPillboxes:
 						f=AddUnit((Side)fire.ShooterSide, UnitKind.Pillboxes,(double)fire.TargetX,(double)fire.TargetY,0);
-						if( IsSingleplayer )
+						if( !Rules.LandedBasesAreBuilt )
 							break;
 						Units[f].BuildTime=(int)(8000*( fire.ShooterSide==(int)Side.UnitedStates ? 1.0 : 0.8 ));		// 建設期間
 						Units[f].Hp/=4;
@@ -357,7 +357,7 @@ private void UpdateCargo(ref Fire fire, ref int n)
 						break;
 					case FireKind.CargoFortress:
 						f=AddUnit((Side)fire.ShooterSide, UnitKind.Fortress,(double)fire.TargetX,(double)fire.TargetY,0);
-						if( IsSingleplayer )
+						if( !Rules.LandedBasesAreBuilt )
 							break;
 						Units[f].BuildTime=(int)(15000*( fire.ShooterSide==(int)Side.UnitedStates ? 0.8 : 1.0 ));		// 建設期間
 						Units[f].Hp/=4;
@@ -365,7 +365,7 @@ private void UpdateCargo(ref Fire fire, ref int n)
 						break;
 					case FireKind.CargoAirBase:
 						f=AddUnit((Side)fire.ShooterSide, UnitKind.AirBase,(double)fire.TargetX,(double)fire.TargetY,0);
-						if( IsSingleplayer )
+						if( !Rules.LandedBasesAreBuilt )
 							break;
 						Units[f].BuildTime=(int)(10000*( fire.ShooterSide==(int)Side.UnitedStates ? 0.8 : 1.0 ));		// 建設期間
 						Units[f].Hp/=4;
@@ -373,7 +373,7 @@ private void UpdateCargo(ref Fire fire, ref int n)
 						break;
 					case FireKind.CargoNavalBase:
 						f=AddUnit((Side)fire.ShooterSide, UnitKind.NavalBase,(double)fire.TargetX,(double)fire.TargetY,0);
-						if( IsSingleplayer )
+						if( !Rules.LandedBasesAreBuilt )
 							break;
 						Units[f].BuildTime=(int)(20000*( fire.ShooterSide==(int)Side.UnitedStates ? 0.8 : 1.0 ));		// 建設期間
 						Units[f].Hp/=4;
@@ -471,7 +471,7 @@ private void UpdateBullet(ref Fire fire, ref int n, int m)
 			if(ShowsAntiAir==0)
 				{
 				// 1.22 damages a transport with every bullet (0x418F92).
-				if( Units[n].Kind!=UnitKind.Transport || IsSingleplayer || Random(4)==0 )
+				if( Units[n].Kind!=UnitKind.Transport || !Rules.BulletsSpareTransports || Random(4)==0 )
 					Units[n].Hp-=GetDamagePoints(m);
 				}
 

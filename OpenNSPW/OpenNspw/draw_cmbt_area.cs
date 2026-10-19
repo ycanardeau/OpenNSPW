@@ -1236,7 +1236,7 @@ private void RestoreSelection()
 // ones taken from Japan's air bases, as Japan's (0x40E070).
 public SpriteId GetUnitSprites(ref Unit unit)
 	{
-	if( unit.Side==Side.Japan || (IsSingleplayer && ScenarioNumber==303 && unit.Side==Side.UnitedStates && unit.Kind==UnitKind.Fighter && unit.Variant==1) )
+	if( unit.Side==Side.Japan || (Rules.DrawsCapturedFightersAsJapans && ScenarioNumber==303 && unit.Side==Side.UnitedStates && unit.Kind==UnitKind.Fighter && unit.Variant==1) )
 		return SpriteId.JapanUnits;		//Off Screen Number		日本海軍の表示
 	return SpriteId.UnitedStatesUnits;		//Off Screen Number		合衆国海軍の表示
 	}

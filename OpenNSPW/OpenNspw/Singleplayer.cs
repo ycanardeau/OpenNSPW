@@ -84,6 +84,10 @@ public unsafe partial class Nspw
 	// Whether this is a single-player game, which numbers its units as 1.22 does.
 	public bool IsSingleplayer;
 
+	// The rules the battle follows where 1.22 and NSPW NET differ: 1.22's in a single-player game, NSPW NET's otherwise.
+	// Chosen when a game starts (InitializeGame).
+	public BattleRules Rules = BattleRules.NspwNet;
+
 	// The sprite sheet: 1.22's own (tst_cg1.bmp) in a single-player game, which has another title and other land-based
 	// fighters of Japan, and NSPW NET's otherwise.
 	public string SpriteSheetName => IsSingleplayer ? "tst_cg1.bmp" : "t3.bmp";
