@@ -1,5 +1,5 @@
 # Differences from NSPW 1.22
-A single-player game plays a scenario of NSPW 1.22 (`Original/Nspw122/NSPW_122.exe`) against its computer. It runs 1.22's own code, in the emulator ([Singleplayer.md](Singleplayer.md)), for the scenarios, the computer (`cpu_strtgy`, `set_cpu_route`, [ComputerPlayer.md](ComputerPlayer.md)) and the victory conditions (`decision`). Everything else is NSPW NET's: the battle (`chara_cont` and the functions it calls), the frame, the input, the drawing and the data.
+A single-player game plays a scenario of NSPW 1.22 (`Original/Nspw122/NSPW_122.exe`) against its computer. It runs 1.22's own code, in the emulator ([Singleplayer.md](Singleplayer.md)), for the scenarios, the computer (`cpu_strtgy`, `set_cpu_route`, [ComputerPlayer.md](ComputerPlayer.md)) and the victory conditions (`decision`). Everything else is NSPW NET's: the battle (`chara_cont` and the functions it calls), the input, the drawing and the data; the frame is 1.22's.
 
 This document lists every difference found between the two, read from 1.22's machine code, with the address where it shows. The single-player game follows 1.22 in the first table only; the others are left as NSPW NET has them, so that the port keeps a single battle, the one network games play.
 
@@ -43,6 +43,9 @@ This document lists every difference found between the two, read from 1.22's mac
 | Fires (`0x418C30`) | Every bullet that hits damages its target, a transport too (`0x418F92`); the effects of the fires, and the place of a plane landed on deck, draw from `rand` (`0x419190`, `0x402CA3`) | A transport is damaged 1 time in 4; those draw from `SharedRandom`, so that network games stay in step | `UpdateBullet`, `EffectRandom` |
 | Depth charges' damage | 3 to 5 (`0x416D1F`); every other weapon does the same damage as NSPW NET's, from the same table | 1 to 6 | `GetDamagePoints`, `BattleRules.DepthChargeDamage` |
 | Hits (`hit_chk`, `0x40F930`) | A surfaced submarine is hit within 4 by 2 of each part (`0x40F9D6`); every other kind, and a submerged submarine, the same as NSPW NET's | 8 by 4 | `CheckHit`, `BattleRules.SurfacedSubmarineHitSize` |
+| The frame | A multimedia timer of 88 ms ([below](#122s-frame)); speed + 1 ticks a frame, none at speed 0 | A frame every 50 ms at least, `GameSpeed` ticks (20 while Space is held) | `UpdateFrame`, `TryStartSingleplayerFrame` |
+| `decision` | Once a tick, after the drawing for the tick that is drawn, so that its messages show over the battle area | After every tick, and again after the drawing | `UpdateFrame` |
+| The speed keys | F7 slower (to 0, which stops the battle), F8 faster (to 100), F9 back to 1 (`0x433AF0` to `0x433B53`) | F, G and R, by steps of 1, 2, 4, 6 and so on to 300, and Space | `MainWndProc` (`VK_F7` to `VK_F9`); `ReadKeyboard` gives F, G and R to network games only |
 
 Supply and ships outside the map together let the computer's fleets renew. In scenario 304 the American naval base (unit 21) is at x 10600, outside the map. A fleet that has lost its carrier, its ammunition or its fuel returns there ([ComputerPlayer.md](ComputerPlayer.md), `cpu_strtgy` step 9); there it supplies, which gives back its HP, ammunition and fuel, and step 12 puts a new carrier at its supplying flagship. NSPW NET's battle would turn the fleet back at the edge, and stop its supply away from a base within 280.
 
@@ -54,7 +57,7 @@ What 1.22's `chara_cont` (`0x401000`) and the functions it calls do differently 
 | Difference | 1.22 | NSPW NET |
 | --- | --- | --- |
 | `set_new_unit_plane` with no parking place left (`0x41F111`) | The place number of the previous plane added, or, for the first, whatever its stack holds | `AddPlane`: 0, or the previous plane's |
-| Effects (`0x41AEB0`) | The same effects, drawing the same random numbers in the same order, but from `rand`; most of them (the leader's flag, the weapons' and works' marks, the smoke and the wakes) only on the tick that is drawn (`0x48A1EC`, thirteen tests from `0x41AF02` to `0x41C18D`) | From `SharedRandom`, on every tick. Single-player draws them from `rand` (`EffectRandom`); the drawn tick only matters once the frame runs 1.22's two ticks at speed 1 |
+| Effects (`0x41AEB0`) | The same effects, drawing the same random numbers in the same order, but from `rand`; most of them (the leader's flag, the weapons' and works' marks, the smoke and the wakes) only on the tick that is drawn (`0x48A1EC`, thirteen tests from `0x41AF02` to `0x41C18D`) | From `SharedRandom`, on every tick. Single-player draws them from `rand` (`EffectRandom`), on every tick |
 
 Compared and the same: reloading and rearming (`0x403043` to `0x4030B6`), the damage that doubles the firing intervals (below 30% of the HP, `0x4030B6`), and the evasions of torpedoes and planes (`set_pos_of_emrgncy_SHIP`, `0x415F4F` to `0x4160FD` and `0x416501` to `0x41688B`).
 
@@ -63,9 +66,6 @@ Compared with `fire_now` (`0x40FE10`), the fires (`0x418C30`) and the emergency 
 ## The frame, the input and the drawing
 | Difference | 1.22 | NSPW NET |
 | --- | --- | --- |
-| The frame | A multimedia timer of 88 ms ([below](#122s-frame)); speed + the timer's ticks a frame, none at speed 0 | A frame every 50 ms at least, `GameSpeed` ticks (20 while Space is held) |
-| `decision` | Once a tick, after the drawing for the tick that is drawn, so that its messages show over the battle area | After every tick, and again after the drawing |
-| The speed keys | F7 slower (to 0, which stops the battle), F8 faster (to 99), F9 back to 1 (`0x433AF0` to `0x433B53`) | F, G and R, by steps of 1, 2, 4, 6 and so on to 300, and Space |
 
 ### 1.22's frame
 1.22 is driven by a multimedia timer, `timeSetEvent(88 × wPeriodMin, wPeriodMin, 0x4329B0, 0, TIME_PERIODIC)` (`0x432960`); with the usual minimum period of 1 ms, every 88 ms. The callback counts the timer's ticks (`0x483B50`) and posts `WM_USER` once; the window procedure handles it (`0x433C61`) by drawing a frame (`0x434570`) and clearing the count.
@@ -77,8 +77,7 @@ A frame of the battle:
 3. `decision` (`0x41C3C0`).
 4. Unless the game has ended, the orders (`0x430390`): `cpu_strtgy` (`0x404E30`) when the computer plays, then the player's.
 
-The speed starts at 1 (`0x42A148`), so two ticks run in a frame of 88 ms.
+The speed starts at 1 (`0x42A148`), so two ticks run in a frame of 88 ms. The count of the timer's ticks is 1: it is cleared after the frame, so the ticks while a frame runs are lost, and a frame starts on the next.
 
 ## Not compared yet
-- In the battle, as above: shooting and hits, the fires, the emergency moves.
 - The input (`0x4312A0` and the window procedure from `0x433000`), the unit information and its menus (`0x430B40`), and the drawing (`0x40DB50`), beyond what is listed above.

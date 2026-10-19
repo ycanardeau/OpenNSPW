@@ -1054,6 +1054,9 @@ if( !IsEditingMap )
 					break;
 
 				case VK_F7:
+					// 1.22's speed keys (0x433AF0 to 0x433B53): F7 slower, to 0, which stops the battle.
+					if( IsSingleplayer && GameSpeed>0 )
+						GameSpeed--;
 
 					if( IsEditingMap && Mode==GameMode.Battle )
 						{
@@ -1063,6 +1066,10 @@ if( !IsEditingMap )
 					break;
 
 				case VK_F8:
+					// F8 faster, to 100.
+					if( IsSingleplayer && GameSpeed<100 )
+						GameSpeed++;
+
 					if( IsEditingMap && Mode==GameMode.Battle )
 						{
 						PlaceEditorUnit(ref m);
@@ -1070,6 +1077,9 @@ if( !IsEditingMap )
 					break;
 
 				case VK_F9:
+					// F9 back to 1.
+					if( IsSingleplayer )
+						GameSpeed=1;
 
 #if DBG_MODE
 if( !IsEditingMap )

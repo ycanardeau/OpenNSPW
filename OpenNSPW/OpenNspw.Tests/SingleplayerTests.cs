@@ -568,7 +568,8 @@ public class SingleplayerTests
 		ref var ship = ref game.Units[m];
 		var fuel = ship.Fuel;
 		var interval = (int)ship.FuelInterval;
-		while (game.Tick % interval != interval - 1)
+		// Until the next frame's two ticks reach the next burn.
+		while (game.Tick % interval < interval - 2)
 		{
 			run.Frames(1);
 		}
@@ -687,6 +688,68 @@ public class SingleplayerTests
 		Assert.True(Hits(5, 1));
 		Assert.False(Hits(0, 3));
 		Assert.False(Hits(7, 0));
+	}
+
+	// A frame runs speed + 1 ticks, as 1.22's does (0x4345DF), on its timer of 88 ms: 2 at speed 1, the speed it starts at.
+	[Fact]
+	public void AFrameRunsSpeedPlusOneTicks()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+
+		int TicksOfAFrame()
+		{
+			var tick = game.Tick;
+			run.Frames(1);
+			return game.Tick - tick;
+		}
+
+		Assert.Equal(1, game.GameSpeed);
+		Assert.Equal(2, TicksOfAFrame());
+	}
+
+	// F7 lowers the speed, to 0, which stops the battle; F8 raises it, to 100; F9 sets it back to 1, as in 1.22 (0x433AF0
+	// to 0x433B53).
+	[Fact]
+	public void TheSpeedKeysAreThoseOf122()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+
+		void Press(int vk, int times = 1)
+		{
+			for (var i = 0; i < times; i++)
+			{
+				run.Player.Post(g => g.SetKeyState(g.hwndApp, vk, true));
+				run.Player.Post(g => g.SetKeyState(g.hwndApp, vk, false));
+			}
+
+			run.Frames(1);
+		}
+
+		int TicksOfAFrame()
+		{
+			var tick = game.Tick;
+			run.Frames(1);
+			return game.Tick - tick;
+		}
+
+		Press(winuser.VK_F8, 2);
+		Assert.Equal(3, game.GameSpeed);
+		Assert.Equal(4, TicksOfAFrame());
+
+		Press(winuser.VK_F7, 5);
+		Assert.Equal(0, game.GameSpeed);
+		Assert.Equal(0, TicksOfAFrame());
+
+		Press(winuser.VK_F8, 120);
+		Assert.Equal(100, game.GameSpeed);
+
+		Press(winuser.VK_F9);
+		Assert.Equal(1, game.GameSpeed);
+		Assert.Equal(2, TicksOfAFrame());
 	}
 
 	// A battle as the desktop app shows it, in real time, saved as singleplayer_battle.png next to the test assembly.

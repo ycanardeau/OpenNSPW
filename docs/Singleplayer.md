@@ -82,7 +82,7 @@ The globals that both have, at 1.22's addresses (`SharedGlobals` in `OpenNspw/Si
 ### Copying
 Before an emulated call, each region is copied from the port into the emulator's memory; after it, the ones that the emulated code writes are copied back. A unit is three blocks (`0x000` to `0x538`, `found` and `tech`, `rnd_250` to `rnd_10`), plus `gas`, which is converted: in, truncated to `int`; out, only the values the emulated code changed are written back, so that a call that does not touch the port's fractional fuel does not truncate it. `load_it2`, which is native, writes the map to both the port and the emulator's memory.
 
-`cpu_strtgy` runs once a frame, and `decision` once a tick and once a frame. `EmulatorCopyBenchmarks` measures the copy.
+`cpu_strtgy` runs once a frame, and `decision` once a tick. `EmulatorCopyBenchmarks` measures the copy.
 
 ### The single-player globals
 1.22 has globals that NSPW NET does not: the computer's plans and the scenarios' state, from `0x4867A0` to `0x489A28`. They live only in the emulator's memory. A new game creates a new emulator, so they start as the executable has them, then sets what 1.22's `game_init` sets before it calls the scenario: the end of the path of each of the 11 entries of the computer's fleet table (`0x4867A0`, `0x498` bytes each) to 9601, `MAP_RIGHT+1`.
@@ -102,13 +102,14 @@ Translating unit numbers at the boundary would need to know every field that hol
 ## The game
 1.22's battle frame is the port's `UpdateFrame` without the network:
 
-1. `chara_cont` (the port's `UpdateBattle`), then `decision`, as many times as the speed asks.
-2. Drawing, which clears the orders of the frame before the mouse gives the player's, then `decision` again.
+1. `chara_cont` (the port's `UpdateBattle`) speed + 1 times, each but the last followed by `decision`.
+2. Drawing, which clears the orders of the frame before the mouse gives the player's, then `decision` for the last tick.
 3. If the game has no result: `cpu_strtgy`, which writes the computer's order into `new_pp[0]` and `slct_unit[0]`, then the orders of both sides, applied at once.
 
 So in a single-player game (`IsSingleplayer`):
 
 - `WinMain` connects to no one, and starts the battle of `ScenarioNumber` (`StartSingleplayerGame`).
+- `UpdateFrame` runs a frame on 1.22's timer, every 88 ms (`TryStartSingleplayerFrame`), with speed + 1 ticks, none at speed 0, and `decision` after each tick but the last, which is drawn first (`0x4345DF` to `0x43463A`). F7, F8 and F9 lower the speed, to 0, raise it, to 100, and set it back to 1, as in 1.22 (`0x433AF0` to `0x433B53`); NSPW NET's F, G, R and Space do nothing.
 - `InitializeGame` sets up 1.22's scenario instead of NSPW NET's, which sets the sides, the camera and the time limit, and sends nothing.
 - `UpdateBattle` skips the two network phases, and counts `BattleTime` down every tick, as 1.22 counts `rest_time`.
 - `HandleInput` buffers the player's orders as in a network game, then `IssueSingleplayerOrders` gives the orders of this frame: `cpu_strtgy`, then what `ReceiveAndIssueOrders` does for a turn, for the player only, and `ApplyOrders` for both. Orders take effect in the frame they are given, not at the next turn.

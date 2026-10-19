@@ -98,6 +98,25 @@ public unsafe partial class Nspw
 	// 0x48A1EC of 1.22: whether this tick is the last of its frame, the one that is drawn.
 	public bool IsDrawnTick;
 
+	// The period of 1.22's multimedia timer, which drives its frames (0x432960), in milliseconds.
+	private const uint SingleplayerTimerPeriod = 88;
+
+	// Whether 1.22's timer has ticked since the last frame, which starts a frame, and the ticks of that frame: none at
+	// speed 0, or speed + the timer's ticks counted (0x4345DF). The count is 1: 1.22 clears it after a frame (0x433C99), so
+	// the timer's ticks while a frame runs are lost.
+	private bool TryStartSingleplayerFrame(out short ticks)
+	{
+		if (Elapsed < SingleplayerTimerPeriod)
+		{
+			ticks = 0;
+			return false;
+		}
+
+		LastTime2 += Elapsed / SingleplayerTimerPeriod * SingleplayerTimerPeriod;
+		ticks = GameSpeed == 0 ? (short)0 : (short)(GameSpeed + 1);
+		return true;
+	}
+
 	// The unit ranges of all_head.h. 1.22 has the same, with 20 ships and 30 planes a side instead of 40 and 50.
 	public int SHIP_LIMIT => IsSingleplayer ? 20 : 40;
 	public int PLANE_LIMIT => IsSingleplayer ? 30 : 50;
