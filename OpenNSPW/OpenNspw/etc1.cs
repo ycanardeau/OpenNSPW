@@ -779,7 +779,7 @@ private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double drctn2, Fire
 			{
 			case UnitKind.Cruiser:
 			case UnitKind.Destroyer:		unit.ReloadTime=RELOAD_TPD_DD;		break;	// 再装填時間
-			case UnitKind.Submarine:		unit.ReloadTime=RELOAD_TPD_SS;
+			case UnitKind.Submarine:		unit.ReloadTime=IsSingleplayer ? 2000 : RELOAD_TPD_SS;	// 1.22's, 2000 (0x4110DB, 0x41176B)
 							//撃った瞬間に発見される。
 							unit.ContactX=(int)(unit.Position.X+Random((50)*2)-50);
 							unit.ContactY=(int)(unit.Position.Y+Random((50)*2)-50);
@@ -924,7 +924,7 @@ private bool ShipFireTorpedoAtTarget(int trgt, ref Unit unit, ref double drctn2,
 		switch( unit.Kind )
 			{
 			case UnitKind.Destroyer:		unit.ReloadTime=RELOAD_TPD_DD;		break;	// 再装填時間
-			case UnitKind.Submarine:		unit.ReloadTime=RELOAD_TPD_SS;
+			case UnitKind.Submarine:		unit.ReloadTime=IsSingleplayer ? 2000 : RELOAD_TPD_SS;	// 1.22's, 2000 (0x4110DB, 0x41176B)
 							//撃った瞬間に発見される。
 							unit.ContactX=(int)(unit.Position.X+Random((50)*2)-50);
 							unit.ContactY=(int)(unit.Position.Y+Random((50)*2)-50);
@@ -1567,7 +1567,16 @@ private bool FighterFireBullet(ref int trgt, ref Unit unit, FireKind kind)
 					}
 				}
 
-			if( unit.Target==0 )
+			if( unit.Target==0 && IsSingleplayer )
+				{
+				// 1.22's fighter takes a target within 400 whatever its kind; a returning one only if it is the computer's,
+				// within 300, with ammunition and fuel for 60 (50 for Japan) (0x413542).
+				if( unit.Mode==UnitMode.Return
+					? unit.Side==CpuSide && unit.Fuel>=(6-(unit.Side==Side.Japan ? 1 : 0))*10 && unit.Ammo!=0 && dstc<=300 && Random(10)==0 && other.IsFound
+					: dstc<=400 && Random(10)==0 && other.IsFound )
+					unit.Target=n;
+				}
+			else if( unit.Target==0 )
 				{
 				if(unit.Mode==UnitMode.Return)
 					{
