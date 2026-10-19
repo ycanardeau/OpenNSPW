@@ -46,7 +46,7 @@ Native, because they are part of the port's own state or platform:
 | --- | --- |
 | `rand` (`0x436056`) | The port's `rand()`, so that the whole game draws from one sequence, as in the original |
 | `__ftol` (`0x4360C4`) | Truncation of `ST(0)` to `EDX:EAX` |
-| `load_it2` (`0x432A30`) | The port's `LoadScenarioFile2`, by NSPW NET's name of the same file: 1.22 also spells some in lower case (`Map\south_pacific.dat`), and `LoadScenarioFile2` recognizes the map by its name |
+| `load_it2` (`0x432A30`) | The port's `LoadScenarioFile2`, by NSPW NET's name of the same file, which is read from 1.22's directory: 1.22 also spells some in lower case (`Map\south_pacific.dat`), and `LoadScenarioFile2` recognizes the map by its name |
 | `IDirectDrawSurface7::GetDC` and `ReleaseDC` of `lpDDSBack` (`0x463AAC`), `SetTextColor`, `SetBkMode`, `SelectObject`, `TextOutA`, `wsprintfA` | The port's stand-ins, on its back buffer, so that the messages of `decision` show. `0x491600`, the font that `decision` selects, is the port's `gameFont_1` |
 | `SetWindowTextA` | `set_cpu_route`'s debug output: dropped |
 
@@ -112,6 +112,7 @@ So in a single-player game (`IsSingleplayer`):
 - `UpdateBattle` skips the two network phases, and counts `BattleTime` down every tick, as 1.22 counts `rest_time`.
 - `HandleInput` buffers the player's orders as in a network game, then `IssueSingleplayerOrders` gives the orders of this frame: `cpu_strtgy`, then what `ReceiveAndIssueOrders` does for a turn, for the player only, and `ApplyOrders` for both. Orders take effect in the frame they are given, not at the next turn.
 - `ApplyOrders` clears the path of a computer's unit for every move order (`if( new_pp[e].cls || unit[m].used==cpu_side )`, as 1.22 does and NSPW NET has as a comment), and calls `set_cpu_route(m, 4.0)` for a computer's ship.
+- The maps, the sprite sheet (`tst_cg1.bmp`) and the sounds are read from 1.22's directory (`GameFiles.OpenSingleplayer`), so that the map on which `set_cpu_route` plans is 1.22's; the three sounds 1.22 does not have are NSPW NET's.
 - `CheckResult` calls `decision`, which also shows the result, instead of NSPW NET's conditions.
 
 ## Playing
@@ -119,7 +120,7 @@ So in a single-player game (`IsSingleplayer`):
 dotnet run --project OpenNSPW/OpenNspw.Desktop -- --singleplayer 3
 ```
 
-The scenario is one of 1, 2, ..., 10, 100, ..., 109, 200, ..., 209, 300, ..., 306. The executable is `Original/Nspw122/NSPW_122.exe`, or the file given with `--exe`. The graphics, sounds and maps are NSPW NET's.
+The scenario is one of 1, 2, ..., 10, 100, ..., 109, 200, ..., 209, 300, ..., 306. The executable is `Original/Nspw122/NSPW_122.exe`, or the file given with `--exe`. A single-player game reads the files of the executable's directory, which are 1.22's own: the maps, the sounds and the sprite sheet (`tst_cg1.bmp`). The files 1.22 does not have, such as the sounds `AA_SHL5`, `SNR` and `CLICK2`, are NSPW NET's (`GameFiles.OpenSingleplayer`).
 
 NSPW NET's debug keys (`DBG_MODE`) work as in a network game, but three are held back from a single-player game in a Release build (`GameSession`): F5, which swaps the side the player plays and would hand the player the computer's fleet; F6, which starts the scenario again; and F9, which sinks the selected unit.
 
@@ -139,6 +140,5 @@ NSPW NET's debug keys (`DBG_MODE`) work as in a network game, but three are held
 ## Open questions
 - Whether the port's own `SetUnitData` (used when a unit is created during the battle, outside the emulated code, such as a reinforcement) should call 1.22's in a single-player game.
 - Which other differences between 1.22's battle and NSPW NET's matter for single-player play. The landing distance of transports, 360 in 1.22 and 160 in NSPW NET (`#if NSPW_THE_NET` in `etc1.cpp`), is one; the other remains of `cpu_side` in NSPW NET's comments are others.
-- Whether to load the maps from 1.22's own `Map` folder: its `japan_off.dat` differs from NSPW NET's.
 - Whether to show 1.22's own setting screen, or NSPW NET's with 1.22's scenarios.
 - Saving and resuming a single-player game, which would also need the single-player globals of the emulator's memory.

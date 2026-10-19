@@ -86,7 +86,7 @@ internal sealed class NspwGame : Game
 	// connecting to a rival.
 	public GameSession StartSession(int? singleplayer = null)
 	{
-		_lastSession = new GameSession(DataDirectory, Text, singleplayer is { } scenario ? (ReadSingleplayerExecutable(), scenario) : null);
+		_lastSession = new GameSession(DataDirectory, Text, singleplayer is { } scenario ? (ReadSingleplayerExecutable(), Path.GetDirectoryName(Path.GetFullPath(_singleplayerExecutablePath!))!, scenario) : null);
 		_lastSession.Start();
 		return _lastSession;
 	}

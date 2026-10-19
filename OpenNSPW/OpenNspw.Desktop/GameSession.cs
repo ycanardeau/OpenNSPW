@@ -47,6 +47,10 @@ internal sealed class GameSession : IDisposable
 
 	public Nspw Game { get; }
 
+	// The sprite sheet that the UI draws the battle from: NSPW NET's t3.bmp, or, in a single-player game, 1.22's own
+	// (Nspw.SpriteSheetName), as the game draws it.
+	public string SpriteSheetPath { get; }
+
 	// Whether WinMain has returned: the game was closed, or failed to connect.
 	public bool HasEnded => _hasEnded;
 
@@ -73,17 +77,20 @@ internal sealed class GameSession : IDisposable
 		}
 	}
 
-	// singleplayer: NSPW_122.exe and a scenario of it, to play that scenario against the computer (docs/Singleplayer.md)
-	// instead of connecting to a rival.
-	public GameSession(string dataDirectory, TextRasterizer text, (byte[] Executable, int Scenario)? singleplayer = null)
+	// singleplayer: NSPW_122.exe, its directory, whose maps, sounds and sprite sheet the game reads, and a scenario of it,
+	// to play that scenario against the computer (docs/Singleplayer.md) instead of connecting to a rival.
+	public GameSession(string dataDirectory, TextRasterizer text, (byte[] Executable, string Directory, int Scenario)? singleplayer = null)
 	{
 		_platform = new DesktopPlatform(dataDirectory, text);
 		Game = new Nspw(_platform);
 		_platform.CaptureState = () => _captured.CopyFrom(Game);
-		if (singleplayer is var (executable, scenario))
+		SpriteSheetPath = GameFiles.Resolve(dataDirectory, "t3.bmp");
+		if (singleplayer is var (executable, directory, scenario))
 		{
 			Game.IsSingleplayer = true;
 			Game.SingleplayerExecutable = executable;
+			_platform.SingleplayerDirectory = directory;
+			SpriteSheetPath = GameFiles.Resolve(directory, Game.SpriteSheetName);
 			Game.ScenarioNumber = (short)scenario;
 		}
 

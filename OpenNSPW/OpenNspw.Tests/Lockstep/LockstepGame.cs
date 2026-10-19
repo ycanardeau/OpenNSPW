@@ -115,6 +115,9 @@ internal sealed class LockstepGame : INspwPlatform
 	// The text the game drew, in order.
 	public List<string> Texts { get; } = [];
 
+	// NSPW 1.22's directory, whose files a single-player game reads instead of the game's own, or null.
+	public string? SingleplayerDirectory { get; set; }
+
 	private void Run()
 	{
 		_resume.Wait();
@@ -271,7 +274,7 @@ internal sealed class LockstepGame : INspwPlatform
 	{
 		try
 		{
-			return new FileStream(GameFiles.Resolve(_dataDirectory, path), mode, access, share);
+			return GameFiles.OpenSingleplayer(SingleplayerDirectory, path, mode, share) ?? new FileStream(GameFiles.Resolve(_dataDirectory, path), mode, access, share);
 		}
 		catch (IOException)
 		{

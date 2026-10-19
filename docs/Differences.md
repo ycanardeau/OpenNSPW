@@ -11,6 +11,8 @@ This document lists every difference found between the two, read from 1.22's mac
 | Move orders of the computer | Clear the unit's path (`if( new_pp[e].cls || unit[m].used==cpu_side )`), and a ship's route is planned by `set_cpu_route` | The same condition is a comment; routes are planned by `set_cpu_root2` | `ApplyOrders` |
 | Time | `rest_time` counts down every tick | Counted by the host | `UpdateBattle` |
 | Victory | `decision` | NSPW NET's conditions | `CheckResult` |
+| The data: maps, sprite sheet and sounds | 1.22's own: its `japan_off.dat` has no island at tiles 56 to 64 across and 164 to 180 down (scenarios 9, 10, 109, 202, 206, 300, 304 and 305), on which `set_cpu_route` also plans; `tst_cg1.bmp`, of 256 colours, with another title, 599 by 387 (`set_sprt_data`, `0x432E43`), and a single-engine land-based fighter for Japan (row 14); 28 sounds, where `GUN3` and `AA_SHL4` are other sounds and there are no `AA_SHL5`, `SNR` and `CLICK2` | NSPW NET's (`Original/NSPW_NET`): a small island there; `t3.bmp`, with NSPW NET's title, 699 by 384, a twin-engine fighter and three more icons; NSPW NET's sounds | Read from 1.22's directory (`GameFiles.OpenSingleplayer`, `SpriteSheetName`, `InitializeSprites`, and the UI's `GameSession.SpriteSheetPath`); the three sounds it does not have are NSPW NET's |
+| Captured fighters in scenario 303 | The Americans' fighters of type 1, which `decision` takes with the Japanese air bases, are drawn from Japan's sheet (`0x40E070`: `sinario==303`, `used==2`, `kind==7`, `type==1`) | Every unit is drawn from its side's sheet | `GetUnitSprites`, for `DrawBattleArea` and the UI's battlefield (`ReadUnitSprites`) |
 
 ## The battle
 What 1.22's `chara_cont` (`0x401000`) and the functions it calls do differently from the port's battle (`UpdateBattle` and the functions it calls), read instruction by instruction.
@@ -69,15 +71,6 @@ A frame of the battle:
 4. Unless the game has ended, the orders (`0x430390`): `cpu_strtgy` (`0x404E30`) when the computer plays, then the player's.
 
 The speed starts at 1 (`0x42A148`), so two ticks run in a frame of 88 ms.
-
-## The data
-The port reads NSPW NET's data (`Original/NSPW_NET`). 1.22's differs:
-
-| Difference | 1.22 | NSPW NET |
-| --- | --- | --- |
-| The map `japan_off.dat` | No island at tiles 56 to 64 across and 164 to 180 down (scenarios 9, 10, 109, 202, 206, 300, 304 and 305) | A small island there |
-| The sprite sheet | `tst_cg1.bmp`, of 256 colours: another title, 599 by 387 (`set_sprt_data`, `0x432E43`), and a single-engine land-based fighter for Japan (row 14) | `t3.bmp`: the title of NSPW NET, 699 by 384, a twin-engine fighter, and three more icons among the sub-units |
-| The sounds | 28 sounds. `GUN3` and `AA_SHL4` are other sounds; there are no `AA_SHL5` (number 8 in NSPW NET), `SNR` and `CLICK2`, so the numbers after them differ | NSPW NET's |
 
 ## Not compared yet
 - In the battle, as above: shooting and hits, the fires, the emergency moves.

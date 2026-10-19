@@ -3,8 +3,8 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace OpenNspw.Desktop;
 
-// The pictures of the original's sprite sheet (t3.bmp) that the battle screen's parts draw. Loaded for a battle screen,
-// and disposed with it.
+// The pictures of the game's sprite sheet (GameSession.SpriteSheetPath) that the battle screen's parts draw. Loaded for
+// a battle screen, and disposed with it.
 internal sealed class BattleArt : IDisposable
 {
 	// The menu's background, each side's flag (ButtonBase, set_sprt_data): Japan's, then the United States'.
@@ -20,11 +20,11 @@ internal sealed class BattleArt : IDisposable
 	// The minimap's map, a pixel a tile, which the minimap draws as the map's tiles change.
 	public Texture2D MinimapTexture { get; }
 
-	public BattleArt(GraphicsDevice graphicsDevice, string dataDirectory)
+	public BattleArt(GraphicsDevice graphicsDevice, string sheetPath)
 	{
-		_flags = SpriteSheet.LoadRegions(graphicsDevice, GameFiles.Resolve(dataDirectory, "t3.bmp"), FlagRegions);
+		_flags = SpriteSheet.LoadRegions(graphicsDevice, sheetPath, FlagRegions);
 		MinimapTexture = new Texture2D(graphicsDevice, 240, 180);
-		_sheet = SpriteSheet.LoadRegions(graphicsDevice, GameFiles.Resolve(dataDirectory, "t3.bmp"), SheetPieces, isKeyed: true);
+		_sheet = SpriteSheet.LoadRegions(graphicsDevice, sheetPath, SheetPieces, isKeyed: true);
 	}
 
 	// A sprite of the sheet, with its color key transparent: the piece that has it, and where it is in the piece.
