@@ -35,7 +35,7 @@ internal sealed class GameSnapshot
 	// Whether each unit is a parked plane on the deck shown in the sidebar (ReadShownOnDeck).
 	public readonly bool[] ShownOnDeck = new bool[256];
 
-	// The sheet each unit is drawn from on the battlefield (ReadUnitSprites).
+	// The sheet each unit is drawn from on the battlefield and on the deck (ReadUnitSprites).
 	public readonly SpriteId[] UnitSprites = new SpriteId[256];
 
 	// Whether the next destination starts the selected unit's path again (MoveOrders[1].ClearsPath), or adds to it.

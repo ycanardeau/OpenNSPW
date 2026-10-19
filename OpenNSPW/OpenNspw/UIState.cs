@@ -266,7 +266,7 @@ public unsafe partial class Nspw
 			}
 	}
 
-	// The sheet each unit is drawn from on the battlefield (GetUnitSprites).
+	// The sheet each unit is drawn from on the battlefield and on the deck (GetUnitSprites).
 	public void ReadUnitSprites(Span<SpriteId> sprites)
 	{
 		for( var m=0; m<=MaxUnitId; m++ )
