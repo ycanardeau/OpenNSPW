@@ -36,6 +36,7 @@ This document lists every difference found between the two, read from 1.22's mac
 | The order of a tick | The tick is counted first, then the clouds (`0x418A20`) and the detection (`0x418230`), then the end of the game is checked (`0x401000` to `0x401039`); the unit loop skips only air bases and naval bases (`0x4010A3`), not cities | The detection, the tick, the end of the game, the clouds; cities are skipped too | `UpdateBattle` |
 | Returning planes | Adjust their approach to their base on the drawn tick only (`0x401AB4`, `0x417530`), whatever its kind | On every tick; a base that is not a carrier or an air base is forgotten | `IsDrawnTick`, `UpdateLanding` |
 | Fuel | An integer (`gas[0]`): 1 every `gas[1]` ticks while moving, a tenth more often for an attacker carrying a torpedo or a bomb and for a fighter above its top speed with a target (`0x402F01` to `0x402FA2`) | A `double`: `Speed/MaxSpeed` every interval | `MoveUnit` |
+| Attackers' approach (`set_pos_of_attack_AT`, `0x415A10`) | No change of formation: the function has no case at 500 to 510 from the target | At 500 to 510 from the target, the leader sends its attackers off to 600 ahead, fanned by their place in the formation, before they turn to the target | `SetAttackerAttackDestination` |
 
 Supply and ships outside the map together let the computer's fleets renew. In scenario 304 the American naval base (unit 21) is at x 10600, outside the map. A fleet that has lost its carrier, its ammunition or its fuel returns there ([ComputerPlayer.md](ComputerPlayer.md), `cpu_strtgy` step 9); there it supplies, which gives back its HP, ammunition and fuel, and step 12 puts a new carrier at its supplying flagship. NSPW NET's battle would turn the fleet back at the edge, and stop its supply away from a base within 280.
 
@@ -47,7 +48,6 @@ What 1.22's `chara_cont` (`0x401000`) and the functions it calls do differently 
 | Difference | 1.22 | NSPW NET |
 | --- | --- | --- |
 | `set_new_unit_plane` with no parking place left (`0x41F111`) | The place number of the previous plane added, or, for the first, whatever its stack holds | `AddPlane`: 0, or the previous plane's |
-| Attackers' approach (`set_pos_of_attack_AT`, `0x415A10`) | No change of formation | At 500 to 510 from the target, the leader sends its attackers off to 600 ahead, fanned by their place in the formation, before they turn to the target |
 | Effects | As the effects function (`0x41AEB0`) does them | `UpdateSurfaceShipEffects` and the others, which draw random numbers every tick |
 
 Compared and the same: reloading and rearming (`0x403043` to `0x4030B6`), the damage that doubles the firing intervals (below 30% of the HP, `0x4030B6`), and the evasions of torpedoes and planes (`set_pos_of_emrgncy_SHIP`, `0x415F4F` to `0x4160FD` and `0x416501` to `0x41688B`).

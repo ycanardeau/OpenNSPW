@@ -2736,7 +2736,8 @@ public void	SetAttackerAttackDestination(int m)
 	if(drctn<0)
 		drctn=360+drctn;
 
-	if( dstc<=510 && dstc >= 500  && (drctn<=22.5||drctn>=337.5)   )
+	// 1.22's leader does not send its attackers off at 500 to 510 from the target: it has no such case (0x415A10).
+	if( !IsSingleplayer && dstc<=510 && dstc >= 500  && (drctn<=22.5||drctn>=337.5)   )
 		{
 
 		// リーダー機か単独機のみここに来ます。

@@ -135,6 +135,7 @@ So in a single-player game (`IsSingleplayer`):
 - `UpdateBattle` counts the tick, moves the clouds and finds the units in 1.22's order, and runs its unit loop for cities too (`0x401009` to `0x4010A3`).
 - `UpdateLanding` adjusts a returning plane's approach on the tick that is drawn only (`IsDrawnTick`, 1.22's `0x48A1EC`), and to any base still in use, as 1.22 does (`0x401AB4`, `0x417530`).
 - `MoveUnit` burns a moving unit's fuel 1 at a time, as 1.22 does with its integer `gas[0]` (`0x402F72`).
+- `SetAttackerAttackDestination` keeps the attackers in formation, as 1.22 does (`0x415A10`), where NSPW NET's leader sends them off at 500 to 510 from the target.
 - `CheckResult` calls `decision`, which also shows the result, instead of NSPW NET's conditions.
 
 ## Playing
