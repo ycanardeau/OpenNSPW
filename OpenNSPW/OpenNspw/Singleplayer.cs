@@ -91,6 +91,9 @@ public unsafe partial class Nspw
 	// cpu_side of 1.22: the side the computer plays, or None.
 	public Side CpuSide;
 
+	// 0x48A1EC of 1.22: whether this tick is the last of its frame, the one that is drawn.
+	public bool IsDrawnTick;
+
 	// The unit ranges of all_head.h. 1.22 has the same, with 20 ships and 30 planes a side instead of 40 and 50.
 	public int SHIP_LIMIT => IsSingleplayer ? 20 : 40;
 	public int PLANE_LIMIT => IsSingleplayer ? 30 : 50;

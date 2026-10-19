@@ -406,6 +406,7 @@ public void	UpdateFrame()
 
 			for( i=chara_loop; i>=1; i-- )
 				{
+				IsDrawnTick=i==1;
 				UpdateBattle();
 				if( !IsEditingMap )
 					CheckResult();

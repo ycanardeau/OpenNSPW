@@ -1122,7 +1122,8 @@ public void	UpdateLanding( int n )
 
 	pt=Units[n].Carrier;
 
-	if( !(Units[pt].Kind==UnitKind.Carrier || Units[pt].Kind==UnitKind.LightCarrier || Units[pt].Kind==UnitKind.AirBase) )
+	// 1.22 approaches any base still in use, whatever its kind (0x417555).
+	if( !(Units[pt].Kind==UnitKind.Carrier || Units[pt].Kind==UnitKind.LightCarrier || Units[pt].Kind==UnitKind.AirBase) && !IsSingleplayer )
 		{
 		Units[n].Carrier=0;
 		pt=0;

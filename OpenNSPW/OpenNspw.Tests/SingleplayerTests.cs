@@ -524,6 +524,29 @@ public class SingleplayerTests
 		Assert.Equal(hunts ? 600 : 0, game.Units[destroyer].EmergencyFlags[0]);
 	}
 
+	// A returning plane approaches its base whatever its kind, as in 1.22, where NSPW NET forgets a base that is not a
+	// carrier or an air base.
+	[Fact]
+	public void ReturningPlanesApproachAnyBase()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var navalBase = game.AddUnit(Side.Japan, UnitKind.NavalBase, -9000, -7000, 0);
+		var attacker = game.AddUnit(Side.Japan, UnitKind.Attacker, -8000, -7000, 0);
+		Assert.NotEqual(0, navalBase);
+		Assert.NotEqual(0, attacker);
+		ref var plane = ref game.Units[attacker];
+		plane.Carrier = navalBase;
+		plane.PathX[0] = -8500;
+		plane.PathX[1] = -8600;
+		plane.PathX[2] = all_head.MAP_RIGHT + 1;
+
+		game.UpdateLanding(attacker);
+
+		Assert.Equal(navalBase, game.Units[attacker].Carrier);
+	}
+
 	// A fighter shoots the flying plane it attacks, but not a transport, as in 1.22.
 	[Theory]
 	[InlineData(UnitKind.Attacker, true)]

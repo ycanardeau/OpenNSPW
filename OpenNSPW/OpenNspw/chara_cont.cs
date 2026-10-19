@@ -864,7 +864,8 @@ private void SteerUnit(ref Unit unit, int m)
 			// 単独、もしくは、編隊長
 			if(!unit.IsStopping )
 				{
-				if(  unit.Category==UnitCategory.Plane && unit.Mode==UnitMode.Return && unit.DeckPhase==1 )
+				// 1.22 adjusts the approach on the drawn tick only (0x401AB4).
+				if(  unit.Category==UnitCategory.Plane && unit.Mode==UnitMode.Return && unit.DeckPhase==1 && (IsDrawnTick || !IsSingleplayer) )
 					{
 					UpdateLanding(m);
 					}
