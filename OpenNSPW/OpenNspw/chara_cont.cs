@@ -1035,7 +1035,7 @@ private void TryLandOnCarrier(ref Unit unit, int m)
 			Units[unit.Carrier].LandingLock=1;	// 着艦、0許可、1不許可
 			Units[unit.Carrier].LaunchLock=1;	// その空母の次機発進許可	0許可、1不許可
 			unit.PlaneState=UnitState.Parked;
-			unit.Position = new WorldPosition(Sprites[SpriteId.JapanUnitInfo].X+Sprites[SpriteId.JapanUnitInfo].Width/2+(SharedRandom(16)-7), Sprites[SpriteId.JapanUnitInfo].Y+Sprites[SpriteId.JapanUnitInfo].Height+40);
+			unit.Position = new WorldPosition(Sprites[SpriteId.JapanUnitInfo].X+Sprites[SpriteId.JapanUnitInfo].Width/2+(EffectRandom(16)-7), Sprites[SpriteId.JapanUnitInfo].Y+Sprites[SpriteId.JapanUnitInfo].Height+40);
 			unit.Speed=5.0; unit.Direction=90.0;
 
 			unit.Target=0;					//

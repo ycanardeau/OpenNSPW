@@ -60,6 +60,10 @@ public int		Random(int x)
 	return(rand()%(x));
 	}
 
+// A random number for an effect. NSPW NET draws them from SharedRandom, so that network games stay in step whatever
+// their effects; 1.22 draws them from rand, as all the others.
+public int EffectRandom(int r) => IsSingleplayer ? Random(r) : SharedRandom(r);
+
 //============================================================================
 // スプライト基礎データ
 //----------------------------------------------------------------------------
@@ -410,7 +414,7 @@ private void UpdateCargo(ref Fire fire, ref int n)
 							{
 							f=FindFreeEffect();
 							Effects[f].Layer=EffectLayer.Lower;
-							Effects[f].TimeLeft=30+SharedRandom(25);
+							Effects[f].TimeLeft=30+EffectRandom(25);
 							Effects[f].Animation=4;
 
 							Effects[f].Position = new WorldPosition(wrk_x, wrk_y);
@@ -466,7 +470,8 @@ private void UpdateBullet(ref Fire fire, ref int n, int m)
 			fire.Target=0;
 			if(ShowsAntiAir==0)
 				{
-				if( Units[n].Kind!=UnitKind.Transport || Random(4)==0 )
+				// 1.22 damages a transport with every bullet (0x418F92).
+				if( Units[n].Kind!=UnitKind.Transport || IsSingleplayer || Random(4)==0 )
 					Units[n].Hp-=GetDamagePoints(m);
 				}
 
@@ -662,10 +667,10 @@ private void UpdateAntiAircraftShell(ref Fire fire, ref int n, int m)
 			f=FindFreeEffect();
 			effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
-			effect.TimeLeft=3+SharedRandom(3);
+			effect.TimeLeft=3+EffectRandom(3);
 			effect.Animation=4;
 
-			effect.Position = new WorldPosition(wrk_x+SharedRandom(10)-5, wrk_y+SharedRandom(10)-5);
+			effect.Position = new WorldPosition(wrk_x+EffectRandom(10)-5, wrk_y+EffectRandom(10)-5);
 
 			effect.SpriteNumber=2;			// ソースファイル上の番号
 			}
@@ -766,10 +771,10 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 			f=FindFreeEffect();
 			effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
-			effect.TimeLeft=3+SharedRandom(3);
+			effect.TimeLeft=3+EffectRandom(3);
 			effect.Animation=4;
 
-			effect.Position = new WorldPosition(wrk_x+SharedRandom(10)-5, wrk_y+SharedRandom(10)-5);
+			effect.Position = new WorldPosition(wrk_x+EffectRandom(10)-5, wrk_y+EffectRandom(10)-5);
 
 			effect.SpriteNumber=2;			// ソースファイル上の番号
 			}
@@ -960,10 +965,10 @@ private void UpdateTorpedo(ref Fire fire, ref int n, int m)
 					f=FindFreeEffect();
 					effect = ref Effects[f];
 					effect.Layer=EffectLayer.Lower;
-					effect.TimeLeft=30+SharedRandom(25);
+					effect.TimeLeft=30+EffectRandom(25);
 					effect.Animation=4;
 
-					effect.Position = new WorldPosition(wrk_x+SharedRandom(10)-5, wrk_y+SharedRandom(10)-5);
+					effect.Position = new WorldPosition(wrk_x+EffectRandom(10)-5, wrk_y+EffectRandom(10)-5);
 
 					effect.SpriteNumber=8;			// ソースファイル上の番号
 					}
@@ -1253,7 +1258,7 @@ private void UpdateLightlyDamagedPlane(ref Unit unit)
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
 		effect.Layer=EffectLayer.Upper;
-		effect.TimeLeft=40+SharedRandom(15);
+		effect.TimeLeft=40+EffectRandom(15);
 		effect.Animation=2;
 
 		effect.Position=unit.Position;
@@ -1275,7 +1280,7 @@ private void UpdateDamagedPlane(ref Unit unit)
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
 		effect.Layer=EffectLayer.Upper;
-		effect.TimeLeft=40+SharedRandom(15);
+		effect.TimeLeft=40+EffectRandom(15);
 		effect.Animation=2;
 
 		effect.Position=unit.Position;
@@ -1287,9 +1292,9 @@ private void UpdateDamagedPlane(ref Unit unit)
 			f=FindFreeEffect();
 			effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
-			effect.TimeLeft=8+SharedRandom(6);
+			effect.TimeLeft=8+EffectRandom(6);
 			effect.Animation=4;
-			effect.Position = new WorldPosition(unit.Position.X+SharedRandom(6)-3, unit.Position.Y+SharedRandom(6)-3);
+			effect.Position = new WorldPosition(unit.Position.X+EffectRandom(6)-3, unit.Position.Y+EffectRandom(6)-3);
 			effect.SpriteNumber=10;			// ソースファイル上の番号
 			}
 		}
@@ -1309,7 +1314,7 @@ private void UpdateHeavilyDamagedPlane(ref Unit unit)
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
 		effect.Layer=EffectLayer.Upper;
-		effect.TimeLeft=40+SharedRandom(15);
+		effect.TimeLeft=40+EffectRandom(15);
 		effect.Animation=2;
 		effect.Position=unit.Position;
 		effect.SpriteNumber=6;			// ソースファイル上の番号
@@ -1320,9 +1325,9 @@ private void UpdateHeavilyDamagedPlane(ref Unit unit)
 			f=FindFreeEffect();
 			effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
-			effect.TimeLeft=8+SharedRandom(6);
+			effect.TimeLeft=8+EffectRandom(6);
 			effect.Animation=4;
-			effect.Position = new WorldPosition(unit.Position.X+SharedRandom(6)-3, unit.Position.Y+SharedRandom(6)-3);
+			effect.Position = new WorldPosition(unit.Position.X+EffectRandom(6)-3, unit.Position.Y+EffectRandom(6)-3);
 			effect.SpriteNumber=10;			// ソースファイル上の番号
 			}
 		}
@@ -1345,9 +1350,9 @@ private void UpdateBurningPlane(ref Unit unit)
 				if( f!=0 )
 					{
 					effect.Layer=EffectLayer.Upper;
-					effect.TimeLeft=20+SharedRandom(20);
+					effect.TimeLeft=20+EffectRandom(20);
 					effect.Animation=4;
-					effect.Position = new WorldPosition(unit.Position.X+20-SharedRandom(40), unit.Position.Y+20-SharedRandom(40));
+					effect.Position = new WorldPosition(unit.Position.X+20-EffectRandom(40), unit.Position.Y+20-EffectRandom(40));
 					effect.SpriteNumber=9;				// ソースファイル上の番号
 					}
 				}
@@ -1357,7 +1362,7 @@ private void UpdateBurningPlane(ref Unit unit)
 			f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
-			effect.TimeLeft=20+SharedRandom(20);
+			effect.TimeLeft=20+EffectRandom(20);
 			effect.Animation=4;
 			effect.Position=unit.Position;
 			effect.SpriteNumber=9;				// ソースファイル上の番号
@@ -1378,7 +1383,7 @@ private void UpdateBurningPlane(ref Unit unit)
 			f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
-			effect.TimeLeft=40+SharedRandom(15);
+			effect.TimeLeft=40+EffectRandom(15);
 			effect.Animation=2;
 			effect.Position=unit.Position;
 			effect.SpriteNumber=6;			// ソースファイル上の番号
@@ -1390,9 +1395,9 @@ private void UpdateBurningPlane(ref Unit unit)
 			f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
-			effect.TimeLeft=8+SharedRandom(6);
+			effect.TimeLeft=8+EffectRandom(6);
 			effect.Animation=4;
-			effect.Position = new WorldPosition(unit.Position.X+SharedRandom(6)-3, unit.Position.Y+SharedRandom(6)-3);
+			effect.Position = new WorldPosition(unit.Position.X+EffectRandom(6)-3, unit.Position.Y+EffectRandom(6)-3);
 			effect.SpriteNumber=10;			// ソースファイル上の番号
 			}
 		}
@@ -1528,7 +1533,7 @@ private void LeaveWake(ref Unit unit)
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
 		effect.Layer=EffectLayer.Lower;
-		effect.TimeLeft=60+SharedRandom(60);
+		effect.TimeLeft=60+EffectRandom(60);
 		effect.Animation=4;
 		effect.Position=unit.Position;
 
@@ -1696,9 +1701,9 @@ private void UpdateSubmergedSubmarineEffects(ref Unit unit, int m)
 					if( f!=0 )
 						{
 						effect.Layer=EffectLayer.Lower;
-						effect.TimeLeft=100+SharedRandom(20);
+						effect.TimeLeft=100+EffectRandom(20);
 						effect.Animation=4;
-						effect.Position = new WorldPosition(unit.Position.X+SharedRandom(40)-20, unit.Position.Y+SharedRandom(40)-20);
+						effect.Position = new WorldPosition(unit.Position.X+EffectRandom(40)-20, unit.Position.Y+EffectRandom(40)-20);
 						effect.SpriteNumber=8;			// ソースファイル上の番号
 						}
 					}
@@ -1730,9 +1735,9 @@ private void UpdateSubmergedSubmarineEffects(ref Unit unit, int m)
 						if( f!=0)
 							{
 							effect.Layer=EffectLayer.Lower;
-							effect.TimeLeft=100+SharedRandom(20);
+							effect.TimeLeft=100+EffectRandom(20);
 							effect.Animation=4;
-							effect.Position = new WorldPosition(unit.Position.X+SharedRandom(40)-20, unit.Position.Y+SharedRandom(40)-20);
+							effect.Position = new WorldPosition(unit.Position.X+EffectRandom(40)-20, unit.Position.Y+EffectRandom(40)-20);
 							effect.SpriteNumber=8;			// ソースファイル上の番号
 							}
 						}

@@ -40,6 +40,7 @@ This document lists every difference found between the two, read from 1.22's mac
 | Ships' shooting (`fire_now`, `0x40FE7C` to `0x412BE1`) | Rapid anti-aircraft fire plays `AA_SHL3` alone, drawing nothing (`0x41019F`); depth charges leave an odd count at −1 (`0x4103B6`); a gun with no target aims closely 1 time in 5 for every kind, and its shell flies `dstc/10` ticks (`0x410A65`, `0x410BCE`); every gun draws the hundredths of its bearing, always 0, before the degrees | `AA_SHL3` or `AA_SHL5`, by a shared random number; the count stops at 0; 1 time in 9 for ground units, and one tick more; the hundredths after the degrees | `ShipFireRapidAntiAircraftShell`, `ShipDropAntiSubmarineBomb`, `ShipFireGunWithoutTarget`, `ShipFireGunAtTarget` |
 | Submarines' torpedoes | Reloaded in 2000 ticks (`0x4110DB`, `0x41176B`) | 1500 (`RELOAD_TPD_SS`) | `ShipFireTorpedoWithoutTarget`, `ShipFireTorpedoAtTarget` |
 | Fighters' targets (`fire_now`, `0x413542`) | A fighter with no target takes one within 400 whatever its kind, 1 time in 10, if found; a returning one only if it is the computer's, within 300, with ammunition and fuel for 60 (50 for Japan) | Within 400, or 650 for an attacker or a bomber; a returning fighter takes none | `FighterFireBullet` |
+| Fires (`0x418C30`) | Every bullet that hits damages its target, a transport too (`0x418F92`); the effects of the fires, and the place of a plane landed on deck, draw from `rand` (`0x419190`, `0x402CA3`) | A transport is damaged 1 time in 4; those draw from `SharedRandom`, so that network games stay in step | `UpdateBullet`, `EffectRandom` |
 
 Supply and ships outside the map together let the computer's fleets renew. In scenario 304 the American naval base (unit 21) is at x 10600, outside the map. A fleet that has lost its carrier, its ammunition or its fuel returns there ([ComputerPlayer.md](ComputerPlayer.md), `cpu_strtgy` step 9); there it supplies, which gives back its HP, ammunition and fuel, and step 12 puts a new carrier at its supplying flagship. NSPW NET's battle would turn the fleet back at the edge, and stop its supply away from a base within 280.
 
@@ -51,11 +52,11 @@ What 1.22's `chara_cont` (`0x401000`) and the functions it calls do differently 
 | Difference | 1.22 | NSPW NET |
 | --- | --- | --- |
 | `set_new_unit_plane` with no parking place left (`0x41F111`) | The place number of the previous plane added, or, for the first, whatever its stack holds | `AddPlane`: 0, or the previous plane's |
-| Effects | As the effects function (`0x41AEB0`) does them | `UpdateSurfaceShipEffects` and the others, which draw random numbers every tick |
+| Effects (`0x41AEB0`) | The same effects, drawing the same random numbers in the same order, but from `rand`; most of them (the leader's flag, the weapons' and works' marks, the smoke and the wakes) only on the tick that is drawn (`0x48A1EC`, thirteen tests from `0x41AF02` to `0x41C18D`) | From `SharedRandom`, on every tick. Single-player draws them from `rand` (`EffectRandom`); the drawn tick only matters once the frame runs 1.22's two ticks at speed 1 |
 
 Compared and the same: reloading and rearming (`0x403043` to `0x4030B6`), the damage that doubles the firing intervals (below 30% of the HP, `0x4030B6`), and the evasions of torpedoes and planes (`set_pos_of_emrgncy_SHIP`, `0x415F4F` to `0x4160FD` and `0x416501` to `0x41688B`).
 
-The rest of the battle (shooting and hits in `fire_now`, `0x40FE10`, the fires in `0x418C30`, the emergency moves of each kind) has not been read. Running a tick of the port's battle and one of 1.22's, emulated, from the same state, and comparing them, would find the remaining differences.
+Compared with `fire_now` (`0x40FE10`), the fires (`0x418C30`) and the emergency moves of every kind, beyond the rows above, and found the same: the shells, the ships' and planes' machine guns, the ships' and planes' torpedoes but the reload, the bombs, the cargo landing, and the emergency moves of planes and transports. Floating-point expressions such as `x*0.1` where the port has `x/10` can differ in their last bit; they are left as NSPW NET has them.
 
 ## The frame, the input and the drawing
 | Difference | 1.22 | NSPW NET |
