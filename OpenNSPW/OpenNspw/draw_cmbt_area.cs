@@ -661,6 +661,46 @@ private void DrawMapTiles(int cm_scrn_y, int cm_scrn_x, int map_bld_y, int map_b
 		}
 	}
 
+// A left click on unit m, that counts (CanClickUnit): it selects the unit, or the selected unit's target, or, for m 0,
+// the land at `ground` where the selected transport lands.
+private void ClickUnit(int m, WorldPosition ground)
+	{
+	MoveOrders[1].Unit=0;
+
+	if( SelectedUnit==m )
+		{
+		SelectedUnit=0; CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection2(1);
+		}
+	else
+		{
+		if( SelectedUnit==0 )
+			{
+			if( !(Units[m].Category==UnitCategory.Plane && Units[m].PlaneState==UnitState.Parked) )
+				PreviousSelectedUnit=(short)m;
+
+			set_the_slct_unit( m );
+			}
+		else if(!IsEditingMap)
+			{
+			if( m!=0  )
+				{
+				// 陸地以外、普通の場合
+				SelectOrders[1].IsSet=true;
+				SelectOrders[1].SelectedUnit=SelectedUnit;
+				SelectOrders[1].Unit=(short)m;
+				}
+			else
+				{
+				// 陸地指定
+				SelectOrders[1].IsSet=true;
+				SelectOrders[1].SelectedUnit=SelectedUnit;
+				SelectOrders[1].Unit=0;
+				SelectOrders[1].GroundPosition = ground;
+				}
+			}
+		}
+	}
+
 private void HandleUnitClick(ref Unit unit, ref RECT dstn_rect, ref int lc_lf_btn, int m, SpriteId sprite)
 	{
 	int right;
@@ -687,40 +727,7 @@ private void HandleUnitClick(ref Unit unit, ref RECT dstn_rect, ref int lc_lf_bt
 	if( lc_lf_btn==1 )
 		{
 		lc_lf_btn=0;
-		MoveOrders[1].Unit=0;
-
-		if( SelectedUnit==m )
-			{
-			SelectedUnit=0; CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None; ClearSelection2(1);
-			}
-		else
-			{
-			if( SelectedUnit==0 )
-				{
-				if( !(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked) )
-					PreviousSelectedUnit=(short)m;
-
-				set_the_slct_unit( m );
-				}
-			else if(!IsEditingMap)
-				{
-				if( m!=0  )
-					{
-					// 陸地以外、普通の場合
-					SelectOrders[1].IsSet=true;
-					SelectOrders[1].SelectedUnit=SelectedUnit;
-					SelectOrders[1].Unit=(short)m;
-					}
-				else
-					{
-					// 陸地指定
-					SelectOrders[1].IsSet=true;
-					SelectOrders[1].SelectedUnit=SelectedUnit;
-					SelectOrders[1].Unit=0;
-					SelectOrders[1].GroundPosition = new WorldPosition(CameraPosition.X+Sprites[sprite].X, CameraPosition.Y-Sprites[sprite].Y);
-					}
-				}
-			}
+		ClickUnit(m, new WorldPosition(CameraPosition.X+Sprites[sprite].X, CameraPosition.Y-Sprites[sprite].Y));
 		}
 	}
 
@@ -836,6 +843,33 @@ private void DrawTargetLine(ref Unit unit)
 		}
 	}
 
+// Whether the selected unit can be given a destination: it is the player's, it is not a parked plane that cannot take
+// off yet, and the map is not being edited.
+private bool CanSetDestination(ref Unit unit)
+	{
+	return unit.Side==LocalSide &&
+		// 発進チェック
+		!(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked
+		&& ( Units[unit.Carrier].PlanesToLaunch!=0 || Units[unit.Carrier].LaunchLock!=0 || unit.ReloadTime>0 || Units[unit.Carrier].IsSupplying ))
+		&& !IsEditingMap;
+	}
+
+// A left click on the battlefield, that gives the selected unit (CanSetDestination) a destination.
+private void SetDestination(WorldPosition destination)
+	{
+	MoveOrders[1].Unit=SelectedUnit;
+	MoveOrders[1].Destination = destination;
+	}
+
+// A right click while unit m is selected: nothing is selected any more.
+private void CancelSelection(int m)
+	{
+	SelectedUnit=0; Selections[1][m]=0;	CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None;
+	ClearSelection2(1);
+
+	BufferedMoveOrders[1].ClearsPath=0;
+	}
+
 private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int lc_lf_btn, ref int lc_ri_btn, int m)
 	{
 	int n;
@@ -886,14 +920,9 @@ private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int lc_lf
 		}
 
 	// 定点設定
-	if( lc_lf_btn==1 && unit.Side==LocalSide && CursorPosition.x < CMBT_WIDTH &&
-		// 発進チェック
-		!(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked
-		&& ( Units[unit.Carrier].PlanesToLaunch!=0 || Units[unit.Carrier].LaunchLock!=0 || unit.ReloadTime>0 || Units[unit.Carrier].IsSupplying ))
-		&& !IsEditingMap )
+	if( lc_lf_btn==1 && CursorPosition.x < CMBT_WIDTH && CanSetDestination(ref unit) )
 		{
-		MoveOrders[1].Unit=SelectedUnit;
-		MoveOrders[1].Destination = new WorldPosition(CursorPosition.x+CameraPosition.X, CameraPosition.Y-CursorPosition.y);
+		SetDestination(new WorldPosition(CursorPosition.x+CameraPosition.X, CameraPosition.Y-CursorPosition.y));
 		}
 
 	if( 1!=0 )
@@ -901,12 +930,27 @@ private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int lc_lf
 		if( lc_ri_btn==1 )
 			{
 			lc_ri_btn=0;
-			SelectedUnit=0; Selections[1][m]=0;	CombatMenuKind=0; CombatMenuSelection=CombatMenuItem.None;
-			ClearSelection2(1);
-
-			BufferedMoveOrders[1].ClearsPath=0;
+			CancelSelection(m);
 			}
 		}
+	}
+
+// Whether a parked plane is shown, on the flight deck or in the hangar of the carrier or the air base whose information
+// the sidebar shows, as the view is switched (UnitInfoPanel[1]).
+private bool IsOnShownDeck(ref Unit unit)
+	{
+	return unit.Carrier==UnitInfoPanel[3] &&  ((UnitKind)UnitInfoPanel[0]==UnitKind.Carrier || (UnitKind)UnitInfoPanel[0]==UnitKind.LightCarrier || (UnitKind)UnitInfoPanel[0]==UnitKind.AirBase )
+		&& ( ( (unit.Mode<=UnitMode.Slow)  && (UnitInfoPanel[1]==1&&unit.DeckPhase<=2)||(UnitInfoPanel[1]==0&&unit.DeckPhase>=3))
+		 || (unit.Mode==UnitMode.Return && (UnitInfoPanel[1]==0) ) );
+	}
+
+// Whether a left click on the unit counts, as it and the selected unit are: the conditions of DrawUnitMarks's click
+// that are not about where the cursor is. The unit is Units[0] for the land, where the selected transport lands.
+private bool CanClickUnit(ref Unit unit)
+	{
+	return !( Units[SelectedUnit].Category==UnitCategory.Plane && unit.Category==UnitCategory.Ship && !(unit.Kind==UnitKind.Carrier || unit.Kind==UnitKind.LightCarrier || unit.Kind==UnitKind.AirBase || Units[SelectedUnit].Side!=unit.Side) ) && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying )  && !( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked && !unit.IsStopping ) && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked && !Units[SelectedUnit].IsStopping ) && !( Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked && unit.Category==UnitCategory.Ship )
+		&& !(Units[SelectedUnit].Category==UnitCategory.Ship && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked)  && !(SelectedUnit!=0 && Units[SelectedUnit].Side!=LocalSide) && !(SelectedUnit!=0 && Units[SelectedUnit].Category==UnitCategory.Plane&&unit.Weapon==FireKind.Maintenance)
+		 && !(unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.IsSubmerged);
 	}
 
 private bool DrawUnitMarks(bool goto_dca1, ref Unit unit, SpriteId sprite, ref int lc_lf_btn, int m, ref int lc_ri_btn)
@@ -927,17 +971,11 @@ private bool DrawUnitMarks(bool goto_dca1, ref Unit unit, SpriteId sprite, ref i
 	if( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked )
 		{
 
-		if( unit.Carrier==UnitInfoPanel[3] &&  ((UnitKind)UnitInfoPanel[0]==UnitKind.Carrier || (UnitKind)UnitInfoPanel[0]==UnitKind.LightCarrier || (UnitKind)UnitInfoPanel[0]==UnitKind.AirBase ) )
+		if( IsOnShownDeck(ref unit) )
 			{
-			if( ( (unit.Mode<=UnitMode.Slow)  && (UnitInfoPanel[1]==1&&unit.DeckPhase<=2)||(UnitInfoPanel[1]==0&&unit.DeckPhase>=3))
-			 || (unit.Mode==UnitMode.Return && (UnitInfoPanel[1]==0) ) )
-				{
-				// 空母で飛行甲板か格納庫かで航空機を表示するかしない。
-				Sprites[sprite].X=(int)unit.Position.X;
-				Sprites[sprite].Y=(int)unit.Position.Y;
-				}
-			else
-				return false;
+			// 空母で飛行甲板か格納庫かで航空機を表示するかしない。
+			Sprites[sprite].X=(int)unit.Position.X;
+			Sprites[sprite].Y=(int)unit.Position.Y;
 			}
 		else
 			return false;
@@ -972,10 +1010,8 @@ private bool DrawUnitMarks(bool goto_dca1, ref Unit unit, SpriteId sprite, ref i
 	wrk_rect.bottom=dstn_rect.bottom-20;
 
 	// クリック選択・非選択
-	if( PointInRect(ref wrk_rect,CursorPosition.x,CursorPosition.y)!=0 && !( Units[SelectedUnit].Category==UnitCategory.Plane && unit.Category==UnitCategory.Ship && !(unit.Kind==UnitKind.Carrier || unit.Kind==UnitKind.LightCarrier || unit.Kind==UnitKind.AirBase || Units[SelectedUnit].Side!=unit.Side) ) && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying )  && !( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked && !unit.IsStopping ) && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked && !Units[SelectedUnit].IsStopping ) && !( Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked && unit.Category==UnitCategory.Ship )
-		&& !(Units[SelectedUnit].Category==UnitCategory.Ship && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked)  && !(SelectedUnit!=0 && Units[SelectedUnit].Side!=LocalSide) && !(SelectedUnit!=0 && Units[SelectedUnit].Category==UnitCategory.Plane&&unit.Weapon==FireKind.Maintenance)
+	if( PointInRect(ref wrk_rect,CursorPosition.x,CursorPosition.y)!=0 && CanClickUnit(ref unit)
 		 && !(unit.PlaneState!=UnitState.Parked && CursorPosition.x>=CMBT_WIDTH-1)
-		 && !(unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.IsSubmerged)
 		)
 		{
 		HandleUnitClick(ref unit, ref dstn_rect, ref lc_lf_btn, m, sprite);
@@ -1161,6 +1197,41 @@ private void DrawUnit(ref Unit unit, SpriteId sprite, ref RECT src_rect, ref REC
 		}
 	}
 
+// Whether the selected transport can land on the land at point (x, y) of the battlefield; if so, the landing mark (the
+// sprite's position) is put on the land's tile.
+private bool AimLanding(SpriteId sprite, int x, int y)
+	{
+	int map_bld_x;
+	int map_bld_y;
+	// カーソルの示す、マップチップの場所
+	map_bld_x=(int)(((x+40+(int)CameraPosition.X)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
+	map_bld_y=(int)((MAP_TOP-((int)CameraPosition.Y-y-40 ))/Sprites[SpriteId.MapTiles].Height);
+	if(
+		MapTiles[map_bld_y][map_bld_x]==9 ||
+		MapTiles[map_bld_y][map_bld_x]==8 ||
+		MapTiles[map_bld_y][map_bld_x]==7 ||
+		MapTiles[map_bld_y][map_bld_x]==5 ||
+		MapTiles[map_bld_y][map_bld_x]==2
+		)
+		{
+		Sprites[sprite].X=(((x+40+(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Width)/80)*80)-(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Width;
+		Sprites[sprite].Y=(((y+40+(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Height)/80)*80)-(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Height;
+		return true;
+		}
+
+	return false;
+	}
+
+// A right click that no selected unit took: the unit selected before is selected again, if nothing is selected and it
+// is still there.
+private void RestoreSelection()
+	{
+	if( SelectedUnit==0 && PreviousSelectedUnit!=0 && Units[PreviousSelectedUnit].IsUsed)
+		{
+		set_the_slct_unit( PreviousSelectedUnit );
+		}
+	}
+
 //============================================================================
 //コンバットエリア描画 同時にユーザー(通信対戦時はホスト)入力を受け付けます
 //----------------------------------------------------------------------------
@@ -1228,6 +1299,11 @@ public void	DrawBattleArea()
 	if( lc_ri_btn==1 || lc_lf_btn==1 )
 		PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
 
+	// The host's UI's commands for clicks on the battlefield (UICommands.cs): taken here, as the clicks are, and dropped
+	// as they are while an order waits for its turn; the units brushed are clicked, one a frame.
+	RunUICommands(UICommandSite.Battlefield, !(HasOrdered && Result==GameResult.None));
+	RunBrushedUnits(!(HasOrdered && Result==GameResult.None));
+
 	for( m=0; m<=MaxUnitId; m++)
 		{
 		ref var unit = ref Units[m];
@@ -1256,20 +1332,8 @@ public void	DrawBattleArea()
 		if (  m==0 && SelectedUnit!=0 && Units[SelectedUnit].Kind==UnitKind.Transport && m!=SelectedUnit)
 			{
 			// カーソルのある場所が
-			// カーソルの示す、マップチップの場所
-			map_bld_x=(int)(((CursorPosition.x+40+(int)CameraPosition.X)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
-			map_bld_y=(int)((MAP_TOP-((int)CameraPosition.Y-CursorPosition.y-40 ))/Sprites[SpriteId.MapTiles].Height);
-			if(
-				MapTiles[map_bld_y][map_bld_x]==9 ||
-				MapTiles[map_bld_y][map_bld_x]==8 ||
-				MapTiles[map_bld_y][map_bld_x]==7 ||
-				MapTiles[map_bld_y][map_bld_x]==5 ||
-				MapTiles[map_bld_y][map_bld_x]==2
-				)
+			if( AimLanding(sprite, CursorPosition.x, CursorPosition.y) )
 				{
-				Sprites[sprite].X=(((CursorPosition.x+40+(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Width)/80)*80)-(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Width;
-				Sprites[sprite].Y=(((CursorPosition.y+40+(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Height)/80)*80)-(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Height;
-
 				goto_dca1=true;
 				}
 			}
@@ -1283,10 +1347,7 @@ public void	DrawBattleArea()
 
 	if( lc_ri_btn==1 )
 		{
-		if( SelectedUnit==0 && PreviousSelectedUnit!=0 && Units[PreviousSelectedUnit].IsUsed)
-			{
-			set_the_slct_unit( PreviousSelectedUnit );
-			}
+		RestoreSelection();
 		}
 
 	// アッパーエフェクト

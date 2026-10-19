@@ -68,6 +68,18 @@ public class Control : IDisposable, IBindableComponent
 				Owner.OnControlRemoved(new ControlEventArgs(value));
 			}
 		}
+
+		/// <summary>
+		/// Moves a child to an index in the z-order, where 0 is the front: the child drawn last, over the others, and the
+		/// first to take the mouse. An index out of the collection moves it to the back.
+		/// </summary>
+		public virtual void SetChildIndex(Control child, int newIndex)
+		{
+			if (!InnerList.Remove(child))
+				throw new ArgumentException("Not a child of the control.", nameof(child));
+
+			InnerList.Insert(newIndex < 0 || newIndex > InnerList.Count ? InnerList.Count : newIndex, child);
+		}
 	}
 
 	[Flags]
@@ -133,6 +145,7 @@ public class Control : IDisposable, IBindableComponent
 	public event EventHandler? MouseLeave;
 	public event EventHandler<MouseEventArgs>? MouseMove;
 	public event EventHandler<MouseEventArgs>? MouseUp;
+	public event EventHandler<MouseEventArgs>? MouseWheel;
 	public event EventHandler<PaintEventArgs>? Paint;
 	public event EventHandler<PaintEventArgs>? PaintBackground;
 	public event EventHandler? ParentChanged;
@@ -281,6 +294,11 @@ public class Control : IDisposable, IBindableComponent
 			}
 		}
 	}
+
+	/// <summary>
+	/// Brings the control to the front of its parent's z-order, over its siblings.
+	/// </summary>
+	public void BringToFront() => _parent?.Controls.SetChildIndex(this, 0);
 
 	private Point ScreenLocation => (Parent?.ScreenLocation ?? Point.Empty) + (Size)Location;
 	private Rectangle ScreenRectangle => new Rectangle(ScreenLocation, Size);
@@ -613,6 +631,28 @@ public class Control : IDisposable, IBindableComponent
 		return null;
 	}
 
+	// The wheel turns for the control under the mouse, as it does in Windows 10 and later.
+	internal Control? HandleMouseWheel(MouseEventArgs e)
+	{
+		if (!IsVisible() || !IsEnabled())
+			return null;
+
+		foreach (var c in Controls)
+		{
+			var handler = c.HandleMouseWheel(e);
+			if (handler is not null)
+				return handler;
+		}
+
+		if (ClipRectangle.Contains(e.Location))
+		{
+			OnMouseWheel(new MouseEventArgs(e.Button, e.Clicks, PointToClient(e.Location), e.Delta));
+			return this;
+		}
+
+		return null;
+	}
+
 	public void Hide() => Visible = false;
 
 	protected virtual void OnBindingContextChanged(EventArgs e)
@@ -702,6 +742,8 @@ public class Control : IDisposable, IBindableComponent
 
 	protected virtual void OnMouseUp(MouseEventArgs e) => MouseUp?.Invoke(this, e);
 
+	protected virtual void OnMouseWheel(MouseEventArgs e) => MouseWheel?.Invoke(this, e);
+
 	protected virtual void OnPaint(PaintEventArgs e) => Paint?.Invoke(this, e);
 
 	protected virtual void OnPaintBackground(PaintEventArgs e)
@@ -763,11 +805,15 @@ public class Control : IDisposable, IBindableComponent
 
 	protected virtual void SetVisibleCore(bool value)
 	{
-		if (value == Visible)
+		// The control's own visibility, which a hidden parent does not change: hiding a control while its parent is
+		// hidden keeps it hidden once the parent is shown.
+		if (value == DesiredVisibility)
 			return;
 
+		var wasVisible = Visible;
 		SetState(States.Visible, value);
-		OnVisibleChanged(EventArgs.Empty);
+		if (Visible != wasVisible)
+			OnVisibleChanged(EventArgs.Empty);
 	}
 
 	public void Show() => Visible = true;

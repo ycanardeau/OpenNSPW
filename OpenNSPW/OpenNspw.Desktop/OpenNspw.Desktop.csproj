@@ -13,6 +13,8 @@
   <ItemGroup>
     <!-- The window's icon: MonoGame loads it from the resource Icon.bmp, nspw_icon.ICO converted to a 32-bit bitmap. -->
     <EmbeddedResource Include="Icon.bmp" LogicalName="Icon.bmp" />
+    <!-- The app's font and its license (BundledFonts), beside the app. -->
+    <None Include="Fonts\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

@@ -121,6 +121,8 @@ dotnet run --project OpenNSPW/OpenNspw.Desktop -- --singleplayer 3
 
 The scenario is one of 1, 2, ..., 10, 100, ..., 109, 200, ..., 209, 300, ..., 306. The executable is `Original/Nspw122/NSPW_122.exe`, or the file given with `--exe`. The graphics, sounds and maps are NSPW NET's.
 
+NSPW NET's debug keys (`DBG_MODE`) work as in a network game, but three are held back from a single-player game in a Release build (`GameSession`): F5, which swaps the side the player plays and would hand the player the computer's fleet; F6, which starts the scenario again; and F9, which sinks the selected unit.
+
 ## Tests
 - `EmulatorTests`: every scenario setup runs on the executable alone and places units of both sides.
 - `SingleplayerTests`: whole games, stepped as the characterization tests step them. In scenarios 3 and 4, the computer gives move orders to its own ships, which move, and the time limit counts down. Every scenario plays 3000 frames without failing. A battle is saved as `singleplayer_battle.png` next to the test assembly.

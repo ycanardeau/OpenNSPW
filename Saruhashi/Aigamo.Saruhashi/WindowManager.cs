@@ -44,6 +44,8 @@ public sealed class WindowManager
 			OnMouseMove(new MouseEventArgs(MouseButtons.None, e.Clicks, e.Location, e.Delta));
 	}
 
+	public void OnMouseWheel(MouseEventArgs e) => Root.HandleMouseWheel(e);
+
 	public void Draw()
 	{
 		Root.Draw();

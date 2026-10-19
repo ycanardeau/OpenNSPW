@@ -6,7 +6,7 @@ using OpenNspw.DirectPlay;
 namespace OpenNspw.Desktop;
 
 // A sound of the game, as a MonoGame sound effect. DirectSound's volume is in hundredths of a decibel.
-internal sealed class Sound(SoundEffect effect) : ISound
+internal sealed class Sound(SoundEffect effect) : ISound, IDisposable
 {
 	private readonly SoundEffect _effect = effect;
 	private readonly SoundEffectInstance _instance = effect.CreateInstance();
@@ -34,15 +34,22 @@ internal sealed class Sound(SoundEffect effect) : ISound
 	{
 		_instance.Stop();
 	}
+
+	public void Dispose()
+	{
+		_instance.Dispose();
+		_effect.Dispose();
+	}
 }
 
 // The platform of the desktop app: the game's files in its data directory, DirectPlay 8 on Otsuki, MonoGame sound,
 // text rasterized with a TrueType font, and settings in a JSON file.
-internal sealed class DesktopPlatform(string dataDirectory) : INspwPlatform
+internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text) : INspwPlatform
 {
 	private readonly string _dataDirectory = dataDirectory;
 	private readonly DirectPlay8Factory _directPlay = new();
-	private readonly TextRasterizer _text = new();
+	private readonly TextRasterizer _text = text;
+	private readonly List<Sound> _sounds = [];
 	private readonly Stopwatch _clock = Stopwatch.StartNew();
 	private readonly Lock _frameLock = new();
 	private readonly string _settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpenNSPW", "settings.json");
@@ -54,12 +61,15 @@ internal sealed class DesktopPlatform(string dataDirectory) : INspwPlatform
 	// Incremented for each frame the game shows.
 	public int FrameNumber { get; private set; }
 
-	public byte[]? FontData => _text.FontData;
+	// Copies what goes with a frame, such as the game's state for the UI: called on the game's thread as it shows each
+	// frame, under the frame's lock.
+	public Action? CaptureState { get; set; }
 
 	public List<string> Messages { get; } = [];
 
-	// Copies the last frame, if it changed since `known`. Returns its number.
-	public int CopyFrame(int known, ref ushort[] pixels, out int width, out int height)
+	// Copies the last frame, if it changed since `known`, and calls `takeState` with the frame's lock held, to take what
+	// CaptureState copied with it. Returns its number.
+	public int CopyFrame(int known, ref ushort[] pixels, out int width, out int height, Action takeState)
 	{
 		lock (_frameLock)
 		{
@@ -67,6 +77,7 @@ internal sealed class DesktopPlatform(string dataDirectory) : INspwPlatform
 			height = _frameHeight;
 			if (known != FrameNumber)
 			{
+				takeState();
 				if (pixels.Length != _frame.Length)
 				{
 					pixels = new ushort[_frame.Length];
@@ -143,6 +154,7 @@ internal sealed class DesktopPlatform(string dataDirectory) : INspwPlatform
 			primary.Pixels.CopyTo(_frame);
 			_frameWidth = primary.Width;
 			_frameHeight = primary.Height;
+			CaptureState?.Invoke();
 			FrameNumber++;
 		}
 	}
@@ -176,13 +188,35 @@ internal sealed class DesktopPlatform(string dataDirectory) : INspwPlatform
 			pcm = data[..(data.Length & ~1)].ToArray();
 		}
 
+		Sound sound;
 		try
 		{
-			return new Sound(new SoundEffect(pcm, (int)format.nSamplesPerSec, format.nChannels == 2 ? AudioChannels.Stereo : AudioChannels.Mono));
+			sound = new Sound(new SoundEffect(pcm, (int)format.nSamplesPerSec, format.nChannels == 2 ? AudioChannels.Stereo : AudioChannels.Mono));
 		}
 		catch (Exception)
 		{
 			return null;
+		}
+
+		lock (_sounds)
+		{
+			_sounds.Add(sound);
+		}
+
+		return sound;
+	}
+
+	// Stops and frees the game's sounds, once it has ended.
+	public void StopSounds()
+	{
+		lock (_sounds)
+		{
+			foreach (var sound in _sounds)
+			{
+				sound.Dispose();
+			}
+
+			_sounds.Clear();
 		}
 	}
 
