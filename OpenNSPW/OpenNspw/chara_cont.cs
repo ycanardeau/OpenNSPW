@@ -1901,7 +1901,8 @@ public void	UpdateBattle()
 
 			//=========		 ユニットの攻撃制御		=========//
 			// ターゲットがアウトならターゲットをクリア
-			if( unit.Target!=0 && ( ( Units[unit.Target].Category==UnitCategory.Plane && ( Units[unit.Target].Hp<=0|| Units[unit.Target].PlaneState==UnitState.Parked )   ) || ( Units[unit.Target].Category==UnitCategory.Ship && Units[unit.Target].Hp<=0 ) || (unit.Kind==UnitKind.Fighter && unit.Ammo<=0) || (Units[unit.Target].Kind==UnitKind.Submarine && Units[unit.Target].IsSubmerged ) || ( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked ) ))
+			// 1.22 keeps a submerged submarine as a target, and a parked plane's target (0x402FD2).
+			if( unit.Target!=0 && ( ( Units[unit.Target].Category==UnitCategory.Plane && ( Units[unit.Target].Hp<=0|| Units[unit.Target].PlaneState==UnitState.Parked )   ) || ( Units[unit.Target].Category==UnitCategory.Ship && Units[unit.Target].Hp<=0 ) || (unit.Kind==UnitKind.Fighter && unit.Ammo<=0) || (!IsSingleplayer && ( (Units[unit.Target].Kind==UnitKind.Submarine && Units[unit.Target].IsSubmerged ) || ( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked ) )) ))
 				{
 				unit.Target=0;
 				}
