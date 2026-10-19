@@ -440,6 +440,30 @@ public class SingleplayerTests
 		Assert.Equal(attacks ? target : 0, game.Units[fighter].Target);
 	}
 
+	// A torpedo plane can be sent against any ground unit but an air base or a naval base, as in 1.22, which refuses
+	// those two only; it still drops no torpedo on any of them.
+	[Theory]
+	[InlineData(UnitKind.InfantryBase, true)]
+	[InlineData(UnitKind.Fortress, true)]
+	[InlineData(UnitKind.AirBase, false)]
+	[InlineData(UnitKind.NavalBase, false)]
+	public void TorpedoPlanesAreOrderedAgainstGroundUnitsButBases(UnitKind kind, bool attacks)
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var attacker = game.AddUnit(game.LocalSide, UnitKind.Attacker, 0, 0, 0);
+		var target = game.AddUnit(game.CpuSide, kind, 100, 0, 0);
+		Assert.NotEqual(0, attacker);
+		Assert.NotEqual(0, target);
+		game.Units[attacker].Weapon = FireKind.Torpedo;
+		game.SelectOrders[0] = new SelectOrder { IsSet = true, SelectedUnit = (short)attacker, Unit = (short)target };
+
+		game.ApplyOrders();
+
+		Assert.Equal(attacks ? target : 0, game.Units[attacker].Target);
+	}
+
 	// A battle as the desktop app shows it, in real time, saved as singleplayer_battle.png next to the test assembly.
 	[Fact]
 	public void TheBattleShows()

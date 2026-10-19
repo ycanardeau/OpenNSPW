@@ -606,10 +606,11 @@ public void	ApplyOrders()
 				else
 					{
 					// 敵性ユニットを左クリック
-					// NSPW NET lets fighters attack transports; 1.22, no ship (0x430618, 0x430679).
+					// NSPW NET lets fighters attack transports; 1.22, no ship (0x430618, 0x430679). NSPW NET sends no torpedo
+					// against a ground unit; 1.22, against an air base or a naval base only (0x4305F9).
 					if( m!=Units[SelectedUnit].Target )
 						{
-						if(!(Units[SelectedUnit].Weapon==FireKind.Torpedo && ( Units[m].Kind>=UnitKind.AirBase && Units[m].Kind<=UnitKind.Fortress )) &&
+						if(!(Units[SelectedUnit].Weapon==FireKind.Torpedo && ( Units[m].Kind>=UnitKind.AirBase && Units[m].Kind<=(IsSingleplayer ? UnitKind.NavalBase : UnitKind.Fortress) )) &&
 							!((Units[SelectedUnit].Kind==UnitKind.Fighter && ( Units[m].Category==UnitCategory.Ship && ( Units[m].Kind!=UnitKind.Transport || IsSingleplayer ) ))||(Units[SelectedUnit].Kind>=UnitKind.InfantryBase&&Units[SelectedUnit].Kind<=UnitKind.Fortress)||(Units[SelectedUnit].Kind==UnitKind.Transport) )
 							)
 							{

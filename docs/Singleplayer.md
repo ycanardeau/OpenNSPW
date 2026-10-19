@@ -122,6 +122,7 @@ So in a single-player game (`IsSingleplayer`):
 - `UpdateCargo` completes the base a transport lands at once, with its full HP, as 1.22 does (`0x418E23`), where NSPW NET builds it over 8000 to 20000 ticks from a quarter of its HP.
 - `AttackerDropBomb` releases every attacker's bombs from 170 to 180 of its aim, as 1.22 does (`0x414186`): NSPW NET's Japanese attackers dive to 35 to 65 instead.
 - `FighterFireBullet` shoots no transport, `ApplyOrders` sends no fighter to attack one, and `SetShipEmergencyDestination` does not turn a transport away from fighters, as 1.22 does (`0x4133B2`, `0x430618`, `0x41650D`): its fighters fight planes only.
+- `ApplyOrders` sends a torpedo plane against any ground unit but an air base or a naval base, as 1.22 does (`0x4305F9`), where NSPW NET refuses them all; neither drops a torpedo on one.
 - `CheckResult` calls `decision`, which also shows the result, instead of NSPW NET's conditions.
 
 ## Playing
