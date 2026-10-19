@@ -128,6 +128,7 @@ So in a single-player game (`IsSingleplayer`):
 - `Detect`, `GetDetectionSize` and `DetectSubmarines` find units as 1.22 does (`0x418230`, `0x418080`, `0x417EA0`): with its ranges, the player's supplying units looking out, submarines diving at any unit found, and the computer's destroyers that chase a submarine stopping when it is found. The ranges at which effects show and sounds play are still NSPW NET's.
 - `CheckCourseAhead` looks 40 ahead with only air bases and naval bases out of the way, and `ReplanBlockedRoute` replans the computer's units that a ship or land blocks, as 1.22 does with `set_cpu_route(m, 1.0)` (`0x401F95` to `0x4023EB`, `0x402D2B`), where NSPW NET's steering stops them.
 - `UpdateParkedPlane` clears the launch lock of the base a plane has landed on, whatever other planes land, as 1.22 does (`0x4018F1`).
+- `UpdateBattle` plays no sonar, which 1.22 does not have.
 - `CheckResult` calls `decision`, which also shows the result, instead of NSPW NET's conditions.
 
 ## Playing

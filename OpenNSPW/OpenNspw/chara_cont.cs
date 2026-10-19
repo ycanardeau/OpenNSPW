@@ -2063,7 +2063,8 @@ public void	UpdateBattle()
 					}
 				}
 
-			if( !IsEditingMap && dstc<=400 )
+			// 1.22 has no sonar.
+			if( !IsEditingMap && dstc<=400 && !IsSingleplayer )
 				{
 				if( (SharedRandom(3+(int)(dstc/5)))==0  )
 				PlaySoundEffect( 0, SoundId.Sonar ,unit.Position.X, unit.Position.Y);
