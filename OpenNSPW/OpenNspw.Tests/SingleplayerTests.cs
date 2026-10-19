@@ -547,6 +547,39 @@ public class SingleplayerTests
 		Assert.Equal(navalBase, game.Units[attacker].Carrier);
 	}
 
+	// A moving unit burns its fuel 1 at a time, as 1.22 does with its integer gas[0], whatever its speed.
+	[Fact]
+	public void FuelBurnsOneAtATime()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var m = 0;
+		for (var i = 1; i <= game.MaxUnitId && m == 0; i++)
+		{
+			ref var unit = ref game.Units[i];
+			if (unit.IsUsed && unit.Category == UnitCategory.Ship && unit.Kind <= UnitKind.LightCarrier && unit.FuelInterval >= 1)
+			{
+				m = i;
+			}
+		}
+
+		Assert.NotEqual(0, m);
+		ref var ship = ref game.Units[m];
+		var fuel = ship.Fuel;
+		var interval = (int)ship.FuelInterval;
+		while (game.Tick % interval != interval - 1)
+		{
+			run.Frames(1);
+		}
+
+		fuel = game.Units[m].Fuel;
+		game.Units[m].Speed = game.Units[m].MaxSpeed / 2;
+		run.Frames(1);
+
+		Assert.Equal(fuel - 1, game.Units[m].Fuel);
+	}
+
 	// A fighter shoots the flying plane it attacks, but not a transport, as in 1.22.
 	[Theory]
 	[InlineData(UnitKind.Attacker, true)]

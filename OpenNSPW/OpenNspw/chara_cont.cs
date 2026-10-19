@@ -1491,9 +1491,11 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 	if( unit.Kind==UnitKind.Fighter && unit.Target!=0 && unit.MaxSpeed < unit.Speed )
 		n=n-(n/10);
 
+	// 1.22's fuel is an integer, which a moving unit burns 1 at a time (0x402F72); NSPW NET burns its speed's share of
+	// its top speed.
 	if( unit.FuelInterval>=1 && (Tick%n)==0 && unit.Fuel>0 && unit.Speed>0)
 		{
-		unit.Fuel-=(unit.Speed/unit.MaxSpeed);
+		unit.Fuel-=( IsSingleplayer ? 1 : unit.Speed/unit.MaxSpeed );
 		if(unit.Fuel<0)
 			unit.Fuel=0;
 		}
