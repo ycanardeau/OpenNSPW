@@ -402,10 +402,11 @@ public unsafe partial class Nspw
 		ClearBufferedOrders();
 	}
 
-	// set_cpu_route(m, 4.0): the route of the computer's ship m to the destination just set as its path.
-	public void SetCpuRoute(int m)
+	// set_cpu_route(m, radius): the route of the computer's ship m to the destination just set as its path; the orders
+	// pass 4.0, the battle 1.0 when the ship is blocked.
+	public void SetCpuRoute(int m, double radius)
 	{
-		var radius = BitConverter.DoubleToUInt64Bits(4.0);
-		RunEmulated(Functions.SetCpuRoute, (uint)m, (uint)radius, (uint)(radius >> 32));
+		var bits = BitConverter.DoubleToUInt64Bits(radius);
+		RunEmulated(Functions.SetCpuRoute, (uint)m, (uint)bits, (uint)(bits >> 32));
 	}
 }

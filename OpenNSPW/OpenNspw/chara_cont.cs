@@ -1161,8 +1161,101 @@ private void SetAcceleration(ref Unit unit, double pp_drctn, int land)
 		}
 	}
 
+// 1.22 replans the route of the computer's unit m that is blocked, with no leader, to the end of its path
+// (set_cpu_route(m, 1.0)): from the last point of the path, or, with a single point, from where the ship is if that
+// point is within ahead, the ship in its way (0x402147, 0x402348).
+private void ReplanBlockedRoute(ref Unit unit, int m, RECT? ahead)
+	{
+	int i;
+	for( i=1; i<=63 && unit.PathX[i]!=MAP_RIGHT+1; i++ )
+		{
+		}
+
+	if( i>=2 )
+		{
+		unit.PathX[0]=unit.PathX[i-1];
+		unit.PathY[0]=unit.PathY[i-1];
+		unit.PathX[1]=MAP_RIGHT+1;
+		}
+	else if( ahead is { } r && PointInRect3(ref r,(int)unit.PathX[0],(int)unit.PathY[0])!=0 )
+		{
+		unit.PathX[0]=unit.Position.X;
+		unit.PathY[0]=unit.Position.Y;
+		unit.PathX[1]=MAP_RIGHT+1;
+		}
+
+	SetCpuRoute(m, 1.0);
+	}
+
+// 1.22's ship looks 40 ahead, and only air bases and naval bases are not in its way (0x401F95 to 0x4023EB). A
+// computer's ship with no leader is replanned when a ship in its way has slowed it to a fifth of its top speed, every
+// 100 ticks, or when the point 80 toward its path is land, unless it is on an emergency move.
+private void CheckCourseAheadAs122(ref Unit unit, int m, ref int land, double pp_drctn)
+	{
+	double wrk_x2;
+	double wrk_y2;
+	int n;
+	RECT wrk_r;
+	int cm_scrn_x;
+	int cm_scrn_y;
+	var replans = unit.Side==CpuSide && unit.GroupLeader==0;
+	wrk_x2=unit.Position.X+CosDegrees(unit.Direction)*40;
+	wrk_y2=unit.Position.Y+SinDegrees(unit.Direction)*40;
+	if(  !( unit.Kind==UnitKind.Submarine && unit.IsSubmerged ) )
+		{
+		for( n=1; n<=MaxUnitId; n++)
+			{
+			ref var other = ref Units[n];
+			if(other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged) && other.Kind!=UnitKind.NavalBase && other.Kind!=UnitKind.AirBase )
+				{
+				wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].Height/2);
+				wrk_r.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].Width/2);
+				wrk_r.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].Height/2);
+				wrk_r.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].Width/2);
+
+				if( PointInRect3(ref wrk_r,(int)wrk_x2,(int)wrk_y2)!=0)
+					{
+					// 前方に艦船！
+					unit.EmergencyFlags[0]=0;
+					land=1;
+					if( replans && (Tick+m)%100==0 && unit.Speed<=unit.MaxSpeed*0.2 )
+						ReplanBlockedRoute(ref unit, m, wrk_r);
+					return;
+					}
+				}
+			}
+		}
+
+	// ＰＰ方向に陸地があるか
+	wrk_x2=unit.Position.X+CosDegrees(pp_drctn)*80;
+	wrk_y2=unit.Position.Y+SinDegrees(pp_drctn)*80;
+	if(!( wrk_y2>MAP_TOP || wrk_y2<MAP_BOTTOM || wrk_x2<MAP_LEFT || wrk_x2>MAP_RIGHT ))
+		{
+		cm_scrn_x=(int)((wrk_x2+(Sprites[SpriteId.JapanUnits].Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
+		cm_scrn_y=(int)((MAP_TOP-wrk_y2+(Sprites[SpriteId.JapanUnits].Height/2))/Sprites[SpriteId.MapTiles].Height);
+		if( MapTiles[cm_scrn_y][cm_scrn_x]>=1 && MapTiles[cm_scrn_y][cm_scrn_x]<=9 )
+			{
+			land=1;
+			if( replans && unit.EmergencyFlags[0]==0 )
+				ReplanBlockedRoute(ref unit, m, null);
+			}
+		}
+
+	if( unit.EmergencyFlags[0]!=0 && land!=0)
+		{
+		// 緊急移動の取り消し
+		unit.EmergencyFlags[0]=0;
+		}
+	}
+
 private void CheckCourseAhead(ref Unit unit, int m, ref int land, double pp_drctn)
 	{
+	if( IsSingleplayer )
+		{
+		CheckCourseAheadAs122(ref unit, m, ref land, pp_drctn);
+		return;
+		}
+
 	double wrk_x2;
 	double wrk_y2;
 	int n;
@@ -1380,6 +1473,11 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 		{
 		TryLandOnCarrier(ref unit, m);
 		}
+
+	// 1.22 replans the computer's unit with no leader whose next step is land, every 500 ticks, planes included
+	// (0x402D2B).
+	if( IsSingleplayer && unit.Side==CpuSide && unit.GroupLeader==0 && (Tick%500)==0 && IsLandAt(unit.Position.X+CosDegrees(unit.Direction)*unit.Speed, unit.Position.Y+SinDegrees(unit.Direction)*unit.Speed) )
+		ReplanBlockedRoute(ref unit, m, null);
 
 	// 新座標を設定
 	unit.Position += new WorldVector(CosDegrees(unit.Direction)*unit.Speed, SinDegrees(unit.Direction)*unit.Speed);
