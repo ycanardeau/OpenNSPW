@@ -3192,7 +3192,10 @@ public void	SetShipEmergencyDestination(int m)
 
 		}
 
-	ReturnIntoWorld(m);
+	// 1.22 brings only the player's ships back into the map (0x416B35): the computer's leave it, to its naval bases
+	// outside, such as scenario 304's.
+	if( !(IsSingleplayer && unit.Side==CpuSide) )
+		ReturnIntoWorld(m);
 
 	}
 }

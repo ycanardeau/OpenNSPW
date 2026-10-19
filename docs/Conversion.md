@@ -58,5 +58,5 @@ What it does not cover: the translation could still differ from the machine code
 ## Known bugs
 | Bug | Cause |
 | --- | --- |
-| The computer's fleets cannot renew in scenario 304, and its ships stop at land until their next order | NSPW NET's battle ([Differences.md](Differences.md#the-battle)) |
+| The computer's ships stop at land until their next order | NSPW NET's battle ([Differences.md](Differences.md#the-battle)) |
 | シナリオ選択へ and リジューム do nothing in single-player | They wait for the rival (`RivalMode`), and the system orders go back to NSPW NET's setting screen, which single-player does not have |

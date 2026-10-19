@@ -822,7 +822,8 @@ private void SteerUnit(ref Unit unit, int m)
 					break;
 
 				case UnitKind.Submarine:
-					if( unit.EmergencyFlags[0]==0  )
+					// 1.22 does not bring submarines back into the map (0x401966, kind 4).
+					if( unit.EmergencyFlags[0]==0 && !IsSingleplayer )
 						ReturnIntoWorld(m);
 					break;
 
