@@ -171,6 +171,40 @@ public class SingleplayerTests
 		Assert.Equal(SpriteId.UnitedStatesUnits, sprites[41]);
 	}
 
+	// A computer's ship supplies wherever it is, as in 1.22, whose computer starts supplying within 580 of its naval base:
+	// NSPW NET's check for a naval base within 280 stopped it at once.
+	[Fact]
+	public void TheComputersShipsSupplyAwayFromTheBase()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var m = 0;
+		for (var i = 1; i <= game.MaxUnitId && m == 0; i++)
+		{
+			ref var unit = ref game.Units[i];
+			if (unit.Side == game.CpuSide && unit.Category == UnitCategory.Ship && unit.Kind <= UnitKind.LightCarrier && unit.MaxHp >= 2)
+			{
+				m = i;
+			}
+		}
+
+		Assert.NotEqual(0, m);
+		for (var i = 1; i <= game.MaxUnitId; i++)
+		{
+			ref var unit = ref game.Units[i];
+			if (unit.Side == game.CpuSide && unit.Kind == UnitKind.NavalBase)
+			{
+				Assert.True(Math.Abs(unit.Position.X - game.Units[m].Position.X) > 280 || Math.Abs(unit.Position.Y - game.Units[m].Position.Y) > 280);
+			}
+		}
+
+		game.Units[m].Hp = game.Units[m].MaxHp - 1;
+		game.Units[m].SupplyTime = 1;
+		run.Frames(300);
+		Assert.Equal(game.Units[m].MaxHp, game.Units[m].Hp);
+	}
+
 	// A battle as the desktop app shows it, in real time, saved as singleplayer_battle.png next to the test assembly.
 	[Fact]
 	public void TheBattleShows()
