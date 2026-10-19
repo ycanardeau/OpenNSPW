@@ -606,10 +606,11 @@ public void	ApplyOrders()
 				else
 					{
 					// 敵性ユニットを左クリック
+					// NSPW NET lets fighters attack transports; 1.22, no ship (0x430618, 0x430679).
 					if( m!=Units[SelectedUnit].Target )
 						{
 						if(!(Units[SelectedUnit].Weapon==FireKind.Torpedo && ( Units[m].Kind>=UnitKind.AirBase && Units[m].Kind<=UnitKind.Fortress )) &&
-							!((Units[SelectedUnit].Kind==UnitKind.Fighter && ( Units[m].Category==UnitCategory.Ship && Units[m].Kind!=UnitKind.Transport ))||(Units[SelectedUnit].Kind>=UnitKind.InfantryBase&&Units[SelectedUnit].Kind<=UnitKind.Fortress)||(Units[SelectedUnit].Kind==UnitKind.Transport) )
+							!((Units[SelectedUnit].Kind==UnitKind.Fighter && ( Units[m].Category==UnitCategory.Ship && ( Units[m].Kind!=UnitKind.Transport || IsSingleplayer ) ))||(Units[SelectedUnit].Kind>=UnitKind.InfantryBase&&Units[SelectedUnit].Kind<=UnitKind.Fortress)||(Units[SelectedUnit].Kind==UnitKind.Transport) )
 							)
 							{
 							Units[SelectedUnit].Target=m;			// 攻撃対象のナンバー
@@ -621,7 +622,7 @@ public void	ApplyOrders()
 					for(n=1;n<=MaxUnitId;n++)
 						{
 						ref var unit = ref Units[n];
-						if( unit.IsUsed && Selections[e][n]!=0 && !((unit.Kind==UnitKind.Fighter && ( Units[Units[SelectedUnit].Target].Category==UnitCategory.Ship &&  Units[Units[SelectedUnit].Target].Kind!=UnitKind.Transport  ) )||(unit.Kind>=UnitKind.InfantryBase&&unit.Kind<=UnitKind.Fortress)||(unit.Kind==UnitKind.Transport))
+						if( unit.IsUsed && Selections[e][n]!=0 && !((unit.Kind==UnitKind.Fighter && ( Units[Units[SelectedUnit].Target].Category==UnitCategory.Ship && ( Units[Units[SelectedUnit].Target].Kind!=UnitKind.Transport || IsSingleplayer ) ) )||(unit.Kind>=UnitKind.InfantryBase&&unit.Kind<=UnitKind.Fortress)||(unit.Kind==UnitKind.Transport))
 							)
 							unit.Target=Units[SelectedUnit].Target;				//
 						}

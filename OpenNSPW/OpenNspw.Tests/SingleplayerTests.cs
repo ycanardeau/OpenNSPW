@@ -393,6 +393,53 @@ public class SingleplayerTests
 		Assert.Equal(game.Units[pillboxes].MaxHp, game.Units[pillboxes].Hp);
 	}
 
+	// A fighter shoots the flying plane it attacks, but not a transport, as in 1.22.
+	[Theory]
+	[InlineData(UnitKind.Attacker, true)]
+	[InlineData(UnitKind.Transport, false)]
+	public void FightersShootPlanesOnly(UnitKind kind, bool shoots)
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var fighter = game.AddUnit(Side.Japan, UnitKind.Fighter, 0, 0, 0);
+		var target = game.AddUnit(Side.UnitedStates, kind, 100, 0, 0);
+		Assert.NotEqual(0, fighter);
+		Assert.NotEqual(0, target);
+		game.Units[fighter].PlaneState = UnitState.Flying;
+		if (game.Units[target].Category == UnitCategory.Plane)
+		{
+			game.Units[target].PlaneState = UnitState.Flying;
+		}
+
+		game.Units[fighter].Target = target;
+		var ammo = game.Units[fighter].Ammo;
+
+		game.FireWeapons(fighter, 0, FireKind.Bullet);
+
+		Assert.Equal(shoots, game.Units[fighter].Ammo < ammo);
+	}
+
+	// The player's fighter can be sent to attack a plane, but not a transport, as in 1.22.
+	[Theory]
+	[InlineData(UnitKind.Attacker, true)]
+	[InlineData(UnitKind.Transport, false)]
+	public void FightersAreOrderedToAttackPlanesOnly(UnitKind kind, bool attacks)
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var fighter = game.AddUnit(game.LocalSide, UnitKind.Fighter, 0, 0, 0);
+		var target = game.AddUnit(game.CpuSide, kind, 100, 0, 0);
+		Assert.NotEqual(0, fighter);
+		Assert.NotEqual(0, target);
+		game.SelectOrders[0] = new SelectOrder { IsSet = true, SelectedUnit = (short)fighter, Unit = (short)target };
+
+		game.ApplyOrders();
+
+		Assert.Equal(attacks ? target : 0, game.Units[fighter].Target);
+	}
+
 	// A battle as the desktop app shows it, in real time, saved as singleplayer_battle.png next to the test assembly.
 	[Fact]
 	public void TheBattleShows()

@@ -1527,7 +1527,8 @@ private bool FighterFireBullet(ref int trgt, ref Unit unit, FireKind kind)
 	for(n=1;n<=MaxUnitId;n++)
 		{
 		ref var other = ref Units[n];	//前方の敵を探す。
-		if( other.IsUsed && (( other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying ) || other.Kind==UnitKind.Transport ) && other.Side!=unit.Side )
+		// NSPW NET's fighters also shoot transports; 1.22's, flying planes only (0x4133B2).
+		if( other.IsUsed && (( other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying ) || ( other.Kind==UnitKind.Transport && !IsSingleplayer ) ) && other.Side!=unit.Side )
 			{
 			// 距離を調べます
 			wrk_x=other.Position.X-unit.Position.X;
@@ -3183,7 +3184,8 @@ public void	SetShipEmergencyDestination(int m)
 			}
 
 		// 艦船によってくる攻撃機から逃げる
-		if( other.IsUsed && (other.Kind==UnitKind.Attacker || other.Kind==UnitKind.Bomber || ( other.Kind==UnitKind.Fighter && unit.Kind==UnitKind.Transport ) ) && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.IsFound
+		// NSPW NET's transports also flee fighters; 1.22's ships, attackers and bombers only (0x41650D).
+		if( other.IsUsed && (other.Kind==UnitKind.Attacker || other.Kind==UnitKind.Bomber || ( other.Kind==UnitKind.Fighter && unit.Kind==UnitKind.Transport && !IsSingleplayer ) ) && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.IsFound
 			)
 			{
 			if( !EvadePlane(ref other, ref unit) )
