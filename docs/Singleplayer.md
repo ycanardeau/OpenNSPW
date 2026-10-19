@@ -117,6 +117,9 @@ So in a single-player game (`IsSingleplayer`):
 - `UpdateSupply` keeps a ship supplying wherever it is, as 1.22's `chara_cont` does (`0x4010BB`), without NSPW NET's check for a naval base within 280: the computer starts supplying once its flagship has stopped within 580 of the base, and that check stopped it at once.
 - `SetShipEmergencyDestination` brings only the player's ships back into the map, and `SteerUnit` no submarine, as 1.22 does (`0x416B35`, `0x401966`): the computer's ships sail on, to its naval bases outside the map, such as scenario 304's.
 - `SetUnitData` runs 1.22's `set_unit_data`, so that the units the battle creates, such as the bases that transports land, have 1.22's data, as the scenario's do; `AddPlane` adds planes to a full carrier, as 1.22's `set_new_unit_plane` does (`0x41F060`).
+- `LandCargo` lands a transport's cargo within 360 of its landing point, as 1.22 does (`0x413003`), where NSPW NET lands it within 160 (`#if NSPW_THE_NET`).
+- `MoveUnit` does not slow a transport with cargo, as 1.22 does not (`0x402955`).
+- `UpdateCargo` completes the base a transport lands at once, with its full HP, as 1.22 does (`0x418E23`), where NSPW NET builds it over 8000 to 20000 ticks from a quarter of its HP.
 - `CheckResult` calls `decision`, which also shows the result, instead of NSPW NET's conditions.
 
 ## Playing
@@ -142,6 +145,6 @@ NSPW NET's debug keys (`DBG_MODE`) work as in a network game, but three are held
 7. **Characterization trace** of a single-player game, to guard the refactoring of the code it runs. Not done.
 
 ## Open questions
-- Which other differences between 1.22's battle and NSPW NET's matter for single-player play. The landing distance of transports, 360 in 1.22 and 160 in NSPW NET (`#if NSPW_THE_NET` in `etc1.cpp`), is one; the other remains of `cpu_side` in NSPW NET's comments are others.
+- Which other differences between 1.22's battle and NSPW NET's ([Differences.md](Differences.md#the-battle)) matter for single-player play.
 - Whether to show 1.22's own setting screen, or NSPW NET's with 1.22's scenarios.
 - Saving and resuming a single-player game, which would also need the single-player globals of the emulator's memory.

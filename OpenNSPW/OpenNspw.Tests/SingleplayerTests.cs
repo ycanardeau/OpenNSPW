@@ -275,6 +275,66 @@ public class SingleplayerTests
 		Assert.Equal(planes + game.Units[carrier].Capacity + 2, game.Units[carrier].PlaneCount);
 	}
 
+	// A transport lands its cargo within 360 of its landing point, as in 1.22, not 160.
+	[Theory]
+	[InlineData(300, true)]
+	[InlineData(400, false)]
+	public void TransportsLandFrom360(int distance, bool lands)
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var transport = game.AddUnit(Side.Japan, UnitKind.Transport, 0, 0, 0);
+		Assert.NotEqual(0, transport);
+		ref var unit = ref game.Units[transport];
+		unit.Direction = 0;
+		unit.LandingX = (int)unit.Position.X + distance;
+		unit.LandingY = (int)unit.Position.Y;
+
+		game.FireWeapons(transport, 0, FireKind.CargoInfantryBase);
+
+		Assert.Equal(lands, game.Units[transport].Hp == 0);
+	}
+
+	// The base a transport lands is complete at once, with its full HP, as in 1.22, where NSPW NET builds it over 8000
+	// ticks or more, from a quarter of its HP.
+	[Fact]
+	public void LandedBasesAreCompleteAtOnce()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var transport = game.AddUnit(Side.Japan, UnitKind.Transport, 0, 0, 0);
+		Assert.NotEqual(0, transport);
+		ref var unit = ref game.Units[transport];
+		unit.Direction = 0;
+		unit.LandingX = (int)unit.Position.X + 100;
+		unit.LandingY = (int)unit.Position.Y;
+		var landing = new WorldPosition(unit.LandingX, unit.LandingY);
+		var full = game.AddUnit(Side.Japan, UnitKind.Pillboxes, 0, -2000, 0);
+		Assert.NotEqual(0, full);
+
+		game.FireWeapons(transport, 0, FireKind.CargoPillboxes);
+
+		var pillboxes = 0;
+		for (var frame = 0; frame < 1000 && pillboxes == 0; frame++)
+		{
+			run.Frames(1);
+			for (var m = 1; m <= game.MaxUnitId; m++)
+			{
+				if (m != full && game.Units[m].IsUsed && game.Units[m].Kind == UnitKind.Pillboxes && game.Units[m].Position.Equals(landing))
+				{
+					pillboxes = m;
+				}
+			}
+		}
+
+		Assert.NotEqual(0, pillboxes);
+		Assert.Equal(0, game.Units[pillboxes].BuildTime);
+		Assert.Equal(game.Units[full].MaxHp, game.Units[pillboxes].MaxHp);
+		Assert.Equal(game.Units[pillboxes].MaxHp, game.Units[pillboxes].Hp);
+	}
+
 	// A battle as the desktop app shows it, in real time, saved as singleplayer_battle.png next to the test assembly.
 	[Fact]
 	public void TheBattleShows()

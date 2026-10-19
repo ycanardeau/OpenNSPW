@@ -261,11 +261,8 @@ private bool LandCargo(ref Unit unit, FireKind kind, int m)
 		wrk_y=unit.Position.Y-(double)unit.LandingY;
 		dstc=Distance(wrk_x, wrk_y);
 
-#if NSPW_THE_NET
-		if( dstc>=0 && dstc<=160 )
-#else
-		if( dstc>=0 && dstc<=360 )
-#endif
+		// NSPW NET lands from 160 (#if NSPW_THE_NET); 1.22, from 360 (0x413003).
+		if( dstc>=0 && dstc<=(IsSingleplayer ? 360 : 160) )
 			{
 			// 発射！
 			unit.Ammo=0;		// 残弾が０

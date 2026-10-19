@@ -335,6 +335,8 @@ private void UpdateCargo(ref Fire fire, ref int n)
 
 			if(h!=0)
 				{
+				// NSPW NET builds a base over 8000 to 20000 ticks, from a quarter of its HP; 1.22 completes it at once, with
+				// its full HP (0x418E23).
 				switch(fire.Kind)
 					{
 					case FireKind.CargoInfantryBase:
@@ -343,24 +345,32 @@ private void UpdateCargo(ref Fire fire, ref int n)
 						break;
 					case FireKind.CargoPillboxes:
 						f=AddUnit((Side)fire.ShooterSide, UnitKind.Pillboxes,(double)fire.TargetX,(double)fire.TargetY,0);
+						if( IsSingleplayer )
+							break;
 						Units[f].BuildTime=(int)(8000*( fire.ShooterSide==(int)Side.UnitedStates ? 1.0 : 0.8 ));		// 建設期間
 						Units[f].Hp/=4;
 						Units[f].MaxHp/=4;
 						break;
 					case FireKind.CargoFortress:
 						f=AddUnit((Side)fire.ShooterSide, UnitKind.Fortress,(double)fire.TargetX,(double)fire.TargetY,0);
+						if( IsSingleplayer )
+							break;
 						Units[f].BuildTime=(int)(15000*( fire.ShooterSide==(int)Side.UnitedStates ? 0.8 : 1.0 ));		// 建設期間
 						Units[f].Hp/=4;
 						Units[f].MaxHp/=4;
 						break;
 					case FireKind.CargoAirBase:
 						f=AddUnit((Side)fire.ShooterSide, UnitKind.AirBase,(double)fire.TargetX,(double)fire.TargetY,0);
+						if( IsSingleplayer )
+							break;
 						Units[f].BuildTime=(int)(10000*( fire.ShooterSide==(int)Side.UnitedStates ? 0.8 : 1.0 ));		// 建設期間
 						Units[f].Hp/=4;
 						Units[f].MaxHp/=4;
 						break;
 					case FireKind.CargoNavalBase:
 						f=AddUnit((Side)fire.ShooterSide, UnitKind.NavalBase,(double)fire.TargetX,(double)fire.TargetY,0);
+						if( IsSingleplayer )
+							break;
 						Units[f].BuildTime=(int)(20000*( fire.ShooterSide==(int)Side.UnitedStates ? 0.8 : 1.0 ));		// 建設期間
 						Units[f].Hp/=4;
 						Units[f].MaxHp/=4;

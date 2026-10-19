@@ -1330,7 +1330,8 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 			unit.Speed = (unit.MaxSpeed+(unit.Kind==UnitKind.Fighter && unit.Target!=0 ? 1 : 0)*CMBT_SPD);
 		}
 
-	if( unit.Kind==UnitKind.Transport && unit.Ammo!=0 )
+	// NSPW NET slows a transport with cargo; 1.22, not (0x402955).
+	if( unit.Kind==UnitKind.Transport && unit.Ammo!=0 && !IsSingleplayer )
 		{
 		// 輸送船でなんかつんでると最高速度がおちる
 		switch( unit.Weapon )
