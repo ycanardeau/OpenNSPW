@@ -110,6 +110,11 @@ public unsafe partial class Nspw
 	// NSPW_122.exe, which the host gives the game to play single-player.
 	public byte[]? SingleplayerExecutable;
 
+	// The player's selection of every unit when the order in the buffers was given (BufferSelections). The network game
+	// sends only the units of the player's side (BufferedSelections); 1.22 gives an order to every unit selected, such as
+	// the fighters that scenario 303 takes from Japan, whose numbers are Japan's.
+	private Array256<short> BufferedSelectionsOfAllUnits;
+
 	// The emulator of the single-player game being played: a new one for each game, so that 1.22's own globals start as
 	// the executable has them.
 	public Emulator? Emulator;
@@ -345,6 +350,8 @@ public unsafe partial class Nspw
 				BufferedSelections[e][s] = 0;
 		}
 
+		BufferedSelectionsOfAllUnits = default;
+
 		CanOrder = true;
 		HasOrdered = false;
 	}
@@ -374,13 +381,11 @@ public unsafe partial class Nspw
 
 		var bf_the_slct_unit = SelectedUnit;
 		Array256<short> bf_slct_unit = Selections[1];
-		for (var s = 0; s <= MaxUnitId; s++)
-			Selections[1][s] = 0;
+		Selections[1] = BufferedSelectionsOfAllUnits;
 
 		MoveOrders[1] = BufferedMoveOrders[1];
 		SelectOrders[1] = BufferedSelectOrders[1];
 		SelectOrders[0].IsSet = false;
-		UnpackSelections(1, LocalSide == Side.Japan);
 
 		ApplyOrders();
 		ApplyUnitInfoInput();

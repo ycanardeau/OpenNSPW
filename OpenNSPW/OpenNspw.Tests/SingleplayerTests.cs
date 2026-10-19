@@ -1,5 +1,6 @@
 using OpenNspw.Tests.Lockstep;
 using Xunit;
+using static OpenNspw.all_head;
 
 namespace OpenNspw.Tests;
 
@@ -109,6 +110,43 @@ public class SingleplayerTests
 		Assert.Equal(0, game.MapTiles[164][62]);
 		Assert.Equal(599, game.Sprites[SpriteId.TitleBackground].Width);
 		Assert.Equal("tst_cg1.bmp", game.SpriteSheetName);
+	}
+
+	// Orders go to every unit selected, as in 1.22, also to the units of the player's side that have the other side's
+	// numbers: in scenario 303, the fighters taken with a Japanese air base (41 to 43) are sent to another base together.
+	[Fact]
+	public void OrdersGoToCapturedPlanes()
+	{
+		using var run = new SingleplayerRun(303);
+		var game = run.Game;
+
+		// Away from the edges, which scroll the battle area.
+		game.SetCursorPos(CMBT_WIDTH / 2, CMBT_HEIGHT / 2);
+		run.Frames(2);
+		Assert.Equal(Side.UnitedStates, game.LocalSide);
+		var airBase = game.Units[21].Position;
+		for (var m = 41; m <= 43; m++)
+		{
+			ref var plane = ref game.Units[m];
+			Assert.Equal(UnitKind.Fighter, plane.Kind);
+			plane.Side = Side.UnitedStates;
+			plane.PlaneState = UnitState.Flying;
+			plane.Position = new WorldPosition(airBase.X - 300, airBase.Y + (m - 42) * 60);
+			game.Selections[1][m] = (short)(m - 40);
+		}
+
+		game.SelectionCount = 3;
+		game.SelectedUnit = 41;
+		// The base in the middle of the battle area, under the cursor.
+		game.CameraPosition = new WorldPosition(airBase.X - (CMBT_WIDTH / 2), airBase.Y + (CMBT_HEIGHT / 2));
+		run.Frames(1);
+		Assert.Equal(airBase.X - (CMBT_WIDTH / 2), game.CameraPosition.X);
+		game.PostMouseInput(0, true);
+		run.Frames(2);
+		game.PostMouseInput(0, false);
+		run.Frames(2);
+
+		Assert.All([41, 42, 43], m => Assert.Equal(21, game.Units[m].Carrier));
 	}
 
 	// A battle as the desktop app shows it, in real time, saved as singleplayer_battle.png next to the test assembly.

@@ -20,10 +20,12 @@ public unsafe partial class Nspw
 {
 
 // The player's selection, kept with an order for the turn that gives it: the ships, then the planes, of the player's
-// side, packed as the network sends them.
+// side, packed as the network sends them, and the selection of every unit, which a single-player game gives the order
+// with (IssueSingleplayerOrders), as 1.22 does.
 private void BufferSelections()
 	{
 	int s;
+	BufferedSelectionsOfAllUnits=Selections[1];
 	if(LocalSide==Side.Japan)
 		{
 		// 日本海軍サイド
