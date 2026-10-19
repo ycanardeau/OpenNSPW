@@ -120,6 +120,7 @@ So in a single-player game (`IsSingleplayer`):
 - `LandCargo` lands a transport's cargo within 360 of its landing point, as 1.22 does (`0x413003`), where NSPW NET lands it within 160 (`#if NSPW_THE_NET`).
 - `MoveUnit` does not slow a transport with cargo, as 1.22 does not (`0x402955`).
 - `UpdateCargo` completes the base a transport lands at once, with its full HP, as 1.22 does (`0x418E23`), where NSPW NET builds it over 8000 to 20000 ticks from a quarter of its HP.
+- `AttackerDropBomb` releases every attacker's bombs from 170 to 180 of its aim, as 1.22 does (`0x414186`): NSPW NET's Japanese attackers dive to 35 to 65 instead.
 - `CheckResult` calls `decision`, which also shows the result, instead of NSPW NET's conditions.
 
 ## Playing

@@ -275,6 +275,64 @@ public class SingleplayerTests
 		Assert.Equal(planes + game.Units[carrier].Capacity + 2, game.Units[carrier].PlaneCount);
 	}
 
+	// Every attacker releases its bombs from 170 to 180 of its aim and speeds up, as in 1.22, where NSPW NET's Japanese
+	// ones dive to 35 to 65; only the Americans' drop a second bomb.
+	[Theory]
+	[InlineData(Side.Japan, 175, true, 1)]
+	[InlineData(Side.Japan, 50, false, 0)]
+	[InlineData(Side.UnitedStates, 175, true, 2)]
+	public void AttackersReleaseTheirBombsFrom170(Side side, int distance, bool releases, int bombs)
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var other = side == Side.Japan ? Side.UnitedStates : Side.Japan;
+		var target = game.AddUnit(other, UnitKind.Cruiser, 0, 0, 0);
+		var carrier = game.AddUnit(side, UnitKind.Carrier, 0, -2000, 0);
+		Assert.NotEqual(0, target);
+		Assert.NotEqual(0, carrier);
+		Assert.Equal(1, game.AddPlane(side, UnitKind.Attacker, 0, carrier, 1, FireKind.Bomb));
+		var attacker = 0;
+		for (var i = 1; i <= game.MaxUnitId; i++)
+		{
+			if (game.Units[i].IsUsed && game.Units[i].Kind == UnitKind.Attacker && game.Units[i].Carrier == carrier)
+			{
+				attacker = i;
+			}
+		}
+
+		Assert.NotEqual(0, attacker);
+		game.Units[target].Speed = 0;
+		game.Units[target].IsFound = true;
+		ref var unit = ref game.Units[attacker];
+		unit.PlaneState = UnitState.Flying;
+		unit.Position = new WorldPosition(-distance, 0);
+		unit.Direction = 0;
+		unit.Ammo = 1;
+		unit.Target = target;
+		var speed = unit.Speed;
+		int Bombs()
+		{
+			var count = 0;
+			for (var s = 1; s < all_head.FIRE_MAX; s++)
+			{
+				if (game.Fires[s].Target != 0 && game.Fires[s].Kind == FireKind.Bomb)
+				{
+					count++;
+				}
+			}
+
+			return count;
+		}
+
+		var before = Bombs();
+		game.FireWeapons(attacker, target, FireKind.Bomb);
+
+		Assert.Equal(releases, game.Units[attacker].Ammo == 0);
+		Assert.Equal(releases, game.Units[attacker].Speed > speed);
+		Assert.Equal(bombs, Bombs() - before);
+	}
+
 	// A transport lands its cargo within 360 of its landing point, as in 1.22, not 160.
 	[Theory]
 	[InlineData(300, true)]
