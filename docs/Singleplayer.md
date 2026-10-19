@@ -132,6 +132,7 @@ So in a single-player game (`IsSingleplayer`):
 - `FindFreeFire` and `FindFreeEffect` keep 255 fires and 255 effects in use at most, as 1.22 does.
 - `SetShipEmergencyDestination` and `EvadeShip` make a stopped ship flee enemy ground units too, within 900, as 1.22 does (`0x41616C`, `0x416277`): in scenario 305 the American transports at Okinawa move away at the start.
 - `HuntSubmarineAs122` makes only the computer's destroyers hunt submarines, and chase one (`em_flg[1]`), as 1.22 does (`0x416706` to `0x416B35`).
+- `UpdateBattle` counts the tick, moves the clouds and finds the units in 1.22's order, and runs its unit loop for cities too (`0x401009` to `0x4010A3`).
 - `CheckResult` calls `decision`, which also shows the result, instead of NSPW NET's conditions.
 
 ## Playing

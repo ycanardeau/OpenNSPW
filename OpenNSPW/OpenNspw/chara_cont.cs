@@ -1933,15 +1933,28 @@ public void	UpdateBattle()
 			}
 		}
 
-	Detect();
+	if( IsSingleplayer )
+		{
+		// 1.22 counts the tick first, then moves the clouds and finds the units, and then checks for the end (0x401009
+		// to 0x401039).
+		Tick++;
+		UpdateClouds( );
+		Detect();
+		if( Result!=GameResult.None || Mode!=GameMode.Battle )
+			return;
+		}
+	else
+		{
+		Detect();
 
-	Tick++;
+		Tick++;
 
-	if( Result!=GameResult.None || Mode!=GameMode.Battle )
-		return;
+		if( Result!=GameResult.None || Mode!=GameMode.Battle )
+			return;
 
-	// 雲を制御します
-	UpdateClouds( );
+		// 雲を制御します
+		UpdateClouds( );
+		}
 
 	// エフェクトのデクリ
 	for( m=1; m<EFFECT_MAX; m++)
@@ -1977,7 +1990,8 @@ public void	UpdateBattle()
 		// 陸上施設の工事処理
 		BuildBase(ref unit);
 
-		if( !IsEditingMap && unit.IsUsed && !(unit.Kind==UnitKind.AirBase||unit.Kind==UnitKind.NavalBase||unit.Kind==UnitKind.City))
+		// 1.22 skips only air bases and naval bases (0x4010A3).
+		if( !IsEditingMap && unit.IsUsed && !(unit.Kind==UnitKind.AirBase||unit.Kind==UnitKind.NavalBase||(unit.Kind==UnitKind.City && !IsSingleplayer)))
 			{
 			// 補給先がちゃんとあるか
 			UpdateSupply(ref unit);
