@@ -405,7 +405,8 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double drctn2, re
 			if(unit.Ammo!=0)
 				unit.Ammo-=RAS_SZ;			// 弾薬消費
 
-			if(SharedRandom(2)!=0 )
+			// 1.22 plays AA_SHL3 alone, drawing nothing: it has no AA_SHL5 (0x41019F).
+			if( IsSingleplayer || SharedRandom(2)!=0 )
 				PlaySoundEffect( 0, SoundId.AntiAircraftShell3 ,unit.Position.X, unit.Position.Y);
 			else
 				PlaySoundEffect( 0, SoundId.AntiAircraftShell5 ,unit.Position.X, unit.Position.Y);
@@ -457,7 +458,8 @@ private bool ShipDropAntiSubmarineBomb(ref int trgt, ref Unit unit, FireKind kin
 					{
 					if(unit.Ammo!=0)
 						unit.Ammo-=ASB_SZ;			// 弾薬消費
-					if(unit.Ammo<0)
+					// 1.22 leaves an odd count at -1 (0x4103B6).
+					if(unit.Ammo<0 && !IsSingleplayer)
 						unit.Ammo=0;
 
 					PlaySoundEffect( 0, SoundId.Splash ,unit.Position.X, unit.Position.Y);
@@ -631,6 +633,13 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rng,
 					else
 						drctn3=drctn2+(double)((double)(Random(80)-40)/10)    ;			// 絶対方位
 					}
+				else if( IsSingleplayer )
+					{
+					// 1.22 aims as closely 1 time in 5 for every kind, and draws the hundredths, always 0, first (0x410A65).
+					var narrow = Random(5)==0 || ( unit.Kind==UnitKind.Battleship && Random( 4 )==0 );
+					var hundredths = Random(100)/100;
+					drctn3=drctn2+(narrow ? Random(7)-3 : Random(11)-5)+hundredths;
+					}
 				else
 					{
 					if( Random(5+(unit.Kind>=UnitKind.InfantryBase&&unit.Kind<=UnitKind.Fortress ? 1 : 0)*4  )==0 || ( unit.Kind==UnitKind.Battleship && Random( 4 )==0 ) )
@@ -651,7 +660,8 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rng,
 				fire.Speed=10.0;
 				fire.Acceleration=((fire.Speed)/(dstc2/fire.Speed));
 				fire.FinalSpeed=0;
-				fire.Ticks=(int)(dstc2/fire.Speed)+1;
+				// 1.22's shell flies one tick less (0x410BCE).
+				fire.Ticks=(int)(dstc2/fire.Speed)+(IsSingleplayer ? 0 : 1);
 				fire.FlightTime=fire.Ticks/2;
 
 				}
@@ -1328,6 +1338,13 @@ private bool ShipFireGunAtTarget(int trgt, ref Unit unit, FireKind kind, ref int
 							drctn3=drctn2+(double)((double)(Random(20)-10)/10)    ;			// 絶対方位
 						else
 							drctn3=drctn2+(double)((double)(Random(60)-30)/10)    ;			// 絶対方位
+						}
+					else if( IsSingleplayer )
+						{
+						// 1.22 draws the hundredths, always 0, first (0x4129AB).
+						var narrow = Random(5)==0 || ( unit.Kind==UnitKind.Battleship && Random(4)==0 );
+						var hundredths = Random(100)/100;
+						drctn3=drctn2+(narrow ? Random(3)-1 : Random(9)-4)+hundredths;
 						}
 					else
 						{
