@@ -2931,6 +2931,76 @@ public void ReturnIntoWorld(int m)
 		}
 	}
 
+// 1.22's hunt of the computer's destroyers, stopped or not (0x416706 to 0x416B35). One that chases no submarine
+// (em_flg[1]) takes the first enemy one found within 600 of its contact, or of itself when surfaced: it runs toward the
+// contact, give or take 20°, 300 past it, for 600 ticks, and chases it. One that chases a submarine no longer found stops
+// chasing it; otherwise it stops 1 time in 10, or else goes to within 400 of the contact for 200 to 299 ticks.
+private bool HuntSubmarineAs122(ref Unit unit)
+	{
+	int n;
+	double wrk_x;
+	double wrk_y;
+	double dstc;
+	double em_drctn;
+	if( unit.EmergencyFlags[1]!=0 )
+		{
+		ref var chased = ref Units[unit.EmergencyFlags[1]];
+		if( !chased.IsFound )
+			{
+			unit.EmergencyFlags[1]=0;
+			return true;
+			}
+
+		if( Random(10)==0 )
+			{
+			unit.EmergencyFlags[1]=0;
+			return false;
+			}
+
+		unit.EmergencyDestination = new WorldPosition(chased.ContactX-Random(800)+400, unit.EmergencyDestination.Y);
+		unit.EmergencyDestination = new WorldPosition(unit.EmergencyDestination.X, chased.ContactY-Random(800)+400);
+		unit.EmergencyFlags[0]=200+Random(100);
+		return false;
+		}
+
+	for(n=1; n<=MaxUnitId; n++)
+		{
+		ref var other = ref Units[n];
+		if( other.IsUsed && other.Kind==UnitKind.Submarine && other.IsFound && other.Side!=unit.Side )
+			{
+			if( other.IsSubmerged )
+				{
+				wrk_x=other.ContactX-unit.Position.X;
+				wrk_y=other.ContactY-unit.Position.Y;
+				}
+			else
+				{
+				wrk_x=other.Position.X-unit.Position.X;
+				wrk_y=other.Position.Y-unit.Position.Y;
+				}
+			if(wrk_x==0)	wrk_x=1;
+			if(wrk_y==0)	wrk_y=1;
+			dstc=Distance(wrk_x, wrk_y);
+
+			if( dstc<=600 )
+				{
+				wrk_x=other.ContactX-unit.Position.X;
+				wrk_y=other.ContactY-unit.Position.Y;
+				if(wrk_x==0)	wrk_x=1;
+				if(wrk_y==0)	wrk_y=1;
+				em_drctn=(int)(atan2(wrk_y,wrk_x)*RAD_to+(20-Random(40)))%360;
+
+				unit.EmergencyDestination = unit.Position + new WorldVector(CosDegrees(em_drctn)*(dstc+300), SinDegrees(em_drctn)*(dstc+300));
+				unit.EmergencyFlags[0]=600;
+				unit.EmergencyFlags[1]=n;
+				return false;
+				}
+			}
+		}
+
+	return true;
+	}
+
 private bool HuntSubmarine(ref Unit unit)
 	{
 	int n;
@@ -3060,7 +3130,8 @@ private void EvadeShip(ref Unit other, ref Unit unit)
 
 	// 見る側
 
-	if( dstc<=(double)( BB1_SIGHT ) )
+	// 1.22 flees within 900, its battleship's sight, where NSPW NET's is 800 (0x416277).
+	if( dstc<=(double)( IsSingleplayer ? 900 : BB1_SIGHT ) )
 		{
 		wrk_x=other.Position.X-unit.Position.X;
 		wrk_y=other.Position.Y-unit.Position.Y;
@@ -3177,7 +3248,9 @@ public void	SetShipEmergencyDestination(int m)
 		{
 		ref var other = ref Units[n];
 		// 艦船によってくる艦船からにげる
-		if( (unit.IsStopping || (unit.Kind==UnitKind.Carrier||unit.Kind==UnitKind.LightCarrier)) && other.IsUsed && (other.Category==UnitCategory.Ship  && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress) ) &&
+		// NSPW NET's ships flee no base, city, mine or ground unit (kinds 11 to 17); 1.22's flee all of them but air bases
+		// and naval bases (0x41616C).
+		if( (unit.IsStopping || (unit.Kind==UnitKind.Carrier||unit.Kind==UnitKind.LightCarrier)) && other.IsUsed && (other.Category==UnitCategory.Ship  && (IsSingleplayer ? other.Kind!=UnitKind.AirBase && other.Kind!=UnitKind.NavalBase : !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress)) ) &&
 		other.Kind!=UnitKind.Submarine && other.Side!=unit.Side && other.IsFound && other.SupplyTime<=0 && unit.Target==0)
 			{
 			EvadeShip(ref other, ref unit);
@@ -3193,7 +3266,12 @@ public void	SetShipEmergencyDestination(int m)
 			}
 		}
 
-	if( unit.Kind==UnitKind.Destroyer  && unit.IsStopping.Value==1   )
+	if( IsSingleplayer )
+		{
+		if( unit.Kind==UnitKind.Destroyer && unit.Side==CpuSide && !HuntSubmarineAs122(ref unit) )
+			return;
+		}
+	else if( unit.Kind==UnitKind.Destroyer  && unit.IsStopping.Value==1   )
 		{
 		// 駆逐艦の対潜水艦行動、発見された後！
 		if( !HuntSubmarine(ref unit) )

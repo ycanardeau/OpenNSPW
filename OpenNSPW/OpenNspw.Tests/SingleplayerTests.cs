@@ -479,6 +479,51 @@ public class SingleplayerTests
 		Assert.Equal(0, game.FindFreeEffect());
 	}
 
+	// In scenario 305 the American transports at Okinawa, stopped and empty, move away from the Japanese ground units
+	// there at the start, as in 1.22, whose stopped ships flee every enemy unit within 900 but air bases, naval bases and
+	// submarines; NSPW NET's flee no ground unit.
+	[Fact]
+	public void StoppedShipsFleeGroundUnits()
+	{
+		using var run = new SingleplayerRun(305);
+		run.Frames(1);
+		var game = run.Game;
+		var start = new[] { game.Units[25].Position, game.Units[26].Position };
+		Assert.All([25, 26], m => Assert.Equal(UnitKind.Transport, game.Units[m].Kind));
+
+		run.Frames(100);
+
+		Assert.All([25, 26], m => Assert.NotEqual(start[m - 25], game.Units[m].Position));
+	}
+
+	// Only the computer's destroyers hunt submarines, as in 1.22: one within 600 of a submarine found chases it for 600
+	// ticks, and remembers it (em_flg[1]).
+	[Theory]
+	[InlineData(true, 500, true)]
+	[InlineData(true, 700, false)]
+	[InlineData(false, 500, false)]
+	public void TheComputersDestroyersHuntSubmarines(bool computers, int distance, bool hunts)
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var side = computers ? game.CpuSide : game.LocalSide;
+		var destroyer = game.AddUnit(side, UnitKind.Destroyer, -9000, -7000, 0);
+		var submarine = game.AddUnit(side == Side.Japan ? Side.UnitedStates : Side.Japan, UnitKind.Submarine, -9000 + distance, -7000, 0);
+		Assert.NotEqual(0, destroyer);
+		Assert.NotEqual(0, submarine);
+		ref var sub = ref game.Units[submarine];
+		sub.IsFound = true;
+		sub.IsSubmerged = true;
+		sub.ContactX = (int)sub.Position.X;
+		sub.ContactY = (int)sub.Position.Y;
+
+		game.SetShipEmergencyDestination(destroyer);
+
+		Assert.Equal(hunts ? submarine : 0, game.Units[destroyer].EmergencyFlags[1]);
+		Assert.Equal(hunts ? 600 : 0, game.Units[destroyer].EmergencyFlags[0]);
+	}
+
 	// A fighter shoots the flying plane it attacks, but not a transport, as in 1.22.
 	[Theory]
 	[InlineData(UnitKind.Attacker, true)]
