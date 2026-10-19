@@ -777,7 +777,8 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 						f++;
 					}
 
-				if( f==0 )
+				// 1.22 lets the next plane take off whatever other planes are landing (0x4018F1).
+				if( f==0 || IsSingleplayer )
 					{	// 滑走路に他の着陸機がなければ発進許可。
 					Units[unit.Carrier].LaunchLock=0;		// その空母の次機発進許可
 					}
