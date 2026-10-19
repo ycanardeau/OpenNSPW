@@ -651,6 +651,19 @@ public class SingleplayerTests
 		Assert.Equal(attacks ? target : 0, game.Units[attacker].Target);
 	}
 
+	// A depth charge does 3 to 5 damage, as in 1.22 (0x416D1F), where NSPW NET's does 1 to 6.
+	[Fact]
+	public void DepthChargesDamageAsIn122()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		game.Fires[1].Kind = FireKind.AntiSubmarineBomb;
+		var damages = Enumerable.Range(0, 1000).Select(_ => game.GetDamagePoints(1)).ToHashSet();
+
+		Assert.Equal([3, 4, 5], damages.Order());
+	}
+
 	// A battle as the desktop app shows it, in real time, saved as singleplayer_battle.png next to the test assembly.
 	[Fact]
 	public void TheBattleShows()

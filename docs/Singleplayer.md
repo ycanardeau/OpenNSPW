@@ -140,6 +140,7 @@ So in a single-player game (`IsSingleplayer`):
 - `ShipFireTorpedoWithoutTarget` and `ShipFireTorpedoAtTarget` reload a submarine's torpedoes in 2000 ticks, as 1.22 does (`0x4110DB`).
 - `FighterFireBullet` chooses a fighter's target as 1.22 does (`0x413542`): within 400 for every kind, and the computer's returning fighters too, within 300.
 - `EffectRandom` draws the random numbers of the fires' effects, and of the place of a plane landed on deck, from `rand`, as 1.22 does, where NSPW NET draws them from `SharedRandom`; `UpdateBullet` damages a transport with every bullet (`0x418F92`).
+- `GetDamagePoints` gives a depth charge 1.22's damage, 3 to 5 (`0x416D1F`).
 - `CheckResult` calls `decision`, which also shows the result, instead of NSPW NET's conditions.
 
 ## Playing

@@ -921,7 +921,7 @@ public int	GetDamagePoints(int	m)
 		case FireKind.Torpedo:		rtn=TPD_DMG+Random(TPD_DMG);
 			break;
 		case FireKind.Bomb:		rtn=BOM_DMG+Random(BOM_DMG);		break;
-		case FireKind.AntiSubmarineBomb:		rtn=1+Random(ASB_DMG+2+1);		break;
+		case FireKind.AntiSubmarineBomb:		rtn=Rules.DepthChargeDamage+Random(Rules.DepthChargeDamageSpread);		break;
 		case FireKind.RapidAntiAircraftShell:		rtn=RAS_DMG+Random(RAS_DMG);		break;
 		}
 

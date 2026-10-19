@@ -60,6 +60,10 @@ public sealed record BattleRules(
 	// Whether an odd count of depth charges stops at 0, rather than going to -1.
 	bool DepthChargeCountStopsAtZero,
 
+	// A depth charge's damage: this much, plus a random number below the spread.
+	int DepthChargeDamage,
+	int DepthChargeDamageSpread,
+
 	// The ticks a submarine takes to reload its torpedoes.
 	int SubmarineTorpedoReload,
 
@@ -160,6 +164,8 @@ public sealed record BattleRules(
 		ExtraGunShellTicks: 1,
 		RapidFireSoundVaries: true,
 		DepthChargeCountStopsAtZero: true,
+		DepthChargeDamage: 1,
+		DepthChargeDamageSpread: all_head.ASB_DMG + 2 + 1,
 		SubmarineTorpedoReload: all_head.RELOAD_TPD_SS,
 		BulletsSpareTransports: true,
 		CargoLandingRange: 160,
@@ -209,6 +215,8 @@ public sealed record BattleRules(
 		ExtraGunShellTicks: 0, // 0x410BCE
 		RapidFireSoundVaries: false, // 0x41019F
 		DepthChargeCountStopsAtZero: false, // 0x4103B6
+		DepthChargeDamage: 3, // 0x416D1F
+		DepthChargeDamageSpread: 3, // 0x416D1F
 		SubmarineTorpedoReload: 2000, // 0x4110DB, 0x41176B
 		BulletsSpareTransports: false, // 0x418F92
 		CargoLandingRange: 360, // 0x413003
