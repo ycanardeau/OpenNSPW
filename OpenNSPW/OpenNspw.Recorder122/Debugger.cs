@@ -6,7 +6,7 @@ namespace OpenNspw.Recorder122;
 
 // Runs a 32-bit program under the debugger API, and calls back at its breakpoints, before the instruction there runs.
 // A breakpoint is an int3 written over its first byte: at a hit, the byte is put back and the thread steps over it once,
-// then the int3 is written again.
+// then the int3 is written again. The callback may read and write the program's memory, and end it (Terminate).
 internal sealed class Debugger(string executable, IReadOnlyCollection<uint> breakpoints, Action<Debugger, uint> hit) : IDisposable
 {
 	private const byte Int3 = 0xCC;
@@ -21,6 +21,7 @@ internal sealed class Debugger(string executable, IReadOnlyCollection<uint> brea
 	private readonly nint _context = Marshal.AllocHGlobal(ContextSize);
 	private nint _process;
 	private bool _hasSeenSystemBreakpoint;
+	private bool _isTerminating;
 
 	private static void Check(bool succeeded, string what)
 	{
@@ -45,6 +46,19 @@ internal sealed class Debugger(string executable, IReadOnlyCollection<uint> brea
 	{
 		Check(WriteProcessMemory(_process, (nint)address, [value], 1, out _), $"WriteProcessMemory at {address:X8}");
 		FlushInstructionCache(_process, (nint)address, 1);
+	}
+
+	public void WriteInt16(uint address, short value)
+	{
+		var bytes = BitConverter.GetBytes(value);
+		Check(WriteProcessMemory(_process, (nint)address, bytes, bytes.Length, out _), $"WriteProcessMemory at {address:X8}");
+	}
+
+	// Ends the program: its threads step over no more breakpoints, and Run returns once it has exited.
+	public void Terminate()
+	{
+		_isTerminating = true;
+		Check(TerminateProcess(_process, 0), "TerminateProcess");
 	}
 
 	private void InstallBreakpoints()
@@ -73,12 +87,15 @@ internal sealed class Debugger(string executable, IReadOnlyCollection<uint> brea
 	{
 		var code = (uint)Marshal.ReadInt32(_event, DebugEventUnion);
 		var address = (uint)Marshal.ReadInt32(_event, DebugEventUnion + 12);
+		if (_isTerminating)
+			return DBG_CONTINUE;
 		if (code == EXCEPTION_BREAKPOINT)
 		{
 			if (_originalBytes.ContainsKey(address))
 			{
 				_hit(this, address);
-				StepOver(threadId, address);
+				if (!_isTerminating)
+					StepOver(threadId, address);
 				return DBG_CONTINUE;
 			}
 			if (!_hasSeenSystemBreakpoint)

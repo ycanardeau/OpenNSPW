@@ -34,6 +34,15 @@ The recorder runs `NSPW_122.exe` under the Windows debugger API, with breakpoint
 3. Choose a scenario in 1.22. From the moment the battle starts, neither click nor press a key but the speed keys (F7 slower, F8 faster, F9 back to 1): the replay gives the port no input, only the speed and the view, so a click or another key would be the first difference. The view may be scrolled with the cursor at an edge of the battle area. Let the battle run, as long as wanted.
 4. Close the game (Alt+F4, or Escape). The recorder writes the end of the file and exits. Closing the recorder's console instead keeps what was recorded until then.
 
+### Without playing
+With `--scenario <n>`, or `--all` for every scenario one after another, the recorder plays 1.22 itself:
+
+```
+recorder\OpenNspw.Recorder122.exe Original\Nspw122\NSPW_122.exe traces --scenario 10 --speed 100 --frames 2000
+```
+
+It goes past the title screen as a click does (the title's button, `0x463B30`, set to 3 where the title tests it, `0x40AD39`), and starts the scenario where the scenario screen tests for a battle to start (`0x40C613`), after its rows and its click have set `sinario` and the mode: there it writes the scenario and the mode 10, and `game_init` starts the battle as after a click. `--speed` sets the speed at the start of each frame, as the speed keys do (1.22 goes up to 100). It closes 1.22 at the start of a frame once `--frames` frames are recorded, or once the battle has a result (`game_end`, `0x483B44`), so that the trace ends with a whole frame. The player's side gives no orders. Click nothing in 1.22 while it plays; moving the cursor only scrolls the view, which the trace records.
+
 The recorder checks that the executable is 1.22 by its `rand`, at `0x436056`. It slows 1.22 a little, which only makes some of its frames run more ticks; the trace has them.
 
 ## Replaying
