@@ -419,6 +419,38 @@ public unsafe partial class Nspw
 		SupplyTarget = 0;
 	}
 
+	// The player's orders of this frame, before HandleInput takes them, as a trace of 1.22 records them: the orders the
+	// clicks on the battle area made, the combat menu's item chosen, and the selection; null if the player gave none, or
+	// if the battle has a result, which gives no more orders, as 1.22 does.
+	internal Trace122Orders? ReadPlayerOrders()
+	{
+		if (Result != GameResult.None || (MoveOrders[1].Unit == 0 && !SelectOrders[1].IsSet && BufferedMenuOrders[1].Menu == CombatMenuItem.None))
+			return null;
+
+		var selections = new short[Trace122Orders.SelectionLength];
+		for (var s = 0; s < selections.Length; s++)
+			selections[s] = Selections[1][s];
+		return new Trace122Orders(MoveOrders[1], SelectOrders[1], BufferedMenuOrders[1], SelectedUnit, SelectionCount, selections);
+	}
+
+	// Gives the player's orders of a trace, before HandleInput takes them, as the player's clicks would: the selection,
+	// the combat menu's item for its unit, then the orders of the battle area for the selected unit.
+	internal void GivePlayerOrders(Trace122Orders orders)
+	{
+		SelectionCount = orders.SelectionCount;
+		for (var s = 0; s < Trace122Orders.SelectionLength; s++)
+			Selections[1][s] = orders.Selections[s];
+		if (orders.Menu.Menu != CombatMenuItem.None)
+		{
+			SelectedUnit = orders.Menu.SelectedUnit;
+			ChooseCombatMenuItem(orders.Menu.Menu);
+		}
+
+		SelectedUnit = orders.SelectedUnit;
+		MoveOrders[1] = orders.Move;
+		SelectOrders[1] = orders.Select;
+	}
+
 	// The orders of this frame, as 1.22 gives them after the input, without turns: the computer's, from cpu_strtgy, and
 	// the player's, from the buffers that the input filled, as ReceiveAndIssueOrders gives a turn's. The system orders,
 	// which go back to the network game's setting screen, are not given: a single-player game has no setting screen yet.

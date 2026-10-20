@@ -133,6 +133,43 @@ public sealed class Trace122Tests
 		Assert.Null(replay.Divergence);
 	}
 
+	// The player's orders, given while the trace is recorded, are given back by the replay, which takes no input: a ship
+	// of the player's sent away. Selecting it is no order: only its move is recorded, with the selection.
+	[Fact]
+	public void TheReplayGivesThePlayersOrders()
+	{
+		var stream = new MemoryStream();
+		var recorder = new Trace122Recorder(stream);
+		int ship;
+		WorldPosition destination;
+		using (var run = new SingleplayerRun(4, game => SetUp(game, recorder)))
+		{
+			var game = run.Game;
+			run.Frames(2);
+			ship = Enumerable.Range(1, game.MaxUnitId).First(m => game.Units[m].IsUsed && game.Units[m].Side == game.LocalSide && game.Units[m].Category == UnitCategory.Ship && game.Units[m].Kind <= UnitKind.Destroyer);
+			destination = new WorldPosition(game.Units[ship].Position.X + 400, game.Units[ship].Position.Y);
+			game.Commands.ClickUnit(ship);
+			run.Frames(2);
+			game.Commands.SetDestination(destination);
+			run.Frames(Frames);
+		}
+		recorder.Dispose();
+		var trace = stream.ToArray();
+
+		using var reader = new Trace122Reader(new MemoryStream(trace));
+		var orders = new List<Trace122Orders>();
+		for (var point = reader.Next(); point.Kind != TracePoint.End; point = reader.Next())
+			if (point.Orders is { } given)
+				orders.Add(given);
+		var order = Assert.Single(orders);
+		Assert.Equal(ship, order.SelectedUnit);
+		Assert.Equal(ship, order.Move.Unit);
+		Assert.Equal(destination, order.Move.Destination);
+
+		using var replay = Replay(trace, Frames + 4);
+		Assert.Null(replay.Divergence);
+	}
+
 	// A change to the game shows at the next tick, by the unit and the field.
 	[Fact]
 	public void TheReplayFindsAChange()

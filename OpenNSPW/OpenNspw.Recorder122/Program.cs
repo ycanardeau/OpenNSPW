@@ -20,6 +20,10 @@ const uint Decision = 0x41C3C0;
 const uint Orders = 0x430390;
 const uint DrawCmbtArea = 0x40DB50;
 
+// Where the input (0x4312A0) applies the combat menu's item clicked to the selected unit, which it has just stored in
+// cmbt_menu_slctd (0x431C59).
+const uint MenuItemApplied = 0x431C60;
+
 // Where the recorder plays in place of the player: the title screen's test of a click (0x40AD39), after which it goes
 // to the scenarios; and the scenario screen's test for a battle to start (0x40C613), after its rows and its click have
 // set sinario and the mode, before game_init.
@@ -37,6 +41,15 @@ const uint Units = 0x4916A0;
 const uint Fires = 0x48A600;
 const uint Camera = 0x489AB0; // cmbt_x, cmbt_y: doubles
 const short BattleMode = 10;
+
+// The player's orders (Trace122Orders): new_pp[1] (used, x at 8, y at 16, cls at 24), new_slct[1] (sw, the_slct_unit at
+// 4, m at 8, gr_x at 16, gr_y at 24), cmbt_menu_slctd, the_slct_unit, slct_unit_no and slct_unit[1].
+const uint PlayerMoveOrder = 0x463AE0;
+const uint PlayerSelectOrder = 0x489A60;
+const uint MenuItem = 0x489AC0;
+const uint SelectedUnit = 0x463AA8;
+const uint SelectionCount = 0x463B28;
+const uint Selection = 0x489CE0;
 
 // The globals the recorder writes to play: the title's button, 3 once clicked, and game_end, set with a result.
 const uint TitleButton = 0x463B30;
@@ -115,6 +128,36 @@ var isChecked = false;
 // The scenario the recorder starts in this run of 1.22, or null when the player chooses; whether it has started it.
 int? playedScenario = null;
 var hasStartedBattle = false;
+
+// The combat menu's item the player clicked in this frame, for its unit, until the orders record it.
+var menuOrder = new MenuOrder();
+
+// The player's orders as the orders function is about to take them: null if there are none.
+Trace122Orders? ReadPlayerOrders(Debugger debugger)
+{
+	var move = debugger.Read(PlayerMoveOrder, 32);
+	var select = debugger.Read(PlayerSelectOrder, 32);
+	if (BitConverter.ToInt16(move, 0) == 0 && BitConverter.ToInt32(select, 0) == 0 && menuOrder.Menu == CombatMenuItem.None)
+		return null;
+
+	var selection = debugger.Read(Selection, 2 * Trace122Orders.SelectionLength);
+	var selections = new short[Trace122Orders.SelectionLength];
+	for (var s = 0; s < selections.Length; s++)
+		selections[s] = BitConverter.ToInt16(selection, 2 * s);
+	return new Trace122Orders(
+		new MoveOrder { Unit = BitConverter.ToInt16(move, 0), Destination = new WorldPosition(BitConverter.ToDouble(move, 8), BitConverter.ToDouble(move, 16)), ClearsPath = BitConverter.ToInt32(move, 24) },
+		new SelectOrder
+		{
+			IsSet = new Bool32(BitConverter.ToInt32(select, 0)),
+			SelectedUnit = BitConverter.ToInt16(select, 4),
+			Unit = BitConverter.ToInt16(select, 8),
+			GroundPosition = new WorldPosition(BitConverter.ToDouble(select, 16), BitConverter.ToDouble(select, 24)),
+		},
+		menuOrder,
+		debugger.ReadInt16(SelectedUnit),
+		debugger.ReadInt16(SelectionCount),
+		selections);
+}
 
 void Close()
 {
@@ -207,7 +250,13 @@ void Hit(Debugger debugger, uint address)
 			case Decision:
 				writer!.WriteRandom(TracePoint.Decision, random);
 				break;
+			case MenuItemApplied:
+				menuOrder = new MenuOrder { Menu = (CombatMenuItem)debugger.ReadInt16(MenuItem), SelectedUnit = debugger.ReadInt16(SelectedUnit) };
+				break;
 			case Orders:
+				if (ReadPlayerOrders(debugger) is { } orders)
+					writer!.WritePlayerOrders(orders);
+				menuOrder = new MenuOrder();
 				writer!.WriteRandom(TracePoint.Orders, random);
 				break;
 			case DrawCmbtArea:
@@ -226,12 +275,12 @@ void Run(int? scenario)
 	playedScenario = scenario;
 	hasStartedBattle = false;
 	uint[] breakpoints = scenario is null
-		? [GameInit, GameInitSeeded, Frame, CharaCont, Decision, Orders, DrawCmbtArea]
-		: [GameInit, GameInitSeeded, Frame, CharaCont, Decision, Orders, DrawCmbtArea, TitleClickTest, BattleStartTest];
+		? [GameInit, GameInitSeeded, Frame, CharaCont, Decision, Orders, DrawCmbtArea, MenuItemApplied]
+		: [GameInit, GameInitSeeded, Frame, CharaCont, Decision, Orders, DrawCmbtArea, MenuItemApplied, TitleClickTest, BattleStartTest];
 	using (var debugger = new Debugger(executable, breakpoints, Hit))
 	{
 		Console.WriteLine(scenario is null
-			? $"Running {executable}. Play a battle without clicking or pressing keys but the speed keys, then close the game."
+			? $"Running {executable}. Play a battle with the mouse and the speed keys, then close the game."
 			: $"Running {executable} in scenario {scenario}. Click nothing in it until it closes.");
 		debugger.Run();
 	}

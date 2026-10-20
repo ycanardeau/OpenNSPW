@@ -183,6 +183,9 @@ public void	HandleInput()
 	{
 	int	h,m,f,e; Array256<int> chk = default;
 
+	// A trace of 1.22 gives the player's orders here, or records them (docs/Verification.md).
+	Trace?.ReachPlayerOrders(this);
+
 	e=1;
 	if( SelectOrders[e].IsSet && !Units[SelectOrders[e].SelectedUnit].IsSupplying && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress ))
 		{
