@@ -48,10 +48,14 @@ internal sealed class Debugger(string executable, IReadOnlyCollection<uint> brea
 		FlushInstructionCache(_process, (nint)address, 1);
 	}
 
+	public void Write(uint address, byte[] bytes)
+	{
+		Check(WriteProcessMemory(_process, (nint)address, bytes, bytes.Length, out _), $"WriteProcessMemory at {address:X8}");
+	}
+
 	public void WriteInt16(uint address, short value)
 	{
-		var bytes = BitConverter.GetBytes(value);
-		Check(WriteProcessMemory(_process, (nint)address, bytes, bytes.Length, out _), $"WriteProcessMemory at {address:X8}");
+		Write(address, BitConverter.GetBytes(value));
 	}
 
 	// Ends the program: its threads step over no more breakpoints, and Run returns once it has exited.

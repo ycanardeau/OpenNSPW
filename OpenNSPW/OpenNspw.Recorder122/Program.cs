@@ -5,10 +5,12 @@ using OpenNspw.Recorder122;
 // battle played in it as a trace (Trace122), <scenario>-<date>-<time>.n122, in the output directory.
 //
 // OpenNspw.Recorder122 <NSPW_122.exe> [output directory] [--scenario <n> | --all] [--speed <n>] [--frames <n>]
+//     [--orders <n>] [--seed <n>]
 //
 // With neither --scenario nor --all, the player chooses the battles in 1.22. With them, the recorder plays without
-// anyone: it starts each scenario as a click on it does, at the speed given, and ends 1.22 after the frames given, or
-// once the battle has a result, then goes on to the next scenario.
+// anyone: it starts each scenario as a click on it does, at the speed given, gives the player's side an order every
+// --orders frames (20 by default, 0 for none; Commander), from the recorder's random numbers of --seed, and ends 1.22
+// after the frames given, or once the battle has a result, then goes on to the next scenario.
 
 // The functions of 1.22 where the trace's points are read, at their first instruction, but Seeded, after game_init's
 // last srand. Drawing is draw_cmbt_area, which only the battle's frame calls (0x434630).
@@ -71,7 +73,7 @@ static string[] Positionals(string[] args)
 	var positionals = new List<string>();
 	for (var i = 0; i < args.Length; i++)
 	{
-		if (args[i] is "--scenario" or "--speed" or "--frames")
+		if (args[i] is "--scenario" or "--speed" or "--frames" or "--orders" or "--seed")
 			i++;
 		else if (args[i] != "--all")
 			positionals.Add(args[i]);
@@ -88,21 +90,25 @@ var positionalArgs = Positionals(args);
 int? scenarioOption;
 int? speedOption;
 int? frameLimit;
+int? ordersOption;
+int? seedOption;
 try
 {
 	scenarioOption = NumberOption(args, "--scenario");
 	speedOption = NumberOption(args, "--speed");
 	frameLimit = NumberOption(args, "--frames");
+	ordersOption = NumberOption(args, "--orders");
+	seedOption = NumberOption(args, "--seed");
 }
 catch (FormatException)
 {
 	positionalArgs = [];
-	scenarioOption = speedOption = frameLimit = null;
+	scenarioOption = speedOption = frameLimit = ordersOption = seedOption = null;
 }
 
 if (positionalArgs.Length is < 1 or > 2)
 {
-	Console.Error.WriteLine("Usage: OpenNspw.Recorder122 <NSPW_122.exe> [output directory] [--scenario <n> | --all] [--speed <n>] [--frames <n>]");
+	Console.Error.WriteLine("Usage: OpenNspw.Recorder122 <NSPW_122.exe> [output directory] [--scenario <n> | --all] [--speed <n>] [--frames <n>] [--orders <n>] [--seed <n>]");
 	return 2;
 }
 
@@ -128,6 +134,10 @@ var isChecked = false;
 // The scenario the recorder starts in this run of 1.22, or null when the player chooses; whether it has started it.
 int? playedScenario = null;
 var hasStartedBattle = false;
+
+// The player's side's orders when the recorder plays, from a seed that is printed, so that a run can be made again.
+var seed = seedOption ?? Random.Shared.Next();
+var commander = new Commander(new Random(seed), ordersOption ?? 20);
 
 // The combat menu's item the player clicked in this frame, for its unit, until the orders record it.
 var menuOrder = new MenuOrder();
@@ -171,7 +181,7 @@ void Close()
 	}
 }
 
-// Plays in place of the player: past the title, the scenario, then the speed of each frame. Ends 1.22 at the start of
+// Plays in place of the player: past the title, the scenario, then the speed of each frame, and the orders. Ends 1.22 at the start of
 // a frame once the frames asked for are recorded, or once the battle has a result, before the frame is recorded, so that
 // the trace ends with a whole frame.
 void Play(Debugger debugger, uint address)
@@ -192,12 +202,16 @@ void Play(Debugger debugger, uint address)
 		case Frame when writer is not null && debugger.ReadInt16(Mode) == BattleMode:
 			if (frames >= frameLimit || debugger.ReadInt32(Result) != 0)
 			{
+				Console.WriteLine(frames >= frameLimit ? $"{frames} frames recorded, as asked." : $"The battle has a result (game_end {debugger.ReadInt32(Result)}).");
 				Close();
 				debugger.Terminate();
 				break;
 			}
 			if (speedOption is { } speed)
 				debugger.WriteInt16(Speed, (short)speed);
+			break;
+		case Orders when writer is not null && commander.Order(debugger, frames) is { } order:
+			Console.WriteLine($"Frame {frames}: {order}.");
 			break;
 	}
 }
@@ -281,7 +295,7 @@ void Run(int? scenario)
 	{
 		Console.WriteLine(scenario is null
 			? $"Running {executable}. Play a battle with the mouse and the speed keys, then close the game."
-			: $"Running {executable} in scenario {scenario}. Click nothing in it until it closes.");
+			: $"Running {executable} in scenario {scenario}, with the player's orders of seed {seed} (--seed). Click nothing in it until it closes.");
 		debugger.Run();
 	}
 
