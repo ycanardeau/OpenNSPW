@@ -60,7 +60,7 @@ Each adds from the first empty element of 1 to 17 (18 when there is none) the un
 
     The events are not flags: an event runs again whenever its condition holds again.
 
-2. **One fleet**: fleet `FrameCount%10+1`, so each fleet acts every 10 frames. The rest of this section is about that fleet.
+2. **One fleet**: fleet `FrameCount%10+1`, so each fleet acts every 10 frames. The battle's first frame is 1, not 0 ([Differences.md](Differences.md)), so fleet 2 acts first. The rest of this section is about that fleet.
 
 3. **The target near its destination** (`0x405554`): if the fleet has a flagship and a destination, the last enemy unit in a square of ±2400 around the destination that is a battleship, cruiser, carrier, light carrier, transport or land force (1, 2, 5, 6, 10, 15 to 17; destroyers, 3, unless the flagship is a battleship), whose `arm[1]` is not 0. In scenario 204, only ground facilities. If the flagship is a carrier, then the last visible (`found`) such enemy within ±800 of the flagship instead, if there is one.
 

@@ -4341,6 +4341,10 @@ public void	InitializeGame()
 		// The scenario has set the sides, the camera and the time limit, and there is no rival.
 		InitializeSingleplayerOrders();
 
+		// 1.22's game_init runs within the frame of the setting screen that starts the battle (0x40C61E), which then
+		// counts itself (0x434E9F): the battle's first frame is 1, and cpu_strtgy starts with fleet 2.
+		FrameCount=1;
+
 		// 1.22's game_init seeds rand last, from the time (0x42A163).
 		srand( Trace?.Seeds?.Battle ?? (uint)time(null) );
 		Trace?.Reach(this, TracePoint.Seeded);
