@@ -200,8 +200,9 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 			if( effect.Animation!=3 || Result!=GameResult.None )
 				{
 				// ユニットインフォ画面以外のエフェクト表示は見える見えないのテストをします。
+				// 1.22 still tests them once the battle has a result (0x40CDEC).
 				flg=0;
-				if(Result!=GameResult.None)
+				if(Result!=GameResult.None && Rules.ResultShowsEveryLowerEffect)
 					flg=1;
 				for(n=1;n<=MaxUnitId;n++)
 					{

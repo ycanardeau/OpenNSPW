@@ -165,6 +165,10 @@ public sealed record BattleRules(
 	// marks.
 	bool MarksSecondTypes,
 
+	// Whether every lower effect is drawn once the battle has a result, rather than those the player sees, with the random
+	// numbers of their animations.
+	bool ResultShowsEveryLowerEffect,
+
 	// Whether the sonar plays.
 	bool PlaysSonar,
 
@@ -230,6 +234,7 @@ public sealed record BattleRules(
 		EffectsOnDrawnTickOnly: false,
 		DamageEffectsTestBeforeDrawing: false,
 		MarksSecondTypes: true,
+		ResultShowsEveryLowerEffect: true,
 		PlaysSonar: true,
 		FireLimit: all_head.FIRE_MAX,
 		EffectLimit: all_head.EFFECT_MAX,
@@ -290,6 +295,7 @@ public sealed record BattleRules(
 		EffectsOnDrawnTickOnly: true, // 0x41AF02 to 0x41C18D, 0x419099 to 0x41A774
 		DamageEffectsTestBeforeDrawing: true, // 0x41B4CC, 0x41B659, 0x41B7AF, 0x41B8EC, 0x41C18D
 		MarksSecondTypes: false, // 0x41B991
+		ResultShowsEveryLowerEffect: false, // 0x40CDEC
 		PlaysSonar: false,
 		FireLimit: 256, // seek_fire_no, 0x416E40
 		EffectLimit: 256,

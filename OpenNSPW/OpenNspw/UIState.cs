@@ -245,7 +245,7 @@ public unsafe partial class Nspw
 			{
 			ref var effect = ref Effects[m];
 			effects[m] = effect.Layer!=EffectLayer.None
-				&& ( Result!=GameResult.None || (effect.Layer==EffectLayer.Lower && effect.Animation==3) || IsEffectSeen(effect.Position) );
+				&& ( (Result!=GameResult.None && (effect.Layer==EffectLayer.Upper || Rules.ResultShowsEveryLowerEffect)) || (effect.Layer==EffectLayer.Lower && effect.Animation==3) || IsEffectSeen(effect.Position) );
 			}
 	}
 
