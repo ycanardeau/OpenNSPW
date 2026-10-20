@@ -437,6 +437,20 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double drctn2, re
 	return true;
 	}
 
+// A heading reduced to whole degrees from 0 to 359, as NSPW NET does: a depth charge's direction from its ship, a
+// fighter's to dodge a head-on pass, a ship's to evade a torpedo or a plane. 1.22 means to, but stores the int into the
+// low half of the double and reads the double back (0x410452, 0x415324, 0x416417, 0x416838): the heading keeps its high
+// bits, so all of its fraction of a degree but the last digits.
+private double ReduceHeading(double heading)
+	{
+	var whole=(int)heading%360;
+	if( !Rules.ReducedHeadingsKeepTheirFraction )
+		return whole;
+
+	var bits=BitConverter.DoubleToInt64Bits(heading);
+	return BitConverter.Int64BitsToDouble((bits & unchecked((long)0xFFFFFFFF00000000)) | (uint)whole);
+	}
+
 private bool ShipDropAntiSubmarineBomb(ref int trgt, ref Unit unit, FireKind kind)
 	{
 	int n;
@@ -476,7 +490,7 @@ private bool ShipDropAntiSubmarineBomb(ref int trgt, ref Unit unit, FireKind kin
 						{
 						// ただの駆逐艦
 						drctn+=180;
-						drctn=(int)drctn%360;
+						drctn=ReduceHeading(drctn);
 						fire.Position += new WorldVector(CosDegrees(drctn)*20, SinDegrees(drctn)*20);
 						}
 					else
@@ -2548,7 +2562,7 @@ public void	SetFighterAttackDestination(int m)
 						em_drctn-=45+Random(45);
 						break;
 					}
-				em_drctn=(int)em_drctn%360;
+				em_drctn=ReduceHeading(em_drctn);
 
 				wrk_x+=CosDegrees(em_drctn)*300;
 				wrk_y+=SinDegrees(em_drctn)*300;
@@ -3089,19 +3103,6 @@ private bool HuntSubmarine(ref Unit unit)
 	return true;
 	}
 
-// A ship's heading to evade a torpedo or a plane, reduced to whole degrees from 0 to 359, as NSPW NET does. 1.22 means
-// to, but stores the int into the low half of the double and reads the double back (0x416417, 0x416838): the heading
-// keeps its high bits, so all of its fraction of a degree but the last digits.
-private double ReduceEvasionHeading(double heading)
-	{
-	var whole=(int)heading%360;
-	if( !Rules.EvasionHeadingsKeepTheirFraction )
-		return whole;
-
-	var bits=BitConverter.DoubleToInt64Bits(heading);
-	return BitConverter.Int64BitsToDouble((bits & unchecked((long)0xFFFFFFFF00000000)) | (uint)whole);
-	}
-
 private bool EvadePlane(ref Unit other, ref Unit unit)
 	{
 	double wrk_x;
@@ -3142,7 +3143,7 @@ private bool EvadePlane(ref Unit other, ref Unit unit)
 					em_drctn-=45+Random(45+20);
 					break;
 				}
-			em_drctn=ReduceEvasionHeading(em_drctn);
+			em_drctn=ReduceHeading(em_drctn);
 
 			wrk_x+=CosDegrees(em_drctn)*300;
 			wrk_y+=SinDegrees(em_drctn)*300;
@@ -3249,7 +3250,7 @@ private bool EvadeTorpedo(ref Fire fire, ref Unit unit)
 					break;
 				}
 
-			em_drctn=ReduceEvasionHeading(em_drctn);
+			em_drctn=ReduceHeading(em_drctn);
 
 			wrk_x+=CosDegrees(em_drctn)*300;
 			wrk_y+=SinDegrees(em_drctn)*300;

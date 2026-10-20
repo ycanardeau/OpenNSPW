@@ -112,9 +112,9 @@ public sealed record BattleRules(
 	bool ShipsFleeGroundUnits,
 	int ShipEvasionRange,
 
-	// Whether a ship's heading to evade a torpedo or a plane keeps its fraction of a degree, but its last digits, rather
-	// than becoming whole degrees.
-	bool EvasionHeadingsKeepTheirFraction,
+	// Whether the headings meant to become whole degrees, a depth charge's from its ship, a fighter's to dodge a head-on
+	// pass and a ship's to evade a torpedo or a plane, keep their fraction of a degree but its last digits (ReduceHeading).
+	bool ReducedHeadingsKeepTheirFraction,
 
 	// Whether only the computer's destroyers hunt submarines, chasing one (HuntSubmarineAs122).
 	bool OnlyComputersDestroyersHunt,
@@ -217,7 +217,7 @@ public sealed record BattleRules(
 		ComputerShipsReturnIntoMap: true,
 		ShipsFleeGroundUnits: false,
 		ShipEvasionRange: all_head.BB1_SIGHT,
-		EvasionHeadingsKeepTheirFraction: false,
+		ReducedHeadingsKeepTheirFraction: false,
 		OnlyComputersDestroyersHunt: false,
 		DropsHiddenTargets: true,
 		HasSightRangesOf122: false,
@@ -278,7 +278,7 @@ public sealed record BattleRules(
 		ComputerShipsReturnIntoMap: false, // 0x416B35, 0x401966
 		ShipsFleeGroundUnits: true, // 0x41616C
 		ShipEvasionRange: 900, // 0x416277
-		EvasionHeadingsKeepTheirFraction: true, // 0x416417, 0x416838
+		ReducedHeadingsKeepTheirFraction: true, // 0x410452, 0x415324, 0x416417, 0x416838
 		OnlyComputersDestroyersHunt: true, // 0x416706 to 0x416B35
 		DropsHiddenTargets: false, // 0x402FD2
 		HasSightRangesOf122: true, // 0x418080
