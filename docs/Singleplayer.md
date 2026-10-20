@@ -110,7 +110,7 @@ So in a single-player game (`IsSingleplayer`):
 
 - `WinMain` connects to no one, and starts the battle of `ScenarioNumber` (`StartSingleplayerGame`).
 - `UpdateFrame` runs a frame on 1.22's timer, every 88 ms (`TryStartSingleplayerFrame`), with speed + 1 ticks, none at speed 0, and `decision` after each tick but the last, which is drawn first (`0x4345DF` to `0x43463A`). The speed keys are NSPW NET's, as in a network game: F, G and R, and Space for 20 ticks a frame; 1.22's are F7, F8 and F9 (`0x433AF0` to `0x433B53`).
-- `InitializeGame` makes no table of shared random numbers, which 1.22 does not have, and seeds rand last from the time, as 1.22's `game_init` does (`0x42A163`).
+- `WinMain` seeds rand from the time as the game starts, as 1.22 does (`0x434456`), and `InitializeGame` goes on from there, unless a trace gives rand's state: the scenario's random setup, such as where scenario 4's American fleets start, differs from game to game. It makes no table of shared random numbers, which 1.22 does not have, and seeds rand last from the time, as 1.22's `game_init` does (`0x42A163`).
 - `InitializeGame` sets up 1.22's scenario instead of NSPW NET's, which sets the sides, the camera and the time limit, and sends nothing.
 - `InitializeGame` starts the battle at frame 1 (`FrameCount`), as 1.22 does: its `game_init` runs within the frame of the setting screen that starts the battle (`0x40C61E`), which then counts itself (`0x434E9F`).
 - `UpdateBattle` skips the two network phases, and counts `BattleTime` down every tick, as 1.22 counts `rest_time`.

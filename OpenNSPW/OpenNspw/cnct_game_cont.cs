@@ -4252,8 +4252,10 @@ public void	InitializeGame()
 	// 乱数の初期化
 	if( IsSingleplayer )
 		{
-		// 1.22 has no shared random numbers; its rand goes on from where it was, which a trace gives.
-		srand( Trace?.Seeds?.Start ?? (uint)( SharedRandomSeed ) );
+		// 1.22 has no shared random numbers: its rand goes on from where it was, seeded from the time as the game started
+		// (WinMain), or as a trace gives it.
+		if( Trace?.Seeds?.Start is { } start )
+			srand( start );
 		Trace?.Reach(this, TracePoint.Start);
 		}
 	else

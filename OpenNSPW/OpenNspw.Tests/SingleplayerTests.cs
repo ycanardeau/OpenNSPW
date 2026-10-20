@@ -34,6 +34,51 @@ public class SingleplayerTests
 		return positions;
 	}
 
+	// Keeps where a side's ships are as the game has set up its scenario, before the battle's first tick.
+	private sealed class SetupCapture(Side side) : ISingleplayerTrace
+	{
+		private readonly Side _side = side;
+
+		public List<(int Unit, WorldPosition Position)> Positions { get; private set; } = [];
+
+		public (uint Start, uint Battle)? Seeds => null;
+
+		public bool TakesInput => true;
+
+		public int? TicksOfNextFrame() => null;
+
+		public void ReachPlayerOrders(Nspw game)
+		{
+		}
+
+		public void Reach(Nspw game, TracePoint point)
+		{
+			if (point == TracePoint.Seeded)
+				Positions = PositionsOf(game, _side);
+		}
+	}
+
+	private static List<(int Unit, WorldPosition Position)> SetUpAt(int scenario, Side side, int startDate)
+	{
+		var capture = new SetupCapture(side);
+		using var run = new SingleplayerRun(scenario, game => game.Trace = capture, startDate);
+		run.Frames(1);
+		return capture.Positions;
+	}
+
+	// The computer's fleets start where 1.22's random setup puts them, from rand as the time the game started seeded it
+	// (WinMain, as 1.22 does at 0x434456): the same for the same time, elsewhere at another. In scenario 4 the American
+	// fleets start at random.
+	[Fact]
+	public void ScenariosAreSetUpFromTheTimeTheGameStarted()
+	{
+		var first = SetUpAt(4, Side.UnitedStates, 1_000_000_000);
+
+		Assert.NotEmpty(first);
+		Assert.Equal(first, SetUpAt(4, Side.UnitedStates, 1_000_000_000));
+		Assert.NotEqual(first, SetUpAt(4, Side.UnitedStates, 1_000_000_001));
+	}
+
 	[Theory]
 	[InlineData(3, Side.Japan)]
 	[InlineData(4, Side.UnitedStates)]

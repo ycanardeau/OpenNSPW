@@ -6,7 +6,7 @@ At each point, rand's state (`0x442250`), which every random number of the battl
 
 | Point | Where in 1.22 | Where in the port | Also recorded |
 | --- | --- | --- | --- |
-| Start | `game_init` (`0x429C50`) | `InitializeGame`, after its `srand` | The scenario (`sinario`) |
+| Start | `game_init` (`0x429C50`) | `InitializeGame`, at its start, where the replay sets rand's state | The scenario (`sinario`) |
 | Seeded | After `game_init`'s last `srand(time(0))` (`0x42A16E`) | `InitializeGame`, at its end | |
 | Frame | The frame (`0x434570`), in a battle | `TryStartSingleplayerFrame` | The speed |
 | Tick | `chara_cont` (`0x401000`) | `UpdateFrame`, before `UpdateBattle` | `cc_count`, whether the tick is drawn, the units 0 to 100 and the fires 0 to 255 in 1.22's layout |

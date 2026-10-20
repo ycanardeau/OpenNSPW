@@ -792,8 +792,13 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 
 	Mode=GameMode.Title;
 
+	// 1.22 seeds rand from the time as it starts (0x434456), and its scenarios draw their random setups, such as where the
+	// computer's fleets start, from where it has gone since.
 	if( IsSingleplayer )
+		{
+		srand( (uint)time(null) );
 		StartSingleplayerGame();
+		}
 
 	//メッセージループ
 	while(TRUE!=0)
