@@ -709,24 +709,23 @@ public class SingleplayerTests
 		Assert.Equal(2, TicksOfAFrame());
 	}
 
-	// F7 lowers the speed, to 0, which stops the battle; F8 raises it, to 100; F9 sets it back to 1, as in 1.22 (0x433AF0
-	// to 0x433B53).
+	// The speed keys are those of a network game, F faster, G slower, R back to 1, and a frame runs speed + 1 ticks.
 	[Fact]
-	public void TheSpeedKeysAreThoseOf122()
+	public void TheSpeedKeysAreThoseOfANetworkGame()
 	{
 		using var run = new SingleplayerRun(3);
 		run.Frames(2);
 		var game = run.Game;
 
-		void Press(int vk, int times = 1)
+		void Press(uint dik, int times = 1)
 		{
 			for (var i = 0; i < times; i++)
 			{
-				run.Player.Post(g => g.SetKeyState(g.hwndApp, vk, true));
-				run.Player.Post(g => g.SetKeyState(g.hwndApp, vk, false));
+				run.Player.Post(g => g.PostKeyboardInput(dik, true));
+				run.Frames(1);
+				run.Player.Post(g => g.PostKeyboardInput(dik, false));
+				run.Frames(1);
 			}
-
-			run.Frames(1);
 		}
 
 		int TicksOfAFrame()
@@ -736,18 +735,15 @@ public class SingleplayerTests
 			return game.Tick - tick;
 		}
 
-		Press(winuser.VK_F8, 2);
-		Assert.Equal(3, game.GameSpeed);
-		Assert.Equal(4, TicksOfAFrame());
+		Press(dinput.DIK_F, 2);
+		Assert.Equal(4, game.GameSpeed);
+		Assert.Equal(5, TicksOfAFrame());
 
-		Press(winuser.VK_F7, 5);
+		Press(dinput.DIK_G, 3);
 		Assert.Equal(0, game.GameSpeed);
 		Assert.Equal(0, TicksOfAFrame());
 
-		Press(winuser.VK_F8, 120);
-		Assert.Equal(100, game.GameSpeed);
-
-		Press(winuser.VK_F9);
+		Press(dinput.DIK_R);
 		Assert.Equal(1, game.GameSpeed);
 		Assert.Equal(2, TicksOfAFrame());
 	}

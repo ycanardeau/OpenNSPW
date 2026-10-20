@@ -958,7 +958,7 @@ private void ReadKeyboard()
 					break;
 
 				case DIK_F:
-					if( Mode==GameMode.Battle && !IsSingleplayer && (od.dwData & (0x80))!=0 )
+					if( Mode==GameMode.Battle && (od.dwData & (0x80))!=0 )
 						{
 						if(GameSpeed<2)
 							GameSpeed++;
@@ -970,7 +970,7 @@ private void ReadKeyboard()
 					break;
 
 				case DIK_G:
-					if( Mode==GameMode.Battle && !IsSingleplayer && (od.dwData & (0x80))!=0 )
+					if( Mode==GameMode.Battle && (od.dwData & (0x80))!=0 )
 						{
 						if(GameSpeed<=1)
 							GameSpeed=0;
@@ -985,7 +985,7 @@ private void ReadKeyboard()
 					break;
 
 				case DIK_R:
-					if( Mode==GameMode.Battle && !IsSingleplayer && (od.dwData & (0x80))!=0 )
+					if( Mode==GameMode.Battle && (od.dwData & (0x80))!=0 )
 						{
 						GameSpeed=1;
 						}

@@ -45,7 +45,6 @@ This document lists every difference found between the two, read from 1.22's mac
 | Hits (`hit_chk`, `0x40F930`) | A surfaced submarine is hit within 4 by 2 of each part (`0x40F9D6`); every other kind, and a submerged submarine, the same as NSPW NET's | 8 by 4 | `CheckHit`, `BattleRules.SurfacedSubmarineHitSize` |
 | The frame | A multimedia timer of 88 ms ([below](#122s-frame)); speed + 1 ticks a frame, none at speed 0 | A frame every 50 ms at least, `GameSpeed` ticks (20 while Space is held) | `UpdateFrame`, `TryStartSingleplayerFrame` |
 | `decision` | Once a tick, after the drawing for the tick that is drawn, so that its messages show over the battle area | After every tick, and again after the drawing | `UpdateFrame` |
-| The speed keys | F7 slower (to 0, which stops the battle), F8 faster (to 100), F9 back to 1 (`0x433AF0` to `0x433B53`) | F, G and R, by steps of 1, 2, 4, 6 and so on to 300, and Space | `MainWndProc` (`VK_F7` to `VK_F9`); `ReadKeyboard` gives F, G and R to network games only |
 
 Supply and ships outside the map together let the computer's fleets renew. In scenario 304 the American naval base (unit 21) is at x 10600, outside the map. A fleet that has lost its carrier, its ammunition or its fuel returns there ([ComputerPlayer.md](ComputerPlayer.md), `cpu_strtgy` step 9); there it supplies, which gives back its HP, ammunition and fuel, and step 12 puts a new carrier at its supplying flagship. NSPW NET's battle would turn the fleet back at the edge, and stop its supply away from a base within 280.
 
@@ -66,6 +65,7 @@ Compared with `fire_now` (`0x40FE10`), the fires (`0x418C30`) and the emergency 
 ## The frame, the input and the drawing
 | Difference | 1.22 | NSPW NET |
 | --- | --- | --- |
+| The speed keys | F7 slower (to 0, which stops the battle), F8 faster (to 100), F9 back to 1 (`0x433AF0` to `0x433B53`) | F, G and R, by steps of 1, 2, 4, 6 and so on to 300, and Space for 20 ticks a frame. Single-player keeps them, as a network game has them, and runs speed + 1 ticks a frame |
 
 ### 1.22's frame
 1.22 is driven by a multimedia timer, `timeSetEvent(88 × wPeriodMin, wPeriodMin, 0x4329B0, 0, TIME_PERIODIC)` (`0x432960`); with the usual minimum period of 1 ms, every 88 ms. The callback counts the timer's ticks (`0x483B50`) and posts `WM_USER` once; the window procedure handles it (`0x433C61`) by drawing a frame (`0x434570`) and clearing the count.

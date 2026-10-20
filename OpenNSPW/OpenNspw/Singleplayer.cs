@@ -103,7 +103,8 @@ public unsafe partial class Nspw
 
 	// Whether 1.22's timer has ticked since the last frame, which starts a frame, and the ticks of that frame: none at
 	// speed 0, or speed + the timer's ticks counted (0x4345DF). The count is 1: 1.22 clears it after a frame (0x433C99), so
-	// the timer's ticks while a frame runs are lost.
+	// the timer's ticks while a frame runs are lost. The speed is set by NSPW NET's keys, as in a network game, and Space
+	// runs 20 ticks a frame while it is held.
 	private bool TryStartSingleplayerFrame(out short ticks)
 	{
 		if (Elapsed < SingleplayerTimerPeriod)
@@ -113,7 +114,10 @@ public unsafe partial class Nspw
 		}
 
 		LastTime2 += Elapsed / SingleplayerTimerPeriod * SingleplayerTimerPeriod;
-		ticks = GameSpeed == 0 ? (short)0 : (short)(GameSpeed + 1);
+		if (Buttons.HasFlag(InputButtons.Space))
+			ticks = 20;
+		else
+			ticks = GameSpeed == 0 ? (short)0 : (short)(GameSpeed + 1);
 		return true;
 	}
 

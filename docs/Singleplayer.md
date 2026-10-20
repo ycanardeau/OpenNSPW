@@ -109,7 +109,7 @@ Translating unit numbers at the boundary would need to know every field that hol
 So in a single-player game (`IsSingleplayer`):
 
 - `WinMain` connects to no one, and starts the battle of `ScenarioNumber` (`StartSingleplayerGame`).
-- `UpdateFrame` runs a frame on 1.22's timer, every 88 ms (`TryStartSingleplayerFrame`), with speed + 1 ticks, none at speed 0, and `decision` after each tick but the last, which is drawn first (`0x4345DF` to `0x43463A`). F7, F8 and F9 lower the speed, to 0, raise it, to 100, and set it back to 1, as in 1.22 (`0x433AF0` to `0x433B53`); NSPW NET's F, G, R and Space do nothing.
+- `UpdateFrame` runs a frame on 1.22's timer, every 88 ms (`TryStartSingleplayerFrame`), with speed + 1 ticks, none at speed 0, and `decision` after each tick but the last, which is drawn first (`0x4345DF` to `0x43463A`). The speed keys are NSPW NET's, as in a network game: F, G and R, and Space for 20 ticks a frame; 1.22's are F7, F8 and F9 (`0x433AF0` to `0x433B53`).
 - `InitializeGame` sets up 1.22's scenario instead of NSPW NET's, which sets the sides, the camera and the time limit, and sends nothing.
 - `UpdateBattle` skips the two network phases, and counts `BattleTime` down every tick, as 1.22 counts `rest_time`.
 - `HandleInput` buffers the player's orders as in a network game, then `IssueSingleplayerOrders` gives the orders of this frame: `cpu_strtgy`, then what `ReceiveAndIssueOrders` does for a turn, for the player only, and `ApplyOrders` for both. Orders take effect in the frame they are given, not at the next turn.
