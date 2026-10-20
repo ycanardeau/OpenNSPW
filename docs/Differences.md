@@ -55,7 +55,7 @@ What 1.22's `chara_cont` (`0x401000`) and the functions it calls do differently 
 
 | Difference | 1.22 | NSPW NET |
 | --- | --- | --- |
-| `set_new_unit_plane` with no parking place left (`0x41F111`) | The place number of the previous plane added, or, for the first, whatever its stack holds | `AddPlane`: 0, or the previous plane's |
+| `set_new_unit_plane` with no parking place left (`0x41F111`) | The place number of the previous plane added, or, for the first, whatever its stack holds | `AddPlane`: 0, or the previous plane's. Single-player never calls `AddPlane`: the scenarios and `cpu_strtgy` call 1.22's own, in the emulator, so only what the emulator's stack holds there can differ from Windows, where it depends on earlier calls |
 | Effects (`0x41AEB0`) | The same effects, drawing the same random numbers in the same order, but from `rand`; most of them (the leader's flag, the weapons' and works' marks, the smoke and the wakes) only on the tick that is drawn (`0x48A1EC`, thirteen tests from `0x41AF02` to `0x41C18D`) | From `SharedRandom`, on every tick. Single-player draws them from `rand` (`EffectRandom`), on every tick |
 
 Compared and the same: reloading and rearming (`0x403043` to `0x4030B6`), the damage that doubles the firing intervals (below 30% of the HP, `0x4030B6`), and the evasions of torpedoes and planes (`set_pos_of_emrgncy_SHIP`, `0x415F4F` to `0x4160FD` and `0x416501` to `0x41688B`).
