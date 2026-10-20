@@ -88,6 +88,9 @@ public sealed record BattleRules(
 	// Moves: whether fuel burns by the speed's share of the top speed, as a fraction, rather than 1 at a time.
 	bool FuelBurnsBySpeed,
 
+	// Whether a heading that turns to 360 becomes 0, rather than only one past 360.
+	bool HeadingWrapsAt360,
+
 	// Whether a ship looks 40 ahead, with only air bases and naval bases out of its way, and the computer replans the
 	// routes of its units that ships or land block (CheckCourseAheadAs122, ReplanBlockedRoute).
 	bool ComputerReplansBlockedRoutes,
@@ -191,6 +194,7 @@ public sealed record BattleRules(
 		CargoSlowsTransports: true,
 		LandedBasesAreBuilt: true,
 		FuelBurnsBySpeed: true,
+		HeadingWrapsAt360: true,
 		ComputerReplansBlockedRoutes: false,
 		SupplyNeedsNavalBase: true,
 		ComputerShipsReturnIntoMap: true,
@@ -247,6 +251,7 @@ public sealed record BattleRules(
 		CargoSlowsTransports: false, // 0x402955
 		LandedBasesAreBuilt: false, // 0x418E23
 		FuelBurnsBySpeed: false, // 0x402F72
+		HeadingWrapsAt360: false, // 0x4024B6
 		ComputerReplansBlockedRoutes: true, // 0x401F95 to 0x4023EB, 0x402D2B
 		SupplyNeedsNavalBase: false, // 0x4010BB
 		ComputerShipsReturnIntoMap: false, // 0x416B35, 0x401966

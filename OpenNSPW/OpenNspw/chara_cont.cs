@@ -1391,7 +1391,7 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 
 		unit.Direction+=unit.TurnRate;
 
-		if(unit.Direction>=360.0)
+		if(unit.Direction>360.0 || (Rules.HeadingWrapsAt360 && unit.Direction==360.0))
 			unit.Direction-=360.0;
 		if(unit.Direction<0.0)
 			unit.Direction=360.0+unit.Direction;

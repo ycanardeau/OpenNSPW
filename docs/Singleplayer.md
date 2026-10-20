@@ -138,6 +138,7 @@ So in a single-player game (`IsSingleplayer`):
 - `UpdateBattle` counts the tick, moves the clouds and finds the units in 1.22's order, and runs its unit loop for cities too (`0x401009` to `0x4010A3`).
 - `UpdateLanding` adjusts a returning plane's approach on the tick that is drawn only (`IsDrawnTick`, 1.22's `0x48A1EC`), and to any base still in use, as 1.22 does (`0x401AB4`, `0x417530`).
 - `MoveUnit` burns a moving unit's fuel 1 at a time, as 1.22 does with its integer `gas[0]` (`0x402F72`).
+- `MoveUnit` turns a heading back to 0 only past 360, as 1.22 does (`0x4024B6`), where NSPW NET does at 360.
 - `SetAttackerAttackDestination` keeps the attackers in formation, as 1.22 does (`0x415A10`), where NSPW NET's leader sends them off at 500 to 510 from the target.
 - `ShipFireRapidAntiAircraftShell`, `ShipDropAntiSubmarineBomb`, `ShipFireGunWithoutTarget` and `ShipFireGunAtTarget` shoot as 1.22's `fire_now` does (`0x40FE7C` to `0x412BE1`): one sound for rapid fire, an odd count of depth charges left at −1, the same aim for every kind of gun, one tick less of flight, and the draws in its order.
 - `ShipFireTorpedoWithoutTarget` and `ShipFireTorpedoAtTarget` reload a submarine's torpedoes in 2000 ticks, as 1.22 does (`0x4110DB`).
