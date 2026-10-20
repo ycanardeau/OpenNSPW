@@ -403,7 +403,7 @@ private void UpdateCargo(ref Fire fire, ref int n)
 				Effects[f].SpriteNumber=8;			// ソースファイル上の番号
 				}
 
-			if( fire.Ticks>=fire.ArmingTime  )
+			if( fire.Ticks>=fire.ArmingTime && IsEffectTick )
 				{
 				if(!( fire.Position.Y>MAP_TOP || fire.Position.Y<MAP_BOTTOM || fire.Position.X<MAP_LEFT || fire.Position.X>MAP_RIGHT ))
 					{
@@ -490,7 +490,7 @@ private void UpdateBullet(ref Fire fire, ref int n, int m)
 			}
 		else
 			{
-			if( 1!=0 )
+			if( IsEffectTick )
 				{
 				// 弾丸描画
 				f=FindFreeEffect();
@@ -523,7 +523,7 @@ private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 
 		fire.Speed+=fire.Acceleration;		// 弾が減速
 
-		if( 1!=0 )
+		if( IsEffectTick )
 			{
 			f=FindFreeEffect();
 			ref var effect = ref Effects[f];
@@ -565,7 +565,8 @@ private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 				if( PointInRect3(ref wrk_rect,(int)unit.Position.X,(int)unit.Position.Y)!=0  )
 					{
 					// 命中
-					fire.Target=0;
+					if( !Rules.RapidFireHitsEveryPlane )
+						fire.Target=0;
 					if(ShowsAntiAir==0  )
 						{
 						unit.Hp-=GetDamagePoints(m);
@@ -657,7 +658,7 @@ private void UpdateAntiAircraftShell(ref Fire fire, ref int n, int m)
 		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
 
 		fire.Speed+=fire.Acceleration;		// 弾が減速
-		if( 1!=0 )
+		if( IsEffectTick )
 			{
 			// 弾自体の絵
 			f=FindFreeEffect();
@@ -761,7 +762,7 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 			fire.Speed-=fire.Acceleration;		// 弾が上昇中
 		else
 			fire.Speed+=(fire.Acceleration*2.83);		// 弾が降下中
-		if( 1!=0 )
+		if( IsEffectTick )
 			{
 			// 弾自体の絵
 			f=FindFreeEffect();
@@ -952,7 +953,7 @@ private void UpdateTorpedo(ref Fire fire, ref int n, int m)
 				effect.SpriteNumber=8;			// ソースファイル上の番号
 				}
 
-			if( fire.Ticks>=fire.ArmingTime  )
+			if( fire.Ticks>=fire.ArmingTime && IsEffectTick )
 				{
 				f=FindFreeEffect();
 				ref var effect = ref Effects[f];
@@ -1008,7 +1009,7 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 
 			fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
 			fire.Speed+=fire.Acceleration;
-			if( 1!=0 )
+			if( IsEffectTick )
 				{
 				f=FindFreeEffect();
 				ref var effect = ref Effects[f];

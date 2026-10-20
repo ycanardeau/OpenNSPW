@@ -808,6 +808,38 @@ public class SingleplayerTests
 		Assert.Equal(draws, game.RandomCount);
 	}
 
+	// A burst of rapid anti-aircraft fire hits every plane of the target's side within 40, as in 1.22 (0x419576); NSPW NET's
+	// hits the first only.
+	[Fact]
+	public void RapidFireHitsEveryPlaneInItsBurst()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var planes = new[] { 41, 42 };
+		foreach (var m in planes)
+		{
+			ref var plane = ref game.Units[m];
+			plane.Side = Side.UnitedStates;
+			plane.Category = UnitCategory.Plane;
+			plane.Kind = UnitKind.Attacker;
+			plane.PlaneState = UnitState.Flying;
+			plane.Position = new WorldPosition(1000 + (m - 41) * 20, 1000);
+			plane.MaxHp = 100;
+			plane.Hp = 100;
+		}
+
+		ref var fire = ref game.Fires[1];
+		fire.Kind = FireKind.RapidAntiAircraftShell;
+		fire.Target = planes[0];
+		fire.Ticks = 1;
+		fire.Speed = 0;
+		fire.Position = new WorldPosition(1010, 1000);
+		game.UpdateFires();
+
+		Assert.All(planes, m => Assert.True(game.Units[m].Hp < 100));
+	}
+
 	// A battle as the desktop app shows it, in real time, saved as singleplayer_battle.png next to the test assembly.
 	[Fact]
 	public void TheBattleShows()

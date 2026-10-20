@@ -54,6 +54,9 @@ public sealed record BattleRules(
 	// The ticks a shell flies beyond its distance over its speed, when it has no target.
 	int ExtraGunShellTicks,
 
+	// Whether a burst of rapid anti-aircraft fire hits every plane of the target's side within 40, rather than the first.
+	bool RapidFireHitsEveryPlane,
+
 	// Whether rapid anti-aircraft fire plays one of two sounds, by a shared random number.
 	bool RapidFireSoundVaries,
 
@@ -137,8 +140,8 @@ public sealed record BattleRules(
 	// Effects: whether they draw from rand, as everything else, rather than from SharedRandom.
 	bool EffectsDrawFromRand,
 
-	// Whether the marks, the leader's flag, the damaged ships' smoke and fire and the damaged submarines' bubbles are made
-	// on the tick that is drawn only (IsEffectTick).
+	// Whether the marks, the leader's flag, the damaged ships' smoke and fire, the damaged submarines' bubbles, and the
+	// fires' sprites, trails and wakes are made on the tick that is drawn only (IsEffectTick).
 	bool EffectsOnDrawnTickOnly,
 
 	// Whether a damaged plane tests the tick, and a ship its damage, before it draws the random number of its smoke.
@@ -176,6 +179,7 @@ public sealed record BattleRules(
 		AttackersBreakFormation: true,
 		GunsAimAlike: false,
 		ExtraGunShellTicks: 1,
+		RapidFireHitsEveryPlane: false,
 		RapidFireSoundVaries: true,
 		DepthChargeCountStopsAtZero: true,
 		DepthChargeDamage: 1,
@@ -231,6 +235,7 @@ public sealed record BattleRules(
 		AttackersBreakFormation: false, // 0x415A10
 		GunsAimAlike: true, // 0x410A65, 0x4129AB
 		ExtraGunShellTicks: 0, // 0x410BCE
+		RapidFireHitsEveryPlane: true, // 0x419576 to 0x41961C
 		RapidFireSoundVaries: false, // 0x41019F
 		DepthChargeCountStopsAtZero: false, // 0x4103B6
 		DepthChargeDamage: 3, // 0x416D1F
@@ -260,7 +265,7 @@ public sealed record BattleRules(
 		FullCarriersRefusePlanes: false, // 0x41F060
 		TickOrderOf122: true, // 0x401009 to 0x4010A3
 		EffectsDrawFromRand: true, // 0x419190, 0x402CA3
-		EffectsOnDrawnTickOnly: true, // 0x41AF02 to 0x41C18D
+		EffectsOnDrawnTickOnly: true, // 0x41AF02 to 0x41C18D, 0x419099 to 0x41A774
 		DamageEffectsTestBeforeDrawing: true, // 0x41B4CC, 0x41B659, 0x41B7AF, 0x41B8EC, 0x41C18D
 		MarksSecondTypes: false, // 0x41B991
 		PlaysSonar: false,
