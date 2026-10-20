@@ -424,6 +424,7 @@ public void	UpdateFrame()
 				}
 
 			UpdateUnitInfo();
+			Trace?.Reach(this, TracePoint.Drawing);
 			DrawBattleArea();
 			DrawMinimap();
 

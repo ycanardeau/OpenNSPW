@@ -6,7 +6,7 @@ using System.Text;
 namespace OpenNspw;
 
 // The points of a single-player game that a trace records, in the order 1.22 reaches them: game_init's start and its last
-// srand, then, for each frame, its start, each tick (before chara_cont), decision, and the orders.
+// srand, then, for each frame, its start, each tick (before chara_cont) and decision, the drawing, and the orders.
 public enum TracePoint : byte
 {
 	End = 0,
@@ -16,6 +16,7 @@ public enum TracePoint : byte
 	Tick = 4,
 	Decision = 5,
 	Orders = 6,
+	Drawing = 7,
 }
 
 // A trace of a single-player game (docs/Verification.md): a recording of 1.22 that the game follows and checks itself
@@ -33,12 +34,13 @@ public interface ISingleplayerTrace
 }
 
 // A point of a trace, with what it records: rand's state, and, for a frame, the speed, for a tick, cc_count, whether
-// the tick is drawn, and the units and the fires.
-public sealed record Trace122Point(TracePoint Kind, uint Random, int Value, bool IsDrawn, byte[]? State);
+// the tick is drawn, and the units and the fires, for the drawing, the view (cmbt_x, cmbt_y).
+public sealed record Trace122Point(TracePoint Kind, uint Random, int Value, bool IsDrawn, byte[]? State, WorldPosition Camera = default);
 
 // The file of a trace of 1.22, compressed with gzip: the magic, the scenario, then the points, each a byte (TracePoint)
 // and what it records: rand's state, but for a frame, the speed; for a tick, cc_count, whether it is drawn, then rand's
-// state and the units and the fires in 1.22's layout, XORed with the last tick's. An End point ends it.
+// state and the units and the fires in 1.22's layout, XORed with the last tick's; for the drawing, rand's state, then the
+// view, two doubles. An End point ends it.
 public static class Trace122
 {
 	public const int UnitCount = 101;
@@ -47,7 +49,7 @@ public static class Trace122
 	public const int FireSize = 0x70;
 	public const int StateSize = UnitCount * UnitSize + FireCount * FireSize;
 
-	public static ReadOnlySpan<byte> Magic => "N122TRC1"u8;
+	public static ReadOnlySpan<byte> Magic => "N122TRC2"u8;
 }
 
 public sealed class Trace122Writer : IDisposable
@@ -74,6 +76,14 @@ public sealed class Trace122Writer : IDisposable
 	{
 		_writer.Write((byte)TracePoint.Frame);
 		_writer.Write(speed);
+	}
+
+	public void WriteDrawing(uint random, WorldPosition camera)
+	{
+		_writer.Write((byte)TracePoint.Drawing);
+		_writer.Write(random);
+		_writer.Write(camera.X);
+		_writer.Write(camera.Y);
 	}
 
 	public void WriteTick(int tick, bool isDrawn, uint random, ReadOnlySpan<byte> state)
@@ -106,7 +116,7 @@ public sealed class Trace122Reader : IDisposable
 	{
 		_reader = new BinaryReader(new GZipStream(stream, CompressionMode.Decompress), Encoding.ASCII);
 		if (!_reader.ReadBytes(Trace122.Magic.Length).AsSpan().SequenceEqual(Trace122.Magic))
-			throw new InvalidDataException("Not a trace of 1.22.");
+			throw new InvalidDataException("Not a trace of 1.22, or one of an older format: record it again.");
 		Scenario = _reader.ReadInt32();
 	}
 
@@ -133,6 +143,13 @@ public sealed class Trace122Reader : IDisposable
 					for (var i = 0; i < Trace122.StateSize; i++)
 						_state[i] ^= delta[i];
 					return new(kind, random, tick, isDrawn, (byte[])_state.Clone());
+				}
+				case TracePoint.Drawing:
+				{
+					var random = _reader.ReadUInt32();
+					var x = _reader.ReadDouble();
+					var y = _reader.ReadDouble();
+					return new(kind, random, 0, false, null, new WorldPosition(x, y));
 				}
 				default:
 					return new(kind, _reader.ReadUInt32(), 0, false, null);
@@ -227,9 +244,10 @@ public static class Trace122Layout
 	public static readonly Field[] Fire = Leaves(typeof(Fire), 0, "").ToArray();
 }
 
-// Follows a trace of 1.22: gives the game its seeds and the ticks of each frame, and checks it at every point, rand's
-// state, and, before every tick, its cc_count and its units and fires, whose doubles may differ by a millionth. The
-// first difference is kept (Divergence), after which nothing more is checked.
+// Follows a trace of 1.22: gives the game its seeds, the speed and the ticks of each frame, and the view it draws, which
+// moves by the player's input; and checks it at every point, rand's state, and, before every tick, its cc_count and its
+// units and fires, whose doubles may differ by a millionth. The first difference is kept (Divergence), after which
+// nothing more is checked.
 public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 {
 	private const double Tolerance = 1e-6;
@@ -330,6 +348,7 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 			return;
 		}
 		Frames++;
+		game.GameSpeed = (short)_next.Value;
 		_frame.Clear();
 		for (_next = _reader.Next(); _next.Kind is not (TracePoint.Frame or TracePoint.End); _next = _reader.Next())
 			_frame.Enqueue(_next);
@@ -368,6 +387,11 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 		if (expected.Random != game.RandomState)
 		{
 			Diverge(game, point, $"rand's state: 1.22 {expected.Random:X8}, port {game.RandomState:X8}.");
+			return;
+		}
+		if (point == TracePoint.Drawing)
+		{
+			game.CameraPosition = expected.Camera;
 			return;
 		}
 		if (point != TracePoint.Tick)
@@ -417,6 +441,9 @@ public sealed class Trace122Recorder(Stream stream) : ISingleplayerTrace, IDispo
 			case TracePoint.Tick:
 				game.WriteStateAs122(_state);
 				_writer.WriteTick(game.Tick, game.IsDrawnTick, game.RandomState, _state);
+				break;
+			case TracePoint.Drawing:
+				_writer.WriteDrawing(game.RandomState, game.CameraPosition);
 				break;
 			default:
 				_writer.WriteRandom(point, game.RandomState);

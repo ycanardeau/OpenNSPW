@@ -7,13 +7,14 @@ using OpenNspw.Recorder122;
 // OpenNspw.Recorder122 <NSPW_122.exe> [output directory]
 
 // The functions of 1.22 where the trace's points are read, at their first instruction, but Seeded, after game_init's
-// last srand.
+// last srand. Drawing is draw_cmbt_area, which only the battle's frame calls (0x434630).
 const uint GameInit = 0x429C50;
 const uint GameInitSeeded = 0x42A16E;
 const uint Frame = 0x434570;
 const uint CharaCont = 0x401000;
 const uint Decision = 0x41C3C0;
 const uint Orders = 0x430390;
+const uint DrawCmbtArea = 0x40DB50;
 
 // Its globals that the trace records.
 const uint RandomState = 0x442250; // rand's holdrand
@@ -24,6 +25,7 @@ const uint DrawnTick = 0x48A1EC;
 const uint Scenario = 0x48A1E8; // sinario
 const uint Units = 0x4916A0;
 const uint Fires = 0x48A600;
+const uint Camera = 0x489AB0; // cmbt_x, cmbt_y: doubles
 const short BattleMode = 10;
 
 // rand (0x436056): mov eax, [0x442250]; imul eax, eax, 0x343FD; the check that the program is 1.22.
@@ -107,13 +109,19 @@ void Hit(Debugger debugger, uint address)
 			case Orders:
 				writer?.WriteRandom(TracePoint.Orders, random);
 				break;
+			case DrawCmbtArea:
+			{
+				var camera = debugger.Read(Camera, 2 * sizeof(double));
+				writer?.WriteDrawing(random, new WorldPosition(BitConverter.ToDouble(camera, 0), BitConverter.ToDouble(camera, sizeof(double))));
+				break;
+			}
 		}
 	}
 }
 
 Console.CancelKeyPress += (_, _) => Close();
 
-using (var debugger = new Debugger(executable, [GameInit, GameInitSeeded, Frame, CharaCont, Decision, Orders], Hit))
+using (var debugger = new Debugger(executable, [GameInit, GameInitSeeded, Frame, CharaCont, Decision, Orders, DrawCmbtArea], Hit))
 {
 	Console.WriteLine($"Running {executable}. Play a battle without touching the mouse or the keyboard, then close the game.");
 	debugger.Run();
