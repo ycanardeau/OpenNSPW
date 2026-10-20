@@ -110,6 +110,7 @@ So in a single-player game (`IsSingleplayer`):
 
 - `WinMain` connects to no one, and starts the battle of `ScenarioNumber` (`StartSingleplayerGame`).
 - `UpdateFrame` runs a frame on 1.22's timer, every 88 ms (`TryStartSingleplayerFrame`), with speed + 1 ticks, none at speed 0, and `decision` after each tick but the last, which is drawn first (`0x4345DF` to `0x43463A`). The speed keys are NSPW NET's, as in a network game: F, G and R, and Space for 20 ticks a frame; 1.22's are F7, F8 and F9 (`0x433AF0` to `0x433B53`).
+- `InitializeGame` makes no table of shared random numbers, which 1.22 does not have, and seeds rand last from the time, as 1.22's `game_init` does (`0x42A163`).
 - `InitializeGame` sets up 1.22's scenario instead of NSPW NET's, which sets the sides, the camera and the time limit, and sends nothing.
 - `UpdateBattle` skips the two network phases, and counts `BattleTime` down every tick, as 1.22 counts `rest_time`.
 - `HandleInput` buffers the player's orders as in a network game, then `IssueSingleplayerOrders` gives the orders of this frame: `cpu_strtgy`, then what `ReceiveAndIssueOrders` does for a turn, for the player only, and `ApplyOrders` for both. Orders take effect in the frame they are given, not at the next turn.
@@ -168,7 +169,7 @@ NSPW NET's debug keys (`DBG_MODE`) work as in a network game, but three are held
 4. **Unit ranges**: properties of the game. Done; the characterization traces did not change.
 5. **The single-player game**: the paths above, started from the desktop app with `--singleplayer`. Done.
 6. **Setting screen**: choosing single-player and the scenario in the game, as 1.22's setting screen does. Not done.
-7. **Characterization trace** of a single-player game, to guard the refactoring of the code it runs. Not done.
+7. **Characterization trace** of a single-player game, to guard the refactoring of the code it runs. Traces of 1.22 itself, recorded on Windows, replayed by the port ([Verification.md](Verification.md)): the tools are done; the traces are not recorded yet.
 
 ## Open questions
 - Which other differences between 1.22's battle and NSPW NET's ([Differences.md](Differences.md#the-battle)) matter for single-player play.

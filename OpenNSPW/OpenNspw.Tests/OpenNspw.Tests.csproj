@@ -35,6 +35,7 @@
   <!-- Recorded by the characterization tests with OPENNSPW_RECORD_TRACES=1 (see CharacterizationTests.cs). -->
   <ItemGroup>
     <None Include="Traces\**" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Traces122\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

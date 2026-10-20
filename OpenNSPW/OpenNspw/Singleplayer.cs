@@ -98,6 +98,10 @@ public unsafe partial class Nspw
 	// 0x48A1EC of 1.22: whether this tick is the last of its frame, the one that is drawn.
 	public bool IsDrawnTick;
 
+	// The trace this single-player game follows and checks itself against, or records itself in, or null
+	// (docs/Verification.md).
+	public ISingleplayerTrace? Trace;
+
 	// The period of 1.22's multimedia timer, which drives its frames (0x432960), in milliseconds.
 	private const uint SingleplayerTimerPeriod = 88;
 
@@ -118,6 +122,9 @@ public unsafe partial class Nspw
 			ticks = 20;
 		else
 			ticks = GameSpeed == 0 ? (short)0 : (short)(GameSpeed + 1);
+		Trace?.Reach(this, TracePoint.Frame);
+		if (Trace?.TicksOfNextFrame() is { } traced)
+			ticks = (short)traced;
 		return true;
 	}
 
@@ -152,23 +159,34 @@ public unsafe partial class Nspw
 	// The gas of each unit as it was copied into the emulator, to write back only what the emulated code changed.
 	private readonly int[] _emulatedGas = new int[UnitCount * 8];
 
+	// Writes unit m in 1.22's layout, its gas truncated to int.
+	private void WriteUnitAs122(int m, Span<byte> target)
+	{
+		var unit = MemoryMarshal.AsBytes((Span<Unit>)Units).Slice(m * sizeof(Unit), sizeof(Unit));
+		unit[..UnitOffsets.SubWeapons].CopyTo(target);
+		for (var i = 0; i < 8; i++)
+			MemoryMarshal.Write(target[(UnitGasOffset + 4 * i)..], (int)Units[m].gas[i]);
+		unit.Slice(UnitOffsets.Found, 2 * sizeof(int)).CopyTo(target[UnitFoundOffset..]);
+		unit[UnitOffsets.Random..].CopyTo(target[UnitRandomOffset..]);
+	}
+
 	private void CopyUnitsIn(Emulator emulator)
 	{
-		var units = MemoryMarshal.AsBytes((Span<Unit>)Units);
 		for (var m = 0; m < UnitCount; m++)
 		{
-			var unit = units.Slice(m * sizeof(Unit), sizeof(Unit));
 			var target = emulator.At(UnitAddress + (uint)(m * UnitSize), UnitSize);
-			unit[..UnitOffsets.SubWeapons].CopyTo(target);
+			WriteUnitAs122(m, target);
 			for (var i = 0; i < 8; i++)
-			{
-				var gas = (int)Units[m].gas[i];
-				_emulatedGas[m * 8 + i] = gas;
-				MemoryMarshal.Write(target[(UnitGasOffset + 4 * i)..], gas);
-			}
-			unit.Slice(UnitOffsets.Found, 2 * sizeof(int)).CopyTo(target[UnitFoundOffset..]);
-			unit[UnitOffsets.Random..].CopyTo(target[UnitRandomOffset..]);
+				_emulatedGas[m * 8 + i] = (int)Units[m].gas[i];
 		}
+	}
+
+	// Writes the units and the fires that a trace of 1.22 records (Trace122.Units, Trace122.Fires), in 1.22's layout.
+	public void WriteStateAs122(Span<byte> state)
+	{
+		for (var m = 0; m < Trace122.UnitCount; m++)
+			WriteUnitAs122(m, state.Slice(m * Trace122.UnitSize, Trace122.UnitSize));
+		MemoryMarshal.AsBytes((Span<Fire>)Fires)[..(Trace122.FireCount * Trace122.FireSize)].CopyTo(state[(Trace122.UnitCount * Trace122.UnitSize)..]);
 	}
 
 	private void CopyUnitsOut(Emulator emulator)
@@ -409,6 +427,7 @@ public unsafe partial class Nspw
 		if (Result != GameResult.None)
 			return;
 
+		Trace?.Reach(this, TracePoint.Orders);
 		if (CpuSide != Side.None)
 			RunCpuStrategy();
 

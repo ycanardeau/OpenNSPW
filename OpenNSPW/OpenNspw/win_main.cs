@@ -416,6 +416,7 @@ public void	UpdateFrame()
 			for( i=chara_loop; i>=1; i-- )
 				{
 				IsDrawnTick=i==1;
+				Trace?.Reach(this, TracePoint.Tick);
 				UpdateBattle();
 				// 1.22 runs decision for the tick that is drawn after the drawing only.
 				if( !IsEditingMap && !(IsSingleplayer && IsDrawnTick) )

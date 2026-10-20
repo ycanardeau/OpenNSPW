@@ -11,13 +11,15 @@ internal sealed class SingleplayerRun : IDisposable
 
 	public Nspw Game => Player.Game;
 
-	public SingleplayerRun(int scenario)
+	// setUp runs before the game starts, to set a trace.
+	public SingleplayerRun(int scenario, Action<Nspw>? setUp = null)
 	{
 		Player = new LockstepGame(_scheduler, new LoopbackNetwork(), _data.Path, "Alice");
 		Game.IsSingleplayer = true;
 		Game.ScenarioNumber = (short)scenario;
 		Game.SingleplayerExecutable = File.ReadAllBytes(Path.Combine(GameData.FindSingleplayer(), "NSPW_122.exe"));
 		Player.SingleplayerDirectory = GameData.FindSingleplayer();
+		setUp?.Invoke(Game);
 		Player.Start();
 	}
 

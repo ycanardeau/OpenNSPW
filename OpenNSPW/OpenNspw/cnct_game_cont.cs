@@ -735,6 +735,7 @@ public void	CheckResult()
 	if( IsSingleplayer )
 		{
 		// 1.22's decision, which also shows the result.
+		Trace?.Reach(this, TracePoint.Decision);
 		RunDecision();
 		return;
 		}
@@ -4249,9 +4250,18 @@ public void	InitializeGame()
 	Rules = IsSingleplayer ? BattleRules.Nspw122 : BattleRules.NspwNet;
 
 	// 乱数の初期化
-	srand( (uint)( SharedRandomSeed ) );
+	if( IsSingleplayer )
+		{
+		// 1.22 has no shared random numbers; its rand goes on from where it was, which a trace gives.
+		srand( Trace?.Seeds?.Start ?? (uint)( SharedRandomSeed ) );
+		Trace?.Reach(this, TracePoint.Start);
+		}
+	else
+		{
+		srand( (uint)( SharedRandomSeed ) );
 
-	MakeSharedRandomTable();
+		MakeSharedRandomTable();
+		}
 
 	ScrollSpeed=0;
 
@@ -4330,6 +4340,10 @@ public void	InitializeGame()
 		{
 		// The scenario has set the sides, the camera and the time limit, and there is no rival.
 		InitializeSingleplayerOrders();
+
+		// 1.22's game_init seeds rand last, from the time (0x42A163).
+		srand( Trace?.Seeds?.Battle ?? (uint)time(null) );
+		Trace?.Reach(this, TracePoint.Seeded);
 		return;
 		}
 
