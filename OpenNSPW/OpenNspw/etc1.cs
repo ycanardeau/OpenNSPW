@@ -2490,9 +2490,10 @@ public void	SetFighterAttackDestination(int m)
 	lvl_my=unit.Skill;
 	lvl_en=Units[trgt].Skill;
 
+	// 1.22 tells two pilots of the same skill apart by the frame (0x4150A9), NSPW NET by the tick.
 	if( lvl_my == lvl_en )
 		{
-		if( ((Tick)%600)<300 )
+		if( ((Rules.FighterTiesBreakByFrame ? FrameCount : Tick)%600)<300 )
 			{lvl_my++;}
 		else
 			{lvl_en++;}

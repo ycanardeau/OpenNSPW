@@ -35,6 +35,10 @@ public sealed record BattleRules(
 	// Whether the computer's returning fighters take a target within 300, with ammunition and fuel left.
 	bool ReturningFightersRetarget,
 
+	// Whether a fighter and its target of the same skill are told apart by the frame, rather than the tick: the first 300
+	// of every 600 favor the fighter.
+	bool FighterTiesBreakByFrame,
+
 	// Torpedo planes: the last kind of ground unit, from air bases, that they cannot be ordered to attack.
 	UnitKind LastKindRefusedToTorpedoes,
 
@@ -183,6 +187,7 @@ public sealed record BattleRules(
 		FightersAttackTransports: true,
 		FighterTargetRangeAgainstBombers: 650,
 		ReturningFightersRetarget: false,
+		FighterTiesBreakByFrame: false,
 		LastKindRefusedToTorpedoes: UnitKind.Fortress,
 		JapaneseAttackersDive: true,
 		FollowersFlyToRelease: true,
@@ -242,6 +247,7 @@ public sealed record BattleRules(
 		FightersAttackTransports: false, // 0x4133B2, 0x430618, 0x430679, 0x41650D
 		FighterTargetRangeAgainstBombers: 400, // 0x4135C1
 		ReturningFightersRetarget: true, // 0x413550
+		FighterTiesBreakByFrame: true, // 0x4150A9
 		LastKindRefusedToTorpedoes: UnitKind.NavalBase, // 0x4305F9
 		JapaneseAttackersDive: false, // 0x414186 to 0x4144E0
 		FollowersFlyToRelease: false, // 0x414186 to 0x4144E0
