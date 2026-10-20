@@ -748,6 +748,66 @@ public class SingleplayerTests
 		Assert.Equal(2, TicksOfAFrame());
 	}
 
+	// The marks, here a destroyer's torpedoes, are made on the tick that is drawn only, as in 1.22 (0x41B991).
+	[Theory]
+	[InlineData(false, 0)]
+	[InlineData(true, 1)]
+	public void MarksAreMadeOnTheDrawnTickOnly(bool drawn, int marks)
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		ref var destroyer = ref game.Units[1];
+		destroyer.Category = UnitCategory.Ship;
+		destroyer.Kind = UnitKind.Destroyer;
+		destroyer.Side = game.LocalSide;
+		destroyer.Hp = destroyer.MaxHp;
+		destroyer.SupplyTime = 0;
+		destroyer.IsGroupLeader = 0;
+		destroyer.Ammo = 1;
+		destroyer.ReloadTime = 0;
+		destroyer.Speed = 0;
+		int EffectsInUse() => Enumerable.Range(1, 255).Count(f => game.Effects[f].Layer != EffectLayer.None);
+
+		var effects = EffectsInUse();
+		game.IsDrawnTick = drawn;
+		game.UpdateUnitEffects(1);
+
+		Assert.Equal(effects + marks, EffectsInUse());
+	}
+
+	// A ship that is not damaged, and a damaged plane but on every tenth tick, draw no random number for their smoke, as in
+	// 1.22, which tests the damage and the tick first (0x41C18D, 0x41B8EC); NSPW NET's draw one every tick.
+	[Theory]
+	[InlineData(UnitCategory.Ship, UnitKind.Destroyer, 1.0)]
+	[InlineData(UnitCategory.Plane, UnitKind.Fighter, 0.6)]
+	public void UnitsDrawForTheirSmokeAsIn122(UnitCategory category, UnitKind kind, double hp)
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		ref var unit = ref game.Units[1];
+		unit.Category = category;
+		unit.Kind = kind;
+		unit.Side = game.LocalSide;
+		unit.PlaneState = UnitState.Flying;
+		unit.IsGroupLeader = 0;
+		unit.Ammo = 0;
+		unit.Speed = 0;
+		unit.MaxHp = 10;
+		unit.Hp = (int)(unit.MaxHp * hp);
+		if (game.Tick % 10 == 0)
+		{
+			game.Tick++;
+		}
+
+		var draws = game.RandomCount;
+		game.IsDrawnTick = true;
+		game.UpdateUnitEffects(1);
+
+		Assert.Equal(draws, game.RandomCount);
+	}
+
 	// A battle as the desktop app shows it, in real time, saved as singleplayer_battle.png next to the test assembly.
 	[Fact]
 	public void TheBattleShows()

@@ -137,6 +137,17 @@ public sealed record BattleRules(
 	// Effects: whether they draw from rand, as everything else, rather than from SharedRandom.
 	bool EffectsDrawFromRand,
 
+	// Whether the marks, the leader's flag, the damaged ships' smoke and fire and the damaged submarines' bubbles are made
+	// on the tick that is drawn only (IsEffectTick).
+	bool EffectsOnDrawnTickOnly,
+
+	// Whether a damaged plane tests the tick, and a ship its damage, before it draws the random number of its smoke.
+	bool DamageEffectsTestBeforeDrawing,
+
+	// Whether the Yamato class and the Essex, the anti-aircraft cruisers and the anti-submarine destroyers have their own
+	// marks.
+	bool MarksSecondTypes,
+
 	// Whether the sonar plays.
 	bool PlaysSonar,
 
@@ -194,6 +205,9 @@ public sealed record BattleRules(
 		FullCarriersRefusePlanes: true,
 		TickOrderOf122: false,
 		EffectsDrawFromRand: false,
+		EffectsOnDrawnTickOnly: false,
+		DamageEffectsTestBeforeDrawing: false,
+		MarksSecondTypes: true,
 		PlaysSonar: true,
 		FireLimit: all_head.FIRE_MAX,
 		EffectLimit: all_head.EFFECT_MAX,
@@ -246,6 +260,9 @@ public sealed record BattleRules(
 		FullCarriersRefusePlanes: false, // 0x41F060
 		TickOrderOf122: true, // 0x401009 to 0x4010A3
 		EffectsDrawFromRand: true, // 0x419190, 0x402CA3
+		EffectsOnDrawnTickOnly: true, // 0x41AF02 to 0x41C18D
+		DamageEffectsTestBeforeDrawing: true, // 0x41B4CC, 0x41B659, 0x41B7AF, 0x41B8EC, 0x41C18D
+		MarksSecondTypes: false, // 0x41B991
 		PlaysSonar: false,
 		FireLimit: 256, // seek_fire_no, 0x416E40
 		EffectLimit: 256,

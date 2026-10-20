@@ -64,6 +64,9 @@ public int		Random(int x)
 // their effects; 1.22 draws them from rand, as all the others.
 public int EffectRandom(int r) => Rules.EffectsDrawFromRand ? Random(r) : SharedRandom(r);
 
+// Whether this tick makes the effects that 1.22 makes on the tick that is drawn only.
+public bool IsEffectTick => IsDrawnTick || !Rules.EffectsOnDrawnTickOnly;
+
 //============================================================================
 // スプライト基礎データ
 //----------------------------------------------------------------------------
@@ -1253,7 +1256,7 @@ public void	AssignGroupLeader(int m)
 private void UpdateLightlyDamagedPlane(ref Unit unit)
 	{
 	int f;
-	if( Random(8)==0 && (Tick%10)==0 )
+	if( Rules.DamageEffectsTestBeforeDrawing ? (Tick%10)==0 && Random(8)==0 : Random(8)==0 && (Tick%10)==0 )
 		{
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
@@ -1275,7 +1278,7 @@ private void UpdateDamagedPlane(ref Unit unit)
 		if(!IsEditingMap)
 			unit.Hp--;
 		}
-	if( Random(2)==1 && (Tick%10)==0 )
+	if( Rules.DamageEffectsTestBeforeDrawing ? (Tick%10)==0 && Random(2)==1 : Random(2)==1 && (Tick%10)==0 )
 		{
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
@@ -1309,7 +1312,7 @@ private void UpdateHeavilyDamagedPlane(ref Unit unit)
 			unit.Hp--;
 		}
 
-	if( Random(3)!=0 && (Tick%(10) )==0 )
+	if( Rules.DamageEffectsTestBeforeDrawing ? (Tick%10)==0 && Random(3)!=0 : Random(3)!=0 && (Tick%(10) )==0 )
 		{
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
@@ -1378,7 +1381,7 @@ private void UpdateBurningPlane(ref Unit unit)
 				unit.Hp--;
 			}
 
-		if( Random(5)!=0 && (Tick%(10))==0 )
+		if( Rules.DamageEffectsTestBeforeDrawing ? (Tick%10)==0 && Random(5)!=0 : Random(5)!=0 && (Tick%(10))==0 )
 			{
 			f=FindFreeEffect();
 			ref var effect = ref Effects[f];
@@ -1459,7 +1462,7 @@ private void CrashPlane(ref Unit unit, int m)
 private void UpdatePlaneEffects(ref Unit unit, int m)
 	{
 	int f;
-	if(  unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%3)==0)&& (unit.Weapon==FireKind.Bomb || unit.Weapon==FireKind.Torpedo || unit.Weapon==FireKind.Maintenance || unit.Weapon==FireKind.Unarmed)  && unit.Side==LocalSide && !(unit.PlaneState==UnitState.Parked && UnitInfoPanel[1]==0) && !( unit.PlaneState==UnitState.Parked && unit.DeckPhase>=3 ) && !( unit.PlaneState==UnitState.Parked && unit.Carrier!=UnitInfoPanel[3]))
+	if(  IsEffectTick && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%3)==0)&& (unit.Weapon==FireKind.Bomb || unit.Weapon==FireKind.Torpedo || unit.Weapon==FireKind.Maintenance || unit.Weapon==FireKind.Unarmed)  && unit.Side==LocalSide && !(unit.PlaneState==UnitState.Parked && UnitInfoPanel[1]==0) && !( unit.PlaneState==UnitState.Parked && unit.DeckPhase>=3 ) && !( unit.PlaneState==UnitState.Parked && unit.Carrier!=UnitInfoPanel[3]))
 		{
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
@@ -1613,7 +1616,7 @@ private void UpdateSurfaceShipEffects(ref Unit unit, int m)
 				if(!IsEditingMap)
 					unit.Hp--;
 				}
-			if( Random(2)!=0  )
+			if( IsEffectTick && Random(2)!=0  )
 				{
 				f=FindFreeEffect();
 				ref var effect = ref Effects[f];
@@ -1630,7 +1633,7 @@ private void UpdateSurfaceShipEffects(ref Unit unit, int m)
 			if( unit.Hp<=unit.MaxHp*0.5  )
 				{
 				n=Random(4);
-				if(  n==0 )
+				if(  IsEffectTick && n==0 )
 					{
 					f=FindFreeEffect();
 					ref var effect = ref Effects[f];
@@ -1639,7 +1642,7 @@ private void UpdateSurfaceShipEffects(ref Unit unit, int m)
 					effect.Position=unit.Position;
 					effect.SpriteNumber=9;			// ソースファイル上の番号
 					}
-				if(  n==1 )
+				if(  IsEffectTick && n==1 )
 					{
 					f=FindFreeEffect();
 					ref var effect = ref Effects[f];
@@ -1651,7 +1654,7 @@ private void UpdateSurfaceShipEffects(ref Unit unit, int m)
 				}
 			else
 				{
-				if( Random(10)==1  && unit.Hp<=unit.MaxHp*0.7 )
+				if( Rules.DamageEffectsTestBeforeDrawing ? IsEffectTick && unit.Hp<=unit.MaxHp*0.7 && Random(10)==1 : Random(10)==1  && unit.Hp<=unit.MaxHp*0.7 )
 					{
 					f=FindFreeEffect();
 					ref var effect = ref Effects[f];
@@ -1692,7 +1695,7 @@ private void UpdateSubmergedSubmarineEffects(ref Unit unit, int m)
 				if(!IsEditingMap)
 					unit.Hp--;
 				}
-			if( Random(300)==1  )
+			if( IsEffectTick && Random(300)==1  )
 				{
 				for(n=0;n<=3;n++)
 					{
@@ -1726,7 +1729,7 @@ private void UpdateSubmergedSubmarineEffects(ref Unit unit, int m)
 					if(!IsEditingMap)
 						unit.Hp--;
 					}
-				if( Random(600)==1  )
+				if( IsEffectTick && Random(600)==1  )
 					{
 					for(n=0;n<=2;n++)
 						{
@@ -1759,7 +1762,7 @@ private void UpdateSubmergedSubmarineEffects(ref Unit unit, int m)
 private void UpdateShipEffects(ref Unit unit, int m)
 	{
 	int f;
-	if(  unit.IsSupplying && (FrameCount%2)!=0 && unit.Side==LocalSide )
+	if(  IsEffectTick && unit.IsSupplying && (FrameCount%2)!=0 && unit.Side==LocalSide )
 		{
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
@@ -1775,7 +1778,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 	// 武装の表示
 // 弾薬の消費サイズ
 
-	if( ( ( unit.Side==Side.Japan && unit.Kind==UnitKind.Battleship ) || ( unit.Side==Side.UnitedStates && unit.Kind==UnitKind.Carrier ) ) && unit.Variant==1 && unit.Side==LocalSide )
+	if( IsEffectTick && Rules.MarksSecondTypes && ( ( unit.Side==Side.Japan && unit.Kind==UnitKind.Battleship ) || ( unit.Side==Side.UnitedStates && unit.Kind==UnitKind.Carrier ) ) && unit.Variant==1 && unit.Side==LocalSide )
 		{
 		// 大和級とエセックス
 		f=FindFreeEffect();
@@ -1788,7 +1791,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 
 		effect.SpriteNumber=27;			// ソースファイル上の番号
 		}
-	else if( unit.Kind==UnitKind.Destroyer && unit.Variant==1  && unit.Side==LocalSide )
+	else if( IsEffectTick && Rules.MarksSecondTypes && unit.Kind==UnitKind.Destroyer && unit.Variant==1  && unit.Side==LocalSide )
 		{
 		// 対潜駆逐艦
 		f=FindFreeEffect();
@@ -1801,7 +1804,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 
 		effect.SpriteNumber=26;			// ソースファイル上の番号
 		}
-	else if( unit.Kind==UnitKind.Cruiser && unit.Variant==1  && unit.Side==LocalSide )
+	else if( IsEffectTick && Rules.MarksSecondTypes && unit.Kind==UnitKind.Cruiser && unit.Variant==1  && unit.Side==LocalSide )
 		{
 		// 防空巡洋艦
 		f=FindFreeEffect();
@@ -1814,7 +1817,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 
 		effect.SpriteNumber=16;			// ソースファイル上の番号
 		}
-	else if( ( unit.Side==Side.Japan && ( unit.Kind==UnitKind.Submarine || unit.Kind==UnitKind.Destroyer || unit.Kind==UnitKind.Cruiser ) || unit.Side==Side.UnitedStates && ( unit.Kind==UnitKind.Submarine || unit.Kind==UnitKind.Destroyer ) ) && !unit.IsSupplying && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%2)!=0) && unit.Ammo>=1 && unit.Side==LocalSide )
+	else if( IsEffectTick && ( unit.Side==Side.Japan && ( unit.Kind==UnitKind.Submarine || unit.Kind==UnitKind.Destroyer || unit.Kind==UnitKind.Cruiser ) || unit.Side==Side.UnitedStates && ( unit.Kind==UnitKind.Submarine || unit.Kind==UnitKind.Destroyer ) ) && !unit.IsSupplying && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%2)!=0) && unit.Ammo>=1 && unit.Side==LocalSide )
 		{
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
@@ -1828,7 +1831,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 		}
 
 	// トランスポーターの荷物の表示
-	if(  unit.Kind==UnitKind.Transport && !unit.IsSupplying && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%2)!=0) && unit.Side==LocalSide )
+	if(  IsEffectTick && unit.Kind==UnitKind.Transport && !unit.IsSupplying && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%2)!=0) && unit.Side==LocalSide )
 		{
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
@@ -1844,7 +1847,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 //TR_GF1
 
 	// およその敵潜航潜水艦
-	if(  unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.IsSubmerged && unit.ContactTime!=0 )
+	if(  IsEffectTick && unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.IsSubmerged && unit.ContactTime!=0 )
 		{
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
@@ -1887,7 +1890,7 @@ public void	UpdateUnitEffects(int m)
 	RECT	wrk_rect;
 	int		f;
 
-	if( unit.IsGroupLeader!=0 && unit.Side==LocalSide && unit.PlaneState!=UnitState.Parked  )
+	if( IsEffectTick && unit.IsGroupLeader!=0 && unit.Side==LocalSide && unit.PlaneState!=UnitState.Parked  )
 		{
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
