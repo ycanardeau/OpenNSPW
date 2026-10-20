@@ -1,5 +1,5 @@
 # Differences from NSPW 1.22
-A single-player game plays a scenario of NSPW 1.22 (`Original/Nspw122/NSPW_122.exe`) against its computer. It runs 1.22's own code, in the emulator ([Singleplayer.md](Singleplayer.md)), for the scenarios, the computer (`cpu_strtgy`, `set_cpu_route`, [ComputerPlayer.md](ComputerPlayer.md)) and the victory conditions (`decision`). Everything else is NSPW NET's: the battle (`chara_cont` and the functions it calls), the input, the drawing and the data; the frame is 1.22's.
+A single-player game plays a scenario of NSPW 1.22 (`Original/Nspw122/NSPW_122.exe`) against its computer. It runs 1.22's own code, in the emulator ([Singleplayer.md](Singleplayer.md)), for the scenarios, the computer (`cpu_strtgy`, `set_cpu_route`, [ComputerPlayer.md](ComputerPlayer.md)) and the victory conditions (`decision`). Everything else is NSPW NET's code: the battle (`chara_cont` and the functions it calls), the input, the drawing and the data; the frame is 1.22's. Where the battle of 1.22 differs from NSPW NET's, a single-player game plays by 1.22's rules, which `BattleRules` (`OpenNSPW/OpenNspw/BattleRules.cs`) gathers, each with the address it was read at, and network games by NSPW NET's.
 
 This document lists every difference found between the two, read from 1.22's machine code, with the address where it shows; [Verification.md](Verification.md) checks the port against 1.22 itself. The single-player game follows 1.22 in the first table only; the others are left as NSPW NET has them, so that the port keeps a single battle, the one network games play.
 
@@ -69,6 +69,7 @@ Compared with `fire_now` (`0x40FE10`), the fires (`0x418C30`) and the emergency 
 | Difference | 1.22 | NSPW NET |
 | --- | --- | --- |
 | The speed keys | F7 slower (to 0, which stops the battle), F8 faster (to 100), F9 back to 1 (`0x433AF0` to `0x433B53`) | F, G and R, by steps of 1, 2, 4, 6 and so on to 300, and Space for 20 ticks a frame. Single-player keeps them, as a network game has them, and runs speed + 1 ticks a frame |
+| The unit panel of a plane that crashes, or of a submerged submarine that sinks | Keeps the unit (`0x41B113`, `0x41BC1F`); only a surfaced ship that sinks clears it (`0x41BEDB`) | Cleared (`unit_info[0]=0`). What 1.22's panel then shows (`0x430B40`) is not compared yet |
 | Saving | None: 1.22 writes no file; its only `WriteFile` is the C runtime's error message (`0x4380FF`), and its only `ReadFile` reads the map (`0x432A30`) | Resume (リジューム), an auto-save every 90 turns and at the start, and a save on losing sync. Single-player saves nothing, as 1.22: `InitializeGame` returns before the auto-save, and the battle skips the network phases; the system menu still shows リジューム |
 
 ### 1.22's frame
@@ -84,4 +85,4 @@ A frame of the battle:
 The speed starts at 1 (`0x42A148`), so two ticks run in a frame of 88 ms. The count of the timer's ticks is 1: it is cleared after the frame, so the ticks while a frame runs are lost, and a frame starts on the next.
 
 ## Not compared yet
-- The input (`0x4312A0` and the window procedure from `0x433000`), the unit information and its menus (`0x430B40`), and the drawing (`0x40DB50`), beyond what is listed above.
+- The input (`0x4312A0` and the window procedure from `0x433000`), the unit information and its menus (`0x430B40`), and the drawing (`0x40DB50`) beyond the effects: what they show, and what the player can order. None of them draws a random number, so they cannot move the battle's (the drawing's only draws are the effects', above; checked through every function they call).
