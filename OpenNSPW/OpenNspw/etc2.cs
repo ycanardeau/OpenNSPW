@@ -272,6 +272,23 @@ public void OnUnitArrived(int side,int new_unit_kind)
 
 	}
 
+// How far a unit of a kind sees in 1.22, as find_out_size (0x418080) and the drawing of the effects (0x40C919) have it.
+public static int GetSightRangeAs122(UnitKind kind) => kind switch
+	{
+	UnitKind.Battleship => 900,
+	UnitKind.Cruiser or UnitKind.City or UnitKind.Mine => 800,
+	UnitKind.Destroyer or UnitKind.LightCarrier => 700,
+	UnitKind.Submarine or UnitKind.Carrier => 600,
+	UnitKind.Fighter => 500,
+	UnitKind.Attacker or UnitKind.InfantryBase => 1000,
+	UnitKind.Bomber => 1200,
+	UnitKind.Transport => 300,
+	UnitKind.AirBase or UnitKind.NavalBase => 1700,
+	UnitKind.Pillboxes => 1500,
+	UnitKind.Fortress => 2000,
+	_ => 0,
+	};
+
 // 1.22's find_out_size (0x418080): other ranges, none limited while a base is built, and, for a submerged submarine,
 // 80 for any unit but a destroyer (none for a supplying unit, a plane, a transport, a carrier, a light carrier or a
 // battleship), 280 for a destroyer, 140 above a third of its top speed; a surfaced one within half the range, at most
@@ -280,21 +297,7 @@ private int GetDetectionSizeAs122(int m, int n)
 	{
 	ref var unit = ref Units[m];
 	ref var other = ref Units[n];
-	int size = unit.Kind switch
-		{
-		UnitKind.Battleship => 900,
-		UnitKind.Cruiser or UnitKind.City or UnitKind.Mine => 800,
-		UnitKind.Destroyer or UnitKind.LightCarrier => 700,
-		UnitKind.Submarine or UnitKind.Carrier => 600,
-		UnitKind.Fighter => 500,
-		UnitKind.Attacker or UnitKind.InfantryBase => 1000,
-		UnitKind.Bomber => 1200,
-		UnitKind.Transport => 300,
-		UnitKind.AirBase or UnitKind.NavalBase => 1700,
-		UnitKind.Pillboxes => 1500,
-		UnitKind.Fortress => 2000,
-		_ => 0,
-		};
+	int size = GetSightRangeAs122(unit.Kind);
 
 	if( other.Kind!=UnitKind.Submarine )
 		return size;

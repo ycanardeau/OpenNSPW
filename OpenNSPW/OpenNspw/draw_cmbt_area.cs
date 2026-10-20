@@ -85,6 +85,10 @@ public void	UpdateUpperEffects(RECT* pfield_rect,RECT* pinfo_rect)
 						size=FT1_SIGHT/2;
 						}
 
+					// 1.22's ranges, none limited while a base is built (0x40C919).
+					if( Rules.HasSightRangesOf122 )
+						size=GetSightRangeAs122(Units[n].Kind);
+
 					if( dstc<=size )
 						{
 						flg=1;
@@ -111,9 +115,9 @@ public void	UpdateUpperEffects(RECT* pfield_rect,RECT* pinfo_rect)
 						n=1;
 						break;
 					case 2:		//	飛行機からの煙
-						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(SharedRandom(2)));
-						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X)+SharedRandom(10)-5;
-						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y)+SharedRandom(10)-5;
+						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(EffectRandom(2)));
+						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X)+EffectRandom(10)-5;
+						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y)+EffectRandom(10)-5;
 						n=1;
 						break;
 					case 3:		//	駐機場の飛行機用
@@ -123,7 +127,7 @@ public void	UpdateUpperEffects(RECT* pfield_rect,RECT* pinfo_rect)
 						n=0;
 						break;
 					case 4:		// 雷跡
-						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(SharedRandom(2)));
+						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(EffectRandom(2)));
 						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X);
 						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y);
 						n=1;
@@ -245,6 +249,10 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 							size=FT1_SIGHT/2;
 							}
 
+						// 1.22's ranges, none limited while a base is built (0x40CF46).
+						if( Rules.HasSightRangesOf122 )
+							size=GetSightRangeAs122(unit.Kind);
+
 						if( dstc<=size)
 							{
 							flg=1;
@@ -276,9 +284,9 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 						n=1;
 						break;
 					case 2:		//	飛行機からの煙
-						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(SharedRandom(2)));
-						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X)+SharedRandom(10)-5;
-						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y)+SharedRandom(10)-5;
+						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(EffectRandom(2)));
+						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X)+EffectRandom(10)-5;
+						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y)+EffectRandom(10)-5;
 						n=1;
 						break;
 					case 3:		//	駐機場の飛行機用
@@ -288,7 +296,7 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 						n=0;
 						break;
 					case 4:		// 雷跡、航跡
-						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(SharedRandom(2)));
+						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(EffectRandom(2)));
 						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X);
 						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y);
 						n=1;

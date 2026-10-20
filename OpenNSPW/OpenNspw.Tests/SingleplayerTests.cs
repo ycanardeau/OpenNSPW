@@ -840,6 +840,33 @@ public class SingleplayerTests
 		Assert.All(planes, m => Assert.True(game.Units[m].Hp < 100));
 	}
 
+	// Drawing a smoke that the player's units see draws three random numbers from rand, as 1.22's drawing does
+	// (0x40C9EF), where NSPW NET's draws them from SharedRandom; the battle's next random numbers depend on it.
+	[Fact]
+	public void DrawingEffectsDrawsFromRand()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var m = Enumerable.Range(1, game.MaxUnitId).First(n => game.Units[n].IsUsed && game.Units[n].Side == game.LocalSide && game.Units[n].Category == UnitCategory.Ship);
+		for (var f = 1; f < 256; f++)
+		{
+			game.Effects[f].Layer = EffectLayer.None;
+		}
+
+		ref var smoke = ref game.Effects[1];
+		smoke.Layer = EffectLayer.Upper;
+		smoke.Animation = 2;
+		smoke.TimeLeft = 10;
+		smoke.SpriteNumber = 6;
+		smoke.Position = game.Units[m].Position;
+
+		var draws = game.RandomCount;
+		game.DrawBattleArea();
+
+		Assert.Equal(draws + 3, game.RandomCount);
+	}
+
 	// A battle as the desktop app shows it, in real time, saved as singleplayer_battle.png next to the test assembly.
 	[Fact]
 	public void TheBattleShows()

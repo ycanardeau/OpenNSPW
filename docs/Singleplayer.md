@@ -141,6 +141,7 @@ So in a single-player game (`IsSingleplayer`):
 - `ShipFireTorpedoWithoutTarget` and `ShipFireTorpedoAtTarget` reload a submarine's torpedoes in 2000 ticks, as 1.22 does (`0x4110DB`).
 - `FighterFireBullet` chooses a fighter's target as 1.22 does (`0x413542`): within 400 for every kind, and the computer's returning fighters too, within 300.
 - `EffectRandom` draws the random numbers of the fires' effects, and of the place of a plane landed on deck, from `rand`, as 1.22 does, where NSPW NET draws them from `SharedRandom`; `UpdateBullet` damages a transport with every bullet (`0x418F92`).
+- `DrawBattleArea` tests whether the player sees an effect by 1.22's sight ranges, and draws its animation from `rand`, as 1.22's drawing does (`0x40C7A0`, `0x40CDD0`): what the player sees moves the battle's random numbers.
 - `UpdateRapidAntiAircraftShell` hits every plane of the target's side in a burst, as 1.22 does (`0x419576`), where NSPW NET's hits the first.
 - `UpdateUnitEffects` makes the marks, the leader's flag, the damaged ships' smoke and fire and the damaged submarines' bubbles on the drawn tick only (`IsEffectTick`), tests a damaged plane's tick and a ship's damage before it draws the random number of its smoke, and makes no marks for the second types, as 1.22 does (`0x41AEB0`); `UpdateFires` makes the fires' sprites, trails and wakes on the drawn tick only (`0x419099` to `0x41A774`).
 - `GetDamagePoints` gives a depth charge 1.22's damage, 3 to 5 (`0x416D1F`).
