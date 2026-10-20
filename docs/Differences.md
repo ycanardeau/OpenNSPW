@@ -66,6 +66,7 @@ Compared with `fire_now` (`0x40FE10`), the fires (`0x418C30`) and the emergency 
 | Difference | 1.22 | NSPW NET |
 | --- | --- | --- |
 | The speed keys | F7 slower (to 0, which stops the battle), F8 faster (to 100), F9 back to 1 (`0x433AF0` to `0x433B53`) | F, G and R, by steps of 1, 2, 4, 6 and so on to 300, and Space for 20 ticks a frame. Single-player keeps them, as a network game has them, and runs speed + 1 ticks a frame |
+| Saving | None: 1.22 writes no file; its only `WriteFile` is the C runtime's error message (`0x4380FF`), and its only `ReadFile` reads the map (`0x432A30`) | Resume (リジューム), an auto-save every 90 turns and at the start, and a save on losing sync. Single-player saves nothing, as 1.22: `InitializeGame` returns before the auto-save, and the battle skips the network phases; the system menu still shows リジューム |
 
 ### 1.22's frame
 1.22 is driven by a multimedia timer, `timeSetEvent(88 × wPeriodMin, wPeriodMin, 0x4329B0, 0, TIME_PERIODIC)` (`0x432960`); with the usual minimum period of 1 ms, every 88 ms. The callback counts the timer's ticks (`0x483B50`) and posts `WM_USER` once; the window procedure handles it (`0x433C61`) by drawing a frame (`0x434570`) and clearing the count.
