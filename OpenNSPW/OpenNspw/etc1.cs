@@ -293,6 +293,10 @@ private bool LandCargo(ref Unit unit, FireKind kind, int m)
 				fire.TargetY=unit.LandingY;
 				fire.ShooterSide=(int)unit.Side;
 
+				// 1.22 keeps the transport, empty (0x413014 to 0x41312B); NSPW NET removes it.
+				if( !Rules.TransportsLeaveAfterLanding )
+					return false;
+
 				unit.Side=0;
 				unit.Hp=0;
 

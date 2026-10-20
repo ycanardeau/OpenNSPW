@@ -85,6 +85,9 @@ public sealed record BattleRules(
 	// Whether the bases that they land are built over 8000 ticks or more, from a quarter of their HP.
 	bool LandedBasesAreBuilt,
 
+	// Whether a transport leaves the battle once it has landed its cargo, rather than staying, empty.
+	bool TransportsLeaveAfterLanding,
+
 	// Moves: whether fuel burns by the speed's share of the top speed, as a fraction, rather than 1 at a time.
 	bool FuelBurnsBySpeed,
 
@@ -193,6 +196,7 @@ public sealed record BattleRules(
 		CargoLandingRange: 160,
 		CargoSlowsTransports: true,
 		LandedBasesAreBuilt: true,
+		TransportsLeaveAfterLanding: true,
 		FuelBurnsBySpeed: true,
 		HeadingWrapsAt360: true,
 		ComputerReplansBlockedRoutes: false,
@@ -250,6 +254,7 @@ public sealed record BattleRules(
 		CargoLandingRange: 360, // 0x413003
 		CargoSlowsTransports: false, // 0x402955
 		LandedBasesAreBuilt: false, // 0x418E23
+		TransportsLeaveAfterLanding: false, // 0x413014 to 0x41312B
 		FuelBurnsBySpeed: false, // 0x402F72
 		HeadingWrapsAt360: false, // 0x4024B6
 		ComputerReplansBlockedRoutes: true, // 0x401F95 to 0x4023EB, 0x402D2B

@@ -333,7 +333,7 @@ public class SingleplayerTests
 		Assert.Equal(bombs, Bombs() - before);
 	}
 
-	// A transport lands its cargo within 360 of its landing point, as in 1.22, not 160.
+	// A transport lands its cargo within 360 of its landing point, as in 1.22, not 160, and stays, empty.
 	[Theory]
 	[InlineData(300, true)]
 	[InlineData(400, false)]
@@ -346,12 +346,14 @@ public class SingleplayerTests
 		Assert.NotEqual(0, transport);
 		ref var unit = ref game.Units[transport];
 		unit.Direction = 0;
+		unit.Ammo = 1;
 		unit.LandingX = (int)unit.Position.X + distance;
 		unit.LandingY = (int)unit.Position.Y;
 
 		game.FireWeapons(transport, 0, FireKind.CargoInfantryBase);
 
-		Assert.Equal(lands, game.Units[transport].Hp == 0);
+		Assert.Equal(lands, game.Units[transport].Ammo == 0);
+		Assert.True(game.Units[transport].IsUsed);
 	}
 
 	// The base a transport lands is complete at once, with its full HP, as in 1.22, where NSPW NET builds it over 8000
@@ -394,7 +396,7 @@ public class SingleplayerTests
 	}
 
 	// A transport lands an infantry base, pillboxes or a fortress, but not the naval bases and air bases that 1.22 does not
-	// have.
+	// have. It stays, empty once it has landed.
 	[Theory]
 	[InlineData(FireKind.CargoInfantryBase, true)]
 	[InlineData(FireKind.CargoNavalBase, false)]
@@ -416,7 +418,8 @@ public class SingleplayerTests
 
 		run.Frames(5);
 
-		Assert.Equal(lands, game.Units[transport].Hp == 0);
+		Assert.Equal(lands, game.Units[transport].Ammo == 0);
+		Assert.True(game.Units[transport].IsUsed);
 	}
 
 	// A unit sees as far as in 1.22: a battleship 900, where NSPW NET's sees 800.
