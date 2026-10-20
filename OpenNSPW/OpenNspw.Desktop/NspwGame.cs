@@ -31,6 +31,7 @@ internal sealed class NspwGame : Game
 	private readonly ScreenManager _screenManager = new();
 	private readonly string? _singleplayerExecutablePath;
 	private readonly int? _scenario;
+	private readonly Trace122Replay? _replay;
 	private byte[]? _singleplayerExecutable;
 	private Screen? _nextScreen;
 	private GameSession? _lastSession;
@@ -56,12 +57,14 @@ internal sealed class NspwGame : Game
 	public bool HasSingleplayerExecutable => _singleplayerExecutablePath is not null;
 
 	// singleplayerExecutablePath: NSPW_122.exe, to play single-player (docs/Singleplayer.md). scenario: a scenario of it
-	// to play at once, without the menus.
-	public NspwGame(string dataDirectory, string? singleplayerExecutablePath, int? scenario = null)
+	// to play at once, without the menus. replay: a trace of 1.22 in that scenario, which that game follows, to watch it
+	// (docs/Verification.md).
+	public NspwGame(string dataDirectory, string? singleplayerExecutablePath, int? scenario = null, Trace122Replay? replay = null)
 	{
 		_graphics = new GraphicsDeviceManager(this);
 		_singleplayerExecutablePath = singleplayerExecutablePath;
 		_scenario = scenario;
+		_replay = replay;
 		DataDirectory = dataDirectory;
 		Texts.Language = UISettings.LoadLanguage();
 		IsMouseVisible = true;
@@ -83,10 +86,10 @@ internal sealed class NspwGame : Game
 
 	// Starts a game of the port. The screen that starts it owns it, and disposes it when it is unloaded, so that nothing
 	// draws a game after it is disposed. singleplayer: a scenario of NSPW 1.22 to play against the computer, instead of
-	// connecting to a rival.
-	public GameSession StartSession(int? singleplayer = null)
+	// connecting to a rival; replay: a trace of 1.22 in that scenario, which the game follows.
+	public GameSession StartSession(int? singleplayer = null, Trace122Replay? replay = null)
 	{
-		_lastSession = new GameSession(DataDirectory, Text, singleplayer is { } scenario ? (ReadSingleplayerExecutable(), Path.GetDirectoryName(Path.GetFullPath(_singleplayerExecutablePath!))!, scenario) : null);
+		_lastSession = new GameSession(DataDirectory, Text, singleplayer is { } scenario ? (ReadSingleplayerExecutable(), Path.GetDirectoryName(Path.GetFullPath(_singleplayerExecutablePath!))!, scenario) : null, replay);
 		_lastSession.Start();
 		return _lastSession;
 	}
@@ -121,7 +124,7 @@ internal sealed class NspwGame : Game
 		keyboardListener.KeyReleased += (_, e) => WindowManager.OnKeyUp(new KeyEventArgs((SaruhashiKeys)e.Key));
 		Window.TextInput += (_, e) => WindowManager.OnKeyPress(new KeyPressEventArgs(e.Character));
 
-		ShowScreen(_scenario is { } scenario ? new GameScreen(this, () => StartSession(scenario)) : new MainMenuScreen(this));
+		ShowScreen(_scenario is { } scenario ? new GameScreen(this, () => StartSession(scenario, _replay)) : new MainMenuScreen(this));
 	}
 
 	protected override void Update(GameTime gameTime)

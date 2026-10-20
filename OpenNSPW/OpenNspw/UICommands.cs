@@ -33,8 +33,12 @@ public unsafe partial class Nspw
 	private readonly Lock _uiCommandsLock = new();
 	private readonly List<(UICommandSite Site, Action Run)> _uiCommands = [];
 
+	// Queues a command, unless the game follows a trace that gives it no input (ISingleplayerTrace.TakesInput).
 	private void QueueUICommand(UICommandSite site, Action run)
 	{
+		if (Trace is { TakesInput: false })
+			return;
+
 		lock (_uiCommandsLock)
 		{
 			_uiCommands.Add((site, run));

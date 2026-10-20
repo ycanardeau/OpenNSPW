@@ -45,6 +45,15 @@ dotnet test OpenNSPW/OpenNspw.Tests --filter ThePortFollowsTheTracesOf122
 
 The test replays every trace there to its end, and fails with the first difference of each: the frame, the point, `cc_count`, and what differs. `TheTraceOfThePortReplays`, `TheReplayFindsAChange` and `TheReplayFollowsTheView` check the recording, the comparison and the view themselves on traces of the port. A trace of an older format is refused: record it again.
 
+## Watching a trace
+The desktop app plays a trace in its battle screen:
+
+```
+dotnet run --project OpenNSPW/OpenNspw.Desktop -- --replay OpenNSPW/OpenNspw.Tests/Traces122/<trace>.n122
+```
+
+The game starts in the trace's scenario and follows it as the test does: its seeds, the speed and the ticks of each frame, and 1.22's view. Up to the first difference its battle is 1.22's, so what it shows is the recorded battle. While it follows the trace, it takes none of the player's keys, clicks or commands, only Escape and F12 to quit; the cursor moves, which changes only what is drawn and the view, which the trace gives back (`TheCursorDoesNotChangeTheReplay`). The window's title shows the frame. At the first difference, or at the end of the trace, the title says so, the console shows the difference in full, and the game goes on as an ordinary single-player game, which the player can take over.
+
 ## Not covered yet
 - Input: a trace has none but the speed and the view, so the player's orders, the unit panel and its menus are not checked.
 - The effects themselves, the clouds and the computer's own globals are not recorded; their random numbers are, through rand's state.

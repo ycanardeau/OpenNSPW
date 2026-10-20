@@ -29,6 +29,10 @@ public interface ISingleplayerTrace
 	// The ticks of the frame that has just started; null for those of the speed.
 	int? TicksOfNextFrame();
 
+	// Whether the game takes the player's input: a replay gives it none while it follows 1.22, whose input it does not
+	// have but for the speed and the view.
+	bool TakesInput { get; }
+
 	// The game has reached a point.
 	void Reach(Nspw game, TracePoint point);
 }
@@ -267,6 +271,8 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 	public int Frames { get; private set; }
 	public bool HasEnded { get; private set; }
 
+	public bool TakesInput => HasEnded || Divergence is not null;
+
 	public Trace122Replay(Stream stream)
 	{
 		_reader = new Trace122Reader(stream);
@@ -420,6 +426,8 @@ public sealed class Trace122Recorder(Stream stream) : ISingleplayerTrace, IDispo
 	private Trace122Writer? _writer;
 
 	public (uint Start, uint Battle)? Seeds => null;
+
+	public bool TakesInput => true;
 
 	public int? TicksOfNextFrame()
 	{

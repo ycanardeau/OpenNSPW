@@ -20,6 +20,33 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 	private DialogForms _dialogs = default!;
 	private ConfirmForm _confirmQuit = default!;
 
+	// Whether the end of the trace the game follows, or its first difference, was written to the console.
+	private bool _hasReportedReplay;
+
+	// Shows in the window's title how far the game follows its trace of 1.22, and writes how that ended to the console,
+	// with the difference in full.
+	private void ShowReplay(Trace122Replay replay)
+	{
+		if (replay.Divergence is { } divergence)
+		{
+			Game.Window.Title = Texts.ReplayDiverged(string.Join(" ", divergence.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Take(2)));
+			if (!_hasReportedReplay)
+				Console.WriteLine($"The game left 1.22's trace: {divergence}");
+			_hasReportedReplay = true;
+		}
+		else if (replay.HasEnded)
+		{
+			Game.Window.Title = Texts.ReplayEnded(replay.Frames);
+			if (!_hasReportedReplay)
+				Console.WriteLine($"1.22's trace ended after {replay.Frames} frames, without a difference.");
+			_hasReportedReplay = true;
+		}
+		else
+		{
+			Game.Window.Title = Texts.ReplayFollowing(replay.Frames);
+		}
+	}
+
 	private void HideConfirmQuit()
 	{
 		_confirmQuit.Visible = false;
@@ -68,6 +95,8 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 	public override void UnloadContent()
 	{
 		base.UnloadContent();
+		if (_session.Replay is not null)
+			Game.Window.Title = all_head.CAPTION;
 		_session.Dispose();
 		_art.Dispose();
 		_backdrop.Dispose();
@@ -82,6 +111,8 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 		}
 
 		_session.UpdateFrame(GraphicsDevice);
+		if (_session.Replay is { } replay)
+			ShowReplay(replay);
 		var snapshot = _session.Snapshot;
 		_battleForm.Visible = snapshot.IsBattle;
 		_battleForm.UpdateFrom(snapshot);

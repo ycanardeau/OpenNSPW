@@ -120,6 +120,19 @@ public sealed class Trace122Tests
 		Assert.Equal(views[^1], run.Game.CameraPosition);
 	}
 
+	// The cursor changes only what is drawn and the view, which the replay gives back: at (0, 0), the corner, it scrolls
+	// the view every frame, and the replay still follows.
+	[Fact]
+	public void TheCursorDoesNotChangeTheReplay()
+	{
+		var trace = RecordPort(3, Frames);
+		using var replay = new Trace122Replay(new MemoryStream(trace));
+		using var run = new SingleplayerRun(replay.Scenario, game => game.Trace = replay);
+		run.Frames(Frames);
+
+		Assert.Null(replay.Divergence);
+	}
+
 	// A change to the game shows at the next tick, by the unit and the field.
 	[Fact]
 	public void TheReplayFindsAChange()
