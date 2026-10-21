@@ -384,6 +384,7 @@ public unsafe partial class Nspw
 
 	// The uninitialized locals that cpu_strtgy reads, with what Windows' stack holds there: 0, in every frame of the
 	// traces recorded so far, where the emulator's would hold what the emulated code left.
+	// BUG(1.22): scenario 208's count at 0x4050C7 is read before it is set. Kept as is for compatibility with 1.22.
 	private static readonly (uint Instruction, uint Value)[] StackLocalsOnWindows = [(0x4050C7, 0)];
 
 	// Whether a trace has given the uninitialized locals of the coming cpu_strtgy (GiveStackLocal).

@@ -1213,6 +1213,8 @@ private bool AimLanding(SpriteId sprite, int x, int y)
 	int map_bld_x;
 	int map_bld_y;
 	// カーソルの示す、マップチップの場所
+	// BUG(NSPW NET): a cursor off the map gives a tile outside it, which NSPW NET reads out of bounds; the port throws
+	// instead (docs/KnownIssues.md).
 	map_bld_x=(int)(((x+40+(int)CameraPosition.X)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
 	map_bld_y=(int)((MAP_TOP-((int)CameraPosition.Y-y-40 ))/Sprites[SpriteId.MapTiles].Height);
 	if(

@@ -1703,6 +1703,9 @@ public int		AddPlane(Side side,UnitKind kind,int type,int no,int planes,FireKind
 			Units[m].Variant=(short)type;
 			Units[m].PlaneState=UnitState.Parked;
 			Units[m].Carrier=no;					// 所属の空母、及び、基地の番号
+			// BUG(1.22, NSPW NET): with no parking place left, f is the previous plane's, or, for the first, read before it
+			// is set: whatever the original's stack holds, 0 in the port (0x41F111). Kept as is for compatibility with 1.22
+			// and NSPW NET.
 			Units[m].ParkingNumber=f;				// 格納庫の位置、及び、その基地の番機番号
 			Units[m].DeckPhase=0;					// 8
 			Units[m].PlanesToLaunch=0;					// 発艦予定の機数

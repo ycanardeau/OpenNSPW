@@ -768,6 +768,9 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 				unit.PathY[0]=Units[unit.Carrier].Position.Y;
 				unit.PathX[1]=MAP_RIGHT+1;
 
+				// BUG(NSPW NET): it counts the planes of LocalSide only, where it means the carrier's, so the two games of a
+				// network game count those of the rival's carriers differently (docs/KnownIssues.md). Kept as is for
+				// compatibility with NSPW NET.
 				f=0;
 				for( i=1; i<=MaxUnitId; i++)
 					{

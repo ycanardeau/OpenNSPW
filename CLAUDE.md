@@ -57,3 +57,9 @@
         public void Send() => connection.Send(/* ... */);
     }
     ```
+
+# Bugs of the originals
+
+- Whenever the port keeps a bug of NSPW 1.22 or NSPW NET, mark it with a comment that starts with the versions that have it, `BUG(1.22):`, `BUG(NSPW NET):` or `BUG(1.22, NSPW NET):`, says what the code does wrong, with 1.22's address where it has one, and ends with `Kept as is for compatibility with <the versions>.` Put it on the `BattleRules` rule when there is one, otherwise on the code that keeps the bug. Apply this whenever a difference is found or fixed, and when reading code that has a known bug without the mark.
+- Something is a bug only when the original's own code shows that it does what its author did not mean: a value written to the wrong place, read before it is set, a field borrowed and never given back, a test that defeats its own loop. Another value, range or choice is not a bug, even where NSPW NET changed it: NSPW NET is the same author's later version, which may change the design as well as fix it.
+- When the code does not show what was meant, mark it `BUG?(<versions>):` instead, with what points each way.

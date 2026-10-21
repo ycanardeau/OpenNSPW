@@ -565,6 +565,8 @@ private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 				if( PointInRect3(ref wrk_rect,(int)unit.Position.X,(int)unit.Position.Y)!=0  )
 					{
 					// 命中
+					// BUG(1.22, NSPW NET): clearing the fire's target compares the next planes with unit 0's side, none, so the
+					// burst hits the first plane only (0x41957B). Kept as is for compatibility with 1.22 and NSPW NET.
 					fire.Target=0;
 					if(ShowsAntiAir==0  )
 						{

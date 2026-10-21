@@ -4,6 +4,13 @@ namespace OpenNspw;
 // which single-player games play by. Each of 1.22's is read from its machine code, at the address given
 // (docs/Differences.md). The game holds the ones it plays by in Nspw.Rules. Both give every rule a value, by its name,
 // since every rule is one where they differ.
+//
+// A rule marked BUG(1.22) is a bug of 1.22, which single-player keeps as is for compatibility with 1.22; the code marks
+// the bugs it keeps the same way, BUG(1.22), BUG(NSPW NET) or BUG(1.22, NSPW NET) by the versions that have them. A rule
+// is a bug when the original's own code shows that it does what its author did not mean: a value written to the wrong
+// place, read before it is set, a field borrowed and never given back, a test that defeats its own loop. Another value,
+// range or choice is not one, even where NSPW NET changed it, since NSPW NET is the same author's later version, which may
+// change the design as well as fix it. BUG?(...) marks what may be a bug, where the code does not show what was meant.
 public sealed record BattleRules(
 	// Firing (ControlFiring): one shot of a ground unit's gun in this many ticks, doubled when it is damaged.
 	int InfantryBaseGunInterval,
@@ -62,14 +69,20 @@ public sealed record BattleRules(
 	bool RapidFireSoundVaries,
 
 	// Whether an odd count of depth charges stops at 0, rather than going to -1.
+	// BUG?(1.22, NSPW NET): every weapon tests the ammunition for 0 before it takes a shot from it, which reads as not to
+	// overdraw it, but takes the whole shot from any count, so the count can go below 0 (0x4103B6); firing needs 1 or more,
+	// so it does no harm. NSPW NET stops the depth charges' at 0, but none of the others'. Kept as is for compatibility
+	// with 1.22.
 	bool DepthChargeCountStopsAtZero,
 
 	// A depth charge's damage: this much, plus a random number below the spread.
 	int DepthChargeDamage,
 	int DepthChargeDamageSpread,
 
-	// Whether a depth charge keeps its fire once it has exploded, with the submerged submarine it hit or tested last as its
-	// target, as 1.22's bug does, rather than freeing it.
+	// Whether a depth charge keeps its fire once it has exploded, rather than freeing it.
+	// BUG(1.22): the explosion passes each submerged submarine to hit_chk as the fire's target (used), and never clears it,
+	// so the fire stays in use, with the submarine hit or tested last, to the end of the battle (0x4196DC to 0x4197EC). Kept
+	// as is for compatibility with 1.22.
 	bool ExplodedDepthChargesKeepTheirFire,
 
 	// The size of a surfaced submarine, within which a fire hits it.
@@ -123,6 +136,8 @@ public sealed record BattleRules(
 	// Whether the headings meant to become whole degrees, a depth charge's from its ship, a fighter's to dodge a head-on
 	// pass, a ship's to evade a torpedo or a plane and a ship's wake behind it, keep their fraction of a degree but its last
 	// digits (ReduceHeading).
+	// BUG(1.22): it stores the whole degrees into the low half of the double, and reads the double back (0x410452,
+	// 0x415324, 0x416417, 0x416838, 0x41C327). Kept as is for compatibility with 1.22.
 	bool ReducedHeadingsKeepTheirFraction,
 
 	// Whether only the computer's destroyers hunt submarines, chasing one (HuntSubmarineAs122).

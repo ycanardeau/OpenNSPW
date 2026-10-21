@@ -1,7 +1,7 @@
 # Differences from NSPW 1.22
 A single-player game plays a scenario of NSPW 1.22 (`Original/Nspw122/NSPW_122.exe`) against its computer. It runs 1.22's own code, in the emulator ([Singleplayer.md](Singleplayer.md)), for the scenarios, the computer (`cpu_strtgy`, `set_cpu_route`, [ComputerPlayer.md](ComputerPlayer.md)) and the victory conditions (`decision`). Everything else is NSPW NET's code: the battle (`chara_cont` and the functions it calls), the input, the drawing and the data; the frame is 1.22's. Where the battle of 1.22 differs from NSPW NET's, a single-player game plays by 1.22's rules, which `BattleRules` (`OpenNSPW/OpenNspw/BattleRules.cs`) gathers, each with the address it was read at, and network games by NSPW NET's.
 
-This document lists every difference found between the two, read from 1.22's machine code, with the address where it shows; [Verification.md](Verification.md) checks the port against 1.22 itself. The single-player game follows 1.22 in the first table only; the others are left as NSPW NET has them, so that the port keeps a single battle, the one network games play.
+This document lists every difference found between the two, read from 1.22's machine code, with the address where it shows; [Verification.md](Verification.md) checks the port against 1.22 itself. The single-player game follows 1.22 in the first table only; the others are left as NSPW NET has them, so that the port keeps a single battle, the one network games play. It follows 1.22's bugs too, as they change the battle; the code marks each `BUG(1.22)`.
 
 ## Followed in single-player
 | Difference | 1.22 | NSPW NET | Where in the port |
