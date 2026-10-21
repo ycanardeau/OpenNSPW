@@ -345,6 +345,41 @@ public class SingleplayerTests
 		Assert.Equal(planes + game.Units[carrier].Capacity + 2, game.Units[carrier].PlaneCount);
 	}
 
+	// The planes that follow a torpedo plane return once it drops its torpedo, and keep their path, as in 1.22
+	// (0x413F51 to 0x413F7C), where NSPW NET sends them to where it dropped it.
+	[Fact]
+	public void TorpedoPlanesFollowersKeepTheirPath()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var target = game.AddUnit(Side.UnitedStates, UnitKind.Cruiser, -9000, -7000, 0);
+		var attacker = game.AddUnit(Side.Japan, UnitKind.Attacker, -9200, -7000, 0);
+		var fighter = game.AddUnit(Side.Japan, UnitKind.Fighter, -9220, -7000, 0);
+		Assert.NotEqual(0, target);
+		Assert.NotEqual(0, attacker);
+		Assert.NotEqual(0, fighter);
+		game.Units[target].Speed = 0;
+		game.Units[target].IsFound = true;
+		ref var unit = ref game.Units[attacker];
+		unit.PlaneState = UnitState.Flying;
+		unit.Ammo = 1;
+		unit.Target = target;
+		unit.IsGroupLeader = 2;
+		ref var follower = ref game.Units[fighter];
+		follower.PlaneState = UnitState.Flying;
+		follower.GroupLeader = (short)attacker;
+		follower.PathX[0] = -5000;
+		follower.PathY[0] = -5000;
+
+		game.FireWeapons(attacker, target, FireKind.Torpedo);
+
+		Assert.Equal(0, game.Units[attacker].Ammo);
+		Assert.Equal(UnitMode.Return, game.Units[fighter].Mode);
+		Assert.Equal(-5000, game.Units[fighter].PathX[0]);
+		Assert.Equal(-5000, game.Units[fighter].PathY[0]);
+	}
+
 	// Every attacker releases its bombs from 170 to 180 of its aim and speeds up, as in 1.22, where NSPW NET's Japanese
 	// ones dive to 35 to 65; only the Americans' drop a second bomb.
 	[Theory]

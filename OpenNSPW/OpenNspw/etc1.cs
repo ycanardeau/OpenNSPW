@@ -1830,9 +1830,13 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int trgt, ref double drctn2, in
 					other.GroupLeader=0;
 					other.Mode=UnitMode.Return;
 
+					// 1.22 leaves their path as it is (0x413F51 to 0x413F7C).
+					if( Rules.FollowersFlyToRelease )
+						{
 other.PathX[0]=unit.Position.X;
 other.PathY[0]=unit.Position.Y;
 other.PathX[1]=MAP_RIGHT+1;
+						}
 
 					}
 				}

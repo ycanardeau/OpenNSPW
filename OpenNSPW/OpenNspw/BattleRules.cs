@@ -46,7 +46,7 @@ public sealed record BattleRules(
 	// they release from 170 as the Americans do, and drop one bomb only.
 	bool JapaneseAttackersDive,
 
-	// Whether the planes that follow an attacker fly to where it released its bombs.
+	// Whether the planes that follow an attacker fly to where it released its bombs or its torpedo.
 	bool FollowersFlyToRelease,
 
 	// Whether a leader sends its attackers off, fanned out, at 500 to 510 from their target.
@@ -261,7 +261,7 @@ public sealed record BattleRules(
 		FighterTiesBreakByFrame: true, // 0x4150A9
 		LastKindRefusedToTorpedoes: UnitKind.NavalBase, // 0x4305F9
 		JapaneseAttackersDive: false, // 0x414186 to 0x4144E0
-		FollowersFlyToRelease: false, // 0x414186 to 0x4144E0
+		FollowersFlyToRelease: false, // 0x414186 to 0x4144E0, 0x413F51 to 0x413F7C
 		AttackersBreakFormation: false, // 0x415A10
 		GunsAimAlike: true, // 0x410A65, 0x4129AB
 		ExtraGunShellTicks: 0, // 0x410BCE
