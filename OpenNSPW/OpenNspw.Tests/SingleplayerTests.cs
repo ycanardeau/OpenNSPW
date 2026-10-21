@@ -931,10 +931,10 @@ public class SingleplayerTests
 		Assert.Equal(draws, game.RandomCount);
 	}
 
-	// A burst of rapid anti-aircraft fire hits every plane of the target's side within 40, as in 1.22 (0x419576); NSPW NET's
-	// hits the first only.
+	// A burst of rapid anti-aircraft fire hits the first plane of the target's side within 40 only, as in 1.22: it clears
+	// the fire's target on the hit (0x41957B), and compares the next planes' side with unit 0's, none.
 	[Fact]
-	public void RapidFireHitsEveryPlaneInItsBurst()
+	public void RapidFireHitsTheFirstPlaneOfItsBurst()
 	{
 		using var run = new SingleplayerRun(3);
 		run.Frames(2);
@@ -960,7 +960,8 @@ public class SingleplayerTests
 		fire.Position = new WorldPosition(1010, 1000);
 		game.UpdateFires();
 
-		Assert.All(planes, m => Assert.True(game.Units[m].Hp < 100));
+		Assert.True(game.Units[planes[0]].Hp < 100);
+		Assert.Equal(100, game.Units[planes[1]].Hp);
 	}
 
 	// Drawing a smoke that the player's units see draws three random numbers from rand, as 1.22's drawing does

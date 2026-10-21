@@ -58,9 +58,6 @@ public sealed record BattleRules(
 	// The ticks a shell flies beyond its distance over its speed, when it has no target.
 	int ExtraGunShellTicks,
 
-	// Whether a burst of rapid anti-aircraft fire hits every plane of the target's side within 40, rather than the first.
-	bool RapidFireHitsEveryPlane,
-
 	// Whether rapid anti-aircraft fire plays one of two sounds, by a shared random number.
 	bool RapidFireSoundVaries,
 
@@ -202,7 +199,6 @@ public sealed record BattleRules(
 		AttackersBreakFormation: true,
 		GunsAimAlike: false,
 		ExtraGunShellTicks: 1,
-		RapidFireHitsEveryPlane: false,
 		RapidFireSoundVaries: true,
 		DepthChargeCountStopsAtZero: true,
 		DepthChargeDamage: 1,
@@ -264,7 +260,6 @@ public sealed record BattleRules(
 		AttackersBreakFormation: false, // 0x415A10
 		GunsAimAlike: true, // 0x410A65, 0x4129AB
 		ExtraGunShellTicks: 0, // 0x410BCE
-		RapidFireHitsEveryPlane: true, // 0x419576 to 0x41961C
 		RapidFireSoundVaries: false, // 0x41019F
 		DepthChargeCountStopsAtZero: false, // 0x4103B6
 		DepthChargeDamage: 3, // 0x416D1F

@@ -565,8 +565,7 @@ private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 				if( PointInRect3(ref wrk_rect,(int)unit.Position.X,(int)unit.Position.Y)!=0  )
 					{
 					// 命中
-					if( !Rules.RapidFireHitsEveryPlane )
-						fire.Target=0;
+					fire.Target=0;
 					if(ShowsAntiAir==0  )
 						{
 						unit.Hp-=GetDamagePoints(m);
