@@ -79,6 +79,31 @@ public class SingleplayerTests
 		Assert.NotEqual(first, SetUpAt(4, Side.UnitedStates, 1_000_000_001));
 	}
 
+	// Scenario 208's event, while more than 20000 is left, reads an uninitialized local as the count of planes at fleet 2's
+	// base, and draws a random number to give it a plane when the count is 1 to 15 (0x4050C7). Windows' stack holds 0
+	// there, so 1.22 draws none, and neither does the port, whatever the emulator's stack held: here 5, as the emulated
+	// code left it in a trace.
+	[Fact]
+	public void Scenario208ReadsItsUninitializedCountAsWindowsHoldsIt()
+	{
+		uint RandomStateAfter(uint? emulatorsLeftover)
+		{
+			using var run = new SingleplayerRun(208);
+			run.Frames(1);
+			for (var frame = 0; frame < 30; frame++)
+			{
+				if (emulatorsLeftover is { } value && run.Game.Emulator is { } emulator)
+					BitConverter.TryWriteBytes(emulator.At(emulator.ImageBase - 0xA8 + 0x30, sizeof(uint)), value);
+				run.Frames(1);
+			}
+
+			Assert.True(run.Game.BattleTime > 20000);
+			return run.Game.RandomState;
+		}
+
+		Assert.Equal(RandomStateAfter(null), RandomStateAfter(5));
+	}
+
 	[Theory]
 	[InlineData(3, Side.Japan)]
 	[InlineData(4, Side.UnitedStates)]

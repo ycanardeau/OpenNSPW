@@ -27,10 +27,11 @@ internal static class Win32
 	public const int DebugEventSize = 96;
 	public const int DebugEventUnion = 12;
 
-	// CONTEXT of x86: ContextFlags at 0, Eip at 0xB8, EFlags at 0xC0.
+	// CONTEXT of x86: ContextFlags at 0, Eip at 0xB8, EFlags at 0xC0, Esp at 0xC4.
 	public const int ContextSize = 0x2CC;
 	public const int ContextEip = 0xB8;
 	public const int ContextEFlags = 0xC0;
+	public const int ContextEsp = 0xC4;
 	public const uint CONTEXT_CONTROL = 0x00010001;
 	public const uint TrapFlag = 0x100;
 

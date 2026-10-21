@@ -7,7 +7,7 @@ namespace OpenNspw;
 
 // The points of a single-player game that a trace records, in the order 1.22 reaches them: game_init's start and its last
 // srand, then, for each frame, its start, each tick (before chara_cont) and decision, the drawing, the player's orders
-// if any, and the orders.
+// if any, the orders, and the uninitialized locals that the computer's strategy reads, if any.
 public enum TracePoint : byte
 {
 	End = 0,
@@ -19,6 +19,7 @@ public enum TracePoint : byte
 	Orders = 6,
 	Drawing = 7,
 	PlayerOrders = 8,
+	StackLocal = 9,
 }
 
 // The player's orders of a frame: the move order (new_pp[1]) and the select order (new_slct[1]) that the clicks on the
@@ -53,7 +54,8 @@ public interface ISingleplayerTrace
 
 // A point of a trace, with what it records: rand's state, and, for a frame, the speed, for a tick, cc_count, whether
 // the tick is drawn, and the units and the fires, for the drawing, the view (cmbt_x, cmbt_y), for the player's orders,
-// those alone.
+// those alone, for an uninitialized local, the instruction that reads it (Value) and what Windows' stack held there
+// (Random).
 public sealed record Trace122Point(TracePoint Kind, uint Random, int Value, bool IsDrawn, byte[]? State, WorldPosition Camera = default, Trace122Orders? Orders = null);
 
 // The file of a trace of 1.22, compressed with gzip: the magic, the scenario, then the points, each a byte (TracePoint)
@@ -61,7 +63,7 @@ public sealed record Trace122Point(TracePoint Kind, uint Random, int Value, bool
 // state and the units and the fires in 1.22's layout, XORed with the last tick's; for the drawing, rand's state, then the
 // view, two doubles; for the player's orders, no state of rand, but the move order (unit, x, y, cls), the select order
 // (sw, the_slct_unit, m, gr_x, gr_y), the menu's item and unit, the selected unit, the selection's count and its 256
-// numbers. An End point ends it.
+// numbers; for an uninitialized local, the instruction's address and the value read. An End point ends it.
 public static class Trace122
 {
 	public const int UnitCount = 101;
@@ -70,10 +72,11 @@ public static class Trace122
 	public const int FireSize = 0x70;
 	public const int StateSize = UnitCount * UnitSize + FireCount * FireSize;
 
-	public static ReadOnlySpan<byte> Magic => "N122TRC3"u8;
+	public static ReadOnlySpan<byte> Magic => "N122TRC4"u8;
 
-	// The format before the player's orders were recorded, which is this one without them: its traces are read as they
-	// are, with a player who gave none.
+	// The formats before: 3 without the uninitialized locals, and 2 without the player's orders either. Their traces are
+	// read as they are, with none of those.
+	public static ReadOnlySpan<byte> MagicWithoutStackLocals => "N122TRC3"u8;
 	public static ReadOnlySpan<byte> MagicWithoutOrders => "N122TRC2"u8;
 }
 
@@ -101,6 +104,14 @@ public sealed class Trace122Writer : IDisposable
 	{
 		_writer.Write((byte)TracePoint.Frame);
 		_writer.Write(speed);
+	}
+
+	// The value an instruction of 1.22 read from an uninitialized local, as Windows' stack held it.
+	public void WriteStackLocal(uint instruction, uint value)
+	{
+		_writer.Write((byte)TracePoint.StackLocal);
+		_writer.Write(instruction);
+		_writer.Write(value);
 	}
 
 	public void WritePlayerOrders(Trace122Orders orders)
@@ -161,7 +172,7 @@ public sealed class Trace122Reader : IDisposable
 	{
 		_reader = new BinaryReader(new GZipStream(stream, CompressionMode.Decompress), Encoding.ASCII);
 		var magic = _reader.ReadBytes(Trace122.Magic.Length).AsSpan();
-		if (!magic.SequenceEqual(Trace122.Magic) && !magic.SequenceEqual(Trace122.MagicWithoutOrders))
+		if (!magic.SequenceEqual(Trace122.Magic) && !magic.SequenceEqual(Trace122.MagicWithoutStackLocals) && !magic.SequenceEqual(Trace122.MagicWithoutOrders))
 			throw new InvalidDataException("Not a trace of 1.22, or one of an older format: record it again.");
 		Scenario = _reader.ReadInt32();
 	}
@@ -189,6 +200,11 @@ public sealed class Trace122Reader : IDisposable
 					for (var i = 0; i < Trace122.StateSize; i++)
 						_state[i] ^= delta[i];
 					return new(kind, random, tick, isDrawn, (byte[])_state.Clone());
+				}
+				case TracePoint.StackLocal:
+				{
+					var instruction = _reader.ReadUInt32();
+					return new(kind, _reader.ReadUInt32(), (int)instruction, false, null);
 				}
 				case TracePoint.PlayerOrders:
 				{
@@ -465,6 +481,18 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 		if (point == TracePoint.Drawing)
 		{
 			game.CameraPosition = expected.Camera;
+			return;
+		}
+		// Before the computer's strategy, which the orders start with, what Windows' stack held where it reads a local it
+		// has not set.
+		if (point == TracePoint.Orders)
+		{
+			while (_frame.TryPeek(out var local) && local.Kind == TracePoint.StackLocal)
+			{
+				_frame.Dequeue();
+				if (!game.GiveStackLocal((uint)local.Value, local.Random))
+					Diverge(game, point, $"1.22 read an uninitialized local at 0x{local.Value:X}, which the port does not give.");
+			}
 			return;
 		}
 		if (point != TracePoint.Tick)

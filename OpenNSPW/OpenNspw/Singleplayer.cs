@@ -370,10 +370,49 @@ public unsafe partial class Nspw
 		InitializeGame();
 	}
 
-	// cpu_strtgy: the computer's order of this frame, in new_pp[0] and slct_unit[0].
+	// Where an uninitialized local that cpu_strtgy reads is on the emulator's stack, by the instruction that reads it. A
+	// call from the port starts with esp at the image base (Emulator.Run), and cpu_strtgy's prologue (its return address,
+	// ebp, the alignment to 8, 0x90 of locals and four registers) leaves esp 0xA8 below it. 0x4050C7: [esp+30h], which
+	// scenario 208's event reads as the count of planes at fleet 2's base when more than 20000 is left or the base is
+	// gone (docs/ComputerPlayer.md).
+	private static uint? StackLocalAddress(Emulator emulator, uint instruction) =>
+		instruction switch
+		{
+			0x4050C7 => emulator.ImageBase - 0xA8 + 0x30,
+			_ => null,
+		};
+
+	// The uninitialized locals that cpu_strtgy reads, with what Windows' stack holds there: 0, in every frame of the
+	// traces recorded so far, where the emulator's would hold what the emulated code left.
+	private static readonly (uint Instruction, uint Value)[] StackLocalsOnWindows = [(0x4050C7, 0)];
+
+	// Whether a trace has given the uninitialized locals of the coming cpu_strtgy (GiveStackLocal).
+	private bool _hasStackLocals;
+
+	// Gives cpu_strtgy, before it runs, what Windows' stack held where it reads a local it has not set, as a trace of
+	// 1.22 records it; false if the port does not know where that local is.
+	internal bool GiveStackLocal(uint instruction, uint value)
+	{
+		if (Emulator is not { } emulator || StackLocalAddress(emulator, instruction) is not { } address)
+			return false;
+
+		MemoryMarshal.Write(emulator.At(address, sizeof(uint)), value);
+		_hasStackLocals = true;
+		return true;
+	}
+
+	// cpu_strtgy: the computer's order of this frame, in new_pp[0] and slct_unit[0]. The locals it reads uninitialized
+	// hold what Windows' stack holds there, or what a trace has given.
 	public void RunCpuStrategy()
 	{
+		if (!_hasStackLocals)
+		{
+			foreach (var (instruction, value) in StackLocalsOnWindows)
+				GiveStackLocal(instruction, value);
+		}
+
 		RunEmulated(Functions.CpuStrategy);
+		_hasStackLocals = false;
 	}
 
 	// decision: the scenario's events and victory conditions, and the result's messages once it has one.

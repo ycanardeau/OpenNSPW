@@ -23,6 +23,9 @@ internal sealed class Debugger(string executable, IReadOnlyCollection<uint> brea
 	private bool _hasSeenSystemBreakpoint;
 	private bool _isTerminating;
 
+	// The thread stopped at the breakpoint being called back.
+	private int _hitThreadId;
+
 	private static void Check(bool succeeded, string what)
 	{
 		if (!succeeded)
@@ -41,6 +44,14 @@ internal sealed class Debugger(string executable, IReadOnlyCollection<uint> brea
 	public int ReadInt32(uint address) => BitConverter.ToInt32(Read(address, 4));
 
 	public short ReadInt16(uint address) => BitConverter.ToInt16(Read(address, 2));
+
+	// ESP of the thread stopped at the breakpoint, before the instruction there runs.
+	public uint ReadEsp()
+	{
+		Marshal.WriteInt32(_context, 0, unchecked((int)CONTEXT_CONTROL));
+		Check(GetThreadContext(_threads[_hitThreadId], _context), "GetThreadContext");
+		return (uint)Marshal.ReadInt32(_context, ContextEsp);
+	}
 
 	private void Write(uint address, byte value)
 	{
@@ -97,6 +108,7 @@ internal sealed class Debugger(string executable, IReadOnlyCollection<uint> brea
 		{
 			if (_originalBytes.ContainsKey(address))
 			{
+				_hitThreadId = threadId;
 				_hit(this, address);
 				if (!_isTerminating)
 					StepOver(threadId, address);

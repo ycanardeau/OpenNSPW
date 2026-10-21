@@ -26,6 +26,10 @@ const uint DrawCmbtArea = 0x40DB50;
 // cmbt_menu_slctd (0x431C59).
 const uint MenuItemApplied = 0x431C60;
 
+// The uninitialized locals that cpu_strtgy reads, which the trace records as Windows' stack holds them, by the instruction
+// that reads them and the local's offset from esp there: scenario 208's count of planes at fleet 2's base.
+(uint Instruction, uint Offset)[] stackLocals = [(0x4050C7, 0x30)];
+
 // Where the recorder plays in place of the player: the title screen's test of a click (0x40AD39), after which it goes
 // to the scenarios; and the scenario screen's test for a battle to start (0x40C613), after its rows and its click have
 // set sinario and the mode, before game_init.
@@ -264,6 +268,12 @@ void Hit(Debugger debugger, uint address)
 			case Decision:
 				writer!.WriteRandom(TracePoint.Decision, random);
 				break;
+			case var _ when stackLocals.Any(local => local.Instruction == address):
+			{
+				var offset = stackLocals.First(local => local.Instruction == address).Offset;
+				writer!.WriteStackLocal(address, debugger.ReadUInt32(debugger.ReadEsp() + offset));
+				break;
+			}
 			case MenuItemApplied:
 				menuOrder = new MenuOrder { Menu = (CombatMenuItem)debugger.ReadInt16(MenuItem), SelectedUnit = debugger.ReadInt16(SelectedUnit) };
 				break;
@@ -289,8 +299,8 @@ void Run(int? scenario)
 	playedScenario = scenario;
 	hasStartedBattle = false;
 	uint[] breakpoints = scenario is null
-		? [GameInit, GameInitSeeded, Frame, CharaCont, Decision, Orders, DrawCmbtArea, MenuItemApplied]
-		: [GameInit, GameInitSeeded, Frame, CharaCont, Decision, Orders, DrawCmbtArea, MenuItemApplied, TitleClickTest, BattleStartTest];
+		? [GameInit, GameInitSeeded, Frame, CharaCont, Decision, Orders, DrawCmbtArea, MenuItemApplied, .. stackLocals.Select(local => local.Instruction)]
+		: [GameInit, GameInitSeeded, Frame, CharaCont, Decision, Orders, DrawCmbtArea, MenuItemApplied, .. stackLocals.Select(local => local.Instruction), TitleClickTest, BattleStartTest];
 	using (var debugger = new Debugger(executable, breakpoints, Hit))
 	{
 		Console.WriteLine(scenario is null
