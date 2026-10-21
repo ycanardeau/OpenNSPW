@@ -919,6 +919,34 @@ public class SingleplayerTests
 		Assert.Equal(effects + marks, EffectsInUse());
 	}
 
+	// A ship leaves its wake behind it at its heading's fraction of a degree, as 1.22 does (0x41C327), which means to reduce
+	// it to whole degrees but stores them into the low half of the double; NSPW NET's is at whole degrees.
+	[Fact]
+	public void WakesKeepTheHeadingsFractionAsIn122()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		ref var destroyer = ref game.Units[1];
+		destroyer.Category = UnitCategory.Ship;
+		destroyer.Kind = UnitKind.Destroyer;
+		destroyer.Side = game.LocalSide;
+		destroyer.Hp = destroyer.MaxHp;
+		destroyer.Position = new WorldPosition(1000, 1000);
+		destroyer.Direction = 10.3;
+		destroyer.Speed = destroyer.MaxSpeed;
+		game.Tick = 15;
+		game.IsDrawnTick = true;
+		var used = Enumerable.Range(1, 255).Where(f => game.Effects[f].Layer != EffectLayer.None).ToHashSet();
+
+		game.UpdateUnitEffects(1);
+
+		var wake = Enumerable.Range(1, 255).Single(f => !used.Contains(f) && game.Effects[f].Animation == 4 && game.Effects[f].SpriteNumber == 8);
+		var heading = 190.3 * Math.PI / 180;
+		Assert.Equal(1000 + Math.Cos(heading) * 16, game.Effects[wake].Position.X, 3);
+		Assert.Equal(1000 + Math.Sin(heading) * 16, game.Effects[wake].Position.Y, 3);
+	}
+
 	// A ship that is not damaged, and a damaged plane but on every tenth tick, draw no random number for their smoke, as in
 	// 1.22, which tests the damage and the tick first (0x41C18D, 0x41B8EC); NSPW NET's draw one every tick.
 	[Theory]

@@ -438,9 +438,10 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double drctn2, re
 	}
 
 // A heading reduced to whole degrees from 0 to 359, as NSPW NET does: a depth charge's direction from its ship, a
-// fighter's to dodge a head-on pass, a ship's to evade a torpedo or a plane. 1.22 means to, but stores the int into the
-// low half of the double and reads the double back (0x410452, 0x415324, 0x416417, 0x416838): the heading keeps its high
-// bits, so all of its fraction of a degree but the last digits.
+// fighter's to dodge a head-on pass, a ship's to evade a torpedo or a plane, a ship's wake behind it. 1.22 means to, but
+// stores the int into the low half of the double and reads the double back (0x410452, 0x415324, 0x416417, 0x416838,
+// 0x41C327): the heading keeps its high bits, so all of its fraction of a degree but the last digits, and the wake's is
+// not brought below 360.
 private double ReduceHeading(double heading)
 	{
 	var whole=(int)heading%360;

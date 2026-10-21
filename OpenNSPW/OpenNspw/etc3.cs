@@ -1545,7 +1545,7 @@ private void LeaveWake(ref Unit unit)
 
 		drctn=unit.Direction;
 		drctn+=180;
-		drctn=(int)drctn%360;
+		drctn=ReduceHeading(drctn);
 
 		switch(unit.Kind)
 			{
