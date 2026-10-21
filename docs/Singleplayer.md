@@ -150,6 +150,7 @@ So in a single-player game (`IsSingleplayer`):
 - `UpdateRapidAntiAircraftShell` hits every plane of the target's side in a burst, as 1.22 does (`0x419576`), where NSPW NET's hits the first.
 - `UpdateUnitEffects` makes the marks, the leader's flag, the damaged ships' smoke and fire and the damaged submarines' bubbles on the drawn tick only (`IsEffectTick`), tests a damaged plane's tick and a ship's damage before it draws the random number of its smoke, and makes no marks for the second types, as 1.22 does (`0x41AEB0`); `UpdateFires` makes the fires' sprites, trails and wakes on the drawn tick only (`0x419099` to `0x41A774`).
 - `GetDamagePoints` gives a depth charge 1.22's damage, 3 to 5 (`0x416D1F`).
+- `UpdateAntiSubmarineBomb` keeps an exploded depth charge's fire in use, with the submerged submarine it hit or tested last as its target, as 1.22's bug does (`0x4196DC` to `0x4197EC`).
 - `CheckHit` hits a surfaced submarine within 1.22's smaller size, 4 by 2 of each part (`0x40F9D6`), where NSPW NET's is 8 by 4.
 - `CheckResult` calls `decision`, which also shows the result, instead of NSPW NET's conditions.
 

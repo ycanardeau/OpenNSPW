@@ -738,6 +738,31 @@ public class SingleplayerTests
 		Assert.Equal([3, 4, 5], damages.Order());
 	}
 
+	// An exploded depth charge keeps its fire, with the last submerged submarine it tested as its target, as in 1.22
+	// (0x4196DC to 0x4197EC), where NSPW NET's frees it.
+	[Fact]
+	public void ExplodedDepthChargesKeepTheirFireAsIn122()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var submarine = game.AddUnit(game.CpuSide, UnitKind.Submarine, 1000, 1000, 0);
+		Assert.NotEqual(0, submarine);
+		game.Units[submarine].IsSubmerged = true;
+		var hp = game.Units[submarine].Hp;
+		ref var fire = ref game.Fires[255];
+		fire.Kind = FireKind.AntiSubmarineBomb;
+		fire.Target = submarine;
+		fire.Position = game.Units[submarine].Position;
+		fire.FlightTime = 100;
+		fire.Ticks = 99;
+
+		game.UpdateFires();
+
+		Assert.True(game.Units[submarine].Hp < hp);
+		Assert.Equal(submarine, game.Fires[255].Target);
+	}
+
 	// A fire hits a surfaced submarine within 4 of it, as in 1.22 (0x40F9D6), where NSPW NET's hits within 8.
 	[Fact]
 	public void SurfacedSubmarinesAreHitAsIn122()

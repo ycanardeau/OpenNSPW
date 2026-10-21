@@ -609,6 +609,8 @@ private void UpdateAntiSubmarineBomb(ref Fire fire, ref int n, int m)
 		}
 	if( fire.Ticks==fire.FlightTime )
 		{	// バクハツ！
+		if( Rules.ExplodedDepthChargesKeepTheirFire )
+			fire.Target=0;
 
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
@@ -641,7 +643,8 @@ private void UpdateAntiSubmarineBomb(ref Fire fire, ref int n, int m)
 			// 命中
 			Units[n].Hp-=GetDamagePoints(m);
 			}
-		fire.Target=0;
+		if( !Rules.ExplodedDepthChargesKeepTheirFire )
+			fire.Target=0;
 		}
 	}
 

@@ -71,6 +71,10 @@ public sealed record BattleRules(
 	int DepthChargeDamage,
 	int DepthChargeDamageSpread,
 
+	// Whether a depth charge keeps its fire once it has exploded, with the submerged submarine it hit or tested last as its
+	// target, as 1.22's bug does, rather than freeing it.
+	bool ExplodedDepthChargesKeepTheirFire,
+
 	// The size of a surfaced submarine, within which a fire hits it.
 	int SurfacedSubmarineHitSize,
 
@@ -203,6 +207,7 @@ public sealed record BattleRules(
 		DepthChargeCountStopsAtZero: true,
 		DepthChargeDamage: 1,
 		DepthChargeDamageSpread: all_head.ASB_DMG + 2 + 1,
+		ExplodedDepthChargesKeepTheirFire: false,
 		SurfacedSubmarineHitSize: 8,
 		SubmarineTorpedoReload: all_head.RELOAD_TPD_SS,
 		BulletsSpareTransports: true,
@@ -264,6 +269,7 @@ public sealed record BattleRules(
 		DepthChargeCountStopsAtZero: false, // 0x4103B6
 		DepthChargeDamage: 3, // 0x416D1F
 		DepthChargeDamageSpread: 3, // 0x416D1F
+		ExplodedDepthChargesKeepTheirFire: true, // 0x4196DC to 0x4197EC
 		SurfacedSubmarineHitSize: 4, // 0x40F9D6
 		SubmarineTorpedoReload: 2000, // 0x4110DB, 0x41176B
 		BulletsSpareTransports: false, // 0x418F92
