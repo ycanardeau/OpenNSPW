@@ -763,6 +763,26 @@ public class SingleplayerTests
 		Assert.Equal([3, 4, 5], damages.Order());
 	}
 
+	// A submarine keeps its target once it has fired torpedoes at it, as in 1.22 (0x4117F7), where NSPW NET's clears it.
+	[Fact]
+	public void SubmarinesKeepTheirTargetAfterFiring()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var submarine = game.AddUnit(Side.Japan, UnitKind.Submarine, -9000, -7000, 0);
+		var cruiser = game.AddUnit(Side.UnitedStates, UnitKind.Cruiser, -8700, -7000, 0);
+		Assert.NotEqual(0, submarine);
+		Assert.NotEqual(0, cruiser);
+		game.Units[cruiser].IsFound = true;
+		game.Units[submarine].Target = cruiser;
+
+		game.FireWeapons(submarine, cruiser, FireKind.Torpedo);
+
+		Assert.Equal(2000, game.Units[submarine].ReloadTime);
+		Assert.Equal(cruiser, game.Units[submarine].Target);
+	}
+
 	// An exploded depth charge keeps its fire, with the last submerged submarine it tested as its target, as in 1.22
 	// (0x4196DC to 0x4197EC), where NSPW NET's frees it.
 	[Fact]

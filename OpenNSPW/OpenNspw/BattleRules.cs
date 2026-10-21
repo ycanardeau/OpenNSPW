@@ -78,6 +78,9 @@ public sealed record BattleRules(
 	// The ticks a submarine takes to reload its torpedoes.
 	int SubmarineTorpedoReload,
 
+	// Whether a submarine keeps its target once it has fired torpedoes at it, rather than clearing it.
+	bool SubmarinesKeepTheirTargetAfterFiring,
+
 	// Whether bullets damage a transport 1 time in 4 only.
 	bool BulletsSpareTransports,
 
@@ -206,6 +209,7 @@ public sealed record BattleRules(
 		ExplodedDepthChargesKeepTheirFire: false,
 		SurfacedSubmarineHitSize: 8,
 		SubmarineTorpedoReload: all_head.RELOAD_TPD_SS,
+		SubmarinesKeepTheirTargetAfterFiring: false,
 		BulletsSpareTransports: true,
 		CargoLandingRange: 160,
 		CargoSlowsTransports: true,
@@ -267,6 +271,7 @@ public sealed record BattleRules(
 		ExplodedDepthChargesKeepTheirFire: true, // 0x4196DC to 0x4197EC
 		SurfacedSubmarineHitSize: 4, // 0x40F9D6
 		SubmarineTorpedoReload: 2000, // 0x4110DB, 0x41176B
+		SubmarinesKeepTheirTargetAfterFiring: true, // 0x4117F7
 		BulletsSpareTransports: false, // 0x418F92
 		CargoLandingRange: 360, // 0x413003
 		CargoSlowsTransports: false, // 0x402955

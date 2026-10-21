@@ -960,7 +960,8 @@ private bool ShipFireTorpedoAtTarget(int trgt, ref Unit unit, ref double drctn2,
 			}
 		else
 			{
-			unit.Target=0;
+			if( !Rules.SubmarinesKeepTheirTargetAfterFiring )
+				unit.Target=0;
 			}
 
 		for( f=0; f<=2; f++)
