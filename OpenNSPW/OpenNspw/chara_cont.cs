@@ -1411,7 +1411,7 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 			}
 		}
 
-	if( unit.Fuel<=0 && (unit.Category==UnitCategory.Plane || (unit.Category==UnitCategory.Ship && unit.Speed>= unit.MaxSpeed/10 ) ) )
+	if( unit.Fuel<=0 && (unit.Category==UnitCategory.Plane || (unit.Category==UnitCategory.Ship && unit.Speed>= (Rules.OutOfFuelShipsBrakeFromTopSpeedTimesATenth ? unit.MaxSpeed*0.1 : unit.MaxSpeed/10) ) ) )
 		unit.Acceleration=-(unit.AccelerationChange*2);		// ガス０なら減速へ
 
 	// 速度を決定

@@ -345,6 +345,30 @@ public class SingleplayerTests
 		Assert.Equal(planes + game.Units[carrier].Capacity + 2, game.Units[carrier].PlaneCount);
 	}
 
+	// A ship out of fuel brakes from its top speed times 0.1, as 1.22 computes it (0x40285F), so a cruiser at 0.08 of 0.8
+	// still speeds up, 0.8 * 0.1 being 0.08000000000000002; NSPW NET's top speed over 10 is 0.08, and it brakes.
+	[Fact]
+	public void ShipsOutOfFuelBrakeFromTopSpeedTimesATenth()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var cruiser = game.AddUnit(Side.Japan, UnitKind.Cruiser, -9000, -7000, 0);
+		Assert.NotEqual(0, cruiser);
+		ref var unit = ref game.Units[cruiser];
+		unit.MaxSpeed = 0.8;
+		unit.Speed = 0.08;
+		unit.Fuel = 0;
+		unit.IsStopping = false;
+		unit.PathX[0] = -8000;
+		unit.PathY[0] = -7000;
+		unit.PathX[1] = all_head.MAP_RIGHT + 1;
+
+		game.UpdateBattle();
+
+		Assert.True(game.Units[cruiser].Speed > 0.08);
+	}
+
 	// The planes that follow a torpedo plane return once it drops its torpedo, and keep their path, as in 1.22
 	// (0x413F51 to 0x413F7C), where NSPW NET sends them to where it dropped it.
 	[Fact]

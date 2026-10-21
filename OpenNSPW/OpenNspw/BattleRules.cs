@@ -99,6 +99,10 @@ public sealed record BattleRules(
 	// Moves: whether fuel burns by the speed's share of the top speed, as a fraction, rather than 1 at a time.
 	bool FuelBurnsBySpeed,
 
+	// Whether a ship out of fuel brakes from its top speed times 0.1, rather than over 10, which can be less in the last
+	// bit: 0.8 * 0.1 is 0.08000000000000002, 0.8 / 10 is 0.08.
+	bool OutOfFuelShipsBrakeFromTopSpeedTimesATenth,
+
 	// Whether a heading that turns to 360 becomes 0, rather than only one past 360.
 	bool HeadingWrapsAt360,
 
@@ -217,6 +221,7 @@ public sealed record BattleRules(
 		LandedBasesAreBuilt: true,
 		TransportsLeaveAfterLanding: true,
 		FuelBurnsBySpeed: true,
+		OutOfFuelShipsBrakeFromTopSpeedTimesATenth: false,
 		HeadingWrapsAt360: true,
 		ComputerReplansBlockedRoutes: false,
 		SupplyNeedsNavalBase: true,
@@ -279,6 +284,7 @@ public sealed record BattleRules(
 		LandedBasesAreBuilt: false, // 0x418E23
 		TransportsLeaveAfterLanding: false, // 0x413014 to 0x41312B
 		FuelBurnsBySpeed: false, // 0x402F72
+		OutOfFuelShipsBrakeFromTopSpeedTimesATenth: true, // 0x40285F
 		HeadingWrapsAt360: false, // 0x4024B6
 		ComputerReplansBlockedRoutes: true, // 0x401F95 to 0x4023EB, 0x402D2B
 		SupplyNeedsNavalBase: false, // 0x4010BB
