@@ -2974,8 +2974,9 @@ public void ReturnIntoWorld(int m)
 
 // 1.22's hunt of the computer's destroyers, stopped or not (0x416706 to 0x416B35). One that chases no submarine
 // (em_flg[1]) takes the first enemy one found within 600 of its contact, or of itself when surfaced: it runs toward the
-// contact, give or take 20°, 300 past it, for 600 ticks, and chases it. One that chases a submarine no longer found stops
-// chasing it; otherwise it stops 1 time in 10, or else goes to within 400 of the contact for 200 to 299 ticks.
+// contact, give or take 20°, 300 past it, for 600 ticks, and chases it. One that chases a submarine stops chasing it once
+// it is found again (0x416A70), as finding it stops its chasers (FoundSubmarinesStopChasers); while it is not, the
+// destroyer stops 1 time in 10, or else goes to within 400 of its last contact for 200 to 299 ticks.
 private bool HuntSubmarineAs122(ref Unit unit)
 	{
 	int n;
@@ -2986,7 +2987,7 @@ private bool HuntSubmarineAs122(ref Unit unit)
 	if( unit.EmergencyFlags[1]!=0 )
 		{
 		ref var chased = ref Units[unit.EmergencyFlags[1]];
-		if( !chased.IsFound )
+		if( chased.IsFound )
 			{
 			unit.EmergencyFlags[1]=0;
 			return true;

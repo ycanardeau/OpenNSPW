@@ -597,6 +597,31 @@ public class SingleplayerTests
 		Assert.Equal(hunts ? 600 : 0, game.Units[destroyer].EmergencyFlags[0]);
 	}
 
+	// The computer's destroyer stops chasing its submarine once it is found, and keeps chasing it, to its last contact,
+	// while it is not, as 1.22 tests it (0x416A70).
+	[Theory]
+	[InlineData(true, false)]
+	[InlineData(false, true)]
+	public void TheComputersDestroyersChaseSubmarinesNotFound(bool found, bool chases)
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var destroyer = game.AddUnit(game.CpuSide, UnitKind.Destroyer, -9000, -7000, 0);
+		var submarine = game.AddUnit(game.LocalSide, UnitKind.Submarine, -8500, -7000, 0);
+		Assert.NotEqual(0, destroyer);
+		Assert.NotEqual(0, submarine);
+		ref var sub = ref game.Units[submarine];
+		sub.IsFound = found;
+		sub.IsSubmerged = true;
+		game.Units[destroyer].EmergencyFlags[1] = submarine;
+		game.srand(1); // Its first draw, 41, is not 1 in 10.
+
+		game.SetShipEmergencyDestination(destroyer);
+
+		Assert.Equal(chases ? submarine : 0, game.Units[destroyer].EmergencyFlags[1]);
+	}
+
 	// A returning plane approaches its base whatever its kind, as in 1.22, where NSPW NET forgets a base that is not a
 	// carrier or an air base.
 	[Fact]
