@@ -223,6 +223,11 @@ private bool IsLandAt(double x, double y)
 	return MapTiles[cm_scrn_y][cm_scrn_x]>=1;
 	}
 
+private bool IsLandAt(WorldPosition position)
+	{
+	return IsLandAt(position.X, position.Y);
+	}
+
 // Ships: whether a point is on a ship other than unit m, one that a ship can run into: not a submerged submarine,
 // nor a base.
 private bool IsShipAt(int m, double x, double y)

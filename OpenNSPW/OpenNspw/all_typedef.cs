@@ -139,11 +139,17 @@ public struct	Unit		// 全ての艦船、航空機、地図上の位置
 
 	[UnscopedRef] public ref int LandingY => ref info[7];
 
+	// LandingX and LandingY as a position in the world.
+	public readonly WorldPosition LandingPoint => new(info[6], info[7]);
+
 	// Where the other side last made contact with the unit, how far around it the contact is drawn, and how long it
 	// lasts: Detect counts ContactTime down, and the unit is no longer found when it reaches 0.
 	[UnscopedRef] public ref int ContactX => ref info[7];
 
 	[UnscopedRef] public ref int ContactY => ref info[8];
+
+	// ContactX and ContactY as a position in the world.
+	public readonly WorldPosition ContactPosition => new(info[7], info[8]);
 
 	[UnscopedRef] public ref int ContactRadius => ref info[9];
 
