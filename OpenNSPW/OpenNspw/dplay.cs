@@ -187,7 +187,6 @@ public int EnumAdapters( HWND hDlg, Guid? pSPGuid )
 {
     DPN_SERVICE_PROVIDER_INFO[]? pdnSPInfo = null;
     Array260<byte>   strName = default;
-    int hr;
     uint   dwItems = 0;
     uint   dwSize  = 0;
     int     nIndex;
@@ -197,7 +196,7 @@ public int EnumAdapters( HWND hDlg, Guid? pSPGuid )
 
     // Enumerate all adapters for the given service provider, and store them
     // in the listbox
-    hr = g_pDP.EnumServiceProviders( pSPGuid, null, pdnSPInfo, ref dwSize,
+    var hr = g_pDP.EnumServiceProviders( pSPGuid, null, pdnSPInfo, ref dwSize,
                                       ref dwItems, 0 );
     if( hr != DPNERR_BUFFERTOOSMALL )
     {
@@ -227,8 +226,7 @@ public int EnumAdapters( HWND hDlg, Guid? pSPGuid )
     pdnSPInfoEnum = 0;
 
     // For each detected adapter, add an item to the listbox
-    uint i;
-    for ( i = 0; i < dwItems; i++ )
+    for ( uint i = 0; i < dwItems; i++ )
     {
         DXUtil_ConvertWideStringToGenericCch( strName, pdnSPInfo[pdnSPInfoEnum].pwszName, MAX_PATH );
 
@@ -306,13 +304,12 @@ LCleanReturn:
 public int EnumServiceProviders( HWND hDlg )
 {
     DPN_SERVICE_PROVIDER_INFO[]? pdnSPInfo = null;
-    int hr;
     uint   dwItems = 0;
     uint   dwSize  = 0;
     int     nIndex;
 
     // Enumerate all DirectPlay service providers, and store them in the listbox
-    hr = g_pDP.EnumServiceProviders( null, null, pdnSPInfo, ref dwSize,
+    var hr = g_pDP.EnumServiceProviders( null, null, pdnSPInfo, ref dwSize,
                                       ref dwItems, 0 );
     if( hr != DPNERR_BUFFERTOOSMALL )
     {
@@ -342,8 +339,7 @@ public int EnumServiceProviders( HWND hDlg )
     pdnSPInfoEnum = 0;
 
     // For each detected service provider, add an item to the list
-    uint i;
-    for ( i = 0; i < dwItems; i++ )
+    for ( uint i = 0; i < dwItems; i++ )
     {
         Array260<byte> strName = default;
         DXUtil_ConvertWideStringToGenericCch( strName, pdnSPInfo[pdnSPInfoEnum].pwszName, MAX_PATH );
@@ -513,10 +509,7 @@ public int OnInitOverrideDialog( HWND hDlg )
 public nint OverrideDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
 	{
 	int hr;
-	int nSPIndex;
-	Guid? pSPGuid;
 
-	int nIndex;
 
 	switch( msg )
 		{
@@ -541,8 +534,8 @@ public nint OverrideDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
 				case IDC_SP_COMBO:
 					// If the pSPGuid changed then re-enum the adapters, and
 					// update the address fields.
-					nSPIndex = (int) SendDlgItemMessage( hDlg, IDC_SP_COMBO, CB_GETCURSEL, 0, 0 );
-					pSPGuid = (Guid?) SendDlgItemMessage( hDlg, IDC_SP_COMBO, CB_GETITEMDATA, nSPIndex, 0 );
+					var nSPIndex = (int) SendDlgItemMessage( hDlg, IDC_SP_COMBO, CB_GETCURSEL, 0, 0 );
+					var pSPGuid = (Guid?) SendDlgItemMessage( hDlg, IDC_SP_COMBO, CB_GETITEMDATA, nSPIndex, 0 );
 
 					if( pSPGuid != null && g_pCurSPGuid != pSPGuid )		// Compares the GUIDs, not the pointers to them, which are equal for the same item
 						{
@@ -559,7 +552,7 @@ public nint OverrideDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
 					// 接続ダイアログのデータをレジ記録する元データ
 					GetDlgItemText( hDlg, IDC_PLAYER_NAME, LocalPlayerName, MAX_PATH );
 
-					nIndex = (int) SendDlgItemMessage( hDlg, IDC_SP_COMBO, CB_GETCURSEL, 0, 0 );
+					var nIndex = (int) SendDlgItemMessage( hDlg, IDC_SP_COMBO, CB_GETCURSEL, 0, 0 );
 					SendDlgItemMessage( hDlg, IDC_SP_COMBO, CB_GETLBTEXT, nIndex, PreferredProvider );
 
 					// Disable the OK button while we work.
@@ -661,8 +654,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 		}
 
 	// Add the adapter to pDeviceAddress
-	int nAdapterIndex;
-	nAdapterIndex = (int) SendDlgItemMessage( hDlg, IDC_ADAPTER_COMBO, CB_GETCURSEL, 0, 0 );
+	var nAdapterIndex = (int) SendDlgItemMessage( hDlg, IDC_ADAPTER_COMBO, CB_GETCURSEL, 0, 0 );
 
 	if( nAdapterIndex != CB_ERR )
 		{
@@ -976,14 +968,13 @@ private void ReceiveLeaveConfigSetting(DPNMSG_RECEIVE pReceiveMsg)
 
 private void ReceiveMoveOrder(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	int s;
 	_DP_NEW_PP* pMsg = (_DP_NEW_PP*) pReceiveMsg.pReceiveData;
 
 	// ホスト、ジョインともここで相手のデータを受け取る。
 	BufferedMoveOrders[0].Unit=pMsg->used;
 	BufferedMoveOrders[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
 	BufferedMoveOrders[0].ClearsPath=pMsg->cls;
-	for( s=0; s<=(USA_PLANE_END/2)-1; s++)
+	for( var s=0; s<=(USA_PLANE_END/2)-1; s++)
 		{
 		BufferedSelections[0][s]=pMsg->slct_unit[s];
 		}
@@ -992,13 +983,12 @@ private void ReceiveMoveOrder(DPNMSG_RECEIVE pReceiveMsg)
 
 private void ReceiveMoveShipsOrder(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	int s;
 	_DP_NEW_PP_SHIP* pMsg = (_DP_NEW_PP_SHIP*) pReceiveMsg.pReceiveData;
 
 	BufferedMoveOrders[0].Unit=pMsg->used;
 	BufferedMoveOrders[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
 	BufferedMoveOrders[0].ClearsPath=pMsg->cls;
-	for( s=0; s<=JPN_SHIP_END-1; s++)
+	for( var s=0; s<=JPN_SHIP_END-1; s++)
 		{
 		BufferedSelections[0][s]=pMsg->slct_unit[s];
 		}
@@ -1007,14 +997,13 @@ private void ReceiveMoveShipsOrder(DPNMSG_RECEIVE pReceiveMsg)
 
 private void ReceiveMovePlanesOrder(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	int s;
 	_DP_NEW_PP_PLANE* pMsg = (_DP_NEW_PP_PLANE*) pReceiveMsg.pReceiveData;
 
 	// ホスト、ジョインともここで相手のデータを受け取る。
 	BufferedMoveOrders[0].Unit=pMsg->used;
 	BufferedMoveOrders[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
 	BufferedMoveOrders[0].ClearsPath=pMsg->cls;
-	for( s=0; s<=JPN_PLANE_END-JPN_PLANE_START; s++)
+	for( var s=0; s<=JPN_PLANE_END-JPN_PLANE_START; s++)
 		{
 		BufferedSelections[0][s+JPN_SHIP_END]=pMsg->slct_unit[s];
 		}
@@ -1023,7 +1012,6 @@ private void ReceiveMovePlanesOrder(DPNMSG_RECEIVE pReceiveMsg)
 
 private void ReceiveSelectOrder(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	int s;
 	_DP_NEW_SLCT* pMsg = (_DP_NEW_SLCT*) pReceiveMsg.pReceiveData;
 
 	// ホスト、ジョインともここで相手のデータを受け取る。
@@ -1031,7 +1019,7 @@ private void ReceiveSelectOrder(DPNMSG_RECEIVE pReceiveMsg)
 	BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
 	BufferedSelectOrders[0].Unit=pMsg->m;
 	BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
-	for( s=0; s<=(USA_PLANE_END/2)-1; s++)
+	for( var s=0; s<=(USA_PLANE_END/2)-1; s++)
 		{
 		BufferedSelections[0][s]=pMsg->slct_unit[s];
 		}
@@ -1040,7 +1028,6 @@ private void ReceiveSelectOrder(DPNMSG_RECEIVE pReceiveMsg)
 
 private void ReceiveSelectShipsOrder(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	int s;
 	_DP_NEW_SLCT_SHIP* pMsg = (_DP_NEW_SLCT_SHIP*) pReceiveMsg.pReceiveData;
 
 	// ホスト、ジョインともここで相手のデータを受け取る。
@@ -1048,7 +1035,7 @@ private void ReceiveSelectShipsOrder(DPNMSG_RECEIVE pReceiveMsg)
 	BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
 	BufferedSelectOrders[0].Unit=pMsg->m;
 	BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
-	for( s=0; s<=JPN_SHIP_END-1; s++)
+	for( var s=0; s<=JPN_SHIP_END-1; s++)
 		{
 		BufferedSelections[0][s]=pMsg->slct_unit[s];
 		}
@@ -1057,7 +1044,6 @@ private void ReceiveSelectShipsOrder(DPNMSG_RECEIVE pReceiveMsg)
 
 private void ReceiveSelectPlanesOrder(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	int s;
 	_DP_NEW_SLCT_PLANE* pMsg = (_DP_NEW_SLCT_PLANE*) pReceiveMsg.pReceiveData;
 
 	// ホスト、ジョインともここで相手のデータを受け取る。
@@ -1065,7 +1051,7 @@ private void ReceiveSelectPlanesOrder(DPNMSG_RECEIVE pReceiveMsg)
 	BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
 	BufferedSelectOrders[0].Unit=pMsg->m;
 	BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
-	for( s=0; s<=JPN_PLANE_END-JPN_PLANE_START; s++)
+	for( var s=0; s<=JPN_PLANE_END-JPN_PLANE_START; s++)
 		{
 		BufferedSelections[0][s+JPN_SHIP_END]=pMsg->slct_unit[s];
 		}
@@ -1086,14 +1072,13 @@ private void ReceiveSelectLandOrder(DPNMSG_RECEIVE pReceiveMsg)
 
 private void ReceiveMenuOrder(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	int s;
 	_DP_NEW_MENU* pMsg = (_DP_NEW_MENU*) pReceiveMsg.pReceiveData;
 
 	// ホスト、ジョインともここで相手のデータを受け取る。
 	BufferedMenuOrders[0].Menu=(CombatMenuItem)pMsg->menu;
 	BufferedMenuOrders[0].SelectedUnit=pMsg->the_slct_unit;
 
-	for( s=0; s<=(USA_PLANE_END/2)-1; s++)
+	for( var s=0; s<=(USA_PLANE_END/2)-1; s++)
 		{
 		BufferedSelections[0][s]=pMsg->slct_unit[s];
 		}
@@ -1132,10 +1117,9 @@ private void ReceiveGoToGameSetting()
 
 private void ReceiveUserScenarioFileName(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	int s;
 	_DP_DATA_20* pMsg = (_DP_DATA_20 *) pReceiveMsg.pReceiveData;
 
-	for(s=0;s<MAX_PATH;s++)
+	for(var s=0;s<MAX_PATH;s++)
 		{
 		UserScenarioFileName[s]=pMsg->friend_chat[s];
 		}
@@ -1153,20 +1137,19 @@ private void ReceiveUserScenarioFileName(DPNMSG_RECEIVE pReceiveMsg)
 //-----------------------------------------------------------------------------
 public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, object pMsgBuffer )
 	{
-	int		s,m,n;
+	int s;
 
 	switch( dwMessageId )
 		{
 		case DPN_MSGID_CREATE_PLAYER:
 			{
-			int hr;
 			DPNMSG_CREATE_PLAYER pCreatePlayerMsg;						// 新規追加につかう構造体
 			pCreatePlayerMsg = (DPNMSG_CREATE_PLAYER)pMsgBuffer;		// この時点で参加者のＤＰＮＩＤはｗかる
 
 			// Get the peer info and extract its name
 			uint dwSize = 0;						// サイズをわざと０と少なくしておいてDPNERR_BUFFERTOOSMALLを誘発させる
 			DPN_PLAYER_INFO? pdpPlayerInfo = null;
-			hr = DPNERR_CONNECTING;
+			var hr = DPNERR_CONNECTING;
 
 			while( hr == DPNERR_CONNECTING )
 				hr = g_pDP.GetPeerInfo( pCreatePlayerMsg.dpnidPlayer, pdpPlayerInfo, ref dwSize, 0 );
@@ -1219,8 +1202,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 		case DPN_MSGID_DESTROY_PLAYER:
 				{
 				// 多分ホストで、ゲストの誰かが接続を切ったらここに来る。
-            DPNMSG_DESTROY_PLAYER pDestroyPlayerMsg;
-            pDestroyPlayerMsg = (DPNMSG_DESTROY_PLAYER)pMsgBuffer;
+            var pDestroyPlayerMsg = (DPNMSG_DESTROY_PLAYER)pMsgBuffer;
             // Update the number of active players, and
             // post a message to the dialog thread to update the
             // UI.
@@ -1237,8 +1219,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 		case DPN_MSGID_TERMINATE_SESSION:
 			{
 			// ゲストで、ホストが接続を切った場合ここにくる。
-			DPNMSG_TERMINATE_SESSION pTerminateSessionMsg;
-			pTerminateSessionMsg = (DPNMSG_TERMINATE_SESSION)pMsgBuffer;
+			var pTerminateSessionMsg = (DPNMSG_TERMINATE_SESSION)pMsgBuffer;
 
 			// The session was terminated.  Generally we don't want to display dialog boxes
 			// and block a DirectPlay message handler callback, but we are doing it in this
@@ -1257,8 +1238,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 		case DPN_MSGID_RECEIVE:
 			{
 			// なんかメッセージが相手から届いた。
-			DPNMSG_RECEIVE pReceiveMsg;
-			pReceiveMsg = (DPNMSG_RECEIVE)pMsgBuffer;
+			var pReceiveMsg = (DPNMSG_RECEIVE)pMsgBuffer;
 
 			// とりあえず、ジェネラルに入れる。
 			GENERICMSG* pGenericMsg = (GENERICMSG*) pReceiveMsg.pReceiveData;		// pMsg in the original, which the pMsg below shadow
@@ -1433,8 +1413,7 @@ typedef	struct	_DP_DATA_1
 		case DPN_MSGID_CONNECT_COMPLETE:
 			{
 			// ゲストで、ホストに接続出来たらここへくる。
-			DPNMSG_CONNECT_COMPLETE pConnectCompleteMsg;
-			pConnectCompleteMsg = (DPNMSG_CONNECT_COMPLETE)pMsgBuffer;
+			var pConnectCompleteMsg = (DPNMSG_CONNECT_COMPLETE)pMsgBuffer;
 
 			g_hConnectAsyncOp = 0;
 			if( FAILED( pConnectCompleteMsg.hResultCode ) )

@@ -152,18 +152,15 @@ public void	LoadResume(int type)
 
 private bool CheckResultOfScenario1()
 	{
-	int f;
-	int i;
-	int m;
-	f=0;
-	for( i=1; i<=MaxUnitId; i++ )
+	var f=0;
+	for( var i=1; i<=MaxUnitId; i++ )
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.Japan && (unit.Kind==UnitKind.Carrier || unit.Kind==UnitKind.LightCarrier) )
 			f++;
 		}
-	m=0;
-	for( i=1; i<=MaxUnitId; i++ )
+	var m=0;
+	for( var i=1; i<=MaxUnitId; i++ )
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.Japan && (unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress ) )
@@ -176,14 +173,14 @@ private bool CheckResultOfScenario1()
 		}
 
 	f=0;
-	for( i=1; i<=MaxUnitId; i++)
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.Carrier || unit.Kind==UnitKind.LightCarrier) )
 			f++;
 		}
 	m=0;
-	for( i=1; i<=MaxUnitId; i++)
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress ) )
@@ -199,18 +196,15 @@ private bool CheckResultOfScenario1()
 
 private bool CheckResultOfScenario4()
 	{
-	int f;
-	int i;
-	int m;
-	f=0;
-	for( i=1; i<=MaxUnitId; i++)
+	var f=0;
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.Japan && (unit.Kind==UnitKind.Battleship || unit.Kind==UnitKind.Cruiser) )
 			f++;
 		}
-	m=0;
-	for( i=1; i<=MaxUnitId; i++ )
+	var m=0;
+	for( var i=1; i<=MaxUnitId; i++ )
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.Japan && (unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress ) )
@@ -223,14 +217,14 @@ private bool CheckResultOfScenario4()
 		}
 
 	f=0;
-	for( i=1; i<=MaxUnitId; i++)
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.Battleship || unit.Kind==UnitKind.Cruiser) )
 			f++;
 		}
 	m=0;
-	for( i=1; i<=MaxUnitId; i++ )
+	for( var i=1; i<=MaxUnitId; i++ )
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress ) )
@@ -246,11 +240,9 @@ private bool CheckResultOfScenario4()
 
 private bool CheckResultOfScenario6()
 	{
-	int m;
-	int i;
 	RECT wrk_r;
-	m=0;
-	for( i=1; i<=MaxUnitId; i++)
+	var m=0;
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.UnitedStates && (unit.Kind>=UnitKind.AirBase&&unit.Kind<=UnitKind.Fortress) )
@@ -277,13 +269,10 @@ private bool CheckResultOfScenario6()
 
 private bool CheckResultOfScenario7()
 	{
-	int f;
-	int m;
-	int i;
 	RECT wrk_r;
-	f=0;
-	m=0;
-	for( i=1; i<=MaxUnitId; i++)
+	var f=0;
+	var m=0;
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.UnitedStates && (unit.Kind>=UnitKind.AirBase&&unit.Kind<=UnitKind.Fortress) )
@@ -300,7 +289,7 @@ private bool CheckResultOfScenario7()
 				}
 			}
 		}
-	for( i=1; i<=MaxUnitId; i++)
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.Japan && (unit.Kind==UnitKind.Fortress) && unit.BuildTime==0 )
@@ -327,13 +316,10 @@ private bool CheckResultOfScenario7()
 
 private bool CheckResultOfScenario8()
 	{
-	int f;
-	int m;
-	int i;
 	RECT wrk_r;
-	f=0;
-	m=0;
-	for( i=1; i<=MaxUnitId; i++)
+	var f=0;
+	var m=0;
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.UnitedStates && (unit.Kind>=UnitKind.AirBase&&unit.Kind<=UnitKind.Fortress) )
@@ -350,7 +336,7 @@ private bool CheckResultOfScenario8()
 				}
 			}
 		}
-	for( i=1; i<=MaxUnitId; i++)
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.Japan && (unit.Kind==UnitKind.Fortress) && unit.BuildTime==0 )
@@ -389,7 +375,7 @@ private bool CheckResultOfScenario8()
 */
 	f=0;
 	m=0;
-	for( i=1; i<=MaxUnitId; i++)
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.Japan && (unit.Kind>=UnitKind.AirBase&&unit.Kind<=UnitKind.Fortress) )
@@ -406,7 +392,7 @@ private bool CheckResultOfScenario8()
 				}
 			}
 		}
-	for( i=1; i<=MaxUnitId; i++)
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.Fortress) && unit.BuildTime==0 )
@@ -433,16 +419,14 @@ private bool CheckResultOfScenario8()
 
 private bool CheckResultOfScenario101()
 	{
-	int f;
 	RECT wrk_r;
-	int i;
-	f=0;
+	var f=0;
 	// ガダルカナル島
 	wrk_r.top=(int)(-160);
 	wrk_r.right=(int)(-1040+(80*3));
 	wrk_r.bottom=(int)(-160-80);
 	wrk_r.left=(int)(-1040);
-	for( i=1; i<=MaxUnitId; i++)
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
@@ -461,18 +445,15 @@ private bool CheckResultOfScenario101()
 
 private bool CheckResultOfScenario102()
 	{
-	int f;
-	int m;
 	RECT wrk_r;
-	int i;
-	f=0;
-	m=0;
+	var f=0;
+	var m=0;
 	// ガダルカナル島
 	wrk_r.top=(int)(-160);
 	wrk_r.right=(int)(-1040+(80*3));
 	wrk_r.bottom=(int)(-160-80);
 	wrk_r.left=(int)(-1040);
-	for( i=1; i<=MaxUnitId; i++)
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
@@ -480,7 +461,7 @@ private bool CheckResultOfScenario102()
 			f++;
 			}
 		}
-	for( i=1; i<=MaxUnitId; i++)
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.UnitedStates && ( unit.Kind==UnitKind.AirBase )  && unit.BuildTime==0 && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
@@ -499,10 +480,8 @@ private bool CheckResultOfScenario102()
 
 private bool CheckResultOfScenario103()
 	{
-	int f;
-	int i;
-	f=0;
-	for( i=1; i<=MaxUnitId; i++)
+	var f=0;
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.Japan && unit.Kind==UnitKind.City  )
@@ -521,16 +500,14 @@ private bool CheckResultOfScenario103()
 
 private bool CheckResultOfScenario104()
 	{
-	int f;
 	RECT wrk_r;
-	int i;
-	f=0;
+	var f=0;
 	// ブーゲンビル島
 	wrk_r.top=(int)(1200+80);
 	wrk_r.right=(int)(-4480+80*5);
 	wrk_r.bottom=(int)(1200-80*3);
 	wrk_r.left=(int)(-4480-80);
-	for( i=1; i<=MaxUnitId; i++)
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
@@ -549,16 +526,14 @@ private bool CheckResultOfScenario104()
 
 private bool CheckResultOfScenario105()
 	{
-	int f;
 	RECT wrk_r;
-	int i;
-	f=0;
+	var f=0;
 	// ブーゲンビル島
 	wrk_r.top=(int)(1200+80);
 	wrk_r.right=(int)(-4480+80*5);
 	wrk_r.bottom=(int)(1200-80*3);
 	wrk_r.left=(int)(-4480-80);
-	for( i=1; i<=MaxUnitId; i++)
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
@@ -578,7 +553,7 @@ private bool CheckResultOfScenario105()
 	wrk_r.right=(int)(-1040+(80*3));
 	wrk_r.bottom=(int)(-160-80);
 	wrk_r.left=(int)(-1040);
-	for( i=1; i<=MaxUnitId; i++)
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.UnitedStates && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
@@ -598,18 +573,15 @@ private bool CheckResultOfScenario105()
 private bool CheckResultOfScenario106()
 	{
 	RECT wrk_r;
-	int f;
-	int m;
-	int i;
 	wrk_r.top=(int)(-160);
 	wrk_r.right=(int)(-1040+(80*3));
 	wrk_r.bottom=(int)(-160-80);
 	wrk_r.left=(int)(-1040);
 
-	f=0;
-	m=0;
+	var f=0;
+	var m=0;
 
-	for( i=1; i<=MaxUnitId; i++)
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
@@ -672,7 +644,6 @@ private void WriteResult(ref Array5<int> len, ref Array5<Array128<byte>> ach)
 private void DrawResult(ref Array5<int> len, ref Array5<Array128<byte>> ach)
 	{
 	HDC hdc;
-	int n;
 	if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
 		{
 		SetBkMode(hdc, TRANSPARENT);
@@ -712,7 +683,7 @@ private void DrawResult(ref Array5<int> len, ref Array5<Array128<byte>> ach)
 
 //			len[3] = wsprintf(ach[3], "ＥＳＣ：プログラム終了　Ｆ６：シナリオセッティング画面");
 
-		for( n=0; n<=2; n++)
+		for( var n=0; n<=2; n++)
 			{
 			SetTextColor(hdc, RGB(255, 255, 255));
 			TextOut(hdc, 300, 300+(n*20), ach[n], len[n]);
@@ -1278,7 +1249,6 @@ public void	SetUnitData(int m)
 		}
 
 	ref var unit = ref Units[m];
-	int		i;
 
 	switch( unit.Kind )
 		{
@@ -1404,7 +1374,7 @@ public void	SetUnitData(int m)
 	//unit[m].hp[1]=10;		// 最高Ｈｐ
 
 	// 各ユニットの乱数データをセットします。
-	for( i=0; i<=1; i++)
+	for( var i=0; i<=1; i++)
 		{
 		unit.Random250[i]=(short)Random(250);
 		unit.Random225[i]=(short)Random(225);
@@ -1435,8 +1405,7 @@ public void	SetUnitData(int m)
 [Original("set_new_unit")]
 public int		AddUnit(Side side,UnitKind kind,double rx,double ry,double drctn)
 	{
-	UnitCategory	ctgry; int start,end,m,n;
-	int	type;
+	UnitCategory	ctgry; int start, end;
 
 	if(kind==UnitKind.Attacker||kind==UnitKind.Fighter||kind==UnitKind.Bomber)
 		ctgry=UnitCategory.Plane;
@@ -1472,7 +1441,7 @@ public int		AddUnit(Side side,UnitKind kind,double rx,double ry,double drctn)
 			}
 		}
 
-	for(m=start;m<=end;m++)
+	for(var m=start;m<=end;m++)
 		{
 		if( !Units[m].IsUsed )
 			{
@@ -1482,7 +1451,7 @@ public int		AddUnit(Side side,UnitKind kind,double rx,double ry,double drctn)
 			Units[m].Category=UnitCategory.None;
 			Units[m].Kind=0;
 			Units[m].Variant=0;
-			for(n=0;n<=15;n++)
+			for(var n=0;n<=15;n++)
 				Units[m].info[n]=0;
 
 			Units[m].SpriteRow=0;
@@ -1507,7 +1476,7 @@ public int		AddUnit(Side side,UnitKind kind,double rx,double ry,double drctn)
 
 			Units[m].FormationSpeed=0;
 
-			for(n=0;n<=7;n++)
+			for(var n=0;n<=7;n++)
 				{
 				Units[m].hp[n]=0;
 				Units[m].arm[n]=0;
@@ -1539,7 +1508,7 @@ public int		AddUnit(Side side,UnitKind kind,double rx,double ry,double drctn)
 [Original("set_new_unit_2")]
 public int		AddUnit2(Side side,UnitKind kind,int type,double rx,double ry,double drctn)
 	{
-	UnitCategory	ctgry; int start,end,m,n;
+	UnitCategory	ctgry; int start, end;
 
 	if(kind==UnitKind.Attacker||kind==UnitKind.Fighter||kind==UnitKind.Bomber)
 		ctgry=UnitCategory.Plane;
@@ -1575,7 +1544,7 @@ public int		AddUnit2(Side side,UnitKind kind,int type,double rx,double ry,double
 			}
 		}
 
-	for(m=start;m<=end;m++)
+	for(var m=start;m<=end;m++)
 		{
 		if( !Units[m].IsUsed )
 			{
@@ -1585,7 +1554,7 @@ public int		AddUnit2(Side side,UnitKind kind,int type,double rx,double ry,double
 			Units[m].Category=UnitCategory.None;
 			Units[m].Kind=0;
 			Units[m].Variant=(short)type;
-			for(n=0;n<=15;n++)
+			for(var n=0;n<=15;n++)
 				Units[m].info[n]=0;
 
 			Units[m].SpriteRow=0;
@@ -1610,7 +1579,7 @@ public int		AddUnit2(Side side,UnitKind kind,int type,double rx,double ry,double
 
 			Units[m].FormationSpeed=0;
 
-			for(n=0;n<=7;n++)
+			for(var n=0;n<=7;n++)
 				{
 				Units[m].hp[n]=0;
 				Units[m].arm[n]=0;
@@ -1644,10 +1613,10 @@ public int		AddUnit2(Side side,UnitKind kind,int type,double rx,double ry,double
 [Original("set_new_unit_plane")]
 public int		AddPlane(Side side,UnitKind kind,int type,int no,int planes,FireKind arm)
 	{
-	UnitCategory	ctgry; int start,end,m,n,f=default /* C4701 */,park;
+	 int start, end, f=default /* C4701 */;
 	Array24<int> space = default;
 
-	ctgry=UnitCategory.Plane;
+	var ctgry=UnitCategory.Plane;
 
 	if(side==Side.Japan)
 		{
@@ -1662,18 +1631,18 @@ public int		AddPlane(Side side,UnitKind kind,int type,int no,int planes,FireKind
 		end=USA_PLANE_END;
 		}
 
-	for(m=start;m<=end && planes!=0 ;m++)
+	for(var m=start;m<=end && planes!=0 ;m++)
 		{
 		if( !Units[m].IsUsed )
 			{
 			// あきスペース発見
 
-			for( n=0; n<24; n++)
+			for( var n=0; n<24; n++)
 				{
 				space[n]=0;
 				}
-			park=0;
-			for(n=1;n<=MaxUnitId;n++)
+			var park=0;
+			for(var n=1;n<=MaxUnitId;n++)
 				{
 				ref var unit = ref Units[n];
 				if( unit.IsUsed && unit.Category==UnitCategory.Plane && unit.Carrier==no && unit.PlaneState==UnitState.Parked )
@@ -1687,7 +1656,7 @@ public int		AddPlane(Side side,UnitKind kind,int type,int no,int planes,FireKind
 			if( park >= Units[no].Capacity && Rules.FullCarriersRefusePlanes )
 				return (-planes);
 
-			for( n=0; n<24; n++)
+			for( var n=0; n<24; n++)
 				{
 				if(space[n]==0)
 					{
@@ -1748,8 +1717,6 @@ public int		AddPlane(Side side,UnitKind kind,int type,int no,int planes,FireKind
 [Original("cnct_sinario_1")]
 public void	SetUpScenario1()
 	{
-	int		m,no;
-	double	rx,ry;
 
 	if(Mode==GameMode.GameSetting)
 		{
@@ -1775,8 +1742,8 @@ public void	SetUpScenario1()
 	//===============		 日本海軍		================
 
 	/*クエゼリン環礁*/
-	rx=-7120;
-	ry=6720;
+	var rx=-7120.0;
+	var ry=6720.0;
 	AddUnit(Side.Japan,UnitKind.NavalBase,rx,ry,(double)0);
 
 	/*クエゼリン*/
@@ -1786,8 +1753,8 @@ public void	SetUpScenario1()
 
 	rx=-2500;
 	ry=2500;
-	m=AddUnit(Side.Japan,UnitKind.Carrier,rx,ry,(double)0);
-	no=m;
+	var m=AddUnit(Side.Japan,UnitKind.Carrier,rx,ry,(double)0);
+	var no=m;
 	m=AddPlane(Side.Japan,UnitKind.Attacker,0,no,9,FireKind.Torpedo);
 	m=AddPlane(Side.Japan,UnitKind.Fighter,0,no,3,FireKind.Unarmed);
 	rx-=120;
@@ -1837,8 +1804,6 @@ public void	SetUpScenario1()
 [Original("cnct_sinario_2")]
 public void	SetUpScenario2()
 	{
-	int		m,no;
-	double	rx,ry;
 
 	if(Mode==GameMode.GameSetting)
 		{
@@ -1863,9 +1828,9 @@ public void	SetUpScenario2()
 
 	//===============		 日本海軍		================
 	// トラック島 港
-	rx=-7600;
-	ry=-4720;
-	m=AddUnit(Side.Japan,UnitKind.NavalBase,rx,ry,(double)0);
+	var rx=-7600.0;
+	var ry=-4720.0;
+	var m=AddUnit(Side.Japan,UnitKind.NavalBase,rx,ry,(double)0);
 
 	// トラック島
 	rx=-7600-80;
@@ -1876,7 +1841,7 @@ public void	SetUpScenario2()
 	ry=-2500;
 
 	m=AddUnit(Side.Japan,UnitKind.Carrier,rx,ry,0);
-	no=m;
+	var no=m;
 	m=AddPlane(Side.Japan,UnitKind.Attacker,0,no,9,FireKind.Torpedo);
 	m=AddPlane(Side.Japan,UnitKind.Fighter,0,no,3,FireKind.Unarmed);
 	rx-=120;
@@ -1941,8 +1906,7 @@ public void	SetUpScenario2()
 [Original("cnct_sinario_3")]
 public void	SetUpScenario3()
 	{
-	int		m,n,no;
-	double	rx,ry;
+	int m, n;
 
 	if(Mode==GameMode.GameSetting)
 		{
@@ -1985,8 +1949,8 @@ public void	SetUpScenario3()
 
 	// 横須賀
 	// 港
-	rx=-7440;
-	ry=4880;
+	var rx=-7440.0;
+	var ry=4880.0;
 	m=AddUnit(Side.Japan,UnitKind.NavalBase,rx,ry,(double)0);
 
 	// 横須賀
@@ -1998,7 +1962,7 @@ public void	SetUpScenario3()
 	ry=5000;
 
 	m=AddUnit(Side.Japan,UnitKind.Carrier,rx,ry,(double)0);
-	no=m;
+	var no=m;
 	m=AddPlane(Side.Japan,UnitKind.Attacker,0,no,9,FireKind.Torpedo);
 	m=AddPlane(Side.Japan,UnitKind.Fighter,0,no,3,FireKind.Unarmed);
 	rx-=120;
@@ -2063,8 +2027,6 @@ public void	SetUpScenario3()
 [Original("cnct_sinario_4")]
 public void	SetUpScenario4()
 	{
-	int		m,n,no;
-	double	rx,ry;
 
 	// 艦隊決戦１
 
@@ -2094,8 +2056,8 @@ public void	SetUpScenario4()
 	//===============		 日本海軍		================
 
 	/*クエゼリン環礁*/
-	rx=-7120;
-	ry=6720;
+	var rx=-7120.0;
+	var ry=6720.0;
 	AddUnit(Side.Japan,UnitKind.NavalBase,rx,ry,(double)0);
 
 	// クエゼリン
@@ -2106,7 +2068,7 @@ public void	SetUpScenario4()
 	rx=-2500;
 	ry=2500;
 
-	m=AddUnit(Side.Japan,UnitKind.Battleship,rx,ry,(double)0);
+	var m=AddUnit(Side.Japan,UnitKind.Battleship,rx,ry,(double)0);
 	rx-=120;
 	m=AddUnit(Side.Japan,UnitKind.Cruiser,rx,ry,(double)0);
 	rx-=120;
@@ -2156,9 +2118,7 @@ public void	SetUpScenario4()
 [Original("cnct_sinario_5")]
 public void	SetUpScenario5()
 	{
-	int		m,n,no;
-	double	rx,ry;
-	int		tf_no,unit_no;
+	int m, n;
 
 	// 艦隊決戦２
 
@@ -2202,8 +2162,8 @@ public void	SetUpScenario5()
 	//===============		 日本海軍		================
 
 	/*クエゼリン環礁*/
-	rx=-7120;
-	ry=6720;
+	var rx=-7120.0;
+	var ry=6720.0;
 	AddUnit(Side.Japan,UnitKind.NavalBase,rx,ry,(double)0);
 
 	// クエゼリン環礁
@@ -2285,9 +2245,7 @@ public void	SetUpScenario5()
 [Original("cnct_sinario_6")]
 public void	SetUpScenario6()
 	{
-	int		m,n,no;
-	double	rx,ry;
-	int		tf_no,unit_no;
+	int m, n;
 
 	// ミッドウェイ島攻略１
 	// 中部太平洋
@@ -2327,14 +2285,14 @@ public void	SetUpScenario6()
 
 	//===============		 日本海軍		================
 	// トラック
-	rx=-7600;
-	ry=-4720;
+	var rx=-7600.0;
+	var ry=-4720.0;
 	m=AddUnit(Side.Japan,UnitKind.NavalBase,rx,ry,135);
 
 	// 空港
 	rx=-7600-80;
 	ry=-4720;
-	no=m=AddUnit(Side.Japan,UnitKind.AirBase,rx,ry,135);
+	var no=m=AddUnit(Side.Japan,UnitKind.AirBase,rx,ry,135);
 	no=m;
 	m=AddPlane(Side.Japan,UnitKind.Attacker,0,no,5,FireKind.Bomb);
 	m=AddPlane(Side.Japan,UnitKind.Fighter,0,no,3,FireKind.Unarmed);
@@ -2459,9 +2417,7 @@ public void	SetUpScenario6()
 [Original("cnct_sinario_7")]
 public void	SetUpScenario7()
 	{
-	int		m,n,no;
-	double	rx,ry;
-	int		tf_no,unit_no;
+	int m, n;
 
 	// ミッドウェイ島攻略２
 	// 中部太平洋
@@ -2502,14 +2458,14 @@ public void	SetUpScenario7()
 	//===============		 日本海軍		================
 
 	// トラック
-	rx=-7600;
-	ry=-4720;
+	var rx=-7600.0;
+	var ry=-4720.0;
 	m=AddUnit(Side.Japan,UnitKind.NavalBase,rx,ry,135);
 
 	// 空港
 	rx=-7600-80;
 	ry=-4720;
-	no=m=AddUnit(Side.Japan,UnitKind.AirBase,rx,ry,135);
+	var no=m=AddUnit(Side.Japan,UnitKind.AirBase,rx,ry,135);
 	no=m;
 	m=AddPlane(Side.Japan,UnitKind.Attacker,0,no,5,FireKind.Unarmed);
 	m=AddPlane(Side.Japan,UnitKind.Fighter,0,no,3,FireKind.Unarmed);
@@ -2643,9 +2599,7 @@ unit[m].arm[4]=1;			// 数 全容量
 [Original("cnct_sinario_8")]
 public void	SetUpScenario8()
 	{
-	int		m,n,no;
-	double	rx,ry;
-	int		tf_no,unit_no;
+	int m, n;
 
 	// 中部太平洋の戦い
 	// 中部太平洋
@@ -2686,14 +2640,14 @@ public void	SetUpScenario8()
 	//===============		 日本海軍		================
 
 	// トラック
-	rx=-7600;
-	ry=-4720;
+	var rx=-7600.0;
+	var ry=-4720.0;
 	m=AddUnit(Side.Japan,UnitKind.NavalBase,rx,ry,135);
 
 	// 空港
 	rx=-7600-80;
 	ry=-4720;
-	no=AddUnit(Side.Japan,UnitKind.AirBase,rx,ry,135);
+	var no=AddUnit(Side.Japan,UnitKind.AirBase,rx,ry,135);
 	m=AddPlane(Side.Japan,UnitKind.Attacker,0,no,3,FireKind.Unarmed);
 	m=AddPlane(Side.Japan,UnitKind.Fighter,0,no,3,FireKind.Unarmed);
 	m=AddPlane(Side.Japan,UnitKind.Attacker,1,no,2,FireKind.Unarmed);
@@ -2810,12 +2764,7 @@ public void	SetUpScenario8()
 [Original("cnct_sinario_9")]
 public void	SetUpScenario9()
 	{
-	int		m,n,no;
-	double	rx,ry;
-	int		tf_no,unit_no;
-	short		data;
 
-	HANDLE	hFile;
 	Array256<Array256<ushort>> szBuf = default;					// マップ
 
 	if(Mode==GameMode.GameSetting)
@@ -2852,7 +2801,7 @@ public void	SetUpScenario9()
 			}
 		else
 			{
-			data=InitialSupplyPoints[0];
+			var data=InitialSupplyPoints[0];
 			InitialSupplyPoints[0]=InitialSupplyPoints[1];
 			InitialSupplyPoints[1]=data;
 
@@ -2880,9 +2829,7 @@ public void	SetUpScenario9()
 [Original("cnct_sinario_101")]
 public void	SetUpScenario101()
 	{
-	int		m,n,no;
-	double	rx,ry;
-	int		tf_no,unit_no;
+	int m, n;
 
 	// ガダルカナル島を巡る戦い
 	if(Mode==GameMode.GameSetting)
@@ -2920,14 +2867,14 @@ public void	SetUpScenario101()
 
 	//===============		 日本海軍		================
 	// クエゼリン環礁
-	rx=-7120;
-	ry=6640;
+	var rx=-7120.0;
+	var ry=6640.0;
 	m=AddUnit(Side.Japan,UnitKind.NavalBase,rx,ry,0);
 
 	// クエゼリン航空基地
 	rx=-7120-80;
 	ry=6640+80;
-	no=AddUnit(Side.Japan,UnitKind.AirBase,rx,ry,0);
+	var no=AddUnit(Side.Japan,UnitKind.AirBase,rx,ry,0);
 	m=AddPlane(Side.Japan,UnitKind.Fighter,1,no,2,FireKind.Unarmed);
 	m=AddPlane(Side.Japan,UnitKind.Attacker,0,no,5,FireKind.Unarmed);
 	m=AddPlane(Side.Japan,UnitKind.Bomber,0,no,3,FireKind.Unarmed);
@@ -3016,9 +2963,7 @@ public void	SetUpScenario101()
 [Original("cnct_sinario_102")]
 public void	SetUpScenario102()
 	{
-	int		m,n,no;
-	double	rx,ry;
-	int		tf_no,unit_no;
+	int m, n;
 
 	// ガダルカナル島を巡る戦い
 	if(Mode==GameMode.GameSetting)
@@ -3057,14 +3002,14 @@ public void	SetUpScenario102()
 
 	//===============		 日本海軍		================
 	/*クエゼリン環礁*/
-	rx=-7120;
-	ry=6640;
+	var rx=-7120.0;
+	var ry=6640.0;
 	m=AddUnit(Side.Japan,UnitKind.NavalBase,rx,ry,0);
 
 	// クエゼリン航空基地
 	rx=-7120-80;
 	ry=6640+80;
-	no=AddUnit(Side.Japan,UnitKind.AirBase,rx,ry,0);
+	var no=AddUnit(Side.Japan,UnitKind.AirBase,rx,ry,0);
 	m=AddPlane(Side.Japan,UnitKind.Fighter,1,no,2,FireKind.Unarmed);
 	m=AddPlane(Side.Japan,UnitKind.Attacker,0,no,5,FireKind.Unarmed);
 	m=AddPlane(Side.Japan,UnitKind.Bomber,0,no,3,FireKind.Unarmed);
@@ -3153,9 +3098,7 @@ public void	SetUpScenario102()
 [Original("cnct_sinario_103")]
 public void	SetUpScenario103()
 	{
-	int		m,n,no;
-	double	rx,ry;
-	int		tf_no,unit_no;
+	int m, n;
 
 	// 日本近海の戦い
 	if(Mode==GameMode.GameSetting)
@@ -3195,10 +3138,10 @@ public void	SetUpScenario103()
 	//===============		 日本海軍		================
 	// 東京
 	// 空港
-	rx=-7440;
-	ry=5440;
+	var rx=-7440.0;
+	var ry=5440.0;
 	m=AddUnit(Side.Japan,UnitKind.AirBase,rx,ry,0);
-	no=m;
+	var no=m;
 	m=AddPlane(Side.Japan,UnitKind.Fighter,0,no,2,FireKind.Unarmed);
 	m=AddPlane(Side.Japan,UnitKind.Attacker,0,no,2,FireKind.Unarmed);
 	// 都市
@@ -3397,9 +3340,7 @@ public void	SetUpScenario103()
 [Original("cnct_sinario_104")]
 public void	SetUpScenario104()
 	{
-	int		m,n,no;
-	double	rx,ry;
-	int		tf_no,unit_no;
+	int m, n;
 
 	//南太平洋の戦い１
 	if(Mode==GameMode.GameSetting)
@@ -3438,14 +3379,14 @@ public void	SetUpScenario104()
 
 	//===============		 日本海軍		================
 	/*クエゼリン環礁*/
-	rx=-7120;
-	ry=6640;
+	var rx=-7120.0;
+	var ry=6640.0;
 	m=AddUnit(Side.Japan,UnitKind.NavalBase,rx,ry,0);
 
 	// クエゼリン航空基地
 	rx=-7120-80;
 	ry=6640+80;
-	no=AddUnit(Side.Japan,UnitKind.AirBase,rx,ry,0);
+	var no=AddUnit(Side.Japan,UnitKind.AirBase,rx,ry,0);
 	m=AddPlane(Side.Japan,UnitKind.Fighter,1,no,2,FireKind.Unarmed);
 	m=AddPlane(Side.Japan,UnitKind.Attacker,0,no,5,FireKind.Unarmed);
 	m=AddPlane(Side.Japan,UnitKind.Bomber,0,no,3,FireKind.Unarmed);
@@ -3546,9 +3487,7 @@ public void	SetUpScenario104()
 [Original("cnct_sinario_105")]
 public void	SetUpScenario105()
 	{
-	int		m,n,no;
-	double	rx,ry;
-	int		tf_no,unit_no;
+	int m, n;
 
 	//南太平洋の戦い２
 	if(Mode==GameMode.GameSetting)
@@ -3587,14 +3526,14 @@ public void	SetUpScenario105()
 
 	//===============		 日本海軍		================
 	/*クエゼリン環礁*/
-	rx=-7120;
-	ry=6640;
+	var rx=-7120.0;
+	var ry=6640.0;
 	m=AddUnit(Side.Japan,UnitKind.NavalBase,rx,ry,0);
 
 	// クエゼリン航空基地
 	rx=-7120-80;
 	ry=6640+80;
-	no=AddUnit(Side.Japan,UnitKind.AirBase,rx,ry,0);
+	var no=AddUnit(Side.Japan,UnitKind.AirBase,rx,ry,0);
 	m=AddPlane(Side.Japan,UnitKind.Fighter,1,no,2,FireKind.Unarmed);
 	m=AddPlane(Side.Japan,UnitKind.Attacker,0,no,5,FireKind.Unarmed);
 	m=AddPlane(Side.Japan,UnitKind.Bomber,0,no,3,FireKind.Unarmed);
@@ -3692,9 +3631,7 @@ public void	SetUpScenario105()
 [Original("cnct_sinario_106")]
 public void	SetUpScenario106()
 	{
-	int		m,n,no;
-	double	rx,ry;
-	int		tf_no,unit_no;
+	int m, n;
 
 	// ガ島争奪戦
 	if(Mode==GameMode.GameSetting)
@@ -3733,14 +3670,14 @@ public void	SetUpScenario106()
 
 	//===============		 日本海軍		================
 	/*クエゼリン環礁*/
-	rx=-7120;
-	ry=6640;
+	var rx=-7120.0;
+	var ry=6640.0;
 	m=AddUnit(Side.Japan,UnitKind.NavalBase,rx,ry,0);
 
 	// クエゼリン航空基地
 	rx=-7120-80;
 	ry=6640+80;
-	no=AddUnit(Side.Japan,UnitKind.AirBase,rx,ry,0);
+	var no=AddUnit(Side.Japan,UnitKind.AirBase,rx,ry,0);
 	m=AddPlane(Side.Japan,UnitKind.Fighter,0,no,2,FireKind.Unarmed);
 	m=AddPlane(Side.Japan,UnitKind.Attacker,0,no,3,FireKind.Unarmed);
 
@@ -3840,9 +3777,7 @@ public void	SetUpScenario106()
 [Original("cnct_sinario_999")]
 public void	SetUpScenario999()
 	{
-	int		m,n,no;
-	double	rx,ry;
-	int		tf_no,unit_no;
+	int m, n;
 
 	if(Mode==GameMode.GameSetting)
 		{
@@ -3877,14 +3812,14 @@ public void	SetUpScenario999()
 	//  ゲーム設定
 	//===============		 日本海軍		================
 	// トラック島 港
-	rx=-7600;
-	ry=-4720;
+	var rx=-7600.0;
+	var ry=-4720.0;
 	m=AddUnit(Side.Japan,UnitKind.NavalBase,rx,ry,0);
 
 	// 空港
 	rx=-7600-80;
 	ry=-4720;
-	no=m=AddUnit(Side.Japan,UnitKind.AirBase,rx,ry,135);
+	var no=m=AddUnit(Side.Japan,UnitKind.AirBase,rx,ry,135);
 	no=m;
 	m=AddPlane(Side.Japan,UnitKind.Attacker,0,no,4,FireKind.Unarmed);
 	m=AddPlane(Side.Japan,UnitKind.Fighter,0,no,4,FireKind.Unarmed);
@@ -3974,7 +3909,7 @@ public void LoadScenarioData()
 [Original("make_map_cg")]
 public void MakeTerrainSurface()
 	{
-	int	m,n;
+	int n;
 	RECT	dstn_rect,src_rect;
 
 	// マップデータから陸地をマップに描画します
@@ -3991,7 +3926,7 @@ public void MakeTerrainSurface()
 		RestoreSurfaces();
 		}
 
-	for(m=0; m<=179; m++) // 縦の個数	マップの枠 縦１８０ドット
+	for(var m=0; m<=179; m++) // 縦の個数	マップの枠 縦１８０ドット
 		for( n=0; n<=239; n++) // 横の個数		マップの枠 横２４０ドット
 			{
 			if( MapTiles[m][n]!=0 )
@@ -4018,8 +3953,7 @@ public void MakeTerrainSurface()
 
 private void ClearClouds()
 	{
-	int n;
-	for(n=0; n<KUMO_MAX; n++)
+	for(var n=0; n<KUMO_MAX; n++)
 		{
 		ref var cloud = ref Clouds[n];
 		cloud.Used=0;
@@ -4030,9 +3964,8 @@ private void ClearClouds()
 
 private void ClearMapTiles()
 	{
-	int m;
 	int n;
-	for(m=0; m<256; m++)
+	for(var m=0; m<256; m++)
 		for(n=0; n<256; n++)
 			{
 			MapTiles[m][n]=0;
@@ -4044,16 +3977,14 @@ private void ClearMapTiles()
 
 private void ClearUnits()
 	{
-	int m;
-	int n;
-	for(m=0; m<=255; m++)
+	for(var m=0; m<=255; m++)
 		{
 		ref var unit = ref Units[m];
 		unit.Side=0;
 		unit.Position = new WorldPosition(0, 0);
 		unit.Category=UnitCategory.None;
 		unit.Kind=0;
-		for(n=0;n<=15;n++)
+		for(var n=0;n<=15;n++)
 			unit.info[n]=0;
 
 		unit.SpriteRow=0;
@@ -4078,7 +4009,7 @@ private void ClearUnits()
 
 		unit.FormationSpeed=0;
 
-		for(n=0;n<=7;n++)
+		for(var n=0;n<=7;n++)
 			{
 			unit.hp[n]=0;
 			unit.arm[n]=0;
@@ -4102,13 +4033,11 @@ private void ClearUnits()
 
 private void ClearFires()
 	{
-	int m;
-	int n;
-	for(m=0; m<FIRE_MAX; m++)
+	for(var m=0; m<FIRE_MAX; m++)
 		{
 		ref var fire = ref Fires[m];
 		fire.Target=0;
-		for(n=0;n<=7;n++)
+		for(var n=0;n<=7;n++)
 			fire.info[n]=0;
 		}
 	MaxFireId=0;
@@ -4116,8 +4045,7 @@ private void ClearFires()
 
 private void ClearEffects()
 	{
-	int m;
-	for(m=0; m<EFFECT_MAX; m++)
+	for(var m=0; m<EFFECT_MAX; m++)
 		{
 		Effects[m].Layer=EffectLayer.None;
 		}
@@ -4125,9 +4053,7 @@ private void ClearEffects()
 
 private void StartFromSave(ref _DP_FLAG dp_flag)
 	{
-	int f;
-	int m;
-	f=ScenarioNumber;
+	int f=ScenarioNumber;
 	switch( f )
 		{
 		case -1:
@@ -4223,7 +4149,7 @@ private void StartFromSave(ref _DP_FLAG dp_flag)
 			break;
 		}
 
-	for(m=0; m<=255; m++)
+	for(var m=0; m<=255; m++)
 		{
 		Selections[0][m]=0;
 		Selections[1][m]=0;
@@ -4244,9 +4170,6 @@ private void StartFromSave(ref _DP_FLAG dp_flag)
 [Original("cnct_game_init")]
 public void	InitializeGame()
 	{
-	int		m,n;
-	double	rx,ry;
-	RECT	dstn_rect,src_rect;
 
 	_DP_FLAG	dp_flag = default;
 
@@ -4271,7 +4194,7 @@ public void	InitializeGame()
 	ScrollSpeed=0;
 
 	//
-	for(m=0;m<=9;m++)
+	for(var m=0;m<=9;m++)
 		UnitInfoPanel[m]=0;
 
 	if( ScenarioNumber < 0 )
@@ -4281,7 +4204,7 @@ public void	InitializeGame()
 		}	// リジュームスタート
 
 	// 全サウンドのダブリカウントクリア
-	for(m=0; m<NUM_SOUND_EFFECTS; m++)
+	for(var m=0; m<NUM_SOUND_EFFECTS; m++)
 		{
 		NextSoundBuffers[m]=0;
 		}
@@ -4305,7 +4228,7 @@ public void	InitializeGame()
 	InitializeClouds();
 
 	//
-	for(n=0;n<=3;n++)
+	for(var n=0;n<=3;n++)
 		DecisionPoints[n]=0;
 
 	if( IsSingleplayer )

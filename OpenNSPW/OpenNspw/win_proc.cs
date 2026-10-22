@@ -38,8 +38,7 @@ public void	RestoreSurfaces()
 	ddpf.dwSize=(uint)(sizeof(DDPIXELFORMAT));
 	lpDDS_OS.GetPixelFormat(&ddpf);
 
-	uint KeyColor;
-	KeyColor = ddpf.dwRBitMask | ddpf.dwBBitMask;
+	var KeyColor = ddpf.dwRBitMask | ddpf.dwBBitMask;
 
 	// カラーキーを設定
 	DDCOLORKEY key;
@@ -70,12 +69,10 @@ public void	RestoreSurfaces()
 [Original("load_user_map")]
 public void	LoadUserMap()
 	{
-	Array2<byte> bf = default;
-	HANDLE	hFile;
-	short	m,n,f,i;
+	short n;
 	Array256<Array256<ushort>> szBuf = default;					// マップ
 
-	hFile=CreateFile( UserScenarioFileName /*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
+	var hFile=CreateFile( UserScenarioFileName /*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
 								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
 
 	if( hFile != INVALID_HANDLE_VALUE )
@@ -89,7 +86,7 @@ public void	LoadUserMap()
 
 		// バッファよりデータへ
 		// データ を バッファへ
-		for(m=0;m<=255;m++)
+		for(short m=0;m<=255;m++)
 			for(n=0;n<=255;n++)
 				MapTiles[m][n]=szBuf[m][n];
 
@@ -113,9 +110,7 @@ public void	LoadUserMap()
 [Original("load_it2")]
 public void	LoadScenarioFile2(string str)
 	{
-	Array20<byte> bf = default;
-	HANDLE	hFile;
-	short	m,n,f,i;
+	short n;
 	Array256<Array256<ushort>> szBuf = default;					// マップ
 
 	if( strcmp ( str,"Map\\South_pacific.dat")==0 )
@@ -125,7 +120,7 @@ public void	LoadScenarioFile2(string str)
 	else
 		CurrentMap=2;
 
-	hFile=CreateFile(str, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
+	var hFile=CreateFile(str, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
 								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
 
 	if( hFile != INVALID_HANDLE_VALUE )
@@ -139,7 +134,7 @@ public void	LoadScenarioFile2(string str)
 
 		// バッファよりデータへ
 		// データ を バッファへ
-		for(m=0;m<=255;m++)
+		for(short m=0;m<=255;m++)
 			for(n=0;n<=255;n++)
 				MapTiles[m][n]=szBuf[m][n];
 
@@ -151,12 +146,10 @@ public void	LoadScenarioFile2(string str)
 [Original("load_it3")]
 public void	LoadScenarioFile3()
 	{
-	Array2<byte> bf = default;
-	HANDLE	hFile;
-	short	m,n,f,i;
+	short n;
 	Array256<Array256<ushort>> szBuf = default;					// マップ
 
-	hFile=CreateFile( UserScenarioFileName /*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
+	var hFile=CreateFile( UserScenarioFileName /*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
 								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
 
 	if( hFile != INVALID_HANDLE_VALUE )
@@ -170,7 +163,7 @@ public void	LoadScenarioFile3()
 
 		// バッファよりデータへ
 		// データ を バッファへ
-		for(m=0;m<=255;m++)
+		for(short m=0;m<=255;m++)
 			for(n=0;n<=255;n++)
 				MapTiles[m][n]=szBuf[m][n];
 
@@ -185,14 +178,11 @@ public void	LoadScenarioFile3()
 [Original("save_user_map")]
 public void	SaveUserMap()
 	{
-	Array2<byte> bf = default;
-	HANDLE	hFile;
-	short	m,n,f,i;
+	short n;
 	uint	dwActBytes;
 	Array256<Array256<ushort>> szBuf = default;					// マップ
-	short		data;
 
-	hFile=CreateFile( UserScenarioFileName/*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
+	var hFile=CreateFile( UserScenarioFileName/*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
 								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
 
 	if( hFile != INVALID_HANDLE_VALUE )
@@ -203,7 +193,7 @@ public void	SaveUserMap()
 
 		// マップを記録
 		// データ を バッファへ
-		for(m=0;m<=255;m++)
+		for(short m=0;m<=255;m++)
 			for(n=0;n<=255;n++)
 				szBuf[m][n]=MapTiles[m][n];
 
@@ -232,7 +222,6 @@ public void	SaveUserMap()
 --------------------------------------------*/
 public int EndApp()
 	{
-	int	m,n,i;
 
 	//
 	if (gameFont_1)
@@ -245,9 +234,9 @@ public int EndApp()
 	RELEASE(ref lpDML);
 
 	// ダイレクトサウンド
-	for(m=0; m<NUM_SOUND_EFFECTS; m++)
+	for(var m=0; m<NUM_SOUND_EFFECTS; m++)
 		{
-		for(n=0; n<SND_DUP; n++)
+		for(var n=0; n<SND_DUP; n++)
 			{
 			RELEASE(ref lpDSB_[m][n]);
 			}
@@ -328,12 +317,11 @@ public void	InitializeRegistry()
 public IDirectDrawSurface7? bitmap_surface(string file_name)
 	{
 	HDC hdc;
-	HBITMAP bit;
 	IDirectDrawSurface7? surf;
 
 	// lインターフェイスビットマップをロード
 
-	bit=(HBITMAP) LoadImage(null,file_name,IMAGE_BITMAP,0,0,
+	var bit=(HBITMAP) LoadImage(null,file_name,IMAGE_BITMAP,0,0,
 								LR_DEFAULTSIZE|LR_LOADFROMFILE);
 	if (!bit)
 		// ロード失敗、呼び出し側に失敗を返す
@@ -348,7 +336,6 @@ public IDirectDrawSurface7? bitmap_surface(string file_name)
 
 	// サーフェスを作成
 
-	int ddrval;
 	DDSURFACEDESC2 ddsd;
 	ZeroMemory(&ddsd,(nuint)(sizeof(DDSURFACEDESC2)));
 	ddsd.dwSize = (uint)(sizeof(DDSURFACEDESC2));
@@ -359,7 +346,7 @@ public IDirectDrawSurface7? bitmap_surface(string file_name)
 
 	// サーフェスを実際に作成
 
-	ddrval=lpDD.CreateSurface(&ddsd,out surf,null);
+	var ddrval=lpDD.CreateSurface(&ddsd,out surf,null);
 
 	// 作成できたか確認
 
@@ -408,7 +395,6 @@ public IDirectDrawSurface7? bitmap_surface(string file_name)
 public nint	IDD_FILE_SAVE_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	{
 	WIN32_FIND_DATA FindFileData;
-	HANDLE hFind;
 	Array260<byte> temp_buf = default;
 
 	switch(msg)
@@ -419,7 +405,7 @@ public nint	IDD_FILE_SAVE_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 
 			EnableWindow( GetDlgItem( hWnd, IDC_EDIT ), TRUE);
 
-			hFind = FindFirstFile( "Scenario\\*.dat", &FindFileData );
+			var hFind = FindFirstFile( "Scenario\\*.dat", &FindFileData );
 
 			if( hFind!=INVALID_HANDLE_VALUE )
 				{
@@ -454,8 +440,7 @@ public nint	IDD_FILE_SAVE_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 						{
 						// なんかユーザーファイルが選ばれた。
 
-int	len;
-						len=wsprintf( temp_buf, "%s", UserScenarioFileName );
+						var len=wsprintf( temp_buf, "%s", UserScenarioFileName );
 
 						if( !(UserScenarioFileName[len-4]=='.' && UserScenarioFileName[len-3]=='d' && UserScenarioFileName[len-2]=='a' && UserScenarioFileName[len-1]=='t') )
 							wsprintf( temp_buf, "%s.dat", UserScenarioFileName );
@@ -492,7 +477,6 @@ int	len;
 public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	{
 	WIN32_FIND_DATA FindFileData;
-	HANDLE hFind;
 	_DP_DATA_20		dp_data_20=default;
 	_DP_DATA_1		dp_data_1;
 	Array260<byte> temp_buf = default;
@@ -502,7 +486,7 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 		case WM_INITDIALOG:
 			SetWindowText(hWnd,"Load File");
 
-			hFind = FindFirstFile( "Scenario\\*.dat", &FindFileData );
+			var hFind = FindFirstFile( "Scenario\\*.dat", &FindFileData );
 
 			if( hFind!=INVALID_HANDLE_VALUE )
 				{
@@ -683,7 +667,6 @@ public void	WaitForDialog()
 public nint ChatDlgProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	{
 	_DP_DATA_20	dp_data_20=default;
-	int			m;
 
 	switch(msg)
 		{
@@ -700,7 +683,7 @@ public nint ChatDlgProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 
 				// なんか入力があったならセンドする
 					dp_data_20.dwType = MessageType.Chat;
-					for(m=0;m<128;m++)
+					for(var m=0;m<128;m++)
 						{
 						dp_data_20.friend_chat[m]=MyChat[m];
 						}
@@ -809,11 +792,6 @@ private void ChangeEditorUnitWeapon()
 
 private void PlaceEditorUnit(ref int m)
 	{
-	double wrk_x2;
-	double wrk_x;
-	double wrk_y2;
-	double wrk_y;
-	int i;
 	if( UnitInfoPanel[1]!=0 && ( Units[PreviousSelectedUnit].Kind==UnitKind.Carrier || Units[PreviousSelectedUnit].Kind==UnitKind.LightCarrier || Units[PreviousSelectedUnit].Kind==UnitKind.AirBase )  && ((UnitKind)EditorKind==UnitKind.Fighter || (UnitKind)EditorKind==UnitKind.Attacker || (UnitKind)EditorKind==UnitKind.Bomber ) )
 		{
 		// 駐機場への航空機の配置
@@ -829,20 +807,20 @@ private void PlaceEditorUnit(ref int m)
 		{
 		// 艦船および、陸上施設
 
-		wrk_x2=(CameraPosition.X+CursorPosition.x)/80;
+		var wrk_x2=(CameraPosition.X+CursorPosition.x)/80;
 		if(wrk_x2<0)
 			wrk_x2=0-wrk_x2;
-		wrk_x=(int)wrk_x2;
+		double wrk_x=(int)wrk_x2;
 		if(  (wrk_x2-wrk_x)>=0.5  )
 			wrk_x+=1;
 		if(((CameraPosition.X+CursorPosition.x)/80)<0)
 			wrk_x=0-wrk_x;
 		wrk_x*=80;
 
-		wrk_y2=(CameraPosition.Y-CursorPosition.y)/80;
+		var wrk_y2=(CameraPosition.Y-CursorPosition.y)/80;
 		if(wrk_y2<0)
 			wrk_y2=0-wrk_y2;
-		wrk_y=(int)wrk_y2;
+		double wrk_y=(int)wrk_y2;
 		if(  (wrk_y2-wrk_y)>=0.5  )
 			wrk_y+=1;
 		if(((CameraPosition.Y-CursorPosition.y)/80)<0)
@@ -850,7 +828,7 @@ private void PlaceEditorUnit(ref int m)
 		wrk_y*=80;
 
 		m=0;
-		for(i=1;i<=MaxUnitId;i++)
+		for(var i=1;i<=MaxUnitId;i++)
 			{
 			ref var unit = ref Units[i];
 			if( unit.IsUsed && unit.Position.X==wrk_x && unit.Position.Y==wrk_y )
@@ -880,13 +858,12 @@ private void PlaceEditorUnit(ref int m)
 
 private void DeleteEditorUnit()
 	{
-	int i;
 	if( Units[SelectedUnit].IsUsed )
 		{
 		// 空母か空港なら搭載ユニットも消す
 		if( Units[SelectedUnit].Kind==UnitKind.Carrier || Units[SelectedUnit].Kind==UnitKind.LightCarrier || Units[SelectedUnit].Kind==UnitKind.AirBase )
 			{
-			for( i=1;i<=MaxUnitId;i++)
+			for( var i=1;i<=MaxUnitId;i++)
 				{
 				ref var unit = ref Units[i];
 				if( unit.IsUsed && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked && unit.Carrier==SelectedUnit)
@@ -918,10 +895,9 @@ private void DeleteEditorUnit()
 --------------------------------------------*/
 public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	{
-	int		m=default /* C4701 */,n;
+	int m=default /* C4701 */;
 	//OPENFILENAME ofn;		// Unused.
 	Array260<byte> cd_buf = default;			// ユーザーシナリオのファイルネーム
-	uint		nBufferLength;
 
 	switch(msg)
 		{

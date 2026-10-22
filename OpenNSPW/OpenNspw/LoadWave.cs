@@ -82,8 +82,7 @@ public int YWaveReadFile(HMMIO hmmioIn,uint cbRead,byte* pbDest,MMCKINFO* pckIn,
 	{
 		return E_FAIL;
 	}
-	uint cbDataIn;
-	cbDataIn = cbRead;
+	var cbDataIn = cbRead;
 	if (cbDataIn > pckIn->cksize)
 	{
 		cbDataIn = pckIn->cksize;
@@ -217,7 +216,6 @@ public int YReadMMIO(HMMIO hmmioIn,MMCKINFO* pckInRIFF,WAVEFORMATEX** ppwfxInfo)
 // WAVE ファイルの読み込み
 public IDirectSoundBuffer? LoadWave(string name)
 {
-	byte* buf;
 	uint readsize;
 	WAVEFORMATEX wf;
 	IDirectSoundBuffer? lpDSB = null;
@@ -230,7 +228,7 @@ public IDirectSoundBuffer? LoadWave(string name)
 		return null;
 	}
 	// メモリ領域の確保
-	buf = (byte*)malloc(m_ckIn.cksize);
+	var buf = (byte*)malloc(m_ckIn.cksize);
 	// 読み込み
 	ZeroMemory(&wf,(nuint)(sizeof(WAVEFORMATEX)));
 	if (YWaveRead(m_ckIn.cksize,buf,&readsize,&wf)==0)

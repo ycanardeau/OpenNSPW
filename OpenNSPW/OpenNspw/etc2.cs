@@ -156,7 +156,7 @@ public void OnUnitArrived(int side,int new_unit_kind)
 	{
 	double		rx=default /* C4701 */,ry=default /* C4701 */;
 	double		rx2=default /* C4701 */,ry2=default /* C4701 */;
-	UnitKind	kind=default /* C4701 */; int kind2,m,i;
+	UnitKind	kind=default /* C4701 */; int m;
 	Side		arrived_side;
 
 	if( side==1 )
@@ -171,7 +171,7 @@ public void OnUnitArrived(int side,int new_unit_kind)
 			arrived_side=Side.Japan;
 		}
 
-	kind2=0;
+	var kind2=0;
 
 	new_unit_kind--;
 
@@ -240,7 +240,7 @@ public void OnUnitArrived(int side,int new_unit_kind)
 		{
 		// 航空機の登場
 
-		for(i=0;i<((kind==UnitKind.Attacker ? 1 : 0)*3)+((kind==UnitKind.Fighter ? 1 : 0)*2)+((kind==UnitKind.Bomber ? 1 : 0)*1)  ;i++)
+		for(var i=0;i<((kind==UnitKind.Attacker ? 1 : 0)*3)+((kind==UnitKind.Fighter ? 1 : 0)*2)+((kind==UnitKind.Bomber ? 1 : 0)*1)  ;i++)
 			{
 			if( arrived_side==Side.Japan )
 				m=AddUnit2(Side.Japan,kind,kind2,rx,ry,(double)90);
@@ -486,10 +486,7 @@ public void	DrawLine4(int x1,int y1,int x2,int y2,int right,int bottom,uint rgb)
 [Original("draw_line5")]
 public void	DrawLine5(int x1,int y1,int x2,int y2,int right,int bottom,ushort cl)
 	{
-	int		dstX, dstY,addX,addY;
-	int		ctr,x,y,i;
-	int		cl1, cl2;
-	DDCOLORKEY          ddck;
+	int addX, addY;
 	ushort* dst_vram;			//書き込むＶＲＡＭのアドレス
 
 	DDSURFACEDESC2		dst_ddsd;
@@ -503,16 +500,16 @@ cl=0xFFFF;
 
 	dst_vram=(ushort*)dst_ddsd.lpSurface;
 
-	dstX=x2-x1;	dstY=y2-y1;
+	var dstX=x2-x1;	var dstY=y2-y1;
 
 	if(dstX<0)	{addX=-1;	dstX*=-1;}	else	addX=1;
 	if(dstY<0)	{addY=-1;	dstY*=-1;}	else	addY=1;
 
-	ctr=0;
-	x=x1;	y=y1;
+	var ctr=0;
+	var x=x1;	var y=y1;
 	if(dstX>=dstY)
 		{
-		for(i=0;i<dstX;i++)
+		for(var i=0;i<dstX;i++)
 			{
 			if( x>=0 && y>=0 && x<=right && y<=bottom )
 				{
@@ -530,7 +527,7 @@ cl=0xFFFF;
 		}
 	else
 		{
-		for(i=0;i<dstY;i++)
+		for(var i=0;i<dstY;i++)
 			{
 			if( x>=0 && y>=0 && x<=right && y<=bottom )
 				{
@@ -664,12 +661,12 @@ public int	ClipRects(ref RECT dstn_rect, ref RECT src_rect, ref RECT field_rect)
 [Original("seek_parking_no")]
 public int		FindParkingNumber( int m )
 	{
-	int		i,n,rtn=0 /* C4701 */; Array32<int> wrk=default;
+	int rtn=0 /* C4701 */ /* C4701 */; Array32<int> wrk=default;
 
-	for(i=0;i<=31;i++)
+	for(var i=0;i<=31;i++)
 		wrk[i]=0;
 
-	for( i=1; i<=MaxUnitId; i++)
+	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.IsUsed && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked
@@ -677,7 +674,7 @@ public int		FindParkingNumber( int m )
 			wrk[unit.ParkingNumber]++;
 		}
 
-	for(i=0;i<=31;i++)
+	for(var i=0;i<=31;i++)
 		if(wrk[i]==0)
 			{
 			rtn=i;
@@ -693,10 +690,9 @@ public int		FindParkingNumber( int m )
 [Original("plane_in_cv")]
 public int		CountPlanesIn( int m )
 	{
-	int		i,rtn;
 
-	rtn=0;
-	for(i=1;i<=MaxUnitId;i++)
+	var rtn=0;
+	for(var i=1;i<=MaxUnitId;i++)
 		{
 		ref var unit = ref Units[i];
 		if( unit.IsUsed && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked && m==unit.Carrier )
@@ -712,7 +708,7 @@ public int		CountPlanesIn( int m )
 public void	SetParkingPosition( int	m )
 	{
 	ref var unit = ref Units[m];
-	int		max,i,w;
+	int w;
 	int		parking_x,parking_y;
 
 	// ２列格納
@@ -759,7 +755,6 @@ public void	SetParkingPosition( int	m )
 //----------------------------------------------------------------------------
 public void	set_the_slct_unit (int m)
 	{
-	int	n;
 
 	if( Units[m].Side!=LocalSide )
 		return;
@@ -772,7 +767,7 @@ public void	set_the_slct_unit (int m)
 	CombatMenuSelection = (CombatMenuItem)Units[m].Mode;
 
 	// そのユニットの随伴機を枠付けします。
-	for( n=0; n<=MaxUnitId; n++)
+	for( var n=0; n<=MaxUnitId; n++)
 		{
 		ref var unit = ref Units[n];
 		if( unit.IsUsed && unit.GroupLeader==m )
@@ -827,8 +822,7 @@ public void	set_the_slct_unit (int m)
 [Original("cls_all_slct_unit")]
 public void	ClearSelection()
 	{
-	int		m;
-	for(m=0; m<=255; m++)
+	for(var m=0; m<=255; m++)
 		{
 		Selections[0][m]=0;
 		Selections[1][m]=0;
@@ -841,12 +835,11 @@ public void	ClearSelection()
 [Original("cls_all_slct_unit_p2")]
 public void	ClearSelection2( int side )
 	{
-	int		m;
 
 	if( side==1 )
 		{
 		// マイサイドの消去
-		for(m=0; m<=255; m++)
+		for(var m=0; m<=255; m++)
 			{
 			Selections[1][m]=0;
 			}
@@ -854,7 +847,7 @@ public void	ClearSelection2( int side )
 	else
 		{
 		// 敵サイドの消去
-		for(m=0; m<=255; m++)
+		for(var m=0; m<=255; m++)
 			{
 			Selections[0][m]=0;
 			}
@@ -868,11 +861,10 @@ public void	ClearSelection2( int side )
 [Original("seek_effect_no")]
 public int		FindFreeEffect()
 	{
-	int		rtn,s;
 
-	rtn=0;
+	var rtn=0;
 	// 1.22 has 255 effects in use at most.
-	for(s=1;s<Rules.EffectLimit;s++)
+	for(var s=1;s<Rules.EffectLimit;s++)
 		{
 		if( Effects[s].Layer==EffectLayer.None )
 			{
@@ -890,11 +882,10 @@ public int		FindFreeEffect()
 [Original("seek_fire_no")]
 public int		FindFreeFire()
 	{
-	int		rtn,s;
 
-	rtn=0;
+	var rtn=0;
 	// 1.22 has 255 fires in use at most.
-	for(s=1;s<Rules.FireLimit;s++)
+	for(var s=1;s<Rules.FireLimit;s++)
 		{
 		if( Fires[s].Target==0 )
 			{
@@ -984,15 +975,15 @@ public int		ToEightDirections(int drctn)
 [Original("set_frmtn_of_ships")]
 public void	SetShipFormation( int s )
 	{
-	double		wrk_x,wrk_y,drctn,dstc,wrk_drctn=0 /* C4701 */;
+	double wrk_drctn=0 /* C4701 */ /* C4701 */;
 
 	// リーダー艦からの方位角を求めます。
-	wrk_x=Units[s].Position.X-Units[Units[s].GroupLeader].Position.X;
-	wrk_y=Units[s].Position.Y-Units[Units[s].GroupLeader].Position.Y;
+	var wrk_x=Units[s].Position.X-Units[Units[s].GroupLeader].Position.X;
+	var wrk_y=Units[s].Position.Y-Units[Units[s].GroupLeader].Position.Y;
 	if(wrk_x==0)	wrk_x=1;
 	if(wrk_y==0)	wrk_y=1;
 
-	drctn=Direction(wrk_x, wrk_y);
+	var drctn=Direction(wrk_x, wrk_y);
 	switch((int)(Units[Units[s].GroupLeader].Direction/22.5))
 		{
 		case 0: case 15:
@@ -1044,10 +1035,9 @@ public void	SetShipFormation( int s )
 [Original("set_pos_of_take_down")]
 public void	SetLandingDestination(int n)
 	{
-	double			angl=0 /* C4701 */,angl2,dstc;
-	int				pt,pos_of_no,a,b,c;
+	double angl=0 /* C4701 */;
 
-	pt=Units[n].Carrier;
+	var pt=Units[n].Carrier;
 
 	if( !Units[pt].IsUsed )
 		{
@@ -1093,8 +1083,8 @@ public void	SetLandingDestination(int n)
 			break;
 		}
 
-	angl2=angl;
-	angl2-=180.0;	dstc=200;
+	var angl2=angl;
+	angl2-=180.0;	var dstc=200.0;
 
 	if( angl<0 )
 		angl=360+angl;
@@ -1130,10 +1120,9 @@ public void	SetLandingDestination(int n)
 public void	UpdateLanding( int n )
 	{
 	int		i;
-	double			angl=0 /* C4701 */,angl2,dstc;
-	int				pt,pos_of_no,a,b,c;
+	double angl=0 /* C4701 */;
 
-	pt=Units[n].Carrier;
+	var pt=Units[n].Carrier;
 
 	// 1.22 approaches any base still in use, whatever its kind (0x417555).
 	if( !(Units[pt].Kind==UnitKind.Carrier || Units[pt].Kind==UnitKind.LightCarrier || Units[pt].Kind==UnitKind.AirBase) && !Rules.ApproachesOnDrawnTick )
@@ -1187,8 +1176,8 @@ public void	UpdateLanding( int n )
 			break;
 		}
 
-	angl2=angl;
-	angl2-=180.0;	dstc=200;
+	var angl2=angl;
+	angl2-=180.0;	var dstc=200.0;
 
 	if( angl<0 )
 		angl=360+angl;
@@ -1316,16 +1305,14 @@ void	draw_line(int	x1,int	y1,int	x2,int	y2)
 [Original("find_out_ss")]
 public int		DetectSubmarines( int m , int n)
 	{
-	int		q_size,q_size2;
-	double	wrk_x,wrk_y,dstc,drctn;
 
 	// 現地点からユニット地点への距離
-	wrk_x=Units[n].Position.X-Units[m].Position.X;
-	wrk_y=Units[n].Position.Y-Units[m].Position.Y;
+	var wrk_x=Units[n].Position.X-Units[m].Position.X;
+	var wrk_y=Units[n].Position.Y-Units[m].Position.Y;
 	if(wrk_x==0)	wrk_x=1;
 	if(wrk_y==0)	wrk_y=1;
 
-	drctn=Direction(wrk_x, wrk_y);
+	var drctn=Direction(wrk_x, wrk_y);
 	if(wrk_x<0)
 		wrk_x=0-wrk_x;
 	if(wrk_y<0)
@@ -1335,7 +1322,7 @@ public int		DetectSubmarines( int m , int n)
 	if(drctn>=90)
 		drctn=90-(drctn-90);
 
-	q_size=((int)((wrk_x)/(CosDegrees(drctn))));
+	var q_size=((int)((wrk_x)/(CosDegrees(drctn))));
 
 	if( q_size<100 )
 		q_size=100;
@@ -1346,7 +1333,7 @@ public int		DetectSubmarines( int m , int n)
 		if( q_size>150 )
 			q_size=150;
 
-		q_size2=(int)(q_size*( Units[m].Variant==0 || !Rules.ContactSpreadByType ? 0.60 : 0.50 ));
+		var q_size2=(int)(q_size*( Units[m].Variant==0 || !Rules.ContactSpreadByType ? 0.60 : 0.50 ));
 
 		Units[n].ContactX=(int)(Units[n].Position.X+Random((q_size2)*2)-q_size2);
 		Units[n].ContactY=(int)(Units[n].Position.Y+Random((q_size2)*2)-q_size2);
@@ -1382,17 +1369,17 @@ private void StopDestroyersChasing(int n)
 [Original("find_out")]
 public void		Detect()
 	{
-	int		m,n,size,flg1,flg2,s;
+	int n, size;
 	double	wrk_x,wrk_y,dstc,drctn;
 
 	if( RevealsAll!=0 || Result!=GameResult.None )
 		{
-		for(m=0;m<=MaxUnitId;m++)
+		for(var m=0;m<=MaxUnitId;m++)
 			Units[m].IsFound=true;
 		return;
 		}
 
-	for(m=0;m<=MaxUnitId;m++)
+	for(var m=0;m<=MaxUnitId;m++)
 		{
 		ref var unit = ref Units[m];
 		if( unit.ContactTime!=0 )
@@ -1402,13 +1389,13 @@ public void		Detect()
 		}
 
 	// ユニットの見え隠れ
-	for(m=1;m<=MaxUnitId;m++)
+	for(var m=1;m<=MaxUnitId;m++)
 		{
 		ref var unit = ref Units[m];
 		// 1.22's player's units look out while they supply too (0x41829B).
 		if( unit.IsUsed && unit.Side==LocalSide  && unit.PlaneState!=UnitState.Parked  && (!unit.IsSupplying || Rules.SupplyingUnitsLookOut) )
 			{
-			flg1=0;
+			var flg1=0;
 			for(n=1;n<=MaxUnitId;n++)
 				{
 				ref var other = ref Units[n];
@@ -1479,7 +1466,7 @@ public void		Detect()
 
 		if( unit.IsUsed && unit.Side!=LocalSide  && unit.PlaneState!=UnitState.Parked  && !unit.IsSupplying )
 			{
-			flg2=0;
+			var flg2=0;
 			for(n=1;n<=MaxUnitId;n++)
 				{
 				ref var other = ref Units[n];

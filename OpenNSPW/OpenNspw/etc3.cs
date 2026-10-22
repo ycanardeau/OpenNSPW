@@ -25,9 +25,8 @@ public unsafe partial class Nspw
 [Original("make_my_rnd")]
 public void	MakeSharedRandomTable()
 	{
-	short	i;
 
-	for(i=0;i<4096;i++)
+	for(short i=0;i<4096;i++)
 		{
 		SharedRandomTable[i]=Random(65536);
 		}
@@ -140,14 +139,13 @@ public void		InitializeSprites()
 [Original("cloud_in_start")]
 public void	InitializeClouds()
 	{
-	int	m,n; Array16<int> ok = default;
-	double	base_x,base_y,sub_x;
+	 Array16<int> ok = default;
 
 	while(true)
 		{
 		// 空いてるくもスプライトを探します。
-		n=0;
-		for(m=0; m<KUMO_MAX; m++)
+		var n=0;
+		for(var m=0; m<KUMO_MAX; m++)
 			{
 			if( Clouds[m].Used==0 )
 				{
@@ -161,13 +159,13 @@ public void	InitializeClouds()
 		if( n<=14 )
 			return;
 
-		base_x=(double)(Random(abs(MAP_RIGHT)+abs(MAP_LEFT))-abs(MAP_LEFT));
-		base_y=(double)(Random(abs(MAP_TOP)+abs(MAP_BOTTOM))-abs(MAP_BOTTOM));
+		var base_x=(double)(Random(abs(MAP_RIGHT)+abs(MAP_LEFT))-abs(MAP_LEFT));
+		var base_y=(double)(Random(abs(MAP_TOP)+abs(MAP_BOTTOM))-abs(MAP_BOTTOM));
 
-		sub_x=(double)( Random(Sprites[SpriteId.MapTiles].Size.Width*4)-Sprites[SpriteId.MapTiles].Size.Width*2 );
+		var sub_x=(double)( Random(Sprites[SpriteId.MapTiles].Size.Width*4)-Sprites[SpriteId.MapTiles].Size.Width*2 );
 
 		n=0;
-		for( m=0;m<3;m++)
+		for( var m=0;m<3;m++)
 			{
 			Clouds[ok[n]].Used=1;
 			Clouds[ok[n]].Position = new WorldPosition(base_x+m*80+sub_x, base_y);
@@ -175,7 +173,7 @@ public void	InitializeClouds()
 			n++;
 			}
 		sub_x=(double)( Random(Sprites[SpriteId.MapTiles].Size.Width*2)-Sprites[SpriteId.MapTiles].Size.Width*2 );
-		for( m=0;m<5;m++)
+		for( var m=0;m<5;m++)
 			{
 			Clouds[ok[n]].Used=1;
 			Clouds[ok[n]].Position = new WorldPosition(base_x+m*80-80+sub_x, base_y+80);
@@ -183,7 +181,7 @@ public void	InitializeClouds()
 			n++;
 			}
 		sub_x=(double)( Random(Sprites[SpriteId.MapTiles].Size.Width*2)-Sprites[SpriteId.MapTiles].Size.Width*2 );
-		for( m=0;m<3;m++)
+		for( var m=0;m<3;m++)
 			{
 			Clouds[ok[n]].Used=1;
 			Clouds[ok[n]].Position = new WorldPosition(base_x+m*80+sub_x, base_y+80*2);
@@ -201,8 +199,7 @@ public void	InitializeClouds()
 [Original("cloud_cont")]
 public void	UpdateClouds()
 	{
-	int	m,n; Array16<int> ok = default;
-	double	base_y,sub_x;
+	int n; Array16<int> ok = default;
 
 	for(n=0;n<KUMO_MAX;n++)
 		{
@@ -220,7 +217,7 @@ public void	UpdateClouds()
 
 	// 空いてるくもスプライトを探します。
 	n=0;
-	for(m=0; m<KUMO_MAX; m++)
+	for(var m=0; m<KUMO_MAX; m++)
 		{
 		if( Clouds[m].Used==0 )
 			{
@@ -234,10 +231,10 @@ public void	UpdateClouds()
 	if( n<=14 )
 		return;
 
-	base_y=(double)(Random(abs(MAP_TOP)+abs(MAP_BOTTOM))-abs(MAP_BOTTOM));
-	sub_x=(double)( Random(Sprites[SpriteId.MapTiles].Size.Width*4)-Sprites[SpriteId.MapTiles].Size.Width*2 );
+	var base_y=(double)(Random(abs(MAP_TOP)+abs(MAP_BOTTOM))-abs(MAP_BOTTOM));
+	var sub_x=(double)( Random(Sprites[SpriteId.MapTiles].Size.Width*4)-Sprites[SpriteId.MapTiles].Size.Width*2 );
 	n=0;
-	for( m=0;m<3;m++)
+	for( var m=0;m<3;m++)
 		{
 		Clouds[ok[n]].Used=1;
 		Clouds[ok[n]].Position = new WorldPosition(MAP_RIGHT+m*80+sub_x, base_y);
@@ -245,7 +242,7 @@ public void	UpdateClouds()
 		n++;
 		}
 	sub_x=(double)( Random(Sprites[SpriteId.MapTiles].Size.Width*2)-Sprites[SpriteId.MapTiles].Size.Width*2 );
-	for( m=0;m<5;m++)
+	for( var m=0;m<5;m++)
 		{
 		Clouds[ok[n]].Used=1;
 		Clouds[ok[n]].Position = new WorldPosition(MAP_RIGHT+m*80-80+sub_x, base_y+80);
@@ -253,7 +250,7 @@ public void	UpdateClouds()
 		n++;
 		}
 	sub_x=(double)( Random(Sprites[SpriteId.MapTiles].Size.Width*2)-Sprites[SpriteId.MapTiles].Size.Width*2 );
-	for( m=0;m<3;m++)
+	for( var m=0;m<3;m++)
 		{
 		Clouds[ok[n]].Used=1;
 		Clouds[ok[n]].Position = new WorldPosition(MAP_RIGHT+m*80+sub_x, base_y+80*2);
@@ -265,21 +262,16 @@ public void	UpdateClouds()
 
 private void UpdateCargo(ref Fire fire, ref int n)
 	{
-	double wrk_x;
-	double wrk_y;
-	int h;
 	RECT wrk_r;
 	int f;
-	int cm_scrn_x;
-	int cm_scrn_y;
 	if( fire.Ticks<=fire.FlightTime )
 		{
-		wrk_x=fire.Position.X;
-		wrk_y=fire.Position.Y;
+		var wrk_x=fire.Position.X;
+		var wrk_y=fire.Position.Y;
 		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 		fire.Speed+=fire.Acceleration;
 
-		h=0;
+		var h=0;
 
 		// ptin dbg
 		wrk_r.top=(int)fire.TargetY+20;
@@ -377,8 +369,8 @@ private void UpdateCargo(ref Fire fire, ref int n)
 				{
 				if(!( fire.Position.Y>MAP_TOP || fire.Position.Y<MAP_BOTTOM || fire.Position.X<MAP_LEFT || fire.Position.X>MAP_RIGHT ))
 					{
-					cm_scrn_x=(int)((fire.Position.X+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
-					cm_scrn_y=(int)((MAP_TOP-fire.Position.Y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height);
+					var cm_scrn_x=(int)((fire.Position.X+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
+					var cm_scrn_y=(int)((MAP_TOP-fire.Position.Y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height);
 
 					if( MapTiles[cm_scrn_y][cm_scrn_x]==0)
 						{
@@ -418,14 +410,11 @@ private void UpdateCargo(ref Fire fire, ref int n)
 
 private void UpdateBullet(ref Fire fire, ref int n, int m)
 	{
-	double wrk_x;
-	double wrk_y;
 	RECT wrk_rect;
-	int f;
 	if( fire.Speed>=fire.FinalSpeed )
 		{
-		wrk_x=fire.Position.X;
-		wrk_y=fire.Position.Y;
+		var wrk_x=fire.Position.X;
+		var wrk_y=fire.Position.Y;
 		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 		fire.Speed+=fire.Acceleration;
 
@@ -448,7 +437,7 @@ private void UpdateBullet(ref Fire fire, ref int n, int m)
 					Units[n].Hp-=GetDamagePoints(m);
 				}
 
-			f=FindFreeEffect();
+			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
 
@@ -463,7 +452,7 @@ private void UpdateBullet(ref Fire fire, ref int n, int m)
 			if( IsEffectTick )
 				{
 				// 弾丸描画
-				f=FindFreeEffect();
+				var f=FindFreeEffect();
 				ref var effect = ref Effects[f];
 				effect.Layer=EffectLayer.Upper;
 				effect.TimeLeft=1;	effect.Animation=11;
@@ -481,21 +470,18 @@ private void UpdateBullet(ref Fire fire, ref int n, int m)
 
 private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 	{
-	double wrk_x;
-	double wrk_y;
-	int f;
 	RECT wrk_rect;
 	fire.Ticks--;
 	if( fire.Ticks!=0 )
 		{	//
-		wrk_x=fire.Position.X;	wrk_y=fire.Position.Y;
+		var wrk_x=fire.Position.X;	var wrk_y=fire.Position.Y;
 		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 
 		fire.Speed+=fire.Acceleration;		// 弾が減速
 
 		if( IsEffectTick )
 			{
-			f=FindFreeEffect();
+			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
 			effect.TimeLeft=1;	effect.Animation=10;
@@ -511,7 +497,7 @@ private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 
 		// 砲弾炸裂
-		f=FindFreeEffect();
+		var f=FindFreeEffect();
 		ref var effect = ref Effects[f];
 		effect.Layer=EffectLayer.Lower;
 
@@ -564,7 +550,6 @@ private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 private void UpdateAntiSubmarineBomb(ref Fire fire, ref int n, int m)
 	{
 	int f;
-	int h;
 	fire.Ticks++;
 	if( fire.Ticks==5 )
 		{
@@ -596,7 +581,7 @@ private void UpdateAntiSubmarineBomb(ref Fire fire, ref int n, int m)
 		effect.Position=fire.Position;
 		effect.SpriteNumber=11;			//ソースファイル上の番号
 
-		h=0;
+		var h=0;
 		for(n=1;n<=MaxUnitId;n++)
 			{
 			ref var unit = ref Units[n];
@@ -621,21 +606,18 @@ private void UpdateAntiSubmarineBomb(ref Fire fire, ref int n, int m)
 
 private void UpdateAntiAircraftShell(ref Fire fire, ref int n, int m)
 	{
-	double wrk_x;
-	double wrk_y;
-	int f;
 	RECT wrk_rect;
 	fire.Ticks--;
 	if( fire.Ticks!=0 )
 		{	//
-		wrk_x=fire.Position.X;	wrk_y=fire.Position.Y;
+		var wrk_x=fire.Position.X;	var wrk_y=fire.Position.Y;
 		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 
 		fire.Speed+=fire.Acceleration;		// 弾が減速
 		if( IsEffectTick )
 			{
 			// 弾自体の絵
-			f=FindFreeEffect();
+			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
 			effect.TimeLeft=1;	effect.Animation=0;
@@ -659,7 +641,7 @@ private void UpdateAntiAircraftShell(ref Fire fire, ref int n, int m)
 
 		// 砲弾炸裂
 		// 煙
-		f=FindFreeEffect();
+		var f=FindFreeEffect();
 		ref var effect = ref Effects[f];
 		effect.Layer=EffectLayer.Lower;
 		effect.TimeLeft=80+Random(80);
@@ -720,17 +702,10 @@ private void UpdateAntiAircraftShell(ref Fire fire, ref int n, int m)
 
 private void UpdateGunShell(ref Fire fire, ref int n, int m)
 	{
-	double wrk_x;
-	double wrk_y;
-	int f;
-	int h;
-	int i;
-	int cm_scrn_x;
-	int cm_scrn_y;
 	fire.Ticks--;
 	if( fire.Ticks!=0 )
 		{	//
-		wrk_x=fire.Position.X;	wrk_y=fire.Position.Y;
+		var wrk_x=fire.Position.X;	var wrk_y=fire.Position.Y;
 		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 		if( fire.Ticks > fire.FlightTime )
 			fire.Speed-=fire.Acceleration;		// 弾が上昇中
@@ -739,7 +714,7 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 		if( IsEffectTick )
 			{
 			// 弾自体の絵
-			f=FindFreeEffect();
+			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
 			effect.TimeLeft=1;	effect.Animation=0;
@@ -761,7 +736,7 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 		{	// 着弾！
 		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 		n=fire.Target;
-		h=CheckHit(m);
+		var h=CheckHit(m);
 		fire.Target=0;
 		if( Units[n].IsUsed && h!=0)
 			{
@@ -770,7 +745,7 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 
 			PlaySoundEffect( 0, SoundId.TorpedoHit1 ,fire.Position.X, fire.Position.Y);
 
-			f=FindFreeEffect();
+			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
 
@@ -784,7 +759,7 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 			// 当った的に収納機があれば破壊される場合もある
 			if( Units[n].Kind==UnitKind.AirBase || Units[n].Kind==UnitKind.Carrier || Units[n].Kind==UnitKind.LightCarrier )
 				{
-				for(i=0;i<=MaxUnitId;i++)
+				for(var i=0;i<=MaxUnitId;i++)
 					{
 					ref var unit = ref Units[i];
 					if( unit.IsUsed && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked && unit.Carrier==n && Random(10)==0 )
@@ -820,7 +795,7 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 			// ハズレ
 			PlaySoundEffect( 0, SoundId.Splash ,fire.Position.X, fire.Position.Y);
 
-			f=FindFreeEffect();
+			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Lower;
 
@@ -829,14 +804,14 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 
 			effect.Position=fire.Position;
 
-			wrk_x=fire.Position.X;
-			wrk_y=fire.Position.Y;
+			var wrk_x=fire.Position.X;
+			var wrk_y=fire.Position.Y;
 
 			effect.SpriteNumber=8;			// 弾丸着弾	のソースファイル上の番号
 			if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
 				{
-				cm_scrn_x=(int)((wrk_x+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
-				cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height);
+				var cm_scrn_x=(int)((wrk_x+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
+				var cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height);
 				if( MapTiles[cm_scrn_y][cm_scrn_x]>=1)
 					effect.SpriteNumber=10;			// 弾丸着弾	のソースファイル上の番号
 				else
@@ -849,22 +824,17 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 
 private void UpdateTorpedo(ref Fire fire, ref int n, int m)
 	{
-	double wrk_x;
-	double wrk_y;
-	int cm_scrn_x;
-	int cm_scrn_y;
-	int h;
 	int f;
 	if( fire.Ticks<=fire.FlightTime )
 		{
-		wrk_x=fire.Position.X;
-		wrk_y=fire.Position.Y;
+		var wrk_x=fire.Position.X;
+		var wrk_y=fire.Position.Y;
 		wrk_x+=CosDegrees(fire.Direction)*-40;
 		wrk_y+=SinDegrees(fire.Direction)*-40;
 		if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
 			{
-			cm_scrn_x=(int)((wrk_x+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
-			cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height);
+			var cm_scrn_x=(int)((wrk_x+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
+			var cm_scrn_y=(int)((MAP_TOP-wrk_y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height);
 			if( MapTiles[cm_scrn_y][cm_scrn_x]>=1)
 				{
 				fire.Ticks=fire.FlightTime;
@@ -876,7 +846,7 @@ private void UpdateTorpedo(ref Fire fire, ref int n, int m)
 		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 		fire.Speed+=fire.Acceleration;
 
-		h=0;
+		var h=0;
 		if( fire.Ticks>=fire.ArmingTime )
 			{
 			for(n=1;n<=MaxUnitId;n++)
@@ -962,11 +932,6 @@ private void UpdateTorpedo(ref Fire fire, ref int n, int m)
 
 private void UpdateBomb(ref Fire fire, ref int n, int m)
 	{
-	int f;
-	int h;
-	int i;
-	double wrk_x;
-	double wrk_y;
 	int cm_scrn_x;
 	int cm_scrn_y;
 	fire.Ticks++;
@@ -985,7 +950,7 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 			fire.Speed+=fire.Acceleration;
 			if( IsEffectTick )
 				{
-				f=FindFreeEffect();
+				var f=FindFreeEffect();
 				ref var effect = ref Effects[f];
 				effect.Layer=EffectLayer.Upper;
 				effect.TimeLeft=1;	effect.Animation=0;
@@ -997,7 +962,7 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 	else
 		{	// 着弾！
 		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
-		h=0;
+		var h=0;
 		for(n=1;n<=MaxUnitId;n++)
 			{
 			ref var unit = ref Units[n];
@@ -1017,7 +982,7 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 
 			PlaySoundEffect( 0, SoundId.BombHit1+Random(2) ,fire.Position.X, fire.Position.Y);
 
-			f=FindFreeEffect();
+			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
 
@@ -1030,7 +995,7 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 			// 当った的に収納機があれば破壊される場合もある
 			if( Units[n].Kind==UnitKind.AirBase || Units[n].Kind==UnitKind.Carrier || Units[n].Kind==UnitKind.LightCarrier )
 				{
-				for(i=0;i<=MaxUnitId;i++)
+				for(var i=0;i<=MaxUnitId;i++)
 					{
 					ref var unit = ref Units[i];
 					if( unit.IsUsed && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked && unit.Carrier==n && Random(10)==0 )
@@ -1063,7 +1028,7 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 			{
 			// ハズレ
 
-			f=FindFreeEffect();
+			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Lower;
 
@@ -1071,8 +1036,8 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 			effect.Animation=4;	// アニメーションパターン
 
 			effect.Position=fire.Position;
-			wrk_x=fire.Position.X;
-			wrk_y=fire.Position.Y;
+			var wrk_x=fire.Position.X;
+			var wrk_y=fire.Position.Y;
 			if(!( wrk_y>MAP_TOP || wrk_y<MAP_BOTTOM || wrk_x<MAP_LEFT || wrk_x>MAP_RIGHT ))
 				{
 				cm_scrn_x=(int)((wrk_x+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
@@ -1105,11 +1070,11 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 public void	UpdateFires()
 	{
 
-	int		m,cl,n=default /* C4701 */;
+	int n=default /* C4701 */ /* C4701 */;
 
 	//=========		 ファイアの制御		=========//
 	// 弾丸、爆弾等の機動、炸裂を制御します。
-	for(m=1;m<FIRE_MAX;m++)
+	for(var m=1;m<FIRE_MAX;m++)
 		{
 		ref var fire = ref Fires[m];
 		if( fire.Target!=0 )
@@ -1171,11 +1136,11 @@ public void	UpdateFires()
 [Original("set_new_ltl_ldr")]
 public void	AssignGroupLeader(int m)
 	{
-	int		n,min_no,f,i;
+	int n;
 
 	// 部下がまだ生きてるか
-	min_no=MaxUnitId+1;
-	f=0;
+	var min_no=MaxUnitId+1;
+	var f=0;
 	for( n=1; n<=MaxUnitId; n++)
 		{
 		ref var unit = ref Units[n];
@@ -1212,7 +1177,7 @@ public void	AssignGroupLeader(int m)
 				}
 			}
 		// ｐｐ＿ｘ、ｙをコピーします。
-		for(i=0;i<=63;i++)
+		for(var i=0;i<=63;i++)
 			{
 			Units[min_no].PathX[i]=Units[m].PathX[i];
 			Units[min_no].PathY[i]=Units[m].PathY[i];
@@ -1230,10 +1195,9 @@ public void	AssignGroupLeader(int m)
 
 private void UpdateLightlyDamagedPlane(ref Unit unit)
 	{
-	int f;
 	if( Rules.DamageEffectsTestBeforeDrawing ? (Tick%10)==0 && Random(8)==0 : Random(8)==0 && (Tick%10)==0 )
 		{
-		f=FindFreeEffect();
+		var f=FindFreeEffect();
 		ref var effect = ref Effects[f];
 		effect.Layer=EffectLayer.Upper;
 		effect.TimeLeft=40+EffectRandom(15);
@@ -1247,7 +1211,6 @@ private void UpdateLightlyDamagedPlane(ref Unit unit)
 
 private void UpdateDamagedPlane(ref Unit unit)
 	{
-	int f;
 	if( Random(500)==0 )
 		{
 		if(!IsEditingMap)
@@ -1255,7 +1218,7 @@ private void UpdateDamagedPlane(ref Unit unit)
 		}
 	if( Rules.DamageEffectsTestBeforeDrawing ? (Tick%10)==0 && Random(2)==1 : Random(2)==1 && (Tick%10)==0 )
 		{
-		f=FindFreeEffect();
+		var f=FindFreeEffect();
 		ref var effect = ref Effects[f];
 		effect.Layer=EffectLayer.Upper;
 		effect.TimeLeft=40+EffectRandom(15);
@@ -1280,7 +1243,6 @@ private void UpdateDamagedPlane(ref Unit unit)
 
 private void UpdateHeavilyDamagedPlane(ref Unit unit)
 	{
-	int f;
 	if( Random(500)==0 )
 		{
 		if(!IsEditingMap)
@@ -1289,7 +1251,7 @@ private void UpdateHeavilyDamagedPlane(ref Unit unit)
 
 	if( Rules.DamageEffectsTestBeforeDrawing ? (Tick%10)==0 && Random(3)!=0 : Random(3)!=0 && (Tick%(10) )==0 )
 		{
-		f=FindFreeEffect();
+		var f=FindFreeEffect();
 		ref var effect = ref Effects[f];
 		effect.Layer=EffectLayer.Upper;
 		effect.TimeLeft=40+EffectRandom(15);
@@ -1313,7 +1275,6 @@ private void UpdateHeavilyDamagedPlane(ref Unit unit)
 
 private void UpdateBurningPlane(ref Unit unit)
 	{
-	int i;
 	int f;
 	// ＨＰはあるが、事実上の墜落、
 	if( unit.Hp==unit.MaxHp*0.2 )
@@ -1321,7 +1282,7 @@ private void UpdateBurningPlane(ref Unit unit)
 		// 飛行機が火を吹く
 		if(unit.Kind==UnitKind.Bomber)
 			{
-			for(i=0;i<3;i++)
+			for(var i=0;i<3;i++)
 				{
 				f=FindFreeEffect();
 				ref var effect = ref Effects[f];
@@ -1383,9 +1344,6 @@ private void UpdateBurningPlane(ref Unit unit)
 
 private void CrashPlane(ref Unit unit, int m)
 	{
-	int f;
-	double wrk_x2;
-	double wrk_y2;
 	int cm_scrn_x;
 	int cm_scrn_y;
 	unit.Side=0;
@@ -1393,15 +1351,15 @@ private void CrashPlane(ref Unit unit, int m)
 	if( UnitInfoPanel[3]==m )
 		UnitInfoPanel[0]=0;				// ユニットインフォをクリア
 
-	f=FindFreeEffect();
+	var f=FindFreeEffect();
 	ref var effect = ref Effects[f];
 	effect.Layer=EffectLayer.Lower;
 	effect.TimeLeft=80;
 
 	effect.Position=unit.Position;
 
-	wrk_x2=unit.Position.X;
-	wrk_y2=unit.Position.Y;
+	var wrk_x2=unit.Position.X;
+	var wrk_y2=unit.Position.Y;
 	if(!( wrk_y2>MAP_TOP || wrk_y2<MAP_BOTTOM || wrk_x2<MAP_LEFT || wrk_x2>MAP_RIGHT ))
 		{
 		cm_scrn_x=(int)((wrk_x2+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
@@ -1436,10 +1394,9 @@ private void CrashPlane(ref Unit unit, int m)
 
 private void UpdatePlaneEffects(ref Unit unit, int m)
 	{
-	int f;
 	if(  IsEffectTick && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%3)==0)&& (unit.Weapon==FireKind.Bomb || unit.Weapon==FireKind.Torpedo || unit.Weapon==FireKind.Maintenance || unit.Weapon==FireKind.Unarmed)  && unit.Side==LocalSide && !(unit.PlaneState==UnitState.Parked && UnitInfoPanel[1]==0) && !( unit.PlaneState==UnitState.Parked && unit.DeckPhase>=3 ) && !( unit.PlaneState==UnitState.Parked && unit.Carrier!=UnitInfoPanel[3]))
 		{
-		f=FindFreeEffect();
+		var f=FindFreeEffect();
 		ref var effect = ref Effects[f];
 		effect.Layer=EffectLayer.Lower;
 		effect.TimeLeft=1;
@@ -1502,20 +1459,18 @@ private void UpdatePlaneEffects(ref Unit unit, int m)
 
 private void LeaveWake(ref Unit unit)
 	{
-	int f;
-	double drctn;
 	double dstc;
 	if( !(unit.Kind==UnitKind.Submarine||unit.Kind==UnitKind.NavalBase||unit.Kind==UnitKind.AirBase||unit.Kind==UnitKind.City||unit.Kind==UnitKind.Mine||unit.Kind==UnitKind.InfantryBase||unit.Kind==UnitKind.Pillboxes||unit.Kind==UnitKind.Fortress) && (Tick%15)==0 && unit.Speed>=unit.MaxSpeed/3 )
 		{
 		// 航跡のエフェクトを残す
-		f=FindFreeEffect();
+		var f=FindFreeEffect();
 		ref var effect = ref Effects[f];
 		effect.Layer=EffectLayer.Lower;
 		effect.TimeLeft=60+EffectRandom(60);
 		effect.Animation=4;
 		effect.Position=unit.Position;
 
-		drctn=unit.Direction;
+		var drctn=unit.Direction;
 		drctn+=180;
 		drctn=ReduceHeading(drctn);
 
@@ -1542,9 +1497,7 @@ private void LeaveWake(ref Unit unit)
 
 private void UpdateSurfaceShipEffects(ref Unit unit, int m)
 	{
-	int i;
 	int f;
-	int n;
 	if( unit.Hp<=0 )
 		{	// 沈没
 
@@ -1558,7 +1511,7 @@ private void UpdateSurfaceShipEffects(ref Unit unit, int m)
 		// 空母なら艦載機とユニットインフォを
 		if( unit.Kind==UnitKind.Carrier || unit.Kind==UnitKind.LightCarrier || unit.Kind==UnitKind.AirBase )
 			{
-			for( i=1;i<=MaxUnitId;i++)
+			for( var i=1;i<=MaxUnitId;i++)
 				{
 				ref var other = ref Units[i];
 				if( other.IsUsed && other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Parked && other.Carrier==m)
@@ -1607,7 +1560,7 @@ private void UpdateSurfaceShipEffects(ref Unit unit, int m)
 			{
 			if( unit.Hp<=unit.MaxHp*0.5  )
 				{
-				n=Random(4);
+				var n=Random(4);
 				if(  IsEffectTick && n==0 )
 					{
 					f=FindFreeEffect();
@@ -1645,8 +1598,6 @@ private void UpdateSurfaceShipEffects(ref Unit unit, int m)
 
 private void UpdateSubmergedSubmarineEffects(ref Unit unit, int m)
 	{
-	int n;
-	int f;
 	if( unit.Hp<=0 )
 		{	// 沈没
 		unit.Side=0;
@@ -1672,9 +1623,9 @@ private void UpdateSubmergedSubmarineEffects(ref Unit unit, int m)
 				}
 			if( IsEffectTick && Random(300)==1  )
 				{
-				for(n=0;n<=3;n++)
+				for(var n=0;n<=3;n++)
 					{
-					f=FindFreeEffect();
+					var f=FindFreeEffect();
 					ref var effect = ref Effects[f];
 					if( f!=0 )
 						{
@@ -1706,9 +1657,9 @@ private void UpdateSubmergedSubmarineEffects(ref Unit unit, int m)
 					}
 				if( IsEffectTick && Random(600)==1  )
 					{
-					for(n=0;n<=2;n++)
+					for(var n=0;n<=2;n++)
 						{
-						f=FindFreeEffect();
+						var f=FindFreeEffect();
 						ref var effect = ref Effects[f];
 						if( f!=0)
 							{
@@ -1862,7 +1813,6 @@ private void UpdateShipEffects(ref Unit unit, int m)
 public void	UpdateUnitEffects(int m)
 	{
 	ref var unit = ref Units[m];
-	RECT	wrk_rect;
 	int		f;
 
 	if( IsEffectTick && unit.IsGroupLeader!=0 && unit.Side==LocalSide && unit.PlaneState!=UnitState.Parked  )
@@ -2065,9 +2015,7 @@ private void SelectEditorUnit(ref int len, ref Array128<byte> ach)
 public void	UpdateMapEditor()
 	{
     Array128<byte> ach = default;
-    int len;
 	HDC					hdc;
-	short	i,jp_plane,jp_ship,us_plane,us_ship;
 
 	if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
 		{
@@ -2077,12 +2025,12 @@ public void	UpdateMapEditor()
 		SelectObject(hdc, gameFont_1);
 		SetTextColor(hdc, RGB(255, 255, 0));
 
-		jp_plane=0;
-		jp_ship=0;
-		us_plane=0;
-		us_ship=0;
+		short jp_plane=0;
+		short jp_ship=0;
+		short us_plane=0;
+		short us_ship=0;
 
-		for(i=1;i<=MaxUnitId;i++)
+		for(short i=1;i<=MaxUnitId;i++)
 			{
 			ref var unit = ref Units[i];
 			if( unit.IsUsed )
@@ -2105,7 +2053,7 @@ public void	UpdateMapEditor()
 			}
 
 #if !LNGG_VER
-		len = wsprintf(ach, "日本海軍　：　航空機　%d／%d　艦船又は地上施設　%d／%d　",jp_plane,JPN_PLANE_END-JPN_PLANE_START+1,jp_ship,JPN_SHIP_END-JPN_SHIP_START+1 );
+		var len = wsprintf(ach, "日本海軍　：　航空機　%d／%d　艦船又は地上施設　%d／%d　",jp_plane,JPN_PLANE_END-JPN_PLANE_START+1,jp_ship,JPN_SHIP_END-JPN_SHIP_START+1 );
 		TextOut(hdc, 0, 530, ach, len);
 		len = wsprintf(ach, "合衆国海軍：　航空機　%d／%d　艦船又は地上施設　%d／%d　",us_plane,USA_PLANE_END-USA_PLANE_START+1,us_ship,USA_SHIP_END-USA_SHIP_START+1 );
 		TextOut(hdc, 0, 550, ach, len);

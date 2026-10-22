@@ -235,7 +235,6 @@ private void WriteUnitDetails(ref Array8<int> len, ref Array8<Array128<byte>> ac
 private void DrawUnitDetails(SpriteId sprite, ref RECT src_rect, ref HDC hdc, ref Array8<int> len, ref Array8<Array128<byte>> ach)
 	{
 	RECT dstn_rect;
-	int n;
 	Sprites[sprite].Frame=UnitInfoPanel[2];
 	if( UnitInfoPanel[1]!=0 )
 		{
@@ -403,7 +402,7 @@ else
 
 #endif
 
-		for( n=0; n<=3; n++)
+		for( var n=0; n<=3; n++)
 			{
 			SetTextColor(hdc, RGB(255, 255, 0));
 			TextOut(hdc, dstn_rect.left+20+110, 10+(n*20), ach[n], len[n]);
@@ -440,12 +439,11 @@ private void ToggleDeckView()
 
 private void UpdateDeckView(ref RECT src_rect, SpriteId sprite, ref RECT dstn_rect)
 	{
-	int i;
 
 	// The host's UI's commands for the switch (UICommands.cs).
 	RunUICommands(UICommandSite.DeckView, true);
 
-	i=0;
+	var i=0;
 	src_rect.left = Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width*0)+1;
 	src_rect.top = Sprites[sprite].SheetPosition.Y+(Sprites[sprite].Size.Height*(i+1))+1;
 	src_rect.right = src_rect.left+(Sprites[sprite].Size.Width)-1;
@@ -479,17 +477,14 @@ private void UpdateDeckView(ref RECT src_rect, SpriteId sprite, ref RECT dstn_re
 // items. Returns their number. The choice shown (CombatMenuSelection) follows a supplying ship or a parked plane's arms.
 private int ListCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu2)
 	{
-	int n;
-	int i;
 	RECT wrk_rect;
-	int g;
 
-	n=0;
+	var n=0;
 	if( Units[SelectedUnit].Category==UnitCategory.Ship && !(Units[SelectedUnit].Kind==UnitKind.InfantryBase||Units[SelectedUnit].Kind==UnitKind.Pillboxes||Units[SelectedUnit].Kind==UnitKind.Fortress||Units[SelectedUnit].Kind==UnitKind.AirBase) )
 		{	// 艦船のメニュー
 		if( Units[SelectedUnit].IsStopping && Units[SelectedUnit].Speed==0 )
 			{
-			for( i=1; i<=MaxUnitId; i++)
+			for( var i=1; i<=MaxUnitId; i++)
 				{
 				ref var unit = ref Units[i];
 				if( unit.Side==LocalSide && unit.Kind==UnitKind.NavalBase && unit.BuildTime==0 )
@@ -520,7 +515,7 @@ private int ListCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu
 		if( Units[SelectedUnit].PlaneState==UnitState.Flying )
 			{	// 飛行中のメニュー
 			n=0;
-			for(g=1;g<=MaxUnitId;g++)
+			for(var g=1;g<=MaxUnitId;g++)
 				{
 				ref var unit = ref Units[g];
 				if( unit.IsUsed && ( unit.GroupLeader==SelectedUnit || g==SelectedUnit || Selections[1][g]!=0) )
@@ -585,12 +580,9 @@ private void ChooseCombatMenuItem(CombatMenuItem item)
 
 private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu2, ref int m, ref RECT src_rect, ref RECT dstn_rect)
 	{
-	SpriteId sprite;
-	int n;
-	int i;
-	sprite=SpriteId.Buttons1;
+	var sprite=SpriteId.Buttons1;
 
-	n=ListCombatMenu(ref menu, ref menu2);
+	var n=ListCombatMenu(ref menu, ref menu2);
 
 	// The host's UI's commands for the combat menu (UICommands.cs), on the items it shows, which wait for a frame in which
 	// they count.
@@ -599,7 +591,7 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 	RunUICommands(UICommandSite.CombatMenu, true);
 	RunWaitingCombatMenu();
 
-	for( i=0;i<n;i++ )
+	for( var i=0;i<n;i++ )
 		{
 		m=menu[i];
 		src_rect.left = Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width*0)+1;
@@ -780,11 +772,9 @@ private void WriteSupplyTargetName(ref Array8<int> len, ref Array8<Array128<byte
 // Whether the player can request the reinforcement chosen in the supply panel (SupplyTarget), or why not.
 private SupplyRequestState GetSupplyRequestState()
 	{
-	int m;
 	int start;
 	int end;
 	int g;
-	int n;
 	if(LocalSide==Side.Japan)
 		{
 		// 日本サイドのユニット
@@ -818,8 +808,8 @@ private SupplyRequestState GetSupplyRequestState()
 			}
 		}
 
-	n=0;
-	for( m=start; m<=end; m++)
+	var n=0;
+	for( var m=start; m<=end; m++)
 		{
 		if(!Units[m].IsUsed)
 			{
@@ -1198,8 +1188,8 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 [Original("unit_info_cont")]
 public void	UpdateUnitInfo()
 	{
-	RECT	src_rect = default,field_rect,dstn_rect = default;
-	int	m=default /* C4701 */,n,wrk,wrk2,wrk3,f,ry; Array6<int> menu = default; Array6<CombatMenuItem> menu2 = default;
+	RECT src_rect = default, dstn_rect = default;
+	int m=default /* C4701 */; Array6<int> menu = default; Array6<CombatMenuItem> menu2 = default;
 	SpriteId sprite;
     Array8<Array128<byte>> ach = default;
     Array8<int> len = default;
@@ -1285,7 +1275,7 @@ rival_mode=mode;
 		len[2] = wsprintf(ach[2], "%d",rest_time);
 #endif
 
-		for( n=0; n<=2; n++)
+		for( var n=0; n<=2; n++)
 			{
 			SetTextColor(hdc, RGB(255, 255, 255));
 			TextOut(hdc, dstn_rect.left+20+110, 100+(n*20), ach[n], len[n]);
@@ -1294,7 +1284,7 @@ rival_mode=mode;
 		}
 
 	// 補給
-	ry=190;
+	var ry=190;
 	if( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
 		{
 		SetBkMode(hdc, TRANSPARENT);
@@ -1355,9 +1345,7 @@ private void ShowMinimapCell(int column, int row)
 [Original("draw_map")]
 public void	DrawMinimap()
 	{
-	RECT	src_rect,field_rect,dstn_rect;
-	int		m,n,base_x,base_y;
-	byte	my_cl, en_cl;
+	RECT src_rect, dstn_rect;
 
 	// マップの下地を描画
 	Sprites[SpriteId.Minimap].Position = new PixelPoint(CMBT_WIDTH, CMBT_HEIGHT-Sprites[SpriteId.Minimap].Size.Height);
@@ -1376,11 +1364,11 @@ public void	DrawMinimap()
 		RestoreSurfaces();
 		}
 
-	base_x=Sprites[SpriteId.Minimap].Position.X+8;
-	base_y=Sprites[SpriteId.Minimap].Position.Y+8;
+	var base_x=Sprites[SpriteId.Minimap].Position.X+8;
+	var base_y=Sprites[SpriteId.Minimap].Position.Y+8;
 
 	// コンバット画面位置の描画
-	my_cl=0;
+	byte my_cl=0;
 	if( CameraPosition.X >= 0 )
 		dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(CameraPosition.X))/80)*map_close;
 	else
@@ -1426,15 +1414,15 @@ public void	DrawMinimap()
 	if( LocalSide==Side.Japan )
 		{
 
-		my_cl=(byte)(Sprites[SpriteId.Minimap].SheetPosition.Y+57);	en_cl=(byte)(Sprites[SpriteId.Minimap].SheetPosition.Y+16);
+		my_cl=(byte)(Sprites[SpriteId.Minimap].SheetPosition.Y+57);	var en_cl=(byte)(Sprites[SpriteId.Minimap].SheetPosition.Y+16);
 
 		}
 	else
 		{
-		en_cl=(byte)(Sprites[SpriteId.Minimap].SheetPosition.Y+57);	my_cl=(byte)(Sprites[SpriteId.Minimap].SheetPosition.Y+16);
+		var en_cl=(byte)(Sprites[SpriteId.Minimap].SheetPosition.Y+57);	my_cl=(byte)(Sprites[SpriteId.Minimap].SheetPosition.Y+16);
 		}
 
-	for(m=1; m<=MaxUnitId; m++)
+	for(var m=1; m<=MaxUnitId; m++)
 		{
 		ref var unit = ref Units[m];
 
@@ -1521,8 +1509,8 @@ public void	DrawMinimap()
 [Original("make_map")]
 public void	MakeMinimap()
 	{
-	RECT	src_rect,field_rect,dstn_rect;
-	int m,n;
+	RECT src_rect, dstn_rect;
+	int n;
 
 	// マップデータから陸地をマップに描画します
 	dstn_rect.left=Sprites[SpriteId.Minimap].SheetPosition.X;
@@ -1538,7 +1526,7 @@ public void	MakeMinimap()
 		RestoreSurfaces();
 		}
 
-	for(m=0; m<=179; m++) // 縦の個数	マップの枠 縦１８０ドット
+	for(var m=0; m<=179; m++) // 縦の個数	マップの枠 縦１８０ドット
 		for( n=0; n<=239; n++) // 横の個数		マップの枠 横２４０ドット
 			{
 			if( MapTiles[m][n]!=0 )
@@ -1568,12 +1556,12 @@ public void	MakeMinimap()
 [Original("cnct_unit_info_cont_now")]
 public void	ApplyUnitInfoInput()
 	{
-	CombatMenuItem	menu2; short e,tmp_slct_unit,g,i;
+	 
 
-	for(e=0;e<=1;e++)
+	for(short e=0;e<=1;e++)
 		{
-		menu2=BufferedMenuOrders[e].Menu;
-		tmp_slct_unit=BufferedMenuOrders[e].SelectedUnit;
+		var menu2=BufferedMenuOrders[e].Menu;
+		var tmp_slct_unit=BufferedMenuOrders[e].SelectedUnit;
 
 		// 指揮、随伴ユニットに下命
 		if(menu2!=0)
@@ -1595,7 +1583,7 @@ public void	ApplyUnitInfoInput()
 				}
 			else
 				{
-				for(g=1;g<=MaxUnitId;g++)
+				for(short g=1;g<=MaxUnitId;g++)
 					{
 					ref var unit = ref Units[g];
 					if( unit.IsUsed && ( unit.GroupLeader==tmp_slct_unit || g==tmp_slct_unit || Selections[e][g]!=0) )

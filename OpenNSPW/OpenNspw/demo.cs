@@ -29,12 +29,12 @@ public unsafe partial class Nspw
 [Original("demo_func")]
 public void	UpdateTitle()
 	{
-	RECT	src_rect,field_rect,dstn_rect;
-	int	m,n,g,no1,i,wrk,wrk2,wrk3; Array6<int> menu = default; Array6<int> menu2 = default;
+	RECT src_rect, dstn_rect;
+	  
     Array5<Array128<byte>> ach = default;
     Array5<int> len = default;
 	HDC					hdc;
-	byte	bf; Array256<byte> copy = default;
+	 
 	_DP_FLAG	dp_flag;
 	_DP_DATA_20	dp_data_20=default;
 
@@ -115,7 +115,7 @@ public void	UpdateTitle()
 			len[2] = wsprintf(ach[2], "  http://www02.u-page.so-net.ne.jp/ta2/kenken/");
 			len[3] = wsprintf(ach[3], "           Nara-Shika Seisakusho");
 #endif
-			for( n=0; n<=3; n++)
+			for( var n=0; n<=3; n++)
 				{
 				SetTextColor(hdc, RGB(255, 255, 255));
 				TextOut(hdc, 330, 580+(n*23), ach[n], len[n]);
@@ -155,9 +155,8 @@ public void	UpdateTitle()
 				//ここにくるのはホストだけ
 				// リジュームデータがホストをやってたかしらべる。
 
-				HANDLE	hFile;
 
-				hFile=CreateFile("Saved\\resume_1.dat", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
+				var hFile=CreateFile("Saved\\resume_1.dat", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
 																null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null);
 
 				if( INVALID_HANDLE_VALUE==hFile )
@@ -263,9 +262,8 @@ public void GoToGameSetting()
 	lpDSB_[(int)SoundId.Sea][0].Stop();		//
 #endif
 
-HANDLE	hFile;
 
-	hFile=CreateFile("Saved\\auto_save.dat", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
+	var hFile=CreateFile("Saved\\auto_save.dat", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
 													null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null);
 
 	if( INVALID_HANDLE_VALUE==hFile )
@@ -608,7 +606,6 @@ private void ToggleSwapRule()
 private void UpdateSwapRuleSetting(ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc, int rx)
 	{
 	RECT dstn_rect;
-	int flg;
 	if( SwapTime!=0 )
 		{
 #if !LNGG_VER
@@ -630,7 +627,7 @@ private void UpdateSwapRuleSetting(ref Array12<int> len, ref Array12<Array128<by
 				if( LeftButton==3 )
 					{
 					ToggleSwapRule();
-					flg=1;
+					var flg=1;
 					}
 				}
 			else
@@ -941,8 +938,7 @@ private void UpdateArrivalControlSetting(ref Array12<int> len, ref Array12<Array
 // scenario kept, and the rules as they are at first (GoToGameSetting).
 private void BackToScenarioSetting(ref _DP_FLAG dp_flag)
 	{
-	int m;
-	m=ScenarioNumber;
+	int m=ScenarioNumber;
 	GoToGameSetting();
 	ScenarioNumber=(short)m;
 
@@ -1084,8 +1080,7 @@ private void SendHostSettings(ref _DP_DATA_1 dp_data_1)
 
 private void UpdateConfigSetting(ref Array12<int> len, ref Array12<Array128<byte>> ach, ref HDC hdc, ref _DP_FLAG dp_flag, ref _DP_DATA_1 dp_data_1)
 	{
-	int rx;
-	rx=630-120;
+	var rx=630-120;
 
 #if !LNGG_VER
 	len[0] = wsprintf(ach[0], "コンフィギュレーション");
@@ -1352,9 +1347,8 @@ private void LeaveGameSetting(ref _DP_DATA_1 dp_data_1)
 
 private void UpdateScenarioList(int m, ref Array12<int> len, ref HDC hdc, ref _DP_DATA_1 dp_data_1, ref Array12<Array128<byte>> ach)
 	{
-	int n;
 	RECT dstn_rect;
-	for( n=0; n<=m; n++)
+	for( var n=0; n<=m; n++)
 		{
 		// ptin dbg
 		dstn_rect.left=120;
@@ -1633,8 +1627,7 @@ private void UpdateScenarioPageButton(ref Array12<int> len, ref Array12<Array128
 
 private void ShowScenarioList(int m, ref HDC hdc, ref Array12<Array128<byte>> ach, ref Array12<int> len)
 	{
-	int n;
-	for( n=0; n<=m; n++)
+	for( var n=0; n<=m; n++)
 		{
 		if(Mode==GameMode.GameSetting)
 			{
@@ -1727,17 +1720,13 @@ private void ListScenarioNames(ref int m, ref Array12<int> len, ref Array12<Arra
 [Original("cnct_game_setting")]
 public void	UpdateGameSetting()
 	{
-	RECT	src_rect,field_rect;
-	int	m=default /* C4701 */,n,g,no1,i,wrk,wrk2,wrk3,rx = default,ry; Array7<int> menu = default; Array7<int> menu2 = default;
+	int m=default /* C4701 */, rx = default;  
     Array12<Array128<byte>> ach = default;
     Array12<int> len = default;
 	HDC					hdc;
-	Array256<byte> cBuf = default;
 
 	_DP_DATA_1		dp_data_1 = default;
-	_DP_DATA_1* lp_dp_data_1;
 	_DP_FLAG			dp_flag = default;
-	_DP_DATA_20		dp_data_20=default;
 
 #if CONN_DBG
 	rival_mode=mode;
@@ -2041,7 +2030,7 @@ else
 
 if( Mode==GameMode.GameSetting )
 	{
-			for( n=0; n<=6; n++)
+			for( var n=0; n<=6; n++)
 				{
 				SetTextColor(hdc, RGB(255, 255, 255));
 				TextOut(hdc, rx, 500+(n*25), ach[n], len[n]);
@@ -2049,7 +2038,7 @@ if( Mode==GameMode.GameSetting )
 	}
 else
 	{
-	for( n=0; n<=6; n++)
+	for( var n=0; n<=6; n++)
 		{
 		SetTextColor(hdc, RGB(126, 126, 126));
 		TextOut(hdc, rx, 500+(n*25), ach[n], len[n]);

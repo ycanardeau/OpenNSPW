@@ -248,16 +248,14 @@ public int FrameCount;
 
 private void DrawRivalChat(ref Array128<byte> ach, ref HDC hdc)
 	{
-	int len;
-	int m;
 	if(RivalChatDisplayTime!=0)
 		{
-		len = wsprintf(ach, RivalChat );
+		var len = wsprintf(ach, RivalChat );
 		TextOut(hdc, 10, 240+170, ach, len);
 		RivalChatDisplayTime--;
 		if(RivalChatDisplayTime==0)
 			{
-			for(m=0;m<128;m++)
+			for(var m=0;m<128;m++)
 				{
 				RivalChat[m]=0;
 				}
@@ -267,16 +265,14 @@ private void DrawRivalChat(ref Array128<byte> ach, ref HDC hdc)
 
 private void DrawMyChat(ref Array128<byte> ach, ref HDC hdc)
 	{
-	int len;
-	int m;
 	if(MyChatDisplayTime!=0)
 		{
-		len = wsprintf(ach, MyChat );
+		var len = wsprintf(ach, MyChat );
 		TextOut(hdc, 10, 200+170, ach, len);
 		MyChatDisplayTime--;
 		if(MyChatDisplayTime==0)
 			{
-			for(m=0;m<128;m++)
+			for(var m=0;m<128;m++)
 				{
 				MyChat[m]=0;
 				}
@@ -336,8 +332,6 @@ public void	UpdateFrame()
 	{
 	DDBLTFX ddbltfx;
 	short		chara_loop;
-	int	i;
-	int	no;
 
 	Now = timeGetTime();
 
@@ -413,7 +407,7 @@ public void	UpdateFrame()
 				return;
 				}
 
-			for( i=chara_loop; i>=1; i-- )
+			for( int i=chara_loop; i>=1; i-- )
 				{
 				IsDrawnTick=i==1;
 				Trace?.Reach(this, TracePoint.Tick);
@@ -444,7 +438,6 @@ public void	UpdateFrame()
 
 	HDC hdc;
 	Array128<byte> ach = default;
-	int len;
 
 	if (DD_OK==lpDDSBack.GetDC(&hdc))
 		{
@@ -453,9 +446,9 @@ public void	UpdateFrame()
 
 #if DBG_MODE
 
-		no=SelectedUnit;
+		int no=SelectedUnit;
 
-		len = wsprintf(ach, "dbg[0]=%d [1]=%d [2]=%d [3]=%d [4]=%d  :%d",DebugValues[0],DebugValues[1],DebugValues[2],DebugValues[3],DebugValues[4] ,SelectedUnit   );
+		var len = wsprintf(ach, "dbg[0]=%d [1]=%d [2]=%d [3]=%d [4]=%d  :%d",DebugValues[0],DebugValues[1],DebugValues[2],DebugValues[3],DebugValues[4] ,SelectedUnit   );
 		TextOut(hdc, 0, 0, ach, len);
 
 		len = wsprintf(ach, "unit_out=%d ccc_out=%d rnd_out=%d rnd_count=%d CCC=%d FrameC=%d Sinario=%d host_side=%d rival_mode=%d" ,AreUnitsOutOfSync ,IsTickOutOfSync,IsRandomOutOfSync,RandomCount ,Tick, FrameCount, ScenarioNumber, HostSide, RivalMode);
@@ -550,9 +543,8 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	MSG msg=default;
 	WNDCLASS wc;
 
-	int	i;
 
-	for(i=0; i<16; i++)
+	for(var i=0; i<16; i++)
 		DebugValues[i]=0;
 
 	IsFullscreen=true;
@@ -676,10 +668,9 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 
 	ImmAssociateContext(hwndApp,null);			// 日本語入力機能を通常ゲーム時抑制する。
 
-    int		ddrval;
 
 	// ダイレクトドロウ
-    ddrval = DirectDrawCreateEx(null,out lpDD,IID_IDirectDraw7,null);
+    var ddrval = DirectDrawCreateEx(null,out lpDD,IID_IDirectDraw7,null);
     if (ddrval != DD_OK)
 		{
 		MessageBox(null,"DirectDrawの作成に失敗","Base",MB_OK | MB_ICONSTOP);
@@ -763,8 +754,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	ddpf.dwSize=(uint)(sizeof(DDPIXELFORMAT));
 	lpDDS_OS.GetPixelFormat(&ddpf);
 
-	uint KeyColor;
-	KeyColor = ddpf.dwRBitMask | ddpf.dwBBitMask;
+	var KeyColor = ddpf.dwRBitMask | ddpf.dwBBitMask;
 
 	// カラーキーを設定
 	DDCOLORKEY key;

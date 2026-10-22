@@ -64,8 +64,6 @@ private static readonly ImmutableArray<string> SoundFileNames = ["AA_BLT1", "AA_
 [Original("InitDSound")]
 public int	InitializeDirectSound()
 	{
-	int		i;
-	int		sound;
 
 	// DirectSound8 の作成
 	if (FAILED(DirectSoundCreate8(null,out lpDS,null)))
@@ -100,7 +98,7 @@ public int	InitializeDirectSound()
 
 // サウンドカードのバッファ性能を調べます。
 
-	for(sound=0;sound<SoundFileNames.Length;sound++)
+	for(var sound=0;sound<SoundFileNames.Length;sound++)
 		{
 		lpDSB_[sound][0]= LoadWave($"WAV\\{SoundFileNames[sound]}.wav");
 		if (lpDSB_[sound][0]==null)
@@ -109,7 +107,7 @@ public int	InitializeDirectSound()
 			SendMessage(hwndApp,WM_CLOSE,0,0);
 			return FALSE;
 			}
-		for(i=1;i<SND_DUP;i++)
+		for(var i=1;i<SND_DUP;i++)
 			lpDS.DuplicateSoundBuffer(lpDSB_[sound][0],out lpDSB_[sound][i]);
 		}
 
@@ -144,8 +142,7 @@ public void	PlaySound(IDirectSoundBuffer? the_lpdsb,short* the_snd,int f)
 public void PlaySoundEffect(int dwFlags,SoundId no,double x,double y)
 	{
 	RECT	field_rect;
-	double	wrk_x,wrk_y,drctn,dstc;
-	int		n,size=default /* C4701 */,flg;
+	int size=default /* C4701 */;
 
 #if !SND_SW
 
@@ -155,16 +152,16 @@ return;
 
 	if( x!=(double)(MAP_RIGHT+1) )
 		{
-		flg=0;
-		for(n=1;n<=MaxUnitId && flg==0 ;n++)
+		var flg=0;
+		for(var n=1;n<=MaxUnitId && flg==0 ;n++)
 			{
 			if( Units[n].IsUsed && Units[n].Side==LocalSide && Units[n].PlaneState!=UnitState.Parked )
 				{
 				// マイユニットからこのエフェクトが見えるか
 				// 現地点からユニット地点への距離
 
-				wrk_x=Units[n].Position.X;
-				wrk_y=Units[n].Position.Y;
+				var wrk_x=Units[n].Position.X;
+				var wrk_y=Units[n].Position.Y;
 				if( Units[n].Kind==UnitKind.Fighter )
 					{	// 航空機の場合はちょっと前へ
 					wrk_x+=CosDegrees(Units[n].Direction)*FT_EYE;
@@ -174,7 +171,7 @@ return;
 				wrk_x=wrk_x-x;
 				wrk_y=wrk_y-y;
 
-				dstc=Distance(wrk_x, wrk_y);
+				var dstc=Distance(wrk_x, wrk_y);
 
 				switch( Units[n].Kind )
 					{

@@ -24,17 +24,16 @@ public unsafe partial class Nspw
 // with (IssueSingleplayerOrders), as 1.22 does.
 private void BufferSelections()
 	{
-	int s;
 	BufferedSelectionsOfAllUnits=Selections[1];
 	if(LocalSide==Side.Japan)
 		{
 		// 日本海軍サイド
-		for(s=1;s<=JPN_SHIP_END;s++)
+		for(var s=1;s<=JPN_SHIP_END;s++)
 			{
 			// 水上ユニット
 			BufferedSelections[1][s-1]=Selections[1][s];
 			}
-		for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
+		for(var s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
 			{
 			// 航空ユニット
 			BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
@@ -43,12 +42,12 @@ private void BufferSelections()
 	else
 		{
 		// 合衆国海軍サイド
-		for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
+		for(var s=USA_SHIP_START;s<=USA_SHIP_END;s++)
 			{
 			// 水上ユニット
 			BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
 			}
-		for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
+		for(var s=USA_PLANE_START;s<=USA_PLANE_END;s++)
 			{
 			// 航空ユニット
 			BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
@@ -58,7 +57,6 @@ private void BufferSelections()
 
 private void BufferMoveOrder(int e)
 	{
-	int m;
 	// あるマイユニットに新ＰＰ＿ＸＹが設定された場合
 	// バッファに保存。これを命令をだせるタイミングにnew_ppに代入する。
 	BufferedMoveOrders[1].Unit=MoveOrders[1].Unit;
@@ -67,7 +65,7 @@ private void BufferMoveOrder(int e)
 
 	BufferSelections();
 
-	m=MoveOrders[e].Unit;
+	int m=MoveOrders[e].Unit;
 	if( Units[m].Category==UnitCategory.Plane && Units[m].PlaneState==UnitState.Parked )
 		{
 		Units[Units[m].Carrier].PlanesToLaunch=0;	// 空母なら これがオンで発艦中
@@ -85,7 +83,6 @@ private void BufferMoveOrder(int e)
 
 private void SelectFriendlyTarget(ref int m, int e)
 	{
-	int n;
 	if ( Units[SelectedUnit].Category==UnitCategory.Plane && (Units[m].Kind==UnitKind.Carrier || Units[m].Kind==UnitKind.LightCarrier || Units[m].Kind==UnitKind.AirBase))
 		{
 		// 航空機の格納先を指定
@@ -120,7 +117,7 @@ private void SelectFriendlyTarget(ref int m, int e)
 			{	// ｍ番号ユニットをセレクトから外す
 			SelectionCount--;
 			// セレクトの設定番号を連番にする。
-			for(n=1;n<=MaxUnitId;n++)
+			for(var n=1;n<=MaxUnitId;n++)
 				{
 				if( Selections[e][n]>=Selections[e][m]+1 )
 					Selections[e][n]--;
@@ -181,17 +178,17 @@ private void SelectTargetOrLanding(ref int m, int e)
 [Original("cnct_game_input_cont")]
 public void	HandleInput()
 	{
-	int	h,m,f,e; Array256<int> chk = default;
+	 
 
 	// A trace of 1.22 gives the player's orders here, or records them (docs/Verification.md).
 	Trace?.ReachPlayerOrders(this);
 
-	e=1;
+	var e=1;
 	if( SelectOrders[e].IsSet && !Units[SelectOrders[e].SelectedUnit].IsSupplying && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress ))
 		{
 		// ユニット自体をクリックした。
 		SelectedUnit=SelectOrders[e].SelectedUnit;
-		m=SelectOrders[e].Unit;
+		int m=SelectOrders[e].Unit;
 
 		if( m==0 || Units[SelectedUnit].Side!=Units[m].Side )
 			{
@@ -217,13 +214,12 @@ public void	HandleInput()
 // Ships: whether the world at a point is land, by the tile of the terrain there. A point outside the world is not.
 private bool IsLandAt(double x, double y)
 	{
-	int cm_scrn_x,cm_scrn_y;
 
 	if( y>MAP_TOP || y<MAP_BOTTOM || x<MAP_LEFT || x>MAP_RIGHT )
 		return false;
 
-	cm_scrn_x=(int)((x+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
-	cm_scrn_y=(int)((MAP_TOP-y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height);
+	var cm_scrn_x=(int)((x+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
+	var cm_scrn_y=(int)((MAP_TOP-y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height);
 	return MapTiles[cm_scrn_y][cm_scrn_x]>=1;
 	}
 
@@ -232,9 +228,8 @@ private bool IsLandAt(double x, double y)
 private bool IsShipAt(int m, double x, double y)
 	{
 	RECT wrk_r;
-	int f;
 
-	for( f=1; f<=MaxUnitId; f++)
+	for( var f=1; f<=MaxUnitId; f++)
 		{
 		ref var other = ref Units[f];
 		if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged) && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress) )
@@ -256,18 +251,13 @@ private bool IsShipAt(int m, double x, double y)
 // back, and the search starts again farther away (min_dstc), counting an error.
 private void TakeDetour(ref Unit unit, ref int pp_indx, double start_x, double start_y, double chk_dstc, double div, double direction, double drctn_ok1, double drctn_ok2, ref double min_dstc, double s_pp_x, double s_pp_y, double re_add, ref int error)
 	{
-	double wrk_x;
-	double wrk_y;
-	double wrk;
-	double drctn1;
-	double drctn2;
 	unit.PathX[pp_indx+1]=unit.PathX[pp_indx];
 	unit.PathY[pp_indx+1]=unit.PathY[pp_indx];
 	unit.PathX[pp_indx+2]=MAP_RIGHT+1;
-	wrk_x=start_x;
-	wrk_y=start_y;
+	var wrk_x=start_x;
+	var wrk_y=start_y;
 
-	wrk=chk_dstc/div;
+	var wrk=chk_dstc/div;
 	if(wrk<40)
 		wrk=40;
 	wrk_x+=CosDegrees(direction)*wrk;
@@ -282,7 +272,7 @@ private void TakeDetour(ref Unit unit, ref int pp_indx, double start_x, double s
 		wrk_y=unit.PathY[pp_indx]-unit.PathY[pp_indx-1];
 		if(wrk_x==0)	wrk_x=1;
 		if(wrk_y==0)	wrk_y=1;
-		drctn1=Direction(wrk_x, wrk_y);
+		var drctn1=Direction(wrk_x, wrk_y);
 		if(drctn1>=360)
 			drctn1=drctn1-360;
 		// 現位置からＰＰ０への角度
@@ -298,7 +288,7 @@ private void TakeDetour(ref Unit unit, ref int pp_indx, double start_x, double s
 			}
 		if(wrk_x==0)	wrk_x=1;
 		if(wrk_y==0)	wrk_y=1;
-		drctn2=Direction(wrk_x, wrk_y);
+		var drctn2=Direction(wrk_x, wrk_y);
 
 		// 方位角 drctn1
 		drctn1=drctn1-drctn2;
@@ -339,19 +329,18 @@ public void	SetCpuRoute2(int m)
 	{
 	ref var unit = ref Units[m];
 	double		add;
-	double	pp_drctn,wrk_x,wrk_y,add_drctn,pp_dstc,chk_dstc,wrk,drctn1,drctn2,wrk_x2,wrk_y2,start_x,start_y,min_dstc,s_pp_x,s_pp_y,first_drctn,div,drctn_ok1,drctn_ok2,re_add; Array16<Array2<double>> rslt_drctn = default;
-	int			n,hit,left,right,pp_indx,error;
+	double pp_drctn, wrk_x, wrk_y, wrk_x2, wrk_y2, start_x, start_y; 
+	int n;
 	RECT		wrk_r;
 
     Array128<byte> ach = default;
-    int len;
 
-	error=0;
-	div=2.0;
-	re_add=160;
+	var error=0;
+	var div=2.0;
+	var re_add=160.0;
 
-	drctn_ok1=90.0;
-	drctn_ok2=270.0;
+	var drctn_ok1=90.0;
+	var drctn_ok2=270.0;
 
 	//	ＰＰ０が侵入不可地なら移動無しにしてリターン
 	if( unit.Category==UnitCategory.Ship  )
@@ -387,10 +376,10 @@ public void	SetCpuRoute2(int m)
 		}
 
 	//
-	min_dstc=0;
-	s_pp_x=unit.PathX[0];
-	s_pp_y=unit.PathY[0];
-	pp_indx=0;
+	var min_dstc=0.0;
+	var s_pp_x=unit.PathX[0];
+	var s_pp_y=unit.PathY[0];
+	var pp_indx=0;
 
 	while(pp_indx==0)
 		{
@@ -437,19 +426,19 @@ public void	SetCpuRoute2(int m)
 			wrk_x=0-wrk_x;
 		if(wrk_y<0)
 			wrk_y=0-wrk_y;
-		wrk=pp_drctn;
+		var wrk=pp_drctn;
 		if(wrk>=180)
 			wrk=wrk-180;
 		if(wrk>=90)
 			wrk=90-(wrk-90);
-		pp_dstc=(wrk_x)/(CosDegrees(wrk));
+		var pp_dstc=(wrk_x)/(CosDegrees(wrk));
 
 		if( unit.Category==UnitCategory.Ship )
 			{
 			// 艦船のルート再計算
 
-			hit=0;
-			chk_dstc=40;
+			var hit=0;
+			var chk_dstc=40.0;
 			while(hit==0 && chk_dstc<=pp_dstc)
 				{
 				if(pp_indx==0 && chk_dstc<=80 )
@@ -477,15 +466,15 @@ public void	SetCpuRoute2(int m)
 			if( hit==1)
 				{
 				// 不幸にも進路を変更しないと目標点までいけない場合。
-				drctn1=pp_drctn;
-				drctn2=pp_drctn;
+				var drctn1=pp_drctn;
+				var drctn2=pp_drctn;
 				for(n=0; n<=7; n++)
 					{
 					drctn1+=22.5;
 					if(drctn1>=360)		drctn1=drctn1-360;
 					drctn2-=22.5;
 					if(drctn2<0)		drctn2=360+drctn2;
-					chk_dstc=40; hit=0;	left=0;	right=0;
+					chk_dstc=40; hit=0;	var left=0;	var right=0;
 					while( chk_dstc<=(pp_dstc) && (left==0||right==0))
 						{
 
@@ -566,7 +555,7 @@ public void	SetCpuRoute2(int m)
 			pp_indx=-1;
 			}
 
-		len = wsprintf(ach, "in Set_cpu_root2 error=%d" ,error);
+		var len = wsprintf(ach, "in Set_cpu_root2 error=%d" ,error);
 
 		}
 
@@ -579,15 +568,15 @@ public void	SetCpuRoute2(int m)
 [Original("cnct_game_input_now")]
 public void	ApplyOrders()
 	{
-	int	h,m,f,s,n,e; Array256<int> chk = default;
+	int h, n; Array256<int> chk = default;
 
-	for(e=0; e<=1; e++)
+	for(var e=0; e<=1; e++)
 		{
 		if( SelectOrders[e].IsSet && !Units[SelectOrders[e].SelectedUnit].IsSupplying && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress ))
 			{
 			// ユニット自体をクリックした。
 			SelectedUnit=SelectOrders[e].SelectedUnit;
-			m=SelectOrders[e].Unit;
+			int m=SelectOrders[e].Unit;
 
 			if( m==0 || Units[SelectedUnit].Side!=Units[m].Side )
 				{
@@ -649,7 +638,7 @@ public void	ApplyOrders()
 			{
 			// あるユニットに新ＰＰ＿ＸＹが設定された場合
 
-			m=MoveOrders[e].Unit;
+			int m=MoveOrders[e].Unit;
 			for(n=0; Units[m].PathX[n]!=MAP_RIGHT+1; n++)
 				{}
 			// The single-player game: the condition that NSPW NET has as a comment, || unit[m].used==cpu_side, and the
@@ -686,11 +675,11 @@ public void	ApplyOrders()
 				Units[m].IsStopping=false;
 
 				// 一時的寮機の重複番号阻止
-				for(s=0;s<=MaxUnitId;s++)
+				for(var s=0;s<=MaxUnitId;s++)
 					chk[s]=0;
 
-				f=0;
-				for( s=0; s<=MaxUnitId; s++)
+				var f=0;
+				for( var s=0; s<=MaxUnitId; s++)
 					{
 					ref var unit = ref Units[s];
 					if( Selections[e][s]==0 && unit.GroupLeader==m )
@@ -761,7 +750,7 @@ public void	ApplyOrders()
 					Units[Units[m].Carrier].LandingLock=0;	// 空母ならこの数値で甲板上の右左 (the slot of the landing lock now)
 					}
 
-				for( s=0; s<=MaxUnitId; s++)
+				for( var s=0; s<=MaxUnitId; s++)
 					{
 					ref var unit = ref Units[s];
 					if( unit.GroupLeader!=0 && Units[unit.GroupLeader].IsGroupLeader==0 )
@@ -825,14 +814,13 @@ public void	ScrollBattleArea(int drctn)
 
 private void ReadMouse()
 	{
-	int hr;
 
 	// バッファリング・データを取得する
 	while(IsAppActive)
 		{
 		DIDEVICEOBJECTDATA od;
 		uint dwItems = 1;
-		hr = pDIDeviceMouse.GetDeviceData((uint)(sizeof(DIDEVICEOBJECTDATA)),
+		var hr = pDIDeviceMouse.GetDeviceData((uint)(sizeof(DIDEVICEOBJECTDATA)),
 							&od, &dwItems, 0);
 		if (hr==DIERR_INPUTLOST)
 			pDIDeviceMouse.Acquire();
@@ -905,7 +893,6 @@ private void ReadMouse()
 
 private void ReadKeyboard()
 	{
-	int hr;
 	int y = 0;
 
 	// バッファリング・データを取得する
@@ -913,7 +900,7 @@ private void ReadKeyboard()
 		{
 		DIDEVICEOBJECTDATA od;
 		uint dwItems = 1;
-		hr = pDIDevice.GetDeviceData((uint)(sizeof(DIDEVICEOBJECTDATA)),
+		var hr = pDIDevice.GetDeviceData((uint)(sizeof(DIDEVICEOBJECTDATA)),
 							&od, &dwItems, 0);
 		if (hr==DIERR_INPUTLOST)
 			pDIDevice.Acquire();
@@ -1077,12 +1064,11 @@ public void ReadInput()
 [Original("InitDInput")]
 public bool InitializeDirectInput()
 {
-	int hr;
 	DIPROPDWORD diprop;
 
 	// *****************************************
 	// DirectInputの作成
-	hr = DirectInput8Create( hInstApp , DIRECTINPUT_VERSION,
+	var hr = DirectInput8Create( hInstApp , DIRECTINPUT_VERSION,
 							IID_IDirectInput8, out pDInput, null);
 	if (FAILED(hr))
 	{
