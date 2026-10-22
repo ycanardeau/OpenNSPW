@@ -784,7 +784,7 @@ public void	ScrollBattleArea(int drctn)
 			ScrollSpeed+=scrn_moving_add;
 			if(ScrollSpeed>=SCRN_MAX_SPD)
 				ScrollSpeed=SCRN_MAX_SPD-1;
-			CameraPosition = new WorldPosition(CameraPosition.X, CameraPosition.Y + ScrollSpeed);
+			CameraPosition += new WorldVector(0, ScrollSpeed);
 			if(CameraPosition.Y>MAP_TOP)
 				CameraPosition = new WorldPosition(CameraPosition.X, MAP_TOP);
 			break;
@@ -794,7 +794,7 @@ public void	ScrollBattleArea(int drctn)
 			ScrollSpeed+=scrn_moving_add;
 			if(ScrollSpeed>=SCRN_MAX_SPD)
 				ScrollSpeed=SCRN_MAX_SPD-1;
-			CameraPosition = new WorldPosition(CameraPosition.X + ScrollSpeed, CameraPosition.Y);
+			CameraPosition += new WorldVector(ScrollSpeed, 0);
 			if(CameraPosition.X>(MAP_RIGHT-CMBT_WIDTH) )
 				CameraPosition = new WorldPosition(MAP_RIGHT-CMBT_WIDTH, CameraPosition.Y);
 			break;
@@ -804,7 +804,7 @@ public void	ScrollBattleArea(int drctn)
 			ScrollSpeed+=scrn_moving_add;
 			if(ScrollSpeed>=SCRN_MAX_SPD)
 				ScrollSpeed=SCRN_MAX_SPD-1;
-			CameraPosition = new WorldPosition(CameraPosition.X, CameraPosition.Y - ScrollSpeed);
+			CameraPosition -= new WorldVector(0, ScrollSpeed);
 			if(CameraPosition.Y<(MAP_BOTTOM+CMBT_HEIGHT) )
 				CameraPosition = new WorldPosition(CameraPosition.X, MAP_BOTTOM+CMBT_HEIGHT);
 			break;
@@ -814,7 +814,7 @@ public void	ScrollBattleArea(int drctn)
 			ScrollSpeed+=scrn_moving_add;
 			if(ScrollSpeed>=SCRN_MAX_SPD)
 				ScrollSpeed=SCRN_MAX_SPD-1;
-			CameraPosition = new WorldPosition(CameraPosition.X - ScrollSpeed, CameraPosition.Y);
+			CameraPosition -= new WorldVector(ScrollSpeed, 0);
 			if(CameraPosition.X<MAP_LEFT)
 				CameraPosition = new WorldPosition(MAP_LEFT, CameraPosition.Y);
 			break;

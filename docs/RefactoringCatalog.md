@@ -58,7 +58,7 @@ Each has the layout of the primitives it replaces (see [Refactoring.md](Refactor
 | Type | Layout | Operations |
 | --- | --- | --- |
 | `WorldPosition` | `double X, Y` | `WorldPosition ± WorldVector`, `WorldPosition - WorldPosition` → `WorldVector`, `==`. `ToPixelPoint()` truncates with `(int)`, as the C++ casts. `WorldToScreen` subtracts it from `CameraPosition`, with Y downward. |
-| `WorldVector` | `double X, Y` | `* double`, `Length` (the original's `atan2` and `cos` distance, exactly). Not stored in the state. |
+| `WorldVector` | `double X, Y` | `* double`, `FromDirection(degrees)` (`CosDegrees`, `SinDegrees`), `Direction` and `Length` (the original's `atan2` and `cos` distance, exactly), `NonZero()` (a component of 0 counts as 1). Not stored in the state. |
 | `Angle` | `double Degrees` | `Sin()`, `Cos()` as `sin(Degrees*a_PI)`, `cos(Degrees*a_PI)`. `FromVector(dx, dy)` as `atan2(dy,dx)*RAD_to`. No normalization that the C++ does not do. |
 | `PixelPoint` | `int X, Y` | `+`. The sprites' `Position`, `Center` and `SheetPosition`; replaces `POINT`. |
 | `PixelSize` | `int Width, Height` | The sprites' `Size`. |

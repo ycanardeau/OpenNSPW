@@ -492,14 +492,14 @@ private bool ShipDropAntiSubmarineBomb(ref int trgt, ref Unit unit, FireKind kin
 						// ただの駆逐艦
 						drctn+=180;
 						drctn=ReduceHeading(drctn);
-						fire.Position += new WorldVector(CosDegrees(drctn)*20, SinDegrees(drctn)*20);
+						fire.Position += WorldVector.FromDirection(drctn) * 20;
 						}
 					else
 						{
 						// 対潜駆逐艦
 						drctn+=120+Random(3)*60;
 						drctn=(int)drctn%360;
-						fire.Position += new WorldVector(CosDegrees(drctn)*35, SinDegrees(drctn)*35);
+						fire.Position += WorldVector.FromDirection(drctn) * 35;
 						}
 
 					fire.Direction=0;
@@ -1978,11 +1978,11 @@ other.PathX[1]=MAP_RIGHT+1;
 
 				if(dives)
 					{
-					fire.Position += new WorldVector(CosDegrees(fire.Direction)*(13), SinDegrees(fire.Direction)*(13));
+					fire.Position += WorldVector.FromDirection(fire.Direction) * 13;
 					}
 				else
 					{
-					fire.Position += new WorldVector(CosDegrees(fire.Direction)*(130), SinDegrees(fire.Direction)*(130));
+					fire.Position += WorldVector.FromDirection(fire.Direction) * 130;
 					}
 
 				fire.Speed=0.3;
@@ -2015,11 +2015,11 @@ other.PathX[1]=MAP_RIGHT+1;
 
 					if(dives)
 						{
-						fire.Position += new WorldVector(CosDegrees(fire.Direction)*(13), SinDegrees(fire.Direction)*(13));
+						fire.Position += WorldVector.FromDirection(fire.Direction) * 13;
 						}
 					else
 						{
-						fire.Position += new WorldVector(CosDegrees(fire.Direction)*(130), SinDegrees(fire.Direction)*(130));
+						fire.Position += WorldVector.FromDirection(fire.Direction) * 130;
 						}
 
 					fire.Speed=0.3;
@@ -3052,7 +3052,7 @@ private bool HuntSubmarineAs122(ref Unit unit)
 				if(wrk_y==0)	wrk_y=1;
 				em_drctn=(int)(atan2(wrk_y,wrk_x)*RAD_to+(20-Random(40)))%360;
 
-				unit.EmergencyDestination = unit.Position + new WorldVector(CosDegrees(em_drctn)*(dstc+300), SinDegrees(em_drctn)*(dstc+300));
+				unit.EmergencyDestination = unit.Position + WorldVector.FromDirection(em_drctn) * (dstc+300);
 				unit.EmergencyFlags[0]=600;
 				unit.EmergencyFlags[1]=n;
 				return false;

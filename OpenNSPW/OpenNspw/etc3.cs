@@ -211,7 +211,7 @@ public void	UpdateClouds()
 			{
 			if( Result==GameResult.None )
 				{
-				cloud.Position = new WorldPosition(cloud.Position.X - 2.0, cloud.Position.Y);
+				cloud.Position -= new WorldVector(2.0, 0);
 				if( cloud.Position.X < MAP_LEFT )
 					cloud.Used=0;
 				}
@@ -276,7 +276,7 @@ private void UpdateCargo(ref Fire fire, ref int n)
 		{
 		wrk_x=fire.Position.X;
 		wrk_y=fire.Position.Y;
-		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
+		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 		fire.Speed+=fire.Acceleration;
 
 		h=0;
@@ -426,7 +426,7 @@ private void UpdateBullet(ref Fire fire, ref int n, int m)
 		{
 		wrk_x=fire.Position.X;
 		wrk_y=fire.Position.Y;
-		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
+		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 		fire.Speed+=fire.Acceleration;
 
 		n=fire.Target;						// ターゲットナンバー
@@ -489,7 +489,7 @@ private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 	if( fire.Ticks!=0 )
 		{	//
 		wrk_x=fire.Position.X;	wrk_y=fire.Position.Y;
-		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
+		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 
 		fire.Speed+=fire.Acceleration;		// 弾が減速
 
@@ -508,7 +508,7 @@ private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 		}
 	else
 		{	// 炸裂！
-		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
+		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 
 		// 砲弾炸裂
 		f=FindFreeEffect();
@@ -629,7 +629,7 @@ private void UpdateAntiAircraftShell(ref Fire fire, ref int n, int m)
 	if( fire.Ticks!=0 )
 		{	//
 		wrk_x=fire.Position.X;	wrk_y=fire.Position.Y;
-		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
+		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 
 		fire.Speed+=fire.Acceleration;		// 弾が減速
 		if( IsEffectTick )
@@ -655,7 +655,7 @@ private void UpdateAntiAircraftShell(ref Fire fire, ref int n, int m)
 		}
 	else
 		{	// 炸裂！
-		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
+		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 
 		// 砲弾炸裂
 		// 煙
@@ -731,7 +731,7 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 	if( fire.Ticks!=0 )
 		{	//
 		wrk_x=fire.Position.X;	wrk_y=fire.Position.Y;
-		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
+		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 		if( fire.Ticks > fire.FlightTime )
 			fire.Speed-=fire.Acceleration;		// 弾が上昇中
 		else
@@ -759,7 +759,7 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 		}
 	else
 		{	// 着弾！
-		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
+		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 		n=fire.Target;
 		h=CheckHit(m);
 		fire.Target=0;
@@ -873,7 +873,7 @@ private void UpdateTorpedo(ref Fire fire, ref int n, int m)
 
 		wrk_x=fire.Position.X;
 		wrk_y=fire.Position.Y;
-		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
+		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 		fire.Speed+=fire.Acceleration;
 
 		h=0;
@@ -981,7 +981,7 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 			if( fire.Ticks==50)
 			PlaySoundEffect( 0, SoundId.BombFalling ,fire.Position.X, fire.Position.Y);
 
-			fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
+			fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 			fire.Speed+=fire.Acceleration;
 			if( IsEffectTick )
 				{
@@ -996,7 +996,7 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 		}
 	else
 		{	// 着弾！
-		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
+		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 		h=0;
 		for(n=1;n<=MaxUnitId;n++)
 			{
@@ -1446,12 +1446,12 @@ private void UpdatePlaneEffects(ref Unit unit, int m)
 		if( unit.PlaneState==UnitState.Flying )
 			{
 			effect.Animation=0;
-			effect.Position = new WorldPosition(unit.Position.X, unit.Position.Y-25);
+			effect.Position = unit.Position - new WorldVector(0, 25);
 			}
 		else
 			{
 			effect.Animation=3;
-			effect.Position = new WorldPosition(unit.Position.X, unit.Position.Y+25);
+			effect.Position = unit.Position + new WorldVector(0, 25);
 			}
 		switch( unit.Weapon )
 			{
@@ -1534,7 +1534,7 @@ private void LeaveWake(ref Unit unit)
 				break;
 			}
 
-		effect.Position += new WorldVector(CosDegrees(drctn)*dstc, SinDegrees(drctn)*dstc);
+		effect.Position += WorldVector.FromDirection(drctn) * dstc;
 
 		effect.SpriteNumber=8;			// ソースファイル上の番号
 		}
@@ -1745,7 +1745,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 		effect.TimeLeft=1;
 
 		effect.Animation=0;
-		effect.Position = new WorldPosition(unit.Position.X, unit.Position.Y-25.0);
+		effect.Position = unit.Position - new WorldVector(0, 25.0);
 
 		effect.SpriteNumber=15;			// ソースファイル上の番号
 		}
@@ -1800,7 +1800,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 		effect.TimeLeft=1;
 
 		effect.Animation=0;
-		effect.Position = new WorldPosition(unit.Position.X, unit.Position.Y-25.0);
+		effect.Position = unit.Position - new WorldVector(0, 25.0);
 
 		effect.SpriteNumber=3;			// ソースファイル上の番号
 		}
@@ -1814,7 +1814,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 		effect.TimeLeft=1;
 
 		effect.Animation=0;
-		effect.Position = new WorldPosition(unit.Position.X, unit.Position.Y-25.0);
+		effect.Position = unit.Position - new WorldVector(0, 25.0);
 
 				effect.SpriteNumber=44;			// ソースファイル上の番号
 		}
@@ -1908,7 +1908,7 @@ public void	UpdateUnitEffects(int m)
 			effect.TimeLeft=1;
 
 			effect.Animation=0;
-			effect.Position = new WorldPosition(unit.Position.X, unit.Position.Y-25.0);
+			effect.Position = unit.Position - new WorldVector(0, 25.0);
 
 			effect.SpriteNumber=15;			// ソースファイル上の番号
 			}

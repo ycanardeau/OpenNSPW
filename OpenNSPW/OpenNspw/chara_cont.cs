@@ -651,11 +651,11 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 
 				if( (Units[unit.Carrier].LaunchCount%2)!=0 )
 					{
-					unit.Position = new WorldPosition(unit.Position.X + 15, unit.Position.Y);
+					unit.Position += new WorldVector(15, 0);
 					}
 				else
 					{
-					unit.Position = new WorldPosition(unit.Position.X - 15, unit.Position.Y);
+					unit.Position -= new WorldVector(15, 0);
 					}
 				}
 			cv_1=Sprites[SpriteId.JapanUnitInfo].Position.Y+370-80;
@@ -677,8 +677,7 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 					PlaySoundEffect( 0, SoundId.TakeOff,(double)(MAP_RIGHT+1), 0);
 					}
 
-				unit.Position = new WorldPosition(unit.Position.X + (CosDegrees(unit.Direction)*(unit.TakeOffRun/20)), unit.Position.Y);
-				unit.Position = new WorldPosition(unit.Position.X, unit.Position.Y - (SinDegrees(unit.Direction)*(unit.TakeOffRun/20)));
+				unit.Position += new WorldVector(CosDegrees(unit.Direction)*(unit.TakeOffRun/20), -SinDegrees(unit.Direction)*(unit.TakeOffRun/20));
 				}
 
 			cv_1=Sprites[SpriteId.JapanUnitInfo].Position.Y-30/*+60*/;
@@ -725,8 +724,7 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 				}
 			if(unit.PlaneState==UnitState.Parked)
 				{
-				unit.Position = new WorldPosition(unit.Position.X + (CosDegrees(unit.Direction)*0.8), unit.Position.Y);
-				unit.Position = new WorldPosition(unit.Position.X, unit.Position.Y - (SinDegrees(unit.Direction)*0.8));
+				unit.Position += new WorldVector(CosDegrees(unit.Direction)*0.8, -SinDegrees(unit.Direction)*0.8);
 				}
 			}
 		else
@@ -791,8 +789,7 @@ else
 				}
 			if(unit.PlaneState==UnitState.Parked)
 				{
-				unit.Position = new WorldPosition(unit.Position.X + (CosDegrees(unit.Direction)*unit.Speed), unit.Position.Y);
-				unit.Position = new WorldPosition(unit.Position.X, unit.Position.Y - (SinDegrees(unit.Direction)*unit.Speed));
+				unit.Position += new WorldVector(CosDegrees(unit.Direction)*unit.Speed, -SinDegrees(unit.Direction)*unit.Speed);
 				}
 			}
 		}
@@ -1485,7 +1482,7 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 		ReplanBlockedRoute(ref unit, m, null);
 
 	// 新座標を設定
-	unit.Position += new WorldVector(CosDegrees(unit.Direction)*unit.Speed, SinDegrees(unit.Direction)*unit.Speed);
+	unit.Position += WorldVector.FromDirection(unit.Direction) * unit.Speed;
 
 	// 燃料消費
 	n=(int)unit.FuelInterval;
