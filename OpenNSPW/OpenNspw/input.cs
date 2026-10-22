@@ -78,7 +78,7 @@ private void BufferMoveOrder(int e)
 		}
 	CanOrder=false;
 	HasOrdered=true;
-	PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+	PlayInterfaceSound(SoundId.Click2);
 	}
 
 private void SelectFriendlyTarget(ref int m, int e)
@@ -100,7 +100,7 @@ private void SelectFriendlyTarget(ref int m, int e)
 
 			CanOrder=false;
 			HasOrdered=true;
-			PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+			PlayInterfaceSound(SoundId.Click2);
 			}
 		}
 	else
@@ -146,7 +146,7 @@ private void SelectTargetOrLanding(ref int m, int e)
 
 			CanOrder=false;
 			HasOrdered=true;
-			PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+			PlayInterfaceSound(SoundId.Click2);
 			}
 		}
 	else
@@ -166,7 +166,7 @@ private void SelectTargetOrLanding(ref int m, int e)
 
 			CanOrder=false;
 			HasOrdered=true;
-			PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+			PlayInterfaceSound(SoundId.Click2);
 
 			}
 		}
@@ -211,21 +211,29 @@ public void	HandleInput()
 		IssueSingleplayerOrders();
 	}
 
-// Ships: whether the world at a point is land, by the tile of the terrain there. A point outside the world is not.
-private bool IsLandAt(double x, double y)
+// Whether a position is in the world, its edges included.
+private static bool IsInWorld(WorldPosition position)
 	{
-
-	if( y>MAP_TOP || y<MAP_BOTTOM || x<MAP_LEFT || x>MAP_RIGHT )
-		return false;
-
-	var column=(int)((x+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
-	var row=(int)((MAP_TOP-y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height);
-	return MapTiles[row][column]>=1;
+	return !( position.Y>MAP_TOP || position.Y<MAP_BOTTOM || position.X<MAP_LEFT || position.X>MAP_RIGHT );
 	}
 
+// The tile of the terrain under a position in the world, by its column and row, as the original finds it: offset by
+// half a unit's sprite.
+private (int Column, int Row) TileAt(WorldPosition position)
+	{
+	return ((int)((position.X+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width),
+		(int)((MAP_TOP-position.Y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height));
+	}
+
+// Ships: whether the world at a position is land, by the tile of the terrain there. A position outside the world is
+// not.
 private bool IsLandAt(WorldPosition position)
 	{
-	return IsLandAt(position.X, position.Y);
+	if( !IsInWorld(position) )
+		return false;
+
+	var (column, row)=TileAt(position);
+	return MapTiles[row][column]>=1;
 	}
 
 // Ships: whether a point is on a ship other than unit m, one that a ship can run into: not a submerged submarine,

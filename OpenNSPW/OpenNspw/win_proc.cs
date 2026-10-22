@@ -608,7 +608,7 @@ public nint	IDD_OK_CANCEL_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					BufferedSystemOrders[1]=(byte)DialogAnswer;
 					CanOrder=false;
 					HasOrdered=true;
-					PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+					PlayInterfaceSound(SoundId.Click2);
 
 					DestroyWindow(hWnd);
 					MainDialog=null;
@@ -752,7 +752,7 @@ private void ChangeEditorUnitWeapon()
 				Units[SelectedUnit].Ammo=0;	// 数
 				break;
 			}
-		PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+		PlayInterfaceSound(SoundId.Click1);
 		}
 	else if( Units[SelectedUnit].Kind==UnitKind.Bomber )
 		{
@@ -772,7 +772,7 @@ private void ChangeEditorUnitWeapon()
 				Units[SelectedUnit].Ammo=0;	// 数
 				break;
 			}
-		PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+		PlayInterfaceSound(SoundId.Click1);
 		}
 	else if( (Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.LightCarrier) || Units[SelectedUnit].Kind==UnitKind.Transport )
 		{
@@ -802,7 +802,7 @@ private void PlaceEditorUnit(ref int m)
 			m=AddPlane(LocalSide,(UnitKind)EditorKind,EditorVariant,PreviousSelectedUnit,1,FireKind.Unarmed);
 
 		if(m!=0)
-			PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+			PlayInterfaceSound(SoundId.Click1);
 		}
 	else if( UnitInfoPanel[1]==0 && CursorPosition.x<=CMBT_WIDTH && CursorPosition.y<=CMBT_HEIGHT )
 		{
@@ -845,7 +845,7 @@ private void PlaceEditorUnit(ref int m)
 
 			if(m!=0)
 				{
-				PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+				PlayInterfaceSound(SoundId.Click1);
 				}
 			if((UnitKind)EditorKind==UnitKind.Transport)
 				{
@@ -887,7 +887,7 @@ private void DeleteEditorUnit()
 		CombatMenuSelection=CombatMenuItem.None;
 		ClearSelection2(1);
 
-		PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+		PlayInterfaceSound(SoundId.Click1);
 		}
 	}
 
@@ -953,7 +953,7 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 						{
 						/*g_hDlg =*/ CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_SAVE_Proc );
 
-						PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+						PlayInterfaceSound(SoundId.Click1);
 						}
 
 					break;
@@ -970,14 +970,14 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 						// シナリオ選択がユーザーシナリオならファイル選択します。
 						/*g_hDlg =*/ CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_LOAD_Proc );
 
-						PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+						PlayInterfaceSound(SoundId.Click1);
 						}
 					break;
 
 				case VK_F3:
 					if( IsEditingMap && Mode==GameMode.Battle )
 						{
-						PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+						PlayInterfaceSound(SoundId.Click1);
 						MakeTerrainSurface();
 						}
 					else
@@ -993,7 +993,7 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					if( IsEditingMap && EditorTarget>1 && Mode==GameMode.Battle )
 						{
 						EditorTarget--;
-						PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+						PlayInterfaceSound(SoundId.Click1);
 						}
 
 #if DBG_MODE
@@ -1014,7 +1014,7 @@ if( !IsEditingMap )
 						if( EditorTarget<24 )
 							{
 							EditorTarget++;
-							PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+							PlayInterfaceSound(SoundId.Click1);
 							}
 						}
 
@@ -1060,7 +1060,7 @@ if( !IsEditingMap )
 							LocalSide=Side.UnitedStates;
 						else
 							LocalSide=Side.Japan;
-						PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+						PlayInterfaceSound(SoundId.Click1);
 						}
 					break;
 
@@ -1072,7 +1072,7 @@ if( !IsEditingMap )
 						{
 						Reinforcements[(int)LocalSide]=Reinforcements[(int)LocalSide]++;
 						Reinforcements[(int)LocalSide]=(byte)(Reinforcements[(int)LocalSide]%4);
-						PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+						PlayInterfaceSound(SoundId.Click1);
 						}
 					break;
 
@@ -1082,7 +1082,7 @@ if( !IsEditingMap )
 						{
 						Units[SelectedUnit].Direction= (int)(Units[SelectedUnit].Direction+45.0)%360 ;
 
-						PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+						PlayInterfaceSound(SoundId.Click1);
 						}
 
 					break;
@@ -1102,7 +1102,7 @@ if( !IsEditingMap )
 						if( Units[SelectedUnit].Hp < Units[SelectedUnit].MaxHp )
 							{
 							Units[SelectedUnit].Hp++;
-							PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+							PlayInterfaceSound(SoundId.Click1);
 							}
 						}
 					break;
@@ -1112,7 +1112,7 @@ if( !IsEditingMap )
 					if( IsEditingMap && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
 						Units[SelectedUnit].Hp--;
-						PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+						PlayInterfaceSound(SoundId.Click1);
 						}
 					break;
 
@@ -1123,7 +1123,7 @@ if( !IsEditingMap )
 						if( Units[SelectedUnit].Fuel < 100 )
 							{
 							Units[SelectedUnit].Fuel++;
-							PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+							PlayInterfaceSound(SoundId.Click1);
 							}
 						}
 					break;
@@ -1135,7 +1135,7 @@ if( !IsEditingMap )
 						if( Units[SelectedUnit].Fuel!=0  )
 							{
 							Units[SelectedUnit].Fuel--;
-							PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+							PlayInterfaceSound(SoundId.Click1);
 							}
 						}
 					break;
@@ -1147,7 +1147,7 @@ if( !IsEditingMap )
 						if( Units[SelectedUnit].Ammo<Units[SelectedUnit].MaxAmmo  )
 							{
 							Units[SelectedUnit].Ammo++;
-							PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+							PlayInterfaceSound(SoundId.Click1);
 							}
 						}
 					break;
@@ -1159,7 +1159,7 @@ if( !IsEditingMap )
 						if( Units[SelectedUnit].Ammo!=0  )
 							{
 							Units[SelectedUnit].Ammo--;
-							PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+							PlayInterfaceSound(SoundId.Click1);
 							}
 						}
 					break;

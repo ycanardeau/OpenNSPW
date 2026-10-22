@@ -159,8 +159,8 @@ public void	InitializeClouds()
 		if( n<=14 )
 			return;
 
-		var baseX=(double)(Random(abs(MAP_RIGHT)+abs(MAP_LEFT))-abs(MAP_LEFT));
-		var baseY=(double)(Random(abs(MAP_TOP)+abs(MAP_BOTTOM))-abs(MAP_BOTTOM));
+		// Every coordinate here is a whole number, so the sums are the same in any order.
+		var origin=new WorldPosition(Random(abs(MAP_RIGHT)+abs(MAP_LEFT))-abs(MAP_LEFT), Random(abs(MAP_TOP)+abs(MAP_BOTTOM))-abs(MAP_BOTTOM));
 
 		var offsetX=(double)( Random(Sprites[SpriteId.MapTiles].Size.Width*4)-Sprites[SpriteId.MapTiles].Size.Width*2 );
 
@@ -168,7 +168,7 @@ public void	InitializeClouds()
 		for( var m=0;m<3;m++)
 			{
 			Clouds[freeClouds[n]].Used=1;
-			Clouds[freeClouds[n]].Position = new WorldPosition(baseX+m*80+offsetX, baseY);
+			Clouds[freeClouds[n]].Position = origin+new WorldVector(m*80+offsetX, 0);
 			Clouds[freeClouds[n]].Kind=1;
 			n++;
 			}
@@ -176,7 +176,7 @@ public void	InitializeClouds()
 		for( var m=0;m<5;m++)
 			{
 			Clouds[freeClouds[n]].Used=1;
-			Clouds[freeClouds[n]].Position = new WorldPosition(baseX+m*80-80+offsetX, baseY+80);
+			Clouds[freeClouds[n]].Position = origin+new WorldVector(m*80-80+offsetX, 80);
 			Clouds[freeClouds[n]].Kind=1;
 			n++;
 			}
@@ -184,7 +184,7 @@ public void	InitializeClouds()
 		for( var m=0;m<3;m++)
 			{
 			Clouds[freeClouds[n]].Used=1;
-			Clouds[freeClouds[n]].Position = new WorldPosition(baseX+m*80+offsetX, baseY+80*2);
+			Clouds[freeClouds[n]].Position = origin+new WorldVector(m*80+offsetX, 80*2);
 			Clouds[freeClouds[n]].Kind=1;
 			n++;
 			}
@@ -231,13 +231,14 @@ public void	UpdateClouds()
 	if( n<=14 )
 		return;
 
-	var baseY=(double)(Random(abs(MAP_TOP)+abs(MAP_BOTTOM))-abs(MAP_BOTTOM));
+	// Every coordinate here is a whole number, so the sums are the same in any order.
+	var origin=new WorldPosition(MAP_RIGHT, Random(abs(MAP_TOP)+abs(MAP_BOTTOM))-abs(MAP_BOTTOM));
 	var offsetX=(double)( Random(Sprites[SpriteId.MapTiles].Size.Width*4)-Sprites[SpriteId.MapTiles].Size.Width*2 );
 	n=0;
 	for( var m=0;m<3;m++)
 		{
 		Clouds[freeClouds[n]].Used=1;
-		Clouds[freeClouds[n]].Position = new WorldPosition(MAP_RIGHT+m*80+offsetX, baseY);
+		Clouds[freeClouds[n]].Position = origin+new WorldVector(m*80+offsetX, 0);
 		Clouds[freeClouds[n]].Kind=1;
 		n++;
 		}
@@ -245,7 +246,7 @@ public void	UpdateClouds()
 	for( var m=0;m<5;m++)
 		{
 		Clouds[freeClouds[n]].Used=1;
-		Clouds[freeClouds[n]].Position = new WorldPosition(MAP_RIGHT+m*80-80+offsetX, baseY+80);
+		Clouds[freeClouds[n]].Position = origin+new WorldVector(m*80-80+offsetX, 80);
 		Clouds[freeClouds[n]].Kind=1;
 		n++;
 		}
@@ -253,7 +254,7 @@ public void	UpdateClouds()
 	for( var m=0;m<3;m++)
 		{
 		Clouds[freeClouds[n]].Used=1;
-		Clouds[freeClouds[n]].Position = new WorldPosition(MAP_RIGHT+m*80+offsetX, baseY+80*2);
+		Clouds[freeClouds[n]].Position = origin+new WorldVector(m*80+offsetX, 80*2);
 		Clouds[freeClouds[n]].Kind=1;
 		n++;
 		}
@@ -360,10 +361,9 @@ private void UpdateCargo(ref Fire fire, ref int n)
 
 			if( fire.Ticks>=fire.ArmingTime && IsEffectTick )
 				{
-				if(!( fire.Position.Y>MAP_TOP || fire.Position.Y<MAP_BOTTOM || fire.Position.X<MAP_LEFT || fire.Position.X>MAP_RIGHT ))
+				if( IsInWorld(fire.Position) )
 					{
-					var column=(int)((fire.Position.X+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
-					var row=(int)((MAP_TOP-fire.Position.Y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height);
+					var (column, row)=TileAt(fire.Position);
 
 					if( MapTiles[row][column]==0)
 						{
@@ -556,7 +556,7 @@ private void UpdateAntiSubmarineBomb(ref Fire fire, ref int n, int m)
 		var f=FindFreeEffect();
 		ref var effect = ref Effects[f];
 
-		PlaySoundEffect( 0, SoundId.TorpedoHit1 ,fire.Position.X, fire.Position.Y);
+		PlaySoundEffect(SoundId.TorpedoHit1, fire.Position);
 
 		effect.Layer=EffectLayer.Lower;
 
@@ -725,7 +725,7 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 			// 命中
 			Units[n].Hp-=GetDamagePoints(m);
 
-			PlaySoundEffect( 0, SoundId.TorpedoHit1 ,fire.Position.X, fire.Position.Y);
+			PlaySoundEffect(SoundId.TorpedoHit1, fire.Position);
 
 			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
@@ -775,7 +775,7 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 		else
 			{
 			// ハズレ
-			PlaySoundEffect( 0, SoundId.Splash ,fire.Position.X, fire.Position.Y);
+			PlaySoundEffect(SoundId.Splash, fire.Position);
 
 			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
@@ -829,7 +829,7 @@ private void UpdateTorpedo(ref Fire fire, ref int n, int m)
 			fire.Target=0;
 			Units[n].Hp-=GetDamagePoints(m);
 
-			PlaySoundEffect( 0, SoundId.TorpedoHit1+Random(2) ,fire.Position.X, fire.Position.Y);
+			PlaySoundEffect(SoundId.TorpedoHit1+Random(2), fire.Position);
 
 			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
@@ -898,14 +898,14 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 	fire.Ticks++;
 
 	if( fire.Target==(int)UnitKind.Attacker && fire.Ticks==12 )
-		PlaySoundEffect( 0, SoundId.BombRelease ,fire.Position.X, fire.Position.Y);
+		PlaySoundEffect(SoundId.BombRelease, fire.Position);
 
 	if( fire.Ticks<=fire.FlightTime  )
 		{	// 爆弾降下中
 		if( fire.Ticks>=50)
 			{
 			if( fire.Ticks==50)
-			PlaySoundEffect( 0, SoundId.BombFalling ,fire.Position.X, fire.Position.Y);
+			PlaySoundEffect(SoundId.BombFalling, fire.Position);
 
 			fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 			fire.Speed+=fire.Acceleration;
@@ -941,7 +941,7 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 			// 命中
 			Units[n].Hp-=GetDamagePoints(m);
 
-			PlaySoundEffect( 0, SoundId.BombHit1+Random(2) ,fire.Position.X, fire.Position.Y);
+			PlaySoundEffect(SoundId.BombHit1+Random(2), fire.Position);
 
 			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
@@ -997,10 +997,9 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 			effect.Animation=4;	// アニメーションパターン
 
 			effect.Position=fire.Position;
-			if(!( fire.Position.Y>MAP_TOP || fire.Position.Y<MAP_BOTTOM || fire.Position.X<MAP_LEFT || fire.Position.X>MAP_RIGHT ))
+			if( IsInWorld(fire.Position) )
 				{
-				column=(int)((fire.Position.X+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
-				row=(int)((MAP_TOP-fire.Position.Y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height);
+				(column, row)=TileAt(fire.Position);
 				}
 			else
 				{
@@ -1011,12 +1010,12 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 			if( MapTiles[row][column]>=1)
 				{
 				effect.SpriteNumber=10;			// 着弾	のソースファイル上の番号
-				PlaySoundEffect( 0, SoundId.BombHit1 ,fire.Position.X, fire.Position.Y);
+				PlaySoundEffect(SoundId.BombHit1, fire.Position);
 				}
 			else
 				{
 				effect.SpriteNumber=8;			// 着弾	のソースファイル上の番号
-				PlaySoundEffect( 0, SoundId.Splash ,fire.Position.X, fire.Position.Y);
+				PlaySoundEffect(SoundId.Splash, fire.Position);
 				}
 			}
 		}
@@ -1315,10 +1314,9 @@ private void CrashPlane(ref Unit unit, int m)
 
 	effect.Position=unit.Position;
 
-	if(!( unit.Position.Y>MAP_TOP || unit.Position.Y<MAP_BOTTOM || unit.Position.X<MAP_LEFT || unit.Position.X>MAP_RIGHT ))
+	if( IsInWorld(unit.Position) )
 		{
-		column=(int)((unit.Position.X+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
-		row=(int)((MAP_TOP-unit.Position.Y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height);
+		(column, row)=TileAt(unit.Position);
 		}
 	else
 		{
@@ -1455,7 +1453,7 @@ private void UpdateSurfaceShipEffects(ref Unit unit, int m)
 	if( unit.Hp<=0 )
 		{	// 沈没
 
-		PlaySoundEffect( 0, SoundId.ShipSinking1 ,unit.Position.X, unit.Position.Y);
+		PlaySoundEffect(SoundId.ShipSinking1, unit.Position);
 
 		unit.Side=0;
 

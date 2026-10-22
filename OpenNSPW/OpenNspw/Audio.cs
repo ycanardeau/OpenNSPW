@@ -139,7 +139,9 @@ public void	PlaySound(IDirectSoundBuffer? buffer,short* nextBuffer,int volume)
 	主にゲーム中の効果音を鳴らす
 ---------------------------------------------*/
 [Original("SoundPlayEffect")]
-public void PlaySoundEffect(int flags,SoundId sound,double x,double y)
+// A sound of the battle at a position in the world, heard if one of the player's units sees the position and it is
+// within 500 of the battle area. A position with an X of MAP_RIGHT+1 is heard always (PlayInterfaceSound).
+public void PlaySoundEffect(SoundId sound,WorldPosition position)
 	{
 	RECT	hearingArea;
 	int size=default /* C4701 */;
@@ -150,7 +152,7 @@ return;
 
 #endif
 
-	if( x!=(double)(MAP_RIGHT+1) )
+	if( position.X!=(double)(MAP_RIGHT+1) )
 		{
 		var isHeard=0;
 		for(var n=1;n<=MaxUnitId && isHeard==0 ;n++)
@@ -162,7 +164,7 @@ return;
 
 				var eye=EyeOf(ref Units[n]);	// 航空機の場合はちょっと前へ
 
-				var distance=(eye-new WorldPosition(x, y)).Length;
+				var distance=(eye-position).Length;
 
 				switch( Units[n].Kind )
 					{
@@ -203,9 +205,8 @@ return;
 		hearingArea.right=CMBT_WIDTH+500;
 		hearingArea.bottom=-500;
 
-		x=(int)(x-CameraPosition.X);
-		y=(int)(CameraPosition.Y-y);
-		if( PointInRect3(ref hearingArea, (int)x,(int)y )==0 )
+		var screen=WorldToScreen(position);
+		if( PointInRect3(ref hearingArea, screen.X, screen.Y)==0 )
 			return;
 		}
 
@@ -223,5 +224,11 @@ return;
 
 		}
 
+	}
+
+// A sound of the interface, heard always: the original plays it at MAP_RIGHT+1, 0.
+public void PlayInterfaceSound(SoundId sound)
+	{
+	PlaySoundEffect(sound, new WorldPosition(MAP_RIGHT+1, 0));
 	}
 }

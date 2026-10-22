@@ -75,7 +75,7 @@ public unsafe partial class Nspw
 	// clicks, unless an order waits for its turn (DrawBattleArea).
 	private void PlayClickSound()
 	{
-		PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+		PlayInterfaceSound(SoundId.Click1);
 	}
 
 	// Whether the selected unit is shown, so that its path is drawn and a click gives it a destination or a right click

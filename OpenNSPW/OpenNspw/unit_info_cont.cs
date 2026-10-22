@@ -572,7 +572,7 @@ private void ChooseCombatMenuItem(CombatMenuItem item)
 	BufferSelections();
 	CanOrder=false;
 	HasOrdered=true;
-	PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+	PlayInterfaceSound(SoundId.Click2);
 	}
 
 private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menuItems, ref int m, ref RECT source, ref RECT destination)
@@ -876,7 +876,7 @@ private void RequestSupplyUnit()
 
 if(CONN_DBG!=0)
 SupplyCount=10;
-	PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+	PlayInterfaceSound(SoundId.Click2);
 	}
 
 private void RequestSupply(ref Array8<int> length, ref Array8<Array128<byte>> text, ref RECT destination, int y, ref HDC hdc)
@@ -1423,7 +1423,7 @@ public void	DrawMinimap()
 		{
 		ref var unit = ref Units[m];
 
-		if( unit.Side==LocalSide  &&   !( unit.Position.Y>MAP_TOP || unit.Position.Y<MAP_BOTTOM || unit.Position.X<MAP_LEFT || unit.Position.X>MAP_RIGHT )    && !(unit.PlaneState==UnitState.Parked) && !(unit.Category==UnitCategory.Plane && (FrameCount%4)==0))
+		if( unit.Side==LocalSide  &&   IsInWorld(unit.Position)    && !(unit.PlaneState==UnitState.Parked) && !(unit.Category==UnitCategory.Plane && (FrameCount%4)==0))
 			{
 			// マイユニット
 			if( unit.Position.X >= 0 )
@@ -1453,7 +1453,7 @@ public void	DrawMinimap()
 
 			}
 
-		if( unit.IsUsed && unit.Side!=LocalSide && !( unit.Position.Y>MAP_TOP || unit.Position.Y<MAP_BOTTOM || unit.Position.X<MAP_LEFT || unit.Position.X>MAP_RIGHT ) && !(unit.PlaneState==UnitState.Parked) && unit.IsFound && !(unit.Category==UnitCategory.Plane && (FrameCount%4)==0) )
+		if( unit.IsUsed && unit.Side!=LocalSide && IsInWorld(unit.Position) && !(unit.PlaneState==UnitState.Parked) && unit.IsFound && !(unit.Category==UnitCategory.Plane && (FrameCount%4)==0) )
 			{
 			// エネユニット
 			if( unit.Kind==UnitKind.Submarine && unit.IsSubmerged )

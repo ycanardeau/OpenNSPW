@@ -656,7 +656,7 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 
 				if( unit.TakeOffRun==40 && unit.Carrier==UnitInfoPanel[3] &&  ((UnitKind)UnitInfoPanel[0]==UnitKind.Carrier || (UnitKind)UnitInfoPanel[0]==UnitKind.LightCarrier || (UnitKind)UnitInfoPanel[0]==UnitKind.AirBase ) )
 					{
-					PlaySoundEffect( 0, SoundId.TakeOff,(double)(MAP_RIGHT+1), 0);
+					PlayInterfaceSound(SoundId.TakeOff);
 					}
 
 				unit.Position += new WorldVector(CosDegrees(unit.Direction)*(unit.TakeOffRun/20), -SinDegrees(unit.Direction)*(unit.TakeOffRun/20));
@@ -1181,10 +1181,9 @@ private void CheckCourseAheadAs122(ref Unit unit, int m, ref int land, double be
 
 	// ＰＰ方向に陸地があるか
 	ahead=unit.Position+WorldVector.FromDirection(bearing) * 80;
-	if(!( ahead.Y>MAP_TOP || ahead.Y<MAP_BOTTOM || ahead.X<MAP_LEFT || ahead.X>MAP_RIGHT ))
+	if( IsInWorld(ahead) )
 		{
-		var column=(int)((ahead.X+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
-		var row=(int)((MAP_TOP-ahead.Y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height);
+		var (column, row)=TileAt(ahead);
 		if( MapTiles[row][column]>=1 && MapTiles[row][column]<=9 )
 			{
 			land=1;
@@ -1238,10 +1237,9 @@ private void CheckCourseAhead(ref Unit unit, int m, ref int land, double bearing
 		{
 		ahead=unit.Position+WorldVector.FromDirection(bearing) * 80;
 
-		if(!( ahead.Y>MAP_TOP || ahead.Y<MAP_BOTTOM || ahead.X<MAP_LEFT || ahead.X>MAP_RIGHT ))
+		if( IsInWorld(ahead) )
 			{
-			var column=(int)((ahead.X+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
-			var row=(int)((MAP_TOP-ahead.Y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height);
+			var (column, row)=TileAt(ahead);
 			if( MapTiles[row][column]>=1 && MapTiles[row][column]<=9 )
 				{
 				land=1;
@@ -2006,7 +2004,7 @@ public void	UpdateBattle()
 			if( !IsEditingMap && nearestDestroyer<=400 && Rules.PlaysSonar )
 				{
 				if( (SharedRandom(3+(int)(nearestDestroyer/5)))==0  )
-				PlaySoundEffect( 0, SoundId.Sonar ,unit.Position.X, unit.Position.Y);
+				PlaySoundEffect(SoundId.Sonar, unit.Position);
 				}
 			}
 		}
