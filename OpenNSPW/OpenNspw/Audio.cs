@@ -25,7 +25,7 @@ public unsafe partial class Nspw
 	ダイレクトミュージックの初期化とロードの指示
 --------------------------------------------*/
 [Original("InitDMusic")]
-public int	InitializeDirectMusic()
+public bool	InitializeDirectMusic()
 	{
 
 	// DirectMusicLoader8 オブジェクトと DirectMusicPerformance8 オブジェクトの作成
@@ -33,14 +33,14 @@ public int	InitializeDirectMusic()
 		{
 		// 失敗
 		printf();
-		return FALSE;
+		return false;
 		}
 	if (FAILED(CoCreateInstance(CLSID_DirectMusicPerformance,IID_IDirectMusicPerformance8,out lpDMP)))
 		{
 		// 失敗
 		RELEASE(ref lpDML);
 		printf();
-		return FALSE;
+		return false;
 		}
 	// パフォーマンスを初期化
 	if (FAILED(lpDMP.InitAudio(null,null,null,DMUS_APATH_SHARED_STEREOPLUSREVERB,64,DMUS_AUDIOF_ALL,null)))
@@ -49,10 +49,10 @@ public int	InitializeDirectMusic()
 		RELEASE(ref lpDMP);
 		RELEASE(ref lpDML);
 		printf();
-		return FALSE;
+		return false;
 		}
 
-	return TRUE;
+	return true;
 	}
 
 // The names of the sounds' files, WAV\<name>.wav, by SoundId.
@@ -62,14 +62,14 @@ private static readonly ImmutableArray<string> SoundFileNames = ["AA_BLT1", "AA_
 	ダイレクトサウンドの初期化とロードの指示
 --------------------------------------------*/
 [Original("InitDSound")]
-public int	InitializeDirectSound()
+public bool	InitializeDirectSound()
 	{
 
 	// DirectSound8 の作成
 	if (FAILED(DirectSoundCreate8(out lpDS)))
 		{
 		MessageBox(null,"DirectSound オブジェクトの作成に失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		return FALSE;
+		return false;
 		}
 
 	// DirectSound の協調レベルを設定
@@ -78,7 +78,7 @@ public int	InitializeDirectSound()
 		MessageBox(null,"DirectSound の協調レベルの設定に失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
 		// 閉じる
 		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
+		return false;
 		}
 
 	// プライマリ サウンドバッファ作成
@@ -93,7 +93,7 @@ public int	InitializeDirectSound()
 		MessageBox(null,"プライマリサウンドバッファの作成に失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
 		// 閉じる
 		SendMessage(hwndApp,WM_CLOSE,0,0);
-		return FALSE;
+		return false;
 		}
 
 // サウンドカードのバッファ性能を調べます。
@@ -105,13 +105,13 @@ public int	InitializeDirectSound()
 			{
 			MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
 			SendMessage(hwndApp,WM_CLOSE,0,0);
-			return FALSE;
+			return false;
 			}
 		for(var i=1;i<SND_DUP;i++)
 			lpDS.DuplicateSoundBuffer(SoundBuffers[sound][0],out SoundBuffers[sound][i]);
 		}
 
-	return TRUE;
+	return true;
 	}
 
 /*-------------------------------------------
@@ -153,8 +153,8 @@ return;
 
 	if( position.X!=(double)World.Beyond )
 		{
-		var isHeard=0;
-		for(var n=1;n<=MaxUnitId && isHeard==0 ;n++)
+		var isHeard=false;
+		for(var n=1;n<=MaxUnitId && !isHeard ;n++)
 			{
 			if( Units[n].IsUsed && Units[n].Side==LocalSide && Units[n].PlaneState!=UnitState.Parked )
 				{
@@ -187,12 +187,12 @@ return;
 
 				if( distance<=size )
 					{
-					isHeard=1;
+					isHeard=true;
 					}
 				}
 			}
 
-		if(isHeard==0)
+		if(!isHeard)
 			{
 			// マイユニットが聞けない位置
 			return;

@@ -57,10 +57,10 @@ public void	UpdateUpperEffects(RECT* field,RECT* infoArea)
 		ref var effect = ref Effects[m];
 		if( effect.Layer==EffectLayer.Upper )
 			{
-			var isSeen=0;
+			var isSeen=false;
 			if(Result!=GameResult.None)
-				isSeen=1;
-			for(n=1;n<=MaxUnitId && isSeen==0 ;n++)
+				isSeen=true;
+			for(n=1;n<=MaxUnitId && !isSeen ;n++)
 				{
 				if( Units[n].IsUsed && Units[n].Side==LocalSide && Units[n].PlaneState!=UnitState.Parked )
 					{
@@ -102,12 +102,12 @@ public void	UpdateUpperEffects(RECT* field,RECT* infoArea)
 
 					if( distance<=size )
 						{
-						isSeen=1;
+						isSeen=true;
 						}
 					}
 				}
 
-			if( isSeen!=0 )
+			if( isSeen )
 				{
 
 				// マイユニットから見えるので表示
@@ -160,7 +160,7 @@ public void	UpdateUpperEffects(RECT* field,RECT* infoArea)
 
 				if( n!=0 )
 					{
-					if( ClipRects(ref destination,ref source,ref *field)!=0 )
+					if( ClipRects(ref destination,ref source,ref *field) )
 						{
 
 	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,DDBLTFAST_SRCCOLORKEY) )
@@ -172,7 +172,7 @@ public void	UpdateUpperEffects(RECT* field,RECT* infoArea)
 					}
 				else
 					{
-					if( ClipRects(ref destination,ref source,ref *infoArea)!=0 )
+					if( ClipRects(ref destination,ref source,ref *infoArea) )
 						{
 
 	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,DDBLTFAST_SRCCOLORKEY) )
@@ -314,7 +314,7 @@ public void UpdateLowerEffects(RECT* field,RECT* infoArea)
 
 				if( n!=0 )
 					{
-					if( ClipRects(ref destination,ref source,ref *field)!=0 )
+					if( ClipRects(ref destination,ref source,ref *field) )
 						{
 						if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,DDBLTFAST_SRCCOLORKEY) )
 							{
@@ -325,7 +325,7 @@ public void UpdateLowerEffects(RECT* field,RECT* infoArea)
 					}
 				else
 					{
-					if( ClipRects(ref destination,ref source,ref *infoArea)!=0 )
+					if( ClipRects(ref destination,ref source,ref *infoArea) )
 						{
 						if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,DDBLTFAST_SRCCOLORKEY) )
 							{
@@ -365,7 +365,7 @@ public void	DrawClouds(RECT* field)
 			destination.right=destination.left+Sprites[SpriteId.MapTiles].Size.Width;
 			destination.bottom=destination.top+Sprites[SpriteId.MapTiles].Size.Height;
 
-			if( ClipRects(ref destination,ref source,ref *field)!=0 )
+			if( ClipRects(ref destination,ref source,ref *field) )
 				{
 
 	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,DDBLTFAST_SRCCOLORKEY ) )
@@ -505,7 +505,7 @@ public void	DrawDestruction(int m)
 
 private void DrawMapTiles(int firstRow, int firstColumn, int editedRow, int editedColumn, ref Array256<byte> keys, ref RECT source, ref RECT field)
 	{
-	int isSeen;
+	bool isSeen;
 	RECT destination;
 	for(var m=0;m<=10;m++)
 		{
@@ -513,7 +513,7 @@ private void DrawMapTiles(int firstRow, int firstColumn, int editedRow, int edit
 			{
 			if(  !IsEditingMap &&  Result==GameResult.None  && MapTiles[firstRow+n][firstColumn+m]==0 )
 				{
-				isSeen=0;
+				isSeen=false;
 				for( var f=1; f<=MaxUnitId; f++)
 					{
 					if( Units[f].IsUsed && Units[f].Side==LocalSide && Units[f].PlaneState!=UnitState.Parked  )
@@ -528,7 +528,7 @@ private void DrawMapTiles(int firstRow, int firstColumn, int editedRow, int edit
 						var distance=(eye-tile).Length;
 						if( distance<=(double)GetDetectionSize(f,0) )
 							{
-							isSeen=1;
+							isSeen=true;
 							break;
 							}
 						}
@@ -536,7 +536,7 @@ private void DrawMapTiles(int firstRow, int firstColumn, int editedRow, int edit
 				}
 			else
 				{
-				isSeen=1;
+				isSeen=true;
 				}
 
 			Sprites[SpriteId.MapTiles].Position = new PixelPoint(
@@ -545,7 +545,7 @@ private void DrawMapTiles(int firstRow, int firstColumn, int editedRow, int edit
 
 			if( MapTiles[firstRow+n][firstColumn+m]==0)
 				{
-				if(isSeen!=0)
+				if(isSeen)
 					{
 					// 見える範囲内の海
 					Sprites[SpriteId.MapTiles].Frame=(FrameCount/30)%2;							// ただの海
@@ -624,7 +624,7 @@ private void DrawMapTiles(int firstRow, int firstColumn, int editedRow, int edit
 			destination.right=destination.left+Sprites[SpriteId.MapTiles].Size.Width;
 			destination.bottom=destination.top+Sprites[SpriteId.MapTiles].Size.Height;
 
-			if( ClipRects(ref destination,ref source,ref field)!=0 )
+			if( ClipRects(ref destination,ref source,ref field) )
 				{
 				if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),0) )
 					{
@@ -929,7 +929,7 @@ private bool DrawUnitMarks(bool isPositioned, ref Unit unit, SpriteId sprite, re
 	clickArea.bottom=destination.bottom-20;
 
 	// クリック選択・非選択
-	if( PointInRect(ref clickArea,CursorPosition.x,CursorPosition.y)!=0 && CanClickUnit(ref unit)
+	if( PointInRect(ref clickArea,CursorPosition.x,CursorPosition.y) && CanClickUnit(ref unit)
 		 && !(unit.PlaneState!=UnitState.Parked && CursorPosition.x>=CMBT_WIDTH-1)
 		)
 		{
@@ -1029,7 +1029,7 @@ private void DrawUnit(ref Unit unit, SpriteId sprite, ref RECT source, ref RECT 
 				destination.right=destination.left+Sprites[sprite].Size.Width-2;
 				destination.bottom=destination.top+Sprites[sprite].Size.Height-2;
 
-				if( ClipRects(ref destination,ref source,ref infoArea)!=0 )
+				if( ClipRects(ref destination,ref source,ref infoArea) )
 					{
 					if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),DDBLTFAST_SRCCOLORKEY) )
 						{
@@ -1065,7 +1065,7 @@ private void DrawUnit(ref Unit unit, SpriteId sprite, ref RECT source, ref RECT 
 		destination.top=Sprites[sprite].Position.Y-Sprites[sprite].Center.Y;
 		destination.right=destination.left+Sprites[sprite].Size.Width-2;
 		destination.bottom=destination.top+Sprites[sprite].Size.Height-2;
-		if( ClipRects(ref destination,ref source,ref field)!=0 )
+		if( ClipRects(ref destination,ref source,ref field) )
 			{
 			if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),DDBLTFAST_SRCCOLORKEY) )
 				{

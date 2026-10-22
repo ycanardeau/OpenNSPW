@@ -592,11 +592,11 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	// 接続ダイアログ 　オーナーウィンドウが無いため、モーダレスになります。
 	MainDialog = CreateDialog(MAKEINTRESOURCE(IDD_ADDRESS_OVERRIDE), null, OverrideDlgProc);
 
-	int    waitsForConnection = TRUE;
+	bool    waitsForConnection = true;
 
 	// ホストも、ゲストもここで接続が完了するまでループ
 	// 接続確認ダイアログ
-	while (waitsForConnection!=0)
+	while (waitsForConnection)
 		{
 		// Retrieve any windows messages.
 		while (PeekMessage(ref msg, PM_REMOVE)!=0)
@@ -604,7 +604,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 			if (msg.message == WM_QUIT)
 				{
 				// Quit the application.
-				waitsForConnection = FALSE;
+				waitsForConnection = false;
 				break;
 				}
 
@@ -761,9 +761,9 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	if(!InitializeDirectInput())
 		return FALSE;
 #if SND_SW
-	if(InitializeDirectSound()==0)
+	if(!InitializeDirectSound())
 		return FALSE;
-	if(InitializeDirectMusic()==0)
+	if(!InitializeDirectMusic())
 		return FALSE;
 #endif
 

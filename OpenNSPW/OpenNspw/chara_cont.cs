@@ -555,7 +555,7 @@ private void UpdateSupply(ref Unit unit)
 		// ptin dbg
 		var supplyArea=WorldRect.Around(unit.Position, 40+240, 40+240);
 
-		var nearNavalBase=0;
+		var nearNavalBase=false;
 		for( var i=1; i<=MaxUnitId; i++)
 			{
 			ref var other = ref Units[i];
@@ -563,13 +563,13 @@ private void UpdateSupply(ref Unit unit)
 				{
 				if( supplyArea.Contains(other.Position) )
 					{
-					nearNavalBase=1;
+					nearNavalBase=true;
 					break;
 					}
 				}
 			}
 
-		if( nearNavalBase==0 )
+		if( !nearNavalBase )
 			unit.SupplyTime=0;
 		}
 
@@ -1042,11 +1042,11 @@ private void SetAcceleration(ref Unit unit, Angle turn, int land)
 
 // この時点でfor_form_spdがちがう
 
-						var keepsSpeed=0;
+						var keepsSpeed=false;
 
 						if( unit.Target!=0 && Units[unit.Target].IsFound ) //&& unit[m].kind==AT1 )
 							{
-							keepsSpeed=1;
+							keepsSpeed=true;
 							// The distance as Distance computes it, but with no component of 0 counted as 1.
 							var dx=Units[unit.Target].Position.X-unit.Position.X;
 							var dy=Units[unit.Target].Position.Y-unit.Position.Y;
@@ -1059,10 +1059,10 @@ private void SetAcceleration(ref Unit unit, Angle turn, int land)
 
 							if( distance<=BB1_SIGHT )
 								{
-								keepsSpeed=1;		// 速度落とす要無し
+								keepsSpeed=true;		// 速度落とす要無し
 								}
 							}
-						if( keepsSpeed==0 && unit.Speed>=(unit.FormationSpeed*(0.60-(unit.Kind==UnitKind.Carrier ? 1 : 0)*0.15 ))+unit.AccelerationChange )
+						if( !keepsSpeed && unit.Speed>=(unit.FormationSpeed*(0.60-(unit.Kind==UnitKind.Carrier ? 1 : 0)*0.15 ))+unit.AccelerationChange )
 							{
 							unit.Acceleration=-unit.AccelerationChange;
 							}

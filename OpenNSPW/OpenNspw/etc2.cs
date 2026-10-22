@@ -561,38 +561,38 @@ public void DrawLine5(PixelPoint from, PixelPoint to, int right, int bottom, ush
 //
 //----------------------------------------------------------------------------
 [Original("pt_in_rect")]
-public int	PointInRect(ref RECT rect,int x,int y)
+public bool	PointInRect(ref RECT rect,int x,int y)
 	{
 	if( rect.top <= y && rect.bottom >= y &&
 		rect.right >= x && rect.left <= x)
-		return 1;
-	return 0;
+		return true;
+	return false;
 	}
 
 //============================================================================
 //
 //----------------------------------------------------------------------------
 [Original("pt_in_rect2")]
-public int	PointInRect2(ref RECT rect,int x,int y)
+public bool	PointInRect2(ref RECT rect,int x,int y)
 	{
 	if( rect.top >= y && rect.bottom <= y &&
 		rect.right >= x && rect.left <= x)
-		return (1);
-	return (0);
+		return true;
+	return false;
 	}
 
 //============================================================================
 //
 //----------------------------------------------------------------------------
 [Original("pt_in_rect3")]
-public int	PointInRect3(ref RECT rect,int x,int y)
+public bool	PointInRect3(ref RECT rect,int x,int y)
 	{
 	if( rect.top >= y && rect.bottom <= y &&
 		rect.right >= x && rect.left <= x)
 		{
-		return (1);
+		return true;
 		}
-	return (0);
+	return false;
 	}
 
 //					セイムレクト
@@ -600,7 +600,7 @@ public int	PointInRect3(ref RECT rect,int x,int y)
 //==========================================================================================
 //
 [Original("same_rect")]
-public int	ClipRects(ref RECT destination, ref RECT source, ref RECT field)
+public bool	ClipRects(ref RECT destination, ref RECT source, ref RECT field)
 	{
 	// field_rectと一致するdstn_rectを見つけ出し。その差分をsrc_rectに反映させます。
 
@@ -614,7 +614,7 @@ public int	ClipRects(ref RECT destination, ref RECT source, ref RECT field)
 		}
 	else
 		{
-		return (0);
+		return false;
 		}
 
 	if( destination.bottom >= field.top )
@@ -627,11 +627,11 @@ public int	ClipRects(ref RECT destination, ref RECT source, ref RECT field)
 		}
 	else
 		{
-		return (0);
+		return false;
 		}
 
 	if( source.top==source.bottom )
-		return (0);
+		return false;
 
 	if( destination.left <= field.right )
 		{
@@ -643,7 +643,7 @@ public int	ClipRects(ref RECT destination, ref RECT source, ref RECT field)
 		}
 	else
 		{
-		return (0);
+		return false;
 		}
 
 	if( destination.right >= field.left )
@@ -656,13 +656,13 @@ public int	ClipRects(ref RECT destination, ref RECT source, ref RECT field)
 		}
 	else
 		{
-		return (0);
+		return false;
 		}
 
 	if( source.left==source.right )
-		return (0);
+		return false;
 
-	return (1);
+	return true;
 	}
 
 //============================================================================
@@ -1160,7 +1160,7 @@ void	draw_line(int	x1,int	y1,int	x2,int	y2)
 // 可視不可視の発見範囲内の潜航潜水艦
 //----------------------------------------------------------------------------
 [Original("find_out_ss")]
-public int		DetectSubmarines( int m , int n)
+public bool		DetectSubmarines( int m , int n)
 	{
 
 	// 現地点からユニット地点への距離
@@ -1182,11 +1182,11 @@ public int		DetectSubmarines( int m , int n)
 
 		Units[n].ContactRadius=range;
 		Units[n].ContactTime=250+Random(150);
-		return(1);
+		return true;
 		}
 	else
 		{
-		return(0);
+		return false;
 		}
 	}
 
@@ -1251,7 +1251,7 @@ public void		Detect()
 						sightings++;
 						if( other.Kind==UnitKind.Submarine && other.IsSubmerged )
 							{	// 潜航中潜水艦が発見可能範囲にいる
-							if( DetectSubmarines(m,n)!=0 )
+							if( DetectSubmarines(m,n) )
 								{
 								other.IsFound=true;
 
@@ -1302,7 +1302,7 @@ public void		Detect()
 						sightings++;
 						if( other.Kind==UnitKind.Submarine && other.IsSubmerged )
 							{	// 潜航中潜水艦が発見可能範囲にいる
-							if( DetectSubmarines(m,n)!=0 )
+							if( DetectSubmarines(m,n) )
 								{
 								other.IsFound=true;
 

@@ -220,7 +220,7 @@ public void	SaveUserMap()
 /*-------------------------------------------
 	終了の処理
 --------------------------------------------*/
-public int EndApp()
+public void EndApp()
 	{
 
 	//
@@ -285,7 +285,6 @@ public int EndApp()
 	// COM 終了
 	CoUninitialize();
 
-	return TRUE;
 	}
 
 /*--------------------------------------------
@@ -638,16 +637,16 @@ public nint	IDD_OK_CANCEL_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 public void	WaitForDialog()
 	{
 	MSG msg=default;
-	int	waitsForConnection=TRUE;
+	bool	waitsForConnection=true;
 
-	while(waitsForConnection!=0)
+	while(waitsForConnection)
 		{
 		while( PeekMessage(ref msg, PM_REMOVE)!=0 )
 			{
 			if (msg.message == WM_QUIT )
 				{
 				// Quit the application.
-				waitsForConnection = FALSE;
+				waitsForConnection = false;
 				break;
 				}
 

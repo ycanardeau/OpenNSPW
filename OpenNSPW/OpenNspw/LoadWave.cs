@@ -28,20 +28,19 @@ public unsafe partial class Nspw
 [Original("m_ckInRiff")] public MMCKINFO RiffChunk;
 
 /* WAVE 閉じる */
-public int YWaveClose()
+public void YWaveClose()
 {
 	mmioClose(WaveFile);
-	return 1;
 }
 
 /* WAVE 読み込み */
-public int YWaveRead(uint size,byte* data,uint* read,WAVEFORMATEX* wf)
+public bool YWaveRead(uint size,byte* data,uint* read,WAVEFORMATEX* wf)
 {
 	// The globals are fields, whose addresses C# only gives with fixed.
 	fixed (MMCKINFO* pckIn = &DataChunk)
 	if (FAILED(YWaveReadFile(WaveFile,size,(byte*)data,pckIn,read)))
 	{
-		return 0;
+		return false;
 	}
 	/* フォーマットのコピー */
 	if (wf!=null)
@@ -49,11 +48,11 @@ public int YWaveRead(uint size,byte* data,uint* read,WAVEFORMATEX* wf)
 		memcpy(wf,WaveFormat,(nuint)(sizeof(WAVEFORMATEX)));
 	}
 	free(WaveFormat);
-	return 1;
+	return true;
 }
 
 /* WAVE 開く */
-public int YWaveOpen(string name)
+public bool YWaveOpen(string name)
 {
 	WaveFormat = null;
 	// The globals are fields, whose addresses C# only gives with fixed.
@@ -63,14 +62,14 @@ public int YWaveOpen(string name)
 	{
 	if (FAILED(YWaveOpenFile(name,phmmioIn,ppwfx,pckInRiff)))
 	{
-		return 0;
+		return false;
 	}
 	if (FAILED(YWaveStartDataRead(phmmioIn,pckIn,pckInRiff)))
 	{
-		return 0;
+		return false;
 	}
 	}
-	return 1;
+	return true;
 }
 
 /* WAVE ファイル読み込み */
@@ -222,7 +221,7 @@ public IDirectSoundBuffer? LoadWave(string name)
 	void* pMem1,pMem2;
 	uint size1,size2;
 	// WAVE ファイルを開く
-	if (YWaveOpen(name)==0)
+	if (!YWaveOpen(name))
 	{
 		return null;
 	}
@@ -230,7 +229,7 @@ public IDirectSoundBuffer? LoadWave(string name)
 	var buf = (byte*)malloc(DataChunk.cksize);
 	// 読み込み
 	ZeroMemory(&wf,(nuint)(sizeof(WAVEFORMATEX)));
-	if (YWaveRead(DataChunk.cksize,buf,&readsize,&wf)==0)
+	if (!YWaveRead(DataChunk.cksize,buf,&readsize,&wf))
 	{
 		free(buf);
 		return null;

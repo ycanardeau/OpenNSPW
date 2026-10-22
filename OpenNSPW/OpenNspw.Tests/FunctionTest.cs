@@ -22,6 +22,9 @@ internal static class FunctionTest
 				break;
 			case ({ ValueKind: JsonValueKind.Number } e, int a) when e.GetInt64() == a:
 				break;
+			// A function that the port makes bool, where the original returns TRUE or FALSE.
+			case ({ ValueKind: JsonValueKind.Number } e, bool a) when e.GetInt64() == (a ? 1 : 0):
+				break;
 			case ({ ValueKind: JsonValueKind.String } e, double a)
 				when BitConverter.DoubleToInt64Bits(FunctionCase.ParseDouble(e)) == BitConverter.DoubleToInt64Bits(a):
 				break;

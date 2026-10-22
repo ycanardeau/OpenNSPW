@@ -394,9 +394,9 @@ public void	SetCpuRoute2(int m)
 			{
 			// 艦船のルート再計算
 
-			var hit=0;
+			var hit=false;
 			var checkedDistance=40.0;
-			while(hit==0 && checkedDistance<=legLength)
+			while(!hit && checkedDistance<=legLength)
 				{
 				if(index==0 && checkedDistance<=80 )
 					step=1.0;
@@ -409,15 +409,15 @@ public void	SetCpuRoute2(int m)
 
 				// 島に接触するか？
 				if( IsLandAt(point) )
-					hit=1;		// 島に接触
+					hit=true;		// 島に接触
 
 				// 船に接触するか
-				if( hit==0 && IsShipAt(m, point) )
-					hit=1;		// 船に接触
+				if( !hit && IsShipAt(m, point) )
+					hit=true;		// 船に接触
 
 				}
 
-			if( hit==1)
+			if( hit)
 				{
 				// 不幸にも進路を変更しないと目標点までいけない場合。
 				var leftBearing=bearing;
@@ -428,8 +428,8 @@ public void	SetCpuRoute2(int m)
 					leftBearing=leftBearing.WrapFullTurn();
 					rightBearing-=22.5;
 					rightBearing=rightBearing.WrapNegative();
-					checkedDistance=40;	var left=0;	var right=0;
-					while( checkedDistance<=(legLength) && (left==0||right==0))
+					checkedDistance=40;	var left=false;	var right=false;
+					while( checkedDistance<=(legLength) && (!left||!right))
 						{
 
 						if(index==0 && checkedDistance<=80)
@@ -439,40 +439,40 @@ public void	SetCpuRoute2(int m)
 
 						checkedDistance+=step;
 
-						if(left==0)
+						if(!left)
 							{
 							// 左回り
 							var point=start+WorldVector.FromDirection(leftBearing) * checkedDistance;
 							// 島に接触するか？
 							if( IsLandAt(point) )
-								left=1;		// 島に接触
+								left=true;		// 島に接触
 
 							// 船に接触するか
 							if( IsShipAt(m, point) )
-								left=1;		// 船に接触
+								left=true;		// 船に接触
 
 							}
-						if(right==0)
+						if(!right)
 							{
 							// 右回り
 							var point=start+WorldVector.FromDirection(rightBearing) * checkedDistance;
 							// 島に接触するか？
 							if( IsLandAt(point) )
-								right=1;		// 島に接触
+								right=true;		// 島に接触
 
 							// 船に接触するか
 							if( IsShipAt(m, point) )
-								right=1;		// 船に接触
+								right=true;		// 船に接触
 							}
 						}
 
-					if( right==0 && checkedDistance>=legLength)
+					if( !right && checkedDistance>=legLength)
 						{
 						TakeDetour(ref unit, ref index, start, checkedDistance, divisor, rightBearing, minTurn, maxTurn, ref extraDistance, savedPoint, extraStep, ref error);
 						break;
 						}
 
-					if( left==0 && checkedDistance>=legLength)
+					if( !left && checkedDistance>=legLength)
 						{
 						TakeDetour(ref unit, ref index, start, checkedDistance, divisor, leftBearing, minTurn, maxTurn, ref extraDistance, savedPoint, extraStep, ref error);
 						break;
@@ -947,7 +947,7 @@ private void ReadKeyboard()
 public void ReadInput()
 	{
 
-	int	isScrolling;
+	bool	isScrolling;
 
 	// キーボードの入力チェック
 	if (pDIDevice!=null)
@@ -955,33 +955,33 @@ public void ReadInput()
 		ReadKeyboard();
 		}
 
-	isScrolling=0;
+	isScrolling=false;
 
 	if( CursorPosition.y<=0 || Buttons.HasFlag(InputButtons.Front) )
 		{
 		ScrollBattleArea(1);
-		isScrolling=1;
+		isScrolling=true;
 		}
 
 	if( CursorPosition.y>=SCRN_HEIGHT-1 || Buttons.HasFlag(InputButtons.Back) )
 		{
 		ScrollBattleArea(5);
-		isScrolling=1;
+		isScrolling=true;
 		}
 
 	if( CursorPosition.x>=SCRN_WIDTH-1 || Buttons.HasFlag(InputButtons.Right) )
 		{
 		ScrollBattleArea(3);
-		isScrolling=1;
+		isScrolling=true;
 		}
 
 	if( CursorPosition.x<=0 || Buttons.HasFlag(InputButtons.Left))
 		{
 		ScrollBattleArea(7);
-		isScrolling=1;
+		isScrolling=true;
 		}
 
-	if(isScrolling==0)
+	if(!isScrolling)
 		{
 		ScrollSpeed=0;
 		}

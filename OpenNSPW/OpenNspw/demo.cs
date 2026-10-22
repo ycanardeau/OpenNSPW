@@ -303,7 +303,7 @@ private void UpdateDecisionSetting(int x, ref HDC hdc, ref Array12<Array128<byte
 		destination.top=125;
 		destination.right=destination.left+(length[0]*12);
 		destination.bottom=destination.top+24;
-		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 )
+		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 			{
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 )
@@ -378,7 +378,7 @@ private void UpdateHostSupplyRateSetting(ref Array12<int> length, ref Array12<Ar
 		destination.top=225;
 		destination.right=destination.left+(length[0]*10);
 		destination.bottom=destination.top+24;
-		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 )
+		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 			{
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 )
@@ -403,7 +403,7 @@ private void UpdateHostSupplyRateSetting(ref Array12<int> length, ref Array12<Ar
 		destination.top=250;
 		destination.right=destination.left+(length[0]*10);
 		destination.bottom=destination.top+24;
-		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 )
+		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 			{
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 && SupplyRates[0]!=0)
@@ -463,7 +463,7 @@ private void UpdateSwapTimeSetting(ref Array12<int> length, ref Array12<Array128
 		destination.top=225;
 		destination.right=destination.left+(length[0]*10);
 		destination.bottom=destination.top+24;
-		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 )
+		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 			{
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( (LeftButton==1||LeftButton==2) )
@@ -488,7 +488,7 @@ private void UpdateSwapTimeSetting(ref Array12<int> length, ref Array12<Array128
 		destination.top=250;
 		destination.right=destination.left+(length[0]*10);
 		destination.bottom=destination.top+24;
-		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 )
+		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 			{
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( (LeftButton==1||LeftButton==2) && SwapTime!=0)
@@ -547,7 +547,7 @@ private void UpdateGuestSupplyRateSetting(ref Array12<int> length, ref Array12<A
 		destination.top=325;
 		destination.right=destination.left+(length[0]*10);
 		destination.bottom=destination.top+24;
-		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 )
+		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 			{
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 )
@@ -572,7 +572,7 @@ private void UpdateGuestSupplyRateSetting(ref Array12<int> length, ref Array12<A
 		destination.top=350;
 		destination.right=destination.left+(length[0]*10);
 		destination.bottom=destination.top+24;
-		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 )
+		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 			{
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 && SupplyRates[1]!=0)
@@ -618,7 +618,7 @@ private void UpdateSwapRuleSetting(ref Array12<int> length, ref Array12<Array128
 
 		if( IsHost )
 			{
-			if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 )
+			if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 				{
 				SetTextColor(hdc, RGB(255, 0, 0));
 				if( LeftButton==3 )
@@ -701,7 +701,7 @@ private void UpdateHostInitialSupplyPointsSetting(ref Array12<int> length, ref A
 		destination.top=425;
 		destination.right=destination.left+(length[0]*10);
 		destination.bottom=destination.top+24;
-		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 )
+		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 			{
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( (LeftButton==1||LeftButton==2) )
@@ -728,7 +728,7 @@ private void UpdateHostInitialSupplyPointsSetting(ref Array12<int> length, ref A
 		destination.top=450;
 		destination.right=destination.left+(length[0]*10);
 		destination.bottom=destination.top+24;
-		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 )
+		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 			{
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( (LeftButton==1||LeftButton==2) && InitialSupplyPoints[0]!=0)
@@ -777,7 +777,7 @@ private void UpdateGuestInitialSupplyPointsSetting(ref Array12<int> length, ref 
 		destination.top=525;
 		destination.right=destination.left+(length[0]*10);
 		destination.bottom=destination.top+24;
-		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 )
+		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 			{
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( (LeftButton==1||LeftButton==2) )
@@ -804,7 +804,7 @@ private void UpdateGuestInitialSupplyPointsSetting(ref Array12<int> length, ref 
 		destination.top=550;
 		destination.right=destination.left+(length[0]*10);
 		destination.bottom=destination.top+24;
-		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 )
+		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 			{
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( (LeftButton==1||LeftButton==2) && InitialSupplyPoints[1]!=0)
@@ -877,7 +877,7 @@ private void UpdateArrivalControlSetting(ref Array12<int> length, ref Array12<Ar
 		destination.top=600;
 		destination.right=destination.left+(length[0]*12);
 		destination.bottom=destination.top+24;
-		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 )
+		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 			{
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 )
@@ -958,7 +958,7 @@ private void UpdateBackToScenarioSettingButton(ref Array12<int> length, ref Arra
 		destination.top=675;
 		destination.right=destination.left+(length[0]*12);
 		destination.bottom=destination.top+24;
-		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.ConfigSetting )
+		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && RivalMode==GameMode.ConfigSetting )
 			{
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 )
@@ -1026,7 +1026,7 @@ private void UpdateStartBattleButton(ref Array12<int> length, ref Array12<Array1
 		destination.top=700;
 		destination.right=destination.left+(length[0]*12);
 		destination.bottom=destination.top+24;
-		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.ConfigSetting )
+		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && RivalMode==GameMode.ConfigSetting )
 			{
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 )
@@ -1350,7 +1350,7 @@ private void UpdateScenarioList(int m, ref Array12<int> length, ref HDC hdc, ref
 		destination.top=150+(n*25);
 		destination.right=destination.left+(length[n]*12);
 		destination.bottom=destination.top+24;
-		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting )
+		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && RivalMode==GameMode.GameSetting )
 			{
 			SetTextColor(hdc, RGB(255, 0, 0));
 
@@ -1414,7 +1414,7 @@ private void UpdateSideSetting(ref int x, ref Array12<int> length, ref Array12<A
 		destination.top=475;
 		destination.right=destination.left+(length[0]*12);
 		destination.bottom=destination.top+24;
-		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting )
+		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && RivalMode==GameMode.GameSetting )
 			{
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 )
@@ -1484,7 +1484,7 @@ private void UpdateAutoSaveButton(ref int x, ref Array12<int> length, ref Array1
 			{
 			destination.right=destination.left+(length[0]*12);
 			destination.bottom=destination.top+24;
-			if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting && HasAutoSave!=0 )
+			if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && RivalMode==GameMode.GameSetting && HasAutoSave!=0 )
 				{
 				SetTextColor(hdc, RGB(255, 0, 0));
 
@@ -1553,7 +1553,7 @@ private void UpdateResumeButton(ref int x, ref Array12<int> length, ref Array12<
 			{
 			destination.right=destination.left+(length[0]*12);
 			destination.bottom=destination.top+24;
-			if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting && WasHost )
+			if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && RivalMode==GameMode.GameSetting && WasHost )
 				{
 				SetTextColor(hdc, RGB(255, 0, 0));
 
@@ -1605,7 +1605,7 @@ private void UpdateScenarioPageButton(ref Array12<int> length, ref Array12<Array
 	destination.top=110;
 	destination.right=destination.left+(length[0]*12);
 	destination.bottom=destination.top+24;
-	if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.GameSetting )
+	if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && RivalMode==GameMode.GameSetting )
 		{
 		SetTextColor(hdc, RGB(255, 0, 0));
 

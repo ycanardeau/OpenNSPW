@@ -270,18 +270,18 @@ private void UpdateCargo(ref Fire fire, ref int n)
 		fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 		fire.Speed+=fire.Acceleration;
 
-		var lands=0;
+		var lands=false;
 
 		// ptin dbg
 		var landingArea=WorldRect.Around(fire.TargetPoint, 20, 20);
 		if( landingArea.Contains(fire.Position) )
-			lands=1;
+			lands=true;
 
-		if( lands!=0 )
+		if( lands )
 			{
-			lands=1;
+			lands=true;
 			// 上陸地点到達
-			for(n=1;n<=MaxUnitId && lands!=0 ;n++)
+			for(n=1;n<=MaxUnitId && lands ;n++)
 				{
 				if( Units[n].IsUsed && Units[n].Kind>=UnitKind.AirBase && Units[n].Kind<=UnitKind.Fortress )
 					{
@@ -290,12 +290,12 @@ private void UpdateCargo(ref Fire fire, ref int n)
 					if( landingArea.Contains(fire.Position) )
 						{
 						// とにかくほかの地上施設の上
-						lands=0;
+						lands=false;
 						}
 					}
 				}
 
-			if(lands!=0)
+			if(lands)
 				{
 				// NSPW NET builds a base over 8000 to 20000 ticks, from a quarter of its HP; 1.22 completes it at once, with
 				// its full HP (0x418E23).

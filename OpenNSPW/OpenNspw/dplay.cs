@@ -603,7 +603,7 @@ public nint OverrideDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
 public int LaunchMultiplayerGame( HWND hDlg )
 	{
 	int hr          = S_OK;
-	int    bOkToQuery  = FALSE;
+	bool    bOkToQuery  = false;
 
 	IDirectPlay8Address? pHostAddress     = null;
 	IDirectPlay8Address? pDeviceAddress   = null;		// 要はサービスプロバイダ？
@@ -768,7 +768,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 		// This simple client doesn't have UI to query for the various
 		// fields needed for the serial.  So we just let DPlay popup a dialog
 		// to ask the user which settings are needed.
-		bOkToQuery = TRUE;
+		bOkToQuery = true;
 		}
 	// --------------------------------
 	// Service Provider: Unknown
@@ -776,7 +776,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 	else
 		{
 		// Unknown SP, so leave as is
-		bOkToQuery = TRUE;
+		bOkToQuery = true;
 		}
 
 	// 自分をＤＰに登録する
@@ -821,7 +821,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 //	MessageBox(hwndApp,"bitmap_surface","残念！",MB_OK | MB_ICONSTOP);
 
 		uint dwHostFlags = 0;
-		if (bOkToQuery!=0)
+		if (bOkToQuery)
 			{
 			dwHostFlags |= DPNHOST_OKTOQUERYFORADDRESSING;
 			}
@@ -858,7 +858,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 //	MessageBox(hwndApp,"ここまで北","残念！",MB_OK | MB_ICONSTOP);
 
 		uint dwConnectFlags = 0;
-		if (bOkToQuery!=0)
+		if (bOkToQuery)
 			{
 			dwConnectFlags |= DPNCONNECT_OKTOQUERYFORADDRESSING;
 			}

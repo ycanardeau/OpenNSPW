@@ -454,7 +454,7 @@ private void UpdateDeckView(ref RECT source, SpriteId sprite, ref RECT destinati
 	destination.right=destination.left+(Sprites[sprite].Size.Width)-1;
 	destination.bottom=destination.top+(Sprites[sprite].Size.Height)-1;
 
-	if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 )
+	if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 		{
 
 		if( LeftButton==3 )
@@ -462,7 +462,7 @@ private void UpdateDeckView(ref RECT source, SpriteId sprite, ref RECT destinati
 			ToggleDeckView();
 			}
 		}
-	if( LeftButton==2 && PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 )
+	if( LeftButton==2 && PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 		{
 		source.right+=180;	source.left+=180;
 		}
@@ -600,20 +600,20 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 		destination.right=destination.left+Sprites[sprite].Size.Width-1;
 		destination.bottom=destination.top+Sprites[sprite].Size.Height-1;
 
-		if( LeftButton==3 && menuItems[i]!=CombatMenuSelection && PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 )
+		if( LeftButton==3 && menuItems[i]!=CombatMenuSelection && PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 			{
 			if( CanOrder )
 				{
 				ChooseCombatMenuItem(menuItems[i]);
 				}
 			}
-		if( LeftButton==2 && PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 && FrameCount%2<1)
+		if( LeftButton==2 && PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && FrameCount%2<1)
 			{
 
 			source.left=Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width*0)+1+180;
 			source.right=source.left+Sprites[sprite].Size.Width-1;
 			}
-		if( menuItems[i]!=CombatMenuSelection && LeftButton==0 && PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 && FrameCount%6<4 )
+		if( menuItems[i]!=CombatMenuSelection && LeftButton==0 && PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && FrameCount%6<4 )
 			{
 			source.left=Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width*0)+1+180;
 			source.right=source.left+Sprites[sprite].Size.Width-1;
@@ -892,7 +892,7 @@ private void RequestSupply(ref Array8<int> length, ref Array8<Array128<byte>> te
 			destination.top=y+20*7+5;
 			destination.right=destination.left+(length[0]*12);
 			destination.bottom=destination.top+18;
-			if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 )
+			if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 				{
 				SetTextColor(hdc, RGB(255, 0, 0));
 				if( LeftButton==3 && Result==GameResult.None )
@@ -982,7 +982,7 @@ private void UpdateSupplyRequest(ref Array8<int> length, ref Array8<Array128<byt
 	destination.top=y+20*5+5;
 	destination.right=destination.left+(length[0]*12);
 	destination.bottom=destination.top+18;
-	if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 && SupplyCount==0 )
+	if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && SupplyCount==0 )
 		{
 		SetTextColor(hdc, RGB(255, 0, 0));
 		if( LeftButton==3 )
@@ -1008,7 +1008,7 @@ private void UpdateSupplyRequest(ref Array8<int> length, ref Array8<Array128<byt
 	destination.top=y+20*6+5;
 	destination.right=destination.left+(length[0]*12);
 	destination.bottom=destination.top+18;
-	if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 )
+	if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 		{
 		SetTextColor(hdc, RGB(255, 0, 0));
 		if( LeftButton==3 )
@@ -1116,7 +1116,7 @@ private void UpdateSystemMenu(ref Array8<int> length, ref Array8<Array128<byte>>
 	destination.top=y+20*9+5;
 	destination.right=destination.left+(length[0]*12);
 	destination.bottom=destination.top+18;
-	if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.Battle )
+	if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && RivalMode==GameMode.Battle )
 		{
 		SetTextColor(hdc, RGB(255, 0, 0));
 		if( LeftButton==3 )
@@ -1158,7 +1158,7 @@ private void UpdateSystemMenu(ref Array8<int> length, ref Array8<Array128<byte>>
 		destination.top=y+20*10+5;
 		destination.right=destination.left+(length[0]*12);
 		destination.bottom=destination.top+18;
-		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.Battle )
+		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && RivalMode==GameMode.Battle )
 			{
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 )
