@@ -240,14 +240,13 @@ private bool IsLandAt(WorldPosition position)
 // nor a base.
 private bool IsShipAt(int m, WorldPosition point)
 	{
-	WorldRect shipArea;
 
 	for( var f=1; f<=MaxUnitId; f++)
 		{
 		ref var other = ref Units[f];
 		if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged) && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress) )
 			{
-			shipArea=WorldRect.Around(other.Position, (Sprites[SpriteId.JapanUnits].Size.Width/2), (Sprites[SpriteId.JapanUnits].Size.Height/2));
+			var shipArea=WorldRect.Around(other.Position, (Sprites[SpriteId.JapanUnits].Size.Width/2), (Sprites[SpriteId.JapanUnits].Size.Height/2));
 			if( shipArea.Contains(point))
 				return true;
 			}
@@ -321,7 +320,6 @@ public void	SetCpuRoute2(int m)
 	ref var unit = ref Units[m];
 	double		step;
 	WorldPosition start;
-	WorldRect		shipArea;
 
     Array128<byte> text = default;
 
@@ -343,7 +341,7 @@ public void	SetCpuRoute2(int m)
 			if( other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged)   && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress )  )
 				{
 				// ptin dbg
-				shipArea=WorldRect.Around(other.Position, (Sprites[SpriteId.JapanUnits].Size.Width/2), (Sprites[SpriteId.JapanUnits].Size.Width/2));
+				var shipArea=WorldRect.Around(other.Position, (Sprites[SpriteId.JapanUnits].Size.Width/2), (Sprites[SpriteId.JapanUnits].Size.Width/2));
 
 				if( shipArea.Contains(destination))
 					{

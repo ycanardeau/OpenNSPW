@@ -477,7 +477,6 @@ private void UpdateDeckView(ref RECT source, SpriteId sprite, ref RECT destinati
 // items. Returns their number. The choice shown (CombatMenuSelection) follows a supplying ship or a parked plane's arms.
 private int ListCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menuItems)
 	{
-	WorldRect area;
 
 	var n=0;
 	if( Units[SelectedUnit].Category==UnitCategory.Ship && !(Units[SelectedUnit].Kind==UnitKind.InfantryBase||Units[SelectedUnit].Kind==UnitKind.Pillboxes||Units[SelectedUnit].Kind==UnitKind.Fortress||Units[SelectedUnit].Kind==UnitKind.AirBase) )
@@ -490,7 +489,7 @@ private int ListCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu
 				if( unit.Side==LocalSide && unit.Kind==UnitKind.NavalBase && unit.BuildTime==0 )
 					{
 					// ptin dbg
-					area=WorldRect.Around(unit.Position, 40+240, 40+240);
+					var area=WorldRect.Around(unit.Position, 40+240, 40+240);
 
 					if( area.Contains(Units[SelectedUnit].Position) )
 						{

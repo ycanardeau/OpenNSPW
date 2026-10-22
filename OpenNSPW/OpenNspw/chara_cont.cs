@@ -547,14 +547,13 @@ private void BuildBase(ref Unit unit)
 
 private void UpdateSupply(ref Unit unit)
 	{
-	WorldRect supplyArea;
 	// 1.22 does not check for the naval base (0x4010BB): its computer starts supplying within 580 of it, further than
 	// this allows.
 	if( unit.Category==UnitCategory.Ship && unit.IsSupplying && unit.Fuel>=0 && Rules.SupplyNeedsNavalBase )
 		{
 		// 補給中の艦船
 		// ptin dbg
-		supplyArea=WorldRect.Around(unit.Position, 40+240, 40+240);
+		var supplyArea=WorldRect.Around(unit.Position, 40+240, 40+240);
 
 		var nearNavalBase=0;
 		for( var i=1; i<=MaxUnitId; i++)
@@ -752,7 +751,6 @@ else
 
 private void SteerUnit(ref Unit unit, int m)
 	{
-	WorldRect pathPointArea;
 	if( 1!=0 )
 		{
 		// 戦闘機動および、緊急移動
@@ -825,7 +823,7 @@ private void SteerUnit(ref Unit unit, int m)
 					}
 
 				// ptin dbg
-				pathPointArea=WorldRect.Around(unit.GetPathPoint(0), ON_PP, ON_PP);
+				var pathPointArea=WorldRect.Around(unit.GetPathPoint(0), ON_PP, ON_PP);
 
 				if( pathPointArea.Contains(unit.Position) )
 					{
@@ -890,7 +888,7 @@ private void SteerUnit(ref Unit unit, int m)
 				}
 
 			// ptin dbg
-			pathPointArea=WorldRect.Around(unit.GetPathPoint(0), 30, 30);
+			var pathPointArea=WorldRect.Around(unit.GetPathPoint(0), 30, 30);
 
 			if( !pathPointArea.Contains(unit.Position) && !unit.IsStopping)
 				{	// 編隊指定位置に無し
@@ -928,7 +926,6 @@ dbg[3]=unit[m].max_spd*100000;
 
 private void TryLandOnCarrier(ref Unit unit, int m)
 	{
-	WorldRect deckArea;
 	if( 0!=0 && Units[unit.Carrier].PlanesToLaunch!=0)
 		{
 		// ほんまにＩｎｆｏ［４］があるんやなチェック
@@ -939,7 +936,7 @@ private void TryLandOnCarrier(ref Unit unit, int m)
 	&& Units[unit.Carrier].PlanesToLaunch<=0 )
 		{
 		// ptin dbg
-		deckArea=WorldRect.Around(Units[unit.Carrier].Position, ON_PP/2, ON_PP/2);
+		var deckArea=WorldRect.Around(Units[unit.Carrier].Position, ON_PP/2, ON_PP/2);
 
 		if( deckArea.Contains(unit.Position) )
 			{
@@ -1128,7 +1125,6 @@ private void ReplanBlockedRoute(ref Unit unit, int m, WorldRect? ahead)
 // 100 ticks, or when the point 80 toward its path is land, unless it is on an emergency move.
 private void CheckCourseAheadAs122(ref Unit unit, int m, ref int land, Angle bearing)
 	{
-	WorldRect shipArea;
 	var replans = unit.Side==CpuSide && unit.GroupLeader==0;
 	var ahead=unit.Position+WorldVector.FromDirection(unit.Direction) * 40;
 	if(  !( unit.Kind==UnitKind.Submarine && unit.IsSubmerged ) )
@@ -1138,7 +1134,7 @@ private void CheckCourseAheadAs122(ref Unit unit, int m, ref int land, Angle bea
 			ref var other = ref Units[n];
 			if(other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged) && other.Kind!=UnitKind.NavalBase && other.Kind!=UnitKind.AirBase )
 				{
-				shipArea=WorldRect.Around(other.Position, (Sprites[SpriteId.JapanUnits].Size.Width/2), (Sprites[SpriteId.JapanUnits].Size.Height/2));
+				var shipArea=WorldRect.Around(other.Position, (Sprites[SpriteId.JapanUnits].Size.Width/2), (Sprites[SpriteId.JapanUnits].Size.Height/2));
 
 				if( shipArea.Contains(ahead))
 					{
@@ -1181,7 +1177,6 @@ private void CheckCourseAhead(ref Unit unit, int m, ref int land, Angle bearing)
 		return;
 		}
 
-	WorldRect shipArea;
 	var ahead=unit.Position+WorldVector.FromDirection(unit.Direction) * (40+unit.MaxSpeed*10);
 	if(  !( unit.Kind==UnitKind.Submarine && unit.IsSubmerged ) )
 		{
@@ -1191,7 +1186,7 @@ private void CheckCourseAhead(ref Unit unit, int m, ref int land, Angle bearing)
 			if(other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged)  && !(other.Kind>=UnitKind.AirBase&&other.Kind<=UnitKind.Fortress) )
 				{
 				// ptin dbg
-				shipArea=WorldRect.Around(other.Position, (Sprites[SpriteId.JapanUnits].Size.Width/2), (Sprites[SpriteId.JapanUnits].Size.Height/2));
+				var shipArea=WorldRect.Around(other.Position, (Sprites[SpriteId.JapanUnits].Size.Width/2), (Sprites[SpriteId.JapanUnits].Size.Height/2));
 
 				if( shipArea.Contains(ahead))
 					{
@@ -1230,7 +1225,6 @@ private void CheckCourseAhead(ref Unit unit, int m, ref int land, Angle bearing)
 
 private void MoveUnit(ref Unit unit, int m, ref double cargoSpeedFactor)
 	{
-	WorldRect destinationArea;
 	WorldVector toDestination;
 	if( (!unit.IsStopping || unit.EmergencyFlags[0]!=0)  && !(unit.Category==UnitCategory.Ship && unit.IsSupplying) )
 		{
@@ -1238,7 +1232,7 @@ private void MoveUnit(ref Unit unit, int m, ref double cargoSpeedFactor)
 			{
 			// 緊急移動先についているか
 			// ptin dbg
-			destinationArea=WorldRect.Around(unit.EmergencyDestination, ON_PP, ON_PP);
+			var destinationArea=WorldRect.Around(unit.EmergencyDestination, ON_PP, ON_PP);
 
 			if( destinationArea.Contains(unit.Position) )
 				{

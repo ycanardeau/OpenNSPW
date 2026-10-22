@@ -123,7 +123,6 @@ public int		CheckHit(int m)
 public void		DrawHitArea(int m)
 	{
 	int size=default /* C4701 */, halfSize=default /* C4701 */;
-	WorldRect	hitArea;
 
 	var target=m;						// ターゲットナンバー
 	switch( Units[target].Kind )
@@ -135,7 +134,7 @@ public void		DrawHitArea(int m)
 			if( Units[target].IsSubmerged )// 潜航中、あたりがでかくなる
 				{
 				// The box is upside down, its top below its bottom, as the original fills it: the same outline.
-				hitArea=WorldRect.Around(Units[target].Position, 50, -50);
+				var hitArea=WorldRect.Around(Units[target].Position, 50, -50);
 
 				DrawWorldRect(hitArea, RGB(255,255,255));
 
@@ -154,7 +153,7 @@ public void		DrawHitArea(int m)
 		case 3: case 7:
 			for( var i=0; i<=4  ; i++)
 				{
-				hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset((+size-(i*halfSize)), (-size+(i*halfSize)));
+				var hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset((+size-(i*halfSize)), (-size+(i*halfSize)));
 
 				DrawWorldRect(hitArea, RGB(255,255,255));
 				}
@@ -162,7 +161,7 @@ public void		DrawHitArea(int m)
 		case 1: case 5:
 			for( var i=0; i<=4  ; i++)
 				{
-				hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset((-size+(i*halfSize)), (-size+(i*halfSize)));
+				var hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset((-size+(i*halfSize)), (-size+(i*halfSize)));
 
 				DrawWorldRect(hitArea, RGB(255,255,255));
 				}
@@ -171,7 +170,7 @@ public void		DrawHitArea(int m)
 		case 0: case 4:
 			for( var i=0; i<=2   ; i++)
 				{
-				hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset(0, (-size+(i*size)));
+				var hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset(0, (-size+(i*size)));
 
 				DrawWorldRect(hitArea, RGB(255,255,255));
 
@@ -180,7 +179,7 @@ public void		DrawHitArea(int m)
 		case 2: case 6:
 			for( var i=0; i<=2   ; i++)
 				{
-				hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset((-size+(i*size)), 0);
+				var hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset((-size+(i*size)), 0);
 
 				DrawWorldRect(hitArea, RGB(255,255,255));
 
@@ -365,7 +364,6 @@ private Angle ReduceHeading(Angle heading)
 
 private bool ShipDropAntiSubmarineBomb(ref int target, ref Unit unit, FireKind kind)
 	{
-	WorldRect contactArea;
 	for( var n=1; n<=MaxUnitId; n++)
 		{
 		target=n;
@@ -373,7 +371,7 @@ private bool ShipDropAntiSubmarineBomb(ref int target, ref Unit unit, FireKind k
 			{	// 爆雷
 
 			// ptin dbg
-			contactArea=WorldRect.Around(Units[target].ContactPosition, Units[target].ContactRadius, Units[target].ContactRadius);
+			var contactArea=WorldRect.Around(Units[target].ContactPosition, Units[target].ContactRadius, Units[target].ContactRadius);
 			if( contactArea.Contains(unit.Position) )
 				{
 				// 投雷
@@ -2029,14 +2027,13 @@ public void	SetDynamicDestination(int n)
 [Original("chk_another_unit")]
 public void	CheckOtherUnits(double* x,double* y)
 	{
-	WorldRect	shipArea;
 
 	for( var n=1; n<=MaxUnitId; n++)
 		{
 		if( Units[n].IsUsed && Units[n].Category==UnitCategory.Ship )
 			{
 			// ptin dbg
-			shipArea=WorldRect.Around(Units[n].Position, (Sprites[SpriteId.JapanUnits].Size.Width/2), (Sprites[SpriteId.JapanUnits].Size.Height/2));
+			var shipArea=WorldRect.Around(Units[n].Position, (Sprites[SpriteId.JapanUnits].Size.Width/2), (Sprites[SpriteId.JapanUnits].Size.Height/2));
 
 			if( shipArea.Contains(new WorldPosition(*x, *y)))
 				{
@@ -2079,10 +2076,9 @@ public void	SetFighterAttackDestination(int m)
 	{
 	ref var unit = ref Units[m];
 	int ownTechnique=default /* C4701 */;
-	WorldRect			destinationArea;
 
 	// ptin dbg
-	destinationArea=WorldRect.Around(unit.EmergencyDestination, 35, 35);
+	var destinationArea=WorldRect.Around(unit.EmergencyDestination, 35, 35);
 
 	if( destinationArea.Contains(unit.Position) )
 		{
@@ -2311,7 +2307,6 @@ public void	SetAttackerEmergencyDestination(int m)
 public void	SetAttackerAttackDestination(int m)
 	{
 	ref var unit = ref Units[m];
-	WorldRect			pathPointArea;
 
 	var target=unit.Target;				// 攻撃目標
 
@@ -2374,7 +2369,7 @@ public void	SetAttackerAttackDestination(int m)
 		if( unit.PathX[1]==MAP_RIGHT+1 )
 			{
 			// ptin dbg
-			pathPointArea=WorldRect.Around(unit.GetPathPoint(0), 35, 35);
+			var pathPointArea=WorldRect.Around(unit.GetPathPoint(0), 35, 35);
 			if( !pathPointArea.Contains(unit.Position) || !Units[target].IsFound)
 				{
 				return;
@@ -2419,7 +2414,7 @@ public void	SetAttackerAttackDestination(int m)
 	else
 		{	// 近すぎる場合は離脱
 		// ptin dbg
-		pathPointArea=WorldRect.Around(unit.GetPathPoint(0), 35, 35);
+		var pathPointArea=WorldRect.Around(unit.GetPathPoint(0), 35, 35);
 		if( pathPointArea.Contains(unit.Position) )
 			{
 			unit.SetPathPoint(0, unit.Position+WorldVector.FromDirection(unit.Direction) * 300);

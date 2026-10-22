@@ -384,12 +384,11 @@ public void	DrawClouds(RECT* field)
 [Original("be_dstryd")]
 public void	DrawDestruction(int m)
 	{
-	int f;
 
 	if( !(Units[m].Kind>=UnitKind.AirBase && Units[m].Kind<=UnitKind.Fortress ) )
 		{
 		// 沈没の水門
-		f=FindFreeEffect();
+		var f=FindFreeEffect();
 		ref var effect = ref Effects[f];
 		effect.Layer=EffectLayer.Lower;
 		effect.TimeLeft=220;
@@ -407,7 +406,7 @@ public void	DrawDestruction(int m)
 			{
 			for(var i=0;i<=7;i++)
 				{
-				f=FindFreeEffect();
+				var f=FindFreeEffect();
 				ref var effect = ref Effects[f];
 				effect.Layer=EffectLayer.Lower;
 				effect.TimeLeft=200+Random(20);
@@ -419,7 +418,7 @@ public void	DrawDestruction(int m)
 		// 沈没の煙
 		for(var i=0;i<=2;i++)
 			{
-			f=FindFreeEffect();
+			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
 			effect.TimeLeft=150+Random(20);
@@ -430,7 +429,7 @@ public void	DrawDestruction(int m)
 		// 沈没の爆炎
 		for(var i=0;i<=4;i++)
 			{
-			f=FindFreeEffect();
+			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
 			effect.TimeLeft=30+Random(20);
@@ -441,7 +440,7 @@ public void	DrawDestruction(int m)
 		// 沈没の小爆炎
 		for(var i=0;i<=4;i++)
 			{
-			f=FindFreeEffect();
+			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
 			effect.TimeLeft=40+Random(20);
@@ -458,7 +457,7 @@ public void	DrawDestruction(int m)
 			{
 			for(var i=0;i<=3;i++)
 				{
-				f=FindFreeEffect();
+				var f=FindFreeEffect();
 				ref var effect = ref Effects[f];
 				effect.Layer=EffectLayer.Lower;
 				effect.TimeLeft=200+Random(20);
@@ -470,7 +469,7 @@ public void	DrawDestruction(int m)
 		// 沈没の煙
 		for(var i=0;i<=1;i++)
 			{
-			f=FindFreeEffect();
+			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
 			effect.TimeLeft=150+Random(20);
@@ -481,7 +480,7 @@ public void	DrawDestruction(int m)
 		// 沈没の爆炎
 		for(var i=0;i<=0;i++)
 			{
-			f=FindFreeEffect();
+			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
 			effect.TimeLeft=30+Random(20);
@@ -492,7 +491,7 @@ public void	DrawDestruction(int m)
 		// 沈没の小爆炎
 		for(var i=0;i<=1;i++)
 			{
-			f=FindFreeEffect();
+			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
 			effect.TimeLeft=20+Random(20);

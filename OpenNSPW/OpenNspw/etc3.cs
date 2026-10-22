@@ -263,7 +263,6 @@ public void	UpdateClouds()
 
 private void UpdateCargo(ref Fire fire, ref int n)
 	{
-	WorldRect landingArea;
 	int f;
 	if( fire.Ticks<=fire.FlightTime )
 		{
@@ -274,7 +273,7 @@ private void UpdateCargo(ref Fire fire, ref int n)
 		var lands=0;
 
 		// ptin dbg
-		landingArea=WorldRect.Around(fire.TargetPoint, 20, 20);
+		var landingArea=WorldRect.Around(fire.TargetPoint, 20, 20);
 		if( landingArea.Contains(fire.Position) )
 			lands=1;
 
@@ -403,7 +402,6 @@ private void UpdateCargo(ref Fire fire, ref int n)
 
 private void UpdateBullet(ref Fire fire, ref int n, int m)
 	{
-	WorldRect hitArea;
 	if( fire.Speed>=fire.FinalSpeed )
 		{
 		var previousPosition=fire.Position;
@@ -413,7 +411,7 @@ private void UpdateBullet(ref Fire fire, ref int n, int m)
 		n=fire.Target;						// ターゲットナンバー
 
 		// ptin dbg
-		hitArea=WorldRect.Around(Units[n].Position, 10, 10);
+		var hitArea=WorldRect.Around(Units[n].Position, 10, 10);
 
 		if( hitArea.Contains(fire.Position) )
 			{
@@ -459,7 +457,6 @@ private void UpdateBullet(ref Fire fire, ref int n, int m)
 
 private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 	{
-	WorldRect burstArea;
 	fire.Ticks--;
 	if( fire.Ticks!=0 )
 		{	//
@@ -497,7 +494,7 @@ private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 		effect.SpriteNumber=0;			// 弾丸着弾	のソースファイル上の番号
 
 		// ptin dbg
-		burstArea=WorldRect.Around(fire.Position, 40, 40);
+		var burstArea=WorldRect.Around(fire.Position, 40, 40);
 
 		for(n=1;n<=MaxUnitId;n++)
 			{
@@ -591,7 +588,6 @@ private void UpdateAntiSubmarineBomb(ref Fire fire, ref int n, int m)
 
 private void UpdateAntiAircraftShell(ref Fire fire, ref int n, int m)
 	{
-	WorldRect burstArea;
 	fire.Ticks--;
 	if( fire.Ticks!=0 )
 		{	//
@@ -645,7 +641,7 @@ private void UpdateAntiAircraftShell(ref Fire fire, ref int n, int m)
 
 		f=40;
 		// ptin dbg
-		burstArea=WorldRect.Around(fire.Position, f, f);
+		var burstArea=WorldRect.Around(fire.Position, f, f);
 
 		for(n=1;n<=MaxUnitId;n++)
 			{
@@ -1231,7 +1227,6 @@ private void UpdateHeavilyDamagedPlane(ref Unit unit)
 
 private void UpdateBurningPlane(ref Unit unit)
 	{
-	int f;
 	// ＨＰはあるが、事実上の墜落、
 	if( unit.Hp==unit.MaxHp*0.2 )
 		{
@@ -1240,7 +1235,7 @@ private void UpdateBurningPlane(ref Unit unit)
 			{
 			for(var i=0;i<3;i++)
 				{
-				f=FindFreeEffect();
+				var f=FindFreeEffect();
 				ref var effect = ref Effects[f];
 				if( f!=0 )
 					{
@@ -1254,7 +1249,7 @@ private void UpdateBurningPlane(ref Unit unit)
 			}
 		else
 			{
-			f=FindFreeEffect();
+			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
 			effect.TimeLeft=20+EffectRandom(20);
@@ -1275,7 +1270,7 @@ private void UpdateBurningPlane(ref Unit unit)
 
 		if( Rules.DamageEffectsTestBeforeDrawing ? (Tick%10)==0 && Random(5)!=0 : Random(5)!=0 && (Tick%(10))==0 )
 			{
-			f=FindFreeEffect();
+			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
 			effect.TimeLeft=40+EffectRandom(15);
@@ -1287,7 +1282,7 @@ private void UpdateBurningPlane(ref Unit unit)
 		if( Random(3)==0 && unit.Hp<=unit.MaxHp*0.1 )
 			{
 			// 小爆炎
-			f=FindFreeEffect();
+			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
 			effect.TimeLeft=8+EffectRandom(6);

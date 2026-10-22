@@ -189,7 +189,6 @@ public int EnumAdapters( HWND hDlg, Guid? pSPGuid )
     Array260<byte>   strName = default;
     uint   dwItems = 0;
     uint   dwSize  = 0;
-    int     nIndex;
     int     nAllAdaptersIndex = 0;
 
     SendDlgItemMessage( hDlg, IDC_ADAPTER_COMBO, CB_RESETCONTENT, 0, 0 );
@@ -231,7 +230,7 @@ public int EnumAdapters( HWND hDlg, Guid? pSPGuid )
         DXUtil_ConvertWideStringToGenericCch( strName, pdnSPInfo[pdnSPInfoEnum].pwszName, MAX_PATH );
 
         // Found an adapter, so put it in the listbox
-        nIndex = (int)SendDlgItemMessage( hDlg, IDC_ADAPTER_COMBO, CB_ADDSTRING,
+        var nIndex = (int)SendDlgItemMessage( hDlg, IDC_ADAPTER_COMBO, CB_ADDSTRING,
                                           0, strName );
 
         // Store pointer to GUID in listbox
@@ -266,7 +265,7 @@ public int EnumAdapters( HWND hDlg, Guid? pSPGuid )
     if ( (dpnspCaps.dwFlags & DPNSPCAPS_SUPPORTSALLADAPTERS)!=0 )
     {
         // Add an "All Adapters" special item to the listbox
-        nIndex = (int)SendDlgItemMessage( hDlg, IDC_ADAPTER_COMBO, CB_ADDSTRING,
+        var nIndex = (int)SendDlgItemMessage( hDlg, IDC_ADAPTER_COMBO, CB_ADDSTRING,
                                           0, TEXT("* All Adapters *") );
 
         nAllAdaptersIndex = nIndex;
