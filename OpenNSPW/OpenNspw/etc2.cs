@@ -1041,8 +1041,7 @@ public void	SetLandingDestination(int n)
 
 	if( !Units[pt].IsUsed )
 		{
-		Units[n].PathX[0]=Units[n].Position.X+(double)(Random(400)-200);
-		Units[n].PathY[0]=Units[n].Position.Y+(double)(Random(400)-200);
+		Units[n].SetPathPoint(0, Units[n].Position+new WorldVector(Random(400)-200, Random(400)-200));
 
 		Units[n].PathX[1]=MAP_RIGHT+1;
 		Units[n].IsStopping=false;
@@ -1091,23 +1090,18 @@ public void	SetLandingDestination(int n)
 
 	if( Units[n].Kind==UnitKind.Bomber )
 		{
-		Units[n].PathX[0]=Units[pt].Position.X+CosDegrees(angl2)*560.0;
-		Units[n].PathY[0]=Units[pt].Position.Y+SinDegrees(angl2)*560.0;
+		Units[n].SetPathPoint(0, Units[pt].Position+WorldVector.FromDirection(angl2) * 560.0);
 		}
 	else
 		{
-		Units[n].PathX[0]=Units[pt].Position.X+CosDegrees(angl2)*280.0;
-		Units[n].PathY[0]=Units[pt].Position.Y+SinDegrees(angl2)*280.0;
+		Units[n].SetPathPoint(0, Units[pt].Position+WorldVector.FromDirection(angl2) * 280.0);
 		}
 
-	Units[n].PathX[1]=Units[pt].Position.X+CosDegrees(angl2)*130.0;
-	Units[n].PathY[1]=Units[pt].Position.Y+SinDegrees(angl2)*130.0;
+	Units[n].SetPathPoint(1, Units[pt].Position+WorldVector.FromDirection(angl2) * 130.0);
 
-	Units[n].PathX[2]=Units[pt].Position.X+CosDegrees(angl2)*10.0;
-	Units[n].PathY[2]=Units[pt].Position.Y+SinDegrees(angl2)*10.0;
+	Units[n].SetPathPoint(2, Units[pt].Position+WorldVector.FromDirection(angl2) * 10.0);
 
-	Units[n].PathX[3]=Units[pt].Position.X+CosDegrees(angl)*100.0;
-	Units[n].PathY[3]=Units[pt].Position.Y+SinDegrees(angl)*100.0;
+	Units[n].SetPathPoint(3, Units[pt].Position+WorldVector.FromDirection(angl) * 100.0);
 
 	Units[n].PathX[4]=MAP_RIGHT+1;
 	Units[n].IsStopping=false;
@@ -1134,8 +1128,7 @@ public void	UpdateLanding( int n )
 	if(  !Units[pt].IsUsed || pt==0 )
 		{
 		// もどる場所がない場合、あった場所で適当に動く
-		Units[n].PathX[0]=Units[n].Position.X+(double)(Random(400)-200);
-		Units[n].PathY[0]=Units[n].Position.Y+(double)(Random(400)-200);
+		Units[n].SetPathPoint(0, Units[n].Position+new WorldVector(Random(400)-200, Random(400)-200));
 
 		Units[n].PathX[1]=MAP_RIGHT+1;
 		Units[n].IsStopping=false;
@@ -1190,44 +1183,34 @@ public void	UpdateLanding( int n )
 			// 全4点を調整
 			if( Units[n].Kind==UnitKind.Bomber )
 				{
-				Units[n].PathX[0]=Units[pt].Position.X+CosDegrees(angl2)*560.0;
-				Units[n].PathY[0]=Units[pt].Position.Y+SinDegrees(angl2)*560.0;
+				Units[n].SetPathPoint(0, Units[pt].Position+WorldVector.FromDirection(angl2) * 560.0);
 				}
 			else
 				{
-				Units[n].PathX[0]=Units[pt].Position.X+CosDegrees(angl2)*280.0;
-				Units[n].PathY[0]=Units[pt].Position.Y+SinDegrees(angl2)*280.0;
+				Units[n].SetPathPoint(0, Units[pt].Position+WorldVector.FromDirection(angl2) * 280.0);
 				}
 
-			Units[n].PathX[1]=Units[pt].Position.X+CosDegrees(angl2)*130.0;
-			Units[n].PathY[1]=Units[pt].Position.Y+SinDegrees(angl2)*130.0;
+			Units[n].SetPathPoint(1, Units[pt].Position+WorldVector.FromDirection(angl2) * 130.0);
 
-			Units[n].PathX[2]=Units[pt].Position.X+CosDegrees(angl2)*10.0;
-			Units[n].PathY[2]=Units[pt].Position.Y+SinDegrees(angl2)*10.0;
+			Units[n].SetPathPoint(2, Units[pt].Position+WorldVector.FromDirection(angl2) * 10.0);
 
-			Units[n].PathX[3]=Units[pt].Position.X+CosDegrees(angl)*100.0;
-			Units[n].PathY[3]=Units[pt].Position.Y+SinDegrees(angl)*100.0;
+			Units[n].SetPathPoint(3, Units[pt].Position+WorldVector.FromDirection(angl) * 100.0);
 			break;
 
 		case 3:
 			// 全3点を調整
-			Units[n].PathX[0]=Units[pt].Position.X+CosDegrees(angl2)*130.0;
-			Units[n].PathY[0]=Units[pt].Position.Y+SinDegrees(angl2)*130.0;
+			Units[n].SetPathPoint(0, Units[pt].Position+WorldVector.FromDirection(angl2) * 130.0);
 
-			Units[n].PathX[1]=Units[pt].Position.X+CosDegrees(angl2)*10.0;
-			Units[n].PathY[1]=Units[pt].Position.Y+SinDegrees(angl2)*10.0;
+			Units[n].SetPathPoint(1, Units[pt].Position+WorldVector.FromDirection(angl2) * 10.0);
 
-			Units[n].PathX[2]=Units[pt].Position.X+CosDegrees(angl)*100.0;
-			Units[n].PathY[2]=Units[pt].Position.Y+SinDegrees(angl)*100.0;
+			Units[n].SetPathPoint(2, Units[pt].Position+WorldVector.FromDirection(angl) * 100.0);
 			break;
 
 		case 2:
 			// 全2点を調整
-			Units[n].PathX[0]=Units[pt].Position.X+CosDegrees(angl2)*10.0;
-			Units[n].PathY[0]=Units[pt].Position.Y+SinDegrees(angl2)*10.0;
+			Units[n].SetPathPoint(0, Units[pt].Position+WorldVector.FromDirection(angl2) * 10.0);
 
-			Units[n].PathX[1]=Units[pt].Position.X+CosDegrees(angl)*100.0;
-			Units[n].PathY[1]=Units[pt].Position.Y+SinDegrees(angl)*100.0;
+			Units[n].SetPathPoint(1, Units[pt].Position+WorldVector.FromDirection(angl) * 100.0);
 			break;
 		}
 	}

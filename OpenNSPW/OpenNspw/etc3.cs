@@ -1179,8 +1179,7 @@ public void	AssignGroupLeader(int m)
 		// ｐｐ＿ｘ、ｙをコピーします。
 		for(var i=0;i<=63;i++)
 			{
-			Units[min_no].PathX[i]=Units[m].PathX[i];
-			Units[min_no].PathY[i]=Units[m].PathY[i];
+			Units[min_no].SetPathPoint(i, Units[m].GetPathPoint(i));
 			}
 		}
 

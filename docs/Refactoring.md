@@ -256,7 +256,7 @@ Done. `SoundId` indexes the sound buffers with a cast. `SpriteId` indexes `Sprit
 ### 5. Value types
 `WorldPosition`, `WorldVector`, `Angle`, `PixelPoint`, `PixelSize`, `Rect`, with their bit-for-bit tests. Then `Bool32` and `UnitId`, field by field.
 
-In progress: `WorldPosition`, a readonly struct, holds every position, and `WorldVector` the moves that add to one. Pairs of assignments of `X` and `Y` are assignments of a position. The sprites' pairs of fields are `PixelPoint`s and a `PixelSize`, assigned whole. `Bool32` and `Bool8` hold the flags of the units, the effects, the select orders and the globals.
+In progress: `WorldPosition`, a readonly struct, holds every position, and `WorldVector` the moves that add to one. Pairs of assignments of `X` and `Y` are assignments of a position. The sprites' pairs of fields are `PixelPoint`s and a `PixelSize`, assigned whole. A unit's path points, `PathX[i]` and `PathY[i]`, are read and written as positions through `GetPathPoint` and `SetPathPoint`; the contact and the landing point are read as `ContactPosition` and `LandingPoint`. `Bool32` and `Bool8` hold the flags of the units, the effects, the select orders and the globals.
 
 ### 6. Union slot accessors
 `hp`, `arm` and `gas` first, whose meanings are clear, then `info[]` of `FIRE`, `EFFECT` and `UNIT`, slot by slot.

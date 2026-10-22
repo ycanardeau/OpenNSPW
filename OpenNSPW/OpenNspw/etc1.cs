@@ -1550,8 +1550,7 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int target, ref double bearing,
 					// 1.22 leaves their path as it is (0x413F51 to 0x413F7C).
 					if( Rules.FollowersFlyToRelease )
 						{
-other.PathX[0]=unit.Position.X;
-other.PathY[0]=unit.Position.Y;
+other.SetPathPoint(0, unit.Position);
 other.PathX[1]=MAP_RIGHT+1;
 						}
 
@@ -1563,8 +1562,7 @@ other.PathX[1]=MAP_RIGHT+1;
 
 		if( unit.IsGroupLeader==0 )
 			{
-			unit.PathX[0]=unit.Position.X;
-			unit.PathY[0]=unit.Position.Y;
+			unit.SetPathPoint(0, unit.Position);
 			unit.PathX[1]=MAP_RIGHT+1;
 			}
 
@@ -1641,8 +1639,7 @@ private bool AttackerDropBomb(ref int target, ref Unit unit, ref double bearing,
 						// 1.22 leaves their path as it is.
 						if( Rules.FollowersFlyToRelease )
 							{
-other.PathX[0]=unit.Position.X;
-other.PathY[0]=unit.Position.Y;
+other.SetPathPoint(0, unit.Position);
 other.PathX[1]=MAP_RIGHT+1;
 							}
 
@@ -1993,8 +1990,7 @@ public void	SetDynamicDestination(int n)
 			Units[n].Mode=UnitMode.Move;
 
 			// 目的地を決定
-			Units[n].PathX[0]=Units[leader].Position.X+CosDegrees(angle)*distance;
-			Units[n].PathY[0]=Units[leader].Position.Y+SinDegrees(angle)*distance;
+			Units[n].SetPathPoint(0, Units[leader].Position+WorldVector.FromDirection(angle) * distance);
 			Units[n].PathX[1]=MAP_RIGHT+1;
 			}
 		else
@@ -2030,8 +2026,7 @@ public void	SetDynamicDestination(int n)
 				}
 
 			// 目的地を決定
-			Units[n].PathX[0]=Units[leader].Position.X+CosDegrees(angle)*distance;
-			Units[n].PathY[0]=Units[leader].Position.Y+SinDegrees(angle)*distance;
+			Units[n].SetPathPoint(0, Units[leader].Position+WorldVector.FromDirection(angle) * distance);
 
 			if( flight>=0 )
 				{
@@ -2078,8 +2073,7 @@ public void	SetDynamicDestination(int n)
 					}
 
 				// 目的地を決定
-				Units[n].PathX[0]=Units[n].PathX[0]+CosDegrees(angle)*distance;
-				Units[n].PathY[0]=Units[n].PathY[0]+SinDegrees(angle)*distance;
+				Units[n].SetPathPoint(0, Units[n].GetPathPoint(0)+WorldVector.FromDirection(angle) * distance);
 				Units[n].PathX[1]=MAP_RIGHT+1;
 				}
 			}
@@ -2093,8 +2087,7 @@ public void	SetDynamicDestination(int n)
 			angle = angle-360;
 		distance=Units[n].DistanceToLeader;
 
-		Units[n].PathX[0]=Units[leader].Position.X+CosDegrees(angle)*distance;
-		Units[n].PathY[0]=Units[leader].Position.Y+SinDegrees(angle)*distance;
+		Units[n].SetPathPoint(0, Units[leader].Position+WorldVector.FromDirection(angle) * distance);
 		Units[n].PathX[1]=MAP_RIGHT+1;
 
 		if( 1!=0  )
@@ -2156,8 +2149,7 @@ public void	SetFighterEmergencyDestination(int m)
 
 		if( unit.IsGroupLeader==0 )
 			{
-			unit.PathX[0]=unit.Position.X;
-			unit.PathY[0]=unit.Position.Y;
+			unit.SetPathPoint(0, unit.Position);
 			unit.PathX[1]=MAP_RIGHT+1;
 			}
 		}
@@ -2336,8 +2328,7 @@ public void	SetAttackerEmergencyDestination(int m)
 
 		if( unit.IsGroupLeader==0 )
 			{
-			unit.PathX[0]=unit.Position.X;
-			unit.PathY[0]=unit.Position.Y;
+			unit.SetPathPoint(0, unit.Position);
 			unit.PathX[1]=MAP_RIGHT+1;
 			}
 		else
@@ -2390,13 +2381,11 @@ public void	SetAttackerEmergencyDestination(int m)
 
 				for(var f=0;f<64;f++)
 					{
-					Units[newLeader].PathX[f]=unit.PathX[f];
-					Units[newLeader].PathY[f]=unit.PathY[f];
+					Units[newLeader].SetPathPoint(f, unit.GetPathPoint(f));
 					}
 
 				// 昔の小隊長
-				unit.PathX[0]=unit.Position.X;
-				unit.PathY[0]=unit.Position.Y;
+				unit.SetPathPoint(0, unit.Position);
 				unit.PathX[1]=MAP_RIGHT+1;
 
 				}
@@ -2465,8 +2454,7 @@ public void	SetAttackerAttackDestination(int m)
 				other.EmergencyDestination = other.Position+WorldVector.FromDirection(heading) * 600;
 				other.EmergencyFlags[0]=10+((1+(other.FormationNumber%5))*20);
 
-				other.PathX[0]=Units[target].Position.X;
-				other.PathY[0]=Units[target].Position.Y;
+				other.SetPathPoint(0, Units[target].Position);
 				other.PathX[1]=MAP_RIGHT+1;
 
 				}
@@ -2487,8 +2475,7 @@ public void	SetAttackerAttackDestination(int m)
 				return;
 				}
 			var aim=Units[target].Position+WorldVector.FromDirection(Units[target].Direction); // とりあえずターン後
-			unit.PathX[0]=aim.X;
-			unit.PathY[0]=aim.Y;
+			unit.SetPathPoint(0, aim);
 			unit.PathX[1]=MAP_RIGHT+1;
 			unit.IsStopping=false;
 			}
@@ -2507,8 +2494,7 @@ public void	SetAttackerAttackDestination(int m)
 			else
 				ticks=70.0;
 			var aim=Units[target].Position+WorldVector.FromDirection(Units[target].Direction) * (Units[target].Speed*ticks); // とりあえずターン後
-			unit.PathX[0]=aim.X;
-			unit.PathY[0]=aim.Y;
+			unit.SetPathPoint(0, aim);
 			unit.PathX[1]=MAP_RIGHT+1;
 			unit.IsStopping=false;
 			if( unit.IsGroupLeader!=0  )
@@ -2538,8 +2524,7 @@ public void	SetAttackerAttackDestination(int m)
 		pathPointArea.left=(int)unit.PathX[0]-35;
 		if( PointInRect3(ref pathPointArea,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
 			{
-			unit.PathX[0]=unit.Position.X+CosDegrees(unit.Direction)*(300);
-			unit.PathY[0]=unit.Position.Y+SinDegrees(unit.Direction)*(300);
+			unit.SetPathPoint(0, unit.Position+WorldVector.FromDirection(unit.Direction) * 300);
 			unit.PathX[1]=MAP_RIGHT+1;
 			unit.IsStopping=false;
 			}

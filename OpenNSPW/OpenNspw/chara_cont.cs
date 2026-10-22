@@ -609,8 +609,7 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 	{
 	if( unit.IsStopping )
 		{
-		unit.PathX[0]=Units[unit.Carrier].Position.X;
-		unit.PathY[0]=Units[unit.Carrier].Position.Y;
+		unit.SetPathPoint(0, Units[unit.Carrier].Position);
 		}
 	else
 		{
@@ -750,8 +749,7 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 				unit.ReloadTime=TUNE_SPAN+(unit.MaxHp-unit.Hp)*(TUNE_SPAN/10)+((unit.Kind==UnitKind.Bomber ? 1 : 0)*(TUNE_SPAN/3));		// 数
 				unit.Hp=unit.MaxHp;
 
-				unit.PathX[0]=Units[unit.Carrier].Position.X;
-				unit.PathY[0]=Units[unit.Carrier].Position.Y;
+				unit.SetPathPoint(0, Units[unit.Carrier].Position);
 				unit.PathX[1]=MAP_RIGHT+1;
 
 				// BUG(NSPW NET): it counts the planes of LocalSide only, where it means the carrier's, so the two games of a
@@ -870,8 +868,7 @@ private void SteerUnit(ref Unit unit, int m)
 						// ＰＰ＿ＸＹを一つずつずらす
 						for(var n=0; unit.PathX[n]!=MAP_RIGHT+1; n++)
 							{
-							unit.PathX[n]=unit.PathX[n+1];
-							unit.PathY[n]=unit.PathY[n+1];
+							unit.SetPathPoint(n, unit.GetPathPoint(n+1));
 							}
 						}
 					else
@@ -909,8 +906,7 @@ private void SteerUnit(ref Unit unit, int m)
 				}
 			else
 				{
-				unit.PathX[0]=unit.Position.X;
-				unit.PathY[0]=unit.Position.Y;
+				unit.SetPathPoint(0, unit.Position);
 				}
 			}
 		else
@@ -925,8 +921,7 @@ private void SteerUnit(ref Unit unit, int m)
 				}
 			else
 				{
-				unit.PathX[0]=unit.Position.X;
-				unit.PathY[0]=unit.Position.Y;
+				unit.SetPathPoint(0, unit.Position);
 				}
 
 			// ptin dbg
@@ -1156,14 +1151,12 @@ private void ReplanBlockedRoute(ref Unit unit, int m, RECT? ahead)
 
 	if( i>=2 )
 		{
-		unit.PathX[0]=unit.PathX[i-1];
-		unit.PathY[0]=unit.PathY[i-1];
+		unit.SetPathPoint(0, unit.GetPathPoint(i-1));
 		unit.PathX[1]=MAP_RIGHT+1;
 		}
 	else if( ahead is { } r && PointInRect3(ref r,(int)unit.PathX[0],(int)unit.PathY[0])!=0 )
 		{
-		unit.PathX[0]=unit.Position.X;
-		unit.PathY[0]=unit.Position.Y;
+		unit.SetPathPoint(0, unit.Position);
 		unit.PathX[1]=MAP_RIGHT+1;
 		}
 

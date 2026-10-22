@@ -95,6 +95,15 @@ public struct	Unit		// 全ての艦船、航空機、地図上の位置
 	// Whether the unit is being supplied and repaired.
 	public readonly bool IsSupplying => SupplyTime != 0;
 
+	// Path point i, PathX[i] and PathY[i], as a position in the world.
+	public readonly WorldPosition GetPathPoint(int i) => new(PathX[i], PathY[i]);
+
+	public void SetPathPoint(int i, WorldPosition point)
+		{
+		PathX[i] = point.X;
+		PathY[i] = point.Y;
+		}
+
 	// The slots of hp, arm and gas by meaning (docs/Refactoring.md, Union slots). They are references to the slots, so
 	// that they can be changed and passed by ref like the slots.
 

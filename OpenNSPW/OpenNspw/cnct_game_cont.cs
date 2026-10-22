@@ -1394,8 +1394,7 @@ public void	SetUnitData(int m)
 		unit.Random10[i]=(short)Random(10);
 		}
 
-	unit.PathX[0]=unit.Position.X;
-	unit.PathY[0]=unit.Position.Y;
+	unit.SetPathPoint(0, unit.Position);
 	unit.PathX[1]=MAP_RIGHT+1;
 	}
 

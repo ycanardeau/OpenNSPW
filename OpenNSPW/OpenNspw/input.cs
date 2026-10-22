@@ -256,8 +256,7 @@ private bool IsShipAt(int m, double x, double y)
 // back, and the search starts again farther away (min_dstc), counting an error.
 private void TakeDetour(ref Unit unit, ref int pp_indx, double start_x, double start_y, double chk_dstc, double div, double direction, double drctn_ok1, double drctn_ok2, ref double min_dstc, double s_pp_x, double s_pp_y, double re_add, ref int error)
 	{
-	unit.PathX[pp_indx+1]=unit.PathX[pp_indx];
-	unit.PathY[pp_indx+1]=unit.PathY[pp_indx];
+	unit.SetPathPoint(pp_indx+1, unit.GetPathPoint(pp_indx));
 	unit.PathX[pp_indx+2]=MAP_RIGHT+1;
 	var wrk_x=start_x;
 	var wrk_y=start_y;
@@ -654,8 +653,7 @@ public void	ApplyOrders()
 				BufferedMoveOrders[e].ClearsPath=0;
 				MoveOrders[e].ClearsPath=0;
 
-				Units[m].PathX[0]=MoveOrders[e].Destination.X;
-				Units[m].PathY[0]=MoveOrders[e].Destination.Y;
+				Units[m].SetPathPoint(0, MoveOrders[e].Destination);
 				Units[m].PathX[1]=MAP_RIGHT+1;
 				n=1;
 
@@ -666,8 +664,7 @@ public void	ApplyOrders()
 				{
 				if(n<64)
 					{
-					Units[m].PathX[n]=MoveOrders[e].Destination.X;
-					Units[m].PathY[n]=MoveOrders[e].Destination.Y;
+					Units[m].SetPathPoint(n, MoveOrders[e].Destination);
 					Units[m].PathX[n+1]=MAP_RIGHT+1;
 					}
 				}
