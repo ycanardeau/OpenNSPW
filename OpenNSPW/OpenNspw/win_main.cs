@@ -42,17 +42,6 @@ public IDirectInputDevice8? pDIDevice = null; // DirectInputデバイス
 public IDirectInputDevice8? pDIDeviceMouse = null; // DirectInputデバイス
 //DIDEVCAPS				diDevCaps;				// ジョイスティックの能力 (joysticks are not used)
 
-// DirectSoundの変数
-public IDirectSound8? lpDS = null;
-public IDirectSoundBuffer? lpDSP = null;
-
-[Original("lpDSB_")] public Array35<Array6<IDirectSoundBuffer?>> SoundBuffers;
-[Original("snd_")] public Array35<short> NextSoundBuffers;
-
-// DirectMusicの変数
-public IDirectMusicLoader8? lpDML = null;
-public IDirectMusicPerformance8? lpDMP = null;
-
 // フォント
 [Original("gameFont_1")] public HFONT GameFont1;
 [Original("gameFont_2")] public HFONT GameFont2;
@@ -761,9 +750,9 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	if(!InitializeDirectInput())
 		return FALSE;
 #if SND_SW
-	if(!InitializeDirectSound())
+	if(!Sound.InitializeDirectSound())
 		return FALSE;
-	if(!InitializeDirectMusic())
+	if(!Sound.InitializeDirectMusic())
 		return FALSE;
 #endif
 

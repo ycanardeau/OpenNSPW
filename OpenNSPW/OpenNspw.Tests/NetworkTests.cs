@@ -94,7 +94,7 @@ internal sealed class ConnectingGame : IDisposable
 		{
 			for (var n = 0; n < SND_DUP; n++)
 			{
-				Game.SoundBuffers[m][n] = new SilentSoundBuffer();
+				Game.Sound.SoundBuffers[m][n] = new SilentSoundBuffer();
 			}
 		}
 

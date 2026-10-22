@@ -553,7 +553,7 @@ private void UpdateAntiSubmarineBomb(ref Fire fire, ref int n, int m)
 		var f=FindFreeEffect();
 		ref var effect = ref Effects[f];
 
-		PlaySoundEffect(SoundId.TorpedoHit1, fire.Position);
+		Sound.PlaySoundEffect(SoundId.TorpedoHit1, fire.Position);
 
 		effect.Layer=EffectLayer.Lower;
 
@@ -721,7 +721,7 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 			// 命中
 			Units[n].Hp-=GetDamagePoints(m);
 
-			PlaySoundEffect(SoundId.TorpedoHit1, fire.Position);
+			Sound.PlaySoundEffect(SoundId.TorpedoHit1, fire.Position);
 
 			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
@@ -771,7 +771,7 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 		else
 			{
 			// ハズレ
-			PlaySoundEffect(SoundId.Splash, fire.Position);
+			Sound.PlaySoundEffect(SoundId.Splash, fire.Position);
 
 			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
@@ -825,7 +825,7 @@ private void UpdateTorpedo(ref Fire fire, ref int n, int m)
 			fire.Target=0;
 			Units[n].Hp-=GetDamagePoints(m);
 
-			PlaySoundEffect(SoundId.TorpedoHit1+Random(2), fire.Position);
+			Sound.PlaySoundEffect(SoundId.TorpedoHit1+Random(2), fire.Position);
 
 			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
@@ -894,14 +894,14 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 	fire.Ticks++;
 
 	if( fire.Target==(int)UnitKind.Attacker && fire.Ticks==12 )
-		PlaySoundEffect(SoundId.BombRelease, fire.Position);
+		Sound.PlaySoundEffect(SoundId.BombRelease, fire.Position);
 
 	if( fire.Ticks<=fire.FlightTime  )
 		{	// 爆弾降下中
 		if( fire.Ticks>=50)
 			{
 			if( fire.Ticks==50)
-			PlaySoundEffect(SoundId.BombFalling, fire.Position);
+			Sound.PlaySoundEffect(SoundId.BombFalling, fire.Position);
 
 			fire.Position += WorldVector.FromDirection(fire.Direction) * fire.Speed;
 			fire.Speed+=fire.Acceleration;
@@ -937,7 +937,7 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 			// 命中
 			Units[n].Hp-=GetDamagePoints(m);
 
-			PlaySoundEffect(SoundId.BombHit1+Random(2), fire.Position);
+			Sound.PlaySoundEffect(SoundId.BombHit1+Random(2), fire.Position);
 
 			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
@@ -1006,12 +1006,12 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 			if( MapTiles[row][column]>=1)
 				{
 				effect.SpriteNumber=10;			// 着弾	のソースファイル上の番号
-				PlaySoundEffect(SoundId.BombHit1, fire.Position);
+				Sound.PlaySoundEffect(SoundId.BombHit1, fire.Position);
 				}
 			else
 				{
 				effect.SpriteNumber=8;			// 着弾	のソースファイル上の番号
-				PlaySoundEffect(SoundId.Splash, fire.Position);
+				Sound.PlaySoundEffect(SoundId.Splash, fire.Position);
 				}
 			}
 		}
@@ -1439,7 +1439,7 @@ private void UpdateSurfaceShipEffects(ref Unit unit, int m)
 	if( unit.Hp<=0 )
 		{	// 沈没
 
-		PlaySoundEffect(SoundId.ShipSinking1, unit.Position);
+		Sound.PlaySoundEffect(SoundId.ShipSinking1, unit.Position);
 
 		unit.Side=0;
 

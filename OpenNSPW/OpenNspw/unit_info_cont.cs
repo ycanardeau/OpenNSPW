@@ -571,7 +571,7 @@ private void ChooseCombatMenuItem(CombatMenuItem item)
 	BufferSelections();
 	CanOrder=false;
 	HasOrdered=true;
-	PlayInterfaceSound(SoundId.Click2);
+	Sound.PlayInterfaceSound(SoundId.Click2);
 	}
 
 private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menuItems, ref int m, ref RECT source, ref RECT destination)
@@ -874,7 +874,7 @@ private void RequestSupplyUnit()
 
 if(CONN_DBG!=0)
 SupplyCount=10;
-	PlayInterfaceSound(SoundId.Click2);
+	Sound.PlayInterfaceSound(SoundId.Click2);
 	}
 
 private void RequestSupply(ref Array8<int> length, ref Array8<Array128<byte>> text, ref RECT destination, int y, ref HDC hdc)

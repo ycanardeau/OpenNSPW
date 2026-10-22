@@ -78,7 +78,7 @@ private void BufferMoveOrder(int e)
 		}
 	CanOrder=false;
 	HasOrdered=true;
-	PlayInterfaceSound(SoundId.Click2);
+	Sound.PlayInterfaceSound(SoundId.Click2);
 	}
 
 private void SelectFriendlyTarget(ref int m, int e)
@@ -100,7 +100,7 @@ private void SelectFriendlyTarget(ref int m, int e)
 
 			CanOrder=false;
 			HasOrdered=true;
-			PlayInterfaceSound(SoundId.Click2);
+			Sound.PlayInterfaceSound(SoundId.Click2);
 			}
 		}
 	else
@@ -146,7 +146,7 @@ private void SelectTargetOrLanding(ref int m, int e)
 
 			CanOrder=false;
 			HasOrdered=true;
-			PlayInterfaceSound(SoundId.Click2);
+			Sound.PlayInterfaceSound(SoundId.Click2);
 			}
 		}
 	else
@@ -166,7 +166,7 @@ private void SelectTargetOrLanding(ref int m, int e)
 
 			CanOrder=false;
 			HasOrdered=true;
-			PlayInterfaceSound(SoundId.Click2);
+			Sound.PlayInterfaceSound(SoundId.Click2);
 
 			}
 		}

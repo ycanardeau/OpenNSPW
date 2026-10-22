@@ -277,6 +277,8 @@ In progress. The longest functions are split with the `extract` command of `Open
 ### 9. Splitting the partial class
 Into classes by responsibility, with C# conventions and `CLAUDE.md`. The emulator's region table is generated at this point at the latest.
 
+In progress. `Nspw` creates the classes and holds them (`Sound`); each is marked `[Globals]`, and the tests find a global in them by the path to it (`Nspw.Sound.SoundBuffers`). The `global-usage` command reports which members read and write each global, which gives the owners: the battle, the match settings, the screens, the input, the network, drawing, sound, the application and the single-player mode. The `move-members` command moves a class's members out of `Nspw`, reaching what stays in `Nspw` through the game. `Sound` is done; the stand-ins stay in `Nspw`.
+
 Steps 4 to 6 make the largest difference to readability for the least risk, because the compiler checks most of them. Steps 8 and 9 carry the most risk, and depend most on the characterization traces.
 
 ## Relation to Porting.md and Multiplayer.md

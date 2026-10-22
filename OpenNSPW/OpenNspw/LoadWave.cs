@@ -16,9 +16,11 @@
 
 // Port of LoadWave.cpp.
 
+using static OpenNspw.Nspw;
+
 namespace OpenNspw;
 
-public unsafe partial class Nspw
+public unsafe partial class Sound
 {
 
 // グローバル変数
@@ -30,7 +32,7 @@ public unsafe partial class Nspw
 /* WAVE 閉じる */
 public void YWaveClose()
 {
-	mmioClose(WaveFile);
+	_game.mmioClose(WaveFile);
 }
 
 /* WAVE 読み込み */
@@ -77,7 +79,7 @@ public int YWaveReadFile(HMMIO hmmioIn,uint cbRead,byte* pbDest,MMCKINFO* pckIn,
 {
 	MMIOINFO mmioinfoIn;
 	*cbActualRead = 0;
-	if (mmioGetInfo(hmmioIn,&mmioinfoIn,0)!=0)
+	if (_game.mmioGetInfo(hmmioIn,&mmioinfoIn,0)!=0)
 	{
 		return E_FAIL;
 	}
@@ -91,7 +93,7 @@ public int YWaveReadFile(HMMIO hmmioIn,uint cbRead,byte* pbDest,MMCKINFO* pckIn,
 	{
 		if (mmioinfoIn.pchNext == mmioinfoIn.pchEndRead)
 		{
-			if (mmioAdvance()!=0)
+			if (_game.mmioAdvance()!=0)
 			{
 				return E_FAIL;
 			}
@@ -103,7 +105,7 @@ public int YWaveReadFile(HMMIO hmmioIn,uint cbRead,byte* pbDest,MMCKINFO* pckIn,
 		*((byte*)pbDest + cT) = *((byte*)mmioinfoIn.pchNext);
 		mmioinfoIn.pchNext++;
 	}
-	if (mmioSetInfo(hmmioIn,&mmioinfoIn,0)!=0)
+	if (_game.mmioSetInfo(hmmioIn,&mmioinfoIn,0)!=0)
 	{
 		return E_FAIL;
 	}
@@ -114,12 +116,12 @@ public int YWaveReadFile(HMMIO hmmioIn,uint cbRead,byte* pbDest,MMCKINFO* pckIn,
 /* WAVE データ読み込み */
 public int YWaveStartDataRead(HMMIO* phmmioIn,MMCKINFO* pckIn,MMCKINFO* pckInRIFF)
 {
-	if (-1 == mmioSeek(*phmmioIn,(int)(pckInRIFF->dwDataOffset + sizeof(uint)),SEEK_SET))
+	if (-1 == _game.mmioSeek(*phmmioIn,(int)(pckInRIFF->dwDataOffset + sizeof(uint)),SEEK_SET))
 	{
 		return E_FAIL;
 	}
 	pckIn->ckid = mmioFOURCC('d','a','t','a');
-	if (mmioDescend(*phmmioIn,pckIn,pckInRIFF,MMIO_FINDCHUNK)!=0)
+	if (_game.mmioDescend(*phmmioIn,pckIn,pckInRIFF,MMIO_FINDCHUNK)!=0)
 	{
 		return E_FAIL;
 	}
@@ -132,13 +134,13 @@ public int YWaveOpenFile(string strFileName,HMMIO* phmmioIn,WAVEFORMATEX** ppwfx
 	int hr;
 	HMMIO hmmioIn;
 	hmmioIn = default;
-	if (!(hmmioIn = mmioOpen(strFileName)))
+	if (!(hmmioIn = _game.mmioOpen(strFileName)))
 	{
 		return E_FAIL;
 	}
 	if (FAILED(hr = YReadMMIO(hmmioIn,pckInRIFF,ppwfxInfo)))
 	{
-		mmioClose(hmmioIn);
+		_game.mmioClose(hmmioIn);
 		return E_FAIL;
 	}
 	*phmmioIn = hmmioIn;
@@ -151,7 +153,7 @@ public int YReadMMIO(HMMIO hmmioIn,MMCKINFO* pckInRIFF,WAVEFORMATEX** ppwfxInfo)
 	MMCKINFO ckIn;
 	PCMWAVEFORMAT pcmWaveFormat;
 	*ppwfxInfo = null;
-	if (mmioDescend(hmmioIn,pckInRIFF,null,0)!=0)
+	if (_game.mmioDescend(hmmioIn,pckInRIFF,null,0)!=0)
 	{
 		return E_FAIL;
 	}
@@ -160,7 +162,7 @@ public int YReadMMIO(HMMIO hmmioIn,MMCKINFO* pckInRIFF,WAVEFORMATEX** ppwfxInfo)
 		return E_FAIL;
 	}
 	ckIn.ckid = mmioFOURCC('f','m','t',' ');
-	if (mmioDescend(hmmioIn,&ckIn,pckInRIFF,MMIO_FINDCHUNK)!=0)
+	if (_game.mmioDescend(hmmioIn,&ckIn,pckInRIFF,MMIO_FINDCHUNK)!=0)
 	{
 		return E_FAIL;
 	}
@@ -168,7 +170,7 @@ public int YReadMMIO(HMMIO hmmioIn,MMCKINFO* pckInRIFF,WAVEFORMATEX** ppwfxInfo)
 	{
 		return E_FAIL;
 	}
-	if (mmioRead(hmmioIn,(byte*)&pcmWaveFormat,sizeof(PCMWAVEFORMAT)) != sizeof(PCMWAVEFORMAT))
+	if (_game.mmioRead(hmmioIn,(byte*)&pcmWaveFormat,sizeof(PCMWAVEFORMAT)) != sizeof(PCMWAVEFORMAT))
 	{
 		return E_FAIL;
 	}
@@ -185,7 +187,7 @@ public int YReadMMIO(HMMIO hmmioIn,MMCKINFO* pckInRIFF,WAVEFORMATEX** ppwfxInfo)
 	{
 		ushort cbExtraBytes;
 		cbExtraBytes = 0;
-		if (mmioRead(hmmioIn,(byte*)&cbExtraBytes,sizeof(ushort)) != sizeof(ushort))
+		if (_game.mmioRead(hmmioIn,(byte*)&cbExtraBytes,sizeof(ushort)) != sizeof(ushort))
 		{
 			return E_FAIL;
 		}
@@ -196,14 +198,14 @@ public int YReadMMIO(HMMIO hmmioIn,MMCKINFO* pckInRIFF,WAVEFORMATEX** ppwfxInfo)
 		}
 		memcpy(*ppwfxInfo,&pcmWaveFormat,(nuint)(sizeof(PCMWAVEFORMAT)));
 		(*ppwfxInfo)->cbSize = cbExtraBytes;
-		if (mmioRead(hmmioIn,(byte*)(((byte*) & ((*ppwfxInfo)->cbSize)) + sizeof(ushort)),cbExtraBytes) != cbExtraBytes)
+		if (_game.mmioRead(hmmioIn,(byte*)(((byte*) & ((*ppwfxInfo)->cbSize)) + sizeof(ushort)),cbExtraBytes) != cbExtraBytes)
 		{
 			free(*ppwfxInfo);
 			*ppwfxInfo = null;
 			return E_FAIL;
 		}
 	}
-	if (mmioAscend(hmmioIn,&ckIn,0)!=0)
+	if (_game.mmioAscend(hmmioIn,&ckIn,0)!=0)
 	{
 		free(*ppwfxInfo);
 		*ppwfxInfo = null;

@@ -230,19 +230,19 @@ public void EndApp()
 		DeleteObject(GameFont2);
 
 	// ダイレクトミュージック
-	RELEASE(ref lpDMP);
-	RELEASE(ref lpDML);
+	RELEASE(ref Sound.lpDMP);
+	RELEASE(ref Sound.lpDML);
 
 	// ダイレクトサウンド
 	for(var m=0; m<NUM_SOUND_EFFECTS; m++)
 		{
 		for(var n=0; n<SND_DUP; n++)
 			{
-			RELEASE(ref SoundBuffers[m][n]);
+			RELEASE(ref Sound.SoundBuffers[m][n]);
 			}
 		}
-	RELEASE(ref lpDSP);
-	RELEASE(ref lpDS);
+	RELEASE(ref Sound.lpDSP);
+	RELEASE(ref Sound.lpDS);
 
 	// ダイレクトドロー
 	RELEASE(ref OffscreenSurface);
@@ -603,7 +603,7 @@ public nint	IDD_OK_CANCEL_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					BufferedSystemOrders[1]=(byte)DialogAnswer;
 					CanOrder=false;
 					HasOrdered=true;
-					PlayInterfaceSound(SoundId.Click2);
+					Sound.PlayInterfaceSound(SoundId.Click2);
 
 					DestroyWindow(hWnd);
 					MainDialog=null;
@@ -747,7 +747,7 @@ private void ChangeEditorUnitWeapon()
 				Units[SelectedUnit].Ammo=0;	// 数
 				break;
 			}
-		PlayInterfaceSound(SoundId.Click1);
+		Sound.PlayInterfaceSound(SoundId.Click1);
 		}
 	else if( Units[SelectedUnit].Kind==UnitKind.Bomber )
 		{
@@ -767,7 +767,7 @@ private void ChangeEditorUnitWeapon()
 				Units[SelectedUnit].Ammo=0;	// 数
 				break;
 			}
-		PlayInterfaceSound(SoundId.Click1);
+		Sound.PlayInterfaceSound(SoundId.Click1);
 		}
 	else if( (Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.LightCarrier) || Units[SelectedUnit].Kind==UnitKind.Transport )
 		{
@@ -797,7 +797,7 @@ private void PlaceEditorUnit(ref int m)
 			m=AddPlane(LocalSide,(UnitKind)EditorKind,EditorVariant,PreviousSelectedUnit,1,FireKind.Unarmed);
 
 		if(m!=0)
-			PlayInterfaceSound(SoundId.Click1);
+			Sound.PlayInterfaceSound(SoundId.Click1);
 		}
 	else if( UnitInfoPanel[1]==0 && CursorPosition.x<=CMBT_WIDTH && CursorPosition.y<=CMBT_HEIGHT )
 		{
@@ -840,7 +840,7 @@ private void PlaceEditorUnit(ref int m)
 
 			if(m!=0)
 				{
-				PlayInterfaceSound(SoundId.Click1);
+				Sound.PlayInterfaceSound(SoundId.Click1);
 				}
 			if((UnitKind)EditorKind==UnitKind.Transport)
 				{
@@ -882,7 +882,7 @@ private void DeleteEditorUnit()
 		CombatMenuSelection=CombatMenuItem.None;
 		ClearSelection2(1);
 
-		PlayInterfaceSound(SoundId.Click1);
+		Sound.PlayInterfaceSound(SoundId.Click1);
 		}
 	}
 
@@ -948,7 +948,7 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 						{
 						/*g_hDlg =*/ CreateDialog(MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_SAVE_Proc );
 
-						PlayInterfaceSound(SoundId.Click1);
+						Sound.PlayInterfaceSound(SoundId.Click1);
 						}
 
 					break;
@@ -965,14 +965,14 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 						// シナリオ選択がユーザーシナリオならファイル選択します。
 						/*g_hDlg =*/ CreateDialog(MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_LOAD_Proc );
 
-						PlayInterfaceSound(SoundId.Click1);
+						Sound.PlayInterfaceSound(SoundId.Click1);
 						}
 					break;
 
 				case VK_F3:
 					if( IsEditingMap && Mode==GameMode.Battle )
 						{
-						PlayInterfaceSound(SoundId.Click1);
+						Sound.PlayInterfaceSound(SoundId.Click1);
 						MakeTerrainSurface();
 						}
 					else
@@ -988,7 +988,7 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					if( IsEditingMap && EditorTarget>1 && Mode==GameMode.Battle )
 						{
 						EditorTarget--;
-						PlayInterfaceSound(SoundId.Click1);
+						Sound.PlayInterfaceSound(SoundId.Click1);
 						}
 
 #if DBG_MODE
@@ -1009,7 +1009,7 @@ if( !IsEditingMap )
 						if( EditorTarget<24 )
 							{
 							EditorTarget++;
-							PlayInterfaceSound(SoundId.Click1);
+							Sound.PlayInterfaceSound(SoundId.Click1);
 							}
 						}
 
@@ -1055,7 +1055,7 @@ if( !IsEditingMap )
 							LocalSide=Side.UnitedStates;
 						else
 							LocalSide=Side.Japan;
-						PlayInterfaceSound(SoundId.Click1);
+						Sound.PlayInterfaceSound(SoundId.Click1);
 						}
 					break;
 
@@ -1067,7 +1067,7 @@ if( !IsEditingMap )
 						{
 						Reinforcements[(int)LocalSide]=Reinforcements[(int)LocalSide]++;
 						Reinforcements[(int)LocalSide]=(byte)(Reinforcements[(int)LocalSide]%4);
-						PlayInterfaceSound(SoundId.Click1);
+						Sound.PlayInterfaceSound(SoundId.Click1);
 						}
 					break;
 
@@ -1077,7 +1077,7 @@ if( !IsEditingMap )
 						{
 						Units[SelectedUnit].Direction=(Units[SelectedUnit].Direction+45.0).WholeDegrees();
 
-						PlayInterfaceSound(SoundId.Click1);
+						Sound.PlayInterfaceSound(SoundId.Click1);
 						}
 
 					break;
@@ -1097,7 +1097,7 @@ if( !IsEditingMap )
 						if( Units[SelectedUnit].Hp < Units[SelectedUnit].MaxHp )
 							{
 							Units[SelectedUnit].Hp++;
-							PlayInterfaceSound(SoundId.Click1);
+							Sound.PlayInterfaceSound(SoundId.Click1);
 							}
 						}
 					break;
@@ -1107,7 +1107,7 @@ if( !IsEditingMap )
 					if( IsEditingMap && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
 						Units[SelectedUnit].Hp--;
-						PlayInterfaceSound(SoundId.Click1);
+						Sound.PlayInterfaceSound(SoundId.Click1);
 						}
 					break;
 
@@ -1118,7 +1118,7 @@ if( !IsEditingMap )
 						if( Units[SelectedUnit].Fuel < 100 )
 							{
 							Units[SelectedUnit].Fuel++;
-							PlayInterfaceSound(SoundId.Click1);
+							Sound.PlayInterfaceSound(SoundId.Click1);
 							}
 						}
 					break;
@@ -1130,7 +1130,7 @@ if( !IsEditingMap )
 						if( Units[SelectedUnit].Fuel!=0  )
 							{
 							Units[SelectedUnit].Fuel--;
-							PlayInterfaceSound(SoundId.Click1);
+							Sound.PlayInterfaceSound(SoundId.Click1);
 							}
 						}
 					break;
@@ -1142,7 +1142,7 @@ if( !IsEditingMap )
 						if( Units[SelectedUnit].Ammo<Units[SelectedUnit].MaxAmmo  )
 							{
 							Units[SelectedUnit].Ammo++;
-							PlayInterfaceSound(SoundId.Click1);
+							Sound.PlayInterfaceSound(SoundId.Click1);
 							}
 						}
 					break;
@@ -1154,7 +1154,7 @@ if( !IsEditingMap )
 						if( Units[SelectedUnit].Ammo!=0  )
 							{
 							Units[SelectedUnit].Ammo--;
-							PlayInterfaceSound(SoundId.Click1);
+							Sound.PlayInterfaceSound(SoundId.Click1);
 							}
 						}
 					break;

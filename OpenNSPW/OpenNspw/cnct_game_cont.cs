@@ -4103,8 +4103,8 @@ private void StartFromSave(ref SyncFlagMessage flagMessage)
 #if SND_SW
 	if( !IsEditingMap )
 		{
-		SoundBuffers[(int)SoundId.Sea][0].SetVolume( 0 );
-		SoundBuffers[(int)SoundId.Sea][0].Play(0,0,DSBPLAY_LOOPING);	// ループする
+		Sound.SoundBuffers[(int)SoundId.Sea][0].SetVolume( 0 );
+		Sound.SoundBuffers[(int)SoundId.Sea][0].Play(0,0,DSBPLAY_LOOPING);	// ループする
 		}
 #endif
 	}
@@ -4151,7 +4151,7 @@ public void	InitializeGame()
 	// 全サウンドのダブリカウントクリア
 	for(var m=0; m<NUM_SOUND_EFFECTS; m++)
 		{
-		NextSoundBuffers[m]=0;
+		Sound.NextSoundBuffers[m]=0;
 		}
 
 	// 全エフェクトのクリア
@@ -4195,8 +4195,8 @@ public void	InitializeGame()
 #if SND_SW
 	if( !IsEditingMap )
 		{
-		SoundBuffers[(int)SoundId.Sea][0].SetVolume( 0 );
-		SoundBuffers[(int)SoundId.Sea][0].Play(0,0,DSBPLAY_LOOPING);	// ループする
+		Sound.SoundBuffers[(int)SoundId.Sea][0].SetVolume( 0 );
+		Sound.SoundBuffers[(int)SoundId.Sea][0].Play(0,0,DSBPLAY_LOOPING);	// ループする
 		}
 #endif
 

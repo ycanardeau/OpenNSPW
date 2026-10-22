@@ -259,7 +259,7 @@ public void GoToGameSetting()
 		}
 
 #if SND_SW
-	SoundBuffers[(int)SoundId.Sea][0].Stop();		//
+	Sound.SoundBuffers[(int)SoundId.Sea][0].Stop();		//
 #endif
 
 

@@ -178,9 +178,18 @@ public static class winerror
 	}
 }
 
-public partial class Nspw(INspwPlatform? platform = null)
+public partial class Nspw
 {
-	private readonly INspwPlatform _platform = platform ?? NullPlatform.Instance;
+	private readonly INspwPlatform _platform;
+
+	// The parts of the game that hold their own globals (docs/Refactoring.md, Splitting the partial class).
+	public Sound Sound { get; }
+
+	public Nspw(INspwPlatform? platform = null)
+	{
+		_platform = platform ?? NullPlatform.Instance;
+		Sound = new Sound(this);
+	}
 
 	// DirectMusic's classes are the port's own (unknwn.cs); the platform creates the others.
 	public int CoCreateInstance<T>(Guid rclsid, Guid riid, out T? ppv) where T : class

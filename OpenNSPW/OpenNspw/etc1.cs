@@ -219,7 +219,7 @@ private bool LandCargo(ref Unit unit, FireKind kind, int m)
 			ref var fire = ref Fires[f];
 			if( f!=0 )
 				{
-				PlaySoundEffect(SoundId.Splash, unit.Position);
+				Sound.PlaySoundEffect(SoundId.Splash, unit.Position);
 				fire.Target=MaxUnitId+1;
 				fire.Kind=kind;
 				fire.Position=unit.Position;
@@ -322,9 +322,9 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref Angle bearing, re
 
 			// 1.22 plays AA_SHL3 alone, drawing nothing: it has no AA_SHL5 (0x41019F).
 			if( !Rules.RapidFireSoundVaries || SharedRandom(2)!=0 )
-				PlaySoundEffect(SoundId.AntiAircraftShell3, unit.Position);
+				Sound.PlaySoundEffect(SoundId.AntiAircraftShell3, unit.Position);
 			else
-				PlaySoundEffect(SoundId.AntiAircraftShell5, unit.Position);
+				Sound.PlaySoundEffect(SoundId.AntiAircraftShell5, unit.Position);
 
 			fire.Target=target;
 			fire.Kind=kind;
@@ -385,7 +385,7 @@ private bool ShipDropAntiSubmarineBomb(ref int target, ref Unit unit, FireKind k
 					if(unit.Ammo<0 && Rules.DepthChargeCountStopsAtZero)
 						unit.Ammo=0;
 
-					PlaySoundEffect(SoundId.Splash, unit.Position);
+					Sound.PlaySoundEffect(SoundId.Splash, unit.Position);
 					fire.Target=target;
 					fire.Kind=kind;
 					fire.Position=unit.Position;
@@ -491,20 +491,20 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rang
 			case UnitKind.Fortress:
 				if( kind==FireKind.NavalBaseGun )
 					{
-					PlaySoundEffect(SoundId.Gun3, unit.Position);
+					Sound.PlaySoundEffect(SoundId.Gun3, unit.Position);
 					break;
 					}
-				PlaySoundEffect(SoundId.Gun2+Random(2), unit.Position);
+				Sound.PlaySoundEffect(SoundId.Gun2+Random(2), unit.Position);
 				break;
 			case UnitKind.Cruiser:
 			case UnitKind.Pillboxes:
-				PlaySoundEffect(SoundId.Gun1+Random(2), unit.Position);
+				Sound.PlaySoundEffect(SoundId.Gun1+Random(2), unit.Position);
 				break;
 
 			case UnitKind.Destroyer:
 			case UnitKind.Submarine:
 			case UnitKind.InfantryBase:
-				PlaySoundEffect(SoundId.Gun1, unit.Position);
+				Sound.PlaySoundEffect(SoundId.Gun1, unit.Position);
 				break;
 			}
 
@@ -662,7 +662,7 @@ private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref Angle bearing, Fire
 			}
 
 		if( unit.Kind!=UnitKind.Submarine )
-			PlaySoundEffect(SoundId.TorpedoLaunch, unit.Position);
+			Sound.PlaySoundEffect(SoundId.TorpedoLaunch, unit.Position);
 
 		for( var torpedo=0; torpedo<=lastTorpedo; torpedo++)
 			{
@@ -757,7 +757,7 @@ private bool ShipFireTorpedoAtTarget(int target, ref Unit unit, ref Angle bearin
 
 		if( unit.Kind!=UnitKind.Submarine )
 			{
-			PlaySoundEffect(SoundId.TorpedoLaunch, unit.Position);
+			Sound.PlaySoundEffect(SoundId.TorpedoLaunch, unit.Position);
 			}
 		else
 			{
@@ -848,7 +848,7 @@ private bool ShipFireAntiAircraftShellAtTarget(int target, ref Unit unit, ref in
 		if( (relativeBearing>=45.0 && relativeBearing<=135.0) || (relativeBearing>=225.0 && relativeBearing<=315.0) )
 			shots=shotCounts[1];	// 側面
 
-		PlaySoundEffect(SoundId.AntiAircraftShell2, unit.Position);
+		Sound.PlaySoundEffect(SoundId.AntiAircraftShell2, unit.Position);
 		for( var i=1; i<=shots ;i++ )
 			{
 
@@ -949,7 +949,7 @@ private bool ShipFireAntiAircraftShellWithoutTarget(ref Unit unit, ref Angle bea
 				{
 				if(unit.Ammo!=0)
 					unit.Ammo-=SHL_SZ;			// 弾薬消費
-				PlaySoundEffect(SoundId.AntiAircraftShell2, unit.Position);
+				Sound.PlaySoundEffect(SoundId.AntiAircraftShell2, unit.Position);
 				fire.Target=target;
 				fire.Kind=kind;
 				fire.Position=unit.Position;
@@ -1036,17 +1036,17 @@ private bool ShipFireGunAtTarget(int target, ref Unit unit, FireKind kind, ref i
 			{
 			case UnitKind.Battleship:
 			case UnitKind.Fortress:
-				PlaySoundEffect(SoundId.Gun3, unit.Position);
+				Sound.PlaySoundEffect(SoundId.Gun3, unit.Position);
 				break;
 			case UnitKind.Cruiser:
 			case UnitKind.Pillboxes:
-				PlaySoundEffect(SoundId.Gun2, unit.Position);
+				Sound.PlaySoundEffect(SoundId.Gun2, unit.Position);
 				break;
 
 			case UnitKind.Destroyer:
 			case UnitKind.Submarine:
 			case UnitKind.InfantryBase:
-				PlaySoundEffect(SoundId.Gun1+Random(2), unit.Position);
+				Sound.PlaySoundEffect(SoundId.Gun1+Random(2), unit.Position);
 				break;
 			}
 
@@ -1176,7 +1176,7 @@ private bool ShipFireBullet(ref int target, ref Unit unit, ref Angle bearing, Fi
 		if( f!=0 )
 			{
 			//unit[m].arm[1]--;			// 弾薬消費
-			PlaySoundEffect(SoundId.AntiAircraftBullet3, unit.Position);
+			Sound.PlaySoundEffect(SoundId.AntiAircraftBullet3, unit.Position);
 			fire.Target=target;
 			fire.Kind=kind;
 			fire.Position=unit.Position;
@@ -1234,7 +1234,7 @@ private bool BomberFireBullet(ref int target, ref Unit unit, ref Angle bearing, 
 		if( f!=0 )
 			{
 			//unit[m].arm[1]--;			// 弾薬消費
-			PlaySoundEffect(SoundId.AntiAircraftBullet4, unit.Position);
+			Sound.PlaySoundEffect(SoundId.AntiAircraftBullet4, unit.Position);
 			fire.Target=target;
 			fire.Kind=kind;
 			fire.Position=unit.Position;
@@ -1307,14 +1307,14 @@ private bool FighterFireBullet(ref int target, ref Unit unit, FireKind kind)
 				{
 				// 艦上戦闘機
 				if(unit.Side==Side.Japan)
-					PlaySoundEffect(SoundId.AntiAircraftBullet1, unit.Position);
+					Sound.PlaySoundEffect(SoundId.AntiAircraftBullet1, unit.Position);
 				else
-					PlaySoundEffect(SoundId.AntiAircraftBullet2, unit.Position);
+					Sound.PlaySoundEffect(SoundId.AntiAircraftBullet2, unit.Position);
 				}
 			else
 				{
 				// 陸上戦闘機
-				PlaySoundEffect(SoundId.AntiAircraftShell4, unit.Position);
+				Sound.PlaySoundEffect(SoundId.AntiAircraftShell4, unit.Position);
 				}
 
 			fire.Target=target;
@@ -1362,7 +1362,7 @@ private bool PlaneFireBullet(ref int target, ref Unit unit, ref Angle bearing, F
 		if( f!=0 )
 			{
 			//unit[m].arm[1]--;			// 弾薬消費
-			PlaySoundEffect(SoundId.AntiAircraftBullet3, unit.Position);
+			Sound.PlaySoundEffect(SoundId.AntiAircraftBullet3, unit.Position);
 			fire.Target=target;
 			fire.Kind=kind;
 			fire.Position=unit.Position;
@@ -1490,7 +1490,7 @@ other.EndPath(1);
 		ref var fire = ref Fires[n];
 		if( n!=0 )
 			{
-			PlaySoundEffect(SoundId.Splash, unit.Position);
+			Sound.PlaySoundEffect(SoundId.Splash, unit.Position);
 			fire.Target=target;
 			fire.Kind=kind;
 			fire.Position=unit.Position;
@@ -1679,7 +1679,7 @@ private bool BomberDropBomb(ref int target, ref Unit unit, ref Angle bearing, Fi
 		ref var fire = ref Fires[f];
 		if( f!=0 )
 			{
-			PlaySoundEffect(SoundId.BomberBombRelease, unit.Position);
+			Sound.PlaySoundEffect(SoundId.BomberBombRelease, unit.Position);
 			if(unit.Ammo!=0)
 				unit.Ammo--;		// 消費
 
@@ -2154,7 +2154,7 @@ public void	SetFighterAttackDestination(int m)
 	unit.EmergencyFlags[0]=70+Random(40);
 	unit.IsStopping=false;
 	if(Random(10)==0)
-		PlaySoundEffect(SoundId.Plane1+Random(2), unit.Position);
+		Sound.PlaySoundEffect(SoundId.Plane1+Random(2), unit.Position);
 
 	}
 

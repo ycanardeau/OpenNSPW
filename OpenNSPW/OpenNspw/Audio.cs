@@ -16,9 +16,11 @@
 
 using System.Collections.Immutable;
 
+using static OpenNspw.Nspw;
+
 namespace OpenNspw;
 
-public unsafe partial class Nspw
+public unsafe partial class Sound
 {
 
 /*--------------------------------------------
@@ -29,13 +31,13 @@ public bool	InitializeDirectMusic()
 	{
 
 	// DirectMusicLoader8 オブジェクトと DirectMusicPerformance8 オブジェクトの作成
-	if (FAILED(CoCreateInstance(CLSID_DirectMusicLoader,IID_IDirectMusicLoader8,out lpDML)))
+	if (FAILED(_game.CoCreateInstance(CLSID_DirectMusicLoader,IID_IDirectMusicLoader8,out lpDML)))
 		{
 		// 失敗
 		printf();
 		return false;
 		}
-	if (FAILED(CoCreateInstance(CLSID_DirectMusicPerformance,IID_IDirectMusicPerformance8,out lpDMP)))
+	if (FAILED(_game.CoCreateInstance(CLSID_DirectMusicPerformance,IID_IDirectMusicPerformance8,out lpDMP)))
 		{
 		// 失敗
 		RELEASE(ref lpDML);
@@ -66,18 +68,18 @@ public bool	InitializeDirectSound()
 	{
 
 	// DirectSound8 の作成
-	if (FAILED(DirectSoundCreate8(out lpDS)))
+	if (FAILED(_game.DirectSoundCreate8(out lpDS)))
 		{
-		MessageBox(null,"DirectSound オブジェクトの作成に失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
+		_game.MessageBox(null,"DirectSound オブジェクトの作成に失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
 		return false;
 		}
 
 	// DirectSound の協調レベルを設定
-	if (FAILED(lpDS.SetCooperativeLevel(hwndApp,DSSCL_PRIORITY)))
+	if (FAILED(lpDS.SetCooperativeLevel(_game.hwndApp,DSSCL_PRIORITY)))
 		{
-		MessageBox(null,"DirectSound の協調レベルの設定に失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
+		_game.MessageBox(null,"DirectSound の協調レベルの設定に失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
 		// 閉じる
-		SendMessage(hwndApp,WM_CLOSE,0,0);
+		_game.SendMessage(_game.hwndApp,WM_CLOSE,0,0);
 		return false;
 		}
 
@@ -90,9 +92,9 @@ public bool	InitializeDirectSound()
 	desc.lpwfxFormat=null;
 	if (FAILED(lpDS.CreateSoundBuffer(&desc,out lpDSP,null)))
 		{
-		MessageBox(null,"プライマリサウンドバッファの作成に失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
+		_game.MessageBox(null,"プライマリサウンドバッファの作成に失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
 		// 閉じる
-		SendMessage(hwndApp,WM_CLOSE,0,0);
+		_game.SendMessage(_game.hwndApp,WM_CLOSE,0,0);
 		return false;
 		}
 
@@ -103,8 +105,8 @@ public bool	InitializeDirectSound()
 		SoundBuffers[sound][0]= LoadWave($"WAV\\{SoundFileNames[sound]}.wav");
 		if (SoundBuffers[sound][0]==null)
 			{
-			MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-			SendMessage(hwndApp,WM_CLOSE,0,0);
+			_game.MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
+			_game.SendMessage(_game.hwndApp,WM_CLOSE,0,0);
 			return false;
 			}
 		for(var i=1;i<SND_DUP;i++)
@@ -154,18 +156,18 @@ return;
 	if( position.X!=(double)World.Beyond )
 		{
 		var isHeard=false;
-		for(var n=1;n<=MaxUnitId && !isHeard ;n++)
+		for(var n=1;n<=_game.MaxUnitId && !isHeard ;n++)
 			{
-			if( Units[n].IsUsed && Units[n].Side==LocalSide && Units[n].PlaneState!=UnitState.Parked )
+			if( _game.Units[n].IsUsed && _game.Units[n].Side==_game.LocalSide && _game.Units[n].PlaneState!=UnitState.Parked )
 				{
 				// マイユニットからこのエフェクトが見えるか
 				// 現地点からユニット地点への距離
 
-				var eye=EyeOf(ref Units[n]);	// 航空機の場合はちょっと前へ
+				var eye=_game.EyeOf(ref _game.Units[n]);	// 航空機の場合はちょっと前へ
 
 				var distance=(eye-position).Length;
 
-				switch( Units[n].Kind )
+				switch( _game.Units[n].Kind )
 					{
 					case UnitKind.Battleship:		size=BB1_SIGHT;		break;
 					case UnitKind.Cruiser:		size=CA1_SIGHT;		break;
@@ -201,7 +203,7 @@ return;
 		// ptin dbg
 		var hearingArea=new PixelRect(-500, CMBT_HEIGHT+500, CMBT_WIDTH+500, -500);
 
-		if( !hearingArea.ContainsWithTopAbove(WorldToScreen(position)) )
+		if( !hearingArea.ContainsWithTopAbove(_game.WorldToScreen(position)) )
 			return;
 		}
 

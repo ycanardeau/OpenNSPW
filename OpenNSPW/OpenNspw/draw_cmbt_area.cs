@@ -1074,7 +1074,7 @@ private void DrawUnit(ref Unit unit, SpriteId sprite, ref RECT source, ref RECT 
 
 			if( !IsEditingMap && playsPlaneSound==0 && Result==GameResult.None && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying && (FrameCount%10)==0 )
 				{
-				PlaySoundEffect(SoundId.PlaneFlying, unit.Position);
+				Sound.PlaySoundEffect(SoundId.PlaneFlying, unit.Position);
 				playsPlaneSound=1;
 				}
 
@@ -1184,7 +1184,7 @@ public void	DrawBattleArea()
 		}
 
 	if( rightButton==1 || leftButton==1 )
-		PlayInterfaceSound(SoundId.Click1);
+		Sound.PlayInterfaceSound(SoundId.Click1);
 
 	// The host's UI's commands for clicks on the battlefield (UICommands.cs): taken here, as the clicks are, and dropped
 	// as they are while an order waits for its turn; the units brushed are clicked, one a frame.

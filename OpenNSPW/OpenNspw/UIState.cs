@@ -167,7 +167,7 @@ public unsafe partial class Nspw
 	}
 
 	// Where a unit looks from: a fighter a little ahead of itself (FT_EYE).
-	private WorldPosition EyeOf(ref Unit unit)
+	internal WorldPosition EyeOf(ref Unit unit)
 	{
 		var eye=unit.Position;
 		if( unit.Kind==UnitKind.Fighter )
