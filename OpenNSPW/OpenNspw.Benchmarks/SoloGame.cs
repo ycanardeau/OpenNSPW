@@ -73,7 +73,7 @@ internal sealed class SoloGame : IDisposable
 			ThrowIfFailed();
 			if (!_thread.IsAlive || DateTime.UtcNow > deadline)
 			{
-				throw new TimeoutException($"The game did not reach the state: dialog {Game.g_hDlg?.Id}, mode {Game.Mode}, frames {_platform.FrameCount}.");
+				throw new TimeoutException($"The game did not reach the state: dialog {Game.MainDialog?.Id}, mode {Game.Mode}, frames {_platform.FrameCount}.");
 			}
 
 			Thread.Sleep(10);
@@ -100,15 +100,15 @@ internal sealed class SoloGame : IDisposable
 	private void StartBattle()
 	{
 		_thread.Start();
-		WaitUntil(() => Game.g_hDlg?.Id == IDD_ADDRESS_OVERRIDE);
+		WaitUntil(() => Game.MainDialog?.Id == IDD_ADDRESS_OVERRIDE);
 		Do(g =>
 		{
-			g.TypeDlgItemText(g.g_hDlg!, IDC_ADDRESS_LINE2, "0");
-			g.ClickDlgItem(g.g_hDlg!, IDOK);
+			g.TypeDlgItemText(g.MainDialog!, IDC_ADDRESS_LINE2, "0");
+			g.ClickDlgItem(g.MainDialog!, IDOK);
 		});
-		WaitUntil(() => Game.g_hDlg?.Id == IDD_MAIN_GAME && Game.ActivePlayerCount == 2);
+		WaitUntil(() => Game.MainDialog?.Id == IDD_MAIN_GAME && Game.ActivePlayerCount == 2);
 
-		Do(g => g.ClickDlgItem(g.g_hDlg!, IDC_START_GAME));
+		Do(g => g.ClickDlgItem(g.MainDialog!, IDC_START_GAME));
 		WaitUntil(() => _platform.FrameCount > 20);
 
 		Click(512, 384);
@@ -165,7 +165,7 @@ internal sealed class SoloGame : IDisposable
 	private void Select(List<int> units)
 	{
 		Game.ClearSelection2(1);
-		Game.set_the_slct_unit(units[0]);
+		Game.SelectUnit(units[0]);
 		foreach (var m in units.Skip(1))
 		{
 			Game.SelectionCount++;
@@ -196,7 +196,7 @@ internal sealed class SoloGame : IDisposable
 	{
 		Game.UpdateBattle();
 		Game.CheckResult();
-		Game.g_pThreadPool!.DoWork(DOWORK_TIMESLICE, 0);
+		Game.DirectPlayThreadPool!.DoWork(DOWORK_TIMESLICE, 0);
 	}
 
 	// Ticks until the start of the next turn, when the player can give an order (CanOrder).
@@ -217,14 +217,14 @@ internal sealed class SoloGame : IDisposable
 		Game.MoveOrders[1].Destination = ownPoint;
 		Game.HandleInput();
 
-		_platform.Rival!.Order(new _DP_NEW_PP
+		_platform.Rival!.Order(new MoveOrderMessage
 		{
-			dwType = MessageType.MoveOrder,
-			used = (byte)rival[0],
-			x = (short)rivalPoint.X,
-			y = (short)rivalPoint.Y,
-			cls = 1,
-			slct_unit = RivalSelection(rival),
+			Type = MessageType.MoveOrder,
+			Unit = (byte)rival[0],
+			X = (short)rivalPoint.X,
+			Y = (short)rivalPoint.Y,
+			ClearsPath = 1,
+			Selections = RivalSelection(rival),
 		});
 	}
 
@@ -248,7 +248,7 @@ internal sealed class SoloGame : IDisposable
 	public void Frame()
 	{
 		Game.UpdateFrame();
-		Game.g_pThreadPool!.DoWork(DOWORK_TIMESLICE, 0);
+		Game.DirectPlayThreadPool!.DoWork(DOWORK_TIMESLICE, 0);
 	}
 
 	// The drawing of a frame of the battle, without the tick.
@@ -281,7 +281,7 @@ internal sealed class SoloGame : IDisposable
 			{
 				Game.PostMessage(window, WM_CLOSE, 0, 0);
 			}
-			else if (Game.g_hDlg is { } dialog)
+			else if (Game.MainDialog is { } dialog)
 			{
 				Do(g => g.ClickDlgItem(dialog, IDCANCEL));
 			}

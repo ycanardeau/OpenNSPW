@@ -53,7 +53,7 @@ private void UnpackSelections(int e, bool isJapan)
 		}
 	}
 
-private bool ReceiveAndIssueOrders(ref short s, ref Array200<short> savedSelections, ref _DP_FLAG syncFlag, ref int checksum, ref int m)
+private bool ReceiveAndIssueOrders(ref short s, ref Array200<short> savedSelections, ref SyncFlagMessage syncFlag, ref int checksum, ref int m)
 	{
 	if( CONN_DBG==0 && !CanAdvance2)
 		{
@@ -186,10 +186,10 @@ private bool ReceiveAndIssueOrders(ref short s, ref Array200<short> savedSelecti
 #if false && CONN_DBG
 dbg[5]=rnd(100);
 #endif
-	syncFlag.dwType = MessageType.SyncFlag;
+	syncFlag.Type = MessageType.SyncFlag;
 
 	// プログラム同期エラーチェックの為
-	syncFlag.cc_chk=(byte)Tick;
+	syncFlag.TickChecksum=(byte)Tick;
 	TickChecksums[1]=(byte)Tick;
 
 	// 座標のずれチェックの為
@@ -203,47 +203,47 @@ dbg[5]=rnd(100);
 			}
 		}
 
-	syncFlag.unit_chk=(byte)checksum;
+	syncFlag.UnitChecksum=(byte)checksum;
 	UnitChecksums[1]=(byte)checksum;
 
 	// ランダム同期エラーチェックのため
-	syncFlag.rnd_chk=(byte)RandomCount;
+	syncFlag.RandomChecksum=(byte)RandomCount;
 	RandomChecksums[1]=(byte)RandomCount;
 
-	syncFlag.ccc_wait_chk=TickWaits[1];
+	syncFlag.TickWait=TickWaits[1];
 
-	syncFlag.rival_mode=(short)Mode;
+	syncFlag.RivalMode=(short)Mode;
 
-	bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
+	bufferDesc.dwBufferSize = (uint)(sizeof(SyncFlagMessage));
 	bufferDesc.pBufferData  = (byte*) Unsafe.AsPointer(ref syncFlag);
-	g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+	DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 	return true;
 	}
 
 private void SendMenuOrder(ref short s)
 	{
-	_DP_NEW_MENU message;
+	MenuOrderMessage message;
 	// メニュー
-	message.dwType = MessageType.MenuOrder;
+	message.Type = MessageType.MenuOrder;
 
-	message.menu=(byte)BufferedMenuOrders[1].Menu;
-	message.the_slct_unit=(byte)BufferedMenuOrders[1].SelectedUnit;
+	message.Menu=(byte)BufferedMenuOrders[1].Menu;
+	message.SelectedUnit=(byte)BufferedMenuOrders[1].SelectedUnit;
 
 	for( s=0; s<=(USA_PLANE_END/2)-1; s++)
 		{
-		message.slct_unit[s]=(byte)BufferedSelections[1][s];
+		message.Selections[s]=(byte)BufferedSelections[1][s];
 		}
-	bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_MENU));
+	bufferDesc.dwBufferSize = (uint)(sizeof(MenuOrderMessage));
 	bufferDesc.pBufferData  = (byte*) &message;
-	g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+	DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 	}
 
 private void SendSelectOrder(ref short s)
 	{
-	_DP_NEW_SLCT message;
-	_DP_NEW_SLCT_SHIP shipsMessage;
-	_DP_NEW_SLCT_PLANE planesMessage;
-	_DP_NEW_SLCT_LAND landMessage;
+	SelectOrderMessage message;
+	SelectShipsOrderMessage shipsMessage;
+	SelectPlanesOrderMessage planesMessage;
+	SelectBaseOrderMessage landMessage;
 	// 目標指定
 	short ships=0;
 	short planes=0;
@@ -259,74 +259,74 @@ private void SendSelectOrder(ref short s)
 	if(ships!=0 && planes!=0)
 		{
 		// 航空機も艦船もある
-		message.dwType = MessageType.SelectOrder;
-		message.sw=BufferedSelectOrders[1].IsSet.Value;
-		message.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
-		message.m=(byte)BufferedSelectOrders[1].Unit;
-		message.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
-		message.gr_y=(short)BufferedSelectOrders[1].GroundPosition.Y;
+		message.Type = MessageType.SelectOrder;
+		message.IsSet=BufferedSelectOrders[1].IsSet.Value;
+		message.SelectedUnit=(byte)BufferedSelectOrders[1].SelectedUnit;
+		message.Unit=(byte)BufferedSelectOrders[1].Unit;
+		message.GroundX=(short)BufferedSelectOrders[1].GroundPosition.X;
+		message.GroundY=(short)BufferedSelectOrders[1].GroundPosition.Y;
 		for( s=0; s<=(USA_PLANE_END/2)-1; s++)
 			{
-			message.slct_unit[s]=(byte)BufferedSelections[1][s];
+			message.Selections[s]=(byte)BufferedSelections[1][s];
 			}
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_SLCT));
+		bufferDesc.dwBufferSize = (uint)(sizeof(SelectOrderMessage));
 		bufferDesc.pBufferData  = (byte*) &message;
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 		}
 	else if( ships!=0 && planes==0 )
 		{
 		// 艦船のみ
-		shipsMessage.dwType = MessageType.SelectShipsOrder;
-		shipsMessage.sw=BufferedSelectOrders[1].IsSet.Value;
-		shipsMessage.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
-		shipsMessage.m=(byte)BufferedSelectOrders[1].Unit;
-		shipsMessage.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
-		shipsMessage.gr_y=(short)BufferedSelectOrders[1].GroundPosition.Y;
+		shipsMessage.Type = MessageType.SelectShipsOrder;
+		shipsMessage.IsSet=BufferedSelectOrders[1].IsSet.Value;
+		shipsMessage.SelectedUnit=(byte)BufferedSelectOrders[1].SelectedUnit;
+		shipsMessage.Unit=(byte)BufferedSelectOrders[1].Unit;
+		shipsMessage.GroundX=(short)BufferedSelectOrders[1].GroundPosition.X;
+		shipsMessage.GroundY=(short)BufferedSelectOrders[1].GroundPosition.Y;
 		for( s=0; s<=JPN_SHIP_END-1; s++)
 			{
-			shipsMessage.slct_unit[s]=(byte)BufferedSelections[1][s];
+			shipsMessage.Selections[s]=(byte)BufferedSelections[1][s];
 			}
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_SLCT_SHIP));
+		bufferDesc.dwBufferSize = (uint)(sizeof(SelectShipsOrderMessage));
 		bufferDesc.pBufferData  = (byte*) &shipsMessage;
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1, 0, null, ref hAsync, MUST_SEND );
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1, 0, null, ref hAsync, MUST_SEND );
 		}
 	else if( ships==0 && planes!=0 )
 		{
 		// 航空機のみ
-		planesMessage.dwType = MessageType.SelectPlanesOrder;
-		planesMessage.sw=BufferedSelectOrders[1].IsSet.Value;
-		planesMessage.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
-		planesMessage.m=(byte)BufferedSelectOrders[1].Unit;
-		planesMessage.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
-		planesMessage.gr_y=(short)BufferedSelectOrders[1].GroundPosition.Y;
+		planesMessage.Type = MessageType.SelectPlanesOrder;
+		planesMessage.IsSet=BufferedSelectOrders[1].IsSet.Value;
+		planesMessage.SelectedUnit=(byte)BufferedSelectOrders[1].SelectedUnit;
+		planesMessage.Unit=(byte)BufferedSelectOrders[1].Unit;
+		planesMessage.GroundX=(short)BufferedSelectOrders[1].GroundPosition.X;
+		planesMessage.GroundY=(short)BufferedSelectOrders[1].GroundPosition.Y;
 		for( s=0; s<=JPN_PLANE_END-JPN_PLANE_START; s++)
 			{
-			planesMessage.slct_unit[s]=(byte)BufferedSelections[1][s+JPN_SHIP_END];
+			planesMessage.Selections[s]=(byte)BufferedSelections[1][s+JPN_SHIP_END];
 			}
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_SLCT_PLANE));
+		bufferDesc.dwBufferSize = (uint)(sizeof(SelectPlanesOrderMessage));
 		bufferDesc.pBufferData  = (byte*) &planesMessage;
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 		}
 	else if( ships==0 && planes==0 )
 		{
 		// ユニットに対する指定無し。おそらく輸送船の揚陸先
-		landMessage.dwType = MessageType.SelectLandOrder;
-		landMessage.sw=BufferedSelectOrders[1].IsSet.Value;
-		landMessage.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
-		landMessage.m=(byte)BufferedSelectOrders[1].Unit;
-		landMessage.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
-		landMessage.gr_y=(short)BufferedSelectOrders[1].GroundPosition.Y;
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_SLCT_LAND));
+		landMessage.Type = MessageType.SelectLandOrder;
+		landMessage.IsSet=BufferedSelectOrders[1].IsSet.Value;
+		landMessage.SelectedUnit=(byte)BufferedSelectOrders[1].SelectedUnit;
+		landMessage.Unit=(byte)BufferedSelectOrders[1].Unit;
+		landMessage.GroundX=(short)BufferedSelectOrders[1].GroundPosition.X;
+		landMessage.GroundY=(short)BufferedSelectOrders[1].GroundPosition.Y;
+		bufferDesc.dwBufferSize = (uint)(sizeof(SelectBaseOrderMessage));
 		bufferDesc.pBufferData  = (byte*) &landMessage;
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 		}
 	}
 
 private void SendMoveOrder(ref short s)
 	{
-	_DP_NEW_PP message;
-	_DP_NEW_PP_SHIP shipsMessage;
-	_DP_NEW_PP_PLANE planesMessage;
+	MoveOrderMessage message;
+	MoveShipsOrderMessage shipsMessage;
+	MovePlanesOrderMessage planesMessage;
 	// 移動
 	short ships=0;
 	short planes=0;
@@ -342,57 +342,57 @@ private void SendMoveOrder(ref short s)
 	if(ships!=0 && planes!=0)
 		{
 		// 航空機も艦船もある
-		message.dwType = MessageType.MoveOrder;
-		message.used=(byte)BufferedMoveOrders[1].Unit;
-		message.x=(short)BufferedMoveOrders[1].Destination.X;
-		message.y=(short)BufferedMoveOrders[1].Destination.Y;
-		message.cls=BufferedMoveOrders[1].ClearsPath;
+		message.Type = MessageType.MoveOrder;
+		message.Unit=(byte)BufferedMoveOrders[1].Unit;
+		message.X=(short)BufferedMoveOrders[1].Destination.X;
+		message.Y=(short)BufferedMoveOrders[1].Destination.Y;
+		message.ClearsPath=BufferedMoveOrders[1].ClearsPath;
 		for( s=0; s<=(USA_PLANE_END/2)-1; s++)
 			{
-			message.slct_unit[s]=(byte)BufferedSelections[1][s];
+			message.Selections[s]=(byte)BufferedSelections[1][s];
 			}
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_PP));
+		bufferDesc.dwBufferSize = (uint)(sizeof(MoveOrderMessage));
 		bufferDesc.pBufferData  = (byte*) &message;
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
 		}
 	else if( ships!=0 && planes==0 )
 		{
 		// 艦船のみ
-		shipsMessage.dwType = MessageType.MoveShipsOrder;
-		shipsMessage.used=(byte)BufferedMoveOrders[1].Unit;
-		shipsMessage.x=(short)BufferedMoveOrders[1].Destination.X;
-		shipsMessage.y=(short)BufferedMoveOrders[1].Destination.Y;
-		shipsMessage.cls=BufferedMoveOrders[1].ClearsPath;
+		shipsMessage.Type = MessageType.MoveShipsOrder;
+		shipsMessage.Unit=(byte)BufferedMoveOrders[1].Unit;
+		shipsMessage.X=(short)BufferedMoveOrders[1].Destination.X;
+		shipsMessage.Y=(short)BufferedMoveOrders[1].Destination.Y;
+		shipsMessage.ClearsPath=BufferedMoveOrders[1].ClearsPath;
 		for( s=0; s<=JPN_SHIP_END-1; s++)
 			{
-			shipsMessage.slct_unit[s]=(byte)BufferedSelections[1][s];
+			shipsMessage.Selections[s]=(byte)BufferedSelections[1][s];
 			}
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_PP_SHIP));
+		bufferDesc.dwBufferSize = (uint)(sizeof(MoveShipsOrderMessage));
 		bufferDesc.pBufferData  = (byte*) &shipsMessage;
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 		}
 	else if( ships==0 && planes!=0 )
 		{
 		// 航空機のみ
-		planesMessage.dwType = MessageType.MovePlanesOrder;
-		planesMessage.used=(byte)BufferedMoveOrders[1].Unit;
-		planesMessage.x=(short)BufferedMoveOrders[1].Destination.X;
-		planesMessage.y=(short)BufferedMoveOrders[1].Destination.Y;
-		planesMessage.cls=BufferedMoveOrders[1].ClearsPath;
+		planesMessage.Type = MessageType.MovePlanesOrder;
+		planesMessage.Unit=(byte)BufferedMoveOrders[1].Unit;
+		planesMessage.X=(short)BufferedMoveOrders[1].Destination.X;
+		planesMessage.Y=(short)BufferedMoveOrders[1].Destination.Y;
+		planesMessage.ClearsPath=BufferedMoveOrders[1].ClearsPath;
 		for( s=0; s<=(JPN_PLANE_END-JPN_PLANE_START); s++)
 			{
-			planesMessage.slct_unit[s]=(byte)BufferedSelections[1][s+JPN_SHIP_END];
+			planesMessage.Selections[s]=(byte)BufferedSelections[1][s+JPN_SHIP_END];
 			}
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_PP_PLANE));
+		bufferDesc.dwBufferSize = (uint)(sizeof(MovePlanesOrderMessage));
 		bufferDesc.pBufferData  = (byte*) &planesMessage;
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 		}
 	}
 
-private bool SendOrders(ref short s, ref _DP_FLAG syncFlag)
+private bool SendOrders(ref short s, ref SyncFlagMessage syncFlag)
 	{
-	_DP_DATA_1 arrivalMessage;
+	NameMessage arrivalMessage;
 	if(  CONN_DBG==0 && !CanAdvance1 )
 		{
 		return false;
@@ -474,11 +474,11 @@ DebugValues[0]++;
 	if( BufferedMoveOrders[1].Unit==0 && !BufferedSelectOrders[1].IsSet && BufferedMenuOrders[1].Menu==CombatMenuItem.None && BufferedSystemOrders[1]==0 && BufferedArrivedUnits[1]==0 )
 		{
 		// 命令が無い場合。
-		syncFlag.dwType = MessageType.NoOrder;
+		syncFlag.Type = MessageType.NoOrder;
 
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
+		bufferDesc.dwBufferSize = (uint)(sizeof(SyncFlagMessage));
 		bufferDesc.pBufferData  = (byte*) Unsafe.AsPointer(ref syncFlag);
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
 		}
 	else
@@ -486,21 +486,21 @@ DebugValues[0]++;
 		// まず、このフェーズで溜めた、命令をセンドする。
 		if( BufferedSystemOrders[1]!=0 )
 			{
-			syncFlag.dwType = (MessageType)BufferedSystemOrders[1];
+			syncFlag.Type = (MessageType)BufferedSystemOrders[1];
 
-			bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
+			bufferDesc.dwBufferSize = (uint)(sizeof(SyncFlagMessage));
 			bufferDesc.pBufferData  = (byte*) Unsafe.AsPointer(ref syncFlag);
-			g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+			DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
 			SystemOrders[1]=BufferedSystemOrders[1];
 			}
 		else if( BufferedArrivedUnits[1]!=0 )
 			{
-			arrivalMessage.dwType = MessageType.UnitArrived;
-			arrivalMessage.data[0] = BufferedArrivedUnits[1];
-			bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
+			arrivalMessage.Type = MessageType.UnitArrived;
+			arrivalMessage.Data[0] = BufferedArrivedUnits[1];
+			bufferDesc.dwBufferSize = (uint)(sizeof(NameMessage));
 			bufferDesc.pBufferData  = (byte*) &arrivalMessage;
-			g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+			DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 			}
 		else if(BufferedMoveOrders[1].Unit!=0)
 			{
@@ -1857,7 +1857,7 @@ public void	UpdateBattle()
 	short	s = default;
 	Array200<short> savedSelections = default;
 
-	_DP_FLAG			syncFlag = default;
+	SyncFlagMessage			syncFlag = default;
 
 	if( Mode!=GameMode.Battle )
 		return;

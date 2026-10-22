@@ -647,7 +647,7 @@ private void DrawResult(ref Array5<int> length, ref Array5<Array128<byte>> text)
 	if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
 		{
 		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, gameFont_1);
+		SelectObject(hdc, GameFont1);
 
 #if !LNGG_VER
 		WriteResult(ref length, ref text);
@@ -3920,7 +3920,7 @@ public void MakeTerrainSurface()
 	source.right = source.left+255;
 	source.bottom = source.top+199;
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDS_OS, destination.left, destination.top,lpDDS_OS,&source,0))
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( OffscreenSurface, destination.left, destination.top,OffscreenSurface,&source,0))
 		{
 		RestoreSurfaces();
 		}
@@ -3941,7 +3941,7 @@ public void MakeTerrainSurface()
 				source.right = source.left+2;
 				source.bottom = source.top+2;
 
-				if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDS_OS, destination.left, destination.top,lpDDS_OS,&source,0))
+				if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( OffscreenSurface, destination.left, destination.top,OffscreenSurface,&source,0))
 					{
 					RestoreSurfaces();
 					}
@@ -4050,7 +4050,7 @@ private void ClearEffects()
 		}
 	}
 
-private void StartFromSave(ref _DP_FLAG flagMessage)
+private void StartFromSave(ref SyncFlagMessage flagMessage)
 	{
 	int f=ScenarioNumber;
 	switch( f )
@@ -4101,16 +4101,16 @@ private void StartFromSave(ref _DP_FLAG flagMessage)
 
 	CameraPosition = new WorldPosition(-400, 400);
 
-	flagMessage.dwType = MessageType.SyncFlag;
-	flagMessage.unit_chk=0;
+	flagMessage.Type = MessageType.SyncFlag;
+	flagMessage.UnitChecksum=0;
 	UnitChecksums[1]=0;
-	flagMessage.cc_chk=(byte)Tick;
+	flagMessage.TickChecksum=(byte)Tick;
 	TickChecksums[1]=(byte)Tick;
-	flagMessage.rnd_chk=(byte)RandomCount;
+	flagMessage.RandomChecksum=(byte)RandomCount;
 	RandomChecksums[1]=(byte)RandomCount;
-	bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
-	bufferDesc.pBufferData  = (byte*) (_DP_FLAG*)Unsafe.AsPointer(ref flagMessage);
-	g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+	bufferDesc.dwBufferSize = (uint)(sizeof(SyncFlagMessage));
+	bufferDesc.pBufferData  = (byte*) (SyncFlagMessage*)Unsafe.AsPointer(ref flagMessage);
+	DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
 	BufferedMoveOrders[0].Unit=0;						// クリア
 	BufferedMoveOrders[1].Unit=0;						// クリア
@@ -4157,8 +4157,8 @@ private void StartFromSave(ref _DP_FLAG flagMessage)
 #if SND_SW
 	if( !IsEditingMap )
 		{
-		lpDSB_[(int)SoundId.Sea][0].SetVolume( 0 );
-		lpDSB_[(int)SoundId.Sea][0].Play(0,0,DSBPLAY_LOOPING);	// ループする
+		SoundBuffers[(int)SoundId.Sea][0].SetVolume( 0 );
+		SoundBuffers[(int)SoundId.Sea][0].Play(0,0,DSBPLAY_LOOPING);	// ループする
 		}
 #endif
 	}
@@ -4170,7 +4170,7 @@ private void StartFromSave(ref _DP_FLAG flagMessage)
 public void	InitializeGame()
 	{
 
-	_DP_FLAG	flagMessage = default;
+	SyncFlagMessage	flagMessage = default;
 
 	Rules = IsSingleplayer ? BattleRules.Nspw122 : BattleRules.NspwNet;
 
@@ -4249,8 +4249,8 @@ public void	InitializeGame()
 #if SND_SW
 	if( !IsEditingMap )
 		{
-		lpDSB_[(int)SoundId.Sea][0].SetVolume( 0 );
-		lpDSB_[(int)SoundId.Sea][0].Play(0,0,DSBPLAY_LOOPING);	// ループする
+		SoundBuffers[(int)SoundId.Sea][0].SetVolume( 0 );
+		SoundBuffers[(int)SoundId.Sea][0].Play(0,0,DSBPLAY_LOOPING);	// ループする
 		}
 #endif
 
@@ -4304,16 +4304,16 @@ public void	InitializeGame()
 
 		CameraPosition = new WorldPosition(-400, 400);
 
-		flagMessage.dwType = MessageType.SyncFlag;
-		flagMessage.unit_chk=0;
+		flagMessage.Type = MessageType.SyncFlag;
+		flagMessage.UnitChecksum=0;
 		UnitChecksums[1]=0;
-		flagMessage.cc_chk=(byte)Tick;
+		flagMessage.TickChecksum=(byte)Tick;
 		TickChecksums[1]=(byte)Tick;
-		flagMessage.rnd_chk=(byte)RandomCount;
+		flagMessage.RandomChecksum=(byte)RandomCount;
 		RandomChecksums[1]=(byte)RandomCount;
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
+		bufferDesc.dwBufferSize = (uint)(sizeof(SyncFlagMessage));
 		bufferDesc.pBufferData  = (byte*) &flagMessage;
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
 		BufferedMoveOrders[0].Unit=0;						// クリア
 		BufferedMoveOrders[1].Unit=0;						// クリア

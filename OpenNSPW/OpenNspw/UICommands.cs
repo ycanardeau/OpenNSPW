@@ -305,7 +305,7 @@ public unsafe partial class Nspw
 	{
 		if( CanChooseScenario() && IsListedScenario(n) )
 			{
-			_DP_DATA_1 message = default;
+			NameMessage message = default;
 			ChooseScenario(n);
 			LeaveGameSetting(ref message);
 			}
@@ -323,7 +323,7 @@ public unsafe partial class Nspw
 	{
 		if( CanChooseScenario() && WasHost )
 			{
-			_DP_DATA_1 message = default;
+			NameMessage message = default;
 			StartFromResume(ref message);
 			}
 	}
@@ -332,7 +332,7 @@ public unsafe partial class Nspw
 	{
 		if( CanChooseScenario() && HasAutoSave!=0 )
 			{
-			_DP_DATA_1 message = default;
+			NameMessage message = default;
 			StartFromAutoSave(ref message);
 			}
 	}
@@ -415,7 +415,7 @@ public unsafe partial class Nspw
 	{
 		if( CanSetRules() && RivalMode==GameMode.ConfigSetting )
 			{
-			_DP_FLAG flagMessage = default;
+			SyncFlagMessage flagMessage = default;
 			BackToScenarioSetting(ref flagMessage);
 			}
 	}
@@ -424,7 +424,7 @@ public unsafe partial class Nspw
 	{
 		if( CanSetRules() && RivalMode==GameMode.ConfigSetting )
 			{
-			_DP_DATA_1 message = default;
+			NameMessage message = default;
 			StartBattle(ref message);
 			}
 	}

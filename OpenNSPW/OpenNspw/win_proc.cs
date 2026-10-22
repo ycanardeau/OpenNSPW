@@ -28,15 +28,15 @@ public void	RestoreSurfaces()
 
 	IDirectDrawSurface_Restore(lpDDSPrimary);
 	IDirectDrawSurface_Restore(lpDDSBack);
-	IDirectDrawSurface_Restore(lpDDS_OS);
+	IDirectDrawSurface_Restore(OffscreenSurface);
 
-	RELEASE(ref lpDDS_OS);
-	lpDDS_OS=bitmap_surface(SpriteSheetName);
+	RELEASE(ref OffscreenSurface);
+	OffscreenSurface=LoadBitmapSurface(SpriteSheetName);
 
 	// ピクセルフォーマットを取得
 	DDPIXELFORMAT ddpf;
 	ddpf.dwSize=(uint)(sizeof(DDPIXELFORMAT));
-	lpDDS_OS.GetPixelFormat(&ddpf);
+	OffscreenSurface.GetPixelFormat(&ddpf);
 
 	var KeyColor = ddpf.dwRBitMask | ddpf.dwBBitMask;
 
@@ -44,7 +44,7 @@ public void	RestoreSurfaces()
 	DDCOLORKEY key;
 	key.dwColorSpaceLowValue = KeyColor;
 	key.dwColorSpaceHighValue = KeyColor;
-	lpDDS_OS.SetColorKey(DDCKEY_SRCBLT, &key);
+	OffscreenSurface.SetColorKey(DDCKEY_SRCBLT, &key);
 
 	// クリッパー
 	RELEASE(ref lpDDclip);
@@ -224,10 +224,10 @@ public int EndApp()
 	{
 
 	//
-	if (gameFont_1)
-		DeleteObject(gameFont_1);
-	if (gameFont_2)
-		DeleteObject(gameFont_2);
+	if (GameFont1)
+		DeleteObject(GameFont1);
+	if (GameFont2)
+		DeleteObject(GameFont2);
 
 	// ダイレクトミュージック
 	RELEASE(ref lpDMP);
@@ -238,32 +238,32 @@ public int EndApp()
 		{
 		for(var n=0; n<SND_DUP; n++)
 			{
-			RELEASE(ref lpDSB_[m][n]);
+			RELEASE(ref SoundBuffers[m][n]);
 			}
 		}
 	RELEASE(ref lpDSP);
 	RELEASE(ref lpDS);
 
 	// ダイレクトドロー
-	RELEASE(ref lpDDS_OS);
+	RELEASE(ref OffscreenSurface);
 	RELEASE(ref lpDDclip);
 	RELEASE(ref lpDDSBack);
 	RELEASE(ref lpDDSPrimary);
 	RELEASE(ref lpDD);
 
 	// ダイレクトプレイ
-	if( g_pDP!=null )
+	if( DirectPlayPeer!=null )
 		{
-		g_pDP.Close(0);
-		g_pDP.Release();
-		g_pDP = null;
+		DirectPlayPeer.Close(0);
+		DirectPlayPeer.Release();
+		DirectPlayPeer = null;
 		}
 
-	if( g_pThreadPool!=null )
+	if( DirectPlayThreadPool!=null )
 		{
-		g_pThreadPool.Close(0);
-		g_pThreadPool.Release();
-		g_pThreadPool = null;
+		DirectPlayThreadPool.Close(0);
+		DirectPlayThreadPool.Release();
+		DirectPlayThreadPool = null;
 		}
 
 	// Write information to the registry
@@ -300,13 +300,13 @@ public void	InitializeRegistry()
 	Tick=0;
 
 	/*** フォント設定 ***/
-	if (gameFont_1)
-		DeleteObject(gameFont_1);
-	gameFont_1=CreateFont(16,0,0,0,0,FALSE,FALSE,FALSE,SHIFTJIS_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,null); // フォントオブジェクト
+	if (GameFont1)
+		DeleteObject(GameFont1);
+	GameFont1=CreateFont(16,0,0,0,0,FALSE,FALSE,FALSE,SHIFTJIS_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,null); // フォントオブジェクト
 
-	if (gameFont_2)
-		DeleteObject(gameFont_2);
-	gameFont_2=CreateFont(20,0,0,0,0,FALSE,FALSE,FALSE,SHIFTJIS_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,null); // フォントオブジェクト
+	if (GameFont2)
+		DeleteObject(GameFont2);
+	GameFont2=CreateFont(20,0,0,0,0,FALSE,FALSE,FALSE,SHIFTJIS_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,null); // フォントオブジェクト
 
 	LeftButton=0;	RightButton=0;
 
@@ -314,7 +314,8 @@ public void	InitializeRegistry()
 
 	}
 
-public IDirectDrawSurface7? bitmap_surface(string fileName)
+[Original("bitmap_surface")]
+public IDirectDrawSurface7? LoadBitmapSurface(string fileName)
 	{
 	HDC hdc;
 	IDirectDrawSurface7? surf;
@@ -477,8 +478,8 @@ public nint	IDD_FILE_SAVE_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	{
 	WIN32_FIND_DATA FindFileData;
-	_DP_DATA_20		chatMessage=default;
-	_DP_DATA_1		message;
+	ChatMessage		chatMessage=default;
+	NameMessage		message;
 	Array260<byte> buffer = default;
 
 	switch(msg)
@@ -524,36 +525,36 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 						if( !IsEditingMap )
 							{
 							// なんかユーザーファイルが選ばれた。
-							chatMessage.dwType = MessageType.UserScenarioFileName;
-							wsprintf( chatMessage.friend_chat, "%s",UserScenarioFileName );
-							bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_20));
+							chatMessage.Type = MessageType.UserScenarioFileName;
+							wsprintf( chatMessage.Chat, "%s",UserScenarioFileName );
+							bufferDesc.dwBufferSize = (uint)(sizeof(ChatMessage));
 							bufferDesc.pBufferData  = (byte*)&chatMessage;
-							g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+							DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 							}
 
 						LoadScenarioData();
 
 						// ホストの選択状態をゲストにセンドします。
-						message.dwType = MessageType.LeaveGameSetting;
-						message.data[0] = (short)HostSide;
-						message.data[1] = ScenarioNumber;
+						message.Type = MessageType.LeaveGameSetting;
+						message.Data[0] = (short)HostSide;
+						message.Data[1] = ScenarioNumber;
 
-						message.data[2] = SupplyRates[0];
-						message.data[3] = SupplyRates[1];
+						message.Data[2] = SupplyRates[0];
+						message.Data[3] = SupplyRates[1];
 
-						message.data[4] = IsDecisionEnabled.Value;
+						message.Data[4] = IsDecisionEnabled.Value;
 
-						message.data[5] = InitialSupplyPoints[0];
-						message.data[6] = InitialSupplyPoints[1];
+						message.Data[5] = InitialSupplyPoints[0];
+						message.Data[6] = InitialSupplyPoints[1];
 
-						message.data[7] = ArrivalControl;
+						message.Data[7] = ArrivalControl;
 
-						message.data[8] = SwapTime;
-						message.data[9] = SwapRule;
+						message.Data[8] = SwapTime;
+						message.Data[9] = SwapRule;
 
-						bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
+						bufferDesc.dwBufferSize = (uint)(sizeof(NameMessage));
 						bufferDesc.pBufferData  = (byte*) &message;
-						g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+						DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
 						Mode=GameMode.ConfigSetting;
 						}
@@ -610,13 +611,13 @@ public nint	IDD_OK_CANCEL_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
 
 					DestroyWindow(hWnd);
-					g_hDlg=null;
+					MainDialog=null;
 //					PostQuitMessage( 0 );		// これでWM_QUITがでるので接続ダイアログループからぬける
 					break;
 
 				case IDCANCEL:
 					DestroyWindow(hWnd);
-					g_hDlg=null;
+					MainDialog=null;
 //					PostQuitMessage( 0 );		// これでWM_QUITがでるので接続ダイアログループからぬける
 					break;
 
@@ -654,7 +655,7 @@ public void	WaitForDialog()
 				break;
 				}
 
-			if ( IsDialogMessage( g_hDlg, ref msg)==0 )
+			if ( IsDialogMessage( MainDialog, ref msg)==0 )
 				{
 				TranslateMessage(ref msg);
 				DispatchMessage(ref msg);
@@ -666,7 +667,7 @@ public void	WaitForDialog()
 
 public nint ChatDlgProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	{
-	_DP_DATA_20	chatMessage=default;
+	ChatMessage	chatMessage=default;
 
 	switch(msg)
 		{
@@ -682,15 +683,15 @@ public nint ChatDlgProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					MyChatDisplayTime=unchecked((byte)CHAT_DSP_TIME);
 
 				// なんか入力があったならセンドする
-					chatMessage.dwType = MessageType.Chat;
+					chatMessage.Type = MessageType.Chat;
 					for(var m=0;m<128;m++)
 						{
-						chatMessage.friend_chat[m]=MyChat[m];
+						chatMessage.Chat[m]=MyChat[m];
 						}
 
-					bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_20));
+					bufferDesc.dwBufferSize = (uint)(sizeof(ChatMessage));
 					bufferDesc.pBufferData  = (byte*) &chatMessage;
-					g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1, 0, null, ref hAsync, MUST_SEND );
+					DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1, 0, null, ref hAsync, MUST_SEND );
 
 					DestroyWindow(hwndChatDlg);
 					hwndChatDlg=null;

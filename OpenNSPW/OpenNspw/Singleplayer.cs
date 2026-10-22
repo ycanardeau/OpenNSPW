@@ -336,7 +336,7 @@ public unsafe partial class Nspw
 		MemoryMarshal.Write(emulator.At(methods + GetDCOffset, 4), getDC);
 		MemoryMarshal.Write(emulator.At(methods + ReleaseDCOffset, 4), releaseDC);
 
-		MemoryMarshal.Write(emulator.At(FontAddress, 4), gameFont_1.Value);
+		MemoryMarshal.Write(emulator.At(FontAddress, 4), GameFont1.Value);
 	}
 
 	// A new emulator for a single-player game, with 1.22's own globals as its game_init leaves them before it calls the

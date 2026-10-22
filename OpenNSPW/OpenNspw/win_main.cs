@@ -22,7 +22,7 @@ public unsafe partial class Nspw
 // ウィンドウアプリケーション変数
 public object? hInstApp;
 public HWND hwndApp;
-public object? my_cursor;
+[Original("my_cursor")] public object? GameCursor;
 //D3DPRESENT_PARAMETERS d3dpp;		// Direct3D is not used.
 [Original("appActive")] public Bool32 IsAppActive;
 [Original("fullscreen")] public Bool32 IsFullscreen;
@@ -35,7 +35,7 @@ public IDirectDrawSurface7? lpDDSBack=null;
 
 public IDirectDrawClipper? lpDDclip=null;
 
-public IDirectDrawSurface7? lpDDS_OS=null;
+[Original("lpDDS_OS")] public IDirectDrawSurface7? OffscreenSurface=null;
 
 // DirectInputの変数
 public IDirectInput8? pDInput = null; // DirectInput
@@ -47,7 +47,7 @@ public IDirectInputDevice8? pDIDeviceMouse = null; // DirectInputデバイス
 public IDirectSound8? lpDS = null;
 public IDirectSoundBuffer? lpDSP = null;
 
-public Array35<Array6<IDirectSoundBuffer?>> lpDSB_;
+[Original("lpDSB_")] public Array35<Array6<IDirectSoundBuffer?>> SoundBuffers;
 [Original("snd_")] public Array35<short> NextSoundBuffers;
 
 // DirectMusicの変数
@@ -55,8 +55,8 @@ public IDirectMusicLoader8? lpDML = null;
 public IDirectMusicPerformance8? lpDMP = null;
 
 // フォント
-public HFONT gameFont_1;
-public HFONT gameFont_2;
+[Original("gameFont_1")] public HFONT GameFont1;
+[Original("gameFont_2")] public HFONT GameFont2;
 
 // ゲーム用
 [Original("cc_count")] public int Tick;
@@ -69,18 +69,18 @@ public HFONT gameFont_2;
 [Original("dbg")] public Array16<int> DebugValues;
 
 // 通信対戦用
-public Guid g_guidApp = new( 0x11bc0eb, 0xbdb3, 0x11d6, 0xba, 0x95, 0x9c, 0xce, 0x36, 0x89, 0x70, 0x55 );
+[Original("g_guidApp")] public Guid AppGuid = new( 0x11bc0eb, 0xbdb3, 0x11d6, 0xba, 0x95, 0x9c, 0xce, 0x36, 0x89, 0x70, 0x55 );
 
-public IDirectPlay8ThreadPool? g_pThreadPool = null; // DirectPlay threadpool object
-public IDirectPlay8Peer? g_pDP = null; // DirectPlay peer object
+[Original("g_pThreadPool")] public IDirectPlay8ThreadPool? DirectPlayThreadPool = null; // DirectPlay threadpool object
+[Original("g_pDP")] public IDirectPlay8Peer? DirectPlayPeer = null; // DirectPlay peer object
 
 public HKEY hDPlaySampleRegKey; // レジストリ
 
-public HWND g_hDlg = null; // HWND of main dialog
+[Original("g_hDlg")] public HWND MainDialog = null; // HWND of main dialog
 [Original("dlg_answer")] public MessageType DialogAnswer;
 
-public uint g_dpnidLocalPlayer = 0; // DPNID of local player
-public uint g_dpnidRivalPlayer = 0; // DPNID of local player
+[Original("g_dpnidLocalPlayer")] public uint LocalPlayerId = 0; // DPNID of local player
+[Original("g_dpnidRivalPlayer")] public uint RivalPlayerId = 0; // DPNID of local player
 //DPNID                      g_dpnidHostPlayer             = 0;       // DPNID of host player
 [Original("g_dwNumberOfActivePlayers")] public uint ActivePlayerCount = 0; // Number of players currently in game
 [Original("g_strAppName")] public Array256<byte> AppName = TEXT<Array256<byte>>("NSPW NET");
@@ -92,8 +92,8 @@ public uint g_dpnidRivalPlayer = 0; // DPNID of local player
 [Original("g_strRemoteHostname")] public Array260<byte> RemoteHostName; // TCP/IP remote host
 
 [Original("g_bHostPlayer")] public int IsHostPlayer = FALSE; // TRUE if local player is host
-public Guid? g_pCurSPGuid = null; // Currently selected guid
-public uint g_hConnectAsyncOp = 0; // Async handle for connecting to host
+[Original("g_pCurSPGuid")] public Guid? ServiceProviderGuid = null; // Currently selected guid
+[Original("g_hConnectAsyncOp")] public uint ConnectOperation = 0; // Async handle for connecting to host
 
 public DPN_BUFFER_DESC bufferDesc;
 public uint hAsync;
@@ -507,7 +507,7 @@ public void	UpdateFrame()
 #endif
 
 		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, gameFont_1);
+		SelectObject(hdc, GameFont1);
 
 		SetTextColor(hdc, RGB(255, 255, 0));
 
@@ -571,21 +571,21 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 
 	// Create IDirectPlay8ThreadPool
 	// ＤＰをバックスレッドでなく通常のルーティン処理とするためにこれを設定する。
-	if( FAILED( CoCreateInstance( CLSID_DirectPlay8ThreadPool, null, CLSCTX_INPROC_SERVER,IID_IDirectPlay8ThreadPool, out g_pThreadPool ) ))
+	if( FAILED( CoCreateInstance( CLSID_DirectPlay8ThreadPool, null, CLSCTX_INPROC_SERVER,IID_IDirectPlay8ThreadPool, out DirectPlayThreadPool ) ))
         return (false ? 1 : 0);
 
 	// Init IDirectPlay8ThreadPool
-	g_pThreadPool.Initialize( null, DirectPlayMessageHandler, DPNINITIALIZE_DISABLEPARAMVAL );
+	DirectPlayThreadPool.Initialize( null, DirectPlayMessageHandler, DPNINITIALIZE_DISABLEPARAMVAL );
 
 	// Put DirectPlay in "DoWork" mode
-   g_pThreadPool.SetThreadCount( unchecked((uint)((uint) -1)), 0, 0 );
+   DirectPlayThreadPool.SetThreadCount( unchecked((uint)((uint) -1)), 0, 0 );
 
 	// Create IDirectPlay8Peer
-	if( FAILED( CoCreateInstance( CLSID_DirectPlay8Peer, null, CLSCTX_INPROC_SERVER, IID_IDirectPlay8Peer, out g_pDP ) ))
+	if( FAILED( CoCreateInstance( CLSID_DirectPlay8Peer, null, CLSCTX_INPROC_SERVER, IID_IDirectPlay8Peer, out DirectPlayPeer ) ))
 		return (false ? 1 : 0);
 
 	// Init IDirectPlay8Peer
-	g_pDP.Initialize( null, DirectPlayMessageHandler, DPNINITIALIZE_DISABLEPARAMVAL );
+	DirectPlayPeer.Initialize( null, DirectPlayMessageHandler, DPNINITIALIZE_DISABLEPARAMVAL );
 
 	// A single-player game has no rival to connect to.
 	if( IsSingleplayer )
@@ -594,7 +594,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 		{
 	// Create the initial dialog.
 	// 接続ダイアログ 　オーナーウィンドウが無いため、モーダレスになります。
-	g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_ADDRESS_OVERRIDE), null, OverrideDlgProc);
+	MainDialog = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_ADDRESS_OVERRIDE), null, OverrideDlgProc);
 
 	int    waitsForConnection = TRUE;
 
@@ -612,21 +612,21 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 				break;
 				}
 
-			if ( IsDialogMessage(g_hDlg, ref msg)==0 )
+			if ( IsDialogMessage(MainDialog, ref msg)==0 )
 				{
 				TranslateMessage(ref msg);
 				DispatchMessage(ref msg);
 				}
 	     }
 		// Let DirectPlay process network events and call our message handler.
-		g_pThreadPool.DoWork(DOWORK_TIMESLICE, 0);
+		DirectPlayThreadPool.DoWork(DOWORK_TIMESLICE, 0);
 		Sleep(1);
 		}
 
 	if( ActivePlayerCount<2 )
 		{
 		// 接続キャンセル
-		EndDialog( g_hDlg, 0 );
+		EndDialog( MainDialog, 0 );
 		EndApp( );
 		return (int)msg.wParam;
 		}
@@ -634,7 +634,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 
 	IsHost=new Bool8((byte)IsHostPlayer);
 
-	g_hDlg=null;
+	MainDialog=null;
 
 	// メインウインドウを作成する
 	ZeroMemory(&wc,(nuint)(sizeof(WNDCLASS)));
@@ -728,8 +728,8 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 		}
 
 	// 最初のイメージをロードし、表示
-	lpDDS_OS=bitmap_surface(SpriteSheetName);
-	if (lpDDS_OS==null)
+	OffscreenSurface=LoadBitmapSurface(SpriteSheetName);
+	if (OffscreenSurface==null)
 		{
 		MessageBox(null,"bitmap_surface","残念！",MB_OK | MB_ICONSTOP);
 		return FALSE;
@@ -752,7 +752,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	// ピクセルフォーマットを取得
 	DDPIXELFORMAT ddpf;
 	ddpf.dwSize=(uint)(sizeof(DDPIXELFORMAT));
-	lpDDS_OS.GetPixelFormat(&ddpf);
+	OffscreenSurface.GetPixelFormat(&ddpf);
 
 	var KeyColor = ddpf.dwRBitMask | ddpf.dwBBitMask;
 
@@ -760,7 +760,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	DDCOLORKEY key;
 	key.dwColorSpaceLowValue = KeyColor;
 	key.dwColorSpaceHighValue = KeyColor;
-	lpDDS_OS.SetColorKey(DDCKEY_SRCBLT, &key);
+	OffscreenSurface.SetColorKey(DDCKEY_SRCBLT, &key);
 
 	if(!InitializeDirectInput())
 		return FALSE;
@@ -804,7 +804,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 			}
 		else
 			{
-			if( ( IsAppActive || hwndChatDlg!=null ) && g_hDlg==null )
+			if( ( IsAppActive || hwndChatDlg!=null ) && MainDialog==null )
 				{
 				UpdateFrame();
 				}
@@ -813,8 +813,8 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 				WaitMessage();
 				}
 
-			if( g_pThreadPool!=null && g_pDP!=null )
-				g_pThreadPool.DoWork(DOWORK_TIMESLICE, 0);
+			if( DirectPlayThreadPool!=null && DirectPlayPeer!=null )
+				DirectPlayThreadPool.DoWork(DOWORK_TIMESLICE, 0);
 			}
 
 		}

@@ -149,7 +149,7 @@ public void	UpdateUpperEffects(RECT* field,RECT* infoArea)
 					if( ClipRects(ref destination,ref source,ref *field)!=0 )
 						{
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,&source,DDBLTFAST_SRCCOLORKEY) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,DDBLTFAST_SRCCOLORKEY) )
 		{
 		RestoreSurfaces();
 		}
@@ -161,7 +161,7 @@ public void	UpdateUpperEffects(RECT* field,RECT* infoArea)
 					if( ClipRects(ref destination,ref source,ref *infoArea)!=0 )
 						{
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,&source,DDBLTFAST_SRCCOLORKEY) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,DDBLTFAST_SRCCOLORKEY) )
 		{
 		RestoreSurfaces();
 		}
@@ -302,7 +302,7 @@ public void UpdateLowerEffects(RECT* field,RECT* infoArea)
 					{
 					if( ClipRects(ref destination,ref source,ref *field)!=0 )
 						{
-						if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,&source,DDBLTFAST_SRCCOLORKEY) )
+						if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,DDBLTFAST_SRCCOLORKEY) )
 							{
 							RestoreSurfaces();
 							}
@@ -313,7 +313,7 @@ public void UpdateLowerEffects(RECT* field,RECT* infoArea)
 					{
 					if( ClipRects(ref destination,ref source,ref *infoArea)!=0 )
 						{
-						if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,&source,DDBLTFAST_SRCCOLORKEY) )
+						if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,DDBLTFAST_SRCCOLORKEY) )
 							{
 							RestoreSurfaces();
 							}
@@ -354,7 +354,7 @@ public void	DrawClouds(RECT* field)
 			if( ClipRects(ref destination,ref source,ref *field)!=0 )
 				{
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,&source,DDBLTFAST_SRCCOLORKEY ) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,DDBLTFAST_SRCCOLORKEY ) )
 		{
 		RestoreSurfaces();
 		}
@@ -614,7 +614,7 @@ private void DrawMapTiles(int firstRow, int firstColumn, int editedRow, int edit
 
 			if( ClipRects(ref destination,ref source,ref field)!=0 )
 				{
-				if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref source),0) )
+				if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),0) )
 					{
 					RestoreSurfaces();
 					}
@@ -640,7 +640,7 @@ private void ClickUnit(int m, WorldPosition ground)
 			if( !(Units[m].Category==UnitCategory.Plane && Units[m].PlaneState==UnitState.Parked) )
 				PreviousSelectedUnit=(short)m;
 
-			set_the_slct_unit( m );
+			SelectUnit( m );
 			}
 		else if(!IsEditingMap)
 			{
@@ -1054,7 +1054,7 @@ private void DrawUnit(ref Unit unit, SpriteId sprite, ref RECT source, ref RECT 
 
 				if( ClipRects(ref destination,ref source,ref infoArea)!=0 )
 					{
-					if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref source),DDBLTFAST_SRCCOLORKEY) )
+					if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),DDBLTFAST_SRCCOLORKEY) )
 						{
 						RestoreSurfaces();
 						}
@@ -1090,7 +1090,7 @@ private void DrawUnit(ref Unit unit, SpriteId sprite, ref RECT source, ref RECT 
 		destination.bottom=destination.top+Sprites[sprite].Size.Height-2;
 		if( ClipRects(ref destination,ref source,ref field)!=0 )
 			{
-			if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref source),DDBLTFAST_SRCCOLORKEY) )
+			if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),DDBLTFAST_SRCCOLORKEY) )
 				{
 				RestoreSurfaces();
 				}
@@ -1135,7 +1135,7 @@ private void RestoreSelection()
 	{
 	if( SelectedUnit==0 && PreviousSelectedUnit!=0 && Units[PreviousSelectedUnit].IsUsed)
 		{
-		set_the_slct_unit( PreviousSelectedUnit );
+		SelectUnit( PreviousSelectedUnit );
 		}
 	}
 

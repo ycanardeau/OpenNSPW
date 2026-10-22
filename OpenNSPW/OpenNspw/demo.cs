@@ -35,8 +35,8 @@ public void	UpdateTitle()
     Array5<int> length = default;
 	HDC					hdc;
 	 
-	_DP_FLAG	flagMessage;
-	_DP_DATA_20	chatMessage=default;
+	SyncFlagMessage	flagMessage;
+	ChatMessage	chatMessage=default;
 
 #if CONN_DBG
 	rival_mode=mode;
@@ -45,18 +45,18 @@ public void	UpdateTitle()
 	if((FrameCount%40)==0)
 		{
 		// 自分のモードを相手に伝える。
-		flagMessage.dwType = MessageType.RivalMode;
-		flagMessage.rival_mode=(short)Mode;
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
+		flagMessage.Type = MessageType.RivalMode;
+		flagMessage.RivalMode=(short)Mode;
+		bufferDesc.dwBufferSize = (uint)(sizeof(SyncFlagMessage));
 		bufferDesc.pBufferData  = (byte*) &flagMessage;
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1, 0, null, ref hAsync, EASY_SEND );
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1, 0, null, ref hAsync, EASY_SEND );
 
 		// 自分のバージョンを相手に伝える。
-		chatMessage.dwType = MessageType.RivalVersion;
-		wsprintf( chatMessage.friend_chat, "%s",VER );
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_20));
+		chatMessage.Type = MessageType.RivalVersion;
+		wsprintf( chatMessage.Chat, "%s",VER );
+		bufferDesc.dwBufferSize = (uint)(sizeof(ChatMessage));
 		bufferDesc.pBufferData  = (byte*) &chatMessage;
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, EASY_SEND );
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, EASY_SEND );
 		}
 
 	if( TitleTime==0 )
@@ -79,7 +79,7 @@ public void	UpdateTitle()
 	destination.left=Sprites[SpriteId.TitleBackground].Position.X;
 	destination.top=Sprites[SpriteId.TitleBackground].Position.Y;
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,&source,0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,0) )
 		{
 		RestoreSurfaces();
 		}
@@ -102,7 +102,7 @@ public void	UpdateTitle()
 		if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
 			{
 			SetBkMode(hdc, TRANSPARENT);
-			SelectObject(hdc, gameFont_2);
+			SelectObject(hdc, GameFont2);
 
 #if !LNGG_VER
 			length[0] = wsprintf(text[0], "Naval South Pacific War on the Net %s",VER );
@@ -121,7 +121,7 @@ public void	UpdateTitle()
 				TextOut(hdc, 330, 580+(n*23), text[n], length[n]);
 				}
 
-			SelectObject(hdc, gameFont_1);
+			SelectObject(hdc, GameFont1);
 
 			length[0] = wsprintf(text[0], "YOUR VERSION = %s",VER );
 			SetTextColor(hdc, RGB(255, 255, 255));
@@ -146,11 +146,11 @@ public void	UpdateTitle()
 
 			if( 1!=0 )
 				{
-				flagMessage.dwType = MessageType.GoToGameSetting;
-				flagMessage.rival_mode=(short)Mode;
-				bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
+				flagMessage.Type = MessageType.GoToGameSetting;
+				flagMessage.RivalMode=(short)Mode;
+				bufferDesc.dwBufferSize = (uint)(sizeof(SyncFlagMessage));
 				bufferDesc.pBufferData  = (byte*) &flagMessage;
-				g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1, 0, null, ref hAsync, MUST_SEND );
+				DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1, 0, null, ref hAsync, MUST_SEND );
 
 				//ここにくるのはホストだけ
 				// リジュームデータがホストをやってたかしらべる。
@@ -259,7 +259,7 @@ public void GoToGameSetting()
 		}
 
 #if SND_SW
-	lpDSB_[(int)SoundId.Sea][0].Stop();		//
+	SoundBuffers[(int)SoundId.Sea][0].Stop();		//
 #endif
 
 
@@ -931,20 +931,20 @@ private void UpdateArrivalControlSetting(ref Array12<int> length, ref Array12<Ar
 	}
 // A click on シナリオセッティングへ戻る, while the guest is on the rules too: both go back to the scenarios, with the
 // scenario kept, and the rules as they are at first (GoToGameSetting).
-private void BackToScenarioSetting(ref _DP_FLAG flagMessage)
+private void BackToScenarioSetting(ref SyncFlagMessage flagMessage)
 	{
 	int m=ScenarioNumber;
 	GoToGameSetting();
 	ScenarioNumber=(short)m;
 
-	flagMessage.dwType = MessageType.GoToGameSetting;
+	flagMessage.Type = MessageType.GoToGameSetting;
 
-	bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
-	bufferDesc.pBufferData  = (byte*) (_DP_FLAG*)Unsafe.AsPointer(ref flagMessage);
-	g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+	bufferDesc.dwBufferSize = (uint)(sizeof(SyncFlagMessage));
+	bufferDesc.pBufferData  = (byte*) (SyncFlagMessage*)Unsafe.AsPointer(ref flagMessage);
+	DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 	}
 
-private void UpdateBackToScenarioSettingButton(ref Array12<int> length, ref Array12<Array128<byte>> text, int x, ref HDC hdc, ref _DP_FLAG flagMessage)
+private void UpdateBackToScenarioSettingButton(ref Array12<int> length, ref Array12<Array128<byte>> text, int x, ref HDC hdc, ref SyncFlagMessage flagMessage)
 	{
 	RECT destination;
 	if(IsHost)
@@ -975,44 +975,44 @@ private void UpdateBackToScenarioSettingButton(ref Array12<int> length, ref Arra
 	}
 // A click on ゲームスタート, while the guest is on the rules too: the host sends the shared random numbers' seed and
 // the rules, and both go to the battle.
-private void StartBattle(ref _DP_DATA_1 message)
+private void StartBattle(ref NameMessage message)
 	{
 	// ホストの選択状態をゲストにセンドします。
 	srand( (uint)time( null ) );
 	SharedRandomSeed=(short)Random(65536);
 
-	message.dwType = MessageType.LeaveSetup;
-	message.data[0] = SharedRandomSeed;
+	message.Type = MessageType.LeaveSetup;
+	message.Data[0] = SharedRandomSeed;
 
-	bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-	bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref message);
-	g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+	bufferDesc.dwBufferSize = (uint)(sizeof(NameMessage));
+	bufferDesc.pBufferData  = (byte*) (NameMessage*)Unsafe.AsPointer(ref message);
+	DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
-	message.dwType = MessageType.LeaveConfigSetting;
-	message.data[0] = (short)HostSide;
-	message.data[1] = ScenarioNumber;
+	message.Type = MessageType.LeaveConfigSetting;
+	message.Data[0] = (short)HostSide;
+	message.Data[1] = ScenarioNumber;
 
-	message.data[2] = SupplyRates[0];
-	message.data[3] = SupplyRates[1];
+	message.Data[2] = SupplyRates[0];
+	message.Data[3] = SupplyRates[1];
 
-	message.data[4] = IsDecisionEnabled.Value;
+	message.Data[4] = IsDecisionEnabled.Value;
 
-	message.data[5] = InitialSupplyPoints[0];
-	message.data[6] = InitialSupplyPoints[1];
+	message.Data[5] = InitialSupplyPoints[0];
+	message.Data[6] = InitialSupplyPoints[1];
 
-	message.data[7] = ArrivalControl;
+	message.Data[7] = ArrivalControl;
 
-	message.data[8] = SwapTime;
-	message.data[9] = SwapRule;
+	message.Data[8] = SwapTime;
+	message.Data[9] = SwapRule;
 
-	bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-	bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref message);
-	g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+	bufferDesc.dwBufferSize = (uint)(sizeof(NameMessage));
+	bufferDesc.pBufferData  = (byte*) (NameMessage*)Unsafe.AsPointer(ref message);
+	DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
 	Mode=GameMode.Battle;
 	}
 
-private void UpdateStartBattleButton(ref Array12<int> length, ref Array12<Array128<byte>> text, int x, ref HDC hdc, ref _DP_DATA_1 message)
+private void UpdateStartBattleButton(ref Array12<int> length, ref Array12<Array128<byte>> text, int x, ref HDC hdc, ref NameMessage message)
 	{
 	RECT destination;
 	if(IsHost)
@@ -1049,31 +1049,31 @@ private void UpdateStartBattleButton(ref Array12<int> length, ref Array12<Array1
 			}
 		}
 	}
-private void SendHostSettings(ref _DP_DATA_1 message)
+private void SendHostSettings(ref NameMessage message)
 	{
-	message.dwType = MessageType.SideAndScenario;
-	message.data[0] = (short)HostSide;
-	message.data[1] = ScenarioNumber;
+	message.Type = MessageType.SideAndScenario;
+	message.Data[0] = (short)HostSide;
+	message.Data[1] = ScenarioNumber;
 
-	message.data[2] = SupplyRates[0];
-	message.data[3] = SupplyRates[1];
+	message.Data[2] = SupplyRates[0];
+	message.Data[3] = SupplyRates[1];
 
-	message.data[4] = IsDecisionEnabled.Value;
+	message.Data[4] = IsDecisionEnabled.Value;
 
-	message.data[5] = InitialSupplyPoints[0];
-	message.data[6] = InitialSupplyPoints[1];
+	message.Data[5] = InitialSupplyPoints[0];
+	message.Data[6] = InitialSupplyPoints[1];
 
-	message.data[7] = ArrivalControl;
+	message.Data[7] = ArrivalControl;
 
-	message.data[8] = SwapTime;
-	message.data[9] = SwapRule;
+	message.Data[8] = SwapTime;
+	message.Data[9] = SwapRule;
 
-	bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-	bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref message);
-	g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, EASY_SEND );
+	bufferDesc.dwBufferSize = (uint)(sizeof(NameMessage));
+	bufferDesc.pBufferData  = (byte*) (NameMessage*)Unsafe.AsPointer(ref message);
+	DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, EASY_SEND );
 	}
 
-private void UpdateConfigSetting(ref Array12<int> length, ref Array12<Array128<byte>> text, ref HDC hdc, ref _DP_FLAG flagMessage, ref _DP_DATA_1 message)
+private void UpdateConfigSetting(ref Array12<int> length, ref Array12<Array128<byte>> text, ref HDC hdc, ref SyncFlagMessage flagMessage, ref NameMessage message)
 	{
 	var x=630-120;
 
@@ -1302,7 +1302,7 @@ private void ChooseScenario(int n)
 
 // A click on the scenario chosen, while the guest is on the scenarios too: the host loads it and sends it with the
 // rules, and both go to the rules; or, for the user's scenario (9), the host picks its file first (IDD_FILE_CONT).
-private void LeaveGameSetting(ref _DP_DATA_1 message)
+private void LeaveGameSetting(ref NameMessage message)
 	{
 	if( ScenarioNumber==9 )
 		{
@@ -1315,32 +1315,32 @@ private void LeaveGameSetting(ref _DP_DATA_1 message)
 		LoadScenarioData();
 
 		// ホストの選択状態をゲストにセンドします。
-		message.dwType = MessageType.LeaveGameSetting;
-		message.data[0] = (short)HostSide;
-		message.data[1] = ScenarioNumber;
+		message.Type = MessageType.LeaveGameSetting;
+		message.Data[0] = (short)HostSide;
+		message.Data[1] = ScenarioNumber;
 
-		message.data[2] = SupplyRates[0];
-		message.data[3] = SupplyRates[1];
+		message.Data[2] = SupplyRates[0];
+		message.Data[3] = SupplyRates[1];
 
-		message.data[4] = IsDecisionEnabled.Value;
+		message.Data[4] = IsDecisionEnabled.Value;
 
-		message.data[5] = InitialSupplyPoints[0];
-		message.data[6] = InitialSupplyPoints[1];
+		message.Data[5] = InitialSupplyPoints[0];
+		message.Data[6] = InitialSupplyPoints[1];
 
-		message.data[7] = ArrivalControl;
+		message.Data[7] = ArrivalControl;
 
-		message.data[8] = SwapTime;
-		message.data[9] = SwapRule;
+		message.Data[8] = SwapTime;
+		message.Data[9] = SwapRule;
 
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-		bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref message);
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		bufferDesc.dwBufferSize = (uint)(sizeof(NameMessage));
+		bufferDesc.pBufferData  = (byte*) (NameMessage*)Unsafe.AsPointer(ref message);
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
 		Mode=GameMode.ConfigSetting;
 		}
 	}
 
-private void UpdateScenarioList(int m, ref Array12<int> length, ref HDC hdc, ref _DP_DATA_1 message, ref Array12<Array128<byte>> text)
+private void UpdateScenarioList(int m, ref Array12<int> length, ref HDC hdc, ref NameMessage message, ref Array12<Array128<byte>> text)
 	{
 	RECT destination;
 	for( var n=0; n<=m; n++)
@@ -1369,26 +1369,26 @@ private void UpdateScenarioList(int m, ref Array12<int> length, ref HDC hdc, ref
 	if( RivalMode==Mode && Mode!=GameMode.ConfigSetting && (FrameCount%10)==0 )
 		{
 		// ホストの選択状態をゲストにセンドします。
-		message.dwType = MessageType.SideAndScenario;
-		message.data[0] = (short)HostSide;
-		message.data[1] = ScenarioNumber;
+		message.Type = MessageType.SideAndScenario;
+		message.Data[0] = (short)HostSide;
+		message.Data[1] = ScenarioNumber;
 
-		message.data[2] = SupplyRates[0];
-		message.data[3] = SupplyRates[1];
+		message.Data[2] = SupplyRates[0];
+		message.Data[3] = SupplyRates[1];
 
-		message.data[4] = IsDecisionEnabled.Value;
+		message.Data[4] = IsDecisionEnabled.Value;
 
-		message.data[5] = InitialSupplyPoints[0];
-		message.data[6] = InitialSupplyPoints[1];
+		message.Data[5] = InitialSupplyPoints[0];
+		message.Data[6] = InitialSupplyPoints[1];
 
-		message.data[7] = ArrivalControl;
+		message.Data[7] = ArrivalControl;
 
-		message.data[8] = SwapTime;
-		message.data[9] = SwapRule;
+		message.Data[8] = SwapTime;
+		message.Data[9] = SwapRule;
 
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-		bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref message);
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, EASY_SEND );
+		bufferDesc.dwBufferSize = (uint)(sizeof(NameMessage));
+		bufferDesc.pBufferData  = (byte*) (NameMessage*)Unsafe.AsPointer(ref message);
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, EASY_SEND );
 		}
 	}
 
@@ -1447,19 +1447,19 @@ private void UpdateSideSetting(ref int x, ref Array12<int> length, ref Array12<A
 	}
 
 // A click on the start from the auto-saved battle (オートセーブスタート), while the guest is on the scenarios too: both go to the battle.
-private void StartFromAutoSave(ref _DP_DATA_1 message)
+private void StartFromAutoSave(ref NameMessage message)
 	{
 	// ホストの選択状態をゲストにセンドします。
-	message.dwType = MessageType.StartFromAutoSave;
-	bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-	bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref message);
-	g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+	message.Type = MessageType.StartFromAutoSave;
+	bufferDesc.dwBufferSize = (uint)(sizeof(NameMessage));
+	bufferDesc.pBufferData  = (byte*) (NameMessage*)Unsafe.AsPointer(ref message);
+	DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
 	Mode=GameMode.Battle;
 	ScenarioNumber=-2;		// －２でオートセーブからのスタートを示す
 	}
 
-private void UpdateAutoSaveButton(ref int x, ref Array12<int> length, ref Array12<Array128<byte>> text, ref HDC hdc, ref _DP_DATA_1 message)
+private void UpdateAutoSaveButton(ref int x, ref Array12<int> length, ref Array12<Array128<byte>> text, ref HDC hdc, ref NameMessage message)
 	{
 	RECT destination;
 	x=80;
@@ -1516,19 +1516,19 @@ private void UpdateAutoSaveButton(ref int x, ref Array12<int> length, ref Array1
 	}
 
 // A click on the start from the resume-saved battle (リジュームスタート), which the player saved as the host, while the guest is on the scenarios too: both go to the battle.
-private void StartFromResume(ref _DP_DATA_1 message)
+private void StartFromResume(ref NameMessage message)
 	{
 	// ホストの選択状態をゲストにセンドします。
-	message.dwType = MessageType.StartFromResume;
-	bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-	bufferDesc.pBufferData  = (byte*) (_DP_DATA_1*)Unsafe.AsPointer(ref message);
-	g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+	message.Type = MessageType.StartFromResume;
+	bufferDesc.dwBufferSize = (uint)(sizeof(NameMessage));
+	bufferDesc.pBufferData  = (byte*) (NameMessage*)Unsafe.AsPointer(ref message);
+	DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
 	Mode=GameMode.Battle;
 	ScenarioNumber=-1;		// －１でリジュームを示す
 	}
 
-private void UpdateResumeButton(ref int x, ref Array12<int> length, ref Array12<Array128<byte>> text, ref HDC hdc, ref _DP_DATA_1 message)
+private void UpdateResumeButton(ref int x, ref Array12<int> length, ref Array12<Array128<byte>> text, ref HDC hdc, ref NameMessage message)
 	{
 	RECT destination;
 	x=80;
@@ -1720,8 +1720,8 @@ public void	UpdateGameSetting()
     Array12<int> length = default;
 	HDC					hdc;
 
-	_DP_DATA_1		message = default;
-	_DP_FLAG			flagMessage = default;
+	NameMessage		message = default;
+	SyncFlagMessage			flagMessage = default;
 
 #if CONN_DBG
 	rival_mode=mode;
@@ -1739,7 +1739,7 @@ public void	UpdateGameSetting()
 	if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
 		{
 		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, gameFont_1);
+		SelectObject(hdc, GameFont1);
 
 if(Mode==GameMode.GameSetting)
 		SetTextColor(hdc, RGB(255, 255, 255));
@@ -1759,7 +1759,7 @@ else
 		if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
 			{
 			SetBkMode(hdc, TRANSPARENT);
-			SelectObject(hdc, gameFont_1);
+			SelectObject(hdc, GameFont1);
 
 #if !LNGG_VER
 			length[0] = wsprintf(text[0], "シナリオ選択画面");
@@ -2066,12 +2066,12 @@ else
 		{
 
 		// 現在のモードをライバルに送る。
-		flagMessage.dwType = MessageType.RivalMode;
-		flagMessage.rival_mode=(short)Mode;
+		flagMessage.Type = MessageType.RivalMode;
+		flagMessage.RivalMode=(short)Mode;
 
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
+		bufferDesc.dwBufferSize = (uint)(sizeof(SyncFlagMessage));
 		bufferDesc.pBufferData  = (byte*) &flagMessage;
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, EASY_SEND );
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, EASY_SEND );
 		}
 	}
 

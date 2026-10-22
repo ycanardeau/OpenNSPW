@@ -386,7 +386,7 @@ public void	SetCpuRoute2(int m)
 
 			var toPoint=(unit.GetPathPoint(index)-unit.Position).NonZero();
 
-			var direction=atan2(toPoint.Y,toPoint.X)*RAD_to;
+			var direction=atan2(toPoint.Y,toPoint.X)*RadiansToDegrees;
 
 			unit.SetPathPoint(index, unit.GetPathPoint(index)+WorldVector.FromDirection(direction) * extraDistance);
 			}
@@ -726,7 +726,7 @@ public void	ScrollBattleArea(int direction)
 	switch(direction)
 		{
 		case 1:		// UP
-			ScrollSpeed+=scrn_moving_add;
+			ScrollSpeed+=ScrollAcceleration;
 			if(ScrollSpeed>=SCRN_MAX_SPD)
 				ScrollSpeed=SCRN_MAX_SPD-1;
 			CameraPosition += new WorldVector(0, ScrollSpeed);
@@ -736,7 +736,7 @@ public void	ScrollBattleArea(int direction)
 		case 2:		// UP RI
 			break;
 		case 3:		// RI
-			ScrollSpeed+=scrn_moving_add;
+			ScrollSpeed+=ScrollAcceleration;
 			if(ScrollSpeed>=SCRN_MAX_SPD)
 				ScrollSpeed=SCRN_MAX_SPD-1;
 			CameraPosition += new WorldVector(ScrollSpeed, 0);
@@ -746,7 +746,7 @@ public void	ScrollBattleArea(int direction)
 		case 4:		// RI DW
 			break;
 		case 5:		// DW
-			ScrollSpeed+=scrn_moving_add;
+			ScrollSpeed+=ScrollAcceleration;
 			if(ScrollSpeed>=SCRN_MAX_SPD)
 				ScrollSpeed=SCRN_MAX_SPD-1;
 			CameraPosition -= new WorldVector(0, ScrollSpeed);
@@ -756,7 +756,7 @@ public void	ScrollBattleArea(int direction)
 		case 6:		// DW LF
 			break;
 		case 7:		// LF
-			ScrollSpeed+=scrn_moving_add;
+			ScrollSpeed+=ScrollAcceleration;
 			if(ScrollSpeed>=SCRN_MAX_SPD)
 				ScrollSpeed=SCRN_MAX_SPD-1;
 			CameraPosition -= new WorldVector(ScrollSpeed, 0);
@@ -958,7 +958,7 @@ private void ReadKeyboard()
 public void ReadInput()
 	{
 
-	int	flg=0;
+	int	isScrolling=0;
 
 	// キーボードの入力チェック
 	if (pDIDevice!=null)
@@ -966,33 +966,33 @@ public void ReadInput()
 		ReadKeyboard();
 		}
 
-	flg=0;
+	isScrolling=0;
 
 	if( CursorPosition.y<=0 || Buttons.HasFlag(InputButtons.Front) )
 		{
 		ScrollBattleArea(1);
-		flg=1;
+		isScrolling=1;
 		}
 
 	if( CursorPosition.y>=SCRN_HEIGHT-1 || Buttons.HasFlag(InputButtons.Back) )
 		{
 		ScrollBattleArea(5);
-		flg=1;
+		isScrolling=1;
 		}
 
 	if( CursorPosition.x>=SCRN_WIDTH-1 || Buttons.HasFlag(InputButtons.Right) )
 		{
 		ScrollBattleArea(3);
-		flg=1;
+		isScrolling=1;
 		}
 
 	if( CursorPosition.x<=0 || Buttons.HasFlag(InputButtons.Left))
 		{
 		ScrollBattleArea(7);
-		flg=1;
+		isScrolling=1;
 		}
 
-	if(flg==0)
+	if(isScrolling==0)
 		{
 		ScrollSpeed=0;
 		}

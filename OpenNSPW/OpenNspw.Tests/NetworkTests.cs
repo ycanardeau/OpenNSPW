@@ -94,23 +94,23 @@ internal sealed class ConnectingGame : IDisposable
 		{
 			for (var n = 0; n < SND_DUP; n++)
 			{
-				Game.lpDSB_[m][n] = new SilentSoundBuffer();
+				Game.SoundBuffers[m][n] = new SilentSoundBuffer();
 			}
 		}
 
-		Assert.Equal(0, Game.CoCreateInstance(CLSID_DirectPlay8ThreadPool, null, Nspw.CLSCTX_INPROC_SERVER, IID_IDirectPlay8ThreadPool, out Game.g_pThreadPool));
-		Game.g_pThreadPool!.Initialize(null, Game.DirectPlayMessageHandler, DPNINITIALIZE_DISABLEPARAMVAL);
-		Game.g_pThreadPool.SetThreadCount(unchecked((uint)-1), 0, 0);
-		Assert.Equal(0, Game.CoCreateInstance(CLSID_DirectPlay8Peer, null, Nspw.CLSCTX_INPROC_SERVER, IID_IDirectPlay8Peer, out Game.g_pDP));
-		Game.g_pDP!.Initialize(null, Game.DirectPlayMessageHandler, DPNINITIALIZE_DISABLEPARAMVAL);
+		Assert.Equal(0, Game.CoCreateInstance(CLSID_DirectPlay8ThreadPool, null, Nspw.CLSCTX_INPROC_SERVER, IID_IDirectPlay8ThreadPool, out Game.DirectPlayThreadPool));
+		Game.DirectPlayThreadPool!.Initialize(null, Game.DirectPlayMessageHandler, DPNINITIALIZE_DISABLEPARAMVAL);
+		Game.DirectPlayThreadPool.SetThreadCount(unchecked((uint)-1), 0, 0);
+		Assert.Equal(0, Game.CoCreateInstance(CLSID_DirectPlay8Peer, null, Nspw.CLSCTX_INPROC_SERVER, IID_IDirectPlay8Peer, out Game.DirectPlayPeer));
+		Game.DirectPlayPeer!.Initialize(null, Game.DirectPlayMessageHandler, DPNINITIALIZE_DISABLEPARAMVAL);
 
-		Game.g_hDlg = Game.CreateDialog(Game.hInstApp, MAKEINTRESOURCE(IDD_ADDRESS_OVERRIDE), null, Game.OverrideDlgProc);
+		Game.MainDialog = Game.CreateDialog(Game.hInstApp, MAKEINTRESOURCE(IDD_ADDRESS_OVERRIDE), null, Game.OverrideDlgProc);
 	}
 
 	// The port the host listens on.
 	public int HostPort => Platform.DirectPlay.Peers.Single().LocalEndPoint!.Port;
 
-	public HWND Dialog => Game.g_hDlg ?? throw new InvalidOperationException("No dialog.");
+	public HWND Dialog => Game.MainDialog ?? throw new InvalidOperationException("No dialog.");
 
 	public string DialogText(int id)
 	{
@@ -128,20 +128,20 @@ internal sealed class ConnectingGame : IDisposable
 				break;
 			}
 
-			if (Game.IsDialogMessage(Game.g_hDlg, ref _msg) == 0)
+			if (Game.IsDialogMessage(Game.MainDialog, ref _msg) == 0)
 			{
 				Game.TranslateMessage(ref _msg);
 				Game.DispatchMessage(ref _msg);
 			}
 		}
 
-		Game.g_pThreadPool!.DoWork(DOWORK_TIMESLICE, 0);
+		Game.DirectPlayThreadPool!.DoWork(DOWORK_TIMESLICE, 0);
 	}
 
 	public void Dispose()
 	{
-		Game.g_pDP?.Close(0);
-		Game.g_pDP?.Release();
+		Game.DirectPlayPeer?.Close(0);
+		Game.DirectPlayPeer?.Release();
 	}
 }
 
@@ -206,15 +206,15 @@ public class NetworkTests
 		Assert.Equal("Alice", guest.DialogText(IDC_PLAYER_NAME2));
 		Assert.Equal("Bob", Encoding.ASCII.GetString(host.Game.RivalPlayerName[..3]));
 		Assert.True(host.Game.GetDlgItem(host.Dialog, IDC_START_GAME)!.Enabled);
-		Assert.NotEqual(0u, host.Game.g_dpnidRivalPlayer);
+		Assert.NotEqual(0u, host.Game.RivalPlayerId);
 		Assert.Equal(1, host.Game.IsHostPlayer);
 		Assert.Equal(0, guest.Game.IsHostPlayer);
 
 		// The host starts the game; the guest follows when MSG_EXIT_WAITING arrives.
 		host.Game.ClickDlgItem(host.Dialog, IDC_START_GAME);
 		PumpUntil(() => !host.WaitingForConnect && !guest.WaitingForConnect, host, guest);
-		Assert.Null(host.Game.g_hDlg);
-		Assert.Null(guest.Game.g_hDlg);
+		Assert.Null(host.Game.MainDialog);
+		Assert.Null(guest.Game.MainDialog);
 		Assert.Empty(host.Platform.MessageBoxes);
 		Assert.Empty(guest.Platform.MessageBoxes);
 	}
@@ -223,7 +223,7 @@ public class NetworkTests
 	{
 		game.Game.bufferDesc.dwBufferSize = (uint)sizeof(T);
 		game.Game.bufferDesc.pBufferData = (byte*)&message;
-		game.Game.g_pDP!.SendTo(game.Game.g_dpnidRivalPlayer, ref game.Game.bufferDesc, 1, 0, null, ref game.Game.hAsync, MUST_SEND);
+		game.Game.DirectPlayPeer!.SendTo(game.Game.RivalPlayerId, ref game.Game.bufferDesc, 1, 0, null, ref game.Game.hAsync, MUST_SEND);
 	}
 
 	[Fact]
@@ -234,7 +234,7 @@ public class NetworkTests
 		using var __ = guest;
 
 		// The checksums of a turn (DP_FLAG_1), as chara_cont sends them.
-		Send(host, new _DP_FLAG { dwType = MessageType.SyncFlag, cc_chk = 12, unit_chk = 34, rnd_chk = 56, ccc_wait_chk = 1, rival_mode = (short)GameMode.Battle });
+		Send(host, new SyncFlagMessage { Type = MessageType.SyncFlag, TickChecksum = 12, UnitChecksum = 34, RandomChecksum = 56, TickWait = 1, RivalMode = (short)GameMode.Battle });
 		PumpUntil(() => guest.Game.CanAdvance1.Value == 1, host, guest);
 		Assert.Equal(12, guest.Game.TickChecksums[0]);
 		Assert.Equal(34, guest.Game.UnitChecksums[0]);
@@ -243,9 +243,9 @@ public class NetworkTests
 		Assert.Equal(GameMode.Battle, guest.Game.RivalMode);
 
 		// An order (DP_NEW_PP_SHIP).
-		var order = new _DP_NEW_PP_SHIP { dwType = MessageType.MoveShipsOrder, used = 1, x = -1234, y = 567, cls = 1 };
-		order.slct_unit[0] = 3;
-		order.slct_unit[guest.Game.JPN_SHIP_END - 1] = 7;
+		MoveShipsOrderMessage order = new MoveShipsOrderMessage { Type = MessageType.MoveShipsOrder, Unit = 1, X = -1234, Y = 567, ClearsPath = 1 };
+		order.Selections[0] = 3;
+		order.Selections[guest.Game.JPN_SHIP_END - 1] = 7;
 		Send(guest, order);
 		PumpUntil(() => host.Game.CanAdvance2.Value == 1, host, guest);
 		Assert.Equal(1, host.Game.BufferedMoveOrders[0].Unit);
@@ -255,8 +255,8 @@ public class NetworkTests
 		Assert.Equal(7, host.Game.BufferedSelections[0][host.Game.JPN_SHIP_END - 1]);
 
 		// A chat message (DP_CHAT_1). CHAT_DSP_TIME (400) does not fit in friend_chat_dsp_time, a BYTE.
-		var chat = new _DP_DATA_20 { dwType = MessageType.Chat };
-		tchar.ShiftJis.GetBytes("こんにちは").CopyTo(chat.friend_chat);
+		ChatMessage chat = new ChatMessage { Type = MessageType.Chat };
+		tchar.ShiftJis.GetBytes("こんにちは").CopyTo(chat.Chat);
 		Send(host, chat);
 		PumpUntil(() => guest.Game.RivalChatDisplayTime != 0, host, guest);
 		Assert.Equal(144, guest.Game.RivalChatDisplayTime);
@@ -264,10 +264,10 @@ public class NetworkTests
 
 		// The game settings, which the guest only takes in the setting modes.
 		guest.Game.Mode = GameMode.GameSetting;
-		var settings = new _DP_DATA_1 { dwType = MessageType.SideAndScenario };
+		NameMessage settings = new NameMessage { Type = MessageType.SideAndScenario };
 		for (short i = 0; i < 10; i++)
 		{
-			settings.data[i] = (short)(i + 1);
+			settings.Data[i] = (short)(i + 1);
 		}
 
 		Send(host, settings);
@@ -281,7 +281,7 @@ public class NetworkTests
 
 		// GO_GAME_SETTING sends a guest on the title screen to the game setting screen (go_cnct_game_setting).
 		guest.Game.Mode = GameMode.Title;
-		Send(host, new GENERICMSG { dwType = MessageType.GoToGameSetting });
+		Send(host, new MessageHeader { Type = MessageType.GoToGameSetting });
 		PumpUntil(() => guest.Game.Mode == GameMode.GameSetting, host, guest);
 		Assert.Equal(0, guest.Game.ScenarioNumber);
 		Assert.Equal(1, guest.Game.IsDecisionEnabled.Value);

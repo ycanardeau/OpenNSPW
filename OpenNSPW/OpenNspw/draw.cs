@@ -39,7 +39,7 @@ public void	Draw()
 
 	// オブジェクトを画面に描画
 
-	lpDDSBack.BltFast(0+Tick,300,lpDDS_OS,&source, DDBLTFAST_SRCCOLORKEY| DDBLTFAST_WAIT);
+	lpDDSBack.BltFast(0+Tick,300,OffscreenSurface,&source, DDBLTFAST_SRCCOLORKEY| DDBLTFAST_WAIT);
 
 	HDC hdc;
 	if (DD_OK==lpDDSBack.GetDC(&hdc))

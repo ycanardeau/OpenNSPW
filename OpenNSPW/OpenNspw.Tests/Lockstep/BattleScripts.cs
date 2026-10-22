@@ -12,24 +12,24 @@ internal static class BattleScripts
 	// title screen.
 	internal static void Connect(LockstepRun run)
 	{
-		run.Until(() => run.Host.Game.g_hDlg?.Id == IDD_ADDRESS_OVERRIDE && run.Guest.Game.g_hDlg?.Id == IDD_ADDRESS_OVERRIDE);
+		run.Until(() => run.Host.Game.MainDialog?.Id == IDD_ADDRESS_OVERRIDE && run.Guest.Game.MainDialog?.Id == IDD_ADDRESS_OVERRIDE);
 		run.Host.Post(g =>
 		{
-			g.TypeDlgItemText(g.g_hDlg!, IDC_ADDRESS_LINE2, "0");
-			g.ClickDlgItem(g.g_hDlg!, IDOK);
+			g.TypeDlgItemText(g.MainDialog!, IDC_ADDRESS_LINE2, "0");
+			g.ClickDlgItem(g.MainDialog!, IDOK);
 		});
-		run.Until(() => run.Host.Game.g_hDlg?.Id == IDD_MAIN_GAME);
+		run.Until(() => run.Host.Game.MainDialog?.Id == IDD_MAIN_GAME);
 
 		run.Guest.Post(g =>
 		{
-			g.ClickDlgItem(g.g_hDlg!, IDC_HOST_SESSION);
-			g.TypeDlgItemText(g.g_hDlg!, IDC_ADDRESS_LINE1, "127.0.0.1");
-			g.TypeDlgItemText(g.g_hDlg!, IDC_ADDRESS_LINE2, $"{ADDRESSOVERRIDE_PORT}");
-			g.ClickDlgItem(g.g_hDlg!, IDOK);
+			g.ClickDlgItem(g.MainDialog!, IDC_HOST_SESSION);
+			g.TypeDlgItemText(g.MainDialog!, IDC_ADDRESS_LINE1, "127.0.0.1");
+			g.TypeDlgItemText(g.MainDialog!, IDC_ADDRESS_LINE2, $"{ADDRESSOVERRIDE_PORT}");
+			g.ClickDlgItem(g.MainDialog!, IDOK);
 		});
-		run.Until(() => run.Host.Game.ActivePlayerCount == 2 && run.Guest.Game.ActivePlayerCount == 2 && run.Guest.Game.g_hDlg?.Id == IDD_MAIN_GAME);
+		run.Until(() => run.Host.Game.ActivePlayerCount == 2 && run.Guest.Game.ActivePlayerCount == 2 && run.Guest.Game.MainDialog?.Id == IDD_MAIN_GAME);
 
-		run.Host.Post(g => g.ClickDlgItem(g.g_hDlg!, IDC_START_GAME));
+		run.Host.Post(g => g.ClickDlgItem(g.MainDialog!, IDC_START_GAME));
 		run.Until(() => run.Host.Game.Mode == GameMode.Title && run.Guest.Game.Mode == GameMode.Title);
 	}
 

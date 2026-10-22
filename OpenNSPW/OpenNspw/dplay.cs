@@ -33,13 +33,13 @@ typedef struct _GENERICMSG
 public void WaveToAllPlayers()
 	{
 
-	if( g_pThreadPool==null || g_pDP==null || ActivePlayerCount!=0 )
+	if( DirectPlayThreadPool==null || DirectPlayPeer==null || ActivePlayerCount!=0 )
 		return;
 
-	GENERICMSG msgWave;
-	msgWave.dwType = MSG_TST;
+	MessageHeader msgWave;
+	msgWave.Type = MSG_TST;
 
-	bufferDesc.dwBufferSize = (uint)sizeof(GENERICMSG);
+	bufferDesc.dwBufferSize = (uint)sizeof(MessageHeader);
 	bufferDesc.pBufferData  = (byte*) &msgWave;
 
 	// Group sends with valid parameters will always succeed unless no player
@@ -87,7 +87,7 @@ public nint GreetingDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
 		{
 		case WM_INITDIALOG:
 			{
-         g_hDlg = hDlg;
+         MainDialog = hDlg;
 
          // Load and set the icon
          object? hIcon = LoadIcon( hInstApp, MAKEINTRESOURCE( IDI_ICON1 ) );
@@ -144,10 +144,10 @@ public nint GreetingDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
 					if( IsHostPlayer!=0 )
 						{
 						// Send a message to all of the players
-						GENERICMSG msgWave;
-						msgWave.dwType = (MessageType)MSG_EXIT_WAITING;
+						MessageHeader msgWave;
+						msgWave.Type = (MessageType)MSG_EXIT_WAITING;
 
-						bufferDesc.dwBufferSize = (uint)sizeof(GENERICMSG);
+						bufferDesc.dwBufferSize = (uint)sizeof(MessageHeader);
 						bufferDesc.pBufferData  = (byte*) &msgWave;
 
 						// Group sends with valid parameters will always succeed unless no player
@@ -156,19 +156,19 @@ public nint GreetingDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
 
 //						g_pDP->SendTo( DPNID_ALL_PLAYERS_GROUP, &bufferDesc, 1,
 
-						g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1, 0, null, ref hAsync
+						DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1, 0, null, ref hAsync
 													, MUST_SEND );
 						}
 
 					DestroyWindow(hDlg);
-					g_hDlg=null;					// ダイアログ表示中かのフラグにもなる
+					MainDialog=null;					// ダイアログ表示中かのフラグにもなる
 					PostQuitMessage( 0 );
 					return TRUE;
 
 				case IDCANCEL:
 					ActivePlayerCount=0;
 					DestroyWindow(hDlg);
-					g_hDlg=null;					// ダイアログ表示中かのフラグにもなる
+					MainDialog=null;					// ダイアログ表示中かのフラグにもなる
 					PostQuitMessage( 0 );
 					return TRUE;
 				}
@@ -196,7 +196,7 @@ public int EnumAdapters( HWND hDlg, Guid? pSPGuid )
 
     // Enumerate all adapters for the given service provider, and store them
     // in the listbox
-    var hr = g_pDP.EnumServiceProviders( pSPGuid, null, pdnSPInfo, ref dwSize,
+    var hr = DirectPlayPeer.EnumServiceProviders( pSPGuid, null, pdnSPInfo, ref dwSize,
                                       ref dwItems, 0 );
     if( hr != DPNERR_BUFFERTOOSMALL )
     {
@@ -214,7 +214,7 @@ public int EnumAdapters( HWND hDlg, Guid? pSPGuid )
     }
 
     // Enumerate adapters
-    if( FAILED( hr = g_pDP.EnumServiceProviders( pSPGuid, null, pdnSPInfo,
+    if( FAILED( hr = DirectPlayPeer.EnumServiceProviders( pSPGuid, null, pdnSPInfo,
                                                   ref dwSize, ref dwItems, 0 ) ) )
     {
         DXTRACE_ERR_MSGBOX( TEXT("EnumAdapters"), hr );
@@ -257,7 +257,7 @@ public int EnumAdapters( HWND hDlg, Guid? pSPGuid )
     // a device GUID and using all devices simultaneously.
     DPN_SP_CAPS dpnspCaps = new();
 	dpnspCaps.dwSize = DPN_SP_CAPS.SIZE;
-    hr = g_pDP.GetSPCaps(pSPGuid, dpnspCaps, 0);
+    hr = DirectPlayPeer.GetSPCaps(pSPGuid, dpnspCaps, 0);
     if ( FAILED( hr ) )
     {
         DXTRACE_ERR_MSGBOX( TEXT("GetSPCaps"), hr );
@@ -309,7 +309,7 @@ public int EnumServiceProviders( HWND hDlg )
     int     nIndex;
 
     // Enumerate all DirectPlay service providers, and store them in the listbox
-    var hr = g_pDP.EnumServiceProviders( null, null, pdnSPInfo, ref dwSize,
+    var hr = DirectPlayPeer.EnumServiceProviders( null, null, pdnSPInfo, ref dwSize,
                                       ref dwItems, 0 );
     if( hr != DPNERR_BUFFERTOOSMALL )
     {
@@ -327,7 +327,7 @@ public int EnumServiceProviders( HWND hDlg )
     }
 
     // Enumerate service providers
-    if( FAILED( hr = g_pDP.EnumServiceProviders( null, null, pdnSPInfo,
+    if( FAILED( hr = DirectPlayPeer.EnumServiceProviders( null, null, pdnSPInfo,
                                                   ref dwSize, ref dwItems, 0 ) ) )
     {
         DXTRACE_ERR_MSGBOX( TEXT("EnumServiceProviders"), hr );
@@ -486,7 +486,7 @@ public int OnInitOverrideDialog( HWND hDlg )
 	Guid? pSPGuid = (Guid?) SendDlgItemMessage( hDlg, IDC_SP_COMBO, CB_GETITEMDATA, nSPIndex, 0 );
 	if( pSPGuid != null )
 		{
-		g_pCurSPGuid = pSPGuid;
+		ServiceProviderGuid = pSPGuid;
 		EnumAdapters( hDlg, pSPGuid );
 		}
 
@@ -537,9 +537,9 @@ public nint OverrideDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
 					var nSPIndex = (int) SendDlgItemMessage( hDlg, IDC_SP_COMBO, CB_GETCURSEL, 0, 0 );
 					var pSPGuid = (Guid?) SendDlgItemMessage( hDlg, IDC_SP_COMBO, CB_GETITEMDATA, nSPIndex, 0 );
 
-					if( pSPGuid != null && g_pCurSPGuid != pSPGuid )		// Compares the GUIDs, not the pointers to them, which are equal for the same item
+					if( pSPGuid != null && ServiceProviderGuid != pSPGuid )		// Compares the GUIDs, not the pointers to them, which are equal for the same item
 						{
-						g_pCurSPGuid = pSPGuid;
+						ServiceProviderGuid = pSPGuid;
 						SetupAddressFields( hDlg );
 						EnumAdapters( hDlg, pSPGuid );
 						}
@@ -799,7 +799,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 	// Set the peer info, and use the DPNOP_SYNC since by default this
 	// is an async call.  If it is not DPNOP_SYNC, then the peer info may not
 	// be set by the time we call Connect() below.
-	if( FAILED( hr = g_pDP.SetPeerInfo( dpPlayerInfo, null, null, DPNOP_SYNC ) ) )
+	if( FAILED( hr = DirectPlayPeer.SetPeerInfo( dpPlayerInfo, null, null, DPNOP_SYNC ) ) )
 		{
 		DXTRACE_ERR_MSGBOX( TEXT("SetPeerInfo"), hr );
 		goto LCleanReturn;
@@ -809,7 +809,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 	DPN_APPLICATION_DESC dpnAppDesc = new();
 	dpnAppDesc.dwSize = DPN_APPLICATION_DESC.SIZE;
 	dpnAppDesc.dwFlags = DPNSESSION_NODPNSVR;
-	dpnAppDesc.guidApplication = g_guidApp;
+	dpnAppDesc.guidApplication = AppGuid;
 	dpnAppDesc.guidInstance    = GUID_NULL;
 	dpnAppDesc.pwszSessionName = null;
 	dpnAppDesc.dwMaxPlayers = 2;
@@ -830,7 +830,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 			}
 
 		// Host a game as described by pSettings
-		hr = g_pDP.Host( dpnAppDesc,          // the application desc
+		hr = DirectPlayPeer.Host( dpnAppDesc,          // the application desc
 								  [pDeviceAddress],      // array of addresses of the local devices used to connect to the host
 								  1,                    // number in array
 								  null, null,           // DPN_SECURITY_DESC, DPN_SECURITY_CREDENTIALS
@@ -844,8 +844,8 @@ public int LaunchMultiplayerGame( HWND hDlg )
 			}
 
 		// Close the existing dialog and create the "in-game" dialog.
-		DestroyWindow(g_hDlg);
-		g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_MAIN_GAME), null, GreetingDlgProc);
+		DestroyWindow(MainDialog);
+		MainDialog = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_MAIN_GAME), null, GreetingDlgProc);
 		}
     //---------------------------------
     // If we are connecting...
@@ -867,7 +867,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 			}
 
 		// Enumerate all the active DirectPlay games on the selected connection
-		hr = g_pDP.Connect( dpnAppDesc,            // application description
+		hr = DirectPlayPeer.Connect( dpnAppDesc,            // application description
 							  pHostAddress,           // host address
 							  pDeviceAddress,         // device address
 							  null,                   // security desc
@@ -876,7 +876,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 							  0,                      // user connect data size
 							  null,                   // player context
 							  null,                   // async op user context
-							  ref g_hConnectAsyncOp,     // place to store async op handle
+							  ref ConnectOperation,     // place to store async op handle
 							  dwConnectFlags );       // flags
 		if( FAILED(hr) )
 			{
@@ -898,206 +898,206 @@ LCleanReturn:
 
 private void ReceiveSideAndScenario(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
+	NameMessage* pMsg = (NameMessage*) pReceiveMsg.pReceiveData;
 
 	// ジョインが受け取る
-	HostSide=pMsg->data[0];
-	ScenarioNumber=pMsg->data[1];
+	HostSide=pMsg->Data[0];
+	ScenarioNumber=pMsg->Data[1];
 
-	SupplyRates[0]=pMsg->data[2];		// Host
-	SupplyRates[1]=pMsg->data[3];		// Guest
+	SupplyRates[0]=pMsg->Data[2];		// Host
+	SupplyRates[1]=pMsg->Data[3];		// Guest
 
-	IsDecisionEnabled=new Bool8((byte)pMsg->data[4]);
+	IsDecisionEnabled=new Bool8((byte)pMsg->Data[4]);
 
-	InitialSupplyPoints[0]=pMsg->data[5];		// Host
-	InitialSupplyPoints[1]=pMsg->data[6];		// Guest
+	InitialSupplyPoints[0]=pMsg->Data[5];		// Host
+	InitialSupplyPoints[1]=pMsg->Data[6];		// Guest
 
-	ArrivalControl=(byte)pMsg->data[7];
+	ArrivalControl=(byte)pMsg->Data[7];
 
-	SwapTime=pMsg->data[8];
-	SwapRule=pMsg->data[9];
+	SwapTime=pMsg->Data[8];
+	SwapRule=pMsg->Data[9];
 	}
 
 private void ReceiveLeaveGameSetting(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
+	NameMessage* pMsg = (NameMessage*) pReceiveMsg.pReceiveData;
 
 	// ジョインが受け取る
-	HostSide=pMsg->data[0];
-	ScenarioNumber=pMsg->data[1];
+	HostSide=pMsg->Data[0];
+	ScenarioNumber=pMsg->Data[1];
 
 	JoinGameStart=MessageType.LeaveGameSetting;
 
-	SupplyRates[0]=pMsg->data[2];		// Host
-	SupplyRates[1]=pMsg->data[3];		// Guest
+	SupplyRates[0]=pMsg->Data[2];		// Host
+	SupplyRates[1]=pMsg->Data[3];		// Guest
 
-	IsDecisionEnabled=new Bool8((byte)pMsg->data[4]);
+	IsDecisionEnabled=new Bool8((byte)pMsg->Data[4]);
 
-	InitialSupplyPoints[0]=pMsg->data[5];		// Host
-	InitialSupplyPoints[1]=pMsg->data[6];		// Guest
+	InitialSupplyPoints[0]=pMsg->Data[5];		// Host
+	InitialSupplyPoints[1]=pMsg->Data[6];		// Guest
 
-	ArrivalControl=(byte)pMsg->data[7];
+	ArrivalControl=(byte)pMsg->Data[7];
 
-	SwapTime=pMsg->data[8];
-	SwapRule=pMsg->data[9];
+	SwapTime=pMsg->Data[8];
+	SwapRule=pMsg->Data[9];
 	}
 
 private void ReceiveLeaveConfigSetting(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
+	NameMessage* pMsg = (NameMessage*) pReceiveMsg.pReceiveData;
 
 	// ジョインが受け取る
-	HostSide=pMsg->data[0];
-	ScenarioNumber=pMsg->data[1];
+	HostSide=pMsg->Data[0];
+	ScenarioNumber=pMsg->Data[1];
 
 	JoinGameStart=MessageType.LeaveConfigSetting;
 
-	SupplyRates[0]=pMsg->data[2];		// Host
-	SupplyRates[1]=pMsg->data[3];		// Guest
+	SupplyRates[0]=pMsg->Data[2];		// Host
+	SupplyRates[1]=pMsg->Data[3];		// Guest
 
-	IsDecisionEnabled=new Bool8((byte)pMsg->data[4]);
+	IsDecisionEnabled=new Bool8((byte)pMsg->Data[4]);
 
-	InitialSupplyPoints[0]=pMsg->data[5];		// Host
-	InitialSupplyPoints[1]=pMsg->data[6];		// Guest
+	InitialSupplyPoints[0]=pMsg->Data[5];		// Host
+	InitialSupplyPoints[1]=pMsg->Data[6];		// Guest
 
-	ArrivalControl=(byte)pMsg->data[7];
+	ArrivalControl=(byte)pMsg->Data[7];
 
-	SwapTime=pMsg->data[8];
-	SwapRule=pMsg->data[9];
+	SwapTime=pMsg->Data[8];
+	SwapRule=pMsg->Data[9];
 	}
 
 private void ReceiveMoveOrder(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	_DP_NEW_PP* pMsg = (_DP_NEW_PP*) pReceiveMsg.pReceiveData;
+	MoveOrderMessage* pMsg = (MoveOrderMessage*) pReceiveMsg.pReceiveData;
 
 	// ホスト、ジョインともここで相手のデータを受け取る。
-	BufferedMoveOrders[0].Unit=pMsg->used;
-	BufferedMoveOrders[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
-	BufferedMoveOrders[0].ClearsPath=pMsg->cls;
+	BufferedMoveOrders[0].Unit=pMsg->Unit;
+	BufferedMoveOrders[0].Destination = new WorldPosition(pMsg->X, pMsg->Y);
+	BufferedMoveOrders[0].ClearsPath=pMsg->ClearsPath;
 	for( var s=0; s<=(USA_PLANE_END/2)-1; s++)
 		{
-		BufferedSelections[0][s]=pMsg->slct_unit[s];
+		BufferedSelections[0][s]=pMsg->Selections[s];
 		}
 	CanAdvance2=true;
 	}
 
 private void ReceiveMoveShipsOrder(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	_DP_NEW_PP_SHIP* pMsg = (_DP_NEW_PP_SHIP*) pReceiveMsg.pReceiveData;
+	MoveShipsOrderMessage* pMsg = (MoveShipsOrderMessage*) pReceiveMsg.pReceiveData;
 
-	BufferedMoveOrders[0].Unit=pMsg->used;
-	BufferedMoveOrders[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
-	BufferedMoveOrders[0].ClearsPath=pMsg->cls;
+	BufferedMoveOrders[0].Unit=pMsg->Unit;
+	BufferedMoveOrders[0].Destination = new WorldPosition(pMsg->X, pMsg->Y);
+	BufferedMoveOrders[0].ClearsPath=pMsg->ClearsPath;
 	for( var s=0; s<=JPN_SHIP_END-1; s++)
 		{
-		BufferedSelections[0][s]=pMsg->slct_unit[s];
+		BufferedSelections[0][s]=pMsg->Selections[s];
 		}
 	CanAdvance2=true;
 	}
 
 private void ReceiveMovePlanesOrder(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	_DP_NEW_PP_PLANE* pMsg = (_DP_NEW_PP_PLANE*) pReceiveMsg.pReceiveData;
+	MovePlanesOrderMessage* pMsg = (MovePlanesOrderMessage*) pReceiveMsg.pReceiveData;
 
 	// ホスト、ジョインともここで相手のデータを受け取る。
-	BufferedMoveOrders[0].Unit=pMsg->used;
-	BufferedMoveOrders[0].Destination = new WorldPosition(pMsg->x, pMsg->y);
-	BufferedMoveOrders[0].ClearsPath=pMsg->cls;
+	BufferedMoveOrders[0].Unit=pMsg->Unit;
+	BufferedMoveOrders[0].Destination = new WorldPosition(pMsg->X, pMsg->Y);
+	BufferedMoveOrders[0].ClearsPath=pMsg->ClearsPath;
 	for( var s=0; s<=JPN_PLANE_END-JPN_PLANE_START; s++)
 		{
-		BufferedSelections[0][s+JPN_SHIP_END]=pMsg->slct_unit[s];
+		BufferedSelections[0][s+JPN_SHIP_END]=pMsg->Selections[s];
 		}
 	CanAdvance2=true;
 	}
 
 private void ReceiveSelectOrder(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	_DP_NEW_SLCT* pMsg = (_DP_NEW_SLCT*) pReceiveMsg.pReceiveData;
+	SelectOrderMessage* pMsg = (SelectOrderMessage*) pReceiveMsg.pReceiveData;
 
 	// ホスト、ジョインともここで相手のデータを受け取る。
-	BufferedSelectOrders[0].IsSet=new Bool32(pMsg->sw);
-	BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
-	BufferedSelectOrders[0].Unit=pMsg->m;
-	BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
+	BufferedSelectOrders[0].IsSet=new Bool32(pMsg->IsSet);
+	BufferedSelectOrders[0].SelectedUnit=pMsg->SelectedUnit;
+	BufferedSelectOrders[0].Unit=pMsg->Unit;
+	BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->GroundX, pMsg->GroundY);
 	for( var s=0; s<=(USA_PLANE_END/2)-1; s++)
 		{
-		BufferedSelections[0][s]=pMsg->slct_unit[s];
+		BufferedSelections[0][s]=pMsg->Selections[s];
 		}
 	CanAdvance2=true;
 	}
 
 private void ReceiveSelectShipsOrder(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	_DP_NEW_SLCT_SHIP* pMsg = (_DP_NEW_SLCT_SHIP*) pReceiveMsg.pReceiveData;
+	SelectShipsOrderMessage* pMsg = (SelectShipsOrderMessage*) pReceiveMsg.pReceiveData;
 
 	// ホスト、ジョインともここで相手のデータを受け取る。
-	BufferedSelectOrders[0].IsSet=new Bool32(pMsg->sw);
-	BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
-	BufferedSelectOrders[0].Unit=pMsg->m;
-	BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
+	BufferedSelectOrders[0].IsSet=new Bool32(pMsg->IsSet);
+	BufferedSelectOrders[0].SelectedUnit=pMsg->SelectedUnit;
+	BufferedSelectOrders[0].Unit=pMsg->Unit;
+	BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->GroundX, pMsg->GroundY);
 	for( var s=0; s<=JPN_SHIP_END-1; s++)
 		{
-		BufferedSelections[0][s]=pMsg->slct_unit[s];
+		BufferedSelections[0][s]=pMsg->Selections[s];
 		}
 	CanAdvance2=true;
 	}
 
 private void ReceiveSelectPlanesOrder(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	_DP_NEW_SLCT_PLANE* pMsg = (_DP_NEW_SLCT_PLANE*) pReceiveMsg.pReceiveData;
+	SelectPlanesOrderMessage* pMsg = (SelectPlanesOrderMessage*) pReceiveMsg.pReceiveData;
 
 	// ホスト、ジョインともここで相手のデータを受け取る。
-	BufferedSelectOrders[0].IsSet=new Bool32(pMsg->sw);
-	BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
-	BufferedSelectOrders[0].Unit=pMsg->m;
-	BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
+	BufferedSelectOrders[0].IsSet=new Bool32(pMsg->IsSet);
+	BufferedSelectOrders[0].SelectedUnit=pMsg->SelectedUnit;
+	BufferedSelectOrders[0].Unit=pMsg->Unit;
+	BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->GroundX, pMsg->GroundY);
 	for( var s=0; s<=JPN_PLANE_END-JPN_PLANE_START; s++)
 		{
-		BufferedSelections[0][s+JPN_SHIP_END]=pMsg->slct_unit[s];
+		BufferedSelections[0][s+JPN_SHIP_END]=pMsg->Selections[s];
 		}
 	CanAdvance2=true;
 	}
 
 private void ReceiveSelectLandOrder(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	_DP_NEW_SLCT_LAND* pMsg = (_DP_NEW_SLCT_LAND*) pReceiveMsg.pReceiveData;
+	SelectBaseOrderMessage* pMsg = (SelectBaseOrderMessage*) pReceiveMsg.pReceiveData;
 
 	// ホスト、ジョインともここで相手のデータを受け取る。
-	BufferedSelectOrders[0].IsSet=new Bool32(pMsg->sw);
-	BufferedSelectOrders[0].SelectedUnit=pMsg->the_slct_unit;
-	BufferedSelectOrders[0].Unit=pMsg->m;
-	BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->gr_x, pMsg->gr_y);
+	BufferedSelectOrders[0].IsSet=new Bool32(pMsg->IsSet);
+	BufferedSelectOrders[0].SelectedUnit=pMsg->SelectedUnit;
+	BufferedSelectOrders[0].Unit=pMsg->Unit;
+	BufferedSelectOrders[0].GroundPosition = new WorldPosition(pMsg->GroundX, pMsg->GroundY);
 	CanAdvance2=true;
 	}
 
 private void ReceiveMenuOrder(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	_DP_NEW_MENU* pMsg = (_DP_NEW_MENU*) pReceiveMsg.pReceiveData;
+	MenuOrderMessage* pMsg = (MenuOrderMessage*) pReceiveMsg.pReceiveData;
 
 	// ホスト、ジョインともここで相手のデータを受け取る。
-	BufferedMenuOrders[0].Menu=(CombatMenuItem)pMsg->menu;
-	BufferedMenuOrders[0].SelectedUnit=pMsg->the_slct_unit;
+	BufferedMenuOrders[0].Menu=(CombatMenuItem)pMsg->Menu;
+	BufferedMenuOrders[0].SelectedUnit=pMsg->SelectedUnit;
 
 	for( var s=0; s<=(USA_PLANE_END/2)-1; s++)
 		{
-		BufferedSelections[0][s]=pMsg->slct_unit[s];
+		BufferedSelections[0][s]=pMsg->Selections[s];
 		}
 	CanAdvance2=true;
 	}
 
 private void ReceiveSyncFlag(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	_DP_FLAG* pMsg = (_DP_FLAG*) pReceiveMsg.pReceiveData;
+	SyncFlagMessage* pMsg = (SyncFlagMessage*) pReceiveMsg.pReceiveData;
 
 	// ホスト、ジョインともここで相手のデータを受け取る。
 	CanAdvance1=true;
 
-	TickChecksums[0]=pMsg->cc_chk;
-	UnitChecksums[0]=pMsg->unit_chk;
-	RandomChecksums[0]=pMsg->rnd_chk;
-	TickWaits[0]=pMsg->ccc_wait_chk;
+	TickChecksums[0]=pMsg->TickChecksum;
+	UnitChecksums[0]=pMsg->UnitChecksum;
+	RandomChecksums[0]=pMsg->RandomChecksum;
+	TickWaits[0]=pMsg->TickWait;
 
-	RivalMode=(GameMode)pMsg->rival_mode;
+	RivalMode=(GameMode)pMsg->RivalMode;
 	}
 
 private void ReceiveGoToGameSetting()
@@ -1117,11 +1117,11 @@ private void ReceiveGoToGameSetting()
 
 private void ReceiveUserScenarioFileName(DPNMSG_RECEIVE pReceiveMsg)
 	{
-	_DP_DATA_20* pMsg = (_DP_DATA_20 *) pReceiveMsg.pReceiveData;
+	ChatMessage* pMsg = (ChatMessage *) pReceiveMsg.pReceiveData;
 
 	for(var s=0;s<MAX_PATH;s++)
 		{
-		UserScenarioFileName[s]=pMsg->friend_chat[s];
+		UserScenarioFileName[s]=pMsg->Chat[s];
 		}
 	}
 
@@ -1152,7 +1152,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 			var hr = DPNERR_CONNECTING;
 
 			while( hr == DPNERR_CONNECTING )
-				hr = g_pDP.GetPeerInfo( pCreatePlayerMsg.dpnidPlayer, pdpPlayerInfo, ref dwSize, 0 );
+				hr = DirectPlayPeer.GetPeerInfo( pCreatePlayerMsg.dpnidPlayer, pdpPlayerInfo, ref dwSize, 0 );
 
 			if( hr == DPNERR_BUFFERTOOSMALL )
 				{
@@ -1165,7 +1165,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 
 				pdpPlayerInfo.dwSize = DPN_PLAYER_INFO.SIZE;
 
-				hr = g_pDP.GetPeerInfo( pCreatePlayerMsg.dpnidPlayer, pdpPlayerInfo, ref dwSize, 0 );
+				hr = DirectPlayPeer.GetPeerInfo( pCreatePlayerMsg.dpnidPlayer, pdpPlayerInfo, ref dwSize, 0 );
 				if( SUCCEEDED(hr) )
 					{
 					Array14<byte> strThisPlayerName = default;		// temp player name buffer
@@ -1175,7 +1175,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 
 					if( (pdpPlayerInfo.dwPlayerFlags & DPNPLAYER_LOCAL)!=0 )
 						{
-						g_dpnidLocalPlayer = pCreatePlayerMsg.dpnidPlayer;
+						LocalPlayerId = pCreatePlayerMsg.dpnidPlayer;
 						}
 					else
 						{
@@ -1185,7 +1185,7 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 						RivalPlayerName[ MAX_PATH-1 ] = 0;
 
 						// 対戦相手のＤＰＮＩＤを取得
-						g_dpnidRivalPlayer = pCreatePlayerMsg.dpnidPlayer;
+						RivalPlayerId = pCreatePlayerMsg.dpnidPlayer;
 						}
 
 					}
@@ -1193,8 +1193,8 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 				}
 
 			ActivePlayerCount++;
-			if( g_hDlg != null )
-				PostMessage( g_hDlg, WM_APP_UPDATE_STATS, 0, 0 );
+			if( MainDialog != null )
+				PostMessage( MainDialog, WM_APP_UPDATE_STATS, 0, 0 );
 
 			break;
 			}
@@ -1207,10 +1207,10 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
             // post a message to the dialog thread to update the
             // UI.
             ActivePlayerCount--;
-				if( g_hDlg != null )
+				if( MainDialog != null )
 					{
 					sprintf(RivalPlayerName, " - - - " );
-					PostMessage( g_hDlg, WM_APP_UPDATE_STATS, 0, 0 );
+					PostMessage( MainDialog, WM_APP_UPDATE_STATS, 0, 0 );
 					}
 
             break;
@@ -1225,11 +1225,11 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 			// and block a DirectPlay message handler callback, but we are doing it in this
 			// sample for simplicity.
 
-			if( g_hDlg != null )
+			if( MainDialog != null )
 				{
 				// フルスクリーンの前の接続ダイアログの場合。
-				MessageBox( g_hDlg, TEXT("Session was terminated."), AppName, MB_OK | MB_ICONERROR );
-				PostMessage( g_hDlg, WM_COMMAND, IDCANCEL, 0 );
+				MessageBox( MainDialog, TEXT("Session was terminated."), AppName, MB_OK | MB_ICONERROR );
+				PostMessage( MainDialog, WM_COMMAND, IDCANCEL, 0 );
 				}
 
 			break;
@@ -1241,137 +1241,137 @@ public int DirectPlayMessageHandler( object? pvUserContext, uint dwMessageId, ob
 			var pReceiveMsg = (DPNMSG_RECEIVE)pMsgBuffer;
 
 			// とりあえず、ジェネラルに入れる。
-			GENERICMSG* pGenericMsg = (GENERICMSG*) pReceiveMsg.pReceiveData;		// pMsg in the original, which the pMsg below shadow
+			MessageHeader* pGenericMsg = (MessageHeader*) pReceiveMsg.pReceiveData;		// pMsg in the original, which the pMsg below shadow
 
-			if( (uint)pGenericMsg->dwType == MSG_TST )
+			if( (uint)pGenericMsg->Type == MSG_TST )
 				{
 				}
-			else if( (uint)pGenericMsg->dwType == MSG_EXIT_WAITING )
+			else if( (uint)pGenericMsg->Type == MSG_EXIT_WAITING )
 				{
-				PostMessage( g_hDlg, WM_COMMAND, IDC_START_GAME, 0 );
+				PostMessage( MainDialog, WM_COMMAND, IDC_START_GAME, 0 );
 				}
-			else if( pGenericMsg->dwType == MessageType.RivalMode )
+			else if( pGenericMsg->Type == MessageType.RivalMode )
 				{
-				_DP_FLAG* pMsg = (_DP_FLAG*) pReceiveMsg.pReceiveData;
-				RivalMode=(GameMode)pMsg->rival_mode;
+				SyncFlagMessage* pMsg = (SyncFlagMessage*) pReceiveMsg.pReceiveData;
+				RivalMode=(GameMode)pMsg->RivalMode;
 				}
-			else if( pGenericMsg->dwType == MessageType.LeaveSetup )
+			else if( pGenericMsg->Type == MessageType.LeaveSetup )
 				{
-				_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
+				NameMessage* pMsg = (NameMessage*) pReceiveMsg.pReceiveData;
 
 				// ジョインが受け取る
-				SharedRandomSeed=pMsg->data[0];
+				SharedRandomSeed=pMsg->Data[0];
 
 				}
 
-			else if (pGenericMsg->dwType == MessageType.SideAndScenario && ( Mode==GameMode.GameSetting || Mode==GameMode.ConfigSetting ) )
+			else if (pGenericMsg->Type == MessageType.SideAndScenario && ( Mode==GameMode.GameSetting || Mode==GameMode.ConfigSetting ) )
 				{
 				ReceiveSideAndScenario(pReceiveMsg);
 				}
-			else if( pGenericMsg->dwType == MessageType.LeaveGameSetting && ( Mode==GameMode.GameSetting || Mode==GameMode.ConfigSetting ) )
+			else if( pGenericMsg->Type == MessageType.LeaveGameSetting && ( Mode==GameMode.GameSetting || Mode==GameMode.ConfigSetting ) )
 				{
 				ReceiveLeaveGameSetting(pReceiveMsg);
 				}
-			else if( pGenericMsg->dwType == MessageType.LeaveConfigSetting )
+			else if( pGenericMsg->Type == MessageType.LeaveConfigSetting )
 				{
 				ReceiveLeaveConfigSetting(pReceiveMsg);
 				}
-			else if( pGenericMsg->dwType == MessageType.StartFromResume )
+			else if( pGenericMsg->Type == MessageType.StartFromResume )
 				{
 				JoinGameStart=MessageType.StartFromResume;
 
 				}
-			else if( pGenericMsg->dwType == MessageType.StartFromAutoSave )
+			else if( pGenericMsg->Type == MessageType.StartFromAutoSave )
 				{
 				JoinGameStart=MessageType.StartFromAutoSave;
 				}
-			else if( pGenericMsg->dwType == MessageType.UnitArrived )
+			else if( pGenericMsg->Type == MessageType.UnitArrived )
 				{
-				_DP_DATA_1* pMsg = (_DP_DATA_1*) pReceiveMsg.pReceiveData;
+				NameMessage* pMsg = (NameMessage*) pReceiveMsg.pReceiveData;
 
-				BufferedArrivedUnits[0]=pMsg->data[0];		// 敵が１ユニット増える。
+				BufferedArrivedUnits[0]=pMsg->Data[0];		// 敵が１ユニット増える。
 				CanAdvance2=true;
 				}
-			else if( pGenericMsg->dwType == MessageType.MoveOrder )
+			else if( pGenericMsg->Type == MessageType.MoveOrder )
 				{
 				ReceiveMoveOrder(pReceiveMsg);
 				}
-			else if( pGenericMsg->dwType == MessageType.MoveShipsOrder )
+			else if( pGenericMsg->Type == MessageType.MoveShipsOrder )
 				{
 				ReceiveMoveShipsOrder(pReceiveMsg);
 				}
-			else if( pGenericMsg->dwType == MessageType.MovePlanesOrder )
+			else if( pGenericMsg->Type == MessageType.MovePlanesOrder )
 				{
 				ReceiveMovePlanesOrder(pReceiveMsg);
 				}
-			else if( pGenericMsg->dwType == MessageType.SelectOrder )
+			else if( pGenericMsg->Type == MessageType.SelectOrder )
 				{
 				ReceiveSelectOrder(pReceiveMsg);
 				}
-			else if( pGenericMsg->dwType == MessageType.SelectShipsOrder )
+			else if( pGenericMsg->Type == MessageType.SelectShipsOrder )
 				{
 				ReceiveSelectShipsOrder(pReceiveMsg);
 				}
-			else if( pGenericMsg->dwType == MessageType.SelectPlanesOrder )
+			else if( pGenericMsg->Type == MessageType.SelectPlanesOrder )
 				{
 				ReceiveSelectPlanesOrder(pReceiveMsg);
 				}
-			else if( pGenericMsg->dwType == MessageType.SelectLandOrder )
+			else if( pGenericMsg->Type == MessageType.SelectLandOrder )
 				{
 				ReceiveSelectLandOrder(pReceiveMsg);
 				}
-			else if( pGenericMsg->dwType == MessageType.MenuOrder )
+			else if( pGenericMsg->Type == MessageType.MenuOrder )
 				{
 				ReceiveMenuOrder(pReceiveMsg);
 				}
-			else if( pGenericMsg->dwType == MessageType.NoOrder )
+			else if( pGenericMsg->Type == MessageType.NoOrder )
 				{
 				// ホスト、ジョインともここで相手のデータを受け取る。
 				CanAdvance2=true;
 				}
-			else if( pGenericMsg->dwType == MessageType.SyncFlag )
+			else if( pGenericMsg->Type == MessageType.SyncFlag )
 				{
 				ReceiveSyncFlag(pReceiveMsg);
 				}
-			else if( pGenericMsg->dwType == MessageType.RivalMode )
+			else if( pGenericMsg->Type == MessageType.RivalMode )
 				{
-				_DP_FLAG* pMsg = (_DP_FLAG*) pReceiveMsg.pReceiveData;
+				SyncFlagMessage* pMsg = (SyncFlagMessage*) pReceiveMsg.pReceiveData;
 
 				// ホスト、ジョインともここで相手のデータを受け取る。
-				RivalMode=(GameMode)pMsg->rival_mode;
+				RivalMode=(GameMode)pMsg->RivalMode;
 
 				}
-			else if( pGenericMsg->dwType == MessageType.GoToGameSetting )
+			else if( pGenericMsg->Type == MessageType.GoToGameSetting )
 				{
 				ReceiveGoToGameSetting();
 				}
-			else if( pGenericMsg->dwType == MessageType.ResumeAndGoToGameSetting )
+			else if( pGenericMsg->Type == MessageType.ResumeAndGoToGameSetting )
 				{
 				// ジョイン ここで相手のデータを受け取る。
 				CanAdvance2=true;
 				SystemOrders[1]=(byte)MessageType.ResumeAndGoToGameSetting;
 				}
-			else if( pGenericMsg->dwType == MessageType.Chat )
+			else if( pGenericMsg->Type == MessageType.Chat )
 				{
-				_DP_DATA_20* pMsg = (_DP_DATA_20 *) pReceiveMsg.pReceiveData;
+				ChatMessage* pMsg = (ChatMessage *) pReceiveMsg.pReceiveData;
 
 				for(s=0;s<MAX_PATH;s++)
 					{
-					RivalChat[s]=pMsg->friend_chat[s];
+					RivalChat[s]=pMsg->Chat[s];
 					}
 				RivalChatDisplayTime=unchecked((byte)CHAT_DSP_TIME);		// 400 does not fit in a BYTE: 144
 				}
-			else if( pGenericMsg->dwType == MessageType.RivalVersion )
+			else if( pGenericMsg->Type == MessageType.RivalVersion )
 				{
-				_DP_DATA_20* pMsg = (_DP_DATA_20 *) pReceiveMsg.pReceiveData;
+				ChatMessage* pMsg = (ChatMessage *) pReceiveMsg.pReceiveData;
 
 				for(s=0;s<15;s++)
 					{
-					RivalVersion[s]=pMsg->friend_chat[s];
+					RivalVersion[s]=pMsg->Chat[s];
 					}
 				RivalVersion[s]=0;
 				}
-			else if( pGenericMsg->dwType == MessageType.UserScenarioFileName )
+			else if( pGenericMsg->Type == MessageType.UserScenarioFileName )
 				{
 				ReceiveUserScenarioFileName(pReceiveMsg);
 				}
@@ -1415,25 +1415,25 @@ typedef	struct	_DP_DATA_1
 			// ゲストで、ホストに接続出来たらここへくる。
 			var pConnectCompleteMsg = (DPNMSG_CONNECT_COMPLETE)pMsgBuffer;
 
-			g_hConnectAsyncOp = 0;
+			ConnectOperation = 0;
 			if( FAILED( pConnectCompleteMsg.hResultCode ) )
 				{
 				// The connect failed.  Generally we don't want to display dialog boxes and
 				// block a DirectPlay message handler callback, but we are doing it in this
 				// sample for simplicity.
-				MessageBox( g_hDlg, TEXT("Unable to join game."),
+				MessageBox( MainDialog, TEXT("Unable to join game."),
 					 AppName, MB_OK | MB_ICONERROR );
 
 				// Re-enable the OK button.
-				EnableWindow( GetDlgItem( g_hDlg, IDOK ), TRUE);
+				EnableWindow( GetDlgItem( MainDialog, IDOK ), TRUE);
 				break;
 				}
 
 			// Otherwise, the connect succeeded.  Create the "in-game" dialog.
 
-			DestroyWindow(g_hDlg);
+			DestroyWindow(MainDialog);
 
-			g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_MAIN_GAME), null, GreetingDlgProc);
+			MainDialog = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_MAIN_GAME), null, GreetingDlgProc);
 			break;
 			}
 		case DPN_MSGID_SEND_COMPLETE:

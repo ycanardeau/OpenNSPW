@@ -286,7 +286,7 @@ internal sealed class GameSession : IDisposable
 	{
 		if (!_hasEnded && _thread.IsAlive)
 		{
-			if (Game.g_hDlg is { } dialog)
+			if (Game.MainDialog is { } dialog)
 			{
 				Game.PostToGame(() => Game.ClickDlgItem(dialog, windef.IDCANCEL));
 			}

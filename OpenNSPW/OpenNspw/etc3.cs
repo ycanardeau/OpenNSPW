@@ -1988,7 +1988,7 @@ public void	UpdateMapEditor()
 
 		// draw stats, like frame number and frame rate
 		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, gameFont_1);
+		SelectObject(hdc, GameFont1);
 		SetTextColor(hdc, RGB(255, 255, 0));
 
 		short japanPlanes=0;

@@ -2619,7 +2619,7 @@ private bool HuntSubmarineAs122(ref Unit unit)
 			if( distance<=600 )
 				{
 				var toContact=(other.ContactPosition-unit.Position).NonZero();
-				double heading=(int)(atan2(toContact.Y,toContact.X)*RAD_to+(20-Random(40)))%360;
+				double heading=(int)(atan2(toContact.Y,toContact.X)*RadiansToDegrees+(20-Random(40)))%360;
 
 				unit.EmergencyDestination = unit.Position + WorldVector.FromDirection(heading) * (distance+300);
 				unit.EmergencyFlags[0]=600;
@@ -2649,7 +2649,7 @@ private bool HuntSubmarine(ref Unit unit)
 					// 近くに潜水艦推定位置
 
 					var toContact=(other.ContactPosition-unit.Position).NonZero();
-					var direction=atan2(toContact.Y,toContact.X)*RAD_to;
+					var direction=atan2(toContact.Y,toContact.X)*RadiansToDegrees;
 
 					direction+=20-Random(40);
 

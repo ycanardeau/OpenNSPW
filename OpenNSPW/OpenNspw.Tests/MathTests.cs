@@ -53,8 +53,8 @@ public class MathTests
 		for (var i = 0; i < 100_000; i++)
 		{
 			var degrees = (random.NextDouble() - 0.25) * 720;
-			Assert.Equal(BitConverter.DoubleToInt64Bits(nspw_math.sin(degrees * all_head.a_PI)), BitConverter.DoubleToInt64Bits(nspw_math.SinDegrees(degrees)));
-			Assert.Equal(BitConverter.DoubleToInt64Bits(nspw_math.cos(degrees * all_head.a_PI)), BitConverter.DoubleToInt64Bits(nspw_math.CosDegrees(degrees)));
+			Assert.Equal(BitConverter.DoubleToInt64Bits(nspw_math.sin(degrees * all_head.DegreesToRadians)), BitConverter.DoubleToInt64Bits(nspw_math.SinDegrees(degrees)));
+			Assert.Equal(BitConverter.DoubleToInt64Bits(nspw_math.cos(degrees * all_head.DegreesToRadians)), BitConverter.DoubleToInt64Bits(nspw_math.CosDegrees(degrees)));
 		}
 	}
 
@@ -64,7 +64,7 @@ public class MathTests
 		double drctn;
 		if (wrk_x == 0) wrk_x = 1;
 		if (wrk_y == 0) wrk_y = 1;
-		drctn = nspw_math.atan2(wrk_y, wrk_x) * all_head.RAD_to;
+		drctn = nspw_math.atan2(wrk_y, wrk_x) * all_head.RadiansToDegrees;
 		if (drctn < 0)
 			drctn = 360 + drctn;
 		if (wrk_x < 0)
@@ -101,7 +101,7 @@ public class MathTests
 		{
 			var dx = (random.NextDouble() - 0.5) * Math.Pow(10, random.Next(-2, 6));
 			var dy = (random.NextDouble() - 0.5) * Math.Pow(10, random.Next(-2, 6));
-			var drctn = nspw_math.atan2(dy, dx) * all_head.RAD_to;
+			var drctn = nspw_math.atan2(dy, dx) * all_head.RadiansToDegrees;
 			if (drctn < 0)
 				drctn = 360 + drctn;
 			Assert.Equal(BitConverter.DoubleToInt64Bits(drctn), BitConverter.DoubleToInt64Bits(nspw_math.Direction(dx, dy)));

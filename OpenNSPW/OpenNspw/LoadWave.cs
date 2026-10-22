@@ -22,15 +22,15 @@ public unsafe partial class Nspw
 {
 
 // グローバル変数
-public WAVEFORMATEX* m_pwfx;
-public HMMIO m_hmmioIn;
-public MMCKINFO m_ckIn;
-public MMCKINFO m_ckInRiff;
+[Original("m_pwfx")] public WAVEFORMATEX* WaveFormat;
+[Original("m_hmmioIn")] public HMMIO WaveFile;
+[Original("m_ckIn")] public MMCKINFO DataChunk;
+[Original("m_ckInRiff")] public MMCKINFO RiffChunk;
 
 /* WAVE 閉じる */
 public int YWaveClose()
 {
-	mmioClose(m_hmmioIn,0);
+	mmioClose(WaveFile,0);
 	return 1;
 }
 
@@ -38,28 +38,28 @@ public int YWaveClose()
 public int YWaveRead(uint size,byte* data,uint* read,WAVEFORMATEX* wf)
 {
 	// The globals are fields, whose addresses C# only gives with fixed.
-	fixed (MMCKINFO* pckIn = &m_ckIn)
-	if (FAILED(YWaveReadFile(m_hmmioIn,size,(byte*)data,pckIn,read)))
+	fixed (MMCKINFO* pckIn = &DataChunk)
+	if (FAILED(YWaveReadFile(WaveFile,size,(byte*)data,pckIn,read)))
 	{
 		return 0;
 	}
 	/* フォーマットのコピー */
 	if (wf!=null)
 	{
-		memcpy(wf,m_pwfx,(nuint)(sizeof(WAVEFORMATEX)));
+		memcpy(wf,WaveFormat,(nuint)(sizeof(WAVEFORMATEX)));
 	}
-	free(m_pwfx);
+	free(WaveFormat);
 	return 1;
 }
 
 /* WAVE 開く */
 public int YWaveOpen(string name)
 {
-	m_pwfx = null;
+	WaveFormat = null;
 	// The globals are fields, whose addresses C# only gives with fixed.
-	fixed (HMMIO* phmmioIn = &m_hmmioIn)
-	fixed (WAVEFORMATEX** ppwfx = &m_pwfx)
-	fixed (MMCKINFO* pckIn = &m_ckIn, pckInRiff = &m_ckInRiff)
+	fixed (HMMIO* phmmioIn = &WaveFile)
+	fixed (WAVEFORMATEX** ppwfx = &WaveFormat)
+	fixed (MMCKINFO* pckIn = &DataChunk, pckInRiff = &RiffChunk)
 	{
 	if (FAILED(YWaveOpenFile(name,phmmioIn,ppwfx,pckInRiff)))
 	{
@@ -228,10 +228,10 @@ public IDirectSoundBuffer? LoadWave(string name)
 		return null;
 	}
 	// メモリ領域の確保
-	var buf = (byte*)malloc(m_ckIn.cksize);
+	var buf = (byte*)malloc(DataChunk.cksize);
 	// 読み込み
 	ZeroMemory(&wf,(nuint)(sizeof(WAVEFORMATEX)));
-	if (YWaveRead(m_ckIn.cksize,buf,&readsize,&wf)==0)
+	if (YWaveRead(DataChunk.cksize,buf,&readsize,&wf)==0)
 	{
 		free(buf);
 		return null;

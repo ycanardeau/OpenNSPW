@@ -83,7 +83,7 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 		{
 			lock (_lock)
 			{
-				return _orders.TryDequeue(out var order) ? order : ToBytes(new _DP_FLAG { dwType = MessageType.NoOrder });
+				return _orders.TryDequeue(out var order) ? order : ToBytes(new SyncFlagMessage { Type = MessageType.NoOrder });
 			}
 		}
 

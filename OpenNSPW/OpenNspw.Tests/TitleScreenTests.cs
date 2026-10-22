@@ -137,7 +137,7 @@ internal sealed class RunningGame : IDisposable
 			{
 				Game.PostMessage(window, WM_CLOSE, 0, 0);
 			}
-			else if (Game.g_hDlg is { } dialog)
+			else if (Game.MainDialog is { } dialog)
 			{
 				Do(g => g.ClickDlgItem(dialog, IDCANCEL));
 			}
@@ -155,7 +155,7 @@ public class TitleScreenTests
 	private static void WaitUntil(Func<bool> condition, params RunningGame[] games)
 	{
 		string Status() => string.Join("; ", games.Select(g =>
-			$"{g.PlayerName}: dialog {g.Game.g_hDlg?.Id}, players {g.Game.ActivePlayerCount}, mode {g.Game.Mode}, rival mode {g.Game.RivalMode}, frames {g.Platform.FrameCount}, ended {g.Ended}, boxes [{string.Join(", ", g.Platform.MessageBoxes)}]"));
+			$"{g.PlayerName}: dialog {g.Game.MainDialog?.Id}, players {g.Game.ActivePlayerCount}, mode {g.Game.Mode}, rival mode {g.Game.RivalMode}, frames {g.Platform.FrameCount}, ended {g.Ended}, boxes [{string.Join(", ", g.Platform.MessageBoxes)}]"));
 
 		var deadline = DateTime.UtcNow + Timeout;
 		while (!condition())
@@ -257,26 +257,26 @@ public class TitleScreenTests
 		using var guest = new RunningGame(data.Path, "Bob");
 		host.Start();
 		guest.Start();
-		WaitUntil(() => host.Game.g_hDlg?.Id == IDD_ADDRESS_OVERRIDE && guest.Game.g_hDlg?.Id == IDD_ADDRESS_OVERRIDE, host, guest);
+		WaitUntil(() => host.Game.MainDialog?.Id == IDD_ADDRESS_OVERRIDE && guest.Game.MainDialog?.Id == IDD_ADDRESS_OVERRIDE, host, guest);
 
 		host.Do(g =>
 		{
-			g.TypeDlgItemText(g.g_hDlg!, IDC_ADDRESS_LINE2, "0");
-			g.ClickDlgItem(g.g_hDlg!, IDOK);
+			g.TypeDlgItemText(g.MainDialog!, IDC_ADDRESS_LINE2, "0");
+			g.ClickDlgItem(g.MainDialog!, IDOK);
 		});
-		WaitUntil(() => host.Game.g_hDlg?.Id == IDD_MAIN_GAME, host, guest);
+		WaitUntil(() => host.Game.MainDialog?.Id == IDD_MAIN_GAME, host, guest);
 		var port = host.Platform.DirectPlay.Peers.Single().LocalEndPoint!.Port;
 
 		guest.Do(g =>
 		{
-			g.ClickDlgItem(g.g_hDlg!, IDC_HOST_SESSION);
-			g.TypeDlgItemText(g.g_hDlg!, IDC_ADDRESS_LINE1, "127.0.0.1");
-			g.TypeDlgItemText(g.g_hDlg!, IDC_ADDRESS_LINE2, $"{port}");
-			g.ClickDlgItem(g.g_hDlg!, IDOK);
+			g.ClickDlgItem(g.MainDialog!, IDC_HOST_SESSION);
+			g.TypeDlgItemText(g.MainDialog!, IDC_ADDRESS_LINE1, "127.0.0.1");
+			g.TypeDlgItemText(g.MainDialog!, IDC_ADDRESS_LINE2, $"{port}");
+			g.ClickDlgItem(g.MainDialog!, IDOK);
 		});
-		WaitUntil(() => host.Game.ActivePlayerCount == 2 && guest.Game.ActivePlayerCount == 2 && guest.Game.g_hDlg?.Id == IDD_MAIN_GAME, host, guest);
+		WaitUntil(() => host.Game.ActivePlayerCount == 2 && guest.Game.ActivePlayerCount == 2 && guest.Game.MainDialog?.Id == IDD_MAIN_GAME, host, guest);
 
-		host.Do(g => g.ClickDlgItem(g.g_hDlg!, IDC_START_GAME));
+		host.Do(g => g.ClickDlgItem(g.MainDialog!, IDC_START_GAME));
 		WaitUntil(() => host.Platform.FrameCount > 20 && guest.Platform.FrameCount > 20, host, guest);
 
 		play(host, guest);

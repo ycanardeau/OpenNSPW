@@ -320,10 +320,11 @@ public struct	Sprite
 //struct GAMEMSG_GENERIC
 //struct _GENERICMSG
 
+[Original("GENERICMSG")]
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct GENERICMSG
+public struct MessageHeader
 	{
-	public MessageType dwType;
+	[Original("dwType")] public MessageType Type;
 	}
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -336,141 +337,152 @@ public struct UNIT_MSG
 	public int cls;
 	}
 
+[Original("_DP_DATA_1")]
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct	_DP_DATA_1
+public struct	NameMessage
 	{
-	public MessageType dwType;
-	public Array16<byte> my_name;
-	public Array10<short> data;
+	[Original("dwType")] public MessageType Type;
+	[Original("my_name")] public Array16<byte> Name;
+	[Original("data")] public Array10<short> Data;
 	}
 
+[Original("_DP_NEW_PP")]
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct _DP_NEW_PP
+public struct MoveOrderMessage
 	{
-	public MessageType dwType;
+	[Original("dwType")] public MessageType Type;
 
 	// NEW PP
-	public byte used; //
-	public short x; //
-	public short y; //
-	public int cls;
-	public Array90<byte> slct_unit; // [USA_PLANE_END/2]
+	[Original("used")] public byte Unit; //
+	[Original("x")] public short X; //
+	[Original("y")] public short Y; //
+	[Original("cls")] public int ClearsPath;
+	[Original("slct_unit")] public Array90<byte> Selections; // [USA_PLANE_END/2]
 	}
 
+[Original("_DP_NEW_PP_SHIP")]
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct	_DP_NEW_PP_SHIP
+public struct	MoveShipsOrderMessage
 	{
-	public MessageType dwType;
+	[Original("dwType")] public MessageType Type;
 
 	// NEW PP
-	public byte used; //
-	public short x; //
-	public short y; //
-	public int cls;
-	public Array40<byte> slct_unit; // [JPN_SHIP_END/*20*/]
+	[Original("used")] public byte Unit; //
+	[Original("x")] public short X; //
+	[Original("y")] public short Y; //
+	[Original("cls")] public int ClearsPath;
+	[Original("slct_unit")] public Array40<byte> Selections; // [JPN_SHIP_END/*20*/]
 	}
 
+[Original("_DP_NEW_PP_PLANE")]
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct	_DP_NEW_PP_PLANE
+public struct	MovePlanesOrderMessage
 	{
-	public MessageType dwType;
+	[Original("dwType")] public MessageType Type;
 
 	// NEW PP
-	public byte used; //
-	public short x; //
-	public short y; //
-	public int cls;
-	public Array50<byte> slct_unit; // [JPN_PLANE_END-USA_SHIP_END/*30*/]
+	[Original("used")] public byte Unit; //
+	[Original("x")] public short X; //
+	[Original("y")] public short Y; //
+	[Original("cls")] public int ClearsPath;
+	[Original("slct_unit")] public Array50<byte> Selections; // [JPN_PLANE_END-USA_SHIP_END/*30*/]
 	}
 
+[Original("_DP_NEW_SLCT")]
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct	_DP_NEW_SLCT
+public struct	SelectOrderMessage
 	{
-	public MessageType dwType;
+	[Original("dwType")] public MessageType Type;
 
 	// NEW SLCT
-	public int sw; //
-	public byte the_slct_unit; //
-	public byte m;
-	public short gr_x; // グランドX，Ｙ
-	public short gr_y;
-	public Array90<byte> slct_unit; // [USA_PLANE_END/2/*50*/]
+	[Original("sw")] public int IsSet; //
+	[Original("the_slct_unit")] public byte SelectedUnit; //
+	[Original("m")] public byte Unit;
+	[Original("gr_x")] public short GroundX; // グランドX，Ｙ
+	[Original("gr_y")] public short GroundY;
+	[Original("slct_unit")] public Array90<byte> Selections; // [USA_PLANE_END/2/*50*/]
 	}
 
+[Original("_DP_NEW_SLCT_SHIP")]
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct	_DP_NEW_SLCT_SHIP
+public struct	SelectShipsOrderMessage
 	{
-	public MessageType dwType;
+	[Original("dwType")] public MessageType Type;
 
 	// NEW SLCT
-	public int sw; //
-	public byte the_slct_unit; //
-	public byte m;
-	public short gr_x; // グランドX，Ｙ
-	public short gr_y;
-	public Array40<byte> slct_unit; // [JPN_SHIP_END/*20*/]
+	[Original("sw")] public int IsSet; //
+	[Original("the_slct_unit")] public byte SelectedUnit; //
+	[Original("m")] public byte Unit;
+	[Original("gr_x")] public short GroundX; // グランドX，Ｙ
+	[Original("gr_y")] public short GroundY;
+	[Original("slct_unit")] public Array40<byte> Selections; // [JPN_SHIP_END/*20*/]
 	}
 
+[Original("_DP_NEW_SLCT_PLANE")]
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct	_DP_NEW_SLCT_PLANE
+public struct	SelectPlanesOrderMessage
 	{
-	public MessageType dwType;
+	[Original("dwType")] public MessageType Type;
 
 	// NEW SLCT
-	public int sw; //
-	public byte the_slct_unit; //
-	public byte m;
-	public short gr_x; // グランドX，Ｙ
-	public short gr_y;
-	public Array50<byte> slct_unit; // [JPN_PLANE_END-USA_SHIP_END/*30*/]
+	[Original("sw")] public int IsSet; //
+	[Original("the_slct_unit")] public byte SelectedUnit; //
+	[Original("m")] public byte Unit;
+	[Original("gr_x")] public short GroundX; // グランドX，Ｙ
+	[Original("gr_y")] public short GroundY;
+	[Original("slct_unit")] public Array50<byte> Selections; // [JPN_PLANE_END-USA_SHIP_END/*30*/]
 	}
 
+[Original("_DP_NEW_SLCT_LAND")]
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct	_DP_NEW_SLCT_LAND
+public struct	SelectBaseOrderMessage
 	{
-	public MessageType dwType;
+	[Original("dwType")] public MessageType Type;
 
 	// NEW SLCT
-	public int sw; //
-	public byte the_slct_unit; //
-	public byte m;
-	public short gr_x; // グランドX，Ｙ
-	public short gr_y;
+	[Original("sw")] public int IsSet; //
+	[Original("the_slct_unit")] public byte SelectedUnit; //
+	[Original("m")] public byte Unit;
+	[Original("gr_x")] public short GroundX; // グランドX，Ｙ
+	[Original("gr_y")] public short GroundY;
 	}
 
+[Original("_DP_NEW_MENU")]
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct	_DP_NEW_MENU
+public struct	MenuOrderMessage
 	{
-	public MessageType dwType;
+	[Original("dwType")] public MessageType Type;
 
 	// NEW MENU
-	public byte menu; // これがｓｗの代わり
-	public byte the_slct_unit;
+	[Original("menu")] public byte Menu; // これがｓｗの代わり
+	[Original("the_slct_unit")] public byte SelectedUnit;
 
-	public Array90<byte> slct_unit; // [USA_PLANE_END/2/*50*/]
+	[Original("slct_unit")] public Array90<byte> Selections; // [USA_PLANE_END/2/*50*/]
 	}
 
+[Original("_DP_FLAG")]
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct	_DP_FLAG
+public struct	SyncFlagMessage
 	{
-	public MessageType dwType;
+	[Original("dwType")] public MessageType Type;
 
-	public byte cc_chk;
-	public byte unit_chk;
-	public byte rnd_chk;
+	[Original("cc_chk")] public byte TickChecksum;
+	[Original("unit_chk")] public byte UnitChecksum;
+	[Original("rnd_chk")] public byte RandomChecksum;
 
-	public byte ccc_wait_chk;
+	[Original("ccc_wait_chk")] public byte TickWait;
 
-	public short rival_mode; // お互いのモードを飛ばす
+	[Original("rival_mode")] public short RivalMode; // お互いのモードを飛ばす
 
 	}
 
+[Original("_DP_DATA_20")]
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct	_DP_DATA_20
+public struct	ChatMessage
 	{
-	public MessageType dwType;
+	[Original("dwType")] public MessageType Type;
 
-	public Array260<byte> friend_chat; // [MAX_PATH/*128*/]
+	[Original("friend_chat")] public Array260<byte> Chat; // [MAX_PATH/*128*/]
 
 	}
 

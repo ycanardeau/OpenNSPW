@@ -762,7 +762,8 @@ public void	SetParkingPosition( int	m )
 //============================================================================
 //
 //----------------------------------------------------------------------------
-public void	set_the_slct_unit (int m)
+[Original("set_the_slct_unit")]
+public void	SelectUnit(int m)
 	{
 
 	if( Units[m].Side!=LocalSide )

@@ -100,15 +100,15 @@ public int	InitializeDirectSound()
 
 	for(var sound=0;sound<SoundFileNames.Length;sound++)
 		{
-		lpDSB_[sound][0]= LoadWave($"WAV\\{SoundFileNames[sound]}.wav");
-		if (lpDSB_[sound][0]==null)
+		SoundBuffers[sound][0]= LoadWave($"WAV\\{SoundFileNames[sound]}.wav");
+		if (SoundBuffers[sound][0]==null)
 			{
 			MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
 			SendMessage(hwndApp,WM_CLOSE,0,0);
 			return FALSE;
 			}
 		for(var i=1;i<SND_DUP;i++)
-			lpDS.DuplicateSoundBuffer(lpDSB_[sound][0],out lpDSB_[sound][i]);
+			lpDS.DuplicateSoundBuffer(SoundBuffers[sound][0],out SoundBuffers[sound][i]);
 		}
 
 	return TRUE;
@@ -212,11 +212,11 @@ return;
 	if(1!=0)
 		{
 
-		lpDSB_[(int)sound][NextSoundBuffers[(int)sound]].Stop();		//
-		lpDSB_[(int)sound][NextSoundBuffers[(int)sound]].SetCurrentPosition(0);	// 巻き戻し
+		SoundBuffers[(int)sound][NextSoundBuffers[(int)sound]].Stop();		//
+		SoundBuffers[(int)sound][NextSoundBuffers[(int)sound]].SetCurrentPosition(0);	// 巻き戻し
 
-		lpDSB_[(int)sound][NextSoundBuffers[(int)sound]].SetVolume( 0 );
-		lpDSB_[(int)sound][NextSoundBuffers[(int)sound]].Play(0,0,0);		//
+		SoundBuffers[(int)sound][NextSoundBuffers[(int)sound]].SetVolume( 0 );
+		SoundBuffers[(int)sound][NextSoundBuffers[(int)sound]].Play(0,0,0);		//
 
 		NextSoundBuffers[(int)sound]++;
 		NextSoundBuffers[(int)sound]=(short)(NextSoundBuffers[(int)sound]%SND_DUP);

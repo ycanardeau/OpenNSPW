@@ -21,7 +21,7 @@ namespace OpenNspw;
 public unsafe partial class Nspw
 {
 
-public const int		map_close	= 1;
+public const int		MinimapCellSize	= 1;
 
 //============================================================================
 // 補給ポイントとユニットの値段
@@ -265,14 +265,14 @@ private void DrawUnitDetails(SpriteId sprite, ref RECT source, ref HDC hdc, ref 
 	destination.right=destination.left+Sprites[sprite].Size.Width-1+1;
 	destination.bottom=destination.top+Sprites[sprite].Size.Height-1+1;
 
-	IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref source),DDBLTFAST_WAIT );
+	IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),DDBLTFAST_WAIT );
 
 	// そのユニットのテキストを表示します。
 	if (IDirectDrawSurface_GetDC(lpDDSBack, (HDC*)Unsafe.AsPointer(ref hdc)) == DD_OK )
 		{
 		// draw stats, like frame number and frame rate
 		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, gameFont_1);
+		SelectObject(hdc, GameFont1);
 
 #if !LNGG_VER
 		WriteUnitDetails(ref length, ref text);
@@ -467,7 +467,7 @@ private void UpdateDeckView(ref RECT source, SpriteId sprite, ref RECT destinati
 		source.right+=180;	source.left+=180;
 		}
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref source),0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),0) )
 	{
 	RestoreSurfaces();
 	}
@@ -515,10 +515,10 @@ private int ListCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu
 		if( Units[SelectedUnit].PlaneState==UnitState.Flying )
 			{	// 飛行中のメニュー
 			n=0;
-			for(var g=1;g<=MaxUnitId;g++)
+			for(var m=1;m<=MaxUnitId;m++)
 				{
-				ref var unit = ref Units[g];
-				if( unit.IsUsed && ( unit.GroupLeader==SelectedUnit || g==SelectedUnit || Selections[1][g]!=0) )
+				ref var unit = ref Units[m];
+				if( unit.IsUsed && ( unit.GroupLeader==SelectedUnit || m==SelectedUnit || Selections[1][m]!=0) )
 					if( unit.PlaneState!=UnitState.Flying )
 						{
 						n=1; break;
@@ -628,7 +628,7 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 			source.right=source.left+Sprites[sprite].Size.Width-1;
 			}
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref source),0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),0) )
 	{
 	RestoreSurfaces();
 	}
@@ -700,7 +700,7 @@ private void DrawSupplyTarget(ref int m, ref RECT source, int y)
 	destination.left=1024-120+10;
 	destination.top=y+20*2+5;
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref source),DDBLTFAST_SRCCOLORKEY) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),DDBLTFAST_SRCCOLORKEY) )
 		{
 		RestoreSurfaces();
 		}
@@ -774,7 +774,7 @@ private SupplyRequestState GetSupplyRequestState()
 	{
 	int start;
 	int end;
-	int g;
+	int group;
 	if(LocalSide==Side.Japan)
 		{
 		// 日本サイドのユニット
@@ -782,13 +782,13 @@ private SupplyRequestState GetSupplyRequestState()
 			{
 			start=JPN_SHIP_START;
 			end=JPN_SHIP_END;
-			g=1;						// 艦船
+			group=1;						// 艦船
 			}
 		else
 			{
 			start=JPN_PLANE_START;
 			end=JPN_PLANE_END;
-			g=2;						// 航空機
+			group=2;						// 航空機
 			}
 		}
 	else
@@ -798,13 +798,13 @@ private SupplyRequestState GetSupplyRequestState()
 			{
 			start=USA_SHIP_START;
 			end=USA_SHIP_END;
-			g=1;						// 艦船
+			group=1;						// 艦船
 			}
 		else
 			{
 			start=USA_PLANE_START;
 			end=USA_PLANE_END;
-			g=2;						// 航空機
+			group=2;						// 航空機
 			}
 		}
 
@@ -853,7 +853,7 @@ private SupplyRequestState GetSupplyRequestState()
 			)
 		{
 
-		if( (g==1 && n!=0 ) || (g==2 && n>=3) )
+		if( (group==1 && n!=0 ) || (group==2 && n>=3) )
 			{
 			if( SupplyPoints>=GetSupplyPointsPerUnit() )
 				return SupplyRequestState.Available;
@@ -1102,7 +1102,7 @@ private void UpdateSupplyPanel(ref Array8<int> length, ref Array8<Array128<byte>
 private void AskSystemMenu(MessageType answer)
 	{
 	DialogAnswer=answer;
-	g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_OK_CANCEL), hwndApp, (DLGPROC)IDD_OK_CANCEL_Proc );
+	MainDialog = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_OK_CANCEL), hwndApp, (DLGPROC)IDD_OK_CANCEL_Proc );
 	}
 
 private void UpdateSystemMenu(ref Array8<int> length, ref Array8<Array128<byte>> text, int y, ref HDC hdc)
@@ -1226,7 +1226,7 @@ rival_mode=mode;
 	destination.left=Sprites[SpriteId.ButtonBase].Position.X;
 	destination.top=Sprites[SpriteId.ButtonBase].Position.Y;
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,&source,0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,0) )
 		{
 		RestoreSurfaces();
 		}
@@ -1262,7 +1262,7 @@ rival_mode=mode;
 	if ( !IsEditingMap && IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
 		{
 		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, gameFont_1);
+		SelectObject(hdc, GameFont1);
 
 #if !LNGG_VER
 		length[0] = wsprintf(text[0], "スピード : %d",GameSpeed);
@@ -1288,7 +1288,7 @@ rival_mode=mode;
 	if( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
 		{
 		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, gameFont_1);
+		SelectObject(hdc, GameFont1);
 
 		if( !IsEditingMap )
 			{
@@ -1328,7 +1328,7 @@ rival_mode=mode;
 // the map.
 private void ShowMinimapCell(int column, int row)
 	{
-	CameraPosition = new WorldPosition(MAP_LEFT+((column/map_close)*80), MAP_TOP-((row/map_close)*80));
+	CameraPosition = new WorldPosition(MAP_LEFT+((column/MinimapCellSize)*80), MAP_TOP-((row/MinimapCellSize)*80));
 	if(CameraPosition.Y>MAP_TOP)
 		CameraPosition = new WorldPosition(CameraPosition.X, MAP_TOP);
 	if(CameraPosition.X>(MAP_RIGHT-CMBT_WIDTH) )
@@ -1359,7 +1359,7 @@ public void	DrawMinimap()
 	destination.left=Sprites[SpriteId.Minimap].Position.X;
 	destination.top=Sprites[SpriteId.Minimap].Position.Y;
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,&source,0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,0) )
 		{
 		RestoreSurfaces();
 		}
@@ -1370,13 +1370,13 @@ public void	DrawMinimap()
 	// コンバット画面位置の描画
 	byte ownColor=0;
 	if( CameraPosition.X >= 0 )
-		destination.left=baseX+((abs(MAP_LEFT)+(int)(CameraPosition.X))/80)*map_close;
+		destination.left=baseX+((abs(MAP_LEFT)+(int)(CameraPosition.X))/80)*MinimapCellSize;
 	else
-		destination.left=baseX+((abs(MAP_LEFT)+(int)(CameraPosition.X))/80)*map_close;
+		destination.left=baseX+((abs(MAP_LEFT)+(int)(CameraPosition.X))/80)*MinimapCellSize;
 	if( CameraPosition.Y >= 0 )
-		destination.top=baseY+((abs(MAP_TOP)-(int)(CameraPosition.Y))/80)*map_close;
+		destination.top=baseY+((abs(MAP_TOP)-(int)(CameraPosition.Y))/80)*MinimapCellSize;
 	else
-		destination.top=baseY+((abs(MAP_TOP)-(int)(CameraPosition.Y))/80)*map_close;
+		destination.top=baseY+((abs(MAP_TOP)-(int)(CameraPosition.Y))/80)*MinimapCellSize;
 
 	destination.right=destination.left+10;
 	destination.bottom=destination.top+10;
@@ -1430,13 +1430,13 @@ public void	DrawMinimap()
 			{
 			// マイユニット
 			if( unit.Position.X >= 0 )
-				destination.left=baseX+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*map_close;
+				destination.left=baseX+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*MinimapCellSize;
 			else
-				destination.left=baseX+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*map_close;
+				destination.left=baseX+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*MinimapCellSize;
 			if( unit.Position.Y >= 0 )
-				destination.top=baseY+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*map_close;
+				destination.top=baseY+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*MinimapCellSize;
 			else
-				destination.top=baseY+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*map_close;
+				destination.top=baseY+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*MinimapCellSize;
 
 			destination.right=destination.left+2;
 			destination.bottom=destination.top+2;
@@ -1449,7 +1449,7 @@ public void	DrawMinimap()
 			source.right = source.left+3;
 			source.bottom = source.top+3;
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,&source,0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,0) )
 		{
 		RestoreSurfaces();
 		}
@@ -1463,25 +1463,25 @@ public void	DrawMinimap()
 				{
 				// 潜航中のおおよそ潜水艦
 				if( unit.ContactX >= 0 )
-					destination.left=baseX+((abs(MAP_LEFT)+(int)(unit.ContactX-40))/80)*map_close;
+					destination.left=baseX+((abs(MAP_LEFT)+(int)(unit.ContactX-40))/80)*MinimapCellSize;
 				else
-					destination.left=baseX+((abs(MAP_LEFT)+(int)(unit.ContactX-40))/80)*map_close;
+					destination.left=baseX+((abs(MAP_LEFT)+(int)(unit.ContactX-40))/80)*MinimapCellSize;
 				if( unit.ContactY >= 0 )
-					destination.top=baseY+((abs(MAP_TOP)-(int)(unit.ContactY+40))/80)*map_close;
+					destination.top=baseY+((abs(MAP_TOP)-(int)(unit.ContactY+40))/80)*MinimapCellSize;
 				else
-					destination.top=baseY+((abs(MAP_TOP)-(int)(unit.ContactY+40))/80)*map_close;
+					destination.top=baseY+((abs(MAP_TOP)-(int)(unit.ContactY+40))/80)*MinimapCellSize;
 				}
 			else
 				{
 				// 艦船基地航空機
 				if( unit.Position.X >= 0 )
-					destination.left=baseX+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*map_close;
+					destination.left=baseX+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*MinimapCellSize;
 				else
-					destination.left=baseX+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*map_close;
+					destination.left=baseX+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*MinimapCellSize;
 				if( unit.Position.Y >= 0 )
-					destination.top=baseY+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*map_close;
+					destination.top=baseY+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*MinimapCellSize;
 				else
-					destination.top=baseY+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*map_close;
+					destination.top=baseY+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*MinimapCellSize;
 				}
 			destination.right=destination.left+2;
 			destination.bottom=destination.top+2;
@@ -1494,7 +1494,7 @@ public void	DrawMinimap()
 			source.right = source.left+3;
 			source.bottom = source.top+3;
 
-			if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,&source,0) )
+			if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,0) )
 				{
 				RestoreSurfaces();
 				}
@@ -1521,7 +1521,7 @@ public void	MakeMinimap()
 	source.right = source.left+255;
 	source.bottom = source.top+199;
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDS_OS, destination.left, destination.top,lpDDS_OS,&source,0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( OffscreenSurface, destination.left, destination.top,OffscreenSurface,&source,0) )
 		{
 		RestoreSurfaces();
 		}
@@ -1541,7 +1541,7 @@ public void	MakeMinimap()
 				source.right = source.left+2;
 				source.bottom = source.top+2;
 
-				if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDS_OS, destination.left, destination.top,lpDDS_OS,&source,0) )
+				if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( OffscreenSurface, destination.left, destination.top,OffscreenSurface,&source,0) )
 					{
 					RestoreSurfaces();
 					}
@@ -1583,10 +1583,10 @@ public void	ApplyUnitInfoInput()
 				}
 			else
 				{
-				for(short g=1;g<=MaxUnitId;g++)
+				for(short n=1;n<=MaxUnitId;n++)
 					{
-					ref var unit = ref Units[g];
-					if( unit.IsUsed && ( unit.GroupLeader==savedSelectedUnit || g==savedSelectedUnit || Selections[e][g]!=0) )
+					ref var unit = ref Units[n];
+					if( unit.IsUsed && ( unit.GroupLeader==savedSelectedUnit || n==savedSelectedUnit || Selections[e][n]!=0) )
 						{
 						// 決定後の書く個別の処理
 						switch( unit.Kind )
