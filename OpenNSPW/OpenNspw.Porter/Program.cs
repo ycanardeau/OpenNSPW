@@ -26,6 +26,8 @@ using OpenNspw.Porter;
 //       Renames locals and parameters of methods (see LocalRenamer), or lists them, without a renames file.
 //   OpenNspw.Porter remove-parameters <port project directory> <positions file> <user project directory>...
 //       Removes unused parameters, and their arguments where they have no side effects (see ParameterRemover).
+//   OpenNspw.Porter bool-locals <project directory>
+//       Makes bool the int locals that are only set to 0 or 1 and compared with them (see BoolLocals).
 //   OpenNspw.Porter ref-locals <project directory> [<method>,<method>...]
 //       Gives the element of a table that a loop works on a ref local, and the unit that the int parameter of the named
 //       methods numbers (see RefLocals).
@@ -61,6 +63,16 @@ if (args.Length is 2 or 3 && args[0] == "ref-locals")
 if (args.Length == 2 && args[0] == "distances")
 {
 	foreach (var line in new Distances(new CSharpProject(args[1])).Run())
+	{
+		Console.WriteLine(line);
+	}
+
+	return 0;
+}
+
+if (args.Length == 2 && args[0] == "bool-locals")
+{
+	foreach (var line in new BoolLocals(new CSharpProject(args[1])).Run())
 	{
 		Console.WriteLine(line);
 	}
