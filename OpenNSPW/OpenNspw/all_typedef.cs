@@ -253,6 +253,9 @@ public struct	Fire
 
 	[UnscopedRef] public ref int TargetY => ref info[7];
 
+	// TargetX and TargetY as a position in the world.
+	public readonly WorldPosition TargetPoint => new(info[6], info[7]);
+
 	// The side of the unit that fired, as an int.
 	[UnscopedRef] public ref int ShooterSide => ref info[8];
 	}

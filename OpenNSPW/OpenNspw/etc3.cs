@@ -262,7 +262,7 @@ public void	UpdateClouds()
 
 private void UpdateCargo(ref Fire fire, ref int n)
 	{
-	RECT landingArea;
+	WorldRect landingArea;
 	int f;
 	if( fire.Ticks<=fire.FlightTime )
 		{
@@ -273,11 +273,8 @@ private void UpdateCargo(ref Fire fire, ref int n)
 		var lands=0;
 
 		// ptin dbg
-		landingArea.top=(int)fire.TargetY+20;
-		landingArea.right=(int)fire.TargetX+20;
-		landingArea.bottom=(int)fire.TargetY-20;
-		landingArea.left=(int)fire.TargetX-20;
-		if( PointInRect3(ref landingArea,(int)fire.Position.X,(int)fire.Position.Y)!=0 )
+		landingArea=WorldRect.Around(fire.TargetPoint, 20, 20);
+		if( landingArea.Contains(fire.Position) )
 			lands=1;
 
 		if( lands!=0 )
@@ -289,11 +286,8 @@ private void UpdateCargo(ref Fire fire, ref int n)
 				if( Units[n].IsUsed && Units[n].Kind>=UnitKind.AirBase && Units[n].Kind<=UnitKind.Fortress )
 					{
 					// ptin dbg
-					landingArea.top=(int)Units[n].Position.Y+20;
-					landingArea.right=(int)Units[n].Position.X+20;
-					landingArea.bottom=(int)Units[n].Position.Y-20;
-					landingArea.left=(int)Units[n].Position.X-20;
-					if( PointInRect3(ref landingArea,(int)fire.Position.X,(int)fire.Position.Y)!=0 )
+					landingArea=WorldRect.Around(Units[n].Position, 20, 20);
+					if( landingArea.Contains(fire.Position) )
 						{
 						// とにかくほかの地上施設の上
 						lands=0;
@@ -409,7 +403,7 @@ private void UpdateCargo(ref Fire fire, ref int n)
 
 private void UpdateBullet(ref Fire fire, ref int n, int m)
 	{
-	RECT hitArea;
+	WorldRect hitArea;
 	if( fire.Speed>=fire.FinalSpeed )
 		{
 		var previousPosition=fire.Position;
@@ -419,12 +413,9 @@ private void UpdateBullet(ref Fire fire, ref int n, int m)
 		n=fire.Target;						// ターゲットナンバー
 
 		// ptin dbg
-		hitArea.top=(int)Units[n].Position.Y+10;
-		hitArea.right=(int)Units[n].Position.X+10;
-		hitArea.bottom=(int)Units[n].Position.Y-10;
-		hitArea.left=(int)Units[n].Position.X-10;
+		hitArea=WorldRect.Around(Units[n].Position, 10, 10);
 
-		if( PointInRect3(ref hitArea,(int)fire.Position.X,(int)fire.Position.Y)!=0 )
+		if( hitArea.Contains(fire.Position) )
 			{
 			// 命中
 			fire.Target=0;
@@ -468,7 +459,7 @@ private void UpdateBullet(ref Fire fire, ref int n, int m)
 
 private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 	{
-	RECT burstArea;
+	WorldRect burstArea;
 	fire.Ticks--;
 	if( fire.Ticks!=0 )
 		{	//
@@ -506,17 +497,14 @@ private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 		effect.SpriteNumber=0;			// 弾丸着弾	のソースファイル上の番号
 
 		// ptin dbg
-		burstArea.top=(int)fire.Position.Y+40;
-		burstArea.right=(int)fire.Position.X+40;
-		burstArea.bottom=(int)fire.Position.Y-40;
-		burstArea.left=(int)fire.Position.X-40;
+		burstArea=WorldRect.Around(fire.Position, 40, 40);
 
 		for(n=1;n<=MaxUnitId;n++)
 			{
 			ref var unit = ref Units[n];
 			if( unit.IsUsed && unit.Side==Units[fire.Target].Side && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying )
 				{
-				if( PointInRect3(ref burstArea,(int)unit.Position.X,(int)unit.Position.Y)!=0  )
+				if( burstArea.Contains(unit.Position)  )
 					{
 					// 命中
 					// BUG(1.22, NSPW NET): clearing the fire's target compares the next planes with unit 0's side, none, so the
@@ -603,7 +591,7 @@ private void UpdateAntiSubmarineBomb(ref Fire fire, ref int n, int m)
 
 private void UpdateAntiAircraftShell(ref Fire fire, ref int n, int m)
 	{
-	RECT burstArea;
+	WorldRect burstArea;
 	fire.Ticks--;
 	if( fire.Ticks!=0 )
 		{	//
@@ -657,17 +645,14 @@ private void UpdateAntiAircraftShell(ref Fire fire, ref int n, int m)
 
 		f=40;
 		// ptin dbg
-		burstArea.top=(int)fire.Position.Y+f;
-		burstArea.right=(int)fire.Position.X+f;
-		burstArea.bottom=(int)fire.Position.Y-f;
-		burstArea.left=(int)fire.Position.X-f;
+		burstArea=WorldRect.Around(fire.Position, f, f);
 
 		for(n=1;n<=MaxUnitId;n++)
 			{
 			ref var unit = ref Units[n];
 			if( unit.IsUsed && unit.Side==Units[fire.Target].Side && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying )
 				{
-				if( PointInRect3(ref burstArea,(int)unit.Position.X,(int)unit.Position.Y)!=0 && !( unit.Kind==UnitKind.Bomber && unit.Side==Side.UnitedStates && Random(3)!=0 ) )
+				if( burstArea.Contains(unit.Position) && !( unit.Kind==UnitKind.Bomber && unit.Side==Side.UnitedStates && Random(3)!=0 ) )
 					{
 					// 命中
 					if(ShowsAntiAir==0  )

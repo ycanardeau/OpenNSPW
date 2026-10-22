@@ -28,6 +28,20 @@ public PixelPoint WorldToScreen(WorldPosition position)
 	return new PixelPoint((int)(position.X-CameraPosition.X), (int)(CameraPosition.Y-position.Y));
 	}
 
+// Outlines an area of the world in the battle area: its top edge from left to right, then its right, bottom and left
+// edges, as the original draws its hit areas.
+public void DrawWorldRect(WorldRect area, uint color)
+	{
+	var topLeft=WorldToScreen(new WorldPosition(area.Left, area.Top));
+	var topRight=WorldToScreen(new WorldPosition(area.Right, area.Top));
+	var bottomRight=WorldToScreen(new WorldPosition(area.Right, area.Bottom));
+	var bottomLeft=WorldToScreen(new WorldPosition(area.Left, area.Bottom));
+	DrawLine4(topLeft, topRight, CMBT_WIDTH-1, CMBT_HEIGHT-1, color);
+	DrawLine4(topRight, bottomRight, CMBT_WIDTH-1, CMBT_HEIGHT-1, color);
+	DrawLine4(bottomRight, bottomLeft, CMBT_WIDTH-1, CMBT_HEIGHT-1, color);
+	DrawLine4(bottomLeft, topLeft, CMBT_WIDTH-1, CMBT_HEIGHT-1, color);
+	}
+
 //============================================================================
 //
 //----------------------------------------------------------------------------

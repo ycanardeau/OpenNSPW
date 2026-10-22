@@ -240,7 +240,7 @@ private bool CheckResultOfScenario4()
 
 private bool CheckResultOfScenario6()
 	{
-	RECT area;
+	WorldRect area;
 	var m=0;
 	for( var i=1; i<=MaxUnitId; i++)
 		{
@@ -249,11 +249,8 @@ private bool CheckResultOfScenario6()
 			{
 			// ミッドウェイ島
 			// ptin debg
-			area.top=(int)(3440)+(80*2);
-			area.right=(int)(80)+(80*4);
-			area.bottom=(int)(3440)-(80*4);
-			area.left=(int)(80)-(80*2);
-			if( PointInRect3(ref area,(int)unit.Position.X,(int)unit.Position.Y)!=0)
+			area=new WorldRect(80-(80*2), 3440+(80*2), 80+(80*4), 3440-(80*4));
+			if( area.Contains(unit.Position))
 				{
 				m++;	// 生きてる基地で指定範囲内に要る
 				}
@@ -269,7 +266,7 @@ private bool CheckResultOfScenario6()
 
 private bool CheckResultOfScenario7()
 	{
-	RECT area;
+	WorldRect area;
 	var f=0;
 	var m=0;
 	for( var i=1; i<=MaxUnitId; i++)
@@ -279,11 +276,8 @@ private bool CheckResultOfScenario7()
 			{
 			// ミッドウェイ島
 			// ptin_dbg
-			area.top=(int)(3440)+(80*2);
-			area.right=(int)(80)+(80*4);
-			area.bottom=(int)(3440)-(80*4);
-			area.left=(int)(80)-(80*2);
-			if( PointInRect3(ref area,(int)unit.Position.X,(int)unit.Position.Y)!=0)
+			area=new WorldRect(80-(80*2), 3440+(80*2), 80+(80*4), 3440-(80*4));
+			if( area.Contains(unit.Position))
 				{
 				m++;	// 生きてる基地で指定範囲内に要る
 				}
@@ -296,11 +290,8 @@ private bool CheckResultOfScenario7()
 			{
 			// ミッドウェイ島
 			// ptin dbg
-			area.top=(int)(3440)+(80*2);
-			area.right=(int)(80)+(80*4);
-			area.bottom=(int)(3440)-(80*4);
-			area.left=(int)(80)-(80*2);
-			if( PointInRect3(ref area,(int)unit.Position.X,(int)unit.Position.Y)!=0)
+			area=new WorldRect(80-(80*2), 3440+(80*2), 80+(80*4), 3440-(80*4));
+			if( area.Contains(unit.Position))
 				{
 				f++;	// 生きてる基地で指定範囲内に要る
 				}
@@ -316,7 +307,7 @@ private bool CheckResultOfScenario7()
 
 private bool CheckResultOfScenario8()
 	{
-	RECT area;
+	WorldRect area;
 	var f=0;
 	var m=0;
 	for( var i=1; i<=MaxUnitId; i++)
@@ -326,11 +317,8 @@ private bool CheckResultOfScenario8()
 			{
 			// ミッドウェイ島
 			// ptin dbg
-			area.top=(int)(3440)+(80*2);
-			area.right=(int)(80)+(80*4);
-			area.bottom=(int)(3440)-(80*4);
-			area.left=(int)(80)-(80*2);
-			if( PointInRect3(ref area,(int)unit.Position.X,(int)unit.Position.Y)!=0)
+			area=new WorldRect(80-(80*2), 3440+(80*2), 80+(80*4), 3440-(80*4));
+			if( area.Contains(unit.Position))
 				{
 				m++;	// 生きてる基地で指定範囲内に要る
 				}
@@ -343,11 +331,8 @@ private bool CheckResultOfScenario8()
 			{
 			// ミッドウェイ島
 			// ptin_dbg
-			area.top=(int)(3440)+(80*2);
-			area.right=(int)(80)+(80*4);
-			area.bottom=(int)(3440)-(80*4);
-			area.left=(int)(80)-(80*2);
-			if( PointInRect3(ref area,(int)unit.Position.X,(int)unit.Position.Y)!=0)
+			area=new WorldRect(80-(80*2), 3440+(80*2), 80+(80*4), 3440-(80*4));
+			if( area.Contains(unit.Position))
 				{
 				f++;	// 生きてる基地で指定範囲内に要る
 				}
@@ -381,12 +366,9 @@ private bool CheckResultOfScenario8()
 		if( unit.Side==Side.Japan && (unit.Kind>=UnitKind.AirBase&&unit.Kind<=UnitKind.Fortress) )
 			{
 			// ウェーク
-			area.top=(int)(-720+80);
-			area.right=(int)(-4080+80);
-			area.bottom=(int)(-720-160);
-			area.left=(int)(-4080-80);
+			area=new WorldRect(-4080-80, -720+80, -4080+80, -720-160);
 
-			if( PointInRect2(ref area,(int)unit.Position.X,(int)unit.Position.Y)!=0)
+			if( area.Contains(unit.Position))
 				{
 				m++;	// 生きてる基地で指定範囲内に要る
 				}
@@ -398,12 +380,9 @@ private bool CheckResultOfScenario8()
 		if( unit.Side==Side.UnitedStates && (unit.Kind==UnitKind.Fortress) && unit.BuildTime==0 )
 			{
 			// ウェーク
-			area.top=(int)(-720+80);
-			area.right=(int)(-4080+80);
-			area.bottom=(int)(-720-160);
-			area.left=(int)(-4080-80);
+			area=new WorldRect(-4080-80, -720+80, -4080+80, -720-160);
 
-			if( PointInRect2(ref area,(int)unit.Position.X,(int)unit.Position.Y)!=0)
+			if( area.Contains(unit.Position))
 				{
 				f++;	// 生きてる基地で指定範囲内に要る
 				}
@@ -419,17 +398,14 @@ private bool CheckResultOfScenario8()
 
 private bool CheckResultOfScenario101()
 	{
-	RECT area;
+	WorldRect area;
 	var f=0;
 	// ガダルカナル島
-	area.top=(int)(-160);
-	area.right=(int)(-1040+(80*3));
-	area.bottom=(int)(-160-80);
-	area.left=(int)(-1040);
+	area=new WorldRect(-1040, -160, -1040+(80*3), -160-80);
 	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
-		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref area,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && area.Contains(unit.Position) )
 			{
 			f++;
 			}
@@ -445,18 +421,15 @@ private bool CheckResultOfScenario101()
 
 private bool CheckResultOfScenario102()
 	{
-	RECT area;
+	WorldRect area;
 	var f=0;
 	var m=0;
 	// ガダルカナル島
-	area.top=(int)(-160);
-	area.right=(int)(-1040+(80*3));
-	area.bottom=(int)(-160-80);
-	area.left=(int)(-1040);
+	area=new WorldRect(-1040, -160, -1040+(80*3), -160-80);
 	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
-		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref area,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && area.Contains(unit.Position) )
 			{
 			f++;
 			}
@@ -464,7 +437,7 @@ private bool CheckResultOfScenario102()
 	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
-		if( unit.Side==Side.UnitedStates && ( unit.Kind==UnitKind.AirBase )  && unit.BuildTime==0 && PointInRect2(ref area,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+		if( unit.Side==Side.UnitedStates && ( unit.Kind==UnitKind.AirBase )  && unit.BuildTime==0 && area.Contains(unit.Position) )
 			{
 			m++;
 			}
@@ -500,17 +473,14 @@ private bool CheckResultOfScenario103()
 
 private bool CheckResultOfScenario104()
 	{
-	RECT area;
+	WorldRect area;
 	var f=0;
 	// ブーゲンビル島
-	area.top=(int)(1200+80);
-	area.right=(int)(-4480+80*5);
-	area.bottom=(int)(1200-80*3);
-	area.left=(int)(-4480-80);
+	area=new WorldRect(-4480-80, 1200+80, -4480+80*5, 1200-80*3);
 	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
-		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref area,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && area.Contains(unit.Position) )
 			{
 			f++;
 			}
@@ -526,17 +496,14 @@ private bool CheckResultOfScenario104()
 
 private bool CheckResultOfScenario105()
 	{
-	RECT area;
+	WorldRect area;
 	var f=0;
 	// ブーゲンビル島
-	area.top=(int)(1200+80);
-	area.right=(int)(-4480+80*5);
-	area.bottom=(int)(1200-80*3);
-	area.left=(int)(-4480-80);
+	area=new WorldRect(-4480-80, 1200+80, -4480+80*5, 1200-80*3);
 	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
-		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref area,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && area.Contains(unit.Position) )
 			{
 			f++;
 			}
@@ -549,14 +516,11 @@ private bool CheckResultOfScenario105()
 
 	f=0;
 	// ガダルカナル島
-	area.top=(int)(-160);
-	area.right=(int)(-1040+(80*3));
-	area.bottom=(int)(-160-80);
-	area.left=(int)(-1040);
+	area=new WorldRect(-1040, -160, -1040+(80*3), -160-80);
 	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
-		if( unit.Side==Side.UnitedStates && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref area,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+		if( unit.Side==Side.UnitedStates && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && area.Contains(unit.Position) )
 			{
 			f++;
 			}
@@ -572,11 +536,8 @@ private bool CheckResultOfScenario105()
 
 private bool CheckResultOfScenario106()
 	{
-	RECT area;
-	area.top=(int)(-160);
-	area.right=(int)(-1040+(80*3));
-	area.bottom=(int)(-160-80);
-	area.left=(int)(-1040);
+	WorldRect area;
+	area=new WorldRect(-1040, -160, -1040+(80*3), -160-80);
 
 	var f=0;
 	var m=0;
@@ -584,11 +545,11 @@ private bool CheckResultOfScenario106()
 	for( var i=1; i<=MaxUnitId; i++)
 		{
 		ref var unit = ref Units[i];
-		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref area,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+		if( unit.Side==Side.Japan && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && area.Contains(unit.Position) )
 			{
 			f++;	//　日本の施設
 			}
-		if( unit.Side==Side.UnitedStates && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && PointInRect2(ref area,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+		if( unit.Side==Side.UnitedStates && ( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress ) && area.Contains(unit.Position) )
 			{
 			m++;	//　米の施設
 			}

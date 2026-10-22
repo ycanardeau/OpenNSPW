@@ -26,7 +26,7 @@ public unsafe partial class Nspw
 public int		CheckHit(int m)
 	{
 	int size=default /* C4701 */, halfSize=default /* C4701 */;
-	RECT	hitArea;
+	WorldRect	hitArea;
 
 	var hit=0;
 
@@ -40,12 +40,9 @@ public int		CheckHit(int m)
 			if( Units[target].IsSubmerged )// 潜航中、あたりがでかくなる
 				{
 				// ptin dbg
-				hitArea.top=(int)Units[target].Position.Y+50;
-				hitArea.right=(int)Units[target].Position.X+50;
-				hitArea.bottom=(int)Units[target].Position.Y-50;
-				hitArea.left=(int)Units[target].Position.X-50;
+				hitArea=WorldRect.Around(Units[target].Position, 50, 50);
 
-				if( PointInRect3(ref hitArea,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
+				if( hitArea.Contains(Fires[m].Position) )
 					hit=1;
 				return	(hit);
 				}
@@ -60,12 +57,9 @@ public int		CheckHit(int m)
 		case UnitKind.Fortress:	case UnitKind.Pillboxes:	case	UnitKind.InfantryBase:
 		case UnitKind.City:	case UnitKind.Mine:
 				// ptin dbg
-				hitArea.top=(int)Units[target].Position.Y+30;
-				hitArea.right=(int)Units[target].Position.X+30;
-				hitArea.bottom=(int)Units[target].Position.Y-30;
-				hitArea.left=(int)Units[target].Position.X-30;
+				hitArea=WorldRect.Around(Units[target].Position, 30, 30);
 
-				if( PointInRect3(ref hitArea,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
+				if( hitArea.Contains(Fires[m].Position) )
 					hit=1;
 
 				return	(hit);
@@ -80,12 +74,9 @@ public int		CheckHit(int m)
 			for( var i=0; i<=4 && hit==0 ; i++)
 				{
 				// ptin dbg
-				hitArea.top=(int)Units[target].Position.Y+(-size+(i*halfSize))+halfSize;
-				hitArea.right=(int)Units[target].Position.X+(+size-(i*halfSize))+halfSize;
-				hitArea.bottom=(int)Units[target].Position.Y+(-size+(i*halfSize))-halfSize;
-				hitArea.left=(int)Units[target].Position.X+(+size-(i*halfSize))-halfSize;
+				hitArea=WorldRect.Around(Units[target].Position, halfSize, halfSize).Offset((+size-(i*halfSize)), (-size+(i*halfSize)));
 
-				if( PointInRect3(ref hitArea,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
+				if( hitArea.Contains(Fires[m].Position) )
 					hit=1;
 				}
 			break;
@@ -93,12 +84,9 @@ public int		CheckHit(int m)
 			for( var i=0; i<=4 && hit==0 ; i++)
 				{
 				// pt in dbg
-				hitArea.top=(int)Units[target].Position.Y+(-size+(i*halfSize))+halfSize;
-				hitArea.right=(int)Units[target].Position.X+(-size+(i*halfSize))+halfSize;
-				hitArea.bottom=(int)Units[target].Position.Y+(-size+(i*halfSize))-halfSize;
-				hitArea.left=(int)Units[target].Position.X+(-size+(i*halfSize))-halfSize;
+				hitArea=WorldRect.Around(Units[target].Position, halfSize, halfSize).Offset((-size+(i*halfSize)), (-size+(i*halfSize)));
 
-				if( PointInRect3(ref hitArea,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
+				if( hitArea.Contains(Fires[m].Position) )
 					hit=1;
 				}
 
@@ -107,12 +95,9 @@ public int		CheckHit(int m)
 			for( var i=0; i<=2  && hit==0 ; i++)
 				{
 				// ptin dbg
-				hitArea.top=(int)Units[target].Position.Y+(-size+(i*size))+halfSize;
-				hitArea.right=(int)Units[target].Position.X+halfSize;
-				hitArea.bottom=(int)Units[target].Position.Y+(-size+(i*size))-halfSize;
-				hitArea.left=(int)Units[target].Position.X-halfSize;
+				hitArea=WorldRect.Around(Units[target].Position, halfSize, halfSize).Offset(0, (-size+(i*size)));
 
-				if( PointInRect3(ref hitArea,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
+				if( hitArea.Contains(Fires[m].Position) )
 					hit=1;
 				}
 			break;
@@ -120,12 +105,9 @@ public int		CheckHit(int m)
 			for( var i=0; i<=2  && hit==0 ; i++)
 				{
 				// ptin dbg
-				hitArea.top=(int)Units[target].Position.Y+halfSize;
-				hitArea.right=(int)Units[target].Position.X+(-size+(i*size))+halfSize;
-				hitArea.bottom=(int)Units[target].Position.Y-halfSize;
-				hitArea.left=(int)Units[target].Position.X+(-size+(i*size))-halfSize;
+				hitArea=WorldRect.Around(Units[target].Position, halfSize, halfSize).Offset((-size+(i*size)), 0);
 
-				if( PointInRect3(ref hitArea,(int)Fires[m].Position.X,(int)Fires[m].Position.Y)!=0 )
+				if( hitArea.Contains(Fires[m].Position) )
 					hit=1;
 				}
 			break;
@@ -141,7 +123,7 @@ public int		CheckHit(int m)
 public void		DrawHitArea(int m)
 	{
 	int size=default /* C4701 */, halfSize=default /* C4701 */;
-	RECT	hitArea;
+	WorldRect	hitArea;
 
 	var target=m;						// ターゲットナンバー
 	switch( Units[target].Kind )
@@ -152,15 +134,10 @@ public void		DrawHitArea(int m)
 		case UnitKind.Submarine:
 			if( Units[target].IsSubmerged )// 潜航中、あたりがでかくなる
 				{
-				hitArea.top=(int)Units[target].Position.Y-50;
-				hitArea.right=(int)Units[target].Position.X+50;
-				hitArea.bottom=(int)Units[target].Position.Y+50;
-				hitArea.left=(int)Units[target].Position.X-50;
+				// The box is upside down, its top below its bottom, as the original fills it: the same outline.
+				hitArea=WorldRect.Around(Units[target].Position, 50, -50);
 
-				DrawLine4((int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),(int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				DrawLine4((int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),(int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				DrawLine4((int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),(int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				DrawLine4((int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),(int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawWorldRect(hitArea, RGB(255,255,255));
 
 				return;
 				}
@@ -177,59 +154,35 @@ public void		DrawHitArea(int m)
 		case 3: case 7:
 			for( var i=0; i<=4  ; i++)
 				{
-				hitArea.top=(int)Units[target].Position.Y+(-size+(i*halfSize))-halfSize;
-				hitArea.right=(int)Units[target].Position.X+(+size-(i*halfSize))+halfSize;
-				hitArea.bottom=(int)Units[target].Position.Y+(-size+(i*halfSize))+halfSize;
-				hitArea.left=(int)Units[target].Position.X+(+size-(i*halfSize))-halfSize;
+				hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset((+size-(i*halfSize)), (-size+(i*halfSize)));
 
-				DrawLine4((int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),(int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				DrawLine4((int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),(int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				DrawLine4((int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),(int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				DrawLine4((int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),(int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawWorldRect(hitArea, RGB(255,255,255));
 				}
 			break;
 		case 1: case 5:
 			for( var i=0; i<=4  ; i++)
 				{
-				hitArea.top=(int)Units[target].Position.Y+(-size+(i*halfSize))-halfSize;
-				hitArea.right=(int)Units[target].Position.X+(-size+(i*halfSize))+halfSize;
-				hitArea.bottom=(int)Units[target].Position.Y+(-size+(i*halfSize))+halfSize;
-				hitArea.left=(int)Units[target].Position.X+(-size+(i*halfSize))-halfSize;
+				hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset((-size+(i*halfSize)), (-size+(i*halfSize)));
 
-				DrawLine4((int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),(int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				DrawLine4((int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),(int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				DrawLine4((int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),(int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				DrawLine4((int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),(int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawWorldRect(hitArea, RGB(255,255,255));
 				}
 
 			break;
 		case 0: case 4:
 			for( var i=0; i<=2   ; i++)
 				{
-				hitArea.top=(int)Units[target].Position.Y+(-size+(i*size))-halfSize;
-				hitArea.right=(int)Units[target].Position.X+halfSize;
-				hitArea.bottom=(int)Units[target].Position.Y+(-size+(i*size))+halfSize;
-				hitArea.left=(int)Units[target].Position.X-halfSize;
+				hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset(0, (-size+(i*size)));
 
-				DrawLine4((int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),(int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				DrawLine4((int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),(int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				DrawLine4((int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),(int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				DrawLine4((int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),(int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawWorldRect(hitArea, RGB(255,255,255));
 
 				}
 			break;
 		case 2: case 6:
 			for( var i=0; i<=2   ; i++)
 				{
-				hitArea.top=(int)Units[target].Position.Y-halfSize;
-				hitArea.right=(int)Units[target].Position.X+(-size+(i*size))+halfSize;
-				hitArea.bottom=(int)Units[target].Position.Y+halfSize;
-				hitArea.left=(int)Units[target].Position.X+(-size+(i*size))-halfSize;
+				hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset((-size+(i*size)), 0);
 
-				DrawLine4((int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),(int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				DrawLine4((int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),(int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				DrawLine4((int)(hitArea.right-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),(int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-				DrawLine4((int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.bottom),(int)(hitArea.left-CameraPosition.X),(int)(CameraPosition.Y-hitArea.top),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawWorldRect(hitArea, RGB(255,255,255));
 
 				}
 			break;
@@ -415,7 +368,7 @@ private double ReduceHeading(double heading)
 
 private bool ShipDropAntiSubmarineBomb(ref int target, ref Unit unit, FireKind kind)
 	{
-	RECT contactArea;
+	WorldRect contactArea;
 	for( var n=1; n<=MaxUnitId; n++)
 		{
 		target=n;
@@ -423,11 +376,8 @@ private bool ShipDropAntiSubmarineBomb(ref int target, ref Unit unit, FireKind k
 			{	// 爆雷
 
 			// ptin dbg
-			contactArea.top=(int)Units[target].ContactY+Units[target].ContactRadius;
-			contactArea.right=(int)Units[target].ContactX+Units[target].ContactRadius;
-			contactArea.bottom=(int)Units[target].ContactY-Units[target].ContactRadius;
-			contactArea.left=(int)Units[target].ContactX-Units[target].ContactRadius;
-			if( PointInRect3(ref contactArea,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+			contactArea=WorldRect.Around(Units[target].ContactPosition, Units[target].ContactRadius, Units[target].ContactRadius);
+			if( contactArea.Contains(unit.Position) )
 				{
 				// 投雷
 				var f=FindFreeFire();
@@ -2101,19 +2051,16 @@ public void	SetDynamicDestination(int n)
 [Original("chk_another_unit")]
 public void	CheckOtherUnits(double* x,double* y)
 	{
-	RECT	shipArea;
+	WorldRect	shipArea;
 
 	for( var n=1; n<=MaxUnitId; n++)
 		{
 		if( Units[n].IsUsed && Units[n].Category==UnitCategory.Ship )
 			{
 			// ptin dbg
-			shipArea.top=(int)Units[n].Position.Y+(Sprites[SpriteId.JapanUnits].Size.Height/2);
-			shipArea.right=(int)Units[n].Position.X+(Sprites[SpriteId.JapanUnits].Size.Width/2);
-			shipArea.bottom=(int)Units[n].Position.Y-(Sprites[SpriteId.JapanUnits].Size.Height/2);
-			shipArea.left=(int)Units[n].Position.X-(Sprites[SpriteId.JapanUnits].Size.Width/2);
+			shipArea=WorldRect.Around(Units[n].Position, (Sprites[SpriteId.JapanUnits].Size.Width/2), (Sprites[SpriteId.JapanUnits].Size.Height/2));
 
-			if( PointInRect3(ref shipArea,(int)*x,(int)*y)!=0)
+			if( shipArea.Contains(new WorldPosition(*x, *y)))
 				{
 				n=0;
 				*y-=80;
@@ -2154,15 +2101,12 @@ public void	SetFighterAttackDestination(int m)
 	{
 	ref var unit = ref Units[m];
 	int ownTechnique=default /* C4701 */;
-	RECT			destinationArea;
+	WorldRect			destinationArea;
 
 	// ptin dbg
-	destinationArea.top=(int)unit.EmergencyDestination.Y+35;
-	destinationArea.right=(int)unit.EmergencyDestination.X+35;
-	destinationArea.bottom=(int)unit.EmergencyDestination.Y-35;
-	destinationArea.left=(int)unit.EmergencyDestination.X-35;
+	destinationArea=WorldRect.Around(unit.EmergencyDestination, 35, 35);
 
-	if( PointInRect3(ref destinationArea,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+	if( destinationArea.Contains(unit.Position) )
 		{
 		unit.EmergencyDestination = unit.Position+new WorldVector(CosDegrees(unit.Direction)*(100+Random(50)), SinDegrees(unit.Direction)*(100+Random(50)));
 		unit.EmergencyFlags[0]=100;
@@ -2393,7 +2337,7 @@ public void	SetAttackerEmergencyDestination(int m)
 public void	SetAttackerAttackDestination(int m)
 	{
 	ref var unit = ref Units[m];
-	RECT			pathPointArea;
+	WorldRect			pathPointArea;
 
 	var target=unit.Target;				// 攻撃目標
 
@@ -2457,11 +2401,8 @@ public void	SetAttackerAttackDestination(int m)
 		if( unit.PathX[1]==MAP_RIGHT+1 )
 			{
 			// ptin dbg
-			pathPointArea.top=(int)unit.PathY[0]+35;
-			pathPointArea.right=(int)unit.PathX[0]+35;
-			pathPointArea.bottom=(int)unit.PathY[0]-35;
-			pathPointArea.left=(int)unit.PathX[0]-35;
-			if( PointInRect3(ref pathPointArea,(int)unit.Position.X,(int)unit.Position.Y)==0 || !Units[target].IsFound)
+			pathPointArea=WorldRect.Around(unit.GetPathPoint(0), 35, 35);
+			if( !pathPointArea.Contains(unit.Position) || !Units[target].IsFound)
 				{
 				return;
 				}
@@ -2475,10 +2416,6 @@ public void	SetAttackerAttackDestination(int m)
 		{
 		if( unit.PathX[1]==MAP_RIGHT+1 )
 			{
-			pathPointArea.top=(int)unit.PathY[0]-35;
-			pathPointArea.right=(int)unit.PathX[0]+35;
-			pathPointArea.bottom=(int)unit.PathY[0]+35;
-			pathPointArea.left=(int)unit.PathX[0]-35;
 			double ticks;
 			if(unit.Weapon==FireKind.Torpedo)
 				ticks=( (AIR_TPD_LOS_DSTC) /AIR_TPD_SPD);		// 投雷距離　÷ 魚雷速度　でターンを求めます
@@ -2509,11 +2446,8 @@ public void	SetAttackerAttackDestination(int m)
 	else
 		{	// 近すぎる場合は離脱
 		// ptin dbg
-		pathPointArea.top=(int)unit.PathY[0]+35;
-		pathPointArea.right=(int)unit.PathX[0]+35;
-		pathPointArea.bottom=(int)unit.PathY[0]-35;
-		pathPointArea.left=(int)unit.PathX[0]-35;
-		if( PointInRect3(ref pathPointArea,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+		pathPointArea=WorldRect.Around(unit.GetPathPoint(0), 35, 35);
+		if( pathPointArea.Contains(unit.Position) )
 			{
 			unit.SetPathPoint(0, unit.Position+WorldVector.FromDirection(unit.Direction) * 300);
 			unit.PathX[1]=MAP_RIGHT+1;
