@@ -13,4 +13,10 @@ public readonly struct WorldPosition(double x, double y)
 	{
 		return new WorldPosition(position.X + vector.X, position.Y + vector.Y);
 	}
+
+	// The position truncated to whole pixels, as `(int)x` and `(int)y` do.
+	public PixelPoint ToPixelPoint()
+	{
+		return new PixelPoint((int)X, (int)Y);
+	}
 }

@@ -138,7 +138,7 @@ public unsafe partial class Nspw
 		if( SelectedUnit!=0 && Units[SelectedUnit].Kind==UnitKind.Transport && AimLanding(sprite, x, y)
 			&& CanClickUnit(ref Units[0]) && !(Units[0].PlaneState!=UnitState.Parked && x>=CMBT_WIDTH-1) )
 			{
-			ClickUnit(0, new WorldPosition(CameraPosition.X+Sprites[sprite].X, CameraPosition.Y-Sprites[sprite].Y));
+			ClickUnit(0, new WorldPosition(CameraPosition.X+Sprites[sprite].Position.X, CameraPosition.Y-Sprites[sprite].Position.Y));
 			}
 	}
 

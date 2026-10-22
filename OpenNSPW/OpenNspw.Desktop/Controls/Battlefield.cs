@@ -135,8 +135,8 @@ internal sealed class Battlefield : Control
 				var (column, row) = (snapshot.FirstColumn + m, snapshot.FirstRow + n);
 				var tile = snapshot.MapTiles[row][column];
 				var frame = tile == 0 ? snapshot.FrameCount / 30 % 2 : 6 + (tile - 1);
-				var position = ToScreen(snapshot, MAP_LEFT + column * tiles.Width, MAP_TOP - row * tiles.Height) - new Vector2(tiles.CenterX, tiles.CenterY);
-				_art.Draw(batch, tiles, frame, 0, tiles.Width, tiles.Height, origin + position);
+				var position = ToScreen(snapshot, MAP_LEFT + column * tiles.Size.Width, MAP_TOP - row * tiles.Size.Height) - new Vector2(tiles.Center.X, tiles.Center.Y);
+				_art.Draw(batch, tiles, frame, 0, tiles.Size.Width, tiles.Size.Height, origin + position);
 			}
 		}
 	}
@@ -183,7 +183,7 @@ internal sealed class Battlefield : Control
 					continue;
 			}
 
-			_art.Draw(batch, sprite, frame, 1, sprite.Width - 1, sprite.Height - 1, origin + at - new Vector2(sprite.CenterX, sprite.CenterY));
+			_art.Draw(batch, sprite, frame, 1, sprite.Size.Width - 1, sprite.Size.Height - 1, origin + at - new Vector2(sprite.Center.X, sprite.Center.Y));
 		}
 	}
 
@@ -208,8 +208,8 @@ internal sealed class Battlefield : Control
 			}
 
 			ref var sprite = ref snapshot.Sprites[id];
-			var at = ToScreen(snapshot, unit.Position.X, unit.Position.Y) - new Vector2(sprite.CenterX, sprite.CenterY);
-			_art.Draw(batch, sprite, row * 8 + Nspw.SpriteColumnOf(unit.Direction), 1, sprite.Width - 2, sprite.Height - 2, origin + at);
+			var at = ToScreen(snapshot, unit.Position.X, unit.Position.Y) - new Vector2(sprite.Center.X, sprite.Center.Y);
+			_art.Draw(batch, sprite, row * 8 + Nspw.SpriteColumnOf(unit.Direction), 1, sprite.Size.Width - 2, sprite.Size.Height - 2, origin + at);
 		}
 	}
 
@@ -222,8 +222,8 @@ internal sealed class Battlefield : Control
 			if (cloud.Used == 0)
 				continue;
 
-			var at = ToScreen(snapshot, cloud.Position.X, cloud.Position.Y) - new Vector2(tiles.Width / 2, tiles.Height / 2);
-			_art.Draw(batch, tiles, 2, 0, tiles.Width, tiles.Height, origin + at);
+			var at = ToScreen(snapshot, cloud.Position.X, cloud.Position.Y) - new Vector2(tiles.Size.Width / 2, tiles.Size.Height / 2);
+			_art.Draw(batch, tiles, 2, 0, tiles.Size.Width, tiles.Size.Height, origin + at);
 		}
 	}
 

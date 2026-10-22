@@ -292,14 +292,10 @@ public struct Cloud
 public struct	Sprite
 	{
 	[Original("no")] public int Frame;
-	[Original("x")] public int X;
-	[Original("y")] public int Y;
-	[Original("cx")] public int CenterX;
-	[Original("cy")] public int CenterY;
-	[Original("wd")] public int Width;
-	[Original("ht")] public int Height;
-	[Original("base_x")] public int SheetX;
-	[Original("base_y")] public int SheetY;
+	[Original("x", "y")] public PixelPoint Position;
+	[Original("cx", "cy")] public PixelPoint Center;
+	[Original("wd", "ht")] public PixelSize Size;
+	[Original("base_x", "base_y")] public PixelPoint SheetPosition;
 	[Original("os_of_x")] public int FramesPerRow;
 	}
 

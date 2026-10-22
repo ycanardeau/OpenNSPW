@@ -254,17 +254,17 @@ private void DrawUnitDetails(SpriteId sprite, ref RECT src_rect, ref HDC hdc, re
 		}
 
 	// src_rect は ソースサーフェスのレクタングルです。
-	src_rect.left = Sprites[sprite].SheetX+(Sprites[sprite].Width * (Sprites[sprite].Frame % Sprites[sprite].FramesPerRow))+1;
-	src_rect.top = Sprites[sprite].SheetY+(Sprites[sprite].Height* (Sprites[sprite].Frame / Sprites[sprite].FramesPerRow))+1;
-	src_rect.right = (src_rect.left + Sprites[sprite].Width)-3;
-	src_rect.bottom = (src_rect.top + Sprites[sprite].Height)-2;
+	src_rect.left = Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width * (Sprites[sprite].Frame % Sprites[sprite].FramesPerRow))+1;
+	src_rect.top = Sprites[sprite].SheetPosition.Y+(Sprites[sprite].Size.Height* (Sprites[sprite].Frame / Sprites[sprite].FramesPerRow))+1;
+	src_rect.right = (src_rect.left + Sprites[sprite].Size.Width)-3;
+	src_rect.bottom = (src_rect.top + Sprites[sprite].Size.Height)-2;
 
 	// dstn_rect は ディスティネーションレクタングルです。
 	dstn_rect.left=CMBT_WIDTH;
 	dstn_rect.top=0;
 
-	dstn_rect.right=dstn_rect.left+Sprites[sprite].Width-1+1;
-	dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Height-1+1;
+	dstn_rect.right=dstn_rect.left+Sprites[sprite].Size.Width-1+1;
+	dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Size.Height-1+1;
 
 	IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref src_rect),DDBLTFAST_WAIT );
 
@@ -446,15 +446,15 @@ private void UpdateDeckView(ref RECT src_rect, SpriteId sprite, ref RECT dstn_re
 	RunUICommands(UICommandSite.DeckView, true);
 
 	i=0;
-	src_rect.left = Sprites[sprite].SheetX+(Sprites[sprite].Width*0)+1;
-	src_rect.top = Sprites[sprite].SheetY+(Sprites[sprite].Height*(i+1))+1;
-	src_rect.right = src_rect.left+(Sprites[sprite].Width)-1;
-	src_rect.bottom = src_rect.top+(Sprites[sprite].Height)-1;
+	src_rect.left = Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width*0)+1;
+	src_rect.top = Sprites[sprite].SheetPosition.Y+(Sprites[sprite].Size.Height*(i+1))+1;
+	src_rect.right = src_rect.left+(Sprites[sprite].Size.Width)-1;
+	src_rect.bottom = src_rect.top+(Sprites[sprite].Size.Height)-1;
 
 	dstn_rect.left=CMBT_WIDTH;
-	dstn_rect.top=Sprites[SpriteId.JapanUnitInfo].Y+Sprites[SpriteId.JapanUnitInfo].Height;
-	dstn_rect.right=dstn_rect.left+(Sprites[sprite].Width)-1;
-	dstn_rect.bottom=dstn_rect.top+(Sprites[sprite].Height)-1;
+	dstn_rect.top=Sprites[SpriteId.JapanUnitInfo].Position.Y+Sprites[SpriteId.JapanUnitInfo].Size.Height;
+	dstn_rect.right=dstn_rect.left+(Sprites[sprite].Size.Width)-1;
+	dstn_rect.bottom=dstn_rect.top+(Sprites[sprite].Size.Height)-1;
 
 	if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
 		{
@@ -602,15 +602,15 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 	for( i=0;i<n;i++ )
 		{
 		m=menu[i];
-		src_rect.left = Sprites[sprite].SheetX+(Sprites[sprite].Width*0)+1;
-		src_rect.top = Sprites[sprite].SheetY+(Sprites[sprite].Height*(m))+1;
-		src_rect.right = src_rect.left+Sprites[sprite].Width-1;
-		src_rect.bottom = src_rect.top+Sprites[sprite].Height-1;
+		src_rect.left = Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width*0)+1;
+		src_rect.top = Sprites[sprite].SheetPosition.Y+(Sprites[sprite].Size.Height*(m))+1;
+		src_rect.right = src_rect.left+Sprites[sprite].Size.Width-1;
+		src_rect.bottom = src_rect.top+Sprites[sprite].Size.Height-1;
 
-		dstn_rect.left=Sprites[SpriteId.ButtonBase].X;
-		dstn_rect.top=Sprites[SpriteId.ButtonBase].Y+(Sprites[sprite].Height*(i));
-		dstn_rect.right=dstn_rect.left+Sprites[sprite].Width-1;
-		dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Height-1;
+		dstn_rect.left=Sprites[SpriteId.ButtonBase].Position.X;
+		dstn_rect.top=Sprites[SpriteId.ButtonBase].Position.Y+(Sprites[sprite].Size.Height*(i));
+		dstn_rect.right=dstn_rect.left+Sprites[sprite].Size.Width-1;
+		dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Size.Height-1;
 
 		if( LeftButton==3 && menu2[i]!=CombatMenuSelection && PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
 			{
@@ -622,18 +622,18 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 		if( LeftButton==2 && PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && FrameCount%2<1)
 			{
 
-			src_rect.left=Sprites[sprite].SheetX+(Sprites[sprite].Width*0)+1+180;
-			src_rect.right=src_rect.left+Sprites[sprite].Width-1;
+			src_rect.left=Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width*0)+1+180;
+			src_rect.right=src_rect.left+Sprites[sprite].Size.Width-1;
 			}
 		if( menu2[i]!=CombatMenuSelection && LeftButton==0 && PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && FrameCount%6<4 )
 			{
-			src_rect.left=Sprites[sprite].SheetX+(Sprites[sprite].Width*0)+1+180;
-			src_rect.right=src_rect.left+Sprites[sprite].Width-1;
+			src_rect.left=Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width*0)+1+180;
+			src_rect.right=src_rect.left+Sprites[sprite].Size.Width-1;
 			}
 		if( CombatMenuSelection==menu2[i] )
 			{
-			src_rect.left=Sprites[sprite].SheetX+(Sprites[sprite].Width*0)+1+180;
-			src_rect.right=src_rect.left+Sprites[sprite].Width-1;
+			src_rect.left=Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width*0)+1+180;
+			src_rect.right=src_rect.left+Sprites[sprite].Size.Width-1;
 			}
 
 	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref src_rect),0) )
@@ -697,12 +697,12 @@ private void DrawSupplyTarget(ref int m, ref RECT src_rect, int ry)
 	ChooseSupplyTargetFrame(ref m, out n);
 
 	// src_rect は ソースサーフェスのレクタングルです。
-	src_rect.left = Sprites[sprite].SheetX+(Sprites[sprite].Width * ( n )) +1;		// 方向
+	src_rect.left = Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width * ( n )) +1;		// 方向
 
-	src_rect.top = Sprites[sprite].SheetY+(Sprites[sprite].Height* (m)) +1;		// 機種
+	src_rect.top = Sprites[sprite].SheetPosition.Y+(Sprites[sprite].Size.Height* (m)) +1;		// 機種
 
-	src_rect.right = (src_rect.left + Sprites[sprite].Width)-2;
-	src_rect.bottom = (src_rect.top + Sprites[sprite].Height)-2;
+	src_rect.right = (src_rect.left + Sprites[sprite].Size.Width)-2;
+	src_rect.bottom = (src_rect.top + Sprites[sprite].Size.Height)-2;
 
 	// dstn_rect は ディスティネーションレクタングルです。
 	dstn_rect.left=1024-120+10;
@@ -903,7 +903,7 @@ private void RequestSupply(ref Array8<int> len, ref Array8<Array128<byte>> ach, 
 #else
 			len[0] = wsprintf(ach[0], "　Request");
 #endif
-			dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120;
+			dstn_rect.left=Sprites[SpriteId.ButtonBase].Position.X+120;
 			dstn_rect.top=ry+20*7+5;
 			dstn_rect.right=dstn_rect.left+(len[0]*12);
 			dstn_rect.bottom=dstn_rect.top+18;
@@ -919,7 +919,7 @@ private void RequestSupply(ref Array8<int> len, ref Array8<Array128<byte>> ach, 
 				{
 				SetTextColor(hdc, RGB(255, 255, 255));
 				}
-			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
+			TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120, ry+20*7+5, ach[0], len[0]);
 			}
 			break;
 
@@ -931,7 +931,7 @@ private void RequestSupply(ref Array8<int> len, ref Array8<Array128<byte>> ach, 
 #else
 			len[0] = wsprintf(ach[0], "Shortage of pts");
 #endif
-			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
+			TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120, ry+20*7+5, ach[0], len[0]);
 			}
 			break;
 
@@ -943,7 +943,7 @@ private void RequestSupply(ref Array8<int> len, ref Array8<Array128<byte>> ach, 
 #else
 			len[0] = wsprintf(ach[0], "Units Max");
 #endif
-			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
+			TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120, ry+20*7+5, ach[0], len[0]);
 			}
 			break;
 
@@ -955,7 +955,7 @@ private void RequestSupply(ref Array8<int> len, ref Array8<Array128<byte>> ach, 
 #else
 			len[0] = wsprintf(ach[0], "Restricted Unit");
 #endif
-			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
+			TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120, ry+20*7+5, ach[0], len[0]);
 			}
 			break;
 		}
@@ -984,7 +984,7 @@ private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>>
 	RunUICommands(UICommandSite.SupplyPanel, true);
 
 	len[0] = wsprintf(ach[0], "%d:" ,GetSupplyPointsPerUnit());
-	TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*3+5+10, ach[0], len[0]);
+	TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120, ry+20*3+5+10, ach[0], len[0]);
 
 	// The previous kind.
 #if !LNGG_VER
@@ -993,7 +993,7 @@ private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>>
 	len[0] = wsprintf(ach[0], "<<<- Previous");
 #endif
 
-	dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120;
+	dstn_rect.left=Sprites[SpriteId.ButtonBase].Position.X+120;
 	dstn_rect.top=ry+20*5+5;
 	dstn_rect.right=dstn_rect.left+(len[0]*12);
 	dstn_rect.bottom=dstn_rect.top+18;
@@ -1010,7 +1010,7 @@ private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>>
 		SetTextColor(hdc, RGB(255, 255, 255));
 		}
 
-	TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*5+5, ach[0], len[0]);
+	TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120, ry+20*5+5, ach[0], len[0]);
 
 	// The next kind.
 #if !LNGG_VER
@@ -1019,7 +1019,7 @@ private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>>
 	len[0] = wsprintf(ach[0], "Next ->>>");
 #endif
 
-	dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120;
+	dstn_rect.left=Sprites[SpriteId.ButtonBase].Position.X+120;
 	dstn_rect.top=ry+20*6+5;
 	dstn_rect.right=dstn_rect.left+(len[0]*12);
 	dstn_rect.bottom=dstn_rect.top+18;
@@ -1036,7 +1036,7 @@ private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>>
 		SetTextColor(hdc, RGB(255, 255, 255));
 		}
 
-	TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*6+5, ach[0], len[0]);
+	TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120, ry+20*6+5, ach[0], len[0]);
 
 	// 要求する
 	RequestSupply(ref len, ref ach, ref dstn_rect, ry, ref hdc);
@@ -1079,7 +1079,7 @@ private void UpdateSupplyPanel(ref Array8<int> len, ref Array8<Array128<byte>> a
 			{
 #if !LNGG_VER
 			len[0] = wsprintf(ach[0], "要求中");
-			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120+30, ry+20*6+5, ach[0], len[0]);
+			TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120+30, ry+20*6+5, ach[0], len[0]);
 #else
 			len[0] = wsprintf(ach[0], "Wait for coming");
 			TextOut(hdc, sprt[SpriteId.ButtonBase].x+120, ry+20*6+5, ach[0], len[0]);
@@ -1127,7 +1127,7 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 #else
 	len[0] = wsprintf(ach[0], "to Mission Menu");
 #endif
-	dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120;
+	dstn_rect.left=Sprites[SpriteId.ButtonBase].Position.X+120;
 	dstn_rect.top=ry+20*9+5;
 	dstn_rect.right=dstn_rect.left+(len[0]*12);
 	dstn_rect.bottom=dstn_rect.top+18;
@@ -1160,7 +1160,7 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 		{
 		SetTextColor(hdc, RGB(255, 255, 255));
 		}
-	TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*9+5, ach[0], len[0]);
+	TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120, ry+20*9+5, ach[0], len[0]);
 
 	if( !IsEditingMap )
 		{
@@ -1169,7 +1169,7 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 #else
 		len[0] = wsprintf(ach[0], "Resume");
 #endif
-		dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120+20;
+		dstn_rect.left=Sprites[SpriteId.ButtonBase].Position.X+120+20;
 		dstn_rect.top=ry+20*10+5;
 		dstn_rect.right=dstn_rect.left+(len[0]*12);
 		dstn_rect.bottom=dstn_rect.top+18;
@@ -1188,7 +1188,7 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 			{
 			SetTextColor(hdc, RGB(255, 255, 255));
 			}
-		TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120+20, ry+20*10+5, ach[0], len[0]);
+		TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120+20, ry+20*10+5, ach[0], len[0]);
 		}
 	}
 
@@ -1227,13 +1227,14 @@ rival_mode=mode;
 		}
 
 	//	スプライトグループ（メニュー下地）
-	src_rect.left = Sprites[SpriteId.ButtonBase].SheetX;
-	src_rect.top = Sprites[SpriteId.ButtonBase].SheetY+(Sprites[SpriteId.ButtonBase].Height*(Side.UnitedStates==LocalSide ? 1 : 0));
-	src_rect.right = src_rect.left+Sprites[SpriteId.ButtonBase].Width;
-	src_rect.bottom = src_rect.top+Sprites[SpriteId.ButtonBase].Height;
+	src_rect.left = Sprites[SpriteId.ButtonBase].SheetPosition.X;
+	src_rect.top = Sprites[SpriteId.ButtonBase].SheetPosition.Y+(Sprites[SpriteId.ButtonBase].Size.Height*(Side.UnitedStates==LocalSide ? 1 : 0));
+	src_rect.right = src_rect.left+Sprites[SpriteId.ButtonBase].Size.Width;
+	src_rect.bottom = src_rect.top+Sprites[SpriteId.ButtonBase].Size.Height;
 
-	dstn_rect.left=Sprites[SpriteId.ButtonBase].X=CMBT_WIDTH;
-	dstn_rect.top=Sprites[SpriteId.ButtonBase].Y=Sprites[SpriteId.JapanUnitInfo].Y+Sprites[SpriteId.JapanUnitInfo].Height+20;
+	Sprites[SpriteId.ButtonBase].Position = new PixelPoint(CMBT_WIDTH, Sprites[SpriteId.JapanUnitInfo].Position.Y+Sprites[SpriteId.JapanUnitInfo].Size.Height+20);
+	dstn_rect.left=Sprites[SpriteId.ButtonBase].Position.X;
+	dstn_rect.top=Sprites[SpriteId.ButtonBase].Position.Y;
 
 	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
 		{
@@ -1359,25 +1360,24 @@ public void	DrawMinimap()
 	byte	my_cl, en_cl;
 
 	// マップの下地を描画
-	Sprites[SpriteId.Minimap].X=CMBT_WIDTH;
-	Sprites[SpriteId.Minimap].Y=CMBT_HEIGHT-Sprites[SpriteId.Minimap].Height;
+	Sprites[SpriteId.Minimap].Position = new PixelPoint(CMBT_WIDTH, CMBT_HEIGHT-Sprites[SpriteId.Minimap].Size.Height);
 
-	src_rect.left = 	Sprites[SpriteId.Minimap].SheetX;
-	src_rect.top = Sprites[SpriteId.Minimap].SheetY;
-	src_rect.right = Sprites[SpriteId.Minimap].SheetX+Sprites[SpriteId.Minimap].Width;
-	src_rect.bottom = Sprites[SpriteId.Minimap].SheetY+Sprites[SpriteId.Minimap].Height;
+	src_rect.left = 	Sprites[SpriteId.Minimap].SheetPosition.X;
+	src_rect.top = Sprites[SpriteId.Minimap].SheetPosition.Y;
+	src_rect.right = Sprites[SpriteId.Minimap].SheetPosition.X+Sprites[SpriteId.Minimap].Size.Width;
+	src_rect.bottom = Sprites[SpriteId.Minimap].SheetPosition.Y+Sprites[SpriteId.Minimap].Size.Height;
 
 	// dstn_rect は ディスティネーションレクタングルです。
-	dstn_rect.left=Sprites[SpriteId.Minimap].X;
-	dstn_rect.top=Sprites[SpriteId.Minimap].Y;
+	dstn_rect.left=Sprites[SpriteId.Minimap].Position.X;
+	dstn_rect.top=Sprites[SpriteId.Minimap].Position.Y;
 
 	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
 		{
 		RestoreSurfaces();
 		}
 
-	base_x=Sprites[SpriteId.Minimap].X+8;
-	base_y=Sprites[SpriteId.Minimap].Y+8;
+	base_x=Sprites[SpriteId.Minimap].Position.X+8;
+	base_y=Sprites[SpriteId.Minimap].Position.Y+8;
 
 	// コンバット画面位置の描画
 	my_cl=0;
@@ -1426,12 +1426,12 @@ public void	DrawMinimap()
 	if( LocalSide==Side.Japan )
 		{
 
-		my_cl=(byte)(Sprites[SpriteId.Minimap].SheetY+57);	en_cl=(byte)(Sprites[SpriteId.Minimap].SheetY+16);
+		my_cl=(byte)(Sprites[SpriteId.Minimap].SheetPosition.Y+57);	en_cl=(byte)(Sprites[SpriteId.Minimap].SheetPosition.Y+16);
 
 		}
 	else
 		{
-		en_cl=(byte)(Sprites[SpriteId.Minimap].SheetY+57);	my_cl=(byte)(Sprites[SpriteId.Minimap].SheetY+16);
+		en_cl=(byte)(Sprites[SpriteId.Minimap].SheetPosition.Y+57);	my_cl=(byte)(Sprites[SpriteId.Minimap].SheetPosition.Y+16);
 		}
 
 	for(m=1; m<=MaxUnitId; m++)
@@ -1455,9 +1455,9 @@ public void	DrawMinimap()
 
 			src_rect.left = 267;
 			if( LocalSide==Side.Japan )
-				src_rect.top = Sprites[SpriteId.Minimap].SheetY+16;
+				src_rect.top = Sprites[SpriteId.Minimap].SheetPosition.Y+16;
 			else
-				src_rect.top = Sprites[SpriteId.Minimap].SheetY+57;
+				src_rect.top = Sprites[SpriteId.Minimap].SheetPosition.Y+57;
 			src_rect.right = src_rect.left+3;
 			src_rect.bottom = src_rect.top+3;
 
@@ -1500,9 +1500,9 @@ public void	DrawMinimap()
 
 			src_rect.left = 267;
 			if( LocalSide==Side.Japan )
-				src_rect.top = Sprites[SpriteId.Minimap].SheetY+57;
+				src_rect.top = Sprites[SpriteId.Minimap].SheetPosition.Y+57;
 			else
-				src_rect.top = Sprites[SpriteId.Minimap].SheetY+16;
+				src_rect.top = Sprites[SpriteId.Minimap].SheetPosition.Y+16;
 			src_rect.right = src_rect.left+3;
 			src_rect.bottom = src_rect.top+3;
 
@@ -1525,11 +1525,11 @@ public void	MakeMinimap()
 	int m,n;
 
 	// マップデータから陸地をマップに描画します
-	dstn_rect.left=Sprites[SpriteId.Minimap].SheetX;
-	dstn_rect.top=Sprites[SpriteId.Minimap].SheetY;
+	dstn_rect.left=Sprites[SpriteId.Minimap].SheetPosition.X;
+	dstn_rect.top=Sprites[SpriteId.Minimap].SheetPosition.Y;
 
-	src_rect.left = Sprites[SpriteId.Minimap].SheetX+306;
-	src_rect.top = Sprites[SpriteId.Minimap].SheetY;
+	src_rect.left = Sprites[SpriteId.Minimap].SheetPosition.X+306;
+	src_rect.top = Sprites[SpriteId.Minimap].SheetPosition.Y;
 	src_rect.right = src_rect.left+255;
 	src_rect.bottom = src_rect.top+199;
 
@@ -1544,11 +1544,11 @@ public void	MakeMinimap()
 			if( MapTiles[m][n]!=0 )
 				{
 				// 陸地有り
-				dstn_rect.left=Sprites[SpriteId.Minimap].SheetX+8+n-0;
-				dstn_rect.top=Sprites[SpriteId.Minimap].SheetY+8+m-0;
+				dstn_rect.left=Sprites[SpriteId.Minimap].SheetPosition.X+8+n-0;
+				dstn_rect.top=Sprites[SpriteId.Minimap].SheetPosition.Y+8+m-0;
 
-				src_rect.left = Sprites[SpriteId.Minimap].SheetX+270;
-				src_rect.top = Sprites[SpriteId.Minimap].SheetY+110;
+				src_rect.left = Sprites[SpriteId.Minimap].SheetPosition.X+270;
+				src_rect.top = Sprites[SpriteId.Minimap].SheetPosition.Y+110;
 
 				src_rect.right = src_rect.left+2;
 				src_rect.bottom = src_rect.top+2;

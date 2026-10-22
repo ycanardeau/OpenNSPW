@@ -68,17 +68,16 @@ public void	UpdateTitle()
 	ClearFlag=1;
 
 	// ユニットインフォーメィション
-	Sprites[SpriteId.TitleBackground].X=212-50;
-	Sprites[SpriteId.TitleBackground].Y=130;
+	Sprites[SpriteId.TitleBackground].Position = new PixelPoint(212-50, 130);
 
-	src_rect.left = 	Sprites[SpriteId.TitleBackground].SheetX;
-	src_rect.top = Sprites[SpriteId.TitleBackground].SheetY;
-	src_rect.right = Sprites[SpriteId.TitleBackground].SheetX+Sprites[SpriteId.TitleBackground].Width;
-	src_rect.bottom = Sprites[SpriteId.TitleBackground].SheetY+Sprites[SpriteId.TitleBackground].Height;
+	src_rect.left = 	Sprites[SpriteId.TitleBackground].SheetPosition.X;
+	src_rect.top = Sprites[SpriteId.TitleBackground].SheetPosition.Y;
+	src_rect.right = Sprites[SpriteId.TitleBackground].SheetPosition.X+Sprites[SpriteId.TitleBackground].Size.Width;
+	src_rect.bottom = Sprites[SpriteId.TitleBackground].SheetPosition.Y+Sprites[SpriteId.TitleBackground].Size.Height;
 
 	// dstn_rect は ディスティネーションレクタングルです。
-	dstn_rect.left=Sprites[SpriteId.TitleBackground].X;
-	dstn_rect.top=Sprites[SpriteId.TitleBackground].Y;
+	dstn_rect.left=Sprites[SpriteId.TitleBackground].Position.X;
+	dstn_rect.top=Sprites[SpriteId.TitleBackground].Position.Y;
 
 	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
 		{

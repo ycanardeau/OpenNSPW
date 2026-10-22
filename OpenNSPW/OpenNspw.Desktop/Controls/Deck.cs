@@ -75,7 +75,7 @@ internal sealed class Deck : Control
 			_ => snapshot.UnitInfoPanel[2],
 		};
 		ref var sprite = ref snapshot.Sprites[snapshot.UnitInfoPanel[4] == (int)Side.Japan ? SpriteId.JapanUnitInfo : SpriteId.UnitedStatesUnitInfo];
-		_art.Draw(batch, sprite, frame, 1, sprite.Width - 3, sprite.Height - 2, origin);
+		_art.Draw(batch, sprite, frame, 1, sprite.Size.Width - 3, sprite.Size.Height - 2, origin);
 	}
 
 	// The parked planes' effects of a layer that the player sees (UpdateLowerEffects, UpdateUpperEffects: 駐機場の飛行機用).
@@ -88,8 +88,8 @@ internal sealed class Deck : Control
 			if (effect.Layer != layer || effect.Animation != 3 || !snapshot.SeenEffects[m])
 				continue;
 
-			var at = ToDeck(effect.Position.X, effect.Position.Y) - new Vector2(sprite.CenterX, sprite.CenterY);
-			_art.Draw(batch, sprite, effect.SpriteNumber, 1, sprite.Width - 1, sprite.Height - 1, origin + at);
+			var at = ToDeck(effect.Position.X, effect.Position.Y) - new Vector2(sprite.Center.X, sprite.Center.Y);
+			_art.Draw(batch, sprite, effect.SpriteNumber, 1, sprite.Size.Width - 1, sprite.Size.Height - 1, origin + at);
 		}
 	}
 
@@ -103,8 +103,8 @@ internal sealed class Deck : Control
 
 			ref var unit = ref snapshot.Units[m];
 			ref var sprite = ref snapshot.Sprites[snapshot.UnitSprites[m]];
-			var at = ToDeck(unit.Position.X, unit.Position.Y) - new Vector2(sprite.CenterX, sprite.CenterY);
-			_art.Draw(batch, sprite, unit.SpriteRow * 8 + Nspw.SpriteColumnOf(unit.Direction), 1, sprite.Width - 2, sprite.Height - 2, origin + at);
+			var at = ToDeck(unit.Position.X, unit.Position.Y) - new Vector2(sprite.Center.X, sprite.Center.Y);
+			_art.Draw(batch, sprite, unit.SpriteRow * 8 + Nspw.SpriteColumnOf(unit.Direction), 1, sprite.Size.Width - 2, sprite.Size.Height - 2, origin + at);
 		}
 	}
 

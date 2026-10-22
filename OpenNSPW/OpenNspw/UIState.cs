@@ -207,8 +207,8 @@ public unsafe partial class Nspw
 			if( unit.IsUsed && unit.Side==LocalSide && unit.PlaneState!=UnitState.Parked )
 				{
 				var (x, y) = EyeOf(ref unit);
-				x=x-((column*Sprites[SpriteId.MapTiles].Width)-MAP_RIGHT);
-				y=y-(MAP_TOP-(row*Sprites[SpriteId.MapTiles].Height));
+				x=x-((column*Sprites[SpriteId.MapTiles].Size.Width)-MAP_RIGHT);
+				y=y-(MAP_TOP-(row*Sprites[SpriteId.MapTiles].Size.Height));
 				if( Distance(x, y)<=(double)GetDetectionSize(f,0) )
 					return true;
 				}
@@ -229,8 +229,8 @@ public unsafe partial class Nspw
 	// (UpdateLowerEffects, UpdateUpperEffects).
 	public void ReadSight(Span<bool> tiles, out int firstColumn, out int firstRow, Span<bool> effects)
 	{
-		firstColumn=(int)((CameraPosition.X-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width)-SightMargin;
-		firstRow=(int)((MAP_TOP-CameraPosition.Y)/Sprites[SpriteId.MapTiles].Height)-SightMargin;
+		firstColumn=(int)((CameraPosition.X-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width)-SightMargin;
+		firstRow=(int)((MAP_TOP-CameraPosition.Y)/Sprites[SpriteId.MapTiles].Size.Height)-SightMargin;
 		for( var n=0; n<SightSize; n++ )
 			{
 			for( var m=0; m<SightSize; m++ )

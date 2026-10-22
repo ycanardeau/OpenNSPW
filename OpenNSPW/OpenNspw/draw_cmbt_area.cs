@@ -21,6 +21,13 @@ namespace OpenNspw;
 public unsafe partial class Nspw
 {
 
+// Where a position in the world is on the screen, in whole pixels: its offset from CameraPosition, with Y growing
+// downward, as `(int)(x-cmbt_x)` and `(int)(cmbt_y-y)` compute it.
+public PixelPoint WorldToScreen(WorldPosition position)
+	{
+	return new PixelPoint((int)(position.X-CameraPosition.X), (int)(CameraPosition.Y-position.Y));
+	}
+
 //============================================================================
 //
 //----------------------------------------------------------------------------
@@ -104,32 +111,27 @@ public void	UpdateUpperEffects(RECT* pfield_rect,RECT* pinfo_rect)
 					{
 					case 0:		//
 						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber;
-						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X);
-						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y);
+						Sprites[SpriteId.SubUnits].Position = WorldToScreen(effect.Position);
 						n=1;
 						break;
 					case 1:		// 対空機関砲弾がヒット
 						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(effect.TimeLeft%2));
-						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X);
-						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y);
+						Sprites[SpriteId.SubUnits].Position = WorldToScreen(effect.Position);
 						n=1;
 						break;
 					case 2:		//	飛行機からの煙
 						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(EffectRandom(2)));
-						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X)+EffectRandom(10)-5;
-						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y)+EffectRandom(10)-5;
+						Sprites[SpriteId.SubUnits].Position = WorldToScreen(effect.Position)+new PixelPoint(EffectRandom(10)-5, EffectRandom(10)-5);
 						n=1;
 						break;
 					case 3:		//	駐機場の飛行機用
 						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber;
-						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X);
-						Sprites[SpriteId.SubUnits].Y=(int)(effect.Position.Y);
+						Sprites[SpriteId.SubUnits].Position = effect.Position.ToPixelPoint();
 						n=0;
 						break;
 					case 4:		// 雷跡
 						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(EffectRandom(2)));
-						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X);
-						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y);
+						Sprites[SpriteId.SubUnits].Position = WorldToScreen(effect.Position);
 						n=1;
 						break;
 					case 10:	// 対空機関砲
@@ -142,15 +144,15 @@ public void	UpdateUpperEffects(RECT* pfield_rect,RECT* pinfo_rect)
 						continue;
 					}
 				// src_rect は ソースサーフェスのレクタングルです。
-				src_rect.left = Sprites[SpriteId.SubUnits].SheetX+(Sprites[SpriteId.SubUnits].Width * (Sprites[SpriteId.SubUnits].Frame % Sprites[SpriteId.SubUnits].FramesPerRow)) +1;
-				src_rect.top = Sprites[SpriteId.SubUnits].SheetY+(Sprites[SpriteId.SubUnits].Height* (Sprites[SpriteId.SubUnits].Frame / Sprites[SpriteId.SubUnits].FramesPerRow)) +1;
-				src_rect.right = (src_rect.left + Sprites[SpriteId.SubUnits].Width)-1;
-				src_rect.bottom = (src_rect.top + Sprites[SpriteId.SubUnits].Height)-1;
+				src_rect.left = Sprites[SpriteId.SubUnits].SheetPosition.X+(Sprites[SpriteId.SubUnits].Size.Width * (Sprites[SpriteId.SubUnits].Frame % Sprites[SpriteId.SubUnits].FramesPerRow)) +1;
+				src_rect.top = Sprites[SpriteId.SubUnits].SheetPosition.Y+(Sprites[SpriteId.SubUnits].Size.Height* (Sprites[SpriteId.SubUnits].Frame / Sprites[SpriteId.SubUnits].FramesPerRow)) +1;
+				src_rect.right = (src_rect.left + Sprites[SpriteId.SubUnits].Size.Width)-1;
+				src_rect.bottom = (src_rect.top + Sprites[SpriteId.SubUnits].Size.Height)-1;
 				// dstn_rect は ディスティネーションレクタングルです。
-				dstn_rect.left=Sprites[SpriteId.SubUnits].X-Sprites[SpriteId.SubUnits].CenterX;
-				dstn_rect.top=Sprites[SpriteId.SubUnits].Y-Sprites[SpriteId.SubUnits].CenterY;
-				dstn_rect.right=dstn_rect.left+Sprites[SpriteId.SubUnits].Width-1;
-				dstn_rect.bottom=dstn_rect.top+Sprites[SpriteId.SubUnits].Height-1;
+				dstn_rect.left=Sprites[SpriteId.SubUnits].Position.X-Sprites[SpriteId.SubUnits].Center.X;
+				dstn_rect.top=Sprites[SpriteId.SubUnits].Position.Y-Sprites[SpriteId.SubUnits].Center.Y;
+				dstn_rect.right=dstn_rect.left+Sprites[SpriteId.SubUnits].Size.Width-1;
+				dstn_rect.bottom=dstn_rect.top+Sprites[SpriteId.SubUnits].Size.Height-1;
 
 				if( n!=0 )
 					{
@@ -274,32 +276,27 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 					{
 					case 0:		//
 						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber;
-						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X);
-						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y);
+						Sprites[SpriteId.SubUnits].Position = WorldToScreen(effect.Position);
 						n=1;
 						break;
 					case 1:		// 対空機関砲弾がヒット
 						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(effect.TimeLeft%2));
-						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X);
-						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y);
+						Sprites[SpriteId.SubUnits].Position = WorldToScreen(effect.Position);
 						n=1;
 						break;
 					case 2:		//	飛行機からの煙
 						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(EffectRandom(2)));
-						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X)+EffectRandom(10)-5;
-						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y)+EffectRandom(10)-5;
+						Sprites[SpriteId.SubUnits].Position = WorldToScreen(effect.Position)+new PixelPoint(EffectRandom(10)-5, EffectRandom(10)-5);
 						n=1;
 						break;
 					case 3:		//	駐機場の飛行機用
 						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber;
-						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X);
-						Sprites[SpriteId.SubUnits].Y=(int)(effect.Position.Y);
+						Sprites[SpriteId.SubUnits].Position = effect.Position.ToPixelPoint();
 						n=0;
 						break;
 					case 4:		// 雷跡、航跡
 						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(EffectRandom(2)));
-						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X);
-						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y);
+						Sprites[SpriteId.SubUnits].Position = WorldToScreen(effect.Position);
 						n=1;
 						break;
 
@@ -311,15 +308,15 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 						continue;
 					}
 				// src_rect は ソースサーフェスのレクタングルです。
-				src_rect.left = Sprites[SpriteId.SubUnits].SheetX+(Sprites[SpriteId.SubUnits].Width * (Sprites[SpriteId.SubUnits].Frame % Sprites[SpriteId.SubUnits].FramesPerRow)) +1;
-				src_rect.top = Sprites[SpriteId.SubUnits].SheetY+(Sprites[SpriteId.SubUnits].Height* (Sprites[SpriteId.SubUnits].Frame / Sprites[SpriteId.SubUnits].FramesPerRow)) +1;
-				src_rect.right = (src_rect.left + Sprites[SpriteId.SubUnits].Width)-1;
-				src_rect.bottom = (src_rect.top + Sprites[SpriteId.SubUnits].Height)-1;
+				src_rect.left = Sprites[SpriteId.SubUnits].SheetPosition.X+(Sprites[SpriteId.SubUnits].Size.Width * (Sprites[SpriteId.SubUnits].Frame % Sprites[SpriteId.SubUnits].FramesPerRow)) +1;
+				src_rect.top = Sprites[SpriteId.SubUnits].SheetPosition.Y+(Sprites[SpriteId.SubUnits].Size.Height* (Sprites[SpriteId.SubUnits].Frame / Sprites[SpriteId.SubUnits].FramesPerRow)) +1;
+				src_rect.right = (src_rect.left + Sprites[SpriteId.SubUnits].Size.Width)-1;
+				src_rect.bottom = (src_rect.top + Sprites[SpriteId.SubUnits].Size.Height)-1;
 				// dstn_rect は ディスティネーションレクタングルです。
-				dstn_rect.left=Sprites[SpriteId.SubUnits].X-Sprites[SpriteId.SubUnits].CenterX;
-				dstn_rect.top=Sprites[SpriteId.SubUnits].Y-Sprites[SpriteId.SubUnits].CenterY;
-				dstn_rect.right=dstn_rect.left+Sprites[SpriteId.SubUnits].Width-1;
-				dstn_rect.bottom=dstn_rect.top+Sprites[SpriteId.SubUnits].Height-1;
+				dstn_rect.left=Sprites[SpriteId.SubUnits].Position.X-Sprites[SpriteId.SubUnits].Center.X;
+				dstn_rect.top=Sprites[SpriteId.SubUnits].Position.Y-Sprites[SpriteId.SubUnits].Center.Y;
+				dstn_rect.right=dstn_rect.left+Sprites[SpriteId.SubUnits].Size.Width-1;
+				dstn_rect.bottom=dstn_rect.top+Sprites[SpriteId.SubUnits].Size.Height-1;
 
 				if( n!=0 )
 					{
@@ -361,20 +358,19 @@ public void	DrawClouds(RECT* pfield_rect)
 		ref var cloud = ref Clouds[n];
 		if( cloud.Used!=0 )
 			{
-			Sprites[SpriteId.MapTiles].X=(int)(cloud.Position.X-CameraPosition.X);
-			Sprites[SpriteId.MapTiles].Y=(int)(CameraPosition.Y-cloud.Position.Y);
+			Sprites[SpriteId.MapTiles].Position = WorldToScreen(cloud.Position);
 			Sprites[SpriteId.MapTiles].Frame=2;
 			// src_rect は ソースサーフェスのレクタングルです。
-			src_rect.left = Sprites[SpriteId.MapTiles].SheetX+(Sprites[SpriteId.MapTiles].Width * (Sprites[SpriteId.MapTiles].Frame % Sprites[SpriteId.MapTiles].FramesPerRow));
-			src_rect.top = Sprites[SpriteId.MapTiles].SheetY+(Sprites[SpriteId.MapTiles].Height* (Sprites[SpriteId.MapTiles].Frame / Sprites[SpriteId.MapTiles].FramesPerRow)) ;
-			src_rect.right = (src_rect.left + Sprites[SpriteId.MapTiles].Width);
-			src_rect.bottom = (src_rect.top + Sprites[SpriteId.MapTiles].Height);
+			src_rect.left = Sprites[SpriteId.MapTiles].SheetPosition.X+(Sprites[SpriteId.MapTiles].Size.Width * (Sprites[SpriteId.MapTiles].Frame % Sprites[SpriteId.MapTiles].FramesPerRow));
+			src_rect.top = Sprites[SpriteId.MapTiles].SheetPosition.Y+(Sprites[SpriteId.MapTiles].Size.Height* (Sprites[SpriteId.MapTiles].Frame / Sprites[SpriteId.MapTiles].FramesPerRow)) ;
+			src_rect.right = (src_rect.left + Sprites[SpriteId.MapTiles].Size.Width);
+			src_rect.bottom = (src_rect.top + Sprites[SpriteId.MapTiles].Size.Height);
 
 			// dstn_rect は ディスティネーションレクタングルです。
-			dstn_rect.left=Sprites[SpriteId.MapTiles].X-(Sprites[SpriteId.MapTiles].Width/2);
-			dstn_rect.top=Sprites[SpriteId.MapTiles].Y-(Sprites[SpriteId.MapTiles].Height/2);
-			dstn_rect.right=dstn_rect.left+Sprites[SpriteId.MapTiles].Width;
-			dstn_rect.bottom=dstn_rect.top+Sprites[SpriteId.MapTiles].Height;
+			dstn_rect.left=Sprites[SpriteId.MapTiles].Position.X-(Sprites[SpriteId.MapTiles].Size.Width/2);
+			dstn_rect.top=Sprites[SpriteId.MapTiles].Position.Y-(Sprites[SpriteId.MapTiles].Size.Height/2);
+			dstn_rect.right=dstn_rect.left+Sprites[SpriteId.MapTiles].Size.Width;
+			dstn_rect.bottom=dstn_rect.top+Sprites[SpriteId.MapTiles].Size.Height;
 
 			if( ClipRects(ref dstn_rect,ref src_rect,ref *pfield_rect)!=0 )
 				{
@@ -546,13 +542,13 @@ private void DrawMapTiles(int cm_scrn_y, int cm_scrn_x, int map_bld_y, int map_b
 							wrk_y=Units[f].Position.Y;
 							wrk_x+=CosDegrees(Units[f].Direction)*FT_EYE;
 							wrk_y+=SinDegrees(Units[f].Direction)*FT_EYE;
-							wrk_x=wrk_x-(((cm_scrn_x+m)*Sprites[SpriteId.MapTiles].Width)-MAP_RIGHT);
-							wrk_y=wrk_y-(MAP_TOP-((cm_scrn_y+n)*Sprites[SpriteId.MapTiles].Height));
+							wrk_x=wrk_x-(((cm_scrn_x+m)*Sprites[SpriteId.MapTiles].Size.Width)-MAP_RIGHT);
+							wrk_y=wrk_y-(MAP_TOP-((cm_scrn_y+n)*Sprites[SpriteId.MapTiles].Size.Height));
 							}
 						else
 							{
-							wrk_x=Units[f].Position.X-(((cm_scrn_x+m)*Sprites[SpriteId.MapTiles].Width)-MAP_RIGHT);
-							wrk_y=Units[f].Position.Y-(MAP_TOP-((cm_scrn_y+n)*Sprites[SpriteId.MapTiles].Height));
+							wrk_x=Units[f].Position.X-(((cm_scrn_x+m)*Sprites[SpriteId.MapTiles].Size.Width)-MAP_RIGHT);
+							wrk_y=Units[f].Position.Y-(MAP_TOP-((cm_scrn_y+n)*Sprites[SpriteId.MapTiles].Size.Height));
 							}
 
 						//((cm_scrn_x+m)*sprt[MAP_TIP_NRML].wd)-MAP_RIGHT
@@ -572,11 +568,9 @@ private void DrawMapTiles(int cm_scrn_y, int cm_scrn_x, int map_bld_y, int map_b
 				flg=1;
 				}
 
-			Sprites[SpriteId.MapTiles].X=(m*Sprites[SpriteId.MapTiles].Width);
-			Sprites[SpriteId.MapTiles].Y=(n*Sprites[SpriteId.MapTiles].Height);
-
-			Sprites[SpriteId.MapTiles].X-=(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Width;
-			Sprites[SpriteId.MapTiles].Y-=(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Height;
+			Sprites[SpriteId.MapTiles].Position = new PixelPoint(
+				m*Sprites[SpriteId.MapTiles].Size.Width-(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Size.Width,
+				n*Sprites[SpriteId.MapTiles].Size.Height-(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Size.Height);
 
 			if( MapTiles[cm_scrn_y+n][cm_scrn_x+m]==0)
 				{
@@ -648,16 +642,16 @@ private void DrawMapTiles(int cm_scrn_y, int cm_scrn_x, int map_bld_y, int map_b
 				}
 
 			// src_rect は ソースサーフェスのレクタングルです。
-			src_rect.left = Sprites[SpriteId.MapTiles].SheetX+(Sprites[SpriteId.MapTiles].Width * (Sprites[SpriteId.MapTiles].Frame % Sprites[SpriteId.MapTiles].FramesPerRow)) ;
-			src_rect.top = Sprites[SpriteId.MapTiles].SheetY+(Sprites[SpriteId.MapTiles].Height* (Sprites[SpriteId.MapTiles].Frame / Sprites[SpriteId.MapTiles].FramesPerRow)) ;
-			src_rect.right = (src_rect.left + Sprites[SpriteId.MapTiles].Width);
-			src_rect.bottom = (src_rect.top + Sprites[SpriteId.MapTiles].Height);
+			src_rect.left = Sprites[SpriteId.MapTiles].SheetPosition.X+(Sprites[SpriteId.MapTiles].Size.Width * (Sprites[SpriteId.MapTiles].Frame % Sprites[SpriteId.MapTiles].FramesPerRow)) ;
+			src_rect.top = Sprites[SpriteId.MapTiles].SheetPosition.Y+(Sprites[SpriteId.MapTiles].Size.Height* (Sprites[SpriteId.MapTiles].Frame / Sprites[SpriteId.MapTiles].FramesPerRow)) ;
+			src_rect.right = (src_rect.left + Sprites[SpriteId.MapTiles].Size.Width);
+			src_rect.bottom = (src_rect.top + Sprites[SpriteId.MapTiles].Size.Height);
 
 			// dstn_rect は ディスティネーションレクタングルです。
-			dstn_rect.left=Sprites[SpriteId.MapTiles].X-Sprites[SpriteId.MapTiles].CenterX;
-			dstn_rect.top=Sprites[SpriteId.MapTiles].Y-Sprites[SpriteId.MapTiles].CenterY;
-			dstn_rect.right=dstn_rect.left+Sprites[SpriteId.MapTiles].Width;
-			dstn_rect.bottom=dstn_rect.top+Sprites[SpriteId.MapTiles].Height;
+			dstn_rect.left=Sprites[SpriteId.MapTiles].Position.X-Sprites[SpriteId.MapTiles].Center.X;
+			dstn_rect.top=Sprites[SpriteId.MapTiles].Position.Y-Sprites[SpriteId.MapTiles].Center.Y;
+			dstn_rect.right=dstn_rect.left+Sprites[SpriteId.MapTiles].Size.Width;
+			dstn_rect.bottom=dstn_rect.top+Sprites[SpriteId.MapTiles].Size.Height;
 
 			if( ClipRects(ref dstn_rect,ref src_rect,ref field_rect)!=0 )
 				{
@@ -736,7 +730,7 @@ private void HandleUnitClick(ref Unit unit, ref RECT dstn_rect, ref int lc_lf_bt
 	if( lc_lf_btn==1 )
 		{
 		lc_lf_btn=0;
-		ClickUnit(m, new WorldPosition(CameraPosition.X+Sprites[sprite].X, CameraPosition.Y-Sprites[sprite].Y));
+		ClickUnit(m, new WorldPosition(CameraPosition.X+Sprites[sprite].Position.X, CameraPosition.Y-Sprites[sprite].Position.Y));
 		}
 	}
 
@@ -760,8 +754,8 @@ private void DrawLandingPoint(SpriteId sprite)
 
 	dstn_rect.left=(int)(Units[SelectedUnit].LandingX-CameraPosition.X-40);
 	dstn_rect.top=(int)(CameraPosition.Y-Units[SelectedUnit].LandingY-40);
-	dstn_rect.right=dstn_rect.left+Sprites[sprite].Width-2;
-	dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Height-2;
+	dstn_rect.right=dstn_rect.left+Sprites[sprite].Size.Width-2;
+	dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Size.Height-2;
 
 	DrawLine4(dstn_rect.left+n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 	DrawLine4(dstn_rect.right-n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
@@ -905,7 +899,7 @@ private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int lc_lf
 			if( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked )
 				{DrawLine4((int)(Units[unit.Carrier].Position.X-CameraPosition.X),(int)(CameraPosition.Y-Units[unit.Carrier].Position.Y),(int)(unit.PathX[n]-CameraPosition.X),(int)(CameraPosition.Y-unit.PathY[n]),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));}
 			else
-				{DrawLine4(Sprites[sprite].X,Sprites[sprite].Y,(int)(unit.PathX[n]-CameraPosition.X),(int)(CameraPosition.Y-unit.PathY[n]),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));}
+				{DrawLine4(Sprites[sprite].Position.X,Sprites[sprite].Position.Y,(int)(unit.PathX[n]-CameraPosition.X),(int)(CameraPosition.Y-unit.PathY[n]),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));}
 			}
 		else
 			{
@@ -983,8 +977,7 @@ private bool DrawUnitMarks(bool goto_dca1, ref Unit unit, SpriteId sprite, ref i
 		if( IsOnShownDeck(ref unit) )
 			{
 			// 空母で飛行甲板か格納庫かで航空機を表示するかしない。
-			Sprites[sprite].X=(int)unit.Position.X;
-			Sprites[sprite].Y=(int)unit.Position.Y;
+			Sprites[sprite].Position = unit.Position.ToPixelPoint();
 			}
 		else
 			return false;
@@ -994,24 +987,22 @@ private bool DrawUnitMarks(bool goto_dca1, ref Unit unit, SpriteId sprite, ref i
 		{
 		if( unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.IsSubmerged )
 			{	// およその敵潜航潜水艦
-			Sprites[sprite].X=(int)(unit.ContactX-CameraPosition.X);
-			Sprites[sprite].Y=(int)(CameraPosition.Y-unit.ContactY);
+			Sprites[sprite].Position = new PixelPoint((int)(unit.ContactX-CameraPosition.X), (int)(CameraPosition.Y-unit.ContactY));
 			}
 		else
 			{	// マップ上のユニット
 
-			Sprites[sprite].X=(int)(unit.Position.X-CameraPosition.X);
-			Sprites[sprite].Y=(int)(CameraPosition.Y-unit.Position.Y);
+			Sprites[sprite].Position = WorldToScreen(unit.Position);
 
 			}
 		}
 	}
 
 // dca1:
-	dstn_rect.left=Sprites[sprite].X-Sprites[sprite].CenterX;
-	dstn_rect.top=Sprites[sprite].Y-Sprites[sprite].CenterY;
-	dstn_rect.right=dstn_rect.left+Sprites[sprite].Width-2;
-	dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Height-2;
+	dstn_rect.left=Sprites[sprite].Position.X-Sprites[sprite].Center.X;
+	dstn_rect.top=Sprites[sprite].Position.Y-Sprites[sprite].Center.Y;
+	dstn_rect.right=dstn_rect.left+Sprites[sprite].Size.Width-2;
+	dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Size.Height-2;
 
 	wrk_rect.left=dstn_rect.left+20;
 	wrk_rect.top=dstn_rect.top+20;
@@ -1136,21 +1127,20 @@ private void DrawUnit(ref Unit unit, SpriteId sprite, ref RECT src_rect, ref REC
 				// 駐機中のの飛行機
 				Sprites[sprite].Frame=(unit.SpriteRow*8)+unit.SpriteColumn;
 
-				Sprites[sprite].X=(int)unit.Position.X;
-				Sprites[sprite].Y=(int)unit.Position.Y;
+				Sprites[sprite].Position = unit.Position.ToPixelPoint();
 
 				// src_rect は ソースサーフェスのレクタングルです。
-				src_rect.left = Sprites[sprite].SheetX+(Sprites[sprite].Width * (Sprites[sprite].Frame % Sprites[sprite].FramesPerRow)) +1;
-				src_rect.top = Sprites[sprite].SheetY+(Sprites[sprite].Height* (Sprites[sprite].Frame / Sprites[sprite].FramesPerRow)) +1;
-				src_rect.right = (src_rect.left + Sprites[sprite].Width)-2;
-				src_rect.bottom = (src_rect.top + Sprites[sprite].Height)-2;
+				src_rect.left = Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width * (Sprites[sprite].Frame % Sprites[sprite].FramesPerRow)) +1;
+				src_rect.top = Sprites[sprite].SheetPosition.Y+(Sprites[sprite].Size.Height* (Sprites[sprite].Frame / Sprites[sprite].FramesPerRow)) +1;
+				src_rect.right = (src_rect.left + Sprites[sprite].Size.Width)-2;
+				src_rect.bottom = (src_rect.top + Sprites[sprite].Size.Height)-2;
 
 				// dstn_rect は ディスティネーションレクタングルです。
 
-				dstn_rect.left=Sprites[sprite].X-Sprites[sprite].CenterX;
-				dstn_rect.top=Sprites[sprite].Y-Sprites[sprite].CenterY;
-				dstn_rect.right=dstn_rect.left+Sprites[sprite].Width-2;
-				dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Height-2;
+				dstn_rect.left=Sprites[sprite].Position.X-Sprites[sprite].Center.X;
+				dstn_rect.top=Sprites[sprite].Position.Y-Sprites[sprite].Center.Y;
+				dstn_rect.right=dstn_rect.left+Sprites[sprite].Size.Width-2;
+				dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Size.Height-2;
 
 				if( ClipRects(ref dstn_rect,ref src_rect,ref info_rect)!=0 )
 					{
@@ -1164,14 +1154,13 @@ private void DrawUnit(ref Unit unit, SpriteId sprite, ref RECT src_rect, ref REC
 		}
 	else
 		{
-		Sprites[sprite].X=(int)(unit.Position.X-CameraPosition.X);
-		Sprites[sprite].Y=(int)(CameraPosition.Y-unit.Position.Y);
+		Sprites[sprite].Position = WorldToScreen(unit.Position);
 
 		if( unit.Kind==UnitKind.Submarine && unit.IsSubmerged && Result==GameResult.None )
 			{	// 潜航潜水艦
 			Sprites[sprite].Frame=((unit.SpriteRow+1)*8)+unit.SpriteColumn;
 			if( unit.Side!=LocalSide )
-				Sprites[sprite].X=-999;				// それが敵潜水艦なら表示を外す
+				Sprites[sprite].Position = new PixelPoint(-999, Sprites[sprite].Position.Y);				// それが敵潜水艦なら表示を外す
 			}
 		else
 			{
@@ -1179,16 +1168,16 @@ private void DrawUnit(ref Unit unit, SpriteId sprite, ref RECT src_rect, ref REC
 			}
 
 		// src_rect は ソースサーフェスのレクタングルです。
-		src_rect.left = Sprites[sprite].SheetX+(Sprites[sprite].Width * (Sprites[sprite].Frame % Sprites[sprite].FramesPerRow)) +1;
-		src_rect.top = Sprites[sprite].SheetY+(Sprites[sprite].Height* (Sprites[sprite].Frame / Sprites[sprite].FramesPerRow)) +1;
-		src_rect.right = (src_rect.left + Sprites[sprite].Width)-2;
-		src_rect.bottom = (src_rect.top + Sprites[sprite].Height)-2;
+		src_rect.left = Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width * (Sprites[sprite].Frame % Sprites[sprite].FramesPerRow)) +1;
+		src_rect.top = Sprites[sprite].SheetPosition.Y+(Sprites[sprite].Size.Height* (Sprites[sprite].Frame / Sprites[sprite].FramesPerRow)) +1;
+		src_rect.right = (src_rect.left + Sprites[sprite].Size.Width)-2;
+		src_rect.bottom = (src_rect.top + Sprites[sprite].Size.Height)-2;
 
 		// dstn_rect は ディスティネーションレクタングルです。
-		dstn_rect.left=Sprites[sprite].X-Sprites[sprite].CenterX;
-		dstn_rect.top=Sprites[sprite].Y-Sprites[sprite].CenterY;
-		dstn_rect.right=dstn_rect.left+Sprites[sprite].Width-2;
-		dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Height-2;
+		dstn_rect.left=Sprites[sprite].Position.X-Sprites[sprite].Center.X;
+		dstn_rect.top=Sprites[sprite].Position.Y-Sprites[sprite].Center.Y;
+		dstn_rect.right=dstn_rect.left+Sprites[sprite].Size.Width-2;
+		dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Size.Height-2;
 		if( ClipRects(ref dstn_rect,ref src_rect,ref field_rect)!=0 )
 			{
 			if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref src_rect),DDBLTFAST_SRCCOLORKEY) )
@@ -1215,8 +1204,8 @@ private bool AimLanding(SpriteId sprite, int x, int y)
 	// カーソルの示す、マップチップの場所
 	// BUG(NSPW NET): a cursor off the map gives a tile outside it, which NSPW NET reads out of bounds; the port throws
 	// instead (docs/KnownIssues.md).
-	map_bld_x=(int)(((x+40+(int)CameraPosition.X)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
-	map_bld_y=(int)((MAP_TOP-((int)CameraPosition.Y-y-40 ))/Sprites[SpriteId.MapTiles].Height);
+	map_bld_x=(int)(((x+40+(int)CameraPosition.X)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
+	map_bld_y=(int)((MAP_TOP-((int)CameraPosition.Y-y-40 ))/Sprites[SpriteId.MapTiles].Size.Height);
 	if(
 		MapTiles[map_bld_y][map_bld_x]==9 ||
 		MapTiles[map_bld_y][map_bld_x]==8 ||
@@ -1225,8 +1214,7 @@ private bool AimLanding(SpriteId sprite, int x, int y)
 		MapTiles[map_bld_y][map_bld_x]==2
 		)
 		{
-		Sprites[sprite].X=(((x+40+(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Width)/80)*80)-(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Width;
-		Sprites[sprite].Y=(((y+40+(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Height)/80)*80)-(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Height;
+		Sprites[sprite].Position = new PixelPoint((((x+40+(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Size.Width)/80)*80)-(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Size.Width, (((y+40+(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Size.Height)/80)*80)-(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Size.Height);
 		return true;
 		}
 
@@ -1280,18 +1268,18 @@ public void	DrawBattleArea()
 
 	// info_rect は インフォのレクタングルです
 
-	info_rect.left=Sprites[SpriteId.JapanUnitInfo].X;
-	info_rect.top=Sprites[SpriteId.JapanUnitInfo].Y;
-	info_rect.right=info_rect.left+Sprites[SpriteId.JapanUnitInfo].Width;
-	info_rect.bottom=info_rect.top+Sprites[SpriteId.JapanUnitInfo].Height;
+	info_rect.left=Sprites[SpriteId.JapanUnitInfo].Position.X;
+	info_rect.top=Sprites[SpriteId.JapanUnitInfo].Position.Y;
+	info_rect.right=info_rect.left+Sprites[SpriteId.JapanUnitInfo].Size.Width;
+	info_rect.bottom=info_rect.top+Sprites[SpriteId.JapanUnitInfo].Size.Height;
 
 	// カーソルの示す、マップチップの場所
-	map_bld_x=(int)(((CursorPosition.x+40+(int)CameraPosition.X)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
-	map_bld_y=(int)((MAP_TOP-((int)CameraPosition.Y-CursorPosition.y-40 ))/Sprites[SpriteId.MapTiles].Height);
+	map_bld_x=(int)(((CursorPosition.x+40+(int)CameraPosition.X)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
+	map_bld_y=(int)((MAP_TOP-((int)CameraPosition.Y-CursorPosition.y-40 ))/Sprites[SpriteId.MapTiles].Size.Height);
 
 	// 標準キャラよう背景の表示
-	cm_scrn_x=(int)((CameraPosition.X-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
-	cm_scrn_y=(int)((MAP_TOP-CameraPosition.Y)/Sprites[SpriteId.MapTiles].Height);
+	cm_scrn_x=(int)((CameraPosition.X-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
+	cm_scrn_y=(int)((MAP_TOP-CameraPosition.Y)/Sprites[SpriteId.MapTiles].Size.Height);
 
 	DrawMapTiles(cm_scrn_y, cm_scrn_x, map_bld_y, map_bld_x, ref cBuf, ref src_rect, ref field_rect);
 

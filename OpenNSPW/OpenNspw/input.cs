@@ -222,8 +222,8 @@ private bool IsLandAt(double x, double y)
 	if( y>MAP_TOP || y<MAP_BOTTOM || x<MAP_LEFT || x>MAP_RIGHT )
 		return false;
 
-	cm_scrn_x=(int)((x+(Sprites[SpriteId.JapanUnits].Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
-	cm_scrn_y=(int)((MAP_TOP-y+(Sprites[SpriteId.JapanUnits].Height/2))/Sprites[SpriteId.MapTiles].Height);
+	cm_scrn_x=(int)((x+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
+	cm_scrn_y=(int)((MAP_TOP-y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height);
 	return MapTiles[cm_scrn_y][cm_scrn_x]>=1;
 	}
 
@@ -239,10 +239,10 @@ private bool IsShipAt(int m, double x, double y)
 		ref var other = ref Units[f];
 		if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged) && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress) )
 			{
-			wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].Height/2);
-			wrk_r.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].Width/2);
-			wrk_r.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].Height/2);
-			wrk_r.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].Width/2);
+			wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].Size.Height/2);
+			wrk_r.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].Size.Width/2);
+			wrk_r.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].Size.Height/2);
+			wrk_r.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].Size.Width/2);
 			if( PointInRect3(ref wrk_r,(int)x,(int)y)!=0)
 				return true;
 			}
@@ -365,10 +365,10 @@ public void	SetCpuRoute2(int m)
 			if( other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged)   && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress )  )
 				{
 				// ptin dbg
-				wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].Width/2);
-				wrk_r.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].Width/2);
-				wrk_r.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].Width/2);
-				wrk_r.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].Width/2);
+				wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].Size.Width/2);
+				wrk_r.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].Size.Width/2);
+				wrk_r.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].Size.Width/2);
+				wrk_r.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].Size.Width/2);
 
 				if( PointInRect3(ref wrk_r,(int)wrk_x2,(int)wrk_y2)!=0)
 					{

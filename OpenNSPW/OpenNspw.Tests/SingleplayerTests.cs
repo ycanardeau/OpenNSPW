@@ -178,7 +178,7 @@ public class SingleplayerTests
 
 		Assert.Equal(2, game.CurrentMap);
 		Assert.Equal(0, game.MapTiles[164][62]);
-		Assert.Equal(599, game.Sprites[SpriteId.TitleBackground].Width);
+		Assert.Equal(599, game.Sprites[SpriteId.TitleBackground].Size.Width);
 		Assert.Equal("tst_cg1.bmp", game.SpriteSheetName);
 	}
 
