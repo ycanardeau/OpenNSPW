@@ -2,8 +2,12 @@ using System.Reflection;
 
 namespace OpenNspw.Tests;
 
-// A C++ variable or struct member, and where its bytes are in the C# field that holds it.
-internal sealed record OriginalSlice(string Name, FieldInfo Field, int Offset, int Size);
+// A C++ variable or struct member, and where its bytes are in the C# field that holds it. For a global, Owners are the
+// fields that lead from Nspw to the object that holds the field, such as Nspw.Sound, none if Nspw holds it itself.
+internal sealed record OriginalSlice(string Name, FieldInfo Field, int Offset, int Size)
+{
+	public IReadOnlyList<FieldInfo> Owners { get; init; } = [];
+}
 
 // The C++ names of the port's members: the names in [Original], or the members' own names (docs/Refactoring.md, Name
 // binding).
@@ -44,11 +48,35 @@ internal static class OriginalNames
 			?? throw new InvalidOperationException($"The port has no struct named {name}.");
 	}
 
+	// The fields that hold globals: Nspw's own, and those of the objects of [Globals] classes that its fields hold, with
+	// the fields that lead to them.
+	public static IEnumerable<(IReadOnlyList<FieldInfo> Owners, FieldInfo Field)> GlobalFields(Type type, IReadOnlyList<FieldInfo> owners)
+	{
+		foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+		{
+			if (field.FieldType.GetCustomAttribute<GlobalsAttribute>() is not null)
+			{
+				foreach (var global in GlobalFields(field.FieldType, [.. owners, field]))
+				{
+					yield return global;
+				}
+			}
+			else
+			{
+				yield return (owners, field);
+			}
+		}
+	}
+
 	// The global of the port that has a C++ name.
 	public static OriginalSlice FindGlobal(string name)
 	{
-		var field = typeof(Nspw).GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).SingleOrDefault(f => Of(f).Contains(name))
-			?? throw new InvalidOperationException($"The port has no global named {name}.");
-		return Slices(field, 0).Single(s => s.Name == name);
+		var (owners, field) = GlobalFields(typeof(Nspw), []).SingleOrDefault(g => Of(g.Field).Contains(name));
+		if (field is null)
+		{
+			throw new InvalidOperationException($"The port has no global named {name}.");
+		}
+
+		return Slices(field, 0).Single(s => s.Name == name) with { Owners = owners };
 	}
 }
