@@ -136,7 +136,7 @@ public void		DrawHitArea(int m)
 				// The box is upside down, its top below its bottom, as the original fills it: the same outline.
 				var hitArea=WorldRect.Around(Units[target].Position, 50, -50);
 
-				DrawWorldRect(hitArea, RGB(255,255,255));
+				DrawWorldRect(hitArea);
 
 				return;
 				}
@@ -155,7 +155,7 @@ public void		DrawHitArea(int m)
 				{
 				var hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset((+size-(i*halfSize)), (-size+(i*halfSize)));
 
-				DrawWorldRect(hitArea, RGB(255,255,255));
+				DrawWorldRect(hitArea);
 				}
 			break;
 		case 1: case 5:
@@ -163,7 +163,7 @@ public void		DrawHitArea(int m)
 				{
 				var hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset((-size+(i*halfSize)), (-size+(i*halfSize)));
 
-				DrawWorldRect(hitArea, RGB(255,255,255));
+				DrawWorldRect(hitArea);
 				}
 
 			break;
@@ -172,7 +172,7 @@ public void		DrawHitArea(int m)
 				{
 				var hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset(0, (-size+(i*size)));
 
-				DrawWorldRect(hitArea, RGB(255,255,255));
+				DrawWorldRect(hitArea);
 
 				}
 			break;
@@ -181,7 +181,7 @@ public void		DrawHitArea(int m)
 				{
 				var hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset((-size+(i*size)), 0);
 
-				DrawWorldRect(hitArea, RGB(255,255,255));
+				DrawWorldRect(hitArea);
 
 				}
 			break;

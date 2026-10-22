@@ -930,7 +930,7 @@ private void ReadKeyboard()
 
 					if( !IsEditingMap && hwndChatDlg==null && (od.dwData & (0x80))!=0 )
 						{
-						hwndChatDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_CHAT_DIALOG), hwndApp, ChatDlgProc);
+						hwndChatDlg = CreateDialog(MAKEINTRESOURCE(IDD_CHAT_DIALOG), hwndApp, ChatDlgProc);
 
 						}
 					break;
@@ -998,7 +998,7 @@ public void ReadInput()
 	// 純粋なマウス位置を取る
 	GetCursorPos(ref CursorPosition);
 	if( !IsFullscreen )
-		ScreenToClient(hwndApp, ref CursorPosition);
+		ScreenToClient();
 
 	}
 
@@ -1013,11 +1013,10 @@ public bool InitializeDirectInput()
 
 	// *****************************************
 	// DirectInputの作成
-	var hr = DirectInput8Create( hInstApp , DIRECTINPUT_VERSION,
-							IID_IDirectInput8, out pDInput, null);
+	var hr = DirectInput8Create( out pDInput);
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR("DirectInput8オブジェクトの作成に失敗", hr);
+		DXTRACE_ERR(hr);
 		return false;
 	}
 
@@ -1025,7 +1024,7 @@ public bool InitializeDirectInput()
 	// デバイス・オブジェクトを作成
 	hr = pDInput.CreateDevice(GUID_SysKeyboard, out pDIDevice, null);
 	if (FAILED(hr)) {
-		DXTRACE_ERR("DirectInputDevice8オブジェクトの作成に失敗", hr);
+		DXTRACE_ERR(hr);
 	    return false;
 	}
 
@@ -1033,7 +1032,7 @@ public bool InitializeDirectInput()
 	hr = pDIDevice.SetDataFormat(c_dfDIKeyboard);
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR("c_dfDIMouse2形式の設定に失敗", hr);
+		DXTRACE_ERR(hr);
 		return false;
 	}
 
@@ -1041,7 +1040,7 @@ public bool InitializeDirectInput()
 	hr = pDIDevice.SetCooperativeLevel(hwndApp, DISCL_NONEXCLUSIVE | DISCL_FOREGROUND);
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR("フォアグラウンド＆非排他モードの設定に失敗", hr);
+		DXTRACE_ERR(hr);
 		return false;
 	}
 
@@ -1054,7 +1053,7 @@ public bool InitializeDirectInput()
 	hr = pDIDevice.SetProperty(DIPROP_BUFFERSIZE, &diprop.diph);
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR("バッファ・サイズの設定に失敗", hr);
+		DXTRACE_ERR(hr);
 		return false;
 	}
 
@@ -1066,7 +1065,7 @@ public bool InitializeDirectInput()
 	hr = pDInput.CreateDevice(GUID_SysMouse, out pDIDeviceMouse, null);
 	if (FAILED(hr))
 		{
-		DXTRACE_ERR("DirectInputDevice8オブジェクトの作成に失敗", hr);
+		DXTRACE_ERR(hr);
 	    return false;
 		}
 
@@ -1074,7 +1073,7 @@ public bool InitializeDirectInput()
 	hr = pDIDeviceMouse.SetDataFormat(c_dfDIMouse2);
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR("c_dfDIMouse2形式の設定に失敗", hr);
+		DXTRACE_ERR(hr);
 		return false;
 	}
 
@@ -1082,7 +1081,7 @@ public bool InitializeDirectInput()
 	hr = pDIDeviceMouse.SetCooperativeLevel(hwndApp, DISCL_NONEXCLUSIVE | DISCL_FOREGROUND);
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR("フォアグラウンド＆非排他モードの設定に失敗", hr);
+		DXTRACE_ERR(hr);
 		return false;
 	}
 
@@ -1096,7 +1095,7 @@ public bool InitializeDirectInput()
 	hr = pDIDeviceMouse.SetProperty(DIPROP_AXISMODE, &diprop.diph);
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR("軸モードの設定に失敗", hr);
+		DXTRACE_ERR(hr);
 		return false;
 	}
 
@@ -1105,7 +1104,7 @@ public bool InitializeDirectInput()
 	hr = pDIDeviceMouse.SetProperty(DIPROP_BUFFERSIZE, &diprop.diph);
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR("バッファ・サイズの設定に失敗", hr);
+		DXTRACE_ERR(hr);
 		return false;
 	}
 

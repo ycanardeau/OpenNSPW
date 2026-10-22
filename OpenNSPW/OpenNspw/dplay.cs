@@ -90,7 +90,7 @@ public nint GreetingDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
          MainDialog = hDlg;
 
          // Load and set the icon
-         object? hIcon = LoadIcon( hInstApp, MAKEINTRESOURCE( IDI_ICON1 ) );
+         object? hIcon = LoadIcon();
          SendMessage( hDlg, WM_SETICON, ICON_BIG,   hIcon );  // Set big icon
          SendMessage( hDlg, WM_SETICON, ICON_SMALL, hIcon );  // Set small icon
 
@@ -199,7 +199,7 @@ public int EnumAdapters( HWND hDlg, Guid? pSPGuid )
                                       ref dwItems, 0 );
     if( hr != DPNERR_BUFFERTOOSMALL )
     {
-        DXTRACE_ERR_MSGBOX( TEXT("EnumAdapters"), hr );
+        DXTRACE_ERR_MSGBOX( hr );
         goto LCleanReturn;
     }
 
@@ -208,7 +208,7 @@ public int EnumAdapters( HWND hDlg, Guid? pSPGuid )
     if( null == pdnSPInfo )
     {
         hr = E_OUTOFMEMORY;
-        DXTRACE_ERR_MSGBOX( TEXT("EnumAdapters"), hr );
+        DXTRACE_ERR_MSGBOX( hr );
         goto LCleanReturn;
     }
 
@@ -216,7 +216,7 @@ public int EnumAdapters( HWND hDlg, Guid? pSPGuid )
     if( FAILED( hr = DirectPlayPeer.EnumServiceProviders( pSPGuid, null, pdnSPInfo,
                                                   ref dwSize, ref dwItems, 0 ) ) )
     {
-        DXTRACE_ERR_MSGBOX( TEXT("EnumAdapters"), hr );
+        DXTRACE_ERR_MSGBOX( hr );
         goto LCleanReturn;
     }
 
@@ -238,7 +238,7 @@ public int EnumAdapters( HWND hDlg, Guid? pSPGuid )
         if( null == pGuid )
         {
             hr = E_OUTOFMEMORY;
-            DXTRACE_ERR_MSGBOX( TEXT("EnumAdapters"), hr );
+            DXTRACE_ERR_MSGBOX( hr );
             goto LCleanReturn;
         }
 
@@ -258,7 +258,7 @@ public int EnumAdapters( HWND hDlg, Guid? pSPGuid )
     hr = DirectPlayPeer.GetSPCaps(pSPGuid, dpnspCaps, 0);
     if ( FAILED( hr ) )
     {
-        DXTRACE_ERR_MSGBOX( TEXT("GetSPCaps"), hr );
+        DXTRACE_ERR_MSGBOX( hr );
         goto LCleanReturn;
     }
     if ( (dpnspCaps.dwFlags & DPNSPCAPS_SUPPORTSALLADAPTERS)!=0 )
@@ -274,7 +274,7 @@ public int EnumAdapters( HWND hDlg, Guid? pSPGuid )
         if( null == pGuid )
         {
             hr = E_OUTOFMEMORY;
-            DXTRACE_ERR_MSGBOX( TEXT("EnumAdapters"), hr );
+            DXTRACE_ERR_MSGBOX( hr );
             goto LCleanReturn;
         }
 
@@ -311,7 +311,7 @@ public int EnumServiceProviders( HWND hDlg )
                                       ref dwItems, 0 );
     if( hr != DPNERR_BUFFERTOOSMALL )
     {
-        DXTRACE_ERR_MSGBOX( TEXT("EnumServiceProviders"), hr );
+        DXTRACE_ERR_MSGBOX( hr );
         goto LCleanReturn;
     }
 
@@ -320,7 +320,7 @@ public int EnumServiceProviders( HWND hDlg )
     if( null == pdnSPInfo )
     {
         hr = E_OUTOFMEMORY;
-        DXTRACE_ERR_MSGBOX( TEXT("EnumServiceProviders"), hr );
+        DXTRACE_ERR_MSGBOX( hr );
         goto LCleanReturn;
     }
 
@@ -328,7 +328,7 @@ public int EnumServiceProviders( HWND hDlg )
     if( FAILED( hr = DirectPlayPeer.EnumServiceProviders( null, null, pdnSPInfo,
                                                   ref dwSize, ref dwItems, 0 ) ) )
     {
-        DXTRACE_ERR_MSGBOX( TEXT("EnumServiceProviders"), hr );
+        DXTRACE_ERR_MSGBOX( hr );
         goto LCleanReturn;
     }
 
@@ -351,7 +351,7 @@ public int EnumServiceProviders( HWND hDlg )
         if( null == pGuid )
         {
             hr = E_OUTOFMEMORY;
-            DXTRACE_ERR_MSGBOX( TEXT("EnumServiceProviders"), hr );
+            DXTRACE_ERR_MSGBOX( hr );
             goto LCleanReturn;
         }
 
@@ -466,7 +466,7 @@ public int OnInitOverrideDialog( HWND hDlg )
 	int hr;
 
 	// Load and set the icon
-	object? hIcon = LoadIcon( hInstApp, MAKEINTRESOURCE( IDI_ICON1 ) );
+	object? hIcon = LoadIcon();
 	SendMessage( hDlg, WM_SETICON, ICON_BIG,   hIcon );  // Set big icon
 	SendMessage( hDlg, WM_SETICON, ICON_SMALL, hIcon );  // Set small icon
 
@@ -476,7 +476,7 @@ public int OnInitOverrideDialog( HWND hDlg )
 	SetDlgItemText( hDlg, IDC_PLAYER_NAME, LocalPlayerName );
 
 	if( FAILED( hr = EnumServiceProviders( hDlg ) ) )
-	return DXTRACE_ERR_MSGBOX( TEXT("EnumServiceProviders"), hr );
+	return DXTRACE_ERR_MSGBOX( hr );
 
 	SetupAddressFields( hDlg );
 
@@ -559,7 +559,7 @@ public nint OverrideDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
               if( FAILED( hr = LaunchMultiplayerGame( hDlg ) ) )
 						{
 						// 設定された接続は失敗した。
-						DXTRACE_ERR_MSGBOX( TEXT("LaunchMultiplayerGame"), hr );
+						DXTRACE_ERR_MSGBOX( hr );
                   MessageBox( null, TEXT("Failed to launch game. "),
                               AppName, MB_OK | MB_ICONERROR );
 
@@ -621,33 +621,31 @@ public int LaunchMultiplayerGame( HWND hDlg )
 		// ゲストだった場合、ホストのアドレスを作ります。
 		// Create a host address if connecting to a host,
 		// otherwise keep it as NULL
-		if( FAILED( hr = CoCreateInstance( CLSID_DirectPlay8Address, null, CLSCTX_INPROC_SERVER,
-								 IID_IDirectPlay8Address, out pHostAddress ) ) )
+		if( FAILED( hr = CoCreateInstance( CLSID_DirectPlay8Address, IID_IDirectPlay8Address, out pHostAddress ) ) )
 			{
-			DXTRACE_ERR_MSGBOX( TEXT("CoCreateInstance"), hr );
+			DXTRACE_ERR_MSGBOX( hr );
 			goto LCleanReturn;
 			}
 
 		// Set the SP to pHostAddress
 		if( FAILED( hr = pHostAddress.SetSP( pSPGuid ) ) )
 			{
-			DXTRACE_ERR_MSGBOX( TEXT("SetSP"), hr );
+			DXTRACE_ERR_MSGBOX( hr );
 			goto LCleanReturn;
 			}
 		}
 
 	// Create a device address to specify which device we are using
-	if( FAILED( hr = CoCreateInstance( CLSID_DirectPlay8Address, null, CLSCTX_INPROC_SERVER,
-									IID_IDirectPlay8Address, out pDeviceAddress ) ) )
+	if( FAILED( hr = CoCreateInstance( CLSID_DirectPlay8Address, IID_IDirectPlay8Address, out pDeviceAddress ) ) )
 		{
-		DXTRACE_ERR_MSGBOX( TEXT("CoCreateInstance"), hr );
+		DXTRACE_ERR_MSGBOX( hr );
 		goto LCleanReturn;
 		}
 
 	// Set the SP to pDeviceAddress
 	if( FAILED( hr = pDeviceAddress.SetSP( pSPGuid ) ) )
 		{
-		DXTRACE_ERR_MSGBOX( TEXT("SetSP"), hr );
+		DXTRACE_ERR_MSGBOX( hr );
 		goto LCleanReturn;
 		}
 
@@ -663,7 +661,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 			{
 			if( FAILED( hr = pDeviceAddress.SetDevice( pAdapterGuid ) ) )
 				{
-				DXTRACE_ERR_MSGBOX( TEXT("SetDevice"), hr );
+				DXTRACE_ERR_MSGBOX( hr );
 				goto LCleanReturn;
 				}
 			}
@@ -701,7 +699,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 																				dwPort, sizeof(uint),
 																				DPNA_DATATYPE_DWORD ) ) )
 					 {
-					  DXTRACE_ERR_MSGBOX( TEXT("AddComponent"), hr );
+					  DXTRACE_ERR_MSGBOX( hr );
 					  goto LCleanReturn;
 					 }
 				}
@@ -718,7 +716,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 									 wstrHostname, (uint) ((wcslen(wstrHostname)+1)*sizeof(char)),
 									 DPNA_DATATYPE_STRING ) ) )
 					 {
-					  DXTRACE_ERR_MSGBOX( TEXT("AddComponent"), hr );
+					  DXTRACE_ERR_MSGBOX( hr );
 					  goto LCleanReturn;
 					 }
 				}
@@ -731,7 +729,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 																			 dwPort, sizeof(uint),
 																			 DPNA_DATATYPE_DWORD ) ) )
 					{
-					  DXTRACE_ERR_MSGBOX( TEXT("AddComponent"), hr );
+					  DXTRACE_ERR_MSGBOX( hr );
 					  goto LCleanReturn;
 					}
 				}
@@ -756,7 +754,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 															 wstrPhone, (uint) ((wcslen(wstrPhone)+1)*sizeof(char)),
 															 DPNA_DATATYPE_STRING ) ) )
 					{
-					DXTRACE_ERR_MSGBOX( TEXT("AddComponent"), hr );
+					DXTRACE_ERR_MSGBOX( hr );
 					goto LCleanReturn;
 					}
 				}
@@ -798,7 +796,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 	// be set by the time we call Connect() below.
 	if( FAILED( hr = DirectPlayPeer.SetPeerInfo( dpPlayerInfo, null, null, DPNOP_SYNC ) ) )
 		{
-		DXTRACE_ERR_MSGBOX( TEXT("SetPeerInfo"), hr );
+		DXTRACE_ERR_MSGBOX( hr );
 		goto LCleanReturn;
 		}
 
@@ -838,13 +836,13 @@ public int LaunchMultiplayerGame( HWND hDlg )
 
 		if( FAILED(hr) )
 			{
-			DXTRACE_ERR_MSGBOX( TEXT("Host"), hr );
+			DXTRACE_ERR_MSGBOX( hr );
 			goto LCleanReturn;
 			}
 
 		// Close the existing dialog and create the "in-game" dialog.
 		DestroyWindow(MainDialog);
-		MainDialog = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_MAIN_GAME), null, GreetingDlgProc);
+		MainDialog = CreateDialog(MAKEINTRESOURCE(IDD_MAIN_GAME), null, GreetingDlgProc);
 		}
     //---------------------------------
     // If we are connecting...
@@ -879,7 +877,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 							  dwConnectFlags );       // flags
 		if( FAILED(hr) )
 			{
-			DXTRACE_ERR_MSGBOX( TEXT("Connect"), hr );
+			DXTRACE_ERR_MSGBOX( hr );
 			goto LCleanReturn;
 			}
 
@@ -1432,7 +1430,7 @@ typedef	struct	_DP_DATA_1
 
 			DestroyWindow(MainDialog);
 
-			MainDialog = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_MAIN_GAME), null, GreetingDlgProc);
+			MainDialog = CreateDialog(MAKEINTRESOURCE(IDD_MAIN_GAME), null, GreetingDlgProc);
 			break;
 			}
 		case DPN_MSGID_SEND_COMPLETE:

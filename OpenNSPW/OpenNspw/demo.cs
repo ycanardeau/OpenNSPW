@@ -157,7 +157,7 @@ public void	UpdateTitle()
 
 
 				var hFile=CreateFile("Saved\\resume_1.dat", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
-																null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null);
+																OPEN_EXISTING);
 
 				if( INVALID_HANDLE_VALUE==hFile )
 					{
@@ -264,7 +264,7 @@ public void GoToGameSetting()
 
 
 	var hFile=CreateFile("Saved\\auto_save.dat", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
-													null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null);
+													OPEN_EXISTING);
 
 	if( INVALID_HANDLE_VALUE==hFile )
 		{
@@ -978,7 +978,7 @@ private void UpdateBackToScenarioSettingButton(ref Array12<int> length, ref Arra
 private void StartBattle(ref NameMessage message)
 	{
 	// ホストの選択状態をゲストにセンドします。
-	srand( (uint)time( null ) );
+	srand( (uint)time() );
 	SharedRandomSeed=(short)Random(65536);
 
 	message.Type = MessageType.LeaveSetup;
@@ -1306,7 +1306,7 @@ private void LeaveGameSetting(ref NameMessage message)
 	{
 	if( ScenarioNumber==9 )
 		{
-		/*g_hDlg =*/ CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_LOAD_Proc );
+		/*g_hDlg =*/ CreateDialog(MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_LOAD_Proc );
 
 		}
 

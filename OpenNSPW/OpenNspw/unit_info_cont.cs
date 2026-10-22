@@ -1097,7 +1097,7 @@ private void UpdateSupplyPanel(ref Array8<int> length, ref Array8<Array128<byte>
 private void AskSystemMenu(MessageType answer)
 	{
 	DialogAnswer=answer;
-	MainDialog = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_OK_CANCEL), hwndApp, (DLGPROC)IDD_OK_CANCEL_Proc );
+	MainDialog = CreateDialog(MAKEINTRESOURCE(IDD_OK_CANCEL), hwndApp, (DLGPROC)IDD_OK_CANCEL_Proc );
 	}
 
 private void UpdateSystemMenu(ref Array8<int> length, ref Array8<Array128<byte>> text, int y, ref HDC hdc)

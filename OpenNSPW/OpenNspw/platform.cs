@@ -182,10 +182,8 @@ public partial class Nspw(INspwPlatform? platform = null)
 {
 	private readonly INspwPlatform _platform = platform ?? NullPlatform.Instance;
 
-	public const uint CLSCTX_INPROC_SERVER = 0x1;
-
 	// DirectMusic's classes are the port's own (unknwn.cs); the platform creates the others.
-	public int CoCreateInstance<T>(Guid rclsid, object? pUnkOuter, uint dwClsContext, Guid riid, out T? ppv) where T : class
+	public int CoCreateInstance<T>(Guid rclsid, Guid riid, out T? ppv) where T : class
 	{
 		object? obj;
 		var hr = rclsid == dmusici.CLSID_DirectMusicLoader ? (obj = new DirectMusicLoader8()) is not null ? winerror.S_OK : 0

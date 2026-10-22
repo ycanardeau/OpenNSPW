@@ -63,8 +63,6 @@ public struct WAVEFORMAT
 
 public static class mmsystem
 {
-	public const uint MMIO_READ = 0x00000000;
-	public const uint MMIO_ALLOCBUF = 0x00010000;
 	public const uint MMIO_FINDCHUNK = 0x0010;
 	public const uint MMIO_FINDRIFF = 0x0020;
 	public const uint MMIO_FINDLIST = 0x0040;
@@ -105,7 +103,7 @@ public unsafe partial class Nspw
 		return _platform.timeGetTime();
 	}
 
-	public HMMIO mmioOpen(string pszFileName, MMIOINFO* pmmioinfo, uint fdwOpen)
+	public HMMIO mmioOpen(string pszFileName)
 	{
 		using var stream = _platform.OpenFile(pszFileName.Replace('\\', '/'), FileMode.Open, FileAccess.Read, FileShare.Read);
 		if (stream is null)
@@ -123,7 +121,7 @@ public unsafe partial class Nspw
 		return new HMMIO(handle);
 	}
 
-	public uint mmioClose(HMMIO hmmio, uint fuClose)
+	public uint mmioClose(HMMIO hmmio)
 	{
 		if (_mmioFiles.Remove(hmmio.Value, out var file))
 		{
@@ -229,7 +227,7 @@ public unsafe partial class Nspw
 	}
 
 	// There is nothing more to read after the end of the buffer, so pchNext stays at pchEndRead.
-	public uint mmioAdvance(HMMIO hmmio, MMIOINFO* pmmioi, uint fuAdvance)
+	public uint mmioAdvance()
 	{
 		return 0;
 	}

@@ -35,15 +35,15 @@ public void	SaveResume(int type)
 		{
 		case 1:
 			hFile=CreateFile("Saved\\resume_1.dat", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
-								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
+								OPEN_ALWAYS);
 			break;
 		case 2:
 			hFile=CreateFile("Saved\\cnct_error.dat", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
-								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
+								OPEN_ALWAYS);
 			break;
 		case 3:
 			hFile=CreateFile("Saved\\auto_save.dat", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
-								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
+								OPEN_ALWAYS);
 			break;
 		}
 
@@ -51,7 +51,7 @@ public void	SaveResume(int type)
 		{
 		//unsigned short		cmbt_map[256][256];					// マップ
 
-		SetFilePointer( hFile,0,0,FILE_BEGIN);		// 先頭へ
+		SetFilePointer( hFile,0,FILE_BEGIN);		// 先頭へ
 /***
 		// データ を バッファへ
 		for(m=0;m<=255;m++)
@@ -103,15 +103,15 @@ public void	LoadResume(int type)
 		{
 		case 1:
 			hFile=CreateFile("Saved\\resume_1.dat", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
-								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
+								OPEN_ALWAYS);
 			break;
 		case 2:
 			hFile=CreateFile("Saved\\cnct_error.dat", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
-								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
+								OPEN_ALWAYS);
 			break;
 		case 3:
 			hFile=CreateFile("Saved\\auto_save.dat", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
-								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
+								OPEN_ALWAYS);
 			break;
 		}
 
@@ -120,7 +120,7 @@ public void	LoadResume(int type)
 		uint	bytesTransferred;
 
 		// 読み込み
-		SetFilePointer( hFile,0,0,FILE_BEGIN);		// 先頭へ
+		SetFilePointer( hFile,0,FILE_BEGIN);		// 先頭へ
 
 		ReadFile( hFile, ref Units, (uint)(sizeof(Array256<Unit>)), &bytesTransferred, null );
 		ReadFile( hFile, ref Fires, (uint)(sizeof(Array512<Fire>)), &bytesTransferred, null );
@@ -4219,7 +4219,7 @@ public void	InitializeGame()
 		FrameCount=1;
 
 		// 1.22's game_init seeds rand last, from the time (0x42A163).
-		srand( Trace?.Seeds?.Battle ?? (uint)time(null) );
+		srand( Trace?.Seeds?.Battle ?? (uint)time() );
 		Trace?.Reach(this, TracePoint.Seeded);
 		return;
 		}

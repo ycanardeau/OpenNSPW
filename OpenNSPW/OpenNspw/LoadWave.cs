@@ -30,7 +30,7 @@ public unsafe partial class Nspw
 /* WAVE 閉じる */
 public int YWaveClose()
 {
-	mmioClose(WaveFile,0);
+	mmioClose(WaveFile);
 	return 1;
 }
 
@@ -92,7 +92,7 @@ public int YWaveReadFile(HMMIO hmmioIn,uint cbRead,byte* pbDest,MMCKINFO* pckIn,
 	{
 		if (mmioinfoIn.pchNext == mmioinfoIn.pchEndRead)
 		{
-			if (mmioAdvance(hmmioIn,&mmioinfoIn,MMIO_READ)!=0)
+			if (mmioAdvance()!=0)
 			{
 				return E_FAIL;
 			}
@@ -133,13 +133,13 @@ public int YWaveOpenFile(string strFileName,HMMIO* phmmioIn,WAVEFORMATEX** ppwfx
 	int hr;
 	HMMIO hmmioIn;
 	hmmioIn = default;
-	if (!(hmmioIn = mmioOpen(strFileName,null,MMIO_ALLOCBUF | MMIO_READ)))
+	if (!(hmmioIn = mmioOpen(strFileName)))
 	{
 		return E_FAIL;
 	}
 	if (FAILED(hr = YReadMMIO(hmmioIn,pckInRIFF,ppwfxInfo)))
 	{
-		mmioClose(hmmioIn,0);
+		mmioClose(hmmioIn);
 		return E_FAIL;
 	}
 	*phmmioIn = hmmioIn;

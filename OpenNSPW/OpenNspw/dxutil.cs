@@ -5,12 +5,12 @@ namespace OpenNspw;
 public static class dxutil
 {
 	// The Release build's definitions: the HRESULT, without a trace or a message box.
-	public static int DXTRACE_ERR(string str, int hr)
+	public static int DXTRACE_ERR(int hr)
 	{
 		return hr;
 	}
 
-	public static int DXTRACE_ERR_MSGBOX(string str, int hr)
+	public static int DXTRACE_ERR_MSGBOX(int hr)
 	{
 		return hr;
 	}

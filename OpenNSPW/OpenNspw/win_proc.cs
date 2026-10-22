@@ -73,14 +73,14 @@ public void	LoadUserMap()
 	Array256<Array256<ushort>> path = default;					// マップ
 
 	var hFile=CreateFile( UserScenarioFileName /*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
-								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
+								OPEN_ALWAYS);
 
 	if( hFile != INVALID_HANDLE_VALUE )
 		{
 		uint	bytesTransferred;
 
 		// 読み込み
-		SetFilePointer( hFile,0,0,FILE_BEGIN);		// 先頭へ
+		SetFilePointer( hFile,0,FILE_BEGIN);		// 先頭へ
 
 		ReadFile( hFile, ref path, (uint)(sizeof(Array256<Array256<ushort>>)), &bytesTransferred, null );
 
@@ -121,14 +121,14 @@ public void	LoadScenarioFile2(string str)
 		CurrentMap=2;
 
 	var hFile=CreateFile(str, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
-								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
+								OPEN_ALWAYS);
 
 	if( hFile != INVALID_HANDLE_VALUE )
 		{
 		uint	bytesTransferred;
 
 		// 読み込み
-		SetFilePointer( hFile,0,0,FILE_BEGIN);		// 先頭へ
+		SetFilePointer( hFile,0,FILE_BEGIN);		// 先頭へ
 
 		ReadFile( hFile, ref path, (uint)(sizeof(Array256<Array256<ushort>>)), &bytesTransferred, null );
 
@@ -150,14 +150,14 @@ public void	LoadScenarioFile3()
 	Array256<Array256<ushort>> path = default;					// マップ
 
 	var hFile=CreateFile( UserScenarioFileName /*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
-								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
+								OPEN_ALWAYS);
 
 	if( hFile != INVALID_HANDLE_VALUE )
 		{
 		uint	bytesTransferred;
 
 		// 読み込み
-		SetFilePointer( hFile,0,0,FILE_BEGIN);		// 先頭へ
+		SetFilePointer( hFile,0,FILE_BEGIN);		// 先頭へ
 
 		ReadFile( hFile, ref path, (uint)(sizeof(Array256<Array256<ushort>>)), &bytesTransferred, null );
 
@@ -183,13 +183,13 @@ public void	SaveUserMap()
 	Array256<Array256<ushort>> path = default;					// マップ
 
 	var hFile=CreateFile( UserScenarioFileName/*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
-								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
+								OPEN_ALWAYS);
 
 	if( hFile != INVALID_HANDLE_VALUE )
 		{
 		//unsigned short		cmbt_map[256][256];					// マップ
 
-		SetFilePointer( hFile,0,0,FILE_BEGIN);		// 先頭へ
+		SetFilePointer( hFile,0,FILE_BEGIN);		// 先頭へ
 
 		// マップを記録
 		// データ を バッファへ
@@ -300,11 +300,11 @@ public void	InitializeRegistry()
 	/*** フォント設定 ***/
 	if (GameFont1)
 		DeleteObject(GameFont1);
-	GameFont1=CreateFont(16,0,0,0,0,FALSE,FALSE,FALSE,SHIFTJIS_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,null); // フォントオブジェクト
+	GameFont1=CreateFont(16,null); // フォントオブジェクト
 
 	if (GameFont2)
 		DeleteObject(GameFont2);
-	GameFont2=CreateFont(20,0,0,0,0,FALSE,FALSE,FALSE,SHIFTJIS_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,null); // フォントオブジェクト
+	GameFont2=CreateFont(20,null); // フォントオブジェクト
 
 	LeftButton=0;	RightButton=0;
 
@@ -319,8 +319,7 @@ public IDirectDrawSurface7? LoadBitmapSurface(string fileName)
 
 	// lインターフェイスビットマップをロード
 
-	var bit=(HBITMAP) LoadImage(null,fileName,IMAGE_BITMAP,0,0,
-								LR_DEFAULTSIZE|LR_LOADFROMFILE);
+	var bit=(HBITMAP) LoadImage(fileName);
 	if (!bit)
 		// ロード失敗、呼び出し側に失敗を返す
 		return null;
@@ -363,12 +362,12 @@ public IDirectDrawSurface7? LoadBitmapSurface(string fileName)
 
 		// 互換DCを生成
 
-		HDC bitmapDc=CreateCompatibleDC(hdc);
+		HDC bitmapDc=CreateCompatibleDC();
 
 		// インターフェイスをサーフェスにブロック転送
 
 		SelectObject(bitmapDc,bit);
-		BitBlt(hdc,0,0,surfaceWidth,surfaceHeight,bitmapDc,0,0,SRCCOPY);
+		BitBlt(hdc,0,0,surfaceWidth,surfaceHeight,bitmapDc,0,0);
 
 		// DCを解放
 
@@ -414,7 +413,7 @@ public nint	IDD_FILE_SAVE_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					// フォルダに次のなんかのファイルがあった。
 					SendDlgItemMessage( hWnd, IDC_LIST, LB_ADDSTRING, 0, FindFileData.cFileName );
 					}
-				FindClose(hFind);
+				FindClose();
 				}
 			UserScenarioFileName[0] = unchecked((byte)'\0');
 			break;
@@ -495,7 +494,7 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					// フォルダに次のなんかのファイルがあった。
 					SendDlgItemMessage( hWnd, IDC_LIST, LB_ADDSTRING, 0, FindFileData.cFileName );
 					}
-				FindClose(hFind);
+				FindClose();
 				}
 			UserScenarioFileName[0] = unchecked((byte)'\0');
 			break;
@@ -643,7 +642,7 @@ public void	WaitForDialog()
 
 	while(waitsForConnection!=0)
 		{
-		while( PeekMessage(ref msg, null, 0, 0, PM_REMOVE)!=0 )
+		while( PeekMessage(ref msg, PM_REMOVE)!=0 )
 			{
 			if (msg.message == WM_QUIT )
 				{
@@ -654,7 +653,7 @@ public void	WaitForDialog()
 
 			if ( IsDialogMessage( MainDialog, ref msg)==0 )
 				{
-				TranslateMessage(ref msg);
+				TranslateMessage();
 				DispatchMessage(ref msg);
 				}
 			}
@@ -948,7 +947,7 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 				case VK_F1:
 					if( IsEditingMap && Mode==GameMode.Battle )
 						{
-						/*g_hDlg =*/ CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_SAVE_Proc );
+						/*g_hDlg =*/ CreateDialog(MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_SAVE_Proc );
 
 						PlayInterfaceSound(SoundId.Click1);
 						}
@@ -965,7 +964,7 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 						ClearSelection2(1);
 
 						// シナリオ選択がユーザーシナリオならファイル選択します。
-						/*g_hDlg =*/ CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_LOAD_Proc );
+						/*g_hDlg =*/ CreateDialog(MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_LOAD_Proc );
 
 						PlayInterfaceSound(SoundId.Click1);
 						}
@@ -1179,7 +1178,7 @@ if( !IsEditingMap )
 			break;
 
 		default:
-			return DefWindowProc(hWnd,msg,wParam,lParam);
+			return DefWindowProc(hWnd,msg);
 		}
 
 	return unchecked((nint)0L);

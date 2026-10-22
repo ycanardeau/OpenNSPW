@@ -213,7 +213,7 @@ public sealed unsafe class DirectSound8(INspwPlatform platform) : IDirectSound8
 
 public partial class Nspw
 {
-	public int DirectSoundCreate8(object? pcGuidDevice, out IDirectSound8? ppDS8, object? pUnkOuter)
+	public int DirectSoundCreate8(out IDirectSound8? ppDS8)
 	{
 		ppDS8 = new DirectSound8(_platform);
 		return dsound.DS_OK;

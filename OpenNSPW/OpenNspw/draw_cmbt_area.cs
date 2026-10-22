@@ -30,16 +30,16 @@ public PixelPoint WorldToScreen(WorldPosition position)
 
 // Outlines an area of the world in the battle area: its top edge from left to right, then its right, bottom and left
 // edges, as the original draws its hit areas.
-public void DrawWorldRect(WorldRect area, uint color)
+public void DrawWorldRect(WorldRect area)
 	{
 	var topLeft=WorldToScreen(new WorldPosition(area.Left, area.Top));
 	var topRight=WorldToScreen(new WorldPosition(area.Right, area.Top));
 	var bottomRight=WorldToScreen(new WorldPosition(area.Right, area.Bottom));
 	var bottomLeft=WorldToScreen(new WorldPosition(area.Left, area.Bottom));
-	DrawLine4(topLeft, topRight, CMBT_WIDTH-1, CMBT_HEIGHT-1, color);
-	DrawLine4(topRight, bottomRight, CMBT_WIDTH-1, CMBT_HEIGHT-1, color);
-	DrawLine4(bottomRight, bottomLeft, CMBT_WIDTH-1, CMBT_HEIGHT-1, color);
-	DrawLine4(bottomLeft, topLeft, CMBT_WIDTH-1, CMBT_HEIGHT-1, color);
+	DrawLine4(topLeft, topRight, CMBT_WIDTH-1, CMBT_HEIGHT-1);
+	DrawLine4(topRight, bottomRight, CMBT_WIDTH-1, CMBT_HEIGHT-1);
+	DrawLine4(bottomRight, bottomLeft, CMBT_WIDTH-1, CMBT_HEIGHT-1);
+	DrawLine4(bottomLeft, topLeft, CMBT_WIDTH-1, CMBT_HEIGHT-1);
 	}
 
 //============================================================================
@@ -688,10 +688,10 @@ private void HandleUnitClick(ref Unit unit, ref RECT destination, ref int leftBu
 		else
 			{right=CMBT_WIDTH-1; bottom=CMBT_HEIGHT-1;}
 		var n=15;
-		DrawLine4(destination.left+n,destination.top+n,destination.right-n,destination.top+n,right,bottom,RGB(255,255,255));
-		DrawLine4(destination.right-n,destination.top+n,destination.right-n,destination.bottom-n,right,bottom,RGB(255,255,255));
-		DrawLine4(destination.right-n,destination.bottom-n,destination.left+n,destination.bottom-n,right,bottom,RGB(255,255,255));
-		DrawLine4(destination.left+n,destination.bottom-n,destination.left+n,destination.top+n,right,bottom,RGB(255,255,255));
+		DrawLine4(destination.left+n,destination.top+n,destination.right-n,destination.top+n,right,bottom);
+		DrawLine4(destination.right-n,destination.top+n,destination.right-n,destination.bottom-n,right,bottom);
+		DrawLine4(destination.right-n,destination.bottom-n,destination.left+n,destination.bottom-n,right,bottom);
+		DrawLine4(destination.left+n,destination.bottom-n,destination.left+n,destination.top+n,right,bottom);
 		}
 
 	if( leftButton==1 )
@@ -704,10 +704,10 @@ private void HandleUnitClick(ref Unit unit, ref RECT destination, ref int leftBu
 private void DrawSelectedUnit(ref RECT destination, int right, int bottom)
 	{
 	var n=10;
-	DrawLine4(destination.left+n,destination.top+n,destination.right-n,destination.top+n,right,bottom,RGB(255,255,255));
-	DrawLine4(destination.right-n,destination.top+n,destination.right-n,destination.bottom-n,right,bottom,RGB(255,255,255));
-	DrawLine4(destination.right-n,destination.bottom-n,destination.left+n,destination.bottom-n,right,bottom,RGB(255,255,255));
-	DrawLine4(destination.left+n,destination.bottom-n,destination.left+n,destination.top+n,right,bottom,RGB(255,255,255));
+	DrawLine4(destination.left+n,destination.top+n,destination.right-n,destination.top+n,right,bottom);
+	DrawLine4(destination.right-n,destination.top+n,destination.right-n,destination.bottom-n,right,bottom);
+	DrawLine4(destination.right-n,destination.bottom-n,destination.left+n,destination.bottom-n,right,bottom);
+	DrawLine4(destination.left+n,destination.bottom-n,destination.left+n,destination.top+n,right,bottom);
 	}
 
 private void DrawLandingPoint(SpriteId sprite)
@@ -720,10 +720,10 @@ private void DrawLandingPoint(SpriteId sprite)
 	mark.right=mark.left+Sprites[sprite].Size.Width-2;
 	mark.bottom=mark.top+Sprites[sprite].Size.Height-2;
 
-	DrawLine4(mark.left+n,mark.top+n,mark.right-n,mark.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-	DrawLine4(mark.right-n,mark.top+n,mark.right-n,mark.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-	DrawLine4(mark.right-n,mark.bottom-n,mark.left+n,mark.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-	DrawLine4(mark.left+n,mark.bottom-n,mark.left+n,mark.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+	DrawLine4(mark.left+n,mark.top+n,mark.right-n,mark.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1);
+	DrawLine4(mark.right-n,mark.top+n,mark.right-n,mark.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1);
+	DrawLine4(mark.right-n,mark.bottom-n,mark.left+n,mark.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1);
+	DrawLine4(mark.left+n,mark.bottom-n,mark.left+n,mark.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1);
 	}
 
 private void DrawTargetLine(ref Unit unit)
@@ -755,21 +755,21 @@ private void DrawTargetLine(ref Unit unit)
 		var barb=bearing;
 		barb-=10;
 		barb=barb.WrapNegative();
-		DrawLine4(WorldToScreen(tip), WorldToScreen(unit.Position+WorldVector.FromDirection(barb) * 20), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
+		DrawLine4(WorldToScreen(tip), WorldToScreen(unit.Position+WorldVector.FromDirection(barb) * 20), CMBT_WIDTH-1, CMBT_HEIGHT-1);
 
 		barb=bearing;
 		barb-=350;
 		barb=barb.WrapNegative();
-		DrawLine4(WorldToScreen(tip), WorldToScreen(unit.Position+WorldVector.FromDirection(barb) * 20), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
+		DrawLine4(WorldToScreen(tip), WorldToScreen(unit.Position+WorldVector.FromDirection(barb) * 20), CMBT_WIDTH-1, CMBT_HEIGHT-1);
 		}
 	else
 		{	// 視認不可
 		var from=new WorldPosition(unit.Position.X+10+20, unit.Position.Y+40);
 		var to=new WorldPosition(unit.Position.X-10+20, unit.Position.Y+20);
-		DrawLine4(WorldToScreen(from), WorldToScreen(to), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
+		DrawLine4(WorldToScreen(from), WorldToScreen(to), CMBT_WIDTH-1, CMBT_HEIGHT-1);
 		from=new WorldPosition(unit.Position.X-10+20, unit.Position.Y+40);
 		to=new WorldPosition(unit.Position.X+10+20, unit.Position.Y+20);
-		DrawLine4(WorldToScreen(from), WorldToScreen(to), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
+		DrawLine4(WorldToScreen(from), WorldToScreen(to), CMBT_WIDTH-1, CMBT_HEIGHT-1);
 		}
 	}
 
@@ -811,21 +811,21 @@ private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int leftB
 	for(n=0; !unit.IsPathEnd(n); n++)
 		{
 		//cl=(31<<7)|(0); // Ｇ 各値最大３１
-		DrawLine4(WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(-10, -10), WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(10, -10), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
-		DrawLine4(WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(10, -10), WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(10, 10), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
-		DrawLine4(WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(10, 10), WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(-10, 10), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
-		DrawLine4(WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(-10, 10), WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(-10, -10), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
+		DrawLine4(WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(-10, -10), WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(10, -10), CMBT_WIDTH-1, CMBT_HEIGHT-1);
+		DrawLine4(WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(10, -10), WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(10, 10), CMBT_WIDTH-1, CMBT_HEIGHT-1);
+		DrawLine4(WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(10, 10), WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(-10, 10), CMBT_WIDTH-1, CMBT_HEIGHT-1);
+		DrawLine4(WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(-10, 10), WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(-10, -10), CMBT_WIDTH-1, CMBT_HEIGHT-1);
 
 		if(n==0)
 			{
 			if( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked )
-				{DrawLine4(WorldToScreen(Units[unit.Carrier].Position), WorldToScreen(unit.GetPathPoint(n)), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));}
+				{DrawLine4(WorldToScreen(Units[unit.Carrier].Position), WorldToScreen(unit.GetPathPoint(n)), CMBT_WIDTH-1, CMBT_HEIGHT-1);}
 			else
-				{DrawLine4(Sprites[sprite].Position, WorldToScreen(unit.GetPathPoint(n)), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));}
+				{DrawLine4(Sprites[sprite].Position, WorldToScreen(unit.GetPathPoint(n)), CMBT_WIDTH-1, CMBT_HEIGHT-1);}
 			}
 		else
 			{
-			DrawLine4(WorldToScreen(unit.GetPathPoint(n-1)), WorldToScreen(unit.GetPathPoint(n)), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
+			DrawLine4(WorldToScreen(unit.GetPathPoint(n-1)), WorldToScreen(unit.GetPathPoint(n)), CMBT_WIDTH-1, CMBT_HEIGHT-1);
 			}
 		}
 
@@ -835,12 +835,12 @@ private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int leftB
 		if( MoveOrders[1].ClearsPath!=0 )
 			{
 			if( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked )
-				DrawLine4(WorldToScreen(Units[unit.Carrier].Position), new PixelPoint(CursorPosition.x, CursorPosition.y), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
+				DrawLine4(WorldToScreen(Units[unit.Carrier].Position), new PixelPoint(CursorPosition.x, CursorPosition.y), CMBT_WIDTH-1, CMBT_HEIGHT-1);
 			else
-				DrawLine4(WorldToScreen(unit.Position), new PixelPoint(CursorPosition.x, CursorPosition.y), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
+				DrawLine4(WorldToScreen(unit.Position), new PixelPoint(CursorPosition.x, CursorPosition.y), CMBT_WIDTH-1, CMBT_HEIGHT-1);
 			}
 		else
-			DrawLine4(WorldToScreen(unit.GetPathPoint(n-1)), new PixelPoint(CursorPosition.x, CursorPosition.y), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
+			DrawLine4(WorldToScreen(unit.GetPathPoint(n-1)), new PixelPoint(CursorPosition.x, CursorPosition.y), CMBT_WIDTH-1, CMBT_HEIGHT-1);
 		}
 
 	// 定点設定
@@ -953,10 +953,10 @@ private bool DrawUnitMarks(bool isPositioned, ref Unit unit, SpriteId sprite, re
 		if( Selections[1][m]!=0 )
 			{
 			var n=20;
-			DrawLine4(destination.left+n,destination.top+n,destination.right-n,destination.top+n,right,bottom,RGB(255,255,255));
-			DrawLine4(destination.right-n,destination.top+n,destination.right-n,destination.bottom-n,right,bottom,RGB(255,255,255));
-			DrawLine4(destination.right-n,destination.bottom-n,destination.left+n,destination.bottom-n,right,bottom,RGB(255,255,255));
-			DrawLine4(destination.left+n,destination.bottom-n,destination.left+n,destination.top+n,right,bottom,RGB(255,255,255));
+			DrawLine4(destination.left+n,destination.top+n,destination.right-n,destination.top+n,right,bottom);
+			DrawLine4(destination.right-n,destination.top+n,destination.right-n,destination.bottom-n,right,bottom);
+			DrawLine4(destination.right-n,destination.bottom-n,destination.left+n,destination.bottom-n,right,bottom);
+			DrawLine4(destination.left+n,destination.bottom-n,destination.left+n,destination.top+n,right,bottom);
 			}
 		}
 
@@ -970,17 +970,17 @@ private bool DrawUnitMarks(bool isPositioned, ref Unit unit, SpriteId sprite, re
 		{
 		// 攻撃先 としてのマーク
 		var n=10+(FrameCount%8)*2;
-		DrawLine4(destination.left+n,destination.top+n,destination.right-n,destination.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-		DrawLine4(destination.right-n,destination.top+n,destination.right-n,destination.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-		DrawLine4(destination.right-n,destination.bottom-n,destination.left+n,destination.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-		DrawLine4(destination.left+n,destination.bottom-n,destination.left+n,destination.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+		DrawLine4(destination.left+n,destination.top+n,destination.right-n,destination.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1);
+		DrawLine4(destination.right-n,destination.top+n,destination.right-n,destination.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1);
+		DrawLine4(destination.right-n,destination.bottom-n,destination.left+n,destination.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1);
+		DrawLine4(destination.left+n,destination.bottom-n,destination.left+n,destination.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1);
 		}
 	else  if( SelectedUnit!=0 && Units[SelectedUnit].Carrier==m && Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Flying)
 		{
 		// 攻撃先 としてのマーク
 		var n=15;
-		DrawLine4(destination.right-n-4,destination.bottom-n,destination.left+n+4,destination.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-		DrawLine4(destination.right-n-4,destination.bottom-n+2,destination.left+n+4,destination.bottom-n+2,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+		DrawLine4(destination.right-n-4,destination.bottom-n,destination.left+n+4,destination.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1);
+		DrawLine4(destination.right-n-4,destination.bottom-n+2,destination.left+n+4,destination.bottom-n+2,CMBT_WIDTH-1,CMBT_HEIGHT-1);
 		}
 
 		// 攻撃先 着艦先 の方向

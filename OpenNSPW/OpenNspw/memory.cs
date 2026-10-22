@@ -56,7 +56,7 @@ public static unsafe partial class crt
 	}
 
 	// The game's printf calls write to a console that the Windows application does not have.
-	public static int printf(string format, params object?[] args)
+	public static int printf()
 	{
 		return 0;
 	}
@@ -64,7 +64,7 @@ public static unsafe partial class crt
 
 public partial class Nspw
 {
-	public int time(object? destTime)
+	public int time()
 	{
 		return _platform.time();
 	}

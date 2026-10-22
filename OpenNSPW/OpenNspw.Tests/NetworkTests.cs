@@ -98,13 +98,13 @@ internal sealed class ConnectingGame : IDisposable
 			}
 		}
 
-		Assert.Equal(0, Game.CoCreateInstance(CLSID_DirectPlay8ThreadPool, null, Nspw.CLSCTX_INPROC_SERVER, IID_IDirectPlay8ThreadPool, out Game.DirectPlayThreadPool));
+		Assert.Equal(0, Game.CoCreateInstance(CLSID_DirectPlay8ThreadPool, IID_IDirectPlay8ThreadPool, out Game.DirectPlayThreadPool));
 		Game.DirectPlayThreadPool!.Initialize(null, Game.DirectPlayMessageHandler, DPNINITIALIZE_DISABLEPARAMVAL);
 		Game.DirectPlayThreadPool.SetThreadCount(unchecked((uint)-1), 0, 0);
-		Assert.Equal(0, Game.CoCreateInstance(CLSID_DirectPlay8Peer, null, Nspw.CLSCTX_INPROC_SERVER, IID_IDirectPlay8Peer, out Game.DirectPlayPeer));
+		Assert.Equal(0, Game.CoCreateInstance(CLSID_DirectPlay8Peer, IID_IDirectPlay8Peer, out Game.DirectPlayPeer));
 		Game.DirectPlayPeer!.Initialize(null, Game.DirectPlayMessageHandler, DPNINITIALIZE_DISABLEPARAMVAL);
 
-		Game.MainDialog = Game.CreateDialog(Game.hInstApp, MAKEINTRESOURCE(IDD_ADDRESS_OVERRIDE), null, Game.OverrideDlgProc);
+		Game.MainDialog = Game.CreateDialog(MAKEINTRESOURCE(IDD_ADDRESS_OVERRIDE), null, Game.OverrideDlgProc);
 	}
 
 	// The port the host listens on.
@@ -120,7 +120,7 @@ internal sealed class ConnectingGame : IDisposable
 	// One iteration of WinMain's loop: the queued window messages, then DirectPlay's events.
 	public void Pump()
 	{
-		while (Game.PeekMessage(ref _msg, null, 0, 0, PM_REMOVE) != 0)
+		while (Game.PeekMessage(ref _msg, PM_REMOVE) != 0)
 		{
 			if (_msg.message == WM_QUIT)
 			{
@@ -130,7 +130,7 @@ internal sealed class ConnectingGame : IDisposable
 
 			if (Game.IsDialogMessage(Game.MainDialog, ref _msg) == 0)
 			{
-				Game.TranslateMessage(ref _msg);
+				Game.TranslateMessage();
 				Game.DispatchMessage(ref _msg);
 			}
 		}

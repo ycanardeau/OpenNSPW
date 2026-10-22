@@ -235,7 +235,7 @@ public partial class Nspw
 {
 	private DirectInput8? _directInput;
 
-	public int DirectInput8Create(object? hinst, uint dwVersion, Guid riidltf, out IDirectInput8? ppvOut, object? punkOuter)
+	public int DirectInput8Create(out IDirectInput8? ppvOut)
 	{
 		_directInput = new DirectInput8();
 		ppvOut = _directInput;

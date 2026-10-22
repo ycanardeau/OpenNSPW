@@ -20,7 +20,6 @@ public unsafe partial class Nspw
 {
 
 // ウィンドウアプリケーション変数
-public object? hInstApp;
 public HWND hwndApp;
 [Original("my_cursor")] public object? GameCursor;
 //D3DPRESENT_PARAMETERS d3dpp;		// Direct3D is not used.
@@ -548,14 +547,11 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 		DebugValues[i]=0;
 
 	IsFullscreen=true;
-	hInstApp=hInst;
 
 	InitCommonControls();
 
 	// Read persistent state information from registry
-	RegCreateKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\DirectX DirectPlay Samples", 0, null,
-                    REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE, null,
-                    ref hDPlaySampleRegKey, null );
+	RegCreateKeyEx( "Software\\Microsoft\\DirectX DirectPlay Samples", ref hDPlaySampleRegKey );
 
     DXUtil_ReadStringRegKeyCch( hDPlaySampleRegKey, TEXT("Player Name"),
                              LocalPlayerName, MAX_PATH, TEXT("TestPlayer") );
@@ -567,11 +563,11 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
                              TEXT("localhost") );
 
 	// COM 初期化
-	CoInitializeEx( null, COINIT_MULTITHREADED );
+	CoInitializeEx();
 
 	// Create IDirectPlay8ThreadPool
 	// ＤＰをバックスレッドでなく通常のルーティン処理とするためにこれを設定する。
-	if( FAILED( CoCreateInstance( CLSID_DirectPlay8ThreadPool, null, CLSCTX_INPROC_SERVER,IID_IDirectPlay8ThreadPool, out DirectPlayThreadPool ) ))
+	if( FAILED( CoCreateInstance( CLSID_DirectPlay8ThreadPool, IID_IDirectPlay8ThreadPool, out DirectPlayThreadPool ) ))
         return (false ? 1 : 0);
 
 	// Init IDirectPlay8ThreadPool
@@ -581,7 +577,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
    DirectPlayThreadPool.SetThreadCount( unchecked((uint)((uint) -1)), 0, 0 );
 
 	// Create IDirectPlay8Peer
-	if( FAILED( CoCreateInstance( CLSID_DirectPlay8Peer, null, CLSCTX_INPROC_SERVER, IID_IDirectPlay8Peer, out DirectPlayPeer ) ))
+	if( FAILED( CoCreateInstance( CLSID_DirectPlay8Peer, IID_IDirectPlay8Peer, out DirectPlayPeer ) ))
 		return (false ? 1 : 0);
 
 	// Init IDirectPlay8Peer
@@ -594,7 +590,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 		{
 	// Create the initial dialog.
 	// 接続ダイアログ 　オーナーウィンドウが無いため、モーダレスになります。
-	MainDialog = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_ADDRESS_OVERRIDE), null, OverrideDlgProc);
+	MainDialog = CreateDialog(MAKEINTRESOURCE(IDD_ADDRESS_OVERRIDE), null, OverrideDlgProc);
 
 	int    waitsForConnection = TRUE;
 
@@ -603,7 +599,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	while (waitsForConnection!=0)
 		{
 		// Retrieve any windows messages.
-		while (PeekMessage(ref msg, null, 0, 0, PM_REMOVE)!=0)
+		while (PeekMessage(ref msg, PM_REMOVE)!=0)
 			{
 			if (msg.message == WM_QUIT)
 				{
@@ -614,7 +610,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 
 			if ( IsDialogMessage(MainDialog, ref msg)==0 )
 				{
-				TranslateMessage(ref msg);
+				TranslateMessage();
 				DispatchMessage(ref msg);
 				}
 	     }
@@ -638,11 +634,11 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 
 	// メインウインドウを作成する
 	ZeroMemory(&wc,(nuint)(sizeof(WNDCLASS)));
-	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+	wc.hbrBackground = (HBRUSH)GetStockObject();
 	wc.hInstance = hInst;
 	wc.lpfnWndProc = (WNDPROC)MainWndProc;
 	wc.lpszClassName = CLASS_NAME;
-	wc.hCursor = LoadCursor(null, IDC_ARROW);
+	wc.hCursor = LoadCursor();
 
 	RegisterClass(ref wc);
 
@@ -653,24 +649,24 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 		// フルスクリーン時はそのままで OK
 		width = WIDTH;
 		height = HEIGHT;
-		hwndApp = CreateWindow(CLASS_NAME,CAPTION, WS_POPUP ,CW_USEDEFAULT,CW_USEDEFAULT,width,height,null,null,hInst,null);
+		hwndApp = CreateWindow(CLASS_NAME,CAPTION, null);
 		}
 	else
 		{
 		// ウインドウ時はウインドウの外枠のサイズを考慮する
 		width = WIDTH + GetSystemMetrics(SM_CXDLGFRAME) * 2;
 		height = HEIGHT + GetSystemMetrics(SM_CYDLGFRAME) * 2 + GetSystemMetrics(SM_CYCAPTION);
-		hwndApp = CreateWindow(CLASS_NAME,CAPTION, WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX /*| WS_VISIBLE*/ ,CW_USEDEFAULT,CW_USEDEFAULT,width,height,null,null,hInst,null);
+		hwndApp = CreateWindow(CLASS_NAME,CAPTION, null);
 		}
 
 	ShowWindow(hwndApp,SW_SHOWNORMAL);
 	UpdateWindow(hwndApp);
 
-	ImmAssociateContext(hwndApp,null);			// 日本語入力機能を通常ゲーム時抑制する。
+	ImmAssociateContext();			// 日本語入力機能を通常ゲーム時抑制する。
 
 
 	// ダイレクトドロウ
-    var ddrval = DirectDrawCreateEx(null,out lpDD,IID_IDirectDraw7,null);
+    var ddrval = DirectDrawCreateEx(out lpDD);
     if (ddrval != DD_OK)
 		{
 		MessageBox(null,"DirectDrawの作成に失敗","Base",MB_OK | MB_ICONSTOP);
@@ -786,7 +782,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	// computer's fleets start, from where it has gone since.
 	if( IsSingleplayer )
 		{
-		srand( (uint)time(null) );
+		srand( (uint)time() );
 		StartSingleplayerGame();
 		}
 
@@ -794,12 +790,12 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	while(TRUE!=0)
 		{
 
-		if(  PeekMessage(ref msg,null,0,0,PM_NOREMOVE)!=0 )
+		if(  PeekMessage(ref msg,PM_NOREMOVE)!=0 )
 			{
-			if(GetMessage(ref msg,null,0,0)==0)
+			if(GetMessage(ref msg)==0)
 				break;
 
-			TranslateMessage(ref msg);
+			TranslateMessage();
 			DispatchMessage(ref msg);
 			}
 		else

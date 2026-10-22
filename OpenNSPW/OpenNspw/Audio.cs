@@ -29,17 +29,17 @@ public int	InitializeDirectMusic()
 	{
 
 	// DirectMusicLoader8 オブジェクトと DirectMusicPerformance8 オブジェクトの作成
-	if (FAILED(CoCreateInstance(CLSID_DirectMusicLoader,null,CLSCTX_INPROC,IID_IDirectMusicLoader8,out lpDML)))
+	if (FAILED(CoCreateInstance(CLSID_DirectMusicLoader,IID_IDirectMusicLoader8,out lpDML)))
 		{
 		// 失敗
-		printf("DirectMusicLoader8 オブジェクトの作成に失敗しました。\n");
+		printf();
 		return FALSE;
 		}
-	if (FAILED(CoCreateInstance(CLSID_DirectMusicPerformance,null,CLSCTX_INPROC,IID_IDirectMusicPerformance8,out lpDMP)))
+	if (FAILED(CoCreateInstance(CLSID_DirectMusicPerformance,IID_IDirectMusicPerformance8,out lpDMP)))
 		{
 		// 失敗
 		RELEASE(ref lpDML);
-		printf("DirectMusicPerformance8 オブジェクトの作成に失敗しました。\n");
+		printf();
 		return FALSE;
 		}
 	// パフォーマンスを初期化
@@ -48,7 +48,7 @@ public int	InitializeDirectMusic()
 		// 失敗
 		RELEASE(ref lpDMP);
 		RELEASE(ref lpDML);
-		printf("パフォーマンスの初期化に失敗しました。\n");
+		printf();
 		return FALSE;
 		}
 
@@ -66,7 +66,7 @@ public int	InitializeDirectSound()
 	{
 
 	// DirectSound8 の作成
-	if (FAILED(DirectSoundCreate8(null,out lpDS,null)))
+	if (FAILED(DirectSoundCreate8(out lpDS)))
 		{
 		MessageBox(null,"DirectSound オブジェクトの作成に失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
 		return FALSE;

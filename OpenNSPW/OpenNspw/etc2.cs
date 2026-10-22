@@ -412,8 +412,9 @@ public int		GetDetectionSize( int m , int n)
 //============================================================================
 //絶対スクリーン座標に線を描画する。色付き
 //----------------------------------------------------------------------------
+// The original's draw_line4 takes a color, and draws white whatever it is, with draw_line5.
 [Original("draw_line4")]
-public void	DrawLine4(int x1,int y1,int x2,int y2,int right,int bottom,uint color)
+public void	DrawLine4(int x1,int y1,int x2,int y2,int right,int bottom)
 	{
 
 	DrawLine5( x1, y1, x2, y2, right, bottom , 0xFFFF);
@@ -547,9 +548,9 @@ color=0xFFFF;
 
 	}
 
-public void DrawLine4(PixelPoint from, PixelPoint to, int right, int bottom, uint color)
+public void DrawLine4(PixelPoint from, PixelPoint to, int right, int bottom)
 	{
-	DrawLine4(from.X, from.Y, to.X, to.Y, right, bottom, color);
+	DrawLine4(from.X, from.Y, to.X, to.Y, right, bottom);
 	}
 
 public void DrawLine5(PixelPoint from, PixelPoint to, int right, int bottom, ushort color)

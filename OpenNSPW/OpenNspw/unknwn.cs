@@ -52,9 +52,6 @@ public static class dmusici
 
 	public const uint DMUS_APATH_SHARED_STEREOPLUSREVERB = 1;
 	public const uint DMUS_AUDIOF_ALL = 0x3F;
-
-	public const uint CLSCTX_INPROC = 0x3;
-	public const uint COINIT_MULTITHREADED = 0x0;
 }
 
 public partial class Nspw
@@ -66,7 +63,7 @@ public partial class Nspw
 		x = null;
 	}
 
-	public int DirectDrawCreateEx(object? lpGuid, out IDirectDraw7? lplpDD, Guid iid, object? pUnkOuter)
+	public int DirectDrawCreateEx(out IDirectDraw7? lplpDD)
 	{
 		lplpDD = new DirectDraw7(gdi, _platform.Present);
 		return ddraw.DD_OK;
