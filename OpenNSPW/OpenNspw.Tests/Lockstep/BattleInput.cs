@@ -27,9 +27,9 @@ internal abstract class BattleInput(LockstepRun run, LockstepGame game)
 	// Moves the battle area so that its center is near a point, with the minimap (unit_info_cont.cpp).
 	public void CenterOn(WorldPosition position)
 	{
-		var left = Math.Clamp(position.X - (CMBT_WIDTH / 2), MAP_LEFT, MAP_RIGHT - CMBT_WIDTH);
-		var top = Math.Clamp(position.Y + (CMBT_HEIGHT / 2), MAP_BOTTOM + CMBT_HEIGHT, MAP_TOP);
-		ShowMinimapCell((int)((left - MAP_LEFT) / 80), (int)((MAP_TOP - top) / 80));
+		var left = Math.Clamp(position.X - (CMBT_WIDTH / 2), World.Left, World.Right - CMBT_WIDTH);
+		var top = Math.Clamp(position.Y + (CMBT_HEIGHT / 2), World.Bottom + CMBT_HEIGHT, World.Top);
+		ShowMinimapCell((int)((left - World.Left) / 80), (int)((World.Top - top) / 80));
 	}
 }
 

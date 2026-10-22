@@ -25,7 +25,7 @@ public unsafe partial class Nspw
 	private const int UnitRandomOffset = 0x560;
 
 	// The table of the computer's fleets (0x4867A0, 11 entries of 0x498 bytes), which game_init clears; each entry ends
-	// with a path whose end, 9601 (MAP_RIGHT+1), it sets.
+	// with a path whose end, 9601 (World.Beyond), it sets.
 	private const uint FleetAddress = 0x4867A0;
 	private const int FleetSize = 0x498;
 	private const int FleetCount = 11;
@@ -351,7 +351,7 @@ public unsafe partial class Nspw
 		emulator.Cpu.Fpu.Atan2 = atan2;
 		SetNatives(emulator);
 		for (var i = 0; i < FleetCount; i++)
-			MemoryMarshal.Write(emulator.At(FleetAddress + (uint)(i * FleetSize + FleetPathEndOffset), sizeof(double)), (double)(MAP_RIGHT + 1));
+			MemoryMarshal.Write(emulator.At(FleetAddress + (uint)(i * FleetSize + FleetPathEndOffset), sizeof(double)), (double)World.Beyond);
 		return emulator;
 	}
 

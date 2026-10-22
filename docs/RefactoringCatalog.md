@@ -43,7 +43,7 @@ Each word means one thing in the new names. The original uses some words for sev
 
 | Term | Means | Examples |
 | --- | --- | --- |
-| **World** | The simulation's coordinate space: `double` coordinates from `WorldLeft` to `WorldRight` (x) and from `WorldBottom` to `WorldTop` (y, growing upward). | `WorldPosition`, `WorldVector`, `ReturnIntoWorld` |
+| **World** | The simulation's coordinate space: `double` coordinates from `World.Left` to `World.Right` (x) and from `World.Bottom` to `World.Top` (y, growing upward). | `WorldPosition`, `WorldVector`, `ReturnIntoWorld` |
 | **Map** | The terrain: the tile grid, which terrain is in use, the map files and the map editor. Never the coordinate space or the minimap. | `MapTiles`, `CurrentMap`, `LoadUserMap`, `IsEditingMap` |
 | **Minimap** | The overview of the whole world in the side panel, drawn on the `MAP_BASE` sprite. | `DrawMinimap`, `MakeMinimap` |
 | **Battle area** | The 768×768 part of the screen that shows the world. Its top-left corner is at `CameraPosition`, in world coordinates. | `BattleAreaWidth`, `DrawBattleArea`, `ScrollBattleArea` |
@@ -186,7 +186,7 @@ Per-kind tables become static classes, so that a value reads as table and kind (
 | `WIDTH`, `HEIGHT` | `WindowWidth`, `WindowHeight` |
 | `CMBT_WIDTH`, `CMBT_HEIGHT` | `BattleAreaWidth`, `BattleAreaHeight` |
 | `CMBT_REST` | `BattleAreaMargin` (check) |
-| `MAP_TOP`, `MAP_BOTTOM`, `MAP_RIGHT`, `MAP_LEFT` | `WorldTop`, `WorldBottom`, `WorldRight`, `WorldLeft` |
+| `MAP_TOP`, `MAP_BOTTOM`, `MAP_RIGHT`, `MAP_LEFT` | `World.Top`, `World.Bottom`, `World.Right`, `World.Left`; `MAP_RIGHT+1`, the end of a path and the place of the interface's sounds, is `World.Beyond` (`unit.EndPath(i)`, `unit.IsPathEnd(i)`) |
 | `SCRN_MAX_SPD`, `scrn_moving_add` | `MaxScrollSpeed`, `ScrollAcceleration` |
 | `CAPTION`, `CLASS_NAME` | `WindowCaption`, `WindowClassName` |
 | `PALT_RED`, `PALT_BUL` | `PaletteRed`, `PaletteBlue` |

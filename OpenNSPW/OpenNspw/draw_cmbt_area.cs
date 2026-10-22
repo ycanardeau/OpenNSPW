@@ -519,11 +519,11 @@ private void DrawMapTiles(int firstRow, int firstColumn, int editedRow, int edit
 					if( Units[f].IsUsed && Units[f].Side==LocalSide && Units[f].PlaneState!=UnitState.Parked  )
 						{
 						// 現地点からユニット地点への距離
-						var tile=new WorldPosition(((firstColumn+m)*Sprites[SpriteId.MapTiles].Size.Width)-MAP_RIGHT, MAP_TOP-((firstRow+n)*Sprites[SpriteId.MapTiles].Size.Height));
+						var tile=new WorldPosition(((firstColumn+m)*Sprites[SpriteId.MapTiles].Size.Width)-World.Right, World.Top-((firstRow+n)*Sprites[SpriteId.MapTiles].Size.Height));
 
 						var eye=EyeOf(ref Units[f]);	// 戦闘機場合、視点を
 
-						//((cm_scrn_x+m)*sprt[MAP_TIP_NRML].wd)-MAP_RIGHT
+						//((cm_scrn_x+m)*sprt[MAP_TIP_NRML].wd)-World.Right
 
 						var distance=(eye-tile).Length;
 						if( distance<=(double)GetDetectionSize(f,0) )
@@ -541,8 +541,8 @@ private void DrawMapTiles(int firstRow, int firstColumn, int editedRow, int edit
 				}
 
 			Sprites[SpriteId.MapTiles].Position = new PixelPoint(
-				m*Sprites[SpriteId.MapTiles].Size.Width-(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Size.Width,
-				n*Sprites[SpriteId.MapTiles].Size.Height-(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Size.Height);
+				m*Sprites[SpriteId.MapTiles].Size.Width-(int)(CameraPosition.X-World.Left)%Sprites[SpriteId.MapTiles].Size.Width,
+				n*Sprites[SpriteId.MapTiles].Size.Height-(int)(World.Top-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Size.Height);
 
 			if( MapTiles[firstRow+n][firstColumn+m]==0)
 				{
@@ -811,7 +811,7 @@ private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int leftB
 		DrawLine5(WorldToScreen(unit.Position), WorldToScreen(unit.EmergencyDestination), CMBT_WIDTH-1, CMBT_HEIGHT-1, PALT_RED);
 		}
 
-	for(n=0; unit.PathX[n]!=MAP_RIGHT+1; n++)
+	for(n=0; !unit.IsPathEnd(n); n++)
 		{
 		//cl=(31<<7)|(0); // Ｇ 各値最大３１
 		DrawLine4(WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(-10, -10), WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(10, -10), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
@@ -1094,8 +1094,8 @@ private bool AimLanding(SpriteId sprite, int x, int y)
 	// カーソルの示す、マップチップの場所
 	// BUG(NSPW NET): a cursor off the map gives a tile outside it, which NSPW NET reads out of bounds; the port throws
 	// instead (docs/KnownIssues.md).
-	var column=(int)(((x+40+(int)CameraPosition.X)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
-	var row=(int)((MAP_TOP-((int)CameraPosition.Y-y-40 ))/Sprites[SpriteId.MapTiles].Size.Height);
+	var column=(int)(((x+40+(int)CameraPosition.X)-World.Left)/Sprites[SpriteId.MapTiles].Size.Width);
+	var row=(int)((World.Top-((int)CameraPosition.Y-y-40 ))/Sprites[SpriteId.MapTiles].Size.Height);
 	if(
 		MapTiles[row][column]==9 ||
 		MapTiles[row][column]==8 ||
@@ -1104,7 +1104,7 @@ private bool AimLanding(SpriteId sprite, int x, int y)
 		MapTiles[row][column]==2
 		)
 		{
-		Sprites[sprite].Position = new PixelPoint((((x+40+(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Size.Width)/80)*80)-(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Size.Width, (((y+40+(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Size.Height)/80)*80)-(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Size.Height);
+		Sprites[sprite].Position = new PixelPoint((((x+40+(int)(CameraPosition.X-World.Left)%Sprites[SpriteId.MapTiles].Size.Width)/80)*80)-(int)(CameraPosition.X-World.Left)%Sprites[SpriteId.MapTiles].Size.Width, (((y+40+(int)(World.Top-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Size.Height)/80)*80)-(int)(World.Top-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Size.Height);
 		return true;
 		}
 
@@ -1158,12 +1158,12 @@ public void	DrawBattleArea()
 	infoArea.bottom=infoArea.top+Sprites[SpriteId.JapanUnitInfo].Size.Height;
 
 	// カーソルの示す、マップチップの場所
-	var editedColumn=(int)(((CursorPosition.x+40+(int)CameraPosition.X)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
-	var editedRow=(int)((MAP_TOP-((int)CameraPosition.Y-CursorPosition.y-40 ))/Sprites[SpriteId.MapTiles].Size.Height);
+	var editedColumn=(int)(((CursorPosition.x+40+(int)CameraPosition.X)-World.Left)/Sprites[SpriteId.MapTiles].Size.Width);
+	var editedRow=(int)((World.Top-((int)CameraPosition.Y-CursorPosition.y-40 ))/Sprites[SpriteId.MapTiles].Size.Height);
 
 	// 標準キャラよう背景の表示
-	var firstColumn=(int)((CameraPosition.X-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
-	var firstRow=(int)((MAP_TOP-CameraPosition.Y)/Sprites[SpriteId.MapTiles].Size.Height);
+	var firstColumn=(int)((CameraPosition.X-World.Left)/Sprites[SpriteId.MapTiles].Size.Width);
+	var firstRow=(int)((World.Top-CameraPosition.Y)/Sprites[SpriteId.MapTiles].Size.Height);
 
 	DrawMapTiles(firstRow, firstColumn, editedRow, editedColumn, ref keys, ref source, ref field);
 

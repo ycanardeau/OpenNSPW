@@ -99,8 +99,8 @@ internal sealed class Battlefield : Control
 	// The tile under a point of the battlefield, where the original puts the landing mark (AimLanding).
 	private static Vector2 SnapToTile(GameSnapshot snapshot, DrawingPoint point)
 	{
-		var offsetX = (int)(snapshot.CameraPosition.X - MAP_LEFT) % 80;
-		var offsetY = (int)(MAP_TOP - snapshot.CameraPosition.Y) % 80;
+		var offsetX = (int)(snapshot.CameraPosition.X - World.Left) % 80;
+		var offsetY = (int)(World.Top - snapshot.CameraPosition.Y) % 80;
 		return new((point.X + 40 + offsetX) / 80 * 80 - offsetX, (point.Y + 40 + offsetY) / 80 * 80 - offsetY);
 	}
 
@@ -112,8 +112,8 @@ internal sealed class Battlefield : Control
 			return false;
 
 		var camera = snapshot.CameraPosition;
-		var column = (point.X + 40 + (int)camera.X - MAP_LEFT) / 80;
-		var row = (MAP_TOP - ((int)camera.Y - point.Y - 40)) / 80;
+		var column = (point.X + 40 + (int)camera.X - World.Left) / 80;
+		var row = (World.Top - ((int)camera.Y - point.Y - 40)) / 80;
 		if (column is < 0 or > 255 || row is < 0 or > 255 || snapshot.MapTiles[row][column] is not (9 or 8 or 7 or 5 or 2))
 			return false;
 
@@ -135,7 +135,7 @@ internal sealed class Battlefield : Control
 				var (column, row) = (snapshot.FirstColumn + m, snapshot.FirstRow + n);
 				var tile = snapshot.MapTiles[row][column];
 				var frame = tile == 0 ? snapshot.FrameCount / 30 % 2 : 6 + (tile - 1);
-				var position = ToScreen(snapshot, MAP_LEFT + column * tiles.Size.Width, MAP_TOP - row * tiles.Size.Height) - new Vector2(tiles.Center.X, tiles.Center.Y);
+				var position = ToScreen(snapshot, World.Left + column * tiles.Size.Width, World.Top - row * tiles.Size.Height) - new Vector2(tiles.Center.X, tiles.Center.Y);
 				_art.Draw(batch, tiles, frame, 0, tiles.Size.Width, tiles.Size.Height, origin + position);
 			}
 		}
@@ -295,7 +295,7 @@ internal sealed class Battlefield : Control
 			batch.DrawLine(start, origin + ToScreen(snapshot, selected.EmergencyDestination.X, selected.EmergencyDestination.Y), Enemy, 1);
 
 		var end = start;
-		for (var n = 0; n < 64 && selected.PathX[n] != MAP_RIGHT + 1; n++)
+		for (var n = 0; n < 64 && !selected.IsPathEnd(n); n++)
 		{
 			var point = origin + ToScreen(snapshot, selected.PathX[n], selected.PathY[n]);
 			batch.DrawLine(end, point, Mark * 0.8f, 1);

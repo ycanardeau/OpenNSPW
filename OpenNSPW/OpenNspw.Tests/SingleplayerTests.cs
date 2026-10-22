@@ -305,10 +305,10 @@ public class SingleplayerTests
 		foreach (var m in new[] { computers, players })
 		{
 			ref var ship = ref game.Units[m];
-			ship.Position = new WorldPosition(all_head.MAP_RIGHT + 100, y);
-			ship.PathX[0] = all_head.MAP_RIGHT + 800;
+			ship.Position = new WorldPosition(World.Right + 100, y);
+			ship.PathX[0] = World.Right + 800;
 			ship.PathY[0] = y;
-			ship.PathX[1] = all_head.MAP_RIGHT + 1;
+			ship.EndPath(1);
 			ship.EmergencyFlags[0] = 0;
 			ship.IsStopping = false;
 			ship.GroupLeader = 0;
@@ -316,9 +316,9 @@ public class SingleplayerTests
 		}
 
 		run.Frames(20);
-		Assert.True(game.Units[computers].Position.X > all_head.MAP_RIGHT, $"The computer's ship is at x {game.Units[computers].Position.X}.");
-		Assert.NotEqual(all_head.MAP_RIGHT - 40, game.Units[computers].EmergencyDestination.X);
-		Assert.Equal(all_head.MAP_RIGHT - 40, game.Units[players].EmergencyDestination.X);
+		Assert.True(game.Units[computers].Position.X > World.Right, $"The computer's ship is at x {game.Units[computers].Position.X}.");
+		Assert.NotEqual(World.Right - 40, game.Units[computers].EmergencyDestination.X);
+		Assert.Equal(World.Right - 40, game.Units[players].EmergencyDestination.X);
 	}
 
 	// The units that the battle creates in a single-player game, such as the bases that transports land, have NSPW
@@ -362,7 +362,7 @@ public class SingleplayerTests
 		unit.IsStopping = false;
 		unit.PathX[0] = -8000;
 		unit.PathY[0] = -7000;
-		unit.PathX[1] = all_head.MAP_RIGHT + 1;
+		unit.EndPath(1);
 
 		game.UpdateBattle();
 
@@ -385,8 +385,8 @@ public class SingleplayerTests
 							 where Enumerable.Range(-1, 3).All(dr => Enumerable.Range(-1, 3).All(dc => IsSea(r + dr, c + dc)))
 								 && Enumerable.Range(1, 3).All(dc => IsSea(r, c + dc)) && game.MapTiles[r][c - 2] >= 1
 							 select (r, c)).First();
-		var x = all_head.MAP_LEFT + column * 80 + 20;
-		var y = all_head.MAP_TOP - row * 80 - 20;
+		var x = World.Left + column * 80 + 20;
+		var y = World.Top - row * 80 - 20;
 		var target = game.AddUnit(Side.UnitedStates, UnitKind.Cruiser, x + 200, y, 0);
 		var attacker = game.AddUnit(Side.Japan, UnitKind.Attacker, x, y, 0);
 		Assert.NotEqual(0, target);
@@ -414,14 +414,14 @@ public class SingleplayerTests
 		using var run = new SingleplayerRun(3);
 		run.Frames(2);
 		var game = run.Game;
-		var target = game.AddUnit(Side.UnitedStates, UnitKind.Cruiser, 0, all_head.MAP_TOP - 10, 0);
-		var attacker = game.AddUnit(Side.Japan, UnitKind.Attacker, -200, all_head.MAP_TOP - 10, 0);
+		var target = game.AddUnit(Side.UnitedStates, UnitKind.Cruiser, 0, World.Top - 10, 0);
+		var attacker = game.AddUnit(Side.Japan, UnitKind.Attacker, -200, World.Top - 10, 0);
 		Assert.NotEqual(0, target);
 		Assert.NotEqual(0, attacker);
-		game.Units[target].Position = new WorldPosition(0, all_head.MAP_TOP - 10);
+		game.Units[target].Position = new WorldPosition(0, World.Top - 10);
 		game.Units[target].IsFound = true;
 		ref var unit = ref game.Units[attacker];
-		unit.Position = new WorldPosition(-200, all_head.MAP_TOP - 10);
+		unit.Position = new WorldPosition(-200, World.Top - 10);
 		unit.Direction = 0;
 		unit.PlaneState = UnitState.Flying;
 		unit.Ammo = 1;
@@ -880,7 +880,7 @@ public class SingleplayerTests
 		plane.Carrier = navalBase;
 		plane.PathX[0] = -8500;
 		plane.PathX[1] = -8600;
-		plane.PathX[2] = all_head.MAP_RIGHT + 1;
+		plane.EndPath(2);
 
 		game.UpdateLanding(attacker);
 

@@ -102,7 +102,7 @@ internal static class BattleScripts
 	internal static WorldPosition TilePosition(Nspw nspw, int column, int row)
 	{
 		ref Sprite tiles = ref nspw.Sprites[SpriteId.MapTiles];
-		return new WorldPosition(MAP_LEFT + (column * tiles.Size.Width), MAP_TOP - (row * tiles.Size.Height));
+		return new WorldPosition(World.Left + (column * tiles.Size.Width), World.Top - (row * tiles.Size.Height));
 	}
 
 	// The tiles a transport's landing point can be on (draw_cmbt_area.cpp).
@@ -121,7 +121,7 @@ internal static class BattleScripts
 	{
 		ref Sprite units = ref nspw.Sprites[SpriteId.JapanUnits];
 		ref Sprite tiles = ref nspw.Sprites[SpriteId.MapTiles];
-		return ((int)((position.X + (units.Size.Width / 2) - MAP_LEFT) / tiles.Size.Width), (int)((MAP_TOP - position.Y + (units.Size.Height / 2)) / tiles.Size.Height));
+		return ((int)((position.X + (units.Size.Width / 2) - World.Left) / tiles.Size.Width), (int)((World.Top - position.Y + (units.Size.Height / 2)) / tiles.Size.Height));
 	}
 
 	// Whether a ship nearer than 80 to a point would stop ship m there (CheckCourseAhead in chara_cont.cpp).

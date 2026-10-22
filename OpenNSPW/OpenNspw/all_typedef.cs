@@ -104,6 +104,15 @@ public struct	Unit		// 全ての艦船、航空機、地図上の位置
 		PathY[i] = point.Y;
 		}
 
+	// Whether the path ends at point i: PathX[i] is World.Beyond, just east of the world.
+	public readonly bool IsPathEnd(int i) => PathX[i] == World.Beyond;
+
+	// Ends the path at point i.
+	public void EndPath(int i)
+		{
+		PathX[i] = World.Beyond;
+		}
+
 	// The slots of hp, arm and gas by meaning (docs/Refactoring.md, Union slots). They are references to the slots, so
 	// that they can be changed and passed by ref like the slots.
 

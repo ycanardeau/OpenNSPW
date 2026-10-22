@@ -203,7 +203,7 @@ public unsafe partial class Nspw
 			ref var unit = ref Units[f];
 			if( unit.IsUsed && unit.Side==LocalSide && unit.PlaneState!=UnitState.Parked )
 				{
-				var tile=new WorldPosition((column*Sprites[SpriteId.MapTiles].Size.Width)-MAP_RIGHT, MAP_TOP-(row*Sprites[SpriteId.MapTiles].Size.Height));
+				var tile=new WorldPosition((column*Sprites[SpriteId.MapTiles].Size.Width)-World.Right, World.Top-(row*Sprites[SpriteId.MapTiles].Size.Height));
 				if( (EyeOf(ref unit)-tile).Length<=(double)GetDetectionSize(f,0) )
 					return true;
 				}
@@ -224,8 +224,8 @@ public unsafe partial class Nspw
 	// (UpdateLowerEffects, UpdateUpperEffects).
 	public void ReadSight(Span<bool> tiles, out int firstColumn, out int firstRow, Span<bool> effects)
 	{
-		firstColumn=(int)((CameraPosition.X-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width)-SightMargin;
-		firstRow=(int)((MAP_TOP-CameraPosition.Y)/Sprites[SpriteId.MapTiles].Size.Height)-SightMargin;
+		firstColumn=(int)((CameraPosition.X-World.Left)/Sprites[SpriteId.MapTiles].Size.Width)-SightMargin;
+		firstRow=(int)((World.Top-CameraPosition.Y)/Sprites[SpriteId.MapTiles].Size.Height)-SightMargin;
 		for( var n=0; n<SightSize; n++ )
 			{
 			for( var m=0; m<SightSize; m++ )

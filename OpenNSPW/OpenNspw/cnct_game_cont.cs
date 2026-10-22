@@ -1348,7 +1348,7 @@ public void	SetUnitData(int m)
 		}
 
 	unit.SetPathPoint(0, unit.Position);
-	unit.PathX[1]=MAP_RIGHT+1;
+	unit.EndPath(1);
 	}
 
 //============================================================================
@@ -3972,7 +3972,7 @@ private void ClearUnits()
 		unit.Skill=0;
 		}
 
-	WorkPathX[0]=MAP_RIGHT+1;
+	WorkPathX[0]=World.Beyond;
 
 	SelectedUnit=0;
 	PreviousSelectedUnit=0;
@@ -4017,7 +4017,7 @@ private void StartFromSave(ref SyncFlagMessage flagMessage)
 		}
 	LoadScenarioData();		// シナリオナンバーからマップだけロードしてくれればいい。
 
-	WorkPathX[0]=MAP_RIGHT+1;
+	WorkPathX[0]=World.Beyond;
 	SelectedUnit=0;
 	PreviousSelectedUnit=0;
 	SelectionCount=0;

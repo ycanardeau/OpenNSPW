@@ -113,12 +113,12 @@ internal sealed class Minimap : Control
 	// A unit's tile on the map, from a point of the world, as the original puts its dot (DrawMinimap).
 	private static DrawingPoint Cell(double x, double y)
 	{
-		return new(MapLeft + (Math.Abs(all_head.MAP_LEFT) + (int)(x - 40)) / 80, MapTop + (Math.Abs(all_head.MAP_TOP) - (int)(y + 40)) / 80);
+		return new(MapLeft + (Math.Abs(World.Left) + (int)(x - 40)) / 80, MapTop + (Math.Abs(World.Top) - (int)(y + 40)) / 80);
 	}
 
 	private static bool IsOnMap(ref Unit unit)
 	{
-		return !(unit.Position.Y > all_head.MAP_TOP || unit.Position.Y < all_head.MAP_BOTTOM || unit.Position.X < all_head.MAP_LEFT || unit.Position.X > all_head.MAP_RIGHT);
+		return !(unit.Position.Y > World.Top || unit.Position.Y < World.Bottom || unit.Position.X < World.Left || unit.Position.X > World.Right);
 	}
 
 	protected override void OnPaint(PaintEventArgs e)
@@ -160,8 +160,8 @@ internal sealed class Minimap : Control
 
 		// Where the battlefield is: its top left corner's tile, 10 tiles across.
 		var camera = snapshot.CameraPosition;
-		var left = MapLeft + (Math.Abs(all_head.MAP_LEFT) + (int)camera.X) / 80;
-		var top = MapTop + (Math.Abs(all_head.MAP_TOP) - (int)camera.Y) / 80;
+		var left = MapLeft + (Math.Abs(World.Left) + (int)camera.X) / 80;
+		var top = MapTop + (Math.Abs(World.Top) - (int)camera.Y) / 80;
 		Painter.Frame(g, new(left, top, 11, 11), Theme.BrassLight);
 	}
 }

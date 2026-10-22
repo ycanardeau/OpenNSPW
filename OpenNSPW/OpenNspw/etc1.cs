@@ -1378,7 +1378,7 @@ private bool PlaneFireBullet(ref int target, ref Unit unit, ref Angle bearing, F
 
 private bool PlaneDropTorpedo(ref Unit unit, ref int target, ref Angle bearing, int m, FireKind kind)
 	{
-	if( IsInWorld(unit.Position) )
+	if( World.Contains(unit.Position) )
 		{
 		var (column, row)=TileAt(unit.Position);
 
@@ -1471,7 +1471,7 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int target, ref Angle bearing, 
 					if( Rules.FollowersFlyToRelease )
 						{
 other.SetPathPoint(0, unit.Position);
-other.PathX[1]=MAP_RIGHT+1;
+other.EndPath(1);
 						}
 
 					}
@@ -1483,7 +1483,7 @@ other.PathX[1]=MAP_RIGHT+1;
 		if( unit.IsGroupLeader==0 )
 			{
 			unit.SetPathPoint(0, unit.Position);
-			unit.PathX[1]=MAP_RIGHT+1;
+			unit.EndPath(1);
 			}
 
 		var n=FindFreeFire();
@@ -1559,7 +1559,7 @@ private bool AttackerDropBomb(ref int target, ref Unit unit, ref Angle bearing, 
 						if( Rules.FollowersFlyToRelease )
 							{
 other.SetPathPoint(0, unit.Position);
-other.PathX[1]=MAP_RIGHT+1;
+other.EndPath(1);
 							}
 
 						}
@@ -1909,7 +1909,7 @@ public void	SetDynamicDestination(int n)
 
 			// 目的地を決定
 			Units[n].SetPathPoint(0, Units[leader].Position+WorldVector.FromDirection(angle) * distance);
-			Units[n].PathX[1]=MAP_RIGHT+1;
+			Units[n].EndPath(1);
 			}
 		else
 			{
@@ -1992,7 +1992,7 @@ public void	SetDynamicDestination(int n)
 
 				// 目的地を決定
 				Units[n].SetPathPoint(0, Units[n].GetPathPoint(0)+WorldVector.FromDirection(angle) * distance);
-				Units[n].PathX[1]=MAP_RIGHT+1;
+				Units[n].EndPath(1);
 				}
 			}
 		}
@@ -2005,7 +2005,7 @@ public void	SetDynamicDestination(int n)
 		distance=Units[n].DistanceToLeader;
 
 		Units[n].SetPathPoint(0, Units[leader].Position+WorldVector.FromDirection(angle) * distance);
-		Units[n].PathX[1]=MAP_RIGHT+1;
+		Units[n].EndPath(1);
 
 		if( 1!=0  )
 			{
@@ -2063,7 +2063,7 @@ public void	SetFighterEmergencyDestination(int m)
 		if( unit.IsGroupLeader==0 )
 			{
 			unit.SetPathPoint(0, unit.Position);
-			unit.PathX[1]=MAP_RIGHT+1;
+			unit.EndPath(1);
 			}
 		}
 	}
@@ -2234,7 +2234,7 @@ public void	SetAttackerEmergencyDestination(int m)
 		if( unit.IsGroupLeader==0 )
 			{
 			unit.SetPathPoint(0, unit.Position);
-			unit.PathX[1]=MAP_RIGHT+1;
+			unit.EndPath(1);
 			}
 		else
 			{
@@ -2291,7 +2291,7 @@ public void	SetAttackerEmergencyDestination(int m)
 
 				// 昔の小隊長
 				unit.SetPathPoint(0, unit.Position);
-				unit.PathX[1]=MAP_RIGHT+1;
+				unit.EndPath(1);
 
 				}
 			}
@@ -2358,7 +2358,7 @@ public void	SetAttackerAttackDestination(int m)
 				other.EmergencyFlags[0]=10+((1+(other.FormationNumber%5))*20);
 
 				other.SetPathPoint(0, Units[target].Position);
-				other.PathX[1]=MAP_RIGHT+1;
+				other.EndPath(1);
 
 				}
 			}
@@ -2366,7 +2366,7 @@ public void	SetAttackerAttackDestination(int m)
 		}
 	else if( distance >= 400 )
 		{
-		if( unit.PathX[1]==MAP_RIGHT+1 )
+		if( unit.IsPathEnd(1) )
 			{
 			// ptin dbg
 			var pathPointArea=WorldRect.Around(unit.GetPathPoint(0), 35, 35);
@@ -2376,13 +2376,13 @@ public void	SetAttackerAttackDestination(int m)
 				}
 			var aim=Units[target].Position+WorldVector.FromDirection(Units[target].Direction); // とりあえずターン後
 			unit.SetPathPoint(0, aim);
-			unit.PathX[1]=MAP_RIGHT+1;
+			unit.EndPath(1);
 			unit.IsStopping=false;
 			}
 		}
 	else if ( distance >= 40 && (relativeBearing<=45||relativeBearing>=315))
 		{
-		if( unit.PathX[1]==MAP_RIGHT+1 )
+		if( unit.IsPathEnd(1) )
 			{
 			double ticks;
 			if(unit.Weapon==FireKind.Torpedo)
@@ -2391,7 +2391,7 @@ public void	SetAttackerAttackDestination(int m)
 				ticks=70.0;
 			var aim=Units[target].Position+WorldVector.FromDirection(Units[target].Direction) * (Units[target].Speed*ticks); // とりあえずターン後
 			unit.SetPathPoint(0, aim);
-			unit.PathX[1]=MAP_RIGHT+1;
+			unit.EndPath(1);
 			unit.IsStopping=false;
 			if( unit.IsGroupLeader!=0  )
 				{
@@ -2418,7 +2418,7 @@ public void	SetAttackerAttackDestination(int m)
 		if( pathPointArea.Contains(unit.Position) )
 			{
 			unit.SetPathPoint(0, unit.Position+WorldVector.FromDirection(unit.Direction) * 300);
-			unit.PathX[1]=MAP_RIGHT+1;
+			unit.EndPath(1);
 			unit.IsStopping=false;
 			}
 		}
@@ -2454,30 +2454,30 @@ public void ReturnIntoWorld(int m)
 	// 展開海域より外れたなら戻る
 	if( 1!=0  )
 		{
-		if( unit.Position.X>MAP_RIGHT )
+		if( unit.Position.X>World.Right )
 			{
-			unit.EmergencyDestination = new WorldPosition(MAP_RIGHT-40, unit.Position.Y-100+Random(200));
+			unit.EmergencyDestination = new WorldPosition(World.Right-40, unit.Position.Y-100+Random(200));
 			unit.EmergencyFlags[0]=50+Random(200);
 			return;
 			}
 
-		if( unit.Position.X<MAP_LEFT )
+		if( unit.Position.X<World.Left )
 			{
-			unit.EmergencyDestination = new WorldPosition(MAP_LEFT+40, unit.Position.Y-100+Random(200));
+			unit.EmergencyDestination = new WorldPosition(World.Left+40, unit.Position.Y-100+Random(200));
 			unit.EmergencyFlags[0]=50+Random(200);
 			return;
 			}
 
-		if( unit.Position.Y>MAP_TOP )
+		if( unit.Position.Y>World.Top )
 			{
-			unit.EmergencyDestination = new WorldPosition(unit.Position.X-100+Random(200), MAP_TOP-40);
+			unit.EmergencyDestination = new WorldPosition(unit.Position.X-100+Random(200), World.Top-40);
 			unit.EmergencyFlags[0]=50+Random(200);
 			return;
 			}
 
-		if( unit.Position.Y<MAP_BOTTOM )
+		if( unit.Position.Y<World.Bottom )
 			{
-			unit.EmergencyDestination = new WorldPosition(unit.Position.X-100+Random(200), MAP_BOTTOM+40);
+			unit.EmergencyDestination = new WorldPosition(unit.Position.X-100+Random(200), World.Bottom+40);
 			unit.EmergencyFlags[0]=50+Random(200);
 			return;
 			}

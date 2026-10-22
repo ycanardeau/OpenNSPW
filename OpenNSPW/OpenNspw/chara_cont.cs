@@ -718,7 +718,7 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 				unit.Hp=unit.MaxHp;
 
 				unit.SetPathPoint(0, Units[unit.Carrier].Position);
-				unit.PathX[1]=MAP_RIGHT+1;
+				unit.EndPath(1);
 
 				// BUG(NSPW NET): it counts the planes of LocalSide only, where it means the carrier's, so the two games of a
 				// network game count those of the rival's carriers differently (docs/KnownIssues.md). Kept as is for
@@ -827,10 +827,10 @@ private void SteerUnit(ref Unit unit, int m)
 
 				if( pathPointArea.Contains(unit.Position) )
 					{
-					if( unit.PathX[1]!=MAP_RIGHT+1 )
+					if( !unit.IsPathEnd(1) )
 						{
 						// ＰＰ＿ＸＹを一つずつずらす
-						for(var n=0; unit.PathX[n]!=MAP_RIGHT+1; n++)
+						for(var n=0; !unit.IsPathEnd(n); n++)
 							{
 							unit.SetPathPoint(n, unit.GetPathPoint(n+1));
 							}
@@ -855,7 +855,7 @@ private void SteerUnit(ref Unit unit, int m)
 										{
 										other.GroupLeader=0;
 										other.SetPathPoint(0, other.GetPathPoint(0)+new WorldVector(Random(600)-300, Random(600)-300));
-										other.PathX[1]=MAP_RIGHT+1;
+										other.EndPath(1);
 										}
 									}
 								if( unit.IsGroupLeader!=0 )
@@ -1102,19 +1102,19 @@ private void SetAcceleration(ref Unit unit, Angle turn, int land)
 private void ReplanBlockedRoute(ref Unit unit, int m, WorldRect? ahead)
 	{
 	int i;
-	for( i=1; i<=63 && unit.PathX[i]!=MAP_RIGHT+1; i++ )
+	for( i=1; i<=63 && !unit.IsPathEnd(i); i++ )
 		{
 		}
 
 	if( i>=2 )
 		{
 		unit.SetPathPoint(0, unit.GetPathPoint(i-1));
-		unit.PathX[1]=MAP_RIGHT+1;
+		unit.EndPath(1);
 		}
 	else if( ahead is { } area && area.Contains(unit.GetPathPoint(0)) )
 		{
 		unit.SetPathPoint(0, unit.Position);
-		unit.PathX[1]=MAP_RIGHT+1;
+		unit.EndPath(1);
 		}
 
 	SetCpuRoute(m, 1.0);
@@ -1151,7 +1151,7 @@ private void CheckCourseAheadAs122(ref Unit unit, int m, ref int land, Angle bea
 
 	// ＰＰ方向に陸地があるか
 	ahead=unit.Position+WorldVector.FromDirection(bearing) * 80;
-	if( IsInWorld(ahead) )
+	if( World.Contains(ahead) )
 		{
 		var (column, row)=TileAt(ahead);
 		if( MapTiles[row][column]>=1 && MapTiles[row][column]<=9 )
@@ -1206,7 +1206,7 @@ private void CheckCourseAhead(ref Unit unit, int m, ref int land, Angle bearing)
 		{
 		ahead=unit.Position+WorldVector.FromDirection(bearing) * 80;
 
-		if( IsInWorld(ahead) )
+		if( World.Contains(ahead) )
 			{
 			var (column, row)=TileAt(ahead);
 			if( MapTiles[row][column]>=1 && MapTiles[row][column]<=9 )

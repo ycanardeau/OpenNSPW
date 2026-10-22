@@ -211,25 +211,19 @@ public void	HandleInput()
 		IssueSingleplayerOrders();
 	}
 
-// Whether a position is in the world, its edges included.
-private static bool IsInWorld(WorldPosition position)
-	{
-	return !( position.Y>MAP_TOP || position.Y<MAP_BOTTOM || position.X<MAP_LEFT || position.X>MAP_RIGHT );
-	}
-
 // The tile of the terrain under a position in the world, by its column and row, as the original finds it: offset by
 // half a unit's sprite.
 private (int Column, int Row) TileAt(WorldPosition position)
 	{
-	return ((int)((position.X+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width),
-		(int)((MAP_TOP-position.Y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height));
+	return ((int)((position.X+(Sprites[SpriteId.JapanUnits].Size.Width/2)-World.Left)/Sprites[SpriteId.MapTiles].Size.Width),
+		(int)((World.Top-position.Y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height));
 	}
 
 // Ships: whether the world at a position is land, by the tile of the terrain there. A position outside the world is
 // not.
 private bool IsLandAt(WorldPosition position)
 	{
-	if( !IsInWorld(position) )
+	if( !World.Contains(position) )
 		return false;
 
 	var (column, row)=TileAt(position);
@@ -261,7 +255,7 @@ private bool IsShipAt(int m, WorldPosition point)
 private void TakeDetour(ref Unit unit, ref int index, WorldPosition start, double checkedDistance, double divisor, Angle direction, Angle minTurn, Angle maxTurn, ref double extraDistance, WorldPosition savedPoint, double extraStep, ref int error)
 	{
 	unit.SetPathPoint(index+1, unit.GetPathPoint(index));
-	unit.PathX[index+2]=MAP_RIGHT+1;
+	unit.EndPath(index+2);
 
 	var step=checkedDistance/divisor;
 	if(step<40)
@@ -292,7 +286,7 @@ private void TakeDetour(ref Unit unit, ref int index, WorldPosition start, doubl
 		if( turn>=(minTurn) && turn<=(maxTurn) && (extraDistance<=2000) )
 			{
 			unit.SetPathPoint(index, savedPoint);
-			unit.PathX[index+1]=MAP_RIGHT+1;
+			unit.EndPath(index+1);
 
 			extraDistance+=extraStep;
 
@@ -305,7 +299,7 @@ private void TakeDetour(ref Unit unit, ref int index, WorldPosition start, doubl
 			{
 			extraDistance=0;
 			unit.SetPathPoint(index+1, savedPoint);
-			unit.PathX[index+2]=MAP_RIGHT+1;
+			unit.EndPath(index+2);
 			}
 		}
 
@@ -378,7 +372,7 @@ public void	SetCpuRoute2(int m)
 		if(extraDistance!=0)
 			{
 			unit.SetPathPoint(index, savedPoint);
-			unit.PathX[index+1]=MAP_RIGHT+1;
+			unit.EndPath(index+1);
 
 			var toPoint=(unit.GetPathPoint(index)-unit.Position).NonZero();
 
@@ -497,7 +491,7 @@ public void	SetCpuRoute2(int m)
 					{
 					extraDistance=0;
 					unit.SetPathPoint(index+1, savedPoint);
-					unit.PathX[index+2]=MAP_RIGHT+1;
+					unit.EndPath(index+2);
 					index++;
 					}
 				}
@@ -592,7 +586,7 @@ public void	ApplyOrders()
 			// あるユニットに新ＰＰ＿ＸＹが設定された場合
 
 			int m=MoveOrders[e].Unit;
-			for(n=0; Units[m].PathX[n]!=MAP_RIGHT+1; n++)
+			for(n=0; !Units[m].IsPathEnd(n); n++)
 				{}
 			// The single-player game: the condition that NSPW NET has as a comment, || unit[m].used==cpu_side, and the
 			// computer's ships' route, as 1.22 has them (docs/Singleplayer.md).
@@ -603,7 +597,7 @@ public void	ApplyOrders()
 				MoveOrders[e].ClearsPath=0;
 
 				Units[m].SetPathPoint(0, MoveOrders[e].Destination);
-				Units[m].PathX[1]=MAP_RIGHT+1;
+				Units[m].EndPath(1);
 				n=1;
 
 				if( CpuSide!=Side.None && Units[m].Side==CpuSide && Units[m].Category!=UnitCategory.Plane )
@@ -614,7 +608,7 @@ public void	ApplyOrders()
 				if(n<64)
 					{
 					Units[m].SetPathPoint(n, MoveOrders[e].Destination);
-					Units[m].PathX[n+1]=MAP_RIGHT+1;
+					Units[m].EndPath(n+1);
 					}
 				}
 
@@ -725,8 +719,8 @@ public void	ScrollBattleArea(int direction)
 			if(ScrollSpeed>=SCRN_MAX_SPD)
 				ScrollSpeed=SCRN_MAX_SPD-1;
 			CameraPosition += new WorldVector(0, ScrollSpeed);
-			if(CameraPosition.Y>MAP_TOP)
-				CameraPosition = new WorldPosition(CameraPosition.X, MAP_TOP);
+			if(CameraPosition.Y>World.Top)
+				CameraPosition = new WorldPosition(CameraPosition.X, World.Top);
 			break;
 		case 2:		// UP RI
 			break;
@@ -735,8 +729,8 @@ public void	ScrollBattleArea(int direction)
 			if(ScrollSpeed>=SCRN_MAX_SPD)
 				ScrollSpeed=SCRN_MAX_SPD-1;
 			CameraPosition += new WorldVector(ScrollSpeed, 0);
-			if(CameraPosition.X>(MAP_RIGHT-CMBT_WIDTH) )
-				CameraPosition = new WorldPosition(MAP_RIGHT-CMBT_WIDTH, CameraPosition.Y);
+			if(CameraPosition.X>(World.Right-CMBT_WIDTH) )
+				CameraPosition = new WorldPosition(World.Right-CMBT_WIDTH, CameraPosition.Y);
 			break;
 		case 4:		// RI DW
 			break;
@@ -745,8 +739,8 @@ public void	ScrollBattleArea(int direction)
 			if(ScrollSpeed>=SCRN_MAX_SPD)
 				ScrollSpeed=SCRN_MAX_SPD-1;
 			CameraPosition -= new WorldVector(0, ScrollSpeed);
-			if(CameraPosition.Y<(MAP_BOTTOM+CMBT_HEIGHT) )
-				CameraPosition = new WorldPosition(CameraPosition.X, MAP_BOTTOM+CMBT_HEIGHT);
+			if(CameraPosition.Y<(World.Bottom+CMBT_HEIGHT) )
+				CameraPosition = new WorldPosition(CameraPosition.X, World.Bottom+CMBT_HEIGHT);
 			break;
 		case 6:		// DW LF
 			break;
@@ -755,8 +749,8 @@ public void	ScrollBattleArea(int direction)
 			if(ScrollSpeed>=SCRN_MAX_SPD)
 				ScrollSpeed=SCRN_MAX_SPD-1;
 			CameraPosition -= new WorldVector(ScrollSpeed, 0);
-			if(CameraPosition.X<MAP_LEFT)
-				CameraPosition = new WorldPosition(MAP_LEFT, CameraPosition.Y);
+			if(CameraPosition.X<World.Left)
+				CameraPosition = new WorldPosition(World.Left, CameraPosition.Y);
 			break;
 		case 8:		// LF UP
 			break;

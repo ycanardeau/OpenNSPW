@@ -160,7 +160,7 @@ public void	InitializeClouds()
 			return;
 
 		// Every coordinate here is a whole number, so the sums are the same in any order.
-		var origin=new WorldPosition(Random(abs(MAP_RIGHT)+abs(MAP_LEFT))-abs(MAP_LEFT), Random(abs(MAP_TOP)+abs(MAP_BOTTOM))-abs(MAP_BOTTOM));
+		var origin=new WorldPosition(Random(World.Width)-abs(World.Left), Random(World.Height)-abs(World.Bottom));
 
 		var offsetX=(double)( Random(Sprites[SpriteId.MapTiles].Size.Width*4)-Sprites[SpriteId.MapTiles].Size.Width*2 );
 
@@ -209,7 +209,7 @@ public void	UpdateClouds()
 			if( Result==GameResult.None )
 				{
 				cloud.Position -= new WorldVector(2.0, 0);
-				if( cloud.Position.X < MAP_LEFT )
+				if( cloud.Position.X < World.Left )
 					cloud.Used=0;
 				}
 			}
@@ -232,7 +232,7 @@ public void	UpdateClouds()
 		return;
 
 	// Every coordinate here is a whole number, so the sums are the same in any order.
-	var origin=new WorldPosition(MAP_RIGHT, Random(abs(MAP_TOP)+abs(MAP_BOTTOM))-abs(MAP_BOTTOM));
+	var origin=new WorldPosition(World.Right, Random(World.Height)-abs(World.Bottom));
 	var offsetX=(double)( Random(Sprites[SpriteId.MapTiles].Size.Width*4)-Sprites[SpriteId.MapTiles].Size.Width*2 );
 	n=0;
 	for( var m=0;m<3;m++)
@@ -360,7 +360,7 @@ private void UpdateCargo(ref Fire fire, ref int n)
 
 			if( fire.Ticks>=fire.ArmingTime && IsEffectTick )
 				{
-				if( IsInWorld(fire.Position) )
+				if( World.Contains(fire.Position) )
 					{
 					var (column, row)=TileAt(fire.Position);
 
@@ -993,7 +993,7 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 			effect.Animation=4;	// アニメーションパターン
 
 			effect.Position=fire.Position;
-			if( IsInWorld(fire.Position) )
+			if( World.Contains(fire.Position) )
 				{
 				(column, row)=TileAt(fire.Position);
 				}
@@ -1309,7 +1309,7 @@ private void CrashPlane(ref Unit unit, int m)
 
 	effect.Position=unit.Position;
 
-	if( IsInWorld(unit.Position) )
+	if( World.Contains(unit.Position) )
 		{
 		(column, row)=TileAt(unit.Position);
 		}

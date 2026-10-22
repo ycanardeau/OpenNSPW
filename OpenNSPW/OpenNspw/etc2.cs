@@ -24,15 +24,15 @@ private void SetUnitedStatesArrivalPoint(ref double x, ref double y, ref double 
 	switch(CurrentMap)
 		{
 		case 0:		// 南太平洋
-			x=MAP_RIGHT-Random(1200)-100;
-			y=MAP_BOTTOM-10;
+			x=World.Right-Random(1200)-100;
+			y=World.Bottom-10;
 			destinationX=x-200;
 			destinationY=y+500;
 y-=reinforcement*80;
 			break;
 
 		case 1:		// 中部太平洋
-			x=MAP_RIGHT+10;
+			x=World.Right+10;
 			y=Random(1200);
 			destinationX=x-500;
 			destinationY=y;
@@ -40,8 +40,8 @@ x+=reinforcement*80;
 			break;
 
 		case 2:		// 日本近海
-			x=MAP_RIGHT-Random(1200)-100;
-			y=MAP_BOTTOM-10;
+			x=World.Right-Random(1200)-100;
+			y=World.Bottom-10;
 			destinationX=x-200;
 			destinationY=y+500;
 y-=reinforcement*80;
@@ -51,29 +51,29 @@ y-=reinforcement*80;
 			switch(Reinforcements[(int)arrivingSide])
 				{
 				case 0:
-					x=MAP_LEFT-500;
-					y=MAP_TOP+500;
+					x=World.Left-500;
+					y=World.Top+500;
 					destinationX=x+1200;
 					destinationY=y-1200-Random(500);
 					y-=reinforcement*80;
 					break;
 				case 1:
-					x=MAP_RIGHT+500;
-					y=MAP_TOP+500;
+					x=World.Right+500;
+					y=World.Top+500;
 					destinationX=x-1200;
 					destinationY=y-1200-Random(500);
 					y-=reinforcement*80;
 					break;
 				case 2:
-					x=MAP_RIGHT+500;
-					y=MAP_BOTTOM-500;
+					x=World.Right+500;
+					y=World.Bottom-500;
 					destinationX=x-1200;
 					destinationY=y+1200+Random(500);
 					y+=reinforcement*80;
 					break;
 				case 3:
-					x=MAP_LEFT-500;
-					y=MAP_BOTTOM-500;
+					x=World.Left-500;
+					y=World.Bottom-500;
 					destinationX=x+1200;
 					destinationY=y+1200+Random(500);
 					y+=reinforcement*80;
@@ -88,24 +88,24 @@ private void SetJapanArrivalPoint(ref double x, ref double y, ref double destina
 	switch(CurrentMap)
 		{
 		case 0:		// 南太平洋
-			x=MAP_LEFT-10;
-			y=MAP_TOP-Random(1200);
+			x=World.Left-10;
+			y=World.Top-Random(1200);
 			destinationX=x+500;
 			destinationY=y-200;
 x-=reinforcement*80 ;
 			break;
 
 		case 1:		// 中部太平洋
-			x=MAP_LEFT-10;
-			y=MAP_BOTTOM+Random(1200);
+			x=World.Left-10;
+			y=World.Bottom+Random(1200);
 			destinationX=x+500;
 			destinationY=y+200;
 x-=reinforcement*80;
 			break;
 
 		case 2:		// 日本近海
-			x=MAP_LEFT+Random(1200);
-			y=MAP_TOP+10;
+			x=World.Left+Random(1200);
+			y=World.Top+10;
 			destinationX=x+200;
 			destinationY=y-500;
 y+=reinforcement*80;
@@ -115,29 +115,29 @@ y+=reinforcement*80;
 			switch(Reinforcements[(int)arrivingSide])
 				{
 				case 0:
-					x=MAP_LEFT-500;
-					y=MAP_TOP+500;
+					x=World.Left-500;
+					y=World.Top+500;
 					destinationX=x+1200;
 					destinationY=y-1200-Random(500);
 					y-=reinforcement*80;
 					break;
 				case 1:
-					x=MAP_RIGHT+500;
-					y=MAP_TOP+500;
+					x=World.Right+500;
+					y=World.Top+500;
 					destinationX=x-1200;
 					destinationY=y-1200-Random(500);
 					y-=reinforcement*80;
 					break;
 				case 2:
-					x=MAP_RIGHT+500;
-					y=MAP_BOTTOM-500;
+					x=World.Right+500;
+					y=World.Bottom-500;
 					destinationX=x-1200;
 					destinationY=y+1200+Random(500);
 					y+=reinforcement*80;
 					break;
 				case 3:
-					x=MAP_LEFT-500;
-					y=MAP_BOTTOM-500;
+					x=World.Left-500;
+					y=World.Bottom-500;
 					destinationX=x+1200;
 					destinationY=y+1200+Random(500);
 					y+=reinforcement*80;
@@ -248,7 +248,7 @@ public void OnUnitArrived(int side,int reinforcement)
 				m=AddUnit2(Side.UnitedStates,kind,variant,x,y,(double)90);
 
 			Units[m].SetPathPoint(0, new WorldPosition(destinationX, destinationY));
-			Units[m].PathX[1]=MAP_RIGHT+1;
+			Units[m].EndPath(1);
 
 			Units[m].PlaneState=UnitState.Flying;
 			Units[m].Speed=1.5;
@@ -773,7 +773,7 @@ public void	SelectUnit(int m)
 
 	MoveOrders[1].ClearsPath=1;
 
-	SelectedUnit=(short)m; SelectionCount=0; Selections[1][m]=1; CombatMenuKind=1; WorkPathX[0]=MAP_RIGHT+1;
+	SelectedUnit=(short)m; SelectionCount=0; Selections[1][m]=1; CombatMenuKind=1; WorkPathX[0]=World.Beyond;
 	CombatMenuSelection = (CombatMenuItem)Units[m].Mode;
 
 	// そのユニットの随伴機を枠付けします。
@@ -1016,7 +1016,7 @@ public void	SetLandingDestination(int n)
 		{
 		Units[n].SetPathPoint(0, Units[n].Position+new WorldVector(Random(400)-200, Random(400)-200));
 
-		Units[n].PathX[1]=MAP_RIGHT+1;
+		Units[n].EndPath(1);
 		Units[n].IsStopping=false;
 
 		return;
@@ -1045,7 +1045,7 @@ public void	SetLandingDestination(int n)
 
 	Units[n].SetPathPoint(3, Units[carrier].Position+WorldVector.FromDirection(heading) * 100.0);
 
-	Units[n].PathX[4]=MAP_RIGHT+1;
+	Units[n].EndPath(4);
 	Units[n].IsStopping=false;
 	}
 
@@ -1072,7 +1072,7 @@ public void	UpdateLanding( int n )
 		// もどる場所がない場合、あった場所で適当に動く
 		Units[n].SetPathPoint(0, Units[n].Position+new WorldVector(Random(400)-200, Random(400)-200));
 
-		Units[n].PathX[1]=MAP_RIGHT+1;
+		Units[n].EndPath(1);
 		Units[n].IsStopping=false;
 
 		return;
@@ -1086,7 +1086,7 @@ public void	UpdateLanding( int n )
 
 	heading=heading.WrapNegative();
 
-	for( count=0; Units[n].PathX[count]!=MAP_RIGHT+1; count++){}
+	for( count=0; !Units[n].IsPathEnd(count); count++){}
 
 	switch( count )
 		{

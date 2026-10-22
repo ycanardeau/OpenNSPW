@@ -113,7 +113,7 @@ public sealed class Trace122Tests
 		using var replay = new Trace122Replay(new MemoryStream(trace));
 		using var run = new SingleplayerRun(replay.Scenario, game => SetUp(game, replay));
 		run.Frames(Frames / 2);
-		run.Game.CameraPosition = new WorldPosition(MAP_LEFT, MAP_TOP);
+		run.Game.CameraPosition = new WorldPosition(World.Left, World.Top);
 		run.Frames(Frames / 2);
 
 		Assert.Null(replay.Divergence);

@@ -1132,7 +1132,7 @@ private void UpdateSystemMenu(ref Array8<int> length, ref Array8<Array128<byte>>
 					{
 //							bf_game_system_menu[1]=GO_GAME_SETTING;
 					go_cnct_game_setting();
-					SoundPlayEffect( NULL, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+					SoundPlayEffect( NULL, SoundId.Click2 ,(double)World.Beyond, 0);
 					}
 */
 				}
@@ -1324,15 +1324,15 @@ rival_mode=mode;
 // the map.
 private void ShowMinimapCell(int column, int row)
 	{
-	CameraPosition = new WorldPosition(MAP_LEFT+((column/MinimapCellSize)*80), MAP_TOP-((row/MinimapCellSize)*80));
-	if(CameraPosition.Y>MAP_TOP)
-		CameraPosition = new WorldPosition(CameraPosition.X, MAP_TOP);
-	if(CameraPosition.X>(MAP_RIGHT-CMBT_WIDTH) )
-		CameraPosition = new WorldPosition(MAP_RIGHT-CMBT_WIDTH, CameraPosition.Y);
-	if(CameraPosition.Y<(MAP_BOTTOM+CMBT_HEIGHT) )
-		CameraPosition = new WorldPosition(CameraPosition.X, MAP_BOTTOM+CMBT_HEIGHT);
-	if(CameraPosition.X<MAP_LEFT)
-		CameraPosition = new WorldPosition(MAP_LEFT, CameraPosition.Y);
+	CameraPosition = new WorldPosition(World.Left+((column/MinimapCellSize)*80), World.Top-((row/MinimapCellSize)*80));
+	if(CameraPosition.Y>World.Top)
+		CameraPosition = new WorldPosition(CameraPosition.X, World.Top);
+	if(CameraPosition.X>(World.Right-CMBT_WIDTH) )
+		CameraPosition = new WorldPosition(World.Right-CMBT_WIDTH, CameraPosition.Y);
+	if(CameraPosition.Y<(World.Bottom+CMBT_HEIGHT) )
+		CameraPosition = new WorldPosition(CameraPosition.X, World.Bottom+CMBT_HEIGHT);
+	if(CameraPosition.X<World.Left)
+		CameraPosition = new WorldPosition(World.Left, CameraPosition.Y);
 	}
 
 //============================================================================
@@ -1366,13 +1366,13 @@ public void	DrawMinimap()
 	// コンバット画面位置の描画
 	byte ownColor=0;
 	if( CameraPosition.X >= 0 )
-		destination.left=baseX+((abs(MAP_LEFT)+(int)(CameraPosition.X))/80)*MinimapCellSize;
+		destination.left=baseX+((abs(World.Left)+(int)(CameraPosition.X))/80)*MinimapCellSize;
 	else
-		destination.left=baseX+((abs(MAP_LEFT)+(int)(CameraPosition.X))/80)*MinimapCellSize;
+		destination.left=baseX+((abs(World.Left)+(int)(CameraPosition.X))/80)*MinimapCellSize;
 	if( CameraPosition.Y >= 0 )
-		destination.top=baseY+((abs(MAP_TOP)-(int)(CameraPosition.Y))/80)*MinimapCellSize;
+		destination.top=baseY+((abs(World.Top)-(int)(CameraPosition.Y))/80)*MinimapCellSize;
 	else
-		destination.top=baseY+((abs(MAP_TOP)-(int)(CameraPosition.Y))/80)*MinimapCellSize;
+		destination.top=baseY+((abs(World.Top)-(int)(CameraPosition.Y))/80)*MinimapCellSize;
 
 	destination.right=destination.left+10;
 	destination.bottom=destination.top+10;
@@ -1422,17 +1422,17 @@ public void	DrawMinimap()
 		{
 		ref var unit = ref Units[m];
 
-		if( unit.Side==LocalSide  &&   IsInWorld(unit.Position)    && !(unit.PlaneState==UnitState.Parked) && !(unit.Category==UnitCategory.Plane && (FrameCount%4)==0))
+		if( unit.Side==LocalSide  &&   World.Contains(unit.Position)    && !(unit.PlaneState==UnitState.Parked) && !(unit.Category==UnitCategory.Plane && (FrameCount%4)==0))
 			{
 			// マイユニット
 			if( unit.Position.X >= 0 )
-				destination.left=baseX+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*MinimapCellSize;
+				destination.left=baseX+((abs(World.Left)+(int)(unit.Position.X-40))/80)*MinimapCellSize;
 			else
-				destination.left=baseX+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*MinimapCellSize;
+				destination.left=baseX+((abs(World.Left)+(int)(unit.Position.X-40))/80)*MinimapCellSize;
 			if( unit.Position.Y >= 0 )
-				destination.top=baseY+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*MinimapCellSize;
+				destination.top=baseY+((abs(World.Top)-(int)(unit.Position.Y+40))/80)*MinimapCellSize;
 			else
-				destination.top=baseY+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*MinimapCellSize;
+				destination.top=baseY+((abs(World.Top)-(int)(unit.Position.Y+40))/80)*MinimapCellSize;
 
 			destination.right=destination.left+2;
 			destination.bottom=destination.top+2;
@@ -1452,32 +1452,32 @@ public void	DrawMinimap()
 
 			}
 
-		if( unit.IsUsed && unit.Side!=LocalSide && IsInWorld(unit.Position) && !(unit.PlaneState==UnitState.Parked) && unit.IsFound && !(unit.Category==UnitCategory.Plane && (FrameCount%4)==0) )
+		if( unit.IsUsed && unit.Side!=LocalSide && World.Contains(unit.Position) && !(unit.PlaneState==UnitState.Parked) && unit.IsFound && !(unit.Category==UnitCategory.Plane && (FrameCount%4)==0) )
 			{
 			// エネユニット
 			if( unit.Kind==UnitKind.Submarine && unit.IsSubmerged )
 				{
 				// 潜航中のおおよそ潜水艦
 				if( unit.ContactX >= 0 )
-					destination.left=baseX+((abs(MAP_LEFT)+(int)(unit.ContactX-40))/80)*MinimapCellSize;
+					destination.left=baseX+((abs(World.Left)+(int)(unit.ContactX-40))/80)*MinimapCellSize;
 				else
-					destination.left=baseX+((abs(MAP_LEFT)+(int)(unit.ContactX-40))/80)*MinimapCellSize;
+					destination.left=baseX+((abs(World.Left)+(int)(unit.ContactX-40))/80)*MinimapCellSize;
 				if( unit.ContactY >= 0 )
-					destination.top=baseY+((abs(MAP_TOP)-(int)(unit.ContactY+40))/80)*MinimapCellSize;
+					destination.top=baseY+((abs(World.Top)-(int)(unit.ContactY+40))/80)*MinimapCellSize;
 				else
-					destination.top=baseY+((abs(MAP_TOP)-(int)(unit.ContactY+40))/80)*MinimapCellSize;
+					destination.top=baseY+((abs(World.Top)-(int)(unit.ContactY+40))/80)*MinimapCellSize;
 				}
 			else
 				{
 				// 艦船基地航空機
 				if( unit.Position.X >= 0 )
-					destination.left=baseX+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*MinimapCellSize;
+					destination.left=baseX+((abs(World.Left)+(int)(unit.Position.X-40))/80)*MinimapCellSize;
 				else
-					destination.left=baseX+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*MinimapCellSize;
+					destination.left=baseX+((abs(World.Left)+(int)(unit.Position.X-40))/80)*MinimapCellSize;
 				if( unit.Position.Y >= 0 )
-					destination.top=baseY+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*MinimapCellSize;
+					destination.top=baseY+((abs(World.Top)-(int)(unit.Position.Y+40))/80)*MinimapCellSize;
 				else
-					destination.top=baseY+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*MinimapCellSize;
+					destination.top=baseY+((abs(World.Top)-(int)(unit.Position.Y+40))/80)*MinimapCellSize;
 				}
 			destination.right=destination.left+2;
 			destination.bottom=destination.top+2;

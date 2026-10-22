@@ -140,10 +140,9 @@ public void	PlaySound(IDirectSoundBuffer? buffer,short* nextBuffer,int volume)
 ---------------------------------------------*/
 [Original("SoundPlayEffect")]
 // A sound of the battle at a position in the world, heard if one of the player's units sees the position and it is
-// within 500 of the battle area. A position with an X of MAP_RIGHT+1 is heard always (PlayInterfaceSound).
+// within 500 of the battle area. A position with an X of World.Beyond is heard always (PlayInterfaceSound).
 public void PlaySoundEffect(SoundId sound,WorldPosition position)
 	{
-	RECT	hearingArea;
 	int size=default /* C4701 */;
 
 #if !SND_SW
@@ -152,7 +151,7 @@ return;
 
 #endif
 
-	if( position.X!=(double)(MAP_RIGHT+1) )
+	if( position.X!=(double)World.Beyond )
 		{
 		var isHeard=0;
 		for(var n=1;n<=MaxUnitId && isHeard==0 ;n++)
@@ -200,13 +199,9 @@ return;
 			}
 
 		// ptin dbg
-		hearingArea.left=-500;
-		hearingArea.top=CMBT_HEIGHT+500;
-		hearingArea.right=CMBT_WIDTH+500;
-		hearingArea.bottom=-500;
+		var hearingArea=new PixelRect(-500, CMBT_HEIGHT+500, CMBT_WIDTH+500, -500);
 
-		var screen=WorldToScreen(position);
-		if( PointInRect3(ref hearingArea, screen.X, screen.Y)==0 )
+		if( !hearingArea.ContainsWithTopAbove(WorldToScreen(position)) )
 			return;
 		}
 
@@ -226,9 +221,9 @@ return;
 
 	}
 
-// A sound of the interface, heard always: the original plays it at MAP_RIGHT+1, 0.
+// A sound of the interface, heard always: the original plays it at MAP_RIGHT+1, 0 (World.Beyond).
 public void PlayInterfaceSound(SoundId sound)
 	{
-	PlaySoundEffect(sound, new WorldPosition(MAP_RIGHT+1, 0));
+	PlaySoundEffect(sound, new WorldPosition(World.Beyond, 0));
 	}
 }

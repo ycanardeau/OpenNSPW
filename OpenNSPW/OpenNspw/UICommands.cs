@@ -246,8 +246,8 @@ public unsafe partial class Nspw
 	{
 		LastCameraMove = id;
 		CameraPosition = new WorldPosition(
-			Math.Clamp(CameraPosition.X+dx, MAP_LEFT, MAP_RIGHT-CMBT_WIDTH),
-			Math.Clamp(CameraPosition.Y-dy, MAP_BOTTOM+CMBT_HEIGHT, MAP_TOP));
+			Math.Clamp(CameraPosition.X+dx, World.Left, World.Right-CMBT_WIDTH),
+			Math.Clamp(CameraPosition.Y-dy, World.Bottom+CMBT_HEIGHT, World.Top));
 	}
 
 	// A click on the system menu that waits for a frame in which it counts, and the frame it was given in.

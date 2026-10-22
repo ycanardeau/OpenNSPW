@@ -118,9 +118,9 @@ internal sealed class Monkey(LockstepGame game, uint seed)
 		{
 			ref Unit unit = ref nspw.Units[m];
 			ref Sprite minimap = ref nspw.Sprites[SpriteId.Minimap];
-			var left = Math.Clamp(unit.Position.X - (CMBT_WIDTH / 2), MAP_LEFT, MAP_RIGHT - CMBT_WIDTH);
-			var top = Math.Clamp(unit.Position.Y + (CMBT_HEIGHT / 2), MAP_BOTTOM + CMBT_HEIGHT, MAP_TOP);
-			return (CMBT_WIDTH + 8 + 5 + (int)((left - MAP_LEFT) / 80), CMBT_HEIGHT - minimap.Size.Height + 8 + 5 + (int)((MAP_TOP - top) / 80));
+			var left = Math.Clamp(unit.Position.X - (CMBT_WIDTH / 2), World.Left, World.Right - CMBT_WIDTH);
+			var top = Math.Clamp(unit.Position.Y + (CMBT_HEIGHT / 2), World.Bottom + CMBT_HEIGHT, World.Top);
+			return (CMBT_WIDTH + 8 + 5 + (int)((left - World.Left) / 80), CMBT_HEIGHT - minimap.Size.Height + 8 + 5 + (int)((World.Top - top) / 80));
 		});
 		PressAt(() => ((int)(nspw.Units[m].Position.X - nspw.CameraPosition.X), (int)(nspw.CameraPosition.Y - nspw.Units[m].Position.Y)));
 		PressAt(() =>
