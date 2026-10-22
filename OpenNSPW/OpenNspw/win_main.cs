@@ -246,12 +246,12 @@ public int FrameCount;
 //
 [Original("rival_ver")] public Array16<byte> RivalVersion;
 
-private void DrawRivalChat(ref Array128<byte> ach, ref HDC hdc)
+private void DrawRivalChat(ref Array128<byte> text, ref HDC hdc)
 	{
 	if(RivalChatDisplayTime!=0)
 		{
-		var len = wsprintf(ach, RivalChat );
-		TextOut(hdc, 10, 240+170, ach, len);
+		var length = wsprintf(text, RivalChat );
+		TextOut(hdc, 10, 240+170, text, length);
 		RivalChatDisplayTime--;
 		if(RivalChatDisplayTime==0)
 			{
@@ -263,12 +263,12 @@ private void DrawRivalChat(ref Array128<byte> ach, ref HDC hdc)
 		}
 	}
 
-private void DrawMyChat(ref Array128<byte> ach, ref HDC hdc)
+private void DrawMyChat(ref Array128<byte> text, ref HDC hdc)
 	{
 	if(MyChatDisplayTime!=0)
 		{
-		var len = wsprintf(ach, MyChat );
-		TextOut(hdc, 10, 200+170, ach, len);
+		var length = wsprintf(text, MyChat );
+		TextOut(hdc, 10, 200+170, text, length);
 		MyChatDisplayTime--;
 		if(MyChatDisplayTime==0)
 			{
@@ -280,39 +280,39 @@ private void DrawMyChat(ref Array128<byte> ach, ref HDC hdc)
 		}
 	}
 
-private void DrawDebugInfo(ref int len, ref Array128<byte> ach, int no)
+private void DrawDebugInfo(ref int length, ref Array128<byte> text, int selected)
 	{
 	switch( DebugMenu )
 		{
 		case 0:
-			len = wsprintf(ach, "%d  :%d  :%d  :%d  :%d", Units[SelectedUnit].info[1], Units[SelectedUnit].info[4], Units[SelectedUnit].info[7], Units[SelectedUnit].info[8], Units[81].info[0] );
+			length = wsprintf(text, "%d  :%d  :%d  :%d  :%d", Units[SelectedUnit].info[1], Units[SelectedUnit].info[4], Units[SelectedUnit].info[7], Units[SelectedUnit].info[8], Units[81].info[0] );
 			break;
 		case 1:
-			len = wsprintf(ach, "put_trgt %d put_kind %d cmbt_x %d cmbt_y %d crsr_pt.x %d crsr_pt.y %d ",EditorTarget, EditorKind, (int)CameraPosition.X, (int)CameraPosition.Y, (int)CursorPosition.x, (int)CursorPosition.y  );
+			length = wsprintf(text, "put_trgt %d put_kind %d cmbt_x %d cmbt_y %d crsr_pt.x %d crsr_pt.y %d ",EditorTarget, EditorKind, (int)CameraPosition.X, (int)CameraPosition.Y, (int)CursorPosition.x, (int)CursorPosition.y  );
 			break;
 		case 2:
-			len = wsprintf(ach, "cnct_game=%d you_are_host=%d you_can_order=%d new_pp[1].used=%d",IsNetworkGame,IsHost,CanOrder,MoveOrders[1].Unit);
+			length = wsprintf(text, "cnct_game=%d you_are_host=%d you_can_order=%d new_pp[1].used=%d",IsNetworkGame,IsHost,CanOrder,MoveOrders[1].Unit);
 			break;
 		case 3:
-			len = wsprintf(ach, "you_ordered=%d you_can_order=%d new_pp[1].used=%d",HasOrdered,CanOrder,MoveOrders[1].Unit);
+			length = wsprintf(text, "you_ordered=%d you_can_order=%d new_pp[1].used=%d",HasOrdered,CanOrder,MoveOrders[1].Unit);
 			break;
 		case 4:
-			len = wsprintf(ach, "game_speed=%d",GameSpeed);
+			length = wsprintf(text, "game_speed=%d",GameSpeed);
 			break;
 		case 5:
-			len = wsprintf(ach, "CR_X=%02d CR_Y=%02d Ri_btn=%d Lf_btn=%d ", CursorPosition.x,CursorPosition.y, RightButton, LeftButton );
+			length = wsprintf(text, "CR_X=%02d CR_Y=%02d Ri_btn=%d Lf_btn=%d ", CursorPosition.x,CursorPosition.y, RightButton, LeftButton );
 			break;
 
 		case 6:
-			len = wsprintf(ach, "go_next_1=%d go_next_2=%d", CanAdvance1, CanAdvance2 );
+			length = wsprintf(text, "go_next_1=%d go_next_2=%d", CanAdvance1, CanAdvance2 );
 			break;
 
 		case 7:
-			len = wsprintf(ach, "hp[0]=%d arm[0]=%d", Units[no].Hp, Units[no].Weapon );
+			length = wsprintf(text, "hp[0]=%d arm[0]=%d", Units[selected].Hp, Units[selected].Weapon );
 			break;
 
 		case 8:
-			len = wsprintf(ach, "spry_rate[0]=%d [1]=%d  first_sply_pt[0]=%d [1]=%d  rvrs_time=%d _rule=%d", SupplyRates[0], SupplyRates[1], InitialSupplyPoints[0], InitialSupplyPoints[1], SwapTime, SwapRule );
+			length = wsprintf(text, "spry_rate[0]=%d [1]=%d  first_sply_pt[0]=%d [1]=%d  rvrs_time=%d _rule=%d", SupplyRates[0], SupplyRates[1], InitialSupplyPoints[0], InitialSupplyPoints[1], SwapTime, SwapRule );
 			break;
 
 		default:
@@ -331,7 +331,7 @@ private void DrawDebugInfo(ref int len, ref Array128<byte> ach, int no)
 public void	UpdateFrame()
 	{
 	DDBLTFX ddbltfx;
-	short		chara_loop;
+	short		ticks;
 
 	Now = timeGetTime();
 
@@ -340,24 +340,24 @@ public void	UpdateFrame()
 	if( IsSingleplayer && Mode==GameMode.Battle && !IsEditingMap )
 		{
 		// 1.22's frame, on its timer.
-		if( !TryStartSingleplayerFrame(out chara_loop) )
+		if( !TryStartSingleplayerFrame(out ticks) )
 			return;
 		}
 	else
 		{
 		if( IsEditingMap )
-			chara_loop=1;
+			ticks=1;
 		else if( Mode==GameMode.Battle )
 			{
 			if( Buttons.HasFlag(InputButtons.Space) )
-				chara_loop=20;
+				ticks=20;
 			else
-				chara_loop=GameSpeed;
+				ticks=GameSpeed;
 			}
 		else
-			chara_loop=1;
+			ticks=1;
 
-		if( chara_loop==1 && Elapsed<=45+5 )
+		if( ticks==1 && Elapsed<=45+5 )
 			{
 			return;
 			}
@@ -407,7 +407,7 @@ public void	UpdateFrame()
 				return;
 				}
 
-			for( int i=chara_loop; i>=1; i-- )
+			for( int i=ticks; i>=1; i-- )
 				{
 				IsDrawnTick=i==1;
 				Trace?.Reach(this, TracePoint.Tick);
@@ -437,7 +437,7 @@ public void	UpdateFrame()
 		}
 
 	HDC hdc;
-	Array128<byte> ach = default;
+	Array128<byte> text = default;
 
 	if (DD_OK==lpDDSBack.GetDC(&hdc))
 		{
@@ -446,42 +446,42 @@ public void	UpdateFrame()
 
 #if DBG_MODE
 
-		int no=SelectedUnit;
+		int selected=SelectedUnit;
 
-		var len = wsprintf(ach, "dbg[0]=%d [1]=%d [2]=%d [3]=%d [4]=%d  :%d",DebugValues[0],DebugValues[1],DebugValues[2],DebugValues[3],DebugValues[4] ,SelectedUnit   );
-		TextOut(hdc, 0, 0, ach, len);
+		var length = wsprintf(text, "dbg[0]=%d [1]=%d [2]=%d [3]=%d [4]=%d  :%d",DebugValues[0],DebugValues[1],DebugValues[2],DebugValues[3],DebugValues[4] ,SelectedUnit   );
+		TextOut(hdc, 0, 0, text, length);
 
-		len = wsprintf(ach, "unit_out=%d ccc_out=%d rnd_out=%d rnd_count=%d CCC=%d FrameC=%d Sinario=%d host_side=%d rival_mode=%d" ,AreUnitsOutOfSync ,IsTickOutOfSync,IsRandomOutOfSync,RandomCount ,Tick, FrameCount, ScenarioNumber, HostSide, RivalMode);
-		TextOut(hdc, 0, 20, ach, len);
+		length = wsprintf(text, "unit_out=%d ccc_out=%d rnd_out=%d rnd_count=%d CCC=%d FrameC=%d Sinario=%d host_side=%d rival_mode=%d" ,AreUnitsOutOfSync ,IsTickOutOfSync,IsRandomOutOfSync,RandomCount ,Tick, FrameCount, ScenarioNumber, HostSide, RivalMode);
+		TextOut(hdc, 0, 20, text, length);
 
-		len = wsprintf(ach, "Dbg[5]=%d  bf_cc_count[0]=%d [1]=%d   bf_rnd_count[0]=%d [1]=%d  ccc_wait[0]=%d  [1]=%d " ,DebugValues[5], TickChecksums[0], TickChecksums[1], RandomChecksums[0], RandomChecksums[1], TickWaits[0], TickWaits[1] );
-		TextOut(hdc, 0, 40, ach, len);
+		length = wsprintf(text, "Dbg[5]=%d  bf_cc_count[0]=%d [1]=%d   bf_rnd_count[0]=%d [1]=%d  ccc_wait[0]=%d  [1]=%d " ,DebugValues[5], TickChecksums[0], TickChecksums[1], RandomChecksums[0], RandomChecksums[1], TickWaits[0], TickWaits[1] );
+		TextOut(hdc, 0, 40, text, length);
 
-		DrawDebugInfo(ref len, ref ach, no);
+		DrawDebugInfo(ref length, ref text, selected);
 
-		TextOut(hdc, 0, 60, ach, len);
+		TextOut(hdc, 0, 60, text, length);
 #endif
 
 #if !LNGG_VER
 			if(AreUnitsOutOfSync)
 				{
-				len = wsprintf(ach, "ユニットデータ同期異常、ゲームを中断されたし。");
-				TextOut(hdc, 0, 100, ach, len);
+				length = wsprintf(text, "ユニットデータ同期異常、ゲームを中断されたし。");
+				TextOut(hdc, 0, 100, text, length);
 				}
 			if(IsTickOutOfSync)
 				{
-				len = wsprintf(ach, "プログラム同期異常、ゲームを中断されたし。");
-				TextOut(hdc, 0, 120, ach, len);
+				length = wsprintf(text, "プログラム同期異常、ゲームを中断されたし。");
+				TextOut(hdc, 0, 120, text, length);
 				}
 			if(IsRandomOutOfSync)
 				{
-				len = wsprintf(ach, "ランダム同期異常、ゲームを中断されたし。");
-				TextOut(hdc, 0, 140, ach, len);
+				length = wsprintf(text, "ランダム同期異常、ゲームを中断されたし。");
+				TextOut(hdc, 0, 140, text, length);
 				}
 			if( ActivePlayerCount!=2 && !IsSingleplayer )
 				{
-				len = wsprintf(ach, "接続相手がいなくなりました。");
-				TextOut(hdc, 0, 160, ach, len);
+				length = wsprintf(text, "接続相手がいなくなりました。");
+				TextOut(hdc, 0, 160, text, length);
 				}
 #else
 			if(unit_out)
@@ -511,9 +511,9 @@ public void	UpdateFrame()
 
 		SetTextColor(hdc, RGB(255, 255, 0));
 
-		DrawMyChat(ref ach, ref hdc);
+		DrawMyChat(ref text, ref hdc);
 
-		DrawRivalChat(ref ach, ref hdc);
+		DrawRivalChat(ref text, ref hdc);
 
 		lpDDSBack.ReleaseDC(hdc);
 		}
@@ -596,11 +596,11 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	// 接続ダイアログ 　オーナーウィンドウが無いため、モーダレスになります。
 	g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_ADDRESS_OVERRIDE), null, OverrideDlgProc);
 
-	int    wait_for_connect = TRUE;
+	int    waitsForConnection = TRUE;
 
 	// ホストも、ゲストもここで接続が完了するまでループ
 	// 接続確認ダイアログ
-	while (wait_for_connect!=0)
+	while (waitsForConnection!=0)
 		{
 		// Retrieve any windows messages.
 		while (PeekMessage(ref msg, null, 0, 0, PM_REMOVE)!=0)
@@ -608,7 +608,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 			if (msg.message == WM_QUIT)
 				{
 				// Quit the application.
-				wait_for_connect = FALSE;
+				waitsForConnection = FALSE;
 				break;
 				}
 

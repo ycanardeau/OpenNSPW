@@ -264,9 +264,9 @@ private bool LandCargo(ref Unit unit, FireKind kind, int m)
 
 			// 部下、多分戦闘機に帰投命令
 
-			var n=FindFreeFire();
-			ref var fire = ref Fires[n];
-			if( n!=0 )
+			var f=FindFreeFire();
+			ref var fire = ref Fires[f];
+			if( f!=0 )
 				{
 				PlaySoundEffect( 0, SoundId.Splash ,unit.Position.X, unit.Position.Y);
 				fire.Target=MaxUnitId+1;
@@ -315,9 +315,8 @@ private bool LandCargo(ref Unit unit, FireKind kind, int m)
 
 private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double bearing, ref double distance, FireKind kind)
 	{
-	int n;
 	var target=0;
-	for(n=1;n<=MaxUnitId;n++)
+	for(var n=1;n<=MaxUnitId;n++)
 		{
 		ref var other = ref Units[n];	//敵を探す。
 		if( other.IsUsed && other.Category==UnitCategory.Plane && (((other.Kind==UnitKind.Attacker||other.Kind==UnitKind.Fighter) && other.Ammo!=0 )|| Random(10)==0 )  && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.IsFound )
@@ -364,9 +363,9 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double bearing, r
 			f=fc[1];	// 側面
 		*/
 
-		n=FindFreeFire();
-		ref var fire = ref Fires[n];
-		if( n!=0 )
+		var f=FindFreeFire();
+		ref var fire = ref Fires[f];
+		if( f!=0 )
 			{
 			if(unit.Ammo!=0)
 				unit.Ammo-=RAS_SZ;			// 弾薬消費
@@ -431,9 +430,9 @@ private bool ShipDropAntiSubmarineBomb(ref int target, ref Unit unit, FireKind k
 			if( PointInRect3(ref contactArea,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
 				{
 				// 投雷
-				n=FindFreeFire();
-				ref var fire = ref Fires[n];
-					if(n!=0)
+				var f=FindFreeFire();
+				ref var fire = ref Fires[f];
+					if( f!=0 )
 					{
 					if(unit.Ammo!=0)
 						unit.Ammo-=ASB_SZ;			// 弾薬消費
@@ -479,10 +478,9 @@ private bool ShipDropAntiSubmarineBomb(ref int target, ref Unit unit, FireKind k
 
 private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int range, ref Array3<int> shotCounts, ref double bearing, ref double relativeBearing)
 	{
-	int n;
 	var target=0;
 	var targetDistance=2000.0;
-	for(n=1;n<=MaxUnitId;n++)
+	for(var n=1;n<=MaxUnitId;n++)
 		{
 		ref var other = ref Units[n];	//敵を探す。
 		if( other.IsUsed && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged ) && other.Side!=unit.Side && other.IsFound  && other.Kind!=UnitKind.City )
@@ -568,9 +566,9 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rang
 
 		for( var i=1; i<=shots ;i++ )
 			{
-			n=FindFreeFire();
-			ref var fire = ref Fires[n];
-			if( n!=0 )
+			var f=FindFreeFire();
+			ref var fire = ref Fires[f];
+			if( f!=0 )
 				{
 				if(unit.Ammo!=0)
 					unit.Ammo-=GUN_SZ;			// 弾薬消費
@@ -627,9 +625,8 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rang
 
 private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double bearing, FireKind kind)
 	{
-	int n;
 	var target=0;
-	for(n=1;n<=MaxUnitId;n++)
+	for(var n=1;n<=MaxUnitId;n++)
 		{
 		ref var other = ref Units[n];	//敵を探す。
 		if( other.IsUsed && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.AirBase||other.Kind==UnitKind.NavalBase||other.Kind==UnitKind.InfantryBase||other.Kind==UnitKind.Pillboxes||other.Kind==UnitKind.Fortress) && other.Side!=unit.Side && other.IsFound && !(other.Kind==UnitKind.Submarine||other.Kind==UnitKind.Destroyer) )
@@ -725,17 +722,17 @@ private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double bearing, Fir
 		if( unit.Kind!=UnitKind.Submarine )
 			PlaySoundEffect( 0, SoundId.TorpedoLaunch ,unit.Position.X, unit.Position.Y);
 
-		for( var f=0; f<=lastTorpedo; f++)
+		for( var torpedo=0; torpedo<=lastTorpedo; torpedo++)
 			{
-			n=FindFreeFire();
-			ref var fire = ref Fires[n];
-			if( n!=0 )
+			var f=FindFreeFire();
+			ref var fire = ref Fires[f];
+			if( f!=0 )
 				{
 				fire.Target=target;
 				fire.Kind=kind;
 				fire.Position=unit.Position;
 
-				switch( f )
+				switch( torpedo )
 					{
 					case 0:	fire.Direction=bearing;	break;
 					case 1:	fire.Direction=bearing+5;	break;
@@ -827,17 +824,17 @@ private bool ShipFireTorpedoAtTarget(int target, ref Unit unit, ref double beari
 				unit.Target=0;
 			}
 
-		for( var f=0; f<=2; f++)
+		for( var torpedo=0; torpedo<=2; torpedo++)
 			{
-			var n=FindFreeFire();
-			ref var fire = ref Fires[n];
-			if( n!=0 )
+			var f=FindFreeFire();
+			ref var fire = ref Fires[f];
+			if( f!=0 )
 				{
 				fire.Target=confirmedTarget;
 				fire.Kind=kind;
 				fire.Position=unit.Position;
 
-				switch( f )
+				switch( torpedo )
 					{
 					case 0:	fire.Direction=bearing+5;	break;
 					case 1:	fire.Direction=bearing;	break;
@@ -915,9 +912,9 @@ private bool ShipFireAntiAircraftShellAtTarget(int target, ref Unit unit, ref in
 		for( var i=1; i<=shots ;i++ )
 			{
 
-			var n=FindFreeFire();
-			ref var fire = ref Fires[n];
-			if( n!=0 )
+			var f=FindFreeFire();
+			ref var fire = ref Fires[f];
+			if( f!=0 )
 				{
 				if(unit.Ammo!=0)
 					unit.Ammo-=SHL_SZ;			// 弾薬消費
@@ -949,9 +946,8 @@ private bool ShipFireAntiAircraftShellAtTarget(int target, ref Unit unit, ref in
 
 private bool ShipFireAntiAircraftShellWithoutTarget(ref Unit unit, ref double bearing, ref double relativeBearing, ref double distance, ref int range, ref Array3<int> shotCounts, FireKind kind)
 	{
-	int n;
 	var target=0;
-	for(n=1;n<=MaxUnitId;n++)
+	for(var n=1;n<=MaxUnitId;n++)
 		{
 		ref var other = ref Units[n];	//敵を探す。
 		if( other.IsUsed && other.Category==UnitCategory.Plane && (((other.Kind==UnitKind.Attacker||other.Kind==UnitKind.Bomber) && other.Ammo!=0 )|| Random(10)==0 )  && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.IsFound )
@@ -1010,9 +1006,9 @@ private bool ShipFireAntiAircraftShellWithoutTarget(ref Unit unit, ref double be
 
 		for( var i=1; i<=shots ;i++ )
 			{
-			n=FindFreeFire();
-			ref var fire = ref Fires[n];
-			if( n!=0 )
+			var f=FindFreeFire();
+			ref var fire = ref Fires[f];
+			if( f!=0 )
 				{
 				if(unit.Ammo!=0)
 					unit.Ammo-=SHL_SZ;			// 弾薬消費
@@ -1122,9 +1118,9 @@ private bool ShipFireGunAtTarget(int target, ref Unit unit, FireKind kind, ref i
 		for( var i=1; i<=shots ;i++ )
 			{
 
-			var n=FindFreeFire();
-			ref var fire = ref Fires[n];
-			if( n!=0 )
+			var f=FindFreeFire();
+			ref var fire = ref Fires[f];
+			if( f!=0 )
 				{
 				unit.Ammo-=GUN_SZ;			// 弾薬消費
 				fire.Target=confirmedTarget;
@@ -1203,9 +1199,8 @@ private bool ShipFireGunAtTarget(int target, ref Unit unit, FireKind kind, ref i
 
 private bool ShipFireBullet(ref int target, ref Unit unit, ref double bearing, FireKind kind)
 	{
-	int n;
 	target=0;
-	for(n=1;n<=MaxUnitId;n++)
+	for(var n=1;n<=MaxUnitId;n++)
 		{
 		ref var other = ref Units[n];	//敵を探す。
 		if( other.IsUsed && ( (other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying )  || (other.Kind>=UnitKind.InfantryBase && other.Kind<=UnitKind.Fortress ) ) && other.Kind!=UnitKind.Bomber
@@ -1243,9 +1238,9 @@ private bool ShipFireBullet(ref int target, ref Unit unit, ref double bearing, F
 
 	if( target!=0 )
 		{
-		n=FindFreeFire();
-		ref var fire = ref Fires[n];
-		if( n!=0 )
+		var f=FindFreeFire();
+		ref var fire = ref Fires[f];
+		if( f!=0 )
 			{
 			//unit[m].arm[1]--;			// 弾薬消費
 			PlaySoundEffect( 0, SoundId.AntiAircraftBullet3 ,unit.Position.X, unit.Position.Y);
@@ -1264,9 +1259,8 @@ private bool ShipFireBullet(ref int target, ref Unit unit, ref double bearing, F
 
 private bool BomberFireBullet(ref int target, ref Unit unit, ref double bearing, FireKind kind)
 	{
-	int n;
 	target=0;
-	for(n=1;n<=MaxUnitId;n++)
+	for(var n=1;n<=MaxUnitId;n++)
 		{
 		ref var other = ref Units[n];	//敵を探す。
 		if( other.IsUsed && other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.IsFound )
@@ -1302,9 +1296,9 @@ private bool BomberFireBullet(ref int target, ref Unit unit, ref double bearing,
 		}
 	if( target!=0 )
 		{
-		n=FindFreeFire();
-		ref var fire = ref Fires[n];
-		if( n!=0 )
+		var f=FindFreeFire();
+		ref var fire = ref Fires[f];
+		if( f!=0 )
 			{
 			//unit[m].arm[1]--;			// 弾薬消費
 			PlaySoundEffect( 0, SoundId.AntiAircraftBullet4 ,unit.Position.X, unit.Position.Y);
@@ -1323,9 +1317,8 @@ private bool BomberFireBullet(ref int target, ref Unit unit, ref double bearing,
 
 private bool FighterFireBullet(ref int target, ref Unit unit, FireKind kind)
 	{
-	int n;
 	target=0;		var targetDistance=5000.0;
-	for(n=1;n<=MaxUnitId;n++)
+	for(var n=1;n<=MaxUnitId;n++)
 		{
 		ref var other = ref Units[n];	//前方の敵を探す。
 		// NSPW NET's fighters also shoot transports; 1.22's, flying planes only (0x4133B2).
@@ -1373,9 +1366,9 @@ private bool FighterFireBullet(ref int target, ref Unit unit, FireKind kind)
 
 	if( target!=0 )
 		{
-		n=FindFreeFire();
-		ref var fire = ref Fires[n];
-		if( n!=0 )
+		var f=FindFreeFire();
+		ref var fire = ref Fires[f];
+		if( f!=0 )
 			{
 			unit.Ammo--;			// 弾薬消費
 			if(unit.Variant==0)
@@ -1407,9 +1400,8 @@ private bool FighterFireBullet(ref int target, ref Unit unit, FireKind kind)
 
 private bool PlaneFireBullet(ref int target, ref Unit unit, ref double bearing, FireKind kind)
 	{
-	int n;
 	target=0;
-	for(n=1;n<=MaxUnitId;n++)
+	for(var n=1;n<=MaxUnitId;n++)
 		{
 		ref var other = ref Units[n];	//後方の敵を探す。
 		if( other.IsUsed && other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.IsFound )
@@ -1435,9 +1427,9 @@ private bool PlaneFireBullet(ref int target, ref Unit unit, ref double bearing, 
 		}
 	if( target!=0 )
 		{
-		n=FindFreeFire();
-		ref var fire = ref Fires[n];
-		if( n!=0 )
+		var f=FindFreeFire();
+		ref var fire = ref Fires[f];
+		if( f!=0 )
 			{
 			//unit[m].arm[1]--;			// 弾薬消費
 			PlaySoundEffect( 0, SoundId.AntiAircraftBullet3 ,unit.Position.X, unit.Position.Y);
@@ -1726,11 +1718,10 @@ other.PathX[1]=MAP_RIGHT+1;
 
 private bool BomberDropBomb(ref int target, ref Unit unit, ref double bearing, FireKind kind)
 	{
-	int n;
 	var selectedTarget=0;
 	if(target!=0)
 		selectedTarget=target;
-	for(n=1;n<=MaxUnitId;n++)
+	for(var n=1;n<=MaxUnitId;n++)
 		{	//前方の敵を探す。
 		if(selectedTarget!=0)
 			{ n=selectedTarget; target=0; }
@@ -1759,9 +1750,9 @@ private bool BomberDropBomb(ref int target, ref Unit unit, ref double bearing, F
 		}
 	if( target!=0 )
 		{
-		n=FindFreeFire();
-		ref var fire = ref Fires[n];
-		if( n!=0 )
+		var f=FindFreeFire();
+		ref var fire = ref Fires[f];
+		if( f!=0 )
 			{
 			PlaySoundEffect( 0, SoundId.BomberBombRelease ,unit.Position.X, unit.Position.Y);
 			if(unit.Ammo!=0)
@@ -2162,7 +2153,7 @@ public void	SetFighterEmergencyDestination(int m)
 public void	SetFighterAttackDestination(int m)
 	{
 	ref var unit = ref Units[m];
-	int ownTechnique=default /* C4701 */, enemyTechnique;
+	int ownTechnique=default /* C4701 */;
 	RECT			destinationArea;
 
 	// ptin dbg
@@ -2192,9 +2183,9 @@ public void	SetFighterAttackDestination(int m)
 			{enemySkill++;}
 		}
 	if( ownSkill > enemySkill )
-		{	ownTechnique=10;	enemyTechnique=40+(ownSkill-enemySkill);	}
+		{	ownTechnique=10;	var enemyTechnique=40+(ownSkill-enemySkill);	}
 	if( ownSkill < enemySkill )
-		{	ownTechnique=40+(enemySkill-ownSkill);	enemyTechnique=10;	}
+		{	ownTechnique=40+(enemySkill-ownSkill);	var enemyTechnique=10;	}
 
 	if( Random(ownTechnique)!=0 )
 		return;

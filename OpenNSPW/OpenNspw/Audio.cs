@@ -118,20 +118,20 @@ public int	InitializeDirectSound()
 	主にゲーム中の効果音を鳴らす
 ---------------------------------------------*/
 [Original("play_snd")]
-public void	PlaySound(IDirectSoundBuffer? the_lpdsb,short* the_snd,int f)
+public void	PlaySound(IDirectSoundBuffer? buffer,short* nextBuffer,int volume)
 	{
 
-	the_lpdsb.Stop();		//
-	the_lpdsb.SetCurrentPosition(0);	// 巻き戻し
+	buffer.Stop();		//
+	buffer.SetCurrentPosition(0);	// 巻き戻し
 
-	if( f<-9600 )
-		f=-9600;
+	if( volume<-9600 )
+		volume=-9600;
 
-	the_lpdsb.SetVolume( f );
-	the_lpdsb.Play(0,0,0);		//
+	buffer.SetVolume( volume );
+	buffer.Play(0,0,0);		//
 
-	(*the_snd)++;
-	*the_snd=(short)((*the_snd)%SND_DUP);
+	(*nextBuffer)++;
+	*nextBuffer=(short)((*nextBuffer)%SND_DUP);
 
 	}
 
@@ -139,9 +139,9 @@ public void	PlaySound(IDirectSoundBuffer? the_lpdsb,short* the_snd,int f)
 	主にゲーム中の効果音を鳴らす
 ---------------------------------------------*/
 [Original("SoundPlayEffect")]
-public void PlaySoundEffect(int dwFlags,SoundId no,double x,double y)
+public void PlaySoundEffect(int flags,SoundId sound,double x,double y)
 	{
-	RECT	field_rect;
+	RECT	hearingArea;
 	int size=default /* C4701 */;
 
 #if !SND_SW
@@ -152,26 +152,17 @@ return;
 
 	if( x!=(double)(MAP_RIGHT+1) )
 		{
-		var flg=0;
-		for(var n=1;n<=MaxUnitId && flg==0 ;n++)
+		var isHeard=0;
+		for(var n=1;n<=MaxUnitId && isHeard==0 ;n++)
 			{
 			if( Units[n].IsUsed && Units[n].Side==LocalSide && Units[n].PlaneState!=UnitState.Parked )
 				{
 				// マイユニットからこのエフェクトが見えるか
 				// 現地点からユニット地点への距離
 
-				var wrk_x=Units[n].Position.X;
-				var wrk_y=Units[n].Position.Y;
-				if( Units[n].Kind==UnitKind.Fighter )
-					{	// 航空機の場合はちょっと前へ
-					wrk_x+=CosDegrees(Units[n].Direction)*FT_EYE;
-					wrk_y+=SinDegrees(Units[n].Direction)*FT_EYE;
-					}
+				var eye=EyeOf(ref Units[n]);	// 航空機の場合はちょっと前へ
 
-				wrk_x=wrk_x-x;
-				wrk_y=wrk_y-y;
-
-				var dstc=Distance(wrk_x, wrk_y);
+				var distance=(eye-new WorldPosition(x, y)).Length;
 
 				switch( Units[n].Kind )
 					{
@@ -193,42 +184,42 @@ return;
 					case UnitKind.Fortress:		size=GF3_SIGHT;		break;
 					}
 
-				if( dstc<=size )
+				if( distance<=size )
 					{
-					flg=1;
+					isHeard=1;
 					}
 				}
 			}
 
-		if(flg==0)
+		if(isHeard==0)
 			{
 			// マイユニットが聞けない位置
 			return;
 			}
 
 		// ptin dbg
-		field_rect.left=-500;
-		field_rect.top=CMBT_HEIGHT+500;
-		field_rect.right=CMBT_WIDTH+500;
-		field_rect.bottom=-500;
+		hearingArea.left=-500;
+		hearingArea.top=CMBT_HEIGHT+500;
+		hearingArea.right=CMBT_WIDTH+500;
+		hearingArea.bottom=-500;
 
 		x=(int)(x-CameraPosition.X);
 		y=(int)(CameraPosition.Y-y);
-		if( PointInRect3(ref field_rect, (int)x,(int)y )==0 )
+		if( PointInRect3(ref hearingArea, (int)x,(int)y )==0 )
 			return;
 		}
 
 	if(1!=0)
 		{
 
-		lpDSB_[(int)no][NextSoundBuffers[(int)no]].Stop();		//
-		lpDSB_[(int)no][NextSoundBuffers[(int)no]].SetCurrentPosition(0);	// 巻き戻し
+		lpDSB_[(int)sound][NextSoundBuffers[(int)sound]].Stop();		//
+		lpDSB_[(int)sound][NextSoundBuffers[(int)sound]].SetCurrentPosition(0);	// 巻き戻し
 
-		lpDSB_[(int)no][NextSoundBuffers[(int)no]].SetVolume( 0 );
-		lpDSB_[(int)no][NextSoundBuffers[(int)no]].Play(0,0,0);		//
+		lpDSB_[(int)sound][NextSoundBuffers[(int)sound]].SetVolume( 0 );
+		lpDSB_[(int)sound][NextSoundBuffers[(int)sound]].Play(0,0,0);		//
 
-		NextSoundBuffers[(int)no]++;
-		NextSoundBuffers[(int)no]=(short)(NextSoundBuffers[(int)no]%SND_DUP);
+		NextSoundBuffers[(int)sound]++;
+		NextSoundBuffers[(int)sound]=(short)(NextSoundBuffers[(int)sound]%SND_DUP);
 
 		}
 

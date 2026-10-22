@@ -27,19 +27,19 @@ public unsafe partial class Nspw
 [Original("draw")]
 public void	Draw()
 	{
-	RECT	src_rect,dstn_rect;
+	RECT	source,destination;
 
-	src_rect.left = 0;
-	src_rect.top = 1759;
-	src_rect.right = src_rect.left+80;
-	src_rect.bottom = src_rect.top+80;
+	source.left = 0;
+	source.top = 1759;
+	source.right = source.left+80;
+	source.bottom = source.top+80;
 
-	dstn_rect.left=100;
-	dstn_rect.top=100;
+	destination.left=100;
+	destination.top=100;
 
 	// オブジェクトを画面に描画
 
-	lpDDSBack.BltFast(0+Tick,300,lpDDS_OS,&src_rect, DDBLTFAST_SRCCOLORKEY| DDBLTFAST_WAIT);
+	lpDDSBack.BltFast(0+Tick,300,lpDDS_OS,&source, DDBLTFAST_SRCCOLORKEY| DDBLTFAST_WAIT);
 
 	HDC hdc;
 	if (DD_OK==lpDDSBack.GetDC(&hdc))

@@ -32,9 +32,9 @@ public PixelPoint WorldToScreen(WorldPosition position)
 //
 //----------------------------------------------------------------------------
 [Original("cont_upper_effect")]
-public void	UpdateUpperEffects(RECT* pfield_rect,RECT* pinfo_rect)
+public void	UpdateUpperEffects(RECT* field,RECT* infoArea)
 	{
-	RECT src_rect,dstn_rect;
+	RECT source,destination;
 	int n, size=default /* C4701 */ /* C4701 */;
 
 	//=========		 Ｕｐｐｅｒのエフェクト描画		=========//
@@ -43,27 +43,18 @@ public void	UpdateUpperEffects(RECT* pfield_rect,RECT* pinfo_rect)
 		ref var effect = ref Effects[m];
 		if( effect.Layer==EffectLayer.Upper )
 			{
-			var flg=0;
+			var isSeen=0;
 			if(Result!=GameResult.None)
-				flg=1;
-			for(n=1;n<=MaxUnitId && flg==0 ;n++)
+				isSeen=1;
+			for(n=1;n<=MaxUnitId && isSeen==0 ;n++)
 				{
 				if( Units[n].IsUsed && Units[n].Side==LocalSide && Units[n].PlaneState!=UnitState.Parked )
 					{
 					// マイユニットからこのエフェクトが見えるか
 					// 現地点からユニット地点への距離
-					var wrk_x=Units[n].Position.X;
-					var wrk_y=Units[n].Position.Y;
-					if( Units[n].Kind==UnitKind.Fighter )
-						{	// 航空機の場合はちょっと前へ
-						wrk_x+=CosDegrees(Units[n].Direction)*FT_EYE;
-						wrk_y+=SinDegrees(Units[n].Direction)*FT_EYE;
-						}
+					var eye=EyeOf(ref Units[n]);	// 航空機の場合はちょっと前へ
 
-					wrk_x=wrk_x-effect.Position.X;
-					wrk_y=wrk_y-effect.Position.Y;
-
-					var dstc=Distance(wrk_x, wrk_y);
+					var distance=(eye-effect.Position).Length;
 
 					switch( Units[n].Kind )
 						{
@@ -95,14 +86,14 @@ public void	UpdateUpperEffects(RECT* pfield_rect,RECT* pinfo_rect)
 					if( Rules.HasSightRangesOf122 )
 						size=GetSightRangeAs122(Units[n].Kind);
 
-					if( dstc<=size )
+					if( distance<=size )
 						{
-						flg=1;
+						isSeen=1;
 						}
 					}
 				}
 
-			if( flg!=0 )
+			if( isSeen!=0 )
 				{
 
 				// マイユニットから見えるので表示
@@ -134,31 +125,31 @@ public void	UpdateUpperEffects(RECT* pfield_rect,RECT* pinfo_rect)
 						n=1;
 						break;
 					case 10:	// 対空機関砲
-						DrawLine5((int)(effect.Position.X-CameraPosition.X),(int)(CameraPosition.Y-effect.Position.Y),(int)(effect.EndPosition.X-CameraPosition.X),(int)(CameraPosition.Y-effect.EndPosition.Y),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
-						DrawLine5((int)(effect.Position.X-CameraPosition.X)+1,(int)(CameraPosition.Y-effect.Position.Y),(int)(effect.EndPosition.X-CameraPosition.X)+1,(int)(CameraPosition.Y-effect.EndPosition.Y),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
-						DrawLine5((int)(effect.Position.X-CameraPosition.X),(int)(CameraPosition.Y-effect.Position.Y)-1,(int)(effect.EndPosition.X-CameraPosition.X),(int)(CameraPosition.Y-effect.EndPosition.Y)-1,CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
+						DrawLine5(WorldToScreen(effect.Position), WorldToScreen(effect.EndPosition), CMBT_WIDTH-1, CMBT_HEIGHT-1, 255);
+						DrawLine5(WorldToScreen(effect.Position)+new PixelPoint(1, 0), WorldToScreen(effect.EndPosition)+new PixelPoint(1, 0), CMBT_WIDTH-1, CMBT_HEIGHT-1, 255);
+						DrawLine5(WorldToScreen(effect.Position)+new PixelPoint(0, -1), WorldToScreen(effect.EndPosition)+new PixelPoint(0, -1), CMBT_WIDTH-1, CMBT_HEIGHT-1, 255);
 						continue;
 					case 11:	// 弾丸
-						DrawLine5((int)(effect.Position.X-CameraPosition.X),(int)(CameraPosition.Y-effect.Position.Y),(int)(effect.EndPosition.X-CameraPosition.X),(int)(CameraPosition.Y-effect.EndPosition.Y),CMBT_WIDTH-1,CMBT_HEIGHT-1,255);
+						DrawLine5(WorldToScreen(effect.Position), WorldToScreen(effect.EndPosition), CMBT_WIDTH-1, CMBT_HEIGHT-1, 255);
 						continue;
 					}
 				// src_rect は ソースサーフェスのレクタングルです。
-				src_rect.left = Sprites[SpriteId.SubUnits].SheetPosition.X+(Sprites[SpriteId.SubUnits].Size.Width * (Sprites[SpriteId.SubUnits].Frame % Sprites[SpriteId.SubUnits].FramesPerRow)) +1;
-				src_rect.top = Sprites[SpriteId.SubUnits].SheetPosition.Y+(Sprites[SpriteId.SubUnits].Size.Height* (Sprites[SpriteId.SubUnits].Frame / Sprites[SpriteId.SubUnits].FramesPerRow)) +1;
-				src_rect.right = (src_rect.left + Sprites[SpriteId.SubUnits].Size.Width)-1;
-				src_rect.bottom = (src_rect.top + Sprites[SpriteId.SubUnits].Size.Height)-1;
+				source.left = Sprites[SpriteId.SubUnits].SheetPosition.X+(Sprites[SpriteId.SubUnits].Size.Width * (Sprites[SpriteId.SubUnits].Frame % Sprites[SpriteId.SubUnits].FramesPerRow)) +1;
+				source.top = Sprites[SpriteId.SubUnits].SheetPosition.Y+(Sprites[SpriteId.SubUnits].Size.Height* (Sprites[SpriteId.SubUnits].Frame / Sprites[SpriteId.SubUnits].FramesPerRow)) +1;
+				source.right = (source.left + Sprites[SpriteId.SubUnits].Size.Width)-1;
+				source.bottom = (source.top + Sprites[SpriteId.SubUnits].Size.Height)-1;
 				// dstn_rect は ディスティネーションレクタングルです。
-				dstn_rect.left=Sprites[SpriteId.SubUnits].Position.X-Sprites[SpriteId.SubUnits].Center.X;
-				dstn_rect.top=Sprites[SpriteId.SubUnits].Position.Y-Sprites[SpriteId.SubUnits].Center.Y;
-				dstn_rect.right=dstn_rect.left+Sprites[SpriteId.SubUnits].Size.Width-1;
-				dstn_rect.bottom=dstn_rect.top+Sprites[SpriteId.SubUnits].Size.Height-1;
+				destination.left=Sprites[SpriteId.SubUnits].Position.X-Sprites[SpriteId.SubUnits].Center.X;
+				destination.top=Sprites[SpriteId.SubUnits].Position.Y-Sprites[SpriteId.SubUnits].Center.Y;
+				destination.right=destination.left+Sprites[SpriteId.SubUnits].Size.Width-1;
+				destination.bottom=destination.top+Sprites[SpriteId.SubUnits].Size.Height-1;
 
 				if( n!=0 )
 					{
-					if( ClipRects(ref dstn_rect,ref src_rect,ref *pfield_rect)!=0 )
+					if( ClipRects(ref destination,ref source,ref *field)!=0 )
 						{
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,DDBLTFAST_SRCCOLORKEY) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,&source,DDBLTFAST_SRCCOLORKEY) )
 		{
 		RestoreSurfaces();
 		}
@@ -167,10 +158,10 @@ public void	UpdateUpperEffects(RECT* pfield_rect,RECT* pinfo_rect)
 					}
 				else
 					{
-					if( ClipRects(ref dstn_rect,ref src_rect,ref *pinfo_rect)!=0 )
+					if( ClipRects(ref destination,ref source,ref *infoArea)!=0 )
 						{
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,DDBLTFAST_SRCCOLORKEY) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,&source,DDBLTFAST_SRCCOLORKEY) )
 		{
 		RestoreSurfaces();
 		}
@@ -186,10 +177,10 @@ public void	UpdateUpperEffects(RECT* pfield_rect,RECT* pinfo_rect)
 //
 //----------------------------------------------------------------------------
 [Original("cont_lower_effect")]
-public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
+public void UpdateLowerEffects(RECT* field,RECT* infoArea)
 	{
-	RECT src_rect,dstn_rect;
-	int n=default /* C4701 */, size=default /* C4701 */, flg;
+	RECT source,destination;
+	int n=default /* C4701 */, size=default /* C4701 */, isSeen;
 
 	//=========		 Ｌｏｗｅｒのエフェクト描画		=========//
 	for(var m=1;m<EFFECT_MAX;m++)
@@ -201,9 +192,9 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 				{
 				// ユニットインフォ画面以外のエフェクト表示は見える見えないのテストをします。
 				// 1.22 still tests them once the battle has a result (0x40CDEC).
-				flg=0;
+				isSeen=0;
 				if(Result!=GameResult.None && Rules.ResultShowsEveryLowerEffect)
-					flg=1;
+					isSeen=1;
 				for(n=1;n<=MaxUnitId;n++)
 					{
 					ref var unit = ref Units[n];
@@ -211,18 +202,9 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 						{
 						// マイユニットからこのエフェクトが見えるか
 						// 現地点からユニット地点への距離
-						var wrk_x=unit.Position.X;
-						var wrk_y=unit.Position.Y;
-						if( unit.Kind==UnitKind.Fighter )
-							{	// 航空機の場合はちょっと前へ
-							wrk_x+=CosDegrees(unit.Direction)*FT_EYE;
-							wrk_y+=SinDegrees(unit.Direction)*FT_EYE;
-							}
+						var eye=EyeOf(ref unit);	// 航空機の場合はちょっと前へ
 
-						wrk_x=wrk_x-effect.Position.X;
-						wrk_y=wrk_y-effect.Position.Y;
-
-						var dstc=Distance(wrk_x, wrk_y);
+						var distance=(eye-effect.Position).Length;
 
 						switch( unit.Kind )
 							{
@@ -254,9 +236,9 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 						if( Rules.HasSightRangesOf122 )
 							size=GetSightRangeAs122(unit.Kind);
 
-						if( dstc<=size)
+						if( distance<=size)
 							{
-							flg=1;
+							isSeen=1;
 							}
 						}
 					}
@@ -264,10 +246,10 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 			else
 				{
 				// ユニットインフォ内のエフェクトは必ず表示します。
-				flg=1;
+				isSeen=1;
 				}
 
-			if( flg!=0 )
+			if( isSeen!=0 )
 				{
 				// マイユニットからの見える
 				switch( effect.Animation )
@@ -306,21 +288,21 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 						continue;
 					}
 				// src_rect は ソースサーフェスのレクタングルです。
-				src_rect.left = Sprites[SpriteId.SubUnits].SheetPosition.X+(Sprites[SpriteId.SubUnits].Size.Width * (Sprites[SpriteId.SubUnits].Frame % Sprites[SpriteId.SubUnits].FramesPerRow)) +1;
-				src_rect.top = Sprites[SpriteId.SubUnits].SheetPosition.Y+(Sprites[SpriteId.SubUnits].Size.Height* (Sprites[SpriteId.SubUnits].Frame / Sprites[SpriteId.SubUnits].FramesPerRow)) +1;
-				src_rect.right = (src_rect.left + Sprites[SpriteId.SubUnits].Size.Width)-1;
-				src_rect.bottom = (src_rect.top + Sprites[SpriteId.SubUnits].Size.Height)-1;
+				source.left = Sprites[SpriteId.SubUnits].SheetPosition.X+(Sprites[SpriteId.SubUnits].Size.Width * (Sprites[SpriteId.SubUnits].Frame % Sprites[SpriteId.SubUnits].FramesPerRow)) +1;
+				source.top = Sprites[SpriteId.SubUnits].SheetPosition.Y+(Sprites[SpriteId.SubUnits].Size.Height* (Sprites[SpriteId.SubUnits].Frame / Sprites[SpriteId.SubUnits].FramesPerRow)) +1;
+				source.right = (source.left + Sprites[SpriteId.SubUnits].Size.Width)-1;
+				source.bottom = (source.top + Sprites[SpriteId.SubUnits].Size.Height)-1;
 				// dstn_rect は ディスティネーションレクタングルです。
-				dstn_rect.left=Sprites[SpriteId.SubUnits].Position.X-Sprites[SpriteId.SubUnits].Center.X;
-				dstn_rect.top=Sprites[SpriteId.SubUnits].Position.Y-Sprites[SpriteId.SubUnits].Center.Y;
-				dstn_rect.right=dstn_rect.left+Sprites[SpriteId.SubUnits].Size.Width-1;
-				dstn_rect.bottom=dstn_rect.top+Sprites[SpriteId.SubUnits].Size.Height-1;
+				destination.left=Sprites[SpriteId.SubUnits].Position.X-Sprites[SpriteId.SubUnits].Center.X;
+				destination.top=Sprites[SpriteId.SubUnits].Position.Y-Sprites[SpriteId.SubUnits].Center.Y;
+				destination.right=destination.left+Sprites[SpriteId.SubUnits].Size.Width-1;
+				destination.bottom=destination.top+Sprites[SpriteId.SubUnits].Size.Height-1;
 
 				if( n!=0 )
 					{
-					if( ClipRects(ref dstn_rect,ref src_rect,ref *pfield_rect)!=0 )
+					if( ClipRects(ref destination,ref source,ref *field)!=0 )
 						{
-						if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,DDBLTFAST_SRCCOLORKEY) )
+						if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,&source,DDBLTFAST_SRCCOLORKEY) )
 							{
 							RestoreSurfaces();
 							}
@@ -329,9 +311,9 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 					}
 				else
 					{
-					if( ClipRects(ref dstn_rect,ref src_rect,ref *pinfo_rect)!=0 )
+					if( ClipRects(ref destination,ref source,ref *infoArea)!=0 )
 						{
-						if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,DDBLTFAST_SRCCOLORKEY) )
+						if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,&source,DDBLTFAST_SRCCOLORKEY) )
 							{
 							RestoreSurfaces();
 							}
@@ -346,9 +328,9 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 //
 //----------------------------------------------------------------------------
 [Original("draw_cloud")]
-public void	DrawClouds(RECT* pfield_rect)
+public void	DrawClouds(RECT* field)
 	{
-	RECT src_rect,dstn_rect;
+	RECT source,destination;
 
 	for(var n=0;n<KUMO_MAX;n++)
 		{
@@ -358,21 +340,21 @@ public void	DrawClouds(RECT* pfield_rect)
 			Sprites[SpriteId.MapTiles].Position = WorldToScreen(cloud.Position);
 			Sprites[SpriteId.MapTiles].Frame=2;
 			// src_rect は ソースサーフェスのレクタングルです。
-			src_rect.left = Sprites[SpriteId.MapTiles].SheetPosition.X+(Sprites[SpriteId.MapTiles].Size.Width * (Sprites[SpriteId.MapTiles].Frame % Sprites[SpriteId.MapTiles].FramesPerRow));
-			src_rect.top = Sprites[SpriteId.MapTiles].SheetPosition.Y+(Sprites[SpriteId.MapTiles].Size.Height* (Sprites[SpriteId.MapTiles].Frame / Sprites[SpriteId.MapTiles].FramesPerRow)) ;
-			src_rect.right = (src_rect.left + Sprites[SpriteId.MapTiles].Size.Width);
-			src_rect.bottom = (src_rect.top + Sprites[SpriteId.MapTiles].Size.Height);
+			source.left = Sprites[SpriteId.MapTiles].SheetPosition.X+(Sprites[SpriteId.MapTiles].Size.Width * (Sprites[SpriteId.MapTiles].Frame % Sprites[SpriteId.MapTiles].FramesPerRow));
+			source.top = Sprites[SpriteId.MapTiles].SheetPosition.Y+(Sprites[SpriteId.MapTiles].Size.Height* (Sprites[SpriteId.MapTiles].Frame / Sprites[SpriteId.MapTiles].FramesPerRow)) ;
+			source.right = (source.left + Sprites[SpriteId.MapTiles].Size.Width);
+			source.bottom = (source.top + Sprites[SpriteId.MapTiles].Size.Height);
 
 			// dstn_rect は ディスティネーションレクタングルです。
-			dstn_rect.left=Sprites[SpriteId.MapTiles].Position.X-(Sprites[SpriteId.MapTiles].Size.Width/2);
-			dstn_rect.top=Sprites[SpriteId.MapTiles].Position.Y-(Sprites[SpriteId.MapTiles].Size.Height/2);
-			dstn_rect.right=dstn_rect.left+Sprites[SpriteId.MapTiles].Size.Width;
-			dstn_rect.bottom=dstn_rect.top+Sprites[SpriteId.MapTiles].Size.Height;
+			destination.left=Sprites[SpriteId.MapTiles].Position.X-(Sprites[SpriteId.MapTiles].Size.Width/2);
+			destination.top=Sprites[SpriteId.MapTiles].Position.Y-(Sprites[SpriteId.MapTiles].Size.Height/2);
+			destination.right=destination.left+Sprites[SpriteId.MapTiles].Size.Width;
+			destination.bottom=destination.top+Sprites[SpriteId.MapTiles].Size.Height;
 
-			if( ClipRects(ref dstn_rect,ref src_rect,ref *pfield_rect)!=0 )
+			if( ClipRects(ref destination,ref source,ref *field)!=0 )
 				{
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,DDBLTFAST_SRCCOLORKEY ) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,&source,DDBLTFAST_SRCCOLORKEY ) )
 		{
 		RestoreSurfaces();
 		}
@@ -508,47 +490,32 @@ public void	DrawDestruction(int m)
 		}
 	}
 
-private void DrawMapTiles(int cm_scrn_y, int cm_scrn_x, int map_bld_y, int map_bld_x, ref Array256<byte> cBuf, ref RECT src_rect, ref RECT field_rect)
+private void DrawMapTiles(int firstRow, int firstColumn, int editedRow, int editedColumn, ref Array256<byte> keys, ref RECT source, ref RECT field)
 	{
-	int flg;
-	double wrk_x;
-	double wrk_y;
-	RECT dstn_rect;
+	int isSeen;
+	RECT destination;
 	for(var m=0;m<=10;m++)
 		{
 		for(var n=0;n<=10;n++)
 			{
-			if(  !IsEditingMap &&  Result==GameResult.None  && MapTiles[cm_scrn_y+n][cm_scrn_x+m]==0 )
+			if(  !IsEditingMap &&  Result==GameResult.None  && MapTiles[firstRow+n][firstColumn+m]==0 )
 				{
-				flg=0;
+				isSeen=0;
 				for( var f=1; f<=MaxUnitId; f++)
 					{
 					if( Units[f].IsUsed && Units[f].Side==LocalSide && Units[f].PlaneState!=UnitState.Parked  )
 						{
 						// 現地点からユニット地点への距離
+						var tile=new WorldPosition(((firstColumn+m)*Sprites[SpriteId.MapTiles].Size.Width)-MAP_RIGHT, MAP_TOP-((firstRow+n)*Sprites[SpriteId.MapTiles].Size.Height));
 
-						if(Units[f].Kind==UnitKind.Fighter )
-							{
-							// 戦闘機場合、視点を
-							wrk_x=Units[f].Position.X;
-							wrk_y=Units[f].Position.Y;
-							wrk_x+=CosDegrees(Units[f].Direction)*FT_EYE;
-							wrk_y+=SinDegrees(Units[f].Direction)*FT_EYE;
-							wrk_x=wrk_x-(((cm_scrn_x+m)*Sprites[SpriteId.MapTiles].Size.Width)-MAP_RIGHT);
-							wrk_y=wrk_y-(MAP_TOP-((cm_scrn_y+n)*Sprites[SpriteId.MapTiles].Size.Height));
-							}
-						else
-							{
-							wrk_x=Units[f].Position.X-(((cm_scrn_x+m)*Sprites[SpriteId.MapTiles].Size.Width)-MAP_RIGHT);
-							wrk_y=Units[f].Position.Y-(MAP_TOP-((cm_scrn_y+n)*Sprites[SpriteId.MapTiles].Size.Height));
-							}
+						var eye=EyeOf(ref Units[f]);	// 戦闘機場合、視点を
 
 						//((cm_scrn_x+m)*sprt[MAP_TIP_NRML].wd)-MAP_RIGHT
 
-						var dstc=Distance(wrk_x, wrk_y);
-						if( dstc<=(double)GetDetectionSize(f,0) )
+						var distance=(eye-tile).Length;
+						if( distance<=(double)GetDetectionSize(f,0) )
 							{
-							flg=1;
+							isSeen=1;
 							f=MaxUnitId;
 							break;
 							}
@@ -557,16 +524,16 @@ private void DrawMapTiles(int cm_scrn_y, int cm_scrn_x, int map_bld_y, int map_b
 				}
 			else
 				{
-				flg=1;
+				isSeen=1;
 				}
 
 			Sprites[SpriteId.MapTiles].Position = new PixelPoint(
 				m*Sprites[SpriteId.MapTiles].Size.Width-(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Size.Width,
 				n*Sprites[SpriteId.MapTiles].Size.Height-(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Size.Height);
 
-			if( MapTiles[cm_scrn_y+n][cm_scrn_x+m]==0)
+			if( MapTiles[firstRow+n][firstColumn+m]==0)
 				{
-				if(flg!=0)
+				if(isSeen!=0)
 					{
 					// 見える範囲内の海
 					Sprites[SpriteId.MapTiles].Frame=(FrameCount/30)%2;							// ただの海
@@ -579,75 +546,75 @@ private void DrawMapTiles(int cm_scrn_y, int cm_scrn_x, int map_bld_y, int map_b
 					}
 				}
 
-			if( MapTiles[cm_scrn_y+n][cm_scrn_x+m]>=1)
+			if( MapTiles[firstRow+n][firstColumn+m]>=1)
 				{
-				Sprites[SpriteId.MapTiles].Frame=6+(MapTiles[cm_scrn_y+n][cm_scrn_x+m]-1);	// 陸地
+				Sprites[SpriteId.MapTiles].Frame=6+(MapTiles[firstRow+n][firstColumn+m]-1);	// 陸地
 				}
 
 			// マップエディット時のプログ
-			if( IsEditingMap && (cm_scrn_y+n)==(map_bld_y) && (cm_scrn_x+m)==(map_bld_x) )
+			if( IsEditingMap && (firstRow+n)==(editedRow) && (firstColumn+m)==(editedColumn) )
 				{
 				if ( (FrameCount%2)!=0 )
 					Sprites[SpriteId.MapTiles].Frame=3;
-				GetKeyboardState(cBuf);
+				GetKeyboardState(keys);
 
-				if( (cBuf[VK_NUMPAD1]&0x80)!=0 )
+				if( (keys[VK_NUMPAD1]&0x80)!=0 )
 					{
-					MapTiles[cm_scrn_y+n][cm_scrn_x+m]=1;
+					MapTiles[firstRow+n][firstColumn+m]=1;
 					}
-				if( (cBuf[VK_NUMPAD2]&0x80)!=0 )
+				if( (keys[VK_NUMPAD2]&0x80)!=0 )
 					{
-					MapTiles[cm_scrn_y+n][cm_scrn_x+m]=2;
+					MapTiles[firstRow+n][firstColumn+m]=2;
 					}
-				if( (cBuf[VK_NUMPAD3]&0x80)!=0 )
+				if( (keys[VK_NUMPAD3]&0x80)!=0 )
 					{
-					MapTiles[cm_scrn_y+n][cm_scrn_x+m]=3;
+					MapTiles[firstRow+n][firstColumn+m]=3;
 					}
-				if( (cBuf[VK_NUMPAD4]&0x80)!=0 )
+				if( (keys[VK_NUMPAD4]&0x80)!=0 )
 					{
-					MapTiles[cm_scrn_y+n][cm_scrn_x+m]=4;
+					MapTiles[firstRow+n][firstColumn+m]=4;
 					}
-				if( (cBuf[VK_NUMPAD5]&0x80)!=0 )
+				if( (keys[VK_NUMPAD5]&0x80)!=0 )
 					{
-					MapTiles[cm_scrn_y+n][cm_scrn_x+m]=5;
+					MapTiles[firstRow+n][firstColumn+m]=5;
 					}
-				if( (cBuf[VK_NUMPAD6]&0x80)!=0 )
+				if( (keys[VK_NUMPAD6]&0x80)!=0 )
 					{
-					MapTiles[cm_scrn_y+n][cm_scrn_x+m]=6;
+					MapTiles[firstRow+n][firstColumn+m]=6;
 					}
-				if( (cBuf[VK_NUMPAD7]&0x80)!=0 )
+				if( (keys[VK_NUMPAD7]&0x80)!=0 )
 					{
-					MapTiles[cm_scrn_y+n][cm_scrn_x+m]=7;
+					MapTiles[firstRow+n][firstColumn+m]=7;
 					}
-				if( (cBuf[VK_NUMPAD8]&0x80)!=0 )
+				if( (keys[VK_NUMPAD8]&0x80)!=0 )
 					{
-					MapTiles[cm_scrn_y+n][cm_scrn_x+m]=8;
+					MapTiles[firstRow+n][firstColumn+m]=8;
 					}
-				if( (cBuf[VK_NUMPAD9]&0x80)!=0 )
+				if( (keys[VK_NUMPAD9]&0x80)!=0 )
 					{
-					MapTiles[cm_scrn_y+n][cm_scrn_x+m]=9;
+					MapTiles[firstRow+n][firstColumn+m]=9;
 					}
-				if( (cBuf[VK_NUMPAD0]&0x80)!=0 )
+				if( (keys[VK_NUMPAD0]&0x80)!=0 )
 					{
-					MapTiles[cm_scrn_y+n][cm_scrn_x+m]=0;
+					MapTiles[firstRow+n][firstColumn+m]=0;
 					}
 				}
 
 			// src_rect は ソースサーフェスのレクタングルです。
-			src_rect.left = Sprites[SpriteId.MapTiles].SheetPosition.X+(Sprites[SpriteId.MapTiles].Size.Width * (Sprites[SpriteId.MapTiles].Frame % Sprites[SpriteId.MapTiles].FramesPerRow)) ;
-			src_rect.top = Sprites[SpriteId.MapTiles].SheetPosition.Y+(Sprites[SpriteId.MapTiles].Size.Height* (Sprites[SpriteId.MapTiles].Frame / Sprites[SpriteId.MapTiles].FramesPerRow)) ;
-			src_rect.right = (src_rect.left + Sprites[SpriteId.MapTiles].Size.Width);
-			src_rect.bottom = (src_rect.top + Sprites[SpriteId.MapTiles].Size.Height);
+			source.left = Sprites[SpriteId.MapTiles].SheetPosition.X+(Sprites[SpriteId.MapTiles].Size.Width * (Sprites[SpriteId.MapTiles].Frame % Sprites[SpriteId.MapTiles].FramesPerRow)) ;
+			source.top = Sprites[SpriteId.MapTiles].SheetPosition.Y+(Sprites[SpriteId.MapTiles].Size.Height* (Sprites[SpriteId.MapTiles].Frame / Sprites[SpriteId.MapTiles].FramesPerRow)) ;
+			source.right = (source.left + Sprites[SpriteId.MapTiles].Size.Width);
+			source.bottom = (source.top + Sprites[SpriteId.MapTiles].Size.Height);
 
 			// dstn_rect は ディスティネーションレクタングルです。
-			dstn_rect.left=Sprites[SpriteId.MapTiles].Position.X-Sprites[SpriteId.MapTiles].Center.X;
-			dstn_rect.top=Sprites[SpriteId.MapTiles].Position.Y-Sprites[SpriteId.MapTiles].Center.Y;
-			dstn_rect.right=dstn_rect.left+Sprites[SpriteId.MapTiles].Size.Width;
-			dstn_rect.bottom=dstn_rect.top+Sprites[SpriteId.MapTiles].Size.Height;
+			destination.left=Sprites[SpriteId.MapTiles].Position.X-Sprites[SpriteId.MapTiles].Center.X;
+			destination.top=Sprites[SpriteId.MapTiles].Position.Y-Sprites[SpriteId.MapTiles].Center.Y;
+			destination.right=destination.left+Sprites[SpriteId.MapTiles].Size.Width;
+			destination.bottom=destination.top+Sprites[SpriteId.MapTiles].Size.Height;
 
-			if( ClipRects(ref dstn_rect,ref src_rect,ref field_rect)!=0 )
+			if( ClipRects(ref destination,ref source,ref field)!=0 )
 				{
-				if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref src_rect),0) )
+				if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref source),0) )
 					{
 					RestoreSurfaces();
 					}
@@ -696,7 +663,7 @@ private void ClickUnit(int m, WorldPosition ground)
 		}
 	}
 
-private void HandleUnitClick(ref Unit unit, ref RECT dstn_rect, ref int lc_lf_btn, int m, SpriteId sprite)
+private void HandleUnitClick(ref Unit unit, ref RECT destination, ref int leftButton, int m, SpriteId sprite)
 	{
 	int right;
 	int bottom;
@@ -708,121 +675,91 @@ private void HandleUnitClick(ref Unit unit, ref RECT dstn_rect, ref int lc_lf_bt
 			}
 		else
 			{right=CMBT_WIDTH-1; bottom=CMBT_HEIGHT-1;}
-		var cl=0xffff;
-
 		var n=15;
-		DrawLine4(dstn_rect.left+n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.top+n,right,bottom,RGB(255,255,255));
-		DrawLine4(dstn_rect.right-n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.bottom-n,right,bottom,RGB(255,255,255));
-		DrawLine4(dstn_rect.right-n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.bottom-n,right,bottom,RGB(255,255,255));
-		DrawLine4(dstn_rect.left+n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.top+n,right,bottom,RGB(255,255,255));
+		DrawLine4(destination.left+n,destination.top+n,destination.right-n,destination.top+n,right,bottom,RGB(255,255,255));
+		DrawLine4(destination.right-n,destination.top+n,destination.right-n,destination.bottom-n,right,bottom,RGB(255,255,255));
+		DrawLine4(destination.right-n,destination.bottom-n,destination.left+n,destination.bottom-n,right,bottom,RGB(255,255,255));
+		DrawLine4(destination.left+n,destination.bottom-n,destination.left+n,destination.top+n,right,bottom,RGB(255,255,255));
 		}
 
-	if( lc_lf_btn==1 )
+	if( leftButton==1 )
 		{
-		lc_lf_btn=0;
+		leftButton=0;
 		ClickUnit(m, new WorldPosition(CameraPosition.X+Sprites[sprite].Position.X, CameraPosition.Y-Sprites[sprite].Position.Y));
 		}
 	}
 
-private void DrawSelectedUnit(ref RECT dstn_rect, int right, int bottom)
+private void DrawSelectedUnit(ref RECT destination, int right, int bottom)
 	{
 	var n=10;
-	DrawLine4(dstn_rect.left+n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.top+n,right,bottom,RGB(255,255,255));
-	DrawLine4(dstn_rect.right-n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.bottom-n,right,bottom,RGB(255,255,255));
-	DrawLine4(dstn_rect.right-n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.bottom-n,right,bottom,RGB(255,255,255));
-	DrawLine4(dstn_rect.left+n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.top+n,right,bottom,RGB(255,255,255));
+	DrawLine4(destination.left+n,destination.top+n,destination.right-n,destination.top+n,right,bottom,RGB(255,255,255));
+	DrawLine4(destination.right-n,destination.top+n,destination.right-n,destination.bottom-n,right,bottom,RGB(255,255,255));
+	DrawLine4(destination.right-n,destination.bottom-n,destination.left+n,destination.bottom-n,right,bottom,RGB(255,255,255));
+	DrawLine4(destination.left+n,destination.bottom-n,destination.left+n,destination.top+n,right,bottom,RGB(255,255,255));
 	}
 
 private void DrawLandingPoint(SpriteId sprite)
 	{
-	RECT dstn_rect;
-	var cl=0x1f;
+	RECT mark;
 	var n=10+(FrameCount%8)*2;
 
-	dstn_rect.left=(int)(Units[SelectedUnit].LandingX-CameraPosition.X-40);
-	dstn_rect.top=(int)(CameraPosition.Y-Units[SelectedUnit].LandingY-40);
-	dstn_rect.right=dstn_rect.left+Sprites[sprite].Size.Width-2;
-	dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Size.Height-2;
+	mark.left=(int)(Units[SelectedUnit].LandingX-CameraPosition.X-40);
+	mark.top=(int)(CameraPosition.Y-Units[SelectedUnit].LandingY-40);
+	mark.right=mark.left+Sprites[sprite].Size.Width-2;
+	mark.bottom=mark.top+Sprites[sprite].Size.Height-2;
 
-	DrawLine4(dstn_rect.left+n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-	DrawLine4(dstn_rect.right-n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-	DrawLine4(dstn_rect.right-n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-	DrawLine4(dstn_rect.left+n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+	DrawLine4(mark.left+n,mark.top+n,mark.right-n,mark.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+	DrawLine4(mark.right-n,mark.top+n,mark.right-n,mark.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+	DrawLine4(mark.right-n,mark.bottom-n,mark.left+n,mark.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+	DrawLine4(mark.left+n,mark.bottom-n,mark.left+n,mark.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 	}
 
 private void DrawTargetLine(ref Unit unit)
 	{
-	double wrk_x3;
-	double wrk_y3;
+	WorldPosition target;
 	if(  0!=0 && Units[unit.Target].Kind==UnitKind.Submarine && Units[unit.Target].IsSubmerged)
 		{	// 対潜水艦
-		wrk_x3=Units[unit.Target].ContactX;
-		wrk_y3=Units[unit.Target].ContactY;
+		target=Units[unit.Target].ContactPosition;
 		}
 	else
 		{	// 対潜航潜水艦以外
 		if( unit.Kind!=UnitKind.Transport )
 			{
-			wrk_x3=Units[unit.Target].Position.X;
-			wrk_y3=Units[unit.Target].Position.Y;
+			target=Units[unit.Target].Position;
 			}
 		else
 			{
 			// 揚陸方向
-			wrk_x3=(double)unit.LandingX;
-			wrk_y3=(double)unit.LandingY;
+			target=unit.LandingPoint;
 			}
 		}
 
 	if( (Units[unit.Target].IsFound || (unit.Target==MaxUnitId+1&&unit.Kind==UnitKind.Transport) )  && !(Units[unit.Target].Kind==UnitKind.Submarine && Units[unit.Target].IsSubmerged)   )
 		{	// 視認
-		var wrk_x=wrk_x3-unit.Position.X;
-		var wrk_y=wrk_y3-unit.Position.Y;
-		if( wrk_x==0 )	wrk_x=1;
-		if( wrk_y==0 )	wrk_y=1;
-		var drctn=Direction(wrk_x, wrk_y);
+		var bearing=(target-unit.Position).NonZero().Direction;
 
-		wrk_x=unit.Position.X;
-		wrk_y=unit.Position.Y;
-		wrk_x+=CosDegrees(drctn)*40;
-		wrk_y+=SinDegrees(drctn)*40;
+		var tip=unit.Position+WorldVector.FromDirection(bearing) * 40;
 
-		var wrk_x2=unit.Position.X;
-		var wrk_y2=unit.Position.Y;
-		var drctn2=drctn;
-		drctn2-=10;
-		if(drctn2<0)
-			drctn2=360+drctn2;
-		wrk_x2+=CosDegrees(drctn2)*20;
-		wrk_y2+=SinDegrees(drctn2)*20;
-		var cl=0x1f;
-		DrawLine4((int)(wrk_x-CameraPosition.X),(int)(CameraPosition.Y-wrk_y),(int)(wrk_x2-CameraPosition.X),(int)(CameraPosition.Y-wrk_y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+		var barb=bearing;
+		barb-=10;
+		if(barb<0)
+			barb=360+barb;
+		DrawLine4(WorldToScreen(tip), WorldToScreen(unit.Position+WorldVector.FromDirection(barb) * 20), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
 
-		wrk_x2=unit.Position.X;
-		wrk_y2=unit.Position.Y;
-		drctn2=drctn;
-		drctn2-=350;
-		if(drctn2<0)
-			drctn2=360+drctn2;
-		wrk_x2+=CosDegrees(drctn2)*20;
-		wrk_y2+=SinDegrees(drctn2)*20;
-		cl=0x1f;
-		DrawLine4((int)(wrk_x-CameraPosition.X),(int)(CameraPosition.Y-wrk_y),(int)(wrk_x2-CameraPosition.X),(int)(CameraPosition.Y-wrk_y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+		barb=bearing;
+		barb-=350;
+		if(barb<0)
+			barb=360+barb;
+		DrawLine4(WorldToScreen(tip), WorldToScreen(unit.Position+WorldVector.FromDirection(barb) * 20), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
 		}
 	else
 		{	// 視認不可
-		var wrk_x=unit.Position.X+10+20;
-		var wrk_y=unit.Position.Y+40;
-		var wrk_x2=unit.Position.X-10+20;
-		var wrk_y2=unit.Position.Y+20;
-		var cl=0x1f;
-		DrawLine4((int)(wrk_x-CameraPosition.X),(int)(CameraPosition.Y-wrk_y),(int)(wrk_x2-CameraPosition.X),(int)(CameraPosition.Y-wrk_y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-		wrk_x=unit.Position.X-10+20;
-		wrk_y=unit.Position.Y+40;
-		wrk_x2=unit.Position.X+10+20;
-		wrk_y2=unit.Position.Y+20;
-		cl=0x1f;
-		DrawLine4((int)(wrk_x-CameraPosition.X),(int)(CameraPosition.Y-wrk_y),(int)(wrk_x2-CameraPosition.X),(int)(CameraPosition.Y-wrk_y2),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+		var from=new WorldPosition(unit.Position.X+10+20, unit.Position.Y+40);
+		var to=new WorldPosition(unit.Position.X-10+20, unit.Position.Y+20);
+		DrawLine4(WorldToScreen(from), WorldToScreen(to), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
+		from=new WorldPosition(unit.Position.X-10+20, unit.Position.Y+40);
+		to=new WorldPosition(unit.Position.X+10+20, unit.Position.Y+20);
+		DrawLine4(WorldToScreen(from), WorldToScreen(to), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
 		}
 	}
 
@@ -853,36 +790,35 @@ private void CancelSelection(int m)
 	BufferedMoveOrders[1].ClearsPath=0;
 	}
 
-private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int lc_lf_btn, ref int lc_ri_btn, int m)
+private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int leftButton, ref int rightButton, int m)
 	{
 	int n;
 	int right;
 	int bottom;
 	if( unit.EmergencyFlags[0]!=0 )
 		{
-		DrawLine5((int)(unit.Position.X-CameraPosition.X),(int)(CameraPosition.Y-unit.Position.Y),(int)(unit.EmergencyDestination.X-CameraPosition.X),(int)(CameraPosition.Y-unit.EmergencyDestination.Y),CMBT_WIDTH-1,CMBT_HEIGHT-1,PALT_RED);
+		DrawLine5(WorldToScreen(unit.Position), WorldToScreen(unit.EmergencyDestination), CMBT_WIDTH-1, CMBT_HEIGHT-1, PALT_RED);
 		}
 
 	for(n=0; unit.PathX[n]!=MAP_RIGHT+1; n++)
 		{
-		var cl=0xffff;
 		//cl=(31<<7)|(0); // Ｇ 各値最大３１
-		DrawLine4((int)(unit.PathX[n]-CameraPosition.X)-10,(int)(CameraPosition.Y-unit.PathY[n])-10,(int)(unit.PathX[n]-CameraPosition.X)+10,(int)(CameraPosition.Y-unit.PathY[n])-10,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-		DrawLine4((int)(unit.PathX[n]-CameraPosition.X)+10,(int)(CameraPosition.Y-unit.PathY[n])-10,(int)(unit.PathX[n]-CameraPosition.X)+10,(int)(CameraPosition.Y-unit.PathY[n])+10,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-		DrawLine4((int)(unit.PathX[n]-CameraPosition.X)+10,(int)(CameraPosition.Y-unit.PathY[n])+10,(int)(unit.PathX[n]-CameraPosition.X)-10,(int)(CameraPosition.Y-unit.PathY[n])+10,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-		DrawLine4((int)(unit.PathX[n]-CameraPosition.X)-10,(int)(CameraPosition.Y-unit.PathY[n])+10,(int)(unit.PathX[n]-CameraPosition.X)-10,(int)(CameraPosition.Y-unit.PathY[n])-10,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+		DrawLine4(WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(-10, -10), WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(10, -10), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
+		DrawLine4(WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(10, -10), WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(10, 10), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
+		DrawLine4(WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(10, 10), WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(-10, 10), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
+		DrawLine4(WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(-10, 10), WorldToScreen(unit.GetPathPoint(n))+new PixelPoint(-10, -10), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
 
 		if(n==0)
 			{
 			right=CMBT_WIDTH-1; bottom=CMBT_HEIGHT-1;
 			if( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked )
-				{DrawLine4((int)(Units[unit.Carrier].Position.X-CameraPosition.X),(int)(CameraPosition.Y-Units[unit.Carrier].Position.Y),(int)(unit.PathX[n]-CameraPosition.X),(int)(CameraPosition.Y-unit.PathY[n]),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));}
+				{DrawLine4(WorldToScreen(Units[unit.Carrier].Position), WorldToScreen(unit.GetPathPoint(n)), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));}
 			else
-				{DrawLine4(Sprites[sprite].Position.X,Sprites[sprite].Position.Y,(int)(unit.PathX[n]-CameraPosition.X),(int)(CameraPosition.Y-unit.PathY[n]),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));}
+				{DrawLine4(Sprites[sprite].Position, WorldToScreen(unit.GetPathPoint(n)), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));}
 			}
 		else
 			{
-			DrawLine4((int)(unit.PathX[n-1]-CameraPosition.X),(int)(CameraPosition.Y-unit.PathY[n-1]),(int)(unit.PathX[n]-CameraPosition.X),(int)(CameraPosition.Y-unit.PathY[n]),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+			DrawLine4(WorldToScreen(unit.GetPathPoint(n-1)), WorldToScreen(unit.GetPathPoint(n)), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
 			}
 		}
 
@@ -893,25 +829,25 @@ private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int lc_lf
 		if( MoveOrders[1].ClearsPath!=0 )
 			{
 			if( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked )
-				DrawLine4((int)(Units[unit.Carrier].Position.X-CameraPosition.X),(int)(CameraPosition.Y-Units[unit.Carrier].Position.Y),(int)(CursorPosition.x),(int)(CursorPosition.y),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4(WorldToScreen(Units[unit.Carrier].Position), new PixelPoint(CursorPosition.x, CursorPosition.y), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
 			else
-				DrawLine4((int)(unit.Position.X-CameraPosition.X),(int)(CameraPosition.Y-unit.Position.Y),(int)(CursorPosition.x),(int)(CursorPosition.y),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+				DrawLine4(WorldToScreen(unit.Position), new PixelPoint(CursorPosition.x, CursorPosition.y), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
 			}
 		else
-			DrawLine4((int)(unit.PathX[n-1]-CameraPosition.X),(int)(CameraPosition.Y-unit.PathY[n-1]),(int)(CursorPosition.x),(int)(CursorPosition.y),CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+			DrawLine4(WorldToScreen(unit.GetPathPoint(n-1)), new PixelPoint(CursorPosition.x, CursorPosition.y), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
 		}
 
 	// 定点設定
-	if( lc_lf_btn==1 && CursorPosition.x < CMBT_WIDTH && CanSetDestination(ref unit) )
+	if( leftButton==1 && CursorPosition.x < CMBT_WIDTH && CanSetDestination(ref unit) )
 		{
 		SetDestination(new WorldPosition(CursorPosition.x+CameraPosition.X, CameraPosition.Y-CursorPosition.y));
 		}
 
 	if( 1!=0 )
 		{
-		if( lc_ri_btn==1 )
+		if( rightButton==1 )
 			{
-			lc_ri_btn=0;
+			rightButton=0;
 			CancelSelection(m);
 			}
 		}
@@ -935,14 +871,13 @@ private bool CanClickUnit(ref Unit unit)
 		 && !(unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.IsSubmerged);
 	}
 
-private bool DrawUnitMarks(bool goto_dca1, ref Unit unit, SpriteId sprite, ref int lc_lf_btn, int m, ref int lc_ri_btn)
+private bool DrawUnitMarks(bool isPositioned, ref Unit unit, SpriteId sprite, ref int leftButton, int m, ref int rightButton)
 	{
-	RECT dstn_rect;
-	RECT wrk_rect;
+	RECT destination;
+	RECT clickArea;
 	int right;
 	int bottom;
-	int n;
-	if( !goto_dca1 )
+	if( !isPositioned )
 	{
 
 //				sprite=UNIT_JPN;		//Off Screen Number		日本海軍の表示
@@ -965,7 +900,7 @@ private bool DrawUnitMarks(bool goto_dca1, ref Unit unit, SpriteId sprite, ref i
 		{
 		if( unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.IsSubmerged )
 			{	// およその敵潜航潜水艦
-			Sprites[sprite].Position = new PixelPoint((int)(unit.ContactX-CameraPosition.X), (int)(CameraPosition.Y-unit.ContactY));
+			Sprites[sprite].Position = WorldToScreen(unit.ContactPosition);
 			}
 		else
 			{	// マップ上のユニット
@@ -977,22 +912,22 @@ private bool DrawUnitMarks(bool goto_dca1, ref Unit unit, SpriteId sprite, ref i
 	}
 
 // dca1:
-	dstn_rect.left=Sprites[sprite].Position.X-Sprites[sprite].Center.X;
-	dstn_rect.top=Sprites[sprite].Position.Y-Sprites[sprite].Center.Y;
-	dstn_rect.right=dstn_rect.left+Sprites[sprite].Size.Width-2;
-	dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Size.Height-2;
+	destination.left=Sprites[sprite].Position.X-Sprites[sprite].Center.X;
+	destination.top=Sprites[sprite].Position.Y-Sprites[sprite].Center.Y;
+	destination.right=destination.left+Sprites[sprite].Size.Width-2;
+	destination.bottom=destination.top+Sprites[sprite].Size.Height-2;
 
-	wrk_rect.left=dstn_rect.left+20;
-	wrk_rect.top=dstn_rect.top+20;
-	wrk_rect.right=dstn_rect.right-20;
-	wrk_rect.bottom=dstn_rect.bottom-20;
+	clickArea.left=destination.left+20;
+	clickArea.top=destination.top+20;
+	clickArea.right=destination.right-20;
+	clickArea.bottom=destination.bottom-20;
 
 	// クリック選択・非選択
-	if( PointInRect(ref wrk_rect,CursorPosition.x,CursorPosition.y)!=0 && CanClickUnit(ref unit)
+	if( PointInRect(ref clickArea,CursorPosition.x,CursorPosition.y)!=0 && CanClickUnit(ref unit)
 		 && !(unit.PlaneState!=UnitState.Parked && CursorPosition.x>=CMBT_WIDTH-1)
 		)
 		{
-		HandleUnitClick(ref unit, ref dstn_rect, ref lc_lf_btn, m, sprite);
+		HandleUnitClick(ref unit, ref destination, ref leftButton, m, sprite);
 		}
 
 	if( m==0 )
@@ -1003,20 +938,19 @@ private bool DrawUnitMarks(bool goto_dca1, ref Unit unit, SpriteId sprite, ref i
 		{right=SCRN_WIDTH-1; bottom=SCRN_HEIGHT-1;}
 	else
 		{right=CMBT_WIDTH-1; bottom=CMBT_HEIGHT-1;}
-	var cl=0xffff;
 	if( SelectedUnit==m && m!=0)
 		{
-		DrawSelectedUnit(ref dstn_rect, right, bottom);
+		DrawSelectedUnit(ref destination, right, bottom);
 		}
 	else
 		{
 		if( Selections[1][m]!=0 )
 			{
-			n=20;
-			DrawLine4(dstn_rect.left+n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.top+n,right,bottom,RGB(255,255,255));
-			DrawLine4(dstn_rect.right-n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.bottom-n,right,bottom,RGB(255,255,255));
-			DrawLine4(dstn_rect.right-n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.bottom-n,right,bottom,RGB(255,255,255));
-			DrawLine4(dstn_rect.left+n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.top+n,right,bottom,RGB(255,255,255));
+			var n=20;
+			DrawLine4(destination.left+n,destination.top+n,destination.right-n,destination.top+n,right,bottom,RGB(255,255,255));
+			DrawLine4(destination.right-n,destination.top+n,destination.right-n,destination.bottom-n,right,bottom,RGB(255,255,255));
+			DrawLine4(destination.right-n,destination.bottom-n,destination.left+n,destination.bottom-n,right,bottom,RGB(255,255,255));
+			DrawLine4(destination.left+n,destination.bottom-n,destination.left+n,destination.top+n,right,bottom,RGB(255,255,255));
 			}
 		}
 
@@ -1029,20 +963,18 @@ private bool DrawUnitMarks(bool goto_dca1, ref Unit unit, SpriteId sprite, ref i
 	else  if( SelectedUnit!=0 && Units[SelectedUnit].Target==m )
 		{
 		// 攻撃先 としてのマーク
-		cl=0x1f;
-		n=10+(FrameCount%8)*2;
-		DrawLine4(dstn_rect.left+n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-		DrawLine4(dstn_rect.right-n,dstn_rect.top+n,dstn_rect.right-n,dstn_rect.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-		DrawLine4(dstn_rect.right-n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-		DrawLine4(dstn_rect.left+n,dstn_rect.bottom-n,dstn_rect.left+n,dstn_rect.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+		var n=10+(FrameCount%8)*2;
+		DrawLine4(destination.left+n,destination.top+n,destination.right-n,destination.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+		DrawLine4(destination.right-n,destination.top+n,destination.right-n,destination.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+		DrawLine4(destination.right-n,destination.bottom-n,destination.left+n,destination.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+		DrawLine4(destination.left+n,destination.bottom-n,destination.left+n,destination.top+n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 		}
 	else  if( SelectedUnit!=0 && Units[SelectedUnit].Carrier==m && Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Flying)
 		{
 		// 攻撃先 としてのマーク
-		cl=0x1f;
-		n=15;
-		DrawLine4(dstn_rect.right-n-4,dstn_rect.bottom-n,dstn_rect.left+n+4,dstn_rect.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
-		DrawLine4(dstn_rect.right-n-4,dstn_rect.bottom-n+2,dstn_rect.left+n+4,dstn_rect.bottom-n+2,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+		var n=15;
+		DrawLine4(destination.right-n-4,destination.bottom-n,destination.left+n+4,destination.bottom-n,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
+		DrawLine4(destination.right-n-4,destination.bottom-n+2,destination.left+n+4,destination.bottom-n+2,CMBT_WIDTH-1,CMBT_HEIGHT-1,RGB(255,255,255));
 		}
 
 		// 攻撃先 着艦先 の方向
@@ -1056,14 +988,14 @@ private bool DrawUnitMarks(bool goto_dca1, ref Unit unit, SpriteId sprite, ref i
 		{
 
 		// 緊急移動先までの線
-		DrawPathAndSetDestination(ref unit, sprite, lc_lf_btn, ref lc_ri_btn, m);
+		DrawPathAndSetDestination(ref unit, sprite, leftButton, ref rightButton, m);
 		}
 	return true;
 	}
 
-private void DrawUnit(ref Unit unit, SpriteId sprite, ref RECT src_rect, ref RECT info_rect, ref RECT field_rect, ref int plane_fling_sound)
+private void DrawUnit(ref Unit unit, SpriteId sprite, ref RECT source, ref RECT infoArea, ref RECT field, ref int playsPlaneSound)
 	{
-	RECT dstn_rect;
+	RECT destination;
 	switch((int)(unit.Direction/22.5))
 		{
 		case 0: case 15:
@@ -1108,21 +1040,21 @@ private void DrawUnit(ref Unit unit, SpriteId sprite, ref RECT src_rect, ref REC
 				Sprites[sprite].Position = unit.Position.ToPixelPoint();
 
 				// src_rect は ソースサーフェスのレクタングルです。
-				src_rect.left = Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width * (Sprites[sprite].Frame % Sprites[sprite].FramesPerRow)) +1;
-				src_rect.top = Sprites[sprite].SheetPosition.Y+(Sprites[sprite].Size.Height* (Sprites[sprite].Frame / Sprites[sprite].FramesPerRow)) +1;
-				src_rect.right = (src_rect.left + Sprites[sprite].Size.Width)-2;
-				src_rect.bottom = (src_rect.top + Sprites[sprite].Size.Height)-2;
+				source.left = Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width * (Sprites[sprite].Frame % Sprites[sprite].FramesPerRow)) +1;
+				source.top = Sprites[sprite].SheetPosition.Y+(Sprites[sprite].Size.Height* (Sprites[sprite].Frame / Sprites[sprite].FramesPerRow)) +1;
+				source.right = (source.left + Sprites[sprite].Size.Width)-2;
+				source.bottom = (source.top + Sprites[sprite].Size.Height)-2;
 
 				// dstn_rect は ディスティネーションレクタングルです。
 
-				dstn_rect.left=Sprites[sprite].Position.X-Sprites[sprite].Center.X;
-				dstn_rect.top=Sprites[sprite].Position.Y-Sprites[sprite].Center.Y;
-				dstn_rect.right=dstn_rect.left+Sprites[sprite].Size.Width-2;
-				dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Size.Height-2;
+				destination.left=Sprites[sprite].Position.X-Sprites[sprite].Center.X;
+				destination.top=Sprites[sprite].Position.Y-Sprites[sprite].Center.Y;
+				destination.right=destination.left+Sprites[sprite].Size.Width-2;
+				destination.bottom=destination.top+Sprites[sprite].Size.Height-2;
 
-				if( ClipRects(ref dstn_rect,ref src_rect,ref info_rect)!=0 )
+				if( ClipRects(ref destination,ref source,ref infoArea)!=0 )
 					{
-					if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref src_rect),DDBLTFAST_SRCCOLORKEY) )
+					if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref source),DDBLTFAST_SRCCOLORKEY) )
 						{
 						RestoreSurfaces();
 						}
@@ -1146,27 +1078,27 @@ private void DrawUnit(ref Unit unit, SpriteId sprite, ref RECT src_rect, ref REC
 			}
 
 		// src_rect は ソースサーフェスのレクタングルです。
-		src_rect.left = Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width * (Sprites[sprite].Frame % Sprites[sprite].FramesPerRow)) +1;
-		src_rect.top = Sprites[sprite].SheetPosition.Y+(Sprites[sprite].Size.Height* (Sprites[sprite].Frame / Sprites[sprite].FramesPerRow)) +1;
-		src_rect.right = (src_rect.left + Sprites[sprite].Size.Width)-2;
-		src_rect.bottom = (src_rect.top + Sprites[sprite].Size.Height)-2;
+		source.left = Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width * (Sprites[sprite].Frame % Sprites[sprite].FramesPerRow)) +1;
+		source.top = Sprites[sprite].SheetPosition.Y+(Sprites[sprite].Size.Height* (Sprites[sprite].Frame / Sprites[sprite].FramesPerRow)) +1;
+		source.right = (source.left + Sprites[sprite].Size.Width)-2;
+		source.bottom = (source.top + Sprites[sprite].Size.Height)-2;
 
 		// dstn_rect は ディスティネーションレクタングルです。
-		dstn_rect.left=Sprites[sprite].Position.X-Sprites[sprite].Center.X;
-		dstn_rect.top=Sprites[sprite].Position.Y-Sprites[sprite].Center.Y;
-		dstn_rect.right=dstn_rect.left+Sprites[sprite].Size.Width-2;
-		dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Size.Height-2;
-		if( ClipRects(ref dstn_rect,ref src_rect,ref field_rect)!=0 )
+		destination.left=Sprites[sprite].Position.X-Sprites[sprite].Center.X;
+		destination.top=Sprites[sprite].Position.Y-Sprites[sprite].Center.Y;
+		destination.right=destination.left+Sprites[sprite].Size.Width-2;
+		destination.bottom=destination.top+Sprites[sprite].Size.Height-2;
+		if( ClipRects(ref destination,ref source,ref field)!=0 )
 			{
-			if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref src_rect),DDBLTFAST_SRCCOLORKEY) )
+			if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref source),DDBLTFAST_SRCCOLORKEY) )
 				{
 				RestoreSurfaces();
 				}
 
-			if( !IsEditingMap && plane_fling_sound==0 && Result==GameResult.None && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying && (FrameCount%10)==0 )
+			if( !IsEditingMap && playsPlaneSound==0 && Result==GameResult.None && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying && (FrameCount%10)==0 )
 				{
 				PlaySoundEffect( 0, SoundId.PlaneFlying ,unit.Position.X, unit.Position.Y);
-				plane_fling_sound=1;
+				playsPlaneSound=1;
 				}
 
 			}
@@ -1180,14 +1112,14 @@ private bool AimLanding(SpriteId sprite, int x, int y)
 	// カーソルの示す、マップチップの場所
 	// BUG(NSPW NET): a cursor off the map gives a tile outside it, which NSPW NET reads out of bounds; the port throws
 	// instead (docs/KnownIssues.md).
-	var map_bld_x=(int)(((x+40+(int)CameraPosition.X)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
-	var map_bld_y=(int)((MAP_TOP-((int)CameraPosition.Y-y-40 ))/Sprites[SpriteId.MapTiles].Size.Height);
+	var column=(int)(((x+40+(int)CameraPosition.X)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
+	var row=(int)((MAP_TOP-((int)CameraPosition.Y-y-40 ))/Sprites[SpriteId.MapTiles].Size.Height);
 	if(
-		MapTiles[map_bld_y][map_bld_x]==9 ||
-		MapTiles[map_bld_y][map_bld_x]==8 ||
-		MapTiles[map_bld_y][map_bld_x]==7 ||
-		MapTiles[map_bld_y][map_bld_x]==5 ||
-		MapTiles[map_bld_y][map_bld_x]==2
+		MapTiles[row][column]==9 ||
+		MapTiles[row][column]==8 ||
+		MapTiles[row][column]==7 ||
+		MapTiles[row][column]==5 ||
+		MapTiles[row][column]==2
 		)
 		{
 		Sprites[sprite].Position = new PixelPoint((((x+40+(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Size.Width)/80)*80)-(int)(CameraPosition.X-MAP_LEFT)%Sprites[SpriteId.MapTiles].Size.Width, (((y+40+(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Size.Height)/80)*80)-(int)(MAP_TOP-CameraPosition.Y)%Sprites[SpriteId.MapTiles].Size.Height);
@@ -1222,39 +1154,39 @@ public SpriteId GetUnitSprites(ref Unit unit)
 [Original("draw_cmbt_area")]
 public void	DrawBattleArea()
 	{
-	RECT	src_rect = default,field_rect,info_rect;
+	RECT	source = default,field,infoArea;
 	 
 	 
 
-	Array256<byte> cBuf = default;
+	Array256<byte> keys = default;
 
-	var plane_fling_sound=0;
+	var playsPlaneSound=0;
 
 	// field_rect は 戦域画面のレクタングルです。
-	field_rect.left=0;
-	field_rect.top=0;
-	field_rect.right=CMBT_WIDTH;
-	field_rect.bottom=CMBT_HEIGHT;
+	field.left=0;
+	field.top=0;
+	field.right=CMBT_WIDTH;
+	field.bottom=CMBT_HEIGHT;
 
 	// info_rect は インフォのレクタングルです
 
-	info_rect.left=Sprites[SpriteId.JapanUnitInfo].Position.X;
-	info_rect.top=Sprites[SpriteId.JapanUnitInfo].Position.Y;
-	info_rect.right=info_rect.left+Sprites[SpriteId.JapanUnitInfo].Size.Width;
-	info_rect.bottom=info_rect.top+Sprites[SpriteId.JapanUnitInfo].Size.Height;
+	infoArea.left=Sprites[SpriteId.JapanUnitInfo].Position.X;
+	infoArea.top=Sprites[SpriteId.JapanUnitInfo].Position.Y;
+	infoArea.right=infoArea.left+Sprites[SpriteId.JapanUnitInfo].Size.Width;
+	infoArea.bottom=infoArea.top+Sprites[SpriteId.JapanUnitInfo].Size.Height;
 
 	// カーソルの示す、マップチップの場所
-	var map_bld_x=(int)(((CursorPosition.x+40+(int)CameraPosition.X)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
-	var map_bld_y=(int)((MAP_TOP-((int)CameraPosition.Y-CursorPosition.y-40 ))/Sprites[SpriteId.MapTiles].Size.Height);
+	var editedColumn=(int)(((CursorPosition.x+40+(int)CameraPosition.X)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
+	var editedRow=(int)((MAP_TOP-((int)CameraPosition.Y-CursorPosition.y-40 ))/Sprites[SpriteId.MapTiles].Size.Height);
 
 	// 標準キャラよう背景の表示
-	var cm_scrn_x=(int)((CameraPosition.X-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
-	var cm_scrn_y=(int)((MAP_TOP-CameraPosition.Y)/Sprites[SpriteId.MapTiles].Size.Height);
+	var firstColumn=(int)((CameraPosition.X-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
+	var firstRow=(int)((MAP_TOP-CameraPosition.Y)/Sprites[SpriteId.MapTiles].Size.Height);
 
-	DrawMapTiles(cm_scrn_y, cm_scrn_x, map_bld_y, map_bld_x, ref cBuf, ref src_rect, ref field_rect);
+	DrawMapTiles(firstRow, firstColumn, editedRow, editedColumn, ref keys, ref source, ref field);
 
 	// ロウエフェクト
-	UpdateLowerEffects( &field_rect,&info_rect );
+	UpdateLowerEffects( &field,&infoArea );
 
 	// 自サイドユニットからの距離により、可視不可視
 
@@ -1265,16 +1197,16 @@ public void	DrawBattleArea()
 	SelectOrders[1].IsSet=false;
 
 	// 標準キャラの表示
-	int lc_ri_btn=RightButton;
-	int lc_lf_btn=LeftButton;
+	int rightButton=RightButton;
+	int leftButton=LeftButton;
 
 	if(  HasOrdered && Result==GameResult.None)
 		{
-		lc_ri_btn=0;
-		lc_lf_btn=0;
+		rightButton=0;
+		leftButton=0;
 		}
 
-	if( lc_ri_btn==1 || lc_lf_btn==1 )
+	if( rightButton==1 || leftButton==1 )
 		PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
 
 	// The host's UI's commands for clicks on the battlefield (UICommands.cs): taken here, as the clicks are, and dropped
@@ -1288,7 +1220,7 @@ public void	DrawBattleArea()
 		if( m==JPN_PLANE_START )
 			{
 			// 雲を描画します。
-			DrawClouds( &field_rect );
+			DrawClouds( &field );
 			}
 
 		var sprite=GetUnitSprites(ref unit);
@@ -1300,33 +1232,33 @@ public void	DrawBattleArea()
 	)
 			)
 			{
-			DrawUnit(ref unit, sprite, ref src_rect, ref info_rect, ref field_rect, ref plane_fling_sound);
+			DrawUnit(ref unit, sprite, ref source, ref infoArea, ref field, ref playsPlaneSound);
 			}
 
-		var goto_dca1=false;
+		var isPositioned=false;
 		if (  m==0 && SelectedUnit!=0 && Units[SelectedUnit].Kind==UnitKind.Transport && m!=SelectedUnit)
 			{
 			// カーソルのある場所が
 			if( AimLanding(sprite, CursorPosition.x, CursorPosition.y) )
 				{
-				goto_dca1=true;
+				isPositioned=true;
 				}
 			}
 
-		if( goto_dca1 || unit.IsUsed && (unit.Side==LocalSide || unit.IsFound)  )
+		if( isPositioned || unit.IsUsed && (unit.Side==LocalSide || unit.IsFound)  )
 			{
-			if( !DrawUnitMarks(goto_dca1, ref unit, sprite, ref lc_lf_btn, m, ref lc_ri_btn) )
+			if( !DrawUnitMarks(isPositioned, ref unit, sprite, ref leftButton, m, ref rightButton) )
 				continue;
 			}
 		}
 
-	if( lc_ri_btn==1 )
+	if( rightButton==1 )
 		{
 		RestoreSelection();
 		}
 
 	// アッパーエフェクト
-	UpdateUpperEffects(&field_rect,&info_rect);
+	UpdateUpperEffects(&field,&infoArea);
 
 	}
 }

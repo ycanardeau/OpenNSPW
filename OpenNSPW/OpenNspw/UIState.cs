@@ -16,19 +16,19 @@ public unsafe partial class Nspw
 		if( UnitInfoPanel[0]==0 )
 			return [];
 
-		Array8<int> len = default;
-		Array8<Array128<byte>> ach = default;
-		WriteUnitDetails(ref len, ref ach);
-		return [Decode(ach[0], len[0]), Decode(ach[1], len[1]), Decode(ach[2], len[2]), Decode(ach[3], len[3])];
+		Array8<int> length = default;
+		Array8<Array128<byte>> text = default;
+		WriteUnitDetails(ref length, ref text);
+		return [Decode(text[0], length[0]), Decode(text[1], length[1]), Decode(text[2], length[2]), Decode(text[3], length[3])];
 	}
 
 	// The name of the reinforcement chosen in the supply panel (WriteSupplyTargetName).
 	public string ReadSupplyTargetName()
 	{
-		Array8<int> len = default;
-		Array8<Array128<byte>> ach = default;
-		WriteSupplyTargetName(ref len, ref ach);
-		return Decode(ach[0], len[0]);
+		Array8<int> length = default;
+		Array8<Array128<byte>> text = default;
+		WriteSupplyTargetName(ref length, ref text);
+		return Decode(text[0], length[0]);
 	}
 
 	// Whether the last frame showed the chosen reinforcement's picture (UpdateUnitInfo): in every frame of a battle but
@@ -53,30 +53,30 @@ public unsafe partial class Nspw
 	// The scenarios of the setting screen's list, on the page of the scenario chosen (ListScenarioNames).
 	public string[] ReadScenarioNames()
 	{
-		Array12<int> len = default;
-		Array12<Array128<byte>> ach = default;
+		Array12<int> length = default;
+		Array12<Array128<byte>> text = default;
 		var m = -1;
-		ListScenarioNames(ref m, ref len, ref ach);
-		return [.. Enumerable.Range(0, m + 1).Select(n => Decode(ach[n], len[n]))];
+		ListScenarioNames(ref m, ref length, ref text);
+		return [.. Enumerable.Range(0, m + 1).Select(n => Decode(text[n], length[n]))];
 	}
 
 	// What the setting screen says about the scenario chosen, a line each, the victory conditions last
 	// (DrawScenarioDescription).
 	public string[] ReadScenarioDescription()
 	{
-		Array12<int> len = default;
-		Array12<Array128<byte>> ach = default;
-		DrawScenarioDescription(ref len, ref ach);
-		return [.. Enumerable.Range(1, 6).Select(n => Decode(ach[n], len[n]))];
+		Array12<int> length = default;
+		Array12<Array128<byte>> text = default;
+		DrawScenarioDescription(ref length, ref text);
+		return [.. Enumerable.Range(1, 6).Select(n => Decode(text[n], length[n]))];
 	}
 
 	// The rule of the reinforcements, in the setting screen's words (WriteArrivalControl).
 	public string ReadArrivalControl()
 	{
-		Array12<int> len = default;
-		Array12<Array128<byte>> ach = default;
-		WriteArrivalControl(ref len, ref ach);
-		return Decode(ach[0], len[0]);
+		Array12<int> length = default;
+		Array12<Array128<byte>> text = default;
+		WriteArrivalControl(ref length, ref text);
+		return Decode(text[0], length[0]);
 	}
 
 	// The result of the battle, as the game writes it over the battlefield once it is over (WriteResult), or none.
@@ -85,10 +85,10 @@ public unsafe partial class Nspw
 		if( Result==GameResult.None )
 			return [];
 
-		Array5<int> len = default;
-		Array5<Array128<byte>> ach = default;
-		WriteResult(ref len, ref ach);
-		return [Decode(ach[0], len[0]), Decode(ach[1], len[1]), Decode(ach[2], len[2])];
+		Array5<int> length = default;
+		Array5<Array128<byte>> text = default;
+		WriteResult(ref length, ref text);
+		return [Decode(text[0], length[0]), Decode(text[1], length[1]), Decode(text[2], length[2])];
 	}
 
 	// What the game writes in the screen's top left corner on any screen, as UpdateFrame does: that the players are out
@@ -110,9 +110,9 @@ public unsafe partial class Nspw
 	// The player's and the rival's chat, each while the game shows it (DrawMyChat, DrawRivalChat), or empty.
 	public (string Mine, string Rival) ReadChat()
 	{
-		Array128<byte> ach = default;
-		var mine = MyChatDisplayTime!=0 ? Decode(ach, wsprintf(ach, MyChat)) : "";
-		var rival = RivalChatDisplayTime!=0 ? Decode(ach, wsprintf(ach, RivalChat)) : "";
+		Array128<byte> text = default;
+		var mine = MyChatDisplayTime!=0 ? Decode(text, wsprintf(text, MyChat)) : "";
+		var rival = RivalChatDisplayTime!=0 ? Decode(text, wsprintf(text, RivalChat)) : "";
 		return (mine, rival);
 	}
 
@@ -167,17 +167,15 @@ public unsafe partial class Nspw
 	}
 
 	// Where a unit looks from: a fighter a little ahead of itself (FT_EYE).
-	private (double X, double Y) EyeOf(ref Unit unit)
+	private WorldPosition EyeOf(ref Unit unit)
 	{
-		var x=unit.Position.X;
-		var y=unit.Position.Y;
+		var eye=unit.Position;
 		if( unit.Kind==UnitKind.Fighter )
 			{
-			x+=CosDegrees(unit.Direction)*FT_EYE;
-			y+=SinDegrees(unit.Direction)*FT_EYE;
+			eye+=WorldVector.FromDirection(unit.Direction) * FT_EYE;
 			}
 
-		return (x, y);
+		return eye;
 	}
 
 	// Whether one of the player's units, but parked planes, sees an effect at a point (UpdateLowerEffects).
@@ -188,8 +186,7 @@ public unsafe partial class Nspw
 			ref var unit = ref Units[n];
 			if( unit.IsUsed && unit.Side==LocalSide && unit.PlaneState!=UnitState.Parked )
 				{
-				var (x, y) = EyeOf(ref unit);
-				if( Distance(x-position.X, y-position.Y)<=EffectSightOf(ref unit) )
+				if( (EyeOf(ref unit)-position).Length<=EffectSightOf(ref unit) )
 					return true;
 				}
 			}
@@ -206,10 +203,8 @@ public unsafe partial class Nspw
 			ref var unit = ref Units[f];
 			if( unit.IsUsed && unit.Side==LocalSide && unit.PlaneState!=UnitState.Parked )
 				{
-				var (x, y) = EyeOf(ref unit);
-				x=x-((column*Sprites[SpriteId.MapTiles].Size.Width)-MAP_RIGHT);
-				y=y-(MAP_TOP-(row*Sprites[SpriteId.MapTiles].Size.Height));
-				if( Distance(x, y)<=(double)GetDetectionSize(f,0) )
+				var tile=new WorldPosition((column*Sprites[SpriteId.MapTiles].Size.Width)-MAP_RIGHT, MAP_TOP-(row*Sprites[SpriteId.MapTiles].Size.Height));
+				if( (EyeOf(ref unit)-tile).Length<=(double)GetDetectionSize(f,0) )
 					return true;
 				}
 			}

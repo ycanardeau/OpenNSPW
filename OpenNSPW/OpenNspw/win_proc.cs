@@ -70,37 +70,37 @@ public void	RestoreSurfaces()
 public void	LoadUserMap()
 	{
 	short n;
-	Array256<Array256<ushort>> szBuf = default;					// マップ
+	Array256<Array256<ushort>> path = default;					// マップ
 
 	var hFile=CreateFile( UserScenarioFileName /*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
 								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
 
 	if( hFile != INVALID_HANDLE_VALUE )
 		{
-		uint	dwActBytes;
+		uint	bytesTransferred;
 
 		// 読み込み
 		SetFilePointer( hFile,0,0,FILE_BEGIN);		// 先頭へ
 
-		ReadFile( hFile, ref szBuf, (uint)(sizeof(Array256<Array256<ushort>>)), &dwActBytes, null );
+		ReadFile( hFile, ref path, (uint)(sizeof(Array256<Array256<ushort>>)), &bytesTransferred, null );
 
 		// バッファよりデータへ
 		// データ を バッファへ
 		for(short m=0;m<=255;m++)
 			for(n=0;n<=255;n++)
-				MapTiles[m][n]=szBuf[m][n];
+				MapTiles[m][n]=path[m][n];
 
-		ReadFile( hFile, ref Units, (uint)(sizeof(Array256<Unit>)), &dwActBytes, null );
-		ReadFile( hFile, ref Reinforcements, (uint)(sizeof(Array3<byte>)), &dwActBytes, null );
+		ReadFile( hFile, ref Units, (uint)(sizeof(Array256<Unit>)), &bytesTransferred, null );
+		ReadFile( hFile, ref Reinforcements, (uint)(sizeof(Array3<byte>)), &bytesTransferred, null );
 
-		ReadFile( hFile, ref IsDecisionEnabled,  sizeof(byte) , &dwActBytes, null );
-		ReadFile( hFile, ref ArrivalControl, sizeof(byte), &dwActBytes, null );
+		ReadFile( hFile, ref IsDecisionEnabled,  sizeof(byte) , &bytesTransferred, null );
+		ReadFile( hFile, ref ArrivalControl, sizeof(byte), &bytesTransferred, null );
 
-		ReadFile( hFile, ref SupplyRates, (uint)(sizeof(Array2<short>)), &dwActBytes, null );
-		ReadFile( hFile, ref InitialSupplyPoints, (uint)(sizeof(Array2<short>)), &dwActBytes, null );
+		ReadFile( hFile, ref SupplyRates, (uint)(sizeof(Array2<short>)), &bytesTransferred, null );
+		ReadFile( hFile, ref InitialSupplyPoints, (uint)(sizeof(Array2<short>)), &bytesTransferred, null );
 
-		ReadFile( hFile, ref SwapTime, sizeof(short), &dwActBytes, null );
-		ReadFile( hFile, ref SwapRule, sizeof(short), &dwActBytes, null );
+		ReadFile( hFile, ref SwapTime, sizeof(short), &bytesTransferred, null );
+		ReadFile( hFile, ref SwapRule, sizeof(short), &bytesTransferred, null );
 
 		CloseHandle(hFile);
 		}
@@ -111,7 +111,7 @@ public void	LoadUserMap()
 public void	LoadScenarioFile2(string str)
 	{
 	short n;
-	Array256<Array256<ushort>> szBuf = default;					// マップ
+	Array256<Array256<ushort>> path = default;					// マップ
 
 	if( strcmp ( str,"Map\\South_pacific.dat")==0 )
 		CurrentMap=0;
@@ -125,18 +125,18 @@ public void	LoadScenarioFile2(string str)
 
 	if( hFile != INVALID_HANDLE_VALUE )
 		{
-		uint	dwActBytes;
+		uint	bytesTransferred;
 
 		// 読み込み
 		SetFilePointer( hFile,0,0,FILE_BEGIN);		// 先頭へ
 
-		ReadFile( hFile, ref szBuf, (uint)(sizeof(Array256<Array256<ushort>>)), &dwActBytes, null );
+		ReadFile( hFile, ref path, (uint)(sizeof(Array256<Array256<ushort>>)), &bytesTransferred, null );
 
 		// バッファよりデータへ
 		// データ を バッファへ
 		for(short m=0;m<=255;m++)
 			for(n=0;n<=255;n++)
-				MapTiles[m][n]=szBuf[m][n];
+				MapTiles[m][n]=path[m][n];
 
 		CloseHandle(hFile);
 		}
@@ -147,28 +147,28 @@ public void	LoadScenarioFile2(string str)
 public void	LoadScenarioFile3()
 	{
 	short n;
-	Array256<Array256<ushort>> szBuf = default;					// マップ
+	Array256<Array256<ushort>> path = default;					// マップ
 
 	var hFile=CreateFile( UserScenarioFileName /*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
 								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
 
 	if( hFile != INVALID_HANDLE_VALUE )
 		{
-		uint	dwActBytes;
+		uint	bytesTransferred;
 
 		// 読み込み
 		SetFilePointer( hFile,0,0,FILE_BEGIN);		// 先頭へ
 
-		ReadFile( hFile, ref szBuf, (uint)(sizeof(Array256<Array256<ushort>>)), &dwActBytes, null );
+		ReadFile( hFile, ref path, (uint)(sizeof(Array256<Array256<ushort>>)), &bytesTransferred, null );
 
 		// バッファよりデータへ
 		// データ を バッファへ
 		for(short m=0;m<=255;m++)
 			for(n=0;n<=255;n++)
-				MapTiles[m][n]=szBuf[m][n];
+				MapTiles[m][n]=path[m][n];
 
-		ReadFile( hFile, ref Units, (uint)(sizeof(Array256<Unit>)), &dwActBytes, null );
-		ReadFile( hFile, ref Reinforcements, (uint)(sizeof(Array3<byte>)), &dwActBytes, null );
+		ReadFile( hFile, ref Units, (uint)(sizeof(Array256<Unit>)), &bytesTransferred, null );
+		ReadFile( hFile, ref Reinforcements, (uint)(sizeof(Array3<byte>)), &bytesTransferred, null );
 
 		CloseHandle(hFile);
 		}
@@ -179,8 +179,8 @@ public void	LoadScenarioFile3()
 public void	SaveUserMap()
 	{
 	short n;
-	uint	dwActBytes;
-	Array256<Array256<ushort>> szBuf = default;					// マップ
+	uint	bytesTransferred;
+	Array256<Array256<ushort>> path = default;					// マップ
 
 	var hFile=CreateFile( UserScenarioFileName/*"Map\\user_map.dat"*/, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
 								null, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
@@ -195,23 +195,23 @@ public void	SaveUserMap()
 		// データ を バッファへ
 		for(short m=0;m<=255;m++)
 			for(n=0;n<=255;n++)
-				szBuf[m][n]=MapTiles[m][n];
+				path[m][n]=MapTiles[m][n];
 
-		WriteFile(hFile, ref szBuf,(uint)(sizeof(Array256<Array256<ushort>>)),&dwActBytes,null);	// 書き込み
+		WriteFile(hFile, ref path,(uint)(sizeof(Array256<Array256<ushort>>)),&bytesTransferred,null);	// 書き込み
 
 		//　ユニット、その他を記録
 		// 書き込み
-		WriteFile(hFile, ref Units,(uint)(sizeof(Array256<Unit>)),&dwActBytes,null);
-		WriteFile(hFile, ref Reinforcements,(uint)(sizeof(Array3<byte>)),&dwActBytes,null);
+		WriteFile(hFile, ref Units,(uint)(sizeof(Array256<Unit>)),&bytesTransferred,null);
+		WriteFile(hFile, ref Reinforcements,(uint)(sizeof(Array3<byte>)),&bytesTransferred,null);
 
-		WriteFile(hFile, ref IsDecisionEnabled,sizeof(byte),&dwActBytes,null);
-		WriteFile(hFile, ref ArrivalControl,sizeof(byte),&dwActBytes,null);
+		WriteFile(hFile, ref IsDecisionEnabled,sizeof(byte),&bytesTransferred,null);
+		WriteFile(hFile, ref ArrivalControl,sizeof(byte),&bytesTransferred,null);
 
-		WriteFile(hFile, ref SupplyRates,(uint)(sizeof(Array2<short>)),&dwActBytes,null);
-		WriteFile(hFile, ref InitialSupplyPoints,(uint)(sizeof(Array2<short>)),&dwActBytes,null);
+		WriteFile(hFile, ref SupplyRates,(uint)(sizeof(Array2<short>)),&bytesTransferred,null);
+		WriteFile(hFile, ref InitialSupplyPoints,(uint)(sizeof(Array2<short>)),&bytesTransferred,null);
 
-		WriteFile(hFile, ref SwapTime,sizeof(short),&dwActBytes,null);
-		WriteFile(hFile, ref SwapRule,sizeof(short),&dwActBytes,null);
+		WriteFile(hFile, ref SwapTime,sizeof(short),&bytesTransferred,null);
+		WriteFile(hFile, ref SwapRule,sizeof(short),&bytesTransferred,null);
 
 		CloseHandle(hFile);
 		}
@@ -314,14 +314,14 @@ public void	InitializeRegistry()
 
 	}
 
-public IDirectDrawSurface7? bitmap_surface(string file_name)
+public IDirectDrawSurface7? bitmap_surface(string fileName)
 	{
 	HDC hdc;
 	IDirectDrawSurface7? surf;
 
 	// lインターフェイスビットマップをロード
 
-	var bit=(HBITMAP) LoadImage(null,file_name,IMAGE_BITMAP,0,0,
+	var bit=(HBITMAP) LoadImage(null,fileName,IMAGE_BITMAP,0,0,
 								LR_DEFAULTSIZE|LR_LOADFROMFILE);
 	if (!bit)
 		// ロード失敗、呼び出し側に失敗を返す
@@ -331,8 +331,8 @@ public IDirectDrawSurface7? bitmap_surface(string file_name)
 
 	BITMAP bitmap;
     GetObject( bit, sizeof(BITMAP), &bitmap );
-	int surf_width=bitmap.bmWidth;
-	int surf_height=bitmap.bmHeight;
+	int surfaceWidth=bitmap.bmWidth;
+	int surfaceHeight=bitmap.bmHeight;
 
 	// サーフェスを作成
 
@@ -341,8 +341,8 @@ public IDirectDrawSurface7? bitmap_surface(string file_name)
 	ddsd.dwSize = (uint)(sizeof(DDSURFACEDESC2));
 	ddsd.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT ;
 	ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
-	ddsd.dwWidth = (uint)surf_width;
-	ddsd.dwHeight = (uint)surf_height;
+	ddsd.dwWidth = (uint)surfaceWidth;
+	ddsd.dwHeight = (uint)surfaceHeight;
 
 	// サーフェスを実際に作成
 
@@ -365,17 +365,17 @@ public IDirectDrawSurface7? bitmap_surface(string file_name)
 
 		// 互換DCを生成
 
-		HDC bit_dc=CreateCompatibleDC(hdc);
+		HDC bitmapDc=CreateCompatibleDC(hdc);
 
 		// インターフェイスをサーフェスにブロック転送
 
-		SelectObject(bit_dc,bit);
-		BitBlt(hdc,0,0,surf_width,surf_height,bit_dc,0,0,SRCCOPY);
+		SelectObject(bitmapDc,bit);
+		BitBlt(hdc,0,0,surfaceWidth,surfaceHeight,bitmapDc,0,0,SRCCOPY);
 
 		// DCを解放
 
 		surf.ReleaseDC(hdc);
-		DeleteDC(bit_dc);
+		DeleteDC(bitmapDc);
 
 		// save the dimensions if rectangle pointer provided
 	}
@@ -395,7 +395,7 @@ public IDirectDrawSurface7? bitmap_surface(string file_name)
 public nint	IDD_FILE_SAVE_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	{
 	WIN32_FIND_DATA FindFileData;
-	Array260<byte> temp_buf = default;
+	Array260<byte> buffer = default;
 
 	switch(msg)
 		{
@@ -440,12 +440,12 @@ public nint	IDD_FILE_SAVE_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 						{
 						// なんかユーザーファイルが選ばれた。
 
-						var len=wsprintf( temp_buf, "%s", UserScenarioFileName );
+						var length=wsprintf( buffer, "%s", UserScenarioFileName );
 
-						if( !(UserScenarioFileName[len-4]=='.' && UserScenarioFileName[len-3]=='d' && UserScenarioFileName[len-2]=='a' && UserScenarioFileName[len-1]=='t') )
-							wsprintf( temp_buf, "%s.dat", UserScenarioFileName );
+						if( !(UserScenarioFileName[length-4]=='.' && UserScenarioFileName[length-3]=='d' && UserScenarioFileName[length-2]=='a' && UserScenarioFileName[length-1]=='t') )
+							wsprintf( buffer, "%s.dat", UserScenarioFileName );
 
-						wsprintf( UserScenarioFileName, "Scenario\\%s", temp_buf );
+						wsprintf( UserScenarioFileName, "Scenario\\%s", buffer );
 
 						SaveUserMap();
 						}
@@ -477,9 +477,9 @@ public nint	IDD_FILE_SAVE_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	{
 	WIN32_FIND_DATA FindFileData;
-	_DP_DATA_20		dp_data_20=default;
-	_DP_DATA_1		dp_data_1;
-	Array260<byte> temp_buf = default;
+	_DP_DATA_20		chatMessage=default;
+	_DP_DATA_1		message;
+	Array260<byte> buffer = default;
 
 	switch(msg)
 		{
@@ -510,49 +510,49 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 
 					if( IsEditingMap && Mode==GameMode.Battle && UserScenarioFileName[0]!='\0' )
 						{
-						wsprintf( temp_buf, "%s", UserScenarioFileName );
-						wsprintf( UserScenarioFileName, "Scenario\\%s", temp_buf );
+						wsprintf( buffer, "%s", UserScenarioFileName );
+						wsprintf( UserScenarioFileName, "Scenario\\%s", buffer );
 
 						LoadUserMap();
 						MakeTerrainSurface();
 						}
 					else if( Mode==GameMode.GameSetting && UserScenarioFileName[0]!='\0' )
 						{
-						wsprintf( temp_buf, "%s", UserScenarioFileName );
-						wsprintf( UserScenarioFileName, "Scenario\\%s", temp_buf );
+						wsprintf( buffer, "%s", UserScenarioFileName );
+						wsprintf( UserScenarioFileName, "Scenario\\%s", buffer );
 
 						if( !IsEditingMap )
 							{
 							// なんかユーザーファイルが選ばれた。
-							dp_data_20.dwType = MessageType.UserScenarioFileName;
-							wsprintf( dp_data_20.friend_chat, "%s",UserScenarioFileName );
+							chatMessage.dwType = MessageType.UserScenarioFileName;
+							wsprintf( chatMessage.friend_chat, "%s",UserScenarioFileName );
 							bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_20));
-							bufferDesc.pBufferData  = (byte*)&dp_data_20;
+							bufferDesc.pBufferData  = (byte*)&chatMessage;
 							g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 							}
 
 						LoadScenarioData();
 
 						// ホストの選択状態をゲストにセンドします。
-						dp_data_1.dwType = MessageType.LeaveGameSetting;
-						dp_data_1.data[0] = (short)HostSide;
-						dp_data_1.data[1] = ScenarioNumber;
+						message.dwType = MessageType.LeaveGameSetting;
+						message.data[0] = (short)HostSide;
+						message.data[1] = ScenarioNumber;
 
-						dp_data_1.data[2] = SupplyRates[0];
-						dp_data_1.data[3] = SupplyRates[1];
+						message.data[2] = SupplyRates[0];
+						message.data[3] = SupplyRates[1];
 
-						dp_data_1.data[4] = IsDecisionEnabled.Value;
+						message.data[4] = IsDecisionEnabled.Value;
 
-						dp_data_1.data[5] = InitialSupplyPoints[0];
-						dp_data_1.data[6] = InitialSupplyPoints[1];
+						message.data[5] = InitialSupplyPoints[0];
+						message.data[6] = InitialSupplyPoints[1];
 
-						dp_data_1.data[7] = ArrivalControl;
+						message.data[7] = ArrivalControl;
 
-						dp_data_1.data[8] = SwapTime;
-						dp_data_1.data[9] = SwapRule;
+						message.data[8] = SwapTime;
+						message.data[9] = SwapRule;
 
 						bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-						bufferDesc.pBufferData  = (byte*) &dp_data_1;
+						bufferDesc.pBufferData  = (byte*) &message;
 						g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
 						Mode=GameMode.ConfigSetting;
@@ -641,16 +641,16 @@ public nint	IDD_OK_CANCEL_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 public void	WaitForDialog()
 	{
 	MSG msg=default;
-	int	wait_for_connect=TRUE;
+	int	waitsForConnection=TRUE;
 
-	while(wait_for_connect!=0)
+	while(waitsForConnection!=0)
 		{
 		while( PeekMessage(ref msg, null, 0, 0, PM_REMOVE)!=0 )
 			{
 			if (msg.message == WM_QUIT )
 				{
 				// Quit the application.
-				wait_for_connect = FALSE;
+				waitsForConnection = FALSE;
 				break;
 				}
 
@@ -666,7 +666,7 @@ public void	WaitForDialog()
 
 public nint ChatDlgProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	{
-	_DP_DATA_20	dp_data_20=default;
+	_DP_DATA_20	chatMessage=default;
 
 	switch(msg)
 		{
@@ -682,14 +682,14 @@ public nint ChatDlgProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					MyChatDisplayTime=unchecked((byte)CHAT_DSP_TIME);
 
 				// なんか入力があったならセンドする
-					dp_data_20.dwType = MessageType.Chat;
+					chatMessage.dwType = MessageType.Chat;
 					for(var m=0;m<128;m++)
 						{
-						dp_data_20.friend_chat[m]=MyChat[m];
+						chatMessage.friend_chat[m]=MyChat[m];
 						}
 
 					bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_20));
-					bufferDesc.pBufferData  = (byte*) &dp_data_20;
+					bufferDesc.pBufferData  = (byte*) &chatMessage;
 					g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1, 0, null, ref hAsync, MUST_SEND );
 
 					DestroyWindow(hwndChatDlg);
@@ -807,31 +807,31 @@ private void PlaceEditorUnit(ref int m)
 		{
 		// 艦船および、陸上施設
 
-		var wrk_x2=(CameraPosition.X+CursorPosition.x)/80;
-		if(wrk_x2<0)
-			wrk_x2=0-wrk_x2;
-		double wrk_x=(int)wrk_x2;
-		if(  (wrk_x2-wrk_x)>=0.5  )
-			wrk_x+=1;
+		var cellX=(CameraPosition.X+CursorPosition.x)/80;
+		if(cellX<0)
+			cellX=0-cellX;
+		double x=(int)cellX;
+		if(  (cellX-x)>=0.5  )
+			x+=1;
 		if(((CameraPosition.X+CursorPosition.x)/80)<0)
-			wrk_x=0-wrk_x;
-		wrk_x*=80;
+			x=0-x;
+		x*=80;
 
-		var wrk_y2=(CameraPosition.Y-CursorPosition.y)/80;
-		if(wrk_y2<0)
-			wrk_y2=0-wrk_y2;
-		double wrk_y=(int)wrk_y2;
-		if(  (wrk_y2-wrk_y)>=0.5  )
-			wrk_y+=1;
+		var cellY=(CameraPosition.Y-CursorPosition.y)/80;
+		if(cellY<0)
+			cellY=0-cellY;
+		double y=(int)cellY;
+		if(  (cellY-y)>=0.5  )
+			y+=1;
 		if(((CameraPosition.Y-CursorPosition.y)/80)<0)
-			wrk_y=0-wrk_y;
-		wrk_y*=80;
+			y=0-y;
+		y*=80;
 
 		m=0;
 		for(var i=1;i<=MaxUnitId;i++)
 			{
 			ref var unit = ref Units[i];
-			if( unit.IsUsed && unit.Position.X==wrk_x && unit.Position.Y==wrk_y )
+			if( unit.IsUsed && unit.Position.X==x && unit.Position.Y==y )
 				{
 				m++;
 				break;
@@ -840,7 +840,7 @@ private void PlaceEditorUnit(ref int m)
 
 		if( m==0 )
 			{
-			m=AddUnit2( LocalSide, (UnitKind)EditorKind, EditorVariant,  wrk_x,  wrk_y, (double)(0+(LocalSide==Side.UnitedStates ? 1 : 0)*180 ) );
+			m=AddUnit2( LocalSide, (UnitKind)EditorKind, EditorVariant,  x,  y, (double)(0+(LocalSide==Side.UnitedStates ? 1 : 0)*180 ) );
 
 			if(m!=0)
 				{
@@ -897,7 +897,7 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 	{
 	int m=default /* C4701 */;
 	//OPENFILENAME ofn;		// Unused.
-	Array260<byte> cd_buf = default;			// ユーザーシナリオのファイルネーム
+	Array260<byte> scenarioFileName = default;			// ユーザーシナリオのファイルネーム
 
 	switch(msg)
 		{

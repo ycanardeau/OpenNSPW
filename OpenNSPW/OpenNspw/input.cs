@@ -218,9 +218,9 @@ private bool IsLandAt(double x, double y)
 	if( y>MAP_TOP || y<MAP_BOTTOM || x<MAP_LEFT || x>MAP_RIGHT )
 		return false;
 
-	var cm_scrn_x=(int)((x+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
-	var cm_scrn_y=(int)((MAP_TOP-y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height);
-	return MapTiles[cm_scrn_y][cm_scrn_x]>=1;
+	var column=(int)((x+(Sprites[SpriteId.JapanUnits].Size.Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Size.Width);
+	var row=(int)((MAP_TOP-y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height);
+	return MapTiles[row][column]>=1;
 	}
 
 private bool IsLandAt(WorldPosition position)
@@ -230,20 +230,20 @@ private bool IsLandAt(WorldPosition position)
 
 // Ships: whether a point is on a ship other than unit m, one that a ship can run into: not a submerged submarine,
 // nor a base.
-private bool IsShipAt(int m, double x, double y)
+private bool IsShipAt(int m, WorldPosition point)
 	{
-	RECT wrk_r;
+	RECT shipArea;
 
 	for( var f=1; f<=MaxUnitId; f++)
 		{
 		ref var other = ref Units[f];
 		if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged) && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress) )
 			{
-			wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].Size.Height/2);
-			wrk_r.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].Size.Width/2);
-			wrk_r.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].Size.Height/2);
-			wrk_r.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].Size.Width/2);
-			if( PointInRect3(ref wrk_r,(int)x,(int)y)!=0)
+			shipArea.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].Size.Height/2);
+			shipArea.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].Size.Width/2);
+			shipArea.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].Size.Height/2);
+			shipArea.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].Size.Width/2);
+			if( PointInRect3(ref shipArea,(int)point.X,(int)point.Y)!=0)
 				return true;
 			}
 		}
@@ -252,74 +252,60 @@ private bool IsShipAt(int m, double x, double y)
 	}
 
 // Ships: inserts a path point that leads around an obstacle, in `direction` from the start of the leg, before the
-// leg's end. If the turn it makes from the previous leg is in the range drctn_ok1 to drctn_ok2, the saved point goes
-// back, and the search starts again farther away (min_dstc), counting an error.
-private void TakeDetour(ref Unit unit, ref int pp_indx, double start_x, double start_y, double chk_dstc, double div, double direction, double drctn_ok1, double drctn_ok2, ref double min_dstc, double s_pp_x, double s_pp_y, double re_add, ref int error)
+// leg's end. If the turn it makes from the previous leg is in the range minTurn to maxTurn, the saved point goes back,
+// and the search starts again farther away (extraDistance), counting an error.
+private void TakeDetour(ref Unit unit, ref int index, WorldPosition start, double checkedDistance, double divisor, double direction, double minTurn, double maxTurn, ref double extraDistance, WorldPosition savedPoint, double extraStep, ref int error)
 	{
-	unit.SetPathPoint(pp_indx+1, unit.GetPathPoint(pp_indx));
-	unit.PathX[pp_indx+2]=MAP_RIGHT+1;
-	var wrk_x=start_x;
-	var wrk_y=start_y;
+	unit.SetPathPoint(index+1, unit.GetPathPoint(index));
+	unit.PathX[index+2]=MAP_RIGHT+1;
 
-	var wrk=chk_dstc/div;
-	if(wrk<40)
-		wrk=40;
-	wrk_x+=CosDegrees(direction)*wrk;
-	wrk_y+=SinDegrees(direction)*wrk;
-	unit.PathX[pp_indx]=wrk_x;
-	unit.PathY[pp_indx]=wrk_y;
+	var step=checkedDistance/divisor;
+	if(step<40)
+		step=40;
+	unit.SetPathPoint(index, start+WorldVector.FromDirection(direction) * step);
 
-	if( pp_indx>=1 )
+	if( index>=1 )
 		{
 		// ＰＰ０からＰＰ１への角度
-		wrk_x=unit.PathX[pp_indx]-unit.PathX[pp_indx-1];
-		wrk_y=unit.PathY[pp_indx]-unit.PathY[pp_indx-1];
-		if(wrk_x==0)	wrk_x=1;
-		if(wrk_y==0)	wrk_y=1;
-		var drctn1=Direction(wrk_x, wrk_y);
-		if(drctn1>=360)
-			drctn1=drctn1-360;
+		var turn=(unit.GetPathPoint(index)-unit.GetPathPoint(index-1)).NonZero().Direction;
+		if(turn>=360)
+			turn=turn-360;
 		// 現位置からＰＰ０への角度
-		if( pp_indx==1)
+		WorldVector previousLeg;
+		if( index==1)
 			{
-			wrk_x=unit.PathX[pp_indx-1]-unit.Position.X;
-			wrk_y=unit.PathY[pp_indx-1]-unit.Position.Y;
+			previousLeg=unit.GetPathPoint(index-1)-unit.Position;
 			}
 		else
 			{
-			wrk_x=unit.PathX[pp_indx-1]-unit.PathX[pp_indx-2];
-			wrk_y=unit.PathY[pp_indx-1]-unit.PathY[pp_indx-2];
+			previousLeg=unit.GetPathPoint(index-1)-unit.GetPathPoint(index-2);
 			}
-		if(wrk_x==0)	wrk_x=1;
-		if(wrk_y==0)	wrk_y=1;
-		var drctn2=Direction(wrk_x, wrk_y);
+		var previousDirection=previousLeg.NonZero().Direction;
 
 		// 方位角 drctn1
-		drctn1=drctn1-drctn2;
-		if(drctn1<0)
-			drctn1=360+drctn1;
-		if(drctn1>=360)
-			drctn1=drctn1-360;
+		turn=turn-previousDirection;
+		if(turn<0)
+			turn=360+turn;
+		if(turn>=360)
+			turn=turn-360;
 
-		if( drctn1>=(drctn_ok1) && drctn1<=(drctn_ok2) && (min_dstc<=2000) )
+		if( turn>=(minTurn) && turn<=(maxTurn) && (extraDistance<=2000) )
 			{
-			unit.PathX[pp_indx]=s_pp_x;
-			unit.PathY[pp_indx]=s_pp_y;
-			unit.PathX[pp_indx+1]=MAP_RIGHT+1;
+			unit.SetPathPoint(index, savedPoint);
+			unit.PathX[index+1]=MAP_RIGHT+1;
 
-			min_dstc+=re_add;
+			extraDistance+=extraStep;
 
-			pp_indx--;
+			index--;
 
 			error++;
 
 			}
 		else
 			{
-			min_dstc=0;
-			unit.PathX[pp_indx+1]=s_pp_x;
-			unit.PathY[pp_indx+1]=s_pp_y;
-			unit.PathX[pp_indx+2]=MAP_RIGHT+1;
+			extraDistance=0;
+			unit.SetPathPoint(index+1, savedPoint);
+			unit.PathX[index+2]=MAP_RIGHT+1;
 			}
 		}
 
@@ -332,38 +318,36 @@ private void TakeDetour(ref Unit unit, ref int pp_indx, double start_x, double s
 public void	SetCpuRoute2(int m)
 	{
 	ref var unit = ref Units[m];
-	double		add;
-	double pp_drctn, wrk_x, wrk_y, wrk_x2, wrk_y2, start_x, start_y; 
-	int n;
-	RECT		wrk_r;
+	double		step;
+	WorldPosition start;
+	RECT		shipArea;
 
-    Array128<byte> ach = default;
+    Array128<byte> text = default;
 
 	var error=0;
-	var div=2.0;
-	var re_add=160.0;
+	var divisor=2.0;
+	var extraStep=160.0;
 
-	var drctn_ok1=90.0;
-	var drctn_ok2=270.0;
+	var minTurn=90.0;
+	var maxTurn=270.0;
 
 	//	ＰＰ０が侵入不可地なら移動無しにしてリターン
 	if( unit.Category==UnitCategory.Ship  )
 		{
 		// 他の艦船があるか
-		wrk_x2=unit.PathX[0];
-		wrk_y2=unit.PathY[0];
-		for( n=1; n<=MaxUnitId; n++)
+		var destination=unit.GetPathPoint(0);
+		for( var n=1; n<=MaxUnitId; n++)
 			{
 			ref var other = ref Units[n];
 			if( other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged)   && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress )  )
 				{
 				// ptin dbg
-				wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].Size.Width/2);
-				wrk_r.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].Size.Width/2);
-				wrk_r.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].Size.Width/2);
-				wrk_r.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].Size.Width/2);
+				shipArea.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].Size.Width/2);
+				shipArea.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].Size.Width/2);
+				shipArea.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].Size.Width/2);
+				shipArea.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].Size.Width/2);
 
-				if( PointInRect3(ref wrk_r,(int)wrk_x2,(int)wrk_y2)!=0)
+				if( PointInRect3(ref shipArea,(int)destination.X,(int)destination.Y)!=0)
 					{
 					// 前方に艦船！
 					return;
@@ -372,97 +356,74 @@ public void	SetCpuRoute2(int m)
 			}
 
 		// ＰＰ方向に陸地があるか
-		wrk_x2=unit.PathX[0];
-		wrk_y2=unit.PathY[0];
-		if( IsLandAt(wrk_x2, wrk_y2) )
+		if( IsLandAt(unit.GetPathPoint(0)) )
 			return;
 
 		}
 
 	//
-	var min_dstc=0.0;
-	var s_pp_x=unit.PathX[0];
-	var s_pp_y=unit.PathY[0];
-	var pp_indx=0;
+	var extraDistance=0.0;
+	var savedPoint=unit.GetPathPoint(0);
+	var index=0;
 
-	while(pp_indx==0)
+	while(index==0)
 		{
 
 		// 最終定点への角度と距離
-		if(pp_indx==0)
+		if(index==0)
 			{
-			start_x=unit.Position.X;
-			start_y=unit.Position.Y;
+			start=unit.Position;
 			}
 		else
 			{
-			start_x=unit.PathX[pp_indx-1];
-			start_y=unit.PathY[pp_indx-1];
+			start=unit.GetPathPoint(index-1);
 			}
 
-		if(min_dstc!=0)
+		if(extraDistance!=0)
 			{
-			unit.PathX[pp_indx]=s_pp_x;
-			unit.PathY[pp_indx]=s_pp_y;
-			unit.PathX[pp_indx+1]=MAP_RIGHT+1;
+			unit.SetPathPoint(index, savedPoint);
+			unit.PathX[index+1]=MAP_RIGHT+1;
 
-			wrk_x=unit.PathX[pp_indx]-unit.Position.X;
-			wrk_y=unit.PathY[pp_indx]-unit.Position.Y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
+			var toPoint=(unit.GetPathPoint(index)-unit.Position).NonZero();
 
-			pp_drctn=atan2(wrk_y,wrk_x)*RAD_to;
+			var direction=atan2(toPoint.Y,toPoint.X)*RAD_to;
 
-			unit.PathX[pp_indx]+=CosDegrees(pp_drctn)*(min_dstc);
-			unit.PathY[pp_indx]+=SinDegrees(pp_drctn)*(min_dstc);
+			unit.SetPathPoint(index, unit.GetPathPoint(index)+WorldVector.FromDirection(direction) * extraDistance);
 			}
 
-		wrk_x=unit.PathX[pp_indx]-start_x;
-		wrk_y=unit.PathY[pp_indx]-start_y;
-		if(wrk_x==0)	wrk_x=1;
-		if(wrk_y==0)	wrk_y=1;
+		var leg=(unit.GetPathPoint(index)-start).NonZero();
 
-		pp_drctn=Direction(wrk_x, wrk_y);
-		if(pp_drctn>=360)
-			pp_drctn=pp_drctn-360;
+		var bearing=leg.Direction;
+		if(bearing>=360)
+			bearing=bearing-360;
 
-		if(wrk_x<0)
-			wrk_x=0-wrk_x;
-		if(wrk_y<0)
-			wrk_y=0-wrk_y;
-		var wrk=pp_drctn;
-		if(wrk>=180)
-			wrk=wrk-180;
-		if(wrk>=90)
-			wrk=90-(wrk-90);
-		var pp_dstc=(wrk_x)/(CosDegrees(wrk));
+		// Distance folds the direction from 0 to 360, where the original folds bearing, 360 brought to 0: both fold
+		// either to 0.
+		var legLength=leg.Length;
 
 		if( unit.Category==UnitCategory.Ship )
 			{
 			// 艦船のルート再計算
 
 			var hit=0;
-			var chk_dstc=40.0;
-			while(hit==0 && chk_dstc<=pp_dstc)
+			var checkedDistance=40.0;
+			while(hit==0 && checkedDistance<=legLength)
 				{
-				if(pp_indx==0 && chk_dstc<=80 )
-					add=1.0;
+				if(index==0 && checkedDistance<=80 )
+					step=1.0;
 				else
-					add=40.0;
+					step=40.0;
 
-				chk_dstc+=add;
+				checkedDistance+=step;
 
-				wrk_x=start_x;
-				wrk_y=start_y;
-				wrk_x+=CosDegrees(pp_drctn)*(chk_dstc);
-				wrk_y+=SinDegrees(pp_drctn)*(chk_dstc);
+				var point=start+WorldVector.FromDirection(bearing) * checkedDistance;
 
 				// 島に接触するか？
-				if( IsLandAt(wrk_x, wrk_y) )
+				if( IsLandAt(point) )
 					hit=1;		// 島に接触
 
 				// 船に接触するか
-				if( hit==0 && IsShipAt(m, wrk_x, wrk_y) )
+				if( hit==0 && IsShipAt(m, point) )
 					hit=1;		// 船に接触
 
 				}
@@ -470,96 +431,89 @@ public void	SetCpuRoute2(int m)
 			if( hit==1)
 				{
 				// 不幸にも進路を変更しないと目標点までいけない場合。
-				var drctn1=pp_drctn;
-				var drctn2=pp_drctn;
-				for(n=0; n<=7; n++)
+				var leftBearing=bearing;
+				var rightBearing=bearing;
+				for(var n=0; n<=7; n++)
 					{
-					drctn1+=22.5;
-					if(drctn1>=360)		drctn1=drctn1-360;
-					drctn2-=22.5;
-					if(drctn2<0)		drctn2=360+drctn2;
-					chk_dstc=40; hit=0;	var left=0;	var right=0;
-					while( chk_dstc<=(pp_dstc) && (left==0||right==0))
+					leftBearing+=22.5;
+					if(leftBearing>=360)		leftBearing=leftBearing-360;
+					rightBearing-=22.5;
+					if(rightBearing<0)		rightBearing=360+rightBearing;
+					checkedDistance=40; hit=0;	var left=0;	var right=0;
+					while( checkedDistance<=(legLength) && (left==0||right==0))
 						{
 
-						if(pp_indx==0 && chk_dstc<=80)
-							add=1.0;
+						if(index==0 && checkedDistance<=80)
+							step=1.0;
 						else
-							add=40.0;
+							step=40.0;
 
-						chk_dstc+=add;
+						checkedDistance+=step;
 
 						if(left==0)
 							{
 							// 左回り
-							wrk_x=start_x;
-							wrk_y=start_y;
-							wrk_x+=CosDegrees(drctn1)*(chk_dstc);
-							wrk_y+=SinDegrees(drctn1)*(chk_dstc);
+							var point=start+WorldVector.FromDirection(leftBearing) * checkedDistance;
 							// 島に接触するか？
-							if( IsLandAt(wrk_x, wrk_y) )
+							if( IsLandAt(point) )
 								left=1;		// 島に接触
 
 							// 船に接触するか
-							if( IsShipAt(m, wrk_x, wrk_y) )
+							if( IsShipAt(m, point) )
 								left=1;		// 船に接触
 
 							}
 						if(right==0)
 							{
 							// 右回り
-							wrk_x2=start_x;
-							wrk_y2=start_y;
-							wrk_x2+=CosDegrees(drctn2)*(chk_dstc);
-							wrk_y2+=SinDegrees(drctn2)*(chk_dstc);
+							var point=start+WorldVector.FromDirection(rightBearing) * checkedDistance;
 							// 島に接触するか？
-							if( IsLandAt(wrk_x2, wrk_y2) )
+							if( IsLandAt(point) )
 								right=1;		// 島に接触
 
 							// 船に接触するか
-							if( IsShipAt(m, wrk_x2, wrk_y2) )
+							if( IsShipAt(m, point) )
 								right=1;		// 船に接触
 							}
 						}
 
-					if( right==0 && chk_dstc>=pp_dstc)
+					if( right==0 && checkedDistance>=legLength)
 						{
-						TakeDetour(ref unit, ref pp_indx, start_x, start_y, chk_dstc, div, drctn2, drctn_ok1, drctn_ok2, ref min_dstc, s_pp_x, s_pp_y, re_add, ref error);
+						TakeDetour(ref unit, ref index, start, checkedDistance, divisor, rightBearing, minTurn, maxTurn, ref extraDistance, savedPoint, extraStep, ref error);
 						break;
 						}
 
-					if( left==0 && chk_dstc>=pp_dstc)
+					if( left==0 && checkedDistance>=legLength)
 						{
-						TakeDetour(ref unit, ref pp_indx, start_x, start_y, chk_dstc, div, drctn1, drctn_ok1, drctn_ok2, ref min_dstc, s_pp_x, s_pp_y, re_add, ref error);
+						TakeDetour(ref unit, ref index, start, checkedDistance, divisor, leftBearing, minTurn, maxTurn, ref extraDistance, savedPoint, extraStep, ref error);
 						break;
 						}
 
 					}
-				pp_indx++;
+				index++;
 				}
 			else
 				{
-				if( min_dstc==0 )
+				if( extraDistance==0 )
 					{
-					pp_indx=-1;
+					index=-1;
 					}
 				else
 					{
-					min_dstc=0;
-					unit.PathX[pp_indx+1]=s_pp_x;
-					unit.PathY[pp_indx+1]=s_pp_y;
-					unit.PathX[pp_indx+2]=MAP_RIGHT+1;
-					pp_indx++;
+					extraDistance=0;
+					unit.SetPathPoint(index+1, savedPoint);
+					unit.PathX[index+2]=MAP_RIGHT+1;
+					index++;
 					}
 				}
 			}
 		else
 			{
 			// 航空機のルート再計算
-			pp_indx=-1;
+			index=-1;
 			}
 
-		var len = wsprintf(ach, "in Set_cpu_root2 error=%d" ,error);
+		var length = wsprintf(text, "in Set_cpu_root2 error=%d" ,error);
 
 		}
 
@@ -572,7 +526,7 @@ public void	SetCpuRoute2(int m)
 [Original("cnct_game_input_now")]
 public void	ApplyOrders()
 	{
-	int h, n; Array256<int> chk = default;
+	int formationNumber, n; Array256<int> usedFormationNumbers = default;
 
 	for(var e=0; e<=1; e++)
 		{
@@ -678,9 +632,9 @@ public void	ApplyOrders()
 
 				// 一時的寮機の重複番号阻止
 				for(var s=0;s<=MaxUnitId;s++)
-					chk[s]=0;
+					usedFormationNumbers[s]=0;
 
-				var f=0;
+				var followers=0;
 				for( var s=0; s<=MaxUnitId; s++)
 					{
 					ref var unit = ref Units[s];
@@ -697,10 +651,10 @@ public void	ApplyOrders()
 					   && (unit.Weapon==FireKind.Torpedo||unit.Weapon==FireKind.Bomb||unit.Weapon==FireKind.Unarmed) && unit.ReloadTime!=0 )
 						 )
 						{
-						f++;
-						if(chk[Selections[e][s]]==0)
+						followers++;
+						if(usedFormationNumbers[Selections[e][s]]==0)
 							{	// 既に使われた番機無し
-							chk[Selections[e][s]]++;
+							usedFormationNumbers[Selections[e][s]]++;
 							unit.FormationNumber=Selections[e][s];
 							unit.IsGroupLeader=0;
 
@@ -719,10 +673,10 @@ public void	ApplyOrders()
 							}
 						else
 							{	// 既に使われた番機をつかおうとした
-							for(h=1;chk[h]!=0&&h<=255;h++)
+							for(formationNumber=1;usedFormationNumbers[formationNumber]!=0&&formationNumber<=255;formationNumber++)
 								{}
-							chk[h]++;
-							unit.FormationNumber=(short)h;
+							usedFormationNumbers[formationNumber]++;
+							unit.FormationNumber=(short)formationNumber;
 							unit.IsGroupLeader=0;
 
 							if( unit.Category==UnitCategory.Ship )
@@ -741,9 +695,9 @@ public void	ApplyOrders()
 						}
 					}
 
-				if( f>=1 )
+				if( followers>=1 )
 					{
-					Units[m].IsGroupLeader=(short)(f+1);		// 小隊機数(指揮機含む)
+					Units[m].IsGroupLeader=(short)(followers+1);		// 小隊機数(指揮機含む)
 					}
 
 				if( Units[m].Category==UnitCategory.Plane && Units[m].PlaneState==UnitState.Parked )
@@ -767,9 +721,9 @@ public void	ApplyOrders()
 	戦術マップ移動
 --------------------------------------------*/
 [Original("tac_map_scrl")]
-public void	ScrollBattleArea(int drctn)
+public void	ScrollBattleArea(int direction)
 	{
-	switch(drctn)
+	switch(direction)
 		{
 		case 1:		// UP
 			ScrollSpeed+=scrn_moving_add;
