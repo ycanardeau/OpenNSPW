@@ -22,6 +22,8 @@ using OpenNspw.Porter;
 //       Gives a new effect or fire a ref local (see ElementRefs).
 //   OpenNspw.Porter declarations <project directory>
 //       Declares each local where it is first assigned (see Declarations).
+//   OpenNspw.Porter rename-locals <project directory> [<renames file>]
+//       Renames locals and parameters of methods (see LocalRenamer), or lists them, without a renames file.
 //   OpenNspw.Porter ref-locals <project directory> [<method>,<method>...]
 //       Gives the element of a table that a loop works on a ref local, and the unit that the int parameter of the named
 //       methods numbers (see RefLocals).
@@ -57,6 +59,17 @@ if (args.Length is 2 or 3 && args[0] == "ref-locals")
 if (args.Length == 2 && args[0] == "distances")
 {
 	foreach (var line in new Distances(new CSharpProject(args[1])).Run())
+	{
+		Console.WriteLine(line);
+	}
+
+	return 0;
+}
+
+if (args.Length is 2 or 3 && args[0] == "rename-locals")
+{
+	var renamer = new LocalRenamer(new CSharpProject(args[1]), args.Length == 3 ? LocalRenamer.ReadRenames(args[2]) : []);
+	foreach (var line in args.Length == 3 ? renamer.Run() : renamer.List())
 	{
 		Console.WriteLine(line);
 	}
