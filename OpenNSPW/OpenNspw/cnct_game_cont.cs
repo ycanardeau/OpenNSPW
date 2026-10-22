@@ -16,6 +16,8 @@ using System.Runtime.CompilerServices;
 
 // Port of cnct_game_cont.cpp.
 
+using static OpenNspw.Nspw;
+
 namespace OpenNspw;
 
 public unsafe partial class Nspw
@@ -562,7 +564,7 @@ private bool CheckResultOfScenario106()
 
 // The result of the battle, in ach[0] to ach[2]: that it is over, which side achieved its victory conditions, and the
 // winner.
-private void WriteResult(ref Array5<int> length, ref Array5<Array128<byte>> text)
+internal void WriteResult(ref Array5<int> length, ref Array5<Array128<byte>> text)
 	{
 	switch( Result )
 		{
@@ -591,58 +593,6 @@ private void WriteResult(ref Array5<int> length, ref Array5<Array128<byte>> text
 			length[1] = wsprintf(text[1], "日米両海軍は勝利目標を達成できなかった。");
 			length[2] = wsprintf(text[2], "引き分け。");
 			break;
-		}
-	}
-
-private void DrawResult(ref Array5<int> length, ref Array5<Array128<byte>> text)
-	{
-	HDC hdc;
-	if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
-		{
-		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, GameFont1);
-
-#if !LNGG_VER
-		WriteResult(ref length, ref text);
-
-#else
-
-		len[0] = wsprintf(ach[0], "Battle is Over.");
-		switch( game_end )
-			{
-			case GameResult.JapanWon:
-				len[1] = wsprintf(ach[1], "Japan Navy got a victory.");
-				len[2] = wsprintf(ach[2], "Japan Navy won.");
-				break;
-			case GameResult.UnitedStatesWon:
-				len[1] = wsprintf(ach[1], "U.S.Navy got a victory.");
-				len[2] = wsprintf(ach[2], "U.S.Navy won.");
-				break;
-			case GameResult.JapanLost:
-				len[1] = wsprintf(ach[1], "Japan Navy lost a victory.");
-				len[2] = wsprintf(ach[2], "");
-				break;
-			case GameResult.UnitedStatesLost:
-				len[1] = wsprintf(ach[1], "U.S.Navy lost a victory.");
-				len[2] = wsprintf(ach[2], "");
-				break;
-			case GameResult.Draw:
-				len[1] = wsprintf(ach[1], "Both of Navies could not get a victory.");
-				len[2] = wsprintf(ach[2], "Draw.");
-				break;
-			}
-
-#endif
-
-//			len[3] = wsprintf(ach[3], "ＥＳＣ：プログラム終了　Ｆ６：シナリオセッティング画面");
-
-		for( var n=0; n<=2; n++)
-			{
-			SetTextColor(hdc, RGB(255, 255, 255));
-			TextOut(hdc, 300, 300+(n*20), text[n], length[n]);
-			}
-
-		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
 		}
 	}
 
@@ -757,7 +707,7 @@ public void	CheckResult()
 	// 結果はっぴょー
 	if( Result!=GameResult.None )
 		{
-		DrawResult(ref length, ref text);
+		Renderer.DrawResult(ref length, ref text);
 		}
 
 	}
@@ -3848,54 +3798,6 @@ public void LoadScenarioData()
 		}
 	}
 
-//============================================================================
-//
-//----------------------------------------------------------------------------
-[Original("make_map_cg")]
-public void MakeTerrainSurface()
-	{
-	int n;
-	RECT	destination,source;
-
-	// マップデータから陸地をマップに描画します
-	destination.left=Sprites[SpriteId.Minimap].SheetPosition.X;
-	destination.top=Sprites[SpriteId.Minimap].SheetPosition.Y;
-
-	source.left = Sprites[SpriteId.Minimap].SheetPosition.X+306;
-	source.top = Sprites[SpriteId.Minimap].SheetPosition.Y;
-	source.right = source.left+255;
-	source.bottom = source.top+199;
-
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( OffscreenSurface, destination.left, destination.top,OffscreenSurface,&source,0))
-		{
-		RestoreSurfaces();
-		}
-
-	for(var m=0; m<=179; m++) // 縦の個数	マップの枠 縦１８０ドット
-		for( n=0; n<=239; n++) // 横の個数		マップの枠 横２４０ドット
-			{
-			if( MapTiles[m][n]!=0 )
-				{
-
-				// 陸地有り
-				destination.left=Sprites[SpriteId.Minimap].SheetPosition.X+8+n-0;
-				destination.top=Sprites[SpriteId.Minimap].SheetPosition.Y+8+m-0;
-
-				source.left = Sprites[SpriteId.Minimap].SheetPosition.X+270;
-				source.top = Sprites[SpriteId.Minimap].SheetPosition.Y+110;
-
-				source.right = source.left+2;
-				source.bottom = source.top+2;
-
-				if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( OffscreenSurface, destination.left, destination.top,OffscreenSurface,&source,0))
-					{
-					RestoreSurfaces();
-					}
-
-				}
-			}
-	}
-
 private void ClearClouds()
 	{
 	for(var n=0; n<KUMO_MAX; n++)
@@ -4027,14 +3929,14 @@ private void StartFromSave(ref SyncFlagMessage flagMessage)
 	//最初の雲
 	InitializeClouds();
 
-	MakeTerrainSurface();
+	Renderer.MakeTerrainSurface();
 
 	ShowsAntiAir=0;		// 0が正常
 	RevealsAll=0;		// 0が正常
 
 	GameSpeed=1;
 	Tick=0;
-	FrameCount=0;
+	Renderer.FrameCount=0;
 	Result=GameResult.None;
 
 	TickChecksums[0]=0;
@@ -4187,7 +4089,7 @@ public void	InitializeGame()
 		EditorKind=(byte)UnitKind.Battleship;
 		}
 
-	MakeTerrainSurface();
+	Renderer.MakeTerrainSurface();
 
 	ShowsAntiAir=0;		// 0が正常
 	RevealsAll=0;		// 0が正常
@@ -4202,7 +4104,7 @@ public void	InitializeGame()
 
 	GameSpeed=1;
 	Tick=0;
-	FrameCount=0;
+	Renderer.FrameCount=0;
 
 	Result=GameResult.None;
 
@@ -4216,7 +4118,7 @@ public void	InitializeGame()
 
 		// 1.22's game_init runs within the frame of the setting screen that starts the battle (0x40C61E), which then
 		// counts itself (0x434E9F): the battle's first frame is 1, and cpu_strtgy starts with fleet 2.
-		FrameCount=1;
+		Renderer.FrameCount=1;
 
 		// 1.22's game_init seeds rand last, from the time (0x42A163).
 		srand( Trace?.Seeds?.Battle ?? (uint)time() );
@@ -4300,5 +4202,109 @@ public void	InitializeGame()
 		if( !IsEditingMap)
 			SaveResume(3);
 
+	}
+}
+
+public unsafe partial class Renderer
+{
+
+internal void DrawResult(ref Array5<int> length, ref Array5<Array128<byte>> text)
+	{
+	HDC hdc;
+	if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
+		{
+		_game.SetBkMode(hdc, TRANSPARENT);
+		_game.SelectObject(hdc, GameFont1);
+
+#if !LNGG_VER
+		_game.WriteResult(ref length, ref text);
+
+#else
+
+		len[0] = wsprintf(ach[0], "Battle is Over.");
+		switch( game_end )
+			{
+			case GameResult.JapanWon:
+				len[1] = wsprintf(ach[1], "Japan Navy got a victory.");
+				len[2] = wsprintf(ach[2], "Japan Navy won.");
+				break;
+			case GameResult.UnitedStatesWon:
+				len[1] = wsprintf(ach[1], "U.S.Navy got a victory.");
+				len[2] = wsprintf(ach[2], "U.S.Navy won.");
+				break;
+			case GameResult.JapanLost:
+				len[1] = wsprintf(ach[1], "Japan Navy lost a victory.");
+				len[2] = wsprintf(ach[2], "");
+				break;
+			case GameResult.UnitedStatesLost:
+				len[1] = wsprintf(ach[1], "U.S.Navy lost a victory.");
+				len[2] = wsprintf(ach[2], "");
+				break;
+			case GameResult.Draw:
+				len[1] = wsprintf(ach[1], "Both of Navies could not get a victory.");
+				len[2] = wsprintf(ach[2], "Draw.");
+				break;
+			}
+
+#endif
+
+//			len[3] = wsprintf(ach[3], "ＥＳＣ：プログラム終了　Ｆ６：シナリオセッティング画面");
+
+		for( var n=0; n<=2; n++)
+			{
+			_game.SetTextColor(hdc, RGB(255, 255, 255));
+			_game.TextOut(hdc, 300, 300+(n*20), text[n], length[n]);
+			}
+
+		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
+		}
+	}
+
+//============================================================================
+//
+//----------------------------------------------------------------------------
+[Original("make_map_cg")]
+public void MakeTerrainSurface()
+	{
+	int n;
+	RECT	destination,source;
+
+	// マップデータから陸地をマップに描画します
+	destination.left=Sprites[SpriteId.Minimap].SheetPosition.X;
+	destination.top=Sprites[SpriteId.Minimap].SheetPosition.Y;
+
+	source.left = Sprites[SpriteId.Minimap].SheetPosition.X+306;
+	source.top = Sprites[SpriteId.Minimap].SheetPosition.Y;
+	source.right = source.left+255;
+	source.bottom = source.top+199;
+
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( OffscreenSurface, destination.left, destination.top,OffscreenSurface,&source,0))
+		{
+		RestoreSurfaces();
+		}
+
+	for(var m=0; m<=179; m++) // 縦の個数	マップの枠 縦１８０ドット
+		for( n=0; n<=239; n++) // 横の個数		マップの枠 横２４０ドット
+			{
+			if( _game.MapTiles[m][n]!=0 )
+				{
+
+				// 陸地有り
+				destination.left=Sprites[SpriteId.Minimap].SheetPosition.X+8+n-0;
+				destination.top=Sprites[SpriteId.Minimap].SheetPosition.Y+8+m-0;
+
+				source.left = Sprites[SpriteId.Minimap].SheetPosition.X+270;
+				source.top = Sprites[SpriteId.Minimap].SheetPosition.Y+110;
+
+				source.right = source.left+2;
+				source.bottom = source.top+2;
+
+				if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( OffscreenSurface, destination.left, destination.top,OffscreenSurface,&source,0))
+					{
+					RestoreSurfaces();
+					}
+
+				}
+			}
 	}
 }

@@ -507,9 +507,9 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 			game.CameraPosition = expected.Camera;
 		if (point == TracePoint.Tick)
 		{
-			if (expected.Value != game.Tick || expected.IsDrawn != game.IsDrawnTick)
+			if (expected.Value != game.Tick || expected.IsDrawn != game.Renderer.IsDrawnTick)
 			{
-				Diverge(game, point, $"cc_count and the drawn tick: 1.22 {expected.Value}, {expected.IsDrawn}; port {game.Tick}, {game.IsDrawnTick}.");
+				Diverge(game, point, $"cc_count and the drawn tick: 1.22 {expected.Value}, {expected.IsDrawn}; port {game.Tick}, {game.Renderer.IsDrawnTick}.");
 				return;
 			}
 			game.WriteStateAs122(_state);
@@ -564,7 +564,7 @@ public sealed class Trace122Recorder(Stream stream) : ISingleplayerTrace, IDispo
 				break;
 			case TracePoint.Tick:
 				game.WriteStateAs122(_state);
-				_writer.WriteTick(game.Tick, game.IsDrawnTick, game.RandomState, _state);
+				_writer.WriteTick(game.Tick, game.Renderer.IsDrawnTick, game.RandomState, _state);
 				break;
 			case TracePoint.Drawing:
 				_writer.WriteDrawing(game.RandomState, game.CameraPosition);

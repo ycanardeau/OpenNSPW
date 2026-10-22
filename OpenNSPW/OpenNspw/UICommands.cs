@@ -53,7 +53,7 @@ public unsafe partial class Nspw
 
 	// Runs the commands queued for a site, in order, on the game's thread; or drops them, as clicks are dropped, when they
 	// do not count. The commands of the other screens' sites are dropped too: they were given for a screen that is gone.
-	private void RunUICommands(UICommandSite site, bool count)
+	internal void RunUICommands(UICommandSite site, bool count)
 	{
 		List<Action> runs;
 		lock (_uiCommandsLock)
@@ -83,13 +83,13 @@ public unsafe partial class Nspw
 	private bool IsSelectedShown()
 	{
 		ref var unit = ref Units[SelectedUnit];
-		return SelectedUnit!=0 && unit.IsUsed && (!(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked) || IsOnShownDeck(ref unit)) && !IsEditingMap;
+		return SelectedUnit!=0 && unit.IsUsed && (!(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked) || Renderer.IsOnShownDeck(ref unit)) && !IsEditingMap;
 	}
 
 	private void RunClickUnit(int m)
 	{
 		ref var unit = ref Units[m];
-		if( m!=0 && unit.IsUsed && (unit.Side==LocalSide || unit.IsFound) && (!(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked) || IsOnShownDeck(ref unit)) && CanClickUnit(ref unit) )
+		if( m!=0 && unit.IsUsed && (unit.Side==LocalSide || unit.IsFound) && (!(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked) || Renderer.IsOnShownDeck(ref unit)) && CanClickUnit(ref unit) )
 			{
 			ClickUnit(m, default);
 			}
@@ -105,7 +105,7 @@ public unsafe partial class Nspw
 		var isParked = unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked;
 		var isLeaderParked = Units[leader].Category==UnitCategory.Plane && Units[leader].PlaneState==UnitState.Parked;
 		return m!=leader && unit.IsUsed && unit.Side==LocalSide && unit.Category==Units[leader].Category
-			&& isParked==isLeaderParked && (!isParked || IsOnShownDeck(ref unit))
+			&& isParked==isLeaderParked && (!isParked || Renderer.IsOnShownDeck(ref unit))
 			&& !(unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress)
 			&& !(Units[leader].Kind>=UnitKind.AirBase && Units[leader].Kind<=UnitKind.Fortress);
 	}
@@ -115,7 +115,7 @@ public unsafe partial class Nspw
 	private readonly Queue<(int Unit, bool IsAdded)> _brushed = new();
 
 	// The next unit brushed that a click still puts in the selection, or takes out of it, as it was brushed for.
-	private void RunBrushedUnits(bool count)
+	internal void RunBrushedUnits(bool count)
 	{
 		if( !count )
 			return;
@@ -138,7 +138,7 @@ public unsafe partial class Nspw
 		if( SelectedUnit!=0 && Units[SelectedUnit].Kind==UnitKind.Transport && AimLanding(sprite, x, y)
 			&& CanClickUnit(ref Units[0]) && !(Units[0].PlaneState!=UnitState.Parked && x>=CMBT_WIDTH-1) )
 			{
-			ClickUnit(0, new WorldPosition(CameraPosition.X+Sprites[sprite].Position.X, CameraPosition.Y-Sprites[sprite].Position.Y));
+			ClickUnit(0, new WorldPosition(CameraPosition.X+Renderer.Sprites[sprite].Position.X, CameraPosition.Y-Renderer.Sprites[sprite].Position.Y));
 			}
 	}
 
@@ -203,7 +203,7 @@ public unsafe partial class Nspw
 			isShown |= ShownCombatMenu[i] == item;
 		}
 
-		if( !isShown || item==ActiveCombatMenuItem() || FrameCount-since>40 )
+		if( !isShown || item==ActiveCombatMenuItem() || Renderer.FrameCount-since>40 )
 			{
 			_waitingCombatMenu=null;
 			}
@@ -216,7 +216,7 @@ public unsafe partial class Nspw
 
 	private void RunChooseCombatMenuItem(CombatMenuItem item)
 	{
-		_waitingCombatMenu=(item, FrameCount);
+		_waitingCombatMenu=(item, Renderer.FrameCount);
 	}
 
 	private void RunSelectSupplyTarget(bool next)
@@ -261,7 +261,7 @@ public unsafe partial class Nspw
 		if( _waitingSystemMenu is not var (answer, since) )
 			return;
 
-		if( RivalMode!=GameMode.Battle || IsEditingMap || FrameCount-since>40 )
+		if( RivalMode!=GameMode.Battle || IsEditingMap || Renderer.FrameCount-since>40 )
 			{
 			_waitingSystemMenu=null;
 			}
@@ -274,7 +274,7 @@ public unsafe partial class Nspw
 
 	private void RunAskSystemMenu(MessageType answer)
 	{
-		_waitingSystemMenu=(answer, FrameCount);
+		_waitingSystemMenu=(answer, Renderer.FrameCount);
 	}
 
 	// Whether the host chooses on the scenarios, the guest being on them too (UpdateScenarioList and the buttons under it).

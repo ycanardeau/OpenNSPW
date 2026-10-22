@@ -14,6 +14,8 @@
 
 // Port of etc3.cpp.
 
+using static OpenNspw.Nspw;
+
 namespace OpenNspw;
 
 public unsafe partial class Nspw
@@ -64,74 +66,7 @@ public int		Random(int range)
 public int EffectRandom(int range) => Rules.EffectsDrawFromRand ? Random(range) : SharedRandom(range);
 
 // Whether this tick makes the effects that 1.22 makes on the tick that is drawn only.
-public bool IsEffectTick => IsDrawnTick || !Rules.EffectsOnDrawnTickOnly;
-
-//============================================================================
-// スプライト基礎データ
-//----------------------------------------------------------------------------
-[Original("set_sprt_data")]
-public void		InitializeSprites()
-	{
-
-	// タイトル
-
-	// 1.22's title in its sheet is 599 by 387 (set_sprt_data, 0x432E43); NSPW NET's, 699 by 384.
-	Sprites[SpriteId.TitleBackground].Size = new PixelSize(IsSingleplayer ? 599 : 699, IsSingleplayer ? 387 : 384);
-	Sprites[SpriteId.TitleBackground].SheetPosition = new PixelPoint(0, 3940);
-	// ユニット
-	Sprites[SpriteId.JapanUnits].Size = new PixelSize(80, 80);
-	Sprites[SpriteId.JapanUnits].SheetPosition = new PixelPoint(0, 1759);
-	Sprites[SpriteId.JapanUnits].FramesPerRow=8;
-	Sprites[SpriteId.JapanUnits].Center = new PixelPoint(40, 40);
-
-	Sprites[SpriteId.UnitedStatesUnits].Size = new PixelSize(80, 80);
-	Sprites[SpriteId.UnitedStatesUnits].SheetPosition = new PixelPoint(0, 4550);
-	Sprites[SpriteId.UnitedStatesUnits].FramesPerRow=8;
-	Sprites[SpriteId.UnitedStatesUnits].Center = new PixelPoint(40, 40);
-
-	// サブユニット
-	Sprites[SpriteId.SubUnits].Size = new PixelSize(40, 40);
-	Sprites[SpriteId.SubUnits].SheetPosition = new PixelPoint(0, 3520);
-	Sprites[SpriteId.SubUnits].FramesPerRow=12;
-	Sprites[SpriteId.SubUnits].Center = new PixelPoint(20, 20);
-
-	// マップチップ 雲
-	Sprites[SpriteId.MapTiles].Size = new PixelSize(80, 80);
-	Sprites[SpriteId.MapTiles].SheetPosition = new PixelPoint(0, 3000);
-	Sprites[SpriteId.MapTiles].FramesPerRow=6;
-	Sprites[SpriteId.MapTiles].Center = new PixelPoint(40, 40);
-
-	// ユニットインフォ
-	Sprites[SpriteId.JapanUnitInfo].Position = new PixelPoint(CMBT_WIDTH, 0);
-	Sprites[SpriteId.JapanUnitInfo].Size = new PixelSize(120, 438);
-	Sprites[SpriteId.JapanUnitInfo].SheetPosition = new PixelPoint(0, 0);
-	Sprites[SpriteId.JapanUnitInfo].FramesPerRow=6;
-	Sprites[SpriteId.JapanUnitInfo].Center = new PixelPoint(0, 0);
-
-	Sprites[SpriteId.UnitedStatesUnitInfo].Size = new PixelSize(120, 438);
-	Sprites[SpriteId.UnitedStatesUnitInfo].SheetPosition = new PixelPoint(0, 878);
-	Sprites[SpriteId.UnitedStatesUnitInfo].FramesPerRow=6;
-	Sprites[SpriteId.UnitedStatesUnitInfo].Center = new PixelPoint(0, 0);
-
-	// 操作ボタンベース
-	Sprites[SpriteId.ButtonBase].Size = new PixelSize(198, 120);
-	Sprites[SpriteId.ButtonBase].SheetPosition = new PixelPoint(361, 3250);
-	Sprites[SpriteId.ButtonBase].FramesPerRow=1;
-	Sprites[SpriteId.ButtonBase].Center = new PixelPoint(0, 0);
-
-	// 操作ボタンベース
-	Sprites[SpriteId.Buttons1].Size = new PixelSize(140, 20);
-	Sprites[SpriteId.Buttons1].SheetPosition = new PixelPoint(0, 3250);
-	Sprites[SpriteId.Buttons1].FramesPerRow=1;
-	Sprites[SpriteId.Buttons1].Center = new PixelPoint(0, 0);
-
-	// マップベース
-	Sprites[SpriteId.Minimap].Size = new PixelSize(256-1, 200-1);
-	Sprites[SpriteId.Minimap].SheetPosition = new PixelPoint(0, 4340);
-	Sprites[SpriteId.Minimap].FramesPerRow=1;
-	Sprites[SpriteId.Minimap].Center = new PixelPoint(0, 0);
-
-	}
+public bool IsEffectTick => Renderer.IsDrawnTick || !Rules.EffectsOnDrawnTickOnly;
 
 //============================================================================
 //
@@ -162,7 +97,7 @@ public void	InitializeClouds()
 		// Every coordinate here is a whole number, so the sums are the same in any order.
 		var origin=new WorldPosition(Random(World.Width)-abs(World.Left), Random(World.Height)-abs(World.Bottom));
 
-		var offsetX=(double)( Random(Sprites[SpriteId.MapTiles].Size.Width*4)-Sprites[SpriteId.MapTiles].Size.Width*2 );
+		var offsetX=(double)( Random(Renderer.Sprites[SpriteId.MapTiles].Size.Width*4)-Renderer.Sprites[SpriteId.MapTiles].Size.Width*2 );
 
 		n=0;
 		for( var m=0;m<3;m++)
@@ -172,7 +107,7 @@ public void	InitializeClouds()
 			Clouds[freeClouds[n]].Kind=1;
 			n++;
 			}
-		offsetX=(double)( Random(Sprites[SpriteId.MapTiles].Size.Width*2)-Sprites[SpriteId.MapTiles].Size.Width*2 );
+		offsetX=(double)( Random(Renderer.Sprites[SpriteId.MapTiles].Size.Width*2)-Renderer.Sprites[SpriteId.MapTiles].Size.Width*2 );
 		for( var m=0;m<5;m++)
 			{
 			Clouds[freeClouds[n]].Used=1;
@@ -180,7 +115,7 @@ public void	InitializeClouds()
 			Clouds[freeClouds[n]].Kind=1;
 			n++;
 			}
-		offsetX=(double)( Random(Sprites[SpriteId.MapTiles].Size.Width*2)-Sprites[SpriteId.MapTiles].Size.Width*2 );
+		offsetX=(double)( Random(Renderer.Sprites[SpriteId.MapTiles].Size.Width*2)-Renderer.Sprites[SpriteId.MapTiles].Size.Width*2 );
 		for( var m=0;m<3;m++)
 			{
 			Clouds[freeClouds[n]].Used=1;
@@ -233,7 +168,7 @@ public void	UpdateClouds()
 
 	// Every coordinate here is a whole number, so the sums are the same in any order.
 	var origin=new WorldPosition(World.Right, Random(World.Height)-abs(World.Bottom));
-	var offsetX=(double)( Random(Sprites[SpriteId.MapTiles].Size.Width*4)-Sprites[SpriteId.MapTiles].Size.Width*2 );
+	var offsetX=(double)( Random(Renderer.Sprites[SpriteId.MapTiles].Size.Width*4)-Renderer.Sprites[SpriteId.MapTiles].Size.Width*2 );
 	n=0;
 	for( var m=0;m<3;m++)
 		{
@@ -242,7 +177,7 @@ public void	UpdateClouds()
 		Clouds[freeClouds[n]].Kind=1;
 		n++;
 		}
-	offsetX=(double)( Random(Sprites[SpriteId.MapTiles].Size.Width*2)-Sprites[SpriteId.MapTiles].Size.Width*2 );
+	offsetX=(double)( Random(Renderer.Sprites[SpriteId.MapTiles].Size.Width*2)-Renderer.Sprites[SpriteId.MapTiles].Size.Width*2 );
 	for( var m=0;m<5;m++)
 		{
 		Clouds[freeClouds[n]].Used=1;
@@ -250,7 +185,7 @@ public void	UpdateClouds()
 		Clouds[freeClouds[n]].Kind=1;
 		n++;
 		}
-	offsetX=(double)( Random(Sprites[SpriteId.MapTiles].Size.Width*2)-Sprites[SpriteId.MapTiles].Size.Width*2 );
+	offsetX=(double)( Random(Renderer.Sprites[SpriteId.MapTiles].Size.Width*2)-Renderer.Sprites[SpriteId.MapTiles].Size.Width*2 );
 	for( var m=0;m<3;m++)
 		{
 		Clouds[freeClouds[n]].Used=1;
@@ -1342,7 +1277,7 @@ private void CrashPlane(ref Unit unit, int m)
 
 private void UpdatePlaneEffects(ref Unit unit, int m)
 	{
-	if(  IsEffectTick && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%3)==0)&& (unit.Weapon==FireKind.Bomb || unit.Weapon==FireKind.Torpedo || unit.Weapon==FireKind.Maintenance || unit.Weapon==FireKind.Unarmed)  && unit.Side==LocalSide && !(unit.PlaneState==UnitState.Parked && UnitInfoPanel[1]==0) && !( unit.PlaneState==UnitState.Parked && unit.DeckPhase>=3 ) && !( unit.PlaneState==UnitState.Parked && unit.Carrier!=UnitInfoPanel[3]))
+	if(  IsEffectTick && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (Renderer.FrameCount%3)==0)&& (unit.Weapon==FireKind.Bomb || unit.Weapon==FireKind.Torpedo || unit.Weapon==FireKind.Maintenance || unit.Weapon==FireKind.Unarmed)  && unit.Side==LocalSide && !(unit.PlaneState==UnitState.Parked && UnitInfoPanel[1]==0) && !( unit.PlaneState==UnitState.Parked && unit.DeckPhase>=3 ) && !( unit.PlaneState==UnitState.Parked && unit.Carrier!=UnitInfoPanel[3]))
 		{
 		var f=FindFreeEffect();
 		ref var effect = ref Effects[f];
@@ -1464,7 +1399,7 @@ private void UpdateSurfaceShipEffects(ref Unit unit, int m)
 				}
 			}
 
-		DrawDestruction(m);
+		Renderer.DrawDestruction(m);
 
 		if( SelectedUnit==m )
 			{
@@ -1625,7 +1560,7 @@ private void UpdateSubmergedSubmarineEffects(ref Unit unit, int m)
 
 private void UpdateShipEffects(ref Unit unit, int m)
 	{
-	if(  IsEffectTick && unit.IsSupplying && (FrameCount%2)!=0 && unit.Side==LocalSide )
+	if(  IsEffectTick && unit.IsSupplying && (Renderer.FrameCount%2)!=0 && unit.Side==LocalSide )
 		{
 		var f=FindFreeEffect();
 		ref var effect = ref Effects[f];
@@ -1680,7 +1615,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 
 		effect.SpriteNumber=16;			// ソースファイル上の番号
 		}
-	else if( IsEffectTick && ( unit.Side==Side.Japan && ( unit.Kind==UnitKind.Submarine || unit.Kind==UnitKind.Destroyer || unit.Kind==UnitKind.Cruiser ) || unit.Side==Side.UnitedStates && ( unit.Kind==UnitKind.Submarine || unit.Kind==UnitKind.Destroyer ) ) && !unit.IsSupplying && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%2)!=0) && unit.Ammo>=1 && unit.Side==LocalSide )
+	else if( IsEffectTick && ( unit.Side==Side.Japan && ( unit.Kind==UnitKind.Submarine || unit.Kind==UnitKind.Destroyer || unit.Kind==UnitKind.Cruiser ) || unit.Side==Side.UnitedStates && ( unit.Kind==UnitKind.Submarine || unit.Kind==UnitKind.Destroyer ) ) && !unit.IsSupplying && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (Renderer.FrameCount%2)!=0) && unit.Ammo>=1 && unit.Side==LocalSide )
 		{
 		var f=FindFreeEffect();
 		ref var effect = ref Effects[f];
@@ -1694,7 +1629,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 		}
 
 	// トランスポーターの荷物の表示
-	if(  IsEffectTick && unit.Kind==UnitKind.Transport && !unit.IsSupplying && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%2)!=0) && unit.Side==LocalSide )
+	if(  IsEffectTick && unit.Kind==UnitKind.Transport && !unit.IsSupplying && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (Renderer.FrameCount%2)!=0) && unit.Side==LocalSide )
 		{
 		var f=FindFreeEffect();
 		ref var effect = ref Effects[f];
@@ -1785,7 +1720,7 @@ public void	UpdateUnitEffects(int m)
 	if( unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress || unit.Kind==UnitKind.AirBase || unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.NavalBase )
 		{
 		// 建設工事中
-		if(  unit.BuildTime!=0 && (FrameCount%2)!=0 && unit.Side==LocalSide )
+		if(  unit.BuildTime!=0 && (Renderer.FrameCount%2)!=0 && unit.Side==LocalSide )
 			{
 			var f=FindFreeEffect();
 			ref var effect = ref Effects[f];
@@ -1952,12 +1887,12 @@ public void	UpdateMapEditor()
     Array128<byte> text = default;
 	HDC					hdc;
 
-	if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
+	if ( IDirectDrawSurface_GetDC(Renderer.lpDDSBack, &hdc) == DD_OK )
 		{
 
 		// draw stats, like frame number and frame rate
 		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, GameFont1);
+		SelectObject(hdc, Renderer.GameFont1);
 		SetTextColor(hdc, RGB(255, 255, 0));
 
 		short japanPlanes=0;
@@ -2218,7 +2153,78 @@ public void	UpdateMapEditor()
 
 #endif
 
-		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
+		IDirectDrawSurface_ReleaseDC(Renderer.lpDDSBack, hdc);
 		}
+	}
+}
+
+public unsafe partial class Renderer
+{
+
+//============================================================================
+// スプライト基礎データ
+//----------------------------------------------------------------------------
+[Original("set_sprt_data")]
+public void		InitializeSprites()
+	{
+
+	// タイトル
+
+	// 1.22's title in its sheet is 599 by 387 (set_sprt_data, 0x432E43); NSPW NET's, 699 by 384.
+	Sprites[SpriteId.TitleBackground].Size = new PixelSize(_game.IsSingleplayer ? 599 : 699, _game.IsSingleplayer ? 387 : 384);
+	Sprites[SpriteId.TitleBackground].SheetPosition = new PixelPoint(0, 3940);
+	// ユニット
+	Sprites[SpriteId.JapanUnits].Size = new PixelSize(80, 80);
+	Sprites[SpriteId.JapanUnits].SheetPosition = new PixelPoint(0, 1759);
+	Sprites[SpriteId.JapanUnits].FramesPerRow=8;
+	Sprites[SpriteId.JapanUnits].Center = new PixelPoint(40, 40);
+
+	Sprites[SpriteId.UnitedStatesUnits].Size = new PixelSize(80, 80);
+	Sprites[SpriteId.UnitedStatesUnits].SheetPosition = new PixelPoint(0, 4550);
+	Sprites[SpriteId.UnitedStatesUnits].FramesPerRow=8;
+	Sprites[SpriteId.UnitedStatesUnits].Center = new PixelPoint(40, 40);
+
+	// サブユニット
+	Sprites[SpriteId.SubUnits].Size = new PixelSize(40, 40);
+	Sprites[SpriteId.SubUnits].SheetPosition = new PixelPoint(0, 3520);
+	Sprites[SpriteId.SubUnits].FramesPerRow=12;
+	Sprites[SpriteId.SubUnits].Center = new PixelPoint(20, 20);
+
+	// マップチップ 雲
+	Sprites[SpriteId.MapTiles].Size = new PixelSize(80, 80);
+	Sprites[SpriteId.MapTiles].SheetPosition = new PixelPoint(0, 3000);
+	Sprites[SpriteId.MapTiles].FramesPerRow=6;
+	Sprites[SpriteId.MapTiles].Center = new PixelPoint(40, 40);
+
+	// ユニットインフォ
+	Sprites[SpriteId.JapanUnitInfo].Position = new PixelPoint(CMBT_WIDTH, 0);
+	Sprites[SpriteId.JapanUnitInfo].Size = new PixelSize(120, 438);
+	Sprites[SpriteId.JapanUnitInfo].SheetPosition = new PixelPoint(0, 0);
+	Sprites[SpriteId.JapanUnitInfo].FramesPerRow=6;
+	Sprites[SpriteId.JapanUnitInfo].Center = new PixelPoint(0, 0);
+
+	Sprites[SpriteId.UnitedStatesUnitInfo].Size = new PixelSize(120, 438);
+	Sprites[SpriteId.UnitedStatesUnitInfo].SheetPosition = new PixelPoint(0, 878);
+	Sprites[SpriteId.UnitedStatesUnitInfo].FramesPerRow=6;
+	Sprites[SpriteId.UnitedStatesUnitInfo].Center = new PixelPoint(0, 0);
+
+	// 操作ボタンベース
+	Sprites[SpriteId.ButtonBase].Size = new PixelSize(198, 120);
+	Sprites[SpriteId.ButtonBase].SheetPosition = new PixelPoint(361, 3250);
+	Sprites[SpriteId.ButtonBase].FramesPerRow=1;
+	Sprites[SpriteId.ButtonBase].Center = new PixelPoint(0, 0);
+
+	// 操作ボタンベース
+	Sprites[SpriteId.Buttons1].Size = new PixelSize(140, 20);
+	Sprites[SpriteId.Buttons1].SheetPosition = new PixelPoint(0, 3250);
+	Sprites[SpriteId.Buttons1].FramesPerRow=1;
+	Sprites[SpriteId.Buttons1].Center = new PixelPoint(0, 0);
+
+	// マップベース
+	Sprites[SpriteId.Minimap].Size = new PixelSize(256-1, 200-1);
+	Sprites[SpriteId.Minimap].SheetPosition = new PixelPoint(0, 4340);
+	Sprites[SpriteId.Minimap].FramesPerRow=1;
+	Sprites[SpriteId.Minimap].Center = new PixelPoint(0, 0);
+
 	}
 }

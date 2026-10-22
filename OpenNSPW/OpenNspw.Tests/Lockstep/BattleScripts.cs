@@ -101,7 +101,7 @@ internal static class BattleScripts
 	// clicked there is exactly that point (draw_cmbt_area.cpp).
 	internal static WorldPosition TilePosition(Nspw nspw, int column, int row)
 	{
-		ref Sprite tiles = ref nspw.Sprites[SpriteId.MapTiles];
+		ref Sprite tiles = ref nspw.Renderer.Sprites[SpriteId.MapTiles];
 		return new WorldPosition(World.Left + (column * tiles.Size.Width), World.Top - (row * tiles.Size.Height));
 	}
 
@@ -119,8 +119,8 @@ internal static class BattleScripts
 	// The tile of the terrain under a point of the world, as the ships see it (chara_cont.cpp).
 	internal static (int Column, int Row) TileAt(Nspw nspw, WorldPosition position)
 	{
-		ref Sprite units = ref nspw.Sprites[SpriteId.JapanUnits];
-		ref Sprite tiles = ref nspw.Sprites[SpriteId.MapTiles];
+		ref Sprite units = ref nspw.Renderer.Sprites[SpriteId.JapanUnits];
+		ref Sprite tiles = ref nspw.Renderer.Sprites[SpriteId.MapTiles];
 		return ((int)((position.X + (units.Size.Width / 2) - World.Left) / tiles.Size.Width), (int)((World.Top - position.Y + (units.Size.Height / 2)) / tiles.Size.Height));
 	}
 

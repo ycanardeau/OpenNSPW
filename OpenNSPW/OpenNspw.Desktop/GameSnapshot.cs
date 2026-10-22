@@ -151,7 +151,7 @@ internal sealed class GameSnapshot
 		Fires = game.Fires;
 		Effects = game.Effects;
 		MapTiles = game.MapTiles;
-		Sprites = game.Sprites;
+		Sprites = game.Renderer.Sprites;
 		Clouds = game.Clouds;
 		FirstPlane = game.JPN_PLANE_START;
 		game.ReadSight(SeenTiles, out FirstColumn, out FirstRow, SeenEffects);
@@ -185,7 +185,7 @@ internal sealed class GameSnapshot
 		IsHost = game.IsHost;
 		RivalMode = game.RivalMode;
 		LocalSide = game.LocalSide;
-		FrameCount = game.FrameCount;
+		FrameCount = game.Renderer.FrameCount;
 		Mode = game.Mode;
 		IsEditingMap = game.IsEditingMap;
 		Result = game.Result;

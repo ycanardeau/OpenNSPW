@@ -255,7 +255,7 @@ internal sealed class SoloGame : IDisposable
 	public void Draw()
 	{
 		Game.UpdateUnitInfo();
-		Game.DrawBattleArea();
+		Game.Renderer.DrawBattleArea();
 		Game.DrawMinimap();
 	}
 

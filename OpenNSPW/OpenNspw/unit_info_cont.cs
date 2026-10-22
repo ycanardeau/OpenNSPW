@@ -235,44 +235,44 @@ private void WriteUnitDetails(ref Array8<int> length, ref Array8<Array128<byte>>
 private void DrawUnitDetails(SpriteId sprite, ref RECT source, ref HDC hdc, ref Array8<int> length, ref Array8<Array128<byte>> text)
 	{
 	RECT destination;
-	Sprites[sprite].Frame=UnitInfoPanel[2];
+	Renderer.Sprites[sprite].Frame=UnitInfoPanel[2];
 	if( UnitInfoPanel[1]!=0 )
 		{
 		if((UnitKind)UnitInfoPanel[0]==UnitKind.AirBase)
 			{
-			Sprites[sprite].Frame=9;
+			Renderer.Sprites[sprite].Frame=9;
 			}
 		if((UnitKind)UnitInfoPanel[0]==UnitKind.Carrier)
 			{
-			Sprites[sprite].Frame=10;
+			Renderer.Sprites[sprite].Frame=10;
 			}
 		if((UnitKind)UnitInfoPanel[0]==UnitKind.LightCarrier)
 			{
-			Sprites[sprite].Frame=11;
+			Renderer.Sprites[sprite].Frame=11;
 			}
 		}
 
 	// src_rect は ソースサーフェスのレクタングルです。
-	source.left = Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width * (Sprites[sprite].Frame % Sprites[sprite].FramesPerRow))+1;
-	source.top = Sprites[sprite].SheetPosition.Y+(Sprites[sprite].Size.Height* (Sprites[sprite].Frame / Sprites[sprite].FramesPerRow))+1;
-	source.right = (source.left + Sprites[sprite].Size.Width)-3;
-	source.bottom = (source.top + Sprites[sprite].Size.Height)-2;
+	source.left = Renderer.Sprites[sprite].SheetPosition.X+(Renderer.Sprites[sprite].Size.Width * (Renderer.Sprites[sprite].Frame % Renderer.Sprites[sprite].FramesPerRow))+1;
+	source.top = Renderer.Sprites[sprite].SheetPosition.Y+(Renderer.Sprites[sprite].Size.Height* (Renderer.Sprites[sprite].Frame / Renderer.Sprites[sprite].FramesPerRow))+1;
+	source.right = (source.left + Renderer.Sprites[sprite].Size.Width)-3;
+	source.bottom = (source.top + Renderer.Sprites[sprite].Size.Height)-2;
 
 	// dstn_rect は ディスティネーションレクタングルです。
 	destination.left=CMBT_WIDTH;
 	destination.top=0;
 
-	destination.right=destination.left+Sprites[sprite].Size.Width-1+1;
-	destination.bottom=destination.top+Sprites[sprite].Size.Height-1+1;
+	destination.right=destination.left+Renderer.Sprites[sprite].Size.Width-1+1;
+	destination.bottom=destination.top+Renderer.Sprites[sprite].Size.Height-1+1;
 
-	IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),DDBLTFAST_WAIT );
+	IDirectDrawSurface_BltFast( Renderer.lpDDSBack, destination.left, destination.top,Renderer.OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),DDBLTFAST_WAIT );
 
 	// そのユニットのテキストを表示します。
-	if (IDirectDrawSurface_GetDC(lpDDSBack, (HDC*)Unsafe.AsPointer(ref hdc)) == DD_OK )
+	if (IDirectDrawSurface_GetDC(Renderer.lpDDSBack, (HDC*)Unsafe.AsPointer(ref hdc)) == DD_OK )
 		{
 		// draw stats, like frame number and frame rate
 		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, GameFont1);
+		SelectObject(hdc, Renderer.GameFont1);
 
 #if !LNGG_VER
 		WriteUnitDetails(ref length, ref text);
@@ -415,7 +415,7 @@ else
 			TextOut(hdc, destination.left+20+110+55, 10+(1*20), text[0], length[0]);
 			}
 
-		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
+		IDirectDrawSurface_ReleaseDC(Renderer.lpDDSBack, hdc);
 		}
 	}
 
@@ -444,15 +444,15 @@ private void UpdateDeckView(ref RECT source, SpriteId sprite, ref RECT destinati
 	RunUICommands(UICommandSite.DeckView, true);
 
 	var i=0;
-	source.left = Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width*0)+1;
-	source.top = Sprites[sprite].SheetPosition.Y+(Sprites[sprite].Size.Height*(i+1))+1;
-	source.right = source.left+(Sprites[sprite].Size.Width)-1;
-	source.bottom = source.top+(Sprites[sprite].Size.Height)-1;
+	source.left = Renderer.Sprites[sprite].SheetPosition.X+(Renderer.Sprites[sprite].Size.Width*0)+1;
+	source.top = Renderer.Sprites[sprite].SheetPosition.Y+(Renderer.Sprites[sprite].Size.Height*(i+1))+1;
+	source.right = source.left+(Renderer.Sprites[sprite].Size.Width)-1;
+	source.bottom = source.top+(Renderer.Sprites[sprite].Size.Height)-1;
 
 	destination.left=CMBT_WIDTH;
-	destination.top=Sprites[SpriteId.JapanUnitInfo].Position.Y+Sprites[SpriteId.JapanUnitInfo].Size.Height;
-	destination.right=destination.left+(Sprites[sprite].Size.Width)-1;
-	destination.bottom=destination.top+(Sprites[sprite].Size.Height)-1;
+	destination.top=Renderer.Sprites[SpriteId.JapanUnitInfo].Position.Y+Renderer.Sprites[SpriteId.JapanUnitInfo].Size.Height;
+	destination.right=destination.left+(Renderer.Sprites[sprite].Size.Width)-1;
+	destination.bottom=destination.top+(Renderer.Sprites[sprite].Size.Height)-1;
 
 	if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 		{
@@ -467,9 +467,9 @@ private void UpdateDeckView(ref RECT source, SpriteId sprite, ref RECT destinati
 		source.right+=180;	source.left+=180;
 		}
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( Renderer.lpDDSBack, destination.left, destination.top,Renderer.OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),0) )
 	{
-	RestoreSurfaces();
+	Renderer.RestoreSurfaces();
 	}
 	}
 
@@ -590,15 +590,15 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 	for( var i=0;i<n;i++ )
 		{
 		m=menu[i];
-		source.left = Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width*0)+1;
-		source.top = Sprites[sprite].SheetPosition.Y+(Sprites[sprite].Size.Height*(m))+1;
-		source.right = source.left+Sprites[sprite].Size.Width-1;
-		source.bottom = source.top+Sprites[sprite].Size.Height-1;
+		source.left = Renderer.Sprites[sprite].SheetPosition.X+(Renderer.Sprites[sprite].Size.Width*0)+1;
+		source.top = Renderer.Sprites[sprite].SheetPosition.Y+(Renderer.Sprites[sprite].Size.Height*(m))+1;
+		source.right = source.left+Renderer.Sprites[sprite].Size.Width-1;
+		source.bottom = source.top+Renderer.Sprites[sprite].Size.Height-1;
 
-		destination.left=Sprites[SpriteId.ButtonBase].Position.X;
-		destination.top=Sprites[SpriteId.ButtonBase].Position.Y+(Sprites[sprite].Size.Height*(i));
-		destination.right=destination.left+Sprites[sprite].Size.Width-1;
-		destination.bottom=destination.top+Sprites[sprite].Size.Height-1;
+		destination.left=Renderer.Sprites[SpriteId.ButtonBase].Position.X;
+		destination.top=Renderer.Sprites[SpriteId.ButtonBase].Position.Y+(Renderer.Sprites[sprite].Size.Height*(i));
+		destination.right=destination.left+Renderer.Sprites[sprite].Size.Width-1;
+		destination.bottom=destination.top+Renderer.Sprites[sprite].Size.Height-1;
 
 		if( LeftButton==3 && menuItems[i]!=CombatMenuSelection && PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 			{
@@ -607,26 +607,26 @@ private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> m
 				ChooseCombatMenuItem(menuItems[i]);
 				}
 			}
-		if( LeftButton==2 && PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && FrameCount%2<1)
+		if( LeftButton==2 && PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && Renderer.FrameCount%2<1)
 			{
 
-			source.left=Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width*0)+1+180;
-			source.right=source.left+Sprites[sprite].Size.Width-1;
+			source.left=Renderer.Sprites[sprite].SheetPosition.X+(Renderer.Sprites[sprite].Size.Width*0)+1+180;
+			source.right=source.left+Renderer.Sprites[sprite].Size.Width-1;
 			}
-		if( menuItems[i]!=CombatMenuSelection && LeftButton==0 && PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && FrameCount%6<4 )
+		if( menuItems[i]!=CombatMenuSelection && LeftButton==0 && PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && Renderer.FrameCount%6<4 )
 			{
-			source.left=Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width*0)+1+180;
-			source.right=source.left+Sprites[sprite].Size.Width-1;
+			source.left=Renderer.Sprites[sprite].SheetPosition.X+(Renderer.Sprites[sprite].Size.Width*0)+1+180;
+			source.right=source.left+Renderer.Sprites[sprite].Size.Width-1;
 			}
 		if( CombatMenuSelection==menuItems[i] )
 			{
-			source.left=Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width*0)+1+180;
-			source.right=source.left+Sprites[sprite].Size.Width-1;
+			source.left=Renderer.Sprites[sprite].SheetPosition.X+(Renderer.Sprites[sprite].Size.Width*0)+1+180;
+			source.right=source.left+Renderer.Sprites[sprite].Size.Width-1;
 			}
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( Renderer.lpDDSBack, destination.left, destination.top,Renderer.OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),0) )
 	{
-	RestoreSurfaces();
+	Renderer.RestoreSurfaces();
 	}
 
 		}
@@ -684,20 +684,20 @@ private void DrawSupplyTarget(ref int m, ref RECT source, int y)
 	ChooseSupplyTargetFrame(ref m, out var n);
 
 	// src_rect は ソースサーフェスのレクタングルです。
-	source.left = Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width * ( n )) +1;		// 方向
+	source.left = Renderer.Sprites[sprite].SheetPosition.X+(Renderer.Sprites[sprite].Size.Width * ( n )) +1;		// 方向
 
-	source.top = Sprites[sprite].SheetPosition.Y+(Sprites[sprite].Size.Height* (m)) +1;		// 機種
+	source.top = Renderer.Sprites[sprite].SheetPosition.Y+(Renderer.Sprites[sprite].Size.Height* (m)) +1;		// 機種
 
-	source.right = (source.left + Sprites[sprite].Size.Width)-2;
-	source.bottom = (source.top + Sprites[sprite].Size.Height)-2;
+	source.right = (source.left + Renderer.Sprites[sprite].Size.Width)-2;
+	source.bottom = (source.top + Renderer.Sprites[sprite].Size.Height)-2;
 
 	// dstn_rect は ディスティネーションレクタングルです。
 	destination.left=1024-120+10;
 	destination.top=y+20*2+5;
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),DDBLTFAST_SRCCOLORKEY) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( Renderer.lpDDSBack, destination.left, destination.top,Renderer.OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),DDBLTFAST_SRCCOLORKEY) )
 		{
-		RestoreSurfaces();
+		Renderer.RestoreSurfaces();
 		}
 	}
 
@@ -888,7 +888,7 @@ private void RequestSupply(ref Array8<int> length, ref Array8<Array128<byte>> te
 #else
 			len[0] = wsprintf(ach[0], "　Request");
 #endif
-			destination.left=Sprites[SpriteId.ButtonBase].Position.X+120;
+			destination.left=Renderer.Sprites[SpriteId.ButtonBase].Position.X+120;
 			destination.top=y+20*7+5;
 			destination.right=destination.left+(length[0]*12);
 			destination.bottom=destination.top+18;
@@ -904,7 +904,7 @@ private void RequestSupply(ref Array8<int> length, ref Array8<Array128<byte>> te
 				{
 				SetTextColor(hdc, RGB(255, 255, 255));
 				}
-			TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120, y+20*7+5, text[0], length[0]);
+			TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120, y+20*7+5, text[0], length[0]);
 			}
 			break;
 
@@ -916,7 +916,7 @@ private void RequestSupply(ref Array8<int> length, ref Array8<Array128<byte>> te
 #else
 			len[0] = wsprintf(ach[0], "Shortage of pts");
 #endif
-			TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120, y+20*7+5, text[0], length[0]);
+			TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120, y+20*7+5, text[0], length[0]);
 			}
 			break;
 
@@ -928,7 +928,7 @@ private void RequestSupply(ref Array8<int> length, ref Array8<Array128<byte>> te
 #else
 			len[0] = wsprintf(ach[0], "Units Max");
 #endif
-			TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120, y+20*7+5, text[0], length[0]);
+			TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120, y+20*7+5, text[0], length[0]);
 			}
 			break;
 
@@ -940,7 +940,7 @@ private void RequestSupply(ref Array8<int> length, ref Array8<Array128<byte>> te
 #else
 			len[0] = wsprintf(ach[0], "Restricted Unit");
 #endif
-			TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120, y+20*7+5, text[0], length[0]);
+			TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120, y+20*7+5, text[0], length[0]);
 			}
 			break;
 		}
@@ -969,7 +969,7 @@ private void UpdateSupplyRequest(ref Array8<int> length, ref Array8<Array128<byt
 	RunUICommands(UICommandSite.SupplyPanel, true);
 
 	length[0] = wsprintf(text[0], "%d:" ,GetSupplyPointsPerUnit());
-	TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120, y+20*3+5+10, text[0], length[0]);
+	TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120, y+20*3+5+10, text[0], length[0]);
 
 	// The previous kind.
 #if !LNGG_VER
@@ -978,7 +978,7 @@ private void UpdateSupplyRequest(ref Array8<int> length, ref Array8<Array128<byt
 	len[0] = wsprintf(ach[0], "<<<- Previous");
 #endif
 
-	destination.left=Sprites[SpriteId.ButtonBase].Position.X+120;
+	destination.left=Renderer.Sprites[SpriteId.ButtonBase].Position.X+120;
 	destination.top=y+20*5+5;
 	destination.right=destination.left+(length[0]*12);
 	destination.bottom=destination.top+18;
@@ -995,7 +995,7 @@ private void UpdateSupplyRequest(ref Array8<int> length, ref Array8<Array128<byt
 		SetTextColor(hdc, RGB(255, 255, 255));
 		}
 
-	TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120, y+20*5+5, text[0], length[0]);
+	TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120, y+20*5+5, text[0], length[0]);
 
 	// The next kind.
 #if !LNGG_VER
@@ -1004,7 +1004,7 @@ private void UpdateSupplyRequest(ref Array8<int> length, ref Array8<Array128<byt
 	len[0] = wsprintf(ach[0], "Next ->>>");
 #endif
 
-	destination.left=Sprites[SpriteId.ButtonBase].Position.X+120;
+	destination.left=Renderer.Sprites[SpriteId.ButtonBase].Position.X+120;
 	destination.top=y+20*6+5;
 	destination.right=destination.left+(length[0]*12);
 	destination.bottom=destination.top+18;
@@ -1021,7 +1021,7 @@ private void UpdateSupplyRequest(ref Array8<int> length, ref Array8<Array128<byt
 		SetTextColor(hdc, RGB(255, 255, 255));
 		}
 
-	TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120, y+20*6+5, text[0], length[0]);
+	TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120, y+20*6+5, text[0], length[0]);
 
 	// 要求する
 	RequestSupply(ref length, ref text, ref destination, y, ref hdc);
@@ -1060,11 +1060,11 @@ private void UpdateSupplyPanel(ref Array8<int> length, ref Array8<Array128<byte>
 		// (UICommands.cs).
 		RunUICommands(UICommandSite.SupplyPanel, false);
 
-		if((FrameCount%2)!=0)
+		if((Renderer.FrameCount%2)!=0)
 			{
 #if !LNGG_VER
 			length[0] = wsprintf(text[0], "要求中");
-			TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120+30, y+20*6+5, text[0], length[0]);
+			TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120+30, y+20*6+5, text[0], length[0]);
 #else
 			len[0] = wsprintf(ach[0], "Wait for coming");
 			TextOut(hdc, sprt[SpriteId.ButtonBase].x+120, ry+20*6+5, ach[0], len[0]);
@@ -1112,7 +1112,7 @@ private void UpdateSystemMenu(ref Array8<int> length, ref Array8<Array128<byte>>
 #else
 	len[0] = wsprintf(ach[0], "to Mission Menu");
 #endif
-	destination.left=Sprites[SpriteId.ButtonBase].Position.X+120;
+	destination.left=Renderer.Sprites[SpriteId.ButtonBase].Position.X+120;
 	destination.top=y+20*9+5;
 	destination.right=destination.left+(length[0]*12);
 	destination.bottom=destination.top+18;
@@ -1145,7 +1145,7 @@ private void UpdateSystemMenu(ref Array8<int> length, ref Array8<Array128<byte>>
 		{
 		SetTextColor(hdc, RGB(255, 255, 255));
 		}
-	TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120, y+20*9+5, text[0], length[0]);
+	TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120, y+20*9+5, text[0], length[0]);
 
 	if( !IsEditingMap )
 		{
@@ -1154,7 +1154,7 @@ private void UpdateSystemMenu(ref Array8<int> length, ref Array8<Array128<byte>>
 #else
 		len[0] = wsprintf(ach[0], "Resume");
 #endif
-		destination.left=Sprites[SpriteId.ButtonBase].Position.X+120+20;
+		destination.left=Renderer.Sprites[SpriteId.ButtonBase].Position.X+120+20;
 		destination.top=y+20*10+5;
 		destination.right=destination.left+(length[0]*12);
 		destination.bottom=destination.top+18;
@@ -1173,7 +1173,7 @@ private void UpdateSystemMenu(ref Array8<int> length, ref Array8<Array128<byte>>
 			{
 			SetTextColor(hdc, RGB(255, 255, 255));
 			}
-		TextOut(hdc, Sprites[SpriteId.ButtonBase].Position.X+120+20, y+20*10+5, text[0], length[0]);
+		TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120+20, y+20*10+5, text[0], length[0]);
 		}
 	}
 
@@ -1212,18 +1212,18 @@ rival_mode=mode;
 		}
 
 	//	スプライトグループ（メニュー下地）
-	source.left = Sprites[SpriteId.ButtonBase].SheetPosition.X;
-	source.top = Sprites[SpriteId.ButtonBase].SheetPosition.Y+(Sprites[SpriteId.ButtonBase].Size.Height*(Side.UnitedStates==LocalSide ? 1 : 0));
-	source.right = source.left+Sprites[SpriteId.ButtonBase].Size.Width;
-	source.bottom = source.top+Sprites[SpriteId.ButtonBase].Size.Height;
+	source.left = Renderer.Sprites[SpriteId.ButtonBase].SheetPosition.X;
+	source.top = Renderer.Sprites[SpriteId.ButtonBase].SheetPosition.Y+(Renderer.Sprites[SpriteId.ButtonBase].Size.Height*(Side.UnitedStates==LocalSide ? 1 : 0));
+	source.right = source.left+Renderer.Sprites[SpriteId.ButtonBase].Size.Width;
+	source.bottom = source.top+Renderer.Sprites[SpriteId.ButtonBase].Size.Height;
 
-	Sprites[SpriteId.ButtonBase].Position = new PixelPoint(CMBT_WIDTH, Sprites[SpriteId.JapanUnitInfo].Position.Y+Sprites[SpriteId.JapanUnitInfo].Size.Height+20);
-	destination.left=Sprites[SpriteId.ButtonBase].Position.X;
-	destination.top=Sprites[SpriteId.ButtonBase].Position.Y;
+	Renderer.Sprites[SpriteId.ButtonBase].Position = new PixelPoint(CMBT_WIDTH, Renderer.Sprites[SpriteId.JapanUnitInfo].Position.Y+Renderer.Sprites[SpriteId.JapanUnitInfo].Size.Height+20);
+	destination.left=Renderer.Sprites[SpriteId.ButtonBase].Position.X;
+	destination.top=Renderer.Sprites[SpriteId.ButtonBase].Position.Y;
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( Renderer.lpDDSBack, destination.left, destination.top,Renderer.OffscreenSurface,&source,0) )
 		{
-		RestoreSurfaces();
+		Renderer.RestoreSurfaces();
 		}
 
 	sprite=SpriteId.Buttons1;
@@ -1254,10 +1254,10 @@ rival_mode=mode;
 		}
 
 	// ゲームデータ
-	if ( !IsEditingMap && IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
+	if ( !IsEditingMap && IDirectDrawSurface_GetDC(Renderer.lpDDSBack, &hdc) == DD_OK )
 		{
 		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, GameFont1);
+		SelectObject(hdc, Renderer.GameFont1);
 
 #if !LNGG_VER
 		length[0] = wsprintf(text[0], "スピード : %d",GameSpeed);
@@ -1275,15 +1275,15 @@ rival_mode=mode;
 			SetTextColor(hdc, RGB(255, 255, 255));
 			TextOut(hdc, destination.left+20+110, 100+(n*20), text[n], length[n]);
 			}
-		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
+		IDirectDrawSurface_ReleaseDC(Renderer.lpDDSBack, hdc);
 		}
 
 	// 補給
 	var y=190;
-	if( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
+	if( IDirectDrawSurface_GetDC(Renderer.lpDDSBack, &hdc) == DD_OK )
 		{
 		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, GameFont1);
+		SelectObject(hdc, Renderer.GameFont1);
 
 		if( !IsEditingMap )
 			{
@@ -1306,13 +1306,13 @@ rival_mode=mode;
 			RunUICommands(UICommandSite.SystemMenu, false);
 			}
 
-		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
+		IDirectDrawSurface_ReleaseDC(Renderer.lpDDSBack, hdc);
 		}
 
 	y-=30;
 
 	// 補給
-	IsSupplyTargetShown = ( SupplyCount==0 || (FrameCount%2)!=0 ) && !IsEditingMap;
+	IsSupplyTargetShown = ( SupplyCount==0 || (Renderer.FrameCount%2)!=0 ) && !IsEditingMap;
 	if( IsSupplyTargetShown )
 		{
 		DrawSupplyTarget(ref m, ref source, y);
@@ -1343,24 +1343,24 @@ public void	DrawMinimap()
 	RECT source, destination;
 
 	// マップの下地を描画
-	Sprites[SpriteId.Minimap].Position = new PixelPoint(CMBT_WIDTH, CMBT_HEIGHT-Sprites[SpriteId.Minimap].Size.Height);
+	Renderer.Sprites[SpriteId.Minimap].Position = new PixelPoint(CMBT_WIDTH, CMBT_HEIGHT-Renderer.Sprites[SpriteId.Minimap].Size.Height);
 
-	source.left = 	Sprites[SpriteId.Minimap].SheetPosition.X;
-	source.top = Sprites[SpriteId.Minimap].SheetPosition.Y;
-	source.right = Sprites[SpriteId.Minimap].SheetPosition.X+Sprites[SpriteId.Minimap].Size.Width;
-	source.bottom = Sprites[SpriteId.Minimap].SheetPosition.Y+Sprites[SpriteId.Minimap].Size.Height;
+	source.left = 	Renderer.Sprites[SpriteId.Minimap].SheetPosition.X;
+	source.top = Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y;
+	source.right = Renderer.Sprites[SpriteId.Minimap].SheetPosition.X+Renderer.Sprites[SpriteId.Minimap].Size.Width;
+	source.bottom = Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y+Renderer.Sprites[SpriteId.Minimap].Size.Height;
 
 	// dstn_rect は ディスティネーションレクタングルです。
-	destination.left=Sprites[SpriteId.Minimap].Position.X;
-	destination.top=Sprites[SpriteId.Minimap].Position.Y;
+	destination.left=Renderer.Sprites[SpriteId.Minimap].Position.X;
+	destination.top=Renderer.Sprites[SpriteId.Minimap].Position.Y;
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( Renderer.lpDDSBack, destination.left, destination.top,Renderer.OffscreenSurface,&source,0) )
 		{
-		RestoreSurfaces();
+		Renderer.RestoreSurfaces();
 		}
 
-	var baseX=Sprites[SpriteId.Minimap].Position.X+8;
-	var baseY=Sprites[SpriteId.Minimap].Position.Y+8;
+	var baseX=Renderer.Sprites[SpriteId.Minimap].Position.X+8;
+	var baseY=Renderer.Sprites[SpriteId.Minimap].Position.Y+8;
 
 	// コンバット画面位置の描画
 	byte ownColor=0;
@@ -1376,10 +1376,10 @@ public void	DrawMinimap()
 	destination.right=destination.left+10;
 	destination.bottom=destination.top+10;
 
-	DrawLine5(destination.left,destination.top,destination.right,destination.top,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
-	DrawLine5(destination.right,destination.top,destination.right,destination.bottom,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
-	DrawLine5(destination.right,destination.bottom,destination.left,destination.bottom,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
-	DrawLine5(destination.left,destination.bottom,destination.left,destination.top,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
+	Renderer.DrawLine5(destination.left,destination.top,destination.right,destination.top,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
+	Renderer.DrawLine5(destination.right,destination.top,destination.right,destination.bottom,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
+	Renderer.DrawLine5(destination.right,destination.bottom,destination.left,destination.bottom,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
+	Renderer.DrawLine5(destination.left,destination.bottom,destination.left,destination.top,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
 
 	// マップ上のカーソルクリックでの位置指定
 	ownColor=255;
@@ -1390,10 +1390,10 @@ public void	DrawMinimap()
 		destination.right=destination.left+10;
 		destination.bottom=destination.top+10;
 
-		DrawLine5(destination.left,destination.top,destination.right,destination.top,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
-		DrawLine5(destination.right,destination.top,destination.right,destination.bottom,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
-		DrawLine5(destination.right,destination.bottom,destination.left,destination.bottom,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
-		DrawLine5(destination.left,destination.bottom,destination.left,destination.top,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
+		Renderer.DrawLine5(destination.left,destination.top,destination.right,destination.top,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
+		Renderer.DrawLine5(destination.right,destination.top,destination.right,destination.bottom,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
+		Renderer.DrawLine5(destination.right,destination.bottom,destination.left,destination.bottom,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
+		Renderer.DrawLine5(destination.left,destination.bottom,destination.left,destination.top,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
 
 		if(LeftButton==2)
 			{
@@ -1410,7 +1410,7 @@ public void	DrawMinimap()
 		{
 		ref var unit = ref Units[m];
 
-		if( unit.Side==LocalSide  &&   World.Contains(unit.Position)    && !(unit.PlaneState==UnitState.Parked) && !(unit.Category==UnitCategory.Plane && (FrameCount%4)==0))
+		if( unit.Side==LocalSide  &&   World.Contains(unit.Position)    && !(unit.PlaneState==UnitState.Parked) && !(unit.Category==UnitCategory.Plane && (Renderer.FrameCount%4)==0))
 			{
 			// マイユニット
 			if( unit.Position.X >= 0 )
@@ -1427,20 +1427,20 @@ public void	DrawMinimap()
 
 			source.left = 267;
 			if( LocalSide==Side.Japan )
-				source.top = Sprites[SpriteId.Minimap].SheetPosition.Y+16;
+				source.top = Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y+16;
 			else
-				source.top = Sprites[SpriteId.Minimap].SheetPosition.Y+57;
+				source.top = Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y+57;
 			source.right = source.left+3;
 			source.bottom = source.top+3;
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( Renderer.lpDDSBack, destination.left, destination.top,Renderer.OffscreenSurface,&source,0) )
 		{
-		RestoreSurfaces();
+		Renderer.RestoreSurfaces();
 		}
 
 			}
 
-		if( unit.IsUsed && unit.Side!=LocalSide && World.Contains(unit.Position) && !(unit.PlaneState==UnitState.Parked) && unit.IsFound && !(unit.Category==UnitCategory.Plane && (FrameCount%4)==0) )
+		if( unit.IsUsed && unit.Side!=LocalSide && World.Contains(unit.Position) && !(unit.PlaneState==UnitState.Parked) && unit.IsFound && !(unit.Category==UnitCategory.Plane && (Renderer.FrameCount%4)==0) )
 			{
 			// エネユニット
 			if( unit.Kind==UnitKind.Submarine && unit.IsSubmerged )
@@ -1472,15 +1472,15 @@ public void	DrawMinimap()
 
 			source.left = 267;
 			if( LocalSide==Side.Japan )
-				source.top = Sprites[SpriteId.Minimap].SheetPosition.Y+57;
+				source.top = Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y+57;
 			else
-				source.top = Sprites[SpriteId.Minimap].SheetPosition.Y+16;
+				source.top = Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y+16;
 			source.right = source.left+3;
 			source.bottom = source.top+3;
 
-			if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,0) )
+			if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( Renderer.lpDDSBack, destination.left, destination.top,Renderer.OffscreenSurface,&source,0) )
 				{
-				RestoreSurfaces();
+				Renderer.RestoreSurfaces();
 				}
 			}
 		}
@@ -1497,17 +1497,17 @@ public void	MakeMinimap()
 	int n;
 
 	// マップデータから陸地をマップに描画します
-	destination.left=Sprites[SpriteId.Minimap].SheetPosition.X;
-	destination.top=Sprites[SpriteId.Minimap].SheetPosition.Y;
+	destination.left=Renderer.Sprites[SpriteId.Minimap].SheetPosition.X;
+	destination.top=Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y;
 
-	source.left = Sprites[SpriteId.Minimap].SheetPosition.X+306;
-	source.top = Sprites[SpriteId.Minimap].SheetPosition.Y;
+	source.left = Renderer.Sprites[SpriteId.Minimap].SheetPosition.X+306;
+	source.top = Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y;
 	source.right = source.left+255;
 	source.bottom = source.top+199;
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( OffscreenSurface, destination.left, destination.top,OffscreenSurface,&source,0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( Renderer.OffscreenSurface, destination.left, destination.top,Renderer.OffscreenSurface,&source,0) )
 		{
-		RestoreSurfaces();
+		Renderer.RestoreSurfaces();
 		}
 
 	for(var m=0; m<=179; m++) // 縦の個数	マップの枠 縦１８０ドット
@@ -1516,18 +1516,18 @@ public void	MakeMinimap()
 			if( MapTiles[m][n]!=0 )
 				{
 				// 陸地有り
-				destination.left=Sprites[SpriteId.Minimap].SheetPosition.X+8+n-0;
-				destination.top=Sprites[SpriteId.Minimap].SheetPosition.Y+8+m-0;
+				destination.left=Renderer.Sprites[SpriteId.Minimap].SheetPosition.X+8+n-0;
+				destination.top=Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y+8+m-0;
 
-				source.left = Sprites[SpriteId.Minimap].SheetPosition.X+270;
-				source.top = Sprites[SpriteId.Minimap].SheetPosition.Y+110;
+				source.left = Renderer.Sprites[SpriteId.Minimap].SheetPosition.X+270;
+				source.top = Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y+110;
 
 				source.right = source.left+2;
 				source.bottom = source.top+2;
 
-				if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( OffscreenSurface, destination.left, destination.top,OffscreenSurface,&source,0) )
+				if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( Renderer.OffscreenSurface, destination.left, destination.top,Renderer.OffscreenSurface,&source,0) )
 					{
-					RestoreSurfaces();
+					Renderer.RestoreSurfaces();
 					}
 
 				}

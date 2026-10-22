@@ -14,57 +14,12 @@
 
 // Port of win_proc.cpp.
 
+using static OpenNspw.Nspw;
+
 namespace OpenNspw;
 
 public unsafe partial class Nspw
 {
-
-//============================================================================
-//失ったオブジェクトを再読み込みする
-//----------------------------------------------------------------------------
-[Original("restoreAll")]
-public void	RestoreSurfaces()
-	{
-
-	IDirectDrawSurface_Restore(lpDDSPrimary);
-	IDirectDrawSurface_Restore(lpDDSBack);
-	IDirectDrawSurface_Restore(OffscreenSurface);
-
-	RELEASE(ref OffscreenSurface);
-	OffscreenSurface=LoadBitmapSurface(SpriteSheetName);
-
-	// ピクセルフォーマットを取得
-	DDPIXELFORMAT ddpf;
-	ddpf.dwSize=(uint)(sizeof(DDPIXELFORMAT));
-	OffscreenSurface.GetPixelFormat(&ddpf);
-
-	var KeyColor = ddpf.dwRBitMask | ddpf.dwBBitMask;
-
-	// カラーキーを設定
-	DDCOLORKEY key;
-	key.dwColorSpaceLowValue = KeyColor;
-	key.dwColorSpaceHighValue = KeyColor;
-	OffscreenSurface.SetColorKey(DDCKEY_SRCBLT, &key);
-
-	// クリッパー
-	RELEASE(ref lpDDclip);
-	if(IsFullscreen)
-		{
-		lpDD.CreateClipper(0,out lpDDclip,null);
-		lpDDclip.SetHWnd(0,hwndApp);
-		lpDD.FlipToGDISurface();
-		}
-	else
-		{
-		lpDD.CreateClipper(0,out lpDDclip,null);
-		lpDDclip.SetHWnd(0,hwndApp);
-		lpDDSPrimary.SetClipper(lpDDclip);
-		}
-
-	// マップを作りなおす
-	MakeTerrainSurface();
-
-	}
 
 [Original("load_user_map")]
 public void	LoadUserMap()
@@ -224,10 +179,10 @@ public void EndApp()
 	{
 
 	//
-	if (GameFont1)
-		DeleteObject(GameFont1);
-	if (GameFont2)
-		DeleteObject(GameFont2);
+	if (Renderer.GameFont1)
+		DeleteObject(Renderer.GameFont1);
+	if (Renderer.GameFont2)
+		DeleteObject(Renderer.GameFont2);
 
 	// ダイレクトミュージック
 	RELEASE(ref Sound.lpDMP);
@@ -245,11 +200,11 @@ public void EndApp()
 	RELEASE(ref Sound.lpDS);
 
 	// ダイレクトドロー
-	RELEASE(ref OffscreenSurface);
-	RELEASE(ref lpDDclip);
-	RELEASE(ref lpDDSBack);
-	RELEASE(ref lpDDSPrimary);
-	RELEASE(ref lpDD);
+	RELEASE(ref Renderer.OffscreenSurface);
+	RELEASE(ref Renderer.lpDDclip);
+	RELEASE(ref Renderer.lpDDSBack);
+	RELEASE(ref Renderer.lpDDSPrimary);
+	RELEASE(ref Renderer.lpDD);
 
 	// ダイレクトプレイ
 	if( DirectPlayPeer!=null )
@@ -297,92 +252,18 @@ public void	InitializeRegistry()
 	Tick=0;
 
 	/*** フォント設定 ***/
-	if (GameFont1)
-		DeleteObject(GameFont1);
-	GameFont1=CreateFont(16,null); // フォントオブジェクト
+	if (Renderer.GameFont1)
+		DeleteObject(Renderer.GameFont1);
+	Renderer.GameFont1=CreateFont(16,null); // フォントオブジェクト
 
-	if (GameFont2)
-		DeleteObject(GameFont2);
-	GameFont2=CreateFont(20,null); // フォントオブジェクト
+	if (Renderer.GameFont2)
+		DeleteObject(Renderer.GameFont2);
+	Renderer.GameFont2=CreateFont(20,null); // フォントオブジェクト
 
 	LeftButton=0;	RightButton=0;
 
 	UserScenarioFileName[0] = unchecked((byte)'\0');
 
-	}
-
-[Original("bitmap_surface")]
-public IDirectDrawSurface7? LoadBitmapSurface(string fileName)
-	{
-	HDC hdc;
-
-	// lインターフェイスビットマップをロード
-
-	var bit=(HBITMAP) LoadImage(fileName);
-	if (!bit)
-		// ロード失敗、呼び出し側に失敗を返す
-		return null;
-
-	// ビットマップのディメンジョンを取得
-
-	BITMAP bitmap;
-    GetObject( bit, sizeof(BITMAP), &bitmap );
-	int surfaceWidth=bitmap.bmWidth;
-	int surfaceHeight=bitmap.bmHeight;
-
-	// サーフェスを作成
-
-	DDSURFACEDESC2 ddsd;
-	ZeroMemory(&ddsd,(nuint)(sizeof(DDSURFACEDESC2)));
-	ddsd.dwSize = (uint)(sizeof(DDSURFACEDESC2));
-	ddsd.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT ;
-	ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
-	ddsd.dwWidth = (uint)surfaceWidth;
-	ddsd.dwHeight = (uint)surfaceHeight;
-
-	// サーフェスを実際に作成
-
-	var ddrval=lpDD.CreateSurface(&ddsd,out var surf,null);
-
-	// 作成できたか確認
-
-	if (ddrval!=DD_OK) {
-
-		// できなかったのでビットマップを解放、呼び出し側に失敗を返す
-
-		DeleteObject(bit);
-		return null;
-
-	} else {
-
-		// できたのでサーフェスのDCを取得
-
-		surf.GetDC(&hdc);
-
-		// 互換DCを生成
-
-		HDC bitmapDc=CreateCompatibleDC();
-
-		// インターフェイスをサーフェスにブロック転送
-
-		SelectObject(bitmapDc,bit);
-		BitBlt(hdc,0,0,surfaceWidth,surfaceHeight,bitmapDc,0,0);
-
-		// DCを解放
-
-		surf.ReleaseDC(hdc);
-		DeleteDC(bitmapDc);
-
-		// save the dimensions if rectangle pointer provided
-	}
-
-	// ビットマップをクリア
-
-	DeleteObject(bit);
-
-	// 呼び出し側にポインタを返す
-
-	return surf;
 	}
 
 /*-------------------------------------------
@@ -510,7 +391,7 @@ public nint	IDD_FILE_LOAD_Proc(HWND hWnd,uint msg,nint wParam,nint lParam)
 						wsprintf( UserScenarioFileName, "Scenario\\%s", buffer );
 
 						LoadUserMap();
-						MakeTerrainSurface();
+						Renderer.MakeTerrainSurface();
 						}
 					else if( Mode==GameMode.GameSetting && UserScenarioFileName[0]!='\0' )
 						{
@@ -973,7 +854,7 @@ public nint MainWndProc(HWND hWnd,uint msg,nint wParam,nint lParam)
 					if( IsEditingMap && Mode==GameMode.Battle )
 						{
 						Sound.PlayInterfaceSound(SoundId.Click1);
-						MakeTerrainSurface();
+						Renderer.MakeTerrainSurface();
 						}
 					else
 						DebugMenu--;
@@ -1181,5 +1062,130 @@ if( !IsEditingMap )
 		}
 
 	return unchecked((nint)0L);
+	}
+}
+
+public unsafe partial class Renderer
+{
+
+//============================================================================
+//失ったオブジェクトを再読み込みする
+//----------------------------------------------------------------------------
+[Original("restoreAll")]
+public void	RestoreSurfaces()
+	{
+
+	IDirectDrawSurface_Restore(lpDDSPrimary);
+	IDirectDrawSurface_Restore(lpDDSBack);
+	IDirectDrawSurface_Restore(OffscreenSurface);
+
+	RELEASE(ref OffscreenSurface);
+	OffscreenSurface=LoadBitmapSurface(_game.SpriteSheetName);
+
+	// ピクセルフォーマットを取得
+	DDPIXELFORMAT ddpf;
+	ddpf.dwSize=(uint)(sizeof(DDPIXELFORMAT));
+	OffscreenSurface.GetPixelFormat(&ddpf);
+
+	var KeyColor = ddpf.dwRBitMask | ddpf.dwBBitMask;
+
+	// カラーキーを設定
+	DDCOLORKEY key;
+	key.dwColorSpaceLowValue = KeyColor;
+	key.dwColorSpaceHighValue = KeyColor;
+	OffscreenSurface.SetColorKey(DDCKEY_SRCBLT, &key);
+
+	// クリッパー
+	RELEASE(ref lpDDclip);
+	if(IsFullscreen)
+		{
+		lpDD.CreateClipper(0,out lpDDclip,null);
+		lpDDclip.SetHWnd(0,_game.hwndApp);
+		lpDD.FlipToGDISurface();
+		}
+	else
+		{
+		lpDD.CreateClipper(0,out lpDDclip,null);
+		lpDDclip.SetHWnd(0,_game.hwndApp);
+		lpDDSPrimary.SetClipper(lpDDclip);
+		}
+
+	// マップを作りなおす
+	MakeTerrainSurface();
+
+	}
+
+[Original("bitmap_surface")]
+public IDirectDrawSurface7? LoadBitmapSurface(string fileName)
+	{
+	HDC hdc;
+
+	// lインターフェイスビットマップをロード
+
+	var bit=(HBITMAP) _game.LoadImage(fileName);
+	if (!bit)
+		// ロード失敗、呼び出し側に失敗を返す
+		return null;
+
+	// ビットマップのディメンジョンを取得
+
+	BITMAP bitmap;
+    _game.GetObject( bit, sizeof(BITMAP), &bitmap );
+	int surfaceWidth=bitmap.bmWidth;
+	int surfaceHeight=bitmap.bmHeight;
+
+	// サーフェスを作成
+
+	DDSURFACEDESC2 ddsd;
+	ZeroMemory(&ddsd,(nuint)(sizeof(DDSURFACEDESC2)));
+	ddsd.dwSize = (uint)(sizeof(DDSURFACEDESC2));
+	ddsd.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT ;
+	ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
+	ddsd.dwWidth = (uint)surfaceWidth;
+	ddsd.dwHeight = (uint)surfaceHeight;
+
+	// サーフェスを実際に作成
+
+	var ddrval=lpDD.CreateSurface(&ddsd,out var surf,null);
+
+	// 作成できたか確認
+
+	if (ddrval!=DD_OK) {
+
+		// できなかったのでビットマップを解放、呼び出し側に失敗を返す
+
+		_game.DeleteObject(bit);
+		return null;
+
+	} else {
+
+		// できたのでサーフェスのDCを取得
+
+		surf.GetDC(&hdc);
+
+		// 互換DCを生成
+
+		HDC bitmapDc=_game.CreateCompatibleDC();
+
+		// インターフェイスをサーフェスにブロック転送
+
+		_game.SelectObject(bitmapDc,bit);
+		_game.BitBlt(hdc,0,0,surfaceWidth,surfaceHeight,bitmapDc,0,0);
+
+		// DCを解放
+
+		surf.ReleaseDC(hdc);
+		_game.DeleteDC(bitmapDc);
+
+		// save the dimensions if rectangle pointer provided
+	}
+
+	// ビットマップをクリア
+
+	_game.DeleteObject(bit);
+
+	// 呼び出し側にポインタを返す
+
+	return surf;
 	}
 }

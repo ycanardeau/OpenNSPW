@@ -32,7 +32,7 @@ public class Etc3Tests
 	{
 		FunctionTest.Run("etc3", "set_sprt_data", (game, c) =>
 		{
-			game.InitializeSprites();
+			game.Renderer.InitializeSprites();
 			return null;
 		});
 	}

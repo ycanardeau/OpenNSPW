@@ -136,7 +136,7 @@ public void		DrawHitArea(int m)
 				// The box is upside down, its top below its bottom, as the original fills it: the same outline.
 				var hitArea=WorldRect.Around(Units[target].Position, 50, -50);
 
-				DrawWorldRect(hitArea);
+				Renderer.DrawWorldRect(hitArea);
 
 				return;
 				}
@@ -155,7 +155,7 @@ public void		DrawHitArea(int m)
 				{
 				var hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset((+size-(i*halfSize)), (-size+(i*halfSize)));
 
-				DrawWorldRect(hitArea);
+				Renderer.DrawWorldRect(hitArea);
 				}
 			break;
 		case 1: case 5:
@@ -163,7 +163,7 @@ public void		DrawHitArea(int m)
 				{
 				var hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset((-size+(i*halfSize)), (-size+(i*halfSize)));
 
-				DrawWorldRect(hitArea);
+				Renderer.DrawWorldRect(hitArea);
 				}
 
 			break;
@@ -172,7 +172,7 @@ public void		DrawHitArea(int m)
 				{
 				var hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset(0, (-size+(i*size)));
 
-				DrawWorldRect(hitArea);
+				Renderer.DrawWorldRect(hitArea);
 
 				}
 			break;
@@ -181,7 +181,7 @@ public void		DrawHitArea(int m)
 				{
 				var hitArea=WorldRect.Around(Units[target].Position, halfSize, -halfSize).Offset((-size+(i*size)), 0);
 
-				DrawWorldRect(hitArea);
+				Renderer.DrawWorldRect(hitArea);
 
 				}
 			break;
@@ -2032,7 +2032,7 @@ public void	CheckOtherUnits(double* x,double* y)
 		if( Units[n].IsUsed && Units[n].Category==UnitCategory.Ship )
 			{
 			// ptin dbg
-			var shipArea=WorldRect.Around(Units[n].Position, (Sprites[SpriteId.JapanUnits].Size.Width/2), (Sprites[SpriteId.JapanUnits].Size.Height/2));
+			var shipArea=WorldRect.Around(Units[n].Position, (Renderer.Sprites[SpriteId.JapanUnits].Size.Width/2), (Renderer.Sprites[SpriteId.JapanUnits].Size.Height/2));
 
 			if( shipArea.Contains(new WorldPosition(*x, *y)))
 				{
@@ -2094,7 +2094,7 @@ public void	SetFighterAttackDestination(int m)
 	// 1.22 tells two pilots of the same skill apart by the frame (0x4150A9), NSPW NET by the tick.
 	if( ownSkill == enemySkill )
 		{
-		if( ((Rules.FighterTiesBreakByFrame ? FrameCount : Tick)%600)<300 )
+		if( ((Rules.FighterTiesBreakByFrame ? Renderer.FrameCount : Tick)%600)<300 )
 			{ownSkill++;}
 		else
 			{enemySkill++;}

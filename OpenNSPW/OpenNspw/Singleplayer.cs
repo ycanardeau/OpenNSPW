@@ -58,13 +58,13 @@ public unsafe partial class Nspw
 		new(0x483B44, game => Bytes(ref game.Result), true), // game_end
 		new(0x483B4C, game => Bytes(ref game.CpuSide), true), // cpu_side
 		new(0x489AB0, game => Bytes(ref game.CameraPosition), true), // cmbt_x, cmbt_y
-		new(0x489AD0, game => Bytes(ref game.FrameCount), true), // FrameCount
+		new(0x489AD0, game => Bytes(ref game.Renderer.FrameCount), true), // FrameCount
 		new(0x489AE0, game => Bytes(ref game.Selections), true), // slct_unit
 		new(0x489EE4, game => Bytes(ref game.Tick), true), // cc_count
 		new(0x489FB0, game => Bytes(ref game.LocalSide), true), // your_side
 		new(0x489FC0, game => Bytes(ref game.DecisionPoints), true), // decision_point
 		new(0x48A1E8, game => Bytes(ref game.ScenarioNumber), true), // sinario
-		new(0x48A200, game => Bytes(ref game.Sprites), false), // sprt
+		new(0x48A200, game => Bytes(ref game.Renderer.Sprites), false), // sprt
 	];
 
 	private static int OffsetOf<T>(ref Unit unit, ref T field)
@@ -94,9 +94,6 @@ public unsafe partial class Nspw
 
 	// cpu_side of 1.22: the side the computer plays, or None.
 	public Side CpuSide;
-
-	// 0x48A1EC of 1.22: whether this tick is the last of its frame, the one that is drawn.
-	public bool IsDrawnTick;
 
 	// The trace this single-player game follows and checks itself against, or records itself in, or null
 	// (docs/Verification.md).
@@ -323,7 +320,7 @@ public unsafe partial class Nspw
 			() =>
 			{
 				HDC hdc = default;
-				var hr = IDirectDrawSurface_GetDC(lpDDSBack, &hdc);
+				var hr = IDirectDrawSurface_GetDC(Renderer.lpDDSBack, &hdc);
 				MemoryMarshal.Write(emulator.At(emulator.Argument(1), 4), hdc.Value);
 				emulator.Cpu.Eax = new Register32((uint)hr);
 			}
@@ -331,12 +328,12 @@ public unsafe partial class Nspw
 		var releaseDC = emulator.AddStub(
 			"IDirectDrawSurface7::ReleaseDC",
 			8,
-			() => emulator.Cpu.Eax = new Register32((uint)IDirectDrawSurface_ReleaseDC(lpDDSBack, new HDC((int)emulator.Argument(1))))
+			() => emulator.Cpu.Eax = new Register32((uint)IDirectDrawSurface_ReleaseDC(Renderer.lpDDSBack, new HDC((int)emulator.Argument(1))))
 		);
 		MemoryMarshal.Write(emulator.At(methods + GetDCOffset, 4), getDC);
 		MemoryMarshal.Write(emulator.At(methods + ReleaseDCOffset, 4), releaseDC);
 
-		MemoryMarshal.Write(emulator.At(FontAddress, 4), GameFont1.Value);
+		MemoryMarshal.Write(emulator.At(FontAddress, 4), Renderer.GameFont1.Value);
 	}
 
 	// A new emulator for a single-player game, with 1.22's own globals as its game_init leaves them before it calls the

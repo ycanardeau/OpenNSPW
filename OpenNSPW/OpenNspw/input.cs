@@ -215,8 +215,8 @@ public void	HandleInput()
 // half a unit's sprite.
 private (int Column, int Row) TileAt(WorldPosition position)
 	{
-	return ((int)((position.X+(Sprites[SpriteId.JapanUnits].Size.Width/2)-World.Left)/Sprites[SpriteId.MapTiles].Size.Width),
-		(int)((World.Top-position.Y+(Sprites[SpriteId.JapanUnits].Size.Height/2))/Sprites[SpriteId.MapTiles].Size.Height));
+	return ((int)((position.X+(Renderer.Sprites[SpriteId.JapanUnits].Size.Width/2)-World.Left)/Renderer.Sprites[SpriteId.MapTiles].Size.Width),
+		(int)((World.Top-position.Y+(Renderer.Sprites[SpriteId.JapanUnits].Size.Height/2))/Renderer.Sprites[SpriteId.MapTiles].Size.Height));
 	}
 
 // Ships: whether the world at a position is land, by the tile of the terrain there. A position outside the world is
@@ -240,7 +240,7 @@ private bool IsShipAt(int m, WorldPosition point)
 		ref var other = ref Units[f];
 		if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged) && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress) )
 			{
-			var shipArea=WorldRect.Around(other.Position, (Sprites[SpriteId.JapanUnits].Size.Width/2), (Sprites[SpriteId.JapanUnits].Size.Height/2));
+			var shipArea=WorldRect.Around(other.Position, (Renderer.Sprites[SpriteId.JapanUnits].Size.Width/2), (Renderer.Sprites[SpriteId.JapanUnits].Size.Height/2));
 			if( shipArea.Contains(point))
 				return true;
 			}
@@ -335,7 +335,7 @@ public void	SetCpuRoute2(int m)
 			if( other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged)   && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress )  )
 				{
 				// ptin dbg
-				var shipArea=WorldRect.Around(other.Position, (Sprites[SpriteId.JapanUnits].Size.Width/2), (Sprites[SpriteId.JapanUnits].Size.Width/2));
+				var shipArea=WorldRect.Around(other.Position, (Renderer.Sprites[SpriteId.JapanUnits].Size.Width/2), (Renderer.Sprites[SpriteId.JapanUnits].Size.Width/2));
 
 				if( shipArea.Contains(destination))
 					{
@@ -997,7 +997,7 @@ public void ReadInput()
 
 	// 純粋なマウス位置を取る
 	GetCursorPos(ref CursorPosition);
-	if( !IsFullscreen )
+	if( !Renderer.IsFullscreen )
 		ScreenToClient();
 
 	}

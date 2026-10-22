@@ -14,6 +14,8 @@
 
 // Port of etc2.cpp.
 
+using static OpenNspw.Nspw;
+
 namespace OpenNspw;
 
 public unsafe partial class Nspw
@@ -408,155 +410,6 @@ public int		GetDetectionSize( int m , int n)
 
 	return (size);
 	}
-
-//============================================================================
-//絶対スクリーン座標に線を描画する。色付き
-//----------------------------------------------------------------------------
-// The original's draw_line4 takes a color, and draws white whatever it is, with draw_line5.
-[Original("draw_line4")]
-public void	DrawLine4(int x1,int y1,int x2,int y2,int right,int bottom)
-	{
-
-	DrawLine5( x1, y1, x2, y2, right, bottom , 0xFFFF);
-
-/***
-	int		dstX, dstY,addX,addY;
-	int		ctr,x,y,i;
-	int		cl1, cl2;
-    DDCOLORKEY          ddck;
-
-	ddck.dwColorSpaceLowValue  = 0xff;
-
-	//書き込むＶＲＡＭのアドレスを得る（ロックして書き込めるようにする）
-	memset(&dst_ddsd, 0, sizeof(DDSURFACEDESC));
-	dst_ddsd.dwSize = sizeof(DDSURFACEDESC);
-	IDirectDrawSurface_Lock( lpDDSBack, NULL, (LPDDSURFACEDESC)&dst_ddsd, DDLOCK_WAIT, NULL );
-	dst_vram=dst_ddsd.lpSurface;
-
-	dstX=x2-x1;	dstY=y2-y1;
-
-	if(dstX<0)	{addX=-1;	dstX*=-1;}	else	addX=1;
-	if(dstY<0)	{addY=-1;	dstY*=-1;}	else	addY=1;
-
-	ctr=0;
-	x=x1;	y=y1;
-	if(dstX>=dstY)
-		{
-		for(i=0;i<dstX;i++)
-			{
-			if( x>=0 && y>=0 && x<=right && y<=bottom )
-				{
-				dst_vram[y*dst_ddsd.lPitch+(x)]=ddck.dwColorSpaceLowValue;
-				}
-
-			x+=addX;
-			ctr+=dstY;
-			if(ctr>=dstX)
-				{
-				y+=addY;
-				ctr-=dstX;
-				}
-			}
-		}
-	else
-		{
-		for(i=0;i<dstY;i++)
-			{
-			if( x>=0 && y>=0 && x<=right && y<=bottom )
-				{
-				dst_vram[y*dst_ddsd.lPitch+(x)]=ddck.dwColorSpaceLowValue;
-				}
-
-			y+=addY;
-			ctr+=dstX;
-			if(ctr>=dstY)
-				{
-				x+=addX;
-				ctr-=dstY;
-				}
-			}
-		}
-	IDirectDrawSurface_Unlock( lpDDSBack, NULL );
-***/
-	}
-
-//============================================================================
-//絶対スクリーン座標に線を描画する。色付き
-//----------------------------------------------------------------------------
-[Original("draw_line5")]
-public void	DrawLine5(int x1,int y1,int x2,int y2,int right,int bottom,ushort color)
-	{
-	int stepX, stepY;
-	ushort* vram;			//書き込むＶＲＡＭのアドレス
-
-	DDSURFACEDESC2		surface;
-
-color=0xFFFF;
-
-	//書き込むＶＲＡＭのアドレスを得る（ロックして書き込めるようにする）
-	memset(&surface, 0, (nuint)(sizeof(DDSURFACEDESC2)));
-	surface.dwSize = (uint)(sizeof(DDSURFACEDESC2));
-	IDirectDrawSurface_Lock( lpDDSBack, null, &surface, DDLOCK_WAIT, null );
-
-	vram=(ushort*)surface.lpSurface;
-
-	var dx=x2-x1;	var dy=y2-y1;
-
-	if(dx<0)	{stepX=-1;	dx*=-1;}	else	stepX=1;
-	if(dy<0)	{stepY=-1;	dy*=-1;}	else	stepY=1;
-
-	var error=0;
-	var x=x1;	var y=y1;
-	if(dx>=dy)
-		{
-		for(var i=0;i<dx;i++)
-			{
-			if( x>=0 && y>=0 && x<=right && y<=bottom )
-				{
-				vram[y*(surface.lPitch/2)+(x)]=color;
-				}
-
-			x+=stepX;
-			error+=dy;
-			if(error>=dx)
-				{
-				y+=stepY;
-				error-=dx;
-				}
-			}
-		}
-	else
-		{
-		for(var i=0;i<dy;i++)
-			{
-			if( x>=0 && y>=0 && x<=right && y<=bottom )
-				{
-				vram[y*(surface.lPitch/2)+(x)]=color;
-				}
-
-			y+=stepY;
-			error+=dx;
-			if(error>=dy)
-				{
-				x+=stepX;
-				error-=dy;
-				}
-			}
-		}
-
-	IDirectDrawSurface_Unlock( lpDDSBack, null );
-
-	}
-
-public void DrawLine4(PixelPoint from, PixelPoint to, int right, int bottom)
-	{
-	DrawLine4(from.X, from.Y, to.X, to.Y, right, bottom);
-	}
-
-public void DrawLine5(PixelPoint from, PixelPoint to, int right, int bottom, ushort color)
-	{
-	DrawLine5(from.X, from.Y, to.X, to.Y, right, bottom, color);
-	}
 //============================================================================
 //
 //----------------------------------------------------------------------------
@@ -724,35 +577,35 @@ public void	SetParkingPosition( int	m )
 	// ２列格納
 	if( Units[unit.Carrier].Kind==UnitKind.AirBase )
 		{	// 陸上基地
-		y=Sprites[SpriteId.JapanUnitInfo].Position.Y+Sprites[SpriteId.JapanUnitInfo].Size.Height-((unit.ParkingNumber/2)*40)-100;
+		y=Renderer.Sprites[SpriteId.JapanUnitInfo].Position.Y+Renderer.Sprites[SpriteId.JapanUnitInfo].Size.Height-((unit.ParkingNumber/2)*40)-100;
 		if( false && unit.Kind==UnitKind.Bomber )
 			offset=55;
 		else
 			offset=35;
 		if( unit.ParkingNumber%2!=0 )
 			{ // 右側
-			x=Sprites[SpriteId.JapanUnitInfo].Position.X+Sprites[SpriteId.JapanUnitInfo].Size.Width/2-offset;
+			x=Renderer.Sprites[SpriteId.JapanUnitInfo].Position.X+Renderer.Sprites[SpriteId.JapanUnitInfo].Size.Width/2-offset;
 			unit.Direction=270+45;
 			y-=18;
 			}
 		else
 			{ // 左側
-			x=Sprites[SpriteId.JapanUnitInfo].Position.X+Sprites[SpriteId.JapanUnitInfo].Size.Width/2+offset;
+			x=Renderer.Sprites[SpriteId.JapanUnitInfo].Position.X+Renderer.Sprites[SpriteId.JapanUnitInfo].Size.Width/2+offset;
 			unit.Direction=180+45;
 			}
 		}
 	else
 		{	// 航空母艦
-		y=Sprites[SpriteId.JapanUnitInfo].Position.Y+Sprites[SpriteId.JapanUnitInfo].Size.Height-((unit.ParkingNumber/2)*40)-100;
+		y=Renderer.Sprites[SpriteId.JapanUnitInfo].Position.Y+Renderer.Sprites[SpriteId.JapanUnitInfo].Size.Height-((unit.ParkingNumber/2)*40)-100;
 		if( unit.ParkingNumber%2!=0 )
 			{ // 右側
-			x=Sprites[SpriteId.JapanUnitInfo].Position.X+Sprites[SpriteId.JapanUnitInfo].Size.Width/2-25;
+			x=Renderer.Sprites[SpriteId.JapanUnitInfo].Position.X+Renderer.Sprites[SpriteId.JapanUnitInfo].Size.Width/2-25;
 			unit.Direction=270+45;
 			y-=18;
 			}
 		else
 			{ // 左側
-			x=Sprites[SpriteId.JapanUnitInfo].Position.X+Sprites[SpriteId.JapanUnitInfo].Size.Width/2+25;
+			x=Renderer.Sprites[SpriteId.JapanUnitInfo].Position.X+Renderer.Sprites[SpriteId.JapanUnitInfo].Size.Width/2+25;
 			unit.Direction=180+45;
 			}
 		}
@@ -1335,4 +1188,157 @@ public void		Detect()
 		}
 	}
 
+}
+
+public unsafe partial class Renderer
+{
+
+//============================================================================
+//絶対スクリーン座標に線を描画する。色付き
+//----------------------------------------------------------------------------
+// The original's draw_line4 takes a color, and draws white whatever it is, with draw_line5.
+[Original("draw_line4")]
+public void	DrawLine4(int x1,int y1,int x2,int y2,int right,int bottom)
+	{
+
+	DrawLine5( x1, y1, x2, y2, right, bottom , 0xFFFF);
+
+/***
+	int		dstX, dstY,addX,addY;
+	int		ctr,x,y,i;
+	int		cl1, cl2;
+    DDCOLORKEY          ddck;
+
+	ddck.dwColorSpaceLowValue  = 0xff;
+
+	//書き込むＶＲＡＭのアドレスを得る（ロックして書き込めるようにする）
+	memset(&dst_ddsd, 0, sizeof(DDSURFACEDESC));
+	dst_ddsd.dwSize = sizeof(DDSURFACEDESC);
+	IDirectDrawSurface_Lock( lpDDSBack, NULL, (LPDDSURFACEDESC)&dst_ddsd, DDLOCK_WAIT, NULL );
+	dst_vram=dst_ddsd.lpSurface;
+
+	dstX=x2-x1;	dstY=y2-y1;
+
+	if(dstX<0)	{addX=-1;	dstX*=-1;}	else	addX=1;
+	if(dstY<0)	{addY=-1;	dstY*=-1;}	else	addY=1;
+
+	ctr=0;
+	x=x1;	y=y1;
+	if(dstX>=dstY)
+		{
+		for(i=0;i<dstX;i++)
+			{
+			if( x>=0 && y>=0 && x<=right && y<=bottom )
+				{
+				dst_vram[y*dst_ddsd.lPitch+(x)]=ddck.dwColorSpaceLowValue;
+				}
+
+			x+=addX;
+			ctr+=dstY;
+			if(ctr>=dstX)
+				{
+				y+=addY;
+				ctr-=dstX;
+				}
+			}
+		}
+	else
+		{
+		for(i=0;i<dstY;i++)
+			{
+			if( x>=0 && y>=0 && x<=right && y<=bottom )
+				{
+				dst_vram[y*dst_ddsd.lPitch+(x)]=ddck.dwColorSpaceLowValue;
+				}
+
+			y+=addY;
+			ctr+=dstX;
+			if(ctr>=dstY)
+				{
+				x+=addX;
+				ctr-=dstY;
+				}
+			}
+		}
+	IDirectDrawSurface_Unlock( lpDDSBack, NULL );
+***/
+	}
+
+//============================================================================
+//絶対スクリーン座標に線を描画する。色付き
+//----------------------------------------------------------------------------
+[Original("draw_line5")]
+public void	DrawLine5(int x1,int y1,int x2,int y2,int right,int bottom,ushort color)
+	{
+	int stepX, stepY;
+	ushort* vram;			//書き込むＶＲＡＭのアドレス
+
+	DDSURFACEDESC2		surface;
+
+color=0xFFFF;
+
+	//書き込むＶＲＡＭのアドレスを得る（ロックして書き込めるようにする）
+	memset(&surface, 0, (nuint)(sizeof(DDSURFACEDESC2)));
+	surface.dwSize = (uint)(sizeof(DDSURFACEDESC2));
+	IDirectDrawSurface_Lock( lpDDSBack, null, &surface, DDLOCK_WAIT, null );
+
+	vram=(ushort*)surface.lpSurface;
+
+	var dx=x2-x1;	var dy=y2-y1;
+
+	if(dx<0)	{stepX=-1;	dx*=-1;}	else	stepX=1;
+	if(dy<0)	{stepY=-1;	dy*=-1;}	else	stepY=1;
+
+	var error=0;
+	var x=x1;	var y=y1;
+	if(dx>=dy)
+		{
+		for(var i=0;i<dx;i++)
+			{
+			if( x>=0 && y>=0 && x<=right && y<=bottom )
+				{
+				vram[y*(surface.lPitch/2)+(x)]=color;
+				}
+
+			x+=stepX;
+			error+=dy;
+			if(error>=dx)
+				{
+				y+=stepY;
+				error-=dx;
+				}
+			}
+		}
+	else
+		{
+		for(var i=0;i<dy;i++)
+			{
+			if( x>=0 && y>=0 && x<=right && y<=bottom )
+				{
+				vram[y*(surface.lPitch/2)+(x)]=color;
+				}
+
+			y+=stepY;
+			error+=dx;
+			if(error>=dy)
+				{
+				x+=stepX;
+				error-=dy;
+				}
+			}
+		}
+
+	IDirectDrawSurface_Unlock( lpDDSBack, null );
+
+	}
+
+public void DrawLine4(PixelPoint from, PixelPoint to, int right, int bottom)
+	{
+	DrawLine4(from.X, from.Y, to.X, to.Y, right, bottom);
+	}
+
+public void DrawLine5(PixelPoint from, PixelPoint to, int right, int bottom, ushort color)
+	{
+	DrawLine5(from.X, from.Y, to.X, to.Y, right, bottom, color);
+	}
 }

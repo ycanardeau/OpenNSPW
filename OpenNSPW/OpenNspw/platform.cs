@@ -185,10 +185,13 @@ public partial class Nspw
 	// The parts of the game that hold their own globals (docs/Refactoring.md, Splitting the partial class).
 	public Sound Sound { get; }
 
+	public Renderer Renderer { get; }
+
 	public Nspw(INspwPlatform? platform = null)
 	{
 		_platform = platform ?? NullPlatform.Instance;
 		Sound = new Sound(this);
+		Renderer = new Renderer(this);
 	}
 
 	// DirectMusic's classes are the port's own (unknwn.cs); the platform creates the others.

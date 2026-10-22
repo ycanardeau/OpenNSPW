@@ -203,7 +203,7 @@ public unsafe partial class Nspw
 			ref var unit = ref Units[f];
 			if( unit.IsUsed && unit.Side==LocalSide && unit.PlaneState!=UnitState.Parked )
 				{
-				var tile=new WorldPosition((column*Sprites[SpriteId.MapTiles].Size.Width)-World.Right, World.Top-(row*Sprites[SpriteId.MapTiles].Size.Height));
+				var tile=new WorldPosition((column*Renderer.Sprites[SpriteId.MapTiles].Size.Width)-World.Right, World.Top-(row*Renderer.Sprites[SpriteId.MapTiles].Size.Height));
 				if( (EyeOf(ref unit)-tile).Length<=(double)GetDetectionSize(f,0) )
 					return true;
 				}
@@ -224,8 +224,8 @@ public unsafe partial class Nspw
 	// (UpdateLowerEffects, UpdateUpperEffects).
 	public void ReadSight(Span<bool> tiles, out int firstColumn, out int firstRow, Span<bool> effects)
 	{
-		firstColumn=(int)((CameraPosition.X-World.Left)/Sprites[SpriteId.MapTiles].Size.Width)-SightMargin;
-		firstRow=(int)((World.Top-CameraPosition.Y)/Sprites[SpriteId.MapTiles].Size.Height)-SightMargin;
+		firstColumn=(int)((CameraPosition.X-World.Left)/Renderer.Sprites[SpriteId.MapTiles].Size.Width)-SightMargin;
+		firstRow=(int)((World.Top-CameraPosition.Y)/Renderer.Sprites[SpriteId.MapTiles].Size.Height)-SightMargin;
 		for( var n=0; n<SightSize; n++ )
 			{
 			for( var m=0; m<SightSize; m++ )
@@ -257,7 +257,7 @@ public unsafe partial class Nspw
 		for( var m=0; m<=MaxUnitId; m++ )
 			{
 			ref var unit = ref Units[m];
-			shown[m]=unit.IsUsed && (unit.Side==LocalSide || unit.IsFound) && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked && IsOnShownDeck(ref unit);
+			shown[m]=unit.IsUsed && (unit.Side==LocalSide || unit.IsFound) && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked && Renderer.IsOnShownDeck(ref unit);
 			}
 	}
 
@@ -265,7 +265,7 @@ public unsafe partial class Nspw
 	public void ReadUnitSprites(Span<SpriteId> sprites)
 	{
 		for( var m=0; m<=MaxUnitId; m++ )
-			sprites[m]=GetUnitSprites(ref Units[m]);
+			sprites[m]=Renderer.GetUnitSprites(ref Units[m]);
 	}
 
 	// The item of the combat menu in effect for the selected unit, which the host's UI shows chosen

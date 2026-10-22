@@ -42,7 +42,7 @@ public void	UpdateTitle()
 	rival_mode=mode;
 #endif
 
-	if((FrameCount%40)==0)
+	if((Renderer.FrameCount%40)==0)
 		{
 		// 自分のモードを相手に伝える。
 		flagMessage.Type = MessageType.RivalMode;
@@ -68,20 +68,20 @@ public void	UpdateTitle()
 	ClearFlag=1;
 
 	// ユニットインフォーメィション
-	Sprites[SpriteId.TitleBackground].Position = new PixelPoint(212-50, 130);
+	Renderer.Sprites[SpriteId.TitleBackground].Position = new PixelPoint(212-50, 130);
 
-	source.left = 	Sprites[SpriteId.TitleBackground].SheetPosition.X;
-	source.top = Sprites[SpriteId.TitleBackground].SheetPosition.Y;
-	source.right = Sprites[SpriteId.TitleBackground].SheetPosition.X+Sprites[SpriteId.TitleBackground].Size.Width;
-	source.bottom = Sprites[SpriteId.TitleBackground].SheetPosition.Y+Sprites[SpriteId.TitleBackground].Size.Height;
+	source.left = 	Renderer.Sprites[SpriteId.TitleBackground].SheetPosition.X;
+	source.top = Renderer.Sprites[SpriteId.TitleBackground].SheetPosition.Y;
+	source.right = Renderer.Sprites[SpriteId.TitleBackground].SheetPosition.X+Renderer.Sprites[SpriteId.TitleBackground].Size.Width;
+	source.bottom = Renderer.Sprites[SpriteId.TitleBackground].SheetPosition.Y+Renderer.Sprites[SpriteId.TitleBackground].Size.Height;
 
 	// dstn_rect は ディスティネーションレクタングルです。
-	destination.left=Sprites[SpriteId.TitleBackground].Position.X;
-	destination.top=Sprites[SpriteId.TitleBackground].Position.Y;
+	destination.left=Renderer.Sprites[SpriteId.TitleBackground].Position.X;
+	destination.top=Renderer.Sprites[SpriteId.TitleBackground].Position.Y;
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, destination.left, destination.top,OffscreenSurface,&source,0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( Renderer.lpDDSBack, destination.left, destination.top,Renderer.OffscreenSurface,&source,0) )
 		{
-		RestoreSurfaces();
+		Renderer.RestoreSurfaces();
 		}
 
 /*****
@@ -99,10 +99,10 @@ public void	UpdateTitle()
 
 *****/
 
-		if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
+		if ( IDirectDrawSurface_GetDC(Renderer.lpDDSBack, &hdc) == DD_OK )
 			{
 			SetBkMode(hdc, TRANSPARENT);
-			SelectObject(hdc, GameFont2);
+			SelectObject(hdc, Renderer.GameFont2);
 
 #if !LNGG_VER
 			length[0] = wsprintf(text[0], "Naval South Pacific War on the Net %s",VER );
@@ -121,7 +121,7 @@ public void	UpdateTitle()
 				TextOut(hdc, 330, 580+(n*23), text[n], length[n]);
 				}
 
-			SelectObject(hdc, GameFont1);
+			SelectObject(hdc, Renderer.GameFont1);
 
 			length[0] = wsprintf(text[0], "YOUR VERSION = %s",VER );
 			SetTextColor(hdc, RGB(255, 255, 255));
@@ -131,7 +131,7 @@ public void	UpdateTitle()
 			SetTextColor(hdc, RGB(255, 255, 255));
 			TextOut(hdc, 385, 99, text[0], length[0]);
 
-			IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
+			IDirectDrawSurface_ReleaseDC(Renderer.lpDDSBack, hdc);
 			}
 
 	if( LeftButton==3 )
@@ -1116,7 +1116,7 @@ private void UpdateConfigSetting(ref Array12<int> length, ref Array12<Array128<b
 	// The host's UI's commands for the rules (UICommands.cs).
 	RunUICommands(UICommandSite.Rules, IsHost);
 
-	if( IsHost && RivalMode==Mode && (FrameCount%10)==0 )
+	if( IsHost && RivalMode==Mode && (Renderer.FrameCount%10)==0 )
 		{
 		// ホストの選択状態をゲストにセンドします。
 		SendHostSettings(ref message);
@@ -1366,7 +1366,7 @@ private void UpdateScenarioList(int m, ref Array12<int> length, ref HDC hdc, ref
 		TextOut(hdc, 120, 150+(n*25), text[n], length[n]);
 		}
 
-	if( RivalMode==Mode && Mode!=GameMode.ConfigSetting && (FrameCount%10)==0 )
+	if( RivalMode==Mode && Mode!=GameMode.ConfigSetting && (Renderer.FrameCount%10)==0 )
 		{
 		// ホストの選択状態をゲストにセンドします。
 		message.Type = MessageType.SideAndScenario;
@@ -1736,10 +1736,10 @@ public void	UpdateGameSetting()
 		RivalMode=Mode;
 		}
 
-	if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
+	if ( IDirectDrawSurface_GetDC(Renderer.lpDDSBack, &hdc) == DD_OK )
 		{
 		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, GameFont1);
+		SelectObject(hdc, Renderer.GameFont1);
 
 if(Mode==GameMode.GameSetting)
 		SetTextColor(hdc, RGB(255, 255, 255));
@@ -1753,13 +1753,13 @@ else
 #endif
 		TextOut(hdc, 300, 80-26, text[0], length[0]);
 
-		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
+		IDirectDrawSurface_ReleaseDC(Renderer.lpDDSBack, hdc);
 		}
 
-		if ( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
+		if ( IDirectDrawSurface_GetDC(Renderer.lpDDSBack, &hdc) == DD_OK )
 			{
 			SetBkMode(hdc, TRANSPARENT);
-			SelectObject(hdc, GameFont1);
+			SelectObject(hdc, Renderer.GameFont1);
 
 #if !LNGG_VER
 			length[0] = wsprintf(text[0], "シナリオ選択画面");
@@ -2053,7 +2053,7 @@ else
 	RunUICommands(UICommandSite.Rules, false);
 	}
 
-			IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
+			IDirectDrawSurface_ReleaseDC(Renderer.lpDDSBack, hdc);
 			}
 
 //t		key_cont();		// チャット用
@@ -2062,7 +2062,7 @@ else
 		{
 		InitializeGame();
 		}
-	else if( RivalMode!=0 && (FrameCount%40)==0 )
+	else if( RivalMode!=0 && (Renderer.FrameCount%40)==0 )
 		{
 
 		// 現在のモードをライバルに送る。

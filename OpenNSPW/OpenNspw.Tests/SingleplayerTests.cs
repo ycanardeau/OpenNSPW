@@ -178,7 +178,7 @@ public class SingleplayerTests
 
 		Assert.Equal(2, game.CurrentMap);
 		Assert.Equal(0, game.MapTiles[164][62]);
-		Assert.Equal(599, game.Sprites[SpriteId.TitleBackground].Size.Width);
+		Assert.Equal(599, game.Renderer.Sprites[SpriteId.TitleBackground].Size.Width);
 		Assert.Equal("tst_cg1.bmp", game.SpriteSheetName);
 	}
 
@@ -1155,7 +1155,7 @@ public class SingleplayerTests
 		int EffectsInUse() => Enumerable.Range(1, 255).Count(f => game.Effects[f].Layer != EffectLayer.None);
 
 		var effects = EffectsInUse();
-		game.IsDrawnTick = drawn;
+		game.Renderer.IsDrawnTick = drawn;
 		game.UpdateUnitEffects(1);
 
 		Assert.Equal(effects + marks, EffectsInUse());
@@ -1178,7 +1178,7 @@ public class SingleplayerTests
 		destroyer.Direction = 10.3;
 		destroyer.Speed = destroyer.MaxSpeed;
 		game.Tick = 15;
-		game.IsDrawnTick = true;
+		game.Renderer.IsDrawnTick = true;
 		var used = Enumerable.Range(1, 255).Where(f => game.Effects[f].Layer != EffectLayer.None).ToHashSet();
 
 		game.UpdateUnitEffects(1);
@@ -1215,7 +1215,7 @@ public class SingleplayerTests
 		}
 
 		var draws = game.RandomCount;
-		game.IsDrawnTick = true;
+		game.Renderer.IsDrawnTick = true;
 		game.UpdateUnitEffects(1);
 
 		Assert.Equal(draws, game.RandomCount);
@@ -1276,7 +1276,7 @@ public class SingleplayerTests
 		smoke.Position = game.Units[m].Position;
 
 		var draws = game.RandomCount;
-		game.DrawBattleArea();
+		game.Renderer.DrawBattleArea();
 
 		Assert.Equal(draws + 3, game.RandomCount);
 	}

@@ -21,30 +21,14 @@ public unsafe partial class Nspw
 
 // ウィンドウアプリケーション変数
 public HWND hwndApp;
-[Original("my_cursor")] public object? GameCursor;
 //D3DPRESENT_PARAMETERS d3dpp;		// Direct3D is not used.
 [Original("appActive")] public Bool32 IsAppActive;
-[Original("fullscreen")] public Bool32 IsFullscreen;
-
-//	DirectXオブジェクト
-
-public IDirectDraw7? lpDD=null;
-public IDirectDrawSurface7? lpDDSPrimary=null;
-public IDirectDrawSurface7? lpDDSBack=null;
-
-public IDirectDrawClipper? lpDDclip=null;
-
-[Original("lpDDS_OS")] public IDirectDrawSurface7? OffscreenSurface=null;
 
 // DirectInputの変数
 public IDirectInput8? pDInput = null; // DirectInput
 public IDirectInputDevice8? pDIDevice = null; // DirectInputデバイス
 public IDirectInputDevice8? pDIDeviceMouse = null; // DirectInputデバイス
 //DIDEVCAPS				diDevCaps;				// ジョイスティックの能力 (joysticks are not used)
-
-// フォント
-[Original("gameFont_1")] public HFONT GameFont1;
-[Original("gameFont_2")] public HFONT GameFont2;
 
 // ゲーム用
 [Original("cc_count")] public int Tick;
@@ -88,25 +72,6 @@ public uint hAsync;
 
 // チャット
 public HWND hwndChatDlg = null; // HWND of chat dialog
-
-/////////////////////
-
-// iNSPWからもってきたやつ
-
-[Original("sprt")] public SpriteArray Sprites;
-
-[Original("missed_pending")] public uint MissedPending;
-[Original("a_paint_speed")] public uint PaintSpeed;
-
-public int FrameCount;
-
-//unsigned char		*dst_vram;							//書き込むＶＲＡＭのアドレス
-
-//unsigned char		*src_vram;							//読み込むＶＲＡＭのアドレス
-
-[Original("scrn_mode")] public int ScreenMode;
-
-[Original("video_memory")] public int VideoMemory;
 
 [Original("anti_air")] public int ShowsAntiAir;
 [Original("reveal")] public int RevealsAll;
@@ -364,9 +329,9 @@ public void	UpdateFrame()
 		case GameMode.Title:
 			// 塗りつぶし
 			ddbltfx.dwFillColor = 0x0000;
-			if( DDERR_SURFACELOST == IDirectDrawSurface_Blt( lpDDSBack,null,null,null,DDBLT_COLORFILL | DDBLT_WAIT,&ddbltfx ))
+			if( DDERR_SURFACELOST == IDirectDrawSurface_Blt( Renderer.lpDDSBack,null,null,null,DDBLT_COLORFILL | DDBLT_WAIT,&ddbltfx ))
 				{
-				RestoreSurfaces();
+				Renderer.RestoreSurfaces();
 				return;
 				}
 
@@ -377,9 +342,9 @@ public void	UpdateFrame()
 		case GameMode.ConfigSetting:
 			// 塗りつぶし
 			ddbltfx.dwFillColor = 0x0300;
-			if( DDERR_SURFACELOST == IDirectDrawSurface_Blt( lpDDSBack,null,null,null,DDBLT_COLORFILL | DDBLT_WAIT,&ddbltfx ))
+			if( DDERR_SURFACELOST == IDirectDrawSurface_Blt( Renderer.lpDDSBack,null,null,null,DDBLT_COLORFILL | DDBLT_WAIT,&ddbltfx ))
 				{
-				RestoreSurfaces();
+				Renderer.RestoreSurfaces();
 				return;
 				}
 
@@ -389,25 +354,25 @@ public void	UpdateFrame()
 		case GameMode.Battle:
 			// 塗りつぶし
 			ddbltfx.dwFillColor = 0x0016;
-			if( DDERR_SURFACELOST == IDirectDrawSurface_Blt( lpDDSBack,null,null,null,DDBLT_COLORFILL | DDBLT_WAIT,&ddbltfx ))
+			if( DDERR_SURFACELOST == IDirectDrawSurface_Blt( Renderer.lpDDSBack,null,null,null,DDBLT_COLORFILL | DDBLT_WAIT,&ddbltfx ))
 				{
-				RestoreSurfaces();
+				Renderer.RestoreSurfaces();
 				return;
 				}
 
 			for( int i=ticks; i>=1; i-- )
 				{
-				IsDrawnTick=i==1;
+				Renderer.IsDrawnTick=i==1;
 				Trace?.Reach(this, TracePoint.Tick);
 				UpdateBattle();
 				// 1.22 runs decision for the tick that is drawn after the drawing only.
-				if( !IsEditingMap && !(IsSingleplayer && IsDrawnTick) )
+				if( !IsEditingMap && !(IsSingleplayer && Renderer.IsDrawnTick) )
 					CheckResult();
 				}
 
 			UpdateUnitInfo();
 			Trace?.Reach(this, TracePoint.Drawing);
-			DrawBattleArea();
+			Renderer.DrawBattleArea();
 			DrawMinimap();
 
 			if( !IsEditingMap )
@@ -427,7 +392,7 @@ public void	UpdateFrame()
 	HDC hdc;
 	Array128<byte> text = default;
 
-	if (DD_OK==lpDDSBack.GetDC(&hdc))
+	if (DD_OK==Renderer.lpDDSBack.GetDC(&hdc))
 		{
 		SetTextColor(hdc,RGB(255,255,255));
 		SetBkMode(hdc, TRANSPARENT);
@@ -439,7 +404,7 @@ public void	UpdateFrame()
 		var length = wsprintf(text, "dbg[0]=%d [1]=%d [2]=%d [3]=%d [4]=%d  :%d",DebugValues[0],DebugValues[1],DebugValues[2],DebugValues[3],DebugValues[4] ,SelectedUnit   );
 		TextOut(hdc, 0, 0, text, length);
 
-		length = wsprintf(text, "unit_out=%d ccc_out=%d rnd_out=%d rnd_count=%d CCC=%d FrameC=%d Sinario=%d host_side=%d rival_mode=%d" ,AreUnitsOutOfSync ,IsTickOutOfSync,IsRandomOutOfSync,RandomCount ,Tick, FrameCount, ScenarioNumber, HostSide, RivalMode);
+		length = wsprintf(text, "unit_out=%d ccc_out=%d rnd_out=%d rnd_count=%d CCC=%d FrameC=%d Sinario=%d host_side=%d rival_mode=%d" ,AreUnitsOutOfSync ,IsTickOutOfSync,IsRandomOutOfSync,RandomCount ,Tick, Renderer.FrameCount, ScenarioNumber, HostSide, RivalMode);
 		TextOut(hdc, 0, 20, text, length);
 
 		length = wsprintf(text, "Dbg[5]=%d  bf_cc_count[0]=%d [1]=%d   bf_rnd_count[0]=%d [1]=%d  ccc_wait[0]=%d  [1]=%d " ,DebugValues[5], TickChecksums[0], TickChecksums[1], RandomChecksums[0], RandomChecksums[1], TickWaits[0], TickWaits[1] );
@@ -495,7 +460,7 @@ public void	UpdateFrame()
 #endif
 
 		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, GameFont1);
+		SelectObject(hdc, Renderer.GameFont1);
 
 		SetTextColor(hdc, RGB(255, 255, 0));
 
@@ -503,7 +468,7 @@ public void	UpdateFrame()
 
 		DrawRivalChat(ref text, ref hdc);
 
-		lpDDSBack.ReleaseDC(hdc);
+		Renderer.lpDDSBack.ReleaseDC(hdc);
 		}
 
 	// マウス入力の後処理
@@ -513,13 +478,13 @@ public void	UpdateFrame()
 	if(LeftButton==1)	LeftButton=2;
 	if(LeftButton==3)	LeftButton=0;
 
-	FrameCount++;
+	Renderer.FrameCount++;
 
 	// プライマリサーフェスにフリップ
 
-	IDirectDrawSurface_SetClipper(lpDDSPrimary,lpDDclip);
-	if( DDERR_SURFACELOST == IDirectDrawSurface_Blt(lpDDSPrimary,null,lpDDSBack,null,DDBLT_WAIT,null))
-		RestoreSurfaces();
+	IDirectDrawSurface_SetClipper(Renderer.lpDDSPrimary,Renderer.lpDDclip);
+	if( DDERR_SURFACELOST == IDirectDrawSurface_Blt(Renderer.lpDDSPrimary,null,Renderer.lpDDSBack,null,DDBLT_WAIT,null))
+		Renderer.RestoreSurfaces();
 
 	}
 
@@ -535,7 +500,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	for(var i=0; i<16; i++)
 		DebugValues[i]=0;
 
-	IsFullscreen=true;
+	Renderer.IsFullscreen=true;
 
 	InitCommonControls();
 
@@ -633,7 +598,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 
 	int width,height;
 	// ウインドウの大きさを計算
-	if (IsFullscreen)
+	if (Renderer.IsFullscreen)
 		{
 		// フルスクリーン時はそのままで OK
 		width = WIDTH;
@@ -655,7 +620,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 
 
 	// ダイレクトドロウ
-    var ddrval = DirectDrawCreateEx(out lpDD);
+    var ddrval = DirectDrawCreateEx(out Renderer.lpDD);
     if (ddrval != DD_OK)
 		{
 		MessageBox(null,"DirectDrawの作成に失敗","Base",MB_OK | MB_ICONSTOP);
@@ -663,10 +628,10 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 		}
 
     // 協調レベルを設定
-	if (IsFullscreen)
-	    ddrval = lpDD.SetCooperativeLevel(hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN );
+	if (Renderer.IsFullscreen)
+	    ddrval = Renderer.lpDD.SetCooperativeLevel(hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN );
 	else
-	    ddrval = lpDD.SetCooperativeLevel(hwndApp, DDSCL_NORMAL );
+	    ddrval = Renderer.lpDD.SetCooperativeLevel(hwndApp, DDSCL_NORMAL );
 	if (ddrval != DD_OK)
 		{
 		MessageBox(null,"残念！","って言うじゃなーい。",MB_OK | MB_ICONSTOP);
@@ -674,9 +639,9 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 		}
 
 	// ディスプレイモードを設定
-	if(IsFullscreen)
+	if(Renderer.IsFullscreen)
 		{
-		ddrval = lpDD.SetDisplayMode( width, height, 16, 0, 0);
+		ddrval = Renderer.lpDD.SetDisplayMode( width, height, 16, 0, 0);
 		if (ddrval !=DD_OK)
 			{
 			MessageBox(null,"SetDisplayMode","残念！",MB_OK | MB_ICONSTOP);
@@ -695,7 +660,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 						  DDSCAPS_FLIP |
 						  DDSCAPS_COMPLEX;
 	ddsd.dwBackBufferCount = 1;
-	ddrval = lpDD.CreateSurface( &ddsd, out lpDDSPrimary, null );
+	ddrval = Renderer.lpDD.CreateSurface( &ddsd, out Renderer.lpDDSPrimary, null );
 	if (ddrval!=DD_OK)
 		{
 		MessageBox(null,"CreateSurface","残念！",MB_OK | MB_ICONSTOP);
@@ -705,7 +670,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	// バックバッファインターフェイスを取得
 	ZeroMemory(&ddscaps, (nuint)(sizeof(DDSCAPS2)));
 	ddscaps.dwCaps=DDSCAPS_BACKBUFFER;
-	ddrval=lpDDSPrimary.GetAttachedSurface(&ddscaps,out lpDDSBack);
+	ddrval=Renderer.lpDDSPrimary.GetAttachedSurface(&ddscaps,out Renderer.lpDDSBack);
 	if (ddrval!=DD_OK)
 		{
 		MessageBox(null,"GetAttachedSurface","残念！",MB_OK | MB_ICONSTOP);
@@ -713,31 +678,31 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 		}
 
 	// 最初のイメージをロードし、表示
-	OffscreenSurface=LoadBitmapSurface(SpriteSheetName);
-	if (OffscreenSurface==null)
+	Renderer.OffscreenSurface=Renderer.LoadBitmapSurface(SpriteSheetName);
+	if (Renderer.OffscreenSurface==null)
 		{
 		MessageBox(null,"bitmap_surface","残念！",MB_OK | MB_ICONSTOP);
 		return FALSE;
 		}
 
 	// クリッパー
-	if(IsFullscreen)
+	if(Renderer.IsFullscreen)
 		{
-		lpDD.CreateClipper(0,out lpDDclip,null);
-		lpDDclip.SetHWnd(0,hwndApp);
-		lpDD.FlipToGDISurface();
+		Renderer.lpDD.CreateClipper(0,out Renderer.lpDDclip,null);
+		Renderer.lpDDclip.SetHWnd(0,hwndApp);
+		Renderer.lpDD.FlipToGDISurface();
 		}
 	else
 		{
-		lpDD.CreateClipper(0,out lpDDclip,null);
-		lpDDclip.SetHWnd(0,hwndApp);
-		lpDDSPrimary.SetClipper(lpDDclip);
+		Renderer.lpDD.CreateClipper(0,out Renderer.lpDDclip,null);
+		Renderer.lpDDclip.SetHWnd(0,hwndApp);
+		Renderer.lpDDSPrimary.SetClipper(Renderer.lpDDclip);
 		}
 
 	// ピクセルフォーマットを取得
 	DDPIXELFORMAT ddpf;
 	ddpf.dwSize=(uint)(sizeof(DDPIXELFORMAT));
-	OffscreenSurface.GetPixelFormat(&ddpf);
+	Renderer.OffscreenSurface.GetPixelFormat(&ddpf);
 
 	var KeyColor = ddpf.dwRBitMask | ddpf.dwBBitMask;
 
@@ -745,7 +710,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 	DDCOLORKEY key;
 	key.dwColorSpaceLowValue = KeyColor;
 	key.dwColorSpaceHighValue = KeyColor;
-	OffscreenSurface.SetColorKey(DDCKEY_SRCBLT, &key);
+	Renderer.OffscreenSurface.SetColorKey(DDCKEY_SRCBLT, &key);
 
 	if(!InitializeDirectInput())
 		return FALSE;
@@ -761,7 +726,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 
 	IsAppActive=true;
 
-	InitializeSprites();
+	Renderer.InitializeSprites();
 
 	TitleTime=0;
 
