@@ -1363,7 +1363,7 @@ public void	SetUnitData(int m)
 //
 //----------------------------------------------------------------------------
 [Original("set_new_unit")]
-public int		AddUnit(Side side,UnitKind kind,double x,double y,double direction)
+public int		AddUnit(Side side,UnitKind kind,double x,double y,Angle direction)
 	{
 	UnitCategory	category; int start, end;
 
@@ -1466,7 +1466,7 @@ public int		AddUnit(Side side,UnitKind kind,double x,double y,double direction)
 //
 //----------------------------------------------------------------------------
 [Original("set_new_unit_2")]
-public int		AddUnit2(Side side,UnitKind kind,int type,double x,double y,double direction)
+public int		AddUnit2(Side side,UnitKind kind,int type,double x,double y,Angle direction)
 	{
 	UnitCategory	category; int start, end;
 

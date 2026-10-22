@@ -756,14 +756,12 @@ private void DrawTargetLine(ref Unit unit)
 
 		var barb=bearing;
 		barb-=10;
-		if(barb<0)
-			barb=360+barb;
+		barb=barb.WrapNegative();
 		DrawLine4(WorldToScreen(tip), WorldToScreen(unit.Position+WorldVector.FromDirection(barb) * 20), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
 
 		barb=bearing;
 		barb-=350;
-		if(barb<0)
-			barb=360+barb;
+		barb=barb.WrapNegative();
 		DrawLine4(WorldToScreen(tip), WorldToScreen(unit.Position+WorldVector.FromDirection(barb) * 20), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));
 		}
 	else
@@ -1010,36 +1008,7 @@ private bool DrawUnitMarks(bool isPositioned, ref Unit unit, SpriteId sprite, re
 private void DrawUnit(ref Unit unit, SpriteId sprite, ref RECT source, ref RECT infoArea, ref RECT field, ref int playsPlaneSound)
 	{
 	RECT destination;
-	switch((int)(unit.Direction/22.5))
-		{
-		case 0: case 15:
-			unit.SpriteColumn=2;
-			break;
-		case 1: case 2:
-			unit.SpriteColumn=1;
-			break;
-		case 3: case 4:
-			unit.SpriteColumn=0;
-			break;
-		case 5: case 6:
-			unit.SpriteColumn=7;
-			break;
-		case 7: case 8:
-			unit.SpriteColumn=6;
-			break;
-		case 9: case 10:
-			unit.SpriteColumn=5;
-			break;
-		case 11: case 12:
-			unit.SpriteColumn=4;
-			break;
-		case 13: case 14:
-			unit.SpriteColumn=3;
-			break;
-		default:
-			unit.SpriteColumn=2;
-			break;
-		}
+	unit.SpriteColumn=SpriteColumnOf(unit.Direction);
 
 	if( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked)
 		{

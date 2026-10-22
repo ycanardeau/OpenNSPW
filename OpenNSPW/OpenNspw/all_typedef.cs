@@ -43,7 +43,7 @@ public struct	Unit		// 全ての艦船、航空機、地図上の位置
 	public Array16<int> info; // 追加の情報、航空機なら飛んでるとか、格納庫の中とか
 	[Original("os_indx_y")] public int SpriteRow; // 各種パターンの頭の位置（ソースサーフェス）
 	[Original("os_indx_x")] public int SpriteColumn; // ユニットの向き
-	[Original("drctn")] public double Direction; // 進行角度 変進角度
+	[Original("drctn")] public Angle Direction; // 進行角度 変進角度
 	[Original("drctn_add")] public double TurnRate;
 	[Original("a_drctn_add")] public double TurnRateChange;
 	[Original("spd")] public double Speed; // スピード 速度変更
@@ -59,7 +59,7 @@ public struct	Unit		// 全ての艦船、航空機、地図上の位置
 	[Original("pp_y")] public Array64<double> PathY;
 	[Original("em_flg")] public Array2<int> EmergencyFlags; // 緊急時の移動の処理フラグ
 	[Original("em_x", "em_y")] public WorldPosition EmergencyDestination; // 緊急時の移動目的地の地図上の位置
-	[Original("to_ldr_drctn")] public double DirectionToLeader; // 主に艦隊時、リーダとの相対位置。
+	[Original("to_ldr_drctn")] public Angle DirectionToLeader; // 主に艦隊時、リーダとの相対位置。
 	[Original("to_ldr_dstc")] public double DistanceToLeader;
 	[Original("is_ltl_ldr")] public short IsGroupLeader; // 一時的指揮機番号、何番機
 	[Original("ltl_ldr")] public short GroupLeader;
@@ -233,7 +233,7 @@ public struct	Fire
 	public Array9<int> info;
 	[Original("no")] public int SpriteNumber; // Sprite nuber of its Sprite Source
 	[Original("x", "y")] public WorldPosition Position;
-	[Original("drctn")] public double Direction;
+	[Original("drctn")] public Angle Direction;
 	[Original("spd")] public double Speed;
 	[Original("spd_add")] public double Acceleration;
 	[Original("last_spd")] public double FinalSpeed;

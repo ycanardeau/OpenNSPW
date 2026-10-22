@@ -259,7 +259,7 @@ private bool IsShipAt(int m, WorldPosition point)
 // Ships: inserts a path point that leads around an obstacle, in `direction` from the start of the leg, before the
 // leg's end. If the turn it makes from the previous leg is in the range minTurn to maxTurn, the saved point goes back,
 // and the search starts again farther away (extraDistance), counting an error.
-private void TakeDetour(ref Unit unit, ref int index, WorldPosition start, double checkedDistance, double divisor, double direction, double minTurn, double maxTurn, ref double extraDistance, WorldPosition savedPoint, double extraStep, ref int error)
+private void TakeDetour(ref Unit unit, ref int index, WorldPosition start, double checkedDistance, double divisor, Angle direction, Angle minTurn, Angle maxTurn, ref double extraDistance, WorldPosition savedPoint, double extraStep, ref int error)
 	{
 	unit.SetPathPoint(index+1, unit.GetPathPoint(index));
 	unit.PathX[index+2]=MAP_RIGHT+1;
@@ -273,8 +273,7 @@ private void TakeDetour(ref Unit unit, ref int index, WorldPosition start, doubl
 		{
 		// ＰＰ０からＰＰ１への角度
 		var turn=(unit.GetPathPoint(index)-unit.GetPathPoint(index-1)).NonZero().Direction;
-		if(turn>=360)
-			turn=turn-360;
+		turn=turn.WrapFullTurn();
 		// 現位置からＰＰ０への角度
 		WorldVector previousLeg;
 		if( index==1)
@@ -289,10 +288,7 @@ private void TakeDetour(ref Unit unit, ref int index, WorldPosition start, doubl
 
 		// 方位角 drctn1
 		turn=turn-previousDirection;
-		if(turn<0)
-			turn=360+turn;
-		if(turn>=360)
-			turn=turn-360;
+		turn=turn.WrapNegative().WrapFullTurn();
 
 		if( turn>=(minTurn) && turn<=(maxTurn) && (extraDistance<=2000) )
 			{
@@ -396,8 +392,7 @@ public void	SetCpuRoute2(int m)
 		var leg=(unit.GetPathPoint(index)-start).NonZero();
 
 		var bearing=leg.Direction;
-		if(bearing>=360)
-			bearing=bearing-360;
+		bearing=bearing.WrapFullTurn();
 
 		// Distance folds the direction from 0 to 360, where the original folds bearing, 360 brought to 0: both fold
 		// either to 0.
@@ -438,9 +433,9 @@ public void	SetCpuRoute2(int m)
 				for(var n=0; n<=7; n++)
 					{
 					leftBearing+=22.5;
-					if(leftBearing>=360)		leftBearing=leftBearing-360;
+					leftBearing=leftBearing.WrapFullTurn();
 					rightBearing-=22.5;
-					if(rightBearing<0)		rightBearing=360+rightBearing;
+					rightBearing=rightBearing.WrapNegative();
 					checkedDistance=40; hit=0;	var left=0;	var right=0;
 					while( checkedDistance<=(legLength) && (left==0||right==0))
 						{

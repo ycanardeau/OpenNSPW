@@ -117,9 +117,9 @@ public unsafe partial class Nspw
 	}
 
 	// The sprite's column of a unit facing a direction: one of eight, as DrawUnit sets SpriteColumn as it draws it.
-	public static int SpriteColumnOf(double direction)
+	public static int SpriteColumnOf(Angle direction)
 	{
-		switch( (int)(direction/22.5) )
+		switch( (int)(direction.Degrees/22.5) )
 			{
 			case 0: case 15:	return 2;
 			case 1: case 2:		return 1;

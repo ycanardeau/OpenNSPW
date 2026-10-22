@@ -985,46 +985,15 @@ public int		ToEightDirections(int direction)
 [Original("set_frmtn_of_ships")]
 public void	SetShipFormation( int s )
 	{
-	double leaderHeading=0 /* C4701 */ /* C4701 */;
+	Angle leaderHeading=0 /* C4701 */ /* C4701 */;
 
 	// リーダー艦からの方位角を求めます。
 	var offset=(Units[s].Position-Units[Units[s].GroupLeader].Position).NonZero();
 	var bearing=offset.Direction;
-	switch((int)(Units[Units[s].GroupLeader].Direction/22.5))
-		{
-		case 0: case 15:
-			leaderHeading=0.0;
-			break;
-		case 1: case 2:
-			leaderHeading=45.0;
-			break;
-		case 3: case 4:
-			leaderHeading=90.0;
-			break;
-		case 5: case 6:
-			leaderHeading=90.0+45.0;
-			break;
-		case 7: case 8:
-			leaderHeading=180.0;
-			break;
-		case 9: case 10:
-			leaderHeading=180.0+45.0;
-			break;
-		case 11: case 12:
-			leaderHeading=270.0;
-			break;
-		case 13: case 14:
-			leaderHeading=270.0+45.0;
-			break;
-		default:
-			// 1.22 reads the angle where its stack slot holds the offset's X (0x417179).
-			if( Rules.HeadingsOf360TakeNoCase )
-				leaderHeading=offset.X;
-			break;
-		}
+	// For a heading that is no case, 1.22 reads the angle where its stack slot holds the offset's X (0x417179).
+	leaderHeading=Units[Units[s].GroupLeader].Direction.SnappedToEightDirections() ?? (Rules.HeadingsOf360TakeNoCase ? offset.X : leaderHeading);
 	bearing=bearing-leaderHeading;
-	if(bearing<0)
-		bearing=360+bearing;
+	bearing=bearing.WrapNegative();
 
 	Units[s].DirectionToLeader=bearing;
 
@@ -1039,7 +1008,7 @@ public void	SetShipFormation( int s )
 [Original("set_pos_of_take_down")]
 public void	SetLandingDestination(int n)
 	{
-	double heading=0 /* C4701 */;
+	Angle heading=0 /* C4701 */;
 
 	var carrier=Units[n].Carrier;
 
@@ -1053,44 +1022,13 @@ public void	SetLandingDestination(int n)
 		return;
 		}
 
-	switch((int)(Units[carrier].Direction/22.5))
-		{
-		case 0: case 15:
-			heading=0.0;
-			break;
-		case 1: case 2:
-			heading=45.0;
-			break;
-		case 3: case 4:
-			heading=90.0;
-			break;
-		case 5: case 6:
-			heading=90.0+45.0;
-			break;
-		case 7: case 8:
-			heading=180.0;
-			break;
-		case 9: case 10:
-			heading=180.0+45.0;
-			break;
-		case 11: case 12:
-			heading=270.0;
-			break;
-		case 13: case 14:
-			heading=270.0+45.0;
-			break;
-		default:
-			// 1.22 reads the angle it has not set (0x4173BF).
-			if( Rules.HeadingsOf360TakeNoCase )
-				heading=TakeStackLocal(0x4173BF, heading);
-			break;
-		}
+	// For a heading that is no case, 1.22 reads the angle it has not set (0x4173BF).
+	heading=Units[carrier].Direction.SnappedToEightDirections() ?? (Rules.HeadingsOf360TakeNoCase ? TakeStackLocal(0x4173BF, heading.Degrees) : heading);
 
 	var astern=heading;
 	astern-=180.0;
 
-	if( heading<0 )
-		heading=360+heading;
+	heading=heading.WrapNegative();
 
 	if( Units[n].Kind==UnitKind.Bomber )
 		{
@@ -1118,7 +1056,7 @@ public void	SetLandingDestination(int n)
 public void	UpdateLanding( int n )
 	{
 	int		count;
-	double heading=0 /* C4701 */;
+	Angle heading=0 /* C4701 */;
 
 	var carrier=Units[n].Carrier;
 
@@ -1140,44 +1078,13 @@ public void	UpdateLanding( int n )
 		return;
 		}
 
-	switch((int)(Units[carrier].Direction/22.5))
-		{
-		case 0: case 15:
-			heading=0.0;
-			break;
-		case 1: case 2:
-			heading=45.0;
-			break;
-		case 3: case 4:
-			heading=90.0;
-			break;
-		case 5: case 6:
-			heading=90.0+45.0;
-			break;
-		case 7: case 8:
-			heading=180.0;
-			break;
-		case 9: case 10:
-			heading=180.0+45.0;
-			break;
-		case 11: case 12:
-			heading=270.0;
-			break;
-		case 13: case 14:
-			heading=270.0+45.0;
-			break;
-		default:
-			// 1.22 reads the angle it has not set (0x41764E).
-			if( Rules.HeadingsOf360TakeNoCase )
-				heading=TakeStackLocal(0x41764E, heading);
-			break;
-		}
+	// For a heading that is no case, 1.22 reads the angle it has not set (0x41764E).
+	heading=Units[carrier].Direction.SnappedToEightDirections() ?? (Rules.HeadingsOf360TakeNoCase ? TakeStackLocal(0x41764E, heading.Degrees) : heading);
 
 	var astern=heading;
 	astern-=180.0;
 
-	if( heading<0 )
-		heading=360+heading;
+	heading=heading.WrapNegative();
 
 	for( count=0; Units[n].PathX[count]!=MAP_RIGHT+1; count++){}
 

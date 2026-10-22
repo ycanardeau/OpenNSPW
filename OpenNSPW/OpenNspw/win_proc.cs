@@ -1080,7 +1080,7 @@ if( !IsEditingMap )
 					// ユニットを回転させます。
 					if( IsEditingMap && Mode==GameMode.Battle && Units[SelectedUnit].IsUsed  && Units[SelectedUnit].Kind>=UnitKind.Battleship && Units[SelectedUnit].Kind<=UnitKind.Transport && !(Units[SelectedUnit].Category==UnitCategory.Plane && Units[SelectedUnit].PlaneState==UnitState.Parked ))
 						{
-						Units[SelectedUnit].Direction= (int)(Units[SelectedUnit].Direction+45.0)%360 ;
+						Units[SelectedUnit].Direction=(Units[SelectedUnit].Direction+45.0).WholeDegrees();
 
 						PlayInterfaceSound(SoundId.Click1);
 						}

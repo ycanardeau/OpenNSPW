@@ -199,7 +199,7 @@ dbg[5]=rnd(100);
 		ref var unit = ref Units[m];
 		if( unit.IsUsed && !(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked) )
 			{
-			checksum+=(int)((unit.Position.X+unit.Position.Y+unit.Direction)*10000);
+			checksum+=(int)((unit.Position.X+unit.Position.Y+unit.Direction.Degrees)*10000);
 			}
 		}
 
@@ -659,7 +659,7 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 					PlayInterfaceSound(SoundId.TakeOff);
 					}
 
-				unit.Position += new WorldVector(CosDegrees(unit.Direction)*(unit.TakeOffRun/20), -SinDegrees(unit.Direction)*(unit.TakeOffRun/20));
+				unit.Position += new WorldVector(unit.Direction.Cos()*(unit.TakeOffRun/20), -unit.Direction.Sin()*(unit.TakeOffRun/20));
 				}
 
 			deckMark=Sprites[SpriteId.JapanUnitInfo].Position.Y-30/*+60*/;
@@ -676,37 +676,11 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 				Units[unit.Carrier].PlaneCount--;		// 現在格納数
 				Units[unit.Carrier].LandingLock=0;		// その空母の次機着艦許可
 					// 発進した場合、最初のポイントは空母の方向から決める。
-				switch((int)(Units[unit.Carrier].Direction/22.5))
-					{
-					case 0: case 15:
-						unit.Direction=0.0;
-						break;
-					case 1: case 2:
-						unit.Direction=45.0;
-						break;
-					case 3: case 4:
-						unit.Direction=90.0;
-						break;
-					case 5: case 6:
-						unit.Direction=90.0+45.0;
-						break;
-					case 7: case 8:
-						unit.Direction=180.0;
-						break;
-					case 9: case 10:
-						unit.Direction=180.0+45.0;
-						break;
-					case 11: case 12:
-						unit.Direction=270.0;
-						break;
-					case 13: case 14:
-						unit.Direction=270.0+45.0;
-						break;
-					}
+				unit.Direction=Units[unit.Carrier].Direction.SnappedToEightDirections(unit.Direction);
 				}
 			if(unit.PlaneState==UnitState.Parked)
 				{
-				unit.Position += new WorldVector(CosDegrees(unit.Direction)*0.8, -SinDegrees(unit.Direction)*0.8);
+				unit.Position += new WorldVector(unit.Direction.Cos()*0.8, -unit.Direction.Sin()*0.8);
 				}
 			}
 		else
@@ -770,7 +744,7 @@ else
 				}
 			if(unit.PlaneState==UnitState.Parked)
 				{
-				unit.Position += new WorldVector(CosDegrees(unit.Direction)*unit.Speed, -SinDegrees(unit.Direction)*unit.Speed);
+				unit.Position += new WorldVector(unit.Direction.Cos()*unit.Speed, -unit.Direction.Sin()*unit.Speed);
 				}
 			}
 		}
@@ -1012,7 +986,7 @@ private void TryLandOnCarrier(ref Unit unit, int m)
 		}
 	}
 
-private void SetAcceleration(ref Unit unit, double turn, int land)
+private void SetAcceleration(ref Unit unit, Angle turn, int land)
 	{
 	if( unit.Category!=UnitCategory.Plane && (turn>=80.0 || land!=0 ) )
 		{
@@ -1152,7 +1126,7 @@ private void ReplanBlockedRoute(ref Unit unit, int m, WorldRect? ahead)
 // 1.22's ship looks 40 ahead, and only air bases and naval bases are not in its way (0x401F95 to 0x4023EB). A
 // computer's ship with no leader is replanned when a ship in its way has slowed it to a fifth of its top speed, every
 // 100 ticks, or when the point 80 toward its path is land, unless it is on an emergency move.
-private void CheckCourseAheadAs122(ref Unit unit, int m, ref int land, double bearing)
+private void CheckCourseAheadAs122(ref Unit unit, int m, ref int land, Angle bearing)
 	{
 	WorldRect shipArea;
 	var replans = unit.Side==CpuSide && unit.GroupLeader==0;
@@ -1199,7 +1173,7 @@ private void CheckCourseAheadAs122(ref Unit unit, int m, ref int land, double be
 		}
 	}
 
-private void CheckCourseAhead(ref Unit unit, int m, ref int land, double bearing)
+private void CheckCourseAhead(ref Unit unit, int m, ref int land, Angle bearing)
 	{
 	if( Rules.ComputerReplansBlockedRoutes )
 		{
@@ -1294,8 +1268,7 @@ private void MoveUnit(ref Unit unit, int m, ref double cargoSpeedFactor)
 			}
 
 		var turn=bearing-unit.Direction;
-		if(turn<0)
-			turn=360+turn;
+		turn=turn.WrapNegative();
 
 		unit.TurnRate=0;
 		if(turn>=1.0&&turn<=180.0)
@@ -1317,8 +1290,7 @@ private void MoveUnit(ref Unit unit, int m, ref double cargoSpeedFactor)
 
 		if(unit.Direction>360.0 || (Rules.HeadingWrapsAt360 && unit.Direction==360.0))
 			unit.Direction-=360.0;
-		if(unit.Direction<0.0)
-			unit.Direction=360.0+unit.Direction;
+		unit.Direction=unit.Direction.WrapNegative();
 
 		if(turn>180.0)
 			turn=360.0-turn;

@@ -7,17 +7,17 @@ public readonly struct WorldVector(double x, double y)
 	public readonly double X = x;
 	public readonly double Y = y;
 
-	// The direction of the vector in degrees, from 0 to 360 (nspw_math.Direction).
-	public double Direction => nspw_math.Direction(X, Y);
+	// The direction of the vector, from 0° to 360° (nspw_math.Direction).
+	public Angle Direction => nspw_math.Direction(X, Y);
 
 	// The length of the vector, as the original computes it (nspw_math.Distance), which counts a component of 0 as 1.
 	public double Length => nspw_math.Distance(X, Y);
 
-	// The vector of length 1 in a direction in degrees: `CosDegrees(direction)` and `SinDegrees(direction)`, as the
-	// original moves things.
-	public static WorldVector FromDirection(double degrees)
+	// The vector of length 1 in a direction: `CosDegrees(direction)` and `SinDegrees(direction)`, as the original moves
+	// things.
+	public static WorldVector FromDirection(Angle direction)
 	{
-		return new WorldVector(nspw_math.CosDegrees(degrees), nspw_math.SinDegrees(degrees));
+		return new WorldVector(direction.Cos(), direction.Sin());
 	}
 
 	// Each component times the factor, as `x*factor` and `y*factor` compute them.

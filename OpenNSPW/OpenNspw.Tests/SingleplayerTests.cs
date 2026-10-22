@@ -504,7 +504,7 @@ public class SingleplayerTests
 
 		game.SetShipFormation(ship);
 
-		Assert.Equal(Math.Atan2(50, 100) * 180 / Math.PI - 100 + 360, game.Units[ship].DirectionToLeader, 6);
+		Assert.Equal(Math.Atan2(50, 100) * 180 / Math.PI - 100 + 360, game.Units[ship].DirectionToLeader.Degrees, 6);
 	}
 
 	// A mode chosen from the combat menu goes to a parked plane too, and Move clears its deck phase, as in 1.22

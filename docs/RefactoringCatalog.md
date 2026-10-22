@@ -59,10 +59,11 @@ Each has the layout of the primitives it replaces (see [Refactoring.md](Refactor
 | --- | --- | --- |
 | `WorldPosition` | `double X, Y` | `WorldPosition ± WorldVector`, `WorldPosition - WorldPosition` → `WorldVector`, `==`. `ToPixelPoint()` truncates with `(int)`, as the C++ casts. `WorldToScreen` subtracts it from `CameraPosition`, with Y downward. |
 | `WorldVector` | `double X, Y` | `* double`, `FromDirection(degrees)` (`CosDegrees`, `SinDegrees`), `Direction` and `Length` (the original's `atan2` and `cos` distance, exactly), `NonZero()` (a component of 0 counts as 1). Not stored in the state. |
-| `Angle` | `double Degrees` | `Sin()`, `Cos()` as `sin(Degrees*a_PI)`, `cos(Degrees*a_PI)`. `FromVector(dx, dy)` as `atan2(dy,dx)*RAD_to`. No normalization that the C++ does not do. |
+| `Angle` | `double Degrees` | `±`, comparisons, from `double` (implicit) and to `int` (explicit, truncating). `Sin()`, `Cos()` as `sin(Degrees*a_PI)`, `cos(Degrees*a_PI)`; `WorldVector.Direction` as `atan2(dy,dx)*RAD_to`. `WrapNegative()` (`if(d<0) d=360+d`), `WrapFullTurn()` (`if(d>=360) d=d-360`), `Wrapped()` (the two, in that order), `WholeDegrees()` (`(int)d%360`), `SnappedToEightDirections()` (the switch on `(int)(d/22.5)`, null for an angle that is no case), and `SnappedToEightDirections(otherwise)` for the switches that leave the heading alone then. No normalization that the C++ does not do. |
 | `PixelPoint` | `int X, Y` | `+`. The sprites' `Position`, `Center` and `SheetPosition`; replaces `POINT`. |
 | `PixelSize` | `int Width, Height` | The sprites' `Size`. |
 | `Rect` | `int Left, Top, Right, Bottom` | Replaces `RECT`. `Contains` only where a `pt_in_rect` variant matches it exactly. |
+| `WorldRect` | `int Left, Top, Right, Bottom` | An area of the world, `Top` above `Bottom`: `Around(center, halfWidth, halfHeight)` with the C++'s `(int)` casts, `Offset`, `Contains` as `pt_in_rect2` and `pt_in_rect3`. Drawn with `DrawWorldRect`. Not stored in the state. |
 | `Bool32` | `int Value` | `implicit operator bool` (`Value != 0`), and from `bool` (1 or 0). Comparisons with 1 stay as `Value==1`. |
 | `Bool8` | `byte Value` | The same, for a `BYTE` used as a boolean (`you_are_host`, `map_edit`, `decision_sw`, ...). |
 | `UnitId` | `int Value` | `None` (0). Exposed by accessors over `short`, `int` and `byte` storage. `Units[id]` indexer. |

@@ -153,6 +153,7 @@ New value types replace groups of primitives that are adjacent in the struct, wi
 | `PixelPoint` | `int X, Y` | `POINT`, the sprites' `x,y`, `cx,cy`, `base_x,base_y` |
 | `PixelSize` | `int Width, Height` | the sprites' `wd,ht` |
 | `Rect` | `int Left, Top, Right, Bottom` | `RECT` |
+| `WorldRect` | `int Left, Top, Right, Bottom` | `RECT`s of world coordinates in locals |
 | `Bool32` | `int Value` | `BOOL` fields that are used as booleans |
 | `Bool8` | `byte Value` | `BYTE` fields that are used as booleans |
 | `UnitId` | `short Value` or `int Value` | Unit numbers (see below) |
@@ -256,7 +257,7 @@ Done. `SoundId` indexes the sound buffers with a cast. `SpriteId` indexes `Sprit
 ### 5. Value types
 `WorldPosition`, `WorldVector`, `Angle`, `PixelPoint`, `PixelSize`, `Rect`, with their bit-for-bit tests. Then `Bool32` and `UnitId`, field by field.
 
-In progress: `WorldPosition`, a readonly struct, holds every position, and `WorldVector` the moves that add to one. Pairs of assignments of `X` and `Y` are assignments of a position. The sprites' pairs of fields are `PixelPoint`s and a `PixelSize`, assigned whole. A unit's path points, `PathX[i]` and `PathY[i]`, are read and written as positions through `GetPathPoint` and `SetPathPoint`; the contact and the landing point are read as `ContactPosition` and `LandingPoint`. `Bool32` and `Bool8` hold the flags of the units, the effects, the select orders and the globals.
+In progress: `WorldPosition`, a readonly struct, holds every position, and `WorldVector` the moves that add to one. Pairs of assignments of `X` and `Y` are assignments of a position. The sprites' pairs of fields are `PixelPoint`s and a `PixelSize`, assigned whole. A unit's path points, `PathX[i]` and `PathY[i]`, are read and written as positions through `GetPathPoint` and `SetPathPoint`; the contact and the landing point are read as `ContactPosition` and `LandingPoint`. Headings (`Direction`, `DirectionToLeader`, and the bearings in locals) are `Angle`s, and the areas tested in the world `WorldRect`s. `Bool32` and `Bool8` hold the flags of the units, the effects, the select orders and the globals.
 
 ### 6. Union slot accessors
 `hp`, `arm` and `gas` first, whose meanings are clear, then `info[]` of `FIRE`, `EFFECT` and `UNIT`, slot by slot.

@@ -67,7 +67,7 @@ public sealed class Trace122Tests
 	// The fields are where 1.22 has them (docs/Singleplayer.md).
 	[Theory]
 	[InlineData("Position.X", 0x08)]
-	[InlineData("Direction", 0x70)]
+	[InlineData("Direction.Degrees", 0x70)]
 	[InlineData("PathX[0]", 0xC0)]
 	[InlineData("PathY[0]", 0x2C0)]
 	[InlineData("hp[0]", 0x4F8)]

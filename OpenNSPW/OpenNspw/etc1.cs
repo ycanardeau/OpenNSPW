@@ -195,8 +195,7 @@ private bool LandCargo(ref Unit unit, FireKind kind, int m)
 	{
 	var bearing=(unit.LandingPoint-unit.Position).Direction;
 	var relativeBearing=bearing-unit.Direction;
-	if(relativeBearing<0)
-		relativeBearing=360+relativeBearing;
+	relativeBearing=relativeBearing.WrapNegative();
 
 	if( (int)relativeBearing<=45||(int)relativeBearing>=315)
 		{
@@ -266,7 +265,7 @@ private bool LandCargo(ref Unit unit, FireKind kind, int m)
 	return true;
 	}
 
-private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double bearing, ref double distance, FireKind kind)
+private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref Angle bearing, ref double distance, FireKind kind)
 	{
 	var target=0;
 	for(var n=1;n<=MaxUnitId;n++)
@@ -285,8 +284,7 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double bearing, r
 			for(var f=0;f<=(int)flightTicks;f++)
 				{
 				bearing+=turnRate;
-				if(bearing<0)		bearing=360+bearing;
-				if(bearing>=360)		bearing=bearing-360;
+				bearing=bearing.WrapNegative().WrapFullTurn();
 				futurePosition+=WorldVector.FromDirection(bearing) * other.Speed; // とりあえずターン後
 				}
 
@@ -334,8 +332,7 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double bearing, r
 			fire.Position=unit.Position;
 
 			var direction=bearing+(Random(18)-9);			// 絶対方位
-			if(direction>=360)	direction=direction-360;
-			if(direction<0)	direction=360+direction;
+			direction=direction.Wrapped();
 			fire.Direction=direction;
 
 			var spreadDistance=distance+(Random( ((int)(distance/5)) )-((int)(distance/10))   );
@@ -356,13 +353,13 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double bearing, r
 // stores the int into the low half of the double and reads the double back (0x410452, 0x415324, 0x416417, 0x416838,
 // 0x41C327): the heading keeps its high bits, so all of its fraction of a degree but the last digits, and the wake's is
 // not brought below 360.
-private double ReduceHeading(double heading)
+private Angle ReduceHeading(Angle heading)
 	{
 	var whole=(int)heading%360;
 	if( !Rules.ReducedHeadingsKeepTheirFraction )
 		return whole;
 
-	var bits=BitConverter.DoubleToInt64Bits(heading);
+	var bits=BitConverter.DoubleToInt64Bits(heading.Degrees);
 	return BitConverter.Int64BitsToDouble((bits & unchecked((long)0xFFFFFFFF00000000)) | (uint)whole);
 	}
 
@@ -407,7 +404,7 @@ private bool ShipDropAntiSubmarineBomb(ref int target, ref Unit unit, FireKind k
 						{
 						// 対潜駆逐艦
 						direction+=120+Random(3)*60;
-						direction=(int)direction%360;
+						direction=direction.WholeDegrees();
 						fire.Position += WorldVector.FromDirection(direction) * 35;
 						}
 
@@ -426,7 +423,7 @@ private bool ShipDropAntiSubmarineBomb(ref int target, ref Unit unit, FireKind k
 	return true;
 	}
 
-private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int range, ref Array3<int> shotCounts, ref double bearing, ref double relativeBearing)
+private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int range, ref Array3<int> shotCounts, ref Angle bearing, ref Angle relativeBearing)
 	{
 	var target=0;
 	var targetDistance=2000.0;
@@ -446,8 +443,7 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rang
 			var otherBearing=(futurePosition-unit.Position).Direction;							// 絶対方位
 
 			var otherRelativeBearing=otherBearing-unit.Direction;
-			if(otherRelativeBearing<0)
-				otherRelativeBearing=360+otherRelativeBearing;							// 方位角
+			otherRelativeBearing=otherRelativeBearing.WrapNegative();							// 方位角
 
 			// 攻撃地点から攻撃目標地点への距離
 			var distance=(futurePosition-unit.Position).Length;
@@ -527,7 +523,7 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rang
 				fire.Kind=FireKind.Gun;
 				fire.Position=unit.Position;
 
-				double direction;
+				Angle direction;
 				if( kind==FireKind.NavalBaseGun )
 					{
 					if( Random(2)==0 )
@@ -550,8 +546,7 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rang
 						direction=bearing+(Random(11)-5)+(Random(100)/100);				// 絶対方位
 					}
 
-				if(direction>=360)	direction=direction-360;
-				if(direction<0)	direction=360+direction;
+				direction=direction.Wrapped();
 				fire.Direction=direction;
 
 				if( kind==FireKind.NavalBaseGun )
@@ -573,7 +568,7 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rang
 	return true;
 	}
 
-private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double bearing, FireKind kind)
+private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref Angle bearing, FireKind kind)
 	{
 	var target=0;
 	for(var n=1;n<=MaxUnitId;n++)
@@ -602,8 +597,7 @@ private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double bearing, Fir
 			bearing=(futurePosition-unit.Position).Direction;					// 未来位置への絶対角
 
 			var relativeBearing=bearing-unit.Direction;
-			if(relativeBearing<0)
-				relativeBearing=360+relativeBearing;							// 方位角
+			relativeBearing=relativeBearing.WrapNegative();							// 方位角
 
 			// 攻撃地点から攻撃目標地点への距離
 			var distance=(futurePosition-unit.Position).Length;
@@ -688,7 +682,7 @@ private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double bearing, Fir
 					case 1:	fire.Direction=bearing+5;	break;
 					case 2:	fire.Direction=bearing-5;	break;
 					}
-				fire.Direction=(int)(fire.Direction)%360;
+				fire.Direction=fire.Direction.WholeDegrees();
 
 				fire.Speed=TPD_SPD;
 				fire.Acceleration=+0.0;
@@ -706,7 +700,7 @@ private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double bearing, Fir
 	return true;
 	}
 
-private bool ShipFireTorpedoAtTarget(int target, ref Unit unit, ref double bearing, FireKind kind)
+private bool ShipFireTorpedoAtTarget(int target, ref Unit unit, ref Angle bearing, FireKind kind)
 	{
 	var confirmedTarget=0;
 	ref var other = ref Units[target];
@@ -723,8 +717,7 @@ private bool ShipFireTorpedoAtTarget(int target, ref Unit unit, ref double beari
 		bearing=(futurePosition-unit.Position).Direction;					// 未来位置への絶対角
 
 		var relativeBearing=bearing-unit.Direction;
-		if(relativeBearing<0)
-			relativeBearing=360+relativeBearing;							// 方位角
+		relativeBearing=relativeBearing.WrapNegative();							// 方位角
 
 		// 攻撃地点から攻撃目標地点への距離
 		var distance=(futurePosition-unit.Position).Length;
@@ -790,7 +783,7 @@ private bool ShipFireTorpedoAtTarget(int target, ref Unit unit, ref double beari
 					case 1:	fire.Direction=bearing;	break;
 					case 2:	fire.Direction=bearing-5;	break;
 					}
-				fire.Direction=(int)(fire.Direction)%360;
+				fire.Direction=fire.Direction.WholeDegrees();
 
 				fire.Speed=TPD_SPD;
 				fire.Acceleration=+0.0;
@@ -828,8 +821,7 @@ private bool ShipFireAntiAircraftShellAtTarget(int target, ref Unit unit, ref in
 	var bearing=(futurePosition-unit.Position).Direction;
 
 	var relativeBearing=bearing-unit.Direction;
-	if(relativeBearing<0)
-		relativeBearing=360+relativeBearing;							// 方位角
+	relativeBearing=relativeBearing.WrapNegative();							// 方位角
 
 	// 攻撃地点から攻撃目標地点への距離
 	var distance=(futurePosition-unit.Position).Length;
@@ -875,8 +867,7 @@ private bool ShipFireAntiAircraftShellAtTarget(int target, ref Unit unit, ref in
 				fire.Position=unit.Position;
 
 				var direction=bearing+(Random(18)-9);			// 絶対方位
-				if(direction>=360)	direction=direction-360;
-				if(direction<0)	direction=360+direction;
+				direction=direction.Wrapped();
 				fire.Direction=direction;
 
 				var spreadDistance=distance+(Random( ((int)(distance/10)) )-((int)(distance/20))   );
@@ -894,7 +885,7 @@ private bool ShipFireAntiAircraftShellAtTarget(int target, ref Unit unit, ref in
 	return true;
 	}
 
-private bool ShipFireAntiAircraftShellWithoutTarget(ref Unit unit, ref double bearing, ref double relativeBearing, ref double distance, ref int range, ref Array3<int> shotCounts, FireKind kind)
+private bool ShipFireAntiAircraftShellWithoutTarget(ref Unit unit, ref Angle bearing, ref Angle relativeBearing, ref double distance, ref int range, ref Array3<int> shotCounts, FireKind kind)
 	{
 	var target=0;
 	for(var n=1;n<=MaxUnitId;n++)
@@ -913,16 +904,14 @@ private bool ShipFireAntiAircraftShellWithoutTarget(ref Unit unit, ref double be
 			for(var f=0;f<=(int)flightTicks;f++)
 				{
 				bearing+=turnRate;
-				if(bearing<0)		bearing=360+bearing;
-				if(bearing>=360)		bearing=bearing-360;
+				bearing=bearing.WrapNegative().WrapFullTurn();
 				futurePosition+=WorldVector.FromDirection(bearing) * other.Speed; // とりあえずターン後
 				}
 
 			bearing=(futurePosition-unit.Position).Direction;
 
 			relativeBearing=bearing-unit.Direction;
-			if(relativeBearing<0)
-				relativeBearing=360+relativeBearing;							// 方位角
+			relativeBearing=relativeBearing.WrapNegative();							// 方位角
 
 			// 攻撃地点から攻撃目標地点への距離
 			distance=(futurePosition-unit.Position).Length;
@@ -968,8 +957,7 @@ private bool ShipFireAntiAircraftShellWithoutTarget(ref Unit unit, ref double be
 				fire.Position=unit.Position;
 
 				var direction=bearing+(Random(18)-9);			// 絶対方位
-				if(direction>=360)	direction=direction-360;
-				if(direction<0)	direction=360+direction;
+				direction=direction.Wrapped();
 				fire.Direction=direction;
 
 				var spreadDistance=distance+(Random( ((int)(distance/10)) )-((int)(distance/20))   );
@@ -1006,8 +994,7 @@ private bool ShipFireGunAtTarget(int target, ref Unit unit, FireKind kind, ref i
 	var bearing=(futurePosition-unit.Position).Direction;
 
 	var relativeBearing=bearing-unit.Direction;
-	if(relativeBearing<0)
-		relativeBearing=360+relativeBearing;							// 方位角
+	relativeBearing=relativeBearing.WrapNegative();							// 方位角
 
 	// 攻撃地点から攻撃目標地点への距離
 	var distance=(futurePosition-unit.Position).Length;
@@ -1075,7 +1062,7 @@ private bool ShipFireGunAtTarget(int target, ref Unit unit, FireKind kind, ref i
 				unit.Ammo-=GUN_SZ;			// 弾薬消費
 				fire.Target=confirmedTarget;
 
-				double direction;
+				Angle direction;
 				double spreadDistance;
 				if( Units[confirmedTarget].Category==UnitCategory.Ship )
 					{
@@ -1105,8 +1092,7 @@ private bool ShipFireGunAtTarget(int target, ref Unit unit, FireKind kind, ref i
 							direction=bearing+(Random(9)-4)+(Random(100)/100);				// 絶対方位
 						}
 
-					if(direction>=360)	direction=direction-360;
-					if(direction<0)	direction=360+direction;
+					direction=direction.Wrapped();
 					fire.Direction=direction;
 
 					if( kind==FireKind.NavalBaseGun )
@@ -1127,8 +1113,7 @@ private bool ShipFireGunAtTarget(int target, ref Unit unit, FireKind kind, ref i
 					fire.Position=unit.Position;
 
 					direction=bearing+(Random(20)-10);			// 絶対方位
-					if(direction>=360)	direction=direction-360;
-					if(direction<0)	direction=360+direction;
+					direction=direction.Wrapped();
 					fire.Direction=direction;
 
 					spreadDistance=distance+(Random( ((int)(distance/10)) )-((int)(distance/20))   );
@@ -1147,7 +1132,7 @@ private bool ShipFireGunAtTarget(int target, ref Unit unit, FireKind kind, ref i
 	return true;
 	}
 
-private bool ShipFireBullet(ref int target, ref Unit unit, ref double bearing, FireKind kind)
+private bool ShipFireBullet(ref int target, ref Unit unit, ref Angle bearing, FireKind kind)
 	{
 	target=0;
 	for(var n=1;n<=MaxUnitId;n++)
@@ -1207,7 +1192,7 @@ private bool ShipFireBullet(ref int target, ref Unit unit, ref double bearing, F
 	return true;
 	}
 
-private bool BomberFireBullet(ref int target, ref Unit unit, ref double bearing, FireKind kind)
+private bool BomberFireBullet(ref int target, ref Unit unit, ref Angle bearing, FireKind kind)
 	{
 	target=0;
 	for(var n=1;n<=MaxUnitId;n++)
@@ -1282,8 +1267,7 @@ private bool FighterFireBullet(ref int target, ref Unit unit, FireKind kind)
 				// 攻撃地点から攻撃目標地点への方位角
 				var relativeBearing=offset.Direction;
 				relativeBearing=relativeBearing-unit.Direction;
-				if(relativeBearing<0)
-					relativeBearing=360+relativeBearing;
+				relativeBearing=relativeBearing.WrapNegative();
 				if( ((int)relativeBearing<=10||(int)relativeBearing>=350) && unit.Target!=0 && unit.Target==n )
 					{
 					targetDistance=distance;
@@ -1348,7 +1332,7 @@ private bool FighterFireBullet(ref int target, ref Unit unit, FireKind kind)
 	return true;
 	}
 
-private bool PlaneFireBullet(ref int target, ref Unit unit, ref double bearing, FireKind kind)
+private bool PlaneFireBullet(ref int target, ref Unit unit, ref Angle bearing, FireKind kind)
 	{
 	target=0;
 	for(var n=1;n<=MaxUnitId;n++)
@@ -1361,12 +1345,10 @@ private bool PlaneFireBullet(ref int target, ref Unit unit, ref double bearing, 
 			var direction=offset.Direction;
 
 			bearing=direction+(Random(10)-5);
-			if(bearing>=360)	bearing=bearing-360;
-			if(bearing<0)	bearing=360+bearing;
+			bearing=bearing.Wrapped();
 
 			var relativeBearing=direction-unit.Direction;
-			if(relativeBearing<0)
-				relativeBearing=360+relativeBearing;
+			relativeBearing=relativeBearing.WrapNegative();
 			if( (int)relativeBearing>=150&&(int)relativeBearing<=210 )
 				{
 				var distance=offset.Length;
@@ -1396,7 +1378,7 @@ private bool PlaneFireBullet(ref int target, ref Unit unit, ref double bearing, 
 	return true;
 	}
 
-private bool PlaneDropTorpedo(ref Unit unit, ref int target, ref double bearing, int m, FireKind kind)
+private bool PlaneDropTorpedo(ref Unit unit, ref int target, ref Angle bearing, int m, FireKind kind)
 	{
 	if( IsInWorld(unit.Position) )
 		{
@@ -1431,8 +1413,7 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int target, ref double bearing,
 		var relativeBearing=(futurePosition-unit.Position).Direction;
 
 		relativeBearing=relativeBearing-unit.Direction;
-		if(relativeBearing<0)
-	relativeBearing=360+relativeBearing;
+		relativeBearing=relativeBearing.WrapNegative();
 
 		if( (int)relativeBearing<=45||(int)relativeBearing>=315)
 	{
@@ -1449,7 +1430,7 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int target, ref double bearing,
 		var ticks=(int)(distance/2);
 		// 1.22 reads the heading it has not set as the loop starts (0x413D23).
 		if( ticks>=1 && Rules.TorpedoPlanesCheckLandAlongUnsetHeading )
-			bearing=TakeStackLocal(0x413D23, bearing);
+			bearing=TakeStackLocal(0x413D23, bearing.Degrees);
 		for(var f=1;f<=ticks;f++)
 			{
 			if( IsLandAt(unit.Position+WorldVector.FromDirection(bearing) * (2*f)) ) // とりあえずターン後
@@ -1472,7 +1453,7 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int target, ref double bearing,
 		else
 			direction-=(70-Random(40));
 
-		direction=(int)(direction)%360;
+		direction=direction.WholeDegrees();
 
 		unit.EmergencyDestination = unit.Position+WorldVector.FromDirection(direction) * 300;
 		unit.EmergencyFlags[0]=20+Random(300);
@@ -1529,7 +1510,7 @@ other.PathX[1]=MAP_RIGHT+1;
 	return true;
 	}
 
-private bool AttackerDropBomb(ref int target, ref Unit unit, ref double bearing, int m, FireKind kind)
+private bool AttackerDropBomb(ref int target, ref Unit unit, ref Angle bearing, int m, FireKind kind)
 	{
 	// NSPW NET's Japanese attackers dive: they release close, pull up and their bombs fall late. 1.22's attackers all
 	// release from 170 and speed up, as NSPW NET's American ones do, and only the Americans' drop a second bomb (0x414186
@@ -1541,8 +1522,7 @@ private bool AttackerDropBomb(ref int target, ref Unit unit, ref double bearing,
 
 	bearing=(futurePosition-unit.Position).Direction;
 	var relativeBearing=bearing-unit.Direction;
-	if(relativeBearing<0)
-		relativeBearing=360+relativeBearing;
+	relativeBearing=relativeBearing.WrapNegative();
 
 	if( (int)relativeBearing<=30||(int)relativeBearing>=330 )
 		{
@@ -1665,7 +1645,7 @@ other.PathX[1]=MAP_RIGHT+1;
 	return true;
 	}
 
-private bool BomberDropBomb(ref int target, ref Unit unit, ref double bearing, FireKind kind)
+private bool BomberDropBomb(ref int target, ref Unit unit, ref Angle bearing, FireKind kind)
 	{
 	var selectedTarget=0;
 	if(target!=0)
@@ -1681,12 +1661,10 @@ private bool BomberDropBomb(ref int target, ref Unit unit, ref double bearing, F
 			var direction=offset.Direction;
 
 			bearing=direction+(Random(10)-5);
-			if(bearing>=360)	bearing=bearing-360;
-			if(bearing<0)	bearing=360+bearing;
+			bearing=bearing.Wrapped();
 
 			var relativeBearing=direction-unit.Direction;
-			if(relativeBearing<0)
-				relativeBearing=360+relativeBearing;
+			relativeBearing=relativeBearing.WrapNegative();
 			if( (int)relativeBearing<=30 || (int)relativeBearing>=330 )
 				{
 				var distance=offset.Length;
@@ -1735,7 +1713,7 @@ private bool BomberDropBomb(ref int target, ref Unit unit, ref double bearing, F
 	return true;
 	}
 
-private bool FirePlaneWeapons(FireKind kind, ref Unit unit, ref int target, ref double bearing, int m)
+private bool FirePlaneWeapons(FireKind kind, ref Unit unit, ref int target, ref Angle bearing, int m)
 	{
 
 
@@ -1790,7 +1768,7 @@ private bool FirePlaneWeapons(FireKind kind, ref Unit unit, ref int target, ref 
 	return true;
 	}
 
-private bool FireShipWeapons(FireKind kind, ref Unit unit, int m, ref double bearing, ref double distance, ref int target, ref int range, ref Array3<int> shotCounts, ref double relativeBearing)
+private bool FireShipWeapons(FireKind kind, ref Unit unit, int m, ref Angle bearing, ref double distance, ref int target, ref int range, ref Array3<int> shotCounts, ref Angle relativeBearing)
 	{
 	if( kind==FireKind.CargoNavalBase || kind==FireKind.CargoAirBase || kind==FireKind.CargoInfantryBase || kind==FireKind.CargoPillboxes || kind==FireKind.CargoFortress )
 		{
@@ -1875,7 +1853,8 @@ public void	FireWeapons(int m,int target,FireKind kind)
 	{
 	ref var unit = ref Units[m];
 	int range=default /* C4701 */; Array3<int> shotCounts = default;
-	double bearing=default /* C4701 */, relativeBearing=default /* C4701 */, distance=default /* C4701 */;
+	Angle bearing=default /* C4701 */, relativeBearing=default /* C4701 */;
+	double distance=default /* C4701 */;
 
 	if( (unit.Kind==UnitKind.NavalBase || unit.Kind==UnitKind.AirBase || unit.Kind==UnitKind.InfantryBase || unit.Kind==UnitKind.Pillboxes || unit.Kind==UnitKind.Fortress) && unit.BuildTime!=0	)
 		{
@@ -1905,7 +1884,8 @@ public void	FireWeapons(int m,int target,FireKind kind)
 [Original("set_pos_of_dynmc")]
 public void	SetDynamicDestination(int n)
 	{
-	double			angle=default /* C4701 */,distance=default /* C4701 */;
+	Angle			angle=default /* C4701 */;
+	double			distance=default /* C4701 */;
 
 	if( Units[n].Category==UnitCategory.Plane )
 		{
@@ -2023,8 +2003,7 @@ public void	SetDynamicDestination(int n)
 		// 艦隊制御
 		int leader=Units[n].GroupLeader;
 		angle=Units[n].DirectionToLeader+Units[leader].Direction;
-		if( angle>=360 )
-			angle = angle-360;
+		angle=angle.WrapFullTurn();
 		distance=Units[n].DistanceToLeader;
 
 		Units[n].SetPathPoint(0, Units[leader].Position+WorldVector.FromDirection(angle) * distance);
@@ -2107,7 +2086,7 @@ public void	SetFighterAttackDestination(int m)
 
 	if( destinationArea.Contains(unit.Position) )
 		{
-		unit.EmergencyDestination = unit.Position+new WorldVector(CosDegrees(unit.Direction)*(100+Random(50)), SinDegrees(unit.Direction)*(100+Random(50)));
+		unit.EmergencyDestination = unit.Position+new WorldVector(unit.Direction.Cos()*(100+Random(50)), unit.Direction.Sin()*(100+Random(50)));
 		unit.EmergencyFlags[0]=100;
 		unit.IsStopping=false;
 		return;
@@ -2139,16 +2118,14 @@ public void	SetFighterAttackDestination(int m)
 	var bearing=(unit.Position-enemy.Position).Direction;					// drctnが絶対角
 
 	bearing=bearing-enemy.Direction;				// 敵機ｎからの方位角をしらべます。
-	if(bearing<0)
-		bearing=360+bearing;
+	bearing=bearing.WrapNegative();
 	if( (int)bearing<=5 || (int)bearing>=355 )
 		{
 		// 敵機が正面に自機を捕らえています。
 		bearing=(enemy.Position-unit.Position).Direction;					// drctnが絶対角
 
 		bearing=bearing-unit.Direction;				// 自機ｍからの方位角をしらべます。
-		if(bearing<0)
-			bearing=360+bearing;
+		bearing=bearing.WrapNegative();
 
 		if( (int)bearing<=5 || (int)bearing>=355 )
 			{
@@ -2206,15 +2183,13 @@ public void	SetAttackerEmergencyDestination(int m)
 			var relativeBearing=(other.Position-unit.Position).Direction;
 
 			relativeBearing=relativeBearing-unit.Direction;
-			if(relativeBearing<0)
-				relativeBearing=360+relativeBearing;
+			relativeBearing=relativeBearing.WrapNegative();
 
 			// 攻撃目標地点から攻撃地点への方位角
 			var otherRelativeBearing=(unit.Position-other.Position).Direction;
 
 			otherRelativeBearing=otherRelativeBearing-other.Direction;
-			if(otherRelativeBearing<0)
-				otherRelativeBearing=360+otherRelativeBearing;
+			otherRelativeBearing=otherRelativeBearing.WrapNegative();
 
 			if( ((int)relativeBearing>=150 && (int)relativeBearing<=210 && other.Kind==UnitKind.Fighter)
 				||
@@ -2236,7 +2211,7 @@ public void	SetAttackerEmergencyDestination(int m)
 							evasion-=45+Random(90);
 							break;
 						}
-					evasion=(int)evasion%360;
+					evasion=evasion.WholeDegrees();
 
 					unit.EmergencyDestination = unit.Position+WorldVector.FromDirection(evasion) * 300;
 					unit.EmergencyFlags[0]=100;
@@ -2346,8 +2321,7 @@ public void	SetAttackerAttackDestination(int m)
 	// 目標ユニットへの方位角を求めます
 	var relativeBearing=(Units[target].Position-unit.Position).Direction;
 	relativeBearing=relativeBearing-unit.Direction;
-	if(relativeBearing<0)
-		relativeBearing=360+relativeBearing;
+	relativeBearing=relativeBearing.WrapNegative();
 
 	// 1.22's leader does not send its attackers off at 500 to 510 from the target: it has no such case (0x415A10).
 	if( Rules.AttackersBreakFormation && distance<=510 && distance >= 500  && (relativeBearing<=22.5||relativeBearing>=337.5)   )
@@ -2383,7 +2357,7 @@ public void	SetAttackerAttackDestination(int m)
 						heading+=45;
 						break;
 					}
-				heading=(int)heading%360;
+				heading=heading.WholeDegrees();
 
 				other.EmergencyDestination = other.Position+WorldVector.FromDirection(heading) * 600;
 				other.EmergencyFlags[0]=10+((1+(other.FormationNumber%5))*20);
@@ -2552,7 +2526,7 @@ private bool HuntSubmarineAs122(ref Unit unit)
 			if( distance<=600 )
 				{
 				var toContact=(other.ContactPosition-unit.Position).NonZero();
-				double heading=(int)(atan2(toContact.Y,toContact.X)*RadiansToDegrees+(20-Random(40)))%360;
+				var heading=new Angle(atan2(toContact.Y,toContact.X)*RadiansToDegrees+(20-Random(40))).WholeDegrees();
 
 				unit.EmergencyDestination = unit.Position + WorldVector.FromDirection(heading) * (distance+300);
 				unit.EmergencyFlags[0]=600;
@@ -2582,11 +2556,11 @@ private bool HuntSubmarine(ref Unit unit)
 					// 近くに潜水艦推定位置
 
 					var toContact=(other.ContactPosition-unit.Position).NonZero();
-					var direction=atan2(toContact.Y,toContact.X)*RadiansToDegrees;
+					Angle direction=atan2(toContact.Y,toContact.X)*RadiansToDegrees;
 
 					direction+=20-Random(40);
 
-					double heading=(int)direction%360;
+					var heading=direction.WholeDegrees();
 
 					unit.EmergencyDestination = unit.Position+WorldVector.FromDirection(heading) * (distance+200);
 					unit.EmergencyFlags[0]=100+Random(250);
@@ -2609,8 +2583,7 @@ private bool EvadePlane(ref Unit other, ref Unit unit)
 		// 対象ユニットからの自点への方位角
 		var relativeBearing=(unit.Position-other.Position).NonZero().Direction;
 		relativeBearing=relativeBearing-other.Direction;
-		if(relativeBearing<0)
-			relativeBearing=360+relativeBearing;
+		relativeBearing=relativeBearing.WrapNegative();
 		if( relativeBearing<=45 || relativeBearing>=315 )
 			{
 
@@ -2663,7 +2636,7 @@ private void EvadeShip(ref Unit other, ref Unit unit)
 			direction+=160+Random(40);
 			}
 
-		double heading=(int)direction%360;
+		var heading=direction.WholeDegrees();
 
 		unit.EmergencyDestination = unit.Position+WorldVector.FromDirection(heading) * 300;
 		unit.EmergencyFlags[0]=100;
@@ -2680,8 +2653,7 @@ private bool EvadeTorpedo(ref Fire fire, ref Unit unit)
 		// 対象ユニットからの自点への方位角
 		var relativeBearing=(unit.Position-fire.Position).NonZero().Direction;
 		relativeBearing=relativeBearing-fire.Direction;
-		if(relativeBearing<0)
-			relativeBearing=360+relativeBearing;
+		relativeBearing=relativeBearing.WrapNegative();
 		if( relativeBearing<=20 || relativeBearing>=340 )
 			{
 

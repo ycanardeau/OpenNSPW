@@ -45,13 +45,13 @@ public class VectorTests
 			var dy = to.Y - from.Y;
 			var difference = to - from;
 			AssertSameBits(nspw_math.Distance(dx, dy), difference.Length);
-			AssertSameBits(nspw_math.Direction(dx, dy), difference.Direction);
+			AssertSameBits(nspw_math.Direction(dx, dy), difference.Direction.Degrees);
 
 			if (dx == 0) dx = 1;
 			if (dy == 0) dy = 1;
 			AssertSameBits(dx, difference.NonZero().X);
 			AssertSameBits(dy, difference.NonZero().Y);
-			AssertSameBits(nspw_math.Direction(dx, dy), difference.NonZero().Direction);
+			AssertSameBits(nspw_math.Direction(dx, dy), difference.NonZero().Direction.Degrees);
 		}
 	}
 }
