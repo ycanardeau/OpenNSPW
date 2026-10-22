@@ -119,18 +119,18 @@ public unsafe partial class Nspw
 	// The sprite's column of a unit facing a direction: one of eight, as DrawUnit sets SpriteColumn as it draws it.
 	public static int SpriteColumnOf(Angle direction)
 	{
-		switch( (int)(direction.Degrees/22.5) )
+		return (int)(direction.Degrees/22.5) switch
 			{
-			case 0: case 15:	return 2;
-			case 1: case 2:		return 1;
-			case 3: case 4:		return 0;
-			case 5: case 6:		return 7;
-			case 7: case 8:		return 6;
-			case 9: case 10:	return 5;
-			case 11: case 12:	return 4;
-			case 13: case 14:	return 3;
-			default:			return 2;
-			}
+			0 or 15 => 2,
+			1 or 2 => 1,
+			3 or 4 => 0,
+			5 or 6 => 7,
+			7 or 8 => 6,
+			9 or 10 => 5,
+			11 or 12 => 4,
+			13 or 14 => 3,
+			_ => 2,
+			};
 	}
 
 	// How far a unit sees an effect, as UpdateLowerEffects and UpdateUpperEffects test it: less while it is built.

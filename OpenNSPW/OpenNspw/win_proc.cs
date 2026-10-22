@@ -274,12 +274,10 @@ public int EndApp()
 	RegCloseKey( hDPlaySampleRegKey );
 
 	// DirectInputのデバイスを解放
-	if (pDIDevice!=null)
-		pDIDevice.Unacquire();
+	pDIDevice?.Unacquire();
 	RELEASE(ref pDIDevice);
 
-	if (pDIDeviceMouse!=null)
-		pDIDeviceMouse.Unacquire();
+	pDIDeviceMouse?.Unacquire();
 	RELEASE(ref pDIDeviceMouse);
 
 	RELEASE(ref pDInput);
@@ -318,7 +316,6 @@ public void	InitializeRegistry()
 public IDirectDrawSurface7? LoadBitmapSurface(string fileName)
 	{
 	HDC hdc;
-	IDirectDrawSurface7? surf;
 
 	// lインターフェイスビットマップをロード
 
@@ -347,7 +344,7 @@ public IDirectDrawSurface7? LoadBitmapSurface(string fileName)
 
 	// サーフェスを実際に作成
 
-	var ddrval=lpDD.CreateSurface(&ddsd,out surf,null);
+	var ddrval=lpDD.CreateSurface(&ddsd,out var surf,null);
 
 	// 作成できたか確認
 

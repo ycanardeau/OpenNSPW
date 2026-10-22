@@ -280,7 +280,7 @@ private void TakeDetour(ref Unit unit, ref int index, WorldPosition start, doubl
 		var previousDirection=previousLeg.NonZero().Direction;
 
 		// 方位角 drctn1
-		turn=turn-previousDirection;
+		turn-=previousDirection;
 		turn=turn.WrapNegative().WrapFullTurn();
 
 		if( turn>=(minTurn) && turn<=(maxTurn) && (extraDistance<=2000) )
@@ -428,7 +428,7 @@ public void	SetCpuRoute2(int m)
 					leftBearing=leftBearing.WrapFullTurn();
 					rightBearing-=22.5;
 					rightBearing=rightBearing.WrapNegative();
-					checkedDistance=40; hit=0;	var left=0;	var right=0;
+					checkedDistance=40;	var left=0;	var right=0;
 					while( checkedDistance<=(legLength) && (left==0||right==0))
 						{
 
@@ -502,7 +502,7 @@ public void	SetCpuRoute2(int m)
 			index=-1;
 			}
 
-		var length = wsprintf(text, "in Set_cpu_root2 error=%d" ,error);
+		wsprintf(text, "in Set_cpu_root2 error=%d" ,error);
 
 		}
 
@@ -947,7 +947,7 @@ private void ReadKeyboard()
 public void ReadInput()
 	{
 
-	int	isScrolling=0;
+	int	isScrolling;
 
 	// キーボードの入力チェック
 	if (pDIDevice!=null)

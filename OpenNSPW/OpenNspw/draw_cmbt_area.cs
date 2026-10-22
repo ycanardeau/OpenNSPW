@@ -529,7 +529,6 @@ private void DrawMapTiles(int firstRow, int firstColumn, int editedRow, int edit
 						if( distance<=(double)GetDetectionSize(f,0) )
 							{
 							isSeen=1;
-							f=MaxUnitId;
 							break;
 							}
 						}
@@ -804,8 +803,6 @@ private void CancelSelection(int m)
 private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int leftButton, ref int rightButton, int m)
 	{
 	int n;
-	int right;
-	int bottom;
 	if( unit.EmergencyFlags[0]!=0 )
 		{
 		DrawLine5(WorldToScreen(unit.Position), WorldToScreen(unit.EmergencyDestination), CMBT_WIDTH-1, CMBT_HEIGHT-1, PALT_RED);
@@ -821,7 +818,6 @@ private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int leftB
 
 		if(n==0)
 			{
-			right=CMBT_WIDTH-1; bottom=CMBT_HEIGHT-1;
 			if( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked )
 				{DrawLine4(WorldToScreen(Units[unit.Carrier].Position), WorldToScreen(unit.GetPathPoint(n)), CMBT_WIDTH-1, CMBT_HEIGHT-1, RGB(255,255,255));}
 			else
@@ -834,7 +830,6 @@ private void DrawPathAndSetDestination(ref Unit unit, SpriteId sprite, int leftB
 		}
 
 	// 次の定点なるか までの線引き
-	right=CMBT_WIDTH-1; bottom=CMBT_HEIGHT-1;
 	if( CursorPosition.x<=CMBT_WIDTH )
 		{
 		if( MoveOrders[1].ClearsPath!=0 )

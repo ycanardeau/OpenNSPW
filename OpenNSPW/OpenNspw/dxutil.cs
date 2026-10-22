@@ -17,11 +17,8 @@ public static class dxutil
 
 	public static void SAFE_RELEASE(ref IDirectPlay8Address? p)
 	{
-		if (p is not null)
-		{
-			p.Release();
-			p = null;
-		}
+		p?.Release();
+		p = null;
 	}
 
 	public static void SAFE_DELETE_ARRAY<T>(ref T? p) where T : class

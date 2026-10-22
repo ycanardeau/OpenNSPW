@@ -218,7 +218,6 @@ public IDirectSoundBuffer? LoadWave(string name)
 {
 	uint readsize;
 	WAVEFORMATEX wf;
-	IDirectSoundBuffer? lpDSB = null;
 	DSBUFFERDESC desc;
 	void* pMem1,pMem2;
 	uint size1,size2;
@@ -243,7 +242,7 @@ public IDirectSoundBuffer? LoadWave(string name)
 		desc.dwBufferBytes = readsize;
 		desc.lpwfxFormat = &wf;
 
-		if (FAILED(lpDS.CreateSoundBuffer(&desc,out lpDSB,null)))
+		if (FAILED(lpDS.CreateSoundBuffer(&desc,out var lpDSB,null)))
 		{
 			free(buf);
 			return null;

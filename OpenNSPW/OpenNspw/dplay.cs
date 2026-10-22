@@ -254,8 +254,7 @@ public int EnumAdapters( HWND hDlg, Guid? pSPGuid )
 
     // Determine if this SP supports all-adapters, that is, not specifying
     // a device GUID and using all devices simultaneously.
-    DPN_SP_CAPS dpnspCaps = new();
-	dpnspCaps.dwSize = DPN_SP_CAPS.SIZE;
+    DPN_SP_CAPS dpnspCaps = new() { dwSize = DPN_SP_CAPS.SIZE };
     hr = DirectPlayPeer.GetSPCaps(pSPGuid, dpnspCaps, 0);
     if ( FAILED( hr ) )
     {
@@ -513,7 +512,7 @@ public nint OverrideDlgProc( HWND hDlg, uint msg, nint wParam, nint lParam )
 	switch( msg )
 		{
 		case WM_INITDIALOG:
-			if( FAILED( hr = OnInitOverrideDialog( hDlg ) ) )
+			if( FAILED( OnInitOverrideDialog( hDlg ) ) )
 				{
              MessageBox( null, TEXT("Failed initializing dialog box. ") +
                          TEXT("The sample will now quit."),
@@ -713,8 +712,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 			// Add the hostname to pHostAddress
 			if( _tcslen( strHostname ) > 0 )
 				{
-				 string wstrHostname;
-				 DXUtil_ConvertGenericStringToWideCch( out wstrHostname, strHostname, MAX_PATH );
+				 DXUtil_ConvertGenericStringToWideCch( out var wstrHostname, strHostname, MAX_PATH );
 
 				 if( FAILED( hr = pHostAddress.AddComponent( DPNA_KEY_HOSTNAME,
 									 wstrHostname, (uint) ((wcslen(wstrHostname)+1)*sizeof(char)),
@@ -752,8 +750,7 @@ public int LaunchMultiplayerGame( HWND hDlg )
 			// Add the phonenumber to pHostAddress
 			if( _tcslen( strPhone ) > 0 )
 				{
-				string wstrPhone;
-				DXUtil_ConvertGenericStringToWideCch( out wstrPhone, strPhone, MAX_PATH );
+				DXUtil_ConvertGenericStringToWideCch( out var wstrPhone, strPhone, MAX_PATH );
 
 				if( FAILED( hr = pHostAddress.AddComponent( DPNA_KEY_PHONENUMBER,
 															 wstrPhone, (uint) ((wcslen(wstrPhone)+1)*sizeof(char)),
@@ -786,14 +783,15 @@ public int LaunchMultiplayerGame( HWND hDlg )
 
 	// 自分をＤＰに登録する
 	// Prepare local player name
-	string wszPeerName;
-	DXUtil_ConvertGenericStringToWideCch( out wszPeerName, LocalPlayerName, MAX_PATH );
+	DXUtil_ConvertGenericStringToWideCch( out var wszPeerName, LocalPlayerName, MAX_PATH );
 
 	// Fill in player info structure
-	DPN_PLAYER_INFO dpPlayerInfo = new();
-	dpPlayerInfo.dwSize       = DPN_PLAYER_INFO.SIZE;
-	dpPlayerInfo.dwInfoFlags  = DPNINFO_NAME;
-	dpPlayerInfo.pwszName     = wszPeerName;
+	DPN_PLAYER_INFO dpPlayerInfo = new()
+		{
+		dwSize       = DPN_PLAYER_INFO.SIZE,
+		dwInfoFlags  = DPNINFO_NAME,
+		pwszName     = wszPeerName,
+		};
 
 	// Set the peer info, and use the DPNOP_SYNC since by default this
 	// is an async call.  If it is not DPNOP_SYNC, then the peer info may not
@@ -805,13 +803,15 @@ public int LaunchMultiplayerGame( HWND hDlg )
 		}
 
 	// Fill in application description structure
-	DPN_APPLICATION_DESC dpnAppDesc = new();
-	dpnAppDesc.dwSize = DPN_APPLICATION_DESC.SIZE;
-	dpnAppDesc.dwFlags = DPNSESSION_NODPNSVR;
-	dpnAppDesc.guidApplication = AppGuid;
-	dpnAppDesc.guidInstance    = GUID_NULL;
-	dpnAppDesc.pwszSessionName = null;
-	dpnAppDesc.dwMaxPlayers = 2;
+	DPN_APPLICATION_DESC dpnAppDesc = new()
+		{
+		dwSize = DPN_APPLICATION_DESC.SIZE,
+		dwFlags = DPNSESSION_NODPNSVR,
+		guidApplication = AppGuid,
+		guidInstance    = GUID_NULL,
+		pwszSessionName = null,
+		dwMaxPlayers = 2,
+		};
 
 	//---------------------------------
 	// If we are hosting...

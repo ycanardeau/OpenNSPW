@@ -1407,7 +1407,6 @@ private void UpdatePlaneEffects(ref Unit unit, int m)
 
 private void LeaveWake(ref Unit unit)
 	{
-	double distance;
 	if( !(unit.Kind==UnitKind.Submarine||unit.Kind==UnitKind.NavalBase||unit.Kind==UnitKind.AirBase||unit.Kind==UnitKind.City||unit.Kind==UnitKind.Mine||unit.Kind==UnitKind.InfantryBase||unit.Kind==UnitKind.Pillboxes||unit.Kind==UnitKind.Fortress) && (Tick%15)==0 && unit.Speed>=unit.MaxSpeed/3 )
 		{
 		// 航跡のエフェクトを残す
@@ -1422,20 +1421,12 @@ private void LeaveWake(ref Unit unit)
 		heading+=180;
 		heading=ReduceHeading(heading);
 
-		switch(unit.Kind)
+		double distance=unit.Kind switch
 			{
-			case UnitKind.Battleship:	case UnitKind.Carrier:
-				distance=26;
-				break;
-
-			case UnitKind.Cruiser:	case UnitKind.LightCarrier:
-				distance=22;
-				break;
-
-			default:
-				distance=16;
-				break;
-			}
+			UnitKind.Battleship or UnitKind.Carrier => 26,
+			UnitKind.Cruiser or UnitKind.LightCarrier => 22,
+			_ => 16,
+			};
 
 		effect.Position += WorldVector.FromDirection(heading) * distance;
 

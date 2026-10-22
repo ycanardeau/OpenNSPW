@@ -273,7 +273,7 @@ public static class Trace122Layout
 
 	private static FieldInfo[] FieldsOf(Type type)
 	{
-		return type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).OrderBy(field => field.MetadataToken).ToArray();
+		return [.. type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).OrderBy(field => field.MetadataToken)];
 	}
 
 	private static int AlignmentOf(Type type)
@@ -325,11 +325,11 @@ public static class Trace122Layout
 			fields.Add(new(UnitGasOffset + 4 * i, 4, $"gas[{i}]", typeof(int)));
 		fields.AddRange(leaves.Where(leaf => leaf.Offset >= found && leaf.Offset < found + 8).Select(leaf => leaf with { Offset = leaf.Offset - found + UnitFoundOffset }));
 		fields.AddRange(leaves.Where(leaf => leaf.Offset >= random).Select(leaf => leaf with { Offset = leaf.Offset - random + UnitRandomOffset }));
-		return fields.Where(field => field.Offset + field.Size <= Trace122.UnitSize).ToArray();
+		return [.. fields.Where(field => field.Offset + field.Size <= Trace122.UnitSize)];
 	}
 
 	public static readonly Field[] Unit = MakeUnitFields();
-	public static readonly Field[] Fire = Leaves(typeof(Fire), 0, "").ToArray();
+	public static readonly Field[] Fire = [.. Leaves(typeof(Fire), 0, "")];
 }
 
 // Follows a trace of 1.22: gives the game its seeds, the speed and the ticks of each frame, and the view it draws, which

@@ -1568,8 +1568,6 @@ public int		AddPlane(Side side,UnitKind kind,int type,int carrier,int planes,Fir
 	 int start, end, f=default /* C4701 */;
 	Array24<int> space = default;
 
-	var category=UnitCategory.Plane;
-
 	if(side==Side.Japan)
 		{
 		// 日本サイドのユニット
@@ -1707,43 +1705,43 @@ public void	SetUpScenario1()
 	y=2500;
 	var m=AddUnit(Side.Japan,UnitKind.Carrier,x,y,(double)0);
 	var carrier=m;
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,9,FireKind.Torpedo);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,9,FireKind.Torpedo);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
 
 	//===============		 合衆国海軍		================
 
 	/*ヌーメア軍港*/
 	x=5440;
 	y=-5760;
-	m=AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,(double)0);
+	AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,(double)0);
 
 	/*ヌーメア*/
 	x=5440-80;
 	y=-5760;
-	m=AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,(double)0);
+	AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,(double)0);
 
 	x=2500;
 	y=-2500;
 
 	m=AddUnit(Side.UnitedStates,UnitKind.Carrier,x,y,(double)180);
 	carrier=m;
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,9,FireKind.Bomb);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,9,FireKind.Bomb);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
 
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
 
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
 
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
 
 	// マップの作成
 	LoadScenarioFile2("Map\\South_pacific.dat");
@@ -1782,70 +1780,70 @@ public void	SetUpScenario2()
 	// トラック島 港
 	var x=-7600.0;
 	var y=-4720.0;
-	var m=AddUnit(Side.Japan,UnitKind.NavalBase,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.NavalBase,x,y,(double)0);
 
 	// トラック島
 	x=-7600-80;
 	y=-4720;
-	m=AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,(double)0);
 
 	x=-5000;
 	y=-2500;
 
-	m=AddUnit(Side.Japan,UnitKind.Carrier,x,y,0);
+	var m=AddUnit(Side.Japan,UnitKind.Carrier,x,y,0);
 	var carrier=m;
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,9,FireKind.Torpedo);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,9,FireKind.Torpedo);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
 	x-=120;
 	m=AddUnit(Side.Japan,UnitKind.LightCarrier,x,y,(double)0);
 	carrier=m;
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,6,FireKind.Torpedo);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,6,FireKind.Torpedo);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
 
 	//===============		 合衆国海軍		================
 	// ハワイ港
 	x=7200;
 	y=-720;
-	m=AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,(double)90.0);
+	AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,(double)90.0);
 
 	// ハワイ
 	x=7200-80;
 	y=-720+80;
-	m=AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,(double)90.0);
+	AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,(double)90.0);
 
 	x=5000;
 	y=2500;
 
 	m=AddUnit(Side.UnitedStates,UnitKind.Carrier,x,y,(double)180);
 	carrier=m;
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,9,FireKind.Bomb);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,9,FireKind.Bomb);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
 
 	x+=150;
 	m=AddUnit(Side.UnitedStates,UnitKind.LightCarrier,x,y,(double)180);
 	carrier=m;
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,6,FireKind.Bomb);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,6,FireKind.Bomb);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
 
 	// マップの作成
 	LoadScenarioFile2("Map\\Middle_pacific.dat");
@@ -1903,33 +1901,33 @@ public void	SetUpScenario3()
 	// 港
 	var x=-7440.0;
 	var y=4880.0;
-	m=AddUnit(Side.Japan,UnitKind.NavalBase,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.NavalBase,x,y,(double)0);
 
 	// 横須賀
 	x=-7440-80;
 	y=4880+80;
-	m=AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,(double)0);
 
 	x=-6500;
 	y=5000;
 
 	m=AddUnit(Side.Japan,UnitKind.Carrier,x,y,(double)0);
 	var carrier=m;
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,9,FireKind.Torpedo);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,9,FireKind.Torpedo);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
 
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Battleship,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Battleship,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
 
 	//===============		 合衆国海軍		================
 	/*ヌーメア軍港*/
@@ -1937,36 +1935,36 @@ public void	SetUpScenario3()
 	// パラオ
 	x=6720-80;
 	y=-3760;
-	m=AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,(double)0);
+	AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,(double)0);
 
 	// パラオ
 	x=6720-80;
 	y=-3760+80;
-	m=AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,(double)0);
+	AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,(double)0);
 
 	x=6500;
 	y=-5000;
 
 	m=AddUnit(Side.UnitedStates,UnitKind.Carrier,x,y,(double)180);
 	carrier=m;
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,9,FireKind.Bomb);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,9,FireKind.Bomb);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
 
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
 
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
 
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
 
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,(double)180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
 
 	// マップの作成
 	LoadScenarioFile2("Map\\Japan_off.dat");
@@ -2020,44 +2018,44 @@ public void	SetUpScenario4()
 	x=-2500;
 	y=2500;
 
-	var m=AddUnit(Side.Japan,UnitKind.Battleship,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Battleship,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
 
 	//===============		 合衆国海軍		================
 
 	/*ヌーメア軍港*/
 	x=5440;
 	y=-5760;
-	m=AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,(double)0);
+	AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,(double)0);
 
 	// ヌーメア
 	x=5440-80;
 	y=-5760-80;
-	m=AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,(double)0);
+	AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,(double)0);
 
 	x=2500;
 	y=-2500;
 
-	m=AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,(double)180);
 	x+=120;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
 	x+=120;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
 	x+=120;
-	m=AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
 	x+=120;
-	m=AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
 	x+=120;
-	m=AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
 
 	// マップの作成
 	LoadScenarioFile2("Map\\South_pacific.dat");
@@ -2126,65 +2124,65 @@ public void	SetUpScenario5()
 	x=-2500;
 	y=2500;
 
-	m=AddUnit(Side.Japan,UnitKind.Battleship,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Battleship,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Battleship,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Battleship,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,(double)0);
 
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Submarine,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Submarine,x,y,(double)0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Submarine,x,y,(double)0);
+	AddUnit(Side.Japan,UnitKind.Submarine,x,y,(double)0);
 
 	//===============		 合衆国海軍		================
 
 	/*ヌーメア軍港*/
 	x=5440;
 	y=-5760;
-	m=AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,(double)0);
+	AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,(double)0);
 
 	// ヌーメア軍港
 	x=5440-80;
 	y=-5760-80;
-	m=AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,(double)0);
+	AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,(double)0);
 
 	x=2500;
 	y=-2500;
-	m=AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,(double)180);
 	x+=120;
-	m=AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,(double)180);
 	x+=120;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
 	x+=120;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
 	x+=120;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,(double)180);
 	x+=120;
-	m=AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
 	x+=120;
-	m=AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
 	x+=120;
-	m=AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
 	x+=120;
-	m=AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,(double)180);
 
 	x+=120;
-	m=AddUnit(Side.UnitedStates,UnitKind.Submarine,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Submarine,x,y,(double)180);
 	x+=120;
-	m=AddUnit(Side.UnitedStates,UnitKind.Submarine,x,y,(double)180);
+	AddUnit(Side.UnitedStates,UnitKind.Submarine,x,y,(double)180);
 
 	// マップの作成
 	LoadScenarioFile2("Map\\South_pacific.dat");
@@ -2239,16 +2237,16 @@ public void	SetUpScenario6()
 	// トラック
 	var x=-7600.0;
 	var y=-4720.0;
-	m=AddUnit(Side.Japan,UnitKind.NavalBase,x,y,135);
+	AddUnit(Side.Japan,UnitKind.NavalBase,x,y,135);
 
 	// 空港
 	x=-7600-80;
 	y=-4720;
-	var carrier=m=AddUnit(Side.Japan,UnitKind.AirBase,x,y,135);
-	carrier=m;
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,5,FireKind.Bomb);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Attacker,1,carrier,1,FireKind.Bomb);
+	m=AddUnit(Side.Japan,UnitKind.AirBase,x,y,135);
+	var carrier=m;
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,5,FireKind.Bomb);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,1,carrier,1,FireKind.Bomb);
 
 	// 戦闘艦船
 	x=-7450;
@@ -2276,78 +2274,78 @@ public void	SetUpScenario6()
 	// 輸送船団
 	x=-7340;
 	y=-4690;
-	carrier=m=AddUnit(Side.Japan,UnitKind.Transport,x,y,270);
+	m=AddUnit(Side.Japan,UnitKind.Transport,x,y,270);
 	Units[m].Weapon=FireKind.CargoInfantryBase;		// 武装品種
 	Units[m].Ammo=1;			// 数
 	Units[m].MaxAmmo=1;			// 数 全容量
 	Units[m].Fuel*=0.2;
 	Units[m].SupplyTime=1;
 	y-=150;
-	carrier=m=AddUnit(Side.Japan,UnitKind.Transport,x-20,y,135);
+	m=AddUnit(Side.Japan,UnitKind.Transport,x-20,y,135);
 	Units[m].Weapon=FireKind.CargoPillboxes;		// 武装品種
 	Units[m].Ammo=1;			// 数
 	Units[m].MaxAmmo=1;			// 数 全容量
 	Units[m].Fuel*=0;
 	Units[m].SupplyTime=1;
 	y-=150;
-	carrier=m=AddUnit(Side.Japan,UnitKind.Transport,x,y,90);
+	m=AddUnit(Side.Japan,UnitKind.Transport,x,y,90);
 	Units[m].Weapon=FireKind.CargoPillboxes;		// 武装品種
 	Units[m].Ammo=1;			// 数
 	Units[m].MaxAmmo=1;			// 数 全容量
 	Units[m].Fuel*=0;
 	Units[m].SupplyTime=1;
 	y-=150;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x+90,y-40,90);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x+90,y-40,90);
 
 	// 潜水艦
 	x=-7800;
 	y=-2000;
-	m=AddUnit(Side.Japan,UnitKind.Submarine,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Submarine,x,y,0);
 
 	//===============		 合衆国海軍		================
 	// ハワイ港
 	x=7200;
 	y=-640;
-	m=AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,90.0);
+	AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,90.0);
 
 	// ハワイ島 基地
 	x=7200-80;
 	y=-640+80*2;
-	m=AddUnit(Side.UnitedStates,UnitKind.Fortress,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.Fortress,x,y,0);
 
 	// ハワイ空港
 	x=7200;
 	y=-560;
 	m=AddUnit(Side.UnitedStates,UnitKind.AirBase,x,y,45.0);
 	carrier=m;
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,1,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Bomber,0,carrier,4,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,1,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Bomber,0,carrier,4,FireKind.Unarmed);
 
 	// ミッドウェイ島 基地
 	x=80+160;
 	y=3440-80;
-	m=AddUnit(Side.UnitedStates,UnitKind.Pillboxes,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.Pillboxes,x,y,0);
 
 	// ミッドウェイ島航空基地 1
 	x=80;
 	y=3440;
 	carrier=AddUnit(Side.UnitedStates,UnitKind.AirBase,x,y,0);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,2,FireKind.Unarmed);
 
 	// 機動部隊
 	x=-3500;
 	y=-3000;
 	carrier=m=AddUnit(Side.UnitedStates,UnitKind.Carrier,x,y,180);
 	Units[m].Fuel/=2;
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,10,FireKind.Bomb);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,10,FireKind.Bomb);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
 	x+=150;
 	carrier=m=AddUnit(Side.UnitedStates,UnitKind.LightCarrier,x,y,180);
 	Units[m].Fuel/=2;
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,6,FireKind.Bomb);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,6,FireKind.Bomb);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
 	x+=150;
 	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
 	Units[m].Fuel/=2;
@@ -2412,16 +2410,16 @@ public void	SetUpScenario7()
 	// トラック
 	var x=-7600.0;
 	var y=-4720.0;
-	m=AddUnit(Side.Japan,UnitKind.NavalBase,x,y,135);
+	AddUnit(Side.Japan,UnitKind.NavalBase,x,y,135);
 
 	// 空港
 	x=-7600-80;
 	y=-4720;
-	var carrier=m=AddUnit(Side.Japan,UnitKind.AirBase,x,y,135);
-	carrier=m;
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,5,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Attacker,1,carrier,1,FireKind.Unarmed);
+	m=AddUnit(Side.Japan,UnitKind.AirBase,x,y,135);
+	var carrier=m;
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,5,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,1,carrier,1,FireKind.Unarmed);
 
 	// 戦闘艦船
 	x=-7450;
@@ -2449,33 +2447,33 @@ public void	SetUpScenario7()
 	// 輸送船団
 	x=-7340;
 	y=-4690;
-	carrier=m=AddUnit(Side.Japan,UnitKind.Transport,x,y,270);
+	m=AddUnit(Side.Japan,UnitKind.Transport,x,y,270);
 	Units[m].Weapon=FireKind.CargoInfantryBase;		// 武装品種
 	Units[m].Ammo=1;			// 数
 	Units[m].MaxAmmo=1;			// 数 全容量
 	Units[m].Fuel*=0.2;
 	Units[m].SupplyTime=1;
 	y-=150;
-	carrier=m=AddUnit(Side.Japan,UnitKind.Transport,x-20,y,135);
+	m=AddUnit(Side.Japan,UnitKind.Transport,x-20,y,135);
 	Units[m].Weapon=FireKind.CargoPillboxes;		// 武装品種
 	Units[m].Ammo=1;			// 数
 	Units[m].MaxAmmo=1;			// 数 全容量
 	Units[m].Fuel*=0;
 	Units[m].SupplyTime=1;
 	y-=150;
-	carrier=m=AddUnit(Side.Japan,UnitKind.Transport,x,y,90);
+	m=AddUnit(Side.Japan,UnitKind.Transport,x,y,90);
 	Units[m].Weapon=FireKind.CargoPillboxes;		// 武装品種
 	Units[m].Ammo=1;			// 数
 	Units[m].MaxAmmo=1;			// 数 全容量
 	Units[m].Fuel*=0;
 	Units[m].SupplyTime=1;
 	y-=150;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x+90,y-40,90);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x+90,y-40,90);
 
 	// 潜水艦
 	x=-7800;
 	y=-2000;
-	m=AddUnit(Side.Japan,UnitKind.Submarine,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Submarine,x,y,0);
 
 /**
 rx=80-800;
@@ -2490,46 +2488,46 @@ unit[m].arm[4]=1;			// 数 全容量
 	// ハワイ港
 	x=7200;
 	y=-640;
-	m=AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,90.0);
+	AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,90.0);
 
 	// ハワイ島 基地
 	x=7200-80;
 	y=-640+80*2;
-	m=AddUnit(Side.UnitedStates,UnitKind.Fortress,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.Fortress,x,y,0);
 
 	// ハワイ空港
 	x=7200;
 	y=-560;
 	m=AddUnit(Side.UnitedStates,UnitKind.AirBase,x,y,45.0);
 	carrier=m;
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,1,carrier,3,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Bomber,0,carrier,2,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,4,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,1,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Bomber,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,4,FireKind.Unarmed);
 
 	// ミッドウェイ島 基地
 	x=80+160;
 	y=3440-80;
-	m=AddUnit(Side.UnitedStates,UnitKind.Pillboxes,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.Pillboxes,x,y,0);
 
 	// ミッドウェイ島航空基地 1
 	x=80;
 	y=3440;
 	carrier=AddUnit(Side.UnitedStates,UnitKind.AirBase,x,y,0);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,2,FireKind.Unarmed);
 
 	// 機動部隊
 	x=-3500;
 	y=-3000;
 	carrier=m=AddUnit(Side.UnitedStates,UnitKind.Carrier,x,y,180);
 	Units[m].Fuel/=2;
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,10,FireKind.Bomb);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,10,FireKind.Bomb);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
 	x+=150;
 	carrier=m=AddUnit(Side.UnitedStates,UnitKind.LightCarrier,x,y,180);
 	Units[m].Fuel/=2;
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,6,FireKind.Bomb);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,6,FireKind.Bomb);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
 	x+=150;
 	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
 	Units[m].Fuel/=2;
@@ -2594,116 +2592,117 @@ public void	SetUpScenario8()
 	// トラック
 	var x=-7600.0;
 	var y=-4720.0;
-	m=AddUnit(Side.Japan,UnitKind.NavalBase,x,y,135);
+	AddUnit(Side.Japan,UnitKind.NavalBase,x,y,135);
 
 	// 空港
 	x=-7600-80;
 	y=-4720;
-	var carrier=AddUnit(Side.Japan,UnitKind.AirBase,x,y,135);
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,3,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Attacker,1,carrier,2,FireKind.Unarmed);
+	m=AddUnit(Side.Japan,UnitKind.AirBase,x,y,135);
+	var carrier=m;
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,1,carrier,2,FireKind.Unarmed);
 
 	// ウェーク
 	x=-4080;
 	y=-720;
 	m=AddUnit(Side.Japan,UnitKind.AirBase,x,y,180);
 	carrier=m;
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,6,FireKind.Bomb);
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,6,FireKind.Bomb);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,3,FireKind.Unarmed);
 
 	x=-4080+80;
 	y=-720-160;
-	m=AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,180);
+	AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,180);
 
 	// 機動部隊
 	x=-7400;
 	y=-4200;
 	carrier=AddUnit(Side.Japan,UnitKind.Carrier,x,y,90);
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,10,FireKind.Bomb);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,10,FireKind.Bomb);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
 	y-=90;
 	carrier=AddUnit(Side.Japan,UnitKind.LightCarrier,x,y,90);
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,0,FireKind.Bomb);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,3,carrier,0,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,0,FireKind.Bomb);
+	AddPlane(Side.Japan,UnitKind.Fighter,3,carrier,0,FireKind.Unarmed);
 	y-=90;
-	m=AddUnit(Side.Japan,UnitKind.Battleship,x,y,90);
+	AddUnit(Side.Japan,UnitKind.Battleship,x,y,90);
 	y-=90;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,90);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,90);
 	y-=90;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,90);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,90);
 	y-=90;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,90);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,90);
 
 	// 戦闘艦船
 	x=-7500;
 	y=-4550;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,45);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,45);
 	y-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x+40,y,135);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x+40,y,135);
 	y-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x+20,y,270);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x+20,y,270);
 
 	// 潜水艦
 	x=-7800;
 	y=-5000;
-	m=AddUnit(Side.Japan,UnitKind.Submarine,x,y,45);
+	AddUnit(Side.Japan,UnitKind.Submarine,x,y,45);
 
 	//===============		 合衆国海軍		================
 	// ハワイ港
 	x=7200;
 	y=-640;
-	m=AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,90.0);
+	AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,90.0);
 	// ハワイ島 基地
 	x=7200;
 	y=-640+80;
-	m=AddUnit(Side.UnitedStates,UnitKind.Fortress,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.Fortress,x,y,0);
 	// ハワイ島 空港
 	x=7200+80;
 	y=-640+80+80;
 	carrier=AddUnit(Side.UnitedStates,UnitKind.AirBase,x,y,0);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,5,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,3,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Bomber,0,carrier,2,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,1,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,5,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Bomber,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,1,carrier,2,FireKind.Unarmed);
 
 	// ミッドウェイ島 基地
 	x=80+160;
 	y=3440-80;
-	m=AddUnit(Side.UnitedStates,UnitKind.Pillboxes,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.Pillboxes,x,y,0);
 
 	// ミッドウェイ島航空基地 1
 	x=80;
 	y=3440;
 	carrier=AddUnit(Side.UnitedStates,UnitKind.AirBase,x,y,0);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,2,FireKind.Unarmed);
 
 	// 機動部隊
 	x=3500;
 	y=3000;
 	carrier=AddUnit(Side.UnitedStates,UnitKind.Carrier,x,y,180);
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,10,FireKind.Bomb);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,10,FireKind.Bomb);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
 	x+=150;
 	carrier=AddUnit(Side.UnitedStates,UnitKind.LightCarrier,x,y,180);
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,6,FireKind.Bomb);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,6,FireKind.Bomb);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
 
 	// 艦隊
 	x=7200+140;
 	y=-640+80;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,45);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,45);
 	x+=120;
-	m=AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,45);
+	AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,45);
 	x+=120;
-	m=AddUnit(Side.UnitedStates,UnitKind.Submarine,x,y,45);
+	AddUnit(Side.UnitedStates,UnitKind.Submarine,x,y,45);
 
 	// マップの作成
 	LoadScenarioFile2("Map\\Middle_pacific.dat");
@@ -2717,7 +2716,7 @@ public void	SetUpScenario8()
 public void	SetUpScenario9()
 	{
 
-	Array256<Array256<ushort>> path = default;					// マップ
+	Array256<Array256<ushort>> path;					// マップ
 
 	if(Mode==GameMode.GameSetting)
 		{
@@ -2753,13 +2752,9 @@ public void	SetUpScenario9()
 			}
 		else
 			{
-			var data=InitialSupplyPoints[0];
-			InitialSupplyPoints[0]=InitialSupplyPoints[1];
-			InitialSupplyPoints[1]=data;
+			(InitialSupplyPoints[0], InitialSupplyPoints[1])=(InitialSupplyPoints[1], InitialSupplyPoints[0]);
 
-			data=SupplyRates[0];
-			SupplyRates[0]=SupplyRates[1];
-			SupplyRates[1]=data;
+			(SupplyRates[0], SupplyRates[1])=(SupplyRates[1], SupplyRates[0]);
 			}
 		return;
 		}
@@ -2821,88 +2816,88 @@ public void	SetUpScenario101()
 	// クエゼリン環礁
 	var x=-7120.0;
 	var y=6640.0;
-	m=AddUnit(Side.Japan,UnitKind.NavalBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.NavalBase,x,y,0);
 
 	// クエゼリン航空基地
 	x=-7120-80;
 	y=6640+80;
 	var carrier=AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,2,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,5,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Bomber,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,5,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Bomber,0,carrier,3,FireKind.Unarmed);
 
 	// ラバウル 空港
 	x=-7520;
 	y=1840;
 	carrier=AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,3,FireKind.Bomb);
-	m=AddPlane(Side.Japan,UnitKind.Bomber,0,carrier,1,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,3,FireKind.Bomb);
+	AddPlane(Side.Japan,UnitKind.Bomber,0,carrier,1,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,2,FireKind.Unarmed);
 
 	// ガダルカナル
 	x=-880;
 	y=-240;
-	m=AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
 	x=-880+80;
 	y=-240;
-	m=AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
 
 	// 機動部隊
 	x=-6500;
 	y=4500;
 	m=AddUnit(Side.Japan,UnitKind.Carrier,x,y,0);
 	carrier=m;
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,3,FireKind.Torpedo);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,3,FireKind.Torpedo);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Battleship,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Battleship,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Battleship,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Battleship,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
 
 	//===============		 合衆国海軍		================
 	/*ヌーメア軍港*/
 	x=5440;
 	y=-5800+40;
-	m=AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,0);
 
 	/*ヌーメア航空基地*/
 	x=5280;
 	y=-5760;
 	m=AddUnit(Side.UnitedStates,UnitKind.AirBase,x,y,0);
 	carrier=m;
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,4,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,8,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,4,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,8,FireKind.Unarmed);
 
 	/*ヌーメア要塞*/
 	x=5360;
 	y=-5760;
-	m=AddUnit(Side.UnitedStates,UnitKind.Pillboxes,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.Pillboxes,x,y,0);
 
 	// 機動部隊
 	x=6500;
 	y=-5000;
 	m=AddUnit(Side.UnitedStates,UnitKind.Carrier,x,y,180);
 	carrier=m;
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,9,FireKind.Bomb);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,9,FireKind.Bomb);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,180);
 
 	// マップの作成
 	LoadScenarioFile2("Map\\South_pacific.dat");
@@ -2956,88 +2951,88 @@ public void	SetUpScenario102()
 	/*クエゼリン環礁*/
 	var x=-7120.0;
 	var y=6640.0;
-	m=AddUnit(Side.Japan,UnitKind.NavalBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.NavalBase,x,y,0);
 
 	// クエゼリン航空基地
 	x=-7120-80;
 	y=6640+80;
 	var carrier=AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,2,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,5,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Bomber,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,5,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Bomber,0,carrier,3,FireKind.Unarmed);
 
 	// ラバウル 空港
 	x=-7520;
 	y=1840;
 	carrier=AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,2,FireKind.Bomb);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,5,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,2,FireKind.Bomb);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,5,FireKind.Unarmed);
 
 	// ガダルカナル
 	x=-880;
 	y=-240;
-	m=AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
 	x=-880+80;
 	y=-240;
-	m=AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
 	x=-880-80;
 	y=-240+80;
-	m=AddUnit(Side.Japan,UnitKind.Pillboxes,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Pillboxes,x,y,0);
 
 	// 機動部隊
 	x=-6500;
 	y=5000;
 	m=AddUnit(Side.Japan,UnitKind.Carrier,x,y,0);
 	carrier=m;
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,3,FireKind.Torpedo);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,3,FireKind.Torpedo);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Battleship,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Battleship,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Submarine,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Submarine,x,y,0);
 
 	//===============		 合衆国海軍		================
 	/*ヌーメア軍港*/
 	x=5440;
 	y=-5800+40;
-	m=AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,0);
 
 	/*ヌーメア航空基地*/
 	x=5280;
 	y=-5760;
 	m=AddUnit(Side.UnitedStates,UnitKind.AirBase,x,y,0);
 	carrier=m;
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,4,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,8,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,4,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,8,FireKind.Unarmed);
 
 	/*ヌーメア要塞*/
 	x=5360;
 	y=-5760;
-	m=AddUnit(Side.UnitedStates,UnitKind.Pillboxes,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.Pillboxes,x,y,0);
 
 	// 機動部隊
 	x=6500;
 	y=-5000;
 	m=AddUnit(Side.UnitedStates,UnitKind.Carrier,x,y,180);
 	carrier=m;
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,9,FireKind.Bomb);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,9,FireKind.Bomb);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,180);
 
 	// マップの作成
 	LoadScenarioFile2("Map\\South_pacific.dat");
@@ -3094,12 +3089,12 @@ public void	SetUpScenario103()
 	var y=5440.0;
 	m=AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
 	var carrier=m;
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,2,FireKind.Unarmed);
 	// 都市
 	x=-7440-80*4;
 	y=5440-80*2;
-	m=AddUnit(Side.Japan,UnitKind.City,x,y,0);
+	AddUnit(Side.Japan,UnitKind.City,x,y,0);
 /****
 	// 都市
 	rx=-7440-80*3;
@@ -3110,7 +3105,7 @@ public void	SetUpScenario103()
 	// 都市
 	x=-7440-80*2;
 	y=5440-80*5;
-	m=AddUnit(Side.Japan,UnitKind.City,x,y,0);
+	AddUnit(Side.Japan,UnitKind.City,x,y,0);
 /***
 	// 都市
 	rx=-7440-80*3;
@@ -3120,18 +3115,18 @@ public void	SetUpScenario103()
 	// 都市
 	x=-7440-80*3;
 	y=5440-80*1;
-	m=AddUnit(Side.Japan,UnitKind.City,x,y,0);
+	AddUnit(Side.Japan,UnitKind.City,x,y,0);
 
 	// 基地
 	x=-7440-80*4;
 	y=5440-80*3;
-	m=AddUnit(Side.Japan,UnitKind.Pillboxes,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Pillboxes,x,y,0);
 
 	// 横須賀
 	// 港
 	x=-7440;
 	y=4880;
-	m=AddUnit(Side.Japan,UnitKind.NavalBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.NavalBase,x,y,0);
 
 	// 大阪
 	// 空港
@@ -3139,13 +3134,13 @@ public void	SetUpScenario103()
 	y=2800;
 	m=AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
 	carrier=m;
-	m=AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,4,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,4,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
 
 	// 都市
 	x=-8000-80*2;
 	y=2800-80*2;
-	m=AddUnit(Side.Japan,UnitKind.City,x,y,0);
+	AddUnit(Side.Japan,UnitKind.City,x,y,0);
 
 /****
 	// 都市
@@ -3166,19 +3161,19 @@ public void	SetUpScenario103()
 	// 呉
 	x=-8160;
 	y=1760-240;
-	m=AddUnit(Side.Japan,UnitKind.NavalBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.NavalBase,x,y,0);
 
 	// 九州の空港
 	x=-7600;
 	y=960;
 	m=AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
 	carrier=m;
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,4,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,4,FireKind.Unarmed);
 
 	// 都市
 	x=-7600-80*9;
 	y=960-80*4;
-	m=AddUnit(Side.Japan,UnitKind.City,x,y,0);
+	AddUnit(Side.Japan,UnitKind.City,x,y,0);
 /***
 	// 都市
 	rx=-7600-80*9;
@@ -3187,50 +3182,48 @@ public void	SetUpScenario103()
 ***/
 
 	// 硫黄島
-	// 基地
-	x=-1440;
-	y=4480;
+	// 基地 (-1440, 4480)
 	// 空港
 	x=-1520;
 	y=4400;
 	m=AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
 	carrier=m;
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,5,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,2,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,5,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,2,FireKind.Unarmed);
 
 	//沖縄の日本軍基地
 	x=-5040;
 	y=-2800;
-	m=AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
 
 	//　台湾
 	x=-5040+80*2;
 	y=-7200+80*4;
-	m=AddUnit(Side.Japan,UnitKind.Pillboxes,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Pillboxes,x,y,0);
 
 	x=-3500;
 	y=1500;
 	m=AddUnit(Side.Japan,UnitKind.Carrier,x,y,0);
 	carrier=m;
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,6,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,6,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
 	x-=150;
 	m=AddUnit(Side.Japan,UnitKind.Carrier,x,y,0);
 	carrier=m;
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,4,FireKind.Bomb);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,4,FireKind.Bomb);
 	x-=150;
-	m=AddUnit(Side.Japan,UnitKind.Battleship,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Battleship,x,y,0);
 	x-=150;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
 	x-=150;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
 	x-=150;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
 	x-=150;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
 	x-=150;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
 
 	//===============		 合衆国海軍		================
 /**
@@ -3249,37 +3242,37 @@ public void	SetUpScenario103()
 	// パラオ
 	x=6720-80;
 	y=-3760;
-	m=AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,0);
-	m=AddUnit(Side.UnitedStates,UnitKind.Pillboxes,x-80,y+80,0);
+	AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.Pillboxes,x-80,y+80,0);
 
 	// 機動部隊
 	x=8000;
 	y=-6500;
 	m=AddUnit(Side.UnitedStates,UnitKind.Carrier,x,y,180);
 	carrier=m;
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,8,FireKind.Bomb);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,4,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,8,FireKind.Bomb);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,4,FireKind.Unarmed);
 
 	x-=150;
 	m=AddUnit(Side.UnitedStates,UnitKind.LightCarrier,x,y,135);
 	carrier=m;
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,6,FireKind.Bomb);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,6,FireKind.Bomb);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
 
 	x-=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,180);
 	x-=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,180);
 	x-=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
 	x-=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
 	x-=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
 	x-=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,180);
 	x-=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,180);
 
 	// マップの作成
 	LoadScenarioFile2("Map\\Japan_off.dat");
@@ -3333,100 +3326,100 @@ public void	SetUpScenario104()
 	/*クエゼリン環礁*/
 	var x=-7120.0;
 	var y=6640.0;
-	m=AddUnit(Side.Japan,UnitKind.NavalBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.NavalBase,x,y,0);
 
 	// クエゼリン航空基地
 	x=-7120-80;
 	y=6640+80;
 	var carrier=AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,2,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,5,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Bomber,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,5,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Bomber,0,carrier,3,FireKind.Unarmed);
 
 	// ブーゲンビル
 	x=-4480;
 	y=1200;
-	m=AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
 	x=-4480+80*2;
 	y=1200-80*2;
-	m=AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
 	x=-4480+80*5;
 	y=1200-80*3;
-	m=AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
 
 	// ガダルカナル
 	x=-880;
 	y=-240;
-	m=AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
 	x=-880+80;
 	y=-240;
-	m=AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
 	x=-880-80;
 	y=-240+80;
-	m=AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
 
 	// ラバウル 空港
 	x=-7520;
 	y=1840;
 	carrier=AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,3,FireKind.Bomb);
-	m=AddPlane(Side.Japan,UnitKind.Bomber,0,carrier,1,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,3,FireKind.Bomb);
+	AddPlane(Side.Japan,UnitKind.Bomber,0,carrier,1,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,2,FireKind.Unarmed);
 
 	x=-6500;
 	y=5000;
 	m=AddUnit(Side.Japan,UnitKind.Carrier,x,y,0);
 	carrier=m;
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,9,FireKind.Torpedo);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,9,FireKind.Torpedo);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Battleship,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Battleship,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
 
 	//===============		 合衆国海軍		================
 	/*ヌーメア軍港*/
 	x=5440;
 	y=-5800+40;
-	m=AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,0);
 
 	/*ヌーメア航空基地*/
 	x=5280;
 	y=-5760;
 	m=AddUnit(Side.UnitedStates,UnitKind.AirBase,x,y,0);
 	carrier=m;
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,5,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,1,carrier,3,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,5,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,5,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,1,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,5,FireKind.Unarmed);
 
 	/*ヌーメア要塞*/
 	x=5360;
 	y=-5760;
-	m=AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,0);
 
 	x=6500;
 	y=-5000;
 
 	m=AddUnit(Side.UnitedStates,UnitKind.Carrier,x,y,180);
 	carrier=m;
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,9,FireKind.Bomb);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,9,FireKind.Bomb);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,180);
 
 	// マップの作成
 	LoadScenarioFile2("Map\\South_pacific.dat");
@@ -3480,97 +3473,97 @@ public void	SetUpScenario105()
 	/*クエゼリン環礁*/
 	var x=-7120.0;
 	var y=6640.0;
-	m=AddUnit(Side.Japan,UnitKind.NavalBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.NavalBase,x,y,0);
 
 	// クエゼリン航空基地
 	x=-7120-80;
 	y=6640+80;
 	var carrier=AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,2,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,5,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Bomber,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,5,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Bomber,0,carrier,3,FireKind.Unarmed);
 
 	// ブーゲンビル
 	x=-4480;
 	y=1200;
-	m=AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
 	x=-4480+80*2;
 	y=1200-80*2;
-	m=AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
 	x=-4480+80*5;
 	y=1200-80*3;
-	m=AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
 
 	// ラバウル 空港
 	x=-7520;
 	y=1840;
 	carrier=AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,3,FireKind.Bomb);
-	m=AddPlane(Side.Japan,UnitKind.Bomber,0,carrier,1,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,3,FireKind.Bomb);
+	AddPlane(Side.Japan,UnitKind.Bomber,0,carrier,1,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,2,FireKind.Unarmed);
 
 	x=-6500;
 	y=5000;
 	m=AddUnit(Side.Japan,UnitKind.Carrier,x,y,0);
 	carrier=m;
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,9,FireKind.Torpedo);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,9,FireKind.Torpedo);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Battleship,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Battleship,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
 
 	//===============		 合衆国海軍		================
 	/*ヌーメア軍港*/
 	x=5440;
 	y=-5800+40;
-	m=AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,0);
 
 	/*ヌーメア航空基地*/
 	x=5280;
 	y=-5760;
 	m=AddUnit(Side.UnitedStates,UnitKind.AirBase,x,y,0);
 	carrier=m;
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,5,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,1,carrier,3,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,5,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,5,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,1,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,5,FireKind.Unarmed);
 
 	/*ヌーメア要塞*/
 	x=5360;
 	y=-5760;
-	m=AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,0);
 
 	// ガダルカナル
 	x=-880;
 	y=-240;
-	m=AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,0);
 	x=-880+80;
 	y=-240;
-	m=AddUnit(Side.UnitedStates,UnitKind.AirBase,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.AirBase,x,y,0);
 
 	x=6500;
 	y=-5000;
 
 	m=AddUnit(Side.UnitedStates,UnitKind.Carrier,x,y,180);
 	carrier=m;
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,9,FireKind.Bomb);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,9,FireKind.Bomb);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Battleship,x,y,180);
 
 	// マップの作成
 	LoadScenarioFile2("Map\\South_pacific.dat");
@@ -3624,27 +3617,27 @@ public void	SetUpScenario106()
 	/*クエゼリン環礁*/
 	var x=-7120.0;
 	var y=6640.0;
-	m=AddUnit(Side.Japan,UnitKind.NavalBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.NavalBase,x,y,0);
 
 	// クエゼリン航空基地
 	x=-7120-80;
 	y=6640+80;
 	var carrier=AddUnit(Side.Japan,UnitKind.AirBase,x,y,0);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,3,FireKind.Unarmed);
 
 	x=-7000;
 	y=5000;
 	m=AddUnit(Side.Japan,UnitKind.LightCarrier,x,y,0);
 	carrier=m;
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,4,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,4,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Cruiser,x,y,0);
 	x-=120;
-	m=AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
+	AddUnit(Side.Japan,UnitKind.Destroyer,x,y,0);
 	x-=120;
 	m=AddUnit(Side.Japan,UnitKind.Transport,x,y,0);
 	Units[m].Weapon=FireKind.CargoInfantryBase;		// 武装品種
@@ -3654,13 +3647,13 @@ public void	SetUpScenario106()
 	// ガダルカナル
 	x=-880-160;
 	y=-240+80;
-	m=AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
 	x=-880+80-160;
 	y=-240+80;
-	m=AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
 	x=-880-160+80;
 	y=-240;
-	m=AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.InfantryBase,x,y,0);
 
 /**
 	// 輸送船団
@@ -3676,28 +3669,28 @@ public void	SetUpScenario106()
 	/*ヌーメア軍港*/
 	x=5440;
 	y=-5800+40;
-	m=AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,0);
 
 	/*ヌーメア航空基地*/
 	x=5280;
 	y=-5760;
 	m=AddUnit(Side.UnitedStates,UnitKind.AirBase,x,y,0);
 	carrier=m;
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,2,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,3,FireKind.Unarmed);
 
 	x=6500;
 	y=-5000;
 	m=AddUnit(Side.UnitedStates,UnitKind.LightCarrier,x,y,180);
 	carrier=m;
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,4,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,4,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Cruiser,x,y,180);
 	x+=150;
-	m=AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,180);
+	AddUnit(Side.UnitedStates,UnitKind.Destroyer,x,y,180);
 	x+=150;
 	m=AddUnit(Side.UnitedStates,UnitKind.Transport,x,y,180);
 	Units[m].Weapon=FireKind.CargoInfantryBase;		// 武装品種
@@ -3707,16 +3700,16 @@ public void	SetUpScenario106()
 	// ガダルカナル
 	x=-880;
 	y=-240;
-	m=AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,0);
 	x=-880+80;
 	y=-240;
-	m=AddUnit(Side.UnitedStates,UnitKind.AirBase,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.AirBase,x,y,0);
 	x=-880+80;
 	y=-240+80;
-	m=AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,0);
 	x=-880;
 	y=-240+80;
-	m=AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,0);
+	AddUnit(Side.UnitedStates,UnitKind.InfantryBase,x,y,0);
 
 	// マップの作成
 	LoadScenarioFile2("Map\\South_pacific.dat");
@@ -3766,44 +3759,44 @@ public void	SetUpScenario999()
 	// トラック島 港
 	var x=-7600.0;
 	var y=-4720.0;
-	m=AddUnit(Side.Japan,UnitKind.NavalBase,x,y,0);
+	AddUnit(Side.Japan,UnitKind.NavalBase,x,y,0);
 
 	// 空港
 	x=-7600-80;
 	y=-4720;
-	var carrier=m=AddUnit(Side.Japan,UnitKind.AirBase,x,y,135);
-	carrier=m;
-	m=AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,4,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,4,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,1,FireKind.Unarmed);
-	m=AddPlane(Side.Japan,UnitKind.Bomber,0,carrier,1,FireKind.Unarmed);
+	m=AddUnit(Side.Japan,UnitKind.AirBase,x,y,135);
+	var carrier=m;
+	AddPlane(Side.Japan,UnitKind.Attacker,0,carrier,4,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,0,carrier,4,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Fighter,1,carrier,1,FireKind.Unarmed);
+	AddPlane(Side.Japan,UnitKind.Bomber,0,carrier,1,FireKind.Unarmed);
 
 	x=0;
 	y=0;
-	m=AddUnit2(Side.Japan,UnitKind.Battleship,1,x,y,90);
+	AddUnit2(Side.Japan,UnitKind.Battleship,1,x,y,90);
 	y+=80;
-	m=AddUnit2(Side.UnitedStates,UnitKind.Submarine,0,x,y,90);
+	AddUnit2(Side.UnitedStates,UnitKind.Submarine,0,x,y,90);
 
 	//===============		 合衆国海軍		================
 	// ハワイ港
 	x=7200;
 	y=-720;
-	m=AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,90.0);
+	AddUnit(Side.UnitedStates,UnitKind.NavalBase,x,y,90.0);
 
 	// ハワイ空港
 	x=7200;
 	y=-560;
 	m=AddUnit(Side.UnitedStates,UnitKind.AirBase,x,y,45.0);
 	carrier=m;
-	m=AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,1,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
-	m=AddPlane(Side.UnitedStates,UnitKind.Bomber,0,carrier,4,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Attacker,0,carrier,1,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Fighter,0,carrier,3,FireKind.Unarmed);
+	AddPlane(Side.UnitedStates,UnitKind.Bomber,0,carrier,4,FireKind.Unarmed);
 
 	x=700;
 	y=0;
-	m=AddUnit2(Side.UnitedStates,UnitKind.Battleship,0,x,y,90);
+	AddUnit2(Side.UnitedStates,UnitKind.Battleship,0,x,y,90);
 	y+=80;
-	m=AddUnit2(Side.Japan,UnitKind.Submarine,0,x,y,90);
+	AddUnit2(Side.Japan,UnitKind.Submarine,0,x,y,90);
 
 	// マップの作成
 	LoadScenarioFile2("Map\\Middle_pacific.dat");

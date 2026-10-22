@@ -675,14 +675,13 @@ private void ChooseSupplyTargetFrame(ref int m, out int n)
 private void DrawSupplyTarget(ref int m, ref RECT source, int y)
 	{
 	SpriteId sprite;
-	int n;
 	RECT destination = default;
 	if(LocalSide==Side.Japan)
 		sprite=SpriteId.JapanUnits;		//Off Screen Number		日本海軍の表示
 	else
 		sprite=SpriteId.UnitedStatesUnits;		//Off Screen Number		日本海軍の表示
 
-	ChooseSupplyTargetFrame(ref m, out n);
+	ChooseSupplyTargetFrame(ref m, out var n);
 
 	// src_rect は ソースサーフェスのレクタングルです。
 	source.left = Sprites[sprite].SheetPosition.X+(Sprites[sprite].Size.Width * ( n )) +1;		// 方向
@@ -1406,17 +1405,6 @@ public void	DrawMinimap()
 	RunUICommands(UICommandSite.Minimap, true);
 
 	// ユニットの描画
-
-	if( LocalSide==Side.Japan )
-		{
-
-		ownColor=(byte)(Sprites[SpriteId.Minimap].SheetPosition.Y+57);	var enemyColor=(byte)(Sprites[SpriteId.Minimap].SheetPosition.Y+16);
-
-		}
-	else
-		{
-		var enemyColor=(byte)(Sprites[SpriteId.Minimap].SheetPosition.Y+57);	ownColor=(byte)(Sprites[SpriteId.Minimap].SheetPosition.Y+16);
-		}
 
 	for(var m=1; m<=MaxUnitId; m++)
 		{

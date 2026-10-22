@@ -62,11 +62,8 @@ public partial class Nspw
 	// RELEASE (all_head.h): `if(x){x->Release();x=NULL;}`.
 	public static void RELEASE<T>(ref T? x) where T : class, IUnknown
 	{
-		if (x is not null)
-		{
-			x.Release();
-			x = null;
-		}
+		x?.Release();
+		x = null;
 	}
 
 	public int DirectDrawCreateEx(object? lpGuid, out IDirectDraw7? lplpDD, Guid iid, object? pUnkOuter)

@@ -696,7 +696,7 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 			if((int)unit.Position.Y<=deckMark && unit.DeckPhase==2)
 				{
 				unit.DeckPhase=3;
-				unit.Speed=unit.Speed/2;
+				unit.Speed/=2;
 				if( unit.Kind!=UnitKind.Bomber && !(unit.Kind==UnitKind.Fighter&&unit.Variant==1) )
 					unit.SpriteRow++;
 				}
@@ -1053,8 +1053,7 @@ private void SetAcceleration(ref Unit unit, Angle turn, int land)
 
 							var angle=Direction(dx, dy);
 							if(dx<0)		dx=0-dx;
-							if(dy<0)		dy=0-dy;
-							if(angle>=180)	angle=angle-180;
+							if(angle>=180)	angle-=180;
 							if(angle>=90)	angle=90-(angle-90);
 							var distance=(dx)/(CosDegrees(angle));
 
@@ -1377,9 +1376,9 @@ private void MoveUnit(ref Unit unit, int m, ref double cargoSpeedFactor)
 	// 燃料消費
 	var interval=(int)unit.FuelInterval;
 	if( unit.Kind==UnitKind.Attacker && unit.Ammo!=0 && (unit.Weapon==FireKind.Torpedo || unit.Weapon==FireKind.Bomb))
-		interval=interval-(interval/10);
+		interval-=(interval/10);
 	if( unit.Kind==UnitKind.Fighter && unit.Target!=0 && unit.MaxSpeed < unit.Speed )
-		interval=interval-(interval/10);
+		interval-=(interval/10);
 
 	// 1.22's fuel is an integer, which a moving unit burns 1 at a time (0x402F72); NSPW NET burns its speed's share of
 	// its top speed.

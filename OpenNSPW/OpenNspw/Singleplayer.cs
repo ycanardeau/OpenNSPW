@@ -54,7 +54,7 @@ public unsafe partial class Nspw
 		new(0x443A48, game => Bytes(ref game.BattleTime), true), // rest_time
 		new(0x443A90, game => Bytes(ref game.MaxUnitId), true), // max_unit
 		new(MapAddress, game => Bytes(ref game.MapTiles), false), // cmbt_map
-		new(0x463AC0, game => Bytes(ref game.MoveOrders).Slice(0, 2 * sizeof(MoveOrder)), true), // new_pp[2]
+		new(0x463AC0, game => Bytes(ref game.MoveOrders)[..(2 * sizeof(MoveOrder))], true), // new_pp[2]
 		new(0x483B44, game => Bytes(ref game.Result), true), // game_end
 		new(0x483B4C, game => Bytes(ref game.CpuSide), true), // cpu_side
 		new(0x489AB0, game => Bytes(ref game.CameraPosition), true), // cmbt_x, cmbt_y

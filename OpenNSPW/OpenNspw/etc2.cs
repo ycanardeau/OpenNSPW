@@ -257,7 +257,7 @@ public void OnUnitArrived(int side,int reinforcement)
 
 			Units[m].Fuel=50;
 			if(kind==UnitKind.Fighter)
-				Units[m].Ammo=Units[m].Ammo/3;
+				Units[m].Ammo/=3;
 			else
 				Units[m].Ammo=0;
 			//unit[m].arm[1]=unit[m].arm[4]/4;			// 弾薬搭載量
@@ -793,36 +793,18 @@ public void	SelectUnit(int m)
 		UnitInfoPanel[3]=m;				// そのユニットの番号
 		UnitInfoPanel[4]=(int)Units[m].Side;	// そのユニットの国籍
 		//unit_info[2]=0;				// 駐機機の発進までのフラグ
-		switch((UnitKind)UnitInfoPanel[0])
+		UnitInfoPanel[2]=(UnitKind)UnitInfoPanel[0] switch
 			{
-			case UnitKind.Battleship:
-				UnitInfoPanel[2]=0;
-				break;
-			case UnitKind.Cruiser:
-				UnitInfoPanel[2]=1;
-				break;
-			case UnitKind.Destroyer:
-				UnitInfoPanel[2]=2;
-				break;
-			case UnitKind.Submarine:
-				UnitInfoPanel[2]=3;
-				break;
-			case UnitKind.Carrier:
-				UnitInfoPanel[2]=4;
-				break;
-			case UnitKind.LightCarrier:
-				UnitInfoPanel[2]=5;
-				break;
-			case UnitKind.Transport:
-				UnitInfoPanel[2]=6;
-				break;
-			case UnitKind.AirBase:
-				UnitInfoPanel[2]=8;
-				break;
-			default:
-				UnitInfoPanel[2]=7;
-				break;
-			}
+			UnitKind.Battleship => 0,
+			UnitKind.Cruiser => 1,
+			UnitKind.Destroyer => 2,
+			UnitKind.Submarine => 3,
+			UnitKind.Carrier => 4,
+			UnitKind.LightCarrier => 5,
+			UnitKind.Transport => 6,
+			UnitKind.AirBase => 8,
+			_ => 7,
+			};
 		}
 	}
 
@@ -943,40 +925,20 @@ public int	GetDamagePoints(int	m)
 public int		ToEightDirections(int direction)
 	{
 
-	direction=direction%360;
+	direction%=360;
 
-	switch( (int)(direction/22.5) )
+	return (int)(direction/22.5) switch
 		{
-		case 0: case 15:
-			direction=2;
-			break;
-		case 1: case 2:
-			direction=1;
-			break;
-		case 3: case 4:
-			direction=0;
-			break;
-		case 5: case 6:
-			direction=7;
-			break;
-		case 7: case 8:
-			direction=6;
-			break;
-		case 9: case 10:
-			direction=5;
-			break;
-		case 11: case 12:
-			direction=4;
-			break;
-		case 13: case 14:
-			direction=3;
-			break;
-		default:
-			direction=2;
-			break;
-		}
-
-	return ( direction );
+		0 or 15 => 2,
+		1 or 2 => 1,
+		3 or 4 => 0,
+		5 or 6 => 7,
+		7 or 8 => 6,
+		9 or 10 => 5,
+		11 or 12 => 4,
+		13 or 14 => 3,
+		_ => 2,
+		};
 	}
 
 //============================================================================
@@ -992,7 +954,7 @@ public void	SetShipFormation( int s )
 	var bearing=offset.Direction;
 	// For a heading that is no case, 1.22 reads the angle where its stack slot holds the offset's X (0x417179).
 	leaderHeading=Units[Units[s].GroupLeader].Direction.SnappedToEightDirections() ?? (Rules.HeadingsOf360TakeNoCase ? offset.X : leaderHeading);
-	bearing=bearing-leaderHeading;
+	bearing-=leaderHeading;
 	bearing=bearing.WrapNegative();
 
 	Units[s].DirectionToLeader=bearing;
