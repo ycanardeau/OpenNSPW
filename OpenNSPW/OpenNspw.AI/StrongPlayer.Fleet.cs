@@ -90,9 +90,11 @@ public sealed partial class StrongPlayer
 
 	// What a carrier keeps its distance from, each with the distance: the enemy's carriers found, where they were last
 	// found, the computer's strike range (3550, or 4350 as Japan) and more for each frame since, as they may have come
-	// on by half their speed, up to 3000; or, none found yet, the areas where the briefing expects them, if the victory
-	// conditions count them, the range and the area's radius; and the places the briefing names, whose air bases strike
-	// 1.5 times as far (ComputerPlayer.md, Air strikes). Whether each is known, found or a place, or only expected.
+	// on by half their speed, up to 3000, or, while hunting carriers, at their full speed (0.7 a tick), up to 1000:
+	// farther, the carrier would sail out of its own planes' reach before the scouts find them again; or, none found
+	// yet, the areas where the briefing expects them, if the victory conditions count them, the range and the area's
+	// radius; and the places the briefing names, whose air bases strike 1.5 times as far (ComputerPlayer.md, Air
+	// strikes). Whether each is known, found or a place, or only expected.
 	private List<(WorldPosition Position, double Range, bool IsKnown)> Threats(Nspw game)
 	{
 		var range = ComputerStrikeRange(game);
@@ -103,7 +105,15 @@ public sealed partial class StrongPlayer
 			.Select(c =>
 				(
 					c.Position,
-					range + Math.Min((game.Renderer.FrameCount - c.Frame) * 2 * 0.35 * 0.5, 3000),
+					range
+						+ (
+							HuntsCarriers
+								? Math.Min((game.Renderer.FrameCount - c.Frame) * 2 * 0.7, 1000)
+								: Math.Min(
+									(game.Renderer.FrameCount - c.Frame) * 2 * 0.35 * 0.5,
+									3000
+								)
+						),
 					true
 				)
 			)
@@ -330,6 +340,76 @@ public sealed partial class StrongPlayer
 		}
 
 		return false;
+	}
+
+	// While hunting carriers, once the strikes have dropped two weapons or more on a carrier found lately (CountDrops),
+	// the cruisers and destroyers screening the player's carriers leave them, one at a time, and go at it, as TryEngage
+	// then sends each, its worth first: a crippled carrier is slow to get away from them, while the player's carriers
+	// keep out of the computer's strike range, which the warships need not. They go only as many as the enemy's
+	// warships found lately within 4000 of the carrier, or more, and while no enemy attacker or bomber has been found
+	// in the air for 3000 frames; the battleships, whose anti-aircraft guns reach farthest, stay: a computer that still
+	// strikes would find the carriers without their guns.
+	private bool TryDetach(Nspw game)
+	{
+		if (
+			!HuntsCarriers
+			|| _contacts.All.Any(c =>
+				c.Category == UnitCategory.Plane
+				&& UnitFacts.IsStrikePlane(c.Kind)
+				&& c.IsFlying
+				&& game.Renderer.FrameCount - c.Frame < 3000
+			)
+		)
+			return false;
+
+		var crippled = _contacts
+			.All.Where(c =>
+				c.Category == UnitCategory.Ship
+				&& IsCounted(c.Kind)
+				&& game.Units[c.Unit].IsUsed
+				&& _dropsOn.GetValueOrDefault(c.Unit) >= 2
+				&& game.Renderer.FrameCount - c.Frame < CarrierMemoryFrames
+			)
+			.MaxBy(c => _dropsOn.GetValueOrDefault(c.Unit));
+		if (crippled is null)
+			return false;
+
+		var screening = new List<int>();
+		var detached = 0;
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var ship = ref game.Units[m];
+			if (
+				!IsOwn(game, m)
+				|| ship.Kind is not (UnitKind.Cruiser or UnitKind.Destroyer)
+				|| ship.IsSupplying
+				|| UnitFacts.IsAnchored(ref ship)
+			)
+				continue;
+
+			if (ship.GroupLeader != 0 && UnitFacts.IsDeck(game.Units[ship.GroupLeader].Kind))
+				screening.Add(m);
+			else
+				detached++;
+		}
+
+		var guns = _contacts.All.Count(c =>
+			IsWarship(c.Kind)
+			&& game.Units[c.Unit].IsUsed
+			&& game.Renderer.FrameCount - c.Frame < CarrierMemoryFrames
+			&& UnitFacts.Distance(c.Position, crippled.Position) <= 4000
+		);
+		if (screening.Count == 0 || screening.Count + detached < guns)
+			return false;
+
+		var warship = screening[0];
+		SelectAlone(warship, "detaching");
+		return SailSelected(
+				game,
+				warship,
+				crippled.Predict(Math.Min((game.Renderer.FrameCount - crippled.Frame) * 2, 1500)),
+				$"leaves its carrier for {crippled.Kind} {crippled.Unit} at"
+			) || true;
 	}
 
 	// The best enemy ship for a surface group to fight: found lately, by its worth and nearness, the ones the victory

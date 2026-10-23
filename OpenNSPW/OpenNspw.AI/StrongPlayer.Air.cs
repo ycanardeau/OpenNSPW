@@ -23,16 +23,35 @@ public sealed partial class StrongPlayer
 	}
 
 	// Launches the selected parked planes, led by `leader`, at an enemy unit, by a waypoint 60% of the way there and
-	// 1000 to one side, the other side each strike, so that the strike does not fly into the enemy's own coming the
-	// other way; TryDirect flies it on from the waypoint to where the target is then.
-	private void LaunchStrike(int leader, Contact target, WorldPosition from)
+	// to one side, so that the strike does not fly into the enemy's own, whose fighters fire at what flies before them:
+	// while hunting carriers, 2000 to the other side from the enemy's attackers and bombers found in the air lately; or
+	// 1000 to one side, the other side each strike. TryDirect flies it on from the waypoint to where the target is then.
+	private void LaunchStrike(Nspw game, int leader, Contact target, WorldPosition from)
 	{
-		var side = _strikeTargets.Count % 2 == 0 ? 90 : -90;
 		var bearing = BearingTo(from, target.Position);
+		var raid = _contacts
+			.All.Where(c =>
+				HuntsCarriers
+				&& c.Category == UnitCategory.Plane
+				&& UnitFacts.IsStrikePlane(c.Kind)
+				&& c.IsFlying
+				&& game.Renderer.FrameCount - c.Frame < 100
+			)
+			.MinBy(c => UnitFacts.Distance(c.Position, from));
+		var (side, offset) = raid is null
+			? (_strikeTargets.Count % 2 == 0 ? 90 : -90, 1000.0)
+			: (
+				((target.Position.X - from.X) * (raid.Position.Y - from.Y))
+					- ((target.Position.Y - from.Y) * (raid.Position.X - from.X))
+				> 0
+					? -90
+					: 90,
+				2000.0
+			);
 		var waypoint = PointAt(
 			PointAt(from, bearing, UnitFacts.Distance(from, target.Position) * 0.6),
 			bearing + side,
-			1000
+			offset
 		);
 		_clicks.Enqueue(g =>
 		{
@@ -49,14 +68,30 @@ public sealed partial class StrongPlayer
 		});
 	}
 
-	// Launches the selected parked planes, led by `leader`, toward a point where an enemy is thought to be.
-	private void LaunchToward(int leader, WorldPosition point)
+	// Launches the selected parked planes, led by `leader`, toward a point where an enemy is thought to be; while
+	// hunting carriers, by a waypoint 60% of the way there and 2000 to one side, the other side each strike, as their
+	// own strike most likely comes straight the other way (LaunchStrike): TryFlyOnFromWaypoint flies it on from there.
+	private void LaunchToward(int leader, WorldPosition point, WorldPosition from)
 	{
+		var bearing = BearingTo(from, point);
+		var waypoint = HuntsCarriers
+			? PointAt(
+				PointAt(from, bearing, UnitFacts.Distance(from, point) * 0.6),
+				bearing + (_lastBlindStrike % 2 == 0 ? 90 : -90),
+				2000
+			)
+			: point;
 		_clicks.Enqueue(g =>
 		{
 			if (g.SelectedUnit != leader)
 				return GiveUp(g, $"launch of {leader}: selected {g.SelectedUnit}");
-			g.Commands.SetDestination(point);
+			g.Commands.SetDestination(waypoint);
+			if (HuntsCarriers)
+			{
+				_blindPoints[leader] = point;
+				_toWaypoint.Add(leader);
+			}
+
 			Log?.Invoke(
 				$"{g.Renderer.FrameCount}: {g.Units[leader].Kind} {leader} and {g.SelectionCount} more launched toward ({point.X:F0}, {point.Y:F0})"
 			);
@@ -99,10 +134,12 @@ public sealed partial class StrongPlayer
 		return current.Predict(ticks);
 	}
 
-	// Whether enemy planes found in the air are near a deck.
+	// Whether enemy planes found in the air are near a deck; while hunting carriers, fighters, which shoot down the
+	// planes as they climb, as the attackers in the air when scenario 201 starts do not.
 	private bool IsUnderRaid(Nspw game, int deck) =>
 		_contacts.All.Any(c =>
 			c.IsFlying
+			&& (!HuntsCarriers || c.Kind == UnitKind.Fighter)
 			&& game.Renderer.FrameCount - c.Frame < 50
 			&& UnitFacts.Distance(c.Position, game.Units[deck].Position) <= RaidRange
 		);
@@ -176,14 +213,50 @@ public sealed partial class StrongPlayer
 		return count;
 	}
 
+	// Counts the weapons the player's planes drop on each enemy unit, as the player sees an attacker let go of its
+	// torpedo or bombs at its target and turn home whole: a plane that turns home damaged drops its weapon in the sea.
+	private void CountDrops(Nspw game)
+	{
+		for (var n = 1; n <= game.MaxUnitId; n++)
+		{
+			ref var plane = ref game.Units[n];
+			if (
+				!IsOwn(game, n)
+				|| !UnitFacts.IsStrikePlane(plane.Kind)
+				|| plane.PlaneState != UnitState.Flying
+			)
+			{
+				_aimedAt.Remove(n);
+				continue;
+			}
+
+			if (
+				_aimedAt.TryGetValue(n, out var aimed)
+				&& aimed.Ammo > plane.Ammo
+				&& plane.HP > plane.MaxHP * 0.7
+				&& aimed.Target != 0
+			)
+				_dropsOn[aimed.Target] = _dropsOn.GetValueOrDefault(aimed.Target) + 1;
+			_aimedAt[n] = (plane.Target, plane.Ammo);
+		}
+	}
+
+	// Whether a strike plane may take a target the victory conditions do not count: when they count no carriers, or when
+	// it has fuel left for little more than coming home.
+	private bool TakesAnyTarget(Nspw game, int plane) =>
+		!HuntsCarriers || game.Units[plane].Fuel <= FuelToHome(game, plane) + 15;
+
 	// The best target found for a flying plane of the player's: for an attacker or a bomber, an enemy ship its weapon
 	// can attack, within 2500, by its worth, the one it was sent at favored, the ones other strikes attack already
-	// less; for a fighter, an enemy plane in the air, attackers and bombers first, within 1500.
+	// less; while it hunts carriers, only the ones the victory conditions count (TakesAnyTarget), the ones most weapons
+	// were dropped on first, to sink one before going for the next; for a fighter, an enemy plane in the air,
+	// attackers and bombers first, within 1500.
 	private Contact? ChooseTargetInFlight(Nspw game, int plane)
 	{
 		ref var unit = ref game.Units[plane];
 		var position = unit.Position;
 		var weapon = unit.Weapon;
+		var takesAny = TakesAnyTarget(game, plane);
 		return unit.Kind == UnitKind.Fighter
 			? _contacts
 				.All.Where(c =>
@@ -200,12 +273,17 @@ public sealed partial class StrongPlayer
 					game.Units[c.Unit].IsFound
 					&& CanAttack(weapon, c)
 					&& UnitFacts.Distance(position, c.Position) <= 2500
+					&& (takesAny || IsCounted(c.Kind))
 				)
 				.OrderByDescending(c =>
 					Value(c.Kind)
 					+ (_strikeTargets.GetValueOrDefault(plane) == c.Unit ? 4 : 0)
 					- (UnitFacts.Distance(position, c.Position) / 1000)
-					- (AttackersOn(game, c.Unit, plane) * 1.5)
+					+ (
+						HuntsCarriers
+							? _dropsOn.GetValueOrDefault(c.Unit) * 3
+							: -(AttackersOn(game, c.Unit, plane) * 1.5)
+					)
 				)
 				.FirstOrDefault();
 	}
@@ -220,6 +298,7 @@ public sealed partial class StrongPlayer
 			!UnitFacts.IsStrikePlane(unit.Kind)
 			|| _scoutLegs.ContainsKey(plane)
 			|| _toWaypoint.Contains(plane)
+			|| unit.PathX[1] != World.Right + 1
 			|| UnitFacts.Distance(unit.Position, new WorldPosition(unit.PathX[0], unit.PathY[0]))
 				> 250
 		)
@@ -261,6 +340,11 @@ public sealed partial class StrongPlayer
 		return true;
 	}
 
+	// Where an enemy unit found most likely is `ticks` from now, on the heading it was found on, for at most 1500 ticks
+	// from when it was found: a ship zigzags, and one lost from sight long ago is better looked for where it was.
+	private static WorldPosition WhereNow(Nspw game, Contact contact, double ticks) =>
+		contact.Predict(Math.Min(((game.Renderer.FrameCount - contact.Frame) * 2) + ticks, 1500));
+
 	// The middle of a contact and the enemy ships found lately within 1500 of it, where they would be after `ticks`
 	// more ticks: where the carriers or the battleships of a formation sail, its escorts around them.
 	private WorldPosition FormationMiddle(Nspw game, Contact contact, double ticks)
@@ -282,7 +366,7 @@ public sealed partial class StrongPlayer
 
 	// A strike that has reached its waypoint flies on to where its target is now, as last found, leading it by half the
 	// time the strike takes to get there; or, if the target is not what the victory conditions count, such as an escort
-	// found before the carrier it screens, to the middle of its formation.
+	// found before the carrier it screens, to the middle of its formation; or, launched toward a point, to that point.
 	private bool TryFlyOnFromWaypoint(Nspw game, int leader)
 	{
 		ref var unit = ref game.Units[leader];
@@ -294,19 +378,30 @@ public sealed partial class StrongPlayer
 			return false;
 
 		_toWaypoint.Remove(leader);
-		if (_contacts.Find(_strikeTargets.GetValueOrDefault(leader)) is not { } target)
+		var target = _contacts.Find(_strikeTargets.GetValueOrDefault(leader));
+		WorldPosition point;
+		if (target is not null)
+		{
+			var ticks =
+				((game.Renderer.FrameCount - target.Frame) * 2)
+				+ (
+					UnitFacts.Distance(unit.Position, target.Position)
+					/ Math.Max(unit.MaxSpeed, 0.5)
+					/ 2
+				);
+			point = IsCounted(target.Kind)
+				? target.Predict(Math.Min(ticks, 1500))
+				: FormationMiddle(game, target, ticks);
+		}
+		else if (_blindPoints.Remove(leader, out var blind))
+		{
+			point = blind;
+		}
+		else
+		{
 			return false;
+		}
 
-		var ticks =
-			(game.Renderer.FrameCount - target.Frame) * 2
-			+ (
-				UnitFacts.Distance(unit.Position, target.Position)
-				/ Math.Max(unit.MaxSpeed, 0.5)
-				/ 2
-			);
-		var point = IsCounted(target.Kind)
-			? target.Predict(ticks)
-			: FormationMiddle(game, target, ticks);
 		Deselect();
 		_clicks.Enqueue(g =>
 		{
@@ -325,7 +420,7 @@ public sealed partial class StrongPlayer
 				return GiveUp(g, $"flying on {leader}: selected {g.SelectedUnit}");
 			g.Commands.SetDestination(point);
 			Log?.Invoke(
-				$"{g.Renderer.FrameCount}: {g.Units[leader].Kind} {leader} flies on toward {target.Kind} {target.Unit} at ({point.X:F0}, {point.Y:F0})"
+				$"{g.Renderer.FrameCount}: {g.Units[leader].Kind} {leader} flies on toward {(target is null ? "" : $"{target.Kind} {target.Unit} ")}at ({point.X:F0}, {point.Y:F0})"
 			);
 			return true;
 		});
@@ -390,15 +485,31 @@ public sealed partial class StrongPlayer
 
 	// A strike that has its target found within 2200, one the victory conditions count, splits up, as the computer's
 	// attackers do (ComputerPlayer.md, The planes' targets): each plane is selected alone, given the target, and sent
-	// to its own point 250 from it, the points fanned out across the side it comes from, so that the guns and the
-	// target's turns meet the torpedoes from many sides at once. Within 400 of the target, each plane's own attack
-	// takes over (SetAttackerAttackDestination).
+	// to its own point 250 from it, the points fanned out across the side it comes from, 75° each way, or 45° while
+	// hunting carriers, as the strike comes in from the side the escorts cover least (TryApproach), so that the guns
+	// and the target's turns meet the torpedoes from many sides at once. Within 400 of the target, each plane's own
+	// attack takes over (SetAttackerAttackDestination). A plane splits, sweeps, disperses and approaches again on each
+	// flight: what it did on its last is forgotten once it is back on its deck.
 	private bool TrySplitAttack(Nspw game)
 	{
 		for (var m = 1; m <= game.MaxUnitId; m++)
 		{
 			ref var leader = ref game.Units[m];
 			var target = leader.Target;
+			if (
+				IsOwn(game, m)
+				&& leader.Category == UnitCategory.Plane
+				&& leader.PlaneState == UnitState.Parked
+			)
+			{
+				_split.Remove(m);
+				_sweeps.Remove(m);
+				_approaching.Remove(m);
+				_holding.Remove(m);
+				_dispersed.Remove(m);
+				continue;
+			}
+
 			if (
 				!IsOwn(game, m)
 				|| !UnitFacts.IsStrikePlane(leader.Kind)
@@ -431,10 +542,11 @@ public sealed partial class StrongPlayer
 				continue;
 
 			var from = BearingTo(game.Units[target].Position, leader.Position);
+			var fan = HuntsCarriers ? 45.0 : 75.0;
 			for (var i = 0; i < planes.Count; i++)
 			{
 				var plane = planes[i];
-				var turn = planes.Count == 1 ? 0 : -75 + (150.0 * i / (planes.Count - 1));
+				var turn = planes.Count == 1 ? 0 : -fan + (2 * fan * i / (planes.Count - 1));
 				Deselect();
 				_clicks.Enqueue(g =>
 				{
@@ -478,6 +590,404 @@ public sealed partial class StrongPlayer
 		return false;
 	}
 
+	// While hunting carriers, a strike in the air disperses: a formation flies at about 60% of its planes' speed, as its
+	// leader slows down for any plane out of its place (SteerUnit), and burns its fuel all the same, so once none of its
+	// planes is left on the deck, each is selected alone and sent on to where the leader flies, which takes it out of
+	// the formation (ApplyOrders), with the leader's waypoint, target or point; each then flies on, approaches and
+	// attacks alone, at full speed (TryDirect, TryApproach).
+	private bool TryDisperse(Nspw game)
+	{
+		if (!HuntsCarriers)
+			return false;
+
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var leader = ref game.Units[m];
+			if (
+				!IsOwn(game, m)
+				|| !UnitFacts.IsStrikePlane(leader.Kind)
+				|| leader.PlaneState != UnitState.Flying
+				|| leader.GroupLeader != 0
+				|| leader.IsGroupLeader < 2
+				|| leader.Mode == UnitMode.Return
+				|| leader.Ammo <= 0
+				|| _scoutLegs.ContainsKey(m)
+				|| _dispersed.Contains(m)
+			)
+				continue;
+
+			var followers = new List<int>();
+			var waiting = false;
+			for (var n = 1; n <= game.MaxUnitId; n++)
+			{
+				if (IsOwn(game, n) && game.Units[n].GroupLeader == m)
+				{
+					followers.Add(n);
+					waiting |= game.Units[n].PlaneState != UnitState.Flying;
+				}
+			}
+
+			if (waiting)
+				continue;
+
+			_dispersed.Add(m);
+			_groups[m] = [m, .. followers];
+			var leaderUnit = m;
+			var point = new WorldPosition(leader.PathX[0], leader.PathY[0]);
+			foreach (var follower in followers)
+			{
+				SelectFlying(follower, "dispersing");
+				_clicks.Enqueue(g =>
+				{
+					if (g.SelectedUnit != follower)
+						return GiveUp(g, $"dispersing {follower}: selected {g.SelectedUnit}");
+					g.Commands.SetDestination(point);
+					_dispersed.Add(follower);
+					if (_toWaypoint.Contains(leaderUnit))
+						_toWaypoint.Add(follower);
+					if (_strikeTargets.TryGetValue(leaderUnit, out var target))
+						_strikeTargets[follower] = target;
+					if (_blindPoints.TryGetValue(leaderUnit, out var blind))
+						_blindPoints[follower] = blind;
+					return true;
+				});
+			}
+
+			Deselect();
+			Log?.Invoke(
+				$"{game.Renderer.FrameCount}: {followers.Count + 1} planes of {leader.Kind} {m} disperse toward ({point.X:F0}, {point.Y:F0})"
+			);
+			return true;
+		}
+
+		return false;
+	}
+
+	// How much an enemy warship's anti-aircraft fire covers a point: a battleship's shells reach 700, a cruiser's 600
+	// (ShipFireAntiAircraftShellWithoutTarget), a destroyer's machine guns 300, and a battleship fires most.
+	private static double GunCover(UnitKind kind, double distance) =>
+		kind switch
+		{
+			UnitKind.Battleship when distance <= 750 => 1.5,
+			UnitKind.Cruiser when distance <= 650 => 1,
+			UnitKind.Destroyer when distance <= 300 => 0.3,
+			_ => 0,
+		};
+
+	// The distance from a point to a segment.
+	private static double DistanceToSegment(WorldPosition point, WorldPosition a, WorldPosition b)
+	{
+		var (dx, dy) = (b.X - a.X, b.Y - a.Y);
+		var t = Math.Clamp(
+			(((point.X - a.X) * dx) + ((point.Y - a.Y) * dy)) / Math.Max((dx * dx) + (dy * dy), 1),
+			0,
+			1
+		);
+		return UnitFacts.Distance(point, new WorldPosition(a.X + (t * dx), a.Y + (t * dy)));
+	}
+
+	// The side from which a strike runs in on a target at a point, coming from a bearing: the bearing from the target
+	// whose last 1500 the warships found around it cover least, then the nearest to where the strike comes from.
+	private double ApproachBearing(Nspw game, int target, WorldPosition at, double from)
+	{
+		var guns = _contacts
+			.All.Where(c =>
+				c.Unit != target
+				&& c.Category == UnitCategory.Ship
+				&& game.Units[c.Unit].IsUsed
+				&& game.Renderer.FrameCount - c.Frame < ContactFrames
+				&& UnitFacts.Distance(c.Position, at) <= 3000
+			)
+			.Select(c => (c.Kind, Position: c.Predict((game.Renderer.FrameCount - c.Frame) * 2)))
+			.ToList();
+		return Enumerable
+			.Range(0, 24)
+			.Select(i => from + (i * 15))
+			.MinBy(b =>
+			{
+				var (outer, inner) = (PointAt(at, b, 1500), PointAt(at, b, 200));
+				var turn = Math.Abs(((b - from + 540) % 360) - 180);
+				return guns.Sum(g => GunCover(g.Kind, DistanceToSegment(g.Position, outer, inner)))
+					+ (turn / 180 * 0.5);
+			});
+	}
+
+	// The strikes in the air that have not approached their target yet, each as the planes that fly together: a
+	// dispersed strike (TryDisperse) as its planes, a plane alone as itself; a formation waits until it has dispersed.
+	private IEnumerable<List<int>> StrikesToApproach(Nspw game)
+	{
+		bool IsReady(int n) =>
+			IsOwn(game, n)
+			&& UnitFacts.IsStrikePlane(game.Units[n].Kind)
+			&& game.Units[n].PlaneState == UnitState.Flying
+			&& game.Units[n].GroupLeader == 0
+			&& game.Units[n].Mode != UnitMode.Return
+			&& game.Units[n].Ammo > 0
+			&& !_scoutLegs.ContainsKey(n)
+			&& !_split.Contains(n)
+			&& !_approaching.ContainsKey(n);
+
+		foreach (var (leader, members) in _groups.ToList())
+		{
+			var planes = members.Where(IsReady).ToList();
+			if (planes.Count == 0)
+				_groups.Remove(leader);
+			else
+				yield return planes;
+		}
+
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			if (IsReady(m) && !_dispersed.Contains(m) && game.Units[m].IsGroupLeader <= 1)
+				yield return [m];
+		}
+	}
+
+	// A strike that hunts carriers, 1300 to 4000 from where the nearest one found in the last CarrierMemoryFrames most
+	// likely is (WhereNow), or, knowing of none, 700 or more from the middle of the nearest ships found within 3000,
+	// where the carrier they screen most likely is, as escorts are found from 1000, outside their guns' reach, before
+	// the carrier, holds off 3300 to one side of it while enemy planes are found in the air within 2500 of it, as long
+	// as its fuel lets: a strike forming up over its carrier, or coming home to it, whose gunners and fighters break up
+	// an attack, and which sails off to the player's carriers. Then it flies around it at 2000 or more, out of the
+	// reach of its escorts' guns, to the side they cover least (ApproachBearing), as far as its fuel lets, and runs in
+	// from there, a dispersed strike's planes (TryDisperse) fanned out across that side, so that they come in together
+	// from many sides: TrySplitAttack splits a formation up as it comes within 2200. The game's own attack takes over
+	// only within 400 of the target, or at the end of the path, so the strike follows its path around.
+	private bool TryApproach(Nspw game)
+	{
+		if (!HuntsCarriers)
+			return false;
+
+		foreach (var planes in StrikesToApproach(game))
+		{
+			ref var leader = ref game.Units[planes[0]];
+			var position = leader.Position;
+			var speed = Math.Max(leader.MaxSpeed, 0.5);
+			var target = _contacts
+				.All.Where(c =>
+					c.Category == UnitCategory.Ship
+					&& IsCounted(c.Kind)
+					&& game.Units[c.Unit].IsUsed
+					&& game.Renderer.FrameCount - c.Frame < CarrierMemoryFrames
+					&& UnitFacts.Distance(position, WhereNow(game, c, 0)) <= 4000
+				)
+				.MinBy(c => UnitFacts.Distance(position, WhereNow(game, c, 0)));
+			var escort = _contacts
+				.All.Where(c =>
+					c.Category == UnitCategory.Ship
+					&& !UnitFacts.IsBase(c.Kind)
+					&& game.Units[c.Unit].IsFound
+					&& UnitFacts.Distance(position, c.Position) <= 3000
+				)
+				.MinBy(c => UnitFacts.Distance(position, c.Position));
+			var aim = target ?? escort;
+			var at =
+				target is not null
+					? WhereNow(
+						game,
+						target,
+						UnitFacts.Distance(position, WhereNow(game, target, 0)) / speed
+					)
+				: escort is not null ? FormationMiddle(game, escort, 0)
+				: position;
+			if (aim is null || UnitFacts.Distance(position, at) < (target is null ? 700 : 1300))
+				continue;
+
+			// A unit of fuel lasts FuelInterval ticks: the arc is as long as the fuel lets, after the run in and the
+			// flight home, with 10 units to spare.
+			var home = game.Units[leader.Carrier].Position;
+			var guarded = _contacts
+				.All.Where(c =>
+					c.Category == UnitCategory.Plane
+					&& c.IsFlying
+					&& game.Renderer.FrameCount - c.Frame < 60
+					&& UnitFacts.Distance(c.Position, at) <= 2500
+				)
+				.ToList();
+			if (guarded.Count > 0 && leader.Fuel > FuelToHome(game, planes[0]) + 25)
+			{
+				var middle = new WorldPosition(
+					guarded.Average(c => c.Position.X),
+					guarded.Average(c => c.Position.Y)
+				);
+				var hold = new[] { 90, -90 }
+					.Select(turn => PointAt(at, BearingTo(at, home) + turn, 3300))
+					.MaxBy(p => UnitFacts.Distance(p, middle));
+				var holding = planes
+					.Where(n =>
+						!_holding.TryGetValue(n, out var held)
+						|| UnitFacts.Distance(held, hold) > 500
+					)
+					.ToList();
+				if (holding.Count == 0)
+					continue;
+
+				foreach (var plane in holding)
+				{
+					_holding[plane] = hold;
+					SelectFlying(plane, "holding");
+					_clicks.Enqueue(g =>
+					{
+						if (g.SelectedUnit != plane)
+							return GiveUp(g, $"holding {plane}: selected {g.SelectedUnit}");
+						g.Commands.SetDestination(hold);
+						return true;
+					});
+				}
+
+				var guardedTarget = aim.Unit;
+				_clicks.Enqueue(g =>
+					Log?.Invoke(
+						$"{g.Renderer.FrameCount}: {holding.Count} strikes hold off {g.Units[guardedTarget].Kind} {guardedTarget} at ({hold.X:F0}, {hold.Y:F0}), {guarded.Count} planes over it"
+					)
+				);
+				Deselect();
+				return true;
+			}
+
+			var from = BearingTo(at, position);
+			var bearing = ApproachBearing(game, target?.Unit ?? 0, at, from);
+			var spare =
+				(
+					((leader.Fuel - 10) * leader.FuelInterval)
+					- ((1300 + UnitFacts.Distance(at, home)) / speed)
+				) * speed;
+			var arc = Math.Max(
+				spare - Math.Max(UnitFacts.Distance(position, at) - 2000, 0) - 700,
+				0
+			);
+			var turn = Math.Clamp(
+				((bearing - from + 540) % 360) - 180,
+				-arc / 2000 * 180 / Math.PI,
+				arc / 2000 * 180 / Math.PI
+			);
+			bearing = from + turn;
+			var steps = (int)Math.Ceiling(Math.Abs(turn) / 40);
+			var radius = Math.Max(UnitFacts.Distance(position, at), 2000);
+			var arcPoints = Enumerable
+				.Range(1, steps)
+				.Select(i => PointAt(at, from + (turn * i / steps), radius))
+				.ToList();
+			for (var i = 0; i < planes.Count; i++)
+			{
+				var plane = planes[i];
+				var fan = planes.Count == 1 ? 0 : -30 + (60.0 * i / (planes.Count - 1));
+				var path = arcPoints.Append(PointAt(at, bearing + fan, 1300)).ToList();
+				_approaching[plane] = path[^1];
+				_toWaypoint.Remove(plane);
+				_blindPoints.Remove(plane);
+				_holding.Remove(plane);
+				SelectFlying(plane, "approaching");
+				foreach (var point in path)
+				{
+					_clicks.Enqueue(g =>
+					{
+						if (g.SelectedUnit != plane)
+							return GiveUp(g, $"approach of {plane}: selected {g.SelectedUnit}");
+						g.Commands.SetDestination(point);
+						return true;
+					});
+				}
+			}
+
+			var targetUnit = aim.Unit;
+			var first = planes[0];
+			_clicks.Enqueue(g =>
+				Log?.Invoke(
+					$"{g.Renderer.FrameCount}: {planes.Count} strikes of {g.Units[first].Kind} {first} approach {g.Units[targetUnit].Kind} {targetUnit} from {bearing % 360:F0}° by {steps + 1} waypoints"
+				)
+			);
+			Deselect();
+			return true;
+		}
+
+		return false;
+	}
+
+	// A strike that finds only ships the victory conditions do not count, while it hunts carriers, flies on from its
+	// waypoint to the nearest carrier it knows of within 5000, where it would be when the strike gets there; or, knowing of none, to
+	// the middle of the nearest ships found within 2500, where the carrier they screen most likely is.
+	private bool TryCloseOnFormation(Nspw game, int leader)
+	{
+		ref var unit = ref game.Units[leader];
+		var position = unit.Position;
+		var speed = Math.Max(unit.MaxSpeed, 0.5);
+		var counted = _contacts
+			.All.Where(c =>
+				c.Category == UnitCategory.Ship
+				&& IsCounted(c.Kind)
+				&& game.Units[c.Unit].IsUsed
+				&& game.Renderer.FrameCount - c.Frame < CarrierMemoryFrames
+				&& UnitFacts.Distance(position, c.Position) <= 5000
+			)
+			.MinBy(c => UnitFacts.Distance(position, c.Position));
+		var nearest = _contacts
+			.All.Where(c =>
+				c.Category == UnitCategory.Ship
+				&& !UnitFacts.IsBase(c.Kind)
+				&& game.Units[c.Unit].IsFound
+				&& UnitFacts.Distance(position, c.Position) <= 2500
+			)
+			.MinBy(c => UnitFacts.Distance(position, c.Position));
+		if (
+			!UnitFacts.IsStrikePlane(unit.Kind)
+			|| _toWaypoint.Contains(leader)
+			|| (counted ?? nearest) is not { } around
+		)
+			return false;
+
+		var point = counted is not null
+			? WhereNow(game, counted, UnitFacts.Distance(position, counted.Position) / speed)
+			: FormationMiddle(game, around, 0);
+		if (UnitFacts.Distance(new WorldPosition(unit.PathX[0], unit.PathY[0]), point) < 200)
+			return false;
+
+		SelectFlying(leader, "closing in");
+		_clicks.Enqueue(g =>
+		{
+			if (g.SelectedUnit != leader)
+				return GiveUp(g, $"closing in {leader}: selected {g.SelectedUnit}");
+			g.Commands.SetDestination(point);
+			Log?.Invoke(
+				$"{g.Renderer.FrameCount}: {g.Units[leader].Kind} {leader} closes in on {around.Kind} {around.Unit} at ({point.X:F0}, {point.Y:F0})"
+			);
+			return true;
+		});
+		Deselect();
+		return true;
+	}
+
+	// While hunting carriers, a strike plane in the air, but its scouts, comes home once it has fuel for little more
+	// than that (FuelToHome), the formation it leads with it, whatever it is doing: the game turns a plane home only at
+	// 20, which is too little when it is far, and the player's carriers may have sailed off while it was away.
+	private bool TryBingo(Nspw game)
+	{
+		if (!HuntsCarriers)
+			return false;
+
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var unit = ref game.Units[m];
+			if (
+				!IsOwn(game, m)
+				|| !UnitFacts.IsStrikePlane(unit.Kind)
+				|| unit.PlaneState != UnitState.Flying
+				|| unit.GroupLeader != 0
+				|| unit.Mode == UnitMode.Return
+				|| _scoutLegs.ContainsKey(m)
+				|| unit.Fuel > FuelToHome(game, m) + 3
+			)
+				continue;
+
+			SelectFlying(m, "sending home");
+			ReturnSelected(m, "sending home");
+			Deselect();
+			return true;
+		}
+
+		return false;
+	}
+
 	// A flying plane of the player's that leads its formation, armed and with no target in sight, given the best target
 	// near it: the formation is selected with it, and takes the target too (ApplyOrders).
 	private bool TryDirect(Nspw game)
@@ -490,6 +1000,7 @@ public sealed partial class StrongPlayer
 				|| unit.Category != UnitCategory.Plane
 				|| unit.PlaneState != UnitState.Flying
 				|| unit.GroupLeader != 0
+				|| _scoutLegs.ContainsKey(m)
 				|| unit.Mode == UnitMode.Return
 				|| unit.Ammo <= 0
 				|| (
@@ -504,13 +1015,27 @@ public sealed partial class StrongPlayer
 			)
 				continue;
 
+			if (
+				(
+					_approaching.TryGetValue(m, out var approach)
+					&& UnitFacts.Distance(UnitFacts.FinalDestination(ref unit), approach) < 50
+					&& UnitFacts.Distance(unit.Position, approach) > 300
+				)
+				|| (
+					_holding.TryGetValue(m, out var hold)
+					&& UnitFacts.Distance(UnitFacts.FinalDestination(ref unit), hold) < 50
+					&& unit.Fuel > FuelToHome(game, m) + 25
+				)
+			)
+				continue;
+
 			_directed[m] = game.Renderer.FrameCount;
 			if (TryFlyOnFromWaypoint(game, m) || TryKeepOnTarget(game, m))
 				return true;
 
 			if (ChooseTargetInFlight(game, m) is not { } target)
 			{
-				if (TrySweep(game, m))
+				if ((!TakesAnyTarget(game, m) && TryCloseOnFormation(game, m)) || TrySweep(game, m))
 					return true;
 				continue;
 			}
@@ -582,19 +1107,31 @@ public sealed partial class StrongPlayer
 		return false;
 	}
 
-	// The best enemy found lately within reach of a deck's planes armed with a weapon, or null.
-	private Contact? ChooseTarget(Nspw game, int deck, FireKind weapon)
+	// The best enemy found lately within reach of a deck's planes armed with a weapon, or null; while the strikes hunt
+	// carriers, a carrier found in the last CarrierMemoryFrames, where it most likely is now, within 85% of the planes'
+	// `reach`, which leaves fuel to look for it and to come round to its side, the ones most weapons were dropped on
+	// first (CountDrops).
+	private Contact? ChooseTarget(Nspw game, int deck, FireKind weapon, double reach)
 	{
 		var position = game.Units[deck].Position;
 		return _contacts
 			.All.Where(c =>
-				game.Renderer.FrameCount - c.Frame < ContactFrames
+				(
+					HuntsCarriers
+						? IsCounted(c.Kind)
+							&& game.Units[c.Unit].IsUsed
+							&& game.Renderer.FrameCount - c.Frame < CarrierMemoryFrames
+							&& UnitFacts.Distance(position, WhereNow(game, c, 0)) <= reach * 0.85
+						: game.Renderer.FrameCount - c.Frame < ContactFrames
+							&& UnitFacts.Distance(position, c.Position) <= StrikeRange
+				)
 				&& CanAttack(weapon, c)
 				&& !WasEngaged(game, c.Unit)
-				&& UnitFacts.Distance(position, c.Position) <= StrikeRange
 			)
 			.OrderByDescending(c =>
-				Value(c.Kind) - (UnitFacts.Distance(position, c.Position) / 2000)
+				Value(c.Kind)
+				- (UnitFacts.Distance(position, c.Position) / 2000)
+				+ (HuntsCarriers ? _dropsOn.GetValueOrDefault(c.Unit) * 3 : 0)
 			)
 			.FirstOrDefault();
 	}
@@ -627,6 +1164,42 @@ public sealed partial class StrongPlayer
 		return place.Center;
 	}
 
+	// Whether an area where the briefing expects the enemy's carriers is one that a strike from a deck at a point goes to
+	// before any is found (ExpectedCarriersToStrike): the only one, or one so near that the carriers there would strike
+	// the deck (ComputerStrikeRange).
+	private bool IsEarlyStrikeArea(Nspw game, WorldPosition deck, Area area) =>
+		_knowledge.Enemy.Count(a => !a.IsPlace) == 1
+		|| UnitFacts.Distance(deck, area.Center) <= ComputerStrikeRange(game) + area.Radius + 1000;
+
+	// While hunting carriers, before any is found, early in the battle, while they most likely are still there, an area
+	// where the briefing expects them, within reach of a deck's planes (IsEarlyStrikeArea): a strike goes there once, to
+	// find them and attack before their own strikes are ready, as in scenarios 4 and 201, whose carriers may start
+	// within reach.
+	private WorldPosition? ExpectedCarriersToStrike(Nspw game, int deck, double reach)
+	{
+		if (
+			!HuntsCarriers
+			|| game.Renderer.FrameCount > 2500
+			|| _contacts.All.Any(c => c.Category == UnitCategory.Ship && IsCounted(c.Kind))
+		)
+			return null;
+
+		var position = game.Units[deck].Position;
+		var area = _knowledge
+			.Enemy.Where(a =>
+				!a.IsPlace
+				&& UnitFacts.Distance(position, a.Center) <= reach
+				&& !_placeStrikes.ContainsKey(a.Name)
+				&& IsEarlyStrikeArea(game, position, a)
+			)
+			.MinBy(a => UnitFacts.Distance(position, a.Center));
+		if (area is null)
+			return null;
+
+		_placeStrikes[area.Name] = game.Renderer.FrameCount;
+		return area.Center;
+	}
+
 	// The attackers and bombers based on a deck, in the air or not, but its scouts.
 	private int StrikePlanesOf(Nspw game, int deck)
 	{
@@ -646,11 +1219,47 @@ public sealed partial class StrongPlayer
 		return count;
 	}
 
+	// Until which frame an enemy strike most likely stays in the air: each enemy attacker or bomber found flying in the
+	// last 1200 frames flies home to the nearest carrier found, at 2.2 a tick, or for 600 frames when none is.
+	private int EnemyStrikeAirborneUntil(Nspw game)
+	{
+		var carriers = _contacts
+			.All.Where(c =>
+				c.Category == UnitCategory.Ship
+				&& UnitFacts.IsDeck(c.Kind)
+				&& game.Units[c.Unit].IsUsed
+			)
+			.ToList();
+		return _contacts
+			.All.Where(c =>
+				c.Category == UnitCategory.Plane
+				&& UnitFacts.IsStrikePlane(c.Kind)
+				&& c.IsFlying
+				&& game.Renderer.FrameCount - c.Frame < 1200
+				&& game.Units[c.Unit].IsUsed
+			)
+			.Select(c =>
+				c.Frame
+				+ (
+					carriers.Count == 0
+						? 600
+						: (int)(carriers.Min(k => UnitFacts.Distance(k.Position, c.Position)) / 4.4)
+							+ 100
+				)
+			)
+			.DefaultIfEmpty(0)
+			.Max();
+	}
+
 	// A deck's ready attackers and bombers, with escorting fighters, against the best enemy found within reach, once
 	// three of its armed planes are ready, or all it has, and none will be ready soon, and no enemy strike is over it;
 	// or, while another deck's strike has just gone, with whatever is ready, at the same target or place, so that they
 	// arrive together: a strike that takes off into the enemy's is broken up as it climbs, so it waits for the raid to
-	// pass, and goes while the enemy's planes are coming home.
+	// pass, and goes while the enemy's planes are coming home. While hunting carriers, it goes with no fighters, as the
+	// computer's fly only with its strikes (ComputerPlayer.md, Air strikes), so that ours are better kept to meet those;
+	// and it waits until the enemy's planes would be home as it gets there: a strike that meets them over their carrier
+	// is broken up by their gunners and fighters, while the planes that have landed are serviced, and fight no more for
+	// a while.
 	private bool TryStrike(Nspw game, List<int> decks)
 	{
 		foreach (var deck in decks)
@@ -699,9 +1308,27 @@ public sealed partial class StrongPlayer
 				)
 					continue;
 
-				var target = wave ?? ChooseTarget(game, deck, weapon);
+				var target = wave ?? ChooseTarget(game, deck, weapon, reach);
+
+				// A formation flies at about 60% of its planes' speed, two ticks a frame.
+				var arrival = target is null
+					? 0
+					: game.Renderer.FrameCount
+						+ (
+							UnitFacts.Distance(game.Units[deck].Position, target.Position)
+							/ (game.Units[ready[0]].MaxSpeed * 2 * 0.6)
+						);
+				if (HuntsCarriers && EnemyStrikeAirborneUntil(game) > arrival && target is not null)
+					continue;
+
 				var origin = target is null
-					? pointWave ?? EnemyStrikeOrigin(game) ?? PlaceToStrike(game, deck, reach)
+					? pointWave
+						?? (
+							HuntsCarriers
+								? ExpectedCarriersToStrike(game, deck, reach)
+								: EnemyStrikeOrigin(game)
+						)
+						?? PlaceToStrike(game, deck, reach)
 					: null;
 				if (target is null && origin is null)
 					continue;
@@ -713,23 +1340,25 @@ public sealed partial class StrongPlayer
 						game.Units[n].Kind == UnitKind.Fighter
 						&& UnitFacts.IsReady(ref game.Units[n])
 				);
-				var escorts = fighters.Take(
-					fighters.Count - (int)Math.Ceiling(fighters.Count * FightersKeptBack)
-				);
+				var escorts = HuntsCarriers
+					? []
+					: fighters.Take(
+						fighters.Count - (int)Math.Ceiling(fighters.Count * FightersKeptBack)
+					);
 				ShowDeck(deck);
 				SelectPlanes(ready[0], ready.Skip(1).Concat(escorts));
 				if (target is not null)
 				{
 					if (wave is null)
 						_wave = (target, game.Renderer.FrameCount);
-					LaunchStrike(ready[0], target, game.Units[deck].Position);
+					LaunchStrike(game, ready[0], target, game.Units[deck].Position);
 				}
 				else
 				{
 					_lastBlindStrike = game.Renderer.FrameCount;
 					if (pointWave is null)
 						_pointWave = (origin!.Value, game.Renderer.FrameCount);
-					LaunchToward(ready[0], origin!.Value);
+					LaunchToward(ready[0], origin!.Value, game.Units[deck].Position);
 				}
 
 				return true;
@@ -830,7 +1459,7 @@ public sealed partial class StrongPlayer
 			var group = fighters.Take(fighters.Count - 1).ToList();
 			ShowDeck(deck);
 			SelectPlanes(group[0], group.Skip(1));
-			LaunchToward(group[0], area.Center);
+			LaunchToward(group[0], area.Center, position);
 			return true;
 		}
 

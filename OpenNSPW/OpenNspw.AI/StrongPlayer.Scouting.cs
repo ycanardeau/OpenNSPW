@@ -5,9 +5,14 @@ public sealed partial class StrongPlayer
 {
 	// The bearing from a deck along which the enemy most likely is: back along the way of the last enemy attacker or
 	// bomber found, which came from its carrier or base; else toward the nearest area where the enemy is expected; else
-	// toward the middle of the map.
+	// toward the middle of the map. While it hunts carriers, toward the nearest area where the briefing expects them
+	// first: a plane found may be on its way home, as the ones in the air when scenario 201 starts.
 	private double LikelyBearing(Nspw game, WorldPosition from)
 	{
+		var fleets = _knowledge.Enemy.Where(a => !a.IsPlace).ToList();
+		if (HuntsCarriers && fleets.Count > 0)
+			return BearingTo(from, fleets.MinBy(a => UnitFacts.Distance(from, a.Center))!.Center);
+
 		var plane = _contacts
 			.All.Where(c =>
 				c.Category == UnitCategory.Plane
@@ -31,15 +36,85 @@ public sealed partial class StrongPlayer
 			: BearingTo(from, new WorldPosition(0, 0));
 	}
 
-	// The two legs of the n-th search from a deck: across an area where the enemy is expected and within reach, the
-	// areas in turn, from one side of it to the other, wider each time around; or, with no such area, an arc around the
-	// way the enemy most likely is, a new one each time, nearest that way first.
-	private (WorldPosition First, WorldPosition Second) SearchLegs(
-		Nspw game,
-		WorldPosition from,
-		int n
-	)
+	// How far a scout flies out: 36% of its range on a full tank, as it flies out, across and back (2.5 times as far),
+	// coming home before its tank is dry (FuelToHome).
+	private static double ScoutDistance(ref Unit plane) =>
+		plane.MaxSpeed * plane.FuelInterval * 100 * 0.36;
+
+	// The legs of the n-th search from a deck. While it hunts carriers, by a scout that flies out as far as `reach`:
+	// across where the carrier found last most likely is, half the way it was heading, wider the longer it has been
+	// lost; or, early in the battle, across an area where the briefing expects them, each once, the nearest first, but
+	// the ones a strike goes to (IsEarlyStrikeArea), as scenario 4's carrier starts in one of three, as far as a flight
+	// there, across and back lets (20% farther than `reach`, which allows for a longer way across);
+	// or back and forth across the way to an area where the briefing expects them, the areas in turn, nearest first,
+	// 25° each side, 2500 beyond the computer's strike range (3550, or 4350 as Japan) or as far as the area: a picket
+	// that a fleet coming within strike range of the deck crosses while the scout is out. Else, across an area where
+	// the enemy is expected and within ScoutReach, the areas in turn, from one side of it to the other, wider each time
+	// around; or, with no such area, an arc around the way the enemy most likely is, a new one each time, nearest that
+	// way first. The scout comes home sooner if its fuel runs low (TryGuideScouts).
+	private List<WorldPosition> SearchLegs(Nspw game, WorldPosition from, int n, double reach)
 	{
+		var lost = _contacts
+			.All.Where(c =>
+				c.Category == UnitCategory.Ship
+				&& !UnitFacts.IsBase(c.Kind)
+				&& IsCounted(c.Kind)
+				&& game.Units[c.Unit].IsUsed
+				&& game.Renderer.FrameCount - c.Frame < CarrierMemoryFrames
+			)
+			.MaxBy(c => c.Frame);
+		if (HuntsCarriers && lost is not null && UnitFacts.Distance(from, lost.Position) <= reach)
+		{
+			var ticks = (game.Renderer.FrameCount - lost.Frame) * 2;
+			var at = lost.Predict(ticks / 2.0);
+			var across = BearingTo(from, at) + 90;
+			var half = 700 + (ticks * 0.35);
+			return [PointAt(at, across, half), PointAt(at, across + 180, half)];
+		}
+
+		if (HuntsCarriers)
+		{
+			var unswept = _knowledge
+				.Enemy.Where(a =>
+					!a.IsPlace
+					&& UnitFacts.Distance(from, a.Center) + a.Radius <= reach * 1.2
+					&& !_sweptAreas.Contains(a.Name)
+					&& !IsEarlyStrikeArea(game, from, a)
+				)
+				.MinBy(a => UnitFacts.Distance(from, a.Center));
+			if (unswept is not null && game.Renderer.FrameCount < 2500)
+			{
+				_sweptAreas.Add(unswept.Name);
+				var across = BearingTo(from, unswept.Center) + 90;
+				return
+				[
+					PointAt(unswept.Center, across, unswept.Radius),
+					PointAt(unswept.Center, across + 180, unswept.Radius),
+				];
+			}
+
+			var fleets = _knowledge
+				.Enemy.Where(a => !a.IsPlace)
+				.OrderBy(a => UnitFacts.Distance(from, a.Center))
+				.ToList();
+			var toward = fleets.Count == 0 ? (Area?)null : fleets[n % fleets.Count];
+			var distance = toward is null ? reach : UnitFacts.Distance(from, toward.Center);
+			var picket = Math.Clamp(
+				distance,
+				Math.Min(3000, reach),
+				Math.Min(ComputerStrikeRange(game) + 2500, reach)
+			);
+			var likely = toward is null
+				? LikelyBearing(game, from)
+				: BearingTo(from, toward.Center);
+			return
+			[
+				.. Enumerable
+					.Range(0, 6)
+					.Select(i => PointAt(from, likely + (i % 2 == 0 ? -25 : 25), picket)),
+			];
+		}
+
 		var areas = _knowledge
 			.Enemy.Where(a => UnitFacts.Distance(from, a.Center) <= ScoutReach)
 			.ToList();
@@ -55,24 +130,27 @@ public sealed partial class StrongPlayer
 			var area = areas[n % areas.Count];
 			var across = BearingTo(from, area.Center) + 90;
 			var half = Math.Max(area.Radius * (0.5 + (0.5 * (n / areas.Count % 2))), 500);
-			return (PointAt(area.Center, across, half), PointAt(area.Center, across + 180, half));
+			return [PointAt(area.Center, across, half), PointAt(area.Center, across + 180, half)];
 		}
 
 		var offset = n == 0 ? 0 : ((n + 1) / 2) * 60.0 * (n % 2 == 0 ? -1 : 1);
 		var bearing = LikelyBearing(game, from) + offset;
-		return (PointAt(from, bearing - 20, ScoutRange), PointAt(from, bearing + 20, ScoutRange));
+		return [PointAt(from, bearing - 20, ScoutRange), PointAt(from, bearing + 20, ScoutRange)];
 	}
 
 	// The planes a deck keeps to scout, unarmed ones first, then attackers before bombers: two of a deck with six
-	// attackers and bombers or more, one of a deck with two or more, none of the others, and three in all at most.
+	// attackers and bombers or more, one of a deck with two or more, none of the others, and three in all at most;
+	// while hunting carriers, which takes every torpedo a deck can spare, two from eight, one from seven, and a scout
+	// lost is replaced by another plane of its deck, once one is back on it.
 	private List<int> ScoutsOf(Nspw game, int deck)
 	{
 		if (!_scoutsOf.TryGetValue(deck, out var scouts))
 		{
 			var strikers = ParkedOn(game, deck, n => UnitFacts.IsStrikePlane(game.Units[n].Kind));
+			var (two, one) = HuntsCarriers ? (8, 7) : (6, 2);
 			var count = Math.Min(
-				strikers.Count >= 6 ? 2
-					: strikers.Count >= 2 ? 1
+				strikers.Count >= two ? 2
+					: strikers.Count >= one ? 1
 					: 0,
 				MaxScouts - _scoutsOf.Values.Sum(l => l.Count)
 			);
@@ -84,20 +162,66 @@ public sealed partial class StrongPlayer
 					.Take(count),
 			];
 			_scoutsOf[deck] = scouts;
+			_scoutCounts[deck] = scouts.Count;
 		}
 
 		scouts.RemoveAll(n => !IsOwn(game, n) || game.Units[n].Carrier != deck);
+		if (HuntsCarriers && scouts.Count < _scoutCounts.GetValueOrDefault(deck))
+		{
+			var replacement = ParkedOn(
+					game,
+					deck,
+					n => UnitFacts.IsStrikePlane(game.Units[n].Kind) && !scouts.Contains(n)
+				)
+				.OrderBy(n => game.Units[n].Weapon != FireKind.Unarmed)
+				.FirstOrDefault();
+			if (replacement != 0)
+				scouts.Add(replacement);
+		}
+
 		return scouts;
 	}
 
-	// While no enemy ship has been found lately, the decks' scouts fly out, each sweeping an arc where the enemy most
-	// likely is, a new arc each flight, nearest the likely bearing first; TryGuideScouts flies them on. There is
-	// nothing to search for when the briefing names every place the enemy is, within the strikes' reach.
+	// The fuel a flying plane needs to come home to its deck, and a margin: a unit of fuel lasts FuelInterval ticks, and
+	// the deck may be sailing away from the plane, which it then closes on slower.
+	private static double FuelToHome(Nspw game, int plane)
+	{
+		ref var unit = ref game.Units[plane];
+		ref var deck = ref game.Units[unit.Carrier];
+		var away =
+			deck.Speed
+			* Math.Cos(
+				(deck.Direction.Degrees - BearingTo(unit.Position, deck.Position)) * Math.PI / 180
+			);
+		var closing = Math.Max(unit.MaxSpeed - Math.Max(away, 0), 0.5);
+		return (UnitFacts.Distance(unit.Position, deck.Position) / (closing * unit.FuelInterval))
+			+ 10;
+	}
+
+	// While no enemy ship has been found lately, the decks' scouts fly out, each on its search (SearchLegs), a new one
+	// each flight; TryGuideScouts flies them on. While it hunts carriers: while no carrier has been found lately, one
+	// every ScoutFrames while another is on its way out, so that one is always out; and one to relieve the ones keeping
+	// a carrier in sight once they have fuel for little more than coming home, or when none is. There is nothing to
+	// search for when the briefing names every place the enemy is, within the strikes' reach.
 	private bool TryScout(Nspw game, List<int> decks)
 	{
+		var relieves =
+			HuntsCarriers
+			&& _scoutLegs
+				.Keys.Where(n =>
+					IsOwn(game, n)
+					&& game.Units[n].PlaneState == UnitState.Flying
+					&& game.Units[n].Mode != UnitMode.Return
+				)
+				.All(n => game.Units[n].Fuel <= FuelToHome(game, n) + 25);
 		if (
-			_contacts.All.Any(c =>
-				c.Category == UnitCategory.Ship && game.Renderer.FrameCount - c.Frame < 300
+			(
+				!relieves
+				&& _contacts.All.Any(c =>
+					c.Category == UnitCategory.Ship
+					&& (!HuntsCarriers || IsCounted(c.Kind))
+					&& game.Renderer.FrameCount - c.Frame < 300
+				)
 			)
 			|| (
 				_knowledge.Enemy.Count > 0
@@ -107,6 +231,11 @@ public sealed partial class StrongPlayer
 						UnitFacts.Distance(game.Units[d].Position, a.Center) <= PlaceStrikeRange
 					)
 				)
+			)
+			|| (
+				HuntsCarriers
+				&& game.Renderer.FrameCount - _lastScout < ScoutFrames
+				&& _scoutLegs.Keys.Any(n => IsOwn(game, n) && game.Units[n].Mode != UnitMode.Return)
 			)
 		)
 			return false;
@@ -126,8 +255,14 @@ public sealed partial class StrongPlayer
 				continue;
 
 			var position = game.Units[deck].Position;
-			var (first, second) = SearchLegs(game, position, _searches++);
-			_scoutLegs[scout] = new Queue<WorldPosition>([second]);
+			var legs = SearchLegs(
+				game,
+				position,
+				_searches++,
+				ScoutDistance(ref game.Units[scout])
+			);
+			var first = legs[0];
+			_scoutLegs[scout] = new Queue<WorldPosition>(legs.Skip(1));
 			ShowDeck(deck);
 			SelectPlanes(scout, []);
 			_clicks.Enqueue(g =>
@@ -140,6 +275,7 @@ public sealed partial class StrongPlayer
 
 				g.Commands.SetDestination(first);
 				_scoutLaunches[scout] = g.Renderer.FrameCount;
+				_lastScout = g.Renderer.FrameCount;
 				Log?.Invoke(
 					$"{g.Renderer.FrameCount}: {g.Units[scout].Kind} {scout} scouts toward ({first.X:F0}, {first.Y:F0})"
 				);
@@ -151,7 +287,94 @@ public sealed partial class StrongPlayer
 		return false;
 	}
 
-	// A scout that has reached the end of its leg flies the next, or comes home (Return) after the last.
+	// The enemy ship a scout keeps in sight: the nearest one the victory conditions count, but bases, found lately
+	// within 3000 of it.
+	private Contact? ShadowTarget(Nspw game, WorldPosition from) =>
+		_contacts
+			.All.Where(c =>
+				c.Category == UnitCategory.Ship
+				&& !UnitFacts.IsBase(c.Kind)
+				&& IsCounted(c.Kind)
+				&& game.Units[c.Unit].IsUsed
+				&& game.Renderer.FrameCount - c.Frame < 300
+				&& UnitFacts.Distance(from, c.Position) <= 3000
+			)
+			.MinBy(c => UnitFacts.Distance(from, c.Position));
+
+	// Where a scout keeps an enemy ship in sight: ShadowDistance from where it would be by now, as near the way to the
+	// scout's deck as the guns of the warships found around it let, 750 from each, which most of their anti-aircraft
+	// fire does not reach.
+	private WorldPosition ShadowPoint(Nspw game, Contact target, WorldPosition home)
+	{
+		var at = target.Predict((game.Renderer.FrameCount - target.Frame) * 2);
+		var guns = _contacts
+			.All.Where(c =>
+				c.Kind is UnitKind.Battleship or UnitKind.Cruiser
+				&& game.Renderer.FrameCount - c.Frame < ContactFrames
+				&& UnitFacts.Distance(c.Position, at) <= 2000
+			)
+			.Select(c => c.Predict((game.Renderer.FrameCount - c.Frame) * 2))
+			.ToList();
+		var toHome = BearingTo(at, home);
+		return Enumerable
+			.Range(0, 19)
+			.Select(i =>
+				PointAt(at, toHome + ((i % 2 == 0 ? 1 : -1) * ((i + 1) / 2) * 20), ShadowDistance)
+			)
+			.MaxBy(p =>
+				Math.Min(
+					guns.Select(g => UnitFacts.Distance(g, p))
+						.DefaultIfEmpty(double.MaxValue)
+						.Min(),
+					750
+				)
+			);
+	}
+
+	// Selects a flying plane of the player's alone, nothing being selected.
+	private void SelectFlying(int plane, string what)
+	{
+		Deselect();
+		_clicks.Enqueue(g =>
+		{
+			if (
+				g.SelectedUnit != 0
+				|| !IsOwn(g, plane)
+				|| g.Units[plane].PlaneState != UnitState.Flying
+			)
+				return GiveUp(g, $"{what} {plane}: selected {g.SelectedUnit}");
+			g.Commands.ClickUnit(plane);
+			return true;
+		});
+	}
+
+	// Sends the selected flying plane home: toward its deck first, as Return turns a plane home only at the end of its
+	// path, then Return, which drops its weapon.
+	private void ReturnSelected(int plane, string what)
+	{
+		_clicks.Enqueue(g =>
+		{
+			if (g.SelectedUnit != plane)
+				return GiveUp(g, $"{what} {plane}: selected {g.SelectedUnit}");
+			g.Commands.SetDestination(g.Units[g.Units[plane].Carrier].Position);
+			return true;
+		});
+		_clicks.Enqueue(g =>
+		{
+			if (g.SelectedUnit != plane)
+				return GiveUp(g, $"{what} {plane}: selected {g.SelectedUnit}");
+			g.Commands.ChooseCombatMenuItem(CombatMenuItem.Return);
+			Log?.Invoke(
+				$"{g.Renderer.FrameCount}: {g.Units[plane].Kind} {plane} comes home, {g.Units[plane].Fuel:F0} fuel left"
+			);
+			return true;
+		});
+		_clicks.Wait(8);
+	}
+
+	// A scout that has found an enemy carrier, while it hunts carriers, keeps it in sight, from the side of its deck, so
+	// that the strikes know where it is, until its fuel brings it home; any other scout that has reached the end of its
+	// leg flies the next, or comes home (Return) after the last, or sooner if its fuel runs low.
 	private bool TryGuideScouts(Nspw game)
 	{
 		foreach (var (scout, legs) in _scoutLegs)
@@ -170,29 +393,41 @@ public sealed partial class StrongPlayer
 				return false;
 			}
 
+			if (unit.PlaneState != UnitState.Flying || unit.Mode == UnitMode.Return)
+				continue;
+
+			var pathEnd = new WorldPosition(unit.PathX[0], unit.PathY[0]);
 			if (
-				unit.PlaneState != UnitState.Flying
-				|| unit.Mode == UnitMode.Return
-				|| UnitFacts.Distance(
-					unit.Position,
-					new WorldPosition(unit.PathX[0], unit.PathY[0])
-				) > 200
+				HuntsCarriers
+				&& ShadowTarget(game, unit.Position) is { } target
+				&& unit.Fuel > FuelToHome(game, scout)
+			)
+			{
+				var point = ShadowPoint(game, target, game.Units[unit.Carrier].Position);
+				if (UnitFacts.Distance(pathEnd, point) <= 250)
+					continue;
+
+				legs.Clear();
+				SelectFlying(scout, "shadowing");
+				_clicks.Enqueue(g =>
+				{
+					if (g.SelectedUnit != scout)
+						return GiveUp(g, $"shadowing {scout}: selected {g.SelectedUnit}");
+					g.Commands.SetDestination(point);
+					return true;
+				});
+				Deselect();
+				return true;
+			}
+
+			if (
+				UnitFacts.Distance(unit.Position, pathEnd) > 200
+				&& unit.Fuel > FuelToHome(game, scout)
 			)
 				continue;
 
-			Deselect();
-			_clicks.Enqueue(g =>
-			{
-				if (
-					g.SelectedUnit != 0
-					|| !IsOwn(g, scout)
-					|| g.Units[scout].PlaneState != UnitState.Flying
-				)
-					return GiveUp(g, $"guiding scout {scout}: selected {g.SelectedUnit}");
-				g.Commands.ClickUnit(scout);
-				return true;
-			});
-			if (legs.TryDequeue(out var next))
+			SelectFlying(scout, "guiding scout");
+			if (unit.Fuel > FuelToHome(game, scout) && legs.TryDequeue(out var next))
 			{
 				_clicks.Enqueue(g =>
 				{
@@ -204,14 +439,7 @@ public sealed partial class StrongPlayer
 			}
 			else
 			{
-				_clicks.Enqueue(g =>
-				{
-					if (g.SelectedUnit != scout)
-						return GiveUp(g, $"scout {scout} not selected: {g.SelectedUnit}");
-					g.Commands.ChooseCombatMenuItem(CombatMenuItem.Return);
-					return true;
-				});
-				_clicks.Wait(8);
+				ReturnSelected(scout, "scout");
 			}
 
 			Deselect();

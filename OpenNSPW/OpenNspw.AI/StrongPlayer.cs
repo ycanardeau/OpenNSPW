@@ -50,11 +50,18 @@ public sealed partial class StrongPlayer : IPlayer
 	// attack (Reach).
 	private const double PlaceStrikeRange = 8000;
 
+	// The frames between two scouts' launches, while the last is still on its way out.
+	private const int ScoutFrames = 900;
+
 	// The scouts of all the decks, at most.
 	private const int MaxScouts = 3;
 
-	// How far out a scout searches, at most.
+	// How far out a scout searches, at most, but while it hunts carriers (ScoutDistance).
 	private const double ScoutReach = 7500;
+
+	// How far from an enemy ship a scout keeps it in sight: within the 1000 an attacker sees, beyond most of the escorts'
+	// anti-aircraft guns (600, 700 for a battleship).
+	private const double ShadowDistance = 900;
 
 	// The frames between strikes at the same place, before anything there is found.
 	private const int PlaceStrikeFrames = 1500;
@@ -89,10 +96,19 @@ public sealed partial class StrongPlayer : IPlayer
 	private readonly Dictionary<int, int> _directed = [];
 	private readonly Dictionary<int, int> _huntedFrom = [];
 	private readonly HashSet<int> _split = [];
+	private readonly Dictionary<int, WorldPosition> _approaching = [];
+	private readonly Dictionary<int, WorldPosition> _holding = [];
+	private readonly Dictionary<int, (int Target, int Ammo)> _aimedAt = [];
+	private readonly Dictionary<int, int> _dropsOn = [];
+	private readonly HashSet<int> _dispersed = [];
+	private readonly Dictionary<int, List<int>> _groups = [];
 	private readonly Dictionary<int, int> _sweeps = [];
 	private readonly Dictionary<int, int> _strikeTargets = [];
 	private readonly HashSet<int> _toWaypoint = [];
+	private readonly Dictionary<int, WorldPosition> _blindPoints = [];
 	private readonly Dictionary<int, List<int>> _scoutsOf = [];
+	private readonly Dictionary<int, int> _scoutCounts = [];
+	private readonly HashSet<string> _sweptAreas = [];
 	private readonly HashSet<int> _formed = [];
 	private readonly Dictionary<int, int> _positioned = [];
 	private readonly HashSet<int> _repairing = [];
@@ -102,6 +118,7 @@ public sealed partial class StrongPlayer : IPlayer
 	private readonly Dictionary<int, int> _scoutLaunches = [];
 	private ScenarioKnowledge _knowledge = ScenarioKnowledge.For(0);
 	private int _searches;
+	private int _lastScout = -ScoutFrames;
 	private int _lastBlindStrike = -1;
 	private (Contact Target, int Frame)? _wave;
 	private (WorldPosition Point, int Frame)? _pointWave;
@@ -269,6 +286,10 @@ public sealed partial class StrongPlayer : IPlayer
 	private bool IsCounted(UnitKind kind) =>
 		_knowledge.Counted.Count == 0 || _knowledge.Counted.Contains(kind);
 
+	// Whether the victory conditions count the enemy's carriers, which the strikes then go for alone: an escort sunk
+	// brings no victory closer, and the strike that took it is lost to the carrier.
+	private bool HuntsCarriers => _knowledge.Counted.Contains(UnitKind.Carrier);
+
 	// Selects a unit of the player's alone, nothing being selected: a ship with the ships that follow it.
 	private void SelectAlone(int m, string what)
 	{
@@ -354,9 +375,12 @@ public sealed partial class StrongPlayer : IPlayer
 		var decks = Decks(game);
 		if (
 			!TryIntercept(game, decks)
-			&& !TrySplitAttack(game)
-			&& !TryDirect(game)
 			&& !TryGuideScouts(game)
+			&& !TryBingo(game)
+			&& !TrySplitAttack(game)
+			&& !TryDisperse(game)
+			&& !TryApproach(game)
+			&& !TryDirect(game)
 			&& !TryScout(game, decks)
 			&& !TryStrike(game, decks)
 			&& !TryHunt(game, decks)
@@ -367,6 +391,7 @@ public sealed partial class StrongPlayer : IPlayer
 			&& !TryFormBattleGroups(game)
 			&& !TryRepair(game)
 			&& !TryPosition(game, decks)
+			&& !TryDetach(game)
 			&& !TryEngage(game)
 			&& !TryPatrol(game, decks)
 			&& !TryArm(game, decks)
@@ -408,6 +433,7 @@ public sealed partial class StrongPlayer : IPlayer
 			LogStatus(game);
 
 		_contacts.Update(game);
+		CountDrops(game);
 		if (_clicks.IsEmpty)
 			Plan(game);
 
