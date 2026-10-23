@@ -468,6 +468,23 @@ public class SingleplayerTests
 		Assert.Equal(UnitMode.Return, game.Units[other].Mode);
 	}
 
+	// The combat menu arms no bomber with a torpedo, Japan's either, as in 1.22 (0x431D56); NSPW NET arms Japan's.
+	[Fact]
+	public void TheCombatMenuArmsNoBomberWithATorpedo()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var bomber = game.AddUnit(Side.Japan, UnitKind.Bomber, -9000, -7000, 0);
+		Assert.NotEqual(0, bomber);
+		game.Units[bomber].Weapon = FireKind.Bomb;
+		game.BufferedMenuOrders[1] = new MenuOrder { Menu = CombatMenuItem.ArmWithTorpedo, SelectedUnit = (short)bomber };
+
+		game.ApplyUnitInfoInput();
+
+		Assert.Equal(FireKind.Bomb, game.Units[bomber].Weapon);
+	}
+
 	// The planes that follow a torpedo plane return once it drops its torpedo, and keep their path, as in 1.22
 	// (0x413F51 to 0x413F7C), where NSPW NET sends them to where it dropped it.
 	[Fact]

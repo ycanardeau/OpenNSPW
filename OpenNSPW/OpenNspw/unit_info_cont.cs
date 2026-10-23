@@ -1606,7 +1606,8 @@ public void	ApplyUnitInfoInput()
 							case UnitKind.Fighter: case UnitKind.Attacker: case UnitKind.Bomber:
 								if(  menu2==CombatMenuItem.ArmWithTorpedo || menu2==CombatMenuItem.ArmWithBomb || menu2==CombatMenuItem.Disarm  )
 									{
-									if(unit.Kind==UnitKind.Attacker || (unit.Kind==UnitKind.Bomber && ( (menu2==CombatMenuItem.ArmWithTorpedo && unit.Side==Side.Japan ) || menu2==CombatMenuItem.ArmWithBomb || menu2==CombatMenuItem.Disarm) ))
+									// 1.22 arms no bomber with a torpedo (0x431D56).
+									if(unit.Kind==UnitKind.Attacker || (unit.Kind==UnitKind.Bomber && ( (menu2==CombatMenuItem.ArmWithTorpedo && unit.Side==Side.Japan && Rules.BombersDropTorpedoes ) || menu2==CombatMenuItem.ArmWithBomb || menu2==CombatMenuItem.Disarm) ))
 										{		// 収容中の攻撃機だったばあい
 										unit.Weapon=(FireKind)menu2;
 

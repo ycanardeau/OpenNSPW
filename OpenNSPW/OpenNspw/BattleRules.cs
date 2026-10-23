@@ -24,7 +24,7 @@ public sealed record BattleRules(
 	// types.
 	bool HasSecondCruiserAndDestroyerTypes,
 
-	// Whether bombers drop torpedoes.
+	// Whether bombers drop torpedoes, and Japan's are armed with them from the combat menu.
 	bool BombersDropTorpedoes,
 
 	// Whether transports can land naval bases and air bases, not only infantry bases, pillboxes and fortresses.
@@ -299,7 +299,7 @@ public sealed record BattleRules(
 		FortressGunInterval: 100, // 0x403275
 		HasYamatoClass: false, // 0x40332C
 		HasSecondCruiserAndDestroyerTypes: false, // 0x40348C, 0x403647
-		BombersDropTorpedoes: false, // 0x40392C
+		BombersDropTorpedoes: false, // 0x40392C, 0x431D56
 		TransportsLandNavalAndAirBases: false, // 0x403745
 		JapanHoldsFireInScenario1: true, // 0x4030FF
 		FightersAttackTransports: false, // 0x4133B2, 0x430618, 0x430679, 0x41650D
