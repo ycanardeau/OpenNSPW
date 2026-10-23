@@ -1170,6 +1170,11 @@ public void	UpdateLanding( int n )
 		case 13: case 14:
 			angl=270.0+45.0;
 			break;
+		default:
+			// 1.22 reads the angle it has not set (0x41764E).
+			if( Rules.ApproachesAlongUnsetAngleAt360 )
+				angl=TakeStackLocal(0x41764E, angl);
+			break;
 		}
 
 	angl2=angl;

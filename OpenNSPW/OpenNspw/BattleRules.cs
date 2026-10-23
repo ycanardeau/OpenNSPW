@@ -56,6 +56,12 @@ public sealed record BattleRules(
 	// Whether the planes that follow an attacker fly to where it released its bombs or its torpedo.
 	bool FollowersFlyToRelease,
 
+	// Whether a plane's approach to a carrier heading 360, which none of the 16 approaches takes, is along an angle it has
+	// not set, rather than 0 (UpdateLanding).
+	// BUG(1.22): a heading can be 360 (HeadingWrapsAt360), and the approach's switch has no case for it, so it reads what
+	// the stack holds there ([esp+10h], 0x41764E), what an earlier call left. Kept as is for compatibility with 1.22.
+	bool ApproachesAlongUnsetAngleAt360,
+
 	// Whether a ship that follows a leader has its route planned by 1.22's own set_cpu_route2, in the emulator, rather than
 	// by NSPW NET's set_cpu_root2.
 	bool FollowersRouteBy122sOwnCode,
@@ -229,6 +235,7 @@ public sealed record BattleRules(
 		LastKindRefusedToTorpedoes: UnitKind.Fortress,
 		JapaneseAttackersDive: true,
 		FollowersFlyToRelease: true,
+		ApproachesAlongUnsetAngleAt360: false,
 		FollowersRouteBy122sOwnCode: false,
 		TorpedoPlanesCheckLandAlongUnsetHeading: false,
 		AttackersBreakFormation: true,
@@ -294,6 +301,7 @@ public sealed record BattleRules(
 		LastKindRefusedToTorpedoes: UnitKind.NavalBase, // 0x4305F9
 		JapaneseAttackersDive: false, // 0x414186 to 0x4144E0
 		FollowersFlyToRelease: false, // 0x414186 to 0x4144E0, 0x413F51 to 0x413F7C
+		ApproachesAlongUnsetAngleAt360: true, // 0x41764E
 		FollowersRouteBy122sOwnCode: true, // 0x414D79
 		TorpedoPlanesCheckLandAlongUnsetHeading: true, // 0x413D23
 		AttackersBreakFormation: false, // 0x415A10

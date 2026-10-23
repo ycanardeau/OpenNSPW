@@ -383,8 +383,9 @@ public unsafe partial class Nspw
 		};
 
 	// The uninitialized locals that the battle's own code reads, by the instruction of 1.22 that reads them: the heading
-	// of a torpedo plane's land check (0x413D23, PlaneDropTorpedo). A trace gives them as 1.22 read them, in order.
-	private static readonly uint[] BattleStackLocals = [0x413D23];
+	// of a torpedo plane's land check (0x413D23, PlaneDropTorpedo), the angle of a plane's approach to a carrier heading 360
+	// (0x41764E, UpdateLanding). A trace gives them as 1.22 read them, in order.
+	private static readonly uint[] BattleStackLocals = [0x413D23, 0x41764E];
 	private readonly Queue<(uint Instruction, byte[] Value)> _battleStackLocals = new();
 
 	// The instruction of an uninitialized local of the battle that a trace gave and the battle has not read, if any.
