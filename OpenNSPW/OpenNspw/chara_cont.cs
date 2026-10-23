@@ -559,7 +559,9 @@ private void UpdateSupply(ref Unit unit)
 	RECT wrk_rect;
 	int flg;
 	int i;
-	if( unit.Category==UnitCategory.Ship && unit.IsSupplying && unit.Fuel>=0 )
+	// 1.22 does not check for the naval base (0x4010BB): its computer starts supplying within 580 of it, further than
+	// this allows.
+	if( unit.Category==UnitCategory.Ship && unit.IsSupplying && unit.Fuel>=0 && Rules.SupplyNeedsNavalBase )
 		{
 		// 補給中の艦船
 		// ptin dbg
@@ -766,6 +768,9 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 				unit.PathY[0]=Units[unit.Carrier].Position.Y;
 				unit.PathX[1]=MAP_RIGHT+1;
 
+				// BUG(NSPW NET): it counts the planes of LocalSide only, where it means the carrier's, so the two games of a
+				// network game count those of the rival's carriers differently (docs/KnownIssues.md). Kept as is for
+				// compatibility with NSPW NET.
 				f=0;
 				for( i=1; i<=MaxUnitId; i++)
 					{
@@ -775,7 +780,8 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 						f++;
 					}
 
-				if( f==0 )
+				// 1.22 lets the next plane take off whatever other planes are landing (0x4018F1).
+				if( f==0 || !Rules.LaunchLockCountsLandingPlanes )
 					{	// 滑走路に他の着陸機がなければ発進許可。
 					Units[unit.Carrier].LaunchLock=0;		// その空母の次機発進許可
 					}
@@ -820,7 +826,8 @@ private void SteerUnit(ref Unit unit, int m)
 					break;
 
 				case UnitKind.Submarine:
-					if( unit.EmergencyFlags[0]==0  )
+					// 1.22 does not bring submarines back into the map (0x401966, kind 4).
+					if( unit.EmergencyFlags[0]==0 && Rules.ComputerShipsReturnIntoMap )
 						ReturnIntoWorld(m);
 					break;
 
@@ -860,7 +867,8 @@ private void SteerUnit(ref Unit unit, int m)
 			// 単独、もしくは、編隊長
 			if(!unit.IsStopping )
 				{
-				if(  unit.Category==UnitCategory.Plane && unit.Mode==UnitMode.Return && unit.DeckPhase==1 )
+				// 1.22 adjusts the approach on the drawn tick only (0x401AB4).
+				if(  unit.Category==UnitCategory.Plane && unit.Mode==UnitMode.Return && unit.DeckPhase==1 && (IsDrawnTick || !Rules.ApproachesOnDrawnTick) )
 					{
 					UpdateLanding(m);
 					}
@@ -1030,7 +1038,7 @@ private void TryLandOnCarrier(ref Unit unit, int m)
 			Units[unit.Carrier].LandingLock=1;	// 着艦、0許可、1不許可
 			Units[unit.Carrier].LaunchLock=1;	// その空母の次機発進許可	0許可、1不許可
 			unit.PlaneState=UnitState.Parked;
-			unit.Position = new WorldPosition(Sprites[SpriteId.JapanUnitInfo].X+Sprites[SpriteId.JapanUnitInfo].Width/2+(SharedRandom(16)-7), Sprites[SpriteId.JapanUnitInfo].Y+Sprites[SpriteId.JapanUnitInfo].Height+40);
+			unit.Position = new WorldPosition(Sprites[SpriteId.JapanUnitInfo].X+Sprites[SpriteId.JapanUnitInfo].Width/2+(EffectRandom(16)-7), Sprites[SpriteId.JapanUnitInfo].Y+Sprites[SpriteId.JapanUnitInfo].Height+40);
 			unit.Speed=5.0; unit.Direction=90.0;
 
 			unit.Target=0;					//
@@ -1158,8 +1166,101 @@ private void SetAcceleration(ref Unit unit, double pp_drctn, int land)
 		}
 	}
 
+// 1.22 replans the route of the computer's unit m that is blocked, with no leader, to the end of its path
+// (set_cpu_route(m, 1.0)): from the last point of the path, or, with a single point, from where the ship is if that
+// point is within ahead, the ship in its way (0x402147, 0x402348).
+private void ReplanBlockedRoute(ref Unit unit, int m, RECT? ahead)
+	{
+	int i;
+	for( i=1; i<=63 && unit.PathX[i]!=MAP_RIGHT+1; i++ )
+		{
+		}
+
+	if( i>=2 )
+		{
+		unit.PathX[0]=unit.PathX[i-1];
+		unit.PathY[0]=unit.PathY[i-1];
+		unit.PathX[1]=MAP_RIGHT+1;
+		}
+	else if( ahead is { } r && PointInRect3(ref r,(int)unit.PathX[0],(int)unit.PathY[0])!=0 )
+		{
+		unit.PathX[0]=unit.Position.X;
+		unit.PathY[0]=unit.Position.Y;
+		unit.PathX[1]=MAP_RIGHT+1;
+		}
+
+	SetCpuRoute(m, 1.0);
+	}
+
+// 1.22's ship looks 40 ahead, and only air bases and naval bases are not in its way (0x401F95 to 0x4023EB). A
+// computer's ship with no leader is replanned when a ship in its way has slowed it to a fifth of its top speed, every
+// 100 ticks, or when the point 80 toward its path is land, unless it is on an emergency move.
+private void CheckCourseAheadAs122(ref Unit unit, int m, ref int land, double pp_drctn)
+	{
+	double wrk_x2;
+	double wrk_y2;
+	int n;
+	RECT wrk_r;
+	int cm_scrn_x;
+	int cm_scrn_y;
+	var replans = unit.Side==CpuSide && unit.GroupLeader==0;
+	wrk_x2=unit.Position.X+CosDegrees(unit.Direction)*40;
+	wrk_y2=unit.Position.Y+SinDegrees(unit.Direction)*40;
+	if(  !( unit.Kind==UnitKind.Submarine && unit.IsSubmerged ) )
+		{
+		for( n=1; n<=MaxUnitId; n++)
+			{
+			ref var other = ref Units[n];
+			if(other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged) && other.Kind!=UnitKind.NavalBase && other.Kind!=UnitKind.AirBase )
+				{
+				wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].Height/2);
+				wrk_r.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].Width/2);
+				wrk_r.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].Height/2);
+				wrk_r.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].Width/2);
+
+				if( PointInRect3(ref wrk_r,(int)wrk_x2,(int)wrk_y2)!=0)
+					{
+					// 前方に艦船！
+					unit.EmergencyFlags[0]=0;
+					land=1;
+					if( replans && (Tick+m)%100==0 && unit.Speed<=unit.MaxSpeed*0.2 )
+						ReplanBlockedRoute(ref unit, m, wrk_r);
+					return;
+					}
+				}
+			}
+		}
+
+	// ＰＰ方向に陸地があるか
+	wrk_x2=unit.Position.X+CosDegrees(pp_drctn)*80;
+	wrk_y2=unit.Position.Y+SinDegrees(pp_drctn)*80;
+	if(!( wrk_y2>MAP_TOP || wrk_y2<MAP_BOTTOM || wrk_x2<MAP_LEFT || wrk_x2>MAP_RIGHT ))
+		{
+		cm_scrn_x=(int)((wrk_x2+(Sprites[SpriteId.JapanUnits].Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
+		cm_scrn_y=(int)((MAP_TOP-wrk_y2+(Sprites[SpriteId.JapanUnits].Height/2))/Sprites[SpriteId.MapTiles].Height);
+		if( MapTiles[cm_scrn_y][cm_scrn_x]>=1 && MapTiles[cm_scrn_y][cm_scrn_x]<=9 )
+			{
+			land=1;
+			if( replans && unit.EmergencyFlags[0]==0 )
+				ReplanBlockedRoute(ref unit, m, null);
+			}
+		}
+
+	if( unit.EmergencyFlags[0]!=0 && land!=0)
+		{
+		// 緊急移動の取り消し
+		unit.EmergencyFlags[0]=0;
+		}
+	}
+
 private void CheckCourseAhead(ref Unit unit, int m, ref int land, double pp_drctn)
 	{
+	if( Rules.ComputerReplansBlockedRoutes )
+		{
+		CheckCourseAheadAs122(ref unit, m, ref land, pp_drctn);
+		return;
+		}
+
 	double wrk_x2;
 	double wrk_y2;
 	int n;
@@ -1293,7 +1394,7 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 
 		unit.Direction+=unit.TurnRate;
 
-		if(unit.Direction>=360.0)
+		if(unit.Direction>360.0 || (Rules.HeadingWrapsAt360 && unit.Direction==360.0))
 			unit.Direction-=360.0;
 		if(unit.Direction<0.0)
 			unit.Direction=360.0+unit.Direction;
@@ -1313,7 +1414,7 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 			}
 		}
 
-	if( unit.Fuel<=0 && (unit.Category==UnitCategory.Plane || (unit.Category==UnitCategory.Ship && unit.Speed>= unit.MaxSpeed/10 ) ) )
+	if( unit.Fuel<=0 && (unit.Category==UnitCategory.Plane || (unit.Category==UnitCategory.Ship && unit.Speed>= (Rules.OutOfFuelShipsBrakeFromTopSpeedTimesATenth ? unit.MaxSpeed*0.1 : unit.MaxSpeed/10) ) ) )
 		unit.Acceleration=-(unit.AccelerationChange*2);		// ガス０なら減速へ
 
 	// 速度を決定
@@ -1327,7 +1428,8 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 			unit.Speed = (unit.MaxSpeed+(unit.Kind==UnitKind.Fighter && unit.Target!=0 ? 1 : 0)*CMBT_SPD);
 		}
 
-	if( unit.Kind==UnitKind.Transport && unit.Ammo!=0 )
+	// NSPW NET slows a transport with cargo; 1.22, not (0x402955).
+	if( unit.Kind==UnitKind.Transport && unit.Ammo!=0 && Rules.CargoSlowsTransports )
 		{
 		// 輸送船でなんかつんでると最高速度がおちる
 		switch( unit.Weapon )
@@ -1377,6 +1479,11 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 		TryLandOnCarrier(ref unit, m);
 		}
 
+	// 1.22 replans the computer's unit with no leader whose next step is land, every 500 ticks, planes included
+	// (0x402D2B).
+	if( Rules.ComputerReplansBlockedRoutes && unit.Side==CpuSide && unit.GroupLeader==0 && (Tick%500)==0 && IsLandAt(unit.Position.X+CosDegrees(unit.Direction)*unit.Speed, unit.Position.Y+SinDegrees(unit.Direction)*unit.Speed) )
+		ReplanBlockedRoute(ref unit, m, null);
+
 	// 新座標を設定
 	unit.Position += new WorldVector(CosDegrees(unit.Direction)*unit.Speed, SinDegrees(unit.Direction)*unit.Speed);
 
@@ -1387,9 +1494,11 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 	if( unit.Kind==UnitKind.Fighter && unit.Target!=0 && unit.MaxSpeed < unit.Speed )
 		n=n-(n/10);
 
+	// 1.22's fuel is an integer, which a moving unit burns 1 at a time (0x402F72); NSPW NET burns its speed's share of
+	// its top speed.
 	if( unit.FuelInterval>=1 && (Tick%n)==0 && unit.Fuel>0 && unit.Speed>0)
 		{
-		unit.Fuel-=(unit.Speed/unit.MaxSpeed);
+		unit.Fuel-=( Rules.FuelBurnsBySpeed ? unit.Speed/unit.MaxSpeed : 1 );
 		if(unit.Fuel<0)
 			unit.Fuel=0;
 		}
@@ -1403,7 +1512,8 @@ private void ControlInfantryBaseFiring(ref Unit unit, int dmg_act, int m)
 	unit.Ammo=unit.MaxAmmo;
 
 	// 艦砲 自動
-	if( unit.Ammo>=1 && Random(250*dmg_act)==0 )
+	// NSPW NET fires 1 in 250 a tick; 1.22, 1 in 200 (0x403140).
+	if( unit.Ammo>=1 && Random(Rules.InfantryBaseGunInterval*dmg_act)==0 )
 		{
 		FireWeapons(m,0,FireKind.Gun);
 		}
@@ -1425,7 +1535,8 @@ private void ControlPillboxesFiring(ref Unit unit, int dmg_act, int m)
 	{
 	unit.Ammo=unit.MaxAmmo;
 	// 艦砲 自動
-	if( unit.Ammo>=1 && Random( 200*dmg_act )==0 )
+	// NSPW NET fires 1 in 200 a tick; 1.22, 1 in 150 (0x4031DE).
+	if( unit.Ammo>=1 && Random( Rules.PillboxesGunInterval*dmg_act )==0 )
 		{
 		FireWeapons(m,0,FireKind.Gun);
 		}
@@ -1452,7 +1563,8 @@ private void ControlFortressFiring(ref Unit unit, int dmg_act, int m)
 	unit.Ammo=unit.MaxAmmo;
 
 	// 艦砲 自動
-	if( unit.Ammo>=1 && Random(150*dmg_act)==0 )
+	// NSPW NET fires 1 in 150 a tick; 1.22, 1 in 100 (0x403275).
+	if( unit.Ammo>=1 && Random(Rules.FortressGunInterval*dmg_act)==0 )
 		{
 		FireWeapons(m,0,FireKind.Gun);
 		}
@@ -1475,7 +1587,8 @@ private void ControlFortressFiring(ref Unit unit, int dmg_act, int m)
 
 private void ControlBattleshipFiring(ref Unit unit, int dmg_act, int m)
 	{
-	if( unit.Side==Side.Japan && unit.Variant==1 )
+	// 1.22 fires every battleship alike, as NSPW NET does all but the Yamato class (0x40332C).
+	if( unit.Side==Side.Japan && unit.Variant==1 && Rules.HasYamatoClass )
 		{
 		// 大和級
 		// 艦砲 自動
@@ -1541,7 +1654,8 @@ private void ControlBattleshipFiring(ref Unit unit, int dmg_act, int m)
 
 private void ControlCruiserFiring(ref Unit unit, int dmg_act, int m)
 	{
-	if( unit.Variant==0 )
+	// 1.22 has no anti-aircraft cruisers: it fires every cruiser as NSPW NET does its first type (0x40348C).
+	if( unit.Variant==0 || !Rules.HasSecondCruiserAndDestroyerTypes )
 		{
 		// 巡洋艦
 		// 艦砲 自動
@@ -1612,7 +1726,8 @@ private void ControlCruiserFiring(ref Unit unit, int dmg_act, int m)
 
 private void ControlDestroyerFiring(ref Unit unit, int dmg_act, int m)
 	{
-	if( unit.Variant==0 )
+	// 1.22 has no second type of destroyer: it fires every destroyer as NSPW NET does its first type (0x403647).
+	if( unit.Variant==0 || !Rules.HasSecondCruiserAndDestroyerTypes )
 		{
 		// 艦砲 自動
 		if( unit.Ammo>=1 && Random(200*dmg_act)==0 )
@@ -1658,6 +1773,18 @@ private void ControlDestroyerFiring(ref Unit unit, int dmg_act, int m)
 
 private void ControlTransportFiring(ref Unit unit, int m)
 	{
+	// 1.22's transports land infantry bases, pillboxes and fortresses only (0x403745).
+	if( !Rules.TransportsLandNavalAndAirBases )
+		{
+		if( unit.Weapon==FireKind.CargoInfantryBase && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
+			FireWeapons(m,0,FireKind.CargoInfantryBase);
+		if( unit.Weapon==FireKind.CargoPillboxes && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
+			FireWeapons(m,0,FireKind.CargoPillboxes);
+		if( unit.Weapon==FireKind.CargoFortress && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
+			FireWeapons(m,0,FireKind.CargoFortress);
+		return;
+		}
+
 	if( unit.Weapon==FireKind.CargoNavalBase && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
 		FireWeapons(m,0,FireKind.CargoNavalBase);
 	if( unit.Weapon==FireKind.CargoAirBase && unit.Ammo>=1  && unit.Target==MaxUnitId+1)
@@ -1674,6 +1801,9 @@ private void ControlTransportFiring(ref Unit unit, int m)
 
 private void ControlFiring(ref Unit unit, int dmg_act, int m)
 	{
+	// 1.22 fires nothing for Japan in scenario 1 (0x4030FF).
+	if( Rules.JapanHoldsFireInScenario1 && ScenarioNumber==1 && unit.Side==Side.Japan )
+		return;
 	if( !IsEditingMap && !unit.IsSupplying && (( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Flying )||( unit.Category==UnitCategory.Ship)))
 		{
 		switch( unit.Kind )
@@ -1758,7 +1888,8 @@ private void ControlFiring(ref Unit unit, int dmg_act, int m)
 			case UnitKind.Bomber:
 				if(Random(20*dmg_act)==0)
 					FireWeapons(m,0,FireKind.Bullet);
-				if( unit.Ammo>=1  && unit.Weapon==FireKind.Torpedo && unit.Target!=0 && unit.TurnRate==0 && unit.Speed>=unit.MaxSpeed )
+				// 1.22's bombers drop no torpedoes (0x40392C).
+				if( unit.Ammo>=1  && unit.Weapon==FireKind.Torpedo && unit.Target!=0 && unit.TurnRate==0 && unit.Speed>=unit.MaxSpeed && Rules.BombersDropTorpedoes )
 					FireWeapons(m,unit.Target,FireKind.Torpedo);
 				if( unit.Ammo>=1  && unit.Weapon==FireKind.Bomb && unit.ReloadTime==0 && unit.TurnRate==0  )
 					FireWeapons(m,unit.Target,FireKind.Bomb);
@@ -1808,15 +1939,28 @@ public void	UpdateBattle()
 			}
 		}
 
-	Detect();
+	if( Rules.TickOrderOf122 )
+		{
+		// 1.22 counts the tick first, then moves the clouds and finds the units, and then checks for the end (0x401009
+		// to 0x401039).
+		Tick++;
+		UpdateClouds( );
+		Detect();
+		if( Result!=GameResult.None || Mode!=GameMode.Battle )
+			return;
+		}
+	else
+		{
+		Detect();
 
-	Tick++;
+		Tick++;
 
-	if( Result!=GameResult.None || Mode!=GameMode.Battle )
-		return;
+		if( Result!=GameResult.None || Mode!=GameMode.Battle )
+			return;
 
-	// 雲を制御します
-	UpdateClouds( );
+		// 雲を制御します
+		UpdateClouds( );
+		}
 
 	// エフェクトのデクリ
 	for( m=1; m<EFFECT_MAX; m++)
@@ -1852,7 +1996,8 @@ public void	UpdateBattle()
 		// 陸上施設の工事処理
 		BuildBase(ref unit);
 
-		if( !IsEditingMap && unit.IsUsed && !(unit.Kind==UnitKind.AirBase||unit.Kind==UnitKind.NavalBase||unit.Kind==UnitKind.City))
+		// 1.22 skips only air bases and naval bases (0x4010A3).
+		if( !IsEditingMap && unit.IsUsed && !(unit.Kind==UnitKind.AirBase||unit.Kind==UnitKind.NavalBase||(unit.Kind==UnitKind.City && !Rules.TickOrderOf122)))
 			{
 			// 補給先がちゃんとあるか
 			UpdateSupply(ref unit);
@@ -1875,7 +2020,8 @@ public void	UpdateBattle()
 
 			//=========		 ユニットの攻撃制御		=========//
 			// ターゲットがアウトならターゲットをクリア
-			if( unit.Target!=0 && ( ( Units[unit.Target].Category==UnitCategory.Plane && ( Units[unit.Target].Hp<=0|| Units[unit.Target].PlaneState==UnitState.Parked )   ) || ( Units[unit.Target].Category==UnitCategory.Ship && Units[unit.Target].Hp<=0 ) || (unit.Kind==UnitKind.Fighter && unit.Ammo<=0) || (Units[unit.Target].Kind==UnitKind.Submarine && Units[unit.Target].IsSubmerged ) || ( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked ) ))
+			// 1.22 keeps a submerged submarine as a target, and a parked plane's target (0x402FD2).
+			if( unit.Target!=0 && ( ( Units[unit.Target].Category==UnitCategory.Plane && ( Units[unit.Target].Hp<=0|| Units[unit.Target].PlaneState==UnitState.Parked )   ) || ( Units[unit.Target].Category==UnitCategory.Ship && Units[unit.Target].Hp<=0 ) || (unit.Kind==UnitKind.Fighter && unit.Ammo<=0) || (Rules.DropsHiddenTargets && ( (Units[unit.Target].Kind==UnitKind.Submarine && Units[unit.Target].IsSubmerged ) || ( unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked ) )) ))
 				{
 				unit.Target=0;
 				}
@@ -1937,7 +2083,8 @@ public void	UpdateBattle()
 					}
 				}
 
-			if( !IsEditingMap && dstc<=400 )
+			// 1.22 has no sonar.
+			if( !IsEditingMap && dstc<=400 && Rules.PlaysSonar )
 				{
 				if( (SharedRandom(3+(int)(dstc/5)))==0  )
 				PlaySoundEffect( 0, SoundId.Sonar ,unit.Position.X, unit.Position.Y);

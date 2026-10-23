@@ -22,6 +22,9 @@ public partial class Nspw
 		_holdrand = seed;
 	}
 
+	// rand's state, as 1.22 keeps it at 0x442250.
+	public uint RandomState => _holdrand;
+
 	public int rand()
 	{
 		_holdrand = _holdrand * 214013 + 2531011;

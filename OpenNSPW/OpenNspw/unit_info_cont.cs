@@ -574,38 +574,10 @@ private int ListCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu
 // A click on an item of the combat menu, while the player can order (CanOrder): the item is the order of the turn.
 private void ChooseCombatMenuItem(CombatMenuItem item)
 	{
-	int s;
 	BufferedMenuOrders[1].Menu=item;
 	BufferedMenuOrders[1].SelectedUnit=SelectedUnit;
 
-	if(LocalSide==Side.Japan)
-		{
-		// 日本海軍サイド
-		for(s=1;s<=JPN_SHIP_END;s++)
-			{
-			// 水上ユニット
-			BufferedSelections[1][s-1]=Selections[1][s];
-			}
-		for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
-			{
-			// 航空ユニット
-			BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-			}
-		}
-	else
-		{
-		// 合衆国海軍サイド
-		for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
-			{
-			// 水上ユニット
-			BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-			}
-		for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
-			{
-			// 航空ユニット
-			BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
-			}
-		}
+	BufferSelections();
 	CanOrder=false;
 	HasOrdered=true;
 	PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
@@ -1634,7 +1606,8 @@ public void	ApplyUnitInfoInput()
 							case UnitKind.Fighter: case UnitKind.Attacker: case UnitKind.Bomber:
 								if(  menu2==CombatMenuItem.ArmWithTorpedo || menu2==CombatMenuItem.ArmWithBomb || menu2==CombatMenuItem.Disarm  )
 									{
-									if(unit.Kind==UnitKind.Attacker || (unit.Kind==UnitKind.Bomber && ( (menu2==CombatMenuItem.ArmWithTorpedo && unit.Side==Side.Japan ) || menu2==CombatMenuItem.ArmWithBomb || menu2==CombatMenuItem.Disarm) ))
+									// 1.22 arms no bomber with a torpedo (0x431D56).
+									if(unit.Kind==UnitKind.Attacker || (unit.Kind==UnitKind.Bomber && ( (menu2==CombatMenuItem.ArmWithTorpedo && unit.Side==Side.Japan && Rules.BombersDropTorpedoes ) || menu2==CombatMenuItem.ArmWithBomb || menu2==CombatMenuItem.Disarm) ))
 										{		// 収容中の攻撃機だったばあい
 										unit.Weapon=(FireKind)menu2;
 
@@ -1648,6 +1621,18 @@ public void	ApplyUnitInfoInput()
 										else
 											unit.ReloadTime=RDY_SPAN;
 										}
+									}
+								else if( Rules.MenuModesApplyToEveryPlane )
+									{
+									// 1.22 gives the mode to every plane, flying or not (0x431D19 to 0x431D4E).
+									unit.Mode=(UnitMode)menu2;
+									if( (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber ) && menu2==CombatMenuItem.Return )
+										{
+										unit.Ammo=0;
+										unit.Target=0;
+										}
+									if( unit.Category==UnitCategory.Plane && menu2==CombatMenuItem.Move )
+										unit.DeckPhase=0;
 									}
 								else
 									{

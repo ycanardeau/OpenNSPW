@@ -102,7 +102,7 @@ internal sealed class Deck : Control
 				continue;
 
 			ref var unit = ref snapshot.Units[m];
-			ref var sprite = ref snapshot.Sprites[unit.Side == Side.Japan ? SpriteId.JapanUnits : SpriteId.UnitedStatesUnits];
+			ref var sprite = ref snapshot.Sprites[snapshot.UnitSprites[m]];
 			var at = ToDeck(unit.Position.X, unit.Position.Y) - new Vector2(sprite.CenterX, sprite.CenterY);
 			_art.Draw(batch, sprite, unit.SpriteRow * 8 + Nspw.SpriteColumnOf(unit.Direction), 1, sprite.Width - 2, sprite.Height - 2, origin + at);
 		}

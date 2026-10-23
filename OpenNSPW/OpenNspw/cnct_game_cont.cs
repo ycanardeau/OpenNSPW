@@ -735,6 +735,7 @@ public void	CheckResult()
 	if( IsSingleplayer )
 		{
 		// 1.22's decision, which also shows the result.
+		Trace?.Reach(this, TracePoint.Decision);
 		RunDecision();
 		return;
 		}
@@ -1268,6 +1269,14 @@ private void SetTransportData(ref Unit unit)
 [Original("set_unit_data")]
 public void	SetUnitData(int m)
 	{
+	// A single-player game has NSPW 1.22's units, whose data differ from NSPW NET's: those created in the battle, such as
+	// the bases that transports land, get them from 1.22's set_unit_data, as the scenario's do.
+	if( IsSingleplayer )
+		{
+		RunSetUnitData(m);
+		return;
+		}
+
 	ref var unit = ref Units[m];
 	int		i;
 
@@ -1674,7 +1683,8 @@ public int		AddPlane(Side side,UnitKind kind,int type,int no,int planes,FireKind
 					}
 				}
 
-			if( park >= Units[no].Capacity )
+			// 1.22 adds the planes to a full carrier too (0x41F060).
+			if( park >= Units[no].Capacity && Rules.FullCarriersRefusePlanes )
 				return (-planes);
 
 			for( n=0; n<24; n++)
@@ -1693,6 +1703,9 @@ public int		AddPlane(Side side,UnitKind kind,int type,int no,int planes,FireKind
 			Units[m].Variant=(short)type;
 			Units[m].PlaneState=UnitState.Parked;
 			Units[m].Carrier=no;					// 所属の空母、及び、基地の番号
+			// BUG(1.22, NSPW NET): with no parking place left, f is the previous plane's, or, for the first, read before it
+			// is set: whatever the original's stack holds, 0 in the port (0x41F111). Kept as is for compatibility with 1.22
+			// and NSPW NET.
 			Units[m].ParkingNumber=f;				// 格納庫の位置、及び、その基地の番機番号
 			Units[m].DeckPhase=0;					// 8
 			Units[m].PlanesToLaunch=0;					// 発艦予定の機数
@@ -4237,10 +4250,23 @@ public void	InitializeGame()
 
 	_DP_FLAG	dp_flag = default;
 
-	// 乱数の初期化
-	srand( (uint)( SharedRandomSeed ) );
+	Rules = IsSingleplayer ? BattleRules.Nspw122 : BattleRules.NspwNet;
 
-	MakeSharedRandomTable();
+	// 乱数の初期化
+	if( IsSingleplayer )
+		{
+		// 1.22 has no shared random numbers: its rand goes on from where it was, seeded from the time as the game started
+		// (WinMain), or as a trace gives it.
+		if( Trace?.Seeds?.Start is { } start )
+			srand( start );
+		Trace?.Reach(this, TracePoint.Start);
+		}
+	else
+		{
+		srand( (uint)( SharedRandomSeed ) );
+
+		MakeSharedRandomTable();
+		}
 
 	ScrollSpeed=0;
 
@@ -4319,6 +4345,14 @@ public void	InitializeGame()
 		{
 		// The scenario has set the sides, the camera and the time limit, and there is no rival.
 		InitializeSingleplayerOrders();
+
+		// 1.22's game_init runs within the frame of the setting screen that starts the battle (0x40C61E), which then
+		// counts itself (0x434E9F): the battle's first frame is 1, and cpu_strtgy starts with fleet 2.
+		FrameCount=1;
+
+		// 1.22's game_init seeds rand last, from the time (0x42A163).
+		srand( Trace?.Seeds?.Battle ?? (uint)time(null) );
+		Trace?.Reach(this, TracePoint.Seeded);
 		return;
 		}
 

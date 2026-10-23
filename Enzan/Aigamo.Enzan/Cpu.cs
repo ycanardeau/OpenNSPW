@@ -271,6 +271,8 @@ public sealed class Cpu(Memory<byte> memory, Register32 offset, Action<Register3
 			Fpu.Status.Update(c3: false, c2: false, c0: true);
 		else if (Fpu.Stack[0].ToDouble() == value.ToDouble())
 			Fpu.Status.Update(c3: true, c2: false, c0: false);
+		else
+			Fpu.Status.Update(c3: true, c2: true, c0: true);
 	}
 
 	/// <summary>
@@ -574,8 +576,11 @@ public sealed class Cpu(Memory<byte> memory, Register32 offset, Action<Register3
 		return ret;
 	}
 
+	/// <summary>
+	/// Push an 8-bit immediate onto the stack, sign-extended to a doubleword.
+	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public void Push(Register8 value) => Push(new Register32(value.Value));
+	public void Push(Register8 value) => Push(value.SignExtend().SignExtend());
 
 	/// <summary>
 	/// Push doubleword onto the stack.
@@ -630,7 +635,7 @@ public sealed class Cpu(Memory<byte> memory, Register32 offset, Action<Register3
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Register32 Sbb(Register32 left, Register32 right)
 	{
-		var tmp = new Register64((ulong)left.Value - (ulong)(right.Value + (Eflags.Carry ? 1 : 0)));
+		var tmp = new Register64((ulong)left.Value - (ulong)right.Value - (Eflags.Carry ? 1UL : 0UL));
 		var result = tmp.Low;
 		Eflags.Update(
 			carry: !tmp.High.IsEmpty,

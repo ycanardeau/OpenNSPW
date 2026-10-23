@@ -55,12 +55,12 @@ Each adds from the first empty element of 1 to 17 (18 when there is none) the un
     | 101, 102 | `0x405127` | Once the computer has no naval base (12) left, each of fleets 1 to 4 in mode 50 attacks (mode 1) the naval bases and the battleships, cruisers and carriers |
     | 200 | `0x405348` | At 50000, fleets 1 and 2 attack the battleships, cruisers and carriers; while fleet 4's flagship is not a cruiser, fleet 3 goes to its second point, (-880, 40) (mode 50) |
     | 203 | `0x40547E` | At 42000, fleet 6 attacks; at 40000, fleet 7 |
-    | 208 | `0x405071` | From 20000, while the Japanese base of fleet 2 has 1 to 15 planes, it gets an attacker or a bomber (one time in 2 each), with bombs, each time. Before 20000, or once the base is gone, 1.22 compares an uninitialized local instead of the count, so a rewrite must read the same slot of the stack |
+    | 208 | `0x405071` | From 20000, while the Japanese base of fleet 2 has 1 to 15 planes, it gets an attacker or a bomber (one time in 2 each), with bombs, each time. Before 20000, or once the base is gone, 1.22 compares an uninitialized local, `[esp+30h]` (`0x4050C7`), instead of the count, so a rewrite must read the same slot of the stack. Windows' stack holds 0 there in every frame recorded, so 1.22 does nothing then; the port gives the emulator's stack 0 there before each `cpu_strtgy` (`StackLocalsOnWindows`), or what a trace recorded (`GiveStackLocal`) |
     | 209 | `0x404E93` | From 40000, while fleet 8 has no flagship: an American carrier with 12 attackers (bombs), then a cruiser, a destroyer, a cruiser and a destroyer, 150 apart, from (8500 + `rand()%1000`, 6500), heading 135°, become fleet 8, which targets the infantry bases (15), then the battleships, cruisers and carriers, toward (80, 3440) |
 
     The events are not flags: an event runs again whenever its condition holds again.
 
-2. **One fleet**: fleet `FrameCount%10+1`, so each fleet acts every 10 frames. The rest of this section is about that fleet.
+2. **One fleet**: fleet `FrameCount%10+1`, so each fleet acts every 10 frames. The battle's first frame is 1, not 0 ([Differences.md](Differences.md)), so fleet 2 acts first. The rest of this section is about that fleet.
 
 3. **The target near its destination** (`0x405554`): if the fleet has a flagship and a destination, the last enemy unit in a square of ±2400 around the destination that is a battleship, cruiser, carrier, light carrier, transport or land force (1, 2, 5, 6, 10, 15 to 17; destroyers, 3, unless the flagship is a battleship), whose `arm[1]` is not 0. In scenario 204, only ground facilities. If the flagship is a carrier, then the last visible (`found`) such enemy within ±800 of the flagship instead, if there is one.
 
@@ -149,7 +149,7 @@ The same as NSPW NET:
 
 The second argument, a `double` (4.0 for a new order, 1.0 for a blocked ship), is not used.
 
-`set_cpu_route2` (`0x42ED30`) is the same as NSPW NET's `set_cpu_root2`; nothing that the port emulates calls it.
+`set_cpu_route2` (`0x42ED30`) is NSPW NET's `set_cpu_root2` as 1.22 compiled it. 1.22's formation (`set_pos_of_dynmc`, `0x414D79`) calls it for a ship that follows a leader, every 10 ticks; the port runs it in the emulator there (`SetCpuRoute2As122`), as NSPW NET's, run natively, took the other side of an obstacle where both were clear, 22.5° either way, in a trace of scenario 203.
 
 ### Blocked ships
 1.22's movement (`chara_cont`) also replans the computer's ships that follow no leader (`ltl_ldr==0`), which NSPW NET does not:

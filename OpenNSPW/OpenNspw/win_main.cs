@@ -343,24 +343,33 @@ public void	UpdateFrame()
 
 	Elapsed = Now - LastTime2;
 
-	if( IsEditingMap )
-		chara_loop=1;
-	else if( Mode==GameMode.Battle )
+	if( IsSingleplayer && Mode==GameMode.Battle && !IsEditingMap )
 		{
-		if( Buttons.HasFlag(InputButtons.Space) )
-			chara_loop=20;
-		else
-			chara_loop=GameSpeed;
+		// 1.22's frame, on its timer.
+		if( !TryStartSingleplayerFrame(out chara_loop) )
+			return;
 		}
 	else
-		chara_loop=1;
-
-	if( chara_loop==1 && Elapsed<=45+5 )
 		{
-		return;
-		}
+		if( IsEditingMap )
+			chara_loop=1;
+		else if( Mode==GameMode.Battle )
+			{
+			if( Buttons.HasFlag(InputButtons.Space) )
+				chara_loop=20;
+			else
+				chara_loop=GameSpeed;
+			}
+		else
+			chara_loop=1;
 
-	LastTime2 = timeGetTime();
+		if( chara_loop==1 && Elapsed<=45+5 )
+			{
+			return;
+			}
+
+		LastTime2 = timeGetTime();
+		}
 
 	ReadInput();		// マウス、キーボード状況取得
 
@@ -406,12 +415,16 @@ public void	UpdateFrame()
 
 			for( i=chara_loop; i>=1; i-- )
 				{
+				IsDrawnTick=i==1;
+				Trace?.Reach(this, TracePoint.Tick);
 				UpdateBattle();
-				if( !IsEditingMap )
+				// 1.22 runs decision for the tick that is drawn after the drawing only.
+				if( !IsEditingMap && !(IsSingleplayer && IsDrawnTick) )
 					CheckResult();
 				}
 
 			UpdateUnitInfo();
+			Trace?.Reach(this, TracePoint.Drawing);
 			DrawBattleArea();
 			DrawMinimap();
 
@@ -724,7 +737,7 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 		}
 
 	// 最初のイメージをロードし、表示
-	lpDDS_OS=bitmap_surface("t3.bmp");
+	lpDDS_OS=bitmap_surface(SpriteSheetName);
 	if (lpDDS_OS==null)
 		{
 		MessageBox(null,"bitmap_surface","残念！",MB_OK | MB_ICONSTOP);
@@ -779,8 +792,13 @@ public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow
 
 	Mode=GameMode.Title;
 
+	// 1.22 seeds rand from the time as it starts (0x434456), and its scenarios draw their random setups, such as where the
+	// computer's fleets start, from where it has gone since.
 	if( IsSingleplayer )
+		{
+		srand( (uint)time(null) );
 		StartSingleplayerGame();
+		}
 
 	//メッセージループ
 	while(TRUE!=0)

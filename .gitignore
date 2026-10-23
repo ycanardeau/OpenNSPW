@@ -290,3 +290,8 @@ __pycache__/
 
 # Nx
 .nx/
+
+# Traces of NSPW 1.22 (docs/Verification.md), and the recorder published to make them
+*.n122
+/recorder/
+/traces/

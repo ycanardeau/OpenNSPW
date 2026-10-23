@@ -1,13 +1,14 @@
 using OpenNspw.Desktop;
 
-// OpenNspw.Desktop [--data <directory>] [--exe <NSPW_122.exe>] [--singleplayer <scenario>]
+// OpenNspw.Desktop [--data <directory>] [--exe <NSPW_122.exe>] [--singleplayer <scenario> | --replay <trace.n122>]
 //
 // Plays the port, from its main menu. The game's data (t3.bmp, wav, Map, Scenario, Saved) is in the original's NSPW_NET
 // directory: by default Original/NSPW_NET of this repository, found from the program's directory.
 //
 // The single-player mode plays a scenario of NSPW 1.22 against the computer (docs/Singleplayer.md), whose functions run
 // from the single-player executable: by default Original/Nspw122/NSPW_122.exe of this repository. With
-// --singleplayer, the game starts in that scenario, without the menus.
+// --singleplayer, the game starts in that scenario, without the menus. With --replay, it starts in the scenario of a
+// trace recorded from 1.22, and follows it, to watch it (docs/Verification.md).
 
 static string? Option(string[] args, string name)
 {
@@ -49,8 +50,23 @@ if (executable is not null && !File.Exists(executable))
 	return 1;
 }
 
+OpenNspw.Trace122Replay? replay = null;
+if (Option(args, "--replay") is { } tracePath)
+{
+	try
+	{
+		replay = new OpenNspw.Trace122Replay(File.OpenRead(tracePath));
+	}
+	catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidDataException)
+	{
+		Console.Error.WriteLine($"The trace cannot be read: {e.Message}");
+		return 1;
+	}
+}
+
+var scenarioText = replay is not null ? replay.Scenario.ToString() : Option(args, "--singleplayer");
 int? scenario = null;
-if (Option(args, "--singleplayer") is { } scenarioText)
+if (scenarioText is not null)
 {
 	if (!int.TryParse(scenarioText, out var number) || !OpenNspw.Singleplayer.Functions.Scenarios.Contains(number))
 	{
@@ -67,6 +83,6 @@ if (Option(args, "--singleplayer") is { } scenarioText)
 	scenario = number;
 }
 
-using var game = new NspwGame(dataDirectory, executable, scenario);
+using var game = new NspwGame(dataDirectory, executable, scenario, replay);
 game.Run();
 return 0;

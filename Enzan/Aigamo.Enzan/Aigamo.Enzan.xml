@@ -279,6 +279,11 @@
             Pop a value from the stack.
             </summary>
         </member>
+        <member name="M:Aigamo.Enzan.Cpu.Push(Aigamo.Enzan.Register8)">
+            <summary>
+            Push an 8-bit immediate onto the stack, sign-extended to a doubleword.
+            </summary>
+        </member>
         <member name="M:Aigamo.Enzan.Cpu.Push(Aigamo.Enzan.Register32)">
             <summary>
             Push doubleword onto the stack.

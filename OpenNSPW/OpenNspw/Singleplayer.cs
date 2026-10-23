@@ -84,8 +84,49 @@ public unsafe partial class Nspw
 	// Whether this is a single-player game, which numbers its units as 1.22 does.
 	public bool IsSingleplayer;
 
+	// The rules the battle follows where 1.22 and NSPW NET differ: 1.22's in a single-player game, NSPW NET's otherwise.
+	// Chosen when a game starts (InitializeGame).
+	public BattleRules Rules = BattleRules.NspwNet;
+
+	// The sprite sheet: 1.22's own (tst_cg1.bmp) in a single-player game, which has another title and other land-based
+	// fighters of Japan, and NSPW NET's otherwise.
+	public string SpriteSheetName => IsSingleplayer ? "tst_cg1.bmp" : "t3.bmp";
+
 	// cpu_side of 1.22: the side the computer plays, or None.
 	public Side CpuSide;
+
+	// 0x48A1EC of 1.22: whether this tick is the last of its frame, the one that is drawn.
+	public bool IsDrawnTick;
+
+	// The trace this single-player game follows and checks itself against, or records itself in, or null
+	// (docs/Verification.md).
+	public ISingleplayerTrace? Trace;
+
+	// The period of 1.22's multimedia timer, which drives its frames (0x432960), in milliseconds.
+	private const uint SingleplayerTimerPeriod = 88;
+
+	// Whether 1.22's timer has ticked since the last frame, which starts a frame, and the ticks of that frame: none at
+	// speed 0, or speed + the timer's ticks counted (0x4345DF). The count is 1: 1.22 clears it after a frame (0x433C99), so
+	// the timer's ticks while a frame runs are lost. The speed is set by NSPW NET's keys, as in a network game, and Space
+	// runs 20 ticks a frame while it is held.
+	private bool TryStartSingleplayerFrame(out short ticks)
+	{
+		if (Elapsed < SingleplayerTimerPeriod)
+		{
+			ticks = 0;
+			return false;
+		}
+
+		LastTime2 += Elapsed / SingleplayerTimerPeriod * SingleplayerTimerPeriod;
+		if (Buttons.HasFlag(InputButtons.Space))
+			ticks = 20;
+		else
+			ticks = GameSpeed == 0 ? (short)0 : (short)(GameSpeed + 1);
+		Trace?.Reach(this, TracePoint.Frame);
+		if (Trace?.TicksOfNextFrame() is { } traced)
+			ticks = (short)traced;
+		return true;
+	}
 
 	// The unit ranges of all_head.h. 1.22 has the same, with 20 ships and 30 planes a side instead of 40 and 50.
 	public int SHIP_LIMIT => IsSingleplayer ? 20 : 40;
@@ -106,6 +147,11 @@ public unsafe partial class Nspw
 	// NSPW_122.exe, which the host gives the game to play single-player.
 	public byte[]? SingleplayerExecutable;
 
+	// The player's selection of every unit when the order in the buffers was given (BufferSelections). The network game
+	// sends only the units of the player's side (BufferedSelections); 1.22 gives an order to every unit selected, such as
+	// the fighters that scenario 303 takes from Japan, whose numbers are Japan's.
+	private Array256<short> BufferedSelectionsOfAllUnits;
+
 	// The emulator of the single-player game being played: a new one for each game, so that 1.22's own globals start as
 	// the executable has them.
 	public Emulator? Emulator;
@@ -113,23 +159,34 @@ public unsafe partial class Nspw
 	// The gas of each unit as it was copied into the emulator, to write back only what the emulated code changed.
 	private readonly int[] _emulatedGas = new int[UnitCount * 8];
 
+	// Writes unit m in 1.22's layout, its gas truncated to int.
+	private void WriteUnitAs122(int m, Span<byte> target)
+	{
+		var unit = MemoryMarshal.AsBytes((Span<Unit>)Units).Slice(m * sizeof(Unit), sizeof(Unit));
+		unit[..UnitOffsets.SubWeapons].CopyTo(target);
+		for (var i = 0; i < 8; i++)
+			MemoryMarshal.Write(target[(UnitGasOffset + 4 * i)..], (int)Units[m].gas[i]);
+		unit.Slice(UnitOffsets.Found, 2 * sizeof(int)).CopyTo(target[UnitFoundOffset..]);
+		unit[UnitOffsets.Random..].CopyTo(target[UnitRandomOffset..]);
+	}
+
 	private void CopyUnitsIn(Emulator emulator)
 	{
-		var units = MemoryMarshal.AsBytes((Span<Unit>)Units);
 		for (var m = 0; m < UnitCount; m++)
 		{
-			var unit = units.Slice(m * sizeof(Unit), sizeof(Unit));
 			var target = emulator.At(UnitAddress + (uint)(m * UnitSize), UnitSize);
-			unit[..UnitOffsets.SubWeapons].CopyTo(target);
+			WriteUnitAs122(m, target);
 			for (var i = 0; i < 8; i++)
-			{
-				var gas = (int)Units[m].gas[i];
-				_emulatedGas[m * 8 + i] = gas;
-				MemoryMarshal.Write(target[(UnitGasOffset + 4 * i)..], gas);
-			}
-			unit.Slice(UnitOffsets.Found, 2 * sizeof(int)).CopyTo(target[UnitFoundOffset..]);
-			unit[UnitOffsets.Random..].CopyTo(target[UnitRandomOffset..]);
+				_emulatedGas[m * 8 + i] = (int)Units[m].gas[i];
 		}
+	}
+
+	// Writes the units and the fires that a trace of 1.22 records (Trace122.Units, Trace122.Fires), in 1.22's layout.
+	public void WriteStateAs122(Span<byte> state)
+	{
+		for (var m = 0; m < Trace122.UnitCount; m++)
+			WriteUnitAs122(m, state.Slice(m * Trace122.UnitSize, Trace122.UnitSize));
+		MemoryMarshal.AsBytes((Span<Fire>)Fires)[..(Trace122.FireCount * Trace122.FireSize)].CopyTo(state[(Trace122.UnitCount * Trace122.UnitSize)..]);
 	}
 
 	private void CopyUnitsOut(Emulator emulator)
@@ -313,16 +370,92 @@ public unsafe partial class Nspw
 		InitializeGame();
 	}
 
-	// cpu_strtgy: the computer's order of this frame, in new_pp[0] and slct_unit[0].
+	// Where an uninitialized local that cpu_strtgy reads is on the emulator's stack, by the instruction that reads it. A
+	// call from the port starts with esp at the image base (Emulator.Run), and cpu_strtgy's prologue (its return address,
+	// ebp, the alignment to 8, 0x90 of locals and four registers) leaves esp 0xA8 below it. 0x4050C7: [esp+30h], which
+	// scenario 208's event reads as the count of planes at fleet 2's base when more than 20000 is left or the base is
+	// gone (docs/ComputerPlayer.md).
+	private static uint? StackLocalAddress(Emulator emulator, uint instruction) =>
+		instruction switch
+		{
+			0x4050C7 => emulator.ImageBase - 0xA8 + 0x30,
+			_ => null,
+		};
+
+	// The uninitialized locals that the battle's own code reads, by the instruction of 1.22 that reads them: the heading
+	// of a torpedo plane's land check (0x413D23, PlaneDropTorpedo), the angle of a plane's landing pattern and approach to
+	// a carrier heading 360 (0x4173BF, SetLandingDestination; 0x41764E, UpdateLanding). A trace gives them as 1.22 read
+	// them, in order.
+	private static readonly uint[] BattleStackLocals = [0x413D23, 0x4173BF, 0x41764E];
+	private readonly Queue<(uint Instruction, byte[] Value)> _battleStackLocals = new();
+
+	// The instruction of an uninitialized local of the battle that a trace gave and the battle has not read, if any.
+	internal uint? UntakenStackLocal => _battleStackLocals.TryPeek(out var local) ? local.Instruction : null;
+
+	// What the battle reads, at the instruction of 1.22 given, from a local 1.22 has not set there: what a trace gave, or
+	// else what the port's own local holds.
+	internal double TakeStackLocal(uint instruction, double own)
+	{
+		if (!_battleStackLocals.TryPeek(out var local) || local.Instruction != instruction)
+			return own;
+		_battleStackLocals.Dequeue();
+		return BitConverter.ToDouble(local.Value);
+	}
+
+	// The uninitialized locals that cpu_strtgy reads, with what Windows' stack holds there: 0, in every frame of the
+	// traces recorded so far, where the emulator's would hold what the emulated code left.
+	// BUG(1.22): scenario 208's count at 0x4050C7 is read before it is set. Kept as is for compatibility with 1.22.
+	private static readonly (uint Instruction, uint Value)[] StackLocalsOnWindows = [(0x4050C7, 0)];
+
+	// Whether a trace has given the uninitialized locals of the coming cpu_strtgy (GiveStackLocal).
+	private bool _hasStackLocals;
+
+	// Gives cpu_strtgy, before it runs, what Windows' stack held where it reads a local it has not set, as a trace of
+	// 1.22 records it; false if the port does not know where that local is.
+	internal bool GiveStackLocal(uint instruction, uint value)
+	{
+		if (Emulator is not { } emulator || StackLocalAddress(emulator, instruction) is not { } address)
+			return false;
+
+		MemoryMarshal.Write(emulator.At(address, sizeof(uint)), value);
+		_hasStackLocals = true;
+		return true;
+	}
+
+	// What Windows' stack held where 1.22 read a local it had not set: for cpu_strtgy, written into the emulator's; for
+	// the battle's own code, kept until it reads it.
+	internal bool GiveStackLocal(uint instruction, byte[] value)
+	{
+		if (!BattleStackLocals.Contains(instruction))
+			return value.Length == sizeof(uint) && GiveStackLocal(instruction, BitConverter.ToUInt32(value));
+		_battleStackLocals.Enqueue((instruction, value));
+		return true;
+	}
+
+	// cpu_strtgy: the computer's order of this frame, in new_pp[0] and slct_unit[0]. The locals it reads uninitialized
+	// hold what Windows' stack holds there, or what a trace has given.
 	public void RunCpuStrategy()
 	{
+		if (!_hasStackLocals)
+		{
+			foreach (var (instruction, value) in StackLocalsOnWindows)
+				GiveStackLocal(instruction, value);
+		}
+
 		RunEmulated(Functions.CpuStrategy);
+		_hasStackLocals = false;
 	}
 
 	// decision: the scenario's events and victory conditions, and the result's messages once it has one.
 	public void RunDecision()
 	{
 		RunEmulated(Functions.Decision);
+	}
+
+	// set_unit_data(m): the data of unit m by its kind and type, NSPW 1.22's.
+	internal void RunSetUnitData(int m)
+	{
+		RunEmulated(Functions.SetUnitData, (uint)m);
 	}
 
 	// The buffers of the orders, empty, and the player free to give the next: what ReceiveAndIssueOrders leaves after a
@@ -341,6 +474,8 @@ public unsafe partial class Nspw
 				BufferedSelections[e][s] = 0;
 		}
 
+		BufferedSelectionsOfAllUnits = default;
+
 		CanOrder = true;
 		HasOrdered = false;
 	}
@@ -354,6 +489,38 @@ public unsafe partial class Nspw
 		SupplyTarget = 0;
 	}
 
+	// The player's orders of this frame, before HandleInput takes them, as a trace of 1.22 records them: the orders the
+	// clicks on the battle area made, the combat menu's item chosen, and the selection; null if the player gave none, or
+	// if the battle has a result, which gives no more orders, as 1.22 does.
+	internal Trace122Orders? ReadPlayerOrders()
+	{
+		if (Result != GameResult.None || (MoveOrders[1].Unit == 0 && !SelectOrders[1].IsSet && BufferedMenuOrders[1].Menu == CombatMenuItem.None))
+			return null;
+
+		var selections = new short[Trace122Orders.SelectionLength];
+		for (var s = 0; s < selections.Length; s++)
+			selections[s] = Selections[1][s];
+		return new Trace122Orders(MoveOrders[1], SelectOrders[1], BufferedMenuOrders[1], SelectedUnit, SelectionCount, selections);
+	}
+
+	// Gives the player's orders of a trace, before HandleInput takes them, as the player's clicks would: the selection,
+	// the combat menu's item for its unit, then the orders of the battle area for the selected unit.
+	internal void GivePlayerOrders(Trace122Orders orders)
+	{
+		SelectionCount = orders.SelectionCount;
+		for (var s = 0; s < Trace122Orders.SelectionLength; s++)
+			Selections[1][s] = orders.Selections[s];
+		if (orders.Menu.Menu != CombatMenuItem.None)
+		{
+			SelectedUnit = orders.Menu.SelectedUnit;
+			ChooseCombatMenuItem(orders.Menu.Menu);
+		}
+
+		SelectedUnit = orders.SelectedUnit;
+		MoveOrders[1] = orders.Move;
+		SelectOrders[1] = orders.Select;
+	}
+
 	// The orders of this frame, as 1.22 gives them after the input, without turns: the computer's, from cpu_strtgy, and
 	// the player's, from the buffers that the input filled, as ReceiveAndIssueOrders gives a turn's. The system orders,
 	// which go back to the network game's setting screen, are not given: a single-player game has no setting screen yet.
@@ -362,6 +529,7 @@ public unsafe partial class Nspw
 		if (Result != GameResult.None)
 			return;
 
+		Trace?.Reach(this, TracePoint.Orders);
 		if (CpuSide != Side.None)
 			RunCpuStrategy();
 
@@ -370,13 +538,11 @@ public unsafe partial class Nspw
 
 		var bf_the_slct_unit = SelectedUnit;
 		Array256<short> bf_slct_unit = Selections[1];
-		for (var s = 0; s <= MaxUnitId; s++)
-			Selections[1][s] = 0;
+		Selections[1] = BufferedSelectionsOfAllUnits;
 
 		MoveOrders[1] = BufferedMoveOrders[1];
 		SelectOrders[1] = BufferedSelectOrders[1];
 		SelectOrders[0].IsSet = false;
-		UnpackSelections(1, LocalSide == Side.Japan);
 
 		ApplyOrders();
 		ApplyUnitInfoInput();
@@ -387,10 +553,31 @@ public unsafe partial class Nspw
 		ClearBufferedOrders();
 	}
 
-	// set_cpu_route(m, 4.0): the route of the computer's ship m to the destination just set as its path.
-	public void SetCpuRoute(int m)
+	// The tile of cmbt_map at row, column, flat as 1.22 reads it, row by row: beyond the map, what 1.22's memory holds around
+	// it, in a single-player game, or else 0, sea.
+	internal ushort MapTileOrBeyond(int row, int column)
 	{
-		var radius = BitConverter.DoubleToUInt64Bits(4.0);
-		RunEmulated(Functions.SetCpuRoute, (uint)m, (uint)radius, (uint)(radius >> 32));
+		var index = row * 256 + column;
+		if ((uint)index < 256 * 256)
+			return MapTiles[index / 256][index % 256];
+		if (Emulator is not { } emulator)
+			return 0;
+		CopyIn(emulator);
+		return BitConverter.ToUInt16(emulator.At((uint)(MapAddress + index * 2), sizeof(ushort)));
+	}
+
+	// set_cpu_route2(m): the route of ship m to the destination just set as its path, as a ship that follows a leader
+	// takes it (0x414D79).
+	public void SetCpuRoute2As122(int m)
+	{
+		RunEmulated(Functions.SetCpuRoute2, (uint)m);
+	}
+
+	// set_cpu_route(m, radius): the route of the computer's ship m to the destination just set as its path; the orders
+	// pass 4.0, the battle 1.0 when the ship is blocked.
+	public void SetCpuRoute(int m, double radius)
+	{
+		var bits = BitConverter.DoubleToUInt64Bits(radius);
+		RunEmulated(Functions.SetCpuRoute, (uint)m, (uint)bits, (uint)(bits >> 32));
 	}
 }

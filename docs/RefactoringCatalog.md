@@ -49,7 +49,7 @@ Each word means one thing in the new names. The original uses some words for sev
 | **Battle area** | The 768×768 part of the screen that shows the world. Its top-left corner is at `CameraPosition`, in world coordinates. | `BattleAreaWidth`, `DrawBattleArea`, `ScrollBattleArea` |
 | **Screen** | The 1024×768 window, in integer pixels (`Point`, `Rect`). | `ScreenWidth`, `CursorPosition` |
 | **Tick** | One step of the simulation: one call of `UpdateBattle` (`chara_cont`). | `Tick` (`cc_count`) |
-| **Frame** | One call of `UpdateFrame`, which runs `GameSpeed` ticks and draws once. | `FrameCount` |
+| **Frame** | One call of `UpdateFrame`, which runs `GameSpeed` ticks (`GameSpeed` + 1 in a single-player game, as 1.22 does) and draws once. | `FrameCount` |
 | **Turn** | The `TurnLength` ticks between two exchanges of orders (see [Synchronization.md](../Original/docs/NSPW_NET/Synchronization.md)). | `TurnLength`, `SyncTick1` |
 
 ## Value types

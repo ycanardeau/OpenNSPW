@@ -19,16 +19,13 @@ namespace OpenNspw;
 public unsafe partial class Nspw
 {
 
-private void BufferMoveOrder(int e)
+// The player's selection, kept with an order for the turn that gives it: the ships, then the planes, of the player's
+// side, packed as the network sends them, and the selection of every unit, which a single-player game gives the order
+// with (IssueSingleplayerOrders), as 1.22 does.
+private void BufferSelections()
 	{
 	int s;
-	int m;
-	// あるマイユニットに新ＰＰ＿ＸＹが設定された場合
-	// バッファに保存。これを命令をだせるタイミングにnew_ppに代入する。
-	BufferedMoveOrders[1].Unit=MoveOrders[1].Unit;
-	BufferedMoveOrders[1].Destination=MoveOrders[1].Destination;
-	BufferedMoveOrders[1].ClearsPath=MoveOrders[1].ClearsPath;
-
+	BufferedSelectionsOfAllUnits=Selections[1];
 	if(LocalSide==Side.Japan)
 		{
 		// 日本海軍サイド
@@ -57,6 +54,18 @@ private void BufferMoveOrder(int e)
 			BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
 			}
 		}
+	}
+
+private void BufferMoveOrder(int e)
+	{
+	int m;
+	// あるマイユニットに新ＰＰ＿ＸＹが設定された場合
+	// バッファに保存。これを命令をだせるタイミングにnew_ppに代入する。
+	BufferedMoveOrders[1].Unit=MoveOrders[1].Unit;
+	BufferedMoveOrders[1].Destination=MoveOrders[1].Destination;
+	BufferedMoveOrders[1].ClearsPath=MoveOrders[1].ClearsPath;
+
+	BufferSelections();
 
 	m=MoveOrders[e].Unit;
 	if( Units[m].Category==UnitCategory.Plane && Units[m].PlaneState==UnitState.Parked )
@@ -76,7 +85,6 @@ private void BufferMoveOrder(int e)
 
 private void SelectFriendlyTarget(ref int m, int e)
 	{
-	int s;
 	int n;
 	if ( Units[SelectedUnit].Category==UnitCategory.Plane && (Units[m].Kind==UnitKind.Carrier || Units[m].Kind==UnitKind.LightCarrier || Units[m].Kind==UnitKind.AirBase))
 		{
@@ -91,34 +99,7 @@ private void SelectFriendlyTarget(ref int m, int e)
 			BufferedSelectOrders[1].Unit=SelectOrders[e].Unit;
 			BufferedSelectOrders[1].GroundPosition=SelectOrders[e].GroundPosition;
 
-			if(LocalSide==Side.Japan)
-				{
-				// 日本海軍サイド
-				for(s=1;s<=JPN_SHIP_END;s++)
-					{
-					// 水上ユニット
-					BufferedSelections[1][s-1]=Selections[1][s];
-					}
-				for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
-					{
-					// 航空ユニット
-					BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-					}
-				}
-			else
-				{
-				// 合衆国海軍サイド
-				for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
-					{
-					// 水上ユニット
-					BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-					}
-				for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
-					{
-					// 航空ユニット
-					BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
-					}
-				}
+			BufferSelections();
 
 			CanOrder=false;
 			HasOrdered=true;
@@ -151,7 +132,6 @@ private void SelectFriendlyTarget(ref int m, int e)
 
 private void SelectTargetOrLanding(ref int m, int e)
 	{
-	int s;
 	if( m==0 )
 		{
 		// 輸送船陸地を選択
@@ -185,34 +165,7 @@ private void SelectTargetOrLanding(ref int m, int e)
 			BufferedSelectOrders[1].Unit=SelectOrders[e].Unit;
 			BufferedSelectOrders[1].GroundPosition=SelectOrders[e].GroundPosition;
 
-			if(LocalSide==Side.Japan)
-				{
-				// 日本海軍サイド
-				for(s=1;s<=JPN_SHIP_END;s++)
-					{
-					// 水上ユニット
-					BufferedSelections[1][s-1]=Selections[1][s];
-					}
-				for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
-					{
-					// 航空ユニット
-					BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-					}
-				}
-			else
-				{
-				// 合衆国海軍サイド
-				for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
-					{
-					// 水上ユニット
-					BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
-					}
-				for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
-					{
-					// 航空ユニット
-					BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
-					}
-				}
+			BufferSelections();
 
 			CanOrder=false;
 			HasOrdered=true;
@@ -229,6 +182,9 @@ private void SelectTargetOrLanding(ref int m, int e)
 public void	HandleInput()
 	{
 	int	h,m,f,e; Array256<int> chk = default;
+
+	// A trace of 1.22 gives the player's orders here, or records them (docs/Verification.md).
+	Trace?.ReachPlayerOrders(this);
 
 	e=1;
 	if( SelectOrders[e].IsSet && !Units[SelectOrders[e].SelectedUnit].IsSupplying && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress ))
@@ -653,10 +609,12 @@ public void	ApplyOrders()
 				else
 					{
 					// 敵性ユニットを左クリック
+					// NSPW NET lets fighters attack transports; 1.22, no ship (0x430618, 0x430679). NSPW NET sends no torpedo
+					// against a ground unit; 1.22, against an air base or a naval base only (0x4305F9).
 					if( m!=Units[SelectedUnit].Target )
 						{
-						if(!(Units[SelectedUnit].Weapon==FireKind.Torpedo && ( Units[m].Kind>=UnitKind.AirBase && Units[m].Kind<=UnitKind.Fortress )) &&
-							!((Units[SelectedUnit].Kind==UnitKind.Fighter && ( Units[m].Category==UnitCategory.Ship && Units[m].Kind!=UnitKind.Transport ))||(Units[SelectedUnit].Kind>=UnitKind.InfantryBase&&Units[SelectedUnit].Kind<=UnitKind.Fortress)||(Units[SelectedUnit].Kind==UnitKind.Transport) )
+						if(!(Units[SelectedUnit].Weapon==FireKind.Torpedo && ( Units[m].Kind>=UnitKind.AirBase && Units[m].Kind<=Rules.LastKindRefusedToTorpedoes )) &&
+							!((Units[SelectedUnit].Kind==UnitKind.Fighter && ( Units[m].Category==UnitCategory.Ship && ( Units[m].Kind!=UnitKind.Transport || !Rules.FightersAttackTransports ) ))||(Units[SelectedUnit].Kind>=UnitKind.InfantryBase&&Units[SelectedUnit].Kind<=UnitKind.Fortress)||(Units[SelectedUnit].Kind==UnitKind.Transport) )
 							)
 							{
 							Units[SelectedUnit].Target=m;			// 攻撃対象のナンバー
@@ -668,7 +626,7 @@ public void	ApplyOrders()
 					for(n=1;n<=MaxUnitId;n++)
 						{
 						ref var unit = ref Units[n];
-						if( unit.IsUsed && Selections[e][n]!=0 && !((unit.Kind==UnitKind.Fighter && ( Units[Units[SelectedUnit].Target].Category==UnitCategory.Ship &&  Units[Units[SelectedUnit].Target].Kind!=UnitKind.Transport  ) )||(unit.Kind>=UnitKind.InfantryBase&&unit.Kind<=UnitKind.Fortress)||(unit.Kind==UnitKind.Transport))
+						if( unit.IsUsed && Selections[e][n]!=0 && !((unit.Kind==UnitKind.Fighter && ( Units[Units[SelectedUnit].Target].Category==UnitCategory.Ship && ( Units[Units[SelectedUnit].Target].Kind!=UnitKind.Transport || !Rules.FightersAttackTransports ) ) )||(unit.Kind>=UnitKind.InfantryBase&&unit.Kind<=UnitKind.Fortress)||(unit.Kind==UnitKind.Transport))
 							)
 							unit.Target=Units[SelectedUnit].Target;				//
 						}
@@ -708,7 +666,7 @@ public void	ApplyOrders()
 				n=1;
 
 				if( CpuSide!=Side.None && Units[m].Side==CpuSide && Units[m].Category!=UnitCategory.Plane )
-					SetCpuRoute(m);
+					SetCpuRoute(m, 4.0);
 				}
 			else
 				{
