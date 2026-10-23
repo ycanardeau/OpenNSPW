@@ -1763,7 +1763,10 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int trgt, ref double drctn2, in
 	if(wrk_y==0)	wrk_y=1;
 
 	drctn=Direction(wrk_x, wrk_y);
-	drctn2=drctn;					// 未来位置への絶対角
+	// BUG(NSPW NET): the bearing from the aim to the plane, so the land is checked behind the plane. Kept as is for
+	// compatibility with NSPW NET.
+	if( !Rules.TorpedoPlanesCheckLandAlongUnsetHeading )
+		drctn2=drctn;					// 未来位置への絶対角
 	if(wrk_x<0)
 		wrk_x=0-wrk_x;
 	if(wrk_y<0)
@@ -1777,6 +1780,9 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int trgt, ref double drctn2, in
 	if( dstc>=100 && dstc<=AIR_TPD_LOS_DSTC )
 		{
 		i=(int)(dstc/2);
+		// 1.22 reads the heading it has not set as the loop starts (0x413D23).
+		if( i>=1 && Rules.TorpedoPlanesCheckLandAlongUnsetHeading )
+			drctn2=TakeStackLocal(0x413D23, drctn2);
 		for(f=1;f<=i;f++)
 			{
 			wrk_x=unit.Position.X;

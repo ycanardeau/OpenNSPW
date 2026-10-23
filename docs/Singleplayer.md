@@ -124,7 +124,7 @@ So in a single-player game (`IsSingleplayer`):
 - `MoveUnit` does not slow a transport with cargo, as 1.22 does not (`0x402955`).
 - `UpdateCargo` completes the base a transport lands at once, with its full HP, as 1.22 does (`0x418E23`), where NSPW NET builds it over 8000 to 20000 ticks from a quarter of its HP.
 - `AttackerDropBomb` releases every attacker's bombs from 170 to 180 of its aim, as 1.22 does (`0x414186`): NSPW NET's Japanese attackers dive to 35 to 65 instead.
-- `PlaneDropTorpedo` leaves the path of the planes that follow a torpedo plane once it drops its torpedo, as 1.22 does (`0x413F51`), where NSPW NET sends them to where it dropped it.
+- `PlaneDropTorpedo` leaves the path of the planes that follow a torpedo plane once it drops its torpedo, as 1.22 does (`0x413F51`), where NSPW NET sends them to where it dropped it; and checks for land along the heading that a trace gives as 1.22's stack held it, or else 0, due east, as 1.22 does, which never sets it (`0x413D23`).
 - `FighterFireBullet` shoots no transport, `ApplyOrders` sends no fighter to attack one, and `SetShipEmergencyDestination` does not turn a transport away from fighters, as 1.22 does (`0x4133B2`, `0x430618`, `0x41650D`): its fighters fight planes only.
 - `ApplyOrders` sends a torpedo plane against any ground unit but an air base or a naval base, as 1.22 does (`0x4305F9`), where NSPW NET refuses them all; neither drops a torpedo on one.
 - `ControlFiring` fires as 1.22 does (`0x4030D8` to `0x40396E`): nothing for Japan in scenario 1, the guns of infantry bases, pillboxes and fortresses 1 in 200, 150 and 100 a tick, every battleship, cruiser and destroyer as NSPW NET does its first type, transports landing ground units only, and no torpedoes from bombers.

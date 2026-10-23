@@ -369,6 +369,43 @@ public class SingleplayerTests
 		Assert.True(game.Units[cruiser].Speed > 0.08);
 	}
 
+	// A torpedo plane checks for land along the heading its stack holds, as 1.22 does (0x413D23), which never sets it;
+	// with no trace to give it, the port's is 0, due east, which is nearly always what 1.22's holds. So a plane at sea
+	// aiming east drops its torpedo with land behind it, to the west, where NSPW NET checks: along the bearing from its aim
+	// to it.
+	[Fact]
+	public void TorpedoPlanesCheckLandAlongTheHeadingTheirStackHolds()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		bool IsSea(int r, int c) => r is > 0 and < 255 && c is > 0 and < 255 && game.MapTiles[r][c] == 0;
+		var (row, column) = (from r in Enumerable.Range(1, 253)
+							 from c in Enumerable.Range(3, 249)
+							 where Enumerable.Range(-1, 3).All(dr => Enumerable.Range(-1, 3).All(dc => IsSea(r + dr, c + dc)))
+								 && Enumerable.Range(1, 3).All(dc => IsSea(r, c + dc)) && game.MapTiles[r][c - 2] >= 1
+							 select (r, c)).First();
+		var x = all_head.MAP_LEFT + column * 80 + 20;
+		var y = all_head.MAP_TOP - row * 80 - 20;
+		var target = game.AddUnit(Side.UnitedStates, UnitKind.Cruiser, x + 200, y, 0);
+		var attacker = game.AddUnit(Side.Japan, UnitKind.Attacker, x, y, 0);
+		Assert.NotEqual(0, target);
+		Assert.NotEqual(0, attacker);
+		game.Units[target].Position = new WorldPosition(x + 200, y);
+		game.Units[target].Speed = 0;
+		game.Units[target].IsFound = true;
+		ref var unit = ref game.Units[attacker];
+		unit.Position = new WorldPosition(x, y);
+		unit.Direction = 0;
+		unit.PlaneState = UnitState.Flying;
+		unit.Ammo = 1;
+		unit.Target = target;
+
+		game.FireWeapons(attacker, target, FireKind.Torpedo);
+
+		Assert.Equal(0, game.Units[attacker].Ammo);
+	}
+
 	// The planes that follow a torpedo plane return once it drops its torpedo, and keep their path, as in 1.22
 	// (0x413F51 to 0x413F7C), where NSPW NET sends them to where it dropped it.
 	[Fact]

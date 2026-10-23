@@ -382,6 +382,24 @@ public unsafe partial class Nspw
 			_ => null,
 		};
 
+	// The uninitialized locals that the battle's own code reads, by the instruction of 1.22 that reads them: the heading
+	// of a torpedo plane's land check (0x413D23, PlaneDropTorpedo). A trace gives them as 1.22 read them, in order.
+	private static readonly uint[] BattleStackLocals = [0x413D23];
+	private readonly Queue<(uint Instruction, byte[] Value)> _battleStackLocals = new();
+
+	// The instruction of an uninitialized local of the battle that a trace gave and the battle has not read, if any.
+	internal uint? UntakenStackLocal => _battleStackLocals.TryPeek(out var local) ? local.Instruction : null;
+
+	// What the battle reads, at the instruction of 1.22 given, from a local 1.22 has not set there: what a trace gave, or
+	// else what the port's own local holds.
+	internal double TakeStackLocal(uint instruction, double own)
+	{
+		if (!_battleStackLocals.TryPeek(out var local) || local.Instruction != instruction)
+			return own;
+		_battleStackLocals.Dequeue();
+		return BitConverter.ToDouble(local.Value);
+	}
+
 	// The uninitialized locals that cpu_strtgy reads, with what Windows' stack holds there: 0, in every frame of the
 	// traces recorded so far, where the emulator's would hold what the emulated code left.
 	// BUG(1.22): scenario 208's count at 0x4050C7 is read before it is set. Kept as is for compatibility with 1.22.
@@ -399,6 +417,16 @@ public unsafe partial class Nspw
 
 		MemoryMarshal.Write(emulator.At(address, sizeof(uint)), value);
 		_hasStackLocals = true;
+		return true;
+	}
+
+	// What Windows' stack held where 1.22 read a local it had not set: for cpu_strtgy, written into the emulator's; for
+	// the battle's own code, kept until it reads it.
+	internal bool GiveStackLocal(uint instruction, byte[] value)
+	{
+		if (!BattleStackLocals.Contains(instruction))
+			return value.Length == sizeof(uint) && GiveStackLocal(instruction, BitConverter.ToUInt32(value));
+		_battleStackLocals.Enqueue((instruction, value));
 		return true;
 	}
 

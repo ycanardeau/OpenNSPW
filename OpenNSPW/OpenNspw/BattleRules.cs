@@ -56,6 +56,12 @@ public sealed record BattleRules(
 	// Whether the planes that follow an attacker fly to where it released its bombs or its torpedo.
 	bool FollowersFlyToRelease,
 
+	// Whether a torpedo plane checks for land, before it drops its torpedo, along a heading it has not set, rather than
+	// along the bearing from its aim to it (PlaneDropTorpedo).
+	// BUG(1.22): it never sets the heading, so it checks along what its stack holds there ([esp+38h], 0x413D23), what an
+	// earlier call left. Kept as is for compatibility with 1.22.
+	bool TorpedoPlanesCheckLandAlongUnsetHeading,
+
 	// Whether a leader sends its attackers off, fanned out, at 500 to 510 from their target.
 	bool AttackersBreakFormation,
 
@@ -219,6 +225,7 @@ public sealed record BattleRules(
 		LastKindRefusedToTorpedoes: UnitKind.Fortress,
 		JapaneseAttackersDive: true,
 		FollowersFlyToRelease: true,
+		TorpedoPlanesCheckLandAlongUnsetHeading: false,
 		AttackersBreakFormation: true,
 		GunsAimAlike: false,
 		ExtraGunShellTicks: 1,
@@ -282,6 +289,7 @@ public sealed record BattleRules(
 		LastKindRefusedToTorpedoes: UnitKind.NavalBase, // 0x4305F9
 		JapaneseAttackersDive: false, // 0x414186 to 0x4144E0
 		FollowersFlyToRelease: false, // 0x414186 to 0x4144E0, 0x413F51 to 0x413F7C
+		TorpedoPlanesCheckLandAlongUnsetHeading: true, // 0x413D23
 		AttackersBreakFormation: false, // 0x415A10
 		GunsAimAlike: true, // 0x410A65, 0x4129AB
 		ExtraGunShellTicks: 0, // 0x410BCE
