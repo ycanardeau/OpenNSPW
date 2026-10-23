@@ -2728,7 +2728,8 @@ public void	SetAttackerEmergencyDestination(int m)
 				Units[new_ldr].FormationNumber=0;
 
 				// 昔の小隊長が攻爆撃機だったら、帰投にしておく
-				if( Units[new_ldr].Kind==UnitKind.Fighter && (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber)  && Units[new_ldr].PlaneState==UnitState.Flying )
+				// 1.22 tests whether the old leader is flying, for the new one and the followers alike (0x415916, 0x415971).
+				if( Units[new_ldr].Kind==UnitKind.Fighter && (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber)  && (Rules.HandoverTestsTheOldLeaderFlying ? unit : Units[new_ldr]).PlaneState==UnitState.Flying )
 					{
 					Units[new_ldr].Mode=UnitMode.Return;		// それまでの隊長がボスだったらきかんしよっと
 					}
@@ -2741,7 +2742,7 @@ public void	SetAttackerEmergencyDestination(int m)
 						other.GroupLeader=(short)new_ldr;
 
 						// 昔の小隊長が攻爆撃機だったら、帰投にしておく
-						if( Units[new_ldr].Kind==UnitKind.Fighter && other.Kind==UnitKind.Fighter && (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber) && other.PlaneState==UnitState.Flying )
+						if( Units[new_ldr].Kind==UnitKind.Fighter && other.Kind==UnitKind.Fighter && (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber) && (Rules.HandoverTestsTheOldLeaderFlying ? unit : other).PlaneState==UnitState.Flying )
 							other.Mode=UnitMode.Return;		// それまでの隊長がボスだったらきかんしよっと
 						}
 

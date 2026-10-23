@@ -430,6 +430,44 @@ public class SingleplayerTests
 		game.FireWeapons(attacker, target, FireKind.Torpedo);
 	}
 
+	// An attacker that turns back, low on fuel, hands its fighters over to a new leader and sends them back if it is itself
+	// flying, as 1.22 tests (0x415916), so a parked fighter is sent back too; NSPW NET tests the fighter.
+	[Fact]
+	public void HandoversSendBackParkedFightersAsIn122()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var carrier = game.AddUnit(Side.Japan, UnitKind.Carrier, -9000, -7000, 0);
+		var attacker = game.AddUnit(Side.Japan, UnitKind.Attacker, -8000, -7000, 0);
+		var fighter = game.AddUnit(Side.Japan, UnitKind.Fighter, -9000, -7000, 0);
+		var other = game.AddUnit(Side.Japan, UnitKind.Fighter, -9000, -7000, 0);
+		Assert.NotEqual(0, carrier);
+		Assert.NotEqual(0, attacker);
+		Assert.NotEqual(0, fighter);
+		Assert.NotEqual(0, other);
+		ref var unit = ref game.Units[attacker];
+		unit.PlaneState = UnitState.Flying;
+		unit.Mode = UnitMode.Move;
+		unit.Carrier = (short)carrier;
+		unit.Fuel = 10;
+		unit.IsGroupLeader = 3;
+		foreach (var (f, number) in new[] { (fighter, 1), (other, 2) })
+		{
+			ref var plane = ref game.Units[f];
+			plane.PlaneState = UnitState.Parked;
+			plane.Mode = UnitMode.Move;
+			plane.GroupLeader = (short)attacker;
+			plane.FormationNumber = (short)number;
+		}
+
+		game.SetAttackerEmergencyDestination(attacker);
+
+		Assert.Equal(0, game.Units[fighter].GroupLeader);
+		Assert.Equal(UnitMode.Return, game.Units[fighter].Mode);
+		Assert.Equal(UnitMode.Return, game.Units[other].Mode);
+	}
+
 	// The planes that follow a torpedo plane return once it drops its torpedo, and keep their path, as in 1.22
 	// (0x413F51 to 0x413F7C), where NSPW NET sends them to where it dropped it.
 	[Fact]

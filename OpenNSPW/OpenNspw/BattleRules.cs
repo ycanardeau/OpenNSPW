@@ -56,6 +56,13 @@ public sealed record BattleRules(
 	// Whether the planes that follow an attacker fly to where it released its bombs or its torpedo.
 	bool FollowersFlyToRelease,
 
+	// Whether, when a returning attacker or bomber hands its fighters over to a new leader (SetAttackerEmergencyDestination),
+	// they are sent back if the old leader is flying, rather than each if it is itself.
+	// BUG?(1.22): it tests the old leader where NSPW NET tests the plane sent back, so a parked fighter is sent back too
+	// (0x415916, 0x415971); 1.22's own handover of a destroyed leader's (0x41ADB3) tests the new leader, as NSPW NET does.
+	// Kept as is for compatibility with 1.22.
+	bool HandoverTestsTheOldLeaderFlying,
+
 	// Whether a plane's approach to a carrier heading 360, which none of the 16 approaches takes, is along an angle it has
 	// not set, rather than 0 (UpdateLanding).
 	// BUG(1.22): a heading can be 360 (HeadingWrapsAt360), and the approach's switch has no case for it, so it reads what
@@ -235,6 +242,7 @@ public sealed record BattleRules(
 		LastKindRefusedToTorpedoes: UnitKind.Fortress,
 		JapaneseAttackersDive: true,
 		FollowersFlyToRelease: true,
+		HandoverTestsTheOldLeaderFlying: false,
 		ApproachesAlongUnsetAngleAt360: false,
 		FollowersRouteBy122sOwnCode: false,
 		TorpedoPlanesCheckLandAlongUnsetHeading: false,
@@ -301,6 +309,7 @@ public sealed record BattleRules(
 		LastKindRefusedToTorpedoes: UnitKind.NavalBase, // 0x4305F9
 		JapaneseAttackersDive: false, // 0x414186 to 0x4144E0
 		FollowersFlyToRelease: false, // 0x414186 to 0x4144E0, 0x413F51 to 0x413F7C
+		HandoverTestsTheOldLeaderFlying: true, // 0x415916, 0x415971
 		ApproachesAlongUnsetAngleAt360: true, // 0x41764E
 		FollowersRouteBy122sOwnCode: true, // 0x414D79
 		TorpedoPlanesCheckLandAlongUnsetHeading: true, // 0x413D23
