@@ -105,6 +105,7 @@ public sealed partial class StrongPlayer : IPlayer
 	private readonly Dictionary<int, int> _sweeps = [];
 	private readonly Dictionary<int, int> _strikeTargets = [];
 	private readonly HashSet<int> _toWaypoint = [];
+	private readonly HashSet<int> _lookedAhead = [];
 	private readonly Dictionary<int, WorldPosition> _blindPoints = [];
 	private readonly Dictionary<int, List<int>> _scoutsOf = [];
 	private readonly Dictionary<int, int> _scoutCounts = [];

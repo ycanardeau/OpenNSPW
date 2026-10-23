@@ -248,9 +248,9 @@ public sealed partial class StrongPlayer
 
 	// The best target found for a flying plane of the player's: for an attacker or a bomber, an enemy ship its weapon
 	// can attack, within 2500, by its worth, the one it was sent at favored, the ones other strikes attack already
-	// less; while it hunts carriers, only the ones the victory conditions count (TakesAnyTarget), the ones most weapons
-	// were dropped on first, to sink one before going for the next; for a fighter, an enemy plane in the air,
-	// attackers and bombers first, within 1500.
+	// less; while it hunts carriers, only the ones the victory conditions count (TakesAnyTarget), the nearest, as every
+	// carrier must be sunk and the nearest is the one the strike reaches with the most fuel left; for a fighter, an
+	// enemy plane in the air, attackers and bombers first, within 1500.
 	private Contact? ChooseTargetInFlight(Nspw game, int plane)
 	{
 		ref var unit = ref game.Units[plane];
@@ -276,14 +276,13 @@ public sealed partial class StrongPlayer
 					&& (takesAny || IsCounted(c.Kind))
 				)
 				.OrderByDescending(c =>
-					Value(c.Kind)
-					+ (_strikeTargets.GetValueOrDefault(plane) == c.Unit ? 4 : 0)
-					- (UnitFacts.Distance(position, c.Position) / 1000)
-					+ (
-						HuntsCarriers
-							? _dropsOn.GetValueOrDefault(c.Unit) * 3
-							: -(AttackersOn(game, c.Unit, plane) * 1.5)
-					)
+					HuntsCarriers
+						? (IsCounted(c.Kind) ? 100 : 0)
+							- (UnitFacts.Distance(position, c.Position) / 100)
+						: Value(c.Kind)
+							+ (_strikeTargets.GetValueOrDefault(plane) == c.Unit ? 4 : 0)
+							- (UnitFacts.Distance(position, c.Position) / 1000)
+							- (AttackersOn(game, c.Unit, plane) * 1.5)
 				)
 				.FirstOrDefault();
 	}
@@ -428,9 +427,10 @@ public sealed partial class StrongPlayer
 		return true;
 	}
 
-	// A strike whose target is alive but not found flies on to where it would be now, and takes no other target until
-	// it has been there, if the victory conditions count the target: the escorts around a carrier are found first. Once
-	// there, with the target still not found, the strike gives it up and takes what it finds.
+	// A strike whose target is alive but not found flies on to where it would be now (WhereNow), then, not finding it
+	// there, to where it was last found, and takes no other target until it has been there, if the victory conditions
+	// count the target: the escorts around a carrier are found first. Once there, with the target still not found, the
+	// strike gives it up and takes what it finds.
 	private bool TryKeepOnTarget(Nspw game, int leader)
 	{
 		ref var unit = ref game.Units[leader];
@@ -448,11 +448,18 @@ public sealed partial class StrongPlayer
 		}
 
 		if (game.Units[targetUnit].IsFound)
+		{
+			_lookedAhead.Remove(leader);
 			return false;
+		}
 
-		var point = target.Predict((game.Renderer.FrameCount - target.Frame) * 2);
+		var point = _lookedAhead.Contains(leader) ? target.Position : WhereNow(game, target, 0);
 		if (UnitFacts.Distance(unit.Position, point) < 400)
 		{
+			if (_lookedAhead.Add(leader))
+				return true;
+
+			_lookedAhead.Remove(leader);
 			_strikeTargets.Remove(leader);
 			return false;
 		}
@@ -506,6 +513,7 @@ public sealed partial class StrongPlayer
 				_sweeps.Remove(m);
 				_approaching.Remove(m);
 				_holding.Remove(m);
+				_lookedAhead.Remove(m);
 				_dispersed.Remove(m);
 				continue;
 			}
@@ -748,11 +756,11 @@ public sealed partial class StrongPlayer
 	// where the carrier they screen most likely is, as escorts are found from 1000, outside their guns' reach, before
 	// the carrier, holds off 3300 to one side of it while enemy planes are found in the air within 2500 of it, as long
 	// as its fuel lets: a strike forming up over its carrier, or coming home to it, whose gunners and fighters break up
-	// an attack, and which sails off to the player's carriers. Then it flies around it at 2000 or more, out of the
-	// reach of its escorts' guns, to the side they cover least (ApproachBearing), as far as its fuel lets, and runs in
-	// from there, a dispersed strike's planes (TryDisperse) fanned out across that side, so that they come in together
-	// from many sides: TrySplitAttack splits a formation up as it comes within 2200. The game's own attack takes over
-	// only within 400 of the target, or at the end of the path, so the strike follows its path around.
+	// an attack, and which sails off to the player's carriers. Then it flies around it at 2000, out of the reach of its
+	// escorts' guns, to the side they cover least (ApproachBearing), as far as its fuel lets, and
+	// runs in from there, a dispersed strike's planes (TryDisperse) fanned out across that side, so that they come in
+	// together from many sides: TrySplitAttack splits a formation up as it comes within 2200. The game's own attack
+	// takes over only within 400 of the target, or at the end of the path, so the strike follows its path around.
 	private bool TryApproach(Nspw game)
 	{
 		if (!HuntsCarriers)
@@ -863,10 +871,9 @@ public sealed partial class StrongPlayer
 			);
 			bearing = from + turn;
 			var steps = (int)Math.Ceiling(Math.Abs(turn) / 40);
-			var radius = Math.Max(UnitFacts.Distance(position, at), 2000);
 			var arcPoints = Enumerable
 				.Range(1, steps)
-				.Select(i => PointAt(at, from + (turn * i / steps), radius))
+				.Select(i => PointAt(at, from + (turn * i / steps), 2000))
 				.ToList();
 			for (var i = 0; i < planes.Count; i++)
 			{
@@ -958,8 +965,9 @@ public sealed partial class StrongPlayer
 	}
 
 	// While hunting carriers, a strike plane in the air, but its scouts, comes home once it has fuel for little more
-	// than that (FuelToHome), the formation it leads with it, whatever it is doing: the game turns a plane home only at
-	// 20, which is too little when it is far, and the player's carriers may have sailed off while it was away.
+	// than that (FuelToHome), the formation it leads with it: the game turns a plane home only at 20, which is too
+	// little when it is far, and the player's carriers may have sailed off while it was away. A plane attacking a
+	// target it sees within 2500 finishes its run first, on most of FuelToHome's margin.
 	private bool TryBingo(Nspw game)
 	{
 		if (!HuntsCarriers)
@@ -968,6 +976,11 @@ public sealed partial class StrongPlayer
 		for (var m = 1; m <= game.MaxUnitId; m++)
 		{
 			ref var unit = ref game.Units[m];
+			var attacking =
+				unit.Target != 0
+				&& game.Units[unit.Target].IsUsed
+				&& game.Units[unit.Target].IsFound
+				&& UnitFacts.Distance(unit.Position, game.Units[unit.Target].Position) <= 2500;
 			if (
 				!IsOwn(game, m)
 				|| !UnitFacts.IsStrikePlane(unit.Kind)
@@ -975,7 +988,7 @@ public sealed partial class StrongPlayer
 				|| unit.GroupLeader != 0
 				|| unit.Mode == UnitMode.Return
 				|| _scoutLegs.ContainsKey(m)
-				|| unit.Fuel > FuelToHome(game, m) + 3
+				|| unit.Fuel > FuelToHome(game, m) + (attacking ? -8 : 3)
 			)
 				continue;
 
@@ -1109,8 +1122,7 @@ public sealed partial class StrongPlayer
 
 	// The best enemy found lately within reach of a deck's planes armed with a weapon, or null; while the strikes hunt
 	// carriers, a carrier found in the last CarrierMemoryFrames, where it most likely is now, within 85% of the planes'
-	// `reach`, which leaves fuel to look for it and to come round to its side, the ones most weapons were dropped on
-	// first (CountDrops).
+	// `reach`, which leaves fuel to look for it and to come round to its side, the nearest first.
 	private Contact? ChooseTarget(Nspw game, int deck, FireKind weapon, double reach)
 	{
 		var position = game.Units[deck].Position;
@@ -1129,9 +1141,9 @@ public sealed partial class StrongPlayer
 				&& !WasEngaged(game, c.Unit)
 			)
 			.OrderByDescending(c =>
-				Value(c.Kind)
-				- (UnitFacts.Distance(position, c.Position) / 2000)
-				+ (HuntsCarriers ? _dropsOn.GetValueOrDefault(c.Unit) * 3 : 0)
+				HuntsCarriers
+					? -UnitFacts.Distance(position, WhereNow(game, c, 0))
+					: Value(c.Kind) - (UnitFacts.Distance(position, c.Position) / 2000)
 			)
 			.FirstOrDefault();
 	}

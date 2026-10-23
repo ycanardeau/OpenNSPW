@@ -79,9 +79,9 @@ So, while the victory conditions count the enemy's carriers (`HuntsCarriers`), t
 - **finds them first**: its scouts sweep the areas where the briefing expects them early, then fly a picket across the way to them, 2500 beyond the computer's strike range, one going out every 900 frames so that one is always out; a scout that finds a carrier keeps it in sight, and another goes out to relieve it when its fuel runs low; a scout lost is replaced. Scenario 4's American carrier starts in one of three places, at random, which its knowledge now names.
 - **keeps its carriers out of the computer's strike range**, as before, and keeps its fighters home to meet the computer's strikes;
 - **strikes early** at an area where the briefing expects the carriers, if it is the only one, or so near that they would strike first (scenarios 4 and 201);
-- **strikes only carriers**, the one most torpedoes were dropped on first, where one was last seen within 3000 frames, within 85% of its planes' reach; a strike that finds only escorts approaches the middle of their formation, where the carrier is;
+- **strikes only carriers**, the nearest first, where one was last seen within 3000 frames, within 85% of its planes' reach; a strike that does not find its carrier where it would be by now looks where it was last seen, and one that finds only escorts approaches the middle of their formation, where the carrier is;
 - **launches when the enemy's strike will be home**, 2000 to one side of its way, and **holds off** 3300 to one side of the target while enemy planes are over it;
-- **disperses** its strike once it is in the air, each plane flying on alone at full speed, and **approaches together**, around the target at 2000, to the side its escorts cover least, fanned out across it, as far as the fuel lets;
+- **disperses** its strike once it is in the air, each plane flying on alone at full speed, and **approaches together**, around the target at 2000, 90° round at most, to the side its escorts cover least, fanned out across it, as far as the fuel lets;
 - **brings its planes home in time**, pointed at their deck, with the fuel for the way home while the deck sails away from them;
 - **sends its warships after a crippled carrier**: once two torpedoes or more were dropped on one, the cruisers and destroyers screening its carriers leave them and go at it, if they are as many as the enemy's warships found around it, and no enemy strike has been seen for 3000 frames; the battleships stay with the carriers. The strikes often leave a carrier at a few HP, burning slowly, and the warships' guns and torpedoes finish it.
 
@@ -183,22 +183,22 @@ It wins 13 games of 111, where the rushing player wins 5: scenarios 1, 101 and 1
 Since then, as measured scenario by scenario: 2 is won in all three games (every deck strikes Pearl Harbor at once, each at a different ship), 202 is won (the strategic bombers reach Tokyo, 62% of their range away), 4 is drawn in all three, and 6 drawn twice.
 
 ### The carrier battles
-At commit `fa6b64e` ([Carrier battles](#carrier-battles)), with no cap on the frames:
+With strikes that go for the nearest carrier, and with no cap on the frames; 4 and 105 also from the six start dates after these (1000023757 to 1000063352), as three games of each swing on small changes:
 
-| Scenario | Side | strong |
-| --- | --- | --- |
-| 4 | J | WWW |
-| 5 | U | DDD |
-| 6 | U | WLD |
-| 9 | J | LLL |
-| 105 | J | WWW |
-| 106 | U | LLW |
-| 201 | J | LLL |
+| Scenario | Side | strong | six more |
+| --- | --- | --- | --- |
+| 4 | J | DWD | WDDLDD |
+| 5 | U | DDD | |
+| 6 | U | WDD | |
+| 9 | J | LLL | |
+| 105 | J | LLW | LLWWWW |
+| 106 | U | WLW | |
+| 201 | J | LLL | |
 
-Before, the strong player drew 4 in all three games, drew 5 and 6 at times, and lost 9, 105, 106 and 201. It now wins 4 and 105 in every game, and 6 and 106 one time in three: its torpedoes reach the carriers, and more than half of them hit.
+Before, the strong player drew 4 in all three games, drew 5 and 6 at times, and lost 9, 105, 106 and 201. It now wins 105 one time in two, 106 two times in three, and 4 and 6 at times: its torpedoes reach the carriers, and more than half of them hit. At `fa6b64e`, whose strikes went for the carriers by their worth, 4 was WWW and 105 WWW on the three dates, but 4 WLDLDD and 105 WLLWLW on the six more: about as often.
 
-- **4**: the strikes leave the American carrier at a few HP, and the cruisers and destroyers sent after it finish it; before they did, two games in three ended in a draw with the carrier at 2 to 6 HP. The carrier starts at one of three places, whichever the early strike and the scouts' sweeps find.
-- **5**, **6** and **106**, where the player is American: the American attackers reach 15400 on a full tank, where the Japanese reach 18700, and the Japanese carriers strike from 4350, so the American strikes fly far and come home short of fuel; in 22500 frames (27500 in 6) the strikes sink one or two of the three Japanese carriers (two in 106), often leaving the last at a few HP. In 6 and 106 the Japanese strikes sink the player's carriers one or two times in three; in 106, whose battle lasts 450000 frames, the Japanese carriers also repair and get their planes back at Truk, which the player's do not. Sending all the warships after the Japanese carriers lost them to the Japanese fleets in 6; sending the strikes of several decks around as one approach made 6 worse too.
+- **4**: the strikes leave the American carrier at a few HP, and the cruisers and destroyers sent after it often finish it, when they find it; most games still end in a draw with the carrier at 2 to 10 HP. The carrier starts at one of three places, whichever the early strike and the scouts' sweeps find.
+- **5**, **6** and **106**, where the player is American: the American attackers reach 15400 on a full tank, where the Japanese reach 18700, and the Japanese carriers strike from 4350, so the American strikes fly far and come home short of fuel; in 22500 frames (27500 in 6) the strikes sink one or two of the three Japanese carriers (two in 106), often leaving the last at a few HP. The Japanese strikes sometimes sink the player's carriers (6 and 106 lost a game each in some runs); in 106, whose battle lasts 450000 frames, the Japanese carriers also repair and get their planes back at Truk, which the player's do not. Sending all the warships after the Japanese carriers lost them to the Japanese fleets in 6; sending the strikes of several decks around as one approach made 6 worse too.
 - **9**: the American fleet screens its three carriers with two battleships, six cruisers and two destroyers, whose fire turns home three of four attackers before they drop (47 in one game), and the player has no fighters; its strikes damage the carriers, but sink none in time.
 - **201**: out of reach as it stands. Three of the four Japanese carriers are burning at 7 of 36 HP, which is not above the fifth a carrier needs to launch, and the ships have 3 to 7 fuel; the last carrier's five or six attackers reach the American carrier, 8000 away, at the edge of their range, and sinking its 41 HP needs about six hits in 4500 frames, one strike.
 
