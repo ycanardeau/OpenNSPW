@@ -37,6 +37,7 @@ internal sealed class ArenaGame
 	private const int FramesAfterTimeOut = 200;
 
 	private readonly IPlayer _player;
+	private readonly int _maxFrames;
 	private readonly ArenaPlatform _platform;
 	private readonly Nspw _game;
 	private int _frames;
@@ -59,7 +60,11 @@ internal sealed class ArenaGame
 			return;
 
 		_frames++;
-		if (_game.Result != GameResult.None || _platform.MessageBoxes.Count > 0)
+		if (
+			_game.Result != GameResult.None
+			|| _platform.MessageBoxes.Count > 0
+			|| _frames > _maxFrames
+		)
 			throw new ArenaStoppedException();
 
 		if (_game.BattleTime <= 0 && ++_framesAfterTimeOut > FramesAfterTimeOut)
@@ -68,9 +73,17 @@ internal sealed class ArenaGame
 		_player.Act(_game);
 	}
 
-	public ArenaGame(GameData data, int scenario, int startDate, IPlayer player)
+	// maxFrames: the frames of the battle after which the game stops, unfinished.
+	public ArenaGame(
+		GameData data,
+		int scenario,
+		int startDate,
+		IPlayer player,
+		int maxFrames = int.MaxValue
+	)
 	{
 		_player = player;
+		_maxFrames = maxFrames;
 		_platform = new ArenaPlatform(
 			data.Directory,
 			data.SingleplayerDirectory,
@@ -79,6 +92,9 @@ internal sealed class ArenaGame
 		);
 		_game = new Nspw(_platform) { IsSingleplayer = true, ScenarioNumber = (short)scenario };
 	}
+
+	// The game, to read its state once it has been played.
+	public Nspw Game => _game;
 
 	public ArenaResult Play()
 	{

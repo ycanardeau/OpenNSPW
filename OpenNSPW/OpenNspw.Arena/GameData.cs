@@ -1,20 +1,24 @@
 namespace OpenNspw.Arena;
 
-// The original's data (Original/NSPW_NET) and NSPW 1.22's directory (Original/Nspw122), found above the arena's folder.
+// The original's data (Original/NSPW_NET) and NSPW 1.22's directory (Original/Nspw122), found above the arena's folder
+// or the current directory.
 internal sealed record GameData(string Directory, string SingleplayerDirectory)
 {
 	private static string FindInOriginal(string folder, string file)
 	{
-		for (
-			var directory = new DirectoryInfo(AppContext.BaseDirectory);
-			directory is not null;
-			directory = directory.Parent
-		)
+		foreach (var start in new[] { AppContext.BaseDirectory, Environment.CurrentDirectory })
 		{
-			var candidate = Path.Combine(directory.FullName, "Original", folder);
-			if (File.Exists(Path.Combine(candidate, file)))
+			for (
+				var directory = new DirectoryInfo(start);
+				directory is not null;
+				directory = directory.Parent
+			)
 			{
-				return candidate;
+				var candidate = Path.Combine(directory.FullName, "Original", folder);
+				if (File.Exists(Path.Combine(candidate, file)))
+				{
+					return candidate;
+				}
 			}
 		}
 

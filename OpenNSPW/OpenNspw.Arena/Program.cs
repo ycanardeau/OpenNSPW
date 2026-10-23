@@ -9,13 +9,19 @@ using OpenNspw.Arena;
 // with each player on the player's side, and writes the table of their results.
 //
 //   dotnet run -c Release --project OpenNspw.Arena -- [--scenarios 4,5,6|all] [--dates 3] [--players idle,rush]
-//       [--parallel <cores>] [--out results.csv]
+//       [--parallel <cores>] [--out results.csv] [--frames <limit>] [--verbose] [--sees-all]
+//   dotnet run -c Release --project OpenNspw.Arena -- --describe [--scenarios 4,5,6|all]
 
-static IPlayer CreatePlayer(string name) =>
+static IPlayer CreatePlayer(string name, bool verbose, bool seesAll) =>
 	name switch
 	{
 		"idle" => new IdlePlayer(),
 		"rush" => new RushPlayer(),
+		"strong" => new StrongPlayer
+		{
+			Log = verbose ? Console.WriteLine : null,
+			SeesEverything = seesAll,
+		},
 		_ => throw new ArgumentException($"No player is named {name}."),
 	};
 
@@ -82,8 +88,26 @@ var parallel = int.Parse(
 	CultureInfo.InvariantCulture
 );
 var outPath = Option(args, "--out", "arena.csv");
+var verbose = args.Contains("--verbose");
+var seesAll = args.Contains("--sees-all");
+var maxFrames = int.Parse(
+	Option(args, "--frames", $"{int.MaxValue}"),
+	CultureInfo.InvariantCulture
+);
 
 var data = GameData.Find();
+if (args.Contains("--describe"))
+{
+	foreach (var scenario in scenarios)
+	{
+		var game = new ArenaGame(data, scenario, 1_000_000_000, new IdlePlayer(), maxFrames: 1);
+		game.Play();
+		Console.WriteLine(ScenarioDescription.Describe(game.Game));
+	}
+
+	return;
+}
+
 var jobs = new ConcurrentQueue<(int Scenario, int StartDate, string Player)>(
 	from scenario in scenarios
 	from date in Enumerable.Range(0, dateCount)
@@ -105,7 +129,8 @@ var workers = Enumerable
 				data,
 				job.Scenario,
 				job.StartDate,
-				CreatePlayer(job.Player)
+				CreatePlayer(job.Player, verbose, seesAll),
+				maxFrames
 			).Play();
 			results.Add(result);
 			lock (results)
