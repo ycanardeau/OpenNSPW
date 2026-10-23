@@ -8,6 +8,9 @@ public sealed partial class StrongPlayer
 	private const int LandingFrames = 600;
 
 	private readonly Dictionary<int, int> _landingOrdered = [];
+	private readonly Dictionary<int, WorldPosition> _landingSeas = [];
+	private bool _convoyFormed;
+	private int _convoyLeader;
 
 	private static bool IsLandable(ushort tile) => tile is 2 or 5 or 7 or 8 or 9;
 
@@ -90,9 +93,8 @@ public sealed partial class StrongPlayer
 		return ((int)((left - World.Left) / 80), (int)((World.Top - top) / 80));
 	}
 
-	// Each transport of the player's with cargo lands it on the coast nearest where the briefing wants bases: the
-	// battlefield is moved there, the transport selected, the land clicked, and the transport sails next to it, where it
-	// lands its cargo once within 400 (SetTransportLandingDestination) and 360 (LandCargo).
+	// Each transport of the player's with cargo is given the coast nearest where the briefing wants bases to land it at:
+	// the battlefield is moved there, the transport selected, and the land clicked. TrySailToLand sails it there.
 	private bool TryLand(Nspw game)
 	{
 		if (_knowledge.Landing is not { } place)
@@ -163,7 +165,7 @@ public sealed partial class StrongPlayer
 						g,
 						$"landing {ship}: selected {g.SelectedUnit}, target {g.Units[ship].Target}"
 					);
-				g.Commands.SetDestination(sea);
+				_landingSeas[ship] = sea;
 				Log?.Invoke(
 					$"{g.Renderer.FrameCount}: Transport {ship} lands {g.Units[ship].Weapon} at ({land.X:F0}, {land.Y:F0})"
 				);
@@ -171,6 +173,109 @@ public sealed partial class StrongPlayer
 			});
 			Deselect();
 			return true;
+		}
+
+		return false;
+	}
+
+	// The transports with cargo, and the warships near them, sail together, the first transport leading, the others and
+	// the warships around it, once: a transport alone is sunk on the way.
+	private bool TryFormConvoy(Nspw game)
+	{
+		if (_knowledge.Landing is null || _convoyFormed)
+			return false;
+
+		_convoyFormed = true;
+		var transports = new List<int>();
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var unit = ref game.Units[m];
+			if (
+				IsOwn(game, m)
+				&& unit.Kind == UnitKind.Transport
+				&& unit.Ammo > 0
+				&& unit.Weapon >= FireKind.CargoNavalBase
+				&& !UnitFacts.IsAnchored(ref unit)
+			)
+				transports.Add(m);
+		}
+
+		if (transports.Count == 0)
+			return false;
+
+		var leader = transports[0];
+		var position = game.Units[leader].Position;
+		var members = transports.Skip(1).ToList();
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var ship = ref game.Units[m];
+			if (
+				IsOwn(game, m)
+				&& IsWarship(ship.Kind)
+				&& !UnitFacts.IsAnchored(ref ship)
+				&& ship.GroupLeader == 0
+				&& !_formed.Contains(m)
+				&& UnitFacts.Distance(ship.Position, position) <= 2500
+			)
+				members.Add(m);
+		}
+
+		_formed.UnionWith(members.Append(leader));
+		_convoyLeader = leader;
+		SelectAlone(leader, "forming the convoy");
+		foreach (var member in members)
+		{
+			_clicks.Enqueue(g =>
+			{
+				if (g.SelectedUnit != leader)
+					return GiveUp(g, $"forming the convoy of {leader}: selected {g.SelectedUnit}");
+				if (IsOwn(g, member) && g.Selections[1][member] == 0)
+					g.Commands.ClickUnit(member);
+				return true;
+			});
+		}
+
+		SendSelected(
+			leader,
+			new WorldPosition(position.X + 80, position.Y),
+			$"leads a convoy of {members.Count} ships to"
+		);
+		return true;
+	}
+
+	// A transport given a coast to land at sails next to it, across the sea, the convoy it leads with it; and so does one
+	// that is still far from it and stands still, the convoy's leader having landed its cargo, or the way having been
+	// blocked. It lands its cargo once within 400 (SetTransportLandingDestination) and 360 (LandCargo).
+	private bool TrySailToLand(Nspw game)
+	{
+		foreach (var (m, sea) in _landingSeas)
+		{
+			ref var transport = ref game.Units[m];
+			if (!IsOwn(game, m) || transport.Ammo <= 0 || transport.Target != game.MaxUnitId + 1)
+			{
+				_landingSeas.Remove(m);
+				return false;
+			}
+
+			var isFollowing =
+				transport.GroupLeader != 0 && game.Units[transport.GroupLeader].IsUsed;
+			var isLeading = m == _convoyLeader || !isFollowing;
+			var isStill = transport.Speed == 0;
+			if (
+				UnitFacts.Distance(transport.Position, sea) <= 300
+				|| (isFollowing && !isStill)
+				|| (
+					UnitFacts.Distance(UnitFacts.FinalDestination(ref transport), sea) < 150
+					&& !isStill
+				)
+				|| game.Renderer.FrameCount - _landingOrdered.GetValueOrDefault(m, -LandingFrames)
+					< (isLeading ? 150 : LandingFrames)
+			)
+				continue;
+
+			_landingOrdered[m] = game.Renderer.FrameCount;
+			SelectAlone(m, "sailing to land");
+			return SailSelected(game, m, sea, "sails to land at") || true;
 		}
 
 		return false;

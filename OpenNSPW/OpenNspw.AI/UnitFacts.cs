@@ -19,6 +19,26 @@ internal static class UnitFacts
 
 	public static bool IsStrikePlane(UnitKind kind) => kind is UnitKind.Attacker or UnitKind.Bomber;
 
+	// Whether a ship is anchored for the whole battle, as some scenarios set ships up (fuel -1): it never moves, and
+	// cannot be refuelled.
+	public static bool IsAnchored(ref Unit unit) =>
+		unit.Category == UnitCategory.Ship && unit.Fuel < 0;
+
+	// The last point of a unit's path, or its position if it has none.
+	public static WorldPosition FinalDestination(ref Unit unit)
+	{
+		if (unit.PathX[0] == World.Right + 1)
+			return unit.Position;
+
+		var n = 0;
+		while (n < 63 && unit.PathX[n + 1] != World.Right + 1)
+		{
+			n++;
+		}
+
+		return new WorldPosition(unit.PathX[n], unit.PathY[n]);
+	}
+
 	// Whether a ship can be at a point: on the map, and on a tile of sea, as the ships see the terrain (IsLandAt).
 	public static bool IsSea(Nspw game, WorldPosition position)
 	{

@@ -76,6 +76,7 @@ public sealed partial class StrongPlayer : IPlayer
 
 	private readonly ClickQueue _clicks = new();
 	private readonly Contacts _contacts = new();
+	private SeaRoutes? _routes;
 	private readonly Dictionary<int, int> _engaged = [];
 	private readonly Dictionary<string, int> _placeStrikes = [];
 	private readonly Dictionary<int, int> _directed = [];
@@ -287,6 +288,57 @@ public sealed partial class StrongPlayer : IPlayer
 		Deselect();
 	}
 
+	// Sails the selected ship m to a point along a route across the sea, around the ships that stand still, a click for each
+	// waypoint: the first replaces its path, the next ones add to it (SetDestination); then deselects it. Gives up if the
+	// sea does not lead there.
+	private bool SailSelected(Nspw game, int m, WorldPosition point, string what)
+	{
+		_routes ??= new SeaRoutes(game);
+		var obstacles = new List<WorldPosition>();
+		for (var n = 1; n <= game.MaxUnitId; n++)
+		{
+			ref var other = ref game.Units[n];
+			if (
+				n != m
+				&& other.IsUsed
+				&& other.Category == UnitCategory.Ship
+				&& other.GroupLeader != m
+				&& (other.Speed == 0 || UnitFacts.IsAnchored(ref other))
+				&& !(other.Kind == UnitKind.Submarine && other.IsSubmerged)
+				&& !UnitFacts.IsBase(other.Kind)
+				&& (other.Side == game.LocalSide || other.IsFound)
+			)
+				obstacles.Add(other.Position);
+		}
+
+		if (_routes.Route(game.Units[m].Position, point, obstacles) is not { } route)
+		{
+			Log?.Invoke(
+				$"{game.Renderer.FrameCount}: no route for {game.Units[m].Kind} {m} to ({point.X:F0}, {point.Y:F0})"
+			);
+			return false;
+		}
+
+		foreach (var waypoint in route)
+		{
+			_clicks.Enqueue(g =>
+			{
+				if (g.SelectedUnit != m)
+					return GiveUp(g, $"{what} {m}: selected {g.SelectedUnit}");
+				g.Commands.SetDestination(waypoint);
+				return true;
+			});
+		}
+
+		_clicks.Enqueue(g =>
+			Log?.Invoke(
+				$"{g.Renderer.FrameCount}: {g.Units[m].Kind} {m} {what} ({point.X:F0}, {point.Y:F0}) by {route.Count} waypoints"
+			)
+		);
+		Deselect();
+		return true;
+	}
+
 	private void Plan(Nspw game)
 	{
 		var decks = Decks(game);
@@ -297,7 +349,9 @@ public sealed partial class StrongPlayer : IPlayer
 			&& !TryScout(game, decks)
 			&& !TryStrike(game, decks)
 			&& !TryForm(game, decks)
+			&& !TryFormConvoy(game)
 			&& !TryLand(game)
+			&& !TrySailToLand(game)
 			&& !TryFormBattleGroups(game)
 			&& !TryRepair(game)
 			&& !TryPosition(game, decks)

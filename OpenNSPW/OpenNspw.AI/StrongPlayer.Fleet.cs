@@ -14,6 +14,7 @@ public sealed partial class StrongPlayer
 			if (
 				unit.Category != UnitCategory.Ship
 				|| UnitFacts.IsBase(unit.Kind)
+				|| UnitFacts.IsAnchored(ref unit)
 				|| !_formed.Add(carrier)
 			)
 				continue;
@@ -25,6 +26,7 @@ public sealed partial class StrongPlayer
 				if (
 					m != carrier
 					&& IsOwn(game, m)
+					&& !UnitFacts.IsAnchored(ref ship)
 					&& ship.Kind
 						is UnitKind.Battleship
 							or UnitKind.Cruiser
@@ -111,51 +113,10 @@ public sealed partial class StrongPlayer
 		return threats;
 	}
 
-	// The point up to 4000 from a ship toward a distance from a threat, across the sea: straight at, or away from, the
-	// threat, or turned up to 90° either way, whichever first brings it nearer that distance; or null.
-	private static WorldPosition? Toward(
-		Nspw game,
-		WorldPosition from,
-		WorldPosition threat,
-		double distance
-	)
-	{
-		var current = UnitFacts.Distance(from, threat);
-		var bearing = BearingTo(from, threat) + (current < distance ? 180 : 0);
-		var step = Math.Min(Math.Abs(current - distance), 4000);
-		foreach (var turn in new[] { 0, 30, -30, 60, -60, 90, -90 })
-		{
-			var point = PointAt(from, bearing + turn, step);
-			if (
-				Math.Abs(UnitFacts.Distance(point, threat) - distance)
-				>= Math.Abs(current - distance) - 150
-			)
-				continue;
-
-			var samples = (int)(step / 150) + 1;
-			var clear = true;
-			for (var i = 1; i <= samples && clear; i++)
-			{
-				clear = UnitFacts.IsSea(
-					game,
-					new WorldPosition(
-						from.X + ((point.X - from.X) * i / samples),
-						from.Y + ((point.Y - from.Y) * i / samples)
-					)
-				);
-			}
-
-			if (clear)
-				return point;
-		}
-
-		return null;
-	}
-
 	// A carrier keeps just beyond the computer's strike range from what threatens it, with a margin: the computer launches
 	// only within it, so a carrier out of it is struck by none, while its own planes reach farther. It closes in while it
-	// is farther than its planes should fly, and moves away while it is within the range, along the sea, its formation with
-	// it.
+	// is farther than its planes should fly, and moves away while it is within the range, across the sea, its formation
+	// with it.
 	private bool TryPosition(Nspw game, List<int> decks)
 	{
 		var threats = Threats(game);
@@ -167,6 +128,7 @@ public sealed partial class StrongPlayer
 				|| UnitFacts.IsBase(unit.Kind)
 				|| unit.GroupLeader != 0
 				|| unit.IsSupplying
+				|| UnitFacts.IsAnchored(ref unit)
 				|| threats.Count == 0
 				|| game.Renderer.FrameCount
 					- _positioned.GetValueOrDefault(carrier, -PositionFrames)
@@ -180,46 +142,23 @@ public sealed partial class StrongPlayer
 			);
 			var low = range + KeepAwayMargin;
 			var distance = UnitFacts.Distance(position, threat);
-			var destination = new WorldPosition(unit.PathX[0], unit.PathY[0]);
-			var isMoving =
-				unit.PathX[0] != World.Right + 1 && UnitFacts.Distance(destination, position) > 400;
-			var aim = low + (ApproachBand / 2);
+			var aim = PointAt(threat, BearingTo(threat, position), low + (ApproachBand / 2));
+			var destination = UnitFacts.FinalDestination(ref unit);
+			var isMoving = UnitFacts.Distance(destination, position) > 400;
 			if (
 				(distance >= low && distance <= low + ApproachBand)
-				|| (
-					isMoving
-					&& Math.Abs(UnitFacts.Distance(destination, threat) - aim)
-						< Math.Abs(distance - aim)
-					&& UnitFacts.Distance(destination, threat) >= low
-				)
+				|| (isMoving && UnitFacts.Distance(destination, aim) < 800)
 			)
 				continue;
 
 			_positioned[carrier] = game.Renderer.FrameCount;
-			if (Toward(game, position, threat, aim) is not { } point)
-				continue;
-
-			var leader = carrier;
-			Deselect();
-			_clicks.Enqueue(g =>
-			{
-				if (g.SelectedUnit != 0 || !IsOwn(g, leader))
-					return GiveUp(g, $"moving {leader}: selected {g.SelectedUnit}");
-				g.Commands.ClickUnit(leader);
-				return true;
-			});
-			_clicks.Enqueue(g =>
-			{
-				if (g.SelectedUnit != leader)
-					return GiveUp(g, $"moving {leader}: selected {g.SelectedUnit}");
-				g.Commands.SetDestination(point);
-				Log?.Invoke(
-					$"{g.Renderer.FrameCount}: {g.Units[leader].Kind} {leader} moves to ({point.X:F0}, {point.Y:F0}), {UnitFacts.Distance(point, threat):F0} from ({threat.X:F0}, {threat.Y:F0})"
-				);
-				return true;
-			});
-			Deselect();
-			return true;
+			SelectAlone(carrier, "moving");
+			return SailSelected(
+					game,
+					carrier,
+					aim,
+					$"moves {low + (ApproachBand / 2):F0} from ({threat.X:F0}, {threat.Y:F0}) to"
+				) || true;
 		}
 
 		return false;
@@ -241,6 +180,7 @@ public sealed partial class StrongPlayer
 				|| seed.GroupLeader != 0
 				|| seed.IsGroupLeader != 0
 				|| seed.IsSupplying
+				|| UnitFacts.IsAnchored(ref seed)
 			)
 				continue;
 
@@ -256,6 +196,7 @@ public sealed partial class StrongPlayer
 					&& ship.GroupLeader == 0
 					&& ship.IsGroupLeader == 0
 					&& !ship.IsSupplying
+					&& !UnitFacts.IsAnchored(ref ship)
 					&& UnitFacts.Distance(ship.Position, position) <= 2500
 				)
 					group.Add(n);
@@ -324,7 +265,7 @@ public sealed partial class StrongPlayer
 		for (var m = 1; m <= game.MaxUnitId; m++)
 		{
 			ref var ship = ref game.Units[m];
-			if (!IsOwn(game, m) || !IsWarship(ship.Kind))
+			if (!IsOwn(game, m) || !IsWarship(ship.Kind) || UnitFacts.IsAnchored(ref ship))
 				continue;
 
 			if (ship.IsSupplying || ship.HP >= ship.MaxHP)
@@ -352,9 +293,11 @@ public sealed partial class StrongPlayer
 			if (UnitFacts.Distance(ship.Position, basePosition) > 240)
 			{
 				var berth = PointAt(basePosition, BearingTo(basePosition, ship.Position), 160);
+				if (UnitFacts.Distance(UnitFacts.FinalDestination(ref ship), berth) < 120)
+					continue;
+
 				SelectAlone(m, "sailing to repair");
-				SendSelected(m, berth, "sails to repair at");
-				return true;
+				return SailSelected(game, m, berth, "sails to repair at") || true;
 			}
 
 			if (!ship.IsStopping || ship.Speed != 0)
@@ -408,6 +351,7 @@ public sealed partial class StrongPlayer
 				|| leader.GroupLeader != 0
 				|| leader.IsSupplying
 				|| _repairing.Contains(m)
+				|| UnitFacts.IsAnchored(ref leader)
 				|| game.Renderer.FrameCount - _engagedAt.GetValueOrDefault(m, -EngageFrames)
 					< EngageFrames
 			)
@@ -452,12 +396,12 @@ public sealed partial class StrongPlayer
 				continue;
 			}
 
-			var destination = new WorldPosition(leader.PathX[0], leader.PathY[0]);
+			var destination = UnitFacts.FinalDestination(ref leader);
 			var hasTarget =
 				target is null || leader.Target == target.Unit || !game.Units[target.Unit].IsFound;
 			if (
 				hasTarget
-				&& leader.PathX[0] != World.Right + 1
+				&& UnitFacts.Distance(destination, position) > 100
 				&& UnitFacts.Distance(destination, point) < 600
 			)
 				continue;
@@ -481,12 +425,12 @@ public sealed partial class StrongPlayer
 				});
 			}
 
-			SendSelected(
-				m,
-				point,
-				target is null ? "sails toward" : $"engages {target.Kind} {target.Unit} at"
-			);
-			return true;
+			return SailSelected(
+					game,
+					m,
+					point,
+					target is null ? "sails toward" : $"engages {target.Kind} {target.Unit} at"
+				) || true;
 		}
 
 		return false;
