@@ -507,14 +507,19 @@ public sealed partial class StrongPlayer
 			.FirstOrDefault();
 	}
 
+	// How far a plane flies out to strike a place: 45% of its range on a full tank, to come back; a strategic bomber, 62%,
+	// as its mission is to get there.
+	private static double Reach(ref Unit plane) =>
+		plane.MaxSpeed * plane.FuelInterval * 100 * (plane.Kind == UnitKind.Bomber ? 0.62 : 0.45);
+
 	// A place the briefing names, within reach of a deck, where nothing has been found lately and no strike went lately:
 	// a strike goes there to find what to attack, as a player strikes Pearl Harbor without seeing it first.
-	private WorldPosition? PlaceToStrike(Nspw game, int deck)
+	private WorldPosition? PlaceToStrike(Nspw game, int deck, double reach)
 	{
 		var position = game.Units[deck].Position;
 		var place = _knowledge.Enemy.FirstOrDefault(a =>
 			a.IsPlace
-			&& UnitFacts.Distance(position, a.Center) <= PlaceStrikeRange
+			&& UnitFacts.Distance(position, a.Center) <= reach
 			&& game.Renderer.FrameCount
 				- _placeStrikes.GetValueOrDefault(a.Name, -PlaceStrikeFrames)
 				>= PlaceStrikeFrames
@@ -582,10 +587,11 @@ public sealed partial class StrongPlayer
 						<= StrikeRange
 						? w.Target
 						: null;
+				var reach = ready.Count == 0 ? 0 : ready.Min(n => Reach(ref game.Units[n]));
 				var pointWave =
 					_pointWave is { } p
 					&& game.Renderer.FrameCount - p.Frame < PointWaveFrames
-					&& UnitFacts.Distance(game.Units[deck].Position, p.Point) <= PlaceStrikeRange
+					&& UnitFacts.Distance(game.Units[deck].Position, p.Point) <= reach
 						? p.Point
 						: (WorldPosition?)null;
 				if (
@@ -603,7 +609,7 @@ public sealed partial class StrongPlayer
 
 				var target = wave ?? ChooseTarget(game, deck, weapon);
 				var origin = target is null
-					? pointWave ?? EnemyStrikeOrigin(game) ?? PlaceToStrike(game, deck)
+					? pointWave ?? EnemyStrikeOrigin(game) ?? PlaceToStrike(game, deck, reach)
 					: null;
 				if (target is null && origin is null)
 					continue;

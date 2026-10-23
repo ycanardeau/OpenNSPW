@@ -92,8 +92,8 @@ public sealed partial class StrongPlayer
 	// found, the computer's strike range (3550, or 4350 as Japan) and more for each frame since, as they may have come on
 	// by half their speed, up to 3000; or, none found yet, the areas where the briefing expects them, if the victory
 	// conditions count them, the range and the area's radius; and the places the briefing names, whose air bases strike
-	// 1.5 times as far (ComputerPlayer.md, Air strikes).
-	private List<(WorldPosition Position, double Range)> Threats(Nspw game)
+	// 1.5 times as far (ComputerPlayer.md, Air strikes). Whether each is known, found or a place, or only expected.
+	private List<(WorldPosition Position, double Range, bool IsKnown)> Threats(Nspw game)
 	{
 		var range = ComputerStrikeRange(game);
 		var threats = _contacts
@@ -103,25 +103,28 @@ public sealed partial class StrongPlayer
 			.Select(c =>
 				(
 					c.Position,
-					range + Math.Min((game.Renderer.FrameCount - c.Frame) * 2 * 0.35 * 0.5, 3000)
+					range + Math.Min((game.Renderer.FrameCount - c.Frame) * 2 * 0.35 * 0.5, 3000),
+					true
 				)
 			)
 			.ToList();
 		if (threats.Count == 0 && _knowledge.Counted.Contains(UnitKind.Carrier))
 			threats.AddRange(
-				_knowledge.Enemy.Where(a => !a.IsPlace).Select(a => (a.Center, range + a.Radius))
+				_knowledge
+					.Enemy.Where(a => !a.IsPlace)
+					.Select(a => (a.Center, range + a.Radius, false))
 			);
 
 		threats.AddRange(
-			_knowledge.Enemy.Where(a => a.IsPlace).Select(a => (a.Center, range * 1.5))
+			_knowledge.Enemy.Where(a => a.IsPlace).Select(a => (a.Center, range * 1.5, true))
 		);
 		return threats;
 	}
 
 	// A carrier keeps just beyond the computer's strike range from what threatens it, with a margin: the computer launches
 	// only within it, so a carrier out of it is struck by none, while its own planes reach farther. It closes in while it
-	// is farther than its planes should fly, and moves away while it is within the range, across the sea, its formation
-	// with it.
+	// is farther than its planes should fly from what is known, found or a place, not what is only expected, which may be
+	// coming on; and moves away while it is within the range, across the sea, its formation with it.
 	private bool TryPosition(Nspw game, List<int> decks)
 	{
 		var threats = Threats(game);
@@ -142,7 +145,7 @@ public sealed partial class StrongPlayer
 				continue;
 
 			var position = unit.Position;
-			var (threat, range) = threats.MinBy(t =>
+			var (threat, range, isKnown) = threats.MinBy(t =>
 				UnitFacts.Distance(t.Position, position) - t.Range
 			);
 			var low = range + KeepAwayMargin;
@@ -151,7 +154,7 @@ public sealed partial class StrongPlayer
 			var destination = UnitFacts.FinalDestination(ref unit);
 			var isMoving = UnitFacts.Distance(destination, position) > 400;
 			if (
-				(distance >= low && distance <= low + ApproachBand)
+				(distance >= low && (distance <= low + ApproachBand || !isKnown))
 				|| (isMoving && UnitFacts.Distance(destination, aim) < 800)
 			)
 				continue;

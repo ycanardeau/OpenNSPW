@@ -47,7 +47,8 @@ public sealed partial class StrongPlayer : IPlayer
 	// The frames after a strike or an interception before the same target is given more planes.
 	private const int RetargetFrames = 400;
 
-	// How far from a deck its planes strike a place the briefing names, before anything there is found.
+	// How far from a deck the scouts leave a place the briefing names to the strikes, which go there to find what to
+	// attack (Reach).
 	private const double PlaceStrikeRange = 8000;
 
 	// The scouts of all the decks, at most.
