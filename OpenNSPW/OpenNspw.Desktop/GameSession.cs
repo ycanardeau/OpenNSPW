@@ -124,6 +124,9 @@ internal sealed class GameSession : IDisposable
 	// give it none.
 	private bool IsInputHeldBack => Game.Extensions.HoldsInput;
 
+	// The computer player that plays the player's side of a single-player battle, to watch it (docs/StrongAI.md), or null.
+	public OpenNspw.AI.IPlayer? Player { get; }
+
 	// Whether WinMain has returned: the game was closed, or failed to connect.
 	public bool HasEnded => _hasEnded;
 
@@ -194,8 +197,9 @@ internal sealed class GameSession : IDisposable
 	// (docs/Singleplayer.md) instead of connecting to a rival. trace: a trace of 1.22 in that scenario, which the game
 	// follows. replay: a replay that the game plays, with what its viewer sees (view), in a game that writes in
 	// scratchDirectory, which is deleted as the game ends. Each battle of a game that plays neither is recorded in the
-	// user's replays, and so is a single-player replay's once it is taken over. The session disposes the trace and the
-	// replay.
+	// user's replays, and so is a single-player replay's once it is taken over. player: a computer player for the player's side
+	// of that scenario's battle, which acts as each frame is shown, on the game's thread. The session disposes the trace
+	// and the replay.
 	public GameSession(
 		GameFileLayers files,
 		TextRasterizer text,
@@ -203,7 +207,8 @@ internal sealed class GameSession : IDisposable
 		Trace122Replay? trace = null,
 		ReplayPlayer? replay = null,
 		ReplayView? view = null,
-		string? scratchDirectory = null
+		string? scratchDirectory = null,
+		OpenNspw.AI.IPlayer? player = null
 	)
 	{
 		_platform = new DesktopPlatform(files, text);
@@ -212,7 +217,17 @@ internal sealed class GameSession : IDisposable
 		View = view;
 		_platform.HidesFrame = () =>
 			GameSnapshot.IsHostScreenOf(Game) || Replay is { IsSeeking: true };
-		_platform.CaptureState = () => _captured.CopyFrom(Game, Commands, View);
+		Player = player;
+		_platform.CaptureState = () =>
+		{
+			if (
+				Player is { } computer
+				&& Game.Mode == GameMode.Battle
+				&& Game.Result == GameResult.None
+			)
+				computer.Act(Game);
+			_captured.CopyFrom(Game, Commands, View);
+		};
 		if (singleplayer is { } scenario)
 		{
 			Game.IsSingleplayer = true;

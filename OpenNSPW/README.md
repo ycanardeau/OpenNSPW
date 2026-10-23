@@ -50,6 +50,12 @@ To start a single-player scenario without the menus:
 dotnet run --project OpenNspw.Desktop -- --singleplayer 3
 ```
 
+With `--ai`, the strong player ([docs/StrongAI.md](../docs/StrongAI.md)) plays the player's side of the single-player games, to watch it:
+
+```bash
+dotnet run --project OpenNspw.Desktop -- --singleplayer 4 --ai
+```
+
 The text is drawn in fonts that come with the game, so that it looks the same on every platform: BIZ UDGothic for the game's own text and BIZ UDPGothic for the menus, under the SIL Open Font License 1.1 ([OpenNspw.Desktop/Fonts/OFL.txt](OpenNspw.Desktop/Fonts/OFL.txt)).
 
 The battle's pictures and the title are the original's sprites, cut from its sprite sheet into a file each in `OpenNspw.Desktop/Sprites` (see [docs/SpriteSheets.md](../docs/SpriteSheets.md)).
@@ -103,6 +109,13 @@ To compare two versions, such as before and after a refactoring, run the benchma
 ```bash
 git worktree add ../OpenNSPW-before <commit>
 ```
+
+## The arena
+```bash
+dotnet run -c Release --project OpenNspw.Arena -- --scenarios 4,5,9 --dates 3 --players idle,rush,strong
+```
+
+Plays single-player scenarios against NSPW 1.22's computer, headless, one game per core, with the players of `OpenNspw.AI` on the player's side, from several start dates, which seed the scenarios' random setups. It writes each game to `arena.csv` (`--out`) and a table of the outcomes (W, D, L; U when the time ran out with no result; F when the game failed). `--describe` writes what each scenario sets up instead; `--verbose` writes what the strong player does, and `--trace <units>` what happens to chosen units. See [docs/StrongAI.md](../docs/StrongAI.md).
 
 ## Recording
 Recording needs Windows, Visual Studio 2022 with the **Desktop development with C++** workload, and the DirectX SDK (June 2006) (see [Original/DirectXSDK.md](../Original/DirectXSDK.md)).

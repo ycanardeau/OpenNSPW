@@ -39,6 +39,7 @@ internal sealed class NspwGame : Game
 	private readonly int? _scenario;
 	private readonly Trace122Replay? _trace;
 	private readonly ReplayWatch? _watch;
+	private readonly bool _isPlayedByComputer;
 	private Screen? _nextScreen;
 	private GameSession? _lastSession;
 
@@ -61,17 +62,21 @@ internal sealed class NspwGame : Game
 	// data: where the games' files come from, 1.22's too, to play single-player (docs/Singleplayer.md). scenario: a
 	// scenario of 1.22 to play at once, without the menus. trace: a trace of 1.22 in that scenario, which that game
 	// follows, to watch it (docs/Verification.md). watch: a replay to watch at once (docs/Replays.md).
+	// isPlayedByComputer: whether the strong player plays the player's side of the single-player games, to watch it
+	// (docs/StrongAI.md).
 	public NspwGame(
 		GameData data,
 		int? scenario = null,
 		Trace122Replay? trace = null,
-		ReplayWatch? watch = null
+		ReplayWatch? watch = null,
+		bool isPlayedByComputer = false
 	)
 	{
 		_graphics = new GraphicsDeviceManager(this);
 		_scenario = scenario;
 		_trace = trace;
 		_watch = watch;
+		_isPlayedByComputer = isPlayedByComputer;
 		Data = data;
 		Texts.Language = UISettings.LoadLanguage();
 		IsMouseVisible = true;
@@ -88,14 +93,20 @@ internal sealed class NspwGame : Game
 
 	// Starts a game of the port. The screen that starts it owns it, and disposes it when it is unloaded, so that nothing
 	// draws a game after it is disposed. singleplayer: a scenario of NSPW 1.22 to play against the computer, instead of
-	// connecting to a rival; trace: a trace of 1.22 in that scenario, which the game follows.
+	// connecting to a rival; trace: a trace of 1.22 in that scenario, which the game follows. With --ai, the strong player
+	// plays a single-player game's battle that follows no trace.
 	public GameSession StartSession(int? singleplayer = null, Trace122Replay? trace = null)
 	{
+		var player =
+			_isPlayedByComputer && singleplayer is not null && trace is null
+				? new OpenNspw.AI.StrongPlayer()
+				: null;
 		_lastSession = new GameSession(
 			Data.Files(singleplayer is not null),
 			Text,
 			singleplayer,
-			trace
+			trace,
+			player: player
 		);
 		_lastSession.Start();
 		return _lastSession;
