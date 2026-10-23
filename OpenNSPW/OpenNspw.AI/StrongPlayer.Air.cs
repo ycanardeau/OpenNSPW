@@ -4,9 +4,9 @@ namespace OpenNspw.AI;
 // targets in the air, and sent up to intercept and to patrol.
 public sealed partial class StrongPlayer
 {
-	// Launches the selected parked planes, led by `leader`, toward an enemy unit found, to where they meet it, as computed
-	// when the click comes. A parked plane cannot be given a target (CanClickUnit): TryDirect gives the planes theirs
-	// once they fly.
+	// Launches the selected parked planes, led by `leader`, toward an enemy unit found, to where they meet it, as
+	// computed when the click comes. A parked plane cannot be given a target (CanClickUnit): TryDirect gives the planes
+	// theirs once they fly.
 	private void Launch(int leader, int target, Func<Nspw, WorldPosition> aim)
 	{
 		_clicks.Enqueue(g =>
@@ -22,9 +22,9 @@ public sealed partial class StrongPlayer
 		});
 	}
 
-	// Launches the selected parked planes, led by `leader`, at an enemy unit, by a waypoint 60% of the way there and 1000
-	// to one side, the other side each strike, so that the strike does not fly into the enemy's own coming the other way;
-	// TryDirect flies it on from the waypoint to where the target is then.
+	// Launches the selected parked planes, led by `leader`, at an enemy unit, by a waypoint 60% of the way there and
+	// 1000 to one side, the other side each strike, so that the strike does not fly into the enemy's own coming the
+	// other way; TryDirect flies it on from the waypoint to where the target is then.
 	private void LaunchStrike(int leader, Contact target, WorldPosition from)
 	{
 		var side = _strikeTargets.Count % 2 == 0 ? 90 : -90;
@@ -176,9 +176,9 @@ public sealed partial class StrongPlayer
 		return count;
 	}
 
-	// The best target found for a flying plane of the player's: for an attacker or a bomber, an enemy ship its weapon can
-	// attack, within 2500, by its worth, the one it was sent at favored, the ones other strikes attack already less; for a
-	// fighter, an enemy plane in the air, attackers and bombers first, within 1500.
+	// The best target found for a flying plane of the player's: for an attacker or a bomber, an enemy ship its weapon
+	// can attack, within 2500, by its worth, the one it was sent at favored, the ones other strikes attack already
+	// less; for a fighter, an enemy plane in the air, attackers and bombers first, within 1500.
 	private Contact? ChooseTargetInFlight(Nspw game, int plane)
 	{
 		ref var unit = ref game.Units[plane];
@@ -210,8 +210,9 @@ public sealed partial class StrongPlayer
 				.FirstOrDefault();
 	}
 
-	// A strike that has reached where it was sent and found nothing there sweeps on, 1500 at a time, turning 60° one way,
-	// then the other, around the way the enemy most likely is, twice; then it waits there until its fuel sends it home.
+	// A strike that has reached where it was sent and found nothing there sweeps on, 1500 at a time, turning 60° one
+	// way, then the other, around the way the enemy most likely is, twice; then it waits there until its fuel sends it
+	// home.
 	private bool TrySweep(Nspw game, int plane)
 	{
 		ref var unit = ref game.Units[plane];
@@ -260,8 +261,8 @@ public sealed partial class StrongPlayer
 		return true;
 	}
 
-	// The middle of a contact and the enemy ships found lately within 1500 of it, where they would be after `ticks` more
-	// ticks: where the carriers or the battleships of a formation sail, its escorts around them.
+	// The middle of a contact and the enemy ships found lately within 1500 of it, where they would be after `ticks`
+	// more ticks: where the carriers or the battleships of a formation sail, its escorts around them.
 	private WorldPosition FormationMiddle(Nspw game, Contact contact, double ticks)
 	{
 		var ships = _contacts
@@ -332,9 +333,9 @@ public sealed partial class StrongPlayer
 		return true;
 	}
 
-	// A strike whose target is alive but not found flies on to where it would be now, and takes no other target until it
-	// has been there, if the victory conditions count the target: the escorts around a carrier are found first. Once there, with the target still not found, the
-	// strike gives it up and takes what it finds.
+	// A strike whose target is alive but not found flies on to where it would be now, and takes no other target until
+	// it has been there, if the victory conditions count the target: the escorts around a carrier are found first. Once
+	// there, with the target still not found, the strike gives it up and takes what it finds.
 	private bool TryKeepOnTarget(Nspw game, int leader)
 	{
 		ref var unit = ref game.Units[leader];
@@ -385,6 +386,96 @@ public sealed partial class StrongPlayer
 		});
 		Deselect();
 		return true;
+	}
+
+	// A strike that has its target found within 2200, one the victory conditions count, splits up, as the computer's
+	// attackers do (ComputerPlayer.md, The planes' targets): each plane is selected alone, given the target, and sent
+	// to its own point 250 from it, the points fanned out across the side it comes from, so that the guns and the
+	// target's turns meet the torpedoes from many sides at once. Within 400 of the target, each plane's own attack
+	// takes over (SetAttackerAttackDestination).
+	private bool TrySplitAttack(Nspw game)
+	{
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var leader = ref game.Units[m];
+			var target = leader.Target;
+			if (
+				!IsOwn(game, m)
+				|| !UnitFacts.IsStrikePlane(leader.Kind)
+				|| leader.PlaneState != UnitState.Flying
+				|| leader.GroupLeader != 0
+				|| leader.IsGroupLeader == 0
+				|| target == 0
+				|| !game.Units[target].IsUsed
+				|| !game.Units[target].IsFound
+				|| !IsCounted(game.Units[target].Kind)
+				|| _split.Contains(m)
+				|| UnitFacts.Distance(leader.Position, game.Units[target].Position) > 2200
+			)
+				continue;
+
+			_split.Add(m);
+			var planes = new List<int> { m };
+			for (var n = 1; n <= game.MaxUnitId; n++)
+			{
+				if (
+					IsOwn(game, n)
+					&& game.Units[n].GroupLeader == m
+					&& UnitFacts.IsStrikePlane(game.Units[n].Kind)
+					&& game.Units[n].Ammo > 0
+				)
+					planes.Add(n);
+			}
+
+			if (planes.Count < 2)
+				continue;
+
+			var from = BearingTo(game.Units[target].Position, leader.Position);
+			for (var i = 0; i < planes.Count; i++)
+			{
+				var plane = planes[i];
+				var turn = planes.Count == 1 ? 0 : -75 + (150.0 * i / (planes.Count - 1));
+				Deselect();
+				_clicks.Enqueue(g =>
+				{
+					if (
+						g.SelectedUnit != 0
+						|| !IsOwn(g, plane)
+						|| g.Units[plane].PlaneState != UnitState.Flying
+					)
+						return true;
+					g.Commands.ClickUnit(plane);
+					return true;
+				});
+				_clicks.Enqueue(g =>
+				{
+					if (
+						g.SelectedUnit != plane
+						|| !g.Units[target].IsUsed
+						|| !g.Units[target].IsFound
+					)
+						return true;
+					if (g.Units[plane].Target != target)
+						g.Commands.ClickUnit(target);
+					return true;
+				});
+				_clicks.Enqueue(g =>
+				{
+					if (g.SelectedUnit != plane || !g.Units[target].IsUsed)
+						return true;
+					g.Commands.SetDestination(PointAt(g.Units[target].Position, from + turn, 250));
+					return true;
+				});
+			}
+
+			Deselect();
+			Log?.Invoke(
+				$"{game.Renderer.FrameCount}: {planes.Count} planes of {leader.Kind} {m} split up against {game.Units[target].Kind} {target}"
+			);
+			return true;
+		}
+
+		return false;
 	}
 
 	// A flying plane of the player's that leads its formation, armed and with no target in sight, given the best target
@@ -450,8 +541,9 @@ public sealed partial class StrongPlayer
 			});
 			if (UnitFacts.IsStrikePlane(unit.Kind))
 			{
-				// The attack takes over within 400 of the target, or at the end of the path (SetAttackerAttackDestination),
-				// which a plane circles wider than it checks: the path goes right at the target.
+				// The attack takes over within 400 of the target, or at the end of the path
+				// (SetAttackerAttackDestination), which a plane circles wider than it checks: the path goes right at
+				// the target.
 				_clicks.Enqueue(g =>
 				{
 					if (g.SelectedUnit != plane || !g.Units[target.Unit].IsUsed)
@@ -507,13 +599,13 @@ public sealed partial class StrongPlayer
 			.FirstOrDefault();
 	}
 
-	// How far a plane flies out to strike a place: 45% of its range on a full tank, to come back; a strategic bomber, 62%,
-	// as its mission is to get there.
+	// How far a plane flies out to strike a place: 45% of its range on a full tank, to come back; a strategic bomber,
+	// 62%, as its mission is to get there.
 	private static double Reach(ref Unit plane) =>
 		plane.MaxSpeed * plane.FuelInterval * 100 * (plane.Kind == UnitKind.Bomber ? 0.62 : 0.45);
 
-	// A place the briefing names, within reach of a deck, where nothing has been found lately and no strike went lately:
-	// a strike goes there to find what to attack, as a player strikes Pearl Harbor without seeing it first.
+	// A place the briefing names, within reach of a deck, where nothing has been found lately and no strike went
+	// lately: a strike goes there to find what to attack, as a player strikes Pearl Harbor without seeing it first.
 	private WorldPosition? PlaceToStrike(Nspw game, int deck, double reach)
 	{
 		var position = game.Units[deck].Position;
@@ -554,11 +646,11 @@ public sealed partial class StrongPlayer
 		return count;
 	}
 
-	// A deck's ready attackers and bombers, with escorting fighters, against the best enemy found within reach, once three
-	// of its armed planes are ready, or all it has, and none will be ready soon, and no enemy strike is over it; or, while
-	// another deck's strike has just gone, with whatever is ready, at the same target or place, so that they arrive
-	// together: a strike that takes off into the enemy's
-	// is broken up as it climbs, so it waits for the raid to pass, and goes while the enemy's planes are coming home.
+	// A deck's ready attackers and bombers, with escorting fighters, against the best enemy found within reach, once
+	// three of its armed planes are ready, or all it has, and none will be ready soon, and no enemy strike is over it;
+	// or, while another deck's strike has just gone, with whatever is ready, at the same target or place, so that they
+	// arrive together: a strike that takes off into the enemy's is broken up as it climbs, so it waits for the raid to
+	// pass, and goes while the enemy's planes are coming home.
 	private bool TryStrike(Nspw game, List<int> decks)
 	{
 		foreach (var deck in decks)
@@ -745,8 +837,8 @@ public sealed partial class StrongPlayer
 		return false;
 	}
 
-	// A carrier keeps a fighter in the air above it, toward where the enemy most likely is, while it has two ready: it sees
-	// the enemy's strikes coming, and fights them, until its fuel brings it home (at 30) and another goes up.
+	// A carrier keeps a fighter in the air above it, toward where the enemy most likely is, while it has two ready: it
+	// sees the enemy's strikes coming, and fights them, until its fuel brings it home (at 30) and another goes up.
 	private bool TryPatrol(Nspw game, List<int> decks)
 	{
 		foreach (var deck in decks)

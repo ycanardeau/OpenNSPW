@@ -26,8 +26,8 @@ public sealed class Contacts
 {
 	private readonly Dictionary<int, Contact> _contacts = [];
 
-	// Whether every enemy unit counts as found, as the computer sees the player's units: an experiment, against the rules
-	// of docs/StrongAI.md.
+	// Whether every enemy unit counts as found, as the computer sees the player's units: an experiment, against the
+	// rules of docs/StrongAI.md.
 	public bool SeesEverything { get; set; }
 
 	public IEnumerable<Contact> All => _contacts.Values;

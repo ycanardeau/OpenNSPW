@@ -1,14 +1,13 @@
 namespace OpenNspw.AI;
 
 // The strong player (docs/StrongAI.md): it remembers the enemies it has found, knows what the briefing tells, and runs
-// its air operations (StrongPlayer.Air.cs), its scouting (StrongPlayer.Scouting.cs), its ships (StrongPlayer.Fleet.cs) and
-// its landings (StrongPlayer.Landing.cs).
-// Each task is a series of clicks, given by the click queue; the next task is chosen once the last one is done, by its
-// priority (Plan).
+// its air operations (StrongPlayer.Air.cs), its scouting (StrongPlayer.Scouting.cs), its ships (StrongPlayer.Fleet.cs)
+// and its landings (StrongPlayer.Landing.cs). Each task is a series of clicks, given by the click queue; the next task
+// is chosen once the last one is done, by its priority (Plan).
 public sealed partial class StrongPlayer : IPlayer
 {
-	// How far from a deck its planes strike: well within their fuel, and beyond the computer's own strikes (3550, or 4350
-	// as Japan).
+	// How far from a deck its planes strike: well within their fuel, and beyond the computer's own strikes (3550, or
+	// 4350 as Japan).
 	private const double StrikeRange = 6000;
 
 	// How close to a deck enemy planes hold its strikes back.
@@ -69,8 +68,8 @@ public sealed partial class StrongPlayer : IPlayer
 	// The frames after a strike in which the other decks' ready planes join it.
 	private const int WaveFrames = 200;
 
-	// The frames after a strike at a place or a point in which the other decks' ready planes join it, waiting longer for
-	// them, as nothing there was found to escape.
+	// The frames after a strike at a place or a point in which the other decks' ready planes join it, waiting longer
+	// for them, as nothing there was found to escape.
 	private const int PointWaveFrames = 400;
 
 	// The planes a strike waits for, when the deck has them armed.
@@ -89,6 +88,7 @@ public sealed partial class StrongPlayer : IPlayer
 	private readonly Dictionary<string, int> _placeStrikes = [];
 	private readonly Dictionary<int, int> _directed = [];
 	private readonly Dictionary<int, int> _huntedFrom = [];
+	private readonly HashSet<int> _split = [];
 	private readonly Dictionary<int, int> _sweeps = [];
 	private readonly Dictionary<int, int> _strikeTargets = [];
 	private readonly HashSet<int> _toWaypoint = [];
@@ -210,8 +210,8 @@ public sealed partial class StrongPlayer : IPlayer
 		});
 	}
 
-	// Shows a deck's parked planes in the sidebar, so that they can be clicked: selects the deck and switches its view to
-	// the planes, which deselects it, the sidebar still showing it.
+	// Shows a deck's parked planes in the sidebar, so that they can be clicked: selects the deck and switches its view
+	// to the planes, which deselects it, the sidebar still showing it.
 	private void ShowDeck(int deck)
 	{
 		Deselect();
@@ -298,9 +298,9 @@ public sealed partial class StrongPlayer : IPlayer
 		Deselect();
 	}
 
-	// Sails the selected ship m to a point along a route across the sea, around the ships that stand still, a click for each
-	// waypoint: the first replaces its path, the next ones add to it (SetDestination); then deselects it. Gives up if the
-	// sea does not lead there.
+	// Sails the selected ship m to a point along a route across the sea, around the ships that stand still, a click for
+	// each waypoint: the first replaces its path, the next ones add to it (SetDestination); then deselects it. Gives up
+	// if the sea does not lead there.
 	private bool SailSelected(Nspw game, int m, WorldPosition point, string what)
 	{
 		_routes ??= new SeaRoutes(game);
@@ -354,6 +354,7 @@ public sealed partial class StrongPlayer : IPlayer
 		var decks = Decks(game);
 		if (
 			!TryIntercept(game, decks)
+			&& !TrySplitAttack(game)
 			&& !TryDirect(game)
 			&& !TryGuideScouts(game)
 			&& !TryScout(game, decks)

@@ -82,8 +82,8 @@ internal static class UnitFacts
 				: unit.Weapon is FireKind.Torpedo or FireKind.Bomb
 		);
 
-	// Whether a deck lets a plane take off now (CanSetDestination): not launching, not locked, not supplying, and above a
-	// fifth of its HP (HandleInput).
+	// Whether a deck lets a plane take off now (CanSetDestination): not launching, not locked, not supplying, and above
+	// a fifth of its HP (HandleInput).
 	public static bool CanLaunch(ref Unit deck) =>
 		deck.IsUsed
 		&& deck.PlanesToLaunch == 0

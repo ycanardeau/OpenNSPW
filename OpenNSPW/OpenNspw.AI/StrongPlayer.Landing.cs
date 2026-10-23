@@ -18,8 +18,8 @@ public sealed partial class StrongPlayer
 	private static WorldPosition TilePosition(int column, int row) =>
 		new(World.Left + (column * 80), World.Top - (row * 80));
 
-	// The landable tile on the coast nearest a point, at least 160 from the points other transports land at, with a point
-	// of the sea next to it, within 240, for the transport to sail to; or null.
+	// The landable tile on the coast nearest a point, at least 160 from the points other transports land at, with a
+	// point of the sea next to it, within 240, for the transport to sail to; or null.
 	private static (WorldPosition Land, WorldPosition Sea)? LandingSite(
 		Nspw game,
 		WorldPosition near,
@@ -93,8 +93,8 @@ public sealed partial class StrongPlayer
 		return ((int)((left - World.Left) / 80), (int)((World.Top - top) / 80));
 	}
 
-	// Each transport of the player's with cargo is given the coast nearest where the briefing wants bases to land it at:
-	// the battlefield is moved there, the transport selected, and the land clicked. TrySailToLand sails it there.
+	// Each transport of the player's with cargo is given the coast nearest where the briefing wants bases to land it
+	// at: the battlefield is moved there, the transport selected, and the land clicked. TrySailToLand sails it there.
 	private bool TryLand(Nspw game)
 	{
 		if (_knowledge.Landing is not { } place)
@@ -243,9 +243,9 @@ public sealed partial class StrongPlayer
 		return true;
 	}
 
-	// A transport given a coast to land at sails next to it, across the sea, the convoy it leads with it; and so does one
-	// that is still far from it and stands still, the convoy's leader having landed its cargo, or the way having been
-	// blocked. It lands its cargo once within 400 (SetTransportLandingDestination) and 360 (LandCargo).
+	// A transport given a coast to land at sails next to it, across the sea, the convoy it leads with it; and so does
+	// one that is still far from it and stands still, the convoy's leader having landed its cargo, or the way having
+	// been blocked. It lands its cargo once within 400 (SetTransportLandingDestination) and 360 (LandCargo).
 	private bool TrySailToLand(Nspw game)
 	{
 		foreach (var (m, sea) in _landingSeas)

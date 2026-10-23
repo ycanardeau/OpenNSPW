@@ -63,8 +63,8 @@ public sealed class SeaRoutes(Nspw game)
 			&& !_blocked.Contains((column, row));
 	}
 
-	// The tiles that a ship at a point keeps other ships out of: those its rectangle, the size of a unit's sprite, and a
-	// half more, touches (IsShipAt).
+	// The tiles that a ship at a point keeps other ships out of: those its rectangle, the size of a unit's sprite, and
+	// a half more, touches (IsShipAt).
 	private IEnumerable<(int, int)> TilesUnder(WorldPosition position)
 	{
 		ref var units = ref _game.Renderer.Sprites[SpriteId.JapanUnits];
@@ -212,9 +212,9 @@ public sealed class SeaRoutes(Nspw game)
 		return null;
 	}
 
-	// The waypoints of a route for a ship from a point to another across the sea, around the ships that do not move out of
-	// the way (`obstacles`), the last one the destination, or the sea nearest it if it is land; each leg clear in a straight
-	// line. Null if the sea does not join them.
+	// The waypoints of a route for a ship from a point to another across the sea, around the ships that do not move out
+	// of the way (`obstacles`), the last one the destination, or the sea nearest it if it is land; each leg clear in a
+	// straight line. Null if the sea does not join them.
 	public List<WorldPosition>? Route(
 		WorldPosition from,
 		WorldPosition to,

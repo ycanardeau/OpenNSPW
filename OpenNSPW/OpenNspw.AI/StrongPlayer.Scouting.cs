@@ -63,8 +63,8 @@ public sealed partial class StrongPlayer
 		return (PointAt(from, bearing - 20, ScoutRange), PointAt(from, bearing + 20, ScoutRange));
 	}
 
-	// The planes a deck keeps to scout, unarmed ones first, then attackers before bombers: two of a deck with six attackers
-	// and bombers or more, one of a deck with two or more, none of the others, and three in all at most.
+	// The planes a deck keeps to scout, unarmed ones first, then attackers before bombers: two of a deck with six
+	// attackers and bombers or more, one of a deck with two or more, none of the others, and three in all at most.
 	private List<int> ScoutsOf(Nspw game, int deck)
 	{
 		if (!_scoutsOf.TryGetValue(deck, out var scouts))
@@ -91,8 +91,8 @@ public sealed partial class StrongPlayer
 	}
 
 	// While no enemy ship has been found lately, the decks' scouts fly out, each sweeping an arc where the enemy most
-	// likely is, a new arc each flight, nearest the likely bearing first; TryGuideScouts flies them on. There is nothing
-	// to search for when the briefing names every place the enemy is, within the strikes' reach.
+	// likely is, a new arc each flight, nearest the likely bearing first; TryGuideScouts flies them on. There is
+	// nothing to search for when the briefing names every place the enemy is, within the strikes' reach.
 	private bool TryScout(Nspw game, List<int> decks)
 	{
 		if (

@@ -1,8 +1,9 @@
 namespace OpenNspw.AI;
 
 // The clicks a player gives, one at a time, each taking as many frames as a click with the mouse: the press, then the
-// release, two frames each (as the tests' CommandInput waits). A click is computed when its frame comes, from the game's
-// state then, and may give up the clicks after it, when the game is not as the clicks before it should have left it.
+// release, two frames each (as the tests' CommandInput waits). A click is computed when its frame comes, from the
+// game's state then, and may give up the clicks after it, when the game is not as the clicks before it should have left
+// it.
 public sealed class ClickQueue
 {
 	private const int FramesPerClick = 4;

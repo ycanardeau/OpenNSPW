@@ -89,8 +89,8 @@ public sealed partial class StrongPlayer
 		game.CpuSide == Side.Japan ? 4350 : 3550;
 
 	// What a carrier keeps its distance from, each with the distance: the enemy's carriers found, where they were last
-	// found, the computer's strike range (3550, or 4350 as Japan) and more for each frame since, as they may have come on
-	// by half their speed, up to 3000; or, none found yet, the areas where the briefing expects them, if the victory
+	// found, the computer's strike range (3550, or 4350 as Japan) and more for each frame since, as they may have come
+	// on by half their speed, up to 3000; or, none found yet, the areas where the briefing expects them, if the victory
 	// conditions count them, the range and the area's radius; and the places the briefing names, whose air bases strike
 	// 1.5 times as far (ComputerPlayer.md, Air strikes). Whether each is known, found or a place, or only expected.
 	private List<(WorldPosition Position, double Range, bool IsKnown)> Threats(Nspw game)
@@ -121,10 +121,11 @@ public sealed partial class StrongPlayer
 		return threats;
 	}
 
-	// A carrier keeps just beyond the computer's strike range from what threatens it, with a margin: the computer launches
-	// only within it, so a carrier out of it is struck by none, while its own planes reach farther. It closes in while it
-	// is farther than its planes should fly from what is known, found or a place, not what is only expected, which may be
-	// coming on; and moves away while it is within the range, across the sea, its formation with it.
+	// A carrier keeps just beyond the computer's strike range from what threatens it, with a margin: the computer
+	// launches only within it, so a carrier out of it is struck by none, while its own planes reach farther. It closes
+	// in while it is farther than its planes should fly from what is known, found or a place, not what is only
+	// expected, which may be coming on; and moves away while it is within the range, across the sea, its formation with
+	// it.
 	private bool TryPosition(Nspw game, List<int> decks)
 	{
 		var threats = Threats(game);
@@ -266,8 +267,9 @@ public sealed partial class StrongPlayer
 		return best;
 	}
 
-	// A warship that has lost most of its HP sails to the nearest naval base of the player's, and supplies there once it
-	// has stopped, which the combat menu offers only within 280 of the base (ListCombatMenu); it fights again once repaired.
+	// A warship that has lost most of its HP sails to the nearest naval base of the player's, and supplies there once
+	// it has stopped, which the combat menu offers only within 280 of the base (ListCombatMenu); it fights again once
+	// repaired.
 	private bool TryRepair(Nspw game)
 	{
 		for (var m = 1; m <= game.MaxUnitId; m++)
@@ -345,9 +347,10 @@ public sealed partial class StrongPlayer
 			)
 			.FirstOrDefault();
 
-	// Each surface group of the player's, led by a warship, goes at the best enemy ship it knows of, all its ships firing at
-	// it once it is found (ApplyOrders gives the formation the leader's target), and keeps at it while it is found, unless
-	// one the victory conditions count is found; or, knowing of none, toward where the briefing expects the enemy.
+	// Each surface group of the player's, led by a warship, goes at the best enemy ship it knows of, all its ships
+	// firing at it once it is found (ApplyOrders gives the formation the leader's target), and keeps at it while it is
+	// found, unless one the victory conditions count is found; or, knowing of none, toward where the briefing expects
+	// the enemy.
 	private bool TryEngage(Nspw game)
 	{
 		for (var m = 1; m <= game.MaxUnitId; m++)
