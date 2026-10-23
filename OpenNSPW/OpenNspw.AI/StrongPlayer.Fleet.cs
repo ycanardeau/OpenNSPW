@@ -88,23 +88,28 @@ public sealed partial class StrongPlayer
 	private static double ComputerStrikeRange(Nspw game) =>
 		game.CpuSide == Side.Japan ? 4350 : 3550;
 
-	// What a carrier keeps its distance from: the enemy's carriers, as found lately, where they would be by now; or, none
-	// found yet, the areas where the briefing expects them, if the victory conditions count them; and the places the
-	// briefing names, whose air bases strike 1.5 times as far (ComputerPlayer.md, Air strikes). Each with the distance the
-	// computer strikes from.
+	// What a carrier keeps its distance from, each with the distance: the enemy's carriers found, where they were last
+	// found, the computer's strike range (3550, or 4350 as Japan) and more for each frame since, as they may have come on
+	// by half their speed, up to 3000; or, none found yet, the areas where the briefing expects them, if the victory
+	// conditions count them, the range and the area's radius; and the places the briefing names, whose air bases strike
+	// 1.5 times as far (ComputerPlayer.md, Air strikes).
 	private List<(WorldPosition Position, double Range)> Threats(Nspw game)
 	{
 		var range = ComputerStrikeRange(game);
 		var threats = _contacts
 			.All.Where(c =>
-				c.Kind is UnitKind.Carrier or UnitKind.LightCarrier
-				&& game.Renderer.FrameCount - c.Frame < CarrierMemoryFrames
+				c.Kind is UnitKind.Carrier or UnitKind.LightCarrier && game.Units[c.Unit].IsUsed
 			)
-			.Select(c => (c.Predict(Math.Min(game.Renderer.FrameCount - c.Frame, 600) * 2), range))
+			.Select(c =>
+				(
+					c.Position,
+					range + Math.Min((game.Renderer.FrameCount - c.Frame) * 2 * 0.35 * 0.5, 3000)
+				)
+			)
 			.ToList();
 		if (threats.Count == 0 && _knowledge.Counted.Contains(UnitKind.Carrier))
 			threats.AddRange(
-				_knowledge.Enemy.Where(a => !a.IsPlace).Select(a => (a.Center, range))
+				_knowledge.Enemy.Where(a => !a.IsPlace).Select(a => (a.Center, range + a.Radius))
 			);
 
 		threats.AddRange(
