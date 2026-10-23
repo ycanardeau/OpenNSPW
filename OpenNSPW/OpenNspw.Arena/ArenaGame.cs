@@ -60,7 +60,11 @@ internal sealed class ArenaGame
 		if (_game.Mode != GameMode.Battle)
 			return;
 
-		_frames++;
+		// The mouse rests in the middle of the battlefield, as a player's does: at the screen's edges, the game scrolls the
+		// battlefield every frame (ScrollBattleArea), where the cursor starts.
+		if (_frames++ == 0)
+			_game.SetCursorPos(all_head.CMBT_WIDTH / 2, all_head.CMBT_HEIGHT / 2);
+
 		if (
 			_game.Result != GameResult.None
 			|| _platform.MessageBoxes.Count > 0

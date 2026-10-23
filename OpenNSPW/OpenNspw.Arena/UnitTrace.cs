@@ -37,7 +37,7 @@ internal sealed class UnitTrace(IReadOnlyList<int> units, int from, int to, int 
 		}
 
 		return FormattableString.Invariant(
-			$"#{m} {unit.Kind.ToString()[..2]} ({unit.Position.X:F0},{unit.Position.Y:F0}) dir {unit.Direction:F0} hp {unit.HP} {unit.Weapon} {unit.Ammo} T{unit.Target} L{unit.GroupLeader} {unit.Mode} path ({unit.PathX[0]:F0},{unit.PathY[0]:F0}) em {unit.EmergencyFlags[0]} near [{string.Join(" ", near)}]"
+			$"#{m} {unit.Kind.ToString()[..2]} ({unit.Position.X:F0},{unit.Position.Y:F0}) dir {unit.Direction:F0} spd {unit.Speed:F2}/{unit.MaxSpeed:F2}{(unit.IsStopping ? " stop" : "")} hp {unit.HP} fuel {unit.Fuel:F0} {unit.Weapon} {unit.Ammo} T{unit.Target} L{unit.GroupLeader} {unit.Mode} path ({unit.PathX[0]:F0},{unit.PathY[0]:F0}) em {unit.EmergencyFlags[0]} near [{string.Join(" ", near)}]"
 		);
 	}
 

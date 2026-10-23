@@ -62,6 +62,55 @@ The computer's own weaknesses, read from its code, are part of the plans: it act
 
 Each step ends with the arena's table, kept in this document.
 
+## Results
+Each cell is the outcomes of the start dates 1000000000, 1000007919 and 1000015838, in order: W won, D drawn, L lost, U unfinished, F failed.
+
+### Baselines
+| Scenario | Side | idle | rush |
+| --- | --- | --- | --- |
+| 1 | U | LLL | LLL |
+| 2 | J | LLL | LLL |
+| 3 | U | WWW | WWW |
+| 4 | J | LLL | LLL |
+| 5 | U | LLL | LLL |
+| 6 | U | DDL | DDD |
+| 7 | U | LLL | LLL |
+| 8 | J | LLL | LLL |
+| 9 | J | LLL | LLL |
+| 10 | J | LLL | LLL |
+| 100 | J | LLL | LLL |
+| 101 | J | LLL | WWL |
+| 102 | U | LLL | LLL |
+| 103 | U | LLL | LLL |
+| 104 | J | LLL | LLL |
+| 105 | J | LLL | LLL |
+| 106 | U | LLL | LLL |
+| 107 | U | LLL | LLL |
+| 108 | J | LLL | LLL |
+| 109 | U | LLL | LLL |
+| 200 | J | LLL | LLL |
+| 201 | J | LLL | LLL |
+| 202 | U | DDD | DDD |
+| 203 | U | LLL | LLL |
+| 204 | U | LLL | LLL |
+| 205 | U | LLL | LLL |
+| 206 | U | LLL | LLL |
+| 207 | U | LLL | LLL |
+| 208 | U | LLL | LLL |
+| 209 | J | LLL | LFL |
+| 300 | U | LLL | LLL |
+| 301 | J | FLL | LLL |
+| 302 | J | LFL | LLL |
+| 303 | U | LLL | LLL |
+| 304 | J | LLL | LLL |
+| 305 | J | LLL | LLL |
+| 306 | J | LLL | LLL |
+| Won | | 3/111 | 5/111 |
+
+The idle player wins scenario 3 by holding on, and draws 6 and 202, where nothing it does not do decides the result. The rushing player also wins 101 twice, its battle line closing on the American one.
+
+Three games failed, in the single-player game itself, not the players: the computer's `set_cpu_route` (`0x42DA80`), planning a route by `ReplanBlockedRoute` or a move order, adds waypoints until it writes beyond the emulator's memory (209 and 302), and `UpdateBattle` indexed out of an array (301).
+
 ## Open questions
 - Whether the strong player should also be offered as the computer of a network game's empty side, or only as the single-player's player.
 - Whether a scenario that cannot be won at speed 1 by any play (if one turns out so) counts against the goal.

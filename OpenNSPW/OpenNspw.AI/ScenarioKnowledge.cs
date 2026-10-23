@@ -4,13 +4,14 @@ namespace OpenNspw.AI;
 public sealed record Area(string Name, WorldPosition Center, double Radius, bool IsPlace);
 
 // What a player knows of a scenario before the battle (docs/StrongAI.md, Scenario knowledge): where the enemy is
-// expected, the places to attack among them, the enemy kinds the victory conditions count, and whether the player wins by
-// holding on until the end. Written from the briefings, the victory conditions and the maps; never from where a hidden
-// unit is.
+// expected, the places to attack among them, the enemy kinds the victory conditions count, whether the player wins by
+// holding on until the end, and where its transports land. Written from the briefings, the victory conditions and the
+// maps; never from where a hidden unit is.
 public sealed record ScenarioKnowledge(
 	IReadOnlyList<Area> Enemy,
 	IReadOnlyList<UnitKind> Counted,
-	bool HoldsOn = false
+	bool HoldsOn = false,
+	Area? Landing = null
 )
 {
 	// The places of the maps, where the scenarios' bases stand.
@@ -32,6 +33,12 @@ public sealed record ScenarioKnowledge(
 		public static readonly Area Truk = new("Truk", new(-7120, 6640), 500, true);
 		public static readonly Area Bougainville = new("Bougainville", new(-4100, 1000), 500, true);
 		public static readonly Area PortMoresby = new("Port Moresby", new(-9000, -1100), 600, true);
+		public static readonly Area PortMoresbyCity = new(
+			"Port Moresby's city",
+			new(-8800, -1280),
+			80,
+			true
+		);
 
 		// Japanese waters.
 		public static readonly Area Tokyo = new("Tokyo", new(-7700, 5200), 500, true);
@@ -120,7 +127,7 @@ public sealed record ScenarioKnowledge(
 				HoldsOn: true
 			),
 			// The U.S. garrison on Guadalcanal.
-			104 => new([Places.Guadalcanal], Ground),
+			104 => new([Places.Guadalcanal], Ground, Landing: Places.Guadalcanal),
 			// The U.S. fleet, off Pearl Harbor.
 			105 => new([Fleet("the U.S. fleet off Pearl Harbor", 6400, -1200, 1500)], Carriers),
 			// Japan's fleet, off Truk.
@@ -183,7 +190,8 @@ public sealed record ScenarioKnowledge(
 			// The U.S. bases on Midway, and the U.S. carrier north-east of it.
 			209 => new(
 				[Places.Midway, Fleet("the U.S. carrier north-east of Midway", 3400, 6500, 2500)],
-				Ground
+				Ground,
+				Landing: Places.Midway
 			),
 			// Tokyo's cities.
 			300 => new([Places.Tokyo], [UnitKind.City]),
@@ -193,12 +201,14 @@ public sealed record ScenarioKnowledge(
 					Places.PortMoresby,
 					Fleet("the U.S. carriers in the Coral Sea", -4000, -4500, 3000),
 				],
-				[.. Carriers, .. Ground]
+				[.. Carriers, .. Ground],
+				Landing: Places.PortMoresbyCity
 			),
 			// Midway, and the U.S. carriers east of it.
 			302 => new(
 				[Places.Midway, Fleet("the U.S. carriers east of Midway", 4000, 0, 4500)],
-				Ground
+				Ground,
+				Landing: Places.Midway
 			),
 			// The airfield at Nouméa that the soldiers take.
 			303 => new([Fleet("Japan's fleets in the north-west", -3000, 2000, 4000)], []),
@@ -216,7 +226,8 @@ public sealed record ScenarioKnowledge(
 			// The U.S. forces on Guadalcanal, and the U.S. fleet in the east.
 			306 => new(
 				[Places.Guadalcanal, Fleet("the U.S. fleet in the east", 9300, 3500, 2500)],
-				Ground
+				Ground,
+				Landing: Places.Guadalcanal
 			),
 			_ => new([], []),
 		};
