@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OpenNspw\OpenNspw.csproj" />
+    <ProjectReference Include="..\OpenNspw.HostUI\OpenNspw.HostUI.csproj" />
+  </ItemGroup>
+
+</Project>

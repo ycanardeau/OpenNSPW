@@ -4,6 +4,8 @@ An exact port of the NSPW NET source ([Original/NSPW_NET](../Original/NSPW_NET))
 | Project | Description |
 | --- | --- |
 | `OpenNspw` | The C# port. One file per C++ file, plus stand-ins for the platform APIs it calls (Win32, DirectPlay 8, DirectSound), with the original APIs' names. |
+| `OpenNspw.AI` | Players of the player's side of a single-player game, which give the orders of the host's UI: the strong player, and the baselines it is measured against. See [docs/StrongAI.md](../docs/StrongAI.md). |
+| `OpenNspw.Arena` | Plays single-player scenarios with those players against NSPW 1.22's computer, headless and in parallel, and writes the table of their results. |
 | `OpenNspw.Benchmarks` | Benchmarks of the game's own work in a battle (simulation and drawing), and of copying the state for the emulator. |
 | `OpenNspw.DirectPlay` | The DirectPlay 8 stand-ins implemented on [Otsuki](../Otsuki). |
 | `OpenNspw.Desktop` | The game, on MonoGame: its menus (with [Saruhashi](../Saruhashi), see [docs/UI.md](../docs/UI.md)), which run the port's `WinMain` and show its frames and dialogs. |
