@@ -551,6 +551,19 @@ public unsafe partial class Nspw
 		ClearBufferedOrders();
 	}
 
+	// The tile of cmbt_map at row, column, flat as 1.22 reads it, row by row: beyond the map, what 1.22's memory holds around
+	// it, in a single-player game, or else 0, sea.
+	internal ushort MapTileOrBeyond(int row, int column)
+	{
+		var index = row * 256 + column;
+		if ((uint)index < 256 * 256)
+			return MapTiles[index / 256][index % 256];
+		if (Emulator is not { } emulator)
+			return 0;
+		CopyIn(emulator);
+		return BitConverter.ToUInt16(emulator.At((uint)(MapAddress + index * 2), sizeof(ushort)));
+	}
+
 	// set_cpu_route2(m): the route of ship m to the destination just set as its path, as a ship that follows a leader
 	// takes it (0x414D79).
 	public void SetCpuRoute2As122(int m)

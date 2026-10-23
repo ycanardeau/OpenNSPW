@@ -406,6 +406,30 @@ public class SingleplayerTests
 		Assert.Equal(0, game.Units[attacker].Ammo);
 	}
 
+	// A torpedo plane at the map's top edge tests the tiles around it beyond the map, as 1.22 does, reading its memory
+	// around cmbt_map, rather than failing.
+	[Fact]
+	public void TorpedoPlanesAtTheMapsEdgeTestTheTilesBeyondIt()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var target = game.AddUnit(Side.UnitedStates, UnitKind.Cruiser, 0, all_head.MAP_TOP - 10, 0);
+		var attacker = game.AddUnit(Side.Japan, UnitKind.Attacker, -200, all_head.MAP_TOP - 10, 0);
+		Assert.NotEqual(0, target);
+		Assert.NotEqual(0, attacker);
+		game.Units[target].Position = new WorldPosition(0, all_head.MAP_TOP - 10);
+		game.Units[target].IsFound = true;
+		ref var unit = ref game.Units[attacker];
+		unit.Position = new WorldPosition(-200, all_head.MAP_TOP - 10);
+		unit.Direction = 0;
+		unit.PlaneState = UnitState.Flying;
+		unit.Ammo = 1;
+		unit.Target = target;
+
+		game.FireWeapons(attacker, target, FireKind.Torpedo);
+	}
+
 	// The planes that follow a torpedo plane return once it drops its torpedo, and keep their path, as in 1.22
 	// (0x413F51 to 0x413F7C), where NSPW NET sends them to where it dropped it.
 	[Fact]

@@ -1718,17 +1718,20 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int trgt, ref double drctn2, in
 		cm_scrn_x=(int)((unit.Position.X+(Sprites[SpriteId.JapanUnits].Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
 		cm_scrn_y=(int)((MAP_TOP-unit.Position.Y+(Sprites[SpriteId.JapanUnits].Height/2))/Sprites[SpriteId.MapTiles].Height);
 
-		if( MapTiles[cm_scrn_y][cm_scrn_x]>=1
-			|| MapTiles[cm_scrn_y-1][cm_scrn_x-1]>=1
-			|| MapTiles[cm_scrn_y-1][cm_scrn_x]>=1
-			|| MapTiles[cm_scrn_y-1][cm_scrn_x+1]>=1
+		// BUG(1.22, NSPW NET): at the map's edges, the tiles around read beyond cmbt_map, or wrap to the next row. Kept as
+		// is for compatibility with 1.22 and NSPW NET: in a single-player game, what 1.22's memory holds there
+		// (MapTileOrBeyond); in a network game, sea, where NSPW NET's memory is not known.
+		if( MapTileOrBeyond(cm_scrn_y,cm_scrn_x)>=1
+			|| MapTileOrBeyond(cm_scrn_y-1,cm_scrn_x-1)>=1
+			|| MapTileOrBeyond(cm_scrn_y-1,cm_scrn_x)>=1
+			|| MapTileOrBeyond(cm_scrn_y-1,cm_scrn_x+1)>=1
 
-			|| MapTiles[cm_scrn_y][cm_scrn_x-1]>=1
-			|| MapTiles[cm_scrn_y][cm_scrn_x+1]>=1
+			|| MapTileOrBeyond(cm_scrn_y,cm_scrn_x-1)>=1
+			|| MapTileOrBeyond(cm_scrn_y,cm_scrn_x+1)>=1
 
-			|| MapTiles[cm_scrn_y+1][cm_scrn_x-1]>=1
-			|| MapTiles[cm_scrn_y+1][cm_scrn_x]>=1
-			|| MapTiles[cm_scrn_y+1][cm_scrn_x+1]>=1
+			|| MapTileOrBeyond(cm_scrn_y+1,cm_scrn_x-1)>=1
+			|| MapTileOrBeyond(cm_scrn_y+1,cm_scrn_x)>=1
+			|| MapTileOrBeyond(cm_scrn_y+1,cm_scrn_x+1)>=1
 			)
 			{
 			return false;
