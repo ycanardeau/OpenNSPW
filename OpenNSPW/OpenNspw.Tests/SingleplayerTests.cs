@@ -507,6 +507,28 @@ public class SingleplayerTests
 		Assert.Equal(Math.Atan2(50, 100) * 180 / Math.PI - 100 + 360, game.Units[ship].DirectionToLeader, 6);
 	}
 
+	// A mode chosen from the combat menu goes to a parked plane too, and Move clears its deck phase, as in 1.22
+	// (0x431D19 to 0x431D4E); NSPW NET gives Move to flying planes only.
+	[Fact]
+	public void MenuModesGoToParkedPlanesToo()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var fighter = game.AddUnit(Side.Japan, UnitKind.Fighter, -9000, -7000, 0);
+		Assert.NotEqual(0, fighter);
+		ref var unit = ref game.Units[fighter];
+		unit.PlaneState = UnitState.Parked;
+		unit.DeckPhase = 4;
+		unit.Mode = UnitMode.Return;
+		game.BufferedMenuOrders[1] = new MenuOrder { Menu = CombatMenuItem.Move, SelectedUnit = (short)fighter };
+
+		game.ApplyUnitInfoInput();
+
+		Assert.Equal(0, game.Units[fighter].DeckPhase);
+		Assert.Equal(UnitMode.Move, game.Units[fighter].Mode);
+	}
+
 	// The planes that follow a torpedo plane return once it drops its torpedo, and keep their path, as in 1.22
 	// (0x413F51 to 0x413F7C), where NSPW NET sends them to where it dropped it.
 	[Fact]

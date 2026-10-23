@@ -1622,6 +1622,18 @@ public void	ApplyUnitInfoInput()
 											unit.ReloadTime=RDY_SPAN;
 										}
 									}
+								else if( Rules.MenuModesApplyToEveryPlane )
+									{
+									// 1.22 gives the mode to every plane, flying or not (0x431D19 to 0x431D4E).
+									unit.Mode=(UnitMode)menu2;
+									if( (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber ) && menu2==CombatMenuItem.Return )
+										{
+										unit.Ammo=0;
+										unit.Target=0;
+										}
+									if( unit.Category==UnitCategory.Plane && menu2==CombatMenuItem.Move )
+										unit.DeckPhase=0;
+									}
 								else
 									{
 									if( (unit.Kind==UnitKind.Fighter ) && menu2==CombatMenuItem.Return  && unit.PlaneState==UnitState.Flying )

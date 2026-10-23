@@ -63,6 +63,10 @@ public sealed record BattleRules(
 	// Kept as is for compatibility with 1.22.
 	bool HandoverTestsTheOldLeaderFlying,
 
+	// Whether a mode chosen from the combat menu is given to every plane it is for, flying or parked, and a move clears a
+	// plane's deck phase, rather than Move and Return only, and to flying planes, but a Return to attackers and bombers.
+	bool MenuModesApplyToEveryPlane,
+
 	// Whether a heading of 360, which none of the 16 cases of a plane's landing pattern and approach, or of a ship's place
 	// in its formation takes, leaves their angle unset, rather than 0 (SetLandingDestination, UpdateLanding,
 	// SetShipFormation).
@@ -246,6 +250,7 @@ public sealed record BattleRules(
 		JapaneseAttackersDive: true,
 		FollowersFlyToRelease: true,
 		HandoverTestsTheOldLeaderFlying: false,
+		MenuModesApplyToEveryPlane: false,
 		HeadingsOf360TakeNoCase: false,
 		FollowersRouteBy122sOwnCode: false,
 		TorpedoPlanesCheckLandAlongUnsetHeading: false,
@@ -313,6 +318,7 @@ public sealed record BattleRules(
 		JapaneseAttackersDive: false, // 0x414186 to 0x4144E0
 		FollowersFlyToRelease: false, // 0x414186 to 0x4144E0, 0x413F51 to 0x413F7C
 		HandoverTestsTheOldLeaderFlying: true, // 0x415916, 0x415971
+		MenuModesApplyToEveryPlane: true, // 0x431D19 to 0x431D4E
 		HeadingsOf360TakeNoCase: true, // 0x4173BF, 0x41764E, 0x417179
 		FollowersRouteBy122sOwnCode: true, // 0x414D79
 		TorpedoPlanesCheckLandAlongUnsetHeading: true, // 0x413D23
