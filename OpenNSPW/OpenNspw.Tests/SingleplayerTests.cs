@@ -485,6 +485,28 @@ public class SingleplayerTests
 		Assert.Equal(FireKind.Bomb, game.Units[bomber].Weapon);
 	}
 
+	// A ship's place in the formation of a leader heading 360, which none of the 16 cases takes, is reckoned from its x
+	// offset taken as an angle, as 1.22's does (0x417179), whose angle shares the offset's stack slot.
+	[Fact]
+	public void FormationsOfALeaderHeading360TakeTheOffsetAsTheAngle()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var leader = game.AddUnit(Side.Japan, UnitKind.Cruiser, -9000, -7000, 0);
+		var ship = game.AddUnit(Side.Japan, UnitKind.Destroyer, -8900, -6950, 0);
+		Assert.NotEqual(0, leader);
+		Assert.NotEqual(0, ship);
+		game.Units[leader].Position = new WorldPosition(-9000, -7000);
+		game.Units[leader].Direction = 360;
+		game.Units[ship].Position = new WorldPosition(-8900, -6950);
+		game.Units[ship].GroupLeader = (short)leader;
+
+		game.SetShipFormation(ship);
+
+		Assert.Equal(Math.Atan2(50, 100) * 180 / Math.PI - 100 + 360, game.Units[ship].DirectionToLeader, 6);
+	}
+
 	// The planes that follow a torpedo plane return once it drops its torpedo, and keep their path, as in 1.22
 	// (0x413F51 to 0x413F7C), where NSPW NET sends them to where it dropped it.
 	[Fact]

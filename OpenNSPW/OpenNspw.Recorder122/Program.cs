@@ -28,9 +28,9 @@ const uint MenuItemApplied = 0x431C60;
 
 // The uninitialized locals that 1.22 reads, which the trace records as Windows' stack holds them, by the instruction that
 // reads them, the local's offset from esp there and its size: in cpu_strtgy, scenario 208's count of planes at fleet 2's
-// base; in the battle, the heading along which a torpedo plane checks for land, and the angle of a plane's approach to a
-// carrier heading 360.
-(uint Instruction, uint Offset, int Size)[] stackLocals = [(0x4050C7, 0x30, 4), (0x413D23, 0x38, 8), (0x41764E, 0x10, 8)];
+// base; in the battle, the heading along which a torpedo plane checks for land, and the angle of a plane's landing pattern
+// and approach to a carrier heading 360.
+(uint Instruction, uint Offset, int Size)[] stackLocals = [(0x4050C7, 0x30, 4), (0x413D23, 0x38, 8), (0x4173BF, 0x0C, 8), (0x41764E, 0x10, 8)];
 
 // Where the recorder plays in place of the player: the title screen's test of a click (0x40AD39), after which it goes
 // to the scenarios; and the scenario screen's test for a battle to start (0x40C613), after its rows and its click have

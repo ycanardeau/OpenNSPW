@@ -1019,6 +1019,11 @@ public void	SetShipFormation( int s )
 		case 13: case 14:
 			wrk_drctn=270.0+45.0;
 			break;
+		default:
+			// 1.22 reads the angle where its stack slot holds wrk_x (0x417179).
+			if( Rules.HeadingsOf360TakeNoCase )
+				wrk_drctn=wrk_x;
+			break;
 		}
 	drctn=drctn-wrk_drctn;
 	if(drctn<0)
@@ -1080,6 +1085,11 @@ public void	SetLandingDestination(int n)
 			break;
 		case 13: case 14:
 			angl=270.0+45.0;
+			break;
+		default:
+			// 1.22 reads the angle it has not set (0x4173BF).
+			if( Rules.HeadingsOf360TakeNoCase )
+				angl=TakeStackLocal(0x4173BF, angl);
 			break;
 		}
 
@@ -1172,7 +1182,7 @@ public void	UpdateLanding( int n )
 			break;
 		default:
 			// 1.22 reads the angle it has not set (0x41764E).
-			if( Rules.ApproachesAlongUnsetAngleAt360 )
+			if( Rules.HeadingsOf360TakeNoCase )
 				angl=TakeStackLocal(0x41764E, angl);
 			break;
 		}
