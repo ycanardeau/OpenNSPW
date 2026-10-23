@@ -63,6 +63,13 @@ public sealed record BattleRules(
 	// Kept as is for compatibility with 1.22.
 	bool HandoverTestsTheOldLeaderFlying,
 
+	// Whether a flying plane leaves its leader once the leader is parked and returning, rather than staying in its group
+	// (SetDynamicDestination).
+	// BUG?(1.22): a flying plane keeps following a parked leader, toward its place on the deck, which is not on the map
+	// (0x4149F0); NSPW NET has it leave, but 1.22's code does not show whether this was meant. Kept as is for compatibility
+	// with 1.22.
+	bool FlyingFollowersLeaveParkedLeaders,
+
 	// Whether a mode chosen from the combat menu is given to every plane it is for, flying or parked, and a move clears a
 	// plane's deck phase, rather than Move and Return only, and to flying planes, but a Return to attackers and bombers.
 	bool MenuModesApplyToEveryPlane,
@@ -250,6 +257,7 @@ public sealed record BattleRules(
 		JapaneseAttackersDive: true,
 		FollowersFlyToRelease: true,
 		HandoverTestsTheOldLeaderFlying: false,
+		FlyingFollowersLeaveParkedLeaders: true,
 		MenuModesApplyToEveryPlane: false,
 		HeadingsOf360TakeNoCase: false,
 		FollowersRouteBy122sOwnCode: false,
@@ -318,6 +326,7 @@ public sealed record BattleRules(
 		JapaneseAttackersDive: false, // 0x414186 to 0x4144E0
 		FollowersFlyToRelease: false, // 0x414186 to 0x4144E0, 0x413F51 to 0x413F7C
 		HandoverTestsTheOldLeaderFlying: true, // 0x415916, 0x415971
+		FlyingFollowersLeaveParkedLeaders: false, // 0x4149F0
 		MenuModesApplyToEveryPlane: true, // 0x431D19 to 0x431D4E
 		HeadingsOf360TakeNoCase: true, // 0x4173BF, 0x41764E, 0x417179
 		FollowersRouteBy122sOwnCode: true, // 0x414D79

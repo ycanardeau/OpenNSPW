@@ -529,6 +529,29 @@ public class SingleplayerTests
 		Assert.Equal(UnitMode.Move, game.Units[fighter].Mode);
 	}
 
+	// A flying plane keeps following its leader once the leader is parked and returning, as in 1.22 (0x4149F0); NSPW NET
+	// has it leave.
+	[Fact]
+	public void FlyingFollowersStayWithParkedLeaders()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		var leader = game.AddUnit(Side.Japan, UnitKind.Bomber, -9000, -7000, 0);
+		var follower = game.AddUnit(Side.Japan, UnitKind.Bomber, -8800, -7000, 0);
+		Assert.NotEqual(0, leader);
+		Assert.NotEqual(0, follower);
+		game.Units[leader].PlaneState = UnitState.Parked;
+		game.Units[leader].Mode = UnitMode.Return;
+		game.Units[follower].PlaneState = UnitState.Flying;
+		game.Units[follower].GroupLeader = (short)leader;
+		game.Units[follower].FormationNumber = 1;
+
+		game.SetDynamicDestination(follower);
+
+		Assert.Equal(leader, game.Units[follower].GroupLeader);
+	}
+
 	// The planes that follow a torpedo plane return once it drops its torpedo, and keep their path, as in 1.22
 	// (0x413F51 to 0x413F7C), where NSPW NET sends them to where it dropped it.
 	[Fact]

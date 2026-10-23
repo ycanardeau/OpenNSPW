@@ -2305,7 +2305,8 @@ public void	SetDynamicDestination(int n)
 
 		pt=Units[n].GroupLeader;
 
-		if(Units[pt].PlaneState==UnitState.Parked && Units[pt].Mode==UnitMode.Return && Units[n].PlaneState==UnitState.Flying )
+		// 1.22 keeps a flying plane with its parked leader (0x4149F0).
+		if(Units[pt].PlaneState==UnitState.Parked && Units[pt].Mode==UnitMode.Return && Units[n].PlaneState==UnitState.Flying && Rules.FlyingFollowersLeaveParkedLeaders )
 			{
 			Units[n].GroupLeader=0;
 			return;
