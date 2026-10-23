@@ -13,6 +13,15 @@ public sealed class StrongPlayer : IPlayer
 	// How close to a deck enemy planes hold its strikes back.
 	private const double RaidRange = 2000;
 
+	// The share of its HP under which a warship goes to repair.
+	private const double RepairBelow = 0.4;
+
+	// The frames between a damaged ship's orders.
+	private const int RepairFrames = 200;
+
+	// The frames between a surface group's orders.
+	private const int EngageFrames = 150;
+
 	// How far beyond the computer's strike range a carrier keeps from the enemy's carriers.
 	private const double KeepAwayMargin = 1000;
 
@@ -75,6 +84,9 @@ public sealed class StrongPlayer : IPlayer
 	private readonly Dictionary<int, List<int>> _scoutsOf = [];
 	private readonly HashSet<int> _formed = [];
 	private readonly Dictionary<int, int> _positioned = [];
+	private readonly HashSet<int> _repairing = [];
+	private readonly Dictionary<int, int> _repairOrdered = [];
+	private readonly Dictionary<int, int> _engagedAt = [];
 	private readonly Dictionary<int, Queue<WorldPosition>> _scoutLegs = [];
 	private readonly Dictionary<int, int> _scoutLaunches = [];
 	private ScenarioKnowledge _knowledge = ScenarioKnowledge.For(0);
@@ -506,17 +518,21 @@ public sealed class StrongPlayer : IPlayer
 	private bool IsCounted(UnitKind kind) =>
 		_knowledge.Counted.Count == 0 || _knowledge.Counted.Contains(kind);
 
-	// The middle of the enemy ships found lately within 1500 of a contact, where they would be after `ticks` more ticks:
-	// where the carriers or the battleships of a formation sail, its escorts around them.
+	// The middle of a contact and the enemy ships found lately within 1500 of it, where they would be after `ticks` more
+	// ticks: where the carriers or the battleships of a formation sail, its escorts around them.
 	private WorldPosition FormationMiddle(Nspw game, Contact contact, double ticks)
 	{
 		var ships = _contacts
 			.All.Where(c =>
-				c.Category == UnitCategory.Ship
-				&& game.Renderer.FrameCount - c.Frame < ContactFrames
-				&& UnitFacts.Distance(c.Position, contact.Position) <= 1500
+				c.Unit == contact.Unit
+				|| (
+					c.Category == UnitCategory.Ship
+					&& game.Renderer.FrameCount - c.Frame < ContactFrames
+					&& UnitFacts.Distance(c.Position, contact.Position) <= 1500
+				)
 			)
 			.Select(c => c.Predict(ticks))
+			.Append(contact.Predict(ticks))
 			.ToList();
 		return new WorldPosition(ships.Average(p => p.X), ships.Average(p => p.Y));
 	}
@@ -1376,6 +1392,302 @@ public sealed class StrongPlayer : IPlayer
 		return false;
 	}
 
+	private static bool IsWarship(UnitKind kind) =>
+		kind is UnitKind.Battleship or UnitKind.Cruiser or UnitKind.Destroyer;
+
+	// Selects a unit of the player's alone, nothing being selected: a ship with the ships that follow it.
+	private void SelectAlone(int m, string what)
+	{
+		Deselect();
+		_clicks.Enqueue(g =>
+		{
+			if (g.SelectedUnit != 0 || !IsOwn(g, m))
+				return GiveUp(g, $"{what} {m}: selected {g.SelectedUnit}");
+			g.Commands.ClickUnit(m);
+			return true;
+		});
+	}
+
+	// Gives the selected unit m a destination, then deselects it.
+	private void SendSelected(int m, WorldPosition point, string what)
+	{
+		_clicks.Enqueue(g =>
+		{
+			if (g.SelectedUnit != m)
+				return GiveUp(g, $"{what} {m}: selected {g.SelectedUnit}");
+			g.Commands.SetDestination(point);
+			Log?.Invoke(
+				$"{g.Renderer.FrameCount}: {g.Units[m].Kind} {m} {what} ({point.X:F0}, {point.Y:F0})"
+			);
+			return true;
+		});
+		Deselect();
+	}
+
+	// The warships that sail alone, near each other, form a line behind the strongest of them, battleships first, once.
+	private bool TryFormBattleGroups(Nspw game)
+	{
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var seed = ref game.Units[m];
+			if (
+				!IsOwn(game, m)
+				|| !IsWarship(seed.Kind)
+				|| _formed.Contains(m)
+				|| seed.GroupLeader != 0
+				|| seed.IsGroupLeader != 0
+				|| seed.IsSupplying
+			)
+				continue;
+
+			var position = seed.Position;
+			var group = new List<int>();
+			for (var n = 1; n <= game.MaxUnitId; n++)
+			{
+				ref var ship = ref game.Units[n];
+				if (
+					IsOwn(game, n)
+					&& IsWarship(ship.Kind)
+					&& !_formed.Contains(n)
+					&& ship.GroupLeader == 0
+					&& ship.IsGroupLeader == 0
+					&& !ship.IsSupplying
+					&& UnitFacts.Distance(ship.Position, position) <= 2500
+				)
+					group.Add(n);
+			}
+
+			_formed.UnionWith(group);
+			if (group.Count < 2)
+				continue;
+
+			var leader = group
+				.OrderBy(n => game.Units[n].Kind)
+				.ThenByDescending(n => game.Units[n].HP)
+				.First();
+			var leaderPosition = game.Units[leader].Position;
+			SelectAlone(leader, "forming");
+			foreach (var member in group.Where(n => n != leader))
+			{
+				_clicks.Enqueue(g =>
+				{
+					if (g.SelectedUnit != leader)
+						return GiveUp(g, $"forming {leader}: selected {g.SelectedUnit}");
+					if (IsOwn(g, member) && g.Selections[1][member] == 0)
+						g.Commands.ClickUnit(member);
+					return true;
+				});
+			}
+
+			SendSelected(
+				leader,
+				new WorldPosition(leaderPosition.X + 80, leaderPosition.Y),
+				$"leads {group.Count - 1} ships to"
+			);
+			return true;
+		}
+
+		return false;
+	}
+
+	// The player's naval base nearest a point, built, or 0.
+	private static int NearestNavalBase(Nspw game, WorldPosition position)
+	{
+		var best = 0;
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var unit = ref game.Units[m];
+			if (
+				IsOwn(game, m)
+				&& unit.Kind == UnitKind.NavalBase
+				&& unit.BuildTime == 0
+				&& (
+					best == 0
+					|| UnitFacts.Distance(unit.Position, position)
+						< UnitFacts.Distance(game.Units[best].Position, position)
+				)
+			)
+				best = m;
+		}
+
+		return best;
+	}
+
+	// A warship that has lost most of its HP sails to the nearest naval base of the player's, and supplies there once it
+	// has stopped, which the combat menu offers only within 280 of the base (ListCombatMenu); it fights again once repaired.
+	private bool TryRepair(Nspw game)
+	{
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var ship = ref game.Units[m];
+			if (!IsOwn(game, m) || !IsWarship(ship.Kind))
+				continue;
+
+			if (ship.IsSupplying || ship.HP >= ship.MaxHP)
+			{
+				if (_repairing.Remove(m) && !ship.IsSupplying)
+					_formed.Remove(m);
+				continue;
+			}
+
+			if (!_repairing.Contains(m) && ship.HP >= ship.MaxHP * RepairBelow)
+				continue;
+
+			var navalBase = NearestNavalBase(game, ship.Position);
+			if (
+				navalBase == 0
+				|| game.Renderer.FrameCount - _repairOrdered.GetValueOrDefault(m, -RepairFrames)
+					< RepairFrames
+			)
+				continue;
+
+			_repairing.Add(m);
+			_repairOrdered[m] = game.Renderer.FrameCount;
+			var basePosition = game.Units[navalBase].Position;
+			var ship1 = m;
+			if (UnitFacts.Distance(ship.Position, basePosition) > 240)
+			{
+				var berth = PointAt(basePosition, BearingTo(basePosition, ship.Position), 160);
+				SelectAlone(m, "sailing to repair");
+				SendSelected(m, berth, "sails to repair at");
+				return true;
+			}
+
+			if (!ship.IsStopping || ship.Speed != 0)
+				continue;
+
+			SelectAlone(m, "supplying");
+			_clicks.Enqueue(g =>
+			{
+				if (g.SelectedUnit != ship1)
+					return GiveUp(g, $"supplying {ship1}: selected {g.SelectedUnit}");
+				g.Commands.ChooseCombatMenuItem(CombatMenuItem.Supply);
+				Log?.Invoke(
+					$"{g.Renderer.FrameCount}: {g.Units[ship1].Kind} {ship1} supplies, {g.Units[ship1].HP}/{g.Units[ship1].MaxHP}"
+				);
+				return true;
+			});
+			_clicks.Wait(8);
+			Deselect();
+			return true;
+		}
+
+		return false;
+	}
+
+	// The best enemy ship for a surface group to fight: found lately, by its worth and nearness, the ones the victory
+	// conditions count first; or null.
+	private Contact? ChooseSurfaceTarget(Nspw game, WorldPosition from) =>
+		_contacts
+			.All.Where(c =>
+				c.Category == UnitCategory.Ship
+				&& game.Renderer.FrameCount - c.Frame < CarrierMemoryFrames
+			)
+			.OrderByDescending(c =>
+				Value(c.Kind)
+				- (UnitFacts.Distance(from, c.Position) / 1500)
+				- ((game.Renderer.FrameCount - c.Frame) / 300.0)
+			)
+			.FirstOrDefault();
+
+	// Each surface group of the player's, led by a warship, goes at the best enemy ship it knows of, all its ships firing at
+	// it once it is found (ApplyOrders gives the formation the leader's target), and keeps at it while it is found, unless
+	// one the victory conditions count is found; or, knowing of none, toward where the briefing expects the enemy.
+	private bool TryEngage(Nspw game)
+	{
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var leader = ref game.Units[m];
+			if (
+				!IsOwn(game, m)
+				|| !IsWarship(leader.Kind)
+				|| leader.GroupLeader != 0
+				|| leader.IsSupplying
+				|| _repairing.Contains(m)
+				|| game.Renderer.FrameCount - _engagedAt.GetValueOrDefault(m, -EngageFrames)
+					< EngageFrames
+			)
+				continue;
+
+			_engagedAt[m] = game.Renderer.FrameCount;
+			var position = leader.Position;
+			var current =
+				leader.Target != 0
+				&& game.Units[leader.Target].IsUsed
+				&& game.Units[leader.Target].IsFound
+					? _contacts.Find(leader.Target)
+					: null;
+			var best = ChooseSurfaceTarget(game, position);
+			var target =
+				current is not null
+				&& (best is null || IsCounted(current.Kind) || !IsCounted(best.Kind))
+					? current
+					: best;
+			WorldPosition point;
+			if (target is not null)
+			{
+				var ticks =
+					Math.Min(
+						UnitFacts.Distance(position, target.Position)
+							/ Math.Max(leader.MaxSpeed, 0.3)
+							/ 2,
+						600
+					) + ((game.Renderer.FrameCount - target.Frame) * 2);
+				point = target.Predict(ticks);
+			}
+			else if (_knowledge.Enemy.Count > 0)
+			{
+				point = _knowledge
+					.Enemy.OrderBy(a => a.IsPlace)
+					.ThenBy(a => UnitFacts.Distance(position, a.Center))
+					.First()
+					.Center;
+			}
+			else
+			{
+				continue;
+			}
+
+			var destination = new WorldPosition(leader.PathX[0], leader.PathY[0]);
+			var hasTarget =
+				target is null || leader.Target == target.Unit || !game.Units[target.Unit].IsFound;
+			if (
+				hasTarget
+				&& leader.PathX[0] != World.Right + 1
+				&& UnitFacts.Distance(destination, point) < 600
+			)
+				continue;
+
+			var ship = m;
+			SelectAlone(m, "engaging");
+			if (target is not null)
+			{
+				var targetUnit = target.Unit;
+				_clicks.Enqueue(g =>
+				{
+					if (g.SelectedUnit != ship)
+						return GiveUp(g, $"engaging {ship}: selected {g.SelectedUnit}");
+					if (
+						g.Units[targetUnit].IsUsed
+						&& g.Units[targetUnit].IsFound
+						&& g.Units[ship].Target != targetUnit
+					)
+						g.Commands.ClickUnit(targetUnit);
+					return true;
+				});
+			}
+
+			SendSelected(
+				m,
+				point,
+				target is null ? "sails toward" : $"engages {target.Kind} {target.Unit} at"
+			);
+			return true;
+		}
+
+		return false;
+	}
+
 	private void Plan(Nspw game)
 	{
 		var decks = Decks(game);
@@ -1386,7 +1698,10 @@ public sealed class StrongPlayer : IPlayer
 			&& !TryScout(game, decks)
 			&& !TryStrike(game, decks)
 			&& !TryForm(game, decks)
+			&& !TryFormBattleGroups(game)
+			&& !TryRepair(game)
 			&& !TryPosition(game, decks)
+			&& !TryEngage(game)
 			&& !TryPatrol(game, decks)
 			&& !TryArm(game, decks)
 		)
