@@ -8,7 +8,7 @@ using OpenNspw.Arena;
 // The arena (docs/StrongAI.md): plays single-player scenarios against NSPW 1.22's computer, from several start dates,
 // with each player on the player's side, and writes the table of their results.
 //
-//   dotnet run -c Release --project OpenNspw.Arena -- [--scenarios 4,5,6|all] [--dates 3] [--players idle,rush]
+//   dotnet run -c Release --project OpenNspw.Arena -- [--scenarios 4,5,6|all] [--dates 3] [--first-date 0] [--players idle,rush]
 //       [--parallel <cores>] [--out results.csv] [--frames <limit>] [--verbose] [--sees-all]
 //       [--trace <units> [--trace-from <frame>] [--trace-to <frame>] [--trace-every <frames>]] [--strikes]
 //   dotnet run -c Release --project OpenNspw.Arena -- --describe [--scenarios 4,5,6|all]
@@ -83,6 +83,7 @@ IReadOnlyList<int> scenarios =
 		? OpenNspw.Singleplayer.Functions.Scenarios
 		: [.. scenarioOption.Split(',').Select(s => int.Parse(s, CultureInfo.InvariantCulture))];
 var dateCount = int.Parse(Option(args, "--dates", "3"), CultureInfo.InvariantCulture);
+var firstDate = int.Parse(Option(args, "--first-date", "0"), CultureInfo.InvariantCulture);
 IReadOnlyList<string> players = Option(args, "--players", "idle,rush").Split(',');
 var parallel = int.Parse(
 	Option(args, "--parallel", $"{Environment.ProcessorCount}"),
@@ -113,7 +114,7 @@ if (args.Contains("--describe"))
 
 var jobs = new ConcurrentQueue<(int Scenario, int StartDate, string Player)>(
 	from scenario in scenarios
-	from date in Enumerable.Range(0, dateCount)
+	from date in Enumerable.Range(firstDate, dateCount)
 	from player in players
 	select (scenario, 1_000_000_000 + (date * 7919), player)
 );
