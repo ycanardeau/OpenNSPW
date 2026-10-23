@@ -217,6 +217,12 @@ void Play(Debugger debugger, uint address)
 		case Orders when writer is not null && commander.Order(debugger, frames) is { } order:
 			Console.WriteLine($"Frame {frames}: {order}.");
 			break;
+		case Commander.Input when writer is not null && commander.StartInput(debugger) is { } selection:
+			Console.WriteLine($"Frame {frames}: {selection}.");
+			break;
+		case Commander.MenuEntryTest when writer is not null && commander.TestMenuEntry(debugger) is { } item:
+			Console.WriteLine($"Frame {frames}: {item}.");
+			break;
 	}
 }
 
@@ -300,7 +306,7 @@ void Run(int? scenario)
 	hasStartedBattle = false;
 	uint[] breakpoints = scenario is null
 		? [GameInit, GameInitSeeded, Frame, CharaCont, Decision, Orders, DrawCmbtArea, MenuItemApplied, .. stackLocals.Select(local => local.Instruction)]
-		: [GameInit, GameInitSeeded, Frame, CharaCont, Decision, Orders, DrawCmbtArea, MenuItemApplied, .. stackLocals.Select(local => local.Instruction), TitleClickTest, BattleStartTest];
+		: [GameInit, GameInitSeeded, Frame, CharaCont, Decision, Orders, DrawCmbtArea, MenuItemApplied, .. stackLocals.Select(local => local.Instruction), TitleClickTest, BattleStartTest, Commander.Input, Commander.MenuEntryTest];
 	using (var debugger = new Debugger(executable, breakpoints, Hit))
 	{
 		Console.WriteLine(scenario is null

@@ -6,7 +6,8 @@ namespace OpenNspw.Recorder122;
 
 // Runs a 32-bit program under the debugger API, and calls back at its breakpoints, before the instruction there runs.
 // A breakpoint is an int3 written over its first byte: at a hit, the byte is put back and the thread steps over it once,
-// then the int3 is written again. The callback may read and write the program's memory, and end it (Terminate).
+// then the int3 is written again. The callback may read and write the program's memory and the thread's registers, send
+// the thread elsewhere instead of over the breakpoint (Resume), and end the program (Terminate).
 internal sealed class Debugger(string executable, IReadOnlyCollection<uint> breakpoints, Action<Debugger, uint> hit) : IDisposable
 {
 	private const byte Int3 = 0xCC;
@@ -25,6 +26,12 @@ internal sealed class Debugger(string executable, IReadOnlyCollection<uint> brea
 
 	// The thread stopped at the breakpoint being called back.
 	private int _hitThreadId;
+
+	// The registers the callback gives the thread as it resumes: where it goes instead of over the breakpoint, its ESI and
+	// its ESP.
+	private uint? _resumeEip;
+	private uint? _resumeEsi;
+	private uint? _resumeEsp;
 
 	private static void Check(bool succeeded, string what)
 	{
@@ -45,12 +52,33 @@ internal sealed class Debugger(string executable, IReadOnlyCollection<uint> brea
 
 	public short ReadInt16(uint address) => BitConverter.ToInt16(Read(address, 2));
 
+	private void ReadContext(nint thread)
+	{
+		Marshal.WriteInt32(_context, 0, unchecked((int)(CONTEXT_CONTROL | CONTEXT_INTEGER)));
+		Check(GetThreadContext(thread, _context), "GetThreadContext");
+	}
+
 	// ESP of the thread stopped at the breakpoint, before the instruction there runs.
 	public uint ReadEsp()
 	{
-		Marshal.WriteInt32(_context, 0, unchecked((int)CONTEXT_CONTROL));
-		Check(GetThreadContext(_threads[_hitThreadId], _context), "GetThreadContext");
+		ReadContext(_threads[_hitThreadId]);
 		return (uint)Marshal.ReadInt32(_context, ContextEsp);
+	}
+
+	// EDI of the thread stopped at the breakpoint.
+	public uint ReadEdi()
+	{
+		ReadContext(_threads[_hitThreadId]);
+		return (uint)Marshal.ReadInt32(_context, ContextEdi);
+	}
+
+	// Gives the thread stopped at the breakpoint registers as it resumes, once the callback returns: eip sends it there
+	// instead of over the breakpoint, which stays; esi and esp are set either way.
+	public void Resume(uint? eip = null, uint? esi = null, uint? esp = null)
+	{
+		_resumeEip = eip;
+		_resumeEsi = esi;
+		_resumeEsp = esp;
 	}
 
 	private void Write(uint address, byte value)
@@ -65,6 +93,11 @@ internal sealed class Debugger(string executable, IReadOnlyCollection<uint> brea
 	}
 
 	public void WriteInt16(uint address, short value)
+	{
+		Write(address, BitConverter.GetBytes(value));
+	}
+
+	public void WriteUInt32(uint address, uint value)
 	{
 		Write(address, BitConverter.GetBytes(value));
 	}
@@ -85,17 +118,28 @@ internal sealed class Debugger(string executable, IReadOnlyCollection<uint> brea
 		}
 	}
 
-	// Puts the instruction back, moves the thread back onto it, and has it step once.
-	private void StepOver(int threadId, uint address)
+	// Resumes the thread with the registers the callback gave it: at the eip given, or else back onto the instruction,
+	// put back, to step over it once.
+	private void ResumeThread(int threadId, uint address)
 	{
 		var thread = _threads[threadId];
-		Write(address, _originalBytes[address]);
-		Marshal.WriteInt32(_context, 0, unchecked((int)CONTEXT_CONTROL));
-		Check(GetThreadContext(thread, _context), "GetThreadContext");
-		Marshal.WriteInt32(_context, ContextEip, (int)address);
-		Marshal.WriteInt32(_context, ContextEFlags, Marshal.ReadInt32(_context, ContextEFlags) | (int)TrapFlag);
+		ReadContext(thread);
+		if (_resumeEsi is { } esi)
+			Marshal.WriteInt32(_context, ContextEsi, (int)esi);
+		if (_resumeEsp is { } esp)
+			Marshal.WriteInt32(_context, ContextEsp, (int)esp);
+		if (_resumeEip is { } eip)
+		{
+			Marshal.WriteInt32(_context, ContextEip, (int)eip);
+		}
+		else
+		{
+			Write(address, _originalBytes[address]);
+			Marshal.WriteInt32(_context, ContextEip, (int)address);
+			Marshal.WriteInt32(_context, ContextEFlags, Marshal.ReadInt32(_context, ContextEFlags) | (int)TrapFlag);
+			_steppingOver[threadId] = address;
+		}
 		Check(SetThreadContext(thread, _context), "SetThreadContext");
-		_steppingOver[threadId] = address;
 	}
 
 	private uint HandleException(int threadId)
@@ -109,9 +153,10 @@ internal sealed class Debugger(string executable, IReadOnlyCollection<uint> brea
 			if (_originalBytes.ContainsKey(address))
 			{
 				_hitThreadId = threadId;
+				Resume();
 				_hit(this, address);
 				if (!_isTerminating)
-					StepOver(threadId, address);
+					ResumeThread(threadId, address);
 				return DBG_CONTINUE;
 			}
 			if (!_hasSeenSystemBreakpoint)

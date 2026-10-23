@@ -53,7 +53,12 @@ recorder\OpenNspw.Recorder122.exe Original\Nspw122\NSPW_122.exe traces --scenari
 
 It goes past the title screen as a click does (the title's button, `0x463B30`, set to 3 where the title tests it, `0x40AD39`), and starts the scenario where the scenario screen tests for a battle to start (`0x40C613`), after its rows and its click have set `sinario` and the mode: there it writes the scenario and the mode 10, and `game_init` starts the battle as after a click. `--speed` sets the speed at the start of each frame, as the speed keys do (1.22 goes up to 100). It closes 1.22 at the start of a frame once `--frames` frames are recorded, or once the battle has a result (`game_end`, `0x483B44`), so that the trace ends with a whole frame, and says why.
 
-It also orders the player's side (`Commander`): every `--orders` frames (20 by default, 0 for none), one of its ships or planes, chosen at random but its bases and the units supplying, attacks an enemy unit it sees, one time in two when it sees one, or else moves to a random point within 2000 of it, which launches a parked plane. The recorder writes the order where 1.22's drawing leaves those of the clicks (`new_pp[1]`, `new_slct[1]`), as its orders start, so that 1.22 applies it as a click's, and records it as the player's. Its choices draw from its own random numbers, of `--seed`, which it prints, never from 1.22's `rand`; 1.22's battle still differs from run to run, by the seed of its `srand(time(0))`. It gives no combat menu's items, which 1.22 applies in its input, where the recorder does not play.
+It also orders the player's side (`Commander`): every `--orders` frames (20 by default, 0 for none), one time in three an item of the combat menu, else an order on the battle area, and records them as the player's:
+
+- **On the battle area.** One of its ships or planes, chosen at random but its bases and the units supplying, attacks an enemy unit it sees, one time in two when it sees one, or else moves to a random point within 2000 of it, which launches a parked plane. The recorder writes the order where 1.22's drawing leaves those of the clicks (`new_pp[1]`, `new_slct[1]`), as its orders start, so that 1.22 applies it as a click's.
+- **On the combat menu**, in the next frame. As 1.22's input starts (`0x4312A0`), the recorder has it call its own selection of a clicked unit (`0x417CF0`) for one of its ships or planes, chosen at random; then, where the input tests each entry of the menu it has made for the unit for a click (`0x431C18`), it sends the input where a click on an entry goes (`0x431C53`), with the entry's item, one chosen at random but the item the unit has. 1.22 applies it as a click's.
+
+Its choices draw from its own random numbers, of `--seed`, which it prints, never from 1.22's `rand`; 1.22's battle still differs from run to run, by the seed of its `srand(time(0))`.
 
 Click nothing in 1.22 while it plays; moving the cursor only scrolls the view, which the trace records.
 
@@ -79,5 +84,4 @@ The game starts in the trace's scenario and follows it as the test does: its see
 
 ## Not covered yet
 - Input beyond the orders: the keys but the speed keys, and what the player's clicks change outside the orders and the combat menu, if 1.22 has any; a trace that has some shows them as its first difference. No trace of 1.22 with the player's orders has been replayed yet.
-- The combat menu's items when the recorder plays: it gives orders on the battle area only.
 - The effects themselves, the clouds and the computer's own globals are not recorded; their random numbers are, through rand's state.
