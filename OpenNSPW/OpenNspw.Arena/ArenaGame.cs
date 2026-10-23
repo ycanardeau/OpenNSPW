@@ -39,6 +39,7 @@ internal sealed class ArenaGame
 	private readonly IPlayer _player;
 	private readonly int _maxFrames;
 	private readonly UnitTrace? _trace;
+	private readonly StrikeLog? _strikes;
 	private readonly ArenaPlatform _platform;
 	private readonly Nspw _game;
 	private int _frames;
@@ -76,22 +77,26 @@ internal sealed class ArenaGame
 			throw new ArenaStoppedException();
 
 		_trace?.Write(_game);
+		_strikes?.Write(_game);
 		_player.Act(_game);
 	}
 
 	// maxFrames: the frames of the battle after which the game stops, unfinished. trace: units to write as the game goes.
+	// strikes: whether to write what becomes of the player's strikes.
 	public ArenaGame(
 		GameData data,
 		int scenario,
 		int startDate,
 		IPlayer player,
 		int maxFrames = int.MaxValue,
-		UnitTrace? trace = null
+		UnitTrace? trace = null,
+		bool strikes = false
 	)
 	{
 		_player = player;
 		_maxFrames = maxFrames;
 		_trace = trace;
+		_strikes = strikes ? new StrikeLog() : null;
 		_platform = new ArenaPlatform(
 			data.Directory,
 			data.SingleplayerDirectory,

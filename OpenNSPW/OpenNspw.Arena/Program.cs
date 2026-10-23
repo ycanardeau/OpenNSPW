@@ -10,7 +10,7 @@ using OpenNspw.Arena;
 //
 //   dotnet run -c Release --project OpenNspw.Arena -- [--scenarios 4,5,6|all] [--dates 3] [--players idle,rush]
 //       [--parallel <cores>] [--out results.csv] [--frames <limit>] [--verbose] [--sees-all]
-//       [--trace <units> [--trace-from <frame>] [--trace-to <frame>] [--trace-every <frames>]]
+//       [--trace <units> [--trace-from <frame>] [--trace-to <frame>] [--trace-every <frames>]] [--strikes]
 //   dotnet run -c Release --project OpenNspw.Arena -- --describe [--scenarios 4,5,6|all]
 
 static IPlayer CreatePlayer(string name, bool verbose, bool seesAll) =>
@@ -95,6 +95,7 @@ var maxFrames = int.Parse(
 	Option(args, "--frames", $"{int.MaxValue}"),
 	CultureInfo.InvariantCulture
 );
+var strikes = args.Contains("--strikes");
 var trace = UnitTrace.FromOptions((name, defaultValue) => Option(args, name, defaultValue));
 
 var data = GameData.Find();
@@ -133,7 +134,8 @@ var workers = Enumerable
 				job.StartDate,
 				CreatePlayer(job.Player, verbose, seesAll),
 				maxFrames,
-				trace
+				trace,
+				strikes
 			).Play();
 			results.Add(result);
 			lock (results)
