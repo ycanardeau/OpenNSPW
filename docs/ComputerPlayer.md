@@ -149,7 +149,7 @@ The same as NSPW NET:
 
 The second argument, a `double` (4.0 for a new order, 1.0 for a blocked ship), is not used.
 
-`set_cpu_route2` (`0x42ED30`) is the same as NSPW NET's `set_cpu_root2`; nothing that the port emulates calls it.
+`set_cpu_route2` (`0x42ED30`) is NSPW NET's `set_cpu_root2` as 1.22 compiled it. 1.22's formation (`set_pos_of_dynmc`, `0x414D79`) calls it for a ship that follows a leader, every 10 ticks; the port runs it in the emulator there (`SetCpuRoute2As122`), as NSPW NET's, run natively, took the other side of an obstacle where both were clear, 22.5° either way, in a trace of scenario 203.
 
 ### Blocked ships
 1.22's movement (`chara_cont`) also replans the computer's ships that follow no leader (`ltl_ldr==0`), which NSPW NET does not:

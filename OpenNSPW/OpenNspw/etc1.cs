@@ -2424,7 +2424,10 @@ public void	SetDynamicDestination(int n)
 		if( 1!=0  )
 			{
 			//コンピュータの進路計算
-			SetCpuRoute2( n );
+			if( Rules.FollowersRouteBy122sOwnCode )
+				SetCpuRoute2As122( n );
+			else
+				SetCpuRoute2( n );
 			}
 		}
 

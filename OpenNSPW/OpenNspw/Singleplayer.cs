@@ -551,6 +551,13 @@ public unsafe partial class Nspw
 		ClearBufferedOrders();
 	}
 
+	// set_cpu_route2(m): the route of ship m to the destination just set as its path, as a ship that follows a leader
+	// takes it (0x414D79).
+	public void SetCpuRoute2As122(int m)
+	{
+		RunEmulated(Functions.SetCpuRoute2, (uint)m);
+	}
+
 	// set_cpu_route(m, radius): the route of the computer's ship m to the destination just set as its path; the orders
 	// pass 4.0, the battle 1.0 when the ship is blocked.
 	public void SetCpuRoute(int m, double radius)

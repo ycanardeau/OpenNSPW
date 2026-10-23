@@ -37,7 +37,7 @@ dotnet run --project Disassembler/OpenNspw.Disassembler -- Original/Nspw122/NSPW
 | `set_unit_data` | `0x41E150` | By the emulated code, and by `SetUnitData` in a single-player game, for the units the battle creates |
 | `set_new_unit`, `set_new_unit_plane`, `plane_in_cv`, `set_pos_of_parking`, `cls_all_slct_unit_p2`, `pt_in_rect3` | | Only by the emulated code |
 
-`set_cpu_route2` (`0x42ED30`) is translated, but nothing calls it: the port's `SetCpuRoute2`, which NSPW NET calls for every unit, stays.
+`set_cpu_route2` (`0x42ED30`) is translated, and `SetDynamicDestination` calls it (`SetCpuRoute2As122`) for a ship that follows a leader, as 1.22's formation does (`0x414D79`); the port's `SetCpuRoute2`, which NSPW NET calls for every unit, stays for network games.
 
 The scenario numbers and their functions are those of 1.22's `game_init` (`0x429C50`), which dispatches to them through two jump tables.
 

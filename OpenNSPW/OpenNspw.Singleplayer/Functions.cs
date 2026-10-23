@@ -15,6 +15,9 @@ public static class Functions
 	// set_cpu_route(int m, double): the route of the computer's ship m to its destination.
 	public const uint SetCpuRoute = 0x42DA80;
 
+	// set_cpu_route2(int m): the route of ship m to its destination, which a ship that follows a leader takes.
+	public const uint SetCpuRoute2 = 0x42ED30;
+
 	// load_it2(char* file_name): reads a map into cmbt_map.
 	public const uint LoadMap = 0x432A30;
 
