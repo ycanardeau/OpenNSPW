@@ -19,6 +19,24 @@ internal static class UnitFacts
 
 	public static bool IsStrikePlane(UnitKind kind) => kind is UnitKind.Attacker or UnitKind.Bomber;
 
+	// Whether a ship can be at a point: on the map, and on a tile of sea, as the ships see the terrain (IsLandAt).
+	public static bool IsSea(Nspw game, WorldPosition position)
+	{
+		if (
+			position.Y > World.Top
+			|| position.Y < World.Bottom
+			|| position.X < World.Left
+			|| position.X > World.Right
+		)
+			return false;
+
+		ref var units = ref game.Renderer.Sprites[SpriteId.JapanUnits];
+		ref var tiles = ref game.Renderer.Sprites[SpriteId.MapTiles];
+		var column = (int)((position.X + (units.Size.Width / 2) - World.Left) / tiles.Size.Width);
+		var row = (int)((World.Top - position.Y + (units.Size.Height / 2)) / tiles.Size.Height);
+		return column is >= 0 and < 256 && row is >= 0 and < 256 && game.MapTiles[row][column] == 0;
+	}
+
 	public static double Distance(WorldPosition a, WorldPosition b)
 	{
 		var dx = a.X - b.X;
