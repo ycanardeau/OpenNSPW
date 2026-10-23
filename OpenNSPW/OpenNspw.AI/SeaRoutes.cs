@@ -102,20 +102,28 @@ public sealed class SeaRoutes(Nspw game)
 	private bool IsCoast(int column, int row) =>
 		Neighbors.Any(n => !IsSea(column + n.Dx, row + n.Dy));
 
-	// Whether a ship sails clear from one point to another in a straight line, every tile on the way being sea.
+	// Whether a ship sails clear from one point to another in a straight line: every tile on the way is sea, and so are
+	// those 30 to either side, so that the way does not graze the coast.
 	private bool IsClear(WorldPosition from, WorldPosition to)
 	{
-		var steps = (int)(UnitFacts.Distance(from, to) / 30) + 1;
+		var length = UnitFacts.Distance(from, to);
+		var steps = (int)(length / 10) + 1;
+		var (sideX, sideY) =
+			length == 0
+				? (0.0, 0.0)
+				: (-(to.Y - from.Y) / length * 30, (to.X - from.X) / length * 30);
 		for (var i = 0; i <= steps; i++)
 		{
-			var (column, row) = TileOf(
-				new WorldPosition(
-					from.X + ((to.X - from.X) * i / steps),
-					from.Y + ((to.Y - from.Y) * i / steps)
-				)
-			);
-			if (!IsSea(column, row))
-				return false;
+			var x = from.X + ((to.X - from.X) * i / steps);
+			var y = from.Y + ((to.Y - from.Y) * i / steps);
+			foreach (var side in new[] { 0, 1, -1 })
+			{
+				var (column, row) = TileOf(
+					new WorldPosition(x + (side * sideX), y + (side * sideY))
+				);
+				if (!IsSea(column, row))
+					return false;
+			}
 		}
 
 		return true;

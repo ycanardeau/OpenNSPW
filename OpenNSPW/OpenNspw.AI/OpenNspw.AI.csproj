@@ -9,4 +9,8 @@
     <ProjectReference Include="..\OpenNspw.HostUI\OpenNspw.HostUI.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="OpenNspw.Tests" />
+  </ItemGroup>
+
 </Project>

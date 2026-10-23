@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OpenNspw\OpenNspw.csproj" />
+    <ProjectReference Include="..\OpenNspw.AI\OpenNspw.AI.csproj" />
     <ProjectReference Include="..\OpenNspw.DirectPlay\OpenNspw.DirectPlay.csproj" />
     <ProjectReference Include="..\OpenNspw.HostUI\OpenNspw.HostUI.csproj" />
     <ProjectReference Include="..\OpenNspw.Replay\OpenNspw.Replay.csproj" />
