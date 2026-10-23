@@ -154,9 +154,31 @@ public sealed partial class StrongPlayer
 		return false;
 	}
 
+	// The player's flying attackers and bombers that attack a unit, but those of the formation led by `leader`.
+	private int AttackersOn(Nspw game, int target, int leader)
+	{
+		var count = 0;
+		for (var n = 1; n <= game.MaxUnitId; n++)
+		{
+			ref var plane = ref game.Units[n];
+			if (
+				IsOwn(game, n)
+				&& UnitFacts.IsStrikePlane(plane.Kind)
+				&& plane.PlaneState == UnitState.Flying
+				&& plane.Target == target
+				&& plane.Ammo > 0
+				&& n != leader
+				&& plane.GroupLeader != leader
+			)
+				count++;
+		}
+
+		return count;
+	}
+
 	// The best target found for a flying plane of the player's: for an attacker or a bomber, an enemy ship its weapon can
-	// attack, within 2500, by its worth, the one it was sent at favored; for a fighter, an enemy plane in the air,
-	// attackers and bombers first, within 1500.
+	// attack, within 2500, by its worth, the one it was sent at favored, the ones other strikes attack already less; for a
+	// fighter, an enemy plane in the air, attackers and bombers first, within 1500.
 	private Contact? ChooseTargetInFlight(Nspw game, int plane)
 	{
 		ref var unit = ref game.Units[plane];
@@ -183,6 +205,7 @@ public sealed partial class StrongPlayer
 					Value(c.Kind)
 					+ (_strikeTargets.GetValueOrDefault(plane) == c.Unit ? 4 : 0)
 					- (UnitFacts.Distance(position, c.Position) / 1000)
+					- (AttackersOn(game, c.Unit, plane) * 1.5)
 				)
 				.FirstOrDefault();
 	}
@@ -528,7 +551,8 @@ public sealed partial class StrongPlayer
 
 	// A deck's ready attackers and bombers, with escorting fighters, against the best enemy found within reach, once three
 	// of its armed planes are ready, or all it has, and none will be ready soon, and no enemy strike is over it; or, while
-	// another deck's strike has just gone, with whatever is ready, at the same target, so that they arrive together: a strike that takes off into the enemy's
+	// another deck's strike has just gone, with whatever is ready, at the same target or place, so that they arrive
+	// together: a strike that takes off into the enemy's
 	// is broken up as it climbs, so it waits for the raid to pass, and goes while the enemy's planes are coming home.
 	private bool TryStrike(Nspw game, List<int> decks)
 	{
@@ -558,10 +582,17 @@ public sealed partial class StrongPlayer
 						<= StrikeRange
 						? w.Target
 						: null;
+				var pointWave =
+					_pointWave is { } p
+					&& game.Renderer.FrameCount - p.Frame < PointWaveFrames
+					&& UnitFacts.Distance(game.Units[deck].Position, p.Point) <= PlaceStrikeRange
+						? p.Point
+						: (WorldPosition?)null;
 				if (
 					ready.Count == 0
 					|| (
 						wave is null
+						&& pointWave is null
 						&& (
 							soon > 0
 							|| (ready.Count < MinStrike && ready.Count < StrikePlanesOf(game, deck))
@@ -572,7 +603,7 @@ public sealed partial class StrongPlayer
 
 				var target = wave ?? ChooseTarget(game, deck, weapon);
 				var origin = target is null
-					? EnemyStrikeOrigin(game) ?? PlaceToStrike(game, deck)
+					? pointWave ?? EnemyStrikeOrigin(game) ?? PlaceToStrike(game, deck)
 					: null;
 				if (target is null && origin is null)
 					continue;
@@ -598,6 +629,8 @@ public sealed partial class StrongPlayer
 				else
 				{
 					_lastBlindStrike = game.Renderer.FrameCount;
+					if (pointWave is null)
+						_pointWave = (origin!.Value, game.Renderer.FrameCount);
 					LaunchToward(ready[0], origin!.Value);
 				}
 

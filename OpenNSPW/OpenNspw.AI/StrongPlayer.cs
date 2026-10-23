@@ -65,6 +65,10 @@ public sealed partial class StrongPlayer : IPlayer
 	// The frames after a strike in which the other decks' ready planes join it.
 	private const int WaveFrames = 200;
 
+	// The frames after a strike at a place or a point in which the other decks' ready planes join it, waiting longer for
+	// them, as nothing there was found to escape.
+	private const int PointWaveFrames = 400;
+
 	// The planes a strike waits for, when the deck has them armed.
 	private const int MinStrike = 3;
 
@@ -95,6 +99,7 @@ public sealed partial class StrongPlayer : IPlayer
 	private int _searches;
 	private int _lastBlindStrike = -1;
 	private (Contact Target, int Frame)? _wave;
+	private (WorldPosition Point, int Frame)? _pointWave;
 
 	public string Name => "strong";
 

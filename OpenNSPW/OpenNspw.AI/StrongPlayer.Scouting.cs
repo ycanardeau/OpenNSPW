@@ -91,12 +91,22 @@ public sealed partial class StrongPlayer
 	}
 
 	// While no enemy ship has been found lately, the decks' scouts fly out, each sweeping an arc where the enemy most
-	// likely is, a new arc each flight, nearest the likely bearing first; TryGuideScouts flies them on.
+	// likely is, a new arc each flight, nearest the likely bearing first; TryGuideScouts flies them on. There is nothing
+	// to search for when the briefing names every place the enemy is, within the strikes' reach.
 	private bool TryScout(Nspw game, List<int> decks)
 	{
 		if (
 			_contacts.All.Any(c =>
 				c.Category == UnitCategory.Ship && game.Renderer.FrameCount - c.Frame < 300
+			)
+			|| (
+				_knowledge.Enemy.Count > 0
+				&& _knowledge.Enemy.All(a =>
+					a.IsPlace
+					&& decks.Any(d =>
+						UnitFacts.Distance(game.Units[d].Position, a.Center) <= PlaceStrikeRange
+					)
+				)
 			)
 		)
 			return false;
