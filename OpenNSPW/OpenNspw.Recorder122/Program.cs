@@ -148,15 +148,21 @@ var commander = new Commander(new Random(seed), ordersOption ?? 20);
 // The combat menu's item the player clicked in this frame, for its unit, until the orders record it.
 var menuOrder = new MenuOrder();
 
-// The player's orders as the orders function is about to take them: null if there are none.
+// The selection as the last orders recorded it: the selected unit, the count and the flags, all 0 as a battle starts.
+var recordedSelection = new byte[2 + 2 + 2 * Trace122Orders.SelectionLength];
+
+// The player's orders as the orders function is about to take them: null if there are none, and the selection is as the
+// last orders recorded it.
 Trace122Orders? ReadPlayerOrders(Debugger debugger)
 {
 	var move = debugger.Read(PlayerMoveOrder, 32);
 	var select = debugger.Read(PlayerSelectOrder, 32);
-	if (BitConverter.ToInt16(move, 0) == 0 && BitConverter.ToInt32(select, 0) == 0 && menuOrder.Menu == CombatMenuItem.None)
+	var selection = debugger.Read(Selection, 2 * Trace122Orders.SelectionLength);
+	byte[] selectionState = [.. debugger.Read(SelectedUnit, 2), .. debugger.Read(SelectionCount, 2), .. selection];
+	if (BitConverter.ToInt16(move, 0) == 0 && BitConverter.ToInt32(select, 0) == 0 && menuOrder.Menu == CombatMenuItem.None && selectionState.AsSpan().SequenceEqual(recordedSelection))
 		return null;
 
-	var selection = debugger.Read(Selection, 2 * Trace122Orders.SelectionLength);
+	recordedSelection = selectionState;
 	var selections = new short[Trace122Orders.SelectionLength];
 	for (var s = 0; s < selections.Length; s++)
 		selections[s] = BitConverter.ToInt16(selection, 2 * s);
@@ -253,6 +259,7 @@ void Hit(Debugger debugger, uint address)
 				path = Path.Combine(output, $"{scenario}-{DateTime.Now:yyyyMMdd-HHmmss}.n122");
 				writer = new Trace122Writer(File.Create(path), scenario);
 				frames = 0;
+				Array.Clear(recordedSelection);
 				writer.WriteRandom(TracePoint.Start, random);
 				Console.WriteLine($"Scenario {scenario} started; recording to {path}.");
 				break;
