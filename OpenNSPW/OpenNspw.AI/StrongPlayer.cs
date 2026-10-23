@@ -63,6 +63,9 @@ public sealed partial class StrongPlayer : IPlayer
 	// The frames for which a strike is still launched at an enemy that is no longer found, where it would be by now.
 	private const int ContactFrames = 600;
 
+	// The frames between a deck's fighter sweeps.
+	private const int HuntFrames = 1500;
+
 	// The frames after a strike in which the other decks' ready planes join it.
 	private const int WaveFrames = 200;
 
@@ -85,6 +88,7 @@ public sealed partial class StrongPlayer : IPlayer
 	private readonly Dictionary<int, int> _engaged = [];
 	private readonly Dictionary<string, int> _placeStrikes = [];
 	private readonly Dictionary<int, int> _directed = [];
+	private readonly Dictionary<int, int> _huntedFrom = [];
 	private readonly Dictionary<int, int> _sweeps = [];
 	private readonly Dictionary<int, int> _strikeTargets = [];
 	private readonly HashSet<int> _toWaypoint = [];
@@ -354,6 +358,7 @@ public sealed partial class StrongPlayer : IPlayer
 			&& !TryGuideScouts(game)
 			&& !TryScout(game, decks)
 			&& !TryStrike(game, decks)
+			&& !TryHunt(game, decks)
 			&& !TryForm(game, decks)
 			&& !TryFormConvoy(game)
 			&& !TryLand(game)

@@ -697,6 +697,54 @@ public sealed partial class StrongPlayer
 		return false;
 	}
 
+	// When the victory conditions count enemy planes, a deck's ready fighters but one fly to the nearest area where the
+	// briefing expects them, within their reach, every so often, and wait there, as they see only 500 around: TryDirect
+	// gives them the planes they find.
+	private bool TryHunt(Nspw game, List<int> decks)
+	{
+		if (
+			!_knowledge.Counted.Any(k =>
+				k is UnitKind.Bomber or UnitKind.Attacker or UnitKind.Fighter
+			)
+		)
+			return false;
+
+		foreach (var deck in decks)
+		{
+			if (
+				!UnitFacts.CanLaunch(ref game.Units[deck])
+				|| game.Renderer.FrameCount - _huntedFrom.GetValueOrDefault(deck, -HuntFrames)
+					< HuntFrames
+			)
+				continue;
+
+			var fighters = ParkedOn(
+				game,
+				deck,
+				n => game.Units[n].Kind == UnitKind.Fighter && UnitFacts.IsReady(ref game.Units[n])
+			);
+			if (fighters.Count < 2)
+				continue;
+
+			var position = game.Units[deck].Position;
+			var reach = Reach(ref game.Units[fighters[0]]);
+			var area = _knowledge
+				.Enemy.Where(a => !a.IsPlace && UnitFacts.Distance(position, a.Center) <= reach)
+				.MinBy(a => UnitFacts.Distance(position, a.Center));
+			if (area is null)
+				continue;
+
+			_huntedFrom[deck] = game.Renderer.FrameCount;
+			var group = fighters.Take(fighters.Count - 1).ToList();
+			ShowDeck(deck);
+			SelectPlanes(group[0], group.Skip(1));
+			LaunchToward(group[0], area.Center);
+			return true;
+		}
+
+		return false;
+	}
+
 	// A carrier keeps a fighter in the air above it, toward where the enemy most likely is, while it has two ready: it sees
 	// the enemy's strikes coming, and fights them, until its fuel brings it home (at 30) and another goes up.
 	private bool TryPatrol(Nspw game, List<int> decks)

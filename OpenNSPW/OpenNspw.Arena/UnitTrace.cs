@@ -64,7 +64,14 @@ internal sealed class UnitTrace(IReadOnlyList<int> units, int from, int to, int 
 			return null;
 
 		return new UnitTrace(
-			[.. units.Split(',').Select(int.Parse)],
+			[
+				.. units
+					.Split(
+						',',
+						StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+					)
+					.Select(int.Parse),
+			],
 			int.Parse(option("--trace-from", "0")),
 			int.Parse(option("--trace-to", $"{int.MaxValue}")),
 			int.Parse(option("--trace-every", "10"))
