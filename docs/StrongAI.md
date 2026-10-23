@@ -73,6 +73,7 @@ What decides a carrier battle, read from the game's code and measured with the a
 - **Each bomb or shell that hits a carrier destroys each plane parked on it one time in 10** (`UpdateBomb`, `UpdateGunShell`): a carrier bombed unawares loses its strike on its deck.
 - **An attacker sees 1000**, beyond the escorts' guns: a scout keeps a carrier in sight from 900.
 - The computer's carriers come at the player's to within its strike range (3550, or 4350 as Japan), and launch as soon as one is within it: a carrier kept out of it is never struck.
+- **A computer's carrier with no more than 2 attackers, or at half its HP or less, sails home** to its naval base ([ComputerPlayer.md](ComputerPlayer.md#cpu_strtgy), Returning to base). There it gets every plane it lost back at once, is repaired by 1 HP every 200 ticks, and comes out again; the player's carriers get no planes back, and the computer gets no other reinforcements in these battles. Only 105 and 106 have naval bases, each within the area where the briefing expects the computer's fleet. Their long games are lost this way: a carrier left at a few HP slips home, while the player's planes run out.
 
 So, while the victory conditions count the enemy's carriers (`HuntsCarriers`), the strong player:
 
@@ -83,6 +84,7 @@ So, while the victory conditions count the enemy's carriers (`HuntsCarriers`), t
 - **launches when the enemy's strike will be home**, 2000 to one side of its way, and **holds off** 3300 to one side of the target while enemy planes are over it;
 - **disperses** its strike once it is in the air, each plane flying on alone at full speed, and **approaches together**, around the target at 2000, 90° round at most, to the side its escorts cover least, fanned out across it, as far as the fuel lets;
 - **brings its planes home in time**, pointed at their deck, with the fuel for the way home while the deck sails away from them;
+- **follows a carrier home**: a carrier lost for 3000 frames that was last seen heading within 45° of the area where the briefing expects its fleet is thought to be on its way there, at 0.55 a tick at least, and remembered until it would have been there for 4000 frames. The scouts look for it on its way, 1500 each side, the strikes go at it there, the carriers follow it to keep it within their planes' reach, and the warships sent after it follow it home. Sooner than 3000 frames, a carrier sailing away is as often keeping out of the player's strike range.
 - **sends its warships after a crippled carrier**: once two torpedoes or more were dropped on one, the cruisers and destroyers screening its carriers leave them and go at it, if they are as many as the enemy's warships found around it, and no enemy strike has been seen for 3000 frames; the battleships stay with the carriers. The strikes often leave a carrier at a few HP, burning slowly, and the warships' guns and torpedoes finish it.
 
 ## Results
@@ -183,19 +185,27 @@ It wins 13 games of 111, where the rushing player wins 5: scenarios 1, 101 and 1
 Since then, as measured scenario by scenario: 2 is won in all three games (every deck strikes Pearl Harbor at once, each at a different ship), 202 is won (the strategic bombers reach Tokyo, 62% of their range away), 4 is drawn in all three, and 6 drawn twice.
 
 ### The carrier battles
-With strikes that go for the nearest carrier, and with no cap on the frames; 4 and 105 also from the six start dates after these (1000023757 to 1000063352), as three games of each swing on small changes:
+With carriers followed home, and with no cap on the frames; 105 and 106 also from the six start dates after these (1000023757 to 1000063352), as three games of each swing on small changes. Before, with strikes that go for the nearest carrier (`c3e4e43`), on the same dates:
 
-| Scenario | Side | strong | six more |
-| --- | --- | --- | --- |
-| 4 | J | DWD | WDDLDD |
-| 5 | U | DDD | |
-| 6 | U | WDD | |
-| 9 | J | LLL | |
-| 105 | J | LLW | LLWWWW |
-| 106 | U | WLW | |
-| 201 | J | LLL | |
+| Scenario | Side | strong | six more | before | six more |
+| --- | --- | --- | --- | --- | --- |
+| 4 | J | DWD | | DWD | WDDLDD |
+| 5 | U | DDD | | DDD | |
+| 6 | U | WDD | | WDD | |
+| 9 | J | LLL | | LLL | |
+| 105 | J | LWW | WLWWLL | LLW | LLWWWW |
+| 106 | U | WWW | LWLLLL | WLW | LLLLWL |
+| 201 | J | LLL | | LLL | |
 
-Before, the strong player drew 4 in all three games, drew 5 and 6 at times, and lost 9, 105, 106 and 201. It now wins 105 one time in two, 106 two times in three, and 4 and 6 at times: its torpedoes reach the carriers, and more than half of them hit. At `fa6b64e`, whose strikes went for the carriers by their worth, 4 was WWW and 105 WWW on the three dates, but 4 WLDLDD and 105 WLLWLW on the six more: about as often.
+Following carriers home wins 9 of the 18 games of 105 and 106, where it won 8 before: as much as the games swing, no gain to speak of. A change of a degree in one strike's approach sends a game another way from there on, so the same date can be won by one build and lost by the next for no reason of their own. In the games it loses, a carrier left at a few HP still gets home: in 105's 1000055433, the American carrier sat at 9 of 41 HP for 8000 frames on its way home, but the one strike sent at it found nothing where it would be, and came home with half its fuel.
+
+That strike was not lost: it chased the carrier from behind, from 7900 away, where the player's carrier kept out of the computer's strike range, and turned home for fuel 3000 short of it. A fleet whose flagship sails home launches no strike ([ComputerPlayer.md](ComputerPlayer.md#cpu_strtgy), Air strikes), so three ways to catch it were tried, none better than this:
+
+- marking a carrier found heading home beyond its strike range of the player's ships as going home, predicting it straight home, and letting the player's carriers close to 2500 from it: the strikes reach it, but its battleship and cruiser turn back ten of twelve attackers before they drop; and in 5, closing on one Japanese carrier going home brought the player's carrier within reach of another, not seen for a while, which sank it (5 LDL);
+- the same, closing only while every carrier found is going home: 5 draws again, but 105 and 106 win 8 of 18;
+- and, on top of it, strikes at a carrier going home waiting for all of their deck's planes: no change, as the planes come home and rearm at different times.
+
+Before, the strong player drew 4 in all three games, drew 5 and 6 at times, and lost 9, 105, 106 and 201. It now wins 105 and 106 about one time in two, and 4 and 6 at times: its torpedoes reach the carriers, and more than half of them hit. At `fa6b64e`, whose strikes went for the carriers by their worth, 4 was WWW and 105 WWW on the three dates, but 4 WLDLDD and 105 WLLWLW on the six more: about as often.
 
 - **4**: the strikes leave the American carrier at a few HP, and the cruisers and destroyers sent after it often finish it, when they find it; most games still end in a draw with the carrier at 2 to 10 HP. The carrier starts at one of three places, whichever the early strike and the scouts' sweeps find.
 - **5**, **6** and **106**, where the player is American: the American attackers reach 15400 on a full tank, where the Japanese reach 18700, and the Japanese carriers strike from 4350, so the American strikes fly far and come home short of fuel; in 22500 frames (27500 in 6) the strikes sink one or two of the three Japanese carriers (two in 106), often leaving the last at a few HP. The Japanese strikes sometimes sink the player's carriers (6 and 106 lost a game each in some runs); in 106, whose battle lasts 450000 frames, the Japanese carriers also repair and get their planes back at Truk, which the player's do not. Sending all the warships after the Japanese carriers lost them to the Japanese fleets in 6; sending the strikes of several decks around as one approach made 6 worse too.

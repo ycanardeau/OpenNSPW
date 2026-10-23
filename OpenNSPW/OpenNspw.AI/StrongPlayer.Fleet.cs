@@ -89,7 +89,8 @@ public sealed partial class StrongPlayer
 		game.CpuSide == Side.Japan ? 4350 : 3550;
 
 	// What a carrier keeps its distance from, each with the distance: the enemy's carriers found, where they were last
-	// found, the computer's strike range (3550, or 4350 as Japan) and more for each frame since, as they may have come
+	// found, or, heading home (HomeOf) and lost from sight for CarrierMemoryFrames, where they would be by now, which the carrier follows to keep them within its
+	// planes' reach, the computer's strike range (3550, or 4350 as Japan) and, but those, more for each frame since, as they may have come
 	// on by half their speed, up to 3000, or, while hunting carriers, at their full speed (0.7 a tick), up to 1000:
 	// farther, the carrier would sail out of its own planes' reach before the scouts find them again; or, none found
 	// yet, the areas where the briefing expects them, if the victory conditions count them, the range and the area's
@@ -103,19 +104,21 @@ public sealed partial class StrongPlayer
 				c.Kind is UnitKind.Carrier or UnitKind.LightCarrier && game.Units[c.Unit].IsUsed
 			)
 			.Select(c =>
-				(
-					c.Position,
-					range
-						+ (
-							HuntsCarriers
-								? Math.Min((game.Renderer.FrameCount - c.Frame) * 2 * 0.7, 1000)
-								: Math.Min(
-									(game.Renderer.FrameCount - c.Frame) * 2 * 0.35 * 0.5,
-									3000
-								)
-						),
-					true
-				)
+				HomeOf(c) is not null && game.Renderer.FrameCount - c.Frame >= CarrierMemoryFrames
+					? (WhereNow(game, c, 0), range, true)
+					: (
+						c.Position,
+						range
+							+ (
+								HuntsCarriers
+									? Math.Min((game.Renderer.FrameCount - c.Frame) * 2 * 0.7, 1000)
+									: Math.Min(
+										(game.Renderer.FrameCount - c.Frame) * 2 * 0.35 * 0.5,
+										3000
+									)
+							),
+						true
+					)
 			)
 			.ToList();
 		if (threats.Count == 0 && _knowledge.Counted.Contains(UnitKind.Carrier))
@@ -368,7 +371,7 @@ public sealed partial class StrongPlayer
 				&& IsCounted(c.Kind)
 				&& game.Units[c.Unit].IsUsed
 				&& _dropsOn.GetValueOrDefault(c.Unit) >= 2
-				&& game.Renderer.FrameCount - c.Frame < CarrierMemoryFrames
+				&& IsRemembered(game, c)
 			)
 			.MaxBy(c => _dropsOn.GetValueOrDefault(c.Unit));
 		if (crippled is null)
@@ -407,7 +410,7 @@ public sealed partial class StrongPlayer
 		return SailSelected(
 				game,
 				warship,
-				crippled.Predict(Math.Min((game.Renderer.FrameCount - crippled.Frame) * 2, 1500)),
+				WhereNow(game, crippled, 0),
 				$"leaves its carrier for {crippled.Kind} {crippled.Unit} at"
 			) || true;
 	}

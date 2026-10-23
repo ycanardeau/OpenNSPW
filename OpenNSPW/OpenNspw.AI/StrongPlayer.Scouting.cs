@@ -43,7 +43,7 @@ public sealed partial class StrongPlayer
 
 	// The legs of the n-th search from a deck. While it hunts carriers, by a scout that flies out as far as `reach`:
 	// across where the carrier found last most likely is, half the way it was heading, wider the longer it has been
-	// lost; or, early in the battle, across an area where the briefing expects them, each once, the nearest first, but
+	// lost, or, lost for CarrierMemoryFrames and heading home, on its way there (WhereNow), 1500 each side; or, early in the battle, across an area where the briefing expects them, each once, the nearest first, but
 	// the ones a strike goes to (IsEarlyStrikeArea), as scenario 4's carrier starts in one of three, as far as a flight
 	// there, across and back lets (20% farther than `reach`, which allows for a longer way across);
 	// or back and forth across the way to an area where the briefing expects them, the areas in turn, nearest first,
@@ -60,15 +60,21 @@ public sealed partial class StrongPlayer
 				&& !UnitFacts.IsBase(c.Kind)
 				&& IsCounted(c.Kind)
 				&& game.Units[c.Unit].IsUsed
-				&& game.Renderer.FrameCount - c.Frame < CarrierMemoryFrames
+				&& IsRemembered(game, c)
 			)
 			.MaxBy(c => c.Frame);
-		if (HuntsCarriers && lost is not null && UnitFacts.Distance(from, lost.Position) <= reach)
+		var homing =
+			lost is not null && game.Renderer.FrameCount - lost.Frame >= CarrierMemoryFrames;
+		if (
+			HuntsCarriers
+			&& lost is not null
+			&& UnitFacts.Distance(from, homing ? WhereNow(game, lost, 0) : lost.Position) <= reach
+		)
 		{
 			var ticks = (game.Renderer.FrameCount - lost.Frame) * 2;
-			var at = lost.Predict(ticks / 2.0);
+			var at = homing ? WhereNow(game, lost, 0) : lost.Predict(ticks / 2.0);
 			var across = BearingTo(from, at) + 90;
-			var half = 700 + (ticks * 0.35);
+			var half = homing ? 1500 : 700 + (ticks * 0.35);
 			return [PointAt(at, across, half), PointAt(at, across + 180, half)];
 		}
 

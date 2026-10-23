@@ -34,6 +34,14 @@ public sealed partial class StrongPlayer : IPlayer
 	// The frames for which a carrier found is thought to be where it would be by now.
 	private const int CarrierMemoryFrames = 3000;
 
+	// How fast a carrier heading home is thought to sail, at least, a tick: its formation's speed (a light carrier's,
+	// in scenario 105, about 0.58).
+	private const double HomewardSpeed = 0.55;
+
+	// The frames for which a carrier that has sailed home is thought to stay there, while it is repaired: 200 ticks
+	// for each HP, half of it or more (ComputerPlayer.md, At the base).
+	private const int HomeFrames = 4000;
+
 	// How far from its deck a combat air patrol flies, toward where the enemy most likely is.
 	private const double PatrolDistance = 700;
 

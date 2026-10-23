@@ -339,10 +339,62 @@ public sealed partial class StrongPlayer
 		return true;
 	}
 
+	// The area the briefing expects an enemy fleet in that a carrier found was heading for, within 45°, from beyond it,
+	// while hunting carriers, or null: its home, where the computer's carrier sails back to its naval base, once it has
+	// no more than 2 attackers or half its HP, to be repaired and to get its planes back, and comes out again
+	// (ComputerPlayer.md, Returning to base).
+	private Area? HomeOf(Contact contact) =>
+		!HuntsCarriers || contact.Kind is not (UnitKind.Carrier or UnitKind.LightCarrier)
+			? null
+			: _knowledge
+				.Enemy.Where(a =>
+					!a.IsPlace
+					&& UnitFacts.Distance(contact.Position, a.Center) > a.Radius
+					&& Math.Abs(
+						((BearingTo(contact.Position, a.Center) - contact.Direction + 540) % 360)
+							- 180
+					) <= 45
+				)
+				.MinBy(a => UnitFacts.Distance(contact.Position, a.Center));
+
 	// Where an enemy unit found most likely is `ticks` from now, on the heading it was found on, for at most 1500 ticks
-	// from when it was found: a ship zigzags, and one lost from sight long ago is better looked for where it was.
-	private static WorldPosition WhereNow(Nspw game, Contact contact, double ticks) =>
-		contact.Predict(Math.Min(((game.Renderer.FrameCount - contact.Frame) * 2) + ticks, 1500));
+	// from when it was found: a ship zigzags, and one lost from sight long ago is better looked for where it was; a
+	// carrier heading home (HomeOf) and lost for CarrierMemoryFrames, on its way there after those 1500 ticks, at
+	// HomewardSpeed or faster, until it is there. A carrier sails away from the enemy within its strike range, toward home as often as
+	// not, which is why it is thought to be going home only once it has been lost that long.
+	private WorldPosition WhereNow(Nspw game, Contact contact, double ticks)
+	{
+		var elapsed = ((game.Renderer.FrameCount - contact.Frame) * 2) + ticks;
+		var near = contact.Predict(Math.Min(elapsed, 1500));
+		if (
+			game.Renderer.FrameCount - contact.Frame < CarrierMemoryFrames
+			|| HomeOf(contact) is not { } home
+		)
+			return near;
+
+		return PointAt(
+			near,
+			BearingTo(near, home.Center),
+			Math.Min(
+				(elapsed - 1500) * Math.Max(contact.Speed, HomewardSpeed),
+				UnitFacts.Distance(near, home.Center)
+			)
+		);
+	}
+
+	// Whether a carrier found is still thought to be where WhereNow has it: for CarrierMemoryFrames, or, heading home,
+	// until it would be there, and HomeFrames more.
+	private bool IsRemembered(Nspw game, Contact contact) =>
+		game.Renderer.FrameCount - contact.Frame < CarrierMemoryFrames
+		|| (
+			HomeOf(contact) is { } home
+			&& game.Renderer.FrameCount - contact.Frame
+				< (
+					UnitFacts.Distance(contact.Position, home.Center)
+					/ Math.Max(contact.Speed, HomewardSpeed)
+					/ 2
+				) + HomeFrames
+		);
 
 	// The middle of a contact and the enemy ships found lately within 1500 of it, where they would be after `ticks`
 	// more ticks: where the carriers or the battleships of a formation sail, its escorts around them.
@@ -751,7 +803,7 @@ public sealed partial class StrongPlayer
 		}
 	}
 
-	// A strike that hunts carriers, 1300 to 4000 from where the nearest one found in the last CarrierMemoryFrames most
+	// A strike that hunts carriers, 1300 to 4000 from where the nearest one remembered (IsRemembered) most
 	// likely is (WhereNow), or, knowing of none, 700 or more from the middle of the nearest ships found within 3000,
 	// where the carrier they screen most likely is, as escorts are found from 1000, outside their guns' reach, before
 	// the carrier, holds off 3300 to one side of it while enemy planes are found in the air within 2500 of it, as long
@@ -776,7 +828,7 @@ public sealed partial class StrongPlayer
 					c.Category == UnitCategory.Ship
 					&& IsCounted(c.Kind)
 					&& game.Units[c.Unit].IsUsed
-					&& game.Renderer.FrameCount - c.Frame < CarrierMemoryFrames
+					&& IsRemembered(game, c)
 					&& UnitFacts.Distance(position, WhereNow(game, c, 0)) <= 4000
 				)
 				.MinBy(c => UnitFacts.Distance(position, WhereNow(game, c, 0)));
@@ -924,7 +976,7 @@ public sealed partial class StrongPlayer
 				c.Category == UnitCategory.Ship
 				&& IsCounted(c.Kind)
 				&& game.Units[c.Unit].IsUsed
-				&& game.Renderer.FrameCount - c.Frame < CarrierMemoryFrames
+				&& IsRemembered(game, c)
 				&& UnitFacts.Distance(position, c.Position) <= 5000
 			)
 			.MinBy(c => UnitFacts.Distance(position, c.Position));
@@ -1121,7 +1173,7 @@ public sealed partial class StrongPlayer
 	}
 
 	// The best enemy found lately within reach of a deck's planes armed with a weapon, or null; while the strikes hunt
-	// carriers, a carrier found in the last CarrierMemoryFrames, where it most likely is now, within 85% of the planes'
+	// carriers, a carrier remembered (IsRemembered), where it most likely is now, within 85% of the planes'
 	// `reach`, which leaves fuel to look for it and to come round to its side, the nearest first.
 	private Contact? ChooseTarget(Nspw game, int deck, FireKind weapon, double reach)
 	{
@@ -1132,7 +1184,7 @@ public sealed partial class StrongPlayer
 					HuntsCarriers
 						? IsCounted(c.Kind)
 							&& game.Units[c.Unit].IsUsed
-							&& game.Renderer.FrameCount - c.Frame < CarrierMemoryFrames
+							&& IsRemembered(game, c)
 							&& UnitFacts.Distance(position, WhereNow(game, c, 0)) <= reach * 0.85
 						: game.Renderer.FrameCount - c.Frame < ContactFrames
 							&& UnitFacts.Distance(position, c.Position) <= StrikeRange
