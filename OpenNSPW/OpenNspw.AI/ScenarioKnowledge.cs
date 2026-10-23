@@ -80,8 +80,16 @@ public sealed record ScenarioKnowledge(
 				Carriers,
 				HoldsOn: true
 			),
-			// The U.S. carrier comes from the Coral Sea, south.
-			4 => new([Fleet("the U.S. carrier in the Coral Sea", -500, -5800, 2500)], Carriers),
+			// The U.S. carrier comes from the Coral Sea, south, or, as a player learns by playing, from the south-east
+			// or the east: it starts at one of three places, at random.
+			4 => new(
+				[
+					Fleet("the U.S. carrier in the Coral Sea", -1000, -6000, 1000),
+					Fleet("the U.S. carrier in the south-east", 3100, -4900, 1000),
+					Fleet("the U.S. carrier in the east", 2800, 100, 1100),
+				],
+				Carriers
+			),
 			// Japan's carriers come at Midway from the west.
 			5 => new([Fleet("Japan's carriers west of Midway", -7000, 4500, 2000)], Carriers),
 			// Japan's fleets come down from the north-west.
