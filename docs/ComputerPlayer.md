@@ -138,14 +138,16 @@ Each adds from the first empty element of 1 to 17 (18 when there is none) the un
 | A destination on land, or in another ship | Return, the path unchanged | The ship stops: its path is its own position |
 | Steps along a leg | 1 for the first 80, then 40 | 1 for the first 320, then 40 |
 | Headings tried around an obstacle | 8 each side, 22.5° apart | 18 each side, 10° apart |
-| Waypoints | At most one (`while(pp_indx==0)`) | Until the last leg is clear (`while(pp_indx>=0)`) |
-| Debug output | Commented out | `SetWindowText` "in Set_cpu_root", "Panzer Vor!" for each waypoint, "out Set_cpu_root", when not full screen |
+| Waypoints | At most one (`while(pp_indx==0)`) | Until the last leg is clear (`while(pp_indx>=0)`), which may never come (below) |
+| Debug output | Commented out | `SetWindowText` "in Set_cpu_root", "Panzer Vor!" each time round the loop, "out Set_cpu_root", when not full screen |
 
 The same as NSPW NET:
 
 - A leg is walked from its start toward its end. It is blocked where it reaches a tile of `cmbt_map` that is not sea (`>=1`), or a ship's rectangle (`sprt[UNIT_JPN]`'s size around it; submerged submarines and ground facilities, kinds 11 to 17, do not count).
 - When a leg is blocked, the headings on each side are tried, nearest first, and the first side whose leg is clear for the whole distance wins. The waypoint is on that heading, at half the clear distance (at least 40).
 - A waypoint that would make the route turn back (between 90° and 270° from the previous leg) is moved back: the destination is moved 160 further, up to 2000, and the waypoint is planned again.
+
+In 1.22, the loop may never end. Once the leg to the moved destination is clear, the distance it was moved goes back to 0 (`0x42EC6F`); when the leg from there back to the destination is blocked again, the loop adds the same points again and again, past the path's 64 points, until 1.22 crashes. The port ends the route at point 62 ([KnownIssues.md](KnownIssues.md#single-player-games-crashed-on-a-route-that-never-ends)).
 
 The second argument, a `double` (4.0 for a new order, 1.0 for a blocked ship), is not used.
 
@@ -157,7 +159,7 @@ The second argument, a `double` (4.0 for a new order, 1.0 for a blocked ship), i
 - **Land ahead** (`0x40229D`): when the point 80 ahead of the ship toward its path is land (a tile of 1 to 9), and it has no emergency move (`em_flg[0]==0`).
 - **A ship ahead** (`0x4020DB`): every 100 ticks (`(cc_count+m)%100==0`), when the ship is at no more than a fifth of its top speed. If its destination is in that ship's rectangle, the destination becomes its own position.
 
-Its path becomes its final destination alone, and `set_cpu_route(m, 1.0)` plans it again. The port does not: its single-player game moves the ships as NSPW NET does, which stops them until the computer gives them another order.
+Its path becomes its final destination alone, and `set_cpu_route(m, 1.0)` plans it again. The port does the same in a single-player game (`CheckCourseAheadAs122`, `ReplanBlockedRoute`).
 
 ## decision
 `decision` (`0x41C3C0`) runs in three steps:

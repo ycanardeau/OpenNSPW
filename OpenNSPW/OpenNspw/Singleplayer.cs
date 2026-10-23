@@ -44,6 +44,16 @@ public unsafe partial class Nspw
 	private const int ReleaseDCOffset = 0x68;
 	private const int SurfaceMethodCount = 0x6C / 4;
 
+	// "Panzer Vor!", which set_cpu_route gives SetWindowTextA each time round its loop of waypoints (0x42ECF3).
+	private const uint WaypointMessageAddress = 0x441620;
+
+	// set_cpu_route's pp_indx, [esp+2Ch] in its frame, from the stack of the SetWindowTextA it calls: past the return
+	// address and the two arguments.
+	private const uint RouteIndexOffset = 4 + 2 * 4 + 0x2C;
+
+	// The points of a unit's path (pp_x, pp_y).
+	private const int RoutePathLength = 64;
+
 	private static Span<byte> Bytes<T>(ref T value) where T : struct
 	{
 		return MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref value, 1));
@@ -286,6 +296,28 @@ public unsafe partial class Nspw
 		emulator.Cpu.Eax = new Register32((uint)length);
 	}
 
+	// SetWindowTextA(hWnd, text): nothing is shown. set_cpu_route calls it each time round its loop of waypoints, with
+	// "Panzer Vor!", as 1.22 runs in a window (0x463B20 is 0, as the emulator leaves it), and the port ends the loop there
+	// once the route fills its path.
+	// BUG(1.22): set_cpu_route's loop (0x42DDA6 to 0x42ECFF) goes on until a leg is clear, with nothing to keep the route
+	// in its path's 64 points. A waypoint that turns back moves the destination 160 further (0x42EB92), up to 2000, but the
+	// leg to the moved destination then being clear sets that distance back to 0 (0x42EC6F): when the leg back from there
+	// is blocked again, the loop adds the same points again and again. 1.22 writes on through the units after the ship
+	// and the globals after them, until its first write to the resources, read-only, at 0x4F1000, crashes it. The port
+	// ends the route at point 62, the last whose leg cannot write past the path (point i + 2): from there, 1.22 also ends
+	// it, unless it writes past the path or finds no heading clear.
+	private void SetWindowTextNatively(Emulator emulator)
+	{
+		if (emulator.Argument(1) == WaypointMessageAddress)
+		{
+			var index = emulator.At(emulator.Cpu.Esp.Value + RouteIndexOffset, sizeof(int));
+			if (MemoryMarshal.Read<int>(index) + 2 >= RoutePathLength)
+				MemoryMarshal.Write(index, -1);
+		}
+
+		emulator.Cpu.Eax = new Register32(1);
+	}
+
 	// The functions that 1.22 calls but the port provides: the C runtime's rand and the map, on the game's own state, and
 	// the Win32 and DirectDraw functions that draw decision's messages, on the game's back buffer.
 	private void SetNatives(Emulator emulator)
@@ -294,7 +326,7 @@ public unsafe partial class Nspw
 		emulator.SetNative(Functions.LoadMap, () => LoadMapNatively(emulator));
 
 		emulator.SetImport("wsprintfA", 0, () => FormatNatively(emulator));
-		emulator.SetImport("SetWindowTextA", 8, () => emulator.Cpu.Eax = new Register32(1));
+		emulator.SetImport("SetWindowTextA", 8, () => SetWindowTextNatively(emulator));
 		emulator.SetImport("SetTextColor", 8, () => emulator.Cpu.Eax = new Register32(SetTextColor(new HDC((int)emulator.Argument(0)), emulator.Argument(1))));
 		emulator.SetImport("SetBkMode", 8, () => emulator.Cpu.Eax = new Register32((uint)SetBkMode(new HDC((int)emulator.Argument(0)), (int)emulator.Argument(1))));
 		emulator.SetImport("SelectObject", 8, () => emulator.Cpu.Eax = new Register32((uint)SelectObject(new HDC((int)emulator.Argument(0)), new HGDIOBJ((int)emulator.Argument(1))).Value));

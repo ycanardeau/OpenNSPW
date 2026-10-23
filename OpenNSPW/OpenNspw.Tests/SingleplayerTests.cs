@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using OpenNspw.Tests.Lockstep;
 using Xunit;
 using static OpenNspw.all_head;
@@ -137,6 +138,58 @@ public class SingleplayerTests
 		Assert.True(game.BattleTime < time, $"The time limit went from {time} to {game.BattleTime}.");
 		var moved = start.Count(s => !game.Units[s.Unit].Position.Equals(s.Position));
 		Assert.True(moved > 0, "None of the computer's ships moved.");
+	}
+
+	private static byte[] BytesOf(ref Unit unit) => MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref unit, 1)).ToArray();
+
+	// set_cpu_route's loop does not end for a ship at (0, 0) sent to (97, 0), past a ship at (56, -10), with another at
+	// (91, 43), on the open sea: the leg back from the destination moved 160 further is blocked again, so 1.22 adds the
+	// same points again and again, past the path's 64 points, into the units after the ship (docs/KnownIssues.md). Here it
+	// clears the used of the ship in the way, the next unit, which frees the leg and ends the loop, as in a game of
+	// scenario 301; elsewhere it runs on until 1.22 crashes. The port ends the route at the end of the path, and leaves
+	// the other units as they were.
+	[Fact]
+	public void RoutesThatNeverEndStopAtTheEndOfThePath()
+	{
+		using var run = new SingleplayerRun(3);
+		run.Frames(2);
+		var game = run.Game;
+		for (var row = 0; row < 256; row++)
+		{
+			for (var column = 0; column < 256; column++)
+			{
+				game.MapTiles[row][column] = 0;
+			}
+		}
+
+		var ships = Enumerable.Range(1, game.MaxUnitId)
+			.Where(n => game.Units[n].Category == UnitCategory.Ship && game.Units[n].Kind is >= UnitKind.Battleship and <= UnitKind.Transport and not UnitKind.Submarine)
+			.ToList();
+		var m = ships.First(n => game.Units[n].Side == game.CpuSide);
+		var others = ships.Where(n => n > m).Take(2).ToArray();
+		Assert.Equal(2, others.Length);
+		for (var n = 1; n <= game.MaxUnitId; n++)
+		{
+			if (n != m && !others.Contains(n))
+				game.Units[n].Side = Side.None;
+		}
+
+		game.Units[others[0]].Position = new WorldPosition(56, -10);
+		game.Units[others[1]].Position = new WorldPosition(91, 43);
+		ref var ship = ref game.Units[m];
+		ship.Position = new WorldPosition(0, 0);
+		ship.PathX[0] = 97;
+		ship.PathY[0] = 0;
+		ship.EndPath(1);
+		var before = Enumerable.Range(0, 256).Select(n => BytesOf(ref game.Units[n])).ToArray();
+
+		game.SetCpuRoute(m, 1.0);
+
+		Assert.All(Enumerable.Range(0, 256).Where(n => n != m), n => Assert.Equal(before[n], BytesOf(ref game.Units[n])));
+		var end = 0;
+		while (end < 64 && !ship.IsPathEnd(end))
+			end++;
+		Assert.InRange(end, 62, 63);
 	}
 
 	// decision shows the result itself, through the port's GDI stand-ins and wsprintf.

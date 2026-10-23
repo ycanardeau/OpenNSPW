@@ -17,7 +17,7 @@ The NSPW NET source has no single-player code: the computer's strategy, the sing
 | `.rdata` | `0x43C000` | The import table, then constants (`double`s used by the FPU code). |
 | `.data` | `0x43E000` | The globals, initialized and then zeroed (`unit` at `0x4916A0`). |
 
-The emulator's memory (`OpenNspw.Singleplayer/Emulator.cs`) is the image from `0x400000` to `0x4F1000`, a stack of 64 KB below it, and 4 KB after it for what the port places there, such as the object behind a COM pointer. Each slot of the import table holds a stub, an address from `0xFFFF0000` that is not in the memory; calling it calls the native function set for that import. An import that has none throws, with its name.
+The emulator's memory (`OpenNspw.Singleplayer/Emulator.cs`) is the image from `0x400000` to `0x4F2000` (its resources, `.rsrc`, from `0x4F1000`), a stack of 64 KB below it, and 4 KB after it for what the port places there, such as the object behind a COM pointer. In 1.22, `.rsrc` is read-only and nothing follows it, so a write past `.data` crashes; the emulator lets it through ([Conversion.md](Conversion.md#known)). Each slot of the import table holds a stub, an address from `0xFFFF0000` that is not in the memory; calling it calls the native function set for that import. An import that has none throws, with its name.
 
 What the emulated functions do is in [ComputerPlayer.md](ComputerPlayer.md); where the single-player game differs from 1.22, in [Differences.md](Differences.md); and what is known of the emulator's discrepancies with the machine code, in [Conversion.md](Conversion.md).
 
