@@ -111,6 +111,54 @@ The idle player wins scenario 3 by holding on, and draws 6 and 202, where nothin
 
 Three games failed, in the single-player game itself, not the players: the computer's `set_cpu_route` (`0x42DA80`), planning a route by `ReplanBlockedRoute` or a move order, adds waypoints until it writes beyond the emulator's memory (209 and 302), and `UpdateBattle` indexed out of an array (301).
 
+### The strong player
+At commit `b4fca20` (air operations, positioning out of the computer's strike range, scenario knowledge, surface groups, landings and sea routes), capped at 100000 frames:
+
+| Scenario | Side | strong |
+| --- | --- | --- |
+| 1 | U | WWL |
+| 2 | J | LLL |
+| 3 | U | WWW |
+| 4 | J | DDL |
+| 5 | U | LLL |
+| 6 | U | LLL |
+| 7 | U | LLL |
+| 8 | J | LLL |
+| 9 | J | LLL |
+| 10 | J | LLL |
+| 100 | J | LLL |
+| 101 | J | WWW |
+| 102 | U | WLL |
+| 103 | U | WWW |
+| 104 | J | LLL |
+| 105 | J | LLL |
+| 106 | U | LLL |
+| 107 | U | LLL |
+| 108 | J | LLL |
+| 109 | U | LLL |
+| 200 | J | LLL |
+| 201 | J | LLL |
+| 202 | U | DDD |
+| 203 | U | LLL |
+| 204 | U | LLL |
+| 205 | U | LLL |
+| 206 | U | WLL |
+| 207 | U | LLL |
+| 208 | U | LLL |
+| 209 | J | LLL |
+| 300 | U | LLL |
+| 301 | J | LLL |
+| 302 | J | LLL |
+| 303 | U | LLL |
+| 304 | J | LLL |
+| 305 | J | LLL |
+| 306 | J | LLL |
+| Won | | 13/111 |
+
+It wins 13 games of 111, where the rushing player wins 5: scenarios 1, 101 and 103 most of the time, 102 and 206 once. It still loses the carrier battles but 4, where it draws: its torpedo strikes reach the enemy carriers through their escorts' guns and fighters too seldom to sink them. It does nothing yet for most of the scenarios with goals of their own (landings at defended places, bombers that must come back, captures).
+
+Since then, as measured scenario by scenario: 2 is won in all three games (every deck strikes Pearl Harbor at once, each at a different ship), 202 is won (the strategic bombers reach Tokyo, 62% of their range away), 4 is drawn in all three, and 6 drawn twice.
+
 ## Open questions
 - Whether the strong player should also be offered as the computer of a network game's empty side, or only as the single-player's player.
 - Whether a scenario that cannot be won at speed 1 by any play (if one turns out so) counts against the goal.
