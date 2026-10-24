@@ -117,12 +117,14 @@ dotnet run -c Release --project OpenNspw.Arena -- --scenarios 4,5,9 --dates 3 --
 
 Plays single-player scenarios against NSPW 1.22's computer, headless, one game per core, with the players of `OpenNspw.AI` on the player's side, from several start dates, which seed the scenarios' random setups (`--dates`, from the `--first-date`-th). It writes each game to `arena.csv` (`--out`) and a table of the outcomes (W, D, L; U when the time ran out with no result; F when the game failed). `--describe` writes what each scenario sets up instead; `--verbose` writes what the strong player does, `--trace <units>` what happens to chosen units, and `--strikes` what becomes of the player's attackers and bombers (each weapon dropped, each turn home, each plane lost) and each hit on an enemy ship. See [docs/StrongAI.md](../docs/StrongAI.md).
 
-`--scenarios carriers` plays the carrier battles (4, 5, 6, 9, 105, 106, 201). After the table, it writes a summary of each scenario and player: the games won, drawn and lost, the win rate with its 95% interval, and, per game, the weapons dropped, the planes turned back, out of fuel and lost, the HP the enemy's ships lost, and the carriers sunk and lost, which `arena.csv` also has for each game. To tell whether a change makes the strong player better, play the same dates before and after it, and compare the two tables:
+`--scenarios carriers` plays the carrier battles (4, 5, 6, 9, 105, 106, 201). After the table, it writes a summary of each scenario and player: the games won, drawn and lost, the win rate with its 95% interval, and, per game, the weapons dropped, the planes turned back, out of fuel and lost, the HP the enemy's ships lost, the carriers sunk and lost, and the HP the player's carriers lost, which `arena.csv` also has for each game. To tell whether a change makes the strong player better, play the same dates before and after it, and compare the two tables:
 
 ```bash
 dotnet run -c Release --project OpenNspw.Arena -- --scenarios carriers --dates 50 --players strong --out before.csv
 dotnet run -c Release --project OpenNspw.Arena -- --compare before.csv after.csv
 ```
+
+`--speed <s>` plays at a game speed, a frame running s + 1 ticks, as the player's keys set it; `--formation line|ring:<radius>|screen:<radius>` chooses how the strong player's carriers form with their escorts, for experiments.
 
 `--compare` pairs the games by scenario, date and player, and counts the games the second table did better and worse in, with the sign test's p: under 0.05, the difference is unlikely to be chance.
 

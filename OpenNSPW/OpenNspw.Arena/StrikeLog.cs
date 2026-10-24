@@ -2,7 +2,8 @@ namespace OpenNspw.Arena;
 
 // What became of the player's strikes in a game, in all: the weapons its attackers and bombers dropped, the planes that
 // turned home damaged or for fuel, their weapon dumped, and the ones lost; the HP the enemy's ships lost, to anything;
-// and the carriers each side lost.
+// the carriers each side lost; and the HP the player's carriers lost, to anything, which tells how well they are
+// defended sooner than the carriers sunk.
 internal sealed record StrikeCounts(
 	int Drops,
 	int TurnedBack,
@@ -10,7 +11,8 @@ internal sealed record StrikeCounts(
 	int PlanesLost,
 	int EnemyDamage,
 	int EnemyCarriersSunk,
-	int OwnCarriersSunk
+	int OwnCarriersSunk,
+	int CarrierDamage
 );
 
 // What becomes of the player's attackers and bombers, each time one drops its weapon, turns home damaged or is lost,
@@ -25,11 +27,13 @@ internal sealed class StrikeLog(bool writes)
 	> _planes = [];
 	private readonly Dictionary<int, int> _ships = [];
 	private readonly HashSet<int> _carriers = [];
+	private readonly Dictionary<int, Side> _sides = [];
 	private int _drops;
 	private int _turnedBack;
 	private int _outOfFuel;
 	private int _planesLost;
 	private int _enemyDamage;
+	private int _carrierDamage;
 	private bool _started;
 
 	private static double Distance(WorldPosition a, WorldPosition b) =>
@@ -73,11 +77,14 @@ internal sealed class StrikeLog(bool writes)
 			Console.WriteLine(line);
 	}
 
-	// The counts so far, with the carriers seen at the start that are gone.
+	// The counts so far, with the carriers seen at the start that are gone or sinking, at no HP: the battle may end
+	// while one sinks.
 	public StrikeCounts Counts(Nspw game)
 	{
 		var sunk = _carriers
-			.Where(n => !game.Units[n].IsUsed || !IsCarrier(game.Units[n].Kind))
+			.Where(n =>
+				!game.Units[n].IsUsed || !IsCarrier(game.Units[n].Kind) || game.Units[n].HP <= 0
+			)
 			.ToList();
 		return new StrikeCounts(
 			_drops,
@@ -85,8 +92,9 @@ internal sealed class StrikeLog(bool writes)
 			_outOfFuel,
 			_planesLost,
 			_enemyDamage,
-			sunk.Count(n => game.Units[n].Side != game.LocalSide),
-			sunk.Count(n => game.Units[n].Side == game.LocalSide)
+			sunk.Count(n => _sides[n] != game.LocalSide),
+			sunk.Count(n => _sides[n] == game.LocalSide),
+			_carrierDamage
 		);
 	}
 
@@ -98,7 +106,10 @@ internal sealed class StrikeLog(bool writes)
 			for (var n = 1; n <= game.MaxUnitId; n++)
 			{
 				if (game.Units[n].IsUsed && IsCarrier(game.Units[n].Kind))
+				{
 					_carriers.Add(n);
+					_sides[n] = game.Units[n].Side;
+				}
 			}
 		}
 
@@ -170,6 +181,12 @@ internal sealed class StrikeLog(bool writes)
 					);
 				}
 
+				_ships[n] = unit.HP;
+			}
+			else if (unit.IsUsed && unit.Side == game.LocalSide && IsCarrier(unit.Kind))
+			{
+				if (_ships.TryGetValue(n, out var hp) && unit.HP < hp)
+					_carrierDamage += hp - unit.HP;
 				_ships[n] = unit.HP;
 			}
 		}
