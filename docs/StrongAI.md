@@ -23,6 +23,8 @@ The arena runs in Release, one game per core, each on its own thread with a plat
 dotnet run -c Release --project OpenNSPW/OpenNspw.Arena -- --scenarios 4,5,6 --dates 3 --players idle,rush
 ```
 
+A game swings on small things: a degree of one strike's approach sends it another way from there on, so the same date can be won by one build and lost by the next for no reason of their own, and three or nine games say little of a change. The benchmark is the carrier battles (`--scenarios carriers`) on 50 start dates; the arena's summary gives each scenario's win rate with its 95% interval, and `--compare` tells, game by game, whether a change does better than chance would (the sign test's p under 0.05).
+
 ## Scenario knowledge
 A player reads the briefing and looks at the map before the battle. The strong player gets the same, per scenario (`ScenarioKnowledge`), written from the briefings ([SingleplayerTexts](../OpenNSPW/OpenNspw.Desktop/SingleplayerTexts.cs)), the victory conditions ([ComputerPlayer.md](ComputerPlayer.md#decision)) and the maps:
 
@@ -213,6 +215,9 @@ Before, the strong player drew 4 in all three games, drew 5 and 6 at times, and 
 - **201**: out of reach as it stands. Three of the four Japanese carriers are burning at 7 of 36 HP, which is not above the fifth a carrier needs to launch, and the ships have 3 to 7 fuel; the last carrier's five or six attackers reach the American carrier, 8000 away, at the edge of their range, and sinking its 41 HP needs about six hits in 4500 frames, one strike.
 
 The other scenarios are as before: 1 WWW, 2 WWW, 101 WWW, 202 WWD, and 103 LLL, which the code before these changes (`10be27d`) also loses in every game now, as it does 202's third game: 103 was lost before them, after `b4fca20`.
+
+## Making it stronger
+Why the strong player is still weak, what has been tried and failed, and the methods to make it much stronger: [StrongAIResearch.md](StrongAIResearch.md).
 
 ## Open questions
 - Whether the strong player should also be offered as the computer of a network game's empty side, or only as the single-player's player.
