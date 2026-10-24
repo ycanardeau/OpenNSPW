@@ -80,7 +80,7 @@ public sealed class RushPlayer : IPlayer
 
 	public void Act(Nspw game)
 	{
-		if (_clicks.IsEmpty)
+		if (_clicks.IsEmpty(game))
 		{
 			var m = NextShip(game);
 			if (m != 0 && NearestEnemyFound(game, m) is not null)

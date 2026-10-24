@@ -119,6 +119,7 @@ public sealed partial class StrongPlayer : IPlayer
 	private readonly Dictionary<int, int> _scoutCounts = [];
 	private readonly HashSet<string> _sweptAreas = [];
 	private readonly HashSet<int> _formed = [];
+	private int _statusAt;
 	private readonly Dictionary<int, int> _positioned = [];
 	private readonly HashSet<int> _repairing = [];
 	private readonly Dictionary<int, int> _repairOrdered = [];
@@ -147,7 +148,7 @@ public sealed partial class StrongPlayer : IPlayer
 	// Gives up the clicks of a task, saying why.
 	private bool GiveUp(Nspw game, string why)
 	{
-		Log?.Invoke($"{game.Renderer.FrameCount}: gave up: {why}");
+		Log?.Invoke($"{UnitFacts.Now(game)}: gave up: {why}");
 		return false;
 	}
 
@@ -223,8 +224,7 @@ public sealed partial class StrongPlayer : IPlayer
 		&& (weapon == FireKind.Bomb || !UnitFacts.IsBase(target.Kind));
 
 	private bool WasEngaged(Nspw game, int target) =>
-		_engaged.TryGetValue(target, out var frame)
-		&& game.Renderer.FrameCount - frame < RetargetFrames;
+		_engaged.TryGetValue(target, out var frame) && UnitFacts.Now(game) - frame < RetargetFrames;
 
 	// Deselects the selected unit, if any.
 	private void Deselect()
@@ -321,7 +321,7 @@ public sealed partial class StrongPlayer : IPlayer
 				return GiveUp(g, $"{what} {m}: selected {g.SelectedUnit}");
 			g.Commands.SetDestination(point);
 			Log?.Invoke(
-				$"{g.Renderer.FrameCount}: {g.Units[m].Kind} {m} {what} ({point.X:F0}, {point.Y:F0})"
+				$"{UnitFacts.Now(g)}: {g.Units[m].Kind} {m} {what} ({point.X:F0}, {point.Y:F0})"
 			);
 			return true;
 		});
@@ -354,7 +354,7 @@ public sealed partial class StrongPlayer : IPlayer
 		if (_routes.Route(game.Units[m].Position, point, obstacles) is not { } route)
 		{
 			Log?.Invoke(
-				$"{game.Renderer.FrameCount}: no route for {game.Units[m].Kind} {m} to ({point.X:F0}, {point.Y:F0})"
+				$"{UnitFacts.Now(game)}: no route for {game.Units[m].Kind} {m} to ({point.X:F0}, {point.Y:F0})"
 			);
 			return false;
 		}
@@ -372,7 +372,7 @@ public sealed partial class StrongPlayer : IPlayer
 
 		_clicks.Enqueue(g =>
 			Log?.Invoke(
-				$"{g.Renderer.FrameCount}: {g.Units[m].Kind} {m} {what} ({point.X:F0}, {point.Y:F0}) by {route.Count} waypoints"
+				$"{UnitFacts.Now(g)}: {g.Units[m].Kind} {m} {what} ({point.X:F0}, {point.Y:F0}) by {route.Count} waypoints"
 			)
 		);
 		Deselect();
@@ -430,7 +430,7 @@ public sealed partial class StrongPlayer : IPlayer
 
 			return $"{side}: {string.Join(", ", decks)}; {planes} planes";
 		});
-		Log?.Invoke($"{game.Renderer.FrameCount}: STATUS {string.Join(" | ", sides)}");
+		Log?.Invoke($"{UnitFacts.Now(game)}: STATUS {string.Join(" | ", sides)}");
 	}
 
 	public void Act(Nspw game)
@@ -438,12 +438,14 @@ public sealed partial class StrongPlayer : IPlayer
 		if (_knowledge.Enemy.Count == 0 && _knowledge.Counted.Count == 0)
 			_knowledge = ScenarioKnowledge.For(game.ScenarioNumber);
 
-		if (game.Renderer.FrameCount % 250 == 0)
+		// Every 250 frames of speed 1, which a faster frame may step over.
+		if (UnitFacts.Now(game) / 250 != _statusAt / 250)
 			LogStatus(game);
+		_statusAt = UnitFacts.Now(game);
 
 		_contacts.Update(game);
 		CountDrops(game);
-		if (_clicks.IsEmpty)
+		if (_clicks.IsEmpty(game))
 			Plan(game);
 
 		_clicks.Act(game);

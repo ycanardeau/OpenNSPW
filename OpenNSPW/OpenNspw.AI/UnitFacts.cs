@@ -3,6 +3,11 @@ namespace OpenNspw.AI;
 // What a player knows of the units by looking at them.
 internal static class UnitFacts
 {
+	// The battle's time in frames of speed 1, two ticks each, from 1: the frame count at speed 1, where a frame runs two
+	// ticks, and the game's own time at any other, where a frame runs the speed and one more (TryStartSingleplayerFrame):
+	// the player thinks and waits by it, so that it does as much in a minute of the battle at any speed.
+	public static int Now(Nspw game) => (game.Tick / 2) + 1;
+
 	public static bool IsBase(UnitKind kind) =>
 		kind is >= UnitKind.AirBase and <= UnitKind.Fortress;
 

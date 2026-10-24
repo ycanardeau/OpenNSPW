@@ -73,7 +73,7 @@ public sealed partial class StrongPlayer
 					return GiveUp(g, $"forming {leader}: selected {g.SelectedUnit}");
 				g.Commands.SetDestination(new WorldPosition(position.X + 80, position.Y));
 				Log?.Invoke(
-					$"{g.Renderer.FrameCount}: {g.Units[leader].Kind} {leader} forms with {g.SelectionCount} ships"
+					$"{UnitFacts.Now(g)}: {g.Units[leader].Kind} {leader} forms with {g.SelectionCount} ships"
 				);
 				return true;
 			});
@@ -104,16 +104,16 @@ public sealed partial class StrongPlayer
 				c.Kind is UnitKind.Carrier or UnitKind.LightCarrier && game.Units[c.Unit].IsUsed
 			)
 			.Select(c =>
-				HomeOf(c) is not null && game.Renderer.FrameCount - c.Frame >= CarrierMemoryFrames
+				HomeOf(c) is not null && UnitFacts.Now(game) - c.Frame >= CarrierMemoryFrames
 					? (WhereNow(game, c, 0), range, true)
 					: (
 						c.Position,
 						range
 							+ (
 								HuntsCarriers
-									? Math.Min((game.Renderer.FrameCount - c.Frame) * 2 * 0.7, 1000)
+									? Math.Min((UnitFacts.Now(game) - c.Frame) * 2 * 0.7, 1000)
 									: Math.Min(
-										(game.Renderer.FrameCount - c.Frame) * 2 * 0.35 * 0.5,
+										(UnitFacts.Now(game) - c.Frame) * 2 * 0.35 * 0.5,
 										3000
 									)
 							),
@@ -152,8 +152,7 @@ public sealed partial class StrongPlayer
 				|| unit.IsSupplying
 				|| UnitFacts.IsAnchored(ref unit)
 				|| threats.Count == 0
-				|| game.Renderer.FrameCount
-					- _positioned.GetValueOrDefault(carrier, -PositionFrames)
+				|| UnitFacts.Now(game) - _positioned.GetValueOrDefault(carrier, -PositionFrames)
 					< PositionFrames
 			)
 				continue;
@@ -173,7 +172,7 @@ public sealed partial class StrongPlayer
 			)
 				continue;
 
-			_positioned[carrier] = game.Renderer.FrameCount;
+			_positioned[carrier] = UnitFacts.Now(game);
 			SelectAlone(carrier, "moving");
 			return SailSelected(
 					game,
@@ -304,13 +303,13 @@ public sealed partial class StrongPlayer
 			var navalBase = NearestNavalBase(game, ship.Position);
 			if (
 				navalBase == 0
-				|| game.Renderer.FrameCount - _repairOrdered.GetValueOrDefault(m, -RepairFrames)
+				|| UnitFacts.Now(game) - _repairOrdered.GetValueOrDefault(m, -RepairFrames)
 					< RepairFrames
 			)
 				continue;
 
 			_repairing.Add(m);
-			_repairOrdered[m] = game.Renderer.FrameCount;
+			_repairOrdered[m] = UnitFacts.Now(game);
 			var basePosition = game.Units[navalBase].Position;
 			var ship1 = m;
 			if (UnitFacts.Distance(ship.Position, basePosition) > 240)
@@ -333,7 +332,7 @@ public sealed partial class StrongPlayer
 					return GiveUp(g, $"supplying {ship1}: selected {g.SelectedUnit}");
 				g.Commands.ChooseCombatMenuItem(CombatMenuItem.Supply);
 				Log?.Invoke(
-					$"{g.Renderer.FrameCount}: {g.Units[ship1].Kind} {ship1} supplies, {g.Units[ship1].HP}/{g.Units[ship1].MaxHP}"
+					$"{UnitFacts.Now(g)}: {g.Units[ship1].Kind} {ship1} supplies, {g.Units[ship1].HP}/{g.Units[ship1].MaxHP}"
 				);
 				return true;
 			});
@@ -360,7 +359,7 @@ public sealed partial class StrongPlayer
 				c.Category == UnitCategory.Plane
 				&& UnitFacts.IsStrikePlane(c.Kind)
 				&& c.IsFlying
-				&& game.Renderer.FrameCount - c.Frame < 3000
+				&& UnitFacts.Now(game) - c.Frame < 3000
 			)
 		)
 			return false;
@@ -399,7 +398,7 @@ public sealed partial class StrongPlayer
 		var guns = _contacts.All.Count(c =>
 			IsWarship(c.Kind)
 			&& game.Units[c.Unit].IsUsed
-			&& game.Renderer.FrameCount - c.Frame < CarrierMemoryFrames
+			&& UnitFacts.Now(game) - c.Frame < CarrierMemoryFrames
 			&& UnitFacts.Distance(c.Position, crippled.Position) <= 4000
 		);
 		if (screening.Count == 0 || screening.Count + detached < guns)
@@ -421,12 +420,12 @@ public sealed partial class StrongPlayer
 		_contacts
 			.All.Where(c =>
 				c.Category == UnitCategory.Ship
-				&& game.Renderer.FrameCount - c.Frame < CarrierMemoryFrames
+				&& UnitFacts.Now(game) - c.Frame < CarrierMemoryFrames
 			)
 			.OrderByDescending(c =>
 				Value(c.Kind)
 				- (UnitFacts.Distance(from, c.Position) / 1500)
-				- ((game.Renderer.FrameCount - c.Frame) / 300.0)
+				- ((UnitFacts.Now(game) - c.Frame) / 300.0)
 			)
 			.FirstOrDefault();
 
@@ -446,12 +445,12 @@ public sealed partial class StrongPlayer
 				|| leader.IsSupplying
 				|| _repairing.Contains(m)
 				|| UnitFacts.IsAnchored(ref leader)
-				|| game.Renderer.FrameCount - _engagedAt.GetValueOrDefault(m, -EngageFrames)
+				|| UnitFacts.Now(game) - _engagedAt.GetValueOrDefault(m, -EngageFrames)
 					< EngageFrames
 			)
 				continue;
 
-			_engagedAt[m] = game.Renderer.FrameCount;
+			_engagedAt[m] = UnitFacts.Now(game);
 			var position = leader.Position;
 			var current =
 				leader.Target != 0
@@ -474,7 +473,7 @@ public sealed partial class StrongPlayer
 							/ Math.Max(leader.MaxSpeed, 0.3)
 							/ 2,
 						600
-					) + ((game.Renderer.FrameCount - target.Frame) * 2);
+					) + ((UnitFacts.Now(game) - target.Frame) * 2);
 				point = target.Predict(ticks);
 			}
 			else if (_knowledge.Enemy.Count > 0)

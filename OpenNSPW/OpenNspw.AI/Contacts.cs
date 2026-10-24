@@ -54,7 +54,7 @@ public sealed class Contacts
 					unit.Position,
 					unit.Direction.Degrees,
 					unit.Speed,
-					game.Renderer.FrameCount
+					UnitFacts.Now(game)
 				);
 			}
 		}

@@ -9,7 +9,7 @@ using OpenNspw.Arena;
 // with each player on the player's side, and writes the table of their results.
 //
 //   dotnet run -c Release --project OpenNspw.Arena -- [--scenarios 4,5,6|carriers|all] [--dates 3] [--first-date 0] [--players idle,rush]
-//       [--parallel <cores>] [--out results.csv] [--frames <limit>] [--verbose] [--sees-all]
+//       [--parallel <cores>] [--out results.csv] [--frames <limit>] [--verbose] [--sees-all] [--speed 1]
 //       [--trace <units> [--trace-from <frame>] [--trace-to <frame>] [--trace-every <frames>]] [--strikes]
 //   dotnet run -c Release --project OpenNspw.Arena -- --describe [--scenarios 4,5,6|all]
 //   dotnet run -c Release --project OpenNspw.Arena -- --compare <before.csv> <after.csv>
@@ -113,6 +113,7 @@ var maxFrames = int.Parse(
 	CultureInfo.InvariantCulture
 );
 var strikes = args.Contains("--strikes");
+var speed = short.Parse(Option(args, "--speed", "1"), CultureInfo.InvariantCulture);
 var trace = UnitTrace.FromOptions((name, defaultValue) => Option(args, name, defaultValue));
 
 var data = GameData.Find();
@@ -152,7 +153,8 @@ var workers = Enumerable
 				CreatePlayer(job.Player, verbose, seesAll),
 				maxFrames,
 				trace,
-				strikes
+				strikes,
+				speed
 			).Play();
 			results.Add(result);
 			lock (results)

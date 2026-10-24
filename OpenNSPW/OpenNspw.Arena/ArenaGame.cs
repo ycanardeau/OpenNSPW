@@ -39,6 +39,7 @@ internal sealed class ArenaGame
 
 	private readonly IPlayer _player;
 	private readonly int _maxFrames;
+	private readonly short _speed;
 	private readonly UnitTrace? _trace;
 	private readonly StrikeLog _strikes;
 	private readonly ArenaPlatform _platform;
@@ -65,7 +66,10 @@ internal sealed class ArenaGame
 		// The mouse rests in the middle of the battlefield, as a player's does: at the screen's edges, the game scrolls the
 		// battlefield every frame (ScrollBattleArea), where the cursor starts.
 		if (_frames++ == 0)
+		{
 			_game.SetCursorPos(all_head.CMBT_WIDTH / 2, all_head.CMBT_HEIGHT / 2);
+			_game.GameSpeed = _speed;
+		}
 
 		if (
 			_game.Result != GameResult.None
@@ -83,7 +87,8 @@ internal sealed class ArenaGame
 	}
 
 	// maxFrames: the frames of the battle after which the game stops, unfinished. trace: units to write as the game goes.
-	// strikes: whether to write what becomes of the player's strikes, which is counted anyway.
+	// strikes: whether to write what becomes of the player's strikes, which is counted anyway. speed: the game's speed,
+	// as the player's keys set it, a frame running the speed and one more ticks.
 	public ArenaGame(
 		GameData data,
 		int scenario,
@@ -91,11 +96,13 @@ internal sealed class ArenaGame
 		IPlayer player,
 		int maxFrames = int.MaxValue,
 		UnitTrace? trace = null,
-		bool strikes = false
+		bool strikes = false,
+		short speed = 1
 	)
 	{
 		_player = player;
 		_maxFrames = maxFrames;
+		_speed = speed;
 		_trace = trace;
 		_strikes = new StrikeLog(strikes);
 		_platform = new ArenaPlatform(

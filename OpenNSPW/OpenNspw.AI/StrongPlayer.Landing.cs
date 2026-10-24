@@ -122,12 +122,12 @@ public sealed partial class StrongPlayer
 				|| transport.Weapon < FireKind.CargoNavalBase
 				|| transport.Target == game.MaxUnitId + 1
 				|| transport.IsSupplying
-				|| game.Renderer.FrameCount - _landingOrdered.GetValueOrDefault(m, -LandingFrames)
+				|| UnitFacts.Now(game) - _landingOrdered.GetValueOrDefault(m, -LandingFrames)
 					< LandingFrames
 			)
 				continue;
 
-			_landingOrdered[m] = game.Renderer.FrameCount;
+			_landingOrdered[m] = UnitFacts.Now(game);
 			if (LandingSite(game, place.Center, taken) is not var (land, sea))
 				continue;
 
@@ -167,7 +167,7 @@ public sealed partial class StrongPlayer
 					);
 				_landingSeas[ship] = sea;
 				Log?.Invoke(
-					$"{g.Renderer.FrameCount}: Transport {ship} lands {g.Units[ship].Weapon} at ({land.X:F0}, {land.Y:F0})"
+					$"{UnitFacts.Now(g)}: Transport {ship} lands {g.Units[ship].Weapon} at ({land.X:F0}, {land.Y:F0})"
 				);
 				return true;
 			});
@@ -268,12 +268,12 @@ public sealed partial class StrongPlayer
 					UnitFacts.Distance(UnitFacts.FinalDestination(ref transport), sea) < 150
 					&& !isStill
 				)
-				|| game.Renderer.FrameCount - _landingOrdered.GetValueOrDefault(m, -LandingFrames)
+				|| UnitFacts.Now(game) - _landingOrdered.GetValueOrDefault(m, -LandingFrames)
 					< (isLeading ? 150 : LandingFrames)
 			)
 				continue;
 
-			_landingOrdered[m] = game.Renderer.FrameCount;
+			_landingOrdered[m] = UnitFacts.Now(game);
 			SelectAlone(m, "sailing to land");
 			return SailSelected(game, m, sea, "sails to land at") || true;
 		}

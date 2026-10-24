@@ -18,7 +18,7 @@ public sealed partial class StrongPlayer
 				c.Category == UnitCategory.Plane
 				&& UnitFacts.IsStrikePlane(c.Kind)
 				&& c.IsFlying
-				&& game.Renderer.FrameCount - c.Frame < 2000
+				&& UnitFacts.Now(game) - c.Frame < 2000
 			)
 			.OrderByDescending(c => c.Frame)
 			.FirstOrDefault();
@@ -63,15 +63,14 @@ public sealed partial class StrongPlayer
 				&& IsRemembered(game, c)
 			)
 			.MaxBy(c => c.Frame);
-		var homing =
-			lost is not null && game.Renderer.FrameCount - lost.Frame >= CarrierMemoryFrames;
+		var homing = lost is not null && UnitFacts.Now(game) - lost.Frame >= CarrierMemoryFrames;
 		if (
 			HuntsCarriers
 			&& lost is not null
 			&& UnitFacts.Distance(from, homing ? WhereNow(game, lost, 0) : lost.Position) <= reach
 		)
 		{
-			var ticks = (game.Renderer.FrameCount - lost.Frame) * 2;
+			var ticks = (UnitFacts.Now(game) - lost.Frame) * 2;
 			var at = homing ? WhereNow(game, lost, 0) : lost.Predict(ticks / 2.0);
 			var across = BearingTo(from, at) + 90;
 			var half = homing ? 1500 : 700 + (ticks * 0.35);
@@ -88,7 +87,7 @@ public sealed partial class StrongPlayer
 					&& !IsEarlyStrikeArea(game, from, a)
 				)
 				.MinBy(a => UnitFacts.Distance(from, a.Center));
-			if (unswept is not null && game.Renderer.FrameCount < 2500)
+			if (unswept is not null && UnitFacts.Now(game) < 2500)
 			{
 				_sweptAreas.Add(unswept.Name);
 				var across = BearingTo(from, unswept.Center) + 90;
@@ -129,7 +128,7 @@ public sealed partial class StrongPlayer
 			&& _contacts.All.All(c =>
 				c.Category != UnitCategory.Plane
 				|| !c.IsFlying
-				|| game.Renderer.FrameCount - c.Frame > 2000
+				|| UnitFacts.Now(game) - c.Frame > 2000
 			)
 		)
 		{
@@ -226,7 +225,7 @@ public sealed partial class StrongPlayer
 				&& _contacts.All.Any(c =>
 					c.Category == UnitCategory.Ship
 					&& (!HuntsCarriers || IsCounted(c.Kind))
-					&& game.Renderer.FrameCount - c.Frame < 300
+					&& UnitFacts.Now(game) - c.Frame < 300
 				)
 			)
 			|| (
@@ -240,7 +239,7 @@ public sealed partial class StrongPlayer
 			)
 			|| (
 				HuntsCarriers
-				&& game.Renderer.FrameCount - _lastScout < ScoutFrames
+				&& UnitFacts.Now(game) - _lastScout < ScoutFrames
 				&& _scoutLegs.Keys.Any(n => IsOwn(game, n) && game.Units[n].Mode != UnitMode.Return)
 			)
 		)
@@ -280,10 +279,10 @@ public sealed partial class StrongPlayer
 				}
 
 				g.Commands.SetDestination(first);
-				_scoutLaunches[scout] = g.Renderer.FrameCount;
-				_lastScout = g.Renderer.FrameCount;
+				_scoutLaunches[scout] = UnitFacts.Now(g);
+				_lastScout = UnitFacts.Now(g);
 				Log?.Invoke(
-					$"{g.Renderer.FrameCount}: {g.Units[scout].Kind} {scout} scouts toward ({first.X:F0}, {first.Y:F0})"
+					$"{UnitFacts.Now(g)}: {g.Units[scout].Kind} {scout} scouts toward ({first.X:F0}, {first.Y:F0})"
 				);
 				return true;
 			});
@@ -302,7 +301,7 @@ public sealed partial class StrongPlayer
 				&& !UnitFacts.IsBase(c.Kind)
 				&& IsCounted(c.Kind)
 				&& game.Units[c.Unit].IsUsed
-				&& game.Renderer.FrameCount - c.Frame < 300
+				&& UnitFacts.Now(game) - c.Frame < 300
 				&& UnitFacts.Distance(from, c.Position) <= 3000
 			)
 			.MinBy(c => UnitFacts.Distance(from, c.Position));
@@ -312,14 +311,14 @@ public sealed partial class StrongPlayer
 	// fire does not reach.
 	private WorldPosition ShadowPoint(Nspw game, Contact target, WorldPosition home)
 	{
-		var at = target.Predict((game.Renderer.FrameCount - target.Frame) * 2);
+		var at = target.Predict((UnitFacts.Now(game) - target.Frame) * 2);
 		var guns = _contacts
 			.All.Where(c =>
 				c.Kind is UnitKind.Battleship or UnitKind.Cruiser
-				&& game.Renderer.FrameCount - c.Frame < ContactFrames
+				&& UnitFacts.Now(game) - c.Frame < ContactFrames
 				&& UnitFacts.Distance(c.Position, at) <= 2000
 			)
-			.Select(c => c.Predict((game.Renderer.FrameCount - c.Frame) * 2))
+			.Select(c => c.Predict((UnitFacts.Now(game) - c.Frame) * 2))
 			.ToList();
 		var toHome = BearingTo(at, home);
 		return Enumerable
@@ -371,7 +370,7 @@ public sealed partial class StrongPlayer
 				return GiveUp(g, $"{what} {plane}: selected {g.SelectedUnit}");
 			g.Commands.ChooseCombatMenuItem(CombatMenuItem.Return);
 			Log?.Invoke(
-				$"{g.Renderer.FrameCount}: {g.Units[plane].Kind} {plane} comes home, {g.Units[plane].Fuel:F0} fuel left"
+				$"{UnitFacts.Now(g)}: {g.Units[plane].Kind} {plane} comes home, {g.Units[plane].Fuel:F0} fuel left"
 			);
 			return true;
 		});
@@ -391,7 +390,7 @@ public sealed partial class StrongPlayer
 				|| (
 					UnitFacts.IsParked(ref unit)
 					&& unit.DeckPhase == 0
-					&& game.Renderer.FrameCount - _scoutLaunches.GetValueOrDefault(scout) > 300
+					&& UnitFacts.Now(game) - _scoutLaunches.GetValueOrDefault(scout) > 300
 				)
 			)
 			{
