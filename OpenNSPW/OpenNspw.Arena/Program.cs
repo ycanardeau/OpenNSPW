@@ -8,10 +8,11 @@ using OpenNspw.Arena;
 // The arena (docs/StrongAI.md): plays single-player scenarios against NSPW 1.22's computer, from several start dates,
 // with each player on the player's side, and writes the table of their results.
 //
-//   dotnet run -c Release --project OpenNspw.Arena -- [--scenarios 4,5,6|all] [--dates 3] [--first-date 0] [--players idle,rush]
+//   dotnet run -c Release --project OpenNspw.Arena -- [--scenarios 4,5,6|carriers|all] [--dates 3] [--first-date 0] [--players idle,rush]
 //       [--parallel <cores>] [--out results.csv] [--frames <limit>] [--verbose] [--sees-all]
 //       [--trace <units> [--trace-from <frame>] [--trace-to <frame>] [--trace-every <frames>]] [--strikes]
 //   dotnet run -c Release --project OpenNspw.Arena -- --describe [--scenarios 4,5,6|all]
+//   dotnet run -c Release --project OpenNspw.Arena -- --compare <before.csv> <after.csv>
 
 static IPlayer CreatePlayer(string name, bool verbose, bool seesAll) =>
 	name switch
@@ -77,11 +78,26 @@ static string Table(
 	return text.ToString();
 }
 
+var compareIndex = Array.IndexOf(args, "--compare");
+if (compareIndex >= 0 && compareIndex + 2 < args.Length)
+{
+	Console.WriteLine(
+		Benchmark.Compare(
+			Benchmark.Read(args[compareIndex + 1]),
+			Benchmark.Read(args[compareIndex + 2])
+		)
+	);
+	return;
+}
+
 var scenarioOption = Option(args, "--scenarios", "all");
-IReadOnlyList<int> scenarios =
-	scenarioOption == "all"
-		? OpenNspw.Singleplayer.Functions.Scenarios
-		: [.. scenarioOption.Split(',').Select(s => int.Parse(s, CultureInfo.InvariantCulture))];
+IReadOnlyList<int> scenarios = scenarioOption switch
+{
+	"all" => OpenNspw.Singleplayer.Functions.Scenarios,
+	// The carrier battles: the scenarios whose victory counts the enemy's carriers.
+	"carriers" => [4, 5, 6, 9, 105, 106, 201],
+	_ => [.. scenarioOption.Split(',').Select(s => int.Parse(s, CultureInfo.InvariantCulture))],
+};
 var dateCount = int.Parse(Option(args, "--dates", "3"), CultureInfo.InvariantCulture);
 var firstDate = int.Parse(Option(args, "--first-date", "0"), CultureInfo.InvariantCulture);
 IReadOnlyList<string> players = Option(args, "--players", "idle,rush").Split(',');
@@ -166,16 +182,7 @@ foreach (var worker in workers)
 }
 
 var all = results.OrderBy(r => r.Scenario).ThenBy(r => r.Player).ThenBy(r => r.StartDate).ToList();
-File.WriteAllLines(
-	outPath,
-	[
-		"scenario,date,player,side,outcome,frames,time_left,seconds",
-		.. all.Select(r =>
-			FormattableString.Invariant(
-				$"{r.Scenario},{r.StartDate},{r.Player},{r.Side},{r.Outcome},{r.Frames},{r.TimeLeft},{r.Elapsed.TotalSeconds:F1}"
-			)
-		),
-	]
-);
+File.WriteAllLines(outPath, Benchmark.Lines(all));
 Console.WriteLine();
 Console.WriteLine(Table(all, scenarios, players));
+Console.WriteLine(Benchmark.Summary(all));

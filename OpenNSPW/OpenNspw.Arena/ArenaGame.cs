@@ -26,7 +26,8 @@ internal sealed record ArenaResult(
 	int Frames,
 	int TimeLeft,
 	TimeSpan Elapsed,
-	string? Error
+	string? Error,
+	StrikeCounts Strikes
 );
 
 // One single-player game of a scenario, from a start date, which seeds rand (docs/Singleplayer.md), with a player on the
@@ -39,7 +40,7 @@ internal sealed class ArenaGame
 	private readonly IPlayer _player;
 	private readonly int _maxFrames;
 	private readonly UnitTrace? _trace;
-	private readonly StrikeLog? _strikes;
+	private readonly StrikeLog _strikes;
 	private readonly ArenaPlatform _platform;
 	private readonly Nspw _game;
 	private int _frames;
@@ -77,12 +78,12 @@ internal sealed class ArenaGame
 			throw new ArenaStoppedException();
 
 		_trace?.Write(_game);
-		_strikes?.Write(_game);
+		_strikes.Write(_game);
 		_player.Act(_game);
 	}
 
 	// maxFrames: the frames of the battle after which the game stops, unfinished. trace: units to write as the game goes.
-	// strikes: whether to write what becomes of the player's strikes.
+	// strikes: whether to write what becomes of the player's strikes, which is counted anyway.
 	public ArenaGame(
 		GameData data,
 		int scenario,
@@ -96,7 +97,7 @@ internal sealed class ArenaGame
 		_player = player;
 		_maxFrames = maxFrames;
 		_trace = trace;
-		_strikes = strikes ? new StrikeLog() : null;
+		_strikes = new StrikeLog(strikes);
 		_platform = new ArenaPlatform(
 			data.Directory,
 			data.SingleplayerDirectory,
@@ -137,7 +138,8 @@ internal sealed class ArenaGame
 			_frames,
 			_game.BattleTime,
 			stopwatch.Elapsed,
-			error
+			error,
+			_strikes.Counts(_game)
 		);
 	}
 }
