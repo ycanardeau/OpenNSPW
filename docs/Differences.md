@@ -8,6 +8,7 @@ This document lists every difference found between the two, read from 1.22's mac
 | --- | --- | --- | --- |
 | Unit numbers | 20 ships and 30 planes a side | 40 and 50 | `SHIP_LIMIT`, `PLANE_LIMIT` |
 | Orders | Given and applied in the frame they are made | Exchanged by turn over the network | `IssueSingleplayerOrders` |
+| Combat menu items | Applied at once, in the input (`0x431C53`), before `cpu_strtgy`, which may see them; the move and select orders after `cpu_strtgy` | Applied with the move and select orders, after both sides' orders are exchanged (`ApplyUnitInfoInput` after `ApplyOrders`) | `IssueSingleplayerOrders` |
 | Move orders of the computer | Clear the unit's path (`if( new_pp[e].cls || unit[m].used==cpu_side )`), and a ship's route is planned by `set_cpu_route` | The same condition is a comment; routes are planned by `set_cpu_root2` | `ApplyOrders` |
 | Time | `rest_time` counts down every tick | Counted by the host | `UpdateBattle` |
 | Victory | `decision` | NSPW NET's conditions | `CheckResult` |

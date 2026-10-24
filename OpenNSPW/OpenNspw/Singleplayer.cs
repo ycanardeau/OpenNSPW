@@ -530,14 +530,25 @@ public unsafe partial class Nspw
 			return;
 
 		Trace?.Reach(this, TracePoint.Orders);
+
+		var bf_the_slct_unit = SelectedUnit;
+		Array256<short> bf_slct_unit = Selections[1];
+		Selections[1] = BufferedSelectionsOfAllUnits;
+
+		// The combat menu's item first: 1.22 applies it in its input (0x431C53), before cpu_strtgy, which may see it.
+		ApplyUnitInfoInput();
+
+		Selections[1] = bf_slct_unit;
+		SelectedUnit = bf_the_slct_unit;
+
 		if (CpuSide != Side.None)
 			RunCpuStrategy();
 
 		if (BufferedArrivedUnits[1] != 0)
 			OnUnitArrived(1, BufferedArrivedUnits[1]);
 
-		var bf_the_slct_unit = SelectedUnit;
-		Array256<short> bf_slct_unit = Selections[1];
+		bf_the_slct_unit = SelectedUnit;
+		bf_slct_unit = Selections[1];
 		Selections[1] = BufferedSelectionsOfAllUnits;
 
 		MoveOrders[1] = BufferedMoveOrders[1];
@@ -545,7 +556,6 @@ public unsafe partial class Nspw
 		SelectOrders[0].IsSet = false;
 
 		ApplyOrders();
-		ApplyUnitInfoInput();
 
 		Selections[1] = bf_slct_unit;
 		SelectedUnit = bf_the_slct_unit;

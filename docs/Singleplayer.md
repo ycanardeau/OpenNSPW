@@ -103,8 +103,9 @@ Translating unit numbers at the boundary would need to know every field that hol
 1.22's battle frame is the port's `UpdateFrame` without the network:
 
 1. `chara_cont` (the port's `UpdateBattle`) speed + 1 times, each but the last followed by `decision`.
-2. Drawing, which clears the orders of the frame before the mouse gives the player's, then `decision` for the last tick.
-3. If the game has no result: `cpu_strtgy`, which writes the computer's order into `new_pp[0]` and `slct_unit[0]`, then the orders of both sides, applied at once.
+2. The input (`0x4312A0`), which applies a combat menu item the player clicked to the selected unit at once (`0x431C53`).
+3. Drawing, which clears the orders of the frame before the mouse gives the player's, then `decision` for the last tick.
+4. If the game has no result: `cpu_strtgy`, which writes the computer's order into `new_pp[0]` and `slct_unit[0]`, then the orders of both sides, applied at once.
 
 So in a single-player game (`IsSingleplayer`):
 
@@ -114,7 +115,7 @@ So in a single-player game (`IsSingleplayer`):
 - `InitializeGame` sets up 1.22's scenario instead of NSPW NET's, which sets the sides, the camera and the time limit, and sends nothing.
 - `InitializeGame` starts the battle at frame 1 (`FrameCount`), as 1.22 does: its `game_init` runs within the frame of the setting screen that starts the battle (`0x40C61E`), which then counts itself (`0x434E9F`).
 - `UpdateBattle` skips the two network phases, and counts `BattleTime` down every tick, as 1.22 counts `rest_time`.
-- `HandleInput` buffers the player's orders as in a network game, then `IssueSingleplayerOrders` gives the orders of this frame: `cpu_strtgy`, then what `ReceiveAndIssueOrders` does for a turn, for the player only, and `ApplyOrders` for both. Orders take effect in the frame they are given, not at the next turn.
+- `HandleInput` buffers the player's orders as in a network game, then `IssueSingleplayerOrders` gives the orders of this frame: the combat menu's item, which 1.22 applies in its input, then `cpu_strtgy`, which may see it, then what `ReceiveAndIssueOrders` does for a turn, for the player only, and `ApplyOrders` for both. Orders take effect in the frame they are given, not at the next turn.
 - `ApplyOrders` clears the path of a computer's unit for every move order (`if( new_pp[e].cls || unit[m].used==cpu_side )`, as 1.22 does and NSPW NET has as a comment), and calls `set_cpu_route(m, 4.0)` for a computer's ship.
 - The maps, the sprite sheet (`tst_cg1.bmp`) and the sounds are read from 1.22's directory (`GameFiles.OpenSingleplayer`), so that the map on which `set_cpu_route` plans is 1.22's; the three sounds 1.22 does not have are NSPW NET's.
 - `UpdateSupply` keeps a ship supplying wherever it is, as 1.22's `chara_cont` does (`0x4010BB`), without NSPW NET's check for a naval base within 280: the computer starts supplying once its flagship has stopped within 580 of the base, and that check stopped it at once.
