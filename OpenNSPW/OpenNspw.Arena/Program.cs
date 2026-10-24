@@ -9,16 +9,22 @@ using OpenNspw.Arena;
 // with each player on the player's side, and writes the table of their results.
 //
 //   dotnet run -c Release --project OpenNspw.Arena -- [--scenarios 4,5,6|carriers|all] [--dates 3] [--first-date 0] [--players idle,rush]
-//       [--parallel <cores>] [--out results.csv] [--frames <limit>] [--verbose] [--sees-all] [--speed 1]
+//       [--parallel <cores>] [--out results.csv] [--frames <limit>] [--verbose] [--sees-all] [--formation line|ring:400|screen:400] [--speed 1]
 //       [--trace <units> [--trace-from <frame>] [--trace-to <frame>] [--trace-every <frames>]] [--strikes]
 //   dotnet run -c Release --project OpenNspw.Arena -- --describe [--scenarios 4,5,6|all]
 //   dotnet run -c Release --project OpenNspw.Arena -- --compare <before.csv> <after.csv>
 
-static IPlayer CreatePlayer(string name, bool verbose, bool seesAll) =>
+static IPlayer CreatePlayer(string name, bool verbose, bool seesAll, FormationShape? formation) =>
 	name switch
 	{
 		"idle" => new IdlePlayer(),
 		"rush" => new RushPlayer(),
+		"strong" when formation is not null => new StrongPlayer
+		{
+			Log = verbose ? Console.WriteLine : null,
+			SeesEverything = seesAll,
+			Formation = formation,
+		},
 		"strong" => new StrongPlayer
 		{
 			Log = verbose ? Console.WriteLine : null,
@@ -114,6 +120,16 @@ var maxFrames = int.Parse(
 );
 var strikes = args.Contains("--strikes");
 var speed = short.Parse(Option(args, "--speed", "1"), CultureInfo.InvariantCulture);
+var formationOption = Option(args, "--formation", "");
+FormationShape? formation =
+	formationOption.Length == 0
+		? null
+		: new(
+			Enum.Parse<FormationKind>(formationOption.Split(':')[0], ignoreCase: true),
+			formationOption.Contains(':')
+				? double.Parse(formationOption.Split(':')[1], CultureInfo.InvariantCulture)
+				: 0
+		);
 var trace = UnitTrace.FromOptions((name, defaultValue) => Option(args, name, defaultValue));
 
 var data = GameData.Find();
@@ -150,7 +166,7 @@ var workers = Enumerable
 				data,
 				job.Scenario,
 				job.StartDate,
-				CreatePlayer(job.Player, verbose, seesAll),
+				CreatePlayer(job.Player, verbose, seesAll, formation),
 				maxFrames,
 				trace,
 				strikes,

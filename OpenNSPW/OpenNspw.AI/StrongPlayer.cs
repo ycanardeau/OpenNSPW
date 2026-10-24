@@ -25,6 +25,18 @@ public sealed partial class StrongPlayer : IPlayer
 	// How far beyond the computer's strike range a carrier keeps from the enemy's carriers.
 	private const double KeepAwayMargin = 1000;
 
+	// How far from its carrier the other carriers of its formation keep.
+	private const double RingCarrierDistance = 250;
+
+	// How near its place a ship of a forming formation is there.
+	private const double RingTolerance = 120;
+
+	// The frames between the orders to the ships of a forming formation to their places.
+	private const int RingOrderFrames = 150;
+
+	// The frames a formation takes to form at most, before it is grouped as it is.
+	private const int RingFrames = 900;
+
 	// The frames between a carrier's moves.
 	private const int PositionFrames = 150;
 
@@ -119,6 +131,7 @@ public sealed partial class StrongPlayer : IPlayer
 	private readonly Dictionary<int, int> _scoutCounts = [];
 	private readonly HashSet<string> _sweptAreas = [];
 	private readonly HashSet<int> _formed = [];
+	private readonly Dictionary<int, Ring> _rings = [];
 	private int _statusAt;
 	private readonly Dictionary<int, int> _positioned = [];
 	private readonly HashSet<int> _repairing = [];
@@ -144,6 +157,9 @@ public sealed partial class StrongPlayer : IPlayer
 		get => _contacts.SeesEverything;
 		init => _contacts.SeesEverything = value;
 	}
+
+	// How the carriers form with their escorts: by default, as the ships stand.
+	public FormationShape Formation { get; init; } = new(FormationKind.Line, 0);
 
 	// Gives up the clicks of a task, saying why.
 	private bool GiveUp(Nspw game, string why)

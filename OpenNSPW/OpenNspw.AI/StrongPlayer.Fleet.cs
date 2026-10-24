@@ -4,10 +4,145 @@ namespace OpenNspw.AI;
 // and repairing.
 public sealed partial class StrongPlayer
 {
+	// A carrier's formation as it forms: its members, taking their places around it, since a frame, last ordered to them
+	// in another.
+	private sealed record Ring(List<int> Members, int Since, int Ordered);
+
+	// Where a member of a carrier's formation keeps (Formation): the other carriers 250 behind it, then to each side;
+	// the warships, battleships first, then cruisers and destroyers, Formation.Radius around it, evenly, the first ahead
+	// (Ring), or across 160° of the way the enemy most likely is (Screen). The game keeps each from the carrier's
+	// heading as it rounds it, to 45° (SetShipFormation), so the formation turns with it.
+	private WorldPosition RingPlace(Nspw game, int carrier, List<int> members, int member)
+	{
+		ref var leader = ref game.Units[carrier];
+		var heading = Math.Round(leader.Direction.Degrees / 45) * 45;
+		var carriers = members.Where(m => UnitFacts.IsDeck(game.Units[m].Kind)).ToList();
+		var warships = members
+			.Where(m => !UnitFacts.IsDeck(game.Units[m].Kind))
+			.OrderBy(m => game.Units[m].Kind)
+			.ThenBy(m => m)
+			.ToList();
+		var place = carriers.IndexOf(member);
+		if (place >= 0)
+			return PointAt(
+				leader.Position,
+				heading
+					+ (
+						place switch
+						{
+							0 => 180,
+							1 => 90,
+							_ => 270,
+						}
+					),
+				RingCarrierDistance
+			);
+
+		var index = warships.IndexOf(member);
+		var bearing =
+			Formation.Kind == FormationKind.Screen
+				? LikelyBearing(game, leader.Position)
+					+ (warships.Count == 1 ? 0 : -80 + (index * 160.0 / (warships.Count - 1)))
+				: heading + (index * 360.0 / warships.Count);
+		return PointAt(leader.Position, bearing, Formation.Radius);
+	}
+
+	private bool IsRinging(int m) => _rings.Values.Any(r => r.Members.Contains(m));
+
+	// Selects a carrier and the ships of its formation, and orders it on, 80 to the east, so that they keep where they
+	// are from it (SetShipFormation).
+	private void Group(int carrier, List<int> members, WorldPosition position)
+	{
+		Deselect();
+		_clicks.Enqueue(g =>
+		{
+			if (g.SelectedUnit != 0 || !IsOwn(g, carrier))
+				return GiveUp(g, $"forming {carrier}: selected {g.SelectedUnit}");
+			g.Commands.ClickUnit(carrier);
+			return true;
+		});
+		foreach (var member in members)
+		{
+			_clicks.Enqueue(g =>
+			{
+				if (g.SelectedUnit != carrier)
+					return GiveUp(g, $"forming {carrier}: selected {g.SelectedUnit}");
+				if (IsOwn(g, member) && g.Selections[1][member] == 0)
+					g.Commands.ClickUnit(member);
+				return true;
+			});
+		}
+
+		_clicks.Enqueue(g =>
+		{
+			if (g.SelectedUnit != carrier)
+				return GiveUp(g, $"forming {carrier}: selected {g.SelectedUnit}");
+			g.Commands.SetDestination(new WorldPosition(position.X + 80, position.Y));
+			Log?.Invoke(
+				$"{UnitFacts.Now(g)}: {g.Units[carrier].Kind} {carrier} forms with {g.SelectionCount} ships"
+			);
+			return true;
+		});
+		Deselect();
+	}
+
 	// Each carrier of the player's takes the warships and the other carriers near it into its formation, once, so that
-	// their guns cover it and they move as one.
+	// their guns cover it and they move as one: a formation keeps the shape its ships are in when they are grouped
+	// (SetShipFormation), so they first sail to their places around it (RingPlace), each ordered again only once its
+	// place has moved from where it sails, as the carrier moves or turns, at most every RingOrderFrames, and are grouped
+	// once all are there, or after RingFrames: orders to all of them every time would keep the clicks busy, and the
+	// player from scouting and striking, until they are grouped. A ring covers the carrier from every side
+	// with its escorts' guns, which a line does from only one.
 	private bool TryForm(Nspw game, List<int> decks)
 	{
+		foreach (var (carrier, ring) in _rings.ToList())
+		{
+			ring.Members.RemoveAll(m => !IsOwn(game, m));
+			if (!IsOwn(game, carrier) || ring.Members.Count == 0)
+			{
+				_rings.Remove(carrier);
+				continue;
+			}
+
+			var away = ring
+				.Members.Where(m =>
+					UnitFacts.Distance(
+						game.Units[m].Position,
+						RingPlace(game, carrier, ring.Members, m)
+					) > RingTolerance
+				)
+				.ToList();
+			if (away.Count == 0 || UnitFacts.Now(game) - ring.Since >= RingFrames)
+			{
+				_rings.Remove(carrier);
+				Group(carrier, ring.Members, game.Units[carrier].Position);
+				return true;
+			}
+
+			var strays = away.Where(m =>
+					UnitFacts.Distance(
+						UnitFacts.FinalDestination(ref game.Units[m]),
+						RingPlace(game, carrier, ring.Members, m)
+					) > RingTolerance
+				)
+				.ToList();
+			if (strays.Count == 0 || UnitFacts.Now(game) - ring.Ordered < RingOrderFrames)
+				continue;
+
+			_rings[carrier] = ring with { Ordered = UnitFacts.Now(game) };
+			foreach (var member in strays)
+			{
+				SelectAlone(member, "ringing");
+				SendSelected(
+					member,
+					RingPlace(game, carrier, ring.Members, member),
+					$"takes its place around {game.Units[carrier].Kind} {carrier} at"
+				);
+			}
+
+			return true;
+		}
+
 		foreach (var carrier in decks)
 		{
 			ref var unit = ref game.Units[carrier];
@@ -45,39 +180,10 @@ public sealed partial class StrongPlayer
 				continue;
 
 			_formed.UnionWith(escorts);
-			var leader = carrier;
-			var position = unit.Position;
-			Deselect();
-			_clicks.Enqueue(g =>
-			{
-				if (g.SelectedUnit != 0 || !IsOwn(g, leader))
-					return GiveUp(g, $"forming {leader}: selected {g.SelectedUnit}");
-				g.Commands.ClickUnit(leader);
-				return true;
-			});
-			foreach (var escort in escorts)
-			{
-				_clicks.Enqueue(g =>
-				{
-					if (g.SelectedUnit != leader)
-						return GiveUp(g, $"forming {leader}: selected {g.SelectedUnit}");
-					if (IsOwn(g, escort) && g.Selections[1][escort] == 0)
-						g.Commands.ClickUnit(escort);
-					return true;
-				});
-			}
-
-			_clicks.Enqueue(g =>
-			{
-				if (g.SelectedUnit != leader)
-					return GiveUp(g, $"forming {leader}: selected {g.SelectedUnit}");
-				g.Commands.SetDestination(new WorldPosition(position.X + 80, position.Y));
-				Log?.Invoke(
-					$"{UnitFacts.Now(g)}: {g.Units[leader].Kind} {leader} forms with {g.SelectionCount} ships"
-				);
-				return true;
-			});
-			Deselect();
+			if (Formation.Kind == FormationKind.Line)
+				Group(carrier, escorts, unit.Position);
+			else
+				_rings[carrier] = new Ring(escorts, UnitFacts.Now(game), -RingOrderFrames);
 			return true;
 		}
 
@@ -445,6 +551,7 @@ public sealed partial class StrongPlayer
 				|| leader.IsSupplying
 				|| _repairing.Contains(m)
 				|| UnitFacts.IsAnchored(ref leader)
+				|| IsRinging(m)
 				|| UnitFacts.Now(game) - _engagedAt.GetValueOrDefault(m, -EngageFrames)
 					< EngageFrames
 			)

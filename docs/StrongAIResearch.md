@@ -15,7 +15,7 @@ Why the strong player of [StrongAI.md](StrongAI.md) is weak, what has been tried
   | 106 | U | about 4 in 9 | 9 |
   | 201 | J | 0% | 3 |
 
-  Only 4 and 5 have been played on 50 dates (`5353565`, stopped partway); the others are from 3 or 9 games, whose margin is about ±30%.
+  Only 4 and 5 have been played on 50 dates (`5353565`, stopped partway); the others are from 3 or 9 games, whose margin is about ±30%. On 50 dates each, capped at 60000 frames, the line formation won 72 of 300 games of 4, 5, 6, 105, 106 and 201 (24%, 20% to 29%): 4 14, 5 2, 6 21, 105 14, 106 21, 201 0.
 
 ## Why it is weak
 - **It is a few hundred hand-picked numbers and rules, each checked on 3 to 9 games.** The approach radius (2000), the shadowing distance (900), the memory of a carrier lost from sight (3000 frames), the fuel margins, the size of a strike, the margin kept beyond the computer's strike range: every one was set by reasoning, then kept or dropped on a handful of games. Most are probably far from their best, and they interact.
@@ -44,6 +44,9 @@ Each was measured on 3 to 9 games of the carrier battles, unless said otherwise.
 | Marking a carrier found heading home beyond its strike range as going home, and closing on it with the carriers | 5 lost twice (LDL): closing on one carrier brought the player's within reach of another, not seen for a while; 105 and 106 no better |
 | The same, closing only while every carrier found is going home | 105 and 106 won 8 of 18 against 9; strikes that reach it are turned back by its battleship and cruiser |
 | Strikes at a carrier going home waiting for all their deck's planes | No change: the planes land and rearm at different times |
+| The escorts in a ring around the carriers, or a screen across the enemy's way, before grouping (`--formation`; screened on 20 dates of 4, 5, 6, 9, 105 and 106, capped at 30000 frames) | Of 120 games: line 19 won, ring 250 28, ring 400 31, ring 600 23, screen 400 22, screen 600 19 |
+| Ring 400 on 50 dates (capped at 60000 frames; 9 left out, which no formation won) | 4: 27 won against the line's 14 (p 0.03); 6: 12 against 21 (p 0.05), the escorts ordered to their places over and over while the ring formed, which kept the clicks busy, and the player from scouting and striking, for 1500 frames |
+| Ring 400, each escort ordered once (`af427d4`), on the same 50 dates | 4: 26 against 14 (p 0.01); 5: 8 against 2 (p 0.06); 6: 17 against 21 (p 0.38); 105: 8 against 14 (p 0.71); 106: 19 against 21; 201: 0 and 0. In all, 78 won of 300 against 72 (p 0.53): better where the player has one carrier group (4, 5), no better where it has battleships and two carriers (6, 105, 106). The line stays the default |
 
 And what has worked, from LLL in every carrier battle to the results above:
 - strikes at carriers only, the nearest first;
