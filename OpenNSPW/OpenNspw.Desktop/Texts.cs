@@ -119,6 +119,15 @@ internal static class Texts
 		"You return to the main menu. In a multiplayer game, the connection to the rival is closed.",
 		"メインメニューに戻ります。対戦中の場合は、相手との接続が切れます。");
 
+	// The window's title while a game follows a trace of 1.22 (--replay): the frame it is at, then how it ended.
+	public static string ReplayFollowing(int frame) => Pick($"Following 1.22's trace: frame {frame}", $"1.22 の記録を再生中: フレーム {frame}");
+	public static string ReplayEnded(int frames) => Pick(
+		$"1.22's trace ended after {frames} frames, without a difference; the game is yours",
+		$"1.22 の記録を最後まで再生しました ({frames} フレーム、相違なし)。ここから操作できます");
+	public static string ReplayDiverged(string divergence) => Pick(
+		$"Left 1.22's trace: {divergence}; the game is yours",
+		$"1.22 の記録と相違: {divergence}。ここから操作できます");
+
 	// The combat menu, whose buttons the original draws as pictures of Japanese words (Buttons1).
 	public static string FlightDeck => Pick("Flight Deck", "飛行甲板");
 	public static string Hangar => Pick("Hangar", "格納庫");

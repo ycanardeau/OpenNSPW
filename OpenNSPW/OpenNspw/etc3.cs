@@ -60,6 +60,13 @@ public int		Random(int x)
 	return(rand()%(x));
 	}
 
+// A random number for an effect. NSPW NET draws them from SharedRandom, so that network games stay in step whatever
+// their effects; 1.22 draws them from rand, as all the others.
+public int EffectRandom(int r) => Rules.EffectsDrawFromRand ? Random(r) : SharedRandom(r);
+
+// Whether this tick makes the effects that 1.22 makes on the tick that is drawn only.
+public bool IsEffectTick => IsDrawnTick || !Rules.EffectsOnDrawnTickOnly;
+
 //============================================================================
 // スプライト基礎データ
 //----------------------------------------------------------------------------
@@ -69,8 +76,9 @@ public void		InitializeSprites()
 
 	// タイトル
 
-	Sprites[SpriteId.TitleBackground].Width=699;
-	Sprites[SpriteId.TitleBackground].Height=384;
+	// 1.22's title in its sheet is 599 by 387 (set_sprt_data, 0x432E43); NSPW NET's, 699 by 384.
+	Sprites[SpriteId.TitleBackground].Width=IsSingleplayer ? 599 : 699;
+	Sprites[SpriteId.TitleBackground].Height=IsSingleplayer ? 387 : 384;
 	Sprites[SpriteId.TitleBackground].SheetX=0;
 	Sprites[SpriteId.TitleBackground].SheetY=3940;
 	// ユニット
@@ -334,6 +342,8 @@ private void UpdateCargo(ref Fire fire, ref int n)
 
 			if(h!=0)
 				{
+				// NSPW NET builds a base over 8000 to 20000 ticks, from a quarter of its HP; 1.22 completes it at once, with
+				// its full HP (0x418E23).
 				switch(fire.Kind)
 					{
 					case FireKind.CargoInfantryBase:
@@ -342,24 +352,32 @@ private void UpdateCargo(ref Fire fire, ref int n)
 						break;
 					case FireKind.CargoPillboxes:
 						f=AddUnit((Side)fire.ShooterSide, UnitKind.Pillboxes,(double)fire.TargetX,(double)fire.TargetY,0);
+						if( !Rules.LandedBasesAreBuilt )
+							break;
 						Units[f].BuildTime=(int)(8000*( fire.ShooterSide==(int)Side.UnitedStates ? 1.0 : 0.8 ));		// 建設期間
 						Units[f].Hp/=4;
 						Units[f].MaxHp/=4;
 						break;
 					case FireKind.CargoFortress:
 						f=AddUnit((Side)fire.ShooterSide, UnitKind.Fortress,(double)fire.TargetX,(double)fire.TargetY,0);
+						if( !Rules.LandedBasesAreBuilt )
+							break;
 						Units[f].BuildTime=(int)(15000*( fire.ShooterSide==(int)Side.UnitedStates ? 0.8 : 1.0 ));		// 建設期間
 						Units[f].Hp/=4;
 						Units[f].MaxHp/=4;
 						break;
 					case FireKind.CargoAirBase:
 						f=AddUnit((Side)fire.ShooterSide, UnitKind.AirBase,(double)fire.TargetX,(double)fire.TargetY,0);
+						if( !Rules.LandedBasesAreBuilt )
+							break;
 						Units[f].BuildTime=(int)(10000*( fire.ShooterSide==(int)Side.UnitedStates ? 0.8 : 1.0 ));		// 建設期間
 						Units[f].Hp/=4;
 						Units[f].MaxHp/=4;
 						break;
 					case FireKind.CargoNavalBase:
 						f=AddUnit((Side)fire.ShooterSide, UnitKind.NavalBase,(double)fire.TargetX,(double)fire.TargetY,0);
+						if( !Rules.LandedBasesAreBuilt )
+							break;
 						Units[f].BuildTime=(int)(20000*( fire.ShooterSide==(int)Side.UnitedStates ? 0.8 : 1.0 ));		// 建設期間
 						Units[f].Hp/=4;
 						Units[f].MaxHp/=4;
@@ -385,7 +403,7 @@ private void UpdateCargo(ref Fire fire, ref int n)
 				Effects[f].SpriteNumber=8;			// ソースファイル上の番号
 				}
 
-			if( fire.Ticks>=fire.ArmingTime  )
+			if( fire.Ticks>=fire.ArmingTime && IsEffectTick )
 				{
 				if(!( fire.Position.Y>MAP_TOP || fire.Position.Y<MAP_BOTTOM || fire.Position.X<MAP_LEFT || fire.Position.X>MAP_RIGHT ))
 					{
@@ -399,7 +417,7 @@ private void UpdateCargo(ref Fire fire, ref int n)
 							{
 							f=FindFreeEffect();
 							Effects[f].Layer=EffectLayer.Lower;
-							Effects[f].TimeLeft=30+SharedRandom(25);
+							Effects[f].TimeLeft=30+EffectRandom(25);
 							Effects[f].Animation=4;
 
 							Effects[f].Position = new WorldPosition(wrk_x, wrk_y);
@@ -455,7 +473,8 @@ private void UpdateBullet(ref Fire fire, ref int n, int m)
 			fire.Target=0;
 			if(ShowsAntiAir==0)
 				{
-				if( Units[n].Kind!=UnitKind.Transport || Random(4)==0 )
+				// 1.22 damages a transport with every bullet (0x418F92).
+				if( Units[n].Kind!=UnitKind.Transport || !Rules.BulletsSpareTransports || Random(4)==0 )
 					Units[n].Hp-=GetDamagePoints(m);
 				}
 
@@ -471,7 +490,7 @@ private void UpdateBullet(ref Fire fire, ref int n, int m)
 			}
 		else
 			{
-			if( 1!=0 )
+			if( IsEffectTick )
 				{
 				// 弾丸描画
 				f=FindFreeEffect();
@@ -504,7 +523,7 @@ private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 
 		fire.Speed+=fire.Acceleration;		// 弾が減速
 
-		if( 1!=0 )
+		if( IsEffectTick )
 			{
 			f=FindFreeEffect();
 			ref var effect = ref Effects[f];
@@ -546,6 +565,8 @@ private void UpdateRapidAntiAircraftShell(ref Fire fire, ref int n, int m)
 				if( PointInRect3(ref wrk_rect,(int)unit.Position.X,(int)unit.Position.Y)!=0  )
 					{
 					// 命中
+					// BUG(1.22, NSPW NET): clearing the fire's target compares the next planes with unit 0's side, none, so the
+					// burst hits the first plane only (0x41957B). Kept as is for compatibility with 1.22 and NSPW NET.
 					fire.Target=0;
 					if(ShowsAntiAir==0  )
 						{
@@ -589,6 +610,8 @@ private void UpdateAntiSubmarineBomb(ref Fire fire, ref int n, int m)
 		}
 	if( fire.Ticks==fire.FlightTime )
 		{	// バクハツ！
+		if( Rules.ExplodedDepthChargesKeepTheirFire )
+			fire.Target=0;
 
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
@@ -621,7 +644,8 @@ private void UpdateAntiSubmarineBomb(ref Fire fire, ref int n, int m)
 			// 命中
 			Units[n].Hp-=GetDamagePoints(m);
 			}
-		fire.Target=0;
+		if( !Rules.ExplodedDepthChargesKeepTheirFire )
+			fire.Target=0;
 		}
 	}
 
@@ -638,7 +662,7 @@ private void UpdateAntiAircraftShell(ref Fire fire, ref int n, int m)
 		fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
 
 		fire.Speed+=fire.Acceleration;		// 弾が減速
-		if( 1!=0 )
+		if( IsEffectTick )
 			{
 			// 弾自体の絵
 			f=FindFreeEffect();
@@ -651,10 +675,10 @@ private void UpdateAntiAircraftShell(ref Fire fire, ref int n, int m)
 			f=FindFreeEffect();
 			effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
-			effect.TimeLeft=3+SharedRandom(3);
+			effect.TimeLeft=3+EffectRandom(3);
 			effect.Animation=4;
 
-			effect.Position = new WorldPosition(wrk_x+SharedRandom(10)-5, wrk_y+SharedRandom(10)-5);
+			effect.Position = new WorldPosition(wrk_x+EffectRandom(10)-5, wrk_y+EffectRandom(10)-5);
 
 			effect.SpriteNumber=2;			// ソースファイル上の番号
 			}
@@ -742,7 +766,7 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 			fire.Speed-=fire.Acceleration;		// 弾が上昇中
 		else
 			fire.Speed+=(fire.Acceleration*2.83);		// 弾が降下中
-		if( 1!=0 )
+		if( IsEffectTick )
 			{
 			// 弾自体の絵
 			f=FindFreeEffect();
@@ -755,10 +779,10 @@ private void UpdateGunShell(ref Fire fire, ref int n, int m)
 			f=FindFreeEffect();
 			effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
-			effect.TimeLeft=3+SharedRandom(3);
+			effect.TimeLeft=3+EffectRandom(3);
 			effect.Animation=4;
 
-			effect.Position = new WorldPosition(wrk_x+SharedRandom(10)-5, wrk_y+SharedRandom(10)-5);
+			effect.Position = new WorldPosition(wrk_x+EffectRandom(10)-5, wrk_y+EffectRandom(10)-5);
 
 			effect.SpriteNumber=2;			// ソースファイル上の番号
 			}
@@ -933,7 +957,7 @@ private void UpdateTorpedo(ref Fire fire, ref int n, int m)
 				effect.SpriteNumber=8;			// ソースファイル上の番号
 				}
 
-			if( fire.Ticks>=fire.ArmingTime  )
+			if( fire.Ticks>=fire.ArmingTime && IsEffectTick )
 				{
 				f=FindFreeEffect();
 				ref var effect = ref Effects[f];
@@ -949,10 +973,10 @@ private void UpdateTorpedo(ref Fire fire, ref int n, int m)
 					f=FindFreeEffect();
 					effect = ref Effects[f];
 					effect.Layer=EffectLayer.Lower;
-					effect.TimeLeft=30+SharedRandom(25);
+					effect.TimeLeft=30+EffectRandom(25);
 					effect.Animation=4;
 
-					effect.Position = new WorldPosition(wrk_x+SharedRandom(10)-5, wrk_y+SharedRandom(10)-5);
+					effect.Position = new WorldPosition(wrk_x+EffectRandom(10)-5, wrk_y+EffectRandom(10)-5);
 
 					effect.SpriteNumber=8;			// ソースファイル上の番号
 					}
@@ -989,7 +1013,7 @@ private void UpdateBomb(ref Fire fire, ref int n, int m)
 
 			fire.Position += new WorldVector(CosDegrees(fire.Direction)*fire.Speed, SinDegrees(fire.Direction)*fire.Speed);
 			fire.Speed+=fire.Acceleration;
-			if( 1!=0 )
+			if( IsEffectTick )
 				{
 				f=FindFreeEffect();
 				ref var effect = ref Effects[f];
@@ -1237,12 +1261,12 @@ public void	AssignGroupLeader(int m)
 private void UpdateLightlyDamagedPlane(ref Unit unit)
 	{
 	int f;
-	if( Random(8)==0 && (Tick%10)==0 )
+	if( Rules.DamageEffectsTestBeforeDrawing ? (Tick%10)==0 && Random(8)==0 : Random(8)==0 && (Tick%10)==0 )
 		{
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
 		effect.Layer=EffectLayer.Upper;
-		effect.TimeLeft=40+SharedRandom(15);
+		effect.TimeLeft=40+EffectRandom(15);
 		effect.Animation=2;
 
 		effect.Position=unit.Position;
@@ -1259,12 +1283,12 @@ private void UpdateDamagedPlane(ref Unit unit)
 		if(!IsEditingMap)
 			unit.Hp--;
 		}
-	if( Random(2)==1 && (Tick%10)==0 )
+	if( Rules.DamageEffectsTestBeforeDrawing ? (Tick%10)==0 && Random(2)==1 : Random(2)==1 && (Tick%10)==0 )
 		{
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
 		effect.Layer=EffectLayer.Upper;
-		effect.TimeLeft=40+SharedRandom(15);
+		effect.TimeLeft=40+EffectRandom(15);
 		effect.Animation=2;
 
 		effect.Position=unit.Position;
@@ -1276,9 +1300,9 @@ private void UpdateDamagedPlane(ref Unit unit)
 			f=FindFreeEffect();
 			effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
-			effect.TimeLeft=8+SharedRandom(6);
+			effect.TimeLeft=8+EffectRandom(6);
 			effect.Animation=4;
-			effect.Position = new WorldPosition(unit.Position.X+SharedRandom(6)-3, unit.Position.Y+SharedRandom(6)-3);
+			effect.Position = new WorldPosition(unit.Position.X+EffectRandom(6)-3, unit.Position.Y+EffectRandom(6)-3);
 			effect.SpriteNumber=10;			// ソースファイル上の番号
 			}
 		}
@@ -1293,12 +1317,12 @@ private void UpdateHeavilyDamagedPlane(ref Unit unit)
 			unit.Hp--;
 		}
 
-	if( Random(3)!=0 && (Tick%(10) )==0 )
+	if( Rules.DamageEffectsTestBeforeDrawing ? (Tick%10)==0 && Random(3)!=0 : Random(3)!=0 && (Tick%(10) )==0 )
 		{
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
 		effect.Layer=EffectLayer.Upper;
-		effect.TimeLeft=40+SharedRandom(15);
+		effect.TimeLeft=40+EffectRandom(15);
 		effect.Animation=2;
 		effect.Position=unit.Position;
 		effect.SpriteNumber=6;			// ソースファイル上の番号
@@ -1309,9 +1333,9 @@ private void UpdateHeavilyDamagedPlane(ref Unit unit)
 			f=FindFreeEffect();
 			effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
-			effect.TimeLeft=8+SharedRandom(6);
+			effect.TimeLeft=8+EffectRandom(6);
 			effect.Animation=4;
-			effect.Position = new WorldPosition(unit.Position.X+SharedRandom(6)-3, unit.Position.Y+SharedRandom(6)-3);
+			effect.Position = new WorldPosition(unit.Position.X+EffectRandom(6)-3, unit.Position.Y+EffectRandom(6)-3);
 			effect.SpriteNumber=10;			// ソースファイル上の番号
 			}
 		}
@@ -1334,9 +1358,9 @@ private void UpdateBurningPlane(ref Unit unit)
 				if( f!=0 )
 					{
 					effect.Layer=EffectLayer.Upper;
-					effect.TimeLeft=20+SharedRandom(20);
+					effect.TimeLeft=20+EffectRandom(20);
 					effect.Animation=4;
-					effect.Position = new WorldPosition(unit.Position.X+20-SharedRandom(40), unit.Position.Y+20-SharedRandom(40));
+					effect.Position = new WorldPosition(unit.Position.X+20-EffectRandom(40), unit.Position.Y+20-EffectRandom(40));
 					effect.SpriteNumber=9;				// ソースファイル上の番号
 					}
 				}
@@ -1346,7 +1370,7 @@ private void UpdateBurningPlane(ref Unit unit)
 			f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
-			effect.TimeLeft=20+SharedRandom(20);
+			effect.TimeLeft=20+EffectRandom(20);
 			effect.Animation=4;
 			effect.Position=unit.Position;
 			effect.SpriteNumber=9;				// ソースファイル上の番号
@@ -1362,12 +1386,12 @@ private void UpdateBurningPlane(ref Unit unit)
 				unit.Hp--;
 			}
 
-		if( Random(5)!=0 && (Tick%(10))==0 )
+		if( Rules.DamageEffectsTestBeforeDrawing ? (Tick%10)==0 && Random(5)!=0 : Random(5)!=0 && (Tick%(10))==0 )
 			{
 			f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
-			effect.TimeLeft=40+SharedRandom(15);
+			effect.TimeLeft=40+EffectRandom(15);
 			effect.Animation=2;
 			effect.Position=unit.Position;
 			effect.SpriteNumber=6;			// ソースファイル上の番号
@@ -1379,9 +1403,9 @@ private void UpdateBurningPlane(ref Unit unit)
 			f=FindFreeEffect();
 			ref var effect = ref Effects[f];
 			effect.Layer=EffectLayer.Upper;
-			effect.TimeLeft=8+SharedRandom(6);
+			effect.TimeLeft=8+EffectRandom(6);
 			effect.Animation=4;
-			effect.Position = new WorldPosition(unit.Position.X+SharedRandom(6)-3, unit.Position.Y+SharedRandom(6)-3);
+			effect.Position = new WorldPosition(unit.Position.X+EffectRandom(6)-3, unit.Position.Y+EffectRandom(6)-3);
 			effect.SpriteNumber=10;			// ソースファイル上の番号
 			}
 		}
@@ -1443,7 +1467,7 @@ private void CrashPlane(ref Unit unit, int m)
 private void UpdatePlaneEffects(ref Unit unit, int m)
 	{
 	int f;
-	if(  unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%3)==0)&& (unit.Weapon==FireKind.Bomb || unit.Weapon==FireKind.Torpedo || unit.Weapon==FireKind.Maintenance || unit.Weapon==FireKind.Unarmed)  && unit.Side==LocalSide && !(unit.PlaneState==UnitState.Parked && UnitInfoPanel[1]==0) && !( unit.PlaneState==UnitState.Parked && unit.DeckPhase>=3 ) && !( unit.PlaneState==UnitState.Parked && unit.Carrier!=UnitInfoPanel[3]))
+	if(  IsEffectTick && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%3)==0)&& (unit.Weapon==FireKind.Bomb || unit.Weapon==FireKind.Torpedo || unit.Weapon==FireKind.Maintenance || unit.Weapon==FireKind.Unarmed)  && unit.Side==LocalSide && !(unit.PlaneState==UnitState.Parked && UnitInfoPanel[1]==0) && !( unit.PlaneState==UnitState.Parked && unit.DeckPhase>=3 ) && !( unit.PlaneState==UnitState.Parked && unit.Carrier!=UnitInfoPanel[3]))
 		{
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
@@ -1517,13 +1541,13 @@ private void LeaveWake(ref Unit unit)
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
 		effect.Layer=EffectLayer.Lower;
-		effect.TimeLeft=60+SharedRandom(60);
+		effect.TimeLeft=60+EffectRandom(60);
 		effect.Animation=4;
 		effect.Position=unit.Position;
 
 		drctn=unit.Direction;
 		drctn+=180;
-		drctn=(int)drctn%360;
+		drctn=ReduceHeading(drctn);
 
 		switch(unit.Kind)
 			{
@@ -1597,7 +1621,7 @@ private void UpdateSurfaceShipEffects(ref Unit unit, int m)
 				if(!IsEditingMap)
 					unit.Hp--;
 				}
-			if( Random(2)!=0  )
+			if( IsEffectTick && Random(2)!=0  )
 				{
 				f=FindFreeEffect();
 				ref var effect = ref Effects[f];
@@ -1614,7 +1638,7 @@ private void UpdateSurfaceShipEffects(ref Unit unit, int m)
 			if( unit.Hp<=unit.MaxHp*0.5  )
 				{
 				n=Random(4);
-				if(  n==0 )
+				if(  IsEffectTick && n==0 )
 					{
 					f=FindFreeEffect();
 					ref var effect = ref Effects[f];
@@ -1623,7 +1647,7 @@ private void UpdateSurfaceShipEffects(ref Unit unit, int m)
 					effect.Position=unit.Position;
 					effect.SpriteNumber=9;			// ソースファイル上の番号
 					}
-				if(  n==1 )
+				if(  IsEffectTick && n==1 )
 					{
 					f=FindFreeEffect();
 					ref var effect = ref Effects[f];
@@ -1635,7 +1659,7 @@ private void UpdateSurfaceShipEffects(ref Unit unit, int m)
 				}
 			else
 				{
-				if( Random(10)==1  && unit.Hp<=unit.MaxHp*0.7 )
+				if( Rules.DamageEffectsTestBeforeDrawing ? IsEffectTick && unit.Hp<=unit.MaxHp*0.7 && Random(10)==1 : Random(10)==1  && unit.Hp<=unit.MaxHp*0.7 )
 					{
 					f=FindFreeEffect();
 					ref var effect = ref Effects[f];
@@ -1676,7 +1700,7 @@ private void UpdateSubmergedSubmarineEffects(ref Unit unit, int m)
 				if(!IsEditingMap)
 					unit.Hp--;
 				}
-			if( Random(300)==1  )
+			if( IsEffectTick && Random(300)==1  )
 				{
 				for(n=0;n<=3;n++)
 					{
@@ -1685,9 +1709,9 @@ private void UpdateSubmergedSubmarineEffects(ref Unit unit, int m)
 					if( f!=0 )
 						{
 						effect.Layer=EffectLayer.Lower;
-						effect.TimeLeft=100+SharedRandom(20);
+						effect.TimeLeft=100+EffectRandom(20);
 						effect.Animation=4;
-						effect.Position = new WorldPosition(unit.Position.X+SharedRandom(40)-20, unit.Position.Y+SharedRandom(40)-20);
+						effect.Position = new WorldPosition(unit.Position.X+EffectRandom(40)-20, unit.Position.Y+EffectRandom(40)-20);
 						effect.SpriteNumber=8;			// ソースファイル上の番号
 						}
 					}
@@ -1710,7 +1734,7 @@ private void UpdateSubmergedSubmarineEffects(ref Unit unit, int m)
 					if(!IsEditingMap)
 						unit.Hp--;
 					}
-				if( Random(600)==1  )
+				if( IsEffectTick && Random(600)==1  )
 					{
 					for(n=0;n<=2;n++)
 						{
@@ -1719,9 +1743,9 @@ private void UpdateSubmergedSubmarineEffects(ref Unit unit, int m)
 						if( f!=0)
 							{
 							effect.Layer=EffectLayer.Lower;
-							effect.TimeLeft=100+SharedRandom(20);
+							effect.TimeLeft=100+EffectRandom(20);
 							effect.Animation=4;
-							effect.Position = new WorldPosition(unit.Position.X+SharedRandom(40)-20, unit.Position.Y+SharedRandom(40)-20);
+							effect.Position = new WorldPosition(unit.Position.X+EffectRandom(40)-20, unit.Position.Y+EffectRandom(40)-20);
 							effect.SpriteNumber=8;			// ソースファイル上の番号
 							}
 						}
@@ -1743,7 +1767,7 @@ private void UpdateSubmergedSubmarineEffects(ref Unit unit, int m)
 private void UpdateShipEffects(ref Unit unit, int m)
 	{
 	int f;
-	if(  unit.IsSupplying && (FrameCount%2)!=0 && unit.Side==LocalSide )
+	if(  IsEffectTick && unit.IsSupplying && (FrameCount%2)!=0 && unit.Side==LocalSide )
 		{
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
@@ -1759,7 +1783,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 	// 武装の表示
 // 弾薬の消費サイズ
 
-	if( ( ( unit.Side==Side.Japan && unit.Kind==UnitKind.Battleship ) || ( unit.Side==Side.UnitedStates && unit.Kind==UnitKind.Carrier ) ) && unit.Variant==1 && unit.Side==LocalSide )
+	if( IsEffectTick && Rules.MarksSecondTypes && ( ( unit.Side==Side.Japan && unit.Kind==UnitKind.Battleship ) || ( unit.Side==Side.UnitedStates && unit.Kind==UnitKind.Carrier ) ) && unit.Variant==1 && unit.Side==LocalSide )
 		{
 		// 大和級とエセックス
 		f=FindFreeEffect();
@@ -1772,7 +1796,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 
 		effect.SpriteNumber=27;			// ソースファイル上の番号
 		}
-	else if( unit.Kind==UnitKind.Destroyer && unit.Variant==1  && unit.Side==LocalSide )
+	else if( IsEffectTick && Rules.MarksSecondTypes && unit.Kind==UnitKind.Destroyer && unit.Variant==1  && unit.Side==LocalSide )
 		{
 		// 対潜駆逐艦
 		f=FindFreeEffect();
@@ -1785,7 +1809,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 
 		effect.SpriteNumber=26;			// ソースファイル上の番号
 		}
-	else if( unit.Kind==UnitKind.Cruiser && unit.Variant==1  && unit.Side==LocalSide )
+	else if( IsEffectTick && Rules.MarksSecondTypes && unit.Kind==UnitKind.Cruiser && unit.Variant==1  && unit.Side==LocalSide )
 		{
 		// 防空巡洋艦
 		f=FindFreeEffect();
@@ -1798,7 +1822,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 
 		effect.SpriteNumber=16;			// ソースファイル上の番号
 		}
-	else if( ( unit.Side==Side.Japan && ( unit.Kind==UnitKind.Submarine || unit.Kind==UnitKind.Destroyer || unit.Kind==UnitKind.Cruiser ) || unit.Side==Side.UnitedStates && ( unit.Kind==UnitKind.Submarine || unit.Kind==UnitKind.Destroyer ) ) && !unit.IsSupplying && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%2)!=0) && unit.Ammo>=1 && unit.Side==LocalSide )
+	else if( IsEffectTick && ( unit.Side==Side.Japan && ( unit.Kind==UnitKind.Submarine || unit.Kind==UnitKind.Destroyer || unit.Kind==UnitKind.Cruiser ) || unit.Side==Side.UnitedStates && ( unit.Kind==UnitKind.Submarine || unit.Kind==UnitKind.Destroyer ) ) && !unit.IsSupplying && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%2)!=0) && unit.Ammo>=1 && unit.Side==LocalSide )
 		{
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
@@ -1812,7 +1836,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 		}
 
 	// トランスポーターの荷物の表示
-	if(  unit.Kind==UnitKind.Transport && !unit.IsSupplying && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%2)!=0) && unit.Side==LocalSide )
+	if(  IsEffectTick && unit.Kind==UnitKind.Transport && !unit.IsSupplying && unit.Ammo!=0 && !(unit.ReloadTime!=0 && (FrameCount%2)!=0) && unit.Side==LocalSide )
 		{
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
@@ -1828,7 +1852,7 @@ private void UpdateShipEffects(ref Unit unit, int m)
 //TR_GF1
 
 	// およその敵潜航潜水艦
-	if(  unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.IsSubmerged && unit.ContactTime!=0 )
+	if(  IsEffectTick && unit.Side!=LocalSide && unit.Kind==UnitKind.Submarine && unit.IsSubmerged && unit.ContactTime!=0 )
 		{
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];
@@ -1871,7 +1895,7 @@ public void	UpdateUnitEffects(int m)
 	RECT	wrk_rect;
 	int		f;
 
-	if( unit.IsGroupLeader!=0 && unit.Side==LocalSide && unit.PlaneState!=UnitState.Parked  )
+	if( IsEffectTick && unit.IsGroupLeader!=0 && unit.Side==LocalSide && unit.PlaneState!=UnitState.Parked  )
 		{
 		f=FindFreeEffect();
 		ref var effect = ref Effects[f];

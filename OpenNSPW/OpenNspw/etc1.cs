@@ -50,7 +50,7 @@ public int		CheckHit(int m)
 				return	(h);
 				}
 			else
-				{	j=8;j2=j/2;		}
+				{	j=Rules.SurfacedSubmarineHitSize;j2=j/2;		}
 
 				break;
 		case UnitKind.Carrier:	j=14;j2=j/2;	break;
@@ -261,11 +261,8 @@ private bool LandCargo(ref Unit unit, FireKind kind, int m)
 		wrk_y=unit.Position.Y-(double)unit.LandingY;
 		dstc=Distance(wrk_x, wrk_y);
 
-#if NSPW_THE_NET
-		if( dstc>=0 && dstc<=160 )
-#else
-		if( dstc>=0 && dstc<=360 )
-#endif
+		// NSPW NET lands from 160 (#if NSPW_THE_NET); 1.22, from 360 (0x413003).
+		if( dstc>=0 && dstc<=Rules.CargoLandingRange )
 			{
 			// 発射！
 			unit.Ammo=0;		// 残弾が０
@@ -295,6 +292,10 @@ private bool LandCargo(ref Unit unit, FireKind kind, int m)
 				fire.TargetX=unit.LandingX;
 				fire.TargetY=unit.LandingY;
 				fire.ShooterSide=(int)unit.Side;
+
+				// 1.22 keeps the transport, empty (0x413014 to 0x41312B); NSPW NET removes it.
+				if( !Rules.TransportsLeaveAfterLanding )
+					return false;
 
 				unit.Side=0;
 				unit.Hp=0;
@@ -408,7 +409,8 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double drctn2, re
 			if(unit.Ammo!=0)
 				unit.Ammo-=RAS_SZ;			// 弾薬消費
 
-			if(SharedRandom(2)!=0 )
+			// 1.22 plays AA_SHL3 alone, drawing nothing: it has no AA_SHL5 (0x41019F).
+			if( !Rules.RapidFireSoundVaries || SharedRandom(2)!=0 )
 				PlaySoundEffect( 0, SoundId.AntiAircraftShell3 ,unit.Position.X, unit.Position.Y);
 			else
 				PlaySoundEffect( 0, SoundId.AntiAircraftShell5 ,unit.Position.X, unit.Position.Y);
@@ -433,6 +435,21 @@ private bool ShipFireRapidAntiAircraftShell(ref Unit unit, ref double drctn2, re
 		}
 	return false;
 	return true;
+	}
+
+// A heading reduced to whole degrees from 0 to 359, as NSPW NET does: a depth charge's direction from its ship, a
+// fighter's to dodge a head-on pass, a ship's to evade a torpedo or a plane, a ship's wake behind it. 1.22 means to, but
+// stores the int into the low half of the double and reads the double back (0x410452, 0x415324, 0x416417, 0x416838,
+// 0x41C327): the heading keeps its high bits, so all of its fraction of a degree but the last digits, and the wake's is
+// not brought below 360.
+private double ReduceHeading(double heading)
+	{
+	var whole=(int)heading%360;
+	if( !Rules.ReducedHeadingsKeepTheirFraction )
+		return whole;
+
+	var bits=BitConverter.DoubleToInt64Bits(heading);
+	return BitConverter.Int64BitsToDouble((bits & unchecked((long)0xFFFFFFFF00000000)) | (uint)whole);
 	}
 
 private bool ShipDropAntiSubmarineBomb(ref int trgt, ref Unit unit, FireKind kind)
@@ -460,7 +477,8 @@ private bool ShipDropAntiSubmarineBomb(ref int trgt, ref Unit unit, FireKind kin
 					{
 					if(unit.Ammo!=0)
 						unit.Ammo-=ASB_SZ;			// 弾薬消費
-					if(unit.Ammo<0)
+					// 1.22 leaves an odd count at -1 (0x4103B6).
+					if(unit.Ammo<0 && Rules.DepthChargeCountStopsAtZero)
 						unit.Ammo=0;
 
 					PlaySoundEffect( 0, SoundId.Splash ,unit.Position.X, unit.Position.Y);
@@ -473,7 +491,7 @@ private bool ShipDropAntiSubmarineBomb(ref int trgt, ref Unit unit, FireKind kin
 						{
 						// ただの駆逐艦
 						drctn+=180;
-						drctn=(int)drctn%360;
+						drctn=ReduceHeading(drctn);
 						fire.Position += new WorldVector(CosDegrees(drctn)*20, SinDegrees(drctn)*20);
 						}
 					else
@@ -634,6 +652,13 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rng,
 					else
 						drctn3=drctn2+(double)((double)(Random(80)-40)/10)    ;			// 絶対方位
 					}
+				else if( Rules.GunsAimAlike )
+					{
+					// 1.22 aims as closely 1 time in 5 for every kind, and draws the hundredths, always 0, first (0x410A65).
+					var narrow = Random(5)==0 || ( unit.Kind==UnitKind.Battleship && Random( 4 )==0 );
+					var hundredths = Random(100)/100;
+					drctn3=drctn2+(narrow ? Random(7)-3 : Random(11)-5)+hundredths;
+					}
 				else
 					{
 					if( Random(5+(unit.Kind>=UnitKind.InfantryBase&&unit.Kind<=UnitKind.Fortress ? 1 : 0)*4  )==0 || ( unit.Kind==UnitKind.Battleship && Random( 4 )==0 ) )
@@ -654,7 +679,8 @@ private bool ShipFireGunWithoutTarget(ref Unit unit, FireKind kind, ref int rng,
 				fire.Speed=10.0;
 				fire.Acceleration=((fire.Speed)/(dstc2/fire.Speed));
 				fire.FinalSpeed=0;
-				fire.Ticks=(int)(dstc2/fire.Speed)+1;
+				// 1.22's shell flies one tick less (0x410BCE).
+				fire.Ticks=(int)(dstc2/fire.Speed)+Rules.ExtraGunShellTicks;
 				fire.FlightTime=fire.Ticks/2;
 
 				}
@@ -772,7 +798,7 @@ private bool ShipFireTorpedoWithoutTarget(ref Unit unit, ref double drctn2, Fire
 			{
 			case UnitKind.Cruiser:
 			case UnitKind.Destroyer:		unit.ReloadTime=RELOAD_TPD_DD;		break;	// 再装填時間
-			case UnitKind.Submarine:		unit.ReloadTime=RELOAD_TPD_SS;
+			case UnitKind.Submarine:		unit.ReloadTime=Rules.SubmarineTorpedoReload;
 							//撃った瞬間に発見される。
 							unit.ContactX=(int)(unit.Position.X+Random((50)*2)-50);
 							unit.ContactY=(int)(unit.Position.Y+Random((50)*2)-50);
@@ -917,7 +943,7 @@ private bool ShipFireTorpedoAtTarget(int trgt, ref Unit unit, ref double drctn2,
 		switch( unit.Kind )
 			{
 			case UnitKind.Destroyer:		unit.ReloadTime=RELOAD_TPD_DD;		break;	// 再装填時間
-			case UnitKind.Submarine:		unit.ReloadTime=RELOAD_TPD_SS;
+			case UnitKind.Submarine:		unit.ReloadTime=Rules.SubmarineTorpedoReload;
 							//撃った瞬間に発見される。
 							unit.ContactX=(int)(unit.Position.X+Random((50)*2)-50);
 							unit.ContactY=(int)(unit.Position.Y+Random((50)*2)-50);
@@ -935,7 +961,8 @@ private bool ShipFireTorpedoAtTarget(int trgt, ref Unit unit, ref double drctn2,
 			}
 		else
 			{
-			unit.Target=0;
+			if( !Rules.SubmarinesKeepTheirTargetAfterFiring )
+				unit.Target=0;
 			}
 
 		for( f=0; f<=2; f++)
@@ -1332,6 +1359,13 @@ private bool ShipFireGunAtTarget(int trgt, ref Unit unit, FireKind kind, ref int
 						else
 							drctn3=drctn2+(double)((double)(Random(60)-30)/10)    ;			// 絶対方位
 						}
+					else if( Rules.GunsAimAlike )
+						{
+						// 1.22 draws the hundredths, always 0, first (0x4129AB).
+						var narrow = Random(5)==0 || ( unit.Kind==UnitKind.Battleship && Random(4)==0 );
+						var hundredths = Random(100)/100;
+						drctn3=drctn2+(narrow ? Random(3)-1 : Random(9)-4)+hundredths;
+						}
 					else
 						{
 						if( Random(5)==0 || ( unit.Kind==UnitKind.Battleship && Random(4)==0 ) )
@@ -1530,7 +1564,8 @@ private bool FighterFireBullet(ref int trgt, ref Unit unit, FireKind kind)
 	for(n=1;n<=MaxUnitId;n++)
 		{
 		ref var other = ref Units[n];	//前方の敵を探す。
-		if( other.IsUsed && (( other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying ) || other.Kind==UnitKind.Transport ) && other.Side!=unit.Side )
+		// NSPW NET's fighters also shoot transports; 1.22's, flying planes only (0x4133B2).
+		if( other.IsUsed && (( other.Category==UnitCategory.Plane && other.PlaneState==UnitState.Flying ) || ( other.Kind==UnitKind.Transport && Rules.FightersAttackTransports ) ) && other.Side!=unit.Side )
 			{
 			// 距離を調べます
 			wrk_x=other.Position.X-unit.Position.X;
@@ -1554,12 +1589,16 @@ private bool FighterFireBullet(ref int trgt, ref Unit unit, FireKind kind)
 
 			if( unit.Target==0 )
 				{
+				// A returning fighter takes a target only by 1.22's rules: if it is the computer's, within 300, with ammunition
+				// and fuel for 60 (50 for Japan) (0x413542).
 				if(unit.Mode==UnitMode.Return)
 					{
+					if( Rules.ReturningFightersRetarget && unit.Side==CpuSide && unit.Fuel>=(6-(unit.Side==Side.Japan ? 1 : 0))*10 && unit.Ammo!=0 && dstc<=300 && Random(10)==0 && other.IsFound )
+						unit.Target=n;
 					}
 				else
 					{
-					if( dstc<=400+(other.Kind==UnitKind.Attacker||other.Kind==UnitKind.Bomber ? 1 : 0)*250 && Random(10)==0 )
+					if( dstc<=(other.Kind==UnitKind.Attacker||other.Kind==UnitKind.Bomber ? Rules.FighterTargetRangeAgainstBombers : 400) && Random(10)==0 )
 						{
 						if( other.IsFound )
 							{
@@ -1679,17 +1718,20 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int trgt, ref double drctn2, in
 		cm_scrn_x=(int)((unit.Position.X+(Sprites[SpriteId.JapanUnits].Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
 		cm_scrn_y=(int)((MAP_TOP-unit.Position.Y+(Sprites[SpriteId.JapanUnits].Height/2))/Sprites[SpriteId.MapTiles].Height);
 
-		if( MapTiles[cm_scrn_y][cm_scrn_x]>=1
-			|| MapTiles[cm_scrn_y-1][cm_scrn_x-1]>=1
-			|| MapTiles[cm_scrn_y-1][cm_scrn_x]>=1
-			|| MapTiles[cm_scrn_y-1][cm_scrn_x+1]>=1
+		// BUG(1.22, NSPW NET): at the map's edges, the tiles around read beyond cmbt_map, or wrap to the next row. Kept as
+		// is for compatibility with 1.22 and NSPW NET: in a single-player game, what 1.22's memory holds there
+		// (MapTileOrBeyond); in a network game, sea, where NSPW NET's memory is not known.
+		if( MapTileOrBeyond(cm_scrn_y,cm_scrn_x)>=1
+			|| MapTileOrBeyond(cm_scrn_y-1,cm_scrn_x-1)>=1
+			|| MapTileOrBeyond(cm_scrn_y-1,cm_scrn_x)>=1
+			|| MapTileOrBeyond(cm_scrn_y-1,cm_scrn_x+1)>=1
 
-			|| MapTiles[cm_scrn_y][cm_scrn_x-1]>=1
-			|| MapTiles[cm_scrn_y][cm_scrn_x+1]>=1
+			|| MapTileOrBeyond(cm_scrn_y,cm_scrn_x-1)>=1
+			|| MapTileOrBeyond(cm_scrn_y,cm_scrn_x+1)>=1
 
-			|| MapTiles[cm_scrn_y+1][cm_scrn_x-1]>=1
-			|| MapTiles[cm_scrn_y+1][cm_scrn_x]>=1
-			|| MapTiles[cm_scrn_y+1][cm_scrn_x+1]>=1
+			|| MapTileOrBeyond(cm_scrn_y+1,cm_scrn_x-1)>=1
+			|| MapTileOrBeyond(cm_scrn_y+1,cm_scrn_x)>=1
+			|| MapTileOrBeyond(cm_scrn_y+1,cm_scrn_x+1)>=1
 			)
 			{
 			return false;
@@ -1724,7 +1766,10 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int trgt, ref double drctn2, in
 	if(wrk_y==0)	wrk_y=1;
 
 	drctn=Direction(wrk_x, wrk_y);
-	drctn2=drctn;					// 未来位置への絶対角
+	// BUG(NSPW NET): the bearing from the aim to the plane, so the land is checked behind the plane. Kept as is for
+	// compatibility with NSPW NET.
+	if( !Rules.TorpedoPlanesCheckLandAlongUnsetHeading )
+		drctn2=drctn;					// 未来位置への絶対角
 	if(wrk_x<0)
 		wrk_x=0-wrk_x;
 	if(wrk_y<0)
@@ -1738,6 +1783,9 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int trgt, ref double drctn2, in
 	if( dstc>=100 && dstc<=AIR_TPD_LOS_DSTC )
 		{
 		i=(int)(dstc/2);
+		// 1.22 reads the heading it has not set as the loop starts (0x413D23).
+		if( i>=1 && Rules.TorpedoPlanesCheckLandAlongUnsetHeading )
+			drctn2=TakeStackLocal(0x413D23, drctn2);
 		for(f=1;f<=i;f++)
 			{
 			wrk_x=unit.Position.X;
@@ -1791,9 +1839,13 @@ private bool PlaneDropTorpedo(ref Unit unit, ref int trgt, ref double drctn2, in
 					other.GroupLeader=0;
 					other.Mode=UnitMode.Return;
 
+					// 1.22 leaves their path as it is (0x413F51 to 0x413F7C).
+					if( Rules.FollowersFlyToRelease )
+						{
 other.PathX[0]=unit.Position.X;
 other.PathY[0]=unit.Position.Y;
 other.PathX[1]=MAP_RIGHT+1;
+						}
 
 					}
 				}
@@ -1840,6 +1892,10 @@ private bool AttackerDropBomb(ref int trgt, ref Unit unit, ref double drctn2, in
 	double dstc =default;
 	int f;
 	int n;
+	// NSPW NET's Japanese attackers dive: they release close, pull up and their bombs fall late. 1.22's attackers all
+	// release from 170 and speed up, as NSPW NET's American ones do, and only the Americans' drop a second bomb (0x414186
+	// to 0x4144E0).
+	var dives = unit.Side==Side.Japan && Rules.JapaneseAttackersDive;
 	if( !Units[trgt].IsFound )
 		return false;
 	wrk_x=Units[trgt].Position.X;
@@ -1865,11 +1921,11 @@ private bool AttackerDropBomb(ref int trgt, ref Unit unit, ref double drctn2, in
 		wrk_y=unit.Position.Y-wrk_y2;
 		dstc=Distance(wrk_x, wrk_y);
 
-		if( ( dstc>=170 && dstc<=180 && unit.Side==Side.UnitedStates ) || ( dstc>=35 && dstc<=65 && unit.Side==Side.Japan ))
+		if( ( dstc>=170 && dstc<=180 && !dives ) || ( dstc>=35 && dstc<=65 && dives ))
 			{
 			// 発射！
 
-			if( unit.Side==Side.UnitedStates )
+			if( !dives )
 				unit.Speed+=unit.AccelerationChange*700;
 			else
 				{
@@ -1898,9 +1954,13 @@ private bool AttackerDropBomb(ref int trgt, ref Unit unit, ref double drctn2, in
 						other.GroupLeader=0;
 						other.Mode=UnitMode.Return;
 
+						// 1.22 leaves their path as it is.
+						if( Rules.FollowersFlyToRelease )
+							{
 other.PathX[0]=unit.Position.X;
 other.PathY[0]=unit.Position.Y;
 other.PathX[1]=MAP_RIGHT+1;
+							}
 
 						}
 					}
@@ -1916,7 +1976,7 @@ other.PathX[1]=MAP_RIGHT+1;
 				fire.Position = new WorldPosition(unit.Position.X+(3-Random(6)), unit.Position.Y+(3-Random(6)));
 				fire.Direction=drctn2;
 
-				if(unit.Side==Side.Japan)
+				if(dives)
 					{
 					fire.Position += new WorldVector(CosDegrees(fire.Direction)*(13), SinDegrees(fire.Direction)*(13));
 					}
@@ -1928,7 +1988,7 @@ other.PathX[1]=MAP_RIGHT+1;
 				fire.Speed=0.3;
 				fire.Acceleration=+0.2;
 				fire.FinalSpeed=0.0;
-				if(unit.Side==Side.Japan)
+				if(dives)
 					{
 					fire.Ticks=10;
 					fire.FlightTime=68+Random(5);
@@ -1942,6 +2002,8 @@ other.PathX[1]=MAP_RIGHT+1;
 				}
 
 				// もう一発
+				if( !Rules.JapaneseAttackersDive && unit.Side!=Side.UnitedStates )
+					return false;
 				n=FindFreeFire();
 				fire = ref Fires[n];
 				if( n!=0 )
@@ -1951,7 +2013,7 @@ other.PathX[1]=MAP_RIGHT+1;
 					fire.Position = new WorldPosition(unit.Position.X+(20-Random(40)), unit.Position.Y+(20-Random(40)));
 					fire.Direction=drctn2;
 
-					if(unit.Side==Side.Japan)
+					if(dives)
 						{
 						fire.Position += new WorldVector(CosDegrees(fire.Direction)*(13), SinDegrees(fire.Direction)*(13));
 						}
@@ -1964,7 +2026,7 @@ other.PathX[1]=MAP_RIGHT+1;
 					fire.Acceleration=+0.2;
 					fire.FinalSpeed=0.0;
 
-					if(unit.Side==Side.Japan)
+					if(dives)
 						{
 						fire.Ticks=10;
 						fire.FlightTime=75+(5-Random(10));
@@ -2243,7 +2305,8 @@ public void	SetDynamicDestination(int n)
 
 		pt=Units[n].GroupLeader;
 
-		if(Units[pt].PlaneState==UnitState.Parked && Units[pt].Mode==UnitMode.Return && Units[n].PlaneState==UnitState.Flying )
+		// 1.22 keeps a flying plane with its parked leader (0x4149F0).
+		if(Units[pt].PlaneState==UnitState.Parked && Units[pt].Mode==UnitMode.Return && Units[n].PlaneState==UnitState.Flying && Rules.FlyingFollowersLeaveParkedLeaders )
 			{
 			Units[n].GroupLeader=0;
 			return;
@@ -2365,7 +2428,10 @@ public void	SetDynamicDestination(int n)
 		if( 1!=0  )
 			{
 			//コンピュータの進路計算
-			SetCpuRoute2( n );
+			if( Rules.FollowersRouteBy122sOwnCode )
+				SetCpuRoute2As122( n );
+			else
+				SetCpuRoute2( n );
 			}
 		}
 
@@ -2457,9 +2523,10 @@ public void	SetFighterAttackDestination(int m)
 	lvl_my=unit.Skill;
 	lvl_en=Units[trgt].Skill;
 
+	// 1.22 tells two pilots of the same skill apart by the frame (0x4150A9), NSPW NET by the tick.
 	if( lvl_my == lvl_en )
 		{
-		if( ((Tick)%600)<300 )
+		if( ((Rules.FighterTiesBreakByFrame ? FrameCount : Tick)%600)<300 )
 			{lvl_my++;}
 		else
 			{lvl_en++;}
@@ -2514,7 +2581,7 @@ public void	SetFighterAttackDestination(int m)
 						em_drctn-=45+Random(45);
 						break;
 					}
-				em_drctn=(int)em_drctn%360;
+				em_drctn=ReduceHeading(em_drctn);
 
 				wrk_x+=CosDegrees(em_drctn)*300;
 				wrk_y+=SinDegrees(em_drctn)*300;
@@ -2662,7 +2729,8 @@ public void	SetAttackerEmergencyDestination(int m)
 				Units[new_ldr].FormationNumber=0;
 
 				// 昔の小隊長が攻爆撃機だったら、帰投にしておく
-				if( Units[new_ldr].Kind==UnitKind.Fighter && (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber)  && Units[new_ldr].PlaneState==UnitState.Flying )
+				// 1.22 tests whether the old leader is flying, for the new one and the followers alike (0x415916, 0x415971).
+				if( Units[new_ldr].Kind==UnitKind.Fighter && (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber)  && (Rules.HandoverTestsTheOldLeaderFlying ? unit : Units[new_ldr]).PlaneState==UnitState.Flying )
 					{
 					Units[new_ldr].Mode=UnitMode.Return;		// それまでの隊長がボスだったらきかんしよっと
 					}
@@ -2675,7 +2743,7 @@ public void	SetAttackerEmergencyDestination(int m)
 						other.GroupLeader=(short)new_ldr;
 
 						// 昔の小隊長が攻爆撃機だったら、帰投にしておく
-						if( Units[new_ldr].Kind==UnitKind.Fighter && other.Kind==UnitKind.Fighter && (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber) && other.PlaneState==UnitState.Flying )
+						if( Units[new_ldr].Kind==UnitKind.Fighter && other.Kind==UnitKind.Fighter && (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber) && (Rules.HandoverTestsTheOldLeaderFlying ? unit : other).PlaneState==UnitState.Flying )
 							other.Mode=UnitMode.Return;		// それまでの隊長がボスだったらきかんしよっと
 						}
 
@@ -2728,7 +2796,8 @@ public void	SetAttackerAttackDestination(int m)
 	if(drctn<0)
 		drctn=360+drctn;
 
-	if( dstc<=510 && dstc >= 500  && (drctn<=22.5||drctn>=337.5)   )
+	// 1.22's leader does not send its attackers off at 500 to 510 from the target: it has no such case (0x415A10).
+	if( Rules.AttackersBreakFormation && dstc<=510 && dstc >= 500  && (drctn<=22.5||drctn>=337.5)   )
 		{
 
 		// リーダー機か単独機のみここに来ます。
@@ -2923,6 +2992,77 @@ public void ReturnIntoWorld(int m)
 		}
 	}
 
+// 1.22's hunt of the computer's destroyers, stopped or not (0x416706 to 0x416B35). One that chases no submarine
+// (em_flg[1]) takes the first enemy one found within 600 of its contact, or of itself when surfaced: it runs toward the
+// contact, give or take 20°, 300 past it, for 600 ticks, and chases it. One that chases a submarine stops chasing it once
+// it is found again (0x416A70), as finding it stops its chasers (FoundSubmarinesStopChasers); while it is not, the
+// destroyer stops 1 time in 10, or else goes to within 400 of its last contact for 200 to 299 ticks.
+private bool HuntSubmarineAs122(ref Unit unit)
+	{
+	int n;
+	double wrk_x;
+	double wrk_y;
+	double dstc;
+	double em_drctn;
+	if( unit.EmergencyFlags[1]!=0 )
+		{
+		ref var chased = ref Units[unit.EmergencyFlags[1]];
+		if( chased.IsFound )
+			{
+			unit.EmergencyFlags[1]=0;
+			return true;
+			}
+
+		if( Random(10)==0 )
+			{
+			unit.EmergencyFlags[1]=0;
+			return false;
+			}
+
+		unit.EmergencyDestination = new WorldPosition(chased.ContactX-Random(800)+400, unit.EmergencyDestination.Y);
+		unit.EmergencyDestination = new WorldPosition(unit.EmergencyDestination.X, chased.ContactY-Random(800)+400);
+		unit.EmergencyFlags[0]=200+Random(100);
+		return false;
+		}
+
+	for(n=1; n<=MaxUnitId; n++)
+		{
+		ref var other = ref Units[n];
+		if( other.IsUsed && other.Kind==UnitKind.Submarine && other.IsFound && other.Side!=unit.Side )
+			{
+			if( other.IsSubmerged )
+				{
+				wrk_x=other.ContactX-unit.Position.X;
+				wrk_y=other.ContactY-unit.Position.Y;
+				}
+			else
+				{
+				wrk_x=other.Position.X-unit.Position.X;
+				wrk_y=other.Position.Y-unit.Position.Y;
+				}
+			if(wrk_x==0)	wrk_x=1;
+			if(wrk_y==0)	wrk_y=1;
+			dstc=Distance(wrk_x, wrk_y);
+
+			if( dstc<=600 )
+				{
+				wrk_x=other.ContactX-unit.Position.X;
+				wrk_y=other.ContactY-unit.Position.Y;
+				if(wrk_x==0)	wrk_x=1;
+				if(wrk_y==0)	wrk_y=1;
+				em_drctn=(int)(atan2(wrk_y,wrk_x)*RAD_to+(20-Random(40)))%360;
+
+				unit.EmergencyDestination = unit.Position + new WorldVector(CosDegrees(em_drctn)*(dstc+300), SinDegrees(em_drctn)*(dstc+300));
+				unit.EmergencyFlags[0]=600;
+				unit.EmergencyFlags[1]=n;
+				return false;
+				}
+			}
+		}
+
+	return true;
+	}
+
 private bool HuntSubmarine(ref Unit unit)
 	{
 	int n;
@@ -3024,7 +3164,7 @@ private bool EvadePlane(ref Unit other, ref Unit unit)
 					em_drctn-=45+Random(45+20);
 					break;
 				}
-			em_drctn=(int)em_drctn%360;
+			em_drctn=ReduceHeading(em_drctn);
 
 			wrk_x+=CosDegrees(em_drctn)*300;
 			wrk_y+=SinDegrees(em_drctn)*300;
@@ -3052,7 +3192,8 @@ private void EvadeShip(ref Unit other, ref Unit unit)
 
 	// 見る側
 
-	if( dstc<=(double)( BB1_SIGHT ) )
+	// 1.22 flees within 900, its battleship's sight, where NSPW NET's is 800 (0x416277).
+	if( dstc<=(double)Rules.ShipEvasionRange )
 		{
 		wrk_x=other.Position.X-unit.Position.X;
 		wrk_y=other.Position.Y-unit.Position.Y;
@@ -3130,7 +3271,7 @@ private bool EvadeTorpedo(ref Fire fire, ref Unit unit)
 					break;
 				}
 
-			em_drctn=(int)em_drctn%360;
+			em_drctn=ReduceHeading(em_drctn);
 
 			wrk_x+=CosDegrees(em_drctn)*300;
 			wrk_y+=SinDegrees(em_drctn)*300;
@@ -3169,14 +3310,17 @@ public void	SetShipEmergencyDestination(int m)
 		{
 		ref var other = ref Units[n];
 		// 艦船によってくる艦船からにげる
-		if( (unit.IsStopping || (unit.Kind==UnitKind.Carrier||unit.Kind==UnitKind.LightCarrier)) && other.IsUsed && (other.Category==UnitCategory.Ship  && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress) ) &&
+		// NSPW NET's ships flee no base, city, mine or ground unit (kinds 11 to 17); 1.22's flee all of them but air bases
+		// and naval bases (0x41616C).
+		if( (unit.IsStopping || (unit.Kind==UnitKind.Carrier||unit.Kind==UnitKind.LightCarrier)) && other.IsUsed && (other.Category==UnitCategory.Ship  && (Rules.ShipsFleeGroundUnits ? other.Kind!=UnitKind.AirBase && other.Kind!=UnitKind.NavalBase : !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress)) ) &&
 		other.Kind!=UnitKind.Submarine && other.Side!=unit.Side && other.IsFound && other.SupplyTime<=0 && unit.Target==0)
 			{
 			EvadeShip(ref other, ref unit);
 			}
 
 		// 艦船によってくる攻撃機から逃げる
-		if( other.IsUsed && (other.Kind==UnitKind.Attacker || other.Kind==UnitKind.Bomber || ( other.Kind==UnitKind.Fighter && unit.Kind==UnitKind.Transport ) ) && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.IsFound
+		// NSPW NET's transports also flee fighters; 1.22's ships, attackers and bombers only (0x41650D).
+		if( other.IsUsed && (other.Kind==UnitKind.Attacker || other.Kind==UnitKind.Bomber || ( other.Kind==UnitKind.Fighter && unit.Kind==UnitKind.Transport && Rules.FightersAttackTransports ) ) && other.PlaneState==UnitState.Flying && other.Side!=unit.Side && other.IsFound
 			)
 			{
 			if( !EvadePlane(ref other, ref unit) )
@@ -3184,7 +3328,12 @@ public void	SetShipEmergencyDestination(int m)
 			}
 		}
 
-	if( unit.Kind==UnitKind.Destroyer  && unit.IsStopping.Value==1   )
+	if( Rules.OnlyComputersDestroyersHunt )
+		{
+		if( unit.Kind==UnitKind.Destroyer && unit.Side==CpuSide && !HuntSubmarineAs122(ref unit) )
+			return;
+		}
+	else if( unit.Kind==UnitKind.Destroyer  && unit.IsStopping.Value==1   )
 		{
 		// 駆逐艦の対潜水艦行動、発見された後！
 		if( !HuntSubmarine(ref unit) )
@@ -3192,7 +3341,10 @@ public void	SetShipEmergencyDestination(int m)
 
 		}
 
-	ReturnIntoWorld(m);
+	// 1.22 brings only the player's ships back into the map (0x416B35): the computer's leave it, to its naval bases
+	// outside, such as scenario 304's.
+	if( Rules.ComputerShipsReturnIntoMap || unit.Side!=CpuSide )
+		ReturnIntoWorld(m);
 
 	}
 }

@@ -74,6 +74,20 @@ public static class GameFiles
 		return full;
 	}
 
+	// A file of a single-player game from NSPW 1.22's directory, which has the game's maps, sounds and sprite sheet as
+	// 1.22 has them (docs/Differences.md): the file there, opened to read only, or null where that directory has none, for
+	// the game's own file. The game writes none of 1.22's files.
+	public static FileStream? OpenSingleplayer(string? singleplayerDirectory, string path, FileMode mode, FileShare share)
+	{
+		if (singleplayerDirectory is null || mode is not (FileMode.Open or FileMode.OpenOrCreate))
+		{
+			return null;
+		}
+
+		var full = Resolve(singleplayerDirectory, path);
+		return File.Exists(full) ? new FileStream(full, FileMode.Open, FileAccess.Read, share) : null;
+	}
+
 	public static IReadOnlyList<string> Find(string dataDirectory, string directory, string pattern)
 	{
 		var full = Resolve(dataDirectory, directory);

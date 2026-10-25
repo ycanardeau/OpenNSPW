@@ -16,6 +16,7 @@
     <Project Path="OpenNSPW/OpenNspw.Desktop/OpenNspw.Desktop.csproj" />
     <Project Path="OpenNSPW/OpenNspw.DirectPlay/OpenNspw.DirectPlay.csproj" />
     <Project Path="OpenNSPW/OpenNspw.Porter/OpenNspw.Porter.csproj" />
+    <Project Path="OpenNSPW/OpenNspw.Recorder122/OpenNspw.Recorder122.csproj" />
     <Project Path="OpenNSPW/OpenNspw.Singleplayer/OpenNspw.Singleplayer.csproj" />
     <Project Path="OpenNSPW/OpenNspw.Tests/OpenNspw.Tests.csproj" />
     <Project Path="OpenNSPW/OpenNspw/OpenNspw.csproj" />

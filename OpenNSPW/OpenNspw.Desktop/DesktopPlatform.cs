@@ -58,6 +58,10 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 	private int _frameWidth;
 	private int _frameHeight;
 
+	// NSPW 1.22's directory, whose files a single-player game reads instead of the game's own, or null. Set before the
+	// game starts.
+	public string? SingleplayerDirectory { get; set; }
+
 	// Incremented for each frame the game shows.
 	public int FrameNumber { get; private set; }
 
@@ -94,6 +98,11 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 	{
 		try
 		{
+			if (GameFiles.OpenSingleplayer(SingleplayerDirectory, path, mode, share) is { } singleplayerFile)
+			{
+				return singleplayerFile;
+			}
+
 			var full = GameFiles.Resolve(_dataDirectory, path);
 			if (mode is FileMode.Create or FileMode.CreateNew or FileMode.OpenOrCreate)
 			{

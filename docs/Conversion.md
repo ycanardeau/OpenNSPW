@@ -13,16 +13,32 @@ The behavior lives in three forms: 1.22's machine code, the reference; its trans
 | --- | --- | --- |
 | 8-bit displacements were not sign-extended (`[eax-0x1C]` read as `[eax+0xE4]`) | Wrong fields in 221 places of the translation | Enzan sign-extends them |
 | `fsin`, `fcos` and `fpatan` gave the host's results | Results that could differ between platforms | The emulator uses the port's `sin`, `cos` and `atan2` |
+| `push imm8` zero-extended its byte | Found reading Enzan: `6A ib` sign-extends. No translated function pushes a byte of 0x80 or more yet | Enzan sign-extends it |
+| `sbb` lost the borrow when the subtrahend plus the carry did not fit in 32 bits | Found reading Enzan. The three `sbb reg, reg` of the translations only use the value, which was right | Enzan subtracts the carry separately |
+| An unordered `fcom` (with a NaN) left C3, C2 and C0 as they were | Found reading Enzan: x87 sets all three | Enzan sets them |
+| `__ftol` saturated a NaN or a value out of range, as a conversion in C# does | Found reading the native: the CRT's `fistp` stores the integer indefinite, `0x8000000000000000` | The native returns it |
+| The single-player game gave the emulated code NSPW NET's map | `set_cpu_route` planned on NSPW NET's `japan_off.dat`, which has an island that 1.22's does not ([Differences.md](Differences.md)) | The single-player game reads 1.22's maps |
+
+### Checked
+A static audit of the 57 translated functions against the machine code, on 2026-10-19. It reads the machine code; it does not run 1.22.
+
+- **Decoding.** Every translated instruction was decoded again with Iced, an independent decoder, and compared with the Disassembler's: the instruction boundaries of each function, the mnemonic, the registers, the immediates and displacements, the size of each memory operand, the direction of each operation (register or memory destination), the operand order of the x87 forms (`fdivr`, `fdivp`, `fpatan` and the others), and each constant of `.rdata` that the translation inlines, against the bytes at its address. All 29,610 agree. No branch leaves its function, every branch target is translated, and every function ends with `ret` or `jmp` before the data that follows it.
+- **Jump tables.** All 11 have as many cases as their guard allows, including `set_unit_data`'s 17, guarded by `cmp ecx, edi`, and their targets are the table's bytes.
+- **Calls.** Every direct call goes to a translated function or a native (`rand`, `__ftol`, `load_it2`); the indirect ones are imports and the surface's `GetDC` and `ReleaseDC`, which have stand-ins. An import without one throws.
+- **The copied state.** Every global that the translations read or write is in `SharedGlobals`, in the units or the fleets, except `0x463AA4` (the window) and `0x463B20` (a flag), which only decide whether `set_cpu_route` calls `SetWindowTextA`, whose stand-in does nothing. The unit layout of the port has 1.22's offsets in the copied blocks, and the sprites that the emulated code reads (the units', the unit panel's and the map tiles' sizes and the panel's position) have 1.22's values (`set_sprt_data`, `0x432E09` to `0x432F21`).
+- **Enzan.** The semantics of the 70 mnemonics that the translations use were read against x86: the flags of each arithmetic, logical and shift instruction, the conditions of each `jcc` and `setcc`, `cdq`, `idiv`, `movsx`, `rep stosd`, and the condition bits of `fnstsw`. The four discrepancies above were found and fixed.
+
+What it does not cover: the translation could still differ from the machine code where Enzan's semantics and the reading agree but both are wrong, and in the natives' and stand-ins' behavior beyond what is listed. A differential test against an emulator of the machine code, or a recording of 1.22 on Windows (below), would.
 
 ### Known
-- **Jump tables guarded by a register.** The Disassembler sizes a jump table from the last `cmp reg, imm`, even with a `cmp reg, reg` after it: a table of 17 cases was translated as 3. A register compare should clear it, and the table should be read while its entries are in the function.
-- **A function's length past its end.** When a function's length runs into its jump table, the table is translated as code. The lengths must end before the tables.
+- **Jump tables guarded by a register.** The Disassembler sizes a jump table from the last `cmp reg, imm`, even with a `cmp reg, reg` after it: a table of 17 cases was translated as 3. The translations today have the right sizes (Checked), but a new function must be checked again.
+- **A function's length past its end.** When a function's length runs into its jump table, the table is translated as code. The lengths must end before the tables; today they do (Checked).
 - **Missing instruction forms.** The Disassembler stops at the first form it does not know, with its address (for example 16-bit `inc`/`dec`, `imm8` forms of `imul`, `test rm8, r8`, `jns rel32`, some x87 forms). Each is added to the Disassembler and Enzan, with a test of Enzan.
 - **x87 precision.** Enzan keeps the FPU stack as `double`s, where x87 registers are 80-bit. 1.22 sets the precision to 53 bits at startup: `_controlfp(_PC_53, _MCW_PC)`, called from `0x436083` (the call is at `0x4363DE`). So addition, subtraction, multiplication, division and square roots round as `double`s do. Only the wider exponent range of x87 registers differs, for intermediate overflow and underflow, which the game's values do not reach.
-- **`fsin`, `fcos` and `fpatan`.** Real x87 results differ from the port's functions in the last bits, and differ between processors. So there is no single machine result to match: the port's functions are the reference.
+- **`fsin`, `fcos` and `fpatan`.** Real x87 results differ from the port's functions in the last bits, and differ between processors. So there is no single machine result to match: the port's functions are the reference. They are not affected by the precision control either: 1.22 keeps their results with a 64-bit mantissa in a register until an instruction that uses them rounds its own result, where the port rounds them to `double`s first. That changes a last bit now and then, which once changed a battle against a trace of 1.22 ([X87Emulation.md](X87Emulation.md)).
 - **Natives.**
   - `rand` (`0x436056`) is the port's `rand()`, so that the whole game draws from one sequence. It is the same generator as 1.22's (`* 214013 + 2531011`, seed at `0x442250`).
-  - `__ftol` (`0x4360C4`) truncates, as the CRT does.
+  - `__ftol` (`0x4360C4`) truncates, as the CRT does, and gives `0x8000000000000000` for a NaN or a value out of range.
 - **Imports.** GDI, DirectDraw, DirectSound and the timer are stand-ins, and they define what 1.22 sees. A wrong stand-in is a bug of the port, not of the emulator.
 - **The copied state.** A global that the emulated code writes but that is not copied back, or reads but that is not copied in, gives wrong results without failing.
   - Every global that the translated functions use must be in `SharedGlobals`, or stay in the emulator's memory only.
@@ -42,7 +58,4 @@ The behavior lives in three forms: 1.22's machine code, the reference; its trans
 ## Known bugs
 | Bug | Cause |
 | --- | --- |
-| The fighters captured in scenario 303 take off one at a time and cannot change base | NSPW NET's packing of the selection keeps only units with the player's side's numbers ([Differences.md](Differences.md#the-frame-the-input-and-the-drawing)) |
-| Those fighters are drawn as American | 1.22 draws them from Japan's sheet (`0x40E070`: `sinario==303`, `used==2`, `kind==7`, `type==1`) |
-| The computer's fleets cannot renew in scenario 304, and its ships stop at land until their next order | NSPW NET's battle ([Differences.md](Differences.md#the-battle)) |
 | シナリオ選択へ and リジューム do nothing in single-player | They wait for the rival (`RivalMode`), and the system orders go back to NSPW NET's setting screen, which single-player does not have |

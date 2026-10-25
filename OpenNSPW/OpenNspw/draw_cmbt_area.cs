@@ -85,6 +85,10 @@ public void	UpdateUpperEffects(RECT* pfield_rect,RECT* pinfo_rect)
 						size=FT1_SIGHT/2;
 						}
 
+					// 1.22's ranges, none limited while a base is built (0x40C919).
+					if( Rules.HasSightRangesOf122 )
+						size=GetSightRangeAs122(Units[n].Kind);
+
 					if( dstc<=size )
 						{
 						flg=1;
@@ -111,9 +115,9 @@ public void	UpdateUpperEffects(RECT* pfield_rect,RECT* pinfo_rect)
 						n=1;
 						break;
 					case 2:		//	飛行機からの煙
-						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(SharedRandom(2)));
-						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X)+SharedRandom(10)-5;
-						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y)+SharedRandom(10)-5;
+						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(EffectRandom(2)));
+						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X)+EffectRandom(10)-5;
+						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y)+EffectRandom(10)-5;
 						n=1;
 						break;
 					case 3:		//	駐機場の飛行機用
@@ -123,7 +127,7 @@ public void	UpdateUpperEffects(RECT* pfield_rect,RECT* pinfo_rect)
 						n=0;
 						break;
 					case 4:		// 雷跡
-						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(SharedRandom(2)));
+						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(EffectRandom(2)));
 						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X);
 						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y);
 						n=1;
@@ -196,8 +200,9 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 			if( effect.Animation!=3 || Result!=GameResult.None )
 				{
 				// ユニットインフォ画面以外のエフェクト表示は見える見えないのテストをします。
+				// 1.22 still tests them once the battle has a result (0x40CDEC).
 				flg=0;
-				if(Result!=GameResult.None)
+				if(Result!=GameResult.None && Rules.ResultShowsEveryLowerEffect)
 					flg=1;
 				for(n=1;n<=MaxUnitId;n++)
 					{
@@ -245,6 +250,10 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 							size=FT1_SIGHT/2;
 							}
 
+						// 1.22's ranges, none limited while a base is built (0x40CF46).
+						if( Rules.HasSightRangesOf122 )
+							size=GetSightRangeAs122(unit.Kind);
+
 						if( dstc<=size)
 							{
 							flg=1;
@@ -276,9 +285,9 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 						n=1;
 						break;
 					case 2:		//	飛行機からの煙
-						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(SharedRandom(2)));
-						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X)+SharedRandom(10)-5;
-						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y)+SharedRandom(10)-5;
+						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(EffectRandom(2)));
+						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X)+EffectRandom(10)-5;
+						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y)+EffectRandom(10)-5;
 						n=1;
 						break;
 					case 3:		//	駐機場の飛行機用
@@ -288,7 +297,7 @@ public void UpdateLowerEffects(RECT* pfield_rect,RECT* pinfo_rect)
 						n=0;
 						break;
 					case 4:		// 雷跡、航跡
-						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(SharedRandom(2)));
+						Sprites[SpriteId.SubUnits].Frame=effect.SpriteNumber+(Sprites[SpriteId.SubUnits].FramesPerRow*(EffectRandom(2)));
 						Sprites[SpriteId.SubUnits].X=(int)(effect.Position.X-CameraPosition.X);
 						Sprites[SpriteId.SubUnits].Y=(int)(CameraPosition.Y-effect.Position.Y);
 						n=1;
@@ -1204,6 +1213,8 @@ private bool AimLanding(SpriteId sprite, int x, int y)
 	int map_bld_x;
 	int map_bld_y;
 	// カーソルの示す、マップチップの場所
+	// BUG(NSPW NET): a cursor off the map gives a tile outside it, which NSPW NET reads out of bounds; the port throws
+	// instead (docs/KnownIssues.md).
 	map_bld_x=(int)(((x+40+(int)CameraPosition.X)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
 	map_bld_y=(int)((MAP_TOP-((int)CameraPosition.Y-y-40 ))/Sprites[SpriteId.MapTiles].Height);
 	if(
@@ -1230,6 +1241,15 @@ private void RestoreSelection()
 		{
 		set_the_slct_unit( PreviousSelectedUnit );
 		}
+	}
+
+// The sheet a unit is drawn from: its side's. 1.22 also draws the Americans' fighters of type 1 in scenario 303, the
+// ones taken from Japan's air bases, as Japan's (0x40E070).
+public SpriteId GetUnitSprites(ref Unit unit)
+	{
+	if( unit.Side==Side.Japan || (Rules.DrawsCapturedFightersAsJapans && ScenarioNumber==303 && unit.Side==Side.UnitedStates && unit.Kind==UnitKind.Fighter && unit.Variant==1) )
+		return SpriteId.JapanUnits;		//Off Screen Number		日本海軍の表示
+	return SpriteId.UnitedStatesUnits;		//Off Screen Number		合衆国海軍の表示
 	}
 
 //============================================================================
@@ -1313,10 +1333,7 @@ public void	DrawBattleArea()
 			DrawClouds( &field_rect );
 			}
 
-		if( unit.Side==Side.Japan)
-			sprite=SpriteId.JapanUnits;		//Off Screen Number		日本海軍の表示
-		else
-			sprite=SpriteId.UnitedStatesUnits;		//Off Screen Number		合衆国海軍の表示
+		sprite=GetUnitSprites(ref unit);
 
 		// ユニットを描画します
 		if( unit.IsUsed && (unit.Side==LocalSide || unit.IsFound) &&

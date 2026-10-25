@@ -47,6 +47,16 @@ internal sealed class GameSession : IDisposable
 
 	public Nspw Game { get; }
 
+	// The trace of 1.22 that the game follows, to watch it (docs/Verification.md), or null.
+	public Trace122Replay? Replay { get; }
+
+	// Whether the player's keys and buttons are held back from the game: while it follows a trace, which gives it none.
+	private bool IsInputHeldBack => Game.Trace is { TakesInput: false };
+
+	// The sprite sheet that the UI draws the battle from: NSPW NET's t3.bmp, or, in a single-player game, 1.22's own
+	// (Nspw.SpriteSheetName), as the game draws it.
+	public string SpriteSheetPath { get; }
+
 	// Whether WinMain has returned: the game was closed, or failed to connect.
 	public bool HasEnded => _hasEnded;
 
@@ -67,26 +77,33 @@ internal sealed class GameSession : IDisposable
 		}
 		finally
 		{
-			// Its sounds stop with it, on its thread, which is the last to use them.
+			// Its sounds stop with it, on its thread, which is the last to use them, and so does the trace it followed.
 			_platform.StopSounds();
+			Replay?.Dispose();
 			_hasEnded = true;
 		}
 	}
 
-	// singleplayer: NSPW_122.exe and a scenario of it, to play that scenario against the computer (docs/Singleplayer.md)
-	// instead of connecting to a rival.
-	public GameSession(string dataDirectory, TextRasterizer text, (byte[] Executable, int Scenario)? singleplayer = null)
+	// singleplayer: NSPW_122.exe, its directory, whose maps, sounds and sprite sheet the game reads, and a scenario of it,
+	// to play that scenario against the computer (docs/Singleplayer.md) instead of connecting to a rival. replay: a trace
+	// of 1.22 in that scenario, which the game follows, and which the session disposes.
+	public GameSession(string dataDirectory, TextRasterizer text, (byte[] Executable, string Directory, int Scenario)? singleplayer = null, Trace122Replay? replay = null)
 	{
 		_platform = new DesktopPlatform(dataDirectory, text);
 		Game = new Nspw(_platform);
 		_platform.CaptureState = () => _captured.CopyFrom(Game);
-		if (singleplayer is var (executable, scenario))
+		SpriteSheetPath = GameFiles.Resolve(dataDirectory, "t3.bmp");
+		if (singleplayer is var (executable, directory, scenario))
 		{
 			Game.IsSingleplayer = true;
 			Game.SingleplayerExecutable = executable;
+			_platform.SingleplayerDirectory = directory;
+			SpriteSheetPath = GameFiles.Resolve(directory, Game.SpriteSheetName);
 			Game.ScenarioNumber = (short)scenario;
 		}
 
+		Replay = replay;
+		Game.Trace = replay;
 		_thread = new Thread(RunGame) { IsBackground = true, Name = "NSPW" };
 	}
 
@@ -133,7 +150,7 @@ internal sealed class GameSession : IDisposable
 			{
 				IsQuitRequested |= down && !_previousKeyboard.IsKeyDown(key);
 			}
-			else if (!IsHeldBackDebugKey(key) && down != _previousKeyboard.IsKeyDown(key))
+			else if (!IsInputHeldBack && !IsHeldBackDebugKey(key) && down != _previousKeyboard.IsKeyDown(key))
 			{
 				Game.PostKeyboardInput(dik, down);
 				Game.SetKeyState(Game.hwndApp, vk, down);
@@ -153,13 +170,21 @@ internal sealed class GameSession : IDisposable
 		}
 	}
 
-	// The cursor, in game pixels, and the buttons, each on its own.
+	// The cursor, in game pixels, and the buttons, each on its own. While the input is held back, the cursor still
+	// moves, which changes only what is drawn and the view, which the trace gives back (TheCursorDoesNotChangeTheReplay),
+	// but the buttons are not passed.
 	private void UpdateMouse(ViewportAdapter viewportAdapter, Func<DrawingPoint, bool> isOnForm, DrawingPoint? cursor)
 	{
 		var mouse = Mouse.GetState();
 		var position = viewportAdapter.PointToScreen(mouse.Position);
 		var (x, y) = cursor is { } point ? (point.X, point.Y) : (position.X, position.Y);
 		Game.SetCursorPos(x, y);
+		if (IsInputHeldBack)
+		{
+			_previousMouse = mouse;
+			return;
+		}
+
 		var onForm = isOnForm(new DrawingPoint(position.X, position.Y));
 		UpdateButton(0, mouse.LeftButton, _previousMouse.LeftButton, onForm);
 		UpdateButton(1, mouse.RightButton, _previousMouse.RightButton, onForm);

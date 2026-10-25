@@ -33,6 +33,9 @@ The bug dates from the port of `etc1.cpp`, not from the refactoring: a landing r
 ### A selected transport crashes the port when the cursor is off the map
 With a transport selected, `DrawBattleArea` (`draw_cmbt_area.cpp`) looks up the tile under the cursor in `cmbt_map`, to show where the transport would land. If the cursor maps to a tile outside the map, such as left of the battle area while the battle area is at the left edge of the world, the index is out of range. The original reads out of bounds without failing; the port throws `IndexOutOfRangeException`, which ends the game. The desktop app passes the cursor position through even when it is outside the window.
 
+### Single-player differs from 1.22 in the last bit of a sine, cosine or arc tangent
+1.22 keeps the result of `fsin`, `fcos` and `fpatan` in an 80-bit x87 register until the next instruction uses it, and that instruction rounds only its own result to 53 bits; the port rounds the sine, cosine or arc tangent to a `double` first. The last bit of the result then differs now and then. It changes the battle only where a unit's decision rests on that bit: in 1 trace of 1.22 of 316 (s6/303), a ship that sat on its path point turned the other way. [X87Emulation.md](X87Emulation.md) has the details and plans the fix; it is not planned to be done for now.
+
 ## In the original
 These are bugs of the original that the port keeps, because changing them would make the port incompatible with the C++ build.
 

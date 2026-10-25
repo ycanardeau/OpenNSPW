@@ -9,8 +9,14 @@ public static class Functions
 	// decision(): the scenario's events and victory conditions.
 	public const uint Decision = 0x41C3C0;
 
+	// set_unit_data(int m): the data of unit m by its kind and type (speed, HP, weapons, fuel).
+	public const uint SetUnitData = 0x41E150;
+
 	// set_cpu_route(int m, double): the route of the computer's ship m to its destination.
 	public const uint SetCpuRoute = 0x42DA80;
+
+	// set_cpu_route2(int m): the route of ship m to its destination, which a ship that follows a leader takes.
+	public const uint SetCpuRoute2 = 0x42ED30;
 
 	// load_it2(char* file_name): reads a map into cmbt_map.
 	public const uint LoadMap = 0x432A30;

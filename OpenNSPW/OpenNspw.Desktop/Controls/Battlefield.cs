@@ -197,7 +197,7 @@ internal sealed class Battlefield : Control
 			if (!IsDrawn(snapshot, ref unit))
 				continue;
 
-			var id = unit.Side == Side.Japan ? SpriteId.JapanUnits : SpriteId.UnitedStatesUnits;
+			var id = snapshot.UnitSprites[m];
 			var row = unit.SpriteRow;
 			if (unit.Kind == UnitKind.Submarine && unit.IsSubmerged && snapshot.Result == GameResult.None)
 			{

@@ -31,7 +31,7 @@ public void	RestoreSurfaces()
 	IDirectDrawSurface_Restore(lpDDS_OS);
 
 	RELEASE(ref lpDDS_OS);
-	lpDDS_OS=bitmap_surface("t3.bmp");
+	lpDDS_OS=bitmap_surface(SpriteSheetName);
 
 	// ピクセルフォーマットを取得
 	DDPIXELFORMAT ddpf;

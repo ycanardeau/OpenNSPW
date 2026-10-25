@@ -245,7 +245,7 @@ public unsafe partial class Nspw
 			{
 			ref var effect = ref Effects[m];
 			effects[m] = effect.Layer!=EffectLayer.None
-				&& ( Result!=GameResult.None || (effect.Layer==EffectLayer.Lower && effect.Animation==3) || IsEffectSeen(effect.Position) );
+				&& ( (Result!=GameResult.None && (effect.Layer==EffectLayer.Upper || Rules.ResultShowsEveryLowerEffect)) || (effect.Layer==EffectLayer.Lower && effect.Animation==3) || IsEffectSeen(effect.Position) );
 			}
 	}
 
@@ -264,6 +264,13 @@ public unsafe partial class Nspw
 			ref var unit = ref Units[m];
 			shown[m]=unit.IsUsed && (unit.Side==LocalSide || unit.IsFound) && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked && IsOnShownDeck(ref unit);
 			}
+	}
+
+	// The sheet each unit is drawn from on the battlefield and on the deck (GetUnitSprites).
+	public void ReadUnitSprites(Span<SpriteId> sprites)
+	{
+		for( var m=0; m<=MaxUnitId; m++ )
+			sprites[m]=GetUnitSprites(ref Units[m]);
 	}
 
 	// The item of the combat menu in effect for the selected unit, which the host's UI shows chosen
