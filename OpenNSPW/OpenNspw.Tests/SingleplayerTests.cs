@@ -1425,4 +1425,27 @@ public class SingleplayerTests
 			all_head.SCRN_HEIGHT
 		);
 	}
+
+	// Around the map, where 1.22 reads beyond it (MapTileOrBeyond), the port's view of 1.22's memory (ByteAs122) is the
+	// emulator's memory with the state copied in.
+	[Theory]
+	[InlineData(4)]
+	[InlineData(303)]
+	public void TheMemoryAroundTheMapIsTheEmulators(int scenario)
+	{
+		const uint MapAddress = 0x443AA0;
+		using var run = new SingleplayerRun(scenario);
+		run.Frames(50);
+		var game = run.Game;
+
+		// Copies the state in, and leaves it there: plane_in_cv(0) writes nothing.
+		game.RunEmulated(OpenNspw.Singleplayer.Functions.CountPlanesIn, 0);
+
+		for (var address = MapAddress - 0x1000; address < MapAddress + 0x20000 + 0x1000; address++)
+		{
+			var emulated = game.Emulator!.At(address, 1)[0];
+			var port = game.ByteAs122(address);
+			Assert.True(emulated == port, $"0x{address:X}: emulator {emulated}, port {port}");
+		}
+	}
 }

@@ -761,6 +761,47 @@ public unsafe partial class Nspw
 		ClearBufferedOrders();
 	}
 
+	// The image of the single-player executable, for what 1.22's memory holds where the port has nothing (ByteAs122).
+	private ExecutableImage? _image122;
+
+	// lpDDSBack as the emulator holds it: the address of the port's stand-in for the surface, which SetNatives allocates
+	// second after the image, after its table of methods. 1.22's own is an address on the heap; neither half of either is
+	// 0.
+	private static uint BackBufferStandIn(ExecutableImage image) =>
+		image.ImageBase + image.ImageSize + (uint)((4 * SurfaceMethodCount + 7) & ~7);
+
+	// The byte at the address of 1.22's memory, as the emulator holds it in a single-player game once the state is copied
+	// in: the globals the port shares with it, the units in 1.22's layout, the pointers of the port's stand-ins, and
+	// elsewhere the executable's image, which the code that the port runs does not write.
+	internal byte ByteAs122(uint address)
+	{
+		foreach (var global in SharedGlobals)
+		{
+			var bytes = global.Bytes(this);
+			if (address >= global.Address && address - global.Address < bytes.Length)
+				return bytes[(int)(address - global.Address)];
+		}
+
+		if (address >= UnitAddress && address - UnitAddress < UnitCount * UnitSize)
+		{
+			Span<byte> unit = stackalloc byte[UnitSize];
+			WriteUnitAs122((int)((address - UnitAddress) / UnitSize), unit);
+			return unit[(int)((address - UnitAddress) % UnitSize)];
+		}
+
+		var image = _image122 ??= new ExecutableImage(
+			SingleplayerExecutable
+				?? throw new InvalidOperationException(
+					"The single-player executable (NSPW_122.exe) is not set."
+				)
+		);
+		if (address >= BackBufferAddress && address - BackBufferAddress < 4)
+			return BitConverter.GetBytes(BackBufferStandIn(image))[address - BackBufferAddress];
+		if (address >= FontAddress && address - FontAddress < 4)
+			return BitConverter.GetBytes(Renderer.GameFont1.Value)[address - FontAddress];
+		return image.ByteAt(address);
+	}
+
 	// The tile of cmbt_map at row, column, flat as 1.22 reads it, row by row: beyond the map, what 1.22's memory holds around
 	// it, in a single-player game, or else 0, sea.
 	internal ushort MapTileOrBeyond(int row, int column)
@@ -768,10 +809,10 @@ public unsafe partial class Nspw
 		var index = row * 256 + column;
 		if ((uint)index < 256 * 256)
 			return MapTiles[index / 256][index % 256];
-		if (Emulator is not { } emulator)
+		if (!IsSingleplayer)
 			return 0;
-		CopyIn(emulator);
-		return BitConverter.ToUInt16(emulator.At((uint)(MapAddress + index * 2), sizeof(ushort)));
+		var address = (uint)(MapAddress + index * 2);
+		return (ushort)(ByteAs122(address) | ByteAs122(address + 1) << 8);
 	}
 
 	// set_cpu_route2(m): the route of ship m to the destination just set as its path, as a ship that follows a leader
