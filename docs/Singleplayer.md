@@ -53,6 +53,11 @@ Native, because they are part of the port's own state or platform:
 | `IDirectDrawSurface7::GetDC` and `ReleaseDC` of `lpDDSBack` (`0x463AAC`), `SetTextColor`, `SetBkMode`, `SelectObject`, `TextOutA`, `wsprintfA` | The port's stand-ins, on its back buffer, so that the messages of `decision` show. `0x491600`, the font that `decision` selects, is the port's `gameFont_1` |
 | `SetWindowTextA` | `set_cpu_route`'s debug output: dropped |
 
+## The scenarios' setups
+`Scenarios122.cs` is the 37 scenario functions of 1.22, lifted from their machine code (10,106 instructions) by a symbolic execution of each: its calls (`set_new_unit` as `AddUnit`, `set_new_unit_plane` as `AddPlane`, the fleets' target lists, `load_it2`, `set_unit_data`), its writes to the units, the fleets and the globals, and its draws of `rand()` become C# statements, in 1.22's order. The compiler's idioms become their C# (`rand()%2`, the divisions by a constant through a multiplication, by a power of 2 through a shift); a branch is an `if` and a `goto`, and where two paths meet in the middle of the arguments of a call, each path makes the call itself. 1.22's `gas` is an `int`, so it is read truncated, as the emulator's copy of the state gives it.
+
+`ScenarioSetupTests` runs each emulated original and its C# from the same state, with 16 seeds of `rand()`, and compares the units, the fleets, the map, the globals and `rand()`'s next number.
+
 ## The state
 ### Layout
 1.22's structs are NSPW NET's, except `UNIT`. Its offsets were read from `set_unit_data` (`gas[0]=100`, `gas[1]=9000`, `tech=5`) and `game_init`, which clears 256 units of `0x598` bytes:

@@ -267,9 +267,10 @@ public unsafe partial class Nspw
 
 	// load_it2(file_name): the map, by the name NSPW NET gives the same file, so that it is found and recognized
 	// (CurrentMap) as in a network game. 1.22 names some of them differently in case.
-	private void LoadMapNatively(Emulator emulator)
+	// load_it2(file_name): reads a map into cmbt_map, by NSPW NET's name of the same file, as LoadScenarioFile2 recognizes
+	// the map by its name, and 1.22 spells some in lower case (Map\south_pacific.dat).
+	private void LoadMap122(string name)
 	{
-		var name = CString(emulator, emulator.Argument(0));
 		var known = new[]
 		{
 			"Map\\South_pacific.dat",
@@ -280,6 +281,11 @@ public unsafe partial class Nspw
 			known.FirstOrDefault(k => string.Equals(k, name, StringComparison.OrdinalIgnoreCase))
 				?? name
 		);
+	}
+
+	private void LoadMapNatively(Emulator emulator)
+	{
+		LoadMap122(CString(emulator, emulator.Argument(0)));
 		Bytes(ref MapTiles).CopyTo(emulator.At(MapAddress, sizeof(Array256<Array256<ushort>>)));
 	}
 
