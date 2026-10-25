@@ -461,6 +461,63 @@ public sealed partial class StrongPlayer
 		return false;
 	}
 
+	// Whether a ship of the player's has fought at close quarters lately (TryCloseQuarters), which the other orders leave
+	// it to.
+	private bool IsAtCloseQuarters(Nspw game, int m) =>
+		UnitFacts.Now(game) - _closeAt.GetValueOrDefault(m, int.MinValue / 2) < 300;
+
+	// Each destroyer of the player's within 1200 of an enemy cruiser or battleship found, while
+	// Parameters.CloseQuarters says so, closes on it: to 135 from where it will be (165 from a battleship), a step of
+	// 30° further round it each time, every CloseQuartersFrames, so that it keeps moving, as a ship that stands turns
+	// away from the enemy's within 900 (EvadeShip). A ship's guns fire at nothing nearer than 30% of their range
+	// (ShipFireGunWithoutTarget), 150 for a cruiser's (500) and 180 for a battleship's (600), or 150 for any at its
+	// target (ShipFireGunAtTarget), but 120 for a destroyer's own (400): there it hits them and they cannot hit it back,
+	// while its torpedoes, fired by themselves from 100 to 600 at a ship on their beam, go in on the way.
+	private bool TryCloseQuarters(Nspw game)
+	{
+		if (!Parameters.CloseQuarters)
+			return false;
+
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var destroyer = ref game.Units[m];
+			if (
+				!IsOwn(game, m)
+				|| destroyer.Kind != UnitKind.Destroyer
+				|| destroyer.IsSupplying
+				|| UnitFacts.IsAnchored(ref destroyer)
+				|| UnitFacts.Now(game) - _closeAt.GetValueOrDefault(m, int.MinValue / 2)
+					< CloseQuartersFrames
+			)
+				continue;
+
+			var position = destroyer.Position;
+			var target = _contacts
+				.All.Where(c =>
+					c.Kind is UnitKind.Cruiser or UnitKind.Battleship
+					&& game.Units[c.Unit].IsUsed
+					&& game.Units[c.Unit].IsFound
+					&& UnitFacts.Distance(position, c.Position) <= 1200
+				)
+				.MinBy(c => UnitFacts.Distance(position, c.Position));
+			if (target is null)
+				continue;
+
+			_closeAt[m] = UnitFacts.Now(game);
+			var at = target.Predict(CloseQuartersFrames * 2);
+			var point = PointAt(
+				at,
+				BearingTo(at, position) + 30,
+				target.Kind == UnitKind.Battleship ? 165 : 135
+			);
+			SelectAlone(m, "closing");
+			SendSelected(m, point, $"closes on {target.Kind} {target.Unit} at");
+			return true;
+		}
+
+		return false;
+	}
+
 	// While hunting carriers, once the strikes have dropped two weapons or more on a carrier found lately (CountDrops),
 	// the cruisers and destroyers screening the player's carriers leave them, one at a time, and go at it, as TryEngage
 	// then sends each, its worth first: a crippled carrier is slow to get away from them, while the player's carriers
@@ -503,6 +560,7 @@ public sealed partial class StrongPlayer
 				|| ship.Kind is not (UnitKind.Cruiser or UnitKind.Destroyer)
 				|| ship.IsSupplying
 				|| UnitFacts.IsAnchored(ref ship)
+				|| IsAtCloseQuarters(game, m)
 			)
 				continue;
 
@@ -642,6 +700,7 @@ public sealed partial class StrongPlayer
 				|| _repairing.Contains(m)
 				|| UnitFacts.IsAnchored(ref leader)
 				|| IsRinging(m)
+				|| IsAtCloseQuarters(game, m)
 				|| UnitFacts.Now(game) - _engagedAt.GetValueOrDefault(m, -EngageFrames)
 					< EngageFrames
 			)

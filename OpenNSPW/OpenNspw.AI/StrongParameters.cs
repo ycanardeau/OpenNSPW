@@ -83,6 +83,12 @@ public sealed record StrongParameters
 	// Whether a flying plane whose deck is at a fifth of its HP or less is sent to another deck (TryDivert).
 	public bool DivertFromCrippledDecks { get; init; }
 
+	// Whether destroyers fight enemy cruisers and battleships from inside their guns' least range (TryCloseQuarters).
+	public bool CloseQuarters { get; init; }
+
+	// Whether the scouts that hunt carriers fly where the map of where they most likely are says (UpdateSearchMap).
+	public bool ProbabilitySearch { get; init; }
+
 	// Whether a deck that hunts carriers keeps scouting while it knows where a carrier is (IsRemembered), its scouts kept
 	// unarmed for it; or stops, and arms them to strike, until the carrier is lost.
 	public bool KeepScouting { get; init; } = true;

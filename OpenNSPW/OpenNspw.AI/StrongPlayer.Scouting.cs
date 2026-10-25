@@ -41,8 +41,9 @@ public sealed partial class StrongPlayer
 	private double ScoutDistance(ref Unit plane) =>
 		plane.MaxSpeed * plane.FuelInterval * 100 * Parameters.ScoutFraction;
 
-	// The legs of the n-th search from a deck. While it hunts carriers, by a scout that flies out as far as `reach`:
-	// across where the carrier found last most likely is, half the way it was heading, wider the longer it has been lost,
+	// The legs of the n-th search from a deck. While it hunts carriers, by a scout that flies out as far as `reach`: to
+	// the likeliest place the map has (LikeliestPlace, with Parameters.ProbabilitySearch), and 700 each side across it;
+	// or across where the carrier found last most likely is, half the way it was heading, wider the longer it has been lost,
 	// or, lost for CarrierMemoryFrames and heading home, on its way there (WhereNow), 1500 each side; or, early in the
 	// battle, across an area where the briefing expects them, each once, the nearest first, but the ones a strike goes to
 	// (IsEarlyStrikeArea), as scenario 4's carrier starts in one of three, as far as a flight there, across and back lets
@@ -55,6 +56,12 @@ public sealed partial class StrongPlayer
 	// (TryGuideScouts).
 	private List<WorldPosition> SearchLegs(Nspw game, WorldPosition from, int n, double reach)
 	{
+		if (HuntsCarriers && LikeliestPlace(game, from, reach) is { } likeliest)
+		{
+			var side = BearingTo(from, likeliest) + 90;
+			return [likeliest, PointAt(likeliest, side, 700), PointAt(likeliest, side + 180, 700)];
+		}
+
 		var lost = _contacts
 			.All.Where(c =>
 				c.Category == UnitCategory.Ship

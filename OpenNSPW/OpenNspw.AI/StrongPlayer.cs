@@ -34,6 +34,9 @@ public sealed partial class StrongPlayer : IPlayer
 	// The frames a formation takes to form at most, before it is grouped as it is.
 	private const int RingFrames = 900;
 
+	// The frames between a destroyer's orders at close quarters (TryCloseQuarters).
+	private const int CloseQuartersFrames = 60;
+
 	// The frames before a plane sent to another deck (TryDivert) is sent again, if it still is not.
 	private const int RetargetFramesForDivert = 300;
 
@@ -103,6 +106,7 @@ public sealed partial class StrongPlayer : IPlayer
 	private readonly Dictionary<int, int> _dropsOn = [];
 	private readonly Dictionary<int, int> _submarineOrders = [];
 	private readonly Dictionary<int, int> _diverted = [];
+	private readonly Dictionary<int, int> _closeAt = [];
 	private readonly HashSet<int> _dispersed = [];
 	private readonly Dictionary<int, List<int>> _groups = [];
 	private readonly Dictionary<int, int> _sweeps = [];
@@ -404,6 +408,7 @@ public sealed partial class StrongPlayer : IPlayer
 			&& !TryFormBattleGroups(game)
 			&& !TryRepair(game)
 			&& !TryPosition(game, decks)
+			&& !TryCloseQuarters(game)
 			&& !TryDetach(game)
 			&& !TrySubmarines(game)
 			&& !TryEngage(game)
@@ -450,6 +455,7 @@ public sealed partial class StrongPlayer : IPlayer
 
 		_contacts.Update(game);
 		CountDrops(game);
+		UpdateSearchMap(game);
 		if (_clicks.IsEmpty(game))
 			Plan(game);
 
