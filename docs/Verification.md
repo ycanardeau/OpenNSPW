@@ -83,5 +83,7 @@ dotnet run --project OpenNSPW/OpenNspw.Desktop -- --replay OpenNSPW/OpenNspw.Tes
 The game starts in the trace's scenario and follows it as the test does: its seeds, the speed and the ticks of each frame, and 1.22's view. Up to the first difference its battle is 1.22's, so what it shows is the recorded battle. While it follows the trace, it takes none of the player's keys, clicks or commands, only Escape and F12 to quit; the cursor moves, which changes only what is drawn and the view, which the trace gives back (`TheCursorDoesNotChangeTheReplay`). The window's title shows the frame. At the first difference, or at the end of the trace, the title says so, the console shows the difference in full, and the game goes on as an ordinary single-player game, which the player can take over.
 
 ## Not covered yet
-- Input beyond the orders: the keys but the speed keys, and what the player's clicks change outside the orders and the combat menu, if 1.22 has any; a trace that has some shows them as its first difference. No trace of 1.22 with the player's orders has been replayed yet.
+- Input beyond the orders: the keys but the speed keys, and what the player's clicks change outside the orders and the combat menu, if 1.22 has any (landings, with a unit selected); a trace that has some shows them as its first difference. Only traces recorded while playing have them.
+- What is drawn and heard: a trace compares the battle's state and rand's state only.
+- The x87's 80-bit intermediates ([X87Emulation.md](X87Emulation.md)): doubles are compared within a millionth, so a last-bit difference shows only once it changes a decision.
 - The effects themselves, the clouds and the computer's own globals are not recorded; their random numbers are, through rand's state.
