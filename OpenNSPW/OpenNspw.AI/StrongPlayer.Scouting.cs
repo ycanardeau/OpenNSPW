@@ -42,16 +42,17 @@ public sealed partial class StrongPlayer
 		plane.MaxSpeed * plane.FuelInterval * 100 * Parameters.ScoutFraction;
 
 	// The legs of the n-th search from a deck. While it hunts carriers, by a scout that flies out as far as `reach`:
-	// across where the carrier found last most likely is, half the way it was heading, wider the longer it has been
-	// lost, or, lost for CarrierMemoryFrames and heading home, on its way there (WhereNow), 1500 each side; or, early in the battle, across an area where the briefing expects them, each once, the nearest first, but
-	// the ones a strike goes to (IsEarlyStrikeArea), as scenario 4's carrier starts in one of three, as far as a flight
-	// there, across and back lets (20% farther than `reach`, which allows for a longer way across);
-	// or back and forth across the way to an area where the briefing expects them, the areas in turn, nearest first,
-	// 25° each side, 2500 beyond the computer's strike range (3550, or 4350 as Japan) or as far as the area: a picket
-	// that a fleet coming within strike range of the deck crosses while the scout is out. Else, across an area where
-	// the enemy is expected and within ScoutReach, the areas in turn, from one side of it to the other, wider each time
-	// around; or, with no such area, an arc around the way the enemy most likely is, a new one each time, nearest that
-	// way first. The scout comes home sooner if its fuel runs low (TryGuideScouts).
+	// across where the carrier found last most likely is, half the way it was heading, wider the longer it has been lost,
+	// or, lost for CarrierMemoryFrames and heading home, on its way there (WhereNow), 1500 each side; or, early in the
+	// battle, across an area where the briefing expects them, each once, the nearest first, but the ones a strike goes to
+	// (IsEarlyStrikeArea), as scenario 4's carrier starts in one of three, as far as a flight there, across and back lets
+	// (20% farther than `reach`, which allows for a longer way across); or back and forth across the way to an area where
+	// the briefing expects them, the areas in turn, nearest first, 25° each side, 2500 beyond the computer's strike range
+	// (3550, or 4350 as Japan) or as far as the area: a picket that a fleet coming within strike range of the deck crosses
+	// while the scout is out. Else, across an area where the enemy is expected and within ScoutReach, the areas in turn,
+	// from one side of it to the other, wider each time around; or, with no such area, an arc around the way the enemy
+	// most likely is, a new one each time, nearest that way first. The scout comes home sooner if its fuel runs low
+	// (TryGuideScouts).
 	private List<WorldPosition> SearchLegs(Nspw game, WorldPosition from, int n, double reach)
 	{
 		var lost = _contacts
@@ -144,12 +145,26 @@ public sealed partial class StrongPlayer
 		return [PointAt(from, bearing - 20, ScoutRange), PointAt(from, bearing + 20, ScoutRange)];
 	}
 
+	// Whether the player, hunting carriers, knows where an enemy carrier is: one found it remembers (IsRemembered).
+	private bool KnowsCarrier(Nspw game) =>
+		HuntsCarriers
+		&& _contacts.All.Any(c =>
+			c.Category == UnitCategory.Ship
+			&& IsCounted(c.Kind)
+			&& game.Units[c.Unit].IsUsed
+			&& IsRemembered(game, c)
+		);
+
 	// The planes a deck keeps to scout, unarmed ones first, then attackers before bombers: two of a deck with six
 	// attackers and bombers or more, one of a deck with two or more, none of the others, and three in all at most;
 	// while hunting carriers, which takes every torpedo a deck can spare, two from eight, one from seven, and a scout
-	// lost is replaced by another plane of its deck, once one is back on it.
+	// lost is replaced by another plane of its deck, once one is back on it; none while a carrier is known
+	// (KnowsCarrier) and the player does not keep scouting (Parameters.KeepScouting), so that they strike.
 	private List<int> ScoutsOf(Nspw game, int deck)
 	{
+		if (!Parameters.KeepScouting && KnowsCarrier(game))
+			return [];
+
 		if (!_scoutsOf.TryGetValue(deck, out var scouts))
 		{
 			var strikers = ParkedOn(game, deck, n => UnitFacts.IsStrikePlane(game.Units[n].Kind));
@@ -208,7 +223,8 @@ public sealed partial class StrongPlayer
 	// each flight; TryGuideScouts flies them on. While it hunts carriers: while no carrier has been found lately, one
 	// every ScoutFrames while another is on its way out, so that one is always out; and one to relieve the ones keeping
 	// a carrier in sight once they have fuel for little more than coming home, or when none is. There is nothing to
-	// search for when the briefing names every place the enemy is, within the strikes' reach.
+	// search for when the briefing names every place the enemy is, within the strikes' reach; nor, unless the player
+	// keeps scouting (Parameters.KeepScouting), while it knows where a carrier is (KnowsCarrier).
 	private bool TryScout(Nspw game, List<int> decks)
 	{
 		var relieves =
@@ -229,6 +245,7 @@ public sealed partial class StrongPlayer
 					&& UnitFacts.Now(game) - c.Frame < 300
 				)
 			)
+			|| (!Parameters.KeepScouting && KnowsCarrier(game))
 			|| (
 				_knowledge.Enemy.Count > 0
 				&& _knowledge.Enemy.All(a =>

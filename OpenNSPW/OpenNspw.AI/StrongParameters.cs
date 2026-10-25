@@ -70,6 +70,17 @@ public sealed record StrongParameters
 	// The share of its range on a full tank that a scout flies out (ScoutDistance).
 	public double ScoutFraction { get; init; } = 0.36;
 
+	// Whether the submarines, while hunting carriers, sail across the way of the carriers found (TrySubmarines).
+	public bool UseSubmarines { get; init; }
+
+	// Whether a strike flies straight at its target when the way round by its waypoint is longer than its planes'
+	// reach (Waypoint).
+	public bool StraightWhenFar { get; init; }
+
+	// Whether a deck that hunts carriers keeps scouting while it knows where a carrier is (IsRemembered), its scouts kept
+	// unarmed for it; or stops, and arms them to strike, until the carrier is lost.
+	public bool KeepScouting { get; init; } = true;
+
 	// What a strike that hunts carriers attacks.
 	public Targeting Targeting { get; init; } = Targeting.Carriers;
 

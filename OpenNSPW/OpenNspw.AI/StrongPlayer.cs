@@ -34,6 +34,9 @@ public sealed partial class StrongPlayer : IPlayer
 	// The frames a formation takes to form at most, before it is grouped as it is.
 	private const int RingFrames = 900;
 
+	// The frames between a submarine's orders, as the carrier it goes at sails on.
+	private const int SubmarineFrames = 300;
+
 	// The frames between a carrier's moves.
 	private const int PositionFrames = 150;
 
@@ -95,6 +98,7 @@ public sealed partial class StrongPlayer : IPlayer
 	private readonly Dictionary<int, WorldPosition> _holding = [];
 	private readonly Dictionary<int, (int Target, int Ammo)> _aimedAt = [];
 	private readonly Dictionary<int, int> _dropsOn = [];
+	private readonly Dictionary<int, int> _submarineOrders = [];
 	private readonly HashSet<int> _dispersed = [];
 	private readonly Dictionary<int, List<int>> _groups = [];
 	private readonly Dictionary<int, int> _sweeps = [];
@@ -396,6 +400,7 @@ public sealed partial class StrongPlayer : IPlayer
 			&& !TryRepair(game)
 			&& !TryPosition(game, decks)
 			&& !TryDetach(game)
+			&& !TrySubmarines(game)
 			&& !TryEngage(game)
 			&& !TryPatrol(game, decks)
 			&& !TryArm(game, decks)

@@ -201,13 +201,13 @@ public sealed partial class StrongPlayer
 		game.CpuSide == Side.Japan ? 4350 : 3550;
 
 	// What a carrier keeps its distance from, each with the distance: the enemy's carriers found, where they were last
-	// found, or, heading home (HomeOf) and lost from sight for CarrierMemoryFrames, where they would be by now, which the carrier follows to keep them within its
-	// planes' reach, the computer's strike range (3550, or 4350 as Japan) and, but those, more for each frame since, as they may have come
-	// on by half their speed, up to 3000, or, while hunting carriers, at their full speed (0.7 a tick), up to 1000:
-	// farther, the carrier would sail out of its own planes' reach before the scouts find them again; or, none found
-	// yet, the areas where the briefing expects them, if the victory conditions count them, the range and the area's
-	// radius; and the places the briefing names, whose air bases strike 1.5 times as far (ComputerPlayer.md, Air
-	// strikes). Whether each is known, found or a place, or only expected.
+	// found, or, heading home (HomeOf) and lost from sight for CarrierMemoryFrames, where they would be by now, which the
+	// carrier follows to keep them within its planes' reach, the computer's strike range (3550, or 4350 as Japan) and, but
+	// those, more for each frame since, as they may have come on by half their speed, up to 3000, or, while hunting
+	// carriers, at their full speed (0.7 a tick), up to 1000: farther, the carrier would sail out of its own planes' reach
+	// before the scouts find them again; or, none found yet, the areas where the briefing expects them, if the victory
+	// conditions count them, the range and the area's radius; and the places the briefing names, whose air bases strike
+	// 1.5 times as far (ComputerPlayer.md, Air strikes). Whether each is known, found or a place, or only expected.
 	private List<(WorldPosition Position, double Range, bool IsKnown)> Threats(Nspw game)
 	{
 		var range = ComputerStrikeRange(game);
@@ -545,6 +545,85 @@ public sealed partial class StrongPlayer
 				- ((UnitFacts.Now(game) - c.Frame) / 300.0)
 			)
 			.FirstOrDefault();
+
+	// Each submarine of the player's, while it hunts carriers and Parameters.UseSubmarines says so, sails every
+	// SubmarineFrames at the nearest carrier it remembers (IsRemembered), where it would be as the submarine gets there,
+	// 300 to the side of its way that the submarine is on; or, knowing of none, at the nearest area where the briefing
+	// expects the enemy's fleet. A submarine dives as it finds any unit, and fires its torpedoes by itself at a ship found
+	// within 100 to 600 (500 as the United States) that it has on its beam (ShipFireTorpedoWithoutTarget), so it needs
+	// only to be across the carrier's way: as in 201, where I-168 finished Yorktown.
+	private bool TrySubmarines(Nspw game)
+	{
+		if (!HuntsCarriers || !Parameters.UseSubmarines)
+			return false;
+
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var submarine = ref game.Units[m];
+			if (
+				!IsOwn(game, m)
+				|| submarine.Kind != UnitKind.Submarine
+				|| submarine.IsSupplying
+				|| submarine.GroupLeader != 0
+				|| UnitFacts.Now(game) - _submarineOrders.GetValueOrDefault(m, int.MinValue / 2)
+					< SubmarineFrames
+			)
+				continue;
+
+			var position = submarine.Position;
+			var speed = Math.Max(submarine.MaxSpeed, 0.2);
+			var carrier = _contacts
+				.All.Where(c =>
+					c.Category == UnitCategory.Ship
+					&& IsCounted(c.Kind)
+					&& game.Units[c.Unit].IsUsed
+					&& IsRemembered(game, c)
+				)
+				.MinBy(c => UnitFacts.Distance(position, WhereNow(game, c, 0)));
+			WorldPosition aim;
+			if (carrier is not null)
+			{
+				var at = WhereNow(
+					game,
+					carrier,
+					UnitFacts.Distance(position, WhereNow(game, carrier, 0)) / speed
+				);
+				var side = new[] { 90.0, -90.0 }
+					.Select(turn => PointAt(at, carrier.Direction + turn, 300))
+					.MinBy(p => UnitFacts.Distance(p, position));
+				aim = side;
+			}
+			else if (
+				_knowledge
+					.Enemy.Where(a => !a.IsPlace)
+					.MinBy(a => UnitFacts.Distance(position, a.Center)) is
+				{ } area
+			)
+			{
+				aim = area.Center;
+			}
+			else
+			{
+				continue;
+			}
+
+			_submarineOrders[m] = UnitFacts.Now(game);
+			if (UnitFacts.Distance(UnitFacts.FinalDestination(ref submarine), aim) < 200)
+				continue;
+
+			SelectAlone(m, "hunting");
+			return SailSelected(
+					game,
+					m,
+					aim,
+					carrier is null
+						? "sails toward the enemy's fleet at"
+						: $"sails across {carrier.Kind} {carrier.Unit}'s way at"
+				) || true;
+		}
+
+		return false;
+	}
 
 	// Each surface group of the player's, led by a warship, goes at the best enemy ship it knows of, all its ships
 	// firing at it once it is found (ApplyOrders gives the formation the leader's target), and keeps at it while it is

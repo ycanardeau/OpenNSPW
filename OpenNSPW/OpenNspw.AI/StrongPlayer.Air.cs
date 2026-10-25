@@ -22,13 +22,43 @@ public sealed partial class StrongPlayer
 		});
 	}
 
+	// How far a plane flies out to strike a place: 45% of its range on a full tank, to come back; a strategic bomber,
+	// 62%, as its mission is to get there.
+	private static double Reach(ref Unit plane) =>
+		plane.MaxSpeed * plane.FuelInterval * 100 * (plane.Kind == UnitKind.Bomber ? 0.62 : 0.45);
+
+	// A strike's waypoint to one side of its way to a point, or, with Parameters.StraightWhenFar, the point itself if the
+	// way round is longer than the planes' reach, which leaves them the fuel to find the target, attack it and come home:
+	// at the edge of their range (201, where the American carrier is 8000 away), a strike that flies round turns home
+	// short of it.
+	private WorldPosition Waypoint(
+		WorldPosition from,
+		WorldPosition point,
+		double side,
+		double offset,
+		double reach
+	)
+	{
+		var bearing = BearingTo(from, point);
+		var waypoint = PointAt(
+			PointAt(from, bearing, UnitFacts.Distance(from, point) * 0.6),
+			bearing + side,
+			offset
+		);
+		return
+			Parameters.StraightWhenFar
+			&& UnitFacts.Distance(from, waypoint) + UnitFacts.Distance(waypoint, point) > reach
+			? point
+			: waypoint;
+	}
+
 	// Launches the selected parked planes, led by `leader`, at an enemy unit, by a waypoint 60% of the way there and
 	// to one side, so that the strike does not fly into the enemy's own, whose fighters fire at what flies before them:
 	// while hunting carriers, 2000 to the other side from the enemy's attackers and bombers found in the air lately; or
-	// 1000 to one side, the other side each strike. TryDirect flies it on from the waypoint to where the target is then.
+	// 1000 to one side, the other side each strike, unless the way round is too long (Waypoint). TryDirect flies it on
+	// from the waypoint to where the target is then.
 	private void LaunchStrike(Nspw game, int leader, Contact target, WorldPosition from)
 	{
-		var bearing = BearingTo(from, target.Position);
 		var raid = _contacts
 			.All.Where(c =>
 				HuntsCarriers
@@ -48,11 +78,7 @@ public sealed partial class StrongPlayer
 					: 90,
 				Parameters.SideOffset
 			);
-		var waypoint = PointAt(
-			PointAt(from, bearing, UnitFacts.Distance(from, target.Position) * 0.6),
-			bearing + side,
-			offset
-		);
+		var waypoint = Waypoint(from, target.Position, side, offset, Reach(ref game.Units[leader]));
 		_clicks.Enqueue(g =>
 		{
 			if (g.SelectedUnit != leader)
@@ -70,15 +96,17 @@ public sealed partial class StrongPlayer
 
 	// Launches the selected parked planes, led by `leader`, toward a point where an enemy is thought to be; while
 	// hunting carriers, by a waypoint 60% of the way there and 2000 to one side, the other side each strike, as their
-	// own strike most likely comes straight the other way (LaunchStrike): TryFlyOnFromWaypoint flies it on from there.
-	private void LaunchToward(int leader, WorldPosition point, WorldPosition from)
+	// own strike most likely comes straight the other way (LaunchStrike), unless the way round is longer than the planes'
+	// `reach` (Waypoint): TryFlyOnFromWaypoint flies it on from there.
+	private void LaunchToward(int leader, WorldPosition point, WorldPosition from, double reach)
 	{
-		var bearing = BearingTo(from, point);
 		var waypoint = HuntsCarriers
-			? PointAt(
-				PointAt(from, bearing, UnitFacts.Distance(from, point) * 0.6),
-				bearing + (_lastBlindStrike % 2 == 0 ? 90 : -90),
-				Parameters.SideOffset
+			? Waypoint(
+				from,
+				point,
+				_lastBlindStrike % 2 == 0 ? 90 : -90,
+				Parameters.SideOffset,
+				reach
 			)
 			: point;
 		_clicks.Enqueue(g =>
@@ -381,8 +409,8 @@ public sealed partial class StrongPlayer
 	// Where an enemy unit found most likely is `ticks` from now, on the heading it was found on, for at most 1500 ticks
 	// from when it was found: a ship zigzags, and one lost from sight long ago is better looked for where it was; a
 	// carrier heading home (HomeOf) and lost for CarrierMemoryFrames, on its way there after those 1500 ticks, at
-	// HomewardSpeed or faster, until it is there. A carrier sails away from the enemy within its strike range, toward home as often as
-	// not, which is why it is thought to be going home only once it has been lost that long.
+	// HomewardSpeed or faster, until it is there. A carrier sails away from the enemy within its strike range, toward home
+	// as often as not, which is why it is thought to be going home only once it has been lost that long.
 	private WorldPosition WhereNow(Nspw game, Contact contact, double ticks)
 	{
 		var elapsed = ((UnitFacts.Now(game) - contact.Frame) * 2) + ticks;
@@ -987,8 +1015,8 @@ public sealed partial class StrongPlayer
 	}
 
 	// A strike that finds only ships the victory conditions do not count, while it hunts carriers, flies on from its
-	// waypoint to the nearest carrier it knows of within 5000, where it would be when the strike gets there; or, knowing of none, to
-	// the middle of the nearest ships found within 2500, where the carrier they screen most likely is.
+	// waypoint to the nearest carrier it knows of within 5000, where it would be when the strike gets there; or, knowing
+	// of none, to the middle of the nearest ships found within 2500, where the carrier they screen most likely is.
 	private bool TryCloseOnFormation(Nspw game, int leader)
 	{
 		ref var unit = ref game.Units[leader];
@@ -1223,11 +1251,6 @@ public sealed partial class StrongPlayer
 			.FirstOrDefault();
 	}
 
-	// How far a plane flies out to strike a place: 45% of its range on a full tank, to come back; a strategic bomber,
-	// 62%, as its mission is to get there.
-	private static double Reach(ref Unit plane) =>
-		plane.MaxSpeed * plane.FuelInterval * 100 * (plane.Kind == UnitKind.Bomber ? 0.62 : 0.45);
-
 	// A place the briefing names, within reach of a deck, where nothing has been found lately and no strike went
 	// lately: a strike goes there to find what to attack, as a player strikes Pearl Harbor without seeing it first.
 	private WorldPosition? PlaceToStrike(Nspw game, int deck, double reach)
@@ -1450,7 +1473,7 @@ public sealed partial class StrongPlayer
 					_lastBlindStrike = UnitFacts.Now(game);
 					if (pointWave is null)
 						_pointWave = (origin!.Value, UnitFacts.Now(game));
-					LaunchToward(ready[0], origin!.Value, game.Units[deck].Position);
+					LaunchToward(ready[0], origin!.Value, game.Units[deck].Position, reach);
 				}
 
 				return true;
@@ -1551,7 +1574,7 @@ public sealed partial class StrongPlayer
 			var group = fighters.Take(fighters.Count - 1).ToList();
 			ShowDeck(deck);
 			SelectPlanes(group[0], group.Skip(1));
-			LaunchToward(group[0], area.Center, position);
+			LaunchToward(group[0], area.Center, position, reach);
 			return true;
 		}
 
