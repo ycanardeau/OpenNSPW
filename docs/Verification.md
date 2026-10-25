@@ -32,13 +32,13 @@ The recorder runs `NSPW_122.exe` under the Windows debugger API, with breakpoint
 1. Build it, on Windows or elsewhere, as a single 32-bit Windows executable:
 
     ```
-    dotnet publish OpenNSPW/OpenNspw.Recorder122 -c Release -o recorder
+    dotnet publish OpenNSPW/OpenNspw.Recorder122 -c Release -o artifacts/recorder
     ```
 
 2. On Windows, run it with 1.22's executable and a directory for the traces:
 
     ```
-    recorder\OpenNspw.Recorder122.exe Original\Nspw122\NSPW_122.exe traces
+    artifacts\recorder\OpenNspw.Recorder122.exe Original\Nspw122\NSPW_122.exe artifacts\traces
     ```
 
 3. Choose a scenario in 1.22, and play it with the mouse: orders on the battle area and the combat menu, the speed keys (F7 slower, F8 faster, F9 back to 1), and the view, with the cursor at an edge or on the minimap. Press no other key: the replay gives the port only the speed, the view and the orders. Let the battle run, as long as wanted.
@@ -48,7 +48,7 @@ The recorder runs `NSPW_122.exe` under the Windows debugger API, with breakpoint
 With `--scenario <n>`, or `--all` for every scenario one after another, the recorder plays 1.22 itself:
 
 ```
-recorder\OpenNspw.Recorder122.exe Original\Nspw122\NSPW_122.exe traces --scenario 10 --speed 100 --frames 2000
+artifacts\recorder\OpenNspw.Recorder122.exe Original\Nspw122\NSPW_122.exe artifacts\traces --scenario 10 --speed 100 --frames 2000
 ```
 
 It goes past the title screen as a click does (the title's button, `0x463B30`, set to 3 where the title tests it, `0x40AD39`), and starts the scenario where the scenario screen tests for a battle to start (`0x40C613`), after its rows and its click have set `sinario` and the mode: there it writes the scenario and the mode 10, and `game_init` starts the battle as after a click. `--speed` sets the speed at the start of each frame, as the speed keys do (1.22 goes up to 100). It closes 1.22 at the start of a frame once `--frames` frames are recorded, or once the battle has a result (`game_end`, `0x483B44`), so that the trace ends with a whole frame, and says why.
