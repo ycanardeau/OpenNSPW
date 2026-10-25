@@ -297,12 +297,29 @@ public sealed partial class StrongPlayer
 			&& UnitFacts.Distance(c.Position, contact.Position) <= 1500
 		);
 
+	// Whether a point is within `distance` of a ship of the player's.
+	private static bool IsNearOwnShip(Nspw game, WorldPosition point, double distance)
+	{
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			if (
+				IsOwn(game, m)
+				&& game.Units[m].Category == UnitCategory.Ship
+				&& UnitFacts.Distance(game.Units[m].Position, point) <= distance
+			)
+				return true;
+		}
+
+		return false;
+	}
+
 	// The best target found for a flying plane of the player's: for an attacker or a bomber, an enemy ship its weapon
 	// can attack, within 2500, by its worth, the one it was sent at favored, the ones other strikes attack already
 	// less; while it hunts carriers, only the ones the victory conditions count (TakesAnyTarget), the nearest, as every
 	// carrier must be sunk and the nearest is the one the strike reaches with the most fuel left, or, as
 	// Parameters.Targeting says, the escorts around them first (IsEscortToStrike); for a fighter, an enemy plane in the
-	// air, attackers and bombers first, within 1500.
+	// air, attackers and bombers first, or, with Parameters.FightersFirst, the ones within 1500 of a ship of the
+	// player's, then fighters, within 1500.
 	private Contact? ChooseTargetInFlight(Nspw game, int plane)
 	{
 		ref var unit = ref game.Units[plane];
@@ -317,7 +334,12 @@ public sealed partial class StrongPlayer
 					&& game.Units[c.Unit].PlaneState == UnitState.Flying
 					&& UnitFacts.Distance(position, c.Position) <= 1500
 				)
-				.OrderByDescending(c => UnitFacts.IsStrikePlane(c.Kind))
+				.OrderByDescending(c =>
+					!Parameters.FightersFirst ? (UnitFacts.IsStrikePlane(c.Kind) ? 1 : 0)
+					: UnitFacts.IsStrikePlane(c.Kind) && IsNearOwnShip(game, c.Position, 1500) ? 2
+					: c.Kind == UnitKind.Fighter ? 1
+					: 0
+				)
 				.ThenBy(c => UnitFacts.Distance(position, c.Position))
 				.FirstOrDefault()
 			: _contacts

@@ -93,6 +93,11 @@ public sealed record StrongParameters
 	// (ApproachBearing): a torpedo across a ship meets all its length, and one from ahead or astern little of it.
 	public bool BeamApproach { get; init; }
 
+	// Whether fighters go for the enemy's fighters before its attackers and bombers, but those within 1500 of a ship of
+	// the player's, about to drop (ChooseTargetInFlight): the escorting fighters shoot down the fighters that go for
+	// the attackers.
+	public bool FightersFirst { get; init; }
+
 	// Whether a deck that hunts carriers keeps scouting while it knows where a carrier is (IsRemembered), its scouts kept
 	// unarmed for it; or stops, and arms them to strike, until the carrier is lost.
 	public bool KeepScouting { get; init; } = true;
