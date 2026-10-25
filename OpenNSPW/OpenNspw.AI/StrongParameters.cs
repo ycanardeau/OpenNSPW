@@ -33,6 +33,10 @@ public sealed record StrongParameters
 	// The fewest planes a deck strikes with, unless it has fewer.
 	public int MinStrike { get; init; } = 3;
 
+	// The share of a deck's attackers and bombers, but its scouts, that must be ready before it strikes, those in the
+	// air counted: 0 strikes from MinStrike, 1 waits for all, so that the escorts' guns are spread over more planes.
+	public double StrikeShare { get; init; }
+
 	// The share of a deck's fighters kept back from escorting its strikes, to meet the enemy's.
 	public double FightersKeptBack { get; init; } = 0.5;
 

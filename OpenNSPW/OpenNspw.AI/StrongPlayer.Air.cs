@@ -1392,6 +1392,8 @@ public sealed partial class StrongPlayer
 								ready.Count < Parameters.MinStrike
 								&& ready.Count < StrikePlanesOf(game, deck)
 							)
+							|| ready.Count
+								< Math.Ceiling(StrikePlanesOf(game, deck) * Parameters.StrikeShare)
 						)
 					)
 				)
