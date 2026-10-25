@@ -164,6 +164,12 @@ Operations on them must compute exactly what the C++ computes, operation by oper
 - `WorldPosition - WorldPosition` is `new WorldVector(a.X - b.X, a.Y - b.Y)`, the same two subtractions. The original never uses `sqrt` for distances: about 40 places take `atan2(wrk_y,wrk_x)*RAD_to`, fold the angle into 0 to 90 degrees, and divide `wrk_x` by `cos(drctn*a_PI)`. `WorldVector.Length` is exactly that sequence, and replaces only the places that compute exactly that.
 - Each value type has unit tests that check its results bit for bit against the inline expressions it replaces.
 
+The value types are `readonly struct`s with public `readonly` fields, not `record struct`s, though a record would write their `Equals`, `GetHashCode`, `==` and `!=`:
+
+- A record's `==` is its `Equals`, which compares a `double` with `double.Equals`, where NaN equals NaN and the C++'s `==` makes it equal nothing. A record cannot declare a `==` of its own. `Angle` keeps `double`'s two: `==` as the C++ compares, `Equals` as `double.Equals`, so that an angle can be a key. A type that has no `==` (`WorldPosition`, `WorldVector`) has none on purpose, and a record would give it the wrong one.
+- A record's positional parameter is a property, whose field is named `<Degrees>k__BackingField`. The tests of the layout (`TypeLayout`, `OriginalNames`) and the comparison with the traces of 1.22 (`Trace122Layout`, which names a unit's heading `Direction.Degrees`) read the fields' names.
+- A record would save little: the arithmetic, the comparisons and the conversions are written by hand either way. If a type's operators become many, a source generator can write them, with `==` as the C++ compares and the fields as they are.
+
 `Bool32` keeps the integer: `implicit operator bool` is `Value != 0`, and comparisons with `1` or `2` stay possible. A `BOOL` field is converted only when every read of it is a truth test, or the comparisons are kept. For example, `unit[m].info[6]` (submerged) is compared with `1` in one place and with `0` in others.
 
 Unit numbers are stored as `short` (`the_slct_unit`, `ltl_ldr`), as `int` (`info[1]`, `arm[2]`, `fire.used`) and as `byte` (network messages). `UnitId` is exposed by accessors over that storage, never by changing its width:
