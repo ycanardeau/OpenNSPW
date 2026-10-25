@@ -269,6 +269,12 @@ public sealed partial class StrongPlayer
 		}
 	}
 
+	// Whether a carrier found is thought to be out of the fight, at a fifth of its HP or less, where it can neither
+	// launch nor take its planes back (UnitFacts.CanLaunch, MoveUnit): the player sees no enemy's damage, so it reckons
+	// it from the weapons it saw dropped on it (CountDrops), six in ten hitting, for 7 HP each.
+	private bool IsThoughtCrippled(Nspw game, Contact contact) =>
+		_dropsOn.GetValueOrDefault(contact.Unit) * 0.6 * 7 >= game.Units[contact.Unit].MaxHP * 0.8;
+
 	// Whether a strike plane may take a target the victory conditions do not count: when they count no carriers, or when
 	// it has fuel left for little more than coming home.
 	private bool TakesAnyTarget(Nspw game, int plane) =>
@@ -325,7 +331,12 @@ public sealed partial class StrongPlayer
 					HuntsCarriers
 						? (
 							IsEscortToStrike(game, c) ? 200
-							: IsCounted(c.Kind) ? 100
+							: IsCounted(c.Kind)
+								? (
+									Parameters.SpareCrippled && IsThoughtCrippled(game, c)
+										? 50
+										: 100
+								)
 							: 0
 						) - (UnitFacts.Distance(position, c.Position) / 100)
 						: Value(c.Kind)
@@ -1106,6 +1117,64 @@ public sealed partial class StrongPlayer
 		return false;
 	}
 
+	// Each flying plane of the player's whose deck is at a fifth of its HP or less, where no plane lands (MoveUnit), or
+	// gone, is given the nearest deck of the player's that can take it, as a click on a deck with the plane selected
+	// does (ApplyOrders): a bomber only an air base; while Parameters.DivertFromCrippledDecks says so, once every
+	// RetargetFramesForDivert. It would circle its own until its fuel ran out.
+	private bool TryDivert(Nspw game)
+	{
+		if (!Parameters.DivertFromCrippledDecks)
+			return false;
+
+		for (var n = 1; n <= game.MaxUnitId; n++)
+		{
+			ref var plane = ref game.Units[n];
+			if (
+				!IsOwn(game, n)
+				|| plane.Category != UnitCategory.Plane
+				|| plane.PlaneState != UnitState.Flying
+				|| (
+					IsOwn(game, plane.Carrier)
+					&& game.Units[plane.Carrier].HP > game.Units[plane.Carrier].MaxHP * 0.2
+				)
+				|| UnitFacts.Now(game) - _diverted.GetValueOrDefault(n, int.MinValue / 2)
+					< RetargetFramesForDivert
+			)
+				continue;
+
+			var position = plane.Position;
+			var isBomber = plane.Kind == UnitKind.Bomber;
+			var deck = Decks(game)
+				.Where(d =>
+					game.Units[d].HP > game.Units[d].MaxHP * 0.2
+					&& game.Units[d].BuildTime == 0
+					&& (!isBomber || game.Units[d].Kind == UnitKind.AirBase)
+				)
+				.OrderBy(d => UnitFacts.Distance(game.Units[d].Position, position))
+				.FirstOrDefault();
+			if (deck == 0)
+				continue;
+
+			var flying = n;
+			_diverted[flying] = UnitFacts.Now(game);
+			SelectFlying(flying, "diverting");
+			_clicks.Enqueue(g =>
+			{
+				if (g.SelectedUnit != flying)
+					return GiveUp(g, $"diverting {flying}: selected {g.SelectedUnit}");
+				g.Commands.ClickUnit(deck);
+				Log?.Invoke(
+					$"{UnitFacts.Now(g)}: {g.Units[flying].Kind} {flying} lands on {g.Units[deck].Kind} {deck} instead"
+				);
+				return true;
+			});
+			Deselect();
+			return true;
+		}
+
+		return false;
+	}
+
 	// A flying plane of the player's that leads its formation, armed and with no target in sight, given the best target
 	// near it: the formation is selected with it, and takes the target too (ApplyOrders).
 	private bool TryDirect(Nspw game)
@@ -1224,7 +1293,8 @@ public sealed partial class StrongPlayer
 
 	// The best enemy found lately within reach of a deck's planes armed with a weapon, or null; while the strikes hunt
 	// carriers, a carrier remembered (IsRemembered), where it most likely is now, within 85% of the planes'
-	// `reach`, which leaves fuel to look for it and to come round to its side, the nearest first.
+	// `reach`, which leaves fuel to look for it and to come round to its side, the nearest first, or, with
+	// Parameters.SpareCrippled, the nearest of those not thought out of the fight (IsThoughtCrippled) first.
 	private Contact? ChooseTarget(Nspw game, int deck, FireKind weapon, double reach)
 	{
 		var position = game.Units[deck].Position;
@@ -1246,6 +1316,7 @@ public sealed partial class StrongPlayer
 			.OrderByDescending(c =>
 				HuntsCarriers
 					? -UnitFacts.Distance(position, WhereNow(game, c, 0))
+						- (Parameters.SpareCrippled && IsThoughtCrippled(game, c) ? 100_000 : 0)
 					: Value(c.Kind) - (UnitFacts.Distance(position, c.Position) / 2000)
 			)
 			.FirstOrDefault();

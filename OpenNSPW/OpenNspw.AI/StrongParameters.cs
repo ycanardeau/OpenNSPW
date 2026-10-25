@@ -77,6 +77,12 @@ public sealed record StrongParameters
 	// reach (Waypoint).
 	public bool StraightWhenFar { get; init; }
 
+	// Whether strikes that hunt carriers go first for the ones not thought out of the fight (IsThoughtCrippled).
+	public bool SpareCrippled { get; init; }
+
+	// Whether a flying plane whose deck is at a fifth of its HP or less is sent to another deck (TryDivert).
+	public bool DivertFromCrippledDecks { get; init; }
+
 	// Whether a deck that hunts carriers keeps scouting while it knows where a carrier is (IsRemembered), its scouts kept
 	// unarmed for it; or stops, and arms them to strike, until the carrier is lost.
 	public bool KeepScouting { get; init; } = true;

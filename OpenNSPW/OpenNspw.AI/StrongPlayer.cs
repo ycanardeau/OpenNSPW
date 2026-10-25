@@ -34,6 +34,9 @@ public sealed partial class StrongPlayer : IPlayer
 	// The frames a formation takes to form at most, before it is grouped as it is.
 	private const int RingFrames = 900;
 
+	// The frames before a plane sent to another deck (TryDivert) is sent again, if it still is not.
+	private const int RetargetFramesForDivert = 300;
+
 	// The frames between a submarine's orders, as the carrier it goes at sails on.
 	private const int SubmarineFrames = 300;
 
@@ -99,6 +102,7 @@ public sealed partial class StrongPlayer : IPlayer
 	private readonly Dictionary<int, (int Target, int Ammo)> _aimedAt = [];
 	private readonly Dictionary<int, int> _dropsOn = [];
 	private readonly Dictionary<int, int> _submarineOrders = [];
+	private readonly Dictionary<int, int> _diverted = [];
 	private readonly HashSet<int> _dispersed = [];
 	private readonly Dictionary<int, List<int>> _groups = [];
 	private readonly Dictionary<int, int> _sweeps = [];
@@ -385,6 +389,7 @@ public sealed partial class StrongPlayer : IPlayer
 			!TryIntercept(game, decks)
 			&& !TryGuideScouts(game)
 			&& !TryBingo(game)
+			&& !TryDivert(game)
 			&& !TrySplitAttack(game)
 			&& !TryDisperse(game)
 			&& !TryApproach(game)
