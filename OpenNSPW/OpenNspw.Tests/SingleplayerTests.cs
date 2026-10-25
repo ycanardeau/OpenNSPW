@@ -1448,4 +1448,20 @@ public class SingleplayerTests
 			Assert.True(emulated == port, $"0x{address:X}: emulator {emulated}, port {port}");
 		}
 	}
+
+	// A single-player game runs none of 1.22's code: its setups, its computer and its victory conditions are C#, and the
+	// emulator is created only by the tests that compare them with 1.22's own.
+	[Theory]
+	[InlineData(3)]
+	[InlineData(203)]
+	[InlineData(303)]
+	[InlineData(304)]
+	public void TheGameRunsWithoutTheEmulator(int scenario)
+	{
+		using var run = new SingleplayerRun(scenario);
+		run.Frames(500);
+
+		Assert.Equal(GameMode.Battle, run.Game.Mode);
+		Assert.False(run.Game.HasEmulator);
+	}
 }

@@ -1,12 +1,13 @@
 # Single-player
 How OpenNSPW plays the single-player game of NSPW 1.22 (`Original/Nspw122/NSPW_122.exe`) against the computer.
 
-The NSPW NET source has no single-player code: the computer's strategy, the single-player scenarios and their victory conditions exist only as machine code in the single-player executable. OpenNSPW runs that machine code on [Enzan](../Enzan), translated to C# by the [Disassembler](../Disassembler), on the port's own state. Everything else (the battle, drawing, input) is the port of NSPW NET.
+The NSPW NET source has no single-player code: the computer's strategy, the single-player scenarios and their victory conditions exist only as machine code in the single-player executable. OpenNSPW rewrites that machine code as C#, on the port's own state: the scenarios' setups (`Scenarios122.cs`), the computer (`ComputerStrategy.cs`, `ComputerPlayer.cs`) and the victory conditions. Each rewrite is tested against the original, run on [Enzan](../Enzan) as translated by the [Disassembler](../Disassembler): a game does not use the emulator, which only the tests create (`Nspw.Emulator`). Everything else (the battle, drawing, input) is the port of NSPW NET, with 1.22's rules where its battle differs (`BattleRules`).
 
 ## Summary
-- **Emulate only what NSPW NET lacks**: the scenario setups, the computer's strategy, its route planning, the victory conditions, and the 1.22 versions of the functions they call to create units. The battle itself stays the port's.
+- **Rewrite only what NSPW NET lacks**: the scenario setups, the computer's strategy, its route planning, the victory conditions, and the 1.22 versions of the functions they call to create units. The battle itself stays the port's.
+- **The emulator is the reference of the rewrites**: each is compared with 1.22's own function, emulated, on states of games, random ones and its edge cases. A game runs none of 1.22's code: the emulator, its memory of 1 MB and the translated functions stay for the tests.
 - **The emulator's memory is the executable's own image**, loaded from `NSPW_122.exe`. Code, jump tables, constants and the single-player globals are where the code expects them.
-- **The state is copied in and out** around every emulated call, region by region, as planned in [Refactoring.md](Refactoring.md#the-emulator). The single-player globals that the port does not have stay in the emulator's memory for the whole game.
+- **The state is copied in and out** around every emulated call, region by region, as planned in [Refactoring.md](Refactoring.md#the-emulator). The single-player globals that the port does not have are the computer's fleets, which the game keeps (`ComputerFleets`).
 - **The port runs with 1.22's unit numbering** in a single-player game. The unit ranges are values of the game instead of constants, with NSPW NET's values in a network game.
 - **The single-player paths come back where NSPW NET left them as comments**, such as `/*|| unit[m].used==cpu_side*/`, behind `IsSingleplayer` or `CpuSide`. A network game runs exactly as before, and its traces do not change.
 
@@ -30,7 +31,7 @@ dotnet run --project Disassembler/OpenNspw.Disassembler -- Original/Nspw122/NSPW
 
 | Function | Address | Called by the port |
 | --- | --- | --- |
-| `scenario_1` to `scenario_10`, `scenario_100` to `scenario_109`, `scenario_200` to `scenario_209`, `scenario_300` to `scenario_306` | `Functions.SetUpScenario` | `InitializeGame`, in place of `get_sinario_data` |
+| `scenario_1` to `scenario_10`, `scenario_100` to `scenario_109`, `scenario_200` to `scenario_209`, `scenario_300` to `scenario_306` | `Functions.SetUpScenario` | Lifted to C# (`Scenarios122.cs`, `SetUpScenarioAs122`), which `InitializeGame` calls in place of `get_sinario_data`; the emulated originals are kept for their test (`ScenarioSetupTests`) |
 | `cpu_strtgy` | `0x404E30` | Rewritten as C# (`PlanComputerStrategy`), which `HandleInput` calls before the orders are applied; the emulated original is kept for its test |
 | `sub_403AE0`, `sub_404D80`, `sub_414DD0`, `sub_41F230`, `sub_41F300`, `sub_41F490` | | Rewritten as C# (`SetFormation`, `ShuffleTargets`, `PlaceReinforcement`, `AddTargets`), called by `PlanComputerStrategy`; the emulated originals are kept for their tests |
 | `set_cpu_route` | `0x42DA80` | Rewritten as C# (`PlanComputerRoute`), which `ApplyOrders` calls for a move order of a computer's ship, and `ReplanBlockedRoute` for a blocked one; the emulated original is kept for its test |

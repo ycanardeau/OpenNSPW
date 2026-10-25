@@ -162,9 +162,7 @@ public unsafe partial class Nspw
 	// the fighters that scenario 303 takes from Japan, whose numbers are Japan's.
 	private Array256<short> BufferedSelectionsOfAllUnits;
 
-	// The emulator of the single-player game being played: a new one for each game, so that 1.22's own globals start as
-	// the executable has them.
-	public Emulator? Emulator;
+	private Emulator? _emulator;
 
 	// The gas of each unit as it was copied into the emulator, to write back only what the emulated code changed.
 	private readonly int[] _emulatedGas = new int[UnitCount * 8];
@@ -243,18 +241,6 @@ public unsafe partial class Nspw
 		}
 
 		CopyUnitsOut(emulator);
-	}
-
-	// Runs a function of 1.22 on the game's state.
-	internal uint RunEmulated(uint address, params ReadOnlySpan<uint> arguments)
-	{
-		var emulator =
-			Emulator
-			?? throw new InvalidOperationException("No single-player game is being played.");
-		CopyIn(emulator);
-		var result = emulator.Run(address, arguments);
-		CopyOut(emulator);
-		return result;
 	}
 
 	private static string CString(Emulator emulator, uint address)
@@ -428,8 +414,25 @@ public unsafe partial class Nspw
 		return emulator;
 	}
 
-	// In place of get_sinario_data: 1.22's scenario, which places the units, loads the map and sets the sides, the time
-	// limit and the camera.
+	// The emulator of 1.22, which the game itself does not need: only the tests run 1.22's own functions, to compare them
+	// with their rewrites. It is created the first time one runs.
+	public Emulator Emulator => _emulator ??= CreateEmulator();
+
+	// Whether the emulator has been created: never in a game.
+	internal bool HasEmulator => _emulator is not null;
+
+	// Runs a function of 1.22 on the game's state.
+	internal uint RunEmulated(uint address, params ReadOnlySpan<uint> arguments)
+	{
+		var emulator = Emulator;
+		CopyIn(emulator);
+		var result = emulator.Run(address, arguments);
+		CopyOut(emulator);
+		return result;
+	}
+
+	// In place of get_sinario_data: 1.22's scenario (Scenarios122.cs), which places the units, loads the map and sets the
+	// sides, the time limit and the camera.
 	public void SetUpSingleplayerScenario()
 	{
 		// game_init clears the computer's fleets, and ends each one's path: its destination is none (0x429C50).
@@ -437,8 +440,7 @@ public unsafe partial class Nspw
 		for (var f = 0; f < 11; f++)
 			ComputerFleets[f].DestinationX = World.Beyond;
 
-		Emulator = CreateEmulator();
-		RunEmulated(Functions.SetUpScenario(ScenarioNumber));
+		SetUpScenarioAs122(ScenarioNumber);
 	}
 
 	// Starts the battle of ScenarioNumber, without the title and setting screens.
@@ -523,9 +525,7 @@ public unsafe partial class Nspw
 	// there, or what a trace has given.
 	public void RunCpuStrategy()
 	{
-		var emulator =
-			Emulator
-			?? throw new InvalidOperationException("No single-player game is being played.");
+		var emulator = Emulator;
 		foreach (var (instruction, _) in StackLocalsOnWindows)
 			MemoryMarshal.Write(
 				emulator.At(StackLocalAddress(emulator, instruction)!.Value, sizeof(uint)),
@@ -574,9 +574,7 @@ public unsafe partial class Nspw
 	// sub_414DD0(&x, &y): moves the point to a free place for a reinforcement near the east edge of the map.
 	internal void RunPlaceReinforcement(ref double x, ref double y)
 	{
-		var emulator =
-			Emulator
-			?? throw new InvalidOperationException("No single-player game is being played.");
+		var emulator = Emulator;
 		MemoryMarshal.Write(emulator.At(_pointAddress, sizeof(double)), x);
 		MemoryMarshal.Write(emulator.At(_pointAddress + sizeof(double), sizeof(double)), y);
 		RunEmulated(Functions.PlaceReinforcement, _pointAddress, _pointAddress + sizeof(double));
