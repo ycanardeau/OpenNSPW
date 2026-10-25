@@ -132,6 +132,8 @@ dotnet run -c Release --project OpenNspw.Arena -- --compare before.csv after.csv
 
 `--speed <s>` plays at a game speed, a frame running s + 1 ticks, as the player's keys set it; `--formation line|ring:<radius>|screen:<radius>|auto:<radius>` chooses how the strong player's carriers form with their escorts, and `--params Name=value,…` sets the numbers of its tactics (`StrongParameters`), for experiments and tuning.
 
+`--tune <candidates>` searches the strong player's numbers (`StrongParameters`) for the best: the defaults and that many random settings play `--dates` dates of each scenario, from `--first-date`; the best third play three times as many, for `--tune-rounds` rounds (3), and it writes the best setting, for `--params`. Tune on other dates than the ones the result is checked on.
+
 `--compare` pairs the games by scenario, date and player, and counts the games the second table did better and worse in, with the sign test's p: under 0.05, the difference is unlikely to be chance.
 
 ## Recording
