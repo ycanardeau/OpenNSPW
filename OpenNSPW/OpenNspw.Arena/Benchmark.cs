@@ -30,6 +30,8 @@ internal static class Benchmark
 		"enemy_carriers_sunk",
 		"own_carriers_sunk",
 		"carrier_damage",
+		"carrier_drops",
+		"carrier_hits",
 	];
 
 	// The 95% Wilson interval of a rate of `successes` in `count`, as fractions, which holds for few games and for rates
@@ -87,16 +89,27 @@ internal static class Benchmark
 	private static string PerGame(IEnumerable<ArenaResult> games, Func<StrikeCounts, int> count) =>
 		FormattableString.Invariant($"{games.Average(r => count(r.Strikes)):F1}");
 
+	// The hits on enemy carriers for each weapon dropped at one, of all the games.
+	private static string HitRate(IEnumerable<ArenaResult> games)
+	{
+		var drops = games.Sum(r => r.Strikes.CarrierDrops);
+		return drops == 0
+			? "-"
+			: FormattableString.Invariant(
+				$"{games.Sum(r => r.Strikes.CarrierHits)}/{drops} ({(double)games.Sum(r => r.Strikes.CarrierHits) / drops * 100:F0}%)"
+			);
+	}
+
 	// A row per scenario and player, and one for all: the games, how many were won, drawn and lost, the win rate with
 	// its 95% interval, and, per game, what became of the strikes (StrikeCounts).
 	public static string Summary(IReadOnlyList<ArenaResult> results)
 	{
 		var text = new StringBuilder();
 		text.AppendLine(
-			"| Scenario | Player | Games | W | D | L | Won (95%) | Drops | Turned back | Out of fuel | Planes lost | Enemy damage | Carriers sunk | Carriers lost | Carrier damage |"
+			"| Scenario | Player | Games | W | D | L | Won (95%) | Drops | Turned back | Out of fuel | Planes lost | Enemy damage | Carriers sunk | Carriers lost | Carrier damage | Hits on carriers |"
 		);
 		text.AppendLine(
-			"| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"
+			"| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"
 		);
 		var groups = results
 			.GroupBy(r => (r.Scenario, r.Player))
@@ -130,7 +143,8 @@ internal static class Benchmark
 					PerGame(games, s => s.EnemyDamage),
 					PerGame(games, s => s.EnemyCarriersSunk),
 					PerGame(games, s => s.OwnCarriersSunk),
-					$"{PerGame(games, s => s.CarrierDamage)} |"
+					PerGame(games, s => s.CarrierDamage),
+					$"{HitRate(games)} |"
 				)
 			);
 		}
@@ -144,7 +158,7 @@ internal static class Benchmark
 			string.Join(",", Columns),
 			.. results.Select(r =>
 				FormattableString.Invariant(
-					$"{r.Scenario},{r.StartDate},{r.Player},{r.Side},{r.Outcome},{r.Frames},{r.TimeLeft},{r.Elapsed.TotalSeconds:F1},{r.Strikes.Drops},{r.Strikes.TurnedBack},{r.Strikes.OutOfFuel},{r.Strikes.PlanesLost},{r.Strikes.EnemyDamage},{r.Strikes.EnemyCarriersSunk},{r.Strikes.OwnCarriersSunk},{r.Strikes.CarrierDamage}"
+					$"{r.Scenario},{r.StartDate},{r.Player},{r.Side},{r.Outcome},{r.Frames},{r.TimeLeft},{r.Elapsed.TotalSeconds:F1},{r.Strikes.Drops},{r.Strikes.TurnedBack},{r.Strikes.OutOfFuel},{r.Strikes.PlanesLost},{r.Strikes.EnemyDamage},{r.Strikes.EnemyCarriersSunk},{r.Strikes.OwnCarriersSunk},{r.Strikes.CarrierDamage},{r.Strikes.CarrierDrops},{r.Strikes.CarrierHits}"
 				)
 			),
 		];
@@ -182,7 +196,9 @@ internal static class Benchmark
 						Number("enemy_damage"),
 						Number("enemy_carriers_sunk"),
 						Number("own_carriers_sunk"),
-						Number("carrier_damage")
+						Number("carrier_damage"),
+						Number("carrier_drops"),
+						Number("carrier_hits")
 					)
 				)
 			);

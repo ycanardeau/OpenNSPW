@@ -807,9 +807,20 @@ public sealed partial class StrongPlayer
 	}
 
 	// The side from which a strike runs in on a target at a point, coming from a bearing: the bearing from the target
-	// whose last 1500 the warships found around it cover least, then the nearest to where the strike comes from.
+	// whose last 1500 the warships found around it cover least, then the nearest to where the strike comes from; with
+	// Parameters.BeamApproach, only within 30° of square to the target's heading, on either side.
 	private double ApproachBearing(Nspw game, int target, WorldPosition at, double from)
 	{
+		var heading = _contacts.Find(target)?.Direction;
+		var bearings =
+			Parameters.BeamApproach && heading is { } h
+				?
+				[
+					.. new[] { h + 90, h - 90 }.SelectMany(beam =>
+						Enumerable.Range(-2, 5).Select(i => beam + (i * 15))
+					),
+				]
+				: Enumerable.Range(0, 24).Select(i => from + (i * 15)).ToList();
 		var guns = _contacts
 			.All.Where(c =>
 				c.Unit != target
@@ -820,16 +831,13 @@ public sealed partial class StrongPlayer
 			)
 			.Select(c => (c.Kind, Position: c.Predict((UnitFacts.Now(game) - c.Frame) * 2)))
 			.ToList();
-		return Enumerable
-			.Range(0, 24)
-			.Select(i => from + (i * 15))
-			.MinBy(b =>
-			{
-				var (outer, inner) = (PointAt(at, b, 1500), PointAt(at, b, 200));
-				var turn = Math.Abs(((b - from + 540) % 360) - 180);
-				return guns.Sum(g => GunCover(g.Kind, DistanceToSegment(g.Position, outer, inner)))
-					+ (turn / 180 * 0.5);
-			});
+		return bearings.MinBy(b =>
+		{
+			var (outer, inner) = (PointAt(at, b, 1500), PointAt(at, b, 200));
+			var turn = Math.Abs(((b - from + 540) % 360) - 180);
+			return guns.Sum(g => GunCover(g.Kind, DistanceToSegment(g.Position, outer, inner)))
+				+ (turn / 180 * 0.5);
+		});
 	}
 
 	// The strikes in the air that have not approached their target yet, each as the planes that fly together: a

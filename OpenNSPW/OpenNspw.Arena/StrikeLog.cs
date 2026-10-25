@@ -3,7 +3,8 @@ namespace OpenNspw.Arena;
 // What became of the player's strikes in a game, in all: the weapons its attackers and bombers dropped, the planes that
 // turned home damaged or for fuel, their weapon dumped, and the ones lost; the HP the enemy's ships lost, to anything;
 // the carriers each side lost; and the HP the player's carriers lost, to anything, which tells how well they are
-// defended sooner than the carriers sunk.
+// defended sooner than the carriers sunk; and the weapons dropped at enemy carriers, and the hits on them, whose ratio
+// is the strikes' aim.
 internal sealed record StrikeCounts(
 	int Drops,
 	int TurnedBack,
@@ -12,7 +13,9 @@ internal sealed record StrikeCounts(
 	int EnemyDamage,
 	int EnemyCarriersSunk,
 	int OwnCarriersSunk,
-	int CarrierDamage
+	int CarrierDamage,
+	int CarrierDrops = 0,
+	int CarrierHits = 0
 );
 
 // What becomes of the player's attackers and bombers, each time one drops its weapon, turns home damaged or is lost,
@@ -34,6 +37,8 @@ internal sealed class StrikeLog(bool writes)
 	private int _planesLost;
 	private int _enemyDamage;
 	private int _carrierDamage;
+	private int _carrierDrops;
+	private int _carrierHits;
 	private bool _started;
 
 	private static double Distance(WorldPosition a, WorldPosition b) =>
@@ -94,7 +99,9 @@ internal sealed class StrikeLog(bool writes)
 			_enemyDamage,
 			sunk.Count(n => _sides[n] != game.LocalSide),
 			sunk.Count(n => _sides[n] == game.LocalSide),
-			_carrierDamage
+			_carrierDamage,
+			_carrierDrops,
+			_carrierHits
 		);
 	}
 
@@ -150,7 +157,15 @@ internal sealed class StrikeLog(bool writes)
 					else if (unit.Fuel <= 20)
 						_outOfFuel++;
 					else
+					{
 						_drops++;
+						if (
+							was.Target != 0
+							&& game.Units[was.Target].IsUsed
+							&& IsCarrier(game.Units[was.Target].Kind)
+						)
+							_carrierDrops++;
+					}
 
 					var target =
 						was.Target != 0 && game.Units[was.Target].IsUsed
@@ -176,6 +191,8 @@ internal sealed class StrikeLog(bool writes)
 				if (_ships.TryGetValue(n, out var hp) && unit.HP < hp)
 				{
 					_enemyDamage += hp - unit.HP;
+					if (IsCarrier(unit.Kind))
+						_carrierHits++;
 					WriteLine(
 						$"STRIKE {game.Renderer.FrameCount} {unit.Kind} {n} hit, {hp} -> {unit.HP}/{unit.MaxHP}"
 					);

@@ -89,6 +89,10 @@ public sealed record StrongParameters
 	// Whether the scouts that hunt carriers fly where the map of where they most likely are says (UpdateSearchMap).
 	public bool ProbabilitySearch { get; init; }
 
+	// Whether strikes come in on a carrier's beam, within 30° of square to its heading, the beam its escorts cover least
+	// (ApproachBearing): a torpedo across a ship meets all its length, and one from ahead or astern little of it.
+	public bool BeamApproach { get; init; }
+
 	// Whether a deck that hunts carriers keeps scouting while it knows where a carrier is (IsRemembered), its scouts kept
 	// unarmed for it; or stops, and arms them to strike, until the carrier is lost.
 	public bool KeepScouting { get; init; } = true;
