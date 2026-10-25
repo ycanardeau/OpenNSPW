@@ -21,13 +21,18 @@ public static class dxutil
 		p = null;
 	}
 
-	public static void SAFE_DELETE_ARRAY<T>(ref T? p) where T : class
+	public static void SAFE_DELETE_ARRAY<T>(ref T? p)
+		where T : class
 	{
 		p = null;
 	}
 
 	// Converts a Shift_JIS string (the game's TCHAR, with the MultiByte character set) to a wide string.
-	public static int DXUtil_ConvertGenericStringToWideCch(out string wstrDestination, ReadOnlySpan<byte> tstrSource, int cchDestChar)
+	public static int DXUtil_ConvertGenericStringToWideCch(
+		out string wstrDestination,
+		ReadOnlySpan<byte> tstrSource,
+		int cchDestChar
+	)
 	{
 		var length = tstrSource.IndexOf((byte)0);
 		var text = tchar.ShiftJis.GetString(length < 0 ? tstrSource : tstrSource[..length]);
@@ -36,7 +41,11 @@ public static class dxutil
 	}
 
 	// Converts a wide string to Shift_JIS, truncated to cchDestChar chars including the null.
-	public static int DXUtil_ConvertWideStringToGenericCch(Span<byte> tstrDestination, string? wstrSource, int cchDestChar)
+	public static int DXUtil_ConvertWideStringToGenericCch(
+		Span<byte> tstrDestination,
+		string? wstrSource,
+		int cchDestChar
+	)
 	{
 		if (wstrSource is null || cchDestChar < 1)
 		{

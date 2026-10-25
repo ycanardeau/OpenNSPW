@@ -24,7 +24,9 @@ internal sealed class MultiplayerScreen(NspwGame game) : Screen(game)
 	{
 		lock (_session.Game.WindowsLock)
 		{
-			return _session.Game.windows.FirstOrDefault(w => w.Kind == "DIALOG" && !w.Destroyed && w.Id == resource.IDD_ADDRESS_OVERRIDE);
+			return _session.Game.windows.FirstOrDefault(w =>
+				w.Kind == "DIALOG" && !w.Destroyed && w.Id == resource.IDD_ADDRESS_OVERRIDE
+			);
 		}
 	}
 
@@ -63,12 +65,20 @@ internal sealed class MultiplayerScreen(NspwGame game) : Screen(game)
 			return;
 		}
 
-		var (playerName, isHost, address, port) = (_form.PlayerName, _form.IsHost, _form.Address, _form.Port);
+		var (playerName, isHost, address, port) = (
+			_form.PlayerName,
+			_form.IsHost,
+			_form.Address,
+			_form.Port
+		);
 		var game = _session.Game;
 		game.PostToGame(() =>
 		{
 			game.TypeDlgItemText(dialog, resource.IDC_PLAYER_NAME, playerName);
-			if ((game.IsDlgButtonChecked(dialog, resource.IDC_HOST_SESSION) == winuser.BST_CHECKED) != isHost)
+			if (
+				(game.IsDlgButtonChecked(dialog, resource.IDC_HOST_SESSION) == winuser.BST_CHECKED)
+				!= isHost
+			)
 			{
 				game.ClickDlgItem(dialog, resource.IDC_HOST_SESSION);
 			}
@@ -140,9 +150,11 @@ internal sealed class MultiplayerScreen(NspwGame game) : Screen(game)
 			_needsFill = false;
 			_form.Fill(
 				ItemText(dialog, resource.IDC_PLAYER_NAME),
-				_session.Game.IsDlgButtonChecked(dialog, resource.IDC_HOST_SESSION) == winuser.BST_CHECKED,
+				_session.Game.IsDlgButtonChecked(dialog, resource.IDC_HOST_SESSION)
+					== winuser.BST_CHECKED,
 				ItemText(dialog, resource.IDC_ADDRESS_LINE1),
-				ItemText(dialog, resource.IDC_ADDRESS_LINE2));
+				ItemText(dialog, resource.IDC_ADDRESS_LINE2)
+			);
 		}
 
 		_form.CanConnect = _session.Game.GetDlgItem(dialog, windef.IDOK)?.Enabled == true;

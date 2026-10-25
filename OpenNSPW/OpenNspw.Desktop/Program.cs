@@ -19,7 +19,11 @@ static string? Option(string[] args, string name)
 // The file or directory at the path under Original, in the first directory up from the program's that has it.
 static string? FindInOriginal(params string[] path)
 {
-	for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
+	for (
+		var directory = new DirectoryInfo(AppContext.BaseDirectory);
+		directory is not null;
+		directory = directory.Parent
+	)
 	{
 		var candidate = Path.Combine([directory.FullName, "Original", .. path]);
 		if (File.Exists(candidate))
@@ -39,7 +43,9 @@ static string? FindDataDirectory(string[] args)
 var dataDirectory = FindDataDirectory(args);
 if (dataDirectory is null)
 {
-	Console.Error.WriteLine("The game's data (t3.bmp) was not found. Pass its directory with --data <directory>.");
+	Console.Error.WriteLine(
+		"The game's data (t3.bmp) was not found. Pass its directory with --data <directory>."
+	);
 	return 1;
 }
 
@@ -57,7 +63,8 @@ if (Option(args, "--replay") is { } tracePath)
 	{
 		replay = new OpenNspw.Trace122Replay(File.OpenRead(tracePath));
 	}
-	catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidDataException)
+	catch (Exception e)
+		when (e is IOException or UnauthorizedAccessException or InvalidDataException)
 	{
 		Console.Error.WriteLine($"The trace cannot be read: {e.Message}");
 		return 1;
@@ -68,15 +75,22 @@ var scenarioText = replay is not null ? replay.Scenario.ToString() : Option(args
 int? scenario = null;
 if (scenarioText is not null)
 {
-	if (!int.TryParse(scenarioText, out var number) || !OpenNspw.Singleplayer.Functions.Scenarios.Contains(number))
+	if (
+		!int.TryParse(scenarioText, out var number)
+		|| !OpenNspw.Singleplayer.Functions.Scenarios.Contains(number)
+	)
 	{
-		Console.Error.WriteLine($"Not a scenario of NSPW 1.22: {scenarioText}. The scenarios are {string.Join(", ", OpenNspw.Singleplayer.Functions.Scenarios)}.");
+		Console.Error.WriteLine(
+			$"Not a scenario of NSPW 1.22: {scenarioText}. The scenarios are {string.Join(", ", OpenNspw.Singleplayer.Functions.Scenarios)}."
+		);
 		return 1;
 	}
 
 	if (executable is null)
 	{
-		Console.Error.WriteLine("The single-player executable (NSPW_122.exe) was not found. Pass it with --exe <file>.");
+		Console.Error.WriteLine(
+			"The single-player executable (NSPW_122.exe) was not found. Pass it with --exe <file>."
+		);
 		return 1;
 	}
 

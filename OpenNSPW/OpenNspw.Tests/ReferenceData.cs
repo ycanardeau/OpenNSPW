@@ -10,7 +10,11 @@ internal sealed record Run(string Global, int Offset, byte[] Bytes)
 {
 	public static Run Parse(JsonElement run)
 	{
-		return new Run(run[0].GetString()!, run[1].GetInt32(), Convert.FromBase64String(run[2].GetString()!));
+		return new Run(
+			run[0].GetString()!,
+			run[1].GetInt32(),
+			Convert.FromBase64String(run[2].GetString()!)
+		);
 	}
 
 	public static ImmutableArray<Run> ParseAll(JsonElement runs)
@@ -21,7 +25,10 @@ internal sealed record Run(string Global, int Offset, byte[] Bytes)
 
 internal sealed record ReferenceField(int Offset, int Size);
 
-internal sealed record ReferenceStruct(int Size, ImmutableDictionary<string, ReferenceField> Fields);
+internal sealed record ReferenceStruct(
+	int Size,
+	ImmutableDictionary<string, ReferenceField> Fields
+);
 
 internal sealed record ReferenceGlobal(string Name, int Size);
 
@@ -29,22 +36,40 @@ internal sealed record ReferenceGlobal(string Name, int Size);
 internal sealed record ReferenceLayout(
 	ImmutableDictionary<string, ReferenceStruct> Structs,
 	ImmutableArray<ReferenceGlobal> Globals,
-	ImmutableArray<Run> Initial)
+	ImmutableArray<Run> Initial
+)
 {
 	private static ReferenceLayout Load()
 	{
-		using var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Layout.json")));
+		using var document = JsonDocument.Parse(
+			File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Layout.json"))
+		);
 		var root = document.RootElement;
 		return new ReferenceLayout(
-			root.GetProperty("structs").EnumerateObject().ToImmutableDictionary(
-				s => s.Name,
-				s => new ReferenceStruct(
-					s.Value.GetProperty("size").GetInt32(),
-					s.Value.GetProperty("fields").EnumerateObject().ToImmutableDictionary(
-						f => f.Name,
-						f => new ReferenceField(f.Value[0].GetInt32(), f.Value[1].GetInt32())))),
-			[.. root.GetProperty("globals").EnumerateObject().Select(g => new ReferenceGlobal(g.Name, g.Value.GetInt32()))],
-			Run.ParseAll(root.GetProperty("initial")));
+			root.GetProperty("structs")
+				.EnumerateObject()
+				.ToImmutableDictionary(
+					s => s.Name,
+					s => new ReferenceStruct(
+						s.Value.GetProperty("size").GetInt32(),
+						s.Value.GetProperty("fields")
+							.EnumerateObject()
+							.ToImmutableDictionary(
+								f => f.Name,
+								f => new ReferenceField(
+									f.Value[0].GetInt32(),
+									f.Value[1].GetInt32()
+								)
+							)
+					)
+				),
+			[
+				.. root.GetProperty("globals")
+					.EnumerateObject()
+					.Select(g => new ReferenceGlobal(g.Name, g.Value.GetInt32())),
+			],
+			Run.ParseAll(root.GetProperty("initial"))
+		);
 	}
 
 	public static ReferenceLayout Instance { get; } = Load();
@@ -59,11 +84,14 @@ internal sealed record FunctionCase(
 	JsonElement? Return,
 	ImmutableArray<JsonElement> Outs,
 	ImmutableArray<Run> After,
-	ImmutableArray<int> Rand)
+	ImmutableArray<int> Rand
+)
 {
 	public static double ParseDouble(JsonElement value)
 	{
-		return BitConverter.Int64BitsToDouble((long)ulong.Parse(value.GetString()!, NumberStyles.AllowHexSpecifier));
+		return BitConverter.Int64BitsToDouble(
+			(long)ulong.Parse(value.GetString()!, NumberStyles.AllowHexSpecifier)
+		);
 	}
 
 	public int IntArg(int index)
@@ -86,14 +114,22 @@ internal sealed record FunctionCase(
 			c.TryGetProperty("return", out var ret) ? ret : null,
 			c.TryGetProperty("outs", out var outs) ? [.. outs.EnumerateArray()] : [],
 			Run.ParseAll(c.GetProperty("after")),
-			[.. c.GetProperty("rand").EnumerateArray().Select(r => r.GetInt32())]);
+			[.. c.GetProperty("rand").EnumerateArray().Select(r => r.GetInt32())]
+		);
 	}
 
 	// The recorded calls of `function` in `file` (a C++ file name without extension, or "math").
 	public static IEnumerable<FunctionCase> Load(string file, string function)
 	{
-		var path = Path.Combine(AppContext.BaseDirectory, "Functions", file, $"{function}.jsonl.gz");
-		using var reader = new StreamReader(new GZipStream(File.OpenRead(path), CompressionMode.Decompress));
+		var path = Path.Combine(
+			AppContext.BaseDirectory,
+			"Functions",
+			file,
+			$"{function}.jsonl.gz"
+		);
+		using var reader = new StreamReader(
+			new GZipStream(File.OpenRead(path), CompressionMode.Decompress)
+		);
 		var index = 0;
 		while (reader.ReadLine() is { } line)
 		{

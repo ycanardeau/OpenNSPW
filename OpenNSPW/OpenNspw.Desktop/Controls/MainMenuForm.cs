@@ -28,7 +28,12 @@ internal sealed class MainMenuForm : Form
 			_items[i].IsHighlighted = i == index;
 	}
 
-	private void AddItem(string caption, string description, bool enabled, Func<EventHandler?> chosen)
+	private void AddItem(
+		string caption,
+		string description,
+		bool enabled,
+		Func<EventHandler?> chosen
+	)
 	{
 		var index = _items.Count;
 		var item = new MenuItemButton(_fonts)
@@ -72,7 +77,8 @@ internal sealed class MainMenuForm : Form
 			Texts.SinglePlayer,
 			canPlaySingleplayer ? Texts.SinglePlayerDescription : Texts.NoSinglePlayer,
 			canPlaySingleplayer,
-			() => SingleplayerChosen);
+			() => SingleplayerChosen
+		);
 		AddItem(Texts.Multiplayer, Texts.MultiplayerDescription, true, () => MultiplayerChosen);
 		AddItem(Texts.Quit, Texts.QuitDescription, true, () => QuitChosen);
 		AddLanguage(Language.English, 0);
@@ -85,7 +91,9 @@ internal sealed class MainMenuForm : Form
 		var index = _highlighted;
 		for (var i = 0; i < _items.Count; i++)
 		{
-			index = ((index < 0 && direction < 0 ? 0 : index) + direction + _items.Count) % _items.Count;
+			index =
+				((index < 0 && direction < 0 ? 0 : index) + direction + _items.Count)
+				% _items.Count;
 			if (_items[index].Enabled)
 				return index;
 		}
@@ -114,7 +122,14 @@ internal sealed class MainMenuForm : Form
 	{
 		base.OnPaint(e);
 		var g = e.Graphics;
-		Painter.Text(g, "Naval South Pacific War on the Net 1.10  ·  © 2002 Ken-ichi Tokumitsu", _fonts.Regular(13), Theme.Muted, 64, 728);
+		Painter.Text(
+			g,
+			"Naval South Pacific War on the Net 1.10  ·  © 2002 Ken-ichi Tokumitsu",
+			_fonts.Regular(13),
+			Theme.Muted,
+			64,
+			728
+		);
 		var brand = _fonts.Bold(13);
 		Painter.SpacedText(g, "OPENNSPW", brand, Theme.Brass, Width - 64 - 8 * 14, 728, 5);
 	}

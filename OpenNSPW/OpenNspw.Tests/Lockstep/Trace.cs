@@ -19,7 +19,8 @@ internal sealed class TraceRecorder(IReadOnlyList<LockstepGame> games)
 {
 	public const int CheckpointInterval = 50;
 
-	private static readonly FieldInfo HoldRand = typeof(Nspw).GetField("_holdrand", BindingFlags.NonPublic | BindingFlags.Instance)
+	private static readonly FieldInfo HoldRand =
+		typeof(Nspw).GetField("_holdrand", BindingFlags.NonPublic | BindingFlags.Instance)
 		?? throw new InvalidOperationException("Nspw has no _holdrand.");
 
 	private readonly IReadOnlyList<LockstepGame> _games = games;
@@ -52,7 +53,9 @@ internal sealed class TraceRecorder(IReadOnlyList<LockstepGame> games)
 			}
 
 			var rand = (uint)HoldRand.GetValue(game.Game)!;
-			_lines.Add($"r {round} {game.Name} f={game.FrameCount} s={state.Value:x16} o={game.TakeOutput():x16} rand={rand:x8}{(game.Ended ? " ended" : "")}");
+			_lines.Add(
+				$"r {round} {game.Name} f={game.FrameCount} s={state.Value:x16} o={game.TakeOutput():x16} rand={rand:x8}{(game.Ended ? " ended" : "")}"
+			);
 			if (round % CheckpointInterval == 0)
 			{
 				Checkpoint(round, game, hashes);
@@ -85,7 +88,11 @@ internal static class Traces
 
 	private static string SourceDirectory()
 	{
-		for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
+		for (
+			var directory = new DirectoryInfo(AppContext.BaseDirectory);
+			directory is not null;
+			directory = directory.Parent
+		)
 		{
 			if (File.Exists(Path.Combine(directory.FullName, "OpenNspw.Tests.csproj")))
 			{
@@ -146,13 +153,24 @@ internal static class Traces
 		message.AppendLine($"  expected: {(index < expected.Count ? expected[index] : "(end)")}");
 		message.AppendLine($"  actual:   {(index < actual.Count ? actual[index] : "(end)")}");
 
-		var expectedCheckpoints = expected.Skip(index).Where(l => l.StartsWith("c ", StringComparison.Ordinal)).ToList();
-		var actualCheckpoints = actual.Skip(index).Where(l => l.StartsWith("c ", StringComparison.Ordinal)).ToHashSet();
+		var expectedCheckpoints = expected
+			.Skip(index)
+			.Where(l => l.StartsWith("c ", StringComparison.Ordinal))
+			.ToList();
+		var actualCheckpoints = actual
+			.Skip(index)
+			.Where(l => l.StartsWith("c ", StringComparison.Ordinal))
+			.ToHashSet();
 		if (expectedCheckpoints.Count > 0)
 		{
 			var round = Round(expectedCheckpoints[0]);
-			var globals = expectedCheckpoints.Where(l => Round(l) == round && !actualCheckpoints.Contains(l)).Select(l => string.Join(' ', l.Split(' ')[2..4])).ToList();
-			message.AppendLine($"Globals that differ at the checkpoint of round {round}: {(globals.Count > 0 ? string.Join(", ", globals) : "none")}");
+			var globals = expectedCheckpoints
+				.Where(l => Round(l) == round && !actualCheckpoints.Contains(l))
+				.Select(l => string.Join(' ', l.Split(' ')[2..4]))
+				.ToList();
+			message.AppendLine(
+				$"Globals that differ at the checkpoint of round {round}: {(globals.Count > 0 ? string.Join(", ", globals) : "none")}"
+			);
 		}
 
 		return message.ToString();
@@ -167,7 +185,10 @@ internal static class Traces
 		{
 			if (failure is not null)
 			{
-				throw new InvalidOperationException($"The run of {name} failed, so its trace is not recorded.", failure);
+				throw new InvalidOperationException(
+					$"The run of {name} failed, so its trace is not recorded.",
+					failure
+				);
 			}
 
 			Write(Path.Combine(SourceDirectory(), "Traces", fileName), actual);
@@ -182,12 +203,17 @@ internal static class Traces
 
 		if (Difference(Read(path), actual) is { } difference)
 		{
-			throw new XunitException(failure is null ? difference : $"{difference}The run also failed: {failure}");
+			throw new XunitException(
+				failure is null ? difference : $"{difference}The run also failed: {failure}"
+			);
 		}
 
 		if (failure is not null)
 		{
-			throw new InvalidOperationException($"The run of {name} failed, but matches its trace as far as it got.", failure);
+			throw new InvalidOperationException(
+				$"The run of {name} failed, but matches its trace as far as it got.",
+				failure
+			);
 		}
 	}
 }

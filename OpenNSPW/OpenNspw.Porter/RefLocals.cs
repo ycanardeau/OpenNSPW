@@ -47,27 +47,58 @@ internal sealed class RefLocals(CSharpProject project, IReadOnlySet<string> para
 
 	private static bool Assigns(SyntaxNode body, string variable)
 	{
-		return body.DescendantNodes().Any(n => n switch
-		{
-			AssignmentExpressionSyntax a => a.Left is IdentifierNameSyntax { Identifier.ValueText: var name } && name == variable,
-			PostfixUnaryExpressionSyntax p => p.Operand is IdentifierNameSyntax { Identifier.ValueText: var name } && name == variable,
-			PrefixUnaryExpressionSyntax p => (p.IsKind(SyntaxKind.PreIncrementExpression) || p.IsKind(SyntaxKind.PreDecrementExpression))
-				&& p.Operand is IdentifierNameSyntax { Identifier.ValueText: var name } && name == variable,
-			ArgumentSyntax a => !a.RefKindKeyword.IsKind(SyntaxKind.None) && a.Expression is IdentifierNameSyntax { Identifier.ValueText: var name } && name == variable,
-			_ => false,
-		});
+		return body.DescendantNodes()
+			.Any(n =>
+				n switch
+				{
+					AssignmentExpressionSyntax a => a.Left
+						is IdentifierNameSyntax { Identifier.ValueText: var name }
+						&& name == variable,
+					PostfixUnaryExpressionSyntax p => p.Operand
+						is IdentifierNameSyntax { Identifier.ValueText: var name }
+						&& name == variable,
+					PrefixUnaryExpressionSyntax p => (
+						p.IsKind(SyntaxKind.PreIncrementExpression)
+						|| p.IsKind(SyntaxKind.PreDecrementExpression)
+					)
+						&& p.Operand is IdentifierNameSyntax { Identifier.ValueText: var name }
+						&& name == variable,
+					ArgumentSyntax a => !a.RefKindKeyword.IsKind(SyntaxKind.None)
+						&& a.Expression is IdentifierNameSyntax { Identifier.ValueText: var name }
+						&& name == variable,
+					_ => false,
+				}
+			);
 	}
 
 	// The loop variable of a `v = <constant >= 0>; v < or <= <bound>; v++` header whose bound keeps v inside the table.
 	private static string? LoopVariable(ForStatementSyntax loop, Table table, SemanticModel model)
 	{
-		if (loop.Declaration is not null
-			|| loop.Initializers is not [AssignmentExpressionSyntax { Left: IdentifierNameSyntax variable, Right: var start }]
-			|| model.GetConstantValue(start) is not { HasValue: true, Value: int first } || first < 0
-			|| loop.Incrementors is not [PostfixUnaryExpressionSyntax { Operand: IdentifierNameSyntax incremented } increment]
-			|| !increment.IsKind(SyntaxKind.PostIncrementExpression) || incremented.Identifier.ValueText != variable.Identifier.ValueText
-			|| loop.Condition is not BinaryExpressionSyntax { Left: IdentifierNameSyntax compared } condition
-			|| compared.Identifier.ValueText != variable.Identifier.ValueText)
+		if (
+			loop.Declaration is not null
+			|| loop.Initializers
+				is not [
+					AssignmentExpressionSyntax
+					{
+						Left: IdentifierNameSyntax variable,
+						Right: var start
+					},
+				]
+			|| model.GetConstantValue(start) is not { HasValue: true, Value: int first }
+			|| first < 0
+			|| loop.Incrementors
+				is not [
+					PostfixUnaryExpressionSyntax
+					{
+						Operand: IdentifierNameSyntax incremented
+					} increment,
+				]
+			|| !increment.IsKind(SyntaxKind.PostIncrementExpression)
+			|| incremented.Identifier.ValueText != variable.Identifier.ValueText
+			|| loop.Condition
+				is not BinaryExpressionSyntax { Left: IdentifierNameSyntax compared } condition
+			|| compared.Identifier.ValueText != variable.Identifier.ValueText
+		)
 		{
 			return null;
 		}
@@ -78,18 +109,29 @@ internal sealed class RefLocals(CSharpProject project, IReadOnlySet<string> para
 			return null;
 		}
 
-		var bounded = condition.Right is IdentifierNameSyntax { Identifier.ValueText: var bound } && bound == table.Bound
-			|| model.GetConstantValue(condition.Right) is { HasValue: true, Value: int last } && (inclusive ? last < table.Length : last <= table.Length);
+		var bounded =
+			condition.Right is IdentifierNameSyntax { Identifier.ValueText: var bound }
+				&& bound == table.Bound
+			|| model.GetConstantValue(condition.Right) is { HasValue: true, Value: int last }
+				&& (inclusive ? last < table.Length : last <= table.Length);
 		return bounded ? variable.Identifier.ValueText : null;
 	}
 
 	private static bool IsElement(SyntaxNode node, Table table, string variable)
 	{
-		return node is ElementAccessExpressionSyntax
-		{
-			Expression: IdentifierNameSyntax { Identifier.ValueText: var field },
-			ArgumentList.Arguments: [{ RefKindKeyword.RawKind: (int)SyntaxKind.None, Expression: IdentifierNameSyntax { Identifier.ValueText: var index } }],
-		} && field == table.Field && index == variable;
+		return node
+				is ElementAccessExpressionSyntax
+				{
+					Expression: IdentifierNameSyntax { Identifier.ValueText: var field },
+					ArgumentList.Arguments: [
+						{
+							RefKindKeyword.RawKind: (int)SyntaxKind.None,
+							Expression: IdentifierNameSyntax { Identifier.ValueText: var index }
+						},
+					],
+				}
+			&& field == table.Field
+			&& index == variable;
 	}
 
 	private static string Indentation(SourceText text, BlockSyntax body)
@@ -103,7 +145,11 @@ internal sealed class RefLocals(CSharpProject project, IReadOnlySet<string> para
 
 	// The ref local for the unit that a parameter numbers, at the start of the method, and the renames of the loops' ref
 	// locals named unit to other.
-	private static void ParameterEdits(MethodDeclarationSyntax method, SourceText text, List<(TextSpan Span, string Text)> edits)
+	private static void ParameterEdits(
+		MethodDeclarationSyntax method,
+		SourceText text,
+		List<(TextSpan Span, string Text)> edits
+	)
 	{
 		if (method.Body is not { } body)
 		{
@@ -114,7 +160,11 @@ internal sealed class RefLocals(CSharpProject project, IReadOnlySet<string> para
 		foreach (var parameter in method.ParameterList.Parameters)
 		{
 			var name = parameter.Identifier.ValueText;
-			if (parameter.Type?.ToString() != "int" || parameter.Modifiers.Count > 0 || Assigns(body, name))
+			if (
+				parameter.Type?.ToString() != "int"
+				|| parameter.Modifiers.Count > 0
+				|| Assigns(body, name)
+			)
 			{
 				continue;
 			}
@@ -125,16 +175,26 @@ internal sealed class RefLocals(CSharpProject project, IReadOnlySet<string> para
 				continue;
 			}
 
-			var tokens = method.DescendantTokens().Where(t => t.IsKind(SyntaxKind.IdentifierToken)).ToList();
-			var loops = body.DescendantNodes().OfType<LocalDeclarationStatementSyntax>()
-				.Where(d => d.Declaration.Variables is [{ Identifier.ValueText: "unit" }] && d.Declaration.Type is RefTypeSyntax)
+			var tokens = method
+				.DescendantTokens()
+				.Where(t => t.IsKind(SyntaxKind.IdentifierToken))
+				.ToList();
+			var loops = body.DescendantNodes()
+				.OfType<LocalDeclarationStatementSyntax>()
+				.Where(d =>
+					d.Declaration.Variables is [{ Identifier.ValueText: "unit" }]
+					&& d.Declaration.Type is RefTypeSyntax
+				)
 				.Select(d => d.Parent!)
 				.ToList();
 			var unitTokens = tokens.Where(t => t.ValueText == "unit").ToList();
 			if (unitTokens.Count > 0)
 			{
 				// Every use of unit must be in a loop that declares it, and other must be free.
-				if (tokens.Any(t => t.ValueText == "other") || unitTokens.Any(t => !loops.Any(l => l.Span.Contains(t.Span))))
+				if (
+					tokens.Any(t => t.ValueText == "other")
+					|| unitTokens.Any(t => !loops.Any(l => l.Span.Contains(t.Span)))
+				)
 				{
 					continue;
 				}
@@ -143,8 +203,20 @@ internal sealed class RefLocals(CSharpProject project, IReadOnlySet<string> para
 			}
 
 			var first = body.Statements.FirstOrDefault();
-			var indentation = first is null ? "\t" : text.ToString(TextSpan.FromBounds(text.Lines.GetLineFromPosition(first.SpanStart).Start, first.SpanStart));
-			edits.Add((new TextSpan(body.OpenBraceToken.Span.End, 0), $"\n{indentation}ref var unit = ref Units[{name}];"));
+			var indentation = first is null
+				? "\t"
+				: text.ToString(
+					TextSpan.FromBounds(
+						text.Lines.GetLineFromPosition(first.SpanStart).Start,
+						first.SpanStart
+					)
+				);
+			edits.Add(
+				(
+					new TextSpan(body.OpenBraceToken.Span.End, 0),
+					$"\n{indentation}ref var unit = ref Units[{name}];"
+				)
+			);
 			edits.AddRange(elements.Select(e => (e.Span, "unit")));
 			return;
 		}
@@ -154,7 +226,12 @@ internal sealed class RefLocals(CSharpProject project, IReadOnlySet<string> para
 	{
 		var text = tree.GetText();
 		var edits = new List<(TextSpan Span, string Text)>();
-		foreach (var method in tree.GetRoot().DescendantNodes().OfType<MethodDeclarationSyntax>().Where(m => _parameterMethods.Contains(m.Identifier.ValueText)))
+		foreach (
+			var method in tree.GetRoot()
+				.DescendantNodes()
+				.OfType<MethodDeclarationSyntax>()
+				.Where(m => _parameterMethods.Contains(m.Identifier.ValueText))
+		)
 		{
 			ParameterEdits(method, text, edits);
 		}
@@ -164,9 +241,15 @@ internal sealed class RefLocals(CSharpProject project, IReadOnlySet<string> para
 			return edits;
 		}
 
-		foreach (var method in tree.GetRoot().DescendantNodes().OfType<BaseMethodDeclarationSyntax>())
+		foreach (
+			var method in tree.GetRoot().DescendantNodes().OfType<BaseMethodDeclarationSyntax>()
+		)
 		{
-			var used = method.DescendantTokens().Where(t => t.IsKind(SyntaxKind.IdentifierToken)).Select(t => t.ValueText).ToHashSet();
+			var used = method
+				.DescendantTokens()
+				.Where(t => t.IsKind(SyntaxKind.IdentifierToken))
+				.Select(t => t.ValueText)
+				.ToHashSet();
 			var names = new Dictionary<ForStatementSyntax, string>();
 			foreach (var loop in method.DescendantNodes().OfType<ForStatementSyntax>())
 			{
@@ -177,27 +260,43 @@ internal sealed class RefLocals(CSharpProject project, IReadOnlySet<string> para
 
 				foreach (var table in Tables)
 				{
-					if (LoopVariable(loop, table, model) is not { } variable || Assigns(body, variable))
+					if (
+						LoopVariable(loop, table, model) is not { } variable
+						|| Assigns(body, variable)
+					)
 					{
 						continue;
 					}
 
-					var elements = body.DescendantNodes().Where(n => IsElement(n, table, variable)).ToList();
+					var elements = body.DescendantNodes()
+						.Where(n => IsElement(n, table, variable))
+						.ToList();
 					if (elements.Count < 2)
 					{
 						continue;
 					}
 
 					// Names taken by the loops around this one, which C# does not let an inner local reuse.
-					var outer = loop.Ancestors().OfType<ForStatementSyntax>().Select(l => names.GetValueOrDefault(l)).OfType<string>().ToHashSet();
-					var name = new[] { table.Name, "other" }.FirstOrDefault(n => !used.Contains(n) && !outer.Contains(n));
+					var outer = loop.Ancestors()
+						.OfType<ForStatementSyntax>()
+						.Select(l => names.GetValueOrDefault(l))
+						.OfType<string>()
+						.ToHashSet();
+					var name = new[] { table.Name, "other" }.FirstOrDefault(n =>
+						!used.Contains(n) && !outer.Contains(n)
+					);
 					if (name is null)
 					{
 						continue;
 					}
 
 					names[loop] = name;
-					edits.Add((new TextSpan(body.OpenBraceToken.Span.End, 0), $"\n{Indentation(text, body)}ref var {name} = ref {table.Field}[{variable}];"));
+					edits.Add(
+						(
+							new TextSpan(body.OpenBraceToken.Span.End, 0),
+							$"\n{Indentation(text, body)}ref var {name} = ref {table.Field}[{variable}];"
+						)
+					);
 					edits.AddRange(elements.Select(e => (e.Span, name)));
 				}
 			}

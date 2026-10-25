@@ -35,12 +35,19 @@ internal sealed class SoloGame : IDisposable
 				_error = e;
 			}
 		})
-		{ IsBackground = true, Name = "Game" };
+		{
+			IsBackground = true,
+			Name = "Game",
+		};
 	}
 
 	private static string FindOriginalData()
 	{
-		for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
+		for (
+			var directory = new DirectoryInfo(AppContext.BaseDirectory);
+			directory is not null;
+			directory = directory.Parent
+		)
 		{
 			var candidate = Path.Combine(directory.FullName, "Original", "NSPW_NET");
 			if (File.Exists(Path.Combine(candidate, "t3.bmp")))
@@ -61,7 +68,9 @@ internal sealed class SoloGame : IDisposable
 
 		if (_platform.MessageBoxes.Count > 0)
 		{
-			throw new InvalidOperationException($"The game showed a message box: {string.Join(", ", _platform.MessageBoxes)}");
+			throw new InvalidOperationException(
+				$"The game showed a message box: {string.Join(", ", _platform.MessageBoxes)}"
+			);
 		}
 	}
 
@@ -73,7 +82,9 @@ internal sealed class SoloGame : IDisposable
 			ThrowIfFailed();
 			if (!_thread.IsAlive || DateTime.UtcNow > deadline)
 			{
-				throw new TimeoutException($"The game did not reach the state: dialog {Game.MainDialog?.Id}, mode {Game.Mode}, frames {_platform.FrameCount}.");
+				throw new TimeoutException(
+					$"The game did not reach the state: dialog {Game.MainDialog?.Id}, mode {Game.Mode}, frames {_platform.FrameCount}."
+				);
 			}
 
 			Thread.Sleep(10);
@@ -112,10 +123,14 @@ internal sealed class SoloGame : IDisposable
 		WaitUntil(() => _platform.FrameCount > 20);
 
 		Click(512, 384);
-		WaitUntil(() => Game.Mode == GameMode.GameSetting && Game.RivalMode == GameMode.GameSetting);
+		WaitUntil(() =>
+			Game.Mode == GameMode.GameSetting && Game.RivalMode == GameMode.GameSetting
+		);
 
 		Click(130, 150 + 12);
-		WaitUntil(() => Game.Mode == GameMode.ConfigSetting && Game.RivalMode == GameMode.ConfigSetting);
+		WaitUntil(() =>
+			Game.Mode == GameMode.ConfigSetting && Game.RivalMode == GameMode.ConfigSetting
+		);
 
 		_platform.ParkAfterFrame = () => Game.Mode == GameMode.Battle;
 		Click(630 - 120 + 10, 700 + 12);
@@ -146,7 +161,13 @@ internal sealed class SoloGame : IDisposable
 		for (var m = 1; m <= Game.MaxUnitId; m++)
 		{
 			ref var unit = ref Game.Units[m];
-			if (unit.Side == side && unit.Category == category && !unit.IsSupplying && unit.Hp > 0 && !(unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress))
+			if (
+				unit.Side == side
+				&& unit.Category == category
+				&& !unit.IsSupplying
+				&& unit.Hp > 0
+				&& !(unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress)
+			)
 			{
 				units.Add(m);
 			}
@@ -157,7 +178,10 @@ internal sealed class SoloGame : IDisposable
 
 	private WorldPosition Center(List<int> units)
 	{
-		return new WorldPosition(units.Average(m => Game.Units[m].Position.X), units.Average(m => Game.Units[m].Position.Y));
+		return new WorldPosition(
+			units.Average(m => Game.Units[m].Position.X),
+			units.Average(m => Game.Units[m].Position.Y)
+		);
 	}
 
 	// Selects units as the player does: cancels the selection (a right click), clicks the first unit, then adds the
@@ -182,9 +206,10 @@ internal sealed class SoloGame : IDisposable
 		for (var i = 0; i < units.Count; i++)
 		{
 			var m = units[i];
-			var index = m < Game.JPN_PLANE_START
-				? m - (japan ? 1 : Game.USA_SHIP_START)
-				: Game.JPN_SHIP_END + m - (japan ? Game.JPN_PLANE_START : Game.USA_PLANE_START);
+			var index =
+				m < Game.JPN_PLANE_START
+					? m - (japan ? 1 : Game.USA_SHIP_START)
+					: Game.JPN_SHIP_END + m - (japan ? Game.JPN_PLANE_START : Game.USA_PLANE_START);
 			selection[index] = (byte)(i + 1);
 		}
 
@@ -210,22 +235,29 @@ internal sealed class SoloGame : IDisposable
 
 	// Orders units of both sides to move: the game's as the player does, by selecting them and clicking the point; the
 	// rival's by its order (DP_NEW_PP). Both orders take effect at the next turn.
-	private void OrderMove(List<int> own, WorldPosition ownPoint, List<int> rival, WorldPosition rivalPoint)
+	private void OrderMove(
+		List<int> own,
+		WorldPosition ownPoint,
+		List<int> rival,
+		WorldPosition rivalPoint
+	)
 	{
 		Select(own);
 		Game.MoveOrders[1].Unit = (short)own[0];
 		Game.MoveOrders[1].Destination = ownPoint;
 		Game.HandleInput();
 
-		_platform.Rival!.Order(new MoveOrderMessage
-		{
-			Type = MessageType.MoveOrder,
-			Unit = (byte)rival[0],
-			X = (short)rivalPoint.X,
-			Y = (short)rivalPoint.Y,
-			ClearsPath = 1,
-			Selections = RivalSelection(rival),
-		});
+		_platform.Rival!.Order(
+			new MoveOrderMessage
+			{
+				Type = MessageType.MoveOrder,
+				Unit = (byte)rival[0],
+				X = (short)rivalPoint.X,
+				Y = (short)rivalPoint.Y,
+				ClearsPath = 1,
+				Selections = RivalSelection(rival),
+			}
+		);
 	}
 
 	// Plays the first turns of the battle for both sides: each sends its ships at the other's ships, then its planes.

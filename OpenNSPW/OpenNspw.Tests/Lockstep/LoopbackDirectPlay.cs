@@ -23,7 +23,8 @@ internal sealed class LoopbackNetwork
 // A sink for the bytes a game sends, so that they can be part of its trace.
 internal delegate void SentHandler(uint dpnid, ReadOnlySpan<byte> data);
 
-internal sealed unsafe class LoopbackPeer(LoopbackNetwork network, SentHandler sent) : IDirectPlay8Peer
+internal sealed unsafe class LoopbackPeer(LoopbackNetwork network, SentHandler sent)
+	: IDirectPlay8Peer
 {
 	private const string TcpIpName = "DirectPlay8 TCP/IP Service Provider";
 
@@ -60,7 +61,9 @@ internal sealed unsafe class LoopbackPeer(LoopbackNetwork network, SentHandler s
 
 	private void EnqueueCreatePlayer(uint dpnid)
 	{
-		Enqueue(() => Handle(dplay8.DPN_MSGID_CREATE_PLAYER, new DPNMSG_CREATE_PLAYER { dpnidPlayer = dpnid }));
+		Enqueue(() =>
+			Handle(dplay8.DPN_MSGID_CREATE_PLAYER, new DPNMSG_CREATE_PLAYER { dpnidPlayer = dpnid })
+		);
 	}
 
 	private void EnqueueReceive(uint sender, byte[] data)
@@ -71,19 +74,24 @@ internal sealed unsafe class LoopbackPeer(LoopbackNetwork network, SentHandler s
 			data.CopyTo(buffer, 0);
 			fixed (byte* pReceiveData = buffer)
 			{
-				Handle(dplay8.DPN_MSGID_RECEIVE, new DPNMSG_RECEIVE
-				{
-					dpnidSender = sender,
-					pReceiveData = pReceiveData,
-					dwReceiveDataSize = (uint)data.Length,
-				});
+				Handle(
+					dplay8.DPN_MSGID_RECEIVE,
+					new DPNMSG_RECEIVE
+					{
+						dpnidSender = sender,
+						pReceiveData = pReceiveData,
+						dwReceiveDataSize = (uint)data.Length,
+					}
+				);
 			}
 		});
 	}
 
 	private LoopbackPeer? Find(uint dpnid)
 	{
-		return dpnid == Id ? this : Rival is { } rival && rival.Id == dpnid ? rival : null;
+		return dpnid == Id ? this
+			: Rival is { } rival && rival.Id == dpnid ? rival
+			: null;
 	}
 
 	public int Initialize(object? pvUserContext, PFNDPNMESSAGEHANDLER pfn, uint dwFlags)
@@ -93,10 +101,24 @@ internal sealed unsafe class LoopbackPeer(LoopbackNetwork network, SentHandler s
 		return winerror.S_OK;
 	}
 
-	public int EnumServiceProviders(Guid? pguidServiceProvider, Guid? pguidApplication, DPN_SERVICE_PROVIDER_INFO[]? pSPInfoBuffer, ref uint pcbEnumData, ref uint pcReturned, uint dwFlags)
+	public int EnumServiceProviders(
+		Guid? pguidServiceProvider,
+		Guid? pguidApplication,
+		DPN_SERVICE_PROVIDER_INFO[]? pSPInfoBuffer,
+		ref uint pcbEnumData,
+		ref uint pcReturned,
+		uint dwFlags
+	)
 	{
 		DPN_SERVICE_PROVIDER_INFO[] items = pguidServiceProvider is null
-			? [new DPN_SERVICE_PROVIDER_INFO { guid = dplay8.CLSID_DP8SP_TCPIP, pwszName = TcpIpName }]
+			?
+			[
+				new DPN_SERVICE_PROVIDER_INFO
+				{
+					guid = dplay8.CLSID_DP8SP_TCPIP,
+					pwszName = TcpIpName,
+				},
+			]
 			: [];
 		if (pSPInfoBuffer is null || pcbEnumData < items.Length)
 		{
@@ -121,13 +143,23 @@ internal sealed unsafe class LoopbackPeer(LoopbackNetwork network, SentHandler s
 		return winerror.S_OK;
 	}
 
-	public int SetPeerInfo(DPN_PLAYER_INFO pdpnPlayerInfo, object? pvAsyncContext, object? phAsyncHandle, uint dwFlags)
+	public int SetPeerInfo(
+		DPN_PLAYER_INFO pdpnPlayerInfo,
+		object? pvAsyncContext,
+		object? phAsyncHandle,
+		uint dwFlags
+	)
 	{
 		Name = pdpnPlayerInfo.pwszName ?? string.Empty;
 		return winerror.S_OK;
 	}
 
-	public int GetPeerInfo(uint dpnid, DPN_PLAYER_INFO? pdpnPlayerInfo, ref uint pdwSize, uint dwFlags)
+	public int GetPeerInfo(
+		uint dpnid,
+		DPN_PLAYER_INFO? pdpnPlayerInfo,
+		ref uint pdwSize,
+		uint dwFlags
+	)
 	{
 		if (Find(dpnid) is not { } player)
 		{
@@ -143,11 +175,21 @@ internal sealed unsafe class LoopbackPeer(LoopbackNetwork network, SentHandler s
 
 		pdpnPlayerInfo.dwInfoFlags = dplay8.DPNINFO_NAME;
 		pdpnPlayerInfo.pwszName = player.Name;
-		pdpnPlayerInfo.dwPlayerFlags = (player == this ? dplay8.DPNPLAYER_LOCAL : 0) | (player.IsHost ? dplay8.DPNPLAYER_HOST : 0);
+		pdpnPlayerInfo.dwPlayerFlags =
+			(player == this ? dplay8.DPNPLAYER_LOCAL : 0)
+			| (player.IsHost ? dplay8.DPNPLAYER_HOST : 0);
 		return winerror.S_OK;
 	}
 
-	public int Host(DPN_APPLICATION_DESC pdnAppDesc, IDirectPlay8Address?[] prgpDeviceInfo, uint cDeviceInfo, object? pdnSecurity, object? pdnCredentials, object? pvPlayerContext, uint dwFlags)
+	public int Host(
+		DPN_APPLICATION_DESC pdnAppDesc,
+		IDirectPlay8Address?[] prgpDeviceInfo,
+		uint cDeviceInfo,
+		object? pdnSecurity,
+		object? pdnCredentials,
+		object? pvPlayerContext,
+		uint dwFlags
+	)
 	{
 		if (_network.Host is not null)
 		{
@@ -163,12 +205,29 @@ internal sealed unsafe class LoopbackPeer(LoopbackNetwork network, SentHandler s
 
 	// Joins the host at once: the guest gets its own player, the host's and the completion, in Otsuki's order, and the
 	// host gets the guest's player.
-	public int Connect(DPN_APPLICATION_DESC pdnAppDesc, IDirectPlay8Address? pHostAddr, IDirectPlay8Address? pDeviceInfo, object? pdnSecurity, object? pdnCredentials, byte[]? pvUserConnectData, uint dwUserConnectDataSize, object? pvPlayerContext, object? pvAsyncContext, ref uint phAsyncHandle, uint dwFlags)
+	public int Connect(
+		DPN_APPLICATION_DESC pdnAppDesc,
+		IDirectPlay8Address? pHostAddr,
+		IDirectPlay8Address? pDeviceInfo,
+		object? pdnSecurity,
+		object? pdnCredentials,
+		byte[]? pvUserConnectData,
+		uint dwUserConnectDataSize,
+		object? pvPlayerContext,
+		object? pvAsyncContext,
+		ref uint phAsyncHandle,
+		uint dwFlags
+	)
 	{
 		phAsyncHandle = 1;
 		if (_network.Host is not { Rival: null } host || host == this)
 		{
-			Enqueue(() => Handle(dplay8.DPN_MSGID_CONNECT_COMPLETE, new DPNMSG_CONNECT_COMPLETE { hResultCode = dplay8.DPNERR_NOCONNECTION }));
+			Enqueue(() =>
+				Handle(
+					dplay8.DPN_MSGID_CONNECT_COMPLETE,
+					new DPNMSG_CONNECT_COMPLETE { hResultCode = dplay8.DPNERR_NOCONNECTION }
+				)
+			);
 			return DPNSUCCESS_PENDING;
 		}
 
@@ -177,14 +236,30 @@ internal sealed unsafe class LoopbackPeer(LoopbackNetwork network, SentHandler s
 		host.Rival = this;
 		EnqueueCreatePlayer(Id);
 		EnqueueCreatePlayer(host.Id);
-		Enqueue(() => Handle(dplay8.DPN_MSGID_CONNECT_COMPLETE, new DPNMSG_CONNECT_COMPLETE { hResultCode = winerror.S_OK }));
+		Enqueue(() =>
+			Handle(
+				dplay8.DPN_MSGID_CONNECT_COMPLETE,
+				new DPNMSG_CONNECT_COMPLETE { hResultCode = winerror.S_OK }
+			)
+		);
 		host.EnqueueCreatePlayer(Id);
 		return DPNSUCCESS_PENDING;
 	}
 
-	public int SendTo(uint dpnid, ref DPN_BUFFER_DESC prgBufferDesc, uint cBufferDesc, uint dwTimeOut, object? pvAsyncContext, ref uint phAsyncHandle, uint dwFlags)
+	public int SendTo(
+		uint dpnid,
+		ref DPN_BUFFER_DESC prgBufferDesc,
+		uint cBufferDesc,
+		uint dwTimeOut,
+		object? pvAsyncContext,
+		ref uint phAsyncHandle,
+		uint dwFlags
+	)
 	{
-		var data = new ReadOnlySpan<byte>(prgBufferDesc.pBufferData, (int)prgBufferDesc.dwBufferSize).ToArray();
+		var data = new ReadOnlySpan<byte>(
+			prgBufferDesc.pBufferData,
+			(int)prgBufferDesc.dwBufferSize
+		).ToArray();
 		_sent(dpnid, data);
 
 		var result = winerror.S_OK;
@@ -211,7 +286,12 @@ internal sealed unsafe class LoopbackPeer(LoopbackNetwork network, SentHandler s
 			return winerror.S_OK;
 		}
 
-		Enqueue(() => Handle(dplay8.DPN_MSGID_SEND_COMPLETE, new DPNMSG_SEND_COMPLETE { hAsyncOp = handle, hResultCode = result }));
+		Enqueue(() =>
+			Handle(
+				dplay8.DPN_MSGID_SEND_COMPLETE,
+				new DPNMSG_SEND_COMPLETE { hAsyncOp = handle, hResultCode = result }
+			)
+		);
 		return DPNSUCCESS_PENDING;
 	}
 
@@ -221,10 +301,20 @@ internal sealed unsafe class LoopbackPeer(LoopbackNetwork network, SentHandler s
 		{
 			if (IsHost)
 			{
-				rival.Enqueue(() => rival.Handle(dplay8.DPN_MSGID_TERMINATE_SESSION, new DPNMSG_TERMINATE_SESSION { hResultCode = winerror.S_OK }));
+				rival.Enqueue(() =>
+					rival.Handle(
+						dplay8.DPN_MSGID_TERMINATE_SESSION,
+						new DPNMSG_TERMINATE_SESSION { hResultCode = winerror.S_OK }
+					)
+				);
 			}
 
-			rival.Enqueue(() => rival.Handle(dplay8.DPN_MSGID_DESTROY_PLAYER, new DPNMSG_DESTROY_PLAYER { dpnidPlayer = Id }));
+			rival.Enqueue(() =>
+				rival.Handle(
+					dplay8.DPN_MSGID_DESTROY_PLAYER,
+					new DPNMSG_DESTROY_PLAYER { dpnidPlayer = Id }
+				)
+			);
 			rival.Rival = null;
 			Rival = null;
 		}

@@ -13,9 +13,13 @@ public readonly struct HDC(int value) : IEquatable<HDC>
 	public int Value { get; } = value;
 
 	public static bool operator !(HDC h) => h.Value == 0;
+
 	public static bool operator true(HDC h) => h.Value != 0;
+
 	public static bool operator false(HDC h) => h.Value == 0;
+
 	public static bool operator ==(HDC a, HDC b) => a.Value == b.Value;
+
 	public static bool operator !=(HDC a, HDC b) => a.Value != b.Value;
 
 	public bool Equals(HDC other) => Value == other.Value;
@@ -32,9 +36,13 @@ public readonly struct HGDIOBJ(int value) : IEquatable<HGDIOBJ>
 	public int Value { get; } = value;
 
 	public static bool operator !(HGDIOBJ h) => h.Value == 0;
+
 	public static bool operator true(HGDIOBJ h) => h.Value != 0;
+
 	public static bool operator false(HGDIOBJ h) => h.Value == 0;
+
 	public static bool operator ==(HGDIOBJ a, HGDIOBJ b) => a.Value == b.Value;
+
 	public static bool operator !=(HGDIOBJ a, HGDIOBJ b) => a.Value != b.Value;
 
 	public bool Equals(HGDIOBJ other) => Value == other.Value;
@@ -131,7 +139,8 @@ public sealed class Gdi(INspwPlatform platform)
 		return handle;
 	}
 
-	private T? Get<T>(int handle) where T : class
+	private T? Get<T>(int handle)
+		where T : class
 	{
 		return _objects.GetValueOrDefault(handle) as T;
 	}
@@ -246,7 +255,9 @@ public sealed class Gdi(INspwPlatform platform)
 			var row = dataOffset + (rawHeight > 0 ? height - 1 - y : y) * stride;
 			for (var x = 0; x < width; x++)
 			{
-				int r, g, b;
+				int r,
+					g,
+					b;
 				switch (bitCount)
 				{
 					case 8:
@@ -278,7 +289,12 @@ public sealed class Gdi(INspwPlatform platform)
 
 	public HGDIOBJ LoadBitmap(string path)
 	{
-		using var stream = _platform.OpenFile(path.Replace('\\', '/'), FileMode.Open, FileAccess.Read, FileShare.Read);
+		using var stream = _platform.OpenFile(
+			path.Replace('\\', '/'),
+			FileMode.Open,
+			FileAccess.Read,
+			FileShare.Read
+		);
 		if (stream is null)
 		{
 			return default;
@@ -306,8 +322,10 @@ public sealed class Gdi(INspwPlatform platform)
 
 	public int BitBlt(HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1)
 	{
-		if (Get<DeviceContext>(hdc.Value)?.Surface is not { } surface
-			|| Get<Bitmap>(Get<DeviceContext>(hdcSrc.Value)?.Bitmap.Value ?? 0) is not { } bitmap)
+		if (
+			Get<DeviceContext>(hdc.Value)?.Surface is not { } surface
+			|| Get<Bitmap>(Get<DeviceContext>(hdcSrc.Value)?.Bitmap.Value ?? 0) is not { } bitmap
+		)
 		{
 			return 0;
 		}
@@ -344,7 +362,10 @@ public sealed class Gdi(INspwPlatform platform)
 		}
 
 		var font = Get<Font>(dc.Font.Value);
-		if (_platform.RasterizeText(text, font?.Height ?? 16, font?.FaceName ?? "") is not { } glyphs)
+		if (
+			_platform.RasterizeText(text, font?.Height ?? 16, font?.FaceName ?? "")
+			is not { } glyphs
+		)
 		{
 			return 1;
 		}
@@ -454,7 +475,12 @@ public unsafe partial class Nspw
 	// TextOut writes the first c chars (bytes) of the string.
 	public int TextOut(HDC hdc, int x, int y, ReadOnlySpan<byte> lpString, int c)
 	{
-		return gdi.TextOut(hdc, x, y, ShiftJis.GetString(lpString[..Math.Min(Math.Max(c, 0), lpString.Length)]));
+		return gdi.TextOut(
+			hdc,
+			x,
+			y,
+			ShiftJis.GetString(lpString[..Math.Min(Math.Max(c, 0), lpString.Length)])
+		);
 	}
 
 	public int TextOut(HDC hdc, int x, int y, string lpString, int c)

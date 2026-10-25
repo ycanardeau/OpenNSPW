@@ -75,9 +75,45 @@ public static class dinput
 	public const int DIERR_INPUTLOST = unchecked((int)0x8007001E);
 	public const int DIERR_NOTACQUIRED = unchecked((int)0x8007000C);
 
-	public static readonly Guid IID_IDirectInput8 = new(0xbf798031, 0x483a, 0x4da2, 0xaa, 0x99, 0x5d, 0x64, 0xed, 0x36, 0x97, 0x00);
-	public static readonly Guid GUID_SysMouse = new(0x6f1d2b60, 0xd5a0, 0x11cf, 0xbf, 0xc7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);
-	public static readonly Guid GUID_SysKeyboard = new(0x6f1d2b61, 0xd5a0, 0x11cf, 0xbf, 0xc7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);
+	public static readonly Guid IID_IDirectInput8 = new(
+		0xbf798031,
+		0x483a,
+		0x4da2,
+		0xaa,
+		0x99,
+		0x5d,
+		0x64,
+		0xed,
+		0x36,
+		0x97,
+		0x00
+	);
+	public static readonly Guid GUID_SysMouse = new(
+		0x6f1d2b60,
+		0xd5a0,
+		0x11cf,
+		0xbf,
+		0xc7,
+		0x44,
+		0x45,
+		0x53,
+		0x54,
+		0x00,
+		0x00
+	);
+	public static readonly Guid GUID_SysKeyboard = new(
+		0x6f1d2b61,
+		0xd5a0,
+		0x11cf,
+		0xbf,
+		0xc7,
+		0x44,
+		0x45,
+		0x53,
+		0x54,
+		0x00,
+		0x00
+	);
 
 	public static readonly DIDATAFORMAT c_dfDIKeyboard = new("Keyboard");
 	public static readonly DIDATAFORMAT c_dfDIMouse2 = new("Mouse2");
@@ -135,7 +171,15 @@ public sealed unsafe class DirectInputDevice8 : IDirectInputDevice8
 	{
 		if (Acquired)
 		{
-			_data.Enqueue(new DIDEVICEOBJECTDATA { dwOfs = offset, dwData = data, dwTimeStamp = timeStamp, dwSequence = ++_sequence });
+			_data.Enqueue(
+				new DIDEVICEOBJECTDATA
+				{
+					dwOfs = offset,
+					dwData = data,
+					dwTimeStamp = timeStamp,
+					dwSequence = ++_sequence,
+				}
+			);
 		}
 	}
 
@@ -168,7 +212,12 @@ public sealed unsafe class DirectInputDevice8 : IDirectInputDevice8
 		return dinput.DI_OK;
 	}
 
-	public int GetDeviceData(uint cbObjectData, DIDEVICEOBJECTDATA* rgdod, uint* pdwInOut, uint dwFlags)
+	public int GetDeviceData(
+		uint cbObjectData,
+		DIDEVICEOBJECTDATA* rgdod,
+		uint* pdwInOut,
+		uint dwFlags
+	)
 	{
 		if (!Acquired)
 		{
@@ -204,7 +253,11 @@ public sealed class DirectInput8 : IDirectInput8
 
 	public DirectInputDevice8? Mouse { get; private set; }
 
-	public int CreateDevice(Guid rguid, out IDirectInputDevice8? lplpDirectInputDevice, object? pUnkOuter)
+	public int CreateDevice(
+		Guid rguid,
+		out IDirectInputDevice8? lplpDirectInputDevice,
+		object? pUnkOuter
+	)
 	{
 		var device = new DirectInputDevice8();
 		if (rguid == dinput.GUID_SysKeyboard)
@@ -251,6 +304,10 @@ public partial class Nspw
 	// A mouse button went down or up: 0 is the left button, 1 the right button.
 	public void PostMouseInput(int button, bool down)
 	{
-		_directInput?.Mouse?.Post(dinput.DIMOFS_BUTTON0 + (uint)button, down ? 0x80u : 0, _platform.timeGetTime());
+		_directInput?.Mouse?.Post(
+			dinput.DIMOFS_BUTTON0 + (uint)button,
+			down ? 0x80u : 0,
+			_platform.timeGetTime()
+		);
 	}
 }

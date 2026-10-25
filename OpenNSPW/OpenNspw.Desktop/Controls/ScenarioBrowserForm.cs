@@ -62,7 +62,10 @@ internal sealed class ScenarioBrowserForm : Form
 
 	private ScenarioRow CreateRow(ScenarioEntry scenario, int page, int index)
 	{
-		var row = new ScenarioRow(_fonts, scenario) { Bounds = new DrawingRectangle(48, 200 + index * RowHeight, 432, RowHeight) };
+		var row = new ScenarioRow(_fonts, scenario)
+		{
+			Bounds = new DrawingRectangle(48, 200 + index * RowHeight, 432, RowHeight),
+		};
 		row.Click += (_, _) => Select(page, index);
 		Controls.Add(row);
 		return row;
@@ -70,7 +73,11 @@ internal sealed class ScenarioBrowserForm : Form
 
 	private TabButton CreateTab(ScenarioSet set, int page)
 	{
-		var tab = new TabButton(_fonts) { Bounds = new DrawingRectangle(48 + page * 112, 112, 96, 32), Text = GameTexts.Of(SplitHeading(set.Heading, page).Name) };
+		var tab = new TabButton(_fonts)
+		{
+			Bounds = new DrawingRectangle(48 + page * 112, 112, 96, 32),
+			Text = GameTexts.Of(SplitHeading(set.Heading, page).Name),
+		};
 		tab.Click += (_, _) => Select(page, 0);
 		Controls.Add(tab);
 		return tab;
@@ -86,19 +93,41 @@ internal sealed class ScenarioBrowserForm : Form
 		KeyPreview = true;
 
 		_tabs = [.. sets.Select(CreateTab)];
-		_rows = [.. sets.Select((set, page) => set.Scenarios.Select((scenario, index) => CreateRow(scenario, page, index)).ToArray())];
+		_rows =
+		[
+			.. sets.Select(
+				(set, page) =>
+					set
+						.Scenarios.Select((scenario, index) => CreateRow(scenario, page, index))
+						.ToArray()
+			),
+		];
 		_details = new ScenarioDetails(fonts) { Bounds = new DrawingRectangle(504, 200, 472, 460) };
 		Controls.Add(_details);
 
-		var back = new ActionButton(fonts) { Bounds = new DrawingRectangle(48, 688, 150, 44), Text = Texts.Back };
+		var back = new ActionButton(fonts)
+		{
+			Bounds = new DrawingRectangle(48, 688, 150, 44),
+			Text = Texts.Back,
+		};
 		back.Click += (_, _) => Canceled?.Invoke(this, EventArgs.Empty);
 		Controls.Add(back);
 
-		var start = new ActionButton(fonts) { Bounds = new DrawingRectangle(826, 688, 150, 44), Text = Texts.Start, IsPrimary = true };
+		var start = new ActionButton(fonts)
+		{
+			Bounds = new DrawingRectangle(826, 688, 150, 44),
+			Text = Texts.Start,
+			IsPrimary = true,
+		};
 		start.Click += (_, _) => Start();
 		Controls.Add(start);
 
-		var initial = sets.SelectMany((set, page) => set.Scenarios.Select((scenario, index) => (scenario.Number, Page: page, Index: index)))
+		var initial = sets.SelectMany(
+				(set, page) =>
+					set.Scenarios.Select(
+						(scenario, index) => (scenario.Number, Page: page, Index: index)
+					)
+			)
 			.FirstOrDefault(s => s.Number == initialScenario);
 		Select(initial.Page, initial.Index);
 	}
@@ -147,11 +176,25 @@ internal sealed class ScenarioBrowserForm : Form
 		var g = e.Graphics;
 		Painter.SpacedText(g, Texts.SinglePlayerKicker, _fonts.Bold(12), Theme.Brass, 48, 34, 3);
 		Painter.Text(g, Texts.Scenarios, _fonts.Bold(34), Theme.Text, 48, 52);
-		Painter.Text(g, GameTexts.Of(SplitHeading(_sets[_page].Heading, _page).Description), _fonts.Regular(14), Theme.Muted, 48, 156);
+		Painter.Text(
+			g,
+			GameTexts.Of(SplitHeading(_sets[_page].Heading, _page).Description),
+			_fonts.Regular(14),
+			Theme.Muted,
+			48,
+			156
+		);
 		Painter.Fill(g, new(48, 186, 928, 1), Theme.Alpha(Theme.Line, 0.9f));
 
 		var hint = Texts.BrowserHint;
 		var hintFont = _fonts.Regular(13);
-		Painter.Text(g, hint, hintFont, Theme.Muted, (Width - Painter.Measure(g, hint, hintFont).Width) / 2, 701);
+		Painter.Text(
+			g,
+			hint,
+			hintFont,
+			Theme.Muted,
+			(Width - Painter.Measure(g, hint, hintFont).Width) / 2,
+			701
+		);
 	}
 }

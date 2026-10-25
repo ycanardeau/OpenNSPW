@@ -28,14 +28,22 @@ public class EmulatorCopyBenchmarks
 
 	private static int OffsetOf<T>(ref Unit unit, ref T field)
 	{
-		return (int)Unsafe.ByteOffset(ref Unsafe.As<Unit, byte>(ref unit), ref Unsafe.As<T, byte>(ref field));
+		return (int)
+			Unsafe.ByteOffset(
+				ref Unsafe.As<Unit, byte>(ref unit),
+				ref Unsafe.As<T, byte>(ref field)
+			);
 	}
 
 	// The offsets of SubWeapons, IsFound and Random250 in Unit.
 	private static (int SubWeapons, int Found, int Random) UnitOffsets()
 	{
 		var unit = new Unit();
-		return (OffsetOf(ref unit, ref unit.SubWeapons), OffsetOf(ref unit, ref unit.IsFound), OffsetOf(ref unit, ref unit.Random250));
+		return (
+			OffsetOf(ref unit, ref unit.SubWeapons),
+			OffsetOf(ref unit, ref unit.IsFound),
+			OffsetOf(ref unit, ref unit.Random250)
+		);
 	}
 
 	private static readonly (int SubWeapons, int Found, int Random) Offsets = UnitOffsets();
@@ -57,8 +65,12 @@ public class EmulatorCopyBenchmarks
 	[Benchmark]
 	public void CopyIn()
 	{
-		MemoryMarshal.AsBytes((Span<Array256<ushort>>)_game.MapTiles).CopyTo(At(MapAddress, Unsafe.SizeOf<Array256<Array256<ushort>>>()));
-		MemoryMarshal.AsBytes((Span<Sprite>)_game.Renderer.Sprites).CopyTo(At(SpriteAddress, Unsafe.SizeOf<SpriteArray>()));
+		MemoryMarshal
+			.AsBytes((Span<Array256<ushort>>)_game.MapTiles)
+			.CopyTo(At(MapAddress, Unsafe.SizeOf<Array256<Array256<ushort>>>()));
+		MemoryMarshal
+			.AsBytes((Span<Sprite>)_game.Renderer.Sprites)
+			.CopyTo(At(SpriteAddress, Unsafe.SizeOf<SpriteArray>()));
 		var units = MemoryMarshal.AsBytes((Span<Unit>)_game.Units);
 		for (var m = 0; m < UnitCount; m++)
 		{
@@ -75,8 +87,10 @@ public class EmulatorCopyBenchmarks
 	[Benchmark]
 	public void CopyOut()
 	{
-		At(MapAddress, Unsafe.SizeOf<Array256<Array256<ushort>>>()).CopyTo(MemoryMarshal.AsBytes((Span<Array256<ushort>>)_game.MapTiles));
-		At(SpriteAddress, Unsafe.SizeOf<SpriteArray>()).CopyTo(MemoryMarshal.AsBytes((Span<Sprite>)_game.Renderer.Sprites));
+		At(MapAddress, Unsafe.SizeOf<Array256<Array256<ushort>>>())
+			.CopyTo(MemoryMarshal.AsBytes((Span<Array256<ushort>>)_game.MapTiles));
+		At(SpriteAddress, Unsafe.SizeOf<SpriteArray>())
+			.CopyTo(MemoryMarshal.AsBytes((Span<Sprite>)_game.Renderer.Sprites));
 		var units = MemoryMarshal.AsBytes((Span<Unit>)_game.Units);
 		for (var m = 0; m < UnitCount; m++)
 		{

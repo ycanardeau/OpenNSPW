@@ -2,8 +2,8 @@ using OpenNspw.Tests.Lockstep;
 using Xunit;
 using static OpenNspw.all_head;
 using static OpenNspw.resource;
-using static OpenNspw.windef;
 using static OpenNspw.Tests.Lockstep.BattleScripts;
+using static OpenNspw.windef;
 
 namespace OpenNspw.Tests;
 
@@ -63,12 +63,15 @@ public class CharacterizationTests
 	[InlineData(2)]
 	public void Scenario_with_random_input(int index)
 	{
-		Check($"scenario-{index + 1}", run =>
-		{
-			StartBattle(run, index);
-			Battle(run, (uint)(1 + index), 2000);
-			Assert.Equal(GameMode.Battle, run.Host.Game.Mode);
-		});
+		Check(
+			$"scenario-{index + 1}",
+			run =>
+			{
+				StartBattle(run, index);
+				Battle(run, (uint)(1 + index), 2000);
+				Assert.Equal(GameMode.Battle, run.Host.Game.Mode);
+			}
+		);
 	}
 
 	// The original's user scenarios tst3.dat and てすと.dat (Scenario/), whose fleets start close, so these cover fighting.
@@ -77,29 +80,51 @@ public class CharacterizationTests
 	[InlineData(2)]
 	public void User_scenario_with_random_input(int index)
 	{
-		Check($"user-scenario-{index}", run =>
-		{
-			StartUserBattle(run, index);
-			Battle(run, (uint)(100 + index), 3000);
-		});
+		Check(
+			$"user-scenario-{index}",
+			run =>
+			{
+				StartUserBattle(run, index);
+				Battle(run, (uint)(100 + index), 3000);
+			}
+		);
 	}
 
 	// ミッドウェイ攻略１, whose host starts with transports: those with a clear course land their cargo, which builds bases.
 	[Fact]
 	public void Transports_landing()
 	{
-		Check("transports-landing", run =>
-		{
-			StartBattle(run, 5);
-			var nspw = run.Host.Game;
-			var input = new MouseInput(run, run.Host);
-			var transports = Enumerable.Range(1, nspw.MaxUnitId).Where(m => nspw.Units[m].IsUsed && nspw.Units[m].Kind == UnitKind.Transport && nspw.Units[m].Side == nspw.LocalSide).ToList();
-			transports = [.. transports.Where(m => LandTransport(run, run.Host, input, m))];
-			Assert.True(transports.Count >= 2, $"Only {transports.Count} transports could be ordered to land.");
+		Check(
+			"transports-landing",
+			run =>
+			{
+				StartBattle(run, 5);
+				var nspw = run.Host.Game;
+				var input = new MouseInput(run, run.Host);
+				var transports = Enumerable
+					.Range(1, nspw.MaxUnitId)
+					.Where(m =>
+						nspw.Units[m].IsUsed
+						&& nspw.Units[m].Kind == UnitKind.Transport
+						&& nspw.Units[m].Side == nspw.LocalSide
+					)
+					.ToList();
+				transports = [.. transports.Where(m => LandTransport(run, run.Host, input, m))];
+				Assert.True(
+					transports.Count >= 2,
+					$"Only {transports.Count} transports could be ordered to land."
+				);
 
-			run.Until(() => transports.All(m => !nspw.Units[m].IsUsed || nspw.Units[m].Kind != UnitKind.Transport), 10000);
-			run.Frames(run.Host, 1000);
-		});
+				run.Until(
+					() =>
+						transports.All(m =>
+							!nspw.Units[m].IsUsed || nspw.Units[m].Kind != UnitKind.Transport
+						),
+					10000
+				);
+				run.Frames(run.Host, 1000);
+			}
+		);
 	}
 
 	[Fact]

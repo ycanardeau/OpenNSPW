@@ -36,7 +36,10 @@ internal sealed class FieldSplitter(CSharpProject project)
 				return null;
 			}
 
-			if (trivia.IsKind(SyntaxKind.SingleLineCommentTrivia) || trivia.IsKind(SyntaxKind.MultiLineCommentTrivia))
+			if (
+				trivia.IsKind(SyntaxKind.SingleLineCommentTrivia)
+				|| trivia.IsKind(SyntaxKind.MultiLineCommentTrivia)
+			)
 			{
 				return trivia;
 			}
@@ -55,7 +58,10 @@ internal sealed class FieldSplitter(CSharpProject project)
 
 			// A declaration that follows another member on the same line goes on a line of its own.
 			var previous = field.GetFirstToken().GetPreviousToken();
-			if (previous.IsKind(SyntaxKind.SemicolonToken) || previous.IsKind(SyntaxKind.CloseBraceToken))
+			if (
+				previous.IsKind(SyntaxKind.SemicolonToken)
+				|| previous.IsKind(SyntaxKind.CloseBraceToken)
+			)
 			{
 				var between = TextSpan.FromBounds(previous.Span.End, field.SpanStart);
 				if (text.ToString(between).All(c => c is ' ' or '\t'))
@@ -70,12 +76,23 @@ internal sealed class FieldSplitter(CSharpProject project)
 				continue;
 			}
 
-			var prefix = text.ToString(TextSpan.FromBounds(field.SpanStart, variables[0].SpanStart));
+			var prefix = text.ToString(
+				TextSpan.FromBounds(field.SpanStart, variables[0].SpanStart)
+			);
 			var comment = EndOfLineComment(field);
-			var commentText = comment is { } c ? text.ToString(TextSpan.FromBounds(field.Span.End, c.Span.End)) : "";
-			var declarations = variables.Select((v, i) => $"{prefix}{v};{(i == 0 ? commentText : "")}");
+			var commentText = comment is { } c
+				? text.ToString(TextSpan.FromBounds(field.Span.End, c.Span.End))
+				: "";
+			var declarations = variables.Select(
+				(v, i) => $"{prefix}{v};{(i == 0 ? commentText : "")}"
+			);
 			var end = comment?.Span.End ?? field.Span.End;
-			edits.Add((TextSpan.FromBounds(field.SpanStart, end), string.Join($"\n{indentation}", declarations)));
+			edits.Add(
+				(
+					TextSpan.FromBounds(field.SpanStart, end),
+					string.Join($"\n{indentation}", declarations)
+				)
+			);
 		}
 
 		return edits;

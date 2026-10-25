@@ -29,7 +29,17 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 	{
 		if (replay.Divergence is { } divergence)
 		{
-			Game.Window.Title = Texts.ReplayDiverged(string.Join(" ", divergence.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Take(2)));
+			Game.Window.Title = Texts.ReplayDiverged(
+				string.Join(
+					" ",
+					divergence
+						.Split(
+							'\n',
+							StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+						)
+						.Take(2)
+				)
+			);
 			if (!_hasReportedReplay)
 				Console.WriteLine($"The game left 1.22's trace: {divergence}");
 			_hasReportedReplay = true;
@@ -38,7 +48,9 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 		{
 			Game.Window.Title = Texts.ReplayEnded(replay.Frames);
 			if (!_hasReportedReplay)
-				Console.WriteLine($"1.22's trace ended after {replay.Frames} frames, without a difference.");
+				Console.WriteLine(
+					$"1.22's trace ended after {replay.Frames} frames, without a difference."
+				);
 			_hasReportedReplay = true;
 		}
 		else
@@ -82,7 +94,15 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 		_backdrop = new Backdrop(GraphicsDevice);
 		_dialogs = new DialogForms(_session.Game, WindowManager, Game.Fonts);
 
-		_confirmQuit = new ConfirmForm(Game.Fonts, Texts.QuitGameTitle, Texts.QuitGameMessage, Texts.Quit) { Visible = false };
+		_confirmQuit = new ConfirmForm(
+			Game.Fonts,
+			Texts.QuitGameTitle,
+			Texts.QuitGameMessage,
+			Texts.Quit
+		)
+		{
+			Visible = false,
+		};
 		_confirmQuit.Confirmed += (_, _) =>
 		{
 			HideConfirmQuit();
@@ -126,8 +146,18 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 		_settingForm.UpdateFrom(snapshot);
 		if (Game.IsActive)
 		{
-			var cursor = _settingForm.Visible ? SettingForm.GameCursor : (System.Drawing.Point?)null;
-			_session.UpdateInput(Game.ViewportAdapter, point => _confirmQuit.Visible || _dialogs.Contains(point) || _battleForm.Owns(point) || _settingForm.Owns(point), cursor);
+			var cursor = _settingForm.Visible
+				? SettingForm.GameCursor
+				: (System.Drawing.Point?)null;
+			_session.UpdateInput(
+				Game.ViewportAdapter,
+				point =>
+					_confirmQuit.Visible
+					|| _dialogs.Contains(point)
+					|| _battleForm.Owns(point)
+					|| _settingForm.Owns(point),
+				cursor
+			);
 			if (_session.IsQuitRequested)
 				ToggleConfirmQuit();
 		}

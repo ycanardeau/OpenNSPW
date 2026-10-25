@@ -30,7 +30,8 @@ internal sealed class ScrollAhead(GameSession session)
 		{
 			camera = new WorldPosition(
 				Math.Clamp(camera.X + move.Dx, World.Left, World.Right - CMBT_WIDTH),
-				Math.Clamp(camera.Y - move.Dy, World.Bottom + CMBT_HEIGHT, World.Top));
+				Math.Clamp(camera.Y - move.Dy, World.Bottom + CMBT_HEIGHT, World.Top)
+			);
 		}
 
 		snapshot.CameraPosition = camera;

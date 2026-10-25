@@ -51,68 +51,144 @@ internal sealed class Distances(CSharpProject project)
 
 	// What the last statement assigns the distance to, if it is `r=x/CosDegrees(d);` with parentheses: a variable or a
 	// field of type double that does not use the computation's variables.
-	private static ExpressionSyntax? Result(StatementSyntax statement, string x, string d, SemanticModel model, string[] variables)
+	private static ExpressionSyntax? Result(
+		StatementSyntax statement,
+		string x,
+		string d,
+		SemanticModel model,
+		string[] variables
+	)
 	{
-		if (statement is not ExpressionStatementSyntax { Expression: AssignmentExpressionSyntax assignment }
+		if (
+			statement
+				is not ExpressionStatementSyntax
+				{
+					Expression: AssignmentExpressionSyntax assignment
+				}
 			|| !assignment.IsKind(SyntaxKind.SimpleAssignmentExpression)
 			|| model.GetTypeInfo(assignment.Left).Type?.SpecialType != SpecialType.System_Double
-			|| assignment.Left.DescendantNodesAndSelf().OfType<IdentifierNameSyntax>().Any(i => variables.Contains(i.Identifier.ValueText)))
+			|| assignment
+				.Left.DescendantNodesAndSelf()
+				.OfType<IdentifierNameSyntax>()
+				.Any(i => variables.Contains(i.Identifier.ValueText))
+		)
 		{
 			return null;
 		}
 
 		var value = Normalized(assignment.Right);
-		string[] forms = [$"{x}/CosDegrees({d})", $"({x})/(CosDegrees({d}))", $"(({x})/(CosDegrees({d})))", $"({x})/CosDegrees({d})"];
+		string[] forms =
+		[
+			$"{x}/CosDegrees({d})",
+			$"({x})/(CosDegrees({d}))",
+			$"(({x})/(CosDegrees({d})))",
+			$"({x})/CosDegrees({d})",
+		];
 		return forms.Contains(value) ? assignment.Left : null;
 	}
 
 	private static bool IsDouble(SemanticModel model, SyntaxNode method, string name)
 	{
-		var symbol = method.DescendantNodes().OfType<IdentifierNameSyntax>().Where(i => i.Identifier.ValueText == name)
-			.Select(i => model.GetSymbolInfo(i).Symbol).FirstOrDefault(s => s is not null);
+		var symbol = method
+			.DescendantNodes()
+			.OfType<IdentifierNameSyntax>()
+			.Where(i => i.Identifier.ValueText == name)
+			.Select(i => model.GetSymbolInfo(i).Symbol)
+			.FirstOrDefault(s => s is not null);
 		return symbol switch
 		{
-			ILocalSymbol { IsRef: false } local => local.Type.SpecialType == SpecialType.System_Double,
-			IParameterSymbol { RefKind: RefKind.None } parameter => parameter.Type.SpecialType == SpecialType.System_Double,
+			ILocalSymbol { IsRef: false } local => local.Type.SpecialType
+				== SpecialType.System_Double,
+			IParameterSymbol { RefKind: RefKind.None } parameter => parameter.Type.SpecialType
+				== SpecialType.System_Double,
 			_ => false,
 		};
 	}
 
 	private static bool TakesAddress(SyntaxNode method, string name)
 	{
-		return method.DescendantNodes().OfType<PrefixUnaryExpressionSyntax>()
-			.Any(p => p.IsKind(SyntaxKind.AddressOfExpression) && p.Operand is IdentifierNameSyntax { Identifier.ValueText: var operand } && operand == name);
+		return method
+			.DescendantNodes()
+			.OfType<PrefixUnaryExpressionSyntax>()
+			.Any(p =>
+				p.IsKind(SyntaxKind.AddressOfExpression)
+				&& p.Operand is IdentifierNameSyntax { Identifier.ValueText: var operand }
+				&& operand == name
+			);
 	}
 
 	// Whether a comment or a directive is between the first and the last statement.
 	private static bool HasTriviaInside(IReadOnlyList<StatementSyntax> statements)
 	{
 		var inside = TextSpan.FromBounds(statements[0].SpanStart, statements[^1].Span.End);
-		return statements[0].Parent!.DescendantTrivia(inside, descendIntoTrivia: true)
-			.Any(t => inside.Contains(t.Span) && (t.IsKind(SyntaxKind.SingleLineCommentTrivia) || t.IsKind(SyntaxKind.MultiLineCommentTrivia) || t.IsDirective));
+		return statements[0]
+			.Parent!.DescendantTrivia(inside, descendIntoTrivia: true)
+			.Any(t =>
+				inside.Contains(t.Span)
+				&& (
+					t.IsKind(SyntaxKind.SingleLineCommentTrivia)
+					|| t.IsKind(SyntaxKind.MultiLineCommentTrivia)
+					|| t.IsDirective
+				)
+			);
 	}
 
 	// The replacement of the computation that starts at statements[start], if it is one that can be replaced.
-	private static (TextSpan Span, string Text)? Edit(IReadOnlyList<StatementSyntax> statements, int start, SemanticModel model)
+	private static (TextSpan Span, string Text)? Edit(
+		IReadOnlyList<StatementSyntax> statements,
+		int start,
+		SemanticModel model
+	)
 	{
-		if (start + 9 > statements.Count
-			|| statements[start + 2] is not ExpressionStatementSyntax { Expression: AssignmentExpressionSyntax { Left: IdentifierNameSyntax direction, Right: BinaryExpressionSyntax { Left: InvocationExpressionSyntax { Expression: IdentifierNameSyntax { Identifier.ValueText: "atan2" }, ArgumentList.Arguments: [{ Expression: IdentifierNameSyntax y }, { Expression: IdentifierNameSyntax x }] } } } })
+		if (
+			start + 9 > statements.Count
+			|| statements[start + 2]
+				is not ExpressionStatementSyntax
+				{
+					Expression: AssignmentExpressionSyntax
+					{
+						Left: IdentifierNameSyntax direction,
+						Right: BinaryExpressionSyntax
+						{
+							Left: InvocationExpressionSyntax
+							{
+								Expression: IdentifierNameSyntax { Identifier.ValueText: "atan2" },
+								ArgumentList.Arguments: [
+									{ Expression: IdentifierNameSyntax y },
+									{ Expression: IdentifierNameSyntax x },
+								]
+							}
+						}
+					}
+				}
+		)
 		{
 			return null;
 		}
 
-		var (xName, yName, dName) = (x.Identifier.ValueText, y.Identifier.ValueText, direction.Identifier.ValueText);
+		var (xName, yName, dName) = (
+			x.Identifier.ValueText,
+			y.Identifier.ValueText,
+			direction.Identifier.ValueText
+		);
 		var template = Template(xName, yName, dName);
 		var range = statements.Skip(start).Take(9).ToList();
 		string[] variables = [xName, yName, dName];
-		if (!template.Select((t, i) => t == Normalized(range[i])).All(b => b) || Result(range[8], xName, dName, model, variables) is not { } result)
+		if (
+			!template.Select((t, i) => t == Normalized(range[i])).All(b => b)
+			|| Result(range[8], xName, dName, model, variables) is not { } result
+		)
 		{
 			return null;
 		}
 
 		var method = range[0].Ancestors().OfType<MethodDeclarationSyntax>().First();
-		if (variables.Distinct().Count() != 3
-			|| !variables.All(v => IsDouble(model, method, v)) || variables.Any(v => TakesAddress(method, v)) || HasTriviaInside(range))
+		if (
+			variables.Distinct().Count() != 3
+			|| !variables.All(v => IsDouble(model, method, v))
+			|| variables.Any(v => TakesAddress(method, v))
+			|| HasTriviaInside(range)
+		)
 		{
 			return null;
 		}
@@ -123,18 +199,26 @@ internal sealed class Distances(CSharpProject project)
 			return null;
 		}
 
-		return (TextSpan.FromBounds(range[0].SpanStart, range[8].Span.End), $"{result}=Distance({xName}, {yName});");
+		return (
+			TextSpan.FromBounds(range[0].SpanStart, range[8].Span.End),
+			$"{result}=Distance({xName}, {yName});"
+		);
 	}
 
 	private static List<(TextSpan Span, string Text)> Edits(SyntaxTree tree, SemanticModel model)
 	{
 		var edits = new List<(TextSpan Span, string Text)>();
-		var lists = tree.GetRoot().DescendantNodes().Select(n => n switch
-		{
-			BlockSyntax block => block.Statements,
-			SwitchSectionSyntax section => section.Statements,
-			_ => default(SyntaxList<StatementSyntax>?),
-		}).OfType<SyntaxList<StatementSyntax>>();
+		var lists = tree.GetRoot()
+			.DescendantNodes()
+			.Select(n =>
+				n switch
+				{
+					BlockSyntax block => block.Statements,
+					SwitchSectionSyntax section => section.Statements,
+					_ => default(SyntaxList<StatementSyntax>?),
+				}
+			)
+			.OfType<SyntaxList<StatementSyntax>>();
 		foreach (var list in lists)
 		{
 			for (var i = 0; i < list.Count; i++)

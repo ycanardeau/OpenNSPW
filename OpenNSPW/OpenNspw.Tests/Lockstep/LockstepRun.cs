@@ -19,8 +19,13 @@ internal sealed class LockstepRun : IDisposable
 
 	public int Round { get; private set; }
 
-	public string Status => string.Join("; ", Games.Select(g =>
-		$"{g.Name}: dialog {g.Game.MainDialog?.Id}, players {g.Game.ActivePlayerCount}, mode {g.Game.Mode}, rival mode {g.Game.RivalMode}, frames {g.FrameCount}, ended {g.Ended}, boxes [{string.Join(", ", g.MessageBoxes)}]"));
+	public string Status =>
+		string.Join(
+			"; ",
+			Games.Select(g =>
+				$"{g.Name}: dialog {g.Game.MainDialog?.Id}, players {g.Game.ActivePlayerCount}, mode {g.Game.Mode}, rival mode {g.Game.RivalMode}, frames {g.FrameCount}, ended {g.Ended}, boxes [{string.Join(", ", g.MessageBoxes)}]"
+			)
+		);
 
 	public LockstepRun()
 	{
@@ -48,7 +53,11 @@ internal sealed class LockstepRun : IDisposable
 
 	// Steps until the condition holds, checked before each round. `beforeRound`, if any, acts before each round, such as a
 	// Monkey.
-	public void Until(Func<bool> condition, int limit = DefaultRoundLimit, Action? beforeRound = null)
+	public void Until(
+		Func<bool> condition,
+		int limit = DefaultRoundLimit,
+		Action? beforeRound = null
+	)
 	{
 		var end = Round + limit;
 		while (!condition())
@@ -56,7 +65,9 @@ internal sealed class LockstepRun : IDisposable
 			beforeRound?.Invoke();
 			if (Round >= end)
 			{
-				throw new TimeoutException($"The condition did not hold within {limit} rounds: {Status}");
+				throw new TimeoutException(
+					$"The condition did not hold within {limit} rounds: {Status}"
+				);
 			}
 
 			if (Games.All(g => g.Ended))

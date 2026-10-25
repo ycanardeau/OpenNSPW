@@ -13,7 +13,11 @@ namespace OpenNspw;
 // - The buffer sizes of EnumServiceProviders count items, not bytes.
 // - Message buffers passed to the message handler are objects of the DPNMSG_* classes.
 
-public delegate int PFNDPNMESSAGEHANDLER(object? pvUserContext, uint dwMessageId, object pMsgBuffer);
+public delegate int PFNDPNMESSAGEHANDLER(
+	object? pvUserContext,
+	uint dwMessageId,
+	object pMsgBuffer
+);
 
 [StructLayout(LayoutKind.Sequential)]
 public unsafe struct DPN_BUFFER_DESC
@@ -157,37 +161,197 @@ public interface IDirectPlay8Peer : IUnknown
 {
 	int Initialize(object? pvUserContext, PFNDPNMESSAGEHANDLER pfn, uint dwFlags);
 
-	int EnumServiceProviders(Guid? pguidServiceProvider, Guid? pguidApplication, DPN_SERVICE_PROVIDER_INFO[]? pSPInfoBuffer, ref uint pcbEnumData, ref uint pcReturned, uint dwFlags);
+	int EnumServiceProviders(
+		Guid? pguidServiceProvider,
+		Guid? pguidApplication,
+		DPN_SERVICE_PROVIDER_INFO[]? pSPInfoBuffer,
+		ref uint pcbEnumData,
+		ref uint pcReturned,
+		uint dwFlags
+	);
 
 	int GetSPCaps(Guid? pguidSP, DPN_SP_CAPS pdpspCaps, uint dwFlags);
 
-	int SetPeerInfo(DPN_PLAYER_INFO pdpnPlayerInfo, object? pvAsyncContext, object? phAsyncHandle, uint dwFlags);
+	int SetPeerInfo(
+		DPN_PLAYER_INFO pdpnPlayerInfo,
+		object? pvAsyncContext,
+		object? phAsyncHandle,
+		uint dwFlags
+	);
 
 	int GetPeerInfo(uint dpnid, DPN_PLAYER_INFO? pdpnPlayerInfo, ref uint pdwSize, uint dwFlags);
 
-	int Host(DPN_APPLICATION_DESC pdnAppDesc, IDirectPlay8Address?[] prgpDeviceInfo, uint cDeviceInfo, object? pdnSecurity, object? pdnCredentials, object? pvPlayerContext, uint dwFlags);
+	int Host(
+		DPN_APPLICATION_DESC pdnAppDesc,
+		IDirectPlay8Address?[] prgpDeviceInfo,
+		uint cDeviceInfo,
+		object? pdnSecurity,
+		object? pdnCredentials,
+		object? pvPlayerContext,
+		uint dwFlags
+	);
 
-	int Connect(DPN_APPLICATION_DESC pdnAppDesc, IDirectPlay8Address? pHostAddr, IDirectPlay8Address? pDeviceInfo, object? pdnSecurity, object? pdnCredentials, byte[]? pvUserConnectData, uint dwUserConnectDataSize, object? pvPlayerContext, object? pvAsyncContext, ref uint phAsyncHandle, uint dwFlags);
+	int Connect(
+		DPN_APPLICATION_DESC pdnAppDesc,
+		IDirectPlay8Address? pHostAddr,
+		IDirectPlay8Address? pDeviceInfo,
+		object? pdnSecurity,
+		object? pdnCredentials,
+		byte[]? pvUserConnectData,
+		uint dwUserConnectDataSize,
+		object? pvPlayerContext,
+		object? pvAsyncContext,
+		ref uint phAsyncHandle,
+		uint dwFlags
+	);
 
-	int SendTo(uint dpnid, ref DPN_BUFFER_DESC prgBufferDesc, uint cBufferDesc, uint dwTimeOut, object? pvAsyncContext, ref uint phAsyncHandle, uint dwFlags);
+	int SendTo(
+		uint dpnid,
+		ref DPN_BUFFER_DESC prgBufferDesc,
+		uint cBufferDesc,
+		uint dwTimeOut,
+		object? pvAsyncContext,
+		ref uint phAsyncHandle,
+		uint dwFlags
+	);
 
 	int Close(uint dwFlags);
 }
 
 public static class dplay8
 {
-	public static readonly Guid CLSID_DirectPlay8Peer = new(0x286f484d, 0x375e, 0x4458, 0xa2, 0x72, 0xb1, 0x38, 0xe2, 0xf8, 0x0a, 0x6a);
-	public static readonly Guid CLSID_DirectPlay8ThreadPool = new(0xfc47060e, 0x6153, 0x4b34, 0xb9, 0x75, 0x8e, 0x41, 0x21, 0xeb, 0x7f, 0x3c);
-	public static readonly Guid CLSID_DirectPlay8Address = new(0x934a9523, 0xa3ca, 0x4bc5, 0xad, 0xa0, 0xd6, 0xd9, 0x5d, 0x97, 0x94, 0x21);
+	public static readonly Guid CLSID_DirectPlay8Peer = new(
+		0x286f484d,
+		0x375e,
+		0x4458,
+		0xa2,
+		0x72,
+		0xb1,
+		0x38,
+		0xe2,
+		0xf8,
+		0x0a,
+		0x6a
+	);
+	public static readonly Guid CLSID_DirectPlay8ThreadPool = new(
+		0xfc47060e,
+		0x6153,
+		0x4b34,
+		0xb9,
+		0x75,
+		0x8e,
+		0x41,
+		0x21,
+		0xeb,
+		0x7f,
+		0x3c
+	);
+	public static readonly Guid CLSID_DirectPlay8Address = new(
+		0x934a9523,
+		0xa3ca,
+		0x4bc5,
+		0xad,
+		0xa0,
+		0xd6,
+		0xd9,
+		0x5d,
+		0x97,
+		0x94,
+		0x21
+	);
 
-	public static readonly Guid IID_IDirectPlay8Peer = new(0x5102dacf, 0x241b, 0x11d3, 0xae, 0xa7, 0x00, 0x60, 0x97, 0xb0, 0x14, 0x11);
-	public static readonly Guid IID_IDirectPlay8ThreadPool = new(0x0d22ee73, 0x4a46, 0x4a0d, 0x89, 0xb2, 0x04, 0x5b, 0x4d, 0x66, 0x64, 0x25);
-	public static readonly Guid IID_IDirectPlay8Address = new(0x83783300, 0x4063, 0x4c8a, 0x9d, 0xb3, 0x82, 0x83, 0x0a, 0x7f, 0xeb, 0x31);
+	public static readonly Guid IID_IDirectPlay8Peer = new(
+		0x5102dacf,
+		0x241b,
+		0x11d3,
+		0xae,
+		0xa7,
+		0x00,
+		0x60,
+		0x97,
+		0xb0,
+		0x14,
+		0x11
+	);
+	public static readonly Guid IID_IDirectPlay8ThreadPool = new(
+		0x0d22ee73,
+		0x4a46,
+		0x4a0d,
+		0x89,
+		0xb2,
+		0x04,
+		0x5b,
+		0x4d,
+		0x66,
+		0x64,
+		0x25
+	);
+	public static readonly Guid IID_IDirectPlay8Address = new(
+		0x83783300,
+		0x4063,
+		0x4c8a,
+		0x9d,
+		0xb3,
+		0x82,
+		0x83,
+		0x0a,
+		0x7f,
+		0xeb,
+		0x31
+	);
 
-	public static readonly Guid CLSID_DP8SP_IPX = new(0x53934290, 0x628d, 0x11d2, 0xae, 0x0f, 0x00, 0x60, 0x97, 0xb0, 0x14, 0x11);
-	public static readonly Guid CLSID_DP8SP_MODEM = new(0x6d4a3650, 0x628d, 0x11d2, 0xae, 0x0f, 0x00, 0x60, 0x97, 0xb0, 0x14, 0x11);
-	public static readonly Guid CLSID_DP8SP_SERIAL = new(0x743b5d60, 0x628d, 0x11d2, 0xae, 0x0f, 0x00, 0x60, 0x97, 0xb0, 0x14, 0x11);
-	public static readonly Guid CLSID_DP8SP_TCPIP = new(0xebfe7ba0, 0x628d, 0x11d2, 0xae, 0x0f, 0x00, 0x60, 0x97, 0xb0, 0x14, 0x11);
+	public static readonly Guid CLSID_DP8SP_IPX = new(
+		0x53934290,
+		0x628d,
+		0x11d2,
+		0xae,
+		0x0f,
+		0x00,
+		0x60,
+		0x97,
+		0xb0,
+		0x14,
+		0x11
+	);
+	public static readonly Guid CLSID_DP8SP_MODEM = new(
+		0x6d4a3650,
+		0x628d,
+		0x11d2,
+		0xae,
+		0x0f,
+		0x00,
+		0x60,
+		0x97,
+		0xb0,
+		0x14,
+		0x11
+	);
+	public static readonly Guid CLSID_DP8SP_SERIAL = new(
+		0x743b5d60,
+		0x628d,
+		0x11d2,
+		0xae,
+		0x0f,
+		0x00,
+		0x60,
+		0x97,
+		0xb0,
+		0x14,
+		0x11
+	);
+	public static readonly Guid CLSID_DP8SP_TCPIP = new(
+		0xebfe7ba0,
+		0x628d,
+		0x11d2,
+		0xae,
+		0x0f,
+		0x00,
+		0x60,
+		0x97,
+		0xb0,
+		0x14,
+		0x11
+	);
 
 	public static readonly Guid GUID_NULL = Guid.Empty;
 

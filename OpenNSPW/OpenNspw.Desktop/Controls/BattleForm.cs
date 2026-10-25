@@ -21,7 +21,12 @@ internal sealed class BattleForm : Form
 	// Puts a part in the sidebar, where it is on the game's screen.
 	private void AddToSidebar(Control part, DrawingRectangle area)
 	{
-		part.Bounds = new DrawingRectangle(area.X - _sidebar.X, area.Y - _sidebar.Y, area.Width, area.Height);
+		part.Bounds = new DrawingRectangle(
+			area.X - _sidebar.X,
+			area.Y - _sidebar.Y,
+			area.Width,
+			area.Height
+		);
 		_sidebar.Controls.Add(part);
 	}
 
@@ -31,12 +36,20 @@ internal sealed class BattleForm : Form
 		BackColor = DrawingColor.Transparent;
 
 		_scrollAhead = new ScrollAhead(session);
-		_battlefield = new Battlefield(session, fonts, art, _scrollAhead) { Bounds = Battlefield.Area };
+		_battlefield = new Battlefield(session, fonts, art, _scrollAhead)
+		{
+			Bounds = Battlefield.Area,
+		};
 		Controls.Add(_battlefield);
 
 		_sidebar = new Control
 		{
-			Bounds = new DrawingRectangle(all_head.CMBT_WIDTH, 0, all_head.SCRN_WIDTH - all_head.CMBT_WIDTH, all_head.SCRN_HEIGHT),
+			Bounds = new DrawingRectangle(
+				all_head.CMBT_WIDTH,
+				0,
+				all_head.SCRN_WIDTH - all_head.CMBT_WIDTH,
+				all_head.SCRN_HEIGHT
+			),
 			BackColor = DrawingColor.Transparent,
 		};
 		Controls.Add(_sidebar);

@@ -54,7 +54,11 @@ internal sealed class MainMenuScreen(NspwGame game) : Screen(game)
 	public override void LoadContent()
 	{
 		base.LoadContent();
-		_title = SpriteSheet.LoadRegion(GraphicsDevice, GameFiles.Resolve(Game.DataDirectory, "t3.bmp"), TitleRegion);
+		_title = SpriteSheet.LoadRegion(
+			GraphicsDevice,
+			GameFiles.Resolve(Game.DataDirectory, "t3.bmp"),
+			TitleRegion
+		);
 		_fadeDown = CreateFade(1, 256);
 		_fadeRight = CreateFade(256, 1);
 
@@ -83,17 +87,51 @@ internal sealed class MainMenuScreen(NspwGame game) : Screen(game)
 	public override void Draw(GameTime gameTime)
 	{
 		var spriteBatch = Game.SpriteBatch;
-		spriteBatch.Begin(transformMatrix: Game.ViewportAdapter.GetScaleMatrix(), samplerState: SamplerState.LinearClamp);
-		spriteBatch.FillRectangle(0, 0, all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT, Theme.Ink.ToXnaColor());
+		spriteBatch.Begin(
+			transformMatrix: Game.ViewportAdapter.GetScaleMatrix(),
+			samplerState: SamplerState.LinearClamp
+		);
+		spriteBatch.FillRectangle(
+			0,
+			0,
+			all_head.SCRN_WIDTH,
+			all_head.SCRN_HEIGHT,
+			Theme.Ink.ToXnaColor()
+		);
 
 		// The picture fills the width from the top.
 		var scale = all_head.SCRN_WIDTH / (float)TitleRegion.Width;
-		spriteBatch.Draw(_title, new Vector2(all_head.SCRN_WIDTH / 2f, 0), null, Color.White, 0, new Vector2(TitleRegion.Width / 2f, 0), scale, SpriteEffects.None, 0);
+		spriteBatch.Draw(
+			_title,
+			new Vector2(all_head.SCRN_WIDTH / 2f, 0),
+			null,
+			Color.White,
+			0,
+			new Vector2(TitleRegion.Width / 2f, 0),
+			scale,
+			SpriteEffects.None,
+			0
+		);
 
 		// It fades into the navy before its bottom edge, under the menu.
 		spriteBatch.Draw(_fadeDown, new Rectangle(0, 300, all_head.SCRN_WIDTH, 250), Color.White);
-		spriteBatch.FillRectangle(0, 549, all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT - 549, Theme.Ink.ToXnaColor());
-		spriteBatch.Draw(_fadeRight, new Rectangle(0, 0, 640, all_head.SCRN_HEIGHT), null, Color.White * 0.6f, 0, Vector2.Zero, SpriteEffects.FlipHorizontally, 0);
+		spriteBatch.FillRectangle(
+			0,
+			549,
+			all_head.SCRN_WIDTH,
+			all_head.SCRN_HEIGHT - 549,
+			Theme.Ink.ToXnaColor()
+		);
+		spriteBatch.Draw(
+			_fadeRight,
+			new Rectangle(0, 0, 640, all_head.SCRN_HEIGHT),
+			null,
+			Color.White * 0.6f,
+			0,
+			Vector2.Zero,
+			SpriteEffects.FlipHorizontally,
+			0
+		);
 		spriteBatch.End();
 	}
 }

@@ -8,11 +8,20 @@ namespace OpenNspw.Desktop;
 internal sealed class BattleArt : IDisposable
 {
 	// The menu's background, each side's flag (ButtonBase, set_sprt_data): Japan's, then the United States'.
-	private static readonly Rectangle[] FlagRegions = [new(361, 3250, 198, 120), new(361, 3250 + 120, 198, 120)];
+	private static readonly Rectangle[] FlagRegions =
+	[
+		new(361, 3250, 198, 120),
+		new(361, 3250 + 120, 198, 120),
+	];
 
 	// The sheet is 5756 high, taller than a texture may be: it is loaded in pieces that overlap by more than a sprite is
 	// high, so that each sprite is whole in one of them.
-	private static readonly Rectangle[] SheetPieces = [new(0, 0, 721, 2200), new(0, 2000, 721, 2200), new(0, 4000, 721, 1756)];
+	private static readonly Rectangle[] SheetPieces =
+	[
+		new(0, 0, 721, 2200),
+		new(0, 2000, 721, 2200),
+		new(0, 4000, 721, 1756),
+	];
 
 	private readonly Texture2D[] _flags;
 	private readonly Texture2D[] _sheet;
@@ -34,21 +43,37 @@ internal sealed class BattleArt : IDisposable
 		{
 			var piece = SheetPieces[i];
 			if (source.Top >= piece.Top && source.Bottom <= piece.Bottom)
-				return (_sheet[i], new Rectangle(source.X, source.Y - piece.Y, source.Width, source.Height));
+				return (
+					_sheet[i],
+					new Rectangle(source.X, source.Y - piece.Y, source.Width, source.Height)
+				);
 		}
 
-		throw new ArgumentOutOfRangeException(nameof(source), source, "Not a region of the sprite sheet.");
+		throw new ArgumentOutOfRangeException(
+			nameof(source),
+			source,
+			"Not a region of the sprite sheet."
+		);
 	}
 
 	// A frame of a sprite at a position, cut `inset` in from the frame's corner and `width` by `height`, as the original
 	// cuts each kind (DrawMapTiles, DrawUnit, UpdateLowerEffects, DrawUnitDetails).
-	public void Draw(SpriteBatch batch, in Sprite sprite, int frame, int inset, int width, int height, Vector2 position)
+	public void Draw(
+		SpriteBatch batch,
+		in Sprite sprite,
+		int frame,
+		int inset,
+		int width,
+		int height,
+		Vector2 position
+	)
 	{
 		var source = new Rectangle(
 			sprite.SheetPosition.X + sprite.Size.Width * (frame % sprite.FramesPerRow) + inset,
 			sprite.SheetPosition.Y + sprite.Size.Height * (frame / sprite.FramesPerRow) + inset,
 			width,
-			height);
+			height
+		);
 		var (texture, piece) = Sheet(source);
 		batch.Draw(texture, position, piece, Color.White);
 	}

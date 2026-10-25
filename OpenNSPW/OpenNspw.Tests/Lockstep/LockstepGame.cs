@@ -128,9 +128,7 @@ internal sealed class LockstepGame : INspwPlatform
 				Game.WinMain(null, null, "", SW_SHOWNORMAL);
 			}
 		}
-		catch (LockstepStoppedException)
-		{
-		}
+		catch (LockstepStoppedException) { }
 		catch (Exception e)
 		{
 			Error = e;
@@ -152,15 +150,23 @@ internal sealed class LockstepGame : INspwPlatform
 		_output.Add(text);
 	}
 
-	public LockstepGame(LockstepScheduler scheduler, LoopbackNetwork network, string dataDirectory, string name)
+	public LockstepGame(
+		LockstepScheduler scheduler,
+		LoopbackNetwork network,
+		string dataDirectory,
+		string name
+	)
 	{
 		_scheduler = scheduler;
 		_dataDirectory = dataDirectory;
-		_directPlay = new LoopbackDirectPlayFactory(network, (dpnid, data) =>
-		{
-			AddOutput($"send {dpnid:x8}");
-			_output.Add(data);
-		});
+		_directPlay = new LoopbackDirectPlayFactory(
+			network,
+			(dpnid, data) =>
+			{
+				AddOutput($"send {dpnid:x8}");
+				_output.Add(data);
+			}
+		);
 		Name = name;
 		Game = new Nspw(this);
 		_thread = new Thread(Run) { IsBackground = true, Name = name };
@@ -262,7 +268,8 @@ internal sealed class LockstepGame : INspwPlatform
 
 	public string? ReadSetting(string key)
 	{
-		return _settings.GetValueOrDefault(key) ?? (key.EndsWith("\\Player Name", StringComparison.Ordinal) ? Name : null);
+		return _settings.GetValueOrDefault(key)
+			?? (key.EndsWith("\\Player Name", StringComparison.Ordinal) ? Name : null);
 	}
 
 	public void WriteSetting(string key, string value)
@@ -274,7 +281,8 @@ internal sealed class LockstepGame : INspwPlatform
 	{
 		try
 		{
-			return GameFiles.OpenSingleplayer(SingleplayerDirectory, path, mode, share) ?? new FileStream(GameFiles.Resolve(_dataDirectory, path), mode, access, share);
+			return GameFiles.OpenSingleplayer(SingleplayerDirectory, path, mode, share)
+				?? new FileStream(GameFiles.Resolve(_dataDirectory, path), mode, access, share);
 		}
 		catch (IOException)
 		{

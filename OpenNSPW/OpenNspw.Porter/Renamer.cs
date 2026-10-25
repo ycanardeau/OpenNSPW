@@ -22,7 +22,11 @@ namespace OpenNspw.Porter;
 // `unit[m].x` to `unit[m].Position.X`, but leaves the declaration, which is replaced by hand with the new field.
 //
 // Code in inactive #if blocks and in comments is not renamed.
-internal sealed class Renamer(CSharpProject port, IReadOnlyList<CSharpProject> users, IReadOnlyDictionary<string, string> renames)
+internal sealed class Renamer(
+	CSharpProject port,
+	IReadOnlyList<CSharpProject> users,
+	IReadOnlyDictionary<string, string> renames
+)
 {
 	private readonly CSharpProject _port = port;
 	private readonly IReadOnlyList<CSharpProject> _users = users;
@@ -39,7 +43,11 @@ internal sealed class Renamer(CSharpProject port, IReadOnlyList<CSharpProject> u
 
 	private static string Apply(string text, IEnumerable<(TextSpan Span, string Text)> edits)
 	{
-		foreach (var (span, replacement) in edits.OrderByDescending(e => e.Span.Start).ThenByDescending(e => e.Span.Length))
+		foreach (
+			var (span, replacement) in edits
+				.OrderByDescending(e => e.Span.Start)
+				.ThenByDescending(e => e.Span.Length)
+		)
 		{
 			text = text[..span.Start] + replacement + text[span.End..];
 		}
@@ -56,7 +64,11 @@ internal sealed class Renamer(CSharpProject port, IReadOnlyList<CSharpProject> u
 		}
 
 		var parameters = id.IndexOf('(');
-		return _renames.TryGetValue(id, out var name) || (parameters > 0 && _renames.TryGetValue(id[..parameters], out name)) ? name : null;
+		return
+			_renames.TryGetValue(id, out var name)
+			|| (parameters > 0 && _renames.TryGetValue(id[..parameters], out name))
+			? name
+			: null;
 	}
 
 	// The new name of a symbol whose declaration is renamed too: not one that moves into a field of a new type.
@@ -69,18 +81,30 @@ internal sealed class Renamer(CSharpProject port, IReadOnlyList<CSharpProject> u
 	// its C++ name.
 	private static bool KeepsOriginalName(ISymbol symbol)
 	{
-		return symbol is IFieldSymbol { IsConst: false, IsStatic: false } or IMethodSymbol { MethodKind: MethodKind.Ordinary } or INamedTypeSymbol { TypeKind: TypeKind.Struct }
+		return symbol
+				is IFieldSymbol { IsConst: false, IsStatic: false }
+					or IMethodSymbol { MethodKind: MethodKind.Ordinary }
+					or INamedTypeSymbol { TypeKind: TypeKind.Struct }
 			&& !symbol.GetAttributes().Any(a => a.AttributeClass?.Name == "OriginalAttribute");
 	}
 
 	private static string Indentation(SyntaxNode node)
 	{
-		return string.Concat(node.GetLeadingTrivia().Reverse().TakeWhile(t => t.IsKind(SyntaxKind.WhitespaceTrivia)).Reverse().Select(t => t.ToFullString()));
+		return string.Concat(
+			node.GetLeadingTrivia()
+				.Reverse()
+				.TakeWhile(t => t.IsKind(SyntaxKind.WhitespaceTrivia))
+				.Reverse()
+				.Select(t => t.ToFullString())
+		);
 	}
 
 	// The first pass: splits each field declaration that declares a renamed field among others into one declaration per
 	// field, on lines of their own. The comment at the end of the line stays after the last one.
-	private Dictionary<string, string> Split(CSharpCompilation compilation, IReadOnlyDictionary<string, string> files)
+	private Dictionary<string, string> Split(
+		CSharpCompilation compilation,
+		IReadOnlyDictionary<string, string> files
+	)
 	{
 		var changed = new Dictionary<string, string>();
 		foreach (var tree in compilation.SyntaxTrees.Where(t => files.ContainsKey(t.FilePath)))
@@ -90,14 +114,19 @@ internal sealed class Renamer(CSharpProject port, IReadOnlyList<CSharpProject> u
 			foreach (var field in tree.GetRoot().DescendantNodes().OfType<FieldDeclarationSyntax>())
 			{
 				var variables = field.Declaration.Variables;
-				if (variables.Count < 2 || !variables.Any(v => NewDeclaredName(model.GetDeclaredSymbol(v)) is not null))
+				if (
+					variables.Count < 2
+					|| !variables.Any(v => NewDeclaredName(model.GetDeclaredSymbol(v)) is not null)
+				)
 				{
 					continue;
 				}
 
 				var prefix = files[tree.FilePath][field.SpanStart..variables[0].SpanStart];
 				var separator = $"\n{Indentation(field)}";
-				edits.Add((field.Span, string.Join(separator, variables.Select(v => $"{prefix}{v};"))));
+				edits.Add(
+					(field.Span, string.Join(separator, variables.Select(v => $"{prefix}{v};")))
+				);
 			}
 
 			if (edits.Count > 0)
@@ -109,16 +138,31 @@ internal sealed class Renamer(CSharpProject port, IReadOnlyList<CSharpProject> u
 		return changed;
 	}
 
-	private static (SyntaxToken Token, ISymbol? Symbol) Declared(SyntaxNode node, SemanticModel model)
+	private static (SyntaxToken Token, ISymbol? Symbol) Declared(
+		SyntaxNode node,
+		SemanticModel model
+	)
 	{
 		return node switch
 		{
-			VariableDeclaratorSyntax declarator => (declarator.Identifier, model.GetDeclaredSymbol(declarator)),
+			VariableDeclaratorSyntax declarator => (
+				declarator.Identifier,
+				model.GetDeclaredSymbol(declarator)
+			),
 			MethodDeclarationSyntax method => (method.Identifier, model.GetDeclaredSymbol(method)),
 			BaseTypeDeclarationSyntax type => (type.Identifier, model.GetDeclaredSymbol(type)),
-			ConstructorDeclarationSyntax constructor => (constructor.Identifier, model.GetDeclaredSymbol(constructor)?.ContainingType),
-			PropertyDeclarationSyntax property => (property.Identifier, model.GetDeclaredSymbol(property)),
-			EnumMemberDeclarationSyntax member => (member.Identifier, model.GetDeclaredSymbol(member)),
+			ConstructorDeclarationSyntax constructor => (
+				constructor.Identifier,
+				model.GetDeclaredSymbol(constructor)?.ContainingType
+			),
+			PropertyDeclarationSyntax property => (
+				property.Identifier,
+				model.GetDeclaredSymbol(property)
+			),
+			EnumMemberDeclarationSyntax member => (
+				member.Identifier,
+				model.GetDeclaredSymbol(member)
+			),
 			ParameterSyntax parameter => (parameter.Identifier, model.GetDeclaredSymbol(parameter)),
 			_ => (default, null),
 		};
@@ -130,14 +174,23 @@ internal sealed class Renamer(CSharpProject port, IReadOnlyList<CSharpProject> u
 		var attribute = $"[Original(\"{symbol.Name}\")]";
 		return node switch
 		{
-			VariableDeclaratorSyntax { Parent.Parent: FieldDeclarationSyntax field } => (new TextSpan(field.SpanStart, 0), $"{attribute} "),
-			MethodDeclarationSyntax or StructDeclarationSyntax => (new TextSpan(node.SpanStart, 0), $"{attribute}\n{Indentation(node)}"),
+			VariableDeclaratorSyntax { Parent.Parent: FieldDeclarationSyntax field } => (
+				new TextSpan(field.SpanStart, 0),
+				$"{attribute} "
+			),
+			MethodDeclarationSyntax or StructDeclarationSyntax => (
+				new TextSpan(node.SpanStart, 0),
+				$"{attribute}\n{Indentation(node)}"
+			),
 			_ => null,
 		};
 	}
 
 	// The second pass: renames the declarations and uses of the renamed symbols, and adds [Original].
-	private Dictionary<string, string> Rename(CSharpCompilation compilation, IReadOnlyDictionary<string, string> files)
+	private Dictionary<string, string> Rename(
+		CSharpCompilation compilation,
+		IReadOnlyDictionary<string, string> files
+	)
 	{
 		var changed = new Dictionary<string, string>();
 		foreach (var tree in compilation.SyntaxTrees.Where(t => files.ContainsKey(t.FilePath)))
@@ -149,7 +202,10 @@ internal sealed class Renamer(CSharpProject port, IReadOnlyList<CSharpProject> u
 				if (node is SimpleNameSyntax name)
 				{
 					var info = model.GetSymbolInfo(name);
-					if (NewName(info.Symbol ?? info.CandidateSymbols.FirstOrDefault()) is { } newName)
+					if (
+						NewName(info.Symbol ?? info.CandidateSymbols.FirstOrDefault()) is
+						{ } newName
+					)
 					{
 						edits.Add((name.Identifier.Span, newName));
 					}
@@ -177,7 +233,11 @@ internal sealed class Renamer(CSharpProject port, IReadOnlyList<CSharpProject> u
 		return changed;
 	}
 
-	private static void Write(Dictionary<string, string> files, Dictionary<string, string> changed, HashSet<string> written)
+	private static void Write(
+		Dictionary<string, string> files,
+		Dictionary<string, string> changed,
+		HashSet<string> written
+	)
 	{
 		foreach (var (path, text) in changed)
 		{
@@ -192,7 +252,11 @@ internal sealed class Renamer(CSharpProject port, IReadOnlyList<CSharpProject> u
 	{
 		var written = new HashSet<string>();
 		var portFiles = _port.ReadFiles();
-		Write(portFiles, Split(_port.Compile(portFiles, CSharpProject.FrameworkReferences), portFiles), written);
+		Write(
+			portFiles,
+			Split(_port.Compile(portFiles, CSharpProject.FrameworkReferences), portFiles),
+			written
+		);
 
 		// The users are compiled against the port before the renames, which is what their files refer to, and against
 		// the users before them, which they may use.
@@ -202,7 +266,14 @@ internal sealed class Renamer(CSharpProject port, IReadOnlyList<CSharpProject> u
 		foreach (var user in _users)
 		{
 			var files = user.ReadFiles();
-			var compilation = user.Compile(files, [.. CSharpProject.FrameworkReferences, .. user.OutputReferences(except), .. compiled]);
+			var compilation = user.Compile(
+				files,
+				[
+					.. CSharpProject.FrameworkReferences,
+					.. user.OutputReferences(except),
+					.. compiled,
+				]
+			);
 			compiled.Add(compilation.ToMetadataReference());
 			Write(files, Rename(compilation, files), written);
 		}

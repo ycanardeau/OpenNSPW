@@ -16,64 +16,48 @@ public sealed record BattleRules(
 	int InfantryBaseGunInterval,
 	int PillboxesGunInterval,
 	int FortressGunInterval,
-
 	// Whether Japan's battleships of type 1, the Yamato class, fire as their own class.
 	bool HasYamatoClass,
-
 	// Whether cruisers and destroyers of type 1, the anti-aircraft cruisers and anti-submarine destroyers, fire as their own
 	// types.
 	bool HasSecondCruiserAndDestroyerTypes,
-
 	// Whether bombers drop torpedoes, and Japan's are armed with them from the combat menu.
 	bool BombersDropTorpedoes,
-
 	// Whether transports can land naval bases and air bases, not only infantry bases, pillboxes and fortresses.
 	bool TransportsLandNavalAndAirBases,
-
 	// Whether Japan holds its fire in scenario 1.
 	bool JapanHoldsFireInScenario1,
-
 	// Fighters: whether they shoot transports, can be ordered to attack them, and transports flee them.
 	bool FightersAttackTransports,
-
 	// How far a fighter takes an attacker or a bomber as its target; any other plane, within 400.
 	int FighterTargetRangeAgainstBombers,
-
 	// Whether the computer's returning fighters take a target within 300, with ammunition and fuel left.
 	bool ReturningFightersRetarget,
-
 	// Whether a fighter and its target of the same skill are told apart by the frame, rather than the tick: the first 300
 	// of every 600 favor the fighter.
 	bool FighterTiesBreakByFrame,
-
 	// Torpedo planes: the last kind of ground unit, from air bases, that they cannot be ordered to attack.
 	UnitKind LastKindRefusedToTorpedoes,
-
 	// Attackers: whether Japan's dive and release their bombs close, and drop a second bomb as the Americans do; if not,
 	// they release from 170 as the Americans do, and drop one bomb only.
 	bool JapaneseAttackersDive,
-
 	// Whether the planes that follow an attacker fly to where it released its bombs or its torpedo.
 	bool FollowersFlyToRelease,
-
 	// Whether, when a returning attacker or bomber hands its fighters over to a new leader (SetAttackerEmergencyDestination),
 	// they are sent back if the old leader is flying, rather than each if it is itself.
 	// BUG?(1.22): it tests the old leader where NSPW NET tests the plane sent back, so a parked fighter is sent back too
 	// (0x415916, 0x415971); 1.22's own handover of a destroyed leader's (0x41ADB3) tests the new leader, as NSPW NET does.
 	// Kept as is for compatibility with 1.22.
 	bool HandoverTestsTheOldLeaderFlying,
-
 	// Whether a flying plane leaves its leader once the leader is parked and returning, rather than staying in its group
 	// (SetDynamicDestination).
 	// BUG?(1.22): a flying plane keeps following a parked leader, toward its place on the deck, which is not on the map
 	// (0x4149F0); NSPW NET has it leave, but 1.22's code does not show whether this was meant. Kept as is for compatibility
 	// with 1.22.
 	bool FlyingFollowersLeaveParkedLeaders,
-
 	// Whether a mode chosen from the combat menu is given to every plane it is for, flying or parked, and a move clears a
 	// plane's deck phase, rather than Move and Return only, and to flying planes, but a Return to attackers and bombers.
 	bool MenuModesApplyToEveryPlane,
-
 	// Whether a heading of 360, which none of the 16 cases of a plane's landing pattern and approach, or of a ship's place
 	// in its formation takes, leaves their angle unset, rather than 0 (SetLandingDestination, UpdateLanding,
 	// SetShipFormation).
@@ -82,163 +66,120 @@ public sealed record BattleRules(
 	// [esp+10h], 0x41764E); for the formation, the ship's x offset from its leader, which shares the angle's slot
 	// ([esp+4], 0x417179). Kept as is for compatibility with 1.22.
 	bool HeadingsOf360TakeNoCase,
-
 	// Whether a ship that follows a leader has its route planned by 1.22's own set_cpu_route2, in the emulator, rather than
 	// by NSPW NET's set_cpu_root2.
 	bool FollowersRouteBy122sOwnCode,
-
 	// Whether a torpedo plane checks for land, before it drops its torpedo, along a heading it has not set, rather than
 	// along the bearing from its aim to it (PlaneDropTorpedo).
 	// BUG(1.22): it never sets the heading, so it checks along what its stack holds there ([esp+38h], 0x413D23), what an
 	// earlier call left. Kept as is for compatibility with 1.22.
 	bool TorpedoPlanesCheckLandAlongUnsetHeading,
-
 	// Whether a leader sends its attackers off, fanned out, at 500 to 510 from their target.
 	bool AttackersBreakFormation,
-
 	// Guns: whether every kind aims alike, and the hundredths of a bearing are drawn before its degrees.
 	bool GunsAimAlike,
-
 	// The ticks a shell flies beyond its distance over its speed, when it has no target.
 	int ExtraGunShellTicks,
-
 	// Whether rapid anti-aircraft fire plays one of two sounds, by a shared random number.
 	bool RapidFireSoundVaries,
-
 	// Whether an odd count of depth charges stops at 0, rather than going to -1.
 	// BUG?(1.22, NSPW NET): every weapon tests the ammunition for 0 before it takes a shot from it, which reads as not to
 	// overdraw it, but takes the whole shot from any count, so the count can go below 0 (0x4103B6); firing needs 1 or more,
 	// so it does no harm. NSPW NET stops the depth charges' at 0, but none of the others'. Kept as is for compatibility
 	// with 1.22.
 	bool DepthChargeCountStopsAtZero,
-
 	// A depth charge's damage: this much, plus a random number below the spread.
 	int DepthChargeDamage,
 	int DepthChargeDamageSpread,
-
 	// Whether a depth charge keeps its fire once it has exploded, rather than freeing it.
 	// BUG(1.22): the explosion passes each submerged submarine to hit_chk as the fire's target (used), and never clears it,
 	// so the fire stays in use, with the submarine hit or tested last, to the end of the battle (0x4196DC to 0x4197EC). Kept
 	// as is for compatibility with 1.22.
 	bool ExplodedDepthChargesKeepTheirFire,
-
 	// The size of a surfaced submarine, within which a fire hits it.
 	int SurfacedSubmarineHitSize,
-
 	// The ticks a submarine takes to reload its torpedoes.
 	int SubmarineTorpedoReload,
-
 	// Whether a submarine keeps its target once it has fired torpedoes at it, rather than clearing it.
 	bool SubmarinesKeepTheirTargetAfterFiring,
-
 	// Whether bullets damage a transport 1 time in 4 only.
 	bool BulletsSpareTransports,
-
 	// Transports: how far from their landing point they land their cargo.
 	int CargoLandingRange,
-
 	// Whether their cargo slows them.
 	bool CargoSlowsTransports,
-
 	// Whether the bases that they land are built over 8000 ticks or more, from a quarter of their HP.
 	bool LandedBasesAreBuilt,
-
 	// Whether a transport leaves the battle once it has landed its cargo, rather than staying, empty.
 	bool TransportsLeaveAfterLanding,
-
 	// Moves: whether fuel burns by the speed's share of the top speed, as a fraction, rather than 1 at a time.
 	bool FuelBurnsBySpeed,
-
 	// Whether a ship out of fuel brakes from its top speed times 0.1, rather than over 10, which can be less in the last
 	// bit: 0.8 * 0.1 is 0.08000000000000002, 0.8 / 10 is 0.08.
 	bool OutOfFuelShipsBrakeFromTopSpeedTimesATenth,
-
 	// Whether a heading that turns to 360 becomes 0, rather than only one past 360.
 	bool HeadingWrapsAt360,
-
 	// Whether a ship looks 40 ahead, with only air bases and naval bases out of its way, and the computer replans the
 	// routes of its units that ships or land block (CheckCourseAheadAs122, ReplanBlockedRoute).
 	bool ComputerReplansBlockedRoutes,
-
 	// Whether supply stops away from a naval base of the side.
 	bool SupplyNeedsNavalBase,
-
 	// Whether the computer's ships, and submarines, are brought back into the map.
 	bool ComputerShipsReturnIntoMap,
-
 	// Whether a stopped ship flees ground units too, and how far it flees ships.
 	bool ShipsFleeGroundUnits,
 	int ShipEvasionRange,
-
 	// Whether the headings meant to become whole degrees, a depth charge's from its ship, a fighter's to dodge a head-on
 	// pass, a ship's to evade a torpedo or a plane and a ship's wake behind it, keep their fraction of a degree but its last
 	// digits (ReduceHeading).
 	// BUG(1.22): it stores the whole degrees into the low half of the double, and reads the double back (0x410452,
 	// 0x415324, 0x416417, 0x416838, 0x41C327). Kept as is for compatibility with 1.22.
 	bool ReducedHeadingsKeepTheirFraction,
-
 	// Whether only the computer's destroyers hunt submarines, chasing one (HuntSubmarineAs122).
 	bool OnlyComputersDestroyersHunt,
-
 	// Targets: whether a submerged submarine, and a parked plane's target, are dropped.
 	bool DropsHiddenTargets,
-
 	// Detection: whether 1.22's sight ranges apply (GetDetectionSizeAs122).
 	bool HasSightRangesOf122,
-
 	// Whether supplying units of the player's side look out.
 	bool SupplyingUnitsLookOut,
-
 	// Whether a submarine dives at any unit it finds, also while it supplies.
 	bool SubmarinesDiveAtAnyUnit,
-
 	// Whether finding a submerged submarine stops the computer's destroyers that chase it.
 	bool FoundSubmarinesStopChasers,
-
 	// The number that finds a submerged submarine, out of rand() % range, and whether the contact's spread depends on the
 	// finder's type.
 	int SubmarineContactDraw,
 	bool ContactSpreadByType,
-
 	// Planes: whether a landed plane's launch lock counts the other planes landing.
 	bool LaunchLockCountsLandingPlanes,
-
 	// Whether returning planes adjust their approach on the drawn tick only, and to any base still in use.
 	bool ApproachesOnDrawnTick,
-
 	// Whether planes cannot be added to a full carrier.
 	bool FullCarriersRefusePlanes,
-
 	// The tick: whether it counts first, then the clouds and the detection, then the end, and cities run its unit loop.
 	bool TickOrderOf122,
-
 	// Effects: whether they draw from rand, as everything else, rather than from SharedRandom.
 	bool EffectsDrawFromRand,
-
 	// Whether the marks, the leader's flag, the damaged ships' smoke and fire, the damaged submarines' bubbles, and the
 	// fires' sprites, trails and wakes are made on the tick that is drawn only (IsEffectTick).
 	bool EffectsOnDrawnTickOnly,
-
 	// Whether a damaged plane tests the tick, and a ship its damage, before it draws the random number of its smoke.
 	bool DamageEffectsTestBeforeDrawing,
-
 	// Whether the Yamato class and the Essex, the anti-aircraft cruisers and the anti-submarine destroyers have their own
 	// marks.
 	bool MarksSecondTypes,
-
 	// Whether every lower effect is drawn once the battle has a result, rather than those the player sees, with the random
 	// numbers of their animations.
 	bool ResultShowsEveryLowerEffect,
-
 	// Whether the sonar plays.
 	bool PlaysSonar,
-
 	// The fires and effects in use at most, and one more.
 	int FireLimit,
 	int EffectLimit,
-
 	// Whether scenario 303's captured fighters, the Americans' of type 1, are drawn as Japan's.
-	bool DrawsCapturedFightersAsJapans)
+	bool DrawsCapturedFightersAsJapans
+)
 {
 	public static readonly BattleRules NspwNet = new(
 		InfantryBaseGunInterval: 250,
@@ -307,7 +248,8 @@ public sealed record BattleRules(
 		PlaysSonar: true,
 		FireLimit: all_head.FIRE_MAX,
 		EffectLimit: all_head.EFFECT_MAX,
-		DrawsCapturedFightersAsJapans: false);
+		DrawsCapturedFightersAsJapans: false
+	);
 
 	public static readonly BattleRules Nspw122 = new(
 		InfantryBaseGunInterval: 200, // 0x403140
@@ -376,5 +318,6 @@ public sealed record BattleRules(
 		PlaysSonar: false,
 		FireLimit: 256, // seek_fire_no, 0x416E40
 		EffectLimit: 256,
-		DrawsCapturedFightersAsJapans: true); // 0x40E070
+		DrawsCapturedFightersAsJapans: true
+	); // 0x40E070
 }

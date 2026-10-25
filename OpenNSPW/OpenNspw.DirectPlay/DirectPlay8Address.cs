@@ -11,7 +11,8 @@ public sealed class DirectPlay8Address : IDirectPlay8Address
 
 	public string? Hostname => _components.GetValueOrDefault(dplay8.DPNA_KEY_HOSTNAME) as string;
 
-	public int? Port => _components.GetValueOrDefault(dplay8.DPNA_KEY_PORT) is uint port ? (int)port : null;
+	public int? Port =>
+		_components.GetValueOrDefault(dplay8.DPNA_KEY_PORT) is uint port ? (int)port : null;
 
 	public int SetSP(Guid? pguidSP)
 	{

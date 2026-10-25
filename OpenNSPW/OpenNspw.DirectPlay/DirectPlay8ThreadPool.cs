@@ -2,7 +2,8 @@ namespace OpenNspw.DirectPlay;
 
 // IDirectPlay8ThreadPool in DoWork mode: DoWork delivers the events of the game's peers to their message handlers, on
 // the calling thread.
-public sealed class DirectPlay8ThreadPool(IReadOnlyList<DirectPlay8Peer> peers) : IDirectPlay8ThreadPool
+public sealed class DirectPlay8ThreadPool(IReadOnlyList<DirectPlay8Peer> peers)
+	: IDirectPlay8ThreadPool
 {
 	private readonly IReadOnlyList<DirectPlay8Peer> _peers = peers;
 

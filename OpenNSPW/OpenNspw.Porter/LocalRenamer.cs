@@ -12,18 +12,24 @@ namespace OpenNspw.Porter;
 //
 // which renames every local and parameter named n in the methods named CheckHit. The result is compiled, and a rename
 // that does not compile (a name that is already used) is reported and left out.
-internal sealed class LocalRenamer(CSharpProject project, IReadOnlyList<(string Method, string Old, string New)> renames)
+internal sealed class LocalRenamer(
+	CSharpProject project,
+	IReadOnlyList<(string Method, string Old, string New)> renames
+)
 {
 	private readonly CSharpProject _project = project;
 	private readonly IReadOnlyList<(string Method, string Old, string New)> _renames = renames;
 
 	public static List<(string Method, string Old, string New)> ReadRenames(string path)
 	{
-		return [.. File.ReadLines(path)
-			.Select(l => l.Trim())
-			.Where(l => l.Length > 0 && !l.StartsWith('#'))
-			.Select(l => l.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
-			.Select(p => (p[0], p[1], p[2]))];
+		return
+		[
+			.. File.ReadLines(path)
+				.Select(l => l.Trim())
+				.Where(l => l.Length > 0 && !l.StartsWith('#'))
+				.Select(l => l.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+				.Select(p => (p[0], p[1], p[2])),
+		];
 	}
 
 	private static string? MethodName(SyntaxNode member)
@@ -38,7 +44,10 @@ internal sealed class LocalRenamer(CSharpProject project, IReadOnlyList<(string 
 
 	private static IEnumerable<BaseMethodDeclarationSyntax> Methods(SyntaxTree tree)
 	{
-		return tree.GetRoot().DescendantNodes().OfType<BaseMethodDeclarationSyntax>().Where(m => MethodName(m) is not null);
+		return tree.GetRoot()
+			.DescendantNodes()
+			.OfType<BaseMethodDeclarationSyntax>()
+			.Where(m => MethodName(m) is not null);
 	}
 
 	private static bool IsLocal(ISymbol? symbol)
@@ -47,7 +56,12 @@ internal sealed class LocalRenamer(CSharpProject project, IReadOnlyList<(string 
 	}
 
 	// The edits of one rename in one method: its declarations and uses.
-	private static List<(TextSpan Span, string Text)> Edits(BaseMethodDeclarationSyntax method, SemanticModel model, string oldName, string newName)
+	private static List<(TextSpan Span, string Text)> Edits(
+		BaseMethodDeclarationSyntax method,
+		SemanticModel model,
+		string oldName,
+		string newName
+	)
 	{
 		var edits = new List<(TextSpan Span, string Text)>();
 		foreach (var node in method.DescendantNodes())
@@ -72,7 +86,11 @@ internal sealed class LocalRenamer(CSharpProject project, IReadOnlyList<(string 
 
 	private static string Apply(string text, IEnumerable<(TextSpan Span, string Text)> edits)
 	{
-		foreach (var (span, replacement) in edits.OrderByDescending(e => e.Span.Start).ThenByDescending(e => e.Span.Length))
+		foreach (
+			var (span, replacement) in edits
+				.OrderByDescending(e => e.Span.Start)
+				.ThenByDescending(e => e.Span.Length)
+		)
 		{
 			text = text[..span.Start] + replacement + text[span.End..];
 		}
@@ -86,21 +104,33 @@ internal sealed class LocalRenamer(CSharpProject project, IReadOnlyList<(string 
 		var files = _project.ReadFiles();
 		var compilation = _project.Compile(files, CSharpProject.FrameworkReferences);
 		var lines = new List<string>();
-		foreach (var tree in compilation.SyntaxTrees.Where(t => files.ContainsKey(t.FilePath)).OrderBy(t => t.FilePath))
+		foreach (
+			var tree in compilation
+				.SyntaxTrees.Where(t => files.ContainsKey(t.FilePath))
+				.OrderBy(t => t.FilePath)
+		)
 		{
 			foreach (var method in Methods(tree))
 			{
-				var names = method.DescendantNodes()
-					.Select(n => n switch
-					{
-						VariableDeclaratorSyntax { Parent.Parent: LocalDeclarationStatementSyntax or ForStatementSyntax } d => d.Identifier.ValueText,
-						ParameterSyntax p => p.Identifier.ValueText,
-						ForEachStatementSyntax f => f.Identifier.ValueText,
-						_ => null,
-					})
+				var names = method
+					.DescendantNodes()
+					.Select(n =>
+						n switch
+						{
+							VariableDeclaratorSyntax
+							{
+								Parent.Parent: LocalDeclarationStatementSyntax or ForStatementSyntax
+							} d => d.Identifier.ValueText,
+							ParameterSyntax p => p.Identifier.ValueText,
+							ForEachStatementSyntax f => f.Identifier.ValueText,
+							_ => null,
+						}
+					)
 					.OfType<string>()
 					.Distinct();
-				lines.Add($"{Path.GetFileName(tree.FilePath)} {MethodName(method)}: {string.Join(' ', names)}");
+				lines.Add(
+					$"{Path.GetFileName(tree.FilePath)} {MethodName(method)}: {string.Join(' ', names)}"
+				);
 			}
 		}
 
@@ -113,23 +143,44 @@ internal sealed class LocalRenamer(CSharpProject project, IReadOnlyList<(string 
 		var files = _project.ReadFiles();
 		var compilation = _project.Compile(files, CSharpProject.FrameworkReferences);
 		var report = new List<string>();
-		foreach (var tree in compilation.SyntaxTrees.Where(t => files.ContainsKey(t.FilePath)).ToList())
+		foreach (
+			var tree in compilation.SyntaxTrees.Where(t => files.ContainsKey(t.FilePath)).ToList()
+		)
 		{
 			var current = compilation.SyntaxTrees.Single(t => t.FilePath == tree.FilePath);
-			var baseline = compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error && d.Location.SourceTree == current).Select(d => d.GetMessage()).ToHashSet();
+			var baseline = compilation
+				.GetDiagnostics()
+				.Where(d =>
+					d.Severity == DiagnosticSeverity.Error && d.Location.SourceTree == current
+				)
+				.Select(d => d.GetMessage())
+				.ToHashSet();
 			foreach (var (methodName, oldName, newName) in _renames)
 			{
 				var model = compilation.GetSemanticModel(current);
-				var edits = Methods(current).Where(m => MethodName(m) == methodName).SelectMany(m => Edits(m, model, oldName, newName)).ToList();
+				var edits = Methods(current)
+					.Where(m => MethodName(m) == methodName)
+					.SelectMany(m => Edits(m, model, oldName, newName))
+					.ToList();
 				if (edits.Count == 0)
 				{
 					continue;
 				}
 
 				var newText = Apply(current.GetText().ToString(), edits);
-				var newTree = CSharpSyntaxTree.ParseText(newText, _project.ParseOptions(), tree.FilePath);
+				var newTree = CSharpSyntaxTree.ParseText(
+					newText,
+					_project.ParseOptions(),
+					tree.FilePath
+				);
 				var newCompilation = compilation.ReplaceSyntaxTree(current, newTree);
-				var error = newCompilation.GetDiagnostics().FirstOrDefault(d => d.Severity == DiagnosticSeverity.Error && d.Location.SourceTree == newTree && !baseline.Contains(d.GetMessage()));
+				var error = newCompilation
+					.GetDiagnostics()
+					.FirstOrDefault(d =>
+						d.Severity == DiagnosticSeverity.Error
+						&& d.Location.SourceTree == newTree
+						&& !baseline.Contains(d.GetMessage())
+					);
 				if (error is not null)
 				{
 					report.Add($"{methodName} {oldName} {newName}: {error}");

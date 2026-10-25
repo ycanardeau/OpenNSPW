@@ -17,13 +17,26 @@ internal static class UnitMarks
 	// Whether a point is in the middle of a unit's sprite at `at`, 20 in from the sides of its 78 by 78 (DrawUnitMarks).
 	public static bool IsInMiddle(Vector2 at, DrawingPoint point)
 	{
-		return point.X >= at.X - 20 && point.X <= at.X + 18 && point.Y >= at.Y - 20 && point.Y <= at.Y + 18;
+		return point.X >= at.X - 20
+			&& point.X <= at.X + 18
+			&& point.Y >= at.Y - 20
+			&& point.Y <= at.Y + 18;
 	}
 
 	// A square around a point, `half` from it to each side.
-	public static void DrawBox(SpriteBatch batch, Vector2 center, int half, Color color, float thickness = 1)
+	public static void DrawBox(
+		SpriteBatch batch,
+		Vector2 center,
+		int half,
+		Color color,
+		float thickness = 1
+	)
 	{
-		batch.DrawRectangle(new RectangleF(center.X - half, center.Y - half, half * 2, half * 2), color, thickness);
+		batch.DrawRectangle(
+			new RectangleF(center.X - half, center.Y - half, half * 2, half * 2),
+			color,
+			thickness
+		);
 	}
 
 	// The corners of a square around a point, as on a chart.
@@ -39,7 +52,12 @@ internal static class UnitMarks
 	}
 
 	// The selected unit's mark, or a mark for a unit in the selection (DrawSelectedUnit, DrawUnitMarks).
-	public static void DrawSelection(SpriteBatch batch, Vector2 center, GameSnapshot snapshot, int m)
+	public static void DrawSelection(
+		SpriteBatch batch,
+		Vector2 center,
+		GameSnapshot snapshot,
+		int m
+	)
 	{
 		if (m == snapshot.SelectedUnit)
 			DrawBrackets(batch, center, 30, MarkLight);

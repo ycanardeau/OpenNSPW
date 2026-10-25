@@ -22,7 +22,15 @@ namespace OpenNspw.Porter;
 // `game.Sound.PlaySoundEffect(...)`), a moved static member through the class, and a member of Nspw that the moved code
 // uses through `_game` (`Units[n]` becomes `_game.Units[n]`); Nspw's static members stay reachable as they were, by a
 // `using static` in the moved files. Nspw's member that holds the object is not added: Nspw creates it.
-internal sealed class MemberMover(CSharpProject port, IReadOnlyList<CSharpProject> users, string className, string owner, string newFile, IReadOnlySet<string> files, IReadOnlySet<string> members)
+internal sealed class MemberMover(
+	CSharpProject port,
+	IReadOnlyList<CSharpProject> users,
+	string className,
+	string owner,
+	string newFile,
+	IReadOnlySet<string> files,
+	IReadOnlySet<string> members
+)
 {
 	private const string Game = "_game";
 	private const string UsingNspw = "using static OpenNspw.Nspw;\n";
@@ -47,7 +55,9 @@ internal sealed class MemberMover(CSharpProject port, IReadOnlyList<CSharpProjec
 		{
 			MethodDeclarationSyntax m => m.Identifier.ValueText,
 			PropertyDeclarationSyntax p => p.Identifier.ValueText,
-			FieldDeclarationSyntax { Declaration.Variables: [var variable] } => variable.Identifier.ValueText,
+			FieldDeclarationSyntax { Declaration.Variables: [var variable] } => variable
+				.Identifier
+				.ValueText,
 			_ => null,
 		};
 	}
@@ -58,14 +68,22 @@ internal sealed class MemberMover(CSharpProject port, IReadOnlyList<CSharpProjec
 		return name.Parent switch
 		{
 			MemberAccessExpressionSyntax access when access.Name == name => access.Expression,
-			MemberBindingExpressionSyntax binding => binding.Ancestors().OfType<ConditionalAccessExpressionSyntax>().First().Expression,
+			MemberBindingExpressionSyntax binding => binding
+				.Ancestors()
+				.OfType<ConditionalAccessExpressionSyntax>()
+				.First()
+				.Expression,
 			_ => null,
 		};
 	}
 
 	private static string Apply(string text, IEnumerable<(TextSpan Span, string Text)> edits)
 	{
-		foreach (var (span, replacement) in edits.OrderByDescending(e => e.Span.Start).ThenByDescending(e => e.Span.End))
+		foreach (
+			var (span, replacement) in edits
+				.OrderByDescending(e => e.Span.Start)
+				.ThenByDescending(e => e.Span.End)
+		)
 		{
 			text = text[..span.Start] + replacement + text[span.End..];
 		}
@@ -97,7 +115,11 @@ internal sealed class MemberMover(CSharpProject port, IReadOnlyList<CSharpProjec
 				continue;
 			}
 
-			moved.AddRange(declaration.Members.Where(m => DeclaredName(m) is { } name && _members.Contains(name)));
+			moved.AddRange(
+				declaration.Members.Where(m =>
+					DeclaredName(m) is { } name && _members.Contains(name)
+				)
+			);
 		}
 
 		return moved;
@@ -105,27 +127,44 @@ internal sealed class MemberMover(CSharpProject port, IReadOnlyList<CSharpProjec
 
 	// The edits of the uses of the members in one tree. The private members used across the two classes are added to
 	// widen.
-	private List<(TextSpan Span, string Text)> UseEdits(SyntaxTree tree, SemanticModel model, INamedTypeSymbol nspw, HashSet<ISymbol> movedSymbols, IReadOnlyList<SyntaxNode> moved, HashSet<ISymbol> widen, List<string> report)
+	private List<(TextSpan Span, string Text)> UseEdits(
+		SyntaxTree tree,
+		SemanticModel model,
+		INamedTypeSymbol nspw,
+		HashSet<ISymbol> movedSymbols,
+		IReadOnlyList<SyntaxNode> moved,
+		HashSet<ISymbol> widen,
+		List<string> report
+	)
 	{
 		var edits = new List<(TextSpan Span, string Text)>();
 		foreach (var name in tree.GetRoot().DescendantNodes().OfType<SimpleNameSyntax>())
 		{
 			var info = model.GetSymbolInfo(name);
-			var symbol = (info.Symbol ?? info.CandidateSymbols.FirstOrDefault())?.OriginalDefinition;
-			if (symbol is not (IFieldSymbol or IMethodSymbol or IPropertySymbol or IEventSymbol) || !IsNspw(symbol.ContainingType, nspw)
-				|| name.Parent is NameColonSyntax or NameEqualsSyntax)
+			var symbol = (
+				info.Symbol ?? info.CandidateSymbols.FirstOrDefault()
+			)?.OriginalDefinition;
+			if (
+				symbol is not (IFieldSymbol or IMethodSymbol or IPropertySymbol or IEventSymbol)
+				|| !IsNspw(symbol.ContainingType, nspw)
+				|| name.Parent is NameColonSyntax or NameEqualsSyntax
+			)
 			{
 				continue;
 			}
 
 			var isInMoved = moved.Any(m => m.Span.Contains(name.Span));
-			if (symbol.DeclaredAccessibility == Accessibility.Private && isInMoved != movedSymbols.Contains(symbol))
+			if (
+				symbol.DeclaredAccessibility == Accessibility.Private
+				&& isInMoved != movedSymbols.Contains(symbol)
+			)
 			{
 				widen.Add(symbol);
 			}
 
 			var receiver = Receiver(name);
-			var receiverIsType = receiver is not null && model.GetSymbolInfo(receiver).Symbol is ITypeSymbol;
+			var receiverIsType =
+				receiver is not null && model.GetSymbolInfo(receiver).Symbol is ITypeSymbol;
 			if (movedSymbols.Contains(symbol))
 			{
 				if (symbol.IsStatic)
@@ -139,9 +178,7 @@ internal sealed class MemberMover(CSharpProject port, IReadOnlyList<CSharpProjec
 						edits.Add((new TextSpan(name.SpanStart, 0), _className + "."));
 					}
 				}
-				else if (receiver is ThisExpressionSyntax && isInMoved)
-				{
-				}
+				else if (receiver is ThisExpressionSyntax && isInMoved) { }
 				else if (receiver is not null || !isInMoved)
 				{
 					edits.Add((new TextSpan(name.SpanStart, 0), _owner + "."));
@@ -162,9 +199,14 @@ internal sealed class MemberMover(CSharpProject port, IReadOnlyList<CSharpProjec
 
 		foreach (var self in tree.GetRoot().DescendantNodes().OfType<ThisExpressionSyntax>())
 		{
-			if (moved.Any(m => m.Span.Contains(self.Span)) && self.Parent is not MemberAccessExpressionSyntax)
+			if (
+				moved.Any(m => m.Span.Contains(self.Span))
+				&& self.Parent is not MemberAccessExpressionSyntax
+			)
 			{
-				report.Add($"{tree.FilePath}({self.GetLocation().GetLineSpan().StartLinePosition.Line + 1}): `this` in moved code");
+				report.Add(
+					$"{tree.FilePath}({self.GetLocation().GetLineSpan().StartLinePosition.Line + 1}): `this` in moved code"
+				);
 			}
 		}
 
@@ -175,7 +217,8 @@ internal sealed class MemberMover(CSharpProject port, IReadOnlyList<CSharpProjec
 	private static ISymbol? FindIn(INamedTypeSymbol nspw, ISymbol symbol)
 	{
 		var id = symbol.GetDocumentationCommentId();
-		return nspw.GetMembers(symbol.Name).FirstOrDefault(m => m.GetDocumentationCommentId() == id);
+		return nspw.GetMembers(symbol.Name)
+			.FirstOrDefault(m => m.GetDocumentationCommentId() == id);
 	}
 
 	// Moves the members, and writes the files that changed. Returns their paths, and what needs a look.
@@ -183,13 +226,17 @@ internal sealed class MemberMover(CSharpProject port, IReadOnlyList<CSharpProjec
 	{
 		var portFiles = _port.ReadFiles();
 		var portCompilation = _port.Compile(portFiles, CSharpProject.FrameworkReferences);
-		var nspw = portCompilation.GetTypeByMetadataName("OpenNspw.Nspw") ?? throw new InvalidOperationException("No Nspw.");
+		var nspw =
+			portCompilation.GetTypeByMetadataName("OpenNspw.Nspw")
+			?? throw new InvalidOperationException("No Nspw.");
 		var moved = Moved(nspw);
 		var movedSymbols = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
 		foreach (var declaration in moved)
 		{
 			var model = portCompilation.GetSemanticModel(declaration.SyntaxTree);
-			var members = declaration is TypeDeclarationSyntax type ? type.Members.AsEnumerable() : [(MemberDeclarationSyntax)declaration];
+			var members = declaration is TypeDeclarationSyntax type
+				? type.Members.AsEnumerable()
+				: [(MemberDeclarationSyntax)declaration];
 			foreach (var member in members)
 			{
 				var symbols = member is FieldDeclarationSyntax field
@@ -199,13 +246,26 @@ internal sealed class MemberMover(CSharpProject port, IReadOnlyList<CSharpProjec
 			}
 		}
 
-		var compilations = new List<(CSharpCompilation Compilation, Dictionary<string, string> Files)> { (portCompilation, portFiles) };
+		var compilations = new List<(
+			CSharpCompilation Compilation,
+			Dictionary<string, string> Files
+		)>
+		{
+			(portCompilation, portFiles),
+		};
 		var except = new HashSet<string>([_port.Name, .. _users.Select(u => u.Name)]);
 		var compiled = new List<MetadataReference> { portCompilation.ToMetadataReference() };
 		foreach (var user in _users)
 		{
 			var files = user.ReadFiles();
-			var compilation = user.Compile(files, [.. CSharpProject.FrameworkReferences, .. user.OutputReferences(except), .. compiled]);
+			var compilation = user.Compile(
+				files,
+				[
+					.. CSharpProject.FrameworkReferences,
+					.. user.OutputReferences(except),
+					.. compiled,
+				]
+			);
 			compiled.Add(compilation.ToMetadataReference());
 			compilations.Add((compilation, files));
 		}
@@ -214,30 +274,62 @@ internal sealed class MemberMover(CSharpProject port, IReadOnlyList<CSharpProjec
 
 		// The private members used across the classes become internal.
 		var widen = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
-		foreach (var tree in portCompilation.SyntaxTrees.Where(t => portFiles.ContainsKey(t.FilePath)))
+		foreach (
+			var tree in portCompilation.SyntaxTrees.Where(t => portFiles.ContainsKey(t.FilePath))
+		)
 		{
-			UseEdits(tree, portCompilation.GetSemanticModel(tree), nspw, movedSymbols, [.. moved.Where(m => m.SyntaxTree == tree)], widen, []);
+			UseEdits(
+				tree,
+				portCompilation.GetSemanticModel(tree),
+				nspw,
+				movedSymbols,
+				[.. moved.Where(m => m.SyntaxTree == tree)],
+				widen,
+				[]
+			);
 		}
 
 		var written = new List<string>();
 		var extra = new List<string>();
 		foreach (var (compilation, files) in compilations)
 		{
-			var userNspw = compilation == portCompilation ? nspw : compilation.GetTypeByMetadataName("OpenNspw.Nspw")!;
-			var userMoved = compilation == portCompilation ? movedSymbols : new HashSet<ISymbol>(movedSymbols.Select(s => FindIn(userNspw, s)).OfType<ISymbol>(), SymbolEqualityComparer.Default);
+			var userNspw =
+				compilation == portCompilation
+					? nspw
+					: compilation.GetTypeByMetadataName("OpenNspw.Nspw")!;
+			var userMoved =
+				compilation == portCompilation
+					? movedSymbols
+					: new HashSet<ISymbol>(
+						movedSymbols.Select(s => FindIn(userNspw, s)).OfType<ISymbol>(),
+						SymbolEqualityComparer.Default
+					);
 			foreach (var tree in compilation.SyntaxTrees.Where(t => files.ContainsKey(t.FilePath)))
 			{
 				var model = compilation.GetSemanticModel(tree);
-				var treeMoved = compilation == portCompilation ? moved.Where(m => m.SyntaxTree == tree).ToList() : [];
+				var treeMoved =
+					compilation == portCompilation
+						? moved.Where(m => m.SyntaxTree == tree).ToList()
+						: [];
 				var edits = UseEdits(tree, model, userNspw, userMoved, treeMoved, [], report);
 				if (compilation == portCompilation)
 				{
-					edits.AddRange(widen.SelectMany(w => w.DeclaringSyntaxReferences)
-						.Where(r => r.SyntaxTree == tree)
-						.Select(r => r.GetSyntax().AncestorsAndSelf().OfType<MemberDeclarationSyntax>().First())
-						.SelectMany(m => m.Modifiers.Where(t => t.IsKind(SyntaxKind.PrivateKeyword)))
-						.Select(t => (t.Span, "internal"))
-						.Distinct());
+					edits.AddRange(
+						widen
+							.SelectMany(w => w.DeclaringSyntaxReferences)
+							.Where(r => r.SyntaxTree == tree)
+							.Select(r =>
+								r.GetSyntax()
+									.AncestorsAndSelf()
+									.OfType<MemberDeclarationSyntax>()
+									.First()
+							)
+							.SelectMany(m =>
+								m.Modifiers.Where(t => t.IsKind(SyntaxKind.PrivateKeyword))
+							)
+							.Select(t => (t.Span, "internal"))
+							.Distinct()
+					);
 				}
 
 				var isMovedFile = _files.Contains(Path.GetFullPath(tree.FilePath));
@@ -248,7 +340,9 @@ internal sealed class MemberMover(CSharpProject port, IReadOnlyList<CSharpProjec
 					{
 						if (type.ParameterList is not null)
 						{
-							report.Add($"{tree.FilePath}: the part with the primary constructor cannot move");
+							report.Add(
+								$"{tree.FilePath}: the part with the primary constructor cannot move"
+							);
 						}
 
 						edits.Add((type.Identifier.Span, _className));
@@ -259,7 +353,17 @@ internal sealed class MemberMover(CSharpProject port, IReadOnlyList<CSharpProjec
 						var span = declaration.FullSpan;
 						var inner = edits.Where(e => span.Contains(e.Span)).ToList();
 						edits.RemoveAll(inner.Contains);
-						var member = Apply(tree.GetText().ToString(span), inner.Select(e => (new TextSpan(e.Span.Start - span.Start, e.Span.Length), e.Text))).TrimEnd() + "\n";
+						var member =
+							Apply(
+									tree.GetText().ToString(span),
+									inner.Select(e =>
+										(
+											new TextSpan(e.Span.Start - span.Start, e.Span.Length),
+											e.Text
+										)
+									)
+								)
+								.TrimEnd() + "\n";
 						(declaration is FieldDeclarationSyntax ? extra : local).Add(member);
 						edits.Add((span, ""));
 					}
@@ -273,7 +377,11 @@ internal sealed class MemberMover(CSharpProject port, IReadOnlyList<CSharpProjec
 				var text = Apply(tree.GetText().ToString(), edits);
 				if (local.Count > 0)
 				{
-					text = text.TrimEnd() + $"\n\npublic unsafe partial class {_className}\n{{\n" + string.Join("", local) + "}\n";
+					text =
+						text.TrimEnd()
+						+ $"\n\npublic unsafe partial class {_className}\n{{\n"
+						+ string.Join("", local)
+						+ "}\n";
 				}
 
 				if (isMovedFile || local.Count > 0)
@@ -286,8 +394,12 @@ internal sealed class MemberMover(CSharpProject port, IReadOnlyList<CSharpProjec
 			}
 		}
 
-		var header = $"{UsingNspw}\nnamespace OpenNspw;\n\n[Globals]\npublic sealed unsafe partial class {_className}(Nspw game)\n{{\n\tprivate readonly Nspw {Game} = game;\n";
-		File.WriteAllText(_newFile, header + (extra.Count > 0 ? "\n" + string.Join("", extra) : "") + "}\n");
+		var header =
+			$"{UsingNspw}\nnamespace OpenNspw;\n\n[Globals]\npublic sealed unsafe partial class {_className}(Nspw game)\n{{\n\tprivate readonly Nspw {Game} = game;\n";
+		File.WriteAllText(
+			_newFile,
+			header + (extra.Count > 0 ? "\n" + string.Join("", extra) : "") + "}\n"
+		);
 		written.Add(_newFile);
 		return [.. report, .. written];
 	}

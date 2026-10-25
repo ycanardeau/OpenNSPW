@@ -3,7 +3,10 @@ using MonoGame.Extended.ViewportAdapters;
 
 namespace Aigamo.Saruhashi.MonoGame;
 
-public sealed class MonoGameGraphicsFactory(SpriteBatch spriteBatch, ViewportAdapter? viewportAdapter = null) : IGraphicsFactory
+public sealed class MonoGameGraphicsFactory(
+	SpriteBatch spriteBatch,
+	ViewportAdapter? viewportAdapter = null
+) : IGraphicsFactory
 {
 	public SpriteBatch SpriteBatch { get; } = spriteBatch;
 	public ViewportAdapter? ViewportAdapter { get; } = viewportAdapter;

@@ -26,21 +26,41 @@ internal sealed class Backdrop : IDisposable
 		_gradient.SetData(colors);
 	}
 
-	private static Color Faded(System.Drawing.Color color, float alpha) => color.ToXnaColor() * alpha;
+	private static Color Faded(System.Drawing.Color color, float alpha) =>
+		color.ToXnaColor() * alpha;
 
 	private static void DrawGrid(SpriteBatch spriteBatch)
 	{
 		for (var i = 0; i <= all_head.SCRN_WIDTH / GridSize; i++)
-			spriteBatch.DrawLine(i * GridSize, 0, i * GridSize, all_head.SCRN_HEIGHT, Faded(Theme.Line, i % 4 == 0 ? 0.35f : 0.16f));
+			spriteBatch.DrawLine(
+				i * GridSize,
+				0,
+				i * GridSize,
+				all_head.SCRN_HEIGHT,
+				Faded(Theme.Line, i % 4 == 0 ? 0.35f : 0.16f)
+			);
 
 		for (var j = 0; j <= all_head.SCRN_HEIGHT / GridSize; j++)
-			spriteBatch.DrawLine(0, j * GridSize, all_head.SCRN_WIDTH, j * GridSize, Faded(Theme.Line, j % 4 == 0 ? 0.35f : 0.16f));
+			spriteBatch.DrawLine(
+				0,
+				j * GridSize,
+				all_head.SCRN_WIDTH,
+				j * GridSize,
+				Faded(Theme.Line, j % 4 == 0 ? 0.35f : 0.16f)
+			);
 	}
 
 	public void Draw(SpriteBatch spriteBatch, ViewportAdapter viewportAdapter)
 	{
-		spriteBatch.Begin(transformMatrix: viewportAdapter.GetScaleMatrix(), blendState: BlendState.AlphaBlend);
-		spriteBatch.Draw(_gradient, new Rectangle(0, 0, all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT), Color.White);
+		spriteBatch.Begin(
+			transformMatrix: viewportAdapter.GetScaleMatrix(),
+			blendState: BlendState.AlphaBlend
+		);
+		spriteBatch.Draw(
+			_gradient,
+			new Rectangle(0, 0, all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT),
+			Color.White
+		);
 		DrawGrid(spriteBatch);
 		spriteBatch.End();
 	}

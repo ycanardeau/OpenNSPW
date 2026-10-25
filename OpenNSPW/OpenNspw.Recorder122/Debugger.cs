@@ -8,7 +8,11 @@ namespace OpenNspw.Recorder122;
 // A breakpoint is an int3 written over its first byte: at a hit, the byte is put back and the thread steps over it once,
 // then the int3 is written again. The callback may read and write the program's memory and the thread's registers, send
 // the thread elsewhere instead of over the breakpoint (Resume), and end the program (Terminate).
-internal sealed class Debugger(string executable, IReadOnlyCollection<uint> breakpoints, Action<Debugger, uint> hit) : IDisposable
+internal sealed class Debugger(
+	string executable,
+	IReadOnlyCollection<uint> breakpoints,
+	Action<Debugger, uint> hit
+) : IDisposable
 {
 	private const byte Int3 = 0xCC;
 
@@ -42,7 +46,10 @@ internal sealed class Debugger(string executable, IReadOnlyCollection<uint> brea
 	public byte[] Read(uint address, int size)
 	{
 		var bytes = new byte[size];
-		Check(ReadProcessMemory(_process, (nint)address, bytes, size, out _), $"ReadProcessMemory at {address:X8}");
+		Check(
+			ReadProcessMemory(_process, (nint)address, bytes, size, out _),
+			$"ReadProcessMemory at {address:X8}"
+		);
 		return bytes;
 	}
 
@@ -83,13 +90,19 @@ internal sealed class Debugger(string executable, IReadOnlyCollection<uint> brea
 
 	private void Write(uint address, byte value)
 	{
-		Check(WriteProcessMemory(_process, (nint)address, [value], 1, out _), $"WriteProcessMemory at {address:X8}");
+		Check(
+			WriteProcessMemory(_process, (nint)address, [value], 1, out _),
+			$"WriteProcessMemory at {address:X8}"
+		);
 		FlushInstructionCache(_process, (nint)address, 1);
 	}
 
 	public void Write(uint address, byte[] bytes)
 	{
-		Check(WriteProcessMemory(_process, (nint)address, bytes, bytes.Length, out _), $"WriteProcessMemory at {address:X8}");
+		Check(
+			WriteProcessMemory(_process, (nint)address, bytes, bytes.Length, out _),
+			$"WriteProcessMemory at {address:X8}"
+		);
 	}
 
 	public void WriteInt16(uint address, short value)
@@ -136,7 +149,11 @@ internal sealed class Debugger(string executable, IReadOnlyCollection<uint> brea
 		{
 			Write(address, _originalBytes[address]);
 			Marshal.WriteInt32(_context, ContextEip, (int)address);
-			Marshal.WriteInt32(_context, ContextEFlags, Marshal.ReadInt32(_context, ContextEFlags) | (int)TrapFlag);
+			Marshal.WriteInt32(
+				_context,
+				ContextEFlags,
+				Marshal.ReadInt32(_context, ContextEFlags) | (int)TrapFlag
+			);
 			_steppingOver[threadId] = address;
 		}
 		Check(SetThreadContext(thread, _context), "SetThreadContext");
@@ -177,7 +194,21 @@ internal sealed class Debugger(string executable, IReadOnlyCollection<uint> brea
 	public void Run()
 	{
 		var startup = new STARTUPINFO { cb = Marshal.SizeOf<STARTUPINFO>() };
-		Check(CreateProcess(_executable, null, 0, 0, false, DEBUG_ONLY_THIS_PROCESS, 0, Path.GetDirectoryName(_executable), ref startup, out var information), "CreateProcess");
+		Check(
+			CreateProcess(
+				_executable,
+				null,
+				0,
+				0,
+				false,
+				DEBUG_ONLY_THIS_PROCESS,
+				0,
+				Path.GetDirectoryName(_executable),
+				ref startup,
+				out var information
+			),
+			"CreateProcess"
+		);
 		CloseHandle(information.hThread);
 
 		while (true)

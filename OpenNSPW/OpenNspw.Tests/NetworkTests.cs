@@ -33,7 +33,8 @@ internal sealed class NetworkTestPlatform : INspwPlatform
 		return IDOK;
 	}
 
-	public IReadOnlyList<string> FindFiles(string directory, string pattern) => NullPlatform.Instance.FindFiles(directory, pattern);
+	public IReadOnlyList<string> FindFiles(string directory, string pattern) =>
+		NullPlatform.Instance.FindFiles(directory, pattern);
 
 	public uint timeGetTime() => NullPlatform.Instance.timeGetTime();
 
@@ -41,21 +42,37 @@ internal sealed class NetworkTestPlatform : INspwPlatform
 
 	public void Present(DirectDrawSurface7 primary) => NullPlatform.Instance.Present(primary);
 
-	public TextBitmap? RasterizeText(string text, int height, string faceName) => NullPlatform.Instance.RasterizeText(text, height, faceName);
+	public TextBitmap? RasterizeText(string text, int height, string faceName) =>
+		NullPlatform.Instance.RasterizeText(text, height, faceName);
 
-	public ISound? CreateSound(WAVEFORMATEX format, ReadOnlySpan<byte> data) => NullPlatform.Instance.CreateSound(format, data);
+	public ISound? CreateSound(WAVEFORMATEX format, ReadOnlySpan<byte> data) =>
+		NullPlatform.Instance.CreateSound(format, data);
 
 	public string? ReadSetting(string key) => NullPlatform.Instance.ReadSetting(key);
 
-	public void WriteSetting(string key, string value) => NullPlatform.Instance.WriteSetting(key, value);
+	public void WriteSetting(string key, string value) =>
+		NullPlatform.Instance.WriteSetting(key, value);
 }
 
 // A sound buffer that does nothing.
 internal sealed unsafe class SilentSoundBuffer : IDirectSoundBuffer
 {
-	public int Lock(uint dwOffset, uint dwBytes, void** ppvAudioPtr1, uint* pdwAudioBytes1, void** ppvAudioPtr2, uint* pdwAudioBytes2, uint dwFlags) => dsound.DSERR_INVALIDPARAM;
+	public int Lock(
+		uint dwOffset,
+		uint dwBytes,
+		void** ppvAudioPtr1,
+		uint* pdwAudioBytes1,
+		void** ppvAudioPtr2,
+		uint* pdwAudioBytes2,
+		uint dwFlags
+	) => dsound.DSERR_INVALIDPARAM;
 
-	public int Unlock(void* pvAudioPtr1, uint dwAudioBytes1, void* pvAudioPtr2, uint dwAudioBytes2) => 0;
+	public int Unlock(
+		void* pvAudioPtr1,
+		uint dwAudioBytes1,
+		void* pvAudioPtr2,
+		uint dwAudioBytes2
+	) => 0;
 
 	public int Play(uint dwReserved1, uint dwPriority, uint dwFlags) => 0;
 
@@ -86,7 +103,9 @@ internal sealed class ConnectingGame : IDisposable
 
 		// The defaults that WinMain reads from the registry.
 		tchar.ShiftJis.GetBytes(playerName).CopyTo(Game.LocalPlayerName);
-		tchar.ShiftJis.GetBytes("DirectPlay8 TCP/IP Service Provider").CopyTo(Game.PreferredProvider);
+		tchar
+			.ShiftJis.GetBytes("DirectPlay8 TCP/IP Service Provider")
+			.CopyTo(Game.PreferredProvider);
 		tchar.ShiftJis.GetBytes("localhost").CopyTo(Game.RemoteHostName);
 
 		// Normally created by InitDSound.
@@ -98,13 +117,39 @@ internal sealed class ConnectingGame : IDisposable
 			}
 		}
 
-		Assert.Equal(0, Game.CoCreateInstance(CLSID_DirectPlay8ThreadPool, IID_IDirectPlay8ThreadPool, out Game.DirectPlayThreadPool));
-		Game.DirectPlayThreadPool!.Initialize(null, Game.DirectPlayMessageHandler, DPNINITIALIZE_DISABLEPARAMVAL);
+		Assert.Equal(
+			0,
+			Game.CoCreateInstance(
+				CLSID_DirectPlay8ThreadPool,
+				IID_IDirectPlay8ThreadPool,
+				out Game.DirectPlayThreadPool
+			)
+		);
+		Game.DirectPlayThreadPool!.Initialize(
+			null,
+			Game.DirectPlayMessageHandler,
+			DPNINITIALIZE_DISABLEPARAMVAL
+		);
 		Game.DirectPlayThreadPool.SetThreadCount(unchecked((uint)-1), 0, 0);
-		Assert.Equal(0, Game.CoCreateInstance(CLSID_DirectPlay8Peer, IID_IDirectPlay8Peer, out Game.DirectPlayPeer));
-		Game.DirectPlayPeer!.Initialize(null, Game.DirectPlayMessageHandler, DPNINITIALIZE_DISABLEPARAMVAL);
+		Assert.Equal(
+			0,
+			Game.CoCreateInstance(
+				CLSID_DirectPlay8Peer,
+				IID_IDirectPlay8Peer,
+				out Game.DirectPlayPeer
+			)
+		);
+		Game.DirectPlayPeer!.Initialize(
+			null,
+			Game.DirectPlayMessageHandler,
+			DPNINITIALIZE_DISABLEPARAMVAL
+		);
 
-		Game.MainDialog = Game.CreateDialog(MAKEINTRESOURCE(IDD_ADDRESS_OVERRIDE), null, Game.OverrideDlgProc);
+		Game.MainDialog = Game.CreateDialog(
+			MAKEINTRESOURCE(IDD_ADDRESS_OVERRIDE),
+			null,
+			Game.OverrideDlgProc
+		);
 	}
 
 	// The port the host listens on.
@@ -186,9 +231,13 @@ public class NetworkTests
 		guest.Game.ClickDlgItem(guest.Dialog, IDOK);
 
 		PumpUntil(
-			() => guest.Dialog.Id == IDD_MAIN_GAME && guest.Game.ActivePlayerCount == 2 && host.Game.ActivePlayerCount == 2,
+			() =>
+				guest.Dialog.Id == IDD_MAIN_GAME
+				&& guest.Game.ActivePlayerCount == 2
+				&& host.Game.ActivePlayerCount == 2,
 			host,
-			guest);
+			guest
+		);
 		return (host, guest);
 	}
 
@@ -219,11 +268,20 @@ public class NetworkTests
 		Assert.Empty(guest.Platform.MessageBoxes);
 	}
 
-	private static unsafe void Send<T>(ConnectingGame game, T message) where T : unmanaged
+	private static unsafe void Send<T>(ConnectingGame game, T message)
+		where T : unmanaged
 	{
 		game.Game.bufferDesc.dwBufferSize = (uint)sizeof(T);
 		game.Game.bufferDesc.pBufferData = (byte*)&message;
-		game.Game.DirectPlayPeer!.SendTo(game.Game.RivalPlayerId, ref game.Game.bufferDesc, 1, 0, null, ref game.Game.hAsync, MUST_SEND);
+		game.Game.DirectPlayPeer!.SendTo(
+			game.Game.RivalPlayerId,
+			ref game.Game.bufferDesc,
+			1,
+			0,
+			null,
+			ref game.Game.hAsync,
+			MUST_SEND
+		);
 	}
 
 	[Fact]
@@ -234,7 +292,18 @@ public class NetworkTests
 		using var __ = guest;
 
 		// The checksums of a turn (DP_FLAG_1), as chara_cont sends them.
-		Send(host, new SyncFlagMessage { Type = MessageType.SyncFlag, TickChecksum = 12, UnitChecksum = 34, RandomChecksum = 56, TickWait = 1, RivalMode = (short)GameMode.Battle });
+		Send(
+			host,
+			new SyncFlagMessage
+			{
+				Type = MessageType.SyncFlag,
+				TickChecksum = 12,
+				UnitChecksum = 34,
+				RandomChecksum = 56,
+				TickWait = 1,
+				RivalMode = (short)GameMode.Battle,
+			}
+		);
 		PumpUntil(() => guest.Game.CanAdvance1.Value == 1, host, guest);
 		Assert.Equal(12, guest.Game.TickChecksums[0]);
 		Assert.Equal(34, guest.Game.UnitChecksums[0]);
@@ -243,7 +312,14 @@ public class NetworkTests
 		Assert.Equal(GameMode.Battle, guest.Game.RivalMode);
 
 		// An order (DP_NEW_PP_SHIP).
-		MoveShipsOrderMessage order = new MoveShipsOrderMessage { Type = MessageType.MoveShipsOrder, Unit = 1, X = -1234, Y = 567, ClearsPath = 1 };
+		MoveShipsOrderMessage order = new MoveShipsOrderMessage
+		{
+			Type = MessageType.MoveShipsOrder,
+			Unit = 1,
+			X = -1234,
+			Y = 567,
+			ClearsPath = 1,
+		};
 		order.Selections[0] = 3;
 		order.Selections[guest.Game.JPN_SHIP_END - 1] = 7;
 		Send(guest, order);

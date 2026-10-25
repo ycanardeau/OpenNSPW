@@ -267,18 +267,14 @@ public partial class Nspw
 			: 0;
 	}
 
-	public void InitCommonControls()
-	{
-	}
+	public void InitCommonControls() { }
 
 	public int CoInitializeEx()
 	{
 		return S_OK;
 	}
 
-	public void CoUninitialize()
-	{
-	}
+	public void CoUninitialize() { }
 
 	public object? ImmAssociateContext()
 	{
@@ -352,7 +348,9 @@ public partial class Nspw
 		};
 		foreach (var item in template.Items)
 		{
-			hDlg.Children.Add(new HWND(hDlg, item.Id, item.Kind, item.Text, !item.Disabled, item.Sort));
+			hDlg.Children.Add(
+				new HWND(hDlg, item.Id, item.Kind, item.Text, !item.Disabled, item.Sort)
+			);
 		}
 
 		lock (WindowsLock)
@@ -424,7 +422,15 @@ public partial class Nspw
 	{
 		lock (_messages)
 		{
-			_messages.Enqueue(new MSG { hwnd = hWnd, message = Msg, wParam = wParam, lParam = lParam });
+			_messages.Enqueue(
+				new MSG
+				{
+					hwnd = hWnd,
+					message = Msg,
+					wParam = wParam,
+					lParam = lParam,
+				}
+			);
 			Monitor.PulseAll(_messages);
 		}
 
@@ -506,7 +512,9 @@ public partial class Nspw
 			return 0;
 		}
 
-		return lpMsg.hwnd is { } hWnd ? CallProc(hWnd, lpMsg.message, lpMsg.wParam, lpMsg.lParam) : 0;
+		return lpMsg.hwnd is { } hWnd
+			? CallProc(hWnd, lpMsg.message, lpMsg.wParam, lpMsg.lParam)
+			: 0;
 	}
 
 	public int IsDialogMessage(HWND? hDlg, ref MSG lpMsg)
@@ -596,13 +604,23 @@ public partial class Nspw
 	private static int AddString(HWND list, string text)
 	{
 		var index = list.Sort
-			? list.Items.TakeWhile(i => string.Compare(i.Text, text, StringComparison.OrdinalIgnoreCase) <= 0).Count()
+			? list
+				.Items.TakeWhile(i =>
+					string.Compare(i.Text, text, StringComparison.OrdinalIgnoreCase) <= 0
+				)
+				.Count()
 			: list.Items.Count;
 		list.Items.Insert(index, new LISTITEM(text));
 		return index;
 	}
 
-	private object? SendListMessage(HWND list, uint Msg, nint wParam, object? lParam, Span<byte> buffer)
+	private object? SendListMessage(
+		HWND list,
+		uint Msg,
+		nint wParam,
+		object? lParam,
+		Span<byte> buffer
+	)
 	{
 		lock (WindowsLock)
 		{
@@ -635,9 +653,14 @@ public partial class Nspw
 					return list.Items.Count;
 				case CB_FINDSTRINGEXACT:
 					var text = lParam as string ?? CString(buffer);
-					return list.Items.FindIndex(index + 1, i => string.Equals(i.Text, text, StringComparison.OrdinalIgnoreCase));
+					return list.Items.FindIndex(
+						index + 1,
+						i => string.Equals(i.Text, text, StringComparison.OrdinalIgnoreCase)
+					);
 				case CB_GETLBTEXT or LB_GETTEXT:
-					return valid ? CopyString(list.Items[index].Text, buffer, buffer.Length) : CB_ERR;
+					return valid
+						? CopyString(list.Items[index].Text, buffer, buffer.Length)
+						: CB_ERR;
 				default:
 					return 0;
 			}
@@ -647,24 +670,56 @@ public partial class Nspw
 	// The overloads take the kinds of LPARAM that the game passes: a number, a string literal, a GUID for
 	// CB_SETITEMDATA, or a char buffer.
 
-	public object? SendDlgItemMessage(HWND? hDlg, int nIDDlgItem, uint Msg, nint wParam, nint lParam)
+	public object? SendDlgItemMessage(
+		HWND? hDlg,
+		int nIDDlgItem,
+		uint Msg,
+		nint wParam,
+		nint lParam
+	)
 	{
-		return GetDlgItem(hDlg, nIDDlgItem) is { } list ? SendListMessage(list, Msg, wParam, lParam, []) : 0;
+		return GetDlgItem(hDlg, nIDDlgItem) is { } list
+			? SendListMessage(list, Msg, wParam, lParam, [])
+			: 0;
 	}
 
-	public object? SendDlgItemMessage(HWND? hDlg, int nIDDlgItem, uint Msg, nint wParam, string lParam)
+	public object? SendDlgItemMessage(
+		HWND? hDlg,
+		int nIDDlgItem,
+		uint Msg,
+		nint wParam,
+		string lParam
+	)
 	{
-		return GetDlgItem(hDlg, nIDDlgItem) is { } list ? SendListMessage(list, Msg, wParam, lParam, []) : 0;
+		return GetDlgItem(hDlg, nIDDlgItem) is { } list
+			? SendListMessage(list, Msg, wParam, lParam, [])
+			: 0;
 	}
 
-	public object? SendDlgItemMessage(HWND? hDlg, int nIDDlgItem, uint Msg, nint wParam, Guid? lParam)
+	public object? SendDlgItemMessage(
+		HWND? hDlg,
+		int nIDDlgItem,
+		uint Msg,
+		nint wParam,
+		Guid? lParam
+	)
 	{
-		return GetDlgItem(hDlg, nIDDlgItem) is { } list ? SendListMessage(list, Msg, wParam, lParam, []) : 0;
+		return GetDlgItem(hDlg, nIDDlgItem) is { } list
+			? SendListMessage(list, Msg, wParam, lParam, [])
+			: 0;
 	}
 
-	public object? SendDlgItemMessage(HWND? hDlg, int nIDDlgItem, uint Msg, nint wParam, Span<byte> lParam)
+	public object? SendDlgItemMessage(
+		HWND? hDlg,
+		int nIDDlgItem,
+		uint Msg,
+		nint wParam,
+		Span<byte> lParam
+	)
 	{
-		return GetDlgItem(hDlg, nIDDlgItem) is { } list ? SendListMessage(list, Msg, wParam, null, lParam) : 0;
+		return GetDlgItem(hDlg, nIDDlgItem) is { } list
+			? SendListMessage(list, Msg, wParam, null, lParam)
+			: 0;
 	}
 
 	public int MessageBox(HWND? hWnd, string lpText, string lpCaption, uint uType)
@@ -703,7 +758,9 @@ public partial class Nspw
 
 	public void ClickDlgItem(HWND hDlg, int nIDDlgItem)
 	{
-		var control = GetDlgItem(hDlg, nIDDlgItem) ?? throw new ArgumentException($"No control {nIDDlgItem}.", nameof(nIDDlgItem));
+		var control =
+			GetDlgItem(hDlg, nIDDlgItem)
+			?? throw new ArgumentException($"No control {nIDDlgItem}.", nameof(nIDDlgItem));
 		if (!control.Enabled || hDlg.Destroyed)
 		{
 			return;
@@ -722,7 +779,9 @@ public partial class Nspw
 
 	public void TypeDlgItemText(HWND hDlg, int nIDDlgItem, string text)
 	{
-		var control = GetDlgItem(hDlg, nIDDlgItem) ?? throw new ArgumentException($"No control {nIDDlgItem}.", nameof(nIDDlgItem));
+		var control =
+			GetDlgItem(hDlg, nIDDlgItem)
+			?? throw new ArgumentException($"No control {nIDDlgItem}.", nameof(nIDDlgItem));
 		if (control.Enabled)
 		{
 			SetWindowText(control, text);
@@ -731,7 +790,9 @@ public partial class Nspw
 
 	public void SelectDlgItem(HWND hDlg, int nIDDlgItem, int index)
 	{
-		var control = GetDlgItem(hDlg, nIDDlgItem) ?? throw new ArgumentException($"No control {nIDDlgItem}.", nameof(nIDDlgItem));
+		var control =
+			GetDlgItem(hDlg, nIDDlgItem)
+			?? throw new ArgumentException($"No control {nIDDlgItem}.", nameof(nIDDlgItem));
 		if (!control.Enabled)
 		{
 			return;
@@ -742,7 +803,12 @@ public partial class Nspw
 			control.CurSel = index;
 		}
 
-		CallProc(hDlg, WM_COMMAND, MAKEWPARAM(nIDDlgItem, control.Kind == "LISTBOX" ? LBN_SELCHANGE : CBN_SELCHANGE), 0);
+		CallProc(
+			hDlg,
+			WM_COMMAND,
+			MAKEWPARAM(nIDDlgItem, control.Kind == "LISTBOX" ? LBN_SELCHANGE : CBN_SELCHANGE),
+			0
+		);
 	}
 
 	// Runs a user's action on the game's thread, when its message loop dispatches it.

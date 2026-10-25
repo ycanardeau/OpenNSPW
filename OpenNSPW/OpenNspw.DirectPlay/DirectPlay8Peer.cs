@@ -40,7 +40,8 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options) : IDirectPlay8P
 
 	private static SendFlags ToSendFlags(uint flags)
 	{
-		return (SendFlags)flags & (SendFlags.NoComplete | SendFlags.Guaranteed | SendFlags.NoLoopback);
+		return (SendFlags)flags
+			& (SendFlags.NoComplete | SendFlags.Guaranteed | SendFlags.NoLoopback);
 	}
 
 	public int Initialize(object? pvUserContext, PFNDPNMESSAGEHANDLER pfn, uint dwFlags)
@@ -50,11 +51,25 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options) : IDirectPlay8P
 		return winerror.S_OK;
 	}
 
-	public int EnumServiceProviders(Guid? pguidServiceProvider, Guid? pguidApplication, DPN_SERVICE_PROVIDER_INFO[]? pSPInfoBuffer, ref uint pcbEnumData, ref uint pcReturned, uint dwFlags)
+	public int EnumServiceProviders(
+		Guid? pguidServiceProvider,
+		Guid? pguidApplication,
+		DPN_SERVICE_PROVIDER_INFO[]? pSPInfoBuffer,
+		ref uint pcbEnumData,
+		ref uint pcReturned,
+		uint dwFlags
+	)
 	{
 		// The service providers, or the adapters of one. TCP/IP lists no adapters of its own, and supports all adapters.
 		DPN_SERVICE_PROVIDER_INFO[] items = pguidServiceProvider is null
-			? [new DPN_SERVICE_PROVIDER_INFO { guid = dplay8.CLSID_DP8SP_TCPIP, pwszName = TcpIpName }]
+			?
+			[
+				new DPN_SERVICE_PROVIDER_INFO
+				{
+					guid = dplay8.CLSID_DP8SP_TCPIP,
+					pwszName = TcpIpName,
+				},
+			]
 			: [];
 		if (pSPInfoBuffer is null || pcbEnumData < items.Length)
 		{
@@ -79,13 +94,23 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options) : IDirectPlay8P
 		return winerror.S_OK;
 	}
 
-	public int SetPeerInfo(DPN_PLAYER_INFO pdpnPlayerInfo, object? pvAsyncContext, object? phAsyncHandle, uint dwFlags)
+	public int SetPeerInfo(
+		DPN_PLAYER_INFO pdpnPlayerInfo,
+		object? pvAsyncContext,
+		object? phAsyncHandle,
+		uint dwFlags
+	)
 	{
 		_peer.SetPeerInfo(pdpnPlayerInfo.pwszName ?? string.Empty);
 		return winerror.S_OK;
 	}
 
-	public int GetPeerInfo(uint dpnid, DPN_PLAYER_INFO? pdpnPlayerInfo, ref uint pdwSize, uint dwFlags)
+	public int GetPeerInfo(
+		uint dpnid,
+		DPN_PLAYER_INFO? pdpnPlayerInfo,
+		ref uint pdwSize,
+		uint dwFlags
+	)
 	{
 		if (_peer.GetPeerInfo(new Dpnid((int)dpnid)) is not { } player)
 		{
@@ -101,13 +126,24 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options) : IDirectPlay8P
 
 		pdpnPlayerInfo.dwInfoFlags = dplay8.DPNINFO_NAME;
 		pdpnPlayerInfo.pwszName = player.Name;
-		pdpnPlayerInfo.dwPlayerFlags = (player.IsLocal ? dplay8.DPNPLAYER_LOCAL : 0) | (player.IsHost ? dplay8.DPNPLAYER_HOST : 0);
+		pdpnPlayerInfo.dwPlayerFlags =
+			(player.IsLocal ? dplay8.DPNPLAYER_LOCAL : 0)
+			| (player.IsHost ? dplay8.DPNPLAYER_HOST : 0);
 		return winerror.S_OK;
 	}
 
-	public int Host(DPN_APPLICATION_DESC pdnAppDesc, IDirectPlay8Address?[] prgpDeviceInfo, uint cDeviceInfo, object? pdnSecurity, object? pdnCredentials, object? pvPlayerContext, uint dwFlags)
+	public int Host(
+		DPN_APPLICATION_DESC pdnAppDesc,
+		IDirectPlay8Address?[] prgpDeviceInfo,
+		uint cDeviceInfo,
+		object? pdnSecurity,
+		object? pdnCredentials,
+		object? pvPlayerContext,
+		uint dwFlags
+	)
 	{
-		var port = (prgpDeviceInfo.FirstOrDefault() as DirectPlay8Address)?.Port ?? Peer.DefaultPort;
+		var port =
+			(prgpDeviceInfo.FirstOrDefault() as DirectPlay8Address)?.Port ?? Peer.DefaultPort;
 		try
 		{
 			_peer.HostAsync(ToApplication(pdnAppDesc), port).GetAwaiter().GetResult();
@@ -119,13 +155,33 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options) : IDirectPlay8P
 		}
 	}
 
-	public int Connect(DPN_APPLICATION_DESC pdnAppDesc, IDirectPlay8Address? pHostAddr, IDirectPlay8Address? pDeviceInfo, object? pdnSecurity, object? pdnCredentials, byte[]? pvUserConnectData, uint dwUserConnectDataSize, object? pvPlayerContext, object? pvAsyncContext, ref uint phAsyncHandle, uint dwFlags)
+	public int Connect(
+		DPN_APPLICATION_DESC pdnAppDesc,
+		IDirectPlay8Address? pHostAddr,
+		IDirectPlay8Address? pDeviceInfo,
+		object? pdnSecurity,
+		object? pdnCredentials,
+		byte[]? pvUserConnectData,
+		uint dwUserConnectDataSize,
+		object? pvPlayerContext,
+		object? pvAsyncContext,
+		ref uint phAsyncHandle,
+		uint dwFlags
+	)
 	{
 		var host = pHostAddr as DirectPlay8Address;
 		var localPort = (pDeviceInfo as DirectPlay8Address)?.Port ?? 0;
 		try
 		{
-			_peer.ConnectAsync(ToApplication(pdnAppDesc), host?.Hostname ?? "localhost", host?.Port ?? Peer.DefaultPort, localPort).GetAwaiter().GetResult();
+			_peer
+				.ConnectAsync(
+					ToApplication(pdnAppDesc),
+					host?.Hostname ?? "localhost",
+					host?.Port ?? Peer.DefaultPort,
+					localPort
+				)
+				.GetAwaiter()
+				.GetResult();
 		}
 		catch (Exception)
 		{
@@ -136,10 +192,23 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options) : IDirectPlay8P
 		return DPNSUCCESS_PENDING;
 	}
 
-	public int SendTo(uint dpnid, ref DPN_BUFFER_DESC prgBufferDesc, uint cBufferDesc, uint dwTimeOut, object? pvAsyncContext, ref uint phAsyncHandle, uint dwFlags)
+	public int SendTo(
+		uint dpnid,
+		ref DPN_BUFFER_DESC prgBufferDesc,
+		uint cBufferDesc,
+		uint dwTimeOut,
+		object? pvAsyncContext,
+		ref uint phAsyncHandle,
+		uint dwFlags
+	)
 	{
-		var data = new ReadOnlySpan<byte>(prgBufferDesc.pBufferData, (int)prgBufferDesc.dwBufferSize);
-		phAsyncHandle = unchecked((uint)_peer.SendTo(new Dpnid((int)dpnid), data, ToSendFlags(dwFlags)));
+		var data = new ReadOnlySpan<byte>(
+			prgBufferDesc.pBufferData,
+			(int)prgBufferDesc.dwBufferSize
+		);
+		phAsyncHandle = unchecked(
+			(uint)_peer.SendTo(new Dpnid((int)dpnid), data, ToSendFlags(dwFlags))
+		);
 		return (dwFlags & dplay8.DPNSEND_NOCOMPLETE) != 0 ? winerror.S_OK : DPNSUCCESS_PENDING;
 	}
 
@@ -166,24 +235,55 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options) : IDirectPlay8P
 		data.CopyTo(buffer);
 		fixed (byte* pReceiveData = buffer)
 		{
-			return Handle(dplay8.DPN_MSGID_RECEIVE, new DPNMSG_RECEIVE
-			{
-				dpnidSender = (uint)sender.Value,
-				pReceiveData = pReceiveData,
-				dwReceiveDataSize = (uint)data.Length,
-			});
+			return Handle(
+				dplay8.DPN_MSGID_RECEIVE,
+				new DPNMSG_RECEIVE
+				{
+					dpnidSender = (uint)sender.Value,
+					pReceiveData = pReceiveData,
+					dwReceiveDataSize = (uint)data.Length,
+				}
+			);
 		}
 	}
 
 	private void Dispatch(PeerEvent e)
 	{
 		e.Match<int>(
-			PlayerCreated: created => Handle(dplay8.DPN_MSGID_CREATE_PLAYER, new DPNMSG_CREATE_PLAYER { dpnidPlayer = (uint)created.Player.Id.Value }),
-			PlayerDestroyed: destroyed => Handle(dplay8.DPN_MSGID_DESTROY_PLAYER, new DPNMSG_DESTROY_PLAYER { dpnidPlayer = (uint)destroyed.Player.Value, dwReason = (uint)destroyed.Reason }),
+			PlayerCreated: created =>
+				Handle(
+					dplay8.DPN_MSGID_CREATE_PLAYER,
+					new DPNMSG_CREATE_PLAYER { dpnidPlayer = (uint)created.Player.Id.Value }
+				),
+			PlayerDestroyed: destroyed =>
+				Handle(
+					dplay8.DPN_MSGID_DESTROY_PLAYER,
+					new DPNMSG_DESTROY_PLAYER
+					{
+						dpnidPlayer = (uint)destroyed.Player.Value,
+						dwReason = (uint)destroyed.Reason,
+					}
+				),
 			DataReceived: received => Receive(received.Sender, received.Data),
-			ConnectCompleted: completed => Handle(dplay8.DPN_MSGID_CONNECT_COMPLETE, new DPNMSG_CONNECT_COMPLETE { hResultCode = (int)completed.Result }),
-			SendCompleted: completed => Handle(dplay8.DPN_MSGID_SEND_COMPLETE, new DPNMSG_SEND_COMPLETE { hAsyncOp = unchecked((uint)completed.Handle), hResultCode = (int)completed.Result }),
-			SessionTerminated: terminated => Handle(dplay8.DPN_MSGID_TERMINATE_SESSION, new DPNMSG_TERMINATE_SESSION { hResultCode = (int)terminated.Result })
+			ConnectCompleted: completed =>
+				Handle(
+					dplay8.DPN_MSGID_CONNECT_COMPLETE,
+					new DPNMSG_CONNECT_COMPLETE { hResultCode = (int)completed.Result }
+				),
+			SendCompleted: completed =>
+				Handle(
+					dplay8.DPN_MSGID_SEND_COMPLETE,
+					new DPNMSG_SEND_COMPLETE
+					{
+						hAsyncOp = unchecked((uint)completed.Handle),
+						hResultCode = (int)completed.Result,
+					}
+				),
+			SessionTerminated: terminated =>
+				Handle(
+					dplay8.DPN_MSGID_TERMINATE_SESSION,
+					new DPNMSG_TERMINATE_SESSION { hResultCode = (int)terminated.Result }
+				)
 		);
 	}
 

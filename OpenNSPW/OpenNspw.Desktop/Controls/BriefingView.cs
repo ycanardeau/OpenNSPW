@@ -44,8 +44,15 @@ internal sealed class BriefingView(UIFonts fonts) : Control
 	// Lines as one text: Japanese lines run on, Latin ones with a space between.
 	private static string Join(IEnumerable<string> lines)
 	{
-		return lines.Where(l => l.Length != 0).Aggregate("", (text, line) =>
-			text.Length != 0 && text[^1] < 0x80 && line[0] < 0x80 ? $"{text} {line}" : text + line);
+		return lines
+			.Where(l => l.Length != 0)
+			.Aggregate(
+				"",
+				(text, line) =>
+					text.Length != 0 && text[^1] < 0x80 && line[0] < 0x80
+						? $"{text} {line}"
+						: text + line
+			);
 	}
 
 	// The briefing, and the victory conditions that end it, each as one text: the screen's lines are broken for its own
@@ -53,11 +60,15 @@ internal sealed class BriefingView(UIFonts fonts) : Control
 	private static (string Briefing, string Conditions) Split(ScenarioEntry scenario)
 	{
 		var lines = scenario.Briefing.ToList();
-		var start = lines.FindIndex(l => ConditionsStarts.Any(s => l.StartsWith(s, StringComparison.Ordinal)));
+		var start = lines.FindIndex(l =>
+			ConditionsStarts.Any(s => l.StartsWith(s, StringComparison.Ordinal))
+		);
 		if (start < 0)
 			return (Join(lines), "");
 
-		var label = ConditionsStarts.First(s => lines[start].StartsWith(s, StringComparison.Ordinal));
+		var label = ConditionsStarts.First(s =>
+			lines[start].StartsWith(s, StringComparison.Ordinal)
+		);
 		return (Join(lines.Take(start)), Join(lines.Skip(start))[label.Length..]);
 	}
 
@@ -71,7 +82,8 @@ internal sealed class BriefingView(UIFonts fonts) : Control
 		_wrappedWidth = Width;
 	}
 
-	private int ConditionsHeight => _conditions.Count == 0 ? 0 : 12 + 40 + _conditions.Count * LineHeight;
+	private int ConditionsHeight =>
+		_conditions.Count == 0 ? 0 : 12 + 40 + _conditions.Count * LineHeight;
 
 	private int ContentHeight => _briefing.Count * LineHeight + ConditionsHeight;
 
@@ -115,7 +127,11 @@ internal sealed class BriefingView(UIFonts fonts) : Control
 	protected override void OnMouseDown(MouseEventArgs e)
 	{
 		base.OnMouseDown(e);
-		if (e.Button == MouseButtons.Left && MaxScroll > 0 && e.Location.X >= Width - ScrollBarWidth - 8)
+		if (
+			e.Button == MouseButtons.Left
+			&& MaxScroll > 0
+			&& e.Location.X >= Width - ScrollBarWidth - 8
+		)
 		{
 			var thumb = Thumb();
 			if (e.Location.Y < thumb.Top || e.Location.Y >= thumb.Bottom)
@@ -131,7 +147,11 @@ internal sealed class BriefingView(UIFonts fonts) : Control
 		if (_drag is var (y, scroll))
 		{
 			var track = Height - Thumb().Height;
-			_scroll = Math.Clamp(scroll + (e.Location.Y - y) * MaxScroll / Math.Max(1, track), 0, MaxScroll);
+			_scroll = Math.Clamp(
+				scroll + (e.Location.Y - y) * MaxScroll / Math.Max(1, track),
+				0,
+				MaxScroll
+			);
 		}
 	}
 
@@ -147,7 +167,11 @@ internal sealed class BriefingView(UIFonts fonts) : Control
 		for (var i = 0; i < 18; i++)
 		{
 			var y = top ? i : Height - 1 - i;
-			Painter.Fill(graphics, new(0, y, Width - ScrollBarWidth - 4, 1), Theme.Alpha(Theme.Panel, 0.9f * (1 - i / 18f)));
+			Painter.Fill(
+				graphics,
+				new(0, y, Width - ScrollBarWidth - 4, 1),
+				Theme.Alpha(Theme.Panel, 0.9f * (1 - i / 18f))
+			);
 		}
 	}
 
@@ -165,17 +189,36 @@ internal sealed class BriefingView(UIFonts fonts) : Control
 		var y = -_scroll;
 		foreach (var line in _briefing)
 		{
-			Painter.Text(g, line, _fonts.Regular(16), Theme.Lerp(Theme.Text, Theme.Muted, 0.15f), 0, y);
+			Painter.Text(
+				g,
+				line,
+				_fonts.Regular(16),
+				Theme.Lerp(Theme.Text, Theme.Muted, 0.15f),
+				0,
+				y
+			);
 			y += LineHeight;
 		}
 
 		if (_conditions.Count > 0)
 		{
 			y += 12;
-			var box = new System.Drawing.Rectangle(0, (int)y, Width - TextRight, 40 + _conditions.Count * LineHeight);
+			var box = new System.Drawing.Rectangle(
+				0,
+				(int)y,
+				Width - TextRight,
+				40 + _conditions.Count * LineHeight
+			);
 			Painter.Fill(g, box, Theme.Alpha(Theme.Brass, 0.09f));
 			Painter.Fill(g, new(box.X, box.Y, 3, box.Height), Theme.Brass);
-			Painter.Text(g, Texts.VictoryConditions, _fonts.Bold(13), Theme.Brass, box.X + 16, box.Y + 10);
+			Painter.Text(
+				g,
+				Texts.VictoryConditions,
+				_fonts.Bold(13),
+				Theme.Brass,
+				box.X + 16,
+				box.Y + 10
+			);
 			y += 34;
 			foreach (var line in _conditions)
 			{
@@ -192,7 +235,11 @@ internal sealed class BriefingView(UIFonts fonts) : Control
 			if (_scroll < MaxScroll)
 				PaintFade(g, top: false);
 
-			Painter.Fill(g, new(Width - ScrollBarWidth, 0, ScrollBarWidth, Height), Theme.Alpha(Theme.Line, 0.5f));
+			Painter.Fill(
+				g,
+				new(Width - ScrollBarWidth, 0, ScrollBarWidth, Height),
+				Theme.Alpha(Theme.Line, 0.5f)
+			);
 			Painter.Fill(g, Thumb(), _drag is null ? Theme.Brass : Theme.BrassLight);
 		}
 	}

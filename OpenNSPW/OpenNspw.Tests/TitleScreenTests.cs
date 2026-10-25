@@ -38,7 +38,8 @@ internal sealed class GameTestPlatform(string dataDirectory) : INspwPlatform
 	{
 		try
 		{
-			return GameFiles.OpenSingleplayer(SingleplayerDirectory, path, mode, share) ?? new FileStream(GameFiles.Resolve(_dataDirectory, path), mode, access, share);
+			return GameFiles.OpenSingleplayer(SingleplayerDirectory, path, mode, share)
+				?? new FileStream(GameFiles.Resolve(_dataDirectory, path), mode, access, share);
 		}
 		catch (IOException)
 		{
@@ -46,9 +47,11 @@ internal sealed class GameTestPlatform(string dataDirectory) : INspwPlatform
 		}
 	}
 
-	public IReadOnlyList<string> FindFiles(string directory, string pattern) => GameFiles.Find(_dataDirectory, directory, pattern);
+	public IReadOnlyList<string> FindFiles(string directory, string pattern) =>
+		GameFiles.Find(_dataDirectory, directory, pattern);
 
-	public int CoCreateInstance(Guid rclsid, Guid riid, out object? ppv) => DirectPlay.CoCreateInstance(rclsid, riid, out ppv);
+	public int CoCreateInstance(Guid rclsid, Guid riid, out object? ppv) =>
+		DirectPlay.CoCreateInstance(rclsid, riid, out ppv);
 
 	public int MessageBox(HWND? hWnd, string lpText, string lpCaption, uint uType)
 	{
@@ -73,15 +76,14 @@ internal sealed class GameTestPlatform(string dataDirectory) : INspwPlatform
 		}
 	}
 
-	public TextBitmap? RasterizeText(string text, int height, string faceName) => _text.Rasterize(text, height);
+	public TextBitmap? RasterizeText(string text, int height, string faceName) =>
+		_text.Rasterize(text, height);
 
 	public ISound? CreateSound(WAVEFORMATEX format, ReadOnlySpan<byte> data) => null;
 
 	public string? ReadSetting(string key) => null;
 
-	public void WriteSetting(string key, string value)
-	{
-	}
+	public void WriteSetting(string key, string value) { }
 }
 
 // A whole game, running its WinMain (win_main.cpp) on its own thread, as the desktop app does.
@@ -114,7 +116,10 @@ internal sealed class RunningGame : IDisposable
 				Error = e;
 			}
 		})
-		{ IsBackground = true, Name = playerName };
+		{
+			IsBackground = true,
+			Name = playerName,
+		};
 		PlayerName = playerName;
 	}
 
@@ -154,8 +159,13 @@ public class TitleScreenTests
 
 	private static void WaitUntil(Func<bool> condition, params RunningGame[] games)
 	{
-		string Status() => string.Join("; ", games.Select(g =>
-			$"{g.PlayerName}: dialog {g.Game.MainDialog?.Id}, players {g.Game.ActivePlayerCount}, mode {g.Game.Mode}, rival mode {g.Game.RivalMode}, frames {g.Platform.FrameCount}, ended {g.Ended}, boxes [{string.Join(", ", g.Platform.MessageBoxes)}]"));
+		string Status() =>
+			string.Join(
+				"; ",
+				games.Select(g =>
+					$"{g.PlayerName}: dialog {g.Game.MainDialog?.Id}, players {g.Game.ActivePlayerCount}, mode {g.Game.Mode}, rival mode {g.Game.RivalMode}, frames {g.Platform.FrameCount}, ended {g.Ended}, boxes [{string.Join(", ", g.Platform.MessageBoxes)}]"
+				)
+			);
 
 		var deadline = DateTime.UtcNow + Timeout;
 		while (!condition())
@@ -199,7 +209,10 @@ public class TitleScreenTests
 			System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(chunk, data.Length);
 			System.Text.Encoding.ASCII.GetBytes(type).CopyTo(chunk, 4);
 			data.CopyTo(chunk, 8);
-			System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(chunk.AsSpan(data.Length + 8), Crc32(chunk.AsSpan(4, data.Length + 4)));
+			System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(
+				chunk.AsSpan(data.Length + 8),
+				Crc32(chunk.AsSpan(4, data.Length + 4))
+			);
 			return chunk;
 		}
 
@@ -245,7 +258,12 @@ public class TitleScreenTests
 
 	private static void SaveFrame(RunningGame game, string name)
 	{
-		WritePng(Path.Combine(AppContext.BaseDirectory, name), game.Platform.LastFrame(), SCRN_WIDTH, SCRN_HEIGHT);
+		WritePng(
+			Path.Combine(AppContext.BaseDirectory, name),
+			game.Platform.LastFrame(),
+			SCRN_WIDTH,
+			SCRN_HEIGHT
+		);
 	}
 
 	// Starts two games, the host and the guest, on a copy of the original's data, connects them through the connection
@@ -257,7 +275,13 @@ public class TitleScreenTests
 		using var guest = new RunningGame(data.Path, "Bob");
 		host.Start();
 		guest.Start();
-		WaitUntil(() => host.Game.MainDialog?.Id == IDD_ADDRESS_OVERRIDE && guest.Game.MainDialog?.Id == IDD_ADDRESS_OVERRIDE, host, guest);
+		WaitUntil(
+			() =>
+				host.Game.MainDialog?.Id == IDD_ADDRESS_OVERRIDE
+				&& guest.Game.MainDialog?.Id == IDD_ADDRESS_OVERRIDE,
+			host,
+			guest
+		);
 
 		host.Do(g =>
 		{
@@ -274,10 +298,21 @@ public class TitleScreenTests
 			g.TypeDlgItemText(g.MainDialog!, IDC_ADDRESS_LINE2, $"{port}");
 			g.ClickDlgItem(g.MainDialog!, IDOK);
 		});
-		WaitUntil(() => host.Game.ActivePlayerCount == 2 && guest.Game.ActivePlayerCount == 2 && guest.Game.MainDialog?.Id == IDD_MAIN_GAME, host, guest);
+		WaitUntil(
+			() =>
+				host.Game.ActivePlayerCount == 2
+				&& guest.Game.ActivePlayerCount == 2
+				&& guest.Game.MainDialog?.Id == IDD_MAIN_GAME,
+			host,
+			guest
+		);
 
 		host.Do(g => g.ClickDlgItem(g.MainDialog!, IDC_START_GAME));
-		WaitUntil(() => host.Platform.FrameCount > 20 && guest.Platform.FrameCount > 20, host, guest);
+		WaitUntil(
+			() => host.Platform.FrameCount > 20 && guest.Platform.FrameCount > 20,
+			host,
+			guest
+		);
 
 		play(host, guest);
 		Assert.Empty(host.Platform.MessageBoxes);
@@ -287,41 +322,70 @@ public class TitleScreenTests
 	[Fact]
 	public void Two_games_connect_and_reach_the_title_screen()
 	{
-		PlayTwoGames((host, guest) =>
-		{
-			Assert.Equal(GameMode.Title, host.Game.Mode);
-			Assert.Equal(GameMode.Title, guest.Game.Mode);
-			Assert.Equal(1, host.Game.IsHost.Value);
-			Assert.Equal(0, guest.Game.IsHost.Value);
+		PlayTwoGames(
+			(host, guest) =>
+			{
+				Assert.Equal(GameMode.Title, host.Game.Mode);
+				Assert.Equal(GameMode.Title, guest.Game.Mode);
+				Assert.Equal(1, host.Game.IsHost.Value);
+				Assert.Equal(0, guest.Game.IsHost.Value);
 
-			SaveFrame(host, "title_host.png");
-			Assert.True(host.Platform.LastFrame().Distinct().Count() > 16, "The title screen is drawn.");
-		});
+				SaveFrame(host, "title_host.png");
+				Assert.True(
+					host.Platform.LastFrame().Distinct().Count() > 16,
+					"The title screen is drawn."
+				);
+			}
+		);
 	}
 
 	// The host clicks the title screen, the first scenario and Game Start (demo.cpp), and both games play the battle.
 	[Fact]
 	public void Two_games_start_a_battle()
 	{
-		PlayTwoGames((host, guest) =>
-		{
-			Click(host, 512, 384);
-			WaitUntil(() => host.Game.Mode == GameMode.GameSetting && host.Game.RivalMode == GameMode.GameSetting, host, guest);
-			SaveFrame(host, "game_setting_host.png");
+		PlayTwoGames(
+			(host, guest) =>
+			{
+				Click(host, 512, 384);
+				WaitUntil(
+					() =>
+						host.Game.Mode == GameMode.GameSetting
+						&& host.Game.RivalMode == GameMode.GameSetting,
+					host,
+					guest
+				);
+				SaveFrame(host, "game_setting_host.png");
 
-			Click(host, 130, 150 + 12);
-			WaitUntil(() => host.Game.Mode == GameMode.ConfigSetting && host.Game.RivalMode == GameMode.ConfigSetting, host, guest);
-			SaveFrame(host, "config_setting_host.png");
+				Click(host, 130, 150 + 12);
+				WaitUntil(
+					() =>
+						host.Game.Mode == GameMode.ConfigSetting
+						&& host.Game.RivalMode == GameMode.ConfigSetting,
+					host,
+					guest
+				);
+				SaveFrame(host, "config_setting_host.png");
 
-			Click(host, 630 - 120 + 10, 700 + 12);
-			WaitUntil(() => host.Game.Mode == GameMode.Battle && guest.Game.Mode == GameMode.Battle, host, guest);
+				Click(host, 630 - 120 + 10, 700 + 12);
+				WaitUntil(
+					() => host.Game.Mode == GameMode.Battle && guest.Game.Mode == GameMode.Battle,
+					host,
+					guest
+				);
 
-			var frames = (host.Platform.FrameCount, guest.Platform.FrameCount);
-			WaitUntil(() => host.Platform.FrameCount > frames.Item1 + 200 && guest.Platform.FrameCount > frames.Item2 + 200, host, guest);
-			SaveFrame(host, "battle_host.png");
-			SaveFrame(guest, "battle_guest.png");
-			Assert.Equal(GameMode.Battle, host.Game.Mode);
-			Assert.Equal(GameMode.Battle, guest.Game.Mode);
-		});
+				var frames = (host.Platform.FrameCount, guest.Platform.FrameCount);
+				WaitUntil(
+					() =>
+						host.Platform.FrameCount > frames.Item1 + 200
+						&& guest.Platform.FrameCount > frames.Item2 + 200,
+					host,
+					guest
+				);
+				SaveFrame(host, "battle_host.png");
+				SaveFrame(guest, "battle_guest.png");
+				Assert.Equal(GameMode.Battle, host.Game.Mode);
+				Assert.Equal(GameMode.Battle, guest.Game.Mode);
+			}
+		);
 	}
 }

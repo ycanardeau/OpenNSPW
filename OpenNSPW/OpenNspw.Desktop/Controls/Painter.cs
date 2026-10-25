@@ -23,14 +23,25 @@ internal static class Painter
 
 	public static void Frame(Graphics graphics, Rectangle rectangle, Color color)
 	{
-		graphics.DrawRectangle(new Pen(color), rectangle.X, rectangle.Y, rectangle.Width - 1, rectangle.Height - 1);
+		graphics.DrawRectangle(
+			new Pen(color),
+			rectangle.X,
+			rectangle.Y,
+			rectangle.Width - 1,
+			rectangle.Height - 1
+		);
 	}
 
 	// The corners of a rectangle, as on a chart's frame.
 	public static void Brackets(Graphics graphics, Rectangle rectangle, int length, Color color)
 	{
 		var brush = new SolidBrush(color);
-		var (left, top, right, bottom) = (rectangle.Left, rectangle.Top, rectangle.Right - 2, rectangle.Bottom - 2);
+		var (left, top, right, bottom) = (
+			rectangle.Left,
+			rectangle.Top,
+			rectangle.Right - 2,
+			rectangle.Bottom - 2
+		);
 		graphics.FillRectangle(brush, left, top, length, 2);
 		graphics.FillRectangle(brush, left, top, 2, length);
 		graphics.FillRectangle(brush, right - length + 2, top, length, 2);
@@ -46,7 +57,14 @@ internal static class Painter
 		return text.Length == 0 ? SizeF.Empty : graphics.MeasureString(text, font);
 	}
 
-	public static void Text(Graphics graphics, string text, IFont font, Color color, float x, float y)
+	public static void Text(
+		Graphics graphics,
+		string text,
+		IFont font,
+		Color color,
+		float x,
+		float y
+	)
 	{
 		if (text.Length > 0)
 			graphics.DrawString(text, font, new SolidBrush(color), new PointF(x, y));
@@ -66,7 +84,15 @@ internal static class Painter
 	}
 
 	// Text spaced out by `spacing` pixels a character, for small capitals.
-	public static void SpacedText(Graphics graphics, string text, IFont font, Color color, float x, float y, float spacing)
+	public static void SpacedText(
+		Graphics graphics,
+		string text,
+		IFont font,
+		Color color,
+		float x,
+		float y,
+		float spacing
+	)
 	{
 		foreach (var c in text)
 		{

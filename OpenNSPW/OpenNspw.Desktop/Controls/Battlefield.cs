@@ -58,22 +58,28 @@ internal sealed class Battlefield : Control
 		return new((int)(x - snapshot.CameraPosition.X), (int)(snapshot.CameraPosition.Y - y));
 	}
 
-	private static bool IsParkedPlane(ref Unit unit) => unit.Category == UnitCategory.Plane && unit.PlaneState == UnitState.Parked;
+	private static bool IsParkedPlane(ref Unit unit) =>
+		unit.Category == UnitCategory.Plane && unit.PlaneState == UnitState.Parked;
 
 	// Whether a unit is on the battlefield as the original draws it there: the player's, or found, near the view, and not
 	// a parked plane, which is on the deck (DrawBattleArea).
 	private static bool IsDrawn(GameSnapshot snapshot, ref Unit unit)
 	{
 		var camera = snapshot.CameraPosition;
-		return unit.IsUsed && (unit.Side == snapshot.LocalSide || unit.IsFound) && !IsParkedPlane(ref unit)
-			&& camera.X - CMBT_REST <= unit.Position.X && camera.X + CMBT_WIDTH + CMBT_REST >= unit.Position.X
-			&& camera.Y + CMBT_REST >= unit.Position.Y && camera.Y - CMBT_HEIGHT - CMBT_REST <= unit.Position.Y;
+		return unit.IsUsed
+			&& (unit.Side == snapshot.LocalSide || unit.IsFound)
+			&& !IsParkedPlane(ref unit)
+			&& camera.X - CMBT_REST <= unit.Position.X
+			&& camera.X + CMBT_WIDTH + CMBT_REST >= unit.Position.X
+			&& camera.Y + CMBT_REST >= unit.Position.Y
+			&& camera.Y - CMBT_HEIGHT - CMBT_REST <= unit.Position.Y;
 	}
 
 	// Where the original puts a unit's marks: an enemy's submerged submarine where it was last made out (DrawUnitMarks).
 	private static Vector2 MarkPosition(GameSnapshot snapshot, ref Unit unit)
 	{
-		return unit.Side != snapshot.LocalSide && unit.Kind == UnitKind.Submarine && unit.IsSubmerged
+		return
+			unit.Side != snapshot.LocalSide && unit.Kind == UnitKind.Submarine && unit.IsSubmerged
 			? ToScreen(snapshot, unit.ContactX, unit.ContactY)
 			: ToScreen(snapshot, unit.Position.X, unit.Position.Y);
 	}
@@ -88,8 +94,13 @@ internal sealed class Battlefield : Control
 		for (var m = 1; m <= snapshot.MaxUnitId; m++)
 		{
 			ref var unit = ref snapshot.Units[m];
-			if (unit.IsUsed && (unit.Side == snapshot.LocalSide || unit.IsFound) && !IsParkedPlane(ref unit)
-				&& snapshot.Clickable[m] && IsInMiddle(MarkPosition(snapshot, ref unit), point))
+			if (
+				unit.IsUsed
+				&& (unit.Side == snapshot.LocalSide || unit.IsFound)
+				&& !IsParkedPlane(ref unit)
+				&& snapshot.Clickable[m]
+				&& IsInMiddle(MarkPosition(snapshot, ref unit), point)
+			)
 				return m;
 		}
 
@@ -101,20 +112,32 @@ internal sealed class Battlefield : Control
 	{
 		var offsetX = (int)(snapshot.CameraPosition.X - World.Left) % 80;
 		var offsetY = (int)(World.Top - snapshot.CameraPosition.Y) % 80;
-		return new((point.X + 40 + offsetX) / 80 * 80 - offsetX, (point.Y + 40 + offsetY) / 80 * 80 - offsetY);
+		return new(
+			(point.X + 40 + offsetX) / 80 * 80 - offsetX,
+			(point.Y + 40 + offsetY) / 80 * 80 - offsetY
+		);
 	}
 
 	// Whether a left click at a point is on land where the selected transport can land, in the middle of the tile, as the
 	// original takes it before any unit (AimLanding, DrawUnitMarks).
 	private static bool IsLanding(GameSnapshot snapshot, DrawingPoint point)
 	{
-		if (snapshot.SelectedUnit == 0 || snapshot.Units[snapshot.SelectedUnit].Kind != UnitKind.Transport || !snapshot.Clickable[0] || point.X >= CMBT_WIDTH - 1)
+		if (
+			snapshot.SelectedUnit == 0
+			|| snapshot.Units[snapshot.SelectedUnit].Kind != UnitKind.Transport
+			|| !snapshot.Clickable[0]
+			|| point.X >= CMBT_WIDTH - 1
+		)
 			return false;
 
 		var camera = snapshot.CameraPosition;
 		var column = (point.X + 40 + (int)camera.X - World.Left) / 80;
 		var row = (World.Top - ((int)camera.Y - point.Y - 40)) / 80;
-		if (column is < 0 or > 255 || row is < 0 or > 255 || snapshot.MapTiles[row][column] is not (9 or 8 or 7 or 5 or 2))
+		if (
+			column is < 0 or > 255
+			|| row is < 0 or > 255
+			|| snapshot.MapTiles[row][column] is not (9 or 8 or 7 or 5 or 2)
+		)
 			return false;
 
 		return IsInMiddle(SnapToTile(snapshot, point), point);
@@ -135,15 +158,33 @@ internal sealed class Battlefield : Control
 				var (column, row) = (snapshot.FirstColumn + m, snapshot.FirstRow + n);
 				var tile = snapshot.MapTiles[row][column];
 				var frame = tile == 0 ? snapshot.FrameCount / 30 % 2 : 6 + (tile - 1);
-				var position = ToScreen(snapshot, World.Left + column * tiles.Size.Width, World.Top - row * tiles.Size.Height) - new Vector2(tiles.Center.X, tiles.Center.Y);
-				_art.Draw(batch, tiles, frame, 0, tiles.Size.Width, tiles.Size.Height, origin + position);
+				var position =
+					ToScreen(
+						snapshot,
+						World.Left + column * tiles.Size.Width,
+						World.Top - row * tiles.Size.Height
+					) - new Vector2(tiles.Center.X, tiles.Center.Y);
+				_art.Draw(
+					batch,
+					tiles,
+					frame,
+					0,
+					tiles.Size.Width,
+					tiles.Size.Height,
+					origin + position
+				);
 			}
 		}
 	}
 
 	// The effects of a layer that the player sees (UpdateLowerEffects, UpdateUpperEffects), but the parked planes', which
 	// are on the deck.
-	private void DrawEffects(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot, EffectLayer layer)
+	private void DrawEffects(
+		SpriteBatch batch,
+		Vector2 origin,
+		GameSnapshot snapshot,
+		EffectLayer layer
+	)
 	{
 		ref var sprite = ref snapshot.Sprites[SpriteId.SubUnits];
 		for (var m = 1; m < EFFECT_MAX; m++)
@@ -170,26 +211,63 @@ internal sealed class Battlefield : Control
 					frame = effect.SpriteNumber + sprite.FramesPerRow * _jitter.Next(2);
 					break;
 				case 10: // 対空機関砲
-					batch.DrawLine(origin + at, origin + ToScreen(snapshot, effect.EndPosition.X, effect.EndPosition.Y), MarkLight, 2);
+					batch.DrawLine(
+						origin + at,
+						origin + ToScreen(snapshot, effect.EndPosition.X, effect.EndPosition.Y),
+						MarkLight,
+						2
+					);
 					continue;
 				case 11: // 弾丸
-					batch.DrawLine(origin + at, origin + ToScreen(snapshot, effect.EndPosition.X, effect.EndPosition.Y), MarkLight, 1);
+					batch.DrawLine(
+						origin + at,
+						origin + ToScreen(snapshot, effect.EndPosition.X, effect.EndPosition.Y),
+						MarkLight,
+						1
+					);
 					continue;
 				case 12: // 矩形
-					var corner = ToScreen(snapshot, effect.Position.X - effect.EndPosition.X, effect.Position.Y + effect.EndPosition.Y);
-					batch.DrawRectangle(new RectangleF(origin + corner, new SizeF((float)(effect.EndPosition.X * 2), (float)(effect.EndPosition.Y * 2))), Color.White);
+					var corner = ToScreen(
+						snapshot,
+						effect.Position.X - effect.EndPosition.X,
+						effect.Position.Y + effect.EndPosition.Y
+					);
+					batch.DrawRectangle(
+						new RectangleF(
+							origin + corner,
+							new SizeF(
+								(float)(effect.EndPosition.X * 2),
+								(float)(effect.EndPosition.Y * 2)
+							)
+						),
+						Color.White
+					);
 					continue;
 				default: // 3: 駐機場の飛行機用
 					continue;
 			}
 
-			_art.Draw(batch, sprite, frame, 1, sprite.Size.Width - 1, sprite.Size.Height - 1, origin + at - new Vector2(sprite.Center.X, sprite.Center.Y));
+			_art.Draw(
+				batch,
+				sprite,
+				frame,
+				1,
+				sprite.Size.Width - 1,
+				sprite.Size.Height - 1,
+				origin + at - new Vector2(sprite.Center.X, sprite.Center.Y)
+			);
 		}
 	}
 
 	// The units from `first` to `last` on the battlefield, facing as they head; a submerged submarine in its own frame,
 	// and none of the enemy's (DrawUnit).
-	private void DrawUnits(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot, int first, int last)
+	private void DrawUnits(
+		SpriteBatch batch,
+		Vector2 origin,
+		GameSnapshot snapshot,
+		int first,
+		int last
+	)
 	{
 		for (var m = first; m <= last; m++)
 		{
@@ -199,7 +277,11 @@ internal sealed class Battlefield : Control
 
 			var id = snapshot.UnitSprites[m];
 			var row = unit.SpriteRow;
-			if (unit.Kind == UnitKind.Submarine && unit.IsSubmerged && snapshot.Result == GameResult.None)
+			if (
+				unit.Kind == UnitKind.Submarine
+				&& unit.IsSubmerged
+				&& snapshot.Result == GameResult.None
+			)
 			{
 				if (unit.Side != snapshot.LocalSide)
 					continue;
@@ -208,8 +290,18 @@ internal sealed class Battlefield : Control
 			}
 
 			ref var sprite = ref snapshot.Sprites[id];
-			var at = ToScreen(snapshot, unit.Position.X, unit.Position.Y) - new Vector2(sprite.Center.X, sprite.Center.Y);
-			_art.Draw(batch, sprite, row * 8 + Nspw.SpriteColumnOf(unit.Direction), 1, sprite.Size.Width - 2, sprite.Size.Height - 2, origin + at);
+			var at =
+				ToScreen(snapshot, unit.Position.X, unit.Position.Y)
+				- new Vector2(sprite.Center.X, sprite.Center.Y);
+			_art.Draw(
+				batch,
+				sprite,
+				row * 8 + Nspw.SpriteColumnOf(unit.Direction),
+				1,
+				sprite.Size.Width - 2,
+				sprite.Size.Height - 2,
+				origin + at
+			);
 		}
 	}
 
@@ -222,7 +314,9 @@ internal sealed class Battlefield : Control
 			if (cloud.Used == 0)
 				continue;
 
-			var at = ToScreen(snapshot, cloud.Position.X, cloud.Position.Y) - new Vector2(tiles.Size.Width / 2, tiles.Size.Height / 2);
+			var at =
+				ToScreen(snapshot, cloud.Position.X, cloud.Position.Y)
+				- new Vector2(tiles.Size.Width / 2, tiles.Size.Height / 2);
 			_art.Draw(batch, tiles, 2, 0, tiles.Size.Width, tiles.Size.Height, origin + at);
 		}
 	}
@@ -242,14 +336,28 @@ internal sealed class Battlefield : Control
 
 	// The direction of a unit's target, or of where a transport lands, or a cross for a target out of sight
 	// (DrawTargetLine).
-	private static void DrawTargetArrow(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot, ref Unit unit)
+	private static void DrawTargetArrow(
+		SpriteBatch batch,
+		Vector2 origin,
+		GameSnapshot snapshot,
+		ref Unit unit
+	)
 	{
 		var at = origin + ToScreen(snapshot, unit.Position.X, unit.Position.Y);
 		ref var target = ref snapshot.Units[unit.Target];
 		var isLanding = unit.Kind == UnitKind.Transport && unit.Target == snapshot.MaxUnitId + 1;
-		if ((target.IsFound || isLanding) && !(target.Kind == UnitKind.Submarine && target.IsSubmerged))
+		if (
+			(target.IsFound || isLanding)
+			&& !(target.Kind == UnitKind.Submarine && target.IsSubmerged)
+		)
 		{
-			var to = origin + (unit.Kind == UnitKind.Transport ? ToScreen(snapshot, unit.LandingX, unit.LandingY) : ToScreen(snapshot, target.Position.X, target.Position.Y));
+			var to =
+				origin
+				+ (
+					unit.Kind == UnitKind.Transport
+						? ToScreen(snapshot, unit.LandingX, unit.LandingY)
+						: ToScreen(snapshot, target.Position.X, target.Position.Y)
+				);
 			var direction = to == at ? Vector2.UnitX : Vector2.Normalize(to - at);
 			var side = new Vector2(-direction.Y, direction.X);
 			var tip = at + direction * 40;
@@ -271,15 +379,29 @@ internal sealed class Battlefield : Control
 		var pulse = 30 - snapshot.FrameCount % 8 * 2;
 		if (selected.Kind == UnitKind.Transport && selected.Target == snapshot.MaxUnitId + 1)
 		{
-			DrawBox(batch, origin + ToScreen(snapshot, selected.LandingX, selected.LandingY), pulse, Mark, 2);
+			DrawBox(
+				batch,
+				origin + ToScreen(snapshot, selected.LandingX, selected.LandingY),
+				pulse,
+				Mark,
+				2
+			);
 		}
 		else if (selected.Target != 0)
 		{
 			ref var target = ref snapshot.Units[selected.Target];
-			if (target.IsUsed && (target.Side == snapshot.LocalSide || target.IsFound) && !IsParkedPlane(ref target))
+			if (
+				target.IsUsed
+				&& (target.Side == snapshot.LocalSide || target.IsFound)
+				&& !IsParkedPlane(ref target)
+			)
 				DrawBox(batch, origin + MarkPosition(snapshot, ref target), pulse, Enemy, 2);
 		}
-		else if (selected.Category == UnitCategory.Plane && selected.PlaneState == UnitState.Flying && selected.Carrier != 0)
+		else if (
+			selected.Category == UnitCategory.Plane
+			&& selected.PlaneState == UnitState.Flying
+			&& selected.Carrier != 0
+		)
 		{
 			ref var carrier = ref snapshot.Units[selected.Carrier];
 			var at = origin + ToScreen(snapshot, carrier.Position.X, carrier.Position.Y);
@@ -289,10 +411,22 @@ internal sealed class Battlefield : Control
 		if (selected.Side != snapshot.LocalSide)
 			return;
 
-		ref var carrierOrSelf = ref IsParkedPlane(ref selected) ? ref snapshot.Units[selected.Carrier] : ref selected;
+		ref var carrierOrSelf = ref IsParkedPlane(ref selected)
+			? ref snapshot.Units[selected.Carrier]
+			: ref selected;
 		var start = origin + ToScreen(snapshot, carrierOrSelf.Position.X, carrierOrSelf.Position.Y);
 		if (selected.EmergencyFlags[0] != 0)
-			batch.DrawLine(start, origin + ToScreen(snapshot, selected.EmergencyDestination.X, selected.EmergencyDestination.Y), Enemy, 1);
+			batch.DrawLine(
+				start,
+				origin
+					+ ToScreen(
+						snapshot,
+						selected.EmergencyDestination.X,
+						selected.EmergencyDestination.Y
+					),
+				Enemy,
+				1
+			);
 
 		var end = start;
 		for (var n = 0; n < 64 && !selected.IsPathEnd(n); n++)
@@ -304,7 +438,12 @@ internal sealed class Battlefield : Control
 		}
 
 		if (_mouse is { } mouse && snapshot.CanSetDestination && HitUnit(snapshot, mouse) is null)
-			batch.DrawLine(snapshot.ClearsPath ? start : end, origin + new Vector2(mouse.X, mouse.Y), MarkLight * 0.6f, 1);
+			batch.DrawLine(
+				snapshot.ClearsPath ? start : end,
+				origin + new Vector2(mouse.X, mouse.Y),
+				MarkLight * 0.6f,
+				1
+			);
 	}
 
 	// The marks: the selection, the directions of the player's units' targets, the selected unit's, and what a click at
@@ -314,7 +453,11 @@ internal sealed class Battlefield : Control
 		for (var m = 1; m <= snapshot.MaxUnitId; m++)
 		{
 			ref var unit = ref snapshot.Units[m];
-			if (!unit.IsUsed || !(unit.Side == snapshot.LocalSide || unit.IsFound) || IsParkedPlane(ref unit))
+			if (
+				!unit.IsUsed
+				|| !(unit.Side == snapshot.LocalSide || unit.IsFound)
+				|| IsParkedPlane(ref unit)
+			)
 				continue;
 
 			DrawSelection(batch, origin + MarkPosition(snapshot, ref unit), snapshot, m);
@@ -346,7 +489,12 @@ internal sealed class Battlefield : Control
 		else if (HitUnit(snapshot, point) is { } m)
 			commands.ClickUnit(m);
 		else
-			commands.SetDestination(new WorldPosition(point.X + snapshot.CameraPosition.X, snapshot.CameraPosition.Y - point.Y));
+			commands.SetDestination(
+				new WorldPosition(
+					point.X + snapshot.CameraPosition.X,
+					snapshot.CameraPosition.Y - point.Y
+				)
+			);
 	}
 
 	// The battlefield follows a drag with the middle button, as a chart pushed across the table, at once (ScrollAhead).
@@ -378,7 +526,10 @@ internal sealed class Battlefield : Control
 		base.OnMouseDown(e);
 		if (e.Button == MouseButtons.Left)
 		{
-			_brush.Press(_snapshot, IsLanding(_snapshot, e.Location) ? null : HitUnit(_snapshot, e.Location));
+			_brush.Press(
+				_snapshot,
+				IsLanding(_snapshot, e.Location) ? null : HitUnit(_snapshot, e.Location)
+			);
 			TakeClick(e.Location);
 		}
 		else if (e.Button == MouseButtons.Right)
@@ -404,15 +555,18 @@ internal sealed class Battlefield : Control
 	protected override void OnPaint(PaintEventArgs e)
 	{
 		var snapshot = _snapshot;
-		((MonoGameGraphics)e.Graphics).DrawWith(SamplerState.PointClamp, (batch, origin) =>
-		{
-			batch.FillRectangle(new RectangleF(origin.X, origin.Y, Width, Height), Fog);
-			DrawTiles(batch, origin, snapshot);
-			DrawEffects(batch, origin, snapshot, EffectLayer.Lower);
-			DrawUnitsAndClouds(batch, origin, snapshot);
-			DrawEffects(batch, origin, snapshot, EffectLayer.Upper);
-			DrawMarks(batch, origin, snapshot);
-		});
+		((MonoGameGraphics)e.Graphics).DrawWith(
+			SamplerState.PointClamp,
+			(batch, origin) =>
+			{
+				batch.FillRectangle(new RectangleF(origin.X, origin.Y, Width, Height), Fog);
+				DrawTiles(batch, origin, snapshot);
+				DrawEffects(batch, origin, snapshot, EffectLayer.Lower);
+				DrawUnitsAndClouds(batch, origin, snapshot);
+				DrawEffects(batch, origin, snapshot, EffectLayer.Upper);
+				DrawMarks(batch, origin, snapshot);
+			}
+		);
 		GameMessages.PaintLines(e.Graphics, _fonts, snapshot, 16, 16);
 		GameMessages.PaintResult(e.Graphics, _fonts, snapshot, ClientRectangle);
 	}

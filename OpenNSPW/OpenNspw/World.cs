@@ -4,10 +4,17 @@ namespace OpenNspw;
 // MAP_BOTTOM, MAP_RIGHT and MAP_LEFT.
 public static class World
 {
-	[Original("MAP_TOP")] public const int Top = 7200;
-	[Original("MAP_BOTTOM")] public const int Bottom = -7200;
-	[Original("MAP_RIGHT")] public const int Right = 9600;
-	[Original("MAP_LEFT")] public const int Left = -9600;
+	[Original("MAP_TOP")]
+	public const int Top = 7200;
+
+	[Original("MAP_BOTTOM")]
+	public const int Bottom = -7200;
+
+	[Original("MAP_RIGHT")]
+	public const int Right = 9600;
+
+	[Original("MAP_LEFT")]
+	public const int Left = -9600;
 
 	// abs(MAP_RIGHT)+abs(MAP_LEFT) and abs(MAP_TOP)+abs(MAP_BOTTOM).
 	public const int Width = Right - Left;
@@ -20,6 +27,8 @@ public static class World
 	// Whether a position is in the world, its edges included.
 	public static bool Contains(WorldPosition position)
 	{
-		return !( position.Y>Top || position.Y<Bottom || position.X<Left || position.X>Right );
+		return !(
+			position.Y > Top || position.Y < Bottom || position.X < Left || position.X > Right
+		);
 	}
 }

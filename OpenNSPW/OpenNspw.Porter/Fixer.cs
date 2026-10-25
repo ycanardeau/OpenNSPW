@@ -17,10 +17,20 @@ internal sealed partial class Fixer(string projectDirectory, IReadOnlySet<string
 
 	private static bool IsNumeric(ITypeSymbol? type)
 	{
-		return type?.SpecialType is SpecialType.System_Byte or SpecialType.System_SByte or SpecialType.System_Int16
-			or SpecialType.System_UInt16 or SpecialType.System_Int32 or SpecialType.System_UInt32 or SpecialType.System_Int64
-			or SpecialType.System_UInt64 or SpecialType.System_Double or SpecialType.System_Single or SpecialType.System_Char
-			or SpecialType.System_IntPtr or SpecialType.System_UIntPtr;
+		return type?.SpecialType
+			is SpecialType.System_Byte
+				or SpecialType.System_SByte
+				or SpecialType.System_Int16
+				or SpecialType.System_UInt16
+				or SpecialType.System_Int32
+				or SpecialType.System_UInt32
+				or SpecialType.System_Int64
+				or SpecialType.System_UInt64
+				or SpecialType.System_Double
+				or SpecialType.System_Single
+				or SpecialType.System_Char
+				or SpecialType.System_IntPtr
+				or SpecialType.System_UIntPtr;
 	}
 
 	private static bool IsFloating(ITypeSymbol? type)
@@ -36,8 +46,15 @@ internal sealed partial class Fixer(string projectDirectory, IReadOnlySet<string
 	// Wraps an expression in parentheses unless it is a primary expression.
 	private static string Wrap(ExpressionSyntax e)
 	{
-		return e is IdentifierNameSyntax or LiteralExpressionSyntax or MemberAccessExpressionSyntax or ElementAccessExpressionSyntax
-			or InvocationExpressionSyntax or ParenthesizedExpressionSyntax or MemberBindingExpressionSyntax
+		return
+			e
+				is IdentifierNameSyntax
+					or LiteralExpressionSyntax
+					or MemberAccessExpressionSyntax
+					or ElementAccessExpressionSyntax
+					or InvocationExpressionSyntax
+					or ParenthesizedExpressionSyntax
+					or MemberBindingExpressionSyntax
 			? e.ToString()
 			: $"({e})";
 	}
@@ -45,11 +62,18 @@ internal sealed partial class Fixer(string projectDirectory, IReadOnlySet<string
 	// An integer, pointer or reference used as a condition: x!=0 or x!=null, as in C.
 	private static string AsCondition(ExpressionSyntax e, ITypeSymbol? type)
 	{
-		return type is IPointerTypeSymbol || type?.IsReferenceType == true ? $"{Wrap(e)}!=null" : $"{Wrap(e)}!=0";
+		return type is IPointerTypeSymbol || type?.IsReferenceType == true
+			? $"{Wrap(e)}!=null"
+			: $"{Wrap(e)}!=0";
 	}
 
 	// A conversion that C++ does implicitly: a cast, or a bool as 0 or 1. Out-of-range constants truncate, as in C++.
-	private static string? Convert(ExpressionSyntax e, ITypeSymbol? from, ITypeSymbol? to, SemanticModel model)
+	private static string? Convert(
+		ExpressionSyntax e,
+		ITypeSymbol? from,
+		ITypeSymbol? to,
+		SemanticModel model
+	)
 	{
 		if (to is null)
 		{
@@ -59,7 +83,15 @@ internal sealed partial class Fixer(string projectDirectory, IReadOnlySet<string
 		var target = to.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
 
 		// A char array initialized with TEXT("...").
-		if (from?.SpecialType == SpecialType.System_String && to.Name.StartsWith("Array", StringComparison.Ordinal) && e is InvocationExpressionSyntax { Expression: IdentifierNameSyntax { Identifier.Text: "TEXT" } } text)
+		if (
+			from?.SpecialType == SpecialType.System_String
+			&& to.Name.StartsWith("Array", StringComparison.Ordinal)
+			&& e
+				is InvocationExpressionSyntax
+				{
+					Expression: IdentifierNameSyntax { Identifier.Text: "TEXT" }
+				} text
+		)
 		{
 			return $"TEXT<{target}>{text.ArgumentList}";
 		}
@@ -71,15 +103,21 @@ internal sealed partial class Fixer(string projectDirectory, IReadOnlySet<string
 
 		if (IsBool(from) && IsNumeric(to))
 		{
-			return to.SpecialType == SpecialType.System_Int32 ? $"({e} ? 1 : 0)" : $"({target})({e} ? 1 : 0)";
+			return to.SpecialType == SpecialType.System_Int32
+				? $"({e} ? 1 : 0)"
+				: $"({target})({e} ? 1 : 0)";
 		}
 
-		if (IsNumeric(from) && IsNumeric(to) || from is IPointerTypeSymbol && to is IPointerTypeSymbol)
+		if (
+			IsNumeric(from) && IsNumeric(to)
+			|| from is IPointerTypeSymbol && to is IPointerTypeSymbol
+		)
 		{
 			// double to short goes through int, as MSVC converts it.
-			var cast = IsFloating(from) && !IsFloating(to) && to.SpecialType != SpecialType.System_Int32
-				? $"({target})(int){Wrap(e)}"
-				: $"({target}){Wrap(e)}";
+			var cast =
+				IsFloating(from) && !IsFloating(to) && to.SpecialType != SpecialType.System_Int32
+					? $"({target})(int){Wrap(e)}"
+					: $"({target}){Wrap(e)}";
 			return model.GetConstantValue(e).HasValue ? $"unchecked({cast})" : cast;
 		}
 
@@ -88,167 +126,244 @@ internal sealed partial class Fixer(string projectDirectory, IReadOnlySet<string
 
 	private static string? DefaultFor(ITypeSymbol? type)
 	{
-		return IsNumeric(type) ? "0" : type?.IsValueType == true ? "default" : null;
+		return IsNumeric(type) ? "0"
+			: type?.IsValueType == true ? "default"
+			: null;
 	}
 
 	// The fix for one error, as a replacement of a span, or null if it has no mechanical fix.
-	private static (TextSpan Span, string Text)? Fix(Diagnostic d, SemanticModel model, SyntaxNode root)
+	private static (TextSpan Span, string Text)? Fix(
+		Diagnostic d,
+		SemanticModel model,
+		SyntaxNode root
+	)
 	{
 		var node = root.FindNode(d.Location.SourceSpan, getInnermostNodeForTie: true);
 		var expression = node as ExpressionSyntax ?? (node as ArgumentSyntax)?.Expression;
 		switch (d.Id)
 		{
 			// Cannot implicitly convert type in a compound assignment, x op= y: C++ converts x op y back to the type of x.
-			case "CS0029" or "CS0266" when node.FirstAncestorOrSelf<AssignmentExpressionSyntax>() is { } assignment
-				&& !assignment.IsKind(SyntaxKind.SimpleAssignmentExpression)
-				&& (assignment.Span == d.Location.SourceSpan || assignment.Right.Span == d.Location.SourceSpan)
-				&& IsNumeric(model.GetTypeInfo(assignment.Left).Type) && IsNumeric(model.GetTypeInfo(assignment.Right).Type):
-				{
-					var to = model.GetTypeInfo(assignment.Left).Type!;
-					var target = to.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-					var floating = IsFloating(to) || IsFloating(model.GetTypeInfo(assignment.Right).Type);
-					var value = $"{assignment.Left} {assignment.OperatorToken.Text[..^1]} {Wrap(assignment.Right)}";
-					var cast = floating && !IsFloating(to) && to.SpecialType != SpecialType.System_Int32 ? $"({target})(int)" : $"({target})";
-					return (assignment.Span, $"{assignment.Left}={cast}({value})");
-				}
+			case "CS0029"
+			or "CS0266"
+				when node.FirstAncestorOrSelf<AssignmentExpressionSyntax>() is { } assignment
+					&& !assignment.IsKind(SyntaxKind.SimpleAssignmentExpression)
+					&& (
+						assignment.Span == d.Location.SourceSpan
+						|| assignment.Right.Span == d.Location.SourceSpan
+					)
+					&& IsNumeric(model.GetTypeInfo(assignment.Left).Type)
+					&& IsNumeric(model.GetTypeInfo(assignment.Right).Type):
+			{
+				var to = model.GetTypeInfo(assignment.Left).Type!;
+				var target = to.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+				var floating =
+					IsFloating(to) || IsFloating(model.GetTypeInfo(assignment.Right).Type);
+				var value =
+					$"{assignment.Left} {assignment.OperatorToken.Text[..^1]} {Wrap(assignment.Right)}";
+				var cast =
+					floating && !IsFloating(to) && to.SpecialType != SpecialType.System_Int32
+						? $"({target})(int)"
+						: $"({target})";
+				return (assignment.Span, $"{assignment.Left}={cast}({value})");
+			}
 
 			// Cannot implicitly convert type.
-			case "CS0029" or "CS0266" when expression is not null:
+			case "CS0029"
+			or "CS0266" when expression is not null:
+			{
+				var info = model.GetTypeInfo(expression);
+
+				// The target type, from the message: for a condition, ConvertedType is not bool.
+				var to = Regex.Match(d.GetMessage(), "to '([^']+)'").Groups[1].Value switch
 				{
-					var info = model.GetTypeInfo(expression);
-
-					// The target type, from the message: for a condition, ConvertedType is not bool.
-					var to = Regex.Match(d.GetMessage(), "to '([^']+)'").Groups[1].Value switch
-					{
-						"bool" => model.Compilation.GetSpecialType(SpecialType.System_Boolean),
-						_ => info.ConvertedType,
-					};
-					if (SymbolEqualityComparer.Default.Equals(to, info.Type))
-					{
-						return null;
-					}
-
-					var text = Convert(expression, info.Type, to, model);
-					if (text is null && info.Type is null && expression is LiteralExpressionSyntax { Token.ValueText: "null" })
-					{
-						text = DefaultFor(info.ConvertedType);
-					}
-
-					return text is null ? null : (expression.Span, text);
+					"bool" => model.Compilation.GetSpecialType(SpecialType.System_Boolean),
+					_ => info.ConvertedType,
+				};
+				if (SymbolEqualityComparer.Default.Equals(to, info.Type))
+				{
+					return null;
 				}
+
+				var text = Convert(expression, info.Type, to, model);
+				if (
+					text is null
+					&& info.Type is null
+					&& expression is LiteralExpressionSyntax { Token.ValueText: "null" }
+				)
+				{
+					text = DefaultFor(info.ConvertedType);
+				}
+
+				return text is null ? null : (expression.Span, text);
+			}
 
 			// Operator cannot be applied to operand: ! on an integer, or . on a pointer.
-			case "CS0023" when node is PrefixUnaryExpressionSyntax { RawKind: (int)SyntaxKind.LogicalNotExpression } not:
-				{
-					var type = model.GetTypeInfo(not.Operand).Type;
-					var test = type is IPointerTypeSymbol || type?.IsReferenceType == true ? "==null" : "==0";
-					return (not.Span, $"{Wrap(not.Operand)}{test}");
-				}
+			case "CS0023"
+				when node
+					is PrefixUnaryExpressionSyntax
+					{
+						RawKind: (int)SyntaxKind.LogicalNotExpression
+					} not:
+			{
+				var type = model.GetTypeInfo(not.Operand).Type;
+				var test =
+					type is IPointerTypeSymbol || type?.IsReferenceType == true ? "==null" : "==0";
+				return (not.Span, $"{Wrap(not.Operand)}{test}");
+			}
 
-			case "CS0023" or "CS1061" when node.FirstAncestorOrSelf<MemberAccessExpressionSyntax>() is { } access
-				&& model.GetTypeInfo(access.Expression).Type is IPointerTypeSymbol:
+			case "CS0023"
+			or "CS1061"
+				when node.FirstAncestorOrSelf<MemberAccessExpressionSyntax>() is { } access
+					&& model.GetTypeInfo(access.Expression).Type is IPointerTypeSymbol:
 				return (access.OperatorToken.Span, "->");
 
 			// Operator cannot be applied to operands: && or || with an integer.
-			case "CS0019" when node is BinaryExpressionSyntax binary
-				&& binary.Kind() is SyntaxKind.LogicalAndExpression or SyntaxKind.LogicalOrExpression:
-				{
-					var left = model.GetTypeInfo(binary.Left).Type;
-					var right = model.GetTypeInfo(binary.Right).Type;
-					var leftText = IsBool(left) ? binary.Left.ToString() : AsCondition(binary.Left, left);
-					var rightText = IsBool(right) ? binary.Right.ToString() : AsCondition(binary.Right, right);
-					return (binary.Span, $"{leftText} {binary.OperatorToken.Text} {rightText}");
-				}
+			case "CS0019"
+				when node is BinaryExpressionSyntax binary
+					&& binary.Kind()
+						is SyntaxKind.LogicalAndExpression
+							or SyntaxKind.LogicalOrExpression:
+			{
+				var left = model.GetTypeInfo(binary.Left).Type;
+				var right = model.GetTypeInfo(binary.Right).Type;
+				var leftText = IsBool(left)
+					? binary.Left.ToString()
+					: AsCondition(binary.Left, left);
+				var rightText = IsBool(right)
+					? binary.Right.ToString()
+					: AsCondition(binary.Right, right);
+				return (binary.Span, $"{leftText} {binary.OperatorToken.Text} {rightText}");
+			}
 
 			// Operator cannot be applied to operands: arithmetic with a comparison, which is 0 or 1 in C++.
-			case "CS0019" when node is BinaryExpressionSyntax binary
-				&& (IsBool(model.GetTypeInfo(binary.Left).Type) || IsBool(model.GetTypeInfo(binary.Right).Type)):
+			case "CS0019"
+				when node is BinaryExpressionSyntax binary
+					&& (
+						IsBool(model.GetTypeInfo(binary.Left).Type)
+						|| IsBool(model.GetTypeInfo(binary.Right).Type)
+					):
+			{
+				static string AsNumber(ExpressionSyntax e, ITypeSymbol? type)
 				{
-					static string AsNumber(ExpressionSyntax e, ITypeSymbol? type)
-					{
-						var inner = e is ParenthesizedExpressionSyntax p ? p.Expression : e;
-						return IsBool(type) ? $"({inner} ? 1 : 0)" : e.ToString();
-					}
-
-					var leftText = AsNumber(binary.Left, model.GetTypeInfo(binary.Left).Type);
-					var rightText = AsNumber(binary.Right, model.GetTypeInfo(binary.Right).Type);
-					return (binary.Span, $"{leftText}{binary.OperatorToken.LeadingTrivia}{binary.OperatorToken.Text}{binary.OperatorToken.TrailingTrivia}{rightText}");
+					var inner = e is ParenthesizedExpressionSyntax p ? p.Expression : e;
+					return IsBool(type) ? $"({inner} ? 1 : 0)" : e.ToString();
 				}
+
+				var leftText = AsNumber(binary.Left, model.GetTypeInfo(binary.Left).Type);
+				var rightText = AsNumber(binary.Right, model.GetTypeInfo(binary.Right).Type);
+				return (
+					binary.Span,
+					$"{leftText}{binary.OperatorToken.LeadingTrivia}{binary.OperatorToken.Text}{binary.OperatorToken.TrailingTrivia}{rightText}"
+				);
+			}
 
 			// Cannot convert null to a value type.
 			case "CS0037" when expression is not null:
-				{
-					var text = DefaultFor(model.GetTypeInfo(expression).ConvertedType);
-					return text is null ? null : (expression.Span, text);
-				}
+			{
+				var text = DefaultFor(model.GetTypeInfo(expression).ConvertedType);
+				return text is null ? null : (expression.Span, text);
+			}
 
 			// Constant value cannot be converted.
-			case "CS0031" or "CS0221" when expression is not null:
-				{
-					var info = model.GetTypeInfo(expression);
-					var target = info.ConvertedType?.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-					return node.Parent is CastExpressionSyntax cast
-						? (cast.Span, $"unchecked({cast})")
-						: target is null ? null : (expression.Span, $"unchecked(({target}){Wrap(expression)})");
-				}
+			case "CS0031"
+			or "CS0221" when expression is not null:
+			{
+				var info = model.GetTypeInfo(expression);
+				var target = info.ConvertedType?.ToDisplayString(
+					SymbolDisplayFormat.MinimallyQualifiedFormat
+				);
+				return node.Parent is CastExpressionSyntax cast ? (cast.Span, $"unchecked({cast})")
+					: target is null ? null
+					: (expression.Span, $"unchecked(({target}){Wrap(expression)})");
+			}
 
 			// The address of a field: passed by ref instead.
-			case "CS0212" when node.FirstAncestorOrSelf<PrefixUnaryExpressionSyntax>() is { RawKind: (int)SyntaxKind.AddressOfExpression } address
-				&& address.Parent is ArgumentSyntax:
+			case "CS0212"
+				when node.FirstAncestorOrSelf<PrefixUnaryExpressionSyntax>()
+					is { RawKind: (int)SyntaxKind.AddressOfExpression } address
+					&& address.Parent is ArgumentSyntax:
 				return (address.Span, $"ref {address.Operand}");
 
 			// Argument must be passed with ref or out.
 			case "CS1620" when node.FirstAncestorOrSelf<ArgumentSyntax>() is { } argument:
-				{
-					var keyword = Regex.Match(d.GetMessage(), "'(ref|out|in)'").Groups[1].Value;
-					var value = argument.Expression is PrefixUnaryExpressionSyntax { RawKind: (int)SyntaxKind.AddressOfExpression } a ? a.Operand : argument.Expression;
-					return keyword.Length == 0 ? null : (argument.Span, $"{keyword} {value}");
-				}
+			{
+				var keyword = Regex.Match(d.GetMessage(), "'(ref|out|in)'").Groups[1].Value;
+				var value = argument.Expression
+					is PrefixUnaryExpressionSyntax
+					{
+						RawKind: (int)SyntaxKind.AddressOfExpression
+					} a
+					? a.Operand
+					: argument.Expression;
+				return keyword.Length == 0 ? null : (argument.Span, $"{keyword} {value}");
+			}
 
 			// Argument cannot convert.
-			case "CS1503" when node.FirstAncestorOrSelf<ArgumentSyntax>() is { RefKindKeyword.RawKind: 0 } argument:
+			case "CS1503"
+				when node.FirstAncestorOrSelf<ArgumentSyntax>()
+					is { RefKindKeyword.RawKind: 0 } argument:
+			{
+				var parameter = (
+					model.GetSymbolInfo(argument.Parent!.Parent!).CandidateSymbols.FirstOrDefault()
+					as IMethodSymbol
+				)?.Parameters.ElementAtOrDefault(
+					((ArgumentListSyntax)argument.Parent).Arguments.IndexOf(argument)
+				);
+				var from = model.GetTypeInfo(argument.Expression).Type;
+				if (argument.Expression is LiteralExpressionSyntax { Token.ValueText: "null" })
 				{
-					var parameter = (model.GetSymbolInfo(argument.Parent!.Parent!).CandidateSymbols.FirstOrDefault() as IMethodSymbol)?.Parameters
-						.ElementAtOrDefault(((ArgumentListSyntax)argument.Parent).Arguments.IndexOf(argument));
-					var from = model.GetTypeInfo(argument.Expression).Type;
-					if (argument.Expression is LiteralExpressionSyntax { Token.ValueText: "null" })
-					{
-						var text = DefaultFor(parameter?.Type);
-						return text is null ? null : (argument.Expression.Span, text);
-					}
-
-					var converted = Convert(argument.Expression, from, parameter?.Type, model);
-					return converted is null ? null : (argument.Expression.Span, converted);
+					var text = DefaultFor(parameter?.Type);
+					return text is null ? null : (argument.Expression.Span, text);
 				}
 
+				var converted = Convert(argument.Expression, from, parameter?.Type, model);
+				return converted is null ? null : (argument.Expression.Span, converted);
+			}
+
 			// A pointer passed by ref, from &x passed as a pointer p: what p points to is passed by ref.
-			case "CS1503" when node.FirstAncestorOrSelf<ArgumentSyntax>() is { RefKindKeyword.RawKind: (int)SyntaxKind.RefKeyword } argument
-				&& model.GetTypeInfo(argument.Expression).Type is IPointerTypeSymbol:
+			case "CS1503"
+				when node.FirstAncestorOrSelf<ArgumentSyntax>()
+					is { RefKindKeyword.RawKind: (int)SyntaxKind.RefKeyword } argument
+					&& model.GetTypeInfo(argument.Expression).Type is IPointerTypeSymbol:
 				return (argument.Expression.Span, $"*{argument.Expression}");
 
 			// Use of an unassigned local: C++ leaves it uninitialized (C4700, C4701); zero here.
-			case "CS0165" when node is IdentifierNameSyntax name
-				&& model.GetSymbolInfo(name).Symbol is ILocalSymbol local
-				&& local.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() is VariableDeclaratorSyntax { Initializer: null } declarator
-				&& declarator.SyntaxTree == root.SyntaxTree:
-				{
-					var marker = local.Type.IsValueType && local.Type.TypeKind != TypeKind.Struct || local.Type.SpecialType != SpecialType.None ? " /* C4701 */" : "";
-					return (new TextSpan(declarator.Identifier.Span.End, 0), $"=default{marker}");
-				}
+			case "CS0165"
+				when node is IdentifierNameSyntax name
+					&& model.GetSymbolInfo(name).Symbol is ILocalSymbol local
+					&& local.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax()
+						is VariableDeclaratorSyntax { Initializer: null } declarator
+					&& declarator.SyntaxTree == root.SyntaxTree:
+			{
+				var marker =
+					local.Type.IsValueType && local.Type.TypeKind != TypeKind.Struct
+					|| local.Type.SpecialType != SpecialType.None
+						? " /* C4701 */"
+						: "";
+				return (new TextSpan(declarator.Identifier.Span.End, 0), $"=default{marker}");
+			}
 
 			// A variable used like a type: sizeof(variable), which C# does not allow.
-			case "CS0118" or "CS0246" when node.FirstAncestorOrSelf<SizeOfExpressionSyntax>() is { } size:
+			case "CS0118"
+			or "CS0246" when node.FirstAncestorOrSelf<SizeOfExpressionSyntax>() is { } size:
+			{
+				var symbol = model
+					.LookupSymbols(size.SpanStart, name: size.Type.ToString())
+					.FirstOrDefault();
+				var type = symbol switch
 				{
-					var symbol = model.LookupSymbols(size.SpanStart, name: size.Type.ToString()).FirstOrDefault();
-					var type = symbol switch
-					{
-						ILocalSymbol l => l.Type,
-						IFieldSymbol f => f.Type,
-						IParameterSymbol p => p.Type,
-						_ => null,
-					};
-					return type is null ? null : (size.Type.Span, type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat));
-				}
+					ILocalSymbol l => l.Type,
+					IFieldSymbol f => f.Type,
+					IParameterSymbol p => p.Type,
+					_ => null,
+				};
+				return type is null
+					? null
+					: (
+						size.Type.Span,
+						type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
+					);
+			}
 
 			default:
 				return null;
@@ -260,7 +375,11 @@ internal sealed partial class Fixer(string projectDirectory, IReadOnlySet<string
 		var applied = new List<(TextSpan Span, string Text)>();
 		foreach (var fix in fixes.OrderBy(f => f.Span.Start).ThenByDescending(f => f.Span.Length))
 		{
-			if (applied.Count == 0 || fix.Span.Start >= applied[^1].Span.End && fix.Span.Start != applied[^1].Span.Start)
+			if (
+				applied.Count == 0
+				|| fix.Span.Start >= applied[^1].Span.End
+					&& fix.Span.Start != applied[^1].Span.Start
+			)
 			{
 				applied.Add(fix);
 			}
@@ -282,13 +401,21 @@ internal sealed partial class Fixer(string projectDirectory, IReadOnlySet<string
 		for (var round = 0; round < maxRounds; round++)
 		{
 			var compilation = _project.Compile(files, CSharpProject.FrameworkReferences);
-			errors = [.. compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error)];
+			errors =
+			[
+				.. compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error),
+			];
 			var changed = false;
-			foreach (var tree in compilation.SyntaxTrees.Where(t => _targets.Contains(Path.GetFileName(t.FilePath))))
+			foreach (
+				var tree in compilation.SyntaxTrees.Where(t =>
+					_targets.Contains(Path.GetFileName(t.FilePath))
+				)
+			)
 			{
 				var model = compilation.GetSemanticModel(tree);
 				var root = tree.GetRoot();
-				var fixes = errors.Where(d => d.Location.SourceTree == tree)
+				var fixes = errors
+					.Where(d => d.Location.SourceTree == tree)
 					.Select(d => Fix(d, model, root))
 					.OfType<(TextSpan Span, string Text)>()
 					.ToList();

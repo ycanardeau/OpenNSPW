@@ -7,7 +7,10 @@ public class VectorTests
 {
 	private static void AssertSameBits(double expected, double actual)
 	{
-		Assert.Equal(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(actual));
+		Assert.Equal(
+			BitConverter.DoubleToInt64Bits(expected),
+			BitConverter.DoubleToInt64Bits(actual)
+		);
 	}
 
 	private static double Coordinate(Random random)
@@ -40,15 +43,23 @@ public class VectorTests
 		for (var i = 0; i < 100_000; i++)
 		{
 			var from = new WorldPosition(Coordinate(random), Coordinate(random));
-			var to = i % 10 == 0 ? new WorldPosition(from.X, Coordinate(random)) : new WorldPosition(Coordinate(random), i % 7 == 0 ? from.Y : Coordinate(random));
+			var to =
+				i % 10 == 0
+					? new WorldPosition(from.X, Coordinate(random))
+					: new WorldPosition(
+						Coordinate(random),
+						i % 7 == 0 ? from.Y : Coordinate(random)
+					);
 			var dx = to.X - from.X;
 			var dy = to.Y - from.Y;
 			var difference = to - from;
 			AssertSameBits(nspw_math.Distance(dx, dy), difference.Length);
 			AssertSameBits(nspw_math.Direction(dx, dy), difference.Direction.Degrees);
 
-			if (dx == 0) dx = 1;
-			if (dy == 0) dy = 1;
+			if (dx == 0)
+				dx = 1;
+			if (dy == 0)
+				dy = 1;
 			AssertSameBits(dx, difference.NonZero().X);
 			AssertSameBits(dy, difference.NonZero().Y);
 			AssertSameBits(nspw_math.Direction(dx, dy), difference.NonZero().Direction.Degrees);

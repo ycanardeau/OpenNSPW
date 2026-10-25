@@ -13,7 +13,12 @@ namespace OpenNspw.Desktop.Controls;
 internal sealed class InfoPanel : Control
 {
 	// Where the column is on the game's screen: right of the deck, down to the combat menu.
-	public static readonly DrawingRectangle Area = new(all_head.CMBT_WIDTH + 120, 0, all_head.SCRN_WIDTH - all_head.CMBT_WIDTH - 120, 438);
+	public static readonly DrawingRectangle Area = new(
+		all_head.CMBT_WIDTH + 120,
+		0,
+		all_head.SCRN_WIDTH - all_head.CMBT_WIDTH - 120,
+		438
+	);
 
 	private const int Left = 8;
 	private const int SupplyTop = 168;
@@ -40,7 +45,12 @@ internal sealed class InfoPanel : Control
 
 	private ActionButton AddButton(DrawingRectangle bounds, string text, Action onClick)
 	{
-		var button = new ActionButton(_fonts) { Bounds = bounds, Text = text, FontSize = 13 };
+		var button = new ActionButton(_fonts)
+		{
+			Bounds = bounds,
+			Text = text,
+			FontSize = 13,
+		};
 		button.Click += (_, _) => onClick();
 		button.MouseDown += (_, e) => RightClick(e);
 		Controls.Add(button);
@@ -57,22 +67,37 @@ internal sealed class InfoPanel : Control
 		var commands = session.Game.Commands;
 		var width = Area.Width - Left * 2;
 		// The previous and the next kind of reinforcement, either side of its picture.
-		_previous = AddButton(new(Left, PictureTop, 19, PictureHeight), Texts.PreviousKind, () => commands.SelectSupplyTarget(next: false));
-		_next = AddButton(new(Area.Width - Left - 19, PictureTop, 19, PictureHeight), Texts.NextKind, () => commands.SelectSupplyTarget(next: true));
+		_previous = AddButton(
+			new(Left, PictureTop, 19, PictureHeight),
+			Texts.PreviousKind,
+			() => commands.SelectSupplyTarget(next: false)
+		);
+		_next = AddButton(
+			new(Area.Width - Left - 19, PictureTop, 19, PictureHeight),
+			Texts.NextKind,
+			() => commands.SelectSupplyTarget(next: true)
+		);
 		_request = AddButton(new(Left, SupplyTop + 156, width, 26), "", commands.RequestSupply);
 		_request.IsPrimary = true;
-		_toScenarioSelection = AddButton(new(Left, SystemTop + 20, width, 26), Texts.ToMissionMenu, commands.ToScenarioSelection);
+		_toScenarioSelection = AddButton(
+			new(Left, SystemTop + 20, width, 26),
+			Texts.ToMissionMenu,
+			commands.ToScenarioSelection
+		);
 		_resume = AddButton(new(Left, SystemTop + 50, width, 26), Texts.Resume, commands.Resume);
 	}
 
 	// The request's state, in the game's words (RequestSupply), or that one is coming (要求中).
-	private static string RequestText(GameSnapshot snapshot) => snapshot.SupplyCount != 0 ? Texts.Coming : snapshot.SupplyRequestState switch
-	{
-		SupplyRequestState.Available => Texts.Request,
-		SupplyRequestState.ShortOfPoints => Texts.ShortOfPoints,
-		SupplyRequestState.UnitLimit => Texts.UnitLimit,
-		_ => Texts.Restricted,
-	};
+	private static string RequestText(GameSnapshot snapshot) =>
+		snapshot.SupplyCount != 0
+			? Texts.Coming
+			: snapshot.SupplyRequestState switch
+			{
+				SupplyRequestState.Available => Texts.Request,
+				SupplyRequestState.ShortOfPoints => Texts.ShortOfPoints,
+				SupplyRequestState.UnitLimit => Texts.UnitLimit,
+				_ => Texts.Restricted,
+			};
 
 	// Shows the game as it was in the last frame: on the UI's thread, each frame.
 	public void UpdateFrom(GameSnapshot snapshot)
@@ -83,7 +108,8 @@ internal sealed class InfoPanel : Control
 		var isChoosing = snapshot.SupplyCount == 0;
 		_previous.Enabled = _next.Enabled = isChoosing;
 		_request.Text = RequestText(snapshot);
-		_request.Enabled = isChoosing && snapshot.SupplyRequestState == SupplyRequestState.Available;
+		_request.Enabled =
+			isChoosing && snapshot.SupplyRequestState == SupplyRequestState.Available;
 
 		// The system menu is the host's, and takes a click while the rival is in the battle. The click waits for a frame in
 		// which the player can order, which comes and goes with the turns (RunAskSystemMenu).
@@ -110,13 +136,29 @@ internal sealed class InfoPanel : Control
 		if (!snapshot.IsSupplyTargetShown)
 			return;
 
-		ref var sprite = ref snapshot.Sprites[snapshot.LocalSide == Side.Japan ? SpriteId.JapanUnits : SpriteId.UnitedStatesUnits];
+		ref var sprite = ref snapshot.Sprites[
+			snapshot.LocalSide == Side.Japan ? SpriteId.JapanUnits : SpriteId.UnitedStatesUnits
+		];
 		var (row, column) = snapshot.SupplyTargetFrame;
 		var frame = row * sprite.FramesPerRow + column;
-		var at = new Vector2((Width - (sprite.Size.Width - 2)) / 2, PictureTop + (PictureHeight - (sprite.Size.Height - 2)) / 2);
+		var at = new Vector2(
+			(Width - (sprite.Size.Width - 2)) / 2,
+			PictureTop + (PictureHeight - (sprite.Size.Height - 2)) / 2
+		);
 		var drawn = sprite;
-		((MonoGameGraphics)graphics).DrawWith(SamplerState.PointClamp, (batch, origin) =>
-			_art.Draw(batch, drawn, frame, 1, drawn.Size.Width - 2, drawn.Size.Height - 2, origin + at));
+		((MonoGameGraphics)graphics).DrawWith(
+			SamplerState.PointClamp,
+			(batch, origin) =>
+				_art.Draw(
+					batch,
+					drawn,
+					frame,
+					1,
+					drawn.Size.Width - 2,
+					drawn.Size.Height - 2,
+					origin + at
+				)
+		);
 	}
 
 	protected override void OnPaint(PaintEventArgs e)
@@ -130,10 +172,29 @@ internal sealed class InfoPanel : Control
 		Painter.SpacedText(g, Texts.UnitSection, _fonts.Bold(10), Theme.Brass, Left, 8, 2);
 		if (snapshot.UnitDetails.Length == 4)
 		{
-			Painter.Text(g, Painter.Fit(g, GameTexts.Of(snapshot.UnitDetails[0]), _fonts.Bold(15), width), _fonts.Bold(15), Theme.BrassLight, Left, 24);
+			Painter.Text(
+				g,
+				Painter.Fit(g, GameTexts.Of(snapshot.UnitDetails[0]), _fonts.Bold(15), width),
+				_fonts.Bold(15),
+				Theme.BrassLight,
+				Left,
+				24
+			);
 			for (var i = 1; i < 4; i++)
 			{
-				Painter.Text(g, Painter.Fit(g, GameTexts.Of(snapshot.UnitDetails[i]), _fonts.Regular(13), width), _fonts.Regular(13), Theme.Text, Left, 30 + i * 18);
+				Painter.Text(
+					g,
+					Painter.Fit(
+						g,
+						GameTexts.Of(snapshot.UnitDetails[i]),
+						_fonts.Regular(13),
+						width
+					),
+					_fonts.Regular(13),
+					Theme.Text,
+					Left,
+					30 + i * 18
+				);
 			}
 		}
 
@@ -142,10 +203,31 @@ internal sealed class InfoPanel : Control
 		Painter.Text(g, Texts.Time(snapshot.BattleTime), _fonts.Regular(13), Theme.Text, Left, 146);
 
 		PaintSection(g, Texts.SupplySection, SupplyTop);
-		Painter.Text(g, Texts.SupplyPoints(snapshot.SupplyPoints), _fonts.Regular(13), Theme.Text, Left, SupplyTop + 20);
-		Painter.Text(g, Painter.Fit(g, GameTexts.Of(snapshot.SupplyTargetName), _fonts.Bold(14), width), _fonts.Bold(14), Theme.BrassLight, Left, SupplyTop + 38);
+		Painter.Text(
+			g,
+			Texts.SupplyPoints(snapshot.SupplyPoints),
+			_fonts.Regular(13),
+			Theme.Text,
+			Left,
+			SupplyTop + 20
+		);
+		Painter.Text(
+			g,
+			Painter.Fit(g, GameTexts.Of(snapshot.SupplyTargetName), _fonts.Bold(14), width),
+			_fonts.Bold(14),
+			Theme.BrassLight,
+			Left,
+			SupplyTop + 38
+		);
 		DrawSupplyTarget(g, snapshot);
-		Painter.Text(g, Texts.Cost(snapshot.SupplyCost), _fonts.Regular(13), Theme.Muted, Left, SupplyTop + 138);
+		Painter.Text(
+			g,
+			Texts.Cost(snapshot.SupplyCost),
+			_fonts.Regular(13),
+			Theme.Muted,
+			Left,
+			SupplyTop + 138
+		);
 
 		if (snapshot.IsHost)
 		{

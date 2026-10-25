@@ -635,7 +635,9 @@ public sealed class Cpu(Memory<byte> memory, Register32 offset, Action<Register3
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Register32 Sbb(Register32 left, Register32 right)
 	{
-		var tmp = new Register64((ulong)left.Value - (ulong)right.Value - (Eflags.Carry ? 1UL : 0UL));
+		var tmp = new Register64(
+			(ulong)left.Value - (ulong)right.Value - (Eflags.Carry ? 1UL : 0UL)
+		);
 		var result = tmp.Low;
 		Eflags.Update(
 			carry: !tmp.High.IsEmpty,

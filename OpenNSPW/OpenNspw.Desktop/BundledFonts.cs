@@ -6,7 +6,8 @@ namespace OpenNspw.Desktop;
 // BIZ UDPGothic, for the menus.
 internal static class BundledFonts
 {
-	private static byte[] Read(string file) => File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Fonts", file));
+	private static byte[] Read(string file) =>
+		File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Fonts", file));
 
 	public static byte[] Game() => Read("BIZUDGothic-Regular.ttf");
 

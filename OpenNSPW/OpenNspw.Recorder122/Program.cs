@@ -30,7 +30,13 @@ const uint MenuItemApplied = 0x431C60;
 // reads them, the local's offset from esp there and its size: in cpu_strtgy, scenario 208's count of planes at fleet 2's
 // base; in the battle, the heading along which a torpedo plane checks for land, and the angle of a plane's landing pattern
 // and approach to a carrier heading 360.
-(uint Instruction, uint Offset, int Size)[] stackLocals = [(0x4050C7, 0x30, 4), (0x413D23, 0x38, 8), (0x4173BF, 0x0C, 8), (0x41764E, 0x10, 8)];
+(uint Instruction, uint Offset, int Size)[] stackLocals =
+[
+	(0x4050C7, 0x30, 4),
+	(0x413D23, 0x38, 8),
+	(0x4173BF, 0x0C, 8),
+	(0x41764E, 0x10, 8),
+];
 
 // Where the recorder plays in place of the player: the title screen's test of a click (0x40AD39), after which it goes
 // to the scenarios; and the scenario screen's test for a battle to start (0x40C613), after its rows and its click have
@@ -114,15 +120,26 @@ catch (FormatException)
 
 if (positionalArgs.Length is < 1 or > 2)
 {
-	Console.Error.WriteLine("Usage: OpenNspw.Recorder122 <NSPW_122.exe> [output directory] [--scenario <n> | --all] [--speed <n>] [--frames <n>] [--orders <n>] [--seed <n>]");
+	Console.Error.WriteLine(
+		"Usage: OpenNspw.Recorder122 <NSPW_122.exe> [output directory] [--scenario <n> | --all] [--speed <n>] [--frames <n>] [--orders <n>] [--seed <n>]"
+	);
 	return 2;
 }
 
 var playsAll = args.Contains("--all");
-int[] scenarios = playsAll ? [.. OpenNspw.Singleplayer.Functions.Scenarios] : scenarioOption is { } one ? [one] : [];
-if (scenarios.FirstOrDefault(s => !OpenNspw.Singleplayer.Functions.Scenarios.Contains(s)) is var unknown and not 0)
+int[] scenarios =
+	playsAll ? [.. OpenNspw.Singleplayer.Functions.Scenarios]
+	: scenarioOption is { } one ? [one]
+	: [];
+if (
+	scenarios.FirstOrDefault(s => !OpenNspw.Singleplayer.Functions.Scenarios.Contains(s))
+	is var unknown
+		and not 0
+)
 {
-	Console.Error.WriteLine($"Not a scenario of NSPW 1.22: {unknown}. The scenarios are {string.Join(", ", OpenNspw.Singleplayer.Functions.Scenarios)}.");
+	Console.Error.WriteLine(
+		$"Not a scenario of NSPW 1.22: {unknown}. The scenarios are {string.Join(", ", OpenNspw.Singleplayer.Functions.Scenarios)}."
+	);
 	return 2;
 }
 
@@ -158,8 +175,18 @@ Trace122Orders? ReadPlayerOrders(Debugger debugger)
 	var move = debugger.Read(PlayerMoveOrder, 32);
 	var select = debugger.Read(PlayerSelectOrder, 32);
 	var selection = debugger.Read(Selection, 2 * Trace122Orders.SelectionLength);
-	byte[] selectionState = [.. debugger.Read(SelectedUnit, 2), .. debugger.Read(SelectionCount, 2), .. selection];
-	if (BitConverter.ToInt16(move, 0) == 0 && BitConverter.ToInt32(select, 0) == 0 && menuOrder.Menu == CombatMenuItem.None && selectionState.AsSpan().SequenceEqual(recordedSelection))
+	byte[] selectionState =
+	[
+		.. debugger.Read(SelectedUnit, 2),
+		.. debugger.Read(SelectionCount, 2),
+		.. selection,
+	];
+	if (
+		BitConverter.ToInt16(move, 0) == 0
+		&& BitConverter.ToInt32(select, 0) == 0
+		&& menuOrder.Menu == CombatMenuItem.None
+		&& selectionState.AsSpan().SequenceEqual(recordedSelection)
+	)
 		return null;
 
 	recordedSelection = selectionState;
@@ -167,18 +194,30 @@ Trace122Orders? ReadPlayerOrders(Debugger debugger)
 	for (var s = 0; s < selections.Length; s++)
 		selections[s] = BitConverter.ToInt16(selection, 2 * s);
 	return new Trace122Orders(
-		new MoveOrder { Unit = BitConverter.ToInt16(move, 0), Destination = new WorldPosition(BitConverter.ToDouble(move, 8), BitConverter.ToDouble(move, 16)), ClearsPath = BitConverter.ToInt32(move, 24) },
+		new MoveOrder
+		{
+			Unit = BitConverter.ToInt16(move, 0),
+			Destination = new WorldPosition(
+				BitConverter.ToDouble(move, 8),
+				BitConverter.ToDouble(move, 16)
+			),
+			ClearsPath = BitConverter.ToInt32(move, 24),
+		},
 		new SelectOrder
 		{
 			IsSet = new Bool32(BitConverter.ToInt32(select, 0)),
 			SelectedUnit = BitConverter.ToInt16(select, 4),
 			Unit = BitConverter.ToInt16(select, 8),
-			GroundPosition = new WorldPosition(BitConverter.ToDouble(select, 16), BitConverter.ToDouble(select, 24)),
+			GroundPosition = new WorldPosition(
+				BitConverter.ToDouble(select, 16),
+				BitConverter.ToDouble(select, 24)
+			),
 		},
 		menuOrder,
 		debugger.ReadInt16(SelectedUnit),
 		debugger.ReadInt16(SelectionCount),
-		selections);
+		selections
+	);
 }
 
 void Close()
@@ -214,7 +253,11 @@ void Play(Debugger debugger, uint address)
 		case Frame when writer is not null && debugger.ReadInt16(Mode) == BattleMode:
 			if (frames >= frameLimit || debugger.ReadInt32(Result) != 0)
 			{
-				Console.WriteLine(frames >= frameLimit ? $"{frames} frames recorded, as asked." : $"The battle has a result (game_end {debugger.ReadInt32(Result)}).");
+				Console.WriteLine(
+					frames >= frameLimit
+						? $"{frames} frames recorded, as asked."
+						: $"The battle has a result (game_end {debugger.ReadInt32(Result)})."
+				);
 				Close();
 				debugger.Terminate();
 				break;
@@ -225,10 +268,12 @@ void Play(Debugger debugger, uint address)
 		case Orders when writer is not null && commander.Order(debugger, frames) is { } order:
 			Console.WriteLine($"Frame {frames}: {order}.");
 			break;
-		case Commander.Input when writer is not null && commander.StartInput(debugger) is { } selection:
+		case Commander.Input
+			when writer is not null && commander.StartInput(debugger) is { } selection:
 			Console.WriteLine($"Frame {frames}: {selection}.");
 			break;
-		case Commander.MenuEntryTest when writer is not null && commander.TestMenuEntry(debugger) is { } item:
+		case Commander.MenuEntryTest
+			when writer is not null && commander.TestMenuEntry(debugger) is { } item:
 			Console.WriteLine($"Frame {frames}: {item}.");
 			break;
 	}
@@ -239,7 +284,9 @@ void Hit(Debugger debugger, uint address)
 	if (!isChecked)
 	{
 		if (!debugger.Read(0x436056, randCode.Length).AsSpan().SequenceEqual(randCode))
-			throw new InvalidOperationException("This is not NSPW 1.22: its rand is not at 0x436056.");
+			throw new InvalidOperationException(
+				"This is not NSPW 1.22: its rand is not at 0x436056."
+			);
 		isChecked = true;
 	}
 
@@ -277,8 +324,15 @@ void Hit(Debugger debugger, uint address)
 				break;
 			case CharaCont:
 				debugger.Read(Units, Trace122.UnitCount * Trace122.UnitSize).CopyTo(state, 0);
-				debugger.Read(Fires, Trace122.FireCount * Trace122.FireSize).CopyTo(state, Trace122.UnitCount * Trace122.UnitSize);
-				writer!.WriteTick(debugger.ReadInt32(CcCount), debugger.ReadInt32(DrawnTick) != 0, random, state);
+				debugger
+					.Read(Fires, Trace122.FireCount * Trace122.FireSize)
+					.CopyTo(state, Trace122.UnitCount * Trace122.UnitSize);
+				writer!.WriteTick(
+					debugger.ReadInt32(CcCount),
+					debugger.ReadInt32(DrawnTick) != 0,
+					random,
+					state
+				);
 				break;
 			case Decision:
 				writer!.WriteRandom(TracePoint.Decision, random);
@@ -290,7 +344,11 @@ void Hit(Debugger debugger, uint address)
 				break;
 			}
 			case MenuItemApplied:
-				menuOrder = new MenuOrder { Menu = (CombatMenuItem)debugger.ReadInt16(MenuItem), SelectedUnit = debugger.ReadInt16(SelectedUnit) };
+				menuOrder = new MenuOrder
+				{
+					Menu = (CombatMenuItem)debugger.ReadInt16(MenuItem),
+					SelectedUnit = debugger.ReadInt16(SelectedUnit),
+				};
 				break;
 			case Orders:
 				if (ReadPlayerOrders(debugger) is { } orders)
@@ -301,7 +359,13 @@ void Hit(Debugger debugger, uint address)
 			case DrawCmbtArea:
 			{
 				var camera = debugger.Read(Camera, 2 * sizeof(double));
-				writer!.WriteDrawing(random, new WorldPosition(BitConverter.ToDouble(camera, 0), BitConverter.ToDouble(camera, sizeof(double))));
+				writer!.WriteDrawing(
+					random,
+					new WorldPosition(
+						BitConverter.ToDouble(camera, 0),
+						BitConverter.ToDouble(camera, sizeof(double))
+					)
+				);
 				break;
 			}
 		}
@@ -314,13 +378,41 @@ void Run(int? scenario)
 	playedScenario = scenario;
 	hasStartedBattle = false;
 	uint[] breakpoints = scenario is null
-		? [GameInit, GameInitSeeded, Frame, CharaCont, Decision, Orders, DrawCmbtArea, MenuItemApplied, .. stackLocals.Select(local => local.Instruction)]
-		: [GameInit, GameInitSeeded, Frame, CharaCont, Decision, Orders, DrawCmbtArea, MenuItemApplied, .. stackLocals.Select(local => local.Instruction), TitleClickTest, BattleStartTest, Commander.Input, Commander.MenuEntryTest];
+		?
+		[
+			GameInit,
+			GameInitSeeded,
+			Frame,
+			CharaCont,
+			Decision,
+			Orders,
+			DrawCmbtArea,
+			MenuItemApplied,
+			.. stackLocals.Select(local => local.Instruction),
+		]
+		:
+		[
+			GameInit,
+			GameInitSeeded,
+			Frame,
+			CharaCont,
+			Decision,
+			Orders,
+			DrawCmbtArea,
+			MenuItemApplied,
+			.. stackLocals.Select(local => local.Instruction),
+			TitleClickTest,
+			BattleStartTest,
+			Commander.Input,
+			Commander.MenuEntryTest,
+		];
 	using (var debugger = new Debugger(executable, breakpoints, Hit))
 	{
-		Console.WriteLine(scenario is null
-			? $"Running {executable}. Play a battle with the mouse and the speed keys, then close the game."
-			: $"Running {executable} in scenario {scenario}, with the player's orders of seed {seed} (--seed). Click nothing in it until it closes.");
+		Console.WriteLine(
+			scenario is null
+				? $"Running {executable}. Play a battle with the mouse and the speed keys, then close the game."
+				: $"Running {executable} in scenario {scenario}, with the player's orders of seed {seed} (--seed). Click nothing in it until it closes."
+		);
 		debugger.Run();
 	}
 

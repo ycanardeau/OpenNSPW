@@ -56,13 +56,23 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 	// Whether a message of this type is what each player sends once per turn, to give an order or none (UpdateBattle).
 	private static bool IsOrder(MessageType type)
 	{
-		return type is MessageType.NoOrder or MessageType.UnitArrived or MessageType.MoveOrder or MessageType.MoveShipsOrder
-			or MessageType.MovePlanesOrder or MessageType.SelectOrder or MessageType.SelectShipsOrder
-			or MessageType.SelectPlanesOrder or MessageType.SelectLandOrder or MessageType.MenuOrder
-			or MessageType.GoToGameSetting or MessageType.ResumeAndGoToGameSetting;
+		return type
+			is MessageType.NoOrder
+				or MessageType.UnitArrived
+				or MessageType.MoveOrder
+				or MessageType.MoveShipsOrder
+				or MessageType.MovePlanesOrder
+				or MessageType.SelectOrder
+				or MessageType.SelectShipsOrder
+				or MessageType.SelectPlanesOrder
+				or MessageType.SelectLandOrder
+				or MessageType.MenuOrder
+				or MessageType.GoToGameSetting
+				or MessageType.ResumeAndGoToGameSetting;
 	}
 
-	private static byte[] ToBytes<T>(T message) where T : unmanaged
+	private static byte[] ToBytes<T>(T message)
+		where T : unmanaged
 	{
 		return MemoryMarshal.AsBytes(new ReadOnlySpan<T>(in message)).ToArray();
 	}
@@ -83,7 +93,9 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 		{
 			lock (_lock)
 			{
-				return _orders.TryDequeue(out var order) ? order : ToBytes(new SyncFlagMessage { Type = MessageType.NoOrder });
+				return _orders.TryDequeue(out var order)
+					? order
+					: ToBytes(new SyncFlagMessage { Type = MessageType.NoOrder });
 			}
 		}
 
@@ -92,7 +104,8 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 	}
 
 	// The rival gives an order in its next turn, as a message of the game (such as _DP_NEW_PP_SHIP).
-	public void Order<T>(T message) where T : unmanaged
+	public void Order<T>(T message)
+		where T : unmanaged
 	{
 		lock (_lock)
 		{
@@ -107,10 +120,24 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 		return winerror.S_OK;
 	}
 
-	public int EnumServiceProviders(Guid? pguidServiceProvider, Guid? pguidApplication, DPN_SERVICE_PROVIDER_INFO[]? pSPInfoBuffer, ref uint pcbEnumData, ref uint pcReturned, uint dwFlags)
+	public int EnumServiceProviders(
+		Guid? pguidServiceProvider,
+		Guid? pguidApplication,
+		DPN_SERVICE_PROVIDER_INFO[]? pSPInfoBuffer,
+		ref uint pcbEnumData,
+		ref uint pcReturned,
+		uint dwFlags
+	)
 	{
 		DPN_SERVICE_PROVIDER_INFO[] items = pguidServiceProvider is null
-			? [new DPN_SERVICE_PROVIDER_INFO { guid = dplay8.CLSID_DP8SP_TCPIP, pwszName = "DirectPlay8 TCP/IP Service Provider" }]
+			?
+			[
+				new DPN_SERVICE_PROVIDER_INFO
+				{
+					guid = dplay8.CLSID_DP8SP_TCPIP,
+					pwszName = "DirectPlay8 TCP/IP Service Provider",
+				},
+			]
 			: [];
 		if (pSPInfoBuffer is null || pcbEnumData < items.Length)
 		{
@@ -130,13 +157,23 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 		return winerror.S_OK;
 	}
 
-	public int SetPeerInfo(DPN_PLAYER_INFO pdpnPlayerInfo, object? pvAsyncContext, object? phAsyncHandle, uint dwFlags)
+	public int SetPeerInfo(
+		DPN_PLAYER_INFO pdpnPlayerInfo,
+		object? pvAsyncContext,
+		object? phAsyncHandle,
+		uint dwFlags
+	)
 	{
 		_localName = pdpnPlayerInfo.pwszName ?? string.Empty;
 		return winerror.S_OK;
 	}
 
-	public int GetPeerInfo(uint dpnid, DPN_PLAYER_INFO? pdpnPlayerInfo, ref uint pdwSize, uint dwFlags)
+	public int GetPeerInfo(
+		uint dpnid,
+		DPN_PLAYER_INFO? pdpnPlayerInfo,
+		ref uint pdwSize,
+		uint dwFlags
+	)
 	{
 		var name = dpnid switch
 		{
@@ -158,27 +195,65 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 
 		pdpnPlayerInfo.dwInfoFlags = dplay8.DPNINFO_NAME;
 		pdpnPlayerInfo.pwszName = name;
-		pdpnPlayerInfo.dwPlayerFlags = dpnid == LocalPlayer ? dplay8.DPNPLAYER_LOCAL | dplay8.DPNPLAYER_HOST : 0;
+		pdpnPlayerInfo.dwPlayerFlags =
+			dpnid == LocalPlayer ? dplay8.DPNPLAYER_LOCAL | dplay8.DPNPLAYER_HOST : 0;
 		return winerror.S_OK;
 	}
 
 	// The game hosts, and the rival joins at once.
-	public int Host(DPN_APPLICATION_DESC pdnAppDesc, IDirectPlay8Address?[] prgpDeviceInfo, uint cDeviceInfo, object? pdnSecurity, object? pdnCredentials, object? pvPlayerContext, uint dwFlags)
+	public int Host(
+		DPN_APPLICATION_DESC pdnAppDesc,
+		IDirectPlay8Address?[] prgpDeviceInfo,
+		uint cDeviceInfo,
+		object? pdnSecurity,
+		object? pdnCredentials,
+		object? pvPlayerContext,
+		uint dwFlags
+	)
 	{
-		Enqueue(dplay8.DPN_MSGID_CREATE_PLAYER, new DPNMSG_CREATE_PLAYER { dpnidPlayer = LocalPlayer });
-		Enqueue(dplay8.DPN_MSGID_CREATE_PLAYER, new DPNMSG_CREATE_PLAYER { dpnidPlayer = RivalPlayer });
+		Enqueue(
+			dplay8.DPN_MSGID_CREATE_PLAYER,
+			new DPNMSG_CREATE_PLAYER { dpnidPlayer = LocalPlayer }
+		);
+		Enqueue(
+			dplay8.DPN_MSGID_CREATE_PLAYER,
+			new DPNMSG_CREATE_PLAYER { dpnidPlayer = RivalPlayer }
+		);
 		return winerror.S_OK;
 	}
 
 	// The game only hosts.
-	public int Connect(DPN_APPLICATION_DESC pdnAppDesc, IDirectPlay8Address? pHostAddr, IDirectPlay8Address? pDeviceInfo, object? pdnSecurity, object? pdnCredentials, byte[]? pvUserConnectData, uint dwUserConnectDataSize, object? pvPlayerContext, object? pvAsyncContext, ref uint phAsyncHandle, uint dwFlags)
+	public int Connect(
+		DPN_APPLICATION_DESC pdnAppDesc,
+		IDirectPlay8Address? pHostAddr,
+		IDirectPlay8Address? pDeviceInfo,
+		object? pdnSecurity,
+		object? pdnCredentials,
+		byte[]? pvUserConnectData,
+		uint dwUserConnectDataSize,
+		object? pvPlayerContext,
+		object? pvAsyncContext,
+		ref uint phAsyncHandle,
+		uint dwFlags
+	)
 	{
 		return dplay8.DPNERR_GENERIC;
 	}
 
-	public int SendTo(uint dpnid, ref DPN_BUFFER_DESC prgBufferDesc, uint cBufferDesc, uint dwTimeOut, object? pvAsyncContext, ref uint phAsyncHandle, uint dwFlags)
+	public int SendTo(
+		uint dpnid,
+		ref DPN_BUFFER_DESC prgBufferDesc,
+		uint cBufferDesc,
+		uint dwTimeOut,
+		object? pvAsyncContext,
+		ref uint phAsyncHandle,
+		uint dwFlags
+	)
 	{
-		var data = new ReadOnlySpan<byte>(prgBufferDesc.pBufferData, (int)prgBufferDesc.dwBufferSize).ToArray();
+		var data = new ReadOnlySpan<byte>(
+			prgBufferDesc.pBufferData,
+			(int)prgBufferDesc.dwBufferSize
+		).ToArray();
 		if (Answer(data) is { } answer)
 		{
 			Enqueue(dplay8.DPN_MSGID_RECEIVE, null, answer);
@@ -220,12 +295,16 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 			data.CopyTo(buffer, 0);
 			fixed (byte* pReceiveData = buffer)
 			{
-				_handler?.Invoke(_userContext, messageId, new DPNMSG_RECEIVE
-				{
-					dpnidSender = RivalPlayer,
-					pReceiveData = pReceiveData,
-					dwReceiveDataSize = (uint)data.Length,
-				});
+				_handler?.Invoke(
+					_userContext,
+					messageId,
+					new DPNMSG_RECEIVE
+					{
+						dpnidSender = RivalPlayer,
+						pReceiveData = pReceiveData,
+						dwReceiveDataSize = (uint)data.Length,
+					}
+				);
 			}
 		}
 	}

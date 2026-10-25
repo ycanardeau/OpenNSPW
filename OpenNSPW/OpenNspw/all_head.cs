@@ -1,4 +1,4 @@
-	// Headder File
+// Headder File
 //winmm.lib dxguid.lib dsound.lib d3d9.lib d3dx9.lib dxerr9.lib dinput8.lib kernel32.lib user32.lib
 //gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib
 //odbccp32.lib
@@ -11,233 +11,234 @@ namespace OpenNspw;
 
 public static class all_head
 {
-//#define	STRICT						// 型チェックを厳密に
-//#define	WIN32_LEAN_AND_MEAN		// ヘッダーから使われていないのを省く
+	//#define	STRICT						// 型チェックを厳密に
+	//#define	WIN32_LEAN_AND_MEAN		// ヘッダーから使われていないのを省く
 
-////#include <stdio.h>
-////#include <stdlib.h>
+	////#include <stdio.h>
+	////#include <stdlib.h>
 
-//#ifndef DIRECTINPUT_VERSION
+	//#ifndef DIRECTINPUT_VERSION
 
-////#include <conio.h>
-//#include <time.h>				// 乱数に使用
+	////#include <conio.h>
+	//#include <time.h>				// 乱数に使用
 
-public const int SCRN_WIDTH		= 1024;
-public const int SCRN_HEIGHT		= 768;
+	public const int SCRN_WIDTH = 1024;
+	public const int SCRN_HEIGHT = 768;
 
-public const int	WIDTH		= 1024;
-public const int	HEIGHT	= 768;
+	public const int WIDTH = 1024;
+	public const int HEIGHT = 768;
 
-public const string	CAPTION		= "NSPW on the Net";
-public const string	CLASS_NAME	= "NSPW_NET";
+	public const string CAPTION = "NSPW on the Net";
+	public const string CLASS_NAME = "NSPW_NET";
 
-public const int DIDEVICE_BUFFERSIZE	= 100;				// ダイレクトインプット　デバイスに設定するバッファ・サイズ
+	public const int DIDEVICE_BUFFERSIZE = 100; // ダイレクトインプット　デバイスに設定するバッファ・サイズ
 
-// FRONT_BTN ... TOP_VIEW_BTN2: InputButtons.
+	// FRONT_BTN ... TOP_VIEW_BTN2: InputButtons.
 
-/*
+	/*
+	
+	winmm.lib dxguid.lib dsound.lib d3d9.lib d3dx9.lib dxerr9.lib dinput8.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib
+	
+	#include <windows.h>
+	#include <stdio.h>
+	#include <stdlib.h>
+	#include <math.h>
+	#include <d3d9.h>
+	#include <d3dx9.h>
+	#include <dinput.h>
+	#include <dxerr9.h>
+	#include <dsound.h>
+	#include <conio.h>
+	#include <dmusicc.h>
+	#include <dmusici.h>
+	#include <time.h>				// 乱数に使用
+	#include <winuser.h>
+	#include <d3dx9math.h>
+	
+	*/
 
-winmm.lib dxguid.lib dsound.lib d3d9.lib d3dx9.lib dxerr9.lib dinput8.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib
+	public const int CMBT_WIDTH = 768;
+	public const int CMBT_HEIGHT = 768;
+	public const int CMBT_REST = 40;
 
-#include <windows.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <d3d9.h>
-#include <d3dx9.h>
-#include <dinput.h>
-#include <dxerr9.h>
-#include <dsound.h>
-#include <conio.h>
-#include <dmusicc.h>
-#include <dmusici.h>
-#include <time.h>				// 乱数に使用
-#include <winuser.h>
-#include <d3dx9math.h>
+	public const int MAX_SPRT = 25;
 
-*/
+	// スプライトナンバー: SpriteId.
 
-public const int	CMBT_WIDTH		= 768;
-public const int	CMBT_HEIGHT		= 768;
-public const int	CMBT_REST		= 40;
+	// 効果音
+	public const int SND_DUP = 6; // 同時に鳴らせる場合の最大音数
 
-public const int MAX_SPRT		= 25;
+	public const int NUM_SOUND_EFFECTS = 35;
 
-// スプライトナンバー: SpriteId.
+	// enum SND_NO: SoundId.
 
-// 効果音
-public const int		SND_DUP		= 6;		// 同時に鳴らせる場合の最大音数
+	// BB1, CA1, DD1, SS1, CV1, CVL1, FT1, AT1, BM1, TR1, AP, SP, CT1, MN1, GF1, GF2 and GF3: UnitKind.
 
-public const int	NUM_SOUND_EFFECTS		= 35;
+	// World.Top, World.Bottom, World.Right and World.Left: World.
 
-// enum SND_NO: SoundId.
+	public const double PI = 3.14159265358979323846;
+	public const double DegreesToRadians = 0.01745329251994;
+	public const double RadiansToDegrees = 57.2957795131;
 
-// BB1, CA1, DD1, SS1, CV1, CVL1, FT1, AT1, BM1, TR1, AP, SP, CT1, MN1, GF1, GF2 and GF3: UnitKind.
+	public const int SCRN_MAX_SPD = 1600;
+	public const int ScrollAcceleration = 15;
 
-// World.Top, World.Bottom, World.Right and World.Left: World.
+	public const int OS_MAX = 10;
 
-public const double	PI            = 3.14159265358979323846;
-public const double	DegreesToRadians          = 0.01745329251994;
-public const double	RadiansToDegrees		  = 57.2957795131;
+	public const int KEY_UP = 8;
+	public const int KEY_RIUP = 9;
+	public const int KEY_RI = 6;
+	public const int KEY_RIDW = 3;
+	public const int KEY_DW = 2;
+	public const int KEY_LFDW = 1;
+	public const int KEY_LF = 4;
+	public const int KEY_LFUP = 7;
 
-public const int		SCRN_MAX_SPD		= 1600;
-public const int		ScrollAcceleration	= 15;
+	public const int MAXPLAYERS = 2; // max no. players in the session
+	public const int TYPE_UNIT_MSG = 0x11; // message containing field layout, sent by host
 
-public const int		OS_MAX			= 10;
+	// SHIP, PLANE and BASE: UnitCategory.
 
-public const int		KEY_UP		= 8;
-public const int		KEY_RIUP	= 9;
-public const int		KEY_RI		= 6;
-public const int		KEY_RIDW	= 3;
-public const int		KEY_DW		= 2;
-public const int		KEY_LFDW	= 1;
-public const int		KEY_LF		= 4;
-public const int		KEY_LFUP	= 7;
+	// 状態
+	// FLYING and PARKING: UnitState.
 
-public const int		MAXPLAYERS			= 2;			// max no. players in the session
-public const int		TYPE_UNIT_MSG       = 0x11;    // message containing field layout, sent by host
+	// モード／メニュー
+	// MOVE, SLOW and RETURN: UnitMode and CombatMenuItem. SPRY, RDY_TPD, RDY_BOM and NOTHING: CombatMenuItem.
 
-// SHIP, PLANE and BASE: UnitCategory.
+	// ファイアの種類 武装の種類
+	// BLT to RAS, SP_GUN and TR_SP to TR_GF3: FireKind.
 
-// 状態
-// FLYING and PARKING: UnitState.
+	// 弾薬の消費サイズ
+	public const int GUN_SZ = 5 + 2; // 対地砲
+	public const int SHL_SZ = 4 + 1; // 対空炸裂弾
+	public const int TPD_SZ = 5 + 2; // 魚雷
+	public const int ASB_SZ = 2; // 対潜爆弾
+	public const int RAS_SZ = 3 + 1; // 対空機関砲弾　Rapid anti Air Shell
 
-// モード／メニュー
-// MOVE, SLOW and RETURN: UnitMode and CombatMenuItem. SPRY, RDY_TPD, RDY_BOM and NOTHING: CombatMenuItem.
+	// 各弾種の破壊力の値
+	public const int BLT_DMG = 1;
+	public const int GUN_DMG = 2;
+	public const int SHL_DMG = 2;
+	public const int TPD_DMG = 5;
+	public const int BOM_DMG = 3;
+	public const int ASB_DMG = 3;
+	public const int RAS_DMG = 1;
 
-// ファイアの種類 武装の種類
-// BLT to RAS, SP_GUN and TR_SP to TR_GF3: FireKind.
+	//ユニット別ＨＰ
+	public const int BB1_HP = 40;
+	public const int CA1_HP = 32;
+	public const int DD1_HP = 18;
+	public const int SS1_HP = 7;
+	public const int CV1_HP = 35 - 3;
+	public const int CVL1_HP = 30 - 3;
 
-// 弾薬の消費サイズ
-public const int		GUN_SZ			= 5+2;	// 対地砲
-public const int		SHL_SZ			= 4+1;	// 対空炸裂弾
-public const int		TPD_SZ			= 5+2;	// 魚雷
-public const int		ASB_SZ			= 2;	// 対潜爆弾
-public const int		RAS_SZ			= 3+1;	// 対空機関砲弾　Rapid anti Air Shell
+	public const int FT1_HP = 14;
+	public const int AT1_HP = 16;
+	public const int BM1_HP = 50;
 
-// 各弾種の破壊力の値
-public const int		BLT_DMG		= 1;
-public const int		GUN_DMG		= 2;
-public const int		SHL_DMG		= 2;
-public const int		TPD_DMG		= 5;
-public const int		BOM_DMG		= 3;
-public const int		ASB_DMG		= 3;
-public const int		RAS_DMG		= 1;
+	public const int TR1_HP = 9;
 
-//ユニット別ＨＰ
-public const int	BB1_HP		= 40;
-public const int	CA1_HP		= 32;
-public const int	DD1_HP		= 18;
-public const int SS1_HP			= 7;
-public const int CV1_HP			= 35-3;
-public const int CVL1_HP		= 30-3;
+	public const int AP_HP = 260;
+	public const int SP_HP = 320;
 
-public const int	FT1_HP		= 14;
-public const int	AT1_HP		= 16;
-public const int	BM1_HP		= 50;
+	public const int CT1_HP = 150;
+	public const int MN1_HP = 150;
+	public const int GF1_HP = 180;
+	public const int GF2_HP = 320;
+	public const int GF3_HP = 400;
 
-public const int TR1_HP		= 9;
+	//
+	public const double AIR_TPD_SPD = 1.8;
+	public const int AIR_TPD_LOS_DSTC = 220;
+	public const double TPD_SPD = 2.0;
 
-public const int AP_HP		= 260;
-public const int SP_HP		= 320;
+	public const int TUNE_SPAN = 900;
+	public const int RDY_SPAN = 700;
 
-public const int CT1_HP		= 150;
-public const int MN1_HP		= 150;
-public const int GF1_HP		= 180;
-public const int GF2_HP		= 320;
-public const int GF3_HP		= 400;
+	// エフェクト
+	// UPPER and LOWER: EffectLayer.
 
-//
-public const double	AIR_TPD_SPD				= 1.8;
-public const int	AIR_TPD_LOS_DSTC		= 220;
-public const double	TPD_SPD					= 2.0;
+	// 国籍
+	// JPN and USA: Side.
 
-public const int		TUNE_SPAN	= 900;
-public const int		RDY_SPAN		= 700;
+	// 現モード
+	// DEMO, CNCT_GAME_SETUP, CNCT_GAME_SETTING, CNCT_CNFG_SETTING and CMBT: GameMode.
 
-// エフェクト
-// UPPER and LOWER: EffectLayer.
+	//
+	public const double CMBT_SPD = 1.5;
+	public const int FT_EYE = 160;
 
-// 国籍
-// JPN and USA: Side.
+	//
+	public const int PALT_RED = 249;
+	public const int PALT_BUL = 252;
 
-// 現モード
-// DEMO, CNCT_GAME_SETUP, CNCT_GAME_SETTING, CNCT_CNFG_SETTING and CMBT: GameMode.
+	//
+	public const int ON_PP = 40;
 
-//
-public const double		CMBT_SPD	= 1.5;
-public const int		FT_EYE		= 160;
+	// 視界
+	public const int BB1_SIGHT = 800;
+	public const int CA1_SIGHT = 700;
+	public const int DD1_SIGHT = 550;
+	public const int SS1_SIGHT = 600;
+	public const int CV1_SIGHT = 500;
+	public const int CVL1_SIGHT = 600;
+	public const int TR1_SIGHT = 300;
+	public const int FT1_SIGHT = 500;
+	public const int AT1_SIGHT = 1000;
+	public const int BM1_SIGHT = 1200;
+	public const int AP_SIGHT = 1700;
+	public const int SP_SIGHT = 1700;
 
-//
-public const int		PALT_RED	= 249;
-public const int		PALT_BUL	= 252;
+	public const int CT1_SIGHT = 800;
+	public const int MN1_SIGHT = 800;
+	public const int GF1_SIGHT = 1000;
+	public const int GF2_SIGHT = 1500;
+	public const int GF3_SIGHT = 2000;
 
-//
-public const int		ON_PP		= 40;
+	// 再装填時間
+	public const int RELOAD_TPD_DD = 800;
+	public const int RELOAD_TPD_SS = 1500;
 
-// 視界
-public const int		BB1_SIGHT	= 800;
-public const int		CA1_SIGHT	= 700;
-public const int		DD1_SIGHT	= 550;
-public const int		SS1_SIGHT	= 600;
-public const int		CV1_SIGHT	= 500;
-public const int		CVL1_SIGHT	= 600;
-public const int		TR1_SIGHT	= 300;
-public const int		FT1_SIGHT	= 500;
-public const int		AT1_SIGHT	= 1000;
-public const int		BM1_SIGHT	= 1200;
-public const int		AP_SIGHT		= 1700;
-public const int		SP_SIGHT		= 1700;
+	//タスクフォース
+	public const int MAX_TF = 8;
 
-public const int		CT1_SIGHT	= 800;
-public const int		MN1_SIGHT	= 800;
-public const int		GF1_SIGHT	= 1000;
-public const int		GF2_SIGHT	= 1500;
-public const int		GF3_SIGHT	= 2000;
+	// 判定
+	// JPN_WIN, USA_WIN, JPN_LOST, USA_LOST and DRAW: GameResult.
 
-// 再装填時間
-public const int		RELOAD_TPD_DD		= 800;
-public const int		RELOAD_TPD_SS		= 1500;
+	//くも
+	public const int KUMO_MAX = 4096;
+	public const int FIRE_MAX = 512;
+	public const int EFFECT_MAX = 1024;
 
-//タスクフォース
-public const int		MAX_TF				= 8;
+	// JPN_SHIP_START to USA_PLANE_END: properties of the game (Singleplayer.cs), with these values in a network game.
 
-// 判定
-// JPN_WIN, USA_WIN, JPN_LOST, USA_LOST and DRAW: GameResult.
+	// ダイレクトプレイ用
 
-//くも
-public const int		KUMO_MAX	= 4096;
-public const int		FIRE_MAX	= 512;
-public const int		EFFECT_MAX	= 1024;
+	public const int MAX_PLAYER_NAME = 14;
+	public const uint WM_APP_UPDATE_STATS = (winuser.WM_APP + 0);
 
-// JPN_SHIP_START to USA_PLANE_END: properties of the game (Singleplayer.cs), with these values in a network game.
+	////#define WM_APP_DISPLAY_WAVE           (WM_APP + 1)
+	public const int DOWORK_TIMESLICE = 8; // let DirectPlay work for 8 ms at a time
+	public const int ADDRESSOVERRIDE_PORT = 2310;
 
-// ダイレクトプレイ用
+	// enum EFCT_NO
+	public const int MSG_TST = 0;
+	public const int MSG_EXIT_WAITING = 1;
+	public const int MSG_END = 2;
 
-public const int MAX_PLAYER_NAME                 = 14;
-public const uint WM_APP_UPDATE_STATS             = (winuser.WM_APP + 0);
-////#define WM_APP_DISPLAY_WAVE           (WM_APP + 1)
-public const int DOWORK_TIMESLICE                = 8; // let DirectPlay work for 8 ms at a time
-public const int ADDRESSOVERRIDE_PORT            = 2310;
+	public const int NSPW_THE_NET = 1;
 
-// enum EFCT_NO
-public const int	MSG_TST = 0;
-public const int	MSG_EXIT_WAITING = 1;
-public const int	MSG_END = 2;
+	// MY_NAME_IS to RIVAL_VER: MessageType.
+	public const int CHAT_DSP_TIME = 400;
 
-public const int		NSPW_THE_NET		= 1;
+	// In dplay8.cs, with the DPNSEND_* values.
 
-// MY_NAME_IS to RIVAL_VER: MessageType.
-public const int		CHAT_DSP_TIME		= 400;
+	public const string VER = "1.10";
 
-// In dplay8.cs, with the DPNSEND_* values.
+	public const int LNGG_VER = 0;
 
-public const string		VER				= "1.10";
+	public const int DBG_MODE = 1;
 
-public const int		LNGG_VER			= 0;
-
-public const int		DBG_MODE			= 1;
-
-public const int		CONN_DBG			= 0;
-public const int		SND_SW			= 1;
+	public const int CONN_DBG = 0;
+	public const int SND_SW = 1;
 }

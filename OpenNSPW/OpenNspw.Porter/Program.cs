@@ -39,7 +39,11 @@ using OpenNspw.Porter;
 
 if (args.Length >= 3 && args[0] == "rename")
 {
-	var renamer = new Renamer(new CSharpProject(args[1]), [.. args[3..].Select(d => new CSharpProject(d))], Renamer.ReadRenames(args[2]));
+	var renamer = new Renamer(
+		new CSharpProject(args[1]),
+		[.. args[3..].Select(d => new CSharpProject(d))],
+		Renamer.ReadRenames(args[2])
+	);
 	foreach (var path in renamer.Run())
 	{
 		Console.WriteLine(path);
@@ -50,7 +54,13 @@ if (args.Length >= 3 && args[0] == "rename")
 
 if (args.Length == 6 && args[0] == "extract")
 {
-	new Extractor(new CSharpProject(args[1]), args[2], int.Parse(args[3]), int.Parse(args[4]), args[5]).Run();
+	new Extractor(
+		new CSharpProject(args[1]),
+		args[2],
+		int.Parse(args[3]),
+		int.Parse(args[4]),
+		args[5]
+	).Run();
 	return 0;
 }
 
@@ -82,8 +92,15 @@ if (args.Length >= 7 && args[0] == "move-members")
 		return arg == "-" ? [] : [.. arg.Split(',').Select(map)];
 	}
 
-	var mover = new MemberMover(new CSharpProject(args[1]), [.. args[7..].Select(d => new CSharpProject(d))], args[2], args[3], Path.GetFullPath(args[4]),
-		List(args[5], Path.GetFullPath), List(args[6], n => n));
+	var mover = new MemberMover(
+		new CSharpProject(args[1]),
+		[.. args[7..].Select(d => new CSharpProject(d))],
+		args[2],
+		args[3],
+		Path.GetFullPath(args[4]),
+		List(args[5], Path.GetFullPath),
+		List(args[6], n => n)
+	);
 	foreach (var line in mover.Run())
 	{
 		Console.WriteLine(line);
@@ -114,7 +131,11 @@ if (args.Length == 2 && args[0] == "bool-locals")
 
 if (args.Length >= 3 && args[0] == "remove-parameters")
 {
-	var remover = new ParameterRemover(new CSharpProject(args[1]), [.. args[3..].Select(d => new CSharpProject(d))], ParameterRemover.ReadPositions(args[2]));
+	var remover = new ParameterRemover(
+		new CSharpProject(args[1]),
+		[.. args[3..].Select(d => new CSharpProject(d))],
+		ParameterRemover.ReadPositions(args[2])
+	);
 	foreach (var path in remover.Run())
 	{
 		Console.WriteLine(path);
@@ -125,7 +146,10 @@ if (args.Length >= 3 && args[0] == "remove-parameters")
 
 if (args.Length is 2 or 3 && args[0] == "rename-locals")
 {
-	var renamer = new LocalRenamer(new CSharpProject(args[1]), args.Length == 3 ? LocalRenamer.ReadRenames(args[2]) : []);
+	var renamer = new LocalRenamer(
+		new CSharpProject(args[1]),
+		args.Length == 3 ? LocalRenamer.ReadRenames(args[2]) : []
+	);
 	foreach (var line in args.Length == 3 ? renamer.Run() : renamer.List())
 	{
 		Console.WriteLine(line);
@@ -185,12 +209,22 @@ Dictionary<string, long> ReadConstants()
 			continue;
 		}
 
-		foreach (Match m in Regex.Matches(File.ReadAllText(path), @"const\s+(?:int|uint)\s+(\w+)\s*=\s*([^;]+);"))
+		foreach (
+			Match m in Regex.Matches(
+				File.ReadAllText(path),
+				@"const\s+(?:int|uint)\s+(\w+)\s*=\s*([^;]+);"
+			)
+		)
 		{
-			var expression = Regex.Replace(m.Groups[2].Value, @"\(\s*0x01\s*<<\s*(\d+)\s*\)", x => (1L << int.Parse(x.Groups[1].Value)).ToString());
+			var expression = Regex.Replace(
+				m.Groups[2].Value,
+				@"\(\s*0x01\s*<<\s*(\d+)\s*\)",
+				x => (1L << int.Parse(x.Groups[1].Value)).ToString()
+			);
 			if (Regex.IsMatch(expression, @"^[\d\s+\-*/()]+$"))
 			{
-				constants[m.Groups[1].Value] = (long)System.Convert.ToDouble(new System.Data.DataTable().Compute(expression, ""));
+				constants[m.Groups[1].Value] = (long)
+					System.Convert.ToDouble(new System.Data.DataTable().Compute(expression, ""));
 			}
 		}
 	}
@@ -203,23 +237,29 @@ void UpdateInlineArrays(IEnumerable<long> lengths)
 {
 	var path = Path.Combine(projectDirectory, "InlineArrays.cs");
 	var text = File.ReadAllText(path);
-	var existing = Regex.Matches(text, @"\[InlineArray\((\d+)\)\]").Select(m => long.Parse(m.Groups[1].Value)).ToHashSet();
+	var existing = Regex
+		.Matches(text, @"\[InlineArray\((\d+)\)\]")
+		.Select(m => long.Parse(m.Groups[1].Value))
+		.ToHashSet();
 	foreach (var length in lengths.Where(l => !existing.Contains(l)))
 	{
-		text = text.TrimEnd() + $$"""
+		text =
+			text.TrimEnd()
+			+ $$"""
 
 
-			[InlineArray({{length}})]
-			public struct Array{{length}}<T> : IInlineArray
-			{
-				private T _element0;
-
-				public readonly byte[] ToBytes()
+				[InlineArray({{length}})]
+				public struct Array{{length}}<T> : IInlineArray
 				{
-					return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * {{length}}).ToArray();
+					private T _element0;
+
+					public readonly byte[] ToBytes()
+					{
+						return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * {{length}}).ToArray();
+					}
 				}
-			}
-			""".Replace("\n\t\t\t", "\n").Replace("\r", "") + "\n";
+				""".Replace("\n\t\t\t", "\n").Replace("\r", "")
+			+ "\n";
 	}
 
 	File.WriteAllText(path, text);
@@ -232,7 +272,10 @@ if (args[0] == "port")
 	foreach (var file in files)
 	{
 		var name = Path.GetFileNameWithoutExtension(file) + ".cs";
-		File.WriteAllText(Path.Combine(projectDirectory, name), converter.Port(File.ReadAllText(file), Path.GetFileName(file)));
+		File.WriteAllText(
+			Path.Combine(projectDirectory, name),
+			converter.Port(File.ReadAllText(file), Path.GetFileName(file))
+		);
 		targets.Add(name);
 	}
 
@@ -244,11 +287,15 @@ else
 }
 
 var errors = new Fixer(projectDirectory, targets).Run();
-var left = errors.Where(e => targets.Contains(Path.GetFileName(e.Location.SourceTree?.FilePath ?? ""))).ToList();
+var left = errors
+	.Where(e => targets.Contains(Path.GetFileName(e.Location.SourceTree?.FilePath ?? "")))
+	.ToList();
 foreach (var error in left)
 {
 	var position = error.Location.GetLineSpan();
-	Console.WriteLine($"{Path.GetFileName(position.Path)}({position.StartLinePosition.Line + 1}): {error.Id} {error.GetMessage()}");
+	Console.WriteLine(
+		$"{Path.GetFileName(position.Path)}({position.StartLinePosition.Line + 1}): {error.Id} {error.GetMessage()}"
+	);
 }
 
 Console.WriteLine($"{left.Count} errors left to port by hand.");

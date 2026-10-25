@@ -15,217 +15,325 @@
 // Port of Audio.cpp.
 
 using System.Collections.Immutable;
-
 using static OpenNspw.Nspw;
 
 namespace OpenNspw;
 
 public unsafe partial class Sound
 {
-
-/*--------------------------------------------
-	ダイレクトミュージックの初期化とロードの指示
---------------------------------------------*/
-[Original("InitDMusic")]
-public bool	InitializeDirectMusic()
+	/*--------------------------------------------
+		ダイレクトミュージックの初期化とロードの指示
+	--------------------------------------------*/
+	[Original("InitDMusic")]
+	public bool InitializeDirectMusic()
 	{
-
-	// DirectMusicLoader8 オブジェクトと DirectMusicPerformance8 オブジェクトの作成
-	if (FAILED(_game.CoCreateInstance(CLSID_DirectMusicLoader,IID_IDirectMusicLoader8,out lpDML)))
+		// DirectMusicLoader8 オブジェクトと DirectMusicPerformance8 オブジェクトの作成
+		if (
+			FAILED(
+				_game.CoCreateInstance(CLSID_DirectMusicLoader, IID_IDirectMusicLoader8, out lpDML)
+			)
+		)
 		{
-		// 失敗
-		printf();
-		return false;
-		}
-	if (FAILED(_game.CoCreateInstance(CLSID_DirectMusicPerformance,IID_IDirectMusicPerformance8,out lpDMP)))
-		{
-		// 失敗
-		RELEASE(ref lpDML);
-		printf();
-		return false;
-		}
-	// パフォーマンスを初期化
-	if (FAILED(lpDMP.InitAudio(null,null,null,DMUS_APATH_SHARED_STEREOPLUSREVERB,64,DMUS_AUDIOF_ALL,null)))
-		{
-		// 失敗
-		RELEASE(ref lpDMP);
-		RELEASE(ref lpDML);
-		printf();
-		return false;
-		}
-
-	return true;
-	}
-
-// The names of the sounds' files, WAV\<name>.wav, by SoundId.
-private static readonly ImmutableArray<string> SoundFileNames = ["AA_BLT1", "AA_BLT2", "AA_BLT3", "AA_BLT4", "AA_SHL1", "AA_SHL2", "AA_SHL3", "AA_SHL4", "AA_SHL5", "TPD_HIT1", "TPD_HIT2", "BOM_HIT1", "BOM_HIT2", "SHIP_SINK1", "SHIP_SINK2", "SPL1", "SEA1", "GUN1", "GUN2", "GUN3", "FALL1", "BOMB_OFF", "BB_BOMB", "TPD_LOS", "PLANE_FLYING", "PLANE1", "PLANE2", "TAKE_OFF", "SNR", "CLICK1", "CLICK2"];
-
-/*--------------------------------------------
-	ダイレクトサウンドの初期化とロードの指示
---------------------------------------------*/
-[Original("InitDSound")]
-public bool	InitializeDirectSound()
-	{
-
-	// DirectSound8 の作成
-	if (FAILED(_game.DirectSoundCreate8(out lpDS)))
-		{
-		_game.MessageBox(null,"DirectSound オブジェクトの作成に失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		return false;
-		}
-
-	// DirectSound の協調レベルを設定
-	if (FAILED(lpDS.SetCooperativeLevel(_game.hwndApp,DSSCL_PRIORITY)))
-		{
-		_game.MessageBox(null,"DirectSound の協調レベルの設定に失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		// 閉じる
-		_game.SendMessage(_game.hwndApp,WM_CLOSE,0,0);
-		return false;
-		}
-
-	// プライマリ サウンドバッファ作成
-	DSBUFFERDESC desc;
-	ZeroMemory(&desc,(nuint)(sizeof(DSBUFFERDESC)));
-	desc.dwSize = (uint)(sizeof(DSBUFFERDESC));
-	desc.dwFlags = /*DSBCAPS_CTRLVOLUME |*/ DSBCAPS_PRIMARYBUFFER;
-	desc.dwBufferBytes=0;
-	desc.lpwfxFormat=null;
-	if (FAILED(lpDS.CreateSoundBuffer(&desc,out lpDSP,null)))
-		{
-		_game.MessageBox(null,"プライマリサウンドバッファの作成に失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-		// 閉じる
-		_game.SendMessage(_game.hwndApp,WM_CLOSE,0,0);
-		return false;
-		}
-
-// サウンドカードのバッファ性能を調べます。
-
-	for(var sound=0;sound<SoundFileNames.Length;sound++)
-		{
-		SoundBuffers[sound][0]= LoadWave($"WAV\\{SoundFileNames[sound]}.wav");
-		if (SoundBuffers[sound][0]==null)
-			{
-			_game.MessageBox(null,"WAV 読み込みに失敗しました。",CAPTION,MB_OK | MB_ICONSTOP);
-			_game.SendMessage(_game.hwndApp,WM_CLOSE,0,0);
+			// 失敗
+			printf();
 			return false;
-			}
-		for(var i=1;i<SND_DUP;i++)
-			lpDS.DuplicateSoundBuffer(SoundBuffers[sound][0],out SoundBuffers[sound][i]);
+		}
+		if (
+			FAILED(
+				_game.CoCreateInstance(
+					CLSID_DirectMusicPerformance,
+					IID_IDirectMusicPerformance8,
+					out lpDMP
+				)
+			)
+		)
+		{
+			// 失敗
+			RELEASE(ref lpDML);
+			printf();
+			return false;
+		}
+		// パフォーマンスを初期化
+		if (
+			FAILED(
+				lpDMP.InitAudio(
+					null,
+					null,
+					null,
+					DMUS_APATH_SHARED_STEREOPLUSREVERB,
+					64,
+					DMUS_AUDIOF_ALL,
+					null
+				)
+			)
+		)
+		{
+			// 失敗
+			RELEASE(ref lpDMP);
+			RELEASE(ref lpDML);
+			printf();
+			return false;
 		}
 
-	return true;
+		return true;
 	}
 
-/*-------------------------------------------
-	主にゲーム中の効果音を鳴らす
----------------------------------------------*/
-[Original("play_snd")]
-public void	PlaySound(IDirectSoundBuffer? buffer,short* nextBuffer,int volume)
+	// The names of the sounds' files, WAV\<name>.wav, by SoundId.
+	private static readonly ImmutableArray<string> SoundFileNames =
+	[
+		"AA_BLT1",
+		"AA_BLT2",
+		"AA_BLT3",
+		"AA_BLT4",
+		"AA_SHL1",
+		"AA_SHL2",
+		"AA_SHL3",
+		"AA_SHL4",
+		"AA_SHL5",
+		"TPD_HIT1",
+		"TPD_HIT2",
+		"BOM_HIT1",
+		"BOM_HIT2",
+		"SHIP_SINK1",
+		"SHIP_SINK2",
+		"SPL1",
+		"SEA1",
+		"GUN1",
+		"GUN2",
+		"GUN3",
+		"FALL1",
+		"BOMB_OFF",
+		"BB_BOMB",
+		"TPD_LOS",
+		"PLANE_FLYING",
+		"PLANE1",
+		"PLANE2",
+		"TAKE_OFF",
+		"SNR",
+		"CLICK1",
+		"CLICK2",
+	];
+
+	/*--------------------------------------------
+		ダイレクトサウンドの初期化とロードの指示
+	--------------------------------------------*/
+	[Original("InitDSound")]
+	public bool InitializeDirectSound()
 	{
+		// DirectSound8 の作成
+		if (FAILED(_game.DirectSoundCreate8(out lpDS)))
+		{
+			_game.MessageBox(
+				null,
+				"DirectSound オブジェクトの作成に失敗しました。",
+				CAPTION,
+				MB_OK | MB_ICONSTOP
+			);
+			return false;
+		}
 
-	buffer.Stop();		//
-	buffer.SetCurrentPosition(0);	// 巻き戻し
+		// DirectSound の協調レベルを設定
+		if (FAILED(lpDS.SetCooperativeLevel(_game.hwndApp, DSSCL_PRIORITY)))
+		{
+			_game.MessageBox(
+				null,
+				"DirectSound の協調レベルの設定に失敗しました。",
+				CAPTION,
+				MB_OK | MB_ICONSTOP
+			);
+			// 閉じる
+			_game.SendMessage(_game.hwndApp, WM_CLOSE, 0, 0);
+			return false;
+		}
 
-	if( volume<-9600 )
-		volume=-9600;
+		// プライマリ サウンドバッファ作成
+		DSBUFFERDESC desc;
+		ZeroMemory(&desc, (nuint)(sizeof(DSBUFFERDESC)));
+		desc.dwSize = (uint)(sizeof(DSBUFFERDESC));
+		desc.dwFlags = /*DSBCAPS_CTRLVOLUME |*/
+		DSBCAPS_PRIMARYBUFFER;
+		desc.dwBufferBytes = 0;
+		desc.lpwfxFormat = null;
+		if (FAILED(lpDS.CreateSoundBuffer(&desc, out lpDSP, null)))
+		{
+			_game.MessageBox(
+				null,
+				"プライマリサウンドバッファの作成に失敗しました。",
+				CAPTION,
+				MB_OK | MB_ICONSTOP
+			);
+			// 閉じる
+			_game.SendMessage(_game.hwndApp, WM_CLOSE, 0, 0);
+			return false;
+		}
 
-	buffer.SetVolume( volume );
-	buffer.Play(0,0,0);		//
+		// サウンドカードのバッファ性能を調べます。
 
-	(*nextBuffer)++;
-	*nextBuffer=(short)((*nextBuffer)%SND_DUP);
+		for (var sound = 0; sound < SoundFileNames.Length; sound++)
+		{
+			SoundBuffers[sound][0] = LoadWave($"WAV\\{SoundFileNames[sound]}.wav");
+			if (SoundBuffers[sound][0] == null)
+			{
+				_game.MessageBox(
+					null,
+					"WAV 読み込みに失敗しました。",
+					CAPTION,
+					MB_OK | MB_ICONSTOP
+				);
+				_game.SendMessage(_game.hwndApp, WM_CLOSE, 0, 0);
+				return false;
+			}
+			for (var i = 1; i < SND_DUP; i++)
+				lpDS.DuplicateSoundBuffer(SoundBuffers[sound][0], out SoundBuffers[sound][i]);
+		}
 
+		return true;
 	}
 
-/*-------------------------------------------
-	主にゲーム中の効果音を鳴らす
----------------------------------------------*/
-[Original("SoundPlayEffect")]
-// A sound of the battle at a position in the world, heard if one of the player's units sees the position and it is
-// within 500 of the battle area. A position with an X of World.Beyond is heard always (PlayInterfaceSound).
-public void PlaySoundEffect(SoundId sound,WorldPosition position)
+	/*-------------------------------------------
+		主にゲーム中の効果音を鳴らす
+	---------------------------------------------*/
+	[Original("play_snd")]
+	public void PlaySound(IDirectSoundBuffer? buffer, short* nextBuffer, int volume)
 	{
-	int size=default /* C4701 */;
+		buffer.Stop(); //
+		buffer.SetCurrentPosition(0); // 巻き戻し
+
+		if (volume < -9600)
+			volume = -9600;
+
+		buffer.SetVolume(volume);
+		buffer.Play(0, 0, 0); //
+
+		(*nextBuffer)++;
+		*nextBuffer = (short)((*nextBuffer) % SND_DUP);
+	}
+
+	/*-------------------------------------------
+		主にゲーム中の効果音を鳴らす
+	---------------------------------------------*/
+	[Original("SoundPlayEffect")]
+	// A sound of the battle at a position in the world, heard if one of the player's units sees the position and it is
+	// within 500 of the battle area. A position with an X of World.Beyond is heard always (PlayInterfaceSound).
+	public void PlaySoundEffect(SoundId sound, WorldPosition position)
+	{
+		int size =
+			default /* C4701 */
+		;
 
 #if !SND_SW
 
-return;
+		return;
 
 #endif
 
-	if( position.X!=(double)World.Beyond )
+		if (position.X != (double)World.Beyond)
 		{
-		var isHeard=false;
-		for(var n=1;n<=_game.MaxUnitId && !isHeard ;n++)
+			var isHeard = false;
+			for (var n = 1; n <= _game.MaxUnitId && !isHeard; n++)
 			{
-			if( _game.Units[n].IsUsed && _game.Units[n].Side==_game.LocalSide && _game.Units[n].PlaneState!=UnitState.Parked )
+				if (
+					_game.Units[n].IsUsed
+					&& _game.Units[n].Side == _game.LocalSide
+					&& _game.Units[n].PlaneState != UnitState.Parked
+				)
 				{
-				// マイユニットからこのエフェクトが見えるか
-				// 現地点からユニット地点への距離
+					// マイユニットからこのエフェクトが見えるか
+					// 現地点からユニット地点への距離
 
-				var eye=_game.EyeOf(ref _game.Units[n]);	// 航空機の場合はちょっと前へ
+					var eye = _game.EyeOf(ref _game.Units[n]); // 航空機の場合はちょっと前へ
 
-				var distance=(eye-position).Length;
+					var distance = (eye - position).Length;
 
-				switch( _game.Units[n].Kind )
+					switch (_game.Units[n].Kind)
 					{
-					case UnitKind.Battleship:		size=BB1_SIGHT;		break;
-					case UnitKind.Cruiser:		size=CA1_SIGHT;		break;
-					case UnitKind.Destroyer:		size=DD1_SIGHT;		break;
-					case UnitKind.Submarine:		size=SS1_SIGHT;		break;
-					case UnitKind.Carrier:		size=CV1_SIGHT;		break;
-					case UnitKind.LightCarrier:		size=CVL1_SIGHT;	break;
-					case UnitKind.Transport:		size=TR1_SIGHT;		break;
-					case UnitKind.Fighter:		size=FT1_SIGHT;		break;
-					case UnitKind.Attacker:		size=AT1_SIGHT;		break;
-					case UnitKind.Bomber:		size=BM1_SIGHT;		break;
-					case UnitKind.AirBase: case UnitKind.NavalBase:		size=AP_SIGHT;		break;
-					case UnitKind.City:		size=CT1_SIGHT;		break;
-					case UnitKind.Mine:		size=MN1_SIGHT;		break;
-					case UnitKind.InfantryBase:		size=GF1_SIGHT;		break;
-					case UnitKind.Pillboxes:		size=GF2_SIGHT;		break;
-					case UnitKind.Fortress:		size=GF3_SIGHT;		break;
+						case UnitKind.Battleship:
+							size = BB1_SIGHT;
+							break;
+						case UnitKind.Cruiser:
+							size = CA1_SIGHT;
+							break;
+						case UnitKind.Destroyer:
+							size = DD1_SIGHT;
+							break;
+						case UnitKind.Submarine:
+							size = SS1_SIGHT;
+							break;
+						case UnitKind.Carrier:
+							size = CV1_SIGHT;
+							break;
+						case UnitKind.LightCarrier:
+							size = CVL1_SIGHT;
+							break;
+						case UnitKind.Transport:
+							size = TR1_SIGHT;
+							break;
+						case UnitKind.Fighter:
+							size = FT1_SIGHT;
+							break;
+						case UnitKind.Attacker:
+							size = AT1_SIGHT;
+							break;
+						case UnitKind.Bomber:
+							size = BM1_SIGHT;
+							break;
+						case UnitKind.AirBase:
+						case UnitKind.NavalBase:
+							size = AP_SIGHT;
+							break;
+						case UnitKind.City:
+							size = CT1_SIGHT;
+							break;
+						case UnitKind.Mine:
+							size = MN1_SIGHT;
+							break;
+						case UnitKind.InfantryBase:
+							size = GF1_SIGHT;
+							break;
+						case UnitKind.Pillboxes:
+							size = GF2_SIGHT;
+							break;
+						case UnitKind.Fortress:
+							size = GF3_SIGHT;
+							break;
 					}
 
-				if( distance<=size )
+					if (distance <= size)
 					{
-					isHeard=true;
+						isHeard = true;
 					}
 				}
 			}
 
-		if(!isHeard)
+			if (!isHeard)
 			{
-			// マイユニットが聞けない位置
-			return;
+				// マイユニットが聞けない位置
+				return;
 			}
 
-		// ptin dbg
-		var hearingArea=new PixelRect(-500, CMBT_HEIGHT+500, CMBT_WIDTH+500, -500);
+			// ptin dbg
+			var hearingArea = new PixelRect(-500, CMBT_HEIGHT + 500, CMBT_WIDTH + 500, -500);
 
-		if( !hearingArea.ContainsWithTopAbove(_game.WorldToScreen(position)) )
-			return;
+			if (!hearingArea.ContainsWithTopAbove(_game.WorldToScreen(position)))
+				return;
 		}
 
-	if(1!=0)
+		if (1 != 0)
 		{
+			SoundBuffers[(int)sound][NextSoundBuffers[(int)sound]].Stop(); //
+			SoundBuffers[(int)sound][NextSoundBuffers[(int)sound]].SetCurrentPosition(0); // 巻き戻し
 
-		SoundBuffers[(int)sound][NextSoundBuffers[(int)sound]].Stop();		//
-		SoundBuffers[(int)sound][NextSoundBuffers[(int)sound]].SetCurrentPosition(0);	// 巻き戻し
+			SoundBuffers[(int)sound][NextSoundBuffers[(int)sound]].SetVolume(0);
+			SoundBuffers[(int)sound][NextSoundBuffers[(int)sound]].Play(0, 0, 0); //
 
-		SoundBuffers[(int)sound][NextSoundBuffers[(int)sound]].SetVolume( 0 );
-		SoundBuffers[(int)sound][NextSoundBuffers[(int)sound]].Play(0,0,0);		//
-
-		NextSoundBuffers[(int)sound]++;
-		NextSoundBuffers[(int)sound]=(short)(NextSoundBuffers[(int)sound]%SND_DUP);
-
+			NextSoundBuffers[(int)sound]++;
+			NextSoundBuffers[(int)sound] = (short)(NextSoundBuffers[(int)sound] % SND_DUP);
 		}
-
 	}
 
-// A sound of the interface, heard always: the original plays it at MAP_RIGHT+1, 0 (World.Beyond).
-public void PlayInterfaceSound(SoundId sound)
+	// A sound of the interface, heard always: the original plays it at MAP_RIGHT+1, 0 (World.Beyond).
+	public void PlayInterfaceSound(SoundId sound)
 	{
-	PlaySoundEffect(sound, new WorldPosition(World.Beyond, 0));
+		PlaySoundEffect(sound, new WorldPosition(World.Beyond, 0));
 	}
 }

@@ -10,9 +10,16 @@ internal sealed class GameSnapshot(ImmutableArray<object?> values)
 {
 	// The value fields of a type, and those of the objects of [Globals] classes that its fields hold, with the field that
 	// holds that object.
-	private static IEnumerable<(FieldInfo? Owner, FieldInfo Field)> ValueFields(Type type, FieldInfo? owner)
+	private static IEnumerable<(FieldInfo? Owner, FieldInfo Field)> ValueFields(
+		Type type,
+		FieldInfo? owner
+	)
 	{
-		foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+		foreach (
+			var field in type.GetFields(
+				BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
+			)
+		)
 		{
 			if (owner is null && field.FieldType.GetCustomAttribute<GlobalsAttribute>() is not null)
 			{
@@ -28,7 +35,10 @@ internal sealed class GameSnapshot(ImmutableArray<object?> values)
 		}
 	}
 
-	private static readonly ImmutableArray<(FieldInfo? Owner, FieldInfo Field)> Fields = [.. ValueFields(typeof(Nspw), null)];
+	private static readonly ImmutableArray<(FieldInfo? Owner, FieldInfo Field)> Fields =
+	[
+		.. ValueFields(typeof(Nspw), null),
+	];
 
 	private readonly ImmutableArray<object?> _values = values;
 

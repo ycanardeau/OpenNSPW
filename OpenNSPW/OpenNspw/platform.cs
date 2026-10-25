@@ -66,9 +66,19 @@ public static class GameFiles
 		foreach (var part in path.Split('/', StringSplitOptions.RemoveEmptyEntries))
 		{
 			var exact = Path.Combine(full, part);
-			full = File.Exists(exact) || Directory.Exists(exact) || !Directory.Exists(full)
-				? exact
-				: Directory.EnumerateFileSystemEntries(full).FirstOrDefault(e => string.Equals(Path.GetFileName(e), part, StringComparison.OrdinalIgnoreCase)) ?? exact;
+			full =
+				File.Exists(exact) || Directory.Exists(exact) || !Directory.Exists(full)
+					? exact
+					: Directory
+						.EnumerateFileSystemEntries(full)
+						.FirstOrDefault(e =>
+							string.Equals(
+								Path.GetFileName(e),
+								part,
+								StringComparison.OrdinalIgnoreCase
+							)
+						)
+						?? exact;
 		}
 
 		return full;
@@ -77,7 +87,12 @@ public static class GameFiles
 	// A file of a single-player game from NSPW 1.22's directory, which has the game's maps, sounds and sprite sheet as
 	// 1.22 has them (docs/Differences.md): the file there, opened to read only, or null where that directory has none, for
 	// the game's own file. The game writes none of 1.22's files.
-	public static FileStream? OpenSingleplayer(string? singleplayerDirectory, string path, FileMode mode, FileShare share)
+	public static FileStream? OpenSingleplayer(
+		string? singleplayerDirectory,
+		string path,
+		FileMode mode,
+		FileShare share
+	)
 	{
 		if (singleplayerDirectory is null || mode is not (FileMode.Open or FileMode.OpenOrCreate))
 		{
@@ -85,14 +100,27 @@ public static class GameFiles
 		}
 
 		var full = Resolve(singleplayerDirectory, path);
-		return File.Exists(full) ? new FileStream(full, FileMode.Open, FileAccess.Read, share) : null;
+		return File.Exists(full)
+			? new FileStream(full, FileMode.Open, FileAccess.Read, share)
+			: null;
 	}
 
 	public static IReadOnlyList<string> Find(string dataDirectory, string directory, string pattern)
 	{
 		var full = Resolve(dataDirectory, directory);
 		return Directory.Exists(full)
-			? [.. Directory.GetFiles(full, pattern, new EnumerationOptions { MatchCasing = MatchCasing.CaseInsensitive }).Select(Path.GetFileName).OfType<string>().Order(StringComparer.OrdinalIgnoreCase)]
+			?
+			[
+				.. Directory
+					.GetFiles(
+						full,
+						pattern,
+						new EnumerationOptions { MatchCasing = MatchCasing.CaseInsensitive }
+					)
+					.Select(Path.GetFileName)
+					.OfType<string>()
+					.Order(StringComparer.OrdinalIgnoreCase),
+			]
 			: [];
 	}
 }
@@ -134,9 +162,7 @@ public sealed class NullPlatform : INspwPlatform
 		return (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 	}
 
-	public void Present(DirectDrawSurface7 primary)
-	{
-	}
+	public void Present(DirectDrawSurface7 primary) { }
 
 	public TextBitmap? RasterizeText(string text, int height, string faceName)
 	{
@@ -153,9 +179,7 @@ public sealed class NullPlatform : INspwPlatform
 		return null;
 	}
 
-	public void WriteSetting(string key, string value)
-	{
-	}
+	public void WriteSetting(string key, string value) { }
 }
 
 public static class winerror
@@ -195,12 +219,20 @@ public partial class Nspw
 	}
 
 	// DirectMusic's classes are the port's own (unknwn.cs); the platform creates the others.
-	public int CoCreateInstance<T>(Guid rclsid, Guid riid, out T? ppv) where T : class
+	public int CoCreateInstance<T>(Guid rclsid, Guid riid, out T? ppv)
+		where T : class
 	{
 		object? obj;
-		var hr = rclsid == dmusici.CLSID_DirectMusicLoader ? (obj = new DirectMusicLoader8()) is not null ? winerror.S_OK : 0
-			: rclsid == dmusici.CLSID_DirectMusicPerformance ? (obj = new DirectMusicPerformance8()) is not null ? winerror.S_OK : 0
-			: _platform.CoCreateInstance(rclsid, riid, out obj);
+		var hr =
+			rclsid == dmusici.CLSID_DirectMusicLoader
+				? (obj = new DirectMusicLoader8()) is not null
+					? winerror.S_OK
+					: 0
+				: rclsid == dmusici.CLSID_DirectMusicPerformance
+					? (obj = new DirectMusicPerformance8()) is not null
+						? winerror.S_OK
+						: 0
+					: _platform.CoCreateInstance(rclsid, riid, out obj);
 		ppv = obj as T;
 		return winerror.SUCCEEDED(hr) && ppv is null ? winerror.E_NOINTERFACE : hr;
 	}

@@ -13,7 +13,9 @@ public readonly struct HMMIO(int value)
 	public int Value { get; } = value;
 
 	public static bool operator !(HMMIO h) => h.Value == 0;
+
 	public static bool operator true(HMMIO h) => h.Value != 0;
+
 	public static bool operator false(HMMIO h) => h.Value == 0;
 }
 
@@ -76,7 +78,10 @@ public static class mmsystem
 
 	public static uint mmioFOURCC(char ch0, char ch1, char ch2, char ch3)
 	{
-		return (byte)ch0 | ((uint)(byte)ch1 << 8) | ((uint)(byte)ch2 << 16) | ((uint)(byte)ch3 << 24);
+		return (byte)ch0
+			| ((uint)(byte)ch1 << 8)
+			| ((uint)(byte)ch2 << 16)
+			| ((uint)(byte)ch3 << 24);
 	}
 
 	public static readonly uint FOURCC_RIFF = mmioFOURCC('R', 'I', 'F', 'F');
@@ -105,7 +110,12 @@ public unsafe partial class Nspw
 
 	public HMMIO mmioOpen(string pszFileName)
 	{
-		using var stream = _platform.OpenFile(pszFileName.Replace('\\', '/'), FileMode.Open, FileAccess.Read, FileShare.Read);
+		using var stream = _platform.OpenFile(
+			pszFileName.Replace('\\', '/'),
+			FileMode.Open,
+			FileAccess.Read,
+			FileShare.Read
+		);
 		if (stream is null)
 		{
 			return default;
@@ -169,11 +179,18 @@ public unsafe partial class Nspw
 	public uint mmioDescend(HMMIO hmmio, MMCKINFO* pmmcki, MMCKINFO* pmmckiParent, uint fuDescend)
 	{
 		var file = _mmioFiles[hmmio.Value];
-		var end = pmmckiParent is null ? file.Size : (int)(pmmckiParent->dwDataOffset + pmmckiParent->cksize);
-		var wantedId = (fuDescend & mmsystem.MMIO_FINDRIFF) != 0 ? mmsystem.FOURCC_RIFF
+		var end = pmmckiParent is null
+			? file.Size
+			: (int)(pmmckiParent->dwDataOffset + pmmckiParent->cksize);
+		var wantedId =
+			(fuDescend & mmsystem.MMIO_FINDRIFF) != 0 ? mmsystem.FOURCC_RIFF
 			: (fuDescend & mmsystem.MMIO_FINDLIST) != 0 ? mmsystem.FOURCC_LIST
 			: pmmcki->ckid;
-		var find = (fuDescend & (mmsystem.MMIO_FINDCHUNK | mmsystem.MMIO_FINDRIFF | mmsystem.MMIO_FINDLIST)) != 0;
+		var find =
+			(
+				fuDescend
+				& (mmsystem.MMIO_FINDCHUNK | mmsystem.MMIO_FINDRIFF | mmsystem.MMIO_FINDLIST)
+			) != 0;
 		while (file.Position + 8 <= end)
 		{
 			var ckid = ReadUInt(file, file.Position);
@@ -181,7 +198,16 @@ public unsafe partial class Nspw
 			var dataOffset = file.Position + 8;
 			var hasType = ckid == mmsystem.FOURCC_RIFF || ckid == mmsystem.FOURCC_LIST;
 			var fccType = hasType ? ReadUInt(file, dataOffset) : 0;
-			if (!find || (ckid == wantedId && ((fuDescend & (mmsystem.MMIO_FINDRIFF | mmsystem.MMIO_FINDLIST)) == 0 || fccType == pmmcki->fccType)))
+			if (
+				!find
+				|| (
+					ckid == wantedId
+					&& (
+						(fuDescend & (mmsystem.MMIO_FINDRIFF | mmsystem.MMIO_FINDLIST)) == 0
+						|| fccType == pmmcki->fccType
+					)
+				)
+			)
 			{
 				pmmcki->ckid = ckid;
 				pmmcki->cksize = cksize;
@@ -202,7 +228,10 @@ public unsafe partial class Nspw
 	public uint mmioAscend(HMMIO hmmio, MMCKINFO* pmmcki, uint fuAscend)
 	{
 		var file = _mmioFiles[hmmio.Value];
-		file.Position = Math.Min(file.Size, (int)(pmmcki->dwDataOffset + ((pmmcki->cksize + 1) & ~1u)));
+		file.Position = Math.Min(
+			file.Size,
+			(int)(pmmcki->dwDataOffset + ((pmmcki->cksize + 1) & ~1u))
+		);
 		return 0;
 	}
 

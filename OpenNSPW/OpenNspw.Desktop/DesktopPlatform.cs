@@ -52,7 +52,11 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 	private readonly List<Sound> _sounds = [];
 	private readonly Stopwatch _clock = Stopwatch.StartNew();
 	private readonly Lock _frameLock = new();
-	private readonly string _settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpenNSPW", "settings.json");
+	private readonly string _settingsPath = Path.Combine(
+		Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+		"OpenNSPW",
+		"settings.json"
+	);
 	private Dictionary<string, string>? _settings;
 	private ushort[] _frame = [];
 	private int _frameWidth;
@@ -73,7 +77,13 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 
 	// Copies the last frame, if it changed since `known`, and calls `takeState` with the frame's lock held, to take what
 	// CaptureState copied with it. Returns its number.
-	public int CopyFrame(int known, ref ushort[] pixels, out int width, out int height, Action takeState)
+	public int CopyFrame(
+		int known,
+		ref ushort[] pixels,
+		out int width,
+		out int height,
+		Action takeState
+	)
 	{
 		lock (_frameLock)
 		{
@@ -98,7 +108,10 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 	{
 		try
 		{
-			if (GameFiles.OpenSingleplayer(SingleplayerDirectory, path, mode, share) is { } singleplayerFile)
+			if (
+				GameFiles.OpenSingleplayer(SingleplayerDirectory, path, mode, share) is
+				{ } singleplayerFile
+			)
 			{
 				return singleplayerFile;
 			}
@@ -200,7 +213,13 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 		Sound sound;
 		try
 		{
-			sound = new Sound(new SoundEffect(pcm, (int)format.nSamplesPerSec, format.nChannels == 2 ? AudioChannels.Stereo : AudioChannels.Mono));
+			sound = new Sound(
+				new SoundEffect(
+					pcm,
+					(int)format.nSamplesPerSec,
+					format.nChannels == 2 ? AudioChannels.Stereo : AudioChannels.Mono
+				)
+			);
 		}
 		catch (Exception)
 		{
@@ -235,11 +254,11 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 		{
 			try
 			{
-				_settings = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(_settingsPath));
+				_settings = JsonSerializer.Deserialize<Dictionary<string, string>>(
+					File.ReadAllText(_settingsPath)
+				);
 			}
-			catch (Exception)
-			{
-			}
+			catch (Exception) { }
 
 			_settings ??= [];
 		}

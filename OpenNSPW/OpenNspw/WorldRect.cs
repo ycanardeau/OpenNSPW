@@ -13,7 +13,12 @@ public readonly struct WorldRect(int left, int top, int right, int bottom)
 	// `top=(int)y+halfHeight; right=(int)x+halfWidth; bottom=(int)y-halfHeight; left=(int)x-halfWidth;`.
 	public static WorldRect Around(WorldPosition center, int halfWidth, int halfHeight)
 	{
-		return new WorldRect((int)center.X - halfWidth, (int)center.Y + halfHeight, (int)center.X + halfWidth, (int)center.Y - halfHeight);
+		return new WorldRect(
+			(int)center.X - halfWidth,
+			(int)center.Y + halfHeight,
+			(int)center.X + halfWidth,
+			(int)center.Y - halfHeight
+		);
 	}
 
 	// The rectangle moved by dx and dy, as each edge's `+dx` or `+dy` does.

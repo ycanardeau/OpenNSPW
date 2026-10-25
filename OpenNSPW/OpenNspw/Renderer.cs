@@ -10,42 +10,55 @@ public sealed unsafe partial class Renderer(Nspw game)
 {
 	private readonly Nspw _game = game;
 
-[Original("my_cursor")] public object? GameCursor;
-[Original("fullscreen")] public Bool32 IsFullscreen;
+	[Original("my_cursor")]
+	public object? GameCursor;
 
-//	DirectXオブジェクト
+	[Original("fullscreen")]
+	public Bool32 IsFullscreen;
 
-public IDirectDraw7? lpDD=null;
-public IDirectDrawSurface7? lpDDSPrimary=null;
-public IDirectDrawSurface7? lpDDSBack=null;
+	//	DirectXオブジェクト
 
-public IDirectDrawClipper? lpDDclip=null;
+	public IDirectDraw7? lpDD = null;
+	public IDirectDrawSurface7? lpDDSPrimary = null;
+	public IDirectDrawSurface7? lpDDSBack = null;
 
-[Original("lpDDS_OS")] public IDirectDrawSurface7? OffscreenSurface=null;
+	public IDirectDrawClipper? lpDDclip = null;
 
-// フォント
-[Original("gameFont_1")] public HFONT GameFont1;
-[Original("gameFont_2")] public HFONT GameFont2;
+	[Original("lpDDS_OS")]
+	public IDirectDrawSurface7? OffscreenSurface = null;
 
-/////////////////////
+	// フォント
+	[Original("gameFont_1")]
+	public HFONT GameFont1;
 
-// iNSPWからもってきたやつ
+	[Original("gameFont_2")]
+	public HFONT GameFont2;
 
-[Original("sprt")] public SpriteArray Sprites;
+	/////////////////////
 
-[Original("missed_pending")] public uint MissedPending;
-[Original("a_paint_speed")] public uint PaintSpeed;
+	// iNSPWからもってきたやつ
 
-public int FrameCount;
+	[Original("sprt")]
+	public SpriteArray Sprites;
 
-//unsigned char		*dst_vram;							//書き込むＶＲＡＭのアドレス
+	[Original("missed_pending")]
+	public uint MissedPending;
 
-//unsigned char		*src_vram;							//読み込むＶＲＡＭのアドレス
+	[Original("a_paint_speed")]
+	public uint PaintSpeed;
 
-[Original("scrn_mode")] public int ScreenMode;
+	public int FrameCount;
 
-[Original("video_memory")] public int VideoMemory;
+	//unsigned char		*dst_vram;							//書き込むＶＲＡＭのアドレス
 
-// 0x48A1EC of 1.22: whether this tick is the last of its frame, the one that is drawn.
-public bool IsDrawnTick;
+	//unsigned char		*src_vram;							//読み込むＶＲＡＭのアドレス
+
+	[Original("scrn_mode")]
+	public int ScreenMode;
+
+	[Original("video_memory")]
+	public int VideoMemory;
+
+	// 0x48A1EC of 1.22: whether this tick is the last of its frame, the one that is drawn.
+	public bool IsDrawnTick;
 }

@@ -44,7 +44,8 @@ public sealed class Emulator
 	internal Memory32 Memory32 { get; }
 	internal Memory64 Memory64 { get; }
 
-	public Span<byte> At(uint address, int length) => _memory.AsSpan((int)(address - Start), length);
+	public Span<byte> At(uint address, int length) =>
+		_memory.AsSpan((int)(address - Start), length);
 
 	// Memory after the image that the code of the executable does not use, for the native side.
 	public uint Allocate(int size)
@@ -57,7 +58,8 @@ public sealed class Emulator
 	}
 
 	// Makes code calling the address run the handler instead of the translated function there.
-	public void SetNative(uint address, Action handler) => _natives[address] = new Native($"0x{address:X}", 0, handler);
+	public void SetNative(uint address, Action handler) =>
+		_natives[address] = new Native($"0x{address:X}", 0, handler);
 
 	// Implements an import. A __stdcall function pops its arguments: argumentBytes says how many bytes.
 	public void SetImport(string name, int argumentBytes, Action handler) =>
@@ -72,7 +74,8 @@ public sealed class Emulator
 	}
 
 	// In a native function: its argument at the index, a doubleword. The return address is on top of the stack.
-	public uint Argument(int index) => Memory32[Cpu.Esp + new Register32((uint)(4 + 4 * index))].Value;
+	public uint Argument(int index) =>
+		Memory32[Cpu.Esp + new Register32((uint)(4 + 4 * index))].Value;
 
 	private void Call(uint address)
 	{
@@ -80,7 +83,9 @@ public sealed class Emulator
 		if (_natives.TryGetValue(address, out var native))
 		{
 			if (native.Handler is null)
-				throw new NotImplementedException($"The emulator has no native function for {native.Name}.");
+				throw new NotImplementedException(
+					$"The emulator has no native function for {native.Name}."
+				);
 
 			native.Handler();
 			Cpu.Pop32();
@@ -129,9 +134,12 @@ public sealed class Emulator
 			() =>
 			{
 				var number = Cpu.Fpu.Stack.Pop().ToDouble();
-				var value = double.IsNaN(number) || number >= 9223372036854775808.0 || number < -9223372036854775808.0
-					? 0x8000000000000000UL
-					: (ulong)(long)number;
+				var value =
+					double.IsNaN(number)
+					|| number >= 9223372036854775808.0
+					|| number < -9223372036854775808.0
+						? 0x8000000000000000UL
+						: (ulong)(long)number;
 				Cpu.Eax = new Register32((uint)value);
 				Cpu.Edx = new Register32((uint)(value >> 32));
 			}

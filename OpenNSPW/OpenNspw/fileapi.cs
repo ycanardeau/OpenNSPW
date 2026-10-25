@@ -48,7 +48,12 @@ public static class fileapi
 
 public unsafe partial class Nspw
 {
-	public HANDLE CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, uint dwCreationDisposition)
+	public HANDLE CreateFile(
+		string lpFileName,
+		uint dwDesiredAccess,
+		uint dwShareMode,
+		uint dwCreationDisposition
+	)
 	{
 		var mode = dwCreationDisposition switch
 		{
@@ -57,15 +62,26 @@ public unsafe partial class Nspw
 			OPEN_ALWAYS => FileMode.OpenOrCreate,
 			_ => FileMode.Open,
 		};
-		var access = (dwDesiredAccess & GENERIC_WRITE) != 0
-			? (dwDesiredAccess & GENERIC_READ) != 0 ? FileAccess.ReadWrite : FileAccess.Write
-			: FileAccess.Read;
-		var share = (dwShareMode & FILE_SHARE_WRITE) != 0 ? FileShare.ReadWrite : (dwShareMode & FILE_SHARE_READ) != 0 ? FileShare.Read : FileShare.None;
+		var access =
+			(dwDesiredAccess & GENERIC_WRITE) != 0
+				? (dwDesiredAccess & GENERIC_READ) != 0
+					? FileAccess.ReadWrite
+					: FileAccess.Write
+				: FileAccess.Read;
+		var share =
+			(dwShareMode & FILE_SHARE_WRITE) != 0 ? FileShare.ReadWrite
+			: (dwShareMode & FILE_SHARE_READ) != 0 ? FileShare.Read
+			: FileShare.None;
 		var stream = _platform.OpenFile(lpFileName.Replace('\\', '/'), mode, access, share);
 		return stream is null ? INVALID_HANDLE_VALUE : new HANDLE(stream);
 	}
 
-	public HANDLE CreateFile(ReadOnlySpan<byte> lpFileName, uint dwDesiredAccess, uint dwShareMode, uint dwCreationDisposition)
+	public HANDLE CreateFile(
+		ReadOnlySpan<byte> lpFileName,
+		uint dwDesiredAccess,
+		uint dwShareMode,
+		uint dwCreationDisposition
+	)
 	{
 		return CreateFile(CString(lpFileName), dwDesiredAccess, dwShareMode, dwCreationDisposition);
 	}
@@ -82,11 +98,19 @@ public unsafe partial class Nspw
 	}
 
 	// The buffer is any variable of the game: its bytes are read or written, as through the pointer in C++.
-	public int ReadFile<T>(HANDLE hFile, ref T lpBuffer, uint nNumberOfBytesToRead, uint* lpNumberOfBytesRead, object? lpOverlapped) where T : unmanaged
+	public int ReadFile<T>(
+		HANDLE hFile,
+		ref T lpBuffer,
+		uint nNumberOfBytesToRead,
+		uint* lpNumberOfBytesRead,
+		object? lpOverlapped
+	)
+		where T : unmanaged
 	{
 		var buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref lpBuffer, 1));
 		var count = (int)Math.Min(nNumberOfBytesToRead, (uint)buffer.Length);
-		var read = hFile.Stream?.ReadAtLeast(buffer[..count], count, throwOnEndOfStream: false) ?? 0;
+		var read =
+			hFile.Stream?.ReadAtLeast(buffer[..count], count, throwOnEndOfStream: false) ?? 0;
 		if (lpNumberOfBytesRead is not null)
 		{
 			*lpNumberOfBytesRead = (uint)read;
@@ -95,7 +119,14 @@ public unsafe partial class Nspw
 		return hFile.Stream is null ? FALSE : TRUE;
 	}
 
-	public int WriteFile<T>(HANDLE hFile, ref T lpBuffer, uint nNumberOfBytesToWrite, uint* lpNumberOfBytesWritten, object? lpOverlapped) where T : unmanaged
+	public int WriteFile<T>(
+		HANDLE hFile,
+		ref T lpBuffer,
+		uint nNumberOfBytesToWrite,
+		uint* lpNumberOfBytesWritten,
+		object? lpOverlapped
+	)
+		where T : unmanaged
 	{
 		var buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref lpBuffer, 1));
 		var count = (int)Math.Min(nNumberOfBytesToWrite, (uint)buffer.Length);
@@ -115,12 +146,16 @@ public unsafe partial class Nspw
 			return 0xFFFFFFFF;
 		}
 
-		return (uint)hFile.Stream.Seek(lDistanceToMove, dwMoveMethod switch
-		{
-			FILE_CURRENT => SeekOrigin.Current,
-			FILE_END => SeekOrigin.End,
-			_ => SeekOrigin.Begin,
-		});
+		return (uint)
+			hFile.Stream.Seek(
+				lDistanceToMove,
+				dwMoveMethod switch
+				{
+					FILE_CURRENT => SeekOrigin.Current,
+					FILE_END => SeekOrigin.End,
+					_ => SeekOrigin.Begin,
+				}
+			);
 	}
 
 	private static void SetFound(WIN32_FIND_DATA* lpFindFileData, string name)
@@ -134,7 +169,9 @@ public unsafe partial class Nspw
 	{
 		var path = lpFileName.Replace('\\', '/');
 		var slash = path.LastIndexOf('/');
-		var found = new Queue<string>(_platform.FindFiles(slash < 0 ? "" : path[..slash], path[(slash + 1)..]));
+		var found = new Queue<string>(
+			_platform.FindFiles(slash < 0 ? "" : path[..slash], path[(slash + 1)..])
+		);
 		if (!found.TryDequeue(out var name))
 		{
 			return INVALID_HANDLE_VALUE;
@@ -165,7 +202,10 @@ public unsafe partial class Nspw
 	{
 		lock (WindowsLock)
 		{
-			if (GetDlgItem(hwndDlg, idListBox) is not { CurSel: >= 0 } list || list.CurSel >= list.Items.Count)
+			if (
+				GetDlgItem(hwndDlg, idListBox) is not { CurSel: >= 0 } list
+				|| list.CurSel >= list.Items.Count
+			)
 			{
 				return FALSE;
 			}

@@ -20,7 +20,11 @@ public class MathTests
 	[Fact]
 	public void atan2()
 	{
-		FunctionTest.Run("math", "atan2", (game, c) => nspw_math.atan2(c.DoubleArg(0), c.DoubleArg(1)));
+		FunctionTest.Run(
+			"math",
+			"atan2",
+			(game, c) => nspw_math.atan2(c.DoubleArg(0), c.DoubleArg(1))
+		);
 	}
 
 	private static long UlpDistance(double a, double b)
@@ -40,7 +44,10 @@ public class MathTests
 			var y = (random.NextDouble() - 0.5) * Math.Pow(10, random.Next(-8, 9));
 			Assert.True(UlpDistance(nspw_math.sin(x), Math.Sin(x)) <= 1, $"sin({x:R})");
 			Assert.True(UlpDistance(nspw_math.cos(x), Math.Cos(x)) <= 1, $"cos({x:R})");
-			Assert.True(UlpDistance(nspw_math.atan2(y, x), Math.Atan2(y, x)) <= 1, $"atan2({y:R}, {x:R})");
+			Assert.True(
+				UlpDistance(nspw_math.atan2(y, x), Math.Atan2(y, x)) <= 1,
+				$"atan2({y:R}, {x:R})"
+			);
 		}
 	}
 
@@ -53,8 +60,14 @@ public class MathTests
 		for (var i = 0; i < 100_000; i++)
 		{
 			var degrees = (random.NextDouble() - 0.25) * 720;
-			Assert.Equal(BitConverter.DoubleToInt64Bits(nspw_math.sin(degrees * all_head.DegreesToRadians)), BitConverter.DoubleToInt64Bits(nspw_math.SinDegrees(degrees)));
-			Assert.Equal(BitConverter.DoubleToInt64Bits(nspw_math.cos(degrees * all_head.DegreesToRadians)), BitConverter.DoubleToInt64Bits(nspw_math.CosDegrees(degrees)));
+			Assert.Equal(
+				BitConverter.DoubleToInt64Bits(nspw_math.sin(degrees * all_head.DegreesToRadians)),
+				BitConverter.DoubleToInt64Bits(nspw_math.SinDegrees(degrees))
+			);
+			Assert.Equal(
+				BitConverter.DoubleToInt64Bits(nspw_math.cos(degrees * all_head.DegreesToRadians)),
+				BitConverter.DoubleToInt64Bits(nspw_math.CosDegrees(degrees))
+			);
 		}
 	}
 
@@ -62,8 +75,10 @@ public class MathTests
 	private static double InlineDistance(double wrk_x, double wrk_y)
 	{
 		double drctn;
-		if (wrk_x == 0) wrk_x = 1;
-		if (wrk_y == 0) wrk_y = 1;
+		if (wrk_x == 0)
+			wrk_x = 1;
+		if (wrk_y == 0)
+			wrk_y = 1;
 		drctn = nspw_math.atan2(wrk_y, wrk_x) * all_head.RadiansToDegrees;
 		if (drctn < 0)
 			drctn = 360 + drctn;
@@ -86,9 +101,14 @@ public class MathTests
 		var random = new Random(3);
 		for (var i = 0; i < 100_000; i++)
 		{
-			var dx = i % 10 == 0 ? 0 : (random.NextDouble() - 0.5) * Math.Pow(10, random.Next(-2, 6));
-			var dy = i % 7 == 0 ? 0 : (random.NextDouble() - 0.5) * Math.Pow(10, random.Next(-2, 6));
-			Assert.Equal(BitConverter.DoubleToInt64Bits(InlineDistance(dx, dy)), BitConverter.DoubleToInt64Bits(nspw_math.Distance(dx, dy)));
+			var dx =
+				i % 10 == 0 ? 0 : (random.NextDouble() - 0.5) * Math.Pow(10, random.Next(-2, 6));
+			var dy =
+				i % 7 == 0 ? 0 : (random.NextDouble() - 0.5) * Math.Pow(10, random.Next(-2, 6));
+			Assert.Equal(
+				BitConverter.DoubleToInt64Bits(InlineDistance(dx, dy)),
+				BitConverter.DoubleToInt64Bits(nspw_math.Distance(dx, dy))
+			);
 		}
 	}
 
@@ -104,7 +124,10 @@ public class MathTests
 			var drctn = nspw_math.atan2(dy, dx) * all_head.RadiansToDegrees;
 			if (drctn < 0)
 				drctn = 360 + drctn;
-			Assert.Equal(BitConverter.DoubleToInt64Bits(drctn), BitConverter.DoubleToInt64Bits(nspw_math.Direction(dx, dy)));
+			Assert.Equal(
+				BitConverter.DoubleToInt64Bits(drctn),
+				BitConverter.DoubleToInt64Bits(nspw_math.Direction(dx, dy))
+			);
 		}
 	}
 }
