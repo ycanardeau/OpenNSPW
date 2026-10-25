@@ -180,7 +180,13 @@ public sealed partial class StrongPlayer
 				continue;
 
 			_formed.UnionWith(escorts);
-			if (Formation.Kind == FormationKind.Line)
+			if (
+				Formation.Kind == FormationKind.Line
+				|| (
+					Formation.Kind == FormationKind.Auto
+					&& escorts.Any(m => game.Units[m].Kind == UnitKind.Battleship)
+				)
+			)
 				Group(carrier, escorts, unit.Position);
 			else
 				_rings[carrier] = new Ring(escorts, UnitFacts.Now(game), -RingOrderFrames);
@@ -210,7 +216,8 @@ public sealed partial class StrongPlayer
 				c.Kind is UnitKind.Carrier or UnitKind.LightCarrier && game.Units[c.Unit].IsUsed
 			)
 			.Select(c =>
-				HomeOf(c) is not null && UnitFacts.Now(game) - c.Frame >= CarrierMemoryFrames
+				HomeOf(c) is not null
+				&& UnitFacts.Now(game) - c.Frame >= Parameters.CarrierMemoryFrames
 					? (WhereNow(game, c, 0), range, true)
 					: (
 						c.Position,
@@ -267,13 +274,17 @@ public sealed partial class StrongPlayer
 			var (threat, range, isKnown) = threats.MinBy(t =>
 				UnitFacts.Distance(t.Position, position) - t.Range
 			);
-			var low = range + KeepAwayMargin;
+			var low = range + Parameters.KeepAwayMargin;
 			var distance = UnitFacts.Distance(position, threat);
-			var aim = PointAt(threat, BearingTo(threat, position), low + (ApproachBand / 2));
+			var aim = PointAt(
+				threat,
+				BearingTo(threat, position),
+				low + (Parameters.ApproachBand / 2)
+			);
 			var destination = UnitFacts.FinalDestination(ref unit);
 			var isMoving = UnitFacts.Distance(destination, position) > 400;
 			if (
-				(distance >= low && (distance <= low + ApproachBand || !isKnown))
+				(distance >= low && (distance <= low + Parameters.ApproachBand || !isKnown))
 				|| (isMoving && UnitFacts.Distance(destination, aim) < 800)
 			)
 				continue;
@@ -284,7 +295,7 @@ public sealed partial class StrongPlayer
 					game,
 					carrier,
 					aim,
-					$"moves {low + (ApproachBand / 2):F0} from ({threat.X:F0}, {threat.Y:F0}) to"
+					$"moves {low + (Parameters.ApproachBand / 2):F0} from ({threat.X:F0}, {threat.Y:F0}) to"
 				) || true;
 		}
 
@@ -504,7 +515,7 @@ public sealed partial class StrongPlayer
 		var guns = _contacts.All.Count(c =>
 			IsWarship(c.Kind)
 			&& game.Units[c.Unit].IsUsed
-			&& UnitFacts.Now(game) - c.Frame < CarrierMemoryFrames
+			&& UnitFacts.Now(game) - c.Frame < Parameters.CarrierMemoryFrames
 			&& UnitFacts.Distance(c.Position, crippled.Position) <= 4000
 		);
 		if (screening.Count == 0 || screening.Count + detached < guns)
@@ -526,7 +537,7 @@ public sealed partial class StrongPlayer
 		_contacts
 			.All.Where(c =>
 				c.Category == UnitCategory.Ship
-				&& UnitFacts.Now(game) - c.Frame < CarrierMemoryFrames
+				&& UnitFacts.Now(game) - c.Frame < Parameters.CarrierMemoryFrames
 			)
 			.OrderByDescending(c =>
 				Value(c.Kind)

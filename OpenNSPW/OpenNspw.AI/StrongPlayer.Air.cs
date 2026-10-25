@@ -46,7 +46,7 @@ public sealed partial class StrongPlayer
 				> 0
 					? -90
 					: 90,
-				2000.0
+				Parameters.SideOffset
 			);
 		var waypoint = PointAt(
 			PointAt(from, bearing, UnitFacts.Distance(from, target.Position) * 0.6),
@@ -78,7 +78,7 @@ public sealed partial class StrongPlayer
 			? PointAt(
 				PointAt(from, bearing, UnitFacts.Distance(from, point) * 0.6),
 				bearing + (_lastBlindStrike % 2 == 0 ? 90 : -90),
-				2000
+				Parameters.SideOffset
 			)
 			: point;
 		_clicks.Enqueue(g =>
@@ -367,7 +367,7 @@ public sealed partial class StrongPlayer
 		var elapsed = ((UnitFacts.Now(game) - contact.Frame) * 2) + ticks;
 		var near = contact.Predict(Math.Min(elapsed, 1500));
 		if (
-			UnitFacts.Now(game) - contact.Frame < CarrierMemoryFrames
+			UnitFacts.Now(game) - contact.Frame < Parameters.CarrierMemoryFrames
 			|| HomeOf(contact) is not { } home
 		)
 			return near;
@@ -385,7 +385,7 @@ public sealed partial class StrongPlayer
 	// Whether a carrier found is still thought to be where WhereNow has it: for CarrierMemoryFrames, or, heading home,
 	// until it would be there, and HomeFrames more.
 	private bool IsRemembered(Nspw game, Contact contact) =>
-		UnitFacts.Now(game) - contact.Frame < CarrierMemoryFrames
+		UnitFacts.Now(game) - contact.Frame < Parameters.CarrierMemoryFrames
 		|| (
 			HomeOf(contact) is { } home
 			&& UnitFacts.Now(game) - contact.Frame
@@ -602,7 +602,7 @@ public sealed partial class StrongPlayer
 				continue;
 
 			var from = BearingTo(game.Units[target].Position, leader.Position);
-			var fan = HuntsCarriers ? 45.0 : 75.0;
+			var fan = HuntsCarriers ? Parameters.FanAngle : 75.0;
 			for (var i = 0; i < planes.Count; i++)
 			{
 				var plane = planes[i];
@@ -871,7 +871,7 @@ public sealed partial class StrongPlayer
 					guarded.Average(c => c.Position.Y)
 				);
 				var hold = new[] { 90, -90 }
-					.Select(turn => PointAt(at, BearingTo(at, home) + turn, 3300))
+					.Select(turn => PointAt(at, BearingTo(at, home) + turn, Parameters.HoldOff))
 					.MaxBy(p => UnitFacts.Distance(p, middle));
 				var holding = planes
 					.Where(n =>
@@ -913,19 +913,21 @@ public sealed partial class StrongPlayer
 					- ((1300 + UnitFacts.Distance(at, home)) / speed)
 				) * speed;
 			var arc = Math.Max(
-				spare - Math.Max(UnitFacts.Distance(position, at) - 2000, 0) - 700,
+				spare
+					- Math.Max(UnitFacts.Distance(position, at) - Parameters.ApproachRadius, 0)
+					- 700,
 				0
 			);
 			var turn = Math.Clamp(
 				((bearing - from + 540) % 360) - 180,
-				-arc / 2000 * 180 / Math.PI,
-				arc / 2000 * 180 / Math.PI
+				-arc / Parameters.ApproachRadius * 180 / Math.PI,
+				arc / Parameters.ApproachRadius * 180 / Math.PI
 			);
 			bearing = from + turn;
 			var steps = (int)Math.Ceiling(Math.Abs(turn) / 40);
 			var arcPoints = Enumerable
 				.Range(1, steps)
-				.Select(i => PointAt(at, from + (turn * i / steps), 2000))
+				.Select(i => PointAt(at, from + (turn * i / steps), Parameters.ApproachRadius))
 				.ToList();
 			for (var i = 0; i < planes.Count; i++)
 			{
@@ -1040,7 +1042,9 @@ public sealed partial class StrongPlayer
 				|| unit.GroupLeader != 0
 				|| unit.Mode == UnitMode.Return
 				|| _scoutLegs.ContainsKey(m)
-				|| unit.Fuel > FuelToHome(game, m) + (attacking ? -8 : 3)
+				|| unit.Fuel
+					> FuelToHome(game, m)
+						+ (attacking ? Parameters.AttackingBingoMargin : Parameters.BingoMargin)
 			)
 				continue;
 
@@ -1182,7 +1186,8 @@ public sealed partial class StrongPlayer
 						? IsCounted(c.Kind)
 							&& game.Units[c.Unit].IsUsed
 							&& IsRemembered(game, c)
-							&& UnitFacts.Distance(position, WhereNow(game, c, 0)) <= reach * 0.85
+							&& UnitFacts.Distance(position, WhereNow(game, c, 0))
+								<= reach * Parameters.TargetReach
 						: UnitFacts.Now(game) - c.Frame < ContactFrames
 							&& UnitFacts.Distance(position, c.Position) <= StrikeRange
 				)
@@ -1362,7 +1367,10 @@ public sealed partial class StrongPlayer
 						&& pointWave is null
 						&& (
 							soon > 0
-							|| (ready.Count < MinStrike && ready.Count < StrikePlanesOf(game, deck))
+							|| (
+								ready.Count < Parameters.MinStrike
+								&& ready.Count < StrikePlanesOf(game, deck)
+							)
 						)
 					)
 				)
@@ -1403,7 +1411,8 @@ public sealed partial class StrongPlayer
 				var escorts = HuntsCarriers
 					? []
 					: fighters.Take(
-						fighters.Count - (int)Math.Ceiling(fighters.Count * FightersKeptBack)
+						fighters.Count
+							- (int)Math.Ceiling(fighters.Count * Parameters.FightersKeptBack)
 					);
 				ShowDeck(deck);
 				SelectPlanes(ready[0], ready.Skip(1).Concat(escorts));

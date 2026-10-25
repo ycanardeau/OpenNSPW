@@ -38,8 +38,8 @@ public sealed partial class StrongPlayer
 
 	// How far a scout flies out: 36% of its range on a full tank, as it flies out, across and back (2.5 times as far),
 	// coming home before its tank is dry (FuelToHome).
-	private static double ScoutDistance(ref Unit plane) =>
-		plane.MaxSpeed * plane.FuelInterval * 100 * 0.36;
+	private double ScoutDistance(ref Unit plane) =>
+		plane.MaxSpeed * plane.FuelInterval * 100 * Parameters.ScoutFraction;
 
 	// The legs of the n-th search from a deck. While it hunts carriers, by a scout that flies out as far as `reach`:
 	// across where the carrier found last most likely is, half the way it was heading, wider the longer it has been
@@ -63,7 +63,8 @@ public sealed partial class StrongPlayer
 				&& IsRemembered(game, c)
 			)
 			.MaxBy(c => c.Frame);
-		var homing = lost is not null && UnitFacts.Now(game) - lost.Frame >= CarrierMemoryFrames;
+		var homing =
+			lost is not null && UnitFacts.Now(game) - lost.Frame >= Parameters.CarrierMemoryFrames;
 		if (
 			HuntsCarriers
 			&& lost is not null
@@ -189,7 +190,7 @@ public sealed partial class StrongPlayer
 
 	// The fuel a flying plane needs to come home to its deck, and a margin: a unit of fuel lasts FuelInterval ticks, and
 	// the deck may be sailing away from the plane, which it then closes on slower.
-	private static double FuelToHome(Nspw game, int plane)
+	private double FuelToHome(Nspw game, int plane)
 	{
 		ref var unit = ref game.Units[plane];
 		ref var deck = ref game.Units[unit.Carrier];
@@ -200,7 +201,7 @@ public sealed partial class StrongPlayer
 			);
 		var closing = Math.Max(unit.MaxSpeed - Math.Max(away, 0), 0.5);
 		return (UnitFacts.Distance(unit.Position, deck.Position) / (closing * unit.FuelInterval))
-			+ 10;
+			+ Parameters.HomeFuelMargin;
 	}
 
 	// While no enemy ship has been found lately, the decks' scouts fly out, each on its search (SearchLegs), a new one
@@ -239,7 +240,7 @@ public sealed partial class StrongPlayer
 			)
 			|| (
 				HuntsCarriers
-				&& UnitFacts.Now(game) - _lastScout < ScoutFrames
+				&& UnitFacts.Now(game) - _lastScout < Parameters.ScoutFrames
 				&& _scoutLegs.Keys.Any(n => IsOwn(game, n) && game.Units[n].Mode != UnitMode.Return)
 			)
 		)
@@ -324,7 +325,11 @@ public sealed partial class StrongPlayer
 		return Enumerable
 			.Range(0, 19)
 			.Select(i =>
-				PointAt(at, toHome + ((i % 2 == 0 ? 1 : -1) * ((i + 1) / 2) * 20), ShadowDistance)
+				PointAt(
+					at,
+					toHome + ((i % 2 == 0 ? 1 : -1) * ((i + 1) / 2) * 20),
+					Parameters.ShadowDistance
+				)
 			)
 			.MaxBy(p =>
 				Math.Min(

@@ -22,9 +22,6 @@ public sealed partial class StrongPlayer : IPlayer
 	// The frames between a surface group's orders.
 	private const int EngageFrames = 150;
 
-	// How far beyond the computer's strike range a carrier keeps from the enemy's carriers.
-	private const double KeepAwayMargin = 1000;
-
 	// How far from its carrier the other carriers of its formation keep.
 	private const double RingCarrierDistance = 250;
 
@@ -39,12 +36,6 @@ public sealed partial class StrongPlayer : IPlayer
 
 	// The frames between a carrier's moves.
 	private const int PositionFrames = 150;
-
-	// How much farther than its margin a carrier may be from what threatens it, before it closes in.
-	private const double ApproachBand = 1000;
-
-	// The frames for which a carrier found is thought to be where it would be by now.
-	private const int CarrierMemoryFrames = 3000;
 
 	// How fast a carrier heading home is thought to sail, at least, a tick: its formation's speed (a light carrier's,
 	// in scenario 105, about 0.58).
@@ -63,25 +54,15 @@ public sealed partial class StrongPlayer : IPlayer
 	// How far a scout flies out from its deck when no area is known.
 	private const double ScoutRange = 3800;
 
-	// The frames after a strike or an interception before the same target is given more planes.
-	private const int RetargetFrames = 400;
-
 	// How far from a deck the scouts leave a place the briefing names to the strikes, which go there to find what to
 	// attack (Reach).
 	private const double PlaceStrikeRange = 8000;
-
-	// The frames between two scouts' launches, while the last is still on its way out.
-	private const int ScoutFrames = 900;
 
 	// The scouts of all the decks, at most.
 	private const int MaxScouts = 3;
 
 	// How far out a scout searches, at most, but while it hunts carriers (ScoutDistance).
 	private const double ScoutReach = 7500;
-
-	// How far from an enemy ship a scout keeps it in sight: within the 1000 an attacker sees, beyond most of the escorts'
-	// anti-aircraft guns (600, 700 for a battleship).
-	private const double ShadowDistance = 900;
 
 	// The frames between strikes at the same place, before anything there is found.
 	private const int PlaceStrikeFrames = 1500;
@@ -99,14 +80,8 @@ public sealed partial class StrongPlayer : IPlayer
 	// for them, as nothing there was found to escape.
 	private const int PointWaveFrames = 400;
 
-	// The planes a strike waits for, when the deck has them armed.
-	private const int MinStrike = 3;
-
 	// How soon, in ticks, an armed plane being serviced is worth waiting for.
 	private const int SoonReadyTicks = 200;
-
-	// The ready fighters of a deck kept back from escorting strikes, to intercept.
-	private const double FightersKeptBack = 0.5;
 
 	private readonly ClickQueue _clicks = new();
 	private readonly Contacts _contacts = new();
@@ -141,7 +116,7 @@ public sealed partial class StrongPlayer : IPlayer
 	private readonly Dictionary<int, int> _scoutLaunches = [];
 	private ScenarioKnowledge _knowledge = ScenarioKnowledge.For(0);
 	private int _searches;
-	private int _lastScout = -ScoutFrames;
+	private int _lastScout = int.MinValue / 2;
 	private int _lastBlindStrike = -1;
 	private (Contact Target, int Frame)? _wave;
 	private (WorldPosition Point, int Frame)? _pointWave;
@@ -160,6 +135,9 @@ public sealed partial class StrongPlayer : IPlayer
 
 	// How the carriers form with their escorts: by default, as the ships stand.
 	public FormationShape Formation { get; init; } = new(FormationKind.Line, 0);
+
+	// The numbers its tactics turn on.
+	public StrongParameters Parameters { get; init; } = new();
 
 	// Gives up the clicks of a task, saying why.
 	private bool GiveUp(Nspw game, string why)
@@ -240,7 +218,8 @@ public sealed partial class StrongPlayer : IPlayer
 		&& (weapon == FireKind.Bomb || !UnitFacts.IsBase(target.Kind));
 
 	private bool WasEngaged(Nspw game, int target) =>
-		_engaged.TryGetValue(target, out var frame) && UnitFacts.Now(game) - frame < RetargetFrames;
+		_engaged.TryGetValue(target, out var frame)
+		&& UnitFacts.Now(game) - frame < Parameters.RetargetFrames;
 
 	// Deselects the selected unit, if any.
 	private void Deselect()

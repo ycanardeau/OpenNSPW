@@ -1,6 +1,7 @@
 using OpenNspw.Desktop;
 
-// OpenNspw.Desktop [--data <directory>] [--singleplayer <scenario> | --replay <trace.n122 | replay.onspwr>] [--ai]
+// OpenNspw.Desktop [--data <directory>] [--singleplayer <scenario> | --replay <trace.n122 | replay.onspwr>]
+//     [--ai [--formation line|ring:400|screen:400|auto:400] [--params Name=value,Name=value]]
 //
 // Plays the port, from its main menu, with the original's files that the app embeds, and what the game writes in the
 // user's folder (GameData, docs/BundledData.md). With --data, the game's data (wav, Map, Scenario, Saved) is that
@@ -10,8 +11,9 @@ using OpenNspw.Desktop;
 // rewritten as C#, with 1.22's maps and sounds that the app embeds. With --singleplayer, the game starts in that
 // scenario, without the menus. With --replay, it starts in the scenario of a trace recorded from 1.22, and follows it,
 // to watch it (docs/Verification.md); or it plays a replay of a battle of the app, to watch it (docs/Replays.md). Each
-// battle played is recorded in the user's replays, which the main menu lists. With --ai, the strong player plays the player's side of the single-player
-// games, to watch it (docs/StrongAI.md).
+// battle played is recorded in the user's replays, which the main menu lists. With --ai, the strong player plays the
+// player's side of the single-player games, to watch it (docs/StrongAI.md), with its carriers formed as --formation
+// says and the numbers of its tactics that --params sets (StrongParameters), as the arena's.
 
 static string? Option(string[] args, string name)
 {
@@ -71,12 +73,15 @@ if (scenarioText is not null)
 	scenario = number;
 }
 
-using var game = new NspwGame(
-	new GameData(dataDirectory),
-	scenario,
-	replay,
-	watch,
-	args.Contains("--ai")
-);
+var formation = Option(args, "--formation") is { } formationText
+	? OpenNspw.AI.FormationShape.Parse(formationText)
+	: null;
+var parameters = OpenNspw.AI.StrongParameters.Parse(Option(args, "--params") ?? "");
+Func<OpenNspw.AI.IPlayer>? computerPlayer =
+	!args.Contains("--ai") ? null
+	: formation is not null
+		? () => new OpenNspw.AI.StrongPlayer { Formation = formation, Parameters = parameters }
+	: () => new OpenNspw.AI.StrongPlayer { Parameters = parameters };
+using var game = new NspwGame(new GameData(dataDirectory), scenario, replay, watch, computerPlayer);
 game.Run();
 return 0;

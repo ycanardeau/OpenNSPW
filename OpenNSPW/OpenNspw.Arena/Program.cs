@@ -9,12 +9,19 @@ using OpenNspw.Arena;
 // with each player on the player's side, and writes the table of their results.
 //
 //   dotnet run -c Release --project OpenNspw.Arena -- [--scenarios 4,5,6|carriers|all] [--dates 3] [--first-date 0] [--players idle,rush]
-//       [--parallel <cores>] [--out results.csv] [--frames <limit>] [--verbose] [--sees-all] [--formation line|ring:400|screen:400] [--speed 1]
+//       [--parallel <cores>] [--out results.csv] [--frames <limit>] [--verbose] [--sees-all] [--formation line|ring:400|screen:400|auto:400] [--speed 1]
+//       [--params Name=value,Name=value]
 //       [--trace <units> [--trace-from <frame>] [--trace-to <frame>] [--trace-every <frames>]] [--strikes]
 //   dotnet run -c Release --project OpenNspw.Arena -- --describe [--scenarios 4,5,6|all]
 //   dotnet run -c Release --project OpenNspw.Arena -- --compare <before.csv> <after.csv>
 
-static IPlayer CreatePlayer(string name, bool verbose, bool seesAll, FormationShape? formation) =>
+static IPlayer CreatePlayer(
+	string name,
+	bool verbose,
+	bool seesAll,
+	FormationShape? formation,
+	StrongParameters parameters
+) =>
 	name switch
 	{
 		"idle" => new IdlePlayer(),
@@ -24,11 +31,13 @@ static IPlayer CreatePlayer(string name, bool verbose, bool seesAll, FormationSh
 			Log = verbose ? Console.WriteLine : null,
 			SeesEverything = seesAll,
 			Formation = formation,
+			Parameters = parameters,
 		},
 		"strong" => new StrongPlayer
 		{
 			Log = verbose ? Console.WriteLine : null,
 			SeesEverything = seesAll,
+			Parameters = parameters,
 		},
 		_ => throw new ArgumentException($"No player is named {name}."),
 	};
@@ -120,16 +129,10 @@ var maxFrames = int.Parse(
 );
 var strikes = args.Contains("--strikes");
 var speed = short.Parse(Option(args, "--speed", "1"), CultureInfo.InvariantCulture);
+var parameters = StrongParameters.Parse(Option(args, "--params", ""));
 var formationOption = Option(args, "--formation", "");
 FormationShape? formation =
-	formationOption.Length == 0
-		? null
-		: new(
-			Enum.Parse<FormationKind>(formationOption.Split(':')[0], ignoreCase: true),
-			formationOption.Contains(':')
-				? double.Parse(formationOption.Split(':')[1], CultureInfo.InvariantCulture)
-				: 0
-		);
+	formationOption.Length == 0 ? null : FormationShape.Parse(formationOption);
 var trace = UnitTrace.FromOptions((name, defaultValue) => Option(args, name, defaultValue));
 
 var data = GameData.Find();
@@ -166,7 +169,7 @@ var workers = Enumerable
 				data,
 				job.Scenario,
 				job.StartDate,
-				CreatePlayer(job.Player, verbose, seesAll, formation),
+				CreatePlayer(job.Player, verbose, seesAll, formation, parameters),
 				maxFrames,
 				trace,
 				strikes,

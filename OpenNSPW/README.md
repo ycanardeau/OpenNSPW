@@ -56,6 +56,12 @@ With `--ai`, the strong player ([docs/StrongAI.md](../docs/StrongAI.md)) plays t
 dotnet run --project OpenNspw.Desktop -- --singleplayer 4 --ai
 ```
 
+As in the arena, `--formation` chooses how its carriers form with their escorts (`line`, the default; `ring:400`; `screen:400`; `auto:400`, a ring for a group with no battleship), and `--params Name=value,…` sets the numbers of its tactics (`OpenNspw.AI/StrongParameters.cs`):
+
+```bash
+dotnet run --project OpenNspw.Desktop -- --singleplayer 4 --ai --formation ring:400
+```
+
 The text is drawn in fonts that come with the game, so that it looks the same on every platform: BIZ UDGothic for the game's own text and BIZ UDPGothic for the menus, under the SIL Open Font License 1.1 ([OpenNspw.Desktop/Fonts/OFL.txt](OpenNspw.Desktop/Fonts/OFL.txt)).
 
 The battle's pictures and the title are the original's sprites, cut from its sprite sheet into a file each in `OpenNspw.Desktop/Sprites` (see [docs/SpriteSheets.md](../docs/SpriteSheets.md)).
@@ -124,7 +130,7 @@ dotnet run -c Release --project OpenNspw.Arena -- --scenarios carriers --dates 5
 dotnet run -c Release --project OpenNspw.Arena -- --compare before.csv after.csv
 ```
 
-`--speed <s>` plays at a game speed, a frame running s + 1 ticks, as the player's keys set it; `--formation line|ring:<radius>|screen:<radius>` chooses how the strong player's carriers form with their escorts, for experiments.
+`--speed <s>` plays at a game speed, a frame running s + 1 ticks, as the player's keys set it; `--formation line|ring:<radius>|screen:<radius>|auto:<radius>` chooses how the strong player's carriers form with their escorts, and `--params Name=value,…` sets the numbers of its tactics (`StrongParameters`), for experiments and tuning.
 
 `--compare` pairs the games by scenario, date and player, and counts the games the second table did better and worse in, with the sign test's p: under 0.05, the difference is unlikely to be chance.
 
