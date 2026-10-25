@@ -1535,10 +1535,14 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 		}
 	}
 
-	// For each ship and random destinations, at a few points of the game: the units after set_cpu_route.
-	[Theory]
-	[MemberData(nameof(Scenarios))]
-	public void PlanComputerRouteIsSetCpuRoute(int scenario)
+	// For every ship but the ground facilities, at three points of a game, to its own destination and three random ones,
+	// and to random ones with a ground unit other than a base (kinds 13 to 17) moved to the destination or halfway: the units
+	// after the emulated route function, and after its rewrite.
+	private static void CompareRoutes(
+		int scenario,
+		Action<Nspw, int> emulatedRoute,
+		Action<Nspw, int> rewrittenRoute
+	)
 	{
 		using var run = new SingleplayerRun(scenario);
 		var game = run.Game;
@@ -1558,7 +1562,12 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 					continue;
 				}
 
-				for (var i = 0; i < 4; i++)
+				var ground = Enumerable
+					.Range(1, game.MaxUnitId)
+					.FirstOrDefault(g =>
+						game.Units[g].IsUsed && game.Units[g].Kind >= UnitKind.City && g != m
+					);
+				for (var i = 0; i < (ground != 0 ? 6 : 4); i++)
 				{
 					var before = UnitBytes(game);
 					var x =
@@ -1570,17 +1579,29 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 							? game.Units[m].PathY[0]
 							: game.Units[m].Position.Y + random.Next(-4000, 4000);
 
+					var groundAt =
+						i == 4 ? new WorldPosition(x, y)
+						: i == 5
+							? new WorldPosition(
+								(x + game.Units[m].Position.X) / 2,
+								(y + game.Units[m].Position.Y) / 2
+							)
+						: (WorldPosition?)null;
+					if (groundAt is { } at)
+						game.Units[ground].Position = at;
 					game.Units[m].PathX[0] = x;
 					game.Units[m].PathY[0] = y;
 					game.Units[m].PathX[1] = World.Beyond;
-					game.SetCpuRoute(m, 1.0);
+					emulatedRoute(game, m);
 					var emulated = UnitBytes(game);
 
 					Restore(game, before);
+					if (groundAt is { } atAgain)
+						game.Units[ground].Position = atAgain;
 					game.Units[m].PathX[0] = x;
 					game.Units[m].PathY[0] = y;
 					game.Units[m].PathX[1] = World.Beyond;
-					game.PlanComputerRoute(m);
+					rewrittenRoute(game, m);
 					var rewritten = UnitBytes(game);
 
 					Restore(game, before);
@@ -1613,5 +1634,49 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 		}
 
 		Assert.True(cases > 0);
+	}
+
+	// For each ship and random destinations, at a few points of the game: the units after set_cpu_route.
+	[Theory]
+	[MemberData(nameof(Scenarios))]
+	public void PlanComputerRouteIsSetCpuRoute(int scenario)
+	{
+		CompareRoutes(
+			scenario,
+			(game, m) => game.SetCpuRoute(m, 1.0),
+			(game, m) => game.PlanComputerRoute(m)
+		);
+	}
+
+	// set_cpu_route2, which 1.22 runs for a ship that follows a leader, on the same states.
+	[Theory]
+	[MemberData(nameof(Scenarios))]
+	public void PlanFollowerRouteIsSetCpuRoute2(int scenario)
+	{
+		CompareRoutes(
+			scenario,
+			(game, m) => game.SetCpuRoute2As122(m),
+			(game, m) => game.SetCpuRoute2(m)
+		);
+	}
+
+	// The port's SetCpuRoute2 with NSPW NET's obstacles, which let ground units through, is not set_cpu_route2: a ground
+	// unit on a ship's way shows it.
+	[Fact]
+	public void NspwNetsObstaclesAreNotSetCpuRoute2s()
+	{
+		Assert.ThrowsAny<Exception>(() =>
+			CompareRoutes(
+				203,
+				(game, m) => game.SetCpuRoute2As122(m),
+				(game, m) =>
+				{
+					var rules = game.Rules;
+					game.Rules = rules with { LastKindRoutesIgnore = UnitKind.Fortress };
+					game.SetCpuRoute2(m);
+					game.Rules = rules;
+				}
+			)
+		);
 	}
 }

@@ -39,7 +39,7 @@ dotnet run --project Disassembler/OpenNspw.Disassembler -- Original/Nspw122/NSPW
 | `set_new_unit`, `set_new_unit_plane`, `plane_in_cv`, `set_pos_of_parking` | `0x41EE20`, `0x41F060`, `0x416F00`, `0x416F40` | The port's `AddUnit`, `AddPlane`, `CountPlanesIn` and `SetParkingPosition` do the same in a single-player game (`SharedFunctionTests`); `Decide` and `PlanComputerStrategy` call them |
 | `sub_41F3C0`, `cls_all_slct_unit_p2`, `pt_in_rect3`, `sub_417C10` | | Only by the emulated code |
 
-`set_cpu_route2` (`0x42ED30`) is translated, and `SetDynamicDestination` calls it (`SetCpuRoute2As122`) for a ship that follows a leader, as 1.22's formation does (`0x414D79`); the port's `SetCpuRoute2`, which NSPW NET calls for every unit, stays for network games.
+`set_cpu_route2` (`0x42ED30`) is translated, for its test: `SetDynamicDestination` calls the port's `SetCpuRoute2` for a ship that follows a leader, as 1.22's formation does (`0x414D79`), with 1.22's obstacles (`BattleRules.LastKindRoutesIgnore`), which is NSPW NET's `set_cpu_root2` but for them ([ComputerPlayer.md](ComputerPlayer.md#set_cpu_route)).
 
 The scenario numbers and their functions are those of 1.22's `game_init` (`0x429C50`), which dispatches to them through two jump tables.
 

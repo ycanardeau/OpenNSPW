@@ -821,8 +821,9 @@ public unsafe partial class Nspw
 		return (ushort)(ByteAs122(address) | ByteAs122(address + 1) << 8);
 	}
 
-	// set_cpu_route2(m): the route of ship m to the destination just set as its path, as a ship that follows a leader
-	// takes it (0x414D79).
+	// The emulated set_cpu_route2(m), which ComputerPlayerTests compares the port's SetCpuRoute2, with 1.22's obstacles,
+	// with: the route of ship m to the destination just set as its path, as a ship that follows a leader takes it
+	// (0x414D79).
 	public void SetCpuRoute2As122(int m)
 	{
 		RunEmulated(Functions.SetCpuRoute2, (uint)m);
