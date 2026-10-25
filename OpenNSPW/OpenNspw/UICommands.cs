@@ -51,15 +51,27 @@ public unsafe partial class Nspw
 		return site is UICommandSite.ScenarioList or UICommandSite.ScenarioMenu or UICommandSite.Rules;
 	}
 
+	// Takes the commands queued for a site off the queue, in order, and drops those of the other screens' sites: they
+	// were given for a screen that is gone. A method of its own, so that its lambdas' closure over the site is allocated
+	// only when a command is queued.
+	private List<Action> TakeUICommands(UICommandSite site)
+	{
+		List<Action> runs = [.. _uiCommands.Where(c => c.Site == site).Select(c => c.Run)];
+		_uiCommands.RemoveAll(c => c.Site == site || IsSettingSite(c.Site) != IsSettingSite(site));
+		return runs;
+	}
+
 	// Runs the commands queued for a site, in order, on the game's thread; or drops them, as clicks are dropped, when they
-	// do not count. The commands of the other screens' sites are dropped too: they were given for a screen that is gone.
+	// do not count. With none queued, as in most frames, it allocates nothing: a frame passes about seven sites.
 	internal void RunUICommands(UICommandSite site, bool count)
 	{
 		List<Action> runs;
 		lock (_uiCommandsLock)
 		{
-			runs = [.. _uiCommands.Where(c => c.Site == site).Select(c => c.Run)];
-			_uiCommands.RemoveAll(c => c.Site == site || IsSettingSite(c.Site) != IsSettingSite(site));
+			if (_uiCommands.Count == 0)
+				return;
+
+			runs = TakeUICommands(site);
 		}
 
 		if (count)
