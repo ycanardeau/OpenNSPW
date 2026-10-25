@@ -246,11 +246,29 @@ public sealed partial class StrongPlayer
 	private bool TakesAnyTarget(Nspw game, int plane) =>
 		!HuntsCarriers || game.Units[plane].Fuel <= FuelToHome(game, plane) + 15;
 
+	// Whether a ship found is an escort a strike that hunts carriers attacks first (Parameters.Targeting): a battleship
+	// or a cruiser, or a cruiser only, within 1500 of a carrier the victory conditions count, found lately.
+	private bool IsEscortToStrike(Nspw game, Contact contact) =>
+		HuntsCarriers
+		&& (
+			Parameters.Targeting == Targeting.Escorts
+				? contact.Kind is UnitKind.Battleship or UnitKind.Cruiser
+				: Parameters.Targeting == Targeting.Cruisers && contact.Kind == UnitKind.Cruiser
+		)
+		&& _contacts.All.Any(c =>
+			IsCounted(c.Kind)
+			&& c.Category == UnitCategory.Ship
+			&& game.Units[c.Unit].IsUsed
+			&& UnitFacts.Now(game) - c.Frame < ContactFrames
+			&& UnitFacts.Distance(c.Position, contact.Position) <= 1500
+		);
+
 	// The best target found for a flying plane of the player's: for an attacker or a bomber, an enemy ship its weapon
 	// can attack, within 2500, by its worth, the one it was sent at favored, the ones other strikes attack already
 	// less; while it hunts carriers, only the ones the victory conditions count (TakesAnyTarget), the nearest, as every
-	// carrier must be sunk and the nearest is the one the strike reaches with the most fuel left; for a fighter, an
-	// enemy plane in the air, attackers and bombers first, within 1500.
+	// carrier must be sunk and the nearest is the one the strike reaches with the most fuel left, or, as
+	// Parameters.Targeting says, the escorts around them first (IsEscortToStrike); for a fighter, an enemy plane in the
+	// air, attackers and bombers first, within 1500.
 	private Contact? ChooseTargetInFlight(Nspw game, int plane)
 	{
 		ref var unit = ref game.Units[plane];
@@ -273,12 +291,15 @@ public sealed partial class StrongPlayer
 					game.Units[c.Unit].IsFound
 					&& CanAttack(weapon, c)
 					&& UnitFacts.Distance(position, c.Position) <= 2500
-					&& (takesAny || IsCounted(c.Kind))
+					&& (takesAny || IsCounted(c.Kind) || IsEscortToStrike(game, c))
 				)
 				.OrderByDescending(c =>
 					HuntsCarriers
-						? (IsCounted(c.Kind) ? 100 : 0)
-							- (UnitFacts.Distance(position, c.Position) / 100)
+						? (
+							IsEscortToStrike(game, c) ? 200
+							: IsCounted(c.Kind) ? 100
+							: 0
+						) - (UnitFacts.Distance(position, c.Position) / 100)
 						: Value(c.Kind)
 							+ (_strikeTargets.GetValueOrDefault(plane) == c.Unit ? 4 : 0)
 							- (UnitFacts.Distance(position, c.Position) / 1000)

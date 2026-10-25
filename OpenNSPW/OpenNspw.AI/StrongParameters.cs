@@ -1,5 +1,15 @@
 namespace OpenNspw.AI;
 
+// What a strike that hunts carriers attacks, once it finds the enemy: the nearest carrier (Carriers); the battleships
+// and cruisers within 1500 of a carrier first, whose guns turn the attackers back, and the carriers once none is left
+// (Escorts); or the cruisers only so (Cruisers), sparing the battleships' 41 HP.
+public enum Targeting
+{
+	Carriers,
+	Escorts,
+	Cruisers,
+}
+
 // The numbers the strong player's tactics turn on, which the arena can set to tune them (--params, StrongAIResearch.md):
 // the defaults are the ones chosen by reasoning, and checked on a few games each. Distances are in the map's units,
 // times in frames of speed 1 (UnitFacts.Now), fuel in its units.
@@ -56,6 +66,9 @@ public sealed record StrongParameters
 	// The share of its range on a full tank that a scout flies out (ScoutDistance).
 	public double ScoutFraction { get; init; } = 0.36;
 
+	// What a strike that hunts carriers attacks.
+	public Targeting Targeting { get; init; } = Targeting.Carriers;
+
 	// The parameters from "Name=value,Name=value", the others at their defaults.
 	public static StrongParameters Parse(string text)
 	{
@@ -68,11 +81,13 @@ public sealed record StrongParameters
 				?? throw new ArgumentException($"No parameter is named {parts[0]}.");
 			property.SetValue(
 				parameters,
-				Convert.ChangeType(
-					parts[1],
-					property.PropertyType,
-					System.Globalization.CultureInfo.InvariantCulture
-				)
+				property.PropertyType.IsEnum
+					? Enum.Parse(property.PropertyType, parts[1], ignoreCase: true)
+					: Convert.ChangeType(
+						parts[1],
+						property.PropertyType,
+						System.Globalization.CultureInfo.InvariantCulture
+					)
 			);
 		}
 
