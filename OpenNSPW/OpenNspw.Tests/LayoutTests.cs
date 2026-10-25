@@ -17,7 +17,8 @@ public class LayoutTests
 		return data;
 	}
 
-	public static TheoryData<string> Structs => ToTheoryData(ReferenceLayout.Instance.Structs.Keys.Order());
+	public static TheoryData<string> Structs =>
+		ToTheoryData(ReferenceLayout.Instance.Structs.Keys.Order());
 
 	[Theory]
 	[MemberData(nameof(Structs))]
@@ -28,11 +29,18 @@ public class LayoutTests
 
 		Assert.Equal(reference.Size, TypeLayout.SizeOf(type));
 		Assert.Equal(
-			reference.Fields.OrderBy(f => f.Value.Offset).Select(f => $"{f.Key}: {f.Value.Size} bytes at {f.Value.Offset}"),
-			TypeLayout.FieldsOf(type).SelectMany(f => OriginalNames.Slices(f.Field, f.Offset)).Select(s => $"{s.Name}: {s.Size} bytes at {s.Offset}"));
+			reference
+				.Fields.OrderBy(f => f.Value.Offset)
+				.Select(f => $"{f.Key}: {f.Value.Size} bytes at {f.Value.Offset}"),
+			TypeLayout
+				.FieldsOf(type)
+				.SelectMany(f => OriginalNames.Slices(f.Field, f.Offset))
+				.Select(s => $"{s.Name}: {s.Size} bytes at {s.Offset}")
+		);
 	}
 
-	public static TheoryData<string> Globals => ToTheoryData(ReferenceLayout.Instance.Globals.Select(g => g.Name));
+	public static TheoryData<string> Globals =>
+		ToTheoryData(ReferenceLayout.Instance.Globals.Select(g => g.Name));
 
 	[Theory]
 	[MemberData(nameof(Globals))]

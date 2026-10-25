@@ -40,7 +40,12 @@ internal sealed class MouseInput(LockstepRun run, LockstepGame game) : BattleInp
 	private void ClickAt(WorldPosition position)
 	{
 		var nspw = Game.Game;
-		BattleScripts.Click(Run, Game, (int)(position.X - nspw.CameraPosition.X), (int)(nspw.CameraPosition.Y - position.Y));
+		BattleScripts.Click(
+			Run,
+			Game,
+			(int)(position.X - nspw.CameraPosition.X),
+			(int)(nspw.CameraPosition.Y - position.Y)
+		);
 	}
 
 	public override void ClickUnit(int m)
@@ -71,7 +76,12 @@ internal sealed class MouseInput(LockstepRun run, LockstepGame game) : BattleInp
 	public override void ShowMinimapCell(int column, int row)
 	{
 		ref Sprite minimap = ref Game.Game.Renderer.Sprites[SpriteId.Minimap];
-		BattleScripts.Click(Run, Game, CMBT_WIDTH + 8 + 5 + column, CMBT_HEIGHT - minimap.Size.Height + 8 + 5 + row);
+		BattleScripts.Click(
+			Run,
+			Game,
+			CMBT_WIDTH + 8 + 5 + column,
+			CMBT_HEIGHT - minimap.Size.Height + 8 + 5 + row
+		);
 	}
 }
 

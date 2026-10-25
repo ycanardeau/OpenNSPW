@@ -85,7 +85,10 @@ internal sealed class SettingForm : Form
 	private ScenarioRow CreateRow(int row)
 	{
 		var scenario = new ScenarioEntry(0, "", ScenarioSide.Japan, "", []);
-		var control = new ScenarioRow(_fonts, scenario) { Bounds = new DrawingRectangle(48, 200 + row * RowHeight, 432, RowHeight) };
+		var control = new ScenarioRow(_fonts, scenario)
+		{
+			Bounds = new DrawingRectangle(48, 200 + row * RowHeight, 432, RowHeight),
+		};
 		control.Click += (_, _) => Choose(row);
 		Controls.Add(control);
 		return control;
@@ -93,7 +96,11 @@ internal sealed class SettingForm : Form
 
 	private TabButton CreateTab(int page)
 	{
-		var tab = new TabButton(_fonts) { Bounds = new DrawingRectangle(48 + page * 112, 112, 96, 32), Text = Texts.Page(page) };
+		var tab = new TabButton(_fonts)
+		{
+			Bounds = new DrawingRectangle(48 + page * 112, 112, 96, 32),
+			Text = Texts.Page(page),
+		};
 		tab.Click += (_, _) => TurnPage(page);
 		Controls.Add(tab);
 		return tab;
@@ -101,7 +108,11 @@ internal sealed class SettingForm : Form
 
 	private RuleRow CreateRule(int index, string name)
 	{
-		var rule = new RuleRow(_fonts, name) { Bounds = new DrawingRectangle(48, 200 + index * RuleHeight, 432, RuleHeight), BackColor = DrawingColor.Transparent };
+		var rule = new RuleRow(_fonts, name)
+		{
+			Bounds = new DrawingRectangle(48, 200 + index * RuleHeight, 432, RuleHeight),
+			BackColor = DrawingColor.Transparent,
+		};
 		Controls.Add(rule);
 		return rule;
 	}
@@ -135,10 +146,22 @@ internal sealed class SettingForm : Form
 		_rows = [.. Enumerable.Range(0, 9).Select(CreateRow)];
 		_details = new ScenarioDetails(fonts) { Bounds = new DrawingRectangle(504, 200, 472, 460) };
 		Controls.Add(_details);
-		_switchSides = AddButton(new DrawingRectangle(380, 622, 100, 32), Texts.Switch, () => Commands.SwitchSides());
+		_switchSides = AddButton(
+			new DrawingRectangle(380, 622, 100, 32),
+			Texts.Switch,
+			() => Commands.SwitchSides()
+		);
 		_switchSides.FontSize = 14;
-		_resume = AddButton(new DrawingRectangle(48, 688, 150, 44), Texts.Resume, () => Commands.StartFromResume());
-		_autoSave = AddButton(new DrawingRectangle(210, 688, 150, 44), Texts.AutoSave, () => Commands.StartFromAutoSave());
+		_resume = AddButton(
+			new DrawingRectangle(48, 688, 150, 44),
+			Texts.Resume,
+			() => Commands.StartFromResume()
+		);
+		_autoSave = AddButton(
+			new DrawingRectangle(210, 688, 150, 44),
+			Texts.AutoSave,
+			() => Commands.StartFromAutoSave()
+		);
 		_next = AddButton(new DrawingRectangle(826, 688, 150, 44), Texts.Next, GoOn);
 		_next.IsPrimary = true;
 
@@ -146,15 +169,35 @@ internal sealed class SettingForm : Form
 		_rules =
 		[
 			CreateChoiceRule(0, Texts.Decision, () => Commands.ToggleDecision()),
-			CreateStepRule(1, Texts.HostSupplyRate, increase => Commands.ChangeSupplyRate(0, increase)),
-			CreateStepRule(2, Texts.GuestSupplyRate, increase => Commands.ChangeSupplyRate(1, increase)),
+			CreateStepRule(
+				1,
+				Texts.HostSupplyRate,
+				increase => Commands.ChangeSupplyRate(0, increase)
+			),
+			CreateStepRule(
+				2,
+				Texts.GuestSupplyRate,
+				increase => Commands.ChangeSupplyRate(1, increase)
+			),
 			CreateStepRule(3, Texts.SwapTime, Commands.ChangeSwapTime),
 			CreateChoiceRule(4, Texts.SwapRule, () => Commands.ToggleSwapRule()),
-			CreateStepRule(5, Texts.HostInitialSupplyPoints, increase => Commands.ChangeInitialSupplyPoints(0, increase)),
-			CreateStepRule(6, Texts.GuestInitialSupplyPoints, increase => Commands.ChangeInitialSupplyPoints(1, increase)),
+			CreateStepRule(
+				5,
+				Texts.HostInitialSupplyPoints,
+				increase => Commands.ChangeInitialSupplyPoints(0, increase)
+			),
+			CreateStepRule(
+				6,
+				Texts.GuestInitialSupplyPoints,
+				increase => Commands.ChangeInitialSupplyPoints(1, increase)
+			),
 			CreateChoiceRule(7, Texts.ArrivalControl, () => Commands.CycleArrivalControl()),
 		];
-		_back = AddButton(new DrawingRectangle(48, 688, 150, 44), Texts.Back, () => Commands.BackToScenarios());
+		_back = AddButton(
+			new DrawingRectangle(48, 688, 150, 44),
+			Texts.Back,
+			() => Commands.BackToScenarios()
+		);
 		_start = AddButton(new DrawingRectangle(826, 688, 150, 44), Texts.Start, GoOn);
 		_start.IsPrimary = true;
 	}
@@ -169,7 +212,13 @@ internal sealed class SettingForm : Form
 			for (var i = 0; i < _rows.Length; i++)
 			{
 				if (i < _shownNames.Length)
-					_rows[i].Scenario = new ScenarioEntry(first + i, GameTexts.Of(_shownNames[i]), ScenarioSide.Japan, "", []);
+					_rows[i].Scenario = new ScenarioEntry(
+						first + i,
+						GameTexts.Of(_shownNames[i]),
+						ScenarioSide.Japan,
+						"",
+						[]
+					);
 			}
 		}
 
@@ -198,14 +247,16 @@ internal sealed class SettingForm : Form
 
 		_shownScenario = shown;
 		var row = ChosenRow;
-		_details.Scenario = row >= 0 && row < _shownNames.Length
-			? new ScenarioEntry(
-				snapshot.ScenarioNumber,
-				GameTexts.Of(_shownNames[row]),
-				PlayerSide == 0 ? ScenarioSide.Japan : ScenarioSide.UnitedStates,
-				Texts.SideName(PlayerSide),
-				GameTexts.DescriptionOf(snapshot.ScenarioNumber, snapshot.ScenarioDescription))
-			: null;
+		_details.Scenario =
+			row >= 0 && row < _shownNames.Length
+				? new ScenarioEntry(
+					snapshot.ScenarioNumber,
+					GameTexts.Of(_shownNames[row]),
+					PlayerSide == 0 ? ScenarioSide.Japan : ScenarioSide.UnitedStates,
+					Texts.SideName(PlayerSide),
+					GameTexts.DescriptionOf(snapshot.ScenarioNumber, snapshot.ScenarioDescription)
+				)
+				: null;
 	}
 
 	// The rules' values, in the setting screen's words (UpdateConfigSetting).
@@ -297,7 +348,13 @@ internal sealed class SettingForm : Form
 	{
 		var hostSide = _snapshot.HostSide;
 		Painter.Text(g, Texts.PlayerSide, _fonts.Regular(13), Theme.Muted, 48, 618);
-		foreach (var (side, player, y) in new[] { (hostSide, Texts.HostPlayer, 614), (1 - hostSide, Texts.GuestPlayer, 640) })
+		foreach (
+			var (side, player, y) in new[]
+			{
+				(hostSide, Texts.HostPlayer, 614),
+				(1 - hostSide, Texts.GuestPlayer, 640),
+			}
+		)
 		{
 			Painter.Fill(g, new(120, y + 8, 8, 8), side == 0 ? Theme.Japan : Theme.UnitedStates);
 			Painter.Text(g, Texts.SideOf(side, player), _fonts.Bold(14), Theme.Text, 134, y);
@@ -308,10 +365,27 @@ internal sealed class SettingForm : Form
 	{
 		base.OnPaint(e);
 		var g = e.Graphics;
-		var kicker = _snapshot.IsEditingMap ? Texts.MapEditorKicker : _snapshot.IsHost ? Texts.HostKicker : Texts.GuestKicker;
+		var kicker =
+			_snapshot.IsEditingMap ? Texts.MapEditorKicker
+			: _snapshot.IsHost ? Texts.HostKicker
+			: Texts.GuestKicker;
 		Painter.SpacedText(g, kicker, _fonts.Bold(12), Theme.Brass, 48, 34, 3);
-		Painter.Text(g, IsChoosingScenario ? Texts.Scenarios : Texts.Rules, _fonts.Bold(34), Theme.Text, 48, 52);
-		Painter.Text(g, Status(), _fonts.Regular(14), Theme.Muted, IsChoosingScenario ? 300 : 48, 156);
+		Painter.Text(
+			g,
+			IsChoosingScenario ? Texts.Scenarios : Texts.Rules,
+			_fonts.Bold(34),
+			Theme.Text,
+			48,
+			52
+		);
+		Painter.Text(
+			g,
+			Status(),
+			_fonts.Regular(14),
+			Theme.Muted,
+			IsChoosingScenario ? 300 : 48,
+			156
+		);
 		Painter.Fill(g, new(48, 186, 928, 1), Theme.Alpha(Theme.Line, 0.9f));
 		if (IsChoosingScenario)
 			PaintSides(g);

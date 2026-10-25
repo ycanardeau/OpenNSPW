@@ -19,7 +19,9 @@ internal sealed class SingleplayerRun : IDisposable
 			Player.StartDate = date;
 		Game.IsSingleplayer = true;
 		Game.ScenarioNumber = (short)scenario;
-		Game.SingleplayerExecutable = File.ReadAllBytes(Path.Combine(GameData.FindSingleplayer(), "NSPW_122.exe"));
+		Game.SingleplayerExecutable = File.ReadAllBytes(
+			Path.Combine(GameData.FindSingleplayer(), "NSPW_122.exe")
+		);
 		Player.SingleplayerDirectory = GameData.FindSingleplayer();
 		setUp?.Invoke(Game);
 		Player.Start();
@@ -33,7 +35,9 @@ internal sealed class SingleplayerRun : IDisposable
 		{
 			if (Player.Ended)
 			{
-				throw new InvalidOperationException($"The game ended after {Player.FrameCount} frames.");
+				throw new InvalidOperationException(
+					$"The game ended after {Player.FrameCount} frames."
+				);
 			}
 
 			Player.Step();

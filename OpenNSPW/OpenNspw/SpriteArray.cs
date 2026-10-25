@@ -10,5 +10,6 @@ public struct SpriteArray
 {
 	private Sprite _element0;
 
-	[UnscopedRef] public ref Sprite this[SpriteId id] => ref this[(int)id];
+	[UnscopedRef]
+	public ref Sprite this[SpriteId id] => ref this[(int)id];
 }

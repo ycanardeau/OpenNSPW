@@ -48,7 +48,10 @@ public unsafe partial class Nspw
 	// Whether a site is the setting screens', not the battle's.
 	private static bool IsSettingSite(UICommandSite site)
 	{
-		return site is UICommandSite.ScenarioList or UICommandSite.ScenarioMenu or UICommandSite.Rules;
+		return site
+			is UICommandSite.ScenarioList
+				or UICommandSite.ScenarioMenu
+				or UICommandSite.Rules;
 	}
 
 	// Runs the commands queued for a site, in order, on the game's thread; or drops them, as clicks are dropped, when they
@@ -59,7 +62,9 @@ public unsafe partial class Nspw
 		lock (_uiCommandsLock)
 		{
 			runs = [.. _uiCommands.Where(c => c.Site == site).Select(c => c.Run)];
-			_uiCommands.RemoveAll(c => c.Site == site || IsSettingSite(c.Site) != IsSettingSite(site));
+			_uiCommands.RemoveAll(c =>
+				c.Site == site || IsSettingSite(c.Site) != IsSettingSite(site)
+			);
 		}
 
 		if (count)
@@ -83,16 +88,31 @@ public unsafe partial class Nspw
 	private bool IsSelectedShown()
 	{
 		ref var unit = ref Units[SelectedUnit];
-		return SelectedUnit!=0 && unit.IsUsed && (!(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked) || Renderer.IsOnShownDeck(ref unit)) && !IsEditingMap;
+		return SelectedUnit != 0
+			&& unit.IsUsed
+			&& (
+				!(unit.Category == UnitCategory.Plane && unit.PlaneState == UnitState.Parked)
+				|| Renderer.IsOnShownDeck(ref unit)
+			)
+			&& !IsEditingMap;
 	}
 
 	private void RunClickUnit(int m)
 	{
 		ref var unit = ref Units[m];
-		if( m!=0 && unit.IsUsed && (unit.Side==LocalSide || unit.IsFound) && (!(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked) || Renderer.IsOnShownDeck(ref unit)) && CanClickUnit(ref unit) )
-			{
+		if (
+			m != 0
+			&& unit.IsUsed
+			&& (unit.Side == LocalSide || unit.IsFound)
+			&& (
+				!(unit.Category == UnitCategory.Plane && unit.PlaneState == UnitState.Parked)
+				|| Renderer.IsOnShownDeck(ref unit)
+			)
+			&& CanClickUnit(ref unit)
+		)
+		{
 			ClickUnit(m, default);
-			}
+		}
 	}
 
 	// Whether unit m can be in the formation of the leader, as a click on it with the leader selected puts it there
@@ -102,12 +122,18 @@ public unsafe partial class Nspw
 	private bool IsFormationMate(int leader, int m)
 	{
 		ref var unit = ref Units[m];
-		var isParked = unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked;
-		var isLeaderParked = Units[leader].Category==UnitCategory.Plane && Units[leader].PlaneState==UnitState.Parked;
-		return m!=leader && unit.IsUsed && unit.Side==LocalSide && unit.Category==Units[leader].Category
-			&& isParked==isLeaderParked && (!isParked || Renderer.IsOnShownDeck(ref unit))
-			&& !(unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress)
-			&& !(Units[leader].Kind>=UnitKind.AirBase && Units[leader].Kind<=UnitKind.Fortress);
+		var isParked = unit.Category == UnitCategory.Plane && unit.PlaneState == UnitState.Parked;
+		var isLeaderParked =
+			Units[leader].Category == UnitCategory.Plane
+			&& Units[leader].PlaneState == UnitState.Parked;
+		return m != leader
+			&& unit.IsUsed
+			&& unit.Side == LocalSide
+			&& unit.Category == Units[leader].Category
+			&& isParked == isLeaderParked
+			&& (!isParked || Renderer.IsOnShownDeck(ref unit))
+			&& !(unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress)
+			&& !(Units[leader].Kind >= UnitKind.AirBase && Units[leader].Kind <= UnitKind.Fortress);
 	}
 
 	// The units brushed with the left button held (BrushUnit), to put in the selected unit's formation or to take out of
@@ -117,49 +143,65 @@ public unsafe partial class Nspw
 	// The next unit brushed that a click still puts in the selection, or takes out of it, as it was brushed for.
 	internal void RunBrushedUnits(bool count)
 	{
-		if( !count )
+		if (!count)
 			return;
 
-		while( _brushed.TryDequeue(out var brushed) )
-			{
+		while (_brushed.TryDequeue(out var brushed))
+		{
 			var (m, isAdded) = brushed;
-			if( SelectedUnit!=0 && IsFormationMate(SelectedUnit, m) && (Selections[1][m]==0)==isAdded && CanClickUnit(ref Units[m]) )
-				{
+			if (
+				SelectedUnit != 0
+				&& IsFormationMate(SelectedUnit, m)
+				&& (Selections[1][m] == 0) == isAdded
+				&& CanClickUnit(ref Units[m])
+			)
+			{
 				PlayClickSound();
 				ClickUnit(m, default);
 				return;
-				}
 			}
+		}
 	}
 
 	private void RunClickLand(int x, int y)
 	{
-		var sprite = Units[0].Side==Side.Japan ? SpriteId.JapanUnits : SpriteId.UnitedStatesUnits;
-		if( SelectedUnit!=0 && Units[SelectedUnit].Kind==UnitKind.Transport && AimLanding(sprite, x, y)
-			&& CanClickUnit(ref Units[0]) && !(Units[0].PlaneState!=UnitState.Parked && x>=CMBT_WIDTH-1) )
-			{
-			ClickUnit(0, new WorldPosition(CameraPosition.X+Renderer.Sprites[sprite].Position.X, CameraPosition.Y-Renderer.Sprites[sprite].Position.Y));
-			}
+		var sprite = Units[0].Side == Side.Japan ? SpriteId.JapanUnits : SpriteId.UnitedStatesUnits;
+		if (
+			SelectedUnit != 0
+			&& Units[SelectedUnit].Kind == UnitKind.Transport
+			&& AimLanding(sprite, x, y)
+			&& CanClickUnit(ref Units[0])
+			&& !(Units[0].PlaneState != UnitState.Parked && x >= CMBT_WIDTH - 1)
+		)
+		{
+			ClickUnit(
+				0,
+				new WorldPosition(
+					CameraPosition.X + Renderer.Sprites[sprite].Position.X,
+					CameraPosition.Y - Renderer.Sprites[sprite].Position.Y
+				)
+			);
+		}
 	}
 
 	private void RunSetDestination(WorldPosition destination)
 	{
-		if( IsSelectedShown() && CanSetDestination(ref Units[SelectedUnit]) )
-			{
+		if (IsSelectedShown() && CanSetDestination(ref Units[SelectedUnit]))
+		{
 			SetDestination(destination);
-			}
+		}
 	}
 
 	private void RunRightClick()
 	{
-		if( IsSelectedShown() )
-			{
+		if (IsSelectedShown())
+		{
 			CancelSelection(SelectedUnit);
-			}
+		}
 		else
-			{
+		{
 			RestoreSelection();
-			}
+		}
 	}
 
 	private void RunToggleDeckView()
@@ -173,16 +215,16 @@ public unsafe partial class Nspw
 	private CombatMenuItem ActiveCombatMenuItem()
 	{
 		ref var unit = ref Units[SelectedUnit];
-		if( SelectedUnit==0 )
+		if (SelectedUnit == 0)
 			return CombatMenuItem.None;
 
-		if( unit.Category==UnitCategory.Ship )
+		if (unit.Category == UnitCategory.Ship)
 			return unit.IsSupplying ? CombatMenuItem.Supply : CombatMenuItem.None;
 
-		if( unit.PlaneState==UnitState.Flying )
+		if (unit.PlaneState == UnitState.Flying)
 			return (CombatMenuItem)unit.Mode;
 
-		return unit.Ammo==0 ? (CombatMenuItem)FireKind.Unarmed : (CombatMenuItem)unit.Weapon;
+		return unit.Ammo == 0 ? (CombatMenuItem)FireKind.Unarmed : (CombatMenuItem)unit.Weapon;
 	}
 
 	// A click on the combat menu that waits for a frame in which it counts, and the frame it was given in.
@@ -194,7 +236,7 @@ public unsafe partial class Nspw
 	// most, two seconds, and while the menu still shows the item.
 	private void RunWaitingCombatMenu()
 	{
-		if( _waitingCombatMenu is not var (item, since) )
+		if (_waitingCombatMenu is not var (item, since))
 			return;
 
 		var isShown = false;
@@ -203,25 +245,25 @@ public unsafe partial class Nspw
 			isShown |= ShownCombatMenu[i] == item;
 		}
 
-		if( !isShown || item==ActiveCombatMenuItem() || Renderer.FrameCount-since>40 )
-			{
-			_waitingCombatMenu=null;
-			}
-		else if( CanOrder )
-			{
-			_waitingCombatMenu=null;
+		if (!isShown || item == ActiveCombatMenuItem() || Renderer.FrameCount - since > 40)
+		{
+			_waitingCombatMenu = null;
+		}
+		else if (CanOrder)
+		{
+			_waitingCombatMenu = null;
 			ChooseCombatMenuItem(item);
-			}
+		}
 	}
 
 	private void RunChooseCombatMenuItem(CombatMenuItem item)
 	{
-		_waitingCombatMenu=(item, Renderer.FrameCount);
+		_waitingCombatMenu = (item, Renderer.FrameCount);
 	}
 
 	private void RunSelectSupplyTarget(bool next)
 	{
-		if( next )
+		if (next)
 			SelectNextSupplyTarget();
 		else
 			SelectPreviousSupplyTarget();
@@ -229,10 +271,10 @@ public unsafe partial class Nspw
 
 	private void RunRequestSupply()
 	{
-		if( GetSupplyRequestState()==SupplyRequestState.Available && Result==GameResult.None )
-			{
+		if (GetSupplyRequestState() == SupplyRequestState.Available && Result == GameResult.None)
+		{
 			RequestSupplyUnit();
-			}
+		}
 	}
 
 	// The last move of the battlefield taken (MoveCamera), for the host's UI, which shows the moves it gave before the
@@ -246,8 +288,9 @@ public unsafe partial class Nspw
 	{
 		LastCameraMove = id;
 		CameraPosition = new WorldPosition(
-			Math.Clamp(CameraPosition.X+dx, World.Left, World.Right-CMBT_WIDTH),
-			Math.Clamp(CameraPosition.Y-dy, World.Bottom+CMBT_HEIGHT, World.Top));
+			Math.Clamp(CameraPosition.X + dx, World.Left, World.Right - CMBT_WIDTH),
+			Math.Clamp(CameraPosition.Y - dy, World.Bottom + CMBT_HEIGHT, World.Top)
+		);
 	}
 
 	// A click on the system menu that waits for a frame in which it counts, and the frame it was given in.
@@ -258,29 +301,29 @@ public unsafe partial class Nspw
 	// player gave a moment later would; for 40 frames at most, two seconds.
 	private void RunWaitingSystemMenu()
 	{
-		if( _waitingSystemMenu is not var (answer, since) )
+		if (_waitingSystemMenu is not var (answer, since))
 			return;
 
-		if( RivalMode!=GameMode.Battle || IsEditingMap || Renderer.FrameCount-since>40 )
-			{
-			_waitingSystemMenu=null;
-			}
-		else if( CanOrder.Value==1 )
-			{
-			_waitingSystemMenu=null;
+		if (RivalMode != GameMode.Battle || IsEditingMap || Renderer.FrameCount - since > 40)
+		{
+			_waitingSystemMenu = null;
+		}
+		else if (CanOrder.Value == 1)
+		{
+			_waitingSystemMenu = null;
 			AskSystemMenu(answer);
-			}
+		}
 	}
 
 	private void RunAskSystemMenu(MessageType answer)
 	{
-		_waitingSystemMenu=(answer, Renderer.FrameCount);
+		_waitingSystemMenu = (answer, Renderer.FrameCount);
 	}
 
 	// Whether the host chooses on the scenarios, the guest being on them too (UpdateScenarioList and the buttons under it).
 	private bool CanChooseScenario()
 	{
-		return IsHost && Mode==GameMode.GameSetting && RivalMode==GameMode.GameSetting;
+		return IsHost && Mode == GameMode.GameSetting && RivalMode == GameMode.GameSetting;
 	}
 
 	// Whether the n-th scenario is in the list shown (ListScenarioNames).
@@ -295,138 +338,138 @@ public unsafe partial class Nspw
 
 	private void RunChooseScenario(int n)
 	{
-		if( CanChooseScenario() && IsListedScenario(n) )
-			{
+		if (CanChooseScenario() && IsListedScenario(n))
+		{
 			ChooseScenario(n);
-			}
+		}
 	}
 
 	private void RunConfirmScenario(int n)
 	{
-		if( CanChooseScenario() && IsListedScenario(n) )
-			{
+		if (CanChooseScenario() && IsListedScenario(n))
+		{
 			NameMessage message = default;
 			ChooseScenario(n);
 			LeaveGameSetting(ref message);
-			}
+		}
 	}
 
 	private void RunTurnScenarioPage()
 	{
-		if( CanChooseScenario() )
-			{
+		if (CanChooseScenario())
+		{
 			TurnScenarioPage();
-			}
+		}
 	}
 
 	private void RunStartFromResume()
 	{
-		if( CanChooseScenario() && WasHost )
-			{
+		if (CanChooseScenario() && WasHost)
+		{
 			NameMessage message = default;
 			StartFromResume(ref message);
-			}
+		}
 	}
 
 	private void RunStartFromAutoSave()
 	{
-		if( CanChooseScenario() && HasAutoSave!=0 )
-			{
+		if (CanChooseScenario() && HasAutoSave != 0)
+		{
 			NameMessage message = default;
 			StartFromAutoSave(ref message);
-			}
+		}
 	}
 
 	private void RunSwitchHostSide()
 	{
-		if( CanChooseScenario() && !IsEditingMap )
-			{
+		if (CanChooseScenario() && !IsEditingMap)
+		{
 			SwitchHostSide();
-			}
+		}
 	}
 
 	// Whether the host sets the rules (UpdateConfigSetting); the start and the way back need the guest on them too.
 	private bool CanSetRules()
 	{
-		return IsHost && Mode==GameMode.ConfigSetting;
+		return IsHost && Mode == GameMode.ConfigSetting;
 	}
 
 	private void RunToggleDecision()
 	{
-		if( CanSetRules() )
-			{
+		if (CanSetRules())
+		{
 			ToggleDecision();
-			}
+		}
 	}
 
 	private void RunChangeSupplyRate(int player, bool increase)
 	{
-		if( CanSetRules() && increase )
-			{
+		if (CanSetRules() && increase)
+		{
 			IncreaseSupplyRate(player);
-			}
-		else if( CanSetRules() && SupplyRates[player]!=0 )
-			{
+		}
+		else if (CanSetRules() && SupplyRates[player] != 0)
+		{
 			DecreaseSupplyRate(player);
-			}
+		}
 	}
 
 	private void RunChangeSwapTime(bool increase)
 	{
-		if( CanSetRules() && increase )
-			{
+		if (CanSetRules() && increase)
+		{
 			IncreaseSwapTime();
-			}
-		else if( CanSetRules() && SwapTime!=0 )
-			{
+		}
+		else if (CanSetRules() && SwapTime != 0)
+		{
 			DecreaseSwapTime();
-			}
+		}
 	}
 
 	private void RunToggleSwapRule()
 	{
-		if( CanSetRules() && SwapTime!=0 )
-			{
+		if (CanSetRules() && SwapTime != 0)
+		{
 			ToggleSwapRule();
-			}
+		}
 	}
 
 	private void RunChangeInitialSupplyPoints(int player, bool increase)
 	{
-		if( CanSetRules() && increase )
-			{
+		if (CanSetRules() && increase)
+		{
 			IncreaseInitialSupplyPoints(player);
-			}
-		else if( CanSetRules() && InitialSupplyPoints[player]!=0 )
-			{
+		}
+		else if (CanSetRules() && InitialSupplyPoints[player] != 0)
+		{
 			DecreaseInitialSupplyPoints(player);
-			}
+		}
 	}
 
 	private void RunCycleArrivalControl()
 	{
-		if( CanSetRules() )
-			{
+		if (CanSetRules())
+		{
 			CycleArrivalControl();
-			}
+		}
 	}
 
 	private void RunBackToScenarioSetting()
 	{
-		if( CanSetRules() && RivalMode==GameMode.ConfigSetting )
-			{
+		if (CanSetRules() && RivalMode == GameMode.ConfigSetting)
+		{
 			SyncFlagMessage flagMessage = default;
 			BackToScenarioSetting(ref flagMessage);
-			}
+		}
 	}
 
 	private void RunStartBattle()
 	{
-		if( CanSetRules() && RivalMode==GameMode.ConfigSetting )
-			{
+		if (CanSetRules() && RivalMode == GameMode.ConfigSetting)
+		{
 			NameMessage message = default;
 			StartBattle(ref message);
-			}
+		}
 	}
 
 	// The commands of the host's UI, for the battle and the setting screens, in order: given on any thread, run on the
@@ -454,7 +497,10 @@ public unsafe partial class Nspw
 		// taken out of it, by a click on it, if a click does that.
 		public void BrushUnit(int m, bool isAdded)
 		{
-			_game.QueueUICommand(UICommandSite.Battlefield, () => _game._brushed.Enqueue((m, isAdded)));
+			_game.QueueUICommand(
+				UICommandSite.Battlefield,
+				() => _game._brushed.Enqueue((m, isAdded))
+			);
 		}
 
 		// A left click on the land at point (x, y) of the battlefield, where the selected transport lands, if it can.
@@ -469,7 +515,10 @@ public unsafe partial class Nspw
 		public void SetDestination(WorldPosition destination)
 		{
 			Press();
-			_game.QueueUICommand(UICommandSite.Battlefield, () => _game.RunSetDestination(destination));
+			_game.QueueUICommand(
+				UICommandSite.Battlefield,
+				() => _game.RunSetDestination(destination)
+			);
 		}
 
 		// A right click on the battlefield: the selected unit is not selected any more, or, if none is, the one selected
@@ -483,7 +532,7 @@ public unsafe partial class Nspw
 		// A click held on the minimap, at cell (column, row) of the map: pressed there, or dragged there.
 		public void ShowMinimapCell(int column, int row, bool isPressed)
 		{
-			if( isPressed )
+			if (isPressed)
 				Press();
 
 			_game.QueueUICommand(UICommandSite.Minimap, () => _game.ShowMinimapCell(column, row));
@@ -508,14 +557,20 @@ public unsafe partial class Nspw
 		public void ChooseCombatMenuItem(CombatMenuItem item)
 		{
 			Press();
-			_game.QueueUICommand(UICommandSite.CombatMenu, () => _game.RunChooseCombatMenuItem(item));
+			_game.QueueUICommand(
+				UICommandSite.CombatMenu,
+				() => _game.RunChooseCombatMenuItem(item)
+			);
 		}
 
 		// A click on the previous or the next kind of reinforcement, while none is coming.
 		public void SelectSupplyTarget(bool next)
 		{
 			Press();
-			_game.QueueUICommand(UICommandSite.SupplyPanel, () => _game.RunSelectSupplyTarget(next));
+			_game.QueueUICommand(
+				UICommandSite.SupplyPanel,
+				() => _game.RunSelectSupplyTarget(next)
+			);
 		}
 
 		// A click that requests the chosen reinforcement, if it can be requested (GetSupplyRequestState).
@@ -530,14 +585,20 @@ public unsafe partial class Nspw
 		public void ToScenarioSelection()
 		{
 			Press();
-			_game.QueueUICommand(UICommandSite.SystemMenu, () => _game.RunAskSystemMenu(MessageType.GoToGameSetting));
+			_game.QueueUICommand(
+				UICommandSite.SystemMenu,
+				() => _game.RunAskSystemMenu(MessageType.GoToGameSetting)
+			);
 		}
 
 		// The host's system menu: saving the battle to resume it, and back to the scenario selection (リジューム).
 		public void Resume()
 		{
 			Press();
-			_game.QueueUICommand(UICommandSite.SystemMenu, () => _game.RunAskSystemMenu(MessageType.ResumeAndGoToGameSetting));
+			_game.QueueUICommand(
+				UICommandSite.SystemMenu,
+				() => _game.RunAskSystemMenu(MessageType.ResumeAndGoToGameSetting)
+			);
 		}
 
 		// The host's cursor on the n-th scenario of the list shown, which chooses it and shows it to the guest.
@@ -585,7 +646,10 @@ public unsafe partial class Nspw
 		// A player's increase of supply points (補給割当増加率) up or down: 0 for the host's, 1 for the guest's; not below 0.
 		public void ChangeSupplyRate(int player, bool increase)
 		{
-			_game.QueueUICommand(UICommandSite.Rules, () => _game.RunChangeSupplyRate(player, increase));
+			_game.QueueUICommand(
+				UICommandSite.Rules,
+				() => _game.RunChangeSupplyRate(player, increase)
+			);
 		}
 
 		// The time at which the supply points' rates swap (補給値反転地点) up or down, by 100; not below 0, never.
@@ -604,7 +668,10 @@ public unsafe partial class Nspw
 		// below 0.
 		public void ChangeInitialSupplyPoints(int player, bool increase)
 		{
-			_game.QueueUICommand(UICommandSite.Rules, () => _game.RunChangeInitialSupplyPoints(player, increase));
+			_game.QueueUICommand(
+				UICommandSite.Rules,
+				() => _game.RunChangeInitialSupplyPoints(player, increase)
+			);
 		}
 
 		// The next rule of the reinforcements (増援ユニット制御).

@@ -1,8 +1,8 @@
 using System.Drawing;
 using Aigamo.Saruhashi;
 using OpenNspw.Desktop.Controls;
-using Control = Aigamo.Saruhashi.Control;
 using Brush = Aigamo.Saruhashi.Brush;
+using Control = Aigamo.Saruhashi.Control;
 using Graphics = Aigamo.Saruhashi.Graphics;
 using Pen = Aigamo.Saruhashi.Pen;
 using SolidBrush = Aigamo.Saruhashi.SolidBrush;
@@ -71,7 +71,10 @@ internal sealed class EditBox : DialogControl
 
 	protected override void OnPaint(PaintEventArgs e)
 	{
-		e.Graphics.FillRectangle(Enabled ? Window : new SolidBrush(Theme.Alpha(Theme.Line, 0.12f)), ClientRectangle);
+		e.Graphics.FillRectangle(
+			Enabled ? Window : new SolidBrush(Theme.Alpha(Theme.Line, 0.12f)),
+			ClientRectangle
+		);
 		e.Graphics.DrawRectangle(Border, 0, 0, Width - 1, Height - 1);
 		DrawText(e.Graphics, Text + (Focused ? "|" : ""), WindowText, 3, 1);
 	}
@@ -135,7 +138,13 @@ internal sealed class ListBoxControl : DialogControl
 				e.Graphics.FillRectangle(Highlight, 1, i * ItemHeight + 1, Width - 2, ItemHeight);
 			}
 
-			DrawText(e.Graphics, Items[i], i == SelectedIndex ? HighlightText : WindowText, 3, i * ItemHeight + 1);
+			DrawText(
+				e.Graphics,
+				Items[i],
+				i == SelectedIndex ? HighlightText : WindowText,
+				3,
+				i * ItemHeight + 1
+			);
 		}
 	}
 }
@@ -168,7 +177,13 @@ internal sealed class CheckBoxControl : DialogControl
 			e.Graphics.FillRectangle(Highlight, 3, y + 3, BoxSize - 6, BoxSize - 6);
 		}
 
-		DrawText(e.Graphics, Text, new SolidBrush(Enabled ? ForeColor : Color.Gray), BoxSize + 4, 0);
+		DrawText(
+			e.Graphics,
+			Text,
+			new SolidBrush(Enabled ? ForeColor : Color.Gray),
+			BoxSize + 4,
+			0
+		);
 	}
 }
 
@@ -188,7 +203,10 @@ internal sealed class StaticText(bool right) : DialogControl
 
 	protected override void OnPaint(PaintEventArgs e)
 	{
-		var x = _right && Font is { } font ? Width - (int)e.Graphics.MeasureString(Text, font).Width : 0;
+		var x =
+			_right && Font is { } font
+				? Width - (int)e.Graphics.MeasureString(Text, font).Width
+				: 0;
 		DrawText(e.Graphics, Text, new SolidBrush(ForeColor), Math.Max(x, 0), 0);
 	}
 }
@@ -209,7 +227,12 @@ internal sealed class DialogForms(Nspw game, WindowManager windowManager, UIFont
 
 	private static Rectangle ToPixels(int x, int y, int cx, int cy)
 	{
-		return new Rectangle((int)(x * UnitX), (int)(y * UnitY) + CaptionHeight, (int)(cx * UnitX), (int)(cy * UnitY));
+		return new Rectangle(
+			(int)(x * UnitX),
+			(int)(y * UnitY) + CaptionHeight,
+			(int)(cx * UnitX),
+			(int)(cy * UnitY)
+		);
 	}
 
 	private Control CreateControl(HWND dialog, HWND item, DLGITEMTEMPLATE template)
@@ -218,28 +241,37 @@ internal sealed class DialogForms(Nspw game, WindowManager windowManager, UIFont
 		switch (template.Kind)
 		{
 			case "PUSHBUTTON" or "DEFPUSHBUTTON":
-				var button = new ActionButton(_fonts) { IsPrimary = template.Kind == "DEFPUSHBUTTON", FontSize = 13 };
-				button.Click += (_, _) => _game.PostToGame(() => _game.ClickDlgItem(dialog, item.Id));
+				var button = new ActionButton(_fonts)
+				{
+					IsPrimary = template.Kind == "DEFPUSHBUTTON",
+					FontSize = 13,
+				};
+				button.Click += (_, _) =>
+					_game.PostToGame(() => _game.ClickDlgItem(dialog, item.Id));
 				control = button;
 				break;
 			case "AUTOCHECKBOX":
 				var checkBox = new CheckBoxControl();
-				checkBox.Clicked += (_, _) => _game.PostToGame(() => _game.ClickDlgItem(dialog, item.Id));
+				checkBox.Clicked += (_, _) =>
+					_game.PostToGame(() => _game.ClickDlgItem(dialog, item.Id));
 				control = checkBox;
 				break;
 			case "EDITTEXT":
 				var edit = new EditBox();
-				edit.Edited += (_, text) => _game.PostToGame(() => _game.TypeDlgItemText(dialog, item.Id, text));
+				edit.Edited += (_, text) =>
+					_game.PostToGame(() => _game.TypeDlgItemText(dialog, item.Id, text));
 				control = edit;
 				break;
 			case "COMBOBOX":
 				var combo = new ComboBoxControl();
-				combo.Selected += (_, index) => _game.PostToGame(() => _game.SelectDlgItem(dialog, item.Id, index));
+				combo.Selected += (_, index) =>
+					_game.PostToGame(() => _game.SelectDlgItem(dialog, item.Id, index));
 				control = combo;
 				break;
 			case "LISTBOX":
 				var list = new ListBoxControl();
-				list.Selected += (_, index) => _game.PostToGame(() => _game.SelectDlgItem(dialog, item.Id, index));
+				list.Selected += (_, index) =>
+					_game.PostToGame(() => _game.SelectDlgItem(dialog, item.Id, index));
 				control = list;
 				break;
 			case "GROUPBOX":
@@ -251,7 +283,12 @@ internal sealed class DialogForms(Nspw game, WindowManager windowManager, UIFont
 		}
 
 		// A drop-down list is as tall as its edit field; the template's height includes the list.
-		var bounds = ToPixels(template.X, template.Y, template.Cx, template.Kind == "COMBOBOX" ? 12 : template.Cy);
+		var bounds = ToPixels(
+			template.X,
+			template.Y,
+			template.Cx,
+			template.Kind == "COMBOBOX" ? 12 : template.Cy
+		);
 		control.Location = bounds.Location;
 		control.Size = bounds.Size;
 		return control;
@@ -272,7 +309,12 @@ internal sealed class DialogForms(Nspw game, WindowManager windowManager, UIFont
 			Painter.Frame(e.Graphics, form.ClientRectangle, Theme.Line);
 			Painter.Brackets(e.Graphics, form.ClientRectangle, 10, Theme.Brass);
 		};
-		var caption = new StaticText(false) { Location = new Point(8, 4), Size = new Size(size.Width - 16, CaptionHeight - 4), ForeColor = Theme.Brass };
+		var caption = new StaticText(false)
+		{
+			Location = new Point(8, 4),
+			Size = new Size(size.Width - 16, CaptionHeight - 4),
+			ForeColor = Theme.Brass,
+		};
 		form.Controls.Add(caption);
 		var controls = new Dictionary<HWND, Control> { [dialog] = caption };
 		foreach (var (item, itemTemplate) in dialog.Children.Zip(template.Items))
@@ -326,7 +368,9 @@ internal sealed class DialogForms(Nspw game, WindowManager windowManager, UIFont
 	{
 		lock (_game.WindowsLock)
 		{
-			var dialogs = _game.windows.Where(w => w.Kind == "DIALOG" && !w.Destroyed && w.Template is not null).ToHashSet();
+			var dialogs = _game
+				.windows.Where(w => w.Kind == "DIALOG" && !w.Destroyed && w.Template is not null)
+				.ToHashSet();
 			foreach (var gone in _forms.Keys.Where(d => !dialogs.Contains(d)).ToList())
 			{
 				_windowManager.Root.Controls.Remove(_forms[gone].Form);

@@ -18,758 +18,1115 @@ namespace OpenNspw;
 
 public unsafe partial class Nspw
 {
+	// ウィンドウアプリケーション変数
+	public HWND hwndApp;
 
-// ウィンドウアプリケーション変数
-public HWND hwndApp;
-//D3DPRESENT_PARAMETERS d3dpp;		// Direct3D is not used.
-[Original("appActive")] public Bool32 IsAppActive;
+	//D3DPRESENT_PARAMETERS d3dpp;		// Direct3D is not used.
+	[Original("appActive")]
+	public Bool32 IsAppActive;
 
-// DirectInputの変数
-public IDirectInput8? pDInput = null; // DirectInput
-public IDirectInputDevice8? pDIDevice = null; // DirectInputデバイス
-public IDirectInputDevice8? pDIDeviceMouse = null; // DirectInputデバイス
-//DIDEVCAPS				diDevCaps;				// ジョイスティックの能力 (joysticks are not used)
+	// DirectInputの変数
+	public IDirectInput8? pDInput = null; // DirectInput
+	public IDirectInputDevice8? pDIDevice = null; // DirectInputデバイス
+	public IDirectInputDevice8? pDIDeviceMouse = null; // DirectInputデバイス
 
-// ゲーム用
-[Original("cc_count")] public int Tick;
-[Original("key_cndtn")] public InputButtons Buttons; // パッドの状態
+	//DIDEVCAPS				diDevCaps;				// ジョイスティックの能力 (joysticks are not used)
 
-//POINT	ptCursor;		// 純粋なマウスカーソルの位置
+	// ゲーム用
+	[Original("cc_count")]
+	public int Tick;
 
-// デバグ
-[Original("dbg_menu")] public int DebugMenu;
-[Original("dbg")] public Array16<int> DebugValues;
+	[Original("key_cndtn")]
+	public InputButtons Buttons; // パッドの状態
 
-// 通信対戦用
-[Original("g_guidApp")] public Guid AppGuid = new( 0x11bc0eb, 0xbdb3, 0x11d6, 0xba, 0x95, 0x9c, 0xce, 0x36, 0x89, 0x70, 0x55 );
+	//POINT	ptCursor;		// 純粋なマウスカーソルの位置
 
-[Original("g_pThreadPool")] public IDirectPlay8ThreadPool? DirectPlayThreadPool = null; // DirectPlay threadpool object
-[Original("g_pDP")] public IDirectPlay8Peer? DirectPlayPeer = null; // DirectPlay peer object
+	// デバグ
+	[Original("dbg_menu")]
+	public int DebugMenu;
 
-public HKEY hDPlaySampleRegKey; // レジストリ
+	[Original("dbg")]
+	public Array16<int> DebugValues;
 
-[Original("g_hDlg")] public HWND MainDialog = null; // HWND of main dialog
-[Original("dlg_answer")] public MessageType DialogAnswer;
+	// 通信対戦用
+	[Original("g_guidApp")]
+	public Guid AppGuid = new(
+		0x11bc0eb,
+		0xbdb3,
+		0x11d6,
+		0xba,
+		0x95,
+		0x9c,
+		0xce,
+		0x36,
+		0x89,
+		0x70,
+		0x55
+	);
 
-[Original("g_dpnidLocalPlayer")] public uint LocalPlayerId = 0; // DPNID of local player
-[Original("g_dpnidRivalPlayer")] public uint RivalPlayerId = 0; // DPNID of local player
-//DPNID                      g_dpnidHostPlayer             = 0;       // DPNID of host player
-[Original("g_dwNumberOfActivePlayers")] public uint ActivePlayerCount = 0; // Number of players currently in game
-[Original("g_strAppName")] public Array256<byte> AppName = TEXT<Array256<byte>>("NSPW NET");
+	[Original("g_pThreadPool")]
+	public IDirectPlay8ThreadPool? DirectPlayThreadPool = null; // DirectPlay threadpool object
 
-[Original("g_strLocalPlayerName")] public Array260<byte> LocalPlayerName; // Local player name
-[Original("g_strRivalPlayerName")] public Array260<byte> RivalPlayerName =TEXT<Array260<byte>>(" - - - ");          // Rival player name
-//TCHAR                      g_strSessionName[MAX_PATH];              // Session name
-[Original("g_strPreferredProvider")] public Array260<byte> PreferredProvider; // Provider string
-[Original("g_strRemoteHostname")] public Array260<byte> RemoteHostName; // TCP/IP remote host
+	[Original("g_pDP")]
+	public IDirectPlay8Peer? DirectPlayPeer = null; // DirectPlay peer object
 
-[Original("g_bHostPlayer")] public int IsHostPlayer = FALSE; // TRUE if local player is host
-[Original("g_pCurSPGuid")] public Guid? ServiceProviderGuid = null; // Currently selected guid
-[Original("g_hConnectAsyncOp")] public uint ConnectOperation = 0; // Async handle for connecting to host
+	public HKEY hDPlaySampleRegKey; // レジストリ
 
-public DPN_BUFFER_DESC bufferDesc;
-public uint hAsync;
+	[Original("g_hDlg")]
+	public HWND MainDialog = null; // HWND of main dialog
 
-// チャット
-public HWND hwndChatDlg = null; // HWND of chat dialog
+	[Original("dlg_answer")]
+	public MessageType DialogAnswer;
 
-[Original("anti_air")] public int ShowsAntiAir;
-[Original("reveal")] public int RevealsAll;
+	[Original("g_dpnidLocalPlayer")]
+	public uint LocalPlayerId = 0; // DPNID of local player
 
-[Original("cmbt_x", "cmbt_y")] public WorldPosition CameraPosition;
-[Original("scrn_moving_spd")] public double ScrollSpeed;
-[Original("unit")] public Array256<Unit> Units;
-[Original("max_unit")] public short MaxUnitId;
-[Original("the_slct_unit")] public short SelectedUnit;
-[Original("old_the_slct_unit")] public short PreviousSelectedUnit;
-[Original("slct_unit_no")] public short SelectionCount;
-[Original("slct_unit")] public Array2<Array256<short>> Selections;
-[Original("crsr_pt")] public POINT CursorPosition;
+	[Original("g_dpnidRivalPlayer")]
+	public uint RivalPlayerId = 0; // DPNID of local player
 
-[Original("unit_info")] public Array10<int> UnitInfoPanel;
-[Original("fire")] public Array512<Fire> Fires;
-[Original("max_fire")] public int MaxFireId;
-[Original("effect")] public Array1024<Effect> Effects;
+	//DPNID                      g_dpnidHostPlayer             = 0;       // DPNID of host player
+	[Original("g_dwNumberOfActivePlayers")]
+	public uint ActivePlayerCount = 0; // Number of players currently in game
 
-[Original("cls_flg")] public short ClearFlag;
+	[Original("g_strAppName")]
+	public Array256<byte> AppName = TEXT<Array256<byte>>("NSPW NET");
 
-[Original("cmbt_map")] public Array256<Array256<ushort>> MapTiles; // マップ
-[Original("kumo")] public Array4096<Cloud> Clouds; // 雲
+	[Original("g_strLocalPlayerName")]
+	public Array260<byte> LocalPlayerName; // Local player name
 
-[Original("lf_btn")] public short LeftButton;
-[Original("ri_btn")] public short RightButton;
-[Original("cmbt_menu_kind")] public short CombatMenuKind;
-[Original("cmbt_menu_slctd")] public CombatMenuItem CombatMenuSelection;
+	[Original("g_strRivalPlayerName")]
+	public Array260<byte> RivalPlayerName = TEXT<Array260<byte>>(" - - - "); // Rival player name
 
-[Original("wrk_pp_x")] public Array64<double> WorkPathX;
-[Original("wrk_pp_y")] public Array64<double> WorkPathY; //（ワーク）移動目的地の地図上の位置
+	//TCHAR                      g_strSessionName[MAX_PATH];              // Session name
+	[Original("g_strPreferredProvider")]
+	public Array260<byte> PreferredProvider; // Provider string
 
-[Original("new_pp")] public Array3<MoveOrder> MoveOrders;
-[Original("new_slct")] public Array3<SelectOrder> SelectOrders;
-[Original("new_menu")] public Array3<MenuOrder> MenuOrders;
+	[Original("g_strRemoteHostname")]
+	public Array260<byte> RemoteHostName; // TCP/IP remote host
 
-[Original("rest_time")] public int BattleTime;
-[Original("game_end")] public GameResult Result;
-[Original("decision_point")] public Array4<int> DecisionPoints;
-[Original("your_side")] public Side LocalSide;
-[Original("game_speed")] public short GameSpeed;
+	[Original("g_bHostPlayer")]
+	public int IsHostPlayer = FALSE; // TRUE if local player is host
 
-[Original("mode")] public GameMode Mode;
-[Original("demo_time")] public short TitleTime;
-[Original("sinario")] public short ScenarioNumber;
+	[Original("g_pCurSPGuid")]
+	public Guid? ServiceProviderGuid = null; // Currently selected guid
 
-[Original("map_edit")] public Bool8 IsEditingMap;
-[Original("put_trgt")] public byte EditorTarget;
-[Original("put_kind")] public byte EditorKind;
-[Original("put_kind_sub")] public byte EditorVariant;
-[Original("rein")] public Array3<byte> Reinforcements;
+	[Original("g_hConnectAsyncOp")]
+	public uint ConnectOperation = 0; // Async handle for connecting to host
 
-[Original("user_sinario_fn")] public Array260<byte> UserScenarioFileName; // ユーザーシナリオのファイルネーム
+	public DPN_BUFFER_DESC bufferDesc;
+	public uint hAsync;
 
-// 通信対戦用
-[Original("cnct_game")] public int			IsNetworkGame;
-[Original("you_are_host")] public Bool8 IsHost;
-[Original("you_were_host")] public Bool8 WasHost;
+	// チャット
+	public HWND hwndChatDlg = null; // HWND of chat dialog
 
-[Original("you_can_order")] public Bool32 CanOrder;
-[Original("you_ordered")] public Bool32 HasOrdered;
+	[Original("anti_air")]
+	public int ShowsAntiAir;
 
-[Original("bf_new_pp")] public Array3<MoveOrder> BufferedMoveOrders;
-[Original("bf_new_slct")] public Array3<SelectOrder> BufferedSelectOrders;
-[Original("bf_new_menu")] public Array3<MenuOrder> BufferedMenuOrders;
+	[Original("reveal")]
+	public int RevealsAll;
 
-[Original("bf_game_system_menu")] public Array3<byte> BufferedSystemOrders;
-[Original("game_system_menu")] public Array3<byte> SystemOrders;
+	[Original("cmbt_x", "cmbt_y")]
+	public WorldPosition CameraPosition;
 
-[Original("bf_slct_unit")] public Array3<Array90<short>> BufferedSelections;
-[Original("go_next_1")] public Bool32 CanAdvance1;
-[Original("go_next_2")] public Bool32 CanAdvance2;
-[Original("join_game_start")] public MessageType JoinGameStart;
-[Original("rival_mode")] public GameMode RivalMode;
-[Original("my_rnd_sheet")] public Array4096<int> SharedRandomTable;
-[Original("my_rnd_pt")] public short SharedRandomIndex;
-[Original("cnct_game_rnd_sheed")] public short SharedRandomSeed;
+	[Original("scrn_moving_spd")]
+	public double ScrollSpeed;
 
-[Original("host_side")] public int HostSide;
-[Original("decision_sw")] public Bool8 IsDecisionEnabled;
-[Original("arrival_cont")] public byte ArrivalControl;
+	[Original("unit")]
+	public Array256<Unit> Units;
 
-[Original("rnd_count")] public int RandomCount;
-[Original("bf_cc_count")] public Array2<byte> TickChecksums;
-[Original("bf_rnd_count")] public Array2<byte> RandomChecksums;
-[Original("bf_unit_chk")] public Array2<byte> UnitChecksums;
-[Original("ccc_out")] public Bool32 IsTickOutOfSync;
-[Original("rnd_out")] public Bool32 IsRandomOutOfSync;
-[Original("unit_out")] public Bool32 AreUnitsOutOfSync;
-[Original("ccc_wait")] public Array2<byte> TickWaits;
-[Original("cnct_loop_ct")] public short TurnCounter;
-[Original("cnct_loop")] public short TurnLength;
-[Original("cnct_loop_pt1")] public short SyncTick1;
-[Original("cnct_loop_pt2")] public short SyncTick2;
+	[Original("max_unit")]
+	public short MaxUnitId;
 
-[Original("spry_pt")] public short SupplyPoints;
-[Original("spry_no_cont")] public short SupplyCount;
-[Original("spry_trgt")] public short SupplyTarget;
-[Original("spry_rate")] public Array2<short> SupplyRates;
-[Original("first_spry_pt")] public Array2<short> InitialSupplyPoints;
-[Original("rvrs_time")] public short SwapTime;
-[Original("rvrs_rule")] public short SwapRule;
-[Original("map_now")] public short CurrentMap;
-[Original("bf_arrived_unit")] public Array2<short> BufferedArrivedUnits;
+	[Original("the_slct_unit")]
+	public short SelectedUnit;
 
-[Original("auto_save_time")] public short AutoSaveTime;
+	[Original("old_the_slct_unit")]
+	public short PreviousSelectedUnit;
 
-[Original("last_tick")] public uint LastTime;
-[Original("last_tick2")] public uint LastTime2;
-[Original("tick_now")] public uint Now;
-[Original("tick_diff")] public uint Elapsed;
+	[Original("slct_unit_no")]
+	public short SelectionCount;
 
-// 通信対戦デバグ用
-[Original("first_r_error")] public Bool8 HasSavedDesync;
+	[Original("slct_unit")]
+	public Array2<Array256<short>> Selections;
 
-// チャット用
-[Original("input_chat_now")] public int IsTypingChat=0;
+	[Original("crsr_pt")]
+	public POINT CursorPosition;
 
-[Original("my_chat")] public Array260<byte> MyChat;
-[Original("friend_chat")] public Array260<byte> RivalChat;
+	[Original("unit_info")]
+	public Array10<int> UnitInfoPanel;
 
-[Original("my_chat_dsp_time")] public byte MyChatDisplayTime;
-[Original("friend_chat_dsp_time")] public byte RivalChatDisplayTime;
+	[Original("fire")]
+	public Array512<Fire> Fires;
 
-//
-[Original("rival_ver")] public Array16<byte> RivalVersion;
+	[Original("max_fire")]
+	public int MaxFireId;
 
-private void DrawRivalChat(ref Array128<byte> text, ref HDC hdc)
+	[Original("effect")]
+	public Array1024<Effect> Effects;
+
+	[Original("cls_flg")]
+	public short ClearFlag;
+
+	[Original("cmbt_map")]
+	public Array256<Array256<ushort>> MapTiles; // マップ
+
+	[Original("kumo")]
+	public Array4096<Cloud> Clouds; // 雲
+
+	[Original("lf_btn")]
+	public short LeftButton;
+
+	[Original("ri_btn")]
+	public short RightButton;
+
+	[Original("cmbt_menu_kind")]
+	public short CombatMenuKind;
+
+	[Original("cmbt_menu_slctd")]
+	public CombatMenuItem CombatMenuSelection;
+
+	[Original("wrk_pp_x")]
+	public Array64<double> WorkPathX;
+
+	[Original("wrk_pp_y")]
+	public Array64<double> WorkPathY; //（ワーク）移動目的地の地図上の位置
+
+	[Original("new_pp")]
+	public Array3<MoveOrder> MoveOrders;
+
+	[Original("new_slct")]
+	public Array3<SelectOrder> SelectOrders;
+
+	[Original("new_menu")]
+	public Array3<MenuOrder> MenuOrders;
+
+	[Original("rest_time")]
+	public int BattleTime;
+
+	[Original("game_end")]
+	public GameResult Result;
+
+	[Original("decision_point")]
+	public Array4<int> DecisionPoints;
+
+	[Original("your_side")]
+	public Side LocalSide;
+
+	[Original("game_speed")]
+	public short GameSpeed;
+
+	[Original("mode")]
+	public GameMode Mode;
+
+	[Original("demo_time")]
+	public short TitleTime;
+
+	[Original("sinario")]
+	public short ScenarioNumber;
+
+	[Original("map_edit")]
+	public Bool8 IsEditingMap;
+
+	[Original("put_trgt")]
+	public byte EditorTarget;
+
+	[Original("put_kind")]
+	public byte EditorKind;
+
+	[Original("put_kind_sub")]
+	public byte EditorVariant;
+
+	[Original("rein")]
+	public Array3<byte> Reinforcements;
+
+	[Original("user_sinario_fn")]
+	public Array260<byte> UserScenarioFileName; // ユーザーシナリオのファイルネーム
+
+	// 通信対戦用
+	[Original("cnct_game")]
+	public int IsNetworkGame;
+
+	[Original("you_are_host")]
+	public Bool8 IsHost;
+
+	[Original("you_were_host")]
+	public Bool8 WasHost;
+
+	[Original("you_can_order")]
+	public Bool32 CanOrder;
+
+	[Original("you_ordered")]
+	public Bool32 HasOrdered;
+
+	[Original("bf_new_pp")]
+	public Array3<MoveOrder> BufferedMoveOrders;
+
+	[Original("bf_new_slct")]
+	public Array3<SelectOrder> BufferedSelectOrders;
+
+	[Original("bf_new_menu")]
+	public Array3<MenuOrder> BufferedMenuOrders;
+
+	[Original("bf_game_system_menu")]
+	public Array3<byte> BufferedSystemOrders;
+
+	[Original("game_system_menu")]
+	public Array3<byte> SystemOrders;
+
+	[Original("bf_slct_unit")]
+	public Array3<Array90<short>> BufferedSelections;
+
+	[Original("go_next_1")]
+	public Bool32 CanAdvance1;
+
+	[Original("go_next_2")]
+	public Bool32 CanAdvance2;
+
+	[Original("join_game_start")]
+	public MessageType JoinGameStart;
+
+	[Original("rival_mode")]
+	public GameMode RivalMode;
+
+	[Original("my_rnd_sheet")]
+	public Array4096<int> SharedRandomTable;
+
+	[Original("my_rnd_pt")]
+	public short SharedRandomIndex;
+
+	[Original("cnct_game_rnd_sheed")]
+	public short SharedRandomSeed;
+
+	[Original("host_side")]
+	public int HostSide;
+
+	[Original("decision_sw")]
+	public Bool8 IsDecisionEnabled;
+
+	[Original("arrival_cont")]
+	public byte ArrivalControl;
+
+	[Original("rnd_count")]
+	public int RandomCount;
+
+	[Original("bf_cc_count")]
+	public Array2<byte> TickChecksums;
+
+	[Original("bf_rnd_count")]
+	public Array2<byte> RandomChecksums;
+
+	[Original("bf_unit_chk")]
+	public Array2<byte> UnitChecksums;
+
+	[Original("ccc_out")]
+	public Bool32 IsTickOutOfSync;
+
+	[Original("rnd_out")]
+	public Bool32 IsRandomOutOfSync;
+
+	[Original("unit_out")]
+	public Bool32 AreUnitsOutOfSync;
+
+	[Original("ccc_wait")]
+	public Array2<byte> TickWaits;
+
+	[Original("cnct_loop_ct")]
+	public short TurnCounter;
+
+	[Original("cnct_loop")]
+	public short TurnLength;
+
+	[Original("cnct_loop_pt1")]
+	public short SyncTick1;
+
+	[Original("cnct_loop_pt2")]
+	public short SyncTick2;
+
+	[Original("spry_pt")]
+	public short SupplyPoints;
+
+	[Original("spry_no_cont")]
+	public short SupplyCount;
+
+	[Original("spry_trgt")]
+	public short SupplyTarget;
+
+	[Original("spry_rate")]
+	public Array2<short> SupplyRates;
+
+	[Original("first_spry_pt")]
+	public Array2<short> InitialSupplyPoints;
+
+	[Original("rvrs_time")]
+	public short SwapTime;
+
+	[Original("rvrs_rule")]
+	public short SwapRule;
+
+	[Original("map_now")]
+	public short CurrentMap;
+
+	[Original("bf_arrived_unit")]
+	public Array2<short> BufferedArrivedUnits;
+
+	[Original("auto_save_time")]
+	public short AutoSaveTime;
+
+	[Original("last_tick")]
+	public uint LastTime;
+
+	[Original("last_tick2")]
+	public uint LastTime2;
+
+	[Original("tick_now")]
+	public uint Now;
+
+	[Original("tick_diff")]
+	public uint Elapsed;
+
+	// 通信対戦デバグ用
+	[Original("first_r_error")]
+	public Bool8 HasSavedDesync;
+
+	// チャット用
+	[Original("input_chat_now")]
+	public int IsTypingChat = 0;
+
+	[Original("my_chat")]
+	public Array260<byte> MyChat;
+
+	[Original("friend_chat")]
+	public Array260<byte> RivalChat;
+
+	[Original("my_chat_dsp_time")]
+	public byte MyChatDisplayTime;
+
+	[Original("friend_chat_dsp_time")]
+	public byte RivalChatDisplayTime;
+
+	//
+	[Original("rival_ver")]
+	public Array16<byte> RivalVersion;
+
+	private void DrawRivalChat(ref Array128<byte> text, ref HDC hdc)
 	{
-	if(RivalChatDisplayTime!=0)
+		if (RivalChatDisplayTime != 0)
 		{
-		var length = wsprintf(text, RivalChat );
-		TextOut(hdc, 10, 240+170, text, length);
-		RivalChatDisplayTime--;
-		if(RivalChatDisplayTime==0)
+			var length = wsprintf(text, RivalChat);
+			TextOut(hdc, 10, 240 + 170, text, length);
+			RivalChatDisplayTime--;
+			if (RivalChatDisplayTime == 0)
 			{
-			for(var m=0;m<128;m++)
+				for (var m = 0; m < 128; m++)
 				{
-				RivalChat[m]=0;
+					RivalChat[m] = 0;
 				}
 			}
 		}
 	}
 
-private void DrawMyChat(ref Array128<byte> text, ref HDC hdc)
+	private void DrawMyChat(ref Array128<byte> text, ref HDC hdc)
 	{
-	if(MyChatDisplayTime!=0)
+		if (MyChatDisplayTime != 0)
 		{
-		var length = wsprintf(text, MyChat );
-		TextOut(hdc, 10, 200+170, text, length);
-		MyChatDisplayTime--;
-		if(MyChatDisplayTime==0)
+			var length = wsprintf(text, MyChat);
+			TextOut(hdc, 10, 200 + 170, text, length);
+			MyChatDisplayTime--;
+			if (MyChatDisplayTime == 0)
 			{
-			for(var m=0;m<128;m++)
+				for (var m = 0; m < 128; m++)
 				{
-				MyChat[m]=0;
+					MyChat[m] = 0;
 				}
 			}
 		}
 	}
 
-private void DrawDebugInfo(ref int length, ref Array128<byte> text, int selected)
+	private void DrawDebugInfo(ref int length, ref Array128<byte> text, int selected)
 	{
-	switch( DebugMenu )
+		switch (DebugMenu)
 		{
-		case 0:
-			length = wsprintf(text, "%d  :%d  :%d  :%d  :%d", Units[SelectedUnit].info[1], Units[SelectedUnit].info[4], Units[SelectedUnit].info[7], Units[SelectedUnit].info[8], Units[81].info[0] );
-			break;
-		case 1:
-			length = wsprintf(text, "put_trgt %d put_kind %d cmbt_x %d cmbt_y %d crsr_pt.x %d crsr_pt.y %d ",EditorTarget, EditorKind, (int)CameraPosition.X, (int)CameraPosition.Y, (int)CursorPosition.x, (int)CursorPosition.y  );
-			break;
-		case 2:
-			length = wsprintf(text, "cnct_game=%d you_are_host=%d you_can_order=%d new_pp[1].used=%d",IsNetworkGame,IsHost,CanOrder,MoveOrders[1].Unit);
-			break;
-		case 3:
-			length = wsprintf(text, "you_ordered=%d you_can_order=%d new_pp[1].used=%d",HasOrdered,CanOrder,MoveOrders[1].Unit);
-			break;
-		case 4:
-			length = wsprintf(text, "game_speed=%d",GameSpeed);
-			break;
-		case 5:
-			length = wsprintf(text, "CR_X=%02d CR_Y=%02d Ri_btn=%d Lf_btn=%d ", CursorPosition.x,CursorPosition.y, RightButton, LeftButton );
-			break;
+			case 0:
+				length = wsprintf(
+					text,
+					"%d  :%d  :%d  :%d  :%d",
+					Units[SelectedUnit].info[1],
+					Units[SelectedUnit].info[4],
+					Units[SelectedUnit].info[7],
+					Units[SelectedUnit].info[8],
+					Units[81].info[0]
+				);
+				break;
+			case 1:
+				length = wsprintf(
+					text,
+					"put_trgt %d put_kind %d cmbt_x %d cmbt_y %d crsr_pt.x %d crsr_pt.y %d ",
+					EditorTarget,
+					EditorKind,
+					(int)CameraPosition.X,
+					(int)CameraPosition.Y,
+					(int)CursorPosition.x,
+					(int)CursorPosition.y
+				);
+				break;
+			case 2:
+				length = wsprintf(
+					text,
+					"cnct_game=%d you_are_host=%d you_can_order=%d new_pp[1].used=%d",
+					IsNetworkGame,
+					IsHost,
+					CanOrder,
+					MoveOrders[1].Unit
+				);
+				break;
+			case 3:
+				length = wsprintf(
+					text,
+					"you_ordered=%d you_can_order=%d new_pp[1].used=%d",
+					HasOrdered,
+					CanOrder,
+					MoveOrders[1].Unit
+				);
+				break;
+			case 4:
+				length = wsprintf(text, "game_speed=%d", GameSpeed);
+				break;
+			case 5:
+				length = wsprintf(
+					text,
+					"CR_X=%02d CR_Y=%02d Ri_btn=%d Lf_btn=%d ",
+					CursorPosition.x,
+					CursorPosition.y,
+					RightButton,
+					LeftButton
+				);
+				break;
 
-		case 6:
-			length = wsprintf(text, "go_next_1=%d go_next_2=%d", CanAdvance1, CanAdvance2 );
-			break;
+			case 6:
+				length = wsprintf(text, "go_next_1=%d go_next_2=%d", CanAdvance1, CanAdvance2);
+				break;
 
-		case 7:
-			length = wsprintf(text, "hp[0]=%d arm[0]=%d", Units[selected].Hp, Units[selected].Weapon );
-			break;
+			case 7:
+				length = wsprintf(
+					text,
+					"hp[0]=%d arm[0]=%d",
+					Units[selected].Hp,
+					Units[selected].Weapon
+				);
+				break;
 
-		case 8:
-			length = wsprintf(text, "spry_rate[0]=%d [1]=%d  first_sply_pt[0]=%d [1]=%d  rvrs_time=%d _rule=%d", SupplyRates[0], SupplyRates[1], InitialSupplyPoints[0], InitialSupplyPoints[1], SwapTime, SwapRule );
-			break;
+			case 8:
+				length = wsprintf(
+					text,
+					"spry_rate[0]=%d [1]=%d  first_sply_pt[0]=%d [1]=%d  rvrs_time=%d _rule=%d",
+					SupplyRates[0],
+					SupplyRates[1],
+					InitialSupplyPoints[0],
+					InitialSupplyPoints[1],
+					SwapTime,
+					SwapRule
+				);
+				break;
 
-		default:
-			DebugMenu=0;
-			break;
+			default:
+				DebugMenu = 0;
+				break;
 		}
 	}
 
-/////////////////////
+	/////////////////////
 
-/*-------------------------------------------
-	アプリがアクティブの時のアイドリング
-	ゲームアプリのメインループ
---------------------------------------------*/
-[Original("updateFrame")]
-public void	UpdateFrame()
+	/*-------------------------------------------
+		アプリがアクティブの時のアイドリング
+		ゲームアプリのメインループ
+	--------------------------------------------*/
+	[Original("updateFrame")]
+	public void UpdateFrame()
 	{
-	DDBLTFX ddbltfx;
-	short		ticks;
+		DDBLTFX ddbltfx;
+		short ticks;
 
-	Now = timeGetTime();
+		Now = timeGetTime();
 
-	Elapsed = Now - LastTime2;
+		Elapsed = Now - LastTime2;
 
-	if( IsSingleplayer && Mode==GameMode.Battle && !IsEditingMap )
+		if (IsSingleplayer && Mode == GameMode.Battle && !IsEditingMap)
 		{
-		// 1.22's frame, on its timer.
-		if( !TryStartSingleplayerFrame(out ticks) )
-			return;
+			// 1.22's frame, on its timer.
+			if (!TryStartSingleplayerFrame(out ticks))
+				return;
 		}
-	else
-		{
-		if( IsEditingMap )
-			ticks=1;
-		else if( Mode==GameMode.Battle )
-			{
-			if( Buttons.HasFlag(InputButtons.Space) )
-				ticks=20;
-			else
-				ticks=GameSpeed;
-			}
 		else
-			ticks=1;
-
-		if( ticks==1 && Elapsed<=45+5 )
+		{
+			if (IsEditingMap)
+				ticks = 1;
+			else if (Mode == GameMode.Battle)
 			{
-			return;
+				if (Buttons.HasFlag(InputButtons.Space))
+					ticks = 20;
+				else
+					ticks = GameSpeed;
+			}
+			else
+				ticks = 1;
+
+			if (ticks == 1 && Elapsed <= 45 + 5)
+			{
+				return;
 			}
 
-		LastTime2 = timeGetTime();
+			LastTime2 = timeGetTime();
 		}
 
-	ReadInput();		// マウス、キーボード状況取得
+		ReadInput(); // マウス、キーボード状況取得
 
-	// 塗りつぶし
-	ZeroMemory(&ddbltfx,(nuint)(sizeof(DDBLTFX)));
-	ddbltfx.dwSize = (uint)(sizeof( DDBLTFX ));
+		// 塗りつぶし
+		ZeroMemory(&ddbltfx, (nuint)(sizeof(DDBLTFX)));
+		ddbltfx.dwSize = (uint)(sizeof(DDBLTFX));
 
-	switch( Mode )
+		switch (Mode)
 		{
-		case GameMode.Title:
-			// 塗りつぶし
-			ddbltfx.dwFillColor = 0x0000;
-			if( DDERR_SURFACELOST == IDirectDrawSurface_Blt( Renderer.lpDDSBack,null,null,null,DDBLT_COLORFILL | DDBLT_WAIT,&ddbltfx ))
+			case GameMode.Title:
+				// 塗りつぶし
+				ddbltfx.dwFillColor = 0x0000;
+				if (
+					DDERR_SURFACELOST
+					== IDirectDrawSurface_Blt(
+						Renderer.lpDDSBack,
+						null,
+						null,
+						null,
+						DDBLT_COLORFILL | DDBLT_WAIT,
+						&ddbltfx
+					)
+				)
 				{
-				Renderer.RestoreSurfaces();
-				return;
+					Renderer.RestoreSurfaces();
+					return;
 				}
 
-			UpdateTitle();
-			break;
+				UpdateTitle();
+				break;
 
-		case GameMode.GameSetting:
-		case GameMode.ConfigSetting:
-			// 塗りつぶし
-			ddbltfx.dwFillColor = 0x0300;
-			if( DDERR_SURFACELOST == IDirectDrawSurface_Blt( Renderer.lpDDSBack,null,null,null,DDBLT_COLORFILL | DDBLT_WAIT,&ddbltfx ))
+			case GameMode.GameSetting:
+			case GameMode.ConfigSetting:
+				// 塗りつぶし
+				ddbltfx.dwFillColor = 0x0300;
+				if (
+					DDERR_SURFACELOST
+					== IDirectDrawSurface_Blt(
+						Renderer.lpDDSBack,
+						null,
+						null,
+						null,
+						DDBLT_COLORFILL | DDBLT_WAIT,
+						&ddbltfx
+					)
+				)
 				{
-				Renderer.RestoreSurfaces();
-				return;
+					Renderer.RestoreSurfaces();
+					return;
 				}
 
-			UpdateGameSetting();
-			break;
+				UpdateGameSetting();
+				break;
 
-		case GameMode.Battle:
-			// 塗りつぶし
-			ddbltfx.dwFillColor = 0x0016;
-			if( DDERR_SURFACELOST == IDirectDrawSurface_Blt( Renderer.lpDDSBack,null,null,null,DDBLT_COLORFILL | DDBLT_WAIT,&ddbltfx ))
+			case GameMode.Battle:
+				// 塗りつぶし
+				ddbltfx.dwFillColor = 0x0016;
+				if (
+					DDERR_SURFACELOST
+					== IDirectDrawSurface_Blt(
+						Renderer.lpDDSBack,
+						null,
+						null,
+						null,
+						DDBLT_COLORFILL | DDBLT_WAIT,
+						&ddbltfx
+					)
+				)
 				{
-				Renderer.RestoreSurfaces();
-				return;
+					Renderer.RestoreSurfaces();
+					return;
 				}
 
-			for( int i=ticks; i>=1; i-- )
+				for (int i = ticks; i >= 1; i--)
 				{
-				Renderer.IsDrawnTick=i==1;
-				Trace?.Reach(this, TracePoint.Tick);
-				UpdateBattle();
-				// 1.22 runs decision for the tick that is drawn after the drawing only.
-				if( !IsEditingMap && !(IsSingleplayer && Renderer.IsDrawnTick) )
+					Renderer.IsDrawnTick = i == 1;
+					Trace?.Reach(this, TracePoint.Tick);
+					UpdateBattle();
+					// 1.22 runs decision for the tick that is drawn after the drawing only.
+					if (!IsEditingMap && !(IsSingleplayer && Renderer.IsDrawnTick))
+						CheckResult();
+				}
+
+				UpdateUnitInfo();
+				Trace?.Reach(this, TracePoint.Drawing);
+				Renderer.DrawBattleArea();
+				DrawMinimap();
+
+				if (!IsEditingMap)
+				{
 					CheckResult();
+					HandleInput();
 				}
 
-			UpdateUnitInfo();
-			Trace?.Reach(this, TracePoint.Drawing);
-			Renderer.DrawBattleArea();
-			DrawMinimap();
-
-			if( !IsEditingMap )
+				if (IsEditingMap)
 				{
-				CheckResult();
-				HandleInput();
+					UpdateMapEditor();
 				}
 
-			if(IsEditingMap )
-				{
-				UpdateMapEditor();
-				}
-
-			break;
+				break;
 		}
 
-	HDC hdc;
-	Array128<byte> text = default;
+		HDC hdc;
+		Array128<byte> text = default;
 
-	if (DD_OK==Renderer.lpDDSBack.GetDC(&hdc))
+		if (DD_OK == Renderer.lpDDSBack.GetDC(&hdc))
 		{
-		SetTextColor(hdc,RGB(255,255,255));
-		SetBkMode(hdc, TRANSPARENT);
+			SetTextColor(hdc, RGB(255, 255, 255));
+			SetBkMode(hdc, TRANSPARENT);
 
 #if DBG_MODE
 
-		int selected=SelectedUnit;
+			int selected = SelectedUnit;
 
-		var length = wsprintf(text, "dbg[0]=%d [1]=%d [2]=%d [3]=%d [4]=%d  :%d",DebugValues[0],DebugValues[1],DebugValues[2],DebugValues[3],DebugValues[4] ,SelectedUnit   );
-		TextOut(hdc, 0, 0, text, length);
+			var length = wsprintf(
+				text,
+				"dbg[0]=%d [1]=%d [2]=%d [3]=%d [4]=%d  :%d",
+				DebugValues[0],
+				DebugValues[1],
+				DebugValues[2],
+				DebugValues[3],
+				DebugValues[4],
+				SelectedUnit
+			);
+			TextOut(hdc, 0, 0, text, length);
 
-		length = wsprintf(text, "unit_out=%d ccc_out=%d rnd_out=%d rnd_count=%d CCC=%d FrameC=%d Sinario=%d host_side=%d rival_mode=%d" ,AreUnitsOutOfSync ,IsTickOutOfSync,IsRandomOutOfSync,RandomCount ,Tick, Renderer.FrameCount, ScenarioNumber, HostSide, RivalMode);
-		TextOut(hdc, 0, 20, text, length);
+			length = wsprintf(
+				text,
+				"unit_out=%d ccc_out=%d rnd_out=%d rnd_count=%d CCC=%d FrameC=%d Sinario=%d host_side=%d rival_mode=%d",
+				AreUnitsOutOfSync,
+				IsTickOutOfSync,
+				IsRandomOutOfSync,
+				RandomCount,
+				Tick,
+				Renderer.FrameCount,
+				ScenarioNumber,
+				HostSide,
+				RivalMode
+			);
+			TextOut(hdc, 0, 20, text, length);
 
-		length = wsprintf(text, "Dbg[5]=%d  bf_cc_count[0]=%d [1]=%d   bf_rnd_count[0]=%d [1]=%d  ccc_wait[0]=%d  [1]=%d " ,DebugValues[5], TickChecksums[0], TickChecksums[1], RandomChecksums[0], RandomChecksums[1], TickWaits[0], TickWaits[1] );
-		TextOut(hdc, 0, 40, text, length);
+			length = wsprintf(
+				text,
+				"Dbg[5]=%d  bf_cc_count[0]=%d [1]=%d   bf_rnd_count[0]=%d [1]=%d  ccc_wait[0]=%d  [1]=%d ",
+				DebugValues[5],
+				TickChecksums[0],
+				TickChecksums[1],
+				RandomChecksums[0],
+				RandomChecksums[1],
+				TickWaits[0],
+				TickWaits[1]
+			);
+			TextOut(hdc, 0, 40, text, length);
 
-		DrawDebugInfo(ref length, ref text, selected);
+			DrawDebugInfo(ref length, ref text, selected);
 
-		TextOut(hdc, 0, 60, text, length);
+			TextOut(hdc, 0, 60, text, length);
 #endif
 
 #if !LNGG_VER
-			if(AreUnitsOutOfSync)
-				{
+			if (AreUnitsOutOfSync)
+			{
 				length = wsprintf(text, "ユニットデータ同期異常、ゲームを中断されたし。");
 				TextOut(hdc, 0, 100, text, length);
-				}
-			if(IsTickOutOfSync)
-				{
+			}
+			if (IsTickOutOfSync)
+			{
 				length = wsprintf(text, "プログラム同期異常、ゲームを中断されたし。");
 				TextOut(hdc, 0, 120, text, length);
-				}
-			if(IsRandomOutOfSync)
-				{
+			}
+			if (IsRandomOutOfSync)
+			{
 				length = wsprintf(text, "ランダム同期異常、ゲームを中断されたし。");
 				TextOut(hdc, 0, 140, text, length);
-				}
-			if( ActivePlayerCount!=2 && !IsSingleplayer )
-				{
+			}
+			if (ActivePlayerCount != 2 && !IsSingleplayer)
+			{
 				length = wsprintf(text, "接続相手がいなくなりました。");
 				TextOut(hdc, 0, 160, text, length);
-				}
+			}
 #else
-			if(unit_out)
-				{
+			if (unit_out)
+			{
 				len = wsprintf(ach, "Unit data synchronisum error! Exit application.");
 				TextOut(hdc, 0, 100, ach, len);
-				}
-			if(ccc_out)
-				{
+			}
+			if (ccc_out)
+			{
 				len = wsprintf(ach, "Program synchronisum error! Exit application.");
 				TextOut(hdc, 0, 120, ach, len);
-				}
-			if(rnd_out)
-				{
+			}
+			if (rnd_out)
+			{
 				len = wsprintf(ach, "Random synchronisum error! Exit application.");
 				TextOut(hdc, 0, 140, ach, len);
-				}
-			if( cnct_now==0  )
-				{
+			}
+			if (cnct_now == 0)
+			{
 				len = wsprintf(ach, "No connection object.");
 				TextOut(hdc, 0, 160, ach, len);
-				}
+			}
 #endif
 
-		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, Renderer.GameFont1);
+			SetBkMode(hdc, TRANSPARENT);
+			SelectObject(hdc, Renderer.GameFont1);
 
-		SetTextColor(hdc, RGB(255, 255, 0));
+			SetTextColor(hdc, RGB(255, 255, 0));
 
-		DrawMyChat(ref text, ref hdc);
+			DrawMyChat(ref text, ref hdc);
 
-		DrawRivalChat(ref text, ref hdc);
+			DrawRivalChat(ref text, ref hdc);
 
-		Renderer.lpDDSBack.ReleaseDC(hdc);
+			Renderer.lpDDSBack.ReleaseDC(hdc);
 		}
 
-	// マウス入力の後処理
-	if(RightButton==1)	RightButton=2;
-	if(RightButton==3)	RightButton=0;
+		// マウス入力の後処理
+		if (RightButton == 1)
+			RightButton = 2;
+		if (RightButton == 3)
+			RightButton = 0;
 
-	if(LeftButton==1)	LeftButton=2;
-	if(LeftButton==3)	LeftButton=0;
+		if (LeftButton == 1)
+			LeftButton = 2;
+		if (LeftButton == 3)
+			LeftButton = 0;
 
-	Renderer.FrameCount++;
+		Renderer.FrameCount++;
 
-	// プライマリサーフェスにフリップ
+		// プライマリサーフェスにフリップ
 
-	IDirectDrawSurface_SetClipper(Renderer.lpDDSPrimary,Renderer.lpDDclip);
-	if( DDERR_SURFACELOST == IDirectDrawSurface_Blt(Renderer.lpDDSPrimary,null,Renderer.lpDDSBack,null,DDBLT_WAIT,null))
-		Renderer.RestoreSurfaces();
-
+		IDirectDrawSurface_SetClipper(Renderer.lpDDSPrimary, Renderer.lpDDclip);
+		if (
+			DDERR_SURFACELOST
+			== IDirectDrawSurface_Blt(
+				Renderer.lpDDSPrimary,
+				null,
+				Renderer.lpDDSBack,
+				null,
+				DDBLT_WAIT,
+				null
+			)
+		)
+			Renderer.RestoreSurfaces();
 	}
 
-/*--------------------------------------------
-	メイン
----------------------------------------------*/
-public int WinMain(object? hInst,object? hPrevInst,string lpCmdLine,int nCmdShow)
+	/*--------------------------------------------
+		メイン
+	---------------------------------------------*/
+	public int WinMain(object? hInst, object? hPrevInst, string lpCmdLine, int nCmdShow)
 	{
-	MSG msg=default;
-	WNDCLASS wc;
+		MSG msg = default;
+		WNDCLASS wc;
 
+		for (var i = 0; i < 16; i++)
+			DebugValues[i] = 0;
 
-	for(var i=0; i<16; i++)
-		DebugValues[i]=0;
+		Renderer.IsFullscreen = true;
 
-	Renderer.IsFullscreen=true;
+		InitCommonControls();
 
-	InitCommonControls();
+		// Read persistent state information from registry
+		RegCreateKeyEx("Software\\Microsoft\\DirectX DirectPlay Samples", ref hDPlaySampleRegKey);
 
-	// Read persistent state information from registry
-	RegCreateKeyEx( "Software\\Microsoft\\DirectX DirectPlay Samples", ref hDPlaySampleRegKey );
+		DXUtil_ReadStringRegKeyCch(
+			hDPlaySampleRegKey,
+			TEXT("Player Name"),
+			LocalPlayerName,
+			MAX_PATH,
+			TEXT("TestPlayer")
+		);
+		DXUtil_ReadStringRegKeyCch(
+			hDPlaySampleRegKey,
+			TEXT("Preferred Provider"),
+			PreferredProvider,
+			MAX_PATH,
+			TEXT("DirectPlay8 TCP/IP Service Provider")
+		);
+		DXUtil_ReadStringRegKeyCch(
+			hDPlaySampleRegKey,
+			TEXT("Remote Hostname"),
+			RemoteHostName,
+			MAX_PATH,
+			TEXT("localhost")
+		);
 
-    DXUtil_ReadStringRegKeyCch( hDPlaySampleRegKey, TEXT("Player Name"),
-                             LocalPlayerName, MAX_PATH, TEXT("TestPlayer") );
-    DXUtil_ReadStringRegKeyCch( hDPlaySampleRegKey, TEXT("Preferred Provider"),
-                             PreferredProvider, MAX_PATH,
-                             TEXT("DirectPlay8 TCP/IP Service Provider") );
-    DXUtil_ReadStringRegKeyCch( hDPlaySampleRegKey, TEXT("Remote Hostname"),
-                             RemoteHostName, MAX_PATH,
-                             TEXT("localhost") );
+		// COM 初期化
+		CoInitializeEx();
 
-	// COM 初期化
-	CoInitializeEx();
+		// Create IDirectPlay8ThreadPool
+		// ＤＰをバックスレッドでなく通常のルーティン処理とするためにこれを設定する。
+		if (
+			FAILED(
+				CoCreateInstance(
+					CLSID_DirectPlay8ThreadPool,
+					IID_IDirectPlay8ThreadPool,
+					out DirectPlayThreadPool
+				)
+			)
+		)
+			return (false ? 1 : 0);
 
-	// Create IDirectPlay8ThreadPool
-	// ＤＰをバックスレッドでなく通常のルーティン処理とするためにこれを設定する。
-	if( FAILED( CoCreateInstance( CLSID_DirectPlay8ThreadPool, IID_IDirectPlay8ThreadPool, out DirectPlayThreadPool ) ))
-        return (false ? 1 : 0);
+		// Init IDirectPlay8ThreadPool
+		DirectPlayThreadPool.Initialize(
+			null,
+			DirectPlayMessageHandler,
+			DPNINITIALIZE_DISABLEPARAMVAL
+		);
 
-	// Init IDirectPlay8ThreadPool
-	DirectPlayThreadPool.Initialize( null, DirectPlayMessageHandler, DPNINITIALIZE_DISABLEPARAMVAL );
+		// Put DirectPlay in "DoWork" mode
+		DirectPlayThreadPool.SetThreadCount(unchecked((uint)((uint)-1)), 0, 0);
 
-	// Put DirectPlay in "DoWork" mode
-   DirectPlayThreadPool.SetThreadCount( unchecked((uint)((uint) -1)), 0, 0 );
+		// Create IDirectPlay8Peer
+		if (
+			FAILED(
+				CoCreateInstance(CLSID_DirectPlay8Peer, IID_IDirectPlay8Peer, out DirectPlayPeer)
+			)
+		)
+			return (false ? 1 : 0);
 
-	// Create IDirectPlay8Peer
-	if( FAILED( CoCreateInstance( CLSID_DirectPlay8Peer, IID_IDirectPlay8Peer, out DirectPlayPeer ) ))
-		return (false ? 1 : 0);
+		// Init IDirectPlay8Peer
+		DirectPlayPeer.Initialize(null, DirectPlayMessageHandler, DPNINITIALIZE_DISABLEPARAMVAL);
 
-	// Init IDirectPlay8Peer
-	DirectPlayPeer.Initialize( null, DirectPlayMessageHandler, DPNINITIALIZE_DISABLEPARAMVAL );
-
-	// A single-player game has no rival to connect to.
-	if( IsSingleplayer )
-		IsHostPlayer=TRUE;
-	else
+		// A single-player game has no rival to connect to.
+		if (IsSingleplayer)
+			IsHostPlayer = TRUE;
+		else
 		{
-	// Create the initial dialog.
-	// 接続ダイアログ 　オーナーウィンドウが無いため、モーダレスになります。
-	MainDialog = CreateDialog(MAKEINTRESOURCE(IDD_ADDRESS_OVERRIDE), null, OverrideDlgProc);
+			// Create the initial dialog.
+			// 接続ダイアログ 　オーナーウィンドウが無いため、モーダレスになります。
+			MainDialog = CreateDialog(MAKEINTRESOURCE(IDD_ADDRESS_OVERRIDE), null, OverrideDlgProc);
 
-	bool    waitsForConnection = true;
+			bool waitsForConnection = true;
 
-	// ホストも、ゲストもここで接続が完了するまでループ
-	// 接続確認ダイアログ
-	while (waitsForConnection)
-		{
-		// Retrieve any windows messages.
-		while (PeekMessage(ref msg, PM_REMOVE)!=0)
+			// ホストも、ゲストもここで接続が完了するまでループ
+			// 接続確認ダイアログ
+			while (waitsForConnection)
 			{
-			if (msg.message == WM_QUIT)
+				// Retrieve any windows messages.
+				while (PeekMessage(ref msg, PM_REMOVE) != 0)
 				{
-				// Quit the application.
-				waitsForConnection = false;
-				break;
+					if (msg.message == WM_QUIT)
+					{
+						// Quit the application.
+						waitsForConnection = false;
+						break;
+					}
+
+					if (IsDialogMessage(MainDialog, ref msg) == 0)
+					{
+						TranslateMessage();
+						DispatchMessage(ref msg);
+					}
 				}
+				// Let DirectPlay process network events and call our message handler.
+				DirectPlayThreadPool.DoWork(DOWORK_TIMESLICE, 0);
+				Sleep(1);
+			}
 
-			if ( IsDialogMessage(MainDialog, ref msg)==0 )
-				{
-				TranslateMessage();
-				DispatchMessage(ref msg);
-				}
-	     }
-		// Let DirectPlay process network events and call our message handler.
-		DirectPlayThreadPool.DoWork(DOWORK_TIMESLICE, 0);
-		Sleep(1);
-		}
-
-	if( ActivePlayerCount<2 )
-		{
-		// 接続キャンセル
-		EndDialog( MainDialog, 0 );
-		EndApp( );
-		return (int)msg.wParam;
-		}
-		}
-
-	IsHost=new Bool8((byte)IsHostPlayer);
-
-	MainDialog=null;
-
-	// メインウインドウを作成する
-	ZeroMemory(&wc,(nuint)(sizeof(WNDCLASS)));
-	wc.hbrBackground = (HBRUSH)GetStockObject();
-	wc.hInstance = hInst;
-	wc.lpfnWndProc = (WNDPROC)MainWndProc;
-	wc.lpszClassName = CLASS_NAME;
-	wc.hCursor = LoadCursor();
-
-	RegisterClass(ref wc);
-
-	int width,height;
-	// ウインドウの大きさを計算
-	if (Renderer.IsFullscreen)
-		{
-		// フルスクリーン時はそのままで OK
-		width = WIDTH;
-		height = HEIGHT;
-		hwndApp = CreateWindow(CLASS_NAME,CAPTION, null);
-		}
-	else
-		{
-		// ウインドウ時はウインドウの外枠のサイズを考慮する
-		width = WIDTH + GetSystemMetrics(SM_CXDLGFRAME) * 2;
-		height = HEIGHT + GetSystemMetrics(SM_CYDLGFRAME) * 2 + GetSystemMetrics(SM_CYCAPTION);
-		hwndApp = CreateWindow(CLASS_NAME,CAPTION, null);
-		}
-
-	ShowWindow(hwndApp,SW_SHOWNORMAL);
-	UpdateWindow(hwndApp);
-
-	ImmAssociateContext();			// 日本語入力機能を通常ゲーム時抑制する。
-
-
-	// ダイレクトドロウ
-    var ddrval = DirectDrawCreateEx(out Renderer.lpDD);
-    if (ddrval != DD_OK)
-		{
-		MessageBox(null,"DirectDrawの作成に失敗","Base",MB_OK | MB_ICONSTOP);
-		return FALSE;
-		}
-
-    // 協調レベルを設定
-	if (Renderer.IsFullscreen)
-	    ddrval = Renderer.lpDD.SetCooperativeLevel(hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN );
-	else
-	    ddrval = Renderer.lpDD.SetCooperativeLevel(hwndApp, DDSCL_NORMAL );
-	if (ddrval != DD_OK)
-		{
-		MessageBox(null,"残念！","って言うじゃなーい。",MB_OK | MB_ICONSTOP);
-		return FALSE;
-		}
-
-	// ディスプレイモードを設定
-	if(Renderer.IsFullscreen)
-		{
-		ddrval = Renderer.lpDD.SetDisplayMode( width, height, 16, 0, 0);
-		if (ddrval !=DD_OK)
+			if (ActivePlayerCount < 2)
 			{
-			MessageBox(null,"SetDisplayMode","残念！",MB_OK | MB_ICONSTOP);
-			return FALSE;
+				// 接続キャンセル
+				EndDialog(MainDialog, 0);
+				EndApp();
+				return (int)msg.wParam;
 			}
 		}
 
-	// バックバッファをひとつ持つプライマリサーフェスを作成
-	DDSURFACEDESC2 ddsd;
-	DDSCAPS2 ddscaps;
+		IsHost = new Bool8((byte)IsHostPlayer);
 
-	ZeroMemory(&ddsd,(nuint)(sizeof(DDSURFACEDESC2)));
-	ddsd.dwSize = (uint)(sizeof( DDSURFACEDESC2 ));
-	ddsd.dwFlags = DDSD_CAPS | DDSD_BACKBUFFERCOUNT;
-	ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE |
-						  DDSCAPS_FLIP |
-						  DDSCAPS_COMPLEX;
-	ddsd.dwBackBufferCount = 1;
-	ddrval = Renderer.lpDD.CreateSurface( &ddsd, out Renderer.lpDDSPrimary, null );
-	if (ddrval!=DD_OK)
+		MainDialog = null;
+
+		// メインウインドウを作成する
+		ZeroMemory(&wc, (nuint)(sizeof(WNDCLASS)));
+		wc.hbrBackground = (HBRUSH)GetStockObject();
+		wc.hInstance = hInst;
+		wc.lpfnWndProc = (WNDPROC)MainWndProc;
+		wc.lpszClassName = CLASS_NAME;
+		wc.hCursor = LoadCursor();
+
+		RegisterClass(ref wc);
+
+		int width,
+			height;
+		// ウインドウの大きさを計算
+		if (Renderer.IsFullscreen)
 		{
-		MessageBox(null,"CreateSurface","残念！",MB_OK | MB_ICONSTOP);
-		return FALSE;
+			// フルスクリーン時はそのままで OK
+			width = WIDTH;
+			height = HEIGHT;
+			hwndApp = CreateWindow(CLASS_NAME, CAPTION, null);
+		}
+		else
+		{
+			// ウインドウ時はウインドウの外枠のサイズを考慮する
+			width = WIDTH + GetSystemMetrics(SM_CXDLGFRAME) * 2;
+			height = HEIGHT + GetSystemMetrics(SM_CYDLGFRAME) * 2 + GetSystemMetrics(SM_CYCAPTION);
+			hwndApp = CreateWindow(CLASS_NAME, CAPTION, null);
 		}
 
-	// バックバッファインターフェイスを取得
-	ZeroMemory(&ddscaps, (nuint)(sizeof(DDSCAPS2)));
-	ddscaps.dwCaps=DDSCAPS_BACKBUFFER;
-	ddrval=Renderer.lpDDSPrimary.GetAttachedSurface(&ddscaps,out Renderer.lpDDSBack);
-	if (ddrval!=DD_OK)
+		ShowWindow(hwndApp, SW_SHOWNORMAL);
+		UpdateWindow(hwndApp);
+
+		ImmAssociateContext(); // 日本語入力機能を通常ゲーム時抑制する。
+
+		// ダイレクトドロウ
+		var ddrval = DirectDrawCreateEx(out Renderer.lpDD);
+		if (ddrval != DD_OK)
 		{
-		MessageBox(null,"GetAttachedSurface","残念！",MB_OK | MB_ICONSTOP);
-		return FALSE;
+			MessageBox(null, "DirectDrawの作成に失敗", "Base", MB_OK | MB_ICONSTOP);
+			return FALSE;
 		}
 
-	// 最初のイメージをロードし、表示
-	Renderer.OffscreenSurface=Renderer.LoadBitmapSurface(SpriteSheetName);
-	if (Renderer.OffscreenSurface==null)
+		// 協調レベルを設定
+		if (Renderer.IsFullscreen)
+			ddrval = Renderer.lpDD.SetCooperativeLevel(hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN);
+		else
+			ddrval = Renderer.lpDD.SetCooperativeLevel(hwndApp, DDSCL_NORMAL);
+		if (ddrval != DD_OK)
 		{
-		MessageBox(null,"bitmap_surface","残念！",MB_OK | MB_ICONSTOP);
-		return FALSE;
+			MessageBox(null, "残念！", "って言うじゃなーい。", MB_OK | MB_ICONSTOP);
+			return FALSE;
 		}
 
-	// クリッパー
-	if(Renderer.IsFullscreen)
+		// ディスプレイモードを設定
+		if (Renderer.IsFullscreen)
 		{
-		Renderer.lpDD.CreateClipper(0,out Renderer.lpDDclip,null);
-		Renderer.lpDDclip.SetHWnd(0,hwndApp);
-		Renderer.lpDD.FlipToGDISurface();
-		}
-	else
-		{
-		Renderer.lpDD.CreateClipper(0,out Renderer.lpDDclip,null);
-		Renderer.lpDDclip.SetHWnd(0,hwndApp);
-		Renderer.lpDDSPrimary.SetClipper(Renderer.lpDDclip);
+			ddrval = Renderer.lpDD.SetDisplayMode(width, height, 16, 0, 0);
+			if (ddrval != DD_OK)
+			{
+				MessageBox(null, "SetDisplayMode", "残念！", MB_OK | MB_ICONSTOP);
+				return FALSE;
+			}
 		}
 
-	// ピクセルフォーマットを取得
-	DDPIXELFORMAT ddpf;
-	ddpf.dwSize=(uint)(sizeof(DDPIXELFORMAT));
-	Renderer.OffscreenSurface.GetPixelFormat(&ddpf);
+		// バックバッファをひとつ持つプライマリサーフェスを作成
+		DDSURFACEDESC2 ddsd;
+		DDSCAPS2 ddscaps;
 
-	var KeyColor = ddpf.dwRBitMask | ddpf.dwBBitMask;
+		ZeroMemory(&ddsd, (nuint)(sizeof(DDSURFACEDESC2)));
+		ddsd.dwSize = (uint)(sizeof(DDSURFACEDESC2));
+		ddsd.dwFlags = DDSD_CAPS | DDSD_BACKBUFFERCOUNT;
+		ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE | DDSCAPS_FLIP | DDSCAPS_COMPLEX;
+		ddsd.dwBackBufferCount = 1;
+		ddrval = Renderer.lpDD.CreateSurface(&ddsd, out Renderer.lpDDSPrimary, null);
+		if (ddrval != DD_OK)
+		{
+			MessageBox(null, "CreateSurface", "残念！", MB_OK | MB_ICONSTOP);
+			return FALSE;
+		}
 
-	// カラーキーを設定
-	DDCOLORKEY key;
-	key.dwColorSpaceLowValue = KeyColor;
-	key.dwColorSpaceHighValue = KeyColor;
-	Renderer.OffscreenSurface.SetColorKey(DDCKEY_SRCBLT, &key);
+		// バックバッファインターフェイスを取得
+		ZeroMemory(&ddscaps, (nuint)(sizeof(DDSCAPS2)));
+		ddscaps.dwCaps = DDSCAPS_BACKBUFFER;
+		ddrval = Renderer.lpDDSPrimary.GetAttachedSurface(&ddscaps, out Renderer.lpDDSBack);
+		if (ddrval != DD_OK)
+		{
+			MessageBox(null, "GetAttachedSurface", "残念！", MB_OK | MB_ICONSTOP);
+			return FALSE;
+		}
 
-	if(!InitializeDirectInput())
-		return FALSE;
+		// 最初のイメージをロードし、表示
+		Renderer.OffscreenSurface = Renderer.LoadBitmapSurface(SpriteSheetName);
+		if (Renderer.OffscreenSurface == null)
+		{
+			MessageBox(null, "bitmap_surface", "残念！", MB_OK | MB_ICONSTOP);
+			return FALSE;
+		}
+
+		// クリッパー
+		if (Renderer.IsFullscreen)
+		{
+			Renderer.lpDD.CreateClipper(0, out Renderer.lpDDclip, null);
+			Renderer.lpDDclip.SetHWnd(0, hwndApp);
+			Renderer.lpDD.FlipToGDISurface();
+		}
+		else
+		{
+			Renderer.lpDD.CreateClipper(0, out Renderer.lpDDclip, null);
+			Renderer.lpDDclip.SetHWnd(0, hwndApp);
+			Renderer.lpDDSPrimary.SetClipper(Renderer.lpDDclip);
+		}
+
+		// ピクセルフォーマットを取得
+		DDPIXELFORMAT ddpf;
+		ddpf.dwSize = (uint)(sizeof(DDPIXELFORMAT));
+		Renderer.OffscreenSurface.GetPixelFormat(&ddpf);
+
+		var KeyColor = ddpf.dwRBitMask | ddpf.dwBBitMask;
+
+		// カラーキーを設定
+		DDCOLORKEY key;
+		key.dwColorSpaceLowValue = KeyColor;
+		key.dwColorSpaceHighValue = KeyColor;
+		Renderer.OffscreenSurface.SetColorKey(DDCKEY_SRCBLT, &key);
+
+		if (!InitializeDirectInput())
+			return FALSE;
 #if SND_SW
-	if(!Sound.InitializeDirectSound())
-		return FALSE;
-	if(!Sound.InitializeDirectMusic())
-		return FALSE;
+		if (!Sound.InitializeDirectSound())
+			return FALSE;
+		if (!Sound.InitializeDirectMusic())
+			return FALSE;
 #endif
 
-	// ゲーム変数初期化
-	InitializeRegistry();
+		// ゲーム変数初期化
+		InitializeRegistry();
 
-	IsAppActive=true;
+		IsAppActive = true;
 
-	Renderer.InitializeSprites();
+		Renderer.InitializeSprites();
 
-	TitleTime=0;
+		TitleTime = 0;
 
-	Mode=GameMode.Title;
+		Mode = GameMode.Title;
 
-	// 1.22 seeds rand from the time as it starts (0x434456), and its scenarios draw their random setups, such as where the
-	// computer's fleets start, from where it has gone since.
-	if( IsSingleplayer )
+		// 1.22 seeds rand from the time as it starts (0x434456), and its scenarios draw their random setups, such as where the
+		// computer's fleets start, from where it has gone since.
+		if (IsSingleplayer)
 		{
-		srand( (uint)time() );
-		StartSingleplayerGame();
+			srand((uint)time());
+			StartSingleplayerGame();
 		}
 
-	//メッセージループ
-	while(TRUE!=0)
+		//メッセージループ
+		while (TRUE != 0)
 		{
-
-		if(  PeekMessage(ref msg,PM_NOREMOVE)!=0 )
+			if (PeekMessage(ref msg, PM_NOREMOVE) != 0)
 			{
-			if(GetMessage(ref msg)==0)
-				break;
+				if (GetMessage(ref msg) == 0)
+					break;
 
-			TranslateMessage();
-			DispatchMessage(ref msg);
+				TranslateMessage();
+				DispatchMessage(ref msg);
 			}
-		else
-			{
-			if( ( IsAppActive || hwndChatDlg!=null ) && MainDialog==null )
-				{
-				UpdateFrame();
-				}
 			else
+			{
+				if ((IsAppActive || hwndChatDlg != null) && MainDialog == null)
 				{
-				WaitMessage();
+					UpdateFrame();
+				}
+				else
+				{
+					WaitMessage();
 				}
 
-			if( DirectPlayThreadPool!=null && DirectPlayPeer!=null )
-				DirectPlayThreadPool.DoWork(DOWORK_TIMESLICE, 0);
+				if (DirectPlayThreadPool != null && DirectPlayPeer != null)
+					DirectPlayThreadPool.DoWork(DOWORK_TIMESLICE, 0);
 			}
-
 		}
 
-	return (int)msg.wParam;
-
+		return (int)msg.wParam;
 	}
 }

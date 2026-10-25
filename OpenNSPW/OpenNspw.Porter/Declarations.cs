@@ -24,7 +24,11 @@ namespace OpenNspw.Porter;
 // address or a ref to which is taken, or whose declaration has a comment, are left as they are.
 internal sealed class Declarations(CSharpProject project)
 {
-	private sealed record Local(ILocalSymbol Symbol, VariableDeclaratorSyntax Declarator, LocalDeclarationStatementSyntax Statement);
+	private sealed record Local(
+		ILocalSymbol Symbol,
+		VariableDeclaratorSyntax Declarator,
+		LocalDeclarationStatementSyntax Statement
+	);
 
 	private readonly CSharpProject _project = project;
 
@@ -35,33 +39,62 @@ internal sealed class Declarations(CSharpProject project)
 
 	// The assignment `local = value` that a statement starts with, where value does not use the local: an expression
 	// statement, or the only initializer of a for.
-	private static AssignmentExpressionSyntax? FirstWrite(StatementSyntax statement, IReadOnlyList<IdentifierNameSyntax> uses)
+	private static AssignmentExpressionSyntax? FirstWrite(
+		StatementSyntax statement,
+		IReadOnlyList<IdentifierNameSyntax> uses
+	)
 	{
 		var assignment = statement switch
 		{
 			ExpressionStatementSyntax { Expression: AssignmentExpressionSyntax a } => a,
-			ForStatementSyntax { Declaration: null, Initializers: [AssignmentExpressionSyntax a] } => a,
+			ForStatementSyntax
+			{
+				Declaration: null,
+				Initializers: [AssignmentExpressionSyntax a]
+			} => a,
 			_ => null,
 		};
-		return assignment is { RawKind: (int)SyntaxKind.SimpleAssignmentExpression, Left: IdentifierNameSyntax left }
-			&& uses.Contains(left) && !References(assignment.Right, uses) ? assignment : null;
+		return
+			assignment
+				is {
+					RawKind: (int)SyntaxKind.SimpleAssignmentExpression,
+					Left: IdentifierNameSyntax left
+				}
+			&& uses.Contains(left)
+			&& !References(assignment.Right, uses)
+			? assignment
+			: null;
 	}
 
-	private static bool StartsRun(StatementSyntax statement, IReadOnlyList<IdentifierNameSyntax> uses)
+	private static bool StartsRun(
+		StatementSyntax statement,
+		IReadOnlyList<IdentifierNameSyntax> uses
+	)
 	{
-		return FirstWrite(statement, uses) is not null || (statement is not ExpressionStatementSyntax && PlaceInside(statement, uses) is not null);
+		return FirstWrite(statement, uses) is not null
+			|| (
+				statement is not ExpressionStatementSyntax
+				&& PlaceInside(statement, uses) is not null
+			);
 	}
 
 	// The declarations that place a local's uses in a list of statements, from `start`: the assignments that start a run,
 	// or null where a run cannot be placed.
-	private static List<AssignmentExpressionSyntax>? Place(SyntaxList<StatementSyntax> list, int start, IReadOnlyList<IdentifierNameSyntax> uses)
+	private static List<AssignmentExpressionSyntax>? Place(
+		SyntaxList<StatementSyntax> list,
+		int start,
+		IReadOnlyList<IdentifierNameSyntax> uses
+	)
 	{
 		var runs = new List<List<StatementSyntax>>();
 		foreach (var statement in list.Skip(start).Where(s => References(s, uses)))
 		{
 			// A local declared by an expression statement is in scope to the end of the list, so the run goes on to it. A
 			// statement that assigns the local first, or that uses it only in runs of its own, starts a run.
-			if (runs.Count == 0 || (runs[^1][0] is not ExpressionStatementSyntax && StartsRun(statement, uses)))
+			if (
+				runs.Count == 0
+				|| (runs[^1][0] is not ExpressionStatementSyntax && StartsRun(statement, uses))
+			)
 			{
 				runs.Add([statement]);
 			}
@@ -74,7 +107,10 @@ internal sealed class Declarations(CSharpProject project)
 		var placed = new List<AssignmentExpressionSyntax>();
 		foreach (var run in runs)
 		{
-			if (FirstWrite(run[0], uses) is { } write && (run[0] is ExpressionStatementSyntax || run.Count == 1))
+			if (
+				FirstWrite(run[0], uses) is { } write
+				&& (run[0] is ExpressionStatementSyntax || run.Count == 1)
+			)
 			{
 				placed.Add(write);
 			}
@@ -92,7 +128,10 @@ internal sealed class Declarations(CSharpProject project)
 	}
 
 	// The declarations that place a local's uses inside a statement that uses it only in the statements it contains.
-	private static List<AssignmentExpressionSyntax>? PlaceInside(StatementSyntax statement, IReadOnlyList<IdentifierNameSyntax> uses)
+	private static List<AssignmentExpressionSyntax>? PlaceInside(
+		StatementSyntax statement,
+		IReadOnlyList<IdentifierNameSyntax> uses
+	)
 	{
 		List<AssignmentExpressionSyntax>? Body(StatementSyntax? body)
 		{
@@ -111,9 +150,13 @@ internal sealed class Declarations(CSharpProject project)
 			case BlockSyntax block:
 				return Place(block.Statements, 0, uses);
 			case IfStatementSyntax @if when !References(@if.Condition, uses):
-				return Body(@if.Statement) is { } then && Body(@if.Else?.Statement) is { } @else ? [.. then, .. @else] : null;
-			case ForStatementSyntax @for when (@for.Condition is null || !References(@for.Condition, uses))
-				&& !@for.Initializers.Concat(@for.Incrementors).Any(e => References(e, uses)) && (@for.Declaration is null || !References(@for.Declaration, uses)):
+				return Body(@if.Statement) is { } then && Body(@if.Else?.Statement) is { } @else
+					? [.. then, .. @else]
+					: null;
+			case ForStatementSyntax @for
+				when (@for.Condition is null || !References(@for.Condition, uses))
+					&& !@for.Initializers.Concat(@for.Incrementors).Any(e => References(e, uses))
+					&& (@for.Declaration is null || !References(@for.Declaration, uses)):
 				return Body(@for.Statement);
 			case WhileStatementSyntax @while when !References(@while.Condition, uses):
 				return Body(@while.Statement);
@@ -125,7 +168,10 @@ internal sealed class Declarations(CSharpProject project)
 				var placed = new List<AssignmentExpressionSyntax>();
 				foreach (var section in @switch.Sections)
 				{
-					if (section.Labels.Any(l => References(l, uses)) || Place(section.Statements, 0, uses) is not { } inner)
+					if (
+						section.Labels.Any(l => References(l, uses))
+						|| Place(section.Statements, 0, uses) is not { } inner
+					)
 					{
 						return null;
 					}
@@ -146,14 +192,23 @@ internal sealed class Declarations(CSharpProject project)
 	// Whether the local must stay where it is: used in a lambda or a local function, or by address or by ref.
 	private static bool IsPinned(IReadOnlyList<IdentifierNameSyntax> uses, SyntaxNode scope)
 	{
-		return uses.Any(u => u.Ancestors().TakeWhile(a => a != scope).Any(a => a is AnonymousFunctionExpressionSyntax or LocalFunctionStatementSyntax)
-			|| u.Parent is PrefixUnaryExpressionSyntax { RawKind: (int)SyntaxKind.AddressOfExpression }
-			|| u.Parent is RefExpressionSyntax);
+		return uses.Any(u =>
+			u.Ancestors()
+				.TakeWhile(a => a != scope)
+				.Any(a => a is AnonymousFunctionExpressionSyntax or LocalFunctionStatementSyntax)
+			|| u.Parent
+				is PrefixUnaryExpressionSyntax { RawKind: (int)SyntaxKind.AddressOfExpression }
+			|| u.Parent is RefExpressionSyntax
+		);
 	}
 
 	// The type of a new declaration: `var` when the value has the local's type, and the value, which an integer literal
 	// assigned to a double becomes a double literal for.
-	private static (string Type, ExpressionSyntax? Literal, string? NewLiteral) DeclaredType(Local local, ExpressionSyntax value, SemanticModel model)
+	private static (string Type, ExpressionSyntax? Literal, string? NewLiteral) DeclaredType(
+		Local local,
+		ExpressionSyntax value,
+		SemanticModel model
+	)
 	{
 		var type = model.GetTypeInfo(value).Type;
 		if (SymbolEqualityComparer.Default.Equals(type, local.Symbol.Type))
@@ -161,8 +216,19 @@ internal sealed class Declarations(CSharpProject project)
 			return ("var", null, null);
 		}
 
-		var literal = value is PrefixUnaryExpressionSyntax { RawKind: (int)SyntaxKind.UnaryMinusExpression, Operand: LiteralExpressionSyntax l } ? l : value as LiteralExpressionSyntax;
-		if (local.Symbol.Type.SpecialType == SpecialType.System_Double && literal is { RawKind: (int)SyntaxKind.NumericLiteralExpression } && literal.Token.Text.All(char.IsAsciiDigit))
+		var literal = value
+			is PrefixUnaryExpressionSyntax
+			{
+				RawKind: (int)SyntaxKind.UnaryMinusExpression,
+				Operand: LiteralExpressionSyntax l
+			}
+			? l
+			: value as LiteralExpressionSyntax;
+		if (
+			local.Symbol.Type.SpecialType == SpecialType.System_Double
+			&& literal is { RawKind: (int)SyntaxKind.NumericLiteralExpression }
+			&& literal.Token.Text.All(char.IsAsciiDigit)
+		)
 		{
 			return ("var", literal, $"{literal.Token.Text}.0");
 		}
@@ -173,12 +239,28 @@ internal sealed class Declarations(CSharpProject project)
 	private static List<Local> Locals(SyntaxTree tree, SemanticModel model)
 	{
 		var locals = new List<Local>();
-		foreach (var statement in tree.GetRoot().DescendantNodes().OfType<LocalDeclarationStatementSyntax>())
+		foreach (
+			var statement in tree.GetRoot()
+				.DescendantNodes()
+				.OfType<LocalDeclarationStatementSyntax>()
+		)
 		{
-			if (statement.IsConst || statement.UsingKeyword != default || statement.Declaration.Type is RefTypeSyntax
+			if (
+				statement.IsConst
+				|| statement.UsingKeyword != default
+				|| statement.Declaration.Type is RefTypeSyntax
 				|| statement.Parent is not BlockSyntax and not SwitchSectionSyntax
-				|| statement.DescendantTrivia().Where(t => t.SpanStart >= statement.SpanStart)
-					.Any(t => t.IsKind(SyntaxKind.SingleLineCommentTrivia) || (t.IsKind(SyntaxKind.MultiLineCommentTrivia) && !t.ToString().Contains("C4701"))))
+				|| statement
+					.DescendantTrivia()
+					.Where(t => t.SpanStart >= statement.SpanStart)
+					.Any(t =>
+						t.IsKind(SyntaxKind.SingleLineCommentTrivia)
+						|| (
+							t.IsKind(SyntaxKind.MultiLineCommentTrivia)
+							&& !t.ToString().Contains("C4701")
+						)
+					)
+			)
 			{
 				continue;
 			}
@@ -187,7 +269,15 @@ internal sealed class Declarations(CSharpProject project)
 			{
 				// A local declared with a value keeps it, unless the value is `default`, which the port adds where C# finds
 				// the local read before it is assigned (/* C4701 */).
-				if (declarator.Initializer is { Value: not LiteralExpressionSyntax { RawKind: (int)SyntaxKind.DefaultLiteralExpression } })
+				if (
+					declarator.Initializer is
+					{
+						Value: not LiteralExpressionSyntax
+						{
+							RawKind: (int)SyntaxKind.DefaultLiteralExpression
+						}
+					}
+				)
 				{
 					continue;
 				}
@@ -202,10 +292,25 @@ internal sealed class Declarations(CSharpProject project)
 		return locals;
 	}
 
-	private static List<IdentifierNameSyntax> Uses(Local local, SyntaxNode scope, SemanticModel model)
+	private static List<IdentifierNameSyntax> Uses(
+		Local local,
+		SyntaxNode scope,
+		SemanticModel model
+	)
 	{
-		return [.. scope.DescendantNodes().OfType<IdentifierNameSyntax>()
-			.Where(n => n.Identifier.ValueText == local.Symbol.Name && SymbolEqualityComparer.Default.Equals(model.GetSymbolInfo(n).Symbol, local.Symbol))];
+		return
+		[
+			.. scope
+				.DescendantNodes()
+				.OfType<IdentifierNameSyntax>()
+				.Where(n =>
+					n.Identifier.ValueText == local.Symbol.Name
+					&& SymbolEqualityComparer.Default.Equals(
+						model.GetSymbolInfo(n).Symbol,
+						local.Symbol
+					)
+				),
+		];
 	}
 
 	// The edits that move a local's declaration, or null if it stays.
@@ -218,7 +323,9 @@ internal sealed class Declarations(CSharpProject project)
 			return null;
 		}
 
-		var list = scope is BlockSyntax block ? block.Statements : ((SwitchSectionSyntax)scope).Statements;
+		var list = scope is BlockSyntax block
+			? block.Statements
+			: ((SwitchSectionSyntax)scope).Statements;
 		if (Place(list, list.IndexOf(local.Statement) + 1, uses) is not { } writes)
 		{
 			return null;
@@ -240,12 +347,17 @@ internal sealed class Declarations(CSharpProject project)
 
 	// The edit that removes the moved declarators from a declaration: the whole statement and its line, or the moved
 	// declarators.
-	private static (TextSpan Span, string Text) Remove(LocalDeclarationStatementSyntax statement, IReadOnlySet<VariableDeclaratorSyntax> moved, SourceText text)
+	private static (TextSpan Span, string Text) Remove(
+		LocalDeclarationStatementSyntax statement,
+		IReadOnlySet<VariableDeclaratorSyntax> moved,
+		SourceText text
+	)
 	{
 		var kept = statement.Declaration.Variables.Where(v => !moved.Contains(v)).ToList();
 		if (kept.Count > 0)
 		{
-			var declaration = $"{statement.Declaration.Type.ToString().Trim()} {string.Join(", ", kept.Select(v => v.ToFullString().Trim()))}";
+			var declaration =
+				$"{statement.Declaration.Type.ToString().Trim()} {string.Join(", ", kept.Select(v => v.ToFullString().Trim()))}";
 			return (statement.Declaration.Span, declaration);
 		}
 
@@ -256,7 +368,11 @@ internal sealed class Declarations(CSharpProject project)
 
 	private static string Apply(string text, IEnumerable<(TextSpan Span, string Text)> edits)
 	{
-		foreach (var (span, replacement) in edits.OrderByDescending(e => e.Span.Start).ThenByDescending(e => e.Span.Length))
+		foreach (
+			var (span, replacement) in edits
+				.OrderByDescending(e => e.Span.Start)
+				.ThenByDescending(e => e.Span.Length)
+		)
 		{
 			text = text[..span.Start] + replacement + text[span.End..];
 		}
@@ -265,7 +381,10 @@ internal sealed class Declarations(CSharpProject project)
 	}
 
 	// The new text of a file, with the locals that are not left out moved, and the moved locals by their declarators.
-	private static (string Text, Dictionary<VariableDeclaratorSyntax, List<(TextSpan Span, string Text)>> Moved) Rewrite(SyntaxTree tree, SemanticModel model, IReadOnlySet<int> leftOut)
+	private static (
+		string Text,
+		Dictionary<VariableDeclaratorSyntax, List<(TextSpan Span, string Text)>> Moved
+	) Rewrite(SyntaxTree tree, SemanticModel model, IReadOnlySet<int> leftOut)
 	{
 		var text = tree.GetText();
 		var moved = new Dictionary<VariableDeclaratorSyntax, List<(TextSpan Span, string Text)>>();
@@ -277,7 +396,8 @@ internal sealed class Declarations(CSharpProject project)
 			}
 		}
 
-		var removals = moved.Keys.GroupBy(d => (LocalDeclarationStatementSyntax)d.Parent!.Parent!)
+		var removals = moved
+			.Keys.GroupBy(d => (LocalDeclarationStatementSyntax)d.Parent!.Parent!)
 			.Select(g => Remove(g.Key, g.ToHashSet(), text));
 		return (Apply(text.ToString(), moved.Values.SelectMany(e => e).Concat(removals)), moved);
 	}
@@ -300,10 +420,16 @@ internal sealed class Declarations(CSharpProject project)
 		var files = _project.ReadFiles();
 		var compilation = _project.Compile(files, CSharpProject.FrameworkReferences);
 		var written = new List<string>();
-		foreach (var tree in compilation.SyntaxTrees.Where(t => files.ContainsKey(t.FilePath)).ToList())
+		foreach (
+			var tree in compilation.SyntaxTrees.Where(t => files.ContainsKey(t.FilePath)).ToList()
+		)
 		{
 			var model = compilation.GetSemanticModel(tree);
-			var baseline = compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error && d.Location.SourceTree == tree).Select(d => d.GetMessage()).ToHashSet();
+			var baseline = compilation
+				.GetDiagnostics()
+				.Where(d => d.Severity == DiagnosticSeverity.Error && d.Location.SourceTree == tree)
+				.Select(d => d.GetMessage())
+				.ToHashSet();
 			var leftOut = new HashSet<int>();
 			while (true)
 			{
@@ -313,9 +439,23 @@ internal sealed class Declarations(CSharpProject project)
 					break;
 				}
 
-				var newTree = CSharpSyntaxTree.ParseText(newText, _project.ParseOptions(), tree.FilePath);
-				var newCompilation = compilation.ReplaceSyntaxTree(compilation.SyntaxTrees.Single(t => t.FilePath == tree.FilePath), newTree);
-				var errors = newCompilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error && d.Location.SourceTree == newTree && !baseline.Contains(d.GetMessage())).ToList();
+				var newTree = CSharpSyntaxTree.ParseText(
+					newText,
+					_project.ParseOptions(),
+					tree.FilePath
+				);
+				var newCompilation = compilation.ReplaceSyntaxTree(
+					compilation.SyntaxTrees.Single(t => t.FilePath == tree.FilePath),
+					newTree
+				);
+				var errors = newCompilation
+					.GetDiagnostics()
+					.Where(d =>
+						d.Severity == DiagnosticSeverity.Error
+						&& d.Location.SourceTree == newTree
+						&& !baseline.Contains(d.GetMessage())
+					)
+					.ToList();
 				if (errors.Count == 0)
 				{
 					File.WriteAllText(tree.FilePath, newText);
@@ -332,11 +472,27 @@ internal sealed class Declarations(CSharpProject project)
 				foreach (var error in errors)
 				{
 					var token = newRoot.FindToken(error.Location.SourceSpan.Start);
-					var member = newRoot.FindNode(error.Location.SourceSpan).AncestorsAndSelf().OfType<MemberDeclarationSyntax>().FirstOrDefault(m => m is BaseMethodDeclarationSyntax or PropertyDeclarationSyntax);
+					var member = newRoot
+						.FindNode(error.Location.SourceSpan)
+						.AncestorsAndSelf()
+						.OfType<MemberDeclarationSyntax>()
+						.FirstOrDefault(m =>
+							m is BaseMethodDeclarationSyntax or PropertyDeclarationSyntax
+						);
 					var name = token.IsKind(SyntaxKind.IdentifierToken) ? token.ValueText : null;
-					var oldMember = member is null ? null : oldRoot.DescendantNodes().OfType<MemberDeclarationSyntax>()
-						.FirstOrDefault(m => m.GetType() == member.GetType() && m is BaseMethodDeclarationSyntax or PropertyDeclarationSyntax && Signature(m) == Signature(member));
-					var candidates = moved.Keys.Where(d => oldMember is null || oldMember.Span.Contains(d.Span)).ToList();
+					var oldMember = member is null
+						? null
+						: oldRoot
+							.DescendantNodes()
+							.OfType<MemberDeclarationSyntax>()
+							.FirstOrDefault(m =>
+								m.GetType() == member.GetType()
+								&& m is BaseMethodDeclarationSyntax or PropertyDeclarationSyntax
+								&& Signature(m) == Signature(member)
+							);
+					var candidates = moved
+						.Keys.Where(d => oldMember is null || oldMember.Span.Contains(d.Span))
+						.ToList();
 					var named = candidates.Where(d => d.Identifier.ValueText == name).ToList();
 					foreach (var declarator in named.Count > 0 ? named : candidates)
 					{
@@ -346,7 +502,9 @@ internal sealed class Declarations(CSharpProject project)
 
 				if (leftOut.Count == before)
 				{
-					throw new InvalidOperationException($"Errors outside the moved locals in {tree.FilePath}: {errors[0]}");
+					throw new InvalidOperationException(
+						$"Errors outside the moved locals in {tree.FilePath}: {errors[0]}"
+					);
 				}
 			}
 		}

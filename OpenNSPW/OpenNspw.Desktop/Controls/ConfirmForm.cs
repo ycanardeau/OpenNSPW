@@ -9,7 +9,12 @@ namespace OpenNspw.Desktop.Controls;
 // it and Cancel, over the whole screen, dimmed, so that nothing under it takes the mouse. Enter does it.
 internal sealed class ConfirmForm : Form
 {
-	private static readonly DrawingRectangle PanelBounds = new((all_head.SCRN_WIDTH - 480) / 2, (all_head.SCRN_HEIGHT - 200) / 2, 480, 200);
+	private static readonly DrawingRectangle PanelBounds = new(
+		(all_head.SCRN_WIDTH - 480) / 2,
+		(all_head.SCRN_HEIGHT - 200) / 2,
+		480,
+		200
+	);
 
 	private readonly UIFonts _fonts;
 	private readonly string _title;
@@ -41,8 +46,18 @@ internal sealed class ConfirmForm : Form
 		BackColor = DrawingColor.Transparent;
 		KeyPreview = true;
 
-		AddButton(PanelBounds.Right - 28, confirm, true, () => Confirmed?.Invoke(this, EventArgs.Empty));
-		AddButton(PanelBounds.Right - 28 - 140 - 12, Texts.Cancel, false, () => Canceled?.Invoke(this, EventArgs.Empty));
+		AddButton(
+			PanelBounds.Right - 28,
+			confirm,
+			true,
+			() => Confirmed?.Invoke(this, EventArgs.Empty)
+		);
+		AddButton(
+			PanelBounds.Right - 28 - 140 - 12,
+			Texts.Cancel,
+			false,
+			() => Canceled?.Invoke(this, EventArgs.Empty)
+		);
 	}
 
 	protected override void OnKeyDown(KeyEventArgs e)
@@ -60,7 +75,14 @@ internal sealed class ConfirmForm : Form
 		Painter.Fill(g, PanelBounds, Theme.Panel);
 		Painter.Frame(g, PanelBounds, Theme.Line);
 		Painter.Brackets(g, PanelBounds, 14, Theme.Brass);
-		Painter.Text(g, _title, _fonts.Bold(20), Theme.Text, PanelBounds.X + 28, PanelBounds.Y + 26);
+		Painter.Text(
+			g,
+			_title,
+			_fonts.Bold(20),
+			Theme.Text,
+			PanelBounds.X + 28,
+			PanelBounds.Y + 26
+		);
 
 		var font = _fonts.Regular(15);
 		var y = PanelBounds.Y + 64f;

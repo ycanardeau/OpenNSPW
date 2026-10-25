@@ -14,22 +14,71 @@ internal sealed class GameSession : IDisposable
 	// MonoGame keys, with their DirectInput scan codes (DIK_*) and virtual-key codes (VK_*).
 	private static readonly Dictionary<XnaKeys, (uint Dik, int Vk)> KeyCodes = new()
 	{
-		[XnaKeys.Escape] = (0x01, 0x1B), [XnaKeys.Enter] = (0x1C, 0x0D), [XnaKeys.Space] = (0x39, 0x20),
-		[XnaKeys.Up] = (0xC8, 0x26), [XnaKeys.Left] = (0xCB, 0x25), [XnaKeys.Right] = (0xCD, 0x27), [XnaKeys.Down] = (0xD0, 0x28),
-		[XnaKeys.D1] = (0x02, '1'), [XnaKeys.D2] = (0x03, '2'), [XnaKeys.D3] = (0x04, '3'), [XnaKeys.D4] = (0x05, '4'), [XnaKeys.D5] = (0x06, '5'),
-		[XnaKeys.D6] = (0x07, '6'), [XnaKeys.D7] = (0x08, '7'), [XnaKeys.D8] = (0x09, '8'), [XnaKeys.D9] = (0x0A, '9'), [XnaKeys.D0] = (0x0B, '0'),
-		[XnaKeys.Q] = (0x10, 'Q'), [XnaKeys.W] = (0x11, 'W'), [XnaKeys.E] = (0x12, 'E'), [XnaKeys.R] = (0x13, 'R'), [XnaKeys.T] = (0x14, 'T'),
-		[XnaKeys.Y] = (0x15, 'Y'), [XnaKeys.U] = (0x16, 'U'), [XnaKeys.I] = (0x17, 'I'), [XnaKeys.O] = (0x18, 'O'), [XnaKeys.P] = (0x19, 'P'),
-		[XnaKeys.A] = (0x1E, 'A'), [XnaKeys.S] = (0x1F, 'S'), [XnaKeys.D] = (0x20, 'D'), [XnaKeys.F] = (0x21, 'F'), [XnaKeys.G] = (0x22, 'G'),
-		[XnaKeys.H] = (0x23, 'H'), [XnaKeys.J] = (0x24, 'J'), [XnaKeys.K] = (0x25, 'K'), [XnaKeys.L] = (0x26, 'L'),
-		[XnaKeys.Z] = (0x2C, 'Z'), [XnaKeys.X] = (0x2D, 'X'), [XnaKeys.C] = (0x2E, 'C'), [XnaKeys.V] = (0x2F, 'V'), [XnaKeys.B] = (0x30, 'B'),
-		[XnaKeys.N] = (0x31, 'N'), [XnaKeys.M] = (0x32, 'M'),
-		[XnaKeys.F1] = (0x3B, 0x70), [XnaKeys.F2] = (0x3C, 0x71), [XnaKeys.F3] = (0x3D, 0x72), [XnaKeys.F4] = (0x3E, 0x73), [XnaKeys.F5] = (0x3F, 0x74),
-		[XnaKeys.F6] = (0x40, 0x75), [XnaKeys.F7] = (0x41, 0x76), [XnaKeys.F8] = (0x42, 0x77), [XnaKeys.F9] = (0x43, 0x78), [XnaKeys.F10] = (0x44, 0x79),
-		[XnaKeys.F11] = (0x57, 0x7A), [XnaKeys.F12] = (0x58, 0x7B),
-		[XnaKeys.NumPad0] = (0x52, 0x60), [XnaKeys.NumPad1] = (0x4F, 0x61), [XnaKeys.NumPad2] = (0x50, 0x62), [XnaKeys.NumPad3] = (0x51, 0x63),
-		[XnaKeys.NumPad4] = (0x4B, 0x64), [XnaKeys.NumPad5] = (0x4C, 0x65), [XnaKeys.NumPad6] = (0x4D, 0x66), [XnaKeys.NumPad7] = (0x47, 0x67),
-		[XnaKeys.NumPad8] = (0x48, 0x68), [XnaKeys.NumPad9] = (0x49, 0x69),
+		[XnaKeys.Escape] = (0x01, 0x1B),
+		[XnaKeys.Enter] = (0x1C, 0x0D),
+		[XnaKeys.Space] = (0x39, 0x20),
+		[XnaKeys.Up] = (0xC8, 0x26),
+		[XnaKeys.Left] = (0xCB, 0x25),
+		[XnaKeys.Right] = (0xCD, 0x27),
+		[XnaKeys.Down] = (0xD0, 0x28),
+		[XnaKeys.D1] = (0x02, '1'),
+		[XnaKeys.D2] = (0x03, '2'),
+		[XnaKeys.D3] = (0x04, '3'),
+		[XnaKeys.D4] = (0x05, '4'),
+		[XnaKeys.D5] = (0x06, '5'),
+		[XnaKeys.D6] = (0x07, '6'),
+		[XnaKeys.D7] = (0x08, '7'),
+		[XnaKeys.D8] = (0x09, '8'),
+		[XnaKeys.D9] = (0x0A, '9'),
+		[XnaKeys.D0] = (0x0B, '0'),
+		[XnaKeys.Q] = (0x10, 'Q'),
+		[XnaKeys.W] = (0x11, 'W'),
+		[XnaKeys.E] = (0x12, 'E'),
+		[XnaKeys.R] = (0x13, 'R'),
+		[XnaKeys.T] = (0x14, 'T'),
+		[XnaKeys.Y] = (0x15, 'Y'),
+		[XnaKeys.U] = (0x16, 'U'),
+		[XnaKeys.I] = (0x17, 'I'),
+		[XnaKeys.O] = (0x18, 'O'),
+		[XnaKeys.P] = (0x19, 'P'),
+		[XnaKeys.A] = (0x1E, 'A'),
+		[XnaKeys.S] = (0x1F, 'S'),
+		[XnaKeys.D] = (0x20, 'D'),
+		[XnaKeys.F] = (0x21, 'F'),
+		[XnaKeys.G] = (0x22, 'G'),
+		[XnaKeys.H] = (0x23, 'H'),
+		[XnaKeys.J] = (0x24, 'J'),
+		[XnaKeys.K] = (0x25, 'K'),
+		[XnaKeys.L] = (0x26, 'L'),
+		[XnaKeys.Z] = (0x2C, 'Z'),
+		[XnaKeys.X] = (0x2D, 'X'),
+		[XnaKeys.C] = (0x2E, 'C'),
+		[XnaKeys.V] = (0x2F, 'V'),
+		[XnaKeys.B] = (0x30, 'B'),
+		[XnaKeys.N] = (0x31, 'N'),
+		[XnaKeys.M] = (0x32, 'M'),
+		[XnaKeys.F1] = (0x3B, 0x70),
+		[XnaKeys.F2] = (0x3C, 0x71),
+		[XnaKeys.F3] = (0x3D, 0x72),
+		[XnaKeys.F4] = (0x3E, 0x73),
+		[XnaKeys.F5] = (0x3F, 0x74),
+		[XnaKeys.F6] = (0x40, 0x75),
+		[XnaKeys.F7] = (0x41, 0x76),
+		[XnaKeys.F8] = (0x42, 0x77),
+		[XnaKeys.F9] = (0x43, 0x78),
+		[XnaKeys.F10] = (0x44, 0x79),
+		[XnaKeys.F11] = (0x57, 0x7A),
+		[XnaKeys.F12] = (0x58, 0x7B),
+		[XnaKeys.NumPad0] = (0x52, 0x60),
+		[XnaKeys.NumPad1] = (0x4F, 0x61),
+		[XnaKeys.NumPad2] = (0x50, 0x62),
+		[XnaKeys.NumPad3] = (0x51, 0x63),
+		[XnaKeys.NumPad4] = (0x4B, 0x64),
+		[XnaKeys.NumPad5] = (0x4C, 0x65),
+		[XnaKeys.NumPad6] = (0x4D, 0x66),
+		[XnaKeys.NumPad7] = (0x47, 0x67),
+		[XnaKeys.NumPad8] = (0x48, 0x68),
+		[XnaKeys.NumPad9] = (0x49, 0x69),
 	};
 
 	private readonly DesktopPlatform _platform;
@@ -87,7 +136,12 @@ internal sealed class GameSession : IDisposable
 	// singleplayer: NSPW_122.exe, its directory, whose maps, sounds and sprite sheet the game reads, and a scenario of it,
 	// to play that scenario against the computer (docs/Singleplayer.md) instead of connecting to a rival. replay: a trace
 	// of 1.22 in that scenario, which the game follows, and which the session disposes.
-	public GameSession(string dataDirectory, TextRasterizer text, (byte[] Executable, string Directory, int Scenario)? singleplayer = null, Trace122Replay? replay = null)
+	public GameSession(
+		string dataDirectory,
+		TextRasterizer text,
+		(byte[] Executable, string Directory, int Scenario)? singleplayer = null,
+		Trace122Replay? replay = null
+	)
 	{
 		_platform = new DesktopPlatform(dataDirectory, text);
 		Game = new Nspw(_platform);
@@ -150,7 +204,11 @@ internal sealed class GameSession : IDisposable
 			{
 				IsQuitRequested |= down && !_previousKeyboard.IsKeyDown(key);
 			}
-			else if (!IsInputHeldBack && !IsHeldBackDebugKey(key) && down != _previousKeyboard.IsKeyDown(key))
+			else if (
+				!IsInputHeldBack
+				&& !IsHeldBackDebugKey(key)
+				&& down != _previousKeyboard.IsKeyDown(key)
+			)
 			{
 				Game.PostKeyboardInput(dik, down);
 				Game.SetKeyState(Game.hwndApp, vk, down);
@@ -173,7 +231,11 @@ internal sealed class GameSession : IDisposable
 	// The cursor, in game pixels, and the buttons, each on its own. While the input is held back, the cursor still
 	// moves, which changes only what is drawn and the view, which the trace gives back (TheCursorDoesNotChangeTheReplay),
 	// but the buttons are not passed.
-	private void UpdateMouse(ViewportAdapter viewportAdapter, Func<DrawingPoint, bool> isOnForm, DrawingPoint? cursor)
+	private void UpdateMouse(
+		ViewportAdapter viewportAdapter,
+		Func<DrawingPoint, bool> isOnForm,
+		DrawingPoint? cursor
+	)
 	{
 		var mouse = Mouse.GetState();
 		var position = viewportAdapter.PointToScreen(mouse.Position);
@@ -193,7 +255,11 @@ internal sealed class GameSession : IDisposable
 
 	// Passes the keyboard and the mouse to the game: the mouse's buttons but where a form of the UI is (isOnForm), and
 	// its position, or `cursor` in its place.
-	public void UpdateInput(ViewportAdapter viewportAdapter, Func<DrawingPoint, bool> isOnForm, DrawingPoint? cursor = null)
+	public void UpdateInput(
+		ViewportAdapter viewportAdapter,
+		Func<DrawingPoint, bool> isOnForm,
+		DrawingPoint? cursor = null
+	)
 	{
 		ObjectDisposedException.ThrowIf(_isDisposed, this);
 		UpdateKeyboard();
@@ -229,7 +295,13 @@ internal sealed class GameSession : IDisposable
 			Frame.SetData(new Color[Frame.Width * Frame.Height]);
 		}
 
-		var frameNumber = _platform.CopyFrame(_frameNumber, ref _pixels, out var width, out var height, () => (Snapshot, _captured) = (_captured, Snapshot));
+		var frameNumber = _platform.CopyFrame(
+			_frameNumber,
+			ref _pixels,
+			out var width,
+			out var height,
+			() => (Snapshot, _captured) = (_captured, Snapshot)
+		);
 		if (frameNumber == _frameNumber || width != Frame.Width || height != Frame.Height)
 		{
 			return;
@@ -265,7 +337,10 @@ internal sealed class GameSession : IDisposable
 			return;
 		}
 
-		spriteBatch.Begin(transformMatrix: viewportAdapter.GetScaleMatrix(), samplerState: SamplerState.PointClamp);
+		spriteBatch.Begin(
+			transformMatrix: viewportAdapter.GetScaleMatrix(),
+			samplerState: SamplerState.PointClamp
+		);
 		spriteBatch.Draw(Frame, Vector2.Zero, Color.White);
 		spriteBatch.End();
 	}

@@ -20,8 +20,18 @@ public class UICommandTests
 	{
 		StartBattle(run, 5);
 		var nspw = run.Host.Game;
-		var transports = Enumerable.Range(1, nspw.MaxUnitId).Where(m => nspw.Units[m].IsUsed && nspw.Units[m].Kind == UnitKind.Transport && nspw.Units[m].Side == nspw.LocalSide).ToList();
-		var landing = transports.Where(m => LandTransport(run, run.Host, input, m)).Take(2).ToList();
+		var transports = Enumerable
+			.Range(1, nspw.MaxUnitId)
+			.Where(m =>
+				nspw.Units[m].IsUsed
+				&& nspw.Units[m].Kind == UnitKind.Transport
+				&& nspw.Units[m].Side == nspw.LocalSide
+			)
+			.ToList();
+		var landing = transports
+			.Where(m => LandTransport(run, run.Host, input, m))
+			.Take(2)
+			.ToList();
 		Assert.Equal(2, landing.Count);
 
 		// Clicks are dropped while an order waits for its turn (DrawBattleArea).
@@ -79,6 +89,8 @@ public class UICommandTests
 		var mouse = Play(run => new MouseInput(run, run.Host));
 		var commands = Play(run => new CommandInput(run, run.Host));
 
-		Assert.Null(Traces.Difference(WithoutMouse(mouse, "Alice"), WithoutMouse(commands, "Alice")));
+		Assert.Null(
+			Traces.Difference(WithoutMouse(mouse, "Alice"), WithoutMouse(commands, "Alice"))
+		);
 	}
 }

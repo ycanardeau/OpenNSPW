@@ -52,9 +52,15 @@ internal sealed class ConnectionForm : Form
 		_host.Enabled = _join.Enabled = _canConnect && !_awaitsFill;
 		_name.Enabled = _port.Enabled = !_awaitsFill;
 		_address.Enabled = !_isHost && !_awaitsFill;
-		_address.Placeholder = _isHost ? Texts.HostAddressPlaceholder : Texts.JoinAddressPlaceholder;
+		_address.Placeholder = _isHost
+			? Texts.HostAddressPlaceholder
+			: Texts.JoinAddressPlaceholder;
 		_connect.Enabled = _canConnect && !_awaitsFill;
-		_connect.Text = _awaitsFill ? "…" : !_canConnect ? Texts.Connecting : _isHost ? Texts.HostGame : Texts.JoinGame;
+		_connect.Text =
+			_awaitsFill ? "…"
+			: !_canConnect ? Texts.Connecting
+			: _isHost ? Texts.HostGame
+			: Texts.JoinGame;
 	}
 
 	// Whether the game can connect now: not while it is connecting.
@@ -70,7 +76,12 @@ internal sealed class ConnectionForm : Form
 
 	private static Label CreateLabel(DrawingRectangle bounds, string text)
 	{
-		return new Label { Bounds = bounds, Text = text, BackColor = DrawingColor.Transparent };
+		return new Label
+		{
+			Bounds = bounds,
+			Text = text,
+			BackColor = DrawingColor.Transparent,
+		};
 	}
 
 	private void Connect()
@@ -111,21 +122,41 @@ internal sealed class ConnectionForm : Form
 		KeyPreview = true;
 
 		var (x, width) = (PanelBounds.X + 32, PanelBounds.Width - 64);
-		_host = CreateSegment(new DrawingRectangle(x, PanelBounds.Y + 32, width / 2, 40), Texts.Host, true);
-		_join = CreateSegment(new DrawingRectangle(x + width / 2, PanelBounds.Y + 32, width / 2, 40), Texts.Join, false);
+		_host = CreateSegment(
+			new DrawingRectangle(x, PanelBounds.Y + 32, width / 2, 40),
+			Texts.Host,
+			true
+		);
+		_join = CreateSegment(
+			new DrawingRectangle(x + width / 2, PanelBounds.Y + 32, width / 2, 40),
+			Texts.Join,
+			false
+		);
 		_name = CreateField(new DrawingRectangle(x, PanelBounds.Y + 124, width, 40));
 		_address = CreateField(new DrawingRectangle(x, PanelBounds.Y + 206, width, 40));
 		_port = CreateField(new DrawingRectangle(x, PanelBounds.Y + 288, 160, 40));
 
-		_connect = new ActionButton(fonts) { Bounds = new DrawingRectangle(x, PanelBounds.Y + 360, width, 48), IsPrimary = true };
+		_connect = new ActionButton(fonts)
+		{
+			Bounds = new DrawingRectangle(x, PanelBounds.Y + 360, width, 48),
+			IsPrimary = true,
+		};
 		_connect.Click += (_, _) => Connect();
 		Controls.Add(_connect);
 
-		var back = new ActionButton(fonts) { Bounds = new DrawingRectangle(48, 688, 150, 44), Text = Texts.Back };
+		var back = new ActionButton(fonts)
+		{
+			Bounds = new DrawingRectangle(48, 688, 150, 44),
+			Text = Texts.Back,
+		};
 		back.Click += (_, _) => Canceled?.Invoke(this, EventArgs.Empty);
 		Controls.Add(back);
 
-		var editor = new ActionButton(fonts) { Bounds = new DrawingRectangle(756, 688, 220, 44), Text = Texts.ScenarioEditor };
+		var editor = new ActionButton(fonts)
+		{
+			Bounds = new DrawingRectangle(756, 688, 220, 44),
+			Text = Texts.ScenarioEditor,
+		};
 		editor.Click += (_, _) => EditingScenario?.Invoke(this, EventArgs.Empty);
 		Controls.Add(editor);
 
@@ -192,8 +223,20 @@ internal sealed class ConnectionForm : Form
 		if (Status.Length > 0)
 		{
 			var font = _fonts.Regular(15);
-			foreach (var (line, i) in Painter.Wrap(g, Status, font, PanelBounds.Width).Take(3).Select((l, i) => (l, i)))
-				Painter.Text(g, line, font, Theme.Alert, PanelBounds.X, PanelBounds.Bottom + 18 + i * 24);
+			foreach (
+				var (line, i) in Painter
+					.Wrap(g, Status, font, PanelBounds.Width)
+					.Take(3)
+					.Select((l, i) => (l, i))
+			)
+				Painter.Text(
+					g,
+					line,
+					font,
+					Theme.Alert,
+					PanelBounds.X,
+					PanelBounds.Bottom + 18 + i * 24
+				);
 		}
 	}
 }

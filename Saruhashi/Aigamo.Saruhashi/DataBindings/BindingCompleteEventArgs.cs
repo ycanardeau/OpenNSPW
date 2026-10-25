@@ -23,9 +23,8 @@ public class BindingCompleteEventArgs(
 	string errorText,
 	Exception exception,
 	bool cancel
-	) : CancelEventArgs(cancel)
+) : CancelEventArgs(cancel)
 {
-
 	/// <summary>
 	///  Constructor for BindingCompleteEventArgs.
 	/// </summary>

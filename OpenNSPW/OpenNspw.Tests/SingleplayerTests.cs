@@ -47,9 +47,7 @@ public class SingleplayerTests
 
 		public int? TicksOfNextFrame() => null;
 
-		public void ReachPlayerOrders(Nspw game)
-		{
-		}
+		public void ReachPlayerOrders(Nspw game) { }
 
 		public void Reach(Nspw game, TracePoint point)
 		{
@@ -58,7 +56,11 @@ public class SingleplayerTests
 		}
 	}
 
-	private static List<(int Unit, WorldPosition Position)> SetUpAt(int scenario, Side side, int startDate)
+	private static List<(int Unit, WorldPosition Position)> SetUpAt(
+		int scenario,
+		Side side,
+		int startDate
+	)
 	{
 		var capture = new SetupCapture(side);
 		using var run = new SingleplayerRun(scenario, game => game.Trace = capture, startDate);
@@ -93,7 +95,10 @@ public class SingleplayerTests
 			for (var frame = 0; frame < 30; frame++)
 			{
 				if (emulatorsLeftover is { } value && run.Game.Emulator is { } emulator)
-					BitConverter.TryWriteBytes(emulator.At(emulator.ImageBase - 0xA8 + 0x30, sizeof(uint)), value);
+					BitConverter.TryWriteBytes(
+						emulator.At(emulator.ImageBase - 0xA8 + 0x30, sizeof(uint)),
+						value
+					);
 				run.Frames(1);
 			}
 
@@ -134,7 +139,10 @@ public class SingleplayerTests
 
 		Assert.True(orders > 0, "The computer gave no move order.");
 		Assert.Empty(run.Player.MessageBoxes);
-		Assert.True(game.BattleTime < time, $"The time limit went from {time} to {game.BattleTime}.");
+		Assert.True(
+			game.BattleTime < time,
+			$"The time limit went from {time} to {game.BattleTime}."
+		);
 		var moved = start.Count(s => !game.Units[s.Unit].Position.Equals(s.Position));
 		Assert.True(moved > 0, "None of the computer's ships moved.");
 	}
@@ -208,7 +216,10 @@ public class SingleplayerTests
 		game.SelectionCount = 3;
 		game.SelectedUnit = 41;
 		// The base in the middle of the battle area, under the cursor.
-		game.CameraPosition = new WorldPosition(airBase.X - (CMBT_WIDTH / 2), airBase.Y + (CMBT_HEIGHT / 2));
+		game.CameraPosition = new WorldPosition(
+			airBase.X - (CMBT_WIDTH / 2),
+			airBase.Y + (CMBT_HEIGHT / 2)
+		);
 		run.Frames(1);
 		Assert.Equal(airBase.X - (CMBT_WIDTH / 2), game.CameraPosition.X);
 		game.PostMouseInput(0, true);
@@ -253,7 +264,12 @@ public class SingleplayerTests
 		for (var i = 1; i <= game.MaxUnitId && m == 0; i++)
 		{
 			ref var unit = ref game.Units[i];
-			if (unit.Side == game.CpuSide && unit.Category == UnitCategory.Ship && unit.Kind <= UnitKind.LightCarrier && unit.MaxHp >= 2)
+			if (
+				unit.Side == game.CpuSide
+				&& unit.Category == UnitCategory.Ship
+				&& unit.Kind <= UnitKind.LightCarrier
+				&& unit.MaxHp >= 2
+			)
 			{
 				m = i;
 			}
@@ -265,7 +281,10 @@ public class SingleplayerTests
 			ref var unit = ref game.Units[i];
 			if (unit.Side == game.CpuSide && unit.Kind == UnitKind.NavalBase)
 			{
-				Assert.True(Math.Abs(unit.Position.X - game.Units[m].Position.X) > 280 || Math.Abs(unit.Position.Y - game.Units[m].Position.Y) > 280);
+				Assert.True(
+					Math.Abs(unit.Position.X - game.Units[m].Position.X) > 280
+						|| Math.Abs(unit.Position.Y - game.Units[m].Position.Y) > 280
+				);
 			}
 		}
 
@@ -316,7 +335,10 @@ public class SingleplayerTests
 		}
 
 		run.Frames(20);
-		Assert.True(game.Units[computers].Position.X > World.Right, $"The computer's ship is at x {game.Units[computers].Position.X}.");
+		Assert.True(
+			game.Units[computers].Position.X > World.Right,
+			$"The computer's ship is at x {game.Units[computers].Position.X}."
+		);
 		Assert.NotEqual(World.Right - 40, game.Units[computers].EmergencyDestination.X);
 		Assert.Equal(World.Right - 40, game.Units[players].EmergencyDestination.X);
 	}
@@ -341,7 +363,17 @@ public class SingleplayerTests
 		Assert.Equal(12, game.Units[carrier].Capacity);
 
 		var planes = game.Units[carrier].PlaneCount;
-		Assert.Equal(1, game.AddPlane(Side.UnitedStates, UnitKind.Attacker, 0, carrier, game.Units[carrier].Capacity + 2, FireKind.Bomb));
+		Assert.Equal(
+			1,
+			game.AddPlane(
+				Side.UnitedStates,
+				UnitKind.Attacker,
+				0,
+				carrier,
+				game.Units[carrier].Capacity + 2,
+				FireKind.Bomb
+			)
+		);
 		Assert.Equal(planes + game.Units[carrier].Capacity + 2, game.Units[carrier].PlaneCount);
 	}
 
@@ -379,12 +411,19 @@ public class SingleplayerTests
 		using var run = new SingleplayerRun(3);
 		run.Frames(2);
 		var game = run.Game;
-		bool IsSea(int r, int c) => r is > 0 and < 255 && c is > 0 and < 255 && game.MapTiles[r][c] == 0;
-		var (row, column) = (from r in Enumerable.Range(1, 253)
-							 from c in Enumerable.Range(3, 249)
-							 where Enumerable.Range(-1, 3).All(dr => Enumerable.Range(-1, 3).All(dc => IsSea(r + dr, c + dc)))
-								 && Enumerable.Range(1, 3).All(dc => IsSea(r, c + dc)) && game.MapTiles[r][c - 2] >= 1
-							 select (r, c)).First();
+		bool IsSea(int r, int c) =>
+			r is > 0 and < 255 && c is > 0 and < 255 && game.MapTiles[r][c] == 0;
+		var (row, column) = (
+			from r in Enumerable.Range(1, 253)
+			from c in Enumerable.Range(3, 249)
+			where
+				Enumerable
+					.Range(-1, 3)
+					.All(dr => Enumerable.Range(-1, 3).All(dc => IsSea(r + dr, c + dc)))
+				&& Enumerable.Range(1, 3).All(dc => IsSea(r, c + dc))
+				&& game.MapTiles[r][c - 2] >= 1
+			select (r, c)
+		).First();
 		var x = World.Left + column * 80 + 20;
 		var y = World.Top - row * 80 - 20;
 		var target = game.AddUnit(Side.UnitedStates, UnitKind.Cruiser, x + 200, y, 0);
@@ -478,7 +517,11 @@ public class SingleplayerTests
 		var bomber = game.AddUnit(Side.Japan, UnitKind.Bomber, -9000, -7000, 0);
 		Assert.NotEqual(0, bomber);
 		game.Units[bomber].Weapon = FireKind.Bomb;
-		game.BufferedMenuOrders[1] = new MenuOrder { Menu = CombatMenuItem.ArmWithTorpedo, SelectedUnit = (short)bomber };
+		game.BufferedMenuOrders[1] = new MenuOrder
+		{
+			Menu = CombatMenuItem.ArmWithTorpedo,
+			SelectedUnit = (short)bomber,
+		};
 
 		game.ApplyUnitInfoInput();
 
@@ -504,7 +547,11 @@ public class SingleplayerTests
 
 		game.SetShipFormation(ship);
 
-		Assert.Equal(Math.Atan2(50, 100) * 180 / Math.PI - 100 + 360, game.Units[ship].DirectionToLeader.Degrees, 6);
+		Assert.Equal(
+			Math.Atan2(50, 100) * 180 / Math.PI - 100 + 360,
+			game.Units[ship].DirectionToLeader.Degrees,
+			6
+		);
 	}
 
 	// A mode chosen from the combat menu goes to a parked plane too, and Move clears its deck phase, as in 1.22
@@ -521,7 +568,11 @@ public class SingleplayerTests
 		unit.PlaneState = UnitState.Parked;
 		unit.DeckPhase = 4;
 		unit.Mode = UnitMode.Return;
-		game.BufferedMenuOrders[1] = new MenuOrder { Menu = CombatMenuItem.Move, SelectedUnit = (short)fighter };
+		game.BufferedMenuOrders[1] = new MenuOrder
+		{
+			Menu = CombatMenuItem.Move,
+			SelectedUnit = (short)fighter,
+		};
 
 		game.ApplyUnitInfoInput();
 
@@ -607,7 +658,11 @@ public class SingleplayerTests
 		var attacker = 0;
 		for (var i = 1; i <= game.MaxUnitId; i++)
 		{
-			if (game.Units[i].IsUsed && game.Units[i].Kind == UnitKind.Attacker && game.Units[i].Carrier == carrier)
+			if (
+				game.Units[i].IsUsed
+				&& game.Units[i].Kind == UnitKind.Attacker
+				&& game.Units[i].Carrier == carrier
+			)
 			{
 				attacker = i;
 			}
@@ -694,7 +749,12 @@ public class SingleplayerTests
 			run.Frames(1);
 			for (var m = 1; m <= game.MaxUnitId; m++)
 			{
-				if (m != full && game.Units[m].IsUsed && game.Units[m].Kind == UnitKind.Pillboxes && game.Units[m].Position.Equals(landing))
+				if (
+					m != full
+					&& game.Units[m].IsUsed
+					&& game.Units[m].Kind == UnitKind.Pillboxes
+					&& game.Units[m].Position.Equals(landing)
+				)
 				{
 					pillboxes = m;
 				}
@@ -761,7 +821,12 @@ public class SingleplayerTests
 	[InlineData(UnitKind.Destroyer, 0.0, 0.0, 330)]
 	[InlineData(UnitKind.Cruiser, 0.0, 1.0, 80)]
 	[InlineData(UnitKind.Battleship, 0.0, 1.0, 0)]
-	public void SubmergedSubmarinesAreFoundAsIn122(UnitKind kind, double speed, double submarineSpeed, int size)
+	public void SubmergedSubmarinesAreFoundAsIn122(
+		UnitKind kind,
+		double speed,
+		double submarineSpeed,
+		int size
+	)
 	{
 		using var run = new SingleplayerRun(3);
 		run.Frames(2);
@@ -824,7 +889,13 @@ public class SingleplayerTests
 		var game = run.Game;
 		var side = computers ? game.CpuSide : game.LocalSide;
 		var destroyer = game.AddUnit(side, UnitKind.Destroyer, -9000, -7000, 0);
-		var submarine = game.AddUnit(side == Side.Japan ? Side.UnitedStates : Side.Japan, UnitKind.Submarine, -9000 + distance, -7000, 0);
+		var submarine = game.AddUnit(
+			side == Side.Japan ? Side.UnitedStates : Side.Japan,
+			UnitKind.Submarine,
+			-9000 + distance,
+			-7000,
+			0
+		);
 		Assert.NotEqual(0, destroyer);
 		Assert.NotEqual(0, submarine);
 		ref var sub = ref game.Units[submarine];
@@ -898,7 +969,12 @@ public class SingleplayerTests
 		for (var i = 1; i <= game.MaxUnitId && m == 0; i++)
 		{
 			ref var unit = ref game.Units[i];
-			if (unit.IsUsed && unit.Category == UnitCategory.Ship && unit.Kind <= UnitKind.LightCarrier && unit.FuelInterval >= 1)
+			if (
+				unit.IsUsed
+				&& unit.Category == UnitCategory.Ship
+				&& unit.Kind <= UnitKind.LightCarrier
+				&& unit.FuelInterval >= 1
+			)
 			{
 				m = i;
 			}
@@ -961,7 +1037,12 @@ public class SingleplayerTests
 		var target = game.AddUnit(game.CpuSide, kind, 100, 0, 0);
 		Assert.NotEqual(0, fighter);
 		Assert.NotEqual(0, target);
-		game.SelectOrders[0] = new SelectOrder { IsSet = true, SelectedUnit = (short)fighter, Unit = (short)target };
+		game.SelectOrders[0] = new SelectOrder
+		{
+			IsSet = true,
+			SelectedUnit = (short)fighter,
+			Unit = (short)target,
+		};
 
 		game.ApplyOrders();
 
@@ -985,7 +1066,12 @@ public class SingleplayerTests
 		Assert.NotEqual(0, attacker);
 		Assert.NotEqual(0, target);
 		game.Units[attacker].Weapon = FireKind.Torpedo;
-		game.SelectOrders[0] = new SelectOrder { IsSet = true, SelectedUnit = (short)attacker, Unit = (short)target };
+		game.SelectOrders[0] = new SelectOrder
+		{
+			IsSet = true,
+			SelectedUnit = (short)attacker,
+			Unit = (short)target,
+		};
 
 		game.ApplyOrders();
 
@@ -1065,7 +1151,10 @@ public class SingleplayerTests
 
 		bool Hits(double dx, double dy)
 		{
-			game.Fires[1].Position = new WorldPosition(game.Units[1].Position.X + dx, game.Units[1].Position.Y + dy);
+			game.Fires[1].Position = new WorldPosition(
+				game.Units[1].Position.X + dx,
+				game.Units[1].Position.Y + dy
+			);
 			return game.CheckHit(1) != 0;
 		}
 
@@ -1152,7 +1241,8 @@ public class SingleplayerTests
 		destroyer.Ammo = 1;
 		destroyer.ReloadTime = 0;
 		destroyer.Speed = 0;
-		int EffectsInUse() => Enumerable.Range(1, 255).Count(f => game.Effects[f].Layer != EffectLayer.None);
+		int EffectsInUse() =>
+			Enumerable.Range(1, 255).Count(f => game.Effects[f].Layer != EffectLayer.None);
 
 		var effects = EffectsInUse();
 		game.Renderer.IsDrawnTick = drawn;
@@ -1179,11 +1269,20 @@ public class SingleplayerTests
 		destroyer.Speed = destroyer.MaxSpeed;
 		game.Tick = 15;
 		game.Renderer.IsDrawnTick = true;
-		var used = Enumerable.Range(1, 255).Where(f => game.Effects[f].Layer != EffectLayer.None).ToHashSet();
+		var used = Enumerable
+			.Range(1, 255)
+			.Where(f => game.Effects[f].Layer != EffectLayer.None)
+			.ToHashSet();
 
 		game.UpdateUnitEffects(1);
 
-		var wake = Enumerable.Range(1, 255).Single(f => !used.Contains(f) && game.Effects[f].Animation == 4 && game.Effects[f].SpriteNumber == 8);
+		var wake = Enumerable
+			.Range(1, 255)
+			.Single(f =>
+				!used.Contains(f)
+				&& game.Effects[f].Animation == 4
+				&& game.Effects[f].SpriteNumber == 8
+			);
 		var heading = 190.3 * Math.PI / 180;
 		Assert.Equal(1000 + Math.Cos(heading) * 16, game.Effects[wake].Position.X, 3);
 		Assert.Equal(1000 + Math.Sin(heading) * 16, game.Effects[wake].Position.Y, 3);
@@ -1262,7 +1361,13 @@ public class SingleplayerTests
 		using var run = new SingleplayerRun(3);
 		run.Frames(2);
 		var game = run.Game;
-		var m = Enumerable.Range(1, game.MaxUnitId).First(n => game.Units[n].IsUsed && game.Units[n].Side == game.LocalSide && game.Units[n].Category == UnitCategory.Ship);
+		var m = Enumerable
+			.Range(1, game.MaxUnitId)
+			.First(n =>
+				game.Units[n].IsUsed
+				&& game.Units[n].Side == game.LocalSide
+				&& game.Units[n].Category == UnitCategory.Ship
+			);
 		for (var f = 1; f < 256; f++)
 		{
 			game.Effects[f].Layer = EffectLayer.None;
@@ -1289,7 +1394,9 @@ public class SingleplayerTests
 		using var player = new RunningGame(data.Path, "Alice");
 		player.Game.IsSingleplayer = true;
 		player.Game.ScenarioNumber = 3;
-		player.Game.SingleplayerExecutable = File.ReadAllBytes(Path.Combine(GameData.FindSingleplayer(), "NSPW_122.exe"));
+		player.Game.SingleplayerExecutable = File.ReadAllBytes(
+			Path.Combine(GameData.FindSingleplayer(), "NSPW_122.exe")
+		);
 		player.Platform.SingleplayerDirectory = GameData.FindSingleplayer();
 
 		// Away from the edges, which scroll the battle area.
@@ -1297,15 +1404,25 @@ public class SingleplayerTests
 		player.Start();
 
 		var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
-		while (player.Platform.FrameCount < 200 && player.Error is null && DateTime.UtcNow < deadline)
+		while (
+			player.Platform.FrameCount < 200 && player.Error is null && DateTime.UtcNow < deadline
+		)
 		{
 			Thread.Sleep(100);
 		}
 
 		Assert.Null(player.Error);
-		Assert.True(player.Platform.FrameCount >= 200, $"The game showed {player.Platform.FrameCount} frames.");
+		Assert.True(
+			player.Platform.FrameCount >= 200,
+			$"The game showed {player.Platform.FrameCount} frames."
+		);
 		Assert.Equal(GameMode.Battle, player.Game.Mode);
 		Assert.Empty(player.Platform.MessageBoxes);
-		TitleScreenTests.WritePng(Path.Combine(AppContext.BaseDirectory, "singleplayer_battle.png"), player.Platform.LastFrame(), all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
+		TitleScreenTests.WritePng(
+			Path.Combine(AppContext.BaseDirectory, "singleplayer_battle.png"),
+			player.Platform.LastFrame(),
+			all_head.SCRN_WIDTH,
+			all_head.SCRN_HEIGHT
+		);
 	}
 }

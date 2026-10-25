@@ -39,8 +39,16 @@ internal sealed class TextField(UIFonts fonts) : Control
 	{
 		var g = e.Graphics;
 		var focused = Focused && Enabled;
-		Painter.Fill(g, ClientRectangle, Enabled ? Theme.Alpha(Theme.Ink, 0.75f) : Theme.Alpha(Theme.Line, 0.12f));
-		Painter.Frame(g, ClientRectangle, focused ? Theme.Brass : Theme.Lerp(Theme.Line, Theme.Navy, Enabled ? 0 : 0.5f));
+		Painter.Fill(
+			g,
+			ClientRectangle,
+			Enabled ? Theme.Alpha(Theme.Ink, 0.75f) : Theme.Alpha(Theme.Line, 0.12f)
+		);
+		Painter.Frame(
+			g,
+			ClientRectangle,
+			focused ? Theme.Brass : Theme.Lerp(Theme.Line, Theme.Navy, Enabled ? 0 : 0.5f)
+		);
 
 		var font = _fonts.Regular(17);
 		var lineHeight = Painter.Measure(g, "国", font).Height;
@@ -51,6 +59,15 @@ internal sealed class TextField(UIFonts fonts) : Control
 			Painter.Text(g, Text, font, Enabled ? Theme.Text : Theme.Muted, 12, y);
 
 		if (focused && Painter.Now % 1 < 0.55f)
-			Painter.Fill(g, new(13 + (int)Painter.Measure(g, Text, font).Width, (int)y + 2, 2, (int)lineHeight - 4), Theme.Brass);
+			Painter.Fill(
+				g,
+				new(
+					13 + (int)Painter.Measure(g, Text, font).Width,
+					(int)y + 2,
+					2,
+					(int)lineHeight - 4
+				),
+				Theme.Brass
+			);
 	}
 }

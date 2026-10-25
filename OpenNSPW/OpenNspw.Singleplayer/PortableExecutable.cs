@@ -12,7 +12,13 @@ internal sealed class PortableExecutable(
 )
 {
 	// A section: where it is loaded (an address), how much of it is in memory, and where its bytes are in the file.
-	public sealed record Section(string Name, uint Address, uint VirtualSize, uint RawOffset, uint RawSize);
+	public sealed record Section(
+		string Name,
+		uint Address,
+		uint VirtualSize,
+		uint RawOffset,
+		uint RawSize
+	);
 
 	// An imported function, by the address of its slot in the import table.
 	public sealed record Import(string Library, string Name, uint Slot);
@@ -38,14 +44,21 @@ internal sealed class PortableExecutable(
 	private static uint FileOffset(IReadOnlyList<Section> sections, uint imageBase, uint rva)
 	{
 		var address = imageBase + rva;
-		var section = sections.First(s => address >= s.Address && address < s.Address + Math.Max(s.VirtualSize, s.RawSize));
+		var section = sections.First(s =>
+			address >= s.Address && address < s.Address + Math.Max(s.VirtualSize, s.RawSize)
+		);
 		return address - section.Address + section.RawOffset;
 	}
 
 	// The offset in the file of an address of the image.
 	public uint FileOffsetOf(uint address) => FileOffset(Sections, ImageBase, address - ImageBase);
 
-	private static List<Import> ReadImports(ReadOnlySpan<byte> file, IReadOnlyList<Section> sections, uint imageBase, uint directory)
+	private static List<Import> ReadImports(
+		ReadOnlySpan<byte> file,
+		IReadOnlyList<Section> sections,
+		uint imageBase,
+		uint directory
+	)
 	{
 		var imports = new List<Import>();
 		for (var descriptor = FileOffset(sections, imageBase, directory); ; descriptor += 20)
@@ -57,16 +70,21 @@ internal sealed class PortableExecutable(
 				return imports;
 
 			var library = CString(file, FileOffset(sections, imageBase, name));
-			var thunks = FileOffset(sections, imageBase, lookupTable != 0 ? lookupTable : addressTable);
+			var thunks = FileOffset(
+				sections,
+				imageBase,
+				lookupTable != 0 ? lookupTable : addressTable
+			);
 			for (var i = 0u; ; i++)
 			{
 				var thunk = UInt32(file, thunks + 4 * i);
 				if (thunk == 0)
 					break;
 
-				var function = (thunk & 0x80000000) != 0
-					? $"#{thunk & 0xFFFF}"
-					: CString(file, FileOffset(sections, imageBase, thunk) + 2);
+				var function =
+					(thunk & 0x80000000) != 0
+						? $"#{thunk & 0xFFFF}"
+						: CString(file, FileOffset(sections, imageBase, thunk) + 2);
 				imports.Add(new(library, function, imageBase + addressTable + 4 * i));
 			}
 		}
@@ -97,6 +115,11 @@ internal sealed class PortableExecutable(
 			);
 		}
 
-		return new(imageBase, imageSize, sections, ReadImports(file, sections, imageBase, importDirectory));
+		return new(
+			imageBase,
+			imageSize,
+			sections,
+			ReadImports(file, sections, imageBase, importDirectory)
+		);
 	}
 }

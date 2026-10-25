@@ -94,9 +94,21 @@ public interface IDirectDrawClipper : IUnknown
 
 public unsafe interface IDirectDrawSurface7 : IUnknown
 {
-	int Blt(RECT* lpDestRect, IDirectDrawSurface7? lpDDSrcSurface, RECT* lpSrcRect, uint dwFlags, DDBLTFX* lpDDBltFx);
+	int Blt(
+		RECT* lpDestRect,
+		IDirectDrawSurface7? lpDDSrcSurface,
+		RECT* lpSrcRect,
+		uint dwFlags,
+		DDBLTFX* lpDDBltFx
+	);
 
-	int BltFast(int dwX, int dwY, IDirectDrawSurface7 lpDDSrcSurface, RECT* lpSrcRect, uint dwTrans);
+	int BltFast(
+		int dwX,
+		int dwY,
+		IDirectDrawSurface7 lpDDSrcSurface,
+		RECT* lpSrcRect,
+		uint dwTrans
+	);
 
 	int Flip(IDirectDrawSurface7? lpDDSurfaceTargetOverride, uint dwFlags);
 
@@ -123,7 +135,11 @@ public unsafe interface IDirectDraw7 : IUnknown
 {
 	int CreateClipper(uint dwFlags, out IDirectDrawClipper? lplpDDClipper, object? pUnkOuter);
 
-	int CreateSurface(DDSURFACEDESC2* lpDDSurfaceDesc2, out IDirectDrawSurface7? lplpDDSurface, object? pUnkOuter);
+	int CreateSurface(
+		DDSURFACEDESC2* lpDDSurfaceDesc2,
+		out IDirectDrawSurface7? lplpDDSurface,
+		object? pUnkOuter
+	);
 
 	int FlipToGDISurface();
 
@@ -141,7 +157,19 @@ public static unsafe class ddraw
 	public const int DDERR_SURFACELOST = unchecked((int)0x887601C2);
 	public const int DDERR_NOTFOUND = unchecked((int)0x887600FF);
 
-	public static readonly Guid IID_IDirectDraw7 = new(0x15e65ec0, 0x3b9c, 0x11d2, 0xb9, 0x2f, 0x00, 0x60, 0x97, 0x97, 0xea, 0x5b);
+	public static readonly Guid IID_IDirectDraw7 = new(
+		0x15e65ec0,
+		0x3b9c,
+		0x11d2,
+		0xb9,
+		0x2f,
+		0x00,
+		0x60,
+		0x97,
+		0x97,
+		0xea,
+		0x5b
+	);
 
 	public const uint DDSCL_FULLSCREEN = 0x00000001;
 	public const uint DDSCL_NORMAL = 0x00000008;
@@ -177,12 +205,26 @@ public static unsafe class ddraw
 
 	public const uint DDPF_RGB = 0x00000040;
 
-	public static int IDirectDrawSurface_Blt(IDirectDrawSurface7 p, RECT* a, IDirectDrawSurface7? b, RECT* c, uint d, DDBLTFX* e)
+	public static int IDirectDrawSurface_Blt(
+		IDirectDrawSurface7 p,
+		RECT* a,
+		IDirectDrawSurface7? b,
+		RECT* c,
+		uint d,
+		DDBLTFX* e
+	)
 	{
 		return p.Blt(a, b, c, d, e);
 	}
 
-	public static int IDirectDrawSurface_BltFast(IDirectDrawSurface7 p, int a, int b, IDirectDrawSurface7 c, RECT* d, uint e)
+	public static int IDirectDrawSurface_BltFast(
+		IDirectDrawSurface7 p,
+		int a,
+		int b,
+		IDirectDrawSurface7 c,
+		RECT* d,
+		uint e
+	)
 	{
 		return p.BltFast(a, b, c, d, e);
 	}
@@ -202,7 +244,13 @@ public static unsafe class ddraw
 		return p.ReleaseDC(a);
 	}
 
-	public static int IDirectDrawSurface_Lock(IDirectDrawSurface7 p, RECT* a, DDSURFACEDESC2* b, uint c, object? d)
+	public static int IDirectDrawSurface_Lock(
+		IDirectDrawSurface7 p,
+		RECT* a,
+		DDSURFACEDESC2* b,
+		uint c,
+		object? d
+	)
 	{
 		return p.Lock(a, b, c, d);
 	}
@@ -274,12 +322,19 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 
 	private static bool Contains(int width, int height, RECT r)
 	{
-		return r.left >= 0 && r.top >= 0 && r.right <= width && r.bottom <= height && r.left <= r.right && r.top <= r.bottom;
+		return r.left >= 0
+			&& r.top >= 0
+			&& r.right <= width
+			&& r.bottom <= height
+			&& r.left <= r.right
+			&& r.top <= r.bottom;
 	}
 
 	private bool IsKey(ushort pixel)
 	{
-		return _sourceColorKey is { } key && pixel >= key.dwColorSpaceLowValue && pixel <= key.dwColorSpaceHighValue;
+		return _sourceColorKey is { } key
+			&& pixel >= key.dwColorSpaceLowValue
+			&& pixel <= key.dwColorSpaceHighValue;
 	}
 
 	// Copies src's rectangle to this surface's rectangle, stretching if their sizes differ, and skipping src's color
@@ -304,7 +359,9 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 			for (var x = 0; x < dw; x++)
 			{
 				var sx = s.left + x * sw / dw;
-				var pixel = source is null ? src._pixels[sy * src.Width + sx] : source[sy * src.Width + sx];
+				var pixel = source is null
+					? src._pixels[sy * src.Width + sx]
+					: source[sy * src.Width + sx];
 				if (!useKey || !src.IsKey(pixel))
 				{
 					row[d.left + x] = pixel;
@@ -321,7 +378,13 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 		}
 	}
 
-	public int Blt(RECT* lpDestRect, IDirectDrawSurface7? lpDDSrcSurface, RECT* lpSrcRect, uint dwFlags, DDBLTFX* lpDDBltFx)
+	public int Blt(
+		RECT* lpDestRect,
+		IDirectDrawSurface7? lpDDSrcSurface,
+		RECT* lpSrcRect,
+		uint dwFlags,
+		DDBLTFX* lpDDBltFx
+	)
 	{
 		var d = lpDestRect is null ? new RECT { right = Width, bottom = Height } : *lpDestRect;
 		if (Clipper is null && !Contains(Width, Height, d))
@@ -352,7 +415,9 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 				return ddraw.DDERR_INVALIDPARAMS;
 			}
 
-			var s = lpSrcRect is null ? new RECT { right = src.Width, bottom = src.Height } : *lpSrcRect;
+			var s = lpSrcRect is null
+				? new RECT { right = src.Width, bottom = src.Height }
+				: *lpSrcRect;
 			if (!Contains(src.Width, src.Height, s))
 			{
 				return ddraw.DDERR_INVALIDRECT;
@@ -365,15 +430,29 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 		return ddraw.DD_OK;
 	}
 
-	public int BltFast(int dwX, int dwY, IDirectDrawSurface7 lpDDSrcSurface, RECT* lpSrcRect, uint dwTrans)
+	public int BltFast(
+		int dwX,
+		int dwY,
+		IDirectDrawSurface7 lpDDSrcSurface,
+		RECT* lpSrcRect,
+		uint dwTrans
+	)
 	{
 		if (lpDDSrcSurface is not DirectDrawSurface7 src)
 		{
 			return ddraw.DDERR_INVALIDPARAMS;
 		}
 
-		var s = lpSrcRect is null ? new RECT { right = src.Width, bottom = src.Height } : *lpSrcRect;
-		var d = new RECT { left = dwX, top = dwY, right = dwX + (s.right - s.left), bottom = dwY + (s.bottom - s.top) };
+		var s = lpSrcRect is null
+			? new RECT { right = src.Width, bottom = src.Height }
+			: *lpSrcRect;
+		var d = new RECT
+		{
+			left = dwX,
+			top = dwY,
+			right = dwX + (s.right - s.left),
+			bottom = dwY + (s.bottom - s.top),
+		};
 		if (!Contains(src.Width, src.Height, s) || !Contains(Width, Height, d))
 		{
 			return ddraw.DDERR_INVALIDRECT;
@@ -398,7 +477,10 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 		return ddraw.DD_OK;
 	}
 
-	public int GetAttachedSurface(DDSCAPS2* lpDDSCaps, out IDirectDrawSurface7? lplpDDAttachedSurface)
+	public int GetAttachedSurface(
+		DDSCAPS2* lpDDSCaps,
+		out IDirectDrawSurface7? lplpDDAttachedSurface
+	)
 	{
 		lplpDDAttachedSurface = BackBuffer;
 		return BackBuffer is null ? ddraw.DDERR_NOTFOUND : ddraw.DD_OK;
@@ -488,12 +570,19 @@ public sealed unsafe class DirectDraw7(Gdi gdi, Action<DirectDrawSurface7> prese
 		return ddraw.DD_OK;
 	}
 
-	public int CreateSurface(DDSURFACEDESC2* lpDDSurfaceDesc2, out IDirectDrawSurface7? lplpDDSurface, object? pUnkOuter)
+	public int CreateSurface(
+		DDSURFACEDESC2* lpDDSurfaceDesc2,
+		out IDirectDrawSurface7? lplpDDSurface,
+		object? pUnkOuter
+	)
 	{
 		if ((lpDDSurfaceDesc2->ddsCaps.dwCaps & ddraw.DDSCAPS_PRIMARYSURFACE) != 0)
 		{
 			var primary = new DirectDrawSurface7(this, _width, _height, true);
-			if ((lpDDSurfaceDesc2->dwFlags & ddraw.DDSD_BACKBUFFERCOUNT) != 0 && lpDDSurfaceDesc2->dwBackBufferCount > 0)
+			if (
+				(lpDDSurfaceDesc2->dwFlags & ddraw.DDSD_BACKBUFFERCOUNT) != 0
+				&& lpDDSurfaceDesc2->dwBackBufferCount > 0
+			)
 			{
 				primary.BackBuffer = new DirectDrawSurface7(this, _width, _height, false);
 			}
@@ -502,13 +591,21 @@ public sealed unsafe class DirectDraw7(Gdi gdi, Action<DirectDrawSurface7> prese
 			return ddraw.DD_OK;
 		}
 
-		if ((lpDDSurfaceDesc2->dwFlags & (ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT)) != (ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT))
+		if (
+			(lpDDSurfaceDesc2->dwFlags & (ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT))
+			!= (ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT)
+		)
 		{
 			lplpDDSurface = null;
 			return ddraw.DDERR_INVALIDPARAMS;
 		}
 
-		lplpDDSurface = new DirectDrawSurface7(this, (int)lpDDSurfaceDesc2->dwWidth, (int)lpDDSurfaceDesc2->dwHeight, false);
+		lplpDDSurface = new DirectDrawSurface7(
+			this,
+			(int)lpDDSurfaceDesc2->dwWidth,
+			(int)lpDDSurfaceDesc2->dwHeight,
+			false
+		);
 		return ddraw.DD_OK;
 	}
 

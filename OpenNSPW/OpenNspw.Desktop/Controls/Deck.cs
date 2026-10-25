@@ -52,7 +52,11 @@ internal sealed class Deck : Control
 		for (var m = 1; m <= snapshot.MaxUnitId; m++)
 		{
 			ref var unit = ref snapshot.Units[m];
-			if (snapshot.ShownOnDeck[m] && snapshot.Clickable[m] && IsInMiddle(ToDeck(unit.Position.X, unit.Position.Y), point))
+			if (
+				snapshot.ShownOnDeck[m]
+				&& snapshot.Clickable[m]
+				&& IsInMiddle(ToDeck(unit.Position.X, unit.Position.Y), point)
+			)
 				return m;
 		}
 
@@ -67,19 +71,31 @@ internal sealed class Deck : Control
 		if (kind == 0)
 			return;
 
-		var frame = snapshot.UnitInfoPanel[1] == 0 ? snapshot.UnitInfoPanel[2] : kind switch
-		{
-			UnitKind.AirBase => 9,
-			UnitKind.Carrier => 10,
-			UnitKind.LightCarrier => 11,
-			_ => snapshot.UnitInfoPanel[2],
-		};
-		ref var sprite = ref snapshot.Sprites[snapshot.UnitInfoPanel[4] == (int)Side.Japan ? SpriteId.JapanUnitInfo : SpriteId.UnitedStatesUnitInfo];
+		var frame =
+			snapshot.UnitInfoPanel[1] == 0
+				? snapshot.UnitInfoPanel[2]
+				: kind switch
+				{
+					UnitKind.AirBase => 9,
+					UnitKind.Carrier => 10,
+					UnitKind.LightCarrier => 11,
+					_ => snapshot.UnitInfoPanel[2],
+				};
+		ref var sprite = ref snapshot.Sprites[
+			snapshot.UnitInfoPanel[4] == (int)Side.Japan
+				? SpriteId.JapanUnitInfo
+				: SpriteId.UnitedStatesUnitInfo
+		];
 		_art.Draw(batch, sprite, frame, 1, sprite.Size.Width - 3, sprite.Size.Height - 2, origin);
 	}
 
 	// The parked planes' effects of a layer that the player sees (UpdateLowerEffects, UpdateUpperEffects: 駐機場の飛行機用).
-	private void DrawEffects(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot, EffectLayer layer)
+	private void DrawEffects(
+		SpriteBatch batch,
+		Vector2 origin,
+		GameSnapshot snapshot,
+		EffectLayer layer
+	)
 	{
 		ref var sprite = ref snapshot.Sprites[SpriteId.SubUnits];
 		for (var m = 1; m < EFFECT_MAX; m++)
@@ -88,8 +104,18 @@ internal sealed class Deck : Control
 			if (effect.Layer != layer || effect.Animation != 3 || !snapshot.SeenEffects[m])
 				continue;
 
-			var at = ToDeck(effect.Position.X, effect.Position.Y) - new Vector2(sprite.Center.X, sprite.Center.Y);
-			_art.Draw(batch, sprite, effect.SpriteNumber, 1, sprite.Size.Width - 1, sprite.Size.Height - 1, origin + at);
+			var at =
+				ToDeck(effect.Position.X, effect.Position.Y)
+				- new Vector2(sprite.Center.X, sprite.Center.Y);
+			_art.Draw(
+				batch,
+				sprite,
+				effect.SpriteNumber,
+				1,
+				sprite.Size.Width - 1,
+				sprite.Size.Height - 1,
+				origin + at
+			);
 		}
 	}
 
@@ -103,8 +129,18 @@ internal sealed class Deck : Control
 
 			ref var unit = ref snapshot.Units[m];
 			ref var sprite = ref snapshot.Sprites[snapshot.UnitSprites[m]];
-			var at = ToDeck(unit.Position.X, unit.Position.Y) - new Vector2(sprite.Center.X, sprite.Center.Y);
-			_art.Draw(batch, sprite, unit.SpriteRow * 8 + Nspw.SpriteColumnOf(unit.Direction), 1, sprite.Size.Width - 2, sprite.Size.Height - 2, origin + at);
+			var at =
+				ToDeck(unit.Position.X, unit.Position.Y)
+				- new Vector2(sprite.Center.X, sprite.Center.Y);
+			_art.Draw(
+				batch,
+				sprite,
+				unit.SpriteRow * 8 + Nspw.SpriteColumnOf(unit.Direction),
+				1,
+				sprite.Size.Width - 2,
+				sprite.Size.Height - 2,
+				origin + at
+			);
 		}
 	}
 
@@ -115,7 +151,12 @@ internal sealed class Deck : Control
 		{
 			ref var unit = ref snapshot.Units[m];
 			if (snapshot.ShownOnDeck[m])
-				DrawSelection(batch, origin + ToDeck(unit.Position.X, unit.Position.Y), snapshot, m);
+				DrawSelection(
+					batch,
+					origin + ToDeck(unit.Position.X, unit.Position.Y),
+					snapshot,
+					m
+				);
 		}
 
 		if (_mouse is { } mouse && HitPlane(snapshot, mouse) is { } hit)
@@ -167,14 +208,20 @@ internal sealed class Deck : Control
 	protected override void OnPaint(PaintEventArgs e)
 	{
 		var snapshot = _snapshot;
-		((MonoGameGraphics)e.Graphics).DrawWith(SamplerState.PointClamp, (batch, origin) =>
-		{
-			batch.FillRectangle(new RectangleF(origin.X, origin.Y, Width, Height), Theme.Ink.ToXnaColor());
-			DrawPicture(batch, origin, snapshot);
-			DrawEffects(batch, origin, snapshot, EffectLayer.Lower);
-			DrawPlanes(batch, origin, snapshot);
-			DrawEffects(batch, origin, snapshot, EffectLayer.Upper);
-			DrawMarks(batch, origin, snapshot);
-		});
+		((MonoGameGraphics)e.Graphics).DrawWith(
+			SamplerState.PointClamp,
+			(batch, origin) =>
+			{
+				batch.FillRectangle(
+					new RectangleF(origin.X, origin.Y, Width, Height),
+					Theme.Ink.ToXnaColor()
+				);
+				DrawPicture(batch, origin, snapshot);
+				DrawEffects(batch, origin, snapshot, EffectLayer.Lower);
+				DrawPlanes(batch, origin, snapshot);
+				DrawEffects(batch, origin, snapshot, EffectLayer.Upper);
+				DrawMarks(batch, origin, snapshot);
+			}
+		);
 	}
 }

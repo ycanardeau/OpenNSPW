@@ -17,20 +17,26 @@ internal static class TypeLayout
 {
 	private delegate Span<byte> BoxBytes(object box);
 
-	private static Span<byte> Bytes<T>(object box) where T : struct
+	private static Span<byte> Bytes<T>(object box)
+		where T : struct
 	{
 		return MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref Unsafe.Unbox<T>(box), 1));
 	}
 
-	private static readonly MethodInfo BytesMethod =
-		typeof(TypeLayout).GetMethod(nameof(Bytes), BindingFlags.NonPublic | BindingFlags.Static)!;
+	private static readonly MethodInfo BytesMethod = typeof(TypeLayout).GetMethod(
+		nameof(Bytes),
+		BindingFlags.NonPublic | BindingFlags.Static
+	)!;
 
 	private static readonly ConcurrentDictionary<Type, BoxBytes> BoxBytesCache = new();
 
 	// The bytes of a boxed value, in the box.
 	public static Span<byte> BytesOf(object box)
 	{
-		var bytes = BoxBytesCache.GetOrAdd(box.GetType(), type => BytesMethod.MakeGenericMethod(type).CreateDelegate<BoxBytes>());
+		var bytes = BoxBytesCache.GetOrAdd(
+			box.GetType(),
+			type => BytesMethod.MakeGenericMethod(type).CreateDelegate<BoxBytes>()
+		);
 		return bytes(box);
 	}
 
@@ -43,7 +49,13 @@ internal static class TypeLayout
 	// field of a packed struct through reflection crashes on arm64.
 	private static int OffsetOf(FieldInfo field)
 	{
-		var method = new DynamicMethod($"offset_{field.Name}", typeof(int), Type.EmptyTypes, typeof(TypeLayout).Module, skipVisibility: true);
+		var method = new DynamicMethod(
+			$"offset_{field.Name}",
+			typeof(int),
+			Type.EmptyTypes,
+			typeof(TypeLayout).Module,
+			skipVisibility: true
+		);
 		var il = method.GetILGenerator();
 		il.DeclareLocal(field.DeclaringType!);
 		il.Emit(OpCodes.Ldloca_S, (byte)0);
@@ -58,15 +70,28 @@ internal static class TypeLayout
 	private static IReadOnlyList<FieldLayout> FindFields(Type type)
 	{
 		var fields = new List<FieldLayout>();
-		foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+		foreach (
+			var field in type.GetFields(
+				BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
+			)
+		)
 		{
-			fields.Add(new FieldLayout(field, field.Name, field.FieldType, OffsetOf(field), SizeOf(field.FieldType)));
+			fields.Add(
+				new FieldLayout(
+					field,
+					field.Name,
+					field.FieldType,
+					OffsetOf(field),
+					SizeOf(field.FieldType)
+				)
+			);
 		}
 
 		return [.. fields.OrderBy(f => f.Offset)];
 	}
 
-	private static readonly ConcurrentDictionary<Type, IReadOnlyList<FieldLayout>> FieldsCache = new();
+	private static readonly ConcurrentDictionary<Type, IReadOnlyList<FieldLayout>> FieldsCache =
+		new();
 
 	// The fields of a struct, ordered by offset.
 	public static IReadOnlyList<FieldLayout> FieldsOf(Type type)
@@ -95,7 +120,9 @@ internal static class TypeLayout
 
 		if (IsInlineArray(type))
 		{
-			var element = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)[0].FieldType;
+			var element = type.GetFields(
+				BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
+			)[0].FieldType;
 			var size = SizeOf(element);
 			var index = offset / size;
 			var inner = Locate(element, offset % size);
@@ -112,7 +139,11 @@ internal static class TypeLayout
 				}
 
 				var inner = Locate(field.Type, offset - field.Offset);
-				return new Location($".{field.Name}{inner.Path}", field.Offset + inner.Start, inner.Type);
+				return new Location(
+					$".{field.Name}{inner.Path}",
+					field.Offset + inner.Start,
+					inner.Type
+				);
 			}
 		}
 
@@ -132,12 +163,22 @@ internal static class TypeLayout
 			TypeCode.Boolean => bytes[0].ToString(CultureInfo.InvariantCulture),
 			TypeCode.Byte => bytes[0].ToString(CultureInfo.InvariantCulture),
 			TypeCode.SByte => ((sbyte)bytes[0]).ToString(CultureInfo.InvariantCulture),
-			TypeCode.Int16 => MemoryMarshal.Read<short>(bytes).ToString(CultureInfo.InvariantCulture),
-			TypeCode.UInt16 => MemoryMarshal.Read<ushort>(bytes).ToString(CultureInfo.InvariantCulture),
+			TypeCode.Int16 => MemoryMarshal
+				.Read<short>(bytes)
+				.ToString(CultureInfo.InvariantCulture),
+			TypeCode.UInt16 => MemoryMarshal
+				.Read<ushort>(bytes)
+				.ToString(CultureInfo.InvariantCulture),
 			TypeCode.Int32 => MemoryMarshal.Read<int>(bytes).ToString(CultureInfo.InvariantCulture),
-			TypeCode.UInt32 => MemoryMarshal.Read<uint>(bytes).ToString(CultureInfo.InvariantCulture),
-			TypeCode.Int64 => MemoryMarshal.Read<long>(bytes).ToString(CultureInfo.InvariantCulture),
-			TypeCode.UInt64 => MemoryMarshal.Read<ulong>(bytes).ToString(CultureInfo.InvariantCulture),
+			TypeCode.UInt32 => MemoryMarshal
+				.Read<uint>(bytes)
+				.ToString(CultureInfo.InvariantCulture),
+			TypeCode.Int64 => MemoryMarshal
+				.Read<long>(bytes)
+				.ToString(CultureInfo.InvariantCulture),
+			TypeCode.UInt64 => MemoryMarshal
+				.Read<ulong>(bytes)
+				.ToString(CultureInfo.InvariantCulture),
 			TypeCode.Double => FormatDouble(MemoryMarshal.Read<double>(bytes)),
 			_ => Convert.ToHexString(bytes),
 		};

@@ -16,11 +16,7 @@ internal abstract class Screen(NspwGame game) : GameScreenBase(game)
 		WindowManager.Root.Controls.Clear();
 	}
 
-	public override void Update(GameTime gameTime)
-	{
-	}
+	public override void Update(GameTime gameTime) { }
 
-	public override void Draw(GameTime gameTime)
-	{
-	}
+	public override void Draw(GameTime gameTime) { }
 }

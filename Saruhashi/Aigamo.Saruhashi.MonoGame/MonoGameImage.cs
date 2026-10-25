@@ -28,7 +28,8 @@ public static class MonoGameImage
 		}
 	}
 
-	private sealed class MonoGameTextureRegion2DImage(Texture2DRegion textureRegion, Color color) : IMonoGameImage
+	private sealed class MonoGameTextureRegion2DImage(Texture2DRegion textureRegion, Color color)
+		: IMonoGameImage
 	{
 		public Texture2DRegion TextureRegion { get; } = textureRegion;
 		public Color Color { get; } = color;

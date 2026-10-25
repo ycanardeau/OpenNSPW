@@ -17,7 +17,12 @@ internal sealed class Minimap : Control
 	// The minimap's top: 199 high, at the bottom of the screen.
 	public const int Top = all_head.CMBT_HEIGHT - 199;
 
-	public static readonly DrawingRectangle Area = new(all_head.CMBT_WIDTH, Top, all_head.SCRN_WIDTH - all_head.CMBT_WIDTH, all_head.SCRN_HEIGHT - Top);
+	public static readonly DrawingRectangle Area = new(
+		all_head.CMBT_WIDTH,
+		Top,
+		all_head.SCRN_WIDTH - all_head.CMBT_WIDTH,
+		all_head.SCRN_HEIGHT - Top
+	);
 
 	// The map, 240 by 180 tiles, 8 from the minimap's corner, as the original draws it (MakeMinimap).
 	private const int MapLeft = 8;
@@ -77,8 +82,17 @@ internal sealed class Minimap : Control
 	// center, 5 from its corner (DrawMinimap).
 	private void ShowPoint(DrawingPoint point, bool isPressed)
 	{
-		if (point.X >= MapLeft && point.X <= MapLeft + Columns && point.Y >= MapTop && point.Y <= MapTop + Rows)
-			_session.Game.Commands.ShowMinimapCell(point.X - 5 - MapLeft, point.Y - 5 - MapTop, isPressed);
+		if (
+			point.X >= MapLeft
+			&& point.X <= MapLeft + Columns
+			&& point.Y >= MapTop
+			&& point.Y <= MapTop + Rows
+		)
+			_session.Game.Commands.ShowMinimapCell(
+				point.X - 5 - MapLeft,
+				point.Y - 5 - MapTop,
+				isPressed
+			);
 	}
 
 	protected override void OnMouseDown(MouseEventArgs e)
@@ -113,12 +127,20 @@ internal sealed class Minimap : Control
 	// A unit's tile on the map, from a point of the world, as the original puts its dot (DrawMinimap).
 	private static DrawingPoint Cell(double x, double y)
 	{
-		return new(MapLeft + (Math.Abs(World.Left) + (int)(x - 40)) / 80, MapTop + (Math.Abs(World.Top) - (int)(y + 40)) / 80);
+		return new(
+			MapLeft + (Math.Abs(World.Left) + (int)(x - 40)) / 80,
+			MapTop + (Math.Abs(World.Top) - (int)(y + 40)) / 80
+		);
 	}
 
 	private static bool IsOnMap(ref Unit unit)
 	{
-		return !(unit.Position.Y > World.Top || unit.Position.Y < World.Bottom || unit.Position.X < World.Left || unit.Position.X > World.Right);
+		return !(
+			unit.Position.Y > World.Top
+			|| unit.Position.Y < World.Bottom
+			|| unit.Position.X < World.Left
+			|| unit.Position.X > World.Right
+		);
 	}
 
 	protected override void OnPaint(PaintEventArgs e)
@@ -127,7 +149,14 @@ internal sealed class Minimap : Control
 		var snapshot = _snapshot;
 		Painter.Fill(g, ClientRectangle, Theme.Navy);
 		Painter.Fill(g, new(0, 0, Width, 1), Theme.Alpha(Theme.Line, 0.9f));
-		g.DrawImage(MonoGameImage.Create(new Texture2DRegion(_map, 0, 0, Columns, Rows), Color.White, SamplerState.PointClamp), new DrawingPoint(MapLeft, MapTop));
+		g.DrawImage(
+			MonoGameImage.Create(
+				new Texture2DRegion(_map, 0, 0, Columns, Rows),
+				Color.White,
+				SamplerState.PointClamp
+			),
+			new DrawingPoint(MapLeft, MapTop)
+		);
 
 		for (var x = 20; x < Columns; x += 20)
 			Painter.Fill(g, new(MapLeft + x, MapTop, 1, Rows), Theme.Alpha(Theme.Line, 0.25f));
@@ -135,14 +164,23 @@ internal sealed class Minimap : Control
 		for (var y = 20; y < Rows; y += 20)
 			Painter.Fill(g, new(MapLeft, MapTop + y, Columns, 1), Theme.Alpha(Theme.Line, 0.25f));
 
-		Painter.Frame(g, new(MapLeft - 1, MapTop - 1, Columns + 2, Rows + 2), Theme.Alpha(Theme.Line, 0.9f));
+		Painter.Frame(
+			g,
+			new(MapLeft - 1, MapTop - 1, Columns + 2, Rows + 2),
+			Theme.Alpha(Theme.Line, 0.9f)
+		);
 
 		// The player's units, but parked planes; the enemy's it has found, a submerged submarine where it was found.
 		// Planes blink (DrawMinimap).
 		for (var m = 1; m <= snapshot.MaxUnitId; m++)
 		{
 			ref var unit = ref snapshot.Units[m];
-			if (!unit.IsUsed || !IsOnMap(ref unit) || unit.PlaneState == UnitState.Parked || (unit.Category == UnitCategory.Plane && snapshot.FrameCount % 4 == 0))
+			if (
+				!unit.IsUsed
+				|| !IsOnMap(ref unit)
+				|| unit.PlaneState == UnitState.Parked
+				|| (unit.Category == UnitCategory.Plane && snapshot.FrameCount % 4 == 0)
+			)
 				continue;
 
 			DrawingPoint cell;
@@ -155,7 +193,11 @@ internal sealed class Minimap : Control
 			else
 				cell = Cell(unit.Position.X, unit.Position.Y);
 
-			Painter.Fill(g, new(cell.X, cell.Y, 3, 3), unit.Side == Side.Japan ? Theme.Japan : Theme.UnitedStates);
+			Painter.Fill(
+				g,
+				new(cell.X, cell.Y, 3, 3),
+				unit.Side == Side.Japan ? Theme.Japan : Theme.UnitedStates
+			);
 		}
 
 		// Where the battlefield is: its top left corner's tile, 10 tiles across.

@@ -13,7 +13,8 @@ internal sealed class UnitBrush(GameSession session)
 	// While the button is held after a press that started a brush: whether the units brushed are put in the selection.
 	private bool? _adds;
 
-	private static bool IsParkedPlane(ref Unit unit) => unit.Category == UnitCategory.Plane && unit.PlaneState == UnitState.Parked;
+	private static bool IsParkedPlane(ref Unit unit) =>
+		unit.Category == UnitCategory.Plane && unit.PlaneState == UnitState.Parked;
 
 	// Whether a press on unit m starts a brush, and which: on one of the player's units that can be in a formation with
 	// the selected unit, as the game's formations go (IsFormationMate), the press puts it in the selection, or takes it
@@ -22,10 +23,20 @@ internal sealed class UnitBrush(GameSession session)
 	{
 		ref var unit = ref snapshot.Units[m];
 		ref var selected = ref snapshot.Units[snapshot.SelectedUnit];
-		if (m == snapshot.SelectedUnit || unit.Side != snapshot.LocalSide || (unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress))
+		if (
+			m == snapshot.SelectedUnit
+			|| unit.Side != snapshot.LocalSide
+			|| (unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress)
+		)
 			return null;
 
-		if (snapshot.SelectedUnit != 0 && (selected.Category != unit.Category || IsParkedPlane(ref selected) != IsParkedPlane(ref unit)))
+		if (
+			snapshot.SelectedUnit != 0
+			&& (
+				selected.Category != unit.Category
+				|| IsParkedPlane(ref selected) != IsParkedPlane(ref unit)
+			)
+		)
 			return null;
 
 		return snapshot.Selections[m] == 0;

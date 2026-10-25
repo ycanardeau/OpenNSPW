@@ -68,9 +68,12 @@ internal static partial class GameTexts
 		["引き分け。"] = "Draw.",
 
 		// The notices (ReadNotices).
-		["ユニットデータ同期異常、ゲームを中断されたし。"] = "Unit data synchronization error! Exit the game.",
-		["プログラム同期異常、ゲームを中断されたし。"] = "Program synchronization error! Exit the game.",
-		["ランダム同期異常、ゲームを中断されたし。"] = "Random synchronization error! Exit the game.",
+		["ユニットデータ同期異常、ゲームを中断されたし。"] =
+			"Unit data synchronization error! Exit the game.",
+		["プログラム同期異常、ゲームを中断されたし。"] =
+			"Program synchronization error! Exit the game.",
+		["ランダム同期異常、ゲームを中断されたし。"] =
+			"Random synchronization error! Exit the game.",
 		["接続相手がいなくなりました。"] = "The rival has gone.",
 
 		// The multiplayer scenarios (ListScenarioNames).
@@ -95,21 +98,77 @@ internal static partial class GameTexts
 	// last.
 	private static readonly Dictionary<int, string[]> EnglishDescriptions = new()
 	{
-		[1] = ["Battle of small carrier fleets.", "Victory Line : Sink the enemy's carrier or destroy its trenches."],
-		[2] = ["Battle of middle-sized carrier fleets.", "Victory Line : Sink the enemy's carrier or destroy its trenches."],
-		[3] = ["Battle of the biggest carrier fleets.", "Victory Line : Sink the enemy's carrier or destroy its trenches."],
-		[4] = ["Battle of combat ships only.", "Victory Line : Sink all the enemy's battleships and cruisers, or destroy its trenches."],
-		[5] = ["Battle of combat ships only.", "Victory Line : Sink all the enemy's battleships and cruisers, or destroy its trenches."],
-		[6] = ["Invasion of Midway by the Japan Navy.", "Victory Line : Total annihilation of the U.S. bases on Midway."],
-		[7] = ["Invasion of Midway by the Japan Navy.", "Victory Line : Total annihilation of the U.S. bases on Midway, and the completion of a Japanese fortress on the island."],
-		[8] = ["Battles of the middle Pacific.", "Victory Line : Total annihilation of the U.S. bases on Midway, and the completion of a Japanese fortress on the island. The opposite conditions on Wake Island are the U.S. Navy's victory."],
+		[1] =
+		[
+			"Battle of small carrier fleets.",
+			"Victory Line : Sink the enemy's carrier or destroy its trenches.",
+		],
+		[2] =
+		[
+			"Battle of middle-sized carrier fleets.",
+			"Victory Line : Sink the enemy's carrier or destroy its trenches.",
+		],
+		[3] =
+		[
+			"Battle of the biggest carrier fleets.",
+			"Victory Line : Sink the enemy's carrier or destroy its trenches.",
+		],
+		[4] =
+		[
+			"Battle of combat ships only.",
+			"Victory Line : Sink all the enemy's battleships and cruisers, or destroy its trenches.",
+		],
+		[5] =
+		[
+			"Battle of combat ships only.",
+			"Victory Line : Sink all the enemy's battleships and cruisers, or destroy its trenches.",
+		],
+		[6] =
+		[
+			"Invasion of Midway by the Japan Navy.",
+			"Victory Line : Total annihilation of the U.S. bases on Midway.",
+		],
+		[7] =
+		[
+			"Invasion of Midway by the Japan Navy.",
+			"Victory Line : Total annihilation of the U.S. bases on Midway, and the completion of a Japanese fortress on the island.",
+		],
+		[8] =
+		[
+			"Battles of the middle Pacific.",
+			"Victory Line : Total annihilation of the U.S. bases on Midway, and the completion of a Japanese fortress on the island. The opposite conditions on Wake Island are the U.S. Navy's victory.",
+		],
 		[9] = ["Battles on the user's mission.", "Victory Line : It depends on your rule."],
-		[101] = ["Battles around Guadalcanal.", "Victory Line : Total annihilation of the Japanese bases on Guadalcanal is the U.S. Navy's victory."],
-		[102] = ["Battles around Guadalcanal.", "Victory Line : Total annihilation of the Japanese bases on Guadalcanal, and the completion of the U.S. Navy's airfield, is its victory."],
-		[103] = ["Battles off and over Japan.", "Victory Line : Total annihilation of all the Japanese cities on their land is the U.S. Navy's victory."],
-		[104] = ["Battle of the South Pacific.", "Victory Line : Total annihilation of all the Japanese bases on Bougainville Island."],
-		[105] = ["Battle of the South Pacific.", "Victory Line : Total annihilation of all the Japanese bases on Bougainville Island. The opposite conditions on Guadalcanal, which the U.S. Navy defends, are the Japanese victory."],
-		[106] = ["Battles at Guadalcanal.", "Victory Line : Total annihilation of all the enemy's bases, and keeping over 4 bases on Guadalcanal Island."],
+		[101] =
+		[
+			"Battles around Guadalcanal.",
+			"Victory Line : Total annihilation of the Japanese bases on Guadalcanal is the U.S. Navy's victory.",
+		],
+		[102] =
+		[
+			"Battles around Guadalcanal.",
+			"Victory Line : Total annihilation of the Japanese bases on Guadalcanal, and the completion of the U.S. Navy's airfield, is its victory.",
+		],
+		[103] =
+		[
+			"Battles off and over Japan.",
+			"Victory Line : Total annihilation of all the Japanese cities on their land is the U.S. Navy's victory.",
+		],
+		[104] =
+		[
+			"Battle of the South Pacific.",
+			"Victory Line : Total annihilation of all the Japanese bases on Bougainville Island.",
+		],
+		[105] =
+		[
+			"Battle of the South Pacific.",
+			"Victory Line : Total annihilation of all the Japanese bases on Bougainville Island. The opposite conditions on Guadalcanal, which the U.S. Navy defends, are the Japanese victory.",
+		],
+		[106] =
+		[
+			"Battles at Guadalcanal.",
+			"Victory Line : Total annihilation of all the enemy's bases, and keeping over 4 bases on Guadalcanal Island.",
+		],
 	};
 
 	[GeneratedRegex(@"^工事:(-?\d+)$")]
@@ -183,6 +242,10 @@ internal static partial class GameTexts
 	// as the game writes them.
 	public static string[] DescriptionOf(int scenario, string[] japanese)
 	{
-		return Texts.Language == Language.English && EnglishDescriptions.TryGetValue(scenario, out var english) ? english : japanese;
+		return
+			Texts.Language == Language.English
+			&& EnglishDescriptions.TryGetValue(scenario, out var english)
+			? english
+			: japanese;
 	}
 }

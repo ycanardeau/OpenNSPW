@@ -52,7 +52,15 @@ public interface IDirectSoundBuffer : IUnknown
 
 	int SetCurrentPosition(uint dwNewPosition);
 
-	unsafe int Lock(uint dwOffset, uint dwBytes, void** ppvAudioPtr1, uint* pdwAudioBytes1, void** ppvAudioPtr2, uint* pdwAudioBytes2, uint dwFlags);
+	unsafe int Lock(
+		uint dwOffset,
+		uint dwBytes,
+		void** ppvAudioPtr1,
+		uint* pdwAudioBytes1,
+		void** ppvAudioPtr2,
+		uint* pdwAudioBytes2,
+		uint dwFlags
+	);
 
 	unsafe int Unlock(void* pvAudioPtr1, uint dwAudioBytes1, void* pvAudioPtr2, uint dwAudioBytes2);
 }
@@ -61,9 +69,16 @@ public unsafe interface IDirectSound8 : IUnknown
 {
 	int SetCooperativeLevel(HWND? hwnd, uint dwLevel);
 
-	int CreateSoundBuffer(DSBUFFERDESC* pcDSBufferDesc, out IDirectSoundBuffer? ppDSBuffer, object? pUnkOuter);
+	int CreateSoundBuffer(
+		DSBUFFERDESC* pcDSBufferDesc,
+		out IDirectSoundBuffer? ppDSBuffer,
+		object? pUnkOuter
+	);
 
-	int DuplicateSoundBuffer(IDirectSoundBuffer pDSBufferOriginal, out IDirectSoundBuffer? ppDSBufferDuplicate);
+	int DuplicateSoundBuffer(
+		IDirectSoundBuffer pDSBufferOriginal,
+		out IDirectSoundBuffer? ppDSBufferDuplicate
+	);
 }
 
 public static class dsound
@@ -110,7 +125,13 @@ public sealed unsafe class DirectSoundBuffer : IDirectSoundBuffer
 	}
 
 	// The platform's sound, created once the data is written.
-	private ISound? Sound => _sound ??= _data is null ? null : _platform.CreateSound(_data.Format, new ReadOnlySpan<byte>(_data.Memory, (int)_data.Size));
+	private ISound? Sound =>
+		_sound ??= _data is null
+			? null
+			: _platform.CreateSound(
+				_data.Format,
+				new ReadOnlySpan<byte>(_data.Memory, (int)_data.Size)
+			);
 
 	internal DirectSoundBuffer Duplicate()
 	{
@@ -141,7 +162,15 @@ public sealed unsafe class DirectSoundBuffer : IDirectSoundBuffer
 		return dsound.DS_OK;
 	}
 
-	public int Lock(uint dwOffset, uint dwBytes, void** ppvAudioPtr1, uint* pdwAudioBytes1, void** ppvAudioPtr2, uint* pdwAudioBytes2, uint dwFlags)
+	public int Lock(
+		uint dwOffset,
+		uint dwBytes,
+		void** ppvAudioPtr1,
+		uint* pdwAudioBytes1,
+		void** ppvAudioPtr2,
+		uint* pdwAudioBytes2,
+		uint dwFlags
+	)
 	{
 		if (_data is null || dwOffset + dwBytes > _data.Size)
 		{
@@ -181,7 +210,11 @@ public sealed unsafe class DirectSound8(INspwPlatform platform) : IDirectSound8
 		return dsound.DS_OK;
 	}
 
-	public int CreateSoundBuffer(DSBUFFERDESC* pcDSBufferDesc, out IDirectSoundBuffer? ppDSBuffer, object? pUnkOuter)
+	public int CreateSoundBuffer(
+		DSBUFFERDESC* pcDSBufferDesc,
+		out IDirectSoundBuffer? ppDSBuffer,
+		object? pUnkOuter
+	)
 	{
 		if ((pcDSBufferDesc->dwFlags & dsound.DSBCAPS_PRIMARYBUFFER) != 0)
 		{
@@ -195,11 +228,17 @@ public sealed unsafe class DirectSound8(INspwPlatform platform) : IDirectSound8
 			return dsound.DSERR_INVALIDPARAM;
 		}
 
-		ppDSBuffer = new DirectSoundBuffer(_platform, new SoundData(*pcDSBufferDesc->lpwfxFormat, pcDSBufferDesc->dwBufferBytes));
+		ppDSBuffer = new DirectSoundBuffer(
+			_platform,
+			new SoundData(*pcDSBufferDesc->lpwfxFormat, pcDSBufferDesc->dwBufferBytes)
+		);
 		return dsound.DS_OK;
 	}
 
-	public int DuplicateSoundBuffer(IDirectSoundBuffer pDSBufferOriginal, out IDirectSoundBuffer? ppDSBufferDuplicate)
+	public int DuplicateSoundBuffer(
+		IDirectSoundBuffer pDSBufferOriginal,
+		out IDirectSoundBuffer? ppDSBufferDuplicate
+	)
 	{
 		ppDSBufferDuplicate = (pDSBufferOriginal as DirectSoundBuffer)?.Duplicate();
 		return ppDSBufferDuplicate is null ? dsound.DSERR_INVALIDPARAM : dsound.DS_OK;

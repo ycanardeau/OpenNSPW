@@ -21,7 +21,12 @@ internal static class Theme
 	public static Color Alpha(Color color, float alpha)
 	{
 		var a = Math.Clamp(alpha, 0, 1);
-		return Color.FromArgb((int)(255 * a), (int)(color.R * a), (int)(color.G * a), (int)(color.B * a));
+		return Color.FromArgb(
+			(int)(255 * a),
+			(int)(color.R * a),
+			(int)(color.G * a),
+			(int)(color.B * a)
+		);
 	}
 
 	public static Color Lerp(Color from, Color to, float amount)
@@ -31,6 +36,7 @@ internal static class Theme
 			(int)(from.A + (to.A - from.A) * t),
 			(int)(from.R + (to.R - from.R) * t),
 			(int)(from.G + (to.G - from.G) * t),
-			(int)(from.B + (to.B - from.B) * t));
+			(int)(from.B + (to.B - from.B) * t)
+		);
 	}
 }

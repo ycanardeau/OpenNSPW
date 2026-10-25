@@ -19,7 +19,8 @@ internal sealed class DynamicSpriteFontWrapper(DynamicSpriteFont font) : IMonoGa
 {
 	private readonly DynamicSpriteFont _font = font;
 
-	public void Draw(SpriteBatch spriteBatch, string? text, Vector2 position, Color color) => _font.DrawText(spriteBatch, text, position, color);
+	public void Draw(SpriteBatch spriteBatch, string? text, Vector2 position, Color color) =>
+		_font.DrawText(spriteBatch, text, position, color);
 
 	public Vector2 MeasureString(string? text) => _font.MeasureString(text);
 }
@@ -35,7 +36,6 @@ internal sealed class NspwGame : Game
 	private byte[]? _singleplayerExecutable;
 	private Screen? _nextScreen;
 	private GameSession? _lastSession;
-
 
 	// The game's data: t3.bmp, wav, Map, Scenario, Saved.
 	public string DataDirectory { get; }
@@ -59,7 +59,12 @@ internal sealed class NspwGame : Game
 	// singleplayerExecutablePath: NSPW_122.exe, to play single-player (docs/Singleplayer.md). scenario: a scenario of it
 	// to play at once, without the menus. replay: a trace of 1.22 in that scenario, which that game follows, to watch it
 	// (docs/Verification.md).
-	public NspwGame(string dataDirectory, string? singleplayerExecutablePath, int? scenario = null, Trace122Replay? replay = null)
+	public NspwGame(
+		string dataDirectory,
+		string? singleplayerExecutablePath,
+		int? scenario = null,
+		Trace122Replay? replay = null
+	)
 	{
 		_graphics = new GraphicsDeviceManager(this);
 		_singleplayerExecutablePath = singleplayerExecutablePath;
@@ -75,7 +80,10 @@ internal sealed class NspwGame : Game
 
 	public byte[] ReadSingleplayerExecutable()
 	{
-		return _singleplayerExecutable ??= File.ReadAllBytes(_singleplayerExecutablePath ?? throw new InvalidOperationException("NSPW_122.exe was not found."));
+		return _singleplayerExecutable ??= File.ReadAllBytes(
+			_singleplayerExecutablePath
+				?? throw new InvalidOperationException("NSPW_122.exe was not found.")
+		);
 	}
 
 	// Shows a screen, from the next update.
@@ -89,7 +97,18 @@ internal sealed class NspwGame : Game
 	// connecting to a rival; replay: a trace of 1.22 in that scenario, which the game follows.
 	public GameSession StartSession(int? singleplayer = null, Trace122Replay? replay = null)
 	{
-		_lastSession = new GameSession(DataDirectory, Text, singleplayer is { } scenario ? (ReadSingleplayerExecutable(), Path.GetDirectoryName(Path.GetFullPath(_singleplayerExecutablePath!))!, scenario) : null, replay);
+		_lastSession = new GameSession(
+			DataDirectory,
+			Text,
+			singleplayer is { } scenario
+				? (
+					ReadSingleplayerExecutable(),
+					Path.GetDirectoryName(Path.GetFullPath(_singleplayerExecutablePath!))!,
+					scenario
+				)
+				: null,
+			replay
+		);
 		_lastSession.Start();
 		return _lastSession;
 	}
@@ -99,7 +118,12 @@ internal sealed class NspwGame : Game
 		_graphics.PreferredBackBufferWidth = all_head.SCRN_WIDTH;
 		_graphics.PreferredBackBufferHeight = all_head.SCRN_HEIGHT;
 		_graphics.ApplyChanges();
-		ViewportAdapter = new BoxingViewportAdapter(Window, GraphicsDevice, all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
+		ViewportAdapter = new BoxingViewportAdapter(
+			Window,
+			GraphicsDevice,
+			all_head.SCRN_WIDTH,
+			all_head.SCRN_HEIGHT
+		);
 		base.Initialize();
 	}
 
@@ -108,23 +132,36 @@ internal sealed class NspwGame : Game
 		SpriteBatch = new SpriteBatch(GraphicsDevice);
 
 		var mouseListener = new SaruhashiMouseListener(ViewportAdapter);
-		var keyboardListener = new KeyboardListener(new KeyboardListenerSettings { InitialDelayMilliseconds = 500, RepeatDelayMilliseconds = 30 });
+		var keyboardListener = new KeyboardListener(
+			new KeyboardListenerSettings
+			{
+				InitialDelayMilliseconds = 500,
+				RepeatDelayMilliseconds = 30,
+			}
+		);
 		Components.Add(new InputListenerComponent(this, mouseListener, keyboardListener));
 
 		Fonts = new UIFonts();
 		WindowManager = new WindowManager(
 			new DrawingRectangle(0, 0, all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT),
 			new MonoGameGraphicsFactory(SpriteBatch, ViewportAdapter),
-			Fonts.Regular(14));
+			Fonts.Regular(14)
+		);
 		mouseListener.MouseDown += (_, e) => WindowManager.OnMouseDown(e);
 		mouseListener.MouseMove += (_, e) => WindowManager.OnMouseMove(e);
 		mouseListener.MouseUp += (_, e) => WindowManager.OnMouseUp(e);
 		mouseListener.MouseWheel += (_, e) => WindowManager.OnMouseWheel(e);
-		keyboardListener.KeyPressed += (_, e) => WindowManager.OnKeyDown(new KeyEventArgs((SaruhashiKeys)e.Key));
-		keyboardListener.KeyReleased += (_, e) => WindowManager.OnKeyUp(new KeyEventArgs((SaruhashiKeys)e.Key));
+		keyboardListener.KeyPressed += (_, e) =>
+			WindowManager.OnKeyDown(new KeyEventArgs((SaruhashiKeys)e.Key));
+		keyboardListener.KeyReleased += (_, e) =>
+			WindowManager.OnKeyUp(new KeyEventArgs((SaruhashiKeys)e.Key));
 		Window.TextInput += (_, e) => WindowManager.OnKeyPress(new KeyPressEventArgs(e.Character));
 
-		ShowScreen(_scenario is { } scenario ? new GameScreen(this, () => StartSession(scenario, _replay)) : new MainMenuScreen(this));
+		ShowScreen(
+			_scenario is { } scenario
+				? new GameScreen(this, () => StartSession(scenario, _replay))
+				: new MainMenuScreen(this)
+		);
 	}
 
 	protected override void Update(GameTime gameTime)

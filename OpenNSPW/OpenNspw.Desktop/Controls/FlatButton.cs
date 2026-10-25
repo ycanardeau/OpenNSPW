@@ -47,7 +47,12 @@ internal abstract class FlatButton : ButtonBase
 
 	protected override void OnMouseUp(MouseEventArgs e)
 	{
-		if (e.Button == MouseButtons.Left && IsPressed && Enabled && WindowManager.WindowFromPoint(PointToScreen(e.Location)) == this)
+		if (
+			e.Button == MouseButtons.Left
+			&& IsPressed
+			&& Enabled
+			&& WindowManager.WindowFromPoint(PointToScreen(e.Location)) == this
+		)
 		{
 			IsPressed = false;
 			OnClick(EventArgs.Empty);

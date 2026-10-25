@@ -78,7 +78,10 @@ public class Control : IDisposable, IBindableComponent
 			if (!InnerList.Remove(child))
 				throw new ArgumentException("Not a child of the control.", nameof(child));
 
-			InnerList.Insert(newIndex < 0 || newIndex > InnerList.Count ? InnerList.Count : newIndex, child);
+			InnerList.Insert(
+				newIndex < 0 || newIndex > InnerList.Count ? InnerList.Count : newIndex,
+				child
+			);
 		}
 	}
 
@@ -646,7 +649,9 @@ public class Control : IDisposable, IBindableComponent
 
 		if (ClipRectangle.Contains(e.Location))
 		{
-			OnMouseWheel(new MouseEventArgs(e.Button, e.Clicks, PointToClient(e.Location), e.Delta));
+			OnMouseWheel(
+				new MouseEventArgs(e.Button, e.Clicks, PointToClient(e.Location), e.Delta)
+			);
 			return this;
 		}
 

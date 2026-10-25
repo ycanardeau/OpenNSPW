@@ -2588,8 +2588,12 @@ public class CpuTests
 	public void ShiftCountIsMaskedTest(byte count, uint shifted)
 	{
 		_cpu.Shl(new Register32(1), new Register8(count)).Should().Be(new Register32(shifted));
-		_cpu.Shr(new Register32(4), new Register8(count)).Should().Be(new Register32(shifted == 1 ? 4u : 2u));
-		_cpu.Sar(new Register32(4), new Register8(count)).Should().Be(new Register32(shifted == 1 ? 4u : 2u));
+		_cpu.Shr(new Register32(4), new Register8(count))
+			.Should()
+			.Be(new Register32(shifted == 1 ? 4u : 2u));
+		_cpu.Sar(new Register32(4), new Register8(count))
+			.Should()
+			.Be(new Register32(shifted == 1 ? 4u : 2u));
 	}
 
 	// The borrow of sbb counts the carry even when right plus it does not fit in 32 bits.
@@ -2598,7 +2602,9 @@ public class CpuTests
 	{
 		_cpu.Eflags.Carry = true;
 
-		_cpu.Sbb(new Register32(0xFFFFFFFF), new Register32(0xFFFFFFFF)).Should().Be(new Register32(0xFFFFFFFF));
+		_cpu.Sbb(new Register32(0xFFFFFFFF), new Register32(0xFFFFFFFF))
+			.Should()
+			.Be(new Register32(0xFFFFFFFF));
 
 		_cpu.Eflags.Carry.Should().BeTrue();
 		_cpu.Eflags.Zero.Should().BeFalse();

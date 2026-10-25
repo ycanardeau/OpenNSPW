@@ -44,7 +44,8 @@ public unsafe partial class Nspw
 	private const int ReleaseDCOffset = 0x68;
 	private const int SurfaceMethodCount = 0x6C / 4;
 
-	private static Span<byte> Bytes<T>(ref T value) where T : struct
+	private static Span<byte> Bytes<T>(ref T value)
+		where T : struct
 	{
 		return MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref value, 1));
 	}
@@ -69,13 +70,21 @@ public unsafe partial class Nspw
 
 	private static int OffsetOf<T>(ref Unit unit, ref T field)
 	{
-		return (int)Unsafe.ByteOffset(ref Unsafe.As<Unit, byte>(ref unit), ref Unsafe.As<T, byte>(ref field));
+		return (int)
+			Unsafe.ByteOffset(
+				ref Unsafe.As<Unit, byte>(ref unit),
+				ref Unsafe.As<T, byte>(ref field)
+			);
 	}
 
 	private static (int SubWeapons, int Found, int Random) GetUnitOffsets()
 	{
 		var unit = new Unit();
-		return (OffsetOf(ref unit, ref unit.SubWeapons), OffsetOf(ref unit, ref unit.IsFound), OffsetOf(ref unit, ref unit.Random250));
+		return (
+			OffsetOf(ref unit, ref unit.SubWeapons),
+			OffsetOf(ref unit, ref unit.IsFound),
+			OffsetOf(ref unit, ref unit.Random250)
+		);
 	}
 
 	// The offsets in Unit of the fields where its layout and 1.22's part.
@@ -183,7 +192,9 @@ public unsafe partial class Nspw
 	{
 		for (var m = 0; m < Trace122.UnitCount; m++)
 			WriteUnitAs122(m, state.Slice(m * Trace122.UnitSize, Trace122.UnitSize));
-		MemoryMarshal.AsBytes((Span<Fire>)Fires)[..(Trace122.FireCount * Trace122.FireSize)].CopyTo(state[(Trace122.UnitCount * Trace122.UnitSize)..]);
+		MemoryMarshal
+			.AsBytes((Span<Fire>)Fires)[..(Trace122.FireCount * Trace122.FireSize)]
+			.CopyTo(state[(Trace122.UnitCount * Trace122.UnitSize)..]);
 	}
 
 	private void CopyUnitsOut(Emulator emulator)
@@ -233,7 +244,9 @@ public unsafe partial class Nspw
 	// Runs a function of 1.22 on the game's state.
 	private uint RunEmulated(uint address, params ReadOnlySpan<uint> arguments)
 	{
-		var emulator = Emulator ?? throw new InvalidOperationException("No single-player game is being played.");
+		var emulator =
+			Emulator
+			?? throw new InvalidOperationException("No single-player game is being played.");
 		CopyIn(emulator);
 		var result = emulator.Run(address, arguments);
 		CopyOut(emulator);
@@ -253,8 +266,16 @@ public unsafe partial class Nspw
 	private void LoadMapNatively(Emulator emulator)
 	{
 		var name = CString(emulator, emulator.Argument(0));
-		var known = new[] { "Map\\South_pacific.dat", "Map\\Middle_pacific.dat", "Map\\Japan_off.dat" };
-		LoadScenarioFile2(known.FirstOrDefault(k => string.Equals(k, name, StringComparison.OrdinalIgnoreCase)) ?? name);
+		var known = new[]
+		{
+			"Map\\South_pacific.dat",
+			"Map\\Middle_pacific.dat",
+			"Map\\Japan_off.dat",
+		};
+		LoadScenarioFile2(
+			known.FirstOrDefault(k => string.Equals(k, name, StringComparison.OrdinalIgnoreCase))
+				?? name
+		);
 		Bytes(ref MapTiles).CopyTo(emulator.At(MapAddress, sizeof(Array256<Array256<ushort>>)));
 	}
 
@@ -277,7 +298,9 @@ public unsafe partial class Nspw
 				continue;
 
 			var value = emulator.Argument(2 + arguments.Count);
-			arguments.Add(formatBytes[i] == 's' ? ShiftJis.GetBytes(CString(emulator, value)) : (int)value);
+			arguments.Add(
+				formatBytes[i] == 's' ? ShiftJis.GetBytes(CString(emulator, value)) : (int)value
+			);
 		}
 
 		var text = new byte[1025];
@@ -295,9 +318,34 @@ public unsafe partial class Nspw
 
 		emulator.SetImport("wsprintfA", 0, () => FormatNatively(emulator));
 		emulator.SetImport("SetWindowTextA", 8, () => emulator.Cpu.Eax = new Register32(1));
-		emulator.SetImport("SetTextColor", 8, () => emulator.Cpu.Eax = new Register32(SetTextColor(new HDC((int)emulator.Argument(0)), emulator.Argument(1))));
-		emulator.SetImport("SetBkMode", 8, () => emulator.Cpu.Eax = new Register32((uint)SetBkMode(new HDC((int)emulator.Argument(0)), (int)emulator.Argument(1))));
-		emulator.SetImport("SelectObject", 8, () => emulator.Cpu.Eax = new Register32((uint)SelectObject(new HDC((int)emulator.Argument(0)), new HGDIOBJ((int)emulator.Argument(1))).Value));
+		emulator.SetImport(
+			"SetTextColor",
+			8,
+			() =>
+				emulator.Cpu.Eax = new Register32(
+					SetTextColor(new HDC((int)emulator.Argument(0)), emulator.Argument(1))
+				)
+		);
+		emulator.SetImport(
+			"SetBkMode",
+			8,
+			() =>
+				emulator.Cpu.Eax = new Register32(
+					(uint)SetBkMode(new HDC((int)emulator.Argument(0)), (int)emulator.Argument(1))
+				)
+		);
+		emulator.SetImport(
+			"SelectObject",
+			8,
+			() =>
+				emulator.Cpu.Eax = new Register32(
+					(uint)
+						SelectObject(
+							new HDC((int)emulator.Argument(0)),
+							new HGDIOBJ((int)emulator.Argument(1))
+						).Value
+				)
+		);
 		emulator.SetImport(
 			"TextOutA",
 			20,
@@ -305,7 +353,15 @@ public unsafe partial class Nspw
 			{
 				var length = (int)emulator.Argument(4);
 				var text = emulator.At(emulator.Argument(3), length);
-				emulator.Cpu.Eax = new Register32((uint)TextOut(new HDC((int)emulator.Argument(0)), (int)emulator.Argument(1), (int)emulator.Argument(2), text, length));
+				emulator.Cpu.Eax = new Register32(
+					(uint)TextOut(
+						new HDC((int)emulator.Argument(0)),
+						(int)emulator.Argument(1),
+						(int)emulator.Argument(2),
+						text,
+						length
+					)
+				);
 			}
 		);
 
@@ -328,7 +384,13 @@ public unsafe partial class Nspw
 		var releaseDC = emulator.AddStub(
 			"IDirectDrawSurface7::ReleaseDC",
 			8,
-			() => emulator.Cpu.Eax = new Register32((uint)IDirectDrawSurface_ReleaseDC(Renderer.lpDDSBack, new HDC((int)emulator.Argument(1))))
+			() =>
+				emulator.Cpu.Eax = new Register32(
+					(uint)IDirectDrawSurface_ReleaseDC(
+						Renderer.lpDDSBack,
+						new HDC((int)emulator.Argument(1))
+					)
+				)
 		);
 		MemoryMarshal.Write(emulator.At(methods + GetDCOffset, 4), getDC);
 		MemoryMarshal.Write(emulator.At(methods + ReleaseDCOffset, 4), releaseDC);
@@ -340,7 +402,12 @@ public unsafe partial class Nspw
 	// scenario.
 	private Emulator CreateEmulator()
 	{
-		var emulator = new Emulator(SingleplayerExecutable ?? throw new InvalidOperationException("The single-player executable (NSPW_122.exe) is not set."));
+		var emulator = new Emulator(
+			SingleplayerExecutable
+				?? throw new InvalidOperationException(
+					"The single-player executable (NSPW_122.exe) is not set."
+				)
+		);
 
 		// fsin, fcos and fpatan as the port computes sin, cos and atan2, the same on every platform.
 		emulator.Cpu.Fpu.Sin = sin;
@@ -348,7 +415,13 @@ public unsafe partial class Nspw
 		emulator.Cpu.Fpu.Atan2 = atan2;
 		SetNatives(emulator);
 		for (var i = 0; i < FleetCount; i++)
-			MemoryMarshal.Write(emulator.At(FleetAddress + (uint)(i * FleetSize + FleetPathEndOffset), sizeof(double)), (double)World.Beyond);
+			MemoryMarshal.Write(
+				emulator.At(
+					FleetAddress + (uint)(i * FleetSize + FleetPathEndOffset),
+					sizeof(double)
+				),
+				(double)World.Beyond
+			);
 		return emulator;
 	}
 
@@ -387,7 +460,8 @@ public unsafe partial class Nspw
 	private readonly Queue<(uint Instruction, byte[] Value)> _battleStackLocals = new();
 
 	// The instruction of an uninitialized local of the battle that a trace gave and the battle has not read, if any.
-	internal uint? UntakenStackLocal => _battleStackLocals.TryPeek(out var local) ? local.Instruction : null;
+	internal uint? UntakenStackLocal =>
+		_battleStackLocals.TryPeek(out var local) ? local.Instruction : null;
 
 	// What the battle reads, at the instruction of 1.22 given, from a local 1.22 has not set there: what a trace gave, or
 	// else what the port's own local holds.
@@ -411,7 +485,10 @@ public unsafe partial class Nspw
 	// 1.22 records it; false if the port does not know where that local is.
 	internal bool GiveStackLocal(uint instruction, uint value)
 	{
-		if (Emulator is not { } emulator || StackLocalAddress(emulator, instruction) is not { } address)
+		if (
+			Emulator is not { } emulator
+			|| StackLocalAddress(emulator, instruction) is not { } address
+		)
 			return false;
 
 		MemoryMarshal.Write(emulator.At(address, sizeof(uint)), value);
@@ -424,7 +501,8 @@ public unsafe partial class Nspw
 	internal bool GiveStackLocal(uint instruction, byte[] value)
 	{
 		if (!BattleStackLocals.Contains(instruction))
-			return value.Length == sizeof(uint) && GiveStackLocal(instruction, BitConverter.ToUInt32(value));
+			return value.Length == sizeof(uint)
+				&& GiveStackLocal(instruction, BitConverter.ToUInt32(value));
 		_battleStackLocals.Enqueue((instruction, value));
 		return true;
 	}
@@ -491,13 +569,27 @@ public unsafe partial class Nspw
 	// if the battle has a result, which gives no more orders, as 1.22 does.
 	internal Trace122Orders? ReadPlayerOrders()
 	{
-		if (Result != GameResult.None || (MoveOrders[1].Unit == 0 && !SelectOrders[1].IsSet && BufferedMenuOrders[1].Menu == CombatMenuItem.None))
+		if (
+			Result != GameResult.None
+			|| (
+				MoveOrders[1].Unit == 0
+				&& !SelectOrders[1].IsSet
+				&& BufferedMenuOrders[1].Menu == CombatMenuItem.None
+			)
+		)
 			return null;
 
 		var selections = new short[Trace122Orders.SelectionLength];
 		for (var s = 0; s < selections.Length; s++)
 			selections[s] = Selections[1][s];
-		return new Trace122Orders(MoveOrders[1], SelectOrders[1], BufferedMenuOrders[1], SelectedUnit, SelectionCount, selections);
+		return new Trace122Orders(
+			MoveOrders[1],
+			SelectOrders[1],
+			BufferedMenuOrders[1],
+			SelectedUnit,
+			SelectionCount,
+			selections
+		);
 	}
 
 	// Gives the player's orders of a trace, before HandleInput takes them, as the player's clicks would: the selection,

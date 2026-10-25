@@ -9,14 +9,17 @@ public sealed unsafe partial class Sound(Nspw game)
 {
 	private readonly Nspw _game = game;
 
-// DirectSoundの変数
-public IDirectSound8? lpDS = null;
-public IDirectSoundBuffer? lpDSP = null;
+	// DirectSoundの変数
+	public IDirectSound8? lpDS = null;
+	public IDirectSoundBuffer? lpDSP = null;
 
-[Original("lpDSB_")] public Array35<Array6<IDirectSoundBuffer?>> SoundBuffers;
-[Original("snd_")] public Array35<short> NextSoundBuffers;
+	[Original("lpDSB_")]
+	public Array35<Array6<IDirectSoundBuffer?>> SoundBuffers;
 
-// DirectMusicの変数
-public IDirectMusicLoader8? lpDML = null;
-public IDirectMusicPerformance8? lpDMP = null;
+	[Original("snd_")]
+	public Array35<short> NextSoundBuffers;
+
+	// DirectMusicの変数
+	public IDirectMusicLoader8? lpDML = null;
+	public IDirectMusicPerformance8? lpDMP = null;
 }

@@ -19,7 +19,12 @@ public struct Array2<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 2).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 2
+			)
+			.ToArray();
 	}
 }
 
@@ -30,7 +35,12 @@ public struct Array3<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 3).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 3
+			)
+			.ToArray();
 	}
 }
 
@@ -41,7 +51,12 @@ public struct Array4<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 4).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 4
+			)
+			.ToArray();
 	}
 }
 
@@ -52,7 +67,12 @@ public struct Array6<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 6).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 6
+			)
+			.ToArray();
 	}
 }
 
@@ -63,7 +83,12 @@ public struct Array8<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 8).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 8
+			)
+			.ToArray();
 	}
 }
 
@@ -74,7 +99,12 @@ public struct Array9<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 9).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 9
+			)
+			.ToArray();
 	}
 }
 
@@ -85,7 +115,12 @@ public struct Array10<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 10).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 10
+			)
+			.ToArray();
 	}
 }
 
@@ -96,7 +131,12 @@ public struct Array14<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 14).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 14
+			)
+			.ToArray();
 	}
 }
 
@@ -107,7 +147,12 @@ public struct Array16<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 16).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 16
+			)
+			.ToArray();
 	}
 }
 
@@ -118,7 +163,12 @@ public struct Array25<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 25).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 25
+			)
+			.ToArray();
 	}
 }
 
@@ -129,7 +179,12 @@ public struct Array32<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 32).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 32
+			)
+			.ToArray();
 	}
 }
 
@@ -140,7 +195,12 @@ public struct Array35<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 35).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 35
+			)
+			.ToArray();
 	}
 }
 
@@ -151,7 +211,12 @@ public struct Array40<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 40).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 40
+			)
+			.ToArray();
 	}
 }
 
@@ -162,7 +227,12 @@ public struct Array50<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 50).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 50
+			)
+			.ToArray();
 	}
 }
 
@@ -173,7 +243,12 @@ public struct Array64<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 64).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 64
+			)
+			.ToArray();
 	}
 }
 
@@ -184,7 +259,12 @@ public struct Array90<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 90).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 90
+			)
+			.ToArray();
 	}
 }
 
@@ -195,7 +275,12 @@ public struct Array128<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 128).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 128
+			)
+			.ToArray();
 	}
 }
 
@@ -206,7 +291,12 @@ public struct Array256<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 256).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 256
+			)
+			.ToArray();
 	}
 }
 
@@ -217,7 +307,12 @@ public struct Array260<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 260).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 260
+			)
+			.ToArray();
 	}
 }
 
@@ -228,7 +323,12 @@ public struct Array512<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 512).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 512
+			)
+			.ToArray();
 	}
 }
 
@@ -239,7 +339,12 @@ public struct Array1024<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 1024).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 1024
+			)
+			.ToArray();
 	}
 }
 
@@ -250,7 +355,12 @@ public struct Array4096<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 4096).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 4096
+			)
+			.ToArray();
 	}
 }
 
@@ -261,7 +371,12 @@ public struct Array5<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 5).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 5
+			)
+			.ToArray();
 	}
 }
 
@@ -272,7 +387,12 @@ public struct Array7<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 7).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 7
+			)
+			.ToArray();
 	}
 }
 
@@ -283,7 +403,12 @@ public struct Array12<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 12).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 12
+			)
+			.ToArray();
 	}
 }
 
@@ -294,7 +419,12 @@ public struct Array20<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 20).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 20
+			)
+			.ToArray();
 	}
 }
 
@@ -305,7 +435,12 @@ public struct Array24<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 24).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 24
+			)
+			.ToArray();
 	}
 }
 
@@ -316,6 +451,11 @@ public struct Array200<T> : IInlineArray
 
 	public readonly byte[] ToBytes()
 	{
-		return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])), Unsafe.SizeOf<T>() * 200).ToArray();
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 200
+			)
+			.ToArray();
 	}
 }

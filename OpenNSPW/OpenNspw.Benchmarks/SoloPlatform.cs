@@ -66,7 +66,8 @@ internal sealed class SoloPlatform(string dataDirectory) : INspwPlatform, IDispo
 		}
 	}
 
-	public IReadOnlyList<string> FindFiles(string directory, string pattern) => GameFiles.Find(_dataDirectory, directory, pattern);
+	public IReadOnlyList<string> FindFiles(string directory, string pattern) =>
+		GameFiles.Find(_dataDirectory, directory, pattern);
 
 	public int CoCreateInstance(Guid rclsid, Guid riid, out object? ppv)
 	{
@@ -122,9 +123,7 @@ internal sealed class SoloPlatform(string dataDirectory) : INspwPlatform, IDispo
 
 	public string? ReadSetting(string key) => null;
 
-	public void WriteSetting(string key, string value)
-	{
-	}
+	public void WriteSetting(string key, string value) { }
 
 	// Lets a parked game's thread go on.
 	public void Dispose()

@@ -20,7 +20,9 @@ internal sealed class UIFonts
 	{
 		if (!_fonts.TryGetValue((bold, size), out var font))
 		{
-			font = new DynamicSpriteFontWrapper((DynamicSpriteFont)(bold ? _bold : _regular).GetFont(size));
+			font = new DynamicSpriteFontWrapper(
+				(DynamicSpriteFont)(bold ? _bold : _regular).GetFont(size)
+			);
 			_fonts[(bold, size)] = font;
 		}
 

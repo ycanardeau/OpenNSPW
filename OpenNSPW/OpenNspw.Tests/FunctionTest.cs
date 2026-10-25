@@ -12,7 +12,8 @@ namespace OpenNspw.Tests;
 internal static class FunctionTest
 {
 	// The reason a function test is skipped until its calls are recorded, on Windows. Remove the Skip once they are.
-	public const string NotRecorded = "Not recorded yet: run OpenNspw.Reference/record-functions.ps1 on Windows (see OpenNSPW/README.md).";
+	public const string NotRecorded =
+		"Not recorded yet: run OpenNspw.Reference/record-functions.ps1 on Windows (see OpenNSPW/README.md).";
 
 	private static void CompareReturn(JsonElement? expected, object? actual, List<string> problems)
 	{
@@ -26,19 +27,27 @@ internal static class FunctionTest
 			case ({ ValueKind: JsonValueKind.Number } e, bool a) when e.GetInt64() == (a ? 1 : 0):
 				break;
 			case ({ ValueKind: JsonValueKind.String } e, double a)
-				when BitConverter.DoubleToInt64Bits(FunctionCase.ParseDouble(e)) == BitConverter.DoubleToInt64Bits(a):
+				when BitConverter.DoubleToInt64Bits(FunctionCase.ParseDouble(e))
+					== BitConverter.DoubleToInt64Bits(a):
 				break;
 			case ({ ValueKind: JsonValueKind.String } e, double a):
-				problems.Add($"return value: expected {TypeLayout.Format(typeof(double), BitConverter.GetBytes(FunctionCase.ParseDouble(e)))}, " +
-					$"actual {TypeLayout.Format(typeof(double), BitConverter.GetBytes(a))}");
+				problems.Add(
+					$"return value: expected {TypeLayout.Format(typeof(double), BitConverter.GetBytes(FunctionCase.ParseDouble(e)))}, "
+						+ $"actual {TypeLayout.Format(typeof(double), BitConverter.GetBytes(a))}"
+				);
 				break;
 			default:
-				problems.Add($"return value: expected {expected?.ToString() ?? "none"}, actual {actual ?? "none"}");
+				problems.Add(
+					$"return value: expected {expected?.ToString() ?? "none"}, actual {actual ?? "none"}"
+				);
 				break;
 		}
 	}
 
-	private static IReadOnlyList<string> RunCase(FunctionCase c, Func<Nspw, FunctionCase, object?> call)
+	private static IReadOnlyList<string> RunCase(
+		FunctionCase c,
+		Func<Nspw, FunctionCase, object?> call
+	)
 	{
 		var game = new Nspw();
 		var before = GameState.Initial.With(c.Before);
@@ -61,7 +70,9 @@ internal static class FunctionTest
 		int[] rand = [game.rand(), game.rand()];
 		if (!rand.SequenceEqual(c.Rand))
 		{
-			problems.Add($"rand() after the call: expected {string.Join(", ", c.Rand)}, actual {string.Join(", ", rand)}");
+			problems.Add(
+				$"rand() after the call: expected {string.Join(", ", c.Rand)}, actual {string.Join(", ", rand)}"
+			);
 		}
 
 		return problems;
@@ -81,7 +92,9 @@ internal static class FunctionTest
 			var problems = RunCase(c, call);
 			if (problems.Count > 0)
 			{
-				failures.Add($"Case {c.Index} (args [{string.Join(", ", c.Args)}], seed {c.Seed}):{Environment.NewLine}  {string.Join($"{Environment.NewLine}  ", problems)}");
+				failures.Add(
+					$"Case {c.Index} (args [{string.Join(", ", c.Args)}], seed {c.Seed}):{Environment.NewLine}  {string.Join($"{Environment.NewLine}  ", problems)}"
+				);
 				if (failures.Count >= MaxFailures)
 				{
 					break;
@@ -92,7 +105,9 @@ internal static class FunctionTest
 		Assert.True(count > 0, $"No recorded calls of {file}/{function}.");
 		if (failures.Count > 0)
 		{
-			throw new XunitException($"{file}/{function} differs from the reference:{Environment.NewLine}{string.Join(Environment.NewLine, failures)}");
+			throw new XunitException(
+				$"{file}/{function} differs from the reference:{Environment.NewLine}{string.Join(Environment.NewLine, failures)}"
+			);
 		}
 	}
 }

@@ -26,9 +26,8 @@ public class PaintValueEventArgs(
 	object value,
 	Graphics graphics,
 	Rectangle bounds
-	) : EventArgs
+) : EventArgs
 {
-
 	/// <summary>
 	/// <see cref="Rectangle"/> outlining the area in which the painting should be done.
 	/// </summary>
@@ -42,7 +41,8 @@ public class PaintValueEventArgs(
 	/// <summary>
 	/// <see cref="Drawing.Graphics"/> object with which painting should be done.
 	/// </summary>
-	public Graphics Graphics { get; } = graphics ?? throw new ArgumentNullException(nameof(graphics));
+	public Graphics Graphics { get; } =
+		graphics ?? throw new ArgumentNullException(nameof(graphics));
 
 	/// <summary>
 	///  Value to paint.

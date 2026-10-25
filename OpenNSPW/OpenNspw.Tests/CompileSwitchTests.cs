@@ -22,43 +22,74 @@ public partial class CompileSwitchTests
 
 	private static DirectoryInfo FindRepository()
 	{
-		for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
+		for (
+			var directory = new DirectoryInfo(AppContext.BaseDirectory);
+			directory is not null;
+			directory = directory.Parent
+		)
 		{
-			if (File.Exists(Path.Combine(directory.FullName, "Original", "NSPW_NET", "all_head.h")) && File.Exists(Path.Combine(directory.FullName, "OpenNSPW", "OpenNspw", "OpenNspw.csproj")))
+			if (
+				File.Exists(Path.Combine(directory.FullName, "Original", "NSPW_NET", "all_head.h"))
+				&& File.Exists(
+					Path.Combine(directory.FullName, "OpenNSPW", "OpenNspw", "OpenNspw.csproj")
+				)
+			)
 			{
 				return directory;
 			}
 		}
 
-		throw new DirectoryNotFoundException("The repository, with Original/NSPW_NET and OpenNSPW/OpenNspw, is not above the test assembly.");
+		throw new DirectoryNotFoundException(
+			"The repository, with Original/NSPW_NET and OpenNSPW/OpenNspw, is not above the test assembly."
+		);
 	}
 
 	private static readonly DirectoryInfo Repository = FindRepository();
 
-	private static string PortDirectory => Path.Combine(Repository.FullName, "OpenNSPW", "OpenNspw");
+	private static string PortDirectory =>
+		Path.Combine(Repository.FullName, "OpenNSPW", "OpenNspw");
 
 	// The numeric #defines of all_head.h, which include the switches, with all the values of each: a few names are
 	// defined in both branches of an #if.
 	private static ILookup<string, int> OriginalDefines()
 	{
-		var text = File.ReadAllText(Path.Combine(Repository.FullName, "Original", "NSPW_NET", "all_head.h"));
-		return DefineRegex().Matches(text).ToLookup(m => m.Groups[1].Value, m => int.Parse(m.Groups[2].Value));
+		var text = File.ReadAllText(
+			Path.Combine(Repository.FullName, "Original", "NSPW_NET", "all_head.h")
+		);
+		return DefineRegex()
+			.Matches(text)
+			.ToLookup(m => m.Groups[1].Value, m => int.Parse(m.Groups[2].Value));
 	}
 
 	// The identifiers in the #if and #elif conditions of the files.
 	private static HashSet<string> ConditionSymbols(IEnumerable<string> files)
 	{
-		return [.. files.SelectMany(file => ConditionRegex().Matches(File.ReadAllText(file)))
-			.SelectMany(m => IdentifierRegex().Matches(m.Groups[1].Value.Split("//")[0]).Select(i => i.Value))];
+		return
+		[
+			.. files
+				.SelectMany(file => ConditionRegex().Matches(File.ReadAllText(file)))
+				.SelectMany(m =>
+					IdentifierRegex().Matches(m.Groups[1].Value.Split("//")[0]).Select(i => i.Value)
+				),
+		];
 	}
 
 	// The symbols that OpenNspw.csproj defines for the port.
 	private static HashSet<string> PortDefinedSymbols()
 	{
 		var project = XDocument.Load(Path.Combine(PortDirectory, "OpenNspw.csproj"));
-		return [.. project.Descendants("DefineConstants")
-			.SelectMany(e => e.Value.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-			.Where(s => s != "$(DefineConstants)")];
+		return
+		[
+			.. project
+				.Descendants("DefineConstants")
+				.SelectMany(e =>
+					e.Value.Split(
+						';',
+						StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+					)
+				)
+				.Where(s => s != "$(DefineConstants)"),
+		];
 	}
 
 	// The switches of all_head.h that the original tests with #if. Each has one value.
@@ -66,14 +97,18 @@ public partial class CompileSwitchTests
 	{
 		var defines = OriginalDefines();
 		var original = Path.Combine(Repository.FullName, "Original", "NSPW_NET");
-		var used = ConditionSymbols(Directory.GetFiles(original, "*.cpp").Concat(Directory.GetFiles(original, "*.h")));
+		var used = ConditionSymbols(
+			Directory.GetFiles(original, "*.cpp").Concat(Directory.GetFiles(original, "*.h"))
+		);
 		return defines.Where(d => used.Contains(d.Key)).ToDictionary(d => d.Key, d => d.Single());
 	}
 
 	public static TheoryData<string, int> Switches()
 	{
 		var data = new TheoryData<string, int>();
-		foreach (var (name, value) in OriginalSwitches().OrderBy(s => s.Key, StringComparer.Ordinal))
+		foreach (
+			var (name, value) in OriginalSwitches().OrderBy(s => s.Key, StringComparer.Ordinal)
+		)
 		{
 			data.Add(name, value);
 		}

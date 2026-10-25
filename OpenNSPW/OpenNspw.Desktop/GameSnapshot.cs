@@ -41,6 +41,7 @@ internal sealed class GameSnapshot
 	// Whether the next destination starts the selected unit's path again (MoveOrders[1].ClearsPath), or adds to it.
 	public bool ClearsPath;
 	public short MaxUnitId;
+
 	// Where the game has the battlefield, and where the UI shows it: ahead of the game by the moves it has given and the
 	// game has not taken yet (ScrollAhead); and the last of them that the game has taken (LastCameraMove).
 	public WorldPosition GameCameraPosition;

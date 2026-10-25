@@ -21,7 +21,12 @@ internal sealed class RuleRow(UIFonts fonts, string name) : Control
 		var right = _buttons.Count == 0 ? Width : _buttons[^1].Bounds.Left - 8;
 		var button = new ActionButton(_fonts)
 		{
-			Bounds = new DrawingRectangle(right - width, (Height - ButtonHeight) / 2, width, ButtonHeight),
+			Bounds = new DrawingRectangle(
+				right - width,
+				(Height - ButtonHeight) / 2,
+				width,
+				ButtonHeight
+			),
 			Text = text,
 			FontSize = 14,
 		};

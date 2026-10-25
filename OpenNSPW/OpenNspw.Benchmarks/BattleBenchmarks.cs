@@ -8,7 +8,13 @@ namespace OpenNspw.Benchmarks;
 // begins, and runs the same ticks or frames, so that versions of the game that behave the same do the same work. The
 // state that an iteration ends with is printed, and must be the same in every iteration.
 [MemoryDiagnoser]
-[SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 5, iterationCount: 20, invocationCount: 1)]
+[SimpleJob(
+	RunStrategy.Monitoring,
+	launchCount: 1,
+	warmupCount: 5,
+	iterationCount: 20,
+	invocationCount: 1
+)]
 public class BattleBenchmarks
 {
 	private const int StartTick = 2000;
@@ -55,7 +61,9 @@ public class BattleBenchmarks
 		}
 		else if (hash != _endHash)
 		{
-			throw new InvalidOperationException($"The iteration ended with the state {hash}, not {_endHash}: it did not do the same work.");
+			throw new InvalidOperationException(
+				$"The iteration ended with the state {hash}, not {_endHash}: it did not do the same work."
+			);
 		}
 	}
 

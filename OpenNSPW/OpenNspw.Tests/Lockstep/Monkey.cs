@@ -7,7 +7,19 @@ namespace OpenNspw.Tests.Lockstep;
 internal sealed class Monkey(LockstepGame game, uint seed)
 {
 	// The keys the battle reads (input.cpp), except those that open a dialog or end the game.
-	private static readonly uint[] Keys = [dinput.DIK_W, dinput.DIK_A, dinput.DIK_S, dinput.DIK_D, dinput.DIK_Q, dinput.DIK_E, dinput.DIK_Z, dinput.DIK_C, dinput.DIK_V, dinput.DIK_X];
+	private static readonly uint[] Keys =
+	[
+		dinput.DIK_W,
+		dinput.DIK_A,
+		dinput.DIK_S,
+		dinput.DIK_D,
+		dinput.DIK_Q,
+		dinput.DIK_E,
+		dinput.DIK_Z,
+		dinput.DIK_C,
+		dinput.DIK_V,
+		dinput.DIK_X,
+	];
 
 	private readonly LockstepGame _game = game;
 	private readonly Queue<(int Frames, Action Act)> _steps = new();
@@ -25,22 +37,32 @@ internal sealed class Monkey(LockstepGame game, uint seed)
 
 	private void Press(int button, int x, int y)
 	{
-		_steps.Enqueue((0, () =>
-		{
-			_game.Game.SetCursorPos(x, y);
-			_game.Game.PostMouseInput(button, true);
-		}));
+		_steps.Enqueue(
+			(
+				0,
+				() =>
+				{
+					_game.Game.SetCursorPos(x, y);
+					_game.Game.PostMouseInput(button, true);
+				}
+			)
+		);
 		_steps.Enqueue((2, () => _game.Game.PostMouseInput(button, false)));
 		_steps.Enqueue((2, () => { }));
 	}
 
 	private void Drag(int x1, int y1, int x2, int y2)
 	{
-		_steps.Enqueue((0, () =>
-		{
-			_game.Game.SetCursorPos(x1, y1);
-			_game.Game.PostMouseInput(0, true);
-		}));
+		_steps.Enqueue(
+			(
+				0,
+				() =>
+				{
+					_game.Game.SetCursorPos(x1, y1);
+					_game.Game.PostMouseInput(0, true);
+				}
+			)
+		);
 		_steps.Enqueue((2, () => _game.Game.SetCursorPos(x2, y2)));
 		_steps.Enqueue((2, () => _game.Game.PostMouseInput(0, false)));
 		_steps.Enqueue((2, () => { }));
@@ -54,7 +76,13 @@ internal sealed class Monkey(LockstepGame game, uint seed)
 		{
 			var m = ((_lastShip + i - 1) % nspw.USA_SHIP_END) + 1;
 			ref Unit unit = ref nspw.Units[m];
-			if (unit.Side == nspw.LocalSide && unit.Category == UnitCategory.Ship && !(unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress) && !unit.IsSupplying && unit.Hp > 0)
+			if (
+				unit.Side == nspw.LocalSide
+				&& unit.Category == UnitCategory.Ship
+				&& !(unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress)
+				&& !unit.IsSupplying
+				&& unit.Hp > 0
+			)
 			{
 				_lastShip = m;
 				return m;
@@ -76,7 +104,9 @@ internal sealed class Monkey(LockstepGame game, uint seed)
 			ref Unit other = ref nspw.Units[n];
 			if (other.IsUsed && other.Side != nspw.LocalSide)
 			{
-				var distance = Math.Abs(other.Position.X - unit.Position.X) + Math.Abs(other.Position.Y - unit.Position.Y);
+				var distance =
+					Math.Abs(other.Position.X - unit.Position.X)
+					+ Math.Abs(other.Position.Y - unit.Position.Y);
 				if (distance < bestDistance)
 				{
 					bestDistance = distance;
@@ -91,12 +121,17 @@ internal sealed class Monkey(LockstepGame game, uint seed)
 	// Clicks the left button at a point that is computed when the click happens, from the game's state then.
 	private void PressAt(Func<(int X, int Y)> point)
 	{
-		_steps.Enqueue((0, () =>
-		{
-			var (x, y) = point();
-			_game.Game.SetCursorPos(x, y);
-			_game.Game.PostMouseInput(0, true);
-		}));
+		_steps.Enqueue(
+			(
+				0,
+				() =>
+				{
+					var (x, y) = point();
+					_game.Game.SetCursorPos(x, y);
+					_game.Game.PostMouseInput(0, true);
+				}
+			)
+		);
 		_steps.Enqueue((2, () => _game.Game.PostMouseInput(0, false)));
 		_steps.Enqueue((2, () => { }));
 	}
@@ -118,11 +153,27 @@ internal sealed class Monkey(LockstepGame game, uint seed)
 		{
 			ref Unit unit = ref nspw.Units[m];
 			ref Sprite minimap = ref nspw.Renderer.Sprites[SpriteId.Minimap];
-			var left = Math.Clamp(unit.Position.X - (CMBT_WIDTH / 2), World.Left, World.Right - CMBT_WIDTH);
-			var top = Math.Clamp(unit.Position.Y + (CMBT_HEIGHT / 2), World.Bottom + CMBT_HEIGHT, World.Top);
-			return (CMBT_WIDTH + 8 + 5 + (int)((left - World.Left) / 80), CMBT_HEIGHT - minimap.Size.Height + 8 + 5 + (int)((World.Top - top) / 80));
+			var left = Math.Clamp(
+				unit.Position.X - (CMBT_WIDTH / 2),
+				World.Left,
+				World.Right - CMBT_WIDTH
+			);
+			var top = Math.Clamp(
+				unit.Position.Y + (CMBT_HEIGHT / 2),
+				World.Bottom + CMBT_HEIGHT,
+				World.Top
+			);
+			return (
+				CMBT_WIDTH + 8 + 5 + (int)((left - World.Left) / 80),
+				CMBT_HEIGHT - minimap.Size.Height + 8 + 5 + (int)((World.Top - top) / 80)
+			);
 		});
-		PressAt(() => ((int)(nspw.Units[m].Position.X - nspw.CameraPosition.X), (int)(nspw.CameraPosition.Y - nspw.Units[m].Position.Y)));
+		PressAt(() =>
+			(
+				(int)(nspw.Units[m].Position.X - nspw.CameraPosition.X),
+				(int)(nspw.CameraPosition.Y - nspw.Units[m].Position.Y)
+			)
+		);
 		PressAt(() =>
 		{
 			var (x, y) = NearestEnemy(m);
@@ -174,7 +225,9 @@ internal sealed class Monkey(LockstepGame game, uint seed)
 	// A dialog that the monkey opened, such as "Exit Without Saving?", which stops the game until it is answered.
 	private HWND? OpenDialog()
 	{
-		return _game.Game.windows.FirstOrDefault(w => w is { Destroyed: false, DialogProc: not null });
+		return _game.Game.windows.FirstOrDefault(w =>
+			w is { Destroyed: false, DialogProc: not null }
+		);
 	}
 
 	// Called between rounds: cancels a dialog the monkey opened, or does the next step once its frame has come.

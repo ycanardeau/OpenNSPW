@@ -10,10 +10,16 @@ internal static class SpriteSheet
 {
 	// Whether a pixel is the sheet's color key, the transparent color of the sprites: magenta, as the original's 16-bit
 	// surface keys it (RestoreSurfaces: the red and the blue masks).
-	private static bool IsColorKey(byte r, byte g, byte b) => r >> 3 == 31 && g >> 2 == 0 && b >> 3 == 31;
+	private static bool IsColorKey(byte r, byte g, byte b) =>
+		r >> 3 == 31 && g >> 2 == 0 && b >> 3 == 31;
 
 	// Regions of the sheet, as textures, reading it once: with the color key transparent, if `isKeyed`.
-	public static Texture2D[] LoadRegions(GraphicsDevice graphicsDevice, string path, Rectangle[] regions, bool isKeyed = false)
+	public static Texture2D[] LoadRegions(
+		GraphicsDevice graphicsDevice,
+		string path,
+		Rectangle[] regions,
+		bool isKeyed = false
+	)
 	{
 		var file = File.ReadAllBytes(path);
 		var pixelsOffset = BinaryPrimitives.ReadInt32LittleEndian(file.AsSpan(10));
@@ -40,11 +46,13 @@ internal static class SpriteSheet
 				var row = height > 0 ? height - 1 - (region.Y + y) : region.Y + y;
 				for (var x = 0; x < region.Width; x++)
 				{
-					var offset = bitCount == 24
-						? pixelsOffset + row * stride + (region.X + x) * 3
-						: paletteOffset + file[pixelsOffset + row * stride + region.X + x] * 4;
+					var offset =
+						bitCount == 24
+							? pixelsOffset + row * stride + (region.X + x) * 3
+							: paletteOffset + file[pixelsOffset + row * stride + region.X + x] * 4;
 					var (r, g, b) = (file[offset + 2], file[offset + 1], file[offset]);
-					colors[y * region.Width + x] = isKeyed && IsColorKey(r, g, b) ? Color.Transparent : new Color(r, g, b);
+					colors[y * region.Width + x] =
+						isKeyed && IsColorKey(r, g, b) ? Color.Transparent : new Color(r, g, b);
 				}
 			}
 

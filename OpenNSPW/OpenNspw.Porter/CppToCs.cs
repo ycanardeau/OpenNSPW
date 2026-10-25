@@ -62,19 +62,72 @@ internal sealed partial class CppToCs(IReadOnlyDictionary<string, long> constant
 	// Types that a declaration can start with, besides those of TypeMap.
 	private static readonly string[] DeclarationTypes =
 	[
-		"int", "short", "double", "float", "bool", "void", "HWND", "HDC", "HFONT", "HBITMAP", "HBRUSH", "HGDIOBJ",
-		"HANDLE", "HMMIO", "HKEY", "RECT", "POINT", "MSG", "WNDCLASS", "BITMAP", "DDSURFACEDESC2", "DDSCAPS2",
-		"DDPIXELFORMAT", "DDCOLORKEY", "DDBLTFX", "DSBUFFERDESC", "WAVEFORMATEX", "PCMWAVEFORMAT", "MMCKINFO", "MMIOINFO",
-		"DIDEVICEOBJECTDATA", "DIPROPDWORD", "DIMOUSESTATE2", "UNIT", "FIRE", "EFFECT", "KUMO", "SPRT", "NEW_PP",
-		"NEW_SLCT", "NEW_MENU", "GENERICMSG", "UNIT_MSG", "_DP_DATA_1", "_DP_NEW_PP", "_DP_NEW_PP_SHIP",
-		"_DP_NEW_PP_PLANE", "_DP_NEW_SLCT", "_DP_NEW_SLCT_SHIP", "_DP_NEW_SLCT_PLANE", "_DP_NEW_SLCT_LAND", "_DP_NEW_MENU",
-		"_DP_FLAG", "_DP_DATA_20", "WIN32_FIND_DATA",
+		"int",
+		"short",
+		"double",
+		"float",
+		"bool",
+		"void",
+		"HWND",
+		"HDC",
+		"HFONT",
+		"HBITMAP",
+		"HBRUSH",
+		"HGDIOBJ",
+		"HANDLE",
+		"HMMIO",
+		"HKEY",
+		"RECT",
+		"POINT",
+		"MSG",
+		"WNDCLASS",
+		"BITMAP",
+		"DDSURFACEDESC2",
+		"DDSCAPS2",
+		"DDPIXELFORMAT",
+		"DDCOLORKEY",
+		"DDBLTFX",
+		"DSBUFFERDESC",
+		"WAVEFORMATEX",
+		"PCMWAVEFORMAT",
+		"MMCKINFO",
+		"MMIOINFO",
+		"DIDEVICEOBJECTDATA",
+		"DIPROPDWORD",
+		"DIMOUSESTATE2",
+		"UNIT",
+		"FIRE",
+		"EFFECT",
+		"KUMO",
+		"SPRT",
+		"NEW_PP",
+		"NEW_SLCT",
+		"NEW_MENU",
+		"GENERICMSG",
+		"UNIT_MSG",
+		"_DP_DATA_1",
+		"_DP_NEW_PP",
+		"_DP_NEW_PP_SHIP",
+		"_DP_NEW_PP_PLANE",
+		"_DP_NEW_SLCT",
+		"_DP_NEW_SLCT_SHIP",
+		"_DP_NEW_SLCT_PLANE",
+		"_DP_NEW_SLCT_LAND",
+		"_DP_NEW_MENU",
+		"_DP_FLAG",
+		"_DP_DATA_20",
+		"WIN32_FIND_DATA",
 	];
 
 	private static readonly HashSet<string> InterfaceTypes =
 	[
-		"IDirectDraw7?", "IDirectDrawSurface7?", "IDirectDrawClipper?", "IDirectSound8?", "IDirectSoundBuffer?",
-		"IDirectInput8?", "IDirectInputDevice8?",
+		"IDirectDraw7?",
+		"IDirectDrawSurface7?",
+		"IDirectDrawClipper?",
+		"IDirectSound8?",
+		"IDirectSoundBuffer?",
+		"IDirectInput8?",
+		"IDirectInputDevice8?",
 	];
 
 	// Comments, strings, chars and #if 0 sections, replaced by placeholders while the code is rewritten.
@@ -94,8 +147,7 @@ internal sealed partial class CppToCs(IReadOnlyDictionary<string, long> constant
 		{
 			previous = text;
 			text = PlaceholderRegex().Replace(text, m => _masked[int.Parse(m.Groups[1].Value)]);
-		}
-		while (text != previous);
+		} while (text != previous);
 
 		return text;
 	}
@@ -217,7 +269,9 @@ internal sealed partial class CppToCs(IReadOnlyDictionary<string, long> constant
 			var j = i + 1;
 			for (; j < lines.Length; j++)
 			{
-				var inner = lines[j].IndexOf('\u0003') is var k and >= 0 ? Unmask(lines[j][(k + 1)..]).Trim() : "";
+				var inner = lines[j].IndexOf('\u0003') is var k and >= 0
+					? Unmask(lines[j][(k + 1)..]).Trim()
+					: "";
 				if (inner.StartsWith("#if", StringComparison.Ordinal))
 				{
 					depth++;
@@ -226,13 +280,23 @@ internal sealed partial class CppToCs(IReadOnlyDictionary<string, long> constant
 				{
 					break;
 				}
-				else if (depth == 0 && (inner.StartsWith("#else", StringComparison.Ordinal) || inner.StartsWith("#elif", StringComparison.Ordinal)))
+				else if (
+					depth == 0
+					&& (
+						inner.StartsWith("#else", StringComparison.Ordinal)
+						|| inner.StartsWith("#elif", StringComparison.Ordinal)
+					)
+				)
 				{
 					break;
 				}
 
 				// C# checks the #if expressions of skipped sections too.
-				skipped.Add(inner.StartsWith('#') ? lines[j][..lines[j].IndexOf('\u0003')] + RewriteDirective(inner) : Unmask(lines[j]));
+				skipped.Add(
+					inner.StartsWith('#')
+						? lines[j][..lines[j].IndexOf('\u0003')] + RewriteDirective(inner)
+						: Unmask(lines[j])
+				);
 			}
 
 			if (skipped.Count > 0)
@@ -321,16 +385,23 @@ internal sealed partial class CppToCs(IReadOnlyDictionary<string, long> constant
 		return type;
 	}
 
-	[GeneratedRegex(@"^(?<indent>[ \t]*)(?<static>static[ \t]+)?(?<type>(?:const[ \t]+)?(?:unsigned[ \t]+(?:short|char|int|long)|unsigned|[A-Za-z_]\w*))(?<ptr>[ \t]*\*+)?[ \t]+(?<decls>[*\w][^;(){}=]*(?:=[^;{}]*)?);(?<tail>.*)$", RegexOptions.Multiline)]
+	[GeneratedRegex(
+		@"^(?<indent>[ \t]*)(?<static>static[ \t]+)?(?<type>(?:const[ \t]+)?(?:unsigned[ \t]+(?:short|char|int|long)|unsigned|[A-Za-z_]\w*))(?<ptr>[ \t]*\*+)?[ \t]+(?<decls>[*\w][^;(){}=]*(?:=[^;{}]*)?);(?<tail>.*)$",
+		RegexOptions.Multiline
+	)]
 	private static partial Regex DeclarationRegex();
 
-	[GeneratedRegex(@"^(?<ptr>\*+)?\s*(?<name>[A-Za-z_]\w*)\s*(?<dims>(?:\[[^\]]*\]\s*)*)(?<init>=.*)?$", RegexOptions.Singleline)]
+	[GeneratedRegex(
+		@"^(?<ptr>\*+)?\s*(?<name>[A-Za-z_]\w*)\s*(?<dims>(?:\[[^\]]*\]\s*)*)(?<init>=.*)?$",
+		RegexOptions.Singleline
+	)]
 	private static partial Regex DeclaratorRegex();
 
 	// A COM interface (IDirectPlay8Peer), whose pointers are references in C#.
 	private static bool IsInterface(string csType)
 	{
-		return InterfaceTypes.Contains(csType) || System.Text.RegularExpressions.Regex.IsMatch(csType, @"^I[A-Z]\w+$");
+		return InterfaceTypes.Contains(csType)
+			|| System.Text.RegularExpressions.Regex.IsMatch(csType, @"^I[A-Z]\w+$");
 	}
 
 	// The C# type of a pointer to a C++ type: a reference for COM interfaces and GUIDs, an unsafe pointer otherwise.
@@ -352,7 +423,9 @@ internal sealed partial class CppToCs(IReadOnlyDictionary<string, long> constant
 	private static bool IsDeclarationType(string type)
 	{
 		var bare = Regex.Replace(type, @"^const\s+", "");
-		return DeclarationTypes.Contains(bare) || TypeMap.Any(t => t.Cpp == bare) || bare.StartsWith("unsigned", StringComparison.Ordinal);
+		return DeclarationTypes.Contains(bare)
+			|| TypeMap.Any(t => t.Cpp == bare)
+			|| bare.StartsWith("unsigned", StringComparison.Ordinal);
 	}
 
 	// Rewrites the declarations of a statement: arrays become ArrayN<T> (one statement each), pointer declarators get
@@ -360,9 +433,11 @@ internal sealed partial class CppToCs(IReadOnlyDictionary<string, long> constant
 	private string RewriteDeclaration(Match m, bool global)
 	{
 		var type = m.Groups["type"].Value;
-		if (!(global || IsDeclarationType(type))
+		if (
+			!(global || IsDeclarationType(type))
 			|| Regex.IsMatch(type, @"^(return|else|case|goto|delete|new|typedef|struct|extern)$")
-			|| Regex.IsMatch(m.Groups["decls"].Value, @"\breturn\b"))
+			|| Regex.IsMatch(m.Groups["decls"].Value, @"\breturn\b")
+		)
 		{
 			return m.Value;
 		}
@@ -385,16 +460,24 @@ internal sealed partial class CppToCs(IReadOnlyDictionary<string, long> constant
 			var pointer = basePointer + d.Groups["ptr"].Value;
 			var name = d.Groups["name"].Value;
 			var init = d.Groups["init"].Value.Trim();
-			var dims = Regex.Matches(d.Groups["dims"].Value, @"\[([^\]]*)\]").Select(x => x.Groups[1].Value).ToList();
+			var dims = Regex
+				.Matches(d.Groups["dims"].Value, @"\[([^\]]*)\]")
+				.Select(x => x.Groups[1].Value)
+				.ToList();
 			var elementType = PointerType(csType, pointer);
 			if (dims.Count > 0)
 			{
-				var arrayInit = init.Length > 0 ? $" {init}" : global ? "" : " = default";
+				var arrayInit =
+					init.Length > 0 ? $" {init}"
+					: global ? ""
+					: " = default";
 				statements.Add($"{prefix}{ArrayType(elementType, dims)} {name}{arrayInit};");
 			}
 			else if (pointer.Length > 0)
 			{
-				statements.Add($"{prefix}{elementType} {name}{(init.Length > 0 ? " " + init : "")};");
+				statements.Add(
+					$"{prefix}{elementType} {name}{(init.Length > 0 ? " " + init : "")};"
+				);
 			}
 			else
 			{
@@ -406,7 +489,9 @@ internal sealed partial class CppToCs(IReadOnlyDictionary<string, long> constant
 		if (statements.Count == 0)
 		{
 			var typeGroup = m.Groups["type"];
-			return m.Value[..(typeGroup.Index - m.Index)].Insert(indent.Length, prefix) + csType + m.Value[(typeGroup.Index - m.Index + typeGroup.Length)..];
+			return m.Value[..(typeGroup.Index - m.Index)].Insert(indent.Length, prefix)
+				+ csType
+				+ m.Value[(typeGroup.Index - m.Index + typeGroup.Length)..];
 		}
 
 		if (plain.Count > 0)
@@ -462,11 +547,17 @@ internal sealed partial class CppToCs(IReadOnlyDictionary<string, long> constant
 			};
 		}
 
-		var m = Regex.Match(p, @"^(?<type>.*?)(?<ptr>[\s\*]*\*)?\s*(?<name>\w+)\s*(?<dims>(\[\s*\])*)$");
+		var m = Regex.Match(
+			p,
+			@"^(?<type>.*?)(?<ptr>[\s\*]*\*)?\s*(?<name>\w+)\s*(?<dims>(\[\s*\])*)$"
+		);
 		var type = m.Groups["type"].Value.Trim();
 		var pointer = m.Groups["ptr"].Value.Replace(" ", "").Replace("\t", "");
 		var paramName = m.Groups["name"].Value;
-		if (type is "char" or "CHAR" or "TCHAR" or "LPCTSTR" or "LPCSTR" or "LPSTR" && (pointer == "*" || type.StartsWith("LP", StringComparison.Ordinal)))
+		if (
+			type is "char" or "CHAR" or "TCHAR" or "LPCTSTR" or "LPCSTR" or "LPSTR"
+			&& (pointer == "*" || type.StartsWith("LP", StringComparison.Ordinal))
+		)
 		{
 			return $"string {paramName}";
 		}
@@ -475,10 +566,16 @@ internal sealed partial class CppToCs(IReadOnlyDictionary<string, long> constant
 		return $"{PointerType(csType, pointer)} {paramName}";
 	}
 
-	[GeneratedRegex(@"^(?<ret>[A-Za-z_][\w \t\*]*?)[ \t\*]+(?<name>\w+)[ \t]*\((?<params>[^()]*)\)[ \t]*(?=\r?\n[ \t]*\{)", RegexOptions.Multiline)]
+	[GeneratedRegex(
+		@"^(?<ret>[A-Za-z_][\w \t\*]*?)[ \t\*]+(?<name>\w+)[ \t]*\((?<params>[^()]*)\)[ \t]*(?=\r?\n[ \t]*\{)",
+		RegexOptions.Multiline
+	)]
 	private static partial Regex FunctionRegex();
 
-	[GeneratedRegex(@"^(?<indent>[ \t]*)(?<prototype>[A-Za-z_][\w \t\*]*[ \t\*]\w+[ \t]*\([^;{}()]*\)[ \t]*;)", RegexOptions.Multiline)]
+	[GeneratedRegex(
+		@"^(?<indent>[ \t]*)(?<prototype>[A-Za-z_][\w \t\*]*[ \t\*]\w+[ \t]*\([^;{}()]*\)[ \t]*;)",
+		RegexOptions.Multiline
+	)]
 	private static partial Regex PrototypeRegex();
 
 	private static string RewriteFunction(Match m)
@@ -487,12 +584,21 @@ internal sealed partial class CppToCs(IReadOnlyDictionary<string, long> constant
 		var callback = Regex.IsMatch(ret, @"\b(CALLBACK)\b");
 		ret = Regex.Replace(ret, @"\b(CALLBACK|WINAPI|static)\b", "").Trim();
 		var parameters = m.Groups["params"].Value.Split(',');
-		var mapped = parameters.Select((p, i) => MapParameter(p, callback, i)).Where(p => p.Length > 0);
+		var mapped = parameters
+			.Select((p, i) => MapParameter(p, callback, i))
+			.Where(p => p.Length > 0);
 		var csRet = callback ? "nint" : MapType(ret);
-		var pointer = Regex.Match(m.Value[..(m.Groups["name"].Index - m.Index)], @"\*+\s*$").Value.Trim();
+		var pointer = Regex
+			.Match(m.Value[..(m.Groups["name"].Index - m.Index)], @"\*+\s*$")
+			.Value.Trim();
 		csRet = PointerType(csRet, pointer);
 
-		var separator = m.Value[(m.Groups["ret"].Index + m.Groups["ret"].Length - m.Index)..(m.Groups["name"].Index - m.Index)].Replace("*", "");
+		var separator = m.Value[
+				(m.Groups["ret"].Index + m.Groups["ret"].Length - m.Index)..(
+					m.Groups["name"].Index - m.Index
+				)
+			]
+			.Replace("*", "");
 		return $"public {csRet}{(separator.Length > 0 ? separator : " ")}{m.Groups["name"].Value}({string.Join(",", mapped)})";
 	}
 
@@ -554,7 +660,9 @@ internal sealed partial class CppToCs(IReadOnlyDictionary<string, long> constant
 		foreach (var (part, global) in SplitByDepth(text))
 		{
 			// Prototypes are commented out: C# needs none.
-			var rewritten = global ? PrototypeRegex().Replace(part, "${indent}//${prototype}") : part;
+			var rewritten = global
+				? PrototypeRegex().Replace(part, "${indent}//${prototype}")
+				: part;
 			rewritten = global ? FunctionRegex().Replace(rewritten, RewriteFunction) : rewritten;
 			rewritten = DeclarationRegex().Replace(rewritten, m => RewriteDeclaration(m, global));
 			output.Append(RewriteCode(rewritten));
@@ -565,7 +673,8 @@ internal sealed partial class CppToCs(IReadOnlyDictionary<string, long> constant
 		// The class, after the #include lines.
 		var includes = Regex.Matches(ported, @"^//#include.*$", RegexOptions.Multiline);
 		var insertAt = includes.Count > 0 ? includes[^1].Index + includes[^1].Length : 0;
-		var header = $"\n\n// Port of {fileName}.\n\nnamespace OpenNspw;\n\npublic unsafe partial class Nspw\n{{";
+		var header =
+			$"\n\n// Port of {fileName}.\n\nnamespace OpenNspw;\n\npublic unsafe partial class Nspw\n{{";
 		return ported[..insertAt] + header + ported[insertAt..].TrimEnd() + "\n}\n";
 	}
 }

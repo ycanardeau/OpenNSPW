@@ -12,7 +12,10 @@ internal static class BattleScripts
 	// title screen.
 	internal static void Connect(LockstepRun run)
 	{
-		run.Until(() => run.Host.Game.MainDialog?.Id == IDD_ADDRESS_OVERRIDE && run.Guest.Game.MainDialog?.Id == IDD_ADDRESS_OVERRIDE);
+		run.Until(() =>
+			run.Host.Game.MainDialog?.Id == IDD_ADDRESS_OVERRIDE
+			&& run.Guest.Game.MainDialog?.Id == IDD_ADDRESS_OVERRIDE
+		);
 		run.Host.Post(g =>
 		{
 			g.TypeDlgItemText(g.MainDialog!, IDC_ADDRESS_LINE2, "0");
@@ -27,10 +30,16 @@ internal static class BattleScripts
 			g.TypeDlgItemText(g.MainDialog!, IDC_ADDRESS_LINE2, $"{ADDRESSOVERRIDE_PORT}");
 			g.ClickDlgItem(g.MainDialog!, IDOK);
 		});
-		run.Until(() => run.Host.Game.ActivePlayerCount == 2 && run.Guest.Game.ActivePlayerCount == 2 && run.Guest.Game.MainDialog?.Id == IDD_MAIN_GAME);
+		run.Until(() =>
+			run.Host.Game.ActivePlayerCount == 2
+			&& run.Guest.Game.ActivePlayerCount == 2
+			&& run.Guest.Game.MainDialog?.Id == IDD_MAIN_GAME
+		);
 
 		run.Host.Post(g => g.ClickDlgItem(g.MainDialog!, IDC_START_GAME));
-		run.Until(() => run.Host.Game.Mode == GameMode.Title && run.Guest.Game.Mode == GameMode.Title);
+		run.Until(() =>
+			run.Host.Game.Mode == GameMode.Title && run.Guest.Game.Mode == GameMode.Title
+		);
 	}
 
 	// Clicks the left mouse button at a point of the screen, as the user does.
@@ -50,11 +59,19 @@ internal static class BattleScripts
 		Connect(run);
 		run.Frames(run.Host, 20);
 		Click(run, run.Host, 512, 384);
-		run.Until(() => run.Host.Game.Mode == GameMode.GameSetting && run.Host.Game.RivalMode == GameMode.GameSetting);
+		run.Until(() =>
+			run.Host.Game.Mode == GameMode.GameSetting
+			&& run.Host.Game.RivalMode == GameMode.GameSetting
+		);
 		Click(run, run.Host, 130, 150 + (index * 25) + 12);
-		run.Until(() => run.Host.Game.Mode == GameMode.ConfigSetting && run.Host.Game.RivalMode == GameMode.ConfigSetting);
+		run.Until(() =>
+			run.Host.Game.Mode == GameMode.ConfigSetting
+			&& run.Host.Game.RivalMode == GameMode.ConfigSetting
+		);
 		Click(run, run.Host, 630 - 120 + 10, 700 + 12);
-		run.Until(() => run.Host.Game.Mode == GameMode.Battle && run.Guest.Game.Mode == GameMode.Battle);
+		run.Until(() =>
+			run.Host.Game.Mode == GameMode.Battle && run.Guest.Game.Mode == GameMode.Battle
+		);
 	}
 
 	// From the title screen, the host chooses the user scenario at `index` in the list of the load dialog (win_proc.cpp,
@@ -64,7 +81,10 @@ internal static class BattleScripts
 		Connect(run);
 		run.Frames(run.Host, 20);
 		Click(run, run.Host, 512, 384);
-		run.Until(() => run.Host.Game.Mode == GameMode.GameSetting && run.Host.Game.RivalMode == GameMode.GameSetting);
+		run.Until(() =>
+			run.Host.Game.Mode == GameMode.GameSetting
+			&& run.Host.Game.RivalMode == GameMode.GameSetting
+		);
 		Click(run, run.Host, 130, 150 + (8 * 25) + 12);
 		run.Until(() => FileDialog(run.Host) is not null);
 		var dialog = FileDialog(run.Host)!;
@@ -73,9 +93,14 @@ internal static class BattleScripts
 			g.SelectDlgItem(dialog, IDC_LIST, index);
 			g.ClickDlgItem(dialog, IDOK);
 		});
-		run.Until(() => run.Host.Game.Mode == GameMode.ConfigSetting && run.Host.Game.RivalMode == GameMode.ConfigSetting);
+		run.Until(() =>
+			run.Host.Game.Mode == GameMode.ConfigSetting
+			&& run.Host.Game.RivalMode == GameMode.ConfigSetting
+		);
 		Click(run, run.Host, 630 - 120 + 10, 700 + 12);
-		run.Until(() => run.Host.Game.Mode == GameMode.Battle && run.Guest.Game.Mode == GameMode.Battle);
+		run.Until(() =>
+			run.Host.Game.Mode == GameMode.Battle && run.Guest.Game.Mode == GameMode.Battle
+		);
 	}
 
 	internal static HWND? FileDialog(LockstepGame game)
@@ -88,13 +113,17 @@ internal static class BattleScripts
 	{
 		Monkey[] monkeys = [new(run.Host, seed), new(run.Guest, seed + 1000)];
 		var end = run.Host.FrameCount + frames;
-		run.Until(() => run.Host.FrameCount >= end || run.Host.Game.Mode != GameMode.Battle, frames * 2, () =>
-		{
-			foreach (var monkey in monkeys)
+		run.Until(
+			() => run.Host.FrameCount >= end || run.Host.Game.Mode != GameMode.Battle,
+			frames * 2,
+			() =>
 			{
-				monkey.Act();
+				foreach (var monkey in monkeys)
+				{
+					monkey.Act();
+				}
 			}
-		});
+		);
 	}
 
 	// The point of the world that stands for a tile of the terrain: TileAt maps it back to the tile, and a landing point
@@ -102,7 +131,10 @@ internal static class BattleScripts
 	internal static WorldPosition TilePosition(Nspw nspw, int column, int row)
 	{
 		ref Sprite tiles = ref nspw.Renderer.Sprites[SpriteId.MapTiles];
-		return new WorldPosition(World.Left + (column * tiles.Size.Width), World.Top - (row * tiles.Size.Height));
+		return new WorldPosition(
+			World.Left + (column * tiles.Size.Width),
+			World.Top - (row * tiles.Size.Height)
+		);
 	}
 
 	// The tiles a transport's landing point can be on (draw_cmbt_area.cpp).
@@ -121,7 +153,10 @@ internal static class BattleScripts
 	{
 		ref Sprite units = ref nspw.Renderer.Sprites[SpriteId.JapanUnits];
 		ref Sprite tiles = ref nspw.Renderer.Sprites[SpriteId.MapTiles];
-		return ((int)((position.X + (units.Size.Width / 2) - World.Left) / tiles.Size.Width), (int)((World.Top - position.Y + (units.Size.Height / 2)) / tiles.Size.Height));
+		return (
+			(int)((position.X + (units.Size.Width / 2) - World.Left) / tiles.Size.Width),
+			(int)((World.Top - position.Y + (units.Size.Height / 2)) / tiles.Size.Height)
+		);
 	}
 
 	// Whether a ship nearer than 80 to a point would stop ship m there (CheckCourseAhead in chara_cont.cpp).
@@ -130,7 +165,14 @@ internal static class BattleScripts
 		for (var n = 1; n <= nspw.MaxUnitId; n++)
 		{
 			ref Unit unit = ref nspw.Units[n];
-			if (n != m && unit.IsUsed && unit.Category == UnitCategory.Ship && !(unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress) && Math.Abs(unit.Position.X - position.X) < 80 && Math.Abs(unit.Position.Y - position.Y) < 80)
+			if (
+				n != m
+				&& unit.IsUsed
+				&& unit.Category == UnitCategory.Ship
+				&& !(unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress)
+				&& Math.Abs(unit.Position.X - position.X) < 80
+				&& Math.Abs(unit.Position.Y - position.Y) < 80
+			)
 			{
 				return true;
 			}
@@ -148,7 +190,10 @@ internal static class BattleScripts
 		var steps = (int)(length / 20) + 1;
 		for (var i = (int)(80 / length * steps) + 1; i <= steps; i++)
 		{
-			var position = new WorldPosition(from.X + ((to.X - from.X) * i / steps), from.Y + ((to.Y - from.Y) * i / steps));
+			var position = new WorldPosition(
+				from.X + ((to.X - from.X) * i / steps),
+				from.Y + ((to.Y - from.Y) * i / steps)
+			);
 			var (column, row) = TileAt(nspw, position);
 			if (!IsSea(nspw, column, row) || IsShipNear(nspw, m, position))
 			{
@@ -166,12 +211,24 @@ internal static class BattleScripts
 		for (var m = 1; m <= nspw.MaxUnitId; m++)
 		{
 			ref Unit unit = ref nspw.Units[m];
-			if (unit.IsUsed && unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress && Math.Abs(unit.Position.X - position.X) <= 20 && Math.Abs(unit.Position.Y - position.Y) <= 20)
+			if (
+				unit.IsUsed
+				&& unit.Kind >= UnitKind.AirBase
+				&& unit.Kind <= UnitKind.Fortress
+				&& Math.Abs(unit.Position.X - position.X) <= 20
+				&& Math.Abs(unit.Position.Y - position.Y) <= 20
+			)
 			{
 				return true;
 			}
 
-			if (unit.IsUsed && unit.Kind == UnitKind.Transport && unit.Target == nspw.MaxUnitId + 1 && unit.LandingX == (int)position.X && unit.LandingY == (int)position.Y)
+			if (
+				unit.IsUsed
+				&& unit.Kind == UnitKind.Transport
+				&& unit.Target == nspw.MaxUnitId + 1
+				&& unit.LandingX == (int)position.X
+				&& unit.LandingY == (int)position.Y
+			)
 			{
 				return true;
 			}
@@ -181,7 +238,11 @@ internal static class BattleScripts
 	}
 
 	// The tile nearest to a point (by the sum of the distances along the axes) that satisfies a condition, if any.
-	internal static (int Column, int Row)? NearestTile(Nspw nspw, WorldPosition from, Func<int, int, bool> condition)
+	internal static (int Column, int Row)? NearestTile(
+		Nspw nspw,
+		WorldPosition from,
+		Func<int, int, bool> condition
+	)
 	{
 		(int Column, int Row)? best = null;
 		var bestDistance = double.MaxValue;
@@ -227,17 +288,41 @@ internal static class BattleScripts
 		run.Until(() => !nspw.Units[m].IsSupplying);
 		var start = nspw.Units[m].Position;
 		bool IsFreeLandable(int column, int row) =>
-			column is >= 0 and < 256 && row is >= 0 and < 256 && IsLandable(nspw.MapTiles[row][column]) && !IsTaken(nspw, TilePosition(nspw, column, row));
+			column is >= 0 and < 256
+			&& row is >= 0 and < 256
+			&& IsLandable(nspw.MapTiles[row][column])
+			&& !IsTaken(nspw, TilePosition(nspw, column, row));
 		bool IsOnScreen(int column, int row) =>
-			Math.Abs(TilePosition(nspw, column, row).X - start.X) < CMBT_WIDTH - 200 && Math.Abs(TilePosition(nspw, column, row).Y - start.Y) < CMBT_HEIGHT - 200;
-		if (NearestTile(nspw, start, (column, row) =>
-			IsSea(nspw, column, row) && IsOnScreen(column, row) && IsClearCourse(nspw, m, TilePosition(nspw, column, row))
-			&& (IsFreeLandable(column - 1, row) || IsFreeLandable(column + 1, row) || IsFreeLandable(column, row - 1) || IsFreeLandable(column, row + 1))) is not var (seaColumn, seaRow))
+			Math.Abs(TilePosition(nspw, column, row).X - start.X) < CMBT_WIDTH - 200
+			&& Math.Abs(TilePosition(nspw, column, row).Y - start.Y) < CMBT_HEIGHT - 200;
+		if (
+			NearestTile(
+				nspw,
+				start,
+				(column, row) =>
+					IsSea(nspw, column, row)
+					&& IsOnScreen(column, row)
+					&& IsClearCourse(nspw, m, TilePosition(nspw, column, row))
+					&& (
+						IsFreeLandable(column - 1, row)
+						|| IsFreeLandable(column + 1, row)
+						|| IsFreeLandable(column, row - 1)
+						|| IsFreeLandable(column, row + 1)
+					)
+			)
+			is not var (seaColumn, seaRow)
+		)
 		{
 			return false;
 		}
 
-		var (landColumn, landRow) = NearestTile(nspw, start, (column, row) => IsFreeLandable(column, row) && Math.Abs(column - seaColumn) + Math.Abs(row - seaRow) == 1)!.Value;
+		var (landColumn, landRow) = NearestTile(
+			nspw,
+			start,
+			(column, row) =>
+				IsFreeLandable(column, row)
+				&& Math.Abs(column - seaColumn) + Math.Abs(row - seaRow) == 1
+		)!.Value;
 		var land = TilePosition(nspw, landColumn, landRow);
 		var sea = TilePosition(nspw, seaColumn, seaRow);
 		input.CenterOn(new WorldPosition((start.X + land.X) / 2, (start.Y + land.Y) / 2));
@@ -248,7 +333,15 @@ internal static class BattleScripts
 			run.Frames(game, 10);
 		}
 
-		for (var i = 0; i < 20 && !(Math.Abs(nspw.Units[m].PathX[0] - sea.X) < 120 && Math.Abs(nspw.Units[m].PathY[0] - sea.Y) < 120); i++)
+		for (
+			var i = 0;
+			i < 20
+				&& !(
+					Math.Abs(nspw.Units[m].PathX[0] - sea.X) < 120
+					&& Math.Abs(nspw.Units[m].PathY[0] - sea.Y) < 120
+				);
+			i++
+		)
 		{
 			Select(input, nspw, m);
 			input.SetDestination(sea);

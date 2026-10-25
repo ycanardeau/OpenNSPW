@@ -11,9 +11,7 @@ internal sealed class TemporaryDirectory(string path) : IDisposable
 		{
 			Directory.Delete(Path, recursive: true);
 		}
-		catch (IOException)
-		{
-		}
+		catch (IOException) { }
 	}
 }
 
@@ -23,7 +21,11 @@ internal static class GameData
 {
 	private static string? FindInOriginal(string folder, string file)
 	{
-		for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
+		for (
+			var directory = new DirectoryInfo(AppContext.BaseDirectory);
+			directory is not null;
+			directory = directory.Parent
+		)
 		{
 			var candidate = System.IO.Path.Combine(directory.FullName, "Original", folder);
 			if (File.Exists(System.IO.Path.Combine(candidate, file)))
@@ -43,7 +45,8 @@ internal static class GameData
 	// Original/Nspw122, with NSPW_122.exe and its maps, sounds and sprite sheet.
 	public static string FindSingleplayer()
 	{
-		return FindInOriginal("Nspw122", "NSPW_122.exe") ?? throw new InvalidOperationException("Original/Nspw122 is not found.");
+		return FindInOriginal("Nspw122", "NSPW_122.exe")
+			?? throw new InvalidOperationException("Original/Nspw122 is not found.");
 	}
 
 	// Makes a new, empty directory case-sensitive on Windows, as directories are on Linux, so that the tests find the
@@ -58,16 +61,19 @@ internal static class GameData
 
 		try
 		{
-			using var fsutil = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("fsutil.exe", ["file", "setCaseSensitiveInfo", directory, "enable"])
-			{
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-			});
+			using var fsutil = System.Diagnostics.Process.Start(
+				new System.Diagnostics.ProcessStartInfo(
+					"fsutil.exe",
+					["file", "setCaseSensitiveInfo", directory, "enable"]
+				)
+				{
+					RedirectStandardOutput = true,
+					RedirectStandardError = true,
+				}
+			);
 			fsutil?.WaitForExit();
 		}
-		catch (System.ComponentModel.Win32Exception)
-		{
-		}
+		catch (System.ComponentModel.Win32Exception) { }
 	}
 
 	private static void CopyDirectory(string source, string target)
@@ -78,9 +84,19 @@ internal static class GameData
 			File.Copy(file, System.IO.Path.Combine(target, System.IO.Path.GetFileName(file)));
 		}
 
-		foreach (var directory in Directory.GetDirectories(source).Where(d => System.IO.Path.GetFileName(d) is not ("Debug" or "Release" or "Backup" or "Saved")))
+		foreach (
+			var directory in Directory
+				.GetDirectories(source)
+				.Where(d =>
+					System.IO.Path.GetFileName(d)
+						is not ("Debug" or "Release" or "Backup" or "Saved")
+				)
+		)
 		{
-			CopyDirectory(directory, System.IO.Path.Combine(target, System.IO.Path.GetFileName(directory)));
+			CopyDirectory(
+				directory,
+				System.IO.Path.Combine(target, System.IO.Path.GetFileName(directory))
+			);
 		}
 	}
 
@@ -89,8 +105,12 @@ internal static class GameData
 	// original's, so that the tests run the same everywhere.
 	public static TemporaryDirectory CreateCopy()
 	{
-		var original = FindOriginal() ?? throw new InvalidOperationException("Original/NSPW_NET is not found.");
-		var directory = new TemporaryDirectory(System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"OpenNspw-{Guid.NewGuid():N}"));
+		var original =
+			FindOriginal()
+			?? throw new InvalidOperationException("Original/NSPW_NET is not found.");
+		var directory = new TemporaryDirectory(
+			System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"OpenNspw-{Guid.NewGuid():N}")
+		);
 		Directory.CreateDirectory(directory.Path);
 		MakeCaseSensitive(directory.Path);
 		CopyDirectory(original, directory.Path);

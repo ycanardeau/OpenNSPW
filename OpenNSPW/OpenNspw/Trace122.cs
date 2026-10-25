@@ -25,7 +25,14 @@ public enum TracePoint : byte
 // The player's orders of a frame: the move order (new_pp[1]) and the select order (new_slct[1]) that the clicks on the
 // battle area made, the item of the combat menu clicked, for its unit, and the selected unit and the selection
 // (the_slct_unit, slct_unit[1] and its count) that they go to.
-public sealed record Trace122Orders(MoveOrder Move, SelectOrder Select, MenuOrder Menu, short SelectedUnit, short SelectionCount, short[] Selections)
+public sealed record Trace122Orders(
+	MoveOrder Move,
+	SelectOrder Select,
+	MenuOrder Menu,
+	short SelectedUnit,
+	short SelectionCount,
+	short[] Selections
+)
 {
 	public const int SelectionLength = 256;
 }
@@ -56,7 +63,15 @@ public interface ISingleplayerTrace
 // the tick is drawn, and the units and the fires, for the drawing, the view (cmbt_x, cmbt_y), for the player's orders,
 // those alone, for an uninitialized local, the instruction that reads it (Value), what Windows' stack held there (State)
 // and its first four bytes (Random).
-public sealed record Trace122Point(TracePoint Kind, uint Random, int Value, bool IsDrawn, byte[]? State, WorldPosition Camera = default, Trace122Orders? Orders = null);
+public sealed record Trace122Point(
+	TracePoint Kind,
+	uint Random,
+	int Value,
+	bool IsDrawn,
+	byte[]? State,
+	WorldPosition Camera = default,
+	Trace122Orders? Orders = null
+);
 
 // The file of a trace of 1.22, compressed with gzip: the magic, the scenario, then the points, each a byte (TracePoint)
 // and what it records: rand's state, but for a frame, the speed; for a tick, cc_count, whether it is drawn, then rand's
@@ -90,7 +105,10 @@ public sealed class Trace122Writer : IDisposable
 
 	public Trace122Writer(Stream stream, int scenario)
 	{
-		_writer = new BinaryWriter(new GZipStream(stream, CompressionLevel.Optimal), Encoding.ASCII);
+		_writer = new BinaryWriter(
+			new GZipStream(stream, CompressionLevel.Optimal),
+			Encoding.ASCII
+		);
 		_writer.Write(Trace122.Magic);
 		_writer.Write(scenario);
 	}
@@ -176,10 +194,20 @@ public sealed class Trace122Reader : IDisposable
 
 	public Trace122Reader(Stream stream)
 	{
-		_reader = new BinaryReader(new GZipStream(stream, CompressionMode.Decompress), Encoding.ASCII);
+		_reader = new BinaryReader(
+			new GZipStream(stream, CompressionMode.Decompress),
+			Encoding.ASCII
+		);
 		var magic = _reader.ReadBytes(Trace122.Magic.Length).AsSpan();
-		if (!magic.SequenceEqual(Trace122.Magic) && !magic.SequenceEqual(Trace122.MagicWithFourByteStackLocals) && !magic.SequenceEqual(Trace122.MagicWithoutStackLocals) && !magic.SequenceEqual(Trace122.MagicWithoutOrders))
-			throw new InvalidDataException("Not a trace of 1.22, or one of an older format: record it again.");
+		if (
+			!magic.SequenceEqual(Trace122.Magic)
+			&& !magic.SequenceEqual(Trace122.MagicWithFourByteStackLocals)
+			&& !magic.SequenceEqual(Trace122.MagicWithoutStackLocals)
+			&& !magic.SequenceEqual(Trace122.MagicWithoutOrders)
+		)
+			throw new InvalidDataException(
+				"Not a trace of 1.22, or one of an older format: record it again."
+			);
 		_hasStackLocalSizes = magic.SequenceEqual(Trace122.Magic);
 		Scenario = _reader.ReadInt32();
 	}
@@ -211,26 +239,60 @@ public sealed class Trace122Reader : IDisposable
 				case TracePoint.StackLocal:
 				{
 					var instruction = _reader.ReadUInt32();
-					var value = _reader.ReadBytes(_hasStackLocalSizes ? _reader.ReadByte() : sizeof(uint));
-					return new(kind, value.Length >= sizeof(uint) ? BitConverter.ToUInt32(value) : 0, (int)instruction, false, value);
+					var value = _reader.ReadBytes(
+						_hasStackLocalSizes ? _reader.ReadByte() : sizeof(uint)
+					);
+					return new(
+						kind,
+						value.Length >= sizeof(uint) ? BitConverter.ToUInt32(value) : 0,
+						(int)instruction,
+						false,
+						value
+					);
 				}
 				case TracePoint.PlayerOrders:
 				{
-					var move = new MoveOrder { Unit = _reader.ReadInt16(), Destination = new WorldPosition(_reader.ReadDouble(), _reader.ReadDouble()), ClearsPath = _reader.ReadInt32() };
+					var move = new MoveOrder
+					{
+						Unit = _reader.ReadInt16(),
+						Destination = new WorldPosition(_reader.ReadDouble(), _reader.ReadDouble()),
+						ClearsPath = _reader.ReadInt32(),
+					};
 					var select = new SelectOrder
 					{
 						IsSet = new Bool32(_reader.ReadInt32()),
 						SelectedUnit = _reader.ReadInt16(),
 						Unit = _reader.ReadInt16(),
-						GroundPosition = new WorldPosition(_reader.ReadDouble(), _reader.ReadDouble()),
+						GroundPosition = new WorldPosition(
+							_reader.ReadDouble(),
+							_reader.ReadDouble()
+						),
 					};
-					var menu = new MenuOrder { Menu = (CombatMenuItem)_reader.ReadInt16(), SelectedUnit = _reader.ReadInt16() };
+					var menu = new MenuOrder
+					{
+						Menu = (CombatMenuItem)_reader.ReadInt16(),
+						SelectedUnit = _reader.ReadInt16(),
+					};
 					var selectedUnit = _reader.ReadInt16();
 					var selectionCount = _reader.ReadInt16();
 					var selections = new short[Trace122Orders.SelectionLength];
 					for (var s = 0; s < selections.Length; s++)
 						selections[s] = _reader.ReadInt16();
-					return new(kind, 0, 0, false, null, Orders: new Trace122Orders(move, select, menu, selectedUnit, selectionCount, selections));
+					return new(
+						kind,
+						0,
+						0,
+						false,
+						null,
+						Orders: new Trace122Orders(
+							move,
+							select,
+							menu,
+							selectedUnit,
+							selectionCount,
+							selections
+						)
+					);
 				}
 				case TracePoint.Drawing:
 				{
@@ -268,12 +330,20 @@ public static class Trace122Layout
 
 	private static int SizeOf(Type type)
 	{
-		return (int)typeof(Unsafe).GetMethod(nameof(Unsafe.SizeOf))!.MakeGenericMethod(type).Invoke(null, null)!;
+		return (int)
+			typeof(Unsafe)
+				.GetMethod(nameof(Unsafe.SizeOf))!
+				.MakeGenericMethod(type)
+				.Invoke(null, null)!;
 	}
 
 	private static FieldInfo[] FieldsOf(Type type)
 	{
-		return [.. type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).OrderBy(field => field.MetadataToken)];
+		return
+		[
+			.. type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+				.OrderBy(field => field.MetadataToken),
+		];
 	}
 
 	private static int AlignmentOf(Type type)
@@ -307,7 +377,13 @@ public static class Trace122Layout
 			var alignment = AlignmentOf(field.FieldType);
 			fieldOffset = (fieldOffset + alignment - 1) / alignment * alignment;
 			var fieldName = field.Name.TrimStart('_');
-			foreach (var leaf in Leaves(field.FieldType, offset + fieldOffset, name.Length == 0 ? fieldName : $"{name}.{fieldName}"))
+			foreach (
+				var leaf in Leaves(
+					field.FieldType,
+					offset + fieldOffset,
+					name.Length == 0 ? fieldName : $"{name}.{fieldName}"
+				)
+			)
 				yield return leaf;
 			fieldOffset += SizeOf(field.FieldType);
 		}
@@ -316,15 +392,30 @@ public static class Trace122Layout
 	private static Field[] MakeUnitFields()
 	{
 		var leaves = Leaves(typeof(Unit), 0, "").ToArray();
-		int OffsetOfField(string name) => leaves.First(leaf => leaf.Name == name || leaf.Name.StartsWith(name + "[", StringComparison.Ordinal) || leaf.Name.StartsWith(name + ".", StringComparison.Ordinal)).Offset;
+		int OffsetOfField(string name) =>
+			leaves
+				.First(leaf =>
+					leaf.Name == name
+					|| leaf.Name.StartsWith(name + "[", StringComparison.Ordinal)
+					|| leaf.Name.StartsWith(name + ".", StringComparison.Ordinal)
+				)
+				.Offset;
 		var subWeapons = OffsetOfField("SubWeapons");
 		var found = OffsetOfField("IsFound");
 		var random = OffsetOfField("Random250");
 		var fields = leaves.Where(leaf => leaf.Offset < subWeapons).ToList();
 		for (var i = 0; i < 8; i++)
 			fields.Add(new(UnitGasOffset + 4 * i, 4, $"gas[{i}]", typeof(int)));
-		fields.AddRange(leaves.Where(leaf => leaf.Offset >= found && leaf.Offset < found + 8).Select(leaf => leaf with { Offset = leaf.Offset - found + UnitFoundOffset }));
-		fields.AddRange(leaves.Where(leaf => leaf.Offset >= random).Select(leaf => leaf with { Offset = leaf.Offset - random + UnitRandomOffset }));
+		fields.AddRange(
+			leaves
+				.Where(leaf => leaf.Offset >= found && leaf.Offset < found + 8)
+				.Select(leaf => leaf with { Offset = leaf.Offset - found + UnitFoundOffset })
+		);
+		fields.AddRange(
+			leaves
+				.Where(leaf => leaf.Offset >= random)
+				.Select(leaf => leaf with { Offset = leaf.Offset - random + UnitRandomOffset })
+		);
 		return [.. fields.Where(field => field.Offset + field.Size <= Trace122.UnitSize)];
 	}
 
@@ -381,7 +472,12 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 		};
 	}
 
-	private static string? CompareRecords(string what, ReadOnlySpan<byte> expected, ReadOnlySpan<byte> actual, Trace122Layout.Field[] fields)
+	private static string? CompareRecords(
+		string what,
+		ReadOnlySpan<byte> expected,
+		ReadOnlySpan<byte> actual,
+		Trace122Layout.Field[] fields
+	)
 	{
 		var differences = new List<string>();
 		foreach (var field in fields)
@@ -397,7 +493,9 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 				if (Math.Abs(x - y) <= Tolerance * Math.Max(1, Math.Abs(x)))
 					continue;
 			}
-			differences.Add($"{field.Name}: 1.22 {DescribeValue(e, field.Type)}, port {DescribeValue(a, field.Type)}");
+			differences.Add(
+				$"{field.Name}: 1.22 {DescribeValue(e, field.Type)}, port {DescribeValue(a, field.Type)}"
+			);
 		}
 		return differences.Count == 0 ? null : $"{what}: {string.Join("; ", differences.Take(8))}";
 	}
@@ -408,13 +506,29 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 		for (var m = 0; m < Trace122.UnitCount; m++)
 		{
 			var offset = m * Trace122.UnitSize;
-			if (CompareRecords($"unit {m}", expected.AsSpan(offset, Trace122.UnitSize), _state.AsSpan(offset, Trace122.UnitSize), Trace122Layout.Unit) is { } difference)
+			if (
+				CompareRecords(
+					$"unit {m}",
+					expected.AsSpan(offset, Trace122.UnitSize),
+					_state.AsSpan(offset, Trace122.UnitSize),
+					Trace122Layout.Unit
+				) is
+				{ } difference
+			)
 				differences.Add(difference);
 		}
 		for (var f = 0; f < Trace122.FireCount; f++)
 		{
 			var offset = Trace122.UnitCount * Trace122.UnitSize + f * Trace122.FireSize;
-			if (CompareRecords($"fire {f}", expected.AsSpan(offset, Trace122.FireSize), _state.AsSpan(offset, Trace122.FireSize), Trace122Layout.Fire) is { } difference)
+			if (
+				CompareRecords(
+					$"fire {f}",
+					expected.AsSpan(offset, Trace122.FireSize),
+					_state.AsSpan(offset, Trace122.FireSize),
+					Trace122Layout.Fire
+				) is
+				{ } difference
+			)
 				differences.Add(difference);
 		}
 		return differences.Count == 0 ? null : string.Join("\n", differences.Take(10));
@@ -433,7 +547,11 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 		{
 			_frame.Dequeue();
 			if (!game.GiveStackLocal((uint)local.Value, local.State!))
-				Diverge(game, point, $"1.22 read an uninitialized local at 0x{local.Value:X}, which the port does not give.");
+				Diverge(
+					game,
+					point,
+					$"1.22 read an uninitialized local at 0x{local.Value:X}, which the port does not give."
+				);
 		}
 	}
 
@@ -452,19 +570,30 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 		Frames++;
 		game.GameSpeed = (short)_next.Value;
 		_frame.Clear();
-		for (_next = _reader.Next(); _next.Kind is not (TracePoint.Frame or TracePoint.End); _next = _reader.Next())
+		for (
+			_next = _reader.Next();
+			_next.Kind is not (TracePoint.Frame or TracePoint.End);
+			_next = _reader.Next()
+		)
 			_frame.Enqueue(_next);
 	}
 
 	public int? TicksOfNextFrame()
 	{
-		return HasEnded || Divergence is not null ? null : _frame.Count(point => point.Kind == TracePoint.Tick);
+		return HasEnded || Divergence is not null
+			? null
+			: _frame.Count(point => point.Kind == TracePoint.Tick);
 	}
 
 	// Gives the game the player's orders that 1.22 had at this point of the frame, if it had some.
 	public void ReachPlayerOrders(Nspw game)
 	{
-		if (Divergence is null && !HasEnded && _frame.TryPeek(out var next) && next.Kind == TracePoint.PlayerOrders)
+		if (
+			Divergence is null
+			&& !HasEnded
+			&& _frame.TryPeek(out var next)
+			&& next.Kind == TracePoint.PlayerOrders
+		)
 			game.GivePlayerOrders(_frame.Dequeue().Orders!);
 	}
 
@@ -495,12 +624,20 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 		}
 		if (expected.Random != game.RandomState)
 		{
-			Diverge(game, point, $"rand's state: 1.22 {expected.Random:X8}, port {game.RandomState:X8}.");
+			Diverge(
+				game,
+				point,
+				$"rand's state: 1.22 {expected.Random:X8}, port {game.RandomState:X8}."
+			);
 			return;
 		}
 		if (game.UntakenStackLocal is { } untaken)
 		{
-			Diverge(game, point, $"1.22 read an uninitialized local at 0x{untaken:X} before this point, where the port did not.");
+			Diverge(
+				game,
+				point,
+				$"1.22 read an uninitialized local at 0x{untaken:X} before this point, where the port did not."
+			);
 			return;
 		}
 		if (point == TracePoint.Drawing)
@@ -509,7 +646,11 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 		{
 			if (expected.Value != game.Tick || expected.IsDrawn != game.Renderer.IsDrawnTick)
 			{
-				Diverge(game, point, $"cc_count and the drawn tick: 1.22 {expected.Value}, {expected.IsDrawn}; port {game.Tick}, {game.Renderer.IsDrawnTick}.");
+				Diverge(
+					game,
+					point,
+					$"cc_count and the drawn tick: 1.22 {expected.Value}, {expected.IsDrawn}; port {game.Tick}, {game.Renderer.IsDrawnTick}."
+				);
 				return;
 			}
 			game.WriteStateAs122(_state);

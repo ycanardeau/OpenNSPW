@@ -45,9 +45,17 @@ public partial class Nspw
 		return winreg.ERROR_SUCCESS;
 	}
 
-	public int DXUtil_ReadStringRegKeyCch(HKEY hKey, string strRegName, Span<byte> strDest, uint cchDest, string strDefault)
+	public int DXUtil_ReadStringRegKeyCch(
+		HKEY hKey,
+		string strRegName,
+		Span<byte> strDest,
+		uint cchDest,
+		string strDefault
+	)
 	{
-		var value = RegistryPath(hKey) is { } path ? _platform.ReadSetting($"{path}\\{strRegName}") : null;
+		var value = RegistryPath(hKey) is { } path
+			? _platform.ReadSetting($"{path}\\{strRegName}")
+			: null;
 		CopyString(value ?? strDefault, strDest, (int)cchDest);
 		return S_OK;
 	}

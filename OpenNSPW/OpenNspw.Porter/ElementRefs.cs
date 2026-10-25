@@ -30,15 +30,28 @@ internal sealed class ElementRefs(CSharpProject project)
 
 	private static bool Assigns(SyntaxNode node, string variable)
 	{
-		return node.DescendantNodesAndSelf().Any(n => n switch
-		{
-			AssignmentExpressionSyntax a => a.Left is IdentifierNameSyntax { Identifier.ValueText: var name } && name == variable,
-			PostfixUnaryExpressionSyntax p => p.Operand is IdentifierNameSyntax { Identifier.ValueText: var name } && name == variable,
-			PrefixUnaryExpressionSyntax p => (p.IsKind(SyntaxKind.PreIncrementExpression) || p.IsKind(SyntaxKind.PreDecrementExpression))
-				&& p.Operand is IdentifierNameSyntax { Identifier.ValueText: var name } && name == variable,
-			ArgumentSyntax a => !a.RefKindKeyword.IsKind(SyntaxKind.None) && a.Expression is IdentifierNameSyntax { Identifier.ValueText: var name } && name == variable,
-			_ => false,
-		});
+		return node.DescendantNodesAndSelf()
+			.Any(n =>
+				n switch
+				{
+					AssignmentExpressionSyntax a => a.Left
+						is IdentifierNameSyntax { Identifier.ValueText: var name }
+						&& name == variable,
+					PostfixUnaryExpressionSyntax p => p.Operand
+						is IdentifierNameSyntax { Identifier.ValueText: var name }
+						&& name == variable,
+					PrefixUnaryExpressionSyntax p => (
+						p.IsKind(SyntaxKind.PreIncrementExpression)
+						|| p.IsKind(SyntaxKind.PreDecrementExpression)
+					)
+						&& p.Operand is IdentifierNameSyntax { Identifier.ValueText: var name }
+						&& name == variable,
+					ArgumentSyntax a => !a.RefKindKeyword.IsKind(SyntaxKind.None)
+						&& a.Expression is IdentifierNameSyntax { Identifier.ValueText: var name }
+						&& name == variable,
+					_ => false,
+				}
+			);
 	}
 
 	private static string Indentation(SourceText text, int position)
@@ -64,27 +77,61 @@ internal sealed class ElementRefs(CSharpProject project)
 			// The ref locals declared so far: the statement that declares each, whose scope is the statements after it in
 			// its list, and their descendants.
 			var declarations = new List<(StatementSyntax Statement, string Name)>();
-			var lists = method.DescendantNodes().Select(n => n switch
-			{
-				BlockSyntax block => block.Statements,
-				SwitchSectionSyntax section => section.Statements,
-				_ => default(SyntaxList<StatementSyntax>?),
-			}).OfType<SyntaxList<StatementSyntax>>();
+			var lists = method
+				.DescendantNodes()
+				.Select(n =>
+					n switch
+					{
+						BlockSyntax block => block.Statements,
+						SwitchSectionSyntax section => section.Statements,
+						_ => default(SyntaxList<StatementSyntax>?),
+					}
+				)
+				.OfType<SyntaxList<StatementSyntax>>();
 			foreach (var list in lists)
 			{
 				for (var i = 0; i < list.Count; i++)
 				{
-					if (list[i] is not ExpressionStatementSyntax { Expression: AssignmentExpressionSyntax { Left: IdentifierNameSyntax index, Right: InvocationExpressionSyntax { Expression: IdentifierNameSyntax finder, ArgumentList.Arguments.Count: 0 } } }
-						|| Tables.FirstOrDefault(t => t.Finder == finder.Identifier.ValueText) is not { } table)
+					if (
+						list[i]
+							is not ExpressionStatementSyntax
+							{
+								Expression: AssignmentExpressionSyntax
+								{
+									Left: IdentifierNameSyntax index,
+									Right: InvocationExpressionSyntax
+									{
+										Expression: IdentifierNameSyntax finder,
+										ArgumentList.Arguments.Count: 0
+									}
+								}
+							}
+						|| Tables.FirstOrDefault(t => t.Finder == finder.Identifier.ValueText)
+							is not { } table
+					)
 					{
 						continue;
 					}
 
 					var variable = index.Identifier.ValueText;
 					var run = list.Skip(i + 1).TakeWhile(s => !Assigns(s, variable)).ToList();
-					var uses = run.SelectMany(s => s.DescendantNodes().OfType<ElementAccessExpressionSyntax>())
-						.Where(e => e.Expression is IdentifierNameSyntax { Identifier.ValueText: var field } && field == table.Field
-							&& e.ArgumentList.Arguments is [{ Expression: IdentifierNameSyntax { Identifier.ValueText: var argument } }] && argument == variable)
+					var uses = run.SelectMany(s =>
+							s.DescendantNodes().OfType<ElementAccessExpressionSyntax>()
+						)
+						.Where(e =>
+							e.Expression is IdentifierNameSyntax { Identifier.ValueText: var field }
+							&& field == table.Field
+							&& e.ArgumentList.Arguments
+								is [
+									{
+										Expression: IdentifierNameSyntax
+										{
+											Identifier.ValueText: var argument
+										}
+									},
+								]
+							&& argument == variable
+						)
 						.ToList();
 					if (uses.Count < 2)
 					{
@@ -93,15 +140,23 @@ internal sealed class ElementRefs(CSharpProject project)
 
 					var indentation = Indentation(text, list[i].SpanStart);
 					var site = list[i];
-					var inScope = declarations.Any(d => d.Name == table.Name && d.Statement.Parent is { } scope
-						&& site.Ancestors().Contains(scope) && d.Statement.Span.End <= site.SpanStart);
-					var reference = inScope ? $"{table.Name} = ref {table.Field}[{variable}];" : $"ref var {table.Name} = ref {table.Field}[{variable}];";
+					var inScope = declarations.Any(d =>
+						d.Name == table.Name
+						&& d.Statement.Parent is { } scope
+						&& site.Ancestors().Contains(scope)
+						&& d.Statement.Span.End <= site.SpanStart
+					);
+					var reference = inScope
+						? $"{table.Name} = ref {table.Field}[{variable}];"
+						: $"ref var {table.Name} = ref {table.Field}[{variable}];";
 					if (!inScope)
 					{
 						declarations.Add((site, table.Name));
 					}
 
-					edits.Add((new TextSpan(list[i].FullSpan.End, 0), $"{indentation}{reference}\n"));
+					edits.Add(
+						(new TextSpan(list[i].FullSpan.End, 0), $"{indentation}{reference}\n")
+					);
 					edits.AddRange(uses.Select(u => (u.Span, table.Name)));
 				}
 			}
@@ -117,7 +172,11 @@ internal sealed class ElementRefs(CSharpProject project)
 
 	private static string Apply(string text, IEnumerable<(TextSpan Span, string Text)> edits)
 	{
-		foreach (var (span, replacement) in edits.OrderByDescending(e => e.Span.Start).ThenByDescending(e => e.Span.Length))
+		foreach (
+			var (span, replacement) in edits
+				.OrderByDescending(e => e.Span.Start)
+				.ThenByDescending(e => e.Span.Length)
+		)
 		{
 			text = text[..span.Start] + replacement + text[span.End..];
 		}
@@ -132,15 +191,29 @@ internal sealed class ElementRefs(CSharpProject project)
 		var files = _project.ReadFiles();
 		var compilation = _project.Compile(files, CSharpProject.FrameworkReferences);
 		var written = new List<string>();
-		foreach (var tree in compilation.SyntaxTrees.Where(t => files.ContainsKey(t.FilePath)).ToList())
+		foreach (
+			var tree in compilation.SyntaxTrees.Where(t => files.ContainsKey(t.FilePath)).ToList()
+		)
 		{
 			var groups = Edits(tree);
 			while (groups.Count > 0)
 			{
 				var newText = Apply(files[tree.FilePath], groups.SelectMany(g => g));
-				var newTree = CSharpSyntaxTree.ParseText(newText, _project.ParseOptions(), tree.FilePath);
-				var newCompilation = compilation.ReplaceSyntaxTree(compilation.SyntaxTrees.Single(t => t.FilePath == tree.FilePath), newTree);
-				var errors = newCompilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error && d.Location.SourceTree == newTree).ToList();
+				var newTree = CSharpSyntaxTree.ParseText(
+					newText,
+					_project.ParseOptions(),
+					tree.FilePath
+				);
+				var newCompilation = compilation.ReplaceSyntaxTree(
+					compilation.SyntaxTrees.Single(t => t.FilePath == tree.FilePath),
+					newTree
+				);
+				var errors = newCompilation
+					.GetDiagnostics()
+					.Where(d =>
+						d.Severity == DiagnosticSeverity.Error && d.Location.SourceTree == newTree
+					)
+					.ToList();
 				if (errors.Count == 0)
 				{
 					File.WriteAllText(tree.FilePath, newText);
@@ -151,13 +224,36 @@ internal sealed class ElementRefs(CSharpProject project)
 				}
 
 				// Leave out the methods with errors, found by their position in the new text.
-				var newMethods = newTree.GetRoot().DescendantNodes().OfType<MethodDeclarationSyntax>().ToList();
-				var failing = errors.Select(e => newMethods.FirstOrDefault(m => m.Span.Contains(e.Location.SourceSpan))?.Identifier.ValueText).ToHashSet();
-				var oldMethods = tree.GetRoot().DescendantNodes().OfType<MethodDeclarationSyntax>().ToList();
-				var kept = groups.Where(g => !failing.Contains(oldMethods.First(m => m.FullSpan.Contains(g[0].Span.Start)).Identifier.ValueText)).ToList();
+				var newMethods = newTree
+					.GetRoot()
+					.DescendantNodes()
+					.OfType<MethodDeclarationSyntax>()
+					.ToList();
+				var failing = errors
+					.Select(e =>
+						newMethods
+							.FirstOrDefault(m => m.Span.Contains(e.Location.SourceSpan))
+							?.Identifier.ValueText
+					)
+					.ToHashSet();
+				var oldMethods = tree.GetRoot()
+					.DescendantNodes()
+					.OfType<MethodDeclarationSyntax>()
+					.ToList();
+				var kept = groups
+					.Where(g =>
+						!failing.Contains(
+							oldMethods
+								.First(m => m.FullSpan.Contains(g[0].Span.Start))
+								.Identifier.ValueText
+						)
+					)
+					.ToList();
 				if (kept.Count == groups.Count)
 				{
-					throw new InvalidOperationException($"Errors outside the changed methods in {tree.FilePath}: {errors[0]}");
+					throw new InvalidOperationException(
+						$"Errors outside the changed methods in {tree.FilePath}: {errors[0]}"
+					);
 				}
 
 				groups = kept;

@@ -85,7 +85,10 @@ public static partial class crt
 			i++;
 			var left = false;
 			var zero = false;
-			while (i < format.Length && (format[i] is (byte)'-' or (byte)'0' or (byte)'+' or (byte)' ' or (byte)'#'))
+			while (
+				i < format.Length
+				&& (format[i] is (byte)'-' or (byte)'0' or (byte)'+' or (byte)' ' or (byte)'#')
+			)
 			{
 				left |= format[i] == '-';
 				zero |= format[i] == '0';
@@ -140,10 +143,21 @@ public static partial class crt
 					Pad(output, Encoding.ASCII.GetBytes(sign + digits), width, left, (byte)' ');
 					break;
 				case 'u':
-					Pad(output, Encoding.ASCII.GetBytes(((uint)ToInteger(args[next++])).ToString(CultureInfo.InvariantCulture)), width, left, fill);
+					Pad(
+						output,
+						Encoding.ASCII.GetBytes(
+							((uint)ToInteger(args[next++])).ToString(CultureInfo.InvariantCulture)
+						),
+						width,
+						left,
+						fill
+					);
 					break;
 				case 'x' or 'X':
-					var hex = ((uint)ToInteger(args[next++])).ToString(conversion == 'x' ? "x" : "X", CultureInfo.InvariantCulture);
+					var hex = ((uint)ToInteger(args[next++])).ToString(
+						conversion == 'x' ? "x" : "X",
+						CultureInfo.InvariantCulture
+					);
 					Pad(output, Encoding.ASCII.GetBytes(hex), width, left, fill);
 					break;
 				case 'c':
@@ -167,7 +181,12 @@ public static partial class crt
 		return [.. output];
 	}
 
-	private static int Print(Span<byte> buffer, ReadOnlySpan<byte> format, object?[] args, int limit)
+	private static int Print(
+		Span<byte> buffer,
+		ReadOnlySpan<byte> format,
+		object?[] args,
+		int limit
+	)
 	{
 		var text = Format(format, args);
 		var length = Math.Min(text.Length, Math.Min(limit, buffer.Length - 1));
@@ -243,7 +262,10 @@ public static partial class crt
 
 	public static void _itot(int value, Span<byte> buffer, int radix)
 	{
-		var text = radix == 10 ? value.ToString(CultureInfo.InvariantCulture) : Convert.ToString(value, radix);
+		var text =
+			radix == 10
+				? value.ToString(CultureInfo.InvariantCulture)
+				: Convert.ToString(value, radix);
 		var bytes = Encoding.ASCII.GetBytes(text);
 		bytes.CopyTo(buffer);
 		buffer[bytes.Length] = 0;

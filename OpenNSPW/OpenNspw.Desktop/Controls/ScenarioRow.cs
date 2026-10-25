@@ -41,7 +41,14 @@ internal sealed class ScenarioRow(UIFonts fonts, ScenarioEntry scenario) : FlatB
 
 		var number = Scenario.Number.ToString();
 		var numberFont = _fonts.Bold(15);
-		Painter.Text(g, number, numberFont, Theme.Brass, 54 - Painter.Measure(g, number, numberFont).Width, 13);
+		Painter.Text(
+			g,
+			number,
+			numberFont,
+			Theme.Brass,
+			54 - Painter.Measure(g, number, numberFont).Width,
+			13
+		);
 
 		var sideFont = _fonts.Regular(13);
 		var sideName = GameTexts.Of(Scenario.SideName);
@@ -51,13 +58,19 @@ internal sealed class ScenarioRow(UIFonts fonts, ScenarioEntry scenario) : FlatB
 
 		// The title, cut to end before the side's mark; the full title is in the details.
 		var titleFont = _fonts.Regular(18);
-		var title = IsSelected ? Theme.BrassLight : Theme.Lerp(Theme.Text, Theme.BrassLight, 0.5f * Hover);
+		var title = IsSelected
+			? Theme.BrassLight
+			: Theme.Lerp(Theme.Text, Theme.BrassLight, 0.5f * Hover);
 		_fitTitle ??= Painter.Fit(g, Scenario.Title, titleFont, sideX - 14 - 8 - 72);
 		Painter.Text(g, _fitTitle, titleFont, title, 72, 10);
 
 		if (hasSide)
 		{
-			Painter.Fill(g, new((int)sideX - 14, 18, 8, 8), Scenario.Side == ScenarioSide.Japan ? Theme.Japan : Theme.UnitedStates);
+			Painter.Fill(
+				g,
+				new((int)sideX - 14, 18, 8, 8),
+				Scenario.Side == ScenarioSide.Japan ? Theme.Japan : Theme.UnitedStates
+			);
 			Painter.Text(g, sideName, sideFont, Theme.Muted, sideX, 13);
 		}
 	}

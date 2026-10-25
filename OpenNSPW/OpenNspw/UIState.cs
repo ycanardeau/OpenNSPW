@@ -13,13 +13,19 @@ public unsafe partial class Nspw
 	// or building time, its ammunition and its fuel.
 	public string[] ReadUnitDetails()
 	{
-		if( UnitInfoPanel[0]==0 )
+		if (UnitInfoPanel[0] == 0)
 			return [];
 
 		Array8<int> length = default;
 		Array8<Array128<byte>> text = default;
 		WriteUnitDetails(ref length, ref text);
-		return [Decode(text[0], length[0]), Decode(text[1], length[1]), Decode(text[2], length[2]), Decode(text[3], length[3])];
+		return
+		[
+			Decode(text[0], length[0]),
+			Decode(text[1], length[1]),
+			Decode(text[2], length[2]),
+			Decode(text[3], length[3]),
+		];
 	}
 
 	// The name of the reinforcement chosen in the supply panel (WriteSupplyTargetName).
@@ -82,7 +88,7 @@ public unsafe partial class Nspw
 	// The result of the battle, as the game writes it over the battlefield once it is over (WriteResult), or none.
 	public string[] ReadResult()
 	{
-		if( Result==GameResult.None )
+		if (Result == GameResult.None)
 			return [];
 
 		Array5<int> length = default;
@@ -96,13 +102,13 @@ public unsafe partial class Nspw
 	public string[] ReadNotices()
 	{
 		List<string> notices = [];
-		if( AreUnitsOutOfSync )
+		if (AreUnitsOutOfSync)
 			notices.Add("ユニットデータ同期異常、ゲームを中断されたし。");
-		if( IsTickOutOfSync )
+		if (IsTickOutOfSync)
 			notices.Add("プログラム同期異常、ゲームを中断されたし。");
-		if( IsRandomOutOfSync )
+		if (IsRandomOutOfSync)
 			notices.Add("ランダム同期異常、ゲームを中断されたし。");
-		if( ActivePlayerCount!=2 && !IsSingleplayer )
+		if (ActivePlayerCount != 2 && !IsSingleplayer)
 			notices.Add("接続相手がいなくなりました。");
 		return [.. notices];
 	}
@@ -111,16 +117,16 @@ public unsafe partial class Nspw
 	public (string Mine, string Rival) ReadChat()
 	{
 		Array128<byte> text = default;
-		var mine = MyChatDisplayTime!=0 ? Decode(text, wsprintf(text, MyChat)) : "";
-		var rival = RivalChatDisplayTime!=0 ? Decode(text, wsprintf(text, RivalChat)) : "";
+		var mine = MyChatDisplayTime != 0 ? Decode(text, wsprintf(text, MyChat)) : "";
+		var rival = RivalChatDisplayTime != 0 ? Decode(text, wsprintf(text, RivalChat)) : "";
 		return (mine, rival);
 	}
 
 	// The sprite's column of a unit facing a direction: one of eight, as DrawUnit sets SpriteColumn as it draws it.
 	public static int SpriteColumnOf(Angle direction)
 	{
-		return (int)(direction.Degrees/22.5) switch
-			{
+		return (int)(direction.Degrees / 22.5) switch
+		{
 			0 or 15 => 2,
 			1 or 2 => 1,
 			3 or 4 => 0,
@@ -130,38 +136,71 @@ public unsafe partial class Nspw
 			11 or 12 => 4,
 			13 or 14 => 3,
 			_ => 2,
-			};
+		};
 	}
 
 	// How far a unit sees an effect, as UpdateLowerEffects and UpdateUpperEffects test it: less while it is built.
 	private int EffectSightOf(ref Unit unit)
 	{
-		int size=0;
-		switch( unit.Kind )
-			{
-			case UnitKind.Battleship:		size=BB1_SIGHT;		break;
-			case UnitKind.Cruiser:		size=CA1_SIGHT;		break;
-			case UnitKind.Destroyer:		size=DD1_SIGHT;		break;
-			case UnitKind.Submarine:		size=SS1_SIGHT;		break;
-			case UnitKind.Carrier:		size=CV1_SIGHT;		break;
-			case UnitKind.LightCarrier:		size=CVL1_SIGHT;	break;
-			case UnitKind.Transport:		size=TR1_SIGHT;		break;
-			case UnitKind.Fighter:		size=FT1_SIGHT;		break;
-			case UnitKind.Attacker:		size=AT1_SIGHT;		break;
-			case UnitKind.Bomber:		size=BM1_SIGHT;		break;
-			case UnitKind.AirBase: case UnitKind.NavalBase:		size=AP_SIGHT;		break;
-			case UnitKind.City:		size=CT1_SIGHT;		break;
-			case UnitKind.Mine:		size=MN1_SIGHT;		break;
-			case UnitKind.InfantryBase:		size=GF1_SIGHT;		break;
-			case UnitKind.Pillboxes:		size=GF2_SIGHT;		break;
-			case UnitKind.Fortress:		size=GF3_SIGHT;		break;
-			}
+		int size = 0;
+		switch (unit.Kind)
+		{
+			case UnitKind.Battleship:
+				size = BB1_SIGHT;
+				break;
+			case UnitKind.Cruiser:
+				size = CA1_SIGHT;
+				break;
+			case UnitKind.Destroyer:
+				size = DD1_SIGHT;
+				break;
+			case UnitKind.Submarine:
+				size = SS1_SIGHT;
+				break;
+			case UnitKind.Carrier:
+				size = CV1_SIGHT;
+				break;
+			case UnitKind.LightCarrier:
+				size = CVL1_SIGHT;
+				break;
+			case UnitKind.Transport:
+				size = TR1_SIGHT;
+				break;
+			case UnitKind.Fighter:
+				size = FT1_SIGHT;
+				break;
+			case UnitKind.Attacker:
+				size = AT1_SIGHT;
+				break;
+			case UnitKind.Bomber:
+				size = BM1_SIGHT;
+				break;
+			case UnitKind.AirBase:
+			case UnitKind.NavalBase:
+				size = AP_SIGHT;
+				break;
+			case UnitKind.City:
+				size = CT1_SIGHT;
+				break;
+			case UnitKind.Mine:
+				size = MN1_SIGHT;
+				break;
+			case UnitKind.InfantryBase:
+				size = GF1_SIGHT;
+				break;
+			case UnitKind.Pillboxes:
+				size = GF2_SIGHT;
+				break;
+			case UnitKind.Fortress:
+				size = GF3_SIGHT;
+				break;
+		}
 
-		if( unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress && unit.BuildTime!=0 )
-			{
+		if (unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress && unit.BuildTime != 0)
+		{
 			// 工事中は視界を制限
-			size=FT1_SIGHT/2;
-			}
+			size = FT1_SIGHT / 2;
+		}
 
 		return size;
 	}
@@ -169,11 +208,11 @@ public unsafe partial class Nspw
 	// Where a unit looks from: a fighter a little ahead of itself (FT_EYE).
 	internal WorldPosition EyeOf(ref Unit unit)
 	{
-		var eye=unit.Position;
-		if( unit.Kind==UnitKind.Fighter )
-			{
-			eye+=WorldVector.FromDirection(unit.Direction) * FT_EYE;
-			}
+		var eye = unit.Position;
+		if (unit.Kind == UnitKind.Fighter)
+		{
+			eye += WorldVector.FromDirection(unit.Direction) * FT_EYE;
+		}
 
 		return eye;
 	}
@@ -181,15 +220,15 @@ public unsafe partial class Nspw
 	// Whether one of the player's units, but parked planes, sees an effect at a point (UpdateLowerEffects).
 	private bool IsEffectSeen(WorldPosition position)
 	{
-		for( var n=1; n<=MaxUnitId; n++ )
-			{
+		for (var n = 1; n <= MaxUnitId; n++)
+		{
 			ref var unit = ref Units[n];
-			if( unit.IsUsed && unit.Side==LocalSide && unit.PlaneState!=UnitState.Parked )
-				{
-				if( (EyeOf(ref unit)-position).Length<=EffectSightOf(ref unit) )
+			if (unit.IsUsed && unit.Side == LocalSide && unit.PlaneState != UnitState.Parked)
+			{
+				if ((EyeOf(ref unit) - position).Length <= EffectSightOf(ref unit))
 					return true;
-				}
 			}
+		}
 
 		return false;
 	}
@@ -198,16 +237,19 @@ public unsafe partial class Nspw
 	// (GetDetectionSize).
 	private bool IsSeaTileSeen(int column, int row)
 	{
-		for( var f=1; f<=MaxUnitId; f++ )
-			{
+		for (var f = 1; f <= MaxUnitId; f++)
+		{
 			ref var unit = ref Units[f];
-			if( unit.IsUsed && unit.Side==LocalSide && unit.PlaneState!=UnitState.Parked )
-				{
-				var tile=new WorldPosition((column*Renderer.Sprites[SpriteId.MapTiles].Size.Width)-World.Right, World.Top-(row*Renderer.Sprites[SpriteId.MapTiles].Size.Height));
-				if( (EyeOf(ref unit)-tile).Length<=(double)GetDetectionSize(f,0) )
+			if (unit.IsUsed && unit.Side == LocalSide && unit.PlaneState != UnitState.Parked)
+			{
+				var tile = new WorldPosition(
+					(column * Renderer.Sprites[SpriteId.MapTiles].Size.Width) - World.Right,
+					World.Top - (row * Renderer.Sprites[SpriteId.MapTiles].Size.Height)
+				);
+				if ((EyeOf(ref unit) - tile).Length <= (double)GetDetectionSize(f, 0))
 					return true;
-				}
 			}
+		}
 
 		return false;
 	}
@@ -222,50 +264,79 @@ public unsafe partial class Nspw
 	// What the player sees on and around the battlefield: of the SightSize by SightSize tiles from (firstColumn,
 	// firstRow), those drawn (DrawMapTiles: land, and the sea in sight), none off the map's tiles; and the effects drawn
 	// (UpdateLowerEffects, UpdateUpperEffects).
-	public void ReadSight(Span<bool> tiles, out int firstColumn, out int firstRow, Span<bool> effects)
+	public void ReadSight(
+		Span<bool> tiles,
+		out int firstColumn,
+		out int firstRow,
+		Span<bool> effects
+	)
 	{
-		firstColumn=(int)((CameraPosition.X-World.Left)/Renderer.Sprites[SpriteId.MapTiles].Size.Width)-SightMargin;
-		firstRow=(int)((World.Top-CameraPosition.Y)/Renderer.Sprites[SpriteId.MapTiles].Size.Height)-SightMargin;
-		for( var n=0; n<SightSize; n++ )
+		firstColumn =
+			(int)((CameraPosition.X - World.Left) / Renderer.Sprites[SpriteId.MapTiles].Size.Width)
+			- SightMargin;
+		firstRow =
+			(int)((World.Top - CameraPosition.Y) / Renderer.Sprites[SpriteId.MapTiles].Size.Height)
+			- SightMargin;
+		for (var n = 0; n < SightSize; n++)
+		{
+			for (var m = 0; m < SightSize; m++)
 			{
-			for( var m=0; m<SightSize; m++ )
-				{
-				var (column, row) = (firstColumn+m, firstRow+n);
-				tiles[n*SightSize+m] = column is >= 0 and <= 255 && row is >= 0 and <= 255
-					&& ( IsEditingMap || Result!=GameResult.None || MapTiles[row][column]!=0 || IsSeaTileSeen(column, row) );
-				}
+				var (column, row) = (firstColumn + m, firstRow + n);
+				tiles[n * SightSize + m] =
+					column is >= 0 and <= 255
+					&& row is >= 0 and <= 255
+					&& (
+						IsEditingMap
+						|| Result != GameResult.None
+						|| MapTiles[row][column] != 0
+						|| IsSeaTileSeen(column, row)
+					);
 			}
+		}
 
-		for( var m=1; m<EFFECT_MAX; m++ )
-			{
+		for (var m = 1; m < EFFECT_MAX; m++)
+		{
 			ref var effect = ref Effects[m];
-			effects[m] = effect.Layer!=EffectLayer.None
-				&& ( (Result!=GameResult.None && (effect.Layer==EffectLayer.Upper || Rules.ResultShowsEveryLowerEffect)) || (effect.Layer==EffectLayer.Lower && effect.Animation==3) || IsEffectSeen(effect.Position) );
-			}
+			effects[m] =
+				effect.Layer != EffectLayer.None
+				&& (
+					(
+						Result != GameResult.None
+						&& (effect.Layer == EffectLayer.Upper || Rules.ResultShowsEveryLowerEffect)
+					)
+					|| (effect.Layer == EffectLayer.Lower && effect.Animation == 3)
+					|| IsEffectSeen(effect.Position)
+				);
+		}
 	}
 
 	// Whether a left click on each unit counts (CanClickUnit), unit 0 being the land where the selected transport lands.
 	public void ReadClickable(Span<bool> clickable)
 	{
-		for( var m=0; m<=MaxUnitId; m++ )
-			clickable[m]=CanClickUnit(ref Units[m]);
+		for (var m = 0; m <= MaxUnitId; m++)
+			clickable[m] = CanClickUnit(ref Units[m]);
 	}
 
 	// Whether each unit is a parked plane shown on the deck in the sidebar (DrawUnit, IsOnShownDeck).
 	public void ReadShownOnDeck(Span<bool> shown)
 	{
-		for( var m=0; m<=MaxUnitId; m++ )
-			{
+		for (var m = 0; m <= MaxUnitId; m++)
+		{
 			ref var unit = ref Units[m];
-			shown[m]=unit.IsUsed && (unit.Side==LocalSide || unit.IsFound) && unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked && Renderer.IsOnShownDeck(ref unit);
-			}
+			shown[m] =
+				unit.IsUsed
+				&& (unit.Side == LocalSide || unit.IsFound)
+				&& unit.Category == UnitCategory.Plane
+				&& unit.PlaneState == UnitState.Parked
+				&& Renderer.IsOnShownDeck(ref unit);
+		}
 	}
 
 	// The sheet each unit is drawn from on the battlefield and on the deck (GetUnitSprites).
 	public void ReadUnitSprites(Span<SpriteId> sprites)
 	{
-		for( var m=0; m<=MaxUnitId; m++ )
-			sprites[m]=Renderer.GetUnitSprites(ref Units[m]);
+		for (var m = 0; m <= MaxUnitId; m++)
+			sprites[m] = Renderer.GetUnitSprites(ref Units[m]);
 	}
 
 	// The item of the combat menu in effect for the selected unit, which the host's UI shows chosen

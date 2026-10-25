@@ -45,32 +45,72 @@ internal static class Win32
 		public string? lpReserved;
 		public string? lpDesktop;
 		public string? lpTitle;
-		public int dwX, dwY, dwXSize, dwYSize, dwXCountChars, dwYCountChars, dwFillAttribute, dwFlags;
-		public short wShowWindow, cbReserved2;
-		public nint lpReserved2, hStdInput, hStdOutput, hStdError;
+		public int dwX,
+			dwY,
+			dwXSize,
+			dwYSize,
+			dwXCountChars,
+			dwYCountChars,
+			dwFillAttribute,
+			dwFlags;
+		public short wShowWindow,
+			cbReserved2;
+		public nint lpReserved2,
+			hStdInput,
+			hStdOutput,
+			hStdError;
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct PROCESS_INFORMATION
 	{
-		public nint hProcess, hThread;
-		public int dwProcessId, dwThreadId;
+		public nint hProcess,
+			hThread;
+		public int dwProcessId,
+			dwThreadId;
 	}
 
 	[DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-	public static extern bool CreateProcess(string? lpApplicationName, string? lpCommandLine, nint lpProcessAttributes, nint lpThreadAttributes, bool bInheritHandles, uint dwCreationFlags, nint lpEnvironment, string? lpCurrentDirectory, ref STARTUPINFO lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
+	public static extern bool CreateProcess(
+		string? lpApplicationName,
+		string? lpCommandLine,
+		nint lpProcessAttributes,
+		nint lpThreadAttributes,
+		bool bInheritHandles,
+		uint dwCreationFlags,
+		nint lpEnvironment,
+		string? lpCurrentDirectory,
+		ref STARTUPINFO lpStartupInfo,
+		out PROCESS_INFORMATION lpProcessInformation
+	);
 
 	[DllImport("kernel32.dll", SetLastError = true)]
 	public static extern bool WaitForDebugEvent(nint lpDebugEvent, uint dwMilliseconds);
 
 	[DllImport("kernel32.dll", SetLastError = true)]
-	public static extern bool ContinueDebugEvent(int dwProcessId, int dwThreadId, uint dwContinueStatus);
+	public static extern bool ContinueDebugEvent(
+		int dwProcessId,
+		int dwThreadId,
+		uint dwContinueStatus
+	);
 
 	[DllImport("kernel32.dll", SetLastError = true)]
-	public static extern bool ReadProcessMemory(nint hProcess, nint lpBaseAddress, [Out] byte[] lpBuffer, int nSize, out nint lpNumberOfBytesRead);
+	public static extern bool ReadProcessMemory(
+		nint hProcess,
+		nint lpBaseAddress,
+		[Out] byte[] lpBuffer,
+		int nSize,
+		out nint lpNumberOfBytesRead
+	);
 
 	[DllImport("kernel32.dll", SetLastError = true)]
-	public static extern bool WriteProcessMemory(nint hProcess, nint lpBaseAddress, byte[] lpBuffer, int nSize, out nint lpNumberOfBytesWritten);
+	public static extern bool WriteProcessMemory(
+		nint hProcess,
+		nint lpBaseAddress,
+		byte[] lpBuffer,
+		int nSize,
+		out nint lpNumberOfBytesWritten
+	);
 
 	[DllImport("kernel32.dll", SetLastError = true)]
 	public static extern bool FlushInstructionCache(nint hProcess, nint lpBaseAddress, nint dwSize);

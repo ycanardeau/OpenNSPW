@@ -50,7 +50,11 @@ public sealed class Trace122Tests
 	{
 		var directory = Path.Combine(AppContext.BaseDirectory, "Traces122");
 		var divergences = new List<string>();
-		foreach (var file in Directory.Exists(directory) ? Directory.GetFiles(directory, "*.n122").Order().ToArray() : [])
+		foreach (
+			var file in Directory.Exists(directory)
+				? Directory.GetFiles(directory, "*.n122").Order().ToArray()
+				: []
+		)
 		{
 			using var replay = new Trace122Replay(File.OpenRead(file));
 			using var run = new SingleplayerRun(replay.Scenario, game => SetUp(game, replay));
@@ -83,7 +87,10 @@ public sealed class Trace122Tests
 	public void FireFieldsAreAt122sOffsets()
 	{
 		Assert.Equal(0x30, Trace122Layout.Fire.Single(field => field.Name == "Position.X").Offset);
-		Assert.Equal(0x68, Trace122Layout.Fire.Single(field => field.Name == "Destination.Y").Offset);
+		Assert.Equal(
+			0x68,
+			Trace122Layout.Fire.Single(field => field.Name == "Destination.Y").Offset
+		);
 	}
 
 	// A trace of the port replays without a difference: the seeds, the ticks of each frame and the comparison work.
@@ -146,8 +153,18 @@ public sealed class Trace122Tests
 		{
 			var game = run.Game;
 			run.Frames(2);
-			ship = Enumerable.Range(1, game.MaxUnitId).First(m => game.Units[m].IsUsed && game.Units[m].Side == game.LocalSide && game.Units[m].Category == UnitCategory.Ship && game.Units[m].Kind <= UnitKind.Destroyer);
-			destination = new WorldPosition(game.Units[ship].Position.X + 400, game.Units[ship].Position.Y);
+			ship = Enumerable
+				.Range(1, game.MaxUnitId)
+				.First(m =>
+					game.Units[m].IsUsed
+					&& game.Units[m].Side == game.LocalSide
+					&& game.Units[m].Category == UnitCategory.Ship
+					&& game.Units[m].Kind <= UnitKind.Destroyer
+				);
+			destination = new WorldPosition(
+				game.Units[ship].Position.X + 400,
+				game.Units[ship].Position.Y
+			);
 			game.Commands.ClickUnit(ship);
 			run.Frames(2);
 			game.Commands.SetDestination(destination);

@@ -14,7 +14,11 @@ internal sealed class SingleplayerScreen(NspwGame game) : Screen(game)
 		base.LoadContent();
 		_backdrop = new Backdrop(GraphicsDevice);
 
-		var form = new ScenarioBrowserForm(Game.Fonts, SingleplayerTexts.Of(ScenarioSelection.Read(Game.ReadSingleplayerExecutable())), Game.LastScenario);
+		var form = new ScenarioBrowserForm(
+			Game.Fonts,
+			SingleplayerTexts.Of(ScenarioSelection.Read(Game.ReadSingleplayerExecutable())),
+			Game.LastScenario
+		);
 		form.ScenarioSelected += (_, scenario) =>
 		{
 			Game.LastScenario = scenario;

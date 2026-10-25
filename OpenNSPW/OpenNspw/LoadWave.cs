@@ -22,250 +22,287 @@ namespace OpenNspw;
 
 public unsafe partial class Sound
 {
+	// グローバル変数
+	[Original("m_pwfx")]
+	public WAVEFORMATEX* WaveFormat;
 
-// グローバル変数
-[Original("m_pwfx")] public WAVEFORMATEX* WaveFormat;
-[Original("m_hmmioIn")] public HMMIO WaveFile;
-[Original("m_ckIn")] public MMCKINFO DataChunk;
-[Original("m_ckInRiff")] public MMCKINFO RiffChunk;
+	[Original("m_hmmioIn")]
+	public HMMIO WaveFile;
 
-/* WAVE 閉じる */
-public void YWaveClose()
-{
-	_game.mmioClose(WaveFile);
-}
+	[Original("m_ckIn")]
+	public MMCKINFO DataChunk;
 
-/* WAVE 読み込み */
-public bool YWaveRead(uint size,byte* data,uint* read,WAVEFORMATEX* wf)
-{
-	// The globals are fields, whose addresses C# only gives with fixed.
-	fixed (MMCKINFO* pckIn = &DataChunk)
-	if (FAILED(YWaveReadFile(WaveFile,size,(byte*)data,pckIn,read)))
-	{
-		return false;
-	}
-	/* フォーマットのコピー */
-	if (wf!=null)
-	{
-		memcpy(wf,WaveFormat,(nuint)(sizeof(WAVEFORMATEX)));
-	}
-	free(WaveFormat);
-	return true;
-}
+	[Original("m_ckInRiff")]
+	public MMCKINFO RiffChunk;
 
-/* WAVE 開く */
-public bool YWaveOpen(string name)
-{
-	WaveFormat = null;
-	// The globals are fields, whose addresses C# only gives with fixed.
-	fixed (HMMIO* phmmioIn = &WaveFile)
-	fixed (WAVEFORMATEX** ppwfx = &WaveFormat)
-	fixed (MMCKINFO* pckIn = &DataChunk, pckInRiff = &RiffChunk)
+	/* WAVE 閉じる */
+	public void YWaveClose()
 	{
-	if (FAILED(YWaveOpenFile(name,phmmioIn,ppwfx,pckInRiff)))
-	{
-		return false;
+		_game.mmioClose(WaveFile);
 	}
-	if (FAILED(YWaveStartDataRead(phmmioIn,pckIn,pckInRiff)))
-	{
-		return false;
-	}
-	}
-	return true;
-}
 
-/* WAVE ファイル読み込み */
-public int YWaveReadFile(HMMIO hmmioIn,uint cbRead,byte* pbDest,MMCKINFO* pckIn,uint* cbActualRead)
-{
-	MMIOINFO mmioinfoIn;
-	*cbActualRead = 0;
-	if (_game.mmioGetInfo(hmmioIn,&mmioinfoIn,0)!=0)
+	/* WAVE 読み込み */
+	public bool YWaveRead(uint size, byte* data, uint* read, WAVEFORMATEX* wf)
 	{
-		return E_FAIL;
-	}
-	var cbDataIn = cbRead;
-	if (cbDataIn > pckIn->cksize)
-	{
-		cbDataIn = pckIn->cksize;
-	}
-	pckIn->cksize -= cbDataIn;
-	for (uint cT = 0;cT < cbDataIn;cT++)
-	{
-		if (mmioinfoIn.pchNext == mmioinfoIn.pchEndRead)
-		{
-			if (_game.mmioAdvance()!=0)
+		// The globals are fields, whose addresses C# only gives with fixed.
+		fixed (MMCKINFO* pckIn = &DataChunk)
+			if (FAILED(YWaveReadFile(WaveFile, size, (byte*)data, pckIn, read)))
 			{
-				return E_FAIL;
+				return false;
 			}
+		/* フォーマットのコピー */
+		if (wf != null)
+		{
+			memcpy(wf, WaveFormat, (nuint)(sizeof(WAVEFORMATEX)));
+		}
+		free(WaveFormat);
+		return true;
+	}
+
+	/* WAVE 開く */
+	public bool YWaveOpen(string name)
+	{
+		WaveFormat = null;
+		// The globals are fields, whose addresses C# only gives with fixed.
+		fixed (HMMIO* phmmioIn = &WaveFile)
+		fixed (WAVEFORMATEX** ppwfx = &WaveFormat)
+		fixed (
+			MMCKINFO* pckIn = &DataChunk,
+				pckInRiff = &RiffChunk
+		)
+		{
+			if (FAILED(YWaveOpenFile(name, phmmioIn, ppwfx, pckInRiff)))
+			{
+				return false;
+			}
+			if (FAILED(YWaveStartDataRead(phmmioIn, pckIn, pckInRiff)))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/* WAVE ファイル読み込み */
+	public int YWaveReadFile(
+		HMMIO hmmioIn,
+		uint cbRead,
+		byte* pbDest,
+		MMCKINFO* pckIn,
+		uint* cbActualRead
+	)
+	{
+		MMIOINFO mmioinfoIn;
+		*cbActualRead = 0;
+		if (_game.mmioGetInfo(hmmioIn, &mmioinfoIn, 0) != 0)
+		{
+			return E_FAIL;
+		}
+		var cbDataIn = cbRead;
+		if (cbDataIn > pckIn->cksize)
+		{
+			cbDataIn = pckIn->cksize;
+		}
+		pckIn->cksize -= cbDataIn;
+		for (uint cT = 0; cT < cbDataIn; cT++)
+		{
 			if (mmioinfoIn.pchNext == mmioinfoIn.pchEndRead)
 			{
+				if (_game.mmioAdvance() != 0)
+				{
+					return E_FAIL;
+				}
+				if (mmioinfoIn.pchNext == mmioinfoIn.pchEndRead)
+				{
+					return E_FAIL;
+				}
+			}
+			*((byte*)pbDest + cT) = *((byte*)mmioinfoIn.pchNext);
+			mmioinfoIn.pchNext++;
+		}
+		if (_game.mmioSetInfo(hmmioIn, &mmioinfoIn, 0) != 0)
+		{
+			return E_FAIL;
+		}
+		*cbActualRead = cbDataIn;
+		return S_OK;
+	}
+
+	/* WAVE データ読み込み */
+	public int YWaveStartDataRead(HMMIO* phmmioIn, MMCKINFO* pckIn, MMCKINFO* pckInRIFF)
+	{
+		if (
+			-1 == _game.mmioSeek(*phmmioIn, (int)(pckInRIFF->dwDataOffset + sizeof(uint)), SEEK_SET)
+		)
+		{
+			return E_FAIL;
+		}
+		pckIn->ckid = mmioFOURCC('d', 'a', 't', 'a');
+		if (_game.mmioDescend(*phmmioIn, pckIn, pckInRIFF, MMIO_FINDCHUNK) != 0)
+		{
+			return E_FAIL;
+		}
+		return S_OK;
+	}
+
+	/* Wave を開く */
+	public int YWaveOpenFile(
+		string strFileName,
+		HMMIO* phmmioIn,
+		WAVEFORMATEX** ppwfxInfo,
+		MMCKINFO* pckInRIFF
+	)
+	{
+		int hr;
+		HMMIO hmmioIn;
+		hmmioIn = default;
+		if (!(hmmioIn = _game.mmioOpen(strFileName)))
+		{
+			return E_FAIL;
+		}
+		if (FAILED(hr = YReadMMIO(hmmioIn, pckInRIFF, ppwfxInfo)))
+		{
+			_game.mmioClose(hmmioIn);
+			return E_FAIL;
+		}
+		*phmmioIn = hmmioIn;
+		return S_OK;
+	}
+
+	/* MMIO 読み込み */
+	public int YReadMMIO(HMMIO hmmioIn, MMCKINFO* pckInRIFF, WAVEFORMATEX** ppwfxInfo)
+	{
+		MMCKINFO ckIn;
+		PCMWAVEFORMAT pcmWaveFormat;
+		*ppwfxInfo = null;
+		if (_game.mmioDescend(hmmioIn, pckInRIFF, null, 0) != 0)
+		{
+			return E_FAIL;
+		}
+		if (
+			(pckInRIFF->ckid != FOURCC_RIFF)
+			|| (pckInRIFF->fccType != mmioFOURCC('W', 'A', 'V', 'E'))
+		)
+		{
+			return E_FAIL;
+		}
+		ckIn.ckid = mmioFOURCC('f', 'm', 't', ' ');
+		if (_game.mmioDescend(hmmioIn, &ckIn, pckInRIFF, MMIO_FINDCHUNK) != 0)
+		{
+			return E_FAIL;
+		}
+		if (ckIn.cksize < (int)sizeof(PCMWAVEFORMAT))
+		{
+			return E_FAIL;
+		}
+		if (
+			_game.mmioRead(hmmioIn, (byte*)&pcmWaveFormat, sizeof(PCMWAVEFORMAT))
+			!= sizeof(PCMWAVEFORMAT)
+		)
+		{
+			return E_FAIL;
+		}
+		if (pcmWaveFormat.wf.wFormatTag == WAVE_FORMAT_PCM)
+		{
+			if ((*ppwfxInfo = (WAVEFORMATEX*)malloc((nuint)(sizeof(WAVEFORMATEX)))) == null)
+			{
+				return E_FAIL;
+			}
+			memcpy(*ppwfxInfo, &pcmWaveFormat, (nuint)(sizeof(PCMWAVEFORMAT)));
+			(*ppwfxInfo)->cbSize = 0;
+		}
+		else
+		{
+			ushort cbExtraBytes;
+			cbExtraBytes = 0;
+			if (_game.mmioRead(hmmioIn, (byte*)&cbExtraBytes, sizeof(ushort)) != sizeof(ushort))
+			{
+				return E_FAIL;
+			}
+			*ppwfxInfo = (WAVEFORMATEX*)malloc((nuint)(sizeof(WAVEFORMATEX) + cbExtraBytes)); // new CHAR[sizeof(WAVEFORMATEX) + cbExtraBytes]
+			if ((*ppwfxInfo) == null)
+			{
+				return E_FAIL;
+			}
+			memcpy(*ppwfxInfo, &pcmWaveFormat, (nuint)(sizeof(PCMWAVEFORMAT)));
+			(*ppwfxInfo)->cbSize = cbExtraBytes;
+			if (
+				_game.mmioRead(
+					hmmioIn,
+					(byte*)(((byte*)&((*ppwfxInfo)->cbSize)) + sizeof(ushort)),
+					cbExtraBytes
+				) != cbExtraBytes
+			)
+			{
+				free(*ppwfxInfo);
+				*ppwfxInfo = null;
 				return E_FAIL;
 			}
 		}
-		*((byte*)pbDest + cT) = *((byte*)mmioinfoIn.pchNext);
-		mmioinfoIn.pchNext++;
-	}
-	if (_game.mmioSetInfo(hmmioIn,&mmioinfoIn,0)!=0)
-	{
-		return E_FAIL;
-	}
-	*cbActualRead = cbDataIn;
-	return S_OK;
-}
-
-/* WAVE データ読み込み */
-public int YWaveStartDataRead(HMMIO* phmmioIn,MMCKINFO* pckIn,MMCKINFO* pckInRIFF)
-{
-	if (-1 == _game.mmioSeek(*phmmioIn,(int)(pckInRIFF->dwDataOffset + sizeof(uint)),SEEK_SET))
-	{
-		return E_FAIL;
-	}
-	pckIn->ckid = mmioFOURCC('d','a','t','a');
-	if (_game.mmioDescend(*phmmioIn,pckIn,pckInRIFF,MMIO_FINDCHUNK)!=0)
-	{
-		return E_FAIL;
-	}
-	return S_OK;
-}
-
-/* Wave を開く */
-public int YWaveOpenFile(string strFileName,HMMIO* phmmioIn,WAVEFORMATEX** ppwfxInfo,MMCKINFO* pckInRIFF)
-{
-	int hr;
-	HMMIO hmmioIn;
-	hmmioIn = default;
-	if (!(hmmioIn = _game.mmioOpen(strFileName)))
-	{
-		return E_FAIL;
-	}
-	if (FAILED(hr = YReadMMIO(hmmioIn,pckInRIFF,ppwfxInfo)))
-	{
-		_game.mmioClose(hmmioIn);
-		return E_FAIL;
-	}
-	*phmmioIn = hmmioIn;
-	return S_OK;
-}
-
-/* MMIO 読み込み */
-public int YReadMMIO(HMMIO hmmioIn,MMCKINFO* pckInRIFF,WAVEFORMATEX** ppwfxInfo)
-{
-	MMCKINFO ckIn;
-	PCMWAVEFORMAT pcmWaveFormat;
-	*ppwfxInfo = null;
-	if (_game.mmioDescend(hmmioIn,pckInRIFF,null,0)!=0)
-	{
-		return E_FAIL;
-	}
-	if ((pckInRIFF->ckid != FOURCC_RIFF) || (pckInRIFF->fccType != mmioFOURCC('W','A','V','E')))
-	{
-		return E_FAIL;
-	}
-	ckIn.ckid = mmioFOURCC('f','m','t',' ');
-	if (_game.mmioDescend(hmmioIn,&ckIn,pckInRIFF,MMIO_FINDCHUNK)!=0)
-	{
-		return E_FAIL;
-	}
-	if (ckIn.cksize < (int)sizeof(PCMWAVEFORMAT))
-	{
-		return E_FAIL;
-	}
-	if (_game.mmioRead(hmmioIn,(byte*)&pcmWaveFormat,sizeof(PCMWAVEFORMAT)) != sizeof(PCMWAVEFORMAT))
-	{
-		return E_FAIL;
-	}
-	if (pcmWaveFormat.wf.wFormatTag == WAVE_FORMAT_PCM)
-	{
-		if ((*ppwfxInfo = (WAVEFORMATEX *)malloc((nuint)(sizeof(WAVEFORMATEX))))==null)
-		{
-			return E_FAIL;
-		}
-		memcpy(*ppwfxInfo,&pcmWaveFormat,(nuint)(sizeof(PCMWAVEFORMAT)));
-		(*ppwfxInfo)->cbSize = 0;
-	}
-	else
-	{
-		ushort cbExtraBytes;
-		cbExtraBytes = 0;
-		if (_game.mmioRead(hmmioIn,(byte*)&cbExtraBytes,sizeof(ushort)) != sizeof(ushort))
-		{
-			return E_FAIL;
-		}
-		*ppwfxInfo = (WAVEFORMATEX *)malloc((nuint)(sizeof(WAVEFORMATEX) + cbExtraBytes));		// new CHAR[sizeof(WAVEFORMATEX) + cbExtraBytes]
-		if ((*ppwfxInfo)==null)
-		{
-			return E_FAIL;
-		}
-		memcpy(*ppwfxInfo,&pcmWaveFormat,(nuint)(sizeof(PCMWAVEFORMAT)));
-		(*ppwfxInfo)->cbSize = cbExtraBytes;
-		if (_game.mmioRead(hmmioIn,(byte*)(((byte*) & ((*ppwfxInfo)->cbSize)) + sizeof(ushort)),cbExtraBytes) != cbExtraBytes)
+		if (_game.mmioAscend(hmmioIn, &ckIn, 0) != 0)
 		{
 			free(*ppwfxInfo);
 			*ppwfxInfo = null;
 			return E_FAIL;
 		}
-	}
-	if (_game.mmioAscend(hmmioIn,&ckIn,0)!=0)
-	{
-		free(*ppwfxInfo);
-		*ppwfxInfo = null;
-		return E_FAIL;
-	}
-	return S_OK;
-}
-
-// WAVE ファイルの読み込み
-public IDirectSoundBuffer? LoadWave(string name)
-{
-	uint readsize;
-	WAVEFORMATEX wf;
-	DSBUFFERDESC desc;
-	void* pMem1,pMem2;
-	uint size1,size2;
-	// WAVE ファイルを開く
-	if (!YWaveOpen(name))
-	{
-		return null;
-	}
-	// メモリ領域の確保
-	var buf = (byte*)malloc(DataChunk.cksize);
-	// 読み込み
-	ZeroMemory(&wf,(nuint)(sizeof(WAVEFORMATEX)));
-	if (!YWaveRead(DataChunk.cksize,buf,&readsize,&wf))
-	{
-		free(buf);
-		return null;
+		return S_OK;
 	}
 
-		ZeroMemory(&desc,(nuint)(sizeof(DSBUFFERDESC)));
-		desc.dwSize = (uint)(sizeof(DSBUFFERDESC));
-		desc.dwFlags = /*DSBCAPS_LOCSOFTWARE |*/ DSBCAPS_CTRLVOLUME;	// 駄目ならソフトウェアバッファで試す。
-		desc.dwBufferBytes = readsize;
-		desc.lpwfxFormat = &wf;
-
-		if (FAILED(lpDS.CreateSoundBuffer(&desc,out var lpDSB,null)))
+	// WAVE ファイルの読み込み
+	public IDirectSoundBuffer? LoadWave(string name)
+	{
+		uint readsize;
+		WAVEFORMATEX wf;
+		DSBUFFERDESC desc;
+		void* pMem1,
+			pMem2;
+		uint size1,
+			size2;
+		// WAVE ファイルを開く
+		if (!YWaveOpen(name))
+		{
+			return null;
+		}
+		// メモリ領域の確保
+		var buf = (byte*)malloc(DataChunk.cksize);
+		// 読み込み
+		ZeroMemory(&wf, (nuint)(sizeof(WAVEFORMATEX)));
+		if (!YWaveRead(DataChunk.cksize, buf, &readsize, &wf))
 		{
 			free(buf);
 			return null;
 		}
 
-	// 領域をロック
-	if (FAILED(lpDSB.Lock(0,readsize,&pMem1,&size1,&pMem2,&size2,0)))
-	{
+		ZeroMemory(&desc, (nuint)(sizeof(DSBUFFERDESC)));
+		desc.dwSize = (uint)(sizeof(DSBUFFERDESC));
+		desc.dwFlags = /*DSBCAPS_LOCSOFTWARE |*/
+		DSBCAPS_CTRLVOLUME; // 駄目ならソフトウェアバッファで試す。
+		desc.dwBufferBytes = readsize;
+		desc.lpwfxFormat = &wf;
+
+		if (FAILED(lpDS.CreateSoundBuffer(&desc, out var lpDSB, null)))
+		{
+			free(buf);
+			return null;
+		}
+
+		// 領域をロック
+		if (FAILED(lpDSB.Lock(0, readsize, &pMem1, &size1, &pMem2, &size2, 0)))
+		{
+			free(buf);
+			return null;
+		}
+		// 書き込み
+		memcpy(pMem1, buf, size1);
+		if (size2 != 0)
+		{
+			memcpy(pMem2, buf + size1, size2);
+		}
+		// ロック解除
+		lpDSB.Unlock(pMem1, size1, pMem2, size2);
 		free(buf);
-		return null;
+		// 閉じる
+		YWaveClose();
+		return lpDSB;
 	}
-	// 書き込み
-	memcpy(pMem1,buf,size1);
-	if (size2!=0)
-	{
-		memcpy(pMem2,buf + size1,size2);
-	}
-	// ロック解除
-	lpDSB.Unlock(pMem1,size1,pMem2,size2);
-	free(buf);
-	// 閉じる
-	YWaveClose();
-	return lpDSB;
-}
 }

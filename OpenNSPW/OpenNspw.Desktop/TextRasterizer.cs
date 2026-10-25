@@ -14,7 +14,13 @@ public sealed unsafe class TextRasterizer
 		_font = new StbTrueType.stbtt_fontinfo();
 		fixed (byte* data = _data)
 		{
-			if (StbTrueType.stbtt_InitFont(_font, data, StbTrueType.stbtt_GetFontOffsetForIndex(data, 0)) == 0)
+			if (
+				StbTrueType.stbtt_InitFont(
+					_font,
+					data,
+					StbTrueType.stbtt_GetFontOffsetForIndex(data, 0)
+				) == 0
+			)
 			{
 				_font = null;
 			}
@@ -32,14 +38,17 @@ public sealed unsafe class TextRasterizer
 		{
 			_font.data = data;
 			var scale = StbTrueType.stbtt_ScaleForPixelHeight(_font, height);
-			int ascent, descent, lineGap;
+			int ascent,
+				descent,
+				lineGap;
 			StbTrueType.stbtt_GetFontVMetrics(_font, &ascent, &descent, &lineGap);
 			var baseline = (int)(ascent * scale);
 
 			var width = 0;
 			foreach (var c in text)
 			{
-				int advance, bearing;
+				int advance,
+					bearing;
 				StbTrueType.stbtt_GetCodepointHMetrics(_font, c, &advance, &bearing);
 				width += (int)Math.Ceiling(advance * scale);
 			}
@@ -48,7 +57,12 @@ public sealed unsafe class TextRasterizer
 			var x = 0;
 			foreach (var c in text)
 			{
-				int advance, bearing, x0, y0, x1, y1;
+				int advance,
+					bearing,
+					x0,
+					y0,
+					x1,
+					y1;
 				StbTrueType.stbtt_GetCodepointHMetrics(_font, c, &advance, &bearing);
 				StbTrueType.stbtt_GetCodepointBitmapBox(_font, c, scale, scale, &x0, &y0, &x1, &y1);
 				var gw = x1 - x0;
@@ -58,7 +72,16 @@ public sealed unsafe class TextRasterizer
 					var glyph = new byte[gw * gh];
 					fixed (byte* g = glyph)
 					{
-						StbTrueType.stbtt_MakeCodepointBitmap(_font, g, gw, gh, gw, scale, scale, c);
+						StbTrueType.stbtt_MakeCodepointBitmap(
+							_font,
+							g,
+							gw,
+							gh,
+							gw,
+							scale,
+							scale,
+							c
+						);
 					}
 
 					for (var j = 0; j < gh; j++)
@@ -69,7 +92,10 @@ public sealed unsafe class TextRasterizer
 							var tx = x + (int)(bearing * scale) + i;
 							if (ty >= 0 && ty < height && tx >= 0 && tx < width)
 							{
-								alpha[ty * width + tx] = Math.Max(alpha[ty * width + tx], glyph[j * gw + i]);
+								alpha[ty * width + tx] = Math.Max(
+									alpha[ty * width + tx],
+									glyph[j * gw + i]
+								);
 							}
 						}
 					}
