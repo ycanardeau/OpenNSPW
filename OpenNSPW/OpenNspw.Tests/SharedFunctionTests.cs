@@ -34,13 +34,13 @@ public class SharedFunctionTests
 	{
 		var units = UnitBytes(game);
 		var maxUnitId = game.MaxUnitId;
-		var memory = game.Emulator!.Memory.ToArray();
+		var memory = State122.Save(game);
 		game.srand(seed);
 		var result = action();
 		var after = (UnitBytes(game), game.MaxUnitId, game.rand(), result);
 		units.CopyTo(MemoryMarshal.AsBytes((Span<Unit>)game.Units));
 		game.MaxUnitId = maxUnitId;
-		memory.CopyTo(game.Emulator!.Memory);
+		State122.Restore(game, memory);
 		return after;
 	}
 

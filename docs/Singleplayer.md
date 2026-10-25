@@ -87,7 +87,7 @@ Before an emulated call, each region is copied from the port into the emulator's
 `cpu_strtgy` runs once a frame, and `decision` once a tick. `EmulatorCopyBenchmarks` measures the copy.
 
 ### The single-player globals
-1.22 has globals that NSPW NET does not: the computer's plans and the scenarios' state, from `0x4867A0` to `0x489A28`. They live only in the emulator's memory. A new game creates a new emulator, so they start as the executable has them, then sets what 1.22's `game_init` sets before it calls the scenario: the end of the path of each of the 11 entries of the computer's fleet table (`0x4867A0`, `0x498` bytes each) to 9601, `MAP_RIGHT+1`.
+1.22 has globals that NSPW NET does not: the computer's plans and the scenarios' state, from `0x4867A0` to `0x489A28`. The code reads and writes only the table of the computer's fleets there (`0x4867A0`, 11 entries of `0x498` bytes), which the port keeps as `ComputerFleets`, in 1.22's layout (`ComputerFleet`), and shares with the emulator as the other globals; the rest of `.data` that the code uses is constants, such as the messages of `decision`, and the debug window of the route functions (`0x463AA4`, `0x463B20`), which the port drops. A new game sets what 1.22's `game_init` sets before it calls the scenario: it clears the fleets, and sets the destination of each to none, 9601 (`World.Beyond`).
 
 ## Unit numbering
 1.22 numbers the units as NSPW NET does, with smaller ranges, and the emulated code depends on them: it loops over them, and keeps unit numbers in its own globals.

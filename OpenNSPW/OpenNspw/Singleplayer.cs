@@ -24,12 +24,8 @@ public unsafe partial class Nspw
 	private const int UnitFoundOffset = 0x558;
 	private const int UnitRandomOffset = 0x560;
 
-	// The table of the computer's fleets (0x4867A0, 11 entries of 0x498 bytes), which game_init clears; each entry ends
-	// with a path whose end, 9601 (World.Beyond), it sets.
+	// The table of the computer's fleets (ComputerFleets) in 1.22's memory.
 	private const uint FleetAddress = 0x4867A0;
-	private const int FleetSize = 0x498;
-	private const int FleetCount = 11;
-	private const int FleetPathEndOffset = 0x478;
 
 	// cmbt_map of 1.22, which load_it2 writes.
 	private const uint MapAddress = 0x443AA0;
@@ -58,6 +54,7 @@ public unsafe partial class Nspw
 		new(0x463AC0, game => Bytes(ref game.MoveOrders)[..(2 * sizeof(MoveOrder))], true), // new_pp[2]
 		new(0x483B44, game => Bytes(ref game.Result), true), // game_end
 		new(0x483B4C, game => Bytes(ref game.CpuSide), true), // cpu_side
+		new(FleetAddress, game => Bytes(ref game.ComputerFleets), true), // the computer's fleets
 		new(0x489AB0, game => Bytes(ref game.CameraPosition), true), // cmbt_x, cmbt_y
 		new(0x489AD0, game => Bytes(ref game.Renderer.FrameCount), true), // FrameCount
 		new(0x489AE0, game => Bytes(ref game.Selections), true), // slct_unit
@@ -103,6 +100,10 @@ public unsafe partial class Nspw
 
 	// cpu_side of 1.22: the side the computer plays, or None.
 	public Side CpuSide;
+
+	// The table of the computer's fleets of 1.22 (0x4867A0, docs/ComputerPlayer.md, Fleets), which only its single-player
+	// code has: its scenarios set the fleets up, and cpu_strtgy moves them.
+	public Array11<ComputerFleet> ComputerFleets;
 
 	// Two doubles in the emulator's memory, for the functions of 1.22 that take pointers to them.
 	private uint _pointAddress;
@@ -418,14 +419,6 @@ public unsafe partial class Nspw
 		emulator.Cpu.Fpu.Atan2 = atan2;
 		SetNatives(emulator);
 		_pointAddress = emulator.Allocate(2 * sizeof(double));
-		for (var i = 0; i < FleetCount; i++)
-			MemoryMarshal.Write(
-				emulator.At(
-					FleetAddress + (uint)(i * FleetSize + FleetPathEndOffset),
-					sizeof(double)
-				),
-				(double)World.Beyond
-			);
 		return emulator;
 	}
 
@@ -433,6 +426,11 @@ public unsafe partial class Nspw
 	// limit and the camera.
 	public void SetUpSingleplayerScenario()
 	{
+		// game_init clears the computer's fleets, and ends each one's path: its destination is none (0x429C50).
+		ComputerFleets = default;
+		for (var f = 0; f < 11; f++)
+			ComputerFleets[f].DestinationX = World.Beyond;
+
 		Emulator = CreateEmulator();
 		RunEmulated(Functions.SetUpScenario(ScenarioNumber));
 	}
@@ -545,15 +543,10 @@ public unsafe partial class Nspw
 		RunEmulated(Functions.SetUnitData, (uint)m);
 	}
 
-	// Entry f of 1.22's table of the computer's fleets, in the emulator's memory.
+	// Entry f of 1.22's table of the computer's fleets.
 	internal ref ComputerFleet FleetAt(int f)
 	{
-		var emulator =
-			Emulator
-			?? throw new InvalidOperationException("No single-player game is being played.");
-		return ref MemoryMarshal.AsRef<ComputerFleet>(
-			emulator.At(FleetAddress + (uint)(f * FleetSize), FleetSize)
-		);
+		return ref ComputerFleets[f];
 	}
 
 	private static uint Low(double value) => (uint)BitConverter.DoubleToUInt64Bits(value);
