@@ -67,6 +67,49 @@ And what has worked, from LLL in every carrier battle to the results above:
 - scout pickets that keep a carrier found in sight;
 - warships sent to finish a cripple.
 
+## A player's tips, and the rules behind them
+Most of what made the player stronger, or is waiting to be measured, came from a player watching it, not from the work's own experiments. Each tip rests on a rule of the game that was in the code all along:
+
+| Tip | The rule in the code | Where it stands |
+| --- | --- | --- |
+| Attackers that found the carriers should not search again; strikes should go for the nearest | `ChooseTarget`, `TryApproach` | Done (`298836a`) |
+| Use the walkthrough's tactics: decoys, the Marianas waves | `EvadePlane`: a ship turns away from any attacker heading at it within 600, armed or not | The decoy scout gained nothing |
+| Damaged enemy carriers go home and come back with all their planes | `cpu_strtgy`, Returning to base | Followed home (`05f6176`); catching them failed |
+| Stop scouting once the enemy is found; predict where it goes | `Contacts`, `WhereNow` | `KeepScouting`, `ProbabilitySearch`, not measured |
+| Strikes take roundabout routes | `SideOffset`, `ApproachRadius`, `HoldOff`, `FanAngle` | Tuned: no better setting; `StraightWhenFar`, not measured |
+| A carrier at 20% of its HP or less can neither launch nor land | `UnitFacts.CanLaunch`, the landing check of `MoveUnit` | `SpareCrippled`, `DivertFromCrippledDecks`, not measured |
+| Land the planes with the least fuel and the most damage first | `LandingLock`; the lowest-numbered plane lands first | Written down, not built |
+| Strike the escorts first, as a trade-off to try | `ShipFireAntiAircraftShellWithoutTarget` | Much worse: 5 won of 120 against 31 |
+| Form a ring, not a line; ships get stuck forming it | `SetShipFormation` keeps the shape at grouping | Ring not confirmed on fresh dates; the stuck ships not fixed |
+| Speed the player up with the game's speed | A frame runs speed + 1 ticks (`TryStartSingleplayerFrame`) | Done (`3ed23f5`) |
+| Launch all the attackers at once, to spread the escorts' fire | `MinStrike` | `StrikeShare=1`: 35 against 31 of 120, to confirm |
+| Hiryu and the submarine can win 201 | A submarine dives and fires by itself (`ShipFireTorpedoWithoutTarget`) | `UseSubmarines`, not measured |
+| Scouts should come home round the enemy, not over it | `ReturnSelected` flies straight | Written down, not built |
+| A Japanese destroyer beats a US cruiser by torpedoing, then sticking to it | Guns fire at nothing nearer than 30% of their range, or 150 at a target | `CloseQuarters`, not measured |
+| The torpedoes hit too seldom | An aerial torpedo runs straight from 100 to 220; a ship dodges it unless already turning | `BeamApproach`, and the arena counts the hits; not measured |
+| Fighters should go for fighters, mostly | `ChooseTargetInFlight` | `FightersFirst`, not measured |
+| Attacker targeting is dumb | Nearest carrier; any ship once low on fuel; no account of damage, turning, or other strikes on it | Written down |
+| Ships attacked by planes should aim at the attackers | A ship with a ship as its gun target fires no anti-aircraft shell; a plane can be its target | Written down |
+
+## What the work needs
+Why the player did not find these by itself, and what would let it:
+
+- **To see what a player sees, as numbers.** A mistake on the screen is a condition the arena can test every frame and count, but only once someone writes the test: the counts so far (weapons dropped, turned back, planes lost, HP lost, hits on carriers) were chosen for strikes, and are blind to the rest. Detectors to add, each counted per game:
+  - escorts with a ship as their gun target while enemy attackers or bombers are within their guns' reach;
+  - planes circling a deck that cannot take them, and planes lost with no fuel;
+  - scouts and strikes within the enemy's guns' reach on their way home;
+  - attackers that drop on ships the victory does not count, and torpedoes dropped from ahead or astern, not across;
+  - a carrier found and lost again, and how long each stays lost;
+  - ships that stand still, or are stuck on one another, in a formation forming;
+  - strikes that arrive two or three planes at a time;
+  - our ships' guns idle while an enemy is within reach.
+- **Pictures of the moments that matter.** The arena plays without a screen; a picture of each strike's run, each carrier hit and each plane lost, saved to a file, would let the work look at the game as a player does, not only count it.
+- **Design before experiments.** Each experiment costs hours of games; testing ideas one by one, as they come, is the slowest way. First a pass over the rules (every condition that stops a unit acting, and what it means for both sides: the start of the table above) and over the detectors; then a list of choices, each with the rule behind it; then the experiments, several at a time.
+- **Examples of good play.** Win rates say how often the player wins, not what a good player would have done instead. Recordings of strong human games of the carrier battles would show it, and could later be learned from (step 6 below). The single-player game cannot record a replay yet; when it can, a few dozen games would do.
+- **Faster games.** A game of 30000 frames takes 4 to 5 minutes on a busy core, most of it probably the emulated 1.22 computer, which runs every frame; a benchmark of 50 dates takes hours. Profiling it, and running only what the tests need, would make every step faster.
+- **Shorter answers.** A sequential test (Wald) stops a comparison once it is clear; screening on the detectors, which move in a few games, before the win rate, which needs a hundred.
+- **A memory of what was learnt.** This document: every tip, every rule behind one, and every result, kept or not, so that the next round starts from them.
+
 ## How to make it much stronger
 In order: each step needs the ones before it.
 
