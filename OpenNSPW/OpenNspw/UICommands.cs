@@ -53,7 +53,7 @@ public unsafe partial class Nspw
 
 	// Runs the commands queued for a site, in order, on the game's thread; or drops them, as clicks are dropped, when they
 	// do not count. The commands of the other screens' sites are dropped too: they were given for a screen that is gone.
-	private void RunUICommands(UICommandSite site, bool count)
+	internal void RunUICommands(UICommandSite site, bool count)
 	{
 		List<Action> runs;
 		lock (_uiCommandsLock)
@@ -75,7 +75,7 @@ public unsafe partial class Nspw
 	// clicks, unless an order waits for its turn (DrawBattleArea).
 	private void PlayClickSound()
 	{
-		PlaySoundEffect( 0, SoundId.Click1 ,(double)(MAP_RIGHT+1), 0);
+		Sound.PlayInterfaceSound(SoundId.Click1);
 	}
 
 	// Whether the selected unit is shown, so that its path is drawn and a click gives it a destination or a right click
@@ -83,13 +83,13 @@ public unsafe partial class Nspw
 	private bool IsSelectedShown()
 	{
 		ref var unit = ref Units[SelectedUnit];
-		return SelectedUnit!=0 && unit.IsUsed && (!(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked) || IsOnShownDeck(ref unit)) && !IsEditingMap;
+		return SelectedUnit!=0 && unit.IsUsed && (!(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked) || Renderer.IsOnShownDeck(ref unit)) && !IsEditingMap;
 	}
 
 	private void RunClickUnit(int m)
 	{
 		ref var unit = ref Units[m];
-		if( m!=0 && unit.IsUsed && (unit.Side==LocalSide || unit.IsFound) && (!(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked) || IsOnShownDeck(ref unit)) && CanClickUnit(ref unit) )
+		if( m!=0 && unit.IsUsed && (unit.Side==LocalSide || unit.IsFound) && (!(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked) || Renderer.IsOnShownDeck(ref unit)) && CanClickUnit(ref unit) )
 			{
 			ClickUnit(m, default);
 			}
@@ -105,7 +105,7 @@ public unsafe partial class Nspw
 		var isParked = unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked;
 		var isLeaderParked = Units[leader].Category==UnitCategory.Plane && Units[leader].PlaneState==UnitState.Parked;
 		return m!=leader && unit.IsUsed && unit.Side==LocalSide && unit.Category==Units[leader].Category
-			&& isParked==isLeaderParked && (!isParked || IsOnShownDeck(ref unit))
+			&& isParked==isLeaderParked && (!isParked || Renderer.IsOnShownDeck(ref unit))
 			&& !(unit.Kind>=UnitKind.AirBase && unit.Kind<=UnitKind.Fortress)
 			&& !(Units[leader].Kind>=UnitKind.AirBase && Units[leader].Kind<=UnitKind.Fortress);
 	}
@@ -115,7 +115,7 @@ public unsafe partial class Nspw
 	private readonly Queue<(int Unit, bool IsAdded)> _brushed = new();
 
 	// The next unit brushed that a click still puts in the selection, or takes out of it, as it was brushed for.
-	private void RunBrushedUnits(bool count)
+	internal void RunBrushedUnits(bool count)
 	{
 		if( !count )
 			return;
@@ -138,7 +138,7 @@ public unsafe partial class Nspw
 		if( SelectedUnit!=0 && Units[SelectedUnit].Kind==UnitKind.Transport && AimLanding(sprite, x, y)
 			&& CanClickUnit(ref Units[0]) && !(Units[0].PlaneState!=UnitState.Parked && x>=CMBT_WIDTH-1) )
 			{
-			ClickUnit(0, new WorldPosition(CameraPosition.X+Sprites[sprite].X, CameraPosition.Y-Sprites[sprite].Y));
+			ClickUnit(0, new WorldPosition(CameraPosition.X+Renderer.Sprites[sprite].Position.X, CameraPosition.Y-Renderer.Sprites[sprite].Position.Y));
 			}
 	}
 
@@ -203,7 +203,7 @@ public unsafe partial class Nspw
 			isShown |= ShownCombatMenu[i] == item;
 		}
 
-		if( !isShown || item==ActiveCombatMenuItem() || FrameCount-since>40 )
+		if( !isShown || item==ActiveCombatMenuItem() || Renderer.FrameCount-since>40 )
 			{
 			_waitingCombatMenu=null;
 			}
@@ -216,7 +216,7 @@ public unsafe partial class Nspw
 
 	private void RunChooseCombatMenuItem(CombatMenuItem item)
 	{
-		_waitingCombatMenu=(item, FrameCount);
+		_waitingCombatMenu=(item, Renderer.FrameCount);
 	}
 
 	private void RunSelectSupplyTarget(bool next)
@@ -246,8 +246,8 @@ public unsafe partial class Nspw
 	{
 		LastCameraMove = id;
 		CameraPosition = new WorldPosition(
-			Math.Clamp(CameraPosition.X+dx, MAP_LEFT, MAP_RIGHT-CMBT_WIDTH),
-			Math.Clamp(CameraPosition.Y-dy, MAP_BOTTOM+CMBT_HEIGHT, MAP_TOP));
+			Math.Clamp(CameraPosition.X+dx, World.Left, World.Right-CMBT_WIDTH),
+			Math.Clamp(CameraPosition.Y-dy, World.Bottom+CMBT_HEIGHT, World.Top));
 	}
 
 	// A click on the system menu that waits for a frame in which it counts, and the frame it was given in.
@@ -261,7 +261,7 @@ public unsafe partial class Nspw
 		if( _waitingSystemMenu is not var (answer, since) )
 			return;
 
-		if( RivalMode!=GameMode.Battle || IsEditingMap || FrameCount-since>40 )
+		if( RivalMode!=GameMode.Battle || IsEditingMap || Renderer.FrameCount-since>40 )
 			{
 			_waitingSystemMenu=null;
 			}
@@ -274,7 +274,7 @@ public unsafe partial class Nspw
 
 	private void RunAskSystemMenu(MessageType answer)
 	{
-		_waitingSystemMenu=(answer, FrameCount);
+		_waitingSystemMenu=(answer, Renderer.FrameCount);
 	}
 
 	// Whether the host chooses on the scenarios, the guest being on them too (UpdateScenarioList and the buttons under it).
@@ -286,10 +286,10 @@ public unsafe partial class Nspw
 	// Whether the n-th scenario is in the list shown (ListScenarioNames).
 	private bool IsListedScenario(int n)
 	{
-		Array12<int> len = default;
-		Array12<Array128<byte>> ach = default;
+		Array12<int> length = default;
+		Array12<Array128<byte>> text = default;
 		var m = -1;
-		ListScenarioNames(ref m, ref len, ref ach);
+		ListScenarioNames(ref m, ref length, ref text);
 		return n >= 0 && n <= m;
 	}
 
@@ -305,9 +305,9 @@ public unsafe partial class Nspw
 	{
 		if( CanChooseScenario() && IsListedScenario(n) )
 			{
-			_DP_DATA_1 dp_data_1 = default;
+			NameMessage message = default;
 			ChooseScenario(n);
-			LeaveGameSetting(ref dp_data_1);
+			LeaveGameSetting(ref message);
 			}
 	}
 
@@ -323,8 +323,8 @@ public unsafe partial class Nspw
 	{
 		if( CanChooseScenario() && WasHost )
 			{
-			_DP_DATA_1 dp_data_1 = default;
-			StartFromResume(ref dp_data_1);
+			NameMessage message = default;
+			StartFromResume(ref message);
 			}
 	}
 
@@ -332,8 +332,8 @@ public unsafe partial class Nspw
 	{
 		if( CanChooseScenario() && HasAutoSave!=0 )
 			{
-			_DP_DATA_1 dp_data_1 = default;
-			StartFromAutoSave(ref dp_data_1);
+			NameMessage message = default;
+			StartFromAutoSave(ref message);
 			}
 	}
 
@@ -415,8 +415,8 @@ public unsafe partial class Nspw
 	{
 		if( CanSetRules() && RivalMode==GameMode.ConfigSetting )
 			{
-			_DP_FLAG dp_flag = default;
-			BackToScenarioSetting(ref dp_flag);
+			SyncFlagMessage flagMessage = default;
+			BackToScenarioSetting(ref flagMessage);
 			}
 	}
 
@@ -424,8 +424,8 @@ public unsafe partial class Nspw
 	{
 		if( CanSetRules() && RivalMode==GameMode.ConfigSetting )
 			{
-			_DP_DATA_1 dp_data_1 = default;
-			StartBattle(ref dp_data_1);
+			NameMessage message = default;
+			StartBattle(ref message);
 			}
 	}
 

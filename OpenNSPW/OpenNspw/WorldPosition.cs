@@ -13,4 +13,22 @@ public readonly struct WorldPosition(double x, double y)
 	{
 		return new WorldPosition(position.X + vector.X, position.Y + vector.Y);
 	}
+
+	// Each component minus the vector's.
+	public static WorldPosition operator -(WorldPosition position, WorldVector vector)
+	{
+		return new WorldPosition(position.X - vector.X, position.Y - vector.Y);
+	}
+
+	// The vector from `from` to `to`: `to.X-from.X` and `to.Y-from.Y`, as the original computes them.
+	public static WorldVector operator -(WorldPosition to, WorldPosition from)
+	{
+		return new WorldVector(to.X - from.X, to.Y - from.Y);
+	}
+
+	// The position truncated to whole pixels, as `(int)x` and `(int)y` do.
+	public PixelPoint ToPixelPoint()
+	{
+		return new PixelPoint((int)X, (int)Y);
+	}
 }

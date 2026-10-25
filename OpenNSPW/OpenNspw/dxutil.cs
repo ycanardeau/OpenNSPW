@@ -5,23 +5,20 @@ namespace OpenNspw;
 public static class dxutil
 {
 	// The Release build's definitions: the HRESULT, without a trace or a message box.
-	public static int DXTRACE_ERR(string str, int hr)
+	public static int DXTRACE_ERR(int hr)
 	{
 		return hr;
 	}
 
-	public static int DXTRACE_ERR_MSGBOX(string str, int hr)
+	public static int DXTRACE_ERR_MSGBOX(int hr)
 	{
 		return hr;
 	}
 
 	public static void SAFE_RELEASE(ref IDirectPlay8Address? p)
 	{
-		if (p is not null)
-		{
-			p.Release();
-			p = null;
-		}
+		p?.Release();
+		p = null;
 	}
 
 	public static void SAFE_DELETE_ARRAY<T>(ref T? p) where T : class

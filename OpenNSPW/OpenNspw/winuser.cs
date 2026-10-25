@@ -159,13 +159,7 @@ public static class winuser
 	public const int IDYES = 6;
 	public const int IDNO = 7;
 
-	public const uint WS_OVERLAPPED = 0x00000000;
-	public const uint WS_POPUP = 0x80000000;
-	public const uint WS_VISIBLE = 0x10000000;
 	public const uint WS_CAPTION = 0x00C00000;
-	public const uint WS_SYSMENU = 0x00080000;
-	public const uint WS_MINIMIZEBOX = 0x00020000;
-	public const int CW_USEDEFAULT = unchecked((int)0x80000000);
 
 	public const int SW_SHOWNORMAL = 1;
 	public const int SW_SHOW = 5;
@@ -174,8 +168,6 @@ public static class winuser
 	public const int SM_CYCAPTION = 4;
 	public const int SM_CXDLGFRAME = 7;
 	public const int SM_CYDLGFRAME = 8;
-
-	public const int IDC_ARROW = 32512;
 
 	public const int VK_RETURN = 0x0D;
 	public const int VK_ESCAPE = 0x1B;
@@ -279,7 +271,7 @@ public partial class Nspw
 	{
 	}
 
-	public int CoInitializeEx(object? pvReserved, uint dwCoInit)
+	public int CoInitializeEx()
 	{
 		return S_OK;
 	}
@@ -288,7 +280,7 @@ public partial class Nspw
 	{
 	}
 
-	public object? ImmAssociateContext(HWND? hWnd, object? hIMC)
+	public object? ImmAssociateContext()
 	{
 		return null;
 	}
@@ -298,12 +290,12 @@ public partial class Nspw
 		_platform.Sleep(dwMilliseconds);
 	}
 
-	public object? LoadIcon(object? hInstance, int lpIconName)
+	public object? LoadIcon()
 	{
 		return null;
 	}
 
-	public object? LoadCursor(object? hInstance, int lpCursorName)
+	public object? LoadCursor()
 	{
 		return null;
 	}
@@ -328,7 +320,7 @@ public partial class Nspw
 		return 1;
 	}
 
-	public HWND? CreateWindow(string lpClassName, string lpWindowName, uint dwStyle, int x, int y, int nWidth, int nHeight, HWND? hWndParent, object? hMenu, object? hInstance, object? lpParam)
+	public HWND? CreateWindow(string lpClassName, string lpWindowName, HWND? hWndParent)
 	{
 		HWND hWnd;
 		lock (WindowsLock)
@@ -350,7 +342,7 @@ public partial class Nspw
 		return hWnd;
 	}
 
-	public HWND CreateDialog(object? hInstance, int lpTemplate, HWND? hWndParent, DLGPROC lpDialogFunc)
+	public HWND CreateDialog(int lpTemplate, HWND? hWndParent, DLGPROC lpDialogFunc)
 	{
 		var template = NSPW_NET_RC.Dialogs[lpTemplate];
 		var hDlg = new HWND(hWndParent, template.Id, "DIALOG", template.Caption, true, false)
@@ -407,7 +399,7 @@ public partial class Nspw
 	}
 
 	// As Win32's: WM_CLOSE destroys the window (which WM_DESTROY then reports); the other messages do nothing.
-	public nint DefWindowProc(HWND hWnd, uint Msg, nint wParam, nint lParam)
+	public nint DefWindowProc(HWND hWnd, uint Msg)
 	{
 		if (Msg == WM_CLOSE)
 		{
@@ -454,7 +446,7 @@ public partial class Nspw
 		return CallProc(hWnd, Msg, wParam, lParam is nint l ? l : 0);
 	}
 
-	public int PeekMessage(ref MSG lpMsg, HWND? hWnd, uint wMsgFilterMin, uint wMsgFilterMax, uint wRemoveMsg)
+	public int PeekMessage(ref MSG lpMsg, uint wRemoveMsg)
 	{
 		lock (_messages)
 		{
@@ -474,7 +466,7 @@ public partial class Nspw
 	}
 
 	// Waits for a message. Returns FALSE for WM_QUIT.
-	public int GetMessage(ref MSG lpMsg, HWND? hWnd, uint wMsgFilterMin, uint wMsgFilterMax)
+	public int GetMessage(ref MSG lpMsg)
 	{
 		lock (_messages)
 		{
@@ -501,7 +493,7 @@ public partial class Nspw
 		return TRUE;
 	}
 
-	public int TranslateMessage(ref MSG lpMsg)
+	public int TranslateMessage()
 	{
 		return FALSE;
 	}
@@ -692,7 +684,7 @@ public partial class Nspw
 	}
 
 	// The game's window has no frame in the desktop app, so screen and client coordinates are the same.
-	public int ScreenToClient(HWND? hWnd, ref POINT lpPoint)
+	public int ScreenToClient()
 	{
 		return TRUE;
 	}

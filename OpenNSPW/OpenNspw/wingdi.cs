@@ -65,19 +65,8 @@ public static class wingdi
 	public const int OPAQUE = 2;
 
 	public const int SHIFTJIS_CHARSET = 128;
-	public const int OUT_DEFAULT_PRECIS = 0;
-	public const int CLIP_DEFAULT_PRECIS = 0;
-	public const int DEFAULT_QUALITY = 0;
-	public const int DEFAULT_PITCH = 0;
 
-	public const uint SRCCOPY = 0x00CC0020;
-
-	public const int WHITE_BRUSH = 0;
 	public const int BLACK_BRUSH = 4;
-
-	public const uint IMAGE_BITMAP = 0;
-	public const uint LR_DEFAULTSIZE = 0x00000040;
-	public const uint LR_LOADFROMFILE = 0x00000010;
 
 	public static uint RGB(int r, int g, int b)
 	{
@@ -152,7 +141,7 @@ public sealed class Gdi(INspwPlatform platform)
 		return new HDC(Add(new DeviceContext(surface)));
 	}
 
-	public HDC CreateCompatibleDC(HDC hdc)
+	public HDC CreateCompatibleDC()
 	{
 		return new HDC(Add(new DeviceContext(null)));
 	}
@@ -315,7 +304,7 @@ public sealed class Gdi(INspwPlatform platform)
 		return sizeof(BITMAP);
 	}
 
-	public int BitBlt(HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1, uint rop)
+	public int BitBlt(HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1)
 	{
 		if (Get<DeviceContext>(hdc.Value)?.Surface is not { } surface
 			|| Get<Bitmap>(Get<DeviceContext>(hdcSrc.Value)?.Bitmap.Value ?? 0) is not { } bitmap)
@@ -427,9 +416,9 @@ public unsafe partial class Nspw
 		return gdi.DeleteObject(ho);
 	}
 
-	public HDC CreateCompatibleDC(HDC hdc)
+	public HDC CreateCompatibleDC()
 	{
-		return gdi.CreateCompatibleDC(hdc);
+		return gdi.CreateCompatibleDC();
 	}
 
 	public int DeleteDC(HDC hdc)
@@ -437,9 +426,9 @@ public unsafe partial class Nspw
 		return gdi.DeleteDC(hdc);
 	}
 
-	public int BitBlt(HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1, uint rop)
+	public int BitBlt(HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1)
 	{
-		return gdi.BitBlt(hdc, x, y, cx, cy, hdcSrc, x1, y1, rop);
+		return gdi.BitBlt(hdc, x, y, cx, cy, hdcSrc, x1, y1);
 	}
 
 	public int GetObject(HGDIOBJ h, int c, BITMAP* pv)
@@ -447,17 +436,17 @@ public unsafe partial class Nspw
 		return gdi.GetObject(h, c, pv);
 	}
 
-	public HGDIOBJ GetStockObject(int i)
+	public HGDIOBJ GetStockObject()
 	{
 		return gdi.CreateBrush();
 	}
 
-	public HGDIOBJ CreateFont(int cHeight, int cWidth, int cEscapement, int cOrientation, int cWeight, int bItalic, int bUnderline, int bStrikeOut, int iCharSet, int iOutPrecision, int iClipPrecision, int iQuality, int iPitchAndFamily, string? pszFaceName)
+	public HGDIOBJ CreateFont(int cHeight, string? pszFaceName)
 	{
 		return gdi.CreateFont(cHeight, pszFaceName ?? "");
 	}
 
-	public HGDIOBJ LoadImage(object? hInst, string name, uint type, int cx, int cy, uint fuLoad)
+	public HGDIOBJ LoadImage(string name)
 	{
 		return gdi.LoadBitmap(name);
 	}

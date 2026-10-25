@@ -113,10 +113,10 @@ internal sealed class InfoPanel : Control
 		ref var sprite = ref snapshot.Sprites[snapshot.LocalSide == Side.Japan ? SpriteId.JapanUnits : SpriteId.UnitedStatesUnits];
 		var (row, column) = snapshot.SupplyTargetFrame;
 		var frame = row * sprite.FramesPerRow + column;
-		var at = new Vector2((Width - (sprite.Width - 2)) / 2, PictureTop + (PictureHeight - (sprite.Height - 2)) / 2);
+		var at = new Vector2((Width - (sprite.Size.Width - 2)) / 2, PictureTop + (PictureHeight - (sprite.Size.Height - 2)) / 2);
 		var drawn = sprite;
 		((MonoGameGraphics)graphics).DrawWith(SamplerState.PointClamp, (batch, origin) =>
-			_art.Draw(batch, drawn, frame, 1, drawn.Width - 2, drawn.Height - 2, origin + at));
+			_art.Draw(batch, drawn, frame, 1, drawn.Size.Width - 2, drawn.Size.Height - 2, origin + at));
 	}
 
 	protected override void OnPaint(PaintEventArgs e)

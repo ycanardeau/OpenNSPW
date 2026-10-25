@@ -16,9 +16,6 @@ public static class winreg
 {
 	public static readonly HKEY HKEY_CURRENT_USER = new(unchecked((int)0x80000001));
 
-	public const uint REG_OPTION_NON_VOLATILE = 0;
-	public const uint KEY_READ = 0x20019;
-	public const uint KEY_WRITE = 0x20006;
 	public const uint REG_SZ = 1;
 	public const int ERROR_SUCCESS = 0;
 }
@@ -34,7 +31,7 @@ public partial class Nspw
 		return _registryKeys.GetValueOrDefault(hKey.Value);
 	}
 
-	public int RegCreateKeyEx(HKEY hKey, string lpSubKey, uint Reserved, string? lpClass, uint dwOptions, uint samDesired, object? lpSecurityAttributes, ref HKEY phkResult, object? lpdwDisposition)
+	public int RegCreateKeyEx(string lpSubKey, ref HKEY phkResult)
 	{
 		var handle = _nextRegistryKey++;
 		_registryKeys[handle] = lpSubKey;

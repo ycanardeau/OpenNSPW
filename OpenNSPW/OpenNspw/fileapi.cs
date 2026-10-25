@@ -39,7 +39,6 @@ public static class fileapi
 	public const uint CREATE_ALWAYS = 2;
 	public const uint OPEN_EXISTING = 3;
 	public const uint OPEN_ALWAYS = 4;
-	public const uint FILE_ATTRIBUTE_NORMAL = 0x00000080;
 	public const uint FILE_BEGIN = 0;
 	public const uint FILE_CURRENT = 1;
 	public const uint FILE_END = 2;
@@ -49,7 +48,7 @@ public static class fileapi
 
 public unsafe partial class Nspw
 {
-	public HANDLE CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, object? lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes, object? hTemplateFile)
+	public HANDLE CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, uint dwCreationDisposition)
 	{
 		var mode = dwCreationDisposition switch
 		{
@@ -66,9 +65,9 @@ public unsafe partial class Nspw
 		return stream is null ? INVALID_HANDLE_VALUE : new HANDLE(stream);
 	}
 
-	public HANDLE CreateFile(ReadOnlySpan<byte> lpFileName, uint dwDesiredAccess, uint dwShareMode, object? lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes, object? hTemplateFile)
+	public HANDLE CreateFile(ReadOnlySpan<byte> lpFileName, uint dwDesiredAccess, uint dwShareMode, uint dwCreationDisposition)
 	{
-		return CreateFile(CString(lpFileName), dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+		return CreateFile(CString(lpFileName), dwDesiredAccess, dwShareMode, dwCreationDisposition);
 	}
 
 	public int CloseHandle(HANDLE hObject)
@@ -109,7 +108,7 @@ public unsafe partial class Nspw
 		return hFile.Stream is null ? FALSE : TRUE;
 	}
 
-	public uint SetFilePointer(HANDLE hFile, int lDistanceToMove, object? lpDistanceToMoveHigh, uint dwMoveMethod)
+	public uint SetFilePointer(HANDLE hFile, int lDistanceToMove, uint dwMoveMethod)
 	{
 		if (hFile.Stream is null)
 		{
@@ -156,7 +155,7 @@ public unsafe partial class Nspw
 		return TRUE;
 	}
 
-	public int FindClose(HANDLE hFindFile)
+	public int FindClose()
 	{
 		return TRUE;
 	}

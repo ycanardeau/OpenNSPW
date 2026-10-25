@@ -150,8 +150,10 @@ New value types replace groups of primitives that are adjacent in the struct, wi
 | --- | --- | --- |
 | `WorldPosition` | `double X, Y` | `x,y`, `em_x,em_y`, `x2,y2`, `last_x,last_y`, `gr_x,gr_y` |
 | `Angle` | `double Degrees` | `drctn`, `to_ldr_drctn`, and angles in locals |
-| `Point` | `int X, Y` | `POINT` |
+| `PixelPoint` | `int X, Y` | `POINT`, the sprites' `x,y`, `cx,cy`, `base_x,base_y` |
+| `PixelSize` | `int Width, Height` | the sprites' `wd,ht` |
 | `Rect` | `int Left, Top, Right, Bottom` | `RECT` |
+| `WorldRect` | `int Left, Top, Right, Bottom` | `RECT`s of world coordinates in locals |
 | `Bool32` | `int Value` | `BOOL` fields that are used as booleans |
 | `Bool8` | `byte Value` | `BYTE` fields that are used as booleans |
 | `UnitId` | `short Value` or `int Value` | Unit numbers (see below) |
@@ -161,6 +163,12 @@ Operations on them must compute exactly what the C++ computes, operation by oper
 - `Angle.Sin()` is `nspw_math.sin(Degrees * a_PI)`, because that is how the original writes it (`sin(unit[m].drctn*a_PI)` and `cos(drctn*a_PI)`, more than 100 times). An expression written differently, such as `sin((drctn+90)*a_PI)`, stays as it is, or gets its own helper. `a*b` may become `b*a` (IEEE multiplication is commutative), but nothing else is rearranged: no `(a+b)*c` for `a*c+b*c`, no `x*0.5` for `x/2`, no `Math.PI/180` for `a_PI`, no `Math.Sin` for `sin`.
 - `WorldPosition - WorldPosition` is `new WorldVector(a.X - b.X, a.Y - b.Y)`, the same two subtractions. The original never uses `sqrt` for distances: about 40 places take `atan2(wrk_y,wrk_x)*RAD_to`, fold the angle into 0 to 90 degrees, and divide `wrk_x` by `cos(drctn*a_PI)`. `WorldVector.Length` is exactly that sequence, and replaces only the places that compute exactly that.
 - Each value type has unit tests that check its results bit for bit against the inline expressions it replaces.
+
+The value types are `readonly struct`s with public `readonly` fields, not `record struct`s, though a record would write their `Equals`, `GetHashCode`, `==` and `!=`:
+
+- A record's `==` is its `Equals`, which compares a `double` with `double.Equals`, where NaN equals NaN and the C++'s `==` makes it equal nothing. A record cannot declare a `==` of its own. `Angle` keeps `double`'s two: `==` as the C++ compares, `Equals` as `double.Equals`, so that an angle can be a key. A type that has no `==` (`WorldPosition`, `WorldVector`) has none on purpose, and a record would give it the wrong one.
+- A record's positional parameter is a property, whose field is named `<Degrees>k__BackingField`. The tests of the layout (`TypeLayout`, `OriginalNames`) and the comparison with the traces of 1.22 (`Trace122Layout`, which names a unit's heading `Direction.Degrees`) read the fields' names.
+- A record would save little: the arithmetic, the comparisons and the conversions are written by hand either way. If a type's operators become many, a source generator can write them, with `==` as the C++ compares and the fields as they are.
 
 `Bool32` keeps the integer: `implicit operator bool` is `Value != 0`, and comparisons with `1` or `2` stay possible. A `BOOL` field is converted only when every read of it is a truth test, or the comparisons are kept. For example, `unit[m].info[6]` (submerged) is compared with `1` in one place and with `0` in others.
 
@@ -200,7 +208,7 @@ Text in the state, the files and the network messages stays Shift_JIS bytes in f
 - **Return types**: functions that return `TRUE`/`FALSE` and are only tested return `bool`; functions that return a unit or fire number return `UnitId` or `FireId`, with the same "0 is none" meaning.
 - **Extracting**: long functions are split into smaller ones, starting with `chara_cont` (about 2000 lines), `cnct_game_cont.cpp` and `etc1.cpp`. A block becomes a method only if it is entered and left in one place. Locals that carry values across the block become parameters, `ref` parameters or return values; locals that are read before being written (`/* C4701 */`) keep that behavior and comment. No statement moves across a call that can call `rnd()` or change state.
 - **Splitting the partial class**: after the steps above, `Nspw` is split into classes by responsibility (the simulation, the screens and input, the network, drawing, sound), each holding its own globals. This is the point where the files stop being one file per C++ file. The globals stay fields with their layout; only their owner changes, and `[Original]` keeps them bound. The split follows the needs of [Multiplayer.md](Multiplayer.md#1-deterministic-simulation) (a simulation separated from drawing and input), and also gives the emulator one object to map.
-- **Platform stand-ins** (`winuser.cs`, `ddraw.cs`, `dplay8.cs`, ...) keep the original APIs' names. The game code moves off them, to small interfaces of its own, only when the partial class is split.
+- **Platform stand-ins** (`winuser.cs`, `ddraw.cs`, `dplay8.cs`, ...) keep the original APIs' names, but not the parameters they ignore (`CreateWindow`'s style, position and size, `PeekMessage`'s filters, `DXTRACE_ERR`'s message): the `remove-parameters` command removes the parameters that the analyzer reports unused (IDE0060), with the arguments passed for them, where every such argument is free of side effects. Window and dialog procedures, which Windows calls, keep theirs. The game code moves off the stand-ins, to small interfaces of its own, only when the partial class is split.
 
 ### Clean-up
 - **Commented-out code and `#if false` blocks** are removed, per file, in commits that contain nothing else. They stay readable in the exact port (see [The exact port](#the-exact-port)).
@@ -253,9 +261,9 @@ Done. It takes documentation comment IDs (`F:OpenNspw.Nspw.unit Units`); the cat
 Done. `SoundId` indexes the sound buffers with a cast. `SpriteId` indexes `Sprites`, a `SpriteArray` with an indexer by `SpriteId`, so without one. `InputButtons` is the type of `Buttons`. The key directions (`KEY_UP` ...) are not used, and get no enum.
 
 ### 5. Value types
-`WorldPosition`, `WorldVector`, `Angle`, `Point`, `Rect`, with their bit-for-bit tests. Then `Bool32` and `UnitId`, field by field.
+`WorldPosition`, `WorldVector`, `Angle`, `PixelPoint`, `PixelSize`, `Rect`, with their bit-for-bit tests. Then `Bool32` and `UnitId`, field by field.
 
-In progress: `WorldPosition`, a readonly struct, holds every position, and `WorldVector` the moves that add to one. Pairs of assignments of `X` and `Y` are assignments of a position. `Bool32` and `Bool8` hold the flags of the units, the effects, the select orders and the globals.
+In progress: `WorldPosition`, a readonly struct, holds every position, and `WorldVector` the moves that add to one. Pairs of assignments of `X` and `Y` are assignments of a position. The sprites' pairs of fields are `PixelPoint`s and a `PixelSize`, assigned whole. A unit's path points, `PathX[i]` and `PathY[i]`, are read and written as positions through `GetPathPoint` and `SetPathPoint`; the contact and the landing point are read as `ContactPosition` and `LandingPoint`. Headings (`Direction`, `DirectionToLeader`, and the bearings in locals) are `Angle`s, and the areas tested in the world `WorldRect`s. `Bool32` and `Bool8` hold the flags of the units, the effects, the select orders and the globals.
 
 ### 6. Union slot accessors
 `hp`, `arm` and `gas` first, whose meanings are clear, then `info[]` of `FIRE`, `EFFECT` and `UNIT`, slot by slot.
@@ -265,15 +273,17 @@ Done for the slots whose meaning is known. Code that clears the arrays, the carr
 ### 7. Renames
 Globals and struct fields, then functions, with the catalog. The ported files' names follow their main function.
 
-Done for the structs, their fields, the recorded globals and the game's functions. The files keep their C++ names until step 9.
+Done for the structs, their fields, the recorded globals, the network messages and the game's functions. The files keep their C++ names until step 9; so do the Win32 callbacks, the DirectPlay and wave-file helpers, the constants in capitals and the inactive `#if LNGG_VER` branches.
 
 ### 8. Functions
 Per function, starting with the most covered: `ref` locals, local names, iteration helpers, return types, then extracting smaller functions. Commented-out code is removed per file before its functions are refactored.
 
-In progress. The longest functions are split with the `extract` command of `OpenNspw.Porter`: the battle loop (`UpdateBattle`, `MoveUnit`, `ControlFiring`, `SendOrders`), the firing and the fires, the effects, the screens (`UpdateGameSetting`, `UpdateConfigSetting`, `UpdateUnitInfo`, `DrawBattleArea`), the input, the network handler, `SetUnitData` and `InitializeGame`, with copies of the same code made one method where they were the same but for a value (`TakeDetour`, `IsLandAt`, `IsShipAt`, `UnpackSelections`). The original's repeated computations are helpers that compute exactly the same, with bit-for-bit tests: `SinDegrees` and `CosDegrees` (`sin(x*a_PI)`), `Direction` (the angle of a vector from 0 to 360) and `Distance` (the folded angle and `|dx|/cos`), the last placed by the `distances` command where data flow analysis allows it. The `element-refs` command gives new effects and fires `ref` locals. Local names, iteration helpers and return types are not done yet. `LaunchMultiplayerGame` keeps its `goto`s, from the DirectPlay sample. Functions with an inactive `#if LNGG_VER` branch (the English version) keep it.
+In progress. The longest functions are split with the `extract` command of `OpenNspw.Porter`: the battle loop (`UpdateBattle`, `MoveUnit`, `ControlFiring`, `SendOrders`), the firing and the fires, the effects, the screens (`UpdateGameSetting`, `UpdateConfigSetting`, `UpdateUnitInfo`, `DrawBattleArea`), the input, the network handler, `SetUnitData` and `InitializeGame`, with copies of the same code made one method where they were the same but for a value (`TakeDetour`, `IsLandAt`, `IsShipAt`, `UnpackSelections`). The original's repeated computations are helpers that compute exactly the same, with bit-for-bit tests: `SinDegrees` and `CosDegrees` (`sin(x*a_PI)`), `Direction` (the angle of a vector from 0 to 360) and `Distance` (the folded angle and `|dx|/cos`), the last placed by the `distances` command where data flow analysis allows it. The `element-refs` command gives new effects and fires `ref` locals. Locals are declared where they are first assigned, with `var` (the `declarations` command), and named (the `rename-locals` command); parameters that are never used are removed (the `remove-parameters` command); pairs of coordinates are positions and vectors, and a unit's eye is `EyeOf`. Functions that only return `TRUE` or `FALSE` and are only tested return `bool`, and locals that are only set to 0 or 1 and compared with them are `bool` (the `bool-locals` command); globals and struct fields keep `int` for the layout. Iteration helpers are not done yet. `LaunchMultiplayerGame` keeps its `goto`s, from the DirectPlay sample. Functions with an inactive `#if LNGG_VER` branch (the English version) keep it.
 
 ### 9. Splitting the partial class
 Into classes by responsibility, with C# conventions and `CLAUDE.md`. The emulator's region table is generated at this point at the latest.
+
+In progress. `Nspw` creates the classes and holds them (`Sound`, `Renderer`); each is marked `[Globals]`, and the tests find a global in them by the path to it (`Nspw.Sound.SoundBuffers`). The `global-usage` command reports which members read and write each global, which gives the owners: the battle, the match settings, the screens, the input, the network, drawing, sound, the application and the single-player mode. The `move-members` command moves a class's members out of `Nspw`, reaching what stays in `Nspw` through the game: a moved function stays in the port of its C++ file, in a part of its class. `Sound` and `Renderer` are done; the stand-ins stay in `Nspw`.
 
 Steps 4 to 6 make the largest difference to readability for the least risk, because the compiler checks most of them. Steps 8 and 9 carry the most risk, and depend most on the characterization traces.
 

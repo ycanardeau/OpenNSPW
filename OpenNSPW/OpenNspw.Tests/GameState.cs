@@ -21,12 +21,18 @@ internal sealed record Global(string Name, int Size, FieldInfo Field, int Offset
 	private static readonly MethodInfo WrapMethod =
 		typeof(Global).GetMethod(nameof(Wrap), BindingFlags.NonPublic | BindingFlags.Static)!;
 
-	// Accesses the field in place, without copying it, as `ref game.field`.
-	private static GlobalBytes CreateBytes(FieldInfo field)
+	// Accesses the field in place, without copying it, as `ref game.field`, or `ref game.owner.field` through the
+	// objects that hold it.
+	private static GlobalBytes CreateBytes(IReadOnlyList<FieldInfo> owners, FieldInfo field)
 	{
 		var method = new DynamicMethod($"ref_{field.Name}", field.FieldType.MakeByRefType(), [typeof(Nspw)], typeof(Nspw).Module, skipVisibility: true);
 		var il = method.GetILGenerator();
 		il.Emit(OpCodes.Ldarg_0);
+		foreach (var owner in owners)
+		{
+			il.Emit(OpCodes.Ldfld, owner);
+		}
+
 		il.Emit(OpCodes.Ldflda, field);
 		il.Emit(OpCodes.Ret);
 		var reference = method.CreateDelegate(typeof(FieldReference<>).MakeGenericType(field.FieldType));
@@ -36,7 +42,7 @@ internal sealed record Global(string Name, int Size, FieldInfo Field, int Offset
 	private static Global Create(ReferenceGlobal global)
 	{
 		var slice = OriginalNames.FindGlobal(global.Name);
-		var bytes = CreateBytes(slice.Field);
+		var bytes = CreateBytes(slice.Owners, slice.Field);
 		return new Global(global.Name, global.Size, slice.Field, slice.Offset, game => bytes(game).Slice(slice.Offset, slice.Size));
 	}
 

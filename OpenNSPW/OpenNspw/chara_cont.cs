@@ -24,16 +24,15 @@ public unsafe partial class Nspw
 // side, then its planes, packed together; they go back to the unit numbers of that side, Japan's or the United States'.
 private void UnpackSelections(int e, bool isJapan)
 	{
-	short s;
 
 	if( isJapan )
 		{
-		for(s=0;s<=JPN_SHIP_END-1;s++)
+		for(short s=0;s<=JPN_SHIP_END-1;s++)
 			{
 			// 水上ユニット
 			Selections[e][s+1]=BufferedSelections[e][s];
 			}
-		for(s=(short)JPN_SHIP_END;s<=(USA_PLANE_END/2)-1;s++)
+		for(var s=(short)JPN_SHIP_END;s<=(USA_PLANE_END/2)-1;s++)
 			{
 			// 航空ユニット
 			Selections[e][s+JPN_SHIP_END+1]=BufferedSelections[e][s];
@@ -41,12 +40,12 @@ private void UnpackSelections(int e, bool isJapan)
 		}
 	else
 		{
-		for(s=0;s<=JPN_SHIP_END-1;s++)
+		for(short s=0;s<=JPN_SHIP_END-1;s++)
 			{
 			// 水上ユニット
 			Selections[e][s+JPN_SHIP_END+1]=BufferedSelections[e][s];
 			}
-		for(s=(short)JPN_SHIP_END;s<=(USA_PLANE_END/2)-1;s++)
+		for(var s=(short)JPN_SHIP_END;s<=(USA_PLANE_END/2)-1;s++)
 			{
 			// 航空ユニット
 			Selections[e][s+(USA_PLANE_END/2)+1]=BufferedSelections[e][s];
@@ -54,10 +53,8 @@ private void UnpackSelections(int e, bool isJapan)
 		}
 	}
 
-private bool ReceiveAndIssueOrders(ref short s, ref Array200<short> bf_2_slct_unit, ref _DP_FLAG dp_flag, ref int f, ref int m)
+private bool ReceiveAndIssueOrders(ref short s, ref Array200<short> savedSelections, ref SyncFlagMessage syncFlag, ref int checksum, ref int m)
 	{
-	short bf_the_slct_unit;
-	short e;
 	if( CONN_DBG==0 && !CanAdvance2)
 		{
 		if(TickWaits[1]<99)
@@ -124,27 +121,25 @@ private bool ReceiveAndIssueOrders(ref short s, ref Array200<short> bf_2_slct_un
 			}
 		}
 
-	bf_the_slct_unit=SelectedUnit;
+	var savedSelectedUnit=SelectedUnit;
 	for( s=0; s<=MaxUnitId; s++)
 		{
-		bf_2_slct_unit[s]=Selections[1][s];
+		savedSelections[s]=Selections[1][s];
 		Selections[0][s]=0;
 		Selections[1][s]=0;
 		}
 
 	// 敵味方両方の命令データをここで入力する。
-	for(e=0; e<=1; e++)
+	for(short e=0; e<=1; e++)
 		{
 		MoveOrders[e].Unit=BufferedMoveOrders[e].Unit;
-		MoveOrders[e].Destination = new WorldPosition((double)BufferedMoveOrders[e].Destination.X, MoveOrders[e].Destination.Y);
-		MoveOrders[e].Destination = new WorldPosition(MoveOrders[e].Destination.X, (double)BufferedMoveOrders[e].Destination.Y);
+		MoveOrders[e].Destination = BufferedMoveOrders[e].Destination;
 		MoveOrders[e].ClearsPath=BufferedMoveOrders[e].ClearsPath;
 
 		SelectOrders[e].IsSet=BufferedSelectOrders[e].IsSet;
 		SelectOrders[e].SelectedUnit=BufferedSelectOrders[e].SelectedUnit;
 		SelectOrders[e].Unit=BufferedSelectOrders[e].Unit;
-		SelectOrders[e].GroundPosition = new WorldPosition((short)BufferedSelectOrders[e].GroundPosition.X, SelectOrders[e].GroundPosition.Y);
-		SelectOrders[e].GroundPosition = new WorldPosition(SelectOrders[e].GroundPosition.X, (short)BufferedSelectOrders[e].GroundPosition.Y);
+		SelectOrders[e].GroundPosition = new WorldPosition((short)BufferedSelectOrders[e].GroundPosition.X, (short)BufferedSelectOrders[e].GroundPosition.Y);
 		}
 
 	UnpackSelections(0, LocalSide!=Side.Japan);
@@ -157,9 +152,9 @@ private bool ReceiveAndIssueOrders(ref short s, ref Array200<short> bf_2_slct_un
 	//
 	for( s=0; s<=MaxUnitId; s++)
 		{
-		Selections[1][s]=bf_2_slct_unit[s];
+		Selections[1][s]=savedSelections[s];
 		}
-	SelectedUnit=bf_the_slct_unit;
+	SelectedUnit=savedSelectedUnit;
 
 	BufferedMoveOrders[0].Unit=0;						// クリア
 	BufferedMoveOrders[1].Unit=0;						// クリア
@@ -191,217 +186,213 @@ private bool ReceiveAndIssueOrders(ref short s, ref Array200<short> bf_2_slct_un
 #if false && CONN_DBG
 dbg[5]=rnd(100);
 #endif
-	dp_flag.dwType = MessageType.SyncFlag;
+	syncFlag.Type = MessageType.SyncFlag;
 
 	// プログラム同期エラーチェックの為
-	dp_flag.cc_chk=(byte)Tick;
+	syncFlag.TickChecksum=(byte)Tick;
 	TickChecksums[1]=(byte)Tick;
 
 	// 座標のずれチェックの為
-	f=0;
+	checksum=0;
 	for(m=1; m<=MaxUnitId; m++)
 		{
 		ref var unit = ref Units[m];
 		if( unit.IsUsed && !(unit.Category==UnitCategory.Plane && unit.PlaneState==UnitState.Parked) )
 			{
-			f+=(int)((unit.Position.X+unit.Position.Y+unit.Direction)*10000);
+			checksum+=(int)((unit.Position.X+unit.Position.Y+unit.Direction.Degrees)*10000);
 			}
 		}
 
-	dp_flag.unit_chk=(byte)f;
-	UnitChecksums[1]=(byte)f;
+	syncFlag.UnitChecksum=(byte)checksum;
+	UnitChecksums[1]=(byte)checksum;
 
 	// ランダム同期エラーチェックのため
-	dp_flag.rnd_chk=(byte)RandomCount;
+	syncFlag.RandomChecksum=(byte)RandomCount;
 	RandomChecksums[1]=(byte)RandomCount;
 
-	dp_flag.ccc_wait_chk=TickWaits[1];
+	syncFlag.TickWait=TickWaits[1];
 
-	dp_flag.rival_mode=(short)Mode;
+	syncFlag.RivalMode=(short)Mode;
 
-	bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
-	bufferDesc.pBufferData  = (byte*) Unsafe.AsPointer(ref dp_flag);
-	g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+	bufferDesc.dwBufferSize = (uint)(sizeof(SyncFlagMessage));
+	bufferDesc.pBufferData  = (byte*) Unsafe.AsPointer(ref syncFlag);
+	DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 	return true;
 	}
 
 private void SendMenuOrder(ref short s)
 	{
-	_DP_NEW_MENU dp_new_menu;
+	MenuOrderMessage message;
 	// メニュー
-	dp_new_menu.dwType = MessageType.MenuOrder;
+	message.Type = MessageType.MenuOrder;
 
-	dp_new_menu.menu=(byte)BufferedMenuOrders[1].Menu;
-	dp_new_menu.the_slct_unit=(byte)BufferedMenuOrders[1].SelectedUnit;
+	message.Menu=(byte)BufferedMenuOrders[1].Menu;
+	message.SelectedUnit=(byte)BufferedMenuOrders[1].SelectedUnit;
 
 	for( s=0; s<=(USA_PLANE_END/2)-1; s++)
 		{
-		dp_new_menu.slct_unit[s]=(byte)BufferedSelections[1][s];
+		message.Selections[s]=(byte)BufferedSelections[1][s];
 		}
-	bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_MENU));
-	bufferDesc.pBufferData  = (byte*) &dp_new_menu;
-	g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+	bufferDesc.dwBufferSize = (uint)(sizeof(MenuOrderMessage));
+	bufferDesc.pBufferData  = (byte*) &message;
+	DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 	}
 
 private void SendSelectOrder(ref short s)
 	{
-	short ship;
-	short plane;
-	_DP_NEW_SLCT dp_new_slct;
-	_DP_NEW_SLCT_SHIP dp_new_slct_ship;
-	_DP_NEW_SLCT_PLANE dp_new_slct_plane;
-	_DP_NEW_SLCT_LAND dp_new_slct_land;
+	SelectOrderMessage message;
+	SelectShipsOrderMessage shipsMessage;
+	SelectPlanesOrderMessage planesMessage;
+	SelectBaseOrderMessage landMessage;
 	// 目標指定
-	ship=0;
-	plane=0;
+	short ships=0;
+	short planes=0;
 	for( s=0; s<=JPN_SHIP_END-1; s++)
 		{
-		ship+=BufferedSelections[1][s];
+		ships+=BufferedSelections[1][s];
 		}
 	for( s=(short)JPN_SHIP_END; s<=(USA_PLANE_END/2)-1; s++)
 		{
-		plane+=BufferedSelections[1][s];
+		planes+=BufferedSelections[1][s];
 		}
 
-	if(ship!=0 && plane!=0)
+	if(ships!=0 && planes!=0)
 		{
 		// 航空機も艦船もある
-		dp_new_slct.dwType = MessageType.SelectOrder;
-		dp_new_slct.sw=BufferedSelectOrders[1].IsSet.Value;
-		dp_new_slct.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
-		dp_new_slct.m=(byte)BufferedSelectOrders[1].Unit;
-		dp_new_slct.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
-		dp_new_slct.gr_y=(short)BufferedSelectOrders[1].GroundPosition.Y;
+		message.Type = MessageType.SelectOrder;
+		message.IsSet=BufferedSelectOrders[1].IsSet.Value;
+		message.SelectedUnit=(byte)BufferedSelectOrders[1].SelectedUnit;
+		message.Unit=(byte)BufferedSelectOrders[1].Unit;
+		message.GroundX=(short)BufferedSelectOrders[1].GroundPosition.X;
+		message.GroundY=(short)BufferedSelectOrders[1].GroundPosition.Y;
 		for( s=0; s<=(USA_PLANE_END/2)-1; s++)
 			{
-			dp_new_slct.slct_unit[s]=(byte)BufferedSelections[1][s];
+			message.Selections[s]=(byte)BufferedSelections[1][s];
 			}
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_SLCT));
-		bufferDesc.pBufferData  = (byte*) &dp_new_slct;
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		bufferDesc.dwBufferSize = (uint)(sizeof(SelectOrderMessage));
+		bufferDesc.pBufferData  = (byte*) &message;
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 		}
-	else if( ship!=0 && plane==0 )
+	else if( ships!=0 && planes==0 )
 		{
 		// 艦船のみ
-		dp_new_slct_ship.dwType = MessageType.SelectShipsOrder;
-		dp_new_slct_ship.sw=BufferedSelectOrders[1].IsSet.Value;
-		dp_new_slct_ship.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
-		dp_new_slct_ship.m=(byte)BufferedSelectOrders[1].Unit;
-		dp_new_slct_ship.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
-		dp_new_slct_ship.gr_y=(short)BufferedSelectOrders[1].GroundPosition.Y;
+		shipsMessage.Type = MessageType.SelectShipsOrder;
+		shipsMessage.IsSet=BufferedSelectOrders[1].IsSet.Value;
+		shipsMessage.SelectedUnit=(byte)BufferedSelectOrders[1].SelectedUnit;
+		shipsMessage.Unit=(byte)BufferedSelectOrders[1].Unit;
+		shipsMessage.GroundX=(short)BufferedSelectOrders[1].GroundPosition.X;
+		shipsMessage.GroundY=(short)BufferedSelectOrders[1].GroundPosition.Y;
 		for( s=0; s<=JPN_SHIP_END-1; s++)
 			{
-			dp_new_slct_ship.slct_unit[s]=(byte)BufferedSelections[1][s];
+			shipsMessage.Selections[s]=(byte)BufferedSelections[1][s];
 			}
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_SLCT_SHIP));
-		bufferDesc.pBufferData  = (byte*) &dp_new_slct_ship;
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1, 0, null, ref hAsync, MUST_SEND );
+		bufferDesc.dwBufferSize = (uint)(sizeof(SelectShipsOrderMessage));
+		bufferDesc.pBufferData  = (byte*) &shipsMessage;
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1, 0, null, ref hAsync, MUST_SEND );
 		}
-	else if( ship==0 && plane!=0 )
+	else if( ships==0 && planes!=0 )
 		{
 		// 航空機のみ
-		dp_new_slct_plane.dwType = MessageType.SelectPlanesOrder;
-		dp_new_slct_plane.sw=BufferedSelectOrders[1].IsSet.Value;
-		dp_new_slct_plane.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
-		dp_new_slct_plane.m=(byte)BufferedSelectOrders[1].Unit;
-		dp_new_slct_plane.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
-		dp_new_slct_plane.gr_y=(short)BufferedSelectOrders[1].GroundPosition.Y;
+		planesMessage.Type = MessageType.SelectPlanesOrder;
+		planesMessage.IsSet=BufferedSelectOrders[1].IsSet.Value;
+		planesMessage.SelectedUnit=(byte)BufferedSelectOrders[1].SelectedUnit;
+		planesMessage.Unit=(byte)BufferedSelectOrders[1].Unit;
+		planesMessage.GroundX=(short)BufferedSelectOrders[1].GroundPosition.X;
+		planesMessage.GroundY=(short)BufferedSelectOrders[1].GroundPosition.Y;
 		for( s=0; s<=JPN_PLANE_END-JPN_PLANE_START; s++)
 			{
-			dp_new_slct_plane.slct_unit[s]=(byte)BufferedSelections[1][s+JPN_SHIP_END];
+			planesMessage.Selections[s]=(byte)BufferedSelections[1][s+JPN_SHIP_END];
 			}
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_SLCT_PLANE));
-		bufferDesc.pBufferData  = (byte*) &dp_new_slct_plane;
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		bufferDesc.dwBufferSize = (uint)(sizeof(SelectPlanesOrderMessage));
+		bufferDesc.pBufferData  = (byte*) &planesMessage;
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 		}
-	else if( ship==0 && plane==0 )
+	else if( ships==0 && planes==0 )
 		{
 		// ユニットに対する指定無し。おそらく輸送船の揚陸先
-		dp_new_slct_land.dwType = MessageType.SelectLandOrder;
-		dp_new_slct_land.sw=BufferedSelectOrders[1].IsSet.Value;
-		dp_new_slct_land.the_slct_unit=(byte)BufferedSelectOrders[1].SelectedUnit;
-		dp_new_slct_land.m=(byte)BufferedSelectOrders[1].Unit;
-		dp_new_slct_land.gr_x=(short)BufferedSelectOrders[1].GroundPosition.X;
-		dp_new_slct_land.gr_y=(short)BufferedSelectOrders[1].GroundPosition.Y;
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_SLCT_LAND));
-		bufferDesc.pBufferData  = (byte*) &dp_new_slct_land;
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		landMessage.Type = MessageType.SelectLandOrder;
+		landMessage.IsSet=BufferedSelectOrders[1].IsSet.Value;
+		landMessage.SelectedUnit=(byte)BufferedSelectOrders[1].SelectedUnit;
+		landMessage.Unit=(byte)BufferedSelectOrders[1].Unit;
+		landMessage.GroundX=(short)BufferedSelectOrders[1].GroundPosition.X;
+		landMessage.GroundY=(short)BufferedSelectOrders[1].GroundPosition.Y;
+		bufferDesc.dwBufferSize = (uint)(sizeof(SelectBaseOrderMessage));
+		bufferDesc.pBufferData  = (byte*) &landMessage;
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 		}
 	}
 
 private void SendMoveOrder(ref short s)
 	{
-	short ship;
-	short plane;
-	_DP_NEW_PP dp_new_pp;
-	_DP_NEW_PP_SHIP dp_new_pp_ship;
-	_DP_NEW_PP_PLANE dp_new_pp_plane;
+	MoveOrderMessage message;
+	MoveShipsOrderMessage shipsMessage;
+	MovePlanesOrderMessage planesMessage;
 	// 移動
-	ship=0;
-	plane=0;
+	short ships=0;
+	short planes=0;
 	for( s=0; s<=JPN_SHIP_END-1; s++)
 		{
-		ship+=BufferedSelections[1][s];
+		ships+=BufferedSelections[1][s];
 		}
 	for( s=(short)JPN_SHIP_END; s<=(USA_PLANE_END/2)-1; s++)
 		{
-		plane+=BufferedSelections[1][s];
+		planes+=BufferedSelections[1][s];
 		}
 
-	if(ship!=0 && plane!=0)
+	if(ships!=0 && planes!=0)
 		{
 		// 航空機も艦船もある
-		dp_new_pp.dwType = MessageType.MoveOrder;
-		dp_new_pp.used=(byte)BufferedMoveOrders[1].Unit;
-		dp_new_pp.x=(short)BufferedMoveOrders[1].Destination.X;
-		dp_new_pp.y=(short)BufferedMoveOrders[1].Destination.Y;
-		dp_new_pp.cls=BufferedMoveOrders[1].ClearsPath;
+		message.Type = MessageType.MoveOrder;
+		message.Unit=(byte)BufferedMoveOrders[1].Unit;
+		message.X=(short)BufferedMoveOrders[1].Destination.X;
+		message.Y=(short)BufferedMoveOrders[1].Destination.Y;
+		message.ClearsPath=BufferedMoveOrders[1].ClearsPath;
 		for( s=0; s<=(USA_PLANE_END/2)-1; s++)
 			{
-			dp_new_pp.slct_unit[s]=(byte)BufferedSelections[1][s];
+			message.Selections[s]=(byte)BufferedSelections[1][s];
 			}
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_PP));
-		bufferDesc.pBufferData  = (byte*) &dp_new_pp;
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		bufferDesc.dwBufferSize = (uint)(sizeof(MoveOrderMessage));
+		bufferDesc.pBufferData  = (byte*) &message;
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
 		}
-	else if( ship!=0 && plane==0 )
+	else if( ships!=0 && planes==0 )
 		{
 		// 艦船のみ
-		dp_new_pp_ship.dwType = MessageType.MoveShipsOrder;
-		dp_new_pp_ship.used=(byte)BufferedMoveOrders[1].Unit;
-		dp_new_pp_ship.x=(short)BufferedMoveOrders[1].Destination.X;
-		dp_new_pp_ship.y=(short)BufferedMoveOrders[1].Destination.Y;
-		dp_new_pp_ship.cls=BufferedMoveOrders[1].ClearsPath;
+		shipsMessage.Type = MessageType.MoveShipsOrder;
+		shipsMessage.Unit=(byte)BufferedMoveOrders[1].Unit;
+		shipsMessage.X=(short)BufferedMoveOrders[1].Destination.X;
+		shipsMessage.Y=(short)BufferedMoveOrders[1].Destination.Y;
+		shipsMessage.ClearsPath=BufferedMoveOrders[1].ClearsPath;
 		for( s=0; s<=JPN_SHIP_END-1; s++)
 			{
-			dp_new_pp_ship.slct_unit[s]=(byte)BufferedSelections[1][s];
+			shipsMessage.Selections[s]=(byte)BufferedSelections[1][s];
 			}
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_PP_SHIP));
-		bufferDesc.pBufferData  = (byte*) &dp_new_pp_ship;
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		bufferDesc.dwBufferSize = (uint)(sizeof(MoveShipsOrderMessage));
+		bufferDesc.pBufferData  = (byte*) &shipsMessage;
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 		}
-	else if( ship==0 && plane!=0 )
+	else if( ships==0 && planes!=0 )
 		{
 		// 航空機のみ
-		dp_new_pp_plane.dwType = MessageType.MovePlanesOrder;
-		dp_new_pp_plane.used=(byte)BufferedMoveOrders[1].Unit;
-		dp_new_pp_plane.x=(short)BufferedMoveOrders[1].Destination.X;
-		dp_new_pp_plane.y=(short)BufferedMoveOrders[1].Destination.Y;
-		dp_new_pp_plane.cls=BufferedMoveOrders[1].ClearsPath;
+		planesMessage.Type = MessageType.MovePlanesOrder;
+		planesMessage.Unit=(byte)BufferedMoveOrders[1].Unit;
+		planesMessage.X=(short)BufferedMoveOrders[1].Destination.X;
+		planesMessage.Y=(short)BufferedMoveOrders[1].Destination.Y;
+		planesMessage.ClearsPath=BufferedMoveOrders[1].ClearsPath;
 		for( s=0; s<=(JPN_PLANE_END-JPN_PLANE_START); s++)
 			{
-			dp_new_pp_plane.slct_unit[s]=(byte)BufferedSelections[1][s+JPN_SHIP_END];
+			planesMessage.Selections[s]=(byte)BufferedSelections[1][s+JPN_SHIP_END];
 			}
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_NEW_PP_PLANE));
-		bufferDesc.pBufferData  = (byte*) &dp_new_pp_plane;
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		bufferDesc.dwBufferSize = (uint)(sizeof(MovePlanesOrderMessage));
+		bufferDesc.pBufferData  = (byte*) &planesMessage;
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 		}
 	}
 
-private bool SendOrders(ref short s, ref _DP_FLAG dp_flag)
+private bool SendOrders(ref short s, ref SyncFlagMessage syncFlag)
 	{
-	_DP_DATA_1 dp_data_1;
+	NameMessage arrivalMessage;
 	if(  CONN_DBG==0 && !CanAdvance1 )
 		{
 		return false;
@@ -483,11 +474,11 @@ DebugValues[0]++;
 	if( BufferedMoveOrders[1].Unit==0 && !BufferedSelectOrders[1].IsSet && BufferedMenuOrders[1].Menu==CombatMenuItem.None && BufferedSystemOrders[1]==0 && BufferedArrivedUnits[1]==0 )
 		{
 		// 命令が無い場合。
-		dp_flag.dwType = MessageType.NoOrder;
+		syncFlag.Type = MessageType.NoOrder;
 
-		bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
-		bufferDesc.pBufferData  = (byte*) Unsafe.AsPointer(ref dp_flag);
-		g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+		bufferDesc.dwBufferSize = (uint)(sizeof(SyncFlagMessage));
+		bufferDesc.pBufferData  = (byte*) Unsafe.AsPointer(ref syncFlag);
+		DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
 		}
 	else
@@ -495,21 +486,21 @@ DebugValues[0]++;
 		// まず、このフェーズで溜めた、命令をセンドする。
 		if( BufferedSystemOrders[1]!=0 )
 			{
-			dp_flag.dwType = (MessageType)BufferedSystemOrders[1];
+			syncFlag.Type = (MessageType)BufferedSystemOrders[1];
 
-			bufferDesc.dwBufferSize = (uint)(sizeof(_DP_FLAG));
-			bufferDesc.pBufferData  = (byte*) Unsafe.AsPointer(ref dp_flag);
-			g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+			bufferDesc.dwBufferSize = (uint)(sizeof(SyncFlagMessage));
+			bufferDesc.pBufferData  = (byte*) Unsafe.AsPointer(ref syncFlag);
+			DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 
 			SystemOrders[1]=BufferedSystemOrders[1];
 			}
 		else if( BufferedArrivedUnits[1]!=0 )
 			{
-			dp_data_1.dwType = MessageType.UnitArrived;
-			dp_data_1.data[0] = BufferedArrivedUnits[1];
-			bufferDesc.dwBufferSize = (uint)(sizeof(_DP_DATA_1));
-			bufferDesc.pBufferData  = (byte*) &dp_data_1;
-			g_pDP.SendTo( g_dpnidRivalPlayer, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
+			arrivalMessage.Type = MessageType.UnitArrived;
+			arrivalMessage.Data[0] = BufferedArrivedUnits[1];
+			bufferDesc.dwBufferSize = (uint)(sizeof(NameMessage));
+			bufferDesc.pBufferData  = (byte*) &arrivalMessage;
+			DirectPlayPeer.SendTo( RivalPlayerId, ref bufferDesc, 1,	0, null, ref hAsync, MUST_SEND );
 			}
 		else if(BufferedMoveOrders[1].Unit!=0)
 			{
@@ -556,35 +547,29 @@ private void BuildBase(ref Unit unit)
 
 private void UpdateSupply(ref Unit unit)
 	{
-	RECT wrk_rect;
-	int flg;
-	int i;
 	// 1.22 does not check for the naval base (0x4010BB): its computer starts supplying within 580 of it, further than
 	// this allows.
 	if( unit.Category==UnitCategory.Ship && unit.IsSupplying && unit.Fuel>=0 && Rules.SupplyNeedsNavalBase )
 		{
 		// 補給中の艦船
 		// ptin dbg
-		wrk_rect.top=(int)unit.Position.Y+40+240;
-		wrk_rect.right=(int)unit.Position.X+40+240;
-		wrk_rect.bottom=(int)unit.Position.Y-40-240;
-		wrk_rect.left=(int)unit.Position.X-40-240;
+		var supplyArea=WorldRect.Around(unit.Position, 40+240, 40+240);
 
-		flg=0;
-		for( i=1; i<=MaxUnitId; i++)
+		var nearNavalBase=false;
+		for( var i=1; i<=MaxUnitId; i++)
 			{
 			ref var other = ref Units[i];
 			if( other.Side==unit.Side && other.Kind==UnitKind.NavalBase && other.BuildTime==0 )
 				{
-				if( PointInRect3( ref wrk_rect, (int)other.Position.X, (int)other.Position.Y )!=0 )
+				if( supplyArea.Contains(other.Position) )
 					{
-					flg=1;
+					nearNavalBase=true;
 					break;
 					}
 				}
 			}
 
-		if( flg==0 )
+		if( !nearNavalBase )
 			unit.SupplyTime=0;
 		}
 
@@ -616,13 +601,9 @@ private void UpdateSupply(ref Unit unit)
 
 private void UpdateParkedPlane(ref Unit unit, int m)
 	{
-	int cv_1;
-	int f = default;
-	int i;
 	if( unit.IsStopping )
 		{
-		unit.PathX[0]=Units[unit.Carrier].Position.X;
-		unit.PathY[0]=Units[unit.Carrier].Position.Y;
+		unit.SetPathPoint(0, Units[unit.Carrier].Position);
 		}
 	else
 		{
@@ -634,14 +615,14 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 				unit.DeckPhase=1;
 				Units[unit.Carrier].PlanesToLaunch++;		// 発艦予定の機数を
 				}
-			cv_1=Sprites[SpriteId.JapanUnitInfo].X+Sprites[SpriteId.JapanUnitInfo].Width/2;
-			if((int)unit.Position.X==cv_1 && unit.DeckPhase==1)
+			var deckMark=Renderer.Sprites[SpriteId.JapanUnitInfo].Position.X+Renderer.Sprites[SpriteId.JapanUnitInfo].Size.Width/2;
+			if((int)unit.Position.X==deckMark && unit.DeckPhase==1)
 				{
 				unit.DeckPhase=2;
 				unit.Direction=270.0;
 				}
-			cv_1=Sprites[SpriteId.JapanUnitInfo].Y+370;
-			if((int)unit.Position.Y>=cv_1 && unit.DeckPhase==2)
+			deckMark=Renderer.Sprites[SpriteId.JapanUnitInfo].Position.Y+370;
+			if((int)unit.Position.Y>=deckMark && unit.DeckPhase==2)
 				{
 				unit.DeckPhase=3;
 				unit.Direction=90.0;
@@ -651,15 +632,15 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 
 				if( (Units[unit.Carrier].LaunchCount%2)!=0 )
 					{
-					unit.Position = new WorldPosition(unit.Position.X + 15, unit.Position.Y);
+					unit.Position += new WorldVector(15, 0);
 					}
 				else
 					{
-					unit.Position = new WorldPosition(unit.Position.X - 15, unit.Position.Y);
+					unit.Position -= new WorldVector(15, 0);
 					}
 				}
-			cv_1=Sprites[SpriteId.JapanUnitInfo].Y+370-80;
-			if((int)unit.Position.Y==cv_1 && unit.DeckPhase==3 )
+			deckMark=Renderer.Sprites[SpriteId.JapanUnitInfo].Position.Y+370-80;
+			if((int)unit.Position.Y==deckMark && unit.DeckPhase==3 )
 				{
 				unit.DeckPhase=4;
 				if( unit.Kind!=UnitKind.Bomber && !(unit.Kind==UnitKind.Fighter&&unit.Variant==1) )
@@ -667,22 +648,21 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 				unit.TakeOffRun=0;
 				}
 
-			cv_1=Sprites[SpriteId.JapanUnitInfo].Y+370-120;
-			if((int)unit.Position.Y<=cv_1 && unit.DeckPhase>=4)
+			deckMark=Renderer.Sprites[SpriteId.JapanUnitInfo].Position.Y+370-120;
+			if((int)unit.Position.Y<=deckMark && unit.DeckPhase>=4)
 				{	// 加速します
 				unit.TakeOffRun+=1;
 
 				if( unit.TakeOffRun==40 && unit.Carrier==UnitInfoPanel[3] &&  ((UnitKind)UnitInfoPanel[0]==UnitKind.Carrier || (UnitKind)UnitInfoPanel[0]==UnitKind.LightCarrier || (UnitKind)UnitInfoPanel[0]==UnitKind.AirBase ) )
 					{
-					PlaySoundEffect( 0, SoundId.TakeOff,(double)(MAP_RIGHT+1), 0);
+					Sound.PlayInterfaceSound(SoundId.TakeOff);
 					}
 
-				unit.Position = new WorldPosition(unit.Position.X + (CosDegrees(unit.Direction)*(unit.TakeOffRun/20)), unit.Position.Y);
-				unit.Position = new WorldPosition(unit.Position.X, unit.Position.Y - (SinDegrees(unit.Direction)*(unit.TakeOffRun/20)));
+				unit.Position += new WorldVector(unit.Direction.Cos()*(unit.TakeOffRun/20), -unit.Direction.Sin()*(unit.TakeOffRun/20));
 				}
 
-			cv_1=Sprites[SpriteId.JapanUnitInfo].Y-30/*+60*/;
-			if((int)unit.Position.Y<=cv_1 && unit.DeckPhase>=4 )
+			deckMark=Renderer.Sprites[SpriteId.JapanUnitInfo].Position.Y-30/*+60*/;
+			if((int)unit.Position.Y<=deckMark && unit.DeckPhase>=4 )
 				{		// ここで発進はお終い。
 				//unit[m].info[3]=100;			// 発進後の最低直線飛行
 				unit.DeckPhase=0;			// 発進後の最低直線飛行
@@ -695,60 +675,33 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 				Units[unit.Carrier].PlaneCount--;		// 現在格納数
 				Units[unit.Carrier].LandingLock=0;		// その空母の次機着艦許可
 					// 発進した場合、最初のポイントは空母の方向から決める。
-				switch((int)(Units[unit.Carrier].Direction/22.5))
-					{
-					case 0: case 15:
-						unit.Direction=0.0;
-						break;
-					case 1: case 2:
-						unit.Direction=45.0;
-						break;
-					case 3: case 4:
-						unit.Direction=90.0;
-						break;
-					case 5: case 6:
-						unit.Direction=90.0+45.0;
-						break;
-					case 7: case 8:
-						unit.Direction=180.0;
-						break;
-					case 9: case 10:
-						unit.Direction=180.0+45.0;
-						break;
-					case 11: case 12:
-						unit.Direction=270.0;
-						break;
-					case 13: case 14:
-						unit.Direction=270.0+45.0;
-						break;
-					}
+				unit.Direction=Units[unit.Carrier].Direction.SnappedToEightDirections(unit.Direction);
 				}
 			if(unit.PlaneState==UnitState.Parked)
 				{
-				unit.Position = new WorldPosition(unit.Position.X + (CosDegrees(unit.Direction)*0.8), unit.Position.Y);
-				unit.Position = new WorldPosition(unit.Position.X, unit.Position.Y - (SinDegrees(unit.Direction)*0.8));
+				unit.Position += new WorldVector(unit.Direction.Cos()*0.8, -unit.Direction.Sin()*0.8);
 				}
 			}
 		else
 			{
 			// 着陸
-			cv_1=Sprites[SpriteId.JapanUnitInfo].Y+Sprites[SpriteId.JapanUnitInfo].Height-150;
-			if((int)unit.Position.Y<=cv_1 && unit.DeckPhase==1)
+			var deckMark=Renderer.Sprites[SpriteId.JapanUnitInfo].Position.Y+Renderer.Sprites[SpriteId.JapanUnitInfo].Size.Height-150;
+			if((int)unit.Position.Y<=deckMark && unit.DeckPhase==1)
 				{
 				unit.DeckPhase=2;
 				unit.Speed=1.5;
 				Units[unit.Carrier].LandingLock=0;		// その空母の次機着艦許可
 				}
-			cv_1=Sprites[SpriteId.JapanUnitInfo].Y+Sprites[SpriteId.JapanUnitInfo].Height-200;
-			if((int)unit.Position.Y<=cv_1 && unit.DeckPhase==2)
+			deckMark=Renderer.Sprites[SpriteId.JapanUnitInfo].Position.Y+Renderer.Sprites[SpriteId.JapanUnitInfo].Size.Height-200;
+			if((int)unit.Position.Y<=deckMark && unit.DeckPhase==2)
 				{
 				unit.DeckPhase=3;
-				unit.Speed=unit.Speed/2;
+				unit.Speed/=2;
 				if( unit.Kind!=UnitKind.Bomber && !(unit.Kind==UnitKind.Fighter&&unit.Variant==1) )
 					unit.SpriteRow++;
 				}
-			cv_1=Sprites[SpriteId.JapanUnitInfo].Y+Sprites[SpriteId.JapanUnitInfo].Height-270;
-			if( (int)unit.Position.Y<=cv_1 && unit.DeckPhase==3 )
+			deckMark=Renderer.Sprites[SpriteId.JapanUnitInfo].Position.Y+Renderer.Sprites[SpriteId.JapanUnitInfo].Size.Height-270;
+			if( (int)unit.Position.Y<=deckMark && unit.DeckPhase==3 )
 				{
 				// 着艦終了
 				unit.DeckPhase=0;
@@ -764,35 +717,33 @@ private void UpdateParkedPlane(ref Unit unit, int m)
 				unit.ReloadTime=TUNE_SPAN+(unit.MaxHp-unit.Hp)*(TUNE_SPAN/10)+((unit.Kind==UnitKind.Bomber ? 1 : 0)*(TUNE_SPAN/3));		// 数
 				unit.Hp=unit.MaxHp;
 
-				unit.PathX[0]=Units[unit.Carrier].Position.X;
-				unit.PathY[0]=Units[unit.Carrier].Position.Y;
-				unit.PathX[1]=MAP_RIGHT+1;
+				unit.SetPathPoint(0, Units[unit.Carrier].Position);
+				unit.EndPath(1);
 
 				// BUG(NSPW NET): it counts the planes of LocalSide only, where it means the carrier's, so the two games of a
 				// network game count those of the rival's carriers differently (docs/KnownIssues.md). Kept as is for
 				// compatibility with NSPW NET.
-				f=0;
-				for( i=1; i<=MaxUnitId; i++)
+				var landingPlanes=0;
+				for( var i=1; i<=MaxUnitId; i++)
 					{
 					ref var other = ref Units[i];
 					if( i!=m && other.IsUsed && other.Category==UnitCategory.Plane && other.Side==LocalSide && other.DeckPhase!=0
 						&& other.PlaneState==UnitState.Parked && unit.Carrier==other.Carrier && !other.IsStopping )
-						f++;
+						landingPlanes++;
 					}
 
 				// 1.22 lets the next plane take off whatever other planes are landing (0x4018F1).
-				if( f==0 || !Rules.LaunchLockCountsLandingPlanes )
+				if( landingPlanes==0 || !Rules.LaunchLockCountsLandingPlanes )
 					{	// 滑走路に他の着陸機がなければ発進許可。
 					Units[unit.Carrier].LaunchLock=0;		// その空母の次機発進許可
 					}
 else
-	Units[unit.Carrier].LaunchLock=2+f;		// 空母の発進不可の調査のため
+	Units[unit.Carrier].LaunchLock=2+landingPlanes;		// 空母の発進不可の調査のため
 
 				}
 			if(unit.PlaneState==UnitState.Parked)
 				{
-				unit.Position = new WorldPosition(unit.Position.X + (CosDegrees(unit.Direction)*unit.Speed), unit.Position.Y);
-				unit.Position = new WorldPosition(unit.Position.X, unit.Position.Y - (SinDegrees(unit.Direction)*unit.Speed));
+				unit.Position += new WorldVector(unit.Direction.Cos()*unit.Speed, -unit.Direction.Sin()*unit.Speed);
 				}
 			}
 		}
@@ -800,8 +751,6 @@ else
 
 private void SteerUnit(ref Unit unit, int m)
 	{
-	RECT wrk_r;
-	int n;
 	if( 1!=0 )
 		{
 		// 戦闘機動および、緊急移動
@@ -868,26 +817,22 @@ private void SteerUnit(ref Unit unit, int m)
 			if(!unit.IsStopping )
 				{
 				// 1.22 adjusts the approach on the drawn tick only (0x401AB4).
-				if(  unit.Category==UnitCategory.Plane && unit.Mode==UnitMode.Return && unit.DeckPhase==1 && (IsDrawnTick || !Rules.ApproachesOnDrawnTick) )
+				if(  unit.Category==UnitCategory.Plane && unit.Mode==UnitMode.Return && unit.DeckPhase==1 && (Renderer.IsDrawnTick || !Rules.ApproachesOnDrawnTick) )
 					{
 					UpdateLanding(m);
 					}
 
 				// ptin dbg
-				wrk_r.top=(int)unit.PathY[0]+ON_PP;
-				wrk_r.right=(int)unit.PathX[0]+ON_PP;
-				wrk_r.bottom=(int)unit.PathY[0]-ON_PP;
-				wrk_r.left=(int)unit.PathX[0]-ON_PP;
+				var pathPointArea=WorldRect.Around(unit.GetPathPoint(0), ON_PP, ON_PP);
 
-				if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+				if( pathPointArea.Contains(unit.Position) )
 					{
-					if( unit.PathX[1]!=MAP_RIGHT+1 )
+					if( !unit.IsPathEnd(1) )
 						{
 						// ＰＰ＿ＸＹを一つずつずらす
-						for(n=0; unit.PathX[n]!=MAP_RIGHT+1; n++)
+						for(var n=0; !unit.IsPathEnd(n); n++)
 							{
-							unit.PathX[n]=unit.PathX[n+1];
-							unit.PathY[n]=unit.PathY[n+1];
+							unit.SetPathPoint(n, unit.GetPathPoint(n+1));
 							}
 						}
 					else
@@ -903,15 +848,14 @@ private void SteerUnit(ref Unit unit, int m)
 								{
 								unit.DeckPhase=1;
 								SetLandingDestination(m);
-								for(n=1;n<=MaxUnitId;n++)
+								for(var n=1;n<=MaxUnitId;n++)
 									{
 									ref var other = ref Units[n];
 									if( other.IsUsed && other.GroupLeader==m )
 										{
 										other.GroupLeader=0;
-										other.PathX[0]+=(double)(Random(600)-300);
-										other.PathY[0]+=(double)(Random(600)-300);
-										other.PathX[1]=MAP_RIGHT+1;
+										other.SetPathPoint(0, other.GetPathPoint(0)+new WorldVector(Random(600)-300, Random(600)-300));
+										other.EndPath(1);
 										}
 									}
 								if( unit.IsGroupLeader!=0 )
@@ -925,8 +869,7 @@ private void SteerUnit(ref Unit unit, int m)
 				}
 			else
 				{
-				unit.PathX[0]=unit.Position.X;
-				unit.PathY[0]=unit.Position.Y;
+				unit.SetPathPoint(0, unit.Position);
 				}
 			}
 		else
@@ -941,17 +884,13 @@ private void SteerUnit(ref Unit unit, int m)
 				}
 			else
 				{
-				unit.PathX[0]=unit.Position.X;
-				unit.PathY[0]=unit.Position.Y;
+				unit.SetPathPoint(0, unit.Position);
 				}
 
 			// ptin dbg
-			wrk_r.top=(int)unit.PathY[0]+30;
-			wrk_r.right=(int)unit.PathX[0]+30;
-			wrk_r.bottom=(int)unit.PathY[0]-30;
-			wrk_r.left=(int)unit.PathX[0]-30;
+			var pathPointArea=WorldRect.Around(unit.GetPathPoint(0), 30, 30);
 
-			if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)==0 && !unit.IsStopping)
+			if( !pathPointArea.Contains(unit.Position) && !unit.IsStopping)
 				{	// 編隊指定位置に無し
 				unit.ForGroupLeader=0;
 				if( Units[unit.GroupLeader].ForGroupLeader==0 )
@@ -987,8 +926,6 @@ dbg[3]=unit[m].max_spd*100000;
 
 private void TryLandOnCarrier(ref Unit unit, int m)
 	{
-	RECT wrk_r;
-	int n;
 	if( 0!=0 && Units[unit.Carrier].PlanesToLaunch!=0)
 		{
 		// ほんまにＩｎｆｏ［４］があるんやなチェック
@@ -999,12 +936,9 @@ private void TryLandOnCarrier(ref Unit unit, int m)
 	&& Units[unit.Carrier].PlanesToLaunch<=0 )
 		{
 		// ptin dbg
-		wrk_r.top=(int)Units[unit.Carrier].Position.Y+ON_PP/2;
-		wrk_r.right=(int)Units[unit.Carrier].Position.X+ON_PP/2;
-		wrk_r.bottom=(int)Units[unit.Carrier].Position.Y-ON_PP/2;
-		wrk_r.left=(int)Units[unit.Carrier].Position.X-ON_PP/2;
+		var deckArea=WorldRect.Around(Units[unit.Carrier].Position, ON_PP/2, ON_PP/2);
 
-		if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+		if( deckArea.Contains(unit.Position) )
 			{
 			// 着艦
 			Units[unit.Carrier].PlaneCount++;	// 現在格納数
@@ -1022,7 +956,7 @@ private void TryLandOnCarrier(ref Unit unit, int m)
 				if(SelectionCount!=0)
 					SelectionCount--;
 				// セレクトの設定番号を連番にする。
-				for(n=1;n<=MaxUnitId;n++)
+				for(var n=1;n<=MaxUnitId;n++)
 					{
 					if( Selections[1][n]>=Selections[1][m]+1 )
 						Selections[1][n]--;
@@ -1038,7 +972,7 @@ private void TryLandOnCarrier(ref Unit unit, int m)
 			Units[unit.Carrier].LandingLock=1;	// 着艦、0許可、1不許可
 			Units[unit.Carrier].LaunchLock=1;	// その空母の次機発進許可	0許可、1不許可
 			unit.PlaneState=UnitState.Parked;
-			unit.Position = new WorldPosition(Sprites[SpriteId.JapanUnitInfo].X+Sprites[SpriteId.JapanUnitInfo].Width/2+(EffectRandom(16)-7), Sprites[SpriteId.JapanUnitInfo].Y+Sprites[SpriteId.JapanUnitInfo].Height+40);
+			unit.Position = new WorldPosition(Renderer.Sprites[SpriteId.JapanUnitInfo].Position.X+Renderer.Sprites[SpriteId.JapanUnitInfo].Size.Width/2+(EffectRandom(16)-7), Renderer.Sprites[SpriteId.JapanUnitInfo].Position.Y+Renderer.Sprites[SpriteId.JapanUnitInfo].Size.Height+40);
 			unit.Speed=5.0; unit.Direction=90.0;
 
 			unit.Target=0;					//
@@ -1049,14 +983,9 @@ private void TryLandOnCarrier(ref Unit unit, int m)
 		}
 	}
 
-private void SetAcceleration(ref Unit unit, double pp_drctn, int land)
+private void SetAcceleration(ref Unit unit, Angle turn, int land)
 	{
-	int n;
-	double wrk_x;
-	double wrk_y;
-	double drctn;
-	double dstc;
-	if( unit.Category!=UnitCategory.Plane && (pp_drctn>=80.0 || land!=0 ) )
+	if( unit.Category!=UnitCategory.Plane && (turn>=80.0 || land!=0 ) )
 		{
 		if( ( unit.MinSpeed ) < unit.Speed || land!=0 )
 			{
@@ -1069,7 +998,7 @@ private void SetAcceleration(ref Unit unit, double pp_drctn, int land)
 		}
 	else
 		{
-		if(pp_drctn>=45.0  )
+		if(turn>=45.0  )
 			{
 
 			if((unit.MaxSpeed+(unit.Kind==UnitKind.Fighter && unit.Target!=0 ? 1 : 0)*CMBT_SPD)/2 < unit.Speed  )
@@ -1084,7 +1013,7 @@ private void SetAcceleration(ref Unit unit, double pp_drctn, int land)
 		else
 			{
 
-			if(pp_drctn>=22.5 )
+			if(turn>=22.5 )
 				{
 
 				if( ((unit.MaxSpeed+(unit.Kind==UnitKind.Fighter && unit.Target!=0 ? 1 : 0)*CMBT_SPD)/3)*2 < unit.Speed )
@@ -1113,27 +1042,27 @@ private void SetAcceleration(ref Unit unit, double pp_drctn, int land)
 
 // この時点でfor_form_spdがちがう
 
-						n=0;
+						var keepsSpeed=false;
 
 						if( unit.Target!=0 && Units[unit.Target].IsFound ) //&& unit[m].kind==AT1 )
 							{
-							n=1;
-							wrk_x=Units[unit.Target].Position.X-unit.Position.X;
-							wrk_y=Units[unit.Target].Position.Y-unit.Position.Y;
+							keepsSpeed=true;
+							// The distance as Distance computes it, but with no component of 0 counted as 1.
+							var dx=Units[unit.Target].Position.X-unit.Position.X;
+							var dy=Units[unit.Target].Position.Y-unit.Position.Y;
 
-							drctn=Direction(wrk_x, wrk_y);
-							if(wrk_x<0)		wrk_x=0-wrk_x;
-							if(wrk_y<0)		wrk_y=0-wrk_y;
-							if(drctn>=180)	drctn=drctn-180;
-							if(drctn>=90)	drctn=90-(drctn-90);
-							dstc=(wrk_x)/(CosDegrees(drctn));
+							var angle=Direction(dx, dy);
+							if(dx<0)		dx=0-dx;
+							if(angle>=180)	angle-=180;
+							if(angle>=90)	angle=90-(angle-90);
+							var distance=(dx)/(CosDegrees(angle));
 
-							if( dstc<=BB1_SIGHT )
+							if( distance<=BB1_SIGHT )
 								{
-								n=1;		// 速度落とす要無し
+								keepsSpeed=true;		// 速度落とす要無し
 								}
 							}
-						if( n==0 && unit.Speed>=(unit.FormationSpeed*(0.60-(unit.Kind==UnitKind.Carrier ? 1 : 0)*0.15 ))+unit.AccelerationChange )
+						if( !keepsSpeed && unit.Speed>=(unit.FormationSpeed*(0.60-(unit.Kind==UnitKind.Carrier ? 1 : 0)*0.15 ))+unit.AccelerationChange )
 							{
 							unit.Acceleration=-unit.AccelerationChange;
 							}
@@ -1169,24 +1098,22 @@ private void SetAcceleration(ref Unit unit, double pp_drctn, int land)
 // 1.22 replans the route of the computer's unit m that is blocked, with no leader, to the end of its path
 // (set_cpu_route(m, 1.0)): from the last point of the path, or, with a single point, from where the ship is if that
 // point is within ahead, the ship in its way (0x402147, 0x402348).
-private void ReplanBlockedRoute(ref Unit unit, int m, RECT? ahead)
+private void ReplanBlockedRoute(ref Unit unit, int m, WorldRect? ahead)
 	{
 	int i;
-	for( i=1; i<=63 && unit.PathX[i]!=MAP_RIGHT+1; i++ )
+	for( i=1; i<=63 && !unit.IsPathEnd(i); i++ )
 		{
 		}
 
 	if( i>=2 )
 		{
-		unit.PathX[0]=unit.PathX[i-1];
-		unit.PathY[0]=unit.PathY[i-1];
-		unit.PathX[1]=MAP_RIGHT+1;
+		unit.SetPathPoint(0, unit.GetPathPoint(i-1));
+		unit.EndPath(1);
 		}
-	else if( ahead is { } r && PointInRect3(ref r,(int)unit.PathX[0],(int)unit.PathY[0])!=0 )
+	else if( ahead is { } area && area.Contains(unit.GetPathPoint(0)) )
 		{
-		unit.PathX[0]=unit.Position.X;
-		unit.PathY[0]=unit.Position.Y;
-		unit.PathX[1]=MAP_RIGHT+1;
+		unit.SetPathPoint(0, unit.Position);
+		unit.EndPath(1);
 		}
 
 	SetCpuRoute(m, 1.0);
@@ -1195,36 +1122,26 @@ private void ReplanBlockedRoute(ref Unit unit, int m, RECT? ahead)
 // 1.22's ship looks 40 ahead, and only air bases and naval bases are not in its way (0x401F95 to 0x4023EB). A
 // computer's ship with no leader is replanned when a ship in its way has slowed it to a fifth of its top speed, every
 // 100 ticks, or when the point 80 toward its path is land, unless it is on an emergency move.
-private void CheckCourseAheadAs122(ref Unit unit, int m, ref int land, double pp_drctn)
+private void CheckCourseAheadAs122(ref Unit unit, int m, ref int land, Angle bearing)
 	{
-	double wrk_x2;
-	double wrk_y2;
-	int n;
-	RECT wrk_r;
-	int cm_scrn_x;
-	int cm_scrn_y;
 	var replans = unit.Side==CpuSide && unit.GroupLeader==0;
-	wrk_x2=unit.Position.X+CosDegrees(unit.Direction)*40;
-	wrk_y2=unit.Position.Y+SinDegrees(unit.Direction)*40;
+	var ahead=unit.Position+WorldVector.FromDirection(unit.Direction) * 40;
 	if(  !( unit.Kind==UnitKind.Submarine && unit.IsSubmerged ) )
 		{
-		for( n=1; n<=MaxUnitId; n++)
+		for( var n=1; n<=MaxUnitId; n++)
 			{
 			ref var other = ref Units[n];
 			if(other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged) && other.Kind!=UnitKind.NavalBase && other.Kind!=UnitKind.AirBase )
 				{
-				wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].Height/2);
-				wrk_r.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].Width/2);
-				wrk_r.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].Height/2);
-				wrk_r.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].Width/2);
+				var shipArea=WorldRect.Around(other.Position, (Renderer.Sprites[SpriteId.JapanUnits].Size.Width/2), (Renderer.Sprites[SpriteId.JapanUnits].Size.Height/2));
 
-				if( PointInRect3(ref wrk_r,(int)wrk_x2,(int)wrk_y2)!=0)
+				if( shipArea.Contains(ahead))
 					{
 					// 前方に艦船！
 					unit.EmergencyFlags[0]=0;
 					land=1;
 					if( replans && (Tick+m)%100==0 && unit.Speed<=unit.MaxSpeed*0.2 )
-						ReplanBlockedRoute(ref unit, m, wrk_r);
+						ReplanBlockedRoute(ref unit, m, shipArea);
 					return;
 					}
 				}
@@ -1232,13 +1149,11 @@ private void CheckCourseAheadAs122(ref Unit unit, int m, ref int land, double pp
 		}
 
 	// ＰＰ方向に陸地があるか
-	wrk_x2=unit.Position.X+CosDegrees(pp_drctn)*80;
-	wrk_y2=unit.Position.Y+SinDegrees(pp_drctn)*80;
-	if(!( wrk_y2>MAP_TOP || wrk_y2<MAP_BOTTOM || wrk_x2<MAP_LEFT || wrk_x2>MAP_RIGHT ))
+	ahead=unit.Position+WorldVector.FromDirection(bearing) * 80;
+	if( World.Contains(ahead) )
 		{
-		cm_scrn_x=(int)((wrk_x2+(Sprites[SpriteId.JapanUnits].Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
-		cm_scrn_y=(int)((MAP_TOP-wrk_y2+(Sprites[SpriteId.JapanUnits].Height/2))/Sprites[SpriteId.MapTiles].Height);
-		if( MapTiles[cm_scrn_y][cm_scrn_x]>=1 && MapTiles[cm_scrn_y][cm_scrn_x]<=9 )
+		var (column, row)=TileAt(ahead);
+		if( MapTiles[row][column]>=1 && MapTiles[row][column]<=9 )
 			{
 			land=1;
 			if( replans && unit.EmergencyFlags[0]==0 )
@@ -1253,38 +1168,26 @@ private void CheckCourseAheadAs122(ref Unit unit, int m, ref int land, double pp
 		}
 	}
 
-private void CheckCourseAhead(ref Unit unit, int m, ref int land, double pp_drctn)
+private void CheckCourseAhead(ref Unit unit, int m, ref int land, Angle bearing)
 	{
 	if( Rules.ComputerReplansBlockedRoutes )
 		{
-		CheckCourseAheadAs122(ref unit, m, ref land, pp_drctn);
+		CheckCourseAheadAs122(ref unit, m, ref land, bearing);
 		return;
 		}
 
-	double wrk_x2;
-	double wrk_y2;
-	int n;
-	RECT wrk_r;
-	int cm_scrn_x;
-	int cm_scrn_y;
-	wrk_x2=unit.Position.X;
-	wrk_y2=unit.Position.Y;
-	wrk_x2+=CosDegrees(unit.Direction)*(40+unit.MaxSpeed*10);
-	wrk_y2+=SinDegrees(unit.Direction)*(40+unit.MaxSpeed*10);
+	var ahead=unit.Position+WorldVector.FromDirection(unit.Direction) * (40+unit.MaxSpeed*10);
 	if(  !( unit.Kind==UnitKind.Submarine && unit.IsSubmerged ) )
 		{
-		for( n=1; n<=MaxUnitId; n++)
+		for( var n=1; n<=MaxUnitId; n++)
 			{
 			ref var other = ref Units[n];
 			if(other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged)  && !(other.Kind>=UnitKind.AirBase&&other.Kind<=UnitKind.Fortress) )
 				{
 				// ptin dbg
-				wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].Height/2);
-				wrk_r.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].Width/2);
-				wrk_r.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].Height/2);
-				wrk_r.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].Width/2);
+				var shipArea=WorldRect.Around(other.Position, (Renderer.Sprites[SpriteId.JapanUnits].Size.Width/2), (Renderer.Sprites[SpriteId.JapanUnits].Size.Height/2));
 
-				if( PointInRect3(ref wrk_r,(int)wrk_x2,(int)wrk_y2)!=0)
+				if( shipArea.Contains(ahead))
 					{
 					// 前方に艦船！
 					land=1;
@@ -1300,16 +1203,12 @@ private void CheckCourseAhead(ref Unit unit, int m, ref int land, double pp_drct
 	// ＰＰ方向に陸地があるか
 	if( land==0  )
 		{
-		wrk_x2=unit.Position.X;
-		wrk_y2=unit.Position.Y;
-		wrk_x2+=CosDegrees(pp_drctn)*80;
-		wrk_y2+=SinDegrees(pp_drctn)*80;
+		ahead=unit.Position+WorldVector.FromDirection(bearing) * 80;
 
-		if(!( wrk_y2>MAP_TOP || wrk_y2<MAP_BOTTOM || wrk_x2<MAP_LEFT || wrk_x2>MAP_RIGHT ))
+		if( World.Contains(ahead) )
 			{
-			cm_scrn_x=(int)((wrk_x2+(Sprites[SpriteId.JapanUnits].Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
-			cm_scrn_y=(int)((MAP_TOP-wrk_y2+(Sprites[SpriteId.JapanUnits].Height/2))/Sprites[SpriteId.MapTiles].Height);
-			if( MapTiles[cm_scrn_y][cm_scrn_x]>=1 && MapTiles[cm_scrn_y][cm_scrn_x]<=9 )
+			var (column, row)=TileAt(ahead);
+			if( MapTiles[row][column]>=1 && MapTiles[row][column]<=9 )
 				{
 				land=1;
 				}
@@ -1323,72 +1222,60 @@ private void CheckCourseAhead(ref Unit unit, int m, ref int land, double pp_drct
 		}
 	}
 
-private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
+private void MoveUnit(ref Unit unit, int m, ref double cargoSpeedFactor)
 	{
-	RECT wrk_r;
-	double wrk_x;
-	double wrk_y;
-	double pp_drctn;
-	int land;
-	int n;
+	WorldVector toDestination;
 	if( (!unit.IsStopping || unit.EmergencyFlags[0]!=0)  && !(unit.Category==UnitCategory.Ship && unit.IsSupplying) )
 		{
 		if( unit.EmergencyFlags[0]!=0	)
 			{
 			// 緊急移動先についているか
 			// ptin dbg
-			wrk_r.top=(int)unit.EmergencyDestination.Y+ON_PP;
-			wrk_r.right=(int)unit.EmergencyDestination.X+ON_PP;
-			wrk_r.bottom=(int)unit.EmergencyDestination.Y-ON_PP;
-			wrk_r.left=(int)unit.EmergencyDestination.X-ON_PP;
+			var destinationArea=WorldRect.Around(unit.EmergencyDestination, ON_PP, ON_PP);
 
-			if( PointInRect3(ref wrk_r,(int)unit.Position.X,(int)unit.Position.Y)!=0 )
+			if( destinationArea.Contains(unit.Position) )
 				{
 				unit.EmergencyFlags[0]=0;
 				// 通常移動		直前定点へ！
-				wrk_x=unit.PathX[0]-unit.Position.X;
-				wrk_y=unit.PathY[0]-unit.Position.Y;
+				toDestination=unit.GetPathPoint(0)-unit.Position;
 				}
 			else
 				{
 				// 緊急移動先がある場合
-				wrk_x=unit.EmergencyDestination.X-unit.Position.X;
-				wrk_y=unit.EmergencyDestination.Y-unit.Position.Y;
+				toDestination=unit.EmergencyDestination-unit.Position;
 				}
 			}
 		else
 			{
 			// 通常移動		直前定点へ！
-			wrk_x=unit.PathX[0]-unit.Position.X;
-			wrk_y=unit.PathY[0]-unit.Position.Y;
+			toDestination=unit.GetPathPoint(0)-unit.Position;
 			}
 
-		pp_drctn=Direction(wrk_x, wrk_y);
+		var bearing=toDestination.Direction;
 
-		land=0;
+		var land=0;
 		if( unit.Category==UnitCategory.Ship )
 			{
 			// 艦首方向に他の艦船があるか
-			CheckCourseAhead(ref unit, m, ref land, pp_drctn);
+			CheckCourseAhead(ref unit, m, ref land, bearing);
 			}
 
-		pp_drctn=pp_drctn-unit.Direction;
-		if(pp_drctn<0)
-			pp_drctn=360+pp_drctn;
+		var turn=bearing-unit.Direction;
+		turn=turn.WrapNegative();
 
 		unit.TurnRate=0;
-		if(pp_drctn>=1.0&&pp_drctn<=180.0)
+		if(turn>=1.0&&turn<=180.0)
 			{
 			//	左へ
 			unit.TurnRate=unit.TurnRateChange;
-			if(pp_drctn <= 3.0)
+			if(turn <= 3.0)
 				unit.TurnRate = +0.5;		// 要は微調整	//unit[m].a_drctn_add;
 			}
-		if(pp_drctn<=359.0 && pp_drctn>180.0)
+		if(turn<=359.0 && turn>180.0)
 			{
 			//	右へ
 			unit.TurnRate=-unit.TurnRateChange;
-			if(pp_drctn >= 357.0)
+			if(turn >= 357.0)
 				unit.TurnRate = -0.5;		// 要は微調整	//-unit[m].a_drctn_add;
 			}
 
@@ -1396,14 +1283,13 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 
 		if(unit.Direction>360.0 || (Rules.HeadingWrapsAt360 && unit.Direction==360.0))
 			unit.Direction-=360.0;
-		if(unit.Direction<0.0)
-			unit.Direction=360.0+unit.Direction;
+		unit.Direction=unit.Direction.WrapNegative();
 
-		if(pp_drctn>180.0)
-			pp_drctn=360.0-pp_drctn;
+		if(turn>180.0)
+			turn=360.0-turn;
 
 		// ユニットのスピード
-		SetAcceleration(ref unit, pp_drctn, land);
+		SetAcceleration(ref unit, turn, land);
 		}
 	else
 		{
@@ -1434,14 +1320,14 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 		// 輸送船でなんかつんでると最高速度がおちる
 		switch( unit.Weapon )
 			{
-			case FireKind.CargoInfantryBase:	wrk_3=1.0;		break;
-			case FireKind.CargoPillboxes:	wrk_3=0.9;		break;
-			case FireKind.CargoFortress:	wrk_3=0.9;		break;
-			case FireKind.CargoAirBase:		wrk_3=0.8;		break;
-			case FireKind.CargoNavalBase:		wrk_3=0.8;		break;
+			case FireKind.CargoInfantryBase:	cargoSpeedFactor=1.0;		break;
+			case FireKind.CargoPillboxes:	cargoSpeedFactor=0.9;		break;
+			case FireKind.CargoFortress:	cargoSpeedFactor=0.9;		break;
+			case FireKind.CargoAirBase:		cargoSpeedFactor=0.8;		break;
+			case FireKind.CargoNavalBase:		cargoSpeedFactor=0.8;		break;
 			}
 
-		if( unit.MaxSpeed*wrk_3 < unit.Speed )
+		if( unit.MaxSpeed*cargoSpeedFactor < unit.Speed )
 			{
 			unit.Speed-=unit.AccelerationChange*8;
 			}
@@ -1481,22 +1367,22 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 
 	// 1.22 replans the computer's unit with no leader whose next step is land, every 500 ticks, planes included
 	// (0x402D2B).
-	if( Rules.ComputerReplansBlockedRoutes && unit.Side==CpuSide && unit.GroupLeader==0 && (Tick%500)==0 && IsLandAt(unit.Position.X+CosDegrees(unit.Direction)*unit.Speed, unit.Position.Y+SinDegrees(unit.Direction)*unit.Speed) )
+	if( Rules.ComputerReplansBlockedRoutes && unit.Side==CpuSide && unit.GroupLeader==0 && (Tick%500)==0 && IsLandAt(unit.Position+WorldVector.FromDirection(unit.Direction) * unit.Speed) )
 		ReplanBlockedRoute(ref unit, m, null);
 
 	// 新座標を設定
-	unit.Position += new WorldVector(CosDegrees(unit.Direction)*unit.Speed, SinDegrees(unit.Direction)*unit.Speed);
+	unit.Position += WorldVector.FromDirection(unit.Direction) * unit.Speed;
 
 	// 燃料消費
-	n=(int)unit.FuelInterval;
+	var interval=(int)unit.FuelInterval;
 	if( unit.Kind==UnitKind.Attacker && unit.Ammo!=0 && (unit.Weapon==FireKind.Torpedo || unit.Weapon==FireKind.Bomb))
-		n=n-(n/10);
+		interval-=(interval/10);
 	if( unit.Kind==UnitKind.Fighter && unit.Target!=0 && unit.MaxSpeed < unit.Speed )
-		n=n-(n/10);
+		interval-=(interval/10);
 
 	// 1.22's fuel is an integer, which a moving unit burns 1 at a time (0x402F72); NSPW NET burns its speed's share of
 	// its top speed.
-	if( unit.FuelInterval>=1 && (Tick%n)==0 && unit.Fuel>0 && unit.Speed>0)
+	if( unit.FuelInterval>=1 && (Tick%interval)==0 && unit.Fuel>0 && unit.Speed>0)
 		{
 		unit.Fuel-=( Rules.FuelBurnsBySpeed ? unit.Speed/unit.MaxSpeed : 1 );
 		if(unit.Fuel<0)
@@ -1507,170 +1393,170 @@ private void MoveUnit(ref Unit unit, int m, ref double wrk_3)
 		unit.Hp=0;							// 飛行機でガス０なら落ちます
 	}
 
-private void ControlInfantryBaseFiring(ref Unit unit, int dmg_act, int m)
+private void ControlInfantryBaseFiring(ref Unit unit, int damageSlowdown, int m)
 	{
 	unit.Ammo=unit.MaxAmmo;
 
 	// 艦砲 自動
 	// NSPW NET fires 1 in 250 a tick; 1.22, 1 in 200 (0x403140).
-	if( unit.Ammo>=1 && Random(Rules.InfantryBaseGunInterval*dmg_act)==0 )
+	if( unit.Ammo>=1 && Random(Rules.InfantryBaseGunInterval*damageSlowdown)==0 )
 		{
 		FireWeapons(m,0,FireKind.Gun);
 		}
 	// 艦砲　選択
 	// 対空砲弾 自動砲撃
-	if( unit.Ammo>=1 && Random(200*dmg_act)==0 )
+	if( unit.Ammo>=1 && Random(200*damageSlowdown)==0 )
 		{
 		FireWeapons(m,0,FireKind.AntiAircraftShell);
 		}
 	// 対空機関砲 X 2
-	if( Random(180*dmg_act)==0 && unit.Side==Side.UnitedStates )
+	if( Random(180*damageSlowdown)==0 && unit.Side==Side.UnitedStates )
 		FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
 	// 対空機銃
-	if( Random(10*dmg_act)==0 )
+	if( Random(10*damageSlowdown)==0 )
 		FireWeapons(m,0,FireKind.Bullet);
 	}
 
-private void ControlPillboxesFiring(ref Unit unit, int dmg_act, int m)
+private void ControlPillboxesFiring(ref Unit unit, int damageSlowdown, int m)
 	{
 	unit.Ammo=unit.MaxAmmo;
 	// 艦砲 自動
 	// NSPW NET fires 1 in 200 a tick; 1.22, 1 in 150 (0x4031DE).
-	if( unit.Ammo>=1 && Random( Rules.PillboxesGunInterval*dmg_act )==0 )
+	if( unit.Ammo>=1 && Random( Rules.PillboxesGunInterval*damageSlowdown )==0 )
 		{
 		FireWeapons(m,0,FireKind.Gun);
 		}
 	// 艦砲　選択
 	// 対空砲弾 自動砲撃
-	if( unit.Ammo>=1 && Random(160*dmg_act)==0 )
+	if( unit.Ammo>=1 && Random(160*damageSlowdown)==0 )
 		{
 		FireWeapons(m,0,FireKind.AntiAircraftShell);
 		}
 	// 対空機関砲
-	if( Random(140*dmg_act)==0 && unit.Side==Side.UnitedStates )
+	if( Random(140*damageSlowdown)==0 && unit.Side==Side.UnitedStates )
 		{
 		FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
 		}
 	// 対空機銃
-	if( Random(10*dmg_act)==0 )
+	if( Random(10*damageSlowdown)==0 )
 		{
 		FireWeapons(m,0,FireKind.Bullet);
 		}
 	}
 
-private void ControlFortressFiring(ref Unit unit, int dmg_act, int m)
+private void ControlFortressFiring(ref Unit unit, int damageSlowdown, int m)
 	{
 	unit.Ammo=unit.MaxAmmo;
 
 	// 艦砲 自動
 	// NSPW NET fires 1 in 150 a tick; 1.22, 1 in 100 (0x403275).
-	if( unit.Ammo>=1 && Random(Rules.FortressGunInterval*dmg_act)==0 )
+	if( unit.Ammo>=1 && Random(Rules.FortressGunInterval*damageSlowdown)==0 )
 		{
 		FireWeapons(m,0,FireKind.Gun);
 		}
 	// 艦砲　選択
 	// 対空砲弾 自動砲撃
-	if( unit.Ammo>=1 && Random(120*dmg_act)==0 )
+	if( unit.Ammo>=1 && Random(120*damageSlowdown)==0 )
 		{
 		FireWeapons(m,0,FireKind.AntiAircraftShell);
 		}
 	// 対空機関砲
-	if( Random(120*dmg_act)==0 && unit.Side==Side.UnitedStates )
+	if( Random(120*damageSlowdown)==0 && unit.Side==Side.UnitedStates )
 		FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
 	// 対空機関砲 X 2
-	if( Random(160*dmg_act)==0 && unit.Side==Side.UnitedStates )
+	if( Random(160*damageSlowdown)==0 && unit.Side==Side.UnitedStates )
 		FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
 	// 対空機銃
-	if( Random(8*dmg_act)==0 )
+	if( Random(8*damageSlowdown)==0 )
 		FireWeapons(m,0,FireKind.Bullet);
 	}
 
-private void ControlBattleshipFiring(ref Unit unit, int dmg_act, int m)
+private void ControlBattleshipFiring(ref Unit unit, int damageSlowdown, int m)
 	{
 	// 1.22 fires every battleship alike, as NSPW NET does all but the Yamato class (0x40332C).
 	if( unit.Side==Side.Japan && unit.Variant==1 && Rules.HasYamatoClass )
 		{
 		// 大和級
 		// 艦砲 自動
-		if( unit.Ammo>=1 && Random(350*dmg_act)==0 && (unit.Target==0 || Units[unit.Target].Category==UnitCategory.Ship) )
+		if( unit.Ammo>=1 && Random(350*damageSlowdown)==0 && (unit.Target==0 || Units[unit.Target].Category==UnitCategory.Ship) )
 			{
 			FireWeapons(m,0,FireKind.Gun);
 			}
 		// 艦砲　選択
-		if(unit.Ammo>=1 && Random(300*dmg_act)==0 && unit.Target!=0 )
+		if(unit.Ammo>=1 && Random(300*damageSlowdown)==0 && unit.Target!=0 )
 			{
 			FireWeapons(m,unit.Target,FireKind.NavalBaseGun);
 			}
 
-		if( unit.Ammo>=1 && Random(180*dmg_act)==0 && unit.Target!=0 )
+		if( unit.Ammo>=1 && Random(180*damageSlowdown)==0 && unit.Target!=0 )
 			{
 			FireWeapons(m,unit.Target,FireKind.AntiAircraftShell);		// 対空砲弾 選択
 			}
 
-		if( unit.Ammo>=1 && Random(95*dmg_act)==0 )
+		if( unit.Ammo>=1 && Random(95*damageSlowdown)==0 )
 			{
 			FireWeapons(m,0,FireKind.AntiAircraftShell);							// 対空砲弾 自動砲撃
 			}
 
 		// 対空機銃
-		if( Random(4*dmg_act)==0 )
+		if( Random(4*damageSlowdown)==0 )
 			FireWeapons(m,0,FireKind.Bullet);
 		}
 	else
 		{
 		// 艦砲 自動
-		if( unit.Ammo>=1 && Random(350*dmg_act)==0 && (unit.Target==0 || Units[unit.Target].Category==UnitCategory.Ship) )
+		if( unit.Ammo>=1 && Random(350*damageSlowdown)==0 && (unit.Target==0 || Units[unit.Target].Category==UnitCategory.Ship) )
 			{
 			FireWeapons(m,0,FireKind.Gun);
 			}
 		// 艦砲　選択
-		if(unit.Ammo>=1 && Random(300*dmg_act)==0 && unit.Target!=0 )
+		if(unit.Ammo>=1 && Random(300*damageSlowdown)==0 && unit.Target!=0 )
 			{
 			FireWeapons(m,unit.Target,FireKind.Gun);
 			}
 
-		if( unit.Ammo>=1 && Random(190*dmg_act)==0 && unit.Target!=0 )
+		if( unit.Ammo>=1 && Random(190*damageSlowdown)==0 && unit.Target!=0 )
 			{
 			FireWeapons(m,unit.Target,FireKind.AntiAircraftShell);		// 対空砲弾 選択
 			}
 
-		if( unit.Ammo>=1 && Random(110*dmg_act)==0 )
+		if( unit.Ammo>=1 && Random(110*damageSlowdown)==0 )
 			{
 			FireWeapons(m,0,FireKind.AntiAircraftShell);							// 対空砲弾 自動砲撃
 			}
 
 		// 対空機関砲
-		if( Random(60*dmg_act)==0 && unit.Side==Side.UnitedStates )
+		if( Random(60*damageSlowdown)==0 && unit.Side==Side.UnitedStates )
 			FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
 		// 対空機関砲 X 2
-		if( Random(120*dmg_act)==0 && unit.Side==Side.UnitedStates )
+		if( Random(120*damageSlowdown)==0 && unit.Side==Side.UnitedStates )
 			FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
 
 		// 対空機銃
-		if( Random(5*dmg_act)==0 )
+		if( Random(5*damageSlowdown)==0 )
 			FireWeapons(m,0,FireKind.Bullet);
 		}
 	}
 
-private void ControlCruiserFiring(ref Unit unit, int dmg_act, int m)
+private void ControlCruiserFiring(ref Unit unit, int damageSlowdown, int m)
 	{
 	// 1.22 has no anti-aircraft cruisers: it fires every cruiser as NSPW NET does its first type (0x40348C).
 	if( unit.Variant==0 || !Rules.HasSecondCruiserAndDestroyerTypes )
 		{
 		// 巡洋艦
 		// 艦砲 自動
-		if( unit.Ammo>=1  && Random(350*dmg_act)==0  && (unit.Target==0 || Units[unit.Target].Category==UnitCategory.Ship) )
+		if( unit.Ammo>=1  && Random(350*damageSlowdown)==0  && (unit.Target==0 || Units[unit.Target].Category==UnitCategory.Ship) )
 			{
 			FireWeapons(m,0,FireKind.Gun);
 			}
 		// 艦砲 選択
-		if( unit.Ammo>=1  && Random(300*dmg_act)==0 && unit.Target!=0 )
+		if( unit.Ammo>=1  && Random(300*damageSlowdown)==0 && unit.Target!=0 )
 			{
 			FireWeapons(m,unit.Target,FireKind.Gun);
 			}
 
 		// 対空砲弾
-		if( unit.Ammo>=1 && Random(120*dmg_act)==0  )
+		if( unit.Ammo>=1 && Random(120*damageSlowdown)==0  )
 			{
 			if(unit.Target!=0)								// 対空砲弾 選択
 				FireWeapons(m,unit.Target,FireKind.AntiAircraftShell);
@@ -1679,14 +1565,14 @@ private void ControlCruiserFiring(ref Unit unit, int dmg_act, int m)
 			}
 
 		// 対空機関砲
-		if( unit.Ammo>=1 && Random(60*dmg_act)==0 && unit.Side==Side.UnitedStates )
+		if( unit.Ammo>=1 && Random(60*damageSlowdown)==0 && unit.Side==Side.UnitedStates )
 			FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
 
 		// 対空機銃 自動
-		if( Random(10*dmg_act)==0  )
+		if( Random(10*damageSlowdown)==0  )
 			FireWeapons(m,0,FireKind.Bullet);
 		// 魚雷
-		if( unit.Random40[0]==Tick%(40*dmg_act) && unit.Ammo>=1 && unit.ReloadTime<=0 && unit.Side==Side.Japan )
+		if( unit.Random40[0]==Tick%(40*damageSlowdown) && unit.Ammo>=1 && unit.ReloadTime<=0 && unit.Side==Side.Japan )
 			{
 			FireWeapons(m,0,FireKind.Torpedo);
 			}
@@ -1695,75 +1581,75 @@ private void ControlCruiserFiring(ref Unit unit, int dmg_act, int m)
 		{
 		// 防空巡洋艦
 		// 艦砲 自動
-		if( unit.Ammo>=1  && Random(800*dmg_act)==0  && (unit.Target==0 || Units[unit.Target].Category==UnitCategory.Ship) )
+		if( unit.Ammo>=1  && Random(800*damageSlowdown)==0  && (unit.Target==0 || Units[unit.Target].Category==UnitCategory.Ship) )
 			{
 			FireWeapons(m,0,FireKind.Gun);
 			}
 
 		// 対空砲弾
-		if( unit.Ammo>=1 && Random(100*dmg_act)==0 )
+		if( unit.Ammo>=1 && Random(100*damageSlowdown)==0 )
 			{
 			// 自動
 			FireWeapons(m,0,FireKind.AntiAircraftShell);							// 対空砲弾 自動砲撃
 			}
 
-		if( unit.Ammo>=1 && Random(180*dmg_act)==0 && unit.Target!=0 )
+		if( unit.Ammo>=1 && Random(180*damageSlowdown)==0 && unit.Target!=0 )
 			{
 			// 選択
 			FireWeapons(m,unit.Target,FireKind.AntiAircraftShell);
 			}
 
 		// 対空機関砲
-		if( unit.Ammo>=1 && Random(55*dmg_act)==0 && unit.Side==Side.UnitedStates )
+		if( unit.Ammo>=1 && Random(55*damageSlowdown)==0 && unit.Side==Side.UnitedStates )
 			FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
 
 		// 対空機銃 自動
-		if( Random(10*dmg_act)==0  )
+		if( Random(10*damageSlowdown)==0  )
 			FireWeapons(m,0,FireKind.Bullet);
 
 		}
 	}
 
-private void ControlDestroyerFiring(ref Unit unit, int dmg_act, int m)
+private void ControlDestroyerFiring(ref Unit unit, int damageSlowdown, int m)
 	{
 	// 1.22 has no second type of destroyer: it fires every destroyer as NSPW NET does its first type (0x403647).
 	if( unit.Variant==0 || !Rules.HasSecondCruiserAndDestroyerTypes )
 		{
 		// 艦砲 自動
-		if( unit.Ammo>=1 && Random(200*dmg_act)==0 )
+		if( unit.Ammo>=1 && Random(200*damageSlowdown)==0 )
 			{
 			FireWeapons(m,0,FireKind.Gun);
 			}
 
 		// 魚雷
-		if( unit.Random40[0]==Tick%(40*dmg_act) && unit.Ammo>=1 && unit.ReloadTime<=0 )
+		if( unit.Random40[0]==Tick%(40*damageSlowdown) && unit.Ammo>=1 && unit.ReloadTime<=0 )
 			{
 			FireWeapons(m,0,FireKind.Torpedo);
 			}
 
 		// 爆雷
-		if( unit.Ammo>=1 && (Tick%(35*dmg_act))==0 )
+		if( unit.Ammo>=1 && (Tick%(35*damageSlowdown))==0 )
 			{
 			FireWeapons(m,0,FireKind.AntiSubmarineBomb);
 			}
 		// 対空機銃
-		if( Random(15*dmg_act)==0 )
+		if( Random(15*damageSlowdown)==0 )
 			FireWeapons(m,0,FireKind.Bullet);
 		}
 	else
 		{
 		// 艦砲 自動
-		if( unit.Ammo>=1 && Random(500*dmg_act)==0 )
+		if( unit.Ammo>=1 && Random(500*damageSlowdown)==0 )
 			{
 			FireWeapons(m,0,FireKind.Gun);
 			}
 
 		// 対空機銃
-		if( Random(20*dmg_act)==0 )
+		if( Random(20*damageSlowdown)==0 )
 			FireWeapons(m,0,FireKind.Bullet);
 
 		// 爆雷
-		if( unit.Ammo>=1 && (Tick%(25*dmg_act))==0 )
+		if( unit.Ammo>=1 && (Tick%(25*damageSlowdown))==0 )
 			{
 			FireWeapons(m,0,FireKind.AntiSubmarineBomb);
 			}
@@ -1799,7 +1685,7 @@ private void ControlTransportFiring(ref Unit unit, int m)
 		FireWeapons(m,0,FireKind.CargoFortress);
 	}
 
-private void ControlFiring(ref Unit unit, int dmg_act, int m)
+private void ControlFiring(ref Unit unit, int damageSlowdown, int m)
 	{
 	// 1.22 fires nothing for Japan in scenario 1 (0x4030FF).
 	if( Rules.JapanHoldsFireInScenario1 && ScenarioNumber==1 && unit.Side==Side.Japan )
@@ -1810,47 +1696,47 @@ private void ControlFiring(ref Unit unit, int dmg_act, int m)
 			{
 			case UnitKind.InfantryBase:
 				// 地上基地は弾が減りません
-				ControlInfantryBaseFiring(ref unit, dmg_act, m);
+				ControlInfantryBaseFiring(ref unit, damageSlowdown, m);
 				break;
 
 			case UnitKind.Pillboxes:
 				// 地上基地は弾が減りません
-				ControlPillboxesFiring(ref unit, dmg_act, m);
+				ControlPillboxesFiring(ref unit, damageSlowdown, m);
 				break;
 
 			case UnitKind.Fortress:
 				// 地上基地は弾が減りません
-				ControlFortressFiring(ref unit, dmg_act, m);
+				ControlFortressFiring(ref unit, damageSlowdown, m);
 				break;
 
 			case UnitKind.Battleship:
-				ControlBattleshipFiring(ref unit, dmg_act, m);
+				ControlBattleshipFiring(ref unit, damageSlowdown, m);
 
 				break;
 
 			case UnitKind.Cruiser:
-				ControlCruiserFiring(ref unit, dmg_act, m);
+				ControlCruiserFiring(ref unit, damageSlowdown, m);
 				break;
 
 			case UnitKind.Carrier:
 				// 対空機関砲
-				if( unit.Ammo>=1 && Random(80*dmg_act)==0 && unit.Side==Side.UnitedStates )
+				if( unit.Ammo>=1 && Random(80*damageSlowdown)==0 && unit.Side==Side.UnitedStates )
 					FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
 				// 対空機銃
-				if( Random(15*dmg_act)==0)
+				if( Random(15*damageSlowdown)==0)
 					FireWeapons(m,0,FireKind.Bullet);
 				break;
 
 			case UnitKind.Destroyer:
-				ControlDestroyerFiring(ref unit, dmg_act, m);
+				ControlDestroyerFiring(ref unit, damageSlowdown, m);
 				break;
 
 			case UnitKind.LightCarrier:
 				// 対空機関砲
-				if( unit.Ammo>=1 && Random(100*dmg_act)==0 && unit.Side==Side.UnitedStates )
+				if( unit.Ammo>=1 && Random(100*damageSlowdown)==0 && unit.Side==Side.UnitedStates )
 					FireWeapons(m,0,FireKind.RapidAntiAircraftShell);
 				// 対空機銃
-				if( Random(20*dmg_act)==0 )
+				if( Random(20*damageSlowdown)==0 )
 					FireWeapons(m,0,FireKind.Bullet);
 				break;
 
@@ -1877,7 +1763,7 @@ private void ControlFiring(ref Unit unit, int dmg_act, int m)
 
 			case UnitKind.Attacker:
 				// 攻撃機の場合は、後方に敵航空機が飛んでればとりあえず撃つ
-				if(Random(35*dmg_act)==0)
+				if(Random(35*damageSlowdown)==0)
 					FireWeapons(m,0,FireKind.Bullet);
 				if( unit.Ammo>=1  && unit.Weapon==FireKind.Torpedo && unit.Target!=0 && unit.TurnRate==0 && unit.Speed>=unit.MaxSpeed )
 					FireWeapons(m,unit.Target,FireKind.Torpedo);
@@ -1886,7 +1772,7 @@ private void ControlFiring(ref Unit unit, int dmg_act, int m)
 				break;
 
 			case UnitKind.Bomber:
-				if(Random(20*dmg_act)==0)
+				if(Random(20*damageSlowdown)==0)
 					FireWeapons(m,0,FireKind.Bullet);
 				// 1.22's bombers drop no torpedoes (0x40392C).
 				if( unit.Ammo>=1  && unit.Weapon==FireKind.Torpedo && unit.Target!=0 && unit.TurnRate==0 && unit.Speed>=unit.MaxSpeed && Rules.BombersDropTorpedoes )
@@ -1905,16 +1791,15 @@ private void ControlFiring(ref Unit unit, int dmg_act, int m)
 [Original("chara_cont")]
 public void	UpdateBattle()
 	{
-	int	m = default,i,f = default;
+	int m = default, checksum = default;
 
-	double	wrk_x,wrk_y,drctn,dstc,wrk_x2,wrk_3=default /* C4701 */;
+	double cargoSpeedFactor=default /* C4701 */ /* C4701 */;
 
-	int		dmg_act;
 
 	short	s = default;
-	Array200<short> bf_2_slct_unit = default;
+	Array200<short> savedSelections = default;
 
-	_DP_FLAG			dp_flag = default;
+	SyncFlagMessage			syncFlag = default;
 
 	if( Mode!=GameMode.Battle )
 		return;
@@ -1926,7 +1811,7 @@ public void	UpdateBattle()
 		// 通信対戦時
 		if((Tick%(TurnLength))==SyncTick1 )
 			{
-			if( !SendOrders(ref s, ref dp_flag) )
+			if( !SendOrders(ref s, ref syncFlag) )
 				return;
 			}
 
@@ -1934,7 +1819,7 @@ public void	UpdateBattle()
 
 		if((Tick%TurnLength)==(SyncTick2) )
 			{
-			if( !ReceiveAndIssueOrders(ref s, ref bf_2_slct_unit, ref dp_flag, ref f, ref m) )
+			if( !ReceiveAndIssueOrders(ref s, ref savedSelections, ref syncFlag, ref checksum, ref m) )
 				return;
 			}
 		}
@@ -2015,7 +1900,7 @@ public void	UpdateBattle()
 				SteerUnit(ref unit, m);
 
 				//=========		 ユニットの座標変更		=========//
-				MoveUnit(ref unit, m, ref wrk_3);
+				MoveUnit(ref unit, m, ref cargoSpeedFactor);
 				}
 
 			//=========		 ユニットの攻撃制御		=========//
@@ -2047,14 +1932,14 @@ public void	UpdateBattle()
 					}
 				}
 
-			dmg_act=1;
+			var damageSlowdown=1;
 			if( unit.Hp<=unit.MaxHp*0.3 )
 				{
-				dmg_act=2;
+				damageSlowdown=2;
 				}
 
 			// そのユニットの打つ、発射を制御します。
-			ControlFiring(ref unit, dmg_act, m);
+			ControlFiring(ref unit, damageSlowdown, m);
 			}
 
 		if( unit.IsUsed )
@@ -2066,28 +1951,25 @@ public void	UpdateBattle()
 		// 潜水艦から聞こえれる探知音
 		if( unit.Side==LocalSide && unit.Kind==UnitKind.Submarine && unit.IsSubmerged && Result==GameResult.None && !unit.IsSupplying )
 			{
-			dstc=500;
-			for( i=1; i<=MaxUnitId; i++)
+			var nearestDestroyer=500.0;
+			for( var i=1; i<=MaxUnitId; i++)
 				{
 				ref var other = ref Units[i];
 				if( other.IsUsed && other.Side!=LocalSide && other.Kind==UnitKind.Destroyer && !unit.IsSupplying )
 					{
-					wrk_x=unit.Position.X-other.Position.X;
-					wrk_y=unit.Position.Y-other.Position.Y;
-
-					wrk_x2=Distance(wrk_x, wrk_y);
-					if( dstc>wrk_x2 )
+					var distance=(unit.Position-other.Position).Length;
+					if( nearestDestroyer>distance )
 						{
-						dstc=wrk_x2;
+						nearestDestroyer=distance;
 						}
 					}
 				}
 
 			// 1.22 has no sonar.
-			if( !IsEditingMap && dstc<=400 && Rules.PlaysSonar )
+			if( !IsEditingMap && nearestDestroyer<=400 && Rules.PlaysSonar )
 				{
-				if( (SharedRandom(3+(int)(dstc/5)))==0  )
-				PlaySoundEffect( 0, SoundId.Sonar ,unit.Position.X, unit.Position.Y);
+				if( (SharedRandom(3+(int)(nearestDestroyer/5)))==0  )
+				Sound.PlaySoundEffect(SoundId.Sonar, unit.Position);
 				}
 			}
 		}

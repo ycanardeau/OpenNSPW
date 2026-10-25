@@ -20,6 +20,19 @@ using OpenNspw.Porter;
 //       Distances).
 //   OpenNspw.Porter element-refs <project directory>
 //       Gives a new effect or fire a ref local (see ElementRefs).
+//   OpenNspw.Porter declarations <project directory>
+//       Declares each local where it is first assigned (see Declarations).
+//   OpenNspw.Porter rename-locals <project directory> [<renames file>]
+//       Renames locals and parameters of methods (see LocalRenamer), or lists them, without a renames file.
+//   OpenNspw.Porter remove-parameters <port project directory> <positions file> <user project directory>...
+//       Removes unused parameters, and their arguments where they have no side effects (see ParameterRemover).
+//   OpenNspw.Porter bool-locals <project directory>
+//       Makes bool the int locals that are only set to 0 or 1 and compared with them (see BoolLocals).
+//   OpenNspw.Porter global-usage <project directory>
+//       Reports which members read and write each global, and which methods call which (see GlobalUsage).
+//   OpenNspw.Porter move-members <port project directory> <class> <owner> <new file> <files>|- <members>|- <user project directory>...
+//       Moves the parts of Nspw in the files (comma-separated), and the members named, into a class that Nspw holds in
+//       its member owner (see MemberMover).
 //   OpenNspw.Porter ref-locals <project directory> [<method>,<method>...]
 //       Gives the element of a table that a loop works on a ref local, and the unit that the int parameter of the named
 //       methods numbers (see RefLocals).
@@ -55,6 +68,75 @@ if (args.Length is 2 or 3 && args[0] == "ref-locals")
 if (args.Length == 2 && args[0] == "distances")
 {
 	foreach (var line in new Distances(new CSharpProject(args[1])).Run())
+	{
+		Console.WriteLine(line);
+	}
+
+	return 0;
+}
+
+if (args.Length >= 7 && args[0] == "move-members")
+{
+	static HashSet<string> List(string arg, Func<string, string> map)
+	{
+		return arg == "-" ? [] : [.. arg.Split(',').Select(map)];
+	}
+
+	var mover = new MemberMover(new CSharpProject(args[1]), [.. args[7..].Select(d => new CSharpProject(d))], args[2], args[3], Path.GetFullPath(args[4]),
+		List(args[5], Path.GetFullPath), List(args[6], n => n));
+	foreach (var line in mover.Run())
+	{
+		Console.WriteLine(line);
+	}
+
+	return 0;
+}
+
+if (args.Length == 2 && args[0] == "global-usage")
+{
+	foreach (var line in new GlobalUsage(new CSharpProject(args[1])).Run())
+	{
+		Console.WriteLine(line);
+	}
+
+	return 0;
+}
+
+if (args.Length == 2 && args[0] == "bool-locals")
+{
+	foreach (var line in new BoolLocals(new CSharpProject(args[1])).Run())
+	{
+		Console.WriteLine(line);
+	}
+
+	return 0;
+}
+
+if (args.Length >= 3 && args[0] == "remove-parameters")
+{
+	var remover = new ParameterRemover(new CSharpProject(args[1]), [.. args[3..].Select(d => new CSharpProject(d))], ParameterRemover.ReadPositions(args[2]));
+	foreach (var path in remover.Run())
+	{
+		Console.WriteLine(path);
+	}
+
+	return 0;
+}
+
+if (args.Length is 2 or 3 && args[0] == "rename-locals")
+{
+	var renamer = new LocalRenamer(new CSharpProject(args[1]), args.Length == 3 ? LocalRenamer.ReadRenames(args[2]) : []);
+	foreach (var line in args.Length == 3 ? renamer.Run() : renamer.List())
+	{
+		Console.WriteLine(line);
+	}
+
+	return 0;
+}
+
+if (args.Length == 2 && args[0] == "declarations")
+{
+	foreach (var line in new Declarations(new CSharpProject(args[1])).Run())
 	{
 		Console.WriteLine(line);
 	}

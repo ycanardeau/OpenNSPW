@@ -94,7 +94,7 @@ public class Etc2Tests
 	{
 		FunctionTest.Run("etc2", "set_the_slct_unit", (game, c) =>
 		{
-			game.set_the_slct_unit(c.IntArg(0));
+			game.SelectUnit(c.IntArg(0));
 			return null;
 		});
 	}

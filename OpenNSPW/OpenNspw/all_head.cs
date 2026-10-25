@@ -74,17 +74,14 @@ public const int	NUM_SOUND_EFFECTS		= 35;
 
 // BB1, CA1, DD1, SS1, CV1, CVL1, FT1, AT1, BM1, TR1, AP, SP, CT1, MN1, GF1, GF2 and GF3: UnitKind.
 
-public const int	MAP_TOP		= 7200;
-public const int	MAP_BOTTOM	= -7200;
-public const int	MAP_RIGHT	= 9600;
-public const int	MAP_LEFT	= -9600;
+// World.Top, World.Bottom, World.Right and World.Left: World.
 
 public const double	PI            = 3.14159265358979323846;
-public const double	a_PI          = 0.01745329251994;
-public const double	RAD_to		  = 57.2957795131;
+public const double	DegreesToRadians          = 0.01745329251994;
+public const double	RadiansToDegrees		  = 57.2957795131;
 
 public const int		SCRN_MAX_SPD		= 1600;
-public const int		scrn_moving_add	= 15;
+public const int		ScrollAcceleration	= 15;
 
 public const int		OS_MAX			= 10;
 

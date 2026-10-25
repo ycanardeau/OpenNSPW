@@ -190,8 +190,8 @@ internal sealed class Commander(Random random, int interval)
 			return $"unit {unit} attacks unit {target}";
 		}
 
-		var x = Math.Clamp((int)DoubleOf(unit, XOffset) + _random.Next(-Range, Range + 1), all_head.MAP_LEFT, all_head.MAP_RIGHT);
-		var y = Math.Clamp((int)DoubleOf(unit, YOffset) + _random.Next(-Range, Range + 1), all_head.MAP_BOTTOM, all_head.MAP_TOP);
+		var x = Math.Clamp((int)DoubleOf(unit, XOffset) + _random.Next(-Range, Range + 1), World.Left, World.Right);
+		var y = Math.Clamp((int)DoubleOf(unit, YOffset) + _random.Next(-Range, Range + 1), World.Bottom, World.Top);
 		debugger.Write(MoveOrder, MoveOrderBytes(unit, x, y));
 		return $"unit {unit} {(isParked ? "launches" : "moves")} to ({x}, {y})";
 	}

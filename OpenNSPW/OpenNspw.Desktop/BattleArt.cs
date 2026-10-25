@@ -45,8 +45,8 @@ internal sealed class BattleArt : IDisposable
 	public void Draw(SpriteBatch batch, in Sprite sprite, int frame, int inset, int width, int height, Vector2 position)
 	{
 		var source = new Rectangle(
-			sprite.SheetX + sprite.Width * (frame % sprite.FramesPerRow) + inset,
-			sprite.SheetY + sprite.Height * (frame / sprite.FramesPerRow) + inset,
+			sprite.SheetPosition.X + sprite.Size.Width * (frame % sprite.FramesPerRow) + inset,
+			sprite.SheetPosition.Y + sprite.Size.Height * (frame / sprite.FramesPerRow) + inset,
 			width,
 			height);
 		var (texture, piece) = Sheet(source);

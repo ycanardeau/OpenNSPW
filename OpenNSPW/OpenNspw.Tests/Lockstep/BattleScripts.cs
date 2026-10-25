@@ -12,24 +12,24 @@ internal static class BattleScripts
 	// title screen.
 	internal static void Connect(LockstepRun run)
 	{
-		run.Until(() => run.Host.Game.g_hDlg?.Id == IDD_ADDRESS_OVERRIDE && run.Guest.Game.g_hDlg?.Id == IDD_ADDRESS_OVERRIDE);
+		run.Until(() => run.Host.Game.MainDialog?.Id == IDD_ADDRESS_OVERRIDE && run.Guest.Game.MainDialog?.Id == IDD_ADDRESS_OVERRIDE);
 		run.Host.Post(g =>
 		{
-			g.TypeDlgItemText(g.g_hDlg!, IDC_ADDRESS_LINE2, "0");
-			g.ClickDlgItem(g.g_hDlg!, IDOK);
+			g.TypeDlgItemText(g.MainDialog!, IDC_ADDRESS_LINE2, "0");
+			g.ClickDlgItem(g.MainDialog!, IDOK);
 		});
-		run.Until(() => run.Host.Game.g_hDlg?.Id == IDD_MAIN_GAME);
+		run.Until(() => run.Host.Game.MainDialog?.Id == IDD_MAIN_GAME);
 
 		run.Guest.Post(g =>
 		{
-			g.ClickDlgItem(g.g_hDlg!, IDC_HOST_SESSION);
-			g.TypeDlgItemText(g.g_hDlg!, IDC_ADDRESS_LINE1, "127.0.0.1");
-			g.TypeDlgItemText(g.g_hDlg!, IDC_ADDRESS_LINE2, $"{ADDRESSOVERRIDE_PORT}");
-			g.ClickDlgItem(g.g_hDlg!, IDOK);
+			g.ClickDlgItem(g.MainDialog!, IDC_HOST_SESSION);
+			g.TypeDlgItemText(g.MainDialog!, IDC_ADDRESS_LINE1, "127.0.0.1");
+			g.TypeDlgItemText(g.MainDialog!, IDC_ADDRESS_LINE2, $"{ADDRESSOVERRIDE_PORT}");
+			g.ClickDlgItem(g.MainDialog!, IDOK);
 		});
-		run.Until(() => run.Host.Game.ActivePlayerCount == 2 && run.Guest.Game.ActivePlayerCount == 2 && run.Guest.Game.g_hDlg?.Id == IDD_MAIN_GAME);
+		run.Until(() => run.Host.Game.ActivePlayerCount == 2 && run.Guest.Game.ActivePlayerCount == 2 && run.Guest.Game.MainDialog?.Id == IDD_MAIN_GAME);
 
-		run.Host.Post(g => g.ClickDlgItem(g.g_hDlg!, IDC_START_GAME));
+		run.Host.Post(g => g.ClickDlgItem(g.MainDialog!, IDC_START_GAME));
 		run.Until(() => run.Host.Game.Mode == GameMode.Title && run.Guest.Game.Mode == GameMode.Title);
 	}
 
@@ -101,8 +101,8 @@ internal static class BattleScripts
 	// clicked there is exactly that point (draw_cmbt_area.cpp).
 	internal static WorldPosition TilePosition(Nspw nspw, int column, int row)
 	{
-		ref Sprite tiles = ref nspw.Sprites[SpriteId.MapTiles];
-		return new WorldPosition(MAP_LEFT + (column * tiles.Width), MAP_TOP - (row * tiles.Height));
+		ref Sprite tiles = ref nspw.Renderer.Sprites[SpriteId.MapTiles];
+		return new WorldPosition(World.Left + (column * tiles.Size.Width), World.Top - (row * tiles.Size.Height));
 	}
 
 	// The tiles a transport's landing point can be on (draw_cmbt_area.cpp).
@@ -119,9 +119,9 @@ internal static class BattleScripts
 	// The tile of the terrain under a point of the world, as the ships see it (chara_cont.cpp).
 	internal static (int Column, int Row) TileAt(Nspw nspw, WorldPosition position)
 	{
-		ref Sprite units = ref nspw.Sprites[SpriteId.JapanUnits];
-		ref Sprite tiles = ref nspw.Sprites[SpriteId.MapTiles];
-		return ((int)((position.X + (units.Width / 2) - MAP_LEFT) / tiles.Width), (int)((MAP_TOP - position.Y + (units.Height / 2)) / tiles.Height));
+		ref Sprite units = ref nspw.Renderer.Sprites[SpriteId.JapanUnits];
+		ref Sprite tiles = ref nspw.Renderer.Sprites[SpriteId.MapTiles];
+		return ((int)((position.X + (units.Size.Width / 2) - World.Left) / tiles.Size.Width), (int)((World.Top - position.Y + (units.Size.Height / 2)) / tiles.Size.Height));
 	}
 
 	// Whether a ship nearer than 80 to a point would stop ship m there (CheckCourseAhead in chara_cont.cpp).

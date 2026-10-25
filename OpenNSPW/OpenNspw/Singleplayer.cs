@@ -25,7 +25,7 @@ public unsafe partial class Nspw
 	private const int UnitRandomOffset = 0x560;
 
 	// The table of the computer's fleets (0x4867A0, 11 entries of 0x498 bytes), which game_init clears; each entry ends
-	// with a path whose end, 9601 (MAP_RIGHT+1), it sets.
+	// with a path whose end, 9601 (World.Beyond), it sets.
 	private const uint FleetAddress = 0x4867A0;
 	private const int FleetSize = 0x498;
 	private const int FleetCount = 11;
@@ -54,17 +54,17 @@ public unsafe partial class Nspw
 		new(0x443A48, game => Bytes(ref game.BattleTime), true), // rest_time
 		new(0x443A90, game => Bytes(ref game.MaxUnitId), true), // max_unit
 		new(MapAddress, game => Bytes(ref game.MapTiles), false), // cmbt_map
-		new(0x463AC0, game => Bytes(ref game.MoveOrders).Slice(0, 2 * sizeof(MoveOrder)), true), // new_pp[2]
+		new(0x463AC0, game => Bytes(ref game.MoveOrders)[..(2 * sizeof(MoveOrder))], true), // new_pp[2]
 		new(0x483B44, game => Bytes(ref game.Result), true), // game_end
 		new(0x483B4C, game => Bytes(ref game.CpuSide), true), // cpu_side
 		new(0x489AB0, game => Bytes(ref game.CameraPosition), true), // cmbt_x, cmbt_y
-		new(0x489AD0, game => Bytes(ref game.FrameCount), true), // FrameCount
+		new(0x489AD0, game => Bytes(ref game.Renderer.FrameCount), true), // FrameCount
 		new(0x489AE0, game => Bytes(ref game.Selections), true), // slct_unit
 		new(0x489EE4, game => Bytes(ref game.Tick), true), // cc_count
 		new(0x489FB0, game => Bytes(ref game.LocalSide), true), // your_side
 		new(0x489FC0, game => Bytes(ref game.DecisionPoints), true), // decision_point
 		new(0x48A1E8, game => Bytes(ref game.ScenarioNumber), true), // sinario
-		new(0x48A200, game => Bytes(ref game.Sprites), false), // sprt
+		new(0x48A200, game => Bytes(ref game.Renderer.Sprites), false), // sprt
 	];
 
 	private static int OffsetOf<T>(ref Unit unit, ref T field)
@@ -94,9 +94,6 @@ public unsafe partial class Nspw
 
 	// cpu_side of 1.22: the side the computer plays, or None.
 	public Side CpuSide;
-
-	// 0x48A1EC of 1.22: whether this tick is the last of its frame, the one that is drawn.
-	public bool IsDrawnTick;
 
 	// The trace this single-player game follows and checks itself against, or records itself in, or null
 	// (docs/Verification.md).
@@ -323,7 +320,7 @@ public unsafe partial class Nspw
 			() =>
 			{
 				HDC hdc = default;
-				var hr = IDirectDrawSurface_GetDC(lpDDSBack, &hdc);
+				var hr = IDirectDrawSurface_GetDC(Renderer.lpDDSBack, &hdc);
 				MemoryMarshal.Write(emulator.At(emulator.Argument(1), 4), hdc.Value);
 				emulator.Cpu.Eax = new Register32((uint)hr);
 			}
@@ -331,12 +328,12 @@ public unsafe partial class Nspw
 		var releaseDC = emulator.AddStub(
 			"IDirectDrawSurface7::ReleaseDC",
 			8,
-			() => emulator.Cpu.Eax = new Register32((uint)IDirectDrawSurface_ReleaseDC(lpDDSBack, new HDC((int)emulator.Argument(1))))
+			() => emulator.Cpu.Eax = new Register32((uint)IDirectDrawSurface_ReleaseDC(Renderer.lpDDSBack, new HDC((int)emulator.Argument(1))))
 		);
 		MemoryMarshal.Write(emulator.At(methods + GetDCOffset, 4), getDC);
 		MemoryMarshal.Write(emulator.At(methods + ReleaseDCOffset, 4), releaseDC);
 
-		MemoryMarshal.Write(emulator.At(FontAddress, 4), gameFont_1.Value);
+		MemoryMarshal.Write(emulator.At(FontAddress, 4), Renderer.GameFont1.Value);
 	}
 
 	// A new emulator for a single-player game, with 1.22's own globals as its game_init leaves them before it calls the
@@ -351,7 +348,7 @@ public unsafe partial class Nspw
 		emulator.Cpu.Fpu.Atan2 = atan2;
 		SetNatives(emulator);
 		for (var i = 0; i < FleetCount; i++)
-			MemoryMarshal.Write(emulator.At(FleetAddress + (uint)(i * FleetSize + FleetPathEndOffset), sizeof(double)), (double)(MAP_RIGHT + 1));
+			MemoryMarshal.Write(emulator.At(FleetAddress + (uint)(i * FleetSize + FleetPathEndOffset), sizeof(double)), (double)World.Beyond);
 		return emulator;
 	}
 
@@ -531,15 +528,15 @@ public unsafe partial class Nspw
 
 		Trace?.Reach(this, TracePoint.Orders);
 
-		var bf_the_slct_unit = SelectedUnit;
-		Array256<short> bf_slct_unit = Selections[1];
+		var savedSelectedUnit = SelectedUnit;
+		Array256<short> savedSelections = Selections[1];
 		Selections[1] = BufferedSelectionsOfAllUnits;
 
 		// The combat menu's item first: 1.22 applies it in its input (0x431C53), before cpu_strtgy, which may see it.
 		ApplyUnitInfoInput();
 
-		Selections[1] = bf_slct_unit;
-		SelectedUnit = bf_the_slct_unit;
+		Selections[1] = savedSelections;
+		SelectedUnit = savedSelectedUnit;
 
 		if (CpuSide != Side.None)
 			RunCpuStrategy();
@@ -547,8 +544,8 @@ public unsafe partial class Nspw
 		if (BufferedArrivedUnits[1] != 0)
 			OnUnitArrived(1, BufferedArrivedUnits[1]);
 
-		bf_the_slct_unit = SelectedUnit;
-		bf_slct_unit = Selections[1];
+		savedSelectedUnit = SelectedUnit;
+		savedSelections = Selections[1];
 		Selections[1] = BufferedSelectionsOfAllUnits;
 
 		MoveOrders[1] = BufferedMoveOrders[1];
@@ -557,8 +554,8 @@ public unsafe partial class Nspw
 
 		ApplyOrders();
 
-		Selections[1] = bf_slct_unit;
-		SelectedUnit = bf_the_slct_unit;
+		Selections[1] = savedSelections;
+		SelectedUnit = savedSelectedUnit;
 
 		ClearBufferedOrders();
 	}

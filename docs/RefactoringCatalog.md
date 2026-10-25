@@ -43,11 +43,11 @@ Each word means one thing in the new names. The original uses some words for sev
 
 | Term | Means | Examples |
 | --- | --- | --- |
-| **World** | The simulation's coordinate space: `double` coordinates from `WorldLeft` to `WorldRight` (x) and from `WorldBottom` to `WorldTop` (y, growing upward). | `WorldPosition`, `WorldVector`, `ReturnIntoWorld` |
+| **World** | The simulation's coordinate space: `double` coordinates from `World.Left` to `World.Right` (x) and from `World.Bottom` to `World.Top` (y, growing upward). | `WorldPosition`, `WorldVector`, `ReturnIntoWorld` |
 | **Map** | The terrain: the tile grid, which terrain is in use, the map files and the map editor. Never the coordinate space or the minimap. | `MapTiles`, `CurrentMap`, `LoadUserMap`, `IsEditingMap` |
 | **Minimap** | The overview of the whole world in the side panel, drawn on the `MAP_BASE` sprite. | `DrawMinimap`, `MakeMinimap` |
 | **Battle area** | The 768×768 part of the screen that shows the world. Its top-left corner is at `CameraPosition`, in world coordinates. | `BattleAreaWidth`, `DrawBattleArea`, `ScrollBattleArea` |
-| **Screen** | The 1024×768 window, in integer pixels (`Point`, `Rect`). | `ScreenWidth`, `CursorPosition` |
+| **Screen** | The 1024×768 window, in integer pixels (`PixelPoint`, `Rect`). | `ScreenWidth`, `CursorPosition` |
 | **Tick** | One step of the simulation: one call of `UpdateBattle` (`chara_cont`). | `Tick` (`cc_count`) |
 | **Frame** | One call of `UpdateFrame`, which runs `GameSpeed` ticks (`GameSpeed` + 1 in a single-player game, as 1.22 does) and draws once. | `FrameCount` |
 | **Turn** | The `TurnLength` ticks between two exchanges of orders (see [Synchronization.md](../Original/docs/NSPW_NET/Synchronization.md)). | `TurnLength`, `SyncTick1` |
@@ -57,11 +57,13 @@ Each has the layout of the primitives it replaces (see [Refactoring.md](Refactor
 
 | Type | Layout | Operations |
 | --- | --- | --- |
-| `WorldPosition` | `double X, Y` | `WorldPosition ± WorldVector`, `WorldPosition - WorldPosition` → `WorldVector`, `==`. `ToPoint()` truncates with `(int)`, as the C++ casts. |
-| `WorldVector` | `double X, Y` | `* double`, `Length` (the original's `atan2` and `cos` distance, exactly). Not stored in the state. |
-| `Angle` | `double Degrees` | `Sin()`, `Cos()` as `sin(Degrees*a_PI)`, `cos(Degrees*a_PI)`. `FromVector(dx, dy)` as `atan2(dy,dx)*RAD_to`. No normalization that the C++ does not do. |
-| `Point` | `int X, Y` | Replaces `POINT`. |
+| `WorldPosition` | `double X, Y` | `WorldPosition ± WorldVector`, `WorldPosition - WorldPosition` → `WorldVector`, `==`. `ToPixelPoint()` truncates with `(int)`, as the C++ casts. `WorldToScreen` subtracts it from `CameraPosition`, with Y downward. |
+| `WorldVector` | `double X, Y` | `* double`, `FromDirection(degrees)` (`CosDegrees`, `SinDegrees`), `Direction` and `Length` (the original's `atan2` and `cos` distance, exactly), `NonZero()` (a component of 0 counts as 1). Not stored in the state. |
+| `Angle` | `double Degrees` | `±`, comparisons, from `double` (implicit) and to `int` (explicit, truncating). `Sin()`, `Cos()` as `sin(Degrees*a_PI)`, `cos(Degrees*a_PI)`; `WorldVector.Direction` as `atan2(dy,dx)*RAD_to`. `WrapNegative()` (`if(d<0) d=360+d`), `WrapFullTurn()` (`if(d>=360) d=d-360`), `Wrapped()` (the two, in that order), `WholeDegrees()` (`(int)d%360`), `SnappedToEightDirections()` (the switch on `(int)(d/22.5)`, null for an angle that is no case), and `SnappedToEightDirections(otherwise)` for the switches that leave the heading alone then. No normalization that the C++ does not do. |
+| `PixelPoint` | `int X, Y` | `+`. The sprites' `Position`, `Center` and `SheetPosition`; replaces `POINT`. |
+| `PixelSize` | `int Width, Height` | The sprites' `Size`. |
 | `Rect` | `int Left, Top, Right, Bottom` | Replaces `RECT`. `Contains` only where a `pt_in_rect` variant matches it exactly. |
+| `WorldRect` | `int Left, Top, Right, Bottom` | An area of the world, `Top` above `Bottom`: `Around(center, halfWidth, halfHeight)` with the C++'s `(int)` casts, `Offset`, `Contains` as `pt_in_rect2` and `pt_in_rect3`. Drawn with `DrawWorldRect`. Not stored in the state. |
 | `Bool32` | `int Value` | `implicit operator bool` (`Value != 0`), and from `bool` (1 or 0). Comparisons with 1 stay as `Value==1`. |
 | `Bool8` | `byte Value` | The same, for a `BYTE` used as a boolean (`you_are_host`, `map_edit`, `decision_sw`, ...). |
 | `UnitId` | `int Value` | `None` (0). Exposed by accessors over `short`, `int` and `byte` storage. `Units[id]` indexer. |
@@ -184,7 +186,7 @@ Per-kind tables become static classes, so that a value reads as table and kind (
 | `WIDTH`, `HEIGHT` | `WindowWidth`, `WindowHeight` |
 | `CMBT_WIDTH`, `CMBT_HEIGHT` | `BattleAreaWidth`, `BattleAreaHeight` |
 | `CMBT_REST` | `BattleAreaMargin` (check) |
-| `MAP_TOP`, `MAP_BOTTOM`, `MAP_RIGHT`, `MAP_LEFT` | `WorldTop`, `WorldBottom`, `WorldRight`, `WorldLeft` |
+| `MAP_TOP`, `MAP_BOTTOM`, `MAP_RIGHT`, `MAP_LEFT` | `World.Top`, `World.Bottom`, `World.Right`, `World.Left`; `MAP_RIGHT+1`, the end of a path and the place of the interface's sounds, is `World.Beyond` (`unit.EndPath(i)`, `unit.IsPathEnd(i)`) |
 | `SCRN_MAX_SPD`, `scrn_moving_add` | `MaxScrollSpeed`, `ScrollAcceleration` |
 | `CAPTION`, `CLASS_NAME` | `WindowCaption`, `WindowClassName` |
 | `PALT_RED`, `PALT_BUL` | `PaletteRed`, `PaletteBlue` |
@@ -245,7 +247,7 @@ The struct types are renamed (`UNIT` → `Unit`, `FIRE` → `Fire`, `EFFECT` →
 | `kind` | `Kind` | `UnitKind` | `IsCarrier`, `IsFacility`, ... with the original's comparisons. |
 | `type` | `Variant` | `short` | 形式: Yamato class, anti-aircraft cruiser, land-based fighter, ... |
 | `info` | `info` | `Array16<int>` | Accessors below. |
-| `os_indx_y` | `SpriteRow` | `int` | Before `os_indx_x`, so not a `Point`. |
+| `os_indx_y` | `SpriteRow` | `int` | Before `os_indx_x`, so not a `PixelPoint`. |
 | `os_indx_x` | `SpriteColumn` | `int` | The facing. |
 | `drctn` | `Direction` | `Angle` | |
 | `drctn_add` | `TurnRate` | `double` | 変進角度 |
@@ -291,7 +293,7 @@ The struct types are renamed (`UNIT` → `Unit`, `FIRE` → `Fire`, `EFFECT` →
 | 9 | | Fighters: `Info9` (制空出撃フラグ, and other uses, check) | |
 | 10, 11 | `Info10`, `Info11` (check) | | |
 
-`LandingPoint` is a `Point` view over `info[6]` and `info[7]`.
+`LandingPoint` is a `PixelPoint` view over `info[6]` and `info[7]`.
 
 ### `Fire` (`FIRE`)
 | Original | New | Type | Notes |
@@ -300,7 +302,7 @@ The struct types are renamed (`UNIT` → `Unit`, `FIRE` → `Fire`, `EFFECT` →
 | `kind` | `Kind` | `FireKind` | |
 | `info[0]` | `Timer` | `int` | Mostly the ticks to the target (`dstc/spd`), check per kind. |
 | `info[1]`, `info[2]` | `Info1`, `Info2` | `int` | Per kind (check). |
-| `info[6]`, `info[7]` | `LandingPoint` | `Point` view | Copied from the transport's `info[6]` and `info[7]`. |
+| `info[6]`, `info[7]` | `LandingPoint` | `PixelPoint` view | Copied from the transport's `info[6]` and `info[7]`. |
 | `info[8]` | `Side` | `int`, accessor `Side` | The firing unit's side. |
 | `no` | `SpriteNumber` | `int` | |
 | `x`, `y` | `Position` | `WorldPosition` | |
@@ -412,7 +414,7 @@ See [Synchronization.md](../Original/docs/NSPW_NET/Synchronization.md) for what 
 | --- | --- |
 | `cmbt_x`, `cmbt_y` | `CameraPosition` (`WorldPosition` over the two globals) |
 | `scrn_moving_spd` | `ScrollSpeed` |
-| `crsr_pt` | `CursorPosition` (`Point`) |
+| `crsr_pt` | `CursorPosition` (`PixelPoint`) |
 | `key_cndtn` | `Buttons` (`InputButtons`) |
 | `lf_btn`, `ri_btn` | `LeftButton`, `RightButton` |
 | `cmbt_menu_kind`, `cmbt_menu_slctd` | `CombatMenuKind`, `CombatMenuSelection` |

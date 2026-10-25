@@ -273,7 +273,7 @@ public static class Trace122Layout
 
 	private static FieldInfo[] FieldsOf(Type type)
 	{
-		return type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).OrderBy(field => field.MetadataToken).ToArray();
+		return [.. type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).OrderBy(field => field.MetadataToken)];
 	}
 
 	private static int AlignmentOf(Type type)
@@ -325,11 +325,11 @@ public static class Trace122Layout
 			fields.Add(new(UnitGasOffset + 4 * i, 4, $"gas[{i}]", typeof(int)));
 		fields.AddRange(leaves.Where(leaf => leaf.Offset >= found && leaf.Offset < found + 8).Select(leaf => leaf with { Offset = leaf.Offset - found + UnitFoundOffset }));
 		fields.AddRange(leaves.Where(leaf => leaf.Offset >= random).Select(leaf => leaf with { Offset = leaf.Offset - random + UnitRandomOffset }));
-		return fields.Where(field => field.Offset + field.Size <= Trace122.UnitSize).ToArray();
+		return [.. fields.Where(field => field.Offset + field.Size <= Trace122.UnitSize)];
 	}
 
 	public static readonly Field[] Unit = MakeUnitFields();
-	public static readonly Field[] Fire = Leaves(typeof(Fire), 0, "").ToArray();
+	public static readonly Field[] Fire = [.. Leaves(typeof(Fire), 0, "")];
 }
 
 // Follows a trace of 1.22: gives the game its seeds, the speed and the ticks of each frame, and the view it draws, which
@@ -507,9 +507,9 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 			game.CameraPosition = expected.Camera;
 		if (point == TracePoint.Tick)
 		{
-			if (expected.Value != game.Tick || expected.IsDrawn != game.IsDrawnTick)
+			if (expected.Value != game.Tick || expected.IsDrawn != game.Renderer.IsDrawnTick)
 			{
-				Diverge(game, point, $"cc_count and the drawn tick: 1.22 {expected.Value}, {expected.IsDrawn}; port {game.Tick}, {game.IsDrawnTick}.");
+				Diverge(game, point, $"cc_count and the drawn tick: 1.22 {expected.Value}, {expected.IsDrawn}; port {game.Tick}, {game.Renderer.IsDrawnTick}.");
 				return;
 			}
 			game.WriteStateAs122(_state);
@@ -564,7 +564,7 @@ public sealed class Trace122Recorder(Stream stream) : ISingleplayerTrace, IDispo
 				break;
 			case TracePoint.Tick:
 				game.WriteStateAs122(_state);
-				_writer.WriteTick(game.Tick, game.IsDrawnTick, game.RandomState, _state);
+				_writer.WriteTick(game.Tick, game.Renderer.IsDrawnTick, game.RandomState, _state);
 				break;
 			case TracePoint.Drawing:
 				_writer.WriteDrawing(game.RandomState, game.CameraPosition);

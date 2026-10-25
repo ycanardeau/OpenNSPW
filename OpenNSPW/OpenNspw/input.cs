@@ -24,17 +24,16 @@ public unsafe partial class Nspw
 // with (IssueSingleplayerOrders), as 1.22 does.
 private void BufferSelections()
 	{
-	int s;
 	BufferedSelectionsOfAllUnits=Selections[1];
 	if(LocalSide==Side.Japan)
 		{
 		// 日本海軍サイド
-		for(s=1;s<=JPN_SHIP_END;s++)
+		for(var s=1;s<=JPN_SHIP_END;s++)
 			{
 			// 水上ユニット
 			BufferedSelections[1][s-1]=Selections[1][s];
 			}
-		for(s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
+		for(var s=JPN_PLANE_START;s<=JPN_PLANE_END;s++)
 			{
 			// 航空ユニット
 			BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
@@ -43,12 +42,12 @@ private void BufferSelections()
 	else
 		{
 		// 合衆国海軍サイド
-		for(s=USA_SHIP_START;s<=USA_SHIP_END;s++)
+		for(var s=USA_SHIP_START;s<=USA_SHIP_END;s++)
 			{
 			// 水上ユニット
 			BufferedSelections[1][s-JPN_SHIP_END-1]=Selections[1][s];
 			}
-		for(s=USA_PLANE_START;s<=USA_PLANE_END;s++)
+		for(var s=USA_PLANE_START;s<=USA_PLANE_END;s++)
 			{
 			// 航空ユニット
 			BufferedSelections[1][s-(USA_PLANE_END/2)-1]=Selections[1][s];
@@ -58,7 +57,6 @@ private void BufferSelections()
 
 private void BufferMoveOrder(int e)
 	{
-	int m;
 	// あるマイユニットに新ＰＰ＿ＸＹが設定された場合
 	// バッファに保存。これを命令をだせるタイミングにnew_ppに代入する。
 	BufferedMoveOrders[1].Unit=MoveOrders[1].Unit;
@@ -67,7 +65,7 @@ private void BufferMoveOrder(int e)
 
 	BufferSelections();
 
-	m=MoveOrders[e].Unit;
+	int m=MoveOrders[e].Unit;
 	if( Units[m].Category==UnitCategory.Plane && Units[m].PlaneState==UnitState.Parked )
 		{
 		Units[Units[m].Carrier].PlanesToLaunch=0;	// 空母なら これがオンで発艦中
@@ -80,12 +78,11 @@ private void BufferMoveOrder(int e)
 		}
 	CanOrder=false;
 	HasOrdered=true;
-	PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+	Sound.PlayInterfaceSound(SoundId.Click2);
 	}
 
 private void SelectFriendlyTarget(ref int m, int e)
 	{
-	int n;
 	if ( Units[SelectedUnit].Category==UnitCategory.Plane && (Units[m].Kind==UnitKind.Carrier || Units[m].Kind==UnitKind.LightCarrier || Units[m].Kind==UnitKind.AirBase))
 		{
 		// 航空機の格納先を指定
@@ -103,7 +100,7 @@ private void SelectFriendlyTarget(ref int m, int e)
 
 			CanOrder=false;
 			HasOrdered=true;
-			PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+			Sound.PlayInterfaceSound(SoundId.Click2);
 			}
 		}
 	else
@@ -120,7 +117,7 @@ private void SelectFriendlyTarget(ref int m, int e)
 			{	// ｍ番号ユニットをセレクトから外す
 			SelectionCount--;
 			// セレクトの設定番号を連番にする。
-			for(n=1;n<=MaxUnitId;n++)
+			for(var n=1;n<=MaxUnitId;n++)
 				{
 				if( Selections[e][n]>=Selections[e][m]+1 )
 					Selections[e][n]--;
@@ -149,7 +146,7 @@ private void SelectTargetOrLanding(ref int m, int e)
 
 			CanOrder=false;
 			HasOrdered=true;
-			PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+			Sound.PlayInterfaceSound(SoundId.Click2);
 			}
 		}
 	else
@@ -169,7 +166,7 @@ private void SelectTargetOrLanding(ref int m, int e)
 
 			CanOrder=false;
 			HasOrdered=true;
-			PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+			Sound.PlayInterfaceSound(SoundId.Click2);
 
 			}
 		}
@@ -181,17 +178,17 @@ private void SelectTargetOrLanding(ref int m, int e)
 [Original("cnct_game_input_cont")]
 public void	HandleInput()
 	{
-	int	h,m,f,e; Array256<int> chk = default;
+	 
 
 	// A trace of 1.22 gives the player's orders here, or records them (docs/Verification.md).
 	Trace?.ReachPlayerOrders(this);
 
-	e=1;
+	var e=1;
 	if( SelectOrders[e].IsSet && !Units[SelectOrders[e].SelectedUnit].IsSupplying && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress ))
 		{
 		// ユニット自体をクリックした。
 		SelectedUnit=SelectOrders[e].SelectedUnit;
-		m=SelectOrders[e].Unit;
+		int m=SelectOrders[e].Unit;
 
 		if( m==0 || Units[SelectedUnit].Side!=Units[m].Side )
 			{
@@ -214,36 +211,37 @@ public void	HandleInput()
 		IssueSingleplayerOrders();
 	}
 
-// Ships: whether the world at a point is land, by the tile of the terrain there. A point outside the world is not.
-private bool IsLandAt(double x, double y)
+// The tile of the terrain under a position in the world, by its column and row, as the original finds it: offset by
+// half a unit's sprite.
+private (int Column, int Row) TileAt(WorldPosition position)
 	{
-	int cm_scrn_x,cm_scrn_y;
+	return ((int)((position.X+(Renderer.Sprites[SpriteId.JapanUnits].Size.Width/2)-World.Left)/Renderer.Sprites[SpriteId.MapTiles].Size.Width),
+		(int)((World.Top-position.Y+(Renderer.Sprites[SpriteId.JapanUnits].Size.Height/2))/Renderer.Sprites[SpriteId.MapTiles].Size.Height));
+	}
 
-	if( y>MAP_TOP || y<MAP_BOTTOM || x<MAP_LEFT || x>MAP_RIGHT )
+// Ships: whether the world at a position is land, by the tile of the terrain there. A position outside the world is
+// not.
+private bool IsLandAt(WorldPosition position)
+	{
+	if( !World.Contains(position) )
 		return false;
 
-	cm_scrn_x=(int)((x+(Sprites[SpriteId.JapanUnits].Width/2)-MAP_LEFT)/Sprites[SpriteId.MapTiles].Width);
-	cm_scrn_y=(int)((MAP_TOP-y+(Sprites[SpriteId.JapanUnits].Height/2))/Sprites[SpriteId.MapTiles].Height);
-	return MapTiles[cm_scrn_y][cm_scrn_x]>=1;
+	var (column, row)=TileAt(position);
+	return MapTiles[row][column]>=1;
 	}
 
 // Ships: whether a point is on a ship other than unit m, one that a ship can run into: not a submerged submarine,
 // nor a base.
-private bool IsShipAt(int m, double x, double y)
+private bool IsShipAt(int m, WorldPosition point)
 	{
-	RECT wrk_r;
-	int f;
 
-	for( f=1; f<=MaxUnitId; f++)
+	for( var f=1; f<=MaxUnitId; f++)
 		{
 		ref var other = ref Units[f];
 		if( other.IsUsed && m!=f && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged) && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress) )
 			{
-			wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].Height/2);
-			wrk_r.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].Width/2);
-			wrk_r.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].Height/2);
-			wrk_r.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].Width/2);
-			if( PointInRect3(ref wrk_r,(int)x,(int)y)!=0)
+			var shipArea=WorldRect.Around(other.Position, (Renderer.Sprites[SpriteId.JapanUnits].Size.Width/2), (Renderer.Sprites[SpriteId.JapanUnits].Size.Height/2));
+			if( shipArea.Contains(point))
 				return true;
 			}
 		}
@@ -252,80 +250,56 @@ private bool IsShipAt(int m, double x, double y)
 	}
 
 // Ships: inserts a path point that leads around an obstacle, in `direction` from the start of the leg, before the
-// leg's end. If the turn it makes from the previous leg is in the range drctn_ok1 to drctn_ok2, the saved point goes
-// back, and the search starts again farther away (min_dstc), counting an error.
-private void TakeDetour(ref Unit unit, ref int pp_indx, double start_x, double start_y, double chk_dstc, double div, double direction, double drctn_ok1, double drctn_ok2, ref double min_dstc, double s_pp_x, double s_pp_y, double re_add, ref int error)
+// leg's end. If the turn it makes from the previous leg is in the range minTurn to maxTurn, the saved point goes back,
+// and the search starts again farther away (extraDistance), counting an error.
+private void TakeDetour(ref Unit unit, ref int index, WorldPosition start, double checkedDistance, double divisor, Angle direction, Angle minTurn, Angle maxTurn, ref double extraDistance, WorldPosition savedPoint, double extraStep, ref int error)
 	{
-	double wrk_x;
-	double wrk_y;
-	double wrk;
-	double drctn1;
-	double drctn2;
-	unit.PathX[pp_indx+1]=unit.PathX[pp_indx];
-	unit.PathY[pp_indx+1]=unit.PathY[pp_indx];
-	unit.PathX[pp_indx+2]=MAP_RIGHT+1;
-	wrk_x=start_x;
-	wrk_y=start_y;
+	unit.SetPathPoint(index+1, unit.GetPathPoint(index));
+	unit.EndPath(index+2);
 
-	wrk=chk_dstc/div;
-	if(wrk<40)
-		wrk=40;
-	wrk_x+=CosDegrees(direction)*wrk;
-	wrk_y+=SinDegrees(direction)*wrk;
-	unit.PathX[pp_indx]=wrk_x;
-	unit.PathY[pp_indx]=wrk_y;
+	var step=checkedDistance/divisor;
+	if(step<40)
+		step=40;
+	unit.SetPathPoint(index, start+WorldVector.FromDirection(direction) * step);
 
-	if( pp_indx>=1 )
+	if( index>=1 )
 		{
 		// ＰＰ０からＰＰ１への角度
-		wrk_x=unit.PathX[pp_indx]-unit.PathX[pp_indx-1];
-		wrk_y=unit.PathY[pp_indx]-unit.PathY[pp_indx-1];
-		if(wrk_x==0)	wrk_x=1;
-		if(wrk_y==0)	wrk_y=1;
-		drctn1=Direction(wrk_x, wrk_y);
-		if(drctn1>=360)
-			drctn1=drctn1-360;
+		var turn=(unit.GetPathPoint(index)-unit.GetPathPoint(index-1)).NonZero().Direction;
+		turn=turn.WrapFullTurn();
 		// 現位置からＰＰ０への角度
-		if( pp_indx==1)
+		WorldVector previousLeg;
+		if( index==1)
 			{
-			wrk_x=unit.PathX[pp_indx-1]-unit.Position.X;
-			wrk_y=unit.PathY[pp_indx-1]-unit.Position.Y;
+			previousLeg=unit.GetPathPoint(index-1)-unit.Position;
 			}
 		else
 			{
-			wrk_x=unit.PathX[pp_indx-1]-unit.PathX[pp_indx-2];
-			wrk_y=unit.PathY[pp_indx-1]-unit.PathY[pp_indx-2];
+			previousLeg=unit.GetPathPoint(index-1)-unit.GetPathPoint(index-2);
 			}
-		if(wrk_x==0)	wrk_x=1;
-		if(wrk_y==0)	wrk_y=1;
-		drctn2=Direction(wrk_x, wrk_y);
+		var previousDirection=previousLeg.NonZero().Direction;
 
 		// 方位角 drctn1
-		drctn1=drctn1-drctn2;
-		if(drctn1<0)
-			drctn1=360+drctn1;
-		if(drctn1>=360)
-			drctn1=drctn1-360;
+		turn-=previousDirection;
+		turn=turn.WrapNegative().WrapFullTurn();
 
-		if( drctn1>=(drctn_ok1) && drctn1<=(drctn_ok2) && (min_dstc<=2000) )
+		if( turn>=(minTurn) && turn<=(maxTurn) && (extraDistance<=2000) )
 			{
-			unit.PathX[pp_indx]=s_pp_x;
-			unit.PathY[pp_indx]=s_pp_y;
-			unit.PathX[pp_indx+1]=MAP_RIGHT+1;
+			unit.SetPathPoint(index, savedPoint);
+			unit.EndPath(index+1);
 
-			min_dstc+=re_add;
+			extraDistance+=extraStep;
 
-			pp_indx--;
+			index--;
 
 			error++;
 
 			}
 		else
 			{
-			min_dstc=0;
-			unit.PathX[pp_indx+1]=s_pp_x;
-			unit.PathY[pp_indx+1]=s_pp_y;
-			unit.PathX[pp_indx+2]=MAP_RIGHT+1;
+			extraDistance=0;
+			unit.SetPathPoint(index+1, savedPoint);
+			unit.EndPath(index+2);
 			}
 		}
 
@@ -338,39 +312,32 @@ private void TakeDetour(ref Unit unit, ref int pp_indx, double start_x, double s
 public void	SetCpuRoute2(int m)
 	{
 	ref var unit = ref Units[m];
-	double		add;
-	double	pp_drctn,wrk_x,wrk_y,add_drctn,pp_dstc,chk_dstc,wrk,drctn1,drctn2,wrk_x2,wrk_y2,start_x,start_y,min_dstc,s_pp_x,s_pp_y,first_drctn,div,drctn_ok1,drctn_ok2,re_add; Array16<Array2<double>> rslt_drctn = default;
-	int			n,hit,left,right,pp_indx,error;
-	RECT		wrk_r;
+	double		step;
+	WorldPosition start;
 
-    Array128<byte> ach = default;
-    int len;
+    Array128<byte> text = default;
 
-	error=0;
-	div=2.0;
-	re_add=160;
+	var error=0;
+	var divisor=2.0;
+	var extraStep=160.0;
 
-	drctn_ok1=90.0;
-	drctn_ok2=270.0;
+	var minTurn=90.0;
+	var maxTurn=270.0;
 
 	//	ＰＰ０が侵入不可地なら移動無しにしてリターン
 	if( unit.Category==UnitCategory.Ship  )
 		{
 		// 他の艦船があるか
-		wrk_x2=unit.PathX[0];
-		wrk_y2=unit.PathY[0];
-		for( n=1; n<=MaxUnitId; n++)
+		var destination=unit.GetPathPoint(0);
+		for( var n=1; n<=MaxUnitId; n++)
 			{
 			ref var other = ref Units[n];
 			if( other.IsUsed && m!=n && other.Category==UnitCategory.Ship && !(other.Kind==UnitKind.Submarine && other.IsSubmerged)   && !(other.Kind>=UnitKind.AirBase && other.Kind<=UnitKind.Fortress )  )
 				{
 				// ptin dbg
-				wrk_r.top=(int)other.Position.Y+(Sprites[SpriteId.JapanUnits].Width/2);
-				wrk_r.right=(int)other.Position.X+(Sprites[SpriteId.JapanUnits].Width/2);
-				wrk_r.bottom=(int)other.Position.Y-(Sprites[SpriteId.JapanUnits].Width/2);
-				wrk_r.left=(int)other.Position.X-(Sprites[SpriteId.JapanUnits].Width/2);
+				var shipArea=WorldRect.Around(other.Position, (Renderer.Sprites[SpriteId.JapanUnits].Size.Width/2), (Renderer.Sprites[SpriteId.JapanUnits].Size.Width/2));
 
-				if( PointInRect3(ref wrk_r,(int)wrk_x2,(int)wrk_y2)!=0)
+				if( shipArea.Contains(destination))
 					{
 					// 前方に艦船！
 					return;
@@ -379,194 +346,163 @@ public void	SetCpuRoute2(int m)
 			}
 
 		// ＰＰ方向に陸地があるか
-		wrk_x2=unit.PathX[0];
-		wrk_y2=unit.PathY[0];
-		if( IsLandAt(wrk_x2, wrk_y2) )
+		if( IsLandAt(unit.GetPathPoint(0)) )
 			return;
 
 		}
 
 	//
-	min_dstc=0;
-	s_pp_x=unit.PathX[0];
-	s_pp_y=unit.PathY[0];
-	pp_indx=0;
+	var extraDistance=0.0;
+	var savedPoint=unit.GetPathPoint(0);
+	var index=0;
 
-	while(pp_indx==0)
+	while(index==0)
 		{
 
 		// 最終定点への角度と距離
-		if(pp_indx==0)
+		if(index==0)
 			{
-			start_x=unit.Position.X;
-			start_y=unit.Position.Y;
+			start=unit.Position;
 			}
 		else
 			{
-			start_x=unit.PathX[pp_indx-1];
-			start_y=unit.PathY[pp_indx-1];
+			start=unit.GetPathPoint(index-1);
 			}
 
-		if(min_dstc!=0)
+		if(extraDistance!=0)
 			{
-			unit.PathX[pp_indx]=s_pp_x;
-			unit.PathY[pp_indx]=s_pp_y;
-			unit.PathX[pp_indx+1]=MAP_RIGHT+1;
+			unit.SetPathPoint(index, savedPoint);
+			unit.EndPath(index+1);
 
-			wrk_x=unit.PathX[pp_indx]-unit.Position.X;
-			wrk_y=unit.PathY[pp_indx]-unit.Position.Y;
-			if(wrk_x==0)	wrk_x=1;
-			if(wrk_y==0)	wrk_y=1;
+			var toPoint=(unit.GetPathPoint(index)-unit.Position).NonZero();
 
-			pp_drctn=atan2(wrk_y,wrk_x)*RAD_to;
+			var direction=atan2(toPoint.Y,toPoint.X)*RadiansToDegrees;
 
-			unit.PathX[pp_indx]+=CosDegrees(pp_drctn)*(min_dstc);
-			unit.PathY[pp_indx]+=SinDegrees(pp_drctn)*(min_dstc);
+			unit.SetPathPoint(index, unit.GetPathPoint(index)+WorldVector.FromDirection(direction) * extraDistance);
 			}
 
-		wrk_x=unit.PathX[pp_indx]-start_x;
-		wrk_y=unit.PathY[pp_indx]-start_y;
-		if(wrk_x==0)	wrk_x=1;
-		if(wrk_y==0)	wrk_y=1;
+		var leg=(unit.GetPathPoint(index)-start).NonZero();
 
-		pp_drctn=Direction(wrk_x, wrk_y);
-		if(pp_drctn>=360)
-			pp_drctn=pp_drctn-360;
+		var bearing=leg.Direction;
+		bearing=bearing.WrapFullTurn();
 
-		if(wrk_x<0)
-			wrk_x=0-wrk_x;
-		if(wrk_y<0)
-			wrk_y=0-wrk_y;
-		wrk=pp_drctn;
-		if(wrk>=180)
-			wrk=wrk-180;
-		if(wrk>=90)
-			wrk=90-(wrk-90);
-		pp_dstc=(wrk_x)/(CosDegrees(wrk));
+		// Distance folds the direction from 0 to 360, where the original folds bearing, 360 brought to 0: both fold
+		// either to 0.
+		var legLength=leg.Length;
 
 		if( unit.Category==UnitCategory.Ship )
 			{
 			// 艦船のルート再計算
 
-			hit=0;
-			chk_dstc=40;
-			while(hit==0 && chk_dstc<=pp_dstc)
+			var hit=false;
+			var checkedDistance=40.0;
+			while(!hit && checkedDistance<=legLength)
 				{
-				if(pp_indx==0 && chk_dstc<=80 )
-					add=1.0;
+				if(index==0 && checkedDistance<=80 )
+					step=1.0;
 				else
-					add=40.0;
+					step=40.0;
 
-				chk_dstc+=add;
+				checkedDistance+=step;
 
-				wrk_x=start_x;
-				wrk_y=start_y;
-				wrk_x+=CosDegrees(pp_drctn)*(chk_dstc);
-				wrk_y+=SinDegrees(pp_drctn)*(chk_dstc);
+				var point=start+WorldVector.FromDirection(bearing) * checkedDistance;
 
 				// 島に接触するか？
-				if( IsLandAt(wrk_x, wrk_y) )
-					hit=1;		// 島に接触
+				if( IsLandAt(point) )
+					hit=true;		// 島に接触
 
 				// 船に接触するか
-				if( hit==0 && IsShipAt(m, wrk_x, wrk_y) )
-					hit=1;		// 船に接触
+				if( !hit && IsShipAt(m, point) )
+					hit=true;		// 船に接触
 
 				}
 
-			if( hit==1)
+			if( hit)
 				{
 				// 不幸にも進路を変更しないと目標点までいけない場合。
-				drctn1=pp_drctn;
-				drctn2=pp_drctn;
-				for(n=0; n<=7; n++)
+				var leftBearing=bearing;
+				var rightBearing=bearing;
+				for(var n=0; n<=7; n++)
 					{
-					drctn1+=22.5;
-					if(drctn1>=360)		drctn1=drctn1-360;
-					drctn2-=22.5;
-					if(drctn2<0)		drctn2=360+drctn2;
-					chk_dstc=40; hit=0;	left=0;	right=0;
-					while( chk_dstc<=(pp_dstc) && (left==0||right==0))
+					leftBearing+=22.5;
+					leftBearing=leftBearing.WrapFullTurn();
+					rightBearing-=22.5;
+					rightBearing=rightBearing.WrapNegative();
+					checkedDistance=40;	var left=false;	var right=false;
+					while( checkedDistance<=(legLength) && (!left||!right))
 						{
 
-						if(pp_indx==0 && chk_dstc<=80)
-							add=1.0;
+						if(index==0 && checkedDistance<=80)
+							step=1.0;
 						else
-							add=40.0;
+							step=40.0;
 
-						chk_dstc+=add;
+						checkedDistance+=step;
 
-						if(left==0)
+						if(!left)
 							{
 							// 左回り
-							wrk_x=start_x;
-							wrk_y=start_y;
-							wrk_x+=CosDegrees(drctn1)*(chk_dstc);
-							wrk_y+=SinDegrees(drctn1)*(chk_dstc);
+							var point=start+WorldVector.FromDirection(leftBearing) * checkedDistance;
 							// 島に接触するか？
-							if( IsLandAt(wrk_x, wrk_y) )
-								left=1;		// 島に接触
+							if( IsLandAt(point) )
+								left=true;		// 島に接触
 
 							// 船に接触するか
-							if( IsShipAt(m, wrk_x, wrk_y) )
-								left=1;		// 船に接触
+							if( IsShipAt(m, point) )
+								left=true;		// 船に接触
 
 							}
-						if(right==0)
+						if(!right)
 							{
 							// 右回り
-							wrk_x2=start_x;
-							wrk_y2=start_y;
-							wrk_x2+=CosDegrees(drctn2)*(chk_dstc);
-							wrk_y2+=SinDegrees(drctn2)*(chk_dstc);
+							var point=start+WorldVector.FromDirection(rightBearing) * checkedDistance;
 							// 島に接触するか？
-							if( IsLandAt(wrk_x2, wrk_y2) )
-								right=1;		// 島に接触
+							if( IsLandAt(point) )
+								right=true;		// 島に接触
 
 							// 船に接触するか
-							if( IsShipAt(m, wrk_x2, wrk_y2) )
-								right=1;		// 船に接触
+							if( IsShipAt(m, point) )
+								right=true;		// 船に接触
 							}
 						}
 
-					if( right==0 && chk_dstc>=pp_dstc)
+					if( !right && checkedDistance>=legLength)
 						{
-						TakeDetour(ref unit, ref pp_indx, start_x, start_y, chk_dstc, div, drctn2, drctn_ok1, drctn_ok2, ref min_dstc, s_pp_x, s_pp_y, re_add, ref error);
+						TakeDetour(ref unit, ref index, start, checkedDistance, divisor, rightBearing, minTurn, maxTurn, ref extraDistance, savedPoint, extraStep, ref error);
 						break;
 						}
 
-					if( left==0 && chk_dstc>=pp_dstc)
+					if( !left && checkedDistance>=legLength)
 						{
-						TakeDetour(ref unit, ref pp_indx, start_x, start_y, chk_dstc, div, drctn1, drctn_ok1, drctn_ok2, ref min_dstc, s_pp_x, s_pp_y, re_add, ref error);
+						TakeDetour(ref unit, ref index, start, checkedDistance, divisor, leftBearing, minTurn, maxTurn, ref extraDistance, savedPoint, extraStep, ref error);
 						break;
 						}
 
 					}
-				pp_indx++;
+				index++;
 				}
 			else
 				{
-				if( min_dstc==0 )
+				if( extraDistance==0 )
 					{
-					pp_indx=-1;
+					index=-1;
 					}
 				else
 					{
-					min_dstc=0;
-					unit.PathX[pp_indx+1]=s_pp_x;
-					unit.PathY[pp_indx+1]=s_pp_y;
-					unit.PathX[pp_indx+2]=MAP_RIGHT+1;
-					pp_indx++;
+					extraDistance=0;
+					unit.SetPathPoint(index+1, savedPoint);
+					unit.EndPath(index+2);
+					index++;
 					}
 				}
 			}
 		else
 			{
 			// 航空機のルート再計算
-			pp_indx=-1;
+			index=-1;
 			}
 
-		len = wsprintf(ach, "in Set_cpu_root2 error=%d" ,error);
+		wsprintf(text, "in Set_cpu_root2 error=%d" ,error);
 
 		}
 
@@ -579,15 +515,15 @@ public void	SetCpuRoute2(int m)
 [Original("cnct_game_input_now")]
 public void	ApplyOrders()
 	{
-	int	h,m,f,s,n,e; Array256<int> chk = default;
+	int formationNumber, n; Array256<int> usedFormationNumbers = default;
 
-	for(e=0; e<=1; e++)
+	for(var e=0; e<=1; e++)
 		{
 		if( SelectOrders[e].IsSet && !Units[SelectOrders[e].SelectedUnit].IsSupplying && !(Units[SelectOrders[e].SelectedUnit].Kind>=UnitKind.AirBase && Units[SelectOrders[e].SelectedUnit].Kind<=UnitKind.Fortress ))
 			{
 			// ユニット自体をクリックした。
 			SelectedUnit=SelectOrders[e].SelectedUnit;
-			m=SelectOrders[e].Unit;
+			int m=SelectOrders[e].Unit;
 
 			if( m==0 || Units[SelectedUnit].Side!=Units[m].Side )
 				{
@@ -649,8 +585,8 @@ public void	ApplyOrders()
 			{
 			// あるユニットに新ＰＰ＿ＸＹが設定された場合
 
-			m=MoveOrders[e].Unit;
-			for(n=0; Units[m].PathX[n]!=MAP_RIGHT+1; n++)
+			int m=MoveOrders[e].Unit;
+			for(n=0; !Units[m].IsPathEnd(n); n++)
 				{}
 			// The single-player game: the condition that NSPW NET has as a comment, || unit[m].used==cpu_side, and the
 			// computer's ships' route, as 1.22 has them (docs/Singleplayer.md).
@@ -660,9 +596,8 @@ public void	ApplyOrders()
 				BufferedMoveOrders[e].ClearsPath=0;
 				MoveOrders[e].ClearsPath=0;
 
-				Units[m].PathX[0]=MoveOrders[e].Destination.X;
-				Units[m].PathY[0]=MoveOrders[e].Destination.Y;
-				Units[m].PathX[1]=MAP_RIGHT+1;
+				Units[m].SetPathPoint(0, MoveOrders[e].Destination);
+				Units[m].EndPath(1);
 				n=1;
 
 				if( CpuSide!=Side.None && Units[m].Side==CpuSide && Units[m].Category!=UnitCategory.Plane )
@@ -672,9 +607,8 @@ public void	ApplyOrders()
 				{
 				if(n<64)
 					{
-					Units[m].PathX[n]=MoveOrders[e].Destination.X;
-					Units[m].PathY[n]=MoveOrders[e].Destination.Y;
-					Units[m].PathX[n+1]=MAP_RIGHT+1;
+					Units[m].SetPathPoint(n, MoveOrders[e].Destination);
+					Units[m].EndPath(n+1);
 					}
 				}
 
@@ -686,11 +620,11 @@ public void	ApplyOrders()
 				Units[m].IsStopping=false;
 
 				// 一時的寮機の重複番号阻止
-				for(s=0;s<=MaxUnitId;s++)
-					chk[s]=0;
+				for(var s=0;s<=MaxUnitId;s++)
+					usedFormationNumbers[s]=0;
 
-				f=0;
-				for( s=0; s<=MaxUnitId; s++)
+				var followers=0;
+				for( var s=0; s<=MaxUnitId; s++)
 					{
 					ref var unit = ref Units[s];
 					if( Selections[e][s]==0 && unit.GroupLeader==m )
@@ -706,10 +640,10 @@ public void	ApplyOrders()
 					   && (unit.Weapon==FireKind.Torpedo||unit.Weapon==FireKind.Bomb||unit.Weapon==FireKind.Unarmed) && unit.ReloadTime!=0 )
 						 )
 						{
-						f++;
-						if(chk[Selections[e][s]]==0)
+						followers++;
+						if(usedFormationNumbers[Selections[e][s]]==0)
 							{	// 既に使われた番機無し
-							chk[Selections[e][s]]++;
+							usedFormationNumbers[Selections[e][s]]++;
 							unit.FormationNumber=Selections[e][s];
 							unit.IsGroupLeader=0;
 
@@ -728,10 +662,10 @@ public void	ApplyOrders()
 							}
 						else
 							{	// 既に使われた番機をつかおうとした
-							for(h=1;chk[h]!=0&&h<=255;h++)
+							for(formationNumber=1;usedFormationNumbers[formationNumber]!=0&&formationNumber<=255;formationNumber++)
 								{}
-							chk[h]++;
-							unit.FormationNumber=(short)h;
+							usedFormationNumbers[formationNumber]++;
+							unit.FormationNumber=(short)formationNumber;
 							unit.IsGroupLeader=0;
 
 							if( unit.Category==UnitCategory.Ship )
@@ -750,9 +684,9 @@ public void	ApplyOrders()
 						}
 					}
 
-				if( f>=1 )
+				if( followers>=1 )
 					{
-					Units[m].IsGroupLeader=(short)(f+1);		// 小隊機数(指揮機含む)
+					Units[m].IsGroupLeader=(short)(followers+1);		// 小隊機数(指揮機含む)
 					}
 
 				if( Units[m].Category==UnitCategory.Plane && Units[m].PlaneState==UnitState.Parked )
@@ -761,7 +695,7 @@ public void	ApplyOrders()
 					Units[Units[m].Carrier].LandingLock=0;	// 空母ならこの数値で甲板上の右左 (the slot of the landing lock now)
 					}
 
-				for( s=0; s<=MaxUnitId; s++)
+				for( var s=0; s<=MaxUnitId; s++)
 					{
 					ref var unit = ref Units[s];
 					if( unit.GroupLeader!=0 && Units[unit.GroupLeader].IsGroupLeader==0 )
@@ -776,47 +710,47 @@ public void	ApplyOrders()
 	戦術マップ移動
 --------------------------------------------*/
 [Original("tac_map_scrl")]
-public void	ScrollBattleArea(int drctn)
+public void	ScrollBattleArea(int direction)
 	{
-	switch(drctn)
+	switch(direction)
 		{
 		case 1:		// UP
-			ScrollSpeed+=scrn_moving_add;
+			ScrollSpeed+=ScrollAcceleration;
 			if(ScrollSpeed>=SCRN_MAX_SPD)
 				ScrollSpeed=SCRN_MAX_SPD-1;
-			CameraPosition = new WorldPosition(CameraPosition.X, CameraPosition.Y + ScrollSpeed);
-			if(CameraPosition.Y>MAP_TOP)
-				CameraPosition = new WorldPosition(CameraPosition.X, MAP_TOP);
+			CameraPosition += new WorldVector(0, ScrollSpeed);
+			if(CameraPosition.Y>World.Top)
+				CameraPosition = new WorldPosition(CameraPosition.X, World.Top);
 			break;
 		case 2:		// UP RI
 			break;
 		case 3:		// RI
-			ScrollSpeed+=scrn_moving_add;
+			ScrollSpeed+=ScrollAcceleration;
 			if(ScrollSpeed>=SCRN_MAX_SPD)
 				ScrollSpeed=SCRN_MAX_SPD-1;
-			CameraPosition = new WorldPosition(CameraPosition.X + ScrollSpeed, CameraPosition.Y);
-			if(CameraPosition.X>(MAP_RIGHT-CMBT_WIDTH) )
-				CameraPosition = new WorldPosition(MAP_RIGHT-CMBT_WIDTH, CameraPosition.Y);
+			CameraPosition += new WorldVector(ScrollSpeed, 0);
+			if(CameraPosition.X>(World.Right-CMBT_WIDTH) )
+				CameraPosition = new WorldPosition(World.Right-CMBT_WIDTH, CameraPosition.Y);
 			break;
 		case 4:		// RI DW
 			break;
 		case 5:		// DW
-			ScrollSpeed+=scrn_moving_add;
+			ScrollSpeed+=ScrollAcceleration;
 			if(ScrollSpeed>=SCRN_MAX_SPD)
 				ScrollSpeed=SCRN_MAX_SPD-1;
-			CameraPosition = new WorldPosition(CameraPosition.X, CameraPosition.Y - ScrollSpeed);
-			if(CameraPosition.Y<(MAP_BOTTOM+CMBT_HEIGHT) )
-				CameraPosition = new WorldPosition(CameraPosition.X, MAP_BOTTOM+CMBT_HEIGHT);
+			CameraPosition -= new WorldVector(0, ScrollSpeed);
+			if(CameraPosition.Y<(World.Bottom+CMBT_HEIGHT) )
+				CameraPosition = new WorldPosition(CameraPosition.X, World.Bottom+CMBT_HEIGHT);
 			break;
 		case 6:		// DW LF
 			break;
 		case 7:		// LF
-			ScrollSpeed+=scrn_moving_add;
+			ScrollSpeed+=ScrollAcceleration;
 			if(ScrollSpeed>=SCRN_MAX_SPD)
 				ScrollSpeed=SCRN_MAX_SPD-1;
-			CameraPosition = new WorldPosition(CameraPosition.X - ScrollSpeed, CameraPosition.Y);
-			if(CameraPosition.X<MAP_LEFT)
-				CameraPosition = new WorldPosition(MAP_LEFT, CameraPosition.Y);
+			CameraPosition -= new WorldVector(ScrollSpeed, 0);
+			if(CameraPosition.X<World.Left)
+				CameraPosition = new WorldPosition(World.Left, CameraPosition.Y);
 			break;
 		case 8:		// LF UP
 			break;
@@ -825,14 +759,13 @@ public void	ScrollBattleArea(int drctn)
 
 private void ReadMouse()
 	{
-	int hr;
 
 	// バッファリング・データを取得する
 	while(IsAppActive)
 		{
 		DIDEVICEOBJECTDATA od;
 		uint dwItems = 1;
-		hr = pDIDeviceMouse.GetDeviceData((uint)(sizeof(DIDEVICEOBJECTDATA)),
+		var hr = pDIDeviceMouse.GetDeviceData((uint)(sizeof(DIDEVICEOBJECTDATA)),
 							&od, &dwItems, 0);
 		if (hr==DIERR_INPUTLOST)
 			pDIDeviceMouse.Acquire();
@@ -905,7 +838,6 @@ private void ReadMouse()
 
 private void ReadKeyboard()
 	{
-	int hr;
 	int y = 0;
 
 	// バッファリング・データを取得する
@@ -913,7 +845,7 @@ private void ReadKeyboard()
 		{
 		DIDEVICEOBJECTDATA od;
 		uint dwItems = 1;
-		hr = pDIDevice.GetDeviceData((uint)(sizeof(DIDEVICEOBJECTDATA)),
+		var hr = pDIDevice.GetDeviceData((uint)(sizeof(DIDEVICEOBJECTDATA)),
 							&od, &dwItems, 0);
 		if (hr==DIERR_INPUTLOST)
 			pDIDevice.Acquire();
@@ -998,7 +930,7 @@ private void ReadKeyboard()
 
 					if( !IsEditingMap && hwndChatDlg==null && (od.dwData & (0x80))!=0 )
 						{
-						hwndChatDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_CHAT_DIALOG), hwndApp, ChatDlgProc);
+						hwndChatDlg = CreateDialog(MAKEINTRESOURCE(IDD_CHAT_DIALOG), hwndApp, ChatDlgProc);
 
 						}
 					break;
@@ -1015,7 +947,7 @@ private void ReadKeyboard()
 public void ReadInput()
 	{
 
-	int	flg=0;
+	bool	isScrolling;
 
 	// キーボードの入力チェック
 	if (pDIDevice!=null)
@@ -1023,33 +955,33 @@ public void ReadInput()
 		ReadKeyboard();
 		}
 
-	flg=0;
+	isScrolling=false;
 
 	if( CursorPosition.y<=0 || Buttons.HasFlag(InputButtons.Front) )
 		{
 		ScrollBattleArea(1);
-		flg=1;
+		isScrolling=true;
 		}
 
 	if( CursorPosition.y>=SCRN_HEIGHT-1 || Buttons.HasFlag(InputButtons.Back) )
 		{
 		ScrollBattleArea(5);
-		flg=1;
+		isScrolling=true;
 		}
 
 	if( CursorPosition.x>=SCRN_WIDTH-1 || Buttons.HasFlag(InputButtons.Right) )
 		{
 		ScrollBattleArea(3);
-		flg=1;
+		isScrolling=true;
 		}
 
 	if( CursorPosition.x<=0 || Buttons.HasFlag(InputButtons.Left))
 		{
 		ScrollBattleArea(7);
-		flg=1;
+		isScrolling=true;
 		}
 
-	if(flg==0)
+	if(!isScrolling)
 		{
 		ScrollSpeed=0;
 		}
@@ -1065,8 +997,8 @@ public void ReadInput()
 
 	// 純粋なマウス位置を取る
 	GetCursorPos(ref CursorPosition);
-	if( !IsFullscreen )
-		ScreenToClient(hwndApp, ref CursorPosition);
+	if( !Renderer.IsFullscreen )
+		ScreenToClient();
 
 	}
 
@@ -1077,16 +1009,14 @@ public void ReadInput()
 [Original("InitDInput")]
 public bool InitializeDirectInput()
 {
-	int hr;
 	DIPROPDWORD diprop;
 
 	// *****************************************
 	// DirectInputの作成
-	hr = DirectInput8Create( hInstApp , DIRECTINPUT_VERSION,
-							IID_IDirectInput8, out pDInput, null);
+	var hr = DirectInput8Create( out pDInput);
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR("DirectInput8オブジェクトの作成に失敗", hr);
+		DXTRACE_ERR(hr);
 		return false;
 	}
 
@@ -1094,7 +1024,7 @@ public bool InitializeDirectInput()
 	// デバイス・オブジェクトを作成
 	hr = pDInput.CreateDevice(GUID_SysKeyboard, out pDIDevice, null);
 	if (FAILED(hr)) {
-		DXTRACE_ERR("DirectInputDevice8オブジェクトの作成に失敗", hr);
+		DXTRACE_ERR(hr);
 	    return false;
 	}
 
@@ -1102,7 +1032,7 @@ public bool InitializeDirectInput()
 	hr = pDIDevice.SetDataFormat(c_dfDIKeyboard);
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR("c_dfDIMouse2形式の設定に失敗", hr);
+		DXTRACE_ERR(hr);
 		return false;
 	}
 
@@ -1110,7 +1040,7 @@ public bool InitializeDirectInput()
 	hr = pDIDevice.SetCooperativeLevel(hwndApp, DISCL_NONEXCLUSIVE | DISCL_FOREGROUND);
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR("フォアグラウンド＆非排他モードの設定に失敗", hr);
+		DXTRACE_ERR(hr);
 		return false;
 	}
 
@@ -1123,7 +1053,7 @@ public bool InitializeDirectInput()
 	hr = pDIDevice.SetProperty(DIPROP_BUFFERSIZE, &diprop.diph);
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR("バッファ・サイズの設定に失敗", hr);
+		DXTRACE_ERR(hr);
 		return false;
 	}
 
@@ -1135,7 +1065,7 @@ public bool InitializeDirectInput()
 	hr = pDInput.CreateDevice(GUID_SysMouse, out pDIDeviceMouse, null);
 	if (FAILED(hr))
 		{
-		DXTRACE_ERR("DirectInputDevice8オブジェクトの作成に失敗", hr);
+		DXTRACE_ERR(hr);
 	    return false;
 		}
 
@@ -1143,7 +1073,7 @@ public bool InitializeDirectInput()
 	hr = pDIDeviceMouse.SetDataFormat(c_dfDIMouse2);
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR("c_dfDIMouse2形式の設定に失敗", hr);
+		DXTRACE_ERR(hr);
 		return false;
 	}
 
@@ -1151,7 +1081,7 @@ public bool InitializeDirectInput()
 	hr = pDIDeviceMouse.SetCooperativeLevel(hwndApp, DISCL_NONEXCLUSIVE | DISCL_FOREGROUND);
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR("フォアグラウンド＆非排他モードの設定に失敗", hr);
+		DXTRACE_ERR(hr);
 		return false;
 	}
 
@@ -1165,7 +1095,7 @@ public bool InitializeDirectInput()
 	hr = pDIDeviceMouse.SetProperty(DIPROP_AXISMODE, &diprop.diph);
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR("軸モードの設定に失敗", hr);
+		DXTRACE_ERR(hr);
 		return false;
 	}
 
@@ -1174,7 +1104,7 @@ public bool InitializeDirectInput()
 	hr = pDIDeviceMouse.SetProperty(DIPROP_BUFFERSIZE, &diprop.diph);
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR("バッファ・サイズの設定に失敗", hr);
+		DXTRACE_ERR(hr);
 		return false;
 	}
 

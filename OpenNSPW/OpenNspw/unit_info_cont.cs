@@ -21,7 +21,7 @@ namespace OpenNspw;
 public unsafe partial class Nspw
 {
 
-public const int		map_close	= 1;
+public const int		MinimapCellSize	= 1;
 
 //============================================================================
 // 補給ポイントとユニットの値段
@@ -92,191 +92,190 @@ public int	GetSupplyPointsPerUnit()
 	return 0;
 	}
 
-private void WriteUnitKindName(ref Array8<int> len, ref Array8<Array128<byte>> ach)
+private void WriteUnitKindName(ref Array8<int> length, ref Array8<Array128<byte>> text)
 	{
 	switch((UnitKind)UnitInfoPanel[0])
 		{
 		case UnitKind.Battleship:
 			if( Units[UnitInfoPanel[3]].Side==Side.Japan && Units[UnitInfoPanel[3]].Variant==1 )
-				len[0] = wsprintf(ach[0], "大和級戦艦");
+				length[0] = wsprintf(text[0], "大和級戦艦");
 			else
-				len[0] = wsprintf(ach[0], "戦艦",10);
+				length[0] = wsprintf(text[0], "戦艦",10);
 			break;
 		case UnitKind.Cruiser:
 			if( Units[UnitInfoPanel[3]].Variant==0 )
-				len[0] = wsprintf(ach[0], "巡洋艦",10);
+				length[0] = wsprintf(text[0], "巡洋艦",10);
 			else
-			len[0] = wsprintf(ach[0], "防空巡洋艦",10);
+			length[0] = wsprintf(text[0], "防空巡洋艦",10);
 			break;
 
 		case UnitKind.Destroyer:
 			if( Units[UnitInfoPanel[3]].Variant==0 )
-				len[0] = wsprintf(ach[0], "駆逐艦",10);
+				length[0] = wsprintf(text[0], "駆逐艦",10);
 			else
-				len[0] = wsprintf(ach[0], "対潜駆逐艦",10);
+				length[0] = wsprintf(text[0], "対潜駆逐艦",10);
 			break;
 		case UnitKind.Submarine:
-			len[0] = wsprintf(ach[0], "潜水艦",10);
+			length[0] = wsprintf(text[0], "潜水艦",10);
 			break;
 		case UnitKind.Carrier:
 			if( Units[UnitInfoPanel[3]].Side==Side.UnitedStates && Units[UnitInfoPanel[3]].Variant==1 )
-				len[0] = wsprintf(ach[0], "エセックス型空母",10);
+				length[0] = wsprintf(text[0], "エセックス型空母",10);
 			else
-				len[0] = wsprintf(ach[0], "正規空母",10);
+				length[0] = wsprintf(text[0], "正規空母",10);
 			break;
 		case UnitKind.LightCarrier:
-			len[0] = wsprintf(ach[0], "軽空母",10);
+			length[0] = wsprintf(text[0], "軽空母",10);
 			break;
 		case UnitKind.Transport:
 			if(Units[UnitInfoPanel[3]].Ammo!=0)
 				{
 				if(Units[UnitInfoPanel[3]].Weapon==FireKind.CargoInfantryBase)
-					len[0] = wsprintf(ach[0], "輸送船(歩兵基地)",10);
+					length[0] = wsprintf(text[0], "輸送船(歩兵基地)",10);
 				else if(Units[UnitInfoPanel[3]].Weapon==FireKind.CargoPillboxes)
-					len[0] = wsprintf(ach[0], "輸送船(トーチカ群)",10);
+					length[0] = wsprintf(text[0], "輸送船(トーチカ群)",10);
 				else if(Units[UnitInfoPanel[3]].Weapon==FireKind.CargoFortress)
-					len[0] = wsprintf(ach[0], "輸送船(要塞)",10);
+					length[0] = wsprintf(text[0], "輸送船(要塞)",10);
 				else if(Units[UnitInfoPanel[3]].Weapon==FireKind.CargoAirBase)
-					len[0] = wsprintf(ach[0], "輸送船(航空基地)",10);
+					length[0] = wsprintf(text[0], "輸送船(航空基地)",10);
 				else if(Units[UnitInfoPanel[3]].Weapon==FireKind.CargoNavalBase)
-					len[0] = wsprintf(ach[0], "輸送船(軍港)",10);
+					length[0] = wsprintf(text[0], "輸送船(軍港)",10);
 				}
 			else
 				{
-				len[0] = wsprintf(ach[0], "輸送船",10);
+				length[0] = wsprintf(text[0], "輸送船",10);
 				}
 			break;
 		case UnitKind.Fighter:
 			if( Units[UnitInfoPanel[3]].Variant==0 )
-				len[0] = wsprintf(ach[0], "戦闘機",10);
+				length[0] = wsprintf(text[0], "戦闘機",10);
 			else
-				len[0] = wsprintf(ach[0], "陸上戦闘機",10);
+				length[0] = wsprintf(text[0], "陸上戦闘機",10);
 			break;
 		case UnitKind.Attacker:
-			len[0] = wsprintf(ach[0], "攻撃機",10);
+			length[0] = wsprintf(text[0], "攻撃機",10);
 			break;
 		case UnitKind.Bomber:
-			len[0] = wsprintf(ach[0], "戦略爆撃機",10);
+			length[0] = wsprintf(text[0], "戦略爆撃機",10);
 			break;
 		case UnitKind.NavalBase:
-			len[0] = wsprintf(ach[0], "軍港",10);
+			length[0] = wsprintf(text[0], "軍港",10);
 			break;
 		case UnitKind.AirBase:
-			len[0] = wsprintf(ach[0], "航空基地",10);
+			length[0] = wsprintf(text[0], "航空基地",10);
 			break;
 		case UnitKind.City:
-			len[0] = wsprintf(ach[0], "都市",10);
+			length[0] = wsprintf(text[0], "都市",10);
 			break;
 		case UnitKind.Mine:
-			len[0] = wsprintf(ach[0], "鉱山",10);
+			length[0] = wsprintf(text[0], "鉱山",10);
 			break;
 		case UnitKind.InfantryBase:
-			len[0] = wsprintf(ach[0], "歩兵基地",10);
+			length[0] = wsprintf(text[0], "歩兵基地",10);
 			break;
 		case UnitKind.Pillboxes:
-			len[0] = wsprintf(ach[0], "トーチカ群",10);
+			length[0] = wsprintf(text[0], "トーチカ群",10);
 			break;
 		case UnitKind.Fortress:
-			len[0] = wsprintf(ach[0], "要塞",10);
+			length[0] = wsprintf(text[0], "要塞",10);
 			break;
 		default:
-			len[0] = wsprintf(ach[0], "だっちゅーの",10);
+			length[0] = wsprintf(text[0], "だっちゅーの",10);
 			break;
 		}
 	}
 
 // The texts of the unit whose information the sidebar shows: [0] its kind, [1] its damage, or its building time,
 // [2] its ammunition and [3] its fuel.
-private void WriteUnitDetails(ref Array8<int> len, ref Array8<Array128<byte>> ach)
+private void WriteUnitDetails(ref Array8<int> length, ref Array8<Array128<byte>> text)
 	{
 	// 艦種
-	WriteUnitKindName(ref len, ref ach);
+	WriteUnitKindName(ref length, ref text);
 
 	// 損傷
 	if( Units[UnitInfoPanel[3]].IsUsed && ( Units[UnitInfoPanel[3]].Kind==UnitKind.AirBase||Units[UnitInfoPanel[3]].Kind==UnitKind.NavalBase||Units[UnitInfoPanel[3]].Kind==UnitKind.InfantryBase||Units[UnitInfoPanel[3]].Kind==UnitKind.Pillboxes||Units[UnitInfoPanel[3]].Kind==UnitKind.Fortress ) && Units[UnitInfoPanel[3]].info[0]!=0 && Units[UnitInfoPanel[3]].Hp==Units[UnitInfoPanel[3]].MaxHp
 		)
 		{
-		len[1] = wsprintf(ach[1], "工事:%d", Units[UnitInfoPanel[3]].BuildTime );
+		length[1] = wsprintf(text[1], "工事:%d", Units[UnitInfoPanel[3]].BuildTime );
 		}
 	else
 		{
 		if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp*0.2 )
 			{
-			len[1] = wsprintf(ach[1], "大破");
+			length[1] = wsprintf(text[1], "大破");
 			}
 		else if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp*0.5 )
 			{
-			len[1] = wsprintf(ach[1], "中破");
+			length[1] = wsprintf(text[1], "中破");
 			}
 		else if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp*0.7 )
 			{
-			len[1] = wsprintf(ach[1], "小破");
+			length[1] = wsprintf(text[1], "小破");
 			}
 		else if( Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp-1 )
 			{
-			len[1] = wsprintf(ach[1], "軽損傷");
+			length[1] = wsprintf(text[1], "軽損傷");
 			}
 		else
 			{
-			len[1] = wsprintf(ach[1], "損傷無");
+			length[1] = wsprintf(text[1], "損傷無");
 			}
 		}
 
 	// 残弾薬
-	len[2] = wsprintf(ach[2], "弾薬：%d",Units[UnitInfoPanel[3]].Ammo);
+	length[2] = wsprintf(text[2], "弾薬：%d",Units[UnitInfoPanel[3]].Ammo);
 
 	// 残燃料
 	if(Units[UnitInfoPanel[3]].Fuel==-1)
-		len[3] = wsprintf(ach[3], "停泊艦船");
+		length[3] = wsprintf(text[3], "停泊艦船");
 	else
-		len[3] = wsprintf(ach[3], "燃料：%d", (int)(Units[UnitInfoPanel[3]].Fuel) );
+		length[3] = wsprintf(text[3], "燃料：%d", (int)(Units[UnitInfoPanel[3]].Fuel) );
 	}
 
-private void DrawUnitDetails(SpriteId sprite, ref RECT src_rect, ref HDC hdc, ref Array8<int> len, ref Array8<Array128<byte>> ach)
+private void DrawUnitDetails(SpriteId sprite, ref RECT source, ref HDC hdc, ref Array8<int> length, ref Array8<Array128<byte>> text)
 	{
-	RECT dstn_rect;
-	int n;
-	Sprites[sprite].Frame=UnitInfoPanel[2];
+	RECT destination;
+	Renderer.Sprites[sprite].Frame=UnitInfoPanel[2];
 	if( UnitInfoPanel[1]!=0 )
 		{
 		if((UnitKind)UnitInfoPanel[0]==UnitKind.AirBase)
 			{
-			Sprites[sprite].Frame=9;
+			Renderer.Sprites[sprite].Frame=9;
 			}
 		if((UnitKind)UnitInfoPanel[0]==UnitKind.Carrier)
 			{
-			Sprites[sprite].Frame=10;
+			Renderer.Sprites[sprite].Frame=10;
 			}
 		if((UnitKind)UnitInfoPanel[0]==UnitKind.LightCarrier)
 			{
-			Sprites[sprite].Frame=11;
+			Renderer.Sprites[sprite].Frame=11;
 			}
 		}
 
 	// src_rect は ソースサーフェスのレクタングルです。
-	src_rect.left = Sprites[sprite].SheetX+(Sprites[sprite].Width * (Sprites[sprite].Frame % Sprites[sprite].FramesPerRow))+1;
-	src_rect.top = Sprites[sprite].SheetY+(Sprites[sprite].Height* (Sprites[sprite].Frame / Sprites[sprite].FramesPerRow))+1;
-	src_rect.right = (src_rect.left + Sprites[sprite].Width)-3;
-	src_rect.bottom = (src_rect.top + Sprites[sprite].Height)-2;
+	source.left = Renderer.Sprites[sprite].SheetPosition.X+(Renderer.Sprites[sprite].Size.Width * (Renderer.Sprites[sprite].Frame % Renderer.Sprites[sprite].FramesPerRow))+1;
+	source.top = Renderer.Sprites[sprite].SheetPosition.Y+(Renderer.Sprites[sprite].Size.Height* (Renderer.Sprites[sprite].Frame / Renderer.Sprites[sprite].FramesPerRow))+1;
+	source.right = (source.left + Renderer.Sprites[sprite].Size.Width)-3;
+	source.bottom = (source.top + Renderer.Sprites[sprite].Size.Height)-2;
 
 	// dstn_rect は ディスティネーションレクタングルです。
-	dstn_rect.left=CMBT_WIDTH;
-	dstn_rect.top=0;
+	destination.left=CMBT_WIDTH;
+	destination.top=0;
 
-	dstn_rect.right=dstn_rect.left+Sprites[sprite].Width-1+1;
-	dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Height-1+1;
+	destination.right=destination.left+Renderer.Sprites[sprite].Size.Width-1+1;
+	destination.bottom=destination.top+Renderer.Sprites[sprite].Size.Height-1+1;
 
-	IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref src_rect),DDBLTFAST_WAIT );
+	IDirectDrawSurface_BltFast( Renderer.lpDDSBack, destination.left, destination.top,Renderer.OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),DDBLTFAST_WAIT );
 
 	// そのユニットのテキストを表示します。
-	if (IDirectDrawSurface_GetDC(lpDDSBack, (HDC*)Unsafe.AsPointer(ref hdc)) == DD_OK )
+	if (IDirectDrawSurface_GetDC(Renderer.lpDDSBack, (HDC*)Unsafe.AsPointer(ref hdc)) == DD_OK )
 		{
 		// draw stats, like frame number and frame rate
 		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, gameFont_1);
+		SelectObject(hdc, Renderer.GameFont1);
 
 #if !LNGG_VER
-		WriteUnitDetails(ref len, ref ach);
+		WriteUnitDetails(ref length, ref text);
 
 #else
 		// 艦種
@@ -403,20 +402,20 @@ else
 
 #endif
 
-		for( n=0; n<=3; n++)
+		for( var n=0; n<=3; n++)
 			{
 			SetTextColor(hdc, RGB(255, 255, 0));
-			TextOut(hdc, dstn_rect.left+20+110, 10+(n*20), ach[n], len[n]);
+			TextOut(hdc, destination.left+20+110, 10+(n*20), text[n], length[n]);
 			}
 
 		if( IsEditingMap )
 			{
-			len[0] = wsprintf(ach[0], "(%d/%d)", Units[UnitInfoPanel[3]].Hp, Units[UnitInfoPanel[3]].MaxHp);
+			length[0] = wsprintf(text[0], "(%d/%d)", Units[UnitInfoPanel[3]].Hp, Units[UnitInfoPanel[3]].MaxHp);
 			SetTextColor(hdc, RGB(255, 255, 0));
-			TextOut(hdc, dstn_rect.left+20+110+55, 10+(1*20), ach[0], len[0]);
+			TextOut(hdc, destination.left+20+110+55, 10+(1*20), text[0], length[0]);
 			}
 
-		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
+		IDirectDrawSurface_ReleaseDC(Renderer.lpDDSBack, hdc);
 		}
 	}
 
@@ -438,25 +437,24 @@ private void ToggleDeckView()
 		}
 	}
 
-private void UpdateDeckView(ref RECT src_rect, SpriteId sprite, ref RECT dstn_rect)
+private void UpdateDeckView(ref RECT source, SpriteId sprite, ref RECT destination)
 	{
-	int i;
 
 	// The host's UI's commands for the switch (UICommands.cs).
 	RunUICommands(UICommandSite.DeckView, true);
 
-	i=0;
-	src_rect.left = Sprites[sprite].SheetX+(Sprites[sprite].Width*0)+1;
-	src_rect.top = Sprites[sprite].SheetY+(Sprites[sprite].Height*(i+1))+1;
-	src_rect.right = src_rect.left+(Sprites[sprite].Width)-1;
-	src_rect.bottom = src_rect.top+(Sprites[sprite].Height)-1;
+	var i=0;
+	source.left = Renderer.Sprites[sprite].SheetPosition.X+(Renderer.Sprites[sprite].Size.Width*0)+1;
+	source.top = Renderer.Sprites[sprite].SheetPosition.Y+(Renderer.Sprites[sprite].Size.Height*(i+1))+1;
+	source.right = source.left+(Renderer.Sprites[sprite].Size.Width)-1;
+	source.bottom = source.top+(Renderer.Sprites[sprite].Size.Height)-1;
 
-	dstn_rect.left=CMBT_WIDTH;
-	dstn_rect.top=Sprites[SpriteId.JapanUnitInfo].Y+Sprites[SpriteId.JapanUnitInfo].Height;
-	dstn_rect.right=dstn_rect.left+(Sprites[sprite].Width)-1;
-	dstn_rect.bottom=dstn_rect.top+(Sprites[sprite].Height)-1;
+	destination.left=CMBT_WIDTH;
+	destination.top=Renderer.Sprites[SpriteId.JapanUnitInfo].Position.Y+Renderer.Sprites[SpriteId.JapanUnitInfo].Size.Height;
+	destination.right=destination.left+(Renderer.Sprites[sprite].Size.Width)-1;
+	destination.bottom=destination.top+(Renderer.Sprites[sprite].Size.Height)-1;
 
-	if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+	if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 		{
 
 		if( LeftButton==3 )
@@ -464,47 +462,40 @@ private void UpdateDeckView(ref RECT src_rect, SpriteId sprite, ref RECT dstn_re
 			ToggleDeckView();
 			}
 		}
-	if( LeftButton==2 && PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+	if( LeftButton==2 && PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 		{
-		src_rect.right+=180;	src_rect.left+=180;
+		source.right+=180;	source.left+=180;
 		}
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref src_rect),0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( Renderer.lpDDSBack, destination.left, destination.top,Renderer.OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),0) )
 	{
-	RestoreSurfaces();
+	Renderer.RestoreSurfaces();
 	}
 	}
 
-// The combat menu's items for the selected unit: in `menu`, their buttons' pictures (Buttons1), and in `menu2`, the
+// The combat menu's items for the selected unit: in `menu`, their buttons' pictures (Buttons1), and in `menuItems`, the
 // items. Returns their number. The choice shown (CombatMenuSelection) follows a supplying ship or a parked plane's arms.
-private int ListCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu2)
+private int ListCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menuItems)
 	{
-	int n;
-	int i;
-	RECT wrk_rect;
-	int g;
 
-	n=0;
+	var n=0;
 	if( Units[SelectedUnit].Category==UnitCategory.Ship && !(Units[SelectedUnit].Kind==UnitKind.InfantryBase||Units[SelectedUnit].Kind==UnitKind.Pillboxes||Units[SelectedUnit].Kind==UnitKind.Fortress||Units[SelectedUnit].Kind==UnitKind.AirBase) )
 		{	// 艦船のメニュー
 		if( Units[SelectedUnit].IsStopping && Units[SelectedUnit].Speed==0 )
 			{
-			for( i=1; i<=MaxUnitId; i++)
+			for( var i=1; i<=MaxUnitId; i++)
 				{
 				ref var unit = ref Units[i];
 				if( unit.Side==LocalSide && unit.Kind==UnitKind.NavalBase && unit.BuildTime==0 )
 					{
 					// ptin dbg
-					wrk_rect.top=(int)unit.Position.Y+40+240;
-					wrk_rect.right=(int)unit.Position.X+40+240;
-					wrk_rect.bottom=(int)unit.Position.Y-40-240;
-					wrk_rect.left=(int)unit.Position.X-40-240;
+					var area=WorldRect.Around(unit.Position, 40+240, 40+240);
 
-					if( PointInRect3( ref wrk_rect, (int)Units[SelectedUnit].Position.X, (int)Units[SelectedUnit].Position.Y )!=0 )
+					if( area.Contains(Units[SelectedUnit].Position) )
 						{
 						n=1;
 						menu[0]=10;			// ボタンＣＧのインデックス
-						menu2[0]=CombatMenuItem.Supply;
+						menuItems[0]=CombatMenuItem.Supply;
 
 						if( Units[SelectedUnit].IsSupplying )
 							CombatMenuSelection=CombatMenuItem.Supply;
@@ -520,10 +511,10 @@ private int ListCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu
 		if( Units[SelectedUnit].PlaneState==UnitState.Flying )
 			{	// 飛行中のメニュー
 			n=0;
-			for(g=1;g<=MaxUnitId;g++)
+			for(var m=1;m<=MaxUnitId;m++)
 				{
-				ref var unit = ref Units[g];
-				if( unit.IsUsed && ( unit.GroupLeader==SelectedUnit || g==SelectedUnit || Selections[1][g]!=0) )
+				ref var unit = ref Units[m];
+				if( unit.IsUsed && ( unit.GroupLeader==SelectedUnit || m==SelectedUnit || Selections[1][m]!=0) )
 					if( unit.PlaneState!=UnitState.Flying )
 						{
 						n=1; break;
@@ -532,13 +523,13 @@ private int ListCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu
 			if( n==0 )
 				{
 				n=2;						// メニュー項目の数
-				menu[0]=2;	menu2[0]=CombatMenuItem.Move;
-				menu[1]=6;	menu2[1]=CombatMenuItem.Return;
+				menu[0]=2;	menuItems[0]=CombatMenuItem.Move;
+				menu[1]=6;	menuItems[1]=CombatMenuItem.Return;
 				}
 			else
 				{
 				n=1;						// メニュー項目の数
-				menu[0]=2;	menu2[0]=CombatMenuItem.Move;
+				menu[0]=2;	menuItems[0]=CombatMenuItem.Move;
 				}
 			}
 		else
@@ -548,15 +539,15 @@ private int ListCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu
 				if( Units[SelectedUnit].Kind==UnitKind.Attacker || Units[SelectedUnit].Side==Side.Japan )
 					{
 					n=3;			// メニューの数
-					menu[0]=7;	menu2[0]=CombatMenuItem.ArmWithTorpedo;
-					menu[1]=8;	menu2[1]=CombatMenuItem.ArmWithBomb;
-					menu[2]=9;	menu2[2]=CombatMenuItem.Disarm;
+					menu[0]=7;	menuItems[0]=CombatMenuItem.ArmWithTorpedo;
+					menu[1]=8;	menuItems[1]=CombatMenuItem.ArmWithBomb;
+					menu[2]=9;	menuItems[2]=CombatMenuItem.Disarm;
 					}
 				else
 					{
 					n=2;			// メニューの数
-					menu[0]=8;	menu2[0]=CombatMenuItem.ArmWithBomb;
-					menu[1]=9;	menu2[1]=CombatMenuItem.Disarm;
+					menu[0]=8;	menuItems[0]=CombatMenuItem.ArmWithBomb;
+					menu[1]=9;	menuItems[1]=CombatMenuItem.Disarm;
 					}
 				CombatMenuSelection=(CombatMenuItem)Units[SelectedUnit].Weapon;
 
@@ -580,65 +571,62 @@ private void ChooseCombatMenuItem(CombatMenuItem item)
 	BufferSelections();
 	CanOrder=false;
 	HasOrdered=true;
-	PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+	Sound.PlayInterfaceSound(SoundId.Click2);
 	}
 
-private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menu2, ref int m, ref RECT src_rect, ref RECT dstn_rect)
+private void UpdateCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menuItems, ref int m, ref RECT source, ref RECT destination)
 	{
-	SpriteId sprite;
-	int n;
-	int i;
-	sprite=SpriteId.Buttons1;
+	var sprite=SpriteId.Buttons1;
 
-	n=ListCombatMenu(ref menu, ref menu2);
+	var n=ListCombatMenu(ref menu, ref menuItems);
 
 	// The host's UI's commands for the combat menu (UICommands.cs), on the items it shows, which wait for a frame in which
 	// they count.
-	ShownCombatMenu=menu2;
+	ShownCombatMenu=menuItems;
 	ShownCombatMenuCount=n;
 	RunUICommands(UICommandSite.CombatMenu, true);
 	RunWaitingCombatMenu();
 
-	for( i=0;i<n;i++ )
+	for( var i=0;i<n;i++ )
 		{
 		m=menu[i];
-		src_rect.left = Sprites[sprite].SheetX+(Sprites[sprite].Width*0)+1;
-		src_rect.top = Sprites[sprite].SheetY+(Sprites[sprite].Height*(m))+1;
-		src_rect.right = src_rect.left+Sprites[sprite].Width-1;
-		src_rect.bottom = src_rect.top+Sprites[sprite].Height-1;
+		source.left = Renderer.Sprites[sprite].SheetPosition.X+(Renderer.Sprites[sprite].Size.Width*0)+1;
+		source.top = Renderer.Sprites[sprite].SheetPosition.Y+(Renderer.Sprites[sprite].Size.Height*(m))+1;
+		source.right = source.left+Renderer.Sprites[sprite].Size.Width-1;
+		source.bottom = source.top+Renderer.Sprites[sprite].Size.Height-1;
 
-		dstn_rect.left=Sprites[SpriteId.ButtonBase].X;
-		dstn_rect.top=Sprites[SpriteId.ButtonBase].Y+(Sprites[sprite].Height*(i));
-		dstn_rect.right=dstn_rect.left+Sprites[sprite].Width-1;
-		dstn_rect.bottom=dstn_rect.top+Sprites[sprite].Height-1;
+		destination.left=Renderer.Sprites[SpriteId.ButtonBase].Position.X;
+		destination.top=Renderer.Sprites[SpriteId.ButtonBase].Position.Y+(Renderer.Sprites[sprite].Size.Height*(i));
+		destination.right=destination.left+Renderer.Sprites[sprite].Size.Width-1;
+		destination.bottom=destination.top+Renderer.Sprites[sprite].Size.Height-1;
 
-		if( LeftButton==3 && menu2[i]!=CombatMenuSelection && PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+		if( LeftButton==3 && menuItems[i]!=CombatMenuSelection && PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 			{
 			if( CanOrder )
 				{
-				ChooseCombatMenuItem(menu2[i]);
+				ChooseCombatMenuItem(menuItems[i]);
 				}
 			}
-		if( LeftButton==2 && PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && FrameCount%2<1)
+		if( LeftButton==2 && PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && Renderer.FrameCount%2<1)
 			{
 
-			src_rect.left=Sprites[sprite].SheetX+(Sprites[sprite].Width*0)+1+180;
-			src_rect.right=src_rect.left+Sprites[sprite].Width-1;
+			source.left=Renderer.Sprites[sprite].SheetPosition.X+(Renderer.Sprites[sprite].Size.Width*0)+1+180;
+			source.right=source.left+Renderer.Sprites[sprite].Size.Width-1;
 			}
-		if( menu2[i]!=CombatMenuSelection && LeftButton==0 && PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && FrameCount%6<4 )
+		if( menuItems[i]!=CombatMenuSelection && LeftButton==0 && PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && Renderer.FrameCount%6<4 )
 			{
-			src_rect.left=Sprites[sprite].SheetX+(Sprites[sprite].Width*0)+1+180;
-			src_rect.right=src_rect.left+Sprites[sprite].Width-1;
+			source.left=Renderer.Sprites[sprite].SheetPosition.X+(Renderer.Sprites[sprite].Size.Width*0)+1+180;
+			source.right=source.left+Renderer.Sprites[sprite].Size.Width-1;
 			}
-		if( CombatMenuSelection==menu2[i] )
+		if( CombatMenuSelection==menuItems[i] )
 			{
-			src_rect.left=Sprites[sprite].SheetX+(Sprites[sprite].Width*0)+1+180;
-			src_rect.right=src_rect.left+Sprites[sprite].Width-1;
+			source.left=Renderer.Sprites[sprite].SheetPosition.X+(Renderer.Sprites[sprite].Size.Width*0)+1+180;
+			source.right=source.left+Renderer.Sprites[sprite].Size.Width-1;
 			}
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref src_rect),0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( Renderer.lpDDSBack, destination.left, destination.top,Renderer.OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),0) )
 	{
-	RestoreSurfaces();
+	Renderer.RestoreSurfaces();
 	}
 
 		}
@@ -684,65 +672,64 @@ private void ChooseSupplyTargetFrame(ref int m, out int n)
 		}
 	}
 
-private void DrawSupplyTarget(ref int m, ref RECT src_rect, int ry)
+private void DrawSupplyTarget(ref int m, ref RECT source, int y)
 	{
 	SpriteId sprite;
-	int n;
-	RECT dstn_rect = default;
+	RECT destination = default;
 	if(LocalSide==Side.Japan)
 		sprite=SpriteId.JapanUnits;		//Off Screen Number		日本海軍の表示
 	else
 		sprite=SpriteId.UnitedStatesUnits;		//Off Screen Number		日本海軍の表示
 
-	ChooseSupplyTargetFrame(ref m, out n);
+	ChooseSupplyTargetFrame(ref m, out var n);
 
 	// src_rect は ソースサーフェスのレクタングルです。
-	src_rect.left = Sprites[sprite].SheetX+(Sprites[sprite].Width * ( n )) +1;		// 方向
+	source.left = Renderer.Sprites[sprite].SheetPosition.X+(Renderer.Sprites[sprite].Size.Width * ( n )) +1;		// 方向
 
-	src_rect.top = Sprites[sprite].SheetY+(Sprites[sprite].Height* (m)) +1;		// 機種
+	source.top = Renderer.Sprites[sprite].SheetPosition.Y+(Renderer.Sprites[sprite].Size.Height* (m)) +1;		// 機種
 
-	src_rect.right = (src_rect.left + Sprites[sprite].Width)-2;
-	src_rect.bottom = (src_rect.top + Sprites[sprite].Height)-2;
+	source.right = (source.left + Renderer.Sprites[sprite].Size.Width)-2;
+	source.bottom = (source.top + Renderer.Sprites[sprite].Size.Height)-2;
 
 	// dstn_rect は ディスティネーションレクタングルです。
-	dstn_rect.left=1024-120+10;
-	dstn_rect.top=ry+20*2+5;
+	destination.left=1024-120+10;
+	destination.top=y+20*2+5;
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,(RECT*)Unsafe.AsPointer(ref src_rect),DDBLTFAST_SRCCOLORKEY) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( Renderer.lpDDSBack, destination.left, destination.top,Renderer.OffscreenSurface,(RECT*)Unsafe.AsPointer(ref source),DDBLTFAST_SRCCOLORKEY) )
 		{
-		RestoreSurfaces();
+		Renderer.RestoreSurfaces();
 		}
 	}
 
-private void WriteSupplyTargetName(ref Array8<int> len, ref Array8<Array128<byte>> ach)
+private void WriteSupplyTargetName(ref Array8<int> length, ref Array8<Array128<byte>> text)
 	{
 	switch( SupplyTarget )
 		{
 #if !LNGG_VER
-		case 0:		len[0] = wsprintf(ach[0], "戦艦");		break;
-		case 1:		len[0] = wsprintf(ach[0], "巡洋艦");		break;
-		case 2:		len[0] = wsprintf(ach[0], "駆逐艦");		break;
-		case 3:		len[0] = wsprintf(ach[0], "潜水艦");		break;
-		case 4:		len[0] = wsprintf(ach[0], "軽空母");		break;
-		case 5:		len[0] = wsprintf(ach[0], "正規空母");		break;
-		case 6:		len[0] = wsprintf(ach[0], "戦闘機");		break;
-		case 7:		len[0] = wsprintf(ach[0], "攻撃機");		break;
-		case 8:		len[0] = wsprintf(ach[0], "戦略爆撃機");		break;
-		case 9:		len[0] = wsprintf(ach[0], "陸上戦闘機");		break;
-		case 10:	len[0] = wsprintf(ach[0], "輸送船(歩兵基地)");		break;
-		case 11:	len[0] = wsprintf(ach[0], "輸送船(トーチカ群)");		break;
-		case 12:	len[0] = wsprintf(ach[0], "輸送船(要塞)");		break;
-		case 13:	len[0] = wsprintf(ach[0], "輸送船(航空基地)");		break;
-		case 14:	len[0] = wsprintf(ach[0], "輸送船(軍港)");		break;
+		case 0:		length[0] = wsprintf(text[0], "戦艦");		break;
+		case 1:		length[0] = wsprintf(text[0], "巡洋艦");		break;
+		case 2:		length[0] = wsprintf(text[0], "駆逐艦");		break;
+		case 3:		length[0] = wsprintf(text[0], "潜水艦");		break;
+		case 4:		length[0] = wsprintf(text[0], "軽空母");		break;
+		case 5:		length[0] = wsprintf(text[0], "正規空母");		break;
+		case 6:		length[0] = wsprintf(text[0], "戦闘機");		break;
+		case 7:		length[0] = wsprintf(text[0], "攻撃機");		break;
+		case 8:		length[0] = wsprintf(text[0], "戦略爆撃機");		break;
+		case 9:		length[0] = wsprintf(text[0], "陸上戦闘機");		break;
+		case 10:	length[0] = wsprintf(text[0], "輸送船(歩兵基地)");		break;
+		case 11:	length[0] = wsprintf(text[0], "輸送船(トーチカ群)");		break;
+		case 12:	length[0] = wsprintf(text[0], "輸送船(要塞)");		break;
+		case 13:	length[0] = wsprintf(text[0], "輸送船(航空基地)");		break;
+		case 14:	length[0] = wsprintf(text[0], "輸送船(軍港)");		break;
 
-		case 15:		len[0] = wsprintf(ach[0], "防空巡洋艦");		break;
-		case 16:		len[0] = wsprintf(ach[0], "対潜駆逐艦");		break;
+		case 15:		length[0] = wsprintf(text[0], "防空巡洋艦");		break;
+		case 16:		length[0] = wsprintf(text[0], "対潜駆逐艦");		break;
 
 		case 17:
 			if( LocalSide==Side.Japan )
-				len[0] = wsprintf(ach[0], "大和級戦艦");
+				length[0] = wsprintf(text[0], "大和級戦艦");
 			else
-				len[0] = wsprintf(ach[0], "エセックス型空母");
+				length[0] = wsprintf(text[0], "エセックス型空母");
 
 			break;
 
@@ -780,11 +767,9 @@ private void WriteSupplyTargetName(ref Array8<int> len, ref Array8<Array128<byte
 // Whether the player can request the reinforcement chosen in the supply panel (SupplyTarget), or why not.
 private SupplyRequestState GetSupplyRequestState()
 	{
-	int m;
 	int start;
 	int end;
-	int g;
-	int n;
+	int group;
 	if(LocalSide==Side.Japan)
 		{
 		// 日本サイドのユニット
@@ -792,13 +777,13 @@ private SupplyRequestState GetSupplyRequestState()
 			{
 			start=JPN_SHIP_START;
 			end=JPN_SHIP_END;
-			g=1;						// 艦船
+			group=1;						// 艦船
 			}
 		else
 			{
 			start=JPN_PLANE_START;
 			end=JPN_PLANE_END;
-			g=2;						// 航空機
+			group=2;						// 航空機
 			}
 		}
 	else
@@ -808,18 +793,18 @@ private SupplyRequestState GetSupplyRequestState()
 			{
 			start=USA_SHIP_START;
 			end=USA_SHIP_END;
-			g=1;						// 艦船
+			group=1;						// 艦船
 			}
 		else
 			{
 			start=USA_PLANE_START;
 			end=USA_PLANE_END;
-			g=2;						// 航空機
+			group=2;						// 航空機
 			}
 		}
 
-	n=0;
-	for( m=start; m<=end; m++)
+	var n=0;
+	for( var m=start; m<=end; m++)
 		{
 		if(!Units[m].IsUsed)
 			{
@@ -863,7 +848,7 @@ private SupplyRequestState GetSupplyRequestState()
 			)
 		{
 
-		if( (g==1 && n!=0 ) || (g==2 && n>=3) )
+		if( (group==1 && n!=0 ) || (group==2 && n>=3) )
 			{
 			if( SupplyPoints>=GetSupplyPointsPerUnit() )
 				return SupplyRequestState.Available;
@@ -889,25 +874,25 @@ private void RequestSupplyUnit()
 
 if(CONN_DBG!=0)
 SupplyCount=10;
-	PlaySoundEffect( 0, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+	Sound.PlayInterfaceSound(SoundId.Click2);
 	}
 
-private void RequestSupply(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref RECT dstn_rect, int ry, ref HDC hdc)
+private void RequestSupply(ref Array8<int> length, ref Array8<Array128<byte>> text, ref RECT destination, int y, ref HDC hdc)
 	{
 	switch( GetSupplyRequestState() )
 		{
 		case SupplyRequestState.Available:
 			{
 #if !LNGG_VER
-			len[0] = wsprintf(ach[0], "　要求する");
+			length[0] = wsprintf(text[0], "　要求する");
 #else
 			len[0] = wsprintf(ach[0], "　Request");
 #endif
-			dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120;
-			dstn_rect.top=ry+20*7+5;
-			dstn_rect.right=dstn_rect.left+(len[0]*12);
-			dstn_rect.bottom=dstn_rect.top+18;
-			if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+			destination.left=Renderer.Sprites[SpriteId.ButtonBase].Position.X+120;
+			destination.top=y+20*7+5;
+			destination.right=destination.left+(length[0]*12);
+			destination.bottom=destination.top+18;
+			if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 				{
 				SetTextColor(hdc, RGB(255, 0, 0));
 				if( LeftButton==3 && Result==GameResult.None )
@@ -919,7 +904,7 @@ private void RequestSupply(ref Array8<int> len, ref Array8<Array128<byte>> ach, 
 				{
 				SetTextColor(hdc, RGB(255, 255, 255));
 				}
-			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
+			TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120, y+20*7+5, text[0], length[0]);
 			}
 			break;
 
@@ -927,11 +912,11 @@ private void RequestSupply(ref Array8<int> len, ref Array8<Array128<byte>> ach, 
 			{
 			SetTextColor(hdc, RGB(255, 255, 255));
 #if !LNGG_VER
-			len[0] = wsprintf(ach[0], "割当点数不足");
+			length[0] = wsprintf(text[0], "割当点数不足");
 #else
 			len[0] = wsprintf(ach[0], "Shortage of pts");
 #endif
-			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
+			TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120, y+20*7+5, text[0], length[0]);
 			}
 			break;
 
@@ -939,11 +924,11 @@ private void RequestSupply(ref Array8<int> len, ref Array8<Array128<byte>> ach, 
 			{
 			SetTextColor(hdc, RGB(255, 255, 255));
 #if !LNGG_VER
-			len[0] = wsprintf(ach[0], "ユニットリミット");
+			length[0] = wsprintf(text[0], "ユニットリミット");
 #else
 			len[0] = wsprintf(ach[0], "Units Max");
 #endif
-			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
+			TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120, y+20*7+5, text[0], length[0]);
 			}
 			break;
 
@@ -951,11 +936,11 @@ private void RequestSupply(ref Array8<int> len, ref Array8<Array128<byte>> ach, 
 			{
 			SetTextColor(hdc, RGB(255, 255, 255));
 #if !LNGG_VER
-			len[0] = wsprintf(ach[0], "　要求制限");
+			length[0] = wsprintf(text[0], "　要求制限");
 #else
 			len[0] = wsprintf(ach[0], "Restricted Unit");
 #endif
-			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*7+5, ach[0], len[0]);
+			TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120, y+20*7+5, text[0], length[0]);
 			}
 			break;
 		}
@@ -978,26 +963,26 @@ private void SelectNextSupplyTarget()
 		SupplyTarget++;
 	}
 
-private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref HDC hdc, int ry, ref RECT dstn_rect)
+private void UpdateSupplyRequest(ref Array8<int> length, ref Array8<Array128<byte>> text, ref HDC hdc, int y, ref RECT destination)
 	{
 	// The host's UI's commands for the supply panel (UICommands.cs).
 	RunUICommands(UICommandSite.SupplyPanel, true);
 
-	len[0] = wsprintf(ach[0], "%d:" ,GetSupplyPointsPerUnit());
-	TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*3+5+10, ach[0], len[0]);
+	length[0] = wsprintf(text[0], "%d:" ,GetSupplyPointsPerUnit());
+	TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120, y+20*3+5+10, text[0], length[0]);
 
 	// The previous kind.
 #if !LNGG_VER
-	len[0] = wsprintf(ach[0], "<<<-前の機種");
+	length[0] = wsprintf(text[0], "<<<-前の機種");
 #else
 	len[0] = wsprintf(ach[0], "<<<- Previous");
 #endif
 
-	dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120;
-	dstn_rect.top=ry+20*5+5;
-	dstn_rect.right=dstn_rect.left+(len[0]*12);
-	dstn_rect.bottom=dstn_rect.top+18;
-	if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && SupplyCount==0 )
+	destination.left=Renderer.Sprites[SpriteId.ButtonBase].Position.X+120;
+	destination.top=y+20*5+5;
+	destination.right=destination.left+(length[0]*12);
+	destination.bottom=destination.top+18;
+	if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && SupplyCount==0 )
 		{
 		SetTextColor(hdc, RGB(255, 0, 0));
 		if( LeftButton==3 )
@@ -1010,20 +995,20 @@ private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>>
 		SetTextColor(hdc, RGB(255, 255, 255));
 		}
 
-	TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*5+5, ach[0], len[0]);
+	TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120, y+20*5+5, text[0], length[0]);
 
 	// The next kind.
 #if !LNGG_VER
-	len[0] = wsprintf(ach[0], "次の機種->>>");
+	length[0] = wsprintf(text[0], "次の機種->>>");
 #else
 	len[0] = wsprintf(ach[0], "Next ->>>");
 #endif
 
-	dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120;
-	dstn_rect.top=ry+20*6+5;
-	dstn_rect.right=dstn_rect.left+(len[0]*12);
-	dstn_rect.bottom=dstn_rect.top+18;
-	if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 )
+	destination.left=Renderer.Sprites[SpriteId.ButtonBase].Position.X+120;
+	destination.top=y+20*6+5;
+	destination.right=destination.left+(length[0]*12);
+	destination.bottom=destination.top+18;
+	if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) )
 		{
 		SetTextColor(hdc, RGB(255, 0, 0));
 		if( LeftButton==3 )
@@ -1036,38 +1021,38 @@ private void UpdateSupplyRequest(ref Array8<int> len, ref Array8<Array128<byte>>
 		SetTextColor(hdc, RGB(255, 255, 255));
 		}
 
-	TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*6+5, ach[0], len[0]);
+	TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120, y+20*6+5, text[0], length[0]);
 
 	// 要求する
-	RequestSupply(ref len, ref ach, ref dstn_rect, ry, ref hdc);
+	RequestSupply(ref length, ref text, ref destination, y, ref hdc);
 	}
 
-private void UpdateSupplyPanel(ref Array8<int> len, ref Array8<Array128<byte>> ach, ref HDC hdc, ref RECT dstn_rect, int ry)
+private void UpdateSupplyPanel(ref Array8<int> length, ref Array8<Array128<byte>> text, ref HDC hdc, ref RECT destination, int y)
 	{
 #if !LNGG_VER
-	len[0] = wsprintf(ach[0], "補給割当:%d",SupplyPoints);
+	length[0] = wsprintf(text[0], "補給割当:%d",SupplyPoints);
 #else
 	len[0] = wsprintf(ach[0], "Supry pts:%d",spry_pt);
 #endif
 	SetTextColor(hdc, RGB(255, 255, 255));
-	TextOut(hdc, dstn_rect.left+120, ry, ach[0], len[0]);
+	TextOut(hdc, destination.left+120, y, text[0], length[0]);
 
 #if !LNGG_VER
-	len[0] = wsprintf(ach[0], "要求対象:");
+	length[0] = wsprintf(text[0], "要求対象:");
 #else
 	len[0] = wsprintf(ach[0], "Object:");
 #endif
 	SetTextColor(hdc, RGB(255, 255, 255));
-	TextOut(hdc, dstn_rect.left+120, ry+20*1, ach[0], len[0]);
+	TextOut(hdc, destination.left+120, y+20*1, text[0], length[0]);
 
-	WriteSupplyTargetName(ref len, ref ach);
+	WriteSupplyTargetName(ref length, ref text);
 	SetTextColor(hdc, RGB(255, 255, 255));
-	TextOut(hdc, dstn_rect.left+120, ry+20*2, ach[0], len[0]);
+	TextOut(hdc, destination.left+120, y+20*2, text[0], length[0]);
 
 	if( SupplyCount==0 )
 		{
 		// 値段の表示
-		UpdateSupplyRequest(ref len, ref ach, ref hdc, ry, ref dstn_rect);
+		UpdateSupplyRequest(ref length, ref text, ref hdc, y, ref destination);
 		}
 	else
 		{
@@ -1075,11 +1060,11 @@ private void UpdateSupplyPanel(ref Array8<int> len, ref Array8<Array128<byte>> a
 		// (UICommands.cs).
 		RunUICommands(UICommandSite.SupplyPanel, false);
 
-		if((FrameCount%2)!=0)
+		if((Renderer.FrameCount%2)!=0)
 			{
 #if !LNGG_VER
-			len[0] = wsprintf(ach[0], "要求中");
-			TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120+30, ry+20*6+5, ach[0], len[0]);
+			length[0] = wsprintf(text[0], "要求中");
+			TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120+30, y+20*6+5, text[0], length[0]);
 #else
 			len[0] = wsprintf(ach[0], "Wait for coming");
 			TextOut(hdc, sprt[SpriteId.ButtonBase].x+120, ry+20*6+5, ach[0], len[0]);
@@ -1112,26 +1097,26 @@ private void UpdateSupplyPanel(ref Array8<int> len, ref Array8<Array128<byte>> a
 private void AskSystemMenu(MessageType answer)
 	{
 	DialogAnswer=answer;
-	g_hDlg = CreateDialog(hInstApp, MAKEINTRESOURCE(IDD_OK_CANCEL), hwndApp, (DLGPROC)IDD_OK_CANCEL_Proc );
+	MainDialog = CreateDialog(MAKEINTRESOURCE(IDD_OK_CANCEL), hwndApp, (DLGPROC)IDD_OK_CANCEL_Proc );
 	}
 
-private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ach, int ry, ref HDC hdc)
+private void UpdateSystemMenu(ref Array8<int> length, ref Array8<Array128<byte>> text, int y, ref HDC hdc)
 	{
-	RECT dstn_rect = default;
+	RECT destination = default;
 
 	// The host's UI's commands for the system menu (UICommands.cs), which wait for a frame in which they count.
 	RunUICommands(UICommandSite.SystemMenu, true);
 	RunWaitingSystemMenu();
 #if !LNGG_VER
-	len[0] = wsprintf(ach[0], "シナリオ選択へ");
+	length[0] = wsprintf(text[0], "シナリオ選択へ");
 #else
 	len[0] = wsprintf(ach[0], "to Mission Menu");
 #endif
-	dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120;
-	dstn_rect.top=ry+20*9+5;
-	dstn_rect.right=dstn_rect.left+(len[0]*12);
-	dstn_rect.bottom=dstn_rect.top+18;
-	if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.Battle )
+	destination.left=Renderer.Sprites[SpriteId.ButtonBase].Position.X+120;
+	destination.top=y+20*9+5;
+	destination.right=destination.left+(length[0]*12);
+	destination.bottom=destination.top+18;
+	if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && RivalMode==GameMode.Battle )
 		{
 		SetTextColor(hdc, RGB(255, 0, 0));
 		if( LeftButton==3 )
@@ -1146,7 +1131,7 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 					{
 //							bf_game_system_menu[1]=GO_GAME_SETTING;
 					go_cnct_game_setting();
-					SoundPlayEffect( NULL, SoundId.Click2 ,(double)(MAP_RIGHT+1), 0);
+					SoundPlayEffect( NULL, SoundId.Click2 ,(double)World.Beyond, 0);
 					}
 */
 				}
@@ -1160,20 +1145,20 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 		{
 		SetTextColor(hdc, RGB(255, 255, 255));
 		}
-	TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120, ry+20*9+5, ach[0], len[0]);
+	TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120, y+20*9+5, text[0], length[0]);
 
 	if( !IsEditingMap )
 		{
 #if !LNGG_VER
-		len[0] = wsprintf(ach[0], "リジューム");
+		length[0] = wsprintf(text[0], "リジューム");
 #else
 		len[0] = wsprintf(ach[0], "Resume");
 #endif
-		dstn_rect.left=Sprites[SpriteId.ButtonBase].X+120+20;
-		dstn_rect.top=ry+20*10+5;
-		dstn_rect.right=dstn_rect.left+(len[0]*12);
-		dstn_rect.bottom=dstn_rect.top+18;
-		if( PointInRect(ref dstn_rect,CursorPosition.x,CursorPosition.y)!=0 && RivalMode==GameMode.Battle )
+		destination.left=Renderer.Sprites[SpriteId.ButtonBase].Position.X+120+20;
+		destination.top=y+20*10+5;
+		destination.right=destination.left+(length[0]*12);
+		destination.bottom=destination.top+18;
+		if( PointInRect(ref destination,CursorPosition.x,CursorPosition.y) && RivalMode==GameMode.Battle )
 			{
 			SetTextColor(hdc, RGB(255, 0, 0));
 			if( LeftButton==3 )
@@ -1188,7 +1173,7 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 			{
 			SetTextColor(hdc, RGB(255, 255, 255));
 			}
-		TextOut(hdc, Sprites[SpriteId.ButtonBase].X+120+20, ry+20*10+5, ach[0], len[0]);
+		TextOut(hdc, Renderer.Sprites[SpriteId.ButtonBase].Position.X+120+20, y+20*10+5, text[0], length[0]);
 		}
 	}
 
@@ -1198,11 +1183,11 @@ private void UpdateSystemMenu(ref Array8<int> len, ref Array8<Array128<byte>> ac
 [Original("unit_info_cont")]
 public void	UpdateUnitInfo()
 	{
-	RECT	src_rect = default,field_rect,dstn_rect = default;
-	int	m=default /* C4701 */,n,wrk,wrk2,wrk3,f,ry; Array6<int> menu = default; Array6<CombatMenuItem> menu2 = default;
+	RECT source = default, destination = default;
+	int m=default /* C4701 */; Array6<int> menu = default; Array6<CombatMenuItem> menuItems = default;
 	SpriteId sprite;
-    Array8<Array128<byte>> ach = default;
-    Array8<int> len = default;
+    Array8<Array128<byte>> text = default;
+    Array8<int> length = default;
 	HDC					hdc = default;
 	//D3DXVECTOR2 chrPos;		// Direct3D is not used.
 
@@ -1223,28 +1208,29 @@ rival_mode=mode;
 	if( UnitInfoPanel[0]!=0 )
 		{
 		// ユニットインフォの絵（戦艦とか空母とか）を表示します。
-		DrawUnitDetails(sprite, ref src_rect, ref hdc, ref len, ref ach);
+		DrawUnitDetails(sprite, ref source, ref hdc, ref length, ref text);
 		}
 
 	//	スプライトグループ（メニュー下地）
-	src_rect.left = Sprites[SpriteId.ButtonBase].SheetX;
-	src_rect.top = Sprites[SpriteId.ButtonBase].SheetY+(Sprites[SpriteId.ButtonBase].Height*(Side.UnitedStates==LocalSide ? 1 : 0));
-	src_rect.right = src_rect.left+Sprites[SpriteId.ButtonBase].Width;
-	src_rect.bottom = src_rect.top+Sprites[SpriteId.ButtonBase].Height;
+	source.left = Renderer.Sprites[SpriteId.ButtonBase].SheetPosition.X;
+	source.top = Renderer.Sprites[SpriteId.ButtonBase].SheetPosition.Y+(Renderer.Sprites[SpriteId.ButtonBase].Size.Height*(Side.UnitedStates==LocalSide ? 1 : 0));
+	source.right = source.left+Renderer.Sprites[SpriteId.ButtonBase].Size.Width;
+	source.bottom = source.top+Renderer.Sprites[SpriteId.ButtonBase].Size.Height;
 
-	dstn_rect.left=Sprites[SpriteId.ButtonBase].X=CMBT_WIDTH;
-	dstn_rect.top=Sprites[SpriteId.ButtonBase].Y=Sprites[SpriteId.JapanUnitInfo].Y+Sprites[SpriteId.JapanUnitInfo].Height+20;
+	Renderer.Sprites[SpriteId.ButtonBase].Position = new PixelPoint(CMBT_WIDTH, Renderer.Sprites[SpriteId.JapanUnitInfo].Position.Y+Renderer.Sprites[SpriteId.JapanUnitInfo].Size.Height+20);
+	destination.left=Renderer.Sprites[SpriteId.ButtonBase].Position.X;
+	destination.top=Renderer.Sprites[SpriteId.ButtonBase].Position.Y;
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( Renderer.lpDDSBack, destination.left, destination.top,Renderer.OffscreenSurface,&source,0) )
 		{
-		RestoreSurfaces();
+		Renderer.RestoreSurfaces();
 		}
 
 	sprite=SpriteId.Buttons1;
 	if( (UnitKind)UnitInfoPanel[0]==UnitKind.Carrier || (UnitKind)UnitInfoPanel[0]==UnitKind.LightCarrier  || (UnitKind)UnitInfoPanel[0]==UnitKind.AirBase )
 		{
 		// 航空母艦の場合切り替えボタンを表示
-		UpdateDeckView(ref src_rect, sprite, ref dstn_rect);
+		UpdateDeckView(ref source, sprite, ref destination);
 
 		}
 	else
@@ -1257,7 +1243,7 @@ rival_mode=mode;
 		{
 
 		//	スプライトグループ（メニュー）
-		UpdateCombatMenu(ref menu, ref menu2, ref m, ref src_rect, ref dstn_rect);
+		UpdateCombatMenu(ref menu, ref menuItems, ref m, ref source, ref destination);
 		}
 	else
 		{
@@ -1268,15 +1254,15 @@ rival_mode=mode;
 		}
 
 	// ゲームデータ
-	if ( !IsEditingMap && IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
+	if ( !IsEditingMap && IDirectDrawSurface_GetDC(Renderer.lpDDSBack, &hdc) == DD_OK )
 		{
 		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, gameFont_1);
+		SelectObject(hdc, Renderer.GameFont1);
 
 #if !LNGG_VER
-		len[0] = wsprintf(ach[0], "スピード : %d",GameSpeed);
-		len[1] = wsprintf(ach[1], "経過時間");
-		len[2] = wsprintf(ach[2], "%d",BattleTime);
+		length[0] = wsprintf(text[0], "スピード : %d",GameSpeed);
+		length[1] = wsprintf(text[1], "経過時間");
+		length[2] = wsprintf(text[2], "%d",BattleTime);
 
 #else
 		len[0] = wsprintf(ach[0], "SPEED : %d",game_speed);
@@ -1284,35 +1270,35 @@ rival_mode=mode;
 		len[2] = wsprintf(ach[2], "%d",rest_time);
 #endif
 
-		for( n=0; n<=2; n++)
+		for( var n=0; n<=2; n++)
 			{
 			SetTextColor(hdc, RGB(255, 255, 255));
-			TextOut(hdc, dstn_rect.left+20+110, 100+(n*20), ach[n], len[n]);
+			TextOut(hdc, destination.left+20+110, 100+(n*20), text[n], length[n]);
 			}
-		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
+		IDirectDrawSurface_ReleaseDC(Renderer.lpDDSBack, hdc);
 		}
 
 	// 補給
-	ry=190;
-	if( IDirectDrawSurface_GetDC(lpDDSBack, &hdc) == DD_OK )
+	var y=190;
+	if( IDirectDrawSurface_GetDC(Renderer.lpDDSBack, &hdc) == DD_OK )
 		{
 		SetBkMode(hdc, TRANSPARENT);
-		SelectObject(hdc, gameFont_1);
+		SelectObject(hdc, Renderer.GameFont1);
 
 		if( !IsEditingMap )
 			{
-			UpdateSupplyPanel(ref len, ref ach, ref hdc, ref dstn_rect, ry);
+			UpdateSupplyPanel(ref length, ref text, ref hdc, ref destination, y);
 			}
 		else
 			{
 			// The host's UI's commands for the supply panel, which is not shown, are dropped (UICommands.cs).
 			RunUICommands(UICommandSite.SupplyPanel, false);
 			}
-		ry+=30;
+		y+=30;
 
 		if( IsHost )
 			{
-			UpdateSystemMenu(ref len, ref ach, ry, ref hdc);
+			UpdateSystemMenu(ref length, ref text, y, ref hdc);
 			}
 		else
 			{
@@ -1320,16 +1306,16 @@ rival_mode=mode;
 			RunUICommands(UICommandSite.SystemMenu, false);
 			}
 
-		IDirectDrawSurface_ReleaseDC(lpDDSBack, hdc);
+		IDirectDrawSurface_ReleaseDC(Renderer.lpDDSBack, hdc);
 		}
 
-	ry-=30;
+	y-=30;
 
 	// 補給
-	IsSupplyTargetShown = ( SupplyCount==0 || (FrameCount%2)!=0 ) && !IsEditingMap;
+	IsSupplyTargetShown = ( SupplyCount==0 || (Renderer.FrameCount%2)!=0 ) && !IsEditingMap;
 	if( IsSupplyTargetShown )
 		{
-		DrawSupplyTarget(ref m, ref src_rect, ry);
+		DrawSupplyTarget(ref m, ref source, y);
 		}
 	}
 
@@ -1337,15 +1323,15 @@ rival_mode=mode;
 // the map.
 private void ShowMinimapCell(int column, int row)
 	{
-	CameraPosition = new WorldPosition(MAP_LEFT+((column/map_close)*80), MAP_TOP-((row/map_close)*80));
-	if(CameraPosition.Y>MAP_TOP)
-		CameraPosition = new WorldPosition(CameraPosition.X, MAP_TOP);
-	if(CameraPosition.X>(MAP_RIGHT-CMBT_WIDTH) )
-		CameraPosition = new WorldPosition(MAP_RIGHT-CMBT_WIDTH, CameraPosition.Y);
-	if(CameraPosition.Y<(MAP_BOTTOM+CMBT_HEIGHT) )
-		CameraPosition = new WorldPosition(CameraPosition.X, MAP_BOTTOM+CMBT_HEIGHT);
-	if(CameraPosition.X<MAP_LEFT)
-		CameraPosition = new WorldPosition(MAP_LEFT, CameraPosition.Y);
+	CameraPosition = new WorldPosition(World.Left+((column/MinimapCellSize)*80), World.Top-((row/MinimapCellSize)*80));
+	if(CameraPosition.Y>World.Top)
+		CameraPosition = new WorldPosition(CameraPosition.X, World.Top);
+	if(CameraPosition.X>(World.Right-CMBT_WIDTH) )
+		CameraPosition = new WorldPosition(World.Right-CMBT_WIDTH, CameraPosition.Y);
+	if(CameraPosition.Y<(World.Bottom+CMBT_HEIGHT) )
+		CameraPosition = new WorldPosition(CameraPosition.X, World.Bottom+CMBT_HEIGHT);
+	if(CameraPosition.X<World.Left)
+		CameraPosition = new WorldPosition(World.Left, CameraPosition.Y);
 	}
 
 //============================================================================
@@ -1354,67 +1340,64 @@ private void ShowMinimapCell(int column, int row)
 [Original("draw_map")]
 public void	DrawMinimap()
 	{
-	RECT	src_rect,field_rect,dstn_rect;
-	int		m,n,base_x,base_y;
-	byte	my_cl, en_cl;
+	RECT source, destination;
 
 	// マップの下地を描画
-	Sprites[SpriteId.Minimap].X=CMBT_WIDTH;
-	Sprites[SpriteId.Minimap].Y=CMBT_HEIGHT-Sprites[SpriteId.Minimap].Height;
+	Renderer.Sprites[SpriteId.Minimap].Position = new PixelPoint(CMBT_WIDTH, CMBT_HEIGHT-Renderer.Sprites[SpriteId.Minimap].Size.Height);
 
-	src_rect.left = 	Sprites[SpriteId.Minimap].SheetX;
-	src_rect.top = Sprites[SpriteId.Minimap].SheetY;
-	src_rect.right = Sprites[SpriteId.Minimap].SheetX+Sprites[SpriteId.Minimap].Width;
-	src_rect.bottom = Sprites[SpriteId.Minimap].SheetY+Sprites[SpriteId.Minimap].Height;
+	source.left = 	Renderer.Sprites[SpriteId.Minimap].SheetPosition.X;
+	source.top = Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y;
+	source.right = Renderer.Sprites[SpriteId.Minimap].SheetPosition.X+Renderer.Sprites[SpriteId.Minimap].Size.Width;
+	source.bottom = Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y+Renderer.Sprites[SpriteId.Minimap].Size.Height;
 
 	// dstn_rect は ディスティネーションレクタングルです。
-	dstn_rect.left=Sprites[SpriteId.Minimap].X;
-	dstn_rect.top=Sprites[SpriteId.Minimap].Y;
+	destination.left=Renderer.Sprites[SpriteId.Minimap].Position.X;
+	destination.top=Renderer.Sprites[SpriteId.Minimap].Position.Y;
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( Renderer.lpDDSBack, destination.left, destination.top,Renderer.OffscreenSurface,&source,0) )
 		{
-		RestoreSurfaces();
+		Renderer.RestoreSurfaces();
 		}
 
-	base_x=Sprites[SpriteId.Minimap].X+8;
-	base_y=Sprites[SpriteId.Minimap].Y+8;
+	var baseX=Renderer.Sprites[SpriteId.Minimap].Position.X+8;
+	var baseY=Renderer.Sprites[SpriteId.Minimap].Position.Y+8;
 
 	// コンバット画面位置の描画
-	my_cl=0;
+	byte ownColor=0;
 	if( CameraPosition.X >= 0 )
-		dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(CameraPosition.X))/80)*map_close;
+		destination.left=baseX+((abs(World.Left)+(int)(CameraPosition.X))/80)*MinimapCellSize;
 	else
-		dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(CameraPosition.X))/80)*map_close;
+		destination.left=baseX+((abs(World.Left)+(int)(CameraPosition.X))/80)*MinimapCellSize;
 	if( CameraPosition.Y >= 0 )
-		dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(CameraPosition.Y))/80)*map_close;
+		destination.top=baseY+((abs(World.Top)-(int)(CameraPosition.Y))/80)*MinimapCellSize;
 	else
-		dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(CameraPosition.Y))/80)*map_close;
+		destination.top=baseY+((abs(World.Top)-(int)(CameraPosition.Y))/80)*MinimapCellSize;
 
-	dstn_rect.right=dstn_rect.left+10;
-	dstn_rect.bottom=dstn_rect.top+10;
+	destination.right=destination.left+10;
+	destination.bottom=destination.top+10;
 
-	DrawLine5(dstn_rect.left,dstn_rect.top,dstn_rect.right,dstn_rect.top,SCRN_WIDTH-1,SCRN_HEIGHT-1,my_cl);
-	DrawLine5(dstn_rect.right,dstn_rect.top,dstn_rect.right,dstn_rect.bottom,SCRN_WIDTH-1,SCRN_HEIGHT-1,my_cl);
-	DrawLine5(dstn_rect.right,dstn_rect.bottom,dstn_rect.left,dstn_rect.bottom,SCRN_WIDTH-1,SCRN_HEIGHT-1,my_cl);
-	DrawLine5(dstn_rect.left,dstn_rect.bottom,dstn_rect.left,dstn_rect.top,SCRN_WIDTH-1,SCRN_HEIGHT-1,my_cl);
+	Renderer.DrawLine5(destination.left,destination.top,destination.right,destination.top,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
+	Renderer.DrawLine5(destination.right,destination.top,destination.right,destination.bottom,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
+	Renderer.DrawLine5(destination.right,destination.bottom,destination.left,destination.bottom,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
+	Renderer.DrawLine5(destination.left,destination.bottom,destination.left,destination.top,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
 
 	// マップ上のカーソルクリックでの位置指定
-	my_cl=255;
-	if ( CursorPosition.x>=base_x && CursorPosition.x<=base_x+240 && CursorPosition.y>=base_y && CursorPosition.y<=base_y+180 )
+	ownColor=255;
+	if ( CursorPosition.x>=baseX && CursorPosition.x<=baseX+240 && CursorPosition.y>=baseY && CursorPosition.y<=baseY+180 )
 		{
-		dstn_rect.left=CursorPosition.x-5;
-		dstn_rect.top=CursorPosition.y-5;
-		dstn_rect.right=dstn_rect.left+10;
-		dstn_rect.bottom=dstn_rect.top+10;
+		destination.left=CursorPosition.x-5;
+		destination.top=CursorPosition.y-5;
+		destination.right=destination.left+10;
+		destination.bottom=destination.top+10;
 
-		DrawLine5(dstn_rect.left,dstn_rect.top,dstn_rect.right,dstn_rect.top,SCRN_WIDTH-1,SCRN_HEIGHT-1,my_cl);
-		DrawLine5(dstn_rect.right,dstn_rect.top,dstn_rect.right,dstn_rect.bottom,SCRN_WIDTH-1,SCRN_HEIGHT-1,my_cl);
-		DrawLine5(dstn_rect.right,dstn_rect.bottom,dstn_rect.left,dstn_rect.bottom,SCRN_WIDTH-1,SCRN_HEIGHT-1,my_cl);
-		DrawLine5(dstn_rect.left,dstn_rect.bottom,dstn_rect.left,dstn_rect.top,SCRN_WIDTH-1,SCRN_HEIGHT-1,my_cl);
+		Renderer.DrawLine5(destination.left,destination.top,destination.right,destination.top,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
+		Renderer.DrawLine5(destination.right,destination.top,destination.right,destination.bottom,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
+		Renderer.DrawLine5(destination.right,destination.bottom,destination.left,destination.bottom,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
+		Renderer.DrawLine5(destination.left,destination.bottom,destination.left,destination.top,SCRN_WIDTH-1,SCRN_HEIGHT-1,ownColor);
 
 		if(LeftButton==2)
 			{
-			ShowMinimapCell(CursorPosition.x-5-base_x, CursorPosition.y-5-base_y);
+			ShowMinimapCell(CursorPosition.x-5-baseX, CursorPosition.y-5-baseY);
 			}
 		}
 
@@ -1423,92 +1406,81 @@ public void	DrawMinimap()
 
 	// ユニットの描画
 
-	if( LocalSide==Side.Japan )
-		{
-
-		my_cl=(byte)(Sprites[SpriteId.Minimap].SheetY+57);	en_cl=(byte)(Sprites[SpriteId.Minimap].SheetY+16);
-
-		}
-	else
-		{
-		en_cl=(byte)(Sprites[SpriteId.Minimap].SheetY+57);	my_cl=(byte)(Sprites[SpriteId.Minimap].SheetY+16);
-		}
-
-	for(m=1; m<=MaxUnitId; m++)
+	for(var m=1; m<=MaxUnitId; m++)
 		{
 		ref var unit = ref Units[m];
 
-		if( unit.Side==LocalSide  &&   !( unit.Position.Y>MAP_TOP || unit.Position.Y<MAP_BOTTOM || unit.Position.X<MAP_LEFT || unit.Position.X>MAP_RIGHT )    && !(unit.PlaneState==UnitState.Parked) && !(unit.Category==UnitCategory.Plane && (FrameCount%4)==0))
+		if( unit.Side==LocalSide  &&   World.Contains(unit.Position)    && !(unit.PlaneState==UnitState.Parked) && !(unit.Category==UnitCategory.Plane && (Renderer.FrameCount%4)==0))
 			{
 			// マイユニット
 			if( unit.Position.X >= 0 )
-				dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*map_close;
+				destination.left=baseX+((abs(World.Left)+(int)(unit.Position.X-40))/80)*MinimapCellSize;
 			else
-				dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*map_close;
+				destination.left=baseX+((abs(World.Left)+(int)(unit.Position.X-40))/80)*MinimapCellSize;
 			if( unit.Position.Y >= 0 )
-				dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*map_close;
+				destination.top=baseY+((abs(World.Top)-(int)(unit.Position.Y+40))/80)*MinimapCellSize;
 			else
-				dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*map_close;
+				destination.top=baseY+((abs(World.Top)-(int)(unit.Position.Y+40))/80)*MinimapCellSize;
 
-			dstn_rect.right=dstn_rect.left+2;
-			dstn_rect.bottom=dstn_rect.top+2;
+			destination.right=destination.left+2;
+			destination.bottom=destination.top+2;
 
-			src_rect.left = 267;
+			source.left = 267;
 			if( LocalSide==Side.Japan )
-				src_rect.top = Sprites[SpriteId.Minimap].SheetY+16;
+				source.top = Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y+16;
 			else
-				src_rect.top = Sprites[SpriteId.Minimap].SheetY+57;
-			src_rect.right = src_rect.left+3;
-			src_rect.bottom = src_rect.top+3;
+				source.top = Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y+57;
+			source.right = source.left+3;
+			source.bottom = source.top+3;
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( Renderer.lpDDSBack, destination.left, destination.top,Renderer.OffscreenSurface,&source,0) )
 		{
-		RestoreSurfaces();
+		Renderer.RestoreSurfaces();
 		}
 
 			}
 
-		if( unit.IsUsed && unit.Side!=LocalSide && !( unit.Position.Y>MAP_TOP || unit.Position.Y<MAP_BOTTOM || unit.Position.X<MAP_LEFT || unit.Position.X>MAP_RIGHT ) && !(unit.PlaneState==UnitState.Parked) && unit.IsFound && !(unit.Category==UnitCategory.Plane && (FrameCount%4)==0) )
+		if( unit.IsUsed && unit.Side!=LocalSide && World.Contains(unit.Position) && !(unit.PlaneState==UnitState.Parked) && unit.IsFound && !(unit.Category==UnitCategory.Plane && (Renderer.FrameCount%4)==0) )
 			{
 			// エネユニット
 			if( unit.Kind==UnitKind.Submarine && unit.IsSubmerged )
 				{
 				// 潜航中のおおよそ潜水艦
 				if( unit.ContactX >= 0 )
-					dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit.ContactX-40))/80)*map_close;
+					destination.left=baseX+((abs(World.Left)+(int)(unit.ContactX-40))/80)*MinimapCellSize;
 				else
-					dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit.ContactX-40))/80)*map_close;
+					destination.left=baseX+((abs(World.Left)+(int)(unit.ContactX-40))/80)*MinimapCellSize;
 				if( unit.ContactY >= 0 )
-					dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit.ContactY+40))/80)*map_close;
+					destination.top=baseY+((abs(World.Top)-(int)(unit.ContactY+40))/80)*MinimapCellSize;
 				else
-					dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit.ContactY+40))/80)*map_close;
+					destination.top=baseY+((abs(World.Top)-(int)(unit.ContactY+40))/80)*MinimapCellSize;
 				}
 			else
 				{
 				// 艦船基地航空機
 				if( unit.Position.X >= 0 )
-					dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*map_close;
+					destination.left=baseX+((abs(World.Left)+(int)(unit.Position.X-40))/80)*MinimapCellSize;
 				else
-					dstn_rect.left=base_x+((abs(MAP_LEFT)+(int)(unit.Position.X-40))/80)*map_close;
+					destination.left=baseX+((abs(World.Left)+(int)(unit.Position.X-40))/80)*MinimapCellSize;
 				if( unit.Position.Y >= 0 )
-					dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*map_close;
+					destination.top=baseY+((abs(World.Top)-(int)(unit.Position.Y+40))/80)*MinimapCellSize;
 				else
-					dstn_rect.top=base_y+((abs(MAP_TOP)-(int)(unit.Position.Y+40))/80)*map_close;
+					destination.top=baseY+((abs(World.Top)-(int)(unit.Position.Y+40))/80)*MinimapCellSize;
 				}
-			dstn_rect.right=dstn_rect.left+2;
-			dstn_rect.bottom=dstn_rect.top+2;
+			destination.right=destination.left+2;
+			destination.bottom=destination.top+2;
 
-			src_rect.left = 267;
+			source.left = 267;
 			if( LocalSide==Side.Japan )
-				src_rect.top = Sprites[SpriteId.Minimap].SheetY+57;
+				source.top = Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y+57;
 			else
-				src_rect.top = Sprites[SpriteId.Minimap].SheetY+16;
-			src_rect.right = src_rect.left+3;
-			src_rect.bottom = src_rect.top+3;
+				source.top = Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y+16;
+			source.right = source.left+3;
+			source.bottom = source.top+3;
 
-			if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDSBack, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
+			if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( Renderer.lpDDSBack, destination.left, destination.top,Renderer.OffscreenSurface,&source,0) )
 				{
-				RestoreSurfaces();
+				Renderer.RestoreSurfaces();
 				}
 			}
 		}
@@ -1521,41 +1493,41 @@ public void	DrawMinimap()
 [Original("make_map")]
 public void	MakeMinimap()
 	{
-	RECT	src_rect,field_rect,dstn_rect;
-	int m,n;
+	RECT source, destination;
+	int n;
 
 	// マップデータから陸地をマップに描画します
-	dstn_rect.left=Sprites[SpriteId.Minimap].SheetX;
-	dstn_rect.top=Sprites[SpriteId.Minimap].SheetY;
+	destination.left=Renderer.Sprites[SpriteId.Minimap].SheetPosition.X;
+	destination.top=Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y;
 
-	src_rect.left = Sprites[SpriteId.Minimap].SheetX+306;
-	src_rect.top = Sprites[SpriteId.Minimap].SheetY;
-	src_rect.right = src_rect.left+255;
-	src_rect.bottom = src_rect.top+199;
+	source.left = Renderer.Sprites[SpriteId.Minimap].SheetPosition.X+306;
+	source.top = Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y;
+	source.right = source.left+255;
+	source.bottom = source.top+199;
 
-	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDS_OS, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
+	if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( Renderer.OffscreenSurface, destination.left, destination.top,Renderer.OffscreenSurface,&source,0) )
 		{
-		RestoreSurfaces();
+		Renderer.RestoreSurfaces();
 		}
 
-	for(m=0; m<=179; m++) // 縦の個数	マップの枠 縦１８０ドット
+	for(var m=0; m<=179; m++) // 縦の個数	マップの枠 縦１８０ドット
 		for( n=0; n<=239; n++) // 横の個数		マップの枠 横２４０ドット
 			{
 			if( MapTiles[m][n]!=0 )
 				{
 				// 陸地有り
-				dstn_rect.left=Sprites[SpriteId.Minimap].SheetX+8+n-0;
-				dstn_rect.top=Sprites[SpriteId.Minimap].SheetY+8+m-0;
+				destination.left=Renderer.Sprites[SpriteId.Minimap].SheetPosition.X+8+n-0;
+				destination.top=Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y+8+m-0;
 
-				src_rect.left = Sprites[SpriteId.Minimap].SheetX+270;
-				src_rect.top = Sprites[SpriteId.Minimap].SheetY+110;
+				source.left = Renderer.Sprites[SpriteId.Minimap].SheetPosition.X+270;
+				source.top = Renderer.Sprites[SpriteId.Minimap].SheetPosition.Y+110;
 
-				src_rect.right = src_rect.left+2;
-				src_rect.bottom = src_rect.top+2;
+				source.right = source.left+2;
+				source.bottom = source.top+2;
 
-				if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( lpDDS_OS, dstn_rect.left, dstn_rect.top,lpDDS_OS,&src_rect,0) )
+				if( DDERR_SURFACELOST == IDirectDrawSurface_BltFast( Renderer.OffscreenSurface, destination.left, destination.top,Renderer.OffscreenSurface,&source,0) )
 					{
-					RestoreSurfaces();
+					Renderer.RestoreSurfaces();
 					}
 
 				}
@@ -1568,55 +1540,55 @@ public void	MakeMinimap()
 [Original("cnct_unit_info_cont_now")]
 public void	ApplyUnitInfoInput()
 	{
-	CombatMenuItem	menu2; short e,tmp_slct_unit,g,i;
+	 
 
-	for(e=0;e<=1;e++)
+	for(short e=0;e<=1;e++)
 		{
-		menu2=BufferedMenuOrders[e].Menu;
-		tmp_slct_unit=BufferedMenuOrders[e].SelectedUnit;
+		var menuItems=BufferedMenuOrders[e].Menu;
+		var savedSelectedUnit=BufferedMenuOrders[e].SelectedUnit;
 
 		// 指揮、随伴ユニットに下命
-		if(menu2!=0)
+		if(menuItems!=0)
 			{
-			CombatMenuSelection=menu2;
-			if( menu2==CombatMenuItem.Supply )
+			CombatMenuSelection=menuItems;
+			if( menuItems==CombatMenuItem.Supply )
 				{
-				Units[tmp_slct_unit].SupplyTime=1;
-				Units[tmp_slct_unit].Target=0;
+				Units[savedSelectedUnit].SupplyTime=1;
+				Units[savedSelectedUnit].Target=0;
 
 				// ちょっと一応
-				if( Units[tmp_slct_unit].Kind==UnitKind.Carrier || Units[tmp_slct_unit].Kind==UnitKind.LightCarrier )
+				if( Units[savedSelectedUnit].Kind==UnitKind.Carrier || Units[savedSelectedUnit].Kind==UnitKind.LightCarrier )
 					{
-					Units[tmp_slct_unit].LandingLock=0;	// 着艦、0許可、1不許可
-					Units[tmp_slct_unit].LaunchLock=0;	// その空母の次機発進許可	0許可、1不許可
+					Units[savedSelectedUnit].LandingLock=0;	// 着艦、0許可、1不許可
+					Units[savedSelectedUnit].LaunchLock=0;	// その空母の次機発進許可	0許可、1不許可
 					}
-				if( Units[tmp_slct_unit].Kind==UnitKind.Submarine )
-					Units[tmp_slct_unit].IsSubmerged=false;		// 強制浮上
+				if( Units[savedSelectedUnit].Kind==UnitKind.Submarine )
+					Units[savedSelectedUnit].IsSubmerged=false;		// 強制浮上
 				}
 			else
 				{
-				for(g=1;g<=MaxUnitId;g++)
+				for(short n=1;n<=MaxUnitId;n++)
 					{
-					ref var unit = ref Units[g];
-					if( unit.IsUsed && ( unit.GroupLeader==tmp_slct_unit || g==tmp_slct_unit || Selections[e][g]!=0) )
+					ref var unit = ref Units[n];
+					if( unit.IsUsed && ( unit.GroupLeader==savedSelectedUnit || n==savedSelectedUnit || Selections[e][n]!=0) )
 						{
 						// 決定後の書く個別の処理
 						switch( unit.Kind )
 							{
 							case UnitKind.Fighter: case UnitKind.Attacker: case UnitKind.Bomber:
-								if(  menu2==CombatMenuItem.ArmWithTorpedo || menu2==CombatMenuItem.ArmWithBomb || menu2==CombatMenuItem.Disarm  )
+								if(  menuItems==CombatMenuItem.ArmWithTorpedo || menuItems==CombatMenuItem.ArmWithBomb || menuItems==CombatMenuItem.Disarm  )
 									{
 									// 1.22 arms no bomber with a torpedo (0x431D56).
-									if(unit.Kind==UnitKind.Attacker || (unit.Kind==UnitKind.Bomber && ( (menu2==CombatMenuItem.ArmWithTorpedo && unit.Side==Side.Japan && Rules.BombersDropTorpedoes ) || menu2==CombatMenuItem.ArmWithBomb || menu2==CombatMenuItem.Disarm) ))
+									if(unit.Kind==UnitKind.Attacker || (unit.Kind==UnitKind.Bomber && ( (menuItems==CombatMenuItem.ArmWithTorpedo && unit.Side==Side.Japan && Rules.BombersDropTorpedoes ) || menuItems==CombatMenuItem.ArmWithBomb || menuItems==CombatMenuItem.Disarm) ))
 										{		// 収容中の攻撃機だったばあい
-										unit.Weapon=(FireKind)menu2;
+										unit.Weapon=(FireKind)menuItems;
 
-										if(menu2==CombatMenuItem.ArmWithTorpedo)
+										if(menuItems==CombatMenuItem.ArmWithTorpedo)
 											unit.Ammo=1;		// 魚雷の場合は常に１、弾数。
 										else
 											unit.Ammo=unit.MaxAmmo;
 
-										if(menu2==CombatMenuItem.Disarm)
+										if(menuItems==CombatMenuItem.Disarm)
 											unit.ReloadTime=1;
 										else
 											unit.ReloadTime=RDY_SPAN;
@@ -1625,31 +1597,31 @@ public void	ApplyUnitInfoInput()
 								else if( Rules.MenuModesApplyToEveryPlane )
 									{
 									// 1.22 gives the mode to every plane, flying or not (0x431D19 to 0x431D4E).
-									unit.Mode=(UnitMode)menu2;
-									if( (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber ) && menu2==CombatMenuItem.Return )
+									unit.Mode=(UnitMode)menuItems;
+									if( (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber ) && menuItems==CombatMenuItem.Return )
 										{
 										unit.Ammo=0;
 										unit.Target=0;
 										}
-									if( unit.Category==UnitCategory.Plane && menu2==CombatMenuItem.Move )
+									if( unit.Category==UnitCategory.Plane && menuItems==CombatMenuItem.Move )
 										unit.DeckPhase=0;
 									}
 								else
 									{
-									if( (unit.Kind==UnitKind.Fighter ) && menu2==CombatMenuItem.Return  && unit.PlaneState==UnitState.Flying )
+									if( (unit.Kind==UnitKind.Fighter ) && menuItems==CombatMenuItem.Return  && unit.PlaneState==UnitState.Flying )
 										{
-										unit.Mode=(UnitMode)menu2;
+										unit.Mode=(UnitMode)menuItems;
 										}
-									if( (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber ) && menu2==CombatMenuItem.Return )
+									if( (unit.Kind==UnitKind.Attacker || unit.Kind==UnitKind.Bomber ) && menuItems==CombatMenuItem.Return )
 										{
 										unit.Ammo=0;		// 帰投選択時に攻撃機なら武装投棄
 										unit.Target=0;		// 帰投選択時に攻撃機攻撃目標放棄
-										unit.Mode=(UnitMode)menu2;
+										unit.Mode=(UnitMode)menuItems;
 										}
-									if( unit.Category==UnitCategory.Plane && menu2==CombatMenuItem.Move && unit.PlaneState==UnitState.Flying  )
+									if( unit.Category==UnitCategory.Plane && menuItems==CombatMenuItem.Move && unit.PlaneState==UnitState.Flying  )
 										{
 										unit.DeckPhase=0;		// 着艦準備をクリア
-										unit.Mode=(UnitMode)menu2;
+										unit.Mode=(UnitMode)menuItems;
 										}
 									}
 								break;

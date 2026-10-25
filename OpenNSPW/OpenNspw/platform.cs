@@ -178,14 +178,24 @@ public static class winerror
 	}
 }
 
-public partial class Nspw(INspwPlatform? platform = null)
+public partial class Nspw
 {
-	private readonly INspwPlatform _platform = platform ?? NullPlatform.Instance;
+	private readonly INspwPlatform _platform;
 
-	public const uint CLSCTX_INPROC_SERVER = 0x1;
+	// The parts of the game that hold their own globals (docs/Refactoring.md, Splitting the partial class).
+	public Sound Sound { get; }
+
+	public Renderer Renderer { get; }
+
+	public Nspw(INspwPlatform? platform = null)
+	{
+		_platform = platform ?? NullPlatform.Instance;
+		Sound = new Sound(this);
+		Renderer = new Renderer(this);
+	}
 
 	// DirectMusic's classes are the port's own (unknwn.cs); the platform creates the others.
-	public int CoCreateInstance<T>(Guid rclsid, object? pUnkOuter, uint dwClsContext, Guid riid, out T? ppv) where T : class
+	public int CoCreateInstance<T>(Guid rclsid, Guid riid, out T? ppv) where T : class
 	{
 		object? obj;
 		var hr = rclsid == dmusici.CLSID_DirectMusicLoader ? (obj = new DirectMusicLoader8()) is not null ? winerror.S_OK : 0

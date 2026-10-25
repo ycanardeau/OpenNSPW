@@ -67,7 +67,7 @@ public sealed class Trace122Tests
 	// The fields are where 1.22 has them (docs/Singleplayer.md).
 	[Theory]
 	[InlineData("Position.X", 0x08)]
-	[InlineData("Direction", 0x70)]
+	[InlineData("Direction.Degrees", 0x70)]
 	[InlineData("PathX[0]", 0xC0)]
 	[InlineData("PathY[0]", 0x2C0)]
 	[InlineData("hp[0]", 0x4F8)]
@@ -113,7 +113,7 @@ public sealed class Trace122Tests
 		using var replay = new Trace122Replay(new MemoryStream(trace));
 		using var run = new SingleplayerRun(replay.Scenario, game => SetUp(game, replay));
 		run.Frames(Frames / 2);
-		run.Game.CameraPosition = new WorldPosition(MAP_LEFT, MAP_TOP);
+		run.Game.CameraPosition = new WorldPosition(World.Left, World.Top);
 		run.Frames(Frames / 2);
 
 		Assert.Null(replay.Divergence);

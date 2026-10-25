@@ -507,13 +507,13 @@ public static class nspw_math
 	// The sine of an angle in degrees, as the original computes it: sin(degrees*a_PI).
 	public static double SinDegrees(double degrees)
 	{
-		return sin(degrees * all_head.a_PI);
+		return sin(degrees * all_head.DegreesToRadians);
 	}
 
 	// The cosine of an angle in degrees, as the original computes it: cos(degrees*a_PI).
 	public static double CosDegrees(double degrees)
 	{
-		return cos(degrees * all_head.a_PI);
+		return cos(degrees * all_head.DegreesToRadians);
 	}
 
 	public static double atan2(double y, double x)
@@ -586,7 +586,7 @@ public static class nspw_math
 	{
 		double drctn;
 
-		drctn=atan2(dy,dx)*all_head.RAD_to;
+		drctn=atan2(dy,dx)*all_head.RadiansToDegrees;
 		if(drctn<0)
 			drctn=360+drctn;
 		return drctn;
