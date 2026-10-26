@@ -46,7 +46,11 @@ internal interface ICanReceiveConnectInfo
 				Data = isLocal ? session.LocalData : [.. entry.Data],
 				Url = new DirectPlayUrl(entry.Url),
 				IsLocal = isLocal,
-				IsHost = entry.Host,
+				IsHost = entry.Host || entry.Server,
+				Role =
+					entry.Server ? NameTableEntryFlags.Server
+					: entry.Client ? NameTableEntryFlags.Client
+					: NameTableEntryFlags.Peer,
 				Version = entry.Version,
 				DnetVersion = entry.DnetVersion,
 			};
@@ -67,13 +71,14 @@ internal interface ICanReceiveConnectInfo
 		)
 			return session.FailConnect(ResultCode.InvalidHostAddress, []);
 
+		// A client is in once it acknowledges; it connects to no one else ([MC-DPL8CS] section 3.1).
 		SessionActor.SendCore(HostConnection, new CoreMessage.AckConnectInfo());
 		return session.CompleteJoin(
 			new SessionState.Joining(
 				HostConnection,
 				Reply: [.. message.Reply],
-				InstructConnectReceived: false,
-				AwaitingPlayers: awaitingPlayers.ToImmutable()
+				InstructConnectReceived: session.IsClientServer,
+				AwaitingPlayers: session.IsClientServer ? [] : awaitingPlayers.ToImmutable()
 			)
 		);
 	}

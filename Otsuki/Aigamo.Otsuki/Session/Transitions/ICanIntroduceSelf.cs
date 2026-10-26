@@ -21,7 +21,7 @@ internal interface ICanIntroduceSelf
 			HostConnection,
 			new CoreMessage.PlayerConnectInfo
 			{
-				Flags = ObjectType.Peer,
+				Flags = session.IsClientServer ? ObjectType.Client : ObjectType.Peer,
 				DnetVersion = DnetVersion.DirectX90,
 				GuidInstance = session.Application.GuidInstance,
 				GuidApplication = session.Application.GuidApplication,

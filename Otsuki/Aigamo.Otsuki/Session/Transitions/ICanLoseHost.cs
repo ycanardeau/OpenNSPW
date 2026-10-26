@@ -32,7 +32,9 @@ internal interface ICanLoseHost
 
 		// The host we follow may be one that has not announced itself yet, after an earlier migration.
 		if (player.IsHost || command.Connection == HostConnection)
-			return session.Application.Flags.HasFlag(SessionFlags.MigrateHost)
+			return
+				session.Application.Flags.HasFlag(SessionFlags.MigrateHost)
+				&& !session.IsClientServer
 				? session.MigrateFrom(player, command.Result)
 				: session.Terminate(
 					command.Result == ResultCode.Success

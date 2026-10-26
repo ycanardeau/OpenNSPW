@@ -112,6 +112,18 @@ public sealed class Peer : IAsyncDisposable
 		));
 
 	/// <summary>
+	/// Removes another player from the session as the host, like IDirectPlay8Peer::DestroyPeer. The player is told
+	/// with <paramref name="data"/>, and <see cref="PeerEvent.PlayerDestroyed"/> follows with
+	/// <see cref="DestroyPlayerFlags.HostDestroyedPlayer"/>.
+	/// </summary>
+	public Task DestroyPeerAsync(Dpnid player, byte[]? data = null) =>
+		PostCommandAsync(completion => new SessionMessage.DestroyPlayer(
+			player,
+			data is null ? [] : [.. data],
+			completion
+		));
+
+	/// <summary>
 	/// Creates a group, like IDirectPlay8Peer::CreateGroup, and returns its DPNID. Only the host creates groups, so a
 	/// non-host peer asks it to. <see cref="PeerEvent.GroupCreated"/> follows on every peer.
 	/// </summary>

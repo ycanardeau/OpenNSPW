@@ -30,6 +30,7 @@ internal interface ICanHost : ISessionTransition<SessionMessage.Host>
 			Data = session.LocalData,
 			IsLocal = true,
 			IsHost = true,
+			Role = session.IsClientServer ? NameTableEntryFlags.Server : NameTableEntryFlags.Peer,
 			Version = session.Version,
 		};
 		session.Players.Add(host.Id, host);

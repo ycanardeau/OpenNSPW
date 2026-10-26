@@ -44,6 +44,16 @@ internal abstract record SessionMessage
 	) : SessionMessage;
 
 	/// <summary>
+	/// The host removes a player from the session, like IDirectPlay8Peer::DestroyPeer and
+	/// IDirectPlay8Server::DestroyClient.
+	/// </summary>
+	public sealed record DestroyPlayer(
+		Dpnid Player,
+		ImmutableArray<byte> Data,
+		TaskCompletionSource Completion
+	) : SessionMessage;
+
+	/// <summary>
 	/// The host did not answer a request for a name table change in time.
 	/// </summary>
 	public sealed record RequestTimedOut(int Context) : SessionMessage;

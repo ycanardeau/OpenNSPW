@@ -13,10 +13,9 @@ using Aigamo.Results;
 namespace Aigamo.Otsuki.Session;
 
 /// <summary>
-/// The peer-to-peer session of the DirectPlay 8 core protocol ([MC-DPL8CS]). The protocol logic lives in the
-/// transitions that each <see cref="SessionState"/> implements; this actor owns the state and the name table,
-/// and runs the transition for each message. Host migration and groups are not implemented; when the host leaves,
-/// the session terminates.
+/// A session of the DirectPlay 8 core protocol ([MC-DPL8CS]), peer-to-peer or client/server. The protocol logic
+/// lives in the transitions that each <see cref="SessionState"/> implements; this actor owns the state and the name
+/// table, with its groups, and runs the transition for each message.
 /// </summary>
 internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 {
@@ -152,6 +151,12 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	) => Post(new SessionMessage.EnumQueryReceived(remoteEndPoint, query));
 
 	public IPEndPoint LocalEndPoint => _endpoint!.LocalEndPoint;
+
+	/// <summary>
+	/// Whether the session is client/server (DPNSESSION_CLIENT_SERVER): the server knows every client, but a client
+	/// knows only the server and itself, and talks only to the server.
+	/// </summary>
+	public bool IsClientServer => Application.Flags.HasFlag(SessionFlags.ClientServer);
 
 	/// <summary>
 	/// Remote players that we have a connection to.
@@ -342,6 +347,9 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	public void Announce(CoreMessage operation)
 	{
 		Record(operation);
+		if (IsClientServer)
+			return;
+
 		foreach (var peer in ConnectedPeers)
 			SendCore(peer.Connection!, operation);
 	}
@@ -565,18 +573,34 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	{
 		Version++;
 		UpdatePlayerInfo(playerId, flags, name, data);
-		Announce(
-			new CoreMessage.UpdateInfo
-			{
-				PacketContext = context,
-				Dpnid = playerId,
-				Version = Version,
-				InfoFlags = flags,
-				Name = flags.HasFlag(InfoFlags.Name) ? name : string.Empty,
-				Data = flags.HasFlag(InfoFlags.Data) ? data : [],
-				DpnidRequesting = requesting,
-			}
-		);
+		var message = new CoreMessage.UpdateInfo
+		{
+			PacketContext = context,
+			Dpnid = playerId,
+			Version = Version,
+			InfoFlags = flags,
+			Name = flags.HasFlag(InfoFlags.Name) ? name : string.Empty,
+			Data = flags.HasFlag(InfoFlags.Data) ? data : [],
+			DpnidRequesting = requesting,
+		};
+		if (!IsClientServer)
+		{
+			Announce(message);
+			return;
+		}
+
+		// A client knows only the server: every client hears of the server's change (DPN_MSGID_SERVER_INFO), and a
+		// client's change goes back to that client alone.
+		Record(message);
+		if (playerId == LocalPlayer)
+		{
+			foreach (var client in ConnectedPeers)
+				SendCore(client.Connection!, message);
+		}
+		else if (Players.TryGetValue(playerId, out var player) && player.Connection is not null)
+		{
+			SendCore(player.Connection, message);
+		}
 	}
 
 	public void RemovePlayer(Player player)
@@ -598,6 +622,10 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	/// </summary>
 	public SessionState.Hosting ResynchronizeVersion(IHasHostingData hosting)
 	{
+		// Clients keep no name table of the session, so there is nothing to resynchronize.
+		if (IsClientServer)
+			return hosting.ToHosting();
+
 		var peers = ConnectedPeers.Where(p => p.Created).ToList();
 		if (peers.Count == 0)
 			return hosting.ToHosting();
@@ -1335,6 +1363,17 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 				Execute(m, otherwise: () => m.Completion.TrySetException(NotInSession())),
 			RemovePlayerFromGroup: m =>
 				Execute(m, otherwise: () => m.Completion.TrySetException(NotInSession())),
+			DestroyPlayer: m =>
+				Execute(
+					m,
+					otherwise: () =>
+						m.Completion.TrySetException(
+							new DirectPlayException(
+								ResultCode.NotHost,
+								"Only the host removes players."
+							)
+						)
+				),
 			RequestTimedOut: m => RequestTimedOut(m.Context),
 			Host: m =>
 				Execute(

@@ -24,7 +24,7 @@ internal interface ICanAdmitPlayers
 	)
 	{
 		var application = session.Application;
-		if (message.Flags != ObjectType.Peer)
+		if (message.Flags != (session.IsClientServer ? ObjectType.Client : ObjectType.Peer))
 			return ResultCode.InvalidInterface;
 
 		if (message.GuidApplication != application.GuidApplication)
@@ -53,6 +53,41 @@ internal interface ICanAdmitPlayers
 	}
 
 	/// <summary>
+	/// The name table a new player gets: everyone in a peer-to-peer session, but only the server and itself for a
+	/// client.
+	/// </summary>
+	private static IEnumerable<NameTableEntryInfo> GetNameTableEntries(
+		SessionActor session,
+		Player player
+	) =>
+		session.IsClientServer
+			?
+			[
+				session.Players[session.LocalPlayer].ToNameTableEntryInfo(),
+				player.ToNameTableEntryInfo(),
+			]
+			: session
+				.Players.Values.Select(p => p.ToNameTableEntryInfo())
+				.Concat(session.Groups.Values.Select(g => g.ToNameTableEntryInfo()))
+				.OrderBy(e => e.Version);
+
+	private static IEnumerable<NameTableMembershipInfo> GetNameTableMemberships(
+		SessionActor session
+	) =>
+		session.IsClientServer
+			? []
+			: session
+				.Groups.Values.SelectMany(g =>
+					g.Members.Select(m => new NameTableMembershipInfo
+					{
+						DpnidPlayer = m.Key,
+						DpnidGroup = g.Id,
+						Version = m.Value,
+					})
+				)
+				.OrderBy(m => m.Version);
+
+	/// <summary>
 	/// Adds a validated peer to the name table and tells everyone about it (steps 4 and 5).
 	/// </summary>
 	private SessionState AdmitPlayer(
@@ -72,6 +107,7 @@ internal interface ICanAdmitPlayers
 			Url = DirectPlayUrl.FromEndPoint(connection.RemoteEndPoint),
 			Version = session.Version,
 			DnetVersion = message.DnetVersion,
+			Role = session.IsClientServer ? NameTableEntryFlags.Client : NameTableEntryFlags.Peer,
 		};
 		session.Players.Add(player.Id, player);
 		session.Bind(player, connection);
@@ -87,26 +123,8 @@ internal interface ICanAdmitPlayers
 				GuidApplication = application.GuidApplication,
 				Dpnid = player.Id,
 				Version = session.Version,
-				NameTableEntries =
-				[
-					.. session
-						.Players.Values.Select(p => p.ToNameTableEntryInfo())
-						.Concat(session.Groups.Values.Select(g => g.ToNameTableEntryInfo()))
-						.OrderBy(e => e.Version),
-				],
-				NameTableMemberships =
-				[
-					.. session
-						.Groups.Values.SelectMany(g =>
-							g.Members.Select(m => new NameTableMembershipInfo
-							{
-								DpnidPlayer = m.Key,
-								DpnidGroup = g.Id,
-								Version = m.Value,
-							})
-						)
-						.OrderBy(m => m.Version),
-				],
+				NameTableEntries = [.. GetNameTableEntries(session, player)],
+				NameTableMemberships = [.. GetNameTableMemberships(session)],
 				ApplicationReservedData = application.ApplicationReservedData,
 				Password = application.Flags.HasFlag(SessionFlags.RequirePassword)
 					? application.Password
@@ -115,11 +133,15 @@ internal interface ICanAdmitPlayers
 			}
 		);
 
-		// Peers that are still joining need the new entry as well, so that they connect to each other.
-		var addPlayer = player.ToAddPlayerMessage();
-		session.Record(addPlayer);
-		foreach (var peer in session.ConnectedPeers.Where(p => p != player))
-			SessionActor.SendCore(peer.Connection!, addPlayer);
+		// Peers that are still joining need the new entry as well, so that they connect to each other. Clients never
+		// hear of each other.
+		if (!session.IsClientServer)
+		{
+			var addPlayer = player.ToAddPlayerMessage();
+			session.Record(addPlayer);
+			foreach (var peer in session.ConnectedPeers.Where(p => p != player))
+				SessionActor.SendCore(peer.Connection!, addPlayer);
+		}
 
 		player.JoinTimer = session.Schedule(
 			session.Options.JoinTimeout,
@@ -164,6 +186,14 @@ internal interface ICanAdmitPlayers
 
 		player.JoinTimer?.Dispose();
 		player.JoinTimer = null;
+
+		// A client is in once it acknowledged; there are no other peers to connect to it ([MC-DPL8CS] section 3.1).
+		if (session.IsClientServer)
+		{
+			session.MarkCreated(player);
+			return Current;
+		}
+
 		session.Version++;
 		var instructConnect = new CoreMessage.InstructConnect
 		{

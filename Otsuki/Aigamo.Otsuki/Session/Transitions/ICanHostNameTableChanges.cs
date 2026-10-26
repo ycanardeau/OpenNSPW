@@ -15,6 +15,7 @@ internal interface ICanHostNameTableChanges
 		ISessionTransition<SessionMessage.DestroyGroup>,
 		ISessionTransition<SessionMessage.AddPlayerToGroup>,
 		ISessionTransition<SessionMessage.RemovePlayerFromGroup>,
+		ISessionTransition<SessionMessage.DestroyPlayer>,
 		ISessionTransition<Received<CoreMessage.RequestUpdateInfo>>,
 		ISessionTransition<Received<CoreMessage.RequestCreateGroup>>,
 		ISessionTransition<Received<CoreMessage.RequestDestroyGroup>>,
@@ -194,6 +195,33 @@ internal interface ICanHostNameTableChanges
 				}
 			);
 		return Current;
+	}
+
+	/// <summary>
+	/// Removes a player: DN_TERMINATE_SESSION tells it, and DN_DESTROY_PLAYER the others ([MC-DPL8CS] section
+	/// 3.2.5.2).
+	/// </summary>
+	SessionState ISessionTransition<SessionMessage.DestroyPlayer>.Execute(
+		SessionActor session,
+		SessionMessage.DestroyPlayer command
+	)
+	{
+		if (!session.Players.TryGetValue(command.Player, out var player) || player.IsLocal)
+		{
+			command.Completion.TrySetException(
+				Fail(ResultCode.InvalidPlayer, $"There is no other player {command.Player}.")
+			);
+			return Current;
+		}
+
+		if (player.Connection is not null)
+			SessionActor.SendCore(
+				player.Connection,
+				new CoreMessage.TerminateSession { TerminateData = command.Data }
+			);
+		var state = session.DestroyPlayer(this, player, DestroyPlayerFlags.HostDestroyedPlayer);
+		command.Completion.TrySetResult();
+		return state;
 	}
 
 	/// <summary>

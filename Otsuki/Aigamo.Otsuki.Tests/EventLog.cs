@@ -1,7 +1,7 @@
 namespace Aigamo.Otsuki.Tests;
 
 /// <summary>
-/// Records the events of a peer through <see cref="Peer.ReadEventsAsync"/> so that tests can wait for them.
+/// Records the events of a peer, server or client as they stream, so that tests can wait for them.
 /// </summary>
 internal sealed class EventLog
 {
@@ -10,10 +10,13 @@ internal sealed class EventLog
 	private readonly List<PeerEvent> _events = [];
 	private readonly Lock _lock = new();
 
-	public EventLog(Peer peer) =>
+	public EventLog(Peer peer)
+		: this(peer.ReadEventsAsync()) { }
+
+	public EventLog(IAsyncEnumerable<PeerEvent> events) =>
 		_ = Task.Run(async () =>
 		{
-			await foreach (var peerEvent in peer.ReadEventsAsync())
+			await foreach (var peerEvent in events)
 			{
 				lock (_lock)
 					_events.Add(peerEvent);

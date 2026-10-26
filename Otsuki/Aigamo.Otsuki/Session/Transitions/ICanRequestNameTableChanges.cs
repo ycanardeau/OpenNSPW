@@ -37,13 +37,20 @@ internal interface ICanRequestNameTableChanges
 		return Current;
 	}
 
+	/// <summary>
+	/// Only the server of a client/server session has groups; its clients do not even see them.
+	/// </summary>
+	private static ResultCode? CheckGroups(SessionActor session) =>
+		session.IsClientServer ? ResultCode.NotHost : null;
+
 	private static ResultCode? CheckMembership(
 		SessionActor session,
 		Dpnid groupId,
 		Dpnid playerId,
 		bool member
 	) =>
-		!session.Groups.TryGetValue(groupId, out var group) ? ResultCode.InvalidGroup
+		CheckGroups(session) is { } result ? result
+		: !session.Groups.TryGetValue(groupId, out var group) ? ResultCode.InvalidGroup
 		: !session.Players.ContainsKey(playerId) ? ResultCode.InvalidPlayer
 		: group.Members.ContainsKey(playerId) != member
 			? member ? ResultCode.PlayerNotInGroup
@@ -73,6 +80,14 @@ internal interface ICanRequestNameTableChanges
 		SessionMessage.CreateGroup command
 	)
 	{
+		if (CheckGroups(session) is { } result)
+		{
+			command.Completion.TrySetException(
+				new DirectPlayException(result, "Clients cannot create groups.")
+			);
+			return Current;
+		}
+
 		var context = session.BeginRequest(
 			id => command.Completion.TrySetResult(id),
 			e => command.Completion.TrySetException(e)
@@ -98,7 +113,8 @@ internal interface ICanRequestNameTableChanges
 		Request(
 			session,
 			command.Completion,
-			session.Groups.ContainsKey(command.Group) ? null : ResultCode.InvalidGroup,
+			CheckGroups(session)
+				?? (session.Groups.ContainsKey(command.Group) ? null : ResultCode.InvalidGroup),
 			context => new CoreMessage.RequestDestroyGroup
 			{
 				PacketContext = context,
