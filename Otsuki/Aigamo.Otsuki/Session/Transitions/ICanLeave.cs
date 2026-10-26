@@ -12,6 +12,8 @@ internal interface ICanLeave : ISessionTransition<SessionMessage.Close>
 		SessionMessage.Close command
 	)
 	{
+		foreach (var group in session.Groups.Values.Where(g => g.Created))
+			session.Emit(new PeerEvent.GroupDestroyed(group.Id, DestroyGroupReason.Normal));
 		foreach (var player in session.Players.Values.Where(p => p.Created).OrderBy(p => p.IsLocal))
 			session.Emit(new PeerEvent.PlayerDestroyed(player.Id, DestroyPlayerFlags.Normal));
 		return session.BeginClosing(command.Completion);

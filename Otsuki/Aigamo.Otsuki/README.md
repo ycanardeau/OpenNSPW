@@ -69,7 +69,7 @@ Only the host changes the name table, so other peers ask it, and each call compl
 
 ### Host migration
 
-With `SessionFlags.MigrateHost`, losing the host does not end the session. The remaining peers agree on the player that joined first as the new host; it collects the name table operations it missed and resynchronizes everyone, and every peer raises `PlayerDestroyed` for the old host and then `HostMigrated`.
+With `SessionFlags.MigrateHost`, losing the host does not end the session. The remaining peers agree on the player that joined first as the new host; it collects the name table operations it missed and resynchronizes everyone, and every peer raises `PlayerDestroyed` for the old host and then `HostMigrated`. Groups that the old host created with `GroupFlags.AutoDestruct` go with it, and requests a peer had sent to the old host fail with `ResultCode.ConnectionLost`.
 
 ### Client/server
 
@@ -185,6 +185,8 @@ Everything that touches the network goes through `IDatagramTransport`, and all t
 ## Limitations
 
 * No DPNSVR: hosts answer host enumeration on their own port only, not through the well-known port 6073.
+* Host migration assumes that the peers agree on who is left. A peer follows a new host only once it has lost the old one too, so a peer cut off from the host alone cannot take the session from it; but a network split into parts that each lose the host ends with one host per part, and nothing merges them again.
+* While a new host collects the name table, it holds back name table changes, joins and integrity checks until migration completes.
 * Not yet tested against real DirectPlay. Some details are interpretations where the specifications are silent or ambiguous:
   * The bit order of the send mask, which tells a receiver that lost unreliable frames will not be resent, is interpreted as bit 0 being the frame just before.
   * [MC-DPL8R] says only that the secret modifier of full signing is "derived from" a payload. Otsuki takes the first 64 bits of the payload's SHA-1 digest.

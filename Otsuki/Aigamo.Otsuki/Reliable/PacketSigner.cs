@@ -81,6 +81,15 @@ internal sealed class PacketSigner(PacketSigning mode, ulong localSecret, ulong 
 
 	public bool IsFullSigned => _mode == PacketSigning.Full;
 
+	private SequenceId? _lastSent;
+
+	/// <summary>
+	/// The secret for SACKs and HARD_DISCONNECTs: that of the last data frame sent, which the partner already holds.
+	/// A newer one would not validate at a partner that has not reached sequence ID 192 yet.
+	/// </summary>
+	public ulong ControlSecret =>
+		_lastSent is { } sequence ? _local.SecretFor(sequence) : _local.Current;
+
 	/// <summary>
 	/// The secret that signs our frame with <paramref name="sequence"/>, which must be read when the frame first gets
 	/// its sequence ID, after <see cref="ObserveSent"/>, and kept for its retries.
@@ -89,6 +98,7 @@ internal sealed class PacketSigner(PacketSigning mode, ulong localSecret, ulong 
 
 	public void ObserveSent(SequenceId sequence, byte[]? reliablePayload)
 	{
+		_lastSent = sequence;
 		if (IsFullSigned)
 			_local.Observe(sequence, reliablePayload);
 	}

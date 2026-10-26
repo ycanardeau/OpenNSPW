@@ -73,7 +73,7 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 		new(
 			remoteEndPoint,
 			isOutbound,
-			isOutbound ? PacketSigning.None : _signing,
+			_signing,
 			_transport,
 			_timeProvider,
 			_profile,

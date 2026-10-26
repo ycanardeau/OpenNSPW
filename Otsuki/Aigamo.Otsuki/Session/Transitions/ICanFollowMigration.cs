@@ -13,7 +13,7 @@ internal interface ICanFollowMigration
 		IHasHostConnection
 {
 	/// <summary>
-	/// The new host may announce itself before we notice that the old one left, so the old one goes here too
+	/// The new host may announce itself before we notice that the old one left; we follow it once we notice too
 	/// (steps 1 and 2).
 	/// </summary>
 	SessionState ISessionTransition<Received<CoreMessage.HostMigrate>>.Execute(
@@ -28,24 +28,20 @@ internal interface ICanFollowMigration
 		)
 			return Current;
 
+		// While we still hear from the old host, the claim waits: the peer may merely have lost its own link to it.
 		if (
 			session.Players.TryGetValue(message.DpnidOldHost, out var oldHost)
-			&& oldHost != newHost
+			&& oldHost.Connection is not null
 		)
-			session.ForgetPlayer(oldHost.Id, DestroyPlayerFlags.ConnectionLost);
-
-		if (!newHost.IsHost)
 		{
-			newHost.IsHost = true;
-			session.Publish();
-			session.Emit(new PeerEvent.HostMigrated(newHost.Id));
+			session.HostClaim = command;
+			return Current;
 		}
 
-		SessionActor.SendCore(
-			command.Connection,
-			new CoreMessage.NameTableVersion { Version = session.Version }
-		);
-		return new SessionState.Connected(command.Connection);
+		// Only the peer that we would elect ourselves may take over.
+		return session.ElectHost() == newHost
+			? session.AcceptHost(command.Connection, newHost, message.DpnidOldHost, HostConnection)
+			: Current;
 	}
 
 	/// <summary>

@@ -45,6 +45,11 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	private readonly Dictionary<int, PendingRequest> _requests = [];
 	private int _nextContext;
 
+	/// <summary>
+	/// Commands that wait for the state to allow them: see <see cref="MustWait"/>.
+	/// </summary>
+	private readonly List<Action> _deferred = [];
+
 	public PeerOptions Options { get; }
 
 	public ActorTimer<SessionMessage> JoinTimer { get; }
@@ -94,6 +99,11 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	/// The name table operations since <see cref="ResynchronizedVersion"/>, which a new host may need.
 	/// </summary>
 	public List<CoreMessage> NameTableLog { get; } = [];
+
+	/// <summary>
+	/// A DN_HOST_MIGRATE that arrived while we still heard from the old host, kept until we lose it too.
+	/// </summary>
+	public Received<CoreMessage.HostMigrate>? HostClaim { get; set; }
 
 	/// <summary>
 	/// The newest name table version that every peer has, from DN_RESYNC_VERSION.
@@ -322,6 +332,10 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	/// </summary>
 	public void Record(CoreMessage operation)
 	{
+		// Client/server sessions never migrate, so there is no one to keep them for.
+		if (IsClientServer)
+			return;
+
 		if (GetOperationVersion(operation) is int version && version > ResynchronizedVersion)
 			NameTableLog.Add(operation);
 	}
@@ -394,6 +408,17 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			request.OnFailure(exception);
 		}
 	}
+
+	/// <summary>
+	/// The host that our requests went to is gone, and the new one never saw them.
+	/// </summary>
+	public void FailRequestsToLostHost() =>
+		FailRequests(
+			new DirectPlayException(
+				ResultCode.ConnectionLost,
+				"The host left before carrying out the request."
+			)
+		);
 
 	/// <summary>
 	/// Raises <see cref="PeerEvent.GroupCreated"/>, followed by <see cref="PeerEvent.PlayerAddedToGroup"/> for the
@@ -802,6 +827,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		Version = 0;
 		NameTableLog.Clear();
 		ResynchronizedVersion = 0;
+		HostClaim = null;
 	}
 
 	/// <summary>
@@ -854,8 +880,17 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	private int GetNextNameTableIndex()
 	{
 		var mask = BitConverter.ToInt32(Application.GuidInstance.ToByteArray(), 0);
+		var logged = NameTableLog.SelectMany(op =>
+			op switch
+			{
+				CoreMessage.AddPlayer m => [m.Dpnid],
+				CoreMessage.CreateGroup m => new[] { m.Group.Dpnid },
+				_ => [],
+			}
+		);
 		var highest = Players
 			.Keys.Concat(Groups.Keys)
+			.Concat(logged)
 			.Select(id => (id.Value ^ mask) & 0xFFFFF)
 			.DefaultIfEmpty(2)
 			.Max();
@@ -925,7 +960,12 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			}
 		}
 
-		hosting = hosting with { Migration = null };
+		// The operations collected may name players and groups that are gone already, whose indexes are taken.
+		hosting = hosting with
+		{
+			Migration = null,
+			NextIndex = Math.Max(hosting.NextIndex, GetNextNameTableIndex()),
+		};
 		if (Players.TryGetValue(migration.OldHost, out var oldHost))
 			hosting = DestroyPlayer(hosting, oldHost, DestroyPlayerFlags.ConnectionLost);
 		else
@@ -940,10 +980,29 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 					Reason = DestroyPlayerFlags.ConnectionLost,
 				}
 			);
+			foreach (
+				var group in Groups
+					.Values.Where(g =>
+						g.Flags.HasFlag(GroupFlags.AutoDestruct) && g.Owner == migration.OldHost
+					)
+					.ToList()
+			)
+				HostDestroyGroup(
+					group.Id,
+					LocalPlayer,
+					context: 0,
+					DestroyGroupReason.AutoDestructed
+				);
 		}
 
-		foreach (var joining in Players.Values.Where(p => !p.IsLocal && !p.Created).ToList())
-			hosting = DestroyPlayer(hosting, joining, DestroyPlayerFlags.ConnectionLost);
+		// Joins the old host never completed, and peers that left while we were migrating, go now, once every peer
+		// has the operations before them.
+		foreach (
+			var gone in Players
+				.Values.Where(p => !p.IsLocal && (!p.Created || p.Connection is null))
+				.ToList()
+		)
+			hosting = DestroyPlayer(hosting, gone, DestroyPlayerFlags.ConnectionLost);
 
 		foreach (var peer in ConnectedPeers)
 			SendCore(peer.Connection!, new CoreMessage.HostMigrateComplete());
@@ -1027,10 +1086,41 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	}
 
 	/// <summary>
-	/// The host is gone and the session allows migration: the local peer takes over or follows whoever does.
+	/// Follows <paramref name="newHost"/>, which announced itself with DN_HOST_MIGRATE (step 2): the old host goes,
+	/// requests sent to another host fail, and the new host gets our name table version.
+	/// </summary>
+	public SessionState AcceptHost(
+		Connection connection,
+		Player newHost,
+		Dpnid oldHostId,
+		Connection previousHost
+	)
+	{
+		HostClaim = null;
+		if (connection != previousHost)
+			FailRequestsToLostHost();
+
+		if (Players.TryGetValue(oldHostId, out var oldHost) && oldHost != newHost)
+			ForgetPlayer(oldHost.Id, DestroyPlayerFlags.ConnectionLost);
+
+		if (!newHost.IsHost)
+		{
+			newHost.IsHost = true;
+			Publish();
+			Emit(new PeerEvent.HostMigrated(newHost.Id));
+		}
+
+		SendCore(connection, new CoreMessage.NameTableVersion { Version = Version });
+		return new SessionState.Connected(connection);
+	}
+
+	/// <summary>
+	/// The host is gone and the session allows migration: the local peer takes over or follows whoever does,
+	/// at once if that peer already announced itself.
 	/// </summary>
 	public SessionState MigrateFrom(Player oldHost, ResultCode result)
 	{
+		FailRequestsToLostHost();
 		ForgetPlayer(
 			oldHost.Id,
 			result == ResultCode.Success
@@ -1041,8 +1131,11 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		if (next is null)
 			return Terminate(ResultCode.HostTerminatedSession);
 
-		return next.IsLocal
-			? BecomeHost(next, oldHost.Id)
+		if (next.IsLocal)
+			return BecomeHost(next, oldHost.Id);
+
+		return HostClaim is { } claim && claim.Connection == next.Connection
+			? AcceptHost(next.Connection, next, claim.Message.DpnidOldHost, next.Connection)
 			: new SessionState.Connected(next.Connection!);
 	}
 
@@ -1160,8 +1253,49 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		}
 	}
 
+	/// <summary>
+	/// Whether the state makes some commands wait: a new host takes no name table changes, joins or integrity
+	/// checks until it has collected the name table, and a joining peer sends info updates once it is in.
+	/// </summary>
+	private bool IsWaiting =>
+		_state
+			is SessionState.Hosting { Migration: not null }
+				or SessionState.Connecting
+				or SessionState.Joining;
+
+	private bool MustWait<TCommand>(TCommand command) =>
+		_state switch
+		{
+			SessionState.Hosting { Migration: not null } => command
+				is SessionMessage.SetPeerInfo
+					or SessionMessage.CreateGroup
+					or SessionMessage.DestroyGroup
+					or SessionMessage.AddPlayerToGroup
+					or SessionMessage.RemovePlayerFromGroup
+					or SessionMessage.DestroyPlayer
+					or Received<CoreMessage.PlayerConnectInfo>
+					or Received<CoreMessage.RequestIntegrityCheck>
+					or Received<CoreMessage.RequestUpdateInfo>
+					or Received<CoreMessage.RequestCreateGroup>
+					or Received<CoreMessage.RequestDestroyGroup>
+					or Received<CoreMessage.RequestAddPlayerToGroup>
+					or Received<CoreMessage.RequestDeletePlayerFromGroup>,
+			SessionState.Connecting or SessionState.Joining => command
+				is SessionMessage.SetPeerInfo,
+			_ => false,
+		};
+
 	private Unit Execute<TCommand>(TCommand command)
 	{
+		if (MustWait(command))
+		{
+			// A command goes back to the mailbox, so that it runs as it would have, fallback included.
+			_deferred.Add(
+				command is SessionMessage message ? () => Post(message) : () => Execute(command)
+			);
+			return Unit.Default;
+		}
+
 		_state = _state is ISessionTransition<TCommand> transition
 			? transition.Execute(this, command)
 			: _state;
@@ -1169,11 +1303,25 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	}
 
 	/// <summary>
+	/// Runs the commands that waited, once the state no longer makes them wait.
+	/// </summary>
+	private void ReplayDeferred()
+	{
+		if (_deferred.Count == 0 || IsWaiting)
+			return;
+
+		var deferred = _deferred.ToList();
+		_deferred.Clear();
+		foreach (var replay in deferred)
+			replay();
+	}
+
+	/// <summary>
 	/// Runs the transition for <paramref name="command"/>, or <paramref name="otherwise"/> if the current state has none.
 	/// </summary>
 	private Unit Execute<TCommand>(TCommand command, Action otherwise)
 	{
-		if (_state is ISessionTransition<TCommand>)
+		if (_state is ISessionTransition<TCommand> || MustWait(command))
 			return Execute(command);
 
 		otherwise();
@@ -1201,9 +1349,12 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	private Unit RequestTimedOut(int context)
 	{
 		if (_requests.Remove(context, out var request))
+		{
+			request.Timer.Dispose();
 			request.OnFailure(
 				new DirectPlayException(ResultCode.TimedOut, "The host did not answer the request.")
 			);
+		}
 		return Unit.Default;
 	}
 
@@ -1426,6 +1577,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			PlayerJoinTimedOut: Execute,
 			IntegrityCheckTimedOut: Execute
 		);
+		ReplayDeferred();
 		Publish();
 	}
 }

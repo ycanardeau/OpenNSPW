@@ -14,9 +14,6 @@ internal abstract class FixedLayoutMessageSerializer<TMessage> : ICoreMessageSer
 
 	protected abstract PacketType PacketType { get; }
 
-	protected static string ReadName(byte[] data, int offset, int size) =>
-		Encoding.Unicode.GetString(ReadField(data, offset, size)).TrimEnd('\0');
-
 	protected static byte[] ReadField(byte[] data, int offset, int size)
 	{
 		if (offset == 0 || size == 0)
@@ -29,6 +26,9 @@ internal abstract class FixedLayoutMessageSerializer<TMessage> : ICoreMessageSer
 		Array.Copy(data, PacketTypeSize + offset, field, 0, size);
 		return field;
 	}
+
+	protected static string ReadName(byte[] data, int offset, int size) =>
+		Encoding.Unicode.GetString(ReadField(data, offset, size)).TrimEnd('\0');
 
 	protected static byte[] EncodeName(string name) =>
 		name.Length == 0 ? [] : Encoding.Unicode.GetBytes(name + '\0');

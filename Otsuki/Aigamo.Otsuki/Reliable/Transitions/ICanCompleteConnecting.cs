@@ -7,7 +7,8 @@ namespace Aigamo.Otsuki.Reliable.Transitions;
 /// 3.1.5.1.2 and 3.1.5.1.3).
 /// </summary>
 /// <remarks>
-/// The connector signs whichever way the listener offers, as DirectPlay's connecting players use the host's choice.
+/// Joining a session, the connector signs whichever way the listener offers, as DirectPlay's connecting players use
+/// the host's choice. Once in a signed session, it accepts only that session's signing.
 /// </remarks>
 internal interface ICanCompleteConnecting
 	: IConnectionTransition<ReliableMessage.Connected>,
@@ -19,7 +20,12 @@ internal interface ICanCompleteConnecting
 		ReliableMessage.Connected message
 	)
 	{
-		if (message.SessionId != Handshake.SessionId || message.MajorVersion != 1 || !message.Poll)
+		if (
+			message.SessionId != Handshake.SessionId
+			|| message.MajorVersion != 1
+			|| !message.Poll
+			|| connection.OfferedSigning != PacketSigning.None
+		)
 			return Current;
 
 		var handshake = Handshake with
@@ -43,6 +49,10 @@ internal interface ICanCompleteConnecting
 			|| message.MinorVersion < 6
 			|| !message.Poll
 			|| message.SigningOptions is not (PacketSigning.Fast or PacketSigning.Full)
+			|| (
+				connection.OfferedSigning != PacketSigning.None
+				&& message.SigningOptions != connection.OfferedSigning
+			)
 		)
 			return Current;
 

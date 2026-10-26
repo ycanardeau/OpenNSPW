@@ -11,12 +11,12 @@ public enum PacketSigning
 	None = 0,
 
 	/// <summary>
-	/// PACKET_SIGNING_FAST: every frame carries the partner's secret as its signature.
+	/// PACKET_SIGNING_FAST: every frame carries its sender's secret as its signature.
 	/// </summary>
 	Fast = 0x00000001,
 
 	/// <summary>
-	/// PACKET_SIGNING_FULL: every frame carries a digest of its contents and the partner's secret.
+	/// PACKET_SIGNING_FULL: every frame carries a digest of its contents and its sender's secret.
 	/// </summary>
 	Full = 0x00000002,
 }

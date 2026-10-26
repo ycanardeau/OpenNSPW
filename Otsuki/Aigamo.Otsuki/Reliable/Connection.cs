@@ -27,7 +27,9 @@ internal sealed class Connection : Actor<ConnectionMessage>
 	public bool IsOutbound { get; }
 
 	/// <summary>
-	/// The signing mode that an inbound connection offers the connector. Outbound connections take the listener's.
+	/// The signing mode of the session, once known: inbound connections offer it, and outbound ones accept only it,
+	/// so that a listener cannot talk a signed session into an unsigned connection. <see cref="PacketSigning.None"/>
+	/// before then, when an outbound connection takes whatever the listener offers.
 	/// </summary>
 	public PacketSigning OfferedSigning { get; }
 
@@ -148,7 +150,7 @@ internal sealed class Connection : Actor<ConnectionMessage>
 
 	/// <summary>
 	/// Sends a frame, signed when the connection is. <paramref name="secret"/> is the secret a data frame got with its
-	/// sequence ID; other frames take the secret for their sequence ID now.
+	/// sequence ID; SACKs and HARD_DISCONNECTs take <see cref="PacketSigner.ControlSecret"/>.
 	/// </summary>
 	public void Transmit(ReliableMessage message, ulong? secret = null)
 	{
@@ -159,11 +161,7 @@ internal sealed class Connection : Actor<ConnectionMessage>
 		}
 
 		var datagram = ReliableMessageSerializer.Signed.Serialize(message);
-		var sequence = GetSigningSequence(message) ?? new SequenceId(0);
-		_transport.Send(
-			RemoteEndPoint,
-			Signer.Sign(datagram, secret ?? Signer.LocalSecretFor(sequence))
-		);
+		_transport.Send(RemoteEndPoint, Signer.Sign(datagram, secret ?? Signer.ControlSecret));
 	}
 
 	/// <summary>

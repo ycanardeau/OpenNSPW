@@ -20,19 +20,19 @@ internal interface ICanLosePlayers
 		)
 			return Current;
 
-		var hosting = session.DestroyPlayer(
-			this,
-			player,
-			command.Result == ResultCode.Success
-				? DestroyPlayerFlags.Normal
-				: DestroyPlayerFlags.ConnectionLost
-		);
-		if (hosting.Migration is not { } migration)
-			return hosting;
+		if (Migration is not { } migration)
+			return session.DestroyPlayer(
+				this,
+				player,
+				command.Result == ResultCode.Success
+					? DestroyPlayerFlags.Normal
+					: DestroyPlayerFlags.ConnectionLost
+			);
 
-		// A peer that leaves during migration is no longer waited for, nor asked for operations.
+		// A peer that leaves during migration is no longer waited for, nor asked for operations. It is destroyed
+		// when migration finishes, after the operations that came before it.
 		return session.ContinueMigration(
-			hosting with
+			ToHosting() with
 			{
 				Migration = migration with
 				{

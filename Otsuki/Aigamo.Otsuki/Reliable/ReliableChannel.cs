@@ -273,17 +273,17 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 	}
 
 	/// <summary>
-	/// Takes the next frame to send, combining it with the whole messages queued after it into one coalesced frame
-	/// when they fit ([MC-DPL8R] section 3.1.4.4). Only messages with the same reliability are combined, so that an
-	/// unreliable message never holds up a reliable one, nor the other way around.
-	/// </summary>
-	/// <summary>
 	/// The payload that a full-signed frame contributes to the next secret: the payload of a reliable frame, or of
 	/// the first message of a reliable coalesced frame. KeepAlives and END_STREAM carry none.
 	/// </summary>
 	private static byte[]? GetModifierPayload(OutgoingFrame frame) =>
 		frame.Reliable && !frame.KeepAlive && !frame.EndStream ? frame.ModifierPayload : null;
 
+	/// <summary>
+	/// Takes the next frame to send, combining it with the whole messages queued after it into one coalesced frame
+	/// when they fit ([MC-DPL8R] section 3.1.4.4). Only messages with the same reliability are combined, so that an
+	/// unreliable message never holds up a reliable one, nor the other way around.
+	/// </summary>
 	private OutgoingFrame DequeueFrame()
 	{
 		var first = _pending.Dequeue();
@@ -444,13 +444,14 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 		Pump();
 	}
 
+	/// <summary>
+	/// Fails the reliable sends that are not acknowledged and every send not transmitted yet. Unreliable sends that
+	/// went out have completed already.
+	/// </summary>
 	public void FailAllSends(ResultCode result)
 	{
-		foreach (var frame in _unacknowledged.Concat(_pending))
-		{
-			if (frame.Reliable)
-				CompleteSend(frame, result);
-		}
+		foreach (var frame in _unacknowledged.Where(f => f.Reliable).Concat(_pending))
+			CompleteSend(frame, result);
 		_unacknowledged.Clear();
 		_pending.Clear();
 	}
