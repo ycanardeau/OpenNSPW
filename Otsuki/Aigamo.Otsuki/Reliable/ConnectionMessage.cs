@@ -14,7 +14,15 @@ internal abstract record ConnectionMessage
 	/// </summary>
 	public sealed record StartConnecting : ConnectionMessage;
 
+	/// <summary>
+	/// The CONNECT that created an inbound connection, already decoded by the endpoint.
+	/// </summary>
 	public sealed record DatagramArrived(ReliableMessage Message) : ConnectionMessage;
+
+	/// <summary>
+	/// A datagram from the partner, which the connection decodes because only it knows whether frames are signed.
+	/// </summary>
+	public sealed record DatagramReceived(byte[] Datagram) : ConnectionMessage;
 
 	/// <summary>
 	/// Sends an upper-layer message. <see cref="IConnectionObserver.OnSendCompleted"/> reports

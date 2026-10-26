@@ -26,6 +26,16 @@ internal sealed class Connection : Actor<ConnectionMessage>
 
 	public bool IsOutbound { get; }
 
+	/// <summary>
+	/// The signing mode that an inbound connection offers the connector. Outbound connections take the listener's.
+	/// </summary>
+	public PacketSigning OfferedSigning { get; }
+
+	/// <summary>
+	/// Signs our frames and validates the partner's once the connection is established with signing.
+	/// </summary>
+	public PacketSigner? Signer { get; private set; }
+
 	public TimeProvider TimeProvider { get; }
 
 	public ReliableProfile Profile { get; }
@@ -49,6 +59,7 @@ internal sealed class Connection : Actor<ConnectionMessage>
 	public Connection(
 		IPEndPoint remoteEndPoint,
 		bool isOutbound,
+		PacketSigning offeredSigning,
 		IDatagramTransport transport,
 		TimeProvider timeProvider,
 		ReliableProfile profile,
@@ -58,6 +69,7 @@ internal sealed class Connection : Actor<ConnectionMessage>
 	{
 		RemoteEndPoint = remoteEndPoint;
 		IsOutbound = isOutbound;
+		OfferedSigning = offeredSigning;
 		_transport = transport;
 		TimeProvider = timeProvider;
 		Profile = profile;
@@ -123,8 +135,36 @@ internal sealed class Connection : Actor<ConnectionMessage>
 		Post(new ConnectionMessage.Flush());
 	}
 
-	public void Transmit(ReliableMessage message) =>
-		_transport.Send(RemoteEndPoint, ReliableMessageSerializer.Default.Serialize(message));
+	/// <summary>
+	/// The sequence ID that selects the secret of a frame: <b>bSeq</b> of a DFRAME, <b>bNSeq</b> of a SACK.
+	/// </summary>
+	private static SequenceId? GetSigningSequence(ReliableMessage message) =>
+		message switch
+		{
+			ReliableMessage.DataFrame frame => frame.SequenceId,
+			ReliableMessage.Sack sack => sack.NextSend,
+			_ => null,
+		};
+
+	/// <summary>
+	/// Sends a frame, signed when the connection is. <paramref name="secret"/> is the secret a data frame got with its
+	/// sequence ID; other frames take the secret for their sequence ID now.
+	/// </summary>
+	public void Transmit(ReliableMessage message, ulong? secret = null)
+	{
+		if (Signer is null)
+		{
+			_transport.Send(RemoteEndPoint, ReliableMessageSerializer.Default.Serialize(message));
+			return;
+		}
+
+		var datagram = ReliableMessageSerializer.Signed.Serialize(message);
+		var sequence = GetSigningSequence(message) ?? new SequenceId(0);
+		_transport.Send(
+			RemoteEndPoint,
+			Signer.Sign(datagram, secret ?? Signer.LocalSecretFor(sequence))
+		);
+	}
 
 	/// <summary>
 	/// Runs the transition of <paramref name="state"/> for <paramref name="command"/>, if it has one.
@@ -164,6 +204,7 @@ internal sealed class Connection : Actor<ConnectionMessage>
 	{
 		ConnectRetryTimer.Cancel();
 		KeepAliveTimer.Start(Profile.KeepAliveInterval);
+		Signer = handshake.CreateSigner(IsOutbound);
 		var channel = new ReliableChannel(this, handshake);
 		Observer.OnConnected(this);
 
@@ -252,9 +293,34 @@ internal sealed class Connection : Actor<ConnectionMessage>
 			DataFrame: Execute,
 			Connect: Execute,
 			Connected: Execute,
+			ConnectedSigned: Execute,
 			HardDisconnect: Execute,
 			Sack: Execute
 		);
+
+	/// <summary>
+	/// Decodes a datagram from the partner, and drops it if the connection is signed and the signature is wrong
+	/// ([MC-DPL8R] section 3.1.5.2.7).
+	/// </summary>
+	private Unit Receive(byte[] datagram)
+	{
+		var serializer = Signer is null
+			? ReliableMessageSerializer.Default
+			: ReliableMessageSerializer.Signed;
+		if (serializer.Deserialize(datagram) is not { } message)
+			return Unit.Default;
+
+		if (Signer is not null)
+		{
+			var nextReceive = _state is IHasChannel established
+				? established.Channel.NextReceive
+				: new SequenceId(0);
+			if (!Signer.Validate(datagram, nextReceive, GetSigningSequence(message) ?? nextReceive))
+				return Unit.Default;
+		}
+
+		return Receive(message);
+	}
 
 	protected override void Receive(ConnectionMessage message)
 	{
@@ -264,6 +330,7 @@ internal sealed class Connection : Actor<ConnectionMessage>
 		message.Match(
 			StartConnecting: Execute,
 			DatagramArrived: m => Receive(m.Message),
+			DatagramReceived: m => Receive(m.Datagram),
 			SendPayload: SendPayload,
 			Flush: m =>
 			{

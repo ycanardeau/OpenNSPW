@@ -82,12 +82,21 @@ public sealed class Peer : IAsyncDisposable
 	/// <summary>
 	/// Creates a session with the local player as host. <see cref="PeerEvent.PlayerCreated"/> follows for the local player.
 	/// </summary>
-	public Task HostAsync(ApplicationDescription application, int port = DefaultPort) =>
-		PostCommandAsync(completion => new SessionMessage.Host(
+	public Task HostAsync(ApplicationDescription application, int port = DefaultPort)
+	{
+		const SessionFlags signing = SessionFlags.FastSigned | SessionFlags.FullSigned;
+		if ((application.Flags & signing) == signing)
+			throw new ArgumentException(
+				"A session is either fast signed or full signed, not both.",
+				nameof(application)
+			);
+
+		return PostCommandAsync(completion => new SessionMessage.Host(
 			application,
 			new IPEndPoint(IPAddress.Any, port),
 			completion
 		));
+	}
 
 	/// <summary>
 	/// Starts joining the session hosted at <paramref name="hostEndPoint"/>. The task completes once the attempt

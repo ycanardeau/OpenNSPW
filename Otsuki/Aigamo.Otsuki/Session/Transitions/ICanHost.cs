@@ -19,6 +19,8 @@ internal interface ICanHost : ISessionTransition<SessionMessage.Host>
 					: command.Application.GuidInstance,
 		};
 
+		session.SetSigning(session.Application.Flags);
+
 		// Name table version 1 and index 1 belong to the all players group, which is never sent.
 		session.Version = 2;
 		var host = new Player

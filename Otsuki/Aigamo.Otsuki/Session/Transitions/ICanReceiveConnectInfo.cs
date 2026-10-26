@@ -27,6 +27,8 @@ internal interface ICanReceiveConnectInfo
 			SessionName = message.SessionName,
 			ApplicationReservedData = [.. message.ApplicationReservedData],
 		};
+		// Peers that join later connect to us, and must sign as the session does.
+		session.SetSigning(message.Flags);
 		session.LocalPlayer = message.Dpnid;
 		session.Version = message.Version;
 

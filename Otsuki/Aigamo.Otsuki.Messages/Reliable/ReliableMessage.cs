@@ -436,6 +436,109 @@ public abstract record ReliableMessage
 			+ $"{nameof(Timestamp)}={Timestamp}]";
 	}
 
+	// Comments from: https://learn.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8r/ac197b6f-789f-4905-bae5-362ca920e177
+	/// <summary>
+	/// The CONNECTED_SIGNED packet is used to accept a connection request or complete a connection handshake when signing is enabled.
+	/// </summary>
+	/// <remarks>
+	/// <b>bCommand</b>: The <b>PACKET_COMMAND_CFRAME</b> flag MUST be set. The <b>PACKET_COMMAND_POLL</b> flag MUST be set by a listener accepting a connection request and MUST NOT be set by a connector completing the connection handshake. All other bits MUST be set to zero and the packet MUST be ignored if they are not.
+	/// </remarks>
+	[Immutable]
+	public sealed record ConnectedSigned() : ReliableMessage(PacketCommand.CommandFrame)
+	{
+		/// <summary>
+		/// An extended operation code. It MUST be set to FRAME_EXOPCODE_CONNECTED_SIGNED (0x03).
+		/// </summary>
+		public ExtendedOpcode Opcode { get; } = ExtendedOpcode.ConnectedSigned;
+
+		/// <summary>
+		/// A message identifier. The initial value SHOULD be zero, and connectors SHOULD increment it when retrying. Listeners MAY always set it to zero.
+		/// </summary>
+		public byte MessageId { get; init; }
+
+		/// <summary>
+		/// A response identifier. It MUST be the <b>bMsgID</b> of the CONNECT or CONNECTED_SIGNED message to which this is a response.
+		/// </summary>
+		public byte ResponseId { get; init; }
+
+		/// <summary>
+		/// The version number of the sender's DirectPlay 8 Protocol. Signing requires minor version 0x0006.
+		/// </summary>
+		public int ProtocolVersion { get; init; }
+
+		/// <summary>
+		/// The session identifier. It MUST be the <b>dwSessID</b> of the CONNECT or CONNECTED_SIGNED message to which this is a response.
+		/// </summary>
+		public SessionId SessionId { get; init; }
+
+		/// <summary>
+		/// The sender's tick count, in milliseconds.
+		/// </summary>
+		public int Timestamp { get; init; }
+
+		/// <summary>
+		/// A cookie with which the listener validates the handshake without keeping state. Connectors MUST echo the value they received.
+		/// </summary>
+		public ulong ConnectSignature { get; init; }
+
+		/// <summary>
+		/// The seed of the signatures from the connector to the listener. It MUST be 0 when sent by the listener and nonzero when sent by the connector.
+		/// </summary>
+		public ulong SenderSecret { get; init; }
+
+		/// <summary>
+		/// The seed of the signatures from the listener to the connector. It MUST be 0 when sent by the listener and nonzero when sent by the connector.
+		/// </summary>
+		public ulong ReceiverSecret { get; init; }
+
+		/// <summary>
+		/// The signing mode. Exactly one flag MUST be set.
+		/// </summary>
+		public PacketSigning SigningOptions { get; init; }
+
+		/// <summary>
+		/// 0 when responding to a CONNECT, otherwise the <b>tTimestamp</b> of the CONNECTED_SIGNED message being answered.
+		/// </summary>
+		public int EchoTimestamp { get; init; }
+
+		public bool CommandFrame
+		{
+			get => Command.HasFlag(PacketCommand.CommandFrame);
+		}
+
+		public bool Poll
+		{
+			get => Command.HasFlag(PacketCommand.Poll);
+			init =>
+				Command = value ? (Command | PacketCommand.Poll) : (Command & ~PacketCommand.Poll);
+		}
+
+		public ushort MajorVersion
+		{
+			get => ProtocolVersion.HighUInt16;
+			init => ProtocolVersion = ProtocolVersion.WithHighUInt16(value);
+		}
+
+		public ushort MinorVersion
+		{
+			get => ProtocolVersion.LowUInt16;
+			init => ProtocolVersion = ProtocolVersion.WithLowUInt16(value);
+		}
+
+		public override string ToString() =>
+			$"{nameof(ConnectedSigned)} ["
+			+ $"{nameof(Command)}={Command}, "
+			+ $"{nameof(Opcode)}={Opcode}, "
+			+ $"{nameof(MessageId)}={MessageId}, "
+			+ $"{nameof(ResponseId)}={ResponseId}, "
+			+ $"{nameof(ProtocolVersion)}={ProtocolVersion}, "
+			+ $"{nameof(SessionId)}={SessionId}, "
+			+ $"{nameof(Timestamp)}={Timestamp}, "
+			+ $"{nameof(ConnectSignature)}={ConnectSignature}, "
+			+ $"{nameof(SigningOptions)}={SigningOptions}, "
+			+ $"{nameof(EchoTimestamp)}={EchoTimestamp}]";
+	}
+
 	// Comments from: https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8r/77c2b46b-996c-4f0b-b362-53ab782fdfbb
 	/// <summary>
 	/// The HARD_DISCONNECT packet is used to quickly disconnect or <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/a4ef7612-93d2-4d94-a96c-dbe6a1890ed6#gt_6aa258ea-917f-461a-9c54-1b1a66791965">acknowledge</see> quick disconnection without waiting for remaining packets to be delivered.

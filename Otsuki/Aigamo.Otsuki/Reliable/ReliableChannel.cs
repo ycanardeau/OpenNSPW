@@ -64,6 +64,12 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 		public bool Coalesce { get; init; }
 
 		/// <summary>
+		/// The bytes a full-signed connection derives the secret modifier from: the payload, or the first message of a
+		/// coalesced frame.
+		/// </summary>
+		public byte[]? ModifierPayload { get; init; }
+
+		/// <summary>
 		/// The sends that complete with this frame: none for a frame that does not end a message, one for a frame
 		/// that does, and one per message for a coalesced frame.
 		/// </summary>
@@ -80,6 +86,11 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 			&& !Coalesce
 			&& Payload.Length <= MaxCoalescedPayloadSize;
 		public SequenceId Sequence { get; set; }
+
+		/// <summary>
+		/// The secret that signs this frame on a signed connection, fixed when it gets its sequence ID.
+		/// </summary>
+		public ulong? Secret { get; set; }
 		public bool Poll { get; set; }
 		public long SentTimestamp { get; set; }
 		public int Retries { get; set; }
@@ -124,6 +135,11 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 	private bool _endStreamQueued;
 	private bool _endStreamAcknowledged;
 	private bool _endStreamReceived;
+
+	/// <summary>
+	/// The sequence ID of the next frame to deliver, which selects the secret of a full-signed frame.
+	/// </summary>
+	public SequenceId NextReceive => _nextReceive;
 
 	/// <summary>
 	/// Bit i acknowledges the frame with sequence ID bNRcv + 1 + i.
@@ -198,7 +214,8 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 						? _handshake.SessionId
 						: SessionId.Empty,
 				Payload = frame.Payload,
-			}
+			},
+			frame.Secret
 		);
 
 		// The frame carries our acknowledgment state, so a dedicated SACK is no longer needed.
@@ -260,6 +277,13 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 	/// when they fit ([MC-DPL8R] section 3.1.4.4). Only messages with the same reliability are combined, so that an
 	/// unreliable message never holds up a reliable one, nor the other way around.
 	/// </summary>
+	/// <summary>
+	/// The payload that a full-signed frame contributes to the next secret: the payload of a reliable frame, or of
+	/// the first message of a reliable coalesced frame. KeepAlives and END_STREAM carry none.
+	/// </summary>
+	private static byte[]? GetModifierPayload(OutgoingFrame frame) =>
+		frame.Reliable && !frame.KeepAlive && !frame.EndStream ? frame.ModifierPayload : null;
+
 	private OutgoingFrame DequeueFrame()
 	{
 		var first = _pending.Dequeue();
@@ -297,6 +321,7 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 			NewMessage = true,
 			EndMessage = true,
 			Coalesce = true,
+			ModifierPayload = [.. first.Payload],
 			SendIds = [.. frames.SelectMany(f => f.SendIds)],
 		};
 	}
@@ -308,6 +333,11 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 		{
 			var frame = DequeueFrame();
 			frame.Sequence = _nextSend++;
+			if (_connection.Signer is { } signer)
+			{
+				signer.ObserveSent(frame.Sequence, GetModifierPayload(frame));
+				frame.Secret = signer.LocalSecretFor(frame.Sequence);
+			}
 			frame.Poll = _pending.Count == 0;
 			frame.SentTimestamp = _connection.TimeProvider.GetTimestamp();
 			_unacknowledged.Add(frame);
@@ -334,6 +364,9 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 					Payload = payload
 						.AsSpan(offset, Math.Min(size, payload.Length - offset))
 						.ToImmutableArray(),
+					ModifierPayload = payload
+						.AsSpan(offset, Math.Min(size, payload.Length - offset))
+						.ToArray(),
 					// A message split across frames is always sent reliably so that it can be reassembled.
 					Reliable = reliable || count > 1,
 					NewMessage = i == 0,
@@ -584,10 +617,29 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 		}
 	}
 
+	/// <summary>
+	/// The payload that a received full-signed frame contributes to the next secret, mirroring the sender.
+	/// </summary>
+	private static byte[]? GetModifierPayload(ReliableMessage.DataFrame? frame)
+	{
+		if (frame is null || !frame.Reliable || frame.KeepAliveOrCorrelate || frame.EndStream)
+			return null;
+
+		if (!frame.Coalesce)
+			return [.. frame.Payload];
+
+		return CoalescedPayloadSerializer
+			.Default.Deserialize([.. frame.Payload])
+			?.FirstOrDefault(p => p.Reliable)
+			?.Payload.ToArray();
+	}
+
 	private void DeliverInSequence()
 	{
 		while (_status == ChannelStatus.Open && _received.Remove(_nextReceive, out var frame))
 		{
+			if (_connection.Signer is { IsFullSigned: true } signer)
+				signer.ObserveReceived(_nextReceive, GetModifierPayload(frame));
 			_nextReceive++;
 			if (frame is null)
 				ResetReassembly();

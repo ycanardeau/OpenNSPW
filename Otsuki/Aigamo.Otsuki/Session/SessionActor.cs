@@ -4,6 +4,7 @@ using System.Net;
 using System.Threading.Channels;
 using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Messages.Core;
+using Aigamo.Otsuki.Messages.Reliable;
 using Aigamo.Otsuki.Reliable;
 using Aigamo.Otsuki.Session.Transitions;
 using Aigamo.Results;
@@ -170,6 +171,19 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			return e;
 		}
 	}
+
+	/// <summary>
+	/// Makes new inbound connections sign as the session's flags say ([MC-DPL8R] section 3.1.5.1.3). Outbound
+	/// connections sign as their listener offers.
+	/// </summary>
+	public void SetSigning(SessionFlags flags) =>
+		_endpoint?.Post(
+			new ReliableEndpointMessage.SetSigning(
+				flags.HasFlag(SessionFlags.FullSigned) ? PacketSigning.Full
+				: flags.HasFlag(SessionFlags.FastSigned) ? PacketSigning.Fast
+				: PacketSigning.None
+			)
+		);
 
 	public Connection Connect(IPEndPoint remoteEndPoint)
 	{
