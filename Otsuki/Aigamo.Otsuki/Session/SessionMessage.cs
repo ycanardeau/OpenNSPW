@@ -12,7 +12,41 @@ internal abstract record SessionMessage
 {
 	private SessionMessage() { }
 
-	public sealed record SetPeerInfo(string Name, ImmutableArray<byte> Data) : SessionMessage;
+	/// <summary>
+	/// Sets the local player's name and data, and updates them in the session if there is one.
+	/// </summary>
+	public sealed record SetPeerInfo(
+		string Name,
+		ImmutableArray<byte> Data,
+		TaskCompletionSource Completion
+	) : SessionMessage;
+
+	public sealed record CreateGroup(
+		string Name,
+		ImmutableArray<byte> Data,
+		GroupFlags Flags,
+		TaskCompletionSource<Dpnid> Completion
+	) : SessionMessage;
+
+	public sealed record DestroyGroup(Dpnid Group, TaskCompletionSource Completion)
+		: SessionMessage;
+
+	public sealed record AddPlayerToGroup(
+		Dpnid Group,
+		Dpnid Player,
+		TaskCompletionSource Completion
+	) : SessionMessage;
+
+	public sealed record RemovePlayerFromGroup(
+		Dpnid Group,
+		Dpnid Player,
+		TaskCompletionSource Completion
+	) : SessionMessage;
+
+	/// <summary>
+	/// The host did not answer a request for a name table change in time.
+	/// </summary>
+	public sealed record RequestTimedOut(int Context) : SessionMessage;
 
 	public sealed record Host(
 		ApplicationDescription Application,

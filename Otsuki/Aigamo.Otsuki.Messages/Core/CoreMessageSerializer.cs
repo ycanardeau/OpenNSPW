@@ -57,6 +57,23 @@ public class CoreMessageSerializer : ICoreMessageSerializer<CoreMessage>
 					AckNameTableOperationsMessageSerializer.Default.Deserialize(data),
 				PacketType.HostMigrateComplete =>
 					HostMigrateCompleteMessageSerializer.Default.Deserialize(data),
+				PacketType.RequestCreateGroup =>
+					RequestCreateGroupMessageSerializer.Default.Deserialize(data),
+				PacketType.CreateGroup => CreateGroupMessageSerializer.Default.Deserialize(data),
+				PacketType.RequestAddPlayerToGroup =>
+					RequestAddPlayerToGroupMessageSerializer.Default.Deserialize(data),
+				PacketType.AddPlayerToGroup =>
+					AddPlayerToGroupMessageSerializer.Default.Deserialize(data),
+				PacketType.RequestDeletePlayerFromGroup =>
+					RequestDeletePlayerFromGroupMessageSerializer.Default.Deserialize(data),
+				PacketType.DeletePlayerFromGroup =>
+					DeletePlayerFromGroupMessageSerializer.Default.Deserialize(data),
+				PacketType.RequestDestroyGroup =>
+					RequestDestroyGroupMessageSerializer.Default.Deserialize(data),
+				PacketType.DestroyGroup => DestroyGroupMessageSerializer.Default.Deserialize(data),
+				PacketType.RequestUpdateInfo =>
+					RequestUpdateInfoMessageSerializer.Default.Deserialize(data),
+				PacketType.UpdateInfo => UpdateInfoMessageSerializer.Default.Deserialize(data),
 				_ => null,
 			};
 		}
@@ -95,6 +112,21 @@ public class CoreMessageSerializer : ICoreMessageSerializer<CoreMessage>
 			AckNameTableOperations: static m =>
 				AckNameTableOperationsMessageSerializer.Default.Serialize(m),
 			HostMigrateComplete: static m =>
-				HostMigrateCompleteMessageSerializer.Default.Serialize(m)
+				HostMigrateCompleteMessageSerializer.Default.Serialize(m),
+			RequestCreateGroup: static m =>
+				RequestCreateGroupMessageSerializer.Default.Serialize(m),
+			CreateGroup: static m => CreateGroupMessageSerializer.Default.Serialize(m),
+			RequestAddPlayerToGroup: static m =>
+				RequestAddPlayerToGroupMessageSerializer.Default.Serialize(m),
+			AddPlayerToGroup: static m => AddPlayerToGroupMessageSerializer.Default.Serialize(m),
+			RequestDeletePlayerFromGroup: static m =>
+				RequestDeletePlayerFromGroupMessageSerializer.Default.Serialize(m),
+			DeletePlayerFromGroup: static m =>
+				DeletePlayerFromGroupMessageSerializer.Default.Serialize(m),
+			RequestDestroyGroup: static m =>
+				RequestDestroyGroupMessageSerializer.Default.Serialize(m),
+			DestroyGroup: static m => DestroyGroupMessageSerializer.Default.Serialize(m),
+			RequestUpdateInfo: static m => RequestUpdateInfoMessageSerializer.Default.Serialize(m),
+			UpdateInfo: static m => UpdateInfoMessageSerializer.Default.Serialize(m)
 		);
 }

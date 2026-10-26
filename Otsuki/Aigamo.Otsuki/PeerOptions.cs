@@ -29,6 +29,12 @@ public sealed record PeerOptions
 	public TimeSpan IntegrityCheckTimeout { get; init; } = TimeSpan.FromSeconds(10);
 
 	/// <summary>
+	/// How long a peer waits for the host to carry out a group change or an info update it requested
+	/// ([MC-DPL8CS] section 3.5).
+	/// </summary>
+	public TimeSpan RequestTimeout { get; init; } = TimeSpan.FromSeconds(30);
+
+	/// <summary>
 	/// How long closing waits for connections to disconnect gracefully.
 	/// </summary>
 	public TimeSpan CloseTimeout { get; init; } = TimeSpan.FromSeconds(5);

@@ -63,6 +63,16 @@ public sealed class Peer : IAsyncDisposable
 
 	public PlayerInfo? GetPeerInfo(Dpnid player) => Snapshot.Players.GetValueOrDefault(player);
 
+	/// <summary>
+	/// Groups for which <see cref="PeerEvent.GroupCreated"/> was raised and not yet followed by <see cref="PeerEvent.GroupDestroyed"/>.
+	/// </summary>
+	public IReadOnlyCollection<GroupInfo> Groups => [.. Snapshot.Groups.Values];
+
+	/// <summary>
+	/// A group with its members, like IDirectPlay8Peer::GetGroupInfo and EnumGroupMembers.
+	/// </summary>
+	public GroupInfo? GetGroupInfo(Dpnid group) => Snapshot.Groups.GetValueOrDefault(group);
+
 	private void PostCommand(SessionMessage command)
 	{
 		if (!_session.Post(command))
@@ -78,11 +88,72 @@ public sealed class Peer : IAsyncDisposable
 		return completion.Task;
 	}
 
+	private Task<T> PostCommandAsync<T>(Func<TaskCompletionSource<T>, SessionMessage> createCommand)
+	{
+		var completion = new TaskCompletionSource<T>(
+			TaskCreationOptions.RunContinuationsAsynchronously
+		);
+		PostCommand(createCommand(completion));
+		return completion.Task;
+	}
+
 	/// <summary>
-	/// Sets the local player's name and data. Takes effect for the next <see cref="HostAsync"/> or <see cref="ConnectAsync(ApplicationDescription, IPEndPoint, int, byte[])"/>.
+	/// Sets the local player's name and data, like IDirectPlay8Peer::SetPeerInfo. Outside a session, they take effect
+	/// for the next <see cref="HostAsync"/> or <see cref="ConnectAsync(ApplicationDescription, IPEndPoint, int, byte[])"/>.
+	/// In a session, the host updates them for everyone and <see cref="PeerEvent.PeerInfoUpdated"/> follows on every
+	/// peer; the task completes once the update is in force, and fails with <see cref="DirectPlayException"/> if the
+	/// host does not answer.
 	/// </summary>
-	public void SetPeerInfo(string name, byte[]? data = null) =>
-		PostCommand(new SessionMessage.SetPeerInfo(name, data is null ? [] : [.. data]));
+	public Task SetPeerInfo(string name, byte[]? data = null) =>
+		PostCommandAsync(completion => new SessionMessage.SetPeerInfo(
+			name,
+			data is null ? [] : [.. data],
+			completion
+		));
+
+	/// <summary>
+	/// Creates a group, like IDirectPlay8Peer::CreateGroup, and returns its DPNID. Only the host creates groups, so a
+	/// non-host peer asks it to. <see cref="PeerEvent.GroupCreated"/> follows on every peer.
+	/// </summary>
+	public Task<Dpnid> CreateGroupAsync(
+		string name,
+		byte[]? data = null,
+		GroupFlags flags = GroupFlags.None
+	) =>
+		PostCommandAsync<Dpnid>(completion => new SessionMessage.CreateGroup(
+			name,
+			data is null ? [] : [.. data],
+			flags,
+			completion
+		));
+
+	/// <summary>
+	/// Destroys a group, like IDirectPlay8Peer::DestroyGroup. <see cref="PeerEvent.GroupDestroyed"/> follows.
+	/// </summary>
+	public Task DestroyGroupAsync(Dpnid group) =>
+		PostCommandAsync(completion => new SessionMessage.DestroyGroup(group, completion));
+
+	/// <summary>
+	/// Adds a player to a group, like IDirectPlay8Peer::AddPlayerToGroup. <see cref="PeerEvent.PlayerAddedToGroup"/>
+	/// follows.
+	/// </summary>
+	public Task AddPlayerToGroupAsync(Dpnid group, Dpnid player) =>
+		PostCommandAsync(completion => new SessionMessage.AddPlayerToGroup(
+			group,
+			player,
+			completion
+		));
+
+	/// <summary>
+	/// Removes a player from a group, like IDirectPlay8Peer::RemovePlayerFromGroup.
+	/// <see cref="PeerEvent.PlayerRemovedFromGroup"/> follows.
+	/// </summary>
+	public Task RemovePlayerFromGroupAsync(Dpnid group, Dpnid player) =>
+		PostCommandAsync(completion => new SessionMessage.RemovePlayerFromGroup(
+			group,
+			player,
+			completion
+		));
 
 	/// <summary>
 	/// Creates a session with the local player as host. <see cref="PeerEvent.PlayerCreated"/> follows for the local player.
@@ -141,7 +212,7 @@ public sealed class Peer : IAsyncDisposable
 	}
 
 	/// <summary>
-	/// Sends a message to a player, or to every player with <see cref="AllPlayers"/>. Returns a handle
+	/// Sends a message to a player, to the members of a group, or to every player with <see cref="AllPlayers"/>. Returns a handle
 	/// that <see cref="PeerEvent.SendCompleted"/> reports unless <see cref="SendFlags.NoComplete"/> is set.
 	/// </summary>
 	public long SendTo(

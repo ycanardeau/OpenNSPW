@@ -90,8 +90,22 @@ internal interface ICanAdmitPlayers
 				NameTableEntries =
 				[
 					.. session
-						.Players.Values.OrderBy(p => p.Version)
-						.Select(p => p.ToNameTableEntryInfo()),
+						.Players.Values.Select(p => p.ToNameTableEntryInfo())
+						.Concat(session.Groups.Values.Select(g => g.ToNameTableEntryInfo()))
+						.OrderBy(e => e.Version),
+				],
+				NameTableMemberships =
+				[
+					.. session
+						.Groups.Values.SelectMany(g =>
+							g.Members.Select(m => new NameTableMembershipInfo
+							{
+								DpnidPlayer = m.Key,
+								DpnidGroup = g.Id,
+								Version = m.Value,
+							})
+						)
+						.OrderBy(m => m.Version),
 				],
 				ApplicationReservedData = application.ApplicationReservedData,
 				Password = application.Flags.HasFlag(SessionFlags.RequirePassword)

@@ -33,7 +33,10 @@ internal interface ICanReceiveConnectInfo
 		session.Version = message.Version;
 
 		var awaitingPlayers = ImmutableHashSet.CreateBuilder<Dpnid>();
-		foreach (var entry in message.NameTableEntries)
+		foreach (var entry in message.NameTableEntries.Where(e => e.Group && !e.AllPlayersGroup))
+			session.AddGroup(Group.FromNameTableEntry(entry), announce: false);
+
+		foreach (var entry in message.NameTableEntries.Where(e => !e.Group && !e.AllPlayersGroup))
 		{
 			var isLocal = entry.Dpnid == message.Dpnid;
 			var player = new Player
@@ -54,6 +57,9 @@ internal interface ICanReceiveConnectInfo
 			else if (!isLocal)
 				awaitingPlayers.Add(player.Id);
 		}
+
+		foreach (var membership in message.NameTableMemberships)
+			session.AddMember(membership.DpnidGroup, membership.DpnidPlayer, membership.Version);
 
 		if (
 			!session.Players.ContainsKey(session.LocalPlayer)

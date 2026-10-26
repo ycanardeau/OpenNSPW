@@ -27,6 +27,15 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		public ResultCode Result { get; set; } = ResultCode.Success;
 	}
 
+	/// <summary>
+	/// A name table change that the local peer asked the host for, waiting for the host's broadcast.
+	/// </summary>
+	private sealed record PendingRequest(
+		Action<Dpnid> OnSuccess,
+		Action<Exception> OnFailure,
+		ITimer Timer
+	);
+
 	private readonly ChannelWriter<PeerEvent> _events;
 	private readonly Action<SessionSnapshot> _publish;
 	private readonly Dictionary<long, PendingSend> _sends = [];
@@ -34,6 +43,8 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	private SessionState _state = new SessionState.Idle();
 	private ReliableEndpoint? _endpoint;
 	private long _nextSendId;
+	private readonly Dictionary<int, PendingRequest> _requests = [];
+	private int _nextContext;
 
 	public PeerOptions Options { get; }
 
@@ -49,13 +60,18 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	public Dictionary<Connection, Player> PlayersByConnection { get; } = [];
 
 	/// <summary>
+	/// The groups of the name table.
+	/// </summary>
+	public Dictionary<Dpnid, Group> Groups { get; } = [];
+
+	/// <summary>
 	/// Every connection that has not reported its end yet.
 	/// </summary>
 	public HashSet<Connection> Connections { get; } = [];
 
-	public string LocalName { get; private set; } = string.Empty;
+	public string LocalName { get; set; } = string.Empty;
 
-	public ImmutableArray<byte> LocalData { get; private set; } = [];
+	public ImmutableArray<byte> LocalData { get; set; } = [];
 
 	public ApplicationDescription Application { get; set; } = new();
 
@@ -150,7 +166,10 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 				_endpoint is null ? null : Application,
 				_endpoint?.LocalEndPoint,
 				LocalPlayer,
-				Players.TryGetValue(LocalPlayer, out var local) && local.IsHost
+				Players.TryGetValue(LocalPlayer, out var local) && local.IsHost,
+				Groups
+					.Values.Where(g => g.Created)
+					.ToImmutableDictionary(g => g.Id, g => g.ToGroupInfo())
 			)
 		);
 
@@ -257,8 +276,252 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			SendCore(hostConnection, new CoreMessage.NameTableVersion { Version = Version });
 	}
 
+	/// <summary>
+	/// Sends <paramref name="message"/> to every peer we have a connection to, joining ones included.
+	/// </summary>
+	public void Broadcast(CoreMessage message)
+	{
+		foreach (var peer in ConnectedPeers)
+			SendCore(peer.Connection!, message);
+	}
+
+	/// <summary>
+	/// Waits for the host to carry out a name table change that we requested. Returns the context that the request
+	/// and the host's broadcast carry.
+	/// </summary>
+	public int BeginRequest(Action<Dpnid> onSuccess, Action<Exception> onFailure)
+	{
+		var context = ++_nextContext;
+		if (context == 0)
+			context = ++_nextContext;
+
+		var timer = Schedule(Options.RequestTimeout, new SessionMessage.RequestTimedOut(context));
+		_requests[context] = new PendingRequest(onSuccess, onFailure, timer);
+		return context;
+	}
+
+	public int BeginRequest(TaskCompletionSource completion) =>
+		BeginRequest(_ => completion.TrySetResult(), e => completion.TrySetException(e));
+
+	/// <summary>
+	/// Completes our request once the host's broadcast for it arrives.
+	/// </summary>
+	public void CompleteRequest(Dpnid requesting, int context, Dpnid result = default)
+	{
+		if (requesting != LocalPlayer || !_requests.Remove(context, out var request))
+			return;
+
+		request.Timer.Dispose();
+		request.OnSuccess(result);
+	}
+
+	private void FailRequests(Exception exception)
+	{
+		var requests = _requests.Values.ToList();
+		_requests.Clear();
+		foreach (var request in requests)
+		{
+			request.Timer.Dispose();
+			request.OnFailure(exception);
+		}
+	}
+
+	/// <summary>
+	/// Raises <see cref="PeerEvent.GroupCreated"/>, followed by <see cref="PeerEvent.PlayerAddedToGroup"/> for the
+	/// members it already has, which a peer that joins later learns all at once.
+	/// </summary>
+	public void MarkGroupCreated(Group group)
+	{
+		if (group.Created)
+			return;
+
+		group.Created = true;
+		Publish();
+		Emit(new PeerEvent.GroupCreated(group.ToGroupInfo()));
+		foreach (var member in group.Members.OrderBy(m => m.Value).Select(m => m.Key))
+			Emit(new PeerEvent.PlayerAddedToGroup(group.Id, member));
+	}
+
+	/// <summary>
+	/// Adds a group to the name table. <paramref name="announce"/> is false while joining, until the join completes.
+	/// </summary>
+	public void AddGroup(Group group, bool announce)
+	{
+		if (!Groups.TryAdd(group.Id, group))
+			return;
+
+		if (announce)
+			MarkGroupCreated(group);
+	}
+
+	public void RemoveGroup(Dpnid id, DestroyGroupReason reason)
+	{
+		if (!Groups.Remove(id, out var group) || !group.Created)
+			return;
+
+		Publish();
+		Emit(new PeerEvent.GroupDestroyed(id, reason));
+	}
+
+	public bool AddMember(Dpnid groupId, Dpnid playerId, int version)
+	{
+		if (
+			!Groups.TryGetValue(groupId, out var group)
+			|| !Players.ContainsKey(playerId)
+			|| !group.Members.TryAdd(playerId, version)
+		)
+			return false;
+
+		if (group.Created)
+		{
+			Publish();
+			Emit(new PeerEvent.PlayerAddedToGroup(groupId, playerId));
+		}
+		return true;
+	}
+
+	public bool RemoveMember(Dpnid groupId, Dpnid playerId)
+	{
+		if (!Groups.TryGetValue(groupId, out var group) || !group.Members.Remove(playerId))
+			return false;
+
+		if (group.Created)
+		{
+			Publish();
+			Emit(new PeerEvent.PlayerRemovedFromGroup(groupId, playerId));
+		}
+		return true;
+	}
+
+	/// <summary>
+	/// Applies DPNINFO_NAME and DPNINFO_DATA to a player and raises <see cref="PeerEvent.PeerInfoUpdated"/>.
+	/// </summary>
+	public void UpdatePlayerInfo(Dpnid id, InfoFlags flags, string name, ImmutableArray<byte> data)
+	{
+		if (!Players.TryGetValue(id, out var player))
+			return;
+
+		if (flags.HasFlag(InfoFlags.Name))
+			player.Name = name;
+		if (flags.HasFlag(InfoFlags.Data))
+			player.Data = data;
+		if (player.IsLocal)
+		{
+			LocalName = player.Name;
+			LocalData = player.Data;
+		}
+
+		if (player.Created)
+		{
+			Publish();
+			Emit(new PeerEvent.PeerInfoUpdated(player.ToPlayerInfo()));
+		}
+	}
+
+	/// <summary>
+	/// The reason a peer gives for a group that the host destroyed: an <see cref="GroupFlags.AutoDestruct"/> group
+	/// goes when its creator leaves, which the peer has already seen.
+	/// </summary>
+	public DestroyGroupReason GetDestroyReason(Dpnid groupId) =>
+		Groups.TryGetValue(groupId, out var group)
+		&& group.Flags.HasFlag(GroupFlags.AutoDestruct)
+		&& !Players.ContainsKey(group.Owner)
+			? DestroyGroupReason.AutoDestructed
+			: DestroyGroupReason.Normal;
+
+	/// <summary>
+	/// Destroys a group as the host and tells the peers ([MC-DPL8CS] section 3.4.5.2, step 8).
+	/// </summary>
+	public void HostDestroyGroup(
+		Dpnid groupId,
+		Dpnid requesting,
+		int context,
+		DestroyGroupReason reason
+	)
+	{
+		Version++;
+		Broadcast(
+			new CoreMessage.DestroyGroup
+			{
+				DpnidGroup = groupId,
+				Version = Version,
+				DpnidRequesting = requesting,
+				PacketContext = context,
+			}
+		);
+		RemoveGroup(groupId, reason);
+	}
+
+	/// <summary>
+	/// Adds a player to a group as the host and tells the peers (step 4).
+	/// </summary>
+	public void HostAddMember(Dpnid groupId, Dpnid playerId, Dpnid requesting, int context)
+	{
+		Version++;
+		AddMember(groupId, playerId, Version);
+		Broadcast(
+			new CoreMessage.AddPlayerToGroup
+			{
+				DpnidGroup = groupId,
+				DpnidPlayer = playerId,
+				Version = Version,
+				DpnidRequesting = requesting,
+				PacketContext = context,
+			}
+		);
+	}
+
+	/// <summary>
+	/// Removes a player from a group as the host and tells the peers (step 6).
+	/// </summary>
+	public void HostRemoveMember(Dpnid groupId, Dpnid playerId, Dpnid requesting, int context)
+	{
+		Version++;
+		RemoveMember(groupId, playerId);
+		Broadcast(
+			new CoreMessage.DeletePlayerFromGroup
+			{
+				DpnidGroup = groupId,
+				DpnidPlayer = playerId,
+				Version = Version,
+				DpnidRequesting = requesting,
+				PacketContext = context,
+			}
+		);
+	}
+
+	/// <summary>
+	/// Updates a player's name and data as the host and tells the peers ([MC-DPL8CS] section 3.5).
+	/// </summary>
+	public void HostUpdateInfo(
+		Dpnid playerId,
+		InfoFlags flags,
+		string name,
+		ImmutableArray<byte> data,
+		Dpnid requesting,
+		int context
+	)
+	{
+		Version++;
+		UpdatePlayerInfo(playerId, flags, name, data);
+		Broadcast(
+			new CoreMessage.UpdateInfo
+			{
+				PacketContext = context,
+				Dpnid = playerId,
+				Version = Version,
+				InfoFlags = flags,
+				Name = flags.HasFlag(InfoFlags.Name) ? name : string.Empty,
+				Data = flags.HasFlag(InfoFlags.Data) ? data : [],
+				DpnidRequesting = requesting,
+			}
+		);
+	}
+
 	public void RemovePlayer(Player player)
 	{
+		foreach (var group in Groups.Values.Where(g => g.Members.ContainsKey(player.Id)).ToList())
+			RemoveMember(group.Id, player.Id);
 		Players.Remove(player.Id);
 		player.JoinTimer?.Dispose();
 		if (player.Connection is not null)
@@ -318,6 +581,14 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			Publish();
 			Emit(new PeerEvent.PlayerDestroyed(player.Id, reason));
 		}
+
+		// DPNGROUP_AUTODESTRUCT groups go with the player that created them.
+		foreach (
+			var group in Groups
+				.Values.Where(g => g.Flags.HasFlag(GroupFlags.AutoDestruct) && g.Owner == player.Id)
+				.ToList()
+		)
+			HostDestroyGroup(group.Id, LocalPlayer, context: 0, DestroyGroupReason.AutoDestructed);
 
 		return ResynchronizeVersion(
 			hosting.ToHosting() with
@@ -429,6 +700,13 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			player.JoinTimer?.Dispose();
 		Players.Clear();
 		PlayersByConnection.Clear();
+		Groups.Clear();
+		FailRequests(
+			new DirectPlayException(
+				ResultCode.NoConnection,
+				"The peer is no longer in the session."
+			)
+		);
 		JoinTimer.Cancel();
 		LocalPlayer = Dpnid.Empty;
 		Version = 0;
@@ -454,10 +732,13 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	public SessionState Terminate(ResultCode result)
 	{
 		var created = Players.Values.Where(p => p.Created).OrderBy(p => p.IsLocal).ToList();
+		var groups = Groups.Values.Where(g => g.Created).ToList();
 		DisconnectAll();
 		ClearSession();
 		Publish();
 		Emit(new PeerEvent.SessionTerminated(result));
+		foreach (var group in groups)
+			Emit(new PeerEvent.GroupDestroyed(group.Id, DestroyGroupReason.SessionTerminated));
 		foreach (var player in created)
 			Emit(new PeerEvent.PlayerDestroyed(player.Id, DestroyPlayerFlags.SessionTerminated));
 		return new SessionState.Terminated();
@@ -481,6 +762,8 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			.ToList();
 		foreach (var player in players)
 			MarkCreated(player);
+		foreach (var group in Groups.Values.OrderBy(g => g.Version).ToList())
+			MarkGroupCreated(group);
 		Emit(new PeerEvent.ConnectCompleted(ResultCode.Success, joining.Reply));
 		return new SessionState.Connected(joining.HostConnection);
 	}
@@ -530,6 +813,19 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		)
 		{
 			targets.Add(player.Connection);
+		}
+		else if (Groups.TryGetValue(command.Target, out var group) && group.Created)
+		{
+			// A group send goes to each member we are connected to, and to us if we are a member.
+			targets.AddRange(
+				group
+					.Members.Keys.Select(id => Players.GetValueOrDefault(id))
+					.Where(p => p is { IsLocal: false, Created: true, Connection: not null })
+					.Select(p => p!.Connection!)
+			);
+			loopback =
+				group.Members.ContainsKey(LocalPlayer)
+				&& !command.Flags.HasFlag(SendFlags.NoLoopback);
 		}
 		else
 		{
@@ -582,10 +878,30 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		return Unit.Default;
 	}
 
-	private Unit SetPeerInfo(SessionMessage.SetPeerInfo command)
+	/// <summary>
+	/// Outside a session, the name and data take effect for the next session; in one, the transition updates them
+	/// everywhere.
+	/// </summary>
+	private Unit SetPeerInfo(SessionMessage.SetPeerInfo command) =>
+		Execute(
+			command,
+			otherwise: () =>
+			{
+				LocalName = command.Name;
+				LocalData = command.Data;
+				command.Completion.TrySetResult();
+			}
+		);
+
+	private static DirectPlayException NotInSession() =>
+		new(ResultCode.NoConnection, "The peer is not in a session.");
+
+	private Unit RequestTimedOut(int context)
 	{
-		LocalName = command.Name;
-		LocalData = command.Data;
+		if (_requests.Remove(context, out var request))
+			request.OnFailure(
+				new DirectPlayException(ResultCode.TimedOut, "The host did not answer the request.")
+			);
 		return Unit.Default;
 	}
 
@@ -680,7 +996,24 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			AckNameTableOperations: m =>
 				Execute(new Received<CoreMessage.AckNameTableOperations>(connection, m)),
 			HostMigrateComplete: m =>
-				Execute(new Received<CoreMessage.HostMigrateComplete>(connection, m))
+				Execute(new Received<CoreMessage.HostMigrateComplete>(connection, m)),
+			RequestCreateGroup: m =>
+				Execute(new Received<CoreMessage.RequestCreateGroup>(connection, m)),
+			CreateGroup: m => Execute(new Received<CoreMessage.CreateGroup>(connection, m)),
+			RequestAddPlayerToGroup: m =>
+				Execute(new Received<CoreMessage.RequestAddPlayerToGroup>(connection, m)),
+			AddPlayerToGroup: m =>
+				Execute(new Received<CoreMessage.AddPlayerToGroup>(connection, m)),
+			RequestDeletePlayerFromGroup: m =>
+				Execute(new Received<CoreMessage.RequestDeletePlayerFromGroup>(connection, m)),
+			DeletePlayerFromGroup: m =>
+				Execute(new Received<CoreMessage.DeletePlayerFromGroup>(connection, m)),
+			RequestDestroyGroup: m =>
+				Execute(new Received<CoreMessage.RequestDestroyGroup>(connection, m)),
+			DestroyGroup: m => Execute(new Received<CoreMessage.DestroyGroup>(connection, m)),
+			RequestUpdateInfo: m =>
+				Execute(new Received<CoreMessage.RequestUpdateInfo>(connection, m)),
+			UpdateInfo: m => Execute(new Received<CoreMessage.UpdateInfo>(connection, m))
 		);
 
 	private Unit Receive(SessionMessage.ConnectionReceived message)
@@ -715,6 +1048,15 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	{
 		message.Match(
 			SetPeerInfo: SetPeerInfo,
+			CreateGroup: m =>
+				Execute(m, otherwise: () => m.Completion.TrySetException(NotInSession())),
+			DestroyGroup: m =>
+				Execute(m, otherwise: () => m.Completion.TrySetException(NotInSession())),
+			AddPlayerToGroup: m =>
+				Execute(m, otherwise: () => m.Completion.TrySetException(NotInSession())),
+			RemovePlayerFromGroup: m =>
+				Execute(m, otherwise: () => m.Completion.TrySetException(NotInSession())),
+			RequestTimedOut: m => RequestTimedOut(m.Context),
 			Host: m =>
 				Execute(
 					m,

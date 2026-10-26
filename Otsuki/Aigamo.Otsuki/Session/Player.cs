@@ -11,9 +11,9 @@ internal sealed class Player
 {
 	public required Dpnid Id { get; init; }
 
-	public required string Name { get; init; }
+	public required string Name { get; set; }
 
-	public ImmutableArray<byte> Data { get; init; } = [];
+	public ImmutableArray<byte> Data { get; set; } = [];
 
 	/// <summary>
 	/// The DirectPlay address that other peers connect to.
@@ -22,7 +22,7 @@ internal sealed class Player
 
 	public bool IsLocal { get; init; }
 
-	public bool IsHost { get; init; }
+	public bool IsHost { get; set; }
 
 	/// <summary>
 	/// The name table version at which the player was added.

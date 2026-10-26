@@ -679,6 +679,170 @@
             The DN_HOST_MIGRATE_COMPLETE packet informs <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/8195991d-b7e3-4435-9e9f-2c3ab57eda8c#gt_e5d0d91c-9a39-493f-ab1b-f36ce840e6a2">peers</see> that the session-hosting responsibilities have successfully migrated from the departing old <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/8195991d-b7e3-4435-9e9f-2c3ab57eda8c#gt_96048ee4-02d7-484e-a53b-3b8ed355251d">host</see>.
             </summary>
         </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestCreateGroup">
+            <summary>
+            The DN_REQ_CREATE_GROUP packet informs the host that a peer is requesting that a new group be created for the game session.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestCreateGroup.#ctor">
+            <summary>
+            The DN_REQ_CREATE_GROUP packet informs the host that a peer is requesting that a new group be created for the game session.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestCreateGroup.PacketContext">
+            <summary>
+            Identifies the operation. DN_CREATE_GROUP returns it unchanged.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestCreateGroup.InfoFlags">
+            <summary>
+            Which of <see cref="P:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestCreateGroup.Name"/> and <see cref="P:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestCreateGroup.Data"/> are included.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.CreateGroup">
+            <summary>
+            The DN_CREATE_GROUP packet informs all of the connected peers that the new group has been successfully created for the game session.
+            </summary>
+            <remarks>
+            [MC-DPL8CS] lists only <b>dpnidRequesting</b> and <b>dwPacketContext</b>, which do not tell the peers what the group is. The
+            group's DN_NAMETABLE_ENTRY_INFO follows them, with its name and data, as in the name table of DN_SEND_CONNECT_INFO.
+            </remarks>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.CreateGroup.#ctor">
+            <summary>
+            The DN_CREATE_GROUP packet informs all of the connected peers that the new group has been successfully created for the game session.
+            </summary>
+            <remarks>
+            [MC-DPL8CS] lists only <b>dpnidRequesting</b> and <b>dwPacketContext</b>, which do not tell the peers what the group is. The
+            group's DN_NAMETABLE_ENTRY_INFO follows them, with its name and data, as in the name table of DN_SEND_CONNECT_INFO.
+            </remarks>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.CreateGroup.DpnidRequesting">
+            <summary>
+            The peer that requested the group, or the host itself.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.CreateGroup.PacketContext">
+            <summary>
+            The <see cref="P:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestCreateGroup.PacketContext"/> of the request.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.CreateGroup.Group">
+            <summary>
+            The group's name table entry, which carries its DPNID, flags and name table version.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestAddPlayerToGroup">
+            <summary>
+            The DN_REQ_ADD_PLAYER_TO_GROUP packet informs the host that a peer is requesting to add a player to an existing group in the game session.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestAddPlayerToGroup.#ctor">
+            <summary>
+            The DN_REQ_ADD_PLAYER_TO_GROUP packet informs the host that a peer is requesting to add a player to an existing group in the game session.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.AddPlayerToGroup">
+            <summary>
+            The DN_ADD_PLAYER_TO_GROUP packet informs the peers that the host has added a player in the game session to a group.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.AddPlayerToGroup.#ctor">
+            <summary>
+            The DN_ADD_PLAYER_TO_GROUP packet informs the peers that the host has added a player in the game session to a group.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.AddPlayerToGroup.Version">
+            <summary>
+            The name table version.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestDeletePlayerFromGroup">
+            <summary>
+            The DN_REQ_DELETE_PLAYER_FROM_GROUP packet informs the host that a peer is requesting that a player be removed from an existing group.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestDeletePlayerFromGroup.#ctor">
+            <summary>
+            The DN_REQ_DELETE_PLAYER_FROM_GROUP packet informs the host that a peer is requesting that a player be removed from an existing group.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.DeletePlayerFromGroup">
+            <summary>
+            The DN_DELETE_PLAYER_FROM_GROUP packet informs the peers that the host has removed a player from a group.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.DeletePlayerFromGroup.#ctor">
+            <summary>
+            The DN_DELETE_PLAYER_FROM_GROUP packet informs the peers that the host has removed a player from a group.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestDestroyGroup">
+            <summary>
+            The DN_REQ_DESTROY_GROUP packet informs the host that a peer is requesting that a group be deleted from the game session.
+            </summary>
+            <remarks>
+            [MC-DPL8CS] gives this packet a <b>dpnidPlayer</b> field after <b>dpnidGroup</b>, which plays no part in destroying a group.
+            </remarks>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestDestroyGroup.#ctor">
+            <summary>
+            The DN_REQ_DESTROY_GROUP packet informs the host that a peer is requesting that a group be deleted from the game session.
+            </summary>
+            <remarks>
+            [MC-DPL8CS] gives this packet a <b>dpnidPlayer</b> field after <b>dpnidGroup</b>, which plays no part in destroying a group.
+            </remarks>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.DestroyGroup">
+            <summary>
+            The DN_DESTROY_GROUP packet informs the peers that the host has removed a group from the game session.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.DestroyGroup.#ctor">
+            <summary>
+            The DN_DESTROY_GROUP packet informs the peers that the host has removed a group from the game session.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestUpdateInfo">
+            <summary>
+            The DN_REQ_UPDATE_INFO packet is sent from a peer/client to the host/server to update information about a specified peer/client.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestUpdateInfo.#ctor">
+            <summary>
+            The DN_REQ_UPDATE_INFO packet is sent from a peer/client to the host/server to update information about a specified peer/client.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestUpdateInfo.PacketContext">
+            <summary>
+            Identifies the operation. DN_UPDATE_INFO returns it unchanged.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestUpdateInfo.Dpnid">
+            <summary>
+            The player to update.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.UpdateInfo">
+            <summary>
+            The DN_UPDATE_INFO packet is the host/server's response to DN_REQ_UPDATE_INFO, sent to all players with the updated information.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.UpdateInfo.#ctor">
+            <summary>
+            The DN_UPDATE_INFO packet is the host/server's response to DN_REQ_UPDATE_INFO, sent to all players with the updated information.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.UpdateInfo.Dpnid">
+            <summary>
+            The player that was updated.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.UpdateInfo.DpnidRequesting">
+            <summary>
+            The player that requested the update.
+            </summary>
+        </member>
         <member name="T:Aigamo.Otsuki.Messages.Core.DestroyPlayerFlags">
             <summary>
             Flag that controls how this method is processed.
@@ -721,6 +885,26 @@
             <remarks>
             The spec lists both 0x00000007 and 0x00000008 as DirectX 9.0.
             </remarks>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.GroupFlags.AutoDestruct">
+            <summary>
+            DPNGROUP_AUTODESTRUCT: the group is deleted once all players have been removed.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.InfoFlags">
+            <summary>
+            Which of a player's or group's fields a message carries.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.InfoFlags.Name">
+            <summary>
+            DPNINFO_NAME: the name is included.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.InfoFlags.Data">
+            <summary>
+            DPNINFO_DATA: the data is included.
+            </summary>
         </member>
         <member name="F:Aigamo.Otsuki.Messages.Core.NameTableEntryFlags.Local">
             <summary>
@@ -887,6 +1071,39 @@
             Not used.
             </summary>
         </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.FixedLayoutMessageSerializer`1">
+            <summary>
+            The common shape of the core messages that groups and info updates use: the packet type, fixed 32-bit fields, then
+            variable fields located by offsets from the end of <b>dwPacketType</b>.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.FixedLayoutMessageSerializer`1.Read(System.IO.BinaryReader,System.Byte[])">
+            <summary>
+            Reads the fields after <b>dwPacketType</b>. <paramref name="data"/> is the whole message, for variable fields.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.FixedLayoutMessageSerializer`1.Write(System.IO.BinaryWriter,`0)">
+            <summary>
+            Writes the fields after <b>dwPacketType</b>.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.VariableFields">
+            <summary>
+            Writes data and a name after a fixed part of <paramref name="fixedSize"/> bytes after <b>dwPacketType</b>, data
+            first, and gives their offsets, 0 for an empty field.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.VariableFields.#ctor(System.Int32,System.Byte[],System.Byte[])">
+            <summary>
+            Writes data and a name after a fixed part of <paramref name="fixedSize"/> bytes after <b>dwPacketType</b>, data
+            first, and gives their offsets, 0 for an empty field.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.CreateGroupMessageSerializer.FixedSize">
+            <summary>
+            <b>dpnidRequesting</b>, <b>dwPacketContext</b> and the 48 bytes of DN_NAMETABLE_ENTRY_INFO.
+            </summary>
+        </member>
         <member name="F:Aigamo.Otsuki.Messages.Core.ObjectType.Client">
             <summary>
             Connecting application is a client.
@@ -995,6 +1212,56 @@
         <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.HostMigrateComplete">
             <summary>
             Informs peers that the session-hosting responsibilities have successfully migrated from the departing old host.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.RequestCreateGroup">
+            <summary>
+            Informs the host that a peer is requesting that a new group be created for the game session.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.RequestAddPlayerToGroup">
+            <summary>
+            Informs the host that a peer is requesting to add a player to an existing group.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.RequestDeletePlayerFromGroup">
+            <summary>
+            Informs the host that a peer is requesting that a player be removed from an existing group.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.RequestDestroyGroup">
+            <summary>
+            Informs the host that a peer is requesting that a group be deleted from the game session.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.RequestUpdateInfo">
+            <summary>
+            Update info request from a peer/client to the host/server.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.CreateGroup">
+            <summary>
+            Informs the peers that the group has been created.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.DestroyGroup">
+            <summary>
+            Informs the peers that the host has removed a group from the game session.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.AddPlayerToGroup">
+            <summary>
+            Informs the peers that the host has added a player to a group.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.DeletePlayerFromGroup">
+            <summary>
+            Informs the peers that the host has removed a player from a group.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.UpdateInfo">
+            <summary>
+            Update info response from a host/server to a peer/client.
             </summary>
         </member>
         <member name="T:Aigamo.Otsuki.Messages.Core.ResultCode">

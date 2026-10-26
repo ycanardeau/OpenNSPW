@@ -86,6 +86,7 @@ internal abstract record SessionState
 			ICanLosePlayers,
 			ICanReceiveData,
 			ICanSendTo,
+			ICanHostNameTableChanges,
 			ICanLeave;
 
 	/// <summary>
@@ -124,6 +125,7 @@ internal abstract record SessionState
 			ICanLoseHost,
 			ICanReceiveData,
 			ICanSendTo,
+			ICanRequestNameTableChanges,
 			ICanLeave;
 
 	/// <summary>

@@ -1024,4 +1024,216 @@ public abstract record CoreMessage
 			return builder.ToString();
 		}
 	}
+
+	// Comments from: https://learn.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/ae589cbb-48b2-4980-80b4-70b520dc0fd0
+	/// <summary>
+	/// The DN_REQ_CREATE_GROUP packet informs the host that a peer is requesting that a new group be created for the game session.
+	/// </summary>
+	[Immutable]
+	public sealed record RequestCreateGroup() : CoreMessage(PacketType.RequestCreateGroup)
+	{
+		/// <summary>
+		/// Identifies the operation. DN_CREATE_GROUP returns it unchanged.
+		/// </summary>
+		public int PacketContext { get; init; }
+
+		public GroupFlags GroupFlags { get; init; }
+
+		/// <summary>
+		/// Which of <see cref="Name"/> and <see cref="Data"/> are included.
+		/// </summary>
+		public InfoFlags InfoFlags { get; init; }
+
+		public string Name { get; init; } = string.Empty;
+
+		public IImmutableList<byte> Data { get; init; } = ImmutableArray<byte>.Empty;
+	}
+
+	// Comments from: https://learn.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/6c13e49a-35d5-4053-9e01-3a85092a2e41
+	/// <summary>
+	/// The DN_CREATE_GROUP packet informs all of the connected peers that the new group has been successfully created for the game session.
+	/// </summary>
+	/// <remarks>
+	/// [MC-DPL8CS] lists only <b>dpnidRequesting</b> and <b>dwPacketContext</b>, which do not tell the peers what the group is. The
+	/// group's DN_NAMETABLE_ENTRY_INFO follows them, with its name and data, as in the name table of DN_SEND_CONNECT_INFO.
+	/// </remarks>
+	[Immutable]
+	public sealed record CreateGroup() : CoreMessage(PacketType.CreateGroup)
+	{
+		/// <summary>
+		/// The peer that requested the group, or the host itself.
+		/// </summary>
+		public Dpnid DpnidRequesting { get; init; }
+
+		/// <summary>
+		/// The <see cref="RequestCreateGroup.PacketContext"/> of the request.
+		/// </summary>
+		public int PacketContext { get; init; }
+
+		/// <summary>
+		/// The group's name table entry, which carries its DPNID, flags and name table version.
+		/// </summary>
+		public NameTableEntryInfo Group { get; init; } = new();
+	}
+
+	// Comments from: https://learn.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/bfb4192c-d394-45f1-aae9-6adb982c108c
+	/// <summary>
+	/// The DN_REQ_ADD_PLAYER_TO_GROUP packet informs the host that a peer is requesting to add a player to an existing group in the game session.
+	/// </summary>
+	[Immutable]
+	public sealed record RequestAddPlayerToGroup() : CoreMessage(PacketType.RequestAddPlayerToGroup)
+	{
+		public int PacketContext { get; init; }
+
+		public Dpnid DpnidGroup { get; init; }
+
+		public Dpnid DpnidPlayer { get; init; }
+	}
+
+	// Comments from: https://learn.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/be1cae13-3170-4299-966e-29123c662345
+	/// <summary>
+	/// The DN_ADD_PLAYER_TO_GROUP packet informs the peers that the host has added a player in the game session to a group.
+	/// </summary>
+	[Immutable]
+	public sealed record AddPlayerToGroup() : CoreMessage(PacketType.AddPlayerToGroup)
+	{
+		public Dpnid DpnidGroup { get; init; }
+
+		public Dpnid DpnidPlayer { get; init; }
+
+		/// <summary>
+		/// The name table version.
+		/// </summary>
+		public int Version { get; init; }
+
+		internal int VersionNotUsed { get; init; }
+
+		public Dpnid DpnidRequesting { get; init; }
+
+		public int PacketContext { get; init; }
+	}
+
+	// Comments from: https://learn.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/b56ad311-b235-4249-8065-b2b69ab092cb
+	/// <summary>
+	/// The DN_REQ_DELETE_PLAYER_FROM_GROUP packet informs the host that a peer is requesting that a player be removed from an existing group.
+	/// </summary>
+	[Immutable]
+	public sealed record RequestDeletePlayerFromGroup()
+		: CoreMessage(PacketType.RequestDeletePlayerFromGroup)
+	{
+		public int PacketContext { get; init; }
+
+		public Dpnid DpnidGroup { get; init; }
+
+		public Dpnid DpnidPlayer { get; init; }
+	}
+
+	// Comments from: https://learn.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/1970f1d7-1598-4d4e-9b9c-4b8d21b71d97
+	/// <summary>
+	/// The DN_DELETE_PLAYER_FROM_GROUP packet informs the peers that the host has removed a player from a group.
+	/// </summary>
+	[Immutable]
+	public sealed record DeletePlayerFromGroup() : CoreMessage(PacketType.DeletePlayerFromGroup)
+	{
+		public Dpnid DpnidGroup { get; init; }
+
+		public Dpnid DpnidPlayer { get; init; }
+
+		public int Version { get; init; }
+
+		internal int VersionNotUsed { get; init; }
+
+		public Dpnid DpnidRequesting { get; init; }
+
+		public int PacketContext { get; init; }
+	}
+
+	// Comments from: https://learn.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/5222a68f-e5a2-4968-ab04-28249c16f360
+	/// <summary>
+	/// The DN_REQ_DESTROY_GROUP packet informs the host that a peer is requesting that a group be deleted from the game session.
+	/// </summary>
+	/// <remarks>
+	/// [MC-DPL8CS] gives this packet a <b>dpnidPlayer</b> field after <b>dpnidGroup</b>, which plays no part in destroying a group.
+	/// </remarks>
+	[Immutable]
+	public sealed record RequestDestroyGroup() : CoreMessage(PacketType.RequestDestroyGroup)
+	{
+		public int PacketContext { get; init; }
+
+		public Dpnid DpnidGroup { get; init; }
+
+		public Dpnid DpnidPlayer { get; init; }
+	}
+
+	// Comments from: https://learn.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/beb7365a-33e6-4301-a777-0e9c64d32b9a
+	/// <summary>
+	/// The DN_DESTROY_GROUP packet informs the peers that the host has removed a group from the game session.
+	/// </summary>
+	[Immutable]
+	public sealed record DestroyGroup() : CoreMessage(PacketType.DestroyGroup)
+	{
+		public Dpnid DpnidGroup { get; init; }
+
+		public int Version { get; init; }
+
+		internal int VersionNotUsed { get; init; }
+
+		public Dpnid DpnidRequesting { get; init; }
+
+		public int PacketContext { get; init; }
+	}
+
+	// Comments from: https://learn.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/f2bea43f-8fe7-4a7d-86ae-4910d4aa1bb5
+	/// <summary>
+	/// The DN_REQ_UPDATE_INFO packet is sent from a peer/client to the host/server to update information about a specified peer/client.
+	/// </summary>
+	[Immutable]
+	public sealed record RequestUpdateInfo() : CoreMessage(PacketType.RequestUpdateInfo)
+	{
+		/// <summary>
+		/// Identifies the operation. DN_UPDATE_INFO returns it unchanged.
+		/// </summary>
+		public int PacketContext { get; init; }
+
+		/// <summary>
+		/// The player to update.
+		/// </summary>
+		public Dpnid Dpnid { get; init; }
+
+		public InfoFlags InfoFlags { get; init; }
+
+		public string Name { get; init; } = string.Empty;
+
+		public IImmutableList<byte> Data { get; init; } = ImmutableArray<byte>.Empty;
+	}
+
+	// Comments from: https://learn.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/cf1fca23-c6d2-4204-8fde-1b4974b3e91a
+	/// <summary>
+	/// The DN_UPDATE_INFO packet is the host/server's response to DN_REQ_UPDATE_INFO, sent to all players with the updated information.
+	/// </summary>
+	[Immutable]
+	public sealed record UpdateInfo() : CoreMessage(PacketType.UpdateInfo)
+	{
+		public int PacketContext { get; init; }
+
+		/// <summary>
+		/// The player that was updated.
+		/// </summary>
+		public Dpnid Dpnid { get; init; }
+
+		public int Version { get; init; }
+
+		internal int VersionNotUsed { get; init; }
+
+		public InfoFlags InfoFlags { get; init; }
+
+		public string Name { get; init; } = string.Empty;
+
+		public IImmutableList<byte> Data { get; init; } = ImmutableArray<byte>.Empty;
+
+		/// <summary>
+		/// The player that requested the update.
+		/// </summary>
+		public Dpnid DpnidRequesting { get; init; }
+	}
 }

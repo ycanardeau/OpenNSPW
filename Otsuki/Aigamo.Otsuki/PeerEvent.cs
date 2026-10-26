@@ -43,4 +43,29 @@ public abstract record PeerEvent
 	/// The local peer is no longer in the session (DPN_MSGID_TERMINATE_SESSION).
 	/// </summary>
 	public sealed record SessionTerminated(ResultCode Result) : PeerEvent;
+
+	/// <summary>
+	/// A player changed its name or data after joining (DPN_MSGID_PEER_INFO). Also raised for the local player.
+	/// </summary>
+	public sealed record PeerInfoUpdated(PlayerInfo Player) : PeerEvent;
+
+	/// <summary>
+	/// A group was created (DPN_MSGID_CREATE_GROUP). Raised for every group of the session once joined.
+	/// </summary>
+	public sealed record GroupCreated(GroupInfo Group) : PeerEvent;
+
+	/// <summary>
+	/// A group was destroyed (DPN_MSGID_DESTROY_GROUP).
+	/// </summary>
+	public sealed record GroupDestroyed(Dpnid Group, DestroyGroupReason Reason) : PeerEvent;
+
+	/// <summary>
+	/// A player joined a group (DPN_MSGID_ADD_PLAYER_TO_GROUP).
+	/// </summary>
+	public sealed record PlayerAddedToGroup(Dpnid Group, Dpnid Player) : PeerEvent;
+
+	/// <summary>
+	/// A player left a group (DPN_MSGID_REMOVE_PLAYER_FROM_GROUP), also when it left the session.
+	/// </summary>
+	public sealed record PlayerRemovedFromGroup(Dpnid Group, Dpnid Player) : PeerEvent;
 }
