@@ -891,6 +891,16 @@
             DPNGROUP_AUTODESTRUCT: the group is deleted once all players have been removed.
             </summary>
         </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.INameTableOperation">
+            <summary>
+            A core message that changes the name table, which a new host collects with DN_REQ_NAMETABLE_OP after a migration.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.INameTableOperation.Version">
+            <summary>
+            The name table version that the operation brings the table to.
+            </summary>
+        </member>
         <member name="T:Aigamo.Otsuki.Messages.Core.InfoFlags">
             <summary>
             Which of a player's or group's fields a message carries.

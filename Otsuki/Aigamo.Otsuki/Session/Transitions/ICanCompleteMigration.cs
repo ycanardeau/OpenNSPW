@@ -21,7 +21,7 @@ internal interface ICanCompleteMigration
 		&& peer.Id == requested
 			? session.ApplyMissedOperations(
 				ToHosting(),
-				command.Message.Entries.OfType<CoreMessage>()
+				command.Message.Entries.OfType<INameTableOperation>()
 			)
 			: Current;
 

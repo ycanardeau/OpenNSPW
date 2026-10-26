@@ -98,7 +98,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	/// <summary>
 	/// The name table operations since <see cref="ResynchronizedVersion"/>, which a new host may need.
 	/// </summary>
-	public List<CoreMessage> NameTableLog { get; } = [];
+	public List<INameTableOperation> NameTableLog { get; } = [];
 
 	/// <summary>
 	/// A DN_HOST_MIGRATE that arrived while we still heard from the old host, kept until we lose it too.
@@ -309,34 +309,16 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	}
 
 	/// <summary>
-	/// The name table version that a name table operation brings the table to, or <see langword="null"/> for messages
-	/// that are not name table operations.
-	/// </summary>
-	public static int? GetOperationVersion(CoreMessage message) =>
-		message switch
-		{
-			CoreMessage.AddPlayer m => m.Version,
-			CoreMessage.InstructConnect m => m.Version,
-			CoreMessage.DestroyPlayer m => m.Version,
-			CoreMessage.UpdateInfo m => m.Version,
-			CoreMessage.CreateGroup m => m.Group.Version,
-			CoreMessage.DestroyGroup m => m.Version,
-			CoreMessage.AddPlayerToGroup m => m.Version,
-			CoreMessage.DeletePlayerFromGroup m => m.Version,
-			_ => null,
-		};
-
-	/// <summary>
 	/// Keeps a name table operation until every peer has it, so that a new host can collect the ones it missed
 	/// after a migration ([MC-DPL8CS] section 3.2.5.4).
 	/// </summary>
-	public void Record(CoreMessage operation)
+	public void Record(INameTableOperation operation)
 	{
 		// Client/server sessions never migrate, so there is no one to keep them for.
 		if (IsClientServer)
 			return;
 
-		if (GetOperationVersion(operation) is int version && version > ResynchronizedVersion)
+		if (operation.Version > ResynchronizedVersion)
 			NameTableLog.Add(operation);
 	}
 
@@ -346,19 +328,23 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	public void TrimNameTableLog(int version)
 	{
 		ResynchronizedVersion = Math.Max(ResynchronizedVersion, version);
-		NameTableLog.RemoveAll(op => GetOperationVersion(op) <= ResynchronizedVersion);
+		NameTableLog.RemoveAll(op => op.Version <= ResynchronizedVersion);
 	}
 
 	/// <summary>
 	/// The operations newer than <paramref name="version"/>, in order.
 	/// </summary>
 	public IEnumerable<CoreMessage> GetOperationsAfter(int version) =>
-		NameTableLog.Where(op => GetOperationVersion(op) > version).OrderBy(GetOperationVersion);
+		NameTableLog
+			.Where(op => op.Version > version)
+			.OrderBy(op => op.Version)
+			.Cast<CoreMessage>();
 
 	/// <summary>
 	/// Records a name table operation and sends it to every peer we have a connection to, joining ones included.
 	/// </summary>
-	public void Announce(CoreMessage operation)
+	public void Announce<TOperation>(TOperation operation)
+		where TOperation : CoreMessage, INameTableOperation
 	{
 		Record(operation);
 		if (IsClientServer)
@@ -900,7 +886,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	/// <summary>
 	/// Applies an operation that the new host collected with DN_ACK_NAMETABLE_OP, as a peer would have.
 	/// </summary>
-	private void ApplyOperation(CoreMessage operation)
+	private void ApplyOperation(INameTableOperation operation)
 	{
 		switch (operation)
 		{
@@ -938,8 +924,8 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 				break;
 		}
 
-		if (GetOperationVersion(operation) is int version && version > Version)
-			Version = version;
+		if (operation.Version > Version)
+			Version = operation.Version;
 		Record(operation);
 	}
 
@@ -1041,13 +1027,11 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	/// </summary>
 	public SessionState.Hosting ApplyMissedOperations(
 		SessionState.Hosting hosting,
-		IEnumerable<CoreMessage> operations
+		IEnumerable<INameTableOperation> operations
 	)
 	{
 		foreach (
-			var operation in operations
-				.Where(op => GetOperationVersion(op) > Version)
-				.OrderBy(GetOperationVersion)
+			var operation in operations.Where(op => op.Version > Version).OrderBy(op => op.Version)
 		)
 			ApplyOperation(operation);
 		return FinishMigration(hosting);
@@ -1469,8 +1453,12 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	private Unit Receive(Connection connection, CoreMessage message)
 	{
 		// Peers keep the host's name table operations, in case they must hand them to a new host.
-		if (_state is IHasHostConnection { HostConnection: var host } && host == connection)
-			Record(message);
+		if (
+			_state is IHasHostConnection { HostConnection: var host }
+			&& host == connection
+			&& message is INameTableOperation operation
+		)
+			Record(operation);
 		return Dispatch(connection, message);
 	}
 

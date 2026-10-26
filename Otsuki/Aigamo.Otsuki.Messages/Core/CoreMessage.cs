@@ -362,7 +362,7 @@ public abstract record CoreMessage
 	/// The DN_ADD_PLAYER packet is sent from the <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/8195991d-b7e3-4435-9e9f-2c3ab57eda8c#gt_96048ee4-02d7-484e-a53b-3b8ed355251d">host</see> and instructs <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/8195991d-b7e3-4435-9e9f-2c3ab57eda8c#gt_e5d0d91c-9a39-493f-ab1b-f36ce840e6a2">peers</see> to add a specified peer to the <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/8195991d-b7e3-4435-9e9f-2c3ab57eda8c#gt_cb5007f6-e2af-44f6-abe1-c8a5ff856254">game session</see>.
 	/// </summary>
 	[Immutable]
-	public sealed record AddPlayer() : CoreMessage(PacketType.AddPlayer)
+	public sealed record AddPlayer() : CoreMessage(PacketType.AddPlayer), INameTableOperation
 	{
 		internal NullTerminatedAsciiString UrlInternal { get; init; } = string.Empty;
 
@@ -567,7 +567,9 @@ public abstract record CoreMessage
 	/// The DN_INSTRUCT_CONNECT packet instructs a peer to connect to a designated peer. This packet uses the <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/../mc-dpl8r/b3c67ec1-f73c-4c47-bd06-95cd4a3b4219">CONNECT</see> and <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/../mc-dpl8r/2377d224-85b7-4c1a-8677-bd18a08dc5da">CONNECTED</see> packets defined in <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/../mc-dpl8r/7a35d96c-daca-4311-bc2b-bd6a2f50bf14">[MC-DPL8R]</see> sections 2.2.1.1 and 2.2.1.2. For an example of the message sequence for these packets, see [MC-DPL8R] section <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/../mc-dpl8r/f02dc0e7-3ab0-4f40-80da-bf8dc09f9f7f">4.1</see>.
 	/// </summary>
 	[Immutable]
-	public sealed record InstructConnect() : CoreMessage(PacketType.InstructConnect)
+	public sealed record InstructConnect()
+		: CoreMessage(PacketType.InstructConnect),
+			INameTableOperation
 	{
 		/// <summary>
 		/// A 32-bit field that contains the identifier of the designated client to which the connection is being made. For more information, see section <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/65b0f61c-4f93-42c9-953f-2299e686b497">2.2.7</see>.
@@ -691,7 +693,9 @@ public abstract record CoreMessage
 	/// The DN_DESTROY_PLAYER packet instructs the <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/8195991d-b7e3-4435-9e9f-2c3ab57eda8c#gt_e5d0d91c-9a39-493f-ab1b-f36ce840e6a2">peer</see> to remove a specified user from its <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/8195991d-b7e3-4435-9e9f-2c3ab57eda8c#gt_d6292f62-e604-4ac7-9b20-87dde6efb93b">name table</see>.
 	/// </summary>
 	[Immutable]
-	public sealed record DestroyPlayer() : CoreMessage(PacketType.DestroyPlayer)
+	public sealed record DestroyPlayer()
+		: CoreMessage(PacketType.DestroyPlayer),
+			INameTableOperation
 	{
 		/// <summary>
 		/// A 32-bit field that contains the identifier of the client or server to remove from the name table. For more information, see section <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/65b0f61c-4f93-42c9-953f-2299e686b497">2.2.7</see>.
@@ -1058,7 +1062,7 @@ public abstract record CoreMessage
 	/// group's DN_NAMETABLE_ENTRY_INFO follows them, with its name and data, as in the name table of DN_SEND_CONNECT_INFO.
 	/// </remarks>
 	[Immutable]
-	public sealed record CreateGroup() : CoreMessage(PacketType.CreateGroup)
+	public sealed record CreateGroup() : CoreMessage(PacketType.CreateGroup), INameTableOperation
 	{
 		/// <summary>
 		/// The peer that requested the group, or the host itself.
@@ -1074,6 +1078,8 @@ public abstract record CoreMessage
 		/// The group's name table entry, which carries its DPNID, flags and name table version.
 		/// </summary>
 		public NameTableEntryInfo Group { get; init; } = new();
+
+		int INameTableOperation.Version => Group.Version;
 	}
 
 	// Comments from: https://learn.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/bfb4192c-d394-45f1-aae9-6adb982c108c
@@ -1095,7 +1101,9 @@ public abstract record CoreMessage
 	/// The DN_ADD_PLAYER_TO_GROUP packet informs the peers that the host has added a player in the game session to a group.
 	/// </summary>
 	[Immutable]
-	public sealed record AddPlayerToGroup() : CoreMessage(PacketType.AddPlayerToGroup)
+	public sealed record AddPlayerToGroup()
+		: CoreMessage(PacketType.AddPlayerToGroup),
+			INameTableOperation
 	{
 		public Dpnid DpnidGroup { get; init; }
 
@@ -1133,7 +1141,9 @@ public abstract record CoreMessage
 	/// The DN_DELETE_PLAYER_FROM_GROUP packet informs the peers that the host has removed a player from a group.
 	/// </summary>
 	[Immutable]
-	public sealed record DeletePlayerFromGroup() : CoreMessage(PacketType.DeletePlayerFromGroup)
+	public sealed record DeletePlayerFromGroup()
+		: CoreMessage(PacketType.DeletePlayerFromGroup),
+			INameTableOperation
 	{
 		public Dpnid DpnidGroup { get; init; }
 
@@ -1170,7 +1180,7 @@ public abstract record CoreMessage
 	/// The DN_DESTROY_GROUP packet informs the peers that the host has removed a group from the game session.
 	/// </summary>
 	[Immutable]
-	public sealed record DestroyGroup() : CoreMessage(PacketType.DestroyGroup)
+	public sealed record DestroyGroup() : CoreMessage(PacketType.DestroyGroup), INameTableOperation
 	{
 		public Dpnid DpnidGroup { get; init; }
 
@@ -1212,7 +1222,7 @@ public abstract record CoreMessage
 	/// The DN_UPDATE_INFO packet is the host/server's response to DN_REQ_UPDATE_INFO, sent to all players with the updated information.
 	/// </summary>
 	[Immutable]
-	public sealed record UpdateInfo() : CoreMessage(PacketType.UpdateInfo)
+	public sealed record UpdateInfo() : CoreMessage(PacketType.UpdateInfo), INameTableOperation
 	{
 		public int PacketContext { get; init; }
 
