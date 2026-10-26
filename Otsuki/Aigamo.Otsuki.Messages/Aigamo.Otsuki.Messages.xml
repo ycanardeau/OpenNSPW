@@ -1087,6 +1087,93 @@
             Full signing turned on for the game session. Passed to protocol layer. Cannot be used with <b>DPNSESSION_FAST_SIGNED</b>. This value is available only in DirectPlay 9.
             </summary>
         </member>
+        <member name="T:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage">
+            <summary>
+            The messages of host and port enumeration ([MC-DPLHP]). They travel as plain datagrams, outside any connection, and
+            are told apart from the frames of [MC-DPL8R] by a first byte of 0.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Query">
+            <summary>
+            Queries for hosts of a game session ([MC-DPLHP] section 2.2.1).
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Query.EnumPayload">
+            <summary>
+            A value chosen by the sender and echoed in the response, to match responses to queries.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Query.GuidApplication">
+            <summary>
+            Only hosts of this application should respond. <see langword="null"/> asks every host.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Query.ApplicationPayload">
+            <summary>
+            Application-specific data for the host to decide whether and how to respond.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Response">
+            <summary>
+            A host's answer to a <see cref="T:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Query"/> ([MC-DPLHP] section 2.2.2).
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Response.EnumPayload">
+            <summary>
+            The <see cref="P:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Query.EnumPayload"/> of the query this answers.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Response.Flags">
+            <summary>
+            Never has <see cref="F:Aigamo.Otsuki.Messages.Core.SessionFlags.NoEnumerations"/>.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Response.CurrentPlayers">
+            <summary>
+            The number of players when the response was sent.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Response.ApplicationReservedData">
+            <summary>
+            Game-specific data that changes infrequently, such as data set when the session was created.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Response.ApplicationData">
+            <summary>
+            Game-specific data that changes frequently, such as the current state of the game.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessageSerializer">
+            <summary>
+            Reads and writes <see cref="T:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage"/>s ([MC-DPLHP] section 2.2).
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessageSerializer.ApplicationDescSize">
+            <summary>
+            The size of the application description, from <b>ApplicationDescSize</b> through <b>ApplicationGUID</b>.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessageSerializer.OffsetBase">
+            <summary>
+            Offsets in a response count from the end of <b>EnumPayload</b>, the start of <b>ReplyOffset</b>.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessageSerializer.FixedResponseSize">
+            <summary>
+            The fixed part of a response, from <b>ReplyOffset</b> through <b>ApplicationGUID</b>.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessageSerializer.IsEnumerationMessage(System.Byte[])">
+            <summary>
+            Whether a datagram is an enumeration message rather than a frame of [MC-DPL8R], whose first byte is never 0.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessageSerializer.WriteResponse(Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Response)">
+            <summary>
+            Writes the variable fields after the fixed part, in the order SessionName, ApplicationReservedData,
+            ApplicationData.
+            </summary>
+        </member>
         <member name="T:Aigamo.Otsuki.Messages.GuardedByAttribute">
             <summary>
             Indicates the synchronization object that guards this item.

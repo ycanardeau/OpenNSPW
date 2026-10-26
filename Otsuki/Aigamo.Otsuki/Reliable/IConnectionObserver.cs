@@ -1,4 +1,6 @@
+using System.Net;
 using Aigamo.Otsuki.Messages.Core;
+using Aigamo.Otsuki.Messages.Enumeration;
 
 namespace Aigamo.Otsuki.Reliable;
 
@@ -25,4 +27,9 @@ internal interface IConnectionObserver
 	/// when the partner disconnected deliberately and <see cref="ResultCode.ConnectionLost"/> when it timed out.
 	/// </summary>
 	void OnDisconnected(Connection connection, ResultCode result);
+
+	/// <summary>
+	/// A host enumeration query arrived on the endpoint ([MC-DPLHP] section 2.2.1).
+	/// </summary>
+	void OnEnumQuery(IPEndPoint remoteEndPoint, EnumerationMessage.Query query);
 }

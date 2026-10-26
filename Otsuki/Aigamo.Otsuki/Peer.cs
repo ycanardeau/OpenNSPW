@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Channels;
+using Aigamo.Otsuki.Enumeration;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Session;
 
@@ -30,16 +31,20 @@ public sealed class Peer : IAsyncDisposable
 		new UnboundedChannelOptions { SingleReader = false, SingleWriter = true }
 	);
 
+	private readonly PeerOptions _options;
 	private readonly SessionActor _session;
 	private SessionSnapshot _snapshot = SessionSnapshot.Empty;
 	private long _nextSendHandle;
 
-	public Peer(PeerOptions? options = null) =>
+	public Peer(PeerOptions? options = null)
+	{
+		_options = options ?? PeerOptions.Default;
 		_session = new SessionActor(
-			options ?? PeerOptions.Default,
+			_options,
 			_events.Writer,
 			snapshot => Volatile.Write(ref _snapshot, snapshot)
 		);
+	}
 
 	private SessionSnapshot Snapshot => Volatile.Read(ref _snapshot);
 
@@ -149,6 +154,37 @@ public sealed class Peer : IAsyncDisposable
 		PostCommand(new SessionMessage.SendTo(target, data.ToArray(), flags, handle));
 		return handle;
 	}
+
+	/// <summary>
+	/// Sets the game-specific data that the host returns to <see cref="EnumHostsAsync"/>, such as the state of the
+	/// game.
+	/// </summary>
+	public void SetEnumResponseData(ReadOnlySpan<byte> data) =>
+		PostCommand(new SessionMessage.SetEnumResponseData([.. data]));
+
+	/// <summary>
+	/// Finds hosts of sessions, like IDirectPlay8Peer::EnumHosts ([MC-DPLHP]). Sends queries to
+	/// <paramref name="target"/>, a host or a broadcast address such as 255.255.255.255:2302, and yields every
+	/// response, so a host appears once per query it answered. Stops once <see cref="EnumHostsOptions.Timeout"/> has
+	/// passed after the last query.
+	/// </summary>
+	/// <param name="guidApplication">Only hosts of this application answer; <see langword="null"/> asks every host.</param>
+	/// <param name="payload">Application-specific data sent with each query.</param>
+	public IAsyncEnumerable<EnumeratedHost> EnumHostsAsync(
+		IPEndPoint target,
+		Guid? guidApplication = null,
+		byte[]? payload = null,
+		EnumHostsOptions? options = null,
+		CancellationToken cancellationToken = default
+	) =>
+		HostEnumerator.EnumerateAsync(
+			_options,
+			target,
+			guidApplication,
+			payload is null ? [] : [.. payload],
+			options ?? EnumHostsOptions.Default,
+			cancellationToken
+		);
 
 	public bool TryGetEvent([NotNullWhen(true)] out PeerEvent? peerEvent) =>
 		_events.Reader.TryRead(out peerEvent);

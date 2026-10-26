@@ -487,6 +487,107 @@ public class PeerTests : IAsyncLifetime
 		await host.Should().ThrowAsync<ArgumentException>();
 	}
 
+	private static readonly EnumHostsOptions QuickEnumeration = new()
+	{
+		Count = 3,
+		RetryInterval = TimeSpan.FromMilliseconds(50),
+		Timeout = TimeSpan.FromMilliseconds(200),
+	};
+
+	private static async Task<List<EnumeratedHost>> EnumerateAsync(
+		Peer peer,
+		IPEndPoint target,
+		Guid? guidApplication = null,
+		byte[]? payload = null
+	)
+	{
+		var hosts = new List<EnumeratedHost>();
+		await foreach (
+			var host in peer.EnumHostsAsync(target, guidApplication, payload, QuickEnumeration)
+		)
+			hosts.Add(host);
+		return hosts;
+	}
+
+	[Fact]
+	public async Task EnumHosts_FindsTheHost()
+	{
+		var application = Application(maxPlayers: 4) with
+		{
+			SessionName = "Battle",
+			Flags = SessionFlags.RequirePassword,
+			Password = "secret",
+			ApplicationReservedData = [1, 2, 3],
+		};
+		var host = await HostAsync("Host", application);
+		host.Peer.SetEnumResponseData([9, 8]);
+		var joiner = await JoinAsync("Joiner", host.Peer, application);
+		var seeker = CreatePeer("Seeker");
+
+		var found = await EnumerateAsync(seeker.Peer, host.Peer.LocalEndPoint!, GuidApplication);
+
+		found.Should().HaveCount(QuickEnumeration.Count);
+		var response = found[0];
+		response.HostEndPoint.Should().Be(host.Peer.LocalEndPoint);
+		response.CurrentPlayers.Should().Be(2);
+		response.ResponseData.Should().Equal([9, 8]);
+		response.RoundTripTime.Should().BeLessThan(TimeSpan.FromSeconds(5));
+		response.Application.SessionName.Should().Be("Battle");
+		response.Application.MaxPlayers.Should().Be(4);
+		response.Application.GuidApplication.Should().Be(GuidApplication);
+		response
+			.Application.GuidInstance.Should()
+			.Be(host.Peer.ApplicationDescription!.GuidInstance);
+		response.Application.Flags.Should().HaveFlag(SessionFlags.RequirePassword);
+		response.Application.Password.Should().BeEmpty();
+		response.Application.ApplicationReservedData.Should().Equal([1, 2, 3]);
+
+		// Only the host answers, not the other peers.
+		(await EnumerateAsync(seeker.Peer, joiner.Peer.LocalEndPoint!))
+			.Should()
+			.BeEmpty();
+	}
+
+	[Fact]
+	public async Task EnumHosts_ForAnotherApplicationFindsNothing()
+	{
+		var host = await HostAsync("Host");
+		var seeker = CreatePeer("Seeker");
+
+		(await EnumerateAsync(seeker.Peer, host.Peer.LocalEndPoint!, Guid.NewGuid()))
+			.Should()
+			.BeEmpty();
+		(await EnumerateAsync(seeker.Peer, host.Peer.LocalEndPoint!)).Should().NotBeEmpty();
+	}
+
+	[Fact]
+	public async Task EnumHosts_OfSessionWithoutEnumerationsFindsNothing()
+	{
+		var host = await HostAsync(
+			"Host",
+			Application() with
+			{
+				Flags = SessionFlags.NoEnumerations,
+			}
+		);
+		var seeker = CreatePeer("Seeker");
+
+		(await EnumerateAsync(seeker.Peer, host.Peer.LocalEndPoint!)).Should().BeEmpty();
+	}
+
+	[Fact]
+	public async Task EnumHosts_ThenConnectJoinsTheSession()
+	{
+		var host = await HostAsync("Host");
+		var joiner = CreatePeer("Joiner");
+
+		var found = await EnumerateAsync(joiner.Peer, host.Peer.LocalEndPoint!, GuidApplication);
+		await joiner.Peer.ConnectAsync(found[0].Application, found[0].HostEndPoint);
+
+		var completed = await joiner.Log.WaitForAsync<PeerEvent.ConnectCompleted>();
+		completed.Result.Should().Be(ResultCode.Success);
+	}
+
 	[Fact]
 	public async Task SendTo_UnknownPlayerFails()
 	{

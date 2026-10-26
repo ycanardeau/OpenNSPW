@@ -4,6 +4,7 @@ using System.Net;
 using System.Threading.Channels;
 using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Messages.Core;
+using Aigamo.Otsuki.Messages.Enumeration;
 using Aigamo.Otsuki.Messages.Reliable;
 using Aigamo.Otsuki.Reliable;
 using Aigamo.Otsuki.Session.Transitions;
@@ -60,6 +61,11 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 
 	public ImmutableArray<byte> ConnectData { get; set; } = [];
 
+	/// <summary>
+	/// The game-specific data in host enumeration responses.
+	/// </summary>
+	public ImmutableArray<byte> EnumResponseData { get; private set; } = [];
+
 	public Dpnid LocalPlayer { get; set; }
 
 	/// <summary>
@@ -106,6 +112,11 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 
 	void IConnectionObserver.OnDisconnected(Connection connection, ResultCode result) =>
 		Post(new SessionMessage.ConnectionDisconnected(connection, result));
+
+	void IConnectionObserver.OnEnumQuery(
+		IPEndPoint remoteEndPoint,
+		EnumerationMessage.Query query
+	) => Post(new SessionMessage.EnumQueryReceived(remoteEndPoint, query));
 
 	public IPEndPoint LocalEndPoint => _endpoint!.LocalEndPoint;
 
@@ -578,6 +589,42 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		return Unit.Default;
 	}
 
+	/// <summary>
+	/// Answers a host enumeration query while hosting, unless the session forbids enumeration or the query is for
+	/// another application ([MC-DPLHP] section 2.2.2). The response goes from the session's endpoint, the address a
+	/// joining peer connects to.
+	/// </summary>
+	private Unit AnswerEnumQuery(SessionMessage.EnumQueryReceived message)
+	{
+		var query = message.Query;
+		if (
+			_state is not SessionState.Hosting
+			|| Application.Flags.HasFlag(SessionFlags.NoEnumerations)
+			|| (query.GuidApplication is Guid guid && guid != Application.GuidApplication)
+		)
+			return Unit.Default;
+
+		var response = new EnumerationMessage.Response
+		{
+			EnumPayload = query.EnumPayload,
+			Flags = Application.Flags,
+			MaxPlayers = Application.MaxPlayers,
+			CurrentPlayers = Players.Count,
+			GuidInstance = Application.GuidInstance,
+			GuidApplication = Application.GuidApplication,
+			SessionName = Application.SessionName,
+			ApplicationReservedData = Application.ApplicationReservedData,
+			ApplicationData = EnumResponseData,
+		};
+		_endpoint?.Post(
+			new ReliableEndpointMessage.SendDatagram(
+				message.RemoteEndPoint,
+				EnumerationMessageSerializer.Default.Serialize(response)
+			)
+		);
+		return Unit.Default;
+	}
+
 	private Unit SendCompleted(long sendId, ResultCode result)
 	{
 		if (
@@ -706,6 +753,12 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			{
 				Connections.Remove(m.Connection);
 				return Execute(m);
+			},
+			EnumQueryReceived: AnswerEnumQuery,
+			SetEnumResponseData: m =>
+			{
+				EnumResponseData = m.Data;
+				return Unit.Default;
 			},
 			JoinTimedOut: m => Elapse(JoinTimer, m.Generation, m),
 			CloseTimedOut: m => Elapse(CloseTimer, m.Generation, m),

@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Net;
 using Aigamo.MatchGenerator;
 using Aigamo.Otsuki.Messages.Core;
+using Aigamo.Otsuki.Messages.Enumeration;
 using Aigamo.Otsuki.Reliable;
 
 namespace Aigamo.Otsuki.Session;
@@ -48,6 +49,16 @@ internal abstract record SessionMessage
 
 	public sealed record ConnectionDisconnected(Connection Connection, ResultCode Result)
 		: SessionMessage;
+
+	public sealed record EnumQueryReceived(
+		IPEndPoint RemoteEndPoint,
+		EnumerationMessage.Query Query
+	) : SessionMessage;
+
+	/// <summary>
+	/// Sets the data that the host returns in host enumeration responses.
+	/// </summary>
+	public sealed record SetEnumResponseData(ImmutableArray<byte> Data) : SessionMessage;
 
 	public sealed record JoinTimedOut(long Generation) : SessionMessage;
 
