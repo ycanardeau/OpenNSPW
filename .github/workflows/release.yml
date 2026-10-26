@@ -1,6 +1,10 @@
 # Publishes every packable project in the solution to NuGet under the version taken from the tag created by `pnpm release`.
 # Release tags (vX.Y.Z) must point at a commit on main; prerelease tags (e.g. vX.Y.Z-preview.N) may come from any branch.
 # Pushes use NuGet trusted publishing: a nuget.org policy for this repository and release.yml exchanges the job's OIDC token for a short-lived API key.
+# Once the packages are pushed, publishes the desktop app, self-contained in a single-file executable, on a GitHub Release of the tag, a prerelease for prerelease tags:
+# for Windows (win-x64) as a zip, for Apple Silicon Macs (osx-arm64) as OpenNSPW.app, ad-hoc signed, in a zip (tools/package-macos-app.sh),
+# and for Linux (linux-x64) as an AppImage (tools/package-linux-appimage.sh); with their SHA-256 in SHA256SUMS, and build provenance attestations.
+# The downloads have none of the original's files (Original/); the release notes tell players where to put theirs.
 
 name: Release
 
@@ -47,3 +51,135 @@ jobs:
       run: dotnet nuget push "artifacts/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${NUGET_API_KEY} --skip-duplicate
       env:
         NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+
+  windows:
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+    - name: Set VERSION and NAME variables from tag
+      run: |
+        echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
+        echo "NAME=OpenNSPW-${GITHUB_REF/refs\/tags\/v/}-win-x64" >> $GITHUB_ENV
+    # One exe, with only what it reads from its own directory beside it: SDL2.dll and openal.dll, which MonoGame loads from there, and Fonts.
+    - name: Publish
+      run: dotnet publish OpenNSPW/OpenNspw.Desktop --configuration Release --runtime win-x64 --self-contained /p:PublishSingleFile=true /p:DebugType=embedded /p:GenerateDocumentationFile=false /p:Version=${VERSION} --output artifacts/${NAME}
+    - name: Zip
+      working-directory: artifacts
+      run: zip --recurse-paths --quiet ${NAME}.zip ${NAME}
+    - name: Upload
+      uses: actions/upload-artifact@v7
+      with:
+        name: windows
+        path: artifacts/${{ env.NAME }}.zip
+
+  # On macOS, whose codesign signs the app, as Apple Silicon runs only signed code.
+  macos:
+    needs: release
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+    - name: Set VERSION and NAME variables from tag
+      run: |
+        echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
+        echo "NAME=OpenNSPW-${GITHUB_REF/refs\/tags\/v/}-osx-arm64" >> $GITHUB_ENV
+    - name: Package
+      run: tools/package-macos-app.sh ${VERSION} artifacts
+    # ditto keeps the app's symbolic link and executable bits. Without extended attributes, which the signature doesn't need, and which other unzipping would leave in the app as ._ files that break it.
+    - name: Zip
+      working-directory: artifacts
+      run: ditto -c -k --norsrc --noextattr --noacl --keepParent OpenNSPW.app ${NAME}.zip
+    - name: Upload
+      uses: actions/upload-artifact@v7
+      with:
+        name: macos
+        path: artifacts/${{ env.NAME }}.zip
+
+  linux:
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+    - name: Set VERSION variable from tag
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
+    - name: Install ImageMagick
+      run: |
+        sudo apt-get update
+        sudo apt-get install --yes --no-install-recommends imagemagick
+    - name: Package
+      run: tools/package-linux-appimage.sh ${VERSION} artifacts
+    - name: Upload
+      uses: actions/upload-artifact@v7
+      with:
+        name: linux
+        path: artifacts/*.AppImage
+
+  github-release:
+    needs: [windows, macos, linux]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+    - name: Download
+      uses: actions/download-artifact@v8
+      with:
+        path: artifacts
+        merge-multiple: true
+    - name: Checksums
+      working-directory: artifacts
+      run: sha256sum * > SHA256SUMS
+    # Signed statements, kept by GitHub, that this workflow built the downloads from the tag's commit: gh attestation verify <file> --repo <this repository>.
+    - name: Attest
+      uses: actions/attest-build-provenance@v4
+      with:
+        subject-checksums: artifacts/SHA256SUMS
+    - name: Write release notes
+      run: |
+        cat > "$RUNNER_TEMP/notes.md" <<'EOF'
+        The builds run without installing .NET. They have none of NSPW's own files: put the app beside an `Original` folder that holds them, as in this repository.
+
+        ```
+        Original/NSPW_NET/                       the game's data: t3.bmp, wav, Map, Scenario, Saved
+        Original/Nspw122/NSPW_122.exe            for single-player
+        OpenNSPW-<version>-win-x64/              Windows: extract the zip here, and start OpenNspw.Desktop.exe
+        OpenNSPW.app                             Macs with Apple silicon: extract the zip here
+        OpenNSPW-<version>-linux-x64.AppImage    Linux: make it executable (chmod +x), and start it
+        ```
+
+        Or start it with `--data <the NSPW_NET folder>` and `--exe <NSPW_122.exe>`.
+
+        The Mac app isn't notarized by Apple, so macOS refuses to open it the first time. Then click Open Anyway in System Settings → Privacy & Security, or run `xattr -dr com.apple.quarantine OpenNSPW.app` in Terminal once.
+
+        To check a download: compare its SHA-256 with `SHA256SUMS`, or check that this repository's release workflow built it with `gh attestation verify <file> --repo ycanardeau/OpenNSPW`.
+        EOF
+    - name: Release
+      run: |
+        if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+          gh release upload "$GITHUB_REF_NAME" artifacts/* --clobber
+        else
+          gh release create "$GITHUB_REF_NAME" artifacts/* --verify-tag --generate-notes --notes-file "$RUNNER_TEMP/notes.md" ${{ contains(github.ref_name, '-') && '--prerelease' || '' }}
+        fi
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
