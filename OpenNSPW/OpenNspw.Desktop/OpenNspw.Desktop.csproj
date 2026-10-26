@@ -15,6 +15,8 @@
     <EmbeddedResource Include="Icon.bmp" LogicalName="Icon.bmp" />
     <!-- The app's font and its license (BundledFonts), beside the app. -->
     <None Include="Fonts\**" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The sprites cut from the original's sprite sheet (SpriteFiles, tools/CutSprites.cs). -->
+    <EmbeddedResource Include="Sprites\**\*.png" />
   </ItemGroup>
 
   <ItemGroup>

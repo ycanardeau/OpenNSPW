@@ -1,11 +1,12 @@
 # Sprite sheets
-A proposal, for review: splitting the original's one sprite sheet into a file per unit and per part of the screen.
+How the desktop app draws the original's sprites: cut from its one sprite sheet into a file per unit and per part of the screen, in [OpenNspw.Desktop/Sprites](../OpenNSPW/OpenNspw.Desktop/Sprites).
 
 ## Summary
 - **NSPW NET's `t3.bmp` and 1.22's `tst_cg1.bmp` share their layout** (721 by 5756) and 93.6% of their pixels. They differ in three places only: the title, Japan's land-based fighter, and three effect icons that NSPW NET adds.
-- **Split by what the code draws**: a file per unit kind and side, eight directions in a row; a file per unit-info picture; one file each for the tiles, the effects, the buttons, the flags and the minimap.
-- **Name the ships by kind and the planes by model** (`bb`, `ca`, `a6m`, `j7w`), and the facilities by kind (`nb`, `ab`).
-- **1.22's differences become files of their own**, not overrides: `title-1.22.png`, and `j7w.png` beside NSPW NET's land-based fighter. Everything else is shared.
+- **Split by what the UI draws**: a file per unit kind and side, eight directions in a row; a file per facility and per unit-info picture; one file each for the title, the tiles, the effects and each flag.
+- **The ships are named by kind and the planes by model** (`bb`, `ca`, `a6m`, `j7w`), and the facilities by kind (`nb`, `ab`).
+- **1.22's land-based fighter is a file of its own**, `j7w.png` beside NSPW NET's `j1n.png`, which a single-player game draws instead. Everything else is NSPW NET's, and draws as 1.22's sheet would: its three extra icons are drawn only by NSPW NET's rules (`BattleRules.MarksSecondTypes`).
+- **The files are made by [tools/CutSprites.cs](../tools/CutSprites.cs)** from the two sheets in `Original`, and embedded in the app. The game itself still reads the sheet for its own surface (`LoadBitmapSurface`); only the UI draws from the files.
 
 ## What differs between the two sheets
 | Region | Rows of the sheet | NSPW NET | 1.22 |
@@ -82,7 +83,7 @@ The facilities set a fixed direction to choose their column of row 11:
 | 10, 11 | Carrier, light carrier: the hangar |
 
 ## The planes
-Identified from the sprites alone; the manuals name only the kinds. The confidence is mine, and the names are for you to confirm.
+Identified from the sprites alone: the manuals name only the kinds. The names of medium and low confidence are still to be confirmed.
 
 | Side | Role | Model | Confidence | Why |
 | --- | --- | --- | --- | --- |
@@ -96,18 +97,15 @@ Identified from the sprites alone; the manuals name only the kinds. The confiden
 | United States | Strategic bomber | B-24 Liberator | medium | four engines, twin fins |
 | United States | Land-based fighter | P-38 Lightning | high | twin booms |
 
-## Proposed files
-PNG with transparency instead of the magenta key. A unit's file is a row of 8 frames of 80×80 (640×80), in the sheet's column order, so that `SpriteColumn` indexes it as before.
+## The files
+PNG with transparency where the sheet has its color key. A unit's file is a row of 8 frames of 80×80 (640×80), in the sheet's column order, so that `SpriteColumn` indexes it as before. Each frame keeps the sheet's cell whole, its border too: the UI cuts it as the original does.
 
 ```
-Data/Sprites/
+OpenNspw.Desktop/Sprites/
   title.png                    NSPW NET's, 699×384
-  title-1.22.png               1.22's, 599×387
   tiles.png                    6×3 frames of 80×80, as on the sheet
-  effects.png                  12×10 frames of 40×40, NSPW NET's (a superset of 1.22's)
-  buttons.png                  2 columns of 11 buttons of 140×20
+  effects.png                  12×10 frames of 40×40, NSPW NET's
   flag-jp.png, flag-us.png     198×120
-  minimap.png                  the frame, and the three dots
   jp/
     bb.png ca.png dd.png ss.png ss-submerged.png cvl.png cv.png tr.png
     a6m.png a6m-stopped.png
@@ -120,19 +118,26 @@ Data/Sprites/
       bb.png ca.png dd.png ss.png cv.png cvl.png tr.png empty.png    120×438
       ab-runway.png ab-apron.png cv-hangar.png cvl-hangar.png
   us/
-    (the same, with f6f, tbf, b24, p38)
+    (the same, with f6f, tbf, b24 and p38)
 ```
 
-The facilities' unused columns 3 and 4 are left out until something is found to draw them.
+Not cut, as the UI does not draw them: 1.22's title, the combat menu's buttons (the UI draws its own), the minimap's frame and dots, and the facilities' row's columns 3 and 4.
 
-## What changes in the code
-- `Sprite.SheetPosition` and `FramesPerRow` give way to a texture per unit kind, state and side; `Renderer` keeps choosing the frame (`SpriteRow`, `SpriteColumn`), and the desktop UI maps the row to its file.
-- `Singleplayer.SpriteSheetName` gives way to the version's choices: the title and Japan's land-based fighter (`j7w` in a single-player game, `j1n` otherwise).
-- `BattleArt`'s loading of the sheet in three overlapping pieces goes away, with the 8-bit decoding in `SpriteSheet`.
-- The files come from a tool that cuts them out of `Original/NSPW_NET/t3.bmp` and `Original/Nspw122/tst_cg1.bmp`, so that they can be made again and checked against the originals.
+To make the files again, and to check that they still match the sheets:
+
+```bash
+dotnet run tools/CutSprites.cs
+dotnet run tools/CutSprites.cs --check
+```
+
+## The code
+- `SpriteFiles` loads a file from the app's resources.
+- `BattleArt` maps a frame of the original's sprites (`SpriteId` and frame number, with `Sprite.Size` and `FramesPerRow` from `set_sprt_data`) to its file and where it is in the file: a unit's row to the row's file, a facility's column to its file, a unit-info picture to its file, and a tile or an effect to its place in the grid. Its callers draw as before.
+- `MainMenuScreen` draws `title.png`.
+
+Every frame that `BattleArt` draws was compared with the same frame cut from the sheet as before: all of them match NSPW NET's sheet, and 1.22's but for the three icons that only NSPW NET's rules draw.
 
 ## Open questions
-- **Commit the PNGs, or cut them at build time?** Committed, they can be edited and replaced; cut at build, the originals stay the only source and nothing can drift. The answer depends on whether the split is meant for editing the art.
 - **The plane names** of medium and low confidence above.
 - **`effects.png`**: the code numbers effects by frame (`effect.SpriteNumber`, such as `96 + direction`), so it stays one grid. Its directional rows (landing craft, torpedo, bomb, anti-aircraft shell, gun shell) could become files of their own later, with a mapping from the frame numbers.
 - **The sounds**, which differ the same way: 1.22 has its own `AA_SHL4.wav` and `GUN3.wav`, and lacks `AA_SHL5.wav`, `SNR.wav` and `click2.wav`. The port plays NSPW NET's in a single-player game too.

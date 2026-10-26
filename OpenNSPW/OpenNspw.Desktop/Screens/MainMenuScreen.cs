@@ -9,9 +9,6 @@ namespace OpenNspw.Desktop.Screens;
 // The title's picture, fading into the navy of the menu below it.
 internal sealed class MainMenuScreen(NspwGame game) : Screen(game)
 {
-	// The title's picture in the sprite sheet (set_sprt_data).
-	private static readonly Rectangle TitleRegion = new(0, 3940, 699, 384);
-
 	private Texture2D _title = default!;
 	private Texture2D _fadeDown = default!;
 	private Texture2D _fadeRight = default!;
@@ -54,11 +51,7 @@ internal sealed class MainMenuScreen(NspwGame game) : Screen(game)
 	public override void LoadContent()
 	{
 		base.LoadContent();
-		_title = SpriteSheet.LoadRegion(
-			GraphicsDevice,
-			GameFiles.Resolve(Game.DataDirectory, "t3.bmp"),
-			TitleRegion
-		);
+		_title = SpriteFiles.Load(GraphicsDevice, "title.png");
 		_fadeDown = CreateFade(1, 256);
 		_fadeRight = CreateFade(256, 1);
 
@@ -100,14 +93,14 @@ internal sealed class MainMenuScreen(NspwGame game) : Screen(game)
 		);
 
 		// The picture fills the width from the top.
-		var scale = all_head.SCRN_WIDTH / (float)TitleRegion.Width;
+		var scale = all_head.SCRN_WIDTH / (float)_title.Width;
 		spriteBatch.Draw(
 			_title,
 			new Vector2(all_head.SCRN_WIDTH / 2f, 0),
 			null,
 			Color.White,
 			0,
-			new Vector2(TitleRegion.Width / 2f, 0),
+			new Vector2(_title.Width / 2f, 0),
 			scale,
 			SpriteEffects.None,
 			0

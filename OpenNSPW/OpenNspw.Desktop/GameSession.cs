@@ -102,10 +102,6 @@ internal sealed class GameSession : IDisposable
 	// Whether the player's keys and buttons are held back from the game: while it follows a trace, which gives it none.
 	private bool IsInputHeldBack => Game.Trace is { TakesInput: false };
 
-	// The sprite sheet that the UI draws the battle from: NSPW NET's t3.bmp, or, in a single-player game, 1.22's own
-	// (Nspw.SpriteSheetName), as the game draws it.
-	public string SpriteSheetPath { get; }
-
 	// Whether WinMain has returned: the game was closed, or failed to connect.
 	public bool HasEnded => _hasEnded;
 
@@ -146,13 +142,11 @@ internal sealed class GameSession : IDisposable
 		_platform = new DesktopPlatform(dataDirectory, text);
 		Game = new Nspw(_platform);
 		_platform.CaptureState = () => _captured.CopyFrom(Game);
-		SpriteSheetPath = GameFiles.Resolve(dataDirectory, "t3.bmp");
 		if (singleplayer is var (executable, directory, scenario))
 		{
 			Game.IsSingleplayer = true;
 			Game.SingleplayerExecutable = executable;
 			_platform.SingleplayerDirectory = directory;
-			SpriteSheetPath = GameFiles.Resolve(directory, Game.SpriteSheetName);
 			Game.ScenarioNumber = (short)scenario;
 		}
 
