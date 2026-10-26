@@ -13,8 +13,22 @@ internal interface ICanFollowHost
 		ISessionTransition<Received<CoreMessage.DestroyGroup>>,
 		ISessionTransition<Received<CoreMessage.AddPlayerToGroup>>,
 		ISessionTransition<Received<CoreMessage.DeletePlayerFromGroup>>,
+		ISessionTransition<Received<CoreMessage.ResyncVersion>>,
 		IHasHostConnection
 {
+	/// <summary>
+	/// Every peer has the operations up to this version, so we no longer keep them for a new host.
+	/// </summary>
+	SessionState ISessionTransition<Received<CoreMessage.ResyncVersion>>.Execute(
+		SessionActor session,
+		Received<CoreMessage.ResyncVersion> command
+	)
+	{
+		if (command.Connection == HostConnection)
+			session.TrimNameTableLog(command.Message.Version);
+		return Current;
+	}
+
 	/// <summary>
 	/// While joining, groups are announced only once the join completes, with the players.
 	/// </summary>

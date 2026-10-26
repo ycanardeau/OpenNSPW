@@ -50,7 +50,7 @@ internal interface ICanHostNameTableChanges
 		};
 		id = group.Id;
 		session.AddGroup(group, announce: true);
-		session.Broadcast(
+		session.Announce(
 			new CoreMessage.CreateGroup
 			{
 				DpnidRequesting = owner,

@@ -16,6 +16,8 @@ internal static class Program
 	{
 		GuidApplication = new("0b0f7a52-5f3d-4c42-9a51-7d2e0c3f6a11"),
 		SessionName = "Otsuki chat",
+		// The chat goes on when the host leaves: the peer that joined first takes over.
+		Flags = SessionFlags.NoDpnServer | SessionFlags.MigrateHost,
 	};
 
 	private const SendFlags ChatSendFlags = SendFlags.Guaranteed | SendFlags.NoComplete;
@@ -113,6 +115,15 @@ internal static class Program
 		return false;
 	}
 
+	private static bool HostMigrated(
+		PeerEvent.HostMigrated migrated,
+		Dictionary<Dpnid, string> names
+	)
+	{
+		Print($"* {names.GetValueOrDefault(migrated.NewHost, "Someone")} is now the host");
+		return true;
+	}
+
 	private static bool PeerInfoUpdated(
 		PeerEvent.PeerInfoUpdated updated,
 		Dictionary<Dpnid, string> names
@@ -143,6 +154,7 @@ internal static class Program
 			SendCompleted: _ => true,
 			SessionTerminated: SessionTerminated,
 			PeerInfoUpdated: updated => PeerInfoUpdated(updated, names),
+			HostMigrated: migrated => HostMigrated(migrated, names),
 			// The chat has no groups.
 			GroupCreated: _ => true,
 			GroupDestroyed: _ => true,

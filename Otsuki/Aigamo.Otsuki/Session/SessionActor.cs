@@ -52,6 +52,8 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 
 	public ActorTimer<SessionMessage> CloseTimer { get; }
 
+	public ActorTimer<SessionMessage> MigrationTimer { get; }
+
 	/// <summary>
 	/// The name table ([MC-DPL8CS] section 2.2.6).
 	/// </summary>
@@ -89,6 +91,16 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	/// </summary>
 	public int Version { get; set; }
 
+	/// <summary>
+	/// The name table operations since <see cref="ResynchronizedVersion"/>, which a new host may need.
+	/// </summary>
+	public List<CoreMessage> NameTableLog { get; } = [];
+
+	/// <summary>
+	/// The newest name table version that every peer has, from DN_RESYNC_VERSION.
+	/// </summary>
+	public int ResynchronizedVersion { get; private set; }
+
 	public SessionActor(
 		PeerOptions options,
 		ChannelWriter<PeerEvent> events,
@@ -106,6 +118,11 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		CloseTimer = new(
 			options.TimeProvider,
 			generation => new SessionMessage.CloseTimedOut(generation),
+			Post
+		);
+		MigrationTimer = new(
+			options.TimeProvider,
+			generation => new SessionMessage.MigrationTimedOut(generation),
 			Post
 		);
 		Start();
@@ -277,12 +294,56 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	}
 
 	/// <summary>
-	/// Sends <paramref name="message"/> to every peer we have a connection to, joining ones included.
+	/// The name table version that a name table operation brings the table to, or <see langword="null"/> for messages
+	/// that are not name table operations.
 	/// </summary>
-	public void Broadcast(CoreMessage message)
+	public static int? GetOperationVersion(CoreMessage message) =>
+		message switch
+		{
+			CoreMessage.AddPlayer m => m.Version,
+			CoreMessage.InstructConnect m => m.Version,
+			CoreMessage.DestroyPlayer m => m.Version,
+			CoreMessage.UpdateInfo m => m.Version,
+			CoreMessage.CreateGroup m => m.Group.Version,
+			CoreMessage.DestroyGroup m => m.Version,
+			CoreMessage.AddPlayerToGroup m => m.Version,
+			CoreMessage.DeletePlayerFromGroup m => m.Version,
+			_ => null,
+		};
+
+	/// <summary>
+	/// Keeps a name table operation until every peer has it, so that a new host can collect the ones it missed
+	/// after a migration ([MC-DPL8CS] section 3.2.5.4).
+	/// </summary>
+	public void Record(CoreMessage operation)
 	{
+		if (GetOperationVersion(operation) is int version && version > ResynchronizedVersion)
+			NameTableLog.Add(operation);
+	}
+
+	/// <summary>
+	/// Forgets the operations that every peer has, once the name table version is resynchronized.
+	/// </summary>
+	public void TrimNameTableLog(int version)
+	{
+		ResynchronizedVersion = Math.Max(ResynchronizedVersion, version);
+		NameTableLog.RemoveAll(op => GetOperationVersion(op) <= ResynchronizedVersion);
+	}
+
+	/// <summary>
+	/// The operations newer than <paramref name="version"/>, in order.
+	/// </summary>
+	public IEnumerable<CoreMessage> GetOperationsAfter(int version) =>
+		NameTableLog.Where(op => GetOperationVersion(op) > version).OrderBy(GetOperationVersion);
+
+	/// <summary>
+	/// Records a name table operation and sends it to every peer we have a connection to, joining ones included.
+	/// </summary>
+	public void Announce(CoreMessage operation)
+	{
+		Record(operation);
 		foreach (var peer in ConnectedPeers)
-			SendCore(peer.Connection!, message);
+			SendCore(peer.Connection!, operation);
 	}
 
 	/// <summary>
@@ -440,7 +501,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	)
 	{
 		Version++;
-		Broadcast(
+		Announce(
 			new CoreMessage.DestroyGroup
 			{
 				DpnidGroup = groupId,
@@ -459,7 +520,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	{
 		Version++;
 		AddMember(groupId, playerId, Version);
-		Broadcast(
+		Announce(
 			new CoreMessage.AddPlayerToGroup
 			{
 				DpnidGroup = groupId,
@@ -478,7 +539,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	{
 		Version++;
 		RemoveMember(groupId, playerId);
-		Broadcast(
+		Announce(
 			new CoreMessage.DeletePlayerFromGroup
 			{
 				DpnidGroup = groupId,
@@ -504,7 +565,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	{
 		Version++;
 		UpdatePlayerInfo(playerId, flags, name, data);
-		Broadcast(
+		Announce(
 			new CoreMessage.UpdateInfo
 			{
 				PacketContext = context,
@@ -547,6 +608,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 
 		foreach (var peer in peers)
 			SendCore(peer.Connection!, new CoreMessage.ResyncVersion { Version = oldest });
+		TrimNameTableLog(oldest);
 		return hosting.ToHosting() with { ResynchronizedVersion = oldest };
 	}
 
@@ -573,8 +635,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			Version = Version,
 			Reason = reason,
 		};
-		foreach (var peer in ConnectedPeers)
-			SendCore(peer.Connection!, message);
+		Announce(message);
 
 		if (player.Created)
 		{
@@ -708,8 +769,11 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			)
 		);
 		JoinTimer.Cancel();
+		MigrationTimer.Cancel();
 		LocalPlayer = Dpnid.Empty;
 		Version = 0;
+		NameTableLog.Clear();
+		ResynchronizedVersion = 0;
 	}
 
 	/// <summary>
@@ -742,6 +806,216 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		foreach (var player in created)
 			Emit(new PeerEvent.PlayerDestroyed(player.Id, DestroyPlayerFlags.SessionTerminated));
 		return new SessionState.Terminated();
+	}
+
+	/// <summary>
+	/// The player that takes over when the host leaves: of the players still in the session that we are connected
+	/// to, and ourselves, the one with the lowest name table version, that is the one that joined first
+	/// ([MC-DPL8CS] section 3.2.5.4, step 1). Every peer reaches the same choice from the same name table.
+	/// </summary>
+	public Player? ElectHost() =>
+		Players
+			.Values.Where(p => !p.IsHost && (p.IsLocal || (p.Created && p.Connection is not null)))
+			.OrderBy(p => p.Version)
+			.ThenBy(p => p.Id.Value)
+			.FirstOrDefault();
+
+	/// <summary>
+	/// The name table index after the highest in use, from which a new host hands out DPNIDs.
+	/// </summary>
+	private int GetNextNameTableIndex()
+	{
+		var mask = BitConverter.ToInt32(Application.GuidInstance.ToByteArray(), 0);
+		var highest = Players
+			.Keys.Concat(Groups.Keys)
+			.Select(id => (id.Value ^ mask) & 0xFFFFF)
+			.DefaultIfEmpty(2)
+			.Max();
+		return highest + 1;
+	}
+
+	/// <summary>
+	/// Applies an operation that the new host collected with DN_ACK_NAMETABLE_OP, as a peer would have.
+	/// </summary>
+	private void ApplyOperation(CoreMessage operation)
+	{
+		switch (operation)
+		{
+			case CoreMessage.AddPlayer m:
+				Players.TryAdd(
+					m.Dpnid,
+					new Player
+					{
+						Id = m.Dpnid,
+						Name = m.Name,
+						Data = [.. m.Data],
+						Url = new DirectPlayUrl(m.Url),
+						Version = m.Version,
+						DnetVersion = m.DnetClientVersion,
+					}
+				);
+				break;
+			case CoreMessage.DestroyPlayer m:
+				ForgetPlayer(m.DpnidLeaving, m.Reason);
+				break;
+			case CoreMessage.UpdateInfo m:
+				UpdatePlayerInfo(m.Dpnid, m.InfoFlags, m.Name, [.. m.Data]);
+				break;
+			case CoreMessage.CreateGroup m:
+				AddGroup(Group.FromNameTableEntry(m.Group), announce: true);
+				break;
+			case CoreMessage.DestroyGroup m:
+				RemoveGroup(m.DpnidGroup, GetDestroyReason(m.DpnidGroup));
+				break;
+			case CoreMessage.AddPlayerToGroup m:
+				AddMember(m.DpnidGroup, m.DpnidPlayer, m.Version);
+				break;
+			case CoreMessage.DeletePlayerFromGroup m:
+				RemoveMember(m.DpnidGroup, m.DpnidPlayer);
+				break;
+		}
+
+		if (GetOperationVersion(operation) is int version && version > Version)
+			Version = version;
+		Record(operation);
+	}
+
+	/// <summary>
+	/// Ends migration (steps 5 and 6): sends every peer the operations it missed, removes the old host and the
+	/// players whose join it never completed, and announces DN_HOST_MIGRATE_COMPLETE.
+	/// </summary>
+	public SessionState.Hosting FinishMigration(SessionState.Hosting hosting)
+	{
+		MigrationTimer.Cancel();
+		var migration = hosting.Migration!;
+		foreach (var (id, reported) in migration.Reported)
+		{
+			if (Players.TryGetValue(id, out var peer) && peer.Connection is not null)
+			{
+				foreach (var operation in GetOperationsAfter(reported))
+					SendCore(peer.Connection, operation);
+			}
+		}
+
+		hosting = hosting with { Migration = null };
+		if (Players.TryGetValue(migration.OldHost, out var oldHost))
+			hosting = DestroyPlayer(hosting, oldHost, DestroyPlayerFlags.ConnectionLost);
+		else
+		{
+			// Everyone removed the old host already; the operation keeps the name table versions in step.
+			Version++;
+			Announce(
+				new CoreMessage.DestroyPlayer
+				{
+					DpnidLeaving = migration.OldHost,
+					Version = Version,
+					Reason = DestroyPlayerFlags.ConnectionLost,
+				}
+			);
+		}
+
+		foreach (var joining in Players.Values.Where(p => !p.IsLocal && !p.Created).ToList())
+			hosting = DestroyPlayer(hosting, joining, DestroyPlayerFlags.ConnectionLost);
+
+		foreach (var peer in ConnectedPeers)
+			SendCore(peer.Connection!, new CoreMessage.HostMigrateComplete());
+		return ResynchronizeVersion(hosting);
+	}
+
+	/// <summary>
+	/// Moves migration on once every peer has reported its name table version (steps 2 to 4): if a peer is ahead of
+	/// us, asks it for what we missed; otherwise finishes.
+	/// </summary>
+	public SessionState.Hosting ContinueMigration(SessionState.Hosting hosting)
+	{
+		if (
+			hosting.Migration is not { RequestedFrom: null } migration
+			|| !migration.Awaiting.IsEmpty
+		)
+			return hosting;
+
+		var newest = migration
+			.Reported.Where(r => r.Value > Version && Players.ContainsKey(r.Key))
+			.OrderByDescending(r => r.Value)
+			.Select(r => Players[r.Key])
+			.FirstOrDefault(p => p.Connection is not null);
+		if (newest is null)
+			return FinishMigration(hosting);
+
+		SendCore(
+			newest.Connection!,
+			new CoreMessage.RequestNameTableOperations { Version = Version }
+		);
+		return hosting with { Migration = migration with { RequestedFrom = newest.Id } };
+	}
+
+	/// <summary>
+	/// Installs the operations from the peer we asked, then finishes migration.
+	/// </summary>
+	public SessionState.Hosting ApplyMissedOperations(
+		SessionState.Hosting hosting,
+		IEnumerable<CoreMessage> operations
+	)
+	{
+		foreach (
+			var operation in operations
+				.Where(op => GetOperationVersion(op) > Version)
+				.OrderBy(GetOperationVersion)
+		)
+			ApplyOperation(operation);
+		return FinishMigration(hosting);
+	}
+
+	/// <summary>
+	/// Takes over as host after <paramref name="oldHost"/> left (step 1): tells every peer with DN_HOST_MIGRATE and
+	/// waits for their name table versions.
+	/// </summary>
+	public SessionState BecomeHost(Player local, Dpnid oldHost)
+	{
+		local.IsHost = true;
+		Publish();
+		Emit(new PeerEvent.HostMigrated(local.Id));
+
+		var peers = ConnectedPeers.Where(p => p.Created).ToList();
+		foreach (var peer in peers)
+			SendCore(
+				peer.Connection!,
+				new CoreMessage.HostMigrate { DpnidOldHost = oldHost, DpnidNewHost = local.Id }
+			);
+
+		var hosting = new SessionState.Hosting(
+			GetNextNameTableIndex(),
+			ResynchronizedVersion,
+			ImmutableDictionary<Dpnid, IntegrityCheck>.Empty,
+			new MigrationProgress(
+				oldHost,
+				[.. peers.Select(p => p.Id)],
+				ImmutableDictionary<Dpnid, int>.Empty,
+				RequestedFrom: null
+			)
+		);
+		MigrationTimer.Start(Options.IntegrityCheckTimeout);
+		return ContinueMigration(hosting);
+	}
+
+	/// <summary>
+	/// The host is gone and the session allows migration: the local peer takes over or follows whoever does.
+	/// </summary>
+	public SessionState MigrateFrom(Player oldHost, ResultCode result)
+	{
+		ForgetPlayer(
+			oldHost.Id,
+			result == ResultCode.Success
+				? DestroyPlayerFlags.Normal
+				: DestroyPlayerFlags.ConnectionLost
+		);
+		var next = ElectHost();
+		if (next is null)
+			return Terminate(ResultCode.HostTerminatedSession);
+
+		return next.IsLocal
+			? BecomeHost(next, oldHost.Id)
+			: new SessionState.Connected(next.Connection!);
 	}
 
 	/// <summary>
@@ -962,10 +1236,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		return Unit.Default;
 	}
 
-	/// <summary>
-	/// Host migration and its name table operations are not implemented, so those messages have no transitions.
-	/// </summary>
-	private Unit Receive(Connection connection, CoreMessage message) =>
+	private Unit Dispatch(Connection connection, CoreMessage message) =>
 		message.Match(
 			PlayerConnectInfo: m =>
 				Execute(new Received<CoreMessage.PlayerConnectInfo>(connection, m)),
@@ -1015,6 +1286,14 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 				Execute(new Received<CoreMessage.RequestUpdateInfo>(connection, m)),
 			UpdateInfo: m => Execute(new Received<CoreMessage.UpdateInfo>(connection, m))
 		);
+
+	private Unit Receive(Connection connection, CoreMessage message)
+	{
+		// Peers keep the host's name table operations, in case they must hand them to a new host.
+		if (_state is IHasHostConnection { HostConnection: var host } && host == connection)
+			Record(message);
+		return Dispatch(connection, message);
+	}
 
 	private Unit Receive(SessionMessage.ConnectionReceived message)
 	{
@@ -1104,6 +1383,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			},
 			JoinTimedOut: m => Elapse(JoinTimer, m.Generation, m),
 			CloseTimedOut: m => Elapse(CloseTimer, m.Generation, m),
+			MigrationTimedOut: m => Elapse(MigrationTimer, m.Generation, m),
 			PlayerJoinTimedOut: Execute,
 			IntegrityCheckTimedOut: Execute
 		);

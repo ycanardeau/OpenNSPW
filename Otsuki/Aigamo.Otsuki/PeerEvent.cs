@@ -45,6 +45,12 @@ public abstract record PeerEvent
 	public sealed record SessionTerminated(ResultCode Result) : PeerEvent;
 
 	/// <summary>
+	/// The host left and <paramref name="NewHost"/> took over (DPN_MSGID_HOST_MIGRATE). Only in sessions with
+	/// <see cref="SessionFlags.MigrateHost"/>; the old host's <see cref="PlayerDestroyed"/> comes first.
+	/// </summary>
+	public sealed record HostMigrated(Dpnid NewHost) : PeerEvent;
+
+	/// <summary>
 	/// A player changed its name or data after joining (DPN_MSGID_PEER_INFO). Also raised for the local player.
 	/// </summary>
 	public sealed record PeerInfoUpdated(PlayerInfo Player) : PeerEvent;

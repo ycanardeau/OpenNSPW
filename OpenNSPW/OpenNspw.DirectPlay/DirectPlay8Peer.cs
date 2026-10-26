@@ -287,6 +287,8 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options) : IDirectPlay8P
 			// The game neither changes player information after joining nor uses groups, and has no handlers for
 			// their messages.
 			PeerInfoUpdated: _ => winerror.S_OK,
+			// The game does not host sessions with DPNSESSION_MIGRATE_HOST.
+			HostMigrated: _ => winerror.S_OK,
 			GroupCreated: _ => winerror.S_OK,
 			GroupDestroyed: _ => winerror.S_OK,
 			PlayerAddedToGroup: _ => winerror.S_OK,

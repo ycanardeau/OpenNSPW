@@ -117,6 +117,7 @@ internal interface ICanAdmitPlayers
 
 		// Peers that are still joining need the new entry as well, so that they connect to each other.
 		var addPlayer = player.ToAddPlayerMessage();
+		session.Record(addPlayer);
 		foreach (var peer in session.ConnectedPeers.Where(p => p != player))
 			SessionActor.SendCore(peer.Connection!, addPlayer);
 
@@ -169,8 +170,7 @@ internal interface ICanAdmitPlayers
 			Dpnid = player.Id,
 			Version = session.Version,
 		};
-		foreach (var peer in session.ConnectedPeers)
-			SessionActor.SendCore(peer.Connection!, instructConnect);
+		session.Announce(instructConnect);
 		session.MarkCreated(player);
 		return Current;
 	}

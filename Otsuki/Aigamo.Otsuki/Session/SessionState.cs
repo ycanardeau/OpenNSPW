@@ -12,6 +12,17 @@ namespace Aigamo.Otsuki.Session;
 /// </summary>
 internal sealed record IntegrityCheck(Dpnid Requester, ITimer Timer);
 
+/// <summary>
+/// A new host's progress through migration ([MC-DPL8CS] section 3.2.5.4): the peers that have not reported their
+/// name table version yet, the versions reported, and the peer asked for the operations we missed, if any.
+/// </summary>
+internal sealed record MigrationProgress(
+	Dpnid OldHost,
+	ImmutableHashSet<Dpnid> Awaiting,
+	ImmutableDictionary<Dpnid, int> Reported,
+	Dpnid? RequestedFrom
+);
+
 internal interface IHasHostingData
 {
 	/// <summary>
@@ -28,6 +39,11 @@ internal interface IHasHostingData
 	/// Integrity checks in progress, by target.
 	/// </summary>
 	ImmutableDictionary<Dpnid, IntegrityCheck> IntegrityChecks { get; }
+
+	/// <summary>
+	/// Set while taking over from a host that left, until DN_HOST_MIGRATE_COMPLETE.
+	/// </summary>
+	MigrationProgress? Migration { get; }
 
 	SessionState.Hosting ToHosting() => (SessionState.Hosting)this;
 }
@@ -76,11 +92,13 @@ internal abstract record SessionState
 	public sealed record Hosting(
 		int NextIndex,
 		int ResynchronizedVersion,
-		ImmutableDictionary<Dpnid, IntegrityCheck> IntegrityChecks
+		ImmutableDictionary<Dpnid, IntegrityCheck> IntegrityChecks,
+		MigrationProgress? Migration = null
 	)
 		: SessionState,
 			IHasHostingData,
 			ICanAdmitPlayers,
+			ICanCompleteMigration,
 			ICanCheckIntegrity,
 			ICanResynchronizeVersion,
 			ICanLosePlayers,
@@ -122,6 +140,7 @@ internal abstract record SessionState
 			ICanFollowHost,
 			ICanMeetPeers,
 			ICanFollowNewPlayers,
+			ICanFollowMigration,
 			ICanLoseHost,
 			ICanReceiveData,
 			ICanSendTo,
