@@ -24,6 +24,11 @@ internal abstract record ConnectionMessage
 		: ConnectionMessage;
 
 	/// <summary>
+	/// Sends the messages queued by earlier <see cref="SendPayload"/>s, coalescing them where possible.
+	/// </summary>
+	public sealed record Flush : ConnectionMessage;
+
+	/// <summary>
 	/// Disconnects gracefully after all queued messages are delivered.
 	/// </summary>
 	public sealed record Disconnect : ConnectionMessage;

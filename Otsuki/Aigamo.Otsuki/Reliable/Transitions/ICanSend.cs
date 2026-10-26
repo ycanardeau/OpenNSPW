@@ -5,7 +5,10 @@ namespace Aigamo.Otsuki.Reliable.Transitions;
 /// <summary>
 /// Sends upper-layer data ([MC-DPL8R] section 3.1.4.4).
 /// </summary>
-internal interface ICanSend : IConnectionTransition<ConnectionMessage.SendPayload>, IHasChannel
+internal interface ICanSend
+	: IConnectionTransition<ConnectionMessage.SendPayload>,
+		IConnectionTransition<ConnectionMessage.Flush>,
+		IHasChannel
 {
 	ConnectionState IConnectionTransition<ConnectionMessage.SendPayload>.Execute(
 		Connection connection,
@@ -18,6 +21,15 @@ internal interface ICanSend : IConnectionTransition<ConnectionMessage.SendPayloa
 				command.SendId,
 				ResultCode.NoConnection
 			);
+		return Current;
+	}
+
+	ConnectionState IConnectionTransition<ConnectionMessage.Flush>.Execute(
+		Connection connection,
+		ConnectionMessage.Flush command
+	)
+	{
+		Channel.Flush();
 		return Current;
 	}
 }

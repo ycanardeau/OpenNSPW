@@ -12,7 +12,6 @@ namespace Aigamo.Otsuki.Reliable;
 /// One connection of the DirectPlay 8 reliable protocol ([MC-DPL8R]) to a single remote endpoint. The protocol
 /// logic lives in the transitions that each <see cref="ConnectionState"/> implements; this actor owns the state,
 /// the timers and the transport, and runs the transition for each message.
-/// Packet signing and coalesced sends are not implemented; coalesced payloads are understood on receipt.
 /// </summary>
 internal sealed class Connection : Actor<ConnectionMessage>
 {
@@ -21,6 +20,7 @@ internal sealed class Connection : Actor<ConnectionMessage>
 	private readonly IDatagramTransport _transport;
 	private readonly Action<Connection> _onTerminated;
 	private ConnectionState _state;
+	private bool _flushRequested;
 
 	public IPEndPoint RemoteEndPoint { get; }
 
@@ -109,6 +109,19 @@ internal sealed class Connection : Actor<ConnectionMessage>
 		unchecked(
 			(int)(TimeProvider.GetTimestamp() / Math.Max(1, TimeProvider.TimestampFrequency / 1000))
 		);
+
+	/// <summary>
+	/// Posts <see cref="ConnectionMessage.Flush"/> unless one is already in the mailbox, so that the messages
+	/// queued before it are sent together.
+	/// </summary>
+	public void RequestFlush()
+	{
+		if (_flushRequested)
+			return;
+
+		_flushRequested = true;
+		Post(new ConnectionMessage.Flush());
+	}
 
 	public void Transmit(ReliableMessage message) =>
 		_transport.Send(RemoteEndPoint, ReliableMessageSerializer.Default.Serialize(message));
@@ -252,6 +265,11 @@ internal sealed class Connection : Actor<ConnectionMessage>
 			StartConnecting: Execute,
 			DatagramArrived: m => Receive(m.Message),
 			SendPayload: SendPayload,
+			Flush: m =>
+			{
+				_flushRequested = false;
+				return Execute(m);
+			},
 			Disconnect: Execute,
 			HardDisconnect: Execute,
 			Abort: m => Abort(m.Result),

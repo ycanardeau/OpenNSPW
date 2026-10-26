@@ -38,6 +38,16 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 	private static readonly TimeSpan SelectiveAcknowledgmentRetryTimeout =
 		TimeSpan.FromMilliseconds(10);
 
+	/// <summary>
+	/// A coalesced frame holds at most 32 payloads ([MC-DPL8R] section 2.2.3).
+	/// </summary>
+	private const int MaxCoalescedPayloadCount = 32;
+
+	/// <summary>
+	/// The size of each coalesced payload is an 11-bit value.
+	/// </summary>
+	private const int MaxCoalescedPayloadSize = 0x7FF;
+
 	private sealed class OutgoingFrame
 	{
 		public required ImmutableArray<byte> Payload { get; init; }
@@ -47,7 +57,28 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 		public bool User1 { get; init; }
 		public bool KeepAlive { get; init; }
 		public bool EndStream { get; init; }
-		public long? SendId { get; init; }
+
+		/// <summary>
+		/// Whether <see cref="Payload"/> holds several messages in the coalesced payload format.
+		/// </summary>
+		public bool Coalesce { get; init; }
+
+		/// <summary>
+		/// The sends that complete with this frame: none for a frame that does not end a message, one for a frame
+		/// that does, and one per message for a coalesced frame.
+		/// </summary>
+		public ImmutableArray<long> SendIds { get; init; } = [];
+
+		/// <summary>
+		/// A frame that carries one whole message, which can be coalesced with others.
+		/// </summary>
+		public bool CanCoalesce =>
+			NewMessage
+			&& EndMessage
+			&& !KeepAlive
+			&& !EndStream
+			&& !Coalesce
+			&& Payload.Length <= MaxCoalescedPayloadSize;
 		public SequenceId Sequence { get; set; }
 		public bool Poll { get; set; }
 		public long SentTimestamp { get; set; }
@@ -155,6 +186,7 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 				NewMessage = frame.NewMessage,
 				EndMessage = frame.EndMessage,
 				User1 = frame.User1,
+				Coalesce = frame.Coalesce,
 				Retry = retry,
 				EndStream = frame.EndStream,
 				SequenceId = frame.Sequence,
@@ -204,8 +236,69 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 
 	private void CompleteSend(OutgoingFrame frame, ResultCode result)
 	{
-		if (frame.SendId is long sendId)
+		foreach (var sendId in frame.SendIds)
 			_connection.Observer.OnSendCompleted(_connection, sendId, result);
+	}
+
+	/// <summary>
+	/// The size of a coalesced payload: two bytes of header per payload, padded to a 32-bit boundary, and each
+	/// payload but the last padded to a 32-bit boundary ([MC-DPL8R] section 2.2.3).
+	/// </summary>
+	private static int CoalescedSize(IReadOnlyList<OutgoingFrame> frames)
+	{
+		var size = (frames.Count * 2 + 3) & ~3;
+		for (var i = 0; i < frames.Count; i++)
+		{
+			var length = frames[i].Payload.Length;
+			size += i == frames.Count - 1 ? length : (length + 3) & ~3;
+		}
+		return size;
+	}
+
+	/// <summary>
+	/// Takes the next frame to send, combining it with the whole messages queued after it into one coalesced frame
+	/// when they fit ([MC-DPL8R] section 3.1.4.4). Only messages with the same reliability are combined, so that an
+	/// unreliable message never holds up a reliable one, nor the other way around.
+	/// </summary>
+	private OutgoingFrame DequeueFrame()
+	{
+		var first = _pending.Dequeue();
+		if (!_connection.Profile.CoalesceSends || !first.CanCoalesce)
+			return first;
+
+		var frames = new List<OutgoingFrame> { first };
+		while (
+			frames.Count < MaxCoalescedPayloadCount
+			&& _pending.TryPeek(out var next)
+			&& next.CanCoalesce
+			&& next.Reliable == first.Reliable
+			&& CoalescedSize([.. frames, next]) <= _connection.Profile.MaxFramePayloadSize
+		)
+			frames.Add(_pending.Dequeue());
+
+		if (frames.Count == 1)
+			return first;
+
+		return new OutgoingFrame
+		{
+			Payload =
+			[
+				.. CoalescedPayloadSerializer.Default.Serialize([
+					.. frames.Select(f => new CoalescedPayload
+					{
+						Reliable = f.Reliable,
+						Sequential = true,
+						User1 = f.User1,
+						Payload = f.Payload,
+					}),
+				]),
+			],
+			Reliable = first.Reliable,
+			NewMessage = true,
+			EndMessage = true,
+			Coalesce = true,
+			SendIds = [.. frames.SelectMany(f => f.SendIds)],
+		};
 	}
 
 	private void Pump()
@@ -213,7 +306,7 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 		var sent = false;
 		while (_pending.Count > 0 && _unacknowledged.Count < _connection.Profile.MaxWindowSize)
 		{
-			var frame = _pending.Dequeue();
+			var frame = DequeueFrame();
 			frame.Sequence = _nextSend++;
 			frame.Poll = _pending.Count == 0;
 			frame.SentTimestamp = _connection.TimeProvider.GetTimestamp();
@@ -246,15 +339,24 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 					NewMessage = i == 0,
 					EndMessage = i == count - 1,
 					User1 = user1,
-					SendId = i == count - 1 ? sendId : null,
+					SendIds = i == count - 1 && sendId is long id ? [id] : [],
 				}
 			);
 		}
-		Pump();
 	}
 
 	/// <summary>
+	/// Sends the queued frames that fit in the send window.
+	/// </summary>
+	public void Flush() => Pump();
+
+	/// <summary>
 	/// Queues an upper-layer message. Returns <see langword="false"/> once the channel is disconnecting.
+	/// <para>
+	/// With <see cref="ReliableProfile.CoalesceSends"/>, the message is sent on the next <see cref="Flush"/>, which
+	/// the connection runs once it has handled the messages already in its mailbox. Messages sent together then
+	/// leave in as few frames as possible, without waiting for a timer.
+	/// </para>
 	/// </summary>
 	public bool TrySend(ConnectionMessage.SendPayload message)
 	{
@@ -262,6 +364,10 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 			return false;
 
 		Enqueue(message.Payload, message.Reliable, message.User1, message.SendId);
+		if (_connection.Profile.CoalesceSends)
+			_connection.RequestFlush();
+		else
+			Pump();
 		return true;
 	}
 

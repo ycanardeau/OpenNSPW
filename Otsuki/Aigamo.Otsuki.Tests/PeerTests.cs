@@ -1,5 +1,6 @@
 using System.Net;
 using Aigamo.Otsuki.Messages.Core;
+using Aigamo.Otsuki.Messages.Reliable;
 using Aigamo.Otsuki.Reliable;
 using FluentAssertions;
 using Xunit;
@@ -41,13 +42,16 @@ public class PeerTests : IAsyncLifetime
 	private static ApplicationDescription Application(int maxPlayers = 0) =>
 		new() { GuidApplication = GuidApplication, MaxPlayers = maxPlayers };
 
-	private (Peer Peer, EventLog Log, IPAddress Address) CreatePeer(string name)
+	private (Peer Peer, EventLog Log, IPAddress Address) CreatePeer(
+		string name,
+		ReliableProfile? profile = null
+	)
 	{
 		var address = IPAddress.Parse($"10.0.0.{Interlocked.Increment(ref _nextAddress)}");
 		var peer = new Peer(
 			new PeerOptions
 			{
-				ReliableProfile = FastProfile,
+				ReliableProfile = profile ?? FastProfile,
 				TransportFactory = _network.CreateFactory(address),
 				JoinTimeout = TimeSpan.FromSeconds(5),
 				IntegrityCheckTimeout = TimeSpan.FromSeconds(1),
@@ -61,10 +65,11 @@ public class PeerTests : IAsyncLifetime
 
 	private async Task<(Peer Peer, EventLog Log, IPAddress Address)> HostAsync(
 		string name,
-		ApplicationDescription? application = null
+		ApplicationDescription? application = null,
+		ReliableProfile? profile = null
 	)
 	{
-		var host = CreatePeer(name);
+		var host = CreatePeer(name, profile);
 		await host.Peer.HostAsync(application ?? Application());
 		await host.Log.WaitForAsync<PeerEvent.PlayerCreated>();
 		return host;
@@ -234,6 +239,96 @@ public class PeerTests : IAsyncLifetime
 		atHost.Data.Should().Equal([1]);
 		await host.Log.WaitForAsync<PeerEvent.SendCompleted>(2);
 		host.Log.OfType<PeerEvent.DataReceived>().Should().ContainSingle();
+	}
+
+	/// <summary>
+	/// Counts the data frames from <paramref name="source"/>, and those of them that are coalesced.
+	/// </summary>
+	private (Func<int> Frames, Func<int> Coalesced) CountDataFrames(IPAddress source)
+	{
+		var frames = 0;
+		var coalesced = 0;
+		_network.Observe = (from, _, datagram) =>
+		{
+			if (
+				!from.Address.Equals(source)
+				|| ReliableMessageSerializer.Default.Deserialize(datagram)
+					is not ReliableMessage.DataFrame frame
+				|| frame.KeepAliveOrCorrelate
+			)
+				return;
+
+			Interlocked.Increment(ref frames);
+			if (frame.Coalesce)
+				Interlocked.Increment(ref coalesced);
+		};
+		return (() => Volatile.Read(ref frames), () => Volatile.Read(ref coalesced));
+	}
+
+	/// <summary>
+	/// Holds the joiner's acknowledgments back, so that the host's send window fills, then sends a burst.
+	/// </summary>
+	private async Task SendBurstWhileWindowIsFullAsync(
+		(Peer Peer, EventLog Log, IPAddress Address) host,
+		(Peer Peer, EventLog Log, IPAddress Address) joiner,
+		int count
+	)
+	{
+		_network.Drop = (from, _, _) => from.Address.Equals(joiner.Address);
+		for (var i = 0; i < count; i++)
+			host.Peer.SendTo(
+				joiner.Peer.LocalPlayer,
+				BitConverter.GetBytes(i),
+				i % 3 == 0 ? SendFlags.None : SendFlags.Guaranteed
+			);
+		await Task.Delay(50);
+		_network.Drop = (_, _, _) => false;
+	}
+
+	[Fact]
+	public async Task SendTo_CoalescesQueuedMessages()
+	{
+		var host = await HostAsync("Host");
+		var joiner = await JoinAsync("Joiner", host.Peer);
+		await host.Log.WaitForAsync<PeerEvent.PlayerCreated>(e => !e.Player.IsLocal);
+		var (frames, coalesced) = CountDataFrames(host.Address);
+
+		await SendBurstWhileWindowIsFullAsync(host, joiner, 300);
+
+		// Reliable messages all arrive, in order; unreliable ones may be lost while the joiner was cut off.
+		var reliable = Enumerable.Range(0, 300).Where(i => i % 3 != 0).ToList();
+		var received = await joiner.Log.WaitForAsync<PeerEvent.DataReceived>(
+			reliable.Count,
+			e => BitConverter.ToInt32([.. e.Data]) % 3 != 0,
+			TimeSpan.FromSeconds(20)
+		);
+		received.Select(e => BitConverter.ToInt32([.. e.Data])).Should().Equal(reliable);
+		joiner
+			.Log.OfType<PeerEvent.DataReceived>()
+			.Select(e => BitConverter.ToInt32([.. e.Data]))
+			.Should()
+			.BeInAscendingOrder();
+		coalesced().Should().BePositive();
+		var completed = await host.Log.WaitForAsync<PeerEvent.SendCompleted>(300);
+		completed.Select(e => e.Handle).Should().OnlyHaveUniqueItems();
+	}
+
+	[Fact]
+	public async Task SendTo_WithoutCoalescingSendsAFramePerMessage()
+	{
+		var host = await HostAsync("Host", profile: FastProfile with { CoalesceSends = false });
+		var joiner = await JoinAsync("Joiner", host.Peer);
+		await host.Log.WaitForAsync<PeerEvent.PlayerCreated>(e => !e.Player.IsLocal);
+		var (_, coalesced) = CountDataFrames(host.Address);
+
+		await SendBurstWhileWindowIsFullAsync(host, joiner, 150);
+
+		await joiner.Log.WaitForAsync<PeerEvent.DataReceived>(
+			100,
+			e => BitConverter.ToInt32([.. e.Data]) % 3 != 0,
+			TimeSpan.FromSeconds(20)
+		);
+		coalesced().Should().Be(0);
 	}
 
 	[Fact]
