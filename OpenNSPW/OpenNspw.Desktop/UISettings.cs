@@ -5,9 +5,14 @@ using System.Text.Json.Serialization;
 namespace OpenNspw.Desktop;
 
 // What the UI remembers between runs, beside the game's own settings (DesktopPlatform): the language chosen.
-internal static class UISettings
+internal static partial class UISettings
 {
 	private sealed record Saved(Language? Language);
+
+	// Generated, as the release builds are trimmed (OpenNspw.Desktop.csproj), which leaves JsonSerializer no reflection.
+	[JsonSourceGenerationOptions(UseStringEnumConverter = true)]
+	[JsonSerializable(typeof(Saved))]
+	private sealed partial class SavedJson : JsonSerializerContext;
 
 	private static readonly string FilePath = Path.Combine(
 		Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -15,16 +20,11 @@ internal static class UISettings
 		"ui.json"
 	);
 
-	private static readonly JsonSerializerOptions Options = new()
-	{
-		Converters = { new JsonStringEnumConverter() },
-	};
-
 	private static Saved Load()
 	{
 		try
 		{
-			return JsonSerializer.Deserialize<Saved>(File.ReadAllText(FilePath), Options)
+			return JsonSerializer.Deserialize(File.ReadAllText(FilePath), SavedJson.Default.Saved)
 				?? new(null);
 		}
 		catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException)
@@ -51,7 +51,7 @@ internal static class UISettings
 			Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
 			File.WriteAllText(
 				FilePath,
-				JsonSerializer.Serialize(Load() with { Language = language }, Options)
+				JsonSerializer.Serialize(Load() with { Language = language }, SavedJson.Default.Saved)
 			);
 		}
 		catch (Exception e) when (e is IOException or UnauthorizedAccessException)

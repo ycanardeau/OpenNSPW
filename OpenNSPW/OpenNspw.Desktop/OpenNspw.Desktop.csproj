@@ -8,6 +8,13 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- The original's icon (Original/NSPW_NET/NSPW_NET.RC). -->
     <ApplicationIcon>..\..\Original\NSPW_NET\nspw_icon.ICO</ApplicationIcon>
+    <!-- The self-contained release builds (release.yml) leave out what the app never uses of .NET's own assemblies, and
+         only of those (partial), as the app's and its packages' reflection (Saruhashi's data bindings, Trace122Layout,
+         MonoGame) isn't trim-safe. Trimming turns off JsonSerializer's reflection, so the settings' JSON is generated
+         (UISettings.SavedJson, DesktopPlatform.SettingsJson). Not InvariantGlobalization: UISettings.LoadLanguage
+         reads the system's language from CurrentUICulture, which it would make invariant. -->
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>partial</TrimMode>
   </PropertyGroup>
 
   <ItemGroup>

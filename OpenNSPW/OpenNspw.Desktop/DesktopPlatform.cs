@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Xna.Framework.Audio;
 using OpenNspw.DirectPlay;
 
@@ -44,8 +45,12 @@ internal sealed class Sound(SoundEffect effect) : ISound, IDisposable
 
 // The platform of the desktop app: the game's files in its data directory, DirectPlay 8 on Otsuki, MonoGame sound,
 // text rasterized with a TrueType font, and settings in a JSON file.
-internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text) : INspwPlatform
+internal sealed partial class DesktopPlatform(string dataDirectory, TextRasterizer text) : INspwPlatform
 {
+	// Generated, as the release builds are trimmed (OpenNspw.Desktop.csproj), which leaves JsonSerializer no reflection.
+	[JsonSerializable(typeof(Dictionary<string, string>))]
+	private sealed partial class SettingsJson : JsonSerializerContext;
+
 	private readonly string _dataDirectory = dataDirectory;
 	private readonly DirectPlay8Factory _directPlay = new();
 	private readonly TextRasterizer _text = text;
@@ -254,8 +259,9 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 		{
 			try
 			{
-				_settings = JsonSerializer.Deserialize<Dictionary<string, string>>(
-					File.ReadAllText(_settingsPath)
+				_settings = JsonSerializer.Deserialize(
+					File.ReadAllText(_settingsPath),
+					SettingsJson.Default.DictionaryStringString
 				);
 			}
 			catch (Exception) { }
@@ -280,7 +286,7 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 		{
 			Settings()[key] = value;
 			Directory.CreateDirectory(Path.GetDirectoryName(_settingsPath)!);
-			File.WriteAllText(_settingsPath, JsonSerializer.Serialize(Settings()));
+			File.WriteAllText(_settingsPath, JsonSerializer.Serialize(Settings(), SettingsJson.Default.DictionaryStringString));
 		}
 	}
 }
