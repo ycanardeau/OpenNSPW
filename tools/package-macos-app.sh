@@ -1,6 +1,7 @@
 #!/bin/bash
 # Builds OpenNSPW.app in the output directory: the desktop app for Apple Silicon Macs, self-contained in a single-file
-# executable, ad-hoc signed, as release.yml publishes it. Runs on macOS only, for sips, iconutil and codesign.
+# executable, ad-hoc signed, as release.yml publishes it. Runs on macOS only, for sips, iconutil and codesign, with
+# fontTools for the fonts (subset-fonts.sh).
 #
 # tools/package-macos-app.sh <version> <output directory>
 #
@@ -19,6 +20,7 @@ rm -rf "$app"
 dotnet publish "$root/OpenNSPW/OpenNspw.Desktop" --configuration Release --runtime osx-arm64 --self-contained \
 	/p:PublishSingleFile=true /p:DebugType=embedded /p:GenerateDocumentationFile=false /p:Version="$version" \
 	--output "$app/Contents/MacOS"
+"$root/tools/subset-fonts.sh" "$app/Contents/MacOS/Fonts"
 
 # The icon from the window's (Icon.bmp, the original's 32x32 icon), at the sizes it has; Finder scales it up.
 iconset=$(mktemp -d)/OpenNSPW.iconset

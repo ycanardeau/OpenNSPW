@@ -4,6 +4,7 @@
 # Once the packages are pushed, publishes the desktop app, self-contained in a single-file executable, on a GitHub Release of the tag, a prerelease for prerelease tags:
 # for Windows (win-x64) as a zip, for Apple Silicon Macs (osx-arm64) as OpenNSPW.app, ad-hoc signed, in a zip (tools/package-macos-app.sh),
 # and for Linux (linux-x64) as an AppImage (tools/package-linux-appimage.sh); with their SHA-256 in SHA256SUMS, and build provenance attestations.
+# Each is trimmed (OpenNspw.Desktop.csproj), and its fonts cut down to what it can draw (tools/subset-fonts.sh).
 # The downloads have none of the original's files (Original/); the release notes tell players where to put theirs.
 
 name: Release
@@ -67,9 +68,13 @@ jobs:
       run: |
         echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
         echo "NAME=OpenNSPW-${GITHUB_REF/refs\/tags\/v/}-win-x64" >> $GITHUB_ENV
+    - name: Install fontTools
+      run: pipx install fonttools==4.66.1
     # One exe, with only what it reads from its own directory beside it: SDL2.dll and openal.dll, which MonoGame loads from there, and Fonts.
     - name: Publish
       run: dotnet publish OpenNSPW/OpenNspw.Desktop --configuration Release --runtime win-x64 --self-contained /p:PublishSingleFile=true /p:DebugType=embedded /p:GenerateDocumentationFile=false /p:Version=${VERSION} --output artifacts/${NAME}
+    - name: Subset fonts
+      run: tools/subset-fonts.sh artifacts/${NAME}/Fonts
     - name: Zip
       working-directory: artifacts
       run: zip --recurse-paths --quiet ${NAME}.zip ${NAME}
@@ -95,6 +100,8 @@ jobs:
       run: |
         echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
         echo "NAME=OpenNSPW-${GITHUB_REF/refs\/tags\/v/}-osx-arm64" >> $GITHUB_ENV
+    - name: Install fontTools
+      run: pipx install fonttools==4.66.1
     - name: Package
       run: tools/package-macos-app.sh ${VERSION} artifacts
     # ditto keeps the app's symbolic link and executable bits. Without extended attributes, which the signature doesn't need, and which other unzipping would leave in the app as ._ files that break it.
@@ -124,6 +131,8 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install --yes --no-install-recommends imagemagick
+    - name: Install fontTools
+      run: pipx install fonttools==4.66.1
     - name: Package
       run: tools/package-linux-appimage.sh ${VERSION} artifacts
     - name: Upload

@@ -1,7 +1,8 @@
 #!/bin/bash
 # Builds OpenNSPW-<version>-linux-x64.AppImage in the output directory: the desktop app for x64 Linux, self-contained in
-# a single-file executable, as release.yml publishes it. Runs on x64 Linux only, with ImageMagick for the icon, and
-# downloads appimagetool and the AppImage runtime, checked against their SHA-256.
+# a single-file executable, as release.yml publishes it. Runs on x64 Linux only, with ImageMagick for the icon and
+# fontTools for the fonts (subset-fonts.sh), and downloads appimagetool and the AppImage runtime, checked against their
+# SHA-256.
 #
 # tools/package-linux-appimage.sh <version> <output directory>
 #
@@ -26,6 +27,7 @@ download() {
 dotnet publish "$root/OpenNSPW/OpenNspw.Desktop" --configuration Release --runtime linux-x64 --self-contained \
 	/p:PublishSingleFile=true /p:DebugType=embedded /p:GenerateDocumentationFile=false /p:Version="$version" \
 	--output "$appdir/usr/bin"
+"$root/tools/subset-fonts.sh" "$appdir/usr/bin/Fonts"
 
 # The icon from the window's (Icon.bmp, the original's 32x32 icon).
 convert "$root/OpenNSPW/OpenNspw.Desktop/Icon.bmp" "$appdir/OpenNSPW.png"
