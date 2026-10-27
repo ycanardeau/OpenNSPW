@@ -83,7 +83,9 @@ The facilities set a fixed direction to choose their column of row 11:
 | 10, 11 | Carrier, light carrier: the hangar |
 
 ## The planes
-Identified from the sprites alone: the manuals name only the kinds. The names of medium and low confidence are still to be confirmed.
+Identified from the sprites: the game, its manuals, its source and the author's site name only the kinds. The B-24 is confirmed by the author's own NSPW manga, in which the bomber introduces itself as the B-24 that players take for a B-29 ([奈良鹿製作所, まんが](http://narashikabranch.web.fc2.com/manga.htm)). The other names of medium and low confidence are still to be confirmed.
+
+The attacker is both the torpedo bomber and the dive bomber: the author merged them on purpose, to keep the game easy for beginners ([his post on X of 17 October 2017](https://x.com/tokumizman/status/920107084514856960), archived in the [Wayback Machine's capture of its thread](https://web.archive.org/web/20220209140925/https://twitter.com/tokumizman/status/909772884897292290)). It is named after the torpedo bomber that it looks like.
 
 | Side | Role | Model | Confidence | Why |
 | --- | --- | --- | --- | --- |
@@ -94,7 +96,7 @@ Identified from the sprites alone: the manuals name only the kinds. The names of
 | Japan | Land-based fighter, 1.22 | J7W Shinden | high | canard, pusher, swept rear wing |
 | United States | Carrier fighter | F6F Hellcat (or F4U Corsair) | low | dark blue, single engine; the gull wing does not show from above |
 | United States | Attacker | TBF Avenger (or SBD Dauntless) | low | khaki, single engine, a long canopy |
-| United States | Strategic bomber | B-24 Liberator | medium | four engines, twin fins |
+| United States | Strategic bomber | B-24 Liberator | confirmed | the author's manga; four engines, twin fins |
 | United States | Land-based fighter | P-38 Lightning | high | twin booms |
 
 ## The files
