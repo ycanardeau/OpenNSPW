@@ -2,6 +2,7 @@ using System.Net;
 using Aigamo.MatchGenerator;
 using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Messages.Core;
+using Aigamo.Otsuki.Messages.Enumeration;
 using Aigamo.Otsuki.Messages.Reliable;
 using Aigamo.Otsuki.Transport;
 using Aigamo.Results;
@@ -20,6 +21,17 @@ internal abstract record ReliableEndpointMessage
 
 	public sealed record ConnectionTerminated(Connection Connection) : ReliableEndpointMessage;
 
+	/// <summary>
+	/// Sends a datagram outside any connection, such as a host enumeration response.
+	/// </summary>
+	public sealed record SendDatagram(IPEndPoint RemoteEndPoint, byte[] Datagram)
+		: ReliableEndpointMessage;
+
+	/// <summary>
+	/// Sets the signing mode that new inbound connections offer, from the session's flags.
+	/// </summary>
+	public sealed record SetSigning(PacketSigning Signing) : ReliableEndpointMessage;
+
 	public sealed record ShutDown : ReliableEndpointMessage;
 }
 
@@ -35,6 +47,7 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 	private readonly IConnectionObserver _observer;
 	private readonly Dictionary<IPEndPoint, Connection> _connections = [];
 	private bool _shutDown;
+	private PacketSigning _signing;
 
 	public IPEndPoint LocalEndPoint => _transport.LocalEndPoint;
 
@@ -60,6 +73,7 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 		new(
 			remoteEndPoint,
 			isOutbound,
+			_signing,
 			_transport,
 			_timeProvider,
 			_profile,
@@ -81,24 +95,36 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 
 	private Unit HandleDatagram(ReliableEndpointMessage.DatagramReceived message)
 	{
+		if (_shutDown)
+			return Unit.Default;
+
+		// Host enumeration travels outside connections, with a first byte of 0 ([MC-DPLHP] section 2.2).
+		if (EnumerationMessageSerializer.IsEnumerationMessage(message.Datagram))
+		{
+			if (
+				EnumerationMessageSerializer.Default.Deserialize(message.Datagram)
+				is EnumerationMessage.Query query
+			)
+				_observer.OnEnumQuery(message.RemoteEndPoint, query);
+			return Unit.Default;
+		}
+
+		if (_connections.TryGetValue(message.RemoteEndPoint, out var connection))
+		{
+			connection.Post(new ConnectionMessage.DatagramReceived(message.Datagram));
+			return Unit.Default;
+		}
+
+		// Only CONNECT can open a connection; everything else from unknown sources is discarded.
 		if (
-			_shutDown
-			|| ReliableMessageSerializer.Default.Deserialize(message.Datagram)
-				is not { } reliableMessage
+			ReliableMessageSerializer.Default.Deserialize(message.Datagram)
+			is not ReliableMessage.Connect connect
 		)
 			return Unit.Default;
 
-		if (!_connections.TryGetValue(message.RemoteEndPoint, out var connection))
-		{
-			// Only CONNECT can open a connection; everything else from unknown sources is discarded.
-			if (reliableMessage is not ReliableMessage.Connect)
-				return Unit.Default;
-
-			connection = CreateConnection(message.RemoteEndPoint, isOutbound: false);
-			_connections.Add(message.RemoteEndPoint, connection);
-		}
-
-		connection.Post(new ConnectionMessage.DatagramArrived(reliableMessage));
+		connection = CreateConnection(message.RemoteEndPoint, isOutbound: false);
+		_connections.Add(message.RemoteEndPoint, connection);
+		connection.Post(new ConnectionMessage.DatagramArrived(connect));
 		return Unit.Default;
 	}
 
@@ -144,6 +170,17 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 			DatagramReceived: HandleDatagram,
 			RegisterConnection: m => HandleRegister(m.Connection),
 			ConnectionTerminated: m => HandleTerminated(m.Connection),
+			SendDatagram: m =>
+			{
+				if (!_shutDown)
+					_transport.Send(m.RemoteEndPoint, m.Datagram);
+				return Unit.Default;
+			},
+			SetSigning: m =>
+			{
+				_signing = m.Signing;
+				return Unit.Default;
+			},
 			ShutDown: _ => HandleShutDown()
 		);
 }

@@ -103,4 +103,54 @@ public enum PacketType
 	/// Informs peers that the session-hosting responsibilities have successfully migrated from the departing old host.
 	/// </summary>
 	HostMigrateComplete = 0x000000CE,
+
+	/// <summary>
+	/// Informs the host that a peer is requesting that a new group be created for the game session.
+	/// </summary>
+	RequestCreateGroup = 0x000000D2,
+
+	/// <summary>
+	/// Informs the host that a peer is requesting to add a player to an existing group.
+	/// </summary>
+	RequestAddPlayerToGroup = 0x000000D3,
+
+	/// <summary>
+	/// Informs the host that a peer is requesting that a player be removed from an existing group.
+	/// </summary>
+	RequestDeletePlayerFromGroup = 0x000000D4,
+
+	/// <summary>
+	/// Informs the host that a peer is requesting that a group be deleted from the game session.
+	/// </summary>
+	RequestDestroyGroup = 0x000000D5,
+
+	/// <summary>
+	/// Update info request from a peer/client to the host/server.
+	/// </summary>
+	RequestUpdateInfo = 0x000000D6,
+
+	/// <summary>
+	/// Informs the peers that the group has been created.
+	/// </summary>
+	CreateGroup = 0x000000D7,
+
+	/// <summary>
+	/// Informs the peers that the host has removed a group from the game session.
+	/// </summary>
+	DestroyGroup = 0x000000D8,
+
+	/// <summary>
+	/// Informs the peers that the host has added a player to a group.
+	/// </summary>
+	AddPlayerToGroup = 0x000000D9,
+
+	/// <summary>
+	/// Informs the peers that the host has removed a player from a group.
+	/// </summary>
+	DeletePlayerFromGroup = 0x000000DA,
+
+	/// <summary>
+	/// Update info response from a host/server to a peer/client.
+	/// </summary>
+	UpdateInfo = 0x000000DB,
 }

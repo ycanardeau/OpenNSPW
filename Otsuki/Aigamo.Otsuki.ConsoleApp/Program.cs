@@ -16,6 +16,8 @@ internal static class Program
 	{
 		GuidApplication = new("0b0f7a52-5f3d-4c42-9a51-7d2e0c3f6a11"),
 		SessionName = "Otsuki chat",
+		// The chat goes on when the host leaves: the peer that joined first takes over.
+		Flags = SessionFlags.NoDpnServer | SessionFlags.MigrateHost,
 	};
 
 	private const SendFlags ChatSendFlags = SendFlags.Guaranteed | SendFlags.NoComplete;
@@ -41,6 +43,7 @@ internal static class Program
 			* Type a message and press Enter to send it to everyone.
 			*   /w NAME MESSAGE  whisper to one player
 			*   /players         list the players
+			*   /nick NAME       change your name
 			*   /quit            leave the session
 			"""
 		);
@@ -112,6 +115,27 @@ internal static class Program
 		return false;
 	}
 
+	private static bool HostMigrated(
+		PeerEvent.HostMigrated migrated,
+		Dictionary<Dpnid, string> names
+	)
+	{
+		Print($"* {names.GetValueOrDefault(migrated.NewHost, "Someone")} is now the host");
+		return true;
+	}
+
+	private static bool PeerInfoUpdated(
+		PeerEvent.PeerInfoUpdated updated,
+		Dictionary<Dpnid, string> names
+	)
+	{
+		var player = updated.Player;
+		if (names.TryGetValue(player.Id, out var name) && name != player.Name)
+			Print($"* {name} is now known as {player.Name}");
+		names[player.Id] = player.Name;
+		return true;
+	}
+
 	/// <summary>
 	/// Prints a peer event. Returns <see langword="false"/> once the session is over.
 	/// Only ever called from one thread at a time, so <paramref name="names"/> needs no lock.
@@ -128,7 +152,14 @@ internal static class Program
 			ConnectCompleted: completed => ConnectCompleted(completed, ready),
 			// Chat messages are sent with SendFlags.NoComplete, so there are none.
 			SendCompleted: _ => true,
-			SessionTerminated: SessionTerminated
+			SessionTerminated: SessionTerminated,
+			PeerInfoUpdated: updated => PeerInfoUpdated(updated, names),
+			HostMigrated: migrated => HostMigrated(migrated, names),
+			// The chat has no groups.
+			GroupCreated: _ => true,
+			GroupDestroyed: _ => true,
+			PlayerAddedToGroup: _ => true,
+			PlayerRemovedFromGroup: _ => true
 		);
 
 	/// <summary>
@@ -195,6 +226,18 @@ internal static class Program
 		peer.SendTo(player.Id, Encoding.UTF8.GetBytes($"(whisper) {parts[1]}"), ChatSendFlags);
 	}
 
+	private static void ChangeName(Peer peer, string name)
+	{
+		if (name.Length == 0)
+		{
+			Print("* Usage: /nick NAME");
+			return;
+		}
+
+		// Everyone, us included, sees the change as PeerEvent.PeerInfoUpdated.
+		_ = peer.SetPeerInfo(name);
+	}
+
 	/// <summary>
 	/// Runs one line of input. Returns <see langword="false"/> to leave.
 	/// </summary>
@@ -212,6 +255,10 @@ internal static class Program
 
 			case "/w":
 				Whisper(peer, command.Length > 1 ? command[1] : string.Empty);
+				return true;
+
+			case "/nick":
+				ChangeName(peer, command.Length > 1 ? command[1].Trim() : string.Empty);
 				return true;
 
 			case "/help":

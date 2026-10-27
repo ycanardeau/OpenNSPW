@@ -679,6 +679,170 @@
             The DN_HOST_MIGRATE_COMPLETE packet informs <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/8195991d-b7e3-4435-9e9f-2c3ab57eda8c#gt_e5d0d91c-9a39-493f-ab1b-f36ce840e6a2">peers</see> that the session-hosting responsibilities have successfully migrated from the departing old <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/8195991d-b7e3-4435-9e9f-2c3ab57eda8c#gt_96048ee4-02d7-484e-a53b-3b8ed355251d">host</see>.
             </summary>
         </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestCreateGroup">
+            <summary>
+            The DN_REQ_CREATE_GROUP packet informs the host that a peer is requesting that a new group be created for the game session.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestCreateGroup.#ctor">
+            <summary>
+            The DN_REQ_CREATE_GROUP packet informs the host that a peer is requesting that a new group be created for the game session.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestCreateGroup.PacketContext">
+            <summary>
+            Identifies the operation. DN_CREATE_GROUP returns it unchanged.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestCreateGroup.InfoFlags">
+            <summary>
+            Which of <see cref="P:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestCreateGroup.Name"/> and <see cref="P:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestCreateGroup.Data"/> are included.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.CreateGroup">
+            <summary>
+            The DN_CREATE_GROUP packet informs all of the connected peers that the new group has been successfully created for the game session.
+            </summary>
+            <remarks>
+            [MC-DPL8CS] lists only <b>dpnidRequesting</b> and <b>dwPacketContext</b>, which do not tell the peers what the group is. The
+            group's DN_NAMETABLE_ENTRY_INFO follows them, with its name and data, as in the name table of DN_SEND_CONNECT_INFO.
+            </remarks>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.CreateGroup.#ctor">
+            <summary>
+            The DN_CREATE_GROUP packet informs all of the connected peers that the new group has been successfully created for the game session.
+            </summary>
+            <remarks>
+            [MC-DPL8CS] lists only <b>dpnidRequesting</b> and <b>dwPacketContext</b>, which do not tell the peers what the group is. The
+            group's DN_NAMETABLE_ENTRY_INFO follows them, with its name and data, as in the name table of DN_SEND_CONNECT_INFO.
+            </remarks>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.CreateGroup.DpnidRequesting">
+            <summary>
+            The peer that requested the group, or the host itself.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.CreateGroup.PacketContext">
+            <summary>
+            The <see cref="P:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestCreateGroup.PacketContext"/> of the request.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.CreateGroup.Group">
+            <summary>
+            The group's name table entry, which carries its DPNID, flags and name table version.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestAddPlayerToGroup">
+            <summary>
+            The DN_REQ_ADD_PLAYER_TO_GROUP packet informs the host that a peer is requesting to add a player to an existing group in the game session.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestAddPlayerToGroup.#ctor">
+            <summary>
+            The DN_REQ_ADD_PLAYER_TO_GROUP packet informs the host that a peer is requesting to add a player to an existing group in the game session.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.AddPlayerToGroup">
+            <summary>
+            The DN_ADD_PLAYER_TO_GROUP packet informs the peers that the host has added a player in the game session to a group.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.AddPlayerToGroup.#ctor">
+            <summary>
+            The DN_ADD_PLAYER_TO_GROUP packet informs the peers that the host has added a player in the game session to a group.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.AddPlayerToGroup.Version">
+            <summary>
+            The name table version.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestDeletePlayerFromGroup">
+            <summary>
+            The DN_REQ_DELETE_PLAYER_FROM_GROUP packet informs the host that a peer is requesting that a player be removed from an existing group.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestDeletePlayerFromGroup.#ctor">
+            <summary>
+            The DN_REQ_DELETE_PLAYER_FROM_GROUP packet informs the host that a peer is requesting that a player be removed from an existing group.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.DeletePlayerFromGroup">
+            <summary>
+            The DN_DELETE_PLAYER_FROM_GROUP packet informs the peers that the host has removed a player from a group.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.DeletePlayerFromGroup.#ctor">
+            <summary>
+            The DN_DELETE_PLAYER_FROM_GROUP packet informs the peers that the host has removed a player from a group.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestDestroyGroup">
+            <summary>
+            The DN_REQ_DESTROY_GROUP packet informs the host that a peer is requesting that a group be deleted from the game session.
+            </summary>
+            <remarks>
+            [MC-DPL8CS] gives this packet a <b>dpnidPlayer</b> field after <b>dpnidGroup</b>, which plays no part in destroying a group.
+            </remarks>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestDestroyGroup.#ctor">
+            <summary>
+            The DN_REQ_DESTROY_GROUP packet informs the host that a peer is requesting that a group be deleted from the game session.
+            </summary>
+            <remarks>
+            [MC-DPL8CS] gives this packet a <b>dpnidPlayer</b> field after <b>dpnidGroup</b>, which plays no part in destroying a group.
+            </remarks>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.DestroyGroup">
+            <summary>
+            The DN_DESTROY_GROUP packet informs the peers that the host has removed a group from the game session.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.DestroyGroup.#ctor">
+            <summary>
+            The DN_DESTROY_GROUP packet informs the peers that the host has removed a group from the game session.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestUpdateInfo">
+            <summary>
+            The DN_REQ_UPDATE_INFO packet is sent from a peer/client to the host/server to update information about a specified peer/client.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestUpdateInfo.#ctor">
+            <summary>
+            The DN_REQ_UPDATE_INFO packet is sent from a peer/client to the host/server to update information about a specified peer/client.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestUpdateInfo.PacketContext">
+            <summary>
+            Identifies the operation. DN_UPDATE_INFO returns it unchanged.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.RequestUpdateInfo.Dpnid">
+            <summary>
+            The player to update.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.CoreMessage.UpdateInfo">
+            <summary>
+            The DN_UPDATE_INFO packet is the host/server's response to DN_REQ_UPDATE_INFO, sent to all players with the updated information.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.CoreMessage.UpdateInfo.#ctor">
+            <summary>
+            The DN_UPDATE_INFO packet is the host/server's response to DN_REQ_UPDATE_INFO, sent to all players with the updated information.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.UpdateInfo.Dpnid">
+            <summary>
+            The player that was updated.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.CoreMessage.UpdateInfo.DpnidRequesting">
+            <summary>
+            The player that requested the update.
+            </summary>
+        </member>
         <member name="T:Aigamo.Otsuki.Messages.Core.DestroyPlayerFlags">
             <summary>
             Flag that controls how this method is processed.
@@ -721,6 +885,36 @@
             <remarks>
             The spec lists both 0x00000007 and 0x00000008 as DirectX 9.0.
             </remarks>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.GroupFlags.AutoDestruct">
+            <summary>
+            DPNGROUP_AUTODESTRUCT: the group is deleted once all players have been removed.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.INameTableOperation">
+            <summary>
+            A core message that changes the name table, which a new host collects with DN_REQ_NAMETABLE_OP after a migration.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Core.INameTableOperation.Version">
+            <summary>
+            The name table version that the operation brings the table to.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.InfoFlags">
+            <summary>
+            Which of a player's or group's fields a message carries.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.InfoFlags.Name">
+            <summary>
+            DPNINFO_NAME: the name is included.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.InfoFlags.Data">
+            <summary>
+            DPNINFO_DATA: the data is included.
+            </summary>
         </member>
         <member name="F:Aigamo.Otsuki.Messages.Core.NameTableEntryFlags.Local">
             <summary>
@@ -887,6 +1081,39 @@
             Not used.
             </summary>
         </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.FixedLayoutMessageSerializer`1">
+            <summary>
+            The common shape of the core messages that groups and info updates use: the packet type, fixed 32-bit fields, then
+            variable fields located by offsets from the end of <b>dwPacketType</b>.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.FixedLayoutMessageSerializer`1.Read(System.IO.BinaryReader,System.Byte[])">
+            <summary>
+            Reads the fields after <b>dwPacketType</b>. <paramref name="data"/> is the whole message, for variable fields.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.FixedLayoutMessageSerializer`1.Write(System.IO.BinaryWriter,`0)">
+            <summary>
+            Writes the fields after <b>dwPacketType</b>.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Core.VariableFields">
+            <summary>
+            Writes data and a name after a fixed part of <paramref name="fixedSize"/> bytes after <b>dwPacketType</b>, data
+            first, and gives their offsets, 0 for an empty field.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Core.VariableFields.#ctor(System.Int32,System.Byte[],System.Byte[])">
+            <summary>
+            Writes data and a name after a fixed part of <paramref name="fixedSize"/> bytes after <b>dwPacketType</b>, data
+            first, and gives their offsets, 0 for an empty field.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.CreateGroupMessageSerializer.FixedSize">
+            <summary>
+            <b>dpnidRequesting</b>, <b>dwPacketContext</b> and the 48 bytes of DN_NAMETABLE_ENTRY_INFO.
+            </summary>
+        </member>
         <member name="F:Aigamo.Otsuki.Messages.Core.ObjectType.Client">
             <summary>
             Connecting application is a client.
@@ -997,6 +1224,56 @@
             Informs peers that the session-hosting responsibilities have successfully migrated from the departing old host.
             </summary>
         </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.RequestCreateGroup">
+            <summary>
+            Informs the host that a peer is requesting that a new group be created for the game session.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.RequestAddPlayerToGroup">
+            <summary>
+            Informs the host that a peer is requesting to add a player to an existing group.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.RequestDeletePlayerFromGroup">
+            <summary>
+            Informs the host that a peer is requesting that a player be removed from an existing group.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.RequestDestroyGroup">
+            <summary>
+            Informs the host that a peer is requesting that a group be deleted from the game session.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.RequestUpdateInfo">
+            <summary>
+            Update info request from a peer/client to the host/server.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.CreateGroup">
+            <summary>
+            Informs the peers that the group has been created.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.DestroyGroup">
+            <summary>
+            Informs the peers that the host has removed a group from the game session.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.AddPlayerToGroup">
+            <summary>
+            Informs the peers that the host has added a player to a group.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.DeletePlayerFromGroup">
+            <summary>
+            Informs the peers that the host has removed a player from a group.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Core.PacketType.UpdateInfo">
+            <summary>
+            Update info response from a host/server to a peer/client.
+            </summary>
+        </member>
         <member name="T:Aigamo.Otsuki.Messages.Core.ResultCode">
             <summary>
             Result codes that can be returned via events.
@@ -1085,6 +1362,93 @@
         <member name="F:Aigamo.Otsuki.Messages.Core.SessionFlags.FullSigned">
             <summary>
             Full signing turned on for the game session. Passed to protocol layer. Cannot be used with <b>DPNSESSION_FAST_SIGNED</b>. This value is available only in DirectPlay 9.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage">
+            <summary>
+            The messages of host and port enumeration ([MC-DPLHP]). They travel as plain datagrams, outside any connection, and
+            are told apart from the frames of [MC-DPL8R] by a first byte of 0.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Query">
+            <summary>
+            Queries for hosts of a game session ([MC-DPLHP] section 2.2.1).
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Query.EnumPayload">
+            <summary>
+            A value chosen by the sender and echoed in the response, to match responses to queries.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Query.GuidApplication">
+            <summary>
+            Only hosts of this application should respond. <see langword="null"/> asks every host.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Query.ApplicationPayload">
+            <summary>
+            Application-specific data for the host to decide whether and how to respond.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Response">
+            <summary>
+            A host's answer to a <see cref="T:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Query"/> ([MC-DPLHP] section 2.2.2).
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Response.EnumPayload">
+            <summary>
+            The <see cref="P:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Query.EnumPayload"/> of the query this answers.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Response.Flags">
+            <summary>
+            Never has <see cref="F:Aigamo.Otsuki.Messages.Core.SessionFlags.NoEnumerations"/>.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Response.CurrentPlayers">
+            <summary>
+            The number of players when the response was sent.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Response.ApplicationReservedData">
+            <summary>
+            Game-specific data that changes infrequently, such as data set when the session was created.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Response.ApplicationData">
+            <summary>
+            Game-specific data that changes frequently, such as the current state of the game.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessageSerializer">
+            <summary>
+            Reads and writes <see cref="T:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage"/>s ([MC-DPLHP] section 2.2).
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessageSerializer.ApplicationDescSize">
+            <summary>
+            The size of the application description, from <b>ApplicationDescSize</b> through <b>ApplicationGUID</b>.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessageSerializer.OffsetBase">
+            <summary>
+            Offsets in a response count from the end of <b>EnumPayload</b>, the start of <b>ReplyOffset</b>.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessageSerializer.FixedResponseSize">
+            <summary>
+            The fixed part of a response, from <b>ReplyOffset</b> through <b>ApplicationGUID</b>.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessageSerializer.IsEnumerationMessage(System.Byte[])">
+            <summary>
+            Whether a datagram is an enumeration message rather than a frame of [MC-DPL8R], whose first byte is never 0.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Enumeration.EnumerationMessageSerializer.WriteResponse(Aigamo.Otsuki.Messages.Enumeration.EnumerationMessage.Response)">
+            <summary>
+            Writes the variable fields after the fixed part, in the order SessionName, ApplicationReservedData,
+            ApplicationData.
             </summary>
         </member>
         <member name="T:Aigamo.Otsuki.Messages.GuardedByAttribute">
@@ -1207,6 +1571,16 @@
             The size of each payload is an 11-bit value.
             </summary>
         </member>
+        <member name="P:Aigamo.Otsuki.Messages.Reliable.DataFrameMessageSerializer.Signed">
+            <summary>
+            Reads and writes the frames of a connection established with signing, which carry <b>ullSignature</b>.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Reliable.HardDisconnectMessageSerializer.Signed">
+            <summary>
+            Reads and writes the frames of a connection established with signing, which carry <b>ullSignature</b>.
+            </summary>
+        </member>
         <member name="F:Aigamo.Otsuki.Messages.Reliable.PacketCommand.Data">
             <summary>
             frame contains user data
@@ -1290,6 +1664,57 @@
         <member name="F:Aigamo.Otsuki.Messages.Reliable.PacketControl.Send2">
             <summary>
             high 32 bits of the cancel-send mask are present
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Reliable.PacketSignature">
+            <summary>
+            The computations of packet signing ([MC-DPL8R] section 3.1.5.2.7). All 64-bit values are little-endian.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Reliable.PacketSignature.GetSignatureOffset(System.Byte[])">
+            <summary>
+            The offset of <b>ullSignature</b> in a frame of a signed connection, or <see langword="null"/> for frames that
+            carry none (CONNECT, CONNECTED and CONNECTED_SIGNED) or that are too short.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Reliable.PacketSignature.WriteSignature(System.Byte[],System.Int32,System.UInt64)">
+            <summary>
+            Writes <paramref name="signature"/> into the <b>ullSignature</b> field of a serialized frame.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Reliable.PacketSignature.ComputeFullSignature(System.Byte[],System.Int32,System.UInt64)">
+            <summary>
+            The full signature of a frame: the first 64 bits of a SHA-1 digest of the whole frame, with the
+            <b>ullSignature</b> bytes set to 0, followed by the secret.
+            </summary>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Reliable.PacketSignature.ComputeModifier(System.Byte[])">
+            <summary>
+            The secret modifier taken from a reliable payload.
+            </summary>
+            <remarks>
+            [MC-DPL8R] only says that the modifier is "derived from" the payload. This takes the first 64 bits of a
+            SHA-1 digest of the payload, which is not confirmed against real DirectPlay.
+            </remarks>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Reliable.PacketSignature.ComputeNextSecret(System.UInt64,System.UInt64)">
+            <summary>
+            The next secret: the first 64 bits of a SHA-1 digest of the previous secret followed by the modifier.
+            </summary>
+        </member>
+        <member name="T:Aigamo.Otsuki.Messages.Reliable.PacketSigning">
+            <summary>
+            The signing mode of a connection, carried in the <b>dwSigningOpts</b> field of CONNECTED_SIGNED.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Reliable.PacketSigning.Fast">
+            <summary>
+            PACKET_SIGNING_FAST: every frame carries its sender's secret as its signature.
+            </summary>
+        </member>
+        <member name="F:Aigamo.Otsuki.Messages.Reliable.PacketSigning.Full">
+            <summary>
+            PACKET_SIGNING_FULL: every frame carries a digest of its contents and its sender's secret.
             </summary>
         </member>
         <member name="P:Aigamo.Otsuki.Messages.Reliable.ReliableMessage.Command">
@@ -1455,6 +1880,77 @@
             The sender's computer system <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/a4ef7612-93d2-4d94-a96c-dbe6a1890ed6#gt_2efd2022-ffd1-4be4-9ff3-aa6b1515948f">tick count</see>, in millisecond units, specified in little-endian byte order.
             </summary>
         </member>
+        <member name="T:Aigamo.Otsuki.Messages.Reliable.ReliableMessage.ConnectedSigned">
+            <summary>
+            The CONNECTED_SIGNED packet is used to accept a connection request or complete a connection handshake when signing is enabled.
+            </summary>
+            <remarks>
+            <b>bCommand</b>: The <b>PACKET_COMMAND_CFRAME</b> flag MUST be set. The <b>PACKET_COMMAND_POLL</b> flag MUST be set by a listener accepting a connection request and MUST NOT be set by a connector completing the connection handshake. All other bits MUST be set to zero and the packet MUST be ignored if they are not.
+            </remarks>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Reliable.ReliableMessage.ConnectedSigned.#ctor">
+            <summary>
+            The CONNECTED_SIGNED packet is used to accept a connection request or complete a connection handshake when signing is enabled.
+            </summary>
+            <remarks>
+            <b>bCommand</b>: The <b>PACKET_COMMAND_CFRAME</b> flag MUST be set. The <b>PACKET_COMMAND_POLL</b> flag MUST be set by a listener accepting a connection request and MUST NOT be set by a connector completing the connection handshake. All other bits MUST be set to zero and the packet MUST be ignored if they are not.
+            </remarks>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Reliable.ReliableMessage.ConnectedSigned.Opcode">
+            <summary>
+            An extended operation code. It MUST be set to FRAME_EXOPCODE_CONNECTED_SIGNED (0x03).
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Reliable.ReliableMessage.ConnectedSigned.MessageId">
+            <summary>
+            A message identifier. The initial value SHOULD be zero, and connectors SHOULD increment it when retrying. Listeners MAY always set it to zero.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Reliable.ReliableMessage.ConnectedSigned.ResponseId">
+            <summary>
+            A response identifier. It MUST be the <b>bMsgID</b> of the CONNECT or CONNECTED_SIGNED message to which this is a response.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Reliable.ReliableMessage.ConnectedSigned.ProtocolVersion">
+            <summary>
+            The version number of the sender's DirectPlay 8 Protocol. Signing requires minor version 0x0006.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Reliable.ReliableMessage.ConnectedSigned.SessionId">
+            <summary>
+            The session identifier. It MUST be the <b>dwSessID</b> of the CONNECT or CONNECTED_SIGNED message to which this is a response.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Reliable.ReliableMessage.ConnectedSigned.Timestamp">
+            <summary>
+            The sender's tick count, in milliseconds.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Reliable.ReliableMessage.ConnectedSigned.ConnectSignature">
+            <summary>
+            A cookie with which the listener validates the handshake without keeping state. Connectors MUST echo the value they received.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Reliable.ReliableMessage.ConnectedSigned.SenderSecret">
+            <summary>
+            The seed of the signatures from the connector to the listener. It MUST be 0 when sent by the listener and nonzero when sent by the connector.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Reliable.ReliableMessage.ConnectedSigned.ReceiverSecret">
+            <summary>
+            The seed of the signatures from the listener to the connector. It MUST be 0 when sent by the listener and nonzero when sent by the connector.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Reliable.ReliableMessage.ConnectedSigned.SigningOptions">
+            <summary>
+            The signing mode. Exactly one flag MUST be set.
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Reliable.ReliableMessage.ConnectedSigned.EchoTimestamp">
+            <summary>
+            0 when responding to a CONNECT, otherwise the <b>tTimestamp</b> of the CONNECTED_SIGNED message being answered.
+            </summary>
+        </member>
         <member name="T:Aigamo.Otsuki.Messages.Reliable.ReliableMessage.HardDisconnect">
             <summary>
             The HARD_DISCONNECT packet is used to quickly disconnect or <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/a4ef7612-93d2-4d94-a96c-dbe6a1890ed6#gt_6aa258ea-917f-461a-9c54-1b1a66791965">acknowledge</see> quick disconnection without waiting for remaining packets to be delivered.
@@ -1578,6 +2074,22 @@
             If the connection was established using signing, this MUST be the signature of the packet using the agreed-upon signing algorithm. The packet <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/a4ef7612-93d2-4d94-a96c-dbe6a1890ed6#gt_b62c00dd-75c2-47bf-ab93-bd8681b8fee4">sequence ID</see> to be used in the calculation is the value in <b>bNSeq</b>. This field MUST NOT be present if signing is not enabled for the connection.
             </summary>
         </member>
+        <member name="T:Aigamo.Otsuki.Messages.Reliable.ReliableMessageSerializer">
+            <remarks>
+            The frames of a connection established with signing carry a <b>ullSignature</b> field, so they are read and written
+            by <see cref="P:Aigamo.Otsuki.Messages.Reliable.ReliableMessageSerializer.Signed"/>; everything else uses <see cref="P:Aigamo.Otsuki.Messages.Reliable.ReliableMessageSerializer.Default"/>. The handshake frames (CONNECT, CONNECTED and
+            CONNECTED_SIGNED) never carry a signature and read the same either way.
+            </remarks>
+            <param name="signed">Whether DFRAMEs, SACKs and HARD_DISCONNECTs carry <b>ullSignature</b>.</param>
+        </member>
+        <member name="M:Aigamo.Otsuki.Messages.Reliable.ReliableMessageSerializer.#ctor(System.Boolean)">
+            <remarks>
+            The frames of a connection established with signing carry a <b>ullSignature</b> field, so they are read and written
+            by <see cref="P:Aigamo.Otsuki.Messages.Reliable.ReliableMessageSerializer.Signed"/>; everything else uses <see cref="P:Aigamo.Otsuki.Messages.Reliable.ReliableMessageSerializer.Default"/>. The handshake frames (CONNECT, CONNECTED and
+            CONNECTED_SIGNED) never carry a signature and read the same either way.
+            </remarks>
+            <param name="signed">Whether DFRAMEs, SACKs and HARD_DISCONNECTs carry <b>ullSignature</b>.</param>
+        </member>
         <member name="F:Aigamo.Otsuki.Messages.Reliable.SackFlags.Response">
             <summary>
             <b>bRetry</b> field is valid
@@ -1601,6 +2113,11 @@
         <member name="F:Aigamo.Otsuki.Messages.Reliable.SackFlags.Send2">
             <summary>
             high 32 bits of the send mask are present in <b>dwSendMask2</b>
+            </summary>
+        </member>
+        <member name="P:Aigamo.Otsuki.Messages.Reliable.SackMessageSerializer.Signed">
+            <summary>
+            Reads and writes the frames of a connection established with signing, which carry <b>ullSignature</b>.
             </summary>
         </member>
         <member name="T:Aigamo.Otsuki.Messages.ThreadSafeAttribute">

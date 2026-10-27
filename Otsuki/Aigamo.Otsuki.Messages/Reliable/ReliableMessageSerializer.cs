@@ -1,8 +1,28 @@
 namespace Aigamo.Otsuki.Messages.Reliable;
 
-public class ReliableMessageSerializer : IReliableMessageSerializer<ReliableMessage>
+/// <remarks>
+/// The frames of a connection established with signing carry a <b>ullSignature</b> field, so they are read and written
+/// by <see cref="Signed"/>; everything else uses <see cref="Default"/>. The handshake frames (CONNECT, CONNECTED and
+/// CONNECTED_SIGNED) never carry a signature and read the same either way.
+/// </remarks>
+/// <param name="signed">Whether DFRAMEs, SACKs and HARD_DISCONNECTs carry <b>ullSignature</b>.</param>
+public class ReliableMessageSerializer(bool signed = false)
+	: IReliableMessageSerializer<ReliableMessage>
 {
 	public static ReliableMessageSerializer Default { get; } = new();
+
+	public static ReliableMessageSerializer Signed { get; } = new(signed: true);
+
+	private readonly bool _signed = signed;
+
+	private DataFrameMessageSerializer DataFrameSerializer =>
+		_signed ? DataFrameMessageSerializer.Signed : DataFrameMessageSerializer.Default;
+
+	private SackMessageSerializer SackSerializer =>
+		_signed ? SackMessageSerializer.Signed : SackMessageSerializer.Default;
+
+	private HardDisconnectMessageSerializer HardDisconnectSerializer =>
+		_signed ? HardDisconnectMessageSerializer.Signed : HardDisconnectMessageSerializer.Default;
 
 	public virtual ReliableMessage? Deserialize(byte[] data)
 	{
@@ -15,7 +35,7 @@ public class ReliableMessageSerializer : IReliableMessageSerializer<ReliableMess
 			var command = (PacketCommand)data[0];
 
 			if (command.HasFlag(PacketCommand.Data))
-				return DataFrameMessageSerializer.Default.Deserialize(data);
+				return DataFrameSerializer.Deserialize(data);
 
 			if (command.HasFlag(PacketCommand.CommandFrame))
 			{
@@ -35,9 +55,10 @@ public class ReliableMessageSerializer : IReliableMessageSerializer<ReliableMess
 					ExtendedOpcode.Connected => ConnectedMessageSerializer.Default.Deserialize(
 						data
 					),
-					ExtendedOpcode.HardDisconnect =>
-						HardDisconnectMessageSerializer.Default.Deserialize(data),
-					ExtendedOpcode.Sack => SackMessageSerializer.Default.Deserialize(data),
+					ExtendedOpcode.ConnectedSigned =>
+						ConnectedSignedMessageSerializer.Default.Deserialize(data),
+					ExtendedOpcode.HardDisconnect => HardDisconnectSerializer.Deserialize(data),
+					ExtendedOpcode.Sack => SackSerializer.Deserialize(data),
 					_ => null,
 				};
 			}
@@ -53,10 +74,11 @@ public class ReliableMessageSerializer : IReliableMessageSerializer<ReliableMess
 
 	public virtual byte[] Serialize(ReliableMessage message) =>
 		message.Match(
-			DataFrame: static m => DataFrameMessageSerializer.Default.Serialize(m),
+			DataFrame: m => DataFrameSerializer.Serialize(m),
 			Connect: static m => ConnectMessageSerializer.Default.Serialize(m),
 			Connected: static m => ConnectedMessageSerializer.Default.Serialize(m),
-			HardDisconnect: static m => HardDisconnectMessageSerializer.Default.Serialize(m),
-			Sack: static m => SackMessageSerializer.Default.Serialize(m)
+			ConnectedSigned: static m => ConnectedSignedMessageSerializer.Default.Serialize(m),
+			HardDisconnect: m => HardDisconnectSerializer.Serialize(m),
+			Sack: m => SackSerializer.Serialize(m)
 		);
 }

@@ -2,16 +2,20 @@ using System.Collections.Immutable;
 
 namespace Aigamo.Otsuki.Messages.Reliable;
 
-internal class DataFrameMessageSerializer : IReliableMessageSerializer<ReliableMessage.DataFrame>
+internal class DataFrameMessageSerializer(bool signed = false)
+	: IReliableMessageSerializer<ReliableMessage.DataFrame>
 {
 	public static DataFrameMessageSerializer Default { get; } = new();
 
+	/// <summary>
+	/// Reads and writes the frames of a connection established with signing, which carry <b>ullSignature</b>.
+	/// </summary>
+	public static DataFrameMessageSerializer Signed { get; } = new(signed: true);
+
+	private readonly bool _signed = signed;
+
 	public virtual ReliableMessage.DataFrame? Read(BinaryReader reader)
 	{
-		var enableSigning =
-			false /* TODO */
-		;
-
 		var command = (PacketCommand)reader.ReadByte();
 		var control = (PacketControl)reader.ReadByte();
 		var sequenceId = new SequenceId(reader.ReadByte());
@@ -20,7 +24,7 @@ internal class DataFrameMessageSerializer : IReliableMessageSerializer<ReliableM
 		var sackMask2 = control.HasFlag(PacketControl.Sack2) ? reader.ReadUInt32() : 0;
 		var sendMask1 = control.HasFlag(PacketControl.Send1) ? reader.ReadUInt32() : 0;
 		var sendMask2 = control.HasFlag(PacketControl.Send2) ? reader.ReadUInt32() : 0;
-		var signature = enableSigning ? reader.ReadInt64() : 0;
+		var signature = _signed ? reader.ReadInt64() : 0;
 		var sessionId = control.HasFlag(PacketControl.KeepAliveOrCorrelate)
 			? new SessionId(reader.ReadInt32())
 			: SessionId.Empty;
@@ -54,10 +58,6 @@ internal class DataFrameMessageSerializer : IReliableMessageSerializer<ReliableM
 
 	public virtual void Write(BinaryWriter writer, ReliableMessage.DataFrame message)
 	{
-		var enableSigning =
-			false /* TODO */
-		;
-
 		writer.Write((byte)message.Command);
 		writer.Write((byte)message.Control);
 		writer.Write(message.SequenceId.Value);
@@ -75,7 +75,7 @@ internal class DataFrameMessageSerializer : IReliableMessageSerializer<ReliableM
 		if (message.Send2)
 			writer.Write(message.SendMask2);
 
-		if (enableSigning)
+		if (_signed)
 			writer.Write(message.Signature);
 
 		if (message.KeepAliveOrCorrelate)

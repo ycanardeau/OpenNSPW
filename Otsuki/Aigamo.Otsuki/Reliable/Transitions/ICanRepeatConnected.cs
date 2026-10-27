@@ -18,7 +18,7 @@ internal interface ICanRepeatConnected
 			return Current;
 
 		var handshake = Handshake with { RemoteMessageId = message.MessageId };
-		connection.Transmit(handshake.CreateConnected(poll: true, connection.Timestamp));
+		connection.Transmit(handshake.CreateListenerResponse(connection.Timestamp));
 		return new ConnectionState.ConnectReceived(handshake);
 	}
 }

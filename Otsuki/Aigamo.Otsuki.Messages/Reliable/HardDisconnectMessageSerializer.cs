@@ -1,16 +1,19 @@
 namespace Aigamo.Otsuki.Messages.Reliable;
 
-internal class HardDisconnectMessageSerializer
+internal class HardDisconnectMessageSerializer(bool signed = false)
 	: IReliableMessageSerializer<ReliableMessage.HardDisconnect>
 {
 	public static HardDisconnectMessageSerializer Default { get; } = new();
 
+	/// <summary>
+	/// Reads and writes the frames of a connection established with signing, which carry <b>ullSignature</b>.
+	/// </summary>
+	public static HardDisconnectMessageSerializer Signed { get; } = new(signed: true);
+
+	private readonly bool _signed = signed;
+
 	public virtual ReliableMessage.HardDisconnect? Read(BinaryReader reader)
 	{
-		var enableSigning =
-			false /* TODO */
-		;
-
 		var command = (PacketCommand)reader.ReadByte();
 
 		var opcode = (ExtendedOpcode)reader.ReadByte();
@@ -22,7 +25,7 @@ internal class HardDisconnectMessageSerializer
 		var protocolVersion = reader.ReadInt32();
 		var sessionId = new SessionId(reader.ReadInt32());
 		var timestamp = reader.ReadInt32();
-		var signature = enableSigning ? reader.ReadInt64() : 0;
+		var signature = _signed ? reader.ReadInt64() : 0;
 
 		return new()
 		{
@@ -38,10 +41,6 @@ internal class HardDisconnectMessageSerializer
 
 	public virtual void Write(BinaryWriter writer, ReliableMessage.HardDisconnect message)
 	{
-		var enableSigning =
-			false /* TODO */
-		;
-
 		writer.Write((byte)message.Command);
 		writer.Write((byte)message.Opcode);
 		writer.Write(message.MessageId);
@@ -50,7 +49,7 @@ internal class HardDisconnectMessageSerializer
 		writer.Write(message.SessionId.Value);
 		writer.Write(message.Timestamp);
 
-		if (enableSigning)
+		if (_signed)
 			writer.Write(message.Signature);
 	}
 

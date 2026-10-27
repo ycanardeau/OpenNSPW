@@ -27,11 +27,16 @@ internal interface ICanReceiveConnectInfo
 			SessionName = message.SessionName,
 			ApplicationReservedData = [.. message.ApplicationReservedData],
 		};
+		// Peers that join later connect to us, and must sign as the session does.
+		session.SetSigning(message.Flags);
 		session.LocalPlayer = message.Dpnid;
 		session.Version = message.Version;
 
 		var awaitingPlayers = ImmutableHashSet.CreateBuilder<Dpnid>();
-		foreach (var entry in message.NameTableEntries)
+		foreach (var entry in message.NameTableEntries.Where(e => e.Group && !e.AllPlayersGroup))
+			session.AddGroup(Group.FromNameTableEntry(entry), announce: false);
+
+		foreach (var entry in message.NameTableEntries.Where(e => !e.Group && !e.AllPlayersGroup))
 		{
 			var isLocal = entry.Dpnid == message.Dpnid;
 			var player = new Player
@@ -41,7 +46,11 @@ internal interface ICanReceiveConnectInfo
 				Data = isLocal ? session.LocalData : [.. entry.Data],
 				Url = new DirectPlayUrl(entry.Url),
 				IsLocal = isLocal,
-				IsHost = entry.Host,
+				IsHost = entry.Host || entry.Server,
+				Role =
+					entry.Server ? NameTableEntryFlags.Server
+					: entry.Client ? NameTableEntryFlags.Client
+					: NameTableEntryFlags.Peer,
 				Version = entry.Version,
 				DnetVersion = entry.DnetVersion,
 			};
@@ -53,19 +62,23 @@ internal interface ICanReceiveConnectInfo
 				awaitingPlayers.Add(player.Id);
 		}
 
+		foreach (var membership in message.NameTableMemberships)
+			session.AddMember(membership.DpnidGroup, membership.DpnidPlayer, membership.Version);
+
 		if (
 			!session.Players.ContainsKey(session.LocalPlayer)
 			|| !session.PlayersByConnection.ContainsKey(HostConnection)
 		)
 			return session.FailConnect(ResultCode.InvalidHostAddress, []);
 
+		// A client is in once it acknowledges; it connects to no one else ([MC-DPL8CS] section 3.1).
 		SessionActor.SendCore(HostConnection, new CoreMessage.AckConnectInfo());
 		return session.CompleteJoin(
 			new SessionState.Joining(
 				HostConnection,
 				Reply: [.. message.Reply],
-				InstructConnectReceived: false,
-				AwaitingPlayers: awaitingPlayers.ToImmutable()
+				InstructConnectReceived: session.IsClientServer,
+				AwaitingPlayers: session.IsClientServer ? [] : awaitingPlayers.ToImmutable()
 			)
 		);
 	}

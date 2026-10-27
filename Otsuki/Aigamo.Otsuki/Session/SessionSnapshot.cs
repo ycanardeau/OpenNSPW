@@ -12,9 +12,17 @@ internal sealed record SessionSnapshot(
 	ApplicationDescription? Application,
 	IPEndPoint? LocalEndPoint,
 	Dpnid LocalPlayer,
-	bool IsHost
+	bool IsHost,
+	ImmutableDictionary<Dpnid, GroupInfo> Groups
 )
 {
 	public static SessionSnapshot Empty { get; } =
-		new(ImmutableDictionary<Dpnid, PlayerInfo>.Empty, null, null, Dpnid.Empty, false);
+		new(
+			ImmutableDictionary<Dpnid, PlayerInfo>.Empty,
+			null,
+			null,
+			Dpnid.Empty,
+			false,
+			ImmutableDictionary<Dpnid, GroupInfo>.Empty
+		);
 }

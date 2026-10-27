@@ -11,9 +11,9 @@ internal sealed class Player
 {
 	public required Dpnid Id { get; init; }
 
-	public required string Name { get; init; }
+	public required string Name { get; set; }
 
-	public ImmutableArray<byte> Data { get; init; } = [];
+	public ImmutableArray<byte> Data { get; set; } = [];
 
 	/// <summary>
 	/// The DirectPlay address that other peers connect to.
@@ -22,7 +22,13 @@ internal sealed class Player
 
 	public bool IsLocal { get; init; }
 
-	public bool IsHost { get; init; }
+	public bool IsHost { get; set; }
+
+	/// <summary>
+	/// What the player is in its session: <see cref="NameTableEntryFlags.Peer"/> in a peer-to-peer session,
+	/// <see cref="NameTableEntryFlags.Server"/> or <see cref="NameTableEntryFlags.Client"/> in a client/server one.
+	/// </summary>
+	public NameTableEntryFlags Role { get; init; } = NameTableEntryFlags.Peer;
 
 	/// <summary>
 	/// The name table version at which the player was added.
@@ -60,7 +66,9 @@ internal sealed class Player
 		{
 			Dpnid = Id,
 			Host = IsHost,
-			Peer = true,
+			Peer = Role == NameTableEntryFlags.Peer,
+			Client = Role == NameTableEntryFlags.Client,
+			Server = Role == NameTableEntryFlags.Server,
 			Version = Version,
 			DnetVersion = DnetVersion,
 			Url = Url.Value,

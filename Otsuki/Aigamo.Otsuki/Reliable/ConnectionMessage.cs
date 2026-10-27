@@ -14,7 +14,15 @@ internal abstract record ConnectionMessage
 	/// </summary>
 	public sealed record StartConnecting : ConnectionMessage;
 
+	/// <summary>
+	/// The CONNECT that created an inbound connection, already decoded by the endpoint.
+	/// </summary>
 	public sealed record DatagramArrived(ReliableMessage Message) : ConnectionMessage;
+
+	/// <summary>
+	/// A datagram from the partner, which the connection decodes because only it knows whether frames are signed.
+	/// </summary>
+	public sealed record DatagramReceived(byte[] Datagram) : ConnectionMessage;
 
 	/// <summary>
 	/// Sends an upper-layer message. <see cref="IConnectionObserver.OnSendCompleted"/> reports
@@ -22,6 +30,11 @@ internal abstract record ConnectionMessage
 	/// </summary>
 	public sealed record SendPayload(long SendId, byte[] Payload, bool Reliable, bool User1)
 		: ConnectionMessage;
+
+	/// <summary>
+	/// Sends the messages queued by earlier <see cref="SendPayload"/>s, coalescing them where possible.
+	/// </summary>
+	public sealed record Flush : ConnectionMessage;
 
 	/// <summary>
 	/// Disconnects gracefully after all queued messages are delivered.

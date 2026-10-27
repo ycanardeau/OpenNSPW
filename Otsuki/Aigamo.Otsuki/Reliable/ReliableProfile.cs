@@ -55,6 +55,12 @@ public sealed record ReliableProfile
 	public int MaxFramePayloadSize { get; init; } = 1200;
 
 	/// <summary>
+	/// Whether messages queued together are combined into coalesced frames ([MC-DPL8R] section 2.2.3), up to
+	/// <see cref="MaxFramePayloadSize"/>. Without it, every message gets frames of its own.
+	/// </summary>
+	public bool CoalesceSends { get; init; } = true;
+
+	/// <summary>
 	/// Maximum size of a reassembled multi-frame message. Larger messages terminate the connection.
 	/// </summary>
 	public int MaxMessageSize { get; init; } = 1024 * 1024;

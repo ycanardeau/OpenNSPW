@@ -18,6 +18,19 @@ internal interface ICanResynchronizeVersion
 			return Current;
 
 		player.ReportedVersion = command.Message.Version;
-		return session.ResynchronizeVersion(this);
+		if (Migration is not { } migration)
+			return session.ResynchronizeVersion(this);
+
+		// During migration, every peer reports its version to the new host (step 2).
+		return session.ContinueMigration(
+			ToHosting() with
+			{
+				Migration = migration with
+				{
+					Awaiting = migration.Awaiting.Remove(player.Id),
+					Reported = migration.Reported.SetItem(player.Id, command.Message.Version),
+				},
+			}
+		);
 	}
 }

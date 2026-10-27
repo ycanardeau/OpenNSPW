@@ -1,5 +1,6 @@
 using System.Net;
 using Aigamo.Otsuki.Messages.Core;
+using Aigamo.Otsuki.Messages.Reliable;
 using Aigamo.Otsuki.Reliable;
 using FluentAssertions;
 using Xunit;
@@ -41,13 +42,16 @@ public class PeerTests : IAsyncLifetime
 	private static ApplicationDescription Application(int maxPlayers = 0) =>
 		new() { GuidApplication = GuidApplication, MaxPlayers = maxPlayers };
 
-	private (Peer Peer, EventLog Log, IPAddress Address) CreatePeer(string name)
+	private (Peer Peer, EventLog Log, IPAddress Address) CreatePeer(
+		string name,
+		ReliableProfile? profile = null
+	)
 	{
 		var address = IPAddress.Parse($"10.0.0.{Interlocked.Increment(ref _nextAddress)}");
 		var peer = new Peer(
 			new PeerOptions
 			{
-				ReliableProfile = FastProfile,
+				ReliableProfile = profile ?? FastProfile,
 				TransportFactory = _network.CreateFactory(address),
 				JoinTimeout = TimeSpan.FromSeconds(5),
 				IntegrityCheckTimeout = TimeSpan.FromSeconds(1),
@@ -61,10 +65,11 @@ public class PeerTests : IAsyncLifetime
 
 	private async Task<(Peer Peer, EventLog Log, IPAddress Address)> HostAsync(
 		string name,
-		ApplicationDescription? application = null
+		ApplicationDescription? application = null,
+		ReliableProfile? profile = null
 	)
 	{
-		var host = CreatePeer(name);
+		var host = CreatePeer(name, profile);
 		await host.Peer.HostAsync(application ?? Application());
 		await host.Log.WaitForAsync<PeerEvent.PlayerCreated>();
 		return host;
@@ -234,6 +239,353 @@ public class PeerTests : IAsyncLifetime
 		atHost.Data.Should().Equal([1]);
 		await host.Log.WaitForAsync<PeerEvent.SendCompleted>(2);
 		host.Log.OfType<PeerEvent.DataReceived>().Should().ContainSingle();
+	}
+
+	/// <summary>
+	/// Counts the data frames from <paramref name="source"/>, and those of them that are coalesced.
+	/// </summary>
+	private (Func<int> Frames, Func<int> Coalesced) CountDataFrames(IPAddress source)
+	{
+		var frames = 0;
+		var coalesced = 0;
+		_network.Observe = (from, _, datagram) =>
+		{
+			if (
+				!from.Address.Equals(source)
+				|| ReliableMessageSerializer.Default.Deserialize(datagram)
+					is not ReliableMessage.DataFrame frame
+				|| frame.KeepAliveOrCorrelate
+			)
+				return;
+
+			Interlocked.Increment(ref frames);
+			if (frame.Coalesce)
+				Interlocked.Increment(ref coalesced);
+		};
+		return (() => Volatile.Read(ref frames), () => Volatile.Read(ref coalesced));
+	}
+
+	/// <summary>
+	/// Holds the joiner's acknowledgments back, so that the host's send window fills, then sends a burst.
+	/// </summary>
+	private async Task SendBurstWhileWindowIsFullAsync(
+		(Peer Peer, EventLog Log, IPAddress Address) host,
+		(Peer Peer, EventLog Log, IPAddress Address) joiner,
+		int count
+	)
+	{
+		_network.Drop = (from, _, _) => from.Address.Equals(joiner.Address);
+		for (var i = 0; i < count; i++)
+			host.Peer.SendTo(
+				joiner.Peer.LocalPlayer,
+				BitConverter.GetBytes(i),
+				i % 3 == 0 ? SendFlags.None : SendFlags.Guaranteed
+			);
+		await Task.Delay(50);
+		_network.Drop = (_, _, _) => false;
+	}
+
+	[Fact]
+	public async Task SendTo_CoalescesQueuedMessages()
+	{
+		var host = await HostAsync("Host");
+		var joiner = await JoinAsync("Joiner", host.Peer);
+		await host.Log.WaitForAsync<PeerEvent.PlayerCreated>(e => !e.Player.IsLocal);
+		var (frames, coalesced) = CountDataFrames(host.Address);
+
+		await SendBurstWhileWindowIsFullAsync(host, joiner, 300);
+
+		// Reliable messages all arrive, in order; unreliable ones may be lost while the joiner was cut off.
+		var reliable = Enumerable.Range(0, 300).Where(i => i % 3 != 0).ToList();
+		var received = await joiner.Log.WaitForAsync<PeerEvent.DataReceived>(
+			reliable.Count,
+			e => BitConverter.ToInt32([.. e.Data]) % 3 != 0,
+			TimeSpan.FromSeconds(20)
+		);
+		received.Select(e => BitConverter.ToInt32([.. e.Data])).Should().Equal(reliable);
+		joiner
+			.Log.OfType<PeerEvent.DataReceived>()
+			.Select(e => BitConverter.ToInt32([.. e.Data]))
+			.Should()
+			.BeInAscendingOrder();
+		coalesced().Should().BePositive();
+		var completed = await host.Log.WaitForAsync<PeerEvent.SendCompleted>(300);
+		completed.Select(e => e.Handle).Should().OnlyHaveUniqueItems();
+	}
+
+	[Fact]
+	public async Task SendTo_WithoutCoalescingSendsAFramePerMessage()
+	{
+		var host = await HostAsync("Host", profile: FastProfile with { CoalesceSends = false });
+		var joiner = await JoinAsync("Joiner", host.Peer);
+		await host.Log.WaitForAsync<PeerEvent.PlayerCreated>(e => !e.Player.IsLocal);
+		var (_, coalesced) = CountDataFrames(host.Address);
+
+		await SendBurstWhileWindowIsFullAsync(host, joiner, 150);
+
+		await joiner.Log.WaitForAsync<PeerEvent.DataReceived>(
+			100,
+			e => BitConverter.ToInt32([.. e.Data]) % 3 != 0,
+			TimeSpan.FromSeconds(20)
+		);
+		coalesced().Should().Be(0);
+	}
+
+	private static ApplicationDescription SignedApplication(SessionFlags signing) =>
+		Application() with
+		{
+			Flags = signing,
+		};
+
+	/// <summary>
+	/// Whether a datagram is a data frame whose layout has the eight bytes of <b>ullSignature</b>.
+	/// </summary>
+	private static bool HasSignature(byte[] datagram) =>
+		(datagram[0] & 0x01) != 0
+		&& PacketSignature.GetSignatureOffset(datagram) is int offset
+		&& ReliableMessageSerializer.Signed.Deserialize(datagram) is ReliableMessage.DataFrame
+		&& offset + 8 <= datagram.Length;
+
+	[Theory]
+	[InlineData(SessionFlags.FastSigned)]
+	[InlineData(SessionFlags.FullSigned)]
+	public async Task SignedSession_ExchangesDataAcrossSequenceWraps(SessionFlags signing)
+	{
+		var profile = FastProfile with { CoalesceSends = false };
+		var host = await HostAsync("Host", SignedApplication(signing), profile);
+		var joiner = CreatePeer("Joiner", profile);
+		var unsigned = 0;
+		var offers = new System.Collections.Concurrent.ConcurrentBag<PacketSigning>();
+		_network.Observe = (_, _, datagram) =>
+		{
+			if ((datagram[0] & 0x01) != 0 && !HasSignature(datagram))
+				Interlocked.Increment(ref unsigned);
+			if (
+				ReliableMessageSerializer.Default.Deserialize(datagram)
+				is ReliableMessage.ConnectedSigned connectedSigned
+			)
+				offers.Add(connectedSigned.SigningOptions);
+		};
+		await joiner.Peer.ConnectAsync(Application(), host.Peer.LocalEndPoint!);
+		(await joiner.Log.WaitForAsync<PeerEvent.ConnectCompleted>())
+			.Result.Should()
+			.Be(ResultCode.Success);
+		await host.Log.WaitForAsync<PeerEvent.PlayerCreated>(e => !e.Player.IsLocal);
+
+		// 700 frames each way wrap the 8-bit sequence space twice, advancing full-signed secrets each time.
+		for (var i = 0; i < 700; i++)
+		{
+			host.Peer.SendTo(joiner.Peer.LocalPlayer, BitConverter.GetBytes(i));
+			joiner.Peer.SendTo(host.Peer.LocalPlayer, BitConverter.GetBytes(-i));
+		}
+		var large = Enumerable.Range(0, 5000).Select(i => (byte)i).ToArray();
+		host.Peer.SendTo(joiner.Peer.LocalPlayer, large);
+
+		var timeout = TimeSpan.FromSeconds(30);
+		var atJoiner = await joiner.Log.WaitForAsync<PeerEvent.DataReceived>(701, timeout: timeout);
+		var atHost = await host.Log.WaitForAsync<PeerEvent.DataReceived>(700, timeout: timeout);
+		atJoiner
+			.Take(700)
+			.Select(e => BitConverter.ToInt32([.. e.Data]))
+			.Should()
+			.Equal(Enumerable.Range(0, 700));
+		atJoiner[700].Data.Should().Equal(large);
+		atHost
+			.Select(e => BitConverter.ToInt32([.. e.Data]))
+			.Should()
+			.Equal(Enumerable.Range(0, 700).Select(i => -i));
+		Volatile.Read(ref unsigned).Should().Be(0);
+		offers
+			.Should()
+			.NotBeEmpty()
+			.And.OnlyContain(o =>
+				o == (signing == SessionFlags.FullSigned ? PacketSigning.Full : PacketSigning.Fast)
+			);
+	}
+
+	[Fact]
+	public async Task FullSignedSession_SurvivesLossAndReorderingAcrossSequenceWraps()
+	{
+		var profile = FastProfile with { CoalesceSends = false };
+		var host = await HostAsync("Host", SignedApplication(SessionFlags.FullSigned), profile);
+		var joiner = CreatePeer("Joiner", profile);
+		await joiner.Peer.ConnectAsync(Application(), host.Peer.LocalEndPoint!);
+		await joiner.Log.WaitForAsync<PeerEvent.ConnectCompleted>();
+		await host.Log.WaitForAsync<PeerEvent.PlayerCreated>(e => !e.Player.IsLocal);
+		_network.LossRate = 0.1;
+		_network.MaxDelay = TimeSpan.FromMilliseconds(5);
+
+		for (var i = 0; i < 600; i++)
+			host.Peer.SendTo(joiner.Peer.LocalPlayer, BitConverter.GetBytes(i));
+
+		var received = await joiner.Log.WaitForAsync<PeerEvent.DataReceived>(
+			600,
+			timeout: TimeSpan.FromSeconds(60)
+		);
+		received
+			.Select(e => BitConverter.ToInt32([.. e.Data]))
+			.Should()
+			.Equal(Enumerable.Range(0, 600));
+	}
+
+	[Fact]
+	public async Task SignedSession_SignsTheWholeMesh()
+	{
+		var application = SignedApplication(SessionFlags.FullSigned);
+		var host = await HostAsync("Host", application);
+		var first = await JoinAsync("First", host.Peer);
+		var second = await JoinAsync("Second", host.Peer);
+		await first.Log.WaitForAsync<PeerEvent.PlayerCreated>(e => e.Player.Name == "Second");
+
+		first.Peer.SendTo(second.Peer.LocalPlayer, [42]);
+
+		var received = await second.Log.WaitForAsync<PeerEvent.DataReceived>();
+		received.Sender.Should().Be(first.Peer.LocalPlayer);
+		received.Data.Should().Equal([42]);
+		second.Peer.ApplicationDescription!.Flags.Should().HaveFlag(SessionFlags.FullSigned);
+	}
+
+	[Fact]
+	public async Task FullSignedSession_DropsTamperedFrames()
+	{
+		var host = await HostAsync("Host", SignedApplication(SessionFlags.FullSigned));
+		var joiner = await JoinAsync("Joiner", host.Peer);
+		await host.Log.WaitForAsync<PeerEvent.PlayerCreated>(e => !e.Player.IsLocal);
+
+		// Corrupt the last byte of the first transmission of every frame from the host that carries "ABCD".
+		var tampered = 0;
+		_network.Drop = (from, _, datagram) =>
+		{
+			if (
+				from.Address.Equals(host.Address)
+				&& (datagram[1] & 0x01) == 0
+				&& datagram.AsSpan().EndsWith("ABCD"u8)
+			)
+			{
+				datagram[^1] = (byte)'X';
+				Interlocked.Increment(ref tampered);
+			}
+			return false;
+		};
+
+		host.Peer.SendTo(joiner.Peer.LocalPlayer, "ABCD"u8);
+
+		var received = await joiner.Log.WaitForAsync<PeerEvent.DataReceived>();
+		received.Data.Should().Equal("ABCD"u8.ToArray());
+		Volatile.Read(ref tampered).Should().BePositive();
+		joiner.Log.OfType<PeerEvent.DataReceived>().Should().ContainSingle();
+	}
+
+	[Fact]
+	public async Task Host_WithBothSigningModesThrows()
+	{
+		var (peer, _, _) = CreatePeer("Host");
+
+		var host = () =>
+			peer.HostAsync(SignedApplication(SessionFlags.FastSigned | SessionFlags.FullSigned));
+
+		await host.Should().ThrowAsync<ArgumentException>();
+	}
+
+	private static readonly EnumHostsOptions QuickEnumeration = new()
+	{
+		Count = 3,
+		RetryInterval = TimeSpan.FromMilliseconds(50),
+		Timeout = TimeSpan.FromMilliseconds(200),
+	};
+
+	private static async Task<List<EnumeratedHost>> EnumerateAsync(
+		Peer peer,
+		IPEndPoint target,
+		Guid? guidApplication = null,
+		byte[]? payload = null
+	)
+	{
+		var hosts = new List<EnumeratedHost>();
+		await foreach (
+			var host in peer.EnumHostsAsync(target, guidApplication, payload, QuickEnumeration)
+		)
+			hosts.Add(host);
+		return hosts;
+	}
+
+	[Fact]
+	public async Task EnumHosts_FindsTheHost()
+	{
+		var application = Application(maxPlayers: 4) with
+		{
+			SessionName = "Battle",
+			Flags = SessionFlags.RequirePassword,
+			Password = "secret",
+			ApplicationReservedData = [1, 2, 3],
+		};
+		var host = await HostAsync("Host", application);
+		host.Peer.SetEnumResponseData([9, 8]);
+		var joiner = await JoinAsync("Joiner", host.Peer, application);
+		var seeker = CreatePeer("Seeker");
+
+		var found = await EnumerateAsync(seeker.Peer, host.Peer.LocalEndPoint!, GuidApplication);
+
+		found.Should().HaveCount(QuickEnumeration.Count);
+		var response = found[0];
+		response.HostEndPoint.Should().Be(host.Peer.LocalEndPoint);
+		response.CurrentPlayers.Should().Be(2);
+		response.ResponseData.Should().Equal([9, 8]);
+		response.RoundTripTime.Should().BeLessThan(TimeSpan.FromSeconds(5));
+		response.Application.SessionName.Should().Be("Battle");
+		response.Application.MaxPlayers.Should().Be(4);
+		response.Application.GuidApplication.Should().Be(GuidApplication);
+		response
+			.Application.GuidInstance.Should()
+			.Be(host.Peer.ApplicationDescription!.GuidInstance);
+		response.Application.Flags.Should().HaveFlag(SessionFlags.RequirePassword);
+		response.Application.Password.Should().BeEmpty();
+		response.Application.ApplicationReservedData.Should().Equal([1, 2, 3]);
+
+		// Only the host answers, not the other peers.
+		(await EnumerateAsync(seeker.Peer, joiner.Peer.LocalEndPoint!))
+			.Should()
+			.BeEmpty();
+	}
+
+	[Fact]
+	public async Task EnumHosts_ForAnotherApplicationFindsNothing()
+	{
+		var host = await HostAsync("Host");
+		var seeker = CreatePeer("Seeker");
+
+		(await EnumerateAsync(seeker.Peer, host.Peer.LocalEndPoint!, Guid.NewGuid()))
+			.Should()
+			.BeEmpty();
+		(await EnumerateAsync(seeker.Peer, host.Peer.LocalEndPoint!)).Should().NotBeEmpty();
+	}
+
+	[Fact]
+	public async Task EnumHosts_OfSessionWithoutEnumerationsFindsNothing()
+	{
+		var host = await HostAsync(
+			"Host",
+			Application() with
+			{
+				Flags = SessionFlags.NoEnumerations,
+			}
+		);
+		var seeker = CreatePeer("Seeker");
+
+		(await EnumerateAsync(seeker.Peer, host.Peer.LocalEndPoint!)).Should().BeEmpty();
+	}
+
+	[Fact]
+	public async Task EnumHosts_ThenConnectJoinsTheSession()
+	{
+		var host = await HostAsync("Host");
+		var joiner = CreatePeer("Joiner");
+
+		var found = await EnumerateAsync(joiner.Peer, host.Peer.LocalEndPoint!, GuidApplication);
+		await joiner.Peer.ConnectAsync(found[0].Application, found[0].HostEndPoint);
+
+		var completed = await joiner.Log.WaitForAsync<PeerEvent.ConnectCompleted>();
+		completed.Result.Should().Be(ResultCode.Success);
 	}
 
 	[Fact]

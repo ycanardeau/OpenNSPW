@@ -1,15 +1,19 @@
 namespace Aigamo.Otsuki.Messages.Reliable;
 
-internal class SackMessageSerializer : IReliableMessageSerializer<ReliableMessage.Sack>
+internal class SackMessageSerializer(bool signed = false)
+	: IReliableMessageSerializer<ReliableMessage.Sack>
 {
 	public static SackMessageSerializer Default { get; } = new();
 
+	/// <summary>
+	/// Reads and writes the frames of a connection established with signing, which carry <b>ullSignature</b>.
+	/// </summary>
+	public static SackMessageSerializer Signed { get; } = new(signed: true);
+
+	private readonly bool _signed = signed;
+
 	public virtual ReliableMessage.Sack? Read(BinaryReader reader)
 	{
-		var enableSigning =
-			false /* TODO */
-		;
-
 		var command = (PacketCommand)reader.ReadByte();
 
 		var opcode = (ExtendedOpcode)reader.ReadByte();
@@ -26,7 +30,7 @@ internal class SackMessageSerializer : IReliableMessageSerializer<ReliableMessag
 		var sackMask2 = flags.HasFlag(SackFlags.Sack2) ? reader.ReadUInt32() : 0;
 		var sendMask1 = flags.HasFlag(SackFlags.Send1) ? reader.ReadUInt32() : 0;
 		var sendMask2 = flags.HasFlag(SackFlags.Send2) ? reader.ReadUInt32() : 0;
-		var signature = enableSigning ? reader.ReadInt64() : 0;
+		var signature = _signed ? reader.ReadInt64() : 0;
 
 		// Flags goes last: the mask setters derive their flags from the value, which would otherwise clobber the flags read from the wire (e.g. SACK_MASK1 with a zero mask).
 		return new()
@@ -48,10 +52,6 @@ internal class SackMessageSerializer : IReliableMessageSerializer<ReliableMessag
 
 	public virtual void Write(BinaryWriter writer, ReliableMessage.Sack message)
 	{
-		var enableSigning =
-			false /* TODO */
-		;
-
 		writer.Write((byte)message.Command);
 		writer.Write((byte)message.Opcode);
 		writer.Write((byte)message.Flags);
@@ -73,7 +73,7 @@ internal class SackMessageSerializer : IReliableMessageSerializer<ReliableMessag
 		if (message.Send2)
 			writer.Write(message.SendMask2);
 
-		if (enableSigning)
+		if (_signed)
 			writer.Write(message.Signature);
 	}
 

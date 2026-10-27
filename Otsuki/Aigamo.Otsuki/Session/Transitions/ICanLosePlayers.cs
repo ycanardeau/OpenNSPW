@@ -12,14 +12,36 @@ internal interface ICanLosePlayers
 	SessionState ISessionTransition<SessionMessage.ConnectionDisconnected>.Execute(
 		SessionActor session,
 		SessionMessage.ConnectionDisconnected command
-	) =>
-		session.Unbind(command.Connection) is { } player && session.Players.ContainsKey(player.Id)
-			? session.DestroyPlayer(
+	)
+	{
+		if (
+			session.Unbind(command.Connection) is not { } player
+			|| !session.Players.ContainsKey(player.Id)
+		)
+			return Current;
+
+		if (Migration is not { } migration)
+			return session.DestroyPlayer(
 				this,
 				player,
 				command.Result == ResultCode.Success
 					? DestroyPlayerFlags.Normal
 					: DestroyPlayerFlags.ConnectionLost
-			)
-			: Current;
+			);
+
+		// A peer that leaves during migration is no longer waited for, nor asked for operations. It is destroyed
+		// when migration finishes, after the operations that came before it.
+		return session.ContinueMigration(
+			ToHosting() with
+			{
+				Migration = migration with
+				{
+					Awaiting = migration.Awaiting.Remove(player.Id),
+					Reported = migration.Reported.Remove(player.Id),
+					RequestedFrom =
+						migration.RequestedFrom == player.Id ? null : migration.RequestedFrom,
+				},
+			}
+		);
+	}
 }

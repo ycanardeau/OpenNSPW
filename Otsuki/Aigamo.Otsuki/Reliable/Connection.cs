@@ -12,7 +12,6 @@ namespace Aigamo.Otsuki.Reliable;
 /// One connection of the DirectPlay 8 reliable protocol ([MC-DPL8R]) to a single remote endpoint. The protocol
 /// logic lives in the transitions that each <see cref="ConnectionState"/> implements; this actor owns the state,
 /// the timers and the transport, and runs the transition for each message.
-/// Packet signing and coalesced sends are not implemented; coalesced payloads are understood on receipt.
 /// </summary>
 internal sealed class Connection : Actor<ConnectionMessage>
 {
@@ -21,10 +20,23 @@ internal sealed class Connection : Actor<ConnectionMessage>
 	private readonly IDatagramTransport _transport;
 	private readonly Action<Connection> _onTerminated;
 	private ConnectionState _state;
+	private bool _flushRequested;
 
 	public IPEndPoint RemoteEndPoint { get; }
 
 	public bool IsOutbound { get; }
+
+	/// <summary>
+	/// The signing mode of the session, once known: inbound connections offer it, and outbound ones accept only it,
+	/// so that a listener cannot talk a signed session into an unsigned connection. <see cref="PacketSigning.None"/>
+	/// before then, when an outbound connection takes whatever the listener offers.
+	/// </summary>
+	public PacketSigning OfferedSigning { get; }
+
+	/// <summary>
+	/// Signs our frames and validates the partner's once the connection is established with signing.
+	/// </summary>
+	public PacketSigner? Signer { get; private set; }
 
 	public TimeProvider TimeProvider { get; }
 
@@ -49,6 +61,7 @@ internal sealed class Connection : Actor<ConnectionMessage>
 	public Connection(
 		IPEndPoint remoteEndPoint,
 		bool isOutbound,
+		PacketSigning offeredSigning,
 		IDatagramTransport transport,
 		TimeProvider timeProvider,
 		ReliableProfile profile,
@@ -58,6 +71,7 @@ internal sealed class Connection : Actor<ConnectionMessage>
 	{
 		RemoteEndPoint = remoteEndPoint;
 		IsOutbound = isOutbound;
+		OfferedSigning = offeredSigning;
 		_transport = transport;
 		TimeProvider = timeProvider;
 		Profile = profile;
@@ -110,8 +124,45 @@ internal sealed class Connection : Actor<ConnectionMessage>
 			(int)(TimeProvider.GetTimestamp() / Math.Max(1, TimeProvider.TimestampFrequency / 1000))
 		);
 
-	public void Transmit(ReliableMessage message) =>
-		_transport.Send(RemoteEndPoint, ReliableMessageSerializer.Default.Serialize(message));
+	/// <summary>
+	/// Posts <see cref="ConnectionMessage.Flush"/> unless one is already in the mailbox, so that the messages
+	/// queued before it are sent together.
+	/// </summary>
+	public void RequestFlush()
+	{
+		if (_flushRequested)
+			return;
+
+		_flushRequested = true;
+		Post(new ConnectionMessage.Flush());
+	}
+
+	/// <summary>
+	/// The sequence ID that selects the secret of a frame: <b>bSeq</b> of a DFRAME, <b>bNSeq</b> of a SACK.
+	/// </summary>
+	private static SequenceId? GetSigningSequence(ReliableMessage message) =>
+		message switch
+		{
+			ReliableMessage.DataFrame frame => frame.SequenceId,
+			ReliableMessage.Sack sack => sack.NextSend,
+			_ => null,
+		};
+
+	/// <summary>
+	/// Sends a frame, signed when the connection is. <paramref name="secret"/> is the secret a data frame got with its
+	/// sequence ID; SACKs and HARD_DISCONNECTs take <see cref="PacketSigner.ControlSecret"/>.
+	/// </summary>
+	public void Transmit(ReliableMessage message, ulong? secret = null)
+	{
+		if (Signer is null)
+		{
+			_transport.Send(RemoteEndPoint, ReliableMessageSerializer.Default.Serialize(message));
+			return;
+		}
+
+		var datagram = ReliableMessageSerializer.Signed.Serialize(message);
+		_transport.Send(RemoteEndPoint, Signer.Sign(datagram, secret ?? Signer.ControlSecret));
+	}
 
 	/// <summary>
 	/// Runs the transition of <paramref name="state"/> for <paramref name="command"/>, if it has one.
@@ -151,6 +202,7 @@ internal sealed class Connection : Actor<ConnectionMessage>
 	{
 		ConnectRetryTimer.Cancel();
 		KeepAliveTimer.Start(Profile.KeepAliveInterval);
+		Signer = handshake.CreateSigner(IsOutbound);
 		var channel = new ReliableChannel(this, handshake);
 		Observer.OnConnected(this);
 
@@ -239,9 +291,34 @@ internal sealed class Connection : Actor<ConnectionMessage>
 			DataFrame: Execute,
 			Connect: Execute,
 			Connected: Execute,
+			ConnectedSigned: Execute,
 			HardDisconnect: Execute,
 			Sack: Execute
 		);
+
+	/// <summary>
+	/// Decodes a datagram from the partner, and drops it if the connection is signed and the signature is wrong
+	/// ([MC-DPL8R] section 3.1.5.2.7).
+	/// </summary>
+	private Unit Receive(byte[] datagram)
+	{
+		var serializer = Signer is null
+			? ReliableMessageSerializer.Default
+			: ReliableMessageSerializer.Signed;
+		if (serializer.Deserialize(datagram) is not { } message)
+			return Unit.Default;
+
+		if (Signer is not null)
+		{
+			var nextReceive = _state is IHasChannel established
+				? established.Channel.NextReceive
+				: new SequenceId(0);
+			if (!Signer.Validate(datagram, nextReceive, GetSigningSequence(message) ?? nextReceive))
+				return Unit.Default;
+		}
+
+		return Receive(message);
+	}
 
 	protected override void Receive(ConnectionMessage message)
 	{
@@ -251,7 +328,13 @@ internal sealed class Connection : Actor<ConnectionMessage>
 		message.Match(
 			StartConnecting: Execute,
 			DatagramArrived: m => Receive(m.Message),
+			DatagramReceived: m => Receive(m.Datagram),
 			SendPayload: SendPayload,
+			Flush: m =>
+			{
+				_flushRequested = false;
+				return Execute(m);
+			},
 			Disconnect: Execute,
 			HardDisconnect: Execute,
 			Abort: m => Abort(m.Result),

@@ -24,6 +24,8 @@ public sealed class UdpDatagramTransport : IDatagramTransport
 			if (OperatingSystem.IsWindows())
 				_socket.IOControl(SioUdpConnectionReset, [0, 0, 0, 0], null);
 
+			// Host enumeration can query a broadcast address.
+			_socket.EnableBroadcast = true;
 			_socket.Bind(localEndPoint);
 		}
 		catch
