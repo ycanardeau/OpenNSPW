@@ -166,6 +166,7 @@ internal sealed class Battlefield : Control
 					) - new Vector2(tiles.Center.X, tiles.Center.Y);
 				_art.Draw(
 					batch,
+					SpriteId.MapTiles,
 					tiles,
 					frame,
 					0,
@@ -249,6 +250,7 @@ internal sealed class Battlefield : Control
 
 			_art.Draw(
 				batch,
+				SpriteId.SubUnits,
 				sprite,
 				frame,
 				1,
@@ -295,6 +297,7 @@ internal sealed class Battlefield : Control
 				- new Vector2(sprite.Center.X, sprite.Center.Y);
 			_art.Draw(
 				batch,
+				id,
 				sprite,
 				row * 8 + Nspw.SpriteColumnOf(unit.Direction),
 				1,
@@ -317,7 +320,16 @@ internal sealed class Battlefield : Control
 			var at =
 				ToScreen(snapshot, cloud.Position.X, cloud.Position.Y)
 				- new Vector2(tiles.Size.Width / 2, tiles.Size.Height / 2);
-			_art.Draw(batch, tiles, 2, 0, tiles.Size.Width, tiles.Size.Height, origin + at);
+			_art.Draw(
+				batch,
+				SpriteId.MapTiles,
+				tiles,
+				2,
+				0,
+				tiles.Size.Width,
+				tiles.Size.Height,
+				origin + at
+			);
 		}
 	}
 

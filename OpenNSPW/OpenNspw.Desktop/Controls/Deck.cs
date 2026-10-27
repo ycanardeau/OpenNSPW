@@ -81,12 +81,21 @@ internal sealed class Deck : Control
 					UnitKind.LightCarrier => 11,
 					_ => snapshot.UnitInfoPanel[2],
 				};
-		ref var sprite = ref snapshot.Sprites[
+		var id =
 			snapshot.UnitInfoPanel[4] == (int)Side.Japan
 				? SpriteId.JapanUnitInfo
-				: SpriteId.UnitedStatesUnitInfo
-		];
-		_art.Draw(batch, sprite, frame, 1, sprite.Size.Width - 3, sprite.Size.Height - 2, origin);
+				: SpriteId.UnitedStatesUnitInfo;
+		ref var sprite = ref snapshot.Sprites[id];
+		_art.Draw(
+			batch,
+			id,
+			sprite,
+			frame,
+			1,
+			sprite.Size.Width - 3,
+			sprite.Size.Height - 2,
+			origin
+		);
 	}
 
 	// The parked planes' effects of a layer that the player sees (UpdateLowerEffects, UpdateUpperEffects: 駐機場の飛行機用).
@@ -109,6 +118,7 @@ internal sealed class Deck : Control
 				- new Vector2(sprite.Center.X, sprite.Center.Y);
 			_art.Draw(
 				batch,
+				SpriteId.SubUnits,
 				sprite,
 				effect.SpriteNumber,
 				1,
@@ -128,12 +138,14 @@ internal sealed class Deck : Control
 				continue;
 
 			ref var unit = ref snapshot.Units[m];
-			ref var sprite = ref snapshot.Sprites[snapshot.UnitSprites[m]];
+			var id = snapshot.UnitSprites[m];
+			ref var sprite = ref snapshot.Sprites[id];
 			var at =
 				ToDeck(unit.Position.X, unit.Position.Y)
 				- new Vector2(sprite.Center.X, sprite.Center.Y);
 			_art.Draw(
 				batch,
+				id,
 				sprite,
 				unit.SpriteRow * 8 + Nspw.SpriteColumnOf(unit.Direction),
 				1,

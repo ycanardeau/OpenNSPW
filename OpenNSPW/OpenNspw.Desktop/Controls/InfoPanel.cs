@@ -136,9 +136,9 @@ internal sealed class InfoPanel : Control
 		if (!snapshot.IsSupplyTargetShown)
 			return;
 
-		ref var sprite = ref snapshot.Sprites[
-			snapshot.LocalSide == Side.Japan ? SpriteId.JapanUnits : SpriteId.UnitedStatesUnits
-		];
+		var id =
+			snapshot.LocalSide == Side.Japan ? SpriteId.JapanUnits : SpriteId.UnitedStatesUnits;
+		ref var sprite = ref snapshot.Sprites[id];
 		var (row, column) = snapshot.SupplyTargetFrame;
 		var frame = row * sprite.FramesPerRow + column;
 		var at = new Vector2(
@@ -151,6 +151,7 @@ internal sealed class InfoPanel : Control
 			(batch, origin) =>
 				_art.Draw(
 					batch,
+					id,
 					drawn,
 					frame,
 					1,

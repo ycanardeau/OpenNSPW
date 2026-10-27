@@ -47,6 +47,8 @@ dotnet run --project OpenNspw.Desktop -- --singleplayer 3
 
 The text is drawn in fonts that come with the game, so that it looks the same on every platform: BIZ UDGothic for the game's own text and BIZ UDPGothic for the menus, under the SIL Open Font License 1.1 ([OpenNspw.Desktop/Fonts/OFL.txt](OpenNspw.Desktop/Fonts/OFL.txt)).
 
+The battle's pictures and the title are the original's sprites, cut from its sprite sheet into a file each in `OpenNspw.Desktop/Sprites` (see [docs/SpriteSheets.md](../docs/SpriteSheets.md)).
+
 ## Porting a file
 ```bash
 dotnet run --project OpenNspw.Porter -- port OpenNspw ../Original/NSPW_NET/<file>.cpp
