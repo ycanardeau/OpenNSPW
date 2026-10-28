@@ -1,6 +1,7 @@
 // Cuts the original's sprite sheet into the desktop app's sprites (docs/SpriteSheets.md): NSPW NET's t3.bmp, and 1.22's
-// tst_cg1.bmp for what only 1.22 has. Writes them to OpenNSPW/OpenNspw.Desktop/Sprites, or with --check, compares them
-// with the files there and fails if any differs.
+// tst_cg1.bmp for what only 1.22 has. The app puts the sheets together again from them (SpriteSheet), so they hold
+// every part of the sheets that the game draws from. Writes them to OpenNSPW/OpenNspw.Desktop/Sprites, or with --check,
+// compares them with the files there and fails if any differs.
 //
 //     dotnet run tools/CutSprites.cs [--check]
 
@@ -203,12 +204,15 @@ internal static class Layout
 		(14, "j1n", "p38"),
 	];
 
-	// The facilities of row 11, by the column their direction draws (set_unit_data). Columns 3 and 4 are not drawn.
+	// The facilities of row 11, by the column their direction draws (set_unit_data). No facility's direction draws
+	// columns 3 and 4, which are cut for the game's own sheet only.
 	private static readonly (int Column, string Name)[] Facilities =
 	[
 		(0, "nb"),
 		(1, "ab"),
 		(2, "city"),
+		(3, "unused-3"),
+		(4, "unused-4"),
 		(5, "ib"),
 		(6, "pillboxes"),
 		(7, "fortress"),
@@ -272,6 +276,12 @@ internal static class Layout
 		yield return ("effects.png", nspwNet, new Region(0, 3520, 480, 400), true);
 		yield return ("flag-jp.png", nspwNet, new Region(361, 3250, 198, 120), false);
 		yield return ("flag-us.png", nspwNet, new Region(361, 3370, 198, 120), false);
+
+		// What only the game's own sheet needs: the combat menu's buttons (Buttons1, both columns), the minimap's band
+		// (its frame, the dots it draws units with, and the background it copies from), and 1.22's title.
+		yield return ("buttons.png", nspwNet, new Region(0, 3250, 361, 270), false);
+		yield return ("minimap.png", nspwNet, new Region(0, 4340, 561, 200), false);
+		yield return ("title-122.png", nspw122, new Region(0, 3940, 599, 387), false);
 
 		foreach (var (name, region) in Side("jp", true, 1759, 0))
 			yield return (name, nspwNet, region, true);
