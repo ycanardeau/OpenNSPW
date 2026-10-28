@@ -44,6 +44,10 @@ public sealed class HWND(HWND? parent, int id, string kind, string text, bool en
 
 	public bool Destroyed { get; internal set; }
 
+	// Whether the dialog has handled WM_INITDIALOG. As in Win32, it exists during WM_INITDIALOG, with the template's
+	// fields until its procedure sets them; Win32 shows it only after. So the desktop app reads its fields only after.
+	public bool Initialized { get; internal set; }
+
 	public uint Checked { get; internal set; }
 
 	public List<LISTITEM> Items { get; } = [];
@@ -359,6 +363,11 @@ public partial class Nspw
 		}
 
 		CallProc(hDlg, WM_INITDIALOG, 0, 0);
+		lock (WindowsLock)
+		{
+			hDlg.Initialized = true;
+		}
+
 		return hDlg;
 	}
 

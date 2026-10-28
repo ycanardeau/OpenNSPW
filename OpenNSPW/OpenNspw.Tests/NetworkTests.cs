@@ -375,4 +375,34 @@ public class NetworkTests
 		PumpUntil(() => host.DialogText(IDC_PLAYER_NAME2) == " - - - ", host);
 		Assert.False(host.Game.GetDlgItem(host.Dialog, IDC_START_GAME)!.Enabled);
 	}
+
+	// The desktop app fills its form from the dialog once it is initialized, so it must not find it with the
+	// template's empty fields, which would make the host listen on DirectPlay's default port.
+	[Fact]
+	public void The_connection_dialog_is_initialized_once_it_has_set_its_fields()
+	{
+		using var game = new ConnectingGame("Alice");
+		var nspw = game.Game;
+		var (isListed, isInitialized) = (false, true);
+
+		var dialog = nspw.CreateDialog(
+			MAKEINTRESOURCE(IDD_ADDRESS_OVERRIDE),
+			null,
+			(hDlg, msg, wParam, lParam) =>
+			{
+				if (msg == WM_INITDIALOG)
+				{
+					(isListed, isInitialized) = (nspw.windows.Contains(hDlg), hDlg.Initialized);
+				}
+
+				return nspw.OverrideDlgProc(hDlg, msg, wParam, lParam);
+			}
+		);
+
+		Assert.True(isListed);
+		Assert.False(isInitialized);
+		Assert.True(dialog.Initialized);
+		Assert.Equal("Alice", nspw.GetDlgItem(dialog, IDC_PLAYER_NAME)!.Text);
+		Assert.Equal($"{ADDRESSOVERRIDE_PORT}", nspw.GetDlgItem(dialog, IDC_ADDRESS_LINE2)!.Text);
+	}
 }

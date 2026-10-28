@@ -19,13 +19,16 @@ internal sealed class MultiplayerScreen(NspwGame game) : Screen(game)
 	// Set on the game's thread once the dialog has changed its fields.
 	private volatile bool _needsFill = true;
 
-	// The game's connection dialog, while it exists.
+	// The game's connection dialog, while it exists, once it has set its fields (WM_INITDIALOG).
 	private HWND? FindDialog()
 	{
 		lock (_session.Game.WindowsLock)
 		{
 			return _session.Game.windows.FirstOrDefault(w =>
-				w.Kind == "DIALOG" && !w.Destroyed && w.Id == resource.IDD_ADDRESS_OVERRIDE
+				w.Kind == "DIALOG"
+				&& w.Initialized
+				&& !w.Destroyed
+				&& w.Id == resource.IDD_ADDRESS_OVERRIDE
 			);
 		}
 	}
