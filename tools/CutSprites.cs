@@ -1,6 +1,7 @@
 // Cuts the original's sprite sheet into the desktop app's sprites (docs/SpriteSheets.md): NSPW NET's t3.bmp, and 1.22's
-// tst_cg1.bmp for what only 1.22 has. Writes them to OpenNSPW/OpenNspw.Desktop/Sprites, or with --check, compares them
-// with the files there and fails if any differs.
+// tst_cg1.bmp for what only 1.22 has, with sheets.txt, where they go on each sheet, from which the app puts the sheets
+// back together for the game (SpriteSheet). Writes them to OpenNSPW/OpenNspw.Desktop/Sprites, or with --check, compares
+// them with the files there and fails if any differs.
 //
 //     dotnet run tools/CutSprites.cs [--check]
 
@@ -15,11 +16,24 @@ var isCheck = args is ["--check"];
 var nspwNet = Sheet.Load(Path.Combine(repository, "Original", "NSPW_NET", "t3.bmp"));
 var nspw122 = Sheet.Load(Path.Combine(repository, "Original", "Nspw122", "tst_cg1.bmp"));
 
+var files = Layout
+	.Sprites(nspwNet, nspw122)
+	.Select(sprite =>
+		(
+			sprite.Name,
+			Bytes: Png.Encode(
+				sprite.Sheet.Cut(sprite.Region, sprite.IsKeyed),
+				sprite.Region.Width,
+				sprite.Region.Height
+			)
+		)
+	)
+	.Append(("sheets.txt", System.Text.Encoding.UTF8.GetBytes(Layout.Sheets(nspwNet))));
+
 var differing = 0;
-foreach (var (name, sheet, region, isKeyed) in Layout.Sprites(nspwNet, nspw122))
+foreach (var (name, png) in files)
 {
 	var path = Path.Combine(output, name);
-	var png = Png.Encode(sheet.Cut(region, isKeyed), region.Width, region.Height);
 	if (isCheck)
 	{
 		if (!File.Exists(path) || !File.ReadAllBytes(path).AsSpan().SequenceEqual(png))
@@ -47,6 +61,10 @@ internal sealed class Sheet(int width, int height, byte[] rgb)
 	private readonly int _width = width;
 	private readonly int _height = height;
 	private readonly byte[] _rgb = rgb;
+
+	public int Width => _width;
+
+	public int Height => _height;
 
 	// Whether a pixel is the sheet's color key, the transparent color of the sprites: magenta, as the original's 16-bit
 	// surface keys it (RestoreSurfaces: the red and the blue masks).
@@ -262,24 +280,56 @@ internal static class Layout
 		}
 	}
 
+	// The files, where they are on the sheets, and which sheets have them: 1.22's only (IsNspw122 true), cut from it,
+	// NSPW NET's only (false), or both (null), cut from NSPW NET's.
+	private static IEnumerable<(string Name, Region Region, bool IsKeyed, bool? IsNspw122)> Placed()
+	{
+		yield return ("title.png", new Region(0, 3940, 699, 384), false, false);
+		// 1.22's title, which its sheet has instead (set_sprt_data, 0x432E43).
+		yield return ("title-122.png", new Region(0, 3940, 599, 387), false, true);
+		yield return ("tiles.png", new Region(0, 3000, 480, 240), true, null);
+		// The combat menu's buttons (Buttons1), two columns, and the minimap's frames and the dots it draws units with
+		// (Minimap): the UI draws its own, but the game draws them on its surface.
+		yield return ("buttons.png", new Region(0, 3250, 321, 221), false, null);
+		yield return ("minimap.png", new Region(0, 4340, 561, 199), false, null);
+		yield return ("effects.png", new Region(0, 3520, 480, 400), true, null);
+		yield return ("flag-jp.png", new Region(361, 3250, 198, 120), false, null);
+		yield return ("flag-us.png", new Region(361, 3370, 198, 120), false, null);
+
+		foreach (var (name, region) in Side("jp", true, 1759, 0))
+			yield return (name, region, true, name == "jp/j1n.png" ? false : null);
+
+		// 1.22's land-based fighter of Japan.
+		yield return ("jp/j7w.png", new Region(0, 1759 + 14 * 80, 640, 80), true, true);
+
+		foreach (var (name, region) in Side("us", false, 4550, 878))
+			yield return (name, region, true, null);
+	}
+
 	public static IEnumerable<(string Name, Sheet Sheet, Region Region, bool IsKeyed)> Sprites(
 		Sheet nspwNet,
 		Sheet nspw122
 	)
 	{
-		yield return ("title.png", nspwNet, new Region(0, 3940, 699, 384), false);
-		yield return ("tiles.png", nspwNet, new Region(0, 3000, 480, 240), true);
-		yield return ("effects.png", nspwNet, new Region(0, 3520, 480, 400), true);
-		yield return ("flag-jp.png", nspwNet, new Region(361, 3250, 198, 120), false);
-		yield return ("flag-us.png", nspwNet, new Region(361, 3370, 198, 120), false);
+		foreach (var (name, region, isKeyed, isNspw122) in Placed())
+			yield return (name, isNspw122 is true ? nspw122 : nspwNet, region, isKeyed);
+	}
 
-		foreach (var (name, region) in Side("jp", true, 1759, 0))
-			yield return (name, nspwNet, region, true);
+	// sheets.txt: each sheet's name and size, then its files and where they go on it. 1.22's has NSPW NET's effects,
+	// with the three icons that only NSPW NET's rules draw.
+	public static string Sheets(Sheet nspwNet)
+	{
+		var text = new System.Text.StringBuilder();
+		foreach (var (sheet, isNspw122) in new[] { ("t3.bmp", false), ("tst_cg1.bmp", true) })
+		{
+			text.Append($"{sheet} {nspwNet.Width} {nspwNet.Height}\n");
+			foreach (var (name, region, _, onNspw122) in Placed())
+			{
+				if (onNspw122 is null || onNspw122 == isNspw122)
+					text.Append($"\t{name} {region.X} {region.Y}\n");
+			}
+		}
 
-		// 1.22's land-based fighter of Japan.
-		yield return ("jp/j7w.png", nspw122, new Region(0, 1759 + 14 * 80, 640, 80), true);
-
-		foreach (var (name, region) in Side("us", false, 4550, 878))
-			yield return (name, nspwNet, region, true);
+		return text.ToString();
 	}
 }

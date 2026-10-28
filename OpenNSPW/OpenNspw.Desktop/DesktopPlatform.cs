@@ -106,6 +106,12 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 
 	public Stream? OpenFile(string path, FileMode mode, FileAccess access, FileShare share)
 	{
+		// The sprite sheet, put back together from the app's sprites, whether or not the data has the original's.
+		if (mode == FileMode.Open && SpriteSheet.Open(path) is { } sheet)
+		{
+			return new MemoryStream(sheet, writable: false);
+		}
+
 		try
 		{
 			if (

@@ -15,14 +15,22 @@
     <EmbeddedResource Include="Icon.bmp" LogicalName="Icon.bmp" />
     <!-- The app's font and its license (BundledFonts), beside the app. -->
     <None Include="Fonts\**" CopyToOutputDirectory="PreserveNewest" />
-    <!-- The sprites cut from the original's sprite sheet (SpriteFiles, tools/CutSprites.cs). -->
+    <!-- The sprites cut from the original's sprite sheet (SpriteFiles, tools/CutSprites.cs), and where they go on it
+         (SpriteSheet). -->
     <EmbeddedResource Include="Sprites\**\*.png" />
+    <EmbeddedResource Include="Sprites\sheets.txt" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FontStashSharp.MonoGame" />
     <PackageReference Include="MonoGame.Extended" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" />
+    <!-- PNG decoding without a graphics device, for the sprite sheet (SpriteSheet). -->
+    <PackageReference Include="StbImageSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="OpenNspw.Tests" />
   </ItemGroup>
 
   <ItemGroup>

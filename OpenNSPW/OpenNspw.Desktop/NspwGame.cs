@@ -37,7 +37,7 @@ internal sealed class NspwGame : Game
 	private Screen? _nextScreen;
 	private GameSession? _lastSession;
 
-	// The game's data: t3.bmp, wav, Map, Scenario, Saved.
+	// The game's data: wav, Map, Scenario, Saved.
 	public string DataDirectory { get; }
 
 	public TextRasterizer Text { get; } = new();

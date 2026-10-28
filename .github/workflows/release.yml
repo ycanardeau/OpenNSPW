@@ -160,7 +160,7 @@ jobs:
         The builds run without installing .NET. They have none of NSPW's own files: put the app beside an `Original` folder that holds them, as in this repository.
 
         ```
-        Original/NSPW_NET/                       the game's data: t3.bmp, wav, Map, Scenario, Saved
+        Original/NSPW_NET/                       the game's data: wav, Map, Scenario, Saved
         Original/Nspw122/NSPW_122.exe            for single-player
         OpenNSPW-<version>-win-x64/              Windows: extract the zip here, and start OpenNspw.Desktop.exe
         OpenNSPW.app                             Macs with Apple silicon: extract the zip here

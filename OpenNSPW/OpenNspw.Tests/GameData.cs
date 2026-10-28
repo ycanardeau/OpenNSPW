@@ -42,6 +42,13 @@ internal static class GameData
 		return FindInOriginal("NSPW_NET", "t3.bmp");
 	}
 
+	// Original/NSPW_NET, with NSPW NET's maps, sounds and sprite sheet.
+	public static string FindNspwNet()
+	{
+		return FindOriginal()
+			?? throw new InvalidOperationException("Original/NSPW_NET is not found.");
+	}
+
 	// Original/Nspw122, with NSPW_122.exe and its maps, sounds and sprite sheet.
 	public static string FindSingleplayer()
 	{

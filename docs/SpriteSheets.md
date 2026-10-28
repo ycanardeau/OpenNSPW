@@ -6,7 +6,8 @@ How the desktop app draws the original's sprites: cut from its one sprite sheet 
 - **Split by what the UI draws**: a file per unit kind and side, eight directions in a row; a file per facility and per unit-info picture; one file each for the title, the tiles, the effects and each flag.
 - **The ships are named by kind and the planes by model** (`bb`, `ca`, `a6m`, `j7w`), and the facilities by kind (`nb`, `ab`).
 - **1.22's land-based fighter is a file of its own**, `j7w.png` beside NSPW NET's `j1n.png`, which a single-player game draws instead. Everything else is NSPW NET's, and draws as 1.22's sheet would: its three extra icons are drawn only by NSPW NET's rules (`BattleRules.MarksSecondTypes`).
-- **The files are made by [tools/CutSprites.cs](../tools/CutSprites.cs)** from the two sheets in `Original`, and embedded in the app. The game itself still reads the sheet for its own surface (`LoadBitmapSurface`); only the UI draws from the files.
+- **The files are made by [tools/CutSprites.cs](../tools/CutSprites.cs)** from the two sheets in `Original`, and embedded in the app.
+- **The app needs neither sheet.** The game still draws its own surface from a sheet (`LoadBitmapSurface`), on the screens that the UI does not draw itself: its title and the map editor. The app puts that sheet back together from the files, where `sheets.txt` puts them (`SpriteSheet`), and gives it to the game when it opens `t3.bmp` or `tst_cg1.bmp`. So the data needs only NSPW NET's maps, scenarios and sounds.
 
 ## What differs between the two sheets
 | Region | Rows of the sheet | NSPW NET | 1.22 |
@@ -105,6 +106,10 @@ PNG with transparency where the sheet has its color key. A unit's file is a row 
 ```
 OpenNspw.Desktop/Sprites/
   title.png                    NSPW NET's, 699×384
+  title-122.png                1.22's, 599×387, for the game's own surface in a single-player game
+  buttons.png                  the combat menu's buttons, two columns, 321×221, for the game's own surface
+  minimap.png                  the minimap's two frames and its dots between them, 561×199, for the game's own surface
+  sheets.txt                   where each file goes on each sheet
   tiles.png                    6×3 frames of 80×80, as on the sheet
   effects.png                  12×10 frames of 40×40, NSPW NET's
   flag-jp.png, flag-us.png     198×120
@@ -123,7 +128,9 @@ OpenNspw.Desktop/Sprites/
     (the same, with f6f, tbf, b24 and p38)
 ```
 
-Not cut, as the UI does not draw them: 1.22's title, the combat menu's buttons (the UI draws its own), the minimap's frame and dots, and the facilities' row's columns 3 and 4.
+The UI draws neither the buttons nor the minimap's frames (it draws its own), nor 1.22's title, but the game draws them on its own surface, so they are cut too. Not cut: the facilities' row's columns 3 and 4, which no facility draws, and what lies between the regions, which the game never reads.
+
+The sheets put back together are the original's wherever the game draws from, as its 16-bit surface sees them (`SpriteSheetTests`), but for 1.22's three blank effect icons: its sheet has NSPW NET's there, which only NSPW NET's rules draw. Every region that the game reads from the sheet, in the tests' whole games, the title, the map editor and a single-player battle, is in a file.
 
 To make the files again, and to check that they still match the sheets:
 
@@ -136,6 +143,7 @@ dotnet run tools/CutSprites.cs --check
 - `SpriteFiles` loads a file from the app's resources.
 - `BattleArt` maps a frame of the original's sprites (`SpriteId` and frame number, with `Sprite.Size` and `FramesPerRow` from `set_sprt_data`) to its file and where it is in the file: a unit's row to the row's file, a facility's column to its file, a unit-info picture to its file, and a tile or an effect to its place in the grid. Its callers draw as before.
 - `MainMenuScreen` draws `title.png`.
+- `SpriteSheet` puts a sheet back together from the files, a 24-bit bitmap with the color key, magenta, where a file is transparent, which `DesktopPlatform.OpenFile` gives the game for `t3.bmp` and `tst_cg1.bmp`.
 
 Every frame that `BattleArt` draws was compared with the same frame cut from the sheet as before: all of them match NSPW NET's sheet, and 1.22's but for the three icons that only NSPW NET's rules draw.
 

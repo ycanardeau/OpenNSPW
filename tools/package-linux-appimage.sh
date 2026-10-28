@@ -47,7 +47,7 @@ here=$(dirname "$(readlink -f "$0")")
 original=$(dirname "${APPIMAGE:-$here}")/Original
 case " $* " in
 *" --data "*) ;;
-*) [ -f "$original/NSPW_NET/t3.bmp" ] && set -- --data "$original/NSPW_NET" "$@" ;;
+*) [ -d "$original/NSPW_NET" ] && set -- --data "$original/NSPW_NET" "$@" ;;
 esac
 case " $* " in
 *" --exe "*) ;;

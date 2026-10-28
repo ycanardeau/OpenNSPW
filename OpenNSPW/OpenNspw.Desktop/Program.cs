@@ -2,8 +2,9 @@ using OpenNspw.Desktop;
 
 // OpenNspw.Desktop [--data <directory>] [--exe <NSPW_122.exe>] [--singleplayer <scenario> | --replay <trace.n122>]
 //
-// Plays the port, from its main menu. The game's data (t3.bmp, wav, Map, Scenario, Saved) is in the original's NSPW_NET
-// directory: by default Original/NSPW_NET of this repository, found from the program's directory.
+// Plays the port, from its main menu. The game's data (wav, Map, Scenario, Saved) is in the original's NSPW_NET
+// directory: by default Original/NSPW_NET of this repository, found from the program's directory. Its sprite sheet,
+// t3.bmp, isn't needed: the app has the sprites cut from it (SpriteSheet).
 //
 // The single-player mode plays a scenario of NSPW 1.22 against the computer (docs/Singleplayer.md), whose functions run
 // from the single-player executable: by default Original/Nspw122/NSPW_122.exe of this repository. With
@@ -26,7 +27,7 @@ static string? FindInOriginal(params string[] path)
 	)
 	{
 		var candidate = Path.Combine([directory.FullName, "Original", .. path]);
-		if (File.Exists(candidate))
+		if (Path.Exists(candidate))
 		{
 			return candidate;
 		}
@@ -37,14 +38,14 @@ static string? FindInOriginal(params string[] path)
 
 static string? FindDataDirectory(string[] args)
 {
-	return Option(args, "--data") ?? Path.GetDirectoryName(FindInOriginal("NSPW_NET", "t3.bmp"));
+	return Option(args, "--data") ?? FindInOriginal("NSPW_NET");
 }
 
 var dataDirectory = FindDataDirectory(args);
 if (dataDirectory is null)
 {
 	Console.Error.WriteLine(
-		"The game's data (t3.bmp) was not found. Pass its directory with --data <directory>."
+		"The game's data (Original/NSPW_NET) was not found. Pass its directory with --data <directory>."
 	);
 	return 1;
 }

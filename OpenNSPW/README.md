@@ -34,7 +34,7 @@ Run the commands below from this folder.
 dotnet run --project OpenNspw.Desktop
 ```
 
-The game's data is `Original/NSPW_NET`, or the folder given with `--data <folder>`. The game starts at its main menu, and returns to it when a game ends.
+The game's data is `Original/NSPW_NET`, or the folder given with `--data <folder>`: its maps, scenarios and sounds. Its sprite sheet, `t3.bmp`, isn't needed (see [docs/SpriteSheets.md](../docs/SpriteSheets.md)). The game starts at its main menu, and returns to it when a game ends.
 
 - **Multiplayer**: start two of them. One hosts (port `0` picks a free port, `2310` is the original's), and the other joins its address and port. **Scenario Editor** opens the original's map editor. Settings, such as the player name, are kept in `OpenNSPW/settings.json` under the user's application data folder.
 - **Single Player**: a scenario of NSPW 1.22 against the computer (see [docs/Singleplayer.md](../docs/Singleplayer.md)), chosen from its scenarios. It needs `Original/Nspw122/NSPW_122.exe`, or the file given with `--exe <file>`.
