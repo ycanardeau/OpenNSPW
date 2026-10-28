@@ -17,6 +17,15 @@
     <None Include="Fonts\**" CopyToOutputDirectory="PreserveNewest" />
     <!-- The sprites cut from the original's sprite sheet (SpriteFiles, tools/CutSprites.cs). -->
     <EmbeddedResource Include="Sprites\**\*.png" />
+    <!-- The original's files that the game reads (BundledOriginal), so that players need none of their own: NSPW NET's
+         data, and NSPW 1.22 with the files of its directory that a single-player game reads. -->
+    <EmbeddedResource Include="..\..\Original\NSPW_NET\t3.bmp" LogicalName="Original/NSPW_NET/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\NSPW_NET\wav\*.wav" LogicalName="Original/NSPW_NET/wav/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\NSPW_NET\Map\*.dat" LogicalName="Original/NSPW_NET/Map/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\NSPW_NET\Scenario\*.dat" LogicalName="Original/NSPW_NET/Scenario/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\Nspw122\NSPW_122.exe;..\..\Original\Nspw122\tst_cg1.bmp" LogicalName="Original/Nspw122/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\Nspw122\wav\*.wav" LogicalName="Original/Nspw122/wav/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\Nspw122\Map\*.dat" LogicalName="Original/Nspw122/Map/%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

@@ -66,19 +66,14 @@ internal sealed class MainMenuForm : Form
 		Controls.Add(tab);
 	}
 
-	public MainMenuForm(UIFonts fonts, bool canPlaySingleplayer)
+	public MainMenuForm(UIFonts fonts)
 	{
 		_fonts = fonts;
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		BackColor = DrawingColor.Transparent;
 		KeyPreview = true;
 
-		AddItem(
-			Texts.SinglePlayer,
-			canPlaySingleplayer ? Texts.SinglePlayerDescription : Texts.NoSinglePlayer,
-			canPlaySingleplayer,
-			() => SingleplayerChosen
-		);
+		AddItem(Texts.SinglePlayer, Texts.SinglePlayerDescription, true, () => SingleplayerChosen);
 		AddItem(Texts.Multiplayer, Texts.MultiplayerDescription, true, () => MultiplayerChosen);
 		AddItem(Texts.Quit, Texts.QuitDescription, true, () => QuitChosen);
 		AddLanguage(Language.English, 0);

@@ -30,15 +30,18 @@ internal sealed class NspwGame : Game
 {
 	private readonly GraphicsDeviceManager _graphics;
 	private readonly ScreenManager _screenManager = new();
-	private readonly string? _singleplayerExecutablePath;
+
+	// The game's data: t3.bmp, wav, Map, Scenario.
+	private readonly IOriginalFiles _files;
+
+	// NSPW 1.22's executable and the files of its directory, to play single-player (docs/Singleplayer.md).
+	private readonly IOriginalFiles _singleplayerFiles;
+	private readonly string _singleplayerExecutableName;
 	private readonly int? _scenario;
 	private readonly Trace122Replay? _replay;
 	private byte[]? _singleplayerExecutable;
 	private Screen? _nextScreen;
 	private GameSession? _lastSession;
-
-	// The game's data: t3.bmp, wav, Map, Scenario, Saved.
-	public string DataDirectory { get; }
 
 	public TextRasterizer Text { get; } = new();
 
@@ -53,24 +56,24 @@ internal sealed class NspwGame : Game
 	// The single-player scenario chosen last, to select it again in the browser.
 	public int? LastScenario { get; set; }
 
-	// Whether NSPW_122.exe was found, to play single-player.
-	public bool HasSingleplayerExecutable => _singleplayerExecutablePath is not null;
-
-	// singleplayerExecutablePath: NSPW_122.exe, to play single-player (docs/Singleplayer.md). scenario: a scenario of it
-	// to play at once, without the menus. replay: a trace of 1.22 in that scenario, which that game follows, to watch it
+	// files: the game's data. singleplayerFiles, singleplayerExecutableName: the files of NSPW 1.22's directory, and the
+	// name of its executable there, NSPW_122.exe, to play single-player. scenario: a scenario of it to play at once,
+	// without the menus. replay: a trace of 1.22 in that scenario, which that game follows, to watch it
 	// (docs/Verification.md).
 	public NspwGame(
-		string dataDirectory,
-		string? singleplayerExecutablePath,
+		IOriginalFiles files,
+		IOriginalFiles singleplayerFiles,
+		string singleplayerExecutableName,
 		int? scenario = null,
 		Trace122Replay? replay = null
 	)
 	{
 		_graphics = new GraphicsDeviceManager(this);
-		_singleplayerExecutablePath = singleplayerExecutablePath;
+		_singleplayerExecutableName = singleplayerExecutableName;
 		_scenario = scenario;
 		_replay = replay;
-		DataDirectory = dataDirectory;
+		_files = files;
+		_singleplayerFiles = singleplayerFiles;
 		Texts.Language = UISettings.LoadLanguage();
 		IsMouseVisible = true;
 		Window.Title = all_head.CAPTION;
@@ -80,10 +83,20 @@ internal sealed class NspwGame : Game
 
 	public byte[] ReadSingleplayerExecutable()
 	{
-		return _singleplayerExecutable ??= File.ReadAllBytes(
-			_singleplayerExecutablePath
-				?? throw new InvalidOperationException("NSPW_122.exe was not found.")
-		);
+		if (_singleplayerExecutable is null)
+		{
+			using var stream =
+				_singleplayerFiles.OpenRead(_singleplayerExecutableName)
+				?? throw new FileNotFoundException(
+					$"{_singleplayerExecutableName} was not found.",
+					_singleplayerExecutableName
+				);
+			using var memory = new MemoryStream();
+			stream.CopyTo(memory);
+			_singleplayerExecutable = memory.ToArray();
+		}
+
+		return _singleplayerExecutable;
 	}
 
 	// Shows a screen, from the next update.
@@ -98,14 +111,10 @@ internal sealed class NspwGame : Game
 	public GameSession StartSession(int? singleplayer = null, Trace122Replay? replay = null)
 	{
 		_lastSession = new GameSession(
-			DataDirectory,
+			_files,
 			Text,
 			singleplayer is { } scenario
-				? (
-					ReadSingleplayerExecutable(),
-					Path.GetDirectoryName(Path.GetFullPath(_singleplayerExecutablePath!))!,
-					scenario
-				)
+				? (ReadSingleplayerExecutable(), _singleplayerFiles, scenario)
 				: null,
 			replay
 		);

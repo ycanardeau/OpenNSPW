@@ -42,29 +42,34 @@ internal sealed class Sound(SoundEffect effect) : ISound, IDisposable
 	}
 }
 
-// The platform of the desktop app: the game's files in its data directory, DirectPlay 8 on Otsuki, MonoGame sound,
-// text rasterized with a TrueType font, and settings in a JSON file.
-internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text) : INspwPlatform
+// The platform of the desktop app: the original's files (IOriginalFiles), under the player's folder, DirectPlay 8 on
+// Otsuki, MonoGame sound, text rasterized with a TrueType font, and settings in a JSON file.
+//
+// The player's folder, in the app-data folder beside the settings, has what the game writes, such as its saves (Saved)
+// and the scenarios saved in it (Scenario): the game finds its files there first, then in the original's, which it never
+// writes to. A file of the original's that it opens to write is copied there once it writes to it (CopyOnWriteStream).
+internal sealed class DesktopPlatform(IOriginalFiles files, TextRasterizer text) : INspwPlatform
 {
-	private readonly string _dataDirectory = dataDirectory;
+	private static readonly string PlayerDirectory = Path.Combine(
+		Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+		"OpenNSPW"
+	);
+
+	private readonly IOriginalFiles _files = files;
 	private readonly DirectPlay8Factory _directPlay = new();
 	private readonly TextRasterizer _text = text;
 	private readonly List<Sound> _sounds = [];
 	private readonly Stopwatch _clock = Stopwatch.StartNew();
 	private readonly Lock _frameLock = new();
-	private readonly string _settingsPath = Path.Combine(
-		Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-		"OpenNSPW",
-		"settings.json"
-	);
+	private readonly string _settingsPath = Path.Combine(PlayerDirectory, "settings.json");
 	private Dictionary<string, string>? _settings;
 	private ushort[] _frame = [];
 	private int _frameWidth;
 	private int _frameHeight;
 
-	// NSPW 1.22's directory, whose files a single-player game reads instead of the game's own, or null. Set before the
-	// game starts.
-	public string? SingleplayerDirectory { get; set; }
+	// The files of NSPW 1.22's directory, which a single-player game reads instead of the game's own, or null. Set before
+	// the game starts.
+	public IOriginalFiles? SingleplayerFiles { get; set; }
 
 	// Incremented for each frame the game shows.
 	public int FrameNumber { get; private set; }
@@ -108,15 +113,26 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 	{
 		try
 		{
-			if (
-				GameFiles.OpenSingleplayer(SingleplayerDirectory, path, mode, share) is
-				{ } singleplayerFile
-			)
+			var opensExisting = mode is FileMode.Open or FileMode.OpenOrCreate;
+			if (opensExisting && SingleplayerFiles?.OpenRead(path) is { } singleplayerFile)
 			{
 				return singleplayerFile;
 			}
 
-			var full = GameFiles.Resolve(_dataDirectory, path);
+			var full = GameFiles.Resolve(PlayerDirectory, path);
+			if (opensExisting && !File.Exists(full) && _files.OpenRead(path) is { } original)
+			{
+				if (access == FileAccess.Read)
+				{
+					return original;
+				}
+
+				using (original)
+				{
+					return new CopyOnWriteStream(original, full);
+				}
+			}
+
 			if (mode is FileMode.Create or FileMode.CreateNew or FileMode.OpenOrCreate)
 			{
 				Directory.CreateDirectory(Path.GetDirectoryName(full)!);
@@ -136,7 +152,13 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 
 	public IReadOnlyList<string> FindFiles(string directory, string pattern)
 	{
-		return GameFiles.Find(_dataDirectory, directory, pattern);
+		return
+		[
+			.. GameFiles
+				.Find(PlayerDirectory, directory, pattern)
+				.Union(_files.Find(directory, pattern), StringComparer.OrdinalIgnoreCase)
+				.Order(StringComparer.OrdinalIgnoreCase),
+		];
 	}
 
 	public int CoCreateInstance(Guid rclsid, Guid riid, out object? ppv)
