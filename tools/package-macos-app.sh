@@ -4,7 +4,7 @@
 #
 # tools/package-macos-app.sh <version> <output directory>
 #
-# The app finds the original's files (Original/) beside it, as it finds them beside the Windows build.
+# The app has the original's files that the game reads (Original/) embedded in it.
 
 set -euo pipefail
 

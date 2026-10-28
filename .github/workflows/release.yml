@@ -4,7 +4,7 @@
 # Once the packages are pushed, publishes the desktop app, self-contained in a single-file executable, on a GitHub Release of the tag, a prerelease for prerelease tags:
 # for Windows (win-x64) as a zip, for Apple Silicon Macs (osx-arm64) as OpenNSPW.app, ad-hoc signed, in a zip (tools/package-macos-app.sh),
 # and for Linux (linux-x64) as an AppImage (tools/package-linux-appimage.sh); with their SHA-256 in SHA256SUMS, and build provenance attestations.
-# The downloads have none of the original's files (Original/); the release notes tell players where to put theirs.
+# The downloads have the original's files that the game reads (Original/) embedded in the app, so players need none of their own.
 
 name: Release
 
@@ -157,17 +157,13 @@ jobs:
     - name: Write release notes
       run: |
         cat > "$RUNNER_TEMP/notes.md" <<'EOF'
-        The builds run without installing .NET. They have none of NSPW's own files: put the app beside an `Original` folder that holds them, as in this repository.
+        The builds run without installing .NET, and come with the files of NSPW that the game reads: NSPW on the Net's data, and NSPW 1.22 for single-player. NSPW is freeware by Ken-ichi Tokumitsu (Nara-Shika Seisakusho), who keeps its copyright.
 
-        ```
-        Original/NSPW_NET/                       the game's data: t3.bmp, wav, Map, Scenario, Saved
-        Original/Nspw122/NSPW_122.exe            for single-player
-        OpenNSPW-<version>-win-x64/              Windows: extract the zip here, and start OpenNspw.Desktop.exe
-        OpenNSPW.app                             Macs with Apple silicon: extract the zip here
-        OpenNSPW-<version>-linux-x64.AppImage    Linux: make it executable (chmod +x), and start it
-        ```
+        - Windows: extract the zip, and start `OpenNspw.Desktop.exe`.
+        - Macs with Apple silicon: extract the zip, and open `OpenNSPW.app`.
+        - Linux: make the AppImage executable (`chmod +x`), and start it.
 
-        Or start it with `--data <the NSPW_NET folder>` and `--exe <NSPW_122.exe>`.
+        Saves and the scenarios saved in the map editor go to the `OpenNSPW` folder in the user's application data folder, beside the settings.
 
         The Mac app isn't notarized by Apple, so macOS refuses to open it the first time. Then click Open Anyway in System Settings → Privacy & Security, or run `xattr -dr com.apple.quarantine OpenNSPW.app` in Terminal once.
 
