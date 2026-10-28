@@ -30,4 +30,6 @@ The author's original homepages linked from the manuals (`www02.u-page.so-net.ne
 ## License
 The games are freeware. According to the manuals, all copyrights belong to the author, and redistribution is generally permitted, though the author asks to be notified when the software is reposted. The software is provided as is, and the author accepts no responsibility for any damage caused by its use. See `Nspw122/説明書/ＮＳＰＷ説明書.htm`, `NSPW_200/説明書/ＮＳＰＷ説明書.htm` and `NSPW_NET_110/説明書/説明書.htm` for the original terms.
 
+The OpenNSPW desktop app (`OpenNSPW/OpenNspw.Desktop`) embeds the files it reads, so that its builds play without this folder: NSPW NET's data from `NSPW_NET` (`t3.bmp`, `wav`, `Map`, `Scenario`), and from `Nspw122` the executable `NSPW_122.exe`, which single-player runs, with its sprite sheet, maps and sounds.
+
 These files are not covered by the licenses of the other projects in this repository.

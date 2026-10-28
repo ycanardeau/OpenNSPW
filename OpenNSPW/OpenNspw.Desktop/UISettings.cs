@@ -9,11 +9,7 @@ internal static class UISettings
 {
 	private sealed record Saved(Language? Language);
 
-	private static readonly string FilePath = Path.Combine(
-		Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-		"OpenNSPW",
-		"ui.json"
-	);
+	private static readonly string FilePath = Path.Combine(UserFolder.Path, "ui.json");
 
 	private static readonly JsonSerializerOptions Options = new()
 	{

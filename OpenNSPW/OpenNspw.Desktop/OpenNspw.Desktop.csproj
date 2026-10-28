@@ -19,6 +19,21 @@
     <EmbeddedResource Include="Sprites\**\*.png" />
   </ItemGroup>
 
+  <!--
+    The original's files that the game reads (EmbeddedFiles), named by their path under Original, whose author lets them
+    be redistributed (Original/README.md): NSPW NET's data, and NSPW 1.22's executable, sprite sheet, maps and sounds
+    for single-player.
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\Original\NSPW_NET\t3.bmp" LogicalName="NSPW_NET/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\NSPW_NET\wav\*.wav" LogicalName="NSPW_NET/wav/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\NSPW_NET\Map\*.dat" LogicalName="NSPW_NET/Map/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\NSPW_NET\Scenario\*.dat" LogicalName="NSPW_NET/Scenario/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\Nspw122\NSPW_122.exe;..\..\Original\Nspw122\tst_cg1.bmp" LogicalName="Nspw122/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\Nspw122\wav\*.wav" LogicalName="Nspw122/wav/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\Nspw122\Map\*.dat" LogicalName="Nspw122/Map/%(Filename)%(Extension)" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="FontStashSharp.MonoGame" />
     <PackageReference Include="MonoGame.Extended" />

@@ -165,7 +165,7 @@ So in a single-player game (`IsSingleplayer`):
 dotnet run --project OpenNSPW/OpenNspw.Desktop -- --singleplayer 3
 ```
 
-The scenario is one of 1, 2, ..., 10, 100, ..., 109, 200, ..., 209, 300, ..., 306. The executable is `Original/Nspw122/NSPW_122.exe`, or the file given with `--exe`. A single-player game reads the files of the executable's directory, which are 1.22's own: the maps, the sounds and the sprite sheet (`tst_cg1.bmp`). The files 1.22 does not have, such as the sounds `AA_SHL5`, `SNR` and `CLICK2`, are NSPW NET's (`GameFiles.OpenSingleplayer`).
+The scenario is one of 1, 2, ..., 10, 100, ..., 109, 200, ..., 209, 300, ..., 306. The executable is `Original/Nspw122/NSPW_122.exe`, which the app embeds with the files of its directory, or the file given with `--exe`. A single-player game reads the files of the executable's directory, which are 1.22's own: the maps, the sounds and the sprite sheet (`tst_cg1.bmp`). The files 1.22 does not have, such as the sounds `AA_SHL5`, `SNR` and `CLICK2`, are NSPW NET's (`DesktopPlatform.OpenFile`, and `GameFiles.OpenSingleplayer` in the tests).
 
 NSPW NET's debug keys (`DBG_MODE`) work as in a network game, but three are held back from a single-player game in a Release build (`GameSession`): F5, which swaps the side the player plays and would hand the player the computer's fleet; F6, which starts the scenario again; and F9, which sinks the selected unit.
 

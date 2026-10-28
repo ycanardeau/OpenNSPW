@@ -42,29 +42,25 @@ internal sealed class Sound(SoundEffect effect) : ISound, IDisposable
 	}
 }
 
-// The platform of the desktop app: the game's files in its data directory, DirectPlay 8 on Otsuki, MonoGame sound,
-// text rasterized with a TrueType font, and settings in a JSON file.
-internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text) : INspwPlatform
+// The platform of the desktop app: the game's files, NSPW NET's data with what the game writes in the user's folder,
+// DirectPlay 8 on Otsuki, MonoGame sound, text rasterized with a TrueType font, and settings in a JSON file.
+internal sealed class DesktopPlatform(IOriginalFiles data, TextRasterizer text) : INspwPlatform
 {
-	private readonly string _dataDirectory = dataDirectory;
+	private readonly IOriginalFiles _data = data;
 	private readonly DirectPlay8Factory _directPlay = new();
 	private readonly TextRasterizer _text = text;
 	private readonly List<Sound> _sounds = [];
 	private readonly Stopwatch _clock = Stopwatch.StartNew();
 	private readonly Lock _frameLock = new();
-	private readonly string _settingsPath = Path.Combine(
-		Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-		"OpenNSPW",
-		"settings.json"
-	);
+	private readonly string _settingsPath = Path.Combine(UserFolder.Path, "settings.json");
 	private Dictionary<string, string>? _settings;
 	private ushort[] _frame = [];
 	private int _frameWidth;
 	private int _frameHeight;
 
-	// NSPW 1.22's directory, whose files a single-player game reads instead of the game's own, or null. Set before the
-	// game starts.
-	public string? SingleplayerDirectory { get; set; }
+	// NSPW 1.22's directory, whose files a single-player game reads, read only, instead of the game's own, or null. Set
+	// before the game starts.
+	public IOriginalFiles? SingleplayerFiles { get; set; }
 
 	// Incremented for each frame the game shows.
 	public int FrameNumber { get; private set; }
@@ -104,25 +100,31 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 		}
 	}
 
+	// A file of the game. The original's files are read only, and may be inside the app, so the game's own files, such
+	// as its saves, are in the user's folder: a file there is the one the game opens, and a file the game creates is put
+	// there. A file of the original that the game opens to write is copied there when the game writes to it.
 	public Stream? OpenFile(string path, FileMode mode, FileAccess access, FileShare share)
 	{
 		try
 		{
-			if (
-				GameFiles.OpenSingleplayer(SingleplayerDirectory, path, mode, share) is
-				{ } singleplayerFile
-			)
+			var isOpened = mode is FileMode.Open or FileMode.OpenOrCreate;
+			if (isOpened && SingleplayerFiles?.Open(path) is { } singleplayerFile)
 			{
 				return singleplayerFile;
 			}
 
-			var full = GameFiles.Resolve(_dataDirectory, path);
-			if (mode is FileMode.Create or FileMode.CreateNew or FileMode.OpenOrCreate)
+			var user = GameFiles.Resolve(UserFolder.Path, path);
+			if (isOpened && !File.Exists(user) && _data.Open(path) is { } dataFile)
 			{
-				Directory.CreateDirectory(Path.GetDirectoryName(full)!);
+				return access == FileAccess.Read ? dataFile : new CopyOnWriteStream(dataFile, user);
 			}
 
-			return new FileStream(full, mode, access, share);
+			if (mode is FileMode.Create or FileMode.CreateNew or FileMode.OpenOrCreate)
+			{
+				Directory.CreateDirectory(Path.GetDirectoryName(user)!);
+			}
+
+			return new FileStream(user, mode, access, share);
 		}
 		catch (IOException)
 		{
@@ -134,9 +136,17 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 		}
 	}
 
+	// The files of the user's folder and of NSPW NET's data, as one directory.
 	public IReadOnlyList<string> FindFiles(string directory, string pattern)
 	{
-		return GameFiles.Find(_dataDirectory, directory, pattern);
+		return
+		[
+			.. GameFiles
+				.Find(UserFolder.Path, directory, pattern)
+				.Concat(_data.Find(directory, pattern))
+				.Distinct(StringComparer.OrdinalIgnoreCase)
+				.Order(StringComparer.OrdinalIgnoreCase),
+		];
 	}
 
 	public int CoCreateInstance(Guid rclsid, Guid riid, out object? ppv)

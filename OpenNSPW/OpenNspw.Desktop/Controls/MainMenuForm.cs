@@ -28,12 +28,7 @@ internal sealed class MainMenuForm : Form
 			_items[i].IsHighlighted = i == index;
 	}
 
-	private void AddItem(
-		string caption,
-		string description,
-		bool enabled,
-		Func<EventHandler?> chosen
-	)
+	private void AddItem(string caption, string description, Func<EventHandler?> chosen)
 	{
 		var index = _items.Count;
 		var item = new MenuItemButton(_fonts)
@@ -41,7 +36,6 @@ internal sealed class MainMenuForm : Form
 			Bounds = new DrawingRectangle(64, 470 + index * 74, 520, 66),
 			Text = caption,
 			Description = description,
-			Enabled = enabled,
 		};
 		item.Hovered += (_, _) => Highlight(index);
 		item.Click += (_, _) => chosen()?.Invoke(this, EventArgs.Empty);
@@ -66,21 +60,16 @@ internal sealed class MainMenuForm : Form
 		Controls.Add(tab);
 	}
 
-	public MainMenuForm(UIFonts fonts, bool canPlaySingleplayer)
+	public MainMenuForm(UIFonts fonts)
 	{
 		_fonts = fonts;
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		BackColor = DrawingColor.Transparent;
 		KeyPreview = true;
 
-		AddItem(
-			Texts.SinglePlayer,
-			canPlaySingleplayer ? Texts.SinglePlayerDescription : Texts.NoSinglePlayer,
-			canPlaySingleplayer,
-			() => SingleplayerChosen
-		);
-		AddItem(Texts.Multiplayer, Texts.MultiplayerDescription, true, () => MultiplayerChosen);
-		AddItem(Texts.Quit, Texts.QuitDescription, true, () => QuitChosen);
+		AddItem(Texts.SinglePlayer, Texts.SinglePlayerDescription, () => SingleplayerChosen);
+		AddItem(Texts.Multiplayer, Texts.MultiplayerDescription, () => MultiplayerChosen);
+		AddItem(Texts.Quit, Texts.QuitDescription, () => QuitChosen);
 		AddLanguage(Language.English, 0);
 		AddLanguage(Language.Japanese, 1);
 	}

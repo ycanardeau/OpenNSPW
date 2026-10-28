@@ -2,11 +2,13 @@ using OpenNspw.Desktop;
 
 // OpenNspw.Desktop [--data <directory>] [--exe <NSPW_122.exe>] [--singleplayer <scenario> | --replay <trace.n122>]
 //
-// Plays the port, from its main menu. The game's data (t3.bmp, wav, Map, Scenario, Saved) is in the original's NSPW_NET
-// directory: by default Original/NSPW_NET of this repository, found from the program's directory.
+// Plays the port, from its main menu. The game's data (t3.bmp, wav, Map, Scenario) is NSPW NET's, from Original/NSPW_NET
+// of this repository, embedded in the app; or the directory given with --data, read from disk. What the game writes,
+// such as its saves (Saved), is in the user's folder (UserFolder).
 //
 // The single-player mode plays a scenario of NSPW 1.22 against the computer (docs/Singleplayer.md), whose functions run
-// from the single-player executable: by default Original/Nspw122/NSPW_122.exe of this repository. With
+// from the single-player executable, with 1.22's maps, sounds and sprite sheet from its directory: Original/Nspw122 of
+// this repository, embedded in the app; or the NSPW_122.exe given with --exe, and its directory, read from disk. With
 // --singleplayer, the game starts in that scenario, without the menus. With --replay, it starts in the scenario of a
 // trace recorded from 1.22, and follows it, to watch it (docs/Verification.md).
 
@@ -16,44 +18,30 @@ static string? Option(string[] args, string name)
 	return index >= 0 && index + 1 < args.Length ? args[index + 1] : null;
 }
 
-// The file or directory at the path under Original, in the first directory up from the program's that has it.
-static string? FindInOriginal(params string[] path)
+IOriginalFiles data = new EmbeddedFiles("NSPW_NET");
+if (Option(args, "--data") is { } dataDirectory)
 {
-	for (
-		var directory = new DirectoryInfo(AppContext.BaseDirectory);
-		directory is not null;
-		directory = directory.Parent
-	)
+	if (!File.Exists(OpenNspw.GameFiles.Resolve(dataDirectory, "t3.bmp")))
 	{
-		var candidate = Path.Combine([directory.FullName, "Original", .. path]);
-		if (File.Exists(candidate))
-		{
-			return candidate;
-		}
+		Console.Error.WriteLine($"The game's data (t3.bmp) was not found in {dataDirectory}.");
+		return 1;
 	}
 
-	return null;
+	data = new DirectoryFiles(dataDirectory);
 }
 
-static string? FindDataDirectory(string[] args)
+IOriginalFiles singleplayerFiles = new EmbeddedFiles("Nspw122");
+var singleplayerExecutableName = "NSPW_122.exe";
+if (Option(args, "--exe") is { } executable)
 {
-	return Option(args, "--data") ?? Path.GetDirectoryName(FindInOriginal("NSPW_NET", "t3.bmp"));
-}
+	if (!File.Exists(executable))
+	{
+		Console.Error.WriteLine($"The single-player executable was not found: {executable}.");
+		return 1;
+	}
 
-var dataDirectory = FindDataDirectory(args);
-if (dataDirectory is null)
-{
-	Console.Error.WriteLine(
-		"The game's data (t3.bmp) was not found. Pass its directory with --data <directory>."
-	);
-	return 1;
-}
-
-var executable = Option(args, "--exe") ?? FindInOriginal("Nspw122", "NSPW_122.exe");
-if (executable is not null && !File.Exists(executable))
-{
-	Console.Error.WriteLine($"The single-player executable was not found: {executable}.");
-	return 1;
+	singleplayerFiles = new DirectoryFiles(Path.GetDirectoryName(Path.GetFullPath(executable))!);
+	singleplayerExecutableName = Path.GetFileName(executable);
 }
 
 OpenNspw.Trace122Replay? replay = null;
@@ -86,17 +74,15 @@ if (scenarioText is not null)
 		return 1;
 	}
 
-	if (executable is null)
-	{
-		Console.Error.WriteLine(
-			"The single-player executable (NSPW_122.exe) was not found. Pass it with --exe <file>."
-		);
-		return 1;
-	}
-
 	scenario = number;
 }
 
-using var game = new NspwGame(dataDirectory, executable, scenario, replay);
+using var game = new NspwGame(
+	data,
+	singleplayerFiles,
+	singleplayerExecutableName,
+	scenario,
+	replay
+);
 game.Run();
 return 0;
