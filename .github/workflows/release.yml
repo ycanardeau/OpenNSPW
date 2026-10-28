@@ -4,7 +4,7 @@
 # Once the packages are pushed, publishes the desktop app, self-contained in a single-file executable, on a GitHub Release of the tag, a prerelease for prerelease tags:
 # for Windows (win-x64) as a zip, for Apple Silicon Macs (osx-arm64) as OpenNSPW.app, ad-hoc signed, in a zip (tools/package-macos-app.sh),
 # and for Linux (linux-x64) as an AppImage (tools/package-linux-appimage.sh); with their SHA-256 in SHA256SUMS, and build provenance attestations.
-# The downloads have none of the original's files (Original/); the release notes tell players where to put theirs.
+# The app embeds the original's files that it reads (Original/NSPW_NET's data, and Original/Nspw122's NSPW_122.exe with its maps, sounds and sprite sheet), so the downloads play on their own.
 
 name: Release
 
@@ -157,17 +157,13 @@ jobs:
     - name: Write release notes
       run: |
         cat > "$RUNNER_TEMP/notes.md" <<'EOF'
-        The builds run without installing .NET. They have none of NSPW's own files: put the app beside an `Original` folder that holds them, as in this repository.
+        The builds run without installing .NET, and come with what they need of the original games, Naval South Pacific War by Ken-ichi Tokumitsu (Nara-Shika Seisakusho), freeware whose author permits redistribution: NSPW on the Net's data, and NSPW 1.22, whose computer player single-player runs.
 
-        ```
-        Original/NSPW_NET/                       the game's data: t3.bmp, wav, Map, Scenario, Saved
-        Original/Nspw122/NSPW_122.exe            for single-player
-        OpenNSPW-<version>-win-x64/              Windows: extract the zip here, and start OpenNspw.Desktop.exe
-        OpenNSPW.app                             Macs with Apple silicon: extract the zip here
-        OpenNSPW-<version>-linux-x64.AppImage    Linux: make it executable (chmod +x), and start it
-        ```
+        - Windows: extract `OpenNSPW-<version>-win-x64.zip`, and start `OpenNspw.Desktop.exe`.
+        - Macs with Apple silicon: extract `OpenNSPW-<version>-osx-arm64.zip`, and start `OpenNSPW.app`.
+        - Linux: make `OpenNSPW-<version>-linux-x64.AppImage` executable (`chmod +x`), and start it.
 
-        Or start it with `--data <the NSPW_NET folder>` and `--exe <NSPW_122.exe>`.
+        The settings and the saves are kept in `%APPDATA%\OpenNSPW` on Windows, `~/Library/Application Support/OpenNSPW` on macOS, and `~/.config/OpenNSPW` on Linux.
 
         The Mac app isn't notarized by Apple, so macOS refuses to open it the first time. Then click Open Anyway in System Settings → Privacy & Security, or run `xattr -dr com.apple.quarantine OpenNSPW.app` in Terminal once.
 

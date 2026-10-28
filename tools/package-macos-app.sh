@@ -4,7 +4,7 @@
 #
 # tools/package-macos-app.sh <version> <output directory>
 #
-# The app finds the original's files (Original/) beside it, as it finds them beside the Windows build.
+# The app embeds the original's files that it reads, so it needs nothing beside it, as the Windows build doesn't.
 
 set -euo pipefail
 

@@ -5,7 +5,7 @@
 #
 # tools/package-linux-appimage.sh <version> <output directory>
 #
-# The AppImage finds the original's files (Original/) beside it.
+# The app embeds the original's files that it reads, so the AppImage needs nothing beside it.
 
 set -euo pipefail
 
@@ -39,20 +39,10 @@ Icon=OpenNSPW
 Categories=Game;StrategyGame;
 EOF
 
-# The app looks for Original up from its own directory, which is inside the mounted AppImage: give it the one beside the
-# AppImage, unless it is told where the files are.
+# Starts the app, which reads its libraries and Fonts from its own directory.
 cat > "$appdir/AppRun" <<'EOF'
 #!/bin/sh
 here=$(dirname "$(readlink -f "$0")")
-original=$(dirname "${APPIMAGE:-$here}")/Original
-case " $* " in
-*" --data "*) ;;
-*) [ -f "$original/NSPW_NET/t3.bmp" ] && set -- --data "$original/NSPW_NET" "$@" ;;
-esac
-case " $* " in
-*" --exe "*) ;;
-*) [ -f "$original/Nspw122/NSPW_122.exe" ] && set -- --exe "$original/Nspw122/NSPW_122.exe" "$@" ;;
-esac
 exec "$here/usr/bin/OpenNspw.Desktop" "$@"
 EOF
 chmod +x "$appdir/AppRun"
