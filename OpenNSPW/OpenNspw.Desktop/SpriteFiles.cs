@@ -6,13 +6,18 @@ namespace OpenNspw.Desktop;
 // app, made again with tools/CutSprites.cs. The sheet's color key is transparent in them.
 internal static class SpriteFiles
 {
-	// The file at the path under Sprites, such as "jp/bb.png", as a texture.
-	public static Texture2D Load(GraphicsDevice graphicsDevice, string path)
+	// The file at the path under Sprites, such as "jp/bb.png", to read.
+	public static Stream Open(string path)
 	{
 		var name = $"{typeof(SpriteFiles).Namespace}.Sprites.{path.Replace('/', '.')}";
-		using var stream =
-			typeof(SpriteFiles).Assembly.GetManifestResourceStream(name)
+		return typeof(SpriteFiles).Assembly.GetManifestResourceStream(name)
 			?? throw new FileNotFoundException($"The sprite {path} is not in the app.", name);
+	}
+
+	// The file at the path under Sprites as a texture.
+	public static Texture2D Load(GraphicsDevice graphicsDevice, string path)
+	{
+		using var stream = Open(path);
 		return Texture2D.FromStream(
 			graphicsDevice,
 			stream,

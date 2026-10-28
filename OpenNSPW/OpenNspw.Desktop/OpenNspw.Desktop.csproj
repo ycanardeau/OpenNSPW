@@ -15,21 +15,21 @@
     <EmbeddedResource Include="Icon.bmp" LogicalName="Icon.bmp" />
     <!-- The app's font and its license (BundledFonts), beside the app. -->
     <None Include="Fonts\**" CopyToOutputDirectory="PreserveNewest" />
-    <!-- The sprites cut from the original's sprite sheet (SpriteFiles, tools/CutSprites.cs). -->
+    <!-- The sprites cut from the original's sprite sheets (SpriteFiles, tools/CutSprites.cs), which the game's own sheets
+         are put together from (SpriteSheet). -->
     <EmbeddedResource Include="Sprites\**\*.png" />
   </ItemGroup>
 
   <!--
     The original's files that the game reads (EmbeddedFiles), named by their path under Original, whose author lets them
-    be redistributed (Original/README.md): NSPW NET's data, and NSPW 1.22's executable, sprite sheet, maps and sounds
-    for single-player.
+    be redistributed (Original/README.md): NSPW NET's data, and NSPW 1.22's executable, maps and sounds for
+    single-player. Not their sprite sheets, which are put together from the sprites (SpriteSheet).
   -->
   <ItemGroup>
-    <EmbeddedResource Include="..\..\Original\NSPW_NET\t3.bmp" LogicalName="NSPW_NET/%(Filename)%(Extension)" />
     <EmbeddedResource Include="..\..\Original\NSPW_NET\wav\*.wav" LogicalName="NSPW_NET/wav/%(Filename)%(Extension)" />
     <EmbeddedResource Include="..\..\Original\NSPW_NET\Map\*.dat" LogicalName="NSPW_NET/Map/%(Filename)%(Extension)" />
     <EmbeddedResource Include="..\..\Original\NSPW_NET\Scenario\*.dat" LogicalName="NSPW_NET/Scenario/%(Filename)%(Extension)" />
-    <EmbeddedResource Include="..\..\Original\Nspw122\NSPW_122.exe;..\..\Original\Nspw122\tst_cg1.bmp" LogicalName="Nspw122/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\Nspw122\NSPW_122.exe" LogicalName="Nspw122/%(Filename)%(Extension)" />
     <EmbeddedResource Include="..\..\Original\Nspw122\wav\*.wav" LogicalName="Nspw122/wav/%(Filename)%(Extension)" />
     <EmbeddedResource Include="..\..\Original\Nspw122\Map\*.dat" LogicalName="Nspw122/Map/%(Filename)%(Extension)" />
   </ItemGroup>
@@ -38,6 +38,13 @@
     <PackageReference Include="FontStashSharp.MonoGame" />
     <PackageReference Include="MonoGame.Extended" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" />
+    <!-- Decodes the sprites to put the sprite sheets together again (SpriteSheet). -->
+    <PackageReference Include="StbImageSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- SpriteSheetTests compares the sheets put together from the sprites with the original's. -->
+    <InternalsVisibleTo Include="OpenNspw.Tests" />
   </ItemGroup>
 
   <ItemGroup>

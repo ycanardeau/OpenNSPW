@@ -4,7 +4,7 @@
 # Once the packages are pushed, publishes the desktop app, self-contained in a single-file executable, on a GitHub Release of the tag, a prerelease for prerelease tags:
 # for Windows (win-x64) as a zip, for Apple Silicon Macs (osx-arm64) as OpenNSPW.app, ad-hoc signed, in a zip (tools/package-macos-app.sh),
 # and for Linux (linux-x64) as an AppImage (tools/package-linux-appimage.sh); with their SHA-256 in SHA256SUMS, and build provenance attestations.
-# The app embeds the original's files that it reads (Original/NSPW_NET's data, and Original/Nspw122's NSPW_122.exe with its maps, sounds and sprite sheet), so the downloads play on their own.
+# The app embeds the original's files that it reads (Original/NSPW_NET's data, and Original/Nspw122's NSPW_122.exe with its maps and sounds), and puts their sprite sheets together from its sprites, so the downloads play on their own.
 
 name: Release
 

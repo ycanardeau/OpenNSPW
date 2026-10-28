@@ -91,6 +91,37 @@ internal sealed class EmbeddedFiles(string folder) : IOriginalFiles
 	}
 }
 
+// Files of the original, with their sprite sheet put together from the sprites (SpriteSheet) instead of read: the app
+// ships no sheet.
+internal sealed class WithSpriteSheet(IOriginalFiles files, string sheetName, Func<byte[]> sheet)
+	: IOriginalFiles
+{
+	private readonly IOriginalFiles _files = files;
+	private readonly string _sheetName = sheetName;
+	private readonly Func<byte[]> _sheet = sheet;
+
+	public Stream? Open(string path)
+	{
+		return string.Equals(path.Trim('/'), _sheetName, StringComparison.OrdinalIgnoreCase)
+			? new MemoryStream(_sheet(), writable: false)
+			: _files.Open(path);
+	}
+
+	public IReadOnlyList<string> Find(string directory, string pattern)
+	{
+		return
+			directory.Trim('/') == "" && FileSystemName.MatchesSimpleExpression(pattern, _sheetName)
+			?
+			[
+				.. _files
+					.Find(directory, pattern)
+					.Append(_sheetName)
+					.Order(StringComparer.OrdinalIgnoreCase),
+			]
+			: _files.Find(directory, pattern);
+	}
+}
+
 // A file of the original that the game opens to write: its bytes in memory, written to a file in the user's folder when
 // it is closed, if the game wrote to it. The game changes that copy, and reads it from then on, never the original's.
 internal sealed class CopyOnWriteStream : MemoryStream

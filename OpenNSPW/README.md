@@ -34,10 +34,10 @@ Run the commands below from this folder.
 dotnet run --project OpenNspw.Desktop
 ```
 
-The game's data is NSPW NET's, `Original/NSPW_NET`, which the app embeds, or the folder given with `--data <folder>`. What the game writes, such as its saves (`Saved`), is kept in `OpenNSPW` under the user's application data folder, never in the data. The game starts at its main menu, and returns to it when a game ends.
+The game's data is NSPW NET's, `Original/NSPW_NET`, which the app embeds but for its sprite sheet, which it puts together from the sprites, or the folder given with `--data <folder>`. What the game writes, such as its saves (`Saved`), is kept in `OpenNSPW` under the user's application data folder, never in the data. The game starts at its main menu, and returns to it when a game ends.
 
 - **Multiplayer**: start two of them. One hosts (port `0` picks a free port, `2310` is the original's), and the other joins its address and port. **Scenario Editor** opens the original's map editor. Settings, such as the player name, are kept in `OpenNSPW/settings.json` under the user's application data folder.
-- **Single Player**: a scenario of NSPW 1.22 against the computer (see [docs/Singleplayer.md](../docs/Singleplayer.md)), chosen from its scenarios. It runs `Original/Nspw122/NSPW_122.exe`, which the app embeds with 1.22's maps, sounds and sprite sheet, or the file given with `--exe <file>`, with the files of its folder.
+- **Single Player**: a scenario of NSPW 1.22 against the computer (see [docs/Singleplayer.md](../docs/Singleplayer.md)), chosen from its scenarios. It runs `Original/Nspw122/NSPW_122.exe`, which the app embeds with 1.22's maps and sounds, and with its sprite sheet put together from the sprites, or the file given with `--exe <file>`, with the files of its folder.
 
 To start a single-player scenario without the menus:
 
@@ -47,7 +47,7 @@ dotnet run --project OpenNspw.Desktop -- --singleplayer 3
 
 The text is drawn in fonts that come with the game, so that it looks the same on every platform: BIZ UDGothic for the game's own text and BIZ UDPGothic for the menus, under the SIL Open Font License 1.1 ([OpenNspw.Desktop/Fonts/OFL.txt](OpenNspw.Desktop/Fonts/OFL.txt)).
 
-The battle's pictures and the title are the original's sprites, cut from its sprite sheet into a file each in `OpenNspw.Desktop/Sprites` (see [docs/SpriteSheets.md](../docs/SpriteSheets.md)).
+The battle's pictures and the title are the original's sprites, cut from its sprite sheet into a file each in `OpenNspw.Desktop/Sprites` (see [docs/SpriteSheets.md](../docs/SpriteSheets.md)). The game's own sprite sheets, `t3.bmp` and 1.22's `tst_cg1.bmp`, are put together again from them, so the app ships no sheet.
 
 ## Porting a file
 ```bash

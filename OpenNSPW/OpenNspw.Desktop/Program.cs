@@ -3,12 +3,14 @@ using OpenNspw.Desktop;
 // OpenNspw.Desktop [--data <directory>] [--exe <NSPW_122.exe>] [--singleplayer <scenario> | --replay <trace.n122>]
 //
 // Plays the port, from its main menu. The game's data (t3.bmp, wav, Map, Scenario) is NSPW NET's, from Original/NSPW_NET
-// of this repository, embedded in the app; or the directory given with --data, read from disk. What the game writes,
-// such as its saves (Saved), is in the user's folder (UserFolder).
+// of this repository, embedded in the app, with the sprite sheet t3.bmp put together from the sprites (SpriteSheet); or
+// the directory given with --data, read from disk. What the game writes, such as its saves (Saved), is in the user's
+// folder (UserFolder).
 //
 // The single-player mode plays a scenario of NSPW 1.22 against the computer (docs/Singleplayer.md), whose functions run
 // from the single-player executable, with 1.22's maps, sounds and sprite sheet from its directory: Original/Nspw122 of
-// this repository, embedded in the app; or the NSPW_122.exe given with --exe, and its directory, read from disk. With
+// this repository, embedded in the app, with the sheet tst_cg1.bmp put together from the sprites; or the NSPW_122.exe
+// given with --exe, and its directory, read from disk. With
 // --singleplayer, the game starts in that scenario, without the menus. With --replay, it starts in the scenario of a
 // trace recorded from 1.22, and follows it, to watch it (docs/Verification.md).
 
@@ -18,7 +20,11 @@ static string? Option(string[] args, string name)
 	return index >= 0 && index + 1 < args.Length ? args[index + 1] : null;
 }
 
-IOriginalFiles data = new EmbeddedFiles("NSPW_NET");
+IOriginalFiles data = new WithSpriteSheet(
+	new EmbeddedFiles("NSPW_NET"),
+	"t3.bmp",
+	() => SpriteSheet.NspwNet
+);
 if (Option(args, "--data") is { } dataDirectory)
 {
 	if (!File.Exists(OpenNspw.GameFiles.Resolve(dataDirectory, "t3.bmp")))
@@ -30,7 +36,11 @@ if (Option(args, "--data") is { } dataDirectory)
 	data = new DirectoryFiles(dataDirectory);
 }
 
-IOriginalFiles singleplayerFiles = new EmbeddedFiles("Nspw122");
+IOriginalFiles singleplayerFiles = new WithSpriteSheet(
+	new EmbeddedFiles("Nspw122"),
+	"tst_cg1.bmp",
+	() => SpriteSheet.Nspw122
+);
 var singleplayerExecutableName = "NSPW_122.exe";
 if (Option(args, "--exe") is { } executable)
 {

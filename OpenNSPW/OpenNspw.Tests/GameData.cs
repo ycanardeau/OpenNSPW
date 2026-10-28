@@ -42,6 +42,13 @@ internal static class GameData
 		return FindInOriginal("NSPW_NET", "t3.bmp");
 	}
 
+	// Original/NSPW_NET, the original's data.
+	public static string FindData()
+	{
+		return FindOriginal()
+			?? throw new InvalidOperationException("Original/NSPW_NET is not found.");
+	}
+
 	// Original/Nspw122, with NSPW_122.exe and its maps, sounds and sprite sheet.
 	public static string FindSingleplayer()
 	{
@@ -105,9 +112,7 @@ internal static class GameData
 	// original's, so that the tests run the same everywhere.
 	public static TemporaryDirectory CreateCopy()
 	{
-		var original =
-			FindOriginal()
-			?? throw new InvalidOperationException("Original/NSPW_NET is not found.");
+		var original = FindData();
 		var directory = new TemporaryDirectory(
 			System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"OpenNspw-{Guid.NewGuid():N}")
 		);
