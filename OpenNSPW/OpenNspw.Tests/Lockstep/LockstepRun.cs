@@ -8,6 +8,7 @@ internal sealed class LockstepRun : IDisposable
 	public const int DefaultRoundLimit = 20_000;
 
 	private readonly TemporaryDirectory _data = GameData.CreateCopy();
+	private readonly TemporaryDirectory _user = GameData.CreateEmpty();
 	private readonly LockstepScheduler _scheduler = new();
 	private readonly TraceRecorder _trace;
 
@@ -27,7 +28,11 @@ internal sealed class LockstepRun : IDisposable
 			)
 		);
 
-	public LockstepRun()
+	// drawsFromSpriteFiles: whether the games draw from the desktop app's sprite files (docs/GameSprites.md), rather than
+	// from the sprite sheet's file. playsBundledFiles: whether they play the desktop app's embedded files, with an empty
+	// user's folder (docs/BundledData.md), rather than a copy of the original's data; they then draw from the sprite
+	// files, as the app embeds no sheet.
+	public LockstepRun(bool drawsFromSpriteFiles = false, bool playsBundledFiles = false)
 	{
 		var network = new LoopbackNetwork();
 		Host = new LockstepGame(_scheduler, network, _data.Path, "Alice");
@@ -36,6 +41,13 @@ internal sealed class LockstepRun : IDisposable
 		_trace = new TraceRecorder(Games);
 		foreach (var game in Games)
 		{
+			game.DrawsFromSpriteFiles = drawsFromSpriteFiles || playsBundledFiles;
+			if (playsBundledFiles)
+				game.Files = new GameFileLayers(
+					[],
+					_user.Path,
+					[new Desktop.BundledFiles("NSPW_NET")]
+				);
 			game.Start();
 		}
 	}
@@ -108,5 +120,6 @@ internal sealed class LockstepRun : IDisposable
 		}
 
 		_data.Dispose();
+		_user.Dispose();
 	}
 }

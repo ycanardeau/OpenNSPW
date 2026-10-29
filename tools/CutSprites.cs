@@ -1,5 +1,6 @@
 // Cuts the original's sprite sheet into the desktop app's sprites (docs/SpriteSheets.md): NSPW NET's t3.bmp, and 1.22's
-// tst_cg1.bmp for what only 1.22 has. Writes them to OpenNSPW/OpenNspw.Desktop/Sprites, or with --check, compares them
+// tst_cg1.bmp for what only 1.22 has. The game draws its own frames from them too (SpriteSheetLayout), so they hold every
+// part of the sheets that it draws from. Writes them to OpenNSPW/OpenNspw.Desktop/Sprites, or with --check, compares them
 // with the files there and fails if any differs.
 //
 //     dotnet run tools/CutSprites.cs [--check]
@@ -272,6 +273,11 @@ internal static class Layout
 		yield return ("effects.png", nspwNet, new Region(0, 3520, 480, 400), true);
 		yield return ("flag-jp.png", nspwNet, new Region(361, 3250, 198, 120), false);
 		yield return ("flag-us.png", nspwNet, new Region(361, 3370, 198, 120), false);
+
+		// What only the game draws: the combat menu's buttons (Buttons1, both columns), and the minimap's band (its frame,
+		// the dots it draws units with, and the background it copies from).
+		yield return ("buttons.png", nspwNet, new Region(0, 3250, 361, 270), false);
+		yield return ("minimap.png", nspwNet, new Region(0, 4340, 561, 200), false);
 
 		foreach (var (name, region) in Side("jp", true, 1759, 0))
 			yield return (name, nspwNet, region, true);

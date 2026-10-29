@@ -1312,51 +1312,6 @@ public unsafe partial class Nspw
 
 public unsafe partial class Renderer
 {
-	//============================================================================
-	//失ったオブジェクトを再読み込みする
-	//----------------------------------------------------------------------------
-	[Original("restoreAll")]
-	public void RestoreSurfaces()
-	{
-		IDirectDrawSurface_Restore(lpDDSPrimary);
-		IDirectDrawSurface_Restore(lpDDSBack);
-		IDirectDrawSurface_Restore(OffscreenSurface);
-
-		RELEASE(ref OffscreenSurface);
-		OffscreenSurface = LoadBitmapSurface(_game.SpriteSheetName);
-
-		// ピクセルフォーマットを取得
-		DDPIXELFORMAT ddpf;
-		ddpf.dwSize = (uint)(sizeof(DDPIXELFORMAT));
-		OffscreenSurface.GetPixelFormat(&ddpf);
-
-		var KeyColor = ddpf.dwRBitMask | ddpf.dwBBitMask;
-
-		// カラーキーを設定
-		DDCOLORKEY key;
-		key.dwColorSpaceLowValue = KeyColor;
-		key.dwColorSpaceHighValue = KeyColor;
-		OffscreenSurface.SetColorKey(DDCKEY_SRCBLT, &key);
-
-		// クリッパー
-		RELEASE(ref lpDDclip);
-		if (IsFullscreen)
-		{
-			lpDD.CreateClipper(0, out lpDDclip, null);
-			lpDDclip.SetHWnd(0, _game.hwndApp);
-			lpDD.FlipToGDISurface();
-		}
-		else
-		{
-			lpDD.CreateClipper(0, out lpDDclip, null);
-			lpDDclip.SetHWnd(0, _game.hwndApp);
-			lpDDSPrimary.SetClipper(lpDDclip);
-		}
-
-		// マップを作りなおす
-		MakeTerrainSurface();
-	}
-
 	[Original("bitmap_surface")]
 	public IDirectDrawSurface7? LoadBitmapSurface(string fileName)
 	{
@@ -1429,5 +1384,109 @@ public unsafe partial class Renderer
 		// 呼び出し側にポインタを返す
 
 		return surf;
+	}
+
+	// A piece of the sprite sheet, from a sprite file: its transparent pixels are the color key that the game sets for
+	// the sheet (RestoreSurfaces), magenta, as on the sheet.
+	private DirectDrawSurface7? CreateSpritePiece(SpriteBitmap bitmap)
+	{
+		DDSURFACEDESC2 ddsd;
+		ZeroMemory(&ddsd, (nuint)(sizeof(DDSURFACEDESC2)));
+		ddsd.dwSize = (uint)(sizeof(DDSURFACEDESC2));
+		ddsd.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
+		ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
+		ddsd.dwWidth = (uint)bitmap.Width;
+		ddsd.dwHeight = (uint)bitmap.Height;
+		if (
+			lpDD.CreateSurface(&ddsd, out var created, null) != DD_OK
+			|| created is not DirectDrawSurface7 surface
+		)
+			return null;
+
+		surface.Lock(null, &ddsd, DDLOCK_WAIT, null);
+		var key = (ushort)(ddsd.ddpfPixelFormat.dwRBitMask | ddsd.ddpfPixelFormat.dwBBitMask);
+		var pixels = new Span<ushort>(ddsd.lpSurface, bitmap.Width * bitmap.Height);
+		var rgba = bitmap.Rgba;
+		for (var i = 0; i < pixels.Length; i++)
+		{
+			pixels[i] =
+				rgba[i * 4 + 3] == 0
+					? key
+					: wingdi.ToPixel(wingdi.RGB(rgba[i * 4], rgba[i * 4 + 1], rgba[i * 4 + 2]));
+		}
+
+		surface.Unlock(null);
+		return surface;
+	}
+
+	// The sprite sheet that the game draws from (OffscreenSurface): made of the sprite files of its layout
+	// (SpriteSheetSurface, docs/GameSprites.md), 1.22's in a single-player game, if the platform has every one of them;
+	// and otherwise the sheet's own file (SpriteSheetName), as the original loads it.
+	public IDirectDrawSurface7? LoadSpriteSheet()
+	{
+		var pieces = new List<(DirectDrawSurface7 Surface, int X, int Y)>();
+		foreach (var piece in SpriteSheetLayout.Pieces(_game.IsSingleplayer))
+		{
+			if (
+				_game.LoadSprite(piece.Path) is not { } bitmap
+				|| bitmap.Width != piece.Width
+				|| bitmap.Height != piece.Height
+				|| CreateSpritePiece(bitmap) is not { } surface
+			)
+			{
+				foreach (var (created, _, _) in pieces)
+					created.Release();
+				return LoadBitmapSurface(_game.SpriteSheetName);
+			}
+
+			pieces.Add((surface, piece.X, piece.Y));
+		}
+
+		return new SpriteSheetSurface(pieces);
+	}
+
+	//============================================================================
+	//失ったオブジェクトを再読み込みする
+	//----------------------------------------------------------------------------
+	[Original("restoreAll")]
+	public void RestoreSurfaces()
+	{
+		IDirectDrawSurface_Restore(lpDDSPrimary);
+		IDirectDrawSurface_Restore(lpDDSBack);
+		IDirectDrawSurface_Restore(OffscreenSurface);
+
+		RELEASE(ref OffscreenSurface);
+		OffscreenSurface = LoadSpriteSheet();
+
+		// ピクセルフォーマットを取得
+		DDPIXELFORMAT ddpf;
+		ddpf.dwSize = (uint)(sizeof(DDPIXELFORMAT));
+		OffscreenSurface.GetPixelFormat(&ddpf);
+
+		var KeyColor = ddpf.dwRBitMask | ddpf.dwBBitMask;
+
+		// カラーキーを設定
+		DDCOLORKEY key;
+		key.dwColorSpaceLowValue = KeyColor;
+		key.dwColorSpaceHighValue = KeyColor;
+		OffscreenSurface.SetColorKey(DDCKEY_SRCBLT, &key);
+
+		// クリッパー
+		RELEASE(ref lpDDclip);
+		if (IsFullscreen)
+		{
+			lpDD.CreateClipper(0, out lpDDclip, null);
+			lpDDclip.SetHWnd(0, _game.hwndApp);
+			lpDD.FlipToGDISurface();
+		}
+		else
+		{
+			lpDD.CreateClipper(0, out lpDDclip, null);
+			lpDDclip.SetHWnd(0, _game.hwndApp);
+			lpDDSPrimary.SetClipper(lpDDclip);
+		}
+
+		// マップを作りなおす
+		MakeTerrainSurface();
 	}
 }

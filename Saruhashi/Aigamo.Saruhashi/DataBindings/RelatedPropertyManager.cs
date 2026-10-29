@@ -9,9 +9,11 @@
 using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Aigamo.Saruhashi;
 
+[RequiresUnreferencedCode(BindingTrimming.Message)]
 internal class RelatedPropertyManager : PropertyManager
 {
 	BindingManagerBase parentManager;

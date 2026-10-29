@@ -1038,7 +1038,7 @@ public unsafe partial class Nspw
 		}
 
 		// 最初のイメージをロードし、表示
-		Renderer.OffscreenSurface = Renderer.LoadBitmapSurface(SpriteSheetName);
+		Renderer.OffscreenSurface = Renderer.LoadSpriteSheet();
 		if (Renderer.OffscreenSurface == null)
 		{
 			MessageBox(null, "bitmap_surface", "残念！", MB_OK | MB_ICONSTOP);

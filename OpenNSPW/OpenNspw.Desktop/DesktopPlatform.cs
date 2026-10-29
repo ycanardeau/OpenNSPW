@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Xna.Framework.Audio;
 using OpenNspw.DirectPlay;
 
@@ -42,11 +43,16 @@ internal sealed class Sound(SoundEffect effect) : ISound, IDisposable
 	}
 }
 
-// The platform of the desktop app: the game's files in its data directory, DirectPlay 8 on Otsuki, MonoGame sound,
-// text rasterized with a TrueType font, and settings in a JSON file.
-internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text) : INspwPlatform
+// The platform of the desktop app: the game's files in their layers (GameData), its sprites from the app's, DirectPlay 8
+// on Otsuki, MonoGame sound, text rasterized with a TrueType font, and settings in a JSON file.
+internal sealed partial class DesktopPlatform(GameFileLayers files, TextRasterizer text)
+	: INspwPlatform
 {
-	private readonly string _dataDirectory = dataDirectory;
+	// How the settings are read and written, generated, so that trimming keeps what it needs.
+	[JsonSerializable(typeof(Dictionary<string, string>))]
+	private sealed partial class SettingsJson : JsonSerializerContext;
+
+	private readonly GameFileLayers _files = files;
 	private readonly DirectPlay8Factory _directPlay = new();
 	private readonly TextRasterizer _text = text;
 	private readonly List<Sound> _sounds = [];
@@ -61,10 +67,6 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 	private ushort[] _frame = [];
 	private int _frameWidth;
 	private int _frameHeight;
-
-	// NSPW 1.22's directory, whose files a single-player game reads instead of the game's own, or null. Set before the
-	// game starts.
-	public string? SingleplayerDirectory { get; set; }
 
 	// Incremented for each frame the game shows.
 	public int FrameNumber { get; private set; }
@@ -106,37 +108,17 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 
 	public Stream? OpenFile(string path, FileMode mode, FileAccess access, FileShare share)
 	{
-		try
-		{
-			if (
-				GameFiles.OpenSingleplayer(SingleplayerDirectory, path, mode, share) is
-				{ } singleplayerFile
-			)
-			{
-				return singleplayerFile;
-			}
-
-			var full = GameFiles.Resolve(_dataDirectory, path);
-			if (mode is FileMode.Create or FileMode.CreateNew or FileMode.OpenOrCreate)
-			{
-				Directory.CreateDirectory(Path.GetDirectoryName(full)!);
-			}
-
-			return new FileStream(full, mode, access, share);
-		}
-		catch (IOException)
-		{
-			return null;
-		}
-		catch (UnauthorizedAccessException)
-		{
-			return null;
-		}
+		return _files.Open(path, mode, access, share);
 	}
 
 	public IReadOnlyList<string> FindFiles(string directory, string pattern)
 	{
-		return GameFiles.Find(_dataDirectory, directory, pattern);
+		return _files.Find(directory, pattern);
+	}
+
+	public SpriteBitmap? LoadSprite(string path)
+	{
+		return SpriteFiles.LoadBitmap(path);
 	}
 
 	public int CoCreateInstance(Guid rclsid, Guid riid, out object? ppv)
@@ -254,8 +236,9 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 		{
 			try
 			{
-				_settings = JsonSerializer.Deserialize<Dictionary<string, string>>(
-					File.ReadAllText(_settingsPath)
+				_settings = JsonSerializer.Deserialize(
+					File.ReadAllText(_settingsPath),
+					SettingsJson.Default.DictionaryStringString
 				);
 			}
 			catch (Exception) { }
@@ -280,7 +263,10 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 		{
 			Settings()[key] = value;
 			Directory.CreateDirectory(Path.GetDirectoryName(_settingsPath)!);
-			File.WriteAllText(_settingsPath, JsonSerializer.Serialize(Settings()));
+			File.WriteAllText(
+				_settingsPath,
+				JsonSerializer.Serialize(Settings(), SettingsJson.Default.DictionaryStringString)
+			);
 		}
 	}
 }

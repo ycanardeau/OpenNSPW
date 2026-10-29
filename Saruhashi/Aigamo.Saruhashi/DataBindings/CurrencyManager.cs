@@ -9,6 +9,7 @@
 using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace Aigamo.Saruhashi;
@@ -16,6 +17,7 @@ namespace Aigamo.Saruhashi;
 /// <summary>
 ///  Manages the position and bindings of a list.
 /// </summary>
+[RequiresUnreferencedCode(BindingTrimming.Message)]
 public class CurrencyManager : BindingManagerBase
 {
 	private object dataSource;

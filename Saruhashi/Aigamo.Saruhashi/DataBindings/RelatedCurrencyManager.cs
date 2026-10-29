@@ -9,6 +9,7 @@
 using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Aigamo.Saruhashi;
 
@@ -16,6 +17,7 @@ namespace Aigamo.Saruhashi;
 ///  Represents the child version of the System.Windows.Forms.ListManager
 ///  that is used when a parent/child relationship exists in a System.Windows.Forms.DataSet.
 /// </summary>
+[RequiresUnreferencedCode(BindingTrimming.Message)]
 internal class RelatedCurrencyManager : CurrencyManager
 {
 	BindingManagerBase parentManager;

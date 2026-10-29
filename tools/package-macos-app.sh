@@ -4,7 +4,8 @@
 #
 # tools/package-macos-app.sh <version> <output directory>
 #
-# The app finds the original's files (Original/) beside it, as it finds them beside the Windows build.
+# The app embeds the original's files that the game reads (docs/BundledData.md), and keeps what the game writes in the
+# user's folder.
 
 set -euo pipefail
 
@@ -20,6 +21,10 @@ dotnet publish "$root/OpenNSPW/OpenNspw.Desktop" --configuration Release --runti
 	/p:PublishSingleFile=true /p:DebugType=embedded /p:GenerateDocumentationFile=false /p:Version="$version" \
 	--output "$app/Contents/MacOS"
 
+# The executable named after the app: Finder takes the end of OpenNspw.Desktop for an extension, .Desktop, which other
+# apps claim (Linux's launchers, .desktop). The single-file executable finds what it bundles wherever it is named.
+mv "$app/Contents/MacOS/OpenNspw.Desktop" "$app/Contents/MacOS/OpenNSPW"
+
 # The icon from the window's (Icon.bmp, the original's 32x32 icon), at the sizes it has; Finder scales it up.
 iconset=$(mktemp -d)/OpenNSPW.iconset
 mkdir "$iconset"
@@ -34,6 +39,9 @@ iconutil --convert icns "$iconset" --output "$app/Contents/Resources/OpenNSPW.ic
 mv "$app/Contents/MacOS/Fonts" "$app/Contents/Resources/Fonts"
 ln -s ../Resources/Fonts "$app/Contents/MacOS/Fonts"
 
+# The notice of the original's files, which the app does not read, in Resources for the same reason.
+mv "$app/Contents/MacOS/OriginalNotice.txt" "$app/Contents/Resources/OriginalNotice.txt"
+
 # The bundle's versions are numbers only, so a prerelease such as 0.0.1-alpha.4 is 0.0.1.
 cat > "$app/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -45,7 +53,7 @@ cat > "$app/Contents/Info.plist" <<EOF
 	<key>CFBundleDisplayName</key>
 	<string>OpenNSPW</string>
 	<key>CFBundleExecutable</key>
-	<string>OpenNspw.Desktop</string>
+	<string>OpenNSPW</string>
 	<key>CFBundleIconFile</key>
 	<string>OpenNSPW</string>
 	<key>CFBundleIdentifier</key>

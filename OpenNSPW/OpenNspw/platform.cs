@@ -43,6 +43,11 @@ public interface INspwPlatform
 	// file cannot be opened.
 	Stream? OpenFile(string path, FileMode mode, FileAccess access, FileShare share);
 
+	// A sprite file of the app, by its path under the app's sprites with '/' separators, such as "jp/bb.png"
+	// (SpriteSheetLayout, docs/GameSprites.md), or null if the platform has none: the game then draws from its sprite
+	// sheet's own file (SpriteSheetName).
+	SpriteBitmap? LoadSprite(string path) => null;
+
 	// The names of the files in a directory of the game ('/' separators, "" for the game's directory) that match a
 	// pattern such as "*.dat".
 	IReadOnlyList<string> FindFiles(string directory, string pattern);
@@ -84,27 +89,6 @@ public static class GameFiles
 		return full;
 	}
 
-	// A file of a single-player game from NSPW 1.22's directory, which has the game's maps, sounds and sprite sheet as
-	// 1.22 has them (docs/Differences.md): the file there, opened to read only, or null where that directory has none, for
-	// the game's own file. The game writes none of 1.22's files.
-	public static FileStream? OpenSingleplayer(
-		string? singleplayerDirectory,
-		string path,
-		FileMode mode,
-		FileShare share
-	)
-	{
-		if (singleplayerDirectory is null || mode is not (FileMode.Open or FileMode.OpenOrCreate))
-		{
-			return null;
-		}
-
-		var full = Resolve(singleplayerDirectory, path);
-		return File.Exists(full)
-			? new FileStream(full, FileMode.Open, FileAccess.Read, share)
-			: null;
-	}
-
 	public static IReadOnlyList<string> Find(string dataDirectory, string directory, string pattern)
 	{
 		var full = Resolve(dataDirectory, directory);
@@ -122,6 +106,246 @@ public static class GameFiles
 					.Order(StringComparer.OrdinalIgnoreCase),
 			]
 			: [];
+	}
+}
+
+// Files of the game that it only reads, in a layer of its files (GameFileLayers): a directory, or the original's files
+// that an app embeds (docs/BundledData.md). By the game's path with '/' separators, its names matched without case.
+public interface IGameFileSource
+{
+	// The file at the path, opened to read, or null where there is none.
+	Stream? Open(string path, FileShare share);
+
+	// The names of the files in a directory ("" for the top) that match a pattern such as "*.dat".
+	IReadOnlyList<string> Find(string directory, string pattern);
+}
+
+// The files of a directory, as a layer that is only read (GameFiles).
+public sealed class DirectoryFileSource(string directory) : IGameFileSource
+{
+	private readonly string _directory = directory;
+
+	public Stream? Open(string path, FileShare share)
+	{
+		var full = GameFiles.Resolve(_directory, path);
+		return File.Exists(full)
+			? new FileStream(full, FileMode.Open, FileAccess.Read, share)
+			: null;
+	}
+
+	public IReadOnlyList<string> Find(string directory, string pattern)
+	{
+		return GameFiles.Find(_directory, directory, pattern);
+	}
+}
+
+// A file of a layer that is only read, opened to write (GameFileLayers): read from its bytes until the game first writes
+// to it or sets its length, then copied to its path in the directory written, a file that it goes on in from the same
+// position. A file only read is never copied.
+public sealed class CopyOnWriteStream(byte[] bytes, string path, FileAccess access, FileShare share)
+	: Stream
+{
+	private readonly byte[] _bytes = bytes;
+	private readonly string _path = path;
+	private readonly FileAccess _access = access;
+	private readonly FileShare _share = share;
+	private Stream _stream = new MemoryStream(bytes, writable: false);
+
+	// Whether the file has been copied, and is now the file at the path.
+	public bool IsCopied => _stream is FileStream;
+
+	private Stream Copied()
+	{
+		if (_stream is FileStream file)
+			return file;
+
+		var position = _stream.Position;
+		Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
+		File.WriteAllBytes(_path, _bytes);
+		var copy = new FileStream(_path, FileMode.Open, _access, _share) { Position = position };
+		_stream.Dispose();
+		_stream = copy;
+		return copy;
+	}
+
+	public override bool CanRead => (_access & FileAccess.Read) != 0;
+
+	public override bool CanSeek => true;
+
+	public override bool CanWrite => true;
+
+	public override long Length => _stream.Length;
+
+	public override long Position
+	{
+		get => _stream.Position;
+		set => _stream.Position = value;
+	}
+
+	public override void Flush()
+	{
+		_stream.Flush();
+	}
+
+	public override int Read(byte[] buffer, int offset, int count)
+	{
+		return _stream.Read(buffer, offset, count);
+	}
+
+	public override int Read(Span<byte> buffer)
+	{
+		return _stream.Read(buffer);
+	}
+
+	public override long Seek(long offset, SeekOrigin origin)
+	{
+		return _stream.Seek(offset, origin);
+	}
+
+	public override void SetLength(long value)
+	{
+		Copied().SetLength(value);
+	}
+
+	public override void Write(byte[] buffer, int offset, int count)
+	{
+		Copied().Write(buffer, offset, count);
+	}
+
+	public override void Write(ReadOnlySpan<byte> buffer)
+	{
+		Copied().Write(buffer);
+	}
+
+	protected override void Dispose(bool disposing)
+	{
+		if (disposing)
+			_stream.Dispose();
+		base.Dispose(disposing);
+	}
+}
+
+// The game's files in layers (docs/BundledData.md): the layers before a directory, the directory, and the layers after
+// it. A file is read from the first layer that has it, and written in the directory: a file of another layer that the
+// game opens to write is copied there when it first writes to it (CopyOnWriteStream), and a file that no layer has is
+// created there. Listing a directory lists the names of every layer, each once.
+public sealed class GameFileLayers(
+	IEnumerable<IGameFileSource> before,
+	string directory,
+	IEnumerable<IGameFileSource> after
+)
+{
+	private readonly IGameFileSource[] _before = [.. before];
+	private readonly string _directory = directory;
+	private readonly IGameFileSource[] _after = [.. after];
+
+	// The files of a directory, the data directory, read and written, and in a single-player game NSPW 1.22's directory
+	// before it, which has the game's maps and sounds as 1.22 has them (docs/Differences.md).
+	public static GameFileLayers OfDirectories(string dataDirectory, string? singleplayerDirectory)
+	{
+		return new(
+			singleplayerDirectory is null ? [] : [new DirectoryFileSource(singleplayerDirectory)],
+			dataDirectory,
+			[]
+		);
+	}
+
+	// The file at the path in a layer that is only read, opened to read, or to write as a copy on write.
+	private static Stream? OpenIn(
+		IGameFileSource layer,
+		string path,
+		string written,
+		FileAccess access,
+		FileShare share
+	)
+	{
+		var stream = layer.Open(path, share);
+		if (stream is null || access == FileAccess.Read)
+			return stream;
+
+		using (stream)
+		{
+			using var bytes = new MemoryStream();
+			stream.CopyTo(bytes);
+			return new CopyOnWriteStream(bytes.ToArray(), written, access, share);
+		}
+	}
+
+	private static bool Exists(IGameFileSource[] layers, string path)
+	{
+		foreach (var layer in layers)
+		{
+			using var stream = layer.Open(path, FileShare.ReadWrite);
+			if (stream is not null)
+				return true;
+		}
+
+		return false;
+	}
+
+	private Stream? OpenOrCreate(string path, FileMode mode, FileAccess access, FileShare share)
+	{
+		var written = GameFiles.Resolve(_directory, path);
+		if (mode is FileMode.Open or FileMode.OpenOrCreate)
+		{
+			foreach (var layer in _before)
+			{
+				if (OpenIn(layer, path, written, access, share) is { } before)
+					return before;
+			}
+
+			if (File.Exists(written))
+				return new FileStream(written, mode, access, share);
+
+			foreach (var layer in _after)
+			{
+				if (OpenIn(layer, path, written, access, share) is { } after)
+					return after;
+			}
+
+			if (mode == FileMode.Open)
+				return null;
+		}
+		else if (mode == FileMode.CreateNew && (Exists(_before, path) || Exists(_after, path)))
+		{
+			return null;
+		}
+
+		Directory.CreateDirectory(Path.GetDirectoryName(written)!);
+		return new FileStream(written, mode, access, share);
+	}
+
+	// Opens a file of the game, as INspwPlatform.OpenFile does, or returns null if it cannot be opened.
+	public Stream? Open(string path, FileMode mode, FileAccess access, FileShare share)
+	{
+		try
+		{
+			return OpenOrCreate(path, mode, access, share);
+		}
+		catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+		{
+			return null;
+		}
+	}
+
+	// The names of the files in a directory of the game that match a pattern, in every layer, each once (in any case and
+	// either Unicode form, the first layer's), in the order of GameFiles.Find.
+	public IReadOnlyList<string> Find(string directory, string pattern)
+	{
+		IEnumerable<string> names =
+		[
+			.. _before.SelectMany(layer => layer.Find(directory, pattern)),
+			.. GameFiles.Find(_directory, directory, pattern),
+			.. _after.SelectMany(layer => layer.Find(directory, pattern)),
+		];
+		return
+		[
+			.. names
+				.DistinctBy(name =>
+					name.Normalize(System.Text.NormalizationForm.FormC).ToUpperInvariant()
+				)
+				.Order(StringComparer.OrdinalIgnoreCase),
+		];
 	}
 }
 
@@ -189,6 +413,7 @@ public static class winerror
 	public const int E_FAIL = unchecked((int)0x80004005);
 	public const int E_OUTOFMEMORY = unchecked((int)0x8007000E);
 	public const int E_NOINTERFACE = unchecked((int)0x80004002);
+	public const int E_NOTIMPL = unchecked((int)0x80004001);
 	public const int REGDB_E_CLASSNOTREG = unchecked((int)0x80040154);
 
 	public static bool FAILED(int hr)

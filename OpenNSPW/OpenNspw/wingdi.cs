@@ -67,6 +67,9 @@ public unsafe struct BITMAP
 // Text rasterized by the platform: an alpha mask of Width x Height, the height being the font's cell height.
 public sealed record TextBitmap(int Width, int Height, byte[] Alpha);
 
+// A sprite file's pixels (INspwPlatform.LoadSprite): 4 bytes a pixel, red, green, blue and alpha, row by row.
+public sealed record SpriteBitmap(int Width, int Height, byte[] Rgba);
+
 public static class wingdi
 {
 	public const int TRANSPARENT = 1;
@@ -470,6 +473,11 @@ public unsafe partial class Nspw
 	public HGDIOBJ LoadImage(string name)
 	{
 		return gdi.LoadBitmap(name);
+	}
+
+	public SpriteBitmap? LoadSprite(string path)
+	{
+		return _platform.LoadSprite(path);
 	}
 
 	// TextOut writes the first c chars (bytes) of the string.

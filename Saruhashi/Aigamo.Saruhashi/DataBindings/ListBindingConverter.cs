@@ -10,6 +10,7 @@ using System.Collections;
 using System.ComponentModel;
 using System.ComponentModel.Design.Serialization;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
@@ -116,6 +117,11 @@ public class ListBindingConverter : TypeConverter
 	///  for the object.  This is useful for objects that are immutable, but still
 	///  want to provide changable properties.
 	/// </summary>
+	[UnconditionalSuppressMessage(
+		"Trimming",
+		"IL2026",
+		Justification = "Only designers make bindings from their property values, through TypeDescriptor."
+	)]
 	public override object CreateInstance(
 		ITypeDescriptorContext context,
 		IDictionary propertyValues
@@ -152,6 +158,11 @@ public class ListBindingConverter : TypeConverter
 	///  Gets the best matching ctor for a given binding and fills it out, based on the
 	///  state of the Binding and the optimal ctor.
 	/// </summary>
+	[UnconditionalSuppressMessage(
+		"Trimming",
+		"IL2026",
+		Justification = "The binding was made by a constructor that requires unreferenced code."
+	)]
 	private InstanceDescriptor GetInstanceDescriptorFromValues(Binding b)
 	{
 		// The BindingFormattingDialog turns on Binding::FormattingEnabled property.
