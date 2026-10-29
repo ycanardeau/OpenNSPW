@@ -163,18 +163,6 @@ public class SingleplayerTests
 		Assert.Contains("日本海軍の勝利", run.Player.Texts);
 	}
 
-	// Every scenario plays for a while with the computer, without failing.
-	[Theory]
-	[MemberData(nameof(Scenarios))]
-	public void ScenarioPlays(int scenario)
-	{
-		using var run = new SingleplayerRun(scenario);
-		run.Frames(1000);
-
-		Assert.Equal(GameMode.Battle, run.Game.Mode);
-		Assert.Empty(run.Player.MessageBoxes);
-	}
-
 	// A single-player game reads 1.22's own files: its japan_off.dat, without the island that NSPW NET's has at tiles 56
 	// to 64 and 164 to 180, and its sprite sheet, whose title is 599 by 387.
 	[Fact]
@@ -1463,5 +1451,22 @@ public class SingleplayerTests
 
 		Assert.Equal(GameMode.Battle, run.Game.Mode);
 		Assert.False(run.Game.HasEmulator);
+	}
+
+	// The longest tests, in a class of their own, which xUnit runs in parallel with the others: the tests of one class run
+	// one after another.
+	public class Plays
+	{
+		// Every scenario plays for a while with the computer, without failing.
+		[Theory]
+		[MemberData(nameof(Scenarios), MemberType = typeof(SingleplayerTests))]
+		public void ScenarioPlays(int scenario)
+		{
+			using var run = new SingleplayerRun(scenario);
+			run.Frames(1000);
+
+			Assert.Equal(GameMode.Battle, run.Game.Mode);
+			Assert.Empty(run.Player.MessageBoxes);
+		}
 	}
 }

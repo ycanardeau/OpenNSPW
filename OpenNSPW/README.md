@@ -60,8 +60,10 @@ Run the commands below from this folder.
 
 ## Running the tests
 ```bash
-dotnet test OpenNspw.Tests
+dotnet test OpenNspw.Tests -c Release
 ```
+
+In Release, as CI runs them: the tests run whole games and the emulated 1.22 for many frames, about 3.5 times as fast as in Debug.
 
 ### Characterization traces
 The characterization tests run two games in lockstep (`OpenNspw.Tests/Lockstep`): each game runs only while the test steps it, until it ends a frame, sleeps or waits for a message; its clock advances only as it reads it; the two games connect through an in-memory DirectPlay 8; and input arrives only between steps. A run therefore does the same thing every time, on every machine.
