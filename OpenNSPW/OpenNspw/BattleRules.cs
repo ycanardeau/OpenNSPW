@@ -66,9 +66,10 @@ public sealed record BattleRules(
 	// [esp+10h], 0x41764E); for the formation, the ship's x offset from its leader, which shares the angle's slot
 	// ([esp+4], 0x417179). Kept as is for compatibility with 1.22.
 	bool HeadingsOf360TakeNoCase,
-	// Whether a ship that follows a leader has its route planned by 1.22's own set_cpu_route2, in the emulator, rather than
-	// by NSPW NET's set_cpu_root2.
-	bool FollowersRouteBy122sOwnCode,
+	// The route of a ship (set_cpu_root2, which 1.22's formation runs for a ship that follows a leader): the last kind of
+	// ground unit, from air bases, that does not block it, at its destination or on its way. 1.22's set_cpu_route2 lets
+	// only air bases and naval bases through; NSPW NET's set_cpu_root2, every ground unit.
+	UnitKind LastKindRoutesIgnore,
 	// Whether a torpedo plane checks for land, before it drops its torpedo, along a heading it has not set, rather than
 	// along the bearing from its aim to it (PlaneDropTorpedo).
 	// BUG(1.22): it never sets the heading, so it checks along what its stack holds there ([esp+38h], 0x413D23), what an
@@ -201,7 +202,7 @@ public sealed record BattleRules(
 		FlyingFollowersLeaveParkedLeaders: true,
 		MenuModesApplyToEveryPlane: false,
 		HeadingsOf360TakeNoCase: false,
-		FollowersRouteBy122sOwnCode: false,
+		LastKindRoutesIgnore: UnitKind.Fortress,
 		TorpedoPlanesCheckLandAlongUnsetHeading: false,
 		AttackersBreakFormation: true,
 		GunsAimAlike: false,
@@ -271,7 +272,7 @@ public sealed record BattleRules(
 		FlyingFollowersLeaveParkedLeaders: false, // 0x4149F0
 		MenuModesApplyToEveryPlane: true, // 0x431D19 to 0x431D4E
 		HeadingsOf360TakeNoCase: true, // 0x4173BF, 0x41764E, 0x417179
-		FollowersRouteBy122sOwnCode: true, // 0x414D79
+		LastKindRoutesIgnore: UnitKind.NavalBase, // 0x42EDFE, 0x42F3CB, 0x42F6DB, 0x42F8C7
 		TorpedoPlanesCheckLandAlongUnsetHeading: true, // 0x413D23
 		AttackersBreakFormation: false, // 0x415A10
 		GunsAimAlike: true, // 0x410A65, 0x4129AB

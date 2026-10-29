@@ -1,12 +1,13 @@
 # Single-player
 How OpenNSPW plays the single-player game of NSPW 1.22 (`Original/Nspw122/NSPW_122.exe`) against the computer.
 
-The NSPW NET source has no single-player code: the computer's strategy, the single-player scenarios and their victory conditions exist only as machine code in the single-player executable. OpenNSPW runs that machine code on [Enzan](../Enzan), translated to C# by the [Disassembler](../Disassembler), on the port's own state. Everything else (the battle, drawing, input) is the port of NSPW NET.
+The NSPW NET source has no single-player code: the computer's strategy, the single-player scenarios and their victory conditions exist only as machine code in the single-player executable. OpenNSPW rewrites that machine code as C#, on the port's own state: the scenarios' setups (`Scenarios122.cs`), the computer (`ComputerStrategy.cs`, `ComputerPlayer.cs`) and the victory conditions. Each rewrite is tested against the original, run on [Enzan](../Enzan) as translated by the [Disassembler](../Disassembler): a game does not use the emulator, which only the tests create (`Nspw.Emulator`). Everything else (the battle, drawing, input) is the port of NSPW NET, with 1.22's rules where its battle differs (`BattleRules`).
 
 ## Summary
-- **Emulate only what NSPW NET lacks**: the scenario setups, the computer's strategy, its route planning, the victory conditions, and the 1.22 versions of the functions they call to create units. The battle itself stays the port's.
+- **Rewrite only what NSPW NET lacks**: the scenario setups, the computer's strategy, its route planning, the victory conditions, and the 1.22 versions of the functions they call to create units. The battle itself stays the port's.
+- **The emulator is the reference of the rewrites**: each is compared with 1.22's own function, emulated, on states of games, random ones and its edge cases. A game runs none of 1.22's code: the emulator, its memory of 1 MB and the translated functions stay for the tests.
 - **The emulator's memory is the executable's own image**, loaded from `NSPW_122.exe`. Code, jump tables, constants and the single-player globals are where the code expects them.
-- **The state is copied in and out** around every emulated call, region by region, as planned in [Refactoring.md](Refactoring.md#the-emulator). The single-player globals that the port does not have stay in the emulator's memory for the whole game.
+- **The state is copied in and out** around every emulated call, region by region, as planned in [Refactoring.md](Refactoring.md#the-emulator). The single-player globals that the port does not have are the computer's fleets, which the game keeps (`ComputerFleets`).
 - **The port runs with 1.22's unit numbering** in a single-player game. The unit ranges are values of the game instead of constants, with NSPW NET's values in a network game.
 - **The single-player paths come back where NSPW NET left them as comments**, such as `/*|| unit[m].used==cpu_side*/`, behind `IsSingleplayer` or `CpuSide`. A network game runs exactly as before, and its traces do not change.
 
@@ -30,7 +31,7 @@ dotnet run --project Disassembler/OpenNspw.Disassembler -- Original/Nspw122/NSPW
 
 | Function | Address | Called by the port |
 | --- | --- | --- |
-| `scenario_1` to `scenario_10`, `scenario_100` to `scenario_109`, `scenario_200` to `scenario_209`, `scenario_300` to `scenario_306` | `Functions.SetUpScenario` | `InitializeGame`, in place of `get_sinario_data` |
+| `scenario_1` to `scenario_10`, `scenario_100` to `scenario_109`, `scenario_200` to `scenario_209`, `scenario_300` to `scenario_306` | `Functions.SetUpScenario` | Lifted to C# (`Scenarios122.cs`, `SetUpScenarioAs122`), which `InitializeGame` calls in place of `get_sinario_data`; the emulated originals are kept for their test (`ScenarioSetupTests`) |
 | `cpu_strtgy` | `0x404E30` | Rewritten as C# (`PlanComputerStrategy`), which `HandleInput` calls before the orders are applied; the emulated original is kept for its test |
 | `sub_403AE0`, `sub_404D80`, `sub_414DD0`, `sub_41F230`, `sub_41F300`, `sub_41F490` | | Rewritten as C# (`SetFormation`, `ShuffleTargets`, `PlaceReinforcement`, `AddTargets`), called by `PlanComputerStrategy`; the emulated originals are kept for their tests |
 | `set_cpu_route` | `0x42DA80` | Rewritten as C# (`PlanComputerRoute`), which `ApplyOrders` calls for a move order of a computer's ship, and `ReplanBlockedRoute` for a blocked one; the emulated original is kept for its test |
@@ -39,7 +40,7 @@ dotnet run --project Disassembler/OpenNspw.Disassembler -- Original/Nspw122/NSPW
 | `set_new_unit`, `set_new_unit_plane`, `plane_in_cv`, `set_pos_of_parking` | `0x41EE20`, `0x41F060`, `0x416F00`, `0x416F40` | The port's `AddUnit`, `AddPlane`, `CountPlanesIn` and `SetParkingPosition` do the same in a single-player game (`SharedFunctionTests`); `Decide` and `PlanComputerStrategy` call them |
 | `sub_41F3C0`, `cls_all_slct_unit_p2`, `pt_in_rect3`, `sub_417C10` | | Only by the emulated code |
 
-`set_cpu_route2` (`0x42ED30`) is translated, and `SetDynamicDestination` calls it (`SetCpuRoute2As122`) for a ship that follows a leader, as 1.22's formation does (`0x414D79`); the port's `SetCpuRoute2`, which NSPW NET calls for every unit, stays for network games.
+`set_cpu_route2` (`0x42ED30`) is translated, for its test: `SetDynamicDestination` calls the port's `SetCpuRoute2` for a ship that follows a leader, as 1.22's formation does (`0x414D79`), with 1.22's obstacles (`BattleRules.LastKindRoutesIgnore`), which is NSPW NET's `set_cpu_root2` but for them ([ComputerPlayer.md](ComputerPlayer.md#set_cpu_route)).
 
 The scenario numbers and their functions are those of 1.22's `game_init` (`0x429C50`), which dispatches to them through two jump tables.
 
@@ -52,6 +53,11 @@ Native, because they are part of the port's own state or platform:
 | `load_it2` (`0x432A30`) | The port's `LoadScenarioFile2`, by NSPW NET's name of the same file, which is read from 1.22's directory: 1.22 also spells some in lower case (`Map\south_pacific.dat`), and `LoadScenarioFile2` recognizes the map by its name |
 | `IDirectDrawSurface7::GetDC` and `ReleaseDC` of `lpDDSBack` (`0x463AAC`), `SetTextColor`, `SetBkMode`, `SelectObject`, `TextOutA`, `wsprintfA` | The port's stand-ins, on its back buffer, so that the messages of `decision` show. `0x491600`, the font that `decision` selects, is the port's `gameFont_1` |
 | `SetWindowTextA` | `set_cpu_route`'s debug output: dropped |
+
+## The scenarios' setups
+`Scenarios122.cs` is the 37 scenario functions of 1.22, lifted from their machine code (10,106 instructions) by a symbolic execution of each: its calls (`set_new_unit` as `AddUnit`, `set_new_unit_plane` as `AddPlane`, the fleets' target lists, `load_it2`, `set_unit_data`), its writes to the units, the fleets and the globals, and its draws of `rand()` become C# statements, in 1.22's order. The compiler's idioms become their C# (`rand()%2`, the divisions by a constant through a multiplication, by a power of 2 through a shift); a branch is an `if` and a `goto`, and where two paths meet in the middle of the arguments of a call, each path makes the call itself. 1.22's `gas` is an `int`, so it is read truncated, as the emulator's copy of the state gives it.
+
+`ScenarioSetupTests` runs each emulated original and its C# from the same state, with 16 seeds of `rand()`, and compares the units, the fleets, the map, the globals and `rand()`'s next number.
 
 ## The state
 ### Layout
@@ -87,7 +93,7 @@ Before an emulated call, each region is copied from the port into the emulator's
 `cpu_strtgy` runs once a frame, and `decision` once a tick. `EmulatorCopyBenchmarks` measures the copy.
 
 ### The single-player globals
-1.22 has globals that NSPW NET does not: the computer's plans and the scenarios' state, from `0x4867A0` to `0x489A28`. They live only in the emulator's memory. A new game creates a new emulator, so they start as the executable has them, then sets what 1.22's `game_init` sets before it calls the scenario: the end of the path of each of the 11 entries of the computer's fleet table (`0x4867A0`, `0x498` bytes each) to 9601, `MAP_RIGHT+1`.
+1.22 has globals that NSPW NET does not: the computer's plans and the scenarios' state, from `0x4867A0` to `0x489A28`. The code reads and writes only the table of the computer's fleets there (`0x4867A0`, 11 entries of `0x498` bytes), which the port keeps as `ComputerFleets`, in 1.22's layout (`ComputerFleet`), and shares with the emulator as the other globals; the rest of `.data` that the code uses is constants, such as the messages of `decision`, and the debug window of the route functions (`0x463AA4`, `0x463B20`), which the port drops. A new game sets what 1.22's `game_init` sets before it calls the scenario: it clears the fleets, and sets the destination of each to none, 9601 (`World.Beyond`).
 
 ## Unit numbering
 1.22 numbers the units as NSPW NET does, with smaller ranges, and the emulated code depends on them: it loops over them, and keeps unit numbers in its own globals.

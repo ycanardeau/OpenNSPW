@@ -124,6 +124,22 @@ public struct Array10<T> : IInlineArray
 	}
 }
 
+[InlineArray(11)]
+public struct Array11<T> : IInlineArray
+{
+	private T _element0;
+
+	public readonly byte[] ToBytes()
+	{
+		return MemoryMarshal
+			.CreateReadOnlySpan(
+				ref Unsafe.As<T, byte>(ref Unsafe.AsRef(in this[0])),
+				Unsafe.SizeOf<T>() * 11
+			)
+			.ToArray();
+	}
+}
+
 [InlineArray(14)]
 public struct Array14<T> : IInlineArray
 {

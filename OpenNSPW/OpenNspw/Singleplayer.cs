@@ -24,12 +24,8 @@ public unsafe partial class Nspw
 	private const int UnitFoundOffset = 0x558;
 	private const int UnitRandomOffset = 0x560;
 
-	// The table of the computer's fleets (0x4867A0, 11 entries of 0x498 bytes), which game_init clears; each entry ends
-	// with a path whose end, 9601 (World.Beyond), it sets.
+	// The table of the computer's fleets (ComputerFleets) in 1.22's memory.
 	private const uint FleetAddress = 0x4867A0;
-	private const int FleetSize = 0x498;
-	private const int FleetCount = 11;
-	private const int FleetPathEndOffset = 0x478;
 
 	// cmbt_map of 1.22, which load_it2 writes.
 	private const uint MapAddress = 0x443AA0;
@@ -58,6 +54,7 @@ public unsafe partial class Nspw
 		new(0x463AC0, game => Bytes(ref game.MoveOrders)[..(2 * sizeof(MoveOrder))], true), // new_pp[2]
 		new(0x483B44, game => Bytes(ref game.Result), true), // game_end
 		new(0x483B4C, game => Bytes(ref game.CpuSide), true), // cpu_side
+		new(FleetAddress, game => Bytes(ref game.ComputerFleets), true), // the computer's fleets
 		new(0x489AB0, game => Bytes(ref game.CameraPosition), true), // cmbt_x, cmbt_y
 		new(0x489AD0, game => Bytes(ref game.Renderer.FrameCount), true), // FrameCount
 		new(0x489AE0, game => Bytes(ref game.Selections), true), // slct_unit
@@ -103,6 +100,10 @@ public unsafe partial class Nspw
 
 	// cpu_side of 1.22: the side the computer plays, or None.
 	public Side CpuSide;
+
+	// The table of the computer's fleets of 1.22 (0x4867A0, docs/ComputerPlayer.md, Fleets), which only its single-player
+	// code has: its scenarios set the fleets up, and cpu_strtgy moves them.
+	public Array11<ComputerFleet> ComputerFleets;
 
 	// Two doubles in the emulator's memory, for the functions of 1.22 that take pointers to them.
 	private uint _pointAddress;
@@ -161,9 +162,7 @@ public unsafe partial class Nspw
 	// the fighters that scenario 303 takes from Japan, whose numbers are Japan's.
 	private Array256<short> BufferedSelectionsOfAllUnits;
 
-	// The emulator of the single-player game being played: a new one for each game, so that 1.22's own globals start as
-	// the executable has them.
-	public Emulator? Emulator;
+	private Emulator? _emulator;
 
 	// The gas of each unit as it was copied into the emulator, to write back only what the emulated code changed.
 	private readonly int[] _emulatedGas = new int[UnitCount * 8];
@@ -244,18 +243,6 @@ public unsafe partial class Nspw
 		CopyUnitsOut(emulator);
 	}
 
-	// Runs a function of 1.22 on the game's state.
-	internal uint RunEmulated(uint address, params ReadOnlySpan<uint> arguments)
-	{
-		var emulator =
-			Emulator
-			?? throw new InvalidOperationException("No single-player game is being played.");
-		CopyIn(emulator);
-		var result = emulator.Run(address, arguments);
-		CopyOut(emulator);
-		return result;
-	}
-
 	private static string CString(Emulator emulator, uint address)
 	{
 		var length = 0;
@@ -266,9 +253,10 @@ public unsafe partial class Nspw
 
 	// load_it2(file_name): the map, by the name NSPW NET gives the same file, so that it is found and recognized
 	// (CurrentMap) as in a network game. 1.22 names some of them differently in case.
-	private void LoadMapNatively(Emulator emulator)
+	// load_it2(file_name): reads a map into cmbt_map, by NSPW NET's name of the same file, as LoadScenarioFile2 recognizes
+	// the map by its name, and 1.22 spells some in lower case (Map\south_pacific.dat).
+	private void LoadMap122(string name)
 	{
-		var name = CString(emulator, emulator.Argument(0));
 		var known = new[]
 		{
 			"Map\\South_pacific.dat",
@@ -279,6 +267,11 @@ public unsafe partial class Nspw
 			known.FirstOrDefault(k => string.Equals(k, name, StringComparison.OrdinalIgnoreCase))
 				?? name
 		);
+	}
+
+	private void LoadMapNatively(Emulator emulator)
+	{
+		LoadMap122(CString(emulator, emulator.Argument(0)));
 		Bytes(ref MapTiles).CopyTo(emulator.At(MapAddress, sizeof(Array256<Array256<ushort>>)));
 	}
 
@@ -418,23 +411,36 @@ public unsafe partial class Nspw
 		emulator.Cpu.Fpu.Atan2 = atan2;
 		SetNatives(emulator);
 		_pointAddress = emulator.Allocate(2 * sizeof(double));
-		for (var i = 0; i < FleetCount; i++)
-			MemoryMarshal.Write(
-				emulator.At(
-					FleetAddress + (uint)(i * FleetSize + FleetPathEndOffset),
-					sizeof(double)
-				),
-				(double)World.Beyond
-			);
 		return emulator;
 	}
 
-	// In place of get_sinario_data: 1.22's scenario, which places the units, loads the map and sets the sides, the time
-	// limit and the camera.
+	// The emulator of 1.22, which the game itself does not need: only the tests run 1.22's own functions, to compare them
+	// with their rewrites. It is created the first time one runs.
+	public Emulator Emulator => _emulator ??= CreateEmulator();
+
+	// Whether the emulator has been created: never in a game.
+	internal bool HasEmulator => _emulator is not null;
+
+	// Runs a function of 1.22 on the game's state.
+	internal uint RunEmulated(uint address, params ReadOnlySpan<uint> arguments)
+	{
+		var emulator = Emulator;
+		CopyIn(emulator);
+		var result = emulator.Run(address, arguments);
+		CopyOut(emulator);
+		return result;
+	}
+
+	// In place of get_sinario_data: 1.22's scenario (Scenarios122.cs), which places the units, loads the map and sets the
+	// sides, the time limit and the camera.
 	public void SetUpSingleplayerScenario()
 	{
-		Emulator = CreateEmulator();
-		RunEmulated(Functions.SetUpScenario(ScenarioNumber));
+		// game_init clears the computer's fleets, and ends each one's path: its destination is none (0x429C50).
+		ComputerFleets = default;
+		for (var f = 0; f < 11; f++)
+			ComputerFleets[f].DestinationX = World.Beyond;
+
+		SetUpScenarioAs122(ScenarioNumber);
 	}
 
 	// Starts the battle of ScenarioNumber, without the title and setting screens.
@@ -519,9 +525,7 @@ public unsafe partial class Nspw
 	// there, or what a trace has given.
 	public void RunCpuStrategy()
 	{
-		var emulator =
-			Emulator
-			?? throw new InvalidOperationException("No single-player game is being played.");
+		var emulator = Emulator;
 		foreach (var (instruction, _) in StackLocalsOnWindows)
 			MemoryMarshal.Write(
 				emulator.At(StackLocalAddress(emulator, instruction)!.Value, sizeof(uint)),
@@ -545,15 +549,10 @@ public unsafe partial class Nspw
 		RunEmulated(Functions.SetUnitData, (uint)m);
 	}
 
-	// Entry f of 1.22's table of the computer's fleets, in the emulator's memory.
+	// Entry f of 1.22's table of the computer's fleets.
 	internal ref ComputerFleet FleetAt(int f)
 	{
-		var emulator =
-			Emulator
-			?? throw new InvalidOperationException("No single-player game is being played.");
-		return ref MemoryMarshal.AsRef<ComputerFleet>(
-			emulator.At(FleetAddress + (uint)(f * FleetSize), FleetSize)
-		);
+		return ref ComputerFleets[f];
 	}
 
 	private static uint Low(double value) => (uint)BitConverter.DoubleToUInt64Bits(value);
@@ -575,9 +574,7 @@ public unsafe partial class Nspw
 	// sub_414DD0(&x, &y): moves the point to a free place for a reinforcement near the east edge of the map.
 	internal void RunPlaceReinforcement(ref double x, ref double y)
 	{
-		var emulator =
-			Emulator
-			?? throw new InvalidOperationException("No single-player game is being played.");
+		var emulator = Emulator;
 		MemoryMarshal.Write(emulator.At(_pointAddress, sizeof(double)), x);
 		MemoryMarshal.Write(emulator.At(_pointAddress + sizeof(double), sizeof(double)), y);
 		RunEmulated(Functions.PlaceReinforcement, _pointAddress, _pointAddress + sizeof(double));
@@ -768,6 +765,47 @@ public unsafe partial class Nspw
 		ClearBufferedOrders();
 	}
 
+	// The image of the single-player executable, for what 1.22's memory holds where the port has nothing (ByteAs122).
+	private ExecutableImage? _image122;
+
+	// lpDDSBack as the emulator holds it: the address of the port's stand-in for the surface, which SetNatives allocates
+	// second after the image, after its table of methods. 1.22's own is an address on the heap; neither half of either is
+	// 0.
+	private static uint BackBufferStandIn(ExecutableImage image) =>
+		image.ImageBase + image.ImageSize + (uint)((4 * SurfaceMethodCount + 7) & ~7);
+
+	// The byte at the address of 1.22's memory, as the emulator holds it in a single-player game once the state is copied
+	// in: the globals the port shares with it, the units in 1.22's layout, the pointers of the port's stand-ins, and
+	// elsewhere the executable's image, which the code that the port runs does not write.
+	internal byte ByteAs122(uint address)
+	{
+		foreach (var global in SharedGlobals)
+		{
+			var bytes = global.Bytes(this);
+			if (address >= global.Address && address - global.Address < bytes.Length)
+				return bytes[(int)(address - global.Address)];
+		}
+
+		if (address >= UnitAddress && address - UnitAddress < UnitCount * UnitSize)
+		{
+			Span<byte> unit = stackalloc byte[UnitSize];
+			WriteUnitAs122((int)((address - UnitAddress) / UnitSize), unit);
+			return unit[(int)((address - UnitAddress) % UnitSize)];
+		}
+
+		var image = _image122 ??= new ExecutableImage(
+			SingleplayerExecutable
+				?? throw new InvalidOperationException(
+					"The single-player executable (NSPW_122.exe) is not set."
+				)
+		);
+		if (address >= BackBufferAddress && address - BackBufferAddress < 4)
+			return BitConverter.GetBytes(BackBufferStandIn(image))[address - BackBufferAddress];
+		if (address >= FontAddress && address - FontAddress < 4)
+			return BitConverter.GetBytes(Renderer.GameFont1.Value)[address - FontAddress];
+		return image.ByteAt(address);
+	}
+
 	// The tile of cmbt_map at row, column, flat as 1.22 reads it, row by row: beyond the map, what 1.22's memory holds around
 	// it, in a single-player game, or else 0, sea.
 	internal ushort MapTileOrBeyond(int row, int column)
@@ -775,14 +813,15 @@ public unsafe partial class Nspw
 		var index = row * 256 + column;
 		if ((uint)index < 256 * 256)
 			return MapTiles[index / 256][index % 256];
-		if (Emulator is not { } emulator)
+		if (!IsSingleplayer)
 			return 0;
-		CopyIn(emulator);
-		return BitConverter.ToUInt16(emulator.At((uint)(MapAddress + index * 2), sizeof(ushort)));
+		var address = (uint)(MapAddress + index * 2);
+		return (ushort)(ByteAs122(address) | ByteAs122(address + 1) << 8);
 	}
 
-	// set_cpu_route2(m): the route of ship m to the destination just set as its path, as a ship that follows a leader
-	// takes it (0x414D79).
+	// The emulated set_cpu_route2(m), which ComputerPlayerTests compares the port's SetCpuRoute2, with 1.22's obstacles,
+	// with: the route of ship m to the destination just set as its path, as a ship that follows a leader takes it
+	// (0x414D79).
 	public void SetCpuRoute2As122(int m)
 	{
 		RunEmulated(Functions.SetCpuRoute2, (uint)m);

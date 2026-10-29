@@ -280,7 +280,7 @@ public unsafe partial class Nspw
 				&& m != f
 				&& other.Category == UnitCategory.Ship
 				&& !(other.Kind == UnitKind.Submarine && other.IsSubmerged)
-				&& !(other.Kind >= UnitKind.AirBase && other.Kind <= UnitKind.Fortress)
+				&& !(other.Kind >= UnitKind.AirBase && other.Kind <= Rules.LastKindRoutesIgnore)
 			)
 			{
 				var shipArea = WorldRect.Around(
@@ -397,7 +397,7 @@ public unsafe partial class Nspw
 					&& m != n
 					&& other.Category == UnitCategory.Ship
 					&& !(other.Kind == UnitKind.Submarine && other.IsSubmerged)
-					&& !(other.Kind >= UnitKind.AirBase && other.Kind <= UnitKind.Fortress)
+					&& !(other.Kind >= UnitKind.AirBase && other.Kind <= Rules.LastKindRoutesIgnore)
 				)
 				{
 					// ptin dbg

@@ -12,7 +12,6 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 	private readonly ITestOutputHelper _output = output;
 
 	// The table of the computer's fleets, in the emulator's memory.
-	private const uint FleetAddress = 0x4867A0;
 	private const int FleetTableSize = 11 * 0x498;
 
 	// What decision changes: the units, the result, decision_point, the fleets, and rand()'s state, by its next number.
@@ -60,7 +59,7 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 
 	private static byte[] FleetBytes(Nspw game)
 	{
-		return game.Emulator!.At(FleetAddress, FleetTableSize).ToArray();
+		return MemoryMarshal.AsBytes((Span<ComputerFleet>)game.ComputerFleets).ToArray();
 	}
 
 	// The state after decision; rand() is advanced.
@@ -88,7 +87,7 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 
 		game.BattleTime = state.BattleTime;
 		game.MaxUnitId = state.MaxUnitId;
-		state.Fleets.CopyTo(game.Emulator!.At(FleetAddress, FleetTableSize));
+		state.Fleets.CopyTo(MemoryMarshal.AsBytes((Span<ComputerFleet>)game.ComputerFleets));
 	}
 
 	// Where the two states first differ.
@@ -632,7 +631,15 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 			selections[i] = game.Selections[0][i];
 		}
 
-		var globals = game.Emulator!.At(ComputerGlobalsAddress, ComputerGlobalsSize).ToArray();
+		// The fleets, which the game keeps, then the rest, which only the emulator's memory has.
+		byte[] globals =
+		[
+			.. MemoryMarshal.AsBytes((Span<ComputerFleet>)game.ComputerFleets),
+			.. game.Emulator!.At(
+				ComputerGlobalsAddress + FleetTableSize,
+				ComputerGlobalsSize - FleetTableSize
+			),
+		];
 		return new StrategyState(
 			UnitBytes(game),
 			game.MaxUnitId,
@@ -690,7 +697,7 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 		var maxUnitId = game.MaxUnitId;
 		var order = game.MoveOrders[0];
 		var selections = game.Selections[0];
-		var memory = game.Emulator!.Memory.ToArray();
+		var memory = State122.Save(game);
 
 		void Reset()
 		{
@@ -698,7 +705,7 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 			game.MaxUnitId = maxUnitId;
 			game.MoveOrders[0] = order;
 			game.Selections[0] = selections;
-			memory.CopyTo(game.Emulator!.Memory);
+			State122.Restore(game, memory);
 			game.srand(seed);
 		}
 
@@ -755,9 +762,7 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 
 	private static ref ComputerFleet FleetOf(Nspw game, int f)
 	{
-		return ref MemoryMarshal.AsRef<ComputerFleet>(
-			game.Emulator!.At((uint)(ComputerGlobalsAddress + f * 0x498), 0x498)
-		);
+		return ref game.ComputerFleets[f];
 	}
 
 	// A random enemy (of the computer) unit, or 0.
@@ -1098,13 +1103,13 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 			var time = game.BattleTime;
 			var tick = game.Tick;
 			var units = UnitBytes(game);
-			var memory = game.Emulator!.Memory.ToArray();
+			var memory = State122.Save(game);
 			for (var f = 1; f <= 10; f++)
 			{
 				for (var variant = 0; variant < 40; variant++)
 				{
 					Restore(game, units);
-					memory.CopyTo(game.Emulator!.Memory);
+					State122.Restore(game, memory);
 					game.BattleTime = time;
 					game.Tick = tick + random.Next(150);
 					game.Renderer.FrameCount = frame / 10 * 10 + f - 1;
@@ -1129,7 +1134,7 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 			}
 
 			Restore(game, units);
-			memory.CopyTo(game.Emulator!.Memory);
+			State122.Restore(game, memory);
 			game.BattleTime = time;
 			game.Tick = tick;
 			game.Renderer.FrameCount = frame;
@@ -1158,7 +1163,7 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 		run.Frames(12);
 		var random = new Random(scenario);
 		var units = UnitBytes(game);
-		var memory = game.Emulator!.Memory.ToArray();
+		var memory = State122.Save(game);
 		var time = game.BattleTime;
 		var frame = game.Renderer.FrameCount;
 		var planeOrders = 0;
@@ -1205,7 +1210,7 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 					)
 					{
 						Restore(game, units);
-						memory.CopyTo(game.Emulator!.Memory);
+						State122.Restore(game, memory);
 						game.Renderer.FrameCount = frame / 10 * 10 + f - 1;
 						game.BattleTime = timeLeft;
 						ref var fleet = ref FleetOf(game, f);
@@ -1287,7 +1292,7 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 		}
 
 		Restore(game, units);
-		memory.CopyTo(game.Emulator!.Memory);
+		State122.Restore(game, memory);
 		game.BattleTime = time;
 		game.Renderer.FrameCount = frame;
 		_output.WriteLine($"{cases} cases, {planeOrders} ordering planes");
@@ -1383,13 +1388,13 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 		for (var point = 0; point < 2; point++)
 		{
 			run.Frames(point == 0 ? 2 : 800);
-			var memory = game.Emulator!.Memory.ToArray();
+			var memory = State122.Save(game);
 			var units = UnitBytes(game);
 			foreach (var (name, original, rewritten) in operations)
 			{
 				for (var variant = 0; variant < 3; variant++)
 				{
-					memory.CopyTo(game.Emulator!.Memory);
+					State122.Restore(game, memory);
 					for (var g = 1; g <= 10; g++)
 					{
 						ref var fleet = ref FleetOf(game, g);
@@ -1401,12 +1406,12 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 						}
 					}
 
-					var before = game.Emulator!.Memory.ToArray();
+					var before = State122.Save(game);
 					var seed = (uint)random.Next();
 					game.srand(seed);
 					original();
 					var expected = (FleetBytes(game), game.rand());
-					before.CopyTo(game.Emulator!.Memory);
+					State122.Restore(game, before);
 					game.srand(seed);
 					rewritten();
 					var actual = (FleetBytes(game), game.rand());
@@ -1426,7 +1431,7 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 				}
 			}
 
-			memory.CopyTo(game.Emulator!.Memory);
+			State122.Restore(game, memory);
 		}
 	}
 
@@ -1443,14 +1448,14 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 		for (var point = 0; point < 2; point++)
 		{
 			run.Frames(point == 0 ? 2 : 800);
-			var memory = game.Emulator!.Memory.ToArray();
+			var memory = State122.Save(game);
 			var units = UnitBytes(game);
 			var selections = game.Selections[0];
 			for (var f = 1; f <= 10; f++)
 			{
 				for (var variant = 0; variant < 20; variant++)
 				{
-					memory.CopyTo(game.Emulator!.Memory);
+					State122.Restore(game, memory);
 					Restore(game, units);
 					ref var fleet = ref FleetOf(game, f);
 					var count = random.Next(0, 19);
@@ -1460,7 +1465,7 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 							k < count ? (short)random.Next(0, game.MaxUnitId + 1) : (short)0;
 					}
 
-					var before = game.Emulator!.Memory.ToArray();
+					var before = State122.Save(game);
 					var unitsBefore = UnitBytes(game);
 					game.Selections[0] = selections;
 					game.RunSetFormation(f);
@@ -1469,7 +1474,7 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 						FleetBytes(game),
 						game.Selections[0].ToBytes()
 					);
-					before.CopyTo(game.Emulator!.Memory);
+					State122.Restore(game, before);
 					Restore(game, unitsBefore);
 					game.Selections[0] = selections;
 					game.SetFormation(f);
@@ -1493,7 +1498,7 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 				}
 			}
 
-			memory.CopyTo(game.Emulator!.Memory);
+			State122.Restore(game, memory);
 			Restore(game, units);
 			game.Selections[0] = selections;
 		}
@@ -1530,10 +1535,14 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 		}
 	}
 
-	// For each ship and random destinations, at a few points of the game: the units after set_cpu_route.
-	[Theory]
-	[MemberData(nameof(Scenarios))]
-	public void PlanComputerRouteIsSetCpuRoute(int scenario)
+	// For every ship but the ground facilities, at three points of a game, to its own destination and three random ones,
+	// and to random ones with a ground unit other than a base (kinds 13 to 17) moved to the destination or halfway: the units
+	// after the emulated route function, and after its rewrite.
+	private static void CompareRoutes(
+		int scenario,
+		Action<Nspw, int> emulatedRoute,
+		Action<Nspw, int> rewrittenRoute
+	)
 	{
 		using var run = new SingleplayerRun(scenario);
 		var game = run.Game;
@@ -1553,7 +1562,12 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 					continue;
 				}
 
-				for (var i = 0; i < 4; i++)
+				var ground = Enumerable
+					.Range(1, game.MaxUnitId)
+					.FirstOrDefault(g =>
+						game.Units[g].IsUsed && game.Units[g].Kind >= UnitKind.City && g != m
+					);
+				for (var i = 0; i < (ground != 0 ? 6 : 4); i++)
 				{
 					var before = UnitBytes(game);
 					var x =
@@ -1565,17 +1579,29 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 							? game.Units[m].PathY[0]
 							: game.Units[m].Position.Y + random.Next(-4000, 4000);
 
+					var groundAt =
+						i == 4 ? new WorldPosition(x, y)
+						: i == 5
+							? new WorldPosition(
+								(x + game.Units[m].Position.X) / 2,
+								(y + game.Units[m].Position.Y) / 2
+							)
+						: (WorldPosition?)null;
+					if (groundAt is { } at)
+						game.Units[ground].Position = at;
 					game.Units[m].PathX[0] = x;
 					game.Units[m].PathY[0] = y;
 					game.Units[m].PathX[1] = World.Beyond;
-					game.SetCpuRoute(m, 1.0);
+					emulatedRoute(game, m);
 					var emulated = UnitBytes(game);
 
 					Restore(game, before);
+					if (groundAt is { } atAgain)
+						game.Units[ground].Position = atAgain;
 					game.Units[m].PathX[0] = x;
 					game.Units[m].PathY[0] = y;
 					game.Units[m].PathX[1] = World.Beyond;
-					game.PlanComputerRoute(m);
+					rewrittenRoute(game, m);
 					var rewritten = UnitBytes(game);
 
 					Restore(game, before);
@@ -1608,5 +1634,49 @@ public class ComputerPlayerTests(ITestOutputHelper output)
 		}
 
 		Assert.True(cases > 0);
+	}
+
+	// For each ship and random destinations, at a few points of the game: the units after set_cpu_route.
+	[Theory]
+	[MemberData(nameof(Scenarios))]
+	public void PlanComputerRouteIsSetCpuRoute(int scenario)
+	{
+		CompareRoutes(
+			scenario,
+			(game, m) => game.SetCpuRoute(m, 1.0),
+			(game, m) => game.PlanComputerRoute(m)
+		);
+	}
+
+	// set_cpu_route2, which 1.22 runs for a ship that follows a leader, on the same states.
+	[Theory]
+	[MemberData(nameof(Scenarios))]
+	public void PlanFollowerRouteIsSetCpuRoute2(int scenario)
+	{
+		CompareRoutes(
+			scenario,
+			(game, m) => game.SetCpuRoute2As122(m),
+			(game, m) => game.SetCpuRoute2(m)
+		);
+	}
+
+	// The port's SetCpuRoute2 with NSPW NET's obstacles, which let ground units through, is not set_cpu_route2: a ground
+	// unit on a ship's way shows it.
+	[Fact]
+	public void NspwNetsObstaclesAreNotSetCpuRoute2s()
+	{
+		Assert.ThrowsAny<Exception>(() =>
+			CompareRoutes(
+				203,
+				(game, m) => game.SetCpuRoute2As122(m),
+				(game, m) =>
+				{
+					var rules = game.Rules;
+					game.Rules = rules with { LastKindRoutesIgnore = UnitKind.Fortress };
+					game.SetCpuRoute2(m);
+					game.Rules = rules;
+				}
+			)
+		);
 	}
 }
