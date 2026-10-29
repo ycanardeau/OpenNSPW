@@ -116,7 +116,7 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 	{
 		base.UnloadContent();
 		if (_session.Replay is not null)
-			Game.Window.Title = all_head.CAPTION;
+			Game.Window.Title = NspwGame.Title;
 		_session.Dispose();
 		_art.Dispose();
 		_backdrop.Dispose();

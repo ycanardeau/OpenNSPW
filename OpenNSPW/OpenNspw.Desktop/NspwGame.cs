@@ -28,6 +28,10 @@ internal sealed class DynamicSpriteFontWrapper(DynamicSpriteFont font) : IMonoGa
 // The app: a window showing the screens of the UI (Screens), which start the port's games (GameSession).
 internal sealed class NspwGame : Game
 {
+	// The window's title: the app's name, not the original's (all_head.CAPTION), which the game still gives its own window
+	// and message boxes.
+	public const string Title = "OpenNSPW";
+
 	private readonly GraphicsDeviceManager _graphics;
 	private readonly ScreenManager _screenManager = new();
 	private readonly int? _scenario;
@@ -63,7 +67,7 @@ internal sealed class NspwGame : Game
 		Data = data;
 		Texts.Language = UISettings.LoadLanguage();
 		IsMouseVisible = true;
-		Window.Title = all_head.CAPTION;
+		Window.Title = Title;
 		Window.AllowUserResizing = true;
 		Components.Add(_screenManager);
 	}
