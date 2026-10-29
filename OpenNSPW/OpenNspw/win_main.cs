@@ -510,7 +510,7 @@ public unsafe partial class Nspw
 				length = wsprintf(
 					text,
 					"hp[0]=%d arm[0]=%d",
-					Units[selected].Hp,
+					Units[selected].HP,
 					Units[selected].Weapon
 				);
 				break;

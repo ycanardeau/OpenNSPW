@@ -311,7 +311,7 @@ public unsafe partial class Nspw
 						return false;
 
 					unit.Side = 0;
-					unit.Hp = 0;
+					unit.HP = 0;
 
 					if (UnitInfoPanel[0] != 0 && UnitInfoPanel[3] == m)
 						UnitInfoPanel[0] = 0;
@@ -2658,7 +2658,7 @@ public unsafe partial class Nspw
 		if (
 			unit.Kind == UnitKind.Fighter
 			&& unit.Mode != UnitMode.Return
-			&& (unit.Fuel <= 30 || unit.Hp <= unit.MaxHp * 0.70 || unit.Ammo <= 0)
+			&& (unit.Fuel <= 30 || unit.HP <= unit.MaxHP * 0.70 || unit.Ammo <= 0)
 		)
 		{
 			// 発射！
@@ -2854,7 +2854,7 @@ public unsafe partial class Nspw
 		}
 
 		// 損傷がひどいかガソリンが切れそうな場合はきとうしよう
-		if (unit.Mode != UnitMode.Return && (unit.Fuel <= 20 || unit.Hp <= unit.MaxHp * 0.70))
+		if (unit.Mode != UnitMode.Return && (unit.Fuel <= 20 || unit.HP <= unit.MaxHP * 0.70))
 		{
 			unit.Ammo = 0; // 魚雷が０
 			unit.Target = 0; // ターゲットをクリア

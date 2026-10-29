@@ -12,7 +12,7 @@ namespace OpenNspw.Desktop;
 internal sealed class GameSession : IDisposable
 {
 	// MonoGame keys, with their DirectInput scan codes (DIK_*) and virtual-key codes (VK_*).
-	private static readonly Dictionary<XnaKeys, (uint Dik, int Vk)> KeyCodes = new()
+	private static readonly Dictionary<XnaKeys, (uint Dik, int VK)> KeyCodes = new()
 	{
 		[XnaKeys.Escape] = (0x01, 0x1B),
 		[XnaKeys.Enter] = (0x1C, 0x0D),

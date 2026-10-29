@@ -81,7 +81,7 @@ internal sealed class Monkey(LockstepGame game, uint seed)
 				&& unit.Category == UnitCategory.Ship
 				&& !(unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress)
 				&& !unit.IsSupplying
-				&& unit.Hp > 0
+				&& unit.HP > 0
 			)
 			{
 				_lastShip = m;

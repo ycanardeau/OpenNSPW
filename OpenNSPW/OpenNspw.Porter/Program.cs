@@ -268,7 +268,7 @@ void UpdateInlineArrays(IEnumerable<long> lengths)
 var targets = new HashSet<string>();
 if (args[0] == "port")
 {
-	var converter = new CppToCs(ReadConstants());
+	var converter = new CppToCSharp(ReadConstants());
 	foreach (var file in files)
 	{
 		var name = Path.GetFileNameWithoutExtension(file) + ".cs";

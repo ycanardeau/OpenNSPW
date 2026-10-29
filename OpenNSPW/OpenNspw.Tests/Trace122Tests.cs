@@ -192,7 +192,7 @@ public sealed class Trace122Tests
 	public void TheReplayFindsAChange()
 	{
 		var trace = RecordPort(3, Frames);
-		using var replay = Replay(trace, Frames, game => game.Units[1].Hp--);
+		using var replay = Replay(trace, Frames, game => game.Units[1].HP--);
 
 		Assert.NotNull(replay.Divergence);
 		Assert.Contains("unit 1: hp[0]", replay.Divergence);

@@ -243,26 +243,26 @@ public unsafe partial class Nspw
 				|| Units[UnitInfoPanel[3]].Kind == UnitKind.Fortress
 			)
 			&& Units[UnitInfoPanel[3]].info[0] != 0
-			&& Units[UnitInfoPanel[3]].Hp == Units[UnitInfoPanel[3]].MaxHp
+			&& Units[UnitInfoPanel[3]].HP == Units[UnitInfoPanel[3]].MaxHP
 		)
 		{
 			length[1] = wsprintf(text[1], "工事:%d", Units[UnitInfoPanel[3]].BuildTime);
 		}
 		else
 		{
-			if (Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp * 0.2)
+			if (Units[UnitInfoPanel[3]].HP <= Units[UnitInfoPanel[3]].MaxHP * 0.2)
 			{
 				length[1] = wsprintf(text[1], "大破");
 			}
-			else if (Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp * 0.5)
+			else if (Units[UnitInfoPanel[3]].HP <= Units[UnitInfoPanel[3]].MaxHP * 0.5)
 			{
 				length[1] = wsprintf(text[1], "中破");
 			}
-			else if (Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp * 0.7)
+			else if (Units[UnitInfoPanel[3]].HP <= Units[UnitInfoPanel[3]].MaxHP * 0.7)
 			{
 				length[1] = wsprintf(text[1], "小破");
 			}
-			else if (Units[UnitInfoPanel[3]].Hp <= Units[UnitInfoPanel[3]].MaxHp - 1)
+			else if (Units[UnitInfoPanel[3]].HP <= Units[UnitInfoPanel[3]].MaxHP - 1)
 			{
 				length[1] = wsprintf(text[1], "軽損傷");
 			}
@@ -448,28 +448,28 @@ public unsafe partial class Nspw
 			}
 
 			// 損傷
-			if (unit[unit_info[3]].Hp <= unit[unit_info[3]].MaxHp * 0.2)
+			if (unit[unit_info[3]].HP <= unit[unit_info[3]].MaxHP * 0.2)
 			{
 				len[1] = wsprintf(
 					ach[1],
 					"Heavy damaged" /*"大破"*/
 				);
 			}
-			else if (unit[unit_info[3]].Hp <= unit[unit_info[3]].MaxHp * 0.5)
+			else if (unit[unit_info[3]].HP <= unit[unit_info[3]].MaxHP * 0.5)
 			{
 				len[1] = wsprintf(
 					ach[1],
 					"Moderate damaged" /*"中破"*/
 				);
 			}
-			else if (unit[unit_info[3]].Hp <= unit[unit_info[3]].MaxHp * 0.7)
+			else if (unit[unit_info[3]].HP <= unit[unit_info[3]].MaxHP * 0.7)
 			{
 				len[1] = wsprintf(
 					ach[1],
 					"light damaged" /*"小破"*/
 				);
 			}
-			else if (unit[unit_info[3]].Hp <= unit[unit_info[3]].MaxHp - 1)
+			else if (unit[unit_info[3]].HP <= unit[unit_info[3]].MaxHP - 1)
 			{
 				len[1] = wsprintf(ach[1], "A bit of damaged");
 			}
@@ -500,8 +500,8 @@ public unsafe partial class Nspw
 				length[0] = wsprintf(
 					text[0],
 					"(%d/%d)",
-					Units[UnitInfoPanel[3]].Hp,
-					Units[UnitInfoPanel[3]].MaxHp
+					Units[UnitInfoPanel[3]].HP,
+					Units[UnitInfoPanel[3]].MaxHP
 				);
 				SetTextColor(hdc, RGB(255, 255, 0));
 				TextOut(hdc, destination.left + 20 + 110 + 55, 10 + (1 * 20), text[0], length[0]);

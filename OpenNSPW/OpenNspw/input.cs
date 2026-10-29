@@ -228,8 +228,8 @@ public unsafe partial class Nspw
 				&& !(
 					Units[MoveOrders[1].Unit].Category == UnitCategory.Plane
 					&& Units[MoveOrders[1].Unit].PlaneState == UnitState.Parked
-					&& Units[Units[MoveOrders[1].Unit].Carrier].Hp
-						<= Units[Units[MoveOrders[1].Unit].Carrier].MaxHp * 0.2
+					&& Units[Units[MoveOrders[1].Unit].Carrier].HP
+						<= Units[Units[MoveOrders[1].Unit].Carrier].MaxHP * 0.2
 				)
 			)
 			{
@@ -763,8 +763,8 @@ public unsafe partial class Nspw
 				&& !(
 					Units[MoveOrders[e].Unit].Category == UnitCategory.Plane
 					&& Units[MoveOrders[e].Unit].PlaneState == UnitState.Parked
-					&& Units[Units[MoveOrders[e].Unit].Carrier].Hp
-						<= Units[Units[MoveOrders[e].Unit].Carrier].MaxHp * 0.2
+					&& Units[Units[MoveOrders[e].Unit].Carrier].HP
+						<= Units[Units[MoveOrders[e].Unit].Carrier].MaxHP * 0.2
 				)
 			)
 			{

@@ -268,7 +268,7 @@ public class SingleplayerTests
 				unit.Side == game.CpuSide
 				&& unit.Category == UnitCategory.Ship
 				&& unit.Kind <= UnitKind.LightCarrier
-				&& unit.MaxHp >= 2
+				&& unit.MaxHP >= 2
 			)
 			{
 				m = i;
@@ -288,10 +288,10 @@ public class SingleplayerTests
 			}
 		}
 
-		game.Units[m].Hp = game.Units[m].MaxHp - 1;
+		game.Units[m].HP = game.Units[m].MaxHP - 1;
 		game.Units[m].SupplyTime = 1;
 		run.Frames(300);
-		Assert.Equal(game.Units[m].MaxHp, game.Units[m].Hp);
+		Assert.Equal(game.Units[m].MaxHP, game.Units[m].HP);
 	}
 
 	// Outside the map, 1.22 brings back the player's ships only: the computer's sail on, to their naval bases outside it,
@@ -354,12 +354,12 @@ public class SingleplayerTests
 
 		var battleship = game.AddUnit(Side.Japan, UnitKind.Battleship, 0, 0, 0);
 		Assert.NotEqual(0, battleship);
-		Assert.Equal(41, game.Units[battleship].MaxHp);
+		Assert.Equal(41, game.Units[battleship].MaxHP);
 		Assert.Equal(9000, game.Units[battleship].FuelInterval);
 
 		var carrier = game.AddUnit(Side.UnitedStates, UnitKind.Carrier, 0, 400, 0);
 		Assert.NotEqual(0, carrier);
-		Assert.Equal(41, game.Units[carrier].MaxHp);
+		Assert.Equal(41, game.Units[carrier].MaxHP);
 		Assert.Equal(12, game.Units[carrier].Capacity);
 
 		var planes = game.Units[carrier].PlaneCount;
@@ -763,8 +763,8 @@ public class SingleplayerTests
 
 		Assert.NotEqual(0, pillboxes);
 		Assert.Equal(0, game.Units[pillboxes].BuildTime);
-		Assert.Equal(game.Units[full].MaxHp, game.Units[pillboxes].MaxHp);
-		Assert.Equal(game.Units[pillboxes].MaxHp, game.Units[pillboxes].Hp);
+		Assert.Equal(game.Units[full].MaxHP, game.Units[pillboxes].MaxHP);
+		Assert.Equal(game.Units[pillboxes].MaxHP, game.Units[pillboxes].HP);
 	}
 
 	// A transport lands an infantry base, pillboxes or a fortress, but not the naval bases and air bases that 1.22 does not
@@ -1122,7 +1122,7 @@ public class SingleplayerTests
 		var submarine = game.AddUnit(game.CpuSide, UnitKind.Submarine, 1000, 1000, 0);
 		Assert.NotEqual(0, submarine);
 		game.Units[submarine].IsSubmerged = true;
-		var hp = game.Units[submarine].Hp;
+		var hp = game.Units[submarine].HP;
 		ref var fire = ref game.Fires[255];
 		fire.Kind = FireKind.AntiSubmarineBomb;
 		fire.Target = submarine;
@@ -1132,7 +1132,7 @@ public class SingleplayerTests
 
 		game.UpdateFires();
 
-		Assert.True(game.Units[submarine].Hp < hp);
+		Assert.True(game.Units[submarine].HP < hp);
 		Assert.Equal(submarine, game.Fires[255].Target);
 	}
 
@@ -1235,7 +1235,7 @@ public class SingleplayerTests
 		destroyer.Category = UnitCategory.Ship;
 		destroyer.Kind = UnitKind.Destroyer;
 		destroyer.Side = game.LocalSide;
-		destroyer.Hp = destroyer.MaxHp;
+		destroyer.HP = destroyer.MaxHP;
 		destroyer.SupplyTime = 0;
 		destroyer.IsGroupLeader = 0;
 		destroyer.Ammo = 1;
@@ -1263,7 +1263,7 @@ public class SingleplayerTests
 		destroyer.Category = UnitCategory.Ship;
 		destroyer.Kind = UnitKind.Destroyer;
 		destroyer.Side = game.LocalSide;
-		destroyer.Hp = destroyer.MaxHp;
+		destroyer.HP = destroyer.MaxHP;
 		destroyer.Position = new WorldPosition(1000, 1000);
 		destroyer.Direction = 10.3;
 		destroyer.Speed = destroyer.MaxSpeed;
@@ -1306,8 +1306,8 @@ public class SingleplayerTests
 		unit.IsGroupLeader = 0;
 		unit.Ammo = 0;
 		unit.Speed = 0;
-		unit.MaxHp = 10;
-		unit.Hp = (int)(unit.MaxHp * hp);
+		unit.MaxHP = 10;
+		unit.HP = (int)(unit.MaxHP * hp);
 		if (game.Tick % 10 == 0)
 		{
 			game.Tick++;
@@ -1337,8 +1337,8 @@ public class SingleplayerTests
 			plane.Kind = UnitKind.Attacker;
 			plane.PlaneState = UnitState.Flying;
 			plane.Position = new WorldPosition(1000 + (m - 41) * 20, 1000);
-			plane.MaxHp = 100;
-			plane.Hp = 100;
+			plane.MaxHP = 100;
+			plane.HP = 100;
 		}
 
 		ref var fire = ref game.Fires[1];
@@ -1349,8 +1349,8 @@ public class SingleplayerTests
 		fire.Position = new WorldPosition(1010, 1000);
 		game.UpdateFires();
 
-		Assert.True(game.Units[planes[0]].Hp < 100);
-		Assert.Equal(100, game.Units[planes[1]].Hp);
+		Assert.True(game.Units[planes[0]].HP < 100);
+		Assert.Equal(100, game.Units[planes[1]].HP);
 	}
 
 	// Drawing a smoke that the player's units see draws three random numbers from rand, as 1.22's drawing does

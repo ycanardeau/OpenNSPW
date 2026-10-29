@@ -298,10 +298,10 @@ public struct Unit // 全ての艦船、航空機、地図上の位置
 
 	// いわゆるヒットポイント
 	[UnscopedRef]
-	public ref int Hp => ref hp[0];
+	public ref int HP => ref hp[0];
 
 	[UnscopedRef]
-	public ref int MaxHp => ref hp[1];
+	public ref int MaxHP => ref hp[1];
 
 	// 武装: the kind of weapon, viewed as a FireKind.
 	[UnscopedRef]

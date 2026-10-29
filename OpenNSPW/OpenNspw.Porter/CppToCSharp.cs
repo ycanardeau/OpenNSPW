@@ -6,7 +6,7 @@ namespace OpenNspw.Porter;
 // The first stage of porting a C++ file: text rewrites that turn it into C# that reads like the original, with the
 // conventions in OpenNSPW/README.md. Comments, strings and #if 0 sections are left as they are. What this stage does not
 // know how to convert is left for the second stage (Fixer) and for porting by hand.
-internal sealed partial class CppToCs(IReadOnlyDictionary<string, long> constants)
+internal sealed partial class CppToCSharp(IReadOnlyDictionary<string, long> constants)
 {
 	private readonly IReadOnlyDictionary<string, long> _constants = constants;
 
@@ -14,7 +14,7 @@ internal sealed partial class CppToCs(IReadOnlyDictionary<string, long> constant
 	public SortedSet<long> ArrayLengths { get; } = [];
 
 	// C++ types and the C# types they become.
-	private static readonly (string Cpp, string Cs)[] TypeMap =
+	private static readonly (string Cpp, string CSharp)[] TypeMap =
 	[
 		("unsigned short", "ushort"),
 		("unsigned char", "byte"),

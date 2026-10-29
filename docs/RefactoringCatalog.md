@@ -269,7 +269,7 @@ The struct types are renamed (`UNIT` → `Unit`, `FIRE` → `Fire`, `EFFECT` →
 | `no` | `FormationNumber` | `short` | 何番機 |
 | `for_ltl_ldr` | `ForGroupLeader` | `short` | (check) |
 | `for_form_spd` | `FormationSpeed` | `double` | Speed of a unit catching up with its formation. |
-| `hp` | `hp` | `Array8<int>` | `Hp` (`[0]`), `MaxHp` (`[1]`). |
+| `hp` | `hp` | `Array8<int>` | `HP` (`[0]`), `MaxHP` (`[1]`). |
 | `arm` | `arm` | `Array8<int>` | `Weapon` (`[0]`, `FireKind`), `Ammo` (`[1]`), `Target` (`[2]`, `UnitId`), `ReloadTime` (`[3]`, 再装填時間, also the maintenance time of planes), `MaxAmmo` (`[4]`, 全容量). |
 | `arm2` | `SubWeapons` | `Array2<int>` | サブ武装 |
 | `gas` | `gas` | `Array8<double>` | `Fuel` (`[0]`), `[1]` (check: maximum fuel). |

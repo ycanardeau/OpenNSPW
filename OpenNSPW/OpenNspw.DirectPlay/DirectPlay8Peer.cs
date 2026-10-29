@@ -9,7 +9,7 @@ namespace OpenNspw.DirectPlay;
 // message handler by DirectPlay8ThreadPool.DoWork, on the game's thread, as DirectPlay does in DoWork mode.
 public sealed unsafe class DirectPlay8Peer(PeerOptions? options) : IDirectPlay8Peer
 {
-	private const string TcpIpName = "DirectPlay8 TCP/IP Service Provider";
+	private const string TcpIPName = "DirectPlay8 TCP/IP Service Provider";
 
 	// DPNSUCCESS_PENDING: an asynchronous operation started.
 	private const int DPNSUCCESS_PENDING = 0x0015800E;
@@ -67,7 +67,7 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options) : IDirectPlay8P
 				new DPN_SERVICE_PROVIDER_INFO
 				{
 					guid = dplay8.CLSID_DP8SP_TCPIP,
-					pwszName = TcpIpName,
+					pwszName = TcpIPName,
 				},
 			]
 			: [];

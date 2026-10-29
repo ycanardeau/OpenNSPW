@@ -1100,7 +1100,7 @@ public unsafe partial class Nspw
 #if DBG_MODE
 						if (!IsEditingMap)
 						{
-							Units[SelectedUnit].Hp = 0;
+							Units[SelectedUnit].HP = 0;
 						}
 #endif
 						if (IsEditingMap && Mode == GameMode.Battle)
@@ -1170,9 +1170,9 @@ public unsafe partial class Nspw
 							)
 						)
 						{
-							if (Units[SelectedUnit].Hp < Units[SelectedUnit].MaxHp)
+							if (Units[SelectedUnit].HP < Units[SelectedUnit].MaxHP)
 							{
-								Units[SelectedUnit].Hp++;
+								Units[SelectedUnit].HP++;
 								Sound.PlayInterfaceSound(SoundId.Click1);
 							}
 						}
@@ -1190,7 +1190,7 @@ public unsafe partial class Nspw
 							)
 						)
 						{
-							Units[SelectedUnit].Hp--;
+							Units[SelectedUnit].HP--;
 							Sound.PlayInterfaceSound(SoundId.Click1);
 						}
 						break;
@@ -1362,17 +1362,17 @@ public unsafe partial class Renderer
 
 			// 互換DCを生成
 
-			HDC bitmapDc = _game.CreateCompatibleDC();
+			HDC bitmapDC = _game.CreateCompatibleDC();
 
 			// インターフェイスをサーフェスにブロック転送
 
-			_game.SelectObject(bitmapDc, bit);
-			_game.BitBlt(hdc, 0, 0, surfaceWidth, surfaceHeight, bitmapDc, 0, 0);
+			_game.SelectObject(bitmapDC, bit);
+			_game.BitBlt(hdc, 0, 0, surfaceWidth, surfaceHeight, bitmapDC, 0, 0);
 
 			// DCを解放
 
 			surf.ReleaseDC(hdc);
-			_game.DeleteDC(bitmapDc);
+			_game.DeleteDC(bitmapDC);
 
 			// save the dimensions if rectangle pointer provided
 		}

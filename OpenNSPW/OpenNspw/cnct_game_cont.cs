@@ -899,7 +899,7 @@ public unsafe partial class Nspw
 
 		unit.Skill = 5;
 
-		unit.Hp = unit.MaxHp = BB1_HP; // Ｈｐ
+		unit.HP = unit.MaxHP = BB1_HP; // Ｈｐ
 
 		if (unit.Side == Side.Japan && unit.Variant == 1)
 		{
@@ -914,7 +914,7 @@ public unsafe partial class Nspw
 
 			unit.FuelInterval *= 1.2; // 残燃料
 
-			unit.Hp = unit.MaxHp = unchecked((int)(BB1_HP * 1.4)); // Ｈｐ
+			unit.HP = unit.MaxHP = unchecked((int)(BB1_HP * 1.4)); // Ｈｐ
 		}
 	}
 
@@ -953,14 +953,14 @@ public unsafe partial class Nspw
 
 		unit.Skill = 5;
 
-		unit.Hp = unit.MaxHp = CA1_HP; // Ｈｐ
+		unit.HP = unit.MaxHP = CA1_HP; // Ｈｐ
 		if (unit.Variant != 0)
 		{
 			if (unit.Side == Side.UnitedStates)
-				unit.MaxHp = (int)(unit.MaxHp * 0.9);
+				unit.MaxHP = (int)(unit.MaxHP * 0.9);
 			else
-				unit.MaxHp = (int)(unit.MaxHp * 0.8);
-			unit.Hp = unit.MaxHp;
+				unit.MaxHP = (int)(unit.MaxHP * 0.8);
+			unit.HP = unit.MaxHP;
 		}
 	}
 
@@ -982,14 +982,14 @@ public unsafe partial class Nspw
 
 		unit.Skill = 5;
 
-		unit.Hp = unit.MaxHp = DD1_HP; // Ｈｐ
+		unit.HP = unit.MaxHP = DD1_HP; // Ｈｐ
 		if (unit.Variant != 0)
 		{
 			if (unit.Side == Side.UnitedStates)
-				unit.MaxHp = (int)(unit.MaxHp * 0.9);
+				unit.MaxHP = (int)(unit.MaxHP * 0.9);
 			else
-				unit.MaxHp = (int)(unit.MaxHp * 0.7);
-			unit.Hp = unit.MaxHp;
+				unit.MaxHP = (int)(unit.MaxHP * 0.7);
+			unit.HP = unit.MaxHP;
 		}
 	}
 
@@ -1011,7 +1011,7 @@ public unsafe partial class Nspw
 
 		unit.Skill = 5;
 
-		unit.Hp = unit.MaxHp = SS1_HP; // Ｈｐ
+		unit.HP = unit.MaxHP = SS1_HP; // Ｈｐ
 	}
 
 	private void SetCarrierData(ref Unit unit, int m)
@@ -1039,7 +1039,7 @@ public unsafe partial class Nspw
 
 		unit.Skill = 5;
 
-		unit.Hp = unit.MaxHp = CV1_HP + ((unit.Side == Side.UnitedStates ? 1 : 0) * 5); // Ｈｐ
+		unit.HP = unit.MaxHP = CV1_HP + ((unit.Side == Side.UnitedStates ? 1 : 0) * 5); // Ｈｐ
 
 		if (unit.Side == Side.UnitedStates && unit.Variant == 1)
 		{
@@ -1056,8 +1056,8 @@ public unsafe partial class Nspw
 
 			unit.FuelInterval *= 1.6; // 残燃料
 
-			unit.Hp = (int)(unit.Hp * 1.15);
-			unit.MaxHp = (int)(unit.MaxHp * 1.15); // Ｈｐ
+			unit.HP = (int)(unit.HP * 1.15);
+			unit.MaxHP = (int)(unit.MaxHP * 1.15); // Ｈｐ
 		}
 	}
 
@@ -1086,7 +1086,7 @@ public unsafe partial class Nspw
 
 		unit.Skill = 5;
 
-		unit.Hp = unit.MaxHp = CVL1_HP + ((unit.Side == Side.UnitedStates ? 1 : 0) * 5); // Ｈｐ
+		unit.HP = unit.MaxHP = CVL1_HP + ((unit.Side == Side.UnitedStates ? 1 : 0) * 5); // Ｈｐ
 	}
 
 	private void SetFighterData(ref Unit unit)
@@ -1116,7 +1116,7 @@ public unsafe partial class Nspw
 
 					unit.Skill = 7;
 
-					unit.Hp = unit.MaxHp = FT1_HP; // Ｈｐ
+					unit.HP = unit.MaxHP = FT1_HP; // Ｈｐ
 				}
 				else
 				{
@@ -1139,7 +1139,7 @@ public unsafe partial class Nspw
 
 					unit.Skill = 5;
 
-					unit.Hp = unit.MaxHp = FT1_HP + 4; // Ｈｐ
+					unit.HP = unit.MaxHP = FT1_HP + 4; // Ｈｐ
 				}
 
 				break;
@@ -1164,7 +1164,7 @@ public unsafe partial class Nspw
 
 					unit.Skill = 5;
 
-					unit.Hp = unit.MaxHp = unchecked((int)(FT1_HP * 0.8)); // Ｈｐ
+					unit.HP = unit.MaxHP = unchecked((int)(FT1_HP * 0.8)); // Ｈｐ
 				}
 				else
 				{
@@ -1184,7 +1184,7 @@ public unsafe partial class Nspw
 
 					unit.Skill = 5;
 
-					unit.Hp = unit.MaxHp = unchecked((int)(FT1_HP * 2.0)); // Ｈｐ
+					unit.HP = unit.MaxHP = unchecked((int)(FT1_HP * 2.0)); // Ｈｐ
 				}
 
 				break;
@@ -1214,7 +1214,7 @@ public unsafe partial class Nspw
 
 			unit.Skill = 5;
 
-			unit.Hp = unit.MaxHp = AT1_HP; // Ｈｐ
+			unit.HP = unit.MaxHP = AT1_HP; // Ｈｐ
 		}
 		else
 		{
@@ -1237,7 +1237,7 @@ public unsafe partial class Nspw
 
 			unit.Skill = 5;
 
-			unit.Hp = unit.MaxHp = AT1_HP + 4; // Ｈｐ
+			unit.HP = unit.MaxHP = AT1_HP + 4; // Ｈｐ
 		}
 	}
 
@@ -1261,7 +1261,7 @@ public unsafe partial class Nspw
 
 			unit.Skill = 5;
 
-			unit.Hp = unit.MaxHp = unchecked((int)(BM1_HP * 0.65)); // Ｈｐ
+			unit.HP = unit.MaxHP = unchecked((int)(BM1_HP * 0.65)); // Ｈｐ
 		}
 		else
 		{
@@ -1281,7 +1281,7 @@ public unsafe partial class Nspw
 
 			unit.Skill = 5;
 
-			unit.Hp = unit.MaxHp = BM1_HP; // Ｈｐ
+			unit.HP = unit.MaxHP = BM1_HP; // Ｈｐ
 		}
 	}
 
@@ -1303,7 +1303,7 @@ public unsafe partial class Nspw
 
 		unit.Skill = 5;
 
-		unit.Hp = unit.MaxHp = TR1_HP; // Ｈｐ
+		unit.HP = unit.MaxHP = TR1_HP; // Ｈｐ
 	}
 
 	//============================================================================
@@ -1369,7 +1369,7 @@ public unsafe partial class Nspw
 
 				unit.Skill = 5;
 
-				unit.Hp = unit.MaxHp = SP_HP; // Ｈｐ
+				unit.HP = unit.MaxHP = SP_HP; // Ｈｐ
 
 				unit.Direction = 90.0; // ９０がos_indx_x=0;
 				break;
@@ -1384,7 +1384,7 @@ public unsafe partial class Nspw
 
 				unit.Skill = 5;
 
-				unit.Hp = unit.MaxHp = AP_HP; // Ｈｐ
+				unit.HP = unit.MaxHP = AP_HP; // Ｈｐ
 
 				unit.Direction = 90.0 - 45.0; // ９０がos_indx_x=0;
 
@@ -1400,7 +1400,7 @@ public unsafe partial class Nspw
 				unit.Direction = 0.0; // ９０がos_indx_x=0;
 
 				unit.Skill = 5;
-				unit.Hp = unit.MaxHp = CT1_HP; // Ｈｐ
+				unit.HP = unit.MaxHP = CT1_HP; // Ｈｐ
 				break;
 
 			case UnitKind.InfantryBase:
@@ -1413,7 +1413,7 @@ public unsafe partial class Nspw
 				unit.Direction = 225.0; // ９０がos_indx_x=0;
 
 				unit.Skill = 5;
-				unit.Hp = unit.MaxHp = GF1_HP; // Ｈｐ
+				unit.HP = unit.MaxHP = GF1_HP; // Ｈｐ
 				break;
 
 			case UnitKind.Pillboxes:
@@ -1426,7 +1426,7 @@ public unsafe partial class Nspw
 				unit.Direction = 180.0; // ９０がos_indx_x=0;
 
 				unit.Skill = 5;
-				unit.Hp = unit.MaxHp = GF2_HP; // Ｈｐ
+				unit.HP = unit.MaxHP = GF2_HP; // Ｈｐ
 				break;
 			case UnitKind.Fortress:
 				unit.SpriteRow = 11;
@@ -1438,7 +1438,7 @@ public unsafe partial class Nspw
 				unit.Direction = 135.0; // ９０がos_indx_x=0;
 
 				unit.Skill = 5;
-				unit.Hp = unit.MaxHp = GF3_HP; // Ｈｐ
+				unit.HP = unit.MaxHP = GF3_HP; // Ｈｐ
 				break;
 		}
 

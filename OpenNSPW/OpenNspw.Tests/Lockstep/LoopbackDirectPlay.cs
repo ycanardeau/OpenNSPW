@@ -26,7 +26,7 @@ internal delegate void SentHandler(uint dpnid, ReadOnlySpan<byte> data);
 internal sealed unsafe class LoopbackPeer(LoopbackNetwork network, SentHandler sent)
 	: IDirectPlay8Peer
 {
-	private const string TcpIpName = "DirectPlay8 TCP/IP Service Provider";
+	private const string TcpIPName = "DirectPlay8 TCP/IP Service Provider";
 
 	// DPNSUCCESS_PENDING: an asynchronous operation started.
 	private const int DPNSUCCESS_PENDING = 0x0015800E;
@@ -116,7 +116,7 @@ internal sealed unsafe class LoopbackPeer(LoopbackNetwork network, SentHandler s
 				new DPN_SERVICE_PROVIDER_INFO
 				{
 					guid = dplay8.CLSID_DP8SP_TCPIP,
-					pwszName = TcpIpName,
+					pwszName = TcpIPName,
 				},
 			]
 			: [];

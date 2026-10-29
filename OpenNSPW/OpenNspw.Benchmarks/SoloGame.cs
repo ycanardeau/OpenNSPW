@@ -165,7 +165,7 @@ internal sealed class SoloGame : IDisposable
 				unit.Side == side
 				&& unit.Category == category
 				&& !unit.IsSupplying
-				&& unit.Hp > 0
+				&& unit.HP > 0
 				&& !(unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress)
 			)
 			{

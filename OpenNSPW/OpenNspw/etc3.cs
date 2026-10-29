@@ -281,8 +281,8 @@ public unsafe partial class Nspw
 							Units[f].BuildTime = (int)(
 								8000 * (fire.ShooterSide == (int)Side.UnitedStates ? 1.0 : 0.8)
 							); // 建設期間
-							Units[f].Hp /= 4;
-							Units[f].MaxHp /= 4;
+							Units[f].HP /= 4;
+							Units[f].MaxHP /= 4;
 							break;
 						case FireKind.CargoFortress:
 							f = AddUnit(
@@ -297,8 +297,8 @@ public unsafe partial class Nspw
 							Units[f].BuildTime = (int)(
 								15000 * (fire.ShooterSide == (int)Side.UnitedStates ? 0.8 : 1.0)
 							); // 建設期間
-							Units[f].Hp /= 4;
-							Units[f].MaxHp /= 4;
+							Units[f].HP /= 4;
+							Units[f].MaxHP /= 4;
 							break;
 						case FireKind.CargoAirBase:
 							f = AddUnit(
@@ -313,8 +313,8 @@ public unsafe partial class Nspw
 							Units[f].BuildTime = (int)(
 								10000 * (fire.ShooterSide == (int)Side.UnitedStates ? 0.8 : 1.0)
 							); // 建設期間
-							Units[f].Hp /= 4;
-							Units[f].MaxHp /= 4;
+							Units[f].HP /= 4;
+							Units[f].MaxHP /= 4;
 							break;
 						case FireKind.CargoNavalBase:
 							f = AddUnit(
@@ -329,8 +329,8 @@ public unsafe partial class Nspw
 							Units[f].BuildTime = (int)(
 								20000 * (fire.ShooterSide == (int)Side.UnitedStates ? 0.8 : 1.0)
 							); // 建設期間
-							Units[f].Hp /= 4;
-							Units[f].MaxHp /= 4;
+							Units[f].HP /= 4;
+							Units[f].MaxHP /= 4;
 							break;
 					}
 				}
@@ -418,7 +418,7 @@ public unsafe partial class Nspw
 						|| !Rules.BulletsSpareTransports
 						|| Random(4) == 0
 					)
-						Units[n].Hp -= GetDamagePoints(m);
+						Units[n].HP -= GetDamagePoints(m);
 				}
 
 				var f = FindFreeEffect();
@@ -511,7 +511,7 @@ public unsafe partial class Nspw
 						fire.Target = 0;
 						if (ShowsAntiAir == 0)
 						{
-							unit.Hp -= GetDamagePoints(m);
+							unit.HP -= GetDamagePoints(m);
 							if (unit.Speed <= unit.MaxSpeed)
 								unit.Direction = Random(360);
 						}
@@ -581,7 +581,7 @@ public unsafe partial class Nspw
 			if (hit != 0)
 			{
 				// 命中
-				Units[n].Hp -= GetDamagePoints(m);
+				Units[n].HP -= GetDamagePoints(m);
 			}
 			if (!Rules.ExplodedDepthChargesKeepTheirFire)
 				fire.Target = 0;
@@ -671,7 +671,7 @@ public unsafe partial class Nspw
 						// 命中
 						if (ShowsAntiAir == 0)
 						{
-							unit.Hp -= GetDamagePoints(m);
+							unit.HP -= GetDamagePoints(m);
 
 							if (unit.Speed <= unit.MaxSpeed)
 							{
@@ -740,7 +740,7 @@ public unsafe partial class Nspw
 			if (Units[n].IsUsed && hit != 0)
 			{
 				// 命中
-				Units[n].Hp -= GetDamagePoints(m);
+				Units[n].HP -= GetDamagePoints(m);
 
 				Sound.PlaySoundEffect(SoundId.TorpedoHit1, fire.Position);
 
@@ -870,7 +870,7 @@ public unsafe partial class Nspw
 			{
 				// 命中
 				fire.Target = 0;
-				Units[n].Hp -= GetDamagePoints(m);
+				Units[n].HP -= GetDamagePoints(m);
 
 				Sound.PlaySoundEffect(SoundId.TorpedoHit1 + Random(2), fire.Position);
 
@@ -990,7 +990,7 @@ public unsafe partial class Nspw
 			if (hit != 0)
 			{
 				// 命中
-				Units[n].Hp -= GetDamagePoints(m);
+				Units[n].HP -= GetDamagePoints(m);
 
 				Sound.PlaySoundEffect(SoundId.BombHit1 + Random(2), fire.Position);
 
@@ -1260,7 +1260,7 @@ public unsafe partial class Nspw
 		if (Random(500) == 0)
 		{
 			if (!IsEditingMap)
-				unit.Hp--;
+				unit.HP--;
 		}
 		if (
 			Rules.DamageEffectsTestBeforeDrawing
@@ -1299,7 +1299,7 @@ public unsafe partial class Nspw
 		if (Random(500) == 0)
 		{
 			if (!IsEditingMap)
-				unit.Hp--;
+				unit.HP--;
 		}
 
 		if (
@@ -1336,7 +1336,7 @@ public unsafe partial class Nspw
 	private void UpdateBurningPlane(ref Unit unit)
 	{
 		// ＨＰはあるが、事実上の墜落、
-		if (unit.Hp == unit.MaxHp * 0.2)
+		if (unit.HP == unit.MaxHP * 0.2)
 		{
 			// 飛行機が火を吹く
 			if (unit.Kind == UnitKind.Bomber)
@@ -1369,14 +1369,14 @@ public unsafe partial class Nspw
 				effect.SpriteNumber = 9; // ソースファイル上の番号
 			}
 			if (!IsEditingMap)
-				unit.Hp--;
+				unit.HP--;
 		}
 		else
 		{
 			if (Random(80) == 0)
 			{
 				if (!IsEditingMap)
-					unit.Hp--;
+					unit.HP--;
 			}
 
 			if (
@@ -1394,7 +1394,7 @@ public unsafe partial class Nspw
 				effect.SpriteNumber = 6; // ソースファイル上の番号
 			}
 
-			if (Random(3) == 0 && unit.Hp <= unit.MaxHp * 0.1)
+			if (Random(3) == 0 && unit.HP <= unit.MaxHP * 0.1)
 			{
 				// 小爆炎
 				var f = FindFreeEffect();
@@ -1512,23 +1512,23 @@ public unsafe partial class Nspw
 		}
 		else
 		{ // 飛行中のエフェクト
-			if (unit.Hp <= 0)
+			if (unit.HP <= 0)
 			{ // 墜落
 				CrashPlane(ref unit, m);
 			}
-			else if (unit.Hp <= unit.MaxHp * 0.2)
+			else if (unit.HP <= unit.MaxHP * 0.2)
 			{
 				UpdateBurningPlane(ref unit);
 			}
-			else if (unit.Hp <= unit.MaxHp * 0.3)
+			else if (unit.HP <= unit.MaxHP * 0.3)
 			{
 				UpdateHeavilyDamagedPlane(ref unit);
 			}
-			else if (unit.Hp <= unit.MaxHp * 0.5)
+			else if (unit.HP <= unit.MaxHP * 0.5)
 			{
 				UpdateDamagedPlane(ref unit);
 			}
-			else if (unit.Hp <= unit.MaxHp * 0.7)
+			else if (unit.HP <= unit.MaxHP * 0.7)
 			{
 				UpdateLightlyDamagedPlane(ref unit);
 			}
@@ -1579,7 +1579,7 @@ public unsafe partial class Nspw
 
 	private void UpdateSurfaceShipEffects(ref Unit unit, int m)
 	{
-		if (unit.Hp <= 0)
+		if (unit.HP <= 0)
 		{ // 沈没
 			Sound.PlaySoundEffect(SoundId.ShipSinking1, unit.Position);
 
@@ -1629,12 +1629,12 @@ public unsafe partial class Nspw
 		}
 		else
 		{
-			if (unit.Hp <= unit.MaxHp * 0.2)
+			if (unit.HP <= unit.MaxHP * 0.2)
 			{
 				if (Random(4000) == 0 && !unit.IsSupplying)
 				{
 					if (!IsEditingMap)
-						unit.Hp--;
+						unit.HP--;
 				}
 				if (IsEffectTick && Random(2) != 0)
 				{
@@ -1650,7 +1650,7 @@ public unsafe partial class Nspw
 			}
 			else
 			{
-				if (unit.Hp <= unit.MaxHp * 0.5)
+				if (unit.HP <= unit.MaxHP * 0.5)
 				{
 					var n = Random(4);
 					if (IsEffectTick && n == 0)
@@ -1678,8 +1678,8 @@ public unsafe partial class Nspw
 				{
 					if (
 						Rules.DamageEffectsTestBeforeDrawing
-							? IsEffectTick && unit.Hp <= unit.MaxHp * 0.7 && Random(10) == 1
-							: Random(10) == 1 && unit.Hp <= unit.MaxHp * 0.7
+							? IsEffectTick && unit.HP <= unit.MaxHP * 0.7 && Random(10) == 1
+							: Random(10) == 1 && unit.HP <= unit.MaxHP * 0.7
 					)
 					{
 						var f = FindFreeEffect();
@@ -1697,7 +1697,7 @@ public unsafe partial class Nspw
 
 	private void UpdateSubmergedSubmarineEffects(ref Unit unit, int m)
 	{
-		if (unit.Hp <= 0)
+		if (unit.HP <= 0)
 		{ // 沈没
 			unit.Side = 0;
 			unit.IsFound = false;
@@ -1715,12 +1715,12 @@ public unsafe partial class Nspw
 		}
 		else
 		{
-			if (unit.Hp <= unit.MaxHp * 0.2)
+			if (unit.HP <= unit.MaxHP * 0.2)
 			{ // 空気漏れ
 				if (Random(100) == 0)
 				{
 					if (!IsEditingMap)
-						unit.Hp--;
+						unit.HP--;
 				}
 				if (IsEffectTick && Random(300) == 1)
 				{
@@ -1752,12 +1752,12 @@ public unsafe partial class Nspw
 			}
 			else
 			{
-				if (unit.Hp <= unit.MaxHp * 0.5)
+				if (unit.HP <= unit.MaxHP * 0.5)
 				{ // 空気漏れ
 					if (Random(1000) == 0)
 					{
 						if (!IsEditingMap)
-							unit.Hp--;
+							unit.HP--;
 					}
 					if (IsEffectTick && Random(600) == 1)
 					{

@@ -569,11 +569,11 @@ dbg[5]=rnd(100);
 			&& unit.BuildTime != 0
 		)
 		{
-			if (unit.Hp < unit.MaxHp)
+			if (unit.HP < unit.MaxHP)
 			{
 				// 損傷してればその修理が先。
 				if ((Tick % 220) == 0 && unit.Fuel >= 0)
-					unit.Hp++;
+					unit.HP++;
 			}
 			else
 			{
@@ -583,8 +583,8 @@ dbg[5]=rnd(100);
 				if (unit.BuildTime == 0)
 				{
 					// 完成
-					unit.MaxHp *= 4;
-					unit.Hp = unit.MaxHp;
+					unit.MaxHP *= 4;
+					unit.HP = unit.MaxHP;
 				}
 			}
 		}
@@ -632,20 +632,20 @@ dbg[5]=rnd(100);
 		{
 			unit.SupplyTime++;
 
-			if (unit.Hp < unit.MaxHp && (unit.SupplyTime % 200) == 199 && unit.Fuel >= 0)
+			if (unit.HP < unit.MaxHP && (unit.SupplyTime % 200) == 199 && unit.Fuel >= 0)
 			{
-				unit.Hp++;
+				unit.HP++;
 				unit.SupplyTime = 1;
 			}
 
-			if (unit.Hp == unit.MaxHp && unit.Ammo < unit.MaxAmmo && (unit.SupplyTime % 10) == 9)
+			if (unit.HP == unit.MaxHP && unit.Ammo < unit.MaxAmmo && (unit.SupplyTime % 10) == 9)
 			{
 				unit.Ammo++;
 				unit.SupplyTime = 1;
 			}
 
 			if (
-				unit.Hp == unit.MaxHp
+				unit.HP == unit.MaxHP
 				&& unit.Ammo == unit.MaxAmmo
 				&& unit.Fuel < 100
 				&& (unit.SupplyTime % 20) == 19
@@ -658,7 +658,7 @@ dbg[5]=rnd(100);
 			}
 
 			if (
-				unit.Hp == unit.MaxHp
+				unit.HP == unit.MaxHP
 				&& unit.Ammo == unit.MaxAmmo
 				&& unit.Fuel == 100
 				&& (unit.SupplyTime % 100) == 99
@@ -821,9 +821,9 @@ dbg[5]=rnd(100);
 					unit.Ammo = 1; // 数
 					unit.ReloadTime =
 						TUNE_SPAN
-						+ (unit.MaxHp - unit.Hp) * (TUNE_SPAN / 10)
+						+ (unit.MaxHP - unit.HP) * (TUNE_SPAN / 10)
 						+ ((unit.Kind == UnitKind.Bomber ? 1 : 0) * (TUNE_SPAN / 3)); // 数
-					unit.Hp = unit.MaxHp;
+					unit.HP = unit.MaxHP;
 
 					unit.SetPathPoint(0, Units[unit.Carrier].Position);
 					unit.EndPath(1);
@@ -1600,7 +1600,7 @@ dbg[5]=rnd(100);
 			&& !(
 				unit.Category == UnitCategory.Plane
 				&& unit.PlaneState == UnitState.Flying
-				&& Units[unit.Carrier].Hp <= Units[unit.Carrier].MaxHp * 0.2
+				&& Units[unit.Carrier].HP <= Units[unit.Carrier].MaxHP * 0.2
 			)
 			&& !(unit.Kind == UnitKind.Bomber && (Units[unit.Carrier].Kind != UnitKind.AirBase))
 			&& !(
@@ -1650,7 +1650,7 @@ dbg[5]=rnd(100);
 		}
 
 		if (unit.Fuel == 0 && unit.Category == UnitCategory.Plane && unit.Speed <= 0)
-			unit.Hp = 0; // 飛行機でガス０なら落ちます
+			unit.HP = 0; // 飛行機でガス０なら落ちます
 	}
 
 	private void ControlInfantryBaseFiring(ref Unit unit, int damageSlowdown, int m)
@@ -2280,13 +2280,13 @@ dbg[5]=rnd(100);
 						(
 							Units[unit.Target].Category == UnitCategory.Plane
 							&& (
-								Units[unit.Target].Hp <= 0
+								Units[unit.Target].HP <= 0
 								|| Units[unit.Target].PlaneState == UnitState.Parked
 							)
 						)
 						|| (
 							Units[unit.Target].Category == UnitCategory.Ship
-							&& Units[unit.Target].Hp <= 0
+							&& Units[unit.Target].HP <= 0
 						)
 						|| (unit.Kind == UnitKind.Fighter && unit.Ammo <= 0)
 						|| (
@@ -2333,7 +2333,7 @@ dbg[5]=rnd(100);
 				}
 
 				var damageSlowdown = 1;
-				if (unit.Hp <= unit.MaxHp * 0.3)
+				if (unit.HP <= unit.MaxHP * 0.3)
 				{
 					damageSlowdown = 2;
 				}
