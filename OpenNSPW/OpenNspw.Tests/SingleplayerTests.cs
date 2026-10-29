@@ -1429,7 +1429,11 @@ public class SingleplayerTests
 		// Copies the state in, and leaves it there: plane_in_cv(0) writes nothing.
 		game.RunEmulated(OpenNspw.Singleplayer.Functions.CountPlanesIn, 0);
 
-		for (var address = MapAddress - 0x1000; address < MapAddress + 0x20000 + 0x1000; address++)
+		for (
+			var address = MapAddress - Nspw.BeyondMapSize;
+			address < MapAddress + 0x20000 + Nspw.BeyondMapSize;
+			address++
+		)
 		{
 			var emulated = game.Emulator!.At(address, 1)[0];
 			var port = game.ByteAs122(address);

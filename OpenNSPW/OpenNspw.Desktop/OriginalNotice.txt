@@ -2,8 +2,7 @@ Naval South Pacific War (NSPW)
 ==============================
 
 OpenNSPW includes files of the original games, unmodified, so that it plays without them:
-NSPW NET's sounds, maps and scenarios, and NSPW 1.22's executable (NSPW_122.exe), one map
-and two sounds.
+NSPW NET's sounds, maps and scenarios, and NSPW 1.22's map and two sounds.
 
 Naval South Pacific War is a game for Windows by Ken-ichi Tokumitsu (徳光 健一) /
 Nara-Shika Seisakusho (奈良鹿製作所). All copyrights of these files belong to him.
@@ -19,7 +18,7 @@ These files are not covered by OpenNSPW's license.
 ---
 
 OpenNSPW には、元のゲームのファイルが改変せずに含まれています: NSPW NET の効果音、
-マップ、シナリオと、NSPW 1.22 の実行ファイル (NSPW_122.exe)、マップ一つと効果音二つ。
+マップ、シナリオと、NSPW 1.22 のマップ一つと効果音二つ。
 
 Naval South Pacific War は、徳光 健一 / 奈良鹿製作所による Windows 用のゲームです。
 これらのファイルの著作権は全て作者にあります。

@@ -36,7 +36,6 @@ internal sealed class NspwGame : Game
 	private readonly ScreenManager _screenManager = new();
 	private readonly int? _scenario;
 	private readonly Trace122Replay? _replay;
-	private byte[]? _singleplayerExecutable;
 	private Screen? _nextScreen;
 	private GameSession? _lastSession;
 
@@ -56,7 +55,7 @@ internal sealed class NspwGame : Game
 	// The single-player scenario chosen last, to select it again in the browser.
 	public int? LastScenario { get; set; }
 
-	// data: where the games' files come from, NSPW_122.exe too, to play single-player (docs/Singleplayer.md). scenario: a
+	// data: where the games' files come from, 1.22's too, to play single-player (docs/Singleplayer.md). scenario: a
 	// scenario of 1.22 to play at once, without the menus. replay: a trace of 1.22 in that scenario, which that game
 	// follows, to watch it (docs/Verification.md).
 	public NspwGame(GameData data, int? scenario = null, Trace122Replay? replay = null)
@@ -70,11 +69,6 @@ internal sealed class NspwGame : Game
 		Window.Title = Title;
 		Window.AllowUserResizing = true;
 		Components.Add(_screenManager);
-	}
-
-	public byte[] ReadSingleplayerExecutable()
-	{
-		return _singleplayerExecutable ??= Data.ReadExecutable();
 	}
 
 	// Shows a screen, from the next update.
@@ -91,7 +85,7 @@ internal sealed class NspwGame : Game
 		_lastSession = new GameSession(
 			Data.Files(singleplayer is not null),
 			Text,
-			singleplayer is { } scenario ? (ReadSingleplayerExecutable(), scenario) : null,
+			singleplayer,
 			replay
 		);
 		_lastSession.Start();

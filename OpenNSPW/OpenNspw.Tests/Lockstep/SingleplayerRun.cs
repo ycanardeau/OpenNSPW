@@ -14,9 +14,9 @@ internal sealed class SingleplayerRun : IDisposable
 
 	// setUp runs before the game starts, to set a trace. startDate: the time it starts at (time(NULL)), which seeds rand.
 	// drawsFromSpriteFiles: whether the game draws from the desktop app's sprite files (docs/GameSprites.md), rather than
-	// from 1.22's sprite sheet. playsBundledFiles: whether it plays the desktop app's embedded files and executable, with
-	// an empty user's folder (docs/BundledData.md), rather than a copy of the original's data and Original/Nspw122; it
-	// then draws from the sprite files, as the app embeds no sheet.
+	// from 1.22's sprite sheet. playsBundledFiles: whether it plays the desktop app's embedded files, with an empty user's
+	// folder and no executable (docs/BundledData.md), rather than a copy of the original's data and Original/Nspw122, with
+	// its executable for the tests' emulator; it then draws from the sprite files, as the app embeds no sheet.
 	public SingleplayerRun(
 		int scenario,
 		Action<Nspw>? setUp = null,
@@ -35,7 +35,6 @@ internal sealed class SingleplayerRun : IDisposable
 		Game.ScenarioNumber = (short)scenario;
 		if (playsBundledFiles)
 		{
-			Game.SingleplayerExecutable = Desktop.BundledFiles.Read("Nspw122/NSPW_122.exe");
 			Player.Files = new GameFileLayers(
 				[],
 				_user.Path,
