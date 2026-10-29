@@ -1,15 +1,15 @@
 using OpenNspw.Desktop;
 
-// OpenNspw.Desktop [--data <directory>] [--exe <NSPW_122.exe>] [--singleplayer <scenario> | --replay <trace.n122>]
+// OpenNspw.Desktop [--data <directory>] [--singleplayer <scenario> | --replay <trace.n122>]
 //
 // Plays the port, from its main menu, with the original's files that the app embeds, and what the game writes in the
 // user's folder (GameData, docs/BundledData.md). With --data, the game's data (wav, Map, Scenario, Saved) is that
 // directory instead, such as the original's NSPW_NET, read and written.
 //
-// The single-player mode plays a scenario of NSPW 1.22 against the computer (docs/Singleplayer.md), whose functions run
-// from the single-player executable: the embedded one, or with --exe, that one, with the maps and sounds of its
-// directory. With --singleplayer, the game starts in that scenario, without the menus. With --replay, it starts in the
-// scenario of a trace recorded from 1.22, and follows it, to watch it (docs/Verification.md).
+// The single-player mode plays a scenario of NSPW 1.22 against the computer (docs/Singleplayer.md), whose functions are
+// rewritten as C#, with 1.22's maps and sounds that the app embeds. With --singleplayer, the game starts in that
+// scenario, without the menus. With --replay, it starts in the scenario of a trace recorded from 1.22, and follows it,
+// to watch it (docs/Verification.md).
 
 static string? Option(string[] args, string name)
 {
@@ -21,13 +21,6 @@ var dataDirectory = Option(args, "--data");
 if (dataDirectory is not null && !Directory.Exists(dataDirectory))
 {
 	Console.Error.WriteLine($"The game's data was not found: {dataDirectory}.");
-	return 1;
-}
-
-var executable = Option(args, "--exe");
-if (executable is not null && !File.Exists(executable))
-{
-	Console.Error.WriteLine($"The single-player executable was not found: {executable}.");
 	return 1;
 }
 
@@ -64,6 +57,6 @@ if (scenarioText is not null)
 	scenario = number;
 }
 
-using var game = new NspwGame(new GameData(dataDirectory, executable), scenario, replay);
+using var game = new NspwGame(new GameData(dataDirectory), scenario, replay);
 game.Run();
 return 0;

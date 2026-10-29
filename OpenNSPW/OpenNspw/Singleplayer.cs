@@ -154,7 +154,7 @@ public unsafe partial class Nspw
 	public int USA_PLANE_START => JPN_PLANE_END + 1;
 	public int USA_PLANE_END => USA_PLANE_START - 1 + PLANE_LIMIT;
 
-	// NSPW_122.exe, which the host gives the game to play single-player.
+	// NSPW_122.exe, the image of the emulator (Emulator), which only the tests create: a game needs no executable.
 	public byte[]? SingleplayerExecutable;
 
 	// The player's selection of every unit when the order in the buffers was given (BufferSelections). The network game
@@ -765,20 +765,31 @@ public unsafe partial class Nspw
 		ClearBufferedOrders();
 	}
 
-	// The image of the single-player executable, for what 1.22's memory holds where the port has nothing (ByteAs122).
-	private ExecutableImage? _image122;
+	// How far beyond cmbt_map 1.22 reads, in bytes, before and after it: a row and a tile, as MapTileOrBeyond reads the
+	// tiles around one at the map's edges.
+	internal const int BeyondMapSize = 2 * (256 + 1);
+
+	// The end of NSPW_122.exe's image in memory (ImageBase + SizeOfImage), after which the emulator allocates.
+	private const uint ImageEnd122 = 0x4F2000;
 
 	// lpDDSBack as the emulator holds it: the address of the port's stand-in for the surface, which SetNatives allocates
 	// second after the image, after its table of methods. 1.22's own is an address on the heap; neither half of either is
 	// 0.
-	private static uint BackBufferStandIn(ExecutableImage image) =>
-		image.ImageBase + image.ImageSize + (uint)((4 * SurfaceMethodCount + 7) & ~7);
+	private const uint BackBufferStandIn = ImageEnd122 + ((4 * SurfaceMethodCount + 7) & ~7u);
 
-	// The byte at the address of 1.22's memory, as the emulator holds it in a single-player game once the state is copied
-	// in: the globals the port shares with it, the units in 1.22's layout, the pointers of the port's stand-ins, and
-	// elsewhere the executable's image, which the code that the port runs does not write.
+	// The byte at the address of 1.22's memory around cmbt_map, as far as 1.22 reads beyond it (BeyondMapSize), as the
+	// emulator holds it in a single-player game once the state is copied in: the globals the port shares with it, the
+	// pointer of the port's stand-in for the back buffer, and elsewhere 0, as the executable's image holds there (.bss),
+	// which the code that the port runs does not write. TheMemoryAroundTheMapIsTheEmulators compares it with the emulator's
+	// memory.
 	internal byte ByteAs122(uint address)
 	{
+		if (address - (MapAddress - BeyondMapSize) >= BeyondMapSize + 256 * 256 * 2 + BeyondMapSize)
+			throw new ArgumentOutOfRangeException(
+				nameof(address),
+				$"0x{address:X} is not around cmbt_map."
+			);
+
 		foreach (var global in SharedGlobals)
 		{
 			var bytes = global.Bytes(this);
@@ -786,24 +797,9 @@ public unsafe partial class Nspw
 				return bytes[(int)(address - global.Address)];
 		}
 
-		if (address >= UnitAddress && address - UnitAddress < UnitCount * UnitSize)
-		{
-			Span<byte> unit = stackalloc byte[UnitSize];
-			WriteUnitAs122((int)((address - UnitAddress) / UnitSize), unit);
-			return unit[(int)((address - UnitAddress) % UnitSize)];
-		}
-
-		var image = _image122 ??= new ExecutableImage(
-			SingleplayerExecutable
-				?? throw new InvalidOperationException(
-					"The single-player executable (NSPW_122.exe) is not set."
-				)
-		);
 		if (address >= BackBufferAddress && address - BackBufferAddress < 4)
-			return BitConverter.GetBytes(BackBufferStandIn(image))[address - BackBufferAddress];
-		if (address >= FontAddress && address - FontAddress < 4)
-			return BitConverter.GetBytes(Renderer.GameFont1.Value)[address - FontAddress];
-		return image.ByteAt(address);
+			return BitConverter.GetBytes(BackBufferStandIn)[address - BackBufferAddress];
+		return 0;
 	}
 
 	// The tile of cmbt_map at row, column, flat as 1.22 reads it, row by row: beyond the map, what 1.22's memory holds around

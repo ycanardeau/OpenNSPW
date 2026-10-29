@@ -239,12 +239,13 @@ public class BundledDataTests
 		}
 	}
 
+	// The app embeds no executable: a game runs none of 1.22's code (docs/Singleplayer.md).
 	[Fact]
-	public void The_bundled_executable_is_122s()
+	public void The_app_bundles_no_executable()
 	{
-		Assert.Equal(
-			File.ReadAllBytes(Path.Combine(GameData.FindSingleplayer(), "NSPW_122.exe")),
-			BundledFiles.Read("Nspw122/NSPW_122.exe")
+		Assert.DoesNotContain(
+			typeof(BundledFiles).Assembly.GetManifestResourceNames(),
+			name => name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
 		);
 	}
 

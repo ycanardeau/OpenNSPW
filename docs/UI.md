@@ -36,7 +36,7 @@ The keyboard goes to the game as it would to the original, but for Escape and F1
 Single player, multiplayer and quit, over the title's picture; and the choice of the language.
 
 ### Single player
-NSPW 1.22's scenarios, a set at a time, as its scenario selection screen lists them, with what its setting screen says about the one selected: its side, its briefing and its victory conditions. The strings are read from `NSPW_122.exe` (`ScenarioSelection`). Choosing one starts the game as `--singleplayer` does.
+NSPW 1.22's scenarios, a set at a time, as its scenario selection screen lists them, with what its setting screen says about the one selected: its side, its briefing and its victory conditions. The strings are `NSPW_122.exe`'s, kept in C# (`ScenarioSelection.Sets`), so that the app needs no executable. Choosing one starts the game as `--singleplayer` does.
 
 ### Multiplayer
 The player's name, hosting or joining, the address and the port, and the scenario editor. The form stands in for the original's connection dialog, which the game still creates: it shows what the dialog has, and types into and clicks the dialog as the user does (`ClickDlgItem`), so that the game connects as the original does.

@@ -16,7 +16,7 @@ internal sealed class SingleplayerScreen(NspwGame game) : Screen(game)
 
 		var form = new ScenarioBrowserForm(
 			Game.Fonts,
-			SingleplayerTexts.Of(ScenarioSelection.Read(Game.ReadSingleplayerExecutable())),
+			SingleplayerTexts.Of(ScenarioSelection.Sets),
 			Game.LastScenario
 		);
 		form.ScenarioSelected += (_, scenario) =>

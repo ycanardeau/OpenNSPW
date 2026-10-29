@@ -2,11 +2,12 @@
 How the desktop app carries the original's files that the game reads, so that `OpenNSPW.app` and the Windows and Linux builds play without an `Original` folder.
 
 ## Summary
-- **The app embeds what the game reads, as the files are**: NSPW NET's sounds, maps and scenarios, and for single-player, `NSPW_122.exe` and the three files of 1.22's that differ from NSPW NET's. About 5 MB in the app, 0.9 MB in a zipped download.
+- **The app embeds what the game reads, as the files are**: NSPW NET's sounds, maps and scenarios, and for single-player, the three files of 1.22's that differ from NSPW NET's. About 5 MB in the app, 0.9 MB in a zipped download.
+- **No executable**: a single-player game runs none of 1.22's code, which is rewritten as C#, and the scenarios' titles and briefings are kept in C# (`ScenarioSelection.Sets`). `NSPW_122.exe` stays in `Original` for the tests, which compare the rewrites with it ([Singleplayer.md](Singleplayer.md)).
 - **No sprite sheet**: the game draws from the cut sprites already ([GameSprites.md](GameSprites.md)).
 - **What the game writes goes to the user's folder**, beside the settings: its saves, and a scenario that the map editor saves over. The user's folder is read first, so a scenario put there is listed with the bundled ones.
 - **A bundled file is copied to the user's folder when the game first writes to it**, not when it opens it: the original opens the files it only reads, such as the maps, to read and write.
-- **`--data` and `--exe` still use other files**, such as a player's own NSPW NET folder. Without them, the app plays its own, also when it runs from the repository.
+- **`--data` still uses other files**, such as a player's own NSPW NET folder. Without it, the app plays its own, also when it runs from the repository.
 - **The author's terms**: the games are freeware whose author permits redistribution and asks to be told of it (Original/README.md). The app ships a notice of his copyright and terms (`OriginalNotice.txt`).
 
 ## What the game reads
@@ -15,11 +16,11 @@ How the desktop app carries the original's files that the game reads, so that `O
 | `wav` | NSPW NET's 32 sounds | 1.3 MB | `InitDSound` (`WAV\NAME.wav`) |
 | `Map` | `South_pacific.dat`, `Middle_pacific.dat`, `Japan_off.dat` | 384 KB | `load_it2` (`LoadScenarioFile2`) |
 | `Scenario` | `中部太平洋.dat`, `南太平洋.dat`, `日本近海.dat`, `tst2.dat`, `tst3.dat`, `てすと.dat` | 2.9 MB | the setting screen's list (`FindFirstFile("Scenario\\*.dat")`) and `load_it3`, `load_user_map` |
-| 1.22's executable | `NSPW_122.exe` | 272 KB | the emulator (its image), the scenarios' titles and briefings (`ScenarioSelection`) |
 | 1.22's `Map` | `japan_off.dat`, without NSPW NET's island | 128 KB | a single-player game's `load_it2` |
 | 1.22's `wav` | `GUN3.wav`, `AA_SHL4.wav`, other sounds than NSPW NET's | 31 KB | a single-player game's sounds |
 
 **Not bundled**:
+- **1.22's executable**, `NSPW_122.exe`: the game runs none of its code. What it read from it is C#: the scenarios' titles and briefings (`ScenarioSelection.Sets`, which `ScenarioSelectionTests` compares with the executable's), and 1.22's memory around the map, which `MapTileOrBeyond` reads at the map's edges (`ByteAs122`: the shared globals, the back buffer's pointer, and zeros, as the image holds there). Only the tests' emulator loads it, from `Original`.
 - **1.22's other files**: its `South_pacific.dat`, `Middle_pacific.dat` and 26 other sounds are byte for byte NSPW NET's, which a single-player game reads where 1.22's files have none (`GameFileLayers`). Its `Map_1.dat` and `no_land_map.dat` are named nowhere in its code.
 - **`Saved`**: the game's own saves (`auto_save.dat`, `resume_1.dat`, `cnct_error.dat`), which belong to each player. The repository's are the author's.
 - **`t3.bmp`, `tst_cg1.bmp`**: replaced by the sprites.
@@ -41,7 +42,7 @@ But the game also opens every file it only reads to read and write, `OPEN_ALWAYS
 `DesktopPlatform` reads and writes the game's files through layers (`GameFileLayers`, in the core, which the tests' platforms use too), by the game's path with `/` separators, its names in any case. `GameData` puts them in order:
 
 1. **The user's folder**, `OpenNSPW/Files` beside `settings.json` (`%APPDATA%`, `~/Library/Application Support`, `~/.config`; `GameData.UserDirectory`): written, and read first.
-2. **In a single-player game, 1.22's files**: the bundled ones (`BundledFiles("Nspw122")`), or the directory of `--exe` (`DirectoryFileSource`).
+2. **In a single-player game, 1.22's files**: the bundled ones (`BundledFiles("Nspw122")`).
 3. **NSPW NET's bundled files** (`BundledFiles("NSPW_NET")`).
 
 With `--data`, the data directory takes the place of the user's folder and of NSPW NET's files, read and written, as before; in a single-player game, 1.22's files come before it, as 1.22's directory did (`GameFileLayers.OfDirectories`).
@@ -65,14 +66,13 @@ With `--data`, the data directory takes the place of the user's folder and of NS
 - **Uninstalling** leaves the user's folder, as it leaves the settings.
 
 ## The single-player executable
-- **Embedded as it is.** The emulator starts from its image, and `ScenarioSelection` reads the titles and briefings from it, as now. Taking out the parts the emulator reads, or keeping the texts in C#, would add thousands of generated lines to save 272 KB, and two places to keep in step with it.
-- `GameData.ReadExecutable` reads the bundled one unless `--exe` is given, and the main menu's single-player item is always on.
+- **Not embedded.** Once the scenarios, the computer and the victory conditions were rewritten as C#, the app read it only for the scenarios' texts and for the zeros of its image around the map. Both are C# now, so the app plays single-player without it, and the main menu's single-player item is always on.
+- **The tests still read it**, from `Original/Nspw122`: the emulator runs 1.22's own functions to compare them with their rewrites, and `ScenarioSelectionTests` compares the texts with those `ScenarioSelection.Read` reads from it.
 
 ## The command line
 | | Without the option | With it |
 | --- | --- | --- |
 | `--data <directory>` | NSPW NET's bundled files, and the user's folder | that directory, read and written, as before |
-| `--exe <NSPW_122.exe>` | the bundled executable and 1.22's three files | that executable and its directory, as before |
 
 The app no longer looks for `Original` up from its own directory: a build run from the repository plays the bundled files, as a release does, and leaves `Original` unchanged, which its README asks. `tools/package-linux-appimage.sh` no longer passes the `Original` beside the AppImage, and the release notes no longer ask for one: they say where the user's folder is.
 
@@ -83,8 +83,8 @@ The app no longer looks for `Original` up from its own directory: a build run fr
 `BundledDataTests`, of which those that compare with the original need `Original`, as the other tests of whole games do (`GameData`):
 
 - **The layers**: a file is read from the first layer that has it; one opened to write is copied when it is first written, at the position written, and not when it is opened; a file that no layer has is created in the directory with `OPEN_ALWAYS`, and not with `OPEN_EXISTING`; a directory lists the names of every layer once, in any case and either Unicode form.
-- **The bundled files**: found in any case and either Unicode form; each byte for byte the file of `Original` it names, `NSPW_122.exe` too; and every file of 1.22's that a single-player game reads and that is not bundled byte for byte NSPW NET's.
-- **A game plays from the bundled files alone**, with an empty user's folder and the sprite files (`playsBundledFiles` of `LockstepRun` and `SingleplayerRun`): the committed `title` trace is unchanged, and scenario 202 shows the same frames, texts and sounds as from `Original`, 200 frames.
+- **The bundled files**: found in any case and either Unicode form; each byte for byte the file of `Original` it names; every file of 1.22's that a single-player game reads and that is not bundled byte for byte NSPW NET's; and no executable.
+- **A game plays from the bundled files alone**, with an empty user's folder, the sprite files and, in a single-player game, no executable (`playsBundledFiles` of `LockstepRun` and `SingleplayerRun`): the committed `title` trace is unchanged, and scenario 202 shows the same frames, texts and sounds as from `Original`, 200 frames.
 
 ## Open questions
 - **Telling the author**: the README says he asks to be told when the software is reposted: before the first release that bundles the files.

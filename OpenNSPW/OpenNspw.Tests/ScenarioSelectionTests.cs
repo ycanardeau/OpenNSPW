@@ -3,7 +3,8 @@ using Xunit;
 
 namespace OpenNspw.Tests;
 
-// The scenario sets, titles and briefings read from the single-player executable.
+// The scenario sets, titles and briefings that the game lists (ScenarioSelection.Sets), and the same read from the
+// single-player executable.
 public class ScenarioSelectionTests
 {
 	private static readonly byte[] Executable = File.ReadAllBytes(
@@ -34,7 +35,27 @@ public class ScenarioSelectionTests
 	];
 
 	private static IEnumerable<ScenarioEntry> Entries() =>
-		ScenarioSelection.Read(Executable).SelectMany(s => s.Scenarios);
+		ScenarioSelection.Sets.SelectMany(s => s.Scenarios);
+
+	// The texts the game keeps are the executable's, every heading, title, side and line of the briefings.
+	[Fact]
+	public void SetsAreTheExecutables()
+	{
+		var read = ScenarioSelection.Read(Executable);
+
+		Assert.Equal(read.Select(s => s.Heading), ScenarioSelection.Sets.Select(s => s.Heading));
+		var readEntries = read.SelectMany(s => s.Scenarios).ToList();
+		var entries = Entries().ToList();
+		Assert.Equal(readEntries.Count, entries.Count);
+		for (var i = 0; i < entries.Count; i++)
+		{
+			Assert.Equal(readEntries[i].Number, entries[i].Number);
+			Assert.Equal(readEntries[i].Title, entries[i].Title);
+			Assert.Equal(readEntries[i].Side, entries[i].Side);
+			Assert.Equal(readEntries[i].SideName, entries[i].SideName);
+			Assert.Equal(readEntries[i].Briefing, entries[i].Briefing);
+		}
+	}
 
 	[Fact]
 	public void SetsListEveryScenarioOnceInOrder()
@@ -45,7 +66,7 @@ public class ScenarioSelectionTests
 	[Fact]
 	public void TitlesAndHeadingsAreTheExecutables()
 	{
-		var sets = ScenarioSelection.Read(Executable);
+		var sets = ScenarioSelection.Sets;
 
 		Assert.Equal("シナリオ選択画面（第一集、本ゲームの標準シナリオです。）", sets[0].Heading);
 		Assert.Equal("シナリオ選択画面（第四集、難易度順には列記されていません）", sets[3].Heading);

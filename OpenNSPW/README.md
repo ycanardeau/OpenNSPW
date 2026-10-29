@@ -37,7 +37,7 @@ dotnet run --project OpenNspw.Desktop
 The game plays the original's files that the app embeds, and keeps what it writes, such as its saves, in `OpenNSPW/Files` under the user's application data folder (see [docs/BundledData.md](../docs/BundledData.md)); with `--data <folder>`, it plays that folder instead, such as `../Original/NSPW_NET`. The game starts at its main menu, and returns to it when a game ends.
 
 - **Multiplayer**: start two of them. One hosts (port `0` picks a free port, `2310` is the original's), and the other joins its address and port. **Scenario Editor** opens the original's map editor. Settings, such as the player name, are kept in `OpenNSPW/settings.json` under the user's application data folder.
-- **Single Player**: a scenario of NSPW 1.22 against the computer (see [docs/Singleplayer.md](../docs/Singleplayer.md)), chosen from its scenarios. It runs the embedded `NSPW_122.exe`, or the file given with `--exe <file>`, with the maps and sounds of its folder.
+- **Single Player**: a scenario of NSPW 1.22 against the computer (see [docs/Singleplayer.md](../docs/Singleplayer.md)), chosen from its scenarios. Its scenarios, computer and victory conditions are rewritten as C#, so it needs no `NSPW_122.exe`; it plays with 1.22's maps and sounds that the app embeds.
 
 To start a single-player scenario without the menus:
 

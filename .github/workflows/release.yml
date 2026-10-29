@@ -165,7 +165,7 @@ jobs:
         OpenNSPW-<version>-linux-x64.AppImage    Linux: make it executable (chmod +x), and start it
         ```
 
-        What the game writes, its saves and the scenarios saved with its map editor, is kept in `OpenNSPW/Files` in the user's application data (`%APPDATA%`, `~/Library/Application Support`, `~/.config`). To play your own copy of NSPW NET's files instead, start the app with `--data <the NSPW_NET folder>`, and with `--exe <NSPW_122.exe>` for 1.22's.
+        What the game writes, its saves and the scenarios saved with its map editor, is kept in `OpenNSPW/Files` in the user's application data (`%APPDATA%`, `~/Library/Application Support`, `~/.config`). To play your own copy of NSPW NET's files instead, start the app with `--data <the NSPW_NET folder>`.
 
         NSPW's files are the work of Ken-ichi Tokumitsu (徳光 健一) / 奈良鹿製作所, who keeps all their copyrights, and are redistributed under his terms: see `OriginalNotice.txt` beside the app (in `OpenNSPW.app/Contents/Resources` on a Mac).
 

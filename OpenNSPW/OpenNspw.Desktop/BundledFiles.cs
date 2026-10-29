@@ -32,17 +32,6 @@ internal sealed class BundledFiles(string folder) : IGameFileSource
 	// The paths of the folder's files.
 	public IReadOnlyList<string> Paths => _paths;
 
-	// The bytes of an embedded file, by its path under Original, such as "Nspw122/NSPW_122.exe".
-	public static byte[] Read(string path)
-	{
-		using var stream =
-			Assembly.GetManifestResourceStream(path)
-			?? throw new FileNotFoundException($"{path} is not in the app.", path);
-		using var bytes = new MemoryStream();
-		stream.CopyTo(bytes);
-		return bytes.ToArray();
-	}
-
 	public Stream? Open(string path, FileShare share)
 	{
 		var key = Key(path);
