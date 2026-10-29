@@ -1,7 +1,7 @@
 # Publishes every packable project in the solution to NuGet under the version taken from the tag created by `pnpm release`.
 # Release tags (vX.Y.Z) must point at a commit on main; prerelease tags (e.g. vX.Y.Z-preview.N) may come from any branch.
 # Pushes use NuGet trusted publishing: a nuget.org policy for this repository and release.yml exchanges the job's OIDC token for a short-lived API key.
-# Once the packages are pushed, publishes the desktop app, self-contained in a single-file executable, on a GitHub Release of the tag, a prerelease for prerelease tags:
+# Once the packages are pushed, publishes the desktop app, self-contained and trimmed (docs/SmallerBuilds.md) in a single-file executable, on a GitHub Release of the tag, a prerelease for prerelease tags:
 # for Windows (win-x64) as a zip, for Apple Silicon Macs (osx-arm64) as OpenNSPW.app, ad-hoc signed, in a zip (tools/package-macos-app.sh),
 # and for Linux (linux-x64) as an AppImage (tools/package-linux-appimage.sh); with their SHA-256 in SHA256SUMS, and build provenance attestations.
 # The app embeds the original's files that the game reads (docs/BundledData.md), with their author's notice (OriginalNotice.txt).

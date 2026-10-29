@@ -8,6 +8,10 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- The original's icon (Original/NSPW_NET/NSPW_NET.RC). -->
     <ApplicationIcon>..\..\Original\NSPW_NET\nspw_icon.ICO</ApplicationIcon>
+    <!-- A publish, as the releases are, keeps only the code the app reaches (docs/SmallerBuilds.md), and fails on code
+         that the trimmer cannot follow. -->
+    <PublishTrimmed>true</PublishTrimmed>
+    <ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
