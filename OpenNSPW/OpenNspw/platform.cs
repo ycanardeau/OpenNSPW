@@ -43,6 +43,11 @@ public interface INspwPlatform
 	// file cannot be opened.
 	Stream? OpenFile(string path, FileMode mode, FileAccess access, FileShare share);
 
+	// A sprite file of the app, by its path under the app's sprites with '/' separators, such as "jp/bb.png"
+	// (SpriteSheetLayout, docs/GameSprites.md), or null if the platform has none: the game then draws from its sprite
+	// sheet's own file (SpriteSheetName).
+	SpriteBitmap? LoadSprite(string path) => null;
+
 	// The names of the files in a directory of the game ('/' separators, "" for the game's directory) that match a
 	// pattern such as "*.dat".
 	IReadOnlyList<string> FindFiles(string directory, string pattern);
@@ -189,6 +194,7 @@ public static class winerror
 	public const int E_FAIL = unchecked((int)0x80004005);
 	public const int E_OUTOFMEMORY = unchecked((int)0x8007000E);
 	public const int E_NOINTERFACE = unchecked((int)0x80004002);
+	public const int E_NOTIMPL = unchecked((int)0x80004001);
 	public const int REGDB_E_CLASSNOTREG = unchecked((int)0x80040154);
 
 	public static bool FAILED(int hr)

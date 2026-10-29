@@ -156,6 +156,7 @@ public static unsafe class ddraw
 	public const int DDERR_INVALIDPARAMS = unchecked((int)0x80070057);
 	public const int DDERR_SURFACELOST = unchecked((int)0x887601C2);
 	public const int DDERR_NOTFOUND = unchecked((int)0x887600FF);
+	public const int DDERR_UNSUPPORTED = winerror.E_NOTIMPL;
 
 	public static readonly Guid IID_IDirectDraw7 = new(
 		0x15e65ec0,
@@ -408,6 +409,15 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 				Row(y)[d.left..d.right].Fill((ushort)lpDDBltFx->dwFillColor);
 			}
 		}
+		else if (lpDDSrcSurface is SpriteSheetSurface sheet)
+		{
+			if (lpSrcRect is null || !sheet.TryFind(*lpSrcRect, out var piece, out var inPiece))
+			{
+				return ddraw.DDERR_INVALIDRECT;
+			}
+
+			return Blt(&d, piece, &inPiece, dwFlags, lpDDBltFx);
+		}
 		else
 		{
 			if (lpDDSrcSurface is not DirectDrawSurface7 src)
@@ -438,6 +448,16 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 		uint dwTrans
 	)
 	{
+		if (lpDDSrcSurface is SpriteSheetSurface sheet)
+		{
+			if (lpSrcRect is null || !sheet.TryFind(*lpSrcRect, out var piece, out var inPiece))
+			{
+				return ddraw.DDERR_INVALIDRECT;
+			}
+
+			return BltFast(dwX, dwY, piece, &inPiece, dwTrans);
+		}
+
 		if (lpDDSrcSurface is not DirectDrawSurface7 src)
 		{
 			return ddraw.DDERR_INVALIDPARAMS;
@@ -547,6 +567,176 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 	{
 		NativeMemory.Free(_pixels);
 		_pixels = (ushort*)NativeMemory.AllocZeroed((nuint)(Width * Height), sizeof(ushort));
+		return 0;
+	}
+}
+
+// The sprite sheet that the game draws from (OffscreenSurface), made of the sprite files instead of one picture
+// (docs/GameSprites.md): a surface a file, at the place on the sheet it was cut from (SpriteSheetLayout). A blit from or
+// to a rectangle of the sheet is a blit from or to the piece that holds it, in the piece's coordinates. A rectangle in no
+// piece, or across two, is not drawn, and is kept in Misses.
+public sealed unsafe class SpriteSheetSurface(
+	IEnumerable<(DirectDrawSurface7 Surface, int X, int Y)> pieces
+) : IDirectDrawSurface7
+{
+	private readonly HashSet<RECT> _misses = [];
+
+	// The pieces, and where each is on the sheet.
+	public IReadOnlyList<(DirectDrawSurface7 Surface, int X, int Y)> Pieces { get; } = [.. pieces];
+
+	// The rectangles of the sheet that a blit asked for and no piece held.
+	public IReadOnlyCollection<RECT> Misses => _misses;
+
+	// Finds the piece that holds a rectangle of the sheet, and the rectangle in its coordinates; or keeps the rectangle in
+	// Misses.
+	public bool TryFind(RECT r, out DirectDrawSurface7 piece, out RECT rectangle)
+	{
+		foreach (var (surface, x, y) in Pieces)
+		{
+			if (
+				r.left >= x
+				&& r.top >= y
+				&& r.right <= x + surface.Width
+				&& r.bottom <= y + surface.Height
+				&& r.left <= r.right
+				&& r.top <= r.bottom
+			)
+			{
+				piece = surface;
+				rectangle = new RECT
+				{
+					left = r.left - x,
+					top = r.top - y,
+					right = r.right - x,
+					bottom = r.bottom - y,
+				};
+				return true;
+			}
+		}
+
+		_misses.Add(r);
+		piece = null!;
+		rectangle = default;
+		return false;
+	}
+
+	// A blit to the sheet: to the piece that holds the destination rectangle. Only the minimap's piece is written to
+	// (make_map_cg), from itself.
+	public int Blt(
+		RECT* lpDestRect,
+		IDirectDrawSurface7? lpDDSrcSurface,
+		RECT* lpSrcRect,
+		uint dwFlags,
+		DDBLTFX* lpDDBltFx
+	)
+	{
+		if (lpDestRect is null || !TryFind(*lpDestRect, out var piece, out var d))
+		{
+			return ddraw.DDERR_INVALIDRECT;
+		}
+
+		return piece.Blt(&d, lpDDSrcSurface, lpSrcRect, dwFlags, lpDDBltFx);
+	}
+
+	public int BltFast(
+		int dwX,
+		int dwY,
+		IDirectDrawSurface7 lpDDSrcSurface,
+		RECT* lpSrcRect,
+		uint dwTrans
+	)
+	{
+		if (lpSrcRect is null)
+		{
+			return ddraw.DDERR_INVALIDRECT;
+		}
+
+		var destination = new RECT
+		{
+			left = dwX,
+			top = dwY,
+			right = dwX + (lpSrcRect->right - lpSrcRect->left),
+			bottom = dwY + (lpSrcRect->bottom - lpSrcRect->top),
+		};
+		if (!TryFind(destination, out var piece, out var d))
+		{
+			return ddraw.DDERR_INVALIDRECT;
+		}
+
+		return piece.BltFast(d.left, d.top, lpDDSrcSurface, lpSrcRect, dwTrans);
+	}
+
+	public int Flip(IDirectDrawSurface7? lpDDSurfaceTargetOverride, uint dwFlags)
+	{
+		return ddraw.DDERR_UNSUPPORTED;
+	}
+
+	public int GetAttachedSurface(
+		DDSCAPS2* lpDDSCaps,
+		out IDirectDrawSurface7? lplpDDAttachedSurface
+	)
+	{
+		lplpDDAttachedSurface = null;
+		return ddraw.DDERR_NOTFOUND;
+	}
+
+	public int GetDC(HDC* lphDC)
+	{
+		return ddraw.DDERR_UNSUPPORTED;
+	}
+
+	public int ReleaseDC(HDC hDC)
+	{
+		return ddraw.DDERR_UNSUPPORTED;
+	}
+
+	public int GetPixelFormat(DDPIXELFORMAT* lpDDPixelFormat)
+	{
+		return Pieces[0].Surface.GetPixelFormat(lpDDPixelFormat);
+	}
+
+	public int Lock(RECT* lpDestRect, DDSURFACEDESC2* lpDDSurfaceDesc, uint dwFlags, object? hEvent)
+	{
+		return ddraw.DDERR_UNSUPPORTED;
+	}
+
+	public int Unlock(RECT* lpRect)
+	{
+		return ddraw.DDERR_UNSUPPORTED;
+	}
+
+	public int Restore()
+	{
+		foreach (var (surface, _, _) in Pieces)
+		{
+			surface.Restore();
+		}
+
+		return ddraw.DD_OK;
+	}
+
+	public int SetClipper(IDirectDrawClipper? lpDDClipper)
+	{
+		return ddraw.DDERR_UNSUPPORTED;
+	}
+
+	public int SetColorKey(uint dwFlags, DDCOLORKEY* lpDDColorKey)
+	{
+		foreach (var (surface, _, _) in Pieces)
+		{
+			surface.SetColorKey(dwFlags, lpDDColorKey);
+		}
+
+		return ddraw.DD_OK;
+	}
+
+	public uint Release()
+	{
+		foreach (var (surface, _, _) in Pieces)
+		{
+			surface.Release();
+		}
+
 		return 0;
 	}
 }

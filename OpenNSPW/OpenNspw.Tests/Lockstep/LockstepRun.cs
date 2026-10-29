@@ -27,7 +27,9 @@ internal sealed class LockstepRun : IDisposable
 			)
 		);
 
-	public LockstepRun()
+	// drawsFromSpriteFiles: whether the games draw from the desktop app's sprite files (docs/GameSprites.md), rather than
+	// from the sprite sheet's file.
+	public LockstepRun(bool drawsFromSpriteFiles = false)
 	{
 		var network = new LoopbackNetwork();
 		Host = new LockstepGame(_scheduler, network, _data.Path, "Alice");
@@ -36,6 +38,7 @@ internal sealed class LockstepRun : IDisposable
 		_trace = new TraceRecorder(Games);
 		foreach (var game in Games)
 		{
+			game.DrawsFromSpriteFiles = drawsFromSpriteFiles;
 			game.Start();
 		}
 	}

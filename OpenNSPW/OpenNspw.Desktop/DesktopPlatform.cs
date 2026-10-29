@@ -42,8 +42,8 @@ internal sealed class Sound(SoundEffect effect) : ISound, IDisposable
 	}
 }
 
-// The platform of the desktop app: the game's files in its data directory, DirectPlay 8 on Otsuki, MonoGame sound,
-// text rasterized with a TrueType font, and settings in a JSON file.
+// The platform of the desktop app: the game's files in its data directory, its sprites from the app's, DirectPlay 8 on
+// Otsuki, MonoGame sound, text rasterized with a TrueType font, and settings in a JSON file.
 internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text) : INspwPlatform
 {
 	private readonly string _dataDirectory = dataDirectory;
@@ -137,6 +137,11 @@ internal sealed class DesktopPlatform(string dataDirectory, TextRasterizer text)
 	public IReadOnlyList<string> FindFiles(string directory, string pattern)
 	{
 		return GameFiles.Find(_dataDirectory, directory, pattern);
+	}
+
+	public SpriteBitmap? LoadSprite(string path)
+	{
+		return SpriteFiles.LoadBitmap(path);
 	}
 
 	public int CoCreateInstance(Guid rclsid, Guid riid, out object? ppv)

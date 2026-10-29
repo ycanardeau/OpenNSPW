@@ -20,6 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="OpenNspw.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="FontStashSharp.MonoGame" />
     <PackageReference Include="MonoGame.Extended" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" />

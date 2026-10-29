@@ -12,9 +12,19 @@ internal sealed class SingleplayerRun : IDisposable
 	public Nspw Game => Player.Game;
 
 	// setUp runs before the game starts, to set a trace. startDate: the time it starts at (time(NULL)), which seeds rand.
-	public SingleplayerRun(int scenario, Action<Nspw>? setUp = null, int? startDate = null)
+	// drawsFromSpriteFiles: whether the game draws from the desktop app's sprite files (docs/GameSprites.md), rather than
+	// from 1.22's sprite sheet.
+	public SingleplayerRun(
+		int scenario,
+		Action<Nspw>? setUp = null,
+		int? startDate = null,
+		bool drawsFromSpriteFiles = false
+	)
 	{
-		Player = new LockstepGame(_scheduler, new LoopbackNetwork(), _data.Path, "Alice");
+		Player = new LockstepGame(_scheduler, new LoopbackNetwork(), _data.Path, "Alice")
+		{
+			DrawsFromSpriteFiles = drawsFromSpriteFiles,
+		};
 		if (startDate is { } date)
 			Player.StartDate = date;
 		Game.IsSingleplayer = true;
