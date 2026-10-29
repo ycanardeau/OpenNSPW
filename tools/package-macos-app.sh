@@ -21,6 +21,10 @@ dotnet publish "$root/OpenNSPW/OpenNspw.Desktop" --configuration Release --runti
 	/p:PublishSingleFile=true /p:DebugType=embedded /p:GenerateDocumentationFile=false /p:Version="$version" \
 	--output "$app/Contents/MacOS"
 
+# The executable named after the app: Finder takes the end of OpenNspw.Desktop for an extension, .Desktop, which other
+# apps claim (Linux's launchers, .desktop). The single-file executable finds what it bundles wherever it is named.
+mv "$app/Contents/MacOS/OpenNspw.Desktop" "$app/Contents/MacOS/OpenNSPW"
+
 # The icon from the window's (Icon.bmp, the original's 32x32 icon), at the sizes it has; Finder scales it up.
 iconset=$(mktemp -d)/OpenNSPW.iconset
 mkdir "$iconset"
@@ -49,7 +53,7 @@ cat > "$app/Contents/Info.plist" <<EOF
 	<key>CFBundleDisplayName</key>
 	<string>OpenNSPW</string>
 	<key>CFBundleExecutable</key>
-	<string>OpenNspw.Desktop</string>
+	<string>OpenNSPW</string>
 	<key>CFBundleIconFile</key>
 	<string>OpenNSPW</string>
 	<key>CFBundleIdentifier</key>
