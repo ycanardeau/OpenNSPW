@@ -4,7 +4,7 @@
 # Once the packages are pushed, publishes the desktop app, self-contained in a single-file executable, on a GitHub Release of the tag, a prerelease for prerelease tags:
 # for Windows (win-x64) as a zip, for Apple Silicon Macs (osx-arm64) as OpenNSPW.app, ad-hoc signed, in a zip (tools/package-macos-app.sh),
 # and for Linux (linux-x64) as an AppImage (tools/package-linux-appimage.sh); with their SHA-256 in SHA256SUMS, and build provenance attestations.
-# The downloads have none of the original's files (Original/); the release notes tell players where to put theirs.
+# The app embeds the original's files that the game reads (docs/BundledData.md), with their author's notice (OriginalNotice.txt).
 
 name: Release
 
@@ -157,17 +157,17 @@ jobs:
     - name: Write release notes
       run: |
         cat > "$RUNNER_TEMP/notes.md" <<'EOF'
-        The builds run without installing .NET. They have none of NSPW's own files: put the app beside an `Original` folder that holds them, as in this repository.
+        The builds run without installing .NET, and come with the files of NSPW that the game reads: nothing else is needed.
 
         ```
-        Original/NSPW_NET/                       the game's data: t3.bmp, wav, Map, Scenario, Saved
-        Original/Nspw122/NSPW_122.exe            for single-player
-        OpenNSPW-<version>-win-x64/              Windows: extract the zip here, and start OpenNspw.Desktop.exe
-        OpenNSPW.app                             Macs with Apple silicon: extract the zip here
+        OpenNSPW-<version>-win-x64.zip           Windows: extract it, and start OpenNspw.Desktop.exe
+        OpenNSPW-<version>-osx-arm64.zip         Macs with Apple silicon: extract OpenNSPW.app, and start it
         OpenNSPW-<version>-linux-x64.AppImage    Linux: make it executable (chmod +x), and start it
         ```
 
-        Or start it with `--data <the NSPW_NET folder>` and `--exe <NSPW_122.exe>`.
+        What the game writes, its saves and the scenarios saved with its map editor, is kept in `OpenNSPW/Files` in the user's application data (`%APPDATA%`, `~/Library/Application Support`, `~/.config`). To play your own copy of NSPW NET's files instead, start the app with `--data <the NSPW_NET folder>`, and with `--exe <NSPW_122.exe>` for 1.22's.
+
+        NSPW's files are the work of Ken-ichi Tokumitsu (徳光 健一) / 奈良鹿製作所, who keeps all their copyrights, and are redistributed under his terms: see `OriginalNotice.txt` beside the app (in `OpenNSPW.app/Contents/Resources` on a Mac).
 
         The Mac app isn't notarized by Apple, so macOS refuses to open it the first time. Then click Open Anyway in System Settings → Privacy & Security, or run `xattr -dr com.apple.quarantine OpenNSPW.app` in Terminal once.
 

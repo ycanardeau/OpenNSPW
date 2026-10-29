@@ -118,6 +118,13 @@ internal sealed class LockstepGame : INspwPlatform
 	// NSPW 1.22's directory, whose files a single-player game reads instead of the game's own, or null.
 	public string? SingleplayerDirectory { get; set; }
 
+	// The game's files, if not those of the data directory and SingleplayerDirectory, such as the desktop app's embedded
+	// ones (docs/BundledData.md). Set before the game starts.
+	public GameFileLayers? Files { get; set; }
+
+	private GameFileLayers FilesOrDirectories =>
+		Files ?? GameFileLayers.OfDirectories(_dataDirectory, SingleplayerDirectory);
+
 	// Whether the game draws from the desktop app's sprite files (docs/GameSprites.md), rather than from its sprite sheet's
 	// file. Set before the game starts.
 	public bool DrawsFromSpriteFiles { get; set; }
@@ -283,20 +290,12 @@ internal sealed class LockstepGame : INspwPlatform
 
 	public Stream? OpenFile(string path, FileMode mode, FileAccess access, FileShare share)
 	{
-		try
-		{
-			return GameFiles.OpenSingleplayer(SingleplayerDirectory, path, mode, share)
-				?? new FileStream(GameFiles.Resolve(_dataDirectory, path), mode, access, share);
-		}
-		catch (IOException)
-		{
-			return null;
-		}
+		return FilesOrDirectories.Open(path, mode, access, share);
 	}
 
 	public IReadOnlyList<string> FindFiles(string directory, string pattern)
 	{
-		return GameFiles.Find(_dataDirectory, directory, pattern);
+		return FilesOrDirectories.Find(directory, pattern);
 	}
 
 	public SpriteBitmap? LoadSprite(string path)

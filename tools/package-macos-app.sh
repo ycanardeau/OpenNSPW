@@ -4,7 +4,8 @@
 #
 # tools/package-macos-app.sh <version> <output directory>
 #
-# The app finds the original's files (Original/) beside it, as it finds them beside the Windows build.
+# The app embeds the original's files that the game reads (docs/BundledData.md), and keeps what the game writes in the
+# user's folder.
 
 set -euo pipefail
 
@@ -33,6 +34,9 @@ iconutil --convert icns "$iconset" --output "$app/Contents/Resources/OpenNSPW.ic
 # MacOS in extended attributes, which most unzipping loses.
 mv "$app/Contents/MacOS/Fonts" "$app/Contents/Resources/Fonts"
 ln -s ../Resources/Fonts "$app/Contents/MacOS/Fonts"
+
+# The notice of the original's files, which the app does not read, in Resources for the same reason.
+mv "$app/Contents/MacOS/OriginalNotice.txt" "$app/Contents/Resources/OriginalNotice.txt"
 
 # The bundle's versions are numbers only, so a prerelease such as 0.0.1-alpha.4 is 0.0.1.
 cat > "$app/Contents/Info.plist" <<EOF

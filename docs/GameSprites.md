@@ -50,7 +50,7 @@ From `set_sprt_data` (`Renderer.InitializeSprites`) and the blits from `Offscree
 - **All or nothing**: `LoadSpriteSheet` makes the pieces if the platform has every file of the layout, each of its size, and otherwise loads the sheet file with the original's `LoadBitmapSurface`, so that a surface never mixes the two. `SpriteSheetName` stays, as the name of that file.
 - **The desktop app** decodes its embedded PNGs (`SpriteFiles.LoadBitmap`) with StbImageSharp, which MonoGame already brings, on the game's thread: no graphics device is needed.
 - **The files stay in the desktop app**, not in the core: the release packs every packable project to NuGet, and the original's art should not go there. The app is not packed.
-- **`GameFiles.OpenSingleplayer`** no longer serves the sheet in the app; it still serves 1.22's maps and sounds. The tests' platforms draw from the sheets, unless a test asks for the files (`DrawsFromSpriteFiles`).
+- **The app reads no sheet**: neither `t3.bmp` nor `tst_cg1.bmp` is among the original's files that it embeds ([BundledData.md](BundledData.md)). The tests' platforms draw from the sheets, unless a test asks for the files (`DrawsFromSpriteFiles`).
 
 ## Tests
 `GameSpritesTests`, which need `Original`, as the other tests of whole games do (`GameData`):

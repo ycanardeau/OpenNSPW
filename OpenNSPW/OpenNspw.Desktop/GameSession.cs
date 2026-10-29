@@ -129,24 +129,23 @@ internal sealed class GameSession : IDisposable
 		}
 	}
 
-	// singleplayer: NSPW_122.exe, its directory, whose maps, sounds and sprite sheet the game reads, and a scenario of it,
-	// to play that scenario against the computer (docs/Singleplayer.md) instead of connecting to a rival. replay: a trace
-	// of 1.22 in that scenario, which the game follows, and which the session disposes.
+	// files: the game's files (GameData). singleplayer: NSPW_122.exe and a scenario of it, to play that scenario against
+	// the computer (docs/Singleplayer.md) instead of connecting to a rival. replay: a trace of 1.22 in that scenario, which
+	// the game follows, and which the session disposes.
 	public GameSession(
-		string dataDirectory,
+		GameFileLayers files,
 		TextRasterizer text,
-		(byte[] Executable, string Directory, int Scenario)? singleplayer = null,
+		(byte[] Executable, int Scenario)? singleplayer = null,
 		Trace122Replay? replay = null
 	)
 	{
-		_platform = new DesktopPlatform(dataDirectory, text);
+		_platform = new DesktopPlatform(files, text);
 		Game = new Nspw(_platform);
 		_platform.CaptureState = () => _captured.CopyFrom(Game);
-		if (singleplayer is var (executable, directory, scenario))
+		if (singleplayer is var (executable, scenario))
 		{
 			Game.IsSingleplayer = true;
 			Game.SingleplayerExecutable = executable;
-			_platform.SingleplayerDirectory = directory;
 			Game.ScenarioNumber = (short)scenario;
 		}
 

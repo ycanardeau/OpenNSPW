@@ -36,19 +36,15 @@ internal sealed class GameTestPlatform(string dataDirectory) : INspwPlatform
 
 	public Stream? OpenFile(string path, FileMode mode, FileAccess access, FileShare share)
 	{
-		try
-		{
-			return GameFiles.OpenSingleplayer(SingleplayerDirectory, path, mode, share)
-				?? new FileStream(GameFiles.Resolve(_dataDirectory, path), mode, access, share);
-		}
-		catch (IOException)
-		{
-			return null;
-		}
+		return GameFileLayers
+			.OfDirectories(_dataDirectory, SingleplayerDirectory)
+			.Open(path, mode, access, share);
 	}
 
 	public IReadOnlyList<string> FindFiles(string directory, string pattern) =>
-		GameFiles.Find(_dataDirectory, directory, pattern);
+		GameFileLayers
+			.OfDirectories(_dataDirectory, SingleplayerDirectory)
+			.Find(directory, pattern);
 
 	public int CoCreateInstance(Guid rclsid, Guid riid, out object? ppv) =>
 		DirectPlay.CoCreateInstance(rclsid, riid, out ppv);

@@ -30,8 +30,6 @@ internal static class Texts
 			"A scenario of NSPW 1.22, against the computer",
 			"NSPW 1.22 のシナリオでコンピューターと対戦"
 		);
-	public static string NoSinglePlayer =>
-		Pick("NSPW_122.exe was not found", "NSPW_122.exe が見つかりません");
 	public static string Multiplayer => Pick("Multiplayer", "マルチプレイ");
 	public static string MultiplayerDescription =>
 		Pick(

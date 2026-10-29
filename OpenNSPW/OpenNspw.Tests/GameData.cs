@@ -42,6 +42,14 @@ internal static class GameData
 		return FindInOriginal("NSPW_NET", "t3.bmp");
 	}
 
+	// The directory of Original, which has the folders NSPW_NET and Nspw122.
+	public static string FindOriginalDirectory()
+	{
+		return System.IO.Path.GetDirectoryName(
+			FindOriginal() ?? throw new InvalidOperationException("Original is not found.")
+		)!;
+	}
+
 	// Original/Nspw122, with NSPW_122.exe and its maps, sounds and sprite sheet.
 	public static string FindSingleplayer()
 	{
@@ -98,6 +106,17 @@ internal static class GameData
 				System.IO.Path.Combine(target, System.IO.Path.GetFileName(directory))
 			);
 		}
+	}
+
+	// A new, empty temporary directory, such as the user's folder of a game that plays the desktop app's embedded files.
+	public static TemporaryDirectory CreateEmpty()
+	{
+		var directory = new TemporaryDirectory(
+			System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"OpenNspw-{Guid.NewGuid():N}")
+		);
+		Directory.CreateDirectory(directory.Path);
+		MakeCaseSensitive(directory.Path);
+		return directory;
 	}
 
 	// A copy of the original's data in a new temporary directory, so that what a game writes (saved games, settings)

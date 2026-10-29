@@ -17,6 +17,23 @@
     <None Include="Fonts\**" CopyToOutputDirectory="PreserveNewest" />
     <!-- The sprites cut from the original's sprite sheet (SpriteFiles, tools/CutSprites.cs). -->
     <EmbeddedResource Include="Sprites\**\*.png" />
+    <!-- The notice of the original's files that the app embeds, beside the app. -->
+    <None Include="OriginalNotice.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!--
+    The original's files that the game reads (BundledFiles, docs/BundledData.md), each a resource named by its path
+    under Original, whose author lets them be redistributed (OriginalNotice.txt): NSPW NET's data, and for single-player,
+    NSPW 1.22's executable and the files of its directory that differ from NSPW NET's, its two other sounds and its map
+    without the island. A single-player game reads NSPW NET's where 1.22's are not embedded, which are the same.
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\Original\NSPW_NET\wav\*.wav" LogicalName="NSPW_NET/wav/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\NSPW_NET\Map\*.dat" LogicalName="NSPW_NET/Map/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\NSPW_NET\Scenario\*.dat" LogicalName="NSPW_NET/Scenario/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\Nspw122\NSPW_122.exe" LogicalName="Nspw122/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\Nspw122\Map\japan_off.dat" LogicalName="Nspw122/Map/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\Nspw122\wav\GUN3.wav;..\..\Original\Nspw122\wav\AA_SHL4.wav" LogicalName="Nspw122/wav/%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
