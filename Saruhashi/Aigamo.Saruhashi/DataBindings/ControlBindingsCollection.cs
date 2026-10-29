@@ -8,6 +8,7 @@
 
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Aigamo.Saruhashi;
 
@@ -63,6 +64,7 @@ public class ControlBindingsCollection(IBindableComponent control) : BindingsCol
 	///  isn't a valid column given this DataSource.Table's schema.
 	///  Fires the CollectionChangedEvent.
 	/// </summary>
+	[RequiresUnreferencedCode(BindingTrimming.Message)]
 	public Binding Add(string propertyName, object dataSource, string dataMember)
 	{
 		return Add(
@@ -77,6 +79,7 @@ public class ControlBindingsCollection(IBindableComponent control) : BindingsCol
 		);
 	}
 
+	[RequiresUnreferencedCode(BindingTrimming.Message)]
 	public Binding Add(
 		string propertyName,
 		object dataSource,
@@ -96,6 +99,7 @@ public class ControlBindingsCollection(IBindableComponent control) : BindingsCol
 		);
 	}
 
+	[RequiresUnreferencedCode(BindingTrimming.Message)]
 	public Binding Add(
 		string propertyName,
 		object dataSource,
@@ -116,6 +120,7 @@ public class ControlBindingsCollection(IBindableComponent control) : BindingsCol
 		);
 	}
 
+	[RequiresUnreferencedCode(BindingTrimming.Message)]
 	public Binding Add(
 		string propertyName,
 		object dataSource,
@@ -137,6 +142,7 @@ public class ControlBindingsCollection(IBindableComponent control) : BindingsCol
 		);
 	}
 
+	[RequiresUnreferencedCode(BindingTrimming.Message)]
 	public Binding Add(
 		string propertyName,
 		object dataSource,
@@ -159,6 +165,7 @@ public class ControlBindingsCollection(IBindableComponent control) : BindingsCol
 		);
 	}
 
+	[RequiresUnreferencedCode(BindingTrimming.Message)]
 	public Binding Add(
 		string propertyName,
 		object dataSource,

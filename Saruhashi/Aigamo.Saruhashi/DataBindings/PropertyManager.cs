@@ -8,9 +8,11 @@
 
 using System.Collections;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Aigamo.Saruhashi;
 
+[RequiresUnreferencedCode(BindingTrimming.Message)]
 public class PropertyManager : BindingManagerBase
 {
 	private object _dataSource;

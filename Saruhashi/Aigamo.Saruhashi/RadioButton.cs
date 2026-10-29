@@ -153,7 +153,7 @@ public class RadioButton : ButtonBase
 				.Where(b => b.AutoCheck && b.Checked);
 			foreach (var b in radioButtons)
 			{
-				var propDesc = TypeDescriptor.GetProperties(this)[nameof(Checked)];
+				var propDesc = TypeDescriptor.GetProperties(typeof(RadioButton))[nameof(Checked)];
 				propDesc.SetValue(b, false);
 			}
 		}

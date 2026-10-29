@@ -7,11 +7,13 @@
 #nullable disable
 
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
 namespace Aigamo.Saruhashi;
 
+[RequiresUnreferencedCode(BindingTrimming.Message)]
 internal class Formatter
 {
 	private static readonly Type stringType = typeof(string);

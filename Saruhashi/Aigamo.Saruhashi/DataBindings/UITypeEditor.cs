@@ -10,6 +10,7 @@ using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Imaging;
 
@@ -18,6 +19,7 @@ namespace Aigamo.Saruhashi;
 /// <summary>
 ///  Provides a base class for editors that may provide users with a user interface to visually edit the values of the supported type or types.
 /// </summary>
+[RequiresUnreferencedCode(BindingTrimming.Message)]
 public class UITypeEditor
 {
 	static UITypeEditor()

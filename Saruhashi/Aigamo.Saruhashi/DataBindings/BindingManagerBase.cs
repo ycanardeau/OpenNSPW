@@ -8,10 +8,12 @@
 
 using System.Collections;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Aigamo.Saruhashi;
 
+[RequiresUnreferencedCode(BindingTrimming.Message)]
 public abstract class BindingManagerBase
 {
 	private BindingsCollection _bindings;

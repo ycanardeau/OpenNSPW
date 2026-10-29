@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -337,6 +338,12 @@ public static class Trace122Layout
 				.Invoke(null, null)!;
 	}
 
+	// The traced types are structs, whose fields trimming keeps, as they make their layout.
+	[UnconditionalSuppressMessage(
+		"Trimming",
+		"IL2070",
+		Justification = "Trimming keeps every field of a struct."
+	)]
 	private static FieldInfo[] FieldsOf(Type type)
 	{
 		return

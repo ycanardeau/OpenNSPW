@@ -9,6 +9,7 @@
 using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace Aigamo.Saruhashi;
@@ -80,7 +81,11 @@ public class BindingContext : ICollection
 	///  Gets the System.Windows.Forms.BindingManagerBase associated with the specified
 	///  data source.
 	/// </summary>
-	public BindingManagerBase this[object dataSource] => this[dataSource, string.Empty];
+	public BindingManagerBase this[object dataSource]
+	{
+		[RequiresUnreferencedCode(BindingTrimming.Message)]
+		get => this[dataSource, string.Empty];
+	}
 
 	/// <summary>
 	///  Gets the System.Windows.Forms.BindingManagerBase associated with the specified
@@ -88,6 +93,7 @@ public class BindingContext : ICollection
 	/// </summary>
 	public BindingManagerBase this[object dataSource, string dataMember]
 	{
+		[RequiresUnreferencedCode(BindingTrimming.Message)]
 		get => EnsureListManager(dataSource, dataMember);
 	}
 
@@ -255,6 +261,7 @@ public class BindingContext : ICollection
 	///  - If the data source is an ICurrencyManagerProvider, just delegate to the data
 	///  source.
 	/// </summary>
+	[RequiresUnreferencedCode(BindingTrimming.Message)]
 	private BindingManagerBase EnsureListManager(object dataSource, string dataMember)
 	{
 		BindingManagerBase bindingManagerBase = null;
@@ -342,6 +349,7 @@ public class BindingContext : ICollection
 		return bindingManagerBase;
 	}
 
+	[RequiresUnreferencedCode(BindingTrimming.Message)]
 	private static void CheckPropertyBindingCycles(
 		BindingContext newBindingContext,
 		Binding propBinding
@@ -412,6 +420,7 @@ public class BindingContext : ICollection
 	///  that support IBindableComponent, to update their Bindings when the value of
 	///  IBindableComponent.BindingContext is changed.
 	/// </summary>
+	[RequiresUnreferencedCode(BindingTrimming.Message)]
 	public static void UpdateBinding(BindingContext newBindingContext, Binding binding)
 	{
 		if (binding is null)

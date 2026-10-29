@@ -1,5 +1,6 @@
 using System.Collections;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 
 namespace Aigamo.Saruhashi;
@@ -823,6 +824,11 @@ public class Control : IDisposable, IBindableComponent
 
 	public void Show() => Visible = true;
 
+	[UnconditionalSuppressMessage(
+		"Trimming",
+		"IL2026",
+		Justification = "Each binding in DataBindings was made by a constructor that requires unreferenced code."
+	)]
 	private void UpdateBindings()
 	{
 		foreach (var b in DataBindings.Cast<Binding>())

@@ -14,6 +14,7 @@ using System.Reflection;
 
 namespace Aigamo.Saruhashi;
 
+[RequiresUnreferencedCode(BindingTrimming.Message)]
 public static class ListBindingHelper
 {
 	private static Attribute[] browsableAttribute;

@@ -8,6 +8,7 @@
 
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace Aigamo.Saruhashi;
@@ -16,6 +17,7 @@ namespace Aigamo.Saruhashi;
 ///  Represents a simple binding of a value in a list and the property of a control.
 /// </summary>
 [TypeConverter(typeof(ListBindingConverter))]
+[RequiresUnreferencedCode(BindingTrimming.Message)]
 public class Binding
 {
 	private BindingManagerBase _bindingManagerBase;
