@@ -31,11 +31,13 @@ dotnet run --project Disassembler/OpenNspw.Disassembler -- Original/Nspw122/NSPW
 | Function | Address | Called by the port |
 | --- | --- | --- |
 | `scenario_1` to `scenario_10`, `scenario_100` to `scenario_109`, `scenario_200` to `scenario_209`, `scenario_300` to `scenario_306` | `Functions.SetUpScenario` | `InitializeGame`, in place of `get_sinario_data` |
-| `cpu_strtgy`, and the functions only it calls (`sub_403A70`, `sub_403AE0`, `sub_404D80`, `sub_414DD0`, `sub_41F230`, `sub_41F300`, `sub_41F3C0`, `sub_41F490`, `sub_417C10`) | `0x404E30` | `HandleInput`, before the orders are applied |
-| `set_cpu_route` | `0x42DA80` | `ApplyOrders`, for a move order of a computer's ship |
-| `decision` | `0x41C3C0` | `CheckResult`, in place of NSPW NET's conditions and result |
-| `set_unit_data` | `0x41E150` | By the emulated code, and by `SetUnitData` in a single-player game, for the units the battle creates |
-| `set_new_unit`, `set_new_unit_plane`, `plane_in_cv`, `set_pos_of_parking`, `cls_all_slct_unit_p2`, `pt_in_rect3` | | Only by the emulated code |
+| `cpu_strtgy` | `0x404E30` | Rewritten as C# (`PlanComputerStrategy`), which `HandleInput` calls before the orders are applied; the emulated original is kept for its test |
+| `sub_403AE0`, `sub_404D80`, `sub_414DD0`, `sub_41F230`, `sub_41F300`, `sub_41F490` | | Rewritten as C# (`SetFormation`, `ShuffleTargets`, `PlaceReinforcement`, `AddTargets`), called by `PlanComputerStrategy`; the emulated originals are kept for their tests |
+| `set_cpu_route` | `0x42DA80` | Rewritten as C# (`PlanComputerRoute`), which `ApplyOrders` calls for a move order of a computer's ship, and `ReplanBlockedRoute` for a blocked one; the emulated original is kept for its test |
+| `decision` | `0x41C3C0` | Rewritten as C# (`Decide`), which `CheckResult` calls in place of NSPW NET's conditions and result; the emulated original is kept for its test |
+| `set_unit_data` | `0x41E150` | Rewritten as C# (`SetUnitData122`), which the port's `SetUnitData` calls in a single-player game: its values are not NSPW NET's |
+| `set_new_unit`, `set_new_unit_plane`, `plane_in_cv`, `set_pos_of_parking` | `0x41EE20`, `0x41F060`, `0x416F00`, `0x416F40` | The port's `AddUnit`, `AddPlane`, `CountPlanesIn` and `SetParkingPosition` do the same in a single-player game (`SharedFunctionTests`); `Decide` and `PlanComputerStrategy` call them |
+| `sub_41F3C0`, `cls_all_slct_unit_p2`, `pt_in_rect3`, `sub_417C10` | | Only by the emulated code |
 
 `set_cpu_route2` (`0x42ED30`) is translated, and `SetDynamicDestination` calls it (`SetCpuRoute2As122`) for a ship that follows a leader, as 1.22's formation does (`0x414D79`); the port's `SetCpuRoute2`, which NSPW NET calls for every unit, stays for network games.
 
@@ -116,11 +118,11 @@ So in a single-player game (`IsSingleplayer`):
 - `InitializeGame` starts the battle at frame 1 (`FrameCount`), as 1.22 does: its `game_init` runs within the frame of the setting screen that starts the battle (`0x40C61E`), which then counts itself (`0x434E9F`).
 - `UpdateBattle` skips the two network phases, and counts `BattleTime` down every tick, as 1.22 counts `rest_time`.
 - `HandleInput` buffers the player's orders as in a network game, then `IssueSingleplayerOrders` gives the orders of this frame: the combat menu's item, which 1.22 applies in its input, then `cpu_strtgy`, which may see it, then what `ReceiveAndIssueOrders` does for a turn, for the player only, and `ApplyOrders` for both. Orders take effect in the frame they are given, not at the next turn.
-- `ApplyOrders` clears the path of a computer's unit for every move order (`if( new_pp[e].cls || unit[m].used==cpu_side )`, as 1.22 does and NSPW NET has as a comment), and calls `set_cpu_route(m, 4.0)` for a computer's ship.
+- `ApplyOrders` clears the path of a computer's unit for every move order (`if( new_pp[e].cls || unit[m].used==cpu_side )`, as 1.22 does and NSPW NET has as a comment), and plans the route of a computer's ship (`set_cpu_route`, rewritten as `PlanComputerRoute`).
 - The maps and the sounds are 1.22's where they differ from NSPW NET's (`GameFileLayers`, [BundledData.md](BundledData.md)), so that the map on which `set_cpu_route` plans is 1.22's; the three sounds 1.22 does not have are NSPW NET's. The sprite sheet is 1.22's layout of the app's sprite files, with 1.22's land-based fighter of Japan ([GameSprites.md](GameSprites.md)); without them, it is 1.22's `tst_cg1.bmp`.
 - `UpdateSupply` keeps a ship supplying wherever it is, as 1.22's `chara_cont` does (`0x4010BB`), without NSPW NET's check for a naval base within 280: the computer starts supplying once its flagship has stopped within 580 of the base, and that check stopped it at once.
 - `SetShipEmergencyDestination` brings only the player's ships back into the map, and `SteerUnit` no submarine, as 1.22 does (`0x416B35`, `0x401966`): the computer's ships sail on, to its naval bases outside the map, such as scenario 304's.
-- `SetUnitData` runs 1.22's `set_unit_data`, so that the units the battle creates, such as the bases that transports land, have 1.22's data, as the scenario's do; `AddPlane` adds planes to a full carrier, as 1.22's `set_new_unit_plane` does (`0x41F060`).
+- `SetUnitData` runs 1.22's `set_unit_data`, rewritten as `SetUnitData122`, so that the units the battle creates, such as the bases that transports land, have 1.22's data, as the scenario's do; `AddPlane` adds planes to a full carrier, as 1.22's `set_new_unit_plane` does (`0x41F060`).
 - `LandCargo` lands a transport's cargo within 360 of its landing point, as 1.22 does (`0x413003`), where NSPW NET lands it within 160 (`#if NSPW_THE_NET`), and keeps the transport, empty, as 1.22 does (`0x413014` to `0x41312B`), where NSPW NET removes it.
 - `MoveUnit` does not slow a transport with cargo, as 1.22 does not (`0x402955`).
 - `UpdateCargo` completes the base a transport lands at once, with its full HP, as 1.22 does (`0x418E23`), where NSPW NET builds it over 8000 to 20000 ticks from a quarter of its HP.
@@ -135,7 +137,7 @@ So in a single-player game (`IsSingleplayer`):
 - `ControlFiring` fires as 1.22 does (`0x4030D8` to `0x40396E`): nothing for Japan in scenario 1, the guns of infantry bases, pillboxes and fortresses 1 in 200, 150 and 100 a tick, every battleship, cruiser and destroyer as NSPW NET does its first type, transports landing ground units only, and no torpedoes from bombers.
 - `UpdateBattle` keeps a submerged submarine as a target, and a parked plane's target, as 1.22 does (`0x402FD2`).
 - `Detect`, `GetDetectionSize` and `DetectSubmarines` find units as 1.22 does (`0x418230`, `0x418080`, `0x417EA0`): with its ranges, the player's supplying units looking out, submarines diving at any unit found, and the computer's destroyers that chase a submarine stopping when it is found. The ranges at which effects show and sounds play are still NSPW NET's.
-- `CheckCourseAhead` looks 40 ahead with only air bases and naval bases out of the way, and `ReplanBlockedRoute` replans the computer's units that a ship or land blocks, as 1.22 does with `set_cpu_route(m, 1.0)` (`0x401F95` to `0x4023EB`, `0x402D2B`), where NSPW NET's steering stops them.
+- `CheckCourseAhead` looks 40 ahead with only air bases and naval bases out of the way, and `ReplanBlockedRoute` replans the computer's units that a ship or land blocks, as 1.22 does with `set_cpu_route(m, 1.0)`, rewritten as `PlanComputerRoute` (`0x401F95` to `0x4023EB`, `0x402D2B`), where NSPW NET's steering stops them.
 - `UpdateParkedPlane` clears the launch lock of the base a plane has landed on, whatever other planes land, as 1.22 does (`0x4018F1`).
 - `UpdateBattle` plays no sonar, which 1.22 does not have.
 - `FindFreeFire` and `FindFreeEffect` keep 255 fires and 255 effects in use at most, as 1.22 does.
@@ -158,7 +160,7 @@ So in a single-player game (`IsSingleplayer`):
 - `GetDamagePoints` gives a depth charge 1.22's damage, 3 to 5 (`0x416D1F`).
 - `UpdateAntiSubmarineBomb` keeps an exploded depth charge's fire in use, with the submerged submarine it hit or tested last as its target, as 1.22's bug does (`0x4196DC` to `0x4197EC`).
 - `CheckHit` hits a surfaced submarine within 1.22's smaller size, 4 by 2 of each part (`0x40F9D6`), where NSPW NET's is 8 by 4.
-- `CheckResult` calls `decision`, which also shows the result, instead of NSPW NET's conditions.
+- `CheckResult` calls `Decide`, `decision`'s rewrite, which also shows the result, instead of NSPW NET's conditions.
 
 ## Playing
 ```bash
@@ -181,6 +183,7 @@ NSPW NET's debug keys (`DBG_MODE`) work as in a network game, but three are held
 5. **The single-player game**: the paths above, started from the desktop app with `--singleplayer`. Done.
 6. **Setting screen**: choosing single-player and the scenario in the game, as 1.22's setting screen does. Not done.
 7. **Characterization trace** of a single-player game, to guard the refactoring of the code it runs. Traces of 1.22 itself, recorded on Windows, replayed by the port ([Verification.md](Verification.md)): the tools are done; the traces are not recorded yet.
+8. **Rewriting the emulated functions as C#** ([ComputerPlayer.md](ComputerPlayer.md)), each tested against the emulated original. `set_cpu_route`, `decision` and `cpu_strtgy` are done; the scenarios' setups and the functions they share with `cpu_strtgy` still run in the emulator. The emulator computes `fsin`, `fcos` and `fpatan` with the port's `sin`, `cos` and `atan2`, so that both give the same results, on every platform.
 
 ## Open questions
 - Which other differences between 1.22's battle and NSPW NET's ([Differences.md](Differences.md#the-battle)) matter for single-player play.

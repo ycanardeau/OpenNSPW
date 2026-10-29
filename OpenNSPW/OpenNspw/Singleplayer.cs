@@ -104,6 +104,9 @@ public unsafe partial class Nspw
 	// cpu_side of 1.22: the side the computer plays, or None.
 	public Side CpuSide;
 
+	// Two doubles in the emulator's memory, for the functions of 1.22 that take pointers to them.
+	private uint _pointAddress;
+
 	// The trace this single-player game follows and checks itself against, or records itself in, or null
 	// (docs/Verification.md).
 	public ISingleplayerTrace? Trace;
@@ -242,7 +245,7 @@ public unsafe partial class Nspw
 	}
 
 	// Runs a function of 1.22 on the game's state.
-	private uint RunEmulated(uint address, params ReadOnlySpan<uint> arguments)
+	internal uint RunEmulated(uint address, params ReadOnlySpan<uint> arguments)
 	{
 		var emulator =
 			Emulator
@@ -414,6 +417,7 @@ public unsafe partial class Nspw
 		emulator.Cpu.Fpu.Cos = cos;
 		emulator.Cpu.Fpu.Atan2 = atan2;
 		SetNatives(emulator);
+		_pointAddress = emulator.Allocate(2 * sizeof(double));
 		for (var i = 0; i < FleetCount; i++)
 			MemoryMarshal.Write(
 				emulator.At(
@@ -478,21 +482,24 @@ public unsafe partial class Nspw
 	// BUG(1.22): scenario 208's count at 0x4050C7 is read before it is set. Kept as is for compatibility with 1.22.
 	private static readonly (uint Instruction, uint Value)[] StackLocalsOnWindows = [(0x4050C7, 0)];
 
-	// Whether a trace has given the uninitialized locals of the coming cpu_strtgy (GiveStackLocal).
-	private bool _hasStackLocals;
+	// The uninitialized locals of the coming cpu_strtgy that a trace has given (GiveStackLocal), by instruction.
+	private readonly Dictionary<uint, uint> _stackLocals = [];
+
+	// What cpu_strtgy reads, at the instruction given, from a local it has not set: what a trace gave, or else what
+	// Windows' stack holds there.
+	private uint StackLocal(uint instruction) =>
+		_stackLocals.TryGetValue(instruction, out var value)
+			? value
+			: StackLocalsOnWindows.First(local => local.Instruction == instruction).Value;
 
 	// Gives cpu_strtgy, before it runs, what Windows' stack held where it reads a local it has not set, as a trace of
 	// 1.22 records it; false if the port does not know where that local is.
 	internal bool GiveStackLocal(uint instruction, uint value)
 	{
-		if (
-			Emulator is not { } emulator
-			|| StackLocalAddress(emulator, instruction) is not { } address
-		)
+		if (!StackLocalsOnWindows.Any(local => local.Instruction == instruction))
 			return false;
 
-		MemoryMarshal.Write(emulator.At(address, sizeof(uint)), value);
-		_hasStackLocals = true;
+		_stackLocals[instruction] = value;
 		return true;
 	}
 
@@ -507,21 +514,26 @@ public unsafe partial class Nspw
 		return true;
 	}
 
-	// cpu_strtgy: the computer's order of this frame, in new_pp[0] and slct_unit[0]. The locals it reads uninitialized
-	// hold what Windows' stack holds there, or what a trace has given.
+	// The emulated cpu_strtgy, which ComputerPlayerTests compares PlanComputerStrategy, its rewrite, with: the computer's
+	// order of this frame, in new_pp[0] and slct_unit[0]. The locals it reads uninitialized hold what Windows' stack holds
+	// there, or what a trace has given.
 	public void RunCpuStrategy()
 	{
-		if (!_hasStackLocals)
-		{
-			foreach (var (instruction, value) in StackLocalsOnWindows)
-				GiveStackLocal(instruction, value);
-		}
+		var emulator =
+			Emulator
+			?? throw new InvalidOperationException("No single-player game is being played.");
+		foreach (var (instruction, _) in StackLocalsOnWindows)
+			MemoryMarshal.Write(
+				emulator.At(StackLocalAddress(emulator, instruction)!.Value, sizeof(uint)),
+				StackLocal(instruction)
+			);
 
 		RunEmulated(Functions.CpuStrategy);
-		_hasStackLocals = false;
+		_stackLocals.Clear();
 	}
 
-	// decision: the scenario's events and victory conditions, and the result's messages once it has one.
+	// The emulated decision, which ComputerPlayerTests compares Decide, its rewrite, with: the scenario's events and
+	// victory conditions, and the result's messages once it has one.
 	public void RunDecision()
 	{
 		RunEmulated(Functions.Decision);
@@ -531,6 +543,107 @@ public unsafe partial class Nspw
 	internal void RunSetUnitData(int m)
 	{
 		RunEmulated(Functions.SetUnitData, (uint)m);
+	}
+
+	// Entry f of 1.22's table of the computer's fleets, in the emulator's memory.
+	internal ref ComputerFleet FleetAt(int f)
+	{
+		var emulator =
+			Emulator
+			?? throw new InvalidOperationException("No single-player game is being played.");
+		return ref MemoryMarshal.AsRef<ComputerFleet>(
+			emulator.At(FleetAddress + (uint)(f * FleetSize), FleetSize)
+		);
+	}
+
+	private static uint Low(double value) => (uint)BitConverter.DoubleToUInt64Bits(value);
+
+	private static uint High(double value) => (uint)(BitConverter.DoubleToUInt64Bits(value) >> 32);
+
+	// sub_403AE0(fleet): the formation of the fleet's members around its flagship.
+	internal void RunSetFormation(int fleet)
+	{
+		RunEmulated(Functions.SetFormation, (uint)fleet);
+	}
+
+	// sub_404D80(fleet): shuffles the fleet's targets.
+	internal void RunShuffleTargets(int fleet)
+	{
+		RunEmulated(Functions.ShuffleTargets, (uint)fleet);
+	}
+
+	// sub_414DD0(&x, &y): moves the point to a free place for a reinforcement near the east edge of the map.
+	internal void RunPlaceReinforcement(ref double x, ref double y)
+	{
+		var emulator =
+			Emulator
+			?? throw new InvalidOperationException("No single-player game is being played.");
+		MemoryMarshal.Write(emulator.At(_pointAddress, sizeof(double)), x);
+		MemoryMarshal.Write(emulator.At(_pointAddress + sizeof(double), sizeof(double)), y);
+		RunEmulated(Functions.PlaceReinforcement, _pointAddress, _pointAddress + sizeof(double));
+		x = MemoryMarshal.Read<double>(emulator.At(_pointAddress, sizeof(double)));
+		y = MemoryMarshal.Read<double>(emulator.At(_pointAddress + sizeof(double), sizeof(double)));
+	}
+
+	// set_pos_of_parking(m): the position of plane m parked at its carrier or air base.
+	internal void RunSetParkingPosition(int m)
+	{
+		RunEmulated(Functions.SetParkingPosition, (uint)m);
+	}
+
+	// set_new_unit: a new unit of the side and kind at the point, heading in the direction; its number.
+	internal short RunAddUnit(Side side, UnitKind kind, double x, double y, double direction)
+	{
+		return (short)RunEmulated(
+			Functions.AddUnit,
+			(uint)side,
+			(uint)kind,
+			Low(x),
+			High(x),
+			Low(y),
+			High(y),
+			Low(direction),
+			High(direction)
+		);
+	}
+
+	// sub_41F230(fleet, kind): adds every enemy unit of the kind to the fleet's targets.
+	internal void RunAddTargetsOfKind(int fleet, UnitKind kind)
+	{
+		RunEmulated(Functions.AddTargetsOfKind, (uint)fleet, (uint)kind);
+	}
+
+	// sub_41F300(fleet): adds every enemy naval base to the fleet's targets.
+	internal void RunAddNavalBaseTargets(int fleet)
+	{
+		RunEmulated(Functions.AddNavalBaseTargets, (uint)fleet);
+	}
+
+	// sub_41F490(fleet): adds every enemy battleship, cruiser and carrier to the fleet's targets.
+	internal void RunAddShipTargets(int fleet)
+	{
+		RunEmulated(Functions.AddShipTargets, (uint)fleet);
+	}
+
+	// plane_in_cv(m): the planes of carrier or air base m.
+	internal int RunCountPlanesIn(int m)
+	{
+		return (int)RunEmulated(Functions.CountPlanesIn, (uint)m);
+	}
+
+	// set_new_unit_plane: a new plane of the side and kind, of the type, at carrier or air base no, as the port's
+	// AddPlane adds one.
+	internal void RunAddPlane(Side side, UnitKind kind, int type, int no, int planes, FireKind arm)
+	{
+		RunEmulated(
+			Functions.AddPlane,
+			(uint)side,
+			(uint)kind,
+			(uint)type,
+			(uint)no,
+			(uint)planes,
+			(uint)arm
+		);
 	}
 
 	// The buffers of the orders, empty, and the player free to give the next: what ReceiveAndIssueOrders leaves after a
@@ -631,7 +744,10 @@ public unsafe partial class Nspw
 		SelectedUnit = savedSelectedUnit;
 
 		if (CpuSide != Side.None)
-			RunCpuStrategy();
+		{
+			PlanComputerStrategy();
+			_stackLocals.Clear();
+		}
 
 		if (BufferedArrivedUnits[1] != 0)
 			OnUnitArrived(1, BufferedArrivedUnits[1]);
@@ -672,8 +788,9 @@ public unsafe partial class Nspw
 		RunEmulated(Functions.SetCpuRoute2, (uint)m);
 	}
 
-	// set_cpu_route(m, radius): the route of the computer's ship m to the destination just set as its path; the orders
-	// pass 4.0, the battle 1.0 when the ship is blocked.
+	// The emulated set_cpu_route(m, radius), which ComputerPlayerTests compares PlanComputerRoute, its rewrite, with: the
+	// route of the computer's ship m to the destination just set as its path. The orders pass 4.0, the battle 1.0 when
+	// the ship is blocked, but 1.22 does not use the value.
 	public void SetCpuRoute(int m, double radius)
 	{
 		var bits = BitConverter.DoubleToUInt64Bits(radius);

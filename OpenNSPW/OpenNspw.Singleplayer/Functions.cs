@@ -3,14 +3,44 @@ namespace OpenNspw.Singleplayer;
 // The functions of the single-player executable that the port calls, or implements natively (docs/Singleplayer.md).
 public static class Functions
 {
+	// sub_403AE0(int fleet): the formation of the fleet's members around its flagship.
+	public const uint SetFormation = 0x403AE0;
+
+	// sub_404D80(int fleet): shuffles the fleet's targets.
+	public const uint ShuffleTargets = 0x404D80;
+
 	// cpu_strtgy(): the computer's orders for this frame.
 	public const uint CpuStrategy = 0x404E30;
+
+	// sub_414DD0(double* x, double* y): a free place for a reinforcement near the east edge of the map, from the point.
+	public const uint PlaceReinforcement = 0x414DD0;
+
+	// plane_in_cv(int m): the planes of carrier or air base m.
+	public const uint CountPlanesIn = 0x416F00;
+
+	// set_pos_of_parking(int m): the position of plane m parked at its carrier or air base.
+	public const uint SetParkingPosition = 0x416F40;
 
 	// decision(): the scenario's events and victory conditions.
 	public const uint Decision = 0x41C3C0;
 
 	// set_unit_data(int m): the data of unit m by its kind and type (speed, HP, weapons, fuel).
 	public const uint SetUnitData = 0x41E150;
+
+	// set_new_unit(int side, int kind, double x, double y, double drctn): a new unit, whose number it returns.
+	public const uint AddUnit = 0x41EE20;
+
+	// set_new_unit_plane(int side, int kind, int type, int no, int planes, int arm): a new plane at carrier or air base no.
+	public const uint AddPlane = 0x41F060;
+
+	// sub_41F230(int fleet, int kind): adds every enemy unit of the kind to the fleet's targets.
+	public const uint AddTargetsOfKind = 0x41F230;
+
+	// sub_41F300(int fleet): adds every enemy naval base to the fleet's targets.
+	public const uint AddNavalBaseTargets = 0x41F300;
+
+	// sub_41F490(int fleet): adds every enemy battleship, cruiser and carrier to the fleet's targets.
+	public const uint AddShipTargets = 0x41F490;
 
 	// set_cpu_route(int m, double): the route of the computer's ship m to its destination.
 	public const uint SetCpuRoute = 0x42DA80;

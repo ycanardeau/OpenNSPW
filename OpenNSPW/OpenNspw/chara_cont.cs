@@ -1289,7 +1289,7 @@ dbg[5]=rnd(100);
 			unit.EndPath(1);
 		}
 
-		SetCpuRoute(m, 1.0);
+		PlanComputerRoute(m);
 	}
 
 	// 1.22's ship looks 40 ahead, and only air bases and naval bases are not in its way (0x401F95 to 0x4023EB). A

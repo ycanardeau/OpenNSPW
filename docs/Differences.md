@@ -3,6 +3,8 @@ A single-player game plays a scenario of NSPW 1.22 (`Original/Nspw122/NSPW_122.e
 
 This document lists every difference found between the two, read from 1.22's machine code, with the address where it shows; [Verification.md](Verification.md) checks the port against 1.22 itself. The single-player game follows 1.22 in the first table only; the others are left as NSPW NET has them, so that the port keeps a single battle, the one network games play. It follows 1.22's bugs too, as they change the battle; the code marks each `BUG(1.22)`.
 
+The computer player itself runs 1.22's code, emulated or rewritten as C# and tested against the emulated original ([ComputerPlayer.md](ComputerPlayer.md)), so it has no difference of its own. The differences are in the battle that the computer plays in.
+
 ## Followed in single-player
 | Difference | 1.22 | NSPW NET | Where in the port |
 | --- | --- | --- | --- |
@@ -17,7 +19,7 @@ This document lists every difference found between the two, read from 1.22's mac
 | Orders to the selected units | Go to every unit selected | Go to the selected units whose numbers are the player's side's, the ones the network sends; the units of the side with the other side's numbers, such as the fighters taken in scenario 303 (41 to 43), are left out, so they took off one at a time and could not be sent to another base | `BufferSelections`, `IssueSingleplayerOrders` |
 | Supply away from a naval base | A unit supplies (`spry`) wherever it is (`0x4010BB`): nothing checks for a naval base | Supply stops at once unless one of the side's naval bases is within ±280 | `UpdateSupply` |
 | Ships outside the map | Only the player's ships are brought back (`0x416B35`, the end of `set_pos_of_emrgncy_SHIP` at `0x415F40`, which skips the units of `cpu_side`); submarines never (`0x401966`: kind 4 does nothing) | Every ship, and every submarine, gets an emergency move back to 40 inside the edge | `SetShipEmergencyDestination`, `SteerUnit` (submarines) |
-| Units' data | `set_unit_data` (`0x41E150`) gives other HP, speeds, weapons and fuel: a battleship has 41 HP and burns fuel every 9000 ticks, a carrier 36 or 41 HP | `SetBattleshipData` and the others: a battleship 40 HP and every 1000 ticks, a carrier 32 or 37 | `SetUnitData` calls 1.22's `set_unit_data` in the emulator, for the units the battle creates, such as the bases that transports land; the scenarios' units get it from 1.22's own setup |
+| Units' data | `set_unit_data` (`0x41E150`) gives other HP, speeds, weapons and fuel: a battleship has 41 HP and burns fuel every 9000 ticks, a carrier 36 or 41 HP | `SetBattleshipData` and the others: a battleship 40 HP and every 1000 ticks, a carrier 32 or 37 | `SetUnitData` calls `SetUnitData122`, the rewrite of 1.22's `set_unit_data`, for the units the battle creates, such as the bases that transports land; the scenarios' units get it from 1.22's own setup |
 | Planes added to a full carrier | `set_new_unit_plane` (`0x41F060`) adds them: it does not check the carrier's capacity | Returns, the planes not added | `AddPlane` |
 | Transports landing | Land their cargo within 360 of the landing point (`0x413003`), and stay in the battle, empty: only their cargo, target and `arm[4]` are cleared (`0x413014` to `0x41312B`) | Within 160 (`#if NSPW_THE_NET`), and leave the battle (`used=0`, `hp[0]=0`, under a commented `if( cnct_game )`) | `LandCargo`, `BattleRules.TransportsLeaveAfterLanding` |
 | Transports with cargo | Not slowed (`0x402955`) | Slowed to 0.8 to 1.0 of the top speed | `MoveUnit` |

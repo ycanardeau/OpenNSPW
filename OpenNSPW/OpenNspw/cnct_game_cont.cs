@@ -778,9 +778,9 @@ public unsafe partial class Nspw
 
 		if (IsSingleplayer)
 		{
-			// 1.22's decision, which also shows the result.
+			// 1.22's decision, rewritten (ComputerPlayer.cs), which also shows the result.
 			Trace?.Reach(this, TracePoint.Decision);
-			RunDecision();
+			Decide();
 			return;
 		}
 
@@ -1316,7 +1316,7 @@ public unsafe partial class Nspw
 		// the bases that transports land, get them from 1.22's set_unit_data, as the scenario's do.
 		if (IsSingleplayer)
 		{
-			RunSetUnitData(m);
+			SetUnitData122(m);
 			return;
 		}
 

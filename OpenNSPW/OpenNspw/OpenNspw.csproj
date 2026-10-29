@@ -18,6 +18,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="OpenNspw.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="OpenNspw.all_head" Static="true" />
     <Using Include="OpenNspw.crt" Static="true" />
     <Using Include="OpenNspw.ddraw" Static="true" />

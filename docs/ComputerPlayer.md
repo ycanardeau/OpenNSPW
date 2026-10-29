@@ -44,7 +44,7 @@ The scenarios build the target lists with these functions, which `cpu_strtgy` al
 Each adds from the first empty element of 1 to 17 (18 when there is none) the units that are not in elements 1 to 17 already, with no limit: past element 17, they are written on into the members. The shuffle counts the targets up to the first empty element, and swaps two random ones (`rand()%n+1` each) `rand()%18+1` times. `sub_403A70(unit, fleet)` (`0x403A70`) tells whether a plane's carrier (`info[1]`) is the fleet's flagship or a member.
 
 ## cpu_strtgy
-`cpu_strtgy` (`0x404E30`) first clears the computer's order of the last frame (`cls_all_slct_unit_p2(0)`, `new_pp[0].used=0`). Then:
+`cpu_strtgy` (`0x404E30`), rewritten as `PlanComputerStrategy` (`ComputerStrategy.cs`), first clears the computer's order of the last frame (`cls_all_slct_unit_p2(0)`, `new_pp[0].used=0`). Then:
 
 1. **The scenario's events** (`0x404E93` to `0x405554`): a `switch` on `sinario` runs the events of 7 scenarios, each when `rest_time` falls to a threshold, and each once (a flag in the fleet table):
 
@@ -55,7 +55,7 @@ Each adds from the first empty element of 1 to 17 (18 when there is none) the un
     | 101, 102 | `0x405127` | Once the computer has no naval base (12) left, each of fleets 1 to 4 in mode 50 attacks (mode 1) the naval bases and the battleships, cruisers and carriers |
     | 200 | `0x405348` | At 50000, fleets 1 and 2 attack the battleships, cruisers and carriers; while fleet 4's flagship is not a cruiser, fleet 3 goes to its second point, (-880, 40) (mode 50) |
     | 203 | `0x40547E` | At 42000, fleet 6 attacks; at 40000, fleet 7 |
-    | 208 | `0x405071` | From 20000, while the Japanese base of fleet 2 has 1 to 15 planes, it gets an attacker or a bomber (one time in 2 each), with bombs, each time. Before 20000, or once the base is gone, 1.22 compares an uninitialized local, `[esp+30h]` (`0x4050C7`), instead of the count, so a rewrite must read the same slot of the stack. Windows' stack holds 0 there in every frame recorded, so 1.22 does nothing then; the port gives the emulator's stack 0 there before each `cpu_strtgy` (`StackLocalsOnWindows`), or what a trace recorded (`GiveStackLocal`) |
+    | 208 | `0x405071` | From 20000, while the Japanese base of fleet 2 has 1 to 15 planes, it gets an attacker or a bomber (one time in 2 each), with bombs, each time. Before 20000, or once the base is gone, 1.22 compares an uninitialized local, `[esp+30h]` (`0x4050C7`), instead of the count, so a rewrite must read the same slot of the stack. Windows' stack holds 0 there in every frame recorded, so 1.22 does nothing then; the port gives `cpu_strtgy`, emulated or rewritten, 0 there (`StackLocalsOnWindows`), or what a trace recorded (`GiveStackLocal`) |
     | 209 | `0x404E93` | From 40000, while fleet 8 has no flagship: an American carrier with 12 attackers (bombs), then a cruiser, a destroyer, a cruiser and a destroyer, 150 apart, from (8500 + `rand()%1000`, 6500), heading 135°, become fleet 8, which targets the infantry bases (15), then the battleships, cruisers and carriers, toward (80, 3440) |
 
     The events are not flags: an event runs again whenever its condition holds again.
@@ -131,7 +131,7 @@ Each adds from the first empty element of 1 to 17 (18 when there is none) the un
     - fleets 3 and 4, and 5 from 100000, with no more than 2 live members: cruisers and battleships (60 and 40 in 100) until they have 3; a new fleet attacks the land forces (fleet 3 toward (6640, -3760)).
 
 ## set_cpu_route
-`set_cpu_route(m, a)` (`0x42DA80`) plans the route of the computer's ship `m` to `pp_x[0]`, `pp_y[0]`. It is NSPW NET's `set_cpu_root2` (`input.cpp`), with these differences:
+`set_cpu_route(m, a)` (`0x42DA80`), rewritten as `PlanComputerRoute` (`ComputerPlayer.cs`), plans the route of the computer's ship `m` to `pp_x[0]`, `pp_y[0]`. It is NSPW NET's `set_cpu_root2` (`input.cpp`), with these differences:
 
 | | NSPW NET's `set_cpu_root2` | 1.22's `set_cpu_route` |
 | --- | --- | --- |
@@ -160,7 +160,7 @@ The second argument, a `double` (4.0 for a new order, 1.0 for a blocked ship), i
 Its path becomes its final destination alone, and `set_cpu_route(m, 1.0)` plans it again. The port does not: its single-player game moves the ships as NSPW NET does, which stops them until the computer gives them another order.
 
 ## decision
-`decision` (`0x41C3C0`) runs in three steps:
+`decision` (`0x41C3C0`), rewritten as `Decide` (`ComputerPlayer.cs`), runs in three steps:
 
 1. While `game_end` is 0, the scenario's conditions, a `switch` on `sinario` (scenarios 1 to 10 at `0x41DFCC`, the others through a byte table), may set it.
 2. If `game_end` is set, the result's three lines, from the messages of `0x4414B0` to `0x4415A4`, in white at (300, 300), 20 apart: the same as the port's `DrawResult`.
@@ -261,5 +261,9 @@ The events of the other scenarios give Japan's unit 1 a plane (`set_new_unit_pla
 | 304 | Every 4500 | Parked there (`plane_in_cv(1)`) | Attacker to 75, fighter to 98, else bomber |
 
 ## Next
-1. Rewrite the functions as C#, starting with `set_cpu_route`, each with a test that compares it with the emulated original on states recorded from games and random ones. The rewrite reads each function in full, and this document gets the details it finds.
+1. Rewrite the functions as C#, each with a test that compares it with the emulated original on states of games and random ones (`ComputerPlayerTests`). The rewrite reads each function in full, and this document gets the details it finds.
+    - `set_cpu_route` is done: on 10 scenarios, every ship, at three points of the game, with its own destination and three random ones, the rewrite leaves the units exactly as the original does.
+    - `decision` is done, and leaves the units, `game_end`, `decision_point`, the fleet table and `rand()` as the original does: for every scenario's conditions on the states of four games, as they are and changed at random; on and next to the edges of each rectangle; for 205's landings; for 303's air bases; and for the planes of 204, 301 and 304, from many seeds.
+    - `cpu_strtgy` is done, and leaves the units, its order (`new_pp[0]`, `slct_unit[0]`), 1.22's own globals and `rand()` as the original does: for every fleet of 20 scenarios at four points of the game, and of 11 scenarios at three points with their state changed at random, around the thresholds it compares. 
+    - The functions they call are done: the formations, the target lists and the placement of reinforcements are rewritten and tested in the same way; `set_unit_data` is rewritten (its values are not NSPW NET's), and the port's `AddUnit`, `AddPlane`, `CountPlanesIn` and `SetParkingPosition` do what `set_new_unit`, `set_new_unit_plane`, `plane_in_cv` and `set_pos_of_parking` do (`SharedFunctionTests`), so `decision` and `cpu_strtgy` run without the emulator.
 2. Rewrite the scenarios' setups (`scenario_N`).
