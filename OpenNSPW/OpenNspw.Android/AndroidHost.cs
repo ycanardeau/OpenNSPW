@@ -13,6 +13,9 @@ internal sealed class AndroidHost(Activity activity) : IAppHost
 
 	public bool IsTouchScreen => true;
 
+	// No Bluetooth on Android yet.
+	public IBluetoothRadio? Bluetooth => null;
+
 	public void ListenToText(GameWindow window, Action<char> typed) { }
 
 	// MonoGame's text box (KeyboardInput), one at a time: a field touched while one is shown is not edited. What is written

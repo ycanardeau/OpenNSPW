@@ -9,6 +9,8 @@ internal sealed class DesktopHost : IAppHost
 {
 	public bool IsTouchScreen => false;
 
+	public IBluetoothRadio? Bluetooth { get; } = DesktopBluetooth.Create();
+
 	public void ListenToText(GameWindow window, Action<char> typed)
 	{
 		window.TextInput += (_, e) => typed(e.Character);

@@ -18,6 +18,9 @@ internal interface IAppHost
 	// player types into the field itself, key by key (ListenToText).
 	bool EditText(string title, string text, Action<string> written);
 
+	// The computer's Bluetooth, for multiplayer games, where the app can join over it and may use it; null otherwise.
+	IBluetoothRadio? Bluetooth { get; }
+
 	// Closes the app, from its main menu, where no game is being played.
 	void Quit(Game game);
 

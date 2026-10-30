@@ -53,6 +53,10 @@ internal sealed class NspwGame : Game
 
 	public TextRasterizer Text { get; } = new();
 
+	// Bluetooth for multiplayer games, on the host's radio (IAppHost.Bluetooth), where the app can join over it and may
+	// use it.
+	public AppBluetooth? Bluetooth { get; }
+
 	public SpriteBatch SpriteBatch { get; private set; } = default!;
 
 	public ViewportAdapter ViewportAdapter { get; private set; } = default!;
@@ -85,6 +89,7 @@ internal sealed class NspwGame : Game
 		_watch = watch;
 		Host = host;
 		Pointer = host.IsTouchScreen ? new TouchPointer(Window) : new MousePointer();
+		Bluetooth = host.Bluetooth is { } radio ? new AppBluetooth(radio) : null;
 		Data = data;
 		Texts.Language = UISettings.LoadLanguage();
 		IsMouseVisible = !host.IsTouchScreen;
@@ -109,7 +114,8 @@ internal sealed class NspwGame : Game
 			Text,
 			singleplayer,
 			trace,
-			options: Options
+			options: Options,
+			bluetooth: singleplayer is null ? Bluetooth : null
 		);
 		_lastSession.Start();
 		return _lastSession;
