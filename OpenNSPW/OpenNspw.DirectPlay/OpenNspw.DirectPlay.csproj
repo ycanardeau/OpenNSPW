@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\OpenNspw\OpenNspw.csproj" />
     <ProjectReference Include="..\..\Otsuki\Aigamo.Otsuki\Aigamo.Otsuki.csproj" />
+    <ProjectReference Include="..\..\Otsuki\Aigamo.Otsuki.Bluetooth\Aigamo.Otsuki.Bluetooth.csproj" />
   </ItemGroup>
 
 </Project>

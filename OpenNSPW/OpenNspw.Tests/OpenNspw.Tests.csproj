@@ -26,6 +26,11 @@
     <ProjectReference Include="..\OpenNspw.Singleplayer\OpenNspw.Singleplayer.csproj" />
   </ItemGroup>
 
+  <!-- The in-memory streams of Otsuki's tests, for LoopbackBluetooth. -->
+  <ItemGroup>
+    <Compile Include="..\..\Otsuki\Aigamo.Otsuki.Tests\InMemoryStreamNetwork.cs" Link="InMemoryStreamNetwork.cs" />
+  </ItemGroup>
+
   <!-- Recorded by OpenNspw.Reference/record-functions.ps1. -->
   <ItemGroup>
     <None Include="Layout.json" CopyToOutputDirectory="PreserveNewest" />
