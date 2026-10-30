@@ -1,3 +1,7 @@
+## 0.0.1-alpha.8 (2026-10-30)
+
+This was a version bump only, there were no code changes.
+
 ## 0.0.1-alpha.7 (2026-10-29)
 
 This was a version bump only, there were no code changes.
