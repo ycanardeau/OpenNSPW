@@ -7,9 +7,9 @@ using DrawingSize = System.Drawing.Size;
 namespace OpenNspw.App.Controls;
 
 // Hosting or joining a game: the player's name, whether to host, and the address and the port, as the original's
-// connection dialog (IDD_ADDRESS_OVERRIDE) asks for them. Where the app may use Bluetooth, the form also chooses between
-// the Internet and Bluetooth, the dialog's service providers; over Bluetooth, a guest gives the host's device instead of
-// the address and the port, typed or chosen from the paired devices. The form shows what the dialog has (Fill), and
+// connection dialog (IDD_ADDRESS_OVERRIDE) asks for them. Where the app may use Bluetooth, tabs above the panel also
+// choose between the Internet and Bluetooth, the dialog's service providers; over Bluetooth, a guest gives the host's
+// device instead of the address and the port, typed or chosen from the paired devices. The form shows what the dialog has (Fill), and
 // reports what the user does. Tab moves between the fields, Enter connects and Escape goes back.
 internal sealed class ConnectionForm : Form
 {
@@ -18,15 +18,11 @@ internal sealed class ConnectionForm : Form
 
 	private readonly UIFonts _fonts;
 	private readonly IAppHost _appHost;
-
-	// Where the panel starts its fields, below the choice between the Internet and Bluetooth when there is one.
-	private readonly int _top;
-
 	private readonly DrawingRectangle _panelBounds;
 	private readonly ActionButton _host;
 	private readonly ActionButton _join;
-	private readonly ActionButton? _internet;
-	private readonly ActionButton? _bluetooth;
+	private readonly TabButton? _internet;
+	private readonly TabButton? _bluetooth;
 	private readonly TextField _name;
 	private readonly TextField _address;
 	private readonly TextField _port;
@@ -84,8 +80,8 @@ internal sealed class ConnectionForm : Form
 		_host.Enabled = _join.Enabled = _canConnect && !_awaitsFill;
 		if (_internet is not null && _bluetooth is not null)
 		{
-			_internet.IsPrimary = !_overBluetooth;
-			_bluetooth.IsPrimary = _overBluetooth;
+			_internet.IsSelected = !_overBluetooth;
+			_bluetooth.IsSelected = _overBluetooth;
 			_internet.Enabled = _bluetooth.Enabled = _canConnect && !_awaitsFill;
 		}
 
@@ -133,17 +129,12 @@ internal sealed class ConnectionForm : Form
 			Connecting?.Invoke(this, EventArgs.Empty);
 	}
 
-	// A choice of two segments, each switching something through the dialog, which sets the fields again: the form shows
-	// that once Filled.
-	private ActionButton CreateSegment(
-		DrawingRectangle bounds,
-		string text,
-		Func<bool> isChosen,
-		Action click
-	)
+	// One of two choices, each switching something through the dialog, which sets the fields again: the form shows that
+	// once Filled.
+	private T AddChoice<T>(T button, Func<bool> isChosen, Action click)
+		where T : FlatButton
 	{
-		var segment = new ActionButton(_fonts) { Bounds = bounds, Text = text };
-		segment.Click += (_, _) =>
+		button.Click += (_, _) =>
 		{
 			if (!isChosen() && !_awaitsFill)
 			{
@@ -152,8 +143,33 @@ internal sealed class ConnectionForm : Form
 				click();
 			}
 		};
-		Controls.Add(segment);
-		return segment;
+		Controls.Add(button);
+		return button;
+	}
+
+	// A segment of the choice between hosting and joining.
+	private ActionButton CreateSegment(
+		DrawingRectangle bounds,
+		string text,
+		Func<bool> isChosen,
+		Action click
+	)
+	{
+		return AddChoice(
+			new ActionButton(_fonts) { Bounds = bounds, Text = text },
+			isChosen,
+			click
+		);
+	}
+
+	// A tab of the choice between the Internet and Bluetooth, which switches the panel's fields.
+	private TabButton CreateTab(DrawingRectangle bounds, string text, Func<bool> isChosen)
+	{
+		return AddChoice(
+			new TabButton(_fonts) { Bounds = bounds, Text = text },
+			isChosen,
+			() => BluetoothClicked?.Invoke(this, EventArgs.Empty)
+		);
 	}
 
 	private TextField CreateField(DrawingRectangle bounds, string title)
@@ -186,8 +202,7 @@ internal sealed class ConnectionForm : Form
 	{
 		_fonts = fonts;
 		_appHost = appHost;
-		_top = offersBluetooth ? 56 : 0;
-		_panelBounds = new DrawingRectangle(262, 176 - _top / 2, 500, 440 + _top);
+		_panelBounds = new DrawingRectangle(262, offersBluetooth ? 188 : 176, 500, 440);
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		BackColor = DrawingColor.Transparent;
 		KeyPreview = true;
@@ -207,21 +222,18 @@ internal sealed class ConnectionForm : Form
 		);
 		if (offersBluetooth)
 		{
-			_internet = CreateSegment(
-				new DrawingRectangle(x, y + 84, width / 2, 36),
+			_internet = CreateTab(
+				new DrawingRectangle(x, y - 44, 144, 32),
 				Texts.Internet,
-				() => !_overBluetooth,
-				() => BluetoothClicked?.Invoke(this, EventArgs.Empty)
+				() => !_overBluetooth
 			);
-			_bluetooth = CreateSegment(
-				new DrawingRectangle(x + width / 2, y + 84, width / 2, 36),
+			_bluetooth = CreateTab(
+				new DrawingRectangle(x + 160, y - 44, 144, 32),
 				Texts.Bluetooth,
-				() => _overBluetooth,
-				() => BluetoothClicked?.Invoke(this, EventArgs.Empty)
+				() => _overBluetooth
 			);
 		}
 
-		y += _top;
 		_name = CreateField(new DrawingRectangle(x, y + 124, width, 40), Texts.PlayerName);
 		_address = CreateField(new DrawingRectangle(x, y + 206, width, 40), Texts.Address);
 		_device = CreateField(new DrawingRectangle(x, y + 206, width, 40), Texts.HostDevice);
@@ -342,7 +354,7 @@ internal sealed class ConnectionForm : Form
 			_fonts.Bold(12),
 			Theme.Brass,
 			_panelBounds.X + 32,
-			_panelBounds.Y + _top + y,
+			_panelBounds.Y + y,
 			2
 		);
 	}
