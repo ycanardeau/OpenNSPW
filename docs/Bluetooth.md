@@ -8,8 +8,7 @@ This is a proposal, not a final design. [Open questions](#open-questions) lists 
 - The **ported game code does not change**. The connection dialog already handles a service provider it does not know (see [The game side](#the-game-side)).
 - **Otsuki** has general endpoints instead of IPv4 ones, and a transport that carries its datagrams over any reliable stream.
 - A new **Bluetooth Classic RFCOMM** connector supplies those streams, with code of its own for each OS: macOS and Windows so far.
-- **On macOS 26, a Mac can host but not join.** Its IOBluetooth delivers callbacks on the main thread, never completes SDP queries, and doesn't open channels to a computer (see [macOS 26](#macos-26)).
-- **The desktop app doesn't offer Bluetooth yet.** Its choice of Bluetooth in the multiplayer form is still in progress (see [The desktop app](#the-desktop-app)).
+- **On macOS 26, a Mac can host but not join.** Its IOBluetooth delivers callbacks on the main thread, never completes SDP queries, and doesn't open channels to a computer (see [macOS 26](#macos-26)). The desktop app doesn't offer Bluetooth there.
 - **Without any of this**, players can already use a Bluetooth PAN (IP over Bluetooth, set up in the OS) with the TCP/IP service provider.
 
 ## The game side
@@ -89,7 +88,7 @@ On macOS 26, IOBluetooth is a shim over CoreBluetooth's classic manager. Its log
 - **Channels to a computer aren't opened.** Opening the cached record's channel with the main run loop turning, `openRFCOMMChannelAsync:` returns success, and the shim first asks CoreBluetooth to connect the device ("Baseband connecting"). `bluetoothd` brings the link up and tries audio profiles such as AVRCP and A2DP, which a computer refuses. The shim never counts the device as connected, never opens the channel, and logs "Trying to close a channel that isn't open" after about 25 seconds. `openConnection` first times out the same way. When the computer had connected to the Mac first, the shim opened a channel to it at once.
 - **The last incoming channel stays behind.** `bluetoothd` keeps the last incoming channel of each channel number after it closes, and hands it to the next registration on that number. That registration fails to accept it ("RFCOMM_Accept failed with status 916") and then refuses the channels that remote devices open ("STATUS 121"). The record is used up by that failure, so the registration after it works. A second registration on the same number doesn't help: `bluetoothd` then accepts no channel on that number at all, and unregistering doesn't undo that. So the library publishes its service on a random channel, which avoids the last one used 29 times in 30.
 
-So on macOS 26 a Mac can host, but not join. `BluetoothTransport.CanConnect` is false there, and the desktop app is to offer no Bluetooth then, since its form offers joining too. The console chat still tries joining, to check later versions. Only 26.6.2 was checked.
+So on macOS 26 a Mac can host, but not join. `BluetoothTransport.CanConnect` is false there, and the desktop app then offers no Bluetooth, since its form offers joining too. The console chat still tries joining, to check later versions. Only 26.6.2 was checked.
 
 On Windows, `WindowsBluetoothConnector` uses Winsock's RFCOMM sockets (`AF_BTH`, `BTHPROTO_RFCOMM`) through .NET's `Socket`, with a `SOCKADDR_BTH` endpoint of its own:
 
@@ -120,7 +119,7 @@ Why Classic rather than Bluetooth Low Energy (BLE):
 Done:
 
 - **The GUID:** `DirectPlay8Peer.CLSID_DP8SP_BLUETOOTH` is {995513AF-3027-4B9A-956E-C772B3F78006}, as Wine's `dplay8.h` defines it. It lives in `OpenNspw.DirectPlay`, not in the port's [dplay8.cs](../OpenNSPW/OpenNspw/dplay8.cs), which the game uses as is.
-- **Turning it on:** the platform gives `DirectPlay8Factory` an `IBluetoothProvider`, which creates the transport of a session and asks the player for the host's device. Without one, nothing changes: the dialog lists only TCP/IP. A platform must give one only where the app may use Bluetooth (see [The Bluetooth connector](#the-bluetooth-connector)). The desktop app doesn't give one yet.
+- **Turning it on:** the platform gives `DirectPlay8Factory` an `IBluetoothProvider`, which creates the transport of a session and asks the player for the host's device. Without one, nothing changes: the dialog lists only TCP/IP. A platform must give one only where the app may use Bluetooth (see [The Bluetooth connector](#the-bluetooth-connector)).
 - **Listing it:** with a provider, `EnumServiceProviders` lists "DirectPlay8 Bluetooth Service Provider" after TCP/IP, and `GetSPCaps` answers for it as it does for TCP/IP: no adapters of its own, and all adapters supported.
 - **Hosting:** `Host` with the Bluetooth provider hosts from `BluetoothEndPoint.Any`. The peer's transport factory sends sessions from Bluetooth endpoints to the provider, and all others to UDP.
 - **Joining:** `Connect` with the Bluetooth provider takes the host from the address's host name. The game gives none, so with `DPNCONNECT_OKTOQUERYFORADDRESSING` it calls `IBluetoothProvider.ChooseHost`, which shows the device picker.
@@ -131,9 +130,9 @@ Done:
 - **Tests:** `NetworkTests` play through the connection dialogs over `LoopbackBluetooth`, a provider on the in-memory streams of Otsuki's tests, from the host's click on OK to the start of the game. They also check that only TCP/IP is listed without a provider, and that a guest who chooses no device stays in the dialog.
 
 ## The desktop app
-In progress, written and checked with a fake Bluetooth:
+Done:
 
-- **When it offers Bluetooth:** `DesktopBluetooth` is the app's `IBluetoothProvider`. The app creates one only when it can join over Bluetooth (`BluetoothTransport.CanConnect`, false from macOS 26 on) and may use it (`BluetoothTransport.IsAllowed`): always on Windows, and on macOS when its `Info.plist` declares `NSBluetoothAlwaysUsageDescription`, which `tools/package-macos-app.sh` is to write into OpenNSPW.app. Checking reads the bundle and touches no Bluetooth. `OPENNSPW_BLUETOOTH=1` turns it on anyway: for a build run from a terminal that may use Bluetooth, or to try a later macOS.
+- **When it offers Bluetooth:** `DesktopBluetooth` is the app's `IBluetoothProvider`. The app creates one only when it can join over Bluetooth (`BluetoothTransport.CanConnect`, false from macOS 26 on) and may use it (`BluetoothTransport.IsAllowed`): always on Windows, and on macOS when its `Info.plist` declares `NSBluetoothAlwaysUsageDescription`, which `tools/package-macos-app.sh` now writes into OpenNSPW.app. Checking reads the bundle and touches no Bluetooth. `OPENNSPW_BLUETOOTH=1` turns it on anyway: for a build run from a terminal that may use Bluetooth, or to try a later macOS.
 - **The service:** hosts publish the game's application GUID (`g_guidApp`) as their service's UUID, under the name "OpenNSPW".
 - **The form:** where Bluetooth is offered, the multiplayer form chooses between the Internet and Bluetooth, the dialog's two service providers, below the choice between hosting and joining.
   - Over Bluetooth, a host sees the computer's own address, to tell the guest.
@@ -142,7 +141,7 @@ In progress, written and checked with a fake Bluetooth:
   - An address that isn't one is reported under the form, and nothing is sent to the game.
   - The form touches Bluetooth only once Bluetooth is chosen, since the first call may ask the user for permission.
 - **The dialog remembers the provider:** the game saves the provider used last ("Preferred Provider"), as the original does, so the form opens on Bluetooth after a game over Bluetooth. The form reads it from the dialog once the dialog has handled `WM_INITDIALOG`.
-- **Long names:** an `ActionButton` cuts text too wide for it with an ellipsis, for long device names.
+- **Long names:** an `ActionButton` now cuts text too wide for it with an ellipsis, for long device names.
 - **Checked:** with a fake Bluetooth and scripted clicks, the form was checked through switching between the Internet and Bluetooth, hosting and joining, a wrong address, a paired device, Back while connecting, a second visit, and hosting into the waiting dialog. Nothing went over real Bluetooth.
 
 ## Steps
@@ -154,7 +153,7 @@ Each step builds and is tested on its own:
    - The connector publishes the service even for a guest. So two chats on one Mac both register the same channel, and when one goes, the other may stop receiving channels.
    - After a failed join, the console chat hung on exit and had to be killed.
 4. **The Bluetooth service provider** in `OpenNspw.DirectPlay`. Done, with a loopback provider in `NetworkTests`.
-5. **The desktop app's provider**: the Bluetooth choice and the device picker in the multiplayer form, `NSBluetoothAlwaysUsageDescription` in the app's `Info.plist`, and a provider given only when the app has that key. In progress: written and checked with a fake Bluetooth.
+5. **The desktop app's provider**: the Bluetooth choice and the device picker in the multiplayer form, `NSBluetoothAlwaysUsageDescription` in the app's `Info.plist`, and a provider given only when the app has that key. Done.
 6. **A manual two-machine game**, run through the whole lifecycle: game end, Back, play again, close.
 7. **Windows, then Linux connectors.** Test each against the macOS one. The Windows connector is built and checked on one computer (see [The Bluetooth connector](#the-bluetooth-connector)). Windows joined a chat hosted on a Mac on macOS 26.6.2: joining, chatting both ways and leaving all worked. Still to do: play between two computers, Windows with Windows and Windows with a Mac.
 8. **Document** pairing and Bluetooth PAN for players.

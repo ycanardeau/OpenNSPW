@@ -44,16 +44,20 @@ internal sealed class Sound(SoundEffect effect) : ISound, IDisposable
 }
 
 // The platform of the desktop app: the game's files in their layers (GameData), its sprites from the app's, DirectPlay 8
-// on Otsuki, MonoGame sound, text rasterized with a TrueType font, and settings in a JSON file.
-internal sealed partial class DesktopPlatform(GameFileLayers files, TextRasterizer text)
-	: INspwPlatform
+// on Otsuki, with Bluetooth when `bluetooth` is given, MonoGame sound, text rasterized with a TrueType font, and
+// settings in a JSON file.
+internal sealed partial class DesktopPlatform(
+	GameFileLayers files,
+	TextRasterizer text,
+	IBluetoothProvider? bluetooth = null
+) : INspwPlatform
 {
 	// How the settings are read and written, generated, so that trimming keeps what it needs.
 	[JsonSerializable(typeof(Dictionary<string, string>))]
 	private sealed partial class SettingsJson : JsonSerializerContext;
 
 	private readonly GameFileLayers _files = files;
-	private readonly DirectPlay8Factory _directPlay = new();
+	private readonly DirectPlay8Factory _directPlay = new(bluetooth: bluetooth);
 	private readonly TextRasterizer _text = text;
 	private readonly List<Sound> _sounds = [];
 	private readonly Stopwatch _clock = Stopwatch.StartNew();

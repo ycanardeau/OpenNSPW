@@ -4,10 +4,11 @@ using System.Text.Json.Serialization;
 
 namespace OpenNspw.Desktop;
 
-// What the UI remembers between runs, beside the game's own settings (DesktopPlatform): the language chosen.
+// What the UI remembers between runs, beside the game's own settings (DesktopPlatform): the language chosen, and the
+// Bluetooth device joined last.
 internal static partial class UISettings
 {
-	private sealed record Saved(Language? Language);
+	private sealed record Saved(Language? Language, string? BluetoothHost = null);
 
 	// How Saved is read and written, generated, so that trimming keeps what it needs: the language by its name.
 	[JsonSourceGenerationOptions(UseStringEnumConverter = true)]
@@ -33,6 +34,22 @@ internal static partial class UISettings
 		}
 	}
 
+	private static void Save(Func<Saved, Saved> change)
+	{
+		try
+		{
+			Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
+			File.WriteAllText(
+				FilePath,
+				JsonSerializer.Serialize(change(Load()), SavedJson.Default.Saved)
+			);
+		}
+		catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+		{
+			// What was to be saved is still used for this run.
+		}
+	}
+
 	// The language chosen last, or the system's: Japanese on a Japanese system, English on any other.
 	public static Language LoadLanguage()
 	{
@@ -46,23 +63,17 @@ internal static partial class UISettings
 
 	public static void SaveLanguage(Language language)
 	{
-		try
-		{
-			Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-			File.WriteAllText(
-				FilePath,
-				JsonSerializer.Serialize(
-					Load() with
-					{
-						Language = language,
-					},
-					SavedJson.Default.Saved
-				)
-			);
-		}
-		catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-		{
-			// The language is still used for this run.
-		}
+		Save(saved => saved with { Language = language });
+	}
+
+	// The address of the Bluetooth device joined last, as typed.
+	public static string LoadBluetoothHost()
+	{
+		return Load().BluetoothHost ?? "";
+	}
+
+	public static void SaveBluetoothHost(string address)
+	{
+		Save(saved => saved with { BluetoothHost = address });
 	}
 }

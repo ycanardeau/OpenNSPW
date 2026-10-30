@@ -12,9 +12,9 @@ namespace OpenNspw.DirectPlay;
 public sealed unsafe class DirectPlay8Peer(PeerOptions? options, IBluetoothProvider? bluetooth)
 	: IDirectPlay8Peer
 {
-	private const string TcpIPName = "DirectPlay8 TCP/IP Service Provider";
+	public const string TcpIPName = "DirectPlay8 TCP/IP Service Provider";
 
-	private const string BluetoothName = "DirectPlay8 Bluetooth Service Provider";
+	public const string BluetoothName = "DirectPlay8 Bluetooth Service Provider";
 
 	// DPNERR_ADDRESSING: an address is missing something it needs.
 	private const int DPNERR_ADDRESSING = unchecked((int)0x80158040);

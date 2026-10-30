@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended.ViewportAdapters;
+using OpenNspw.DirectPlay;
 using DrawingPoint = System.Drawing.Point;
 using XnaKeys = Microsoft.Xna.Framework.Input.Keys;
 
@@ -131,15 +132,16 @@ internal sealed class GameSession : IDisposable
 
 	// files: the game's files (GameData). singleplayer: a scenario of NSPW 1.22, to play it against the computer
 	// (docs/Singleplayer.md) instead of connecting to a rival. replay: a trace of 1.22 in that scenario, which
-	// the game follows, and which the session disposes.
+	// the game follows, and which the session disposes. bluetooth: Bluetooth to connect over, if the app may use it.
 	public GameSession(
 		GameFileLayers files,
 		TextRasterizer text,
 		int? singleplayer = null,
-		Trace122Replay? replay = null
+		Trace122Replay? replay = null,
+		IBluetoothProvider? bluetooth = null
 	)
 	{
-		_platform = new DesktopPlatform(files, text);
+		_platform = new DesktopPlatform(files, text, bluetooth);
 		Game = new Nspw(_platform);
 		_platform.CaptureState = () => _captured.CopyFrom(Game);
 		if (singleplayer is { } scenario)

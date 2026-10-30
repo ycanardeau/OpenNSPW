@@ -71,6 +71,21 @@ internal static class Texts
 	public static string HostAddressPlaceholder =>
 		Pick("A host listens on its port", "ホストは指定したポートで接続を待ちます");
 	public static string JoinAddressPlaceholder => Pick("The host's address", "ホストのアドレス");
+	public static string Internet => Pick("Internet", "インターネット");
+	public static string Bluetooth => "Bluetooth";
+	public static string HostDevice =>
+		Pick("HOST'S BLUETOOTH ADDRESS", "ホストの Bluetooth アドレス");
+	public static string ThisDevice =>
+		Pick("THIS COMPUTER'S BLUETOOTH ADDRESS", "このコンピューターの Bluetooth アドレス");
+	public static string HostDevicePlaceholder =>
+		Pick("Such as 00:1A:7D:DA:71:13", "例: 00:1A:7D:DA:71:13");
+	public static string BluetoothOff => Pick("Bluetooth is off", "Bluetooth がオフです");
+	public static string PairedDevices => Pick("PAIRED DEVICES", "ペアリング済みのデバイス");
+	public static string InvalidBluetoothAddress =>
+		Pick(
+			"Enter the host's Bluetooth address, such as 00:1A:7D:DA:71:13, or choose a paired device.",
+			"ホストの Bluetooth アドレス（例: 00:1A:7D:DA:71:13）を入力するか、ペアリング済みのデバイスを選んでください。"
+		);
 	public static string Connecting => Pick("Connecting…", "接続中…");
 	public static string HostGame => Pick("Host Game", "ホストとして開始");
 	public static string JoinGame => Pick("Join Game", "参加");

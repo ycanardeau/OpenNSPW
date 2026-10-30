@@ -39,6 +39,8 @@ ln -s ../Resources/Fonts "$app/Contents/MacOS/Fonts"
 mv "$app/Contents/MacOS/OriginalNotice.txt" "$app/Contents/Resources/OriginalNotice.txt"
 
 # The bundle's versions are numbers only, so a prerelease such as 0.0.1-alpha.4 is 0.0.1.
+# NSBluetoothAlwaysUsageDescription lets the app use Bluetooth: macOS kills an app that uses it without saying why, and
+# the app offers Bluetooth only when its Info.plist says (DesktopBluetooth).
 cat > "$app/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -66,6 +68,8 @@ cat > "$app/Contents/Info.plist" <<EOF
 	<string>${version%%-*}</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.strategy-games</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>OpenNSPW plays against a nearby computer over Bluetooth.</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 </dict>
