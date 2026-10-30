@@ -5,6 +5,19 @@
 #import <Foundation/Foundation.h>
 #import <IOBluetooth/IOBluetooth.h>
 
+// Whether to log each step to standard error, to find where a channel stops: when OTSUKI_BLUETOOTH_LOG is 1.
+static BOOL OtsukiBluetoothLogging(void)
+{
+	static BOOL logging;
+	static dispatch_once_t once;
+	dispatch_once(&once, ^{
+		logging = [NSProcessInfo.processInfo.environment[@"OTSUKI_BLUETOOTH_LOG"] isEqualToString:@"1"];
+	});
+	return logging;
+}
+
+#define OTSUKI_LOG(...) do { if (OtsukiBluetoothLogging()) NSLog(@"Otsuki Bluetooth: " __VA_ARGS__); } while (0)
+
 typedef struct
 {
 	// A remote device opened a channel to the published service.
@@ -41,6 +54,7 @@ typedef struct
 	@autoreleasepool
 	{
 		NSRunLoop *runLoop = NSRunLoop.currentRunLoop;
+		OTSUKI_LOG(@"run loop started");
 		// A run loop without sources returns at once; the port keeps it waiting for performed selectors.
 		[runLoop addPort:NSMachPort.port forMode:NSDefaultRunLoopMode];
 		while (!_stopped)
@@ -104,6 +118,8 @@ typedef struct
 		return;
 
 	int64_t channelId = [self addChannel:channel];
+	OTSUKI_LOG(@"%@ opened channel %u as %lld", [[channel getDevice] addressString], (unsigned)[channel getChannelID],
+	           (long long)channelId);
 	[channel setDelegate:self];
 	_callbacks.accepted(_context, channelId, [[channel getDevice] getAddress]->data);
 }
@@ -126,12 +142,16 @@ typedef struct
 	};
 	_record = [IOBluetoothSDPServiceRecord publishedServiceRecordWithDictionary:record];
 	if (_record == nil)
+	{
+		OTSUKI_LOG(@"could not publish the service %@", name);
 		return kIOReturnError;
+	}
 
 	BluetoothRFCOMMChannelID channelId;
 	IOReturn status = [_record getRFCOMMChannelID:&channelId];
 	if (status != kIOReturnSuccess)
 	{
+		OTSUKI_LOG(@"published the service %@ without a channel (0x%08X)", name, status);
 		[_record removeServiceRecord];
 		_record = nil;
 		return status;
@@ -141,6 +161,8 @@ typedef struct
 	                                                                     selector:@selector(channelOpened:channel:)
 	                                                                withChannelID:channelId
 	                                                                    direction:kIOBluetoothUserNotificationChannelDirectionIncoming];
+	OTSUKI_LOG(@"published the service %@ on channel %u, %@", name, (unsigned)channelId,
+	           _notification == nil ? @"but cannot be told of channels" : @"waiting for channels");
 	return kIOReturnSuccess;
 }
 
@@ -162,6 +184,8 @@ typedef struct
 	IOBluetoothRFCOMMChannel *channel = nil;
 	if (status == kIOReturnSuccess)
 		status = [device openRFCOMMChannelAsync:&channel withChannelID:channelId delegate:self];
+	OTSUKI_LOG(@"%@ %@ the service; opening its channel: 0x%08X", device.addressString,
+	           record == nil ? @"does not have" : @"has", status);
 	if (status == kIOReturnSuccess && channel != nil)
 		[_opening setObject:request forKey:channel];
 	else
@@ -172,6 +196,7 @@ typedef struct
 {
 	NSData *address = [NSData dataWithBytes:[device getAddress] length:sizeof(BluetoothDeviceAddress)];
 	NSMutableArray<NSArray *> *waiting = _queries[address];
+	OTSUKI_LOG(@"SDP query of %@ completed: 0x%08X", device.addressString, status);
 	[_queries removeObjectForKey:address];
 	for (NSArray *entry in waiting)
 	{
@@ -199,6 +224,7 @@ typedef struct
 	IOReturn status = device == nil
 		? kIOReturnNotFound
 		: [device performSDPQuery:self uuids:@[ [IOBluetoothSDPUUID uuidWithData:service] ]];
+	OTSUKI_LOG(@"querying SDP of %@: 0x%08X", device.addressString, status);
 	if (status == kIOReturnSuccess)
 		_queries[address] = [NSMutableArray arrayWithObject:@[ request, service ]];
 	else
@@ -226,8 +252,11 @@ typedef struct
 			// The chunk must live until the write completes, so the refcon holds it.
 			NSData *chunk = [data subdataWithRange:NSMakeRange(offset, MIN(mtu, data.length - offset))];
 			void *refcon = (__bridge_retained void *)chunk;
-			if ([channel writeAsync:(void *)chunk.bytes length:(UInt16)chunk.length refcon:refcon] != kIOReturnSuccess)
+			IOReturn status = [channel writeAsync:(void *)chunk.bytes length:(UInt16)chunk.length refcon:refcon];
+			if (status != kIOReturnSuccess)
 			{
+				OTSUKI_LOG(@"could not write %lu bytes to %lld: 0x%08X", (unsigned long)chunk.length, channelId,
+				           status);
 				// Nothing was sent. The rest is lost too, so that the stream does not skip bytes.
 				CFBridgingRelease(refcon);
 				break;
@@ -279,6 +308,8 @@ typedef struct
 		return;
 
 	[_opening removeObjectForKey:channel];
+	OTSUKI_LOG(@"opened channel %u of %@: 0x%08X", (unsigned)[channel getChannelID], [[channel getDevice] addressString],
+	           error);
 	if (error != kIOReturnSuccess)
 	{
 		[channel setDelegate:nil];
@@ -292,12 +323,14 @@ typedef struct
 - (void)rfcommChannelData:(IOBluetoothRFCOMMChannel *)channel data:(void *)data length:(size_t)length
 {
 	NSNumber *channelId = [_channelIds objectForKey:channel];
+	OTSUKI_LOG(@"received %zu bytes on %@", length, (id)channelId ?: @"a channel it does not know");
 	if (channelId != nil)
 		_callbacks.received(_context, channelId.longLongValue, data, (int32_t)length);
 }
 
 - (void)rfcommChannelClosed:(IOBluetoothRFCOMMChannel *)channel
 {
+	OTSUKI_LOG(@"channel %u of %@ closed", (unsigned)[channel getChannelID], [[channel getDevice] addressString]);
 	NSNumber *request = [_opening objectForKey:channel];
 	if (request != nil)
 	{
