@@ -6,6 +6,7 @@ using System.Threading.Channels;
 using Aigamo.Otsuki.Enumeration;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Session;
+using Aigamo.Otsuki.Transport;
 
 namespace Aigamo.Otsuki;
 
@@ -48,7 +49,7 @@ public sealed class Peer : IAsyncDisposable
 
 	private SessionSnapshot Snapshot => Volatile.Read(ref _snapshot);
 
-	public IPEndPoint? LocalEndPoint => Snapshot.LocalEndPoint;
+	public EndPoint? LocalEndPoint => Snapshot.LocalEndPoint;
 
 	public Dpnid LocalPlayer => Snapshot.LocalPlayer;
 
@@ -168,9 +169,10 @@ public sealed class Peer : IAsyncDisposable
 		));
 
 	/// <summary>
-	/// Creates a session with the local player as host. <see cref="PeerEvent.PlayerCreated"/> follows for the local player.
+	/// Creates a session with the local player as host, listening on <paramref name="localEndPoint"/>.
+	/// <see cref="PeerEvent.PlayerCreated"/> follows for the local player.
 	/// </summary>
-	public Task HostAsync(ApplicationDescription application, int port = DefaultPort)
+	public Task HostAsync(ApplicationDescription application, EndPoint localEndPoint)
 	{
 		const SessionFlags signing = SessionFlags.FastSigned | SessionFlags.FullSigned;
 		if ((application.Flags & signing) == signing)
@@ -181,14 +183,44 @@ public sealed class Peer : IAsyncDisposable
 
 		return PostCommandAsync(completion => new SessionMessage.Host(
 			application,
-			new IPEndPoint(IPAddress.Any, port),
+			localEndPoint,
 			completion
 		));
 	}
 
 	/// <summary>
-	/// Starts joining the session hosted at <paramref name="hostEndPoint"/>. The task completes once the attempt
-	/// has started; its outcome is reported by <see cref="PeerEvent.ConnectCompleted"/>.
+	/// Creates a session with the local player as host, listening on <paramref name="port"/> of every IPv4 address.
+	/// <see cref="PeerEvent.PlayerCreated"/> follows for the local player.
+	/// </summary>
+	public Task HostAsync(ApplicationDescription application, int port = DefaultPort) =>
+		HostAsync(application, new IPEndPoint(IPAddress.Any, port));
+
+	/// <summary>
+	/// Starts joining the session hosted at <paramref name="hostEndPoint"/>, from <paramref name="localEndPoint"/>.
+	/// It may be left out for an <see cref="IPEndPoint"/>, to use any local address and port. The task completes once
+	/// the attempt has started; its outcome is reported by <see cref="PeerEvent.ConnectCompleted"/>.
+	/// </summary>
+	public Task ConnectAsync(
+		ApplicationDescription application,
+		EndPoint hostEndPoint,
+		EndPoint? localEndPoint = null,
+		byte[]? connectData = null
+	)
+	{
+		var local = localEndPoint ?? AnyEndPoint.For(hostEndPoint);
+		return PostCommandAsync(completion => new SessionMessage.Connect(
+			application,
+			hostEndPoint,
+			local,
+			connectData is null ? [] : [.. connectData],
+			completion
+		));
+	}
+
+	/// <summary>
+	/// Starts joining the session hosted at <paramref name="hostEndPoint"/>, from <paramref name="localPort"/> of
+	/// every IPv4 address. The task completes once the attempt has started; its outcome is reported by
+	/// <see cref="PeerEvent.ConnectCompleted"/>.
 	/// </summary>
 	public Task ConnectAsync(
 		ApplicationDescription application,
@@ -196,13 +228,12 @@ public sealed class Peer : IAsyncDisposable
 		int localPort = 0,
 		byte[]? connectData = null
 	) =>
-		PostCommandAsync(completion => new SessionMessage.Connect(
+		ConnectAsync(
 			application,
 			hostEndPoint,
 			new IPEndPoint(IPAddress.Any, localPort),
-			connectData is null ? [] : [.. connectData],
-			completion
-		));
+			connectData
+		);
 
 	public async Task ConnectAsync(
 		ApplicationDescription application,
@@ -254,7 +285,7 @@ public sealed class Peer : IAsyncDisposable
 	/// <param name="guidApplication">Only hosts of this application answer; <see langword="null"/> asks every host.</param>
 	/// <param name="payload">Application-specific data sent with each query.</param>
 	public IAsyncEnumerable<EnumeratedHost> EnumHostsAsync(
-		IPEndPoint target,
+		EndPoint target,
 		Guid? guidApplication = null,
 		byte[]? payload = null,
 		EnumHostsOptions? options = null,

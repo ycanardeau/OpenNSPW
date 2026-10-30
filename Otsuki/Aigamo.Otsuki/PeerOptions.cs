@@ -13,10 +13,16 @@ public sealed record PeerOptions
 	public ReliableProfile ReliableProfile { get; init; } = ReliableProfile.Default;
 
 	/// <summary>
-	/// Creates the transport bound to the given local endpoint. Defaults to a UDP socket.
+	/// Creates the transport bound to the given local endpoint. Defaults to a UDP socket, which binds only to an
+	/// <see cref="IPEndPoint"/>; other kinds of endpoint need a transport of their own.
 	/// </summary>
-	public Func<IPEndPoint, IDatagramTransport> TransportFactory { get; init; } =
-		localEndPoint => new UdpDatagramTransport(localEndPoint);
+	public Func<EndPoint, IDatagramTransport> TransportFactory { get; init; } =
+		localEndPoint =>
+			localEndPoint is IPEndPoint ipEndPoint
+				? new UdpDatagramTransport(ipEndPoint)
+				: throw new NotSupportedException(
+					$"UDP cannot bind to {localEndPoint}. Set {nameof(TransportFactory)} to a transport for it."
+				);
 
 	/// <summary>
 	/// How long a joining peer may take from connecting to the host until it is in the session.

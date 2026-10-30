@@ -14,7 +14,7 @@ internal abstract record ReliableEndpointMessage
 {
 	private ReliableEndpointMessage() { }
 
-	public sealed record DatagramReceived(IPEndPoint RemoteEndPoint, byte[] Datagram)
+	public sealed record DatagramReceived(EndPoint RemoteEndPoint, byte[] Datagram)
 		: ReliableEndpointMessage;
 
 	public sealed record RegisterConnection(Connection Connection) : ReliableEndpointMessage;
@@ -24,7 +24,7 @@ internal abstract record ReliableEndpointMessage
 	/// <summary>
 	/// Sends a datagram outside any connection, such as a host enumeration response.
 	/// </summary>
-	public sealed record SendDatagram(IPEndPoint RemoteEndPoint, byte[] Datagram)
+	public sealed record SendDatagram(EndPoint RemoteEndPoint, byte[] Datagram)
 		: ReliableEndpointMessage;
 
 	/// <summary>
@@ -45,11 +45,11 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 	private readonly TimeProvider _timeProvider;
 	private readonly ReliableProfile _profile;
 	private readonly IConnectionObserver _observer;
-	private readonly Dictionary<IPEndPoint, Connection> _connections = [];
+	private readonly Dictionary<EndPoint, Connection> _connections = [];
 	private bool _shutDown;
 	private PacketSigning _signing;
 
-	public IPEndPoint LocalEndPoint => _transport.LocalEndPoint;
+	public EndPoint LocalEndPoint => _transport.LocalEndPoint;
 
 	public ReliableEndpoint(
 		IDatagramTransport transport,
@@ -69,7 +69,7 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 		);
 	}
 
-	private Connection CreateConnection(IPEndPoint remoteEndPoint, bool isOutbound) =>
+	private Connection CreateConnection(EndPoint remoteEndPoint, bool isOutbound) =>
 		new(
 			remoteEndPoint,
 			isOutbound,
@@ -85,7 +85,7 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 	/// Creates an outbound connection. It starts connecting once the endpoint has registered it.
 	/// Thread-safe: only reads immutable state.
 	/// </summary>
-	public Connection Connect(IPEndPoint remoteEndPoint)
+	public Connection Connect(EndPoint remoteEndPoint)
 	{
 		var connection = CreateConnection(remoteEndPoint, isOutbound: true);
 		if (!Post(new ReliableEndpointMessage.RegisterConnection(connection)))

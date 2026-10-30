@@ -12,7 +12,7 @@ namespace Aigamo.Otsuki;
 /// <param name="ResponseData">The data that the host set with <see cref="Peer.SetEnumResponseData"/>.</param>
 /// <param name="RoundTripTime">The time from the query to this response.</param>
 public sealed record EnumeratedHost(
-	IPEndPoint HostEndPoint,
+	EndPoint HostEndPoint,
 	ApplicationDescription Application,
 	int CurrentPlayers,
 	ImmutableArray<byte> ResponseData,

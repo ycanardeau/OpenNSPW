@@ -22,8 +22,8 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options) : IDirectPlay8P
 	private PFNDPNMESSAGEHANDLER? _handler;
 	private object? _userContext;
 
-	// The local endpoint of the session, once hosting or connected.
-	public IPEndPoint? LocalEndPoint => _peer.LocalEndPoint;
+	// The local endpoint of the session, once hosting or connected. Only TCP/IP exists, so it is an IP endpoint.
+	public IPEndPoint? LocalEndPoint => (IPEndPoint?)_peer.LocalEndPoint;
 
 	private static ApplicationDescription ToApplication(DPN_APPLICATION_DESC desc)
 	{

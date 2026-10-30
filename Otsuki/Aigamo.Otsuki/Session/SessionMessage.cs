@@ -60,14 +60,14 @@ internal abstract record SessionMessage
 
 	public sealed record Host(
 		ApplicationDescription Application,
-		IPEndPoint LocalEndPoint,
+		EndPoint LocalEndPoint,
 		TaskCompletionSource Completion
 	) : SessionMessage;
 
 	public sealed record Connect(
 		ApplicationDescription Application,
-		IPEndPoint HostEndPoint,
-		IPEndPoint LocalEndPoint,
+		EndPoint HostEndPoint,
+		EndPoint LocalEndPoint,
 		ImmutableArray<byte> ConnectData,
 		TaskCompletionSource Completion
 	) : SessionMessage;
@@ -94,10 +94,8 @@ internal abstract record SessionMessage
 	public sealed record ConnectionDisconnected(Connection Connection, ResultCode Result)
 		: SessionMessage;
 
-	public sealed record EnumQueryReceived(
-		IPEndPoint RemoteEndPoint,
-		EnumerationMessage.Query Query
-	) : SessionMessage;
+	public sealed record EnumQueryReceived(EndPoint RemoteEndPoint, EnumerationMessage.Query Query)
+		: SessionMessage;
 
 	/// <summary>
 	/// Sets the data that the host returns in host enumeration responses.

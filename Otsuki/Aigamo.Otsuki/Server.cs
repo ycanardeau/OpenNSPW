@@ -15,7 +15,7 @@ public sealed class Server(PeerOptions? options = null) : IAsyncDisposable
 {
 	private readonly Peer _peer = new(options);
 
-	public IPEndPoint? LocalEndPoint => _peer.LocalEndPoint;
+	public EndPoint? LocalEndPoint => _peer.LocalEndPoint;
 
 	/// <summary>
 	/// The server's own player.
@@ -43,8 +43,21 @@ public sealed class Server(PeerOptions? options = null) : IAsyncDisposable
 	public Task SetServerInfo(string name, byte[]? data = null) => _peer.SetPeerInfo(name, data);
 
 	/// <summary>
-	/// Creates the session. <see cref="SessionFlags.ClientServer"/> is added to the flags, and host migration does
-	/// not apply.
+	/// Creates the session, listening on <paramref name="localEndPoint"/>. <see cref="SessionFlags.ClientServer"/> is
+	/// added to the flags, and host migration does not apply.
+	/// </summary>
+	public Task HostAsync(ApplicationDescription application, EndPoint localEndPoint) =>
+		_peer.HostAsync(
+			application with
+			{
+				Flags = application.Flags | SessionFlags.ClientServer,
+			},
+			localEndPoint
+		);
+
+	/// <summary>
+	/// Creates the session, listening on <paramref name="port"/> of every IPv4 address.
+	/// <see cref="SessionFlags.ClientServer"/> is added to the flags, and host migration does not apply.
 	/// </summary>
 	public Task HostAsync(ApplicationDescription application, int port = Peer.DefaultPort) =>
 		_peer.HostAsync(

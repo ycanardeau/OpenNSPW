@@ -22,7 +22,7 @@ So a Bluetooth provider only has to be listed by `DirectPlay8Peer.EnumServicePro
 The provider list is sorted, so "DirectPlay8 Bluetooth Service Provider" would come before TCP/IP. TCP/IP still stays selected by default, because the saved "Preferred Provider" defaults to "DirectPlay8 TCP/IP Service Provider" ([win_main.cs](../OpenNSPW/OpenNspw/win_main.cs)).
 
 ## Otsuki
-Otsuki assumes IPv4 in these places:
+Otsuki assumed IPv4 in these places:
 
 | Where | What |
 | --- | --- |
@@ -33,16 +33,21 @@ Otsuki assumes IPv4 in these places:
 | `HostEnumerator`, `EnumeratedHost` | Enumeration is a UDP query, possibly to a broadcast address |
 
 ### Endpoints
-Use `System.Net.EndPoint` in all of the places above except enumeration. A Bluetooth endpoint is a new record holding the device address (`BD_ADDR`) and the RFCOMM channel. Being a record gives it the value equality that the connection table needs.
+Done: Otsuki uses `System.Net.EndPoint` in all of the places above.
+
+- `Peer`, `Client` and `Server` take a local endpoint of any kind. Their `int` port overloads still bind to every IPv4 address, and connecting or enumerating without a local endpoint does so too when the remote one is an `IPEndPoint`. For other kinds, the local endpoint must be given.
+- `PeerOptions.TransportFactory` receives the local endpoint. The default UDP transport accepts only an `IPEndPoint`.
+- A Bluetooth endpoint will be a new `EndPoint` subclass holding the device address (`BD_ADDR`) and the RFCOMM channel, with value equality for the connection table. It can't be a record, because `EndPoint` is a class.
 
 `DirectPlayUrl` maps each endpoint type to its provider:
 
 - TCP/IP stays as it is.
-- Bluetooth uses `provider={CLSID_DP8SP_BLUETOOTH};hostname=<BD_ADDR>;port=<channel>`. No documented DirectPlay URL format for Bluetooth exists, and only OpenNSPW peers will read these, so the keys are our choice.
+- Other endpoints get an empty URL for now.
+- Bluetooth will use `provider={CLSID_DP8SP_BLUETOOTH};hostname=<BD_ADDR>;port=<channel>`. No documented DirectPlay URL format for Bluetooth exists, and only OpenNSPW peers will read these, so the keys are our choice.
 
-Peers send these URLs to each other while joining (`ICanIntroduceSelf`, `ICanAdmitPlayers`, `ICanReceiveConnectInfo`). NSPW sessions have two players, so a guest never has to connect to a third peer through them. They still have to be built and parsed without failing.
+Peers send these URLs to each other while joining (`ICanIntroduceSelf`, `ICanAdmitPlayers`, `ICanReceiveConnectInfo`), and a peer connects to another by its URL only when a third peer joins a peer-to-peer session. So an empty URL works for two peers, as in NSPW, or for a server and its clients.
 
-UDP behaviour must stay exactly as it is. This step changes types only.
+UDP behaviour stays exactly as it was.
 
 ### Datagrams over a stream
 RFCOMM gives a reliable byte stream, not datagrams. A `StreamDatagramTransport` adapts one to `IDatagramTransport`:
@@ -54,7 +59,7 @@ RFCOMM gives a reliable byte stream, not datagrams. A `StreamDatagramTransport` 
 
 Otsuki's reliable protocol then runs on top of a stream that is already reliable. That is wasteful but harmless. It never sees loss, so it never resends. Its acknowledgements and keep-alives still detect a peer that is gone.
 
-Enumeration stays UDP only. The game never enumerates, and Bluetooth finds peers in a different way (see the device picker under [The DirectPlay layer](#the-directplay-layer)).
+Enumeration needs no Bluetooth support. The game never enumerates, and Bluetooth finds peers in a different way (see the device picker under [The DirectPlay layer](#the-directplay-layer)).
 
 ## The Bluetooth connector
 **Bluetooth Classic RFCOMM**, registered in SDP under a fixed OpenNSPW service UUID. The host listens on it, and a guest connects to that service on the chosen device.
@@ -87,7 +92,7 @@ Why Classic rather than Bluetooth Low Energy (BLE):
 ## Steps
 Each step builds and is tested on its own:
 
-1. **Generalize Otsuki's endpoints.** Change types only. All Otsuki and OpenNSPW network tests pass unchanged, and the in-memory test network gets a non-IP endpoint test.
+1. **Generalize Otsuki's endpoints.** Done. All Otsuki and OpenNSPW network tests pass, and `NamedEndPointTests` run a session over endpoints that are not IP addresses.
 2. **`StreamDatagramTransport`.** Test it with in-memory stream pairs: framing, opening a stream on first send, accepting, a peer that disappears. Then run a whole two-peer session over it.
 3. **The macOS RFCOMM connector.** Try it first with a small console app between two Macs.
 4. **The Bluetooth service provider** in `OpenNspw.DirectPlay`, with a fake connector in tests, so that `NetworkTests` can play a game over it.

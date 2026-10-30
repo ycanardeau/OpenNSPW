@@ -21,7 +21,7 @@ public class UdpPeerTests
 
 		await joiner.ConnectAsync(
 			application,
-			new IPEndPoint(IPAddress.Loopback, host.LocalEndPoint!.Port)
+			new IPEndPoint(IPAddress.Loopback, ((IPEndPoint)host.LocalEndPoint!).Port)
 		);
 
 		(await joinerLog.WaitForAsync<PeerEvent.ConnectCompleted>())

@@ -26,12 +26,17 @@ internal sealed record DirectPlayUrl(string Value)
 	public static DirectPlayUrl Empty { get; } = new(string.Empty);
 
 	/// <summary>
-	/// The address of a TCP/IP service provider endpoint.
+	/// The address of an endpoint: a TCP/IP service provider address for an <see cref="IPEndPoint"/>.
+	/// Other kinds of endpoint have no DirectPlay address yet, so they get <see cref="Empty"/>, which no peer can
+	/// connect to. Sessions over them then work only where no peer connects to another by its address: two peers,
+	/// or a server and its clients.
 	/// </summary>
-	public static DirectPlayUrl FromEndPoint(IPEndPoint endPoint) =>
-		new(
-			$"{Scheme}provider={Uri.EscapeDataString(TcpIpProvider)};hostname={endPoint.Address};port={endPoint.Port}"
-		);
+	public static DirectPlayUrl FromEndPoint(EndPoint endPoint) =>
+		endPoint is IPEndPoint ipEndPoint
+			? new(
+				$"{Scheme}provider={Uri.EscapeDataString(TcpIpProvider)};hostname={ipEndPoint.Address};port={ipEndPoint.Port}"
+			)
+			: Empty;
 
 	/// <summary>
 	/// The "key=value" components, unescaped. Empty if this is not a DirectPlay URL.

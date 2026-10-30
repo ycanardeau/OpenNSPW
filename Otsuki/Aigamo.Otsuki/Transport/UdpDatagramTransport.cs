@@ -35,10 +35,10 @@ public sealed class UdpDatagramTransport : IDatagramTransport
 		}
 	}
 
-	public IPEndPoint LocalEndPoint => (IPEndPoint)_socket.LocalEndPoint!;
+	public EndPoint LocalEndPoint => _socket.LocalEndPoint!;
 
 	private async Task ReceiveLoopAsync(
-		Action<IPEndPoint, byte[]> onReceive,
+		Action<EndPoint, byte[]> onReceive,
 		CancellationToken cancellationToken
 	)
 	{
@@ -64,17 +64,14 @@ public sealed class UdpDatagramTransport : IDatagramTransport
 				return;
 			}
 
-			onReceive(
-				(IPEndPoint)result.RemoteEndPoint,
-				buffer.AsSpan(0, result.ReceivedBytes).ToArray()
-			);
+			onReceive(result.RemoteEndPoint, buffer.AsSpan(0, result.ReceivedBytes).ToArray());
 		}
 	}
 
-	public void Start(Action<IPEndPoint, byte[]> onReceive) =>
+	public void Start(Action<EndPoint, byte[]> onReceive) =>
 		_ = ReceiveLoopAsync(onReceive, _cancellation.Token);
 
-	public void Send(IPEndPoint remoteEndPoint, byte[] datagram)
+	public void Send(EndPoint remoteEndPoint, byte[] datagram)
 	{
 		try
 		{

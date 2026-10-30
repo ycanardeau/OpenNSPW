@@ -31,5 +31,5 @@ internal interface IConnectionObserver
 	/// <summary>
 	/// A host enumeration query arrived on the endpoint ([MC-DPLHP] section 2.2.1).
 	/// </summary>
-	void OnEnumQuery(IPEndPoint remoteEndPoint, EnumerationMessage.Query query);
+	void OnEnumQuery(EndPoint remoteEndPoint, EnumerationMessage.Query query);
 }

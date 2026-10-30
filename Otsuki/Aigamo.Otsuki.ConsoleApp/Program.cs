@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using Aigamo.Otsuki.Messages.Core;
@@ -292,7 +293,7 @@ internal static class Program
 		if (options.IsHost)
 		{
 			await peer.HostAsync(Application, options.Port);
-			Print($"* Hosting on port {peer.LocalEndPoint!.Port}");
+			Print($"* Hosting on port {((IPEndPoint)peer.LocalEndPoint!).Port}");
 		}
 		else
 		{

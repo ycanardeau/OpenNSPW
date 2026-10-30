@@ -8,15 +8,15 @@ namespace Aigamo.Otsuki.Transport;
 /// </summary>
 public interface IDatagramTransport : IDisposable
 {
-	IPEndPoint LocalEndPoint { get; }
+	EndPoint LocalEndPoint { get; }
 
 	/// <summary>
 	/// Starts receiving. <paramref name="onReceive"/> is called for each datagram and must not block.
 	/// </summary>
-	void Start(Action<IPEndPoint, byte[]> onReceive);
+	void Start(Action<EndPoint, byte[]> onReceive);
 
 	/// <summary>
 	/// Sends a datagram on a best-effort basis. Failures are silently ignored, like packet loss.
 	/// </summary>
-	void Send(IPEndPoint remoteEndPoint, byte[] datagram);
+	void Send(EndPoint remoteEndPoint, byte[] datagram);
 }
