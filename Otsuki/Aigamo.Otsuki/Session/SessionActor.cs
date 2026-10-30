@@ -155,12 +155,10 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	void IConnectionObserver.OnDisconnected(Connection connection, ResultCode result) =>
 		Post(new SessionMessage.ConnectionDisconnected(connection, result));
 
-	void IConnectionObserver.OnEnumQuery(
-		IPEndPoint remoteEndPoint,
-		EnumerationMessage.Query query
-	) => Post(new SessionMessage.EnumQueryReceived(remoteEndPoint, query));
+	void IConnectionObserver.OnEnumQuery(EndPoint remoteEndPoint, EnumerationMessage.Query query) =>
+		Post(new SessionMessage.EnumQueryReceived(remoteEndPoint, query));
 
-	public IPEndPoint LocalEndPoint => _endpoint!.LocalEndPoint;
+	public EndPoint LocalEndPoint => _endpoint!.LocalEndPoint;
 
 	/// <summary>
 	/// Whether the session is client/server (DPNSESSION_CLIENT_SERVER): the server knows every client, but a client
@@ -216,7 +214,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			Timeout.InfiniteTimeSpan
 		);
 
-	public Result<Unit, Exception> StartEndpoint(IPEndPoint localEndPoint)
+	public Result<Unit, Exception> StartEndpoint(EndPoint localEndPoint)
 	{
 		try
 		{
@@ -247,7 +245,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			)
 		);
 
-	public Connection Connect(IPEndPoint remoteEndPoint)
+	public Connection Connect(EndPoint remoteEndPoint)
 	{
 		var connection = _endpoint!.Connect(remoteEndPoint);
 		Connections.Add(connection);

@@ -1,15 +1,26 @@
 using System.Collections.Immutable;
 using System.Net;
 using Aigamo.Otsuki;
+using Aigamo.Otsuki.Bluetooth;
 using Aigamo.Otsuki.Messages.Core;
 
 namespace OpenNspw.DirectPlay;
 
-// IDirectPlay8Peer on an Otsuki peer. Only the TCP/IP service provider exists. The peer's events are delivered to the
-// message handler by DirectPlay8ThreadPool.DoWork, on the game's thread, as DirectPlay does in DoWork mode.
-public sealed unsafe class DirectPlay8Peer(PeerOptions? options) : IDirectPlay8Peer
+// IDirectPlay8Peer on an Otsuki peer. The service providers are TCP/IP, and Bluetooth when the platform gives a
+// Bluetooth provider. The peer's events are delivered to the message handler by DirectPlay8ThreadPool.DoWork, on the
+// game's thread, as DirectPlay does in DoWork mode.
+public sealed unsafe class DirectPlay8Peer(PeerOptions? options, IBluetoothProvider? bluetooth)
+	: IDirectPlay8Peer
 {
 	private const string TcpIPName = "DirectPlay8 TCP/IP Service Provider";
+
+	private const string BluetoothName = "DirectPlay8 Bluetooth Service Provider";
+
+	// DPNERR_ADDRESSING: an address is missing something it needs.
+	private const int DPNERR_ADDRESSING = unchecked((int)0x80158040);
+
+	// DPNERR_USERCANCEL: the player cancelled a dialog.
+	private const int DPNERR_USERCANCEL = unchecked((int)0x80158650);
 
 	// DPNSUCCESS_PENDING: an asynchronous operation started.
 	private const int DPNSUCCESS_PENDING = 0x0015800E;
@@ -18,12 +29,49 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options) : IDirectPlay8P
 	// least this size, filled with zeros after the data.
 	private const int MinimumReceiveBuffer = 1024;
 
-	private readonly Peer _peer = new(options);
+	// As Wine's dplay8.h defines it. Microsoft shipped this provider for the Pocket PC 2002 only, so the originals on
+	// Windows never had it.
+	public static readonly Guid CLSID_DP8SP_BLUETOOTH = new(
+		0x995513af,
+		0x3027,
+		0x4b9a,
+		0x95,
+		0x6e,
+		0xc7,
+		0x72,
+		0xb3,
+		0xf7,
+		0x80,
+		0x06
+	);
+
+	// Sends a session over Bluetooth when it is hosted or joined from a Bluetooth endpoint, and over UDP otherwise.
+	private static PeerOptions WithBluetooth(PeerOptions? options, IBluetoothProvider? bluetooth)
+	{
+		var udpOptions = options ?? PeerOptions.Default;
+		if (bluetooth is null)
+		{
+			return udpOptions;
+		}
+
+		var udp = udpOptions.TransportFactory;
+		return udpOptions with
+		{
+			TransportFactory = localEndPoint =>
+				localEndPoint is BluetoothEndPoint bluetoothEndPoint
+					? bluetooth.CreateTransport(bluetoothEndPoint)
+					: udp(localEndPoint),
+		};
+	}
+
+	private readonly IBluetoothProvider? _bluetooth = bluetooth;
+	private readonly Peer _peer = new(WithBluetooth(options, bluetooth));
 	private PFNDPNMESSAGEHANDLER? _handler;
 	private object? _userContext;
 
-	// The local endpoint of the session, once hosting or connected.
-	public IPEndPoint? LocalEndPoint => _peer.LocalEndPoint;
+	// The local endpoint of the session, once hosting or connected: an IPEndPoint over TCP/IP, and a BluetoothEndPoint
+	// over Bluetooth.
+	public EndPoint? LocalEndPoint => _peer.LocalEndPoint;
 
 	private static ApplicationDescription ToApplication(DPN_APPLICATION_DESC desc)
 	{
@@ -36,6 +84,35 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options) : IDirectPlay8P
 			SessionName = desc.pwszSessionName ?? string.Empty,
 			Password = desc.pwszPassword ?? string.Empty,
 		};
+	}
+
+	private bool IsBluetooth(IDirectPlay8Address? address) =>
+		_bluetooth is not null
+		&& (address as DirectPlay8Address)?.ServiceProvider == CLSID_DP8SP_BLUETOOTH;
+
+	// The host of a Bluetooth session: the address's host name, or else the device the player chooses, if Connect may
+	// ask (DPNCONNECT_OKTOQUERYFORADDRESSING). The game gives Bluetooth no host name, so the player chooses.
+	private int GetBluetoothHost(
+		IDirectPlay8Address? address,
+		uint flags,
+		out BluetoothEndPoint? host
+	)
+	{
+		host = null;
+		if ((address as DirectPlay8Address)?.Hostname is { } hostname)
+		{
+			return BluetoothEndPoint.TryParse(hostname, out host)
+				? winerror.S_OK
+				: DPNERR_ADDRESSING;
+		}
+
+		if ((flags & dplay8.DPNCONNECT_OKTOQUERYFORADDRESSING) == 0)
+		{
+			return DPNERR_ADDRESSING;
+		}
+
+		host = _bluetooth!.ChooseHost();
+		return host is null ? DPNERR_USERCANCEL : winerror.S_OK;
 	}
 
 	private static SendFlags ToSendFlags(uint flags)
@@ -60,7 +137,8 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options) : IDirectPlay8P
 		uint dwFlags
 	)
 	{
-		// The service providers, or the adapters of one. TCP/IP lists no adapters of its own, and supports all adapters.
+		// The service providers, or the adapters of one. Neither lists adapters of its own, and both support all
+		// adapters.
 		DPN_SERVICE_PROVIDER_INFO[] items = pguidServiceProvider is null
 			?
 			[
@@ -69,6 +147,16 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options) : IDirectPlay8P
 					guid = dplay8.CLSID_DP8SP_TCPIP,
 					pwszName = TcpIPName,
 				},
+				.. _bluetooth is null
+					? (DPN_SERVICE_PROVIDER_INFO[])[]
+					:
+					[
+						new DPN_SERVICE_PROVIDER_INFO
+						{
+							guid = CLSID_DP8SP_BLUETOOTH,
+							pwszName = BluetoothName,
+						},
+					],
 			]
 			: [];
 		if (pSPInfoBuffer is null || pcbEnumData < items.Length)
@@ -85,7 +173,10 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options) : IDirectPlay8P
 
 	public int GetSPCaps(Guid? pguidSP, DPN_SP_CAPS pdpspCaps, uint dwFlags)
 	{
-		if (pguidSP != dplay8.CLSID_DP8SP_TCPIP)
+		if (
+			pguidSP != dplay8.CLSID_DP8SP_TCPIP
+			&& !(pguidSP == CLSID_DP8SP_BLUETOOTH && _bluetooth is not null)
+		)
 		{
 			return winerror.E_FAIL;
 		}
@@ -142,11 +233,22 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options) : IDirectPlay8P
 		uint dwFlags
 	)
 	{
-		var port =
-			(prgpDeviceInfo.FirstOrDefault() as DirectPlay8Address)?.Port ?? Peer.DefaultPort;
+		var device = prgpDeviceInfo.FirstOrDefault();
 		try
 		{
-			_peer.HostAsync(ToApplication(pdnAppDesc), port).GetAwaiter().GetResult();
+			if (IsBluetooth(device))
+			{
+				_peer
+					.HostAsync(ToApplication(pdnAppDesc), BluetoothEndPoint.Any)
+					.GetAwaiter()
+					.GetResult();
+			}
+			else
+			{
+				var port = (device as DirectPlay8Address)?.Port ?? Peer.DefaultPort;
+				_peer.HostAsync(ToApplication(pdnAppDesc), port).GetAwaiter().GetResult();
+			}
+
 			return winerror.S_OK;
 		}
 		catch (Exception)
@@ -169,19 +271,30 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options) : IDirectPlay8P
 		uint dwFlags
 	)
 	{
+		BluetoothEndPoint? bluetoothHost = null;
+		if (IsBluetooth(pHostAddr))
+		{
+			var hr = GetBluetoothHost(pHostAddr, dwFlags, out bluetoothHost);
+			if (hr != winerror.S_OK)
+			{
+				return hr;
+			}
+		}
+
+		var application = ToApplication(pdnAppDesc);
 		var host = pHostAddr as DirectPlay8Address;
 		var localPort = (pDeviceInfo as DirectPlay8Address)?.Port ?? 0;
 		try
 		{
-			_peer
-				.ConnectAsync(
-					ToApplication(pdnAppDesc),
+			var connecting = bluetoothHost is not null
+				? _peer.ConnectAsync(application, bluetoothHost, BluetoothEndPoint.Any)
+				: _peer.ConnectAsync(
+					application,
 					host?.Hostname ?? "localhost",
 					host?.Port ?? Peer.DefaultPort,
 					localPort
-				)
-				.GetAwaiter()
-				.GetResult();
+				);
+			connecting.GetAwaiter().GetResult();
 		}
 		catch (Exception)
 		{

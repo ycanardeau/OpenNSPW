@@ -10,7 +10,7 @@ namespace Aigamo.Otsuki.Session;
 internal sealed record SessionSnapshot(
 	ImmutableDictionary<Dpnid, PlayerInfo> Players,
 	ApplicationDescription? Application,
-	IPEndPoint? LocalEndPoint,
+	EndPoint? LocalEndPoint,
 	Dpnid LocalPlayer,
 	bool IsHost,
 	ImmutableDictionary<Dpnid, GroupInfo> Groups

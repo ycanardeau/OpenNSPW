@@ -496,7 +496,7 @@ public class PeerTests : IAsyncLifetime
 
 	private static async Task<List<EnumeratedHost>> EnumerateAsync(
 		Peer peer,
-		IPEndPoint target,
+		EndPoint target,
 		Guid? guidApplication = null,
 		byte[]? payload = null
 	)

@@ -16,7 +16,7 @@ public sealed class Client(PeerOptions? options = null) : IAsyncDisposable
 {
 	private readonly Peer _peer = new(options);
 
-	public IPEndPoint? LocalEndPoint => _peer.LocalEndPoint;
+	public EndPoint? LocalEndPoint => _peer.LocalEndPoint;
 
 	public Dpnid LocalPlayer => _peer.LocalPlayer;
 
@@ -37,7 +37,7 @@ public sealed class Client(PeerOptions? options = null) : IAsyncDisposable
 	/// Finds servers, like IDirectPlay8Client::EnumHosts.
 	/// </summary>
 	public IAsyncEnumerable<EnumeratedHost> EnumHostsAsync(
-		IPEndPoint target,
+		EndPoint target,
 		Guid? guidApplication = null,
 		byte[]? payload = null,
 		EnumHostsOptions? options = null,
@@ -45,8 +45,30 @@ public sealed class Client(PeerOptions? options = null) : IAsyncDisposable
 	) => _peer.EnumHostsAsync(target, guidApplication, payload, options, cancellationToken);
 
 	/// <summary>
-	/// Starts connecting to the server. <see cref="SessionFlags.ClientServer"/> is added to the flags; the outcome
-	/// is reported by <see cref="PeerEvent.ConnectCompleted"/>.
+	/// Starts connecting to the server, from <paramref name="localEndPoint"/>, which may be left out for an
+	/// <see cref="IPEndPoint"/>. <see cref="SessionFlags.ClientServer"/> is added to the flags; the outcome is
+	/// reported by <see cref="PeerEvent.ConnectCompleted"/>.
+	/// </summary>
+	public Task ConnectAsync(
+		ApplicationDescription application,
+		EndPoint serverEndPoint,
+		EndPoint? localEndPoint = null,
+		byte[]? connectData = null
+	) =>
+		_peer.ConnectAsync(
+			application with
+			{
+				Flags = application.Flags | SessionFlags.ClientServer,
+			},
+			serverEndPoint,
+			localEndPoint,
+			connectData
+		);
+
+	/// <summary>
+	/// Starts connecting to the server, from <paramref name="localPort"/> of every IPv4 address.
+	/// <see cref="SessionFlags.ClientServer"/> is added to the flags; the outcome is reported by
+	/// <see cref="PeerEvent.ConnectCompleted"/>.
 	/// </summary>
 	public Task ConnectAsync(
 		ApplicationDescription application,

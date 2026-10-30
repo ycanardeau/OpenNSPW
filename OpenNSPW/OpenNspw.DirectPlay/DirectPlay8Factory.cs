@@ -3,10 +3,15 @@ using Aigamo.Otsuki;
 namespace OpenNspw.DirectPlay;
 
 // Creates the DirectPlay 8 objects of one game, for INspwPlatform.CoCreateInstance. The thread pool it creates serves
-// the peers it creates, so that two games in one process do not handle each other's events.
-public sealed class DirectPlay8Factory(PeerOptions? options = null)
+// the peers it creates, so that two games in one process do not handle each other's events. The peers offer the
+// Bluetooth service provider when `bluetooth` is given.
+public sealed class DirectPlay8Factory(
+	PeerOptions? options = null,
+	IBluetoothProvider? bluetooth = null
+)
 {
 	private readonly PeerOptions? _options = options;
+	private readonly IBluetoothProvider? _bluetooth = bluetooth;
 	private readonly List<DirectPlay8Peer> _peers = [];
 
 	public IReadOnlyList<DirectPlay8Peer> Peers => _peers;
@@ -16,7 +21,7 @@ public sealed class DirectPlay8Factory(PeerOptions? options = null)
 	{
 		if (rclsid == dplay8.CLSID_DirectPlay8Peer)
 		{
-			var peer = new DirectPlay8Peer(_options);
+			var peer = new DirectPlay8Peer(_options, _bluetooth);
 			_peers.Add(peer);
 			ppv = peer;
 		}

@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using System.Net;
 using OpenNspw.DirectPlay;
 using Xunit;
 using static OpenNspw.all_head;
@@ -285,7 +286,7 @@ public class TitleScreenTests
 			g.ClickDlgItem(g.MainDialog!, IDOK);
 		});
 		WaitUntil(() => host.Game.MainDialog?.Id == IDD_MAIN_GAME, host, guest);
-		var port = host.Platform.DirectPlay.Peers.Single().LocalEndPoint!.Port;
+		var port = ((IPEndPoint)host.Platform.DirectPlay.Peers.Single().LocalEndPoint!).Port;
 
 		guest.Do(g =>
 		{

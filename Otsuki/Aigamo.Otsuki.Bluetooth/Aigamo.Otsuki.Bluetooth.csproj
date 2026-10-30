@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- The connectors pass buffers, structures and callbacks to native code as pointers. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- The native library is built on macOS only, so a package made anywhere else would lack it. -->
+    <IsPackable>false</IsPackable>
+    <OtsukiBluetoothLibrary>$(BaseIntermediateOutputPath)native/libOtsukiBluetooth.dylib</OtsukiBluetoothLibrary>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Aigamo.Otsuki\Aigamo.Otsuki.csproj" />
+  </ItemGroup>
+
+  <!-- On macOS, the native library for IOBluetooth, for Apple silicon and Intel Macs, next to the assembly. -->
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+    <None Include="$(OtsukiBluetoothLibrary)" Link="libOtsukiBluetooth.dylib" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+
+  <Target Name="BuildOtsukiBluetoothLibrary" BeforeTargets="BeforeBuild" Condition="$([MSBuild]::IsOSPlatform('OSX'))" Inputs="Native/OtsukiBluetooth.m" Outputs="$(OtsukiBluetoothLibrary)">
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(OtsukiBluetoothLibrary)'))" />
+    <Exec Command="xcrun clang -dynamiclib -fobjc-arc -Wall -Wextra -Werror -arch arm64 -arch x86_64 -mmacosx-version-min=12.0 -framework Foundation -framework IOBluetooth -install_name @rpath/libOtsukiBluetooth.dylib -o &quot;$(OtsukiBluetoothLibrary)&quot; Native/OtsukiBluetooth.m" />
+  </Target>
+
+</Project>

@@ -27,7 +27,7 @@ internal static class HostEnumerator
 
 	public static async IAsyncEnumerable<EnumeratedHost> EnumerateAsync(
 		PeerOptions options,
-		IPEndPoint target,
+		EndPoint target,
 		Guid? guidApplication,
 		ImmutableArray<byte> payload,
 		EnumHostsOptions enumOptions,
@@ -36,12 +36,10 @@ internal static class HostEnumerator
 	{
 		var timeProvider = options.TimeProvider;
 		var responses = Channel.CreateUnbounded<(
-			IPEndPoint Sender,
+			EndPoint Sender,
 			EnumerationMessage.Response Response
 		)>(new UnboundedChannelOptions { SingleReader = true });
-		using IDatagramTransport transport = options.TransportFactory(
-			new IPEndPoint(IPAddress.Any, 0)
-		);
+		using IDatagramTransport transport = options.TransportFactory(AnyEndPoint.For(target));
 		transport.Start(
 			(sender, datagram) =>
 			{
@@ -100,7 +98,7 @@ internal static class HostEnumerator
 				cancellationToken,
 				delay.Token
 			);
-			(IPEndPoint Sender, EnumerationMessage.Response Response) item;
+			(EndPoint Sender, EnumerationMessage.Response Response) item;
 			try
 			{
 				item = await responses.Reader.ReadAsync(timeout.Token).ConfigureAwait(false);

@@ -1,5 +1,7 @@
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using Aigamo.Otsuki.Bluetooth;
 using Aigamo.Otsuki.Messages.Core;
 
 namespace Aigamo.Otsuki.ConsoleApp;
@@ -28,12 +30,14 @@ internal static class Program
 		Print(
 			"""
 			Usage:
-			  Aigamo.Otsuki.ConsoleApp host [--port PORT] [--name NAME] [--do-work]
-			  Aigamo.Otsuki.ConsoleApp join HOSTNAME [--port PORT] [--name NAME] [--do-work]
+			  Aigamo.Otsuki.ConsoleApp host [--port PORT] [--name NAME] [--do-work] [--bluetooth]
+			  Aigamo.Otsuki.ConsoleApp join HOSTNAME [--port PORT] [--name NAME] [--do-work] [--bluetooth]
 
-			  --port     The host's port (default 2302).
-			  --name     Your player name (default: your user name).
-			  --do-work  Poll events once per frame with Peer.DoWork instead of streaming them.
+			  --port       The host's port (default 2302).
+			  --name       Your player name (default: your user name).
+			  --do-work    Poll events once per frame with Peer.DoWork instead of streaming them.
+			  --bluetooth  Talk over Bluetooth instead of UDP, on macOS and Windows. HOSTNAME is then the host's
+			               Bluetooth address, such as 00:1A:7D:DA:71:13. Two players only.
 			"""
 		);
 
@@ -289,10 +293,24 @@ internal static class Program
 
 	private static async Task StartAsync(Peer peer, ChatOptions options)
 	{
-		if (options.IsHost)
+		if (options is { IsHost: true, Bluetooth: true })
+		{
+			await peer.HostAsync(Application, BluetoothEndPoint.Any);
+			Print($"* Hosting on Bluetooth as {peer.LocalEndPoint}");
+		}
+		else if (options.Bluetooth)
+		{
+			Print($"* Joining {options.Hostname} over Bluetooth");
+			await peer.ConnectAsync(
+				Application,
+				BluetoothEndPoint.Parse(options.Hostname!),
+				BluetoothEndPoint.Any
+			);
+		}
+		else if (options.IsHost)
 		{
 			await peer.HostAsync(Application, options.Port);
-			Print($"* Hosting on port {peer.LocalEndPoint!.Port}");
+			Print($"* Hosting on port {((IPEndPoint)peer.LocalEndPoint!).Port}");
 		}
 		else
 		{
@@ -301,7 +319,7 @@ internal static class Program
 		}
 	}
 
-	public static async Task<int> Main(string[] args)
+	private static async Task<int> RunAsync(string[] args)
 	{
 		if (ChatOptions.Parse(args) is not { } options)
 		{
@@ -309,7 +327,18 @@ internal static class Program
 			return 1;
 		}
 
-		var peer = new Peer();
+		// Over Bluetooth, the application's GUID names the service that the host publishes.
+		var peer = new Peer(
+			options.Bluetooth
+				? new PeerOptions
+				{
+					TransportFactory = BluetoothTransport.CreateFactory(
+						Application.GuidApplication,
+						Application.SessionName
+					),
+				}
+				: null
+		);
 		var names = new Dictionary<Dpnid, string>();
 		var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 		var ended = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -323,7 +352,16 @@ internal static class Program
 		{
 			await StartAsync(peer, options);
 		}
-		catch (Exception e) when (e is SocketException or ArgumentException)
+		catch (Exception e)
+			when (e
+					is SocketException
+						or ArgumentException
+						or FormatException
+						or IOException
+						or PlatformNotSupportedException
+						or NotSupportedException
+						or DllNotFoundException
+			)
 		{
 			Print($"* {e.Message}");
 			await peer.CloseAsync();
@@ -341,5 +379,16 @@ internal static class Program
 		ended.TrySetResult();
 		await events;
 		return 0;
+	}
+
+	/// <summary>
+	/// The chat runs on the thread pool, because on macOS 26 IOBluetooth calls back on the main thread, which turns its
+	/// run loop meanwhile.
+	/// </summary>
+	public static int Main(string[] args)
+	{
+		var chat = Task.Run(() => RunAsync(args));
+		BluetoothTransport.RunMainLoopUntil(chat);
+		return chat.GetAwaiter().GetResult();
 	}
 }

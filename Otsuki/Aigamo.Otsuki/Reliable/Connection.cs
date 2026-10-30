@@ -22,7 +22,7 @@ internal sealed class Connection : Actor<ConnectionMessage>
 	private ConnectionState _state;
 	private bool _flushRequested;
 
-	public IPEndPoint RemoteEndPoint { get; }
+	public EndPoint RemoteEndPoint { get; }
 
 	public bool IsOutbound { get; }
 
@@ -59,7 +59,7 @@ internal sealed class Connection : Actor<ConnectionMessage>
 	public ActorTimer<ConnectionMessage> GracefulDisconnectTimer { get; }
 
 	public Connection(
-		IPEndPoint remoteEndPoint,
+		EndPoint remoteEndPoint,
 		bool isOutbound,
 		PacketSigning offeredSigning,
 		IDatagramTransport transport,

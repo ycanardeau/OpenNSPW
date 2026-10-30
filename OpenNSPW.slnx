@@ -24,6 +24,7 @@
   <Folder Name="/Otsuki/">
     <Project Path="Otsuki/Aigamo.Otsuki.Analyzers.Tests/Aigamo.Otsuki.Analyzers.Tests.csproj" />
     <Project Path="Otsuki/Aigamo.Otsuki.Analyzers/Aigamo.Otsuki.Analyzers.csproj" />
+    <Project Path="Otsuki/Aigamo.Otsuki.Bluetooth/Aigamo.Otsuki.Bluetooth.csproj" />
     <Project Path="Otsuki/Aigamo.Otsuki.ConsoleApp/Aigamo.Otsuki.ConsoleApp.csproj" />
     <Project Path="Otsuki/Aigamo.Otsuki.Messages.Tests/Aigamo.Otsuki.Messages.Tests.csproj" />
     <Project Path="Otsuki/Aigamo.Otsuki.Messages/Aigamo.Otsuki.Messages.csproj" />

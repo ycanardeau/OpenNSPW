@@ -51,8 +51,8 @@ internal sealed class InMemoryNetwork
 		return transport;
 	}
 
-	public Func<IPEndPoint, IDatagramTransport> CreateFactory(IPAddress address) =>
-		localEndPoint => Bind(address, localEndPoint.Port);
+	public Func<EndPoint, IDatagramTransport> CreateFactory(IPAddress address) =>
+		localEndPoint => Bind(address, ((IPEndPoint)localEndPoint).Port);
 
 	public void Partition(IPAddress address) => _partitioned[address] = true;
 
@@ -107,14 +107,21 @@ internal sealed class InMemoryNetwork
 internal sealed class InMemoryTransport(InMemoryNetwork network, IPEndPoint localEndPoint)
 	: IDatagramTransport
 {
-	private Action<IPEndPoint, byte[]>? _onReceive;
+	private readonly InMemoryNetwork _network = network;
+	private Action<EndPoint, byte[]>? _onReceive;
 
 	public IPEndPoint LocalEndPoint { get; } = localEndPoint;
 
-	public void Start(Action<IPEndPoint, byte[]> onReceive) => _onReceive = onReceive;
+	EndPoint IDatagramTransport.LocalEndPoint => LocalEndPoint;
 
-	public void Send(IPEndPoint remoteEndPoint, byte[] datagram) =>
-		network.Send(LocalEndPoint, remoteEndPoint, datagram);
+	public void Start(Action<EndPoint, byte[]> onReceive) => _onReceive = onReceive;
+
+	// The network carries only IPv4 endpoints, so a datagram to any other kind is lost.
+	public void Send(EndPoint remoteEndPoint, byte[] datagram)
+	{
+		if (remoteEndPoint is IPEndPoint ipEndPoint)
+			_network.Send(LocalEndPoint, ipEndPoint, datagram);
+	}
 
 	internal void Receive(IPEndPoint remoteEndPoint, byte[] datagram) =>
 		_onReceive?.Invoke(remoteEndPoint, datagram);
@@ -122,6 +129,6 @@ internal sealed class InMemoryTransport(InMemoryNetwork network, IPEndPoint loca
 	public void Dispose()
 	{
 		_onReceive = null;
-		network.Unbind(this);
+		_network.Unbind(this);
 	}
 }

@@ -1,9 +1,16 @@
 namespace Aigamo.Otsuki.ConsoleApp;
 
 /// <summary>
-/// The command line: <c>host [options]</c> or <c>join HOSTNAME [options]</c>.
+/// The command line: <c>host [options]</c> or <c>join HOSTNAME [options]</c>, where HOSTNAME is a Bluetooth address
+/// with <c>--bluetooth</c>.
 /// </summary>
-internal sealed record ChatOptions(string? Hostname, int Port, string Name, bool DoWork)
+internal sealed record ChatOptions(
+	string? Hostname,
+	int Port,
+	string Name,
+	bool DoWork,
+	bool Bluetooth
+)
 {
 	public bool IsHost => Hostname is null;
 
@@ -25,7 +32,8 @@ internal sealed record ChatOptions(string? Hostname, int Port, string Name, bool
 			hostname,
 			Peer.DefaultPort,
 			Environment.UserName,
-			DoWork: false
+			DoWork: false,
+			Bluetooth: false
 		);
 		for (var i = 0; i < rest.Length; i++)
 		{
@@ -43,6 +51,10 @@ internal sealed record ChatOptions(string? Hostname, int Port, string Name, bool
 
 				case "--do-work":
 					options = options with { DoWork = true };
+					break;
+
+				case "--bluetooth":
+					options = options with { Bluetooth = true };
 					break;
 
 				default:

@@ -1,4 +1,7 @@
+using System.Net;
 using System.Text;
+using Aigamo.Otsuki.Bluetooth;
+using Aigamo.Otsuki.Tests;
 using OpenNspw.DirectPlay;
 using Xunit;
 using static OpenNspw.all_head;
@@ -9,11 +12,11 @@ using static OpenNspw.winuser;
 
 namespace OpenNspw.Tests;
 
-// The platform of a game in the tests: DirectPlay 8 on Otsuki, no files, and message boxes that are recorded and
-// answered with OK.
-internal sealed class NetworkTestPlatform : INspwPlatform
+// The platform of a game in the tests: DirectPlay 8 on Otsuki, with Bluetooth when `bluetooth` is given, no files, and
+// message boxes that are recorded and answered with OK.
+internal sealed class NetworkTestPlatform(IBluetoothProvider? bluetooth = null) : INspwPlatform
 {
-	public DirectPlay8Factory DirectPlay { get; } = new();
+	public DirectPlay8Factory DirectPlay { get; } = new(bluetooth: bluetooth);
 
 	public List<string> MessageBoxes { get; } = [];
 
@@ -90,15 +93,16 @@ internal sealed class ConnectingGame : IDisposable
 {
 	private MSG _msg;
 
-	public NetworkTestPlatform Platform { get; } = new();
+	public NetworkTestPlatform Platform { get; }
 
 	public Nspw Game { get; }
 
 	// Whether the loop that waits for the connection still runs (wait_for_connect in WinMain).
 	public bool WaitingForConnect { get; private set; } = true;
 
-	public ConnectingGame(string playerName)
+	public ConnectingGame(string playerName, IBluetoothProvider? bluetooth = null)
 	{
+		Platform = new NetworkTestPlatform(bluetooth);
 		Game = new Nspw(Platform);
 
 		// The defaults that WinMain reads from the registry.
@@ -152,14 +156,29 @@ internal sealed class ConnectingGame : IDisposable
 		);
 	}
 
+	// Where the game hosts or joins from.
+	public EndPoint LocalEndPoint => Platform.DirectPlay.Peers.Single().LocalEndPoint!;
+
 	// The port the host listens on.
-	public int HostPort => Platform.DirectPlay.Peers.Single().LocalEndPoint!.Port;
+	public int HostPort => ((IPEndPoint)LocalEndPoint).Port;
 
 	public HWND Dialog => Game.MainDialog ?? throw new InvalidOperationException("No dialog.");
 
 	public string DialogText(int id)
 	{
 		return Game.GetDlgItem(Dialog, id)!.Text;
+	}
+
+	// The service providers that the connection dialog lists.
+	public IEnumerable<string> ServiceProviders =>
+		Game.GetDlgItem(Dialog, IDC_SP_COMBO)!.Items.Select(i => i.Text);
+
+	// Picks a service provider from the connection dialog's list, as the player does.
+	public void SelectServiceProvider(string name)
+	{
+		var index = ServiceProviders.ToList().IndexOf(name);
+		Assert.NotEqual(-1, index);
+		Game.SelectDlgItem(Dialog, IDC_SP_COMBO, index);
 	}
 
 	// One iteration of WinMain's loop: the queued window messages, then DirectPlay's events.
@@ -404,5 +423,100 @@ public class NetworkTests
 		Assert.True(dialog.Initialized);
 		Assert.Equal("Alice", nspw.GetDlgItem(dialog, IDC_PLAYER_NAME)!.Text);
 		Assert.Equal($"{ADDRESSOVERRIDE_PORT}", nspw.GetDlgItem(dialog, IDC_ADDRESS_LINE2)!.Text);
+	}
+
+	private const string BluetoothProvider = "DirectPlay8 Bluetooth Service Provider";
+
+	[Fact]
+	public void Only_TCP_IP_is_listed_without_Bluetooth()
+	{
+		using var game = new ConnectingGame("Alice");
+
+		Assert.Equal(["DirectPlay8 TCP/IP Service Provider"], game.ServiceProviders);
+	}
+
+	// Connects a host and a guest over Bluetooth, the guest choosing the host's device when DirectPlay asks.
+	private static (
+		ConnectingGame Host,
+		ConnectingGame Guest,
+		LoopbackBluetooth GuestBluetooth
+	) ConnectOverBluetooth()
+	{
+		var network = new InMemoryStreamNetwork();
+		var hostBluetooth = new LoopbackBluetooth(
+			network,
+			BluetoothEndPoint.Parse("00:00:00:00:00:01")
+		);
+		var guestBluetooth = new LoopbackBluetooth(
+			network,
+			BluetoothEndPoint.Parse("00:00:00:00:00:02")
+		)
+		{
+			Host = hostBluetooth.Address,
+		};
+		var host = new ConnectingGame("Alice", hostBluetooth);
+		var guest = new ConnectingGame("Bob", guestBluetooth);
+
+		// Bluetooth needs no address in the dialog: the address fields are disabled.
+		host.SelectServiceProvider(BluetoothProvider);
+		Assert.False(host.Game.GetDlgItem(host.Dialog, IDC_ADDRESS_LINE2)!.Enabled);
+		host.Game.ClickDlgItem(host.Dialog, IDOK);
+		Assert.Equal(IDD_MAIN_GAME, host.Dialog.Id);
+		Assert.Equal(hostBluetooth.Address, host.LocalEndPoint);
+
+		guest.Game.ClickDlgItem(guest.Dialog, IDC_HOST_SESSION);
+		guest.SelectServiceProvider(BluetoothProvider);
+		Assert.False(guest.Game.GetDlgItem(guest.Dialog, IDC_ADDRESS_LINE1)!.Enabled);
+		guest.Game.ClickDlgItem(guest.Dialog, IDOK);
+		return (host, guest, guestBluetooth);
+	}
+
+	[Fact]
+	public void Host_and_guest_connect_over_Bluetooth()
+	{
+		var (host, guest, guestBluetooth) = ConnectOverBluetooth();
+		using var _ = host;
+		using var __ = guest;
+
+		PumpUntil(
+			() =>
+				guest.Dialog.Id == IDD_MAIN_GAME
+				&& guest.Game.ActivePlayerCount == 2
+				&& host.Game.ActivePlayerCount == 2,
+			host,
+			guest
+		);
+		PumpUntil(() => host.DialogText(IDC_PLAYER_NAME2) == "Bob", host, guest);
+		Assert.Equal("Alice", guest.DialogText(IDC_PLAYER_NAME2));
+		Assert.Equal(1, guestBluetooth.ChooseHostCount);
+		Assert.Equal(guestBluetooth.Address, guest.LocalEndPoint);
+		Assert.Equal(
+			BluetoothProvider,
+			tchar.ShiftJis.GetString(guest.Game.PreferredProvider[..BluetoothProvider.Length])
+		);
+
+		host.Game.ClickDlgItem(host.Dialog, IDC_START_GAME);
+		PumpUntil(() => !host.WaitingForConnect && !guest.WaitingForConnect, host, guest);
+		Assert.Empty(host.Platform.MessageBoxes);
+		Assert.Empty(guest.Platform.MessageBoxes);
+	}
+
+	[Fact]
+	public void A_guest_who_chooses_no_device_stays_in_the_connection_dialog()
+	{
+		var network = new InMemoryStreamNetwork();
+		var bluetooth = new LoopbackBluetooth(
+			network,
+			BluetoothEndPoint.Parse("00:00:00:00:00:02")
+		);
+		using var guest = new ConnectingGame("Bob", bluetooth);
+
+		guest.Game.ClickDlgItem(guest.Dialog, IDC_HOST_SESSION);
+		guest.SelectServiceProvider(BluetoothProvider);
+		guest.Game.ClickDlgItem(guest.Dialog, IDOK);
+
+		Assert.Equal(1, bluetooth.ChooseHostCount);
+		Assert.Equal(IDD_ADDRESS_OVERRIDE, guest.Dialog.Id);
+		Assert.NotEmpty(guest.Platform.MessageBoxes);
 	}
 }

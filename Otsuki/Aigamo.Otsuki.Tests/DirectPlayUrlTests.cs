@@ -42,6 +42,12 @@ public class DirectPlayUrlTests
 		url.ToEndPoint().Should().Be(Result.Ok<IPEndPoint, DirectPlayUrlError>(endPoint));
 	}
 
+	[Fact]
+	public void FromEndPoint_IsEmptyForANonIPEndPoint()
+	{
+		DirectPlayUrl.FromEndPoint(new NamedEndPoint("host")).Should().Be(DirectPlayUrl.Empty);
+	}
+
 	[Theory]
 	[InlineData("", nameof(DirectPlayUrlError.NotDirectPlayUrl))]
 	[InlineData("http://10.0.0.1:2302", nameof(DirectPlayUrlError.NotDirectPlayUrl))]
