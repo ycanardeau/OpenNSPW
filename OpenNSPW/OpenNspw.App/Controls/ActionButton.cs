@@ -40,8 +40,10 @@ internal sealed class ActionButton(UIFonts fonts) : FlatButton
 			text = Theme.Lerp(Theme.Text, Theme.BrassLight, Hover);
 		}
 
+		// Text too wide for the button, such as a long device name, is cut short with an ellipsis.
 		var font = _fonts.Bold(FontSize);
-		var size = Painter.Measure(g, Text, font);
-		Painter.Text(g, Text, font, text, (Width - size.Width) / 2, (Height - size.Height) / 2);
+		var shown = Painter.Fit(g, Text, font, Width - 16);
+		var size = Painter.Measure(g, shown, font);
+		Painter.Text(g, shown, font, text, (Width - size.Width) / 2, (Height - size.Height) / 2);
 	}
 }

@@ -4,15 +4,16 @@ using System.Text.Json.Serialization;
 
 namespace OpenNspw.App;
 
-// What the UI remembers between runs, beside the game's own settings (AppPlatform): the language chosen, and the
-// options of single-player battles (docs/Options.md).
+// What the UI remembers between runs, beside the game's own settings (AppPlatform): the language chosen, the options
+// of single-player battles (docs/Options.md), and the Bluetooth device joined last.
 internal static partial class UISettings
 {
 	// IsSpeedSteady: BattleOptions.SteadySpeed, by the name it was first saved under.
 	private sealed record Saved(
 		Language? Language,
 		bool? IsSpeedSteady = null,
-		bool? SharedEffectRandom = null
+		bool? SharedEffectRandom = null,
+		string? BluetoothHost = null
 	);
 
 	// How Saved is read and written, generated, so that trimming keeps what it needs: the language by its name.
@@ -88,5 +89,16 @@ internal static partial class UISettings
 				SharedEffectRandom = options.SharedEffectRandom,
 			}
 		);
+	}
+
+	// The address of the Bluetooth device joined last, as typed.
+	public static string LoadBluetoothHost()
+	{
+		return Load().BluetoothHost ?? "";
+	}
+
+	public static void SaveBluetoothHost(string address)
+	{
+		Save(saved => saved with { BluetoothHost = address });
 	}
 }

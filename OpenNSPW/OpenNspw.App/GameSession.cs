@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended.ViewportAdapters;
+using OpenNspw.DirectPlay;
 using OpenNspw.HostUI;
 using OpenNspw.Pacing;
 using OpenNspw.Replay;
@@ -218,6 +219,7 @@ internal sealed class GameSession : IDisposable
 	// user's replays, and so is a single-player replay's once it is taken over. The session disposes the trace and the
 	// replay. options: the options of a single-player battle that follows no trace (docs/Options.md); a replay's are
 	// those it was recorded with, and it plays at a steady speed once it is taken over if it was recorded at one.
+	// bluetooth: Bluetooth to connect over, if the app may use it.
 	public GameSession(
 		GameFileLayers files,
 		TextRasterizer text,
@@ -226,11 +228,12 @@ internal sealed class GameSession : IDisposable
 		ReplayPlayer? replay = null,
 		ReplayView? view = null,
 		string? scratchDirectory = null,
-		BattleOptions? options = null
+		BattleOptions? options = null,
+		IBluetoothProvider? bluetooth = null
 	)
 	{
 		var mailbox = new Mailbox<GameMessage>();
-		_platform = new AppPlatform(files, text, _ui, mailbox);
+		_platform = new AppPlatform(files, text, _ui, mailbox, bluetooth);
 		Game = new Nspw(_platform, mailbox);
 		Game.Extensions.Add(Commands);
 		View = view;

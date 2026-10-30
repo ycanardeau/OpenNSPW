@@ -83,13 +83,14 @@ internal abstract record UIMessage
 internal sealed record BufferFree(FrameBuffer Buffer) : GameMessage;
 
 // The platform of the app: the game's files in their layers (GameData), its sprites from the app's, DirectPlay 8
-// on Otsuki, MonoGame sound, text rasterized with a TrueType font, and settings in a JSON file. It runs on the game's
-// thread, and posts what the UI shows to the UI's mailbox (ui).
+// on Otsuki, with Bluetooth when `bluetooth` is given, MonoGame sound, text rasterized with a TrueType font, and
+// settings in a JSON file. It runs on the game's thread, and posts what the UI shows to the UI's mailbox (ui).
 internal sealed partial class AppPlatform(
 	GameFileLayers files,
 	TextRasterizer text,
 	Mailbox<UIMessage> ui,
-	Mailbox<GameMessage> game
+	Mailbox<GameMessage> game,
+	IBluetoothProvider? bluetooth = null
 ) : INspwPlatform
 {
 	// How the settings are read and written, generated, so that trimming keeps what it needs.
@@ -100,7 +101,7 @@ internal sealed partial class AppPlatform(
 	private const int MaxTexts = 1024;
 
 	private readonly GameFileLayers _files = files;
-	private readonly DirectPlay8Factory _directPlay = new();
+	private readonly DirectPlay8Factory _directPlay = new(bluetooth: bluetooth);
 	private readonly TextRasterizer _text = text;
 	private readonly Mailbox<UIMessage> _ui = ui;
 	private readonly Mailbox<GameMessage> _game = game;

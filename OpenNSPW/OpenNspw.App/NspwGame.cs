@@ -53,6 +53,9 @@ internal sealed class NspwGame : Game
 
 	public TextRasterizer Text { get; } = new();
 
+	// Bluetooth for multiplayer games, where the app may use it.
+	public AppBluetooth? Bluetooth { get; } = AppBluetooth.Create();
+
 	public SpriteBatch SpriteBatch { get; private set; } = default!;
 
 	public ViewportAdapter ViewportAdapter { get; private set; } = default!;
@@ -109,7 +112,8 @@ internal sealed class NspwGame : Game
 			Text,
 			singleplayer,
 			trace,
-			options: Options
+			options: Options,
+			bluetooth: singleplayer is null ? Bluetooth : null
 		);
 		_lastSession.Start();
 		return _lastSession;
