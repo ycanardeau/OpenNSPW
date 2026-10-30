@@ -1,6 +1,7 @@
 // A C interface to IOBluetooth's RFCOMM channels, for MacBluetoothConnector. IOBluetooth delivers its callbacks on the
 // run loop of the thread that asked for them, so every call runs on a thread of the host's own, which runs a run loop,
-// and every callback comes from that thread.
+// and every callback comes from that thread. On macOS 26, IOBluetooth delivers them on the main thread's run loop
+// instead, which the app must run (otsuki_bluetooth_run_main_loop), and the host hands them on to its thread.
 
 #import <Foundation/Foundation.h>
 #import <IOBluetooth/IOBluetooth.h>
@@ -96,6 +97,12 @@ typedef struct
 	[self performSelector:@selector(invoke:) onThread:_thread withObject:[block copy] waitUntilDone:wait];
 }
 
+// Whether a callback came on another thread than the host's, as on macOS 26. It is then handed on to the host's.
+- (BOOL)isElsewhere
+{
+	return NSThread.currentThread != _thread;
+}
+
 - (int64_t)addChannel:(IOBluetoothRFCOMMChannel *)channel
 {
 	NSNumber *channelId = @(++_nextChannel);
@@ -114,6 +121,15 @@ typedef struct
 
 - (void)channelOpened:(IOBluetoothUserNotification *)notification channel:(IOBluetoothRFCOMMChannel *)channel
 {
+	if ([self isElsewhere])
+	{
+		[self perform:^{
+			[self channelOpened:notification channel:channel];
+		}
+		         wait:NO];
+		return;
+	}
+
 	if (_stopped)
 		return;
 
@@ -129,8 +145,12 @@ typedef struct
 	if (_record != nil)
 		return kIOReturnExclusiveAccess;
 
-	// Channel 1 is a placeholder: the system assigns a free channel when 1 is in use.
-	NSDictionary *channel = @{@"DataElementType" : @1, @"DataElementSize" : @1, @"DataElementValue" : @1};
+	// The system assigns a free channel when the one asked for is in use. A random one, because on macOS 26 bluetoothd
+	// keeps the last incoming channel of each channel number after it closes, and hands it to the next registration on
+	// that number, which fails to accept it and then refuses the channels that remote devices open. A second
+	// registration on the same number doesn't help: bluetoothd then accepts no channel on it at all.
+	NSDictionary *channel =
+		@{@"DataElementType" : @1, @"DataElementSize" : @1, @"DataElementValue" : @(1 + arc4random_uniform(30))};
 	NSDictionary *record = @{
 		@"0001 - ServiceClassIDList" : @[ [IOBluetoothSDPUUID uuidWithData:service] ],
 		@"0004 - ProtocolDescriptorList" : @[
@@ -194,6 +214,15 @@ typedef struct
 
 - (void)sdpQueryComplete:(IOBluetoothDevice *)device status:(IOReturn)status
 {
+	if ([self isElsewhere])
+	{
+		[self perform:^{
+			[self sdpQueryComplete:device status:status];
+		}
+		         wait:NO];
+		return;
+	}
+
 	NSData *address = [NSData dataWithBytes:[device getAddress] length:sizeof(BluetoothDeviceAddress)];
 	NSMutableArray<NSArray *> *waiting = _queries[address];
 	OTSUKI_LOG(@"SDP query of %@ completed: 0x%08X", device.addressString, status);
@@ -303,6 +332,15 @@ typedef struct
 
 - (void)rfcommChannelOpenComplete:(IOBluetoothRFCOMMChannel *)channel status:(IOReturn)error
 {
+	if ([self isElsewhere])
+	{
+		[self perform:^{
+			[self rfcommChannelOpenComplete:channel status:error];
+		}
+		         wait:NO];
+		return;
+	}
+
 	NSNumber *request = [_opening objectForKey:channel];
 	if (request == nil)
 		return;
@@ -322,6 +360,17 @@ typedef struct
 
 - (void)rfcommChannelData:(IOBluetoothRFCOMMChannel *)channel data:(void *)data length:(size_t)length
 {
+	if ([self isElsewhere])
+	{
+		// The data lives only until this returns.
+		NSData *copy = [NSData dataWithBytes:data length:length];
+		[self perform:^{
+			[self rfcommChannelData:channel data:(void *)copy.bytes length:copy.length];
+		}
+		         wait:NO];
+		return;
+	}
+
 	NSNumber *channelId = [_channelIds objectForKey:channel];
 	OTSUKI_LOG(@"received %zu bytes on %@", length, (id)channelId ?: @"a channel it does not know");
 	if (channelId != nil)
@@ -330,6 +379,15 @@ typedef struct
 
 - (void)rfcommChannelClosed:(IOBluetoothRFCOMMChannel *)channel
 {
+	if ([self isElsewhere])
+	{
+		[self perform:^{
+			[self rfcommChannelClosed:channel];
+		}
+		         wait:NO];
+		return;
+	}
+
 	OTSUKI_LOG(@"channel %u of %@ closed", (unsigned)[channel getChannelID], [[channel getDevice] addressString]);
 	NSNumber *request = [_opening objectForKey:channel];
 	if (request != nil)
@@ -361,6 +419,21 @@ typedef struct
 void *otsuki_bluetooth_create(OtsukiBluetoothCallbacks callbacks, void *context)
 {
 	return (__bridge_retained void *)[[OtsukiBluetoothHost alloc] initWithCallbacks:callbacks context:context];
+}
+
+// Runs the main thread's run loop until something happens on it, or for at most the given seconds, so that IOBluetooth
+// can deliver callbacks there, as on macOS 26. For an app whose main thread runs no run loop of its own. Returns
+// kIOReturnNotPermitted, without waiting, when called on another thread.
+int32_t otsuki_bluetooth_run_main_loop(double seconds)
+{
+	if (!NSThread.isMainThread)
+		return kIOReturnNotPermitted;
+
+	@autoreleasepool
+	{
+		[NSRunLoop.mainRunLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:seconds]];
+	}
+	return kIOReturnSuccess;
 }
 
 // Stops the host. No callback comes after it returns.

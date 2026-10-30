@@ -79,6 +79,9 @@ internal sealed unsafe partial class MacBluetoothConnector : IStreamConnector
 	[LibraryImport(Library, EntryPoint = "otsuki_bluetooth_close")]
 	private static partial void NativeClose(nint host, long channel);
 
+	[LibraryImport(Library, EntryPoint = "otsuki_bluetooth_run_main_loop")]
+	private static partial int NativeRunMainLoop(double seconds);
+
 	public EndPoint LocalEndPoint { get; }
 
 	// Whether the app declares why it uses Bluetooth, without which macOS kills it at its first Bluetooth call. False
@@ -93,6 +96,14 @@ internal sealed unsafe partial class MacBluetoothConnector : IStreamConnector
 		{
 			return false;
 		}
+	}
+
+	// Runs the main thread's run loop until something happens on it, or for at most the given time, so that IOBluetooth
+	// can deliver callbacks there, as on macOS 26.
+	internal static void RunMainLoop(TimeSpan timeout)
+	{
+		if (NativeRunMainLoop(timeout.TotalSeconds) != Success)
+			throw new InvalidOperationException("The main run loop runs only on the main thread.");
 	}
 
 	[UnmanagedCallersOnly]

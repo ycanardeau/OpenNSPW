@@ -319,7 +319,7 @@ internal static class Program
 		}
 	}
 
-	public static async Task<int> Main(string[] args)
+	private static async Task<int> RunAsync(string[] args)
 	{
 		if (ChatOptions.Parse(args) is not { } options)
 		{
@@ -379,5 +379,16 @@ internal static class Program
 		ended.TrySetResult();
 		await events;
 		return 0;
+	}
+
+	/// <summary>
+	/// The chat runs on the thread pool, because on macOS 26 IOBluetooth calls back on the main thread, which turns its
+	/// run loop meanwhile.
+	/// </summary>
+	public static int Main(string[] args)
+	{
+		var chat = Task.Run(() => RunAsync(args));
+		BluetoothTransport.RunMainLoopUntil(chat);
+		return chat.GetAwaiter().GetResult();
 	}
 }

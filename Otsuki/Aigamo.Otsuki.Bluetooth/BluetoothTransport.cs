@@ -14,6 +14,31 @@ public static class BluetoothTransport
 	public static bool IsSupported => OperatingSystem.IsMacOS() || OperatingSystem.IsWindows();
 
 	/// <summary>
+	/// Whether channels to other devices can be opened on this version of the OS: not on macOS 26, where IOBluetooth
+	/// runs over CoreBluetooth, never completes SDP queries, and opens a channel only to a device that it counts as
+	/// connected, which a computer never is (docs/Bluetooth.md). Hosting still works there, with
+	/// <see cref="RunMainLoopUntil"/>.
+	/// </summary>
+	public static bool CanConnect => !OperatingSystem.IsMacOSVersionAtLeast(26);
+
+	/// <summary>
+	/// Runs the main thread's run loop until <paramref name="task"/> completes: on macOS 26, IOBluetooth delivers its
+	/// callbacks there, so an app whose main thread runs no run loop of its own, such as a console app, calls this on
+	/// its main thread. Elsewhere, it only waits.
+	/// </summary>
+	public static void RunMainLoopUntil(Task task)
+	{
+		if (!OperatingSystem.IsMacOS())
+		{
+			((IAsyncResult)task).AsyncWaitHandle.WaitOne();
+			return;
+		}
+
+		while (!task.IsCompleted)
+			MacBluetoothConnector.RunMainLoop(TimeSpan.FromMilliseconds(100));
+	}
+
+	/// <summary>
 	/// Whether the app may use Bluetooth: on macOS, it must declare why in its Info.plist
 	/// (NSBluetoothAlwaysUsageDescription), or macOS kills it at its first Bluetooth call, before anything can catch it.
 	/// Checking touches no Bluetooth. A process started from a terminal may use Bluetooth if the terminal may, which
