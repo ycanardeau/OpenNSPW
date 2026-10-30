@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- The connector passes buffers and callbacks to the native library as pointers. -->
+    <!-- The connectors pass buffers, structures and callbacks to native code as pointers. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- The native library is built on macOS only, so a package made anywhere else would lack it. -->
     <IsPackable>false</IsPackable>

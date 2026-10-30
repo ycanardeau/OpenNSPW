@@ -59,6 +59,13 @@ public class BluetoothEndPointTests
 		BluetoothTransport.IsUsageDescribed.Should().BeFalse();
 	}
 
+	// Windows asks desktop apps for no declaration.
+	[Fact]
+	public void IsAllowed_OnlyOnWindowsForTheTestHost()
+	{
+		BluetoothTransport.IsAllowed.Should().Be(OperatingSystem.IsWindows());
+	}
+
 	[Fact]
 	public void CreateFactory_RejectsANonBluetoothEndPoint()
 	{

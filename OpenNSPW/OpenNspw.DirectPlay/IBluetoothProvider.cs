@@ -4,7 +4,7 @@ using Aigamo.Otsuki.Transport;
 namespace OpenNspw.DirectPlay;
 
 // Bluetooth for the DirectPlay 8 Bluetooth service provider, from the platform. A platform gives one only where the app
-// may use Bluetooth: on macOS, an app without NSBluetoothAlwaysUsageDescription is killed by its first Bluetooth call,
+// may use Bluetooth (BluetoothTransport.IsAllowed): on macOS, an app without NSBluetoothAlwaysUsageDescription is killed by its first Bluetooth call,
 // before anything can catch it.
 public interface IBluetoothProvider
 {

@@ -5,11 +5,13 @@ namespace Aigamo.Otsuki.Bluetooth;
 
 /// <summary>
 /// Sessions over Bluetooth RFCOMM channels. Each application publishes a service of its own, named by a UUID, and
-/// peers find each other's channel by it. Only macOS is supported so far.
+/// peers find each other's channel by it. macOS and Windows are supported.
 /// </summary>
 public static class BluetoothTransport
 {
-	public static bool IsSupported => OperatingSystem.IsMacOS();
+	private const string NotSupported = "Bluetooth is supported on macOS and Windows only.";
+
+	public static bool IsSupported => OperatingSystem.IsMacOS() || OperatingSystem.IsWindows();
 
 	/// <summary>
 	/// Whether the app may use Bluetooth: on macOS, it must declare why in its Info.plist
@@ -21,29 +23,34 @@ public static class BluetoothTransport
 		OperatingSystem.IsMacOS() && MacBluetoothConnector.IsUsageDescribed();
 
 	/// <summary>
+	/// Whether the app may use Bluetooth: on Windows, always; on macOS, if <see cref="IsUsageDescribed"/>.
+	/// </summary>
+	public static bool IsAllowed => OperatingSystem.IsWindows() || IsUsageDescribed;
+
+	/// <summary>
 	/// The address of the computer's Bluetooth controller. Fails with <see cref="IOException"/> if there is none, or it
 	/// is off.
 	/// </summary>
 	public static BluetoothEndPoint GetLocalEndPoint() =>
-		OperatingSystem.IsMacOS()
-			? MacBluetoothConnector.GetLocalEndPoint()
-			: throw new PlatformNotSupportedException("Bluetooth is supported on macOS only.");
+		OperatingSystem.IsMacOS() ? MacBluetoothConnector.GetLocalEndPoint()
+		: OperatingSystem.IsWindows() ? WindowsBluetoothConnector.GetLocalEndPoint()
+		: throw new PlatformNotSupportedException(NotSupported);
 
 	/// <summary>
 	/// The devices paired with the computer.
 	/// </summary>
 	public static IReadOnlyList<BluetoothDevice> GetPairedDevices() =>
-		OperatingSystem.IsMacOS()
-			? MacBluetoothConnector.GetPairedDevices()
-			: throw new PlatformNotSupportedException("Bluetooth is supported on macOS only.");
+		OperatingSystem.IsMacOS() ? MacBluetoothConnector.GetPairedDevices()
+		: OperatingSystem.IsWindows() ? WindowsBluetoothConnector.GetPairedDevices()
+		: throw new PlatformNotSupportedException(NotSupported);
 
 	/// <summary>
 	/// Opens and accepts channels to <paramref name="service"/>, published under <paramref name="serviceName"/>.
 	/// </summary>
 	public static IStreamConnector CreateConnector(Guid service, string serviceName) =>
-		OperatingSystem.IsMacOS()
-			? new MacBluetoothConnector(service, serviceName)
-			: throw new PlatformNotSupportedException("Bluetooth is supported on macOS only.");
+		OperatingSystem.IsMacOS() ? new MacBluetoothConnector(service, serviceName)
+		: OperatingSystem.IsWindows() ? new WindowsBluetoothConnector(service, serviceName)
+		: throw new PlatformNotSupportedException(NotSupported);
 
 	/// <summary>
 	/// A <see cref="PeerOptions.TransportFactory"/> for Bluetooth. The local endpoint is

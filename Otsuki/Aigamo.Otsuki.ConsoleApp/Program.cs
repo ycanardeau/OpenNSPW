@@ -36,7 +36,7 @@ internal static class Program
 			  --port       The host's port (default 2302).
 			  --name       Your player name (default: your user name).
 			  --do-work    Poll events once per frame with Peer.DoWork instead of streaming them.
-			  --bluetooth  Talk over Bluetooth instead of UDP, on macOS. HOSTNAME is then the host's
+			  --bluetooth  Talk over Bluetooth instead of UDP, on macOS and Windows. HOSTNAME is then the host's
 			               Bluetooth address, such as 00:1A:7D:DA:71:13. Two players only.
 			"""
 		);
