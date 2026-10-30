@@ -337,6 +337,21 @@ void otsuki_bluetooth_destroy(void *host)
 	[bluetooth stop];
 }
 
+// Whether the app declares why it uses Bluetooth (NSBluetoothAlwaysUsageDescription in its Info.plist). Without it,
+// macOS kills the process at its first Bluetooth call. This touches no Bluetooth.
+int32_t otsuki_bluetooth_usage_described(void)
+{
+	return [NSBundle.mainBundle objectForInfoDictionaryKey:@"NSBluetoothAlwaysUsageDescription"] != nil;
+}
+
+// Calls back with the address and the name of each device paired with the computer.
+void otsuki_bluetooth_paired_devices(void (*device)(void *context, const uint8_t *address, const char *name),
+                                     void *context)
+{
+	for (IOBluetoothDevice *paired in IOBluetoothDevice.pairedDevices)
+		device(context, [paired getAddress]->data, (paired.nameOrAddress ?: @"").UTF8String);
+}
+
 // The address of the computer's Bluetooth controller. Returns an IOReturn.
 int32_t otsuki_bluetooth_local_address(uint8_t *address)
 {

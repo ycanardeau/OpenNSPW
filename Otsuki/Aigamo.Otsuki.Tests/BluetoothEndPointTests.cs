@@ -51,6 +51,14 @@ public class BluetoothEndPointTests
 		new BluetoothEndPoint(0x1234).Should().NotBe(new NamedEndPoint("00:00:00:00:12:34"));
 	}
 
+	// The test host declares no use of Bluetooth, so the tests must never touch it: on macOS, the first call would end
+	// the process.
+	[Fact]
+	public void IsUsageDescribed_IsFalseForTheTestHost()
+	{
+		BluetoothTransport.IsUsageDescribed.Should().BeFalse();
+	}
+
 	[Fact]
 	public void CreateFactory_RejectsANonBluetoothEndPoint()
 	{

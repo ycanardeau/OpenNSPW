@@ -46,6 +46,15 @@ internal sealed unsafe partial class MacBluetoothConnector : IStreamConnector
 	[LibraryImport(Library, EntryPoint = "otsuki_bluetooth_destroy")]
 	private static partial void NativeDestroy(nint host);
 
+	[LibraryImport(Library, EntryPoint = "otsuki_bluetooth_usage_described")]
+	private static partial int NativeUsageDescribed();
+
+	[LibraryImport(Library, EntryPoint = "otsuki_bluetooth_paired_devices")]
+	private static partial void NativePairedDevices(
+		delegate* unmanaged<nint, byte*, byte*, void> device,
+		nint context
+	);
+
 	[LibraryImport(Library, EntryPoint = "otsuki_bluetooth_local_address")]
 	private static partial int NativeLocalAddress(byte* address);
 
@@ -72,7 +81,52 @@ internal sealed unsafe partial class MacBluetoothConnector : IStreamConnector
 
 	public EndPoint LocalEndPoint { get; }
 
-	private static BluetoothEndPoint GetLocalEndPoint()
+	// Whether the app declares why it uses Bluetooth, without which macOS kills it at its first Bluetooth call. False
+	// when the native library is missing, as in a build made on another system.
+	internal static bool IsUsageDescribed()
+	{
+		try
+		{
+			return NativeUsageDescribed() != 0;
+		}
+		catch (Exception e) when (e is DllNotFoundException or EntryPointNotFoundException)
+		{
+			return false;
+		}
+	}
+
+	[UnmanagedCallersOnly]
+	private static void AddPairedDevice(nint context, byte* address, byte* name)
+	{
+		try
+		{
+			if (GCHandle.FromIntPtr(context).Target is List<BluetoothDevice> devices)
+				devices.Add(
+					new BluetoothDevice(
+						BluetoothEndPoint.FromBytes(new ReadOnlySpan<byte>(address, 6)),
+						Marshal.PtrToStringUTF8((nint)name) ?? ""
+					)
+				);
+		}
+		catch (Exception) { }
+	}
+
+	internal static IReadOnlyList<BluetoothDevice> GetPairedDevices()
+	{
+		var devices = new List<BluetoothDevice>();
+		var handle = GCHandle.Alloc(devices);
+		try
+		{
+			NativePairedDevices(&AddPairedDevice, GCHandle.ToIntPtr(handle));
+		}
+		finally
+		{
+			handle.Free();
+		}
+		return devices;
+	}
+
+	internal static BluetoothEndPoint GetLocalEndPoint()
 	{
 		var address = stackalloc byte[6];
 		var status = NativeLocalAddress(address);
