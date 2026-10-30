@@ -29,6 +29,8 @@ On the screens the UI draws (a battle but the map editor's, and the setting scre
 ### Threads and input
 The game's thread starts when a game is chosen (`GameSession`), and the main menu comes back when it ends. Going back never waits for the game: it is asked to close, as closing its window or cancelling its dialog does, and ends on its own thread, stopping its sounds; only quitting the app waits for it, three seconds at most, so that it can leave the session.
 
+The game's dialogs are not in the snapshot. The UI reads them where the game keeps them, its windows (`HWND`), under `WindowsLock`, and changes them only through the game's message queue (`PostToGame`, `PostMessage`). A dialog is created in two steps on the game's thread: it joins the windows with its template's fields, then its procedure sets them as it handles `WM_INITDIALOG`. As in Win32, which shows it only after, the UI takes a dialog only once `HWND.Initialized` says it has handled `WM_INITDIALOG`. Otherwise the multiplayer form could fill itself from the empty template, once and for good: an empty name, and a host listening on DirectPlay's default port rather than the one saved.
+
 The keyboard goes to the game as it would to the original, but for Escape and F12, which close the game at once in the original: the UI asks first (`ConfirmForm`). In a single-player game in a Release build, the debug keys that swap the player's side, start the scenario again or sink a unit (F5, F6, F9) are held back. A mouse press on a form of the UI is the form's; the game only sees the presses elsewhere, such as on the title screen. While the setting form is shown, the game is given a cursor of its own away from its texts (`SettingForm.GameCursor`), as the original chooses a scenario by the cursor's place alone.
 
 ## Screens
@@ -85,6 +87,7 @@ What is drawn or taken differently:
 - In a single-player game, the result is written in NSPW NET's words (`ReadResult`); 1.22's decision writes its own, which the UI does not read.
 
 ## Not done
+- **The dialogs are read live** (see [Threads and input](#threads-and-input)). The lock keeps the windows consistent, but a dialog changes in several steps, and the UI can read it between them; `MultiplayerScreen.Update` even reads whether hosting is checked and OK is enabled without the lock. The way out is the battle's: the game's thread would publish an immutable copy of each dialog (its fields, checks, enabled states and list items) after `WM_INITDIALOG` and after each message it dispatches, and the UI would read only those copies and keep writing through `PostToGame`. Only the Win32 layer (`winuser.cs`) and the app would change, not the ported game, and the app would no longer take `WindowsLock`.
 - **The title screen and the map editor** are still drawn by the game, and the chat is still typed into the game's dialog.
 - **The controls have no tests of their own**: they live in `OpenNspw.Desktop` and draw with MonoGame. Moving what they compute (which unit a click takes, what a part shows) into a project the tests can use would let a saved snapshot be tested without a window.
 - **The debug lines** that the original's `DBG_MODE` writes at the top of the screen, and the keys that page them (F3, F4), are shown in every build, as the original's release shows them.
