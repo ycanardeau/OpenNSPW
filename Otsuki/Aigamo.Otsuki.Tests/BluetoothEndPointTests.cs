@@ -50,4 +50,15 @@ public class BluetoothEndPointTests
 		new BluetoothEndPoint(0x1234).Should().NotBe(new BluetoothEndPoint(0x1235));
 		new BluetoothEndPoint(0x1234).Should().NotBe(new NamedEndPoint("00:00:00:00:12:34"));
 	}
+
+	[Fact]
+	public void CreateFactory_RejectsANonBluetoothEndPoint()
+	{
+		var factory = BluetoothTransport.CreateFactory(Guid.NewGuid(), "Test");
+
+		FluentActions
+			.Invoking(() => factory(new IPEndPoint(IPAddress.Any, 0)))
+			.Should()
+			.Throw<NotSupportedException>();
+	}
 }
