@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Not published until it has connectors for the operating systems. -->
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Aigamo.Otsuki\Aigamo.Otsuki.csproj" />
+  </ItemGroup>
+
+</Project>
