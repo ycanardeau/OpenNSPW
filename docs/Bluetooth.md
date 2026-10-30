@@ -6,7 +6,7 @@ This is a proposal, not a final design. [Open questions](#open-questions) lists 
 ## Summary
 - Bluetooth play is **OpenNSPW against OpenNSPW only**. Microsoft's DirectPlay 8 Bluetooth service provider only ever shipped for Pocket PC 2002, never for desktop Windows, so NSPW 1.22 and NSPW NET never had one to play over.
 - The **ported game code does not change**. The connection dialog already handles a service provider it does not know (see [The game side](#the-game-side)).
-- **Otsuki** gets general endpoints instead of IPv4 ones, and a transport that carries its datagrams over any reliable stream.
+- **Otsuki** has general endpoints instead of IPv4 ones, and a transport that carries its datagrams over any reliable stream.
 - A new **Bluetooth Classic RFCOMM** connector supplies those streams, with code of its own for each OS, starting with macOS.
 - **Without any of this**, players can already use a Bluetooth PAN (IP over Bluetooth, set up in the OS) with the TCP/IP service provider.
 
@@ -50,12 +50,12 @@ Peers send these URLs to each other while joining (`ICanIntroduceSelf`, `ICanAdm
 UDP behaviour stays exactly as it was.
 
 ### Datagrams over a stream
-RFCOMM gives a reliable byte stream, not datagrams. A `StreamDatagramTransport` adapts one to `IDatagramTransport`:
+Done: RFCOMM gives a reliable byte stream, not datagrams, so `StreamDatagramTransport` adapts streams to `IDatagramTransport`:
 
-- It frames each datagram with a 16-bit length.
-- It keeps one stream per remote endpoint. It opens a stream on the first `Send` to an unknown endpoint, and accepts the streams that remote peers open.
-- While a stream is still opening, datagrams sent to it are dropped. The reliable protocol resends them, as it does after packet loss.
-- The transport doesn't know about Bluetooth. It works through a small connector interface that listens, connects, and hands it streams.
+- It frames each datagram with its length, as a big-endian 16-bit number. Longer datagrams are dropped.
+- It keeps one stream per remote endpoint. The first `Send` to an endpoint opens one, and streams that remote endpoints open are accepted. Replies go back over the accepted stream.
+- Datagrams sent while a stream is opening wait for it, up to 256. When a stream fails to open, fails or closes, the datagrams still waiting are lost. The reliable protocol resends them, as after packet loss, and the next `Send` opens a new stream.
+- The transport doesn't know about Bluetooth. It gets its streams from an `IStreamConnector`, which opens them, accepts them, and is the Bluetooth part of each OS.
 
 Otsuki's reliable protocol then runs on top of a stream that is already reliable. That is wasteful but harmless. It never sees loss, so it never resends. Its acknowledgements and keep-alives still detect a peer that is gone.
 
@@ -93,8 +93,8 @@ Why Classic rather than Bluetooth Low Energy (BLE):
 Each step builds and is tested on its own:
 
 1. **Generalize Otsuki's endpoints.** Done. All Otsuki and OpenNSPW network tests pass, and `NamedEndPointTests` run a session over endpoints that are not IP addresses.
-2. **`StreamDatagramTransport`.** Test it with in-memory stream pairs: framing, opening a stream on first send, accepting, a peer that disappears. Then run a whole two-peer session over it.
-3. **The macOS RFCOMM connector.** Try it first with a small console app between two Macs.
+2. **`StreamDatagramTransport`.** Done. `StreamDatagramTransportTests` cover framing, opening a stream on the first send, replies over an accepted stream, an endpoint that refuses, and a peer that comes back, over in-memory streams, and run a two-peer session over it.
+3. **The macOS RFCOMM connector**, an `IStreamConnector`. Try it first with a small console app between two Macs.
 4. **The Bluetooth service provider** in `OpenNspw.DirectPlay`, with a fake connector in tests, so that `NetworkTests` can play a game over it.
 5. **The device picker** in the desktop app, and `NSBluetoothAlwaysUsageDescription`.
 6. **A manual two-machine game**, run through the whole lifecycle: game end, Back, play again, close.
