@@ -850,4 +850,115 @@ public sealed partial class StrongPlayer
 
 		return false;
 	}
+
+	// How far a warship's anti-aircraft shells reach (ShipFireAntiAircraftShellAtTarget): a battleship's 700, a
+	// cruiser's 600, from a quarter of that. Others fire none.
+	private static double AntiAircraftRange(UnitKind kind) =>
+		kind switch
+		{
+			UnitKind.Battleship => 700,
+			UnitKind.Cruiser => 600,
+			_ => 0,
+		};
+
+	// The enemy attacker or bomber, its weapon still aboard, found and flying, within a warship's anti-aircraft reach, that
+	// is the nearest one of the player's carriers: the one about to drop on it. Null if none is.
+	private static int? AttackerToTarget(Nspw game, int ship, List<int> decks)
+	{
+		ref var unit = ref game.Units[ship];
+		var range = AntiAircraftRange(unit.Kind);
+		int? best = null;
+		var bestDistance = double.PositiveInfinity;
+		for (var n = 1; n <= game.MaxUnitId; n++)
+		{
+			ref var plane = ref game.Units[n];
+			if (
+				!plane.IsUsed
+				|| plane.Side == game.LocalSide
+				|| !UnitFacts.IsStrikePlane(plane.Kind)
+				|| plane.Ammo == 0
+				|| plane.PlaneState != UnitState.Flying
+				|| !plane.IsFound
+			)
+				continue;
+
+			var distance = UnitFacts.Distance(plane.Position, unit.Position);
+			if (distance < range * 0.25 || distance > range)
+				continue;
+
+			var at = plane.Position;
+			var fromDeck =
+				decks.Count == 0
+					? distance
+					: decks.Min(d => UnitFacts.Distance(at, game.Units[d].Position));
+			if (fromDeck < bestDistance)
+				(best, bestDistance) = (n, fromDeck);
+		}
+
+		return best;
+	}
+
+	// With Parameters.TargetAttackers, each battleship and cruiser of the player's takes as its target the enemy attacker
+	// within its anti-aircraft reach that is nearest the player's carriers (AttackerToTarget), unless its target already
+	// is such a plane, and at most every 60 frames: a battleship with a plane as its target fires an aimed salvo at it as
+	// well as its others (ControlBattleshipFiring), half as many shells again; a cruiser aims at it, and with a ship as its
+	// target, or a plane out of its reach, fires none (ControlCruiserFiring).
+	private bool TryTargetAttackers(Nspw game)
+	{
+		if (!Parameters.TargetAttackers)
+			return false;
+
+		var decks = Decks(game);
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var ship = ref game.Units[m];
+			if (
+				!IsOwn(game, m)
+				|| ship.Category != UnitCategory.Ship
+				|| AntiAircraftRange(ship.Kind) == 0
+				|| UnitFacts.Now(game) - _antiAircraftOrders.GetValueOrDefault(m, int.MinValue / 2)
+					< 60
+			)
+				continue;
+
+			if (AttackerToTarget(game, m, decks) is not { } attacker)
+				continue;
+
+			ref var current = ref game.Units[ship.Target];
+			var range = AntiAircraftRange(ship.Kind);
+			if (
+				ship.Target != 0
+				&& current.IsUsed
+				&& current.Category == UnitCategory.Plane
+				&& current.Side != game.LocalSide
+				&& current.Ammo != 0
+				&& UnitFacts.Distance(current.Position, ship.Position) is var d
+				&& d >= range * 0.25
+				&& d <= range
+			)
+				continue;
+
+			_antiAircraftOrders[m] = UnitFacts.Now(game);
+			var warship = m;
+			SelectAlone(m, "aiming at attackers");
+			_clicks.Enqueue(g =>
+			{
+				if (g.SelectedUnit != warship)
+					return GiveUp(g, $"aiming {warship}: selected {g.SelectedUnit}");
+				if (g.Units[attacker].IsUsed && g.Units[attacker].IsFound)
+				{
+					g.Commands.ClickUnit(attacker);
+					Log?.Invoke(
+						$"{UnitFacts.Now(g)}: {g.Units[warship].Kind} {warship} aims at {g.Units[attacker].Kind} {attacker}: target {g.Units[warship].Target}"
+					);
+				}
+
+				return true;
+			});
+			Deselect();
+			return true;
+		}
+
+		return false;
+	}
 }
