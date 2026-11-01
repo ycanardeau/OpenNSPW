@@ -949,7 +949,8 @@ public sealed partial class StrongPlayer
 	// The bearing a strike runs in from, chosen by playing it forward (Lookahead): the heuristic's (ApproachBearing) and
 	// eight others around the target, each flown in copies of the battle on two seeds of their own for 1800 frames, as the
 	// planes would fly them, the game's own attack taking over at the end of the path; scored by the HP the enemy's
-	// ships the victory counts lose within 3000 of the target, less 3 for each plane of the strike lost.
+	// ships the victory counts lose within 3000 of the target, less Parameters.LookaheadPlaneCost for each plane of the
+	// strike lost.
 	private double LookAheadApproach(
 		Nspw game,
 		List<int> planes,
@@ -1038,7 +1039,7 @@ public sealed partial class StrongPlayer
 
 		double Score(Nspw g) =>
 			counted.Sum(n => hp[n] - Math.Max(g.Units[n].IsUsed ? g.Units[n].HP : 0, 0))
-			- (3 * planes.Count(n => !g.Units[n].IsUsed));
+			- (Parameters.LookaheadPlaneCost * planes.Count(n => !g.Units[n].IsUsed));
 
 		var scores = Lookahead.Evaluate(
 			game,

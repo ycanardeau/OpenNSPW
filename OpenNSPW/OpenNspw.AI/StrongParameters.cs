@@ -131,6 +131,10 @@ public sealed record StrongParameters
 	// (TryRetargetWhenClose).
 	public bool RetargetWhenClose { get; init; }
 
+	// With LookaheadApproach, what a plane of the strike lost costs, in the HP of the enemy's counted ships: sparing planes
+	// at 3 dropped fewer weapons and sank fewer carriers (StrongAIResearch.md).
+	public double LookaheadPlaneCost { get; init; } = 3;
+
 	// Whether strikes run in on a ship only from where the sea lets a torpedo be dropped (ApproachBearing, IsSeaRun).
 	public bool SeaApproach { get; init; }
 
