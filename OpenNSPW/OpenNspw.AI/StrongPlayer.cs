@@ -113,6 +113,8 @@ public sealed partial class StrongPlayer : IPlayer
 	private readonly Dictionary<int, int> _dropsOn = [];
 	private readonly Dictionary<int, int> _submarineOrders = [];
 	private readonly Dictionary<int, int> _antiAircraftOrders = [];
+	private readonly Dictionary<int, int> _retargeted = [];
+	private readonly Dictionary<int, int> _closeSince = [];
 	private readonly Dictionary<int, int> _diverted = [];
 	private readonly Dictionary<int, int> _closeAt = [];
 	private readonly HashSet<int> _dispersed = [];
@@ -407,6 +409,7 @@ public sealed partial class StrongPlayer : IPlayer
 			!TryIntercept(game, decks)
 			&& !TryMission(game)
 			&& !TryTargetAttackers(game)
+			&& !TryRetargetWhenClose(game)
 			&& !TryGuideScouts(game)
 			&& !TryBingo(game)
 			&& !TryDivert(game)

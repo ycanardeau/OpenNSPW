@@ -2,12 +2,15 @@ namespace OpenNspw.AI;
 
 // What a strike that hunts carriers attacks, once it finds the enemy: the nearest carrier (Carriers); the battleships
 // and cruisers within 1500 of a carrier first, whose guns turn the attackers back, and the carriers once none is left
-// (Escorts); or the cruisers only so (Cruisers), sparing the battleships' 41 HP.
+// (Escorts); or the cruisers only so (Cruisers), sparing the battleships' 41 HP; or both at once (Split): a share of
+// each strike's planes (EscortShare) at the escorts, the rest at the carrier, so that the escorts' guns are spread
+// or silenced as the carrier is struck, and the strike does not spend the battle on the escorts.
 public enum Targeting
 {
 	Carriers,
 	Escorts,
 	Cruisers,
+	Split,
 }
 
 // The numbers the strong player's tactics turn on, which the arena can set to tune them (--params, StrongAIResearch.md):
@@ -124,6 +127,10 @@ public sealed record StrongParameters
 	// (LookAheadApproach), rather than by the escorts' cover alone.
 	public bool LookaheadApproach { get; init; }
 
+	// Whether an attacker too close to the ship it attacks to drop on it takes another it can drop on now
+	// (TryRetargetWhenClose).
+	public bool RetargetWhenClose { get; init; }
+
 	// Whether strikes run in on a ship only from where the sea lets a torpedo be dropped (ApproachBearing, IsSeaRun).
 	public bool SeaApproach { get; init; }
 
@@ -141,6 +148,9 @@ public sealed record StrongParameters
 
 	// What a strike that hunts carriers attacks.
 	public Targeting Targeting { get; init; } = Targeting.Carriers;
+
+	// With Targeting.Split, the share of the strike planes that attack the escorts.
+	public double EscortShare { get; init; } = 1 / 3.0;
 
 	// The parameters from "Name=value,Name=value", the others at their defaults.
 	public static StrongParameters Parse(string text)

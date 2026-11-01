@@ -288,14 +288,24 @@ public sealed partial class StrongPlayer
 	private bool TakesAnyTarget(Nspw game, int plane) =>
 		!HuntsCarriers || game.Units[plane].Fuel <= FuelToHome(game, plane) + 15;
 
-	// Whether a ship found is an escort a strike that hunts carriers attacks first (Parameters.Targeting): a battleship
-	// or a cruiser, or a cruiser only, within 1500 of a carrier the victory conditions count, found lately.
-	private bool IsEscortToStrike(Nspw game, Contact contact) =>
+	// Whether a plane is of the share of the strike planes that attack the escorts (Targeting.Split, EscortShare): by its
+	// number, spread evenly over the planes by the golden ratio.
+	private bool IsEscortStriker(int plane) => plane * 0.6180339887 % 1 < Parameters.EscortShare;
+
+	// Whether a ship found is an escort a strike plane that hunts carriers attacks first (Parameters.Targeting): a
+	// battleship or a cruiser, or a cruiser only, or, for the share of the planes that do (IsEscortStriker), a battleship
+	// or a cruiser, within 1500 of a carrier the victory conditions count, found lately.
+	private bool IsEscortToStrike(Nspw game, Contact contact, int plane) =>
 		HuntsCarriers
 		&& (
-			Parameters.Targeting == Targeting.Escorts
-				? contact.Kind is UnitKind.Battleship or UnitKind.Cruiser
-				: Parameters.Targeting == Targeting.Cruisers && contact.Kind == UnitKind.Cruiser
+			Parameters.Targeting switch
+			{
+				Targeting.Escorts => contact.Kind is UnitKind.Battleship or UnitKind.Cruiser,
+				Targeting.Cruisers => contact.Kind == UnitKind.Cruiser,
+				Targeting.Split => IsEscortStriker(plane)
+					&& contact.Kind is UnitKind.Battleship or UnitKind.Cruiser,
+				_ => false,
+			}
 		)
 		&& _contacts.All.Any(c =>
 			IsCounted(c.Kind)
@@ -355,13 +365,13 @@ public sealed partial class StrongPlayer
 					game.Units[c.Unit].IsFound
 					&& CanAttack(weapon, c)
 					&& UnitFacts.Distance(position, c.Position) <= 2500
-					&& (takesAny || IsCounted(c.Kind) || IsEscortToStrike(game, c))
+					&& (takesAny || IsCounted(c.Kind) || IsEscortToStrike(game, c, plane))
 					&& (!_knowledge.StrikesCountedOnly || IsCounted(c.Kind))
 				)
 				.OrderByDescending(c =>
 					HuntsCarriers
 						? (
-							IsEscortToStrike(game, c) ? 200
+							IsEscortToStrike(game, c, plane) ? 200
 							: IsCounted(c.Kind)
 								? (
 									Parameters.SpareCrippled && IsThoughtCrippled(game, c)
@@ -1933,6 +1943,109 @@ public sealed partial class StrongPlayer
 				);
 				return true;
 			});
+			return true;
+		}
+
+		return false;
+	}
+
+	// Whether an attacker could drop its torpedo on a ship now, as the game lets it (PlaneDropTorpedo): the point where
+	// the ship would be after the torpedo's run, at its speed and heading, is 100 to 220 away and within 45° of the
+	// plane's heading, and the sea lets a torpedo be dropped there and run (UnitFacts.CanDropTorpedoAt, IsSeaRun).
+	private static bool CanDropTorpedoNow(Nspw game, int plane, int ship)
+	{
+		ref var unit = ref game.Units[plane];
+		ref var target = ref game.Units[ship];
+		var ahead = target.Speed * (all_head.AIR_TPD_LOS_DSTC / all_head.AIR_TPD_SPD);
+		var aim = new WorldPosition(
+			target.Position.X + (target.Direction.Cos() * ahead),
+			target.Position.Y + (target.Direction.Sin() * ahead)
+		);
+		var distance = UnitFacts.Distance(unit.Position, aim);
+		var off = Math.Abs(
+			((BearingTo(unit.Position, aim) - unit.Direction.Degrees + 540) % 360) - 180
+		);
+		return distance is >= 100 and <= all_head.AIR_TPD_LOS_DSTC
+			&& off <= 45
+			&& UnitFacts.CanDropTorpedoAt(game, unit.Position)
+			&& IsSeaRun(game, aim, BearingTo(aim, unit.Position));
+	}
+
+	// With Parameters.RetargetWhenClose, an attacker with its torpedo that has been within 400 of the ship it attacks for
+	// 60 frames without being able to drop on it (CanDropTorpedoNow), circling to come round, takes as its target another
+	// enemy ship found that it can drop on now, one the victory counts first, then the one whose aim is nearest the
+	// middle of the drop's reach; at most once every 50 frames a plane: coming round costs time over the escorts' guns.
+	private bool TryRetargetWhenClose(Nspw game)
+	{
+		if (!Parameters.RetargetWhenClose)
+			return false;
+
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var plane = ref game.Units[m];
+			if (
+				!IsOwn(game, m)
+				|| plane.Kind != UnitKind.Attacker
+				|| plane.Weapon != FireKind.Torpedo
+				|| plane.Ammo == 0
+				|| plane.PlaneState != UnitState.Flying
+				|| plane.Mode == UnitMode.Return
+				|| plane.Target == 0
+				|| !game.Units[plane.Target].IsUsed
+				|| game.Units[plane.Target].Category != UnitCategory.Ship
+				|| UnitFacts.Distance(plane.Position, game.Units[plane.Target].Position) > 400
+				|| CanDropTorpedoNow(game, m, plane.Target)
+			)
+			{
+				_closeSince.Remove(m);
+				continue;
+			}
+
+			_closeSince.TryAdd(m, UnitFacts.Now(game));
+			if (
+				UnitFacts.Now(game) - _closeSince[m] < 60
+				|| UnitFacts.Now(game) - _retargeted.GetValueOrDefault(m, int.MinValue / 2) < 50
+			)
+				continue;
+
+			var current = plane.Target;
+			var position = plane.Position;
+			var other = Enumerable
+				.Range(1, game.MaxUnitId)
+				.Where(n =>
+					n != current
+					&& game.Units[n].IsUsed
+					&& game.Units[n].Side != game.LocalSide
+					&& game.Units[n].Category == UnitCategory.Ship
+					&& !UnitFacts.IsBase(game.Units[n].Kind)
+					&& game.Units[n].IsFound
+					&& !(game.Units[n].Kind == UnitKind.Submarine && game.Units[n].IsSubmerged)
+					&& CanDropTorpedoNow(game, m, n)
+				)
+				.OrderBy(n => IsCounted(game.Units[n].Kind) ? 0 : 1)
+				.ThenBy(n => Math.Abs(UnitFacts.Distance(position, game.Units[n].Position) - 160))
+				.FirstOrDefault();
+			if (other == 0)
+				continue;
+
+			_retargeted[m] = UnitFacts.Now(game);
+			var attacker = m;
+			SelectFlying(m, "retargeting");
+			_clicks.Enqueue(g =>
+			{
+				if (g.SelectedUnit != attacker)
+					return GiveUp(g, $"retargeting {attacker}: selected {g.SelectedUnit}");
+				if (g.Units[other].IsUsed && g.Units[other].IsFound)
+				{
+					g.Commands.ClickUnit(other);
+					Log?.Invoke(
+						$"{UnitFacts.Now(g)}: {g.Units[attacker].Kind} {attacker}, too close to {g.Units[current].Kind} {current}, aims at {g.Units[other].Kind} {other}"
+					);
+				}
+
+				return true;
+			});
+			Deselect();
 			return true;
 		}
 
