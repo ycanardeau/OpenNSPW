@@ -237,11 +237,16 @@ public sealed partial class StrongPlayer : IPlayer
 	// Deselects the selected unit, if any.
 	private void Deselect()
 	{
-		_clicks.Enqueue(g =>
-		{
-			if (g.SelectedUnit != 0)
-				g.Commands.RightClick();
-		});
+		_clicks.EnqueueMaybe(
+			(g, idle) =>
+			{
+				if (g.SelectedUnit != 0)
+					g.Commands.RightClick();
+				else
+					idle();
+				return true;
+			}
+		);
 	}
 
 	// Shows a deck's parked planes in the sidebar, so that they can be clicked: selects the deck and switches its view
@@ -461,6 +466,8 @@ public sealed partial class StrongPlayer : IPlayer
 		if (_clicks.IsEmpty(game))
 			Plan(game);
 
+		_clicks.FramesPerClick = Parameters.FramesPerClick;
+		_clicks.SkipsIdleClicks = Parameters.SkipIdleClicks;
 		_clicks.Act(game);
 	}
 }

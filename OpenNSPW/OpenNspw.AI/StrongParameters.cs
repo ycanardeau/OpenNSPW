@@ -113,6 +113,13 @@ public sealed record StrongParameters
 	// The fuel, beyond what it needs to come home, below which a plane coming home holds its deck's launches.
 	public double RecoverMargin { get; init; } = 30;
 
+	// The frames of speed 1 each click takes (ClickQueue): 4, as a hand gives a press and a release, or as few as 1, the
+	// game's own limit of a click a frame, faster than a hand.
+	public int FramesPerClick { get; init; } = 4;
+
+	// Whether a deselection with nothing selected takes no time (ClickQueue.SkipsIdleClicks): no click is given.
+	public bool SkipIdleClicks { get; init; }
+
 	// Whether a carrier holds its course while its planes are landing, unless within the enemy's strike range
 	// (TryPosition, IsLandingOn): they land only along its heading.
 	public bool HoldCourse { get; init; }
