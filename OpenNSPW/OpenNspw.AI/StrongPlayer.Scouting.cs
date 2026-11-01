@@ -226,6 +226,38 @@ public sealed partial class StrongPlayer
 			+ Parameters.HomeFuelMargin;
 	}
 
+	// Whether a plane of a deck's is coming home to it, within 2000, with fuel for little more than the way
+	// (FuelToHome and Parameters.RecoverMargin): a deck takes no plane while a launch from it is under way
+	// (TryLandOnCarrier), and one launch of a strike keeps the deck for a while, so the plane would circle it until its
+	// fuel ran out.
+	private bool IsRecovering(Nspw game, int deck)
+	{
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var plane = ref game.Units[m];
+			if (
+				IsOwn(game, m)
+				&& plane.Category == UnitCategory.Plane
+				&& plane.PlaneState == UnitState.Flying
+				&& plane.Carrier == deck
+				&& plane.Mode == UnitMode.Return
+				&& UnitFacts.Distance(plane.Position, game.Units[deck].Position) <= 2000
+				&& plane.Fuel <= FuelToHome(game, m) + Parameters.RecoverMargin
+			)
+				return true;
+		}
+
+		return false;
+	}
+
+	// Whether the player launches from a deck now: the deck lets a plane take off (UnitFacts.CanLaunch), and, with
+	// Parameters.RecoverFirst, none of its planes short of fuel is coming home to it (IsRecovering), for its strikes and
+	// scouts. Interceptions and patrols do not wait (TryIntercept, TryPatrol): they cover the deck the planes land on,
+	// and held, they left the carriers to the enemy's strikes, which hit them half as hard again.
+	private bool MayLaunch(Nspw game, int deck) =>
+		UnitFacts.CanLaunch(ref game.Units[deck])
+		&& !(Parameters.RecoverFirst && IsRecovering(game, deck));
+
 	// While no enemy ship has been found lately, the decks' scouts fly out, each on its search (SearchLegs), a new one
 	// each flight; TryGuideScouts flies them on. While it hunts carriers: while no carrier has been found lately, one
 	// every ScoutFrames while another is on its way out, so that one is always out; and one to relieve the ones keeping
@@ -272,7 +304,7 @@ public sealed partial class StrongPlayer
 
 		foreach (var deck in decks)
 		{
-			if (!UnitFacts.CanLaunch(ref game.Units[deck]))
+			if (!MayLaunch(game, deck))
 				continue;
 
 			var scout = ScoutsOf(game, deck)

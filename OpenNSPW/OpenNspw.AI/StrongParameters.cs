@@ -106,6 +106,13 @@ public sealed record StrongParameters
 	// them (HomeWaypoint).
 	public bool ReturnAround { get; init; }
 
+	// Whether a deck holds its strikes and scouts, but not its interceptions and patrols, while a plane of its own short
+	// of fuel is coming home to it (MayLaunch): no plane lands on a deck while one takes off from it.
+	public bool RecoverFirst { get; init; }
+
+	// The fuel, beyond what it needs to come home, below which a plane coming home holds its deck's launches.
+	public double RecoverMargin { get; init; } = 30;
+
 	// Whether a deck that hunts carriers keeps scouting while it knows where a carrier is (IsRemembered), its scouts kept
 	// unarmed for it; or stops, and arms them to strike, until the carrier is lost.
 	public bool KeepScouting { get; init; } = true;

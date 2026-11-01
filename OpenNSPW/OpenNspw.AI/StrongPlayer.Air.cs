@@ -1474,7 +1474,7 @@ public sealed partial class StrongPlayer
 	{
 		foreach (var deck in decks)
 		{
-			if (!UnitFacts.CanLaunch(ref game.Units[deck]) || IsUnderRaid(game, deck))
+			if (!MayLaunch(game, deck) || IsUnderRaid(game, deck))
 				continue;
 
 			foreach (var weapon in new[] { FireKind.Torpedo, FireKind.Bomb })
@@ -1649,7 +1649,7 @@ public sealed partial class StrongPlayer
 		foreach (var deck in decks)
 		{
 			if (
-				!UnitFacts.CanLaunch(ref game.Units[deck])
+				!MayLaunch(game, deck)
 				|| UnitFacts.Now(game) - _huntedFrom.GetValueOrDefault(deck, -HuntFrames)
 					< HuntFrames
 			)
