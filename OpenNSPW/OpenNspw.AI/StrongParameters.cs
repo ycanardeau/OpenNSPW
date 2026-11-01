@@ -120,6 +120,9 @@ public sealed record StrongParameters
 	// Whether a deselection with nothing selected takes no time (ClickQueue.SkipsIdleClicks): no click is given.
 	public bool SkipIdleClicks { get; init; }
 
+	// Whether strikes run in on a ship only from where the sea lets a torpedo be dropped (ApproachBearing, IsSeaRun).
+	public bool SeaApproach { get; init; }
+
 	// Whether a carrier holds its course while its planes are landing, unless within the enemy's strike range
 	// (TryPosition, IsLandingOn): they land only along its heading.
 	public bool HoldCourse { get; init; }

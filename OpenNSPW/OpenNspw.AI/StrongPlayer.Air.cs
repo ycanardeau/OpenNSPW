@@ -828,9 +828,28 @@ public sealed partial class StrongPlayer
 		return UnitFacts.Distance(point, new WorldPosition(a.X + (t * dx), a.Y + (t * dy)));
 	}
 
+	// Whether a torpedo plane can run in on a target at a point from a bearing, as for the land: the sea all the way in
+	// from 240, and a drop allowed (UnitFacts.CanDropTorpedoAt) at 100 to 220, where it drops (PlaneDropTorpedo), so
+	// that it does not circle over the land with its torpedo until it is shot down or turns home.
+	private static bool IsSeaRun(Nspw game, WorldPosition at, double bearing)
+	{
+		for (var d = 20; d <= 240; d += 20)
+		{
+			var point = PointAt(at, bearing, d);
+			if (
+				!UnitFacts.IsSea(game, point)
+				|| (d is >= 100 and <= 220 && !UnitFacts.CanDropTorpedoAt(game, point))
+			)
+				return false;
+		}
+
+		return true;
+	}
+
 	// The side from which a strike runs in on a target at a point, coming from a bearing: the bearing from the target
 	// whose last 1500 the warships found around it cover least, then the nearest to where the strike comes from; with
-	// Parameters.BeamApproach, only within 30° of square to the target's heading, on either side.
+	// Parameters.BeamApproach, only within 30° of square to the target's heading, on either side; with
+	// Parameters.SeaApproach, only those with the sea to run in on (IsSeaRun), or any bearing that has it, if none.
 	private double ApproachBearing(Nspw game, int target, WorldPosition at, double from)
 	{
 		var heading = _contacts.Find(target)?.Direction;
@@ -843,6 +862,21 @@ public sealed partial class StrongPlayer
 					),
 				]
 				: Enumerable.Range(0, 24).Select(i => from + (i * 15)).ToList();
+		if (Parameters.SeaApproach)
+		{
+			var sea = bearings.Where(b => IsSeaRun(game, at, b)).ToList();
+			if (sea.Count == 0)
+				sea =
+				[
+					.. Enumerable
+						.Range(0, 24)
+						.Select(i => from + (i * 15))
+						.Where(b => IsSeaRun(game, at, b)),
+				];
+			if (sea.Count > 0)
+				bearings = sea;
+		}
+
 		var guns = _contacts
 			.All.Where(c =>
 				c.Unit != target
