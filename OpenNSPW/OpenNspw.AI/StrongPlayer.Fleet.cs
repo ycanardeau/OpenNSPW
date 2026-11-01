@@ -266,6 +266,19 @@ public sealed partial class StrongPlayer
 	private static double ComputerStrikeRange(Nspw game) =>
 		game.CpuSide == Side.Japan ? 4350 : 3550;
 
+	// How far the player's strikes reach: the farthest of its attackers and bombers (Reach), or none.
+	private static double StrikeReach(Nspw game)
+	{
+		var reach = 0.0;
+		for (var n = 1; n <= game.MaxUnitId; n++)
+		{
+			if (IsOwn(game, n) && UnitFacts.IsStrikePlane(game.Units[n].Kind))
+				reach = Math.Max(reach, Reach(ref game.Units[n]));
+		}
+
+		return reach;
+	}
+
 	// What a carrier keeps its distance from, each with the distance: the enemy's carriers found, where they were last
 	// found, or, heading home (HomeOf) and lost from sight for CarrierMemoryFrames, where they would be by now, which the
 	// carrier follows to keep them within its planes' reach, the computer's strike range (3550, or 4350 as Japan) and, but
@@ -273,7 +286,9 @@ public sealed partial class StrongPlayer
 	// carriers, at their full speed (0.7 a tick), up to 1000: farther, the carrier would sail out of its own planes' reach
 	// before the scouts find them again; or, none found yet, the areas where the briefing expects them, if the victory
 	// conditions count them, the range and the area's radius; and the places the briefing names, whose air bases strike
-	// 1.5 times as far (ComputerPlayer.md, Air strikes). Whether each is known, found or a place, or only expected.
+	// 1.5 times as far (ComputerPlayer.md, Air strikes), but no farther than the player's strikes reach, which must reach
+	// them; and the other enemy air bases found, 1.5 times as far. Whether each is known, found or a place, or only
+	// expected.
 	private List<(WorldPosition Position, double Range, bool IsKnown)> Threats(Nspw game)
 	{
 		var range = ComputerStrikeRange(game);
@@ -307,8 +322,31 @@ public sealed partial class StrongPlayer
 					.Select(a => (a.Center, range + a.Radius, false))
 			);
 
+		var reach = StrikeReach(game);
 		threats.AddRange(
-			_knowledge.Enemy.Where(a => a.IsPlace).Select(a => (a.Center, range * 1.5, true))
+			_knowledge
+				.Enemy.Where(a => a.IsPlace)
+				.Select(a =>
+					(
+						a.Center,
+						Math.Min(
+							range * 1.5,
+							reach - Parameters.KeepAwayMargin - Parameters.ApproachBand
+						),
+						true
+					)
+				)
+		);
+		threats.AddRange(
+			_contacts
+				.All.Where(c =>
+					c.Kind == UnitKind.AirBase
+					&& game.Units[c.Unit].IsUsed
+					&& !_knowledge.Enemy.Any(a =>
+						a.IsPlace && UnitFacts.Distance(a.Center, c.Position) <= a.Radius + 800
+					)
+				)
+				.Select(c => (c.Position, range * 1.5, true))
 		);
 		return threats;
 	}

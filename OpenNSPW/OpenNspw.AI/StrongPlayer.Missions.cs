@@ -12,6 +12,7 @@ public sealed partial class StrongPlayer
 	private const double DoolittleRangeShare = 0.85;
 
 	private readonly HashSet<int> _seenCities = [];
+	private readonly HashSet<int> _placeTargets = [];
 	private int _missionOrdered = -1000;
 
 	// Scenario 205: the point the rescue flies by each way, north-east of Guadalcanal, clear of the enemy fighters that
@@ -358,13 +359,66 @@ public sealed partial class StrongPlayer
 			_ => false,
 		};
 
+	// Whether the places the briefing names are destroyed: what the victory conditions count there has been found, and is
+	// gone, all of it.
+	private bool ArePlacesDestroyed(Nspw game)
+	{
+		foreach (
+			var contact in _contacts.All.Where(c =>
+				IsCounted(c.Kind)
+				&& _knowledge.Enemy.Any(a =>
+					a.IsPlace && UnitFacts.Distance(c.Position, a.Center) <= a.Radius + 800
+				)
+			)
+		)
+		{
+			_placeTargets.Add(contact.Unit);
+		}
+
+		return _placeTargets.Count > 0 && _placeTargets.All(m => !game.Units[m].IsUsed);
+	}
+
+	// Once the places the briefing names are destroyed, every ship of the player's that leads or sails alone sails back to
+	// where the briefing wants it at the end, its formation with it.
+	private bool TryReturnHome(Nspw game)
+	{
+		if (
+			_knowledge.Home is not { } home
+			|| !ArePlacesDestroyed(game)
+			|| !IsMissionOrderDue(game, 40)
+		)
+			return false;
+
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var ship = ref game.Units[m];
+			if (
+				!IsOwn(game, m)
+				|| ship.Category != UnitCategory.Ship
+				|| UnitFacts.IsBase(ship.Kind)
+				|| ship.GroupLeader != 0
+				|| UnitFacts.IsAnchored(ref ship)
+				|| UnitFacts.Distance(UnitFacts.FinalDestination(ref ship), home.Center)
+					< home.Radius * 0.6
+			)
+				continue;
+
+			_missionOrdered = UnitFacts.Now(game);
+			SelectAlone(m, "coming home");
+			var point = PointAt(home.Center, m * 47.0, Math.Min(home.Radius * 0.5, 80.0 * (m % 6)));
+			return SailSelected(game, m, point, "comes home to") || true;
+		}
+
+		return false;
+	}
+
 	// The scenario's mission, if it has one: true if it gave an order.
 	private bool TryMission(Nspw game) =>
 		game.ScenarioNumber switch
 		{
 			300 => TryDoolittle(game),
 			205 => TryRescue(game),
-			_ => false,
+			_ => TryReturnHome(game),
 		};
 
 	// Whether the mission holds the general strikes back.
@@ -372,7 +426,7 @@ public sealed partial class StrongPlayer
 		game.ScenarioNumber switch
 		{
 			300 => !IsDoolittleLaunching(game) || CitiesDestroyed(game) >= 2,
-			_ => false,
+			_ => _knowledge.Home is not null && ArePlacesDestroyed(game),
 		};
 
 	// Whether the mission holds the scouts back.
@@ -388,6 +442,6 @@ public sealed partial class StrongPlayer
 		game.ScenarioNumber switch
 		{
 			300 => true,
-			_ => false,
+			_ => _knowledge.Home is not null && ArePlacesDestroyed(game),
 		};
 }

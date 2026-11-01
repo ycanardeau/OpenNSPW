@@ -6,14 +6,16 @@ public sealed record Area(string Name, WorldPosition Center, double Radius, bool
 // What a player knows of a scenario before the battle (docs/StrongAI.md, Scenario knowledge): where the enemy is
 // expected, the places to attack among them, the enemy kinds the victory conditions count, whether the player wins by
 // holding on until the end, where its transports land, and whether its strikes go only at what the victory conditions
-// count, as a mission whose planes are too few, or too far, to spend on anything else. Written from the briefings, the
-// victory conditions and the maps; never from where a hidden unit is.
+// count, as a mission whose planes are too few, or too far, to spend on anything else; and where its ships must come
+// back to once the places are destroyed. Written from the briefings, the victory conditions and the maps; never from
+// where a hidden unit is.
 public sealed record ScenarioKnowledge(
 	IReadOnlyList<Area> Enemy,
 	IReadOnlyList<UnitKind> Counted,
 	bool HoldsOn = false,
 	Area? Landing = null,
-	bool StrikesCountedOnly = false
+	bool StrikesCountedOnly = false,
+	Area? Home = null
 )
 {
 	// The places of the maps, where the scenarios' bases stand.
@@ -161,7 +163,11 @@ public sealed record ScenarioKnowledge(
 				HoldsOn: true
 			),
 			// The ships anchored at Yokosuka.
-			109 => new([Places.Yokosuka], [.. Carriers, .. BattleLine, UnitKind.Transport]),
+			109 => new(
+				[Places.Yokosuka],
+				[.. Carriers, .. BattleLine, UnitKind.Transport],
+				Home: new("the waters of the start", new(8000, -7000), 900, true)
+			),
 			// The U.S. facilities on Guadalcanal, and the U.S. carrier south of it.
 			200 => new(
 				[
@@ -197,7 +203,11 @@ public sealed record ScenarioKnowledge(
 				[UnitKind.Battleship]
 			),
 			// Rabaul's airfield.
-			207 => new([Places.Rabaul], [UnitKind.AirBase]),
+			207 => new(
+				[Places.Rabaul],
+				[UnitKind.AirBase],
+				Home: new("the waters of the start", new(5600, -2400), 900, true)
+			),
 			// Japan's bases at Rabaul and Truk, and its fleet in the north.
 			208 => new(
 				[Places.Rabaul, Places.Truk, Fleet("Japan's fleet in the north", 0, 7000, 3000)],
