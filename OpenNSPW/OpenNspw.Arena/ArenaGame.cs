@@ -27,7 +27,8 @@ internal sealed record ArenaResult(
 	int TimeLeft,
 	TimeSpan Elapsed,
 	string? Error,
-	StrikeCounts Strikes
+	StrikeCounts Strikes,
+	IReadOnlyList<string>? Torpedoes = null
 );
 
 // One single-player game of a scenario, from a start date, which seeds rand (docs/Singleplayer.md), with a player on the
@@ -42,6 +43,7 @@ internal sealed class ArenaGame
 	private readonly short _speed;
 	private readonly UnitTrace? _trace;
 	private readonly StrikeLog _strikes;
+	private readonly TorpedoLog _torpedoes = new();
 	private readonly ArenaPlatform _platform;
 	private readonly Nspw _game;
 	private int _frames;
@@ -83,6 +85,7 @@ internal sealed class ArenaGame
 
 		_trace?.Write(_game);
 		_strikes.Write(_game);
+		_torpedoes.Write(_game);
 		_player.Act(_game);
 	}
 
@@ -146,7 +149,8 @@ internal sealed class ArenaGame
 			_game.BattleTime,
 			stopwatch.Elapsed,
 			error,
-			_strikes.Counts(_game)
+			_strikes.Counts(_game),
+			_torpedoes.Rows
 		);
 	}
 }

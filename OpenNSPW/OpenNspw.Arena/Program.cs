@@ -13,6 +13,7 @@ using OpenNspw.Arena;
 //   dotnet run -c Release --project OpenNspw.Arena -- --tune <candidates> [--tune-rounds 3] [--tune-seed 1] [--scenarios ...]
 //       [--first-date 100] [--dates 2] [--frames <limit>] [--formation ...] [--out tune.csv]
 //       [--trace <units> [--trace-from <frame>] [--trace-to <frame>] [--trace-every <frames>]] [--strikes]
+//       [--torpedoes <torpedoes.csv>]
 //   dotnet run -c Release --project OpenNspw.Arena -- --describe [--scenarios 4,5,6|all]
 //   dotnet run -c Release --project OpenNspw.Arena -- --compare <before.csv> <after.csv>
 
@@ -197,6 +198,18 @@ var results = GamePool.Play(
 
 var all = results.OrderBy(r => r.Scenario).ThenBy(r => r.Player).ThenBy(r => r.StartDate).ToList();
 File.WriteAllLines(outPath, Benchmark.Lines(all));
+if (Option(args, "--torpedoes", "") is { Length: > 0 } torpedoesPath)
+{
+	File.WriteAllLines(
+		torpedoesPath,
+		[
+			$"scenario,date,{TorpedoLog.Header}",
+			.. all.SelectMany(r =>
+				(r.Torpedoes ?? []).Select(row => $"{r.Scenario},{r.StartDate},{row}")
+			),
+		]
+	);
+}
 Console.WriteLine();
 Console.WriteLine(Table(all, scenarios, players));
 Console.WriteLine(Benchmark.Summary(all));
