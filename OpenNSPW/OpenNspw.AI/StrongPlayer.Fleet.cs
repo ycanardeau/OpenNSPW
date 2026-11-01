@@ -313,11 +313,35 @@ public sealed partial class StrongPlayer
 		return threats;
 	}
 
+	// Whether planes of a deck's are in its landing pattern, within 1500 (DeckPhase 1, SetLandingDestination): they come
+	// in from astern along its heading, to 45°, and land only so (TryLandOnCarrier), so a deck that turns sends them
+	// round again, on what fuel they have left.
+	private static bool IsLandingOn(Nspw game, int deck)
+	{
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var plane = ref game.Units[m];
+			if (
+				IsOwn(game, m)
+				&& plane.Category == UnitCategory.Plane
+				&& plane.PlaneState == UnitState.Flying
+				&& plane.Carrier == deck
+				&& plane.Mode == UnitMode.Return
+				&& plane.DeckPhase == 1
+				&& UnitFacts.Distance(plane.Position, game.Units[deck].Position) <= 1500
+			)
+				return true;
+		}
+
+		return false;
+	}
+
 	// A carrier keeps just beyond the computer's strike range from what threatens it, with a margin: the computer
 	// launches only within it, so a carrier out of it is struck by none, while its own planes reach farther. It closes
 	// in while it is farther than its planes should fly from what is known, found or a place, not what is only
 	// expected, which may be coming on; and moves away while it is within the range, across the sea, its formation with
-	// it.
+	// it. With Parameters.HoldCourse, a carrier whose planes are landing (IsLandingOn) holds its course, unless it is
+	// within the range.
 	private bool TryPosition(Nspw game, List<int> decks)
 	{
 		var threats = Threats(game);
@@ -353,6 +377,9 @@ public sealed partial class StrongPlayer
 				(distance >= low && (distance <= low + Parameters.ApproachBand || !isKnown))
 				|| (isMoving && UnitFacts.Distance(destination, aim) < 800)
 			)
+				continue;
+
+			if (Parameters.HoldCourse && distance >= range && IsLandingOn(game, carrier))
 				continue;
 
 			_positioned[carrier] = UnitFacts.Now(game);

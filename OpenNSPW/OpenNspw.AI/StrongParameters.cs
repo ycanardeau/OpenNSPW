@@ -113,6 +113,10 @@ public sealed record StrongParameters
 	// The fuel, beyond what it needs to come home, below which a plane coming home holds its deck's launches.
 	public double RecoverMargin { get; init; } = 30;
 
+	// Whether a carrier holds its course while its planes are landing, unless within the enemy's strike range
+	// (TryPosition, IsLandingOn): they land only along its heading.
+	public bool HoldCourse { get; init; }
+
 	// Whether the battleships and cruisers take as their target the enemy attackers within their anti-aircraft reach
 	// (TryTargetAttackers), which fire more at a target, and not at all with a ship as their target.
 	public bool TargetAttackers { get; init; }
