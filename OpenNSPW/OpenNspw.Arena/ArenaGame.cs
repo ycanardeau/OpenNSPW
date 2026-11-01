@@ -44,6 +44,10 @@ internal sealed class ArenaGame
 	private readonly UnitTrace? _trace;
 	private readonly StrikeLog _strikes;
 	private readonly TorpedoLog _torpedoes = new();
+	private readonly int? _forkCheckAt;
+	private GameFork? _fork;
+	private bool _forkChecked;
+	private TimeSpan _forkStepTime;
 	private readonly ArenaPlatform _platform;
 	private readonly Nspw _game;
 	private int _frames;
@@ -59,6 +63,36 @@ internal sealed class ArenaGame
 			(GameResult.UnitedStatesWon or GameResult.JapanLost, Side.UnitedStates) => Outcome.Won,
 			_ => Outcome.Lost,
 		};
+
+	// From frame _forkCheckAt, a fork of the game (GameFork) steps once a frame beside it, and the first frame where the
+	// two differ is written, with the fields that differ, to check that a fork plays as the game does.
+	private void CheckFork()
+	{
+		if (_forkCheckAt is not { } at || _game.Renderer.FrameCount < at || _forkChecked)
+			return;
+
+		if (_fork is null)
+		{
+			_fork = new GameFork(_game);
+			Console.WriteLine($"FORK at frame {_game.Renderer.FrameCount}");
+			return;
+		}
+
+		var stopwatch = Stopwatch.StartNew();
+		_fork.Step();
+		_forkStepTime += stopwatch.Elapsed;
+		var differences = GameFork.Differences(_game, _fork.Game);
+		if (differences.Count > 0 || _game.Renderer.FrameCount - at >= 2000)
+		{
+			Console.WriteLine(
+				differences.Count == 0
+					? $"FORK the same for {_game.Renderer.FrameCount - at} frames, {_forkStepTime.TotalMilliseconds / (_game.Renderer.FrameCount - at):F2} ms a frame"
+					: $"FORK differs at frame {_game.Renderer.FrameCount}: {string.Join(", ", differences)}"
+			);
+			_forkChecked = true;
+			throw new ArenaStoppedException();
+		}
+	}
 
 	private void OnFrame()
 	{
@@ -86,6 +120,7 @@ internal sealed class ArenaGame
 		_trace?.Write(_game);
 		_strikes.Write(_game);
 		_torpedoes.Write(_game);
+		CheckFork();
 		_player.Act(_game);
 	}
 
@@ -100,12 +135,14 @@ internal sealed class ArenaGame
 		int maxFrames = int.MaxValue,
 		UnitTrace? trace = null,
 		bool strikes = false,
-		short speed = 1
+		short speed = 1,
+		int? forkCheckAt = null
 	)
 	{
 		_player = player;
 		_maxFrames = maxFrames;
 		_speed = speed;
+		_forkCheckAt = forkCheckAt;
 		_trace = trace;
 		_strikes = new StrikeLog(strikes);
 		_platform = new ArenaPlatform(
@@ -116,6 +153,9 @@ internal sealed class ArenaGame
 		);
 		_game = new Nspw(_platform) { IsSingleplayer = true, ScenarioNumber = (short)scenario };
 	}
+
+	// Whether the fork check ended, the same or not, before the game did.
+	public bool HasForkChecked => _forkChecked;
 
 	// The game, to read its state once it has been played.
 	public Nspw Game => _game;

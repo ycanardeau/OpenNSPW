@@ -138,6 +138,27 @@ FormationShape? formation =
 var trace = UnitTrace.FromOptions((name, defaultValue) => Option(args, name, defaultValue));
 
 var data = GameData.Find();
+if (Option(args, "--fork-check", "") is { Length: > 0 } forkText)
+{
+	foreach (var scenario in scenarios)
+	{
+		var checkedGame = new ArenaGame(
+			data,
+			scenario,
+			1_000_000_000 + (firstDate * 7919),
+			CreatePlayer(players[0], verbose, seesAll, formation, parameters),
+			forkCheckAt: int.Parse(forkText, CultureInfo.InvariantCulture)
+		);
+		var result = checkedGame.Play();
+		if (!checkedGame.HasForkChecked && result.Error is null)
+			Console.WriteLine($"FORK the same until the game ended, at frame {result.Frames}");
+		if (result.Error is { } error)
+			Console.WriteLine($"FORK check failed: {error}");
+	}
+
+	return;
+}
+
 if (args.Contains("--describe"))
 {
 	foreach (var scenario in scenarios)
