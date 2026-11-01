@@ -927,6 +927,116 @@ public sealed partial class StrongPlayer
 		}
 	}
 
+	// The bearing a strike runs in from, chosen by playing it forward (Lookahead): the heuristic's (ApproachBearing) and
+	// eight others around the target, each flown in copies of the battle on two seeds of their own for 1800 frames, as the
+	// planes would fly them, the game's own attack taking over at the end of the path; scored by the HP the enemy's
+	// ships the victory counts lose within 3000 of the target, less 3 for each plane of the strike lost.
+	private double LookAheadApproach(
+		Nspw game,
+		List<int> planes,
+		int targetUnit,
+		WorldPosition at,
+		double from,
+		double heuristic,
+		Func<double, (double Bearing, List<WorldPosition>[] Paths)> pathsOf
+	)
+	{
+		double[] candidates = [heuristic, .. Enumerable.Range(0, 8).Select(k => from + (k * 45.0))];
+		var routes = candidates.Select(c => pathsOf(c).Paths).ToArray();
+		var counted = _contacts
+			.All.Where(c =>
+				c.Category == UnitCategory.Ship
+				&& IsCounted(c.Kind)
+				&& game.Units[c.Unit].IsUsed
+				&& UnitFacts.Distance(c.Position, at) <= 3000
+			)
+			.Select(c => c.Unit)
+			.ToList();
+		var hp = counted.ToDictionary(n => n, n => game.Units[n].HP);
+
+		// A candidate's orders in a copy, one click a frame, as the game takes them: each plane its path, as TryApproach
+		// gives it; then, as each comes to the end of its path, the target to attack, as the player gives it once the
+		// planes are there.
+		Action<GameFork> Orders(int candidate)
+		{
+			var clicks = new Queue<Action<GameFork>>();
+			void Deselect() =>
+				clicks.Enqueue(f =>
+				{
+					if (f.Game.SelectedUnit != 0)
+						f.RightClick();
+				});
+
+			for (var i = 0; i < planes.Count; i++)
+			{
+				var plane = planes[i];
+				Deselect();
+				clicks.Enqueue(f => f.ClickUnit(plane));
+				foreach (var point in routes[candidate][i])
+					clicks.Enqueue(f =>
+					{
+						if (f.Game.SelectedUnit == plane)
+							f.SetDestination(point);
+					});
+			}
+
+			Deselect();
+			var attacking = new HashSet<int>();
+			return fork =>
+			{
+				var g = fork.Game;
+				if (clicks.Count == 0)
+				{
+					for (var i = 0; i < planes.Count; i++)
+					{
+						var plane = planes[i];
+						if (
+							attacking.Contains(plane)
+							|| !g.Units[plane].IsUsed
+							|| g.Units[plane].PlaneState != UnitState.Flying
+							|| !g.Units[targetUnit].IsUsed
+							|| UnitFacts.Distance(g.Units[plane].Position, routes[candidate][i][^1])
+								> 250
+						)
+							continue;
+
+						attacking.Add(plane);
+						Deselect();
+						clicks.Enqueue(f => f.ClickUnit(plane));
+						clicks.Enqueue(f =>
+						{
+							if (f.Game.SelectedUnit == plane)
+								f.ClickUnit(targetUnit);
+						});
+						Deselect();
+					}
+				}
+
+				if (clicks.TryDequeue(out var click))
+					click(fork);
+			};
+		}
+
+		double Score(Nspw g) =>
+			counted.Sum(n => hp[n] - Math.Max(g.Units[n].IsUsed ? g.Units[n].HP : 0, 0))
+			- (3 * planes.Count(n => !g.Units[n].IsUsed));
+
+		var scores = Lookahead.Evaluate(
+			game,
+			candidates.Length,
+			Orders,
+			1800,
+			2,
+			Score,
+			(uint)UnitFacts.Now(game)
+		);
+		var best = Array.IndexOf(scores, scores.Max());
+		Log?.Invoke(
+			$"{UnitFacts.Now(game)}: lookahead runs in from {candidates[best] % 360:F0}°, the heuristic's {heuristic % 360:F0}°: {string.Join(" ", scores.Select(v => v.ToString("F1")))}"
+		);
+		return scores[best] > scores[0] ? candidates[best] : heuristic;
+	}
+
 	// A strike that hunts carriers, 1300 to 4000 from where the nearest one remembered (IsRemembered) most
 	// likely is (WhereNow), or, knowing of none, 700 or more from the middle of the nearest ships found within 3000,
 	// where the carrier they screen most likely is, as escorts are found from 1000, outside their guns' reach, before
@@ -1030,7 +1140,7 @@ public sealed partial class StrongPlayer
 			}
 
 			var from = BearingTo(at, position);
-			var bearing = ApproachBearing(game, target?.Unit ?? 0, at, from);
+			var heuristic = ApproachBearing(game, target?.Unit ?? 0, at, from);
 			var spare =
 				(
 					((leader.Fuel - 10) * leader.FuelInterval)
@@ -1042,22 +1152,56 @@ public sealed partial class StrongPlayer
 					- 700,
 				0
 			);
-			var turn = Math.Clamp(
-				((bearing - from + 540) % 360) - 180,
-				-arc / Parameters.ApproachRadius * 180 / Math.PI,
-				arc / Parameters.ApproachRadius * 180 / Math.PI
-			);
-			bearing = from + turn;
-			var steps = (int)Math.Ceiling(Math.Abs(turn) / 40);
-			var arcPoints = Enumerable
-				.Range(1, steps)
-				.Select(i => PointAt(at, from + (turn * i / steps), Parameters.ApproachRadius))
-				.ToList();
+
+			// The bearing a strike can come round to, as far as its fuel lets, and each plane's path: the arc's points,
+			// then its point of the fan across the side it runs in from.
+			(double Bearing, List<WorldPosition>[] Paths) PathsOf(double toward)
+			{
+				var turn = Math.Clamp(
+					((toward - from + 540) % 360) - 180,
+					-arc / Parameters.ApproachRadius * 180 / Math.PI,
+					arc / Parameters.ApproachRadius * 180 / Math.PI
+				);
+				var steps = (int)Math.Ceiling(Math.Abs(turn) / 40);
+				var arcPoints = Enumerable
+					.Range(1, steps)
+					.Select(i => PointAt(at, from + (turn * i / steps), Parameters.ApproachRadius))
+					.ToList();
+				return (
+					from + turn,
+					[
+						.. planes.Select(
+							(_, i) =>
+								arcPoints
+									.Append(
+										PointAt(
+											at,
+											from
+												+ turn
+												+ (
+													planes.Count == 1
+														? 0
+														: -30 + (60.0 * i / (planes.Count - 1))
+												),
+											1300
+										)
+									)
+									.ToList()
+						),
+					]
+				);
+			}
+
+			var bearing = Parameters.LookaheadApproach
+				? LookAheadApproach(game, planes, aim.Unit, at, from, heuristic, PathsOf)
+				: heuristic;
+			var (runIn, paths) = PathsOf(bearing);
+			bearing = runIn;
+			var steps = paths[0].Count - 1;
 			for (var i = 0; i < planes.Count; i++)
 			{
 				var plane = planes[i];
-				var fan = planes.Count == 1 ? 0 : -30 + (60.0 * i / (planes.Count - 1));
-				var path = arcPoints.Append(PointAt(at, bearing + fan, 1300)).ToList();
+				var path = paths[i];
 				_approaching[plane] = path[^1];
 				_toWaypoint.Remove(plane);
 				_blindPoints.Remove(plane);

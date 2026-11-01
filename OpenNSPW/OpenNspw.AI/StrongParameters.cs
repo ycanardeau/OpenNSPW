@@ -120,6 +120,10 @@ public sealed record StrongParameters
 	// Whether a deselection with nothing selected takes no time (ClickQueue.SkipsIdleClicks): no click is given.
 	public bool SkipIdleClicks { get; init; }
 
+	// Whether a strike's side to run in from is chosen by playing the candidates forward in copies of the battle
+	// (LookAheadApproach), rather than by the escorts' cover alone.
+	public bool LookaheadApproach { get; init; }
+
 	// Whether strikes run in on a ship only from where the sea lets a torpedo be dropped (ApproachBearing, IsSeaRun).
 	public bool SeaApproach { get; init; }
 

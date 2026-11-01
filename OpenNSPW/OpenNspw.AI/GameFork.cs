@@ -10,9 +10,9 @@ namespace OpenNspw.AI;
 // (the units, fires, effects, map, random numbers, the computer's state, the renderer's frame count and sprites) by
 // reflection, and the one reference that holds state of the battle (the key state), and steps a frame as UpdateFrame
 // does, without the drawing and the timer, and with sounds that play nothing. The original's extensions, and the
-// commands queued on it, are left behind, as they act on it; the copy takes its own, as commands of the host's UI of its own
-// (GameCommands). It plays the same as the original only if what the drawing and the timer do changes nothing of the
-// battle, which the arena checks (--fork-check).
+// commands queued on it, are left behind, as they act on it; the copy takes its own orders as the clicks would run them,
+// at once (ClickUnit, SetDestination, RightClick). It plays the same as the original only if what the drawing and the
+// timer do changes nothing of the battle, which the arena checks (--fork-check).
 public sealed class GameFork
 {
 	// A sound buffer that plays nothing, for every sound of a copy: a copy's sounds are never heard.
@@ -97,14 +97,54 @@ public sealed class GameFork
 		}
 	}
 
+	// Whether a click on the battlefield counts now: not while an order waits for its turn, as the drawing takes them
+	// (DrawBattleArea).
+	private bool TakesClicks => !(Game.HasOrdered && Game.Result == GameResult.None);
+
+	// Runs the commands of the host's UI given for a site of the copy, or drops them (IGameExtension.InputSite), as the
+	// drawing has the game do: a player's that plays on in it.
+	private static void InputSite(Nspw game, ActionSite site, bool counts)
+	{
+		foreach (var extension in game.Extensions.All)
+			extension.InputSite(game, site, counts);
+	}
+
+	// A click on unit m, run at once: in the game, the drawing takes the battlefield's clicks (DrawBattleArea), which a
+	// copy does not do, so a copy's orders run what the clicks would, when they are given.
+	public void ClickUnit(int m)
+	{
+		Game.Commands.ClickUnit(m);
+		InputSite(Game, ActionSite.Battlefield, TakesClicks);
+	}
+
+	// A click on the battlefield that gives the selected unit a destination, run at once.
+	public void SetDestination(WorldPosition destination)
+	{
+		Game.Commands.SetDestination(destination);
+		InputSite(Game, ActionSite.Battlefield, TakesClicks);
+	}
+
+	// A right click on the battlefield, run at once.
+	public void RightClick()
+	{
+		Game.Commands.RightClick();
+		InputSite(Game, ActionSite.Battlefield, TakesClicks);
+	}
+
+	// Gives the copy random numbers of its own from here on, so that what it plays out is one of the ways the battle may
+	// go, not the way it will: the game's own numbers to come are not the player's to know.
+	public void Reseed(uint seed)
+	{
+		Game.srand(seed);
+	}
+
 	// The random numbers the drawing draws for the effects it shows (UpdateLowerEffects, then UpdateUpperEffects), from
 	// the game's own, as 1.22 has its effects do in single-player (EffectRandom, Rules.EffectsDrawFromRand): three for a
 	// plane's smoke, one for a wake, each effect of a layer in turn that one of the player's units sees, or every one once
 	// the battle has a result. The drawing changes nothing else of the battle, so a copy that draws these plays on as the
 	// game does.
-	private static void DrawEffectRandoms(Nspw game)
+	private static void DrawEffectRandoms(Nspw game, EffectLayer layer)
 	{
-		foreach (var layer in (ReadOnlySpan<EffectLayer>)[EffectLayer.Lower, EffectLayer.Upper])
 		{
 			for (var m = 1; m < all_head.EFFECT_MAX; m++)
 			{
@@ -136,11 +176,23 @@ public sealed class GameFork
 		}
 	}
 
+	// Checks the battle's result (decision): in single-player, which also draws the result once there is one, on a
+	// screen a copy does not have. A copy needs the result, not its drawing, and plays no further once it has one.
+	private static void CheckResult(Nspw game)
+	{
+		try
+		{
+			game.CheckResult();
+		}
+		catch (NullReferenceException) when (game.Result != GameResult.None) { }
+	}
+
 	// Plays a frame of the battle, as UpdateFrame does, but for the drawing and its timer: the speed's ticks, the result
 	// checked after each (but the drawn one, in single-player, as 1.22 does) and after the frame, the input and the
-	// commands given, the mouse buttons released, and the frame counted; of the drawing, only the random numbers it draws
-	// (DrawEffectRandoms).
-	public void Step()
+	// commands given, the mouse buttons released, and the frame counted; of the drawing, only what it does to the battle:
+	// the random numbers it draws for the effects (DrawEffectRandoms), and between the layers, the orders cleared and the
+	// battlefield's clicks taken, which are the frame's `clicks` (ClickUnit, SetDestination, RightClick).
+	public void Step(Action<GameFork>? clicks = null)
 	{
 		var game = Game;
 		var ticks =
@@ -153,13 +205,19 @@ public sealed class GameFork
 			game.Renderer.IsDrawnTick = i == 1;
 			game.UpdateBattle();
 			if (!game.IsEditingMap && !(game.IsSingleplayer && game.Renderer.IsDrawnTick))
-				game.CheckResult();
+				CheckResult(game);
 		}
 
-		DrawEffectRandoms(game);
+		DrawEffectRandoms(game, EffectLayer.Lower);
+		game.MoveOrders[0].Unit = 0;
+		game.SelectOrders[0].IsSet = false;
+		game.MoveOrders[1].Unit = 0;
+		game.SelectOrders[1].IsSet = false;
+		clicks?.Invoke(this);
+		DrawEffectRandoms(game, EffectLayer.Upper);
 		if (!game.IsEditingMap)
 		{
-			game.CheckResult();
+			CheckResult(game);
 			game.HandleInput();
 		}
 
