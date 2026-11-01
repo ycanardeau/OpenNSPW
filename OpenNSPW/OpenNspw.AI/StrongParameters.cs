@@ -98,6 +98,10 @@ public sealed record StrongParameters
 	// the attackers.
 	public bool FightersFirst { get; init; }
 
+	// Whether the warships of a ring or a screen take the places that sail them the least in all (WarshipOrder), rather
+	// than by kind and number.
+	public bool RingAssignment { get; init; }
+
 	// Whether a deck that hunts carriers keeps scouting while it knows where a carrier is (IsRemembered), its scouts kept
 	// unarmed for it; or stops, and arms them to strike, until the carrier is lost.
 	public bool KeepScouting { get; init; } = true;

@@ -5,24 +5,92 @@ namespace OpenNspw.AI;
 public sealed partial class StrongPlayer
 {
 	// A carrier's formation as it forms: its members, taking their places around it, since a frame, last ordered to them
-	// in another.
-	private sealed record Ring(List<int> Members, int Since, int Ordered);
+	// in another, and its warships in the order of their places (WarshipOrder).
+	private sealed record Ring(List<int> Members, int Since, int Ordered, List<int> Warships);
 
-	// Where a member of a carrier's formation keeps (Formation): the other carriers 250 behind it, then to each side;
-	// the warships, battleships first, then cruisers and destroyers, Formation.Radius around it, evenly, the first ahead
-	// (Ring), or across 160° of the way the enemy most likely is (Screen). The game keeps each from the carrier's
-	// heading as it rounds it, to 45° (SetShipFormation), so the formation turns with it.
-	private WorldPosition RingPlace(Nspw game, int carrier, List<int> members, int member)
+	// Where the warships of a carrier's formation keep, by their order: Formation.Radius around it, evenly, the first ahead
+	// (Ring), or across 160° of the way the enemy most likely is (Screen). The game keeps each from the carrier's heading
+	// as it rounds it, to 45° (SetShipFormation), so the formation turns with it.
+	private WorldPosition WarshipPlace(Nspw game, int carrier, int index, int count)
 	{
 		ref var leader = ref game.Units[carrier];
 		var heading = Math.Round(leader.Direction.Degrees / 45) * 45;
-		var carriers = members.Where(m => UnitFacts.IsDeck(game.Units[m].Kind)).ToList();
+		var bearing =
+			Formation.Kind == FormationKind.Screen
+				? LikelyBearing(game, leader.Position)
+					+ (count == 1 ? 0 : -80 + (index * 160.0 / (count - 1)))
+				: heading + (index * 360.0 / count);
+		return PointAt(leader.Position, bearing, Formation.Radius);
+	}
+
+	// The order of a formation's warships, which gives each its place (WarshipPlace): battleships first, then cruisers and
+	// destroyers, by number; or, with RingAssignment, the order that sails them the least in all to their places (the
+	// assignment problem, by dynamic programming over the places taken), so that none crosses the formation, nor runs
+	// into the others on its way: the ways of an assignment with the least sum of distances never cross.
+	private List<int> WarshipOrder(Nspw game, int carrier, List<int> members)
+	{
 		var warships = members
 			.Where(m => !UnitFacts.IsDeck(game.Units[m].Kind))
 			.OrderBy(m => game.Units[m].Kind)
 			.ThenBy(m => m)
 			.ToList();
-		var place = carriers.IndexOf(member);
+		var count = warships.Count;
+		if (!Parameters.RingAssignment || count < 2 || count > 16)
+			return warships;
+
+		var places = Enumerable
+			.Range(0, count)
+			.Select(i => WarshipPlace(game, carrier, i, count))
+			.ToList();
+		// least[taken]: the least sailing of the first popcount(taken) warships to the places in taken; from[taken], the
+		// place the last of them takes.
+		var least = new double[1 << count];
+		var from = new int[1 << count];
+		Array.Fill(least, double.PositiveInfinity);
+		least[0] = 0;
+		for (var taken = 0; taken < 1 << count; taken++)
+		{
+			if (double.IsPositiveInfinity(least[taken]))
+				continue;
+			var ship = System.Numerics.BitOperations.PopCount((uint)taken);
+			if (ship == count)
+				continue;
+			for (var place = 0; place < count; place++)
+			{
+				if ((taken & (1 << place)) != 0)
+					continue;
+				var next = taken | (1 << place);
+				var cost =
+					least[taken]
+					+ UnitFacts.Distance(game.Units[warships[ship]].Position, places[place]);
+				if (cost < least[next])
+				{
+					least[next] = cost;
+					from[next] = place;
+				}
+			}
+		}
+
+		var order = new int[count];
+		for (int all = (1 << count) - 1, ship = count - 1; ship >= 0; ship--)
+		{
+			order[from[all]] = warships[ship];
+			all &= ~(1 << from[all]);
+		}
+
+		return [.. order];
+	}
+
+	// Where a member of a carrier's formation keeps: the other carriers 250 behind it, then to each side; the warships at
+	// their places (WarshipPlace), in the formation's order.
+	private WorldPosition RingPlace(Nspw game, int carrier, Ring ring, int member)
+	{
+		ref var leader = ref game.Units[carrier];
+		var heading = Math.Round(leader.Direction.Degrees / 45) * 45;
+		var place = ring
+			.Members.Where(m => UnitFacts.IsDeck(game.Units[m].Kind))
+			.ToList()
+			.IndexOf(member);
 		if (place >= 0)
 			return PointAt(
 				leader.Position,
@@ -38,13 +106,7 @@ public sealed partial class StrongPlayer
 				RingCarrierDistance
 			);
 
-		var index = warships.IndexOf(member);
-		var bearing =
-			Formation.Kind == FormationKind.Screen
-				? LikelyBearing(game, leader.Position)
-					+ (warships.Count == 1 ? 0 : -80 + (index * 160.0 / (warships.Count - 1)))
-				: heading + (index * 360.0 / warships.Count);
-		return PointAt(leader.Position, bearing, Formation.Radius);
+		return WarshipPlace(game, carrier, ring.Warships.IndexOf(member), ring.Warships.Count);
 	}
 
 	private bool IsRinging(int m) => _rings.Values.Any(r => r.Members.Contains(m));
@@ -98,6 +160,7 @@ public sealed partial class StrongPlayer
 		foreach (var (carrier, ring) in _rings.ToList())
 		{
 			ring.Members.RemoveAll(m => !IsOwn(game, m));
+			ring.Warships.RemoveAll(m => !IsOwn(game, m));
 			if (!IsOwn(game, carrier) || ring.Members.Count == 0)
 			{
 				_rings.Remove(carrier);
@@ -106,10 +169,8 @@ public sealed partial class StrongPlayer
 
 			var away = ring
 				.Members.Where(m =>
-					UnitFacts.Distance(
-						game.Units[m].Position,
-						RingPlace(game, carrier, ring.Members, m)
-					) > RingTolerance
+					UnitFacts.Distance(game.Units[m].Position, RingPlace(game, carrier, ring, m))
+					> RingTolerance
 				)
 				.ToList();
 			if (away.Count == 0 || UnitFacts.Now(game) - ring.Since >= RingFrames)
@@ -122,7 +183,7 @@ public sealed partial class StrongPlayer
 			var strays = away.Where(m =>
 					UnitFacts.Distance(
 						UnitFacts.FinalDestination(ref game.Units[m]),
-						RingPlace(game, carrier, ring.Members, m)
+						RingPlace(game, carrier, ring, m)
 					) > RingTolerance
 				)
 				.ToList();
@@ -135,7 +196,7 @@ public sealed partial class StrongPlayer
 				SelectAlone(member, "ringing");
 				SendSelected(
 					member,
-					RingPlace(game, carrier, ring.Members, member),
+					RingPlace(game, carrier, ring, member),
 					$"takes its place around {game.Units[carrier].Kind} {carrier} at"
 				);
 			}
@@ -189,7 +250,12 @@ public sealed partial class StrongPlayer
 			)
 				Group(carrier, escorts, unit.Position);
 			else
-				_rings[carrier] = new Ring(escorts, UnitFacts.Now(game), -RingOrderFrames);
+				_rings[carrier] = new Ring(
+					escorts,
+					UnitFacts.Now(game),
+					-RingOrderFrames,
+					WarshipOrder(game, carrier, escorts)
+				);
 			return true;
 		}
 
