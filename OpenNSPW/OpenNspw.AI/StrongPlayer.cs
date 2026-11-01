@@ -179,8 +179,8 @@ public sealed partial class StrongPlayer : IPlayer
 		return decks;
 	}
 
-	// The player's planes parked on a deck that match.
-	private static List<int> ParkedOn(Nspw game, int deck, Func<int, bool> match)
+	// The player's planes parked on a deck that match, but those the mission keeps.
+	private List<int> ParkedOn(Nspw game, int deck, Func<int, bool> match)
 	{
 		var planes = new List<int>();
 		for (var n = 1; n <= game.MaxUnitId; n++)
@@ -189,6 +189,7 @@ public sealed partial class StrongPlayer : IPlayer
 				IsOwn(game, n)
 				&& UnitFacts.IsParked(ref game.Units[n])
 				&& game.Units[n].Carrier == deck
+				&& !IsReserved(game, n)
 				&& match(n)
 			)
 				planes.Add(n);

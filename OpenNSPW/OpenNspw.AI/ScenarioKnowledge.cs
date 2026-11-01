@@ -49,8 +49,12 @@ public sealed record ScenarioKnowledge(
 		public static readonly Area Okinawa = new("Okinawa", new(-5000, -2780), 400, true);
 	}
 
-	// Tokyo, for the missions that need it.
+	// The places the missions need.
 	public static Area Tokyo => Places.Tokyo;
+
+	public static Area Bougainville => Places.Bougainville;
+
+	public static Area Guadalcanal => Places.Guadalcanal;
 
 	private static Area Fleet(string name, double x, double y, double radius) =>
 		new(name, new WorldPosition(x, y), radius, false);
