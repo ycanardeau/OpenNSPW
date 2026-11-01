@@ -4,7 +4,7 @@ namespace OpenNspw.Arena;
 // turned home damaged or for fuel, their weapon dumped, and the ones lost; the HP the enemy's ships lost, to anything;
 // the carriers each side lost; and the HP the player's carriers lost, to anything, which tells how well they are
 // defended sooner than the carriers sunk; and the weapons dropped at enemy carriers, and the hits on them, whose ratio
-// is the strikes' aim.
+// is the strikes' aim; and the player's planes of every kind lost with no fuel left, and the fighters among them.
 internal sealed record StrikeCounts(
 	int Drops,
 	int TurnedBack,
@@ -15,7 +15,9 @@ internal sealed record StrikeCounts(
 	int OwnCarriersSunk,
 	int CarrierDamage,
 	int CarrierDrops = 0,
-	int CarrierHits = 0
+	int CarrierHits = 0,
+	int PlanesDry = 0,
+	int FightersDry = 0
 );
 
 // What becomes of the player's attackers and bombers, each time one drops its weapon, turns home damaged or is lost,
@@ -28,6 +30,10 @@ internal sealed class StrikeLog(bool writes)
 		int,
 		(int Ammo, int HP, double Fuel, int Target, WorldPosition Position)
 	> _planes = [];
+	private readonly Dictionary<
+		int,
+		(UnitKind Kind, double Fuel, WorldPosition Position, int Carrier, string State)
+	> _flying = [];
 	private readonly Dictionary<int, int> _ships = [];
 	private readonly HashSet<int> _carriers = [];
 	private readonly Dictionary<int, Side> _sides = [];
@@ -39,6 +45,8 @@ internal sealed class StrikeLog(bool writes)
 	private int _carrierDamage;
 	private int _carrierDrops;
 	private int _carrierHits;
+	private int _planesDry;
+	private int _fightersDry;
 	private bool _started;
 
 	private static double Distance(WorldPosition a, WorldPosition b) =>
@@ -101,7 +109,9 @@ internal sealed class StrikeLog(bool writes)
 			sunk.Count(n => _sides[n] == game.LocalSide),
 			_carrierDamage,
 			_carrierDrops,
-			_carrierHits
+			_carrierHits,
+			_planesDry,
+			_fightersDry
 		);
 	}
 
@@ -123,6 +133,36 @@ internal sealed class StrikeLog(bool writes)
 		for (var n = 1; n <= game.MaxUnitId; n++)
 		{
 			ref var unit = ref game.Units[n];
+
+			// A plane whose fuel runs out slows to a stop and is lost (MoveUnit): one gone with no fuel left ran dry.
+			if (!unit.IsUsed && _flying.Remove(n, out var flown) && flown.Fuel <= 1)
+			{
+				_planesDry++;
+				if (flown.Kind == UnitKind.Fighter)
+					_fightersDry++;
+				var deck = game.Units[flown.Carrier];
+				WriteLine(
+					FormattableString.Invariant(
+						$"STRIKE {game.Renderer.FrameCount} {flown.Kind} #{n} lost with no fuel, {(deck.IsUsed ? Distance(deck.Position, flown.Position) : -1):F0} from its deck {flown.Carrier} ({(deck.IsUsed ? $"{deck.HP}/{deck.MaxHP}, {deck.PlaneCount}/{deck.Capacity} aboard, {deck.PlanesToLaunch} to launch" : "gone")}), {flown.State}"
+					)
+				);
+			}
+			else if (
+				unit.IsUsed
+				&& unit.Side == game.LocalSide
+				&& unit.Category == UnitCategory.Plane
+				&& unit.PlaneState == UnitState.Flying
+			)
+				_flying[n] = (
+					unit.Kind,
+					unit.Fuel,
+					unit.Position,
+					unit.Carrier,
+					$"{unit.Mode}, phase {unit.DeckPhase}, heading {unit.Direction.Degrees:F0}, deck heading {game.Units[unit.Carrier].Direction.Degrees:F0}, lock {game.Units[unit.Carrier].LandingLock}"
+				);
+			else
+				_flying.Remove(n);
+
 			if (!unit.IsUsed && _planes.Remove(n, out var gone))
 			{
 				_planesLost++;

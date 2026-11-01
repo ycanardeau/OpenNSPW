@@ -32,6 +32,8 @@ internal static class Benchmark
 		"carrier_damage",
 		"carrier_drops",
 		"carrier_hits",
+		"planes_dry",
+		"fighters_dry",
 	];
 
 	// The 95% Wilson interval of a rate of `successes` in `count`, as fractions, which holds for few games and for rates
@@ -106,10 +108,10 @@ internal static class Benchmark
 	{
 		var text = new StringBuilder();
 		text.AppendLine(
-			"| Scenario | Player | Games | W | D | L | Won (95%) | Drops | Turned back | Out of fuel | Planes lost | Enemy damage | Carriers sunk | Carriers lost | Carrier damage | Hits on carriers |"
+			"| Scenario | Player | Games | W | D | L | Won (95%) | Drops | Turned back | Out of fuel | Planes lost | Lost dry | Enemy damage | Carriers sunk | Carriers lost | Carrier damage | Hits on carriers |"
 		);
 		text.AppendLine(
-			"| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"
+			"| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"
 		);
 		var groups = results
 			.GroupBy(r => (r.Scenario, r.Player))
@@ -140,6 +142,7 @@ internal static class Benchmark
 					PerGame(games, s => s.TurnedBack),
 					PerGame(games, s => s.OutOfFuel),
 					PerGame(games, s => s.PlanesLost),
+					PerGame(games, s => s.PlanesDry),
 					PerGame(games, s => s.EnemyDamage),
 					PerGame(games, s => s.EnemyCarriersSunk),
 					PerGame(games, s => s.OwnCarriersSunk),
@@ -158,7 +161,7 @@ internal static class Benchmark
 			string.Join(",", Columns),
 			.. results.Select(r =>
 				FormattableString.Invariant(
-					$"{r.Scenario},{r.StartDate},{r.Player},{r.Side},{r.Outcome},{r.Frames},{r.TimeLeft},{r.Elapsed.TotalSeconds:F1},{r.Strikes.Drops},{r.Strikes.TurnedBack},{r.Strikes.OutOfFuel},{r.Strikes.PlanesLost},{r.Strikes.EnemyDamage},{r.Strikes.EnemyCarriersSunk},{r.Strikes.OwnCarriersSunk},{r.Strikes.CarrierDamage},{r.Strikes.CarrierDrops},{r.Strikes.CarrierHits}"
+					$"{r.Scenario},{r.StartDate},{r.Player},{r.Side},{r.Outcome},{r.Frames},{r.TimeLeft},{r.Elapsed.TotalSeconds:F1},{r.Strikes.Drops},{r.Strikes.TurnedBack},{r.Strikes.OutOfFuel},{r.Strikes.PlanesLost},{r.Strikes.EnemyDamage},{r.Strikes.EnemyCarriersSunk},{r.Strikes.OwnCarriersSunk},{r.Strikes.CarrierDamage},{r.Strikes.CarrierDrops},{r.Strikes.CarrierHits},{r.Strikes.PlanesDry},{r.Strikes.FightersDry}"
 				)
 			),
 		];
@@ -198,7 +201,9 @@ internal static class Benchmark
 						Number("own_carriers_sunk"),
 						Number("carrier_damage"),
 						Number("carrier_drops"),
-						Number("carrier_hits")
+						Number("carrier_hits"),
+						Number("planes_dry"),
+						Number("fighters_dry")
 					)
 				)
 			);
