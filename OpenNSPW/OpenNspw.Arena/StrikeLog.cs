@@ -6,7 +6,9 @@ namespace OpenNspw.Arena;
 // defended sooner than the carriers sunk; and the weapons dropped at enemy carriers, and the hits on them, whose ratio
 // is the strikes' aim; and the player's planes of every kind lost with no fuel left, and the fighters among them; and
 // the attack runs stuck: a torpedo plane of the player's within 400 of the ship it attacks for 150 frames without
-// dropping, and those stuck over or near land, where no torpedo may be dropped (PlaneDropTorpedo).
+// dropping, and those stuck over or near land, where no torpedo may be dropped (PlaneDropTorpedo); and the enemy's
+// attackers and bombers lost within 1000 of a ship of the player's with their weapon still aboard, shot down before
+// they dropped, which tells how well the player's ships defend themselves.
 internal sealed record StrikeCounts(
 	int Drops,
 	int TurnedBack,
@@ -21,7 +23,8 @@ internal sealed record StrikeCounts(
 	int PlanesDry = 0,
 	int FightersDry = 0,
 	int StuckRuns = 0,
-	int StuckOverLand = 0
+	int StuckOverLand = 0,
+	int EnemyStrikersDowned = 0
 );
 
 // What becomes of the player's attackers and bombers, each time one drops its weapon, turns home damaged or is lost,
@@ -39,6 +42,7 @@ internal sealed class StrikeLog(bool writes)
 		(UnitKind Kind, double Fuel, WorldPosition Position, int Carrier, string State)
 	> _flying = [];
 	private readonly Dictionary<int, (int Since, bool OverLand, bool Counted)> _runs = [];
+	private readonly Dictionary<int, WorldPosition> _enemyStrikers = [];
 	private readonly Dictionary<int, int> _ships = [];
 	private readonly HashSet<int> _carriers = [];
 	private readonly Dictionary<int, Side> _sides = [];
@@ -54,6 +58,7 @@ internal sealed class StrikeLog(bool writes)
 	private int _fightersDry;
 	private int _stuckRuns;
 	private int _stuckOverLand;
+	private int _enemyStrikersDowned;
 	private bool _started;
 
 	private static double Distance(WorldPosition a, WorldPosition b) =>
@@ -141,7 +146,8 @@ internal sealed class StrikeLog(bool writes)
 			_planesDry,
 			_fightersDry,
 			_stuckRuns,
-			_stuckOverLand
+			_stuckOverLand,
+			_enemyStrikersDowned
 		);
 	}
 
@@ -226,6 +232,32 @@ internal sealed class StrikeLog(bool writes)
 			}
 			else
 				_runs.Remove(n);
+
+			if (!unit.IsUsed && _enemyStrikers.Remove(n, out var downedAt))
+			{
+				var nearShip = false;
+				for (var s = 1; s <= game.MaxUnitId && !nearShip; s++)
+				{
+					nearShip =
+						game.Units[s].IsUsed
+						&& game.Units[s].Side == game.LocalSide
+						&& game.Units[s].Category == UnitCategory.Ship
+						&& Distance(game.Units[s].Position, downedAt) <= 1000;
+				}
+
+				if (nearShip)
+					_enemyStrikersDowned++;
+			}
+			else if (
+				unit.IsUsed
+				&& unit.Side != game.LocalSide
+				&& (unit.Kind is UnitKind.Attacker or UnitKind.Bomber)
+				&& unit.PlaneState == UnitState.Flying
+				&& unit.Ammo > 0
+			)
+				_enemyStrikers[n] = unit.Position;
+			else
+				_enemyStrikers.Remove(n);
 
 			if (!unit.IsUsed && _planes.Remove(n, out var gone))
 			{
