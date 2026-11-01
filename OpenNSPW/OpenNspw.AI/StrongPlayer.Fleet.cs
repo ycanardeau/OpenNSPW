@@ -344,6 +344,9 @@ public sealed partial class StrongPlayer
 	// within the range.
 	private bool TryPosition(Nspw game, List<int> decks)
 	{
+		if (HoldsFleet(game))
+			return false;
+
 		var threats = Threats(game);
 		foreach (var carrier in decks)
 		{

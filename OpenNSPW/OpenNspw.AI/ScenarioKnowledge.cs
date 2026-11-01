@@ -5,13 +5,15 @@ public sealed record Area(string Name, WorldPosition Center, double Radius, bool
 
 // What a player knows of a scenario before the battle (docs/StrongAI.md, Scenario knowledge): where the enemy is
 // expected, the places to attack among them, the enemy kinds the victory conditions count, whether the player wins by
-// holding on until the end, and where its transports land. Written from the briefings, the victory conditions and the
-// maps; never from where a hidden unit is.
+// holding on until the end, where its transports land, and whether its strikes go only at what the victory conditions
+// count, as a mission whose planes are too few, or too far, to spend on anything else. Written from the briefings, the
+// victory conditions and the maps; never from where a hidden unit is.
 public sealed record ScenarioKnowledge(
 	IReadOnlyList<Area> Enemy,
 	IReadOnlyList<UnitKind> Counted,
 	bool HoldsOn = false,
-	Area? Landing = null
+	Area? Landing = null,
+	bool StrikesCountedOnly = false
 )
 {
 	// The places of the maps, where the scenarios' bases stand.
@@ -46,6 +48,9 @@ public sealed record ScenarioKnowledge(
 		public static readonly Area Saipan = new("Saipan", new(5250, 2200), 400, true);
 		public static readonly Area Okinawa = new("Okinawa", new(-5000, -2780), 400, true);
 	}
+
+	// Tokyo, for the missions that need it.
+	public static Area Tokyo => Places.Tokyo;
 
 	private static Area Fleet(string name, double x, double y, double radius) =>
 		new(name, new WorldPosition(x, y), radius, false);
@@ -164,7 +169,7 @@ public sealed record ScenarioKnowledge(
 			// The U.S. carrier, east of the burning fleet.
 			201 => new([Fleet("the U.S. carrier to the east", 1200, 2000, 2500)], Carriers),
 			// Tokyo's cities.
-			202 => new([Places.Tokyo], [UnitKind.City]),
+			202 => new([Places.Tokyo], [UnitKind.City], StrikesCountedOnly: true),
 			// Japan's fleets come at Midway from the west.
 			203 => new(
 				[
@@ -202,7 +207,7 @@ public sealed record ScenarioKnowledge(
 				Landing: Places.Midway
 			),
 			// Tokyo's cities.
-			300 => new([Places.Tokyo], [UnitKind.City]),
+			300 => new([Places.Tokyo], [UnitKind.City], StrikesCountedOnly: true),
 			// Port Moresby, and the U.S. carriers south-east of it.
 			301 => new(
 				[

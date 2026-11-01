@@ -2,8 +2,9 @@ namespace OpenNspw.AI;
 
 // The strong player (docs/StrongAI.md): it remembers the enemies it has found, knows what the briefing tells, and runs
 // its air operations (StrongPlayer.Air.cs), its scouting (StrongPlayer.Scouting.cs), its ships (StrongPlayer.Fleet.cs)
-// and its landings (StrongPlayer.Landing.cs). Each task is a series of clicks, given by the click queue; the next task
-// is chosen once the last one is done, by its priority (Plan).
+// its landings (StrongPlayer.Landing.cs), and the scenarios' own missions (StrongPlayer.Missions.cs). Each task is a
+// series of clicks, given by the click queue; the next task is chosen once the last one is done, by its priority
+// (Plan).
 public sealed partial class StrongPlayer : IPlayer
 {
 	// How far from a deck its planes strike: well within their fuel, and beyond the computer's own strikes (3550, or
@@ -400,6 +401,7 @@ public sealed partial class StrongPlayer : IPlayer
 		var decks = Decks(game);
 		if (
 			!TryIntercept(game, decks)
+			&& !TryMission(game)
 			&& !TryTargetAttackers(game)
 			&& !TryGuideScouts(game)
 			&& !TryBingo(game)

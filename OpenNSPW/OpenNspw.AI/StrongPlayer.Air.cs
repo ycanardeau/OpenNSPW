@@ -353,6 +353,7 @@ public sealed partial class StrongPlayer
 					&& CanAttack(weapon, c)
 					&& UnitFacts.Distance(position, c.Position) <= 2500
 					&& (takesAny || IsCounted(c.Kind) || IsEscortToStrike(game, c))
+					&& (!_knowledge.StrikesCountedOnly || IsCounted(c.Kind))
 				)
 				.OrderByDescending(c =>
 					HuntsCarriers
@@ -1524,6 +1525,7 @@ public sealed partial class StrongPlayer
 							&& UnitFacts.Distance(position, c.Position) <= StrikeRange
 				)
 				&& CanAttack(weapon, c)
+				&& (!_knowledge.StrikesCountedOnly || IsCounted(c.Kind))
 				&& !WasEngaged(game, c.Unit)
 			)
 			.OrderByDescending(c =>
@@ -1655,6 +1657,9 @@ public sealed partial class StrongPlayer
 	// a while.
 	private bool TryStrike(Nspw game, List<int> decks)
 	{
+		if (HoldsStrikes(game))
+			return false;
+
 		foreach (var deck in decks)
 		{
 			if (!MayLaunch(game, deck) || IsUnderRaid(game, deck))
