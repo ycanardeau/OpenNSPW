@@ -8,7 +8,8 @@ namespace OpenNspw.Arena;
 // the attack runs stuck: a torpedo plane of the player's within 400 of the ship it attacks for 150 frames without
 // dropping, and those stuck over or near land, where no torpedo may be dropped (PlaneDropTorpedo); and the enemy's
 // attackers and bombers lost within 1000 of a ship of the player's with their weapon still aboard, shot down before
-// they dropped, which tells how well the player's ships defend themselves.
+// they dropped, and those turned back, their weapon dumped at 70% of their HP or less, within 1500 of one, which tell
+// how well the player's ships defend themselves: a plane hit that hard turns home before it is shot down.
 internal sealed record StrikeCounts(
 	int Drops,
 	int TurnedBack,
@@ -24,7 +25,8 @@ internal sealed record StrikeCounts(
 	int FightersDry = 0,
 	int StuckRuns = 0,
 	int StuckOverLand = 0,
-	int EnemyStrikersDowned = 0
+	int EnemyStrikersDowned = 0,
+	int EnemyStrikersTurnedBack = 0
 );
 
 // What becomes of the player's attackers and bombers, each time one drops its weapon, turns home damaged or is lost,
@@ -59,6 +61,7 @@ internal sealed class StrikeLog(bool writes)
 	private int _stuckRuns;
 	private int _stuckOverLand;
 	private int _enemyStrikersDowned;
+	private int _enemyStrikersTurnedBack;
 	private bool _started;
 
 	private static double Distance(WorldPosition a, WorldPosition b) =>
@@ -114,6 +117,24 @@ internal sealed class StrikeLog(bool writes)
 		return true;
 	}
 
+	// Whether a point is within `distance` of a ship of the player's.
+	private static bool IsNearOwnShip(Nspw game, WorldPosition point, double distance)
+	{
+		for (var s = 1; s <= game.MaxUnitId; s++)
+		{
+			ref var ship = ref game.Units[s];
+			if (
+				ship.IsUsed
+				&& ship.Side == game.LocalSide
+				&& ship.Category == UnitCategory.Ship
+				&& Distance(ship.Position, point) <= distance
+			)
+				return true;
+		}
+
+		return false;
+	}
+
 	private static bool IsCarrier(UnitKind kind) =>
 		kind is UnitKind.Carrier or UnitKind.LightCarrier;
 
@@ -147,7 +168,8 @@ internal sealed class StrikeLog(bool writes)
 			_fightersDry,
 			_stuckRuns,
 			_stuckOverLand,
-			_enemyStrikersDowned
+			_enemyStrikersDowned,
+			_enemyStrikersTurnedBack
 		);
 	}
 
@@ -235,17 +257,7 @@ internal sealed class StrikeLog(bool writes)
 
 			if (!unit.IsUsed && _enemyStrikers.Remove(n, out var downedAt))
 			{
-				var nearShip = false;
-				for (var s = 1; s <= game.MaxUnitId && !nearShip; s++)
-				{
-					nearShip =
-						game.Units[s].IsUsed
-						&& game.Units[s].Side == game.LocalSide
-						&& game.Units[s].Category == UnitCategory.Ship
-						&& Distance(game.Units[s].Position, downedAt) <= 1000;
-				}
-
-				if (nearShip)
+				if (IsNearOwnShip(game, downedAt, 1000))
 					_enemyStrikersDowned++;
 			}
 			else if (
@@ -256,8 +268,14 @@ internal sealed class StrikeLog(bool writes)
 				&& unit.Ammo > 0
 			)
 				_enemyStrikers[n] = unit.Position;
-			else
-				_enemyStrikers.Remove(n);
+			else if (
+				_enemyStrikers.Remove(n)
+				&& unit.IsUsed
+				&& unit.Ammo == 0
+				&& unit.HP <= unit.MaxHP * 0.7
+				&& IsNearOwnShip(game, unit.Position, 1500)
+			)
+				_enemyStrikersTurnedBack++;
 
 			if (!unit.IsUsed && _planes.Remove(n, out var gone))
 			{
