@@ -1,10 +1,10 @@
 namespace OpenNspw.AI;
 
 // The strong player (docs/StrongAI.md): it remembers the enemies it has found, knows what the briefing tells, and runs
-// its air operations (StrongPlayer.Air.cs), its scouting (StrongPlayer.Scouting.cs), its ships (StrongPlayer.Fleet.cs)
-// its landings (StrongPlayer.Landing.cs), and the scenarios' own missions (StrongPlayer.Missions.cs). Each task is a
-// series of clicks, given by the click queue; the next task is chosen once the last one is done, by its priority
-// (Plan).
+// its air operations (StrongPlayer.Air.cs), its scouting (StrongPlayer.Scouting.cs), its ships (StrongPlayer.Fleet.cs),
+// its landings (StrongPlayer.Landing.cs), its defense (StrongPlayer.Defense.cs), and the scenarios' own missions
+// (StrongPlayer.Missions.cs). Each task is a series of clicks, given by the click queue; the next task is chosen once
+// the last one is done, by its priority (Plan).
 public sealed partial class StrongPlayer : IPlayer
 {
 	// How far from a deck its planes strike: well within their fuel, and beyond the computer's own strikes (3550, or
@@ -19,6 +19,9 @@ public sealed partial class StrongPlayer : IPlayer
 
 	// The share of its HP under which a warship goes to repair.
 	private const double RepairBelow = 0.4;
+
+	// The same, where the player holds on, and its ships are needed where they are.
+	private const double HeldRepairBelow = 0.25;
 
 	// The frames between a damaged ship's orders.
 	private const int RepairFrames = 200;
@@ -425,6 +428,8 @@ public sealed partial class StrongPlayer : IPlayer
 			&& !TryDetach(game)
 			&& !TrySubmarines(game)
 			&& !TryEngage(game)
+			&& !TryRebase(game, decks)
+			&& !TryGuardHeldPlaces(game, decks)
 			&& !TryPatrol(game, decks)
 			&& !TryArm(game, decks)
 		)

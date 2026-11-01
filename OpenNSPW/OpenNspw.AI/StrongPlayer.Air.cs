@@ -177,7 +177,8 @@ public sealed partial class StrongPlayer
 	private bool DefendsAll(UnitKind kind) =>
 		_knowledge.HoldsOn || _knowledge.Counted.Contains(kind);
 
-	// Fighters against an enemy attacker or bomber found near a deck or a ship of the player's.
+	// Fighters against an enemy attacker or bomber found near a deck, or near a place held from a deck not too far, or a
+	// ship of the player's.
 	private bool TryIntercept(Nspw game, List<int> decks)
 	{
 		foreach (var contact in _contacts.All)
@@ -191,14 +192,16 @@ public sealed partial class StrongPlayer
 			)
 				continue;
 
+			var nearHeld = IsNearHeldPlace(game, contact.Position);
 			foreach (
 				var deck in decks.OrderBy(d =>
 					UnitFacts.Distance(game.Units[d].Position, contact.Position)
 				)
 			)
 			{
+				var distance = UnitFacts.Distance(game.Units[deck].Position, contact.Position);
 				if (
-					UnitFacts.Distance(game.Units[deck].Position, contact.Position) > InterceptRange
+					(distance > InterceptRange && !(nearHeld && distance <= HeldPlaceRange * 2))
 					|| !UnitFacts.CanLaunch(ref game.Units[deck])
 				)
 					continue;
@@ -1716,6 +1719,7 @@ public sealed partial class StrongPlayer
 					_knowledge.HoldsOn
 					&& target is not null
 					&& UnitFacts.Distance(target.Position, game.Units[deck].Position) > DefenseRange
+					&& !IsNearHeldPlace(game, target.Position)
 				)
 					target = null;
 

@@ -64,6 +64,18 @@ The computer's own weaknesses, read from its code, are part of the plans: it act
 
 Each step ends with the arena's table, kept in this document.
 
+## Missions and holding on
+Some scenarios' goals are not reached by the general tasks, and get their own plan (`StrongPlayer.Missions.cs`), played before the general tasks, which it may hold back: the general strikes, the scouts and the carriers' moves.
+
+| Scenario | Mission |
+| --- | --- |
+| 300 | The carrier sails toward Tokyo until the bombers' fuel carries them over Tokyo and on to the corner of the map, or its own fuel, 9 at the start, is spent; the bombers strike the cities only; once two cities are destroyed, every bomber flies to the corner. |
+| 205 | Nouméa's bomber flies to Bougainville's airfield by a point clear of the enemy's fighters, with Nouméa's fighters, all given Bougainville as their base; it comes down there within 1000; once serviced, it flies back the same way. Guadalcanal's fighters are based at Bougainville from the start, to defend it. |
+| 109, 207 | Once the place is destroyed, every ship sails back to the waters of the start. |
+
+### Holding on
+Where the player wins by holding on (`ScenarioKnowledge.HoldsOn`), it defends (`StrongPlayer.Defense.cs`): the places it holds are where its bases, cities and anchored ships stand, as it sees them. Its fighters patrol over them, and every ready fighter meets a raid near them or near a deck; its strikes hit only enemies that come within 3500 of a deck or a place held, and it neither scouts nor sweeps; its warships fight only near the places held, keep station at the nearest one otherwise, and leave for repairs only below a quarter of their HP. The ready fighters and attackers of its other air bases fly to the air base nearest where the briefing expects the enemy, as many as it has room for, and are based there in the air: in scenario 7, every plane starts at Nouméa, beyond a fighter's reach of Guadalcanal's empty airfield, which the scenario is lost with.
+
 ## Carrier battles
 What decides a carrier battle, read from the game's code and measured with the arena's `--strikes`:
 
@@ -185,6 +197,51 @@ At commit `b4fca20` (air operations, positioning out of the computer's strike ra
 It wins 13 games of 111, where the rushing player wins 5: scenarios 1, 101 and 103 most of the time, 102 and 206 once. It still loses the carrier battles but 4, where it draws: its torpedo strikes reach the enemy carriers through their escorts' guns and fighters too seldom to sink them. It does nothing yet for most of the scenarios with goals of their own (landings at defended places, bombers that must come back, captures).
 
 Since then, as measured scenario by scenario: 2 is won in all three games (every deck strikes Pearl Harbor at once, each at a different ship), 202 is won (the strategic bombers reach Tokyo, 62% of their range away), 4 is drawn in all three, and 6 drawn twice.
+
+At commit `f329921` (strikes that reach as far as the planes' fuel, every deck at once against known places, fanned attacks, carriers that close in only on what is known), capped at 100000 frames:
+
+| Scenario | Side | strong |
+| --- | --- | --- |
+| 1 | U | WWW |
+| 2 | J | WWW |
+| 3 | U | WLW |
+| 4 | J | DDD |
+| 5 | U | DDL |
+| 6 | U | DDD |
+| 7 | U | LLL |
+| 8 | J | LLL |
+| 9 | J | LLL |
+| 10 | J | LLL |
+| 100 | J | LLL |
+| 101 | J | WWW |
+| 102 | U | WWL |
+| 103 | U | LLL |
+| 104 | J | LLL |
+| 105 | J | LLL |
+| 106 | U | LLL |
+| 107 | U | LLL |
+| 108 | J | LLL |
+| 109 | U | LLL |
+| 200 | J | FLF |
+| 201 | J | LLL |
+| 202 | U | WWD |
+| 203 | U | LLL |
+| 204 | U | LLL |
+| 205 | U | LLL |
+| 206 | U | WWW |
+| 207 | U | LLL |
+| 208 | U | LLL |
+| 209 | J | LLL |
+| 300 | U | LLL |
+| 301 | J | LLL |
+| 302 | J | LLL |
+| 303 | U | LLL |
+| 304 | J | LLL |
+| 305 | J | LLL |
+| 306 | J | LLL |
+| Won | | 18/111 |
+
+It wins 18 games of 111. Scenario 103 is lost where it was won: the fighters swept to the enemy's carriers, which the victory conditions count, and left Pearl Harbor to the raids; 3 is lost once, the air units spent on strikes. Both are mended since (see [Holding on](#holding-on)).
 
 ### The carrier battles
 With carriers followed home, and with no cap on the frames; 105 and 106 also from the six start dates after these (1000023757 to 1000063352), as three games of each swing on small changes. Before, with strikes that go for the nearest carrier (`c3e4e43`), on the same dates:

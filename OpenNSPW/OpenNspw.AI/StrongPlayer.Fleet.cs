@@ -548,7 +548,10 @@ public sealed partial class StrongPlayer
 				continue;
 			}
 
-			if (!_repairing.Contains(m) && ship.HP >= ship.MaxHP * RepairBelow)
+			if (
+				!_repairing.Contains(m)
+				&& ship.HP >= ship.MaxHP * (_knowledge.HoldsOn ? HeldRepairBelow : RepairBelow)
+			)
 				continue;
 
 			var navalBase = NearestNavalBase(game, ship.Position);
@@ -854,6 +857,9 @@ public sealed partial class StrongPlayer
 				&& (best is null || IsCounted(current.Kind) || !IsCounted(best.Kind))
 					? current
 					: best;
+			if (_knowledge.HoldsOn && target is not null && !IsNearHeldPlace(game, target.Position))
+				target = null;
+
 			WorldPosition point;
 			if (target is not null)
 			{
@@ -865,6 +871,13 @@ public sealed partial class StrongPlayer
 						600
 					) + ((UnitFacts.Now(game) - target.Frame) * 2);
 				point = target.Predict(ticks);
+			}
+			else if (NearestHeldPlace(game, position) is { } station)
+			{
+				if (UnitFacts.Distance(position, station) <= 1500)
+					continue;
+
+				point = station;
 			}
 			else if (_knowledge.Enemy.Count > 0)
 			{
