@@ -1,12 +1,16 @@
 namespace OpenNspw.AI;
 
-// The strong player's defense, where it wins by holding on: the places it holds are where its bases, cities and anchored
-// ships stand, as it sees them; its fighters patrol over them and meet the raids near them, its strikes hit the enemy
-// near them, and its warships keep station there rather than chase the enemy away from them.
+// The strong player's defense, where it wins by holding on: the places it holds are where its bases, cities and
+// anchored ships stand, as it sees them; its fighters patrol over them and meet the raids near them, its strikes hit
+// the enemy near them, and its warships keep station there rather than chase the enemy away from them.
 public sealed partial class StrongPlayer
 {
 	// How far around a place held enemy planes are intercepted, and enemy ships struck and fought.
 	private const double HeldPlaceRange = 3500;
+
+	// How far from the front air base another must be for its planes to move up: nearer, they defend the front from
+	// where they are.
+	private const double RebaseFrom = 4000;
 
 	// The frames for which the places held are kept before they are found again.
 	private const int HeldPlaceFrames = 500;
@@ -63,8 +67,8 @@ public sealed partial class StrongPlayer
 			? places.MinBy(p => UnitFacts.Distance(p, position))
 			: null;
 
-	// Each place held keeps a fighter in the air above it, from the nearest deck whose fighters reach it, while that deck
-	// has two ready.
+	// Each place held keeps a fighter in the air above it, from the nearest deck whose fighters reach it, while that
+	// deck has two ready.
 	private bool TryGuardHeldPlaces(Nspw game, List<int> decks)
 	{
 		foreach (var place in HeldPlaces(game))
@@ -142,9 +146,9 @@ public sealed partial class StrongPlayer
 		return front;
 	}
 
-	// Where the player holds on, the ready fighters and attackers of its other air bases fly to the one nearest the
-	// enemy, as many as it has room for (Capacity), within 70% of their range, to defend it from there: in the air,
-	// they are given it as their base, and come down there (Return).
+	// Where the player holds on, the ready fighters and attackers of its air bases 4000 or more away fly to the one
+	// nearest the enemy, as many as it has room for (Capacity), within 70% of their range, to defend it from there: in
+	// the air, they are given it as their base, and come down there (Return).
 	private bool TryRebase(Nspw game, List<int> decks)
 	{
 		if (!_knowledge.HoldsOn || FrontAirBase(game) is not (> 0 and var front))
@@ -199,6 +203,9 @@ public sealed partial class StrongPlayer
 				continue;
 
 			var distance = UnitFacts.Distance(game.Units[deck].Position, frontBase.Position);
+			if (distance < RebaseFrom)
+				continue;
+
 			var planes = ParkedOn(
 					game,
 					deck,

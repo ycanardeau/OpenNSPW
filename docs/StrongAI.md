@@ -243,6 +243,51 @@ At commit `f329921` (strikes that reach as far as the planes' fuel, every deck a
 
 It wins 18 games of 111. Scenario 103 is lost where it was won: the fighters swept to the enemy's carriers, which the victory conditions count, and left Pearl Harbor to the raids; 3 is lost once, the air units spent on strikes. Both are mended since (see [Holding on](#holding-on)).
 
+At commit `31da670` (missions for 300, 205, 109 and 207, defense where it holds on without moving planes up, strikes at what the victory counts only in 202 and 300), capped at 100000 frames:
+
+| Scenario | Side | strong |
+| --- | --- | --- |
+| 1 | U | WWW |
+| 2 | J | WWW |
+| 3 | U | WWW |
+| 4 | J | DDD |
+| 5 | U | DDL |
+| 6 | U | DDD |
+| 7 | U | LLL |
+| 8 | J | WLL |
+| 9 | J | LLL |
+| 10 | J | LLL |
+| 100 | J | LLL |
+| 101 | J | WWW |
+| 102 | U | WWL |
+| 103 | U | WLW |
+| 104 | J | LLL |
+| 105 | J | LLL |
+| 106 | U | LLL |
+| 107 | U | LLL |
+| 108 | J | LLL |
+| 109 | U | LLL |
+| 200 | J | FLF |
+| 201 | J | LLL |
+| 202 | U | WDD |
+| 203 | U | LLL |
+| 204 | U | LLL |
+| 205 | U | LLL |
+| 206 | U | WWW |
+| 207 | U | LLL |
+| 208 | U | FLL |
+| 209 | J | LLL |
+| 300 | U | LLL |
+| 301 | J | LLL |
+| 302 | J | LLL |
+| 303 | U | LLL |
+| 304 | J | LLL |
+| 305 | J | LLL |
+| 306 | J | LLL |
+| Won | | 21/111 |
+
+It wins 21 games of 111. Since then, the hold-on scenarios last much longer, the planes moved up to the front air base, but none is won yet: 7 holds Guadalcanal for 13000 to 38000 frames of its 37000, and 208 for 25000 of 30000.
+
 ### The carrier battles
 With carriers followed home, and with no cap on the frames; 105 and 106 also from the six start dates after these (1000023757 to 1000063352), as three games of each swing on small changes. Before, with strikes that go for the nearest carrier (`c3e4e43`), on the same dates:
 
