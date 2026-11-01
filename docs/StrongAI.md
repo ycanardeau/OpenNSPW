@@ -17,7 +17,7 @@ Each scenario is also played by two players that do not think, as baselines:
 - **Idle**: gives no order. Several scenarios are won by holding on until the end (3, 7, 108, 204, 208, 304), and some may be won by doing nothing at all; a win that the idle player also gets says nothing of the strong one.
 - **Rush**: sends its ships one after another at the nearest enemy found, as the tests' `Monkey` does, through the commands, and gives no other order. The `Monkey` itself does not fit: it clicks at random, holds Space and presses the speed keys, which the rules forbid, and it sends its ships at enemies that are not found.
 
-The arena runs in Release, one game per core, each on its own thread with a platform of its own (`ArenaPlatform`), whose clock runs as fast as the game can: a frame costs about 1.2 ms, so a scenario of 60000 ticks, 30000 frames, takes about 40 seconds. The tests' lockstep runs, in Debug, cost about 17 ms a frame.
+The arena runs in Release, one game per core, each on its own thread with a platform of its own (`ArenaPlatform`), whose clock runs as fast as the game can. The single-player computer is 1.22's rewritten as C# ([Singleplayer.md](Singleplayer.md)), not emulated: the same games, row for row, in about half the time (scenarios 4, 5 and 105, 10000 frames each, one at a time: 37 seconds against 68). A frame costs about 1.2 ms when the game runs alone and about 6 ms with every core busy, so a scenario of 60000 ticks, 30000 frames, takes about 40 seconds alone and about 3 minutes in a full arena. The tests' lockstep runs, in Debug, cost about 17 ms a frame.
 
 ```bash
 dotnet run -c Release --project OpenNSPW/OpenNspw.Arena -- --scenarios 4,5,6 --dates 3 --players idle,rush
