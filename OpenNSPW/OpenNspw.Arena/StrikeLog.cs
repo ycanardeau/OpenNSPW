@@ -4,7 +4,9 @@ namespace OpenNspw.Arena;
 // turned home damaged or for fuel, their weapon dumped, and the ones lost; the HP the enemy's ships lost, to anything;
 // the carriers each side lost; and the HP the player's carriers lost, to anything, which tells how well they are
 // defended sooner than the carriers sunk; and the weapons dropped at enemy carriers, and the hits on them, whose ratio
-// is the strikes' aim; and the player's planes of every kind lost with no fuel left, and the fighters among them.
+// is the strikes' aim; and the player's planes of every kind lost with no fuel left, and the fighters among them; and
+// the attack runs stuck: a torpedo plane of the player's within 400 of the ship it attacks for 150 frames without
+// dropping, and those stuck over or near land, where no torpedo may be dropped (PlaneDropTorpedo).
 internal sealed record StrikeCounts(
 	int Drops,
 	int TurnedBack,
@@ -17,7 +19,9 @@ internal sealed record StrikeCounts(
 	int CarrierDrops = 0,
 	int CarrierHits = 0,
 	int PlanesDry = 0,
-	int FightersDry = 0
+	int FightersDry = 0,
+	int StuckRuns = 0,
+	int StuckOverLand = 0
 );
 
 // What becomes of the player's attackers and bombers, each time one drops its weapon, turns home damaged or is lost,
@@ -34,6 +38,7 @@ internal sealed class StrikeLog(bool writes)
 		int,
 		(UnitKind Kind, double Fuel, WorldPosition Position, int Carrier, string State)
 	> _flying = [];
+	private readonly Dictionary<int, (int Since, bool OverLand, bool Counted)> _runs = [];
 	private readonly Dictionary<int, int> _ships = [];
 	private readonly HashSet<int> _carriers = [];
 	private readonly Dictionary<int, Side> _sides = [];
@@ -47,6 +52,8 @@ internal sealed class StrikeLog(bool writes)
 	private int _carrierHits;
 	private int _planesDry;
 	private int _fightersDry;
+	private int _stuckRuns;
+	private int _stuckOverLand;
 	private bool _started;
 
 	private static double Distance(WorldPosition a, WorldPosition b) =>
@@ -81,6 +88,27 @@ internal sealed class StrikeLog(bool writes)
 		);
 	}
 
+	// Whether a torpedo may be dropped at a point, as for the land: its tile and the eight around it are sea
+	// (PlaneDropTorpedo), the map's edge counted as land.
+	private static bool CanDropTorpedoAt(Nspw game, WorldPosition position)
+	{
+		ref var units = ref game.Renderer.Sprites[SpriteId.JapanUnits];
+		ref var tiles = ref game.Renderer.Sprites[SpriteId.MapTiles];
+		var column = (int)((position.X + (units.Size.Width / 2) - World.Left) / tiles.Size.Width);
+		var row = (int)((World.Top - position.Y + (units.Size.Height / 2)) / tiles.Size.Height);
+		for (var dy = -1; dy <= 1; dy++)
+		{
+			for (var dx = -1; dx <= 1; dx++)
+			{
+				var (c, r) = (column + dx, row + dy);
+				if (c is < 0 or >= 256 || r is < 0 or >= 256 || game.MapTiles[r][c] != 0)
+					return false;
+			}
+		}
+
+		return true;
+	}
+
 	private static bool IsCarrier(UnitKind kind) =>
 		kind is UnitKind.Carrier or UnitKind.LightCarrier;
 
@@ -111,7 +139,9 @@ internal sealed class StrikeLog(bool writes)
 			_carrierDrops,
 			_carrierHits,
 			_planesDry,
-			_fightersDry
+			_fightersDry,
+			_stuckRuns,
+			_stuckOverLand
 		);
 	}
 
@@ -162,6 +192,40 @@ internal sealed class StrikeLog(bool writes)
 				);
 			else
 				_flying.Remove(n);
+
+			if (
+				unit.IsUsed
+				&& unit.Side == game.LocalSide
+				&& unit.Kind == UnitKind.Attacker
+				&& unit.Weapon == FireKind.Torpedo
+				&& unit.Ammo > 0
+				&& unit.PlaneState == UnitState.Flying
+				&& unit.Target != 0
+				&& game.Units[unit.Target].IsUsed
+				&& game.Units[unit.Target].Category == UnitCategory.Ship
+				&& Distance(unit.Position, game.Units[unit.Target].Position) <= 400
+			)
+			{
+				var run = _runs.GetValueOrDefault(
+					n,
+					(Since: game.Renderer.FrameCount, OverLand: false, Counted: false)
+				);
+				run.OverLand |= !CanDropTorpedoAt(game, unit.Position);
+				if (!run.Counted && game.Renderer.FrameCount - run.Since >= 150)
+				{
+					run.Counted = true;
+					_stuckRuns++;
+					if (run.OverLand)
+						_stuckOverLand++;
+					WriteLine(
+						$"STRIKE {game.Renderer.FrameCount} #{n} stuck on {game.Units[unit.Target].Kind} {unit.Target}{(run.OverLand ? ", over land" : "")}"
+					);
+				}
+
+				_runs[n] = run;
+			}
+			else
+				_runs.Remove(n);
 
 			if (!unit.IsUsed && _planes.Remove(n, out var gone))
 			{

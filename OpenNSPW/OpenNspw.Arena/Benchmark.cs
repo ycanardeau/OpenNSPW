@@ -34,6 +34,8 @@ internal static class Benchmark
 		"carrier_hits",
 		"planes_dry",
 		"fighters_dry",
+		"stuck_runs",
+		"stuck_over_land",
 	];
 
 	// The 95% Wilson interval of a rate of `successes` in `count`, as fractions, which holds for few games and for rates
@@ -161,7 +163,7 @@ internal static class Benchmark
 			string.Join(",", Columns),
 			.. results.Select(r =>
 				FormattableString.Invariant(
-					$"{r.Scenario},{r.StartDate},{r.Player},{r.Side},{r.Outcome},{r.Frames},{r.TimeLeft},{r.Elapsed.TotalSeconds:F1},{r.Strikes.Drops},{r.Strikes.TurnedBack},{r.Strikes.OutOfFuel},{r.Strikes.PlanesLost},{r.Strikes.EnemyDamage},{r.Strikes.EnemyCarriersSunk},{r.Strikes.OwnCarriersSunk},{r.Strikes.CarrierDamage},{r.Strikes.CarrierDrops},{r.Strikes.CarrierHits},{r.Strikes.PlanesDry},{r.Strikes.FightersDry}"
+					$"{r.Scenario},{r.StartDate},{r.Player},{r.Side},{r.Outcome},{r.Frames},{r.TimeLeft},{r.Elapsed.TotalSeconds:F1},{r.Strikes.Drops},{r.Strikes.TurnedBack},{r.Strikes.OutOfFuel},{r.Strikes.PlanesLost},{r.Strikes.EnemyDamage},{r.Strikes.EnemyCarriersSunk},{r.Strikes.OwnCarriersSunk},{r.Strikes.CarrierDamage},{r.Strikes.CarrierDrops},{r.Strikes.CarrierHits},{r.Strikes.PlanesDry},{r.Strikes.FightersDry},{r.Strikes.StuckRuns},{r.Strikes.StuckOverLand}"
 				)
 			),
 		];
@@ -203,7 +205,9 @@ internal static class Benchmark
 						Number("carrier_drops"),
 						Number("carrier_hits"),
 						Number("planes_dry"),
-						Number("fighters_dry")
+						Number("fighters_dry"),
+						Number("stuck_runs"),
+						Number("stuck_over_land")
 					)
 				)
 			);
