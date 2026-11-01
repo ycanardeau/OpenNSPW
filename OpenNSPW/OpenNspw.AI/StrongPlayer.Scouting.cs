@@ -382,15 +382,101 @@ public sealed partial class StrongPlayer
 		});
 	}
 
+	// How far from an enemy warship found a plane on its way home keeps: beyond its anti-aircraft fire (GunCover), by 150.
+	private static double GunClearance(UnitKind kind) =>
+		kind switch
+		{
+			UnitKind.Battleship => 900,
+			UnitKind.Cruiser => 800,
+			UnitKind.Destroyer => 450,
+			_ => 0,
+		};
+
+	// Where a plane on its way home turns, to come round the enemy's warships found in the last 600 frames, where they
+	// would be by now, rather than over them, where their guns shoot it down: a point to one side of its way, beyond
+	// each warship within its clearance (GunClearance) of the way, from which it flies straight home, on the side that
+	// is the shorter way round with both legs clear. The warships the plane or its deck is already within the clearance of
+	// are left out, as there is no way round them. Null if its way is clear, if neither side is, or if it has not the
+	// fuel for the way round (FuelToHome, for its length).
+	private WorldPosition? HomeWaypoint(Nspw game, int plane)
+	{
+		ref var unit = ref game.Units[plane];
+		var from = unit.Position;
+		var to = game.Units[unit.Carrier].Position;
+		var length = UnitFacts.Distance(from, to);
+		if (length < 1)
+			return null;
+
+		var now = UnitFacts.Now(game);
+		var warships = _contacts
+			.All.Where(c =>
+				c.Category == UnitCategory.Ship && GunClearance(c.Kind) > 0 && now - c.Frame <= 600
+			)
+			.Select(c =>
+				(Position: c.Predict((now - c.Frame) * 2), Clearance: GunClearance(c.Kind))
+			)
+			.Where(w =>
+				UnitFacts.Distance(w.Position, from) >= w.Clearance
+				&& UnitFacts.Distance(w.Position, to) >= w.Clearance
+			)
+			.ToList();
+		var threats = warships
+			.Where(w => DistanceToSegment(w.Position, from, to) < w.Clearance)
+			.ToList();
+		if (threats.Count == 0)
+			return null;
+
+		var (ux, uy) = ((to.X - from.X) / length, (to.Y - from.Y) / length);
+		var along = threats.Average(w =>
+			((w.Position.X - from.X) * ux) + ((w.Position.Y - from.Y) * uy)
+		);
+		var foot = new WorldPosition(from.X + (ux * along), from.Y + (uy * along));
+		WorldPosition? best = null;
+		var bestLength = double.PositiveInfinity;
+		foreach (var side in (ReadOnlySpan<int>)[1, -1])
+		{
+			var (nx, ny) = (-uy * side, ux * side);
+			var offset = threats.Max(w =>
+				((w.Position.X - foot.X) * nx) + ((w.Position.Y - foot.Y) * ny) + w.Clearance
+			);
+			for (var attempt = 0; attempt < 3; attempt++, offset *= 1.3)
+			{
+				var point = new WorldPosition(foot.X + (nx * offset), foot.Y + (ny * offset));
+				if (
+					warships.Any(w =>
+						DistanceToSegment(w.Position, from, point) < w.Clearance
+						|| DistanceToSegment(w.Position, point, to) < w.Clearance
+					)
+				)
+					continue;
+
+				var way = UnitFacts.Distance(from, point) + UnitFacts.Distance(point, to);
+				if (way < bestLength)
+					(best, bestLength) = (point, way);
+				break;
+			}
+		}
+
+		return best is not null && unit.Fuel > FuelToHome(game, plane) * bestLength / length
+			? best
+			: null;
+	}
+
 	// Sends the selected flying plane home: toward its deck first, as Return turns a plane home only at the end of its
-	// path, then Return, which drops its weapon.
+	// path, or, with Parameters.ReturnAround, round the enemy's warships on the way (HomeWaypoint); then Return, which
+	// drops its weapon.
 	private void ReturnSelected(int plane, string what)
 	{
 		_clicks.Enqueue(g =>
 		{
 			if (g.SelectedUnit != plane)
 				return GiveUp(g, $"{what} {plane}: selected {g.SelectedUnit}");
-			g.Commands.SetDestination(g.Units[g.Units[plane].Carrier].Position);
+			var round = Parameters.ReturnAround ? HomeWaypoint(g, plane) : null;
+			g.Commands.SetDestination(round ?? g.Units[g.Units[plane].Carrier].Position);
+			if (round is { } point)
+				Log?.Invoke(
+					$"{UnitFacts.Now(g)}: {g.Units[plane].Kind} {plane} comes home round the enemy by ({point.X:F0}, {point.Y:F0})"
+				);
 			return true;
 		});
 		_clicks.Enqueue(g =>

@@ -102,6 +102,10 @@ public sealed record StrongParameters
 	// than by kind and number.
 	public bool RingAssignment { get; init; }
 
+	// Whether a plane sent home comes round the enemy's warships found on its way, beyond their guns, rather than over
+	// them (HomeWaypoint).
+	public bool ReturnAround { get; init; }
+
 	// Whether a deck that hunts carriers keeps scouting while it knows where a carrier is (IsRemembered), its scouts kept
 	// unarmed for it; or stops, and arms them to strike, until the carrier is lost.
 	public bool KeepScouting { get; init; } = true;

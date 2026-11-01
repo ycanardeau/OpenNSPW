@@ -84,7 +84,7 @@ Most of what made the player stronger, or is waiting to be measured, came from a
 | Speed the player up with the game's speed | A frame runs speed + 1 ticks (`TryStartSingleplayerFrame`) | Done (`3ed23f5`) |
 | Launch all the attackers at once, to spread the escorts' fire | `MinStrike` | `StrikeShare=1`: 35 against 31 of 120, to confirm |
 | Hiryu and the submarine can win 201 | A submarine dives and fires by itself (`ShipFireTorpedoWithoutTarget`) | `UseSubmarines`, not measured |
-| Scouts should come home round the enemy, not over it | `ReturnSelected` flies straight | Written down, not built |
+| Scouts should come home round the enemy, not over it | `ReturnSelected` flies straight | `ReturnAround`, not measured |
 | A Japanese destroyer beats a US cruiser by torpedoing, then sticking to it | Guns fire at nothing nearer than 30% of their range, or 150 at a target | `CloseQuarters`, not measured |
 | The torpedoes hit too seldom | An aerial torpedo runs straight from 100 to 220; a ship dodges it unless already turning | `BeamApproach`, and the arena counts the hits; not measured |
 | Fighters should go for fighters, mostly | `ChooseTargetInFlight` | `FightersFirst`, not measured |
