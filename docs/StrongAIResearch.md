@@ -58,6 +58,11 @@ Each was measured on 3 to 9 games of the carrier battles, unless said otherwise.
 | Tuning the 17 numbers of `StrongParameters` (`--tune 18`, three rounds, on dates 100 and on of 4, 5, 6, 105 and 106, capped at 30000 frames) | In the last round, on 90 games each, the best two random settings and the defaults scored 0.650, 0.648 and 0.646, 20 wins each: a tie. Round 1's leader, on 10 games, fell to fifth on 30. No setting of these numbers does better than the defaults: what holds the player back is what it does, not its numbers |
 | A ring only for a group with no battleship (`--formation auto:400`), checked on fresh dates 50 to 99 of 4 and 5 | 4: 18 against the line's 17 (p 0.86); 5: 4 against 6 (p 0.27). The gain of dates 0 to 49 does not come back: it was chosen for winning there, and much of the win was those dates' luck. Over the 100 dates of 4, 44 against 31. The line stays the default; a choice is kept only once it wins on dates it was not chosen on |
 | The ring's places given to the warships that sail the least to them in all (`RingAssignment`, the assignment problem), ring 400 on 20 dates of 4, 5, 6, 105 and 106, capped at 30000 frames | 29 won of 100 against 29 by kind and number (21 games better, 18 worse, p 0.75); 5 played the same in every game. The ships stuck on the way to their places are not what holds the ring back |
+| Ten choices screened on 20 dates of 4, 5, 6, 105, 106 and 201, capped at 30000 frames, against the defaults (19 won of 120) | `ReturnAround` 18 (1 game better, 3 worse); `UseSubmarines` 19, the same in every game but 201's, where the enemy's ships lose 9.4 HP a game against 8.4 and no carrier is sunk; `StraightWhenFar` 20 (1, 1); `SpareCrippled` 21 (3, 2); `BeamApproach` 21 (15, 12, p 0.70); `DivertFromCrippledDecks` 18 (3, 2); `ProbabilitySearch` 19 (10, 14); `CloseQuarters` 29 (15, 5, p 0.04), the only gain, to confirm on fresh dates |
+| A fuel margin of +2 for a plane attacking a target found (`AttackingBingoMargin=2`, not -8), on 10 dates of 5, 6 and 106 | 8 won of 30 against 7; 95 planes lost dry against 87: the planes do not run dry on the way home, but over their decks (below) |
+| Launches held while a plane short of fuel comes home to its deck (`RecoverFirst`), on the same 30 games | Holding every launch: 3 won against 7, 66 lost dry against 87, the carriers losing 29.3 HP a game against 18.1, their patrols held too. Patrols and interceptions not held: 6 won, 77 dry, 24.9 HP. With `RecoverMargin=15`: 9 won (6 better, 5 worse), 74 dry, 21.1 HP |
+| Carriers holding their course while their planes land (`HoldCourse`), on the same 30 games | 6 won against 7, 72 lost dry, 21.0 HP; with `RecoverFirst`, 4 won, 75 dry, 28.1 HP. Planes saved, carriers struck more: none is kept |
+| Battleships and cruisers aiming at the attackers nearest the carriers (`TargetAttackers`), on the same 30 games | 8 won against 7 (2 better, 3 worse), the carriers losing 18.8 HP a game against 18.1: no effect seen on the carriers; measured again with the enemy's attackers shot down counted |
 
 And what has worked, from LLL in every carrier battle to the results above:
 - strikes at carriers only, the nearest first;
@@ -76,21 +81,34 @@ Most of what made the player stronger, or is waiting to be measured, came from a
 | Attackers that found the carriers should not search again; strikes should go for the nearest | `ChooseTarget`, `TryApproach` | Done (`298836a`) |
 | Use the walkthrough's tactics: decoys, the Marianas waves | `EvadePlane`: a ship turns away from any attacker heading at it within 600, armed or not | The decoy scout gained nothing |
 | Damaged enemy carriers go home and come back with all their planes | `cpu_strtgy`, Returning to base | Followed home (`05f6176`); catching them failed |
-| Stop scouting once the enemy is found; predict where it goes | `Contacts`, `WhereNow` | `KeepScouting`, `ProbabilitySearch`, not measured |
-| Strikes take roundabout routes | `SideOffset`, `ApproachRadius`, `HoldOff`, `FanAngle` | Tuned: no better setting; `StraightWhenFar`, not measured |
-| A carrier at 20% of its HP or less can neither launch nor land | `UnitFacts.CanLaunch`, the landing check of `MoveUnit` | `SpareCrippled`, `DivertFromCrippledDecks`, not measured |
-| Land the planes with the least fuel and the most damage first | `LandingLock`; the lowest-numbered plane lands first | Written down, not built |
+| Stop scouting once the enemy is found; predict where it goes | `Contacts`, `WhereNow` | `ProbabilitySearch` gains nothing; `KeepScouting=false` being measured |
+| Strikes take roundabout routes | `SideOffset`, `ApproachRadius`, `HoldOff`, `FanAngle` | Tuned: no better setting; `StraightWhenFar` gains nothing |
+| A carrier at 20% of its HP or less can neither launch nor land | `UnitFacts.CanLaunch`, the landing check of `MoveUnit` | `SpareCrippled`, `DivertFromCrippledDecks`: no gain |
+| Land the planes with the least fuel and the most damage first; a plane runs dry while others take off | `LandingLock`; no plane lands while a launch from its deck is under way, nor but along the deck's heading (`TryLandOnCarrier`) | 29% of the planes lost in 5, 6 and 106 run dry over their decks; `RecoverFirst` and `HoldCourse` save some, but lose games |
 | Strike the escorts first, as a trade-off to try | `ShipFireAntiAircraftShellWithoutTarget` | Much worse: 5 won of 120 against 31 |
 | Form a ring, not a line; ships get stuck forming it | `SetShipFormation` keeps the shape at grouping | Ring not confirmed on fresh dates; places by the assignment problem (`RingAssignment`) gain nothing |
 | Speed the player up with the game's speed | A frame runs speed + 1 ticks (`TryStartSingleplayerFrame`) | Done (`3ed23f5`) |
 | Launch all the attackers at once, to spread the escorts' fire | `MinStrike` | `StrikeShare=1`: 35 against 31 of 120, to confirm |
-| Hiryu and the submarine can win 201 | A submarine dives and fires by itself (`ShipFireTorpedoWithoutTarget`) | `UseSubmarines`, not measured |
-| Scouts should come home round the enemy, not over it | `ReturnSelected` flies straight | `ReturnAround`, not measured |
-| A Japanese destroyer beats a US cruiser by torpedoing, then sticking to it | Guns fire at nothing nearer than 30% of their range, or 150 at a target | `CloseQuarters`, not measured |
-| The torpedoes hit too seldom | An aerial torpedo runs straight from 100 to 220; a ship dodges it unless already turning | `BeamApproach`, and the arena counts the hits; not measured |
+| Hiryu and the submarine can win 201 | A submarine dives and fires by itself (`ShipFireTorpedoWithoutTarget`) | `UseSubmarines`: the submarine reaches the carrier's way too late in 201's 4500 frames |
+| Scouts should come home round the enemy, not over it | `ReturnSelected` flies straight | `ReturnAround`: planes seldom turn home across warships found; no gain |
+| A Japanese destroyer beats a US cruiser by torpedoing, then sticking to it | Guns fire at nothing nearer than 30% of their range, or 150 at a target | `CloseQuarters`: 29 won of 120 against 19 (p 0.04), being confirmed on fresh dates |
+| The torpedoes hit too seldom; they hit more across a ship than along it | An aerial torpedo runs straight on the plane's heading; a ship is a strip of boxes along its heading (`CheckHit`) and turns away from attackers within 600 | Measured (below): 70% across, 40% head-on; `BeamApproach` does not move the drops, as the ship turns first |
 | Fighters should go for fighters, mostly | `ChooseTargetInFlight` | `FightersFirst`, not measured |
 | Attacker targeting is dumb | Nearest carrier; any ship once low on fuel; no account of damage, turning, or other strikes on it | Written down |
-| Ships attacked by planes should aim at the attackers | A ship with a ship as its gun target fires no anti-aircraft shell; a plane can be its target | Written down |
+| Ships attacked by planes should aim at the attackers | A battleship with a plane as its target fires half as many shells again; a cruiser with a ship as its target fires none (`ControlBattleshipFiring`, `ControlCruiserFiring`) | `TargetAttackers`: no effect seen yet |
+| Torpedoes need the sea: attackers should come in from it | A torpedo is dropped only over sea, with sea all round and all the way (`PlaneDropTorpedo`) | 33 attack runs stuck in one game of each scenario, 29 over land, 26 in 2; `SeaApproach`, not measured |
+| Attackers too close to their ship should take another | The aim must be 100 to 220 ahead, within 45° of the heading | `RetargetWhenClose`, not measured |
+| Attack the escorts as well as the carriers: their guns turn the strikes back | `ShipFireAntiAircraftShellWithoutTarget` hits every plane near a burst | All escorts first lost (above); a share of each strike at them, `Targeting=Split`, being measured |
+| Strike with many planes together, not a few | Each burst and fighter takes few planes; a small strike meets the whole defense | `MinStrike` 6 and 9, `StrikeShare=1`, being measured |
+
+## Torpedoes, by the angle they are dropped at
+Every aerial torpedo of the 120 games of the screen's defaults (`--torpedoes`): 1318 of the player's, of which 773 hit the ship they were aimed at (59%). By the angle between the torpedo's way and the target's heading:
+
+| Angle | 0–15° (from astern) | 15–45° | 45–90° | 90–135° | 135–150° | 150–180° (head-on) |
+| --- | --- | --- | --- | --- | --- | --- |
+| Hit | 61% | 43–53% | 65–73% | 61–77% | 60% | 36–42% |
+
+The aim is close: two drops in three would pass within 5 of the ship if it held on. The misses come from its turn after the drop (64% hit when it does not turn, 53% when it does). Drops from 180 to 240 hit most, about 70%. The computer's torpedoes show the same, flatter. `BeamApproach` comes in on the beam, but the drops fall at the same angles (39% within 60–135°, against 40%), and hit a little more often (61.4% against 58.6%): the ship has turned away before the drop.
 
 ## What the work needs
 Why the player did not find these by itself, and what would let it:
