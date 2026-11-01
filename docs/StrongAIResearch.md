@@ -57,6 +57,7 @@ Each was measured on 3 to 9 games of the carrier battles, unless said otherwise.
 | Strikes waiting for a share of their deck's planes (`StrikeShare`), on the same 20 dates | 0.6: 33 won against 31, most games the same (6 better, 7 worse): the share seldom holds a strike back. 1, all of them: 35 against 31 (12 better, 9 worse, p 0.66), 4 9 against 6, the attackers turned back 13.9 a game against 15.2. The best of this round, to check on fresh dates |
 | Tuning the 17 numbers of `StrongParameters` (`--tune 18`, three rounds, on dates 100 and on of 4, 5, 6, 105 and 106, capped at 30000 frames) | In the last round, on 90 games each, the best two random settings and the defaults scored 0.650, 0.648 and 0.646, 20 wins each: a tie. Round 1's leader, on 10 games, fell to fifth on 30. No setting of these numbers does better than the defaults: what holds the player back is what it does, not its numbers |
 | A ring only for a group with no battleship (`--formation auto:400`), checked on fresh dates 50 to 99 of 4 and 5 | 4: 18 against the line's 17 (p 0.86); 5: 4 against 6 (p 0.27). The gain of dates 0 to 49 does not come back: it was chosen for winning there, and much of the win was those dates' luck. Over the 100 dates of 4, 44 against 31. The line stays the default; a choice is kept only once it wins on dates it was not chosen on |
+| The ring's places given to the warships that sail the least to them in all (`RingAssignment`, the assignment problem), ring 400 on 20 dates of 4, 5, 6, 105 and 106, capped at 30000 frames | 29 won of 100 against 29 by kind and number (21 games better, 18 worse, p 0.75); 5 played the same in every game. The ships stuck on the way to their places are not what holds the ring back |
 
 And what has worked, from LLL in every carrier battle to the results above:
 - strikes at carriers only, the nearest first;
@@ -80,7 +81,7 @@ Most of what made the player stronger, or is waiting to be measured, came from a
 | A carrier at 20% of its HP or less can neither launch nor land | `UnitFacts.CanLaunch`, the landing check of `MoveUnit` | `SpareCrippled`, `DivertFromCrippledDecks`, not measured |
 | Land the planes with the least fuel and the most damage first | `LandingLock`; the lowest-numbered plane lands first | Written down, not built |
 | Strike the escorts first, as a trade-off to try | `ShipFireAntiAircraftShellWithoutTarget` | Much worse: 5 won of 120 against 31 |
-| Form a ring, not a line; ships get stuck forming it | `SetShipFormation` keeps the shape at grouping | Ring not confirmed on fresh dates; the stuck ships not fixed |
+| Form a ring, not a line; ships get stuck forming it | `SetShipFormation` keeps the shape at grouping | Ring not confirmed on fresh dates; places by the assignment problem (`RingAssignment`) gain nothing |
 | Speed the player up with the game's speed | A frame runs speed + 1 ticks (`TryStartSingleplayerFrame`) | Done (`3ed23f5`) |
 | Launch all the attackers at once, to spread the escorts' fire | `MinStrike` | `StrikeShare=1`: 35 against 31 of 120, to confirm |
 | Hiryu and the submarine can win 201 | A submarine dives and fires by itself (`ShipFireTorpedoWithoutTarget`) | `UseSubmarines`, not measured |
