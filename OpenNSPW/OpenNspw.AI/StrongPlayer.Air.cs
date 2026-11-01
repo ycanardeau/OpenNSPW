@@ -172,6 +172,11 @@ public sealed partial class StrongPlayer
 			&& UnitFacts.Distance(c.Position, game.Units[deck].Position) <= RaidRange
 		);
 
+	// Whether every ready fighter goes up against an enemy plane of a kind, not four: when the player holds on, or the
+	// victory conditions count the kind.
+	private bool DefendsAll(UnitKind kind) =>
+		_knowledge.HoldsOn || _knowledge.Counted.Contains(kind);
+
 	// Fighters against an enemy attacker or bomber found near a deck or a ship of the player's.
 	private bool TryIntercept(Nspw game, List<int> decks)
 	{
@@ -208,7 +213,7 @@ public sealed partial class StrongPlayer
 				if (fighters.Count == 0)
 					continue;
 
-				var group = fighters.Take(4).ToList();
+				var group = fighters.Take(DefendsAll(contact.Kind) ? fighters.Count : 4).ToList();
 				ShowDeck(deck);
 				SelectPlanes(group[0], group.Skip(1));
 				Launch(group[0], contact.Unit, g => Intercept(g, group[0], contact));
@@ -1702,6 +1707,12 @@ public sealed partial class StrongPlayer
 					continue;
 
 				var target = wave ?? ChooseTarget(game, deck, weapon, reach);
+				if (
+					_knowledge.HoldsOn
+					&& target is not null
+					&& UnitFacts.Distance(target.Position, game.Units[deck].Position) > DefenseRange
+				)
+					target = null;
 
 				// A formation flies at about 60% of its planes' speed, two ticks a frame.
 				var arrival = target is null
@@ -1714,15 +1725,16 @@ public sealed partial class StrongPlayer
 				if (HuntsCarriers && EnemyStrikeAirborneUntil(game) > arrival && target is not null)
 					continue;
 
-				var origin = target is null
-					? pointWave
-						?? (
-							HuntsCarriers
-								? ExpectedCarriersToStrike(game, deck, reach)
-								: EnemyStrikeOrigin(game)
-						)
-						?? PlaceToStrike(game, deck, reach)
-					: null;
+				var origin =
+					target is null && !_knowledge.HoldsOn
+						? pointWave
+							?? (
+								HuntsCarriers
+									? ExpectedCarriersToStrike(game, deck, reach)
+									: EnemyStrikeOrigin(game)
+							)
+							?? PlaceToStrike(game, deck, reach)
+						: null;
 				if (target is null && origin is null)
 					continue;
 
@@ -1812,13 +1824,15 @@ public sealed partial class StrongPlayer
 		return false;
 	}
 
-	// When the victory conditions count enemy planes, a deck's ready fighters but one fly to the nearest area where the
-	// briefing expects them, within their reach, every so often, and wait there, as they see only 500 around: TryDirect
-	// gives them the planes they find.
+	// When the victory conditions count enemy planes, and the player does not win by holding on, which its fighters
+	// defend at home, a deck's ready fighters but one fly to the nearest area where the briefing expects them, within
+	// their reach, every so often, and wait there, as they see only 500 around: TryDirect gives them the planes they
+	// find.
 	private bool TryHunt(Nspw game, List<int> decks)
 	{
 		if (
-			!_knowledge.Counted.Any(k =>
+			_knowledge.HoldsOn
+			|| !_knowledge.Counted.Any(k =>
 				k is UnitKind.Bomber or UnitKind.Attacker or UnitKind.Fighter
 			)
 		)
@@ -1860,14 +1874,18 @@ public sealed partial class StrongPlayer
 		return false;
 	}
 
-	// A carrier keeps a fighter in the air above it, toward where the enemy most likely is, while it has two ready: it
-	// sees the enemy's strikes coming, and fights them, until its fuel brings it home (at 30) and another goes up.
+	// A carrier, or an air base where the player holds on, keeps a fighter in the air above it, toward where the enemy
+	// most likely is, while it has two ready: it sees the enemy's strikes coming, and fights them, until its fuel brings
+	// it home (at 30) and another goes up.
 	private bool TryPatrol(Nspw game, List<int> decks)
 	{
 		foreach (var deck in decks)
 		{
 			ref var unit = ref game.Units[deck];
-			if (unit.Category != UnitCategory.Ship || !UnitFacts.CanLaunch(ref unit))
+			if (
+				(unit.Category != UnitCategory.Ship && !_knowledge.HoldsOn)
+				|| !UnitFacts.CanLaunch(ref unit)
+			)
 				continue;
 
 			var flying = 0;

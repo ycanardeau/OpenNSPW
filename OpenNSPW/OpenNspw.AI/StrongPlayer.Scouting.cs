@@ -276,7 +276,8 @@ public sealed partial class StrongPlayer
 				)
 				.All(n => game.Units[n].Fuel <= FuelToHome(game, n) + 25);
 		if (
-			(
+			_knowledge.HoldsOn
+			|| (
 				!relieves
 				&& _contacts.All.Any(c =>
 					c.Category == UnitCategory.Ship

@@ -10,6 +10,9 @@ public sealed partial class StrongPlayer : IPlayer
 	// 4350 as Japan).
 	private const double StrikeRange = 6000;
 
+	// How close to a deck an enemy comes before the player strikes it, where it holds on.
+	private const double DefenseRange = 3500;
+
 	// How close to a deck enemy planes hold its strikes back.
 	private const double RaidRange = 2000;
 
