@@ -104,6 +104,9 @@ Most of what made the player stronger, or is waiting to be measured, came from a
 | Attack the escorts as well as the carriers: their guns turn the strikes back | `ShipFireAntiAircraftShellWithoutTarget` hits every plane near a burst | All escorts first, or a third of each strike (`Targeting=Split`): both lose |
 | Strike with many planes together, not a few | Each burst and fighter takes few planes; a small strike meets the whole defense | Waiting for all a deck's planes: 14 won of 50 against 12, then 21 against 21 on fresh dates: fewer turned back, no more won |
 
+## Where the games go
+Of the defaults' 100 games on 20 dates of 4, 5, 6, 105 and 106, capped at 30000 frames: 19 won, 40 drawn, 6 lost, 35 unfinished. In 4, 5 and 6 the player seldom loses (5 of 60): 40 games are drawn, the battle's time running out with enemy carriers afloat. 105 and 106 have far more time than the cap (840000 ticks left at 30000 frames), so the benchmark counts them won only when every carrier is sunk early: 35 of 40 are cut off unfinished. None of the techniques measured changes this, as none makes the carriers sink sooner: what the player lacks is tempo, finding the carriers and striking again and again until each is sunk within the time, and the benchmark should play 105 and 106 to their end, or count the carriers sunk.
+
 ## Torpedoes, by the angle they are dropped at
 Every aerial torpedo of the 120 games of the screen's defaults (`--torpedoes`): 1318 of the player's, of which 773 hit the ship they were aimed at (59%). By the angle between the torpedo's way and the target's heading:
 
