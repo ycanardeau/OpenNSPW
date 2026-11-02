@@ -72,6 +72,9 @@ public unsafe partial class Nspw
 		return false;
 	}
 
+	// The points of a unit's path (pp_x, pp_y).
+	private const int RoutePathLength = 64;
+
 	// Stops unit m where it is: its path is its position alone.
 	private void StopWhereItIs(ref Unit unit)
 	{
@@ -326,6 +329,16 @@ public unsafe partial class Nspw
 			{
 				pp_indx = -1;
 			}
+
+			// BUG(1.22): the loop (0x42DDA6 to 0x42ECFF) goes on until a leg is clear, with nothing to keep the route in
+			// its path's 64 points. A waypoint that turns back moves the destination 160 further (0x42EB92), up to 2000,
+			// but the leg to the moved destination then being clear sets that distance back to 0 (0x42EC6F): when the leg
+			// back from there is blocked again, the loop adds the same points again and again, writes on through the units
+			// after the ship, and crashes 1.22 (docs/KnownIssues.md). The port ends the route at point 62, the last whose
+			// leg cannot write past the path (point i + 2), where 1.22 calls SetWindowTextA each time round the loop
+			// (0x42ECF3), as the emulated set_cpu_route's stand-in does (SetWindowTextNatively).
+			if (pp_indx + 2 >= RoutePathLength)
+				pp_indx = -1;
 		}
 	}
 
