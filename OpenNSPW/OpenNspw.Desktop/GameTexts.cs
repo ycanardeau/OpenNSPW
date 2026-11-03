@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using OpenNspw.HostUI;
 
@@ -222,8 +221,10 @@ internal static partial class GameTexts
 	// How many texts with numbers Of keeps translated before it starts again.
 	private const int MaxTranslated = 1024;
 
-	// The texts with numbers translated, as Of last translated them: on any thread, as the tests' are several.
-	private static readonly ConcurrentDictionary<string, string> Translated = new();
+	// The texts with numbers translated, as Of last translated them: each thread's own, as the tests' are several and
+	// threads share no state but through the actors' mailboxes (docs/Actors.md).
+	[ThreadStatic]
+	private static Dictionary<string, string>? _translated;
 
 	// A text with a number, in English, by a pattern of EnglishPatterns, or the Japanese as it is.
 	private static string Translate(string japanese)
@@ -248,11 +249,12 @@ internal static partial class GameTexts
 
 		// Translated once: the UI paints the same texts every frame. Emptied once it has many, as the texts with numbers
 		// in them keep changing.
-		if (!Translated.TryGetValue(japanese, out english))
+		var translated = _translated ??= [];
+		if (!translated.TryGetValue(japanese, out english))
 		{
-			if (Translated.Count >= MaxTranslated)
-				Translated.Clear();
-			english = Translated[japanese] = Translate(japanese);
+			if (translated.Count >= MaxTranslated)
+				translated.Clear();
+			english = translated[japanese] = Translate(japanese);
 		}
 
 		return english;

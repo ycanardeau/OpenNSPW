@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Aigamo.Otsuki.Actors;
 
 namespace OpenNspw;
 
@@ -8,10 +9,11 @@ namespace OpenNspw;
 // the objects that hold them soon enough.
 internal static unsafe class NativeAllocations
 {
-	private static long _bytes;
+	// The bytes held, a Tally, as the game's threads allocate them and the finalizers free them (docs/Actors.md).
+	private static readonly Tally Held = new();
 
 	// The bytes held now, by the whole process.
-	public static long Bytes => Interlocked.Read(ref _bytes);
+	public static long Bytes => Held.Value;
 
 	// The collector is told of a byte at least, as it takes no less.
 	private static long Pressure(long bytes) => Math.Max(bytes, 1);
@@ -20,7 +22,7 @@ internal static unsafe class NativeAllocations
 	public static void* Alloc(long bytes)
 	{
 		var block = NativeMemory.AllocZeroed((nuint)bytes);
-		Interlocked.Add(ref _bytes, bytes);
+		Held.Add(bytes);
 		GC.AddMemoryPressure(Pressure(bytes));
 		return block;
 	}
@@ -29,7 +31,7 @@ internal static unsafe class NativeAllocations
 	public static void Free(void* block, long bytes)
 	{
 		NativeMemory.Free(block);
-		Interlocked.Add(ref _bytes, -bytes);
+		Held.Add(-bytes);
 		GC.RemoveMemoryPressure(Pressure(bytes));
 	}
 }

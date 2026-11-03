@@ -4,15 +4,16 @@ A design: every thread of OpenNSPW and Otsuki is an actor. An actor owns its sta
 ## The rule
 - **Threads talk only by messages.** No thread reads or writes another's state. What one needs of another's, the other sends.
 - **No locks:** no `lock`, `Monitor`, `System.Threading.Lock`, `ReaderWriterLockSlim`, no semaphore or event used to guard or hand over state, nor `System.Threading.Channels`, whose writers lock inside.
-- **The mailbox is the only concurrent code.** It is built on `ConcurrentQueue<T>`, `Interlocked` and one signal for an actor that sleeps; nothing else uses them but its two siblings, `Latest<T>` and `Sequence` (below).
+- **The mailbox is the only concurrent code.** It is built on `ConcurrentQueue<T>`, `Interlocked` and one signal for an actor that sleeps; nothing else uses them but its three siblings, `Latest<T>`, `Sequence` and `Tally` (below).
 - **A message is immutable,** or handed over whole: a buffer sent is the receiver's until it is sent back.
 - **Ownership may move, by message:** a thread that hands its state to another, as a benchmark's game hands its own to the benchmark once parked, posts it and touches it no more until it is posted back.
 
 ## The mailbox
-One type, `Mailbox<T>`, in a project of Otsuki of its own, `Aigamo.Otsuki.Actors`, with `Actor<T>`: Otsuki and the game reference it, and the game does not reference the rest of Otsuki. The project has two more types, for what is not a queue of messages:
+One type, `Mailbox<T>`, in a project of Otsuki of its own, `Aigamo.Otsuki.Actors`, with `Actor<T>`: Otsuki and the game reference it, and the game does not reference the rest of Otsuki. The project has three more types, for what is not a queue of messages:
 
 - **`Latest<T>`:** the newest of an immutable value that one actor posts and any thread reads, such as the session's snapshot of its players, a replay's progress, or a replay's view as the viewer sets it. A message that only the newest of matters, which no one changes.
 - **`Sequence`:** numbers drawn from any thread, each once, such as the peer's send handles, which `SendTo` returns at once.
+- **`Tally`:** a count that any thread adds to and reads, such as the bytes of native memory the stand-ins hold (`NativeAllocations`), which the game's threads allocate and the finalizers free.
 
 - **Post** enqueues on a `ConcurrentQueue<T>`, from any thread. A message that is a struct allocates nothing.
 - **Receive** takes the messages in order, on the owner's thread only.
