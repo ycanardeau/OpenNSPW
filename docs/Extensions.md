@@ -49,7 +49,7 @@ An extension implements `IGameExtension`, whose methods all do nothing by defaul
 - `ReadSight(camera, ...)`: what the player sees around any camera, not only the game's, for a view that the battle does not follow (below).
 
 ### Rules
-- **Input authority.** At most one extension gives the player's input, such as a replay that plays or a trace of 1.22 that the game follows. While one does, the host's keys, clicks and commands are held back. This replaces `Trace is { TakesInput: false }` and `Recording is { TakesInput: false }`.
+- **Input authority.** At most one extension gives the player's input, such as a replay that plays or a trace of 1.22 that the game follows. While one does, the host's keys, clicks and commands are held back. It holds the input as long as it says so (`HoldsInput`): a replay until it ends or is taken over, a trace until it ends or the game differs from it.
 - **No hidden writes.** An extension changes the battle only through actions and the interventions above: seeds, ticks, camera, held frames, and 1.22's uninitialized locals. Then a recorder sees all of it, and a replay of a game with any extension plays the same.
 - **Order.** Extensions are called in the order they were added. Where several intervene, the first that answers wins.
 - **Platform seams first.** What the platform already abstracts is replaced, not hooked in the core: files (`OpenFile`, `GameFileLayers`), the clock, DirectPlay.

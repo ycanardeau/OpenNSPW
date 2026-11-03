@@ -12,9 +12,9 @@ public sealed class Trace122Tests
 	// The game follows or records a trace with the cursor in the middle of the battle area, where it neither scrolls the
 	// view nor clicks anything: the replay gives the game 1.22's view at each drawing, but at (0, 0), its corner, the
 	// view would scroll on the drawn tick before it.
-	private static void SetUp(Nspw game, ISingleplayerTrace trace)
+	private static void SetUp(Nspw game, SingleplayerTrace trace)
 	{
-		game.Trace = trace;
+		game.Extensions.Add(trace);
 		game.SetCursorPos(CMBT_WIDTH / 2, CMBT_HEIGHT / 2);
 	}
 
@@ -134,7 +134,7 @@ public sealed class Trace122Tests
 	{
 		var trace = RecordPort(3, Frames);
 		using var replay = new Trace122Replay(new MemoryStream(trace));
-		using var run = new SingleplayerRun(replay.Scenario, game => game.Trace = replay);
+		using var run = new SingleplayerRun(replay.Scenario, game => game.Extensions.Add(replay));
 		run.Frames(Frames);
 
 		Assert.Null(replay.Divergence);

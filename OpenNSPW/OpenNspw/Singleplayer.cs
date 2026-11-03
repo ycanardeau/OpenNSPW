@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Aigamo.Enzan;
@@ -115,10 +116,6 @@ public unsafe partial class Nspw
 	// Two doubles in the emulator's memory, for the functions of 1.22 that take pointers to them.
 	private uint _pointAddress;
 
-	// The trace this single-player game follows and checks itself against, or records itself in, or null
-	// (docs/Verification.md).
-	public ISingleplayerTrace? Trace;
-
 	// The period of 1.22's multimedia timer, which drives its frames (0x432960), in milliseconds.
 	private const uint SingleplayerTimerPeriod = 88;
 
@@ -144,9 +141,6 @@ public unsafe partial class Nspw
 			ticks = 20;
 		else
 			ticks = GameSpeed == 0 ? (short)0 : (short)(GameSpeed + 1);
-		Trace?.Reach(this, TracePoint.Frame);
-		if (Trace?.TicksOfNextFrame() is { } traced)
-			ticks = (short)traced;
 		return true;
 	}
 
@@ -498,25 +492,16 @@ public unsafe partial class Nspw
 
 	// The uninitialized locals that the battle's own code reads, by the instruction of 1.22 that reads them: the heading
 	// of a torpedo plane's land check (0x413D23, PlaneDropTorpedo), the angle of a plane's landing pattern and approach to
-	// a carrier heading 360 (0x4173BF, SetLandingDestination; 0x41764E, UpdateLanding). A trace gives them as 1.22 read
-	// them, in order.
-	private static readonly uint[] BattleStackLocals = [0x413D23, 0x4173BF, 0x41764E];
-	private readonly Queue<(uint Instruction, byte[] Value)> _battleStackLocals = new();
+	// a carrier heading 360 (0x4173BF, SetLandingDestination; 0x41764E, UpdateLanding).
+	public static readonly ImmutableArray<uint> BattleStackLocals = [0x413D23, 0x4173BF, 0x41764E];
 
-	// The instruction of an uninitialized local of the battle that a trace gave and the battle has not read, if any.
-	internal uint? UntakenStackLocal =>
-		_battleStackLocals.TryPeek(out var local) ? local.Instruction : null;
-
-	// What the battle reads, at the instruction of 1.22 given, from a local 1.22 has not set there: what a trace gave, or
-	// an extension (IGameExtension.UninitializedLocal), or else what the port's own local holds.
+	// What the battle reads, at the instruction of 1.22 given, from a local 1.22 has not set there: what an extension
+	// gives (IGameExtension.UninitializedLocal), such as a trace of 1.22, or else what the port's own local holds.
 	internal double TakeStackLocal(uint instruction, double own)
 	{
-		if (!_battleStackLocals.TryPeek(out var local) || local.Instruction != instruction)
-			return Extensions.UninitializedLocal(instruction) is { Length: sizeof(double) } value
-				? BitConverter.ToDouble(value)
-				: own;
-		_battleStackLocals.Dequeue();
-		return BitConverter.ToDouble(local.Value);
+		return Extensions.UninitializedLocal(instruction) is { Length: sizeof(double) } value
+			? BitConverter.ToDouble(value)
+			: own;
 	}
 
 	// The uninitialized locals that cpu_strtgy reads, with what Windows' stack holds there: 0, in every frame of the
@@ -524,37 +509,19 @@ public unsafe partial class Nspw
 	// BUG(1.22): scenario 208's count at 0x4050C7 is read before it is set. Kept as is for compatibility with 1.22.
 	private static readonly (uint Instruction, uint Value)[] StackLocalsOnWindows = [(0x4050C7, 0)];
 
-	// The uninitialized locals of the coming cpu_strtgy that a trace has given (GiveStackLocal), by instruction.
-	private readonly Dictionary<uint, uint> _stackLocals = [];
+	// The instructions of the uninitialized locals that cpu_strtgy reads.
+	public static readonly ImmutableArray<uint> StrategyStackLocals =
+	[
+		.. StackLocalsOnWindows.Select(local => local.Instruction),
+	];
 
-	// What cpu_strtgy reads, at the instruction given, from a local it has not set: what a trace gave, or an extension
-	// (IGameExtension.UninitializedLocal), or else what Windows' stack holds there.
-	private uint StackLocal(uint instruction) =>
-		_stackLocals.TryGetValue(instruction, out var value) ? value
-		: Extensions.UninitializedLocal(instruction) is { Length: sizeof(uint) } given
-			? BitConverter.ToUInt32(given)
-		: StackLocalsOnWindows.First(local => local.Instruction == instruction).Value;
-
-	// Gives cpu_strtgy, before it runs, what Windows' stack held where it reads a local it has not set, as a trace of
-	// 1.22 records it; false if the port does not know where that local is.
-	internal bool GiveStackLocal(uint instruction, uint value)
+	// What cpu_strtgy reads, at the instruction given, from a local it has not set: what an extension gives
+	// (IGameExtension.UninitializedLocal), such as a trace of 1.22, or else what Windows' stack holds there.
+	private uint StackLocal(uint instruction)
 	{
-		if (!StackLocalsOnWindows.Any(local => local.Instruction == instruction))
-			return false;
-
-		_stackLocals[instruction] = value;
-		return true;
-	}
-
-	// What Windows' stack held where 1.22 read a local it had not set: for cpu_strtgy, written into the emulator's; for
-	// the battle's own code, kept until it reads it.
-	internal bool GiveStackLocal(uint instruction, byte[] value)
-	{
-		if (!BattleStackLocals.Contains(instruction))
-			return value.Length == sizeof(uint)
-				&& GiveStackLocal(instruction, BitConverter.ToUInt32(value));
-		_battleStackLocals.Enqueue((instruction, value));
-		return true;
+		return Extensions.UninitializedLocal(instruction) is { Length: sizeof(uint) } value
+			? BitConverter.ToUInt32(value)
+			: StackLocalsOnWindows.First(local => local.Instruction == instruction).Value;
 	}
 
 	// The emulated cpu_strtgy, which ComputerPlayerTests compares PlanComputerStrategy, its rewrite, with: the computer's
@@ -570,7 +537,6 @@ public unsafe partial class Nspw
 			);
 
 		RunEmulated(Functions.CpuStrategy);
-		_stackLocals.Clear();
 	}
 
 	// The emulated decision, which ComputerPlayerTests compares Decide, its rewrite, with: the scenario's events and
@@ -767,7 +733,6 @@ public unsafe partial class Nspw
 		if (Result != GameResult.None)
 			return;
 
-		Trace?.Reach(this, TracePoint.Orders);
 		Extensions.OrdersStarting();
 
 		var savedSelectedUnit = SelectedUnit;
@@ -781,10 +746,7 @@ public unsafe partial class Nspw
 		SelectedUnit = savedSelectedUnit;
 
 		if (CpuSide != Side.None)
-		{
 			PlanComputerStrategy();
-			_stackLocals.Clear();
-		}
 
 		if (BufferedArrivedUnits[1] != 0)
 			OnUnitArrived(1, BufferedArrivedUnits[1]);

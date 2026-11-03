@@ -14,11 +14,11 @@ public unsafe partial class Nspw
 	private readonly Lock _uiCommandsLock = new();
 	private readonly List<(ActionSite Site, Action Run)> _uiCommands = [];
 
-	// Queues a command, unless the game follows a trace, or an extension gives the player's input, which give it none
-	// (ISingleplayerTrace.TakesInput, IGameExtension.HoldsInput).
+	// Queues a command, unless an extension gives the player's input, such as a replay or a trace of 1.22 that the game
+	// follows, which give it none (IGameExtension.HoldsInput).
 	private void QueueUICommand(ActionSite site, Action run)
 	{
-		if (Trace is { TakesInput: false } || Extensions.HoldsInput)
+		if (Extensions.HoldsInput)
 			return;
 
 		lock (_uiCommandsLock)

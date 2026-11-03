@@ -116,8 +116,7 @@ internal sealed class GameSession : IDisposable
 
 	// Whether the player's keys and buttons are held back from the game: while it follows a trace or plays a replay, which
 	// give it none.
-	private bool IsInputHeldBack =>
-		Game.Trace is { TakesInput: false } || Game.Extensions.HoldsInput;
+	private bool IsInputHeldBack => Game.Extensions.HoldsInput;
 
 	// Whether WinMain has returned: the game was closed, or failed to connect.
 	public bool HasEnded => _hasEnded;
@@ -212,7 +211,8 @@ internal sealed class GameSession : IDisposable
 		}
 
 		Trace = trace;
-		Game.Trace = trace;
+		if (trace is not null)
+			Game.Extensions.Add(trace);
 		Replay = replay;
 		_scratchDirectory = scratchDirectory;
 		if (replay is not null)

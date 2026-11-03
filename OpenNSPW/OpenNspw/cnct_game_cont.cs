@@ -781,7 +781,6 @@ public unsafe partial class Nspw
 		if (IsSingleplayer)
 		{
 			// 1.22's decision, rewritten (ComputerPlayer.cs), which also shows the result.
-			Trace?.Reach(this, TracePoint.Decision);
 			Decide();
 			return;
 		}
@@ -4215,15 +4214,9 @@ public unsafe partial class Nspw
 		Extensions.BattleStarting();
 
 		// 乱数の初期化
-		if (IsSingleplayer)
-		{
-			// 1.22 has no shared random numbers: its rand goes on from where it was, seeded from the time as the game started
-			// (WinMain), or as a trace or an extension gives it.
-			if (Trace?.Seeds?.Start is { } start)
-				srand(start);
-			Trace?.Reach(this, TracePoint.Start);
-		}
-		else
+		// 1.22 has no shared random numbers: its rand goes on from where it was, seeded from the time as the game started
+		// (WinMain), or as an extension gives it.
+		if (!IsSingleplayer)
 		{
 			srand((uint)(SharedRandomSeed));
 
@@ -4312,9 +4305,8 @@ public unsafe partial class Nspw
 			// counts itself (0x434E9F): the battle's first frame is 1, and cpu_strtgy starts with fleet 2.
 			Renderer.FrameCount = 1;
 
-			// 1.22's game_init seeds rand last, from the time (0x42A163).
-			srand(Trace?.Seeds?.Battle ?? (uint)time());
-			Trace?.Reach(this, TracePoint.Seeded);
+			// 1.22's game_init seeds rand last, from the time (0x42A163), or as an extension gives it.
+			srand((uint)time());
 			Extensions.BattleStarted();
 			return;
 		}

@@ -659,7 +659,6 @@ public unsafe partial class Nspw
 				for (int i = ticks; i >= 1; i--)
 				{
 					Renderer.IsDrawnTick = i == 1;
-					Trace?.Reach(this, TracePoint.Tick);
 					if (!IsEditingMap)
 						Extensions.TickStarting();
 					UpdateBattle();
@@ -669,7 +668,6 @@ public unsafe partial class Nspw
 				}
 
 				UpdateUnitInfo();
-				Trace?.Reach(this, TracePoint.Drawing);
 				if (!IsEditingMap)
 					Extensions.Drawing();
 				Renderer.DrawBattleArea();
