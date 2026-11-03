@@ -32,6 +32,10 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 	// The game's speed as the player had it in the frame (RecordedSpeed).
 	private short _recordedSpeed = 1;
 
+	// The camera as the player had it, which the game is given at each frame: the cursor still moves while the replay
+	// plays, and at the battlefield's edge would scroll the camera, which decides what is drawn, and so the battle.
+	private WorldPosition? _camera;
+
 	public ReplayStart Start => _reader.Start;
 
 	// The frames played so far, and how long they were played, in milliseconds.
@@ -267,7 +271,9 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 			return;
 
 		foreach (var item in Take(item => item.Kind == ReplayRecord.Camera))
-			game.CameraPosition = item.Camera;
+			_camera = item.Camera;
+		if (_camera is { } camera)
+			game.CameraPosition = camera;
 	}
 
 	// The player's actions at this site in this frame.

@@ -1,6 +1,7 @@
 using OpenNspw.Replay;
 using OpenNspw.Tests.Lockstep;
 using Xunit;
+using static OpenNspw.all_head;
 using static OpenNspw.Tests.Lockstep.BattleScripts;
 
 namespace OpenNspw.Tests;
@@ -64,6 +65,31 @@ public sealed class ReplayTests
 
 		Assert.NotNull(player.Divergence);
 		Assert.Contains("not the one recorded", player.Divergence);
+	}
+
+	// The cursor does not move the replay's camera: recorded with the cursor amid the battlefield, where the view stays, and
+	// played with it at (0, 0), the corner, where it would scroll the view every frame.
+	[Fact]
+	public void TheCursorDoesNotMoveTheCamera()
+	{
+		var camera = default(WorldPosition);
+		var replay = Record(
+			3,
+			run =>
+			{
+				run.Game.SetCursorPos(CMBT_WIDTH / 2, CMBT_HEIGHT / 2);
+				run.Frames(Frames);
+				camera = run.Game.CameraPosition;
+			}
+		);
+
+		var player = new ReplayPlayer(new MemoryStream(replay)) { Speed = double.PositiveInfinity };
+		using var run = new SingleplayerRun(3, game => game.Extensions.Add(player));
+		run.Game.SetCursorPos(0, 0);
+		run.Frames(Frames);
+
+		Assert.Equal(camera, run.Game.CameraPosition);
+		player.Dispose();
 	}
 
 	// The player's ship, of scenario 4, that the tests order.
