@@ -163,9 +163,24 @@ internal sealed partial class DesktopPlatform(GameFileLayers files, TextRasteriz
 		}
 	}
 
+	// Copies the game's state again for the frame shown last (CaptureState), such as when the view of a replay moves while
+	// it is paused: on the game's thread.
+	public void CaptureAgain()
+	{
+		lock (_frameLock)
+		{
+			CaptureState?.Invoke();
+			FrameNumber++;
+		}
+	}
+
+	// Whether the game goes ahead as fast as it can, such as a replay to a point, showing nothing of the frames it passes:
+	// its text is not rasterized then, which only draws.
+	public Func<bool>? IsSkippingFrames { get; set; }
+
 	public TextBitmap? RasterizeText(string text, int height, string faceName)
 	{
-		return _text.Rasterize(text, height);
+		return IsSkippingFrames?.Invoke() == true ? null : _text.Rasterize(text, height);
 	}
 
 	// MonoGame plays 16-bit PCM, so 8-bit sounds are converted.

@@ -71,11 +71,11 @@ Later, each its own change: the traces of 1.22 into a verification extension, th
 A replay follows the recorded camera: the camera decides what is drawn, and drawing draws random numbers (1.22's effects take `rand`; a network battle's take the cosmetic table, which a landing plane reads). So the battle keeps the recorded camera, and the viewer gets one of its own:
 
 - The game runs with the recorded camera, exactly.
-- The desktop app keeps a viewer's camera, moved by dragging, the minimap and the edges. Its snapshot reads the sight around the viewer's camera (`ReadSight(camera)`), and the battlefield is drawn from there. A button puts the view back on the player's camera.
+- The desktop app keeps a viewer's camera, moved by dragging with the middle button and with the minimap. Its snapshot reads the sight around the viewer's camera (`ReadSight(camera, ...)`), and the battlefield is drawn from there. A button puts the view back on the player's camera.
 - The viewer may show both sides, or only the recording player's. This is a choice of what to draw, not a change to the battle.
 - Taking over a single-player replay moves the game's camera to the viewer's.
 
-To check before building it: whether effects off the recorded camera still animate (if the game moves them only as it draws them, they would stand still in the free view); the sprite's column of units the game did not draw (the UI computes it from the heading, `SpriteColumnOf`); and sounds, which keep the recorded camera's volume.
+What was checked: the game shows the effects by what the player's units see, not by the camera, so they animate off the recorded camera too; the UI draws a unit's sprite by its heading (`SpriteColumnOf`), not by the column the game last drew; the sounds keep the recorded camera's volume.
 
 ## Out of process, later
 A bridge extension serves the API over a protocol (JSON-RPC over stdio or a socket): each point is a request that the game waits on, and each action a call. Bots in other languages, external debuggers and training tools then need no build of the app. It costs a round trip a point, so it gives only the points a client asks for.
@@ -83,8 +83,8 @@ A bridge extension serves the API over a protocol (JSON-RPC over stdio or a sock
 ## Steps
 1. **Core:** the extension API (`Extensions.cs`), and its calls at the points above. Existing tests show nothing else changed.
 2. **`OpenNspw.Replay`:** the format, the recorder and the player, on the API, for single-player and network battles: the rival's DirectPlay stand-in and the file layer.
-3. **Desktop:** record every battle; the Replays screen; the watch screen's controls; the free camera.
-4. **Docs:** `docs/Replays.md`, and this file updated to what was built.
+3. **Desktop:** every battle recorded; the Replays screen; the watch screen's bar; the free view, through `ReadSight(camera, ...)`.
+4. **Later:** keyframes, to seek back without playing from the start; the traces of 1.22 into a verification extension; the host UI's commands onto `PlayerAction`; computer players as an extension; the out-of-process bridge.
 
 ## Open questions
 - Names: "extension" (VS Code's) or "plugin" or "mod"?

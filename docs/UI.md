@@ -35,13 +35,16 @@ The keyboard goes to the game as it would to the original, but for Escape and F1
 
 ## Screens
 ### Main menu
-Single player, multiplayer and quit, over the title's picture; and the choice of the language.
+Single player, multiplayer, replays and quit, over the title's picture; and the choice of the language.
 
 ### Single player
 NSPW 1.22's scenarios, a set at a time, as its scenario selection screen lists them, with what its setting screen says about the one selected: its side, its briefing and its victory conditions. The strings are `NSPW_122.exe`'s, kept in C# (`ScenarioSelection.Sets`), so that the app needs no executable. Choosing one starts the game as `--singleplayer` does.
 
 ### Multiplayer
 The player's name, hosting or joining, the address and the port, and the scenario editor. The form stands in for the original's connection dialog, which the game still creates: it shows what the dialog has, and types into and clicks the dialog as the user does (`ClickDlgItem`), so that the game connects as the original does.
+
+### Replays
+The battles played, which the app records ([Replays.md](Replays.md)), newest first, a page at a time: when, single-player or against whom, the scenario, how long and how it ended. One is watched in the battle screen, with a bar along the battlefield's bottom (`ReplayBar`): play or pause, a step, the speed, the timeline, the player's view or a free view, both sides, and taking a single-player battle over. While it plays, the battle takes no clicks; the middle button, the minimap, and W, A, S and D move the free view.
 
 ### Setting screens
 `SettingForm`: the scenarios a page at a time, with what the setting screen says about the one chosen, the sides, and the starts from the resume-saved and the auto-saved battles; then the rules, each with its value in the game's words (`RuleRow`). The host chooses and the guest sees the host's choices as the host sends them; the host's buttons wait for the guest to be on the same screen, as the original's clicks do. The map editor goes through the same form.

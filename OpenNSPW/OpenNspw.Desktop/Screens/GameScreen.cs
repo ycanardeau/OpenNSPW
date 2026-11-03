@@ -1,4 +1,6 @@
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
+using Microsoft.Xna.Framework.Input;
 using OpenNspw.Desktop.Controls;
 
 namespace OpenNspw.Desktop.Screens;
@@ -8,10 +10,19 @@ namespace OpenNspw.Desktop.Screens;
 // the game ends.
 //
 // startSession: starts the game when the screen is shown, or hands over one already started. The screen owns the game
-// from then on, and disposes it when it is unloaded, after its last frame is drawn.
-internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) : Screen(game)
+// from then on, and disposes it when it is unloaded, after its last frame is drawn. watch: the replay that the game
+// plays, which the screen shows with its bar (ReplayBar), and whose list comes back when the game ends.
+internal sealed class GameScreen(
+	NspwGame game,
+	Func<GameSession> startSession,
+	ReplayWatch? watch = null
+) : Screen(game)
 {
 	private readonly Func<GameSession> _startSession = startSession;
+	private readonly ReplayWatch? _watch = watch;
+	private ReplayBar? _replayBar;
+	private KeyboardState _previousKeyboard;
+	private int _viewScrollSpeed;
 	private GameSession _session = default!;
 	private BattleArt _art = default!;
 	private BattleForm _battleForm = default!;
@@ -59,6 +70,76 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 		}
 	}
 
+	// Goes to a point of the replay, as a fraction of its frames: ahead, as fast as the game can; back, by playing it again
+	// from its start.
+	private void SeekReplay(ReplayWatch watch, double fraction)
+	{
+		var frame = (int)Math.Round(fraction * watch.Summary.Frames);
+		if (frame > _session.Replay!.Frame)
+			_session.Replay.SeekTo(frame);
+		else
+			Game.Watch(watch, frame);
+	}
+
+	// The player takes the single-player battle over from here, from the viewer's camera.
+	private void TakeOverReplay(ReplayWatch watch)
+	{
+		var snapshot = _session.Snapshot;
+		_session.Replay!.TakeOver();
+		var (game, viewer) = (_session.Game.CameraPosition, snapshot.CameraPosition);
+		_session.Game.Commands.ScrollBattlefield(
+			(int)(viewer.X - game.X),
+			(int)(game.Y - viewer.Y),
+			0
+		);
+		watch.View.FollowsPlayer = true;
+		watch.View.SeesAll = false;
+	}
+
+	// The view of a replay scrolled with W, A, S and D, faster as they are held, as the game scrolls the battlefield with
+	// them (ScrollBattleArea).
+	private void ScrollReplayView(ReplayView view, KeyboardState keyboard)
+	{
+		var (dx, dy) = (0, 0);
+		if (keyboard.IsKeyDown(Keys.W))
+			dy--;
+		if (keyboard.IsKeyDown(Keys.S))
+			dy++;
+		if (keyboard.IsKeyDown(Keys.A))
+			dx--;
+		if (keyboard.IsKeyDown(Keys.D))
+			dx++;
+		_viewScrollSpeed = dx == 0 && dy == 0 ? 0 : Math.Min(_viewScrollSpeed + 2, 40);
+		if (_viewScrollSpeed > 0)
+			view.Move(
+				dx * _viewScrollSpeed,
+				dy * _viewScrollSpeed,
+				_session.Snapshot.CameraPosition
+			);
+	}
+
+	// The replay's bar, shown in the battle until it is taken over, also once it has ended, to go back in it; and its keys:
+	// the period steps a frame, and W, A, S and D scroll the view. The sounds are silent while it goes ahead to a point,
+	// skipping what it passes, but not at any speed it plays at, as the game's are at any of its speeds.
+	private void UpdateReplay(ReplayWatch watch, ReplayBar bar)
+	{
+		var player = _session.Replay!;
+		bar.Visible = _session.Snapshot.IsBattle && !player.IsTakenOver;
+		bar.UpdateFrom();
+		SoundEffect.MasterVolume = _session.IsWatching && player.IsSeeking ? 0 : 1;
+
+		var keyboard = Keyboard.GetState();
+		bool Pressed(Keys key) => keyboard.IsKeyDown(key) && !_previousKeyboard.IsKeyDown(key);
+		if (Game.IsActive && _session.IsWatching && !_confirmQuit.Visible)
+		{
+			if (Pressed(Keys.OemPeriod))
+				bar.Step();
+			ScrollReplayView(watch.View, keyboard);
+		}
+
+		_previousKeyboard = keyboard;
+	}
+
 	private void HideConfirmQuit()
 	{
 		_confirmQuit.Visible = false;
@@ -93,6 +174,16 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 		WindowManager.Root.Controls.Add(_settingForm);
 		_backdrop = new Backdrop(GraphicsDevice);
 		_dialogs = new DialogForms(_session.Game, WindowManager, Game.Fonts);
+		if (_watch is { } watch && _session.Replay is { } player)
+		{
+			_replayBar = new ReplayBar(Game.Fonts, watch, player) { Visible = false };
+			_replayBar.Seek += (_, fraction) => SeekReplay(watch, fraction);
+			_replayBar.TakeOverChosen += (_, _) => TakeOverReplay(watch);
+			WindowManager.Root.Controls.Add(_replayBar);
+
+			// Over the battle screen, under the dialogs, which come to the front as they open.
+			_replayBar.BringToFront();
+		}
 
 		_confirmQuit = new ConfirmForm(
 			Game.Fonts,
@@ -115,8 +206,9 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 	public override void UnloadContent()
 	{
 		base.UnloadContent();
-		if (_session.Replay is not null)
+		if (_session.Trace is not null)
 			Game.Window.Title = NspwGame.Title;
+		SoundEffect.MasterVolume = 1;
 		_session.Dispose();
 		_art.Dispose();
 		_backdrop.Dispose();
@@ -126,13 +218,17 @@ internal sealed class GameScreen(NspwGame game, Func<GameSession> startSession) 
 	{
 		if (_session.HasEnded)
 		{
-			Game.ShowScreen(new MainMenuScreen(Game));
+			Game.ShowScreen(
+				_watch is not null ? new ReplaysScreen(Game) : new MainMenuScreen(Game)
+			);
 			return;
 		}
 
 		_session.UpdateFrame(GraphicsDevice);
-		if (_session.Replay is { } replay)
-			ShowReplay(replay);
+		if (_session.Trace is { } trace)
+			ShowReplay(trace);
+		if (_replayBar is { } bar)
+			UpdateReplay(_watch!, bar);
 		var snapshot = _session.Snapshot;
 		_battleForm.Visible = snapshot.IsBattle;
 		_battleForm.UpdateFrom(snapshot);

@@ -17,6 +17,8 @@ internal sealed class MainMenuForm : Form
 
 	public event EventHandler? MultiplayerChosen;
 
+	public event EventHandler? ReplaysChosen;
+
 	public event EventHandler? QuitChosen;
 
 	public event EventHandler<Language>? LanguageChosen;
@@ -33,7 +35,7 @@ internal sealed class MainMenuForm : Form
 		var index = _items.Count;
 		var item = new MenuItemButton(_fonts)
 		{
-			Bounds = new DrawingRectangle(64, 470 + index * 74, 520, 66),
+			Bounds = new DrawingRectangle(64, 404 + index * 72, 520, 64),
 			Text = caption,
 			Description = description,
 		};
@@ -69,6 +71,7 @@ internal sealed class MainMenuForm : Form
 
 		AddItem(Texts.SinglePlayer, Texts.SinglePlayerDescription, () => SingleplayerChosen);
 		AddItem(Texts.Multiplayer, Texts.MultiplayerDescription, () => MultiplayerChosen);
+		AddItem(Texts.Replays, Texts.ReplaysDescription, () => ReplaysChosen);
 		AddItem(Texts.Quit, Texts.QuitDescription, () => QuitChosen);
 		AddLanguage(Language.English, 0);
 		AddLanguage(Language.Japanese, 1);

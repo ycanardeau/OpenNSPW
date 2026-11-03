@@ -83,11 +83,17 @@ internal sealed class Minimap : Control
 	private void ShowPoint(DrawingPoint point, bool isPressed)
 	{
 		if (
-			point.X >= MapLeft
-			&& point.X <= MapLeft + Columns
-			&& point.Y >= MapTop
-			&& point.Y <= MapTop + Rows
+			point.X < MapLeft
+			|| point.X > MapLeft + Columns
+			|| point.Y < MapTop
+			|| point.Y > MapTop + Rows
 		)
+			return;
+
+		// A replay's view moves, not the battle's (ReplayView).
+		if (_session.IsWatching && _session.View is { } view)
+			view.ShowMinimapCell(point.X - 5 - MapLeft, point.Y - 5 - MapTop);
+		else
 			_session.Game.Commands.ShowMinimapCell(
 				point.X - 5 - MapLeft,
 				point.Y - 5 - MapTop,
@@ -106,7 +112,8 @@ internal sealed class Minimap : Control
 		else if (e.Button == MouseButtons.Right)
 		{
 			// The right button deselects anywhere, as on the battlefield (DrawBattleArea).
-			_session.Game.Commands.RightClick();
+			if (!_session.IsWatching)
+				_session.Game.Commands.RightClick();
 		}
 	}
 
@@ -184,7 +191,7 @@ internal sealed class Minimap : Control
 				continue;
 
 			DrawingPoint cell;
-			if (unit.Side == snapshot.LocalSide)
+			if (unit.Side == snapshot.LocalSide || snapshot.SeesAll)
 				cell = Cell(unit.Position.X, unit.Position.Y);
 			else if (!unit.IsFound)
 				continue;

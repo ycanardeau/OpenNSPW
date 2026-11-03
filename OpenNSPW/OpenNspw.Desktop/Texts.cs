@@ -196,6 +196,90 @@ internal static class Texts
 			$"1.22 の記録と相違: {divergence}。ここから操作できます"
 		);
 
+	// The replays (docs/Replays.md): the main menu's item, the list, and the bar that plays one.
+	public static string Replays => Pick("Replays", "リプレイ");
+	public static string ReplaysDescription =>
+		Pick("Watch the battles played, again", "プレイした戦闘をもう一度見る");
+	public static string ReplaysKicker => Pick("REPLAYS", "リプレイ");
+	public static string RecordedBattles => Pick("Recorded battles", "記録した戦闘");
+	public static string RecordedBattlesDescription =>
+		Pick(
+			"Each battle played is recorded. Watch one again, from the player's view or a view of your own.",
+			"プレイした戦闘はすべて記録されます。プレイヤーの視点、または自由な視点でもう一度見られます。"
+		);
+	public static string ReplaysHint =>
+		Pick(
+			"↑↓ Replay    PgUp PgDn Page    Enter Watch    Del Delete    Esc Back",
+			"↑↓ 選択    PgUp PgDn ページ    Enter 再生    Del 削除    Esc 戻る"
+		);
+	public static string NoReplays =>
+		Pick(
+			"No battle has been recorded yet: each battle played is recorded here.",
+			"記録された戦闘はまだありません。プレイした戦闘はここに記録されます。"
+		);
+	public static string Watch => Pick("Watch", "再生");
+	public static string Delete => Pick("Delete", "削除");
+	public static string OpenFolder => Pick("Open Folder", "フォルダーを開く");
+	public static string DeleteReplayTitle =>
+		Pick("Delete the replay?", "リプレイを削除しますか？");
+
+	public static string DeleteReplayMessage(string name) =>
+		Pick($"{name} is deleted for good.", $"{name} を完全に削除します。");
+
+	public static string UnreadableReplay =>
+		Pick(
+			"Cannot be read: recorded by another version?",
+			"読み込めません（別のバージョンの記録？）"
+		);
+
+	public static string ReplayMode(Replay.ReplayMode mode, string rival) =>
+		mode switch
+		{
+			Replay.ReplayMode.NetworkHost => Pick($"Host · vs {rival}", $"ホスト · 対 {rival}"),
+			Replay.ReplayMode.NetworkGuest => Pick($"Guest · vs {rival}", $"ゲスト · 対 {rival}"),
+			_ => Pick("Single player", "シングルプレイ"),
+		};
+
+	public static string NetworkScenario(int number) =>
+		number < 0
+			? Pick("Resumed battle", "リジュームした戦闘")
+			: Pick($"Scenario {number}", $"シナリオ {number}");
+
+	public static string ResultName(GameResult result) =>
+		result switch
+		{
+			GameResult.JapanWon => Pick("Japan won", "日本の勝利"),
+			GameResult.UnitedStatesWon => Pick("U.S. won", "米国の勝利"),
+			GameResult.JapanLost => Pick("Japan lost", "日本の敗北"),
+			GameResult.UnitedStatesLost => Pick("U.S. lost", "米国の敗北"),
+			GameResult.Draw => Pick("Draw", "引き分け"),
+			_ => Pick("Unfinished", "未決着"),
+		};
+
+	public static string Duration(long milliseconds) =>
+		TimeSpan.FromMilliseconds(milliseconds) is var time && time.TotalHours >= 1
+			? $"{(int)time.TotalHours}:{time:mm\\:ss}"
+			: $"{time:mm\\:ss}";
+
+	public static string Pause => Pick("Pause", "一時停止");
+	public static string Play => Pick("Play", "再生");
+	public static string Step => Pick("Step", "コマ送り");
+	public static string PlayersView => Pick("Player's view", "プレイヤー視点");
+	public static string FreeView => Pick("Free view", "自由視点");
+	public static string BothSides => Pick("Both sides", "両軍を表示");
+	public static string TakeOver => Pick("Take over", "操作する");
+
+	public static string ReplayPage(int page, int pages) =>
+		Pick($"Page {page} / {pages}", $"{page} / {pages} ページ");
+
+	public static string ReplayFrame(int frame, int frames) =>
+		Pick($"Frame {frame} / {frames}", $"フレーム {frame} / {frames}");
+
+	public static string ReplayDiffers(string divergence) =>
+		Pick($"Not the battle recorded: {divergence}", $"記録と異なります: {divergence}");
+
+	public static string ReplayOver => Pick("End of the replay", "リプレイ終了");
+
 	// The combat menu, whose buttons the original draws as pictures of Japanese words (Buttons1).
 	public static string FlightDeck => Pick("Flight Deck", "飛行甲板");
 	public static string Hangar => Pick("Hangar", "格納庫");

@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended.ViewportAdapters;
+using OpenNspw.Replay;
 using DrawingPoint = System.Drawing.Point;
 using XnaKeys = Microsoft.Xna.Framework.Input.Keys;
 
@@ -97,13 +98,64 @@ internal sealed class GameSession : IDisposable
 	public Nspw Game { get; }
 
 	// The trace of 1.22 that the game follows, to watch it (docs/Verification.md), or null.
-	public Trace122Replay? Replay { get; }
+	public Trace122Replay? Trace { get; }
 
-	// Whether the player's keys and buttons are held back from the game: while it follows a trace, which gives it none.
-	private bool IsInputHeldBack => Game.Trace is { TakesInput: false };
+	// The replay that the game plays, to watch it (docs/Replays.md), and what its viewer sees; or null.
+	public ReplayPlayer? Replay { get; }
+
+	public ReplayView? View { get; }
+
+	// Whether the game plays a replay, and gives the viewer its battle to watch: until the replay ends or is taken over.
+	public bool IsWatching => Replay is { HoldsInput: true };
+
+	// What records the game's battles in the user's replays, when it plays neither a replay nor a trace.
+	private readonly ReplayRecorder? _recorder;
+
+	// The directory that a replay's game writes in, deleted as it ends, or null.
+	private readonly string? _scratchDirectory;
+
+	// Whether the player's keys and buttons are held back from the game: while it follows a trace or plays a replay, which
+	// give it none.
+	private bool IsInputHeldBack =>
+		Game.Trace is { TakesInput: false } || Game.Extensions.HoldsInput;
 
 	// Whether WinMain has returned: the game was closed, or failed to connect.
 	public bool HasEnded => _hasEnded;
+
+	// A replay's file in the user's replays, named by the battle's date and scenario, opened for a battle that starts; or
+	// none, if it cannot be created, so that the game goes on unrecorded.
+	private static Stream OpenReplayFile(ReplayStart start)
+	{
+		try
+		{
+			Directory.CreateDirectory(GameData.ReplayDirectory);
+			var name = $"{start.Date.ToLocalTime():yyyyMMdd-HHmmss}-{start.Mode}-{start.Scenario}";
+			for (var n = 1; ; n++)
+			{
+				var path = Path.Combine(
+					GameData.ReplayDirectory,
+					(n == 1 ? name : $"{name}-{n}") + ReplayFormat.Extension
+				);
+				if (!File.Exists(path))
+					return new FileStream(path, FileMode.CreateNew, FileAccess.Write);
+			}
+		}
+		catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+		{
+			Console.Error.WriteLine($"The battle cannot be recorded: {e.Message}");
+			return Stream.Null;
+		}
+	}
+
+	private void DeleteScratchDirectory()
+	{
+		try
+		{
+			if (_scratchDirectory is not null)
+				Directory.Delete(_scratchDirectory, recursive: true);
+		}
+		catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
+	}
 
 	private void RunGame()
 	{
@@ -122,34 +174,59 @@ internal sealed class GameSession : IDisposable
 		}
 		finally
 		{
-			// Its sounds stop with it, on its thread, which is the last to use them, and so does the trace it followed.
+			// Its sounds stop with it, on its thread, which is the last to use them, and so do the trace it followed, the
+			// replay it played and the one it recorded.
 			_platform.StopSounds();
+			Trace?.Dispose();
 			Replay?.Dispose();
+			_recorder?.Dispose();
+			DeleteScratchDirectory();
 			_hasEnded = true;
 		}
 	}
 
 	// files: the game's files (GameData). singleplayer: a scenario of NSPW 1.22, to play it against the computer
-	// (docs/Singleplayer.md) instead of connecting to a rival. replay: a trace of 1.22 in that scenario, which
-	// the game follows, and which the session disposes.
+	// (docs/Singleplayer.md) instead of connecting to a rival. trace: a trace of 1.22 in that scenario, which the game
+	// follows. replay: a replay that the game plays, with what its viewer sees (view), in a game that writes in
+	// scratchDirectory, which is deleted as the game ends. Each battle of a game that plays neither is recorded in the
+	// user's replays. The session disposes the trace and the replay.
 	public GameSession(
 		GameFileLayers files,
 		TextRasterizer text,
 		int? singleplayer = null,
-		Trace122Replay? replay = null
+		Trace122Replay? trace = null,
+		ReplayPlayer? replay = null,
+		ReplayView? view = null,
+		string? scratchDirectory = null
 	)
 	{
 		_platform = new DesktopPlatform(files, text);
 		Game = new Nspw(_platform);
-		_platform.CaptureState = () => _captured.CopyFrom(Game);
+		View = view;
+		_platform.IsSkippingFrames = () => Replay is { IsSeeking: true };
+		_platform.CaptureState = () => _captured.CopyFrom(Game, View);
 		if (singleplayer is { } scenario)
 		{
 			Game.IsSingleplayer = true;
 			Game.ScenarioNumber = (short)scenario;
 		}
 
+		Trace = trace;
+		Game.Trace = trace;
 		Replay = replay;
-		Game.Trace = replay;
+		_scratchDirectory = scratchDirectory;
+		if (replay is not null)
+		{
+			if (view is not null)
+				Game.Extensions.Add(new ReplayViewExtension(view, _platform));
+			Game.Extensions.Add(replay);
+		}
+		else if (trace is null)
+		{
+			_recorder = new ReplayRecorder(OpenReplayFile);
+			Game.Extensions.Add(_recorder);
+		}
+
 		_thread = new Thread(RunGame) { IsBackground = true, Name = "NSPW" };
 	}
 

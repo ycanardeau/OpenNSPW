@@ -7,6 +7,7 @@ using MonoGame.Extended.Input.InputListeners;
 using MonoGame.Extended.ViewportAdapters;
 using OpenNspw.Desktop.Controls;
 using OpenNspw.Desktop.Screens;
+using OpenNspw.Replay;
 using DrawingRectangle = System.Drawing.Rectangle;
 using SaruhashiKeys = Aigamo.Saruhashi.Keys;
 using SaruhashiMouseListener = Aigamo.Saruhashi.MonoGame.MouseListener;
@@ -35,7 +36,8 @@ internal sealed class NspwGame : Game
 	private readonly GraphicsDeviceManager _graphics;
 	private readonly ScreenManager _screenManager = new();
 	private readonly int? _scenario;
-	private readonly Trace122Replay? _replay;
+	private readonly Trace122Replay? _trace;
+	private readonly ReplayWatch? _watch;
 	private Screen? _nextScreen;
 	private GameSession? _lastSession;
 
@@ -56,13 +58,19 @@ internal sealed class NspwGame : Game
 	public int? LastScenario { get; set; }
 
 	// data: where the games' files come from, 1.22's too, to play single-player (docs/Singleplayer.md). scenario: a
-	// scenario of 1.22 to play at once, without the menus. replay: a trace of 1.22 in that scenario, which that game
-	// follows, to watch it (docs/Verification.md).
-	public NspwGame(GameData data, int? scenario = null, Trace122Replay? replay = null)
+	// scenario of 1.22 to play at once, without the menus. trace: a trace of 1.22 in that scenario, which that game
+	// follows, to watch it (docs/Verification.md). watch: a replay to watch at once (docs/Replays.md).
+	public NspwGame(
+		GameData data,
+		int? scenario = null,
+		Trace122Replay? trace = null,
+		ReplayWatch? watch = null
+	)
 	{
 		_graphics = new GraphicsDeviceManager(this);
 		_scenario = scenario;
-		_replay = replay;
+		_trace = trace;
+		_watch = watch;
 		Data = data;
 		Texts.Language = UISettings.LoadLanguage();
 		IsMouseVisible = true;
@@ -79,17 +87,46 @@ internal sealed class NspwGame : Game
 
 	// Starts a game of the port. The screen that starts it owns it, and disposes it when it is unloaded, so that nothing
 	// draws a game after it is disposed. singleplayer: a scenario of NSPW 1.22 to play against the computer, instead of
-	// connecting to a rival; replay: a trace of 1.22 in that scenario, which the game follows.
-	public GameSession StartSession(int? singleplayer = null, Trace122Replay? replay = null)
+	// connecting to a rival; trace: a trace of 1.22 in that scenario, which the game follows.
+	public GameSession StartSession(int? singleplayer = null, Trace122Replay? trace = null)
 	{
 		_lastSession = new GameSession(
 			Data.Files(singleplayer is not null),
 			Text,
 			singleplayer,
-			replay
+			trace
 		);
 		_lastSession.Start();
 		return _lastSession;
+	}
+
+	// Starts a game that plays a replay from its start, as fast as it can up to frame `seekTo`, in a folder of its own to
+	// write in, with the viewer's choices.
+	public GameSession StartReplaySession(ReplayWatch watch, int seekTo)
+	{
+		var player = new ReplayPlayer(File.OpenRead(watch.Path))
+		{
+			Speed = watch.Speed,
+			IsPaused = watch.IsPaused,
+		};
+		player.SeekTo(seekTo);
+		var scratch = Directory.CreateTempSubdirectory("OpenNSPW-replay-").FullName;
+		_lastSession = new GameSession(
+			Data.ReplayFiles(player.Start, scratch),
+			Text,
+			player.Start.Mode == ReplayMode.Singleplayer ? player.Start.Scenario : null,
+			replay: player,
+			view: watch.View,
+			scratchDirectory: scratch
+		);
+		_lastSession.Start();
+		return _lastSession;
+	}
+
+	// Shows a replay being watched, from frame `seekTo`.
+	public void Watch(ReplayWatch watch, int seekTo = 0)
+	{
+		ShowScreen(new GameScreen(this, () => StartReplaySession(watch, seekTo), watch));
 	}
 
 	protected override void Initialize()
@@ -136,11 +173,14 @@ internal sealed class NspwGame : Game
 			WindowManager.OnKeyUp(new KeyEventArgs((SaruhashiKeys)e.Key));
 		Window.TextInput += (_, e) => WindowManager.OnKeyPress(new KeyPressEventArgs(e.Character));
 
-		ShowScreen(
-			_scenario is { } scenario
-				? new GameScreen(this, () => StartSession(scenario, _replay))
-				: new MainMenuScreen(this)
-		);
+		if (_watch is not null)
+			Watch(_watch);
+		else
+			ShowScreen(
+				_scenario is { } scenario
+					? new GameScreen(this, () => StartSession(scenario, _trace))
+					: new MainMenuScreen(this)
+			);
 	}
 
 	protected override void Update(GameTime gameTime)
