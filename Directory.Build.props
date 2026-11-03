@@ -6,4 +6,8 @@
 		<LangVersion>preview</LangVersion>
 		<Version>0.0.1-alpha.8</Version>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Aigamo.MatchGenerator" PrivateAssets="all" />
+	</ItemGroup>
 </Project>
