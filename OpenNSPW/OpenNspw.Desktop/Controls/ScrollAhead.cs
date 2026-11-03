@@ -13,8 +13,15 @@ internal sealed class ScrollAhead(GameSession session)
 	private readonly List<(int Id, float At, int Dx, int Dy)> _moves = [];
 	private int _lastId;
 
+	// A replay's view moves, not the battle's (ReplayView), from where the UI shows it.
 	public void Scroll(int dx, int dy)
 	{
+		if (_session.IsWatching && _session.View is { } view)
+		{
+			view.Move(dx, dy, _session.Snapshot.CameraPosition);
+			return;
+		}
+
 		_lastId++;
 		_session.Game.Commands.ScrollBattlefield(dx, dy, _lastId);
 		_moves.Add((_lastId, Painter.Now, dx, dy));

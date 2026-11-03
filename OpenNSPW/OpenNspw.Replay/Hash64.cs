@@ -2,11 +2,11 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace OpenNspw.Tests.Lockstep;
+namespace OpenNspw.Replay;
 
 // A 64-bit hash of bytes, the same on every platform and in every process, unlike HashCode. Not cryptographic: it only
 // tells whether bytes changed.
-internal struct Hash64()
+public struct Hash64()
 {
 	private const ulong Prime1 = 0x9E3779B185EBCA87;
 	private const ulong Prime2 = 0xC2B2AE3D27D4EB4F;

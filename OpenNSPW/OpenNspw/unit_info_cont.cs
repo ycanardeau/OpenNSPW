@@ -515,6 +515,7 @@ public unsafe partial class Nspw
 	// deselects, or its flight deck again.
 	private void ToggleDeckView()
 	{
+		Extensions.PlayerActed(new PlayerAction.ToggleDeckView());
 		if (UnitInfoPanel[1] != 0)
 		{
 			UnitInfoPanel[1] = 0; // 空母なら１で格納庫 ０ で飛行甲板
@@ -712,6 +713,7 @@ public unsafe partial class Nspw
 	// A click on an item of the combat menu, while the player can order (CanOrder): the item is the order of the turn.
 	private void ChooseCombatMenuItem(CombatMenuItem item)
 	{
+		Extensions.PlayerActed(new PlayerAction.ChooseCombatMenuItem(item));
 		BufferedMenuOrders[1].Menu = item;
 		BufferedMenuOrders[1].SelectedUnit = SelectedUnit;
 
@@ -1163,6 +1165,7 @@ public unsafe partial class Nspw
 	// and the battle has no result: it costs its supply points, and comes after a while (SupplyCount).
 	private void RequestSupplyUnit()
 	{
+		Extensions.PlayerActed(new PlayerAction.RequestSupply());
 		SupplyPoints = (short)(SupplyPoints - GetSupplyPointsPerUnit());
 		if (SupplyTarget <= 5 || SupplyTarget >= 10)
 			SupplyCount = 150; // 艦船
@@ -1276,6 +1279,7 @@ public unsafe partial class Nspw
 	// A click on the previous kind of reinforcement (前の機種), from the first to the last.
 	private void SelectPreviousSupplyTarget()
 	{
+		Extensions.PlayerActed(new PlayerAction.SelectSupplyTarget(Next: false));
 		if (SupplyTarget == 0)
 			SupplyTarget = 17;
 		else
@@ -1285,6 +1289,7 @@ public unsafe partial class Nspw
 	// A click on the next kind of reinforcement (次の機種), from the last to the first.
 	private void SelectNextSupplyTarget()
 	{
+		Extensions.PlayerActed(new PlayerAction.SelectSupplyTarget(Next: true));
 		if (SupplyTarget == 17)
 			SupplyTarget = 0;
 		else

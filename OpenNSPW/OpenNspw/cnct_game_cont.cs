@@ -4209,11 +4209,14 @@ public unsafe partial class Nspw
 
 		Rules = IsSingleplayer ? BattleRules.Nspw122 : BattleRules.NspwNet;
 
+		// Extensions see the battle's start, and may set its seeds (docs/Extensions.md).
+		Extensions.BattleStarting();
+
 		// 乱数の初期化
 		if (IsSingleplayer)
 		{
 			// 1.22 has no shared random numbers: its rand goes on from where it was, seeded from the time as the game started
-			// (WinMain), or as a trace gives it.
+			// (WinMain), or as a trace or an extension gives it.
 			if (Trace?.Seeds?.Start is { } start)
 				srand(start);
 			Trace?.Reach(this, TracePoint.Start);
@@ -4234,6 +4237,7 @@ public unsafe partial class Nspw
 		if (ScenarioNumber < 0)
 		{
 			StartFromSave(ref flagMessage);
+			Extensions.BattleStarted();
 			return;
 		} // リジュームスタート
 
@@ -4309,6 +4313,7 @@ public unsafe partial class Nspw
 			// 1.22's game_init seeds rand last, from the time (0x42A163).
 			srand(Trace?.Seeds?.Battle ?? (uint)time());
 			Trace?.Reach(this, TracePoint.Seeded);
+			Extensions.BattleStarted();
 			return;
 		}
 
@@ -4387,6 +4392,8 @@ public unsafe partial class Nspw
 
 		if (!IsEditingMap)
 			SaveResume(3);
+
+		Extensions.BattleStarted();
 	}
 }
 

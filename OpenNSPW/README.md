@@ -7,6 +7,7 @@ An exact port of the NSPW NET source ([Original/NSPW_NET](../Original/NSPW_NET))
 | `OpenNspw.Benchmarks` | Benchmarks of the game's own work in a battle (simulation and drawing), and of copying the state for the emulator. |
 | `OpenNspw.DirectPlay` | The DirectPlay 8 stand-ins implemented on [Otsuki](../Otsuki). |
 | `OpenNspw.Desktop` | The game, on MonoGame: its menus (with [Saruhashi](../Saruhashi), see [docs/UI.md](../docs/UI.md)), which run the port's `WinMain` and show its frames and dialogs. |
+| `OpenNspw.Replay` | Replays of battles, recorded and played as an extension of the game. See [docs/Replays.md](../docs/Replays.md). |
 | `OpenNspw.Porter` | Ports C++ files to the port's conventions, then fixes the compile errors that have a mechanical fix. |
 | `OpenNspw.Singleplayer` | The emulator of the single-player executable (NSPW 1.22) on [Enzan](../Enzan), and its functions translated by the [Disassembler](../Disassembler). See [docs/Singleplayer.md](../docs/Singleplayer.md). |
 | `OpenNspw.Reference` | The reference: the unmodified C++ source, compiled in place, plus the tools that record what the tests compare against. Windows only, and not part of `OpenNSPW.slnx`. |
@@ -21,6 +22,7 @@ What is tested:
 - **`NetworkTests`**: `dplay.cpp`. Two games in one process connect over loopback UDP through the original's connection dialogs, and exchange the game's messages.
 - **`TitleScreenTests`**: two whole games with the original's data connect, reach the title screen, and play a battle that the host starts by clicking through the setting screens. They check the modes, that both games keep in step, and that no message box shows. They save the frames they reach as PNG files next to the test assembly.
 - **`CharacterizationTests`**: the characterization traces that guard the refactoring (see [docs/Refactoring.md](../docs/Refactoring.md#characterization-traces)). Scripts play two whole games in lockstep: the title screen, the first three scenarios, and the original's user scenarios `tst3.dat` and `てすと.dat`, whose fleets start close enough to fight, with seeded random input on both sides, and the host's transports landing their cargo in ミッドウェイ攻略１. Each script's trace, the state, output and `rand()` state of both games after every round, must match the one in `OpenNspw.Tests/Traces`, which was recorded from the port itself, and neither game may detect a desync.
+- **`ReplayTests`** and **`ExtensionTests`**: replays of single-player battles and of both peers of a network battle, each played again alone with the same hash every frame, and what the extension API gives an extension ([docs/Replays.md](../docs/Replays.md), [docs/Extensions.md](../docs/Extensions.md)).
 - **`EmulatorTests`** and **`SingleplayerTests`**: the single-player mode. Every scenario of NSPW 1.22 sets up and plays against the computer, which gives orders to its ships, without the emulator. **`ScenarioSetupTests`**, **`ComputerPlayerTests`** and **`SharedFunctionTests`** compare 1.22's functions rewritten as C# with the originals, run in the emulator.
 
 The rest of the game logic is not compared with the reference yet.

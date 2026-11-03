@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using System.Reflection;
 using System.Text;
+using OpenNspw.Replay;
 using Xunit.Sdk;
 
 namespace OpenNspw.Tests.Lockstep;

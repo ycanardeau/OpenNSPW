@@ -27,6 +27,9 @@ internal sealed class GameSnapshot
 	public int FirstRow;
 	public readonly bool[] SeenEffects = new bool[all_head.EFFECT_MAX];
 
+	// Whether every unit is shown, as a replay's view that sees both sides shows them (ReplayView.SeesAll).
+	public bool SeesAll;
+
 	// Whether a left click on each unit counts, unit 0 being the land where the selected transport lands (ReadClickable),
 	// and whether one on the battlefield gives the selected unit a destination (ReadCanSetDestination).
 	public readonly bool[] Clickable = new bool[256];
@@ -145,9 +148,11 @@ internal sealed class GameSnapshot
 		HasAutoSave = game.HasAutoSave != 0;
 	}
 
-	// On the game's thread.
-	public void CopyFrom(Nspw game)
+	// On the game's thread. view: what the viewer of a replay sees, or null for the player's view.
+	public void CopyFrom(Nspw game, ReplayView? view = null)
 	{
+		var camera = view?.CameraFor(game.CameraPosition) ?? game.CameraPosition;
+		SeesAll = view?.SeesAll ?? false;
 		Units = game.Units;
 		Fires = game.Fires;
 		Effects = game.Effects;
@@ -155,14 +160,14 @@ internal sealed class GameSnapshot
 		Sprites = game.Renderer.Sprites;
 		Clouds = game.Clouds;
 		FirstPlane = game.JPN_PLANE_START;
-		game.ReadSight(SeenTiles, out FirstColumn, out FirstRow, SeenEffects);
+		game.ReadSight(camera, SeesAll, SeenTiles, out FirstColumn, out FirstRow, SeenEffects);
 		game.ReadClickable(Clickable);
 		game.ReadShownOnDeck(ShownOnDeck);
 		game.ReadUnitSprites(UnitSprites);
 		CanSetDestination = game.ReadCanSetDestination();
 		ClearsPath = game.MoveOrders[1].ClearsPath != 0;
 		MaxUnitId = game.MaxUnitId;
-		GameCameraPosition = CameraPosition = game.CameraPosition;
+		GameCameraPosition = CameraPosition = camera;
 		LastCameraMove = game.LastCameraMove;
 		SelectedUnit = game.SelectedUnit;
 		Selections = game.Selections[1];

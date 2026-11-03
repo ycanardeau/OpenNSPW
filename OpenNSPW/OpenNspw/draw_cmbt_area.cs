@@ -35,6 +35,7 @@ public unsafe partial class Nspw
 	// the land at `ground` where the selected transport lands.
 	private void ClickUnit(int m, WorldPosition ground)
 	{
+		Extensions.PlayerActed(new PlayerAction.ClickUnit(m, ground));
 		MoveOrders[1].Unit = 0;
 
 		if (SelectedUnit == m)
@@ -172,6 +173,7 @@ public unsafe partial class Nspw
 	// A left click on the battlefield, that gives the selected unit (CanSetDestination) a destination.
 	private void SetDestination(WorldPosition destination)
 	{
+		Extensions.PlayerActed(new PlayerAction.SetDestination(destination));
 		MoveOrders[1].Unit = SelectedUnit;
 		MoveOrders[1].Destination = destination;
 	}
@@ -179,6 +181,7 @@ public unsafe partial class Nspw
 	// A right click while unit m is selected: nothing is selected any more.
 	private void CancelSelection(int m)
 	{
+		Extensions.PlayerActed(new PlayerAction.CancelSelection(m));
 		SelectedUnit = 0;
 		Selections[1][m] = 0;
 		CombatMenuKind = 0;
@@ -428,6 +431,7 @@ public unsafe partial class Nspw
 	{
 		if (SelectedUnit == 0 && PreviousSelectedUnit != 0 && Units[PreviousSelectedUnit].IsUsed)
 		{
+			Extensions.PlayerActed(new PlayerAction.RestoreSelection());
 			SelectUnit(PreviousSelectedUnit);
 		}
 	}

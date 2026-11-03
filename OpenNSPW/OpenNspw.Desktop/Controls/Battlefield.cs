@@ -61,13 +61,13 @@ internal sealed class Battlefield : Control
 	private static bool IsParkedPlane(ref Unit unit) =>
 		unit.Category == UnitCategory.Plane && unit.PlaneState == UnitState.Parked;
 
-	// Whether a unit is on the battlefield as the original draws it there: the player's, or found, near the view, and not
-	// a parked plane, which is on the deck (DrawBattleArea).
+	// Whether a unit is on the battlefield as the original draws it there: the player's, or found, or any for a replay's
+	// view that sees both sides, near the view, and not a parked plane, which is on the deck (DrawBattleArea).
 	private static bool IsDrawn(GameSnapshot snapshot, ref Unit unit)
 	{
 		var camera = snapshot.CameraPosition;
 		return unit.IsUsed
-			&& (unit.Side == snapshot.LocalSide || unit.IsFound)
+			&& (unit.Side == snapshot.LocalSide || unit.IsFound || snapshot.SeesAll)
 			&& !IsParkedPlane(ref unit)
 			&& camera.X - CMBT_REST <= unit.Position.X
 			&& camera.X + CMBT_WIDTH + CMBT_REST >= unit.Position.X
@@ -285,7 +285,7 @@ internal sealed class Battlefield : Control
 				&& snapshot.Result == GameResult.None
 			)
 			{
-				if (unit.Side != snapshot.LocalSide)
+				if (unit.Side != snapshot.LocalSide && !snapshot.SeesAll)
 					continue;
 
 				row++;
@@ -536,6 +536,11 @@ internal sealed class Battlefield : Control
 	protected override void OnMouseDown(MouseEventArgs e)
 	{
 		base.OnMouseDown(e);
+
+		// A replay takes no clicks while it plays: only its view moves, with the middle button.
+		if (_session.IsWatching && e.Button != MouseButtons.Middle)
+			return;
+
 		if (e.Button == MouseButtons.Left)
 		{
 			_brush.Press(

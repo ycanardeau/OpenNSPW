@@ -33,10 +33,11 @@ public unsafe partial class Nspw
 	private readonly Lock _uiCommandsLock = new();
 	private readonly List<(UICommandSite Site, Action Run)> _uiCommands = [];
 
-	// Queues a command, unless the game follows a trace that gives it no input (ISingleplayerTrace.TakesInput).
+	// Queues a command, unless the game follows a trace, or an extension gives the player's input, which give it none
+	// (ISingleplayerTrace.TakesInput, IGameExtension.HoldsInput).
 	private void QueueUICommand(UICommandSite site, Action run)
 	{
-		if (Trace is { TakesInput: false })
+		if (Trace is { TakesInput: false } || Extensions.HoldsInput)
 			return;
 
 		lock (_uiCommandsLock)
@@ -58,6 +59,9 @@ public unsafe partial class Nspw
 	// do not count. The commands of the other screens' sites are dropped too: they were given for a screen that is gone.
 	internal void RunUICommands(UICommandSite site, bool count)
 	{
+		// Extensions may do the player's actions where the clicks are taken (docs/Extensions.md).
+		Extensions.InputSite(site);
+
 		List<Action> runs;
 		lock (_uiCommandsLock)
 		{
