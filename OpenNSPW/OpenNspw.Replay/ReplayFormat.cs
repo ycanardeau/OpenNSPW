@@ -72,6 +72,7 @@ public enum ReplayActionCase : byte
 	ConfirmSystemMenu = 8,
 	SwapLocalSide = 9,
 	SinkSelectedUnit = 10,
+	GiveOrders = 11,
 }
 
 // A record of a replay, with what it has: Value, a frame's ticks or the result; Time, a frame's milliseconds since the
@@ -239,6 +240,24 @@ public sealed class ReplayWriter : IDisposable
 		_writer.Write(position.Y);
 	}
 
+	// A frame's orders, as a trace of 1.22 writes them.
+	private void WriteOrders(PlayerOrders orders)
+	{
+		_writer.Write(orders.Move.Unit);
+		WritePosition(orders.Move.Destination);
+		_writer.Write(orders.Move.ClearsPath);
+		_writer.Write(orders.Select.IsSet.Value);
+		_writer.Write(orders.Select.SelectedUnit);
+		_writer.Write(orders.Select.Unit);
+		WritePosition(orders.Select.GroundPosition);
+		_writer.Write((short)orders.Menu.Menu);
+		_writer.Write(orders.Menu.SelectedUnit);
+		_writer.Write(orders.SelectedUnit);
+		_writer.Write(orders.SelectionCount);
+		foreach (var selection in orders.Selections)
+			_writer.Write(selection);
+	}
+
 	// An action: its case (ReplayActionCase), then what that case has.
 	public void WriteAction(PlayerAction action)
 	{
@@ -285,7 +304,13 @@ public sealed class ReplayWriter : IDisposable
 					_writer.Write7BitEncodedInt((int)confirm.Answer);
 				},
 			SwapLocalSide: _ => () => _writer.Write((byte)ReplayActionCase.SwapLocalSide),
-			SinkSelectedUnit: _ => () => _writer.Write((byte)ReplayActionCase.SinkSelectedUnit)
+			SinkSelectedUnit: _ => () => _writer.Write((byte)ReplayActionCase.SinkSelectedUnit),
+			GiveOrders: give =>
+				() =>
+				{
+					_writer.Write((byte)ReplayActionCase.GiveOrders);
+					WriteOrders(give.Orders);
+				}
 		)();
 	}
 
@@ -405,6 +430,34 @@ public sealed class ReplayReader : IDisposable
 
 	private WorldPosition ReadPosition() => new(_reader.ReadDouble(), _reader.ReadDouble());
 
+	private PlayerOrders ReadOrders()
+	{
+		var move = new MoveOrder
+		{
+			Unit = _reader.ReadInt16(),
+			Destination = ReadPosition(),
+			ClearsPath = _reader.ReadInt32(),
+		};
+		var select = new SelectOrder
+		{
+			IsSet = new Bool32(_reader.ReadInt32()),
+			SelectedUnit = _reader.ReadInt16(),
+			Unit = _reader.ReadInt16(),
+			GroundPosition = ReadPosition(),
+		};
+		var menu = new MenuOrder
+		{
+			Menu = (CombatMenuItem)_reader.ReadInt16(),
+			SelectedUnit = _reader.ReadInt16(),
+		};
+		var selectedUnit = _reader.ReadInt16();
+		var selectionCount = _reader.ReadInt16();
+		var selections = new short[PlayerOrders.SelectionLength];
+		for (var s = 0; s < selections.Length; s++)
+			selections[s] = _reader.ReadInt16();
+		return new PlayerOrders(move, select, menu, selectedUnit, selectionCount, selections);
+	}
+
 	// An action, by its case; a byte that is no case is not a replay's.
 	private PlayerAction ReadAction()
 	{
@@ -426,7 +479,8 @@ public sealed class ReplayReader : IDisposable
 			ConfirmSystemMenu: () =>
 				new PlayerAction.ConfirmSystemMenu((MessageType)_reader.Read7BitEncodedInt()),
 			SwapLocalSide: static () => new PlayerAction.SwapLocalSide(),
-			SinkSelectedUnit: static () => new PlayerAction.SinkSelectedUnit()
+			SinkSelectedUnit: static () => new PlayerAction.SinkSelectedUnit(),
+			GiveOrders: () => new PlayerAction.GiveOrders(ReadOrders())
 		);
 	}
 

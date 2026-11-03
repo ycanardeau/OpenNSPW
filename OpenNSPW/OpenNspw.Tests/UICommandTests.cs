@@ -1,3 +1,4 @@
+using OpenNspw.HostUI;
 using OpenNspw.Tests.Lockstep;
 using Xunit;
 using static OpenNspw.Tests.Lockstep.BattleScripts;
@@ -92,5 +93,48 @@ public class UICommandTests
 		Assert.Null(
 			Traces.Difference(WithoutMouse(mouse, "Alice"), WithoutMouse(commands, "Alice"))
 		);
+	}
+
+	// Sees the host's actions on the setting screens.
+	private sealed class SettingObserver : IGameExtension
+	{
+		public List<SettingAction> Actions { get; } = [];
+
+		public void SettingActed(Nspw game, SettingAction action) => Actions.Add(action);
+	}
+
+	// The setting screens' commands do what their clicks do: the host confirms a scenario, turns the victory conditions
+	// over and starts the battle, and both players start it with the host's scenario and rules.
+	[Fact]
+	public void The_setting_screens_commands_start_the_battle()
+	{
+		using var run = new LockstepRun();
+		var host = run.Host.Game;
+		var guest = run.Guest.Game;
+		var observer = new SettingObserver();
+		host.Extensions.Add(observer);
+		Connect(run);
+		run.Frames(run.Host, 20);
+		Click(run, run.Host, 512, 384);
+		run.Until(() =>
+			host.Mode == GameMode.GameSetting && host.RivalMode == GameMode.GameSetting
+		);
+
+		run.Host.Commands.ConfirmScenario(5);
+		run.Until(() =>
+			host.Mode == GameMode.ConfigSetting && host.RivalMode == GameMode.ConfigSetting
+		);
+		var isDecisionEnabled = host.IsDecisionEnabled.Value;
+		run.Host.Commands.ToggleDecision();
+		run.Until(() => host.IsDecisionEnabled.Value != isDecisionEnabled);
+		run.Host.Commands.StartBattle();
+		run.Until(() => host.Mode == GameMode.Battle && guest.Mode == GameMode.Battle);
+
+		Assert.Equal(host.ScenarioNumber, guest.ScenarioNumber);
+		Assert.Equal(host.IsDecisionEnabled.Value, guest.IsDecisionEnabled.Value);
+		Assert.Contains(new SettingAction.ChooseScenario(5), observer.Actions);
+		Assert.Contains(new SettingAction.ConfirmScenario(), observer.Actions);
+		Assert.Contains(new SettingAction.ToggleDecision(), observer.Actions);
+		Assert.Contains(new SettingAction.StartBattle(), observer.Actions);
 	}
 }

@@ -1,4 +1,5 @@
 using OpenNspw.Tests.Lockstep;
+using OpenNspw.Verification;
 using Xunit;
 using static OpenNspw.all_head;
 
@@ -12,9 +13,9 @@ public sealed class Trace122Tests
 	// The game follows or records a trace with the cursor in the middle of the battle area, where it neither scrolls the
 	// view nor clicks anything: the replay gives the game 1.22's view at each drawing, but at (0, 0), its corner, the
 	// view would scroll on the drawn tick before it.
-	private static void SetUp(Nspw game, ISingleplayerTrace trace)
+	private static void SetUp(Nspw game, SingleplayerTrace trace)
 	{
-		game.Trace = trace;
+		game.Extensions.Add(trace);
 		game.SetCursorPos(CMBT_WIDTH / 2, CMBT_HEIGHT / 2);
 	}
 
@@ -134,7 +135,7 @@ public sealed class Trace122Tests
 	{
 		var trace = RecordPort(3, Frames);
 		using var replay = new Trace122Replay(new MemoryStream(trace));
-		using var run = new SingleplayerRun(replay.Scenario, game => game.Trace = replay);
+		using var run = new SingleplayerRun(replay.Scenario, game => game.Extensions.Add(replay));
 		run.Frames(Frames);
 
 		Assert.Null(replay.Divergence);
@@ -165,16 +166,16 @@ public sealed class Trace122Tests
 				game.Units[ship].Position.X + 400,
 				game.Units[ship].Position.Y
 			);
-			game.Commands.ClickUnit(ship);
+			run.Player.Commands.ClickUnit(ship);
 			run.Frames(2);
-			game.Commands.SetDestination(destination);
+			run.Player.Commands.SetDestination(destination);
 			run.Frames(Frames);
 		}
 		recorder.Dispose();
 		var trace = stream.ToArray();
 
 		using var reader = new Trace122Reader(new MemoryStream(trace));
-		var orders = new List<Trace122Orders>();
+		var orders = new List<PlayerOrders>();
 		for (var point = reader.Next(); point.Kind != TracePoint.End; point = reader.Next())
 			if (point.Orders is { } given)
 				orders.Add(given);

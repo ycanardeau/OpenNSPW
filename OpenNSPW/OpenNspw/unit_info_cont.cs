@@ -534,8 +534,8 @@ public unsafe partial class Nspw
 
 	private void UpdateDeckView(ref RECT source, SpriteId sprite, ref RECT destination)
 	{
-		// The host's UI's commands for the switch (UICommands.cs).
-		RunUICommands(UICommandSite.DeckView, true);
+		// Extensions take the clicks on the switch here (docs/Extensions.md).
+		Extensions.InputSite(ActionSite.DeckView, true);
 
 		var i = 0;
 		source.left =
@@ -585,20 +585,24 @@ public unsafe partial class Nspw
 		}
 	}
 
-	// The combat menu's items for the selected unit: in `menu`, their buttons' pictures (Buttons1), and in `menuItems`, the
-	// items. Returns their number. The choice shown (CombatMenuSelection) follows a supplying ship or a parked plane's arms.
-	private int ListCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menuItems)
+	// Whether the selected unit has a ship's combat menu: a ship's, but a base's.
+	private bool HasShipCombatMenu()
 	{
-		var n = 0;
-		if (
-			Units[SelectedUnit].Category == UnitCategory.Ship
+		return Units[SelectedUnit].Category == UnitCategory.Ship
 			&& !(
 				Units[SelectedUnit].Kind == UnitKind.InfantryBase
 				|| Units[SelectedUnit].Kind == UnitKind.Pillboxes
 				|| Units[SelectedUnit].Kind == UnitKind.Fortress
 				|| Units[SelectedUnit].Kind == UnitKind.AirBase
-			)
-		)
+			);
+	}
+
+	// The combat menu's items for the selected unit: in `menu`, their buttons' pictures (Buttons1), and in `menuItems`, the
+	// items. Returns their number.
+	private int ListCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menuItems)
+	{
+		var n = 0;
+		if (HasShipCombatMenu())
 		{ // 艦船のメニュー
 			if (Units[SelectedUnit].IsStopping && Units[SelectedUnit].Speed == 0)
 			{
@@ -619,9 +623,6 @@ public unsafe partial class Nspw
 							n = 1;
 							menu[0] = 10; // ボタンＣＧのインデックス
 							menuItems[0] = CombatMenuItem.Supply;
-
-							if (Units[SelectedUnit].IsSupplying)
-								CombatMenuSelection = CombatMenuItem.Supply;
 
 							break;
 						}
@@ -697,12 +698,6 @@ public unsafe partial class Nspw
 						menu[1] = 9;
 						menuItems[1] = CombatMenuItem.Disarm;
 					}
-					CombatMenuSelection = (CombatMenuItem)Units[SelectedUnit].Weapon;
-
-					if (Units[SelectedUnit].Ammo == 0)
-					{
-						CombatMenuSelection = (CombatMenuItem)FireKind.Unarmed;
-					}
 				}
 			}
 		}
@@ -710,10 +705,32 @@ public unsafe partial class Nspw
 		return n;
 	}
 
-	// A click on an item of the combat menu, while the player can order (CanOrder): the item is the order of the turn.
-	private void ChooseCombatMenuItem(CombatMenuItem item)
+	// The choice shown (CombatMenuSelection) follows a supplying ship or a parked plane's arms, of the `n` items the combat
+	// menu lists for the selected unit (ListCombatMenu): a ship's menu lists its supply, a parked plane's its arms.
+	private void ShowCombatMenuSelection(int n)
 	{
-		Extensions.PlayerActed(new PlayerAction.ChooseCombatMenuItem(item));
+		if (n == 0)
+			return;
+
+		if (HasShipCombatMenu())
+		{
+			if (Units[SelectedUnit].IsSupplying)
+				CombatMenuSelection = CombatMenuItem.Supply;
+		}
+		else if (Units[SelectedUnit].PlaneState != UnitState.Flying)
+		{
+			CombatMenuSelection = (CombatMenuItem)Units[SelectedUnit].Weapon;
+
+			if (Units[SelectedUnit].Ammo == 0)
+			{
+				CombatMenuSelection = (CombatMenuItem)FireKind.Unarmed;
+			}
+		}
+	}
+
+	// The item of the combat menu as the order of the turn.
+	private void BufferCombatMenuItem(CombatMenuItem item)
+	{
 		BufferedMenuOrders[1].Menu = item;
 		BufferedMenuOrders[1].SelectedUnit = SelectedUnit;
 
@@ -721,6 +738,13 @@ public unsafe partial class Nspw
 		CanOrder = false;
 		HasOrdered = true;
 		Sound.PlayInterfaceSound(SoundId.Click2);
+	}
+
+	// A click on an item of the combat menu, while the player can order (CanOrder): the item is the order of the turn.
+	private void ChooseCombatMenuItem(CombatMenuItem item)
+	{
+		Extensions.PlayerActed(new PlayerAction.ChooseCombatMenuItem(item));
+		BufferCombatMenuItem(item);
 	}
 
 	private void UpdateCombatMenu(
@@ -734,13 +758,10 @@ public unsafe partial class Nspw
 		var sprite = SpriteId.Buttons1;
 
 		var n = ListCombatMenu(ref menu, ref menuItems);
+		ShowCombatMenuSelection(n);
 
-		// The host's UI's commands for the combat menu (UICommands.cs), on the items it shows, which wait for a frame in which
-		// they count.
-		ShownCombatMenu = menuItems;
-		ShownCombatMenuCount = n;
-		RunUICommands(UICommandSite.CombatMenu, true);
-		RunWaitingCombatMenu();
+		// Extensions take the combat menu's clicks here (docs/Extensions.md).
+		Extensions.InputSite(ActionSite.CombatMenu, true);
 
 		for (var i = 0; i < n; i++)
 		{
@@ -1304,8 +1325,8 @@ public unsafe partial class Nspw
 		ref RECT destination
 	)
 	{
-		// The host's UI's commands for the supply panel (UICommands.cs).
-		RunUICommands(UICommandSite.SupplyPanel, true);
+		// Extensions take the clicks on the supply panel here (docs/Extensions.md).
+		Extensions.InputSite(ActionSite.SupplyPanel, true);
 
 		length[0] = wsprintf(text[0], "%d:", GetSupplyPointsPerUnit());
 		TextOut(
@@ -1419,9 +1440,8 @@ public unsafe partial class Nspw
 		}
 		else
 		{
-			// The host's UI's commands for choosing and requesting, while a reinforcement is coming, are dropped
-			// (UICommands.cs).
-			RunUICommands(UICommandSite.SupplyPanel, false);
+			// The clicks for choosing and requesting do not count while a reinforcement is coming (docs/Extensions.md).
+			Extensions.InputSite(ActionSite.SupplyPanel, false);
 
 			if ((Renderer.FrameCount % 2) != 0)
 			{
@@ -1463,7 +1483,7 @@ public unsafe partial class Nspw
 
 	// A click on an item of the host's system menu (シナリオ選択へ, リジューム), while the player can order: the game asks
 	// whether to do it (IDD_OK_CANCEL), and then sends the answer.
-	private void AskSystemMenu(MessageType answer)
+	public void AskSystemMenu(MessageType answer)
 	{
 		DialogAnswer = answer;
 		MainDialog = CreateDialog(
@@ -1482,9 +1502,8 @@ public unsafe partial class Nspw
 	{
 		RECT destination = default;
 
-		// The host's UI's commands for the system menu (UICommands.cs), which wait for a frame in which they count.
-		RunUICommands(UICommandSite.SystemMenu, true);
-		RunWaitingSystemMenu();
+		// Extensions take the system menu's clicks here (docs/Extensions.md).
+		Extensions.InputSite(ActionSite.SystemMenu, true);
 #if !LNGG_VER
 		length[0] = wsprintf(text[0], "シナリオ選択へ");
 #else
@@ -1572,6 +1591,10 @@ public unsafe partial class Nspw
 		}
 	}
 
+	// Whether the last frame showed the chosen reinforcement's picture (UpdateUnitInfo): in every frame of a battle but
+	// the map editor's, and while one is coming, in every other frame.
+	public bool IsSupplyTargetShown;
+
 	//============================================================================
 	//ユニットインフォーメイション
 	//----------------------------------------------------------------------------
@@ -1658,8 +1681,8 @@ public unsafe partial class Nspw
 		}
 		else
 		{
-			// The host's UI's commands for the switch, which is not shown, are dropped (UICommands.cs).
-			RunUICommands(UICommandSite.DeckView, false);
+			// The clicks on the switch, which is not shown, do not count (docs/Extensions.md).
+			Extensions.InputSite(ActionSite.DeckView, false);
 		}
 
 		if (CombatMenuKind != 0 && !IsEditingMap)
@@ -1669,10 +1692,8 @@ public unsafe partial class Nspw
 		}
 		else
 		{
-			// The host's UI's commands for the combat menu, which is not shown, are dropped (UICommands.cs).
-			ShownCombatMenuCount = 0;
-			RunUICommands(UICommandSite.CombatMenu, false);
-			RunWaitingCombatMenu();
+			// The clicks on the combat menu, which is not shown, do not count (docs/Extensions.md).
+			Extensions.InputSite(ActionSite.CombatMenu, false);
 		}
 
 		// ゲームデータ
@@ -1713,8 +1734,8 @@ public unsafe partial class Nspw
 			}
 			else
 			{
-				// The host's UI's commands for the supply panel, which is not shown, are dropped (UICommands.cs).
-				RunUICommands(UICommandSite.SupplyPanel, false);
+				// The clicks on the supply panel, which is not shown, do not count (docs/Extensions.md).
+				Extensions.InputSite(ActionSite.SupplyPanel, false);
 			}
 			y += 30;
 
@@ -1724,8 +1745,8 @@ public unsafe partial class Nspw
 			}
 			else
 			{
-				// The host's UI's commands for the system menu, which only the host has, are dropped (UICommands.cs).
-				RunUICommands(UICommandSite.SystemMenu, false);
+				// The clicks on the system menu, which only the host has, do not count (docs/Extensions.md).
+				Extensions.InputSite(ActionSite.SystemMenu, false);
 			}
 
 			IDirectDrawSurface_ReleaseDC(Renderer.lpDDSBack, hdc);
@@ -1743,7 +1764,7 @@ public unsafe partial class Nspw
 
 	// A click held on the minimap, at cell (column, row) of the map: the battlefield shows the map from there, kept within
 	// the map.
-	private void ShowMinimapCell(int column, int row)
+	public void ShowMinimapCell(int column, int row)
 	{
 		CameraPosition = new WorldPosition(
 			World.Left + ((column / MinimapCellSize) * 80),
@@ -1917,8 +1938,8 @@ public unsafe partial class Nspw
 			}
 		}
 
-		// The host's UI's commands for clicks held on the minimap (UICommands.cs).
-		RunUICommands(UICommandSite.Minimap, true);
+		// Extensions take the clicks held on the minimap here (docs/Extensions.md).
+		Extensions.InputSite(ActionSite.Minimap, true);
 
 		// ユニットの描画
 

@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace OpenNspw;
+namespace OpenNspw.Verification;
 
 // The points of a single-player game that a trace records, in the order 1.22 reaches them: game_init's start and its last
 // srand, then, for each frame, its start, each tick (before chara_cont) and decision, the drawing, the player's orders
@@ -23,41 +23,90 @@ public enum TracePoint : byte
 	StackLocal = 9,
 }
 
-// The player's orders of a frame: the move order (new_pp[1]) and the select order (new_slct[1]) that the clicks on the
-// battle area made, the item of the combat menu clicked, for its unit, and the selected unit and the selection
-// (the_slct_unit, slct_unit[1] and its count) that they go to.
-public sealed record Trace122Orders(
-	MoveOrder Move,
-	SelectOrder Select,
-	MenuOrder Menu,
-	short SelectedUnit,
-	short SelectionCount,
-	short[] Selections
-)
-{
-	public const int SelectionLength = 256;
-}
-
-// A trace of a single-player game (docs/Verification.md): a recording of 1.22 that the game follows and checks itself
-// against, or one that records the game.
-public interface ISingleplayerTrace
+// A trace of a single-player game (docs/Verification.md), as an extension of the game: a recording of 1.22 that the game
+// follows and checks itself against, or one that records the game. It reaches 1.22's points at the game's points
+// (docs/Extensions.md), in a single-player game only.
+public abstract class SingleplayerTrace : IGameExtension
 {
 	// rand's state when the game starts, and the seed of game_init's last srand; null to start as 1.22 does.
-	(uint Start, uint Battle)? Seeds { get; }
+	public abstract (uint Start, uint Battle)? Seeds { get; }
+
+	// Whether it gives the player's input: a replay does while it follows 1.22, with the speed, the view and the
+	// player's orders.
+	public virtual bool HoldsInput => false;
 
 	// The ticks of the frame that has just started; null for those of the speed.
-	int? TicksOfNextFrame();
-
-	// Whether the game takes the player's input: a replay gives it none while it follows 1.22, but for the speed, the
-	// view and the player's orders, which it gives itself.
-	bool TakesInput { get; }
+	public abstract int? TicksOfNextFrame();
 
 	// The player's orders of this frame are to be given (HandleInput): a replay gives 1.22's, a recorder records the
 	// game's. Not a point that every frame has: a trace has the orders of the frames that have some.
-	void ReachPlayerOrders(Nspw game);
+	public abstract void ReachPlayerOrders(Nspw game);
 
 	// The game has reached a point.
-	void Reach(Nspw game, TracePoint point);
+	public abstract void Reach(Nspw game, TracePoint point);
+
+	// What Windows' stack held where 1.22 read a local it had not set, as the trace gives it.
+	public virtual byte[]? UninitializedLocal(Nspw game, uint instruction) => null;
+
+	public void BattleStarting(Nspw game)
+	{
+		if (!game.IsSingleplayer)
+			return;
+
+		if (Seeds is { } seeds)
+			game.srand(seeds.Start);
+		Reach(game, TracePoint.Start);
+	}
+
+	// 1.22's game_init seeds rand last, from the time, which the trace's seed replaces.
+	public void BattleStarted(Nspw game)
+	{
+		if (!game.IsSingleplayer)
+			return;
+
+		if (Seeds is { } seeds)
+			game.srand(seeds.Battle);
+		Reach(game, TracePoint.Seeded);
+	}
+
+	public short FrameStarting(Nspw game, short ticks)
+	{
+		if (!game.IsSingleplayer)
+			return ticks;
+
+		Reach(game, TracePoint.Frame);
+		return TicksOfNextFrame() is { } traced ? (short)traced : ticks;
+	}
+
+	public void TickStarting(Nspw game)
+	{
+		if (game.IsSingleplayer)
+			Reach(game, TracePoint.Tick);
+	}
+
+	public void ResultChecking(Nspw game)
+	{
+		if (game.IsSingleplayer)
+			Reach(game, TracePoint.Decision);
+	}
+
+	public void Drawing(Nspw game)
+	{
+		if (game.IsSingleplayer)
+			Reach(game, TracePoint.Drawing);
+	}
+
+	public void InputSite(Nspw game, ActionSite site, bool counts)
+	{
+		if (game.IsSingleplayer && site == ActionSite.Orders)
+			ReachPlayerOrders(game);
+	}
+
+	public void OrdersStarting(Nspw game)
+	{
+		if (game.IsSingleplayer)
+			Reach(game, TracePoint.Orders);
+	}
 }
 
 // A point of a trace, with what it records: rand's state, and, for a frame, the speed, for a tick, cc_count, whether
@@ -71,7 +120,7 @@ public sealed record Trace122Point(
 	bool IsDrawn,
 	byte[]? State,
 	WorldPosition Camera = default,
-	Trace122Orders? Orders = null
+	PlayerOrders? Orders = null
 );
 
 // The file of a trace of 1.22, compressed with gzip: the magic, the scenario, then the points, each a byte (TracePoint)
@@ -83,11 +132,11 @@ public sealed record Trace122Point(
 // ends it.
 public static class Trace122
 {
-	public const int UnitCount = 101;
-	public const int UnitSize = 0x598;
-	public const int FireCount = 256;
-	public const int FireSize = 0x70;
-	public const int StateSize = UnitCount * UnitSize + FireCount * FireSize;
+	public const int UnitCount = Layout122.UnitCount;
+	public const int UnitSize = Layout122.UnitSize;
+	public const int FireCount = Layout122.FireCount;
+	public const int FireSize = Layout122.FireSize;
+	public const int StateSize = Layout122.StateSize;
 
 	public static ReadOnlySpan<byte> Magic => "N122TRC5"u8;
 
@@ -136,7 +185,7 @@ public sealed class Trace122Writer : IDisposable
 		_writer.Write(value);
 	}
 
-	public void WritePlayerOrders(Trace122Orders orders)
+	public void WritePlayerOrders(PlayerOrders orders)
 	{
 		_writer.Write((byte)TracePoint.PlayerOrders);
 		_writer.Write(orders.Move.Unit);
@@ -152,7 +201,7 @@ public sealed class Trace122Writer : IDisposable
 		_writer.Write(orders.Menu.SelectedUnit);
 		_writer.Write(orders.SelectedUnit);
 		_writer.Write(orders.SelectionCount);
-		for (var s = 0; s < Trace122Orders.SelectionLength; s++)
+		for (var s = 0; s < PlayerOrders.SelectionLength; s++)
 			_writer.Write(orders.Selections[s]);
 	}
 
@@ -276,7 +325,7 @@ public sealed class Trace122Reader : IDisposable
 					};
 					var selectedUnit = _reader.ReadInt16();
 					var selectionCount = _reader.ReadInt16();
-					var selections = new short[Trace122Orders.SelectionLength];
+					var selections = new short[PlayerOrders.SelectionLength];
 					for (var s = 0; s < selections.Length; s++)
 						selections[s] = _reader.ReadInt16();
 					return new(
@@ -285,7 +334,7 @@ public sealed class Trace122Reader : IDisposable
 						0,
 						false,
 						null,
-						Orders: new Trace122Orders(
+						Orders: new PlayerOrders(
 							move,
 							select,
 							menu,
@@ -434,7 +483,7 @@ public static class Trace122Layout
 // moves by the player's input; and checks it at every point, rand's state, and, before every tick, its cc_count and its
 // units and fires, whose doubles may differ by a millionth. The first difference is kept (Divergence), after which
 // nothing more is checked.
-public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
+public sealed class Trace122Replay : SingleplayerTrace, IDisposable
 {
 	private const double Tolerance = 1e-6;
 
@@ -443,8 +492,13 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 	private readonly byte[] _state = new byte[Trace122.StateSize];
 	private Trace122Point _next;
 
+	// The uninitialized locals that the trace has given and the port has not read: the battle's, in the order 1.22 read
+	// them, and those of the coming cpu_strtgy, by instruction, until the next point.
+	private readonly Queue<(uint Instruction, byte[] Value)> _battleLocals = new();
+	private readonly Dictionary<uint, byte[]> _strategyLocals = [];
+
 	public int Scenario => _reader.Scenario;
-	public (uint Start, uint Battle)? Seeds { get; }
+	public override (uint Start, uint Battle)? Seeds { get; }
 
 	// The first difference, or null.
 	public string? Divergence { get; private set; }
@@ -453,7 +507,7 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 	public int Frames { get; private set; }
 	public bool HasEnded { get; private set; }
 
-	public bool TakesInput => HasEnded || Divergence is not null;
+	public override bool HoldsInput => !HasEnded && Divergence is null;
 
 	public Trace122Replay(Stream stream)
 	{
@@ -546,20 +600,43 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 		Divergence = $"Frame {Frames}, {point} (cc_count {game.Tick}): {what}";
 	}
 
-	// What Windows' stack held where 1.22 read a local it had not set, after this point: in the computer's strategy, which
-	// the orders start with, or in the tick.
+	// Keeps what Windows' stack held where 1.22 read a local it had not set, after this point, for the port to read
+	// (UninitializedLocal): in the computer's strategy, which the orders start with, or in the tick; false if the port does
+	// not read that local.
+	private bool GiveStackLocal(uint instruction, byte[] value)
+	{
+		if (Nspw.BattleStackLocals.Contains(instruction))
+			_battleLocals.Enqueue((instruction, value));
+		else if (Nspw.StrategyStackLocals.Contains(instruction) && value.Length == sizeof(uint))
+			_strategyLocals[instruction] = value;
+		else
+			return false;
+		return true;
+	}
+
 	private void GiveStackLocals(Nspw game, TracePoint point)
 	{
 		while (_frame.TryPeek(out var local) && local.Kind == TracePoint.StackLocal)
 		{
 			_frame.Dequeue();
-			if (!game.GiveStackLocal((uint)local.Value, local.State!))
+			if (!GiveStackLocal((uint)local.Value, local.State!))
 				Diverge(
 					game,
 					point,
 					$"1.22 read an uninitialized local at 0x{local.Value:X}, which the port does not give."
 				);
 		}
+	}
+
+	// The battle reads its locals in the order the trace gave them; cpu_strtgy reads those given for it.
+	public override byte[]? UninitializedLocal(Nspw game, uint instruction)
+	{
+		if (_strategyLocals.TryGetValue(instruction, out var value))
+			return value;
+		if (!_battleLocals.TryPeek(out var local) || local.Instruction != instruction)
+			return null;
+		_battleLocals.Dequeue();
+		return local.Value;
 	}
 
 	private void StartFrame(Nspw game)
@@ -585,7 +662,7 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 			_frame.Enqueue(_next);
 	}
 
-	public int? TicksOfNextFrame()
+	public override int? TicksOfNextFrame()
 	{
 		return HasEnded || Divergence is not null
 			? null
@@ -593,7 +670,7 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 	}
 
 	// Gives the game the player's orders that 1.22 had at this point of the frame, if it had some.
-	public void ReachPlayerOrders(Nspw game)
+	public override void ReachPlayerOrders(Nspw game)
 	{
 		if (
 			Divergence is null
@@ -601,11 +678,13 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 			&& _frame.TryPeek(out var next)
 			&& next.Kind == TracePoint.PlayerOrders
 		)
-			game.GivePlayerOrders(_frame.Dequeue().Orders!);
+			game.Do(new PlayerAction.GiveOrders(_frame.Dequeue().Orders!));
 	}
 
-	public void Reach(Nspw game, TracePoint point)
+	public override void Reach(Nspw game, TracePoint point)
 	{
+		// The locals given for cpu_strtgy were for the orders before this point.
+		_strategyLocals.Clear();
 		if (Divergence is not null || HasEnded)
 			return;
 
@@ -638,12 +717,12 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 			);
 			return;
 		}
-		if (game.UntakenStackLocal is { } untaken)
+		if (_battleLocals.TryPeek(out var untaken))
 		{
 			Diverge(
 				game,
 				point,
-				$"1.22 read an uninitialized local at 0x{untaken:X} before this point, where the port did not."
+				$"1.22 read an uninitialized local at 0x{untaken.Instruction:X} before this point, where the port did not."
 			);
 			return;
 		}
@@ -677,28 +756,26 @@ public sealed class Trace122Replay : ISingleplayerTrace, IDisposable
 }
 
 // Records a single-player game of the port as a trace of 1.22, to replay it (tests).
-public sealed class Trace122Recorder(Stream stream) : ISingleplayerTrace, IDisposable
+public sealed class Trace122Recorder(Stream stream) : SingleplayerTrace, IDisposable
 {
 	private readonly Stream _stream = stream;
 	private readonly byte[] _state = new byte[Trace122.StateSize];
 	private Trace122Writer? _writer;
 
-	public (uint Start, uint Battle)? Seeds => null;
+	public override (uint Start, uint Battle)? Seeds => null;
 
-	public bool TakesInput => true;
-
-	public int? TicksOfNextFrame()
+	public override int? TicksOfNextFrame()
 	{
 		return null;
 	}
 
-	public void ReachPlayerOrders(Nspw game)
+	public override void ReachPlayerOrders(Nspw game)
 	{
 		if (_writer is not null && game.ReadPlayerOrders() is { } orders)
 			_writer.WritePlayerOrders(orders);
 	}
 
-	public void Reach(Nspw game, TracePoint point)
+	public override void Reach(Nspw game, TracePoint point)
 	{
 		if (point == TracePoint.Start)
 			_writer = new Trace122Writer(_stream, game.ScenarioNumber);

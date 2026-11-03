@@ -23,7 +23,7 @@ internal sealed class ScrollAhead(GameSession session)
 		}
 
 		_lastId++;
-		_session.Game.Commands.ScrollBattlefield(dx, dy, _lastId);
+		_session.Commands.ScrollBattlefield(dx, dy, _lastId);
 		_moves.Add((_lastId, Painter.Now, dx, dy));
 	}
 

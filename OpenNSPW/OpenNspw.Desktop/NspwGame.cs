@@ -8,6 +8,7 @@ using MonoGame.Extended.ViewportAdapters;
 using OpenNspw.Desktop.Controls;
 using OpenNspw.Desktop.Screens;
 using OpenNspw.Replay;
+using OpenNspw.Verification;
 using DrawingRectangle = System.Drawing.Rectangle;
 using SaruhashiKeys = Aigamo.Saruhashi.Keys;
 using SaruhashiMouseListener = Aigamo.Saruhashi.MonoGame.MouseListener;

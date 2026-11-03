@@ -1334,6 +1334,18 @@ public unsafe partial class Nspw
 		}
 	}
 
+	// Where a unit looks from: a fighter a little ahead of itself (FT_EYE).
+	public WorldPosition EyeOf(ref Unit unit)
+	{
+		var eye = unit.Position;
+		if (unit.Kind == UnitKind.Fighter)
+		{
+			eye += WorldVector.FromDirection(unit.Direction) * FT_EYE;
+		}
+
+		return eye;
+	}
+
 	//============================================================================
 	// 可視不可視
 	//----------------------------------------------------------------------------

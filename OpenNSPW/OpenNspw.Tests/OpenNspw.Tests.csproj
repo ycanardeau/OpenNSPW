@@ -22,7 +22,9 @@
   <ItemGroup>
     <ProjectReference Include="..\OpenNspw\OpenNspw.csproj" />
     <ProjectReference Include="..\OpenNspw.DirectPlay\OpenNspw.DirectPlay.csproj" />
+    <ProjectReference Include="..\OpenNspw.HostUI\OpenNspw.HostUI.csproj" />
     <ProjectReference Include="..\OpenNspw.Replay\OpenNspw.Replay.csproj" />
+    <ProjectReference Include="..\OpenNspw.Verification\OpenNspw.Verification.csproj" />
     <ProjectReference Include="..\OpenNspw.Desktop\OpenNspw.Desktop.csproj" />
     <ProjectReference Include="..\OpenNspw.Singleplayer\OpenNspw.Singleplayer.csproj" />
   </ItemGroup>

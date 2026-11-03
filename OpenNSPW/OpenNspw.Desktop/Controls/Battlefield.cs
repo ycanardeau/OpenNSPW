@@ -3,6 +3,7 @@ using Aigamo.Saruhashi.MonoGame;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
+using OpenNspw.HostUI;
 using static OpenNspw.all_head;
 using static OpenNspw.Desktop.Controls.UnitMarks;
 using DrawingPoint = System.Drawing.Point;
@@ -148,11 +149,11 @@ internal sealed class Battlefield : Control
 	private void DrawTiles(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot)
 	{
 		ref var tiles = ref snapshot.Sprites[SpriteId.MapTiles];
-		for (var n = 0; n < Nspw.SightSize; n++)
+		for (var n = 0; n < UIState.SightSize; n++)
 		{
-			for (var m = 0; m < Nspw.SightSize; m++)
+			for (var m = 0; m < UIState.SightSize; m++)
 			{
-				if (!snapshot.SeenTiles[n * Nspw.SightSize + m])
+				if (!snapshot.SeenTiles[n * UIState.SightSize + m])
 					continue;
 
 				var (column, row) = (snapshot.FirstColumn + m, snapshot.FirstRow + n);
@@ -495,7 +496,7 @@ internal sealed class Battlefield : Control
 	private void TakeClick(DrawingPoint point)
 	{
 		var snapshot = _snapshot;
-		var commands = _session.Game.Commands;
+		var commands = _session.Commands;
 		if (IsLanding(snapshot, point))
 			commands.ClickLand(point.X, point.Y);
 		else if (HitUnit(snapshot, point) is { } m)
@@ -550,7 +551,7 @@ internal sealed class Battlefield : Control
 			TakeClick(e.Location);
 		}
 		else if (e.Button == MouseButtons.Right)
-			_session.Game.Commands.RightClick();
+			_session.Commands.RightClick();
 		else if (e.Button == MouseButtons.Middle)
 			_scrolledTo = e.Location;
 	}

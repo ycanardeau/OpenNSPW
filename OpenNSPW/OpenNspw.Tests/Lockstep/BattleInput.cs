@@ -1,3 +1,4 @@
+using OpenNspw.HostUI;
 using static OpenNspw.all_head;
 
 namespace OpenNspw.Tests.Lockstep;
@@ -90,9 +91,9 @@ internal sealed class MouseInput(LockstepRun run, LockstepGame game) : BattleInp
 internal sealed class CommandInput(LockstepRun run, LockstepGame game) : BattleInput(run, game)
 {
 	// Gives a command, and waits as long as a click takes: the press, then the release.
-	private void Give(Action<Nspw.UICommands> command)
+	private void Give(Action<UICommands> command)
 	{
-		command(Game.Game.Commands);
+		command(Game.Commands);
 		Run.Frames(Game, 2);
 		Run.Frames(Game, 2);
 	}
@@ -131,7 +132,7 @@ internal sealed class CommandInput(LockstepRun run, LockstepGame game) : BattleI
 	public override void ShowMinimapCell(int column, int row)
 	{
 		Run.Frames(Game, 1);
-		Game.Game.Commands.ShowMinimapCell(column, row, isPressed: true);
+		Game.Commands.ShowMinimapCell(column, row, isPressed: true);
 		Run.Frames(Game, 1);
 		Run.Frames(Game, 2);
 	}

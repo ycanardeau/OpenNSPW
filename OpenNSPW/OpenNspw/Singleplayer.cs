@@ -1,9 +1,21 @@
+using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Aigamo.Enzan;
 using OpenNspw.Singleplayer;
 
 namespace OpenNspw;
+
+// 1.22's layout of the units and the fires as WriteStateAs122 writes them, and a trace of 1.22 records them
+// (docs/Verification.md): units 0 to 100, then fires 0 to 255.
+public static class Layout122
+{
+	public const int UnitCount = 101;
+	public const int UnitSize = 0x598;
+	public const int FireCount = 256;
+	public const int FireSize = 0x70;
+	public const int StateSize = UnitCount * UnitSize + FireCount * FireSize;
+}
 
 // The single-player mode (docs/Singleplayer.md): the game against the computer of NSPW 1.22, whose own functions (the
 // computer's strategy, the scenarios and their victory conditions) run in an emulator on this state.
@@ -115,10 +127,6 @@ public unsafe partial class Nspw
 	// Two doubles in the emulator's memory, for the functions of 1.22 that take pointers to them.
 	private uint _pointAddress;
 
-	// The trace this single-player game follows and checks itself against, or records itself in, or null
-	// (docs/Verification.md).
-	public ISingleplayerTrace? Trace;
-
 	// The period of 1.22's multimedia timer, which drives its frames (0x432960), in milliseconds.
 	private const uint SingleplayerTimerPeriod = 88;
 
@@ -144,9 +152,6 @@ public unsafe partial class Nspw
 			ticks = 20;
 		else
 			ticks = GameSpeed == 0 ? (short)0 : (short)(GameSpeed + 1);
-		Trace?.Reach(this, TracePoint.Frame);
-		if (Trace?.TicksOfNextFrame() is { } traced)
-			ticks = (short)traced;
 		return true;
 	}
 
@@ -201,14 +206,14 @@ public unsafe partial class Nspw
 		}
 	}
 
-	// Writes the units and the fires that a trace of 1.22 records (Trace122.Units, Trace122.Fires), in 1.22's layout.
+	// Writes the units and the fires that a trace of 1.22 records, in 1.22's layout (Layout122).
 	public void WriteStateAs122(Span<byte> state)
 	{
-		for (var m = 0; m < Trace122.UnitCount; m++)
-			WriteUnitAs122(m, state.Slice(m * Trace122.UnitSize, Trace122.UnitSize));
+		for (var m = 0; m < Layout122.UnitCount; m++)
+			WriteUnitAs122(m, state.Slice(m * Layout122.UnitSize, Layout122.UnitSize));
 		MemoryMarshal
-			.AsBytes((Span<Fire>)Fires)[..(Trace122.FireCount * Trace122.FireSize)]
-			.CopyTo(state[(Trace122.UnitCount * Trace122.UnitSize)..]);
+			.AsBytes((Span<Fire>)Fires)[..(Layout122.FireCount * Layout122.FireSize)]
+			.CopyTo(state[(Layout122.UnitCount * Layout122.UnitSize)..]);
 	}
 
 	private void CopyUnitsOut(Emulator emulator)
@@ -498,23 +503,16 @@ public unsafe partial class Nspw
 
 	// The uninitialized locals that the battle's own code reads, by the instruction of 1.22 that reads them: the heading
 	// of a torpedo plane's land check (0x413D23, PlaneDropTorpedo), the angle of a plane's landing pattern and approach to
-	// a carrier heading 360 (0x4173BF, SetLandingDestination; 0x41764E, UpdateLanding). A trace gives them as 1.22 read
-	// them, in order.
-	private static readonly uint[] BattleStackLocals = [0x413D23, 0x4173BF, 0x41764E];
-	private readonly Queue<(uint Instruction, byte[] Value)> _battleStackLocals = new();
+	// a carrier heading 360 (0x4173BF, SetLandingDestination; 0x41764E, UpdateLanding).
+	public static readonly ImmutableArray<uint> BattleStackLocals = [0x413D23, 0x4173BF, 0x41764E];
 
-	// The instruction of an uninitialized local of the battle that a trace gave and the battle has not read, if any.
-	internal uint? UntakenStackLocal =>
-		_battleStackLocals.TryPeek(out var local) ? local.Instruction : null;
-
-	// What the battle reads, at the instruction of 1.22 given, from a local 1.22 has not set there: what a trace gave, or
-	// else what the port's own local holds.
+	// What the battle reads, at the instruction of 1.22 given, from a local 1.22 has not set there: what an extension
+	// gives (IGameExtension.UninitializedLocal), such as a trace of 1.22, or else what the port's own local holds.
 	internal double TakeStackLocal(uint instruction, double own)
 	{
-		if (!_battleStackLocals.TryPeek(out var local) || local.Instruction != instruction)
-			return own;
-		_battleStackLocals.Dequeue();
-		return BitConverter.ToDouble(local.Value);
+		return Extensions.UninitializedLocal(instruction) is { Length: sizeof(double) } value
+			? BitConverter.ToDouble(value)
+			: own;
 	}
 
 	// The uninitialized locals that cpu_strtgy reads, with what Windows' stack holds there: 0, in every frame of the
@@ -522,36 +520,19 @@ public unsafe partial class Nspw
 	// BUG(1.22): scenario 208's count at 0x4050C7 is read before it is set. Kept as is for compatibility with 1.22.
 	private static readonly (uint Instruction, uint Value)[] StackLocalsOnWindows = [(0x4050C7, 0)];
 
-	// The uninitialized locals of the coming cpu_strtgy that a trace has given (GiveStackLocal), by instruction.
-	private readonly Dictionary<uint, uint> _stackLocals = [];
+	// The instructions of the uninitialized locals that cpu_strtgy reads.
+	public static readonly ImmutableArray<uint> StrategyStackLocals =
+	[
+		.. StackLocalsOnWindows.Select(local => local.Instruction),
+	];
 
-	// What cpu_strtgy reads, at the instruction given, from a local it has not set: what a trace gave, or else what
-	// Windows' stack holds there.
-	private uint StackLocal(uint instruction) =>
-		_stackLocals.TryGetValue(instruction, out var value)
-			? value
+	// What cpu_strtgy reads, at the instruction given, from a local it has not set: what an extension gives
+	// (IGameExtension.UninitializedLocal), such as a trace of 1.22, or else what Windows' stack holds there.
+	private uint StackLocal(uint instruction)
+	{
+		return Extensions.UninitializedLocal(instruction) is { Length: sizeof(uint) } value
+			? BitConverter.ToUInt32(value)
 			: StackLocalsOnWindows.First(local => local.Instruction == instruction).Value;
-
-	// Gives cpu_strtgy, before it runs, what Windows' stack held where it reads a local it has not set, as a trace of
-	// 1.22 records it; false if the port does not know where that local is.
-	internal bool GiveStackLocal(uint instruction, uint value)
-	{
-		if (!StackLocalsOnWindows.Any(local => local.Instruction == instruction))
-			return false;
-
-		_stackLocals[instruction] = value;
-		return true;
-	}
-
-	// What Windows' stack held where 1.22 read a local it had not set: for cpu_strtgy, written into the emulator's; for
-	// the battle's own code, kept until it reads it.
-	internal bool GiveStackLocal(uint instruction, byte[] value)
-	{
-		if (!BattleStackLocals.Contains(instruction))
-			return value.Length == sizeof(uint)
-				&& GiveStackLocal(instruction, BitConverter.ToUInt32(value));
-		_battleStackLocals.Enqueue((instruction, value));
-		return true;
 	}
 
 	// The emulated cpu_strtgy, which ComputerPlayerTests compares PlanComputerStrategy, its rewrite, with: the computer's
@@ -567,7 +548,6 @@ public unsafe partial class Nspw
 			);
 
 		RunEmulated(Functions.CpuStrategy);
-		_stackLocals.Clear();
 	}
 
 	// The emulated decision, which ComputerPlayerTests compares Decide, its rewrite, with: the scenario's events and
@@ -711,7 +691,7 @@ public unsafe partial class Nspw
 	// The player's orders of this frame, before HandleInput takes them, as a trace of 1.22 records them: the orders the
 	// clicks on the battle area made, the combat menu's item chosen, and the selection; null if the player gave none, or
 	// if the battle has a result, which gives no more orders, as 1.22 does.
-	internal Trace122Orders? ReadPlayerOrders()
+	public PlayerOrders? ReadPlayerOrders()
 	{
 		if (
 			Result != GameResult.None
@@ -723,10 +703,10 @@ public unsafe partial class Nspw
 		)
 			return null;
 
-		var selections = new short[Trace122Orders.SelectionLength];
+		var selections = new short[PlayerOrders.SelectionLength];
 		for (var s = 0; s < selections.Length; s++)
 			selections[s] = Selections[1][s];
-		return new Trace122Orders(
+		return new PlayerOrders(
 			MoveOrders[1],
 			SelectOrders[1],
 			BufferedMenuOrders[1],
@@ -736,17 +716,19 @@ public unsafe partial class Nspw
 		);
 	}
 
-	// Gives the player's orders of a trace, before HandleInput takes them, as the player's clicks would: the selection,
-	// the combat menu's item for its unit, then the orders of the battle area for the selected unit.
-	internal void GivePlayerOrders(Trace122Orders orders)
+	// Gives the player's orders of a frame, such as a trace's, before HandleInput takes them, as the player's clicks
+	// would: the selection, the combat menu's item for its unit, then the orders of the battle area for the selected unit.
+	// One action for the whole (PlayerAction.GiveOrders): the item chosen inside is not an action of its own.
+	internal void GivePlayerOrders(PlayerOrders orders)
 	{
+		Extensions.PlayerActed(new PlayerAction.GiveOrders(orders));
 		SelectionCount = orders.SelectionCount;
-		for (var s = 0; s < Trace122Orders.SelectionLength; s++)
+		for (var s = 0; s < PlayerOrders.SelectionLength; s++)
 			Selections[1][s] = orders.Selections[s];
 		if (orders.Menu.Menu != CombatMenuItem.None)
 		{
 			SelectedUnit = orders.Menu.SelectedUnit;
-			ChooseCombatMenuItem(orders.Menu.Menu);
+			BufferCombatMenuItem(orders.Menu.Menu);
 		}
 
 		SelectedUnit = orders.SelectedUnit;
@@ -762,7 +744,7 @@ public unsafe partial class Nspw
 		if (Result != GameResult.None)
 			return;
 
-		Trace?.Reach(this, TracePoint.Orders);
+		Extensions.OrdersStarting();
 
 		var savedSelectedUnit = SelectedUnit;
 		Array256<short> savedSelections = Selections[1];
@@ -775,10 +757,7 @@ public unsafe partial class Nspw
 		SelectedUnit = savedSelectedUnit;
 
 		if (CpuSide != Side.None)
-		{
 			PlanComputerStrategy();
-			_stackLocals.Clear();
-		}
 
 		if (BufferedArrivedUnits[1] != 0)
 			OnUnitArrived(1, BufferedArrivedUnits[1]);

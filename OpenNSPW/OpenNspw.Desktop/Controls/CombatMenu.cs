@@ -53,7 +53,7 @@ internal sealed class CombatMenu : Control
 	private void RightClick(MouseEventArgs e)
 	{
 		if (e.Button == MouseButtons.Right)
-			_session.Game.Commands.RightClick();
+			_session.Commands.RightClick();
 	}
 
 	private ActionButton AddButton(
@@ -81,7 +81,7 @@ internal sealed class CombatMenu : Control
 		_art = art;
 		BackColor = System.Drawing.Color.Transparent;
 
-		var commands = session.Game.Commands;
+		var commands = session.Commands;
 		_flightDeck = AddButton(fonts, new(6, 2, 120, 17), 12, commands.ToggleDeckView);
 		_hangar = AddButton(fonts, new(130, 2, 120, 17), 12, commands.ToggleDeckView);
 		_flightDeck.Text = Texts.FlightDeck;
@@ -114,7 +114,7 @@ internal sealed class CombatMenu : Control
 		_shown =
 		[
 			.. Enumerable
-				.Range(0, Math.Min(snapshot.CombatMenuCount, _items.Length))
+				.Range(0, Math.Min(snapshot.CombatMenu.Length, _items.Length))
 				.Select(i => snapshot.CombatMenu[i]),
 		];
 		for (var i = 0; i < _items.Length; i++)

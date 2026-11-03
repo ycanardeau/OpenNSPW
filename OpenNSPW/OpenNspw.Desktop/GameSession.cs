@@ -2,7 +2,9 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended.ViewportAdapters;
+using OpenNspw.HostUI;
 using OpenNspw.Replay;
+using OpenNspw.Verification;
 using DrawingPoint = System.Drawing.Point;
 using XnaKeys = Microsoft.Xna.Framework.Input.Keys;
 
@@ -97,6 +99,9 @@ internal sealed class GameSession : IDisposable
 
 	public Nspw Game { get; }
 
+	// The host UI's commands, which the game takes as an extension (docs/UI.md).
+	public UICommands Commands { get; } = new();
+
 	// The trace of 1.22 that the game follows, to watch it (docs/Verification.md), or null.
 	public Trace122Replay? Trace { get; }
 
@@ -116,8 +121,7 @@ internal sealed class GameSession : IDisposable
 
 	// Whether the player's keys and buttons are held back from the game: while it follows a trace or plays a replay, which
 	// give it none.
-	private bool IsInputHeldBack =>
-		Game.Trace is { TakesInput: false } || Game.Extensions.HoldsInput;
+	private bool IsInputHeldBack => Game.Extensions.HoldsInput;
 
 	// Whether WinMain has returned: the game was closed, or failed to connect.
 	public bool HasEnded => _hasEnded;
@@ -202,9 +206,10 @@ internal sealed class GameSession : IDisposable
 	{
 		_platform = new DesktopPlatform(files, text);
 		Game = new Nspw(_platform);
+		Game.Extensions.Add(Commands);
 		View = view;
 		_platform.IsSkippingFrames = () => Replay is { IsSeeking: true };
-		_platform.CaptureState = () => _captured.CopyFrom(Game, View);
+		_platform.CaptureState = () => _captured.CopyFrom(Game, Commands, View);
 		if (singleplayer is { } scenario)
 		{
 			Game.IsSingleplayer = true;
@@ -212,7 +217,8 @@ internal sealed class GameSession : IDisposable
 		}
 
 		Trace = trace;
-		Game.Trace = trace;
+		if (trace is not null)
+			Game.Extensions.Add(trace);
 		Replay = replay;
 		_scratchDirectory = scratchDirectory;
 		if (replay is not null)

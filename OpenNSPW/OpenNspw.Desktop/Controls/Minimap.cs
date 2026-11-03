@@ -94,7 +94,7 @@ internal sealed class Minimap : Control
 		if (_session.IsWatching && _session.View is { } view)
 			view.ShowMinimapCell(point.X - 5 - MapLeft, point.Y - 5 - MapTop);
 		else
-			_session.Game.Commands.ShowMinimapCell(
+			_session.Commands.ShowMinimapCell(
 				point.X - 5 - MapLeft,
 				point.Y - 5 - MapTop,
 				isPressed
@@ -113,7 +113,7 @@ internal sealed class Minimap : Control
 		{
 			// The right button deselects anywhere, as on the battlefield (DrawBattleArea).
 			if (!_session.IsWatching)
-				_session.Game.Commands.RightClick();
+				_session.Commands.RightClick();
 		}
 	}
 

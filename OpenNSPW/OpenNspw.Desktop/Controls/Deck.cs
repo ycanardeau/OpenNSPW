@@ -3,6 +3,7 @@ using Aigamo.Saruhashi.MonoGame;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
+using OpenNspw.HostUI;
 using static OpenNspw.all_head;
 using static OpenNspw.Desktop.Controls.UnitMarks;
 using DrawingPoint = System.Drawing.Point;
@@ -202,11 +203,11 @@ internal sealed class Deck : Control
 			var m = HitPlane(_snapshot, e.Location);
 			_brush.Press(_snapshot, m);
 			if (m is { } plane)
-				_session.Game.Commands.ClickUnit(plane);
+				_session.Commands.ClickUnit(plane);
 		}
 		else if (e.Button == MouseButtons.Right)
 		{
-			_session.Game.Commands.RightClick();
+			_session.Commands.RightClick();
 		}
 	}
 

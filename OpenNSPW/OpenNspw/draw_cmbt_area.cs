@@ -370,9 +370,9 @@ public unsafe partial class Nspw
 			&& !(unit.Side != LocalSide && unit.Kind == UnitKind.Submarine && unit.IsSubmerged);
 	}
 
-	// Whether the selected transport can land on the land at point (x, y) of the battlefield; if so, the landing mark (the
-	// sprite's position) is put on the land's tile.
-	internal bool AimLanding(SpriteId sprite, int x, int y)
+	// Where the landing mark goes for the land at point (x, y) of the battlefield, on the land's tile, if the selected
+	// transport can land there; null otherwise.
+	public PixelPoint? LandingMarkAt(int x, int y)
 	{
 		// カーソルの示す、マップチップの場所
 		// BUG(NSPW NET): a cursor off the map gives a tile outside it, which NSPW NET reads out of bounds; the port throws
@@ -393,7 +393,7 @@ public unsafe partial class Nspw
 			|| MapTiles[row][column] == 2
 		)
 		{
-			Renderer.Sprites[sprite].Position = new PixelPoint(
+			return new PixelPoint(
 				(
 					(
 						(
@@ -419,10 +419,20 @@ public unsafe partial class Nspw
 					- (int)(World.Top - CameraPosition.Y)
 						% Renderer.Sprites[SpriteId.MapTiles].Size.Height
 			);
-			return true;
 		}
 
-		return false;
+		return null;
+	}
+
+	// Whether the selected transport can land on the land at point (x, y) of the battlefield; if so, the landing mark (the
+	// sprite's position) is put on the land's tile.
+	internal bool AimLanding(SpriteId sprite, int x, int y)
+	{
+		if (LandingMarkAt(x, y) is not { } mark)
+			return false;
+
+		Renderer.Sprites[sprite].Position = mark;
+		return true;
 	}
 
 	// A right click that no selected unit took: the unit selected before is selected again, if nothing is selected and it
@@ -434,6 +444,23 @@ public unsafe partial class Nspw
 			Extensions.PlayerActed(new PlayerAction.RestoreSelection());
 			SelectUnit(PreviousSelectedUnit);
 		}
+	}
+
+	// The sprite's column of a unit facing a direction: one of eight, as DrawUnit sets SpriteColumn as it draws it.
+	public static int SpriteColumnOf(Angle direction)
+	{
+		return (int)(direction.Degrees / 22.5) switch
+		{
+			0 or 15 => 2,
+			1 or 2 => 1,
+			3 or 4 => 0,
+			5 or 6 => 7,
+			7 or 8 => 6,
+			9 or 10 => 5,
+			11 or 12 => 4,
+			13 or 14 => 3,
+			_ => 2,
+		};
 	}
 }
 
@@ -2156,13 +2183,12 @@ public unsafe partial class Renderer
 		if (rightButton == 1 || leftButton == 1)
 			_game.Sound.PlayInterfaceSound(SoundId.Click1);
 
-		// The host's UI's commands for clicks on the battlefield (UICommands.cs): taken here, as the clicks are, and dropped
-		// as they are while an order waits for its turn; the units brushed are clicked, one a frame.
-		_game.RunUICommands(
-			UICommandSite.Battlefield,
+		// Extensions take the battlefield's clicks here, as the clicks are, and they do not count while an order waits for
+		// its turn (docs/Extensions.md).
+		_game.Extensions.InputSite(
+			ActionSite.Battlefield,
 			!(_game.HasOrdered && _game.Result == GameResult.None)
 		);
-		_game.RunBrushedUnits(!(_game.HasOrdered && _game.Result == GameResult.None));
 
 		for (var m = 0; m <= _game.MaxUnitId; m++)
 		{

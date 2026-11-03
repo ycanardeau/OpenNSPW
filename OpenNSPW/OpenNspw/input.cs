@@ -189,8 +189,9 @@ public unsafe partial class Nspw
 	[Original("cnct_game_input_cont")]
 	public void HandleInput()
 	{
-		// A trace of 1.22 gives the player's orders here, or records them (docs/Verification.md).
-		Trace?.ReachPlayerOrders(this);
+		// Extensions may give the frame's orders here (PlayerAction.GiveOrders), such as a trace of 1.22, or read them
+		// (docs/Verification.md).
+		Extensions.InputSite(ActionSite.Orders, true);
 
 		var e = 1;
 		if (

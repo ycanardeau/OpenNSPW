@@ -40,7 +40,7 @@ internal sealed class InfoPanel : Control
 	private void RightClick(MouseEventArgs e)
 	{
 		if (e.Button == MouseButtons.Right)
-			_session.Game.Commands.RightClick();
+			_session.Commands.RightClick();
 	}
 
 	private ActionButton AddButton(DrawingRectangle bounds, string text, Action onClick)
@@ -64,7 +64,7 @@ internal sealed class InfoPanel : Control
 		_art = art;
 		BackColor = System.Drawing.Color.Transparent;
 
-		var commands = session.Game.Commands;
+		var commands = session.Commands;
 		var width = Area.Width - Left * 2;
 		// The previous and the next kind of reinforcement, either side of its picture.
 		_previous = AddButton(

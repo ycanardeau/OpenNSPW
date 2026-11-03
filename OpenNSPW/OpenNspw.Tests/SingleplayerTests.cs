@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using OpenNspw.HostUI;
 using OpenNspw.Tests.Lockstep;
 using Xunit;
 using static OpenNspw.all_head;
@@ -36,24 +37,15 @@ public class SingleplayerTests
 	}
 
 	// Keeps where a side's ships are as the game has set up its scenario, before the battle's first tick.
-	private sealed class SetupCapture(Side side) : ISingleplayerTrace
+	private sealed class SetupCapture(Side side) : IGameExtension
 	{
 		private readonly Side _side = side;
 
 		public List<(int Unit, WorldPosition Position)> Positions { get; private set; } = [];
 
-		public (uint Start, uint Battle)? Seeds => null;
-
-		public bool TakesInput => true;
-
-		public int? TicksOfNextFrame() => null;
-
-		public void ReachPlayerOrders(Nspw game) { }
-
-		public void Reach(Nspw game, TracePoint point)
+		public void BattleStarted(Nspw game)
 		{
-			if (point == TracePoint.Seeded)
-				Positions = PositionsOf(game, _side);
+			Positions = PositionsOf(game, _side);
 		}
 	}
 
@@ -64,7 +56,11 @@ public class SingleplayerTests
 	)
 	{
 		var capture = new SetupCapture(side);
-		using var run = new SingleplayerRun(scenario, game => game.Trace = capture, startDate);
+		using var run = new SingleplayerRun(
+			scenario,
+			game => game.Extensions.Add(capture),
+			startDate
+		);
 		run.Frames(1);
 		return capture.Positions;
 	}

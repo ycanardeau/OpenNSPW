@@ -77,6 +77,29 @@ public sealed class ReplayTests
 				&& game.Units[m].Kind <= UnitKind.Destroyer
 			);
 
+	// Reads the player's orders of each frame where the game takes them (ActionSite.Orders), or gives them there whole.
+	private sealed class FrameOrders(bool gives, Dictionary<int, PlayerOrders> byFrame)
+		: IGameExtension
+	{
+		private readonly bool _gives = gives;
+		private int _frame;
+
+		public Dictionary<int, PlayerOrders> ByFrame { get; } = byFrame;
+
+		public void InputSite(Nspw game, ActionSite site, bool counts)
+		{
+			if (site != ActionSite.Orders)
+				return;
+
+			if (!_gives && game.ReadPlayerOrders() is { } orders)
+				ByFrame[_frame] = orders;
+			else if (_gives && ByFrame.TryGetValue(_frame, out var given))
+				game.Do(new PlayerAction.GiveOrders(given));
+		}
+
+		public void FrameEnded(Nspw game) => _frame++;
+	}
+
 	private static List<PlayerAction> ActionsOf(byte[] replay)
 	{
 		using var reader = new ReplayReader(new MemoryStream(replay));
@@ -106,13 +129,13 @@ public sealed class ReplayTests
 					game.Units[ship].Position.X + 400,
 					game.Units[ship].Position.Y
 				);
-				game.Commands.ClickUnit(ship);
+				run.Player.Commands.ClickUnit(ship);
 				run.Frames(2);
-				game.Commands.SetDestination(destination);
+				run.Player.Commands.SetDestination(destination);
 				run.Frames(10);
-				game.Commands.RightClick();
+				run.Player.Commands.RightClick();
 				run.Frames(2);
-				game.Commands.RightClick();
+				run.Player.Commands.RightClick();
 				run.Frames(Frames);
 			}
 		);
@@ -128,6 +151,47 @@ public sealed class ReplayTests
 		);
 
 		using var player = Play(replay, Frames + 16);
+		Assert.Null(player.Divergence);
+	}
+
+	// A frame's orders given whole, as a trace of 1.22 gives its player's, are recorded as one action, and given back by
+	// the replay: the orders that a ship selected and sent away left, read in one game and given in another.
+	[Fact]
+	public void TheReplayGivesTheOrdersGivenWhole()
+	{
+		var read = new FrameOrders(gives: false, []);
+		using (var run = new SingleplayerRun(4, game => game.Extensions.Add(read)))
+		{
+			var game = run.Game;
+			run.Frames(2);
+			var ship = PlayersShip(game);
+			run.Player.Commands.ClickUnit(ship);
+			run.Frames(2);
+			run.Player.Commands.SetDestination(
+				new WorldPosition(game.Units[ship].Position.X + 400, game.Units[ship].Position.Y)
+			);
+			run.Frames(2);
+		}
+		Assert.NotEmpty(read.ByFrame);
+
+		var replay = Record(
+			4,
+			run =>
+			{
+				run.Game.Extensions.Add(new FrameOrders(gives: true, read.ByFrame));
+				run.Frames(Frames);
+			}
+		);
+
+		var actions = ActionsOf(replay);
+		Assert.Equal(read.ByFrame.Count, actions.Count);
+		Assert.All(actions, action => Assert.IsType<PlayerAction.GiveOrders>(action));
+		Assert.Equal(
+			read.ByFrame.Values.Select(orders => orders.Selections),
+			actions.Select(action => ((PlayerAction.GiveOrders)action).Orders.Selections)
+		);
+
+		using var player = Play(replay, Frames);
 		Assert.Null(player.Divergence);
 	}
 

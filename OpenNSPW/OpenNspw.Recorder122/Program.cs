@@ -1,5 +1,6 @@
 using OpenNspw;
 using OpenNspw.Recorder122;
+using OpenNspw.Verification;
 
 // Records traces of NSPW 1.22 on Windows (docs/Verification.md): runs NSPW_122.exe under the debugger, and records each
 // battle played in it as a trace (Trace122), <scenario>-<date>-<time>.n122, in the output directory.
@@ -56,7 +57,7 @@ const uint Fires = 0x48A600;
 const uint Camera = 0x489AB0; // cmbt_x, cmbt_y: doubles
 const short BattleMode = 10;
 
-// The player's orders (Trace122Orders): new_pp[1] (used, x at 8, y at 16, cls at 24), new_slct[1] (sw, the_slct_unit at
+// The player's orders (PlayerOrders): new_pp[1] (used, x at 8, y at 16, cls at 24), new_slct[1] (sw, the_slct_unit at
 // 4, m at 8, gr_x at 16, gr_y at 24), cmbt_menu_slctd, the_slct_unit, slct_unit_no and slct_unit[1].
 const uint PlayerMoveOrder = 0x463AE0;
 const uint PlayerSelectOrder = 0x489A60;
@@ -166,15 +167,15 @@ var commander = new Commander(new Random(seed), ordersOption ?? 20);
 var menuOrder = new MenuOrder();
 
 // The selection as the last orders recorded it: the selected unit, the count and the flags, all 0 as a battle starts.
-var recordedSelection = new byte[2 + 2 + 2 * Trace122Orders.SelectionLength];
+var recordedSelection = new byte[2 + 2 + 2 * PlayerOrders.SelectionLength];
 
 // The player's orders as the orders function is about to take them: null if there are none, and the selection is as the
 // last orders recorded it.
-Trace122Orders? ReadPlayerOrders(Debugger debugger)
+PlayerOrders? ReadPlayerOrders(Debugger debugger)
 {
 	var move = debugger.Read(PlayerMoveOrder, 32);
 	var select = debugger.Read(PlayerSelectOrder, 32);
-	var selection = debugger.Read(Selection, 2 * Trace122Orders.SelectionLength);
+	var selection = debugger.Read(Selection, 2 * PlayerOrders.SelectionLength);
 	byte[] selectionState =
 	[
 		.. debugger.Read(SelectedUnit, 2),
@@ -190,10 +191,10 @@ Trace122Orders? ReadPlayerOrders(Debugger debugger)
 		return null;
 
 	recordedSelection = selectionState;
-	var selections = new short[Trace122Orders.SelectionLength];
+	var selections = new short[PlayerOrders.SelectionLength];
 	for (var s = 0; s < selections.Length; s++)
 		selections[s] = BitConverter.ToInt16(selection, 2 * s);
-	return new Trace122Orders(
+	return new PlayerOrders(
 		new MoveOrder
 		{
 			Unit = BitConverter.ToInt16(move, 0),

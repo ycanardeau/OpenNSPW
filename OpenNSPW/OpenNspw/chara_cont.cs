@@ -69,6 +69,10 @@ public unsafe partial class Nspw
 
 		CanAdvance2 = false;
 
+		// Extensions see the turn's orders start (docs/Extensions.md).
+		if (!IsEditingMap)
+			Extensions.OrdersStarting();
+
 		if (!IsEditingMap && Result == GameResult.None && ActivePlayerCount == 2)
 		{
 			AutoSaveTime++;

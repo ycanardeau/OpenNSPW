@@ -1,4 +1,5 @@
 using Aigamo.Saruhashi;
+using OpenNspw.HostUI;
 using OpenNspw.Singleplayer;
 using DrawingColor = System.Drawing.Color;
 using DrawingPoint = System.Drawing.Point;
@@ -36,7 +37,7 @@ internal sealed class SettingForm : Form
 	private string[] _shownNames = [];
 	private (short Number, int Side, string Description)? _shownScenario;
 
-	private Nspw.UICommands Commands => _session.Game.Commands;
+	private UICommands Commands => _session.Commands;
 
 	private bool IsChoosingScenario => _snapshot.Mode == GameMode.GameSetting;
 

@@ -1,3 +1,5 @@
+using OpenNspw.HostUI;
+
 namespace OpenNspw.Desktop.Controls;
 
 // Selecting units by brushing over them with the left button held, on the battlefield or on the deck: a press on one of
@@ -57,7 +59,7 @@ internal sealed class UnitBrush(GameSession session)
 		if (_adds is not { } adds || m is not { } unit || !_brushed.Add(unit))
 			return;
 
-		_session.Game.Commands.BrushUnit(unit, adds);
+		_session.Commands.BrushUnit(unit, adds);
 	}
 
 	public void Release()
