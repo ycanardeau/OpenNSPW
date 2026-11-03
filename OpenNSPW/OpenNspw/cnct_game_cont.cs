@@ -776,6 +776,8 @@ public unsafe partial class Nspw
 		Array5<Array128<byte>> text = default;
 		Array5<int> length = default;
 
+		Extensions.ResultChecking();
+
 		if (IsSingleplayer)
 		{
 			// 1.22's decision, rewritten (ComputerPlayer.cs), which also shows the result.

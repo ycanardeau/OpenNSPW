@@ -192,6 +192,9 @@ public unsafe partial class Nspw
 		// A trace of 1.22 gives the player's orders here, or records them (docs/Verification.md).
 		Trace?.ReachPlayerOrders(this);
 
+		// Extensions may give the frame's orders here (PlayerAction.GiveOrders).
+		Extensions.InputSite(ActionSite.Orders, true);
+
 		var e = 1;
 		if (
 			SelectOrders[e].IsSet

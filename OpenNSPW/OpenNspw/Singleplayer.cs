@@ -508,11 +508,13 @@ public unsafe partial class Nspw
 		_battleStackLocals.TryPeek(out var local) ? local.Instruction : null;
 
 	// What the battle reads, at the instruction of 1.22 given, from a local 1.22 has not set there: what a trace gave, or
-	// else what the port's own local holds.
+	// an extension (IGameExtension.UninitializedLocal), or else what the port's own local holds.
 	internal double TakeStackLocal(uint instruction, double own)
 	{
 		if (!_battleStackLocals.TryPeek(out var local) || local.Instruction != instruction)
-			return own;
+			return Extensions.UninitializedLocal(instruction) is { Length: sizeof(double) } value
+				? BitConverter.ToDouble(value)
+				: own;
 		_battleStackLocals.Dequeue();
 		return BitConverter.ToDouble(local.Value);
 	}
@@ -525,12 +527,13 @@ public unsafe partial class Nspw
 	// The uninitialized locals of the coming cpu_strtgy that a trace has given (GiveStackLocal), by instruction.
 	private readonly Dictionary<uint, uint> _stackLocals = [];
 
-	// What cpu_strtgy reads, at the instruction given, from a local it has not set: what a trace gave, or else what
-	// Windows' stack holds there.
+	// What cpu_strtgy reads, at the instruction given, from a local it has not set: what a trace gave, or an extension
+	// (IGameExtension.UninitializedLocal), or else what Windows' stack holds there.
 	private uint StackLocal(uint instruction) =>
-		_stackLocals.TryGetValue(instruction, out var value)
-			? value
-			: StackLocalsOnWindows.First(local => local.Instruction == instruction).Value;
+		_stackLocals.TryGetValue(instruction, out var value) ? value
+		: Extensions.UninitializedLocal(instruction) is { Length: sizeof(uint) } given
+			? BitConverter.ToUInt32(given)
+		: StackLocalsOnWindows.First(local => local.Instruction == instruction).Value;
 
 	// Gives cpu_strtgy, before it runs, what Windows' stack held where it reads a local it has not set, as a trace of
 	// 1.22 records it; false if the port does not know where that local is.
@@ -711,7 +714,7 @@ public unsafe partial class Nspw
 	// The player's orders of this frame, before HandleInput takes them, as a trace of 1.22 records them: the orders the
 	// clicks on the battle area made, the combat menu's item chosen, and the selection; null if the player gave none, or
 	// if the battle has a result, which gives no more orders, as 1.22 does.
-	internal Trace122Orders? ReadPlayerOrders()
+	public PlayerOrders? ReadPlayerOrders()
 	{
 		if (
 			Result != GameResult.None
@@ -723,10 +726,10 @@ public unsafe partial class Nspw
 		)
 			return null;
 
-		var selections = new short[Trace122Orders.SelectionLength];
+		var selections = new short[PlayerOrders.SelectionLength];
 		for (var s = 0; s < selections.Length; s++)
 			selections[s] = Selections[1][s];
-		return new Trace122Orders(
+		return new PlayerOrders(
 			MoveOrders[1],
 			SelectOrders[1],
 			BufferedMenuOrders[1],
@@ -736,17 +739,19 @@ public unsafe partial class Nspw
 		);
 	}
 
-	// Gives the player's orders of a trace, before HandleInput takes them, as the player's clicks would: the selection,
-	// the combat menu's item for its unit, then the orders of the battle area for the selected unit.
-	internal void GivePlayerOrders(Trace122Orders orders)
+	// Gives the player's orders of a frame, such as a trace's, before HandleInput takes them, as the player's clicks
+	// would: the selection, the combat menu's item for its unit, then the orders of the battle area for the selected unit.
+	// One action for the whole (PlayerAction.GiveOrders): the item chosen inside is not an action of its own.
+	internal void GivePlayerOrders(PlayerOrders orders)
 	{
+		Extensions.PlayerActed(new PlayerAction.GiveOrders(orders));
 		SelectionCount = orders.SelectionCount;
-		for (var s = 0; s < Trace122Orders.SelectionLength; s++)
+		for (var s = 0; s < PlayerOrders.SelectionLength; s++)
 			Selections[1][s] = orders.Selections[s];
 		if (orders.Menu.Menu != CombatMenuItem.None)
 		{
 			SelectedUnit = orders.Menu.SelectedUnit;
-			ChooseCombatMenuItem(orders.Menu.Menu);
+			BufferCombatMenuItem(orders.Menu.Menu);
 		}
 
 		SelectedUnit = orders.SelectedUnit;
@@ -763,6 +768,7 @@ public unsafe partial class Nspw
 			return;
 
 		Trace?.Reach(this, TracePoint.Orders);
+		Extensions.OrdersStarting();
 
 		var savedSelectedUnit = SelectedUnit;
 		Array256<short> savedSelections = Selections[1];

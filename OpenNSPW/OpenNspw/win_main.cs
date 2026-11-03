@@ -660,6 +660,8 @@ public unsafe partial class Nspw
 				{
 					Renderer.IsDrawnTick = i == 1;
 					Trace?.Reach(this, TracePoint.Tick);
+					if (!IsEditingMap)
+						Extensions.TickStarting();
 					UpdateBattle();
 					// 1.22 runs decision for the tick that is drawn after the drawing only.
 					if (!IsEditingMap && !(IsSingleplayer && Renderer.IsDrawnTick))

@@ -1211,7 +1211,7 @@ public unsafe partial class Nspw
 		UpdateStartBattleButton(ref length, ref text, x, ref hdc, ref message);
 
 		// The host's UI's commands for the rules (UICommands.cs).
-		RunUICommands(UICommandSite.Rules, IsHost);
+		RunUICommands(ActionSite.Rules, IsHost);
 
 		if (IsHost && RivalMode == Mode && (Renderer.FrameCount % 10) == 0)
 		{
@@ -1983,7 +1983,7 @@ public unsafe partial class Nspw
 #endif
 
 			// The host's UI's commands for the list (UICommands.cs).
-			RunUICommands(UICommandSite.ScenarioList, IsHost && Mode == GameMode.GameSetting);
+			RunUICommands(ActionSite.ScenarioList, IsHost && Mode == GameMode.GameSetting);
 
 			if (IsHost && Mode == GameMode.GameSetting)
 			{
@@ -2000,7 +2000,7 @@ public unsafe partial class Nspw
 			}
 
 			// The host's UI's commands for the page, the starts from saved battles and the sides (UICommands.cs).
-			RunUICommands(UICommandSite.ScenarioMenu, IsHost && Mode == GameMode.GameSetting);
+			RunUICommands(ActionSite.ScenarioMenu, IsHost && Mode == GameMode.GameSetting);
 
 			// リジュームスタート
 			UpdateResumeButton(ref x, ref length, ref text, ref hdc, ref message);
@@ -2265,7 +2265,7 @@ public unsafe partial class Nspw
 			else
 			{
 				// The host's UI's commands for the rules, which are not shown, are dropped (UICommands.cs).
-				RunUICommands(UICommandSite.Rules, false);
+				RunUICommands(ActionSite.Rules, false);
 			}
 
 			IDirectDrawSurface_ReleaseDC(Renderer.lpDDSBack, hdc);

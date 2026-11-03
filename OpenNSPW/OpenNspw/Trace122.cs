@@ -23,21 +23,6 @@ public enum TracePoint : byte
 	StackLocal = 9,
 }
 
-// The player's orders of a frame: the move order (new_pp[1]) and the select order (new_slct[1]) that the clicks on the
-// battle area made, the item of the combat menu clicked, for its unit, and the selected unit and the selection
-// (the_slct_unit, slct_unit[1] and its count) that they go to.
-public sealed record Trace122Orders(
-	MoveOrder Move,
-	SelectOrder Select,
-	MenuOrder Menu,
-	short SelectedUnit,
-	short SelectionCount,
-	short[] Selections
-)
-{
-	public const int SelectionLength = 256;
-}
-
 // A trace of a single-player game (docs/Verification.md): a recording of 1.22 that the game follows and checks itself
 // against, or one that records the game.
 public interface ISingleplayerTrace
@@ -71,7 +56,7 @@ public sealed record Trace122Point(
 	bool IsDrawn,
 	byte[]? State,
 	WorldPosition Camera = default,
-	Trace122Orders? Orders = null
+	PlayerOrders? Orders = null
 );
 
 // The file of a trace of 1.22, compressed with gzip: the magic, the scenario, then the points, each a byte (TracePoint)
@@ -136,7 +121,7 @@ public sealed class Trace122Writer : IDisposable
 		_writer.Write(value);
 	}
 
-	public void WritePlayerOrders(Trace122Orders orders)
+	public void WritePlayerOrders(PlayerOrders orders)
 	{
 		_writer.Write((byte)TracePoint.PlayerOrders);
 		_writer.Write(orders.Move.Unit);
@@ -152,7 +137,7 @@ public sealed class Trace122Writer : IDisposable
 		_writer.Write(orders.Menu.SelectedUnit);
 		_writer.Write(orders.SelectedUnit);
 		_writer.Write(orders.SelectionCount);
-		for (var s = 0; s < Trace122Orders.SelectionLength; s++)
+		for (var s = 0; s < PlayerOrders.SelectionLength; s++)
 			_writer.Write(orders.Selections[s]);
 	}
 
@@ -276,7 +261,7 @@ public sealed class Trace122Reader : IDisposable
 					};
 					var selectedUnit = _reader.ReadInt16();
 					var selectionCount = _reader.ReadInt16();
-					var selections = new short[Trace122Orders.SelectionLength];
+					var selections = new short[PlayerOrders.SelectionLength];
 					for (var s = 0; s < selections.Length; s++)
 						selections[s] = _reader.ReadInt16();
 					return new(
@@ -285,7 +270,7 @@ public sealed class Trace122Reader : IDisposable
 						0,
 						false,
 						null,
-						Orders: new Trace122Orders(
+						Orders: new PlayerOrders(
 							move,
 							select,
 							menu,

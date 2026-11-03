@@ -2159,7 +2159,7 @@ public unsafe partial class Renderer
 		// The host's UI's commands for clicks on the battlefield (UICommands.cs): taken here, as the clicks are, and dropped
 		// as they are while an order waits for its turn; the units brushed are clicked, one a frame.
 		_game.RunUICommands(
-			UICommandSite.Battlefield,
+			ActionSite.Battlefield,
 			!(_game.HasOrdered && _game.Result == GameResult.None)
 		);
 		_game.RunBrushedUnits(!(_game.HasOrdered && _game.Result == GameResult.None));

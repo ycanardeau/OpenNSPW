@@ -535,7 +535,7 @@ public unsafe partial class Nspw
 	private void UpdateDeckView(ref RECT source, SpriteId sprite, ref RECT destination)
 	{
 		// The host's UI's commands for the switch (UICommands.cs).
-		RunUICommands(UICommandSite.DeckView, true);
+		RunUICommands(ActionSite.DeckView, true);
 
 		var i = 0;
 		source.left =
@@ -710,10 +710,9 @@ public unsafe partial class Nspw
 		return n;
 	}
 
-	// A click on an item of the combat menu, while the player can order (CanOrder): the item is the order of the turn.
-	private void ChooseCombatMenuItem(CombatMenuItem item)
+	// The item of the combat menu as the order of the turn.
+	private void BufferCombatMenuItem(CombatMenuItem item)
 	{
-		Extensions.PlayerActed(new PlayerAction.ChooseCombatMenuItem(item));
 		BufferedMenuOrders[1].Menu = item;
 		BufferedMenuOrders[1].SelectedUnit = SelectedUnit;
 
@@ -721,6 +720,13 @@ public unsafe partial class Nspw
 		CanOrder = false;
 		HasOrdered = true;
 		Sound.PlayInterfaceSound(SoundId.Click2);
+	}
+
+	// A click on an item of the combat menu, while the player can order (CanOrder): the item is the order of the turn.
+	private void ChooseCombatMenuItem(CombatMenuItem item)
+	{
+		Extensions.PlayerActed(new PlayerAction.ChooseCombatMenuItem(item));
+		BufferCombatMenuItem(item);
 	}
 
 	private void UpdateCombatMenu(
@@ -739,7 +745,7 @@ public unsafe partial class Nspw
 		// they count.
 		ShownCombatMenu = menuItems;
 		ShownCombatMenuCount = n;
-		RunUICommands(UICommandSite.CombatMenu, true);
+		RunUICommands(ActionSite.CombatMenu, true);
 		RunWaitingCombatMenu();
 
 		for (var i = 0; i < n; i++)
@@ -1305,7 +1311,7 @@ public unsafe partial class Nspw
 	)
 	{
 		// The host's UI's commands for the supply panel (UICommands.cs).
-		RunUICommands(UICommandSite.SupplyPanel, true);
+		RunUICommands(ActionSite.SupplyPanel, true);
 
 		length[0] = wsprintf(text[0], "%d:", GetSupplyPointsPerUnit());
 		TextOut(
@@ -1421,7 +1427,7 @@ public unsafe partial class Nspw
 		{
 			// The host's UI's commands for choosing and requesting, while a reinforcement is coming, are dropped
 			// (UICommands.cs).
-			RunUICommands(UICommandSite.SupplyPanel, false);
+			RunUICommands(ActionSite.SupplyPanel, false);
 
 			if ((Renderer.FrameCount % 2) != 0)
 			{
@@ -1483,7 +1489,7 @@ public unsafe partial class Nspw
 		RECT destination = default;
 
 		// The host's UI's commands for the system menu (UICommands.cs), which wait for a frame in which they count.
-		RunUICommands(UICommandSite.SystemMenu, true);
+		RunUICommands(ActionSite.SystemMenu, true);
 		RunWaitingSystemMenu();
 #if !LNGG_VER
 		length[0] = wsprintf(text[0], "シナリオ選択へ");
@@ -1659,7 +1665,7 @@ public unsafe partial class Nspw
 		else
 		{
 			// The host's UI's commands for the switch, which is not shown, are dropped (UICommands.cs).
-			RunUICommands(UICommandSite.DeckView, false);
+			RunUICommands(ActionSite.DeckView, false);
 		}
 
 		if (CombatMenuKind != 0 && !IsEditingMap)
@@ -1671,7 +1677,7 @@ public unsafe partial class Nspw
 		{
 			// The host's UI's commands for the combat menu, which is not shown, are dropped (UICommands.cs).
 			ShownCombatMenuCount = 0;
-			RunUICommands(UICommandSite.CombatMenu, false);
+			RunUICommands(ActionSite.CombatMenu, false);
 			RunWaitingCombatMenu();
 		}
 
@@ -1714,7 +1720,7 @@ public unsafe partial class Nspw
 			else
 			{
 				// The host's UI's commands for the supply panel, which is not shown, are dropped (UICommands.cs).
-				RunUICommands(UICommandSite.SupplyPanel, false);
+				RunUICommands(ActionSite.SupplyPanel, false);
 			}
 			y += 30;
 
@@ -1725,7 +1731,7 @@ public unsafe partial class Nspw
 			else
 			{
 				// The host's UI's commands for the system menu, which only the host has, are dropped (UICommands.cs).
-				RunUICommands(UICommandSite.SystemMenu, false);
+				RunUICommands(ActionSite.SystemMenu, false);
 			}
 
 			IDirectDrawSurface_ReleaseDC(Renderer.lpDDSBack, hdc);
@@ -1918,7 +1924,7 @@ public unsafe partial class Nspw
 		}
 
 		// The host's UI's commands for clicks held on the minimap (UICommands.cs).
-		RunUICommands(UICommandSite.Minimap, true);
+		RunUICommands(ActionSite.Minimap, true);
 
 		// ユニットの描画
 

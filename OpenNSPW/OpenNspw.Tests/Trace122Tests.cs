@@ -174,7 +174,7 @@ public sealed class Trace122Tests
 		var trace = stream.ToArray();
 
 		using var reader = new Trace122Reader(new MemoryStream(trace));
-		var orders = new List<Trace122Orders>();
+		var orders = new List<PlayerOrders>();
 		for (var point = reader.Next(); point.Kind != TracePoint.End; point = reader.Next())
 			if (point.Orders is { } given)
 				orders.Add(given);

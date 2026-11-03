@@ -28,16 +28,20 @@ An extension implements `IGameExtension`, whose methods all do nothing by defaul
 | `StartsBattle` | `WinMain`, before it connects to a rival | Say that it starts the battle itself, so that the game does not connect first |
 | `GameStarted` | `WinMain`, before the message loop | Start a battle (below) |
 | `BattleStarting`, `BattleStarted` | `InitializeGame`, at its start and at its end | Read the start; set rand's state (`srand`) |
-| `FrameStarting` | `UpdateFrame`, as a frame of the battle would start | Hold the frame, start it now, or leave it to the game's timer; set its ticks |
+| `FrameStarting` | `UpdateFrame`, as a frame of the battle would start | Hold the frame, start it now, or leave it to the game's timer; set its ticks and the speed shown |
+| `TickStarting` | Before each tick of the battle (`UpdateBattle`) | Read the battle |
+| `ResultChecking` | At the start of `CheckResult`: after each tick that is not drawn in a single-player game, and after the drawing | Read the battle |
 | `Drawing` | Before `DrawBattleArea` | Read or set the camera |
-| `InputSite(site)` | Where the game takes the clicks of a part of the screen (`RunUICommands`) | Do player actions there |
+| `InputSite(site, counts)` | Where the game takes the clicks of a part of the screen (`RunUICommands`), with whether a click counts there in this frame; and at the start of `HandleInput` (`Orders`), where it takes the frame's orders | Do player actions there |
+| `OrdersStarting` | Where a turn's orders start to be applied (`IssueSingleplayerOrders`, `ReceiveAndIssueOrders`) | Read the battle |
 | `PlayerAction(action)` | In the functions that a click calls, as the game does it | Read it |
+| `UninitializedLocal(instruction)` | Where the port reads a local that 1.22 reads without setting it ([Verification.md](Verification.md)) | Answer what Windows' stack held there; the first that answers wins |
 | `FrameEnded` | After `HandleInput` | Read the battle |
 | `MessageReceived`, `RivalLeft` | `DirectPlayMessageHandler` | Read them |
 | `Presented` | After the frame is shown | Read the battle; queue commands for later frames |
 
 ### The player's actions
-`PlayerAction` is what the player did, as the game does it: a closed set of cases, one record each with what its function takes (`ClickUnit`, `SetDestination`, `CancelSelection`, `RestoreSelection`, `ChooseCombatMenuItem`, `ToggleDeckView`, `SelectSupplyTarget`, `RequestSupply`, `ConfirmSystemMenu`, and the debug keys `SwapLocalSide` and `SinkSelectedUnit`). The game raises it from the functions that the mouse, the host UI's commands and a computer player all reach, so one record covers every source. `Nspw.Do(action)` does one, as the click did. Cases are handled with the `Match` that Aigamo.MatchGenerator generates (`[GenerateMatch]`), which takes every case: a case added fails to compile wherever it is not handled, such as where a replay writes actions.
+`PlayerAction` is what the player did, as the game does it: a closed set of cases, one record each with what its function takes (`ClickUnit`, `SetDestination`, `CancelSelection`, `RestoreSelection`, `ChooseCombatMenuItem`, `ToggleDeckView`, `SelectSupplyTarget`, `RequestSupply`, `ConfirmSystemMenu`, the debug keys `SwapLocalSide` and `SinkSelectedUnit`, and `GiveOrders`, a frame's orders given whole as the input leaves them, `PlayerOrders`, as a trace of 1.22 gives its player's). The game raises it from the functions that the mouse, the host UI's commands and a computer player all reach, so one record covers every source. `Nspw.Do(action)` does one, as the click did. Cases are handled with the `Match` that Aigamo.MatchGenerator generates (`[GenerateMatch]`), which takes every case: a case added fails to compile wherever it is not handled, such as where a replay writes actions.
 
 ### Entry points
 - `StartNetworkBattle(settings, peer, threadPool)`: starts a network battle from its settings, over a DirectPlay peer and thread pool of the extension's, without the setting screens, as `StartSingleplayerGame` does for 1.22's scenarios. The settings are what the setting screens and the rival's messages set: the seed, the sides, the rules, the map editor's scenario, the names, and what the rival's messages before the battle left of the turns, which `InitializeGame` keeps: whether a turn may go on at each sync point (`CanAdvance1`, `CanAdvance2`), and the rival's checksums.
@@ -46,7 +50,7 @@ An extension implements `IGameExtension`, whose methods all do nothing by defaul
 
 ### Rules
 - **Input authority.** At most one extension gives the player's input, such as a replay that plays or a trace of 1.22 that the game follows. While one does, the host's keys, clicks and commands are held back. This replaces `Trace is { TakesInput: false }` and `Recording is { TakesInput: false }`.
-- **No hidden writes.** An extension changes the battle only through actions and the interventions above: seeds, ticks, camera, held frames. Then a recorder sees all of it, and a replay of a game with any extension plays the same.
+- **No hidden writes.** An extension changes the battle only through actions and the interventions above: seeds, ticks, camera, held frames, and 1.22's uninitialized locals. Then a recorder sees all of it, and a replay of a game with any extension plays the same.
 - **Order.** Extensions are called in the order they were added. Where several intervene, the first that answers wins.
 - **Platform seams first.** What the platform already abstracts is replaced, not hooked in the core: files (`OpenFile`, `GameFileLayers`), the clock, DirectPlay.
 

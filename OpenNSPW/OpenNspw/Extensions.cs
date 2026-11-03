@@ -6,6 +6,41 @@ namespace OpenNspw;
 // The extension API (docs/Extensions.md): what the game offers to what is built around it, such as replays, in projects
 // of their own. Not part of the original.
 
+// Where in a frame the game takes an action (IGameExtension.InputSite): where the battle takes the mouse's clicks on the
+// battlefield (DrawBattleArea), on the minimap (DrawMinimap), on the switch of a carrier's view (UpdateDeckView), on the
+// combat menu (UpdateCombatMenu), on the supply panel (UpdateSupplyRequest), or on the host's system menu
+// (UpdateSystemMenu); where the setting screens take them on the list of scenarios (UpdateScenarioList), on the buttons
+// under it (UpdateScenarioPageButton, UpdateResumeButton, UpdateAutoSaveButton, UpdateSideSetting), or on the rules
+// (UpdateConfigSetting); or where the battle takes the frame's orders, at the start of HandleInput (Orders).
+public enum ActionSite
+{
+	Battlefield,
+	Minimap,
+	DeckView,
+	CombatMenu,
+	SupplyPanel,
+	SystemMenu,
+	ScenarioList,
+	ScenarioMenu,
+	Rules,
+	Orders,
+}
+
+// The player's orders of a frame, as the input leaves them for HandleInput: the move order (new_pp[1]) and the select
+// order (new_slct[1]) that the clicks on the battle area made, the item of the combat menu clicked, for its unit, and
+// the selected unit and the selection (the_slct_unit, slct_unit[1] and its count) that they go to.
+public sealed record PlayerOrders(
+	MoveOrder Move,
+	SelectOrder Select,
+	MenuOrder Menu,
+	short SelectedUnit,
+	short SelectionCount,
+	short[] Selections
+)
+{
+	public const int SelectionLength = 256;
+}
+
 // What the player did, as the game does it: what a click, a command of the host's UI, a computer player or a key did,
 // in the function that they all reach (docs/UI.md). A closed set of cases, each with what its function takes, handled
 // with the generated Match, which a case added makes fail to compile wherever it is not handled.
@@ -40,21 +75,26 @@ public abstract record PlayerAction
 
 	public sealed record SinkSelectedUnit : PlayerAction;
 
-	// Where in a frame the game takes the click the action stands for (IGameExtension.InputSite); none for the dialog's
-	// answer and the keys, which the game takes between frames.
-	public UICommandSite? Site =>
-		this.Match<UICommandSite?>(
-			ClickUnit: static _ => UICommandSite.Battlefield,
-			SetDestination: static _ => UICommandSite.Battlefield,
-			CancelSelection: static _ => UICommandSite.Battlefield,
-			RestoreSelection: static _ => UICommandSite.Battlefield,
-			ChooseCombatMenuItem: static _ => UICommandSite.CombatMenu,
-			ToggleDeckView: static _ => UICommandSite.DeckView,
-			SelectSupplyTarget: static _ => UICommandSite.SupplyPanel,
-			RequestSupply: static _ => UICommandSite.SupplyPanel,
+	// A frame's orders given whole, as the input leaves them (GivePlayerOrders), such as a trace of 1.22 gives its
+	// player's.
+	public sealed record GiveOrders(PlayerOrders Orders) : PlayerAction;
+
+	// Where in a frame the game takes the action (IGameExtension.InputSite); none for the dialog's answer and the keys,
+	// which the game takes between frames.
+	public ActionSite? Site =>
+		this.Match<ActionSite?>(
+			ClickUnit: static _ => ActionSite.Battlefield,
+			SetDestination: static _ => ActionSite.Battlefield,
+			CancelSelection: static _ => ActionSite.Battlefield,
+			RestoreSelection: static _ => ActionSite.Battlefield,
+			ChooseCombatMenuItem: static _ => ActionSite.CombatMenu,
+			ToggleDeckView: static _ => ActionSite.DeckView,
+			SelectSupplyTarget: static _ => ActionSite.SupplyPanel,
+			RequestSupply: static _ => ActionSite.SupplyPanel,
 			ConfirmSystemMenu: static _ => null,
 			SwapLocalSide: static _ => null,
-			SinkSelectedUnit: static _ => null
+			SinkSelectedUnit: static _ => null,
+			GiveOrders: static _ => ActionSite.Orders
 		);
 }
 
@@ -112,18 +152,34 @@ public interface IGameExtension
 	// Whether the next frame of the battle starts now (true), waits (false), or starts when the game's timer says (null).
 	bool? StartsFrame(Nspw game) => null;
 
-	// A frame of the battle starts, with `ticks` ticks: returns the ticks it runs.
+	// A frame of the battle starts, with `ticks` ticks: returns the ticks it runs. An extension may set the speed
+	// (GameSpeed), which the game shows.
 	short FrameStarting(Nspw game, short ticks) => ticks;
+
+	// A tick of the battle starts, before UpdateBattle.
+	void TickStarting(Nspw game) { }
+
+	// The battle's result is checked (CheckResult), at its start.
+	void ResultChecking(Nspw game) { }
 
 	// Before the battle is drawn, after its ticks: an extension may set the camera.
 	void Drawing(Nspw game) { }
 
-	// Where the game takes the clicks of a part of the screen (RunUICommands): an extension may do the player's actions
-	// there (Nspw.Do).
-	void InputSite(Nspw game, UICommandSite site) { }
+	// Where the game takes the actions of a part of the screen (RunUICommands), or the frame's orders: an extension may do
+	// the player's actions there (Nspw.Do). `counts`: whether a click counts there in this frame, as the part is shown
+	// and the player may give it.
+	void InputSite(Nspw game, ActionSite site, bool counts) { }
+
+	// A turn's orders start to be applied: the player's, and, in a single-player game, the computer's.
+	void OrdersStarting(Nspw game) { }
 
 	// The player did something, as the game does it.
 	void PlayerActed(Nspw game, PlayerAction action) { }
+
+	// What Windows' stack held where 1.22 reads a local it has not set, at the instruction of 1.22 that reads it
+	// (docs/Verification.md), or null: the game then reads what the port's own local holds, or what Windows' stack holds
+	// there in every trace recorded so far.
+	byte[]? UninitializedLocal(Nspw game, uint instruction) => null;
 
 	// The frame of the battle has ended, after HandleInput.
 	void FrameEnded(Nspw game) { }
@@ -223,22 +279,52 @@ public sealed class GameExtensions(Nspw game)
 		return ticks;
 	}
 
+	internal void TickStarting()
+	{
+		foreach (var extension in _all)
+			extension.TickStarting(_game);
+	}
+
+	internal void ResultChecking()
+	{
+		foreach (var extension in _all)
+			extension.ResultChecking(_game);
+	}
+
 	internal void Drawing()
 	{
 		foreach (var extension in _all)
 			extension.Drawing(_game);
 	}
 
-	internal void InputSite(UICommandSite site)
+	internal void InputSite(ActionSite site, bool counts)
 	{
 		foreach (var extension in _all)
-			extension.InputSite(_game, site);
+			extension.InputSite(_game, site, counts);
+	}
+
+	internal void OrdersStarting()
+	{
+		foreach (var extension in _all)
+			extension.OrdersStarting(_game);
 	}
 
 	internal void PlayerActed(PlayerAction action)
 	{
 		foreach (var extension in _all)
 			extension.PlayerActed(_game, action);
+	}
+
+	// The first extension that answers.
+	internal byte[]? UninitializedLocal(uint instruction)
+	{
+		foreach (var extension in _all)
+		{
+			if (extension.UninitializedLocal(_game, instruction) is { } value)
+				return value;
+		}
+
+		return null;
 	}
 
 	internal void FrameEnded()
@@ -292,7 +378,8 @@ public unsafe partial class Nspw
 			RequestSupply: _ => RequestSupplyUnit,
 			ConfirmSystemMenu: confirm => () => ConfirmSystemMenu(confirm.Answer),
 			SwapLocalSide: _ => SwapLocalSide,
-			SinkSelectedUnit: _ => SinkSelectedUnit
+			SinkSelectedUnit: _ => SinkSelectedUnit,
+			GiveOrders: give => () => GivePlayerOrders(give.Orders)
 		)();
 	}
 

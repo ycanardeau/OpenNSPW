@@ -1,24 +1,5 @@
 namespace OpenNspw;
 
-// Where in a frame a command of the host's UI runs: where the battle takes the mouse's clicks on the battlefield
-// (DrawBattleArea), on the minimap (DrawMinimap), on the switch of a carrier's view (UpdateDeckView), on the combat menu
-// (UpdateCombatMenu), on the supply panel (UpdateSupplyRequest), or on the host's system menu (UpdateSystemMenu); or
-// where the setting screens take them on the list of scenarios (UpdateScenarioList), on the buttons under it
-// (UpdateScenarioPageButton, UpdateResumeButton, UpdateAutoSaveButton, UpdateSideSetting), or on the rules
-// (UpdateConfigSetting).
-public enum UICommandSite
-{
-	Battlefield,
-	Minimap,
-	DeckView,
-	CombatMenu,
-	SupplyPanel,
-	SystemMenu,
-	ScenarioList,
-	ScenarioMenu,
-	Rules,
-}
-
 // The commands that the host's own UI gives the battle in place of the mouse's clicks (docs/UI.md). Not part of the
 // original. Each command runs where the battle takes the click it stands for, counts only where that click would count,
 // and does what it does with the same functions, so that a battle ordered with commands sends the same orders as one
@@ -31,11 +12,11 @@ public unsafe partial class Nspw
 	public int ShownCombatMenuCount;
 
 	private readonly Lock _uiCommandsLock = new();
-	private readonly List<(UICommandSite Site, Action Run)> _uiCommands = [];
+	private readonly List<(ActionSite Site, Action Run)> _uiCommands = [];
 
 	// Queues a command, unless the game follows a trace, or an extension gives the player's input, which give it none
 	// (ISingleplayerTrace.TakesInput, IGameExtension.HoldsInput).
-	private void QueueUICommand(UICommandSite site, Action run)
+	private void QueueUICommand(ActionSite site, Action run)
 	{
 		if (Trace is { TakesInput: false } || Extensions.HoldsInput)
 			return;
@@ -47,20 +28,17 @@ public unsafe partial class Nspw
 	}
 
 	// Whether a site is the setting screens', not the battle's.
-	private static bool IsSettingSite(UICommandSite site)
+	private static bool IsSettingSite(ActionSite site)
 	{
-		return site
-			is UICommandSite.ScenarioList
-				or UICommandSite.ScenarioMenu
-				or UICommandSite.Rules;
+		return site is ActionSite.ScenarioList or ActionSite.ScenarioMenu or ActionSite.Rules;
 	}
 
 	// Runs the commands queued for a site, in order, on the game's thread; or drops them, as clicks are dropped, when they
 	// do not count. The commands of the other screens' sites are dropped too: they were given for a screen that is gone.
-	internal void RunUICommands(UICommandSite site, bool count)
+	internal void RunUICommands(ActionSite site, bool count)
 	{
 		// Extensions may do the player's actions where the clicks are taken (docs/Extensions.md).
-		Extensions.InputSite(site);
+		Extensions.InputSite(site, count);
 
 		List<Action> runs;
 		lock (_uiCommandsLock)
@@ -486,7 +464,7 @@ public unsafe partial class Nspw
 		// and drops it as it drops the battlefield's clicks.
 		private void Press()
 		{
-			_game.QueueUICommand(UICommandSite.Battlefield, _game.PlayClickSound);
+			_game.QueueUICommand(ActionSite.Battlefield, _game.PlayClickSound);
 		}
 
 		// A left click on unit m on the battlefield, or on a parked plane on the deck shown in the sidebar, if the player
@@ -494,7 +472,7 @@ public unsafe partial class Nspw
 		public void ClickUnit(int m)
 		{
 			Press();
-			_game.QueueUICommand(UICommandSite.Battlefield, () => _game.RunClickUnit(m));
+			_game.QueueUICommand(ActionSite.Battlefield, () => _game.RunClickUnit(m));
 		}
 
 		// Unit m brushed with the left button held, after a press on a unit: put in the selected unit's formation, or
@@ -502,7 +480,7 @@ public unsafe partial class Nspw
 		public void BrushUnit(int m, bool isAdded)
 		{
 			_game.QueueUICommand(
-				UICommandSite.Battlefield,
+				ActionSite.Battlefield,
 				() => _game._brushed.Enqueue((m, isAdded))
 			);
 		}
@@ -511,7 +489,7 @@ public unsafe partial class Nspw
 		public void ClickLand(int x, int y)
 		{
 			Press();
-			_game.QueueUICommand(UICommandSite.Battlefield, () => _game.RunClickLand(x, y));
+			_game.QueueUICommand(ActionSite.Battlefield, () => _game.RunClickLand(x, y));
 		}
 
 		// A left click on the battlefield, that gives the selected unit a destination, if it can have one
@@ -520,7 +498,7 @@ public unsafe partial class Nspw
 		{
 			Press();
 			_game.QueueUICommand(
-				UICommandSite.Battlefield,
+				ActionSite.Battlefield,
 				() => _game.RunSetDestination(destination)
 			);
 		}
@@ -530,7 +508,7 @@ public unsafe partial class Nspw
 		public void RightClick()
 		{
 			Press();
-			_game.QueueUICommand(UICommandSite.Battlefield, _game.RunRightClick);
+			_game.QueueUICommand(ActionSite.Battlefield, _game.RunRightClick);
 		}
 
 		// A click held on the minimap, at cell (column, row) of the map: pressed there, or dragged there.
@@ -539,21 +517,21 @@ public unsafe partial class Nspw
 			if (isPressed)
 				Press();
 
-			_game.QueueUICommand(UICommandSite.Minimap, () => _game.ShowMinimapCell(column, row));
+			_game.QueueUICommand(ActionSite.Minimap, () => _game.ShowMinimapCell(column, row));
 		}
 
 		// The battlefield moved by (dx, dy) pixels, by a drag with the middle button, the move numbered `id`
 		// (LastCameraMove); run with the minimap's, which move it too.
 		public void ScrollBattlefield(int dx, int dy, int id)
 		{
-			_game.QueueUICommand(UICommandSite.Minimap, () => _game.MoveCamera(dx, dy, id));
+			_game.QueueUICommand(ActionSite.Minimap, () => _game.MoveCamera(dx, dy, id));
 		}
 
 		// A click on the switch of a carrier's or an air base's view, while its information is shown.
 		public void ToggleDeckView()
 		{
 			Press();
-			_game.QueueUICommand(UICommandSite.DeckView, _game.RunToggleDeckView);
+			_game.QueueUICommand(ActionSite.DeckView, _game.RunToggleDeckView);
 		}
 
 		// A click on an item of the combat menu, if the menu shows it and it is not the item in effect already; it waits for
@@ -561,27 +539,21 @@ public unsafe partial class Nspw
 		public void ChooseCombatMenuItem(CombatMenuItem item)
 		{
 			Press();
-			_game.QueueUICommand(
-				UICommandSite.CombatMenu,
-				() => _game.RunChooseCombatMenuItem(item)
-			);
+			_game.QueueUICommand(ActionSite.CombatMenu, () => _game.RunChooseCombatMenuItem(item));
 		}
 
 		// A click on the previous or the next kind of reinforcement, while none is coming.
 		public void SelectSupplyTarget(bool next)
 		{
 			Press();
-			_game.QueueUICommand(
-				UICommandSite.SupplyPanel,
-				() => _game.RunSelectSupplyTarget(next)
-			);
+			_game.QueueUICommand(ActionSite.SupplyPanel, () => _game.RunSelectSupplyTarget(next));
 		}
 
 		// A click that requests the chosen reinforcement, if it can be requested (GetSupplyRequestState).
 		public void RequestSupply()
 		{
 			Press();
-			_game.QueueUICommand(UICommandSite.SupplyPanel, _game.RunRequestSupply);
+			_game.QueueUICommand(ActionSite.SupplyPanel, _game.RunRequestSupply);
 		}
 
 		// The host's system menu: back to the scenario selection (シナリオ選択へ), which the game asks first, while the
@@ -590,7 +562,7 @@ public unsafe partial class Nspw
 		{
 			Press();
 			_game.QueueUICommand(
-				UICommandSite.SystemMenu,
+				ActionSite.SystemMenu,
 				() => _game.RunAskSystemMenu(MessageType.GoToGameSetting)
 			);
 		}
@@ -600,7 +572,7 @@ public unsafe partial class Nspw
 		{
 			Press();
 			_game.QueueUICommand(
-				UICommandSite.SystemMenu,
+				ActionSite.SystemMenu,
 				() => _game.RunAskSystemMenu(MessageType.ResumeAndGoToGameSetting)
 			);
 		}
@@ -608,50 +580,50 @@ public unsafe partial class Nspw
 		// The host's cursor on the n-th scenario of the list shown, which chooses it and shows it to the guest.
 		public void ChooseScenario(int n)
 		{
-			_game.QueueUICommand(UICommandSite.ScenarioList, () => _game.RunChooseScenario(n));
+			_game.QueueUICommand(ActionSite.ScenarioList, () => _game.RunChooseScenario(n));
 		}
 
 		// The host's click on the n-th scenario of the list shown: on to the rules with it.
 		public void ConfirmScenario(int n)
 		{
-			_game.QueueUICommand(UICommandSite.ScenarioList, () => _game.RunConfirmScenario(n));
+			_game.QueueUICommand(ActionSite.ScenarioList, () => _game.RunConfirmScenario(n));
 		}
 
 		// The other page of the list (シナリオ切り替え).
 		public void TurnScenarioPage()
 		{
-			_game.QueueUICommand(UICommandSite.ScenarioMenu, _game.RunTurnScenarioPage);
+			_game.QueueUICommand(ActionSite.ScenarioMenu, _game.RunTurnScenarioPage);
 		}
 
 		// The start from the resume-saved battle (リジュームスタート), if the player saved it as the host.
 		public void StartFromResume()
 		{
-			_game.QueueUICommand(UICommandSite.ScenarioMenu, _game.RunStartFromResume);
+			_game.QueueUICommand(ActionSite.ScenarioMenu, _game.RunStartFromResume);
 		}
 
 		// The start from the auto-saved battle (オートセーブスタート), if there is one.
 		public void StartFromAutoSave()
 		{
-			_game.QueueUICommand(UICommandSite.ScenarioMenu, _game.RunStartFromAutoSave);
+			_game.QueueUICommand(ActionSite.ScenarioMenu, _game.RunStartFromAutoSave);
 		}
 
 		// The host and the guest swap their sides (操作対象の切り替え), but in the map editor.
 		public void SwitchSides()
 		{
-			_game.QueueUICommand(UICommandSite.ScenarioMenu, _game.RunSwitchHostSide);
+			_game.QueueUICommand(ActionSite.ScenarioMenu, _game.RunSwitchHostSide);
 		}
 
 		// The victory conditions on or off (勝敗判定の切り替え).
 		public void ToggleDecision()
 		{
-			_game.QueueUICommand(UICommandSite.Rules, _game.RunToggleDecision);
+			_game.QueueUICommand(ActionSite.Rules, _game.RunToggleDecision);
 		}
 
 		// A player's increase of supply points (補給割当増加率) up or down: 0 for the host's, 1 for the guest's; not below 0.
 		public void ChangeSupplyRate(int player, bool increase)
 		{
 			_game.QueueUICommand(
-				UICommandSite.Rules,
+				ActionSite.Rules,
 				() => _game.RunChangeSupplyRate(player, increase)
 			);
 		}
@@ -659,13 +631,13 @@ public unsafe partial class Nspw
 		// The time at which the supply points' rates swap (補給値反転地点) up or down, by 100; not below 0, never.
 		public void ChangeSwapTime(bool increase)
 		{
-			_game.QueueUICommand(UICommandSite.Rules, () => _game.RunChangeSwapTime(increase));
+			_game.QueueUICommand(ActionSite.Rules, () => _game.RunChangeSwapTime(increase));
 		}
 
 		// The rule of the swap (補給値反転ルール), once or every time, while the rates swap.
 		public void ToggleSwapRule()
 		{
-			_game.QueueUICommand(UICommandSite.Rules, _game.RunToggleSwapRule);
+			_game.QueueUICommand(ActionSite.Rules, _game.RunToggleSwapRule);
 		}
 
 		// A player's supply points at the start (初期補給割当) up or down by 50: 0 for the host's, 1 for the guest's; not
@@ -673,7 +645,7 @@ public unsafe partial class Nspw
 		public void ChangeInitialSupplyPoints(int player, bool increase)
 		{
 			_game.QueueUICommand(
-				UICommandSite.Rules,
+				ActionSite.Rules,
 				() => _game.RunChangeInitialSupplyPoints(player, increase)
 			);
 		}
@@ -681,19 +653,19 @@ public unsafe partial class Nspw
 		// The next rule of the reinforcements (増援ユニット制御).
 		public void CycleArrivalControl()
 		{
-			_game.QueueUICommand(UICommandSite.Rules, _game.RunCycleArrivalControl);
+			_game.QueueUICommand(ActionSite.Rules, _game.RunCycleArrivalControl);
 		}
 
 		// Back to the scenarios (シナリオセッティングへ戻る), while the guest is on the rules too.
 		public void BackToScenarios()
 		{
-			_game.QueueUICommand(UICommandSite.Rules, _game.RunBackToScenarioSetting);
+			_game.QueueUICommand(ActionSite.Rules, _game.RunBackToScenarioSetting);
 		}
 
 		// The battle (ゲームスタート), while the guest is on the rules too.
 		public void StartBattle()
 		{
-			_game.QueueUICommand(UICommandSite.Rules, _game.RunStartBattle);
+			_game.QueueUICommand(ActionSite.Rules, _game.RunStartBattle);
 		}
 	}
 

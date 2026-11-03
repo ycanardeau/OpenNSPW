@@ -266,7 +266,7 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 	}
 
 	// The player's actions at this site in this frame.
-	public void InputSite(Nspw game, UICommandSite site)
+	public void InputSite(Nspw game, ActionSite site, bool counts)
 	{
 		if (!HoldsInput)
 			return;
