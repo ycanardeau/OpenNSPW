@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Authors>ycanardeau</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ycanardeau/Otsuki</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ycanardeau/Otsuki</RepositoryUrl>
+    <Description>Actors and their mailboxes: the only concurrent code of Otsuki and of what is built on it.</Description>
+  </PropertyGroup>
+
+</Project>

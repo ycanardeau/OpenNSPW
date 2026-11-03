@@ -26,6 +26,8 @@
     <Project Path="OpenNSPW/OpenNspw/OpenNspw.csproj" />
   </Folder>
   <Folder Name="/Otsuki/">
+    <Project Path="Otsuki/Aigamo.Otsuki.Actors.Tests/Aigamo.Otsuki.Actors.Tests.csproj" />
+    <Project Path="Otsuki/Aigamo.Otsuki.Actors/Aigamo.Otsuki.Actors.csproj" />
     <Project Path="Otsuki/Aigamo.Otsuki.Analyzers.Tests/Aigamo.Otsuki.Analyzers.Tests.csproj" />
     <Project Path="Otsuki/Aigamo.Otsuki.Analyzers/Aigamo.Otsuki.Analyzers.csproj" />
     <Project Path="Otsuki/Aigamo.Otsuki.Bluetooth/Aigamo.Otsuki.Bluetooth.csproj" />
