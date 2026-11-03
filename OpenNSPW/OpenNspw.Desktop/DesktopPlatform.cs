@@ -1,6 +1,8 @@
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Aigamo.Otsuki.Actors;
 using Microsoft.Xna.Framework.Audio;
 using OpenNspw.DirectPlay;
 
@@ -43,10 +45,52 @@ internal sealed class Sound(SoundEffect effect) : ISound, IDisposable
 	}
 }
 
+// A frame that the game showed: its pixels, and the game's state that goes with them (GameSnapshot). The game's while it
+// fills it, the UI's once posted, until the UI gives it back (docs/Actors.md).
+internal sealed class FrameBuffer
+{
+	public ushort[] Pixels { get; set; } = [];
+
+	public int Width { get; set; }
+
+	public int Height { get; set; }
+
+	public GameSnapshot Snapshot { get; } = new();
+}
+
+// What the game posts to the UI's thread (GameSession), which takes it at the start of each update.
+internal abstract record UIMessage
+{
+	private UIMessage() { }
+
+	// A frame to show, the UI's until it gives it back (BufferFree).
+	public sealed record FrameReady(FrameBuffer Buffer) : UIMessage;
+
+	// The windows, as they are since one has changed.
+	public sealed record WindowsChanged(ImmutableArray<WindowView> Windows) : UIMessage;
+
+	// A message box the game showed, or what the game threw.
+	public sealed record MessageShown(string Text) : UIMessage;
+
+	// A user's action on a dialog has run (DialogFilled), after which the form reads the dialog's fields again.
+	public sealed record DialogFilled : UIMessage;
+
+	// WinMain has returned.
+	public sealed record Ended : UIMessage;
+}
+
+// A frame buffer that the UI gives back to the game, for another frame.
+internal sealed record BufferFree(FrameBuffer Buffer) : GameMessage;
+
 // The platform of the desktop app: the game's files in their layers (GameData), its sprites from the app's, DirectPlay 8
-// on Otsuki, MonoGame sound, text rasterized with a TrueType font, and settings in a JSON file.
-internal sealed partial class DesktopPlatform(GameFileLayers files, TextRasterizer text)
-	: INspwPlatform
+// on Otsuki, MonoGame sound, text rasterized with a TrueType font, and settings in a JSON file. It runs on the game's
+// thread, and posts what the UI shows to the UI's mailbox (ui).
+internal sealed partial class DesktopPlatform(
+	GameFileLayers files,
+	TextRasterizer text,
+	Mailbox<UIMessage> ui,
+	Mailbox<GameMessage> game
+) : INspwPlatform
 {
 	// How the settings are read and written, generated, so that trimming keeps what it needs.
 	[JsonSerializable(typeof(Dictionary<string, string>))]
@@ -58,60 +102,29 @@ internal sealed partial class DesktopPlatform(GameFileLayers files, TextRasteriz
 	private readonly GameFileLayers _files = files;
 	private readonly DirectPlay8Factory _directPlay = new();
 	private readonly TextRasterizer _text = text;
+	private readonly Mailbox<UIMessage> _ui = ui;
+	private readonly Mailbox<GameMessage> _game = game;
 
 	// The texts rasterized, by text and height: the game writes most of its texts again every frame. On the game's thread;
 	// emptied once it has many, as the texts with numbers in them keep changing.
 	private readonly Dictionary<(string Text, int Height), TextBitmap?> _texts = [];
 	private readonly List<Sound> _sounds = [];
 	private readonly Stopwatch _clock = Stopwatch.StartNew();
-	private readonly Lock _frameLock = new();
+
+	// The frame buffers the game holds, to fill, and the one it filled but keeps, while it holds no other to fill next.
+	private readonly Stack<FrameBuffer> _free = new([new(), new(), new()]);
+	private FrameBuffer? _kept;
+	private DirectDrawSurface7? _primary;
 	private readonly string _settingsPath = Path.Combine(
 		Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
 		"OpenNSPW",
 		"settings.json"
 	);
 	private Dictionary<string, string>? _settings;
-	private ushort[] _frame = [];
-	private int _frameWidth;
-	private int _frameHeight;
 
-	// Incremented for each frame the game shows.
-	public int FrameNumber { get; private set; }
-
-	// Copies what goes with a frame, such as the game's state for the UI: called on the game's thread as it shows each
-	// frame, under the frame's lock.
-	public Action? CaptureState { get; set; }
-
-	public List<string> Messages { get; } = [];
-
-	// Copies the last frame, if it changed since `known`, and calls `takeState` with the frame's lock held, to take what
-	// CaptureState copied with it. Returns its number.
-	public int CopyFrame(
-		int known,
-		ref ushort[] pixels,
-		out int width,
-		out int height,
-		Action takeState
-	)
-	{
-		lock (_frameLock)
-		{
-			width = _frameWidth;
-			height = _frameHeight;
-			if (known != FrameNumber)
-			{
-				takeState();
-				if (pixels.Length != _frame.Length)
-				{
-					pixels = new ushort[_frame.Length];
-				}
-
-				_frame.CopyTo(pixels, 0);
-			}
-
-			return FrameNumber;
-		}
-	}
+	// Copies what goes with a frame, such as the game's state for the UI, into its snapshot: called on the game's thread as
+	// it shows each frame.
+	public Action<GameSnapshot>? CaptureState { get; set; }
 
 	public Stream? OpenFile(string path, FileMode mode, FileAccess access, FileShare share)
 	{
@@ -135,11 +148,7 @@ internal sealed partial class DesktopPlatform(GameFileLayers files, TextRasteriz
 
 	public int MessageBox(HWND? hWnd, string lpText, string lpCaption, uint uType)
 	{
-		lock (Messages)
-		{
-			Messages.Add($"{lpCaption}: {lpText}");
-		}
-
+		_ui.Post(new UIMessage.MessageShown($"{lpCaption}: {lpText}"));
 		return windef.IDOK;
 	}
 
@@ -153,32 +162,77 @@ internal sealed partial class DesktopPlatform(GameFileLayers files, TextRasteriz
 		return (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 	}
 
-	public void Present(DirectDrawSurface7 primary)
+	// Takes the buffers the UI gave back, and posts the frame kept, now that the game holds another to fill.
+	private void TakeFreed()
 	{
-		lock (_frameLock)
+		while (_game.TryReceive<BufferFree>(out var free))
 		{
-			if (_frame.Length != primary.Pixels.Length)
-			{
-				_frame = new ushort[primary.Pixels.Length];
-			}
+			_free.Push(free.Buffer);
+		}
 
-			primary.Pixels.CopyTo(_frame);
-			_frameWidth = primary.Width;
-			_frameHeight = primary.Height;
-			CaptureState?.Invoke();
-			FrameNumber++;
+		if (_kept is not null && _free.Count > 0)
+		{
+			_ui.Post(new UIMessage.FrameReady(_kept));
+			_kept = null;
 		}
 	}
 
-	// Copies the game's state again for the frame shown last (CaptureState), such as when the view of a replay moves while
-	// it is paused: on the game's thread.
+	// Fills a buffer with the primary surface's pixels and the game's state, and posts it to the UI if the game holds
+	// another to fill next; or keeps it, to post once the UI gives one back. The game never waits for the UI.
+	private void Show(DirectDrawSurface7 primary)
+	{
+		TakeFreed();
+		var buffer = _kept ?? _free.Pop();
+		_kept = null;
+		if (buffer.Pixels.Length != primary.Pixels.Length)
+		{
+			buffer.Pixels = new ushort[primary.Pixels.Length];
+		}
+
+		primary.Pixels.CopyTo(buffer.Pixels);
+		buffer.Width = primary.Width;
+		buffer.Height = primary.Height;
+		CaptureState?.Invoke(buffer.Snapshot);
+		if (_free.Count > 0)
+		{
+			_ui.Post(new UIMessage.FrameReady(buffer));
+		}
+		else
+		{
+			_kept = buffer;
+		}
+	}
+
+	public void Present(DirectDrawSurface7 primary)
+	{
+		_primary = primary;
+		Show(primary);
+	}
+
+	// Shows the frame shown last again, with the game's state copied again (CaptureState), such as when the view of a
+	// replay moves while it is paused: on the game's thread. The primary surface still holds the last frame.
 	public void CaptureAgain()
 	{
-		lock (_frameLock)
+		if (_primary is { } primary)
 		{
-			CaptureState?.Invoke();
-			FrameNumber++;
+			Show(primary);
 		}
+	}
+
+	public void ShowWindows(ImmutableArray<WindowView> windows)
+	{
+		_ui.Post(new UIMessage.WindowsChanged(windows));
+	}
+
+	// Sleeps until a window message comes; a buffer the UI gives back meanwhile wakes it to post the frame it kept, so
+	// that the UI does not show an old frame while a dialog is up.
+	public void WaitForMessage(Mailbox<GameMessage> mailbox)
+	{
+		do
+		{
+			mailbox.WaitFor(static message => message is GameMessage.Window or BufferFree);
+			TakeFreed();
+		} while (!mailbox.TryPeek<GameMessage.Window>(out _));
 	}
 
 	// Whether nothing of the game's frame is shown: on the screens that the UI draws in the game's place, and while the game
@@ -247,26 +301,19 @@ internal sealed partial class DesktopPlatform(GameFileLayers files, TextRasteriz
 			return null;
 		}
 
-		lock (_sounds)
-		{
-			_sounds.Add(sound);
-		}
-
+		_sounds.Add(sound);
 		return sound;
 	}
 
-	// Stops and frees the game's sounds, once it has ended.
+	// Stops and frees the game's sounds, once it has ended, on its thread.
 	public void StopSounds()
 	{
-		lock (_sounds)
+		foreach (var sound in _sounds)
 		{
-			foreach (var sound in _sounds)
-			{
-				sound.Dispose();
-			}
-
-			_sounds.Clear();
+			sound.Dispose();
 		}
+
+		_sounds.Clear();
 	}
 
 	private Dictionary<string, string> Settings()
@@ -290,22 +337,16 @@ internal sealed partial class DesktopPlatform(GameFileLayers files, TextRasteriz
 
 	public string? ReadSetting(string key)
 	{
-		lock (_frameLock)
-		{
-			return Settings().GetValueOrDefault(key);
-		}
+		return Settings().GetValueOrDefault(key);
 	}
 
 	public void WriteSetting(string key, string value)
 	{
-		lock (_frameLock)
-		{
-			Settings()[key] = value;
-			Directory.CreateDirectory(Path.GetDirectoryName(_settingsPath)!);
-			File.WriteAllText(
-				_settingsPath,
-				JsonSerializer.Serialize(Settings(), SettingsJson.Default.DictionaryStringString)
-			);
-		}
+		Settings()[key] = value;
+		Directory.CreateDirectory(Path.GetDirectoryName(_settingsPath)!);
+		File.WriteAllText(
+			_settingsPath,
+			JsonSerializer.Serialize(Settings(), SettingsJson.Default.DictionaryStringString)
+		);
 	}
 }

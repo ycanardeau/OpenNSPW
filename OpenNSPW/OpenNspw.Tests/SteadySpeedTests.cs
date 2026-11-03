@@ -240,7 +240,7 @@ public sealed class SteadySpeedTests
 
 		var player = new ReplayPlayer(new MemoryStream(stream.ToArray()))
 		{
-			Speed = double.PositiveInfinity,
+			InitialSpeed = double.PositiveInfinity,
 		};
 		using var replayed = new SingleplayerRun(4, game => game.Extensions.Add(player));
 		replayed.Frames(80);
@@ -294,7 +294,7 @@ public sealed class SteadySpeedTests
 
 		var player = new ReplayPlayer(new MemoryStream(stream.ToArray()))
 		{
-			Speed = double.PositiveInfinity,
+			InitialSpeed = double.PositiveInfinity,
 		};
 		var played = new ReplayFrames(player);
 		using var replayed = new SingleplayerRun(

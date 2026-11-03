@@ -1,3 +1,4 @@
+using Aigamo.Otsuki.Actors;
 using static OpenNspw.all_head;
 
 namespace OpenNspw.HostUI;
@@ -6,10 +7,13 @@ namespace OpenNspw.HostUI;
 // the game (docs/Extensions.md). Not part of the original. A command is given on any thread, and runs on the game's
 // where the battle takes the click it stands for (IGameExtension.InputSite); it counts only where that click would count,
 // and does the player's action that the click does (Nspw.Do), so that a battle ordered with commands sends the same
-// orders as one ordered with the mouse.
+// orders as one ordered with the mouse. The commands come to the extension's mailbox, which the game's thread receives
+// from at each site (docs/Actors.md).
 public sealed class UICommands : IGameExtension
 {
-	private readonly Lock _lock = new();
+	private readonly Mailbox<(ActionSite Site, Action<Nspw> Run)> _given = new();
+
+	// The commands given that the game has taken from the mailbox and not run yet. On the game's thread.
 	private readonly List<(ActionSite Site, Action<Nspw> Run)> _queued = [];
 
 	// The commands that InputSite takes from the queue for its site, in a list kept for it: on the game's thread.
@@ -35,10 +39,7 @@ public sealed class UICommands : IGameExtension
 
 	private void Queue(ActionSite site, Action<Nspw> run)
 	{
-		lock (_lock)
-		{
-			_queued.Add((site, run));
-		}
+		_given.Post((site, run));
 	}
 
 	// Whether a site is the setting screens', not the battle's.
@@ -347,23 +348,25 @@ public sealed class UICommands : IGameExtension
 	// and the system menu that wait for a frame in which they count.
 	public void InputSite(Nspw game, ActionSite site, bool counts)
 	{
-		// Without garbage, as the game calls this at each of its sites every frame: the site's commands are taken, and the
-		// other screens' dropped, in place.
-		_runs.Clear();
-		lock (_lock)
+		// Without garbage, as the game calls this at each of its sites every frame: the commands given are taken from the
+		// mailbox, then the site's taken, and the other screens' dropped, in place.
+		while (_given.TryReceive(out var given))
 		{
-			var kept = 0;
-			for (var i = 0; i < _queued.Count; i++)
-			{
-				var command = _queued[i];
-				if (command.Site == site)
-					_runs.Add(command.Run);
-				else if (IsSettingSite(command.Site) == IsSettingSite(site))
-					_queued[kept++] = command;
-			}
-
-			_queued.RemoveRange(kept, _queued.Count - kept);
+			_queued.Add(given);
 		}
+
+		_runs.Clear();
+		var kept = 0;
+		for (var i = 0; i < _queued.Count; i++)
+		{
+			var command = _queued[i];
+			if (command.Site == site)
+				_runs.Add(command.Run);
+			else if (IsSettingSite(command.Site) == IsSettingSite(site))
+				_queued[kept++] = command;
+		}
+
+		_queued.RemoveRange(kept, _queued.Count - kept);
 
 		// The menu's items in a new array only when they change, as the host's UI keeps the one it was given.
 		if (site == ActionSite.CombatMenu)

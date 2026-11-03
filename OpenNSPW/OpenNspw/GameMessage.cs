@@ -25,5 +25,5 @@ public abstract record GameMessage
 public partial class Nspw
 {
 	// The game's mailbox, which any thread posts to, and the game's thread receives from.
-	public Mailbox<GameMessage> Mailbox { get; } = new();
+	public Mailbox<GameMessage> Mailbox { get; }
 }

@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Runtime.InteropServices;
 
 namespace OpenNspw;
@@ -10,8 +11,8 @@ namespace OpenNspw;
 // user does: tests call ClickDlgItem and the others directly on the game's thread, and the desktop app posts them with
 // PostToGame, so that they run on the game's thread when its message loop dispatches them, as in Win32. The messages,
 // the keys' state and the cursor come to the game's mailbox (GameMessage), from any thread, and the game takes them
-// where it reads them. Window state is read and changed under WindowsLock, which the desktop app also takes to draw the
-// windows.
+// where it reads them. The windows are the game's: it gives the platform a view of them as they change (ShowWindows),
+// which the desktop app draws.
 
 public delegate nint DLGPROC(HWND hDlg, uint msg, nint wParam, nint lParam);
 
@@ -67,6 +68,24 @@ public sealed class HWND(HWND? parent, int id, string kind, string text, bool en
 	// The result passed to EndDialog, for DialogBox.
 	public nint? DialogResult { get; internal set; }
 }
+
+// What a window or a dialog's control shows, as it was when the game gave it to the platform (ShowWindows), for the
+// host's UI, which draws the dialogs on its own thread (docs/Actors.md). Window is the window itself, only as a key that
+// finds it again on the game's thread. Not part of the original.
+public sealed record WindowView(
+	HWND Window,
+	int Id,
+	string Kind,
+	string Text,
+	bool Enabled,
+	bool Visible,
+	bool Initialized,
+	uint Checked,
+	ImmutableArray<string> Items,
+	int CurSel,
+	DLGTEMPLATE? Template,
+	ImmutableArray<WindowView> Children
+);
 
 [StructLayout(LayoutKind.Sequential)]
 public struct MSG
@@ -232,11 +251,58 @@ public partial class Nspw
 	private readonly byte[] _keyState = new byte[256];
 	private POINT _cursor;
 
-	// Taken to read or change windows, by the game's thread and the desktop app.
-	public object WindowsLock { get; } = new();
+	// Whether a window has changed since the game last gave the platform their view (ShowChangedWindows).
+	private bool _windowsChanged;
 
-	// The windows that exist, oldest first. Read under WindowsLock.
+	// The windows that exist, oldest first. On the game's thread.
 	public IReadOnlyList<HWND> windows => _windows;
+
+	private static WindowView ViewOf(HWND window)
+	{
+		return new WindowView(
+			window,
+			window.Id,
+			window.Kind,
+			window.Text,
+			window.Enabled,
+			window.Visible,
+			window.Initialized,
+			window.Checked,
+			[.. window.Items.Select(i => i.Text)],
+			window.CurSel,
+			window.Template,
+			[.. window.Children.Select(ViewOf)]
+		);
+	}
+
+	// Takes the cursor and the keys' state posted so far. Taking them earlier than where they are read gives the same
+	// state there, as each is the newest of its posts: the message loops take them too, so that they do not wait in the
+	// mailbox while no frame reads them.
+	private void TakeInputState()
+	{
+		while (Mailbox.TryReceive<GameMessage.Cursor>(out var cursor))
+		{
+			_cursor = cursor.Position;
+		}
+
+		while (Mailbox.TryReceive<GameMessage.KeyState>(out var key))
+		{
+			_keyState[key.VirtualKey & 0xFF] = key.IsDown ? (byte)0x80 : (byte)0;
+		}
+	}
+
+	// Gives the platform a view of the windows, if one has changed since it was last given one: where the game takes its
+	// window messages, shows a frame or a message box, and where a user's action needs the platform to have them first.
+	public void ShowChangedWindows()
+	{
+		if (!_windowsChanged)
+		{
+			return;
+		}
+
+		_windowsChanged = false;
+		_platform.ShowWindows([.. _windows.Select(ViewOf)]);
+	}
 
 	private static string CString(ReadOnlySpan<byte> text)
 	{
@@ -259,23 +325,7 @@ public partial class Nspw
 		return length;
 	}
 
-	// Takes the cursor and the keys' state posted so far. Taking them earlier than where they are read gives the same
-	// state there, as each is the newest of its posts: the message loops take them too, so that they do not wait in the
-	// mailbox while no frame reads them.
-	private void TakeInputState()
-	{
-		while (Mailbox.TryReceive<GameMessage.Cursor>(out var cursor))
-		{
-			_cursor = cursor.Position;
-		}
-
-		while (Mailbox.TryReceive<GameMessage.KeyState>(out var key))
-		{
-			_keyState[key.VirtualKey & 0xFF] = key.IsDown ? (byte)0x80 : (byte)0;
-		}
-	}
-
-	// Calls the window's procedure, outside WindowsLock.
+	// Calls the window's procedure.
 	private static nint CallProc(HWND hWnd, uint msg, nint wParam, nint lParam)
 	{
 		if (hWnd.Destroyed)
@@ -329,10 +379,7 @@ public partial class Nspw
 
 	public ushort RegisterClass(ref WNDCLASS lpWndClass)
 	{
-		lock (WindowsLock)
-		{
-			_classes[lpWndClass.lpszClassName ?? ""] = lpWndClass;
-		}
+		_classes[lpWndClass.lpszClassName ?? ""] = lpWndClass;
 
 		return 1;
 	}
@@ -340,20 +387,18 @@ public partial class Nspw
 	public HWND? CreateWindow(string lpClassName, string lpWindowName, HWND? hWndParent)
 	{
 		HWND hWnd;
-		lock (WindowsLock)
+		if (!_classes.TryGetValue(lpClassName, out var wndClass))
 		{
-			if (!_classes.TryGetValue(lpClassName, out var wndClass))
-			{
-				return null;
-			}
-
-			hWnd = new HWND(hWndParent, 0, "WINDOW", lpWindowName, true, false)
-			{
-				WindowProc = wndClass.lpfnWndProc,
-				Visible = false,
-			};
-			_windows.Add(hWnd);
+			return null;
 		}
+
+		hWnd = new HWND(hWndParent, 0, "WINDOW", lpWindowName, true, false)
+		{
+			WindowProc = wndClass.lpfnWndProc,
+			Visible = false,
+		};
+		_windows.Add(hWnd);
+		_windowsChanged = true;
 
 		CallProc(hWnd, WM_CREATE, 0, 0);
 		return hWnd;
@@ -374,16 +419,12 @@ public partial class Nspw
 			);
 		}
 
-		lock (WindowsLock)
-		{
-			_windows.Add(hDlg);
-		}
+		_windows.Add(hDlg);
+		_windowsChanged = true;
 
 		CallProc(hDlg, WM_INITDIALOG, 0, 0);
-		lock (WindowsLock)
-		{
-			hDlg.Initialized = true;
-		}
+		hDlg.Initialized = true;
+		_windowsChanged = true;
 
 		return hDlg;
 	}
@@ -397,6 +438,7 @@ public partial class Nspw
 
 		var wasVisible = hWnd.Visible;
 		hWnd.Visible = nCmdShow != SW_MINIMIZE;
+		_windowsChanged = true;
 		return wasVisible ? TRUE : FALSE;
 	}
 
@@ -413,11 +455,9 @@ public partial class Nspw
 		}
 
 		CallProc(hWnd, WM_DESTROY, 0, 0);
-		lock (WindowsLock)
-		{
-			hWnd.Destroyed = true;
-			_windows.Remove(hWnd);
-		}
+		hWnd.Destroyed = true;
+		_windows.Remove(hWnd);
+		_windowsChanged = true;
 
 		return TRUE;
 	}
@@ -478,6 +518,7 @@ public partial class Nspw
 	public int PeekMessage(ref MSG lpMsg, uint wRemoveMsg)
 	{
 		TakeInputState();
+		ShowChangedWindows();
 		var isTaken =
 			(wRemoveMsg & PM_REMOVE) != 0
 				? Mailbox.TryReceive<GameMessage.Window>(out var window)
@@ -494,6 +535,7 @@ public partial class Nspw
 	// Waits for a message. Returns FALSE for WM_QUIT.
 	public int GetMessage(ref MSG lpMsg)
 	{
+		ShowChangedWindows();
 		GameMessage.Window? window;
 		while (!Mailbox.TryReceive<GameMessage.Window>(out window))
 		{
@@ -507,6 +549,7 @@ public partial class Nspw
 
 	public int WaitMessage()
 	{
+		ShowChangedWindows();
 		while (!Mailbox.TryPeek<GameMessage.Window>(out _))
 		{
 			_platform.WaitForMessage(Mailbox);
@@ -557,10 +600,8 @@ public partial class Nspw
 			return FALSE;
 		}
 
-		lock (WindowsLock)
-		{
-			hWnd.Text = lpString;
-		}
+		hWnd.Text = lpString;
+		_windowsChanged = true;
 
 		return TRUE;
 	}
@@ -577,10 +618,7 @@ public partial class Nspw
 
 	public uint GetDlgItemText(HWND? hDlg, int nIDDlgItem, Span<byte> lpString, int cchMax)
 	{
-		lock (WindowsLock)
-		{
-			return (uint)CopyString(GetDlgItem(hDlg, nIDDlgItem)?.Text ?? "", lpString, cchMax);
-		}
+		return (uint)CopyString(GetDlgItem(hDlg, nIDDlgItem)?.Text ?? "", lpString, cchMax);
 	}
 
 	public int EnableWindow(HWND? hWnd, int bEnable)
@@ -590,12 +628,10 @@ public partial class Nspw
 			return FALSE;
 		}
 
-		lock (WindowsLock)
-		{
-			var wasDisabled = !hWnd.Enabled;
-			hWnd.Enabled = bEnable != 0;
-			return wasDisabled ? TRUE : FALSE;
-		}
+		var wasDisabled = !hWnd.Enabled;
+		hWnd.Enabled = bEnable != 0;
+		_windowsChanged = true;
+		return wasDisabled ? TRUE : FALSE;
 	}
 
 	public int CheckDlgButton(HWND? hDlg, int nIDButton, uint uCheck)
@@ -605,10 +641,8 @@ public partial class Nspw
 			return FALSE;
 		}
 
-		lock (WindowsLock)
-		{
-			button.Checked = uCheck;
-		}
+		button.Checked = uCheck;
+		_windowsChanged = true;
 
 		return TRUE;
 	}
@@ -639,48 +673,48 @@ public partial class Nspw
 		Span<byte> buffer
 	)
 	{
-		lock (WindowsLock)
+		var index = (int)wParam;
+		var valid = index >= 0 && index < list.Items.Count;
+		switch (Msg)
 		{
-			var index = (int)wParam;
-			var valid = index >= 0 && index < list.Items.Count;
-			switch (Msg)
-			{
-				case CB_RESETCONTENT or LB_RESETCONTENT:
-					list.Items.Clear();
-					list.CurSel = CB_ERR;
-					return CB_OKAY;
-				case CB_ADDSTRING or LB_ADDSTRING:
-					return AddString(list, lParam as string ?? CString(buffer));
-				case CB_SETITEMDATA:
-					if (!valid)
-					{
-						return CB_ERR;
-					}
+			case CB_RESETCONTENT or LB_RESETCONTENT:
+				list.Items.Clear();
+				list.CurSel = CB_ERR;
+				_windowsChanged = true;
+				return CB_OKAY;
+			case CB_ADDSTRING or LB_ADDSTRING:
+				_windowsChanged = true;
+				return AddString(list, lParam as string ?? CString(buffer));
+			case CB_SETITEMDATA:
+				if (!valid)
+				{
+					return CB_ERR;
+				}
 
-					list.Items[index].Data = lParam;
-					return CB_OKAY;
-				case CB_GETITEMDATA:
-					return valid ? list.Items[index].Data : CB_ERR;
-				case CB_SETCURSEL or LB_SETCURSEL:
-					list.CurSel = valid ? index : CB_ERR;
-					return list.CurSel;
-				case CB_GETCURSEL or LB_GETCURSEL:
-					return list.CurSel;
-				case LB_GETCOUNT:
-					return list.Items.Count;
-				case CB_FINDSTRINGEXACT:
-					var text = lParam as string ?? CString(buffer);
-					return list.Items.FindIndex(
-						index + 1,
-						i => string.Equals(i.Text, text, StringComparison.OrdinalIgnoreCase)
-					);
-				case CB_GETLBTEXT or LB_GETTEXT:
-					return valid
-						? CopyString(list.Items[index].Text, buffer, buffer.Length)
-						: CB_ERR;
-				default:
-					return 0;
-			}
+				list.Items[index].Data = lParam;
+				return CB_OKAY;
+			case CB_GETITEMDATA:
+				return valid ? list.Items[index].Data : CB_ERR;
+			case CB_SETCURSEL or LB_SETCURSEL:
+				list.CurSel = valid ? index : CB_ERR;
+				_windowsChanged = true;
+				return list.CurSel;
+			case CB_GETCURSEL or LB_GETCURSEL:
+				return list.CurSel;
+			case LB_GETCOUNT:
+				return list.Items.Count;
+			case CB_FINDSTRINGEXACT:
+				var text = lParam as string ?? CString(buffer);
+				return list.Items.FindIndex(
+					index + 1,
+					i => string.Equals(i.Text, text, StringComparison.OrdinalIgnoreCase)
+				);
+			case CB_GETLBTEXT or LB_GETTEXT:
+				return valid
+					? CopyString(list.Items[index].Text, buffer, buffer.Length)
+					: CB_ERR;
+			default:
+				return 0;
 		}
 	}
 
@@ -741,6 +775,7 @@ public partial class Nspw
 
 	public int MessageBox(HWND? hWnd, string lpText, string lpCaption, uint uType)
 	{
+		ShowChangedWindows();
 		return _platform.MessageBox(hWnd, lpText, lpCaption, uType);
 	}
 
@@ -783,10 +818,8 @@ public partial class Nspw
 
 		if (control.Kind == "AUTOCHECKBOX")
 		{
-			lock (WindowsLock)
-			{
-				control.Checked = control.Checked == BST_CHECKED ? BST_UNCHECKED : BST_CHECKED;
-			}
+			control.Checked = control.Checked == BST_CHECKED ? BST_UNCHECKED : BST_CHECKED;
+			_windowsChanged = true;
 		}
 
 		CallProc(hDlg, WM_COMMAND, MAKEWPARAM(nIDDlgItem, BN_CLICKED), 0);
@@ -813,10 +846,8 @@ public partial class Nspw
 			return;
 		}
 
-		lock (WindowsLock)
-		{
-			control.CurSel = index;
-		}
+		control.CurSel = index;
+		_windowsChanged = true;
 
 		CallProc(
 			hDlg,

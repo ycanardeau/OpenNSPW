@@ -47,7 +47,7 @@ public sealed class ReplayTests
 		BattleOptions? options = null
 	)
 	{
-		var player = new ReplayPlayer(new MemoryStream(replay)) { Speed = double.PositiveInfinity };
+		var player = new ReplayPlayer(new MemoryStream(replay)) { InitialSpeed = double.PositiveInfinity };
 		var played = new ReplayFrames(player, frames / 2, change);
 		using var run = new SingleplayerRun(
 			player.Start.Scenario,
@@ -128,7 +128,7 @@ public sealed class ReplayTests
 			}
 		);
 
-		var player = new ReplayPlayer(new MemoryStream(replay)) { Speed = double.PositiveInfinity };
+		var player = new ReplayPlayer(new MemoryStream(replay)) { InitialSpeed = double.PositiveInfinity };
 		var played = new ReplayFrames(player);
 		using var run = new SingleplayerRun(
 			3,
@@ -283,7 +283,7 @@ public sealed class ReplayTests
 	public void ATakenOverReplayIsRecordedAgain(bool takesOver)
 	{
 		var replay = Record(4, run => run.Frames(Frames));
-		var player = new ReplayPlayer(new MemoryStream(replay)) { Speed = double.PositiveInfinity };
+		var player = new ReplayPlayer(new MemoryStream(replay)) { InitialSpeed = double.PositiveInfinity };
 		var opened = 0;
 		var stream = new MemoryStream();
 		var recorder = new ReplayRecorder(_ =>
@@ -362,7 +362,7 @@ public sealed class ReplayTests
 			}
 		);
 
-		var player = new ReplayPlayer(new MemoryStream(replay)) { Speed = double.PositiveInfinity };
+		var player = new ReplayPlayer(new MemoryStream(replay)) { InitialSpeed = double.PositiveInfinity };
 		var played = new ReplayFrames(player);
 		using var run = new SingleplayerRun(
 			3,
@@ -407,7 +407,7 @@ public sealed class ReplayTests
 	public void ASeekShowsFewFramesAndPlaysTheSame()
 	{
 		var replay = Record(3, run => run.Frames(Frames));
-		var player = new ReplayPlayer(new MemoryStream(replay)) { IsPaused = true };
+		var player = new ReplayPlayer(new MemoryStream(replay)) { IsInitiallyPaused = true };
 		player.SeekTo(Frames - 1);
 		var shown = new ShownFrames(player);
 		using var run = new SingleplayerRun(
@@ -560,7 +560,7 @@ public sealed class ReplayTests
 	// Plays a network battle's replay in a game of its own, with no rival, to its end.
 	private static ReplayPlayer PlayAlone(byte[] replay)
 	{
-		var player = new ReplayPlayer(new MemoryStream(replay)) { Speed = double.PositiveInfinity };
+		var player = new ReplayPlayer(new MemoryStream(replay)) { InitialSpeed = double.PositiveInfinity };
 		using var data = GameData.CreateCopy();
 		var scheduler = new LockstepScheduler();
 		var game = new LockstepGame(scheduler, new LoopbackNetwork(), data.Path, "Carol");

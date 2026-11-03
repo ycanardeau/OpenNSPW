@@ -130,7 +130,14 @@ public partial class Nspw
 
 	public int DirectDrawCreateEx(out IDirectDraw7? lplpDD)
 	{
-		lplpDD = new DirectDraw7(gdi, _platform.Present);
+		lplpDD = new DirectDraw7(
+			gdi,
+			primary =>
+			{
+				ShowChangedWindows();
+				_platform.Present(primary);
+			}
+		);
 		return ddraw.DD_OK;
 	}
 }

@@ -205,16 +205,17 @@ internal sealed class StaticText(bool right) : DialogControl
 	}
 }
 
-// The forms that show the game's dialogs (HWND, from NSPW_NET_RC.cs), kept in step with them. What the user does is
-// posted to the game's thread.
-internal sealed class DialogForms(Nspw game, WindowManager windowManager, UIFonts fonts)
+// The forms that show the game's dialogs (HWND, from NSPW_NET_RC.cs), kept in step with the view of them that the game
+// posts (GameSession.Windows). What the user does is posted to the game's thread.
+internal sealed class DialogForms(GameSession session, WindowManager windowManager, UIFonts fonts)
 {
 	// The pixels of a dialog unit, for the dialogs' 9-point font.
 	private const float UnitX = 1.5f;
 	private const float UnitY = 1.625f;
 	private const int CaptionHeight = 22;
 
-	private readonly Nspw _game = game;
+	private readonly GameSession _session = session;
+	private readonly Nspw _game = session.Game;
 	private readonly WindowManager _windowManager = windowManager;
 	private readonly UIFonts _fonts = fonts;
 	private readonly Dictionary<HWND, (Form Form, Dictionary<HWND, Control> Controls)> _forms = [];
@@ -229,7 +230,7 @@ internal sealed class DialogForms(Nspw game, WindowManager windowManager, UIFont
 		);
 	}
 
-	private Control CreateControl(HWND dialog, HWND item, DLGITEMTEMPLATE template)
+	private Control CreateControl(HWND dialog, WindowView item, DLGITEMTEMPLATE template)
 	{
 		Control control;
 		switch (template.Kind)
@@ -288,7 +289,7 @@ internal sealed class DialogForms(Nspw game, WindowManager windowManager, UIFont
 		return control;
 	}
 
-	private (Form, Dictionary<HWND, Control>) CreateForm(HWND dialog)
+	private (Form, Dictionary<HWND, Control>) CreateForm(WindowView dialog)
 	{
 		var template = dialog.Template!;
 		var size = ToPixels(0, 0, template.Cx, template.Cy);
@@ -310,10 +311,10 @@ internal sealed class DialogForms(Nspw game, WindowManager windowManager, UIFont
 			ForeColor = Theme.Brass,
 		};
 		form.Controls.Add(caption);
-		var controls = new Dictionary<HWND, Control> { [dialog] = caption };
+		var controls = new Dictionary<HWND, Control> { [dialog.Window] = caption };
 		foreach (var (item, itemTemplate) in dialog.Children.Zip(template.Items))
 		{
-			var control = CreateControl(dialog, item, itemTemplate);
+			var control = CreateControl(dialog.Window, item, itemTemplate);
 
 			// A left-aligned text may run to the dialog's edge: the font is wider than the original's.
 			if (itemTemplate.Kind == "LTEXT")
@@ -322,7 +323,7 @@ internal sealed class DialogForms(Nspw game, WindowManager windowManager, UIFont
 			}
 
 			form.Controls.Add(control);
-			controls[item] = control;
+			controls[item.Window] = control;
 		}
 
 		// Over the screen's forms, which were added before: the first of the root's controls is the front.
@@ -332,7 +333,7 @@ internal sealed class DialogForms(Nspw game, WindowManager windowManager, UIFont
 		return (form, controls);
 	}
 
-	private static void Update(HWND window, Control control)
+	private static void Update(WindowView window, Control control)
 	{
 		control.Enabled = window.Enabled;
 		switch (control)
@@ -344,11 +345,11 @@ internal sealed class DialogForms(Nspw game, WindowManager windowManager, UIFont
 				checkBox.Checked = window.Checked == winuser.BST_CHECKED;
 				break;
 			case ComboBoxControl combo:
-				combo.Items = [.. window.Items.Select(i => i.Text)];
+				combo.Items = window.Items;
 				combo.SelectedIndex = window.CurSel;
 				break;
 			case ListBoxControl list:
-				list.Items = [.. window.Items.Select(i => i.Text)];
+				list.Items = window.Items;
 				list.SelectedIndex = window.CurSel;
 				break;
 			default:
@@ -360,26 +361,26 @@ internal sealed class DialogForms(Nspw game, WindowManager windowManager, UIFont
 	// Shows a form for each dialog that exists, and removes those of the destroyed ones.
 	public void Update()
 	{
-		lock (_game.WindowsLock)
+		var dialogs = _session
+			.Windows.Where(w => w.Kind == "DIALOG" && w.Template is not null)
+			.ToDictionary(w => w.Window);
+		foreach (var gone in _forms.Keys.Where(d => !dialogs.ContainsKey(d)).ToList())
 		{
-			var dialogs = _game
-				.windows.Where(w => w.Kind == "DIALOG" && !w.Destroyed && w.Template is not null)
-				.ToHashSet();
-			foreach (var gone in _forms.Keys.Where(d => !dialogs.Contains(d)).ToList())
+			_windowManager.Root.Controls.Remove(_forms[gone].Form);
+			_forms.Remove(gone);
+		}
+
+		foreach (var (key, dialog) in dialogs)
+		{
+			if (!_forms.TryGetValue(key, out var entry))
 			{
-				_windowManager.Root.Controls.Remove(_forms[gone].Form);
-				_forms.Remove(gone);
+				entry = CreateForm(dialog);
+				_forms[key] = entry;
 			}
 
-			foreach (var dialog in dialogs)
+			foreach (var window in dialog.Children.Prepend(dialog))
 			{
-				if (!_forms.TryGetValue(dialog, out var entry))
-				{
-					entry = CreateForm(dialog);
-					_forms[dialog] = entry;
-				}
-
-				foreach (var (window, control) in entry.Controls)
+				if (entry.Controls.TryGetValue(window.Window, out var control))
 				{
 					Update(window, control);
 				}

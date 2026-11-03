@@ -1,3 +1,4 @@
+using Aigamo.Otsuki.Actors;
 using OpenNspw.DirectPlay;
 using OpenNspw.Tests.Lockstep;
 using Xunit;
@@ -185,7 +186,9 @@ public sealed class AllocationTests
 		using var files = GameData.CreateEmpty();
 		var platform = new Desktop.DesktopPlatform(
 			new GameFileLayers([], files.Path, []),
-			new Desktop.TextRasterizer()
+			new Desktop.TextRasterizer(),
+			new Mailbox<Desktop.UIMessage>(),
+			new Mailbox<GameMessage>()
 		);
 		var first = platform.RasterizeText("経過時間 12", 12, "ＭＳ ゴシック");
 		TextBitmap? again = null;

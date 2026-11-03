@@ -111,8 +111,8 @@ internal sealed class NspwGame : Game
 	{
 		var player = new ReplayPlayer(File.OpenRead(watch.Path))
 		{
-			Speed = watch.Speed,
-			IsPaused = watch.IsPaused,
+			InitialSpeed = watch.Speed,
+			IsInitiallyPaused = watch.IsPaused,
 		};
 		player.SeekTo(seekTo);
 		var scratch = Directory.CreateTempSubdirectory("OpenNSPW-replay-").FullName;
