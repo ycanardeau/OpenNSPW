@@ -460,14 +460,19 @@ internal sealed class GameSession : IDisposable
 	{
 		if (!_hasEnded && _thread.IsAlive)
 		{
-			if (Game.MainDialog is { } dialog)
+			// The game chooses on its thread, which owns its dialog and its window.
+			var game = Game;
+			game.PostToGame(() =>
 			{
-				Game.PostToGame(() => Game.ClickDlgItem(dialog, windef.IDCANCEL));
-			}
-			else if (Game.hwndApp is { } window)
-			{
-				Game.PostMessage(window, winuser.WM_CLOSE, 0, 0);
-			}
+				if (game.MainDialog is { } dialog)
+				{
+					game.ClickDlgItem(dialog, windef.IDCANCEL);
+				}
+				else if (game.hwndApp is { } window)
+				{
+					game.PostMessage(window, winuser.WM_CLOSE, 0, 0);
+				}
+			});
 		}
 	}
 

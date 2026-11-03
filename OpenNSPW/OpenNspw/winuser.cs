@@ -8,8 +8,10 @@ namespace OpenNspw;
 //
 // The game runs on its own thread. The functions with Win32 names are called on it. The methods at the end are what a
 // user does: tests call ClickDlgItem and the others directly on the game's thread, and the desktop app posts them with
-// PostToGame, so that they run on the game's thread when its message loop dispatches them, as in Win32. Window state is
-// read and changed under WindowsLock, which the desktop app also takes to draw the windows.
+// PostToGame, so that they run on the game's thread when its message loop dispatches them, as in Win32. The messages,
+// the keys' state and the cursor come to the game's mailbox (GameMessage), from any thread, and the game takes them
+// where it reads them. Window state is read and changed under WindowsLock, which the desktop app also takes to draw the
+// windows.
 
 public delegate nint DLGPROC(HWND hDlg, uint msg, nint wParam, nint lParam);
 
@@ -227,7 +229,6 @@ public partial class Nspw
 {
 	private readonly List<HWND> _windows = [];
 	private readonly Dictionary<string, WNDCLASS> _classes = [];
-	private readonly Queue<MSG> _messages = new();
 	private readonly byte[] _keyState = new byte[256];
 	private POINT _cursor;
 
@@ -256,6 +257,22 @@ public partial class Nspw
 		bytes.AsSpan(0, length).CopyTo(buffer);
 		buffer[length] = 0;
 		return length;
+	}
+
+	// Takes the cursor and the keys' state posted so far. Taking them earlier than where they are read gives the same
+	// state there, as each is the newest of its posts: the message loops take them too, so that they do not wait in the
+	// mailbox while no frame reads them.
+	private void TakeInputState()
+	{
+		while (Mailbox.TryReceive<GameMessage.Cursor>(out var cursor))
+		{
+			_cursor = cursor.Position;
+		}
+
+		while (Mailbox.TryReceive<GameMessage.KeyState>(out var key))
+		{
+			_keyState[key.VirtualKey & 0xFF] = key.IsDown ? (byte)0x80 : (byte)0;
+		}
 	}
 
 	// Calls the window's procedure, outside WindowsLock.
@@ -429,9 +446,8 @@ public partial class Nspw
 
 	public int PostMessage(HWND? hWnd, uint Msg, nint wParam, nint lParam)
 	{
-		lock (_messages)
-		{
-			_messages.Enqueue(
+		Mailbox.Post(
+			new GameMessage.Window(
 				new MSG
 				{
 					hwnd = hWnd,
@@ -439,10 +455,8 @@ public partial class Nspw
 					wParam = wParam,
 					lParam = lParam,
 				}
-			);
-			Monitor.PulseAll(_messages);
-		}
-
+			)
+		);
 		return TRUE;
 	}
 
@@ -463,46 +477,40 @@ public partial class Nspw
 
 	public int PeekMessage(ref MSG lpMsg, uint wRemoveMsg)
 	{
-		lock (_messages)
+		TakeInputState();
+		var isTaken =
+			(wRemoveMsg & PM_REMOVE) != 0
+				? Mailbox.TryReceive<GameMessage.Window>(out var window)
+				: Mailbox.TryPeek<GameMessage.Window>(out window);
+		if (!isTaken)
 		{
-			if (!_messages.TryPeek(out var msg))
-			{
-				return FALSE;
-			}
-
-			lpMsg = msg;
-			if ((wRemoveMsg & PM_REMOVE) != 0)
-			{
-				_messages.Dequeue();
-			}
-
-			return TRUE;
+			return FALSE;
 		}
+
+		lpMsg = window!.Message;
+		return TRUE;
 	}
 
 	// Waits for a message. Returns FALSE for WM_QUIT.
 	public int GetMessage(ref MSG lpMsg)
 	{
-		lock (_messages)
+		GameMessage.Window? window;
+		while (!Mailbox.TryReceive<GameMessage.Window>(out window))
 		{
-			while (_messages.Count == 0)
-			{
-				_platform.WaitForMessage(_messages);
-			}
-
-			lpMsg = _messages.Dequeue();
-			return lpMsg.message == WM_QUIT ? FALSE : TRUE;
+			_platform.WaitForMessage(Mailbox);
+			TakeInputState();
 		}
+
+		lpMsg = window.Message;
+		return lpMsg.message == WM_QUIT ? FALSE : TRUE;
 	}
 
 	public int WaitMessage()
 	{
-		lock (_messages)
+		while (!Mailbox.TryPeek<GameMessage.Window>(out _))
 		{
-			while (_messages.Count == 0)
-			{
-				_platform.WaitForMessage(_messages);
-			}
+			_platform.WaitForMessage(Mailbox);
+			TakeInputState();
 		}
 
 		return TRUE;
@@ -743,6 +751,7 @@ public partial class Nspw
 
 	public int GetCursorPos(ref POINT lpPoint)
 	{
+		TakeInputState();
 		lpPoint = _cursor;
 		return TRUE;
 	}
@@ -755,11 +764,8 @@ public partial class Nspw
 
 	public int GetKeyboardState(Span<byte> lpKeyState)
 	{
-		lock (_keyState)
-		{
-			_keyState.CopyTo(lpKeyState);
-		}
-
+		TakeInputState();
+		_keyState.CopyTo(lpKeyState);
 		return TRUE;
 	}
 
@@ -823,25 +829,18 @@ public partial class Nspw
 	// Runs a user's action on the game's thread, when its message loop dispatches it.
 	public void PostToGame(Action action)
 	{
-		lock (_messages)
-		{
-			_messages.Enqueue(new MSG { userAction = action });
-			Monitor.PulseAll(_messages);
-		}
+		Mailbox.Post(new GameMessage.Window(new MSG { userAction = action }));
 	}
 
 	public void SetCursorPos(int x, int y)
 	{
-		_cursor = new POINT { x = x, y = y };
+		Mailbox.Post(new GameMessage.Cursor(new POINT { x = x, y = y }));
 	}
 
 	// A virtual key went down or up, for GetKeyboardState. Posts WM_KEYDOWN to the window.
 	public void SetKeyState(HWND? hWnd, int vk, bool down)
 	{
-		lock (_keyState)
-		{
-			_keyState[vk & 0xFF] = down ? (byte)0x80 : (byte)0;
-		}
+		Mailbox.Post(new GameMessage.KeyState(vk, down));
 
 		if (down && hWnd is not null)
 		{

@@ -17,11 +17,10 @@ public interface INspwPlatform
 		Thread.Sleep((int)milliseconds);
 	}
 
-	// Waits until a message may have been posted to the game's message queue, like Monitor.Wait(queue). Called with the
-	// queue's lock held, when the queue is empty.
-	void WaitForMessage(object queue)
+	// Waits until a window message may have been posted to the game's mailbox (GameMessage.Window), when it has none.
+	void WaitForMessage(Aigamo.Otsuki.Actors.Mailbox<GameMessage> mailbox)
 	{
-		Monitor.Wait(queue);
+		mailbox.WaitFor(static message => message is GameMessage.Window);
 	}
 
 	// Shows a frame: what the game flipped or blitted to the primary surface.

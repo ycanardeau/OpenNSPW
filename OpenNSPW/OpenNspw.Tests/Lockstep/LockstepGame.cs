@@ -256,17 +256,11 @@ internal sealed class LockstepGame : INspwPlatform
 		Yield();
 	}
 
-	public void WaitForMessage(object queue)
+	// Everything that enters the game arrives while it is not running, so it waits for a message by letting the driver
+	// run.
+	public void WaitForMessage(Aigamo.Otsuki.Actors.Mailbox<GameMessage> mailbox)
 	{
-		Monitor.Exit(queue);
-		try
-		{
-			Yield();
-		}
-		finally
-		{
-			Monitor.Enter(queue);
-		}
+		Yield();
 	}
 
 	public void Present(DirectDrawSurface7 primary)

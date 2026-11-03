@@ -44,6 +44,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OpenNspw.Singleplayer\OpenNspw.Singleplayer.csproj" />
+    <ProjectReference Include="..\..\Otsuki\Aigamo.Otsuki.Actors\Aigamo.Otsuki.Actors.csproj" />
   </ItemGroup>
 
   <!-- Win32 handle types that are the same stand-in type. -->
