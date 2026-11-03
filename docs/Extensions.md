@@ -58,11 +58,12 @@ An extension implements `IGameExtension`, whose methods all do nothing by defaul
 | Project | What it is |
 | --- | --- |
 | `OpenNspw` | The port, and the extension API (`Extensions.cs`, and the calls at the points above) |
+| `OpenNspw.Verification` | The traces of 1.22 ([Verification.md](Verification.md)): the format, the replay that the game follows and checks itself against, and the recorder of the port |
 | `OpenNspw.Replay` | Replays: the format, the recorder, the player, the DirectPlay stand-in that gives the rival's messages, and a file layer with the files a battle started from |
 | `OpenNspw.Desktop` | The app: adds the recorder to every battle, plays replays, and shows them with a camera of their own |
 | `OpenNspw.Tests` | Tests of the port, and of the extensions in their games |
 
-Later, each its own change: the traces of 1.22 into a verification extension, the host UI's commands onto `PlayerAction`, computer players as an extension, and the out-of-process bridge. Until then they stay where they are. Moving them is not needed for the API to work.
+Later, each its own change ([FeatureExtensions.md](FeatureExtensions.md)): the host UI's commands onto `PlayerAction`, computer players as an extension, and the out-of-process bridge. Until then they stay where they are. Moving them is not needed for the API to work.
 
 ## Replays, as an extension
 - **Recorder.** At `BattleStarting` it takes the start: the mode, the scenario, the seeds, the network settings (`ReadNetworkBattleSettings`), and the files the battle starts from, read through the game's platform. At each point it writes what it sees: ticks, camera, actions, the rival's messages, hashes. It intervenes in nothing.
@@ -88,7 +89,8 @@ A bridge extension serves the API over a protocol (JSON-RPC over stdio or a sock
 1. **Core:** the extension API (`Extensions.cs`), and its calls at the points above. Existing tests show nothing else changed.
 2. **`OpenNspw.Replay`:** the format, the recorder and the player, on the API, for single-player and network battles: the rival's DirectPlay stand-in and the file layer.
 3. **Desktop:** every battle recorded; the Replays screen; the watch screen's bar; the free view, through `ReadSight(camera, ...)`.
-4. **Later:** keyframes, to seek back without playing from the start; the traces of 1.22 into a verification extension; the host UI's commands onto `PlayerAction`; computer players as an extension; the out-of-process bridge.
+4. **The traces of 1.22** into `OpenNspw.Verification`.
+5. **Later:** keyframes, to seek back without playing from the start; the host UI's commands onto `PlayerAction`; computer players as an extension; the out-of-process bridge.
 
 ## Open questions
 - Names: "extension" (VS Code's) or "plugin" or "mod"?

@@ -20,6 +20,7 @@
     <Project Path="OpenNSPW/OpenNspw.Replay/OpenNspw.Replay.csproj" />
     <Project Path="OpenNSPW/OpenNspw.Singleplayer/OpenNspw.Singleplayer.csproj" />
     <Project Path="OpenNSPW/OpenNspw.Tests/OpenNspw.Tests.csproj" />
+    <Project Path="OpenNSPW/OpenNspw.Verification/OpenNspw.Verification.csproj" />
     <Project Path="OpenNSPW/OpenNspw/OpenNspw.csproj" />
   </Folder>
   <Folder Name="/Otsuki/">

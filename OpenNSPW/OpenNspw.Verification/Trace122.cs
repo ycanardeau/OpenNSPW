@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace OpenNspw;
+namespace OpenNspw.Verification;
 
 // The points of a single-player game that a trace records, in the order 1.22 reaches them: game_init's start and its last
 // srand, then, for each frame, its start, each tick (before chara_cont) and decision, the drawing, the player's orders
@@ -132,11 +132,11 @@ public sealed record Trace122Point(
 // ends it.
 public static class Trace122
 {
-	public const int UnitCount = 101;
-	public const int UnitSize = 0x598;
-	public const int FireCount = 256;
-	public const int FireSize = 0x70;
-	public const int StateSize = UnitCount * UnitSize + FireCount * FireSize;
+	public const int UnitCount = Layout122.UnitCount;
+	public const int UnitSize = Layout122.UnitSize;
+	public const int FireCount = Layout122.FireCount;
+	public const int FireSize = Layout122.FireSize;
+	public const int StateSize = Layout122.StateSize;
 
 	public static ReadOnlySpan<byte> Magic => "N122TRC5"u8;
 

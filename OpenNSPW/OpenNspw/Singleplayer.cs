@@ -6,6 +6,17 @@ using OpenNspw.Singleplayer;
 
 namespace OpenNspw;
 
+// 1.22's layout of the units and the fires as WriteStateAs122 writes them, and a trace of 1.22 records them
+// (docs/Verification.md): units 0 to 100, then fires 0 to 255.
+public static class Layout122
+{
+	public const int UnitCount = 101;
+	public const int UnitSize = 0x598;
+	public const int FireCount = 256;
+	public const int FireSize = 0x70;
+	public const int StateSize = UnitCount * UnitSize + FireCount * FireSize;
+}
+
 // The single-player mode (docs/Singleplayer.md): the game against the computer of NSPW 1.22, whose own functions (the
 // computer's strategy, the scenarios and their victory conditions) run in an emulator on this state.
 public unsafe partial class Nspw
@@ -195,14 +206,14 @@ public unsafe partial class Nspw
 		}
 	}
 
-	// Writes the units and the fires that a trace of 1.22 records (Trace122.Units, Trace122.Fires), in 1.22's layout.
+	// Writes the units and the fires that a trace of 1.22 records, in 1.22's layout (Layout122).
 	public void WriteStateAs122(Span<byte> state)
 	{
-		for (var m = 0; m < Trace122.UnitCount; m++)
-			WriteUnitAs122(m, state.Slice(m * Trace122.UnitSize, Trace122.UnitSize));
+		for (var m = 0; m < Layout122.UnitCount; m++)
+			WriteUnitAs122(m, state.Slice(m * Layout122.UnitSize, Layout122.UnitSize));
 		MemoryMarshal
-			.AsBytes((Span<Fire>)Fires)[..(Trace122.FireCount * Trace122.FireSize)]
-			.CopyTo(state[(Trace122.UnitCount * Trace122.UnitSize)..]);
+			.AsBytes((Span<Fire>)Fires)[..(Layout122.FireCount * Layout122.FireSize)]
+			.CopyTo(state[(Layout122.UnitCount * Layout122.UnitSize)..]);
 	}
 
 	private void CopyUnitsOut(Emulator emulator)

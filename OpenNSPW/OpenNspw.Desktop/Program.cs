@@ -25,7 +25,7 @@ if (dataDirectory is not null && !Directory.Exists(dataDirectory))
 	return 1;
 }
 
-OpenNspw.Trace122Replay? replay = null;
+OpenNspw.Verification.Trace122Replay? replay = null;
 OpenNspw.Desktop.ReplayWatch? watch = null;
 if (Option(args, "--replay") is { } tracePath)
 {
@@ -42,7 +42,7 @@ if (Option(args, "--replay") is { } tracePath)
 		}
 
 		if (watch is null)
-			replay = new OpenNspw.Trace122Replay(File.OpenRead(tracePath));
+			replay = new OpenNspw.Verification.Trace122Replay(File.OpenRead(tracePath));
 	}
 	catch (Exception e)
 		when (e is IOException or UnauthorizedAccessException or InvalidDataException)

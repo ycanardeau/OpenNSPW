@@ -1,5 +1,6 @@
 using OpenNspw;
 using OpenNspw.Recorder122;
+using OpenNspw.Verification;
 
 // Records traces of NSPW 1.22 on Windows (docs/Verification.md): runs NSPW_122.exe under the debugger, and records each
 // battle played in it as a trace (Trace122), <scenario>-<date>-<time>.n122, in the output directory.
