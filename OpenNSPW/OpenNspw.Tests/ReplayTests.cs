@@ -1,6 +1,7 @@
 using OpenNspw.Replay;
 using OpenNspw.Tests.Lockstep;
 using Xunit;
+using static OpenNspw.all_head;
 using static OpenNspw.Tests.Lockstep.BattleScripts;
 
 namespace OpenNspw.Tests;
@@ -64,6 +65,31 @@ public sealed class ReplayTests
 
 		Assert.NotNull(player.Divergence);
 		Assert.Contains("not the one recorded", player.Divergence);
+	}
+
+	// The cursor does not move the replay's camera: recorded with the cursor amid the battlefield, where the view stays, and
+	// played with it at (0, 0), the corner, where it would scroll the view every frame.
+	[Fact]
+	public void TheCursorDoesNotMoveTheCamera()
+	{
+		var camera = default(WorldPosition);
+		var replay = Record(
+			3,
+			run =>
+			{
+				run.Game.SetCursorPos(CMBT_WIDTH / 2, CMBT_HEIGHT / 2);
+				run.Frames(Frames);
+				camera = run.Game.CameraPosition;
+			}
+		);
+
+		var player = new ReplayPlayer(new MemoryStream(replay)) { Speed = double.PositiveInfinity };
+		using var run = new SingleplayerRun(3, game => game.Extensions.Add(player));
+		run.Game.SetCursorPos(0, 0);
+		run.Frames(Frames);
+
+		Assert.Equal(camera, run.Game.CameraPosition);
+		player.Dispose();
 	}
 
 	// The player's ship, of scenario 4, that the tests order.
@@ -193,6 +219,76 @@ public sealed class ReplayTests
 
 		using var player = Play(replay, Frames);
 		Assert.Null(player.Divergence);
+	}
+
+	// A replay taken over halfway is recorded again, in a replay of its own: the battle from its start, as recorded, then
+	// what the player did, a ship sent away, which plays again as the new replay was played. Watched without being taken
+	// over, it leaves none.
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void ATakenOverReplayIsRecordedAgain(bool takesOver)
+	{
+		var replay = Record(4, run => run.Frames(Frames));
+		var player = new ReplayPlayer(new MemoryStream(replay)) { Speed = double.PositiveInfinity };
+		var opened = 0;
+		var stream = new MemoryStream();
+		var recorder = new ReplayRecorder(_ =>
+		{
+			opened++;
+			return stream;
+		})
+		{
+			HashInterval = 1,
+			Replay = player,
+		};
+		int ship;
+		WorldPosition destination;
+		using (
+			var run = new SingleplayerRun(
+				4,
+				game =>
+				{
+					game.Extensions.Add(player);
+					game.Extensions.Add(recorder);
+				},
+				startDate: 1_234_567_890
+			)
+		)
+		{
+			var game = run.Game;
+			run.Frames(Frames / 2);
+			if (takesOver)
+				player.TakeOver();
+			run.Frames(2);
+			ship = PlayersShip(game);
+			destination = new WorldPosition(
+				game.Units[ship].Position.X + 400,
+				game.Units[ship].Position.Y
+			);
+			run.Player.Commands.ClickUnit(ship);
+			run.Frames(2);
+			run.Player.Commands.SetDestination(destination);
+			run.Frames(Frames);
+		}
+		recorder.Dispose();
+		player.Dispose();
+
+		if (!takesOver)
+		{
+			Assert.Equal(0, opened);
+			return;
+		}
+
+		Assert.Equal(1, opened);
+		var again = stream.ToArray();
+		Assert.Equal(
+			[new PlayerAction.ClickUnit(ship), new PlayerAction.SetDestination(destination)],
+			ActionsOf(again)
+		);
+		using var replayed = Play(again, Frames / 2 + Frames + 8);
+		Assert.True(replayed.HasEnded);
+		Assert.Null(replayed.Divergence);
 	}
 
 	// The game's speed that the player chose, as the game showed it, is shown again as the replay plays: 4 after 1.

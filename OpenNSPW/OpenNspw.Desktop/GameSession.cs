@@ -113,7 +113,8 @@ internal sealed class GameSession : IDisposable
 	// Whether the game plays a replay, and gives the viewer its battle to watch: until the replay ends or is taken over.
 	public bool IsWatching => Replay is { HoldsInput: true };
 
-	// What records the game's battles in the user's replays, when it plays neither a replay nor a trace.
+	// What records the game's battles in the user's replays, when it follows no trace: a single-player replay's battle only
+	// once the player takes it over (ReplayRecorder.Replay).
 	private readonly ReplayRecorder? _recorder;
 
 	// The directory that a replay's game writes in, deleted as it ends, or null.
@@ -193,7 +194,8 @@ internal sealed class GameSession : IDisposable
 	// (docs/Singleplayer.md) instead of connecting to a rival. trace: a trace of 1.22 in that scenario, which the game
 	// follows. replay: a replay that the game plays, with what its viewer sees (view), in a game that writes in
 	// scratchDirectory, which is deleted as the game ends. Each battle of a game that plays neither is recorded in the
-	// user's replays. The session disposes the trace and the replay.
+	// user's replays, and so is a single-player replay's once it is taken over. The session disposes the trace and the
+	// replay.
 	public GameSession(
 		GameFileLayers files,
 		TextRasterizer text,
@@ -226,6 +228,11 @@ internal sealed class GameSession : IDisposable
 			if (view is not null)
 				Game.Extensions.Add(new ReplayViewExtension(view, _platform));
 			Game.Extensions.Add(replay);
+			if (replay.Start.Mode == ReplayMode.Singleplayer)
+			{
+				_recorder = new ReplayRecorder(OpenReplayFile) { Replay = replay };
+				Game.Extensions.Add(_recorder);
+			}
 		}
 		else if (trace is null)
 		{

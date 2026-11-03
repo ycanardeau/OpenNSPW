@@ -32,12 +32,19 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 	// The game's speed as the player had it in the frame (RecordedSpeed).
 	private short _recordedSpeed = 1;
 
+	// The camera as the player had it, which the game is given at each frame: the cursor still moves while the replay
+	// plays, and at the battlefield's edge would scroll the camera, which decides what is drawn, and so the battle.
+	private WorldPosition? _camera;
+
 	public ReplayStart Start => _reader.Start;
 
 	// The frames played so far, and how long they were played, in milliseconds.
 	public int Frame { get; private set; }
 
 	public long Milliseconds { get; private set; }
+
+	// How long the frame that the game runs now was played, in milliseconds, or null if the replay did not give it.
+	public int? FrameMilliseconds { get; private set; }
 
 	// Whether the replay has no frame left.
 	public bool HasEnded { get; private set; }
@@ -232,6 +239,7 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 
 	public short FrameStarting(Nspw game, short ticks)
 	{
+		FrameMilliseconds = null;
 		if (!HoldsInput)
 			return ticks;
 
@@ -244,6 +252,7 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 
 		Frame++;
 		Milliseconds += _next.Time;
+		FrameMilliseconds = _next.Time;
 		ticks = (short)_next.Value;
 		for (
 			_next = _reader.Next();
@@ -262,7 +271,9 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 			return;
 
 		foreach (var item in Take(item => item.Kind == ReplayRecord.Camera))
-			game.CameraPosition = item.Camera;
+			_camera = item.Camera;
+		if (_camera is { } camera)
+			game.CameraPosition = camera;
 	}
 
 	// The player's actions at this site in this frame.
