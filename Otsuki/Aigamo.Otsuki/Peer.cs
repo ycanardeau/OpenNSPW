@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading.Channels;
+using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Enumeration;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Session;
@@ -28,26 +28,19 @@ public sealed class Peer : IAsyncDisposable
 	/// </summary>
 	public static readonly Dpnid AllPlayers = Dpnid.Empty;
 
-	private readonly Channel<PeerEvent> _events = Channel.CreateUnbounded<PeerEvent>(
-		new UnboundedChannelOptions { SingleReader = false, SingleWriter = true }
-	);
-
+	private readonly Mailbox<PeerEvent> _events = new();
+	private readonly Latest<SessionSnapshot> _snapshot = new(SessionSnapshot.Empty);
+	private readonly Sequence _sendHandles = new();
 	private readonly PeerOptions _options;
 	private readonly SessionActor _session;
-	private SessionSnapshot _snapshot = SessionSnapshot.Empty;
-	private long _nextSendHandle;
 
 	public Peer(PeerOptions? options = null)
 	{
 		_options = options ?? PeerOptions.Default;
-		_session = new SessionActor(
-			_options,
-			_events.Writer,
-			snapshot => Volatile.Write(ref _snapshot, snapshot)
-		);
+		_session = new SessionActor(_options, _events, _snapshot.Post);
 	}
 
-	private SessionSnapshot Snapshot => Volatile.Read(ref _snapshot);
+	private SessionSnapshot Snapshot => _snapshot.Value;
 
 	public EndPoint? LocalEndPoint => Snapshot.LocalEndPoint;
 
@@ -264,7 +257,7 @@ public sealed class Peer : IAsyncDisposable
 		SendFlags flags = SendFlags.Guaranteed
 	)
 	{
-		var handle = Interlocked.Increment(ref _nextSendHandle);
+		var handle = _sendHandles.Next();
 		PostCommand(new SessionMessage.SendTo(target, data.ToArray(), flags, handle));
 		return handle;
 	}
@@ -301,7 +294,7 @@ public sealed class Peer : IAsyncDisposable
 		);
 
 	public bool TryGetEvent([NotNullWhen(true)] out PeerEvent? peerEvent) =>
-		_events.Reader.TryRead(out peerEvent);
+		_events.TryReceive(out peerEvent);
 
 	/// <summary>
 	/// Handles the queued events on the calling thread and returns how many were handled.
@@ -309,7 +302,7 @@ public sealed class Peer : IAsyncDisposable
 	public int DoWork(Action<PeerEvent> handler, int maxEvents = int.MaxValue)
 	{
 		var count = 0;
-		while (count < maxEvents && _events.Reader.TryRead(out var peerEvent))
+		while (count < maxEvents && _events.TryReceive(out var peerEvent))
 		{
 			handler(peerEvent);
 			count++;
@@ -322,7 +315,7 @@ public sealed class Peer : IAsyncDisposable
 	/// </summary>
 	public IAsyncEnumerable<PeerEvent> ReadEventsAsync(
 		CancellationToken cancellationToken = default
-	) => _events.Reader.ReadAllAsync(cancellationToken);
+	) => _events.ReadAllAsync(cancellationToken);
 
 	/// <summary>
 	/// Leaves the session, disconnecting gracefully from every peer, and shuts the peer down.

@@ -1,7 +1,6 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Net;
-using System.Threading.Channels;
 using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Messages.Enumeration;
@@ -35,7 +34,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		ITimer Timer
 	);
 
-	private readonly ChannelWriter<PeerEvent> _events;
+	private readonly Mailbox<PeerEvent> _events;
 	private readonly Action<SessionSnapshot> _publish;
 	private readonly Dictionary<long, PendingSend> _sends = [];
 	private readonly Dictionary<long, long> _sendHandles = [];
@@ -112,7 +111,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 
 	public SessionActor(
 		PeerOptions options,
-		ChannelWriter<PeerEvent> events,
+		Mailbox<PeerEvent> events,
 		Action<SessionSnapshot> publish
 	)
 	{
@@ -182,7 +181,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			)
 		);
 
-	public void Emit(PeerEvent peerEvent) => _events.TryWrite(peerEvent);
+	public void Emit(PeerEvent peerEvent) => _events.Post(peerEvent);
 
 	/// <summary>
 	/// Publishes a snapshot for other threads. Called before raising events that the snapshot must already reflect.
@@ -1150,7 +1149,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		CloseTimer.Cancel();
 		ShutDownEndpoint();
 		ClearSession();
-		_events.TryComplete();
+		_events.Complete();
 		foreach (var completion in completions)
 			completion.TrySetResult();
 		Stop();

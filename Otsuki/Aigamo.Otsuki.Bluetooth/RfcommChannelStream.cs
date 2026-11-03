@@ -1,5 +1,5 @@
 using System.Runtime.Versioning;
-using System.Threading.Channels;
+using Aigamo.Otsuki.Actors;
 
 namespace Aigamo.Otsuki.Bluetooth;
 
@@ -11,9 +11,7 @@ namespace Aigamo.Otsuki.Bluetooth;
 internal sealed class RfcommChannelStream(MacBluetoothConnector connector, long channel) : Stream
 {
 	private readonly MacBluetoothConnector _connector = connector;
-	private readonly Channel<byte[]> _received = Channel.CreateUnbounded<byte[]>(
-		new UnboundedChannelOptions { SingleReader = true, SingleWriter = true }
-	);
+	private readonly Mailbox<byte[]> _received = new();
 	private ReadOnlyMemory<byte> _pending;
 
 	public long Id { get; } = channel;
@@ -32,12 +30,12 @@ internal sealed class RfcommChannelStream(MacBluetoothConnector connector, long 
 		set => throw new NotSupportedException();
 	}
 
-	public void Receive(ReadOnlySpan<byte> data) => _received.Writer.TryWrite(data.ToArray());
+	public void Receive(byte[] data) => _received.Post(data);
 
 	/// <summary>
 	/// Ends the reads once what arrived has been read.
 	/// </summary>
-	public void End() => _received.Writer.TryComplete();
+	public void End() => _received.Complete();
 
 	public override async ValueTask<int> ReadAsync(
 		Memory<byte> buffer,
@@ -46,11 +44,9 @@ internal sealed class RfcommChannelStream(MacBluetoothConnector connector, long 
 	{
 		while (_pending.IsEmpty)
 		{
-			if (_received.Reader.TryRead(out var chunk))
+			if (_received.TryReceive(out var chunk))
 				_pending = chunk;
-			else if (
-				!await _received.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)
-			)
+			else if (!await _received.WaitToReceiveAsync(cancellationToken).ConfigureAwait(false))
 				return 0;
 		}
 

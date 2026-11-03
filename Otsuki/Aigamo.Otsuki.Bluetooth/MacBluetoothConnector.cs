@@ -1,6 +1,7 @@
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Transport;
 
 namespace Aigamo.Otsuki.Bluetooth;
@@ -8,11 +9,43 @@ namespace Aigamo.Otsuki.Bluetooth;
 /// <summary>
 /// Bluetooth RFCOMM channels on macOS, through IOBluetooth and the native library built from
 /// Native/OtsukiBluetooth.m. Starting publishes the service in the computer's SDP server, so that remote devices find
-/// its channel. The native library calls back on a thread of its own, so the callbacks only hand data on.
+/// its channel. The native library calls back on a thread of its own, so the callbacks only post what happened to the
+/// connector, an actor that owns the streams and the requests.
 /// </summary>
 [SupportedOSPlatform("macos")]
-internal sealed unsafe partial class MacBluetoothConnector : IStreamConnector
+internal sealed unsafe partial class MacBluetoothConnector
+	: Actor<MacBluetoothConnector.Message>,
+		IStreamConnector
 {
+	internal abstract record Message
+	{
+		private Message() { }
+
+		public sealed record Started(Action<EndPoint, Stream> OnAccept) : Message;
+
+		public sealed record Connect(
+			BluetoothEndPoint RemoteEndPoint,
+			TaskCompletionSource<Stream> Completion,
+			CancellationToken CancellationToken
+		) : Message;
+
+		public sealed record Cancel(long Request) : Message;
+
+		public sealed record Write(long Channel, byte[] Data) : Message;
+
+		public sealed record Close(long Channel) : Message;
+
+		public sealed record Accepted(long Channel, BluetoothEndPoint RemoteEndPoint) : Message;
+
+		public sealed record Opened(long Request, long Channel, int Status) : Message;
+
+		public sealed record Received(long Channel, byte[] Data) : Message;
+
+		public sealed record Closed(long Channel) : Message;
+
+		public sealed record Dispose : Message;
+	}
+
 	[StructLayout(LayoutKind.Sequential)]
 	private struct Callbacks
 	{
@@ -30,13 +63,13 @@ internal sealed unsafe partial class MacBluetoothConnector : IStreamConnector
 	private readonly byte[] _service;
 	private readonly string _serviceName;
 	private readonly GCHandle _handle;
-	private readonly Lock _lock = new();
+	private readonly nint _host;
 	private readonly Dictionary<long, RfcommChannelStream> _streams = [];
 	private readonly Dictionary<
 		long,
 		(BluetoothEndPoint, TaskCompletionSource<Stream>)
 	> _requests = [];
-	private nint _host;
+	private bool _isDestroyed;
 	private long _nextRequest;
 	private Action<EndPoint, Stream>? _onAccept;
 
@@ -154,36 +187,70 @@ internal sealed unsafe partial class MacBluetoothConnector : IStreamConnector
 	private RfcommChannelStream AddStream(long channel)
 	{
 		var stream = new RfcommChannelStream(this, channel);
-		lock (_lock)
-			_streams.Add(channel, stream);
+		_streams.Add(channel, stream);
 		return stream;
 	}
 
-	internal void Write(long channel, ReadOnlySpan<byte> data)
-	{
-		lock (_lock)
-		{
-			if (_host == 0 || !_streams.ContainsKey(channel))
-				return;
+	internal void Write(long channel, ReadOnlySpan<byte> data) =>
+		Post(new Message.Write(channel, data.ToArray()));
 
-			fixed (byte* bytes = data)
-				NativeWrite(_host, channel, bytes, data.Length);
-		}
+	internal void Close(long channel) => Post(new Message.Close(channel));
+
+	private void OnWrite(long channel, byte[] data)
+	{
+		if (_isDestroyed || !_streams.ContainsKey(channel))
+			return;
+
+		fixed (byte* bytes = data)
+			NativeWrite(_host, channel, bytes, data.Length);
 	}
 
-	internal void Close(long channel)
+	private void OnClose(long channel)
 	{
-		lock (_lock)
+		if (!_isDestroyed && _streams.Remove(channel))
+			NativeClose(_host, channel);
+	}
+
+	private void OnConnect(
+		BluetoothEndPoint remoteEndPoint,
+		TaskCompletionSource<Stream> completion,
+		CancellationToken cancellationToken
+	)
+	{
+		if (_isDestroyed)
 		{
-			if (_host != 0 && _streams.Remove(channel))
-				NativeClose(_host, channel);
+			completion.TrySetException(new ObjectDisposedException(nameof(MacBluetoothConnector)));
+			return;
 		}
+
+		// A connect cancelled before its turn is not sent.
+		if (cancellationToken.IsCancellationRequested)
+		{
+			completion.TrySetCanceled(cancellationToken);
+			return;
+		}
+
+		var request = ++_nextRequest;
+		_requests.Add(request, (remoteEndPoint, completion));
+		var registration = cancellationToken.Register(() =>
+		{
+			Post(new Message.Cancel(request));
+			completion.TrySetCanceled(cancellationToken);
+		});
+		completion.Task.ContinueWith(_ => registration.Dispose(), TaskScheduler.Default);
+		var address = remoteEndPoint.ToBytes();
+		fixed (byte* addressBytes = address)
+		fixed (byte* service = _service)
+			NativeConnect(_host, request, addressBytes, service);
 	}
 
 	private void OnAccepted(long channel, BluetoothEndPoint remoteEndPoint)
 	{
+		if (_isDestroyed)
+			return;
+
 		var stream = AddStream(channel);
-		if (Volatile.Read(ref _onAccept) is { } onAccept)
+		if (_onAccept is { } onAccept)
 			onAccept(remoteEndPoint, stream);
 		else
 			stream.Dispose();
@@ -193,13 +260,10 @@ internal sealed unsafe partial class MacBluetoothConnector : IStreamConnector
 	{
 		TaskCompletionSource<Stream>? completion = null;
 		BluetoothEndPoint? remoteEndPoint = null;
-		lock (_lock)
-		{
-			if (_requests.Remove(request, out var entry))
-				(remoteEndPoint, completion) = entry;
-		}
+		if (_requests.Remove(request, out var entry))
+			(remoteEndPoint, completion) = entry;
 
-		if (channel == 0)
+		if (channel == 0 || _isDestroyed)
 		{
 			completion?.TrySetException(
 				new IOException(
@@ -214,20 +278,70 @@ internal sealed unsafe partial class MacBluetoothConnector : IStreamConnector
 			stream.Dispose();
 	}
 
-	private void OnReceived(long channel, ReadOnlySpan<byte> data)
+	private void OnReceived(long channel, byte[] data)
 	{
-		RfcommChannelStream? stream;
-		lock (_lock)
-			stream = _streams.GetValueOrDefault(channel);
-		stream?.Receive(data);
+		_streams.GetValueOrDefault(channel)?.Receive(data);
 	}
 
 	private void OnClosed(long channel)
 	{
-		RfcommChannelStream? stream;
-		lock (_lock)
-			_streams.Remove(channel, out stream);
-		stream?.End();
+		if (_streams.Remove(channel, out var stream))
+			stream.End();
+	}
+
+	// Destroying waits for the native thread, which only posts to the connector: no callback comes after.
+	private void OnDispose()
+	{
+		if (_isDestroyed)
+			return;
+
+		_isDestroyed = true;
+		NativeDestroy(_host);
+		_handle.Free();
+		foreach (var stream in _streams.Values)
+			stream.End();
+		foreach (var (_, completion) in _requests.Values)
+			completion.TrySetException(new ObjectDisposedException(nameof(MacBluetoothConnector)));
+		_streams.Clear();
+		_requests.Clear();
+		Stop();
+	}
+
+	protected override void Receive(Message message)
+	{
+		switch (message)
+		{
+			case Message.Started started:
+				_onAccept = started.OnAccept;
+				break;
+			case Message.Connect connect:
+				OnConnect(connect.RemoteEndPoint, connect.Completion, connect.CancellationToken);
+				break;
+			case Message.Cancel cancel:
+				_requests.Remove(cancel.Request);
+				break;
+			case Message.Write write:
+				OnWrite(write.Channel, write.Data);
+				break;
+			case Message.Close close:
+				OnClose(close.Channel);
+				break;
+			case Message.Accepted accepted:
+				OnAccepted(accepted.Channel, accepted.RemoteEndPoint);
+				break;
+			case Message.Opened opened:
+				OnOpened(opened.Request, opened.Channel, opened.Status);
+				break;
+			case Message.Received received:
+				OnReceived(received.Channel, received.Data);
+				break;
+			case Message.Closed closed:
+				OnClosed(closed.Channel);
+				break;
+			case Message.Dispose:
+				OnDispose();
+				break;
+		}
 	}
 
 	// The callbacks run on the native library's thread, where an exception would end the process, so they keep
@@ -239,9 +353,11 @@ internal sealed unsafe partial class MacBluetoothConnector : IStreamConnector
 		try
 		{
 			FromContext(context)
-				?.OnAccepted(
-					channel,
-					BluetoothEndPoint.FromBytes(new ReadOnlySpan<byte>(address, 6))
+				?.Post(
+					new Message.Accepted(
+						channel,
+						BluetoothEndPoint.FromBytes(new ReadOnlySpan<byte>(address, 6))
+					)
 				);
 		}
 		catch (Exception) { }
@@ -252,7 +368,7 @@ internal sealed unsafe partial class MacBluetoothConnector : IStreamConnector
 	{
 		try
 		{
-			FromContext(context)?.OnOpened(request, channel, status);
+			FromContext(context)?.Post(new Message.Opened(request, channel, status));
 		}
 		catch (Exception) { }
 	}
@@ -262,7 +378,8 @@ internal sealed unsafe partial class MacBluetoothConnector : IStreamConnector
 	{
 		try
 		{
-			FromContext(context)?.OnReceived(channel, new ReadOnlySpan<byte>(data, length));
+			FromContext(context)
+				?.Post(new Message.Received(channel, new ReadOnlySpan<byte>(data, length).ToArray()));
 		}
 		catch (Exception) { }
 	}
@@ -272,7 +389,7 @@ internal sealed unsafe partial class MacBluetoothConnector : IStreamConnector
 	{
 		try
 		{
-			FromContext(context)?.OnClosed(channel);
+			FromContext(context)?.Post(new Message.Closed(channel));
 		}
 		catch (Exception) { }
 	}
@@ -293,11 +410,13 @@ internal sealed unsafe partial class MacBluetoothConnector : IStreamConnector
 			},
 			GCHandle.ToIntPtr(_handle)
 		);
+		Start();
 	}
 
+	// Listens on the caller's thread, as IOBluetooth may want, and throws if it cannot.
 	public void Start(Action<EndPoint, Stream> onAccept)
 	{
-		Volatile.Write(ref _onAccept, onAccept);
+		Post(new Message.Started(onAccept));
 		int status;
 		fixed (byte* service = _service)
 			status = NativeListen(_host, service, _serviceName);
@@ -319,56 +438,11 @@ internal sealed unsafe partial class MacBluetoothConnector : IStreamConnector
 		var completion = new TaskCompletionSource<Stream>(
 			TaskCreationOptions.RunContinuationsAsynchronously
 		);
-		var address = bluetooth.ToBytes();
-		lock (_lock)
-		{
-			if (_host == 0)
-				throw new ObjectDisposedException(nameof(MacBluetoothConnector));
+		if (!Post(new Message.Connect(bluetooth, completion, cancellationToken)))
+			throw new ObjectDisposedException(nameof(MacBluetoothConnector));
 
-			var request = ++_nextRequest;
-			_requests.Add(request, (bluetooth, completion));
-			var registration = cancellationToken.Register(() =>
-			{
-				lock (_lock)
-					_requests.Remove(request);
-				completion.TrySetCanceled(cancellationToken);
-			});
-			completion.Task.ContinueWith(_ => registration.Dispose(), TaskScheduler.Default);
-			fixed (byte* addressBytes = address)
-			fixed (byte* service = _service)
-				NativeConnect(_host, request, addressBytes, service);
-		}
 		return completion.Task;
 	}
 
-	public void Dispose()
-	{
-		nint host;
-		lock (_lock)
-		{
-			host = _host;
-			_host = 0;
-		}
-		if (host == 0)
-			return;
-
-		// Outside the lock: the native thread may be waiting for it in a callback, and destroying waits for that
-		// thread. No callback comes after.
-		NativeDestroy(host);
-		_handle.Free();
-
-		RfcommChannelStream[] streams;
-		TaskCompletionSource<Stream>[] completions;
-		lock (_lock)
-		{
-			streams = [.. _streams.Values];
-			completions = [.. _requests.Values.Select(entry => entry.Item2)];
-			_streams.Clear();
-			_requests.Clear();
-		}
-		foreach (var stream in streams)
-			stream.End();
-		foreach (var completion in completions)
-			completion.TrySetException(new ObjectDisposedException(nameof(MacBluetoothConnector)));
-	}
+	public void Dispose() => Post(new Message.Dispose());
 }

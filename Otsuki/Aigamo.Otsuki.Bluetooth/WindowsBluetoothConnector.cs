@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Transport;
 
 namespace Aigamo.Otsuki.Bluetooth;
@@ -10,14 +11,23 @@ namespace Aigamo.Otsuki.Bluetooth;
 /// Bluetooth RFCOMM channels on Windows, through Winsock's AF_BTH sockets. Starting listens on a channel that Windows
 /// chooses and publishes the service in the computer's SDP server, so that remote devices find the channel; opening
 /// a stream gives Windows the service's UUID, and Windows looks the channel up with SDP. The computer's controller and
-/// its paired devices come from the Bluetooth APIs.
+/// its paired devices come from the Bluetooth APIs. The connector is an actor that owns the listener and the service
+/// it published, which starting and disposing hand it.
 /// </summary>
-/// <param name="service">The UUID of the service, which hosts publish and guests connect to.</param>
-/// <param name="serviceName">The name that hosts publish the service under.</param>
 [SupportedOSPlatform("windows")]
-internal sealed partial class WindowsBluetoothConnector(Guid service, string serviceName)
-	: IStreamConnector
+internal sealed partial class WindowsBluetoothConnector
+	: Actor<WindowsBluetoothConnector.Message>,
+		IStreamConnector
 {
+	internal abstract record Message
+	{
+		private Message() { }
+
+		public sealed record Listening(Socket Listener, EndPoint Published) : Message;
+
+		public sealed record Dispose : Message;
+	}
+
 	private const AddressFamily BluetoothAddressFamily = (AddressFamily)32; // AF_BTH
 	private const ProtocolType RfcommProtocol = (ProtocolType)3; // BTHPROTO_RFCOMM
 	private const uint AnyPort = uint.MaxValue; // BT_PORT_ANY
@@ -166,10 +176,9 @@ internal sealed partial class WindowsBluetoothConnector(Guid service, string ser
 		public nint Blob;
 	}
 
-	private readonly Guid _service = service;
-	private readonly string _serviceName = serviceName;
+	private readonly Guid _service;
+	private readonly string _serviceName;
 	private readonly CancellationTokenSource _disposing = new();
-	private readonly Lock _lock = new();
 	private Socket? _listener;
 	private SocketEndPoint? _published;
 	private bool _disposed;
@@ -271,6 +280,15 @@ internal sealed partial class WindowsBluetoothConnector(Guid service, string ser
 	}
 
 	public EndPoint LocalEndPoint { get; } = GetLocalEndPoint();
+
+	/// <param name="service">The UUID of the service, which hosts publish and guests connect to.</param>
+	/// <param name="serviceName">The name that hosts publish the service under.</param>
+	public WindowsBluetoothConnector(Guid service, string serviceName)
+	{
+		_service = service;
+		_serviceName = serviceName;
+		Start();
+	}
 
 	private static Socket CreateSocket() =>
 		new(BluetoothAddressFamily, SocketType.Stream, RfcommProtocol);
@@ -376,18 +394,13 @@ internal sealed partial class WindowsBluetoothConnector(Guid service, string ser
 			);
 		}
 
-		lock (_lock)
+		if (!Post(new Message.Listening(listener, channel)))
 		{
-			if (_disposed)
-			{
-				SetService(channel, DeleteService);
-				listener.Dispose();
-				throw new ObjectDisposedException(nameof(WindowsBluetoothConnector));
-			}
-
-			_listener = listener;
-			_published = channel;
+			SetService(channel, DeleteService);
+			listener.Dispose();
+			throw new ObjectDisposedException(nameof(WindowsBluetoothConnector));
 		}
+
 		_ = AcceptAsync(listener, onAccept, _disposing.Token);
 	}
 
@@ -431,22 +444,34 @@ internal sealed partial class WindowsBluetoothConnector(Guid service, string ser
 		}
 	}
 
+	private void Close()
+	{
+		if (_published is not null)
+			SetService(_published, DeleteService);
+		_listener?.Dispose();
+	}
+
+	protected override void Receive(Message message)
+	{
+		switch (message)
+		{
+			case Message.Listening listening:
+				_listener = listening.Listener;
+				_published = (SocketEndPoint)listening.Published;
+				if (_disposed)
+					Close();
+				break;
+			case Message.Dispose when !_disposed:
+				_disposed = true;
+				Close();
+				Stop();
+				break;
+		}
+	}
+
 	public void Dispose()
 	{
-		Socket? listener;
-		SocketEndPoint? published;
-		lock (_lock)
-		{
-			if (_disposed)
-				return;
-
-			_disposed = true;
-			listener = _listener;
-			published = _published;
-		}
 		_disposing.Cancel();
-		if (published is not null)
-			SetService(published, DeleteService);
-		listener?.Dispose();
+		Post(new Message.Dispose());
 	}
 }

@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using System.Net;
 using System.Runtime.CompilerServices;
-using System.Threading.Channels;
+using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Messages.Enumeration;
 using Aigamo.Otsuki.Transport;
 
@@ -35,10 +35,7 @@ internal static class HostEnumerator
 	)
 	{
 		var timeProvider = options.TimeProvider;
-		var responses = Channel.CreateUnbounded<(
-			EndPoint Sender,
-			EnumerationMessage.Response Response
-		)>(new UnboundedChannelOptions { SingleReader = true });
+		var responses = new Mailbox<(EndPoint Sender, EnumerationMessage.Response Response)>();
 		using IDatagramTransport transport = options.TransportFactory(AnyEndPoint.For(target));
 		transport.Start(
 			(sender, datagram) =>
@@ -47,7 +44,7 @@ internal static class HostEnumerator
 					EnumerationMessageSerializer.Default.Deserialize(datagram)
 					is EnumerationMessage.Response response
 				)
-					responses.Writer.TryWrite((sender, response));
+					responses.Post((sender, response));
 			}
 		);
 
@@ -101,7 +98,7 @@ internal static class HostEnumerator
 			(EndPoint Sender, EnumerationMessage.Response Response) item;
 			try
 			{
-				item = await responses.Reader.ReadAsync(timeout.Token).ConfigureAwait(false);
+				item = await responses.ReceiveAsync(timeout.Token).ConfigureAwait(false);
 			}
 			catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
 			{
