@@ -1,6 +1,6 @@
 using static OpenNspw.all_head;
 
-namespace OpenNspw;
+namespace OpenNspw.HostUI;
 
 // The commands that the host's own UI gives the battle in place of the mouse's clicks (docs/UI.md), as an extension of
 // the game (docs/Extensions.md). Not part of the original. A command is given on any thread, and runs on the game's

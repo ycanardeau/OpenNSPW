@@ -1,4 +1,5 @@
 using Aigamo.Saruhashi;
+using OpenNspw.HostUI;
 using OpenNspw.Singleplayer;
 using DrawingColor = System.Drawing.Color;
 using DrawingPoint = System.Drawing.Point;

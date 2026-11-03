@@ -1,3 +1,4 @@
+using OpenNspw.HostUI;
 using OpenNspw.Tests.Lockstep;
 using Xunit;
 using static OpenNspw.Tests.Lockstep.BattleScripts;

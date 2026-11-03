@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using OpenNspw.HostUI;
 using OpenNspw.Tests.Lockstep;
 using Xunit;
 using static OpenNspw.all_head;

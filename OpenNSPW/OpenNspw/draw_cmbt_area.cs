@@ -445,6 +445,23 @@ public unsafe partial class Nspw
 			SelectUnit(PreviousSelectedUnit);
 		}
 	}
+
+	// The sprite's column of a unit facing a direction: one of eight, as DrawUnit sets SpriteColumn as it draws it.
+	public static int SpriteColumnOf(Angle direction)
+	{
+		return (int)(direction.Degrees / 22.5) switch
+		{
+			0 or 15 => 2,
+			1 or 2 => 1,
+			3 or 4 => 0,
+			5 or 6 => 7,
+			7 or 8 => 6,
+			9 or 10 => 5,
+			11 or 12 => 4,
+			13 or 14 => 3,
+			_ => 2,
+		};
+	}
 }
 
 public unsafe partial class Renderer

@@ -11,7 +11,7 @@ As in VS Code, which talks to its extensions through an extension API, and to la
 | --- | --- |
 | The editor's core | `OpenNspw`: the port, the game as the original plays it |
 | The extension API | The game's extension API, in `OpenNspw`: the points of a frame, the player's actions, a few entry points |
-| Built-in and third-party extensions | Projects beside the port: `OpenNspw.Replay` first, later the verification against 1.22, computer players, the host UI's commands |
+| Built-in and third-party extensions | Projects beside the port: `OpenNspw.Replay`, the verification against 1.22 (`OpenNspw.Verification`), the host UI (`OpenNspw.HostUI`), later computer players |
 | Language servers, out of process | Later, a bridge extension that speaks the API over a protocol, for programs outside the app |
 | The editor's window | The hosts: the desktop app, the tests, command-line tools, which choose the extensions and compose them |
 
@@ -50,7 +50,6 @@ An extension implements `IGameExtension`, whose methods all do nothing by defaul
 - `StartNetworkBattle(settings, peer, threadPool)`: starts a network battle from its settings, over a DirectPlay peer and thread pool of the extension's, without the setting screens, as `StartSingleplayerGame` does for 1.22's scenarios. The settings are what the setting screens and the rival's messages set: the seed, the sides, the rules, the map editor's scenario, the names, and what the rival's messages before the battle left of the turns, which `InitializeGame` keeps: whether a turn may go on at each sync point (`CanAdvance1`, `CanAdvance2`), and the rival's checksums.
 - `ReadNetworkBattleSettings()`: those settings, as a battle starts.
 - The queries (`Queries.cs`): the game's own checks and texts, which read and write nothing, such as whether a click on a unit counts (`CanClickUnit`), the combat menu's items (`ListCombatMenuItems`), where the landing mark goes (`LandingMarkAt`), what the player's units see (`IsSeaTileSeen`, `IsEffectSeen`), and the texts the game writes (`ReadUnitDetails`, `ReadResult`, ...).
-- `ReadSight(camera, ...)`: what the player sees around any camera, not only the game's, for a view that the battle does not follow (below).
 
 ### Rules
 - **Input authority.** At most one extension gives the player's input, such as a replay that plays or a trace of 1.22 that the game follows. While one does, the host's keys, clicks and commands are held back. It holds the input as long as it says so (`HoldsInput`): a replay until it ends or is taken over, a trace until it ends or the game differs from it.
@@ -63,11 +62,12 @@ An extension implements `IGameExtension`, whose methods all do nothing by defaul
 | --- | --- |
 | `OpenNspw` | The port, and the extension API (`Extensions.cs`, and the calls at the points above) |
 | `OpenNspw.Verification` | The traces of 1.22 ([Verification.md](Verification.md)): the format, the replay that the game follows and checks itself against, and the recorder of the port |
+| `OpenNspw.HostUI` | The host UI's commands (`UICommands`), given as the player's actions where the game takes the clicks they stand for, and what the UI reads of the game (`UIState`), such as what the player sees around any camera (`ReadSight(camera, ...)`) ([UI.md](UI.md)) |
 | `OpenNspw.Replay` | Replays: the format, the recorder, the player, the DirectPlay stand-in that gives the rival's messages, and a file layer with the files a battle started from |
 | `OpenNspw.Desktop` | The app: adds the recorder to every battle, plays replays, and shows them with a camera of their own |
 | `OpenNspw.Tests` | Tests of the port, and of the extensions in their games |
 
-Later, each its own change ([FeatureExtensions.md](FeatureExtensions.md)): the host UI's commands onto `PlayerAction`, computer players as an extension, and the out-of-process bridge. Until then they stay where they are. Moving them is not needed for the API to work.
+Later, each its own change: computer players as an extension, and the out-of-process bridge. How the traces of 1.22 and the host UI left the core is in [FeatureExtensions.md](FeatureExtensions.md).
 
 ## Replays, as an extension
 - **Recorder.** At `BattleStarting` it takes the start: the mode, the scenario, the seeds, the network settings (`ReadNetworkBattleSettings`), and the files the battle starts from, read through the game's platform. At each point it writes what it sees: ticks, camera, actions, the rival's messages, hashes. It intervenes in nothing.
@@ -80,7 +80,7 @@ Later, each its own change ([FeatureExtensions.md](FeatureExtensions.md)): the h
 A replay follows the recorded camera: the camera decides what is drawn, and drawing draws random numbers (1.22's effects take `rand`; a network battle's take the cosmetic table, which a landing plane reads). So the battle keeps the recorded camera, and the viewer gets one of its own:
 
 - The game runs with the recorded camera, exactly.
-- The desktop app keeps a viewer's camera, moved by dragging with the middle button and with the minimap. Its snapshot reads the sight around the viewer's camera (`ReadSight(camera, ...)`), and the battlefield is drawn from there. A button puts the view back on the player's camera.
+- The desktop app keeps a viewer's camera, moved by dragging with the middle button and with the minimap. Its snapshot reads the sight around the viewer's camera (`ReadSight(camera, ...)`, `OpenNspw.HostUI`), and the battlefield is drawn from there. A button puts the view back on the player's camera.
 - The viewer may show both sides, or only the recording player's. This is a choice of what to draw, not a change to the battle.
 - Taking over a single-player replay moves the game's camera to the viewer's.
 
@@ -93,10 +93,9 @@ A bridge extension serves the API over a protocol (JSON-RPC over stdio or a sock
 1. **Core:** the extension API (`Extensions.cs`), and its calls at the points above. Existing tests show nothing else changed.
 2. **`OpenNspw.Replay`:** the format, the recorder and the player, on the API, for single-player and network battles: the rival's DirectPlay stand-in and the file layer.
 3. **Desktop:** every battle recorded; the Replays screen; the watch screen's bar; the free view, through `ReadSight(camera, ...)`.
-4. **The traces of 1.22** into `OpenNspw.Verification`.
-5. **Later:** keyframes, to seek back without playing from the start; the host UI's commands onto `PlayerAction`; computer players as an extension; the out-of-process bridge.
+4. **The traces of 1.22** into `OpenNspw.Verification`, and **the host UI** into `OpenNspw.HostUI` ([FeatureExtensions.md](FeatureExtensions.md)).
+5. **Later:** keyframes, to seek back without playing from the start; computer players as an extension; the out-of-process bridge.
 
 ## Open questions
 - Names: "extension" (VS Code's) or "plugin" or "mod"?
 - Loading: only compiled in for now. Assemblies loaded at run time, and the bridge, come later. Should third-party extensions be a goal at all?
-- Should the host UI's commands and what the UI reads (`UICommands.cs`, `UIState.cs`) leave the core? They need the game's private functions today. With `PlayerAction` and `ReadSight(camera)` in the API, most of them would not.

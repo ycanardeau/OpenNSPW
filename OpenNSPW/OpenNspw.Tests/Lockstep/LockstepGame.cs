@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using OpenNspw.HostUI;
 using OpenNspw.Replay;
 using static OpenNspw.windef;
 using static OpenNspw.winuser;

@@ -1,3 +1,5 @@
+using OpenNspw.HostUI;
+
 namespace OpenNspw.Desktop;
 
 // What the host's UI shows of the game, as it was when the game showed a frame (docs/UI.md): copied on the game's
@@ -20,9 +22,9 @@ internal sealed class GameSnapshot
 	// The first plane's number, after both sides' ships (JPN_PLANE_START).
 	public int FirstPlane;
 
-	// What the player sees (ReadSight): the Nspw.SightSize by Nspw.SightSize tiles on and around the battlefield from
+	// What the player sees (ReadSight): the UIState.SightSize by UIState.SightSize tiles on and around the battlefield from
 	// (FirstColumn, FirstRow) that are drawn, by row, and the effects drawn.
-	public readonly bool[] SeenTiles = new bool[Nspw.SightSize * Nspw.SightSize];
+	public readonly bool[] SeenTiles = new bool[UIState.SightSize * UIState.SightSize];
 	public int FirstColumn;
 	public int FirstRow;
 	public readonly bool[] SeenEffects = new bool[all_head.EFFECT_MAX];
