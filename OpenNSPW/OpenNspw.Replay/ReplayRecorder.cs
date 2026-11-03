@@ -1,8 +1,69 @@
 namespace OpenNspw.Replay;
 
+// A file not opened yet: what is written is kept in memory until the stream to write it to is given (Keep), and then goes
+// there after it. Disposed before, it drops what it kept.
+internal sealed class PendingStream : Stream
+{
+	private MemoryStream? _kept = new();
+	private Stream? _target;
+
+	public bool IsKept => _target is not null;
+
+	public override bool CanRead => false;
+
+	public override bool CanSeek => false;
+
+	public override bool CanWrite => true;
+
+	public override long Length => throw new NotSupportedException();
+
+	public override long Position
+	{
+		get => throw new NotSupportedException();
+		set => throw new NotSupportedException();
+	}
+
+	// What was kept, then what is written after it, goes to `target`, which this stream disposes.
+	public void Keep(Stream target)
+	{
+		_kept!.WriteTo(target);
+		_kept = null;
+		_target = target;
+	}
+
+	public override void Write(byte[] buffer, int offset, int count)
+	{
+		(_target ?? _kept)!.Write(buffer, offset, count);
+	}
+
+	public override void Flush()
+	{
+		_target?.Flush();
+	}
+
+	public override int Read(byte[] buffer, int offset, int count) =>
+		throw new NotSupportedException();
+
+	public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+	public override void SetLength(long value) => throw new NotSupportedException();
+
+	protected override void Dispose(bool disposing)
+	{
+		if (disposing)
+			_target?.Dispose();
+		base.Dispose(disposing);
+	}
+}
+
 // Records each battle of a game in a replay of its own, in the stream that `open` opens for its start, which the recorder
 // disposes as the battle ends: as the next one starts, or as the recorder is disposed. The map editor's battles are not
 // recorded. It changes nothing in the game.
+//
+// In a game that plays a replay (Replay), added after it, it records the battle as the replay plays it, with the frames'
+// times as they were played, but opens the stream only once the player takes the battle over (ReplayPlayer.TakeOver),
+// and keeps it in memory until then: the new replay is the battle from its start, as recorded, then what the player
+// did. A replay never taken over leaves none.
 public sealed class ReplayRecorder(Func<ReplayStart, Stream> open) : IGameExtension, IDisposable
 {
 	// The frames between two flushes of the file.
@@ -10,6 +71,7 @@ public sealed class ReplayRecorder(Func<ReplayStart, Stream> open) : IGameExtens
 
 	private readonly Func<ReplayStart, Stream> _open = open;
 	private ReplayWriter? _writer;
+	private PendingStream? _pending;
 	private ReplayStart? _start;
 	private uint _lastTime;
 	private WorldPosition? _camera;
@@ -18,6 +80,9 @@ public sealed class ReplayRecorder(Func<ReplayStart, Stream> open) : IGameExtens
 
 	// The frames between two hashes of the battle: 1 hashes every frame, to find the first that differs.
 	public int HashInterval { get; init; } = 10;
+
+	// The replay that the game plays, or null.
+	public ReplayPlayer? Replay { get; init; }
 
 	// The bytes of a file of the game, or null if there is none.
 	private static byte[]? ReadFile(Nspw game, string path)
@@ -65,6 +130,7 @@ public sealed class ReplayRecorder(Func<ReplayStart, Stream> open) : IGameExtens
 	{
 		_writer?.Dispose();
 		_writer = null;
+		_pending = null;
 	}
 
 	public void BattleStarting(Nspw game)
@@ -99,7 +165,9 @@ public sealed class ReplayRecorder(Func<ReplayStart, Stream> open) : IGameExtens
 			BattleSeed = game.RandomState,
 			Files = [.. _start.Files.UnionBy(StartFiles(game), file => file.Path)],
 		};
-		_writer = new ReplayWriter(_open(start), start);
+		_start = start;
+		_pending = Replay is null ? null : new PendingStream();
+		_writer = new ReplayWriter(_pending ?? _open(start), start);
 		_lastTime = game.Now;
 		_camera = null;
 		_result = GameResult.None;
@@ -108,7 +176,13 @@ public sealed class ReplayRecorder(Func<ReplayStart, Stream> open) : IGameExtens
 
 	public short FrameStarting(Nspw game, short ticks)
 	{
-		_writer?.WriteFrame((int)(game.Now - _lastTime), ticks);
+		if (_pending is { IsKept: false } && Replay!.IsTakenOver)
+		{
+			_pending.Keep(_open(_start!));
+			_writer!.Flush();
+		}
+
+		_writer?.WriteFrame(Replay?.FrameMilliseconds ?? (int)(game.Now - _lastTime), ticks);
 		_lastTime = game.Now;
 		return ticks;
 	}

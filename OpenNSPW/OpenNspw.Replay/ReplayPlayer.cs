@@ -39,6 +39,9 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 
 	public long Milliseconds { get; private set; }
 
+	// How long the frame that the game runs now was played, in milliseconds, or null if the replay did not give it.
+	public int? FrameMilliseconds { get; private set; }
+
 	// Whether the replay has no frame left.
 	public bool HasEnded { get; private set; }
 
@@ -232,6 +235,7 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 
 	public short FrameStarting(Nspw game, short ticks)
 	{
+		FrameMilliseconds = null;
 		if (!HoldsInput)
 			return ticks;
 
@@ -244,6 +248,7 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 
 		Frame++;
 		Milliseconds += _next.Time;
+		FrameMilliseconds = _next.Time;
 		ticks = (short)_next.Value;
 		for (
 			_next = _reader.Next();
