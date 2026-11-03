@@ -105,6 +105,9 @@ internal sealed class LockstepGame : INspwPlatform
 
 	public Nspw Game { get; }
 
+	// The host UI's commands, which the game takes as an extension (docs/UI.md).
+	public UICommands Commands { get; } = new();
+
 	public int FrameCount { get; private set; }
 
 	public bool Ended { get; private set; }
@@ -181,6 +184,7 @@ internal sealed class LockstepGame : INspwPlatform
 		);
 		Name = name;
 		Game = new Nspw(this);
+		Game.Extensions.Add(Commands);
 		_thread = new Thread(Run) { IsBackground = true, Name = name };
 	}
 

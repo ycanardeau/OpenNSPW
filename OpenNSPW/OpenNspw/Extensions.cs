@@ -226,7 +226,7 @@ public interface IGameExtension
 	// Before the battle is drawn, after its ticks: an extension may set the camera.
 	void Drawing(Nspw game) { }
 
-	// Where the game takes the actions of a part of the screen (RunUICommands), or the frame's orders: an extension may do
+	// Where the game takes the actions of a part of the screen (Extensions.InputSite), or the frame's orders: an extension may do
 	// the player's actions there (Nspw.Do). `counts`: whether a click counts there in this frame, as the part is shown
 	// and the player may give it.
 	void InputSite(Nspw game, ActionSite site, bool counts) { }

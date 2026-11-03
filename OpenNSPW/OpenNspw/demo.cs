@@ -1225,8 +1225,8 @@ public unsafe partial class Nspw
 		// 戦闘開始
 		UpdateStartBattleButton(ref length, ref text, x, ref hdc, ref message);
 
-		// The host's UI's commands for the rules (UICommands.cs).
-		RunUICommands(ActionSite.Rules, IsHost);
+		// Extensions take the clicks on the rules here (docs/Extensions.md).
+		Extensions.InputSite(ActionSite.Rules, IsHost);
 
 		if (IsHost && RivalMode == Mode && (Renderer.FrameCount % 10) == 0)
 		{
@@ -2003,8 +2003,8 @@ public unsafe partial class Nspw
 
 #endif
 
-			// The host's UI's commands for the list (UICommands.cs).
-			RunUICommands(ActionSite.ScenarioList, IsHost && Mode == GameMode.GameSetting);
+			// Extensions take the clicks on the list here (docs/Extensions.md).
+			Extensions.InputSite(ActionSite.ScenarioList, IsHost && Mode == GameMode.GameSetting);
 
 			if (IsHost && Mode == GameMode.GameSetting)
 			{
@@ -2020,8 +2020,9 @@ public unsafe partial class Nspw
 				UpdateScenarioPageButton(ref length, ref text, ref hdc);
 			}
 
-			// The host's UI's commands for the page, the starts from saved battles and the sides (UICommands.cs).
-			RunUICommands(ActionSite.ScenarioMenu, IsHost && Mode == GameMode.GameSetting);
+			// Extensions take the clicks on the page, the starts from saved battles and the sides here
+			// (docs/Extensions.md).
+			Extensions.InputSite(ActionSite.ScenarioMenu, IsHost && Mode == GameMode.GameSetting);
 
 			// リジュームスタート
 			UpdateResumeButton(ref x, ref length, ref text, ref hdc, ref message);
@@ -2285,8 +2286,8 @@ public unsafe partial class Nspw
 			}
 			else
 			{
-				// The host's UI's commands for the rules, which are not shown, are dropped (UICommands.cs).
-				RunUICommands(ActionSite.Rules, false);
+				// The clicks on the rules, which are not shown, do not count (docs/Extensions.md).
+				Extensions.InputSite(ActionSite.Rules, false);
 			}
 
 			IDirectDrawSurface_ReleaseDC(Renderer.lpDDSBack, hdc);

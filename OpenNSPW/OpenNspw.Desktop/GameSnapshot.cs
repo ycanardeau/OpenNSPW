@@ -60,9 +60,8 @@ internal sealed class GameSnapshot
 	// The item of the combat menu in effect for the selected unit (ReadActiveCombatMenuItem), which the menu shows chosen.
 	public CombatMenuItem ActiveCombatMenuItem;
 
-	// The combat menu's items, as the game showed them in the frame (ShownCombatMenu).
-	public Array6<CombatMenuItem> CombatMenu;
-	public int CombatMenuCount;
+	// The combat menu's items, as the game showed them in the frame (UICommands.ShownCombatMenu).
+	public CombatMenuItem[] CombatMenu = [];
 
 	// Whether the player can give the turn's order (CanOrder).
 	public bool CanOrder;
@@ -149,7 +148,7 @@ internal sealed class GameSnapshot
 	}
 
 	// On the game's thread. view: what the viewer of a replay sees, or null for the player's view.
-	public void CopyFrom(Nspw game, ReplayView? view = null)
+	public void CopyFrom(Nspw game, UICommands commands, ReplayView? view = null)
 	{
 		var camera = view?.CameraFor(game.CameraPosition) ?? game.CameraPosition;
 		SeesAll = view?.SeesAll ?? false;
@@ -168,13 +167,12 @@ internal sealed class GameSnapshot
 		ClearsPath = game.MoveOrders[1].ClearsPath != 0;
 		MaxUnitId = game.MaxUnitId;
 		GameCameraPosition = CameraPosition = camera;
-		LastCameraMove = game.LastCameraMove;
+		LastCameraMove = commands.LastCameraMove;
 		SelectedUnit = game.SelectedUnit;
 		Selections = game.Selections[1];
 		CombatMenuKind = game.CombatMenuKind;
 		ActiveCombatMenuItem = game.ReadActiveCombatMenuItem();
-		CombatMenu = game.ShownCombatMenu;
-		CombatMenuCount = game.ShownCombatMenuCount;
+		CombatMenu = commands.ShownCombatMenu;
 		CanOrder = game.CanOrder;
 		UnitInfoPanel = game.UnitInfoPanel;
 		UnitDetails = game.ReadUnitDetails();

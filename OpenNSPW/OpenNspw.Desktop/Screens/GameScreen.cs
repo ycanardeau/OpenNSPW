@@ -88,11 +88,7 @@ internal sealed class GameScreen(
 		var snapshot = _session.Snapshot;
 		_session.Replay!.TakeOver();
 		var (game, viewer) = (_session.Game.CameraPosition, snapshot.CameraPosition);
-		_session.Game.Commands.ScrollBattlefield(
-			(int)(viewer.X - game.X),
-			(int)(game.Y - viewer.Y),
-			0
-		);
+		_session.Commands.ScrollBattlefield((int)(viewer.X - game.X), (int)(game.Y - viewer.Y), 0);
 		watch.View.FollowsPlayer = true;
 		watch.View.SeesAll = false;
 	}

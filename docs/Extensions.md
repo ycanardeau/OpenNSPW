@@ -32,7 +32,7 @@ An extension implements `IGameExtension`, whose methods all do nothing by defaul
 | `TickStarting` | Before each tick of the battle (`UpdateBattle`) | Read the battle |
 | `ResultChecking` | At the start of `CheckResult`: after each tick that is not drawn in a single-player game, and after the drawing | Read the battle |
 | `Drawing` | Before `DrawBattleArea` | Read or set the camera |
-| `InputSite(site, counts)` | Where the game takes the clicks of a part of the screen (`RunUICommands`), with whether a click counts there in this frame; and at the start of `HandleInput` (`Orders`), where it takes the frame's orders | Do player actions there |
+| `InputSite(site, counts)` | Where the game takes the clicks of a part of the screen (`DrawBattleArea`, `UpdateUnitInfo`, `UpdateGameSetting`), with whether a click counts there in this frame; and at the start of `HandleInput` (`Orders`), where it takes the frame's orders | Do player actions there |
 | `OrdersStarting` | Where a turn's orders start to be applied (`IssueSingleplayerOrders`, `ReceiveAndIssueOrders`) | Read the battle |
 | `PlayerAction(action)` | In the functions that a click calls, as the game does it | Read it |
 | `UninitializedLocal(instruction)` | Where the port reads a local that 1.22 reads without setting it ([Verification.md](Verification.md)) | Answer what Windows' stack held there; the first that answers wins |

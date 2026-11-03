@@ -129,13 +129,13 @@ public sealed class ReplayTests
 					game.Units[ship].Position.X + 400,
 					game.Units[ship].Position.Y
 				);
-				game.Commands.ClickUnit(ship);
+				run.Player.Commands.ClickUnit(ship);
 				run.Frames(2);
-				game.Commands.SetDestination(destination);
+				run.Player.Commands.SetDestination(destination);
 				run.Frames(10);
-				game.Commands.RightClick();
+				run.Player.Commands.RightClick();
 				run.Frames(2);
-				game.Commands.RightClick();
+				run.Player.Commands.RightClick();
 				run.Frames(Frames);
 			}
 		);
@@ -165,9 +165,9 @@ public sealed class ReplayTests
 			var game = run.Game;
 			run.Frames(2);
 			var ship = PlayersShip(game);
-			game.Commands.ClickUnit(ship);
+			run.Player.Commands.ClickUnit(ship);
 			run.Frames(2);
-			game.Commands.SetDestination(
+			run.Player.Commands.SetDestination(
 				new WorldPosition(game.Units[ship].Position.X + 400, game.Units[ship].Position.Y)
 			);
 			run.Frames(2);

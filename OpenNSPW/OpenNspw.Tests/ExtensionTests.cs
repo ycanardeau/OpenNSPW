@@ -89,9 +89,9 @@ public sealed class ExtensionTests
 			game.Units[ship].Position.Y
 		);
 
-		game.Commands.ClickUnit(ship);
+		run.Player.Commands.ClickUnit(ship);
 		run.Frames(2);
-		game.Commands.SetDestination(destination);
+		run.Player.Commands.SetDestination(destination);
 		run.Frames(2);
 
 		Assert.Equal(

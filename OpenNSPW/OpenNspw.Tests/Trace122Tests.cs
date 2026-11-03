@@ -166,9 +166,9 @@ public sealed class Trace122Tests
 				game.Units[ship].Position.X + 400,
 				game.Units[ship].Position.Y
 			);
-			game.Commands.ClickUnit(ship);
+			run.Player.Commands.ClickUnit(ship);
 			run.Frames(2);
-			game.Commands.SetDestination(destination);
+			run.Player.Commands.SetDestination(destination);
 			run.Frames(Frames);
 		}
 		recorder.Dispose();

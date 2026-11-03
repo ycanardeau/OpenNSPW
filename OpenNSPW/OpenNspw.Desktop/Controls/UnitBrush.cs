@@ -57,7 +57,7 @@ internal sealed class UnitBrush(GameSession session)
 		if (_adds is not { } adds || m is not { } unit || !_brushed.Add(unit))
 			return;
 
-		_session.Game.Commands.BrushUnit(unit, adds);
+		_session.Commands.BrushUnit(unit, adds);
 	}
 
 	public void Release()

@@ -1,29 +1,40 @@
+using static OpenNspw.all_head;
+
 namespace OpenNspw;
 
-// The commands that the host's own UI gives the battle in place of the mouse's clicks (docs/UI.md). Not part of the
-// original. Each command runs where the battle takes the click it stands for, counts only where that click would count,
-// and does what it does with the same functions, so that a battle ordered with commands sends the same orders as one
-// ordered with the mouse.
-public unsafe partial class Nspw
+// The commands that the host's own UI gives the battle in place of the mouse's clicks (docs/UI.md), as an extension of
+// the game (docs/Extensions.md). Not part of the original. A command is given on any thread, and runs on the game's
+// where the battle takes the click it stands for (IGameExtension.InputSite); it counts only where that click would count,
+// and does the player's action that the click does (Nspw.Do), so that a battle ordered with commands sends the same
+// orders as one ordered with the mouse.
+public sealed class UICommands : IGameExtension
 {
-	// The items of the combat menu in the last frame (ListCombatMenu), for the host's UI to show: none if the menu was
-	// not shown.
-	public Array6<CombatMenuItem> ShownCombatMenu;
-	public int ShownCombatMenuCount;
+	private readonly Lock _lock = new();
+	private readonly List<(ActionSite Site, Action<Nspw> Run)> _queued = [];
 
-	private readonly Lock _uiCommandsLock = new();
-	private readonly List<(ActionSite Site, Action Run)> _uiCommands = [];
+	// The units brushed with the left button held (BrushUnit), to put in the selected unit's formation or to take out of
+	// it: a click on each, one a frame, as the game takes one click on a unit a frame (SelectOrders[1]).
+	private readonly Queue<(int Unit, bool IsAdded)> _brushed = new();
 
-	// Queues a command, unless an extension gives the player's input, such as a replay or a trace of 1.22 that the game
-	// follows, which give it none (IGameExtension.HoldsInput).
-	private void QueueUICommand(ActionSite site, Action run)
+	// A click on the combat menu that waits for a frame in which it counts, and the frame it was given in.
+	private (CombatMenuItem Item, int Since)? _waitingCombatMenu;
+
+	// A click on the system menu that waits for a frame in which it counts, and the frame it was given in.
+	private (MessageType Answer, int Since)? _waitingSystemMenu;
+
+	// The items of the combat menu in the last frame (ListCombatMenuItems), for the host's UI to show: none if the menu
+	// was not shown. On the game's thread.
+	public CombatMenuItem[] ShownCombatMenu { get; private set; } = [];
+
+	// The last move of the battlefield taken (ScrollBattlefield), for the host's UI, which shows the moves it gave before
+	// the game takes them. On the game's thread.
+	public int LastCameraMove { get; private set; }
+
+	private void Queue(ActionSite site, Action<Nspw> run)
 	{
-		if (Extensions.HoldsInput)
-			return;
-
-		lock (_uiCommandsLock)
+		lock (_lock)
 		{
-			_uiCommands.Add((site, run));
+			_queued.Add((site, run));
 		}
 	}
 
@@ -33,643 +44,535 @@ public unsafe partial class Nspw
 		return site is ActionSite.ScenarioList or ActionSite.ScenarioMenu or ActionSite.Rules;
 	}
 
-	// Runs the commands queued for a site, in order, on the game's thread; or drops them, as clicks are dropped, when they
-	// do not count. The commands of the other screens' sites are dropped too: they were given for a screen that is gone.
-	internal void RunUICommands(ActionSite site, bool count)
-	{
-		// Extensions may do the player's actions where the clicks are taken (docs/Extensions.md).
-		Extensions.InputSite(site, count);
-
-		List<Action> runs;
-		lock (_uiCommandsLock)
-		{
-			runs = [.. _uiCommands.Where(c => c.Site == site).Select(c => c.Run)];
-			_uiCommands.RemoveAll(c =>
-				c.Site == site || IsSettingSite(c.Site) != IsSettingSite(site)
-			);
-		}
-
-		if (count)
-		{
-			foreach (var run in runs)
-			{
-				run();
-			}
-		}
-	}
-
 	// The sound of a press of either button, anywhere on the screen, which the game plays where it takes the battlefield's
 	// clicks, unless an order waits for its turn (DrawBattleArea).
-	private void PlayClickSound()
+	private static void PlayClickSound(Nspw game)
 	{
-		Sound.PlayInterfaceSound(SoundId.Click1);
+		game.Sound.PlayInterfaceSound(SoundId.Click1);
 	}
 
-	// Whether the selected unit is shown, so that its path is drawn and a click gives it a destination or a right click
-	// deselects it (DrawUnitMarks): a parked plane only on the deck shown in the sidebar (IsOnShownDeck).
-	private bool IsSelectedShown()
+	private static void RunClickUnit(Nspw game, int m)
 	{
-		ref var unit = ref Units[SelectedUnit];
-		return SelectedUnit != 0
-			&& unit.IsUsed
-			&& (
-				!(unit.Category == UnitCategory.Plane && unit.PlaneState == UnitState.Parked)
-				|| Renderer.IsOnShownDeck(ref unit)
-			)
-			&& !IsEditingMap;
-	}
-
-	private void RunClickUnit(int m)
-	{
-		ref var unit = ref Units[m];
+		ref var unit = ref game.Units[m];
 		if (
 			m != 0
 			&& unit.IsUsed
-			&& (unit.Side == LocalSide || unit.IsFound)
+			&& (unit.Side == game.LocalSide || unit.IsFound)
 			&& (
 				!(unit.Category == UnitCategory.Plane && unit.PlaneState == UnitState.Parked)
-				|| Renderer.IsOnShownDeck(ref unit)
+				|| game.IsOnShownDeck(m)
 			)
-			&& CanClickUnit(ref unit)
+			&& game.CanClickUnit(m)
 		)
 		{
-			ClickUnit(m, default);
+			game.Do(new PlayerAction.ClickUnit(m));
 		}
 	}
 
-	// Whether unit m can be in the formation of the leader, as a click on it with the leader selected puts it there
-	// (SelectFriendlyTarget): the player's, of the same category, and neither of them a base. A plane does not take a
-	// carrier or an air base, which a click would make it land on, nor a ship a plane; a parked plane takes the planes
-	// parked on the deck shown, and a flying one those flying.
-	private bool IsFormationMate(int leader, int m)
-	{
-		ref var unit = ref Units[m];
-		var isParked = unit.Category == UnitCategory.Plane && unit.PlaneState == UnitState.Parked;
-		var isLeaderParked =
-			Units[leader].Category == UnitCategory.Plane
-			&& Units[leader].PlaneState == UnitState.Parked;
-		return m != leader
-			&& unit.IsUsed
-			&& unit.Side == LocalSide
-			&& unit.Category == Units[leader].Category
-			&& isParked == isLeaderParked
-			&& (!isParked || Renderer.IsOnShownDeck(ref unit))
-			&& !(unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress)
-			&& !(Units[leader].Kind >= UnitKind.AirBase && Units[leader].Kind <= UnitKind.Fortress);
-	}
-
-	// The units brushed with the left button held (BrushUnit), to put in the selected unit's formation or to take out of
-	// it: a click on each, one a frame, as the game takes one click on a unit a frame (SelectOrders[1]).
-	private readonly Queue<(int Unit, bool IsAdded)> _brushed = new();
-
 	// The next unit brushed that a click still puts in the selection, or takes out of it, as it was brushed for.
-	internal void RunBrushedUnits(bool count)
+	private void RunBrushedUnits(Nspw game, bool counts)
 	{
-		if (!count)
+		if (!counts)
 			return;
 
 		while (_brushed.TryDequeue(out var brushed))
 		{
 			var (m, isAdded) = brushed;
 			if (
-				SelectedUnit != 0
-				&& IsFormationMate(SelectedUnit, m)
-				&& (Selections[1][m] == 0) == isAdded
-				&& CanClickUnit(ref Units[m])
+				game.SelectedUnit != 0
+				&& game.IsFormationMate(game.SelectedUnit, m)
+				&& (game.Selections[1][m] == 0) == isAdded
+				&& game.CanClickUnit(m)
 			)
 			{
-				PlayClickSound();
-				ClickUnit(m, default);
+				PlayClickSound(game);
+				game.Do(new PlayerAction.ClickUnit(m));
 				return;
 			}
 		}
 	}
 
-	private void RunClickLand(int x, int y)
+	private static void RunClickLand(Nspw game, int x, int y)
 	{
-		var sprite = Units[0].Side == Side.Japan ? SpriteId.JapanUnits : SpriteId.UnitedStatesUnits;
 		if (
-			SelectedUnit != 0
-			&& Units[SelectedUnit].Kind == UnitKind.Transport
-			&& AimLanding(sprite, x, y)
-			&& CanClickUnit(ref Units[0])
-			&& !(Units[0].PlaneState != UnitState.Parked && x >= CMBT_WIDTH - 1)
+			game.SelectedUnit != 0
+			&& game.Units[game.SelectedUnit].Kind == UnitKind.Transport
+			&& game.LandingMarkAt(x, y) is { } mark
+			&& game.CanClickUnit(0)
+			&& !(game.Units[0].PlaneState != UnitState.Parked && x >= CMBT_WIDTH - 1)
 		)
 		{
-			ClickUnit(
-				0,
-				new WorldPosition(
-					CameraPosition.X + Renderer.Sprites[sprite].Position.X,
-					CameraPosition.Y - Renderer.Sprites[sprite].Position.Y
+			game.Do(
+				new PlayerAction.ClickUnit(
+					0,
+					new WorldPosition(
+						game.CameraPosition.X + mark.X,
+						game.CameraPosition.Y - mark.Y
+					)
 				)
 			);
 		}
 	}
 
-	private void RunSetDestination(WorldPosition destination)
+	private static void RunSetDestination(Nspw game, WorldPosition destination)
 	{
-		if (IsSelectedShown() && CanSetDestination(ref Units[SelectedUnit]))
+		if (game.IsSelectedShown() && game.CanSetDestination(game.SelectedUnit))
 		{
-			SetDestination(destination);
+			game.Do(new PlayerAction.SetDestination(destination));
 		}
 	}
 
-	private void RunRightClick()
+	private static void RunRightClick(Nspw game)
 	{
-		if (IsSelectedShown())
+		if (game.IsSelectedShown())
 		{
-			CancelSelection(SelectedUnit);
+			game.Do(new PlayerAction.CancelSelection(game.SelectedUnit));
 		}
 		else
 		{
-			RestoreSelection();
+			game.Do(new PlayerAction.RestoreSelection());
 		}
 	}
 
-	private void RunToggleDeckView()
-	{
-		ToggleDeckView();
-	}
-
-	// The item of the combat menu in effect for the selected unit, as the host's UI shows it chosen: a ship's supply while
-	// it is supplying, a flying plane's mode, a parked plane's arms (ListCombatMenu), or none. The game's own choice
-	// (CombatMenuSelection) is set as an order is given but not as it ends, such as a ship's supply when it is done.
-	private CombatMenuItem ActiveCombatMenuItem()
-	{
-		ref var unit = ref Units[SelectedUnit];
-		if (SelectedUnit == 0)
-			return CombatMenuItem.None;
-
-		if (unit.Category == UnitCategory.Ship)
-			return unit.IsSupplying ? CombatMenuItem.Supply : CombatMenuItem.None;
-
-		if (unit.PlaneState == UnitState.Flying)
-			return (CombatMenuItem)unit.Mode;
-
-		return unit.Ammo == 0 ? (CombatMenuItem)FireKind.Unarmed : (CombatMenuItem)unit.Weapon;
-	}
-
-	// A click on the combat menu that waits for a frame in which it counts, and the frame it was given in.
-	private (CombatMenuItem Item, int Since)? _waitingCombatMenu;
-
 	// The combat menu's click counts while the menu shows the item, it is not the item in effect already
-	// (ActiveCombatMenuItem), and the player can order (UpdateCombatMenu). The player can order on and off with the turns,
-	// so a click waits for a frame in which it counts, as a click the player gave a moment later would; for 40 frames at
-	// most, two seconds, and while the menu still shows the item.
-	private void RunWaitingCombatMenu()
+	// (ReadActiveCombatMenuItem), and the player can order (UpdateCombatMenu). The player can order on and off with the
+	// turns, so a click waits for a frame in which it counts, as a click the player gave a moment later would; for 40
+	// frames at most, two seconds, and while the menu still shows the item.
+	private void RunWaitingCombatMenu(Nspw game)
 	{
 		if (_waitingCombatMenu is not var (item, since))
 			return;
 
-		var isShown = false;
-		for (var i = 0; i < ShownCombatMenuCount; i++)
-		{
-			isShown |= ShownCombatMenu[i] == item;
-		}
-
-		if (!isShown || item == ActiveCombatMenuItem() || Renderer.FrameCount - since > 40)
+		if (
+			!ShownCombatMenu.Contains(item)
+			|| item == game.ReadActiveCombatMenuItem()
+			|| game.Renderer.FrameCount - since > 40
+		)
 		{
 			_waitingCombatMenu = null;
 		}
-		else if (CanOrder)
+		else if (game.CanOrder)
 		{
 			_waitingCombatMenu = null;
-			ChooseCombatMenuItem(item);
+			game.Do(new PlayerAction.ChooseCombatMenuItem(item));
 		}
 	}
 
-	private void RunChooseCombatMenuItem(CombatMenuItem item)
+	private static void RunRequestSupply(Nspw game)
 	{
-		_waitingCombatMenu = (item, Renderer.FrameCount);
-	}
-
-	private void RunSelectSupplyTarget(bool next)
-	{
-		if (next)
-			SelectNextSupplyTarget();
-		else
-			SelectPreviousSupplyTarget();
-	}
-
-	private void RunRequestSupply()
-	{
-		if (GetSupplyRequestState() == SupplyRequestState.Available && Result == GameResult.None)
+		if (
+			game.ReadSupplyRequestState() == SupplyRequestState.Available
+			&& game.Result == GameResult.None
+		)
 		{
-			RequestSupplyUnit();
+			game.Do(new PlayerAction.RequestSupply());
 		}
 	}
-
-	// The last move of the battlefield taken (MoveCamera), for the host's UI, which shows the moves it gave before the
-	// game takes them.
-	public int LastCameraMove;
 
 	// Moves the battlefield by (dx, dy) pixels of the screen, kept on the map as the minimap keeps it (ShowMinimapCell).
 	// Not a click of the original: the host's UI scrolls by dragging with the middle button. The camera is only what the
 	// player sees, as the screen's edges and the minimap move it.
-	private void MoveCamera(int dx, int dy, int id)
+	private void MoveCamera(Nspw game, int dx, int dy, int id)
 	{
 		LastCameraMove = id;
-		CameraPosition = new WorldPosition(
-			Math.Clamp(CameraPosition.X + dx, World.Left, World.Right - CMBT_WIDTH),
-			Math.Clamp(CameraPosition.Y - dy, World.Bottom + CMBT_HEIGHT, World.Top)
+		game.CameraPosition = new WorldPosition(
+			Math.Clamp(game.CameraPosition.X + dx, World.Left, World.Right - CMBT_WIDTH),
+			Math.Clamp(game.CameraPosition.Y - dy, World.Bottom + CMBT_HEIGHT, World.Top)
 		);
 	}
-
-	// A click on the system menu that waits for a frame in which it counts, and the frame it was given in.
-	private (MessageType Answer, int Since)? _waitingSystemMenu;
 
 	// The system menu's click counts while the rival is in the battle and the player can order (UpdateSystemMenu). The
 	// player can order on and off with the turns, so a click waits for a frame in which it counts, as a click the
 	// player gave a moment later would; for 40 frames at most, two seconds.
-	private void RunWaitingSystemMenu()
+	private void RunWaitingSystemMenu(Nspw game)
 	{
 		if (_waitingSystemMenu is not var (answer, since))
 			return;
 
-		if (RivalMode != GameMode.Battle || IsEditingMap || Renderer.FrameCount - since > 40)
+		if (
+			game.RivalMode != GameMode.Battle
+			|| game.IsEditingMap
+			|| game.Renderer.FrameCount - since > 40
+		)
 		{
 			_waitingSystemMenu = null;
 		}
-		else if (CanOrder.Value == 1)
+		else if (game.CanOrder.Value == 1)
 		{
 			_waitingSystemMenu = null;
-			AskSystemMenu(answer);
+			game.AskSystemMenu(answer);
 		}
-	}
-
-	private void RunAskSystemMenu(MessageType answer)
-	{
-		_waitingSystemMenu = (answer, Renderer.FrameCount);
 	}
 
 	// Whether the host chooses on the scenarios, the guest being on them too (UpdateScenarioList and the buttons under it).
-	private bool CanChooseScenario()
+	private static bool CanChooseScenario(Nspw game)
 	{
-		return IsHost && Mode == GameMode.GameSetting && RivalMode == GameMode.GameSetting;
+		return game.IsHost
+			&& game.Mode == GameMode.GameSetting
+			&& game.RivalMode == GameMode.GameSetting;
 	}
 
-	// Whether the n-th scenario is in the list shown (ListScenarioNames).
-	private bool IsListedScenario(int n)
+	// Whether the n-th scenario is in the list shown (ReadScenarioNames).
+	private static bool IsListedScenario(Nspw game, int n)
 	{
-		Array12<int> length = default;
-		Array12<Array128<byte>> text = default;
-		var m = -1;
-		ListScenarioNames(ref m, ref length, ref text);
-		return n >= 0 && n <= m;
+		return n >= 0 && n < game.ReadScenarioNames().Length;
 	}
 
-	private void RunChooseScenario(int n)
+	private static void RunChooseScenario(Nspw game, int n)
 	{
-		if (CanChooseScenario() && IsListedScenario(n))
+		if (CanChooseScenario(game) && IsListedScenario(game, n))
 		{
-			ChooseScenario(n);
+			game.Do(new SettingAction.ChooseScenario(n));
 		}
 	}
 
-	private void RunConfirmScenario(int n)
+	private static void RunConfirmScenario(Nspw game, int n)
 	{
-		if (CanChooseScenario() && IsListedScenario(n))
+		if (CanChooseScenario(game) && IsListedScenario(game, n))
 		{
-			NameMessage message = default;
-			ChooseScenario(n);
-			LeaveGameSetting(ref message);
+			game.Do(new SettingAction.ChooseScenario(n));
+			game.Do(new SettingAction.ConfirmScenario());
 		}
 	}
 
-	private void RunTurnScenarioPage()
+	private static void RunTurnScenarioPage(Nspw game)
 	{
-		if (CanChooseScenario())
+		if (CanChooseScenario(game))
 		{
-			TurnScenarioPage();
+			game.Do(new SettingAction.TurnScenarioPage());
 		}
 	}
 
-	private void RunStartFromResume()
+	private static void RunStartFromResume(Nspw game)
 	{
-		if (CanChooseScenario() && WasHost)
+		if (CanChooseScenario(game) && game.WasHost)
 		{
-			NameMessage message = default;
-			StartFromResume(ref message);
+			game.Do(new SettingAction.StartFromResume());
 		}
 	}
 
-	private void RunStartFromAutoSave()
+	private static void RunStartFromAutoSave(Nspw game)
 	{
-		if (CanChooseScenario() && HasAutoSave != 0)
+		if (CanChooseScenario(game) && game.HasAutoSave != 0)
 		{
-			NameMessage message = default;
-			StartFromAutoSave(ref message);
+			game.Do(new SettingAction.StartFromAutoSave());
 		}
 	}
 
-	private void RunSwitchHostSide()
+	private static void RunSwitchHostSide(Nspw game)
 	{
-		if (CanChooseScenario() && !IsEditingMap)
+		if (CanChooseScenario(game) && !game.IsEditingMap)
 		{
-			SwitchHostSide();
+			game.Do(new SettingAction.SwitchHostSide());
 		}
 	}
 
 	// Whether the host sets the rules (UpdateConfigSetting); the start and the way back need the guest on them too.
-	private bool CanSetRules()
+	private static bool CanSetRules(Nspw game)
 	{
-		return IsHost && Mode == GameMode.ConfigSetting;
+		return game.IsHost && game.Mode == GameMode.ConfigSetting;
 	}
 
-	private void RunToggleDecision()
+	private static void RunToggleDecision(Nspw game)
 	{
-		if (CanSetRules())
+		if (CanSetRules(game))
 		{
-			ToggleDecision();
-		}
-	}
-
-	private void RunChangeSupplyRate(int player, bool increase)
-	{
-		if (CanSetRules() && increase)
-		{
-			IncreaseSupplyRate(player);
-		}
-		else if (CanSetRules() && SupplyRates[player] != 0)
-		{
-			DecreaseSupplyRate(player);
+			game.Do(new SettingAction.ToggleDecision());
 		}
 	}
 
-	private void RunChangeSwapTime(bool increase)
+	private static void RunChangeSupplyRate(Nspw game, int player, bool increase)
 	{
-		if (CanSetRules() && increase)
+		if (CanSetRules(game) && (increase || game.SupplyRates[player] != 0))
 		{
-			IncreaseSwapTime();
-		}
-		else if (CanSetRules() && SwapTime != 0)
-		{
-			DecreaseSwapTime();
+			game.Do(new SettingAction.ChangeSupplyRate(player, increase));
 		}
 	}
 
-	private void RunToggleSwapRule()
+	private static void RunChangeSwapTime(Nspw game, bool increase)
 	{
-		if (CanSetRules() && SwapTime != 0)
+		if (CanSetRules(game) && (increase || game.SwapTime != 0))
 		{
-			ToggleSwapRule();
+			game.Do(new SettingAction.ChangeSwapTime(increase));
 		}
 	}
 
-	private void RunChangeInitialSupplyPoints(int player, bool increase)
+	private static void RunToggleSwapRule(Nspw game)
 	{
-		if (CanSetRules() && increase)
+		if (CanSetRules(game) && game.SwapTime != 0)
 		{
-			IncreaseInitialSupplyPoints(player);
-		}
-		else if (CanSetRules() && InitialSupplyPoints[player] != 0)
-		{
-			DecreaseInitialSupplyPoints(player);
+			game.Do(new SettingAction.ToggleSwapRule());
 		}
 	}
 
-	private void RunCycleArrivalControl()
+	private static void RunChangeInitialSupplyPoints(Nspw game, int player, bool increase)
 	{
-		if (CanSetRules())
+		if (CanSetRules(game) && (increase || game.InitialSupplyPoints[player] != 0))
 		{
-			CycleArrivalControl();
+			game.Do(new SettingAction.ChangeInitialSupplyPoints(player, increase));
 		}
 	}
 
-	private void RunBackToScenarioSetting()
+	private static void RunCycleArrivalControl(Nspw game)
 	{
-		if (CanSetRules() && RivalMode == GameMode.ConfigSetting)
+		if (CanSetRules(game))
 		{
-			SyncFlagMessage flagMessage = default;
-			BackToScenarioSetting(ref flagMessage);
+			game.Do(new SettingAction.CycleArrivalControl());
 		}
 	}
 
-	private void RunStartBattle()
+	private static void RunBackToScenarios(Nspw game)
 	{
-		if (CanSetRules() && RivalMode == GameMode.ConfigSetting)
+		if (CanSetRules(game) && game.RivalMode == GameMode.ConfigSetting)
 		{
-			NameMessage message = default;
-			StartBattle(ref message);
+			game.Do(new SettingAction.BackToScenarios());
 		}
 	}
 
-	// The commands of the host's UI, for the battle and the setting screens, in order: given on any thread, run on the
-	// game's.
-	public sealed class UICommands(Nspw game)
+	private static void RunStartBattle(Nspw game)
 	{
-		private readonly Nspw _game = game;
-
-		// The press that the command stands for: its sound, at the battlefield's site, as the game plays it for any press,
-		// and drops it as it drops the battlefield's clicks.
-		private void Press()
+		if (CanSetRules(game) && game.RivalMode == GameMode.ConfigSetting)
 		{
-			_game.QueueUICommand(ActionSite.Battlefield, _game.PlayClickSound);
-		}
-
-		// A left click on unit m on the battlefield, or on a parked plane on the deck shown in the sidebar, if the player
-		// sees it and the click counts (CanClickUnit).
-		public void ClickUnit(int m)
-		{
-			Press();
-			_game.QueueUICommand(ActionSite.Battlefield, () => _game.RunClickUnit(m));
-		}
-
-		// Unit m brushed with the left button held, after a press on a unit: put in the selected unit's formation, or
-		// taken out of it, by a click on it, if a click does that.
-		public void BrushUnit(int m, bool isAdded)
-		{
-			_game.QueueUICommand(
-				ActionSite.Battlefield,
-				() => _game._brushed.Enqueue((m, isAdded))
-			);
-		}
-
-		// A left click on the land at point (x, y) of the battlefield, where the selected transport lands, if it can.
-		public void ClickLand(int x, int y)
-		{
-			Press();
-			_game.QueueUICommand(ActionSite.Battlefield, () => _game.RunClickLand(x, y));
-		}
-
-		// A left click on the battlefield, that gives the selected unit a destination, if it can have one
-		// (CanSetDestination).
-		public void SetDestination(WorldPosition destination)
-		{
-			Press();
-			_game.QueueUICommand(
-				ActionSite.Battlefield,
-				() => _game.RunSetDestination(destination)
-			);
-		}
-
-		// A right click on the battlefield: the selected unit is not selected any more, or, if none is, the one selected
-		// before is selected again.
-		public void RightClick()
-		{
-			Press();
-			_game.QueueUICommand(ActionSite.Battlefield, _game.RunRightClick);
-		}
-
-		// A click held on the minimap, at cell (column, row) of the map: pressed there, or dragged there.
-		public void ShowMinimapCell(int column, int row, bool isPressed)
-		{
-			if (isPressed)
-				Press();
-
-			_game.QueueUICommand(ActionSite.Minimap, () => _game.ShowMinimapCell(column, row));
-		}
-
-		// The battlefield moved by (dx, dy) pixels, by a drag with the middle button, the move numbered `id`
-		// (LastCameraMove); run with the minimap's, which move it too.
-		public void ScrollBattlefield(int dx, int dy, int id)
-		{
-			_game.QueueUICommand(ActionSite.Minimap, () => _game.MoveCamera(dx, dy, id));
-		}
-
-		// A click on the switch of a carrier's or an air base's view, while its information is shown.
-		public void ToggleDeckView()
-		{
-			Press();
-			_game.QueueUICommand(ActionSite.DeckView, _game.RunToggleDeckView);
-		}
-
-		// A click on an item of the combat menu, if the menu shows it and it is not the item in effect already; it waits for
-		// a frame in which the player can order (RunWaitingCombatMenu).
-		public void ChooseCombatMenuItem(CombatMenuItem item)
-		{
-			Press();
-			_game.QueueUICommand(ActionSite.CombatMenu, () => _game.RunChooseCombatMenuItem(item));
-		}
-
-		// A click on the previous or the next kind of reinforcement, while none is coming.
-		public void SelectSupplyTarget(bool next)
-		{
-			Press();
-			_game.QueueUICommand(ActionSite.SupplyPanel, () => _game.RunSelectSupplyTarget(next));
-		}
-
-		// A click that requests the chosen reinforcement, if it can be requested (GetSupplyRequestState).
-		public void RequestSupply()
-		{
-			Press();
-			_game.QueueUICommand(ActionSite.SupplyPanel, _game.RunRequestSupply);
-		}
-
-		// The host's system menu: back to the scenario selection (シナリオ選択へ), which the game asks first, while the
-		// rival is in the battle; it waits for a frame in which the player can order (RunWaitingSystemMenu).
-		public void ToScenarioSelection()
-		{
-			Press();
-			_game.QueueUICommand(
-				ActionSite.SystemMenu,
-				() => _game.RunAskSystemMenu(MessageType.GoToGameSetting)
-			);
-		}
-
-		// The host's system menu: saving the battle to resume it, and back to the scenario selection (リジューム).
-		public void Resume()
-		{
-			Press();
-			_game.QueueUICommand(
-				ActionSite.SystemMenu,
-				() => _game.RunAskSystemMenu(MessageType.ResumeAndGoToGameSetting)
-			);
-		}
-
-		// The host's cursor on the n-th scenario of the list shown, which chooses it and shows it to the guest.
-		public void ChooseScenario(int n)
-		{
-			_game.QueueUICommand(ActionSite.ScenarioList, () => _game.RunChooseScenario(n));
-		}
-
-		// The host's click on the n-th scenario of the list shown: on to the rules with it.
-		public void ConfirmScenario(int n)
-		{
-			_game.QueueUICommand(ActionSite.ScenarioList, () => _game.RunConfirmScenario(n));
-		}
-
-		// The other page of the list (シナリオ切り替え).
-		public void TurnScenarioPage()
-		{
-			_game.QueueUICommand(ActionSite.ScenarioMenu, _game.RunTurnScenarioPage);
-		}
-
-		// The start from the resume-saved battle (リジュームスタート), if the player saved it as the host.
-		public void StartFromResume()
-		{
-			_game.QueueUICommand(ActionSite.ScenarioMenu, _game.RunStartFromResume);
-		}
-
-		// The start from the auto-saved battle (オートセーブスタート), if there is one.
-		public void StartFromAutoSave()
-		{
-			_game.QueueUICommand(ActionSite.ScenarioMenu, _game.RunStartFromAutoSave);
-		}
-
-		// The host and the guest swap their sides (操作対象の切り替え), but in the map editor.
-		public void SwitchSides()
-		{
-			_game.QueueUICommand(ActionSite.ScenarioMenu, _game.RunSwitchHostSide);
-		}
-
-		// The victory conditions on or off (勝敗判定の切り替え).
-		public void ToggleDecision()
-		{
-			_game.QueueUICommand(ActionSite.Rules, _game.RunToggleDecision);
-		}
-
-		// A player's increase of supply points (補給割当増加率) up or down: 0 for the host's, 1 for the guest's; not below 0.
-		public void ChangeSupplyRate(int player, bool increase)
-		{
-			_game.QueueUICommand(
-				ActionSite.Rules,
-				() => _game.RunChangeSupplyRate(player, increase)
-			);
-		}
-
-		// The time at which the supply points' rates swap (補給値反転地点) up or down, by 100; not below 0, never.
-		public void ChangeSwapTime(bool increase)
-		{
-			_game.QueueUICommand(ActionSite.Rules, () => _game.RunChangeSwapTime(increase));
-		}
-
-		// The rule of the swap (補給値反転ルール), once or every time, while the rates swap.
-		public void ToggleSwapRule()
-		{
-			_game.QueueUICommand(ActionSite.Rules, _game.RunToggleSwapRule);
-		}
-
-		// A player's supply points at the start (初期補給割当) up or down by 50: 0 for the host's, 1 for the guest's; not
-		// below 0.
-		public void ChangeInitialSupplyPoints(int player, bool increase)
-		{
-			_game.QueueUICommand(
-				ActionSite.Rules,
-				() => _game.RunChangeInitialSupplyPoints(player, increase)
-			);
-		}
-
-		// The next rule of the reinforcements (増援ユニット制御).
-		public void CycleArrivalControl()
-		{
-			_game.QueueUICommand(ActionSite.Rules, _game.RunCycleArrivalControl);
-		}
-
-		// Back to the scenarios (シナリオセッティングへ戻る), while the guest is on the rules too.
-		public void BackToScenarios()
-		{
-			_game.QueueUICommand(ActionSite.Rules, _game.RunBackToScenarioSetting);
-		}
-
-		// The battle (ゲームスタート), while the guest is on the rules too.
-		public void StartBattle()
-		{
-			_game.QueueUICommand(ActionSite.Rules, _game.RunStartBattle);
+			game.Do(new SettingAction.StartBattle());
 		}
 	}
 
-	private UICommands? _commands;
+	// Runs the commands given for a site, in order; or drops them, as clicks are dropped, when they do not count there,
+	// or while an extension gives the player's input, such as a replay or a trace of 1.22 that the game follows
+	// (IGameExtension.HoldsInput). The commands of the other screens' sites are dropped too: they were given for a screen
+	// that is gone. Then what waits for the site: the units brushed on the battlefield, and the clicks on the combat menu
+	// and the system menu that wait for a frame in which they count.
+	public void InputSite(Nspw game, ActionSite site, bool counts)
+	{
+		List<Action<Nspw>> runs;
+		lock (_lock)
+		{
+			runs = [.. _queued.Where(c => c.Site == site).Select(c => c.Run)];
+			_queued.RemoveAll(c => c.Site == site || IsSettingSite(c.Site) != IsSettingSite(site));
+		}
 
-	public UICommands Commands => _commands ??= new UICommands(this);
+		if (site == ActionSite.CombatMenu)
+			ShownCombatMenu = counts ? game.ListCombatMenuItems() : [];
+
+		if (counts && !game.Extensions.HoldsInput)
+		{
+			foreach (var run in runs)
+			{
+				run(game);
+			}
+		}
+
+		switch (site)
+		{
+			case ActionSite.Battlefield:
+				RunBrushedUnits(game, counts);
+				break;
+			case ActionSite.CombatMenu:
+				RunWaitingCombatMenu(game);
+				break;
+			case ActionSite.SystemMenu when counts:
+				RunWaitingSystemMenu(game);
+				break;
+		}
+	}
+
+	// The press that the command stands for: its sound, at the battlefield's site, as the game plays it for any press,
+	// and drops it as it drops the battlefield's clicks.
+	private void Press()
+	{
+		Queue(ActionSite.Battlefield, PlayClickSound);
+	}
+
+	// A left click on unit m on the battlefield, or on a parked plane on the deck shown in the sidebar, if the player sees
+	// it and the click counts (CanClickUnit).
+	public void ClickUnit(int m)
+	{
+		Press();
+		Queue(ActionSite.Battlefield, game => RunClickUnit(game, m));
+	}
+
+	// Unit m brushed with the left button held, after a press on a unit: put in the selected unit's formation, or taken
+	// out of it, by a click on it, if a click does that.
+	public void BrushUnit(int m, bool isAdded)
+	{
+		Queue(ActionSite.Battlefield, _ => _brushed.Enqueue((m, isAdded)));
+	}
+
+	// A left click on the land at point (x, y) of the battlefield, where the selected transport lands, if it can.
+	public void ClickLand(int x, int y)
+	{
+		Press();
+		Queue(ActionSite.Battlefield, game => RunClickLand(game, x, y));
+	}
+
+	// A left click on the battlefield, that gives the selected unit a destination, if it can have one
+	// (CanSetDestination).
+	public void SetDestination(WorldPosition destination)
+	{
+		Press();
+		Queue(ActionSite.Battlefield, game => RunSetDestination(game, destination));
+	}
+
+	// A right click on the battlefield: the selected unit is not selected any more, or, if none is, the one selected
+	// before is selected again.
+	public void RightClick()
+	{
+		Press();
+		Queue(ActionSite.Battlefield, RunRightClick);
+	}
+
+	// A click held on the minimap, at cell (column, row) of the map: pressed there, or dragged there.
+	public void ShowMinimapCell(int column, int row, bool isPressed)
+	{
+		if (isPressed)
+			Press();
+
+		Queue(ActionSite.Minimap, game => game.ShowMinimapCell(column, row));
+	}
+
+	// The battlefield moved by (dx, dy) pixels, by a drag with the middle button, the move numbered `id`
+	// (LastCameraMove); run with the minimap's, which move it too.
+	public void ScrollBattlefield(int dx, int dy, int id)
+	{
+		Queue(ActionSite.Minimap, game => MoveCamera(game, dx, dy, id));
+	}
+
+	// A click on the switch of a carrier's or an air base's view, while its information is shown.
+	public void ToggleDeckView()
+	{
+		Press();
+		Queue(ActionSite.DeckView, game => game.Do(new PlayerAction.ToggleDeckView()));
+	}
+
+	// A click on an item of the combat menu, if the menu shows it and it is not the item in effect already; it waits for
+	// a frame in which the player can order (RunWaitingCombatMenu).
+	public void ChooseCombatMenuItem(CombatMenuItem item)
+	{
+		Press();
+		Queue(ActionSite.CombatMenu, game => _waitingCombatMenu = (item, game.Renderer.FrameCount));
+	}
+
+	// A click on the previous or the next kind of reinforcement, while none is coming.
+	public void SelectSupplyTarget(bool next)
+	{
+		Press();
+		Queue(ActionSite.SupplyPanel, game => game.Do(new PlayerAction.SelectSupplyTarget(next)));
+	}
+
+	// A click that requests the chosen reinforcement, if it can be requested (ReadSupplyRequestState).
+	public void RequestSupply()
+	{
+		Press();
+		Queue(ActionSite.SupplyPanel, RunRequestSupply);
+	}
+
+	// The host's system menu: back to the scenario selection (シナリオ選択へ), which the game asks first, while the
+	// rival is in the battle; it waits for a frame in which the player can order (RunWaitingSystemMenu).
+	public void ToScenarioSelection()
+	{
+		Press();
+		Queue(
+			ActionSite.SystemMenu,
+			game => _waitingSystemMenu = (MessageType.GoToGameSetting, game.Renderer.FrameCount)
+		);
+	}
+
+	// The host's system menu: saving the battle to resume it, and back to the scenario selection (リジューム).
+	public void Resume()
+	{
+		Press();
+		Queue(
+			ActionSite.SystemMenu,
+			game =>
+				_waitingSystemMenu = (
+					MessageType.ResumeAndGoToGameSetting,
+					game.Renderer.FrameCount
+				)
+		);
+	}
+
+	// The host's cursor on the n-th scenario of the list shown, which chooses it and shows it to the guest.
+	public void ChooseScenario(int n)
+	{
+		Queue(ActionSite.ScenarioList, game => RunChooseScenario(game, n));
+	}
+
+	// The host's click on the n-th scenario of the list shown: on to the rules with it.
+	public void ConfirmScenario(int n)
+	{
+		Queue(ActionSite.ScenarioList, game => RunConfirmScenario(game, n));
+	}
+
+	// The other page of the list (シナリオ切り替え).
+	public void TurnScenarioPage()
+	{
+		Queue(ActionSite.ScenarioMenu, RunTurnScenarioPage);
+	}
+
+	// The start from the resume-saved battle (リジュームスタート), if the player saved it as the host.
+	public void StartFromResume()
+	{
+		Queue(ActionSite.ScenarioMenu, RunStartFromResume);
+	}
+
+	// The start from the auto-saved battle (オートセーブスタート), if there is one.
+	public void StartFromAutoSave()
+	{
+		Queue(ActionSite.ScenarioMenu, RunStartFromAutoSave);
+	}
+
+	// The host and the guest swap their sides (操作対象の切り替え), but in the map editor.
+	public void SwitchSides()
+	{
+		Queue(ActionSite.ScenarioMenu, RunSwitchHostSide);
+	}
+
+	// The victory conditions on or off (勝敗判定の切り替え).
+	public void ToggleDecision()
+	{
+		Queue(ActionSite.Rules, RunToggleDecision);
+	}
+
+	// A player's increase of supply points (補給割当増加率) up or down: 0 for the host's, 1 for the guest's; not below 0.
+	public void ChangeSupplyRate(int player, bool increase)
+	{
+		Queue(ActionSite.Rules, game => RunChangeSupplyRate(game, player, increase));
+	}
+
+	// The time at which the supply points' rates swap (補給値反転地点) up or down, by 100; not below 0, never.
+	public void ChangeSwapTime(bool increase)
+	{
+		Queue(ActionSite.Rules, game => RunChangeSwapTime(game, increase));
+	}
+
+	// The rule of the swap (補給値反転ルール), once or every time, while the rates swap.
+	public void ToggleSwapRule()
+	{
+		Queue(ActionSite.Rules, RunToggleSwapRule);
+	}
+
+	// A player's supply points at the start (初期補給割当) up or down by 50: 0 for the host's, 1 for the guest's; not
+	// below 0.
+	public void ChangeInitialSupplyPoints(int player, bool increase)
+	{
+		Queue(ActionSite.Rules, game => RunChangeInitialSupplyPoints(game, player, increase));
+	}
+
+	// The next rule of the reinforcements (増援ユニット制御).
+	public void CycleArrivalControl()
+	{
+		Queue(ActionSite.Rules, RunCycleArrivalControl);
+	}
+
+	// Back to the scenarios (シナリオセッティングへ戻る), while the guest is on the rules too.
+	public void BackToScenarios()
+	{
+		Queue(ActionSite.Rules, RunBackToScenarios);
+	}
+
+	// The battle (ゲームスタート), while the guest is on the rules too.
+	public void StartBattle()
+	{
+		Queue(ActionSite.Rules, RunStartBattle);
+	}
 }

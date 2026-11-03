@@ -147,11 +147,57 @@ public unsafe partial class Nspw
 			sprites[m] = Renderer.GetUnitSprites(ref Units[m]);
 	}
 
-	// The item of the combat menu in effect for the selected unit, which the host's UI shows chosen
-	// (ActiveCombatMenuItem).
+	// The item of the combat menu in effect for the selected unit, as the host's UI shows it chosen: a ship's supply while
+	// it is supplying, a flying plane's mode, a parked plane's arms (ListCombatMenu), or none. The game's own choice
+	// (CombatMenuSelection) is set as an order is given but not as it ends, such as a ship's supply when it is done.
 	public CombatMenuItem ReadActiveCombatMenuItem()
 	{
-		return ActiveCombatMenuItem();
+		ref var unit = ref Units[SelectedUnit];
+		if (SelectedUnit == 0)
+			return CombatMenuItem.None;
+
+		if (unit.Category == UnitCategory.Ship)
+			return unit.IsSupplying ? CombatMenuItem.Supply : CombatMenuItem.None;
+
+		if (unit.PlaneState == UnitState.Flying)
+			return (CombatMenuItem)unit.Mode;
+
+		return unit.Ammo == 0 ? (CombatMenuItem)FireKind.Unarmed : (CombatMenuItem)unit.Weapon;
+	}
+
+	// Whether the selected unit is shown, so that its path is drawn and a click gives it a destination or a right click
+	// deselects it (DrawUnitMarks): a parked plane only on the deck shown in the sidebar (IsOnShownDeck).
+	public bool IsSelectedShown()
+	{
+		ref var unit = ref Units[SelectedUnit];
+		return SelectedUnit != 0
+			&& unit.IsUsed
+			&& (
+				!(unit.Category == UnitCategory.Plane && unit.PlaneState == UnitState.Parked)
+				|| Renderer.IsOnShownDeck(ref unit)
+			)
+			&& !IsEditingMap;
+	}
+
+	// Whether unit m can be in the formation of the leader, as a click on it with the leader selected puts it there
+	// (SelectFriendlyTarget): the player's, of the same category, and neither of them a base. A plane does not take a
+	// carrier or an air base, which a click would make it land on, nor a ship a plane; a parked plane takes the planes
+	// parked on the deck shown, and a flying one those flying.
+	public bool IsFormationMate(int leader, int m)
+	{
+		ref var unit = ref Units[m];
+		var isParked = unit.Category == UnitCategory.Plane && unit.PlaneState == UnitState.Parked;
+		var isLeaderParked =
+			Units[leader].Category == UnitCategory.Plane
+			&& Units[leader].PlaneState == UnitState.Parked;
+		return m != leader
+			&& unit.IsUsed
+			&& unit.Side == LocalSide
+			&& unit.Category == Units[leader].Category
+			&& isParked == isLeaderParked
+			&& (!isParked || Renderer.IsOnShownDeck(ref unit))
+			&& !(unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress)
+			&& !(Units[leader].Kind >= UnitKind.AirBase && Units[leader].Kind <= UnitKind.Fortress);
 	}
 
 	// Whether a left click on the battlefield gives the selected unit a destination (DrawPathAndSetDestination).

@@ -495,7 +495,7 @@ internal sealed class Battlefield : Control
 	private void TakeClick(DrawingPoint point)
 	{
 		var snapshot = _snapshot;
-		var commands = _session.Game.Commands;
+		var commands = _session.Commands;
 		if (IsLanding(snapshot, point))
 			commands.ClickLand(point.X, point.Y);
 		else if (HitUnit(snapshot, point) is { } m)
@@ -550,7 +550,7 @@ internal sealed class Battlefield : Control
 			TakeClick(e.Location);
 		}
 		else if (e.Button == MouseButtons.Right)
-			_session.Game.Commands.RightClick();
+			_session.Commands.RightClick();
 		else if (e.Button == MouseButtons.Middle)
 			_scrolledTo = e.Location;
 	}

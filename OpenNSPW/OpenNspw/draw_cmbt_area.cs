@@ -2166,13 +2166,12 @@ public unsafe partial class Renderer
 		if (rightButton == 1 || leftButton == 1)
 			_game.Sound.PlayInterfaceSound(SoundId.Click1);
 
-		// The host's UI's commands for clicks on the battlefield (UICommands.cs): taken here, as the clicks are, and dropped
-		// as they are while an order waits for its turn; the units brushed are clicked, one a frame.
-		_game.RunUICommands(
+		// Extensions take the battlefield's clicks here, as the clicks are, and they do not count while an order waits for
+		// its turn (docs/Extensions.md).
+		_game.Extensions.InputSite(
 			ActionSite.Battlefield,
 			!(_game.HasOrdered && _game.Result == GameResult.None)
 		);
-		_game.RunBrushedUnits(!(_game.HasOrdered && _game.Result == GameResult.None));
 
 		for (var m = 0; m <= _game.MaxUnitId; m++)
 		{

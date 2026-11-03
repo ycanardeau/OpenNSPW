@@ -98,6 +98,9 @@ internal sealed class GameSession : IDisposable
 
 	public Nspw Game { get; }
 
+	// The host UI's commands, which the game takes as an extension (docs/UI.md).
+	public UICommands Commands { get; } = new();
+
 	// The trace of 1.22 that the game follows, to watch it (docs/Verification.md), or null.
 	public Trace122Replay? Trace { get; }
 
@@ -202,9 +205,10 @@ internal sealed class GameSession : IDisposable
 	{
 		_platform = new DesktopPlatform(files, text);
 		Game = new Nspw(_platform);
+		Game.Extensions.Add(Commands);
 		View = view;
 		_platform.IsSkippingFrames = () => Replay is { IsSeeking: true };
-		_platform.CaptureState = () => _captured.CopyFrom(Game, View);
+		_platform.CaptureState = () => _captured.CopyFrom(Game, Commands, View);
 		if (singleplayer is { } scenario)
 		{
 			Game.IsSingleplayer = true;

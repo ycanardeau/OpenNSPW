@@ -202,11 +202,11 @@ internal sealed class Deck : Control
 			var m = HitPlane(_snapshot, e.Location);
 			_brush.Press(_snapshot, m);
 			if (m is { } plane)
-				_session.Game.Commands.ClickUnit(plane);
+				_session.Commands.ClickUnit(plane);
 		}
 		else if (e.Button == MouseButtons.Right)
 		{
-			_session.Game.Commands.RightClick();
+			_session.Commands.RightClick();
 		}
 	}
 
