@@ -1346,6 +1346,7 @@ public unsafe partial class Nspw
 			{
 				// 多分ホストで、ゲストの誰かが接続を切ったらここに来る。
 				var pDestroyPlayerMsg = (DPNMSG_DESTROY_PLAYER)pMsgBuffer;
+				Extensions.RivalLeft();
 				// Update the number of active players, and
 				// post a message to the dialog thread to update the
 				// UI.
@@ -1387,6 +1388,14 @@ public unsafe partial class Nspw
 			{
 				// なんかメッセージが相手から届いた。
 				var pReceiveMsg = (DPNMSG_RECEIVE)pMsgBuffer;
+
+				// Extensions see the rival's messages (docs/Extensions.md).
+				Extensions.MessageReceived(
+					new ReadOnlySpan<byte>(
+						pReceiveMsg.pReceiveData,
+						(int)pReceiveMsg.dwReceiveDataSize
+					)
+				);
 
 				// とりあえず、ジェネラルに入れる。
 				MessageHeader* pGenericMsg = (MessageHeader*)pReceiveMsg.pReceiveData; // pMsg in the original, which the pMsg below shadow

@@ -570,13 +570,19 @@ public unsafe partial class Nspw
 			else
 				ticks = 1;
 
-			if (ticks == 1 && Elapsed <= 45 + 5)
+			// An extension may start the battle's frames itself (IGameExtension.StartsFrame).
+			var starts = Mode == GameMode.Battle && !IsEditingMap ? Extensions.StartsFrame() : null;
+			if (starts is false || (starts is null && ticks == 1 && Elapsed <= 45 + 5))
 			{
 				return;
 			}
 
 			LastTime2 = timeGetTime();
 		}
+
+		// Extensions see the ticks of the battle's frame, and may set them (docs/Extensions.md).
+		if (Mode == GameMode.Battle && !IsEditingMap)
+			ticks = Extensions.FrameStarting(ticks);
 
 		ReadInput(); // マウス、キーボード状況取得
 
@@ -662,6 +668,8 @@ public unsafe partial class Nspw
 
 				UpdateUnitInfo();
 				Trace?.Reach(this, TracePoint.Drawing);
+				if (!IsEditingMap)
+					Extensions.Drawing();
 				Renderer.DrawBattleArea();
 				DrawMinimap();
 
@@ -669,6 +677,7 @@ public unsafe partial class Nspw
 				{
 					CheckResult();
 					HandleInput();
+					Extensions.FrameEnded();
 				}
 
 				if (IsEditingMap)
@@ -820,6 +829,8 @@ public unsafe partial class Nspw
 			)
 		)
 			Renderer.RestoreSurfaces();
+
+		Extensions.Presented();
 	}
 
 	/*--------------------------------------------
@@ -899,8 +910,8 @@ public unsafe partial class Nspw
 		// Init IDirectPlay8Peer
 		DirectPlayPeer.Initialize(null, DirectPlayMessageHandler, DPNINITIALIZE_DISABLEPARAMVAL);
 
-		// A single-player game has no rival to connect to.
-		if (IsSingleplayer)
+		// A single-player game has no rival to connect to, nor a game whose battle an extension starts (StartsBattle).
+		if (IsSingleplayer || Extensions.StartsBattle)
 			IsHostPlayer = TRUE;
 		else
 		{
@@ -1099,6 +1110,9 @@ public unsafe partial class Nspw
 			srand((uint)time());
 			StartSingleplayerGame();
 		}
+
+		// Extensions may start a battle themselves (StartNetworkBattle).
+		Extensions.GameStarted();
 
 		//メッセージループ
 		while (TRUE != 0)

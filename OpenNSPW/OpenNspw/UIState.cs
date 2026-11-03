@@ -261,10 +261,13 @@ public unsafe partial class Nspw
 	// The tiles a side of what ReadSight reads.
 	public const int SightSize = 11 + SightMargin * 2;
 
-	// What the player sees on and around the battlefield: of the SightSize by SightSize tiles from (firstColumn,
-	// firstRow), those drawn (DrawMapTiles: land, and the sea in sight), none off the map's tiles; and the effects drawn
-	// (UpdateLowerEffects, UpdateUpperEffects).
+	// What the player sees on and around the battlefield seen from `camera`, which may be another than the game's, such
+	// as a replay's viewer's: of the SightSize by SightSize tiles from (firstColumn, firstRow), those drawn (DrawMapTiles:
+	// land, and the sea in sight), none off the map's tiles; and the effects drawn (UpdateLowerEffects,
+	// UpdateUpperEffects). With `seesAll`, every tile and every effect, as a viewer that sees both sides.
 	public void ReadSight(
+		WorldPosition camera,
+		bool seesAll,
 		Span<bool> tiles,
 		out int firstColumn,
 		out int firstRow,
@@ -272,10 +275,10 @@ public unsafe partial class Nspw
 	)
 	{
 		firstColumn =
-			(int)((CameraPosition.X - World.Left) / Renderer.Sprites[SpriteId.MapTiles].Size.Width)
+			(int)((camera.X - World.Left) / Renderer.Sprites[SpriteId.MapTiles].Size.Width)
 			- SightMargin;
 		firstRow =
-			(int)((World.Top - CameraPosition.Y) / Renderer.Sprites[SpriteId.MapTiles].Size.Height)
+			(int)((World.Top - camera.Y) / Renderer.Sprites[SpriteId.MapTiles].Size.Height)
 			- SightMargin;
 		for (var n = 0; n < SightSize; n++)
 		{
@@ -286,7 +289,8 @@ public unsafe partial class Nspw
 					column is >= 0 and <= 255
 					&& row is >= 0 and <= 255
 					&& (
-						IsEditingMap
+						seesAll
+						|| IsEditingMap
 						|| Result != GameResult.None
 						|| MapTiles[row][column] != 0
 						|| IsSeaTileSeen(column, row)
@@ -300,7 +304,8 @@ public unsafe partial class Nspw
 			effects[m] =
 				effect.Layer != EffectLayer.None
 				&& (
-					(
+					seesAll
+					|| (
 						Result != GameResult.None
 						&& (effect.Layer == EffectLayer.Upper || Rules.ResultShowsEveryLowerEffect)
 					)
@@ -308,6 +313,17 @@ public unsafe partial class Nspw
 					|| IsEffectSeen(effect.Position)
 				);
 		}
+	}
+
+	// What the player sees on and around the battlefield, from the game's camera.
+	public void ReadSight(
+		Span<bool> tiles,
+		out int firstColumn,
+		out int firstRow,
+		Span<bool> effects
+	)
+	{
+		ReadSight(CameraPosition, false, tiles, out firstColumn, out firstRow, effects);
 	}
 
 	// Whether a left click on each unit counts (CanClickUnit), unit 0 being the land where the selected transport lands.

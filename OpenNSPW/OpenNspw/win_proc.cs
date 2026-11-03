@@ -577,6 +577,16 @@ public unsafe partial class Nspw
 	/*-------------------------------------------
 		OK　キャンセル
 	--------------------------------------------*/
+	// The system menu's question (AskSystemMenu) answered OK: the answer is the order of the turn.
+	private void ConfirmSystemMenu(MessageType answer)
+	{
+		Extensions.PlayerActed(new PlayerAction.ConfirmSystemMenu(answer));
+		BufferedSystemOrders[1] = (byte)answer;
+		CanOrder = false;
+		HasOrdered = true;
+		Sound.PlayInterfaceSound(SoundId.Click2);
+	}
+
 	public nint IDD_OK_CANCEL_Proc(HWND hWnd, uint msg, nint wParam, nint lParam)
 	{
 		switch (msg)
@@ -595,10 +605,7 @@ public unsafe partial class Nspw
 				{
 					case IDOK:
 
-						BufferedSystemOrders[1] = (byte)DialogAnswer;
-						CanOrder = false;
-						HasOrdered = true;
-						Sound.PlayInterfaceSound(SoundId.Click2);
+						ConfirmSystemMenu(DialogAnswer);
 
 						DestroyWindow(hWnd);
 						MainDialog = null;
@@ -932,9 +939,27 @@ public unsafe partial class Nspw
 		}
 	}
 
+	// F5, a debug key (DBG_MODE): the player plays the other side.
+	private void SwapLocalSide()
+	{
+		Extensions.PlayerActed(new PlayerAction.SwapLocalSide());
+		if (LocalSide == Side.Japan)
+			LocalSide = Side.UnitedStates;
+		else
+			LocalSide = Side.Japan;
+	}
+
+	// F9, a debug key (DBG_MODE): the selected unit sinks.
+	private void SinkSelectedUnit()
+	{
+		Extensions.PlayerActed(new PlayerAction.SinkSelectedUnit());
+		Units[SelectedUnit].HP = 0;
+	}
+
 	/*-------------------------------------------
 		ウィンドウ処理
 	--------------------------------------------*/
+
 	public nint MainWndProc(HWND hWnd, uint msg, nint wParam, nint lParam)
 	{
 		int m =
@@ -1049,10 +1074,7 @@ public unsafe partial class Nspw
 #if DBG_MODE
 						if (!IsEditingMap)
 						{
-							if (LocalSide == Side.Japan)
-								LocalSide = Side.UnitedStates;
-							else
-								LocalSide = Side.Japan;
+							SwapLocalSide();
 						}
 #endif
 
@@ -1100,7 +1122,7 @@ public unsafe partial class Nspw
 #if DBG_MODE
 						if (!IsEditingMap)
 						{
-							Units[SelectedUnit].HP = 0;
+							SinkSelectedUnit();
 						}
 #endif
 						if (IsEditingMap && Mode == GameMode.Battle)
