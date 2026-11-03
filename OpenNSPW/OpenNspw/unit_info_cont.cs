@@ -585,20 +585,24 @@ public unsafe partial class Nspw
 		}
 	}
 
-	// The combat menu's items for the selected unit: in `menu`, their buttons' pictures (Buttons1), and in `menuItems`, the
-	// items. Returns their number. The choice shown (CombatMenuSelection) follows a supplying ship or a parked plane's arms.
-	private int ListCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menuItems)
+	// Whether the selected unit has a ship's combat menu: a ship's, but a base's.
+	private bool HasShipCombatMenu()
 	{
-		var n = 0;
-		if (
-			Units[SelectedUnit].Category == UnitCategory.Ship
+		return Units[SelectedUnit].Category == UnitCategory.Ship
 			&& !(
 				Units[SelectedUnit].Kind == UnitKind.InfantryBase
 				|| Units[SelectedUnit].Kind == UnitKind.Pillboxes
 				|| Units[SelectedUnit].Kind == UnitKind.Fortress
 				|| Units[SelectedUnit].Kind == UnitKind.AirBase
-			)
-		)
+			);
+	}
+
+	// The combat menu's items for the selected unit: in `menu`, their buttons' pictures (Buttons1), and in `menuItems`, the
+	// items. Returns their number.
+	private int ListCombatMenu(ref Array6<int> menu, ref Array6<CombatMenuItem> menuItems)
+	{
+		var n = 0;
+		if (HasShipCombatMenu())
 		{ // 艦船のメニュー
 			if (Units[SelectedUnit].IsStopping && Units[SelectedUnit].Speed == 0)
 			{
@@ -619,9 +623,6 @@ public unsafe partial class Nspw
 							n = 1;
 							menu[0] = 10; // ボタンＣＧのインデックス
 							menuItems[0] = CombatMenuItem.Supply;
-
-							if (Units[SelectedUnit].IsSupplying)
-								CombatMenuSelection = CombatMenuItem.Supply;
 
 							break;
 						}
@@ -697,17 +698,34 @@ public unsafe partial class Nspw
 						menu[1] = 9;
 						menuItems[1] = CombatMenuItem.Disarm;
 					}
-					CombatMenuSelection = (CombatMenuItem)Units[SelectedUnit].Weapon;
-
-					if (Units[SelectedUnit].Ammo == 0)
-					{
-						CombatMenuSelection = (CombatMenuItem)FireKind.Unarmed;
-					}
 				}
 			}
 		}
 
 		return n;
+	}
+
+	// The choice shown (CombatMenuSelection) follows a supplying ship or a parked plane's arms, of the `n` items the combat
+	// menu lists for the selected unit (ListCombatMenu): a ship's menu lists its supply, a parked plane's its arms.
+	private void ShowCombatMenuSelection(int n)
+	{
+		if (n == 0)
+			return;
+
+		if (HasShipCombatMenu())
+		{
+			if (Units[SelectedUnit].IsSupplying)
+				CombatMenuSelection = CombatMenuItem.Supply;
+		}
+		else if (Units[SelectedUnit].PlaneState != UnitState.Flying)
+		{
+			CombatMenuSelection = (CombatMenuItem)Units[SelectedUnit].Weapon;
+
+			if (Units[SelectedUnit].Ammo == 0)
+			{
+				CombatMenuSelection = (CombatMenuItem)FireKind.Unarmed;
+			}
+		}
 	}
 
 	// The item of the combat menu as the order of the turn.
@@ -740,6 +758,7 @@ public unsafe partial class Nspw
 		var sprite = SpriteId.Buttons1;
 
 		var n = ListCombatMenu(ref menu, ref menuItems);
+		ShowCombatMenuSelection(n);
 
 		// The host's UI's commands for the combat menu (UICommands.cs), on the items it shows, which wait for a frame in which
 		// they count.
@@ -1577,6 +1596,10 @@ public unsafe partial class Nspw
 			);
 		}
 	}
+
+	// Whether the last frame showed the chosen reinforcement's picture (UpdateUnitInfo): in every frame of a battle but
+	// the map editor's, and while one is coming, in every other frame.
+	public bool IsSupplyTargetShown;
 
 	//============================================================================
 	//ユニットインフォーメイション

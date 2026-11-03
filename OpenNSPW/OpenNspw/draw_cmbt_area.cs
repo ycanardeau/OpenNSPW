@@ -370,9 +370,9 @@ public unsafe partial class Nspw
 			&& !(unit.Side != LocalSide && unit.Kind == UnitKind.Submarine && unit.IsSubmerged);
 	}
 
-	// Whether the selected transport can land on the land at point (x, y) of the battlefield; if so, the landing mark (the
-	// sprite's position) is put on the land's tile.
-	internal bool AimLanding(SpriteId sprite, int x, int y)
+	// Where the landing mark goes for the land at point (x, y) of the battlefield, on the land's tile, if the selected
+	// transport can land there; null otherwise.
+	public PixelPoint? LandingMarkAt(int x, int y)
 	{
 		// カーソルの示す、マップチップの場所
 		// BUG(NSPW NET): a cursor off the map gives a tile outside it, which NSPW NET reads out of bounds; the port throws
@@ -393,7 +393,7 @@ public unsafe partial class Nspw
 			|| MapTiles[row][column] == 2
 		)
 		{
-			Renderer.Sprites[sprite].Position = new PixelPoint(
+			return new PixelPoint(
 				(
 					(
 						(
@@ -419,10 +419,20 @@ public unsafe partial class Nspw
 					- (int)(World.Top - CameraPosition.Y)
 						% Renderer.Sprites[SpriteId.MapTiles].Size.Height
 			);
-			return true;
 		}
 
-		return false;
+		return null;
+	}
+
+	// Whether the selected transport can land on the land at point (x, y) of the battlefield; if so, the landing mark (the
+	// sprite's position) is put on the land's tile.
+	internal bool AimLanding(SpriteId sprite, int x, int y)
+	{
+		if (LandingMarkAt(x, y) is not { } mark)
+			return false;
+
+		Renderer.Sprites[sprite].Position = mark;
+		return true;
 	}
 
 	// A right click that no selected unit took: the unit selected before is selected again, if nothing is selected and it

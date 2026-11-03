@@ -46,6 +46,7 @@ An extension implements `IGameExtension`, whose methods all do nothing by defaul
 ### Entry points
 - `StartNetworkBattle(settings, peer, threadPool)`: starts a network battle from its settings, over a DirectPlay peer and thread pool of the extension's, without the setting screens, as `StartSingleplayerGame` does for 1.22's scenarios. The settings are what the setting screens and the rival's messages set: the seed, the sides, the rules, the map editor's scenario, the names, and what the rival's messages before the battle left of the turns, which `InitializeGame` keeps: whether a turn may go on at each sync point (`CanAdvance1`, `CanAdvance2`), and the rival's checksums.
 - `ReadNetworkBattleSettings()`: those settings, as a battle starts.
+- The queries (`Queries.cs`): the game's own checks and texts, which read and write nothing, such as whether a click on a unit counts (`CanClickUnit`), the combat menu's items (`ListCombatMenuItems`), where the landing mark goes (`LandingMarkAt`), what the player's units see (`IsSeaTileSeen`, `IsEffectSeen`), and the texts the game writes (`ReadUnitDetails`, `ReadResult`, ...).
 - `ReadSight(camera, ...)`: what the player sees around any camera, not only the game's, for a view that the battle does not follow (below).
 
 ### Rules
