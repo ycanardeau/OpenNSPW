@@ -309,6 +309,7 @@ public unsafe partial class Nspw
 	// A click on the switch of the victory conditions (勝敗判定の切り替え): on, or off.
 	private void ToggleDecision()
 	{
+		Extensions.SettingActed(new SettingAction.ToggleDecision());
 		IsDecisionEnabled = !IsDecisionEnabled;
 	}
 
@@ -377,11 +378,13 @@ public unsafe partial class Nspw
 	// guest's. A rate is decreased only while it is not 0.
 	private void IncreaseSupplyRate(int player)
 	{
+		Extensions.SettingActed(new SettingAction.ChangeSupplyRate(player, Increase: true));
 		SupplyRates[player]++;
 	}
 
 	private void DecreaseSupplyRate(int player)
 	{
+		Extensions.SettingActed(new SettingAction.ChangeSupplyRate(player, Increase: false));
 		SupplyRates[player]--;
 	}
 
@@ -468,11 +471,13 @@ public unsafe partial class Nspw
 	// 0 for never. The time is decreased only while it is not 0.
 	private void IncreaseSwapTime()
 	{
+		Extensions.SettingActed(new SettingAction.ChangeSwapTime(Increase: true));
 		SwapTime++;
 	}
 
 	private void DecreaseSwapTime()
 	{
+		Extensions.SettingActed(new SettingAction.ChangeSwapTime(Increase: false));
 		SwapTime--;
 	}
 
@@ -646,6 +651,7 @@ public unsafe partial class Nspw
 	// A click on the rule of the swap (補給値反転ルール): once (一度だけ), or every time the time passes (指定時間毎).
 	private void ToggleSwapRule()
 	{
+		Extensions.SettingActed(new SettingAction.ToggleSwapRule());
 		SwapRule = (short)(SwapRule == 0 ? 1 : 0);
 	}
 
@@ -719,11 +725,17 @@ public unsafe partial class Nspw
 	// the guest's, by 50. The points are decreased only while they are not 0.
 	private void IncreaseInitialSupplyPoints(int player)
 	{
+		Extensions.SettingActed(
+			new SettingAction.ChangeInitialSupplyPoints(player, Increase: true)
+		);
 		InitialSupplyPoints[player] += 50;
 	}
 
 	private void DecreaseInitialSupplyPoints(int player)
 	{
+		Extensions.SettingActed(
+			new SettingAction.ChangeInitialSupplyPoints(player, Increase: false)
+		);
 		InitialSupplyPoints[player] -= 50;
 		if (InitialSupplyPoints[player] < 0)
 			InitialSupplyPoints[player] = 0;
@@ -925,6 +937,7 @@ public unsafe partial class Nspw
 	// A click on the control of the reinforcements (増援ユニット制御): the next of its 7 rules.
 	private void CycleArrivalControl()
 	{
+		Extensions.SettingActed(new SettingAction.CycleArrivalControl());
 		ArrivalControl++;
 		if (ArrivalControl >= 7)
 			ArrivalControl = 0;
@@ -1004,6 +1017,7 @@ public unsafe partial class Nspw
 	// scenario kept, and the rules as they are at first (GoToGameSetting).
 	private void BackToScenarioSetting(ref SyncFlagMessage flagMessage)
 	{
+		Extensions.SettingActed(new SettingAction.BackToScenarios());
 		int m = ScenarioNumber;
 		GoToGameSetting();
 		ScenarioNumber = (short)m;
@@ -1058,6 +1072,7 @@ public unsafe partial class Nspw
 	// the rules, and both go to the battle.
 	private void StartBattle(ref NameMessage message)
 	{
+		Extensions.SettingActed(new SettingAction.StartBattle());
 		// ホストの選択状態をゲストにセンドします。
 		srand((uint)time());
 		SharedRandomSeed = (short)Random(65536);
@@ -1392,6 +1407,7 @@ public unsafe partial class Nspw
 	// The cursor on the n-th scenario of the list: it is the scenario chosen, of the list shown (ListScenarioNames).
 	private void ChooseScenario(int n)
 	{
+		Extensions.SettingActed(new SettingAction.ChooseScenario(n));
 		if (ScenarioNumber <= 99)
 			ScenarioNumber = (short)(n + 1);
 		else if (ScenarioNumber <= 199)
@@ -1404,6 +1420,7 @@ public unsafe partial class Nspw
 	// rules, and both go to the rules; or, for the user's scenario (9), the host picks its file first (IDD_FILE_CONT).
 	private void LeaveGameSetting(ref NameMessage message)
 	{
+		Extensions.SettingActed(new SettingAction.ConfirmScenario());
 		if (ScenarioNumber == 9)
 		{
 			/*g_hDlg =*/CreateDialog(MAKEINTRESOURCE(IDD_FILE_CONT), hwndApp, (DLGPROC)IDD_FILE_LOAD_Proc);
@@ -1503,6 +1520,7 @@ public unsafe partial class Nspw
 	// A click on 操作対象の切り替え: the host and the guest swap their sides.
 	private void SwitchHostSide()
 	{
+		Extensions.SettingActed(new SettingAction.SwitchHostSide());
 		HostSide = (HostSide == 0 ? 1 : 0);
 	}
 
@@ -1565,6 +1583,7 @@ public unsafe partial class Nspw
 	// A click on the start from the auto-saved battle (オートセーブスタート), while the guest is on the scenarios too: both go to the battle.
 	private void StartFromAutoSave(ref NameMessage message)
 	{
+		Extensions.SettingActed(new SettingAction.StartFromAutoSave());
 		// ホストの選択状態をゲストにセンドします。
 		message.Type = MessageType.StartFromAutoSave;
 		bufferDesc.dwBufferSize = (uint)(sizeof(NameMessage));
@@ -1644,6 +1663,7 @@ public unsafe partial class Nspw
 	// A click on the start from the resume-saved battle (リジュームスタート), which the player saved as the host, while the guest is on the scenarios too: both go to the battle.
 	private void StartFromResume(ref NameMessage message)
 	{
+		Extensions.SettingActed(new SettingAction.StartFromResume());
 		// ホストの選択状態をゲストにセンドします。
 		message.Type = MessageType.StartFromResume;
 		bufferDesc.dwBufferSize = (uint)(sizeof(NameMessage));
@@ -1722,6 +1742,7 @@ public unsafe partial class Nspw
 	// A click on シナリオ切り替え: the other page of the list, with its first scenario chosen.
 	private void TurnScenarioPage()
 	{
+		Extensions.SettingActed(new SettingAction.TurnScenarioPage());
 		if (ScenarioNumber <= 99)
 			ScenarioNumber = 101;
 		else if (ScenarioNumber <= 199)

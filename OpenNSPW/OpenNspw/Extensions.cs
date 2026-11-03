@@ -98,6 +98,67 @@ public abstract record PlayerAction
 		);
 }
 
+// What the host did on the setting screens, as the game does it (demo.cs): the clicks on the list of scenarios, on the
+// buttons under it and on the rules, in the functions that the mouse and the host UI's commands both reach. A closed set
+// of cases, as PlayerAction's; a battle has none of them.
+[GenerateMatch]
+public abstract record SettingAction
+{
+	private SettingAction() { }
+
+	// The cursor on the n-th scenario of the list shown, in every frame it is there.
+	public sealed record ChooseScenario(int N) : SettingAction;
+
+	// A click on the scenario chosen (LeaveGameSetting): on to the rules with it.
+	public sealed record ConfirmScenario : SettingAction;
+
+	public sealed record TurnScenarioPage : SettingAction;
+
+	public sealed record StartFromResume : SettingAction;
+
+	public sealed record StartFromAutoSave : SettingAction;
+
+	public sealed record SwitchHostSide : SettingAction;
+
+	public sealed record ToggleDecision : SettingAction;
+
+	// A player's increase of supply points up or down (IncreaseSupplyRate, DecreaseSupplyRate): 0 for the host's, 1 for
+	// the guest's.
+	public sealed record ChangeSupplyRate(int Player, bool Increase) : SettingAction;
+
+	public sealed record ChangeSwapTime(bool Increase) : SettingAction;
+
+	public sealed record ToggleSwapRule : SettingAction;
+
+	public sealed record ChangeInitialSupplyPoints(int Player, bool Increase) : SettingAction;
+
+	public sealed record CycleArrivalControl : SettingAction;
+
+	// Back to the scenarios (BackToScenarioSetting).
+	public sealed record BackToScenarios : SettingAction;
+
+	public sealed record StartBattle : SettingAction;
+
+	// Where in a frame the setting screens take the action (IGameExtension.InputSite).
+	public ActionSite Site =>
+		this.Match(
+			ChooseScenario: static _ => ActionSite.ScenarioList,
+			ConfirmScenario: static _ => ActionSite.ScenarioList,
+			TurnScenarioPage: static _ => ActionSite.ScenarioMenu,
+			StartFromResume: static _ => ActionSite.ScenarioMenu,
+			StartFromAutoSave: static _ => ActionSite.ScenarioMenu,
+			SwitchHostSide: static _ => ActionSite.ScenarioMenu,
+			ToggleDecision: static _ => ActionSite.Rules,
+			ChangeSupplyRate: static _ => ActionSite.Rules,
+			ChangeSwapTime: static _ => ActionSite.Rules,
+			ToggleSwapRule: static _ => ActionSite.Rules,
+			ChangeInitialSupplyPoints: static _ => ActionSite.Rules,
+			CycleArrivalControl: static _ => ActionSite.Rules,
+			BackToScenarios: static _ => ActionSite.Rules,
+			StartBattle: static _ => ActionSite.Rules
+		);
+}
+
 // What a network battle starts with, that the setting screens and the rival's messages set (demo.cs, dplay.cs):
 // whether the game hosts it, the scenario (below 0 for a saved battle, StartFromSave), the shared seed, the host's side,
 // the rules, the map editor's scenario, the players' names and the rival's mode; and what the rival's messages that came
@@ -175,6 +236,9 @@ public interface IGameExtension
 
 	// The player did something, as the game does it.
 	void PlayerActed(Nspw game, PlayerAction action) { }
+
+	// The host did something on the setting screens, as the game does it.
+	void SettingActed(Nspw game, SettingAction action) { }
 
 	// What Windows' stack held where 1.22 reads a local it has not set, at the instruction of 1.22 that reads it
 	// (docs/Verification.md), or null: the game then reads what the port's own local holds, or what Windows' stack holds
@@ -315,6 +379,12 @@ public sealed class GameExtensions(Nspw game)
 			extension.PlayerActed(_game, action);
 	}
 
+	internal void SettingActed(SettingAction action)
+	{
+		foreach (var extension in _all)
+			extension.SettingActed(_game, action);
+	}
+
 	// The first extension that answers.
 	internal byte[]? UninitializedLocal(uint instruction)
 	{
@@ -380,6 +450,36 @@ public unsafe partial class Nspw
 			SwapLocalSide: _ => SwapLocalSide,
 			SinkSelectedUnit: _ => SinkSelectedUnit,
 			GiveOrders: give => () => GivePlayerOrders(give.Orders)
+		)();
+	}
+
+	// Does what the host did on the setting screens, as the click it stands for did, without the checks that a click
+	// passes before it.
+	public void Do(SettingAction action)
+	{
+		NameMessage message = default;
+		SyncFlagMessage flagMessage = default;
+		action.Match<Action>(
+			ChooseScenario: choose => () => ChooseScenario(choose.N),
+			ConfirmScenario: _ => () => LeaveGameSetting(ref message),
+			TurnScenarioPage: _ => TurnScenarioPage,
+			StartFromResume: _ => () => StartFromResume(ref message),
+			StartFromAutoSave: _ => () => StartFromAutoSave(ref message),
+			SwitchHostSide: _ => SwitchHostSide,
+			ToggleDecision: _ => ToggleDecision,
+			ChangeSupplyRate: change =>
+				change.Increase
+					? () => IncreaseSupplyRate(change.Player)
+					: () => DecreaseSupplyRate(change.Player),
+			ChangeSwapTime: change => change.Increase ? IncreaseSwapTime : DecreaseSwapTime,
+			ToggleSwapRule: _ => ToggleSwapRule,
+			ChangeInitialSupplyPoints: change =>
+				change.Increase
+					? () => IncreaseInitialSupplyPoints(change.Player)
+					: () => DecreaseInitialSupplyPoints(change.Player),
+			CycleArrivalControl: _ => CycleArrivalControl,
+			BackToScenarios: _ => () => BackToScenarioSetting(ref flagMessage),
+			StartBattle: _ => () => StartBattle(ref message)
 		)();
 	}
 
