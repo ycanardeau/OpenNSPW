@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Aigamo.Otsuki.Actors;
 using static OpenNspw.all_head;
 
 namespace OpenNspw.Benchmarks;
@@ -32,7 +33,9 @@ internal sealed class NullAddress : IDirectPlay8Address
 // The rival is a guest that joins as soon as the game hosts, and whose simulation is the same as the game's: it sends
 // back the game's checksums (DP_FLAG_1) and screen changes, and answers each turn's order of the game with an order of
 // its own, from Order(), or with DP_NO_ORDER. Its messages are delivered by DoWork, on the game's thread, as DirectPlay
-// does in DoWork mode, so the game runs the same code as in a network game, but takes the same time in every run.
+// does in DoWork mode, so the game runs the same code as in a network game, but takes the same time in every run. Its
+// messages and orders wait in mailboxes that whichever thread runs the game receives from: the game's, or the benchmark's
+// once the game is handed to it.
 internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 {
 	private const uint LocalPlayer = 1;
@@ -46,9 +49,8 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 	// least this size, filled with zeros after the data.
 	private const int MinimumReceiveBuffer = 1024;
 
-	private readonly Lock _lock = new();
-	private readonly Queue<(uint MessageId, object? Message, byte[]? Data)> _events = [];
-	private readonly Queue<byte[]> _orders = [];
+	private readonly Mailbox<(uint MessageId, object? Message, byte[]? Data)> _events = new();
+	private readonly Mailbox<byte[]> _orders = new();
 	private PFNDPNMESSAGEHANDLER? _handler;
 	private object? _userContext;
 	private string _localName = string.Empty;
@@ -79,10 +81,7 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 
 	private void Enqueue(uint messageId, object? message, byte[]? data = null)
 	{
-		lock (_lock)
-		{
-			_events.Enqueue((messageId, message, data));
-		}
+		_events.Post((messageId, message, data));
 	}
 
 	// The rival's message in answer to one of the game's.
@@ -91,12 +90,9 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 		var type = MemoryMarshal.Read<MessageType>(data);
 		if (IsOrder(type))
 		{
-			lock (_lock)
-			{
-				return _orders.TryDequeue(out var order)
-					? order
-					: ToBytes(new SyncFlagMessage { Type = MessageType.NoOrder });
-			}
+			return _orders.TryReceive(out var order)
+				? order
+				: ToBytes(new SyncFlagMessage { Type = MessageType.NoOrder });
 		}
 
 		// The rival is a guest, which leaves its dialog when the host starts the game.
@@ -107,10 +103,7 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 	public void Order<T>(T message)
 		where T : unmanaged
 	{
-		lock (_lock)
-		{
-			_orders.Enqueue(ToBytes(message));
-		}
+		_orders.Post(ToBytes(message));
 	}
 
 	public int Initialize(object? pvUserContext, PFNDPNMESSAGEHANDLER pfn, uint dwFlags)
@@ -276,11 +269,10 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 	// Delivers the rival's messages so far to the game's message handler. Called by ScriptedRivalThreadPool.DoWork.
 	public void DoWork()
 	{
-		(uint MessageId, object? Message, byte[]? Data)[] events;
-		lock (_lock)
+		var events = new List<(uint MessageId, object? Message, byte[]? Data)>();
+		while (_events.TryReceive(out var item))
 		{
-			events = [.. _events];
-			_events.Clear();
+			events.Add(item);
 		}
 
 		foreach (var (messageId, message, data) in events)

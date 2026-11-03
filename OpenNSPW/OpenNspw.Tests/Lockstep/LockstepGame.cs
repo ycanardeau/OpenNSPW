@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Aigamo.Otsuki.Actors;
 using OpenNspw.HostUI;
 using OpenNspw.Replay;
 using static OpenNspw.windef;
@@ -12,21 +13,32 @@ internal sealed class LockstepStoppedException : Exception;
 // Runs the games of a test one at a time, so that a run does the same thing every time. Each game runs WinMain on its
 // own thread, but only while the driver (the test's thread) has stepped it, until the game yields: at the end of a
 // frame, in Sleep, or when it waits for a message. Everything that enters a game (input, dialog actions, network
-// messages) arrives while it is not running.
+// messages) arrives while it is not running. The driver and the games hand the run to each other by messages: the
+// driver posts a game whether it is to stop (resume), and the game posts the driver that it has yielded, and the state
+// of the one that runs is its own until it hands the run back.
 internal sealed class LockstepScheduler
 {
 	private static readonly TimeSpan StepTimeout = TimeSpan.FromSeconds(60);
 
-	private readonly SemaphoreSlim _yielded = new(0);
+	// Where the driver waits for the game it stepped to yield or end.
+	private readonly Mailbox<bool> _yielded = new();
 
+	// Whether the run is disposed: the driver's, which it gives a game with each step.
 	public bool Stopping { get; private set; }
 
-	// On a game's thread: lets the driver run, and waits until the driver steps the game again.
-	public void Yield(SemaphoreSlim resume)
+	// On a game's thread: waits until the driver steps the game, and returns whether it is to stop.
+	public static bool WaitForStep(Mailbox<bool> resume)
 	{
-		_yielded.Release();
 		resume.Wait();
-		if (Stopping)
+		resume.TryReceive(out var stopping);
+		return stopping;
+	}
+
+	// On a game's thread: lets the driver run, and waits until the driver steps the game again.
+	public void Yield(Mailbox<bool> resume)
+	{
+		_yielded.Post(true);
+		if (WaitForStep(resume))
 		{
 			throw new LockstepStoppedException();
 		}
@@ -35,17 +47,19 @@ internal sealed class LockstepScheduler
 	// On a game's thread, when the game ends.
 	public void Exit()
 	{
-		_yielded.Release();
+		_yielded.Post(true);
 	}
 
 	// On the driver's thread: runs a game until it yields or ends.
-	public void Step(SemaphoreSlim resume)
+	public void Step(Mailbox<bool> resume)
 	{
-		resume.Release();
-		if (!_yielded.Wait(StepTimeout))
+		resume.Post(Stopping);
+		if (!_yielded.WaitFor(static _ => true, StepTimeout))
 		{
 			throw new TimeoutException("A game did not yield.");
 		}
+
+		_yielded.TryReceive(out _);
 	}
 
 	public void Stop()
@@ -100,7 +114,7 @@ internal sealed class LockstepGame : INspwPlatform
 	private readonly string _dataDirectory;
 	private readonly LoopbackDirectPlayFactory _directPlay;
 	private readonly Dictionary<string, string> _settings = [];
-	private readonly SemaphoreSlim _resume = new(0);
+	private readonly Mailbox<bool> _resume = new();
 	private readonly Thread _thread;
 	private Hash64 _output = new();
 	private uint _now = StartTime;
@@ -144,10 +158,10 @@ internal sealed class LockstepGame : INspwPlatform
 
 	private void Run()
 	{
-		_resume.Wait();
+		var stopping = LockstepScheduler.WaitForStep(_resume);
 		try
 		{
-			if (!_scheduler.Stopping)
+			if (!stopping)
 			{
 				Game.WinMain(null, null, "", SW_SHOWNORMAL);
 			}
@@ -229,7 +243,7 @@ internal sealed class LockstepGame : INspwPlatform
 	{
 		if (!Ended)
 		{
-			_resume.Release();
+			_resume.Post(true);
 			_thread.Join(TimeSpan.FromSeconds(10));
 		}
 	}

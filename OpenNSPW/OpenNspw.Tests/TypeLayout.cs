@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Globalization;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -28,15 +27,21 @@ internal static class TypeLayout
 		BindingFlags.NonPublic | BindingFlags.Static
 	)!;
 
-	private static readonly ConcurrentDictionary<Type, BoxBytes> BoxBytesCache = new();
+	// Each thread's own, as the tests run in parallel.
+	[ThreadStatic]
+	private static Dictionary<Type, BoxBytes>? _boxBytesCache;
 
 	// The bytes of a boxed value, in the box.
 	public static Span<byte> BytesOf(object box)
 	{
-		var bytes = BoxBytesCache.GetOrAdd(
-			box.GetType(),
-			type => BytesMethod.MakeGenericMethod(type).CreateDelegate<BoxBytes>()
-		);
+		var cache = _boxBytesCache ??= [];
+		var type = box.GetType();
+		if (!cache.TryGetValue(type, out var bytes))
+		{
+			bytes = BytesMethod.MakeGenericMethod(type).CreateDelegate<BoxBytes>();
+			cache[type] = bytes;
+		}
+
 		return bytes(box);
 	}
 
@@ -90,13 +95,21 @@ internal static class TypeLayout
 		return [.. fields.OrderBy(f => f.Offset)];
 	}
 
-	private static readonly ConcurrentDictionary<Type, IReadOnlyList<FieldLayout>> FieldsCache =
-		new();
+	// Each thread's own, as the tests run in parallel.
+	[ThreadStatic]
+	private static Dictionary<Type, IReadOnlyList<FieldLayout>>? _fieldsCache;
 
 	// The fields of a struct, ordered by offset.
 	public static IReadOnlyList<FieldLayout> FieldsOf(Type type)
 	{
-		return FieldsCache.GetOrAdd(type, FindFields);
+		var cache = _fieldsCache ??= [];
+		if (!cache.TryGetValue(type, out var fields))
+		{
+			fields = FindFields(type);
+			cache[type] = fields;
+		}
+
+		return fields;
 	}
 
 	// Whether a value of the type is one number, which an enum is too.

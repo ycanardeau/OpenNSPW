@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Net;
+using Aigamo.Otsuki.Actors;
 using OpenNspw.DirectPlay;
 using Xunit;
 using static OpenNspw.all_head;
@@ -10,11 +11,11 @@ using static OpenNspw.winuser;
 namespace OpenNspw.Tests;
 
 // The platform of a whole game in the tests: the game's files in a copy of Original/NSPW_NET, DirectPlay 8 on Otsuki,
-// the frames it shows, and text with the desktop app's rasterizer, where its font exists. No sound.
+// the frames it shows, and text with the desktop app's rasterizer, where its font exists. No sound. On the game's thread:
+// the test reads it with RunningGame.Ask.
 internal sealed class GameTestPlatform(string dataDirectory) : INspwPlatform
 {
 	private readonly string _dataDirectory = dataDirectory;
-	private readonly Lock _frameLock = new();
 	private readonly OpenNspw.Desktop.TextRasterizer _text = new();
 	private ushort[] _frame = [];
 
@@ -29,10 +30,7 @@ internal sealed class GameTestPlatform(string dataDirectory) : INspwPlatform
 
 	public ushort[] LastFrame()
 	{
-		lock (_frameLock)
-		{
-			return [.. _frame];
-		}
+		return [.. _frame];
 	}
 
 	public Stream? OpenFile(string path, FileMode mode, FileAccess access, FileShare share)
@@ -52,11 +50,7 @@ internal sealed class GameTestPlatform(string dataDirectory) : INspwPlatform
 
 	public int MessageBox(HWND? hWnd, string lpText, string lpCaption, uint uType)
 	{
-		lock (MessageBoxes)
-		{
-			MessageBoxes.Add(lpText);
-		}
-
+		MessageBoxes.Add(lpText);
 		return IDOK;
 	}
 
@@ -66,11 +60,8 @@ internal sealed class GameTestPlatform(string dataDirectory) : INspwPlatform
 
 	public void Present(DirectDrawSurface7 primary)
 	{
-		lock (_frameLock)
-		{
-			_frame = primary.Pixels.ToArray();
-			FrameCount++;
-		}
+		_frame = primary.Pixels.ToArray();
+		FrameCount++;
 	}
 
 	public TextBitmap? RasterizeText(string text, int height, string faceName) =>
@@ -83,10 +74,17 @@ internal sealed class GameTestPlatform(string dataDirectory) : INspwPlatform
 	public void WriteSetting(string key, string value) { }
 }
 
-// A whole game, running its WinMain (win_main.cpp) on its own thread, as the desktop app does.
+// A whole game, running its WinMain (win_main.cpp) on its own thread, as the desktop app does. The game and its
+// platform are its thread's: the test asks it what it needs to know (Ask), and posts it what the user does (Do).
 internal sealed class RunningGame : IDisposable
 {
+	private static readonly TimeSpan AskTimeout = TimeSpan.FromSeconds(1);
+
 	private readonly Thread _thread;
+
+	// What WinMain threw, posted by the game's thread, and taken by the test's (Error).
+	private readonly Mailbox<Exception> _errors = new();
+	private Exception? _error;
 
 	public string PlayerName { get; }
 
@@ -94,7 +92,18 @@ internal sealed class RunningGame : IDisposable
 
 	public Nspw Game { get; }
 
-	public Exception? Error { get; private set; }
+	public Exception? Error
+	{
+		get
+		{
+			while (_errors.TryReceive(out var error))
+			{
+				_error = error;
+			}
+
+			return _error;
+		}
+	}
 
 	public bool Ended => !_thread.IsAlive;
 
@@ -110,7 +119,7 @@ internal sealed class RunningGame : IDisposable
 			}
 			catch (Exception e)
 			{
-				Error = e;
+				_errors.Post(e);
 			}
 		})
 		{
@@ -131,19 +140,30 @@ internal sealed class RunningGame : IDisposable
 		Game.PostToGame(() => action(Game));
 	}
 
+	// Asks the game's thread, as its message loop dispatches the question, and waits for the answer; or answers
+	// `unanswered` if the game does not answer within a second, such as while it waits for DirectPlay.
+	public T Ask<T>(Func<Nspw, GameTestPlatform, T> question, T unanswered)
+	{
+		var answer = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+		Do(game => answer.TrySetResult(question(game, Platform)));
+		return answer.Task.Wait(AskTimeout) ? answer.Task.Result : unanswered;
+	}
+
 	public void Dispose()
 	{
 		if (_thread.IsAlive)
 		{
-			if (Game.hwndApp is { } window)
+			Do(game =>
 			{
-				Game.PostMessage(window, WM_CLOSE, 0, 0);
-			}
-			else if (Game.MainDialog is { } dialog)
-			{
-				Do(g => g.ClickDlgItem(dialog, IDCANCEL));
-			}
-
+				if (game.hwndApp is { } window)
+				{
+					game.PostMessage(window, WM_CLOSE, 0, 0);
+				}
+				else if (game.MainDialog is { } dialog)
+				{
+					game.ClickDlgItem(dialog, IDCANCEL);
+				}
+			});
 			_thread.Join(TimeSpan.FromSeconds(5));
 		}
 	}
@@ -154,13 +174,19 @@ public class TitleScreenTests
 {
 	private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(60);
 
+	private static int? DialogOf(RunningGame game) => game.Ask((g, _) => g.MainDialog?.Id, null);
+
+	private static GameMode? ModeOf(RunningGame game) => game.Ask((g, _) => (GameMode?)g.Mode, null);
+
+	private static int FramesOf(RunningGame game) => game.Ask((_, platform) => platform.FrameCount, 0);
+
 	private static void WaitUntil(Func<bool> condition, params RunningGame[] games)
 	{
 		string Status() =>
 			string.Join(
 				"; ",
 				games.Select(g =>
-					$"{g.PlayerName}: dialog {g.Game.MainDialog?.Id}, players {g.Game.ActivePlayerCount}, mode {g.Game.Mode}, rival mode {g.Game.RivalMode}, frames {g.Platform.FrameCount}, ended {g.Ended}, boxes [{string.Join(", ", g.Platform.MessageBoxes)}]"
+					$"{g.PlayerName}: {g.Ask((game, platform) => $"dialog {game.MainDialog?.Id}, players {game.ActivePlayerCount}, mode {game.Mode}, rival mode {game.RivalMode}, frames {platform.FrameCount}, boxes [{string.Join(", ", platform.MessageBoxes)}]", "not answering")}, ended {g.Ended}"
 				)
 			);
 
@@ -257,7 +283,7 @@ public class TitleScreenTests
 	{
 		WritePng(
 			Path.Combine(AppContext.BaseDirectory, name),
-			game.Platform.LastFrame(),
+			game.Ask((_, platform) => platform.LastFrame(), []),
 			SCRN_WIDTH,
 			SCRN_HEIGHT
 		);
@@ -274,8 +300,7 @@ public class TitleScreenTests
 		guest.Start();
 		WaitUntil(
 			() =>
-				host.Game.MainDialog?.Id == IDD_ADDRESS_OVERRIDE
-				&& guest.Game.MainDialog?.Id == IDD_ADDRESS_OVERRIDE,
+				DialogOf(host) == IDD_ADDRESS_OVERRIDE && DialogOf(guest) == IDD_ADDRESS_OVERRIDE,
 			host,
 			guest
 		);
@@ -285,8 +310,11 @@ public class TitleScreenTests
 			g.TypeDlgItemText(g.MainDialog!, IDC_ADDRESS_LINE2, "0");
 			g.ClickDlgItem(g.MainDialog!, IDOK);
 		});
-		WaitUntil(() => host.Game.MainDialog?.Id == IDD_MAIN_GAME, host, guest);
-		var port = ((IPEndPoint)host.Platform.DirectPlay.Peers.Single().LocalEndPoint!).Port;
+		WaitUntil(() => DialogOf(host) == IDD_MAIN_GAME, host, guest);
+		var port = host.Ask(
+			(_, platform) => ((IPEndPoint)platform.DirectPlay.Peers.Single().LocalEndPoint!).Port,
+			0
+		);
 
 		guest.Do(g =>
 		{
@@ -297,23 +325,23 @@ public class TitleScreenTests
 		});
 		WaitUntil(
 			() =>
-				host.Game.ActivePlayerCount == 2
-				&& guest.Game.ActivePlayerCount == 2
-				&& guest.Game.MainDialog?.Id == IDD_MAIN_GAME,
+				host.Ask((g, _) => (int)g.ActivePlayerCount, 0) == 2
+				&& guest.Ask((g, _) => (int)g.ActivePlayerCount, 0) == 2
+				&& DialogOf(guest) == IDD_MAIN_GAME,
 			host,
 			guest
 		);
 
 		host.Do(g => g.ClickDlgItem(g.MainDialog!, IDC_START_GAME));
 		WaitUntil(
-			() => host.Platform.FrameCount > 20 && guest.Platform.FrameCount > 20,
+			() => FramesOf(host) > 20 && FramesOf(guest) > 20,
 			host,
 			guest
 		);
 
 		play(host, guest);
-		Assert.Empty(host.Platform.MessageBoxes);
-		Assert.Empty(guest.Platform.MessageBoxes);
+		Assert.Empty(host.Ask((_, platform) => platform.MessageBoxes.ToList(), ["not answering"]));
+		Assert.Empty(guest.Ask((_, platform) => platform.MessageBoxes.ToList(), ["not answering"]));
 	}
 
 	[Fact]
@@ -322,14 +350,14 @@ public class TitleScreenTests
 		PlayTwoGames(
 			(host, guest) =>
 			{
-				Assert.Equal(GameMode.Title, host.Game.Mode);
-				Assert.Equal(GameMode.Title, guest.Game.Mode);
-				Assert.Equal(1, host.Game.IsHost.Value);
-				Assert.Equal(0, guest.Game.IsHost.Value);
+				Assert.Equal(GameMode.Title, ModeOf(host));
+				Assert.Equal(GameMode.Title, ModeOf(guest));
+				Assert.Equal(1, host.Ask((g, _) => g.IsHost.Value, -1));
+				Assert.Equal(0, guest.Ask((g, _) => g.IsHost.Value, -1));
 
 				SaveFrame(host, "title_host.png");
 				Assert.True(
-					host.Platform.LastFrame().Distinct().Count() > 16,
+					host.Ask((_, platform) => platform.LastFrame().Distinct().Count(), 0) > 16,
 					"The title screen is drawn."
 				);
 			}
@@ -346,8 +374,8 @@ public class TitleScreenTests
 				Click(host, 512, 384);
 				WaitUntil(
 					() =>
-						host.Game.Mode == GameMode.GameSetting
-						&& host.Game.RivalMode == GameMode.GameSetting,
+						ModeOf(host) == GameMode.GameSetting
+						&& host.Ask((g, _) => g.RivalMode, default) == GameMode.GameSetting,
 					host,
 					guest
 				);
@@ -356,8 +384,8 @@ public class TitleScreenTests
 				Click(host, 130, 150 + 12);
 				WaitUntil(
 					() =>
-						host.Game.Mode == GameMode.ConfigSetting
-						&& host.Game.RivalMode == GameMode.ConfigSetting,
+						ModeOf(host) == GameMode.ConfigSetting
+						&& host.Ask((g, _) => g.RivalMode, default) == GameMode.ConfigSetting,
 					host,
 					guest
 				);
@@ -365,23 +393,22 @@ public class TitleScreenTests
 
 				Click(host, 630 - 120 + 10, 700 + 12);
 				WaitUntil(
-					() => host.Game.Mode == GameMode.Battle && guest.Game.Mode == GameMode.Battle,
+					() => ModeOf(host) == GameMode.Battle && ModeOf(guest) == GameMode.Battle,
 					host,
 					guest
 				);
 
-				var frames = (host.Platform.FrameCount, guest.Platform.FrameCount);
+				var frames = (FramesOf(host), FramesOf(guest));
 				WaitUntil(
 					() =>
-						host.Platform.FrameCount > frames.Item1 + 200
-						&& guest.Platform.FrameCount > frames.Item2 + 200,
+						FramesOf(host) > frames.Item1 + 200 && FramesOf(guest) > frames.Item2 + 200,
 					host,
 					guest
 				);
 				SaveFrame(host, "battle_host.png");
 				SaveFrame(guest, "battle_guest.png");
-				Assert.Equal(GameMode.Battle, host.Game.Mode);
-				Assert.Equal(GameMode.Battle, guest.Game.Mode);
+				Assert.Equal(GameMode.Battle, ModeOf(host));
+				Assert.Equal(GameMode.Battle, ModeOf(guest));
 			}
 		);
 	}

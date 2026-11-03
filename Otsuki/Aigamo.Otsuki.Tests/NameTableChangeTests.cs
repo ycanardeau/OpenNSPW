@@ -1,4 +1,5 @@
 using System.Net;
+using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Reliable;
 using FluentAssertions;
@@ -31,7 +32,7 @@ public class NameTableChangeTests : IAsyncLifetime
 
 	private readonly InMemoryNetwork _network = new();
 	private readonly List<Peer> _peers = [];
-	private int _nextAddress;
+	private readonly Sequence _addresses = new();
 
 	public Task InitializeAsync() => Task.CompletedTask;
 
@@ -46,7 +47,7 @@ public class NameTableChangeTests : IAsyncLifetime
 
 	private (Peer Peer, EventLog Log) CreatePeer(string name, TimeSpan? requestTimeout = null)
 	{
-		var address = IPAddress.Parse($"10.1.0.{Interlocked.Increment(ref _nextAddress)}");
+		var address = IPAddress.Parse($"10.1.0.{_addresses.Next()}");
 		var peer = new Peer(
 			new PeerOptions
 			{

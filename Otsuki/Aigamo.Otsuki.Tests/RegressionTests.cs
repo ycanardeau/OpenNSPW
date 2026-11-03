@@ -1,12 +1,13 @@
 using System.Net;
 using System.Reflection;
+using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Messages.Reliable;
 using Aigamo.Otsuki.Reliable;
 using Aigamo.Otsuki.Session;
 using FluentAssertions;
-using Xunit;
 using Xunit.Abstractions;
+using Xunit;
 
 namespace Aigamo.Otsuki.Tests;
 
@@ -35,7 +36,7 @@ public class RegressionTests(ITestOutputHelper output) : IAsyncLifetime
 
 	private readonly InMemoryNetwork _network = new();
 	private readonly List<Func<Task>> _closers = [];
-	private int _nextAddress;
+	private readonly Sequence _addresses = new();
 
 	public Task InitializeAsync() => Task.CompletedTask;
 
@@ -67,7 +68,7 @@ public class RegressionTests(ITestOutputHelper output) : IAsyncLifetime
 
 	private TestPeer CreatePeer(string name)
 	{
-		var address = IPAddress.Parse($"10.9.0.{Interlocked.Increment(ref _nextAddress)}");
+		var address = IPAddress.Parse($"10.9.0.{_addresses.Next()}");
 		var peer = new Peer(Options(address));
 		_closers.Add(peer.CloseAsync);
 		peer.SetPeerInfo(name);

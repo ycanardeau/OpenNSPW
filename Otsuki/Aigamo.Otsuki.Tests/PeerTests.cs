@@ -1,4 +1,5 @@
 using System.Net;
+using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Messages.Reliable;
 using Aigamo.Otsuki.Reliable;
@@ -29,7 +30,7 @@ public class PeerTests : IAsyncLifetime
 
 	private readonly InMemoryNetwork _network = new();
 	private readonly List<Peer> _peers = [];
-	private int _nextAddress;
+	private readonly Sequence _addresses = new();
 
 	public Task InitializeAsync() => Task.CompletedTask;
 
@@ -47,7 +48,7 @@ public class PeerTests : IAsyncLifetime
 		ReliableProfile? profile = null
 	)
 	{
-		var address = IPAddress.Parse($"10.0.0.{Interlocked.Increment(ref _nextAddress)}");
+		var address = IPAddress.Parse($"10.0.0.{_addresses.Next()}");
 		var peer = new Peer(
 			new PeerOptions
 			{
@@ -258,11 +259,11 @@ public class PeerTests : IAsyncLifetime
 			)
 				return;
 
-			Interlocked.Increment(ref frames);
+			frames++;
 			if (frame.Coalesce)
-				Interlocked.Increment(ref coalesced);
+				coalesced++;
 		};
-		return (() => Volatile.Read(ref frames), () => Volatile.Read(ref coalesced));
+		return (() => _network.Ask(() => frames), () => _network.Ask(() => coalesced));
 	}
 
 	/// <summary>
@@ -355,11 +356,11 @@ public class PeerTests : IAsyncLifetime
 		var host = await HostAsync("Host", SignedApplication(signing), profile);
 		var joiner = CreatePeer("Joiner", profile);
 		var unsigned = 0;
-		var offers = new System.Collections.Concurrent.ConcurrentBag<PacketSigning>();
+		var offers = new List<PacketSigning>();
 		_network.Observe = (_, _, datagram) =>
 		{
 			if ((datagram[0] & 0x01) != 0 && !HasSignature(datagram))
-				Interlocked.Increment(ref unsigned);
+				unsigned++;
 			if (
 				ReliableMessageSerializer.Default.Deserialize(datagram)
 				is ReliableMessage.ConnectedSigned connectedSigned
@@ -394,8 +395,9 @@ public class PeerTests : IAsyncLifetime
 			.Select(e => BitConverter.ToInt32([.. e.Data]))
 			.Should()
 			.Equal(Enumerable.Range(0, 700).Select(i => -i));
-		Volatile.Read(ref unsigned).Should().Be(0);
-		offers
+		_network.Ask(() => unsigned).Should().Be(0);
+		_network
+			.Ask(() => offers.ToList())
 			.Should()
 			.NotBeEmpty()
 			.And.OnlyContain(o =>
@@ -463,7 +465,7 @@ public class PeerTests : IAsyncLifetime
 			)
 			{
 				datagram[^1] = (byte)'X';
-				Interlocked.Increment(ref tampered);
+				tampered++;
 			}
 			return false;
 		};
@@ -472,7 +474,7 @@ public class PeerTests : IAsyncLifetime
 
 		var received = await joiner.Log.WaitForAsync<PeerEvent.DataReceived>();
 		received.Data.Should().Equal("ABCD"u8.ToArray());
-		Volatile.Read(ref tampered).Should().BePositive();
+		_network.Ask(() => tampered).Should().BePositive();
 		joiner.Log.OfType<PeerEvent.DataReceived>().Should().ContainSingle();
 	}
 
@@ -619,14 +621,17 @@ public class PeerTests : IAsyncLifetime
 		_network.Observe = (source, destination, _) =>
 		{
 			if (source.Address.Equals(first.Address) && destination.Address.Equals(second.Address))
-				Interlocked.Increment(ref direct);
+				direct++;
 		};
 		first.Peer.SendTo(second.Peer.LocalPlayer, [42]);
 
 		var received = await second.Log.WaitForAsync<PeerEvent.DataReceived>();
 		received.Should().Be(new PeerEvent.DataReceived(first.Peer.LocalPlayer, received.Data));
 		received.Data.Should().Equal([42]);
-		direct.Should().BePositive("peers talk to each other directly, not through the host");
+		_network
+			.Ask(() => direct)
+			.Should()
+			.BePositive("peers talk to each other directly, not through the host");
 	}
 
 	[Fact]
