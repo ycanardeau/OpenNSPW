@@ -119,17 +119,19 @@ public sealed partial class StrongPlayer
 	}
 
 	// Scenario 10: from frame 4000, the carrier's raid over, the ready fighters of the player's air base nearest Saipan,
-	// four or more, with its attackers armed with bombs (TryArm), sweep its airfield, every 2500 frames, while no enemy attacker or bomber has been seen in the air
-	// within 3000 of that base for 300 frames: the victory counts the enemy's planes, its last fighters are kept there,
-	// and its transports land troops at that base later on.
+	// three or more, with its attackers armed with bombs (TryArm), sweep its airfield, every 1200 frames, while no enemy
+	// attacker or bomber has been seen in the air within 3000 of that base for 300 frames, nor do planes land on it: the
+	// victory counts the enemy's planes, its last fighters are kept there, and its transports land troops at that base
+	// later on.
 	private bool TrySweepSaipan(Nspw game)
 	{
 		var from = NearestOwnAirBase(game, ScenarioKnowledge.Saipan.Center);
 		if (
 			from == 0
 			|| UnitFacts.Now(game) < 4000
-			|| UnitFacts.Now(game) - _lastSweep < 2500
+			|| UnitFacts.Now(game) - _lastSweep < 1200
 			|| !UnitFacts.CanLaunch(ref game.Units[from])
+			|| IsLandingOn(game, from)
 			|| _contacts.All.Any(c =>
 				c.Category == UnitCategory.Plane
 				&& UnitFacts.IsStrikePlane(c.Kind)
@@ -145,7 +147,7 @@ public sealed partial class StrongPlayer
 			from,
 			n => game.Units[n].Kind == UnitKind.Fighter && UnitFacts.IsReady(ref game.Units[n])
 		);
-		if (fighters.Count < 4)
+		if (fighters.Count < 3)
 			return false;
 
 		// The attackers armed with bombs go too, waited for, to draw the fighters up, which the computer sends only
@@ -168,15 +170,29 @@ public sealed partial class StrongPlayer
 		_lastSweep = UnitFacts.Now(game);
 		ShowDeck(from);
 		SelectPlanes(fighters[0], fighters.Skip(1).Concat(attackers));
-		SendSelected(
-			fighters[0],
-			PointAt(
-				ScenarioKnowledge.Saipan.Center,
-				BearingTo(ScenarioKnowledge.Saipan.Center, game.Units[from].Position),
-				550
-			),
-			$"and {fighters.Count - 1} more sweep Saipan at"
+		// The deck takes the order only while no plane lands on it, nor takes off (CanSetDestination), which a plane
+		// coming down by the time the clicks come forbids: then the sweep is given up, and tried again.
+		var leader = fighters[0];
+		var point = PointAt(
+			ScenarioKnowledge.Saipan.Center,
+			BearingTo(ScenarioKnowledge.Saipan.Center, game.Units[from].Position),
+			550
 		);
+		_clicks.Enqueue(g =>
+		{
+			if (g.SelectedUnit != leader || !UnitFacts.CanLaunch(ref g.Units[from]))
+			{
+				_lastSweep = int.MinValue / 2;
+				return GiveUp(g, $"sweeping with {leader}: selected {g.SelectedUnit}, deck busy");
+			}
+
+			g.Commands.SetDestination(point);
+			Log?.Invoke(
+				$"{UnitFacts.Now(g)}: {g.Units[leader].Kind} {leader} and {g.SelectionCount - 1} more sweep Saipan at ({point.X:F0}, {point.Y:F0})"
+			);
+			return true;
+		});
+		Deselect();
 		return true;
 	}
 
