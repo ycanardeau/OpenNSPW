@@ -7,7 +7,7 @@ They serve two purposes: watching a battle again, and studying one, such as what
 | Record | When | What |
 | --- | --- | --- |
 | Start | `BattleStarting`, `BattleStarted` | The mode (single-player, network host or guest), the scenario, the date, the app's version; in a single-player battle rand's state and the last seed of `InitializeGame`; in a network battle its settings (`NetworkBattleSettings`); and the files it started from: the map editor's scenario, or the saved battle it resumes |
-| Frame | `FrameStarting` | The milliseconds since the last frame, which pace the replay, the frame's ticks, which cover the speed and Space, and the speed shown, which the ticks do not tell at a steady speed ([SteadySpeed.md](SteadySpeed.md)) |
+| Frame | `FrameStarting` | The milliseconds since the last frame, which pace the replay, the frame's ticks, which cover the speed and Space, the speed shown, which the ticks do not tell at a steady speed ([SteadySpeed.md](SteadySpeed.md)), and whether it holds the battle |
 | Camera | `Drawing` | The view, when it has changed |
 | Action | `PlayerActed` | What the player did (`PlayerAction`), wherever it came from: the mouse, the UI's commands, a computer player, a key; a byte for its case (`ReplayActionCase`), then what the case has |
 | Received, RivalLeft | `MessageReceived`, `RivalLeft` | A network battle's message of the rival, as its bytes, or the rival leaving |

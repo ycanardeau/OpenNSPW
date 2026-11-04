@@ -59,9 +59,12 @@ public unsafe partial class Nspw
 	}
 
 	// A random number for an effect. NSPW NET draws them from SharedRandom, so that network games stay in step whatever
-	// their effects; 1.22 draws them from rand, as all the others.
+	// their effects; 1.22 draws them from rand, as all the others. None while the battle is held (IsBattleHeld), whose
+	// effects keep still: 0.
 	public int EffectRandom(int range) =>
-		Rules.EffectsDrawFromRand ? Random(range) : SharedRandom(range);
+		IsBattleHeld ? 0
+		: Rules.EffectsDrawFromRand ? Random(range)
+		: SharedRandom(range);
 
 	// Whether this tick makes the effects that 1.22 makes on the tick that is drawn only.
 	public bool IsEffectTick => Renderer.IsDrawnTick || !Rules.EffectsOnDrawnTickOnly;

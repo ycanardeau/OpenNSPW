@@ -29,6 +29,7 @@ An extension implements `IGameExtension`, whose methods all do nothing by defaul
 | `GameStarted` | `WinMain`, before the message loop | Start a battle (below) |
 | `BattleStarting`, `BattleStarted` | `InitializeGame`, at its start and at its end | Read the start; set rand's state (`srand`) |
 | `FrameStarting` | `UpdateFrame`, as a frame of the battle would start | Hold the frame, start it now, or leave it to the game's timer; set its ticks and the speed shown |
+| `HoldsBattle` | `TryStartSingleplayerFrame`, as a frame of a single-player battle starts | Hold the battle in it (`IsBattleHeld`): no tick, no computer, no scenario event, no reinforcement's countdown, no random number for the effects, and the frame not counted; the input, the player's orders and the drawing go on |
 | `TickStarting` | Before each tick of the battle (`UpdateBattle`) | Read the battle |
 | `ResultChecking` | At the start of `CheckResult`: after each tick that is not drawn in a single-player game, and after the drawing | Read the battle |
 | `Drawing` | Before `DrawBattleArea` | Read or set the camera |
@@ -73,7 +74,7 @@ Later, each its own change: computer players as an extension, and the out-of-pro
 ## Replays, as an extension
 - **Recorder.** At `BattleStarting` it takes the start: the mode, the scenario, the seeds, the network settings (`ReadNetworkBattleSettings`), and the files the battle starts from, read through the game's platform. At each point it writes what it sees: ticks, camera, actions, the rival's messages, hashes. It intervenes in nothing.
 - **Hashes** cover the units and the fires, rand's state and the tick, but not a unit's sprite column (`SpriteColumn`): the drawing sets it for the units it draws, so it follows the camera and the cursor, and the battle never reads it.
-- **Player.** It holds the input authority. It sets the seeds, starts a network battle (`StartNetworkBattle`), paces the frames and gives their ticks (`FrameStarting`), the camera (`Drawing`), and the actions (`InputSite`).
+- **Player.** It holds the input authority. It sets the seeds, starts a network battle (`StartNetworkBattle`), paces the frames and gives their ticks (`FrameStarting`) and whether they hold the battle (`HoldsBattle`), the camera (`Drawing`), and the actions (`InputSite`).
 - **The rival, in a network replay**, is a DirectPlay peer and thread pool that the player gives `StartNetworkBattle`: they send nothing, and deliver the recorded messages in `DoWork` after their frame, where DirectPlay delivered them.
 - **Files.** The files a battle started from (the map editor's scenario, a saved battle) come from a file layer over the host's platform. The game's writes during a replay (the auto-save, `cnct_error.dat`) go to a scratch folder, not the user's.
 

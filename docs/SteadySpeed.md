@@ -11,6 +11,7 @@ A single-player battle that plays the same at every speed: the same orders at th
 | Returning planes' approach (`ApproachesOnDrawnTick`) | On the tick that is drawn only, the last of the frame |
 | The effects (`EffectsOnDrawnTickOnly`), which draw from rand as the battle does (`EffectsDrawFromRand`) | On the tick that is drawn only: how many random numbers a tick draws depends on the speed, and so does every one drawn after |
 | Two fighters of the same skill (`FighterTiesBreakByFrame`), a reload (`FrameCount % 3`, `% 2`), a base built | By the frame count |
+| A reinforcement requested (`SupplyCount`) | Comes after 150 frames of a ship's, 30 of a plane's |
 
 So the ticks of a battle at speed 4 are not the ticks of the same battle at speed 1, and it ends otherwise. Network battles go by the tick: their turns come at ticks (`Tick % TurnLength`), and NSPW NET's rules make none of the differences above.
 
@@ -19,7 +20,7 @@ Every frame runs 2 ticks, as at speed 1, and a faster speed runs more frames ins
 
 - `StartsFrame`: owes the ticks of the time since the last frame, at the speed, and starts a frame once it owes 2. It owes 250 milliseconds' at most, so that a game that draws slower than the pace runs as fast as it draws, and does not hurry once it can keep up.
 - `FrameStarting`: 2 ticks. The speed shown stays the player's (`GameSpeed`), which the keys change as before.
-- At speed 0 it leaves the frames to the game's timer: frames of no ticks, as 1.22 runs them. The computer still plays in them, a fleet a frame, as it does in 1.22.
+- At speed 0 it leaves the frames to the game's timer, and holds the battle in them (`HoldsBattle`): they run no tick, the computer does not play, the scenario's events and a reinforcement requested wait, the effects keep still, and the frames are not counted. The player looks around and orders, and the battle goes on from where it was, as if it had not been paused. In 1.22, a frame of speed 0 runs no tick, but the computer plays in it, a fleet a frame, so that a pause changes the battle.
 - It leaves alone a battle whose input an extension gives (`HoldsInput`): a replay that plays, a trace of 1.22.
 
 The fastest speed is as fast as the game draws frames: above it, the battle is the same, but slower than the speed shown.

@@ -1077,9 +1077,10 @@ public unsafe partial class Nspw
 	}
 
 	// decision (0x41C3C0): the scenario's result, shown once it has one, and its events.
+	// While the battle is held (IsBattleHeld), it only shows the result it has.
 	public void Decide()
 	{
-		if (Result == GameResult.None)
+		if (Result == GameResult.None && !IsBattleHeld)
 			Result = DecideScenario();
 
 		if (Result != GameResult.None)
@@ -1089,6 +1090,7 @@ public unsafe partial class Nspw
 			Renderer.DrawResult(ref len, ref ach);
 		}
 
-		ApplyScenarioEvents();
+		if (!IsBattleHeld)
+			ApplyScenarioEvents();
 	}
 }

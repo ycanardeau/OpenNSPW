@@ -1460,7 +1460,8 @@ public unsafe partial class Nspw
 #endif
 			}
 
-			if (Result == GameResult.None)
+			// The reinforcement waits while the battle is held (IsBattleHeld).
+			if (Result == GameResult.None && !IsBattleHeld)
 			{
 				SupplyCount--;
 

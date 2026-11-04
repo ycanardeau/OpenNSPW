@@ -41,7 +41,7 @@ public sealed record ReplayStart(
 );
 
 // What a replay records after its start, each a byte and what it has: a frame, with the milliseconds since the last one,
-// its ticks and the game's speed shown as it starts; then, within the frame, the view as it is drawn when it has changed, what the player did, the hash of
+// its ticks, the game's speed shown as it starts and whether it holds the battle (Nspw.IsBattleHeld); then, within the frame, the view as it is drawn when it has changed, what the player did, the hash of
 // the battle as the frame ends, a note, the result as the battle has one; then what the game took after the frame: a
 // message of the rival, the rival leaving. End ends the file.
 public enum ReplayRecord : byte
@@ -77,7 +77,7 @@ public enum ReplayActionCase : byte
 
 // A record of a replay, with what it has: Value, a frame's ticks or the result; Time, a frame's milliseconds since the
 // last; Camera; Hash; Text, a note's; Action; Message, a message received; Speed, the game's speed shown as a frame
-// starts.
+// starts; IsHeld, whether a frame holds the battle.
 public readonly record struct ReplayItem(
 	ReplayRecord Kind,
 	int Value = 0,
@@ -87,7 +87,8 @@ public readonly record struct ReplayItem(
 	string? Text = null,
 	PlayerAction? Action = null,
 	byte[]? Message = null,
-	short Speed = 0
+	short Speed = 0,
+	bool IsHeld = false
 );
 
 // The file of a replay, compressed with gzip: the magic, the start (ReplayStart), then the records (ReplayRecord).
@@ -97,7 +98,8 @@ public static class ReplayFormat
 
 	// The magic of this version of the format, and what every version's starts with: an older replay is told apart, to be
 	// refused (ReplayReader). 2 writes each action by its case (ReplayActionCase); 3 writes a frame's speed, which a frame
-	// of 2 tells by its ticks only, as the frames of a speed may run other ticks (docs/SteadySpeed.md). 3 reads 2.
+	// of 2 tells by its ticks only, as the frames of a speed may run other ticks (docs/SteadySpeed.md), and whether it
+	// holds the battle, which none of 2 does. 3 reads 2.
 	public static ReadOnlySpan<byte> Magic => "ONSPWRP3"u8;
 
 	public static ReadOnlySpan<byte> MagicOfVersion2 => "ONSPWRP2"u8;
@@ -207,12 +209,13 @@ public sealed class ReplayWriter : IDisposable
 		}
 	}
 
-	public void WriteFrame(int time, int ticks, short speed)
+	public void WriteFrame(int time, int ticks, short speed, bool isHeld)
 	{
 		_writer.Write((byte)ReplayRecord.Frame);
 		_writer.Write7BitEncodedInt(time);
 		_writer.Write7BitEncodedInt(ticks);
 		_writer.Write7BitEncodedInt(speed);
+		_writer.Write(isHeld);
 	}
 
 	public void WriteCamera(WorldPosition camera)
@@ -458,7 +461,8 @@ public sealed class ReplayReader : IDisposable
 		var time = _reader.Read7BitEncodedInt();
 		var ticks = _reader.Read7BitEncodedInt();
 		var speed = _isVersion2 ? SpeedOfVersion2(ticks) : (short)_reader.Read7BitEncodedInt();
-		return new(ReplayRecord.Frame, Time: time, Value: ticks, Speed: speed);
+		var isHeld = !_isVersion2 && _reader.ReadBoolean();
+		return new(ReplayRecord.Frame, Time: time, Value: ticks, Speed: speed, IsHeld: isHeld);
 	}
 
 	private WorldPosition ReadPosition() => new(_reader.ReadDouble(), _reader.ReadDouble());

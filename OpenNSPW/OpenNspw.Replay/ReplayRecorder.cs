@@ -185,7 +185,8 @@ public sealed class ReplayRecorder(Func<ReplayStart, Stream> open) : IGameExtens
 		_writer?.WriteFrame(
 			Replay?.FrameMilliseconds ?? (int)(game.Now - _lastTime),
 			ticks,
-			game.GameSpeed
+			game.GameSpeed,
+			game.IsBattleHeld
 		);
 		_lastTime = game.Now;
 		return ticks;

@@ -220,6 +220,9 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 		return _playTime >= _nextTime;
 	}
 
+	// Whether the frame that starts holds the battle, as it did.
+	public bool? HoldsBattle(Nspw game) => HoldsInput ? _next.IsHeld : null;
+
 	private void Diverge(string what)
 	{
 		Divergence ??= $"Frame {Frame}: {what}";

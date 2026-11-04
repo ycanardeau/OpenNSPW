@@ -4,8 +4,9 @@ namespace OpenNspw.Pacing;
 // timer, every 88 milliseconds, of speed + 1 ticks, and the computer, the player's orders and some of 1.22's rules go by
 // the frame, not by the tick, so that another speed plays another battle. This runs every frame as speed 1 runs it, of 2
 // ticks, and more of them instead: speed + 1 ticks every 88 milliseconds, 20 while Space is held, as fast as the game
-// draws them at most. Paused, the game's timer runs its frames, of no ticks, as 1.22 does. It leaves alone a battle whose
-// input an extension gives, such as a replay that plays.
+// draws them at most. Paused, the game's timer runs its frames, which hold the battle (Nspw.IsBattleHeld): the player
+// looks around and orders, and the battle goes on from where it was. It leaves alone a battle whose input an extension
+// gives, such as a replay that plays.
 public sealed class SteadySpeed : IGameExtension
 {
 	// The period of 1.22's timer, which drives its frames (Nspw.SingleplayerTimerPeriod), in milliseconds.
@@ -60,6 +61,8 @@ public sealed class SteadySpeed : IGameExtension
 		_owed -= FrameTicks;
 		return true;
 	}
+
+	public bool? HoldsBattle(Nspw game) => Paces(game) && TicksPerPeriod(game) == 0 ? true : null;
 
 	public short FrameStarting(Nspw game, short ticks) =>
 		Paces(game) && ticks != 0 ? FrameTicks : ticks;

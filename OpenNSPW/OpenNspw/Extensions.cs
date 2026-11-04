@@ -213,6 +213,12 @@ public interface IGameExtension
 	// Whether the next frame of the battle starts now (true), waits (false), or starts when the game's timer says (null).
 	bool? StartsFrame(Nspw game) => null;
 
+	// Whether the battle of a single-player game stands still in the frame that starts (Nspw.IsBattleHeld): no tick runs,
+	// the computer does not play, the scenario's events and a reinforcement requested wait, the effects draw no random
+	// numbers, and the frame is not counted (FrameCount); the player's input and orders and the drawing go on. Null if it
+	// does not say: the battle then runs.
+	bool? HoldsBattle(Nspw game) => null;
+
 	// A frame of the battle starts, with `ticks` ticks: returns the ticks it runs. An extension may set the speed
 	// (GameSpeed), which the game shows.
 	short FrameStarting(Nspw game, short ticks) => ticks;
@@ -330,6 +336,18 @@ public sealed class GameExtensions(Nspw game)
 		{
 			if (extension.StartsFrame(_game) is { } starts)
 				return starts;
+		}
+
+		return null;
+	}
+
+	// The first extension that answers.
+	internal bool? HoldsBattle()
+	{
+		foreach (var extension in _all)
+		{
+			if (extension.HoldsBattle(_game) is { } holds)
+				return holds;
 		}
 
 		return null;

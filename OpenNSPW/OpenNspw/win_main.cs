@@ -550,6 +550,9 @@ public unsafe partial class Nspw
 
 		Elapsed = Now - LastTime2;
 
+		// Until a frame of a single-player battle says otherwise (TryStartSingleplayerFrame).
+		IsBattleHeld = false;
+
 		if (IsSingleplayer && Mode == GameMode.Battle && !IsEditingMap)
 		{
 			// 1.22's frame, on its timer.
@@ -581,8 +584,11 @@ public unsafe partial class Nspw
 		}
 
 		// Extensions see the ticks of the battle's frame, and may set them (docs/Extensions.md).
+		// A frame that holds the battle runs no tick, whatever they set (IsBattleHeld).
 		if (Mode == GameMode.Battle && !IsEditingMap)
 			ticks = Extensions.FrameStarting(ticks);
+		if (IsBattleHeld)
+			ticks = 0;
 
 		ReadInput(); // マウス、キーボード状況取得
 
@@ -812,7 +818,9 @@ public unsafe partial class Nspw
 		if (LeftButton == 3)
 			LeftButton = 0;
 
-		Renderer.FrameCount++;
+		// A frame that holds the battle is not counted (IsBattleHeld).
+		if (!IsBattleHeld)
+			Renderer.FrameCount++;
 
 		// プライマリサーフェスにフリップ
 
