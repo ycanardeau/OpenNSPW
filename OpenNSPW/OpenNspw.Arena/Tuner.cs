@@ -3,8 +3,8 @@ using OpenNspw.AI;
 
 namespace OpenNspw.Arena;
 
-// The tuner (StrongAIResearch.md, step 3): a random search over the strong player's numbers (StrongParameters), with
-// successive halving. The defaults and `candidates` random settings play each scenario on a few start dates; the best
+// The tuner (StrongAIResearch.md, step 3): a random search over the strong player's numbers (StrongParameters), or, with
+// --tune-local, a search one step from the defaults (Steps), with successive halving. The defaults and `candidates` random settings play each scenario on a few start dates; the best
 // third goes on, to three times as many dates, the games already played counted again; and so on for `rounds` rounds.
 // Every setting of a round plays the same dates, so that the setups' luck falls alike on all of them (common random
 // numbers). A game scores 1 won, 0 drawn, unfinished or lost: only a win counts; and, to break ties among few games, the
@@ -94,6 +94,31 @@ internal static class Tuner
 			})
 		);
 
+	// The settings one step from the defaults: each switch turned the other way, and each number at the middle of its
+	// range below the default and at the middle above it (Range), a local search, where random settings, many changed at
+	// once, seldom beat the defaults chosen by reasoning.
+	private static IEnumerable<string> Steps()
+	{
+		var defaults = new StrongParameters();
+		foreach (var r in Ranges)
+		{
+			var value = typeof(StrongParameters).GetProperty(r.Name)!.GetValue(defaults);
+			if (r.IsSwitch)
+			{
+				yield return $"{r.Name}={((bool)value! ? "false" : "true")}";
+				continue;
+			}
+
+			var current = Convert.ToDouble(value, CultureInfo.InvariantCulture);
+			foreach (var step in new[] { (r.Low + current) / 2, (current + r.High) / 2 })
+			{
+				var rounded = r.IsWhole ? Math.Round(step) : Math.Round(step, 2);
+				if (Math.Abs(rounded - current) > 1e-9)
+					yield return FormattableString.Invariant($"{r.Name}={rounded}");
+			}
+		}
+	}
+
 	// Plays the rounds, writes each round's settings by score, and every game to `outPath`, each setting's games as
 	// player "strong#n", n its number in the first round (0, the defaults); returns the best setting.
 	public static string Tune(
@@ -107,12 +132,15 @@ internal static class Tuner
 		int maxFrames,
 		FormationShape? formation,
 		int parallel,
-		string outPath
+		string outPath,
+		bool local = false
 	)
 	{
 		var random = new Random(seed);
 		var settings = new List<string> { "" };
-		settings.AddRange(Enumerable.Range(0, candidates).Select(_ => Draw(random)));
+		settings.AddRange(
+			local ? Steps().Distinct() : Enumerable.Range(0, candidates).Select(_ => Draw(random))
+		);
 		var alive = Enumerable.Range(0, settings.Count).ToList();
 		var played = new Dictionary<(int Setting, int Scenario, int Date), ArenaResult>();
 		for (var round = 0; round < rounds; round++)

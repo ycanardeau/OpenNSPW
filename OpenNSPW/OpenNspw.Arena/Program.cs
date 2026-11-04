@@ -10,7 +10,7 @@ using OpenNspw.Arena;
 //   dotnet run -c Release --project OpenNspw.Arena -- [--scenarios 4,5,6|carriers|all] [--dates 3] [--first-date 0] [--players idle,rush]
 //       [--parallel <cores>] [--out results.csv] [--frames <limit>] [--verbose] [--sees-all] [--formation line|ring:400|screen:400|auto:400] [--speed 1]
 //       [--params Name=value,Name=value] [--memory <dir> [--memory-readonly]]
-//   dotnet run -c Release --project OpenNspw.Arena -- --tune <candidates> [--tune-rounds 3] [--tune-seed 1] [--scenarios ...]
+//   dotnet run -c Release --project OpenNspw.Arena -- --tune <candidates> [--tune-local] [--tune-rounds 3] [--tune-seed 1] [--scenarios ...]
 //       [--first-date 100] [--dates 2] [--frames <limit>] [--formation ...] [--out tune.csv]
 //       [--trace <units> [--trace-from <frame>] [--trace-to <frame>] [--trace-every <frames>]] [--strikes]
 //       [--torpedoes <torpedoes.csv>]
@@ -276,7 +276,8 @@ if (tuneIndex >= 0 && tuneIndex + 1 < args.Length)
 		maxFrames,
 		formation,
 		parallel,
-		outPath
+		outPath,
+		args.Contains("--tune-local")
 	);
 	Console.WriteLine($"Best: {(best.Length == 0 ? "the defaults" : $"--params {best}")}");
 	return;
