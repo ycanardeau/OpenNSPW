@@ -91,13 +91,17 @@ public sealed record ScenarioKnowledge(
 				Carriers,
 				HoldsOn: true
 			),
-			// The U.S. carrier comes from the Coral Sea, south, or, as a player learns by playing, from the south-east
-			// or the east: it starts at one of three places, at random.
+			// The U.S. carrier comes from the Coral Sea, south, or, as a player learns by playing, from the east: half the
+			// time it starts on the line y -6000 from x -5000 to 0, else anywhere from x 2000 to 4000 and y -6000 to 1000
+			// (scenario_4), each cut in three areas, so that the scouts sweep them in turn.
 			4 => new(
 				[
-					Fleet("the U.S. carrier in the Coral Sea", -1000, -6000, 1000),
-					Fleet("the U.S. carrier in the south-east", 3100, -4900, 1000),
-					Fleet("the U.S. carrier in the east", 2800, 100, 1100),
+					Fleet("the U.S. carrier in the Coral Sea, west", -4167, -6000, 900),
+					Fleet("the U.S. carrier in the Coral Sea", -2500, -6000, 900),
+					Fleet("the U.S. carrier in the Coral Sea, east", -833, -6000, 900),
+					Fleet("the U.S. carrier in the south-east", 3000, -4833, 1550),
+					Fleet("the U.S. carrier in the east", 3000, -2500, 1550),
+					Fleet("the U.S. carrier in the north-east", 3000, -167, 1550),
 				],
 				Carriers
 			),

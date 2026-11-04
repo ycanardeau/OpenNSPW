@@ -46,7 +46,7 @@ public sealed partial class StrongPlayer
 	// or across where the carrier found last most likely is, half the way it was heading, wider the longer it has been lost,
 	// or, lost for CarrierMemoryFrames and heading home, on its way there (WhereNow), 1500 each side; or, early in the
 	// battle, across an area where the briefing expects them, each once, the nearest first, but the ones a strike goes to
-	// (IsEarlyStrikeArea), as scenario 4's carrier starts in one of three, as far as a flight there, across and back lets
+	// (IsEarlyStrikeArea), as scenario 4's carrier starts in one of six, as far as a flight there, across and back lets
 	// (20% farther than `reach`, which allows for a longer way across); or back and forth across the way to an area where
 	// the briefing expects them, the areas in turn, nearest first, 25° each side, 2500 beyond the computer's strike range
 	// (3550, or 4350 as Japan) or as far as the area: a picket that a fleet coming within strike range of the deck crosses
