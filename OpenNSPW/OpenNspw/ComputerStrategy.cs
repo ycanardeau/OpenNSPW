@@ -143,16 +143,16 @@ public unsafe partial class Nspw
 		}
 	}
 
-	internal void AddTargetsOfKind(int f, UnitKind kind) => AddTargets(f, k => k == kind);
+	public void AddTargetsOfKind(int f, UnitKind kind) => AddTargets(f, k => k == kind);
 
 	internal void AddNavalBaseTargets(int f) => AddTargets(f, k => k == UnitKind.NavalBase);
 
 	// sub_41F3C0: the carriers and light carriers.
-	internal void AddCarrierTargets(int f) =>
+	public void AddCarrierTargets(int f) =>
 		AddTargets(f, k => k is UnitKind.Carrier or UnitKind.LightCarrier);
 
 	// sub_41F490: the battleships, cruisers and carriers.
-	internal void AddShipTargets(int f) =>
+	public void AddShipTargets(int f) =>
 		AddTargets(
 			f,
 			k =>

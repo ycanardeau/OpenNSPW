@@ -48,7 +48,7 @@ internal static class Benchmark
 
 	// The 95% Wilson interval of a rate of `successes` in `count`, as fractions, which holds for few games and for rates
 	// near 0 or 1, as the normal one does not.
-	private static (double Low, double High) Wilson(int successes, int count)
+	internal static (double Low, double High) Wilson(int successes, int count)
 	{
 		if (count == 0)
 			return (0, 1);
@@ -74,7 +74,7 @@ internal static class Benchmark
 
 	// The two-sided p of the exact sign test: how likely `better` and `worse` games, or a split further from even, are
 	// if the change makes no difference, each game then going either way with a chance of one half.
-	private static double SignTest(int better, int worse)
+	internal static double SignTest(int better, int worse)
 	{
 		var count = better + worse;
 		if (count == 0)

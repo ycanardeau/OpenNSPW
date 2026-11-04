@@ -124,6 +124,10 @@ public unsafe partial class Nspw
 	// code has: its scenarios set the fleets up, and cpu_strtgy moves them.
 	public Array11<ComputerFleet> ComputerFleets;
 
+	// A battle of the host's own, set up in place of 1.22's scenario, as a scenario sets one up: its units, fleets, sides,
+	// time and map. Null plays 1.22's scenario of ScenarioNumber. The arena's skirmishes set it; nothing else does.
+	public Action<Nspw>? CustomScenario;
+
 	// Two doubles in the emulator's memory, for the functions of 1.22 that take pointers to them.
 	private uint _pointAddress;
 
@@ -471,7 +475,7 @@ public unsafe partial class Nspw
 	}
 
 	// In place of get_sinario_data: 1.22's scenario (Scenarios122.cs), which places the units, loads the map and sets the
-	// sides, the time limit and the camera.
+	// sides, the time limit and the camera; or the host's own (CustomScenario).
 	public void SetUpSingleplayerScenario()
 	{
 		// game_init clears the computer's fleets, and ends each one's path: its destination is none (0x429C50).
@@ -479,7 +483,10 @@ public unsafe partial class Nspw
 		for (var f = 0; f < 11; f++)
 			ComputerFleets[f].DestinationX = World.Beyond;
 
-		SetUpScenarioAs122(ScenarioNumber);
+		if (CustomScenario is { } setUp)
+			setUp(this);
+		else
+			SetUpScenarioAs122(ScenarioNumber);
 	}
 
 	// Starts the battle of ScenarioNumber, without the title and setting screens.

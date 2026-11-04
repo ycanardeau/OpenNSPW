@@ -16,6 +16,9 @@ using OpenNspw.Arena;
 //       [--torpedoes <torpedoes.csv>]
 //   dotnet run -c Release --project OpenNspw.Arena -- --describe [--scenarios 4,5,6|all]
 //   dotnet run -c Release --project OpenNspw.Arena -- --compare <before.csv> <after.csv>
+//   dotnet run -c Release --project OpenNspw.Arena -- --skirmishes fighters,dd-ca|all [--dates 50] [--first-date 0]
+//       [--variants "default:;close:CloseQuarters=true"] [--side japan|us] [--parallel <cores>] [--out skirmishes.csv]
+//   dotnet run -c Release --project OpenNspw.Arena -- --skirmish-summary <a.csv> [<b.csv> ...] [--baseline default]
 
 static IPlayer CreatePlayer(
 	string name,
@@ -107,6 +110,22 @@ if (compareIndex >= 0 && compareIndex + 2 < args.Length)
 	return;
 }
 
+var summaryIndex = Array.IndexOf(args, "--skirmish-summary");
+if (summaryIndex >= 0)
+{
+	Console.WriteLine(
+		SkirmishReport.Summary(
+			[
+				.. args.Skip(summaryIndex + 1)
+					.TakeWhile(a => !a.StartsWith("--", StringComparison.Ordinal))
+					.SelectMany(SkirmishReport.Read),
+			],
+			Option(args, "--baseline", "") is { Length: > 0 } named ? named : null
+		)
+	);
+	return;
+}
+
 var scenarioOption = Option(args, "--scenarios", "all");
 IReadOnlyList<int> scenarios = scenarioOption switch
 {
@@ -138,6 +157,66 @@ FormationShape? formation =
 var trace = UnitTrace.FromOptions((name, defaultValue) => Option(args, name, defaultValue));
 
 var data = GameData.Find();
+if (Option(args, "--skirmishes", "") is { Length: > 0 } skirmishNames)
+{
+	var side = Option(args, "--side", "japan") == "us" ? Side.UnitedStates : Side.Japan;
+	var variants = Option(args, "--variants", "default:")
+		.Split(';', StringSplitOptions.RemoveEmptyEntries)
+		.Select(v => v.Split(':', 2))
+		.Select(v => (Name: v[0], Parameters: StrongParameters.Parse(v.Length > 1 ? v[1] : "")))
+		.ToList();
+	var fights =
+		from skirmish in Skirmish.Parse(skirmishNames)
+		from date in Enumerable.Range(firstDate, dateCount)
+		from variant in variants
+		select (Skirmish: skirmish, Seed: 1_000_000_000 + (date * 7919), Variant: variant);
+	var played = GamePool.Play(
+		[
+			.. fights.Select(fight =>
+				(Func<ArenaResult>)(
+					() =>
+					{
+						var layout = fight.Skirmish.Lay(new Random(fight.Seed), side);
+						var player = new StrongPlayer
+						{
+							Log = verbose ? Console.WriteLine : null,
+							SeesEverything = true,
+							Parameters = fight.Variant.Parameters,
+							Knowledge = layout.Knowledge,
+						};
+						return new ArenaGame(
+							data,
+							0,
+							fight.Seed,
+							player,
+							fight.Skirmish.Frames,
+							trace,
+							strikes,
+							speed,
+							skirmish: (fight.Skirmish.Name, layout)
+						).Play() with
+						{
+							Player = fight.Variant.Name,
+						};
+					}
+				)
+			),
+		],
+		parallel
+	);
+	var rows = played
+		.Where(r => r.Losses is not null && r.Outcome != Outcome.Failed)
+		.Select(SkirmishReport.Row)
+		.OrderBy(r => r.Skirmish)
+		.ThenBy(r => r.Seed)
+		.ThenBy(r => variants.FindIndex(v => v.Name == r.Player))
+		.ToList();
+	File.WriteAllLines(Option(args, "--out", "skirmishes.csv"), SkirmishReport.Lines(rows));
+	Console.WriteLine();
+	Console.WriteLine(SkirmishReport.Summary(rows, variants[0].Name));
+	return;
+}
+
 if (Option(args, "--fork-check", "") is { Length: > 0 } forkText)
 {
 	foreach (var scenario in scenarios)

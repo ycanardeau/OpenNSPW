@@ -28,7 +28,9 @@ internal sealed record ArenaResult(
 	TimeSpan Elapsed,
 	string? Error,
 	StrikeCounts Strikes,
-	IReadOnlyList<string>? Torpedoes = null
+	IReadOnlyList<string>? Torpedoes = null,
+	string? Skirmish = null,
+	SkirmishLosses? Losses = null
 );
 
 // One single-player game of a scenario, from a start date, which seeds rand (docs/Singleplayer.md), with a player on the
@@ -45,6 +47,8 @@ internal sealed class ArenaGame
 	private readonly StrikeLog _strikes;
 	private readonly TorpedoLog _torpedoes = new();
 	private readonly int? _forkCheckAt;
+	private readonly string? _skirmish;
+	private readonly SkirmishLog _losses = new();
 	private GameFork? _fork;
 	private bool _forkChecked;
 	private TimeSpan _forkStepTime;
@@ -107,10 +111,25 @@ internal sealed class ArenaGame
 			_game.GameSpeed = _speed;
 		}
 
+		// A skirmish is fought with both sides seeing everything, as the game's own switch shows every unit to both (Detect),
+		// and ends once a side has nothing left.
+		if (_skirmish is not null)
+		{
+			_game.RevealsAll = 1;
+			_losses.Start(_game);
+		}
+
 		if (
 			_game.Result != GameResult.None
 			|| _platform.MessageBoxes.Count > 0
 			|| _frames > _maxFrames
+			|| (
+				_skirmish is not null
+				&& (
+					_losses.IsWipedOut(_game, _game.LocalSide)
+					|| _losses.IsWipedOut(_game, _game.CpuSide)
+				)
+			)
 		)
 			throw new ArenaStoppedException();
 
@@ -126,7 +145,8 @@ internal sealed class ArenaGame
 
 	// maxFrames: the frames of the battle after which the game stops, unfinished. trace: units to write as the game goes.
 	// strikes: whether to write what becomes of the player's strikes, which is counted anyway. speed: the game's speed,
-	// as the player's keys set it, a frame running the speed and one more ticks.
+	// as the player's keys set it, a frame running the speed and one more ticks. skirmish: a battle of the arena's own
+	// (Skirmish), set up in place of the scenario's, with its name.
 	public ArenaGame(
 		GameData data,
 		int scenario,
@@ -136,7 +156,8 @@ internal sealed class ArenaGame
 		UnitTrace? trace = null,
 		bool strikes = false,
 		short speed = 1,
-		int? forkCheckAt = null
+		int? forkCheckAt = null,
+		(string Name, SkirmishLayout Layout)? skirmish = null
 	)
 	{
 		_player = player;
@@ -152,6 +173,11 @@ internal sealed class ArenaGame
 			OnFrame
 		);
 		_game = new Nspw(_platform) { IsSingleplayer = true, ScenarioNumber = (short)scenario };
+		if (skirmish is { } fight)
+		{
+			_skirmish = fight.Name;
+			_game.CustomScenario = fight.Layout.SetUp;
+		}
 	}
 
 	// Whether the fork check ended, the same or not, before the game did.
@@ -190,7 +216,9 @@ internal sealed class ArenaGame
 			stopwatch.Elapsed,
 			error,
 			_strikes.Counts(_game),
-			_torpedoes.Rows
+			_torpedoes.Rows,
+			_skirmish,
+			_skirmish is null ? null : _losses.Losses(_game)
 		);
 	}
 }

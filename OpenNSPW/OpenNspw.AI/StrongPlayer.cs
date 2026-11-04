@@ -161,6 +161,10 @@ public sealed partial class StrongPlayer : IPlayer
 	// The numbers its tactics turn on.
 	public StrongParameters Parameters { get; init; } = new();
 
+	// What it knows of the battle, in place of what it knows of the scenario (ScenarioKnowledge.For): for a battle of the
+	// arena's own, which no briefing tells of.
+	public ScenarioKnowledge? Knowledge { get; init; }
+
 	// Gives up the clicks of a task, saying why.
 	private bool GiveUp(Nspw game, string why)
 	{
@@ -467,7 +471,7 @@ public sealed partial class StrongPlayer : IPlayer
 	public void Act(Nspw game)
 	{
 		if (_knowledge.Enemy.Count == 0 && _knowledge.Counted.Count == 0)
-			_knowledge = ScenarioKnowledge.For(game.ScenarioNumber);
+			_knowledge = Knowledge ?? ScenarioKnowledge.For(game.ScenarioNumber);
 
 		// Every 250 frames of speed 1, which a faster frame may step over.
 		if (UnitFacts.Now(game) / 250 != _statusAt / 250)
