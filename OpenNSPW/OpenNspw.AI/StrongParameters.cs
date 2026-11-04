@@ -170,6 +170,25 @@ public sealed record StrongParameters
 	// (ExpectedCarriersToStrike).
 	public bool EarlyStrike { get; init; } = true;
 
+	// Whether a surface group whose leader's guns outrange its target's keeps 40 within its own reach, outside the
+	// target's (KeepRangeOf): a battleship's 600 against a cruiser's 500, a cruiser's 500 against a destroyer's 400.
+	public bool KeepRange { get; init; }
+
+	// Whether fighters spread over the enemy planes, each counting one that others of the player's already attack 400
+	// farther (ChooseTargetInFlight), rather than all going for the nearest.
+	public bool SpreadFighters { get; init; }
+
+	// Whether every ready fighter of a deck goes up against an enemy attacker or bomber, not four (TryIntercept).
+	public bool InterceptWithAll { get; init; }
+
+	// Whether a strike that hunts carriers disperses once in the air (TryDisperse), each plane flying on alone at full
+	// speed; or keeps its formation, massed, until it splits up near the target (TrySplitAttack).
+	public bool Disperse { get; init; } = true;
+
+	// How many degrees apart the two halves of a strike that hunts carriers run in (TryApproach), half each side of the
+	// bearing: a ship that turns away from one half turns its beam to the other. 0 runs in as one.
+	public double PincerAngle { get; init; }
+
 	// What a strike that hunts carriers attacks.
 	public Targeting Targeting { get; init; } = Targeting.Carriers;
 

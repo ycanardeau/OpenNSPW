@@ -41,6 +41,9 @@ public sealed partial class StrongPlayer : IPlayer
 	// The frames a formation takes to form at most, before it is grouped as it is.
 	private const int RingFrames = 900;
 
+	// The frames between the orders of a surface group that keeps at its range (Parameters.KeepRange).
+	private const int KeepRangeFrames = 40;
+
 	// The frames between a destroyer's orders at close quarters (TryCloseQuarters).
 	private const int CloseQuartersFrames = 60;
 

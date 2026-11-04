@@ -216,7 +216,11 @@ public sealed partial class StrongPlayer
 				if (fighters.Count == 0)
 					continue;
 
-				var group = fighters.Take(DefendsAll(contact.Kind) ? fighters.Count : 4).ToList();
+				var group = fighters
+					.Take(
+						DefendsAll(contact.Kind) || Parameters.InterceptWithAll ? fighters.Count : 4
+					)
+					.ToList();
 				ShowDeck(deck);
 				SelectPlanes(group[0], group.Skip(1));
 				Launch(group[0], contact.Unit, g => Intercept(g, group[0], contact));
@@ -242,6 +246,26 @@ public sealed partial class StrongPlayer
 				&& plane.Ammo > 0
 				&& n != leader
 				&& plane.GroupLeader != leader
+			)
+				count++;
+		}
+
+		return count;
+	}
+
+	// The player's flying fighters that attack a plane, but `fighter`.
+	private static int FightersOn(Nspw game, int target, int fighter)
+	{
+		var count = 0;
+		for (var n = 1; n <= game.MaxUnitId; n++)
+		{
+			ref var plane = ref game.Units[n];
+			if (
+				IsOwn(game, n)
+				&& plane.Kind == UnitKind.Fighter
+				&& plane.PlaneState == UnitState.Flying
+				&& plane.Target == target
+				&& n != fighter
 			)
 				count++;
 		}
@@ -338,7 +362,8 @@ public sealed partial class StrongPlayer
 	// counted nearer (Parameters.FocusDistance), or, as
 	// Parameters.Targeting says, the escorts around them first (IsEscortToStrike); for a fighter, an enemy plane in the
 	// air, attackers and bombers first, or, with Parameters.FightersFirst, the ones within 1500 of a ship of the
-	// player's, then fighters, within 1500.
+	// player's, then fighters, within 1500, the nearest, or, with Parameters.SpreadFighters, the ones fewer of the
+	// player's fighters attack (FightersOn).
 	private Contact? ChooseTargetInFlight(Nspw game, int plane)
 	{
 		ref var unit = ref game.Units[plane];
@@ -359,7 +384,10 @@ public sealed partial class StrongPlayer
 					: c.Kind == UnitKind.Fighter ? 1
 					: 0
 				)
-				.ThenBy(c => UnitFacts.Distance(position, c.Position))
+				.ThenBy(c =>
+					UnitFacts.Distance(position, c.Position)
+					+ (Parameters.SpreadFighters ? 400 * FightersOn(game, c.Unit, plane) : 0)
+				)
 				.FirstOrDefault()
 			: _contacts
 				.All.Where(c =>
@@ -765,10 +793,10 @@ public sealed partial class StrongPlayer
 	// leader slows down for any plane out of its place (SteerUnit), and burns its fuel all the same, so once none of its
 	// planes is left on the deck, each is selected alone and sent on to where the leader flies, which takes it out of
 	// the formation (ApplyOrders), with the leader's waypoint, target or point; each then flies on, approaches and
-	// attacks alone, at full speed (TryDirect, TryApproach).
+	// attacks alone, at full speed (TryDirect, TryApproach). Not with Parameters.Disperse false.
 	private bool TryDisperse(Nspw game)
 	{
-		if (!HuntsCarriers)
+		if (!HuntsCarriers || !Parameters.Disperse)
 			return false;
 
 		for (var m = 1; m <= game.MaxUnitId; m++)
@@ -1184,39 +1212,63 @@ public sealed partial class StrongPlayer
 			);
 
 			// The bearing a strike can come round to, as far as its fuel lets, and each plane's path: the arc's points,
-			// then its point of the fan across the side it runs in from.
+			// then its point of the fan across the side it runs in from; with Parameters.PincerAngle, each half of the
+			// strike comes round to its own side, that many degrees apart.
 			(double Bearing, List<WorldPosition>[] Paths) PathsOf(double toward)
 			{
-				var turn = Math.Clamp(
-					((toward - from + 540) % 360) - 180,
-					-arc / Parameters.ApproachRadius * 180 / Math.PI,
-					arc / Parameters.ApproachRadius * 180 / Math.PI
-				);
-				var steps = (int)Math.Ceiling(Math.Abs(turn) / 40);
-				var arcPoints = Enumerable
-					.Range(1, steps)
-					.Select(i => PointAt(at, from + (turn * i / steps), Parameters.ApproachRadius))
-					.ToList();
+				double TurnTo(double bearing) =>
+					Math.Clamp(
+						((bearing - from + 540) % 360) - 180,
+						-arc / Parameters.ApproachRadius * 180 / Math.PI,
+						arc / Parameters.ApproachRadius * 180 / Math.PI
+					);
+
+				List<WorldPosition> ArcTo(double turn)
+				{
+					var steps = (int)Math.Ceiling(Math.Abs(turn) / 40);
+					return
+					[
+						.. Enumerable
+							.Range(1, steps)
+							.Select(i =>
+								PointAt(at, from + (turn * i / steps), Parameters.ApproachRadius)
+							),
+					];
+				}
+
+				var turn = TurnTo(toward);
+				var halves = Parameters.PincerAngle > 0 && planes.Count > 1;
+				var sides = halves
+					? new[] { -Parameters.PincerAngle / 2, Parameters.PincerAngle / 2 }
+						.Select(o => TurnTo(toward + o))
+						.ToArray()
+					: [turn, turn];
+				var arcs = sides.Select(ArcTo).ToArray();
 				return (
 					from + turn,
 					[
 						.. planes.Select(
 							(_, i) =>
-								arcPoints
+							{
+								var half = halves ? i % 2 : 0;
+								var count = halves ? (planes.Count + 1 - half) / 2 : planes.Count;
+								var place = halves ? i / 2 : i;
+								return arcs[half]
 									.Append(
 										PointAt(
 											at,
 											from
-												+ turn
+												+ sides[half]
 												+ (
-													planes.Count == 1
+													count == 1
 														? 0
-														: -30 + (60.0 * i / (planes.Count - 1))
+														: -30 + (60.0 * place / (count - 1))
 												),
 											1300
 										)
 									)
-									.ToList()
+									.ToList();
+							}
 						),
 					]
 				);

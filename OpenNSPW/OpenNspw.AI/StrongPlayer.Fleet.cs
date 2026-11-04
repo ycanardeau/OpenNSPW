@@ -840,10 +840,51 @@ public sealed partial class StrongPlayer
 		return false;
 	}
 
+	// How far a warship's guns reach at ships (ShipFireGunWithoutTarget): a battleship's 600, a cruiser's 500, a
+	// destroyer's 400. Others fire none at ships.
+	private static double GunRange(UnitKind kind) =>
+		kind switch
+		{
+			UnitKind.Battleship => 600,
+			UnitKind.Cruiser => 500,
+			UnitKind.Destroyer => 400,
+			_ => 0,
+		};
+
+	// With Parameters.KeepRange, how far a warship keeps from its target: 40 within its guns' reach, if that is 40 or more
+	// beyond the target's; or null, to close in.
+	private double? KeepRangeOf(UnitKind own, UnitKind target)
+	{
+		var keep = GunRange(own) - 40;
+		return Parameters.KeepRange && keep >= GunRange(target) + 40 ? keep : null;
+	}
+
+	// The enemy warship found nearest a warship of a kind, within 1500, if its guns outrange that one's, with the range to
+	// keep from it (KeepRangeOf); null if none is near, or the nearest outranges it.
+	private (Contact Contact, double Keep)? NearestToKeepFrom(
+		Nspw game,
+		WorldPosition position,
+		UnitKind kind
+	)
+	{
+		var nearest = _contacts
+			.All.Where(c =>
+				IsWarship(c.Kind)
+				&& game.Units[c.Unit].IsUsed
+				&& game.Units[c.Unit].IsFound
+				&& UnitFacts.Distance(position, c.Position) <= 1500
+			)
+			.MinBy(c => UnitFacts.Distance(position, c.Position));
+		return nearest is not null && KeepRangeOf(kind, nearest.Kind) is { } keep
+			? (nearest, keep)
+			: null;
+	}
+
 	// Each surface group of the player's, led by a warship, goes at the best enemy ship it knows of, all its ships
 	// firing at it once it is found (ApplyOrders gives the formation the leader's target), and keeps at it while it is
 	// found, unless one the victory conditions count is found; or, knowing of none, toward where the briefing expects
-	// the enemy.
+	// the enemy. A leader whose guns outrange those of the enemy warship nearest it keeps at its range from that one
+	// (NearestToKeepFrom), ordered every KeepRangeFrames.
 	private bool TryEngage(Nspw game)
 	{
 		for (var m = 1; m <= game.MaxUnitId; m++)
@@ -859,7 +900,7 @@ public sealed partial class StrongPlayer
 				|| IsRinging(m)
 				|| IsAtCloseQuarters(game, m)
 				|| UnitFacts.Now(game) - _engagedAt.GetValueOrDefault(m, -EngageFrames)
-					< EngageFrames
+					< (Parameters.KeepRange ? KeepRangeFrames : EngageFrames)
 			)
 				continue;
 
@@ -891,6 +932,13 @@ public sealed partial class StrongPlayer
 						600
 					) + ((UnitFacts.Now(game) - target.Frame) * 2);
 				point = target.Predict(ticks);
+				if (NearestToKeepFrom(game, position, leader.Kind) is { } nearest)
+				{
+					var at = nearest.Contact.Predict(
+						(UnitFacts.Now(game) - nearest.Contact.Frame) * 2
+					);
+					point = PointAt(at, BearingTo(at, position), nearest.Keep);
+				}
 			}
 			else if (NearestHeldPlace(game, position) is { } station)
 			{
@@ -915,10 +963,12 @@ public sealed partial class StrongPlayer
 			var destination = UnitFacts.FinalDestination(ref leader);
 			var hasTarget =
 				target is null || leader.Target == target.Unit || !game.Units[target.Unit].IsFound;
+			var keeping =
+				target is not null && NearestToKeepFrom(game, position, leader.Kind) is not null;
 			if (
 				hasTarget
 				&& UnitFacts.Distance(destination, position) > 100
-				&& UnitFacts.Distance(destination, point) < 600
+				&& UnitFacts.Distance(destination, point) < (keeping ? 40 : 600)
 			)
 				continue;
 
