@@ -21,6 +21,9 @@ public sealed record StrongParameters
 	// How far beyond the computer's strike range a carrier keeps from the enemy's carriers.
 	public double KeepAwayMargin { get; init; } = 1000;
 
+	// How far a carrier keeps from the enemy's warships found lately (Threats), its escorts with it; 0 keeps from none.
+	public double AvoidWarships { get; init; }
+
 	// How much farther than its margin a carrier may be from what threatens it, before it closes in.
 	public double ApproachBand { get; init; } = 1000;
 

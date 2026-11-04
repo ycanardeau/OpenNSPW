@@ -279,6 +279,9 @@ public sealed partial class StrongPlayer
 		return reach;
 	}
 
+	private static bool IsWarship(UnitKind kind) =>
+		kind is UnitKind.Battleship or UnitKind.Cruiser or UnitKind.Destroyer;
+
 	// What a carrier keeps its distance from, each with the distance: the enemy's carriers found, where they were last
 	// found, or, heading home (HomeOf) and lost from sight for CarrierMemoryFrames, where they would be by now, which the
 	// carrier follows to keep them within its planes' reach, the computer's strike range (3550, or 4350 as Japan) and, but
@@ -287,8 +290,10 @@ public sealed partial class StrongPlayer
 	// before the scouts find them again; or, none found yet, the areas where the briefing expects them, if the victory
 	// conditions count them, the range and the area's radius; and the places the briefing names, whose air bases strike
 	// 1.5 times as far (ComputerPlayer.md, Air strikes), but no farther than the player's strikes reach, which must reach
-	// them; and the other enemy air bases found, 1.5 times as far. Whether each is known, found or a place, or only
-	// expected.
+	// them; and the other enemy air bases found, 1.5 times as far; and, with Parameters.AvoidWarships, the enemy's
+	// warships found in the last 600 frames, where they would be by now, whose guns sink the escorts: their fleets come
+	// on once their carriers are sunk, and outnumber the player's. Whether each is known, found or a place, or only
+	// expected: a warship counts as expected, so that a carrier only keeps away from it, and never closes in.
 	private List<(WorldPosition Position, double Range, bool IsKnown)> Threats(Nspw game)
 	{
 		var range = ComputerStrikeRange(game);
@@ -348,6 +353,23 @@ public sealed partial class StrongPlayer
 				)
 				.Select(c => (c.Position, range * 1.5, true))
 		);
+		if (Parameters.AvoidWarships > 0)
+			threats.AddRange(
+				_contacts
+					.All.Where(c =>
+						IsWarship(c.Kind)
+						&& game.Units[c.Unit].IsUsed
+						&& UnitFacts.Now(game) - c.Frame < 600
+					)
+					.Select(c =>
+						(
+							c.Predict((UnitFacts.Now(game) - c.Frame) * 2.0),
+							Parameters.AvoidWarships - Parameters.KeepAwayMargin,
+							false
+						)
+					)
+			);
+
 		return threats;
 	}
 
@@ -435,9 +457,6 @@ public sealed partial class StrongPlayer
 
 		return false;
 	}
-
-	private static bool IsWarship(UnitKind kind) =>
-		kind is UnitKind.Battleship or UnitKind.Cruiser or UnitKind.Destroyer;
 
 	// The warships that sail alone, near each other, form a line behind the strongest of them, battleships first, once.
 	private bool TryFormBattleGroups(Nspw game)
