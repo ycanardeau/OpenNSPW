@@ -89,6 +89,15 @@ internal static class Benchmark
 			_ => 0,
 		};
 
+	// How a game went for the player, finer than its outcome: its rank, then, between games of the same rank, the enemy's
+	// carriers sunk less its own. Most carrier battles are drawn at the time limit, and 105's and 106's are too long to
+	// play to their end, so the carriers sunk tell those games apart where the outcome cannot.
+	private static (int Rank, int Carriers) Standing(ArenaResult result) =>
+		(Rank(result.Outcome), result.Strikes.EnemyCarriersSunk - result.Strikes.OwnCarriersSunk);
+
+	private static int CompareStanding(ArenaResult a, ArenaResult b) =>
+		Standing(a).CompareTo(Standing(b));
+
 	private static string Percent(double fraction) =>
 		FormattableString.Invariant($"{fraction * 100:F0}%");
 
@@ -222,7 +231,8 @@ internal static class Benchmark
 
 	// A row per scenario and player that both runs played, and one for all, over the games of the same start dates: the
 	// wins of each run, the games the second did better and worse in (a win over a draw or a loss, a draw over a loss),
-	// and the sign test's p that so many more better or worse games come by chance: under 0.05, the change counts.
+	// and the sign test's p that so many more better or worse games come by chance: under 0.05, the change counts. Then the
+	// same by standing (Standing), which also counts a draw or an unfinished game with more carriers sunk as better.
 	public static string Compare(
 		IReadOnlyList<ArenaResult> before,
 		IReadOnlyList<ArenaResult> after
@@ -236,9 +246,11 @@ internal static class Benchmark
 		).ToList();
 		var text = new StringBuilder();
 		text.AppendLine(
-			"| Scenario | Player | Games | Won before | Won after | Better | Worse | p |"
+			"| Scenario | Player | Games | Won before | Won after | Better | Worse | p | Carriers before | Carriers after | Better by carriers | Worse by carriers | p |"
 		);
-		text.AppendLine("| --- | --- | --- | --- | --- | --- | --- | --- |");
+		text.AppendLine(
+			"| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"
+		);
 		var groups = pairs
 			.GroupBy(p => (p.After.Scenario, p.After.Player))
 			.OrderBy(g => g.Key.Scenario)
@@ -254,9 +266,11 @@ internal static class Benchmark
 		{
 			var better = games.Count(p => Rank(p.After.Outcome) > Rank(p.Before.Outcome));
 			var worse = games.Count(p => Rank(p.After.Outcome) < Rank(p.Before.Outcome));
+			var ahead = games.Count(p => CompareStanding(p.After, p.Before) > 0);
+			var behind = games.Count(p => CompareStanding(p.After, p.Before) < 0);
 			text.AppendLine(
 				FormattableString.Invariant(
-					$"| {scenario} | {player} | {games.Count} | {games.Count(p => p.Before.Outcome == Outcome.Won)} | {games.Count(p => p.After.Outcome == Outcome.Won)} | {better} | {worse} | {SignTest(better, worse):F2} |"
+					$"| {scenario} | {player} | {games.Count} | {games.Count(p => p.Before.Outcome == Outcome.Won)} | {games.Count(p => p.After.Outcome == Outcome.Won)} | {better} | {worse} | {SignTest(better, worse):F2} | {games.Average(p => Standing(p.Before).Carriers):F2} | {games.Average(p => Standing(p.After).Carriers):F2} | {ahead} | {behind} | {SignTest(ahead, behind):F2} |"
 				)
 			);
 		}
