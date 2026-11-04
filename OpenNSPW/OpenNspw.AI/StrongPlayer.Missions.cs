@@ -48,6 +48,7 @@ public sealed partial class StrongPlayer
 	private static readonly WorldPosition RaidedAirBase = new(-7600, 960);
 
 	private readonly HashSet<int> _gatheredFrom = [];
+	private readonly HashSet<int> _guarding = [];
 	private int _lastSweep = int.MinValue / 2;
 
 	private bool IsMissionOrderDue(Nspw game, int frames) =>
@@ -70,6 +71,64 @@ public sealed partial class StrongPlayer
 		game.ScenarioNumber == 10 && Parameters.GatherAndSweep
 			? NearestOwnAirBase(game, RaidedAirBase)
 			: 0;
+
+	// Scenario 8: the player's anchored ships nearest its air base with the most fighters, where they are guarded, or
+	// null: the victory counts them, and the carriers' strikes sink what is not covered.
+	private WorldPosition? Anchorage(Nspw game)
+	{
+		var bases = Decks(game)
+			.Where(d => game.Units[d].Kind == UnitKind.AirBase)
+			.OrderByDescending(d =>
+				ParkedOn(game, d, n => game.Units[n].Kind == UnitKind.Fighter).Count
+			)
+			.ToList();
+		if (bases.Count == 0)
+			return null;
+
+		var anchored = new List<WorldPosition>();
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var unit = ref game.Units[m];
+			if (
+				IsOwn(game, m)
+				&& UnitFacts.IsAnchored(ref unit)
+				&& UnitFacts.Distance(unit.Position, game.Units[bases[0]].Position) <= 1500
+			)
+				anchored.Add(unit.Position);
+		}
+
+		return anchored.Count == 0
+			? null
+			: new WorldPosition(anchored.Average(p => p.X), anchored.Average(p => p.Y));
+	}
+
+	// Scenario 8: each of the player's ships that sails, warship or carrier, sails to the anchorage once, as the fleet a
+	// player keeps together over what it must hold: their guns, and the fighters' base, cover it.
+	private bool TryGuardAnchorage(Nspw game)
+	{
+		if (Anchorage(game) is not { } anchorage)
+			return false;
+
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var ship = ref game.Units[m];
+			if (
+				!IsOwn(game, m)
+				|| ship.Category != UnitCategory.Ship
+				|| UnitFacts.IsBase(ship.Kind)
+				|| UnitFacts.IsAnchored(ref ship)
+				|| ship.Kind == UnitKind.Transport
+				|| !_guarding.Add(m)
+			)
+				continue;
+
+			SelectAlone(m, "guarding");
+			var point = PointAt(anchorage, m * 53.0, 250 + (60.0 * (m % 4)));
+			return SailSelected(game, m, point, "guards the anchorage at") || true;
+		}
+
+		return false;
+	}
 
 	// Scenario 10: the ready fighters of each other air base of the player's within 3000 of the raided one fly there,
 	// once, and are based there (TryRebase brings them down there).
@@ -670,6 +729,7 @@ public sealed partial class StrongPlayer
 		{
 			300 => TryDoolittle(game),
 			205 => TryRescue(game),
+			8 when Parameters.GuardAnchorage => TryGuardAnchorage(game),
 			10 when Parameters.GatherAndSweep => TryGatherFighters(game) || TrySweepSaipan(game),
 			107 when Parameters.AmbushYamamoto => TrySailToAmbush(game) || TryGunsOnYamamoto(game),
 			_ => TryReturnHome(game),
@@ -706,6 +766,7 @@ public sealed partial class StrongPlayer
 		{
 			300 => true,
 			107 => Parameters.AmbushYamamoto,
+			8 => Parameters.GuardAnchorage,
 			_ => _knowledge.Home is not null && ArePlacesDestroyed(game),
 		};
 }

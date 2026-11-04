@@ -77,6 +77,10 @@ public sealed record StrongParameters
 	// are over, the forward base's fighters sweep Saipan's airfield (TryGatherFighters, TrySweepSaipan).
 	public bool GatherAndSweep { get; init; }
 
+	// Whether, in scenario 8, every ship that sails gathers at the anchored ships next to the air base with the most
+	// fighters, and stays there (TryGuardAnchorage).
+	public bool GuardAnchorage { get; init; }
+
 	// The frames before a target engaged may be engaged again.
 	public int RetargetFrames { get; init; } = 400;
 
