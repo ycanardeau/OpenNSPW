@@ -177,7 +177,7 @@ public sealed record StrongParameters
 
 	// Whether a carrier whose strike is out keeps away, holds or closes in as playing each forward in copies of the battle
 	// shows best (LookAheadStance), rather than keeping away; for this many frames, on LookaheadSeeds seeds.
-	public bool LookaheadPosition { get; init; }
+	public bool LookaheadPosition { get; init; } = true;
 	public int LookaheadPositionFrames { get; init; } = 2500;
 
 	// Whether the battleships and cruisers take as their target the enemy attackers within their anti-aircraft reach
