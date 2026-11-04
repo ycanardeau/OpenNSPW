@@ -219,6 +219,11 @@ public interface IGameExtension
 	// does not say: the battle then runs.
 	bool? HoldsBattle(Nspw game) => null;
 
+	// Whether the frame of the battle that starts is shown (true, or null if it does not say) or not (false): a frame not
+	// shown runs as any other, its drawing too, which draws random numbers and takes the clicks, but draws no pixel and is
+	// not presented (Renderer.DrawsNothing), so that the battle is the same whether it is shown or not.
+	bool? ShowsFrame(Nspw game) => null;
+
 	// A frame of the battle starts, with `ticks` ticks: returns the ticks it runs. An extension may set the speed
 	// (GameSpeed), which the game shows.
 	short FrameStarting(Nspw game, short ticks) => ticks;
@@ -259,7 +264,7 @@ public interface IGameExtension
 
 	void RivalLeft(Nspw game) { }
 
-	// A frame has been shown.
+	// A frame has been shown: not one that is not (ShowsFrame).
 	void Presented(Nspw game) { }
 }
 
@@ -348,6 +353,18 @@ public sealed class GameExtensions(Nspw game)
 		{
 			if (extension.HoldsBattle(_game) is { } holds)
 				return holds;
+		}
+
+		return null;
+	}
+
+	// The first extension that answers.
+	internal bool? ShowsFrame()
+	{
+		foreach (var extension in _all)
+		{
+			if (extension.ShowsFrame(_game) is { } shows)
+				return shows;
 		}
 
 		return null;

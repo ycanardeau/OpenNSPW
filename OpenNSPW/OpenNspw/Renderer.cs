@@ -20,6 +20,19 @@ public sealed unsafe partial class Renderer(Nspw game)
 
 	public IDirectDraw7? lpDD = null;
 	public IDirectDrawSurface7? lpDDSPrimary = null;
+
+	// Whether this frame draws nothing: a frame of the battle that an extension does not show (IGameExtension.ShowsFrame),
+	// which runs as any other, its drawing too, but draws no pixel and is not presented. Not part of the original.
+	public bool DrawsNothing
+	{
+		get => lpDD is DirectDraw7 { DrawsNothing: true };
+		set
+		{
+			if (lpDD is DirectDraw7 directDraw)
+				directDraw.DrawsNothing = value;
+		}
+	}
+
 	public IDirectDrawSurface7? lpDDSBack = null;
 
 	public IDirectDrawClipper? lpDDclip = null;

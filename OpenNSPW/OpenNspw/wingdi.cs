@@ -412,6 +412,12 @@ public sealed class Gdi(INspwPlatform platform)
 			return 0;
 		}
 
+		// A surface that draws nothing rasterizes no text (DirectDraw7.DrawsNothing).
+		if (surface.DrawsNothing)
+		{
+			return 1;
+		}
+
 		var font = Get<Font>(dc.Font.Value);
 		if (
 			_platform.RasterizeText(text, font?.Height ?? 16, font?.FaceName ?? "")

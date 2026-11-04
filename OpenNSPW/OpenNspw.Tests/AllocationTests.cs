@@ -54,18 +54,24 @@ public sealed class AllocationTests
 	}
 
 	// A battle of 1.22's first scenario, drawn from 1.22's sprite sheet or from the app's sprite files, whose sheet looks
-	// up a piece at each blit (SpriteSheetSurface).
+	// up a piece at each blit (SpriteSheetSurface), and at a steady speed (docs/SteadySpeed.md).
 	[Theory]
-	[InlineData(false)]
-	[InlineData(true)]
-	public void ABattlesFrameMakesLittleGarbage(bool drawsFromSpriteFiles)
+	[InlineData(false, false)]
+	[InlineData(true, false)]
+	[InlineData(false, true)]
+	public void ABattlesFrameMakesLittleGarbage(bool drawsFromSpriteFiles, bool isSteady)
 	{
 		const int warmUp = 100;
 		const int frames = 300;
 		var meter = new Meter(warmUp);
 		using var run = new SingleplayerRun(
 			1,
-			game => game.Extensions.Add(meter),
+			game =>
+			{
+				if (isSteady)
+					game.Extensions.Add(new Pacing.SteadySpeed());
+				game.Extensions.Add(meter);
+			},
 			drawsFromSpriteFiles: drawsFromSpriteFiles,
 			recordsOutput: false
 		);

@@ -10,12 +10,42 @@ public sealed class SteadySpeedTests
 {
 	private const int Frames = 150;
 
-	// The battle's hash as each frame ends, by its tick.
+	// The battle's hash as each frame ends, by its tick, and the frames that ended and that were shown.
 	private sealed class Hashes : IGameExtension
 	{
 		public Dictionary<int, ulong> ByTick { get; } = [];
 
-		public void FrameEnded(Nspw game) => ByTick[game.Tick] = ReplayFormat.HashBattle(game);
+		public int Frames { get; private set; }
+
+		public int Shown { get; private set; }
+
+		public void FrameEnded(Nspw game)
+		{
+			ByTick[game.Tick] = ReplayFormat.HashBattle(game);
+			Frames++;
+		}
+
+		public void Presented(Nspw game) => Shown++;
+	}
+
+	// Shows every other frame of the battle, once the player's orders of Play are given, in the first 10.
+	private sealed class EveryOtherFrame : IGameExtension
+	{
+		private int _frames;
+
+		public bool? ShowsFrame(Nspw game) => _frames++ < 10 || _frames % 2 == 0;
+	}
+
+	// The battles are the same at every tick that both ran: the shorter is the longer's beginning.
+	private static void AssertSameBattle(Hashes expected, Hashes actual)
+	{
+		var (shorter, longer) =
+			expected.ByTick.Count <= actual.ByTick.Count ? (expected, actual) : (actual, expected);
+		Assert.NotEmpty(shorter.ByTick);
+		Assert.All(
+			shorter.ByTick,
+			pair => Assert.Equal(pair.Value, longer.ByTick.GetValueOrDefault(pair.Key))
+		);
 	}
 
 	// The player's ship, of scenario 4, that the tests order.
@@ -29,15 +59,18 @@ public sealed class SteadySpeedTests
 				&& game.Units[m].Kind <= UnitKind.Destroyer
 			);
 
-	// Plays scenario 4 for `frames` frames at `speed`, with Space held from the 100th frame to the 120th if `holdsSpace`,
-	// paused for `pause` more frames at the 60th, and with steady speed if `isSteady`: a ship of the player's selected and
-	// sent away, as the battle starts.
+	// Plays scenario 4 for `frames` frames shown at `speed`, with Space held from the 100th frame to the 120th if
+	// `holdsSpace`, paused for `pause` more frames at the 60th, with the cursor at the battlefield's left edge from then
+	// if `scrolls`, and with steady speed if `isSteady`, or the extension `added`: a ship of the player's selected and
+	// sent away, at speed 1, as the battle starts.
 	private static Hashes Play(
 		short speed,
 		int frames,
 		bool isSteady,
 		bool holdsSpace = false,
-		int pause = 0
+		int pause = 0,
+		bool scrolls = false,
+		IGameExtension? added = null
 	)
 	{
 		var hashes = new Hashes();
@@ -47,19 +80,24 @@ public sealed class SteadySpeedTests
 			{
 				if (isSteady)
 					game.Extensions.Add(new SteadySpeed());
+				if (added is not null)
+					game.Extensions.Add(added);
 				game.Extensions.Add(hashes);
 			}
 		);
 		var game = run.Game;
 		run.Frames(2);
-		game.GameSpeed = speed;
 		var ship = PlayersShip(game);
 		run.Player.Commands.ClickUnit(ship);
 		run.Frames(2);
 		run.Player.Commands.SetDestination(
 			new WorldPosition(game.Units[ship].Position.X + 400, game.Units[ship].Position.Y)
 		);
-		for (var frame = 4; frame < frames; frame++)
+		run.Frames(2);
+		game.GameSpeed = speed;
+		if (scrolls)
+			game.SetCursorPos(0, all_head.CMBT_HEIGHT / 2);
+		for (var frame = 6; frame < frames; frame++)
 		{
 			if (holdsSpace && frame == 100)
 				game.Buttons |= InputButtons.Space;
@@ -77,19 +115,49 @@ public sealed class SteadySpeedTests
 		return hashes;
 	}
 
-	// Each frame runs 2 ticks, at every speed and with Space held: the battle is the same, tick by tick.
+	// Each frame runs 2 ticks, at every speed and with Space held: the battle is the same, tick by tick. Speed 300 runs
+	// as many frames as the game can between two shown, and more ticks in `frames` shown than speed 1 in Frames.
 	[Theory]
-	[InlineData(4, false)]
-	[InlineData(10, false)]
-	[InlineData(300, false)]
-	[InlineData(1, true)]
-	public void EverySpeedPlaysTheSameBattle(short speed, bool holdsSpace)
+	[InlineData(4, false, Frames)]
+	[InlineData(10, false, Frames)]
+	[InlineData(300, false, 20)]
+	[InlineData(1, true, Frames)]
+	public void EverySpeedPlaysTheSameBattle(short speed, bool holdsSpace, int frames)
 	{
 		var atSpeed1 = Play(1, Frames, isSteady: true);
 
-		var atSpeed = Play(speed, Frames, isSteady: true, holdsSpace);
+		var atSpeed = Play(speed, frames, isSteady: true, holdsSpace);
 
-		Assert.Equal(atSpeed1.ByTick, atSpeed.ByTick);
+		AssertSameBattle(atSpeed1, atSpeed);
+	}
+
+	// One frame is shown every 88 milliseconds, as 1.22 shows its frames: at speed 10, which runs 5.5 frames in that
+	// time, about one in 5.5.
+	[Fact]
+	public void AFrameIsShownEvery88Milliseconds()
+	{
+		var hashes = Play(10, Frames, isSteady: true);
+
+		Assert.InRange(hashes.Frames / (double)hashes.Shown, 5.5 * 0.8, 5.5 * 1.2);
+	}
+
+	// A frame that is not shown runs as any other, but draws nothing and does not scroll: the battle is the same, at
+	// 1.22's speed 1 too, while the battlefield scrolls, whose camera then differs.
+	[Fact]
+	public void AFrameNotShownPlaysTheSame()
+	{
+		var shown = Play(1, Frames, isSteady: false, scrolls: true);
+
+		var everyOther = Play(
+			1,
+			Frames,
+			isSteady: false,
+			scrolls: true,
+			added: new EveryOtherFrame()
+		);
+
+		AssertSameBattle(shown, everyOther);
+		Assert.True(everyOther.ByTick.Count > shown.ByTick.Count);
 	}
 
 	// Without it, as 1.22 plays, speed 4 plays another battle than speed 1: its frames run 5 ticks, and the computer plays
@@ -114,7 +182,7 @@ public sealed class SteadySpeedTests
 
 		var paused = Play(1, Frames, isSteady: true, pause: 30);
 
-		Assert.Equal(atSpeed1.ByTick, paused.ByTick);
+		AssertSameBattle(atSpeed1, paused);
 	}
 
 	// Without it, as 1.22 plays, a pause changes the battle: its frames run no tick, but the computer plays in them.

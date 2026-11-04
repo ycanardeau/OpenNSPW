@@ -550,8 +550,9 @@ public unsafe partial class Nspw
 
 		Elapsed = Now - LastTime2;
 
-		// Until a frame of a single-player battle says otherwise (TryStartSingleplayerFrame).
+		// Until a frame of a single-player battle says otherwise (TryStartSingleplayerFrame), and of a battle (ShowsFrame).
 		IsBattleHeld = false;
+		Renderer.DrawsNothing = false;
 
 		if (IsSingleplayer && Mode == GameMode.Battle && !IsEditingMap)
 		{
@@ -589,6 +590,10 @@ public unsafe partial class Nspw
 			ticks = Extensions.FrameStarting(ticks);
 		if (IsBattleHeld)
 			ticks = 0;
+
+		// A frame of the battle that an extension does not show draws nothing (Renderer.DrawsNothing).
+		if (Mode == GameMode.Battle && !IsEditingMap)
+			Renderer.DrawsNothing = Extensions.ShowsFrame() == false;
 
 		ReadInput(); // マウス、キーボード状況取得
 
@@ -838,7 +843,10 @@ public unsafe partial class Nspw
 		)
 			Renderer.RestoreSurfaces();
 
-		Extensions.Presented();
+		if (Renderer.DrawsNothing)
+			Renderer.DrawsNothing = false;
+		else
+			Extensions.Presented();
 	}
 
 	/*--------------------------------------------
