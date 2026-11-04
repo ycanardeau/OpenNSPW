@@ -85,6 +85,10 @@ public sealed record StrongParameters
 	// and comes home once the ships there are sunk (TrySailToRaid, TryReturnHome).
 	public bool RaidYokosuka { get; init; }
 
+	// Whether, in scenario 201, the warships and the submarine sail at once to where the American carrier comes west, and
+	// wait for it there (TrySailToIntercept).
+	public bool InterceptCarrier { get; init; }
+
 	// Whether the player expects the enemy where it was in past games of the scenario (Recall), given a memory.
 	public bool UseMemory { get; init; } = true;
 

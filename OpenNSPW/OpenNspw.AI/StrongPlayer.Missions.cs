@@ -54,6 +54,12 @@ public sealed partial class StrongPlayer
 	private static readonly WorldPosition RaidPoint = new(-3500, 1800);
 
 	private int _raidOrdered = int.MinValue / 2;
+
+	// Scenario 201: where the warships and the submarine wait for the American carrier, which waits east of there until
+	// about frame 2400, then sails west across it, toward the player's carriers.
+	private static readonly WorldPosition InterceptPoint = new(-200, 2900);
+
+	private readonly HashSet<int> _intercepting = [];
 	private int _lastSweep = int.MinValue / 2;
 
 	private bool IsMissionOrderDue(Nspw game, int frames) =>
@@ -167,6 +173,41 @@ public sealed partial class StrongPlayer
 			_raidOrdered = UnitFacts.Now(game);
 			SelectAlone(m, "raiding");
 			return SailSelected(game, m, RaidPoint, "sails to raid Yokosuka from") || true;
+		}
+
+		return false;
+	}
+
+	// Scenario 201: whether the American carrier has been found in the last 300 frames: the warships are left to the
+	// general tasks then, which send them at it (TryEngage).
+	private bool IsCarrierFound(Nspw game) =>
+		_contacts.All.Any(c =>
+			c.Kind is UnitKind.Carrier or UnitKind.LightCarrier
+			&& game.Units[c.Unit].IsUsed
+			&& UnitFacts.Now(game) - c.Frame < 300
+		);
+
+	// Scenario 201: each of the player's warships and submarines, not in a carrier's formation, sails to the intercept
+	// point once, from the start: three of the four carriers burn under a fifth of their HP, which launches nothing, and
+	// the fourth's six attackers do not sink the carrier alone.
+	private bool TrySailToIntercept(Nspw game)
+	{
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var ship = ref game.Units[m];
+			if (
+				!IsOwn(game, m)
+				|| ship.Category != UnitCategory.Ship
+				|| UnitFacts.IsDeck(ship.Kind)
+				|| UnitFacts.IsBase(ship.Kind)
+				|| ship.GroupLeader != 0
+				|| !_intercepting.Add(m)
+			)
+				continue;
+
+			SelectAlone(m, "intercepting");
+			var point = PointAt(InterceptPoint, m * 71.0, 200);
+			return SailSelected(game, m, point, "waits for the carrier at") || true;
 		}
 
 		return false;
@@ -773,6 +814,7 @@ public sealed partial class StrongPlayer
 			205 => TryRescue(game),
 			8 when Parameters.GuardAnchorage => TryGuardAnchorage(game),
 			10 when Parameters.GatherAndSweep => TryGatherFighters(game) || TrySweepSaipan(game),
+			201 when Parameters.InterceptCarrier => TrySailToIntercept(game),
 			109 when Parameters.RaidYokosuka => TryReturnHome(game) || TrySailToRaid(game),
 			107 when Parameters.AmbushYamamoto => TrySailToAmbush(game) || TryGunsOnYamamoto(game),
 			_ => TryReturnHome(game),
@@ -790,8 +832,10 @@ public sealed partial class StrongPlayer
 		};
 
 	// Whether the mission holds the ships back from the general tasks that form them and send them at the enemy
-	// (TryForm, TryFormBattleGroups, TryEngage).
-	private bool HoldsShips(Nspw game) => game.ScenarioNumber == 107 && Parameters.AmbushYamamoto;
+	// (TryForm, TryFormBattleGroups, TryEngage): in 201, until the carrier is found.
+	private bool HoldsShips(Nspw game) =>
+		(game.ScenarioNumber == 107 && Parameters.AmbushYamamoto)
+		|| (game.ScenarioNumber == 201 && Parameters.InterceptCarrier && !IsCarrierFound(game));
 
 	// Whether the mission holds the fighters back from intercepting, hunting and patrolling.
 	private bool HoldsFighters(Nspw game) =>
