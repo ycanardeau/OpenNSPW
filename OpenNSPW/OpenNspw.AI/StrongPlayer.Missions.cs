@@ -77,6 +77,7 @@ public sealed partial class StrongPlayer
 	// fly round the escorts (TryApproach), but close on the carriers (TryCloseOnFormation): its point is at the edge of
 	// their reach.
 	private readonly HashSet<int> _oneWay = [];
+	private readonly HashSet<int> _aimed = [];
 	private int _lastSweep = int.MinValue / 2;
 
 	private bool IsMissionOrderDue(Nspw game, int frames) =>
@@ -226,6 +227,54 @@ public sealed partial class StrongPlayer
 				Reach(ref game.Units[ready[0]]),
 				Parameters.StraightOpening
 			);
+			return true;
+		}
+
+		return false;
+	}
+
+	// Scenarios 9 and 201: each plane of the opening strike, armed, within 3000 of an enemy carrier found, takes it as its
+	// target, once, as a player who won them clicked the carriers for the strike: left to the game's attack, a plane
+	// drops at the escort nearest it, and the carrier, 41 HP, needs every torpedo.
+	private bool TryAimOpening(Nspw game)
+	{
+		if (!Parameters.AimOpening)
+			return false;
+
+		foreach (var m in _oneWay)
+		{
+			ref var plane = ref game.Units[m];
+			if (
+				!IsOwn(game, m)
+				|| plane.PlaneState != UnitState.Flying
+				|| plane.Ammo == 0
+				|| _aimed.Contains(m)
+			)
+				continue;
+
+			var position = plane.Position;
+			var carrier = _contacts
+				.All.Where(c =>
+					c.Kind is UnitKind.Carrier or UnitKind.LightCarrier
+					&& game.Units[c.Unit].IsUsed
+					&& game.Units[c.Unit].IsFound
+					&& UnitFacts.Distance(position, game.Units[c.Unit].Position) <= 3000
+				)
+				.MinBy(c => UnitFacts.Distance(position, game.Units[c.Unit].Position));
+			if (carrier is null || plane.Target == carrier.Unit)
+				continue;
+
+			_aimed.Add(m);
+			var target = carrier.Unit;
+			SelectFlying(m, "aiming");
+			_clicks.Enqueue(g =>
+			{
+				if (g.SelectedUnit != m || !g.Units[target].IsUsed)
+					return GiveUp(g, $"aiming {m}: selected {g.SelectedUnit}");
+				g.Commands.ClickUnit(target);
+				return true;
+			});
+			Deselect();
 			return true;
 		}
 
@@ -949,10 +998,11 @@ public sealed partial class StrongPlayer
 			205 => TryRescue(game),
 			8 when Parameters.GuardAnchorage => TryGuardAnchorage(game),
 			10 when Parameters.GatherAndSweep => TryGatherFighters(game) || TrySweepSaipan(game),
-			9 when Parameters.OpeningStrike => TryOpeningStrike(game),
+			9 when Parameters.OpeningStrike => TryOpeningStrike(game) || TryAimOpening(game),
 			201 when Parameters.InterceptCarrier => TrySailAtHornet(game)
 				|| TryTorpedoHornet(game)
-				|| TryOpeningStrike(game),
+				|| TryOpeningStrike(game)
+				|| TryAimOpening(game),
 			109 when Parameters.RaidYokosuka => TryReturnHome(game) || TrySailToRaid(game),
 			107 when Parameters.AmbushYamamoto => TrySailToAmbush(game) || TryGunsOnYamamoto(game),
 			_ => TryReturnHome(game),

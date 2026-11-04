@@ -98,6 +98,10 @@ public sealed record StrongParameters
 	// (LaunchToward): in 201 the carrier waits, still, only until about frame 2400.
 	public bool StraightOpening { get; init; }
 
+	// Whether each plane of the opening strikes of scenarios 9 and 201 takes the nearest enemy carrier found as its target
+	// (TryAimOpening), not left to drop at the nearest escort.
+	public bool AimOpening { get; init; }
+
 	// Whether the player expects the enemy where it was in past games of the scenario (Recall), given a memory.
 	public bool UseMemory { get; init; } = true;
 
