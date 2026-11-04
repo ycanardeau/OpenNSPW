@@ -65,7 +65,7 @@ An extension implements `IGameExtension`, whose methods all do nothing by defaul
 | `OpenNspw.HostUI` | The host UI's commands (`UICommands`), given as the player's actions where the game takes the clicks they stand for, and what the UI reads of the game (`UIState`), such as what the player sees around any camera (`ReadSight(camera, ...)`) ([UI.md](UI.md)) |
 | `OpenNspw.Replay` | Replays: the format, the recorder, the player, the DirectPlay stand-in that gives the rival's messages, and a file layer with the files a battle started from |
 | `OpenNspw.Pacing` | Steady speed ([SteadySpeed.md](SteadySpeed.md)): a single-player battle's frames all of speed 1's ticks, more of them a second at a faster speed, so that every speed plays the same battle |
-| `OpenNspw.Desktop` | The app: adds the recorder to every battle, plays replays, and shows them with a camera of their own |
+| `OpenNspw.Desktop` | The app: adds the recorder to every battle, steady speed to single-player ones, plays replays, and shows them with a camera of their own |
 | `OpenNspw.Tests` | Tests of the port, and of the extensions in their games |
 
 Later, each its own change: computer players as an extension, and the out-of-process bridge. How the traces of 1.22 and the host UI left the core is in [FeatureExtensions.md](FeatureExtensions.md).

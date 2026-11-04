@@ -24,4 +24,7 @@ Every frame runs 2 ticks, as at speed 1, and a faster speed runs more frames ins
 
 The fastest speed is as fast as the game draws frames: above it, the battle is the same, but slower than the speed shown.
 
+## In the app
+The single-player scenario browser has a switch, Steady speed, on unless the player turns it off, which the app remembers (`ui.json`). A battle that follows a trace of 1.22 never plays at a steady speed; a single-player replay does once it is taken over.
+
 Replays record the speed shown in each frame ([Replays.md](Replays.md)), which the ticks no longer tell.

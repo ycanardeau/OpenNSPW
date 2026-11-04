@@ -24,6 +24,9 @@ internal sealed class ScenarioBrowserForm : Form
 
 	public event EventHandler? Canceled;
 
+	// The switch of steady speed turned over (docs/SteadySpeed.md), to what it is now.
+	public event EventHandler<bool>? SteadySpeedChosen;
+
 	// The selected scenario's number.
 	public int SelectedScenario => _rows[_page][_selected].Scenario.Number;
 
@@ -83,8 +86,14 @@ internal sealed class ScenarioBrowserForm : Form
 		return tab;
 	}
 
-	// initialScenario: the scenario to select first, such as the one played last.
-	public ScenarioBrowserForm(UIFonts fonts, IReadOnlyList<ScenarioSet> sets, int? initialScenario)
+	// initialScenario: the scenario to select first, such as the one played last. isSpeedSteady: whether the switch of
+	// steady speed is on.
+	public ScenarioBrowserForm(
+		UIFonts fonts,
+		IReadOnlyList<ScenarioSet> sets,
+		int? initialScenario,
+		bool isSpeedSteady
+	)
 	{
 		_fonts = fonts;
 		_sets = sets;
@@ -121,6 +130,17 @@ internal sealed class ScenarioBrowserForm : Form
 		};
 		start.Click += (_, _) => Start();
 		Controls.Add(start);
+
+		var steadySpeed = new CheckButton(fonts)
+		{
+			Bounds = new DrawingRectangle(696, 52, 280, 44),
+			Text = Texts.SteadySpeed,
+			Description = Texts.SteadySpeedDescription,
+			IsChecked = isSpeedSteady,
+		};
+		steadySpeed.CheckedChanged += (_, _) =>
+			SteadySpeedChosen?.Invoke(this, steadySpeed.IsChecked);
+		Controls.Add(steadySpeed);
 
 		var initial = sets.SelectMany(
 				(set, page) =>

@@ -43,6 +43,11 @@ internal static class Texts
 	public static string SinglePlayerKicker =>
 		Pick("SINGLE PLAYER  ·  NSPW 1.22", "シングルプレイ  ·  NSPW 1.22");
 	public static string Scenarios => Pick("Scenarios", "シナリオ");
+	public static string SteadySpeed => Pick("Steady speed", "安定スピード");
+
+	public static string SteadySpeedDescription =>
+		Pick("The same battle at every speed", "どのスピードでも同じ戦闘になります");
+
 	public static string BrowserHint =>
 		Pick(
 			"↑↓ Scenario    ←→ Set    PgUp PgDn Briefing    Enter Start    Esc Back",

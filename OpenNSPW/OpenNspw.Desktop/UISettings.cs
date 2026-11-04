@@ -4,10 +4,11 @@ using System.Text.Json.Serialization;
 
 namespace OpenNspw.Desktop;
 
-// What the UI remembers between runs, beside the game's own settings (DesktopPlatform): the language chosen.
+// What the UI remembers between runs, beside the game's own settings (DesktopPlatform): the language chosen, and whether
+// single-player battles play at a steady speed (docs/SteadySpeed.md).
 internal static partial class UISettings
 {
-	private sealed record Saved(Language? Language);
+	private sealed record Saved(Language? Language, bool? IsSpeedSteady = null);
 
 	// How Saved is read and written, generated, so that trimming keeps what it needs: the language by its name.
 	[JsonSourceGenerationOptions(UseStringEnumConverter = true)]
@@ -33,6 +34,17 @@ internal static partial class UISettings
 		}
 	}
 
+	// Writes what is saved, changed by `change`. What cannot be written is still used for this run.
+	private static void Save(Func<Saved, Saved> change)
+	{
+		try
+		{
+			Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
+			File.WriteAllText(FilePath, JsonSerializer.Serialize(change(Load()), SavedJson.Default.Saved));
+		}
+		catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
+	}
+
 	// The language chosen last, or the system's: Japanese on a Japanese system, English on any other.
 	public static Language LoadLanguage()
 	{
@@ -46,23 +58,17 @@ internal static partial class UISettings
 
 	public static void SaveLanguage(Language language)
 	{
-		try
-		{
-			Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-			File.WriteAllText(
-				FilePath,
-				JsonSerializer.Serialize(
-					Load() with
-					{
-						Language = language,
-					},
-					SavedJson.Default.Saved
-				)
-			);
-		}
-		catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-		{
-			// The language is still used for this run.
-		}
+		Save(saved => saved with { Language = language });
+	}
+
+	// Whether single-player battles play at a steady speed, as chosen last: they do, unless the player chose otherwise.
+	public static bool LoadIsSpeedSteady()
+	{
+		return Load().IsSpeedSteady ?? true;
+	}
+
+	public static void SaveIsSpeedSteady(bool isSpeedSteady)
+	{
+		Save(saved => saved with { IsSpeedSteady = isSpeedSteady });
 	}
 }
