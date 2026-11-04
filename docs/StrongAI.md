@@ -16,6 +16,7 @@ Each scenario is also played by two players that do not think, as baselines:
 
 - **Idle**: gives no order. Several scenarios are won by holding on until the end (3, 7, 108, 204, 208, 304), and some may be won by doing nothing at all; a win that the idle player also gets says nothing of the strong one.
 - **Rush**: sends its ships one after another at the nearest enemy found, as the tests' `Monkey` does, through the commands, and gives no other order. The `Monkey` itself does not fit: it clicks at random, holds Space and presses the speed keys, which the rules forbid, and it sends its ships at enemies that are not found.
+- **Computer** (`ComputerLikePlayer`): plays the player's side as 1.22's computer plays its own. At the start, its ships are put in fleets as a scenario puts the computer's: those within 1000 of each other in one, carriers first, then transports and warships, and each air base and submarine alone, up to the table's 10; a ship at anchor is left out, as 8 counts the ships that stay at anchor. Each fleet targets every enemy unit of the kinds the victory counts, then every enemy carrier, battleship and cruiser, as many as the list's 17 places hold, toward where the briefing expects the enemy. The list is written as `Nspw.AddTargetsOfKind` and the others would write it, but not with them: past the 17th they write on into the fleet's members, which turned a Japanese bomber into one of the player's flagships in 7. Then, every frame, `cpu_strtgy` itself (`Nspw.PlanComputerStrategy`) plays them, with the player's side as `cpu_side` and these fleets in the table, and its order is applied as the computer's is, the ships' routes planned by `set_cpu_route`. The computer's side, fleets and orders are put back after, and the scenario number is 0 while it plays, so that none of the computer's scenario events runs for the player. It breaks the rules above, as the computer does: it writes the game's state (its planes' weapons, targets and paths), and its fleets' targets are every enemy unit of their kinds, found or not. It tells what the computer's own way of playing gives on the player's side, and where it does better than the strong player, what to learn from it.
 
 The arena runs in Release, one game per core, each on its own thread with a platform of its own (`ArenaPlatform`), whose clock runs as fast as the game can. The single-player computer is 1.22's rewritten as C# ([Singleplayer.md](Singleplayer.md)), not emulated: the same games, row for row, in about half the time (scenarios 4, 5 and 105, 10000 frames each, one at a time: 37 seconds against 68). A frame costs about 1.2 ms when the game runs alone and about 6 ms with every core busy, so a scenario of 60000 ticks, 30000 frames, takes about 40 seconds alone and about 3 minutes in a full arena. The tests' lockstep runs, in Debug, cost about 17 ms a frame.
 
@@ -132,48 +133,50 @@ So, while the victory conditions count the enemy's carriers (`HuntsCarriers`), t
 Each cell is the outcomes of the start dates 1000000000, 1000007919 and 1000015838, in order: W won, D drawn, L lost, U unfinished, F failed.
 
 ### Baselines
-| Scenario | Side | idle | rush |
-| --- | --- | --- | --- |
-| 1 | U | LLL | LLL |
-| 2 | J | LLL | LLL |
-| 3 | U | WWW | WWW |
-| 4 | J | LLL | LLL |
-| 5 | U | LLL | LLL |
-| 6 | U | DDL | DDD |
-| 7 | U | LLL | LLL |
-| 8 | J | LLL | LLL |
-| 9 | J | LLL | LLL |
-| 10 | J | LLL | LLL |
-| 100 | J | LLL | LLL |
-| 101 | J | LLL | WWL |
-| 102 | U | LLL | LLL |
-| 103 | U | LLL | LLL |
-| 104 | J | LLL | LLL |
-| 105 | J | LLL | LLL |
-| 106 | U | LLL | LLL |
-| 107 | U | LLL | LLL |
-| 108 | J | LLL | LLL |
-| 109 | U | LLL | LLL |
-| 200 | J | LLL | LLL |
-| 201 | J | LLL | LLL |
-| 202 | U | DDD | DDD |
-| 203 | U | LLL | LLL |
-| 204 | U | LLL | LLL |
-| 205 | U | LLL | LLL |
-| 206 | U | LLL | LLL |
-| 207 | U | LLL | LLL |
-| 208 | U | LLL | LLL |
-| 209 | J | LLL | LFL |
-| 300 | U | LLL | LLL |
-| 301 | J | FLL | LLL |
-| 302 | J | LFL | LLL |
-| 303 | U | LLL | LLL |
-| 304 | J | LLL | LLL |
-| 305 | J | LLL | LLL |
-| 306 | J | LLL | LLL |
-| Won | | 3/111 | 5/111 |
+| Scenario | Side | idle | rush | computer |
+| --- | --- | --- | --- | --- |
+| 1 | U | LLL | LLL | WWW |
+| 2 | J | LLL | LLL | LLL |
+| 3 | U | WWW | WWW | WWW |
+| 4 | J | LLL | LLL | DDW |
+| 5 | U | LLL | LLL | LLL |
+| 6 | U | DDL | DDD | DDD |
+| 7 | U | LLL | LLL | LLL |
+| 8 | J | LLL | LLL | WLL |
+| 9 | J | LLL | LLL | LLL |
+| 10 | J | LLL | LLL | LLL |
+| 100 | J | LLL | LLL | LLL |
+| 101 | J | LLL | WWL | WWW |
+| 102 | U | LLL | LLL | LLL |
+| 103 | U | LLL | LLL | WWW |
+| 104 | J | LLL | LLL | LLL |
+| 105 | J | LLL | LLL | UUL |
+| 106 | U | LLL | LLL | UUU |
+| 107 | U | LLL | LLL | LLL |
+| 108 | J | LLL | LLL | LLL |
+| 109 | U | LLL | LLL | LLL |
+| 200 | J | LLL | LLL | LLL |
+| 201 | J | LLL | LLL | LLL |
+| 202 | U | DDD | DDD | WWW |
+| 203 | U | LLL | LLL | LLL |
+| 204 | U | LLL | LLL | LLL |
+| 205 | U | LLL | LLL | LLL |
+| 206 | U | LLL | LLL | LWL |
+| 207 | U | LLL | LLL | LLL |
+| 208 | U | LLL | LLL | LLL |
+| 209 | J | LLL | LFL | LLL |
+| 300 | U | LLL | LLL | LLL |
+| 301 | J | FLL | LLL | LLL |
+| 302 | J | LFL | LLL | LLL |
+| 303 | U | LLL | LLL | LLL |
+| 304 | J | LLL | LLL | LLL |
+| 305 | J | LLL | LLL | LLL |
+| 306 | J | LLL | LLL | LLL |
+| Won | | 3/111 | 5/111 | 18/111 |
 
 The idle player wins scenario 3 by holding on, and draws 6 and 202, where nothing it does not do decides the result. The rushing player also wins 101 twice, its battle line closing on the American one.
+
+The computer's own strategy, playing the player's side and seeing every unit, wins 18 of 111, against the strong player's 26 on the same games, capped at 100000 frames (`--players computer,strong`). Game by game, by the result, then the carriers, ships and planes sunk less lost, it does better in 34 and worse in 72 (5 the same; the sign test's p about 0.0003). Its fleets sail at their targets and strike as soon as they are within range, and its carriers are sunk for it: 2 enemy carriers sunk against 36 of its own, where the strong player sinks 26 and loses 22; the ships, 117 sunk against 253 lost (the strong player 211 against 289). Where it does better is in the air over its own fleets: every ready fighter of a deck goes up against a raid, and it downs more planes than it loses where it is attacked, 89 against 32 in 6 (the strong player 78 against 42), 182 against 25 in 106 (39 against 10), 25 against 20 in 3 (15 against 24), 90 against 14 in 202 (90 against 27). It wins a game of 8, which the strong player has never won, its ships held at anchor and the rest sent at the Americans, and one of 4, against none; it loses all three games of 2 and of 102, where the strong player wins three and two, and leaves all three of 106, which the strong player wins, unfinished at 100000 frames, no carrier sunk on either side.
 
 Three games failed, in the single-player game itself, not the players: the computer's `set_cpu_route` (`0x42DA80`), planning a route by `ReplanBlockedRoute` or a move order, adds waypoints until it writes beyond the emulator's memory (209 and 302), and `UpdateBattle` indexed out of an array (301).
 

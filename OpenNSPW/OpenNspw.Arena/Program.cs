@@ -33,6 +33,7 @@ static IPlayer CreatePlayer(
 	{
 		"idle" => new IdlePlayer(),
 		"rush" => new RushPlayer(),
+		"computer" => new ComputerLikePlayer(),
 		"strong" when formation is not null => new StrongPlayer
 		{
 			Log = verbose ? Console.WriteLine : null,

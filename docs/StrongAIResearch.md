@@ -3,6 +3,7 @@ Why the strong player of [StrongAI.md](StrongAI.md) is weak, what has been tried
 
 ## Where it stands
 - **All scenarios** (at `b4fca20`, three dates each): 13 games won of 111. Scenarios 1, 3, 101 and 103 are won most of the time, 2 and 202 since then; nearly every scenario with goals of its own (landings at defended places, bombers that must come back, captures) is lost.
+- **Against the computer's own strategy** on the player's side (`ComputerLikePlayer`, [StrongAI.md](StrongAI.md#baselines)), on the same three dates of every scenario: 26 won of 111 against its 18, better in 72 games and worse in 34 by the result and then the battle's losses (p about 0.0003); 26 carriers sunk against 22 lost, where it sinks 2 and loses 36. It does better only in the air over its own fleets, every ready fighter up against a raid, and in 8, which it wins once.
 - **The carrier battles**, the scenarios whose victory counts the enemy's carriers:
 
   | Scenario | Side | Won | Games |
