@@ -60,6 +60,9 @@ public sealed partial class StrongPlayer
 	// and had the submarine fire at it from under it.
 	private static readonly WorldPosition HornetStart = new(1200, 2000);
 
+	// A torpedo's speed, a tick (TPD_SPD).
+	private const double TorpedoSpeed = 2.0;
+
 	private readonly HashSet<int> _intercepting = [];
 
 	// Scenario 9: where the opening strike goes, west of where the U.S. fleet starts, which it sails west from: a player
@@ -220,7 +223,8 @@ public sealed partial class StrongPlayer
 				ready[0],
 				OpeningStrikePoint(game),
 				game.Units[deck].Position,
-				Reach(ref game.Units[ready[0]])
+				Reach(ref game.Units[ready[0]]),
+				Parameters.StraightOpening
 			);
 			return true;
 		}
@@ -258,8 +262,11 @@ public sealed partial class StrongPlayer
 		return false;
 	}
 
-	// Scenario 201: the submarine, within 1500 of the American carrier found, takes it as its target and sails under it,
-	// every 200 frames: a submarine fires only at its target.
+	// Scenario 201: a submarine within 3000 of the American carrier found waits on its beam, 450 from its course and
+	// ahead of it, turned toward the course, and takes it as its target only once the carrier is lined up, where its
+	// torpedo meets it 150 to 600 ahead, within 10° of the bow: a submarine fires at its target only so, within 5°
+	// (ShipFireTorpedoAtTarget), and a torpedo across a ship's course hits it from the side. Given the target sooner, it
+	// chases the carrier bow on, among its escorts.
 	private bool TryTorpedoHornet(Nspw game)
 	{
 		var carrier = _contacts.All.FirstOrDefault(c =>
@@ -270,35 +277,68 @@ public sealed partial class StrongPlayer
 		if (carrier is null)
 			return false;
 
+		ref var target = ref game.Units[carrier.Unit];
 		for (var m = 1; m <= game.MaxUnitId; m++)
 		{
-			ref var ship = ref game.Units[m];
+			ref var sub = ref game.Units[m];
+			var distance = UnitFacts.Distance(sub.Position, target.Position);
 			if (
 				!IsOwn(game, m)
-				|| ship.Kind != UnitKind.Submarine
-				|| UnitFacts.Distance(ship.Position, game.Units[carrier.Unit].Position) > 1500
-				|| UnitFacts.Now(game) - _gunsOnYamamoto.GetValueOrDefault(m, -1000) < 200
+				|| sub.Kind != UnitKind.Submarine
+				|| distance > 3000
+				|| sub.Target == carrier.Unit
+				|| UnitFacts.Now(game) - _gunsOnYamamoto.GetValueOrDefault(m, -1000) < 60
 			)
 				continue;
 
 			_gunsOnYamamoto[m] = UnitFacts.Now(game);
-			var target = carrier.Unit;
-			SelectAlone(m, "torpedoing the carrier");
-			_clicks.Enqueue(g =>
+			var heading = target.Direction.Degrees;
+			var meeting = PointAt(target.Position, heading, target.Speed * distance / TorpedoSpeed);
+			var off = Math.Abs(
+				((BearingTo(sub.Position, meeting) - sub.Direction.Degrees + 540) % 360) - 180
+			);
+			var reach = UnitFacts.Distance(sub.Position, meeting);
+			var unit = carrier.Unit;
+			if (reach is >= 150 and <= 600 && off <= 10)
 			{
-				if (g.SelectedUnit != m || !g.Units[target].IsUsed)
-					return GiveUp(g, $"torpedoing with {m}: selected {g.SelectedUnit}");
-				g.Commands.ClickUnit(target);
-				Log?.Invoke(
-					$"{UnitFacts.Now(g)}: {g.Units[m].Kind} {m} fires at {g.Units[target].Kind} {target}"
-				);
+				SelectAlone(m, "torpedoing the carrier");
+				_clicks.Enqueue(g =>
+				{
+					if (g.SelectedUnit != m || !g.Units[unit].IsUsed)
+						return GiveUp(g, $"torpedoing with {m}: selected {g.SelectedUnit}");
+					g.Commands.ClickUnit(unit);
+					Log?.Invoke(
+						$"{UnitFacts.Now(g)}: {g.Units[m].Kind} {m} fires at {g.Units[unit].Kind} {unit}, lined up"
+					);
+					return true;
+				});
+				Deselect();
 				return true;
-			});
+			}
+
+			// The beam on the submarine's side, ahead of the carrier by about the time it takes the submarine there.
+			var ahead = PointAt(
+				target.Position,
+				heading,
+				target.Speed * (distance / Math.Max(sub.MaxSpeed, 0.1))
+			);
+			var side =
+				((BearingTo(ahead, sub.Position) - heading + 540) % 360) - 180 >= 0 ? 90 : -90;
+			var station = PointAt(ahead, heading + side, 450);
+			// On station, within 300, it turns its bow to where its torpedo would meet the carrier, a short way.
+			var point =
+				UnitFacts.Distance(sub.Position, station) <= 300
+					? PointAt(sub.Position, BearingTo(sub.Position, meeting), 80)
+					: station;
+			if (UnitFacts.Distance(UnitFacts.FinalDestination(ref sub), point) < 40)
+				continue;
+
+			SelectAlone(m, "lying in wait");
 			_clicks.Enqueue(g =>
 			{
-				if (g.SelectedUnit != m || !g.Units[target].IsUsed)
-					return GiveUp(g, $"sailing under {target} {m}: selected {g.SelectedUnit}");
-				g.Commands.SetDestination(g.Units[target].Position);
+				if (g.SelectedUnit != m)
+					return GiveUp(g, $"lying in wait {m}: selected {g.SelectedUnit}");
+				g.Commands.SetDestination(point);
 				return true;
 			});
 			Deselect();

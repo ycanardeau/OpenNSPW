@@ -97,18 +97,25 @@ public sealed partial class StrongPlayer
 	// Launches the selected parked planes, led by `leader`, toward a point where an enemy is thought to be; while
 	// hunting carriers, by a waypoint 60% of the way there and 2000 to one side, the other side each strike, as their
 	// own strike most likely comes straight the other way (LaunchStrike), unless the way round is longer than the planes'
-	// `reach` (Waypoint): TryFlyOnFromWaypoint flies it on from there.
-	private void LaunchToward(int leader, WorldPosition point, WorldPosition from, double reach)
+	// `reach` (Waypoint), or `straight`: TryFlyOnFromWaypoint flies it on from there.
+	private void LaunchToward(
+		int leader,
+		WorldPosition point,
+		WorldPosition from,
+		double reach,
+		bool straight = false
+	)
 	{
-		var waypoint = HuntsCarriers
-			? Waypoint(
-				from,
-				point,
-				_lastBlindStrike % 2 == 0 ? 90 : -90,
-				Parameters.SideOffset,
-				reach
-			)
-			: point;
+		var waypoint =
+			HuntsCarriers && !straight
+				? Waypoint(
+					from,
+					point,
+					_lastBlindStrike % 2 == 0 ? 90 : -90,
+					Parameters.SideOffset,
+					reach
+				)
+				: point;
 		_clicks.Enqueue(g =>
 		{
 			if (g.SelectedUnit != leader)
@@ -121,7 +128,7 @@ public sealed partial class StrongPlayer
 			}
 
 			Log?.Invoke(
-				$"{UnitFacts.Now(g)}: {g.Units[leader].Kind} {leader} and {g.SelectionCount} more launched toward ({point.X:F0}, {point.Y:F0})"
+				$"{UnitFacts.Now(g)}: {g.Units[leader].Kind} {leader} and {g.SelectionCount} more launched toward ({point.X:F0}, {point.Y:F0}) by ({waypoint.X:F0}, {waypoint.Y:F0})"
 			);
 			return true;
 		});

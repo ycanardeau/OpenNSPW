@@ -94,6 +94,10 @@ public sealed record StrongParameters
 	// comes on (TryOpeningStrike).
 	public bool OpeningStrike { get; init; }
 
+	// Whether the opening strikes of scenarios 9 and 201 fly straight to their point, not by a waypoint to one side
+	// (LaunchToward): in 201 the carrier waits, still, only until about frame 2400.
+	public bool StraightOpening { get; init; }
+
 	// Whether the player expects the enemy where it was in past games of the scenario (Recall), given a memory.
 	public bool UseMemory { get; init; } = true;
 
