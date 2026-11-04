@@ -83,6 +83,11 @@ public sealed record StrongParameters
 	// Whether strikes that hunt carriers go first for the ones not thought out of the fight (IsThoughtCrippled).
 	public bool SpareCrippled { get; init; }
 
+	// How much nearer, while hunting carriers, a carrier counts for each weapon seen dropped on it (CountDrops), so that
+	// the strikes finish the one they have hit before the next: every carrier must be sunk, and the hits spread over
+	// several sink none. 0 takes the nearest.
+	public double FocusDistance { get; init; }
+
 	// Whether a flying plane whose deck is at a fifth of its HP or less is sent to another deck (TryDivert).
 	public bool DivertFromCrippledDecks { get; init; }
 
@@ -149,6 +154,14 @@ public sealed record StrongParameters
 	// Whether a deck that hunts carriers keeps scouting while it knows where a carrier is (IsRemembered), its scouts kept
 	// unarmed for it; or stops, and arms them to strike, until the carrier is lost.
 	public bool KeepScouting { get; init; } = true;
+
+	// The scouts a deck of eight attackers and bombers or more keeps while it hunts carriers (ScoutsOf), and the most in
+	// all, if more than MaxScouts.
+	public int HuntScouts { get; init; } = 2;
+
+	// Whether a strike goes, early in the battle, to an area where the briefing expects the carriers, before any is found
+	// (ExpectedCarriersToStrike).
+	public bool EarlyStrike { get; init; } = true;
 
 	// What a strike that hunts carriers attacks.
 	public Targeting Targeting { get; init; } = Targeting.Carriers;

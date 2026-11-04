@@ -164,7 +164,8 @@ public sealed partial class StrongPlayer
 
 	// The planes a deck keeps to scout, unarmed ones first, then attackers before bombers: two of a deck with six
 	// attackers and bombers or more, one of a deck with two or more, none of the others, and three in all at most;
-	// while hunting carriers, which takes every torpedo a deck can spare, two from eight, one from seven, and a scout
+	// while hunting carriers, which takes every torpedo a deck can spare, Parameters.HuntScouts from eight (and as many
+	// in all, if more), one from seven, and a scout
 	// lost is replaced by another plane of its deck, once one is back on it; none while a carrier is known
 	// (KnowsCarrier) and the player does not keep scouting (Parameters.KeepScouting), so that they strike.
 	private List<int> ScoutsOf(Nspw game, int deck)
@@ -177,10 +178,10 @@ public sealed partial class StrongPlayer
 			var strikers = ParkedOn(game, deck, n => UnitFacts.IsStrikePlane(game.Units[n].Kind));
 			var (two, one) = HuntsCarriers ? (8, 7) : (6, 2);
 			var count = Math.Min(
-				strikers.Count >= two ? 2
+				strikers.Count >= two ? (HuntsCarriers ? Parameters.HuntScouts : 2)
 					: strikers.Count >= one ? 1
 					: 0,
-				MaxScouts - _scoutsOf.Values.Sum(l => l.Count)
+				Math.Max(MaxScouts, Parameters.HuntScouts) - _scoutsOf.Values.Sum(l => l.Count)
 			);
 			scouts =
 			[

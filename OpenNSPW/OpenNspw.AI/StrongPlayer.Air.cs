@@ -334,7 +334,8 @@ public sealed partial class StrongPlayer
 	// The best target found for a flying plane of the player's: for an attacker or a bomber, an enemy ship its weapon
 	// can attack, within 2500, by its worth, the one it was sent at favored, the ones other strikes attack already
 	// less; while it hunts carriers, only the ones the victory conditions count (TakesAnyTarget), the nearest, as every
-	// carrier must be sunk and the nearest is the one the strike reaches with the most fuel left, or, as
+	// carrier must be sunk and the nearest is the one the strike reaches with the most fuel left, the ones hit most
+	// counted nearer (Parameters.FocusDistance), or, as
 	// Parameters.Targeting says, the escorts around them first (IsEscortToStrike); for a fighter, an enemy plane in the
 	// air, attackers and bombers first, or, with Parameters.FightersFirst, the ones within 1500 of a ship of the
 	// player's, then fighters, within 1500.
@@ -379,7 +380,16 @@ public sealed partial class StrongPlayer
 										: 100
 								)
 							: 0
-						) - (UnitFacts.Distance(position, c.Position) / 100)
+						)
+							- (
+								(
+									UnitFacts.Distance(position, c.Position)
+									- (
+										Parameters.FocusDistance
+										* _dropsOn.GetValueOrDefault(c.Unit)
+									)
+								) / 100
+							)
 						: Value(c.Kind)
 							+ (_strikeTargets.GetValueOrDefault(plane) == c.Unit ? 4 : 0)
 							- (UnitFacts.Distance(position, c.Position) / 1000)
@@ -1521,8 +1531,9 @@ public sealed partial class StrongPlayer
 
 	// The best enemy found lately within reach of a deck's planes armed with a weapon, or null; while the strikes hunt
 	// carriers, a carrier remembered (IsRemembered), where it most likely is now, within 85% of the planes'
-	// `reach`, which leaves fuel to look for it and to come round to its side, the nearest first, or, with
-	// Parameters.SpareCrippled, the nearest of those not thought out of the fight (IsThoughtCrippled) first.
+	// `reach`, which leaves fuel to look for it and to come round to its side, the nearest first, the ones hit most
+	// counted nearer (Parameters.FocusDistance), or, with Parameters.SpareCrippled, the nearest of those not thought out
+	// of the fight (IsThoughtCrippled) first.
 	private Contact? ChooseTarget(Nspw game, int deck, FireKind weapon, double reach)
 	{
 		var position = game.Units[deck].Position;
@@ -1545,6 +1556,7 @@ public sealed partial class StrongPlayer
 			.OrderByDescending(c =>
 				HuntsCarriers
 					? -UnitFacts.Distance(position, WhereNow(game, c, 0))
+						+ (Parameters.FocusDistance * _dropsOn.GetValueOrDefault(c.Unit))
 						- (Parameters.SpareCrippled && IsThoughtCrippled(game, c) ? 100_000 : 0)
 					: Value(c.Kind) - (UnitFacts.Distance(position, c.Position) / 2000)
 			)
@@ -1588,6 +1600,7 @@ public sealed partial class StrongPlayer
 	{
 		if (
 			!HuntsCarriers
+			|| !Parameters.EarlyStrike
 			|| UnitFacts.Now(game) > 2500
 			|| _contacts.All.Any(c => c.Category == UnitCategory.Ship && IsCounted(c.Kind))
 		)
