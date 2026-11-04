@@ -851,12 +851,15 @@ public sealed partial class StrongPlayer
 			_ => 0,
 		};
 
-	// With Parameters.KeepRange, how far a warship keeps from its target: 40 within its guns' reach, if that is 40 or more
-	// beyond the target's; or null, to close in.
+	// With Parameters.KeepRange, how far a cruiser keeps from its target: 40 within its guns' reach, if that is 40 or more
+	// beyond the target's, as against a destroyer; or null, to close in. Not a battleship: the cruisers it outranges are
+	// faster (0.8 a tick against 0.7), and close in all the same while it turns away (StrongAIResearch.md, Local battles).
 	private double? KeepRangeOf(UnitKind own, UnitKind target)
 	{
 		var keep = GunRange(own) - 40;
-		return Parameters.KeepRange && keep >= GunRange(target) + 40 ? keep : null;
+		return Parameters.KeepRange && own == UnitKind.Cruiser && keep >= GunRange(target) + 40
+			? keep
+			: null;
 	}
 
 	// The enemy warship found nearest a warship of a kind, within 1500, if its guns outrange that one's, with the range to

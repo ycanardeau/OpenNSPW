@@ -170,8 +170,8 @@ public sealed record StrongParameters
 	// (ExpectedCarriersToStrike).
 	public bool EarlyStrike { get; init; } = true;
 
-	// Whether a surface group whose leader's guns outrange its target's keeps 40 within its own reach, outside the
-	// target's (KeepRangeOf): a battleship's 600 against a cruiser's 500, a cruiser's 500 against a destroyer's 400.
+	// Whether a surface group led by a cruiser keeps 40 within its guns' reach from the enemy destroyer nearest it, outside
+	// the destroyer's (KeepRangeOf): a cruiser's 500 against a destroyer's 400.
 	public bool KeepRange { get; init; }
 
 	// Whether fighters spread over the enemy planes, each counting one that others of the player's already attack 400
