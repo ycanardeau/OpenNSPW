@@ -52,9 +52,16 @@ internal sealed partial class DesktopPlatform(GameFileLayers files, TextRasteriz
 	[JsonSerializable(typeof(Dictionary<string, string>))]
 	private sealed partial class SettingsJson : JsonSerializerContext;
 
+	// How many texts RasterizeText keeps before it starts again.
+	private const int MaxTexts = 1024;
+
 	private readonly GameFileLayers _files = files;
 	private readonly DirectPlay8Factory _directPlay = new();
 	private readonly TextRasterizer _text = text;
+
+	// The texts rasterized, by text and height: the game writes most of its texts again every frame. On the game's thread;
+	// emptied once it has many, as the texts with numbers in them keep changing.
+	private readonly Dictionary<(string Text, int Height), TextBitmap?> _texts = [];
 	private readonly List<Sound> _sounds = [];
 	private readonly Stopwatch _clock = Stopwatch.StartNew();
 	private readonly Lock _frameLock = new();
@@ -174,13 +181,30 @@ internal sealed partial class DesktopPlatform(GameFileLayers files, TextRasteriz
 		}
 	}
 
-	// Whether the game goes ahead as fast as it can, such as a replay to a point, showing nothing of the frames it passes:
-	// its text is not rasterized then, which only draws.
-	public Func<bool>? IsSkippingFrames { get; set; }
+	// Whether nothing of the game's frame is shown: on the screens that the UI draws in the game's place, and while the game
+	// goes ahead as fast as it can, such as a replay to a point. Its text is not rasterized then, which only draws. Asked
+	// on the game's thread.
+	public Func<bool>? HidesFrame { get; set; }
 
 	public TextBitmap? RasterizeText(string text, int height, string faceName)
 	{
-		return IsSkippingFrames?.Invoke() == true ? null : _text.Rasterize(text, height);
+		if (HidesFrame?.Invoke() == true)
+		{
+			return null;
+		}
+
+		if (!_texts.TryGetValue((text, height), out var bitmap))
+		{
+			if (_texts.Count >= MaxTexts)
+			{
+				_texts.Clear();
+			}
+
+			bitmap = _text.Rasterize(text, height);
+			_texts[(text, height)] = bitmap;
+		}
+
+		return bitmap;
 	}
 
 	// MonoGame plays 16-bit PCM, so 8-bit sounds are converted.

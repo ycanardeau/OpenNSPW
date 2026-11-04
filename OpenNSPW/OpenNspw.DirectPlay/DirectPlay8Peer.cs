@@ -69,6 +69,9 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options, IBluetoothProvi
 	private PFNDPNMESSAGEHANDLER? _handler;
 	private object? _userContext;
 
+	// Dispatch, as the delegate DoWork gives Otsuki, made once: the game calls DoWork each time round its message loop.
+	private Action<PeerEvent>? _dispatch;
+
 	// The local endpoint of the session, once hosting or connected: an IPEndPoint over TCP/IP, and a BluetoothEndPoint
 	// over Bluetooth.
 	public EndPoint? LocalEndPoint => _peer.LocalEndPoint;
@@ -412,6 +415,6 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options, IBluetoothProvi
 	// Delivers the queued events to the message handler. Called by DirectPlay8ThreadPool.DoWork.
 	public int DoWork()
 	{
-		return _peer.DoWork(Dispatch);
+		return _peer.DoWork(_dispatch ??= Dispatch);
 	}
 }

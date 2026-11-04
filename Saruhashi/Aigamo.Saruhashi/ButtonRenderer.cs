@@ -18,39 +18,34 @@ public class ButtonRenderer : IButtonRenderer
 		switch (state)
 		{
 			case PushButtonState.Normal:
-				// OPTIMIZE
-				using (var brush = new SolidBrush(Color.FromArgb(85, 85, 85)))
-					graphics.FillRectangle(brush, bounds);
+				graphics.FillRectangle(SolidBrush.Of(Color.FromArgb(85, 85, 85)), bounds);
 
-				// OPTIMIZE
-				using (var brush = new SolidBrush(Color.FromArgb(63, 63, 70)))
-					graphics.FillRectangle(brush, Rectangle.Inflate(bounds, -1, -1));
+				graphics.FillRectangle(
+					SolidBrush.Of(Color.FromArgb(63, 63, 70)),
+					Rectangle.Inflate(bounds, -1, -1)
+				);
 				break;
 
 			case PushButtonState.Hot:
-				// OPTIMIZE
-				using (var brush = new SolidBrush(Color.FromArgb(0, 151, 251)))
-					graphics.FillRectangle(brush, bounds);
+				graphics.FillRectangle(SolidBrush.Of(Color.FromArgb(0, 151, 251)), bounds);
 
-				// OPTIMIZE
-				using (var brush = new SolidBrush(Color.FromArgb(63, 63, 70)))
-					graphics.FillRectangle(brush, Rectangle.Inflate(bounds, -1, -1));
+				graphics.FillRectangle(
+					SolidBrush.Of(Color.FromArgb(63, 63, 70)),
+					Rectangle.Inflate(bounds, -1, -1)
+				);
 				break;
 
 			case PushButtonState.Pressed:
-				// OPTIMIZE
-				using (var brush = new SolidBrush(Color.FromArgb(0, 122, 204)))
-					graphics.FillRectangle(brush, bounds);
+				graphics.FillRectangle(SolidBrush.Of(Color.FromArgb(0, 122, 204)), bounds);
 				break;
 
 			case PushButtonState.Disabled:
-				// OPTIMIZE
-				using (var brush = new SolidBrush(Color.FromArgb(85, 85, 85)))
-					graphics.FillRectangle(brush, bounds);
+				graphics.FillRectangle(SolidBrush.Of(Color.FromArgb(85, 85, 85)), bounds);
 
-				// OPTIMIZE
-				using (var brush = new SolidBrush(Color.FromArgb(45, 45, 45)))
-					graphics.FillRectangle(brush, Rectangle.Inflate(bounds, -1, -1));
+				graphics.FillRectangle(
+					SolidBrush.Of(Color.FromArgb(45, 45, 45)),
+					Rectangle.Inflate(bounds, -1, -1)
+				);
 				break;
 		}
 	}

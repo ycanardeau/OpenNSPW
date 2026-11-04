@@ -13,7 +13,16 @@ public class Control : IDisposable, IBindableComponent
 
 		private protected List<Control> InnerList { get; } = new();
 
-		public IEnumerator<Control> GetEnumerator() => InnerList.GetEnumerator();
+		public int Count => InnerList.Count;
+
+		public Control this[int index] => InnerList[index];
+
+		/// <summary>
+		/// The children, from the front, with an enumerator that is a struct: the controls are gone through every frame.
+		/// </summary>
+		public List<Control>.Enumerator GetEnumerator() => InnerList.GetEnumerator();
+
+		IEnumerator<Control> IEnumerable<Control>.GetEnumerator() => GetEnumerator();
 
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
@@ -440,15 +449,25 @@ public class Control : IDisposable, IBindableComponent
 		if (!IsVisible())
 			return;
 
-		using (var graphics = CreateGraphics())
+		var factory = WindowManager.GraphicsFactory;
+		var graphics = factory.Rent(this);
+		try
 		{
-			var e = new PaintEventArgs(graphics, RectangleToClient(ClipRectangle));
+			var e = graphics.PaintEventArgsFor(RectangleToClient(ClipRectangle));
 			OnPaintBackground(e);
 			OnPaint(e);
 		}
+		finally
+		{
+			factory.Return(graphics);
+		}
 
-		foreach (var c in Controls.AsEnumerable().Reverse())
-			c.Draw();
+		// From the back, by index, without a copy: a child that a paint removes is not drawn.
+		for (var i = Controls.Count - 1; i >= 0; i--)
+		{
+			if (i < Controls.Count)
+				Controls[i].Draw();
+		}
 	}
 
 	public bool Focus()
@@ -754,9 +773,7 @@ public class Control : IDisposable, IBindableComponent
 
 	protected virtual void OnPaintBackground(PaintEventArgs e)
 	{
-		// OPTIMIZE
-		using (var brush = new SolidBrush(BackColor))
-			e.Graphics.FillRectangle(brush, ClientRectangle);
+		e.Graphics.FillRectangle(SolidBrush.Of(BackColor), ClientRectangle);
 
 		PaintBackground?.Invoke(this, e);
 	}

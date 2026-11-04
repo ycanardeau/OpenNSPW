@@ -579,10 +579,12 @@ public sealed unsafe class SpriteSheetSurface(
 	IEnumerable<(DirectDrawSurface7 Surface, int X, int Y)> pieces
 ) : IDirectDrawSurface7
 {
+	// An array, which TryFind goes through without an enumerator, at each blit.
+	private readonly (DirectDrawSurface7 Surface, int X, int Y)[] _pieces = [.. pieces];
 	private readonly HashSet<RECT> _misses = [];
 
 	// The pieces, and where each is on the sheet.
-	public IReadOnlyList<(DirectDrawSurface7 Surface, int X, int Y)> Pieces { get; } = [.. pieces];
+	public IReadOnlyList<(DirectDrawSurface7 Surface, int X, int Y)> Pieces => _pieces;
 
 	// The rectangles of the sheet that a blit asked for and no piece held.
 	public IReadOnlyCollection<RECT> Misses => _misses;
@@ -591,7 +593,7 @@ public sealed unsafe class SpriteSheetSurface(
 	// Misses.
 	public bool TryFind(RECT r, out DirectDrawSurface7 piece, out RECT rectangle)
 	{
-		foreach (var (surface, x, y) in Pieces)
+		foreach (var (surface, x, y) in _pieces)
 		{
 			if (
 				r.left >= x

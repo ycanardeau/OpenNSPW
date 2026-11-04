@@ -23,21 +23,22 @@ public unsafe partial class Nspw
 		return CanSetDestination(ref Units[m]);
 	}
 
-	// The items that the combat menu lists for the selected unit (ListCombatMenu).
-	public CombatMenuItem[] ListCombatMenuItems()
+	// The items that the combat menu lists for the selected unit (ListCombatMenu), written in `items`, which holds 6,
+	// without garbage: how many.
+	public int ListCombatMenuItems(Span<CombatMenuItem> items)
 	{
 		Array6<int> menu = default;
 		Array6<CombatMenuItem> menuItems = default;
 		var n = ListCombatMenu(ref menu, ref menuItems);
-		var items = new CombatMenuItem[n];
 		for (var i = 0; i < n; i++)
 			items[i] = menuItems[i];
-		return items;
+		return n;
 	}
 
-	private static string Decode(ReadOnlySpan<byte> text, int length)
+	// A text that the game wrote, decoded once (Gdi.Decode), as the UI reads most of them again every frame.
+	private string Decode(ReadOnlySpan<byte> text, int length)
 	{
-		return ShiftJis.GetString(text[..Math.Clamp(length, 0, text.Length)]);
+		return gdi.Decode(text[..Math.Clamp(length, 0, text.Length)]);
 	}
 
 	// The texts of the unit whose information the sidebar shows (WriteUnitDetails), if it shows one: its kind, its damage

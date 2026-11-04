@@ -62,22 +62,26 @@ internal sealed class LockstepSound(LockstepGame game, int id) : ISound
 
 	public void Play(bool loop)
 	{
-		_game.AddOutput($"play {_id} {loop}");
+		if (_game.RecordsOutput)
+			_game.AddOutput($"play {_id} {loop}");
 	}
 
 	public void Stop()
 	{
-		_game.AddOutput($"stop {_id}");
+		if (_game.RecordsOutput)
+			_game.AddOutput($"stop {_id}");
 	}
 
 	public void SetVolume(int volume)
 	{
-		_game.AddOutput($"volume {_id} {volume}");
+		if (_game.RecordsOutput)
+			_game.AddOutput($"volume {_id} {volume}");
 	}
 
 	public void Rewind()
 	{
-		_game.AddOutput($"rewind {_id}");
+		if (_game.RecordsOutput)
+			_game.AddOutput($"rewind {_id}");
 	}
 }
 
@@ -116,6 +120,10 @@ internal sealed class LockstepGame : INspwPlatform
 	public Exception? Error { get; private set; }
 
 	public List<string> MessageBoxes { get; } = [];
+
+	// Whether what the game outputs is hashed, and its text kept (Texts): not for a test of the garbage that the game makes,
+	// as both make their own.
+	public bool RecordsOutput { get; init; } = true;
 
 	// The text the game drew, in order.
 	public List<string> Texts { get; } = [];
@@ -263,15 +271,20 @@ internal sealed class LockstepGame : INspwPlatform
 
 	public void Present(DirectDrawSurface7 primary)
 	{
-		_output.Add(MemoryMarshal.AsBytes(primary.Pixels));
+		if (RecordsOutput)
+			_output.Add(MemoryMarshal.AsBytes(primary.Pixels));
 		FrameCount++;
 		Yield();
 	}
 
 	public TextBitmap? RasterizeText(string text, int height, string faceName)
 	{
-		AddOutput($"text {height} {text}");
-		Texts.Add(text);
+		if (RecordsOutput)
+		{
+			AddOutput($"text {height} {text}");
+			Texts.Add(text);
+		}
+
 		return null;
 	}
 

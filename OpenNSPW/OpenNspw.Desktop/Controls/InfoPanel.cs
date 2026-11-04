@@ -34,6 +34,10 @@ internal sealed class InfoPanel : Control
 	private readonly ActionButton _request;
 	private readonly ActionButton _toScenarioSelection;
 	private readonly ActionButton _resume;
+	private readonly LastText<short> _speed = new(speed => Texts.Speed(speed));
+	private readonly LastText<int> _time = new(time => Texts.Time(time));
+	private readonly LastText<short> _supplyPoints = new(points => Texts.SupplyPoints(points));
+	private readonly LastText<int> _cost = new(cost => Texts.Cost(cost));
 	private GameSnapshot _snapshot = new();
 
 	// The right button deselects anywhere, as on the battlefield (DrawBattleArea): on the column and on its buttons.
@@ -200,13 +204,13 @@ internal sealed class InfoPanel : Control
 		}
 
 		PaintSection(g, Texts.StatusSection, 110);
-		Painter.Text(g, Texts.Speed(snapshot.GameSpeed), _fonts.Regular(13), Theme.Text, Left, 128);
-		Painter.Text(g, Texts.Time(snapshot.BattleTime), _fonts.Regular(13), Theme.Text, Left, 146);
+		Painter.Text(g, _speed.Of(snapshot.GameSpeed), _fonts.Regular(13), Theme.Text, Left, 128);
+		Painter.Text(g, _time.Of(snapshot.BattleTime), _fonts.Regular(13), Theme.Text, Left, 146);
 
 		PaintSection(g, Texts.SupplySection, SupplyTop);
 		Painter.Text(
 			g,
-			Texts.SupplyPoints(snapshot.SupplyPoints),
+			_supplyPoints.Of(snapshot.SupplyPoints),
 			_fonts.Regular(13),
 			Theme.Text,
 			Left,
@@ -223,7 +227,7 @@ internal sealed class InfoPanel : Control
 		DrawSupplyTarget(g, snapshot);
 		Painter.Text(
 			g,
-			Texts.Cost(snapshot.SupplyCost),
+			_cost.Of(snapshot.SupplyCost),
 			_fonts.Regular(13),
 			Theme.Muted,
 			Left,

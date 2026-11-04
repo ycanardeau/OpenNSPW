@@ -17,17 +17,20 @@ internal sealed class SingleplayerRun : IDisposable
 	// from 1.22's sprite sheet. playsBundledFiles: whether it plays the desktop app's embedded files, with an empty user's
 	// folder and no executable (docs/BundledData.md), rather than a copy of the original's data and Original/Nspw122, with
 	// its executable for the tests' emulator; it then draws from the sprite files, as the app embeds no sheet.
+	// recordsOutput: whether the game's output is hashed and its text kept (LockstepGame.RecordsOutput).
 	public SingleplayerRun(
 		int scenario,
 		Action<Nspw>? setUp = null,
 		int? startDate = null,
 		bool drawsFromSpriteFiles = false,
-		bool playsBundledFiles = false
+		bool playsBundledFiles = false,
+		bool recordsOutput = true
 	)
 	{
 		Player = new LockstepGame(_scheduler, new LoopbackNetwork(), _data.Path, "Alice")
 		{
 			DrawsFromSpriteFiles = drawsFromSpriteFiles || playsBundledFiles,
+			RecordsOutput = recordsOutput,
 		};
 		if (startDate is { } date)
 			Player.StartDate = date;

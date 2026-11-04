@@ -39,8 +39,6 @@ public class TextRenderer : ITextRenderer
 
 		var point = new PointF(x, y);
 
-		// OPTIMIZE
-		using (var brush = new SolidBrush(foreColor))
-			graphics.DrawString(text, font, brush, point);
+		graphics.DrawString(text, font, SolidBrush.Of(foreColor), point);
 	}
 }

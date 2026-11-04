@@ -18,13 +18,13 @@ internal static class Painter
 
 	public static void Fill(Graphics graphics, Rectangle rectangle, Color color)
 	{
-		graphics.FillRectangle(new SolidBrush(color), rectangle);
+		graphics.FillRectangle(SolidBrush.Of(color), rectangle);
 	}
 
 	public static void Frame(Graphics graphics, Rectangle rectangle, Color color)
 	{
 		graphics.DrawRectangle(
-			new Pen(color),
+			Pen.Of(color),
 			rectangle.X,
 			rectangle.Y,
 			rectangle.Width - 1,
@@ -35,7 +35,7 @@ internal static class Painter
 	// The corners of a rectangle, as on a chart's frame.
 	public static void Brackets(Graphics graphics, Rectangle rectangle, int length, Color color)
 	{
-		var brush = new SolidBrush(color);
+		var brush = SolidBrush.Of(color);
 		var (left, top, right, bottom) = (
 			rectangle.Left,
 			rectangle.Top,
@@ -67,7 +67,7 @@ internal static class Painter
 	)
 	{
 		if (text.Length > 0)
-			graphics.DrawString(text, font, new SolidBrush(color), new PointF(x, y));
+			graphics.DrawString(text, font, SolidBrush.Of(color), new PointF(x, y));
 	}
 
 	// The text, cut with an ellipsis to fit `width`.

@@ -72,7 +72,7 @@ internal sealed class EditBox : DialogControl
 	protected override void OnPaint(PaintEventArgs e)
 	{
 		e.Graphics.FillRectangle(
-			Enabled ? Window : new SolidBrush(Theme.Alpha(Theme.Line, 0.12f)),
+			Enabled ? Window : SolidBrush.Of(Theme.Alpha(Theme.Line, 0.12f)),
 			ClientRectangle
 		);
 		e.Graphics.DrawRectangle(Border, 0, 0, Width - 1, Height - 1);
@@ -177,13 +177,7 @@ internal sealed class CheckBoxControl : DialogControl
 			e.Graphics.FillRectangle(Highlight, 3, y + 3, BoxSize - 6, BoxSize - 6);
 		}
 
-		DrawText(
-			e.Graphics,
-			Text,
-			new SolidBrush(Enabled ? ForeColor : Color.Gray),
-			BoxSize + 4,
-			0
-		);
+		DrawText(e.Graphics, Text, SolidBrush.Of(Enabled ? ForeColor : Color.Gray), BoxSize + 4, 0);
 	}
 }
 
@@ -207,7 +201,7 @@ internal sealed class StaticText(bool right) : DialogControl
 			_right && Font is { } font
 				? Width - (int)e.Graphics.MeasureString(Text, font).Width
 				: 0;
-		DrawText(e.Graphics, Text, new SolidBrush(ForeColor), Math.Max(x, 0), 0);
+		DrawText(e.Graphics, Text, SolidBrush.Of(ForeColor), Math.Max(x, 0), 0);
 	}
 }
 

@@ -14,6 +14,9 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 	// the ones after it.
 	private const int MaxStep = 250;
 
+	// What Take returns when nothing matches: never written to.
+	private static readonly List<ReplayItem> NoItems = [];
+
 	private readonly ReplayReader _reader;
 
 	// The records of the frame being played, and then of what the game took after it, that the game has not been given.
@@ -108,12 +111,23 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 		_isTakenOver = true;
 	}
 
-	// The records of this frame that `matches`, in order, which are taken out.
-	private List<ReplayItem> Take(Func<ReplayItem, bool> matches)
+	// The records of this frame that `matches`, with `state`, in order, which are taken out: in place, and none without
+	// garbage, as most points of most frames have none. The list returned is only read.
+	private List<ReplayItem> Take<T>(T state, Func<ReplayItem, T, bool> matches)
 	{
-		var taken = _frame.Where(matches).ToList();
-		_frame.RemoveAll(item => matches(item));
-		return taken;
+		List<ReplayItem>? taken = null;
+		var kept = 0;
+		for (var i = 0; i < _frame.Count; i++)
+		{
+			var item = _frame[i];
+			if (matches(item, state))
+				(taken ??= []).Add(item);
+			else
+				_frame[kept++] = item;
+		}
+
+		_frame.RemoveRange(kept, _frame.Count - kept);
+		return taken ?? NoItems;
 	}
 
 	// Gives the game a message of the rival, as DirectPlay gives it one (DoWork), or the rival leaving.
@@ -151,7 +165,10 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 			return;
 
 		foreach (
-			var item in Take(item => item.Kind is ReplayRecord.Received or ReplayRecord.RivalLeft)
+			var item in Take(
+				0,
+				static (item, _) => item.Kind is ReplayRecord.Received or ReplayRecord.RivalLeft
+			)
 		)
 			Receive(game, item);
 	}
@@ -216,7 +233,7 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 	// messages, if its DirectPlay has not given them.
 	private void GiveTheRest(Nspw game)
 	{
-		foreach (var item in Take(_ => true))
+		foreach (var item in Take(0, static (_, _) => true))
 		{
 			if (item.Kind == ReplayRecord.Action)
 				game.Do(item.Action!);
@@ -270,7 +287,7 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 		if (!HoldsInput)
 			return;
 
-		foreach (var item in Take(item => item.Kind == ReplayRecord.Camera))
+		foreach (var item in Take(0, static (item, _) => item.Kind == ReplayRecord.Camera))
 			_camera = item.Camera;
 		if (_camera is { } camera)
 			game.CameraPosition = camera;
@@ -283,7 +300,10 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 			return;
 
 		foreach (
-			var item in Take(item => item.Kind == ReplayRecord.Action && item.Action!.Site == site)
+			var item in Take(
+				site,
+				static (item, site) => item.Kind == ReplayRecord.Action && item.Action!.Site == site
+			)
 		)
 			game.Do(item.Action!);
 	}
@@ -294,8 +314,10 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 			return;
 
 		foreach (
-			var item in Take(item =>
-				item.Kind is ReplayRecord.Note or ReplayRecord.Result or ReplayRecord.Hash
+			var item in Take(
+				0,
+				static (item, _) =>
+					item.Kind is ReplayRecord.Note or ReplayRecord.Result or ReplayRecord.Hash
 			)
 		)
 		{

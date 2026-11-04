@@ -17,7 +17,8 @@ namespace Aigamo.Saruhashi.MonoGame;
 
 public sealed class MonoGameGraphics : Graphics
 {
-	private sealed class DisposableScissor : IDisposable
+	// A struct, as a graphics may serve a paint every frame.
+	private readonly struct DisposableScissor : IDisposable
 	{
 		private readonly SpriteBatch _spriteBatch;
 		private readonly XnaRectangle _scissorRectangle;
@@ -55,7 +56,8 @@ public sealed class MonoGameGraphics : Graphics
 	public SpriteBatch SpriteBatch { get; }
 	public ViewportAdapter? ViewportAdapter { get; }
 
-	private readonly DisposableScissor _scissor;
+	private DisposableScissor _scissor;
+	private bool _isOpen;
 
 	private DisposableScissor CreateDisposableScissor() =>
 		new(SpriteBatch, DrawingRectangle.Round(ClipBounds).ToXnaRectangle(), ViewportAdapter);
@@ -68,6 +70,25 @@ public sealed class MonoGameGraphics : Graphics
 			transformMatrix: ViewportAdapter?.GetScaleMatrix()
 		);
 
+	// Starts drawing on the control: its clip, and the batch.
+	private void Open()
+	{
+		_scissor = CreateDisposableScissor();
+		Begin();
+		_isOpen = true;
+	}
+
+	// Ends the drawing: the batch, and the clip as it was.
+	internal void Close()
+	{
+		if (!_isOpen)
+			return;
+
+		SpriteBatch.End();
+		_scissor.Dispose();
+		_isOpen = false;
+	}
+
 	public MonoGameGraphics(
 		Control control,
 		SpriteBatch spriteBatch,
@@ -78,8 +99,14 @@ public sealed class MonoGameGraphics : Graphics
 		SpriteBatch = spriteBatch;
 		ViewportAdapter = viewportAdapter;
 
-		_scissor = CreateDisposableScissor();
-		Begin();
+		Open();
+	}
+
+	// Starts drawing again, closed, on another control, for another paint (MonoGameGraphicsFactory.Rent).
+	internal void Reopen(Control control)
+	{
+		Rebind(control);
+		Open();
 	}
 
 	private bool _disposed;
@@ -90,10 +117,7 @@ public sealed class MonoGameGraphics : Graphics
 			return;
 
 		if (disposing)
-		{
-			SpriteBatch.End();
-			_scissor.Dispose();
-		}
+			Close();
 
 		_disposed = true;
 
