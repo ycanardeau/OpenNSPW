@@ -57,7 +57,10 @@ internal sealed class StrikeLog(bool writes)
 	private readonly Dictionary<int, int> _ships = [];
 	private readonly HashSet<int> _carriers = [];
 	private readonly Dictionary<int, Side> _sides = [];
-	private readonly Dictionary<int, (Side Side, UnitKind Kind, UnitCategory Category)> _alive = [];
+	private readonly Dictionary<
+		int,
+		(Side Side, UnitKind Kind, UnitCategory Category, WorldPosition Position)
+	> _alive = [];
 	private int _drops;
 	private int _turnedBack;
 	private int _outOfFuel;
@@ -158,7 +161,8 @@ internal sealed class StrikeLog(bool writes)
 	private static bool IsBase(UnitKind kind) =>
 		kind is >= UnitKind.AirBase and <= UnitKind.Fortress and not UnitKind.Mine;
 
-	// Counts a unit alive that is gone, or became another or another side's, as lost to its side.
+	// Counts a unit alive that is gone, or became another or another side's, as lost to its side, with the enemy's
+	// ships and planes near where it was last.
 	private void CountLoss(Nspw game, int n)
 	{
 		if (!_alive.TryGetValue(n, out var was))
@@ -173,6 +177,9 @@ internal sealed class StrikeLog(bool writes)
 			return;
 
 		var own = was.Side == game.LocalSide;
+		WriteLine(
+			$"LOSS {game.Renderer.FrameCount} {(own ? "own" : "enemy")} {was.Kind} #{n}, near [{Near(game, was.Position, was.Side, UnitCategory.Ship)}] [{Near(game, was.Position, was.Side, UnitCategory.Plane)}]"
+		);
 		if (was.Category == UnitCategory.Plane)
 		{
 			if (own)
@@ -265,7 +272,7 @@ internal sealed class StrikeLog(bool writes)
 			ref var unit = ref game.Units[n];
 			CountLoss(game, n);
 			if (unit.IsUsed)
-				_alive[n] = (unit.Side, unit.Kind, unit.Category);
+				_alive[n] = (unit.Side, unit.Kind, unit.Category, unit.Position);
 
 			// A plane whose fuel runs out slows to a stop and is lost (MoveUnit): one gone with no fuel left ran dry.
 			if (!unit.IsUsed && _flying.Remove(n, out var flown) && flown.Fuel <= 1)
