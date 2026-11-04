@@ -38,6 +38,12 @@ internal static class Benchmark
 		"stuck_over_land",
 		"enemy_strikers_downed",
 		"enemy_strikers_turned_back",
+		"own_ships_sunk",
+		"enemy_ships_sunk",
+		"own_planes_lost",
+		"enemy_planes_lost",
+		"own_bases_lost",
+		"enemy_bases_lost",
 	];
 
 	// The 95% Wilson interval of a rate of `successes` in `count`, as fractions, which holds for few games and for rates
@@ -90,10 +96,16 @@ internal static class Benchmark
 		};
 
 	// How a game went for the player, finer than its outcome: its rank, then, between games of the same rank, the enemy's
-	// carriers sunk less its own. Most carrier battles are drawn at the time limit, and 105's and 106's are too long to
-	// play to their end, so the carriers sunk tell those games apart where the outcome cannot.
-	private static (int Rank, int Carriers) Standing(ArenaResult result) =>
-		(Rank(result.Outcome), result.Strikes.EnemyCarriersSunk - result.Strikes.OwnCarriersSunk);
+	// carriers sunk less its own, then the enemy's ships sunk less its own, then the enemy's planes lost less its own.
+	// Most carrier battles are drawn at the time limit, and 105's and 106's are too long to play to their end, so the
+	// battle's losses tell those games apart where the outcome cannot.
+	private static (int Rank, int Carriers, int Ships, int Planes) Standing(ArenaResult result) =>
+		(
+			Rank(result.Outcome),
+			result.Strikes.EnemyCarriersSunk - result.Strikes.OwnCarriersSunk,
+			result.Strikes.EnemyShipsSunk - result.Strikes.OwnShipsSunk,
+			result.Strikes.EnemyPlanesLost - result.Strikes.OwnPlanesLost
+		);
 
 	private static int CompareStanding(ArenaResult a, ArenaResult b) =>
 		Standing(a).CompareTo(Standing(b));
@@ -103,6 +115,13 @@ internal static class Benchmark
 
 	private static string PerGame(IEnumerable<ArenaResult> games, Func<StrikeCounts, int> count) =>
 		FormattableString.Invariant($"{games.Average(r => count(r.Strikes)):F1}");
+
+	// The enemy's losses and the player's, a game: "theirs–ours".
+	private static string Losses(
+		IEnumerable<ArenaResult> games,
+		Func<StrikeCounts, int> theirs,
+		Func<StrikeCounts, int> ours
+	) => $"{PerGame(games, theirs)}–{PerGame(games, ours)}";
 
 	// The hits on enemy carriers for each weapon dropped at one, of all the games.
 	private static string HitRate(IEnumerable<ArenaResult> games)
@@ -121,10 +140,10 @@ internal static class Benchmark
 	{
 		var text = new StringBuilder();
 		text.AppendLine(
-			"| Scenario | Player | Games | W | D | L | Won (95%) | Drops | Turned back | Out of fuel | Planes lost | Lost dry | Enemy damage | Carriers sunk | Carriers lost | Carrier damage | Hits on carriers |"
+			"| Scenario | Player | Games | W | D | L | Won (95%) | Drops | Turned back | Out of fuel | Planes lost | Lost dry | Enemy damage | Carriers sunk | Carriers lost | Carrier damage | Hits on carriers | Ships sunk–lost | Planes downed–lost | Bases taken–lost |"
 		);
 		text.AppendLine(
-			"| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"
+			"| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"
 		);
 		var groups = results
 			.GroupBy(r => (r.Scenario, r.Player))
@@ -160,7 +179,10 @@ internal static class Benchmark
 					PerGame(games, s => s.EnemyCarriersSunk),
 					PerGame(games, s => s.OwnCarriersSunk),
 					PerGame(games, s => s.CarrierDamage),
-					$"{HitRate(games)} |"
+					HitRate(games),
+					Losses(games, s => s.EnemyShipsSunk, s => s.OwnShipsSunk),
+					Losses(games, s => s.EnemyPlanesLost, s => s.OwnPlanesLost),
+					$"{Losses(games, s => s.EnemyBasesLost, s => s.OwnBasesLost)} |"
 				)
 			);
 		}
@@ -174,7 +196,7 @@ internal static class Benchmark
 			string.Join(",", Columns),
 			.. results.Select(r =>
 				FormattableString.Invariant(
-					$"{r.Scenario},{r.StartDate},{r.Player},{r.Side},{r.Outcome},{r.Frames},{r.TimeLeft},{r.Elapsed.TotalSeconds:F1},{r.Strikes.Drops},{r.Strikes.TurnedBack},{r.Strikes.OutOfFuel},{r.Strikes.PlanesLost},{r.Strikes.EnemyDamage},{r.Strikes.EnemyCarriersSunk},{r.Strikes.OwnCarriersSunk},{r.Strikes.CarrierDamage},{r.Strikes.CarrierDrops},{r.Strikes.CarrierHits},{r.Strikes.PlanesDry},{r.Strikes.FightersDry},{r.Strikes.StuckRuns},{r.Strikes.StuckOverLand},{r.Strikes.EnemyStrikersDowned},{r.Strikes.EnemyStrikersTurnedBack}"
+					$"{r.Scenario},{r.StartDate},{r.Player},{r.Side},{r.Outcome},{r.Frames},{r.TimeLeft},{r.Elapsed.TotalSeconds:F1},{r.Strikes.Drops},{r.Strikes.TurnedBack},{r.Strikes.OutOfFuel},{r.Strikes.PlanesLost},{r.Strikes.EnemyDamage},{r.Strikes.EnemyCarriersSunk},{r.Strikes.OwnCarriersSunk},{r.Strikes.CarrierDamage},{r.Strikes.CarrierDrops},{r.Strikes.CarrierHits},{r.Strikes.PlanesDry},{r.Strikes.FightersDry},{r.Strikes.StuckRuns},{r.Strikes.StuckOverLand},{r.Strikes.EnemyStrikersDowned},{r.Strikes.EnemyStrikersTurnedBack},{r.Strikes.OwnShipsSunk},{r.Strikes.EnemyShipsSunk},{r.Strikes.OwnPlanesLost},{r.Strikes.EnemyPlanesLost},{r.Strikes.OwnBasesLost},{r.Strikes.EnemyBasesLost}"
 				)
 			),
 		];
@@ -220,7 +242,13 @@ internal static class Benchmark
 						Number("stuck_runs"),
 						Number("stuck_over_land"),
 						Number("enemy_strikers_downed"),
-						Number("enemy_strikers_turned_back")
+						Number("enemy_strikers_turned_back"),
+						Number("own_ships_sunk"),
+						Number("enemy_ships_sunk"),
+						Number("own_planes_lost"),
+						Number("enemy_planes_lost"),
+						Number("own_bases_lost"),
+						Number("enemy_bases_lost")
 					)
 				)
 			);
@@ -232,7 +260,8 @@ internal static class Benchmark
 	// A row per scenario and player that both runs played, and one for all, over the games of the same start dates: the
 	// wins of each run, the games the second did better and worse in (a win over a draw or a loss, a draw over a loss),
 	// and the sign test's p that so many more better or worse games come by chance: under 0.05, the change counts. Then the
-	// same by standing (Standing), which also counts a draw or an unfinished game with more carriers sunk as better.
+	// same by standing (Standing), which also counts a draw or an unfinished game that went better in the battle's
+	// losses as better; and the carriers, ships and planes the enemy lost less the player's, a game.
 	public static string Compare(
 		IReadOnlyList<ArenaResult> before,
 		IReadOnlyList<ArenaResult> after
@@ -246,10 +275,10 @@ internal static class Benchmark
 		).ToList();
 		var text = new StringBuilder();
 		text.AppendLine(
-			"| Scenario | Player | Games | Won before | Won after | Better | Worse | p | Carriers before | Carriers after | Better by carriers | Worse by carriers | p |"
+			"| Scenario | Player | Games | Won before | Won after | Better | Worse | p | Carriers before | Carriers after | Ships before | Ships after | Planes before | Planes after | Better by losses | Worse by losses | p |"
 		);
 		text.AppendLine(
-			"| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"
+			"| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"
 		);
 		var groups = pairs
 			.GroupBy(p => (p.After.Scenario, p.After.Player))
@@ -270,7 +299,7 @@ internal static class Benchmark
 			var behind = games.Count(p => CompareStanding(p.After, p.Before) < 0);
 			text.AppendLine(
 				FormattableString.Invariant(
-					$"| {scenario} | {player} | {games.Count} | {games.Count(p => p.Before.Outcome == Outcome.Won)} | {games.Count(p => p.After.Outcome == Outcome.Won)} | {better} | {worse} | {SignTest(better, worse):F2} | {games.Average(p => Standing(p.Before).Carriers):F2} | {games.Average(p => Standing(p.After).Carriers):F2} | {ahead} | {behind} | {SignTest(ahead, behind):F2} |"
+					$"| {scenario} | {player} | {games.Count} | {games.Count(p => p.Before.Outcome == Outcome.Won)} | {games.Count(p => p.After.Outcome == Outcome.Won)} | {better} | {worse} | {SignTest(better, worse):F2} | {games.Average(p => Standing(p.Before).Carriers):F2} | {games.Average(p => Standing(p.After).Carriers):F2} | {games.Average(p => Standing(p.Before).Ships):F2} | {games.Average(p => Standing(p.After).Ships):F2} | {games.Average(p => Standing(p.Before).Planes):F1} | {games.Average(p => Standing(p.After).Planes):F1} | {ahead} | {behind} | {SignTest(ahead, behind):F2} |"
 				)
 			);
 		}

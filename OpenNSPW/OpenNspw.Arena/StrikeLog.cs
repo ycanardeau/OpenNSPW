@@ -9,7 +9,10 @@ namespace OpenNspw.Arena;
 // dropping, and those stuck over or near land, where no torpedo may be dropped (PlaneDropTorpedo); and the enemy's
 // attackers and bombers lost within 1000 of a ship of the player's with their weapon still aboard, shot down before
 // they dropped, and those turned back, their weapon dumped at 70% of their HP or less, within 1500 of one, which tell
-// how well the player's ships defend themselves: a plane hit that hard turns home before it is shot down.
+// how well the player's ships defend themselves: a plane hit that hard turns home before it is shot down; and the
+// battle's losses, of each side, of every unit but mines, which are spent as they go off: the ships sunk, transports
+// among them, the planes lost, of every kind, and the bases lost, cities and naval bases among them, destroyed or taken,
+// to anything, which tell how the battle went where the outcome does not.
 internal sealed record StrikeCounts(
 	int Drops,
 	int TurnedBack,
@@ -26,7 +29,13 @@ internal sealed record StrikeCounts(
 	int StuckRuns = 0,
 	int StuckOverLand = 0,
 	int EnemyStrikersDowned = 0,
-	int EnemyStrikersTurnedBack = 0
+	int EnemyStrikersTurnedBack = 0,
+	int OwnShipsSunk = 0,
+	int EnemyShipsSunk = 0,
+	int OwnPlanesLost = 0,
+	int EnemyPlanesLost = 0,
+	int OwnBasesLost = 0,
+	int EnemyBasesLost = 0
 );
 
 // What becomes of the player's attackers and bombers, each time one drops its weapon, turns home damaged or is lost,
@@ -48,6 +57,7 @@ internal sealed class StrikeLog(bool writes)
 	private readonly Dictionary<int, int> _ships = [];
 	private readonly HashSet<int> _carriers = [];
 	private readonly Dictionary<int, Side> _sides = [];
+	private readonly Dictionary<int, (Side Side, UnitKind Kind, UnitCategory Category)> _alive = [];
 	private int _drops;
 	private int _turnedBack;
 	private int _outOfFuel;
@@ -62,6 +72,12 @@ internal sealed class StrikeLog(bool writes)
 	private int _stuckOverLand;
 	private int _enemyStrikersDowned;
 	private int _enemyStrikersTurnedBack;
+	private int _ownShipsSunk;
+	private int _enemyShipsSunk;
+	private int _ownPlanesLost;
+	private int _enemyPlanesLost;
+	private int _ownBasesLost;
+	private int _enemyBasesLost;
 	private bool _started;
 
 	private static double Distance(WorldPosition a, WorldPosition b) =>
@@ -138,16 +154,63 @@ internal sealed class StrikeLog(bool writes)
 	private static bool IsCarrier(UnitKind kind) =>
 		kind is UnitKind.Carrier or UnitKind.LightCarrier;
 
+	// Whether a unit is a base: an air base, a naval base, a city or a ground unit, mines aside.
+	private static bool IsBase(UnitKind kind) =>
+		kind is >= UnitKind.AirBase and <= UnitKind.Fortress and not UnitKind.Mine;
+
+	// Counts a unit alive that is gone, or became another or another side's, as lost to its side.
+	private void CountLoss(Nspw game, int n)
+	{
+		if (!_alive.TryGetValue(n, out var was))
+			return;
+
+		ref var unit = ref game.Units[n];
+		if (unit.IsUsed && unit.Side == was.Side && unit.Kind == was.Kind)
+			return;
+
+		_alive.Remove(n);
+		if (was.Kind == UnitKind.Mine)
+			return;
+
+		var own = was.Side == game.LocalSide;
+		if (was.Category == UnitCategory.Plane)
+		{
+			if (own)
+				_ownPlanesLost++;
+			else
+				_enemyPlanesLost++;
+		}
+		else if (IsBase(was.Kind))
+		{
+			if (own)
+				_ownBasesLost++;
+			else
+				_enemyBasesLost++;
+		}
+		else if (own)
+			_ownShipsSunk++;
+		else
+			_enemyShipsSunk++;
+	}
+
 	private void WriteLine(string line)
 	{
 		if (_writes)
 			Console.WriteLine(line);
 	}
 
-	// The counts so far, with the carriers seen at the start that are gone or sinking, at no HP: the battle may end
-	// while one sinks.
+	// The counts so far, with the carriers seen at the start that are gone or sinking, at no HP, and the ships alive
+	// that are sinking: the battle may end while one sinks.
 	public StrikeCounts Counts(Nspw game)
 	{
+		var sinking = _alive
+			.Where(a =>
+				a.Value.Category == UnitCategory.Ship
+				&& !IsBase(a.Value.Kind)
+				&& game.Units[a.Key].IsUsed
+				&& game.Units[a.Key].HP <= 0
+			)
+			.ToList();
 		var sunk = _carriers
 			.Where(n =>
 				!game.Units[n].IsUsed || !IsCarrier(game.Units[n].Kind) || game.Units[n].HP <= 0
@@ -169,7 +232,13 @@ internal sealed class StrikeLog(bool writes)
 			_stuckRuns,
 			_stuckOverLand,
 			_enemyStrikersDowned,
-			_enemyStrikersTurnedBack
+			_enemyStrikersTurnedBack,
+			_ownShipsSunk + sinking.Count(a => a.Value.Side == game.LocalSide),
+			_enemyShipsSunk + sinking.Count(a => a.Value.Side != game.LocalSide),
+			_ownPlanesLost,
+			_enemyPlanesLost,
+			_ownBasesLost,
+			_enemyBasesLost
 		);
 	}
 
@@ -188,9 +257,15 @@ internal sealed class StrikeLog(bool writes)
 			}
 		}
 
+		foreach (var n in _alive.Keys.Where(n => n > game.MaxUnitId).ToList())
+			CountLoss(game, n);
+
 		for (var n = 1; n <= game.MaxUnitId; n++)
 		{
 			ref var unit = ref game.Units[n];
+			CountLoss(game, n);
+			if (unit.IsUsed)
+				_alive[n] = (unit.Side, unit.Kind, unit.Category);
 
 			// A plane whose fuel runs out slows to a stop and is lost (MoveUnit): one gone with no fuel left ran dry.
 			if (!unit.IsUsed && _flying.Remove(n, out var flown) && flown.Fuel <= 1)
