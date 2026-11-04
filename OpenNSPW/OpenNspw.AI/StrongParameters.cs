@@ -85,9 +85,10 @@ public sealed record StrongParameters
 	// and comes home once the ships there are sunk (TrySailToRaid, TryReturnHome).
 	public bool RaidYokosuka { get; init; }
 
-	// Whether, in scenario 201, the warships and the submarine sail at once to where the American carrier comes west, and
-	// wait for it there (TrySailToIntercept).
-	public bool InterceptCarrier { get; init; }
+	// Whether, in scenario 201, the submarine and the carrier that can launch sail at once at where the American carrier
+	// waits, its attackers strike it there, and the submarine fires at it from under it (TrySailAtHornet,
+	// TryTorpedoHornet, TryOpeningStrike).
+	public bool InterceptCarrier { get; init; } = true;
 
 	// Whether, in scenario 9, every deck launches all its attackers at once from the start toward where the U.S. fleet
 	// comes on (TryOpeningStrike).

@@ -55,15 +55,18 @@ public sealed partial class StrongPlayer
 
 	private int _raidOrdered = int.MinValue / 2;
 
-	// Scenario 201: where the warships and the submarine wait for the American carrier, which waits east of there until
-	// about frame 2400, then sails west across it, toward the player's carriers.
-	private static readonly WorldPosition InterceptPoint = new(-200, 2900);
+	// Scenario 201: where the American carrier waits until about frame 2400, before it sails west: a player who won it
+	// sent the submarine there at once, and the carrier that can launch toward it, struck it there with its attackers,
+	// and had the submarine fire at it from under it.
+	private static readonly WorldPosition HornetStart = new(1200, 2000);
 
 	private readonly HashSet<int> _intercepting = [];
 
 	// Scenario 9: where the opening strike goes, west of where the U.S. fleet starts, which it sails west from: a player
-	// who won it launched every attacker there at once, and found the carriers there about frame 1400.
-	private static readonly WorldPosition OpeningStrikePoint = new(4900, 1500);
+	// who won it launched every attacker there at once, and found the carriers there about frame 1400. Scenario 201: just
+	// short of where the American carrier waits.
+	private static WorldPosition OpeningStrikePoint(Nspw game) =>
+		game.ScenarioNumber == 201 ? PointAt(HornetStart, 260, 300) : new(4900, 1500);
 
 	private readonly HashSet<int> _openedFrom = [];
 
@@ -215,7 +218,7 @@ public sealed partial class StrongPlayer
 			SelectPlanes(ready[0], ready.Skip(1));
 			LaunchToward(
 				ready[0],
-				OpeningStrikePoint,
+				OpeningStrikePoint(game),
 				game.Units[deck].Position,
 				Reach(ref game.Units[ready[0]])
 			);
@@ -225,19 +228,10 @@ public sealed partial class StrongPlayer
 		return false;
 	}
 
-	// Scenario 201: whether the American carrier has been found in the last 300 frames: the warships are left to the
-	// general tasks then, which send them at it (TryEngage).
-	private bool IsCarrierFound(Nspw game) =>
-		_contacts.All.Any(c =>
-			c.Kind is UnitKind.Carrier or UnitKind.LightCarrier
-			&& game.Units[c.Unit].IsUsed
-			&& UnitFacts.Now(game) - c.Frame < 300
-		);
-
-	// Scenario 201: each of the player's warships and submarines, not in a carrier's formation, sails to the intercept
-	// point once, from the start: three of the four carriers burn under a fifth of their HP, which launches nothing, and
-	// the fourth's six attackers do not sink the carrier alone.
-	private bool TrySailToIntercept(Nspw game)
+	// Scenario 201: the submarine sails to where the American carrier waits, and the carrier that can launch toward it,
+	// each once, from the start: the cruisers and destroyers start with next to no fuel, and the other carriers burn
+	// under a fifth of their HP, which launches nothing.
+	private bool TrySailAtHornet(Nspw game)
 	{
 		for (var m = 1; m <= game.MaxUnitId; m++)
 		{
@@ -245,16 +239,70 @@ public sealed partial class StrongPlayer
 			if (
 				!IsOwn(game, m)
 				|| ship.Category != UnitCategory.Ship
-				|| UnitFacts.IsDeck(ship.Kind)
-				|| UnitFacts.IsBase(ship.Kind)
-				|| ship.GroupLeader != 0
+				|| !(
+					ship.Kind == UnitKind.Submarine
+					|| (UnitFacts.IsDeck(ship.Kind) && UnitFacts.CanLaunch(ref ship))
+				)
 				|| !_intercepting.Add(m)
 			)
 				continue;
 
-			SelectAlone(m, "intercepting");
-			var point = PointAt(InterceptPoint, m * 71.0, 200);
-			return SailSelected(game, m, point, "waits for the carrier at") || true;
+			var point =
+				ship.Kind == UnitKind.Submarine
+					? PointAt(HornetStart, 200, 250)
+					: PointAt(HornetStart, BearingTo(HornetStart, ship.Position), 1200);
+			SelectAlone(m, "sailing at the carrier");
+			return SailSelected(game, m, point, "sails at the carrier, to") || true;
+		}
+
+		return false;
+	}
+
+	// Scenario 201: the submarine, within 1500 of the American carrier found, takes it as its target and sails under it,
+	// every 200 frames: a submarine fires only at its target.
+	private bool TryTorpedoHornet(Nspw game)
+	{
+		var carrier = _contacts.All.FirstOrDefault(c =>
+			c.Kind is UnitKind.Carrier or UnitKind.LightCarrier
+			&& game.Units[c.Unit].IsUsed
+			&& game.Units[c.Unit].IsFound
+		);
+		if (carrier is null)
+			return false;
+
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var ship = ref game.Units[m];
+			if (
+				!IsOwn(game, m)
+				|| ship.Kind != UnitKind.Submarine
+				|| UnitFacts.Distance(ship.Position, game.Units[carrier.Unit].Position) > 1500
+				|| UnitFacts.Now(game) - _gunsOnYamamoto.GetValueOrDefault(m, -1000) < 200
+			)
+				continue;
+
+			_gunsOnYamamoto[m] = UnitFacts.Now(game);
+			var target = carrier.Unit;
+			SelectAlone(m, "torpedoing the carrier");
+			_clicks.Enqueue(g =>
+			{
+				if (g.SelectedUnit != m || !g.Units[target].IsUsed)
+					return GiveUp(g, $"torpedoing with {m}: selected {g.SelectedUnit}");
+				g.Commands.ClickUnit(target);
+				Log?.Invoke(
+					$"{UnitFacts.Now(g)}: {g.Units[m].Kind} {m} fires at {g.Units[target].Kind} {target}"
+				);
+				return true;
+			});
+			_clicks.Enqueue(g =>
+			{
+				if (g.SelectedUnit != m || !g.Units[target].IsUsed)
+					return GiveUp(g, $"sailing under {target} {m}: selected {g.SelectedUnit}");
+				g.Commands.SetDestination(g.Units[target].Position);
+				return true;
+			});
+			Deselect();
+			return true;
 		}
 
 		return false;
@@ -862,7 +910,9 @@ public sealed partial class StrongPlayer
 			8 when Parameters.GuardAnchorage => TryGuardAnchorage(game),
 			10 when Parameters.GatherAndSweep => TryGatherFighters(game) || TrySweepSaipan(game),
 			9 when Parameters.OpeningStrike => TryOpeningStrike(game),
-			201 when Parameters.InterceptCarrier => TrySailToIntercept(game),
+			201 when Parameters.InterceptCarrier => TrySailAtHornet(game)
+				|| TryTorpedoHornet(game)
+				|| TryOpeningStrike(game),
 			109 when Parameters.RaidYokosuka => TryReturnHome(game) || TrySailToRaid(game),
 			107 when Parameters.AmbushYamamoto => TrySailToAmbush(game) || TryGunsOnYamamoto(game),
 			_ => TryReturnHome(game),
@@ -880,10 +930,10 @@ public sealed partial class StrongPlayer
 		};
 
 	// Whether the mission holds the ships back from the general tasks that form them and send them at the enemy
-	// (TryForm, TryFormBattleGroups, TryEngage): in 201, until the carrier is found.
+	// (TryForm, TryFormBattleGroups, TryEngage).
 	private bool HoldsShips(Nspw game) =>
 		(game.ScenarioNumber == 107 && Parameters.AmbushYamamoto)
-		|| (game.ScenarioNumber == 201 && Parameters.InterceptCarrier && !IsCarrierFound(game));
+		|| (game.ScenarioNumber == 201 && Parameters.InterceptCarrier);
 
 	// Whether the mission holds the fighters back from intercepting, hunting and patrolling.
 	private bool HoldsFighters(Nspw game) =>
@@ -905,6 +955,7 @@ public sealed partial class StrongPlayer
 			107 => Parameters.AmbushYamamoto,
 			8 => Parameters.GuardAnchorage,
 			109 when Parameters.RaidYokosuka => true,
+			201 => Parameters.InterceptCarrier,
 			_ => _knowledge.Home is not null && ArePlacesDestroyed(game),
 		};
 }
