@@ -17,7 +17,8 @@ namespace Aigamo.Saruhashi.MonoGame;
 
 public sealed class MonoGameGraphics : Graphics
 {
-	private sealed class DisposableScissor : IDisposable
+	// A struct, as a graphics is made for every paint.
+	private readonly struct DisposableScissor : IDisposable
 	{
 		private readonly SpriteBatch _spriteBatch;
 		private readonly XnaRectangle _scissorRectangle;

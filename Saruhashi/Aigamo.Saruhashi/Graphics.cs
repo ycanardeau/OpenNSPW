@@ -8,9 +8,14 @@ public abstract class Graphics(Control control) : IDisposable
 
 	~Graphics() => Dispose(false);
 
-	public Region Clip { get; } = new Region(control.ClipRectangle);
-	public RectangleF ClipBounds => Clip.GetBounds(this);
+	private readonly Rectangle _clipRectangle = control.ClipRectangle;
+	private Region? _clip;
+
 	protected internal Control Control { get; } = control;
+
+	// Made only when asked for: a graphics is made for every paint.
+	public Region Clip => _clip ??= new Region(_clipRectangle);
+	public RectangleF ClipBounds => Control.GetClipRectangle(_clipRectangle);
 
 	public void Dispose()
 	{
