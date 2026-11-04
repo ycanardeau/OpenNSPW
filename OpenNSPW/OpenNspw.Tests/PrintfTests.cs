@@ -91,12 +91,12 @@ public sealed class PrintfTests
 	{
 		var buffer = new byte[64];
 		var name = "大和"u8.ToArray();
-		crt.wsprintf(buffer, "%s: %-8s|"u8, name, name);
 
-		var start = GC.GetAllocatedBytesForCurrentThread();
-		crt.wsprintf(buffer, "%s: %-8s|"u8, name, name);
-		crt.sprintf(buffer, "%s", name);
-		var bytes = GC.GetAllocatedBytesForCurrentThread() - start;
+		var bytes = AllocationTests.SteadyBytes(() =>
+		{
+			crt.wsprintf(buffer, "%s: %-8s|"u8, name, name);
+			crt.sprintf(buffer, "%s", name);
+		});
 
 		Assert.Equal(0, bytes);
 	}
