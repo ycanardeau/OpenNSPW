@@ -80,6 +80,12 @@ public sealed partial class StrongPlayer
 	private readonly HashSet<int> _aimed = [];
 	private int _lastSweep = int.MinValue / 2;
 
+	// Scenario 10: the leader of the raided base's fighters that watch for Saipan's bombers (TryWatchForBombers), or 0,
+	// and when it was last given one; and the frame the bases the watch keeps fighters on were last worked out, with them.
+	private int _watchLeader;
+	private int _lastWatchAim = int.MinValue / 2;
+	private (int Frame, int Raided, int Forward) _watchBases = (int.MinValue, 0, 0);
+
 	private bool IsMissionOrderDue(Nspw game, int frames) =>
 		UnitFacts.Now(game) - _missionOrdered >= frames;
 
@@ -541,7 +547,8 @@ public sealed partial class StrongPlayer
 		var fighters = ParkedOn(
 			game,
 			from,
-			n => game.Units[n].Kind == UnitKind.Fighter && UnitFacts.IsReady(ref game.Units[n])
+			n => game.Units[n].Kind == UnitKind.Fighter && UnitFacts.IsReady(ref game.Units[n]),
+			includeReserved: true
 		);
 		if (fighters.Count < 3)
 			return false;
@@ -589,6 +596,141 @@ public sealed partial class StrongPlayer
 			return true;
 		});
 		Deselect();
+		return true;
+	}
+
+	// Scenario 10: from this frame, the carrier's raid shot down, the raided base's fighters watch for Saipan's bombers
+	// together.
+	private const int WatchFrom = 2000;
+
+	// Scenario 10: the raided air base and the forward one, nearest Saipan, worked out once a frame.
+	private (int Raided, int Forward) WatchBases(Nspw game)
+	{
+		if (_watchBases.Frame != UnitFacts.Now(game))
+			_watchBases = (
+				UnitFacts.Now(game),
+				RaidedBase(game),
+				NearestOwnAirBase(game, ScenarioKnowledge.Saipan.Center)
+			);
+		return (_watchBases.Raided, _watchBases.Forward);
+	}
+
+	// Scenario 10, with Parameters.BomberWatch: whether a parked fighter is kept for the watch or the sweep, on the
+	// raided base or the forward one, from WatchFrom.
+	private bool IsKeptForWatch(Nspw game, int m)
+	{
+		ref var plane = ref game.Units[m];
+		if (
+			!Parameters.BomberWatch
+			|| plane.Kind != UnitKind.Fighter
+			|| UnitFacts.Now(game) < WatchFrom
+		)
+			return false;
+
+		var (raided, forward) = WatchBases(game);
+		return raided != 0 && (plane.Carrier == raided || plane.Carrier == forward);
+	}
+
+	// Scenario 10: the raided base's ready fighters go up together from WatchFrom, 1000 ahead of it toward Saipan, once
+	// six are ready, most of them refuelled after the carrier's raid, or three, once an attacker or a bomber is found
+	// within 5000 of the base; then their leader, for the formation, and every other fighter of the player's in the air
+	// near the base takes as its target the enemy attacker or bomber found within 4000 of the base nearest it, one a
+	// click, every 30 frames. Once the watch has landed, it goes up again.
+	private bool TryWatchForBombers(Nspw game)
+	{
+		var (raided, _) = WatchBases(game);
+		if (raided == 0 || UnitFacts.Now(game) < WatchFrom)
+			return false;
+
+		var basePosition = game.Units[raided].Position;
+		var bomber = _contacts
+			.All.Where(c =>
+				c.Category == UnitCategory.Plane
+				&& UnitFacts.IsStrikePlane(c.Kind)
+				&& game.Units[c.Unit].IsUsed
+				&& game.Units[c.Unit].IsFound
+				&& game.Units[c.Unit].PlaneState == UnitState.Flying
+				&& UnitFacts.Distance(c.Position, basePosition) <= 4000
+			)
+			.OrderBy(c => UnitFacts.Distance(c.Position, basePosition))
+			.FirstOrDefault();
+		// The watch's leader, then each other fighter of the player's in the air within 4000 of the base, armed, not on
+		// its way home unless it can go back to the fight (CanReengage), and with the fuel to come back, takes the
+		// bomber, one a click.
+		var aiming =
+			bomber is null || UnitFacts.Now(game) - _lastWatchAim < 30
+				? 0
+				: Enumerable
+					.Range(1, game.MaxUnitId)
+					.Where(m =>
+						IsOwn(game, m)
+						&& game.Units[m].Kind == UnitKind.Fighter
+						&& game.Units[m].PlaneState == UnitState.Flying
+						&& game.Units[m].GroupLeader == 0
+						&& (game.Units[m].Mode != UnitMode.Return || CanReengage(game, m))
+						&& game.Units[m].Ammo > 0
+						&& game.Units[m].Target != bomber.Unit
+						&& game.Units[m].Fuel > FuelToHome(game, m) + 20
+						&& UnitFacts.Distance(game.Units[m].Position, basePosition) <= 4000
+					)
+					.OrderBy(m => m == _watchLeader ? 0 : 1)
+					.FirstOrDefault();
+		if (aiming != 0)
+		{
+			_lastWatchAim = UnitFacts.Now(game);
+			var target = bomber!.Unit;
+			SelectFlying(aiming, "watching");
+			_clicks.Enqueue(g =>
+			{
+				if (g.SelectedUnit != aiming || !g.Units[target].IsUsed || !g.Units[target].IsFound)
+					return GiveUp(
+						g,
+						$"{g.Units[target].Kind} {target} for {aiming}: selected {g.SelectedUnit}"
+					);
+				g.Commands.ClickUnit(target);
+				Log?.Invoke(
+					$"{UnitFacts.Now(g)}: Fighter {aiming} and {g.SelectionCount - 1} more go for {g.Units[target].Kind} {target}"
+				);
+				return true;
+			});
+			Deselect();
+			return true;
+		}
+
+		if (
+			_watchLeader != 0
+			&& IsOwn(game, _watchLeader)
+			&& game.Units[_watchLeader].PlaneState == UnitState.Flying
+		)
+			return false;
+
+		if (!UnitFacts.CanLaunch(ref game.Units[raided]) || IsLandingOn(game, raided))
+			return false;
+
+		var fighters = ParkedOn(
+			game,
+			raided,
+			n => game.Units[n].Kind == UnitKind.Fighter && UnitFacts.IsReady(ref game.Units[n]),
+			includeReserved: true
+		);
+		var threatened = _contacts.All.Any(c =>
+			c.Category == UnitCategory.Plane
+			&& UnitFacts.IsStrikePlane(c.Kind)
+			&& game.Units[c.Unit].IsUsed
+			&& game.Units[c.Unit].IsFound
+			&& UnitFacts.Distance(c.Position, basePosition) <= 5000
+		);
+		if (fighters.Count < (threatened ? 3 : 6))
+			return false;
+
+		_watchLeader = fighters[0];
+		ShowDeck(raided);
+		SelectPlanes(fighters[0], fighters.Skip(1));
+		SendSelected(
+			fighters[0],
+			PointAt(basePosition, BearingTo(basePosition, ScenarioKnowledge.Saipan.Center), 1000),
+			$"and {fighters.Count - 1} more watch for bombers at"
+		);
 		return true;
 	}
 
@@ -1004,6 +1146,7 @@ public sealed partial class StrongPlayer
 		game.ScenarioNumber switch
 		{
 			205 => m == RescueBomber(game),
+			10 => IsKeptForWatch(game, m),
 			_ => false,
 		};
 
@@ -1067,7 +1210,9 @@ public sealed partial class StrongPlayer
 			300 => TryDoolittle(game),
 			205 => TryRescue(game),
 			8 when Parameters.GuardAnchorage => TryGuardAnchorage(game),
-			10 when Parameters.GatherAndSweep => TryGatherFighters(game) || TrySweepSaipan(game),
+			10 when Parameters.GatherAndSweep => TryGatherFighters(game)
+				|| (Parameters.BomberWatch && TryWatchForBombers(game))
+				|| TrySweepSaipan(game),
 			9 when Parameters.OpeningStrike => TryOpeningStrike(game)
 				|| TryAmbushTrack(game)
 				|| TryAimOpening(game),

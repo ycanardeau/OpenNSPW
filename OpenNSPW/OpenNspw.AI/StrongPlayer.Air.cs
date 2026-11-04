@@ -184,6 +184,26 @@ public sealed partial class StrongPlayer
 	private bool DefendsAll(UnitKind kind) =>
 		_knowledge.HoldsOn || _knowledge.Counted.Contains(kind);
 
+	// The player's flying fighters that attack a plane, but `fighter`.
+	private static int FightersOn(Nspw game, int target, int fighter)
+	{
+		var count = 0;
+		for (var n = 1; n <= game.MaxUnitId; n++)
+		{
+			ref var plane = ref game.Units[n];
+			if (
+				IsOwn(game, n)
+				&& plane.Kind == UnitKind.Fighter
+				&& plane.PlaneState == UnitState.Flying
+				&& plane.Target == target
+				&& n != fighter
+			)
+				count++;
+		}
+
+		return count;
+	}
+
 	// Fighters against an enemy attacker or bomber found near a deck, or near a place held from a deck not too far, or a
 	// ship of the player's.
 	private bool TryIntercept(Nspw game, List<int> decks)
@@ -191,14 +211,18 @@ public sealed partial class StrongPlayer
 		if (HoldsFighters(game))
 			return false;
 
-		foreach (var contact in _contacts.All)
+		foreach (
+			var contact in Parameters.FocusFire
+				? _contacts.All.OrderByDescending(c => FightersOn(game, c.Unit, 0))
+				: _contacts.All
+		)
 		{
 			if (
 				contact.Category != UnitCategory.Plane
 				|| !UnitFacts.IsStrikePlane(contact.Kind)
 				|| !game.Units[contact.Unit].IsFound
 				|| game.Units[contact.Unit].PlaneState != UnitState.Flying
-				|| WasEngaged(game, contact.Unit)
+				|| (WasEngaged(game, contact.Unit) && !Parameters.FocusFire)
 			)
 				continue;
 
@@ -258,26 +282,6 @@ public sealed partial class StrongPlayer
 				&& plane.Ammo > 0
 				&& n != leader
 				&& plane.GroupLeader != leader
-			)
-				count++;
-		}
-
-		return count;
-	}
-
-	// The player's flying fighters that attack a plane, but `fighter`.
-	private static int FightersOn(Nspw game, int target, int fighter)
-	{
-		var count = 0;
-		for (var n = 1; n <= game.MaxUnitId; n++)
-		{
-			ref var plane = ref game.Units[n];
-			if (
-				IsOwn(game, n)
-				&& plane.Kind == UnitKind.Fighter
-				&& plane.PlaneState == UnitState.Flying
-				&& plane.Target == target
-				&& n != fighter
 			)
 				count++;
 		}
@@ -375,32 +379,48 @@ public sealed partial class StrongPlayer
 	// Parameters.Targeting says, the escorts around them first (IsEscortToStrike); for a fighter, an enemy plane in the
 	// air, attackers and bombers first, or, with Parameters.FightersFirst, the ones within 1500 of a ship of the
 	// player's, then fighters, within 1500, the nearest, or, with Parameters.SpreadFighters, the ones fewer of the
-	// player's fighters attack (FightersOn).
+	// player's fighters attack (FightersOn); or, with Parameters.FocusFire, the attacker or bomber within 2500 that the
+	// most of them attack.
 	private Contact? ChooseTargetInFlight(Nspw game, int plane)
 	{
 		ref var unit = ref game.Units[plane];
 		var position = unit.Position;
 		var weapon = unit.Weapon;
 		var takesAny = TakesAnyTarget(game, plane);
-		return unit.Kind == UnitKind.Fighter
+		var focus = Parameters.FocusFire
 			? _contacts
 				.All.Where(c =>
 					c.Category == UnitCategory.Plane
+					&& UnitFacts.IsStrikePlane(c.Kind)
 					&& game.Units[c.Unit].IsFound
 					&& game.Units[c.Unit].PlaneState == UnitState.Flying
-					&& UnitFacts.Distance(position, c.Position) <= 1500
+					&& UnitFacts.Distance(position, c.Position) <= 2500
 				)
-				.OrderByDescending(c =>
-					!Parameters.FightersFirst ? (UnitFacts.IsStrikePlane(c.Kind) ? 1 : 0)
-					: UnitFacts.IsStrikePlane(c.Kind) && IsNearOwnShip(game, c.Position, 1500) ? 2
-					: c.Kind == UnitKind.Fighter ? 1
-					: 0
-				)
-				.ThenBy(c =>
-					UnitFacts.Distance(position, c.Position)
-					+ (Parameters.SpreadFighters ? 400 * FightersOn(game, c.Unit, plane) : 0)
-				)
+				.OrderByDescending(c => FightersOn(game, c.Unit, plane))
+				.ThenBy(c => UnitFacts.Distance(position, c.Position))
 				.FirstOrDefault()
+			: null;
+		return unit.Kind == UnitKind.Fighter && focus is not null ? focus
+			: unit.Kind == UnitKind.Fighter
+				? _contacts
+					.All.Where(c =>
+						c.Category == UnitCategory.Plane
+						&& game.Units[c.Unit].IsFound
+						&& game.Units[c.Unit].PlaneState == UnitState.Flying
+						&& UnitFacts.Distance(position, c.Position) <= 1500
+					)
+					.OrderByDescending(c =>
+						!Parameters.FightersFirst ? (UnitFacts.IsStrikePlane(c.Kind) ? 1 : 0)
+						: UnitFacts.IsStrikePlane(c.Kind) && IsNearOwnShip(game, c.Position, 1500)
+							? 2
+						: c.Kind == UnitKind.Fighter ? 1
+						: 0
+					)
+					.ThenBy(c =>
+						UnitFacts.Distance(position, c.Position)
+						+ (Parameters.SpreadFighters ? 400 * FightersOn(game, c.Unit, plane) : 0)
+					)
+					.FirstOrDefault()
 			: _contacts
 				.All.Where(c =>
 					game.Units[c.Unit].IsFound
@@ -1525,8 +1545,38 @@ public sealed partial class StrongPlayer
 		return false;
 	}
 
+	// Whether a fighter of the player's on its way home goes back to the fight (Parameters.Reengage): it has
+	// ammunition, fuel for more than the way home, and 60% of its HP or more, or, damaged, an enemy attacker or bomber
+	// within 1200 of it is within 1500 of a ship or a base of the player's, about to drop.
+	private bool CanReengage(Nspw game, int m)
+	{
+		ref var unit = ref game.Units[m];
+		if (
+			!Parameters.Reengage
+			|| unit.Kind != UnitKind.Fighter
+			|| unit.Ammo <= 0
+			|| unit.Fuel <= FuelToHome(game, m) + Parameters.BingoMargin + 10
+		)
+			return false;
+
+		if (unit.HP >= unit.MaxHP * 0.6)
+			return true;
+
+		var position = unit.Position;
+		return _contacts.All.Any(c =>
+			c.Category == UnitCategory.Plane
+			&& UnitFacts.IsStrikePlane(c.Kind)
+			&& game.Units[c.Unit].IsUsed
+			&& game.Units[c.Unit].IsFound
+			&& game.Units[c.Unit].PlaneState == UnitState.Flying
+			&& UnitFacts.Distance(c.Position, position) <= 1200
+			&& IsNearOwnShip(game, c.Position, 1500)
+		);
+	}
+
 	// A flying plane of the player's that leads its formation, armed and with no target in sight, given the best target
-	// near it: the formation is selected with it, and takes the target too (ApplyOrders).
+	// near it: the formation is selected with it, and takes the target too (ApplyOrders); a fighter on its way home too,
+	// if it can go back to the fight (CanReengage).
 	private bool TryDirect(Nspw game)
 	{
 		for (var m = 1; m <= game.MaxUnitId; m++)
@@ -1538,7 +1588,7 @@ public sealed partial class StrongPlayer
 				|| unit.PlaneState != UnitState.Flying
 				|| unit.GroupLeader != 0
 				|| _scoutLegs.ContainsKey(m)
-				|| unit.Mode == UnitMode.Return
+				|| (unit.Mode == UnitMode.Return && !CanReengage(game, m))
 				|| unit.Ammo <= 0
 				|| (
 					unit.Target != 0

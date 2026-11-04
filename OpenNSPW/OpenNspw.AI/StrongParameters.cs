@@ -77,6 +77,13 @@ public sealed record StrongParameters
 	// are over, the forward base's fighters sweep Saipan's airfield (TryGatherFighters, TrySweepSaipan).
 	public bool GatherAndSweep { get; init; } = true;
 
+	// Whether, in scenario 10, from frame 2000, the carrier's raid over, the ready fighters of the raided air base, four
+	// or more, go up together, as one formation, ahead of it toward Saipan, and take Saipan's bombers, or any attacker,
+	// as their target one at a time, the nearest to the base first; while the fighters of that base and of the forward one are kept from the
+	// interceptions, which send them up two or three at a time (TryWatchForBombers), as a player who won it did. A
+	// bomber's 50 HP and guns shoot down the few fighters that meet it alone.
+	public bool BomberWatch { get; init; }
+
 	// Whether, in scenario 8, every ship that sails gathers at the anchored ships next to the air base with the most
 	// fighters, and stays there (TryGuardAnchorage).
 	public bool GuardAnchorage { get; init; }
@@ -298,6 +305,17 @@ public sealed record StrongParameters
 	// Whether fighters spread over the enemy planes, each counting one that others of the player's already attack 400
 	// farther (ChooseTargetInFlight), rather than all going for the nearest.
 	public bool SpreadFighters { get; init; }
+
+	// Whether fighters gather on one enemy attacker or bomber at a time: in the air, each takes the one within 2500 that
+	// the most others of the player's already attack, then the nearest (ChooseTargetInFlight); and the ready fighters
+	// launch at that one first, though it is engaged already (TryIntercept). A bomber's 50 HP and guns shoot down one or
+	// two fighters at it, and ten bring it down in about 150 frames, as a player who won scenario 10 did.
+	public bool FocusFire { get; init; }
+
+	// Whether a fighter on its way home, once its fight is over, takes another target at once (TryDirect,
+	// CanReengage): with ammunition left and fuel for more than the way home, at 60% of its HP or more, or, damaged, if
+	// an enemy attacker or bomber within 1200 of it is within 1500 of a ship or a base of the player's, about to drop.
+	public bool Reengage { get; init; }
 
 	// Whether every ready fighter of a deck goes up against an enemy attacker or bomber, not four (TryIntercept).
 	public bool InterceptWithAll { get; init; }
