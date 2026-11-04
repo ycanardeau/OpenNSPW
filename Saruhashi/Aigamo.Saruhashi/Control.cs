@@ -449,11 +449,17 @@ public class Control : IDisposable, IBindableComponent
 		if (!IsVisible())
 			return;
 
-		using (var graphics = CreateGraphics())
+		var factory = WindowManager.GraphicsFactory;
+		var graphics = factory.Rent(this);
+		try
 		{
-			var e = new PaintEventArgs(graphics, RectangleToClient(ClipRectangle));
+			var e = graphics.PaintEventArgsFor(RectangleToClient(ClipRectangle));
 			OnPaintBackground(e);
 			OnPaint(e);
+		}
+		finally
+		{
+			factory.Return(graphics);
 		}
 
 		// From the back, by index, without a copy: a child that a paint removes is not drawn.

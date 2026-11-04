@@ -8,14 +8,34 @@ public abstract class Graphics(Control control) : IDisposable
 
 	~Graphics() => Dispose(false);
 
-	private readonly Rectangle _clipRectangle = control.ClipRectangle;
+	private Rectangle _clipRectangle = control.ClipRectangle;
 	private Region? _clip;
+	private PaintEventArgs? _paintEventArgs;
 
-	protected internal Control Control { get; } = control;
+	protected internal Control Control { get; private set; } = control;
 
-	// Made only when asked for: a graphics is made for every paint.
+	// Made only when asked for: a graphics may serve a paint every frame.
 	public Region Clip => _clip ??= new Region(_clipRectangle);
 	public RectangleF ClipBounds => Control.GetClipRectangle(_clipRectangle);
+
+	// The arguments of a paint with this graphics, made once, as a factory may give the same graphics to every paint
+	// (IGraphicsFactory.Rent).
+	internal PaintEventArgs PaintEventArgsFor(Rectangle clipRectangle)
+	{
+		_paintEventArgs ??= new PaintEventArgs(this, clipRectangle);
+		_paintEventArgs.ClipRectangle = clipRectangle;
+		return _paintEventArgs;
+	}
+
+	/// <summary>
+	/// Makes the graphics draw on another control, for a factory that gives the same graphics to every paint.
+	/// </summary>
+	protected void Rebind(Control control)
+	{
+		Control = control;
+		_clipRectangle = control.ClipRectangle;
+		_clip = null;
+	}
 
 	public void Dispose()
 	{
