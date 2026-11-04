@@ -122,7 +122,7 @@ A query is one of the game's own checks, made public, that reads and writes noth
 | `IsOnShownDeck(m)` | `Renderer` | Internal |
 | `CanSetDestination(m)` | `draw_cmbt_area.cs` | Private |
 | `GetSupplyRequestState()` | `unit_info_cont.cs` | Private |
-| `ListCombatMenuItems()` | `ListCombatMenu`, without setting the choice shown (`CombatMenuSelection`) | Private, and writes |
+| `ListCombatMenuItems(items)` | `ListCombatMenu`, without setting the choice shown (`CombatMenuSelection`) | Private, and writes |
 | `LandingPointAt(x, y)` | `AimLanding`, without putting the landing mark | Internal, and writes the mark's sprite |
 | `IsSeaTileSeen(column, row)`, `IsEffectSeen(position)` | `UIState.cs`, as `DrawMapTiles` and the effects test it | Private; where the drawing tests the same, it calls them, so that the two cannot drift |
 | `EyeOf(unit)` | `UIState.cs`, but the ported code calls it (`Audio.cs`, `draw_cmbt_area.cs`, `etc2.cs`) | Internal; it moves into the ported code's own files |

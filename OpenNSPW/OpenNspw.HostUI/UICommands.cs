@@ -12,6 +12,9 @@ public sealed class UICommands : IGameExtension
 	private readonly Lock _lock = new();
 	private readonly List<(ActionSite Site, Action<Nspw> Run)> _queued = [];
 
+	// The commands that InputSite takes from the queue for its site, in a list kept for it: on the game's thread.
+	private readonly List<Action<Nspw>> _runs = [];
+
 	// The units brushed with the left button held (BrushUnit), to put in the selected unit's formation or to take out of
 	// it: a click on each, one a frame, as the game takes one click on a unit a frame (SelectOrders[1]).
 	private readonly Queue<(int Unit, bool IsAdded)> _brushed = new();
@@ -344,19 +347,36 @@ public sealed class UICommands : IGameExtension
 	// and the system menu that wait for a frame in which they count.
 	public void InputSite(Nspw game, ActionSite site, bool counts)
 	{
-		List<Action<Nspw>> runs;
+		// Without garbage, as the game calls this at each of its sites every frame: the site's commands are taken, and the
+		// other screens' dropped, in place.
+		_runs.Clear();
 		lock (_lock)
 		{
-			runs = [.. _queued.Where(c => c.Site == site).Select(c => c.Run)];
-			_queued.RemoveAll(c => c.Site == site || IsSettingSite(c.Site) != IsSettingSite(site));
+			var kept = 0;
+			for (var i = 0; i < _queued.Count; i++)
+			{
+				var command = _queued[i];
+				if (command.Site == site)
+					_runs.Add(command.Run);
+				else if (IsSettingSite(command.Site) == IsSettingSite(site))
+					_queued[kept++] = command;
+			}
+
+			_queued.RemoveRange(kept, _queued.Count - kept);
 		}
 
+		// The menu's items in a new array only when they change, as the host's UI keeps the one it was given.
 		if (site == ActionSite.CombatMenu)
-			ShownCombatMenu = counts ? game.ListCombatMenuItems() : [];
+		{
+			Span<CombatMenuItem> items = stackalloc CombatMenuItem[6];
+			var shown = items[..(counts ? game.ListCombatMenuItems(items) : 0)];
+			if (!shown.SequenceEqual(ShownCombatMenu))
+				ShownCombatMenu = shown.ToArray();
+		}
 
 		if (counts && !game.Extensions.HoldsInput)
 		{
-			foreach (var run in runs)
+			foreach (var run in _runs)
 			{
 				run(game);
 			}

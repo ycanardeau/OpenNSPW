@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Runtime.InteropServices;
 
 namespace OpenNspw;
@@ -131,9 +132,56 @@ public sealed class Gdi(INspwPlatform platform)
 		public int BkMode { get; set; } = wingdi.OPAQUE;
 	}
 
+	// Compares texts by their bytes, a span's too, so that a text is looked up without a copy.
+	private sealed class TextComparer
+		: IEqualityComparer<byte[]>,
+			IAlternateEqualityComparer<ReadOnlySpan<byte>, byte[]>
+	{
+		public static readonly TextComparer Instance = new();
+
+		public bool Equals(ReadOnlySpan<byte> alternate, byte[] other) =>
+			alternate.SequenceEqual(other);
+
+		public bool Equals(byte[]? x, byte[]? y) => x.AsSpan().SequenceEqual(y);
+
+		public int GetHashCode(ReadOnlySpan<byte> alternate)
+		{
+			var hash = new HashCode();
+			hash.AddBytes(alternate);
+			return hash.ToHashCode();
+		}
+
+		public int GetHashCode(byte[] obj) => GetHashCode((ReadOnlySpan<byte>)obj);
+
+		public byte[] Create(ReadOnlySpan<byte> alternate) => alternate.ToArray();
+	}
+
+	// How many texts Decode keeps before it starts again: the texts with numbers in them keep changing.
+	private const int MaxTexts = 4096;
+
 	private readonly INspwPlatform _platform = platform;
 	private readonly Dictionary<int, object> _objects = [];
+	private readonly Dictionary<byte[], string> _texts = new(TextComparer.Instance);
 	private int _next = 1;
+
+	// A text of the game, in Shift_JIS, as a string: decoded once, as the game writes most of its texts again every frame.
+	public string Decode(ReadOnlySpan<byte> text)
+	{
+		var texts = _texts.GetAlternateLookup<ReadOnlySpan<byte>>();
+		if (texts.TryGetValue(text, out var decoded))
+		{
+			return decoded;
+		}
+
+		if (_texts.Count >= MaxTexts)
+		{
+			_texts.Clear();
+		}
+
+		decoded = tchar.ShiftJis.GetString(text);
+		texts[text] = decoded;
+		return decoded;
+	}
 
 	private int Add(object value)
 	{
@@ -487,12 +535,21 @@ public unsafe partial class Nspw
 			hdc,
 			x,
 			y,
-			ShiftJis.GetString(lpString[..Math.Min(Math.Max(c, 0), lpString.Length)])
+			gdi.Decode(lpString[..Math.Min(Math.Max(c, 0), lpString.Length)])
 		);
 	}
 
 	public int TextOut(HDC hdc, int x, int y, string lpString, int c)
 	{
-		return TextOut(hdc, x, y, ShiftJis.GetBytes(lpString), c);
+		var bytes = ArrayPool<byte>.Shared.Rent(ShiftJis.GetMaxByteCount(lpString.Length));
+		try
+		{
+			var length = ShiftJis.GetBytes(lpString, bytes);
+			return TextOut(hdc, x, y, bytes.AsSpan(0, length), c);
+		}
+		finally
+		{
+			ArrayPool<byte>.Shared.Return(bytes);
+		}
 	}
 }
