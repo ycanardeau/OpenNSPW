@@ -59,10 +59,16 @@ public sealed class GameFork
 		InstanceFields
 	)!;
 
-	// Whether one of the player's units sees an effect at a point, as the drawing tests it (UpdateLowerEffects).
-	private static readonly Func<Nspw, WorldPosition, bool> IsEffectSeen = typeof(Nspw)
-		.GetMethod("IsEffectSeen", InstanceFields)!
-		.CreateDelegate<Func<Nspw, WorldPosition, bool>>();
+	private delegate int SightOfDelegate(Nspw game, ref Unit unit);
+	private delegate WorldPosition EyeOfDelegate(Nspw game, ref Unit unit);
+
+	// How far a unit sees an effect, by the game's own ranges (EffectSightOf), and where it looks from (EyeOf).
+	private static readonly SightOfDelegate EffectSightOf = typeof(Nspw)
+		.GetMethod("EffectSightOf", InstanceFields)!
+		.CreateDelegate<SightOfDelegate>();
+	private static readonly EyeOfDelegate EyeOf = typeof(Nspw)
+		.GetMethod("EyeOf", InstanceFields)!
+		.CreateDelegate<EyeOfDelegate>();
 
 	// The copy, to read and to give orders to.
 	public Nspw Game { get; }
@@ -136,6 +142,27 @@ public sealed class GameFork
 	public void Reseed(uint seed)
 	{
 		Game.srand(seed);
+	}
+
+	// Whether one of the player's units, but parked planes, sees an effect at a point, as the drawing tests it
+	// (UpdateLowerEffects, UpdateUpperEffects): by 1.22's ranges under its rules (Rules.HasSightRangesOf122), as the drawing
+	// does, and the game's own test for the host's UI (IsEffectSeen) does not.
+	private static bool IsEffectSeen(Nspw game, WorldPosition position)
+	{
+		for (var n = 1; n <= game.MaxUnitId; n++)
+		{
+			ref var unit = ref game.Units[n];
+			if (!unit.IsUsed || unit.Side != game.LocalSide || unit.PlaneState == UnitState.Parked)
+				continue;
+
+			var sight = game.Rules.HasSightRangesOf122
+				? Nspw.GetSightRangeAs122(unit.Kind)
+				: EffectSightOf(game, ref unit);
+			if ((EyeOf(game, ref unit) - position).Length <= sight)
+				return true;
+		}
+
+		return false;
 	}
 
 	// The random numbers the drawing draws for the effects it shows (UpdateLowerEffects, then UpdateUpperEffects), from
