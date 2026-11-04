@@ -1,7 +1,7 @@
 using OpenNspw.Desktop;
 
 // OpenNspw.Desktop [--data <directory>] [--singleplayer <scenario> | --replay <trace.n122 | replay.onspwr>]
-//     [--ai [--formation line|ring:400|screen:400|auto:400] [--params Name=value,Name=value]]
+//     [--ai [--formation line|ring:400|screen:400|auto:400] [--params Name=value,Name=value]] [--start-date <seconds>]
 //
 // Plays the port, from its main menu, with the original's files that the app embeds, and what the game writes in the
 // user's folder (GameData, docs/BundledData.md). With --data, the game's data (wav, Map, Scenario, Saved) is that
@@ -77,6 +77,11 @@ var formation = Option(args, "--formation") is { } formationText
 	? OpenNspw.AI.FormationShape.Parse(formationText)
 	: null;
 var parameters = OpenNspw.AI.StrongParameters.Parse(Option(args, "--params") ?? "");
+if (Option(args, "--start-date") is { } startDate)
+	DesktopPlatform.FixedTime = int.Parse(
+		startDate,
+		System.Globalization.CultureInfo.InvariantCulture
+	);
 Func<OpenNspw.AI.IPlayer>? computerPlayer =
 	!args.Contains("--ai") ? null
 	: formation is not null

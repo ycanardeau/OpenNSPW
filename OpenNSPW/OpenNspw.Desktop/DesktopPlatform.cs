@@ -148,9 +148,13 @@ internal sealed partial class DesktopPlatform(GameFileLayers files, TextRasteriz
 		return (uint)_clock.ElapsedMilliseconds;
 	}
 
+	// The time the game takes as now, which seeds a battle's random setup (srand), if --start-date fixes it, as the
+	// arena's start dates do: a battle the arena played can be watched again from the same start.
+	public static int? FixedTime { get; set; }
+
 	public int time()
 	{
-		return (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+		return FixedTime ?? (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 	}
 
 	public void Present(DirectDrawSurface7 primary)
