@@ -8,23 +8,13 @@ namespace OpenNspw.Desktop.Controls;
 // and how the battle ended; or that it cannot be read.
 internal sealed class ReplayRow(UIFonts fonts, string path, ReplaySummary? summary) : FlatButton
 {
-	private static readonly IReadOnlyList<ScenarioSet> ScenarioSets = SingleplayerTexts.Of(
-		ScenarioSelection.Sets
-	);
-
-	private readonly UIFonts _fonts = fonts;
-
-	public string Path { get; } = path;
-
-	public ReplaySummary? Summary { get; } = summary;
-
-	public bool IsSelected { get; set; }
-
-	// The scenario's title: one of 1.22's, as the single-player browser names it, or a network battle's.
+	// The scenario's title, in the language chosen: one of 1.22's, as the single-player browser names it, or a network
+	// battle's.
 	private static string ScenarioTitle(ReplayStart start)
 	{
 		if (start.Mode == ReplayMode.Singleplayer)
-			return ScenarioSets
+			return SingleplayerTexts
+					.Of(ScenarioSelection.Sets)
 					.SelectMany(set => set.Scenarios)
 					.FirstOrDefault(scenario => scenario.Number == start.Scenario)
 					?.Title
@@ -34,6 +24,15 @@ internal sealed class ReplayRow(UIFonts fonts, string path, ReplaySummary? summa
 			? System.IO.Path.GetFileNameWithoutExtension(file.Replace('\\', '/'))
 			: Texts.NetworkScenario(start.Scenario);
 	}
+
+	private readonly UIFonts _fonts = fonts;
+	private readonly LastText<ReplayStart> _scenarioTitle = new(ScenarioTitle);
+
+	public string Path { get; } = path;
+
+	public ReplaySummary? Summary { get; } = summary;
+
+	public bool IsSelected { get; set; }
 
 	protected override void PaintButton(PaintEventArgs e)
 	{
@@ -74,7 +73,7 @@ internal sealed class ReplayRow(UIFonts fonts, string path, ReplaySummary? summa
 		var titleFont = _fonts.Regular(16);
 		Painter.Text(
 			g,
-			Painter.Fit(g, ScenarioTitle(start), titleFont, 300),
+			Painter.Fit(g, _scenarioTitle.Of(start), titleFont, 300),
 			titleFont,
 			title,
 			160,
