@@ -146,7 +146,7 @@ A carrier battle is many small fights, and the whole game swings on so much else
 | `ca-dd`, a cruiser against a destroyer | Closing on it (defaults) | 50% (38–62%) | 2.07–1.84 | 0.89 | | |
 | | At 460, beyond its guns (`KeepRange`) | 77% (65–86%) | 1.20–1.78 | 1.48 | 40–18 | 0.005 |
 | `bb-ca`, a battleship against 2 cruisers | Closing (defaults) | 18% (11–30%) | 5.73–3.62 | 0.63 | | |
-| | At 560 from the nearest (`KeepRange`) | 8% (4–18%) | 5.87–2.69 | 0.46 | 27–33 | 0.52 |
+| | At 560 from the nearest (`KeepRange` as first written; it now keeps cruisers only) | 8% (4–18%) | 5.87–2.69 | 0.46 | 27–33 | 0.52 |
 | `ca-bb`, 2 cruisers against a battleship | Closing (defaults) | 90% (80–95%) | 2.67–5.77 | 2.16 | | |
 | `cruisers`, 2 cruisers and 2 destroyers a side | Closing, in one line (defaults) | 67% (54–77%) | 8.92–10.45 | 1.17 | | |
 | | `CloseQuarters` | 78% (66–87%) | 8.03–11.41 | 1.42 | 37–23 | 0.09 |
