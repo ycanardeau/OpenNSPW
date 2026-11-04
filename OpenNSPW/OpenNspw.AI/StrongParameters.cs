@@ -27,7 +27,7 @@ public sealed record StrongParameters
 
 	// The cruisers and destroyers leave the carriers for a carrier hit (TryDetach) only when they are, screening and
 	// detached together, this many times as many as the enemy's warships found near it.
-	public double DetachRatio { get; init; } = 1;
+	public double DetachRatio { get; init; } = 2;
 
 	// How far a carrier keeps from the enemy's warships found lately (Threats), its escorts with it; 0 keeps from none.
 	public double AvoidWarships { get; init; }
