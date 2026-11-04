@@ -67,7 +67,7 @@ public sealed record StrongParameters
 
 	// Whether a rebasing formation is given the new base, every plane of it (SelectFormation), not its leader alone, whose
 	// planes fly back to their own base short of fuel, and run dry on the way (TryRebase).
-	public bool RebaseFormations { get; init; }
+	public bool RebaseFormations { get; init; } = true;
 
 	// Whether, in scenario 107, the ships sail at once to where Yamamoto's plane comes round to land, west of Rabaul's
 	// airfield, and fire at it there (TrySailToAmbush, TryGunsOnYamamoto).

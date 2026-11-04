@@ -170,7 +170,11 @@ public sealed partial class StrongPlayer
 		SelectPlanes(fighters[0], fighters.Skip(1).Concat(attackers));
 		SendSelected(
 			fighters[0],
-			ScenarioKnowledge.Saipan.Center,
+			PointAt(
+				ScenarioKnowledge.Saipan.Center,
+				BearingTo(ScenarioKnowledge.Saipan.Center, game.Units[from].Position),
+				550
+			),
 			$"and {fighters.Count - 1} more sweep Saipan at"
 		);
 		return true;
