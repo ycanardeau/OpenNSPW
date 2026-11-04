@@ -680,11 +680,12 @@ public sealed partial class StrongPlayer
 	// keep out of the computer's strike range, which the warships need not. They go only as many as the enemy's
 	// warships found lately within 4000 of the carrier, or more, and while no enemy attacker or bomber has been found
 	// in the air for 3000 frames; the battleships, whose anti-aircraft guns reach farthest, stay: a computer that still
-	// strikes would find the carriers without their guns.
+	// strikes would find the carriers without their guns. None go without Parameters.Detach.
 	private bool TryDetach(Nspw game)
 	{
 		if (
 			!HuntsCarriers
+			|| !Parameters.Detach
 			|| _contacts.All.Any(c =>
 				c.Category == UnitCategory.Plane
 				&& UnitFacts.IsStrikePlane(c.Kind)

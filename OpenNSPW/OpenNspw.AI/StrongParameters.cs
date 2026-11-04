@@ -21,6 +21,10 @@ public sealed record StrongParameters
 	// How far beyond the computer's strike range a carrier keeps from the enemy's carriers.
 	public double KeepAwayMargin { get; init; } = 1000;
 
+	// Whether the cruisers and destroyers screening the carriers leave them to finish a carrier the strikes have hit
+	// (TryDetach).
+	public bool Detach { get; init; } = true;
+
 	// How far a carrier keeps from the enemy's warships found lately (Threats), its escorts with it; 0 keeps from none.
 	public double AvoidWarships { get; init; }
 
