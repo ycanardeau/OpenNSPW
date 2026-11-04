@@ -40,8 +40,8 @@ public sealed record ReplayStart(
 	IReadOnlyList<StartFile> Files
 );
 
-// What a replay records after its start, each a byte and what it has: a frame, with the milliseconds since the last one
-// and its ticks; then, within the frame, the view as it is drawn when it has changed, what the player did, the hash of
+// What a replay records after its start, each a byte and what it has: a frame, with the milliseconds since the last one,
+// its ticks and the game's speed shown as it starts; then, within the frame, the view as it is drawn when it has changed, what the player did, the hash of
 // the battle as the frame ends, a note, the result as the battle has one; then what the game took after the frame: a
 // message of the rival, the rival leaving. End ends the file.
 public enum ReplayRecord : byte
@@ -76,7 +76,8 @@ public enum ReplayActionCase : byte
 }
 
 // A record of a replay, with what it has: Value, a frame's ticks or the result; Time, a frame's milliseconds since the
-// last; Camera; Hash; Text, a note's; Action; Message, a message received.
+// last; Camera; Hash; Text, a note's; Action; Message, a message received; Speed, the game's speed shown as a frame
+// starts.
 public readonly record struct ReplayItem(
 	ReplayRecord Kind,
 	int Value = 0,
@@ -85,7 +86,8 @@ public readonly record struct ReplayItem(
 	ulong Hash = 0,
 	string? Text = null,
 	PlayerAction? Action = null,
-	byte[]? Message = null
+	byte[]? Message = null,
+	short Speed = 0
 );
 
 // The file of a replay, compressed with gzip: the magic, the start (ReplayStart), then the records (ReplayRecord).
@@ -94,8 +96,11 @@ public static class ReplayFormat
 	public const string Extension = ".onspwr";
 
 	// The magic of this version of the format, and what every version's starts with: an older replay is told apart, to be
-	// refused (ReplayReader). 2 writes each action by its case (ReplayActionCase).
-	public static ReadOnlySpan<byte> Magic => "ONSPWRP2"u8;
+	// refused (ReplayReader). 2 writes each action by its case (ReplayActionCase); 3 writes a frame's speed, which a frame
+	// of 2 tells by its ticks only, as the frames of a speed may run other ticks (docs/SteadySpeed.md). 3 reads 2.
+	public static ReadOnlySpan<byte> Magic => "ONSPWRP3"u8;
+
+	public static ReadOnlySpan<byte> MagicOfVersion2 => "ONSPWRP2"u8;
 
 	public static ReadOnlySpan<byte> MagicOfAnyVersion => "ONSPWRP"u8;
 
@@ -202,11 +207,12 @@ public sealed class ReplayWriter : IDisposable
 		}
 	}
 
-	public void WriteFrame(int time, int ticks)
+	public void WriteFrame(int time, int ticks, short speed)
 	{
 		_writer.Write((byte)ReplayRecord.Frame);
 		_writer.Write7BitEncodedInt(time);
 		_writer.Write7BitEncodedInt(ticks);
+		_writer.Write7BitEncodedInt(speed);
 	}
 
 	public void WriteCamera(WorldPosition camera)
@@ -343,6 +349,12 @@ public sealed class ReplayReader : IDisposable
 {
 	private readonly BinaryReader _reader;
 
+	// Whether the replay is of version 2, whose frames have no speed (SpeedOfVersion2).
+	private readonly bool _isVersion2;
+
+	// The speed of the last frame of version 2 that was not run with Space held.
+	private short _speedOfVersion2 = 1;
+
 	public ReplayStart Start { get; }
 
 	// Bytes of a count that the file says, or EndOfStreamException if it is cut before they end.
@@ -406,7 +418,8 @@ public sealed class ReplayReader : IDisposable
 			var magic = _reader.ReadBytes(ReplayFormat.Magic.Length).AsSpan();
 			if (!magic.StartsWith(ReplayFormat.MagicOfAnyVersion))
 				throw new InvalidDataException("Not a replay of OpenNSPW.");
-			if (!magic.SequenceEqual(ReplayFormat.Magic))
+			_isVersion2 = magic.SequenceEqual(ReplayFormat.MagicOfVersion2);
+			if (!_isVersion2 && !magic.SequenceEqual(ReplayFormat.Magic))
 				throw new InvalidDataException(
 					"A replay of another version of OpenNSPW, which this one does not play."
 				);
@@ -426,6 +439,26 @@ public sealed class ReplayReader : IDisposable
 		{
 			throw new InvalidDataException("The replay ends before its start.");
 		}
+	}
+
+	// The game's speed shown in a frame of version 2, as its ticks tell it: 1.22 runs speed + 1 ticks a frame, a network
+	// game speed; both run 20 while Space is held, which leaves the speed as it was. A speed changed while Space is held
+	// shows once it is let go.
+	private short SpeedOfVersion2(int ticks)
+	{
+		if (ticks != 20)
+			_speedOfVersion2 = (short)(
+				Start.Mode == ReplayMode.Singleplayer ? Math.Max(ticks - 1, 0) : ticks
+			);
+		return _speedOfVersion2;
+	}
+
+	private ReplayItem ReadFrame()
+	{
+		var time = _reader.Read7BitEncodedInt();
+		var ticks = _reader.Read7BitEncodedInt();
+		var speed = _isVersion2 ? SpeedOfVersion2(ticks) : (short)_reader.Read7BitEncodedInt();
+		return new(ReplayRecord.Frame, Time: time, Value: ticks, Speed: speed);
 	}
 
 	private WorldPosition ReadPosition() => new(_reader.ReadDouble(), _reader.ReadDouble());
@@ -492,11 +525,7 @@ public sealed class ReplayReader : IDisposable
 			var kind = (ReplayRecord)_reader.ReadByte();
 			return kind switch
 			{
-				ReplayRecord.Frame => new(
-					kind,
-					Time: _reader.Read7BitEncodedInt(),
-					Value: _reader.Read7BitEncodedInt()
-				),
+				ReplayRecord.Frame => ReadFrame(),
 				ReplayRecord.Camera => new(
 					kind,
 					Camera: new WorldPosition(_reader.ReadDouble(), _reader.ReadDouble())

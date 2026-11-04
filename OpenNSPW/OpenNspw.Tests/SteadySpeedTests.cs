@@ -112,4 +112,49 @@ public sealed class SteadySpeedTests
 		var ticksPerPeriod = (game.Tick - tick) * 88.0 / (game.Now - now);
 		Assert.InRange(ticksPerPeriod, (speed + 1) * 0.9, (speed + 1) * 1.1);
 	}
+
+	// A replay records the speed that the player chose, which the frames' ticks no longer tell, and shows it again.
+	[Fact]
+	public void TheReplayShowsTheSteadySpeed()
+	{
+		var stream = new MemoryStream();
+		var recorder = new ReplayRecorder(_ => stream);
+		using (
+			var run = new SingleplayerRun(
+				3,
+				game =>
+				{
+					game.Extensions.Add(new SteadySpeed());
+					game.Extensions.Add(recorder);
+				}
+			)
+		)
+		{
+			run.Frames(5);
+			run.Game.GameSpeed = 4;
+			run.Frames(10);
+		}
+		recorder.Dispose();
+
+		var player = new ReplayPlayer(new MemoryStream(stream.ToArray()))
+		{
+			Speed = double.PositiveInfinity,
+		};
+		using var replayed = new SingleplayerRun(
+			3,
+			game =>
+			{
+				game.Extensions.Add(player);
+				game.Extensions.Add(new SteadySpeed());
+			}
+		);
+		replayed.Frames(3);
+		var before = replayed.Game.GameSpeed;
+		replayed.Frames(10);
+
+		Assert.Equal(1, before);
+		Assert.Equal(4, replayed.Game.GameSpeed);
+		Assert.Null(player.Divergence);
+		player.Dispose();
+	}
 }

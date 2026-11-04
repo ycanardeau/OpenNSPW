@@ -32,9 +32,6 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 	private bool _steps;
 	private bool _isTakenOver;
 
-	// The game's speed as the player had it in the frame (RecordedSpeed).
-	private short _recordedSpeed = 1;
-
 	// The camera as the player had it, which the game is given at each frame: the cursor still moves while the replay
 	// plays, and at the battlefield's edge would scroll the camera, which decides what is drawn, and so the battle.
 	private WorldPosition? _camera;
@@ -242,18 +239,6 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 		}
 	}
 
-	// The game's speed as the player had it, which the game shows, as the frame's ticks tell it: 1.22 runs speed + 1 ticks
-	// a frame, a network game speed; both run 20 while Space is held, which leaves the speed as it was. A speed changed
-	// while Space is held shows once it is let go.
-	private short RecordedSpeed(int ticks)
-	{
-		if (ticks != 20)
-			_recordedSpeed = (short)(
-				Start.Mode == ReplayMode.Singleplayer ? Math.Max(ticks - 1, 0) : ticks
-			);
-		return _recordedSpeed;
-	}
-
 	public short FrameStarting(Nspw game, short ticks)
 	{
 		FrameMilliseconds = null;
@@ -271,6 +256,8 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 		Milliseconds += _next.Time;
 		FrameMilliseconds = _next.Time;
 		ticks = (short)_next.Value;
+		// The game's speed as the player had it, which the game shows.
+		game.GameSpeed = _next.Speed;
 		for (
 			_next = _reader.Next();
 			_next.Kind is not (ReplayRecord.Frame or ReplayRecord.End);
@@ -278,7 +265,6 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 		)
 			_frame.Add(_next);
 		_nextTime += _next.Time;
-		game.GameSpeed = RecordedSpeed(ticks);
 		return ticks;
 	}
 

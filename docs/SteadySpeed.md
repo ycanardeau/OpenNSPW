@@ -23,3 +23,5 @@ Every frame runs 2 ticks, as at speed 1, and a faster speed runs more frames ins
 - It leaves alone a battle whose input an extension gives (`HoldsInput`): a replay that plays, a trace of 1.22.
 
 The fastest speed is as fast as the game draws frames: above it, the battle is the same, but slower than the speed shown.
+
+Replays record the speed shown in each frame ([Replays.md](Replays.md)), which the ticks no longer tell.

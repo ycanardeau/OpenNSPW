@@ -360,6 +360,49 @@ public sealed class ReplayTests
 		Assert.Contains("another version", exception.Message);
 	}
 
+	// A replay of version 2, whose frames have no speed, shows the speed that their ticks tell: speed + 1 ticks a frame,
+	// and 20 while Space is held, which leaves the speed as it was.
+	[Fact]
+	public void AReplayOfVersion2TellsTheSpeedByTheTicks()
+	{
+		var bytes = new MemoryStream();
+		using (
+			var gzip = new System.IO.Compression.GZipStream(
+				bytes,
+				System.IO.Compression.CompressionLevel.Fastest,
+				leaveOpen: true
+			)
+		)
+		using (var writer = new BinaryWriter(gzip))
+		{
+			writer.Write(ReplayFormat.MagicOfVersion2);
+			writer.Write((byte)ReplayMode.Singleplayer);
+			writer.Write((short)3);
+			writer.Write(0L);
+			writer.Write("");
+			writer.Write(0u);
+			writer.Write(0u);
+			writer.Write7BitEncodedInt(10);
+			writer.Write(false);
+			writer.Write7BitEncodedInt(0);
+			foreach (var ticks in new[] { 2, 5, 20, 0, 3 })
+			{
+				writer.Write((byte)ReplayRecord.Frame);
+				writer.Write7BitEncodedInt(88);
+				writer.Write7BitEncodedInt(ticks);
+			}
+			writer.Write((byte)ReplayRecord.End);
+		}
+
+		bytes.Position = 0;
+		using var reader = new ReplayReader(bytes);
+		var speeds = new List<short>();
+		for (var item = reader.Next(); item.Kind != ReplayRecord.End; item = reader.Next())
+			speeds.Add(item.Speed);
+
+		Assert.Equal(new short[] { 1, 4, 4, 0, 2 }, speeds);
+	}
+
 	// A battle of ミッドウェイ攻略１ between two games, each recorded: the host has a transport land, with the mouse, and
 	// the guest sends a ship away, with the commands, so that each game's replay has the rival's orders as well as its own.
 	private static (byte[] Host, byte[] Guest) RecordNetwork(int frames)
