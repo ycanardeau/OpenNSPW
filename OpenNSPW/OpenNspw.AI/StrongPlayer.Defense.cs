@@ -148,10 +148,14 @@ public sealed partial class StrongPlayer
 
 	// Where the player holds on, the ready fighters and attackers of its air bases 4000 or more away fly to the one
 	// nearest the enemy, as many as it has room for (Capacity), within 70% of their range, to defend it from there: in
-	// the air, they are given it as their base, and come down there (Return).
+	// the air, they are given it as their base, and come down there (Return). With Parameters.Rebase only.
 	private bool TryRebase(Nspw game, List<int> decks)
 	{
-		if (!_knowledge.HoldsOn || FrontAirBase(game) is not (> 0 and var front))
+		if (
+			!Parameters.Rebase
+			|| !_knowledge.HoldsOn
+			|| FrontAirBase(game) is not (> 0 and var front)
+		)
 			return false;
 
 		foreach (var (leader, airBase) in _rebasing)

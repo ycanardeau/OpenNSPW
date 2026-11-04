@@ -549,7 +549,8 @@ public sealed partial class StrongPlayer
 	// it. With Parameters.HoldCourse, a carrier whose planes are landing (IsLandingOn) holds its course, unless it is
 	// within the range; with Parameters.StrikeOutMargin, one whose strike is out keeps that margin instead, and with
 	// Parameters.HoldForStrike, it stays where it is, unless it is within its margin; with Parameters.LookaheadPosition,
-	// it keeps away, holds or closes in as looking ahead shows best (LookAheadStance).
+	// it keeps away, holds or closes in as looking ahead shows best (LookAheadStance), and with
+	// Parameters.LookaheadPositionEvery, it looks ahead that often, its strike out or not.
 	private bool TryPosition(Nspw game, List<int> decks)
 	{
 		if (HoldsFleet(game))
@@ -576,10 +577,27 @@ public sealed partial class StrongPlayer
 				UnitFacts.Distance(t.Position, position) - t.Range
 			);
 			var isStrikeOut = IsStrikeOut(game, carrier);
-			if (!isStrikeOut)
+			if (Parameters.LookaheadPositionEvery > 0)
+			{
+				if (
+					Parameters.LookaheadPosition
+					&& !_isFork
+					&& UnitFacts.Now(game) - _stanceAt.GetValueOrDefault(carrier, int.MinValue / 2)
+						>= Parameters.LookaheadPositionEvery
+				)
+				{
+					_stances[carrier] = LookAheadStance(game, carrier);
+					_stanceAt[carrier] = UnitFacts.Now(game);
+				}
+			}
+			else if (!isStrikeOut)
+			{
 				_stances.Remove(carrier);
+			}
 			else if (Parameters.LookaheadPosition && !_isFork && !_stances.ContainsKey(carrier))
+			{
 				_stances[carrier] = LookAheadStance(game, carrier);
+			}
 
 			var stance = _stances.GetValueOrDefault(carrier);
 			var low =

@@ -1410,15 +1410,17 @@ public sealed partial class StrongPlayer
 	// While hunting carriers, a strike plane in the air, but its scouts, comes home once it has fuel for little more
 	// than that (FuelToHome), the formation it leads with it: the game turns a plane home only at 20, which is too
 	// little when it is far, and the player's carriers may have sailed off while it was away. A plane attacking a
-	// target it sees within 2500 finishes its run first, on most of FuelToHome's margin.
+	// target it sees within 2500 finishes its run first, on most of FuelToHome's margin. With Parameters.FighterBingo, a
+	// fighter too, hunting carriers or not: one that chases a raid far from its deck runs dry otherwise.
 	private bool TryBingo(Nspw game)
 	{
-		if (!HuntsCarriers)
+		if (!HuntsCarriers && !Parameters.FighterBingo)
 			return false;
 
 		for (var m = 1; m <= game.MaxUnitId; m++)
 		{
 			ref var unit = ref game.Units[m];
+			var isFighter = unit.Kind == UnitKind.Fighter;
 			var attacking =
 				unit.Target != 0
 				&& game.Units[unit.Target].IsUsed
@@ -1426,14 +1428,22 @@ public sealed partial class StrongPlayer
 				&& UnitFacts.Distance(unit.Position, game.Units[unit.Target].Position) <= 2500;
 			if (
 				!IsOwn(game, m)
-				|| !UnitFacts.IsStrikePlane(unit.Kind)
+				|| !(
+					isFighter
+						? Parameters.FighterBingo
+						: HuntsCarriers && UnitFacts.IsStrikePlane(unit.Kind)
+				)
 				|| unit.PlaneState != UnitState.Flying
 				|| unit.GroupLeader != 0
 				|| unit.Mode == UnitMode.Return
 				|| _scoutLegs.ContainsKey(m)
 				|| unit.Fuel
 					> FuelToHome(game, m)
-						+ (attacking ? Parameters.AttackingBingoMargin : Parameters.BingoMargin)
+						+ (
+							attacking && !isFighter
+								? Parameters.AttackingBingoMargin
+								: Parameters.BingoMargin
+						)
 			)
 				continue;
 
@@ -1945,12 +1955,13 @@ public sealed partial class StrongPlayer
 						game.Units[n].Kind == UnitKind.Fighter
 						&& UnitFacts.IsReady(ref game.Units[n])
 				);
-				var escorts = HuntsCarriers
-					? []
-					: fighters.Take(
-						fighters.Count
-							- (int)Math.Ceiling(fighters.Count * Parameters.FightersKeptBack)
-					);
+				var escorts =
+					HuntsCarriers && !Parameters.EscortHunts
+						? []
+						: fighters.Take(
+							fighters.Count
+								- (int)Math.Ceiling(fighters.Count * Parameters.FightersKeptBack)
+						);
 				ShowDeck(deck);
 				SelectPlanes(ready[0], ready.Skip(1).Concat(escorts));
 				if (target is not null)

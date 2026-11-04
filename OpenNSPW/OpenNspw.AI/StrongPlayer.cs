@@ -132,6 +132,10 @@ public sealed partial class StrongPlayer : IPlayer
 	private int _statusAt;
 	private readonly Dictionary<int, int> _positioned = [];
 	private readonly Dictionary<int, StrikeStance> _stances = [];
+	private readonly Dictionary<int, int> _stanceAt = [];
+	private StrongParameters _parameters = new();
+	private StrongParameters? _setParameters;
+	private int _planAt = int.MinValue / 2;
 	private readonly Dictionary<int, (int Target, int Until)> _forcedStrikes = [];
 	private readonly HashSet<int> _repairing = [];
 	private readonly Dictionary<int, int> _repairOrdered = [];
@@ -164,7 +168,11 @@ public sealed partial class StrongPlayer : IPlayer
 	public FormationShape Formation { get; init; } = new(FormationKind.Line, 0);
 
 	// The numbers its tactics turn on.
-	public StrongParameters Parameters { get; init; } = new();
+	public StrongParameters Parameters
+	{
+		get => _parameters;
+		init => _parameters = value;
+	}
 
 	// What it knows of the battle, in place of what it knows of the scenario (ScenarioKnowledge.For): for a battle of the
 	// arena's own, which no briefing tells of.
@@ -504,6 +512,40 @@ public sealed partial class StrongPlayer : IPlayer
 		_clicks.Act(game);
 	}
 
+	// Chooses how the player plays on, with Parameters.LookaheadPlans, as set, every LookaheadPlansEvery frames: each of
+	// the plans looked ahead on (LookAhead), the first that scores best played on, or the one it plays if that is as
+	// good. A copy of the player chooses none; it plays the plan it is given.
+	private void TryChoosePlan(Nspw game)
+	{
+		var set = _setParameters ??= _parameters;
+		if (
+			!set.LookaheadPlans
+			|| _isFork
+			|| game.Result != GameResult.None
+			|| UnitFacts.Now(game) - _planAt < set.LookaheadPlansEvery
+		)
+			return;
+
+		_planAt = UnitFacts.Now(game);
+		var texts = set.Plans.Split(';');
+		var plans = texts.Select(set.With).ToArray();
+		var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+		var scores = LookAhead(
+			game,
+			plans.Length,
+			(player, candidate) => player._parameters = plans[candidate],
+			set.LookaheadPlansFrames
+		);
+		var current = Array.IndexOf(plans.Select(p => p == _parameters).ToArray(), true);
+		var best = Array.IndexOf(scores, scores.Max());
+		if (current >= 0 && scores[current] >= scores[best])
+			best = current;
+		_parameters = plans[best];
+		Log?.Invoke(
+			$"{UnitFacts.Now(game)}: lookahead plays plan {best} ({texts[best]}), in {stopwatch.ElapsedMilliseconds} ms: {string.Join(" ", scores.Select(v => v.ToString("F1")))}"
+		);
+	}
+
 	public void Act(Nspw game)
 	{
 		if (_knowledge.Enemy.Count == 0 && _knowledge.Counted.Count == 0)
@@ -518,7 +560,10 @@ public sealed partial class StrongPlayer : IPlayer
 		CountDrops(game);
 		UpdateSearchMap(game);
 		if (_clicks.IsEmpty(game))
+		{
+			TryChoosePlan(game);
 			Plan(game);
+		}
 
 		GiveClicks(game);
 	}

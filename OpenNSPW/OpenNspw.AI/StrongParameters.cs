@@ -54,6 +54,17 @@ public sealed record StrongParameters
 	// The share of a deck's fighters kept back from escorting its strikes, to meet the enemy's.
 	public double FightersKeptBack { get; init; } = 0.5;
 
+	// Whether a strike that hunts carriers takes fighters along, as one at other targets does (FightersKeptBack), rather
+	// than none.
+	public bool EscortHunts { get; init; }
+
+	// Whether a fighter in the air comes home once it has fuel for little more than the way (TryBingo), as strike planes
+	// do while hunting carriers.
+	public bool FighterBingo { get; init; }
+
+	// Whether, where the player holds on, its planes rebase to the air base nearest the enemy (TryRebase).
+	public bool Rebase { get; init; } = true;
+
 	// The frames before a target engaged may be engaged again.
 	public int RetargetFrames { get; init; } = 400;
 
@@ -180,6 +191,10 @@ public sealed record StrongParameters
 	public bool LookaheadPosition { get; init; } = true;
 	public int LookaheadPositionFrames { get; init; } = 2500;
 
+	// With LookaheadPosition, how often a carrier looks ahead at its stance, its strike out or not; 0 looks ahead only
+	// as its strike takes off, keeping away otherwise.
+	public int LookaheadPositionEvery { get; init; }
+
 	// Whether a strike about to take off goes at its target, at another the victory conditions count within its reach,
 	// or waits StrikeWaitFrames, as playing each forward in copies of the battle shows best (LookAheadStrike); for this
 	// many frames, on LookaheadSeeds seeds.
@@ -189,6 +204,17 @@ public sealed record StrongParameters
 
 	// What the player's own losses count for in a lookahead's points (Points), against the enemy's at 1.
 	public double LookaheadOwnLoss { get; init; } = 1;
+
+	// Whether the player chooses how it plays by looking ahead (TryChoosePlan): every LookaheadPlansEvery frames, each of
+	// Plans, the parameters as set with some set otherwise (With), the plans `;` apart, is played LookaheadPlansFrames
+	// frames forward in copies of the battle, and the one that scores best is played on. The first plan, empty, plays
+	// as set; then one that closes in and strikes with what is ready, one that keeps farther away, and one that goes in
+	// within the enemy's strike range.
+	public bool LookaheadPlans { get; init; }
+	public int LookaheadPlansEvery { get; init; } = 3000;
+	public int LookaheadPlansFrames { get; init; } = 6000;
+	public string Plans { get; init; } =
+		";KeepAwayMargin=0,StrikeOutMargin=0,MinStrike=1,HuntScouts=1;KeepAwayMargin=2000;KeepAwayMargin=-1500";
 
 	// Whether the battleships and cruisers take as their target the enemy attackers within their anti-aircraft reach
 	// (TryTargetAttackers), which fire more at a target, and not at all with a ship as their target.
@@ -254,9 +280,10 @@ public sealed record StrongParameters
 	public double EscortShare { get; init; } = 1 / 3.0;
 
 	// The parameters from "Name=value,Name=value", the others at their defaults.
-	public static StrongParameters Parse(string text)
+	// These parameters with some set otherwise, as `Name=value,Name=value`.
+	public StrongParameters With(string text)
 	{
-		var parameters = new StrongParameters();
+		var parameters = this with { };
 		foreach (var pair in text.Split(',', StringSplitOptions.RemoveEmptyEntries))
 		{
 			var parts = pair.Split('=');
@@ -277,4 +304,6 @@ public sealed record StrongParameters
 
 		return parameters;
 	}
+
+	public static StrongParameters Parse(string text) => new StrongParameters().With(text);
 }
