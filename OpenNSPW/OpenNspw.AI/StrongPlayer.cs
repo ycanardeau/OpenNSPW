@@ -143,6 +143,9 @@ public sealed partial class StrongPlayer : IPlayer
 	private readonly Dictionary<int, Queue<WorldPosition>> _scoutLegs = [];
 	private readonly Dictionary<int, int> _scoutLaunches = [];
 	private ScenarioKnowledge _knowledge = ScenarioKnowledge.For(0);
+	private ScenarioKnowledge? _briefing;
+	private readonly Dictionary<int, int> _recordedAt = [];
+	private int _recalledAt = int.MinValue / 2;
 	private int _searches;
 	private int _lastScout = int.MinValue / 2;
 	private int _lastBlindStrike = -1;
@@ -173,6 +176,9 @@ public sealed partial class StrongPlayer : IPlayer
 		get => _parameters;
 		init => _parameters = value;
 	}
+
+	// What it remembers of past games of the scenarios (ScenarioMemory), which it adds to, or null.
+	public ScenarioMemory? Memory { get; init; }
 
 	// What it knows of the battle, in place of what it knows of the scenario (ScenarioKnowledge.For): for a battle of the
 	// arena's own, which no briefing tells of.
@@ -498,6 +504,10 @@ public sealed partial class StrongPlayer : IPlayer
 		};
 		if (Log is not null)
 			mapped[Log] = null;
+		if (Memory is not null)
+			mapped[Memory] = Memory;
+		if (_briefing is not null)
+			mapped[_briefing] = _briefing;
 
 		var copy = (StrongPlayer)new ObjectCopy(mapped).Copy(this)!;
 		copy._isFork = true;
@@ -546,6 +556,75 @@ public sealed partial class StrongPlayer : IPlayer
 		);
 	}
 
+	// Adds to the memory where the enemy units the victory conditions count are found now, each every 250 frames at
+	// most; a copy of the player adds nothing.
+	private void Remember(Nspw game)
+	{
+		if (Memory is null || _isFork)
+			return;
+
+		foreach (var contact in _contacts.All)
+		{
+			if (
+				contact.Frame != UnitFacts.Now(game)
+				|| contact.Category != UnitCategory.Ship
+				|| !IsCounted(contact.Kind)
+				|| UnitFacts.Now(game)
+					- _recordedAt.GetValueOrDefault(contact.Unit, int.MinValue / 2)
+					< 250
+			)
+				continue;
+
+			_recordedAt[contact.Unit] = UnitFacts.Now(game);
+			Memory.Add(
+				game.ScenarioNumber,
+				new ScenarioMemory.Sighting(
+					contact.Unit,
+					contact.Kind,
+					UnitFacts.Now(game),
+					contact.Position.X,
+					contact.Position.Y
+				)
+			);
+		}
+	}
+
+	// With Parameters.UseMemory, every 250 frames, the areas where the enemy is expected: where the memory has each unit
+	// the victory conditions count at this frame of past games, but those found lately and those seen sunk, in place of
+	// the briefing's fleets (ScenarioKnowledge), whose places stay: a player who plays a scenario again looks for its
+	// carriers where they were.
+	private void Recall(Nspw game)
+	{
+		_briefing ??= _knowledge;
+		if (Memory is null || !Parameters.UseMemory || UnitFacts.Now(game) - _recalledAt < 250)
+			return;
+
+		_recalledAt = UnitFacts.Now(game);
+		var remembered = Memory
+			.Expected(game.ScenarioNumber, UnitFacts.Now(game))
+			.Where(e =>
+				IsCounted(e.Kind)
+				&& !(
+					_contacts.Find(e.Unit) is { } contact
+					&& (!game.Units[e.Unit].IsUsed || UnitFacts.Now(game) - contact.Frame < 600)
+				)
+			)
+			.Select(e => new Area(
+				$"where {e.Kind} {e.Unit} was",
+				e.Center,
+				Math.Max(600, e.Spread * 1.5),
+				false
+			))
+			.ToList();
+		_knowledge = _briefing with
+		{
+			Enemy =
+				remembered.Count == 0
+					? _briefing.Enemy
+					: [.. remembered, .. _briefing.Enemy.Where(a => a.IsPlace)],
+		};
+	}
+
 	public void Act(Nspw game)
 	{
 		if (_knowledge.Enemy.Count == 0 && _knowledge.Counted.Count == 0)
@@ -557,6 +636,8 @@ public sealed partial class StrongPlayer : IPlayer
 		_statusAt = UnitFacts.Now(game);
 
 		_contacts.Update(game);
+		Remember(game);
+		Recall(game);
 		CountDrops(game);
 		UpdateSearchMap(game);
 		if (_clicks.IsEmpty(game))

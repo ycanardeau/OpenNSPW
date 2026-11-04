@@ -85,6 +85,9 @@ public sealed record StrongParameters
 	// and comes home once the ships there are sunk (TrySailToRaid, TryReturnHome).
 	public bool RaidYokosuka { get; init; }
 
+	// Whether the player expects the enemy where it was in past games of the scenario (Recall), given a memory.
+	public bool UseMemory { get; init; } = true;
+
 	// The frames before a target engaged may be engaged again.
 	public int RetargetFrames { get; init; } = 400;
 

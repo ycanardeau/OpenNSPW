@@ -9,7 +9,7 @@ using OpenNspw.Arena;
 //
 //   dotnet run -c Release --project OpenNspw.Arena -- [--scenarios 4,5,6|carriers|all] [--dates 3] [--first-date 0] [--players idle,rush]
 //       [--parallel <cores>] [--out results.csv] [--frames <limit>] [--verbose] [--sees-all] [--formation line|ring:400|screen:400|auto:400] [--speed 1]
-//       [--params Name=value,Name=value]
+//       [--params Name=value,Name=value] [--memory <dir> [--memory-readonly]]
 //   dotnet run -c Release --project OpenNspw.Arena -- --tune <candidates> [--tune-rounds 3] [--tune-seed 1] [--scenarios ...]
 //       [--first-date 100] [--dates 2] [--frames <limit>] [--formation ...] [--out tune.csv]
 //       [--trace <units> [--trace-from <frame>] [--trace-to <frame>] [--trace-every <frames>]] [--strikes]
@@ -27,7 +27,8 @@ static IPlayer CreatePlayer(
 	bool verbose,
 	bool seesAll,
 	FormationShape? formation,
-	StrongParameters parameters
+	StrongParameters parameters,
+	ScenarioMemory? memory
 ) =>
 	name switch
 	{
@@ -40,12 +41,14 @@ static IPlayer CreatePlayer(
 			SeesEverything = seesAll,
 			Formation = formation,
 			Parameters = parameters,
+			Memory = memory,
 		},
 		"strong" => new StrongPlayer
 		{
 			Log = verbose ? Console.WriteLine : null,
 			SeesEverything = seesAll,
 			Parameters = parameters,
+			Memory = memory,
 		},
 		_ => throw new ArgumentException($"No player is named {name}."),
 	};
@@ -159,6 +162,11 @@ FormationShape? formation =
 	formationOption.Length == 0 ? null : FormationShape.Parse(formationOption);
 var trace = UnitTrace.FromOptions((name, defaultValue) => Option(args, name, defaultValue));
 
+// --memory <dir>: what the strong player saw in past games (ScenarioMemory), loaded from the directory, and saved there
+// after, with what it saw, unless --memory-readonly.
+var memoryDirectory = Option(args, "--memory", "");
+var memory = memoryDirectory.Length == 0 ? null : ScenarioMemory.Load(memoryDirectory);
+
 var data = GameData.Find();
 if (Option(args, "--skirmishes", "") is { Length: > 0 } skirmishNames)
 {
@@ -228,7 +236,7 @@ if (Option(args, "--fork-check", "") is { Length: > 0 } forkText)
 			data,
 			scenario,
 			1_000_000_000 + (firstDate * 7919),
-			CreatePlayer(players[0], verbose, seesAll, formation, parameters),
+			CreatePlayer(players[0], verbose, seesAll, formation, parameters, memory),
 			forkCheckAt: int.Parse(forkText, CultureInfo.InvariantCulture),
 			forkPlays: args.Contains("--fork-plays")
 		);
@@ -288,7 +296,7 @@ var results = GamePool.Play(
 						data,
 						job.Scenario,
 						job.StartDate,
-						CreatePlayer(job.Player, verbose, seesAll, formation, parameters),
+						CreatePlayer(job.Player, verbose, seesAll, formation, parameters, memory),
 						maxFrames,
 						trace,
 						strikes,
@@ -302,6 +310,8 @@ var results = GamePool.Play(
 
 var all = results.OrderBy(r => r.Scenario).ThenBy(r => r.Player).ThenBy(r => r.StartDate).ToList();
 File.WriteAllLines(outPath, Benchmark.Lines(all));
+if (memory is not null && !args.Contains("--memory-readonly"))
+	memory.Save(memoryDirectory);
 if (Option(args, "--torpedoes", "") is { Length: > 0 } torpedoesPath)
 {
 	File.WriteAllLines(
