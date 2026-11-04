@@ -677,8 +677,8 @@ public sealed partial class StrongPlayer
 	// While hunting carriers, once the strikes have dropped two weapons or more on a carrier found lately (CountDrops),
 	// the cruisers and destroyers screening the player's carriers leave them, one at a time, and go at it, as TryEngage
 	// then sends each, its worth first: a crippled carrier is slow to get away from them, while the player's carriers
-	// keep out of the computer's strike range, which the warships need not. They go only as many as the enemy's
-	// warships found lately within 4000 of the carrier, or more, and while no enemy attacker or bomber has been found
+	// keep out of the computer's strike range, which the warships need not. They go only Parameters.DetachRatio times
+	// as many as the enemy's warships found lately within 4000 of the carrier, or more, and while no enemy attacker or bomber has been found
 	// in the air for 3000 frames; the battleships, whose anti-aircraft guns reach farthest, stay: a computer that still
 	// strikes would find the carriers without their guns. None go without Parameters.Detach.
 	private bool TryDetach(Nspw game)
@@ -733,7 +733,7 @@ public sealed partial class StrongPlayer
 			&& UnitFacts.Now(game) - c.Frame < Parameters.CarrierMemoryFrames
 			&& UnitFacts.Distance(c.Position, crippled.Position) <= 4000
 		);
-		if (screening.Count == 0 || screening.Count + detached < guns)
+		if (screening.Count == 0 || screening.Count + detached < guns * Parameters.DetachRatio)
 			return false;
 
 		var warship = screening[0];
