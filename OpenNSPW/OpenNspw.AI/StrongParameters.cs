@@ -81,6 +81,10 @@ public sealed record StrongParameters
 	// fighters, and stays there (TryGuardAnchorage).
 	public bool GuardAnchorage { get; init; }
 
+	// Whether, in scenario 109, the fleet sails to strike Yokosuka from 5000 away, its strikes held until it is there,
+	// and comes home once the ships there are sunk (TrySailToRaid, TryReturnHome).
+	public bool RaidYokosuka { get; init; }
+
 	// The frames before a target engaged may be engaged again.
 	public int RetargetFrames { get; init; } = 400;
 

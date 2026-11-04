@@ -49,6 +49,11 @@ public sealed partial class StrongPlayer
 
 	private readonly HashSet<int> _gatheredFrom = [];
 	private readonly HashSet<int> _guarding = [];
+
+	// Scenario 109: where the fleet strikes Yokosuka from, 5000 from it, beyond the guns of what guards it.
+	private static readonly WorldPosition RaidPoint = new(-3500, 1800);
+
+	private int _raidOrdered = int.MinValue / 2;
 	private int _lastSweep = int.MinValue / 2;
 
 	private bool IsMissionOrderDue(Nspw game, int frames) =>
@@ -125,6 +130,43 @@ public sealed partial class StrongPlayer
 			SelectAlone(m, "guarding");
 			var point = PointAt(anchorage, m * 53.0, 250 + (60.0 * (m % 4)));
 			return SailSelected(game, m, point, "guards the anchorage at") || true;
+		}
+
+		return false;
+	}
+
+	// Scenario 109: whether the player's carriers are at the raid point, within 1500 of it, where the strikes go.
+	private bool IsAtRaidPoint(Nspw game) =>
+		Decks(game)
+			.Any(d =>
+				game.Units[d].Category == UnitCategory.Ship
+				&& UnitFacts.Distance(game.Units[d].Position, RaidPoint) <= 1500
+			);
+
+	// Scenario 109: until Yokosuka's ships are sunk (ArePlacesDestroyed), each of the player's ships that leads or sails
+	// alone, and is not on its way to the raid point, sails there, every 600 frames at most: the carriers keep away from
+	// the places the briefing names otherwise (TryPosition), out of reach, and their strikes go at the first warships
+	// found.
+	private bool TrySailToRaid(Nspw game)
+	{
+		if (ArePlacesDestroyed(game) || UnitFacts.Now(game) - _raidOrdered < 600)
+			return false;
+
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var ship = ref game.Units[m];
+			if (
+				!IsOwn(game, m)
+				|| ship.Category != UnitCategory.Ship
+				|| UnitFacts.IsBase(ship.Kind)
+				|| ship.GroupLeader != 0
+				|| UnitFacts.Distance(UnitFacts.FinalDestination(ref ship), RaidPoint) < 800
+			)
+				continue;
+
+			_raidOrdered = UnitFacts.Now(game);
+			SelectAlone(m, "raiding");
+			return SailSelected(game, m, RaidPoint, "sails to raid Yokosuka from") || true;
 		}
 
 		return false;
@@ -731,6 +773,7 @@ public sealed partial class StrongPlayer
 			205 => TryRescue(game),
 			8 when Parameters.GuardAnchorage => TryGuardAnchorage(game),
 			10 when Parameters.GatherAndSweep => TryGatherFighters(game) || TrySweepSaipan(game),
+			109 when Parameters.RaidYokosuka => TryReturnHome(game) || TrySailToRaid(game),
 			107 when Parameters.AmbushYamamoto => TrySailToAmbush(game) || TryGunsOnYamamoto(game),
 			_ => TryReturnHome(game),
 		};
@@ -741,6 +784,8 @@ public sealed partial class StrongPlayer
 		{
 			300 => !IsDoolittleLaunching(game) || CitiesDestroyed(game) >= 2,
 			107 => Parameters.AmbushYamamoto,
+			109 when Parameters.RaidYokosuka => !IsAtRaidPoint(game)
+				|| (_knowledge.Home is not null && ArePlacesDestroyed(game)),
 			_ => _knowledge.Home is not null && ArePlacesDestroyed(game),
 		};
 
@@ -767,6 +812,7 @@ public sealed partial class StrongPlayer
 			300 => true,
 			107 => Parameters.AmbushYamamoto,
 			8 => Parameters.GuardAnchorage,
+			109 when Parameters.RaidYokosuka => true,
 			_ => _knowledge.Home is not null && ArePlacesDestroyed(game),
 		};
 }
