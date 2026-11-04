@@ -102,6 +102,10 @@ public sealed record StrongParameters
 	// (TryAimOpening), not left to drop at the nearest escort.
 	public bool AimOpening { get; init; }
 
+	// Whether the planes of scenario 9's opening strike wait across the way of the carrier found, ahead of it, and take it
+	// as their target only as it comes on (TryAmbushTrack).
+	public bool AmbushTrack { get; init; }
+
 	// Whether the player expects the enemy where it was in past games of the scenario (Recall), given a memory.
 	public bool UseMemory { get; init; } = true;
 

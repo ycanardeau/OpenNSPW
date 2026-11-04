@@ -233,6 +233,76 @@ public sealed partial class StrongPlayer
 		return false;
 	}
 
+	// Scenario 9: each plane of the opening strike, armed, within 4000 of an enemy carrier found, waits ahead of it, 800
+	// along its course and spread across it, 150 apart, and takes it as its target once it comes within 450, every 100
+	// frames: as a player who won it lined the attackers up across the fleet's way, which sailed into their torpedoes,
+	// where flown at the carrier among its escorts, most are shot down by their guns.
+	private bool TryAmbushTrack(Nspw game)
+	{
+		if (!Parameters.AmbushTrack)
+			return false;
+
+		var index = 0;
+		foreach (var m in _oneWay.Order())
+		{
+			ref var plane = ref game.Units[m];
+			if (!IsOwn(game, m) || plane.PlaneState != UnitState.Flying || plane.Ammo == 0)
+				continue;
+
+			index++;
+			if (UnitFacts.Now(game) - _gunsOnYamamoto.GetValueOrDefault(m, -1000) < 100)
+				continue;
+
+			var position = plane.Position;
+			var carrier = _contacts
+				.All.Where(c =>
+					c.Kind is UnitKind.Carrier or UnitKind.LightCarrier
+					&& game.Units[c.Unit].IsUsed
+					&& game.Units[c.Unit].IsFound
+					&& UnitFacts.Distance(position, game.Units[c.Unit].Position) <= 4000
+				)
+				.MinBy(c => UnitFacts.Distance(position, game.Units[c.Unit].Position));
+			if (carrier is null || plane.Target == carrier.Unit)
+				continue;
+
+			_gunsOnYamamoto[m] = UnitFacts.Now(game);
+			ref var target = ref game.Units[carrier.Unit];
+			var unit = carrier.Unit;
+			if (UnitFacts.Distance(position, target.Position) <= 450)
+			{
+				SelectFlying(m, "springing the ambush");
+				_clicks.Enqueue(g =>
+				{
+					if (g.SelectedUnit != m || !g.Units[unit].IsUsed)
+						return GiveUp(g, $"springing the ambush {m}: selected {g.SelectedUnit}");
+					g.Commands.ClickUnit(unit);
+					return true;
+				});
+				Deselect();
+				return true;
+			}
+
+			var heading = target.Direction.Degrees;
+			var across = ((index % 2 == 0 ? 1 : -1) * 150.0 * (index / 2)) + 75;
+			var station = PointAt(PointAt(target.Position, heading, 800), heading + 90, across);
+			if (UnitFacts.Distance(UnitFacts.FinalDestination(ref plane), station) < 150)
+				continue;
+
+			SelectFlying(m, "lying in wait");
+			_clicks.Enqueue(g =>
+			{
+				if (g.SelectedUnit != m)
+					return GiveUp(g, $"lying in wait {m}: selected {g.SelectedUnit}");
+				g.Commands.SetDestination(station);
+				return true;
+			});
+			Deselect();
+			return true;
+		}
+
+		return false;
+	}
+
 	// Scenarios 9 and 201: each plane of the opening strike, armed, within 3000 of an enemy carrier found, takes it as its
 	// target, once, as a player who won them clicked the carriers for the strike: left to the game's attack, a plane
 	// drops at the escort nearest it, and the carrier, 41 HP, needs every torpedo.
@@ -998,7 +1068,9 @@ public sealed partial class StrongPlayer
 			205 => TryRescue(game),
 			8 when Parameters.GuardAnchorage => TryGuardAnchorage(game),
 			10 when Parameters.GatherAndSweep => TryGatherFighters(game) || TrySweepSaipan(game),
-			9 when Parameters.OpeningStrike => TryOpeningStrike(game) || TryAimOpening(game),
+			9 when Parameters.OpeningStrike => TryOpeningStrike(game)
+				|| TryAmbushTrack(game)
+				|| TryAimOpening(game),
 			201 when Parameters.InterceptCarrier => TrySailAtHornet(game)
 				|| TryTorpedoHornet(game)
 				|| TryOpeningStrike(game)
