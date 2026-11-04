@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Globalization;
 using System.Text;
 
@@ -49,29 +50,81 @@ public static partial class crt
 		};
 	}
 
-	private static void Pad(List<byte> output, byte[] text, int width, bool left, byte fill)
+	// Where Format writes: a buffer, as far as it goes. What goes past its end is dropped, as the text is cut to it.
+	private ref struct Output(Span<byte> buffer)
 	{
-		if (left)
+		private readonly Span<byte> _buffer = buffer;
+
+		public int Length { get; private set; }
+
+		public void Add(byte value)
 		{
-			output.AddRange(text);
+			if (Length < _buffer.Length)
+			{
+				_buffer[Length++] = value;
+			}
 		}
 
-		for (var i = text.Length; i < width; i++)
+		public void Add(scoped ReadOnlySpan<byte> text)
 		{
-			output.Add(left ? (byte)' ' : fill);
+			foreach (var value in text)
+			{
+				Add(value);
+			}
 		}
 
-		if (!left)
+		public void Add(byte value, int count)
 		{
-			output.AddRange(text);
+			for (var i = 0; i < count; i++)
+			{
+				Add(value);
+			}
 		}
 	}
 
-	// Formats like the MSVC printf family for the conversions the game uses: d, i, u, x, X, c, s and %, with the flags
-	// '-' and '0', a width and a precision.
-	private static byte[] Format(ReadOnlySpan<byte> format, object?[] args)
+	private static void Pad(
+		ref Output output,
+		scoped ReadOnlySpan<byte> text,
+		int width,
+		bool left,
+		byte fill
+	)
 	{
-		var output = new List<byte>();
+		if (left)
+		{
+			output.Add(text);
+		}
+
+		output.Add(left ? (byte)' ' : fill, width - text.Length);
+
+		if (!left)
+		{
+			output.Add(text);
+		}
+	}
+
+	// A number's digits, in `scratch`.
+	private static ReadOnlySpan<byte> Digits<T>(
+		T number,
+		Span<byte> scratch,
+		ReadOnlySpan<char> format = default
+	)
+		where T : IUtf8SpanFormattable
+	{
+		number.TryFormat(scratch, out var length, format, CultureInfo.InvariantCulture);
+		return scratch[..length];
+	}
+
+	// Formats like the MSVC printf family for the conversions the game uses: d, i, u, x, X, c, s and %, with the flags
+	// '-' and '0', a width and a precision. Writes nothing but into `output`, so that the game's texts, which it writes
+	// every frame, make no garbage.
+	private static void Format(
+		ref Output output,
+		ReadOnlySpan<byte> format,
+		ReadOnlySpan<object?> args
+	)
+	{
+		Span<byte> scratch = stackalloc byte[24];
 		var next = 0;
 		var i = 0;
 		while (i < format.Length && format[i] != 0)
@@ -127,41 +180,60 @@ public static partial class crt
 			switch (conversion)
 			{
 				case 'd' or 'i':
+					// The sign, then the digits with zeros before them up to the precision, and up to the width with the
+					// sign when the flag '0' fills; padded with spaces.
 					var number = (int)ToInteger(args[next++]);
-					var digits = Math.Abs((long)number).ToString(CultureInfo.InvariantCulture);
-					if (precision >= 0)
-					{
-						digits = digits.PadLeft(precision, '0');
-					}
-
-					var sign = number < 0 ? "-" : "";
+					var digits = Digits(Math.Abs((long)number), scratch);
+					var signLength = number < 0 ? 1 : 0;
+					var zeros = Math.Max(precision - digits.Length, 0);
 					if (fill == '0')
 					{
-						digits = digits.PadLeft(width - sign.Length, '0');
+						zeros = Math.Max(zeros, width - signLength - digits.Length);
 					}
 
-					Pad(output, Encoding.ASCII.GetBytes(sign + digits), width, left, (byte)' ');
+					var length = signLength + zeros + digits.Length;
+					if (!left)
+					{
+						output.Add((byte)' ', width - length);
+					}
+
+					if (number < 0)
+					{
+						output.Add((byte)'-');
+					}
+
+					output.Add((byte)'0', zeros);
+					output.Add(digits);
+					if (left)
+					{
+						output.Add((byte)' ', width - length);
+					}
+
 					break;
 				case 'u':
 					Pad(
-						output,
-						Encoding.ASCII.GetBytes(
-							((uint)ToInteger(args[next++])).ToString(CultureInfo.InvariantCulture)
-						),
+						ref output,
+						Digits((uint)ToInteger(args[next++]), scratch),
 						width,
 						left,
 						fill
 					);
 					break;
 				case 'x' or 'X':
-					var hex = ((uint)ToInteger(args[next++])).ToString(
-						conversion == 'x' ? "x" : "X",
-						CultureInfo.InvariantCulture
+					Pad(
+						ref output,
+						Digits(
+							(uint)ToInteger(args[next++]),
+							scratch,
+							conversion == 'x' ? "x" : "X"
+						),
+						width,
+						left,
+						fill
 					);
-					Pad(output, Encoding.ASCII.GetBytes(hex), width, left, fill);
 					break;
 				case 'c':
-					Pad(output, [(byte)ToInteger(args[next++])], width, left, (byte)' ');
+					Pad(ref output, [(byte)ToInteger(args[next++])], width, left, (byte)' ');
 					break;
 				case 's':
 					var text = UntilNull(ToCString(args[next++]));
@@ -170,48 +242,85 @@ public static partial class crt
 						text = text[..precision];
 					}
 
-					Pad(output, text.ToArray(), width, left, (byte)' ');
+					Pad(ref output, text, width, left, (byte)' ');
 					break;
 				default:
 					output.Add((byte)conversion);
 					break;
 			}
 		}
-
-		return [.. output];
 	}
 
+	// Writes the text into `buffer`, cut to `limit` chars and to the buffer, with a null after it. It is written first in
+	// a buffer of its own, as an argument may be `buffer` itself.
 	private static int Print(
 		Span<byte> buffer,
 		ReadOnlySpan<byte> format,
-		object?[] args,
+		ReadOnlySpan<object?> args,
 		int limit
 	)
 	{
-		var text = Format(format, args);
-		var length = Math.Min(text.Length, Math.Min(limit, buffer.Length - 1));
-		text.AsSpan(0, length).CopyTo(buffer);
-		buffer[length] = 0;
-		return length;
+		var capacity = Math.Min(limit, buffer.Length - 1);
+		var text = ArrayPool<byte>.Shared.Rent(Math.Max(capacity, 0));
+		try
+		{
+			var output = new Output(text.AsSpan(0, capacity));
+			Format(ref output, format, args);
+			text.AsSpan(0, output.Length).CopyTo(buffer);
+			buffer[output.Length] = 0;
+			return output.Length;
+		}
+		finally
+		{
+			ArrayPool<byte>.Shared.Return(text);
+		}
 	}
 
-	public static int sprintf(Span<byte> buffer, string format, params object?[] args)
+	// A format given as a C# string, converted to Shift_JIS in a buffer of its own.
+	private static int Print(
+		Span<byte> buffer,
+		string format,
+		ReadOnlySpan<object?> args,
+		int limit
+	)
 	{
-		return Print(buffer, tchar.ShiftJis.GetBytes(format), args, int.MaxValue);
+		var bytes = ArrayPool<byte>.Shared.Rent(tchar.ShiftJis.GetMaxByteCount(format.Length));
+		try
+		{
+			var length = tchar.ShiftJis.GetBytes(format, bytes);
+			return Print(buffer, bytes.AsSpan(0, length), args, limit);
+		}
+		finally
+		{
+			ArrayPool<byte>.Shared.Return(bytes);
+		}
 	}
 
-	public static int sprintf(Span<byte> buffer, ReadOnlySpan<byte> format, params object?[] args)
+	public static int sprintf(Span<byte> buffer, string format, params ReadOnlySpan<object?> args)
+	{
+		return Print(buffer, format, args, int.MaxValue);
+	}
+
+	public static int sprintf(
+		Span<byte> buffer,
+		ReadOnlySpan<byte> format,
+		params ReadOnlySpan<object?> args
+	)
 	{
 		return Print(buffer, format, args, int.MaxValue);
 	}
 
 	// wsprintf writes at most 1024 chars.
-	public static int wsprintf(Span<byte> buffer, string format, params object?[] args)
+	public static int wsprintf(Span<byte> buffer, string format, params ReadOnlySpan<object?> args)
 	{
-		return Print(buffer, tchar.ShiftJis.GetBytes(format), args, 1024);
+		return Print(buffer, format, args, 1024);
 	}
 
-	public static int wsprintf(Span<byte> buffer, ReadOnlySpan<byte> format, params object?[] args)
+	public static int wsprintf(
+		Span<byte> buffer,
+		ReadOnlySpan<byte> format,
+		params ReadOnlySpan<object?> args
+	)
 	{
 		return Print(buffer, format, args, 1024);
 	}
