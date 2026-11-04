@@ -471,6 +471,31 @@ public sealed partial class StrongPlayer : IPlayer
 		Log?.Invoke($"{UnitFacts.Now(game)}: STATUS {string.Join(" | ", sides)}");
 	}
 
+	// A copy of the player as it stands, to play on in a copy of the battle (GameFork) as it would in the battle: all it
+	// knows and plans, and the clicks it has queued, copied (ObjectCopy), given to the copy's game; it logs nothing. Call it between frames, or while it acts.
+	public StrongPlayer CopyFor(Nspw game, Nspw fork)
+	{
+		var mapped = new Dictionary<object, object?>(ReferenceEqualityComparer.Instance)
+		{
+			[game] = fork,
+			[Parameters] = Parameters,
+			[Formation] = Formation,
+			[_knowledge] = _knowledge,
+		};
+		if (Log is not null)
+			mapped[Log] = null;
+
+		return (StrongPlayer)new ObjectCopy(mapped).Copy(this)!;
+	}
+
+	// Gives the next click, if its time has come (ClickQueue).
+	private void GiveClicks(Nspw game)
+	{
+		_clicks.FramesPerClick = Parameters.FramesPerClick;
+		_clicks.SkipsIdleClicks = Parameters.SkipIdleClicks;
+		_clicks.Act(game);
+	}
+
 	public void Act(Nspw game)
 	{
 		if (_knowledge.Enemy.Count == 0 && _knowledge.Counted.Count == 0)
@@ -487,8 +512,6 @@ public sealed partial class StrongPlayer : IPlayer
 		if (_clicks.IsEmpty(game))
 			Plan(game);
 
-		_clicks.FramesPerClick = Parameters.FramesPerClick;
-		_clicks.SkipsIdleClicks = Parameters.SkipIdleClicks;
-		_clicks.Act(game);
+		GiveClicks(game);
 	}
 }

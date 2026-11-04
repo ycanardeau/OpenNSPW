@@ -49,7 +49,9 @@ internal sealed class ArenaGame
 	private readonly int? _forkCheckAt;
 	private readonly string? _skirmish;
 	private readonly SkirmishLog _losses = new();
+	private readonly bool _forkPlays;
 	private GameFork? _fork;
+	private StrongPlayer? _forkPlayer;
 	private bool _forkChecked;
 	private TimeSpan _forkStepTime;
 	private readonly ArenaPlatform _platform;
@@ -69,7 +71,9 @@ internal sealed class ArenaGame
 		};
 
 	// From frame _forkCheckAt, a fork of the game (GameFork) steps once a frame beside it, and the first frame where the
-	// two differ is written, with the fields that differ, to check that a fork plays as the game does.
+	// two differ is written, with the fields that differ, to check that a fork plays as the game does; with _forkPlays, a
+	// copy of the strong player (StrongPlayer.CopyFor) plays on in the fork, as the player does in the game, to check
+	// that the copy plays as the player does.
 	private void CheckFork()
 	{
 		if (_forkCheckAt is not { } at || _game.Renderer.FrameCount < at || _forkChecked)
@@ -78,11 +82,14 @@ internal sealed class ArenaGame
 		if (_fork is null)
 		{
 			_fork = new GameFork(_game);
+			if (_forkPlays && _player is StrongPlayer strong)
+				_forkPlayer = strong.CopyFor(_game, _fork.Game);
 			Console.WriteLine($"FORK at frame {_game.Renderer.FrameCount}");
 			return;
 		}
 
 		var stopwatch = Stopwatch.StartNew();
+		_forkPlayer?.Act(_fork.Game);
 		_fork.Step();
 		_forkStepTime += stopwatch.Elapsed;
 		var differences = GameFork.Differences(_game, _fork.Game);
@@ -146,7 +153,8 @@ internal sealed class ArenaGame
 	// maxFrames: the frames of the battle after which the game stops, unfinished. trace: units to write as the game goes.
 	// strikes: whether to write what becomes of the player's strikes, which is counted anyway. speed: the game's speed,
 	// as the player's keys set it, a frame running the speed and one more ticks. skirmish: a battle of the arena's own
-	// (Skirmish), set up in place of the scenario's, with its name.
+	// (Skirmish), set up in place of the scenario's, with its name. forkCheckAt, forkPlays: the fork check
+	// (CheckFork).
 	public ArenaGame(
 		GameData data,
 		int scenario,
@@ -157,13 +165,15 @@ internal sealed class ArenaGame
 		bool strikes = false,
 		short speed = 1,
 		int? forkCheckAt = null,
-		(string Name, SkirmishLayout Layout)? skirmish = null
+		(string Name, SkirmishLayout Layout)? skirmish = null,
+		bool forkPlays = false
 	)
 	{
 		_player = player;
 		_maxFrames = maxFrames;
 		_speed = speed;
 		_forkCheckAt = forkCheckAt;
+		_forkPlays = forkPlays;
 		_trace = trace;
 		_strikes = new StrikeLog(strikes);
 		_platform = new ArenaPlatform(

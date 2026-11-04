@@ -19,6 +19,8 @@ using OpenNspw.Arena;
 //   dotnet run -c Release --project OpenNspw.Arena -- --skirmishes fighters,dd-ca|all [--dates 50] [--first-date 0]
 //       [--variants "default:;close:CloseQuarters=true"] [--side japan|us] [--parallel <cores>] [--out skirmishes.csv]
 //   dotnet run -c Release --project OpenNspw.Arena -- --skirmish-summary <a.csv> [<b.csv> ...] [--baseline default]
+//   dotnet run -c Release --project OpenNspw.Arena -- --fork-check <frame> [--fork-plays] [--scenarios ...] [--first-date 0]
+//       [--players idle|strong] [--params ...]
 
 static IPlayer CreatePlayer(
 	string name,
@@ -226,7 +228,8 @@ if (Option(args, "--fork-check", "") is { Length: > 0 } forkText)
 			scenario,
 			1_000_000_000 + (firstDate * 7919),
 			CreatePlayer(players[0], verbose, seesAll, formation, parameters),
-			forkCheckAt: int.Parse(forkText, CultureInfo.InvariantCulture)
+			forkCheckAt: int.Parse(forkText, CultureInfo.InvariantCulture),
+			forkPlays: args.Contains("--fork-plays")
 		);
 		var result = checkedGame.Play();
 		if (!checkedGame.HasForkChecked && result.Error is null)

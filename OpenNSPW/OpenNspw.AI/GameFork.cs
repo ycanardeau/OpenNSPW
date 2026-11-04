@@ -11,8 +11,9 @@ namespace OpenNspw.AI;
 // reflection, and the one reference that holds state of the battle (the key state), and steps a frame as UpdateFrame
 // does, without the drawing and the timer, and with sounds that play nothing. The original's extensions, and the
 // commands queued on it, are left behind, as they act on it; the copy takes its own orders as the clicks would run them,
-// at once (ClickUnit, SetDestination, RightClick). It plays the same as the original only if what the drawing and the
-// timer do changes nothing of the battle, which the arena checks (--fork-check).
+// at once (ClickUnit, SetDestination, RightClick), or as commands of the host's UI of its own (GameCommands), by a
+// player playing on in it, which it runs where the drawing would. It plays the same as the original only if what the
+// drawing and the timer do changes nothing of the battle, which the arena checks (--fork-check).
 public sealed class GameFork
 {
 	// A sound buffer that plays nothing, for every sound of a copy: a copy's sounds are never heard.
@@ -203,6 +204,23 @@ public sealed class GameFork
 		}
 	}
 
+	// The commands of the host's UI for the sidebar, which its drawing takes before the battlefield's (UpdateUnitInfo):
+	// the switch of a deck's view while a deck's information is shown, and the combat menu's items while it is shown,
+	// listed as it shows them (UICommands.InputSite); or dropped. The supply panel and the system menu, which no player of
+	// a copy uses, are not taken.
+	private static void RunSidebarCommands(Nspw game)
+	{
+		InputSite(
+			game,
+			ActionSite.DeckView,
+			(UnitKind)game.UnitInfoPanel[0]
+				is UnitKind.Carrier
+					or UnitKind.LightCarrier
+					or UnitKind.AirBase
+		);
+		InputSite(game, ActionSite.CombatMenu, game.CombatMenuKind != 0 && !game.IsEditingMap);
+	}
+
 	// Checks the battle's result (decision): in single-player, which also draws the result once there is one, on a
 	// screen a copy does not have. A copy needs the result, not its drawing, and plays no further once it has one.
 	private static void CheckResult(Nspw game)
@@ -217,8 +235,9 @@ public sealed class GameFork
 	// Plays a frame of the battle, as UpdateFrame does, but for the drawing and its timer: the speed's ticks, the result
 	// checked after each (but the drawn one, in single-player, as 1.22 does) and after the frame, the input and the
 	// commands given, the mouse buttons released, and the frame counted; of the drawing, only what it does to the battle:
-	// the random numbers it draws for the effects (DrawEffectRandoms), and between the layers, the orders cleared and the
-	// battlefield's clicks taken, which are the frame's `clicks` (ClickUnit, SetDestination, RightClick).
+	// the sidebar's commands (RunSidebarCommands), the random numbers it draws for the effects (DrawEffectRandoms), and
+	// between the layers, the orders cleared and the battlefield's clicks taken, the commands queued on the copy, then the
+	// frame's `clicks` (ClickUnit, SetDestination, RightClick); and last, the minimap's commands.
 	public void Step(Action<GameFork>? clicks = null)
 	{
 		var game = Game;
@@ -235,13 +254,16 @@ public sealed class GameFork
 				CheckResult(game);
 		}
 
+		RunSidebarCommands(game);
 		DrawEffectRandoms(game, EffectLayer.Lower);
 		game.MoveOrders[0].Unit = 0;
 		game.SelectOrders[0].IsSet = false;
 		game.MoveOrders[1].Unit = 0;
 		game.SelectOrders[1].IsSet = false;
+		InputSite(game, ActionSite.Battlefield, TakesClicks);
 		clicks?.Invoke(this);
 		DrawEffectRandoms(game, EffectLayer.Upper);
+		InputSite(game, ActionSite.Minimap, true);
 		if (!game.IsEditingMap)
 		{
 			CheckResult(game);
