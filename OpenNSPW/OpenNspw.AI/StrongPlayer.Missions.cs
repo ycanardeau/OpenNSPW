@@ -60,6 +60,17 @@ public sealed partial class StrongPlayer
 	private static readonly WorldPosition InterceptPoint = new(-200, 2900);
 
 	private readonly HashSet<int> _intercepting = [];
+
+	// Scenario 9: where the opening strike goes, west of where the U.S. fleet starts, which it sails west from: a player
+	// who won it launched every attacker there at once, and found the carriers there about frame 1400.
+	private static readonly WorldPosition OpeningStrikePoint = new(4900, 1500);
+
+	private readonly HashSet<int> _openedFrom = [];
+
+	// Scenario 9: the opening strike's planes, which do not turn home short of fuel while they are armed (TryBingo), nor
+	// fly round the escorts (TryApproach), but close on the carriers (TryCloseOnFormation): its point is at the edge of
+	// their reach.
+	private readonly HashSet<int> _oneWay = [];
 	private int _lastSweep = int.MinValue / 2;
 
 	private bool IsMissionOrderDue(Nspw game, int frames) =>
@@ -173,6 +184,42 @@ public sealed partial class StrongPlayer
 			_raidOrdered = UnitFacts.Now(game);
 			SelectAlone(m, "raiding");
 			return SailSelected(game, m, RaidPoint, "sails to raid Yokosuka from") || true;
+		}
+
+		return false;
+	}
+
+	// Scenario 9: each deck's ready attackers, armed, all of them, launch at the opening strike point once, from the
+	// start, before any carrier is found: the briefing's area is beyond their reach, but the fleet comes on.
+	private bool TryOpeningStrike(Nspw game)
+	{
+		foreach (var deck in Decks(game))
+		{
+			if (_openedFrom.Contains(deck) || !UnitFacts.CanLaunch(ref game.Units[deck]))
+				continue;
+
+			var ready = ParkedOn(
+				game,
+				deck,
+				n =>
+					UnitFacts.IsStrikePlane(game.Units[n].Kind)
+					&& game.Units[n].Ammo > 0
+					&& UnitFacts.IsReady(ref game.Units[n])
+			);
+			if (ready.Count == 0)
+				continue;
+
+			_openedFrom.Add(deck);
+			_oneWay.UnionWith(ready);
+			ShowDeck(deck);
+			SelectPlanes(ready[0], ready.Skip(1));
+			LaunchToward(
+				ready[0],
+				OpeningStrikePoint,
+				game.Units[deck].Position,
+				Reach(ref game.Units[ready[0]])
+			);
+			return true;
 		}
 
 		return false;
@@ -814,6 +861,7 @@ public sealed partial class StrongPlayer
 			205 => TryRescue(game),
 			8 when Parameters.GuardAnchorage => TryGuardAnchorage(game),
 			10 when Parameters.GatherAndSweep => TryGatherFighters(game) || TrySweepSaipan(game),
+			9 when Parameters.OpeningStrike => TryOpeningStrike(game),
 			201 when Parameters.InterceptCarrier => TrySailToIntercept(game),
 			109 when Parameters.RaidYokosuka => TryReturnHome(game) || TrySailToRaid(game),
 			107 when Parameters.AmbushYamamoto => TrySailToAmbush(game) || TryGunsOnYamamoto(game),

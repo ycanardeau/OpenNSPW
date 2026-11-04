@@ -1183,6 +1183,9 @@ public sealed partial class StrongPlayer
 
 		foreach (var planes in StrikesToApproach(game))
 		{
+			if (_oneWay.Contains(planes[0]))
+				continue;
+
 			ref var leader = ref game.Units[planes[0]];
 			var position = leader.Position;
 			var speed = Math.Max(leader.MaxSpeed, 0.5);
@@ -1437,6 +1440,7 @@ public sealed partial class StrongPlayer
 				|| unit.GroupLeader != 0
 				|| unit.Mode == UnitMode.Return
 				|| _scoutLegs.ContainsKey(m)
+				|| (_oneWay.Contains(m) && unit.Ammo > 0)
 				|| unit.Fuel
 					> FuelToHome(game, m)
 						+ (

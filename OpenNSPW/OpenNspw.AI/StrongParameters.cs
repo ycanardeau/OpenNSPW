@@ -89,6 +89,10 @@ public sealed record StrongParameters
 	// wait for it there (TrySailToIntercept).
 	public bool InterceptCarrier { get; init; }
 
+	// Whether, in scenario 9, every deck launches all its attackers at once from the start toward where the U.S. fleet
+	// comes on (TryOpeningStrike).
+	public bool OpeningStrike { get; init; }
+
 	// Whether the player expects the enemy where it was in past games of the scenario (Recall), given a memory.
 	public bool UseMemory { get; init; } = true;
 
