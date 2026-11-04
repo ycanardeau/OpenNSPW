@@ -426,7 +426,7 @@ public sealed partial class StrongPlayer
 		Close,
 	}
 
-	// A unit as it stood when a stance was chosen (LookAheadStance), to count what it lost since (Points).
+	// A unit as it stood when a choice was looked ahead on (Standings), to count what it lost since (Points).
 	private sealed record Standing(
 		UnitKind Kind,
 		UnitCategory Category,
@@ -435,9 +435,29 @@ public sealed partial class StrongPlayer
 		double MaxHP
 	);
 
-	// What the battle stands at, in points: the worth of what each side has lost since `before`, the units by number,
-	// those in use and alive (Value), the enemy's for the player and the player's against it, each ship and base by the
-	// share of its HP lost, each plane whole; and 200 for a battle won, or against one lost.
+	// The units in use and alive, by number, as they stand.
+	private static Dictionary<int, Standing> Standings(Nspw game)
+	{
+		var standings = new Dictionary<int, Standing>();
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var unit = ref game.Units[m];
+			if (unit.IsUsed && unit.HP > 0)
+				standings[m] = new Standing(
+					unit.Kind,
+					unit.Category,
+					unit.Side,
+					unit.HP,
+					unit.MaxHP
+				);
+		}
+
+		return standings;
+	}
+
+	// What the battle stands at, in points: the worth of what each side has lost since `before` (Value), the enemy's
+	// for the player and the player's against it, times Parameters.LookaheadOwnLoss, each ship and base by the share of
+	// its HP lost, each plane whole; and 200 for a battle won, or against one lost or drawn: only a win counts.
 	private double Points(Nspw game, Dictionary<int, Standing> before)
 	{
 		var points = 0.0;
@@ -449,38 +469,37 @@ public sealed partial class StrongPlayer
 				was.Category == UnitCategory.Plane
 					? (hp == 0 ? 1 : 0)
 					: Value(was.Kind) * (was.HP - hp) / Math.Max(was.MaxHP, 1.0);
-			points += was.Side == game.LocalSide ? -lost : lost;
+			points += was.Side == game.LocalSide ? -lost * Parameters.LookaheadOwnLoss : lost;
 		}
 
-		var won = game.LocalSide == Side.Japan ? GameResult.JapanWon : GameResult.UnitedStatesWon;
-		var lostGame =
-			game.LocalSide == Side.Japan ? GameResult.UnitedStatesWon : GameResult.JapanWon;
+		var won =
+			game.LocalSide == Side.Japan
+				? game.Result is GameResult.JapanWon or GameResult.UnitedStatesLost
+				: game.Result is GameResult.UnitedStatesWon or GameResult.JapanLost;
 		return points
 			+ (
-				game.Result == won ? 200
-				: game.Result == lostGame ? -200
+				won ? 200
+				: game.Result != GameResult.None ? -200
 				: 0
 			);
 	}
 
-	// The stance a carrier keeps while its strike is out, chosen by playing each forward in copies of the battle, the
-	// player playing on in each as it would, a copy of it keeping that stance (CopyFor), and scored in points (Points):
-	// the first that scores best, keeping away if none does better.
-	private StrikeStance LookAheadStance(Nspw game, int carrier)
+	// The points (Points) of each of `candidates` choices, each played `frames` frames forward in copies of the battle,
+	// on LookaheadSeeds seeds, the player playing on in each as it would, a copy of it (CopyFor) given the choice by
+	// `choose`.
+	private double[] LookAhead(
+		Nspw game,
+		int candidates,
+		Action<StrongPlayer, int> choose,
+		int frames
+	)
 	{
-		var stances = Enum.GetValues<StrikeStance>();
-		var before = new Dictionary<int, Standing>();
-		for (var m = 1; m <= game.MaxUnitId; m++)
-		{
-			ref var unit = ref game.Units[m];
-			if (unit.IsUsed && unit.HP > 0)
-				before[m] = new Standing(unit.Kind, unit.Category, unit.Side, unit.HP, unit.MaxHP);
-		}
+		var before = Standings(game);
 
 		Action<GameFork> Played(int candidate, GameFork fork)
 		{
 			var player = CopyFor(game, fork.Game);
-			player._stances[carrier] = stances[candidate];
+			choose(player, candidate);
 			var isFirst = true;
 			return f =>
 			{
@@ -493,15 +512,28 @@ public sealed partial class StrongPlayer
 			};
 		}
 
-		var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-		var scores = Lookahead.Evaluate(
+		return Lookahead.Evaluate(
 			game,
-			stances.Length,
+			candidates,
 			Played,
-			Parameters.LookaheadPositionFrames,
+			frames,
 			Parameters.LookaheadSeeds,
 			g => Points(g, before),
 			(uint)UnitFacts.Now(game)
+		);
+	}
+
+	// The stance a carrier keeps while its strike is out, chosen by looking ahead (LookAhead): the first that scores
+	// best, keeping away if none does better.
+	private StrikeStance LookAheadStance(Nspw game, int carrier)
+	{
+		var stances = Enum.GetValues<StrikeStance>();
+		var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+		var scores = LookAhead(
+			game,
+			stances.Length,
+			(player, candidate) => player._stances[carrier] = stances[candidate],
+			Parameters.LookaheadPositionFrames
 		);
 		var best = Array.IndexOf(scores, scores.Max());
 		Log?.Invoke(

@@ -180,6 +180,16 @@ public sealed record StrongParameters
 	public bool LookaheadPosition { get; init; } = true;
 	public int LookaheadPositionFrames { get; init; } = 2500;
 
+	// Whether a strike about to take off goes at its target, at another the victory conditions count within its reach,
+	// or waits StrikeWaitFrames, as playing each forward in copies of the battle shows best (LookAheadStrike); for this
+	// many frames, on LookaheadSeeds seeds.
+	public bool LookaheadStrike { get; init; }
+	public int LookaheadStrikeFrames { get; init; } = 3000;
+	public int StrikeWaitFrames { get; init; } = 300;
+
+	// What the player's own losses count for in a lookahead's points (Points), against the enemy's at 1.
+	public double LookaheadOwnLoss { get; init; } = 1;
+
 	// Whether the battleships and cruisers take as their target the enemy attackers within their anti-aircraft reach
 	// (TryTargetAttackers), which fire more at a target, and not at all with a ship as their target.
 	public bool TargetAttackers { get; init; }

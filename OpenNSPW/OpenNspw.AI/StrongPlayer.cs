@@ -132,6 +132,7 @@ public sealed partial class StrongPlayer : IPlayer
 	private int _statusAt;
 	private readonly Dictionary<int, int> _positioned = [];
 	private readonly Dictionary<int, StrikeStance> _stances = [];
+	private readonly Dictionary<int, (int Target, int Until)> _forcedStrikes = [];
 	private readonly HashSet<int> _repairing = [];
 	private readonly Dictionary<int, int> _repairOrdered = [];
 	private readonly Dictionary<int, int> _engagedAt = [];

@@ -1764,6 +1764,43 @@ public sealed partial class StrongPlayer
 			.Max();
 	}
 
+	// What a deck's strike about to take off at `target` does, chosen by looking ahead (LookAhead): goes at it, or at one
+	// of the two nearest other targets the victory conditions count that it can reach (ChooseTarget), or waits
+	// Parameters.StrikeWaitFrames, as a copy of the player does, given the choice (_forcedStrikes); the first that
+	// scores best, going at `target` if none does better. The unit to go at, or 0 to wait.
+	private int LookAheadStrike(Nspw game, int deck, FireKind weapon, double reach, Contact target)
+	{
+		var position = game.Units[deck].Position;
+		var others = _contacts
+			.All.Where(c =>
+				c.Unit != target.Unit
+				&& c.Category == UnitCategory.Ship
+				&& IsCounted(c.Kind)
+				&& game.Units[c.Unit].IsUsed
+				&& IsRemembered(game, c)
+				&& CanAttack(weapon, c)
+				&& UnitFacts.Distance(position, WhereNow(game, c, 0))
+					<= reach * Parameters.TargetReach
+			)
+			.OrderBy(c => UnitFacts.Distance(position, WhereNow(game, c, 0)))
+			.Take(2)
+			.Select(c => c.Unit);
+		int[] candidates = [target.Unit, .. others, 0];
+		var until = UnitFacts.Now(game) + Parameters.StrikeWaitFrames;
+		var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+		var scores = LookAhead(
+			game,
+			candidates.Length,
+			(player, candidate) => player._forcedStrikes[deck] = (candidates[candidate], until),
+			Parameters.LookaheadStrikeFrames
+		);
+		var best = Array.IndexOf(scores, scores.Max());
+		Log?.Invoke(
+			$"{UnitFacts.Now(game)}: lookahead has the strike of {game.Units[deck].Kind} {deck} {(candidates[best] == 0 ? "wait" : $"go at {game.Units[candidates[best]].Kind} {candidates[best]}")}, in {stopwatch.ElapsedMilliseconds} ms: {string.Join(" ", candidates.Zip(scores, (c, v) => $"{c}:{v:F1}"))}"
+		);
+		return scores[best] > scores[0] ? candidates[best] : target.Unit;
+	}
+
 	// A deck's ready attackers and bombers, with escorting fighters, against the best enemy found within reach, once
 	// three of its armed planes are ready, or all it has, and none will be ready soon, and no enemy strike is over it;
 	// or, while another deck's strike has just gone, with whatever is ready, at the same target or place, so that they
@@ -1848,6 +1885,45 @@ public sealed partial class StrongPlayer
 						);
 				if (HuntsCarriers && EnemyStrikeAirborneUntil(game) > arrival && target is not null)
 					continue;
+
+				// A choice looked ahead on: a wait, until its time is up, or a target to go at; or, with
+				// Parameters.LookaheadStrike, a strike about to go at a target the victory conditions count looks ahead,
+				// again once a wait is up.
+				var forced = _forcedStrikes.GetValueOrDefault(deck, (Target: -1, Until: 0));
+				if (forced.Target == 0 && UnitFacts.Now(game) < forced.Until)
+					continue;
+
+				_forcedStrikes.Remove(deck);
+				if (
+					forced.Target > 0
+					&& game.Units[forced.Target].IsUsed
+					&& _contacts.Find(forced.Target) is { } chosen
+				)
+				{
+					target = chosen;
+				}
+				else if (
+					forced.Target <= 0
+					&& Parameters.LookaheadStrike
+					&& !_isFork
+					&& HuntsCarriers
+					&& wave is null
+					&& target is not null
+					&& IsCounted(target.Kind)
+				)
+				{
+					var choice = LookAheadStrike(game, deck, weapon, reach, target);
+					if (choice == 0)
+					{
+						_forcedStrikes[deck] = (
+							0,
+							UnitFacts.Now(game) + Parameters.StrikeWaitFrames
+						);
+						continue;
+					}
+
+					target = _contacts.Find(choice) ?? target;
+				}
 
 				var origin =
 					target is null && !StaysHome
