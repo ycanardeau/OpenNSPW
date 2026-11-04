@@ -921,7 +921,7 @@ public sealed partial class StrongPlayer
 				&& (best is null || IsCounted(current.Kind) || !IsCounted(best.Kind))
 					? current
 					: best;
-			if (_knowledge.HoldsOn && target is not null && !IsNearHeldPlace(game, target.Position))
+			if (StaysHome && target is not null && !IsNearHeldPlace(game, target.Position))
 				target = null;
 
 			WorldPosition point;

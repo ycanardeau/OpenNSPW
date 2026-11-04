@@ -67,9 +67,6 @@ public sealed partial class StrongPlayer : IPlayer
 	// How far from its deck a combat air patrol flies, toward where the enemy most likely is.
 	private const double PatrolDistance = 700;
 
-	// How close to a deck or a ship an enemy attacker or bomber is intercepted.
-	private const double InterceptRange = 3000;
-
 	// How far a scout flies out from its deck when no area is known.
 	private const double ScoutRange = 3800;
 
@@ -331,6 +328,9 @@ public sealed partial class StrongPlayer : IPlayer
 	// Whether the victory conditions count the enemy's carriers, which the strikes then go for alone: an escort sunk
 	// brings no victory closer, and the strike that took it is lost to the carrier.
 	private bool HuntsCarriers => _knowledge.Counted.Contains(UnitKind.Carrier);
+
+	// Whether the player, winning by holding on, keeps its strikes, scouts and fleets at home (Parameters.StayHome).
+	private bool StaysHome => _knowledge.HoldsOn && Parameters.StayHome;
 
 	// Selects a unit of the player's alone, nothing being selected: a ship with the ships that follow it.
 	private void SelectAlone(int m, string what)

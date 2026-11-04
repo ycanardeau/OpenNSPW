@@ -193,6 +193,11 @@ public sealed record StrongParameters
 	// Whether every ready fighter of a deck goes up against an enemy attacker or bomber, not four (TryIntercept).
 	public bool InterceptWithAll { get; init; }
 
+	// How close to a deck an enemy attacker or bomber is intercepted (TryIntercept). The computer's own fleets intercept
+	// within its strike range, 3550, or 4350 when it plays Japan, and 1.5 times that from an air base
+	// (docs/ComputerPlayer.md, Air strikes).
+	public double InterceptRange { get; init; } = 3000;
+
 	// Whether a strike that hunts carriers disperses once in the air (TryDisperse), each plane flying on alone at full
 	// speed; or keeps its formation, massed, until it splits up near the target (TrySplitAttack).
 	public bool Disperse { get; init; } = true;
@@ -200,6 +205,23 @@ public sealed record StrongParameters
 	// How many degrees apart the two halves of a strike that hunts carriers run in (TryApproach), half each side of the
 	// bearing: a ship that turns away from one half turns its beam to the other. 0 runs in as one.
 	public double PincerAngle { get; init; }
+
+	// Whether attackers carry bombs, not torpedoes, when the victory counts ground units, as the computer's do when its
+	// fleet's first target is a ground facility (docs/ComputerPlayer.md, cpu_strtgy, Arming the planes): a torpedo never
+	// hits one.
+	public bool BombGround { get; init; }
+
+	// Whether transports wait to land while the landing place is still defended, as the player has seen it (IsDefended),
+	// and more than LandingTimeLeft ticks are left.
+	public bool LandWhenClear { get; init; }
+
+	// The ticks left under which transports land whether the place is defended or not (LandWhenClear).
+	public int LandingTimeLeft { get; init; } = 20000;
+
+	// Whether a player that wins by holding on keeps its strikes, scouts and fleets at home: strikes only within
+	// DefenseRange of its decks or near the places it holds, no scouts sent out, its warships' targets only near the
+	// places held. Its fighters defend at home either way.
+	public bool StayHome { get; init; } = true;
 
 	// What a strike that hunts carriers attacks.
 	public Targeting Targeting { get; init; } = Targeting.Carriers;

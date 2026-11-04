@@ -201,8 +201,10 @@ public sealed partial class StrongPlayer
 			{
 				var distance = UnitFacts.Distance(game.Units[deck].Position, contact.Position);
 				if (
-					(distance > InterceptRange && !(nearHeld && distance <= HeldPlaceRange * 2))
-					|| !UnitFacts.CanLaunch(ref game.Units[deck])
+					(
+						distance > Parameters.InterceptRange
+						&& !(nearHeld && distance <= HeldPlaceRange * 2)
+					) || !UnitFacts.CanLaunch(ref game.Units[deck])
 				)
 					continue;
 
@@ -1829,7 +1831,7 @@ public sealed partial class StrongPlayer
 
 				var target = wave ?? ChooseTarget(game, deck, weapon, reach);
 				if (
-					_knowledge.HoldsOn
+					StaysHome
 					&& target is not null
 					&& UnitFacts.Distance(target.Position, game.Units[deck].Position) > DefenseRange
 					&& !IsNearHeldPlace(game, target.Position)
@@ -1848,7 +1850,7 @@ public sealed partial class StrongPlayer
 					continue;
 
 				var origin =
-					target is null && !_knowledge.HoldsOn
+					target is null && !StaysHome
 						? pointWave
 							?? (
 								HuntsCarriers
@@ -1896,7 +1898,8 @@ public sealed partial class StrongPlayer
 		return false;
 	}
 
-	// A deck's unarmed attackers and bombers armed: torpedoes for attackers, bombs for bombers.
+	// A deck's unarmed attackers and bombers armed: torpedoes for attackers (bombs with Parameters.BombGround, when the
+	// victory counts ground units), bombs for bombers.
 	private bool TryArm(Nspw game, List<int> decks)
 	{
 		foreach (var deck in decks)
@@ -1907,7 +1910,12 @@ public sealed partial class StrongPlayer
 			foreach (
 				var (kind, item) in new[]
 				{
-					(UnitKind.Attacker, CombatMenuItem.ArmWithTorpedo),
+					(
+						UnitKind.Attacker,
+						Parameters.BombGround && _knowledge.Counted.Any(UnitFacts.IsGround)
+							? CombatMenuItem.ArmWithBomb
+							: CombatMenuItem.ArmWithTorpedo
+					),
 					(UnitKind.Bomber, CombatMenuItem.ArmWithBomb),
 				}
 			)
@@ -1953,7 +1961,7 @@ public sealed partial class StrongPlayer
 	private bool TryHunt(Nspw game, List<int> decks)
 	{
 		if (
-			_knowledge.HoldsOn
+			StaysHome
 			|| !_knowledge.Counted.Any(k =>
 				k is UnitKind.Bomber or UnitKind.Attacker or UnitKind.Fighter
 			)

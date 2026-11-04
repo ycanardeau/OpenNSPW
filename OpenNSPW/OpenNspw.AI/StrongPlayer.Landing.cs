@@ -93,11 +93,34 @@ public sealed partial class StrongPlayer
 		return ((int)((left - World.Left) / 80), (int)((World.Top - top) / 80));
 	}
 
+	// Whether a landing place is still defended, as the player has seen it: an enemy ground unit the victory counts found
+	// within 600 of it, which stays where it is until it is destroyed, or an enemy warship seen within 3000 of it lately.
+	private bool IsDefended(Nspw game, Area place) =>
+		_contacts.All.Any(c =>
+			(
+				UnitFacts.IsGround(c.Kind)
+				&& IsCounted(c.Kind)
+				&& UnitFacts.Distance(c.Position, place.Center) <= place.Radius + 600
+			)
+			|| (
+				IsWarship(c.Kind)
+				&& UnitFacts.Now(game) - c.Frame < 1500
+				&& UnitFacts.Distance(c.Position, place.Center) <= 3000
+			)
+		);
+
 	// Each transport of the player's with cargo is given the coast nearest where the briefing wants bases to land it
 	// at: the battlefield is moved there, the transport selected, and the land clicked. TrySailToLand sails it there.
 	private bool TryLand(Nspw game)
 	{
-		if (_knowledge.Landing is not { } place)
+		if (
+			_knowledge.Landing is not { } place
+			|| (
+				Parameters.LandWhenClear
+				&& game.BattleTime > Parameters.LandingTimeLeft
+				&& IsDefended(game, place)
+			)
+		)
 			return false;
 
 		var taken = new List<WorldPosition>();
