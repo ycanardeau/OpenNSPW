@@ -1417,7 +1417,8 @@ public sealed partial class StrongPlayer
 	// fighter too, hunting carriers or not: one that chases a raid far from its deck runs dry otherwise.
 	private bool TryBingo(Nspw game)
 	{
-		if (!HuntsCarriers && !Parameters.FighterBingo)
+		var fighterBingo = Parameters.FighterBingo || RaidedBase(game) != 0;
+		if (!HuntsCarriers && !fighterBingo)
 			return false;
 
 		for (var m = 1; m <= game.MaxUnitId; m++)
@@ -1431,11 +1432,7 @@ public sealed partial class StrongPlayer
 				&& UnitFacts.Distance(unit.Position, game.Units[unit.Target].Position) <= 2500;
 			if (
 				!IsOwn(game, m)
-				|| !(
-					isFighter
-						? Parameters.FighterBingo
-						: HuntsCarriers && UnitFacts.IsStrikePlane(unit.Kind)
-				)
+				|| !(isFighter ? fighterBingo : HuntsCarriers && UnitFacts.IsStrikePlane(unit.Kind))
 				|| unit.PlaneState != UnitState.Flying
 				|| unit.GroupLeader != 0
 				|| unit.Mode == UnitMode.Return

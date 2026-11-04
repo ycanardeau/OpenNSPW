@@ -59,7 +59,7 @@ public sealed record StrongParameters
 	public bool EscortHunts { get; init; }
 
 	// Whether a fighter in the air comes home once it has fuel for little more than the way (TryBingo), as strike planes
-	// do while hunting carriers.
+	// do while hunting carriers; always with GatherAndSweep's mission (RaidedBase).
 	public bool FighterBingo { get; init; }
 
 	// Whether, where the player holds on, its planes rebase to the air base nearest the enemy (TryRebase).
@@ -75,7 +75,7 @@ public sealed record StrongParameters
 
 	// Whether, in scenario 10, the fighters gather at the air base the raids strike, the southern one, and, once the raids
 	// are over, the forward base's fighters sweep Saipan's airfield (TryGatherFighters, TrySweepSaipan).
-	public bool GatherAndSweep { get; init; }
+	public bool GatherAndSweep { get; init; } = true;
 
 	// Whether, in scenario 8, every ship that sails gathers at the anchored ships next to the air base with the most
 	// fighters, and stays there (TryGuardAnchorage).
