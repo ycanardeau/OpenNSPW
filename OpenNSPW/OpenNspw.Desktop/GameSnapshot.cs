@@ -123,13 +123,26 @@ internal sealed class GameSnapshot
 	public bool WasHost;
 	public bool HasAutoSave;
 
-	// Whether the frame is a battle's, with the battlefield, the sidebar and the minimap: not the map editor's.
-	public bool IsBattle => Mode == GameMode.Battle && !IsEditingMap;
+	// Whether a frame of `mode` is a battle's, with the battlefield, the sidebar and the minimap: not the map editor's.
+	private static bool IsBattleOf(GameMode mode, bool isEditingMap) =>
+		mode == GameMode.Battle && !isEditingMap;
 
-	// Whether the frame is a setting screen's: the scenarios' or the rules'.
-	public bool IsSetting => Mode is GameMode.GameSetting or GameMode.ConfigSetting;
+	// Whether a frame of `mode` is a setting screen's: the scenarios' or the rules'.
+	private static bool IsSettingOf(GameMode mode) =>
+		mode is GameMode.GameSetting or GameMode.ConfigSetting;
 
-	// Whether the UI draws the frame's screen in the game's place: a battle, but the map editor, or a setting screen.
+	// Whether the UI draws the screen of the frame that the game draws now in the game's place: a battle, but the map
+	// editor, or a setting screen. On the game's thread.
+	public static bool IsHostScreenOf(Nspw game) =>
+		IsBattleOf(game.Mode, game.IsEditingMap) || IsSettingOf(game.Mode);
+
+	// Whether the frame is a battle's.
+	public bool IsBattle => IsBattleOf(Mode, IsEditingMap);
+
+	// Whether the frame is a setting screen's.
+	public bool IsSetting => IsSettingOf(Mode);
+
+	// Whether the UI draws the frame's screen in the game's place.
 	public bool IsHostScreen => IsBattle || IsSetting;
 
 	// The setting screens' fields, which the game writes as text only on them.

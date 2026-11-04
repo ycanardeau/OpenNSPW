@@ -210,7 +210,8 @@ internal sealed class GameSession : IDisposable
 		Game = new Nspw(_platform);
 		Game.Extensions.Add(Commands);
 		View = view;
-		_platform.IsSkippingFrames = () => Replay is { IsSeeking: true };
+		_platform.HidesFrame = () =>
+			GameSnapshot.IsHostScreenOf(Game) || Replay is { IsSeeking: true };
 		_platform.CaptureState = () => _captured.CopyFrom(Game, Commands, View);
 		if (singleplayer is { } scenario)
 		{

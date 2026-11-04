@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using OpenNspw.HostUI;
 
@@ -218,6 +219,24 @@ internal static partial class GameTexts
 		(AllButPortTransports(), "All but transports (port)($1)"),
 	];
 
+	// How many texts with numbers Of keeps translated before it starts again.
+	private const int MaxTranslated = 1024;
+
+	// The texts with numbers translated, as Of last translated them: on any thread, as the tests' are several.
+	private static readonly ConcurrentDictionary<string, string> Translated = new();
+
+	// A text with a number, in English, by a pattern of EnglishPatterns, or the Japanese as it is.
+	private static string Translate(string japanese)
+	{
+		foreach (var (pattern, replacement) in EnglishPatterns)
+		{
+			if (pattern.IsMatch(japanese))
+				return pattern.Replace(japanese, replacement);
+		}
+
+		return japanese;
+	}
+
 	// A text the game writes, in the language chosen.
 	public static string Of(string japanese)
 	{
@@ -227,13 +246,16 @@ internal static partial class GameTexts
 		if (English.TryGetValue(japanese, out var english))
 			return english;
 
-		foreach (var (pattern, replacement) in EnglishPatterns)
+		// Translated once: the UI paints the same texts every frame. Emptied once it has many, as the texts with numbers
+		// in them keep changing.
+		if (!Translated.TryGetValue(japanese, out english))
 		{
-			if (pattern.IsMatch(japanese))
-				return pattern.Replace(japanese, replacement);
+			if (Translated.Count >= MaxTranslated)
+				Translated.Clear();
+			english = Translated[japanese] = Translate(japanese);
 		}
 
-		return japanese;
+		return english;
 	}
 
 	// The texts the game writes, in the language chosen.

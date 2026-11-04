@@ -106,6 +106,11 @@ internal sealed class ReplayBar : Control
 	private readonly ReplayTimeline _timeline;
 	private readonly ActionButton _view;
 	private readonly ActionButton _sides;
+	private readonly LastText<double> _speedText = new(speed => $"{speed:0.#}×");
+	private readonly LastText<long> _pointedText = new(milliseconds =>
+		$"→ {Texts.Duration(milliseconds)}"
+	);
+	private readonly LastText<(int Frame, long Milliseconds)> _placeText;
 
 	public event EventHandler<double>? Seek;
 
@@ -140,7 +145,7 @@ internal sealed class ReplayBar : Control
 	public void UpdateFrom()
 	{
 		_play.Text = _watch.IsPaused ? Texts.Play : Texts.Pause;
-		_speed.Text = $"{_watch.Speed:0.#}×";
+		_speed.Text = _speedText.Of(_watch.Speed);
 		_view.Text = _watch.View.FollowsPlayer ? Texts.PlayersView : Texts.FreeView;
 		_view.IsPrimary = !_watch.View.FollowsPlayer;
 		_sides.Text = Texts.BothSides;
@@ -154,6 +159,9 @@ internal sealed class ReplayBar : Control
 		_fonts = fonts;
 		_watch = watch;
 		_player = player;
+		_placeText = new(place =>
+			$"{Texts.ReplayFrame(place.Frame, watch.Summary.Frames)}  ·  {Texts.Duration(place.Milliseconds)} / {Texts.Duration(watch.Summary.Milliseconds)}"
+		);
 		Bounds = new DrawingRectangle(
 			0,
 			all_head.CMBT_HEIGHT - BarHeight,
@@ -181,14 +189,13 @@ internal sealed class ReplayBar : Control
 		base.OnPaint(e);
 		var g = e.Graphics;
 		var font = _fonts.Regular(13);
-		var place =
-			$"{Texts.ReplayFrame(_player.Frame, _watch.Summary.Frames)}  ·  {Texts.Duration(_player.Milliseconds)} / {Texts.Duration(_watch.Summary.Milliseconds)}";
+		var place = _placeText.Of((_player.Frame, _player.Milliseconds));
 		Painter.Text(g, place, font, Theme.Text, 10, 7);
 
 		// The time at the point of the timeline under the mouse, where a click goes.
 		if (_timeline.Pointed is { } pointed)
 		{
-			var to = $"→ {Texts.Duration((long)(pointed * _watch.Summary.Milliseconds))}";
+			var to = _pointedText.Of((long)(pointed * _watch.Summary.Milliseconds));
 			Painter.Text(
 				g,
 				to,
