@@ -65,9 +65,17 @@ public sealed record StrongParameters
 	// Whether, where the player holds on, its planes rebase to the air base nearest the enemy (TryRebase).
 	public bool Rebase { get; init; } = true;
 
+	// Whether a rebasing formation is given the new base, every plane of it (SelectFormation), not its leader alone, whose
+	// planes fly back to their own base short of fuel, and run dry on the way (TryRebase).
+	public bool RebaseFormations { get; init; }
+
 	// Whether, in scenario 107, the ships sail at once to where Yamamoto's plane comes round to land, west of Rabaul's
 	// airfield, and fire at it there (TrySailToAmbush, TryGunsOnYamamoto).
 	public bool AmbushYamamoto { get; init; } = true;
+
+	// Whether, in scenario 10, the fighters gather at the air base the raids strike, the southern one, and, once the raids
+	// are over, the forward base's fighters sweep Saipan's airfield (TryGatherFighters, TrySweepSaipan).
+	public bool GatherAndSweep { get; init; }
 
 	// The frames before a target engaged may be engaged again.
 	public int RetargetFrames { get; init; } = 400;

@@ -148,7 +148,9 @@ public sealed partial class StrongPlayer
 
 	// Where the player holds on, the ready fighters and attackers of its air bases 4000 or more away fly to the one
 	// nearest the enemy, as many as it has room for (Capacity), within 70% of their range, to defend it from there: in
-	// the air, they are given it as their base, and come down there (Return). With Parameters.Rebase only.
+	// the air, they are given it as their base, and come down there (Return): the leader alone, or, with
+	// Parameters.RebaseFormations, each of them, one after the other: the others keep their own base otherwise, and fly
+	// back to it once short of fuel, which runs them dry on the way. With Parameters.Rebase only.
 	private bool TryRebase(Nspw game, List<int> decks)
 	{
 		if (
@@ -201,6 +203,7 @@ public sealed partial class StrongPlayer
 		{
 			if (
 				deck == front
+				|| deck == RaidedBase(game)
 				|| game.Units[deck].Kind != UnitKind.AirBase
 				|| !UnitFacts.CanLaunch(ref game.Units[deck])
 			)
@@ -235,8 +238,9 @@ public sealed partial class StrongPlayer
 			SendSelected(leader, frontBase.Position, $"and {planes.Count - 1} more rebase to");
 			_clicks.Enqueue(g =>
 			{
-				if (IsOwn(g, leader))
-					_rebasing[leader] = front;
+				foreach (var plane in Parameters.RebaseFormations ? planes : [leader])
+					if (IsOwn(g, plane))
+						_rebasing[plane] = front;
 			});
 			return true;
 		}

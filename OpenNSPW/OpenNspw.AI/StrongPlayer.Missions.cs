@@ -42,6 +42,14 @@ public sealed partial class StrongPlayer
 	private bool _hasSailedToAmbush;
 	private readonly Dictionary<int, int> _gunsOnYamamoto = [];
 
+	// Scenario 10: the player's air base that the raids strike, the southern one, where a player who won it gathered the
+	// fighters of the base north of it at once, and shot both raids down over it; then swept Saipan's airfield with the
+	// fighters based farthest forward, and shot down the last fighters there, which won it.
+	private static readonly WorldPosition RaidedAirBase = new(-7600, 960);
+
+	private readonly HashSet<int> _gatheredFrom = [];
+	private int _lastSweep = int.MinValue / 2;
+
 	private bool IsMissionOrderDue(Nspw game, int frames) =>
 		UnitFacts.Now(game) - _missionOrdered >= frames;
 
@@ -56,6 +64,117 @@ public sealed partial class StrongPlayer
 	private bool IsAtAmbush(Nspw game) =>
 		Yamamoto(game) is { } bomber
 		&& UnitFacts.Distance(game.Units[bomber.Unit].Position, YamamotoAmbush) <= 2500;
+
+	// The air base the mission gathers the fighters at, which they are not rebased from (TryRebase), or 0.
+	private int RaidedBase(Nspw game) =>
+		game.ScenarioNumber == 10 && Parameters.GatherAndSweep
+			? NearestOwnAirBase(game, RaidedAirBase)
+			: 0;
+
+	// Scenario 10: the ready fighters of each other air base of the player's within 3000 of the raided one fly there,
+	// once, and are based there (TryRebase brings them down there).
+	private bool TryGatherFighters(Nspw game)
+	{
+		var raided = RaidedBase(game);
+		if (raided == 0)
+			return false;
+
+		foreach (var deck in Decks(game))
+		{
+			if (
+				deck == raided
+				|| game.Units[deck].Kind != UnitKind.AirBase
+				|| _gatheredFrom.Contains(deck)
+				|| UnitFacts.Distance(game.Units[deck].Position, game.Units[raided].Position) > 3000
+				|| !UnitFacts.CanLaunch(ref game.Units[deck])
+			)
+				continue;
+
+			var fighters = ParkedOn(
+				game,
+				deck,
+				n => game.Units[n].Kind == UnitKind.Fighter && UnitFacts.IsReady(ref game.Units[n])
+			);
+			if (fighters.Count == 0)
+				continue;
+
+			_gatheredFrom.Add(deck);
+			var leader = fighters[0];
+			ShowDeck(deck);
+			SelectPlanes(leader, fighters.Skip(1));
+			SendSelected(
+				leader,
+				game.Units[raided].Position,
+				$"and {fighters.Count - 1} more gather at"
+			);
+			_clicks.Enqueue(g =>
+			{
+				if (IsOwn(g, leader))
+					_rebasing[leader] = raided;
+			});
+			return true;
+		}
+
+		return false;
+	}
+
+	// Scenario 10: from frame 4000, the carrier's raid over, the ready fighters of the player's air base nearest Saipan,
+	// four or more, with its attackers armed with bombs (TryArm), sweep its airfield, every 2500 frames, while no enemy attacker or bomber has been seen in the air
+	// within 3000 of that base for 300 frames: the victory counts the enemy's planes, its last fighters are kept there,
+	// and its transports land troops at that base later on.
+	private bool TrySweepSaipan(Nspw game)
+	{
+		var from = NearestOwnAirBase(game, ScenarioKnowledge.Saipan.Center);
+		if (
+			from == 0
+			|| UnitFacts.Now(game) < 4000
+			|| UnitFacts.Now(game) - _lastSweep < 2500
+			|| !UnitFacts.CanLaunch(ref game.Units[from])
+			|| _contacts.All.Any(c =>
+				c.Category == UnitCategory.Plane
+				&& UnitFacts.IsStrikePlane(c.Kind)
+				&& c.IsFlying
+				&& UnitFacts.Now(game) - c.Frame < 300
+				&& UnitFacts.Distance(c.Position, game.Units[from].Position) <= 3000
+			)
+		)
+			return false;
+
+		var fighters = ParkedOn(
+			game,
+			from,
+			n => game.Units[n].Kind == UnitKind.Fighter && UnitFacts.IsReady(ref game.Units[n])
+		);
+		if (fighters.Count < 4)
+			return false;
+
+		// The attackers armed with bombs go too, waited for, to draw the fighters up, which the computer sends only
+		// against attackers and bombers.
+		var attackers = ParkedOn(
+			game,
+			from,
+			n =>
+				game.Units[n].Kind == UnitKind.Attacker
+				&& game.Units[n].Weapon == FireKind.Bomb
+				&& game.Units[n].Ammo > 0
+				&& UnitFacts.IsReady(ref game.Units[n])
+		);
+		if (
+			attackers.Count == 0
+			&& ParkedOn(game, from, n => game.Units[n].Kind == UnitKind.Attacker).Count > 0
+		)
+			return false;
+
+		_lastSweep = UnitFacts.Now(game);
+		ShowDeck(from);
+		SelectPlanes(fighters[0], fighters.Skip(1).Concat(attackers));
+		SendSelected(
+			fighters[0],
+			ScenarioKnowledge.Saipan.Center,
+			$"and {fighters.Count - 1} more sweep Saipan at"
+		);
+		return true;
+	}
 
 	// Scenario 107: the ships sail to the ambush, each alone, once, from the start: formed (TryForm), the destroyers
 	// keep their places on the carrier's beam, which runs them aground on the coast north-west of the start, and the
@@ -531,6 +650,7 @@ public sealed partial class StrongPlayer
 		{
 			300 => TryDoolittle(game),
 			205 => TryRescue(game),
+			10 when Parameters.GatherAndSweep => TryGatherFighters(game) || TrySweepSaipan(game),
 			107 when Parameters.AmbushYamamoto => TrySailToAmbush(game) || TryGunsOnYamamoto(game),
 			_ => TryReturnHome(game),
 		};

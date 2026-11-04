@@ -2002,7 +2002,8 @@ public sealed partial class StrongPlayer
 				{
 					(
 						UnitKind.Attacker,
-						Parameters.BombGround && _knowledge.Counted.Any(UnitFacts.IsGround)
+						(Parameters.BombGround && _knowledge.Counted.Any(UnitFacts.IsGround))
+						|| RaidedBase(game) != 0
 							? CombatMenuItem.ArmWithBomb
 							: CombatMenuItem.ArmWithTorpedo
 					),

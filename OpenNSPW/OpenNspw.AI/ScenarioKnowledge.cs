@@ -55,6 +55,7 @@ public sealed record ScenarioKnowledge(
 	public static Area Tokyo => Places.Tokyo;
 
 	public static Area Bougainville => Places.Bougainville;
+	public static Area Saipan => Places.Saipan;
 
 	public static Area Guadalcanal => Places.Guadalcanal;
 
