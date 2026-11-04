@@ -25,6 +25,33 @@ dotnet run -c Release --project OpenNSPW/OpenNspw.Arena -- --scenarios 4,5,6 --d
 
 A game swings on small things: a degree of one strike's approach sends it another way from there on, so the same date can be won by one build and lost by the next for no reason of their own, and three or nine games say little of a change. The benchmark is the carrier battles (`--scenarios carriers`) on 50 start dates; the arena's summary gives each scenario's win rate with its 95% interval, and `--compare` tells, game by game, whether a change does better than chance would (the sign test's p under 0.05).
 
+### Skirmishes
+A carrier battle is many fights at once, each decided by its own tactics. The arena's skirmishes (`Skirmish.cs`) play one fight at a time: a handful of units a side in open sea, with no map loaded (every tile sea), set up in place of a scenario (`Nspw.CustomScenario`, which nothing else sets), and played to the end of one side or to a frame cap, a few seconds each. The strong player plays its side with its own code, by clicks, as everywhere, told only where the enemy is (`StrongPlayer.Knowledge`); NSPW 1.22's computer plays the other, as one of its fleets, set up as its scenarios set them (`ComputerFleets`, `AddTargetsOfKind`).
+
+- **Both sides see everything**: the game's own switch (`RevealsAll`, which `Detect` reads) marks every unit found, for both sides' guns and for the computer, and the strong player sees all it may (`SeesEverything`). `--sees-all` alone covers only the strong player's own picture: the guns and the computer still need a unit found.
+- **Each start is drawn from the seed**: the start date seeds `srand`, as in a scenario, and the layout: the turn of the whole, the distance (±10 to 20%), each side's heading, each ship a little off its place.
+- **The result is each side's losses**: the ships sunk and the planes lost, by kind, the HP the ships lost, and their worth: a carrier 10, a light carrier 8, a battleship 6, a cruiser 4, a destroyer 2, a plane 1, a ship's worth lost as its HP is. A game is won when the enemy lost more worth, drawn when as much. The summary gives each player's games won, drawn and lost, the win rate's 95% Wilson interval, each side's losses a game, the ratio of the worth the enemy lost to the player's, and, against the first player, the games better and worse by the worth lost on the same seeds, with the sign test's p.
+- **Tactics are the strong player's options** (`StrongParameters`), compared head to head on the same seeds in one run (`--variants "name:Params;name:Params"`).
+
+| Skirmish | The player's side | The computer's |
+| --- | --- | --- |
+| `fighters` | 6 fighters in the air, flying at the enemy's carrier 3000 away | A carrier with 6 fighters, which it sends up against them (its fleet targets the player's fighters, ComputerPlayer.md, Air strikes) |
+| `raid` | An air base with 6 fighters (a carrier would keep out of the computer's strike range) | A carrier 3000 away with 6 attackers and 3 fighters, which strike as soon as they are armed |
+| `dd-ca`, `ca-dd` | A destroyer, or a cruiser | A cruiser, or a destroyer, 1500 away |
+| `cruisers` | 2 cruisers and 2 destroyers | The same, 2500 away |
+| `bb-ca`, `ca-bb` | A battleship, or 2 cruisers | 2 cruisers, or a battleship, 2500 away |
+| `torpedo-ring`, `bomb-ring` | A carrier with 9 attackers, armed with torpedoes or bombs | 4500 away, a carrier with no planes, 2 cruisers and a destroyer, in its fleet's own formation, which comes at the player's carrier to its strike range |
+| `torpedo-line`, `bomb-line` | The same | The same ships in a line, sailing straight on, in no fleet |
+
+The player plays Japan unless `--side us`.
+
+```bash
+dotnet run -c Release --project OpenNSPW/OpenNspw.Arena -- --skirmishes dd-ca,torpedo-ring --dates 60 --parallel 4 --variants "default:;close:CloseQuarters=true" --out skirmishes.csv
+dotnet run -c Release --project OpenNSPW/OpenNspw.Arena -- --skirmish-summary skirmishes.csv other.csv --baseline default
+```
+
+What the skirmishes found is in [StrongAIResearch.md](StrongAIResearch.md#local-battles).
+
 ## Scenario knowledge
 A player reads the briefing and looks at the map before the battle. The strong player gets the same, per scenario (`ScenarioKnowledge`), written from the briefings ([SingleplayerTexts](../OpenNSPW/OpenNspw.Desktop/SingleplayerTexts.cs)), the victory conditions ([ComputerPlayer.md](ComputerPlayer.md#decision)) and the maps:
 

@@ -124,6 +124,55 @@ Every aerial torpedo of the 120 games of the screen's defaults (`--torpedoes`): 
 
 The aim is close: two drops in three would pass within 5 of the ship if it held on. The misses come from its turn after the drop (64% hit when it does not turn, 53% when it does). Drops from 180 to 240 hit most, about 70%. The computer's torpedoes show the same, flatter. `BeamApproach` comes in on the beam, but the drops fall at the same angles (39% within 60–135°, against 40%), and hit a little more often (61.4% against 58.6%): the ship has turned away before the drop.
 
+## Local battles
+A carrier battle is many small fights, and the whole game swings on so much else that a tactic's worth in one of them is lost in the noise of 50 games. The arena's skirmishes ([StrongAI.md](StrongAI.md#skirmishes)) play each kind of fight alone: a handful of units a side in open sea, both sides seeing everything, 1.22's computer on the other side, from 60 seeds each, each tactic on the same 60 starts as the defaults. A game is won when the enemy lost more worth than the player (a carrier 10, a battleship 6, a cruiser 4, a destroyer 2, a plane 1, a ship's worth lost as its HP is); "better" and "worse" count the seeds where a tactic's net worth (the enemy's loss less the player's) beat the defaults' or fell short, and p is the sign test's. The player plays Japan.
+
+| Skirmish | Tactic | Won (95%) | Worth lost, ours–theirs | Ratio | Better–worse vs the defaults | p |
+| --- | --- | --- | --- | --- | --- | --- |
+| `fighters`, 6 against 6 | All on the nearest (defaults) | 13% (7–24%) | 4.72–2.83 | 0.60 | | |
+| | Spread over the enemy's (`SpreadFighters`) | 2% (0–9%) | 5.23–2.07 | 0.39 | 18–35 | 0.03 |
+| `raid`, 6 fighters against 6 attackers and 3 fighters | Four up at a time (defaults) | 25% (16–37%) | 3.57–3.02 | 0.85 | | |
+| | Every ready fighter up (`InterceptWithAll`) | 37% (26–49%) | 3.21–3.20 | 1.00 | 34–19 | 0.053 |
+| | Fighters first (`FightersFirst`) | 37% (26–49%) | 3.16–3.02 | 0.95 | 24–19 | 0.54 |
+| | `SpreadFighters` | 20% (12–32%) | 3.51–2.73 | 0.78 | 22–28 | 0.48 |
+| `dd-ca`, a destroyer against a cruiser | Closing on it (defaults) | 92% (82–96%) | 0.95–3.46 | 3.64 | | |
+| | Inside its guns' least range (`CloseQuarters`) | 98% (91–100%) | 0.64–3.91 | 6.14 | 40–17 | 0.003 |
+| `ca-dd`, a cruiser against a destroyer | Closing on it (defaults) | 50% (38–62%) | 2.07–1.84 | 0.89 | | |
+| | At 460, beyond its guns (`KeepRange`) | 77% (65–86%) | 1.20–1.78 | 1.48 | 40–18 | 0.005 |
+| `bb-ca`, a battleship against 2 cruisers | Closing (defaults) | 18% (11–30%) | 5.73–3.62 | 0.63 | | |
+| | At 560 from the nearest (`KeepRange`) | 8% (4–18%) | 5.87–2.69 | 0.46 | 27–33 | 0.52 |
+| `ca-bb`, 2 cruisers against a battleship | Closing (defaults) | 90% (80–95%) | 2.67–5.77 | 2.16 | | |
+| `cruisers`, 2 cruisers and 2 destroyers a side | Closing, in one line (defaults) | 67% (54–77%) | 8.92–10.45 | 1.17 | | |
+| | `CloseQuarters` | 78% (66–87%) | 8.03–11.41 | 1.42 | 37–23 | 0.09 |
+| | `KeepRange` (59 games) | 86% (75–93%) | 7.64–11.38 | 1.49 | 37–22 | 0.07 |
+| | Both | 92% (82–96%) | 7.04–11.34 | 1.61 | 38–22 | 0.05 |
+| `torpedo-ring`, 9 attackers against a carrier, 2 cruisers and a destroyer in their fleet's formation | Dispersed, fanned across one side (defaults) | 93% (84–97%) | 1.08–5.94 | 5.49 | | |
+| | Massed, the formation kept to the target (`Disperse=false`) | 90% (80–95%) | 1.23–6.59 | 5.35 | 33–27 | 0.52 |
+| | Two halves 90° apart (`PincerAngle=90`) | 98% (91–100%) | 0.78–6.08 | 7.76 | 34–26 | 0.37 |
+| | On the beam (`BeamApproach`) | 97% (89–99%) | 1.20–6.31 | 5.26 | 30–29 | 1.00 |
+| `torpedo-line`, the same ships in a line sailing on | Defaults | 87% (76–93%) | 0.88–5.91 | 6.69 | | |
+| | `Disperse=false` | 33% (23–46%) | 0.67–1.87 | 2.81 | 6–46 | < 0.001 |
+| | `PincerAngle=90` | 87% (76–93%) | 0.57–4.37 | 7.71 | 19–36 | 0.03 |
+| | `BeamApproach` | 75% (63–84%) | 0.63–4.96 | 7.83 | 20–32 | 0.13 |
+| `bomb-ring`, the same as `torpedo-ring`, with bombs | Defaults | 85% (74–92%) | 0.77–4.01 | 5.23 | | |
+| | `Disperse=false` | 87% (76–93%) | 1.03–4.32 | 4.18 | 26–33 | 0.44 |
+| | `PincerAngle=90` | 98% (91–100%) | 0.68–3.97 | 5.81 | 30–29 | 1.00 |
+| `bomb-line` | Defaults | 82% (70–89%) | 0.58–2.96 | 5.07 | | |
+| | `Disperse=false` | 20% (12–32%) | 0.85–1.11 | 1.31 | 6–47 | < 0.001 |
+| | `PincerAngle=90` | 78% (66–87%) | 0.68–2.74 | 4.02 | 20–33 | 0.10 |
+
+`FanAngle=90` played every strike game as the defaults: a dispersed strike's planes reach their fan's points alone, and never split again (`TrySplitAttack` splits only a formation). `InterceptWithAll` and `FightersFirst` play the `fighters` games as the defaults, as their fighters are in the air from the start.
+
+What the fights say:
+
+- **Fighters should go for the same plane.** Six fighters on the nearest enemy, often the same one, lose fewer than six spread one to each (p 0.03). Even so, 1.22's Japanese carrier fighter (16 HP, 2.35 a tick) loses to the American (20 HP, 2.5): 4.7 lost for 2.8, whatever the tactic.
+- **Against a raid, more fighters at once**: every ready fighter up, not four, wins 37% against 25%, and trades a plane for a plane (p 0.053). The air base still loses 17 HP a raid: the attackers' bombs get through.
+- **A destroyer beats a cruiser**, as the player's tip said (92%): its torpedoes, fired by themselves on the beam, outweigh the cruiser's guns; inside the cruiser's least range (`CloseQuarters`) it wins 98%.
+- **A cruiser should keep a destroyer at the range of its own guns, not of the destroyer's**: closing in, it meets the destroyer's torpedoes, and wins only one fight in two; at 460 it wins 77% (p 0.005). A battleship cannot do the same to cruisers: they are faster (0.8 against 0.7), and close anyway; turning away to keep the range loses it more (8% against 18%). And 2 cruisers sink a battleship 9 times in 10.
+- **Squadrons gain from both**: the cruisers keeping their range, the destroyers at close quarters, win 92% against 67%, and lose a ship a fight instead of 1.7.
+- **A strike must disperse**: kept in its formation, which flies at about 60% of its planes' speed, it drops 1.7 torpedoes a game at the line sailing on instead of 4.6, and sinks its carrier twice in 60 games instead of 9 (p < 0.001); at the ring, which comes on at the player's carrier, it does as well as dispersed. Coming from two sides 90° apart, as many planes are turned back (3.3 a game against 3.2 on the ring), and fewer carriers are sunk (7 against 10 on the ring, 4 against 9 on the line), though fewer planes are lost on the ring (0.78 against 1.08 a game). On the beam, no gain, as before ([Torpedoes](#torpedoes-by-the-angle-they-are-dropped-at)). The defaults' strike is already good: 65% to 72% of its torpedoes hit, and it seldom loses a plane to two cruisers and a destroyer.
+- **Torpedoes, not bombs, against a carrier**: bombs hit more often (81% at the ring, 69% at the line, against 65% and 72%), but a strike's bombs take 12 to 16 HP off the ships, nearly all of it off the carrier, and its torpedoes 25, and the torpedoes sink the carrier in 19 games of 120, the bombs in none.
+
 ## What the work needs
 Why the player did not find these by itself, and what would let it:
 
