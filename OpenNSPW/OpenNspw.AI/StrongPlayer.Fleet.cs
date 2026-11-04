@@ -157,6 +157,9 @@ public sealed partial class StrongPlayer
 	// with its escorts' guns, which a line does from only one.
 	private bool TryForm(Nspw game, List<int> decks)
 	{
+		if (HoldsShips(game))
+			return false;
+
 		foreach (var (carrier, ring) in _rings.ToList())
 		{
 			ring.Members.RemoveAll(m => !IsOwn(game, m));
@@ -646,6 +649,9 @@ public sealed partial class StrongPlayer
 	// The warships that sail alone, near each other, form a line behind the strongest of them, battleships first, once.
 	private bool TryFormBattleGroups(Nspw game)
 	{
+		if (HoldsShips(game))
+			return false;
+
 		for (var m = 1; m <= game.MaxUnitId; m++)
 		{
 			ref var seed = ref game.Units[m];
@@ -1075,6 +1081,9 @@ public sealed partial class StrongPlayer
 	// (NearestToKeepFrom), ordered every KeepRangeFrames.
 	private bool TryEngage(Nspw game)
 	{
+		if (HoldsShips(game))
+			return false;
+
 		for (var m = 1; m <= game.MaxUnitId; m++)
 		{
 			ref var leader = ref game.Units[m];

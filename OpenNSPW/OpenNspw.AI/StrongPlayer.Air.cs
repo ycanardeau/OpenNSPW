@@ -181,6 +181,9 @@ public sealed partial class StrongPlayer
 	// ship of the player's.
 	private bool TryIntercept(Nspw game, List<int> decks)
 	{
+		if (HoldsFighters(game))
+			return false;
+
 		foreach (var contact in _contacts.All)
 		{
 			if (
@@ -2049,6 +2052,7 @@ public sealed partial class StrongPlayer
 	{
 		if (
 			StaysHome
+			|| HoldsFighters(game)
 			|| !_knowledge.Counted.Any(k =>
 				k is UnitKind.Bomber or UnitKind.Attacker or UnitKind.Fighter
 			)
@@ -2096,6 +2100,9 @@ public sealed partial class StrongPlayer
 	// it home (at 30) and another goes up.
 	private bool TryPatrol(Nspw game, List<int> decks)
 	{
+		if (HoldsFighters(game))
+			return false;
+
 		foreach (var deck in decks)
 		{
 			ref var unit = ref game.Units[deck];

@@ -65,6 +65,10 @@ public sealed record StrongParameters
 	// Whether, where the player holds on, its planes rebase to the air base nearest the enemy (TryRebase).
 	public bool Rebase { get; init; } = true;
 
+	// Whether, in scenario 107, the ships sail at once to where Yamamoto's plane comes round to land, west of Rabaul's
+	// airfield, and fire at it there (TrySailToAmbush, TryGunsOnYamamoto).
+	public bool AmbushYamamoto { get; init; } = true;
+
 	// The frames before a target engaged may be engaged again.
 	public int RetargetFrames { get; init; } = 400;
 

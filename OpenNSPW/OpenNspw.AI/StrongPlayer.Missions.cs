@@ -25,8 +25,121 @@ public sealed partial class StrongPlayer
 	private bool _hasDefendedBougainville;
 	private int _defenders;
 
+	// Scenario 107: where the ships wait for Yamamoto's plane, west of Rabaul's airfield, which it comes round to land
+	// at: a player who won it sailed there at once, and shot the plane down over it with the fighters and the
+	// destroyers' guns.
+	private static readonly WorldPosition YamamotoAmbush = new(-9100, 1700);
+
+	// Scenario 107: the way there that player sailed, from the easternmost destroyer's start, west of the coast north-west
+	// of the start, which a ship sailing straight there from farther west runs aground on.
+	private static readonly WorldPosition[] AmbushWay =
+	[
+		new(-4260, -2950),
+		new(-9188, 934),
+		YamamotoAmbush,
+	];
+
+	private bool _hasSailedToAmbush;
+	private readonly Dictionary<int, int> _gunsOnYamamoto = [];
+
 	private bool IsMissionOrderDue(Nspw game, int frames) =>
 		UnitFacts.Now(game) - _missionOrdered >= frames;
+
+	// Scenario 107: Yamamoto's plane, found, or null.
+	private Contact? Yamamoto(Nspw game) =>
+		_contacts.All.FirstOrDefault(c =>
+			c.Kind == UnitKind.Bomber && game.Units[c.Unit].IsUsed && game.Units[c.Unit].IsFound
+		);
+
+	// Scenario 107: whether Yamamoto's plane is at the ambush, within 2500 of it, found, the fighters held until then: its
+	// seven escorts shoot down what meets it on its way, and it circles there before it lands.
+	private bool IsAtAmbush(Nspw game) =>
+		Yamamoto(game) is { } bomber
+		&& UnitFacts.Distance(game.Units[bomber.Unit].Position, YamamotoAmbush) <= 2500;
+
+	// Scenario 107: the ships sail to the ambush, each alone, once, from the start: formed (TryForm), the destroyers
+	// keep their places on the carrier's beam, which runs them aground on the coast north-west of the start, and the
+	// carrier waits for them.
+	private bool TrySailToAmbush(Nspw game)
+	{
+		if (_hasSailedToAmbush)
+			return false;
+
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var ship = ref game.Units[m];
+			if (
+				!IsOwn(game, m)
+				|| ship.Category != UnitCategory.Ship
+				|| UnitFacts.IsBase(ship.Kind)
+				|| UnitFacts.Distance(UnitFacts.FinalDestination(ref ship), YamamotoAmbush) < 600
+			)
+				continue;
+
+			SelectAlone(m, "ambushing");
+			foreach (var point in AmbushWay)
+				_clicks.Enqueue(g =>
+				{
+					if (g.SelectedUnit != m)
+						return GiveUp(g, $"ambushing {m}: selected {g.SelectedUnit}");
+					g.Commands.SetDestination(point);
+					return true;
+				});
+			_clicks.Enqueue(g =>
+				Log?.Invoke($"{UnitFacts.Now(g)}: {g.Units[m].Kind} {m} sails to wait for Yamamoto")
+			);
+			Deselect();
+			return true;
+		}
+
+		_hasSailedToAmbush = true;
+		return false;
+	}
+
+	// Scenario 107: each warship within 1500 of Yamamoto's plane, found, takes it as its gun target and sails under it,
+	// every 200 frames: its guns reach a plane only close.
+	private bool TryGunsOnYamamoto(Nspw game)
+	{
+		if (Yamamoto(game) is not { } bomber)
+			return false;
+
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var ship = ref game.Units[m];
+			if (
+				!IsOwn(game, m)
+				|| !IsWarship(ship.Kind)
+				|| UnitFacts.Distance(ship.Position, game.Units[bomber.Unit].Position) > 1500
+				|| UnitFacts.Now(game) - _gunsOnYamamoto.GetValueOrDefault(m, -1000) < 200
+			)
+				continue;
+
+			_gunsOnYamamoto[m] = UnitFacts.Now(game);
+			var target = bomber.Unit;
+			SelectAlone(m, "firing at Yamamoto");
+			_clicks.Enqueue(g =>
+			{
+				if (g.SelectedUnit != m || !g.Units[target].IsUsed)
+					return GiveUp(g, $"firing at Yamamoto {m}: selected {g.SelectedUnit}");
+				g.Commands.ClickUnit(target);
+				Log?.Invoke(
+					$"{UnitFacts.Now(g)}: {g.Units[m].Kind} {m} fires at Yamamoto's {g.Units[target].Kind} {target}"
+				);
+				return true;
+			});
+			_clicks.Enqueue(g =>
+			{
+				if (g.SelectedUnit != m || !g.Units[target].IsUsed)
+					return GiveUp(g, $"sailing under Yamamoto {m}: selected {g.SelectedUnit}");
+				g.Commands.SetDestination(g.Units[target].Position);
+				return true;
+			});
+			Deselect();
+			return true;
+		}
+
+		return false;
+	}
 
 	// The player's first unit of a kind, or 0.
 	private static int FirstOwn(Nspw game, UnitKind kind)
@@ -418,6 +531,7 @@ public sealed partial class StrongPlayer
 		{
 			300 => TryDoolittle(game),
 			205 => TryRescue(game),
+			107 when Parameters.AmbushYamamoto => TrySailToAmbush(game) || TryGunsOnYamamoto(game),
 			_ => TryReturnHome(game),
 		};
 
@@ -426,8 +540,17 @@ public sealed partial class StrongPlayer
 		game.ScenarioNumber switch
 		{
 			300 => !IsDoolittleLaunching(game) || CitiesDestroyed(game) >= 2,
+			107 => Parameters.AmbushYamamoto,
 			_ => _knowledge.Home is not null && ArePlacesDestroyed(game),
 		};
+
+	// Whether the mission holds the ships back from the general tasks that form them and send them at the enemy
+	// (TryForm, TryFormBattleGroups, TryEngage).
+	private bool HoldsShips(Nspw game) => game.ScenarioNumber == 107 && Parameters.AmbushYamamoto;
+
+	// Whether the mission holds the fighters back from intercepting, hunting and patrolling.
+	private bool HoldsFighters(Nspw game) =>
+		game.ScenarioNumber == 107 && Parameters.AmbushYamamoto && !IsAtAmbush(game);
 
 	// Whether the mission holds the scouts back.
 	private bool HoldsScouts(Nspw game) =>
@@ -442,6 +565,7 @@ public sealed partial class StrongPlayer
 		game.ScenarioNumber switch
 		{
 			300 => true,
+			107 => Parameters.AmbushYamamoto,
 			_ => _knowledge.Home is not null && ArePlacesDestroyed(game),
 		};
 }
