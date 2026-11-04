@@ -88,6 +88,17 @@ public sealed record StrongParameters
 	// Whether the player expects the enemy where it was in past games of the scenario (Recall), given a memory.
 	public bool UseMemory { get; init; } = true;
 
+	// How many frames ahead the memory is asked where the enemy will be (Recall): about the time a strike takes to get
+	// there, as the enemy's fleets come on.
+	public int MemoryLead { get; init; } = 1000;
+
+	// Whether the player plays a scenario with the settings found for it (ScenarioTuning), over these.
+	public bool UseScenarioTuning { get; init; } = true;
+
+	// Whether the carriers keep away from where the memory expects the enemy (Threats), not from the briefing's areas:
+	// those move on as the frames go, and the carriers with them.
+	public bool MemoryThreats { get; init; }
+
 	// The frames before a target engaged may be engaged again.
 	public int RetargetFrames { get; init; } = 400;
 
@@ -213,6 +224,10 @@ public sealed record StrongParameters
 	// shows best (LookAheadStance), rather than keeping away; for this many frames, on LookaheadSeeds seeds.
 	public bool LookaheadPosition { get; init; } = true;
 	public int LookaheadPositionFrames { get; init; } = 2500;
+
+	// With LookaheadPosition, the stances looked ahead on (StrikeStance): 3, keeping away, holding and closing in; 5, also
+	// backing off and closing in within the enemy's strike range.
+	public int LookaheadStances { get; init; } = 3;
 
 	// With LookaheadPosition, how often a carrier looks ahead at its stance, its strike out or not; 0 looks ahead only
 	// as its strike takes off, keeping away otherwise.

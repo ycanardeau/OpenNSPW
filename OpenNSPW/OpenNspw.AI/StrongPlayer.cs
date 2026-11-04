@@ -590,7 +590,8 @@ public sealed partial class StrongPlayer : IPlayer
 	}
 
 	// With Parameters.UseMemory, every 250 frames, the areas where the enemy is expected: where the memory has each unit
-	// the victory conditions count at this frame of past games, but those found lately and those seen sunk, in place of
+	// the victory conditions count Parameters.MemoryLead frames from now in past games, about when a strike launched now
+	// gets there, but those found lately and those seen sunk, in place of
 	// the briefing's fleets (ScenarioKnowledge), whose places stay: a player who plays a scenario again looks for its
 	// carriers where they were.
 	private void Recall(Nspw game)
@@ -601,7 +602,7 @@ public sealed partial class StrongPlayer : IPlayer
 
 		_recalledAt = UnitFacts.Now(game);
 		var remembered = Memory
-			.Expected(game.ScenarioNumber, UnitFacts.Now(game))
+			.Expected(game.ScenarioNumber, UnitFacts.Now(game) + Parameters.MemoryLead)
 			.Where(e =>
 				IsCounted(e.Kind)
 				&& !(
@@ -628,7 +629,13 @@ public sealed partial class StrongPlayer : IPlayer
 	public void Act(Nspw game)
 	{
 		if (_knowledge.Enemy.Count == 0 && _knowledge.Counted.Count == 0)
+		{
 			_knowledge = Knowledge ?? ScenarioKnowledge.For(game.ScenarioNumber);
+			if (
+				Parameters.UseScenarioTuning && ScenarioTuning.For(game.ScenarioNumber) is { } tuned
+			)
+				_parameters = _parameters.With(tuned);
+		}
 
 		// Every 250 frames of speed 1, which a faster frame may step over.
 		if (UnitFacts.Now(game) / 250 != _statusAt / 250)

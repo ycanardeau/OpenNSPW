@@ -290,8 +290,9 @@ public sealed partial class StrongPlayer
 	// carrier follows to keep them within its planes' reach, the computer's strike range (3550, or 4350 as Japan) and, but
 	// those, more for each frame since, as they may have come on by half their speed, up to 3000, or, while hunting
 	// carriers, at their full speed (0.7 a tick), up to 1000: farther, the carrier would sail out of its own planes' reach
-	// before the scouts find them again; or, none found yet, the areas where the briefing expects them, if the victory
-	// conditions count them, the range and the area's radius; and the places the briefing names, whose air bases strike
+	// before the scouts find them again; or, none found yet, the areas where the briefing expects them (or, with
+	// Parameters.MemoryThreats, the memory: Recall), if the victory conditions count them, the range and the area's
+	// radius; and the places the briefing names, whose air bases strike
 	// 1.5 times as far (ComputerPlayer.md, Air strikes), but no farther than the player's strikes reach, which must reach
 	// them; and the other enemy air bases found, 1.5 times as far; and, with Parameters.AvoidWarships, the enemy's
 	// warships found in the last 600 frames, where they would be by now, whose guns sink the escorts: their fleets come
@@ -325,7 +326,7 @@ public sealed partial class StrongPlayer
 			.ToList();
 		if (threats.Count == 0 && _knowledge.Counted.Contains(UnitKind.Carrier))
 			threats.AddRange(
-				_knowledge
+				(Parameters.MemoryThreats ? _knowledge : _briefing ?? _knowledge)
 					.Enemy.Where(a => !a.IsPlace)
 					.Select(a => (a.Center, range + a.Radius, false))
 			);
@@ -421,12 +422,15 @@ public sealed partial class StrongPlayer
 	}
 
 	// What a carrier does while its strike is out (TryPosition): keeps away as it does otherwise, holds where it is, or
-	// closes in to the computer's strike range, as with StrikeOutMargin 0.
+	// closes in to the computer's strike range, as with StrikeOutMargin 0; or, with Parameters.LookaheadStances 5, backs
+	// off 1000 farther than it keeps away, or closes in 500 within that range.
 	private enum StrikeStance
 	{
 		KeepAway,
 		Hold,
 		Close,
+		BackOff,
+		CloseIn,
 	}
 
 	// A unit as it stood when a choice was looked ahead on (Standings), to count what it lost since (Points).
@@ -530,7 +534,7 @@ public sealed partial class StrongPlayer
 	// best, keeping away if none does better.
 	private StrikeStance LookAheadStance(Nspw game, int carrier)
 	{
-		var stances = Enum.GetValues<StrikeStance>();
+		var stances = Enum.GetValues<StrikeStance>().Take(Parameters.LookaheadStances).ToArray();
 		var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 		var scores = LookAhead(
 			game,
@@ -607,6 +611,8 @@ public sealed partial class StrongPlayer
 				range
 				+ (
 					stance == StrikeStance.Close ? 0
+					: stance == StrikeStance.CloseIn ? -500
+					: stance == StrikeStance.BackOff ? Parameters.KeepAwayMargin + 1000
 					: Parameters.StrikeOutMargin >= 0 && isStrikeOut ? Parameters.StrikeOutMargin
 					: Parameters.KeepAwayMargin
 				);

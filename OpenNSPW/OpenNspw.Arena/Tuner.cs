@@ -7,12 +7,22 @@ namespace OpenNspw.Arena;
 // successive halving. The defaults and `candidates` random settings play each scenario on a few start dates; the best
 // third goes on, to three times as many dates, the games already played counted again; and so on for `rounds` rounds.
 // Every setting of a round plays the same dates, so that the setups' luck falls alike on all of them (common random
-// numbers). A game scores 1 won, 0.5 drawn or unfinished, 0 lost, and, to break ties among few games, the HP the enemy's
-// ships lost less the HP the player's carriers lost, a thousandth each.
+// numbers). A game scores 1 won, 0 drawn, unfinished or lost: only a win counts; and, to break ties among few games, the
+// HP the enemy's ships lost less the HP the player's carriers lost, a thousandth each. The scenarios' own settings
+// (ScenarioTuning) are left out, as the tuner looks for them.
 internal static class Tuner
 {
-	// A parameter's range: the tuner draws it uniformly from Low to High, a whole number if it is one.
-	private sealed record Range(string Name, double Low, double High, bool IsWhole);
+	// A parameter's range: the tuner draws it uniformly from Low to High, a whole number if it is one, or, a switch,
+	// true or false.
+	private sealed record Range(
+		string Name,
+		double Low,
+		double High,
+		bool IsWhole,
+		bool IsSwitch = false
+	);
+
+	private static Range Switch(string name) => new(name, 0, 1, false, true);
 
 	private static readonly Range[] Ranges =
 	[
@@ -33,6 +43,31 @@ internal static class Tuner
 		new("HomeFuelMargin", 5, 25, false),
 		new("TargetReach", 0.6, 1.0, false),
 		new("ScoutFraction", 0.25, 0.45, false),
+		new("HuntScouts", 0, 3, true),
+		new("StrikeShare", 0, 1, false),
+		new("InterceptRange", 2000, 5000, false),
+		new("FocusDistance", 0, 3000, false),
+		new("DetachRatio", 1, 3, false),
+		new("AvoidWarships", 0, 3000, false),
+		Switch("HoldForStrike"),
+		Switch("EscortHunts"),
+		Switch("KeepScouting"),
+		Switch("EarlyStrike"),
+		Switch("CloseQuarters"),
+		Switch("TargetAttackers"),
+		Switch("RecoverFirst"),
+		Switch("HoldCourse"),
+		Switch("SeaApproach"),
+		Switch("SpareCrippled"),
+		Switch("BeamApproach"),
+		Switch("StraightWhenFar"),
+		Switch("Detach"),
+		Switch("FighterBingo"),
+		Switch("LookaheadPosition"),
+		Switch("StayHome"),
+		Switch("BombGround"),
+		Switch("LandWhenClear"),
+		Switch("UseSubmarines"),
 	];
 
 	private static double Score(ArenaResult result) =>
@@ -40,7 +75,6 @@ internal static class Tuner
 			result.Outcome switch
 			{
 				Outcome.Won => 1,
-				Outcome.Drawn or Outcome.Unfinished => 0.5,
 				_ => 0,
 			}
 		) + ((result.Strikes.EnemyDamage - result.Strikes.CarrierDamage) / 1000.0);
@@ -52,9 +86,11 @@ internal static class Tuner
 			Ranges.Select(r =>
 			{
 				var value = r.Low + (random.NextDouble() * (r.High - r.Low));
-				return FormattableString.Invariant(
-					$"{r.Name}={(r.IsWhole ? Math.Round(value) : Math.Round(value, 2))}"
-				);
+				return r.IsSwitch
+					? $"{r.Name}={(value >= 0.5 ? "true" : "false")}"
+					: FormattableString.Invariant(
+						$"{r.Name}={(r.IsWhole ? Math.Round(value) : Math.Round(value, 2))}"
+					);
 			})
 		);
 
@@ -98,7 +134,10 @@ internal static class Tuner
 						(Func<ArenaResult>)(
 							() =>
 							{
-								var parameters = StrongParameters.Parse(settings[g.n]);
+								var parameters = StrongParameters.Parse(settings[g.n]) with
+								{
+									UseScenarioTuning = false,
+								};
 								var player = formation is not null
 									? new StrongPlayer
 									{
