@@ -146,6 +146,9 @@ public sealed partial class StrongPlayer : IPlayer
 	private (Contact Target, int Frame)? _wave;
 	private (WorldPosition Point, int Frame)? _pointWave;
 
+	// Whether the player is a copy, playing on in a copy of the battle (CopyFor), which does not look ahead itself.
+	private bool _isFork;
+
 	public string Name => "strong";
 
 	// Where the player says what it does, to follow it, or null.
@@ -472,7 +475,8 @@ public sealed partial class StrongPlayer : IPlayer
 	}
 
 	// A copy of the player as it stands, to play on in a copy of the battle (GameFork) as it would in the battle: all it
-	// knows and plans, and the clicks it has queued, copied (ObjectCopy), given to the copy's game; it logs nothing. Call it between frames, or while it acts.
+	// knows and plans, and the clicks it has queued, copied (ObjectCopy), given to the copy's game; it logs nothing, and
+	// does not look ahead. Call it between frames, or while it acts.
 	public StrongPlayer CopyFor(Nspw game, Nspw fork)
 	{
 		var mapped = new Dictionary<object, object?>(ReferenceEqualityComparer.Instance)
@@ -485,7 +489,9 @@ public sealed partial class StrongPlayer : IPlayer
 		if (Log is not null)
 			mapped[Log] = null;
 
-		return (StrongPlayer)new ObjectCopy(mapped).Copy(this)!;
+		var copy = (StrongPlayer)new ObjectCopy(mapped).Copy(this)!;
+		copy._isFork = true;
+		return copy;
 	}
 
 	// Gives the next click, if its time has come (ClickQueue).

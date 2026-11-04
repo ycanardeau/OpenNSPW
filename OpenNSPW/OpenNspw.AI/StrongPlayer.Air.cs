@@ -984,11 +984,51 @@ public sealed partial class StrongPlayer
 		}
 	}
 
+	// Sends a strike in to attack a target, each plane along its path (TryApproach), running in from a bearing.
+	private void Approach(
+		List<int> planes,
+		int targetUnit,
+		double bearing,
+		List<WorldPosition>[] paths
+	)
+	{
+		var steps = paths[0].Count - 1;
+		for (var i = 0; i < planes.Count; i++)
+		{
+			var plane = planes[i];
+			var path = paths[i];
+			_approaching[plane] = path[^1];
+			_toWaypoint.Remove(plane);
+			_blindPoints.Remove(plane);
+			_holding.Remove(plane);
+			SelectFlying(plane, "approaching");
+			foreach (var point in path)
+			{
+				_clicks.Enqueue(g =>
+				{
+					if (g.SelectedUnit != plane)
+						return GiveUp(g, $"approach of {plane}: selected {g.SelectedUnit}");
+					g.Commands.SetDestination(point);
+					return true;
+				});
+			}
+		}
+
+		var first = planes[0];
+		_clicks.Enqueue(g =>
+			Log?.Invoke(
+				$"{UnitFacts.Now(g)}: {planes.Count} strikes of {g.Units[first].Kind} {first} approach {g.Units[targetUnit].Kind} {targetUnit} from {bearing % 360:F0}° by {steps + 1} waypoints"
+			)
+		);
+		Deselect();
+	}
+
 	// The bearing a strike runs in from, chosen by playing it forward (Lookahead): the heuristic's (ApproachBearing) and
-	// eight others around the target, each flown in copies of the battle on two seeds of their own for 1800 frames, as the
-	// planes would fly them, the game's own attack taking over at the end of the path; scored by the HP the enemy's
-	// ships the victory counts lose within 3000 of the target, less Parameters.LookaheadPlaneCost for each plane of the
-	// strike lost.
+	// eight others around the target, each flown in copies of the battle on Parameters.LookaheadSeeds seeds of their own
+	// for Parameters.LookaheadFrames frames; scored by the HP the enemy's ships the victory counts lose within 3000 of the
+	// target, less Parameters.LookaheadPlaneCost for each plane of the strike lost. In a copy, the strike is sent in as
+	// TryApproach sends it, and then, with Parameters.LookaheadPlays, the player plays on in it, a copy of it (CopyFor);
+	// or else the planes fly their paths, and the game's own attack takes over at the end of them.
 	private double LookAheadApproach(
 		Nspw game,
 		List<int> planes,
@@ -1000,7 +1040,8 @@ public sealed partial class StrongPlayer
 	)
 	{
 		double[] candidates = [heuristic, .. Enumerable.Range(0, 8).Select(k => from + (k * 45.0))];
-		var routes = candidates.Select(c => pathsOf(c).Paths).ToArray();
+		var plans = candidates.Select(pathsOf).ToArray();
+		var routes = plans.Select(p => p.Paths).ToArray();
 		var counted = _contacts
 			.All.Where(c =>
 				c.Category == UnitCategory.Ship
@@ -1075,22 +1116,47 @@ public sealed partial class StrongPlayer
 			};
 		}
 
+		// A candidate played by a copy of the player in a copy of the battle: the strike sent in, its first clicks given in
+		// the frame of the choice, whose rest the player has done already (Act), then the player playing on.
+		Action<GameFork> Played(int candidate, GameFork fork)
+		{
+			var player = CopyFor(game, fork.Game);
+			player.Approach(planes, targetUnit, plans[candidate].Bearing, plans[candidate].Paths);
+			var isFirst = true;
+			return f =>
+			{
+				if (isFirst)
+					player.GiveClicks(f.Game);
+				else
+					player.Act(f.Game);
+				isFirst = false;
+				f.Step();
+			};
+		}
+
 		double Score(Nspw g) =>
 			counted.Sum(n => hp[n] - Math.Max(g.Units[n].IsUsed ? g.Units[n].HP : 0, 0))
 			- (Parameters.LookaheadPlaneCost * planes.Count(n => !g.Units[n].IsUsed));
 
+		var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 		var scores = Lookahead.Evaluate(
 			game,
 			candidates.Length,
-			Orders,
-			1800,
-			2,
+			Parameters.LookaheadPlays
+				? Played
+				: (candidate, _) =>
+				{
+					var orders = Orders(candidate);
+					return f => f.Step(orders);
+				},
+			Parameters.LookaheadFrames,
+			Parameters.LookaheadSeeds,
 			Score,
 			(uint)UnitFacts.Now(game)
 		);
 		var best = Array.IndexOf(scores, scores.Max());
 		Log?.Invoke(
-			$"{UnitFacts.Now(game)}: lookahead runs in from {candidates[best] % 360:F0}°, the heuristic's {heuristic % 360:F0}°: {string.Join(" ", scores.Select(v => v.ToString("F1")))}"
+			$"{UnitFacts.Now(game)}: lookahead runs in from {candidates[best] % 360:F0}°, the heuristic's {heuristic % 360:F0}°, in {stopwatch.ElapsedMilliseconds} ms: {string.Join(" ", scores.Select(v => v.ToString("F1")))}"
 		);
 		return scores[best] > scores[0] ? candidates[best] : heuristic;
 	}
@@ -1274,41 +1340,12 @@ public sealed partial class StrongPlayer
 				);
 			}
 
-			var bearing = Parameters.LookaheadApproach
-				? LookAheadApproach(game, planes, aim.Unit, at, from, heuristic, PathsOf)
-				: heuristic;
+			var bearing =
+				Parameters.LookaheadApproach && !_isFork
+					? LookAheadApproach(game, planes, aim.Unit, at, from, heuristic, PathsOf)
+					: heuristic;
 			var (runIn, paths) = PathsOf(bearing);
-			bearing = runIn;
-			var steps = paths[0].Count - 1;
-			for (var i = 0; i < planes.Count; i++)
-			{
-				var plane = planes[i];
-				var path = paths[i];
-				_approaching[plane] = path[^1];
-				_toWaypoint.Remove(plane);
-				_blindPoints.Remove(plane);
-				_holding.Remove(plane);
-				SelectFlying(plane, "approaching");
-				foreach (var point in path)
-				{
-					_clicks.Enqueue(g =>
-					{
-						if (g.SelectedUnit != plane)
-							return GiveUp(g, $"approach of {plane}: selected {g.SelectedUnit}");
-						g.Commands.SetDestination(point);
-						return true;
-					});
-				}
-			}
-
-			var targetUnit = aim.Unit;
-			var first = planes[0];
-			_clicks.Enqueue(g =>
-				Log?.Invoke(
-					$"{UnitFacts.Now(g)}: {planes.Count} strikes of {g.Units[first].Kind} {first} approach {g.Units[targetUnit].Kind} {targetUnit} from {bearing % 360:F0}° by {steps + 1} waypoints"
-				)
-			);
-			Deselect();
+			Approach(planes, aim.Unit, runIn, paths);
 			return true;
 		}
 

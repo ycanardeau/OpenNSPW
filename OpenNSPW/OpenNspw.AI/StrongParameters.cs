@@ -151,6 +151,14 @@ public sealed record StrongParameters
 	// at 3 dropped fewer weapons and sank fewer carriers (StrongAIResearch.md).
 	public double LookaheadPlaneCost { get; init; } = 3;
 
+	// With LookaheadApproach, whether the player plays on in each copy of the battle, a copy of it, after the strike's first
+	// orders, rather than the strike flying its path and being left to the game's attack.
+	public bool LookaheadPlays { get; init; }
+
+	// With LookaheadApproach, the frames each copy is played, and the seeds each candidate is played on.
+	public int LookaheadFrames { get; init; } = 1800;
+	public int LookaheadSeeds { get; init; } = 2;
+
 	// Whether strikes run in on a ship only from where the sea lets a torpedo be dropped (ApproachBearing, IsSeaRun).
 	public bool SeaApproach { get; init; }
 

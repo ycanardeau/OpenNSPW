@@ -6,13 +6,14 @@ namespace OpenNspw.AI;
 // left out of its candidate's average, and a candidate whose copies all fail scores the least.
 public static class Lookahead
 {
-	// The average score of each candidate: a copy of the game for each candidate and seed, given the candidate's orders,
-	// then played `frames` frames, each frame giving the candidate's clicks as they go on (`step`, at the point of the
-	// frame where the game takes them), and scored by `score`.
+	// The average score of each candidate: a copy of the game for each candidate and seed, which `play` gives, for the
+	// candidate and the copy, what plays a frame of it with the candidate's orders (GameFork.Step, with its clicks, or a
+	// player's Act before it); played `frames` frames, and scored by `score`. `play` is called for every copy before any
+	// is played, on the calling thread.
 	public static double[] Evaluate(
 		Nspw game,
 		int candidates,
-		Func<int, Action<GameFork>> step,
+		Func<int, GameFork, Action<GameFork>> play,
 		int frames,
 		int seeds,
 		Func<Nspw, double> score,
@@ -20,10 +21,12 @@ public static class Lookahead
 	)
 	{
 		var forks = new GameFork[candidates * seeds];
+		var plays = new Action<GameFork>[forks.Length];
 		for (var i = 0; i < forks.Length; i++)
 		{
 			forks[i] = new GameFork(game);
 			forks[i].Reseed(seed + (uint)(i % seeds) * 7919);
+			plays[i] = play(i / seeds, forks[i]);
 		}
 
 		var scores = new double[forks.Length];
@@ -33,12 +36,11 @@ public static class Lookahead
 			i =>
 			{
 				var fork = forks[i];
-				var act = step(i / seeds);
 				try
 				{
 					for (var f = 0; f < frames && fork.Game.Result == GameResult.None; f++)
 					{
-						fork.Step(act);
+						plays[i](fork);
 					}
 
 					scores[i] = score(fork.Game);
