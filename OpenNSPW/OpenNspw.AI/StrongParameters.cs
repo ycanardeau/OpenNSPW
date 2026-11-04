@@ -166,6 +166,20 @@ public sealed record StrongParameters
 	// (TryPosition, IsLandingOn): they land only along its heading.
 	public bool HoldCourse { get; init; }
 
+	// The margin beyond the computer's strike range a carrier keeps while its strike is out (TryPosition, IsStrikeOut),
+	// instead of KeepAwayMargin, so that it does not sail off from the planes, which come home on what fuel they have
+	// left; negative keeps KeepAwayMargin.
+	public double StrikeOutMargin { get; init; } = -1;
+
+	// Whether a carrier whose strike is out (IsStrikeOut) stays where it is, neither closing in nor moving away, unless
+	// it is within the computer's strike range and StrikeOutMargin, or KeepAwayMargin if that is negative (TryPosition).
+	public bool HoldForStrike { get; init; }
+
+	// Whether a carrier whose strike is out keeps away, holds or closes in as playing each forward in copies of the battle
+	// shows best (LookAheadStance), rather than keeping away; for this many frames, on LookaheadSeeds seeds.
+	public bool LookaheadPosition { get; init; }
+	public int LookaheadPositionFrames { get; init; } = 2500;
+
 	// Whether the battleships and cruisers take as their target the enemy attackers within their anti-aircraft reach
 	// (TryTargetAttackers), which fire more at a target, and not at all with a ship as their target.
 	public bool TargetAttackers { get; init; }

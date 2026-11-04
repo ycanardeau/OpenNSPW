@@ -396,12 +396,128 @@ public sealed partial class StrongPlayer
 		return false;
 	}
 
+	// Whether a deck's attackers or bombers are out on a strike, armed, on their way to it or over it.
+	private bool IsStrikeOut(Nspw game, int deck)
+	{
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var plane = ref game.Units[m];
+			if (
+				IsOwn(game, m)
+				&& UnitFacts.IsStrikePlane(plane.Kind)
+				&& plane.PlaneState == UnitState.Flying
+				&& plane.Carrier == deck
+				&& plane.Mode != UnitMode.Return
+				&& plane.Ammo > 0
+				&& !_scoutLegs.ContainsKey(m)
+			)
+				return true;
+		}
+
+		return false;
+	}
+
+	// What a carrier does while its strike is out (TryPosition): keeps away as it does otherwise, holds where it is, or
+	// closes in to the computer's strike range, as with StrikeOutMargin 0.
+	private enum StrikeStance
+	{
+		KeepAway,
+		Hold,
+		Close,
+	}
+
+	// A unit as it stood when a stance was chosen (LookAheadStance), to count what it lost since (Points).
+	private sealed record Standing(
+		UnitKind Kind,
+		UnitCategory Category,
+		Side Side,
+		double HP,
+		double MaxHP
+	);
+
+	// What the battle stands at, in points: the worth of what each side has lost since `before`, the units by number,
+	// those in use and alive (Value), the enemy's for the player and the player's against it, each ship and base by the
+	// share of its HP lost, each plane whole; and 200 for a battle won, or against one lost.
+	private double Points(Nspw game, Dictionary<int, Standing> before)
+	{
+		var points = 0.0;
+		foreach (var (m, was) in before)
+		{
+			ref var unit = ref game.Units[m];
+			var hp = unit.IsUsed ? Math.Max(unit.HP, 0) : 0;
+			var lost =
+				was.Category == UnitCategory.Plane
+					? (hp == 0 ? 1 : 0)
+					: Value(was.Kind) * (was.HP - hp) / Math.Max(was.MaxHP, 1.0);
+			points += was.Side == game.LocalSide ? -lost : lost;
+		}
+
+		var won = game.LocalSide == Side.Japan ? GameResult.JapanWon : GameResult.UnitedStatesWon;
+		var lostGame =
+			game.LocalSide == Side.Japan ? GameResult.UnitedStatesWon : GameResult.JapanWon;
+		return points
+			+ (
+				game.Result == won ? 200
+				: game.Result == lostGame ? -200
+				: 0
+			);
+	}
+
+	// The stance a carrier keeps while its strike is out, chosen by playing each forward in copies of the battle, the
+	// player playing on in each as it would, a copy of it keeping that stance (CopyFor), and scored in points (Points):
+	// the first that scores best, keeping away if none does better.
+	private StrikeStance LookAheadStance(Nspw game, int carrier)
+	{
+		var stances = Enum.GetValues<StrikeStance>();
+		var before = new Dictionary<int, Standing>();
+		for (var m = 1; m <= game.MaxUnitId; m++)
+		{
+			ref var unit = ref game.Units[m];
+			if (unit.IsUsed && unit.HP > 0)
+				before[m] = new Standing(unit.Kind, unit.Category, unit.Side, unit.HP, unit.MaxHP);
+		}
+
+		Action<GameFork> Played(int candidate, GameFork fork)
+		{
+			var player = CopyFor(game, fork.Game);
+			player._stances[carrier] = stances[candidate];
+			var isFirst = true;
+			return f =>
+			{
+				if (isFirst)
+					player.GiveClicks(f.Game);
+				else
+					player.Act(f.Game);
+				isFirst = false;
+				f.Step();
+			};
+		}
+
+		var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+		var scores = Lookahead.Evaluate(
+			game,
+			stances.Length,
+			Played,
+			Parameters.LookaheadPositionFrames,
+			Parameters.LookaheadSeeds,
+			g => Points(g, before),
+			(uint)UnitFacts.Now(game)
+		);
+		var best = Array.IndexOf(scores, scores.Max());
+		Log?.Invoke(
+			$"{UnitFacts.Now(game)}: lookahead has {game.Units[carrier].Kind} {carrier} {stances[best]} while its strike is out, in {stopwatch.ElapsedMilliseconds} ms: {string.Join(" ", scores.Select(v => v.ToString("F1")))}"
+		);
+		return scores[best] > scores[0] ? stances[best] : StrikeStance.KeepAway;
+	}
+
 	// A carrier keeps just beyond the computer's strike range from what threatens it, with a margin: the computer
 	// launches only within it, so a carrier out of it is struck by none, while its own planes reach farther. It closes
 	// in while it is farther than its planes should fly from what is known, found or a place, not what is only
 	// expected, which may be coming on; and moves away while it is within the range, across the sea, its formation with
 	// it. With Parameters.HoldCourse, a carrier whose planes are landing (IsLandingOn) holds its course, unless it is
-	// within the range.
+	// within the range; with Parameters.StrikeOutMargin, one whose strike is out keeps that margin instead, and with
+	// Parameters.HoldForStrike, it stays where it is, unless it is within its margin; with Parameters.LookaheadPosition,
+	// it keeps away, holds or closes in as looking ahead shows best (LookAheadStance).
 	private bool TryPosition(Nspw game, List<int> decks)
 	{
 		if (HoldsFleet(game))
@@ -427,8 +543,27 @@ public sealed partial class StrongPlayer
 			var (threat, range, isKnown) = threats.MinBy(t =>
 				UnitFacts.Distance(t.Position, position) - t.Range
 			);
-			var low = range + Parameters.KeepAwayMargin;
+			var isStrikeOut = IsStrikeOut(game, carrier);
+			if (!isStrikeOut)
+				_stances.Remove(carrier);
+			else if (Parameters.LookaheadPosition && !_isFork && !_stances.ContainsKey(carrier))
+				_stances[carrier] = LookAheadStance(game, carrier);
+
+			var stance = _stances.GetValueOrDefault(carrier);
+			var low =
+				range
+				+ (
+					stance == StrikeStance.Close ? 0
+					: Parameters.StrikeOutMargin >= 0 && isStrikeOut ? Parameters.StrikeOutMargin
+					: Parameters.KeepAwayMargin
+				);
 			var distance = UnitFacts.Distance(position, threat);
+			if (
+				(stance == StrikeStance.Hold || (Parameters.HoldForStrike && isStrikeOut))
+				&& distance >= low
+			)
+				continue;
+
 			var aim = PointAt(
 				threat,
 				BearingTo(threat, position),
