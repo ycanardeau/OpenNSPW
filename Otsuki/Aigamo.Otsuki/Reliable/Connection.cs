@@ -50,19 +50,19 @@ internal sealed class Connection
 
 	public IConnectionObserver Observer { get; }
 
-	public ActorTimer<ConnectionMessage> ConnectRetryTimer { get; }
+	public LoopTimer ConnectRetryTimer { get; }
 
-	public ActorTimer<ConnectionMessage> RetryTimer { get; }
+	public LoopTimer RetryTimer { get; }
 
-	public ActorTimer<ConnectionMessage> DelayedAcknowledgmentTimer { get; }
+	public LoopTimer DelayedAcknowledgmentTimer { get; }
 
-	public ActorTimer<ConnectionMessage> DelayedSendMaskTimer { get; }
+	public LoopTimer DelayedSendMaskTimer { get; }
 
-	public ActorTimer<ConnectionMessage> KeepAliveTimer { get; }
+	public LoopTimer KeepAliveTimer { get; }
 
-	public ActorTimer<ConnectionMessage> HardDisconnectTimer { get; }
+	public LoopTimer HardDisconnectTimer { get; }
 
-	public ActorTimer<ConnectionMessage> GracefulDisconnectTimer { get; }
+	public LoopTimer GracefulDisconnectTimer { get; }
 
 	/// <summary>
 	/// Posts a message to the connection, from any thread. Returns <see langword="false"/> if its loop has stopped.
@@ -91,39 +91,39 @@ internal sealed class Connection
 		Observer = observer;
 		_onTerminated = onTerminated;
 		ConnectRetryTimer = new(
-			timeProvider,
+			loop.Timers,
 			generation => new ConnectionMessage.ConnectRetryTimerElapsed(generation),
-			Post
+			Handle
 		);
 		RetryTimer = new(
-			timeProvider,
+			loop.Timers,
 			generation => new ConnectionMessage.RetryTimerElapsed(generation),
-			Post
+			Handle
 		);
 		DelayedAcknowledgmentTimer = new(
-			timeProvider,
+			loop.Timers,
 			generation => new ConnectionMessage.DelayedAcknowledgmentTimerElapsed(generation),
-			Post
+			Handle
 		);
 		DelayedSendMaskTimer = new(
-			timeProvider,
+			loop.Timers,
 			generation => new ConnectionMessage.DelayedSendMaskTimerElapsed(generation),
-			Post
+			Handle
 		);
 		KeepAliveTimer = new(
-			timeProvider,
+			loop.Timers,
 			generation => new ConnectionMessage.KeepAliveTimerElapsed(generation),
-			Post
+			Handle
 		);
 		HardDisconnectTimer = new(
-			timeProvider,
+			loop.Timers,
 			generation => new ConnectionMessage.HardDisconnectTimerElapsed(generation),
-			Post
+			Handle
 		);
 		GracefulDisconnectTimer = new(
-			timeProvider,
+			loop.Timers,
 			generation => new ConnectionMessage.GracefulDisconnectTimerElapsed(generation),
-			Post
+			Handle
 		);
 		_state = isOutbound ? new ConnectionState.Idle() : new ConnectionState.Listening();
 	}
@@ -254,7 +254,7 @@ internal sealed class Connection
 	}
 
 	private Unit Elapse<TCommand>(
-		ActorTimer<ConnectionMessage> timer,
+		LoopTimer timer,
 		long generation,
 		TCommand command
 	) => timer.TryConsume(generation) ? Execute(command) : Unit.Default;
