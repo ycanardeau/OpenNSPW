@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Net;
+using Aigamo.Otsuki.Transport;
 
 namespace Aigamo.Otsuki.LoadTest;
 
@@ -93,7 +94,7 @@ internal sealed class ServerRole(
 			ConnectionLoops = _loops,
 			TransportFactory = localEndPoint =>
 				new CountingTransport(
-					PeerOptions.Default.TransportFactory(localEndPoint),
+					new UdpDatagramTransport((IPEndPoint)localEndPoint, sockets: _loops),
 					_counts
 				),
 		};
