@@ -45,7 +45,8 @@ public class PeerTests : IAsyncLifetime
 
 	private (Peer Peer, EventLog Log, IPAddress Address) CreatePeer(
 		string name,
-		ReliableProfile? profile = null
+		ReliableProfile? profile = null,
+		TimeSpan? joinTimeout = null
 	)
 	{
 		var address = IPAddress.Parse($"10.0.0.{_addresses.Next()}");
@@ -54,7 +55,7 @@ public class PeerTests : IAsyncLifetime
 			{
 				ReliableProfile = profile ?? FastProfile,
 				TransportFactory = _network.CreateFactory(address),
-				JoinTimeout = TimeSpan.FromSeconds(5),
+				JoinTimeout = joinTimeout ?? TimeSpan.FromSeconds(5),
 				IntegrityCheckTimeout = TimeSpan.FromSeconds(1),
 				CloseTimeout = TimeSpan.FromSeconds(2),
 			}
@@ -748,6 +749,40 @@ public class PeerTests : IAsyncLifetime
 		(await second.Log.WaitForAsync<PeerEvent.ConnectCompleted>())
 			.Result.Should()
 			.Be(ResultCode.SessionFull);
+	}
+
+	// A join that fails with its connection to the host open still says goodbye: the joiner's HARD_DISCONNECT reaches
+	// the host, though the joiner's endpoint shuts down at once, on another thread ([MC-DPL8R] section 3.1.6.4). The host
+	// answers nothing but the connection's own frames, so the join times out.
+	[Fact]
+	public async Task Connect_ThatTimesOutStillSendsHardDisconnect()
+	{
+		var host = await HostAsync("Host");
+		var goodbyes = new HashSet<IPAddress>();
+		_network.Observe = (from, _, datagram) =>
+		{
+			if (ReliableMessageSerializer.Default.Deserialize(datagram) is ReliableMessage.HardDisconnect)
+				goodbyes.Add(from.Address);
+		};
+
+		for (var i = 0; i < 5; i++)
+		{
+			var joiner = CreatePeer($"Joiner{i}", joinTimeout: TimeSpan.FromMilliseconds(200));
+			var address = joiner.Address;
+			_network.Drop = (from, to, datagram) =>
+				from.Address.Equals(host.Address)
+				&& to.Address.Equals(address)
+				&& ReliableMessageSerializer.Default.Deserialize(datagram) is ReliableMessage.DataFrame;
+			await joiner.Peer.ConnectAsync(Application(), host.Peer.LocalEndPoint!);
+			(await joiner.Log.WaitForAsync<PeerEvent.ConnectCompleted>())
+				.Result.Should()
+				.Be(ResultCode.TimedOut);
+
+			var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(2);
+			while (!_network.Ask(() => goodbyes.Contains(address)) && DateTime.UtcNow < deadline)
+				await Task.Delay(10);
+			_network.Ask(() => goodbyes.Contains(address)).Should().BeTrue($"attempt {i} said goodbye");
+		}
 	}
 
 	[Fact]

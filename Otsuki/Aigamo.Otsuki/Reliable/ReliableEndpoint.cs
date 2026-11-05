@@ -37,7 +37,9 @@ internal abstract record ReliableEndpointMessage
 
 /// <summary>
 /// Owns a datagram transport and the connection table: routes each datagram to the <see cref="Connection"/>
-/// for its source address, and accepts new inbound connections ([MC-DPL8R] section 3.1.4.1).
+/// for its source address, and accepts new inbound connections ([MC-DPL8R] section 3.1.4.1). Shut down, it accepts
+/// nothing new, and keeps its transport until its last connection has terminated, so that a connection saying goodbye
+/// (HARD_DISCONNECT) is not cut off by the shutdown that follows it.
 /// </summary>
 internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 {
@@ -47,6 +49,7 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 	private readonly IConnectionObserver _observer;
 	private readonly Dictionary<EndPoint, Connection> _connections = [];
 	private bool _shutDown;
+	private bool _isTransportDisposed;
 	private PacketSigning _signing;
 
 	public EndPoint LocalEndPoint => _transport.LocalEndPoint;
@@ -95,7 +98,7 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 
 	private Unit HandleDatagram(ReliableEndpointMessage.DatagramReceived message)
 	{
-		if (_shutDown)
+		if (_shutDown && !_connections.ContainsKey(message.RemoteEndPoint))
 			return Unit.Default;
 
 		// Host enumeration travels outside connections, with a first byte of 0 ([MC-DPLHP] section 2.2).
@@ -141,6 +144,17 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 		return Unit.Default;
 	}
 
+	// Disposes the transport once the endpoint is shut down and its last connection has terminated.
+	private void DisposeWhenDone()
+	{
+		if (!_shutDown || _isTransportDisposed || _connections.Count > 0)
+			return;
+
+		_isTransportDisposed = true;
+		_transport.Dispose();
+		Stop();
+	}
+
 	private Unit HandleTerminated(Connection connection)
 	{
 		if (
@@ -148,9 +162,12 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 			&& current == connection
 		)
 			_connections.Remove(connection.RemoteEndPoint);
+		DisposeWhenDone();
 		return Unit.Default;
 	}
 
+	// The connections end: at once, but one that says goodbye, which the session told to before it shut the endpoint
+	// down, and so takes that first.
 	private Unit HandleShutDown()
 	{
 		if (_shutDown)
@@ -158,10 +175,8 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 
 		_shutDown = true;
 		foreach (var connection in _connections.Values)
-			connection.Post(new ConnectionMessage.Abort(ResultCode.NoConnection));
-		_connections.Clear();
-		_transport.Dispose();
-		Stop();
+			connection.Post(new ConnectionMessage.EndpointShutDown(ResultCode.NoConnection));
+		DisposeWhenDone();
 		return Unit.Default;
 	}
 

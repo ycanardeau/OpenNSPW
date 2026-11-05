@@ -51,6 +51,12 @@ internal abstract record ConnectionMessage
 	/// </summary>
 	public sealed record Abort(ResultCode Result) : ConnectionMessage;
 
+	/// <summary>
+	/// The endpoint shuts down: aborts, but lets a hard disconnect send all of its HARD_DISCONNECT packets first, as
+	/// the endpoint keeps its transport until the last connection has terminated ([MC-DPL8R] section 3.1.6.4).
+	/// </summary>
+	public sealed record EndpointShutDown(ResultCode Result) : ConnectionMessage;
+
 	public sealed record ConnectRetryTimerElapsed(long Generation) : ConnectionMessage;
 
 	public sealed record RetryTimerElapsed(long Generation) : ConnectionMessage;

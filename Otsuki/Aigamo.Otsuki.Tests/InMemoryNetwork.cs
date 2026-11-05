@@ -128,8 +128,12 @@ internal sealed class InMemoryNetwork : Actor<NetworkMessage>
 		}
 	}
 
+	// A transport that is disposed sends nothing, as a closed socket does: what it sends after is lost.
 	private void Send(IPEndPoint source, IPEndPoint destination, byte[] datagram)
 	{
+		if (!_transports.ContainsKey(source))
+			return;
+
 		if (_partitioned.Contains(source.Address) || _partitioned.Contains(destination.Address))
 			return;
 
