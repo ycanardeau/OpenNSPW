@@ -13,10 +13,7 @@ internal interface ICanConnect : ISessionTransition<SessionMessage.Connect>
 		session.ConnectData = command.ConnectData;
 		var hostConnection = session.Connect(command.HostEndPoint);
 		session.JoinTimer.Start(session.Options.JoinTimeout);
-		// No event follows the start of a connection, and the caller reads the snapshot (LocalEndPoint) as soon as the
-		// command completes.
-		session.Publish();
-		command.Completion.TrySetResult();
+		session.Reply(command.Completion);
 		return new SessionState.Connecting(hostConnection);
 	}
 
@@ -30,7 +27,7 @@ internal interface ICanConnect : ISessionTransition<SessionMessage.Connect>
 				onOk: _ => Connect(session, command),
 				onError: exception =>
 				{
-					command.Completion.TrySetException(exception);
+					session.Fail(command.Completion, exception);
 					return Current;
 				}
 			);

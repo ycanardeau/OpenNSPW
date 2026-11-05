@@ -36,7 +36,7 @@ internal interface ICanHost : ISessionTransition<SessionMessage.Host>
 		session.Players.Add(host.Id, host);
 		session.LocalPlayer = host.Id;
 		session.MarkCreated(host);
-		command.Completion.TrySetResult();
+		session.Reply(command.Completion);
 		return new SessionState.Hosting(
 			NextIndex: 3,
 			ResynchronizedVersion: 0,
@@ -54,7 +54,7 @@ internal interface ICanHost : ISessionTransition<SessionMessage.Host>
 				onOk: _ => Host(session, command),
 				onError: exception =>
 				{
-					command.Completion.TrySetException(exception);
+					session.Fail(command.Completion, exception);
 					return Current;
 				}
 			);

@@ -94,7 +94,7 @@ internal interface ICanHostNameTableChanges
 			session.LocalPlayer,
 			context: 0
 		);
-		command.Completion.TrySetResult();
+		session.Reply(command.Completion);
 		return Current;
 	}
 
@@ -112,7 +112,7 @@ internal interface ICanHostNameTableChanges
 			context: 0,
 			out var id
 		);
-		command.Completion.TrySetResult(id);
+		session.Reply(command.Completion, id);
 		return state;
 	}
 
@@ -123,7 +123,7 @@ internal interface ICanHostNameTableChanges
 	{
 		if (!session.Groups.ContainsKey(command.Group))
 		{
-			command.Completion.TrySetException(
+			session.Fail(command.Completion, 
 				Fail(ResultCode.InvalidGroup, $"There is no group {command.Group}.")
 			);
 			return Current;
@@ -135,7 +135,7 @@ internal interface ICanHostNameTableChanges
 			context: 0,
 			DestroyGroupReason.Normal
 		);
-		command.Completion.TrySetResult();
+		session.Reply(command.Completion);
 		return Current;
 	}
 
@@ -154,12 +154,12 @@ internal interface ICanHostNameTableChanges
 						session.LocalPlayer,
 						context: 0
 					);
-					command.Completion.TrySetResult();
+					session.Reply(command.Completion);
 					return Unit.Default;
 				},
 				onError: result =>
 				{
-					command.Completion.TrySetException(
+					session.Fail(command.Completion, 
 						Fail(result, $"Cannot add {command.Player} to {command.Group}.")
 					);
 					return Unit.Default;
@@ -183,12 +183,12 @@ internal interface ICanHostNameTableChanges
 						session.LocalPlayer,
 						context: 0
 					);
-					command.Completion.TrySetResult();
+					session.Reply(command.Completion);
 					return Unit.Default;
 				},
 				onError: result =>
 				{
-					command.Completion.TrySetException(
+					session.Fail(command.Completion, 
 						Fail(result, $"Cannot remove {command.Player} from {command.Group}.")
 					);
 					return Unit.Default;
@@ -208,7 +208,7 @@ internal interface ICanHostNameTableChanges
 	{
 		if (!session.Players.TryGetValue(command.Player, out var player) || player.IsLocal)
 		{
-			command.Completion.TrySetException(
+			session.Fail(command.Completion, 
 				Fail(ResultCode.InvalidPlayer, $"There is no other player {command.Player}.")
 			);
 			return Current;
@@ -220,7 +220,7 @@ internal interface ICanHostNameTableChanges
 				new CoreMessage.TerminateSession { TerminateData = command.Data }
 			);
 		var state = session.DestroyPlayer(this, player, DestroyPlayerFlags.HostDestroyedPlayer);
-		command.Completion.TrySetResult();
+		session.Reply(command.Completion);
 		return state;
 	}
 

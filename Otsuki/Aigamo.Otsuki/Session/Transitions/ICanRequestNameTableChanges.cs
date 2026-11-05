@@ -27,7 +27,7 @@ internal interface ICanRequestNameTableChanges
 	{
 		if (error is ResultCode result)
 		{
-			completion.TrySetException(
+			session.Fail(completion, 
 				new DirectPlayException(result, $"The request would fail with {result}.")
 			);
 			return Current;
@@ -82,15 +82,15 @@ internal interface ICanRequestNameTableChanges
 	{
 		if (CheckGroups(session) is { } result)
 		{
-			command.Completion.TrySetException(
+			session.Fail(command.Completion, 
 				new DirectPlayException(result, "Clients cannot create groups.")
 			);
 			return Current;
 		}
 
 		var context = session.BeginRequest(
-			id => command.Completion.TrySetResult(id),
-			e => command.Completion.TrySetException(e)
+			id => session.Reply(command.Completion, id),
+			e => session.Fail(command.Completion, e)
 		);
 		SessionActor.SendCore(
 			HostConnection,

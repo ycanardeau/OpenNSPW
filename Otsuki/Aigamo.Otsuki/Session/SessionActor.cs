@@ -59,6 +59,12 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	/// </summary>
 	private readonly List<Action> _deferred = [];
 
+	/// <summary>
+	/// The answers to commands of the message being handled, given once it is done and its snapshot published: a
+	/// caller that reads the snapshot as soon as its task completes reads what the command did.
+	/// </summary>
+	private readonly List<Action> _replies = [];
+
 	public PeerOptions Options { get; }
 
 	public ActorTimer<SessionMessage> JoinTimer { get; }
@@ -190,6 +196,25 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 				User1: true
 			)
 		);
+
+	public void Reply(TaskCompletionSource completion) =>
+		_replies.Add(() => completion.TrySetResult());
+
+	public void Reply<T>(TaskCompletionSource<T> completion, T value) =>
+		_replies.Add(() => completion.TrySetResult(value));
+
+	public void Fail(TaskCompletionSource completion, Exception exception) =>
+		_replies.Add(() => completion.TrySetException(exception));
+
+	public void Fail<T>(TaskCompletionSource<T> completion, Exception exception) =>
+		_replies.Add(() => completion.TrySetException(exception));
+
+	private void SendReplies()
+	{
+		foreach (var reply in _replies)
+			reply();
+		_replies.Clear();
+	}
 
 	/// <summary>
 	/// Marks a player as changed in what the snapshot shows of it: created, removed, its info or its role as host.
@@ -463,7 +488,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	}
 
 	public int BeginRequest(TaskCompletionSource completion) =>
-		BeginRequest(_ => completion.TrySetResult(), e => completion.TrySetException(e));
+		BeginRequest(_ => Reply(completion), e => Fail(completion, e));
 
 	/// <summary>
 	/// Completes our request once the host's broadcast for it arrives.
@@ -1249,7 +1274,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		ClearSession();
 		_events.Complete();
 		foreach (var completion in completions)
-			completion.TrySetResult();
+			Reply(completion);
 		Stop();
 		return new SessionState.Closed();
 	}
@@ -1424,7 +1449,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			{
 				LocalName = command.Name;
 				LocalData = command.Data;
-				command.Completion.TrySetResult();
+				Reply(command.Completion);
 			}
 		);
 
@@ -1596,18 +1621,18 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		message.Match(
 			SetPeerInfo: SetPeerInfo,
 			CreateGroup: m =>
-				Execute(m, otherwise: () => m.Completion.TrySetException(NotInSession())),
+				Execute(m, otherwise: () => Fail(m.Completion, NotInSession())),
 			DestroyGroup: m =>
-				Execute(m, otherwise: () => m.Completion.TrySetException(NotInSession())),
+				Execute(m, otherwise: () => Fail(m.Completion, NotInSession())),
 			AddPlayerToGroup: m =>
-				Execute(m, otherwise: () => m.Completion.TrySetException(NotInSession())),
+				Execute(m, otherwise: () => Fail(m.Completion, NotInSession())),
 			RemovePlayerFromGroup: m =>
-				Execute(m, otherwise: () => m.Completion.TrySetException(NotInSession())),
+				Execute(m, otherwise: () => Fail(m.Completion, NotInSession())),
 			DestroyPlayer: m =>
 				Execute(
 					m,
 					otherwise: () =>
-						m.Completion.TrySetException(
+						Fail(m.Completion, 
 							new DirectPlayException(
 								ResultCode.NotHost,
 								"Only the host removes players."
@@ -1619,7 +1644,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 				Execute(
 					m,
 					otherwise: () =>
-						m.Completion.TrySetException(
+						Fail(m.Completion, 
 							new InvalidOperationException("The peer is already in a session.")
 						)
 				),
@@ -1627,7 +1652,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 				Execute(
 					m,
 					otherwise: () =>
-						m.Completion.TrySetException(
+						Fail(m.Completion, 
 							new InvalidOperationException("The peer is already in a session.")
 						)
 				),
@@ -1640,7 +1665,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 							Emit(new PeerEvent.SendCompleted(m.Handle, ResultCode.NoConnection));
 					}
 				),
-			Close: m => Execute(m, otherwise: () => m.Completion.TrySetResult()),
+			Close: m => Execute(m, otherwise: () => Reply(m.Completion)),
 			ConnectionConnected: Connected,
 			ConnectionConnectFailed: m =>
 			{
@@ -1690,7 +1715,9 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		}
 		ReplayDeferred();
 
-		// What changed with no event to show it, such as a session closed, is published as the message is done.
+		// What changed with no event to show it, such as a session closed, is published as the message is done; then
+		// the commands are answered.
 		Publish();
+		SendReplies();
 	}
 }
