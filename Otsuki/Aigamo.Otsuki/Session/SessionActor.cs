@@ -40,6 +40,10 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	private readonly Dictionary<long, long> _sendHandles = [];
 	private SessionState _state = new SessionState.Idle();
 	private ReliableEndpoint? _endpoint;
+
+	// The signing mode the session set its endpoint to (SetSigning), which it gives the connections it opens: the
+	// endpoint's own copy is read on the endpoint's thread only.
+	private PacketSigning _signing;
 	private long _nextSendId;
 	private readonly Dictionary<int, PendingRequest> _requests = [];
 	private int _nextContext;
@@ -223,6 +227,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 				Options.ReliableProfile,
 				this
 			);
+			_signing = PacketSigning.None;
 			return Unit.Default;
 		}
 		catch (Exception e)
@@ -235,18 +240,18 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	/// Makes new inbound connections sign as the session's flags say ([MC-DPL8R] section 3.1.5.1.3). Outbound
 	/// connections sign as their listener offers.
 	/// </summary>
-	public void SetSigning(SessionFlags flags) =>
-		_endpoint?.Post(
-			new ReliableEndpointMessage.SetSigning(
-				flags.HasFlag(SessionFlags.FullSigned) ? PacketSigning.Full
-				: flags.HasFlag(SessionFlags.FastSigned) ? PacketSigning.Fast
-				: PacketSigning.None
-			)
-		);
+	public void SetSigning(SessionFlags flags)
+	{
+		_signing =
+			flags.HasFlag(SessionFlags.FullSigned) ? PacketSigning.Full
+			: flags.HasFlag(SessionFlags.FastSigned) ? PacketSigning.Fast
+			: PacketSigning.None;
+		_endpoint?.Post(new ReliableEndpointMessage.SetSigning(_signing));
+	}
 
 	public Connection Connect(EndPoint remoteEndPoint)
 	{
-		var connection = _endpoint!.Connect(remoteEndPoint);
+		var connection = _endpoint!.Connect(remoteEndPoint, _signing);
 		Connections.Add(connection);
 		return connection;
 	}

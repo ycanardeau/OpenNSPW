@@ -72,11 +72,15 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 		);
 	}
 
-	private Connection CreateConnection(EndPoint remoteEndPoint, bool isOutbound) =>
+	private Connection CreateConnection(
+		EndPoint remoteEndPoint,
+		bool isOutbound,
+		PacketSigning signing
+	) =>
 		new(
 			remoteEndPoint,
 			isOutbound,
-			_signing,
+			signing,
 			_transport,
 			_timeProvider,
 			_profile,
@@ -85,12 +89,13 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 		);
 
 	/// <summary>
-	/// Creates an outbound connection. It starts connecting once the endpoint has registered it.
+	/// Creates an outbound connection, which signs as <paramref name="signing"/> says, the session's mode, which the
+	/// caller gives: the endpoint's own is its thread's. It starts connecting once the endpoint has registered it.
 	/// Thread-safe: only reads immutable state.
 	/// </summary>
-	public Connection Connect(EndPoint remoteEndPoint)
+	public Connection Connect(EndPoint remoteEndPoint, PacketSigning signing)
 	{
-		var connection = CreateConnection(remoteEndPoint, isOutbound: true);
+		var connection = CreateConnection(remoteEndPoint, isOutbound: true, signing);
 		if (!Post(new ReliableEndpointMessage.RegisterConnection(connection)))
 			connection.Post(new ConnectionMessage.Abort(ResultCode.NoConnection));
 		return connection;
@@ -125,7 +130,7 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 		)
 			return Unit.Default;
 
-		connection = CreateConnection(message.RemoteEndPoint, isOutbound: false);
+		connection = CreateConnection(message.RemoteEndPoint, isOutbound: false, _signing);
 		_connections.Add(message.RemoteEndPoint, connection);
 		connection.Post(new ConnectionMessage.DatagramArrived(connect));
 		return Unit.Default;
