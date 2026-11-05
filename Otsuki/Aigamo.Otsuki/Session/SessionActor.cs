@@ -1597,7 +1597,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		TCommand command
 	) => timer.TryConsume(generation) ? Execute(command) : Unit.Default;
 
-	protected override void Receive(SessionMessage message)
+	private void ReceiveOther(SessionMessage message)
 	{
 		message.Match(
 			SetPeerInfo: SetPeerInfo,
@@ -1672,6 +1672,28 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			PlayerJoinTimedOut: Execute,
 			IntegrityCheckTimedOut: Execute
 		);
+	}
+
+	protected override void Receive(SessionMessage message)
+	{
+		// The messages of the data path take a switch, which allocates nothing; the rest take Match, which keeps every
+		// kind handled but makes a delegate for each kind at each call.
+		switch (message)
+		{
+			case SessionMessage.ConnectionReceived m:
+				Receive(m);
+				break;
+			case SessionMessage.SendTo m
+				when _state is ISessionTransition<SessionMessage.SendTo> || MustWait(m):
+				Execute(m);
+				break;
+			case SessionMessage.ConnectionSendCompleted m:
+				SendCompleted(m.SendId, m.Result);
+				break;
+			default:
+				ReceiveOther(message);
+				break;
+		}
 		ReplayDeferred();
 
 		// What changed with no event to show it, such as a session closed, is published as the message is done.

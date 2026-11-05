@@ -298,7 +298,17 @@ internal sealed class Connection
 		return Unit.Default;
 	}
 
+	// Data frames and acknowledgments take a switch, which allocates nothing; the rest take Match, which keeps every
+	// kind handled but makes a delegate for each kind at each call.
 	private Unit Receive(ReliableMessage message) =>
+		message switch
+		{
+			ReliableMessage.DataFrame m => Execute(m),
+			ReliableMessage.Sack m => Execute(m),
+			_ => ReceiveOther(message),
+		};
+
+	private Unit ReceiveOther(ReliableMessage message) =>
 		message.Match(
 			DataFrame: Execute,
 			Connect: Execute,
@@ -348,6 +358,34 @@ internal sealed class Connection
 	{
 		if (_state is ConnectionState.Closed)
 			return;
+
+		// The messages of every frame take a switch, which allocates nothing; the rest take Match, which keeps every
+		// kind handled but makes a delegate for each kind at each call.
+		switch (message)
+		{
+			case ConnectionMessage.DatagramReceived m:
+				Receive(m.Datagram);
+				return;
+			case ConnectionMessage.SendPayload m:
+				SendPayload(m);
+				return;
+			case ConnectionMessage.Flush m:
+				_flushRequested = false;
+				Execute(m);
+				return;
+			case ConnectionMessage.RetryTimerElapsed m:
+				Elapse(RetryTimer, m.Generation, m);
+				return;
+			case ConnectionMessage.DelayedAcknowledgmentTimerElapsed m:
+				Elapse(DelayedAcknowledgmentTimer, m.Generation, m);
+				return;
+			case ConnectionMessage.DelayedSendMaskTimerElapsed m:
+				Elapse(DelayedSendMaskTimer, m.Generation, m);
+				return;
+			case ConnectionMessage.KeepAliveTimerElapsed m:
+				Elapse(KeepAliveTimer, m.Generation, m);
+				return;
+		}
 
 		message.Match(
 			StartConnecting: Execute,
