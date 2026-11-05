@@ -9,6 +9,7 @@ namespace Aigamo.Otsuki.LoadTest;
 /// </summary>
 internal sealed class ServerRole(
 	int port,
+	int loops,
 	int updatesPerSecond,
 	int size,
 	TimeSpan duration,
@@ -18,6 +19,7 @@ internal sealed class ServerRole(
 	public static readonly Guid Application = new("5b0e2c1d-6a7f-4c55-9d0e-0a1b2c3d4e5f");
 
 	private readonly int _port = port;
+	private readonly int _loops = loops;
 	private readonly int _updatesPerSecond = updatesPerSecond;
 	private readonly int _size = size;
 	private readonly TimeSpan _duration = duration;
@@ -85,6 +87,7 @@ internal sealed class ServerRole(
 	{
 		var options = new PeerOptions
 		{
+			ConnectionLoops = _loops,
 			TransportFactory = localEndPoint =>
 				new CountingTransport(
 					PeerOptions.Default.TransportFactory(localEndPoint),

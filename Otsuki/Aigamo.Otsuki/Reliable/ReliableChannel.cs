@@ -396,7 +396,12 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 		if (_endStreamQueued)
 			return false;
 
-		Enqueue(message.Payload, message.Reliable, message.User1, message.SendId);
+		Enqueue(
+			message.Payload,
+			message.Reliable,
+			message.User1,
+			message.SendId == 0 ? null : message.SendId
+		);
 		if (_connection.Profile.CoalesceSends)
 			_connection.RequestFlush();
 		else

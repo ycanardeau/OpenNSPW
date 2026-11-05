@@ -15,7 +15,7 @@ internal interface ICanSend
 		ConnectionMessage.SendPayload command
 	)
 	{
-		if (!Channel.TrySend(command))
+		if (!Channel.TrySend(command) && command.SendId != 0)
 			connection.Observer.OnSendCompleted(
 				connection,
 				command.SendId,
