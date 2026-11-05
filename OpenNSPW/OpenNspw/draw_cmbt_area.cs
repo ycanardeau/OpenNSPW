@@ -2160,7 +2160,8 @@ public unsafe partial class Renderer
 		);
 
 		// ロウエフェクト
-		UpdateLowerEffects(&field, &infoArea);
+		if (!SkipsEffects)
+			UpdateLowerEffects(&field, &infoArea);
 
 		// 自サイドユニットからの距離により、可視不可視
 
@@ -2267,6 +2268,7 @@ public unsafe partial class Renderer
 		}
 
 		// アッパーエフェクト
-		UpdateUpperEffects(&field, &infoArea);
+		if (!SkipsEffects)
+			UpdateUpperEffects(&field, &infoArea);
 	}
 }

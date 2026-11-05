@@ -27,7 +27,7 @@ An extension implements `IGameExtension`, whose methods all do nothing by defaul
 | --- | --- | --- |
 | `StartsBattle` | `WinMain`, before it connects to a rival | Say that it starts the battle itself, so that the game does not connect first |
 | `GameStarted` | `WinMain`, before the message loop | Start a battle (below) |
-| `BattleStarting`, `BattleStarted` | `InitializeGame`, at its start and at its end | Read the start; set rand's state (`srand`) |
+| `BattleStarting`, `BattleStarted` | `InitializeGame`, at its start and at its end | Read the start; set rand's state (`srand`); in `BattleStarting`, set the options of a single-player battle (`Nspw.Options`, [Options.md](Options.md)) |
 | `FrameStarting` | `UpdateFrame`, as a frame of the battle would start | Hold the frame, start it now, or leave it to the game's timer; set its ticks and the speed shown |
 | `ShowsFrame` | `UpdateFrame`, as a frame of the battle starts | Not show it: it runs as any other, its drawing too, which draws random numbers and takes the clicks, but draws no pixel and is not presented (`Renderer.DrawsNothing`), so that the battle is the same |
 | `HoldsBattle` | `TryStartSingleplayerFrame`, as a frame of a single-player battle starts | Hold the battle in it (`IsBattleHeld`): no tick, no computer, no scenario event, no reinforcement's countdown, no random number for the effects, and the frame not counted; the input, the player's orders and the drawing go on |

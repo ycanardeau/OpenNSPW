@@ -58,8 +58,8 @@ internal sealed class NspwGame : Game
 	// The single-player scenario chosen last, to select it again in the browser.
 	public int? LastScenario { get; set; }
 
-	// Whether single-player battles play at a steady speed (docs/SteadySpeed.md), as the player chose last.
-	public bool IsSpeedSteady { get; set; } = UISettings.LoadIsSpeedSteady();
+	// The options of single-player battles (docs/Options.md), as the player chose last.
+	public BattleOptions Options { get; set; } = UISettings.LoadOptions();
 
 	// data: where the games' files come from, 1.22's too, to play single-player (docs/Singleplayer.md). scenario: a
 	// scenario of 1.22 to play at once, without the menus. trace: a trace of 1.22 in that scenario, which that game
@@ -99,7 +99,7 @@ internal sealed class NspwGame : Game
 			Text,
 			singleplayer,
 			trace,
-			isSpeedSteady: IsSpeedSteady
+			options: Options
 		);
 		_lastSession.Start();
 		return _lastSession;
@@ -122,8 +122,7 @@ internal sealed class NspwGame : Game
 			player.Start.Mode == ReplayMode.Singleplayer ? player.Start.Scenario : null,
 			replay: player,
 			view: watch.View,
-			scratchDirectory: scratch,
-			isSpeedSteady: IsSpeedSteady
+			scratchDirectory: scratch
 		);
 		_lastSession.Start();
 		return _lastSession;

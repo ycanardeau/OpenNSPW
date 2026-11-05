@@ -33,6 +33,13 @@ public sealed unsafe partial class Renderer(Nspw game)
 		}
 	}
 
+	// Whether this frame skips the effects' loops (UpdateLowerEffects, UpdateUpperEffects): it draws nothing, and they draw
+	// no random number that the battle reads, but from SharedRandom (BattleOptions.SharedEffectRandom), which nothing of
+	// the battle reads (DeckPlacesDrawFromRand). They draw only, and change nothing but the pixels and the table's place.
+	// Not part of the original.
+	public bool SkipsEffects =>
+		DrawsNothing && !_game.Rules.EffectsDrawFromRand && _game.Rules.DeckPlacesDrawFromRand;
+
 	public IDirectDrawSurface7? lpDDSBack = null;
 
 	public IDirectDrawClipper? lpDDclip = null;

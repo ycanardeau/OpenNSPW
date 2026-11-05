@@ -21,17 +21,15 @@ namespace OpenNspw;
 public unsafe partial class Nspw
 {
 	//============================================================================
-	//	マイ乱数を作ります
+	//
 	//----------------------------------------------------------------------------
-	[Original("make_my_rnd")]
-	public void MakeSharedRandomTable()
-	{
-		for (short i = 0; i < 4096; i++)
-		{
-			SharedRandomTable[i] = Random(65536);
-		}
 
-		SharedRandomIndex = 0;
+	[Original("rnd")]
+	public int Random(int range)
+	{
+		RandomCount++;
+
+		return (rand() % (range));
 	}
 
 	//============================================================================
@@ -47,19 +45,32 @@ public unsafe partial class Nspw
 	}
 
 	//============================================================================
-	//
+	//	マイ乱数を作ります
 	//----------------------------------------------------------------------------
-
-	[Original("rnd")]
-	public int Random(int range)
+	[Original("make_my_rnd")]
+	public void MakeSharedRandomTable()
 	{
-		RandomCount++;
+		for (short i = 0; i < 4096; i++)
+		{
+			SharedRandomTable[i] = Random(65536);
+		}
 
-		return (rand() % (range));
+		SharedRandomIndex = 0;
+	}
+
+	// The table of SharedRandom of a single-player battle whose effects draw from it (BattleOptions.SharedEffectRandom),
+	// made from rand as it is, which then goes on from where it was: the battle draws what it would without it.
+	public void MakeSharedRandomTableAside()
+	{
+		var (state, count) = (RandomState, RandomCount);
+		MakeSharedRandomTable();
+		srand(state);
+		RandomCount = count;
 	}
 
 	// A random number for an effect. NSPW NET draws them from SharedRandom, so that network games stay in step whatever
-	// their effects; 1.22 draws them from rand, as all the others. None while the battle is held (IsBattleHeld), whose
+	// their effects; 1.22 draws them from rand, as all the others, but with an option (BattleOptions.SharedEffectRandom),
+	// from SharedRandom too. None while the battle is held (IsBattleHeld), whose
 	// effects keep still: 0.
 	public int EffectRandom(int range) =>
 		IsBattleHeld ? 0
