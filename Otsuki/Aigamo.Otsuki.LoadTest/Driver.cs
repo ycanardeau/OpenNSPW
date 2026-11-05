@@ -112,10 +112,14 @@ internal sealed class Driver(LoadSettings settings)
 					Clients = sum.Clients + r.Clients,
 					Failed = sum.Failed + r.Failed,
 					Terminated = sum.Terminated + r.Terminated,
+					SessionQueue = sum.SessionQueue + r.SessionQueue,
+					LoopQueue = Math.Max(sum.LoopQueue, r.LoopQueue),
+					EventQueue = sum.EventQueue + r.EventQueue,
 					MessagesIn = sum.MessagesIn + r.MessagesIn,
 					MessagesOut = sum.MessagesOut + r.MessagesOut,
 					DatagramsIn = sum.DatagramsIn + r.DatagramsIn,
 					DatagramsOut = sum.DatagramsOut + r.DatagramsOut,
+					SendErrors = sum.SendErrors + r.SendErrors,
 					P50 = Math.Max(sum.P50, r.P50),
 					P99 = Math.Max(sum.P99, r.P99),
 					P999 = Math.Max(sum.P999, r.P999),
@@ -136,7 +140,7 @@ internal sealed class Driver(LoadSettings settings)
 		Console.WriteLine(
 			string.Create(
 				CultureInfo.InvariantCulture,
-				$"{server.Seconds,6:0} s  clients {server.Clients,6} ({clients.Clients} connected, {clients.Failed} failed, {clients.Terminated} ended)  sent {clients.MessagesOut,8}/s  in {server.MessagesIn,8}/s  out {server.MessagesOut,8}/s  got {clients.MessagesIn,8}/s  dgrams {server.DatagramsIn,8}/{server.DatagramsOut,-8}  p50 {Ms(server.P50),7} p99 {Ms(server.P99),7} ms  updates p99 {Ms(clients.P99),7} ms  cpu {server.Cores,5:0.00}+{clients.Cores,5:0.00}  alloc {server.AllocatedMBps,7:0.0} MB/s  gc {server.Gen0}/{server.Gen1}/{server.Gen2} {server.GcPauseMs,5:0.0} ms  locks {server.LockContentions,4:0}  queues {server.SessionQueue}/{server.LoopQueue}/{server.EventQueue}  pool {server.PoolThreads:0}/{server.PoolQueue:0}  ws {server.WorkingSetMB,5:0} MB"
+				$"{server.Seconds,6:0} s  clients {server.Clients,6} ({clients.Clients} connected, {clients.Failed} failed, {clients.Terminated} ended)  sent {clients.MessagesOut,8}/s  in {server.MessagesIn,8}/s  out {server.MessagesOut,8}/s  got {clients.MessagesIn,8}/s  dgrams {server.DatagramsIn,8}/{server.DatagramsOut,-8} (clients {clients.DatagramsOut}/{clients.DatagramsIn}, refused {server.SendErrors}/{clients.SendErrors})  p50 {Ms(server.P50),7} p99 {Ms(server.P99),7} ms  updates p99 {Ms(clients.P99),7} ms  cpu {server.Cores,5:0.00}+{clients.Cores,5:0.00}  alloc {server.AllocatedMBps,7:0.0} MB/s  gc {server.Gen0}/{server.Gen1}/{server.Gen2} {server.GcPauseMs,5:0.0} ms  locks {server.LockContentions,4:0}  queues {server.SessionQueue}/{server.LoopQueue}/{server.EventQueue}  pool {server.PoolThreads:0}/{server.PoolQueue:0}  client queues {clients.SessionQueue}/{clients.LoopQueue}/{clients.EventQueue}  ws {server.WorkingSetMB,5:0} MB"
 			)
 		);
 	}
