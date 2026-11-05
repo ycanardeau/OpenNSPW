@@ -17,6 +17,11 @@ public abstract class Actor<TMessage>
 	}
 
 	/// <summary>
+	/// How many messages wait in the mailbox, from any thread: a reading for diagnostics.
+	/// </summary>
+	public int QueueLength => _mailbox.Count;
+
+	/// <summary>
 	/// Completes when the actor has stopped and drained its mailbox.
 	/// </summary>
 	public Task Completion => _mailbox.Completion;

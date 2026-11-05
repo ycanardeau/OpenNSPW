@@ -43,6 +43,11 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 
 	public EndPoint LocalEndPoint => _transport.LocalEndPoint;
 
+	/// <summary>
+	/// The messages waiting in each loop's mailbox, from any thread.
+	/// </summary>
+	public ImmutableArray<int> LoopQueueLengths => [.. _loops.Select(l => l.QueueLength)];
+
 	public ReliableEndpoint(
 		IDatagramTransport transport,
 		TimeProvider timeProvider,

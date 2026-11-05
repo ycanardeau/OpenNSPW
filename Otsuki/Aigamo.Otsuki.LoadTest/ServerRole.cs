@@ -55,7 +55,7 @@ internal sealed class ServerRole(
 		}
 	}
 
-	private void Report()
+	private void Report(PeerQueues queues)
 	{
 		var datagramsIn = _counts.Received.Value;
 		var datagramsOut = _counts.Sent.Value;
@@ -64,6 +64,9 @@ internal sealed class ServerRole(
 			{
 				Role = "server",
 				Clients = _clients,
+				SessionQueue = queues.Session,
+				LoopQueue = queues.ConnectionLoops.DefaultIfEmpty().Max(),
+				EventQueue = queues.Events,
 				MessagesIn = _messagesIn,
 				MessagesOut = _messagesOut,
 				DatagramsIn = datagramsIn - _lastDatagramsIn,
@@ -127,7 +130,7 @@ internal sealed class ServerRole(
 			if (now >= nextReport)
 			{
 				nextReport += Stopwatch.Frequency;
-				Report();
+				Report(server.Queues);
 			}
 
 			if (handled == 0)

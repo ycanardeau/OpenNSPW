@@ -136,7 +136,7 @@ internal sealed class Driver(LoadSettings settings)
 		Console.WriteLine(
 			string.Create(
 				CultureInfo.InvariantCulture,
-				$"{server.Seconds,6:0} s  clients {server.Clients,6} ({clients.Clients} connected, {clients.Failed} failed, {clients.Terminated} ended)  sent {clients.MessagesOut,8}/s  in {server.MessagesIn,8}/s  out {server.MessagesOut,8}/s  got {clients.MessagesIn,8}/s  dgrams {server.DatagramsIn,8}/{server.DatagramsOut,-8}  p50 {Ms(server.P50),7} p99 {Ms(server.P99),7} ms  updates p99 {Ms(clients.P99),7} ms  cpu {server.Cores,5:0.00}+{clients.Cores,5:0.00}  alloc {server.AllocatedMBps,7:0.0} MB/s  gc {server.Gen0}/{server.Gen1}/{server.Gen2} {server.GcPauseMs,5:0.0} ms  locks {server.LockContentions,4:0}  pool {server.PoolThreads:0}/{server.PoolQueue:0}  ws {server.WorkingSetMB,5:0} MB"
+				$"{server.Seconds,6:0} s  clients {server.Clients,6} ({clients.Clients} connected, {clients.Failed} failed, {clients.Terminated} ended)  sent {clients.MessagesOut,8}/s  in {server.MessagesIn,8}/s  out {server.MessagesOut,8}/s  got {clients.MessagesIn,8}/s  dgrams {server.DatagramsIn,8}/{server.DatagramsOut,-8}  p50 {Ms(server.P50),7} p99 {Ms(server.P99),7} ms  updates p99 {Ms(clients.P99),7} ms  cpu {server.Cores,5:0.00}+{clients.Cores,5:0.00}  alloc {server.AllocatedMBps,7:0.0} MB/s  gc {server.Gen0}/{server.Gen1}/{server.Gen2} {server.GcPauseMs,5:0.0} ms  locks {server.LockContentions,4:0}  queues {server.SessionQueue}/{server.LoopQueue}/{server.EventQueue}  pool {server.PoolThreads:0}/{server.PoolQueue:0}  ws {server.WorkingSetMB,5:0} MB"
 			)
 		);
 	}
