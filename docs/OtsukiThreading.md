@@ -1,10 +1,59 @@
 # Otsuki's threading
 A proposal for making races impossible in [Otsuki](../Otsuki/Aigamo.Otsuki) by construction. The actors removed the locks around the protocol state, but the state is split over several mailboxes, and every message that crosses from one mailbox to another is a place where two things can happen in either order. This document explains why actors still race, lists where Otsuki does today, explains why such races are hard to find, and proposes a protocol core with no threads at all, driven by one loop, with tests that choose every order instead of waiting for one. It then shards that loop so that a server can hold 10,000 clients and more with no locks in Otsuki's code, and says how to verify it by measuring.
 
-This is a proposal, not a final design. [Open questions](#open-questions) lists what still needs to be decided.
+This is a proposal, not a final design. [Open questions](#open-questions) lists what still needs to be decided. Part of it is done: [Progress](#progress) says what, with what the load tests measured.
 
-## Today
-[The README](../Otsuki/Aigamo.Otsuki/README.md#design) describes the design. In short:
+## Progress
+Done so far, each step a commit with Otsuki's tests passing, and measured with the load test ([`Aigamo.Otsuki.LoadTest`](../Otsuki/Aigamo.Otsuki.LoadTest)):
+
+| Step | State |
+| --- | --- |
+| 0. The load test | Done: a server and processes of clients over UDP, reporting each second the messages, datagrams on both sides, latency, CPU, garbage, lock contentions, the thread pool and every mailbox's depth (`Peer.Queues`). |
+| 1. Signing passed to `Connect` | Done before this plan's steps ([The signing mode](#the-signing-mode)). |
+| 2. Replies after the snapshot | Done: transitions answer through `SessionActor.Reply` and `Fail`, which complete the tasks once the message is done and the snapshot published; a regression test checks it twenty times over. |
+| 3. The snapshot updated, not rebuilt | Done: only the players and groups marked changed are made again, and nothing is published when nothing changed. A debug build checks after each publish that the snapshot equals one made from scratch. |
+| 4, 12. Connections out of their own actors | Done differently from the plan: the connections of a peer run on *connection loops*, as many as `PeerOptions.ConnectionLoops` (1 by default), a hash of the partner's address choosing the loop; the session stays an actor of its own, and the endpoint only owns the transport and coordinates the shutdown in two phases. The plan's single loop for session and connections is not done ([What is left](#what-is-left)). |
+| 5. The transport owned by the loop | Partly: each loop sends on its own UDP socket, all bound to the same port (`UdpDatagramTransport(endPoint, sockets)`), so that the loops do not wait for each other in the kernel. |
+| 10. Timers in the loop | Done: a loop keeps its connections' deadlines in one priority queue and arms one runtime timer for the nearest; a restart that only moves a deadline later costs nothing. |
+| 11. The mailbox without locks | Not needed so far: Otsuki's code takes no lock to post or receive (`ConcurrentQueue` and `Interlocked`; the queue's own lock is taken only when a segment of it fills), and the runtime counts 1 to 8 contended locks a second in a whole server process under load, which is not where its time goes. |
+| 13. Receiving across the cores | Partly: every socket of the port receives; macOS gives a port's datagrams to one socket, so on macOS one receive loop takes them all. |
+| 14. No allocation per datagram | Partly: the dispatch of every frame and of the data path takes a `switch` ahead of the generated `Match`, whose delegates were made at each call, and acknowledgments take a loop in place of closures; the garbage per datagram fell from about 15 KB to about 1 KB. Pooled buffers are not done. |
+| 15. The data path around the session | Not done: no load that this machine can carry has made the session the bottleneck. |
+| 8. The simulation | Partly, without the core of steps 6 and 7: a `ManualScheduler` (`PeerOptions.Scheduler`) runs the peers' actors one message at a time on the test's thread, in an order a seed chooses, with a manual clock and a simulated network that delivers each datagram as a step of its own ([`SimulationTests`](../Otsuki/Aigamo.Otsuki.Tests/SimulationTests.cs)). It tries 100 orders of a client/server session that joins, sends and closes, and 100 of a rejected join, which must send nothing after its transport is disposed: with the old goodbye race put back, that test fails on its first seed. A seed takes nearly the same order again, not exactly: the session's GUID and the hash order of a set of connections still change from run to run. |
+| 6, 7. Effects as outputs, the core's assembly | Not done. |
+| 9. `StreamDatagramTransport` without the lock | Done before this plan's steps: its links are an actor's. |
+| 17. The README | Done: its design section describes the loops, the mailbox and its scheduler, the snapshot, the simulation and the load test. |
+| Also | A broadcast is one message per loop, not one per client; a send that reports no completion (`SendFlags.NoComplete`) is no longer followed by the session, and its connections report nothing back. |
+
+### Measurements
+On one Apple M2 (4 performance and 4 efficiency cores, 16 GB), macOS, over loopback, with the clients in 1 to 5 processes of their own on the same machine, each client a whole Otsuki `Client`. Each client sends 30 guaranteed messages of 32 bytes a second and the server sends 20 updates a second to every client, unless the run says otherwise; the server has 4 loops and 4 sockets once those exist. The values are the medians of the seconds once every client has joined and 3 more have passed, or their means for the pauses and the contentions; p99 is the worst second's.
+
+| Run | Clients | Messages in/s | Messages out/s | Datagrams in / out per s | p99 in (ms) | p99 updates (ms) | Server CPU (cores) | Allocated (MB/s) | GC pause (ms/s) | Lock contentions/s |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Before | 1,000 | 4,451 | 20,000 | 32,890 / 32,854 | 13,096 | 12,145 | 2.28 | 677 | 48.9 | 15.0 |
+| Snapshot updated (3) | 1,000 | 29,999 | 20,000 | 49,975 / 50,003 | 72 | 79 | 1.61 | 179 | 8.5 | 3.8 |
+| Loops (4, 12) | 1,000 | 30,067 | 20,000 | 49,944 / 49,928 | 107 | 213 | 1.38 | 217 | 10.4 | 0.9 |
+| Loop timers (10) | 1,000 | 30,018 | 20,000 | 49,998 / 49,998 | 109 | 131 | 1.14 | 207 | 7.6 | 8.1 |
+| No delegates per message (14) | 1,000 | 29,953 | 20,000 | 49,953 / 49,953 | 119 | 74 | 1.13 | 93 | 5.1 | 2.7 |
+| 1 message and 1 update a second | 10,000 | 10,006 | 10,000 | 19,810 / 22,868 | 852 | 950 | 0.72 | 40 | 3.2 | 4.0 |
+
+What the measurements found, in the order they found it:
+
+1. **The snapshot was rebuilt after every message.** Before, the server took a few hundred clients: past that, the session spent its time copying the name table, its mailbox grew without bound, and the latency reached seconds. Updating the snapshot by what changed took 1,000 clients to a steady state.
+2. **The mailbox hops, the timers and the sends.** At 2,000 and more, the server's time went to `sendto` on one socket shared by the threads of every connection (48% of its threads' time, with the connections already on 4 loops), `recvfrom` (11%), and the runtime's timer queue lock (8%), taken by every restart of a connection's timer. The loops, a socket per loop and the loop timers took the server from 1.6 to 1.1 cores at 1,000 clients.
+3. **The delegates of `Match`.** The generated `Match` takes a delegate per kind, made again at every call: about 17 for each message to a connection, about 30 for each message to the session. A `switch` ahead of it, for the kinds of every frame, halved the garbage.
+4. **The machine, not the server.** Past about 2,000 clients at 30 messages a second, or about 9,000 at 3, the clients stopped getting their acknowledgments in time and gave up, while the server's mailboxes stayed empty and it used under 2 cores. The system's own counters show why: in one such run the loopback interface passed 3.15 million packets, and IP received 1.41 million of them; the rest were dropped between the two, with every core busy with the server, five processes of clients and the system. Over loopback, with the clients on the same 8 cores, half of them efficiency cores, the system is what fails first.
+5. **10,000 clients.** At 1 message and 1 update a second each, 10,000 clients joined at 500 a second and stayed for the rest of the minute, none lost: the server used 0.7 of a core, allocated 40 MB a second, kept its mailboxes empty, and the runtime counted 4 contended locks a second in the whole process. Otsuki's code takes none, as the analyzer checks; the runtime's types take theirs (the thread pool, the sockets, the timers), and the trace did not tell them apart ([No locks on the hot path](#no-locks-on-the-hot-path)). The p99 latency of about 0.9 s comes from the starved processes of clients and the system's drops, not from the server's queues.
+
+So the architecture carries 10,000 connections on one server here, at the message rates this machine's loopback can carry. Higher rates at 10,000 need the clients on other machines, which the load test supports (`clients --server HOST:PORT`).
+
+### What is left
+- **Steps 6 and 7**, the core without threads that the compiler keeps so: the certainty of [The proposal](#the-proposal) is not there yet. Today the session and the connection loops are separate mailboxes whose orders are kept by the rules of [Races between loops](#races-between-loops), checked by the simulation in two scenarios; host migration, peer-to-peer meshes and lost datagrams are still to simulate, and a seed should take exactly the same order, which needs the GUIDs and the sets of connections made deterministic.
+- **Step 15**, the data path around the session, and **pooled buffers** (14): to do once a load shows the session or the garbage collector as the limit, which needs clients on other machines.
+- **Batched system calls** (16): only if those measurements ask for them.
+
+## The design this started from
+As it was before the steps of [Progress](#progress). [The README](../Otsuki/Aigamo.Otsuki/README.md#design) describes it. In short:
 
 - [`SessionActor`](../Otsuki/Aigamo.Otsuki/Session/SessionActor.cs) runs the core protocol, and publishes a `SessionSnapshot` that [`Peer`](../Otsuki/Aigamo.Otsuki/Peer.cs) reads from the application's threads.
 - [`ReliableEndpoint`](../Otsuki/Aigamo.Otsuki/Reliable/ReliableEndpoint.cs) owns the transport and the connection table, and routes datagrams.
@@ -34,11 +83,15 @@ Fewer, larger actors make fewer such places, but any two mailboxes make at least
 
 ## Where Otsuki races
 ### The snapshot and the answer
+*Fixed by step 2: the session answers commands only after it has published the snapshot.*
+
 `await peer.ConnectAsync(...)` followed by `peer.LocalEndPoint` must see the endpoint. The session completes the command's `TaskCompletionSource` and publishes the snapshot, and the caller's continuation runs on the thread pool as soon as the task completes, so publishing must come first. It did not once; [`ICanConnect`](../Otsuki/Aigamo.Otsuki/Session/Transitions/ICanConnect.cs) now calls `Publish()` before `TrySetResult()`.
 
 The order is still a convention that each transition keeps by itself. [`ICanHost`](../Otsuki/Aigamo.Otsuki/Session/Transitions/ICanHost.cs) completes `HostAsync` without calling `Publish()`, and is right only because `MarkCreated` publishes on the way. The `Publish()` at the end of `SessionActor.Receive` runs after every transition, so it is always too late to cover a completion. A new transition that completes a task before anything publishes brings the bug back, and no test is likely to catch it, because the window is a few microseconds.
 
 ### The goodbye and the socket
+*Fixed: the endpoint keeps its transport until its last connection has terminated, and a connection that is hard-disconnecting finishes its retries before it does; with the loops, the shutdown is posted to every loop after the goodbyes, and the transport is disposed once every loop has reported that its last connection has ended.*
+
 When joining fails, [`FailConnect`](../Otsuki/Aigamo.Otsuki/Session/SessionActor.cs) posts `HardDisconnect` to each connection, then `ShutDown` to the endpoint:
 
 ```mermaid
@@ -59,14 +112,20 @@ The connection and the endpoint run on different threads, so the endpoint can di
 Even when the connection wins, the endpoint's `Abort` follows right behind `HardDisconnect` in the connection's mailbox, so the connection leaves `HardDisconnecting` before its retry timer ([`ICanHardDisconnect`](../Otsuki/Aigamo.Otsuki/Reliable/Transitions/ICanHardDisconnect.cs)) can resend. HARD_DISCONNECT is sent at most once, and not at all when the endpoint wins.
 
 ### The signing mode
+*Fixed: the session gives `Connect` its own signing mode, and the loops keep theirs for inbound connections.*
+
 [`ReliableEndpoint.Connect`](../Otsuki/Aigamo.Otsuki/Reliable/ReliableEndpoint.cs) is called on the session's thread, and its comment says that it only reads immutable state. It reads `_signing`, which `SetSigning` writes on the endpoint's thread. The session posts `SetSigning` when it hosts or receives DN_SEND_CONNECT_INFO, and connects to other peers only after later messages arrive, so in practice the write is long done before the read. Nothing guarantees it, though. If an outbound connection read the old value, `PacketSigning.None`, it would accept whatever signing the listener offers, which is the downgrade that `OfferedSigning` exists to prevent.
 
 ### The shared transport
+*Fixed for streams: `StreamDatagramTransport`'s links are an actor's, with no lock. A UDP transport is still sent on from several threads, the loops', which the system allows; with a socket per loop, no two loops share one.*
+
 [`IDatagramTransport`](../Otsuki/Aigamo.Otsuki/Transport/IDatagramTransport.cs) requires `Send` to be safe from several threads at once, because every connection calls it from its own loop, and the endpoint from its own. A UDP socket allows that. `StreamDatagramTransport` keeps a table of links, which `Send` adds to from the connections' threads while the link tasks remove from it and the connector adds accepted streams, so it guards the table with a `lock`. The README's threading summary says that there are no locks anywhere in the library, which is no longer true.
 
 The lock is a symptom: the transport is state that several actors share instead of one owning it.
 
 ### The tests wait on real time
+*Partly fixed: the simulation tests run on a manual clock and choose the order ([Progress](#progress)); the other tests still run on real threads and real time.*
+
 Every test runs real actors on the thread pool, with protocol timings shortened to milliseconds, and polls for events with `Task.Delay` up to a 10-second time-out ([`EventLog`](../Otsuki/Aigamo.Otsuki.Tests/EventLog.cs)). A test sees whichever interleaving the thread pool happens to produce, so none of the orders above can be forced, and a failure that depends on one shows up as a rare flake. The `TimeProvider` is injected everywhere but never faked.
 
 ## Why these are hard to find
@@ -132,7 +191,7 @@ What stays nondeterministic is the order in which inputs arrive: which datagram 
 What it costs: the connections no longer run in parallel ([Performance](#performance)).
 
 ### Performance
-Nothing is measured yet. For a session of a few peers, what the structure says:
+For a session of a few peers, what the structure says ([Measurements](#measurements) has the numbers for many):
 
 - **The serial part is already serial.** Every payload that reaches the application goes through `SessionActor`, one message at a time. Running connections in parallel only spreads the reliable layer's work (decoding, acknowledging, reassembling, signing).
 - **Fewer hops.** Today a received datagram crosses three mailboxes, endpoint, connection, then session, and each crossing is a channel write, a record allocated, and a thread-pool thread woken. In one loop it crosses one. The latency from the socket to the event should go down, not up.
