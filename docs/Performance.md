@@ -6,6 +6,7 @@ How the game keeps from stopping for the garbage collector, and how that is kept
 - **A frame should allocate almost nothing**, on the game's thread and on the UI's, which paints about 60 to 75 times a second.
 - **Measured** with a replay of a single-player battle at 1×, in a Release build: from about 1.3 GB a second to 129 KB a second, and from about 170 collections a second to about one a minute, each under 1 ms.
 - **Guarded** by `AllocationTests`, which `dotnet test` runs on every pull request.
+- **The native memory of a game**, which the collector sees none of, goes with the game: its surfaces and sounds free theirs once they are collected, which `NativeMemoryTests` checks ([Native memory](#native-memory)).
 
 ## Why the message loop matters
 `WinMain` ends in the loop of NSPW NET ([win_main.cs](../OpenNSPW/OpenNspw/win_main.cs)). While the game is active and no dialog is up, nothing in it waits:
@@ -59,6 +60,22 @@ So 96 bytes a call there, a copy of the list of peers and a new delegate in `DoW
 What is expected to allocate nothing is measured once the code is warm: the least of several rounds, as the runtime's tiered compilation may allocate on the calling thread as it compiles the code again. The game of these tests does not hash its output (`LockstepGame.RecordsOutput`), which makes garbage of its own.
 
 The tests do not cover the UI's painting, which needs a window. Measure it in the app.
+
+## Native memory
+Some of the stand-ins hold memory that the game reaches by pointers, which must not move, so it is native, outside the collector's heap: the collector sees none of it, and frees none of it by itself.
+
+| Memory | Held by | Freed |
+| --- | --- | --- |
+| A surface's pixels, which `Lock` points to | `DirectDrawSurface7` ([ddraw.cs](../OpenNSPW/OpenNspw/ddraw.cs)) | When the surface is collected. `Release` frees them and gives the surface new ones, which it holds until then. |
+| A sound's data, which `Lock` points to | `SoundData` ([dsound.cs](../OpenNSPW/OpenNspw/dsound.cs)), shared by a buffer and its duplicates | When the last of them is collected |
+| An mmio file, read whole | `mmioOpen` ([mmsystem.cs](../OpenNSPW/OpenNspw/mmsystem.cs)) | By `mmioClose`, which `LoadWave` calls once it has read the file |
+| What the game takes with `malloc` | The game | By its `free`, as in the original |
+
+The game releases none of its surfaces and sounds: the original's process ends with it, and the system takes back what it held. The port's games end in a process that goes on, as the tests' do, and a game stopped before its end, as a test stops one, releases nothing either. So a surface and a sound free their memory when the collector takes them, in their finalizers, once nothing of the game holds them. Before, each game left about 11 MB behind, the sprite sheet's pixels and the sounds' data, and a process that played thousands grew by tens of gigabytes.
+
+Each block goes through `NativeAllocations` ([NativeAllocations.cs](../OpenNSPW/OpenNspw/NativeAllocations.cs)), which counts the bytes the process holds, and tells the collector of them (`GC.AddMemoryPressure`), so that it collects the objects that hold them soon enough, as their own size would not make it.
+
+`NativeMemoryTests` ([NativeMemoryTests.cs](../OpenNSPW/OpenNspw.Tests/NativeMemoryTests.cs)) plays some frames of a battle, lets the game go, and collects it: the count must be back where it was. It runs alone, after the other tests, as the count is the process's. Memory that a new stand-in allocates natively should go through `NativeAllocations` too, so that the test counts it.
 
 ## Measuring the app
 A listener of the runtime's events in the app's process (`EventListener`, the source `Microsoft-Windows-DotNETRuntime`, the keyword GC at the level Verbose) sees each collection and its pause (`GCSuspendEEBegin`, `GCRestartEEEnd`), and a sample about every 100 KB allocated, with its type and its thread (`GCAllocationTick`): enough to find what makes the most, by type, on each thread. `GC.GetTotalAllocatedBytes` gives the rate.

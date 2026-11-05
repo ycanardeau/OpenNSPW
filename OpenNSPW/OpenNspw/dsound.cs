@@ -109,7 +109,13 @@ internal sealed unsafe class SoundData(WAVEFORMATEX format, uint size)
 
 	public uint Size { get; } = size;
 
-	public byte* Memory { get; } = (byte*)NativeMemory.AllocZeroed(size);
+	public byte* Memory { get; } = (byte*)NativeAllocations.Alloc(size);
+
+	// The data goes with the last buffer that plays it, as nothing releases it.
+	~SoundData()
+	{
+		NativeAllocations.Free(Memory, Size);
+	}
 }
 
 public sealed unsafe class DirectSoundBuffer : IDirectSoundBuffer

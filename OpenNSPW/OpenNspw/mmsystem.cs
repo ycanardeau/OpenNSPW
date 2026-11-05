@@ -124,7 +124,7 @@ public unsafe partial class Nspw
 		using var memory = new MemoryStream();
 		stream.CopyTo(memory);
 		var bytes = memory.ToArray();
-		var data = (byte*)NativeMemory.Alloc((nuint)Math.Max(bytes.Length, 1));
+		var data = (byte*)NativeAllocations.Alloc(bytes.Length);
 		bytes.CopyTo(new Span<byte>(data, bytes.Length));
 		var handle = _nextMmio++;
 		_mmioFiles[handle] = new MmioFile(data, bytes.Length);
@@ -135,7 +135,7 @@ public unsafe partial class Nspw
 	{
 		if (_mmioFiles.Remove(hmmio.Value, out var file))
 		{
-			NativeMemory.Free(file.Data);
+			NativeAllocations.Free(file.Data, file.Size);
 		}
 
 		return 0;

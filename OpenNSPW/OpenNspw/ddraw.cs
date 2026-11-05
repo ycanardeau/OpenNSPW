@@ -295,20 +295,30 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 	private ushort* _pixels;
 	private DDCOLORKEY? _sourceColorKey;
 
+	public int Width { get; }
+
+	public int Height { get; }
+
+	public bool IsPrimary { get; }
+
+	// The native memory of the pixels.
+	private long Bytes => (long)Width * Height * sizeof(ushort);
+
 	internal DirectDrawSurface7(DirectDraw7 directDraw, int width, int height, bool primary)
 	{
 		_directDraw = directDraw;
 		Width = width;
 		Height = height;
 		IsPrimary = primary;
-		_pixels = (ushort*)NativeMemory.AllocZeroed((nuint)(width * height), sizeof(ushort));
+		_pixels = (ushort*)NativeAllocations.Alloc(Bytes);
 	}
 
-	public int Width { get; }
-
-	public int Height { get; }
-
-	public bool IsPrimary { get; }
+	// The pixels go with the surface, as a game that stops without releasing its surfaces would otherwise leave them
+	// behind.
+	~DirectDrawSurface7()
+	{
+		NativeAllocations.Free(_pixels, Bytes);
+	}
 
 	public IDirectDrawSurface7? BackBuffer { get; internal set; }
 
@@ -570,8 +580,8 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 
 	public uint Release()
 	{
-		NativeMemory.Free(_pixels);
-		_pixels = (ushort*)NativeMemory.AllocZeroed((nuint)(Width * Height), sizeof(ushort));
+		NativeAllocations.Free(_pixels, Bytes);
+		_pixels = (ushort*)NativeAllocations.Alloc(Bytes);
 		return 0;
 	}
 }
