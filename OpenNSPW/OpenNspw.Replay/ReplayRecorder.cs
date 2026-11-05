@@ -149,6 +149,7 @@ public sealed class ReplayRecorder(Func<ReplayStart, Stream> open) : IGameExtens
 				0,
 				HashInterval,
 				game.IsSingleplayer ? null : game.ReadNetworkBattleSettings(),
+				game.IsSingleplayer ? game.Options : BattleOptions.None,
 				[.. StartFiles(game)]
 			);
 	}

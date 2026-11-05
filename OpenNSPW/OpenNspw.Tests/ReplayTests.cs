@@ -11,11 +11,26 @@ public sealed class ReplayTests
 {
 	private const int Frames = 60;
 
-	private static byte[] Record(int scenario, Action<SingleplayerRun> play, int hashInterval = 1)
+	// Records a battle of `scenario`, with `options`, played by `play`.
+	private static byte[] Record(
+		int scenario,
+		Action<SingleplayerRun> play,
+		int hashInterval = 1,
+		BattleOptions? options = null
+	)
 	{
 		var stream = new MemoryStream();
 		var recorder = new ReplayRecorder(_ => stream) { HashInterval = hashInterval };
-		using (var run = new SingleplayerRun(scenario, game => game.Extensions.Add(recorder)))
+		using (
+			var run = new SingleplayerRun(
+				scenario,
+				game =>
+				{
+					game.Options = options ?? BattleOptions.None;
+					game.Extensions.Add(recorder);
+				}
+			)
+		)
 		{
 			play(run);
 		}
@@ -24,8 +39,13 @@ public sealed class ReplayTests
 	}
 
 	// Plays a replay for `frames` of its frames, or to its end, changing the game halfway if `change` says so. The game
-	// starts at another date than the recorded one, which would seed it otherwise.
-	private static ReplayPlayer Play(byte[] replay, int frames, Action<Nspw>? change = null)
+	// starts at another date than the recorded one, which would seed it otherwise, and with the player's `options`.
+	private static ReplayPlayer Play(
+		byte[] replay,
+		int frames,
+		Action<Nspw>? change = null,
+		BattleOptions? options = null
+	)
 	{
 		var player = new ReplayPlayer(new MemoryStream(replay)) { Speed = double.PositiveInfinity };
 		var played = new ReplayFrames(player, frames / 2, change);
@@ -33,6 +53,7 @@ public sealed class ReplayTests
 			player.Start.Scenario,
 			game =>
 			{
+				game.Options = options ?? BattleOptions.None;
 				game.Extensions.Add(player);
 				game.Extensions.Add(played);
 			},
@@ -51,6 +72,30 @@ public sealed class ReplayTests
 
 		Assert.Equal(ReplayMode.Singleplayer, player.Start.Mode);
 		Assert.Equal(3, player.Start.Scenario);
+		Assert.Null(player.Divergence);
+		Assert.True(player.Frame >= Frames - 1);
+	}
+
+	// A replay plays with the options it was recorded with, whatever the player's are: scenario 7 draws random numbers for
+	// its effects from its first frames, from rand without SharedEffectRandom, which the battle draws from too.
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void TheReplayPlaysWithItsOptions(bool sharedEffectRandom)
+	{
+		var options = new BattleOptions(SharedEffectRandom: sharedEffectRandom);
+		var replay = Record(7, run => run.Frames(Frames), options: options);
+
+		using var player = Play(
+			replay,
+			Frames,
+			options: options with
+			{
+				SharedEffectRandom = !sharedEffectRandom,
+			}
+		);
+
+		Assert.Equal(options, player.Start.Options);
 		Assert.Null(player.Divergence);
 		Assert.True(player.Frame >= Frames - 1);
 	}
@@ -468,6 +513,7 @@ public sealed class ReplayTests
 			speeds.Add(item.Speed);
 
 		Assert.Equal(new short[] { 1, 4, 4, 0, 2 }, speeds);
+		Assert.Equal(BattleOptions.None, reader.Start.Options);
 	}
 
 	// A battle of ミッドウェイ攻略１ between two games, each recorded: the host has a transport land, with the mouse, and

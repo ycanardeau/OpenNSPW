@@ -27,7 +27,9 @@ public sealed record StartFile(string Path, byte[] Bytes);
 // for a battle started from a saved one. Version: the app's that recorded it. RandomState: rand's state as
 // InitializeGame starts, which a single-player scenario's random setup draws from. BattleSeed: the seed of
 // InitializeGame's last srand, in a single-player battle. HashInterval: the frames between two hashes of the battle
-// (ReplayRecorder.HashInterval). Network: a network battle's settings. Files: the files it started from.
+// (ReplayRecorder.HashInterval). Network: a network battle's settings. Options: a single-player battle's options
+// (BattleOptions), which it plays again with, whatever the player's are now; none in a network battle, and in a replay of
+// version 2. Files: the files it started from.
 public sealed record ReplayStart(
 	ReplayMode Mode,
 	short Scenario,
@@ -37,6 +39,7 @@ public sealed record ReplayStart(
 	uint BattleSeed,
 	int HashInterval,
 	NetworkBattleSettings? Network,
+	BattleOptions Options,
 	IReadOnlyList<StartFile> Files
 );
 
@@ -99,7 +102,7 @@ public static class ReplayFormat
 	// The magic of this version of the format, and what every version's starts with: an older replay is told apart, to be
 	// refused (ReplayReader). 2 writes each action by its case (ReplayActionCase); 3 writes a frame's speed, which a frame
 	// of 2 tells by its ticks only, as the frames of a speed may run other ticks (docs/SteadySpeed.md), and whether it
-	// holds the battle, which none of 2 does. 3 reads 2.
+	// holds the battle, which none of 2 does, and the battle's options (docs/Options.md), which 2 has none of. 3 reads 2.
 	public static ReadOnlySpan<byte> Magic => "ONSPWRP3"u8;
 
 	public static ReadOnlySpan<byte> MagicOfVersion2 => "ONSPWRP2"u8;
@@ -188,6 +191,13 @@ public sealed class ReplayWriter : IDisposable
 		_writer.Write(network.RivalTickWait);
 	}
 
+	// Each option, in the order of BattleOptions.
+	private void WriteOptions(BattleOptions options)
+	{
+		_writer.Write(options.SharedEffectRandom);
+		_writer.Write(options.SteadySpeed);
+	}
+
 	public ReplayWriter(Stream stream, ReplayStart start)
 	{
 		_writer = new BinaryWriter(new GZipStream(stream, CompressionLevel.Optimal), Encoding.UTF8);
@@ -200,6 +210,7 @@ public sealed class ReplayWriter : IDisposable
 		_writer.Write(start.BattleSeed);
 		_writer.Write7BitEncodedInt(start.HashInterval);
 		WriteNetwork(start.Network);
+		WriteOptions(start.Options);
 		_writer.Write7BitEncodedInt(start.Files.Count);
 		foreach (var file in start.Files)
 		{
@@ -398,6 +409,18 @@ public sealed class ReplayReader : IDisposable
 		);
 	}
 
+	// The options; none in a replay of version 2.
+	private BattleOptions ReadOptions()
+	{
+		if (_isVersion2)
+			return BattleOptions.None;
+
+		return new BattleOptions(
+			SharedEffectRandom: _reader.ReadBoolean(),
+			SteadySpeed: _reader.ReadBoolean()
+		);
+	}
+
 	private StartFile[] ReadFiles()
 	{
 		var files = new StartFile[_reader.Read7BitEncodedInt()];
@@ -435,6 +458,7 @@ public sealed class ReplayReader : IDisposable
 				_reader.ReadUInt32(),
 				_reader.Read7BitEncodedInt(),
 				ReadNetwork(),
+				ReadOptions(),
 				ReadFiles()
 			);
 		}

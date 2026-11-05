@@ -192,10 +192,14 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 		}
 	}
 
+	// A single-player battle starts with the options it was recorded with, not the player's.
 	public void BattleStarting(Nspw game)
 	{
-		if (Start.Mode == ReplayMode.Singleplayer)
-			game.srand(Start.RandomState);
+		if (Start.Mode != ReplayMode.Singleplayer)
+			return;
+
+		game.srand(Start.RandomState);
+		game.Options = Start.Options;
 	}
 
 	public void BattleStarted(Nspw game)
