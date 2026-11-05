@@ -5,7 +5,7 @@ namespace OpenNspw.Tests;
 // etc1.cpp
 public class Etc1Tests
 {
-	[Fact(Skip = FunctionTest.NotRecorded)]
+	[Fact]
 	public void set_pos_of_attack_TR1()
 	{
 		FunctionTest.Run(
@@ -20,7 +20,7 @@ public class Etc1Tests
 	}
 
 	// The transports' branch of fire_now, which launches the landing craft.
-	[Fact(Skip = FunctionTest.NotRecorded)]
+	[Fact]
 	public void fire_now_TR()
 	{
 		FunctionTest.Run(

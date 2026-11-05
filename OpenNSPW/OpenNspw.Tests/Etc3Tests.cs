@@ -74,7 +74,7 @@ public class Etc3Tests
 	}
 
 	// The landing craft of cont_fire (TR_SP to TR_GF3).
-	[Fact(Skip = FunctionTest.NotRecorded)]
+	[Fact]
 	public void cont_fire_TR()
 	{
 		FunctionTest.Run(
