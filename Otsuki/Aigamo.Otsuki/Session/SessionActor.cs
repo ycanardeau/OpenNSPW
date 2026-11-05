@@ -44,6 +44,12 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	// The signing mode the session set its endpoint to (SetSigning), which it gives the connections it opens: the
 	// endpoint's own copy is read on the endpoint's thread only.
 	private PacketSigning _signing;
+
+	// The snapshot published last, and the players and groups changed since, by which the next Publish updates it:
+	// a message that changes no one costs no copy of the name table.
+	private SessionSnapshot _published = SessionSnapshot.Empty;
+	private readonly HashSet<Dpnid> _changedPlayers = [];
+	private readonly HashSet<Dpnid> _changedGroups = [];
 	private long _nextSendId;
 	private readonly Dictionary<int, PendingRequest> _requests = [];
 	private int _nextContext;
@@ -186,24 +192,96 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		);
 
 	/// <summary>
-	/// Publishes a snapshot of the session for other threads (<see cref="Peer"/>'s queries): before each event but data
-	/// (<see cref="Emit"/>), before completing a command that no event follows, and after each message.
+	/// Marks a player as changed in what the snapshot shows of it: created, removed, its info or its role as host.
 	/// </summary>
-	public void Publish() =>
-		_publish(
-			new SessionSnapshot(
-				Players
-					.Values.Where(p => p.Created)
-					.ToImmutableDictionary(p => p.Id, p => p.ToPlayerInfo()),
-				_endpoint is null ? null : Application,
-				_endpoint?.LocalEndPoint,
-				LocalPlayer,
-				Players.TryGetValue(LocalPlayer, out var local) && local.IsHost,
-				Groups
-					.Values.Where(g => g.Created)
-					.ToImmutableDictionary(g => g.Id, g => g.ToGroupInfo())
-			)
+	public void Changed(Player player) => _changedPlayers.Add(player.Id);
+
+	/// <summary>
+	/// Marks a group as changed in what the snapshot shows of it: created, removed or its members.
+	/// </summary>
+	public void ChangedGroup(Dpnid group) => _changedGroups.Add(group);
+
+	// The published entries, with those of the changed ids made again from the name table, or removed.
+	private static ImmutableDictionary<Dpnid, TInfo> Update<TEntry, TInfo>(
+		ImmutableDictionary<Dpnid, TInfo> published,
+		HashSet<Dpnid> changed,
+		Dictionary<Dpnid, TEntry> current,
+		Func<TEntry, bool> isShown,
+		Func<TEntry, TInfo> toInfo
+	)
+	{
+		if (changed.Count == 0)
+			return published;
+
+		var builder = published.ToBuilder();
+		foreach (var id in changed)
+		{
+			if (current.TryGetValue(id, out var entry) && isShown(entry))
+				builder[id] = toInfo(entry);
+			else
+				builder.Remove(id);
+		}
+		changed.Clear();
+		return builder.ToImmutable();
+	}
+
+	[Conditional("DEBUG")]
+	private void CheckPublished()
+	{
+		var players = Players.Values.Where(p => p.Created).ToDictionary(p => p.Id);
+		var groups = Groups.Values.Where(g => g.Created).ToDictionary(g => g.Id);
+		Debug.Assert(
+			players.Count == _published.Players.Count
+				&& players.All(p =>
+					_published.Players.TryGetValue(p.Key, out var info)
+					&& info.Name == p.Value.Name
+					&& info.Data.AsSpan().SequenceEqual(p.Value.Data.AsSpan())
+					&& info.IsLocal == p.Value.IsLocal
+					&& info.IsHost == p.Value.IsHost
+				),
+			"The snapshot's players are not the name table's: a change was not marked (Changed)."
 		);
+		Debug.Assert(
+			groups.Count == _published.Groups.Count
+				&& groups.All(g =>
+					_published.Groups.TryGetValue(g.Key, out var info)
+					&& info.Members.OrderBy(m => m.Value).SequenceEqual(g.Value.Members.Keys.OrderBy(m => m.Value))
+				),
+			"The snapshot's groups are not the name table's: a change was not marked (ChangedGroup)."
+		);
+	}
+
+	/// <summary>
+	/// Publishes a snapshot of the session for other threads (<see cref="Peer"/>'s queries): before each event but data
+	/// (<see cref="Emit"/>), before completing a command that no event follows, and after each message. Only what was
+	/// marked changed is made again; nothing is published if nothing changed.
+	/// </summary>
+	public void Publish()
+	{
+		var application = _endpoint is null ? null : Application;
+		var localEndPoint = _endpoint?.LocalEndPoint;
+		var isHost = Players.TryGetValue(LocalPlayer, out var local) && local.IsHost;
+		if (
+			_changedPlayers.Count == 0
+			&& _changedGroups.Count == 0
+			&& ReferenceEquals(application, _published.Application)
+			&& Equals(localEndPoint, _published.LocalEndPoint)
+			&& LocalPlayer == _published.LocalPlayer
+			&& isHost == _published.IsHost
+		)
+			return;
+
+		_published = new SessionSnapshot(
+			Update(_published.Players, _changedPlayers, Players, p => p.Created, p => p.ToPlayerInfo()),
+			application,
+			localEndPoint,
+			LocalPlayer,
+			isHost,
+			Update(_published.Groups, _changedGroups, Groups, g => g.Created, g => g.ToGroupInfo())
+		);
+		CheckPublished();
+		_publish(_published);
+	}
 
 	/// <summary>
 	/// Raises an event. A change of the name table or of the session is published first, so that whoever handles the
@@ -293,6 +371,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			return;
 
 		player.Created = true;
+		Changed(player);
 		Emit(new PeerEvent.PlayerCreated(player.ToPlayerInfo()));
 		foreach (var data in player.PendingData)
 			Emit(new PeerEvent.DataReceived(player.Id, [.. data]));
@@ -427,6 +506,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			return;
 
 		group.Created = true;
+		ChangedGroup(group.Id);
 		Emit(new PeerEvent.GroupCreated(group.ToGroupInfo()));
 		foreach (var member in group.Members.OrderBy(m => m.Value).Select(m => m.Key))
 			Emit(new PeerEvent.PlayerAddedToGroup(group.Id, member));
@@ -449,6 +529,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		if (!Groups.Remove(id, out var group) || !group.Created)
 			return;
 
+		ChangedGroup(id);
 		Emit(new PeerEvent.GroupDestroyed(id, reason));
 	}
 
@@ -461,6 +542,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		)
 			return false;
 
+		ChangedGroup(groupId);
 		if (group.Created)
 		{
 			Emit(new PeerEvent.PlayerAddedToGroup(groupId, playerId));
@@ -473,6 +555,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		if (!Groups.TryGetValue(groupId, out var group) || !group.Members.Remove(playerId))
 			return false;
 
+		ChangedGroup(groupId);
 		if (group.Created)
 		{
 			Emit(new PeerEvent.PlayerRemovedFromGroup(groupId, playerId));
@@ -492,6 +575,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			player.Name = name;
 		if (flags.HasFlag(InfoFlags.Data))
 			player.Data = data;
+		Changed(player);
 		if (player.IsLocal)
 		{
 			LocalName = player.Name;
@@ -625,6 +709,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		foreach (var group in Groups.Values.Where(g => g.Members.ContainsKey(player.Id)).ToList())
 			RemoveMember(group.Id, player.Id);
 		Players.Remove(player.Id);
+		Changed(player);
 		player.JoinTimer?.Dispose();
 		if (player.Connection is not null)
 		{
@@ -807,7 +892,12 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	private void ClearSession()
 	{
 		foreach (var player in Players.Values)
+		{
 			player.JoinTimer?.Dispose();
+			Changed(player);
+		}
+		foreach (var group in Groups.Keys)
+			ChangedGroup(group);
 		Players.Clear();
 		PlayersByConnection.Clear();
 		Groups.Clear();
@@ -1052,6 +1142,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	public SessionState BecomeHost(Player local, Dpnid oldHost)
 	{
 		local.IsHost = true;
+		Changed(local);
 		Emit(new PeerEvent.HostMigrated(local.Id));
 
 		var peers = ConnectedPeers.Where(p => p.Created).ToList();
@@ -1097,6 +1188,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		if (!newHost.IsHost)
 		{
 			newHost.IsHost = true;
+			Changed(newHost);
 			Emit(new PeerEvent.HostMigrated(newHost.Id));
 		}
 
