@@ -1166,35 +1166,40 @@ public unsafe partial class Nspw
 			ReadKeyboard();
 		}
 
-		isScrolling = false;
-
-		if (CursorPosition.y <= 0 || Buttons.HasFlag(InputButtons.Front))
+		// A frame that is not shown does not scroll (Renderer.DrawsNothing): the battlefield scrolls once a frame shown, as
+		// fast at every speed. The camera changes what is drawn only.
+		if (!Renderer.DrawsNothing)
 		{
-			ScrollBattleArea(1);
-			isScrolling = true;
-		}
+			isScrolling = false;
 
-		if (CursorPosition.y >= SCRN_HEIGHT - 1 || Buttons.HasFlag(InputButtons.Back))
-		{
-			ScrollBattleArea(5);
-			isScrolling = true;
-		}
+			if (CursorPosition.y <= 0 || Buttons.HasFlag(InputButtons.Front))
+			{
+				ScrollBattleArea(1);
+				isScrolling = true;
+			}
 
-		if (CursorPosition.x >= SCRN_WIDTH - 1 || Buttons.HasFlag(InputButtons.Right))
-		{
-			ScrollBattleArea(3);
-			isScrolling = true;
-		}
+			if (CursorPosition.y >= SCRN_HEIGHT - 1 || Buttons.HasFlag(InputButtons.Back))
+			{
+				ScrollBattleArea(5);
+				isScrolling = true;
+			}
 
-		if (CursorPosition.x <= 0 || Buttons.HasFlag(InputButtons.Left))
-		{
-			ScrollBattleArea(7);
-			isScrolling = true;
-		}
+			if (CursorPosition.x >= SCRN_WIDTH - 1 || Buttons.HasFlag(InputButtons.Right))
+			{
+				ScrollBattleArea(3);
+				isScrolling = true;
+			}
 
-		if (!isScrolling)
-		{
-			ScrollSpeed = 0;
+			if (CursorPosition.x <= 0 || Buttons.HasFlag(InputButtons.Left))
+			{
+				ScrollBattleArea(7);
+				isScrolling = true;
+			}
+
+			if (!isScrolling)
+			{
+				ScrollSpeed = 0;
+			}
 		}
 
 		// マウスボタンの状況記録

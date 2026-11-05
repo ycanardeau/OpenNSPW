@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended.ViewportAdapters;
 using OpenNspw.HostUI;
+using OpenNspw.Pacing;
 using OpenNspw.Replay;
 using OpenNspw.Verification;
 using DrawingPoint = System.Drawing.Point;
@@ -195,7 +196,8 @@ internal sealed class GameSession : IDisposable
 	// follows. replay: a replay that the game plays, with what its viewer sees (view), in a game that writes in
 	// scratchDirectory, which is deleted as the game ends. Each battle of a game that plays neither is recorded in the
 	// user's replays, and so is a single-player replay's once it is taken over. The session disposes the trace and the
-	// replay.
+	// replay. isSpeedSteady: whether a single-player battle that follows no trace plays at a steady speed
+	// (docs/SteadySpeed.md), a replay's once it is taken over.
 	public GameSession(
 		GameFileLayers files,
 		TextRasterizer text,
@@ -203,7 +205,8 @@ internal sealed class GameSession : IDisposable
 		Trace122Replay? trace = null,
 		ReplayPlayer? replay = null,
 		ReplayView? view = null,
-		string? scratchDirectory = null
+		string? scratchDirectory = null,
+		bool isSpeedSteady = false
 	)
 	{
 		_platform = new DesktopPlatform(files, text);
@@ -222,6 +225,8 @@ internal sealed class GameSession : IDisposable
 		Trace = trace;
 		if (trace is not null)
 			Game.Extensions.Add(trace);
+		// Before the recorder, which records the frames' ticks that it sets.
+		var steadySpeed = isSpeedSteady && singleplayer is not null && trace is null ? new SteadySpeed() : null;
 		Replay = replay;
 		_scratchDirectory = scratchDirectory;
 		if (replay is not null)
@@ -231,12 +236,16 @@ internal sealed class GameSession : IDisposable
 			Game.Extensions.Add(replay);
 			if (replay.Start.Mode == ReplayMode.Singleplayer)
 			{
+				if (steadySpeed is not null)
+					Game.Extensions.Add(steadySpeed);
 				_recorder = new ReplayRecorder(OpenReplayFile) { Replay = replay };
 				Game.Extensions.Add(_recorder);
 			}
 		}
 		else if (trace is null)
 		{
+			if (steadySpeed is not null)
+				Game.Extensions.Add(steadySpeed);
 			_recorder = new ReplayRecorder(OpenReplayFile);
 			Game.Extensions.Add(_recorder);
 		}

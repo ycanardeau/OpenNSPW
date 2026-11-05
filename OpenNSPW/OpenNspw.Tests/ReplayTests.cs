@@ -23,22 +23,22 @@ public sealed class ReplayTests
 		return stream.ToArray();
 	}
 
-	// Plays a replay for `frames` frames, changing the game halfway if `change` says so. The game starts at another date
-	// than the recorded one, which would seed it otherwise.
+	// Plays a replay for `frames` of its frames, or to its end, changing the game halfway if `change` says so. The game
+	// starts at another date than the recorded one, which would seed it otherwise.
 	private static ReplayPlayer Play(byte[] replay, int frames, Action<Nspw>? change = null)
 	{
 		var player = new ReplayPlayer(new MemoryStream(replay)) { Speed = double.PositiveInfinity };
+		var played = new ReplayFrames(player, frames / 2, change);
 		using var run = new SingleplayerRun(
 			player.Start.Scenario,
-			game => game.Extensions.Add(player),
+			game =>
+			{
+				game.Extensions.Add(player);
+				game.Extensions.Add(played);
+			},
 			startDate: 1_234_567_890
 		);
-		for (var frame = 0; frame < frames; frame++)
-		{
-			if (frame == frames / 2)
-				change?.Invoke(run.Game);
-			run.Frames(1);
-		}
+		played.PlayTo(run, frames);
 		return player;
 	}
 
@@ -84,11 +84,19 @@ public sealed class ReplayTests
 		);
 
 		var player = new ReplayPlayer(new MemoryStream(replay)) { Speed = double.PositiveInfinity };
-		using var run = new SingleplayerRun(3, game => game.Extensions.Add(player));
+		var played = new ReplayFrames(player);
+		using var run = new SingleplayerRun(
+			3,
+			game =>
+			{
+				game.Extensions.Add(player);
+				game.Extensions.Add(played);
+			}
+		);
 		run.Game.SetCursorPos(0, 0);
-		run.Frames(Frames);
+		played.PlayTo(run);
 
-		Assert.Equal(camera, run.Game.CameraPosition);
+		Assert.Equal(camera, played.ByFrame[played.ByFrame.Keys.Max()].Camera);
 		player.Dispose();
 	}
 
@@ -242,6 +250,11 @@ public sealed class ReplayTests
 			HashInterval = 1,
 			Replay = player,
 		};
+		var played = new ReplayFrames(
+			player,
+			Frames / 2,
+			takesOver ? _ => player.TakeOver() : null
+		);
 		int ship;
 		WorldPosition destination;
 		using (
@@ -251,15 +264,14 @@ public sealed class ReplayTests
 				{
 					game.Extensions.Add(player);
 					game.Extensions.Add(recorder);
+					game.Extensions.Add(played);
 				},
 				startDate: 1_234_567_890
 			)
 		)
 		{
 			var game = run.Game;
-			run.Frames(Frames / 2);
-			if (takesOver)
-				player.TakeOver();
+			played.PlayTo(run, Frames / 2);
 			run.Frames(2);
 			ship = PlayersShip(game);
 			destination = new WorldPosition(
@@ -306,14 +318,69 @@ public sealed class ReplayTests
 		);
 
 		var player = new ReplayPlayer(new MemoryStream(replay)) { Speed = double.PositiveInfinity };
-		using var run = new SingleplayerRun(3, game => game.Extensions.Add(player));
-		run.Frames(3);
-		var before = run.Game.GameSpeed;
-		run.Frames(10);
+		var played = new ReplayFrames(player);
+		using var run = new SingleplayerRun(
+			3,
+			game =>
+			{
+				game.Extensions.Add(player);
+				game.Extensions.Add(played);
+			}
+		);
+		played.PlayTo(run);
 
-		Assert.Equal(1, before);
-		Assert.Equal(4, run.Game.GameSpeed);
+		Assert.Equal(1, played.ByFrame[3].Speed);
+		Assert.Equal(4, played.ByFrame[13].Speed);
 		Assert.Null(player.Divergence);
+		player.Dispose();
+	}
+
+	// The frames played and shown, and the frame of the replay last shown, as each frame ends.
+	private sealed class ShownFrames(ReplayPlayer player) : IGameExtension
+	{
+		private readonly ReplayPlayer _player = player;
+
+		public int Played { get; private set; }
+
+		public int Shown { get; private set; }
+
+		public int LastShown { get; private set; }
+
+		public void FrameEnded(Nspw game)
+		{
+			Played++;
+			if (game.Renderer.DrawsNothing)
+				return;
+
+			Shown++;
+			LastShown = _player.Frame;
+		}
+	}
+
+	// A seek draws a frame every 100 milliseconds of the game's clock, and the one it ends with, and plays the same.
+	[Fact]
+	public void ASeekShowsFewFramesAndPlaysTheSame()
+	{
+		var replay = Record(3, run => run.Frames(Frames));
+		var player = new ReplayPlayer(new MemoryStream(replay)) { IsPaused = true };
+		player.SeekTo(Frames - 1);
+		var shown = new ShownFrames(player);
+		using var run = new SingleplayerRun(
+			3,
+			game =>
+			{
+				game.Extensions.Add(player);
+				game.Extensions.Add(shown);
+			},
+			startDate: 1_234_567_890
+		);
+
+		while (player.Frame < Frames - 1)
+			run.Frames(1);
+
+		Assert.Null(player.Divergence);
+		Assert.True(shown.Shown < shown.Played);
+		Assert.Equal(Frames - 1, shown.LastShown);
 		player.Dispose();
 	}
 
@@ -358,6 +425,49 @@ public sealed class ReplayTests
 		Assert.True(ReplayFormat.IsReplay(older));
 		var exception = Assert.Throws<InvalidDataException>(() => new ReplayReader(older));
 		Assert.Contains("another version", exception.Message);
+	}
+
+	// A replay of version 2, whose frames have no speed, shows the speed that their ticks tell: speed + 1 ticks a frame,
+	// and 20 while Space is held, which leaves the speed as it was.
+	[Fact]
+	public void AReplayOfVersion2TellsTheSpeedByTheTicks()
+	{
+		var bytes = new MemoryStream();
+		using (
+			var gzip = new System.IO.Compression.GZipStream(
+				bytes,
+				System.IO.Compression.CompressionLevel.Fastest,
+				leaveOpen: true
+			)
+		)
+		using (var writer = new BinaryWriter(gzip))
+		{
+			writer.Write(ReplayFormat.MagicOfVersion2);
+			writer.Write((byte)ReplayMode.Singleplayer);
+			writer.Write((short)3);
+			writer.Write(0L);
+			writer.Write("");
+			writer.Write(0u);
+			writer.Write(0u);
+			writer.Write7BitEncodedInt(10);
+			writer.Write(false);
+			writer.Write7BitEncodedInt(0);
+			foreach (var ticks in new[] { 2, 5, 20, 0, 3 })
+			{
+				writer.Write((byte)ReplayRecord.Frame);
+				writer.Write7BitEncodedInt(88);
+				writer.Write7BitEncodedInt(ticks);
+			}
+			writer.Write((byte)ReplayRecord.End);
+		}
+
+		bytes.Position = 0;
+		using var reader = new ReplayReader(bytes);
+		var speeds = new List<short>();
+		for (var item = reader.Next(); item.Kind != ReplayRecord.End; item = reader.Next())
+			speeds.Add(item.Speed);
+
+		Assert.Equal(new short[] { 1, 4, 4, 0, 2 }, speeds);
 	}
 
 	// A battle of ミッドウェイ攻略１ between two games, each recorded: the host has a transport land, with the mouse, and

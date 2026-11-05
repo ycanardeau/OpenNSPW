@@ -550,6 +550,10 @@ public unsafe partial class Nspw
 
 		Elapsed = Now - LastTime2;
 
+		// Until a frame of a single-player battle says otherwise (TryStartSingleplayerFrame), and of a battle (ShowsFrame).
+		IsBattleHeld = false;
+		Renderer.DrawsNothing = false;
+
 		if (IsSingleplayer && Mode == GameMode.Battle && !IsEditingMap)
 		{
 			// 1.22's frame, on its timer.
@@ -581,8 +585,15 @@ public unsafe partial class Nspw
 		}
 
 		// Extensions see the ticks of the battle's frame, and may set them (docs/Extensions.md).
+		// A frame that holds the battle runs no tick, whatever they set (IsBattleHeld).
 		if (Mode == GameMode.Battle && !IsEditingMap)
 			ticks = Extensions.FrameStarting(ticks);
+		if (IsBattleHeld)
+			ticks = 0;
+
+		// A frame of the battle that an extension does not show draws nothing (Renderer.DrawsNothing).
+		if (Mode == GameMode.Battle && !IsEditingMap)
+			Renderer.DrawsNothing = Extensions.ShowsFrame() == false;
 
 		ReadInput(); // マウス、キーボード状況取得
 
@@ -691,7 +702,10 @@ public unsafe partial class Nspw
 		HDC hdc;
 		Array128<byte> text = default;
 
-		if (DD_OK == Renderer.lpDDSBack.GetDC(&hdc))
+		// A frame that is not shown writes no text (Renderer.DrawsNothing): its debug lines and chat only draw, and their
+		// numbers, which wsprintf takes boxed, would make garbage in each of the many frames not shown. The chat stays up
+		// as many frames shown.
+		if (!Renderer.DrawsNothing && DD_OK == Renderer.lpDDSBack.GetDC(&hdc))
 		{
 			SetTextColor(hdc, RGB(255, 255, 255));
 			SetBkMode(hdc, TRANSPARENT);
@@ -812,7 +826,9 @@ public unsafe partial class Nspw
 		if (LeftButton == 3)
 			LeftButton = 0;
 
-		Renderer.FrameCount++;
+		// A frame that holds the battle is not counted (IsBattleHeld).
+		if (!IsBattleHeld)
+			Renderer.FrameCount++;
 
 		// プライマリサーフェスにフリップ
 
@@ -830,7 +846,10 @@ public unsafe partial class Nspw
 		)
 			Renderer.RestoreSurfaces();
 
-		Extensions.Presented();
+		if (Renderer.DrawsNothing)
+			Renderer.DrawsNothing = false;
+		else
+			Extensions.Presented();
 	}
 
 	/*--------------------------------------------

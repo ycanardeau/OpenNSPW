@@ -316,6 +316,9 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 
 	public ReadOnlySpan<ushort> Pixels => new(_pixels, Width * Height);
 
+	// Whether it draws nothing, as in a frame that is not shown (DirectDraw7.DrawsNothing).
+	internal bool DrawsNothing => _directDraw.DrawsNothing;
+
 	internal Span<ushort> Row(int y)
 	{
 		return new Span<ushort>(_pixels + y * Width, Width);
@@ -373,7 +376,7 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 
 	private void Changed()
 	{
-		if (IsPrimary)
+		if (IsPrimary && !DrawsNothing)
 		{
 			_directDraw.Present(this);
 		}
@@ -404,7 +407,7 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 				return ddraw.DDERR_INVALIDPARAMS;
 			}
 
-			for (var y = d.top; y < d.bottom; y++)
+			for (var y = d.top; y < d.bottom && !DrawsNothing; y++)
 			{
 				Row(y)[d.left..d.right].Fill((ushort)lpDDBltFx->dwFillColor);
 			}
@@ -433,7 +436,8 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 				return ddraw.DDERR_INVALIDRECT;
 			}
 
-			Copy(src, s, d, (dwFlags & ddraw.DDBLT_KEYSRC) != 0);
+			if (!DrawsNothing)
+				Copy(src, s, d, (dwFlags & ddraw.DDBLT_KEYSRC) != 0);
 		}
 
 		Changed();
@@ -478,7 +482,8 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 			return ddraw.DDERR_INVALIDRECT;
 		}
 
-		Copy(src, s, d, (dwTrans & ddraw.DDBLTFAST_SRCCOLORKEY) != 0);
+		if (!DrawsNothing)
+			Copy(src, s, d, (dwTrans & ddraw.DDBLTFAST_SRCCOLORKEY) != 0);
 		Changed();
 		return ddraw.DD_OK;
 	}
@@ -750,6 +755,10 @@ public sealed unsafe class DirectDraw7(Gdi gdi, Action<DirectDrawSurface7> prese
 	private int _height = all_head.SCRN_HEIGHT;
 
 	public Gdi Gdi { get; } = gdi;
+
+	// Whether its surfaces draw nothing, as in a frame of the battle that is not shown (IGameExtension.ShowsFrame): a
+	// blit, a fill and a text only check what they are given, and the primary is not presented. Not part of DirectDraw.
+	public bool DrawsNothing { get; set; }
 
 	internal void Present(DirectDrawSurface7 primary)
 	{

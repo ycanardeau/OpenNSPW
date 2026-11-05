@@ -130,11 +130,16 @@ public unsafe partial class Nspw
 	// The period of 1.22's multimedia timer, which drives its frames (0x432960), in milliseconds.
 	private const uint SingleplayerTimerPeriod = 88;
 
+	// Whether the battle stands still in this frame of a single-player game, as an extension says (HoldsBattle): it runs
+	// no tick, and the frame is not counted. Not part of the original.
+	public bool IsBattleHeld;
+
 	// Whether 1.22's timer has ticked since the last frame, which starts a frame, and the ticks of that frame: none at
 	// speed 0, or speed + the timer's ticks counted (0x4345DF). The count is 1: 1.22 clears it after a frame (0x433C99), so
 	// the timer's ticks while a frame runs are lost. The speed is set by NSPW NET's keys, as in a network game, and Space
 	// runs 20 ticks a frame while it is held.
-	// An extension may start the frames itself (IGameExtension.StartsFrame), such as a replay that plays.
+	// An extension may start the frames itself (IGameExtension.StartsFrame), such as a replay that plays, and hold the
+	// battle in them (IGameExtension.HoldsBattle), which then run no tick.
 	private bool TryStartSingleplayerFrame(out short ticks)
 	{
 		var starts = Extensions.StartsFrame();
@@ -148,7 +153,10 @@ public unsafe partial class Nspw
 			LastTime2 += Elapsed / SingleplayerTimerPeriod * SingleplayerTimerPeriod;
 		else
 			LastTime2 = Now;
-		if (Buttons.HasFlag(InputButtons.Space))
+		IsBattleHeld = Extensions.HoldsBattle() ?? false;
+		if (IsBattleHeld)
+			ticks = 0;
+		else if (Buttons.HasFlag(InputButtons.Space))
 			ticks = 20;
 		else
 			ticks = GameSpeed == 0 ? (short)0 : (short)(GameSpeed + 1);
@@ -756,7 +764,8 @@ public unsafe partial class Nspw
 		Selections[1] = savedSelections;
 		SelectedUnit = savedSelectedUnit;
 
-		if (CpuSide != Side.None)
+		// The computer does not play while the battle is held (IsBattleHeld).
+		if (CpuSide != Side.None && !IsBattleHeld)
 			PlanComputerStrategy();
 
 		if (BufferedArrivedUnits[1] != 0)

@@ -29,6 +29,8 @@ An extension implements `IGameExtension`, whose methods all do nothing by defaul
 | `GameStarted` | `WinMain`, before the message loop | Start a battle (below) |
 | `BattleStarting`, `BattleStarted` | `InitializeGame`, at its start and at its end | Read the start; set rand's state (`srand`) |
 | `FrameStarting` | `UpdateFrame`, as a frame of the battle would start | Hold the frame, start it now, or leave it to the game's timer; set its ticks and the speed shown |
+| `ShowsFrame` | `UpdateFrame`, as a frame of the battle starts | Not show it: it runs as any other, its drawing too, which draws random numbers and takes the clicks, but draws no pixel and is not presented (`Renderer.DrawsNothing`), so that the battle is the same |
+| `HoldsBattle` | `TryStartSingleplayerFrame`, as a frame of a single-player battle starts | Hold the battle in it (`IsBattleHeld`): no tick, no computer, no scenario event, no reinforcement's countdown, no random number for the effects, and the frame not counted; the input, the player's orders and the drawing go on |
 | `TickStarting` | Before each tick of the battle (`UpdateBattle`) | Read the battle |
 | `ResultChecking` | At the start of `CheckResult`: after each tick that is not drawn in a single-player game, and after the drawing | Read the battle |
 | `Drawing` | Before `DrawBattleArea` | Read or set the camera |
@@ -38,7 +40,7 @@ An extension implements `IGameExtension`, whose methods all do nothing by defaul
 | `UninitializedLocal(instruction)` | Where the port reads a local that 1.22 reads without setting it ([Verification.md](Verification.md)) | Answer what Windows' stack held there; the first that answers wins |
 | `FrameEnded` | After `HandleInput` | Read the battle |
 | `MessageReceived`, `RivalLeft` | `DirectPlayMessageHandler` | Read them |
-| `Presented` | After the frame is shown | Read the battle; queue commands for later frames |
+| `Presented` | After the frame is shown, not one that is not (`ShowsFrame`) | Read the battle; queue commands for later frames |
 
 ### The player's actions
 `PlayerAction` is what the player did, as the game does it: a closed set of cases, one record each with what its function takes (`ClickUnit`, `SetDestination`, `CancelSelection`, `RestoreSelection`, `ChooseCombatMenuItem`, `ToggleDeckView`, `SelectSupplyTarget`, `RequestSupply`, `ConfirmSystemMenu`, the debug keys `SwapLocalSide` and `SinkSelectedUnit`, and `GiveOrders`, a frame's orders given whole as the input leaves them, `PlayerOrders`, as a trace of 1.22 gives its player's). The game raises it from the functions that the mouse, the host UI's commands and a computer player all reach, so one record covers every source. `Nspw.Do(action)` does one, as the click did. Cases are handled with the `Match` that Aigamo.MatchGenerator generates (`[GenerateMatch]`), which takes every case: a case added fails to compile wherever it is not handled, such as where a replay writes actions.
@@ -64,7 +66,8 @@ An extension implements `IGameExtension`, whose methods all do nothing by defaul
 | `OpenNspw.Verification` | The traces of 1.22 ([Verification.md](Verification.md)): the format, the replay that the game follows and checks itself against, and the recorder of the port |
 | `OpenNspw.HostUI` | The host UI's commands (`UICommands`), given as the player's actions where the game takes the clicks they stand for, and what the UI reads of the game (`UIState`), such as what the player sees around any camera (`ReadSight(camera, ...)`) ([UI.md](UI.md)) |
 | `OpenNspw.Replay` | Replays: the format, the recorder, the player, the DirectPlay stand-in that gives the rival's messages, and a file layer with the files a battle started from |
-| `OpenNspw.Desktop` | The app: adds the recorder to every battle, plays replays, and shows them with a camera of their own |
+| `OpenNspw.Pacing` | Steady speed ([SteadySpeed.md](SteadySpeed.md)): a single-player battle's frames all of speed 1's ticks, more of them a second at a faster speed, so that every speed plays the same battle |
+| `OpenNspw.Desktop` | The app: adds the recorder to every battle, steady speed to single-player ones, plays replays, and shows them with a camera of their own |
 | `OpenNspw.Tests` | Tests of the port, and of the extensions in their games |
 
 Later, each its own change: computer players as an extension, and the out-of-process bridge. How the traces of 1.22 and the host UI left the core is in [FeatureExtensions.md](FeatureExtensions.md).
@@ -72,7 +75,7 @@ Later, each its own change: computer players as an extension, and the out-of-pro
 ## Replays, as an extension
 - **Recorder.** At `BattleStarting` it takes the start: the mode, the scenario, the seeds, the network settings (`ReadNetworkBattleSettings`), and the files the battle starts from, read through the game's platform. At each point it writes what it sees: ticks, camera, actions, the rival's messages, hashes. It intervenes in nothing.
 - **Hashes** cover the units and the fires, rand's state and the tick, but not a unit's sprite column (`SpriteColumn`): the drawing sets it for the units it draws, so it follows the camera and the cursor, and the battle never reads it.
-- **Player.** It holds the input authority. It sets the seeds, starts a network battle (`StartNetworkBattle`), paces the frames and gives their ticks (`FrameStarting`), the camera (`Drawing`), and the actions (`InputSite`).
+- **Player.** It holds the input authority. It sets the seeds, starts a network battle (`StartNetworkBattle`), paces the frames and gives their ticks (`FrameStarting`) and whether they hold the battle (`HoldsBattle`), the camera (`Drawing`), and the actions (`InputSite`).
 - **The rival, in a network replay**, is a DirectPlay peer and thread pool that the player gives `StartNetworkBattle`: they send nothing, and deliver the recorded messages in `DoWork` after their frame, where DirectPlay delivered them.
 - **Files.** The files a battle started from (the map editor's scenario, a saved battle) come from a file layer over the host's platform. The game's writes during a replay (the auto-save, `cnct_error.dat`) go to a scratch folder, not the user's.
 
