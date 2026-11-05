@@ -42,6 +42,13 @@ public sealed class Peer : IAsyncDisposable
 
 	private SessionSnapshot Snapshot => _snapshot.Value;
 
+	/// <summary>
+	/// How many messages wait in the peer's mailboxes now: the session's, each connection loop's, and the events not
+	/// yet handled. For diagnostics, such as finding where a peer under load falls behind.
+	/// </summary>
+	public PeerQueues Queues =>
+		new(_session.QueueLength, Snapshot.Endpoint?.LoopQueueLengths ?? [], _events.Count);
+
 	public EndPoint? LocalEndPoint => Snapshot.LocalEndPoint;
 
 	public Dpnid LocalPlayer => Snapshot.LocalPlayer;

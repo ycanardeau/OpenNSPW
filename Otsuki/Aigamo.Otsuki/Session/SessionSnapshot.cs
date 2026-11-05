@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Net;
 using Aigamo.Otsuki.Messages.Core;
+using Aigamo.Otsuki.Reliable;
 
 namespace Aigamo.Otsuki.Session;
 
@@ -13,7 +14,8 @@ internal sealed record SessionSnapshot(
 	EndPoint? LocalEndPoint,
 	Dpnid LocalPlayer,
 	bool IsHost,
-	ImmutableDictionary<Dpnid, GroupInfo> Groups
+	ImmutableDictionary<Dpnid, GroupInfo> Groups,
+	ReliableEndpoint? Endpoint
 )
 {
 	public static SessionSnapshot Empty { get; } =
@@ -23,6 +25,7 @@ internal sealed record SessionSnapshot(
 			null,
 			Dpnid.Empty,
 			false,
-			ImmutableDictionary<Dpnid, GroupInfo>.Empty
+			ImmutableDictionary<Dpnid, GroupInfo>.Empty,
+			null
 		);
 }

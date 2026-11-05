@@ -268,6 +268,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			&& Equals(localEndPoint, _published.LocalEndPoint)
 			&& LocalPlayer == _published.LocalPlayer
 			&& isHost == _published.IsHost
+			&& _endpoint == _published.Endpoint
 		)
 			return;
 
@@ -277,7 +278,8 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			localEndPoint,
 			LocalPlayer,
 			isHost,
-			Update(_published.Groups, _changedGroups, Groups, g => g.Created, g => g.ToGroupInfo())
+			Update(_published.Groups, _changedGroups, Groups, g => g.Created, g => g.ToGroupInfo()),
+			_endpoint
 		);
 		CheckPublished();
 		_publish(_published);

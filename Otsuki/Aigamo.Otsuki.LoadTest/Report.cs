@@ -26,6 +26,16 @@ internal sealed record Report
 	/// </summary>
 	public int Terminated { get; init; }
 
+	/// <summary>
+	/// The messages waiting in the session's mailbox, the fullest connection loop's, and the events', as the second
+	/// ends (the server).
+	/// </summary>
+	public int SessionQueue { get; init; }
+
+	public int LoopQueue { get; init; }
+
+	public int EventQueue { get; init; }
+
 	public long MessagesIn { get; init; }
 
 	public long MessagesOut { get; init; }

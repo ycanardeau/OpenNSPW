@@ -80,6 +80,12 @@ public sealed class Mailbox<T>
 	public Task Completion => _completion.Task;
 
 	/// <summary>
+	/// How many messages are posted and not yet taken out of the queue, from any thread: a reading of a count that
+	/// moves, for diagnostics.
+	/// </summary>
+	public int Count => (int)(Interlocked.Read(ref _state) / OneMessage);
+
+	/// <summary>
 	/// Whether the mailbox is completed and its owner has received each of its messages. On the owner's thread.
 	/// </summary>
 	public bool IsCompleted => Interlocked.Read(ref _state) == Completed && _passed.Count == 0;
