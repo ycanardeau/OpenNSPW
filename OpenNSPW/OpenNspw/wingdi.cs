@@ -405,6 +405,11 @@ public sealed class Gdi(INspwPlatform platform)
 		return 1;
 	}
 
+	// Whether a device context is a surface's that draws nothing (DirectDraw7.DrawsNothing): its text is neither decoded
+	// nor rasterized.
+	public bool DrawsNothing(HDC hdc) =>
+		Get<DeviceContext>(hdc.Value) is { Surface.DrawsNothing: true };
+
 	public int TextOut(HDC hdc, int x, int y, string text)
 	{
 		if (Get<DeviceContext>(hdc.Value) is not { Surface: { } surface } dc)
@@ -537,6 +542,11 @@ public unsafe partial class Nspw
 	// TextOut writes the first c chars (bytes) of the string.
 	public int TextOut(HDC hdc, int x, int y, ReadOnlySpan<byte> lpString, int c)
 	{
+		if (gdi.DrawsNothing(hdc))
+		{
+			return 1;
+		}
+
 		return gdi.TextOut(
 			hdc,
 			x,

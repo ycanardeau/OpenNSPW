@@ -85,6 +85,69 @@ public sealed class AllocationTests
 		);
 	}
 
+	// What a frame not shown allocates on the game's thread, from its start to the next frame's, which covers its text
+	// written after its end, after a number of frames to warm up: at a steady speed of 300, which runs about 1,700 frames a
+	// second, most of them not shown (docs/SteadySpeed.md).
+	private sealed class FramesNotShown(int warmUp) : IGameExtension
+	{
+		private readonly int _warmUp = warmUp;
+		private long _start;
+		private bool _wasNotShown;
+		private int _seen;
+
+		public int Frames { get; private set; }
+
+		public long Bytes { get; private set; }
+
+		public short FrameStarting(Nspw game, short ticks)
+		{
+			var now = GC.GetAllocatedBytesForCurrentThread();
+			if (_wasNotShown && _seen++ >= _warmUp)
+			{
+				Frames++;
+				Bytes += now - _start;
+			}
+
+			_start = now;
+			_wasNotShown = false;
+			return ticks;
+		}
+
+		public void FrameEnded(Nspw game) => _wasNotShown = game.Renderer.DrawsNothing;
+	}
+
+	// The most bytes that a frame not shown may allocate: it draws nothing, but runs as any other, its unit panel's texts
+	// formatted too.
+	private const long NotShownBudget = 800;
+
+	// A frame not shown writes and decodes no text, which would make garbage in each of the many: at speed 300 it once made
+	// about 2.6 MB a second, and a full collection every few seconds.
+	[Fact]
+	public void AFrameNotShownMakesLittleGarbage()
+	{
+		var meter = new FramesNotShown(warmUp: 500);
+		using var run = new SingleplayerRun(
+			1,
+			game =>
+			{
+				game.Extensions.Add(new Pacing.SteadySpeed());
+				game.Extensions.Add(meter);
+			},
+			recordsOutput: false
+		);
+		run.Frames(3);
+		run.Game.GameSpeed = 300;
+
+		run.Frames(60);
+
+		Assert.True(meter.Frames > 1_000);
+		var perFrame = meter.Bytes / meter.Frames;
+		Assert.True(
+			perFrame <= NotShownBudget,
+			$"A frame not shown allocated {perFrame} bytes, more than the {NotShownBudget} it may."
+		);
+	}
+
 	// DirectPlay's DoWork, which the game's message loop calls without a pause, allocates nothing: it once made a garbage
 	// collection about 170 times a second.
 	[Fact]

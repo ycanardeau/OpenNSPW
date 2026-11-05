@@ -702,7 +702,10 @@ public unsafe partial class Nspw
 		HDC hdc;
 		Array128<byte> text = default;
 
-		if (DD_OK == Renderer.lpDDSBack.GetDC(&hdc))
+		// A frame that is not shown writes no text (Renderer.DrawsNothing): its debug lines and chat only draw, and their
+		// numbers, which wsprintf takes boxed, would make garbage in each of the many frames not shown. The chat stays up
+		// as many frames shown.
+		if (!Renderer.DrawsNothing && DD_OK == Renderer.lpDDSBack.GetDC(&hdc))
 		{
 			SetTextColor(hdc, RGB(255, 255, 255));
 			SetBkMode(hdc, TRANSPARENT);
