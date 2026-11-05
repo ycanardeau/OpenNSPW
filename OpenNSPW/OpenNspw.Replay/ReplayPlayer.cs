@@ -14,6 +14,14 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 	// the ones after it.
 	private const int MaxStep = 250;
 
+	// The milliseconds of the game's clock between two frames shown while the replay plays faster than the game draws them
+	// (ShowsFrame): often enough to follow it.
+	private const int ShownInterval = 100;
+
+	// How late a frame may start, in milliseconds of play, and still be shown at its pace: later, the game does not keep
+	// up.
+	private const int LateBy = 20;
+
 	// What Take returns when nothing matches: never written to.
 	private static readonly List<ReplayItem> NoItems = [];
 
@@ -31,6 +39,11 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 	private int? _seekTarget;
 	private bool _steps;
 	private bool _isTakenOver;
+
+	// Whether the frame that starts is late (LateBy), and when a frame was last shown while the replay played faster than
+	// the game drew them.
+	private bool _isLate;
+	private uint? _lastShown;
 
 	// The camera as the player had it, which the game is given at each frame: the cursor still moves while the replay
 	// plays, and at the battlefield's edge would scroll the camera, which decides what is drawn, and so the battle.
@@ -217,7 +230,28 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 		// Nor does it run ahead of the frames, by MaxStep at most, when the game takes longer to draw them than their pace,
 		// as at 8×: it would hurry the frames after a slower speed is chosen, for as long as it ran ahead.
 		_playTime = Math.Min(_playTime + elapsed * Speed, _nextTime + MaxStep);
-		return _playTime >= _nextTime;
+		var starts = _playTime >= _nextTime;
+		_isLate = starts && _playTime - _nextTime > LateBy;
+		return starts;
+	}
+
+	// While it plays faster than the game draws the frames, as it seeks, at PositiveInfinity or with its frames late, a
+	// frame every ShownInterval, and the one a seek ends with; the others draw nothing, and play the same
+	// (IGameExtension.ShowsFrame). Every frame otherwise.
+	public bool? ShowsFrame(Nspw game)
+	{
+		var isFast = IsSeeking || double.IsPositiveInfinity(Speed) || _isLate;
+		if (!HoldsInput || !isFast || _seekTarget is { } target && Frame + 1 == target)
+		{
+			_lastShown = null;
+			return null;
+		}
+
+		if (_lastShown is { } last && game.Now - last < ShownInterval)
+			return false;
+
+		_lastShown = game.Now;
+		return true;
 	}
 
 	// Whether the frame that starts holds the battle, as it did.

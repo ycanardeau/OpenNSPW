@@ -296,20 +296,20 @@ public sealed class SteadySpeedTests
 		{
 			Speed = double.PositiveInfinity,
 		};
+		var played = new ReplayFrames(player);
 		using var replayed = new SingleplayerRun(
 			3,
 			game =>
 			{
 				game.Extensions.Add(player);
 				game.Extensions.Add(new SteadySpeed());
+				game.Extensions.Add(played);
 			}
 		);
-		replayed.Frames(3);
-		var before = replayed.Game.GameSpeed;
-		replayed.Frames(10);
+		played.PlayTo(replayed);
 
-		Assert.Equal(1, before);
-		Assert.Equal(4, replayed.Game.GameSpeed);
+		Assert.Equal(1, played.ByFrame[3].Speed);
+		Assert.Equal(4, played.ByFrame[13].Speed);
 		Assert.Null(player.Divergence);
 		player.Dispose();
 	}
