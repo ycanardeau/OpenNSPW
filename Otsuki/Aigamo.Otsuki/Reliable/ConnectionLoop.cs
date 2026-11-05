@@ -28,6 +28,11 @@ internal abstract record ConnectionLoopMessage
 	public sealed record ShutDown : ConnectionLoopMessage;
 
 	/// <summary>
+	/// The nearest deadline of the loop's timers has come.
+	/// </summary>
+	public sealed record TimersDue : ConnectionLoopMessage;
+
+	/// <summary>
 	/// Sends one message to several connections of the loop, as a broadcast does: one post per loop, not one per
 	/// connection. <paramref name="SendIds"/> are the connections' send ids, each 0 for no completion report.
 	/// </summary>
@@ -66,6 +71,11 @@ internal sealed class ConnectionLoop : Actor<ConnectionLoopItem>
 	private bool _isDone;
 	private PacketSigning _signing;
 
+	/// <summary>
+	/// The timers of the loop's connections.
+	/// </summary>
+	public LoopTimers Timers { get; }
+
 	public ConnectionLoop(
 		IDatagramTransport transport,
 		TimeProvider timeProvider,
@@ -79,6 +89,7 @@ internal sealed class ConnectionLoop : Actor<ConnectionLoopItem>
 		_profile = profile;
 		_observer = observer;
 		_onDone = onDone;
+		Timers = new LoopTimers(timeProvider, () => Post(new ConnectionLoopMessage.TimersDue()));
 		Start();
 	}
 
@@ -95,6 +106,7 @@ internal sealed class ConnectionLoop : Actor<ConnectionLoopItem>
 			return;
 
 		_isDone = true;
+		Timers.Dispose();
 		Stop();
 		_onDone();
 	}
@@ -209,6 +221,11 @@ internal sealed class ConnectionLoop : Actor<ConnectionLoopItem>
 				return Unit.Default;
 			},
 			ShutDown: _ => HandleShutDown(),
+			TimersDue: _ =>
+			{
+				Timers.FireDue();
+				return Unit.Default;
+			},
 			SendToMany: m =>
 			{
 				for (var i = 0; i < m.Connections.Length; i++)
