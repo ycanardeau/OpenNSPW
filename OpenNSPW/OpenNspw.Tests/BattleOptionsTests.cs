@@ -19,41 +19,47 @@ public sealed class BattleOptionsTests
 		public void FrameEnded(Nspw game) => ByTick[game.Tick] = ReplayFormat.HashBattle(game);
 	}
 
-	// Shows every other frame of the battle after the first 10, and skips the effects of those it does not show: from the
-	// drawing to the check of the result, there are none, and then they are as they were, as if the effect loops of
-	// UpdateLowerEffects and UpdateUpperEffects had not run.
-	private sealed class SkipsEffectsNotShown : IGameExtension
+	// Shows every other frame of the battle after the first 10, and counts the frames whose drawing drew random numbers,
+	// from rand or from SharedRandom, by whether they were shown.
+	private sealed class EveryOtherFrame : IGameExtension
 	{
 		private int _frames;
-		private Array1024<Effect>? _effects;
+		private (int Count, short Index)? _beforeDrawing;
 
-		// The frames that skipped an effect.
-		public int Skipped { get; private set; }
+		public int ShownDrawingFromRand { get; private set; }
+
+		public int ShownDrawingFromTable { get; private set; }
+
+		public int NotShownDrawingFromRand { get; private set; }
+
+		public int NotShownDrawingFromTable { get; private set; }
 
 		public bool? ShowsFrame(Nspw game) => _frames++ < 10 || _frames % 2 == 0;
 
-		public void Drawing(Nspw game)
-		{
-			if (!game.Renderer.DrawsNothing)
-				return;
+		public void Drawing(Nspw game) =>
+			_beforeDrawing = (game.RandomCount, game.SharedRandomIndex);
 
-			_effects = game.Effects;
-			if (
-				((ReadOnlySpan<Effect>)game.Effects)
-					.ToArray()
-					.Any(effect => effect.Layer != EffectLayer.None)
-			)
-				Skipped++;
-			game.Effects = default;
-		}
-
+		// The first check of the result after the drawing.
 		public void ResultChecking(Nspw game)
 		{
-			if (_effects is not { } effects)
+			if (_beforeDrawing is not var (count, index))
 				return;
 
-			game.Effects = effects;
-			_effects = null;
+			_beforeDrawing = null;
+			var (fromRand, fromTable) = (
+				game.RandomCount != count,
+				game.SharedRandomIndex != index
+			);
+			if (game.Renderer.DrawsNothing)
+			{
+				NotShownDrawingFromRand += fromRand ? 1 : 0;
+				NotShownDrawingFromTable += fromTable ? 1 : 0;
+			}
+			else
+			{
+				ShownDrawingFromRand += fromRand ? 1 : 0;
+				ShownDrawingFromTable += fromTable ? 1 : 0;
+			}
 		}
 	}
 
@@ -106,31 +112,33 @@ public sealed class BattleOptionsTests
 		);
 	}
 
-	// With SharedEffectRandom, a frame that is not shown can skip the effects: the battle draws no random number for them,
-	// and is the same.
+	// With SharedEffectRandom, a frame that is not shown skips the effects (Renderer.SkipsEffects), which draw from
+	// SharedRandom in a frame shown: the battle is the same.
 	[Fact]
-	public void WithSharedEffectRandomAFrameNotShownCanSkipTheEffects()
+	public void WithSharedEffectRandomAFrameNotShownSkipsTheEffects()
 	{
 		var shown = Play(SharedEffectRandom);
 
-		var skips = new SkipsEffectsNotShown();
-		var skipped = Play(SharedEffectRandom, skips);
+		var everyOther = new EveryOtherFrame();
+		var notAllShown = Play(SharedEffectRandom, everyOther);
 
-		Assert.True(skips.Skipped > 0);
-		AssertSameBattle(shown, skipped);
+		Assert.True(everyOther.ShownDrawingFromTable > 0);
+		Assert.Equal(0, everyOther.NotShownDrawingFromTable);
+		Assert.Equal(0, everyOther.NotShownDrawingFromRand + everyOther.ShownDrawingFromRand);
+		AssertSameBattle(shown, notAllShown);
 	}
 
-	// Without it, as 1.22 plays, skipping the effects plays another battle: they draw from rand, as the battle does.
+	// Without it, as 1.22 plays, a frame that is not shown runs the effects, which draw from rand, as the battle does: the
+	// battle is the same.
 	[Fact]
-	public void WithoutItSkippingTheEffectsPlaysAnotherBattle()
+	public void WithoutItAFrameNotShownRunsTheEffects()
 	{
 		var shown = Play(BattleOptions.None);
 
-		var skips = new SkipsEffectsNotShown();
-		var skipped = Play(BattleOptions.None, skips);
+		var everyOther = new EveryOtherFrame();
+		var notAllShown = Play(BattleOptions.None, everyOther);
 
-		Assert.True(skips.Skipped > 0);
-		var common = shown.ByTick.Keys.Intersect(skipped.ByTick.Keys).ToList();
-		Assert.Contains(common, tick => shown.ByTick[tick] != skipped.ByTick[tick]);
+		Assert.True(everyOther.NotShownDrawingFromRand > 0);
+		AssertSameBattle(shown, notAllShown);
 	}
 }
