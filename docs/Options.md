@@ -9,6 +9,15 @@ The game holds the options it plays by in `Nspw.Options`, which the host sets be
 | Changes the battle's rules | `InitializeGame` plays by 1.22's rules changed by the options (`BattleOptions.Apply`), as a `with` on `BattleRules.Nspw122`: the battle's code reads the rules, and does not know the options | `SharedEffectRandom` |
 | Changes when the frames run, not the battle | The host adds an extension for it ([Extensions.md](Extensions.md)); the record says only whether it does | `SteadySpeed` |
 
+## Rule or option
+| What | Where | Example |
+| --- | --- | --- |
+| What 1.22 and NSPW NET do where they differ, read from their code | A rule of `BattleRules`, with the address it was read at | `DeckPlacesDrawFromRand`: the place of a plane landed on deck, which 1.22 draws from `rand` (`0x402CA3`) and NSPW NET from its table. It is a rule of its own, apart from `EffectsDrawFromRand`, so that an option can draw the effects from the table and leave the place to `rand` |
+| A choice that neither original has, which changes the battle | An option that changes 1.22's rules in `Apply`, by the rules there are: it adds none, as the rules hold only what the originals do | `SharedEffectRandom`, which plays by NSPW NET's `EffectsDrawFromRand` |
+| A choice that changes when the frames run, not the battle | An option that the host plays by with an extension | `SteadySpeed` |
+| A fix of a bug of 1.22 that 1.22 plays through, a rule marked `BUG(1.22)` | An option that plays by NSPW NET's value of the rule | None yet; `TorpedoPlanesCheckLandAlongUnsetHeading` would be one |
+| A fix of a bug of 1.22 that 1.22 cannot play past: a crash, a write out of its memory | Neither: the port always fixes it, and marks the code `BUG(1.22)`. An option off would have nothing of 1.22's to play | `PlanComputerRoute` ends a route at point 62 of its path, where 1.22's `set_cpu_route` writes on through the units after the ship and crashes ([KnownIssues.md](KnownIssues.md#single-player-games-crashed-on-a-route-that-never-ends)) |
+
 ## SharedEffectRandom
 1.22's effects, the smoke, the fires, the wakes and their animations, draw their random numbers from `rand`, as the battle does (`EffectsDrawFromRand`), and its drawing draws some for the effects in sight: what the player sees, and whether a frame is drawn at all, moves the battle's random numbers. A frame that is not shown ([SteadySpeed.md](SteadySpeed.md)) must still run the drawing code, or the battle would be another.
 
