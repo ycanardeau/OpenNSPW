@@ -162,6 +162,9 @@ public sealed record BattleRules(
 	bool TickOrderOf122,
 	// Effects: whether they draw from rand, as everything else, rather than from SharedRandom.
 	bool EffectsDrawFromRand,
+	// Whether the place of a plane landed on deck draws from rand, as the battle does, rather than from SharedRandom, as
+	// NSPW NET's effects do (TryLandOnCarrier).
+	bool DeckPlacesDrawFromRand,
 	// Whether the marks, the leader's flag, the damaged ships' smoke and fire, the damaged submarines' bubbles, and the
 	// fires' sprites, trails and wakes are made on the tick that is drawn only (IsEffectTick).
 	bool EffectsOnDrawnTickOnly,
@@ -242,6 +245,7 @@ public sealed record BattleRules(
 		FullCarriersRefusePlanes: true,
 		TickOrderOf122: false,
 		EffectsDrawFromRand: false,
+		DeckPlacesDrawFromRand: false,
 		EffectsOnDrawnTickOnly: false,
 		DamageEffectsTestBeforeDrawing: false,
 		MarksSecondTypes: true,
@@ -311,7 +315,8 @@ public sealed record BattleRules(
 		ApproachesOnDrawnTick: true, // 0x401AB4, 0x417555
 		FullCarriersRefusePlanes: false, // 0x41F060
 		TickOrderOf122: true, // 0x401009 to 0x4010A3
-		EffectsDrawFromRand: true, // 0x419190, 0x402CA3
+		EffectsDrawFromRand: true, // 0x419190
+		DeckPlacesDrawFromRand: true, // 0x402CA3
 		EffectsOnDrawnTickOnly: true, // 0x41AF02 to 0x41C18D, 0x419099 to 0x41A774
 		DamageEffectsTestBeforeDrawing: true, // 0x41B4CC, 0x41B659, 0x41B7AF, 0x41B8EC, 0x41C18D
 		MarksSecondTypes: false, // 0x41B991

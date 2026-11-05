@@ -1126,7 +1126,7 @@ dbg[5]=rnd(100);
 				unit.Position = new WorldPosition(
 					Renderer.Sprites[SpriteId.JapanUnitInfo].Position.X
 						+ Renderer.Sprites[SpriteId.JapanUnitInfo].Size.Width / 2
-						+ (EffectRandom(16) - 7),
+						+ ((Rules.DeckPlacesDrawFromRand ? Random(16) : SharedRandom(16)) - 7),
 					Renderer.Sprites[SpriteId.JapanUnitInfo].Position.Y
 						+ Renderer.Sprites[SpriteId.JapanUnitInfo].Size.Height
 						+ 40
