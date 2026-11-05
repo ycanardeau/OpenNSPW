@@ -192,11 +192,15 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 		);
 	}
 
-	// The controls posted since the last frame.
+	// The controls posted since the last frame, and the progress they change. The game asks whether a frame starts each
+	// time round its message loop, millions of times a second (StartsFrame), so that it publishes nothing when none came:
+	// a new progress each time made about 130 MB of garbage a second.
 	private void TakeControls()
 	{
+		var isTaken = false;
 		while (_controls.TryReceive(out var control))
 		{
+			isTaken = true;
 			switch (control)
 			{
 				case Control.ChangeSpeed change:
@@ -217,7 +221,8 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 			}
 		}
 
-		Publish();
+		if (isTaken)
+			Publish();
 	}
 
 	// The records of this frame that `matches`, with `state`, in order, which are taken out: in place, and none without

@@ -1,5 +1,6 @@
 using Aigamo.Otsuki.Actors;
 using OpenNspw.DirectPlay;
+using OpenNspw.Replay;
 using OpenNspw.Tests.Lockstep;
 using Xunit;
 
@@ -176,6 +177,40 @@ public sealed class AllocationTests
 		});
 
 		((IDirectPlay8Peer)peer!).Close(0);
+		Assert.Equal(0, bytes);
+	}
+
+	// A replay's player, which the game asks whether a frame starts each time round its message loop (StartsFrame),
+	// allocates nothing there while no control comes: it once published a new progress each time, about 130 MB a second.
+	[Fact]
+	public void AReplaysPlayerMakesNoGarbageBetweenFrames()
+	{
+		var stream = new MemoryStream();
+		var recorder = new ReplayRecorder(_ => stream);
+		Nspw game;
+		using (
+			var run = new SingleplayerRun(
+				1,
+				setUp => setUp.Extensions.Add(recorder),
+				recordsOutput: false
+			)
+		)
+		{
+			run.Frames(10);
+			game = run.Game;
+		}
+		recorder.Dispose();
+		using var player = new ReplayPlayer(new MemoryStream(stream.ToArray()))
+		{
+			IsInitiallyPaused = true,
+		};
+
+		var bytes = SteadyBytes(() =>
+		{
+			for (var i = 0; i < 10_000; i++)
+				player.StartsFrame(game);
+		});
+
 		Assert.Equal(0, bytes);
 	}
 
