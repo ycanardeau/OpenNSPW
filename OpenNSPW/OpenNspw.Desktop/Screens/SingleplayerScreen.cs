@@ -18,7 +18,7 @@ internal sealed class SingleplayerScreen(NspwGame game) : Screen(game)
 			Game.Fonts,
 			SingleplayerTexts.Of(ScenarioSelection.Sets),
 			Game.LastScenario,
-			Game.IsSpeedSteady
+			Game.Options
 		);
 		form.ScenarioSelected += (_, scenario) =>
 		{
@@ -26,10 +26,10 @@ internal sealed class SingleplayerScreen(NspwGame game) : Screen(game)
 			Game.ShowScreen(new GameScreen(Game, () => Game.StartSession(scenario)));
 		};
 		form.Canceled += (_, _) => Game.ShowScreen(new MainMenuScreen(Game));
-		form.SteadySpeedChosen += (_, isSpeedSteady) =>
+		form.OptionsChosen += (_, options) =>
 		{
-			Game.IsSpeedSteady = isSpeedSteady;
-			UISettings.SaveIsSpeedSteady(isSpeedSteady);
+			Game.Options = options;
+			UISettings.SaveOptions(options);
 		};
 		WindowManager.Root.Controls.Add(form);
 		form.Show();

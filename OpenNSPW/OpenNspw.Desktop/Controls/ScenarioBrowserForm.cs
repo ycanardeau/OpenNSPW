@@ -19,13 +19,14 @@ internal sealed class ScenarioBrowserForm : Form
 	private readonly ScenarioDetails _details;
 	private int _page;
 	private int _selected;
+	private BattleOptions _options;
 
 	public event EventHandler<int>? ScenarioSelected;
 
 	public event EventHandler? Canceled;
 
-	// The switch of steady speed turned over (docs/SteadySpeed.md), to what it is now.
-	public event EventHandler<bool>? SteadySpeedChosen;
+	// A switch of the options turned over (docs/Options.md): the options as they are now.
+	public event EventHandler<BattleOptions>? OptionsChosen;
 
 	// The selected scenario's number.
 	public int SelectedScenario => _rows[_page][_selected].Scenario.Number;
@@ -74,6 +75,30 @@ internal sealed class ScenarioBrowserForm : Form
 		return row;
 	}
 
+	// A switch of an option, at `y`, on as `isOn` says, which turns it over in the options by `turn`.
+	private void CreateSwitch(
+		int y,
+		string text,
+		string description,
+		bool isOn,
+		Func<BattleOptions, bool, BattleOptions> turn
+	)
+	{
+		var check = new CheckButton(_fonts)
+		{
+			Bounds = new DrawingRectangle(696, y, 280, 44),
+			Text = text,
+			Description = description,
+			IsChecked = isOn,
+		};
+		check.CheckedChanged += (_, _) =>
+		{
+			_options = turn(_options, check.IsChecked);
+			OptionsChosen?.Invoke(this, _options);
+		};
+		Controls.Add(check);
+	}
+
 	private TabButton CreateTab(ScenarioSet set, int page)
 	{
 		var tab = new TabButton(_fonts)
@@ -86,17 +111,18 @@ internal sealed class ScenarioBrowserForm : Form
 		return tab;
 	}
 
-	// initialScenario: the scenario to select first, such as the one played last. isSpeedSteady: whether the switch of
-	// steady speed is on.
+	// initialScenario: the scenario to select first, such as the one played last. options: the options that the switches
+	// show.
 	public ScenarioBrowserForm(
 		UIFonts fonts,
 		IReadOnlyList<ScenarioSet> sets,
 		int? initialScenario,
-		bool isSpeedSteady
+		BattleOptions options
 	)
 	{
 		_fonts = fonts;
 		_sets = sets;
+		_options = options;
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		BackColor = DrawingColor.Transparent;
 		KeyPreview = true;
@@ -131,16 +157,20 @@ internal sealed class ScenarioBrowserForm : Form
 		start.Click += (_, _) => Start();
 		Controls.Add(start);
 
-		var steadySpeed = new CheckButton(fonts)
-		{
-			Bounds = new DrawingRectangle(696, 52, 280, 44),
-			Text = Texts.SteadySpeed,
-			Description = Texts.SteadySpeedDescription,
-			IsChecked = isSpeedSteady,
-		};
-		steadySpeed.CheckedChanged += (_, _) =>
-			SteadySpeedChosen?.Invoke(this, steadySpeed.IsChecked);
-		Controls.Add(steadySpeed);
+		CreateSwitch(
+			52,
+			Texts.SteadySpeed,
+			Texts.SteadySpeedDescription,
+			options.SteadySpeed,
+			static (options, isOn) => options with { SteadySpeed = isOn }
+		);
+		CreateSwitch(
+			100,
+			Texts.SharedEffectRandom,
+			Texts.SharedEffectRandomDescription,
+			options.SharedEffectRandom,
+			static (options, isOn) => options with { SharedEffectRandom = isOn }
+		);
 
 		var initial = sets.SelectMany(
 				(set, page) =>

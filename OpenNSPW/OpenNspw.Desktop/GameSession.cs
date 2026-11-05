@@ -196,8 +196,8 @@ internal sealed class GameSession : IDisposable
 	// follows. replay: a replay that the game plays, with what its viewer sees (view), in a game that writes in
 	// scratchDirectory, which is deleted as the game ends. Each battle of a game that plays neither is recorded in the
 	// user's replays, and so is a single-player replay's once it is taken over. The session disposes the trace and the
-	// replay. isSpeedSteady: whether a single-player battle that follows no trace plays at a steady speed
-	// (docs/SteadySpeed.md), a replay's once it is taken over.
+	// replay. options: the options of a single-player battle that follows no trace (docs/Options.md); a replay's are
+	// those it was recorded with, and it plays at a steady speed once it is taken over if it was recorded at one.
 	public GameSession(
 		GameFileLayers files,
 		TextRasterizer text,
@@ -206,7 +206,7 @@ internal sealed class GameSession : IDisposable
 		ReplayPlayer? replay = null,
 		ReplayView? view = null,
 		string? scratchDirectory = null,
-		bool isSpeedSteady = false
+		BattleOptions? options = null
 	)
 	{
 		_platform = new DesktopPlatform(files, text);
@@ -225,8 +225,15 @@ internal sealed class GameSession : IDisposable
 		Trace = trace;
 		if (trace is not null)
 			Game.Extensions.Add(trace);
+		if (singleplayer is not null && trace is null && options is not null)
+			Game.Options = options;
 		// Before the recorder, which records the frames' ticks that it sets.
-		var steadySpeed = isSpeedSteady && singleplayer is not null && trace is null ? new SteadySpeed() : null;
+		var steadySpeed =
+			singleplayer is not null
+			&& trace is null
+			&& (replay?.Start.Options ?? Game.Options).SteadySpeed
+				? new SteadySpeed()
+				: null;
 		Replay = replay;
 		_scratchDirectory = scratchDirectory;
 		if (replay is not null)

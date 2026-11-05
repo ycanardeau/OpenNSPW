@@ -4,11 +4,16 @@ using System.Text.Json.Serialization;
 
 namespace OpenNspw.Desktop;
 
-// What the UI remembers between runs, beside the game's own settings (DesktopPlatform): the language chosen, and whether
-// single-player battles play at a steady speed (docs/SteadySpeed.md).
+// What the UI remembers between runs, beside the game's own settings (DesktopPlatform): the language chosen, and the
+// options of single-player battles (docs/Options.md).
 internal static partial class UISettings
 {
-	private sealed record Saved(Language? Language, bool? IsSpeedSteady = null);
+	// IsSpeedSteady: BattleOptions.SteadySpeed, by the name it was first saved under.
+	private sealed record Saved(
+		Language? Language,
+		bool? IsSpeedSteady = null,
+		bool? SharedEffectRandom = null
+	);
 
 	// How Saved is read and written, generated, so that trimming keeps what it needs: the language by its name.
 	[JsonSourceGenerationOptions(UseStringEnumConverter = true)]
@@ -40,7 +45,10 @@ internal static partial class UISettings
 		try
 		{
 			Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-			File.WriteAllText(FilePath, JsonSerializer.Serialize(change(Load()), SavedJson.Default.Saved));
+			File.WriteAllText(
+				FilePath,
+				JsonSerializer.Serialize(change(Load()), SavedJson.Default.Saved)
+			);
 		}
 		catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
 	}
@@ -61,14 +69,24 @@ internal static partial class UISettings
 		Save(saved => saved with { Language = language });
 	}
 
-	// Whether single-player battles play at a steady speed, as chosen last: they do, unless the player chose otherwise.
-	public static bool LoadIsSpeedSteady()
+	// The options of single-player battles, as chosen last: off, but steady speed, unless the player chose otherwise.
+	public static BattleOptions LoadOptions()
 	{
-		return Load().IsSpeedSteady ?? true;
+		var saved = Load();
+		return new BattleOptions(
+			SharedEffectRandom: saved.SharedEffectRandom ?? false,
+			SteadySpeed: saved.IsSpeedSteady ?? true
+		);
 	}
 
-	public static void SaveIsSpeedSteady(bool isSpeedSteady)
+	public static void SaveOptions(BattleOptions options)
 	{
-		Save(saved => saved with { IsSpeedSteady = isSpeedSteady });
+		Save(saved =>
+			saved with
+			{
+				IsSpeedSteady = options.SteadySpeed,
+				SharedEffectRandom = options.SharedEffectRandom,
+			}
+		);
 	}
 }

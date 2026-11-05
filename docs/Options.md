@@ -16,3 +16,6 @@ With the option, the effects draw from `SharedRandom`, as NSPW NET's do (`Effect
 
 ## SteadySpeed
 The battle plays the same at every speed ([SteadySpeed.md](SteadySpeed.md)), with the extension `OpenNspw.Pacing.SteadySpeed`, which the host adds.
+
+## In the app
+The single-player scenario browser has a switch for each option, by the scenarios' title: Steady speed, on unless the player turns it off, and Shared effect table, off unless the player turns it on. The app remembers them (`ui.json`). A battle that follows a trace of 1.22 has none; a replay has those it was recorded with, a replay of version 2 none, and plays at a steady speed once it is taken over if it was recorded at one.

@@ -48,6 +48,11 @@ internal static class Texts
 	public static string SteadySpeedDescription =>
 		Pick("The same battle at every speed", "どのスピードでも同じ戦闘になります");
 
+	public static string SharedEffectRandom => Pick("Shared effect table", "エフェクト用乱数表");
+
+	public static string SharedEffectRandomDescription =>
+		Pick("Effects never change the battle", "エフェクトが戦闘に影響しません");
+
 	public static string BrowserHint =>
 		Pick(
 			"↑↓ Scenario    ←→ Set    PgUp PgDn Briefing    Enter Start    Esc Back",
