@@ -45,6 +45,11 @@ internal sealed record Report
 	public long DatagramsOut { get; init; }
 
 	/// <summary>
+	/// The sends the system refused.
+	/// </summary>
+	public long SendErrors { get; init; }
+
+	/// <summary>
 	/// The latency of the messages received, from their send, in microseconds.
 	/// </summary>
 	public long P50 { get; init; }

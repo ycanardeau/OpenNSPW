@@ -72,6 +72,7 @@ internal sealed class ServerRole(
 				MessagesOut = _messagesOut,
 				DatagramsIn = datagramsIn - _lastDatagramsIn,
 				DatagramsOut = datagramsOut - _lastDatagramsOut,
+				SendErrors = _counts.SendErrors.Value,
 				P50 = _latency.Percentile(0.5),
 				P99 = _latency.Percentile(0.99),
 				P999 = _latency.Percentile(0.999),

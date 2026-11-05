@@ -17,6 +17,11 @@ internal sealed class DatagramCounts
 	public Tally BytesSent { get; } = new();
 
 	public Tally BytesReceived { get; } = new();
+
+	/// <summary>
+	/// The sends the system refused (<see cref="UdpDatagramTransport.SendErrors"/>).
+	/// </summary>
+	public Tally SendErrors { get; } = new();
 }
 
 /// <summary>
@@ -44,7 +49,16 @@ internal sealed class CountingTransport(IDatagramTransport inner, DatagramCounts
 	{
 		_counts.Sent.Add(1);
 		_counts.BytesSent.Add(datagram.Length);
-		_inner.Send(remoteEndPoint, datagram);
+		if (_inner is not UdpDatagramTransport udp)
+		{
+			_inner.Send(remoteEndPoint, datagram);
+			return;
+		}
+
+		var errors = udp.SendErrors.Value;
+		udp.Send(remoteEndPoint, datagram);
+		if (udp.SendErrors.Value != errors)
+			_counts.SendErrors.Add(1);
 	}
 
 	public void Dispose() => _inner.Dispose();

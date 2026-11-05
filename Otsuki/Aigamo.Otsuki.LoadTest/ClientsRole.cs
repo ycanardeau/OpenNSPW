@@ -76,10 +76,14 @@ internal sealed class ClientsRole(
 				Clients = _connected,
 				Failed = _failed,
 				Terminated = _terminated,
+				SessionQueue = _loads.Sum(l => l.Client.Queues.Session),
+				LoopQueue = _loads.Select(l => l.Client.Queues.ConnectionLoops.DefaultIfEmpty().Max()).DefaultIfEmpty().Max(),
+				EventQueue = _loads.Sum(l => l.Client.Queues.Events),
 				MessagesIn = _messagesIn,
 				MessagesOut = _messagesOut,
 				DatagramsIn = datagramsIn - _lastDatagramsIn,
 				DatagramsOut = datagramsOut - _lastDatagramsOut,
+				SendErrors = _counts.SendErrors.Value,
 				P50 = _latency.Percentile(0.5),
 				P99 = _latency.Percentile(0.99),
 				P999 = _latency.Percentile(0.999),
@@ -172,6 +176,11 @@ internal sealed class ClientsRole(
 		var nextReport = start + Stopwatch.Frequency;
 		var end = start + (long)(_duration.TotalSeconds * Stopwatch.Frequency);
 		var random = new Random(_id);
+
+		// The clients are looked at about four times between two sends of one, between 2 ms and 20 ms apart.
+		var pause = TimeSpan.FromMilliseconds(
+			Math.Clamp(1000.0 / Math.Max(1, _messagesPerSecond) / 4, 2, 20)
+		);
 		while (true)
 		{
 			var now = Stopwatch.GetTimestamp();
@@ -197,7 +206,7 @@ internal sealed class ClientsRole(
 				Report();
 			}
 
-			Thread.Sleep(2);
+			Thread.Sleep(pause);
 		}
 
 		await Task.WhenAll(_loads.Select(l => l.Client.DisposeAsync().AsTask()));
