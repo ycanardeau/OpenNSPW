@@ -87,17 +87,22 @@ public sealed class AllocationTests
 
 	// What a frame not shown allocates on the game's thread, from its start to the next frame's, which covers its text
 	// written after its end, after a number of frames to warm up: at a steady speed of 300, which runs about 1,700 frames a
-	// second, most of them not shown (docs/SteadySpeed.md).
-	private sealed class FramesNotShown(int warmUp) : IGameExtension
+	// second, most of them not shown (docs/SteadySpeed.md). The least of rounds of `round` frames, as SteadyBytes takes,
+	// since a round may count more while other tests load the machine.
+	private sealed class FramesNotShown(int warmUp, int round) : IGameExtension
 	{
 		private readonly int _warmUp = warmUp;
+		private readonly int _round = round;
 		private long _start;
 		private bool _wasNotShown;
 		private int _seen;
+		private int _framesOfRound;
+		private long _bytesOfRound;
 
 		public int Frames { get; private set; }
 
-		public long Bytes { get; private set; }
+		// The least bytes a frame of a round allocated.
+		public long LeastPerFrame { get; private set; } = long.MaxValue;
 
 		public short FrameStarting(Nspw game, short ticks)
 		{
@@ -105,7 +110,12 @@ public sealed class AllocationTests
 			if (_wasNotShown && _seen++ >= _warmUp)
 			{
 				Frames++;
-				Bytes += now - _start;
+				_bytesOfRound += now - _start;
+				if (++_framesOfRound == _round)
+				{
+					LeastPerFrame = Math.Min(LeastPerFrame, _bytesOfRound / _round);
+					(_framesOfRound, _bytesOfRound) = (0, 0);
+				}
 			}
 
 			_start = now;
@@ -118,14 +128,14 @@ public sealed class AllocationTests
 
 	// The most bytes that a frame not shown may allocate: it draws nothing, but runs as any other, its unit panel's texts
 	// formatted too.
-	private const long NotShownBudget = 800;
+	private const long NotShownBudget = 450;
 
 	// A frame not shown writes and decodes no text, which would make garbage in each of the many: at speed 300 it once made
 	// about 2.6 MB a second, and a full collection every few seconds.
 	[Fact]
 	public void AFrameNotShownMakesLittleGarbage()
 	{
-		var meter = new FramesNotShown(warmUp: 500);
+		var meter = new FramesNotShown(warmUp: 500, round: 200);
 		using var run = new SingleplayerRun(
 			1,
 			game =>
@@ -141,7 +151,7 @@ public sealed class AllocationTests
 		run.Frames(60);
 
 		Assert.True(meter.Frames > 1_000);
-		var perFrame = meter.Bytes / meter.Frames;
+		var perFrame = meter.LeastPerFrame;
 		Assert.True(
 			perFrame <= NotShownBudget,
 			$"A frame not shown allocated {perFrame} bytes, more than the {NotShownBudget} it may."

@@ -130,6 +130,16 @@ public sealed class Gdi(INspwPlatform platform)
 		public uint BkColor { get; set; } = 0xFFFFFF;
 
 		public int BkMode { get; set; } = wingdi.OPAQUE;
+
+		// As a new one, for its surface: a context released is used again (Gdi.CreateSurfaceDC).
+		public void Reset()
+		{
+			Font = default;
+			Bitmap = default;
+			TextColor = 0;
+			BkColor = 0xFFFFFF;
+			BkMode = wingdi.OPAQUE;
+		}
 	}
 
 	// Compares texts by their bytes, a span's too, so that a text is looked up without a copy.
@@ -159,9 +169,16 @@ public sealed class Gdi(INspwPlatform platform)
 	// How many texts Decode keeps before it starts again: the texts with numbers in them keep changing.
 	private const int MaxTexts = 4096;
 
+	// How many surfaces' contexts released are kept to be used again (CreateSurfaceDC).
+	private const int MaxFreeContexts = 8;
+
 	private readonly INspwPlatform _platform = platform;
 	private readonly Dictionary<int, object> _objects = [];
 	private readonly Dictionary<byte[], string> _texts = new(TextComparer.Instance);
+
+	// The surfaces' contexts released (DeleteDC), used again rather than made anew: the game takes a surface's several
+	// times a frame (GetDC), and a frame not shown many times a second.
+	private readonly List<DeviceContext> _freeContexts = [];
 	private int _next = 1;
 
 	// A text of the game, in Shift_JIS, as a string: decoded once, as the game writes most of its texts again every frame.
@@ -196,9 +213,27 @@ public sealed class Gdi(INspwPlatform platform)
 		return _objects.GetValueOrDefault(handle) as T;
 	}
 
+	// A context released for the surface, as a new one, or a new one.
+	private DeviceContext TakeSurfaceContext(DirectDrawSurface7 surface)
+	{
+		for (var i = 0; i < _freeContexts.Count; i++)
+		{
+			var context = _freeContexts[i];
+			if (context.Surface != surface)
+				continue;
+
+			_freeContexts[i] = _freeContexts[^1];
+			_freeContexts.RemoveAt(_freeContexts.Count - 1);
+			context.Reset();
+			return context;
+		}
+
+		return new DeviceContext(surface);
+	}
+
 	public HDC CreateSurfaceDC(DirectDrawSurface7 surface)
 	{
-		return new HDC(Add(new DeviceContext(surface)));
+		return new HDC(Add(TakeSurfaceContext(surface)));
 	}
 
 	public HDC CreateCompatibleDC()
@@ -208,7 +243,15 @@ public sealed class Gdi(INspwPlatform platform)
 
 	public int DeleteDC(HDC hdc)
 	{
-		return _objects.Remove(hdc.Value) ? 1 : 0;
+		if (!_objects.Remove(hdc.Value, out var removed))
+			return 0;
+
+		if (
+			removed is DeviceContext { Surface: not null } context
+			&& _freeContexts.Count < MaxFreeContexts
+		)
+			_freeContexts.Add(context);
+		return 1;
 	}
 
 	public HGDIOBJ CreateFont(int height, string faceName)

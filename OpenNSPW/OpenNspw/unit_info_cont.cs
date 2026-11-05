@@ -1698,7 +1698,13 @@ public unsafe partial class Nspw
 		}
 
 		// ゲームデータ
-		if (!IsEditingMap && IDirectDrawSurface_GetDC(Renderer.lpDDSBack, &hdc) == DD_OK)
+		// A frame that is not shown leaves out the speed and the time, which only draw (Renderer.DrawsNothing), and whose
+		// numbers wsprintf takes boxed.
+		if (
+			!IsEditingMap
+			&& !Renderer.DrawsNothing
+			&& IDirectDrawSurface_GetDC(Renderer.lpDDSBack, &hdc) == DD_OK
+		)
 		{
 			SetBkMode(hdc, TRANSPARENT);
 			SelectObject(hdc, Renderer.GameFont1);
