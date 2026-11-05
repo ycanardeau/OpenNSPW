@@ -11,9 +11,9 @@ public abstract class Actor<TMessage>
 {
 	private readonly Mailbox<TMessage> _mailbox;
 
-	protected Actor(int capacity = int.MaxValue)
+	protected Actor(int capacity = int.MaxValue, MailboxScheduler? scheduler = null)
 	{
-		_mailbox = new Mailbox<TMessage>(Receive, OnError, capacity);
+		_mailbox = new Mailbox<TMessage>(Receive, OnError, capacity, scheduler);
 	}
 
 	/// <summary>
