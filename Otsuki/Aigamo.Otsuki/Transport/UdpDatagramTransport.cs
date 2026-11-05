@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Net;
 using System.Net.Sockets;
+using Aigamo.Otsuki.Actors;
 
 namespace Aigamo.Otsuki.Transport;
 
@@ -23,6 +24,12 @@ public sealed class UdpDatagramTransport : IDatagramTransport
 
 	private readonly ImmutableArray<Socket> _sockets;
 	private readonly CancellationTokenSource _cancellation = new();
+
+	/// <summary>
+	/// The sends that the system refused, such as for want of buffers, and that were dropped as a lost datagram is: a
+	/// count for diagnostics.
+	/// </summary>
+	public Tally SendErrors { get; } = new();
 
 	// SOL_SOCKET and SO_REUSEPORT, which .NET does not name, where the system lets sockets share a port.
 	private static (int Level, int Name)? ReusePort =>
@@ -129,6 +136,7 @@ public sealed class UdpDatagramTransport : IDatagramTransport
 		catch (Exception e) when (e is SocketException or ObjectDisposedException)
 		{
 			// Datagrams are best effort; the reliable protocol retries.
+			SendErrors.Add(1);
 		}
 	}
 
