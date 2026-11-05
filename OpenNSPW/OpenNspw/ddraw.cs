@@ -295,6 +295,15 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 	private ushort* _pixels;
 	private DDCOLORKEY? _sourceColorKey;
 
+	public int Width { get; }
+
+	public int Height { get; }
+
+	public bool IsPrimary { get; }
+
+	// The native memory of the pixels, which the collector is told of, as it sees none of it.
+	private long Bytes => Math.Max((long)Width * Height * sizeof(ushort), 1);
+
 	internal DirectDrawSurface7(DirectDraw7 directDraw, int width, int height, bool primary)
 	{
 		_directDraw = directDraw;
@@ -302,13 +311,16 @@ public sealed unsafe class DirectDrawSurface7 : IDirectDrawSurface7
 		Height = height;
 		IsPrimary = primary;
 		_pixels = (ushort*)NativeMemory.AllocZeroed((nuint)(width * height), sizeof(ushort));
+		GC.AddMemoryPressure(Bytes);
 	}
 
-	public int Width { get; }
-
-	public int Height { get; }
-
-	public bool IsPrimary { get; }
+	// The pixels go with the surface, as a game that stops without releasing its surfaces would otherwise leave them
+	// behind.
+	~DirectDrawSurface7()
+	{
+		NativeMemory.Free(_pixels);
+		GC.RemoveMemoryPressure(Bytes);
+	}
 
 	public IDirectDrawSurface7? BackBuffer { get; internal set; }
 
