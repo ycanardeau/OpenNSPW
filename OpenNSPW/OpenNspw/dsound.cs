@@ -103,30 +103,18 @@ public static class dsound
 }
 
 // A buffer's data, shared by the buffer and its duplicates.
-internal sealed unsafe class SoundData
+internal sealed unsafe class SoundData(WAVEFORMATEX format, uint size)
 {
-	public WAVEFORMATEX Format { get; }
+	public WAVEFORMATEX Format { get; } = format;
 
-	public uint Size { get; }
+	public uint Size { get; } = size;
 
-	public byte* Memory { get; }
-
-	// The native memory of the data, which the collector is told of, as it sees none of it.
-	private long Bytes => Math.Max(Size, 1);
-
-	public SoundData(WAVEFORMATEX format, uint size)
-	{
-		Format = format;
-		Size = size;
-		Memory = (byte*)NativeMemory.AllocZeroed(size);
-		GC.AddMemoryPressure(Bytes);
-	}
+	public byte* Memory { get; } = (byte*)NativeAllocations.Alloc(size);
 
 	// The data goes with the last buffer that plays it, as nothing releases it.
 	~SoundData()
 	{
-		NativeMemory.Free(Memory);
-		GC.RemoveMemoryPressure(Bytes);
+		NativeAllocations.Free(Memory, Size);
 	}
 }
 
