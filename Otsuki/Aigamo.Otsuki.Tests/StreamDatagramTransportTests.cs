@@ -36,9 +36,7 @@ public class StreamDatagramTransportTests : IDisposable
 		return (transport, received);
 	}
 
-	private static async Task<(EndPoint, byte[])> ReceiveAsync(
-		Mailbox<(EndPoint, byte[])> received
-	)
+	private static async Task<(EndPoint, byte[])> ReceiveAsync(Mailbox<(EndPoint, byte[])> received)
 	{
 		using var timeout = new CancellationTokenSource(Timeout);
 		return await received.ReceiveAsync(timeout.Token);

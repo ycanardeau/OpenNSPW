@@ -16,7 +16,9 @@ internal sealed record ReplayViewState(bool FollowsPlayer, bool SeesAll, WorldPo
 // change is posted as a new state (State), which the game takes as it copies its state (GameSnapshot).
 internal sealed class ReplayView
 {
-	private readonly Latest<ReplayViewState> _state = new(new ReplayViewState(true, false, default));
+	private readonly Latest<ReplayViewState> _state = new(
+		new ReplayViewState(true, false, default)
+	);
 	private WorldPosition _camera;
 	private bool _followsPlayer = true;
 	private bool _seesAll;

@@ -761,7 +761,10 @@ public class PeerTests : IAsyncLifetime
 		var goodbyes = new HashSet<IPAddress>();
 		_network.Observe = (from, _, datagram) =>
 		{
-			if (ReliableMessageSerializer.Default.Deserialize(datagram) is ReliableMessage.HardDisconnect)
+			if (
+				ReliableMessageSerializer.Default.Deserialize(datagram)
+				is ReliableMessage.HardDisconnect
+			)
 				goodbyes.Add(from.Address);
 		};
 
@@ -772,7 +775,8 @@ public class PeerTests : IAsyncLifetime
 			_network.Drop = (from, to, datagram) =>
 				from.Address.Equals(host.Address)
 				&& to.Address.Equals(address)
-				&& ReliableMessageSerializer.Default.Deserialize(datagram) is ReliableMessage.DataFrame;
+				&& ReliableMessageSerializer.Default.Deserialize(datagram)
+					is ReliableMessage.DataFrame;
 			await joiner.Peer.ConnectAsync(Application(), host.Peer.LocalEndPoint!);
 			(await joiner.Log.WaitForAsync<PeerEvent.ConnectCompleted>())
 				.Result.Should()
@@ -781,7 +785,10 @@ public class PeerTests : IAsyncLifetime
 			var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(2);
 			while (!_network.Ask(() => goodbyes.Contains(address)) && DateTime.UtcNow < deadline)
 				await Task.Delay(10);
-			_network.Ask(() => goodbyes.Contains(address)).Should().BeTrue($"attempt {i} said goodbye");
+			_network
+				.Ask(() => goodbyes.Contains(address))
+				.Should()
+				.BeTrue($"attempt {i} said goodbye");
 		}
 	}
 

@@ -42,7 +42,10 @@ public class ReliableEndpointTests
 		);
 		endpoint.Post(new ReliableEndpointMessage.SetSigning(PacketSigning.Fast));
 
-		var connection = endpoint.Connect(new IPEndPoint(IPAddress.Parse("10.4.0.2"), 2302), signing);
+		var connection = endpoint.Connect(
+			new IPEndPoint(IPAddress.Parse("10.4.0.2"), 2302),
+			signing
+		);
 
 		connection.OfferedSigning.Should().Be(signing);
 		endpoint.Post(new ReliableEndpointMessage.ShutDown());

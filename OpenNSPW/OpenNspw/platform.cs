@@ -439,7 +439,10 @@ public partial class Nspw
 	public Renderer Renderer { get; }
 
 	// mailbox: the game's (GameMessage), when the platform posts to it too; a new one by default.
-	public Nspw(INspwPlatform? platform = null, Aigamo.Otsuki.Actors.Mailbox<GameMessage>? mailbox = null)
+	public Nspw(
+		INspwPlatform? platform = null,
+		Aigamo.Otsuki.Actors.Mailbox<GameMessage>? mailbox = null
+	)
 	{
 		_platform = platform ?? NullPlatform.Instance;
 		Mailbox = mailbox ?? new();

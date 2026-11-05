@@ -1467,7 +1467,9 @@ public class SingleplayerTests
 		var frames = Frames();
 		Assert.True(frames >= 200, $"The game showed {frames} frames.");
 		Assert.Equal(GameMode.Battle, player.Ask((g, _) => (GameMode?)g.Mode, null));
-		Assert.Empty(player.Ask((_, platform) => platform.MessageBoxes.ToList(), ["not answering"]));
+		Assert.Empty(
+			player.Ask((_, platform) => platform.MessageBoxes.ToList(), ["not answering"])
+		);
 		TitleScreenTests.WritePng(
 			Path.Combine(AppContext.BaseDirectory, "singleplayer_battle.png"),
 			player.Ask((_, platform) => platform.LastFrame(), []),

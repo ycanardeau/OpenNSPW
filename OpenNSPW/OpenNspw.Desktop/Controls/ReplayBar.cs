@@ -153,9 +153,7 @@ internal sealed class ReplayBar : Control
 		_sides.Text = Texts.BothSides;
 		_sides.IsPrimary = _watch.View.SeesAll;
 		_timeline.Played =
-			_watch.Summary.Frames == 0
-				? 0
-				: _player.Progress.Frame / (double)_watch.Summary.Frames;
+			_watch.Summary.Frames == 0 ? 0 : _player.Progress.Frame / (double)_watch.Summary.Frames;
 	}
 
 	public ReplayBar(UIFonts fonts, ReplayWatch watch, ReplayPlayer player)

@@ -56,7 +56,9 @@ internal sealed class NamedNetwork : Actor<NamedNetworkMessage>
 	public NamedTransport Bind(NamedEndPoint endPoint)
 	{
 		var transport = new NamedTransport(this, endPoint);
-		var bound = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+		var bound = new TaskCompletionSource<bool>(
+			TaskCreationOptions.RunContinuationsAsynchronously
+		);
 		Post(new NamedNetworkMessage.Bind(transport, bound));
 		if (!bound.Task.GetAwaiter().GetResult())
 			throw new SocketException((int)SocketError.AddressAlreadyInUse);
@@ -71,7 +73,9 @@ internal sealed class NamedNetwork : Actor<NamedNetworkMessage>
 		switch (message)
 		{
 			case NamedNetworkMessage.Bind bind:
-				bind.Bound.SetResult(_transports.TryAdd(bind.Transport.LocalEndPoint, (bind.Transport, null)));
+				bind.Bound.SetResult(
+					_transports.TryAdd(bind.Transport.LocalEndPoint, (bind.Transport, null))
+				);
 				break;
 			case NamedNetworkMessage.Start start
 				when _transports.TryGetValue(start.Transport.LocalEndPoint, out var entry)
@@ -105,7 +109,9 @@ internal sealed class NamedTransport(NamedNetwork network, NamedEndPoint localEn
 		_network.Post(new NamedNetworkMessage.Start(this, onReceive));
 
 	public void Send(EndPoint remoteEndPoint, byte[] datagram) =>
-		_network.Post(new NamedNetworkMessage.Send(LocalEndPoint, remoteEndPoint, datagram.ToArray()));
+		_network.Post(
+			new NamedNetworkMessage.Send(LocalEndPoint, remoteEndPoint, datagram.ToArray())
+		);
 
 	public void Dispose() => _network.Post(new NamedNetworkMessage.Unbind(this));
 }

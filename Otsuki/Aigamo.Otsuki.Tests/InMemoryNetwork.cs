@@ -35,7 +35,10 @@ internal abstract record NetworkMessage
 /// </summary>
 internal sealed class InMemoryNetwork : Actor<NetworkMessage>
 {
-	private readonly Dictionary<IPEndPoint, (InMemoryTransport Transport, Action<EndPoint, byte[]>? OnReceive)> _transports = [];
+	private readonly Dictionary<
+		IPEndPoint,
+		(InMemoryTransport Transport, Action<EndPoint, byte[]>? OnReceive)
+	> _transports = [];
 	private readonly HashSet<IPAddress> _partitioned = [];
 	private readonly Random _random = new(12345);
 	private readonly Sequence _ports = new();
@@ -93,7 +96,9 @@ internal sealed class InMemoryNetwork : Actor<NetworkMessage>
 	/// </summary>
 	public T Ask<T>(Func<T> question)
 	{
-		var answer = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+		var answer = new TaskCompletionSource<T>(
+			TaskCreationOptions.RunContinuationsAsynchronously
+		);
 		Post(new NetworkMessage.Ask(() => answer.SetResult(question())));
 		return answer.Task.GetAwaiter().GetResult();
 	}
@@ -104,7 +109,9 @@ internal sealed class InMemoryNetwork : Actor<NetworkMessage>
 	{
 		var endPoint = new IPEndPoint(address, port == 0 ? 40000 + (int)_ports.Next() : port);
 		var transport = new InMemoryTransport(this, endPoint);
-		var bound = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+		var bound = new TaskCompletionSource<bool>(
+			TaskCreationOptions.RunContinuationsAsynchronously
+		);
 		Post(new NetworkMessage.Bind(transport, bound));
 		if (!bound.Task.GetAwaiter().GetResult())
 			throw new SocketException((int)SocketError.AddressAlreadyInUse);
@@ -159,7 +166,9 @@ internal sealed class InMemoryNetwork : Actor<NetworkMessage>
 		switch (message)
 		{
 			case NetworkMessage.Bind bind:
-				bind.Bound.SetResult(_transports.TryAdd(bind.Transport.LocalEndPoint, (bind.Transport, null)));
+				bind.Bound.SetResult(
+					_transports.TryAdd(bind.Transport.LocalEndPoint, (bind.Transport, null))
+				);
 				break;
 			case NetworkMessage.Start start
 				when _transports.TryGetValue(start.Transport.LocalEndPoint, out var bound)

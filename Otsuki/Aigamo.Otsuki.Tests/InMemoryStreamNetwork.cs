@@ -128,7 +128,9 @@ internal sealed class InMemoryStreamNetwork : Actor<StreamNetworkMessage>
 
 	private T Ask<T>(Func<T> question)
 	{
-		var answer = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+		var answer = new TaskCompletionSource<T>(
+			TaskCreationOptions.RunContinuationsAsynchronously
+		);
 		Post(new StreamNetworkMessage.Ask(() => answer.SetResult(question())));
 		return answer.Task.GetAwaiter().GetResult();
 	}
@@ -141,7 +143,9 @@ internal sealed class InMemoryStreamNetwork : Actor<StreamNetworkMessage>
 	public InMemoryStreamConnector Bind(EndPoint endPoint)
 	{
 		var connector = new InMemoryStreamConnector(this, endPoint);
-		var bound = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+		var bound = new TaskCompletionSource<bool>(
+			TaskCreationOptions.RunContinuationsAsynchronously
+		);
 		Post(new StreamNetworkMessage.Bind(connector, bound));
 		if (!bound.Task.GetAwaiter().GetResult())
 			throw new SocketException((int)SocketError.AddressAlreadyInUse);
@@ -154,9 +158,16 @@ internal sealed class InMemoryStreamNetwork : Actor<StreamNetworkMessage>
 
 	// Hands the accepting end of a new stream to the destination's owner, and the connecting end to the source; or
 	// refuses, if the destination is not accepting.
-	private void Connect(EndPoint source, EndPoint destination, TaskCompletionSource<Stream> connected)
+	private void Connect(
+		EndPoint source,
+		EndPoint destination,
+		TaskCompletionSource<Stream> connected
+	)
 	{
-		if (!_connectors.TryGetValue(destination, out var entry) || entry.OnAccept is not { } onAccept)
+		if (
+			!_connectors.TryGetValue(destination, out var entry)
+			|| entry.OnAccept is not { } onAccept
+		)
 		{
 			connected.SetException(new SocketException((int)SocketError.ConnectionRefused));
 			return;
@@ -173,7 +184,9 @@ internal sealed class InMemoryStreamNetwork : Actor<StreamNetworkMessage>
 		switch (message)
 		{
 			case StreamNetworkMessage.Bind bind:
-				bind.Bound.SetResult(_connectors.TryAdd(bind.Connector.LocalEndPoint, (bind.Connector, null)));
+				bind.Bound.SetResult(
+					_connectors.TryAdd(bind.Connector.LocalEndPoint, (bind.Connector, null))
+				);
 				break;
 			case StreamNetworkMessage.Start start
 				when _connectors.TryGetValue(start.Connector.LocalEndPoint, out var entry)

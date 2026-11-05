@@ -6,8 +6,8 @@ using Aigamo.Otsuki.Messages.Reliable;
 using Aigamo.Otsuki.Reliable;
 using Aigamo.Otsuki.Session;
 using FluentAssertions;
-using Xunit.Abstractions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Aigamo.Otsuki.Tests;
 

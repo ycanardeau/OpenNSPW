@@ -232,7 +232,8 @@ internal sealed class GameSession : IDisposable
 		View = view;
 		_platform.HidesFrame = () =>
 			GameSnapshot.IsHostScreenOf(Game) || Replay is { IsSeeking: true };
-		_platform.CaptureState = snapshot => snapshot.CopyFrom(Game, Commands, _viewExtension?.Seen);
+		_platform.CaptureState = snapshot =>
+			snapshot.CopyFrom(Game, Commands, _viewExtension?.Seen);
 		if (singleplayer is { } scenario)
 		{
 			Game.IsSingleplayer = true;

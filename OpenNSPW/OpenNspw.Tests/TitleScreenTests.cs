@@ -144,7 +144,9 @@ internal sealed class RunningGame : IDisposable
 	// `unanswered` if the game does not answer within a second, such as while it waits for DirectPlay.
 	public T Ask<T>(Func<Nspw, GameTestPlatform, T> question, T unanswered)
 	{
-		var answer = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+		var answer = new TaskCompletionSource<T>(
+			TaskCreationOptions.RunContinuationsAsynchronously
+		);
 		Do(game => answer.TrySetResult(question(game, Platform)));
 		return answer.Task.Wait(AskTimeout) ? answer.Task.Result : unanswered;
 	}
@@ -176,9 +178,11 @@ public class TitleScreenTests
 
 	private static int? DialogOf(RunningGame game) => game.Ask((g, _) => g.MainDialog?.Id, null);
 
-	private static GameMode? ModeOf(RunningGame game) => game.Ask((g, _) => (GameMode?)g.Mode, null);
+	private static GameMode? ModeOf(RunningGame game) =>
+		game.Ask((g, _) => (GameMode?)g.Mode, null);
 
-	private static int FramesOf(RunningGame game) => game.Ask((_, platform) => platform.FrameCount, 0);
+	private static int FramesOf(RunningGame game) =>
+		game.Ask((_, platform) => platform.FrameCount, 0);
 
 	private static void WaitUntil(Func<bool> condition, params RunningGame[] games)
 	{
@@ -299,8 +303,7 @@ public class TitleScreenTests
 		host.Start();
 		guest.Start();
 		WaitUntil(
-			() =>
-				DialogOf(host) == IDD_ADDRESS_OVERRIDE && DialogOf(guest) == IDD_ADDRESS_OVERRIDE,
+			() => DialogOf(host) == IDD_ADDRESS_OVERRIDE && DialogOf(guest) == IDD_ADDRESS_OVERRIDE,
 			host,
 			guest
 		);
@@ -333,11 +336,7 @@ public class TitleScreenTests
 		);
 
 		host.Do(g => g.ClickDlgItem(g.MainDialog!, IDC_START_GAME));
-		WaitUntil(
-			() => FramesOf(host) > 20 && FramesOf(guest) > 20,
-			host,
-			guest
-		);
+		WaitUntil(() => FramesOf(host) > 20 && FramesOf(guest) > 20, host, guest);
 
 		play(host, guest);
 		Assert.Empty(host.Ask((_, platform) => platform.MessageBoxes.ToList(), ["not answering"]));

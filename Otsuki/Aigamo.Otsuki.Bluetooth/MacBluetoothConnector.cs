@@ -379,7 +379,9 @@ internal sealed unsafe partial class MacBluetoothConnector
 		try
 		{
 			FromContext(context)
-				?.Post(new Message.Received(channel, new ReadOnlySpan<byte>(data, length).ToArray()));
+				?.Post(
+					new Message.Received(channel, new ReadOnlySpan<byte>(data, length).ToArray())
+				);
 		}
 		catch (Exception) { }
 	}

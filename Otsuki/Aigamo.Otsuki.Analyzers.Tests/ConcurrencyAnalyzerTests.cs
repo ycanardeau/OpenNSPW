@@ -59,7 +59,9 @@ public class ConcurrencyAnalyzerTests
 	[InlineData("class C { int _n; void M() => _n++; }")]
 	[InlineData("class C { readonly List<int> _items = []; void M() => _items.Add(1); }")]
 	[InlineData("class C { async Task M() { var t = new TaskCompletionSource(); await t.Task; } }")]
-	[InlineData("class C { void M(CancellationToken token) => token.ThrowIfCancellationRequested(); }")]
+	[InlineData(
+		"class C { void M(CancellationToken token) => token.ThrowIfCancellationRequested(); }"
+	)]
 	[InlineData("class C { [ThreadStatic] static int _n; }")]
 	[InlineData("class C { void M(Thread thread) => thread.Join(); }")]
 	internal async Task NoDiagnostic(string source)
@@ -85,7 +87,10 @@ public class ConcurrencyAnalyzerTests
 		"class C { void M() => System.Threading.Channels.Channel.CreateUnbounded<int>(); }",
 		"Channel"
 	)]
-	[InlineData("using System.Collections.Concurrent; class C { }", "System.Collections.Concurrent")]
+	[InlineData(
+		"using System.Collections.Concurrent; class C { }",
+		"System.Collections.Concurrent"
+	)]
 	internal async Task ReportsSharedState(string source, string reported)
 	{
 		var diagnostics = await GetDiagnosticsAsync(source);

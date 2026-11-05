@@ -710,9 +710,7 @@ public partial class Nspw
 					i => string.Equals(i.Text, text, StringComparison.OrdinalIgnoreCase)
 				);
 			case CB_GETLBTEXT or LB_GETTEXT:
-				return valid
-					? CopyString(list.Items[index].Text, buffer, buffer.Length)
-					: CB_ERR;
+				return valid ? CopyString(list.Items[index].Text, buffer, buffer.Length) : CB_ERR;
 			default:
 				return 0;
 		}

@@ -150,7 +150,10 @@ public sealed class StreamDatagramTransport : IDatagramTransport
 			{
 				link = new Link(remoteEndPoint);
 				_links.Add(remoteEndPoint, link);
-				Run(link, cancellationToken => _connector.ConnectAsync(remoteEndPoint, cancellationToken));
+				Run(
+					link,
+					cancellationToken => _connector.ConnectAsync(remoteEndPoint, cancellationToken)
+				);
 			}
 
 			link.Datagrams.Post(datagram);

@@ -122,9 +122,7 @@ internal sealed class SoloGame : IDisposable
 					)
 				)
 			);
-			while (
-				!_messages.WaitFor(m => m is SoloMessage.Answer, TimeSpan.FromMilliseconds(100))
-			)
+			while (!_messages.WaitFor(m => m is SoloMessage.Answer, TimeSpan.FromMilliseconds(100)))
 			{
 				ThrowIfFailed();
 				if (!_thread.IsAlive || DateTime.UtcNow > deadline)

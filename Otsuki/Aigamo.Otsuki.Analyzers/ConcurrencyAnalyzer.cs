@@ -39,10 +39,8 @@ public sealed class ConcurrencyAnalyzer : DiagnosticAnalyzer
 		"System.Collections.Immutable.ImmutableInterlocked"
 	);
 
-	private static readonly ImmutableHashSet<string> SharedStateNamespaces = ImmutableHashSet.Create(
-		"System.Threading.Channels",
-		"System.Collections.Concurrent"
-	);
+	private static readonly ImmutableHashSet<string> SharedStateNamespaces =
+		ImmutableHashSet.Create("System.Threading.Channels", "System.Collections.Concurrent");
 
 	private static readonly DiagnosticDescriptor SharedStateRule = new(
 		id: SharedStateDiagnosticId,
@@ -81,7 +79,10 @@ public sealed class ConcurrencyAnalyzer : DiagnosticAnalyzer
 		var symbol = context.SemanticModel.GetSymbolInfo(name, context.CancellationToken).Symbol;
 		if (symbol is INamespaceSymbol ns)
 		{
-			if (name.FirstAncestorOrSelf<UsingDirectiveSyntax>() is { } directive && IsSharedStateNamespace(ns))
+			if (
+				name.FirstAncestorOrSelf<UsingDirectiveSyntax>() is { } directive
+				&& IsSharedStateNamespace(ns)
+			)
 				Report(context, directive.NamespaceOrType.GetLocation(), ns.ToDisplayString());
 			return;
 		}

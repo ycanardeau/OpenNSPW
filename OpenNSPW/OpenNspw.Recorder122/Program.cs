@@ -150,6 +150,7 @@ var output = Path.GetFullPath(positionalArgs.Length == 2 ? positionalArgs[1] : "
 Directory.CreateDirectory(output);
 
 var state = new byte[Trace122.StateSize];
+
 // Ctrl+C, posted by the console to the debugger's thread, which closes the trace and ends 1.22 between two of its events
 // (TakeCloseRequest), and records no more battles.
 var closeRequests = new Mailbox<CloseRequest>();

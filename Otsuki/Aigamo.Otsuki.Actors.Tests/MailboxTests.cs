@@ -50,9 +50,7 @@ public sealed class MailboxTests
 		number.Should().Be(new Number(1));
 		mailbox.Post(new Number(3));
 
-		ReceiveAll(mailbox)
-			.Should()
-			.Equal(new Number(2), new Text("b"), new Number(3));
+		ReceiveAll(mailbox).Should().Equal(new Number(2), new Text("b"), new Number(3));
 	}
 
 	[Fact]
@@ -260,7 +258,11 @@ public sealed class MailboxTests
 		});
 
 		var received = new List<int>();
-		await foreach (var message in mailbox.ReadAllAsync().WithCancellation(new CancellationTokenSource(Timeout).Token))
+		await foreach (
+			var message in mailbox
+				.ReadAllAsync()
+				.WithCancellation(new CancellationTokenSource(Timeout).Token)
+		)
 			received.Add(message);
 		await poster;
 
