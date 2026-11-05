@@ -10,12 +10,18 @@ namespace Aigamo.Otsuki.Reliable;
 
 /// <summary>
 /// One connection of the DirectPlay 8 reliable protocol ([MC-DPL8R]) to a single remote endpoint. The protocol
-/// logic lives in the transitions that each <see cref="ConnectionState"/> implements; this actor owns the state,
-/// the timers and the transport, and runs the transition for each message.
+/// logic lives in the transitions that each <see cref="ConnectionState"/> implements; the connection owns the state
+/// and the timers, and runs the transition for each message. It runs on its <see cref="ConnectionLoop"/>, with the
+/// other connections of that loop, one message at a time: its messages go to the loop's mailbox.
 /// </summary>
-internal sealed class Connection : Actor<ConnectionMessage>
+internal sealed class Connection
 {
 	public const int ProtocolVersion = 0x00010006;
+
+	/// <summary>
+	/// The loop that runs the connection.
+	/// </summary>
+	public ConnectionLoop Loop { get; }
 
 	private readonly IDatagramTransport _transport;
 	private readonly Action<Connection> _onTerminated;
@@ -58,7 +64,13 @@ internal sealed class Connection : Actor<ConnectionMessage>
 
 	public ActorTimer<ConnectionMessage> GracefulDisconnectTimer { get; }
 
+	/// <summary>
+	/// Posts a message to the connection, from any thread. Returns <see langword="false"/> if its loop has stopped.
+	/// </summary>
+	public bool Post(ConnectionMessage message) => Loop.Post(this, message);
+
 	public Connection(
+		ConnectionLoop loop,
 		EndPoint remoteEndPoint,
 		bool isOutbound,
 		PacketSigning offeredSigning,
@@ -69,6 +81,7 @@ internal sealed class Connection : Actor<ConnectionMessage>
 		Action<Connection> onTerminated
 	)
 	{
+		Loop = loop;
 		RemoteEndPoint = remoteEndPoint;
 		IsOutbound = isOutbound;
 		OfferedSigning = offeredSigning;
@@ -113,7 +126,6 @@ internal sealed class Connection : Actor<ConnectionMessage>
 			Post
 		);
 		_state = isOutbound ? new ConnectionState.Idle() : new ConnectionState.Listening();
-		Start();
 	}
 
 	public override string ToString() =>
@@ -187,7 +199,6 @@ internal sealed class Connection : Actor<ConnectionMessage>
 		HardDisconnectTimer.Cancel();
 		CancelChannelTimers();
 		_onTerminated(this);
-		Stop();
 		return new ConnectionState.Closed();
 	}
 
@@ -253,7 +264,8 @@ internal sealed class Connection : Actor<ConnectionMessage>
 		if (_state is IConnectionTransition<ConnectionMessage.SendPayload>)
 			return Execute(command);
 
-		Observer.OnSendCompleted(this, command.SendId, ResultCode.NoConnection);
+		if (command.SendId != 0)
+			Observer.OnSendCompleted(this, command.SendId, ResultCode.NoConnection);
 		return Unit.Default;
 	}
 
@@ -320,7 +332,19 @@ internal sealed class Connection : Actor<ConnectionMessage>
 		return Receive(message);
 	}
 
-	protected override void Receive(ConnectionMessage message)
+	/// <summary>
+	/// Handles a datagram from the partner. On the loop's thread.
+	/// </summary>
+	public void ReceiveDatagram(byte[] datagram)
+	{
+		if (_state is not ConnectionState.Closed)
+			Receive(datagram);
+	}
+
+	/// <summary>
+	/// Handles a message. On the loop's thread.
+	/// </summary>
+	public void Handle(ConnectionMessage message)
 	{
 		if (_state is ConnectionState.Closed)
 			return;

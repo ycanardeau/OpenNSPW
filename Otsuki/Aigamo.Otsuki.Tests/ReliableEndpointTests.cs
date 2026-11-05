@@ -40,7 +40,7 @@ public class ReliableEndpointTests
 			new ReliableProfile(),
 			new NoObserver()
 		);
-		endpoint.Post(new ReliableEndpointMessage.SetSigning(PacketSigning.Fast));
+		endpoint.SetSigning(PacketSigning.Fast);
 
 		var connection = endpoint.Connect(
 			new IPEndPoint(IPAddress.Parse("10.4.0.2"), 2302),
@@ -48,6 +48,6 @@ public class ReliableEndpointTests
 		);
 
 		connection.OfferedSigning.Should().Be(signing);
-		endpoint.Post(new ReliableEndpointMessage.ShutDown());
+		endpoint.ShutDown();
 	}
 }

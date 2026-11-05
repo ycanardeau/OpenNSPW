@@ -26,7 +26,8 @@ internal abstract record ConnectionMessage
 
 	/// <summary>
 	/// Sends an upper-layer message. <see cref="IConnectionObserver.OnSendCompleted"/> reports
-	/// <paramref name="SendId"/> when it is acknowledged (reliable) or transmitted (unreliable).
+	/// <paramref name="SendId"/> when it is acknowledged (reliable) or transmitted (unreliable), unless it is 0, for a
+	/// send whose completion no one waits for.
 	/// </summary>
 	public sealed record SendPayload(long SendId, byte[] Payload, bool Reliable, bool User1)
 		: ConnectionMessage;

@@ -313,7 +313,8 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 				Options.TransportFactory(localEndPoint),
 				Options.TimeProvider,
 				Options.ReliableProfile,
-				this
+				this,
+				Options.ConnectionLoops
 			);
 			_signing = PacketSigning.None;
 			return Unit.Default;
@@ -334,7 +335,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			flags.HasFlag(SessionFlags.FullSigned) ? PacketSigning.Full
 			: flags.HasFlag(SessionFlags.FastSigned) ? PacketSigning.Fast
 			: PacketSigning.None;
-		_endpoint?.Post(new ReliableEndpointMessage.SetSigning(_signing));
+		_endpoint?.SetSigning(_signing);
 	}
 
 	public Connection Connect(EndPoint remoteEndPoint)
@@ -877,7 +878,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 
 	private void ShutDownEndpoint()
 	{
-		_endpoint?.Post(new ReliableEndpointMessage.ShutDown());
+		_endpoint?.ShutDown();
 		_endpoint = null;
 		Connections.Clear();
 		PlayersByConnection.Clear();
@@ -1313,18 +1314,24 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			return;
 		}
 
-		_sends.Add(command.Handle, new PendingSend(targets.Count, command.Flags));
-		foreach (var target in targets)
+		// A send that reports no completion is not followed: its connections report nothing (send id 0).
+		var reportsCompletion = !command.Flags.HasFlag(SendFlags.NoComplete);
+		if (reportsCompletion)
+			_sends.Add(command.Handle, new PendingSend(targets.Count, command.Flags));
+
+		var reliable = command.Flags.HasFlag(SendFlags.Guaranteed);
+		foreach (var loop in targets.GroupBy(t => t.Loop))
 		{
-			var sendId = ++_nextSendId;
-			_sendHandles.Add(sendId, command.Handle);
-			target.Post(
-				new ConnectionMessage.SendPayload(
-					sendId,
-					command.Data,
-					Reliable: command.Flags.HasFlag(SendFlags.Guaranteed),
-					User1: false
-				)
+			var connections = loop.ToImmutableArray();
+			var sendIds = connections.Select(_ => reportsCompletion ? ++_nextSendId : 0).ToImmutableArray();
+			if (reportsCompletion)
+			{
+				foreach (var sendId in sendIds)
+					_sendHandles.Add(sendId, command.Handle);
+			}
+
+			loop.Key.Post(
+				new ConnectionLoopMessage.SendToMany(connections, sendIds, command.Data, reliable)
 			);
 		}
 	}

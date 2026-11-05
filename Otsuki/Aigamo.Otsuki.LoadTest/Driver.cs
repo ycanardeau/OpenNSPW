@@ -35,6 +35,11 @@ internal sealed record LoadSettings
 	/// </summary>
 	public int ServerHeaps { get; init; } = 4;
 
+	/// <summary>
+	/// The loops that run the server's connections.
+	/// </summary>
+	public int ServerLoops { get; init; } = 4;
+
 	public string? Label { get; init; }
 
 	public string? Out { get; init; }
@@ -175,7 +180,7 @@ internal sealed class Driver(LoadSettings settings)
 			0,
 			string.Create(
 				CultureInfo.InvariantCulture,
-				$"server --port {s.Port} --server-rate {s.ServerRate} {common}"
+				$"server --port {s.Port} --server-loops {s.ServerLoops} --server-rate {s.ServerRate} {common}"
 			)
 		);
 		await Task.Delay(1000);

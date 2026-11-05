@@ -44,4 +44,10 @@ public sealed record PeerOptions
 	/// How long closing waits for connections to disconnect gracefully.
 	/// </summary>
 	public TimeSpan CloseTimeout { get; init; } = TimeSpan.FromSeconds(5);
+
+	/// <summary>
+	/// How many loops run the connections, each on one thread at a time; a hash of each partner's address chooses its
+	/// loop. One is enough for a game's few partners; a server of many clients gives one to each core it can spare.
+	/// </summary>
+	public int ConnectionLoops { get; init; } = 1;
 }

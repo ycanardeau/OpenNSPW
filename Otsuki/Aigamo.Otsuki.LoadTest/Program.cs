@@ -4,8 +4,8 @@ using Aigamo.Otsuki.LoadTest;
 
 // Usage:
 //   run [--clients N] [--processes K] [--client-rate M] [--server-rate R] [--join-rate J] [--size B] [--seconds S]
-//       [--warmup W] [--port P] [--unreliable] [--server-heaps H] [--label L] [--out results.md]
-//   server --port P --server-rate R --size B --seconds S [--unreliable]
+//       [--warmup W] [--port P] [--unreliable] [--server-heaps H] [--server-loops N] [--label L] [--out results.md]
+//   server --port P --server-loops N --server-rate R --size B --seconds S [--unreliable]
 //   clients --id I --server HOST:PORT --clients N --join-rate J --client-rate M --size B --seconds S [--unreliable]
 
 static Dictionary<string, string> Parse(string[] args)
@@ -40,6 +40,7 @@ switch (args[0])
 	case "server":
 		await new ServerRole(
 			Int(options, "port", 47_624),
+			Int(options, "server-loops", 4),
 			Int(options, "server-rate", 20),
 			Int(options, "size", 32),
 			seconds,
@@ -74,6 +75,7 @@ switch (args[0])
 				Port = Int(options, "port", defaults.Port),
 				Guaranteed = guaranteed,
 				ServerHeaps = Int(options, "server-heaps", defaults.ServerHeaps),
+				ServerLoops = Int(options, "server-loops", defaults.ServerLoops),
 				Label = options.GetValueOrDefault("label"),
 				Out = options.GetValueOrDefault("out"),
 			}
