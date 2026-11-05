@@ -81,8 +81,10 @@ internal sealed class ConnectionLoop : Actor<ConnectionLoopItem>
 		TimeProvider timeProvider,
 		ReliableProfile profile,
 		IConnectionObserver observer,
-		Action onDone
+		Action onDone,
+		MailboxScheduler? scheduler = null
 	)
+		: base(scheduler: scheduler)
 	{
 		_transport = transport;
 		_timeProvider = timeProvider;

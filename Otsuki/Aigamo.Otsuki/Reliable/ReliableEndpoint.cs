@@ -53,8 +53,10 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 		TimeProvider timeProvider,
 		ReliableProfile profile,
 		IConnectionObserver observer,
-		int loops = 1
+		int loops = 1,
+		MailboxScheduler? scheduler = null
 	)
+		: base(scheduler: scheduler)
 	{
 		_transport = transport;
 		_loops =
@@ -66,7 +68,8 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 					timeProvider,
 					profile,
 					observer,
-					() => Post(new ReliableEndpointMessage.LoopDone())
+					() => Post(new ReliableEndpointMessage.LoopDone()),
+					scheduler
 				)),
 		];
 		Start();

@@ -130,6 +130,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		Mailbox<PeerEvent> events,
 		Action<SessionSnapshot> publish
 	)
+		: base(scheduler: options.Scheduler)
 	{
 		Options = options;
 		_events = events;
@@ -341,7 +342,8 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 				Options.TimeProvider,
 				Options.ReliableProfile,
 				this,
-				Options.ConnectionLoops
+				Options.ConnectionLoops,
+				Options.Scheduler
 			);
 			_signing = PacketSigning.None;
 			return Unit.Default;

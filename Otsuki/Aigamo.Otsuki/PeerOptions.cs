@@ -1,4 +1,5 @@
 using System.Net;
+using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Reliable;
 using Aigamo.Otsuki.Transport;
 
@@ -50,4 +51,11 @@ public sealed record PeerOptions
 	/// loop. One is enough for a game's few partners; a server of many clients gives one to each core it can spare.
 	/// </summary>
 	public int ConnectionLoops { get; init; } = 1;
+
+	/// <summary>
+	/// Runs the peer's actors: the session, the endpoint and the connection loops. The thread pool if
+	/// <see langword="null"/>; a test may run them one message at a time in an order of its choosing
+	/// (<see cref="ManualScheduler"/>).
+	/// </summary>
+	public MailboxScheduler? Scheduler { get; init; }
 }
