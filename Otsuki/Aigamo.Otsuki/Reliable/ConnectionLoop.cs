@@ -204,12 +204,43 @@ internal sealed class ConnectionLoop : Actor<ConnectionLoopItem>
 		return Unit.Default;
 	}
 
+	private Unit SendToMany(ConnectionLoopMessage.SendToMany message)
+	{
+		for (var i = 0; i < message.Connections.Length; i++)
+			message
+				.Connections[i]
+				.Handle(
+					new ConnectionMessage.SendPayload(
+						message.SendIds[i],
+						message.Payload,
+						message.Reliable,
+						User1: false
+					)
+				);
+		return Unit.Default;
+	}
+
 	protected override void Receive(ConnectionLoopItem item)
 	{
 		if (item.Connection is { } connection)
 		{
 			connection.Handle(item.ToConnection!);
 			return;
+		}
+
+		// Datagrams, broadcasts and timers take a switch, which allocates nothing; the rest take Match, which keeps every
+		// kind handled but makes a delegate for each kind at each call.
+		switch (item.ToLoop)
+		{
+			case ConnectionLoopMessage.DatagramReceived m:
+				HandleDatagram(m);
+				return;
+			case ConnectionLoopMessage.SendToMany m:
+				SendToMany(m);
+				return;
+			case ConnectionLoopMessage.TimersDue:
+				Timers.FireDue();
+				return;
 		}
 
 		item.ToLoop!.Match(
@@ -226,20 +257,7 @@ internal sealed class ConnectionLoop : Actor<ConnectionLoopItem>
 				Timers.FireDue();
 				return Unit.Default;
 			},
-			SendToMany: m =>
-			{
-				for (var i = 0; i < m.Connections.Length; i++)
-					m.Connections[i]
-						.Handle(
-							new ConnectionMessage.SendPayload(
-								m.SendIds[i],
-								m.Payload,
-								m.Reliable,
-								User1: false
-							)
-						);
-				return Unit.Default;
-			}
+			SendToMany: SendToMany
 		);
 	}
 }

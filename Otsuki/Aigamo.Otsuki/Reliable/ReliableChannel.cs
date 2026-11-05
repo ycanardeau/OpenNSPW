@@ -512,25 +512,26 @@ internal sealed class ReliableChannel(Connection connection, Handshake handshake
 				_endStreamAcknowledged = true;
 		}
 		_unacknowledged.RemoveRange(0, acknowledged);
-		_droppedUnreliable.RemoveWhere(sequence =>
-			sequence.DistanceTo(nextReceive) is > 0 and <= 128
-		);
+		if (_droppedUnreliable.Count > 0)
+			_droppedUnreliable.RemoveWhere(sequence =>
+				sequence.DistanceTo(nextReceive) is > 0 and <= 128
+			);
 
-		for (var i = 0; i < SequenceWindow; i++)
+		// Loops, not Find and Any, which would make a closure for each acknowledgment.
+		var waiting = false;
+		foreach (var frame in _unacknowledged)
 		{
-			if ((selectiveAcknowledgmentMask & (1UL << i)) == 0)
-				continue;
-
-			var sequence = nextReceive + (byte)(1 + i);
-			var frame = _unacknowledged.Find(f => f.Sequence == sequence);
-			if (frame is not null)
+			var distance = nextReceive.DistanceTo(frame.Sequence);
+			if (
+				selectiveAcknowledgmentMask != 0
+				&& distance is >= 1 and <= SequenceWindow
+				&& (selectiveAcknowledgmentMask & (1UL << (distance - 1))) != 0
+			)
 				frame.SelectivelyAcknowledged = true;
+			waiting |= !frame.SelectivelyAcknowledged && !frame.Dropped;
 		}
 
-		if (
-			selectiveAcknowledgmentMask != 0
-			&& _unacknowledged.Any(f => !f.SelectivelyAcknowledged && !f.Dropped)
-		)
+		if (selectiveAcknowledgmentMask != 0 && waiting)
 			_connection.RetryTimer.Start(SelectiveAcknowledgmentRetryTimeout);
 		else if (acknowledged > 0)
 			ScheduleRetryTimer();
