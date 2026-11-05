@@ -3,7 +3,8 @@ namespace OpenNspw;
 // The rules a battle follows where NSPW 1.22 and NSPW NET differ: NSPW NET's, which network games play by, or 1.22's,
 // which single-player games play by. Each of 1.22's is read from its machine code, at the address given
 // (docs/Differences.md). The game holds the ones it plays by in Nspw.Rules. Both give every rule a value, by its name,
-// since every rule is one where they differ.
+// since every rule is one where they differ. OpenNSPW's own options, which neither original has, are not rules: they
+// change 1.22's as a single-player battle starts (BattleOptions).
 //
 // A rule marked BUG(1.22) is a bug of 1.22, which single-player keeps as is for compatibility with 1.22; the code marks
 // the bugs it keeps the same way, BUG(1.22), BUG(NSPW NET) or BUG(1.22, NSPW NET) by the versions that have them. A rule

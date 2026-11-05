@@ -4208,19 +4208,23 @@ public unsafe partial class Nspw
 	{
 		SyncFlagMessage flagMessage = default;
 
-		Rules = IsSingleplayer ? BattleRules.Nspw122 : BattleRules.NspwNet;
-
-		// Extensions see the battle's start, and may set its seeds (docs/Extensions.md).
+		// Extensions see the battle's start, and may set its seeds and its options (docs/Extensions.md).
 		Extensions.BattleStarting();
+
+		Rules = IsSingleplayer ? Options.Apply(BattleRules.Nspw122) : BattleRules.NspwNet;
 
 		// 乱数の初期化
 		// 1.22 has no shared random numbers: its rand goes on from where it was, seeded from the time as the game started
-		// (WinMain), or as an extension gives it.
+		// (WinMain), or as an extension gives it. Its effects have them as an option (BattleOptions.SharedEffectRandom).
 		if (!IsSingleplayer)
 		{
 			srand((uint)(SharedRandomSeed));
 
 			MakeSharedRandomTable();
+		}
+		else if (!Rules.EffectsDrawFromRand)
+		{
+			MakeSharedRandomTableAside();
 		}
 
 		ScrollSpeed = 0;
