@@ -29,52 +29,58 @@ public sealed class CoreAnalyzer : DiagnosticAnalyzer
 
 	private const string ActorsAssemblyName = "Aigamo.Otsuki.Actors";
 
+	// The names below are by typeof and nameof where netstandard2.0, which the analyzer targets, has the type or
+	// member, so that a misspelled name does not build; by name where it has not, and for Random and Environment,
+	// which Roslyn's own rules forbid an analyzer to name (RS1035).
+
+	private static string Member(Type type, string name) => $"{type.FullName}.{name}";
+
 	// Namespaces whose every type but an enum starts, schedules, waits for or shares work across threads, or talks to
 	// the network; an enum, such as an address family, is only a value. Then single types that do, or that read a
 	// clock.
 	private static readonly ImmutableArray<string> ThreadNamespaces = ImmutableArray.Create(
-		"System.Threading",
-		"System.Timers",
-		"System.Collections.Concurrent",
-		"System.Net.Sockets"
+		typeof(Monitor).Namespace,
+		typeof(System.Timers.Timer).Namespace,
+		typeof(System.Collections.Concurrent.ConcurrentQueue<>).Namespace,
+		typeof(System.Net.Sockets.Socket).Namespace
 	);
 
 	// The namespaces whose using directive is reported: those with no enum the core may need.
 	private static readonly ImmutableArray<string> ThreadOnlyNamespaces = ImmutableArray.Create(
-		"System.Threading",
-		"System.Timers",
-		"System.Collections.Concurrent"
+		typeof(Monitor).Namespace,
+		typeof(System.Timers.Timer).Namespace,
+		typeof(System.Collections.Concurrent.ConcurrentQueue<>).Namespace
 	);
 
 	private static readonly ImmutableHashSet<string> ThreadTypeNames = ImmutableHashSet.Create(
 		"System.TimeProvider",
-		"System.Diagnostics.Stopwatch",
-		"System.Net.Dns",
+		typeof(System.Diagnostics.Stopwatch).FullName,
+		typeof(System.Net.Dns).FullName,
 		"System.Random",
-		"System.Security.Cryptography.RandomNumberGenerator",
-		"System.Linq.ParallelEnumerable"
+		typeof(System.Security.Cryptography.RandomNumberGenerator).FullName,
+		typeof(ParallelEnumerable).FullName
 	);
 
 	// Members that read a clock or draw randomness: the core is told the time with each input, and asks its outputs for
 	// random bytes, so that a test can make it repeat.
 	private static readonly ImmutableHashSet<string> AmbientMemberNames = ImmutableHashSet.Create(
-		"System.DateTime.Now",
-		"System.DateTime.UtcNow",
-		"System.DateTime.Today",
-		"System.DateTimeOffset.Now",
-		"System.DateTimeOffset.UtcNow",
+		Member(typeof(DateTime), nameof(DateTime.Now)),
+		Member(typeof(DateTime), nameof(DateTime.UtcNow)),
+		Member(typeof(DateTime), nameof(DateTime.Today)),
+		Member(typeof(DateTimeOffset), nameof(DateTimeOffset.Now)),
+		Member(typeof(DateTimeOffset), nameof(DateTimeOffset.UtcNow)),
 		"System.Environment.TickCount",
 		"System.Environment.TickCount64",
-		"System.Guid.NewGuid"
+		Member(typeof(Guid), nameof(Guid.NewGuid))
 	);
 
 	// Collections whose static instance would be state shared by every core of the process: these namespaces
 	// themselves, not System.Collections.Immutable below them.
 	private static readonly ImmutableHashSet<string> MutableCollectionNamespaces =
 		ImmutableHashSet.Create(
-			"System.Collections",
-			"System.Collections.Generic",
-			"System.Collections.ObjectModel"
+			typeof(System.Collections.ArrayList).Namespace,
+			typeof(List<>).Namespace,
+			typeof(System.Collections.ObjectModel.Collection<>).Namespace
 		);
 
 	private static readonly DiagnosticDescriptor ThreadRule = new(
@@ -118,13 +124,15 @@ public sealed class CoreAnalyzer : DiagnosticAnalyzer
 	private static bool IsAmbientMember(ISymbol symbol) =>
 		symbol is IPropertySymbol or IMethodSymbol
 		&& symbol.ContainingType is { } type
-		&& AmbientMemberNames.Contains($"{type.OriginalDefinition.ToDisplayString()}.{symbol.Name}");
+		&& AmbientMemberNames.Contains(
+			$"{type.OriginalDefinition.ToDisplayString()}.{symbol.Name}"
+		);
 
 	private static bool IsMutableCollection(ITypeSymbol type) =>
 		type is IArrayTypeSymbol
 		|| type is INamedTypeSymbol named
 			&& MutableCollectionNamespaces.Contains(named.ContainingNamespace.ToDisplayString())
-		|| type.OriginalDefinition.ToDisplayString() == "System.Text.StringBuilder";
+		|| type.OriginalDefinition.ToDisplayString() == typeof(System.Text.StringBuilder).FullName;
 
 	private static void Report(
 		SyntaxNodeAnalysisContext context,
@@ -173,10 +181,11 @@ public sealed class CoreAnalyzer : DiagnosticAnalyzer
 	// Whether a call names the type of its method, which the name rule reports, as Task.Run(...) does and
 	// items.AsParallel() does not.
 	private static bool NamesItsType(IInvocationOperation invocation) =>
-		invocation.Syntax is InvocationExpressionSyntax
-		{
-			Expression: MemberAccessExpressionSyntax { Expression: var receiver },
-		}
+		invocation.Syntax
+			is InvocationExpressionSyntax
+			{
+				Expression: MemberAccessExpressionSyntax { Expression: var receiver },
+			}
 		&& invocation.SemanticModel?.GetSymbolInfo(receiver).Symbol is INamedTypeSymbol;
 
 	// A call that returns one of the types without naming it, such as a method of another assembly that returns a
@@ -231,14 +240,17 @@ public sealed class CoreAnalyzer : DiagnosticAnalyzer
 	private static void AnalyzeField(SyntaxNodeAnalysisContext context)
 	{
 		var field = (FieldDeclarationSyntax)context.Node;
-		if (!field.Modifiers.Any(SyntaxKind.StaticKeyword) || field.Modifiers.Any(SyntaxKind.ConstKeyword))
+		if (
+			!field.Modifiers.Any(SyntaxKind.StaticKeyword)
+			|| field.Modifiers.Any(SyntaxKind.ConstKeyword)
+		)
 			return;
 
 		foreach (var variable in field.Declaration.Variables)
 		{
 			if (
 				context.SemanticModel.GetDeclaredSymbol(variable, context.CancellationToken)
-				is IFieldSymbol symbol
+					is IFieldSymbol symbol
 				&& (!symbol.IsReadOnly || IsMutableCollection(symbol.Type))
 			)
 				Report(context, StaticStateRule, variable.Identifier.GetLocation(), symbol.Name);
@@ -259,10 +271,7 @@ public sealed class CoreAnalyzer : DiagnosticAnalyzer
 		var isAutomatic =
 			property.AccessorList?.Accessors.All(a => a.Body is null && a.ExpressionBody is null)
 			?? false;
-		if (
-			symbol.SetMethod is not null
-			|| isAutomatic && IsMutableCollection(symbol.Type)
-		)
+		if (symbol.SetMethod is not null || isAutomatic && IsMutableCollection(symbol.Type))
 			Report(context, StaticStateRule, property.Identifier.GetLocation(), symbol.Name);
 	}
 

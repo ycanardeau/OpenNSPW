@@ -20,27 +20,32 @@ public sealed class ConcurrencyAnalyzer : DiagnosticAnalyzer
 	// The assembly of Mailbox<T>, Latest<T> and Sequence, which may use what the others may not.
 	private const string ActorsAssemblyName = "Aigamo.Otsuki.Actors";
 
+	// By typeof where netstandard2.0, which the analyzer targets, has the type, so that a misspelled name does not
+	// build; by name where it has not.
 	private static readonly ImmutableHashSet<string> SharedStateTypeNames = ImmutableHashSet.Create(
-		"System.Threading.Monitor",
+		typeof(Monitor).FullName,
 		"System.Threading.Lock",
-		"System.Threading.SpinLock",
-		"System.Threading.Mutex",
-		"System.Threading.Semaphore",
-		"System.Threading.SemaphoreSlim",
-		"System.Threading.ReaderWriterLock",
-		"System.Threading.ReaderWriterLockSlim",
-		"System.Threading.ManualResetEvent",
-		"System.Threading.ManualResetEventSlim",
-		"System.Threading.AutoResetEvent",
-		"System.Threading.CountdownEvent",
-		"System.Threading.Barrier",
-		"System.Threading.Interlocked",
-		"System.Threading.Volatile",
-		"System.Collections.Immutable.ImmutableInterlocked"
+		typeof(SpinLock).FullName,
+		typeof(Mutex).FullName,
+		typeof(Semaphore).FullName,
+		typeof(SemaphoreSlim).FullName,
+		typeof(ReaderWriterLock).FullName,
+		typeof(ReaderWriterLockSlim).FullName,
+		typeof(ManualResetEvent).FullName,
+		typeof(ManualResetEventSlim).FullName,
+		typeof(AutoResetEvent).FullName,
+		typeof(CountdownEvent).FullName,
+		typeof(Barrier).FullName,
+		typeof(Interlocked).FullName,
+		typeof(Volatile).FullName,
+		typeof(ImmutableInterlocked).FullName
 	);
 
 	private static readonly ImmutableHashSet<string> SharedStateNamespaces =
-		ImmutableHashSet.Create("System.Threading.Channels", "System.Collections.Concurrent");
+		ImmutableHashSet.Create(
+			"System.Threading.Channels",
+			typeof(System.Collections.Concurrent.ConcurrentQueue<>).Namespace
+		);
 
 	private static readonly DiagnosticDescriptor SharedStateRule = new(
 		id: SharedStateDiagnosticId,
