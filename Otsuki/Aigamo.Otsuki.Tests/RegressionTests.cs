@@ -200,7 +200,7 @@ public class RegressionTests(ITestOutputHelper output) : IAsyncLifetime
 			await client.CloseAsync();
 		}
 		await log.WaitForAsync<PeerEvent.PlayerDestroyed>(20);
-		var session = SessionOf(PeerOf(server));
+		var session = SessionOf(PeerOf(server)).Core;
 		output.WriteLine($"server NameTableLog = {session.NameTableLog.Count}");
 		session.NameTableLog.Count.Should().BeLessThan(10);
 	}
@@ -367,5 +367,26 @@ public class RegressionTests(ITestOutputHelper output) : IAsyncLifetime
 			$"PlayerDestroyed={peers[1].Log.OfType<PeerEvent.PlayerDestroyed>().Count} GroupDestroyed={peers[1].Log.OfType<PeerEvent.GroupDestroyed>().Count}"
 		);
 		peers[1].Log.OfType<PeerEvent.GroupDestroyed>().Should().NotBeEmpty();
+	}
+
+	/// <summary>A command's task completes only once the snapshot shows what it did, so a caller reads it at once.</summary>
+	[Fact]
+	public async Task CommandsCompleteAfterTheSnapshot()
+	{
+		for (var i = 0; i < 20; i++)
+		{
+			var host = CreatePeer($"Host{i}");
+			await host.Peer.HostAsync(Application());
+			host.Peer.LocalEndPoint.Should().NotBeNull();
+			host.Peer.IsHost.Should().BeTrue();
+			host.Peer.GetPeerInfo(host.Peer.LocalPlayer).Should().NotBeNull();
+
+			var group = await host.Peer.CreateGroupAsync($"Group{i}");
+			host.Peer.GetGroupInfo(group).Should().NotBeNull();
+
+			var joiner = CreatePeer($"Joiner{i}");
+			await joiner.Peer.ConnectAsync(Application(), host.Peer.LocalEndPoint!);
+			joiner.Peer.LocalEndPoint.Should().NotBeNull();
+		}
 	}
 }

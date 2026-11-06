@@ -1,9 +1,10 @@
+using System.Collections.Immutable;
 using System.Net;
 using Aigamo.MatchGenerator;
 using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Messages.Core;
-using Aigamo.Otsuki.Messages.Enumeration;
 using Aigamo.Otsuki.Messages.Reliable;
+using Aigamo.Otsuki.Session;
 using Aigamo.Otsuki.Transport;
 using Aigamo.Results;
 
@@ -14,193 +15,172 @@ internal abstract record ReliableEndpointMessage
 {
 	private ReliableEndpointMessage() { }
 
-	public sealed record DatagramReceived(EndPoint RemoteEndPoint, byte[] Datagram)
-		: ReliableEndpointMessage;
-
-	public sealed record RegisterConnection(Connection Connection) : ReliableEndpointMessage;
-
-	public sealed record ConnectionTerminated(Connection Connection) : ReliableEndpointMessage;
-
 	/// <summary>
 	/// Sends a datagram outside any connection, such as a host enumeration response.
 	/// </summary>
 	public sealed record SendDatagram(EndPoint RemoteEndPoint, byte[] Datagram)
 		: ReliableEndpointMessage;
 
-	/// <summary>
-	/// Sets the signing mode that new inbound connections offer, from the session's flags.
-	/// </summary>
-	public sealed record SetSigning(PacketSigning Signing) : ReliableEndpointMessage;
-
 	public sealed record ShutDown : ReliableEndpointMessage;
+
+	/// <summary>
+	/// A loop is shut down and its last connection has terminated.
+	/// </summary>
+	public sealed record LoopDone : ReliableEndpointMessage;
 }
 
 /// <summary>
-/// Owns a datagram transport and the connection table: routes each datagram to the <see cref="Connection"/>
-/// for its source address, and accepts new inbound connections ([MC-DPL8R] section 3.1.4.1). Shut down, it accepts
-/// nothing new, and keeps its transport until its last connection has terminated, so that a connection saying goodbye
-/// (HARD_DISCONNECT) is not cut off by the shutdown that follows it.
+/// Owns a datagram transport and the loops that run the connections ([MC-DPL8R] section 3.1.4.1): gives each datagram
+/// to the loop of its source address, which a hash of the address chooses, so that routing reads no shared state.
+/// Shut down, it keeps its transport until every loop's last connection has terminated, so that a connection saying
+/// goodbye (HARD_DISCONNECT) is not cut off by the shutdown that follows it.
 /// </summary>
 internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 {
 	private readonly IDatagramTransport _transport;
-	private readonly TimeProvider _timeProvider;
-	private readonly ReliableProfile _profile;
-	private readonly IConnectionObserver _observer;
-	private readonly Dictionary<EndPoint, Connection> _connections = [];
+	private readonly Func<SessionMessage, bool> _report;
+	private readonly ImmutableArray<ConnectionLoop> _loops;
+	private int _loopsDone;
 	private bool _shutDown;
-	private bool _isTransportDisposed;
-	private PacketSigning _signing;
 
 	public EndPoint LocalEndPoint => _transport.LocalEndPoint;
 
+	/// <summary>
+	/// The messages waiting in each loop's mailbox, from any thread.
+	/// </summary>
+	public ImmutableArray<int> LoopQueueLengths => [.. _loops.Select(l => l.QueueLength)];
+
+	// A hash of the partner's address that every process computes alike: an endpoint's own hash differs from process
+	// to process, and the same partner would take another loop in each run (FNV-1a of the address, then the port).
+	private static int StableHash(EndPoint remoteEndPoint)
+	{
+		var hash = 2166136261u;
+		void Add(byte value) => hash = (hash ^ value) * 16777619u;
+
+		if (remoteEndPoint is IPEndPoint ip)
+		{
+			foreach (var value in ip.Address.GetAddressBytes())
+				Add(value);
+			Add((byte)ip.Port);
+			Add((byte)(ip.Port >> 8));
+		}
+		else
+		{
+			foreach (var value in remoteEndPoint.ToString() ?? string.Empty)
+			{
+				Add((byte)value);
+				Add((byte)(value >> 8));
+			}
+		}
+
+		return (int)(hash & int.MaxValue);
+	}
+
+	/// <summary>
+	/// The loop, of <paramref name="loops"/>, that runs the connection to <paramref name="remoteEndPoint"/>: the same in
+	/// every process.
+	/// </summary>
+	public static int LoopIndex(EndPoint remoteEndPoint, int loops) =>
+		StableHash(remoteEndPoint) % loops;
+
+	private ConnectionLoop LoopFor(EndPoint remoteEndPoint) =>
+		_loops[LoopIndex(remoteEndPoint, _loops.Length)];
+
+	/// <param name="randomSeed">Seeds the loops' randomness, each its own, for a test that must repeat;
+	/// <see langword="null"/>, the system's secure source.</param>
 	public ReliableEndpoint(
 		IDatagramTransport transport,
 		TimeProvider timeProvider,
 		ReliableProfile profile,
-		IConnectionObserver observer
+		Func<SessionMessage, bool> report,
+		int loops = 1,
+		MailboxScheduler? scheduler = null,
+		int? randomSeed = null
 	)
+		: base(scheduler: scheduler)
 	{
 		_transport = transport;
-		_timeProvider = timeProvider;
-		_profile = profile;
-		_observer = observer;
+		_report = report;
+		_loops =
+		[
+			.. Enumerable
+				.Range(0, Math.Max(1, loops))
+				.Select(index => new ConnectionLoop(
+					transport,
+					timeProvider,
+					profile,
+					report,
+					() => Post(new ReliableEndpointMessage.LoopDone()),
+					scheduler,
+					randomSeed + 1 + index
+				)),
+		];
 		Start();
 		_transport.Start(
 			(remoteEndPoint, datagram) =>
-				Post(new ReliableEndpointMessage.DatagramReceived(remoteEndPoint, datagram))
+				LoopFor(remoteEndPoint)
+					.Post(new ConnectionLoopMessage.DatagramReceived(remoteEndPoint, datagram))
 		);
 	}
 
-	private Connection CreateConnection(
-		EndPoint remoteEndPoint,
-		bool isOutbound,
-		PacketSigning signing
-	) =>
-		new(
-			remoteEndPoint,
-			isOutbound,
-			signing,
-			_transport,
-			_timeProvider,
-			_profile,
-			_observer,
-			connection => Post(new ReliableEndpointMessage.ConnectionTerminated(connection))
-		);
-
 	/// <summary>
-	/// Creates an outbound connection, which signs as <paramref name="signing"/> says, the session's mode, which the
-	/// caller gives: the endpoint's own is its thread's. It starts connecting once the endpoint has registered it.
-	/// Thread-safe: only reads immutable state.
+	/// Opens an outbound connection, which signs as <paramref name="signing"/> says, the session's mode, which the
+	/// caller gives: the loops' own are for inbound connections. Returns its handle at once; it starts connecting once
+	/// its loop has registered it, and if the loop has stopped, the session hears that it failed.
 	/// </summary>
 	public Connection Connect(EndPoint remoteEndPoint, PacketSigning signing)
 	{
-		var connection = CreateConnection(remoteEndPoint, isOutbound: true, signing);
-		if (!Post(new ReliableEndpointMessage.RegisterConnection(connection)))
-			connection.Post(new ConnectionMessage.Abort(ResultCode.NoConnection));
+		var loop = LoopFor(remoteEndPoint);
+		var connection = new Connection(remoteEndPoint, isOutbound: true, loop);
+		if (!loop.Post(new ConnectionLoopMessage.RegisterConnection(connection, signing)))
+			_report(new SessionMessage.ConnectionConnectFailed(connection, ResultCode.NoConnection));
 		return connection;
 	}
 
-	private Unit HandleDatagram(ReliableEndpointMessage.DatagramReceived message)
+	/// <summary>
+	/// Makes new inbound connections offer <paramref name="signing"/>. Posts to every loop, from any thread.
+	/// </summary>
+	public void SetSigning(PacketSigning signing)
 	{
-		if (_shutDown && !_connections.ContainsKey(message.RemoteEndPoint))
-			return Unit.Default;
-
-		// Host enumeration travels outside connections, with a first byte of 0 ([MC-DPLHP] section 2.2).
-		if (EnumerationMessageSerializer.IsEnumerationMessage(message.Datagram))
-		{
-			if (
-				EnumerationMessageSerializer.Default.Deserialize(message.Datagram)
-				is EnumerationMessage.Query query
-			)
-				_observer.OnEnumQuery(message.RemoteEndPoint, query);
-			return Unit.Default;
-		}
-
-		if (_connections.TryGetValue(message.RemoteEndPoint, out var connection))
-		{
-			connection.Post(new ConnectionMessage.DatagramReceived(message.Datagram));
-			return Unit.Default;
-		}
-
-		// Only CONNECT can open a connection; everything else from unknown sources is discarded.
-		if (
-			ReliableMessageSerializer.Default.Deserialize(message.Datagram)
-			is not ReliableMessage.Connect connect
-		)
-			return Unit.Default;
-
-		connection = CreateConnection(message.RemoteEndPoint, isOutbound: false, _signing);
-		_connections.Add(message.RemoteEndPoint, connection);
-		connection.Post(new ConnectionMessage.DatagramArrived(connect));
-		return Unit.Default;
+		foreach (var loop in _loops)
+			loop.Post(new ConnectionLoopMessage.SetSigning(signing));
 	}
 
-	private Unit HandleRegister(Connection connection)
+	/// <summary>
+	/// Shuts the connections down, then the transport. Posts to every loop, from any thread, after the messages the
+	/// caller posted to their connections before.
+	/// </summary>
+	public void ShutDown()
 	{
-		if (_shutDown || !_connections.TryAdd(connection.RemoteEndPoint, connection))
-			connection.Post(
-				new ConnectionMessage.Abort(
-					_shutDown ? ResultCode.NoConnection : ResultCode.AlreadyConnected
-				)
-			);
-		else
-			connection.Post(new ConnectionMessage.StartConnecting());
-		return Unit.Default;
+		Post(new ReliableEndpointMessage.ShutDown());
+		foreach (var loop in _loops)
+			loop.Post(new ConnectionLoopMessage.ShutDown());
 	}
 
-	// Disposes the transport once the endpoint is shut down and its last connection has terminated.
-	private void DisposeWhenDone()
+	private Unit HandleLoopDone()
 	{
-		if (!_shutDown || _isTransportDisposed || _connections.Count > 0)
-			return;
+		_loopsDone++;
+		if (_loopsDone < _loops.Length)
+			return Unit.Default;
 
-		_isTransportDisposed = true;
 		_transport.Dispose();
 		Stop();
-	}
-
-	private Unit HandleTerminated(Connection connection)
-	{
-		if (
-			_connections.TryGetValue(connection.RemoteEndPoint, out var current)
-			&& current == connection
-		)
-			_connections.Remove(connection.RemoteEndPoint);
-		DisposeWhenDone();
-		return Unit.Default;
-	}
-
-	// The connections end: at once, but one that says goodbye, which the session told to before it shut the endpoint
-	// down, and so takes that first.
-	private Unit HandleShutDown()
-	{
-		if (_shutDown)
-			return Unit.Default;
-
-		_shutDown = true;
-		foreach (var connection in _connections.Values)
-			connection.Post(new ConnectionMessage.EndpointShutDown(ResultCode.NoConnection));
-		DisposeWhenDone();
 		return Unit.Default;
 	}
 
 	protected override void Receive(ReliableEndpointMessage message) =>
 		message.Match(
-			DatagramReceived: HandleDatagram,
-			RegisterConnection: m => HandleRegister(m.Connection),
-			ConnectionTerminated: m => HandleTerminated(m.Connection),
 			SendDatagram: m =>
 			{
 				if (!_shutDown)
 					_transport.Send(m.RemoteEndPoint, m.Datagram);
 				return Unit.Default;
 			},
-			SetSigning: m =>
+			ShutDown: _ =>
 			{
-				_signing = m.Signing;
+				_shutDown = true;
 				return Unit.Default;
 			},
-			ShutDown: _ => HandleShutDown()
+			LoopDone: _ => HandleLoopDone()
 		);
 }

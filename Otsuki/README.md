@@ -7,5 +7,6 @@
 ## Projects
 
 * [Aigamo.Otsuki.Messages](Aigamo.Otsuki.Messages) – the messages of both protocols and their serializers.
-* [Aigamo.Otsuki](Aigamo.Otsuki) – a DirectPlay 8 peer built on those messages and on the actor model. See [its README](Aigamo.Otsuki/README.md) for usage and the design.
+* [Aigamo.Otsuki.Core](Aigamo.Otsuki.Core) – the protocol as state machines with no threads, timers or I/O, which an analyzer keeps so.
+* [Aigamo.Otsuki](Aigamo.Otsuki) – a DirectPlay 8 peer that runs that core on actors. See [its README](Aigamo.Otsuki/README.md) for usage and the design.
 * [Aigamo.Otsuki.ConsoleApp](Aigamo.Otsuki.ConsoleApp) – a chat that demonstrates the peer.

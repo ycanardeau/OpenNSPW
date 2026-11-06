@@ -20,6 +20,9 @@ public sealed class Client(PeerOptions? options = null) : IAsyncDisposable
 
 	public Dpnid LocalPlayer => _peer.LocalPlayer;
 
+	/// <inheritdoc cref="Peer.Queues"/>
+	public PeerQueues Queues => _peer.Queues;
+
 	public ApplicationDescription? ApplicationDescription => _peer.ApplicationDescription;
 
 	/// <summary>

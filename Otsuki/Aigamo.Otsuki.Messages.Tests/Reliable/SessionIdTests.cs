@@ -14,16 +14,6 @@ public class SessionIdTests
 		SessionId.Empty.Should().Be(new SessionId(0));
 	}
 
-	[Fact]
-	public void NewSessionId()
-	{
-		var sessionId1 = SessionId.NewSessionId();
-		sessionId1.Should().NotBe(SessionId.Empty);
-
-		var sessionId2 = SessionId.NewSessionId();
-		sessionId2.Should().NotBe(SessionId.Empty);
-	}
-
 	private static IEnumerable<object?[]> Equals_TestData()
 	{
 		yield return new object?[] { _testSessionId, _testSessionId, true };

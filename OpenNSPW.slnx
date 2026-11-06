@@ -32,6 +32,8 @@
     <Project Path="Otsuki/Aigamo.Otsuki.Analyzers/Aigamo.Otsuki.Analyzers.csproj" />
     <Project Path="Otsuki/Aigamo.Otsuki.Bluetooth/Aigamo.Otsuki.Bluetooth.csproj" />
     <Project Path="Otsuki/Aigamo.Otsuki.ConsoleApp/Aigamo.Otsuki.ConsoleApp.csproj" />
+    <Project Path="Otsuki/Aigamo.Otsuki.Core/Aigamo.Otsuki.Core.csproj" />
+    <Project Path="Otsuki/Aigamo.Otsuki.LoadTest/Aigamo.Otsuki.LoadTest.csproj" />
     <Project Path="Otsuki/Aigamo.Otsuki.Messages.Tests/Aigamo.Otsuki.Messages.Tests.csproj" />
     <Project Path="Otsuki/Aigamo.Otsuki.Messages/Aigamo.Otsuki.Messages.csproj" />
     <Project Path="Otsuki/Aigamo.Otsuki.Tests/Aigamo.Otsuki.Tests.csproj" />

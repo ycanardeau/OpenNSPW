@@ -36,6 +36,8 @@ public sealed class Mailbox<T>
 	private readonly int _capacity;
 	private readonly Action<T>? _receive;
 	private readonly Action<Exception>? _onError;
+	private readonly MailboxScheduler _scheduler = MailboxScheduler.ThreadPool;
+	private readonly Action? _run;
 
 	// Released when a message is posted to an owner that may sleep, once until the owner wakes (_isSignaled).
 	private readonly SemaphoreSlim _signal = new(0);
@@ -63,14 +65,22 @@ public sealed class Mailbox<T>
 	}
 
 	/// <summary>
-	/// A pooled mailbox: once <see cref="Start"/> is called, it runs <paramref name="receive"/> on the thread pool for
-	/// each message, one at a time, and <paramref name="onError"/> for what it throws.
+	/// A pooled mailbox: once <see cref="Start"/> is called, it runs <paramref name="receive"/> on
+	/// <paramref name="scheduler"/>, the thread pool if none, for each message, one at a time, and
+	/// <paramref name="onError"/> for what it throws.
 	/// </summary>
-	public Mailbox(Action<T> receive, Action<Exception> onError, int capacity = int.MaxValue)
+	public Mailbox(
+		Action<T> receive,
+		Action<Exception> onError,
+		int capacity = int.MaxValue,
+		MailboxScheduler? scheduler = null
+	)
 	{
 		_capacity = capacity;
 		_receive = receive;
 		_onError = onError;
+		_scheduler = scheduler ?? MailboxScheduler.ThreadPool;
+		_run = Run;
 		_isScheduled = 1;
 	}
 
@@ -78,6 +88,12 @@ public sealed class Mailbox<T>
 	/// Completes when a pooled mailbox is completed and has run its handler for each of its messages.
 	/// </summary>
 	public Task Completion => _completion.Task;
+
+	/// <summary>
+	/// How many messages are posted and not yet taken out of the queue, from any thread: a reading of a count that
+	/// moves, for diagnostics.
+	/// </summary>
+	public int Count => (int)(Interlocked.Read(ref _state) / OneMessage);
 
 	/// <summary>
 	/// Whether the mailbox is completed and its owner has received each of its messages. On the owner's thread.
@@ -100,9 +116,11 @@ public sealed class Mailbox<T>
 	}
 
 	// Runs the handler for each message, until the queue is empty; then lets the next post schedule it again, and looks
-	// at the queue once more, so that a message posted in between is not left.
+	// at the queue once more, so that a message posted in between is not left. A scheduler that runs a few messages at
+	// a time has it scheduled again, still marked as scheduled, after those.
 	private void Run()
 	{
+		var handled = 0;
 		while (true)
 		{
 			while (TryDequeue(out var message))
@@ -114,6 +132,12 @@ public sealed class Mailbox<T>
 				catch (Exception exception)
 				{
 					_onError!(exception);
+				}
+
+				if (++handled >= _scheduler.MessagesPerRun)
+				{
+					_scheduler.Schedule(_run!);
+					return;
 				}
 			}
 
@@ -135,11 +159,7 @@ public sealed class Mailbox<T>
 	private void Schedule()
 	{
 		if (Interlocked.CompareExchange(ref _isScheduled, 1, 0) == 0)
-			ThreadPool.UnsafeQueueUserWorkItem(
-				static mailbox => mailbox.Run(),
-				this,
-				preferLocal: false
-			);
+			_scheduler.Schedule(_run!);
 	}
 
 	private void Notify()

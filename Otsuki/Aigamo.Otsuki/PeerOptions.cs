@@ -1,5 +1,7 @@
 using System.Net;
+using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Reliable;
+using Aigamo.Otsuki.Session;
 using Aigamo.Otsuki.Transport;
 
 namespace Aigamo.Otsuki;
@@ -44,4 +46,32 @@ public sealed record PeerOptions
 	/// How long closing waits for connections to disconnect gracefully.
 	/// </summary>
 	public TimeSpan CloseTimeout { get; init; } = TimeSpan.FromSeconds(5);
+
+	/// <summary>
+	/// How many loops run the connections, each on one thread at a time; a hash of each partner's address chooses its
+	/// loop. One is enough for a game's few partners; a server of many clients gives one to each core it can spare.
+	/// </summary>
+	public int ConnectionLoops { get; init; } = 1;
+
+	/// <summary>
+	/// Runs the peer's actors: the session, the endpoint and the connection loops. The thread pool if
+	/// <see langword="null"/>; a test may run them one message at a time in an order of its choosing
+	/// (<see cref="ManualScheduler"/>).
+	/// </summary>
+	public MailboxScheduler? Scheduler { get; init; }
+
+	/// <summary>
+	/// Makes the peer's randomness repeat, for a test: its session and each of its connection loops draw from a
+	/// <see cref="Random"/> of their own, seeded from this. <see langword="null"/>, the system's secure source.
+	/// </summary>
+	internal int? RandomSeed { get; init; }
+
+	internal SessionOptions ToSessionOptions() =>
+		new()
+		{
+			JoinTimeout = JoinTimeout,
+			IntegrityCheckTimeout = IntegrityCheckTimeout,
+			RequestTimeout = RequestTimeout,
+			CloseTimeout = CloseTimeout,
+		};
 }

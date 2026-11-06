@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Authors>ycanardeau</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ycanardeau/Otsuki</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ycanardeau/Otsuki</RepositoryUrl>
+    <Description>The DirectPlay 8 protocol of Otsuki as state machines without threads, timers or I/O, which the analyzer keeps so.</Description>
+  </PropertyGroup>
+
+  <!-- Nothing in the core waits, schedules or shares: the analyzer refuses the types (OTSUKI0004), and the usings that
+  would bring them in are left out. -->
+  <ItemGroup>
+    <Using Remove="System.Net.Http" />
+    <Using Remove="System.Threading" />
+    <Using Remove="System.Threading.Tasks" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aigamo.Results" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Aigamo.Otsuki.Messages\Aigamo.Otsuki.Messages.csproj" />
+  </ItemGroup>
+
+</Project>

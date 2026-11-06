@@ -42,6 +42,13 @@ public sealed class Peer : IAsyncDisposable
 
 	private SessionSnapshot Snapshot => _snapshot.Value;
 
+	/// <summary>
+	/// How many messages wait in the peer's mailboxes now: the session's, each connection loop's, and the events not
+	/// yet handled. For diagnostics, such as finding where a peer under load falls behind.
+	/// </summary>
+	public PeerQueues Queues =>
+		new(_session.QueueLength, _session.LoopQueueLengths, _events.Count);
+
 	public EndPoint? LocalEndPoint => Snapshot.LocalEndPoint;
 
 	public Dpnid LocalPlayer => Snapshot.LocalPlayer;
@@ -73,21 +80,23 @@ public sealed class Peer : IAsyncDisposable
 			throw new ObjectDisposedException(nameof(Peer));
 	}
 
-	private Task PostCommandAsync(Func<TaskCompletionSource, SessionMessage> createCommand)
+	// The session completes the task through its outputs (SessionActor), once the command is done and its snapshot
+	// published.
+	private Task PostCommandAsync(Func<Completion, SessionMessage> createCommand)
 	{
 		var completion = new TaskCompletionSource(
 			TaskCreationOptions.RunContinuationsAsynchronously
 		);
-		PostCommand(createCommand(completion));
+		PostCommand(createCommand(new Completion(completion)));
 		return completion.Task;
 	}
 
-	private Task<T> PostCommandAsync<T>(Func<TaskCompletionSource<T>, SessionMessage> createCommand)
+	private Task<T> PostCommandAsync<T>(Func<Completion<T>, SessionMessage> createCommand)
 	{
 		var completion = new TaskCompletionSource<T>(
 			TaskCreationOptions.RunContinuationsAsynchronously
 		);
-		PostCommand(createCommand(completion));
+		PostCommand(createCommand(new Completion<T>(completion)));
 		return completion.Task;
 	}
 
@@ -318,17 +327,17 @@ public sealed class Peer : IAsyncDisposable
 	) => _events.ReadAllAsync(cancellationToken);
 
 	/// <summary>
-	/// Leaves the session, disconnecting gracefully from every peer, and shuts the peer down.
+	/// Leaves the session, disconnecting gracefully from every peer, and shuts the peer down. The task is the one the
+	/// session completes, with no step between, so that it completes as the session answers.
 	/// </summary>
-	public async Task CloseAsync()
+	public Task CloseAsync()
 	{
 		var completion = new TaskCompletionSource(
 			TaskCreationOptions.RunContinuationsAsynchronously
 		);
-		if (_session.Post(new SessionMessage.Close(completion)))
-			await completion.Task.ConfigureAwait(false);
-		else
-			await _session.Completion.ConfigureAwait(false);
+		return _session.Post(new SessionMessage.Close(new Completion(completion)))
+			? completion.Task
+			: _session.Completion;
 	}
 
 	public async ValueTask DisposeAsync() => await CloseAsync().ConfigureAwait(false);
