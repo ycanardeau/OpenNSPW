@@ -849,6 +849,11 @@ public unsafe partial class Nspw
 	{
 		if (fire.Ticks <= fire.FlightTime)
 		{
+			// BUG?(1.22, NSPW NET): a torpedo with land 40 behind it ends its run by taking its flight time as its ticks, which
+			// also arms it (0x41A254 to 0x41A336, 0x41A3B8), so that one fired from a ship off a coast it heads away from hits
+			// the ship that fired it, of whichever side, as it is fired. The arming time is there so that a torpedo cannot hit
+			// as it is fired, but the code does not show whether testing behind the torpedo, or hitting where it ends, was
+			// meant. Kept as is for compatibility with 1.22 and NSPW NET.
 			if (IsLandAt(fire.Position + WorldVector.FromDirection(fire.Direction) * -40))
 			{
 				fire.Ticks = fire.FlightTime;
