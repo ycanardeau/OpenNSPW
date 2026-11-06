@@ -13,6 +13,11 @@ internal interface IAppHost
 	// on a desktop, which MonoGame's Android does not have.
 	void ListenToText(GameWindow window, Action<char> typed);
 
+	// Lets the player write a field's `text` in the system's own text box, headed `title`, and passes what they wrote to
+	// `written` once they confirm it: true where the system has one for a touch screen, as Android does; false where the
+	// player types into the field itself, key by key (ListenToText).
+	bool EditText(string title, string text, Action<string> written);
+
 	// Closes the app, from its main menu, where no game is being played.
 	void Quit(Game game);
 

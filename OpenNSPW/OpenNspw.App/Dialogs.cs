@@ -35,14 +35,33 @@ internal abstract class DialogControl : Control
 	}
 }
 
-internal sealed class EditBox : DialogControl
+// Where the system has its own text box (host, IAppHost.EditText), touching the edit box opens it, headed with the
+// dialog's caption (title).
+internal sealed class EditBox(IAppHost host, Func<string> title) : DialogControl
 {
+	private readonly IAppHost _host = host;
+	private readonly Func<string> _title = title;
+
 	public event EventHandler<string>? Edited;
 
 	protected override void OnMouseDown(MouseEventArgs e)
 	{
 		base.OnMouseDown(e);
 		WindowManager.SetFocus(this);
+		if (!Enabled)
+		{
+			return;
+		}
+
+		_host.EditText(
+			_title(),
+			Text,
+			text =>
+			{
+				Text = text;
+				Edited?.Invoke(this, Text);
+			}
+		);
 	}
 
 	protected override void OnKeyPress(KeyPressEventArgs e)
@@ -207,7 +226,12 @@ internal sealed class StaticText(bool right) : DialogControl
 
 // The forms that show the game's dialogs (HWND, from NSPW_NET_RC.cs), kept in step with the view of them that the game
 // posts (GameSession.Windows). What the user does is posted to the game's thread.
-internal sealed class DialogForms(GameSession session, WindowManager windowManager, UIFonts fonts)
+internal sealed class DialogForms(
+	GameSession session,
+	WindowManager windowManager,
+	UIFonts fonts,
+	IAppHost host
+)
 {
 	// The pixels of a dialog unit, for the dialogs' 9-point font.
 	private const float UnitX = 1.5f;
@@ -218,6 +242,7 @@ internal sealed class DialogForms(GameSession session, WindowManager windowManag
 	private readonly Nspw _game = session.Game;
 	private readonly WindowManager _windowManager = windowManager;
 	private readonly UIFonts _fonts = fonts;
+	private readonly IAppHost _host = host;
 	private readonly Dictionary<HWND, (Form Form, Dictionary<HWND, Control> Controls)> _forms = [];
 
 	private static Rectangle ToPixels(int x, int y, int cx, int cy)
@@ -230,7 +255,13 @@ internal sealed class DialogForms(GameSession session, WindowManager windowManag
 		);
 	}
 
-	private Control CreateControl(HWND dialog, WindowView item, DLGITEMTEMPLATE template)
+	// caption: the dialog's caption, which heads the system's text box of an edit box.
+	private Control CreateControl(
+		HWND dialog,
+		WindowView item,
+		DLGITEMTEMPLATE template,
+		Control caption
+	)
 	{
 		Control control;
 		switch (template.Kind)
@@ -252,7 +283,7 @@ internal sealed class DialogForms(GameSession session, WindowManager windowManag
 				control = checkBox;
 				break;
 			case "EDITTEXT":
-				var edit = new EditBox();
+				var edit = new EditBox(_host, () => caption.Text);
 				edit.Edited += (_, text) =>
 					_game.PostToGame(() => _game.TypeDlgItemText(dialog, item.Id, text));
 				control = edit;
@@ -314,7 +345,7 @@ internal sealed class DialogForms(GameSession session, WindowManager windowManag
 		var controls = new Dictionary<HWND, Control> { [dialog.Window] = caption };
 		foreach (var (item, itemTemplate) in dialog.Children.Zip(template.Items))
 		{
-			var control = CreateControl(dialog.Window, item, itemTemplate);
+			var control = CreateControl(dialog.Window, item, itemTemplate, caption);
 
 			// A left-aligned text may run to the dialog's edge: the font is wider than the original's.
 			if (itemTemplate.Kind == "LTEXT")

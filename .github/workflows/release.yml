@@ -224,7 +224,7 @@ jobs:
         OpenNSPW-<version>-android.apk           Android 6 or later: open it on the device, allowing installs from where it was opened
         ```
 
-        On Android, the game shows the desktop's screens, played by touch: a touch is a click, and Back is Escape. No text can be typed yet, such as a host's address, so it plays single-player only.
+        On Android, the game shows the desktop's screens, played by touch: a touch is a click, Back is Escape, and touching a field to write in, such as a host's address, opens Android's text box.
 
         What the game writes, its saves and the scenarios saved with its map editor, is kept in `OpenNSPW/Files` in the user's application data (`%APPDATA%`, `~/Library/Application Support`, `~/.config`). To play your own copy of NSPW NET's files instead, start the app with `--data <the NSPW_NET folder>`.
 

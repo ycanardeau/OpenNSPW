@@ -13,6 +13,7 @@ internal sealed class ConnectionForm : Form
 	private static readonly DrawingRectangle PanelBounds = new(262, 176, 500, 440);
 
 	private readonly UIFonts _fonts;
+	private readonly IAppHost _appHost;
 	private readonly ActionButton _host;
 	private readonly ActionButton _join;
 	private readonly TextField _name;
@@ -107,16 +108,17 @@ internal sealed class ConnectionForm : Form
 		return segment;
 	}
 
-	private TextField CreateField(DrawingRectangle bounds)
+	private TextField CreateField(DrawingRectangle bounds, string title)
 	{
-		var field = new TextField(_fonts) { Bounds = bounds };
+		var field = new TextField(_fonts, _appHost) { Bounds = bounds, Title = title };
 		Controls.Add(field);
 		return field;
 	}
 
-	public ConnectionForm(UIFonts fonts)
+	public ConnectionForm(UIFonts fonts, IAppHost appHost)
 	{
 		_fonts = fonts;
+		_appHost = appHost;
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		BackColor = DrawingColor.Transparent;
 		KeyPreview = true;
@@ -132,9 +134,15 @@ internal sealed class ConnectionForm : Form
 			Texts.Join,
 			false
 		);
-		_name = CreateField(new DrawingRectangle(x, PanelBounds.Y + 124, width, 40));
-		_address = CreateField(new DrawingRectangle(x, PanelBounds.Y + 206, width, 40));
-		_port = CreateField(new DrawingRectangle(x, PanelBounds.Y + 288, 160, 40));
+		_name = CreateField(
+			new DrawingRectangle(x, PanelBounds.Y + 124, width, 40),
+			Texts.PlayerName
+		);
+		_address = CreateField(
+			new DrawingRectangle(x, PanelBounds.Y + 206, width, 40),
+			Texts.Address
+		);
+		_port = CreateField(new DrawingRectangle(x, PanelBounds.Y + 288, 160, 40), Texts.Port);
 
 		_connect = new ActionButton(fonts)
 		{

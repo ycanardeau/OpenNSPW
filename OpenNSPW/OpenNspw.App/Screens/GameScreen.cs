@@ -177,7 +177,7 @@ internal sealed class GameScreen(
 		_settingForm = new SettingForm(_session, Game.Fonts) { Visible = false };
 		WindowManager.Root.Controls.Add(_settingForm);
 		_backdrop = new Backdrop(GraphicsDevice);
-		_dialogs = new DialogForms(_session, WindowManager, Game.Fonts);
+		_dialogs = new DialogForms(_session, WindowManager, Game.Fonts, Game.Host);
 		if (_watch is { } watch && _session.Replay is { } player)
 		{
 			_replayBar = new ReplayBar(Game.Fonts, watch, player) { Visible = false };

@@ -105,7 +105,7 @@ internal sealed class MultiplayerScreen(NspwGame game) : Screen(game)
 		_backdrop = new Backdrop(GraphicsDevice);
 		_session = Game.StartSession();
 
-		_form = new ConnectionForm(Game.Fonts) { CanConnect = false };
+		_form = new ConnectionForm(Game.Fonts, Game.Host) { CanConnect = false };
 		_form.HostClicked += (_, _) => ClickHost();
 		_form.Connecting += (_, _) => Connect();
 		_form.EditingScenario += (_, _) => EditScenario();

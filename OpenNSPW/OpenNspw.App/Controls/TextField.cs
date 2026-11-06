@@ -3,20 +3,35 @@ using Aigamo.Saruhashi;
 namespace OpenNspw.App.Controls;
 
 // A field to type text in: dark, outlined in brass while it has the focus, with a blinking caret, and a placeholder
-// while it is empty.
-internal sealed class TextField(UIFonts fonts) : Control
+// while it is empty. Where the system has its own text box (host, IAppHost.EditText), touching the field opens it,
+// headed with the field's title.
+internal sealed class TextField(UIFonts fonts, IAppHost host) : Control
 {
 	private readonly UIFonts _fonts = fonts;
+	private readonly IAppHost _host = host;
 
 	public string Placeholder { get; set; } = "";
+
+	public string Title { get; set; } = "";
 
 	public event EventHandler? Edited;
 
 	protected override void OnMouseDown(MouseEventArgs e)
 	{
 		base.OnMouseDown(e);
-		if (Enabled)
-			WindowManager.SetFocus(this);
+		if (!Enabled)
+			return;
+
+		WindowManager.SetFocus(this);
+		_host.EditText(
+			Title,
+			Text,
+			text =>
+			{
+				Text = text;
+				Edited?.Invoke(this, EventArgs.Empty);
+			}
+		);
 	}
 
 	protected override void OnKeyPress(KeyPressEventArgs e)

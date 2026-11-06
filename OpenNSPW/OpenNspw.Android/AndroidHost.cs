@@ -1,11 +1,12 @@
 using Android.App;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using OpenNspw.App;
 
 namespace OpenNspw.Android;
 
-// The app on Android, in `activity`: played by touching the screen. MonoGame's Android gives no text typed
-// (GameWindow.TextInput), and the app's folders are its own, in no file browser.
+// The app on Android, in `activity`: played by touching the screen, and text written in Android's text box, as MonoGame's
+// Android gives no text typed (GameWindow.TextInput). The app's folders are its own, in no file browser.
 internal sealed class AndroidHost(Activity activity) : IAppHost
 {
 	private readonly Activity _activity = activity;
@@ -13,6 +14,21 @@ internal sealed class AndroidHost(Activity activity) : IAppHost
 	public bool IsTouchScreen => true;
 
 	public void ListenToText(GameWindow window, Action<char> typed) { }
+
+	// MonoGame's text box (KeyboardInput), one at a time: a field touched while one is shown is not edited. What is written
+	// comes on the UI's thread, which runs the game's updates.
+	public bool EditText(string title, string text, Action<string> written)
+	{
+		async Task Show()
+		{
+			if (await KeyboardInput.Show(title, "", text) is { } result)
+				written(result);
+		}
+
+		if (!KeyboardInput.IsVisible)
+			_ = Show();
+		return true;
+	}
 
 	// MonoGame's Game.Exit on Android only moves the app's task to the back, and the game draws nothing from then on, also
 	// once the app is shown again: the activity is finished and the process ends instead.

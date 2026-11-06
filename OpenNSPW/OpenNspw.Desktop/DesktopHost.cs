@@ -14,6 +14,8 @@ internal sealed class DesktopHost : IAppHost
 		window.TextInput += (_, e) => typed(e.Character);
 	}
 
+	public bool EditText(string title, string text, Action<string> written) => false;
+
 	public void Quit(Game game)
 	{
 		game.Exit();
