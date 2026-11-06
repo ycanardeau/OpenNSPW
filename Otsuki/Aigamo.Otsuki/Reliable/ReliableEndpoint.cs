@@ -4,6 +4,7 @@ using Aigamo.MatchGenerator;
 using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Messages.Reliable;
+using Aigamo.Otsuki.Session;
 using Aigamo.Otsuki.Transport;
 using Aigamo.Results;
 
@@ -37,6 +38,7 @@ internal abstract record ReliableEndpointMessage
 internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 {
 	private readonly IDatagramTransport _transport;
+	private readonly Func<SessionMessage, bool> _report;
 	private readonly ImmutableArray<ConnectionLoop> _loops;
 	private int _loopsDone;
 	private bool _shutDown;
@@ -52,13 +54,14 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 		IDatagramTransport transport,
 		TimeProvider timeProvider,
 		ReliableProfile profile,
-		IConnectionObserver observer,
+		Func<SessionMessage, bool> report,
 		int loops = 1,
 		MailboxScheduler? scheduler = null
 	)
 		: base(scheduler: scheduler)
 	{
 		_transport = transport;
+		_report = report;
 		_loops =
 		[
 			.. Enumerable
@@ -67,7 +70,7 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 					transport,
 					timeProvider,
 					profile,
-					observer,
+					report,
 					() => Post(new ReliableEndpointMessage.LoopDone()),
 					scheduler
 				)),
@@ -84,16 +87,16 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 		_loops[(remoteEndPoint.GetHashCode() & int.MaxValue) % _loops.Length];
 
 	/// <summary>
-	/// Creates an outbound connection, which signs as <paramref name="signing"/> says, the session's mode, which the
-	/// caller gives: the loops' own are their threads'. It starts connecting once its loop has registered it.
-	/// Thread-safe: only reads immutable state.
+	/// Opens an outbound connection, which signs as <paramref name="signing"/> says, the session's mode, which the
+	/// caller gives: the loops' own are for inbound connections. Returns its handle at once; it starts connecting once
+	/// its loop has registered it, and if the loop has stopped, the session hears that it failed.
 	/// </summary>
 	public Connection Connect(EndPoint remoteEndPoint, PacketSigning signing)
 	{
 		var loop = LoopFor(remoteEndPoint);
-		var connection = loop.CreateConnection(remoteEndPoint, isOutbound: true, signing);
-		if (!loop.Post(new ConnectionLoopMessage.RegisterConnection(connection)))
-			connection.Observer.OnConnectFailed(connection, ResultCode.NoConnection);
+		var connection = new Connection(remoteEndPoint, isOutbound: true, loop);
+		if (!loop.Post(new ConnectionLoopMessage.RegisterConnection(connection, signing)))
+			_report(new SessionMessage.ConnectionConnectFailed(connection, ResultCode.NoConnection));
 		return connection;
 	}
 
