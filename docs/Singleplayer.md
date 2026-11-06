@@ -1,7 +1,7 @@
 # Single-player
 How OpenNSPW plays the single-player game of NSPW 1.22 (`Original/Nspw122/NSPW_122.exe`) against the computer.
 
-The NSPW NET source has no single-player code: the computer's strategy, the single-player scenarios and their victory conditions exist only as machine code in the single-player executable. OpenNSPW rewrites that machine code as C#, on the port's own state: the scenarios' setups (`Scenarios122.cs`), the computer (`ComputerStrategy.cs`, `ComputerPlayer.cs`) and the victory conditions. Each rewrite is tested against the original, run on [Enzan](../Enzan) as translated by the [Disassembler](../Disassembler): a game does not use the emulator, which only the tests create (`Nspw.Emulator`). Everything else (the battle, drawing, input) is the port of NSPW NET, with 1.22's rules where its battle differs (`BattleRules`).
+The NSPW NET source has no single-player code: the computer's strategy, the single-player scenarios and their victory conditions exist only as machine code in the single-player executable. OpenNSPW rewrites that machine code as C#, on the port's own state: the scenarios' setups (`Scenarios122.cs`), the computer (`ComputerPlayer.cs`, and its strategy in `OpenNspw.ComputerPlayers`) and the victory conditions. Each rewrite is tested against the original, run on [Enzan](../Enzan) as translated by the [Disassembler](../Disassembler): a game does not use the emulator, which only the tests create (`Nspw.Emulator`). Everything else (the battle, drawing, input) is the port of NSPW NET, with 1.22's rules where its battle differs (`BattleRules`).
 
 ## Summary
 - **Rewrite only what NSPW NET lacks**: the scenario setups, the computer's strategy, its route planning, the victory conditions, and the 1.22 versions of the functions they call to create units. The battle itself stays the port's.
@@ -32,12 +32,12 @@ dotnet run --project Disassembler/OpenNspw.Disassembler -- Original/Nspw122/NSPW
 | Function | Address | Called by the port |
 | --- | --- | --- |
 | `scenario_1` to `scenario_10`, `scenario_100` to `scenario_109`, `scenario_200` to `scenario_209`, `scenario_300` to `scenario_306` | `Functions.SetUpScenario` | Lifted to C# (`Scenarios122.cs`, `SetUpScenarioAs122`), which `InitializeGame` calls in place of `get_sinario_data`; the emulated originals are kept for their test (`ScenarioSetupTests`) |
-| `cpu_strtgy` | `0x404E30` | Rewritten as C# (`PlanComputerStrategy`), which `HandleInput` calls before the orders are applied; the emulated original is kept for its test |
-| `sub_403AE0`, `sub_404D80`, `sub_414DD0`, `sub_41F230`, `sub_41F300`, `sub_41F490` | | Rewritten as C# (`SetFormation`, `ShuffleTargets`, `PlaceReinforcement`, `AddTargets`), called by `PlanComputerStrategy`; the emulated originals are kept for their tests |
+| `cpu_strtgy` | `0x404E30` | Rewritten as C# (`Strategy122`, in `OpenNspw.ComputerPlayers`), which `HandleInput` runs through the game's computer player (`ComputerPlayer122`) before the orders are applied; the emulated original is kept for its test |
+| `sub_403AE0`, `sub_404D80`, `sub_414DD0`, `sub_41F230`, `sub_41F300`, `sub_41F490` | | Rewritten as C# (`SetFormation`, `ShuffleTargets`, `PlaceReinforcement`, `AddTargets`), called by `Strategy122`; the emulated originals are kept for their tests |
 | `set_cpu_route` | `0x42DA80` | Rewritten as C# (`PlanComputerRoute`), which `ApplyOrders` calls for a move order of a computer's ship, and `ReplanBlockedRoute` for a blocked one; the emulated original is kept for its test |
 | `decision` | `0x41C3C0` | Rewritten as C# (`Decide`), which `CheckResult` calls in place of NSPW NET's conditions and result; the emulated original is kept for its test |
 | `set_unit_data` | `0x41E150` | Rewritten as C# (`SetUnitData122`), which the port's `SetUnitData` calls in a single-player game: its values are not NSPW NET's |
-| `set_new_unit`, `set_new_unit_plane`, `plane_in_cv`, `set_pos_of_parking` | `0x41EE20`, `0x41F060`, `0x416F00`, `0x416F40` | The port's `AddUnit`, `AddPlane`, `CountPlanesIn` and `SetParkingPosition` do the same in a single-player game (`SharedFunctionTests`); `Decide` and `PlanComputerStrategy` call them |
+| `set_new_unit`, `set_new_unit_plane`, `plane_in_cv`, `set_pos_of_parking` | `0x41EE20`, `0x41F060`, `0x416F00`, `0x416F40` | The port's `AddUnit`, `AddPlane`, `CountPlanesIn` and `SetParkingPosition` do the same in a single-player game (`SharedFunctionTests`); `Decide` and `Strategy122` call them |
 | `sub_41F3C0`, `cls_all_slct_unit_p2`, `pt_in_rect3`, `sub_417C10` | | Only by the emulated code |
 
 `set_cpu_route2` (`0x42ED30`) is translated, for its test: `SetDynamicDestination` calls the port's `SetCpuRoute2` for a ship that follows a leader, as 1.22's formation does (`0x414D79`), with 1.22's obstacles (`BattleRules.LastKindRoutesIgnore`), which is NSPW NET's `set_cpu_root2` but for them ([ComputerPlayer.md](ComputerPlayer.md#set_cpu_route)).

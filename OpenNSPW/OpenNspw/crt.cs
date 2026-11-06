@@ -9,6 +9,14 @@ public static partial class crt
 	{
 		return x < 0 ? -x : x;
 	}
+
+	// __ftol (0x4360C4): truncated toward zero, the low half of the 64-bit integer, and of the integer indefinite,
+	// 0x8000000000000000, for a NaN or a value out of range, as the CRT's fistp gives them, where a conversion in C#
+	// saturates.
+	public static int Ftol(double value) =>
+		double.IsNaN(value) || value >= 9223372036854775808.0 || value < -9223372036854775808.0
+			? 0
+			: (int)(long)value;
 }
 
 // rand() and srand() keep their state per game, like the per-thread state of the MSVC CRT, so that two games can run

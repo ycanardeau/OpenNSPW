@@ -1,12 +1,15 @@
 using System.Runtime.CompilerServices;
+using static OpenNspw.Nspw;
 
-namespace OpenNspw;
+namespace OpenNspw.ComputerPlayers;
 
 // NSPW 1.22's cpu_strtgy (0x404E30), rewritten from its machine code (docs/ComputerPlayer.md, cpu_strtgy): the
-// computer's order of the frame, for one of its fleets. It is tested against the emulated original
-// (ComputerPlayerTests). The functions that it calls and that are not rewritten yet run in the emulator.
-public unsafe partial class Nspw
+// computer's order of the frame, for one of its fleets, in the game it is given. It is tested against the emulated
+// original (ComputerPlayerTests). A struct, so that a frame's strategy allocates nothing.
+internal readonly struct Strategy122(Nspw game)
 {
+	private readonly Nspw _game = game;
+
 	// Where cpu_strtgy goes after a step: on to the next, to the reinforcements of scenario 304 and the order (when the
 	// fleet has given its order, or has none to give), or out, without an order.
 	private enum StrategyFlow
@@ -26,14 +29,6 @@ public unsafe partial class Nspw
 
 	private static bool IsLandForce(UnitKind kind) =>
 		kind >= UnitKind.InfantryBase && kind <= UnitKind.Fortress;
-
-	// __ftol (0x4360C4): truncated toward zero, the low half of the 64-bit integer, and of the integer indefinite,
-	// 0x8000000000000000, for a NaN or a value out of range, as the CRT's fistp gives them, where a conversion in C#
-	// saturates.
-	private static int Ftol(double value) =>
-		double.IsNaN(value) || value >= 9223372036854775808.0 || value < -9223372036854775808.0
-			? 0
-			: (int)(long)value;
 
 	// The distance of (dx, dy) as 1.22 computes it everywhere: the x component over the cosine of the direction folded
 	// into 0 to 90°, with a component of 0 taken as 1.
@@ -82,18 +77,6 @@ public unsafe partial class Nspw
 			&& plane.Weapon != FireKind.Maintenance;
 	}
 
-	// Element i of the fleet's members, read on into the fields that follow them as 1.22 reads past the last.
-	private static ref short MemberAt(ref ComputerFleet fleet, int i)
-	{
-		return ref Unsafe.Add(ref fleet.Members[0], i);
-	}
-
-	// Element i of the fleet's targets, read on into its members as 1.22 reads index 18.
-	private static ref short TargetAt(ref ComputerFleet fleet, int i)
-	{
-		return ref Unsafe.Add(ref fleet.Targets[0], i);
-	}
-
 	// Packs the list from start to last, moving each unit to the first empty element before it; after a move, the scan
 	// starts again after start.
 	private static void Pack(Span<short> list, int start, int last)
@@ -115,94 +98,19 @@ public unsafe partial class Nspw
 		}
 	}
 
-	// sub_41F230, sub_41F300, sub_41F3C0, sub_41F490: adds every enemy unit of the kinds to fleet f's targets, from the
-	// first empty element of 1 to 17, unless it is in elements 1 to 17 already. There is no limit: past element 17, 1.22
-	// writes on into the members.
-	private void AddTargets(int f, Func<UnitKind, bool> isTarget)
-	{
-		ref var fleet = ref FleetAt(f);
-		var next = 1;
-		while (next <= 17 && fleet.Targets[next] != 0)
-			next++;
-
-		for (var i = 1; i <= MaxUnitId; i++)
-		{
-			ref var unit = ref Units[i];
-			if (!unit.IsUsed || unit.Side == CpuSide || !isTarget(unit.Kind))
-				continue;
-
-			var isListed = false;
-			for (var k = 1; k <= 17; k++)
-			{
-				if (fleet.Targets[k] == i)
-					isListed = true;
-			}
-
-			if (!isListed)
-				TargetAt(ref fleet, next++) = (short)i;
-		}
-	}
-
-	public void AddTargetsOfKind(int f, UnitKind kind) => AddTargets(f, k => k == kind);
-
-	public void AddNavalBaseTargets(int f) => AddTargets(f, k => k == UnitKind.NavalBase);
-
-	// sub_41F3C0: the carriers and light carriers.
-	public void AddCarrierTargets(int f) =>
-		AddTargets(f, k => k is UnitKind.Carrier or UnitKind.LightCarrier);
-
-	// sub_41F490: the battleships, cruisers and carriers.
-	public void AddShipTargets(int f) =>
-		AddTargets(
-			f,
-			k =>
-				k
-					is UnitKind.Battleship
-						or UnitKind.Cruiser
-						or UnitKind.Carrier
-						or UnitKind.LightCarrier
-		);
-
-	// sub_404D80: shuffles fleet f's targets, up to the first empty element, with rand()%18+1 random swaps.
-	public void ShuffleTargets(int f)
-	{
-		ref var fleet = ref FleetAt(f);
-		var count = 0;
-		if (fleet.Targets[1] != 0)
-		{
-			count = 1;
-			while (TargetAt(ref fleet, count + 1) != 0)
-				count++;
-		}
-
-		if (count <= 1)
-			return;
-
-		for (var swaps = rand() % 18 + 1; swaps > 0; swaps--)
-		{
-			var i = rand() % count + 1;
-			var j = rand() % count + 1;
-			if (i != j)
-				(TargetAt(ref fleet, i), TargetAt(ref fleet, j)) = (
-					TargetAt(ref fleet, j),
-					TargetAt(ref fleet, i)
-				);
-		}
-	}
-
 	// sub_414DD0: moves the point 80 down until no ship's square (the size of the units' sprite) covers it.
 	internal void PlaceReinforcement(ref double x, ref double y)
 	{
-		for (var i = 1; i <= MaxUnitId; i++)
+		for (var i = 1; i <= _game.MaxUnitId; i++)
 		{
-			ref var unit = ref Units[i];
+			ref var unit = ref _game.Units[i];
 			if (!unit.IsUsed || unit.Category != UnitCategory.Ship)
 				continue;
 
 			var unitY = Ftol(unit.Position.Y);
 			var unitX = Ftol(unit.Position.X);
-			var halfHeight = Renderer.Sprites[SpriteId.JapanUnits].Size.Height / 2;
-			var halfWidth = Renderer.Sprites[SpriteId.JapanUnits].Size.Width / 2;
+			var halfHeight = _game.Renderer.Sprites[SpriteId.JapanUnits].Size.Height / 2;
+			var halfWidth = _game.Renderer.Sprites[SpriteId.JapanUnits].Size.Width / 2;
 			var square = new RECT
 			{
 				left = unitX - halfWidth,
@@ -210,7 +118,7 @@ public unsafe partial class Nspw
 				right = unitX + halfWidth,
 				bottom = unitY + halfHeight,
 			};
-			if (PointInRect(ref square, Ftol(x), Ftol(y)))
+			if (_game.PointInRect(ref square, Ftol(x), Ftol(y)))
 			{
 				y = y - 80;
 				i = 0;
@@ -259,8 +167,8 @@ public unsafe partial class Nspw
 
 	private void PlaceInFormation(int m, double bearing, double distance)
 	{
-		Units[m].DirectionToLeader = bearing;
-		Units[m].DistanceToLeader = distance;
+		_game.Units[m].DirectionToLeader = bearing;
+		_game.Units[m].DistanceToLeader = distance;
 	}
 
 	// sub_403AE0's formation of a fleet led by its transports or carriers (the first members, isLead): the others
@@ -278,7 +186,7 @@ public unsafe partial class Nspw
 		var escorts = 0;
 		for (var k = 0; MemberAt(ref fleet, k) != 0; k++)
 		{
-			if (isLead(Units[MemberAt(ref fleet, k)].Kind))
+			if (isLead(_game.Units[MemberAt(ref fleet, k)].Kind))
 				leads++;
 			else
 				escorts++;
@@ -317,13 +225,13 @@ public unsafe partial class Nspw
 	// other, in line behind the flagship, 180 apart.
 	internal void SetFormation(int f)
 	{
-		ref var fleet = ref FleetAt(f);
+		ref var fleet = ref _game.FleetAt(f);
 		var carrierAt = -1;
 		if (fleet.Members[0] != 0)
 		{
 			for (var k = 0; MemberAt(ref fleet, k) != 0; k++)
 			{
-				ref var member = ref Units[MemberAt(ref fleet, k)];
+				ref var member = ref _game.Units[MemberAt(ref fleet, k)];
 				if (
 					carrierAt == -1
 					&& member.Kind is UnitKind.Carrier or UnitKind.LightCarrier
@@ -334,17 +242,17 @@ public unsafe partial class Nspw
 		}
 
 		var n = 1;
-		if (carrierAt == -1 && Units[fleet.Members[0]].Kind != UnitKind.Transport)
+		if (carrierAt == -1 && _game.Units[fleet.Members[0]].Kind != UnitKind.Transport)
 		{
 			var distance = 180;
 			for (var k = 1; MemberAt(ref fleet, k) != 0; k++)
 			{
 				int m = MemberAt(ref fleet, k);
-				if (!Units[m].IsUsed)
+				if (!_game.Units[m].IsUsed)
 					continue;
 
-				Selections[0][m] = (short)n++;
-				Units[m].GroupLeader = fleet.Flagship;
+				_game.Selections[0][m] = (short)n++;
+				_game.Units[m].GroupLeader = fleet.Flagship;
 				PlaceInFormation(m, 180, distance);
 				distance += 180;
 			}
@@ -374,27 +282,27 @@ public unsafe partial class Nspw
 		for (var k = 1; MemberAt(ref fleet, k) != 0; k++)
 		{
 			int m = MemberAt(ref fleet, k);
-			if (!Units[m].IsUsed)
+			if (!_game.Units[m].IsUsed)
 				continue;
 
-			Selections[0][m] = (short)n++;
-			Units[m].GroupLeader = fleet.Flagship;
+			_game.Selections[0][m] = (short)n++;
+			_game.Units[m].GroupLeader = fleet.Flagship;
 		}
 	}
 
 	// sub_403A70: whether plane m belongs to fleet f, its carrier or base being the fleet's flagship.
 	private bool IsInFleet(int m, int f)
 	{
-		return Units[m].Carrier == FleetAt(f).Flagship;
+		return _game.Units[m].Carrier == _game.FleetAt(f).Flagship;
 	}
 
 	// The order's destination, moved 300 in a random direction: a strike on a base.
 	private void MoveOrderDestinationAtRandom()
 	{
-		var a = rand() % 360 * DegreesToRadians;
-		MoveOrders[0].Destination = new WorldPosition(
-			cos(a) * 300 + MoveOrders[0].Destination.X,
-			sin(a) * 300 + MoveOrders[0].Destination.Y
+		var a = _game.rand() % 360 * DegreesToRadians;
+		_game.MoveOrders[0].Destination = new WorldPosition(
+			cos(a) * 300 + _game.MoveOrders[0].Destination.X,
+			sin(a) * 300 + _game.MoveOrders[0].Destination.Y
 		);
 	}
 
@@ -402,9 +310,9 @@ public unsafe partial class Nspw
 	private void LeadMoveOrderDestination(ref Unit target, double distance)
 	{
 		var a = target.Direction.Degrees * DegreesToRadians;
-		MoveOrders[0].Destination = new WorldPosition(
-			cos(a) * distance + MoveOrders[0].Destination.X,
-			sin(a) * distance + MoveOrders[0].Destination.Y
+		_game.MoveOrders[0].Destination = new WorldPosition(
+			cos(a) * distance + _game.MoveOrders[0].Destination.X,
+			sin(a) * distance + _game.MoveOrders[0].Destination.Y
 		);
 	}
 
@@ -424,34 +332,34 @@ public unsafe partial class Nspw
 	// Step 1: the scenario's events.
 	private void ApplyComputerEvents()
 	{
-		switch (ScenarioNumber)
+		switch (_game.ScenarioNumber)
 		{
 			case 8:
 			{
-				ref var fleet5 = ref FleetAt(5);
+				ref var fleet5 = ref _game.FleetAt(5);
 				if (
 					fleet5.Flagship != 0
 					&& fleet5.Mode == 0
-					&& Units[fleet5.Flagship].IsUsed
-					&& BattleTime <= 40000
+					&& _game.Units[fleet5.Flagship].IsUsed
+					&& _game.BattleTime <= 40000
 				)
 				{
 					fleet5.Mode = 1;
-					AddTargetsOfKind(5, UnitKind.Transport);
-					ShuffleTargets(5);
+					_game.AddTargetsOfKind(5, UnitKind.Transport);
+					_game.ShuffleTargets(5);
 				}
 
-				ref var fleet7 = ref FleetAt(7);
+				ref var fleet7 = ref _game.FleetAt(7);
 				if (
 					fleet7.Flagship != 0
 					&& fleet7.Mode == 50
-					&& Units[fleet7.Flagship].IsUsed
-					&& BattleTime <= 50000
+					&& _game.Units[fleet7.Flagship].IsUsed
+					&& _game.BattleTime <= 50000
 				)
 				{
 					fleet7.Mode = 1;
-					AddTargetsOfKind(7, UnitKind.Transport);
-					ShuffleTargets(7);
+					_game.AddTargetsOfKind(7, UnitKind.Transport);
+					_game.ShuffleTargets(7);
 				}
 				break;
 			}
@@ -459,15 +367,15 @@ public unsafe partial class Nspw
 			case 10:
 				foreach (var (f, time) in new[] { (2, 60000), (4, 20000) })
 				{
-					ref var fleet = ref FleetAt(f);
+					ref var fleet = ref _game.FleetAt(f);
 					if (
 						fleet.Flagship != 0
 						&& fleet.Mode == 0
-						&& Units[fleet.Flagship].IsUsed
-						&& BattleTime <= time
+						&& _game.Units[fleet.Flagship].IsUsed
+						&& _game.BattleTime <= time
 					)
 					{
-						AddPlane(
+						_game.AddPlane(
 							Side.UnitedStates,
 							UnitKind.Bomber,
 							0,
@@ -476,7 +384,7 @@ public unsafe partial class Nspw
 							FireKind.Bomb
 						);
 						fleet.Mode = 1;
-						AddTargetsOfKind(f, UnitKind.City);
+						_game.AddTargetsOfKind(f, UnitKind.City);
 					}
 				}
 				break;
@@ -485,27 +393,30 @@ public unsafe partial class Nspw
 			case 102:
 			{
 				var navalBases = 0;
-				for (var i = 1; i <= MaxUnitId; i++)
+				for (var i = 1; i <= _game.MaxUnitId; i++)
 				{
-					if (Units[i].Side == CpuSide && Units[i].Kind == UnitKind.NavalBase)
+					if (
+						_game.Units[i].Side == _game.CpuSide
+						&& _game.Units[i].Kind == UnitKind.NavalBase
+					)
 						navalBases++;
 				}
 
 				for (var f = 1; f <= 4; f++)
 				{
-					ref var fleet = ref FleetAt(f);
+					ref var fleet = ref _game.FleetAt(f);
 					if (
 						navalBases == 0
 						&& fleet.Flagship != 0
 						&& fleet.Mode == 50
-						&& Units[fleet.Flagship].IsUsed
+						&& _game.Units[fleet.Flagship].IsUsed
 					)
 					{
 						fleet.RenewsFlagship = 1;
 						fleet.Mode = 1;
-						AddNavalBaseTargets(f);
-						AddShipTargets(f);
-						ShuffleTargets(f);
+						_game.AddNavalBaseTargets(f);
+						_game.AddShipTargets(f);
+						_game.ShuffleTargets(f);
 					}
 				}
 				break;
@@ -515,26 +426,26 @@ public unsafe partial class Nspw
 			{
 				for (var f = 1; f <= 2; f++)
 				{
-					ref var fleet = ref FleetAt(f);
+					ref var fleet = ref _game.FleetAt(f);
 					if (
 						fleet.Flagship != 0
 						&& fleet.Mode != 1
-						&& Units[fleet.Flagship].IsUsed
-						&& BattleTime <= 50000
+						&& _game.Units[fleet.Flagship].IsUsed
+						&& _game.BattleTime <= 50000
 					)
 					{
 						fleet.RenewsFlagship = 1;
 						fleet.Mode = 1;
-						AddShipTargets(f);
-						ShuffleTargets(f);
+						_game.AddShipTargets(f);
+						_game.ShuffleTargets(f);
 					}
 				}
 
-				ref var fleet4 = ref FleetAt(4);
-				if (fleet4.Flagship != 0 && Units[fleet4.Flagship].Kind == UnitKind.Cruiser)
+				ref var fleet4 = ref _game.FleetAt(4);
+				if (fleet4.Flagship != 0 && _game.Units[fleet4.Flagship].Kind == UnitKind.Cruiser)
 					break;
 
-				ref var fleet3 = ref FleetAt(3);
+				ref var fleet3 = ref _game.FleetAt(3);
 				if (fleet3.Flagship != 0)
 				{
 					fleet3.RenewsFlagship = 1;
@@ -550,12 +461,12 @@ public unsafe partial class Nspw
 			case 203:
 				foreach (var (f, time) in new[] { (6, 42000), (7, 40000) })
 				{
-					ref var fleet = ref FleetAt(f);
+					ref var fleet = ref _game.FleetAt(f);
 					if (
 						fleet.Flagship != 0
 						&& fleet.Mode != 1
-						&& Units[fleet.Flagship].IsUsed
-						&& BattleTime <= time
+						&& _game.Units[fleet.Flagship].IsUsed
+						&& _game.BattleTime <= time
 					)
 					{
 						fleet.Mode = 1;
@@ -567,17 +478,17 @@ public unsafe partial class Nspw
 
 			case 208:
 			{
-				var f2 = FleetAt(2).Flagship;
+				var f2 = _game.FleetAt(2).Flagship;
 				int planes;
-				if (Units[f2].IsUsed && BattleTime <= 20000)
+				if (_game.Units[f2].IsUsed && _game.BattleTime <= 20000)
 				{
 					planes = 0;
-					for (var i = 1; i <= MaxUnitId; i++)
+					for (var i = 1; i <= _game.MaxUnitId; i++)
 					{
 						if (
-							Units[i].IsUsed
-							&& Units[i].Category == UnitCategory.Plane
-							&& Units[i].Carrier == f2
+							_game.Units[i].IsUsed
+							&& _game.Units[i].Category == UnitCategory.Plane
+							&& _game.Units[i].Carrier == f2
 						)
 							planes++;
 					}
@@ -586,13 +497,13 @@ public unsafe partial class Nspw
 				{
 					// BUG(1.22): the count is read before it is set (0x4050C7): what Windows' stack holds there, or what a
 					// trace gave. Kept as is for compatibility with 1.22.
-					planes = (int)StackLocal(0x4050C7);
+					planes = (int)_game.StackLocal(0x4050C7);
 				}
 
 				if (planes < 16 && planes != 0)
-					AddPlane(
+					_game.AddPlane(
 						Side.Japan,
-						rand() % 2 == 0 ? UnitKind.Attacker : UnitKind.Bomber,
+						_game.rand() % 2 == 0 ? UnitKind.Attacker : UnitKind.Bomber,
 						0,
 						f2,
 						1,
@@ -603,17 +514,18 @@ public unsafe partial class Nspw
 
 			case 209:
 			{
-				ref var fleet8 = ref FleetAt(8);
-				if (fleet8.Flagship != 0 || BattleTime > 40000)
+				ref var fleet8 = ref _game.FleetAt(8);
+				if (fleet8.Flagship != 0 || _game.BattleTime > 40000)
 					break;
 
 				const double Y = 6500;
 				const double Direction = 135;
-				var x = (double)(rand() % 1000 + 8500);
-				var carrier = (short)AddUnit(Side.UnitedStates, UnitKind.Carrier, x, Y, Direction);
+				var x = (double)(_game.rand() % 1000 + 8500);
+				var carrier = (short)
+					_game.AddUnit(Side.UnitedStates, UnitKind.Carrier, x, Y, Direction);
 				fleet8.Flagship = carrier;
 				fleet8.Members[0] = carrier;
-				AddPlane(Side.UnitedStates, UnitKind.Attacker, 0, carrier, 12, FireKind.Bomb);
+				_game.AddPlane(Side.UnitedStates, UnitKind.Attacker, 0, carrier, 12, FireKind.Bomb);
 				var escorts = new[]
 				{
 					UnitKind.Cruiser,
@@ -624,20 +536,15 @@ public unsafe partial class Nspw
 				for (var i = 0; i < escorts.Length; i++)
 				{
 					x = x + 150;
-					fleet8.Members[i + 1] = (short)AddUnit(
-						Side.UnitedStates,
-						escorts[i],
-						x,
-						Y,
-						Direction
-					);
+					fleet8.Members[i + 1] = (short)
+						_game.AddUnit(Side.UnitedStates, escorts[i], x, Y, Direction);
 				}
 
 				fleet8.RenewsFlagship = 1;
 				fleet8.Mode = 1;
-				AddTargetsOfKind(8, UnitKind.InfantryBase);
-				ShuffleTargets(8);
-				AddShipTargets(8);
+				_game.AddTargetsOfKind(8, UnitKind.InfantryBase);
+				_game.ShuffleTargets(8);
+				_game.AddShipTargets(8);
 				fleet8.DestinationX = 80;
 				fleet8.DestinationY = 3440;
 				break;
@@ -652,7 +559,7 @@ public unsafe partial class Nspw
 		if (fleet.Flagship == 0)
 			return found;
 
-		ref var flagship = ref Units[fleet.Flagship];
+		ref var flagship = ref _game.Units[fleet.Flagship];
 		RECT rect;
 		if (fleet.DestinationX != PathEnd)
 		{
@@ -660,10 +567,10 @@ public unsafe partial class Nspw
 			rect.right = Ftol(fleet.DestinationX + 2400);
 			rect.bottom = Ftol(fleet.DestinationY + 2400);
 			rect.left = Ftol(fleet.DestinationX - 2400);
-			for (var i = 1; i <= MaxUnitId; i++)
+			for (var i = 1; i <= _game.MaxUnitId; i++)
 			{
-				ref var unit = ref Units[i];
-				if (!unit.IsUsed || unit.Side == CpuSide)
+				ref var unit = ref _game.Units[i];
+				if (!unit.IsUsed || unit.Side == _game.CpuSide)
 					continue;
 
 				var kind = unit.Kind;
@@ -675,8 +582,8 @@ public unsafe partial class Nspw
 				if (
 					isTarget
 					&& unit.Ammo != 0
-					&& PointInRect(ref rect, Ftol(unit.Position.X), Ftol(unit.Position.Y))
-					&& (ScenarioNumber != 204 || IsLandForce(kind))
+					&& _game.PointInRect(ref rect, Ftol(unit.Position.X), Ftol(unit.Position.Y))
+					&& (_game.ScenarioNumber != 204 || IsLandForce(kind))
 				)
 					found = i;
 			}
@@ -688,10 +595,10 @@ public unsafe partial class Nspw
 			rect.right = Ftol(flagship.Position.X + 800);
 			rect.bottom = Ftol(flagship.Position.Y + 800);
 			rect.left = Ftol(flagship.Position.X - 800);
-			for (var i = 1; i <= MaxUnitId; i++)
+			for (var i = 1; i <= _game.MaxUnitId; i++)
 			{
-				ref var unit = ref Units[i];
-				if (!unit.IsUsed || unit.Side == CpuSide || !unit.IsFound)
+				ref var unit = ref _game.Units[i];
+				if (!unit.IsUsed || unit.Side == _game.CpuSide || !unit.IsFound)
 					continue;
 
 				var isTarget =
@@ -705,7 +612,7 @@ public unsafe partial class Nspw
 				if (
 					isTarget
 					&& unit.Ammo != 0
-					&& PointInRect(ref rect, Ftol(unit.Position.X), Ftol(unit.Position.Y))
+					&& _game.PointInRect(ref rect, Ftol(unit.Position.X), Ftol(unit.Position.Y))
 				)
 					found = i;
 			}
@@ -717,7 +624,7 @@ public unsafe partial class Nspw
 	// Step 4: the fleet's members and flagship.
 	private StrategyFlow KeepUpFleet(ref ComputerFleet fleet)
 	{
-		if (fleet.Flagship != 0 && Units[fleet.Flagship].Kind != UnitKind.AirBase)
+		if (fleet.Flagship != 0 && _game.Units[fleet.Flagship].Kind != UnitKind.AirBase)
 		{
 			var live = 0;
 			var listed = 0;
@@ -728,7 +635,7 @@ public unsafe partial class Nspw
 					continue;
 
 				listed++;
-				ref var member = ref Units[m];
+				ref var member = ref _game.Units[m];
 				if (member.IsUsed)
 				{
 					live++;
@@ -763,7 +670,7 @@ public unsafe partial class Nspw
 			return StrategyFlow.NoFleet;
 
 		fleet.State = 0;
-		ref var flagship = ref Units[fleet.Flagship];
+		ref var flagship = ref _game.Units[fleet.Flagship];
 		if (
 			flagship.Kind != UnitKind.AirBase
 			&& fleet.Members[1] != 0
@@ -783,7 +690,7 @@ public unsafe partial class Nspw
 		for (var k = 0; k <= 17; k++)
 		{
 			var s = fleet.Members[k];
-			ref var member = ref Units[s];
+			ref var member = ref _game.Units[s];
 			if (
 				!member.IsUsed
 				|| member.Kind
@@ -791,12 +698,12 @@ public unsafe partial class Nspw
 			)
 				continue;
 
-			for (var p = 1; p <= MaxUnitId; p++)
+			for (var p = 1; p <= _game.MaxUnitId; p++)
 			{
-				ref var plane = ref Units[p];
+				ref var plane = ref _game.Units[p];
 				if (
 					!plane.IsUsed
-					|| plane.Side != CpuSide
+					|| plane.Side != _game.CpuSide
 					|| !plane.IsStopping
 					|| plane.Kind is not (UnitKind.Attacker or UnitKind.Bomber)
 					|| plane.Weapon != FireKind.Unarmed
@@ -806,10 +713,10 @@ public unsafe partial class Nspw
 
 				if (
 					plane.Kind == UnitKind.Bomber
-					|| CpuSide == Side.UnitedStates
-					|| IsGroundFacility(Units[fleet.Targets[1]].Kind)
-					|| ScenarioNumber == 204
-					|| ((short)near != 0 && IsGroundFacility(Units[near].Kind))
+					|| _game.CpuSide == Side.UnitedStates
+					|| IsGroundFacility(_game.Units[fleet.Targets[1]].Kind)
+					|| _game.ScenarioNumber == 204
+					|| ((short)near != 0 && IsGroundFacility(_game.Units[near].Kind))
 				)
 					plane.Weapon = FireKind.Bomb;
 				else
@@ -824,14 +731,14 @@ public unsafe partial class Nspw
 	// A plane of the computer and the planes that follow it fly home.
 	private void ReturnWithFollowers(int m)
 	{
-		ref var plane = ref Units[m];
+		ref var plane = ref _game.Units[m];
 		plane.Mode = UnitMode.Return;
 		plane.Ammo = 0;
 		plane.Target = 0;
-		StopWhereItIs(ref plane);
-		for (var j = 1; j <= MaxUnitId; j++)
+		_game.StopWhereItIs(ref plane);
+		for (var j = 1; j <= _game.MaxUnitId; j++)
 		{
-			ref var follower = ref Units[j];
+			ref var follower = ref _game.Units[j];
 			if (!follower.IsUsed || follower.GroupLeader != m)
 				continue;
 
@@ -843,7 +750,7 @@ public unsafe partial class Nspw
 				follower.Target = 0;
 			}
 
-			StopWhereItIs(ref follower);
+			_game.StopWhereItIs(ref follower);
 		}
 	}
 
@@ -853,25 +760,25 @@ public unsafe partial class Nspw
 	{
 		for (var g = 1; g <= 10; g++)
 		{
-			ref var fleet = ref FleetAt(g);
+			ref var fleet = ref _game.FleetAt(g);
 			if (fleet.Flagship != plane.Carrier)
 				continue;
 
 			if (plane.Kind == UnitKind.Bomber && fleet.Targets[1] != 0)
 			{
-				ref var target = ref Units[fleet.Targets[1]];
+				ref var target = ref _game.Units[fleet.Targets[1]];
 				plane.PathX[0] = target.Position.X;
 				plane.PathY[0] = target.Position.Y;
-				var a = rand() % 360 * DegreesToRadians;
+				var a = _game.rand() % 360 * DegreesToRadians;
 				plane.PathX[0] = cos(a) * 500 + plane.PathX[0];
 				plane.PathY[0] = sin(a) * 500 + plane.PathY[0];
 				continue;
 			}
 
-			var t = fleet.Targets[rand() % 17 + 1];
-			if (t != 0 && Units[t].IsUsed)
+			var t = fleet.Targets[_game.rand() % 17 + 1];
+			if (t != 0 && _game.Units[t].IsUsed)
 			{
-				ref var target = ref Units[t];
+				ref var target = ref _game.Units[t];
 				var distance = DistanceBetween(ref target, ref plane);
 				if (distance < 2000)
 				{
@@ -888,7 +795,7 @@ public unsafe partial class Nspw
 			{
 				plane.PathX[0] = plane.Position.X;
 				plane.PathY[0] = plane.Position.Y;
-				var a = rand() % 360 * DegreesToRadians;
+				var a = _game.rand() % 360 * DegreesToRadians;
 				plane.PathX[0] = cos(a) * 500 + plane.PathX[0];
 				plane.PathY[0] = sin(a) * 500 + plane.PathY[0];
 			}
@@ -898,12 +805,12 @@ public unsafe partial class Nspw
 	// Step 6: the computer's planes in the air.
 	private void FlyComputersPlanes()
 	{
-		for (var i = 1; i <= MaxUnitId; i++)
+		for (var i = 1; i <= _game.MaxUnitId; i++)
 		{
-			ref var plane = ref Units[i];
+			ref var plane = ref _game.Units[i];
 			var leads = plane.GroupLeader == 0 || plane.IsGroupLeader != 0;
 			if (
-				plane.Side == CpuSide
+				plane.Side == _game.CpuSide
 				&& plane.Kind is UnitKind.Attacker or UnitKind.Bomber
 				&& plane.PlaneState == UnitState.Flying
 				&& leads
@@ -921,28 +828,28 @@ public unsafe partial class Nspw
 					rect.right = Ftol(plane.PathX[0]) + 40;
 					rect.bottom = Ftol(plane.PathY[0]) + 40;
 					rect.left = Ftol(plane.PathX[0]) - 40;
-					if (PointInRect(ref rect, Ftol(plane.Position.X), Ftol(plane.Position.Y)))
+					if (_game.PointInRect(ref rect, Ftol(plane.Position.X), Ftol(plane.Position.Y)))
 						ChooseNextStrike(ref plane);
 				}
 			}
 
 			if (
 				(int)plane.Fuel <= 60
-				&& plane.Side == CpuSide
+				&& plane.Side == _game.CpuSide
 				&& plane.Kind == UnitKind.Fighter
 				&& plane.PlaneState == UnitState.Flying
 				&& plane.Mode != UnitMode.Return
-				&& rand() % 10 == 1
+				&& _game.rand() % 10 == 1
 			)
 			{
 				plane.Mode = UnitMode.Return;
 				plane.GroupLeader = 0;
-				StopWhereItIs(ref plane);
+				_game.StopWhereItIs(ref plane);
 			}
 
 			leads = plane.GroupLeader == 0 || plane.IsGroupLeader != 0;
 			if (
-				plane.Side == CpuSide
+				plane.Side == _game.CpuSide
 				&& plane.Kind == UnitKind.Fighter
 				&& plane.PlaneState == UnitState.Flying
 				&& leads
@@ -952,9 +859,9 @@ public unsafe partial class Nspw
 			)
 			{
 				plane.Mode = UnitMode.Return;
-				for (var j = 1; j <= MaxUnitId; j++)
+				for (var j = 1; j <= _game.MaxUnitId; j++)
 				{
-					ref var follower = ref Units[j];
+					ref var follower = ref _game.Units[j];
 					if (follower.IsUsed && follower.GroupLeader == i)
 					{
 						follower.GroupLeader = 0;
@@ -971,11 +878,11 @@ public unsafe partial class Nspw
 	{
 		for (var n = 0; n <= 1 && ship.Target == 0; n++)
 		{
-			var r = rand() % MaxUnitId + 1;
-			ref var enemy = ref Units[r];
+			var r = _game.rand() % _game.MaxUnitId + 1;
+			ref var enemy = ref _game.Units[r];
 			if (
 				enemy.IsUsed
-				&& enemy.Side != CpuSide
+				&& enemy.Side != _game.CpuSide
 				&& enemy.IsFound
 				&& !(enemy.Kind == UnitKind.Submarine && enemy.IsSubmerged)
 				&& enemy.Category != UnitCategory.Plane
@@ -989,26 +896,26 @@ public unsafe partial class Nspw
 	// not one to shoot, four times, a random enemy unit within 1200.
 	private void ChooseWarshipsTarget(ref ComputerFleet fleet, ref Unit ship)
 	{
-		var t = fleet.Targets[rand() % 17 + 1];
+		var t = fleet.Targets[_game.rand() % 17 + 1];
 		if (
 			t != 0
-			&& Units[t].IsFound
-			&& !(Units[t].Kind == UnitKind.Submarine && Units[t].IsSubmerged)
-			&& !(ship.Kind == UnitKind.Submarine && IsGroundFacility(Units[t].Kind))
+			&& _game.Units[t].IsFound
+			&& !(_game.Units[t].Kind == UnitKind.Submarine && _game.Units[t].IsSubmerged)
+			&& !(ship.Kind == UnitKind.Submarine && IsGroundFacility(_game.Units[t].Kind))
 		)
 		{
-			if (rand() % 2 == 1 && DistanceBetween(ref Units[t], ref ship) < 1200)
+			if (_game.rand() % 2 == 1 && DistanceBetween(ref _game.Units[t], ref ship) < 1200)
 				ship.Target = t;
 			return;
 		}
 
 		for (var n = 0; n <= 3 && ship.Target == 0; n++)
 		{
-			var r = rand() % MaxUnitId + 1;
-			ref var enemy = ref Units[r];
+			var r = _game.rand() % _game.MaxUnitId + 1;
+			ref var enemy = ref _game.Units[r];
 			if (
 				enemy.IsUsed
-				&& enemy.Side != CpuSide
+				&& enemy.Side != _game.CpuSide
 				&& enemy.IsFound
 				&& !(enemy.Kind == UnitKind.Submarine && enemy.IsSubmerged)
 				&& enemy.Kind != UnitKind.Transport
@@ -1023,7 +930,7 @@ public unsafe partial class Nspw
 	// place in the formation, then to the target.
 	private void AttackWith(ref Unit plane, int t)
 	{
-		ref var target = ref Units[t];
+		ref var target = ref _game.Units[t];
 		plane.GroupLeader = 0;
 		plane.Target = t;
 		var drctn = plane.Direction.Degrees;
@@ -1063,13 +970,14 @@ public unsafe partial class Nspw
 			return;
 
 		var t1 = fleet.Targets[1];
-		var index = t1 != 0 && Units[t1].IsFound && rand() % 3 != 0 ? 1 : rand() % 17 + 1;
+		var index =
+			t1 != 0 && _game.Units[t1].IsFound && _game.rand() % 3 != 0 ? 1 : _game.rand() % 17 + 1;
 		var t = fleet.Targets[index];
 		if (
 			t != 0
-			&& Units[t].IsFound
-			&& !(plane.Weapon == FireKind.Torpedo && IsGroundFacility(Units[t].Kind))
-			&& DistanceBetween(ref Units[t], ref plane) < 1000
+			&& _game.Units[t].IsFound
+			&& !(plane.Weapon == FireKind.Torpedo && IsGroundFacility(_game.Units[t].Kind))
+			&& DistanceBetween(ref _game.Units[t], ref plane) < 1000
 		)
 			AttackWith(ref plane, t);
 	}
@@ -1080,11 +988,14 @@ public unsafe partial class Nspw
 	{
 		for (var n = 0; n <= 10 && plane.Target == 0; n++)
 		{
-			var t = (short)near != 0 && rand() % 10 == 0 ? (short)near : rand() % MaxUnitId + 1;
-			ref var enemy = ref Units[t];
+			var t =
+				(short)near != 0 && _game.rand() % 10 == 0
+					? (short)near
+					: _game.rand() % _game.MaxUnitId + 1;
+			ref var enemy = ref _game.Units[t];
 			if (
 				enemy.IsUsed
-				&& enemy.Side != CpuSide
+				&& enemy.Side != _game.CpuSide
 				&& enemy.IsFound
 				&& enemy.Kind != UnitKind.Submarine
 				&& enemy.Category == UnitCategory.Ship
@@ -1098,10 +1009,10 @@ public unsafe partial class Nspw
 	// Steps 7 and 8, for unit i: its target.
 	private void ChooseTargetOf(int i, int f, ref ComputerFleet fleet, int near)
 	{
-		ref var unit = ref Units[i];
-		if (unit.Side == CpuSide && unit.Target != 0 && unit.Kind != UnitKind.Transport)
+		ref var unit = ref _game.Units[i];
+		if (unit.Side == _game.CpuSide && unit.Target != 0 && unit.Kind != UnitKind.Transport)
 		{
-			ref var target = ref Units[unit.Target];
+			ref var target = ref _game.Units[unit.Target];
 			var keeps = target.IsFound && target.IsUsed && target.PlaneState != UnitState.Parked;
 			if (!keeps && !(unit.Kind == UnitKind.Fighter && unit.AirSuperioritySortie == 1))
 				unit.Target = 0;
@@ -1111,13 +1022,13 @@ public unsafe partial class Nspw
 		{
 			var isMember =
 				fleet.Members[k] == i
-				&& unit.Side == CpuSide
+				&& unit.Side == _game.CpuSide
 				&& unit.Category == UnitCategory.Ship
 				&& unit.Ammo >= 1
 				&& unit.Kind
 					is not (UnitKind.Carrier or UnitKind.LightCarrier or UnitKind.Transport);
 			if (
-				Units[fleet.Flagship].Kind
+				_game.Units[fleet.Flagship].Kind
 					is UnitKind.Carrier
 						or UnitKind.LightCarrier
 						or UnitKind.Transport
@@ -1129,11 +1040,11 @@ public unsafe partial class Nspw
 				ChooseWarshipsTarget(ref fleet, ref unit);
 		}
 
-		if (unit.Target == 0 && fleet.Targets[1] == 0 && (short)near == 0 && rand() % 20 == 1)
+		if (unit.Target == 0 && fleet.Targets[1] == 0 && (short)near == 0 && _game.rand() % 20 == 1)
 		{
 			if (
 				IsInFleet(i, f)
-				&& unit.Side == CpuSide
+				&& unit.Side == _game.CpuSide
 				&& unit.Category == UnitCategory.Plane
 				&& unit.PlaneState == UnitState.Flying
 				&& unit.Mode != UnitMode.Return
@@ -1147,16 +1058,16 @@ public unsafe partial class Nspw
 					unit.Target = 0;
 				}
 
-				StopWhereItIs(ref unit);
+				_game.StopWhereItIs(ref unit);
 				return;
 			}
 		}
 
-		if (!IsInFleet(i, f) && Units[unit.Carrier].IsUsed)
+		if (!IsInFleet(i, f) && _game.Units[unit.Carrier].IsUsed)
 			return;
 
 		if (
-			unit.Side != CpuSide
+			unit.Side != _game.CpuSide
 			|| unit.Kind is not (UnitKind.Attacker or UnitKind.Bomber)
 			|| unit.PlaneState != UnitState.Flying
 			|| unit.Mode == UnitMode.Return
@@ -1166,15 +1077,15 @@ public unsafe partial class Nspw
 			return;
 
 		if (
-			(rand() % 10 == 0 && !(unit.Kind == UnitKind.Bomber && fleet.Targets[1] != 0))
-			|| !Units[unit.Carrier].IsUsed
+			(_game.rand() % 10 == 0 && !(unit.Kind == UnitKind.Bomber && fleet.Targets[1] != 0))
+			|| !_game.Units[unit.Carrier].IsUsed
 		)
 		{
 			AttackAnyShip(ref unit, near);
 		}
 		else if ((short)near != 0)
 		{
-			if (DistanceBetween(ref Units[near], ref unit) < 1000)
+			if (DistanceBetween(ref _game.Units[near], ref unit) < 1000)
 				AttackWith(ref unit, (short)near);
 		}
 		else
@@ -1187,7 +1098,7 @@ public unsafe partial class Nspw
 	private void ReturnToBase(ref ComputerFleet fleet, int naval)
 	{
 		fleet.Base = (short)naval;
-		StopWhereItIs(ref Units[fleet.Flagship]);
+		_game.StopWhereItIs(ref _game.Units[fleet.Flagship]);
 	}
 
 	// Step 9: the fleet's dead targets dropped, and whether it returns to its nearest naval base.
@@ -1200,7 +1111,7 @@ public unsafe partial class Nspw
 		for (var k = 1; k <= 17; k++)
 		{
 			var t = fleet.Targets[k];
-			if (t != 0 && !Units[t].IsUsed)
+			if (t != 0 && !_game.Units[t].IsUsed)
 			{
 				fleet.Targets[k] = 0;
 				removed++;
@@ -1210,13 +1121,13 @@ public unsafe partial class Nspw
 		if (removed != 0)
 			Pack(fleet.Targets, 1, 17);
 
-		ref var flagship = ref Units[fleet.Flagship];
+		ref var flagship = ref _game.Units[fleet.Flagship];
 		var naval = 0;
 		var nearest = -1.0;
-		for (var i = 1; i <= MaxUnitId; i++)
+		for (var i = 1; i <= _game.MaxUnitId; i++)
 		{
-			ref var unit = ref Units[i];
-			if (!unit.IsUsed || unit.Kind != UnitKind.NavalBase || unit.Side != CpuSide)
+			ref var unit = ref _game.Units[i];
+			if (!unit.IsUsed || unit.Kind != UnitKind.NavalBase || unit.Side != _game.CpuSide)
 				continue;
 
 			var distance = DistanceBetween(ref unit, ref flagship);
@@ -1234,9 +1145,9 @@ public unsafe partial class Nspw
 		{
 			var attackers = 0;
 			var planes = 0;
-			for (var i = 1; i <= MaxUnitId; i++)
+			for (var i = 1; i <= _game.MaxUnitId; i++)
 			{
-				ref var unit = ref Units[i];
+				ref var unit = ref _game.Units[i];
 				if (!unit.IsUsed || unit.Carrier != fleet.Flagship)
 					continue;
 
@@ -1245,12 +1156,12 @@ public unsafe partial class Nspw
 				planes++;
 			}
 
-			if (ScenarioNumber == 303 && flagship.Kind == UnitKind.LightCarrier)
+			if (_game.ScenarioNumber == 303 && flagship.Kind == UnitKind.LightCarrier)
 				attackers = 3;
 
 			if (
 				planes == 0
-				|| (attackers <= 2 && Units[fleet.Targets[1]].Category != UnitCategory.Plane)
+				|| (attackers <= 2 && _game.Units[fleet.Targets[1]].Category != UnitCategory.Plane)
 				|| flagship.HP <= flagship.MaxHP / 2
 			)
 				ReturnToBase(ref fleet, naval);
@@ -1264,9 +1175,9 @@ public unsafe partial class Nspw
 				var m = fleet.Members[k];
 				hasCargo =
 					m != 0
-					&& Units[m].IsUsed
-					&& Units[m].Kind == UnitKind.Transport
-					&& Units[m].Ammo != 0;
+					&& _game.Units[m].IsUsed
+					&& _game.Units[m].Kind == UnitKind.Transport
+					&& _game.Units[m].Ammo != 0;
 			}
 
 			if (!hasCargo)
@@ -1277,7 +1188,7 @@ public unsafe partial class Nspw
 			fleet.Base == 0
 			&& flagship.Kind >= UnitKind.Battleship
 			&& flagship.Kind <= UnitKind.Destroyer
-			&& BattleTime >= 20000
+			&& _game.BattleTime >= 20000
 		)
 		{
 			var hp = 0;
@@ -1285,10 +1196,10 @@ public unsafe partial class Nspw
 			for (var k = 0; k <= 17; k++)
 			{
 				var m = fleet.Members[k];
-				if (m != 0 && Units[m].IsUsed)
+				if (m != 0 && _game.Units[m].IsUsed)
 				{
-					hp += Units[m].HP;
-					maxHP += Units[m].MaxHP;
+					hp += _game.Units[m].HP;
+					maxHP += _game.Units[m].MaxHP;
 				}
 			}
 
@@ -1303,16 +1214,16 @@ public unsafe partial class Nspw
 			for (var k = 0; k <= 17; k++)
 			{
 				var m = fleet.Members[k];
-				if (m != 0 && Units[m].IsUsed)
+				if (m != 0 && _game.Units[m].IsUsed)
 				{
-					maxAmmo += Units[m].MaxAmmo;
-					if (Units[m].Ammo >= 1)
-						ammo += Units[m].Ammo;
+					maxAmmo += _game.Units[m].MaxAmmo;
+					if (_game.Units[m].Ammo >= 1)
+						ammo += _game.Units[m].Ammo;
 				}
 			}
 
 			var percent = Ftol((double)ammo / maxAmmo * 100.0f);
-			ref var first = ref Units[fleet.Members[0]];
+			ref var first = ref _game.Units[fleet.Members[0]];
 			if (percent < 20 || !(first.MaxAmmo * 0.2 <= first.Ammo))
 				ReturnToBase(ref fleet, naval);
 		}
@@ -1320,10 +1231,10 @@ public unsafe partial class Nspw
 		if (fleet.Base == 0)
 		{
 			// Unit 23, wherever it is, stands for the computer's home.
-			var distance = DistanceBetween(ref Units[23], ref flagship);
+			var distance = DistanceBetween(ref _game.Units[23], ref flagship);
 			var range =
 				(double)(int)flagship.gas[1] * (int)flagship.gas[0] * flagship.MaxSpeed * 0.9;
-			if (!(range > distance) && BattleTime > 10000)
+			if (!(range > distance) && _game.BattleTime > 10000)
 				ReturnToBase(ref fleet, naval);
 		}
 	}
@@ -1335,7 +1246,7 @@ public unsafe partial class Nspw
 		if (fleet.Flagship == 0)
 			return;
 
-		ref var flagship = ref Units[fleet.Flagship];
+		ref var flagship = ref _game.Units[fleet.Flagship];
 		if (
 			flagship.Kind == UnitKind.AirBase
 			|| fleet.Base == 0
@@ -1344,7 +1255,7 @@ public unsafe partial class Nspw
 		)
 			return;
 
-		ref var naval = ref Units[fleet.Base];
+		ref var naval = ref _game.Units[fleet.Base];
 		RECT rect;
 		var y = Ftol(naval.Position.Y);
 		var x = Ftol(naval.Position.X);
@@ -1352,13 +1263,13 @@ public unsafe partial class Nspw
 		rect.right = x + 580;
 		rect.bottom = y + 580;
 		rect.left = x - 580;
-		if (!PointInRect(ref rect, Ftol(flagship.Position.X), Ftol(flagship.Position.Y)))
+		if (!_game.PointInRect(ref rect, Ftol(flagship.Position.X), Ftol(flagship.Position.Y)))
 			return;
 
-		for (var i = 1; i <= MaxUnitId; i++)
+		for (var i = 1; i <= _game.MaxUnitId; i++)
 		{
-			ref var enemy = ref Units[i];
-			if (!enemy.IsUsed || enemy.Side == CpuSide || !enemy.IsFound)
+			ref var enemy = ref _game.Units[i];
+			if (!enemy.IsUsed || enemy.Side == _game.CpuSide || !enemy.IsFound)
 				continue;
 
 			var threatens =
@@ -1373,10 +1284,10 @@ public unsafe partial class Nspw
 		}
 
 		flagship.SupplyTime = 1;
-		for (var i = 1; i <= MaxUnitId; i++)
+		for (var i = 1; i <= _game.MaxUnitId; i++)
 		{
-			if (Units[i].IsUsed && Units[i].GroupLeader == fleet.Flagship)
-				Units[i].SupplyTime = 1;
+			if (_game.Units[i].IsUsed && _game.Units[i].GroupLeader == fleet.Flagship)
+				_game.Units[i].SupplyTime = 1;
 		}
 
 		fleet.Base = 0;
@@ -1385,36 +1296,36 @@ public unsafe partial class Nspw
 
 		int carrier = fleet.Flagship;
 		var planes = 0;
-		if (ScenarioNumber == 204)
+		if (_game.ScenarioNumber == 204)
 		{
-			for (var i = 1; i <= MaxUnitId; i++)
+			for (var i = 1; i <= _game.MaxUnitId; i++)
 			{
 				// 1.22 compares with the register that holds 1 by then, not with cpu_side.
 				if (
-					Units[i].Category == UnitCategory.Plane
-					&& Units[i].Carrier == carrier
-					&& Units[i].Side == Side.Japan
+					_game.Units[i].Category == UnitCategory.Plane
+					&& _game.Units[i].Carrier == carrier
+					&& _game.Units[i].Side == Side.Japan
 				)
 					planes++;
 			}
 
-			AddPlane(Side.Japan, UnitKind.Attacker, 0, carrier, 12 - planes, FireKind.Bomb);
+			_game.AddPlane(Side.Japan, UnitKind.Attacker, 0, carrier, 12 - planes, FireKind.Bomb);
 			return;
 		}
 
-		for (var i = 1; i <= MaxUnitId; i++)
+		for (var i = 1; i <= _game.MaxUnitId; i++)
 		{
 			if (
-				Units[i].Category == UnitCategory.Plane
-				&& Units[i].Carrier == carrier
-				&& Units[i].IsUsed
+				_game.Units[i].Category == UnitCategory.Plane
+				&& _game.Units[i].Carrier == carrier
+				&& _game.Units[i].IsUsed
 			)
 				planes++;
 		}
 
-		for (var i = 1; i <= MaxUnitId; i++)
+		for (var i = 1; i <= _game.MaxUnitId; i++)
 		{
-			ref var plane = ref Units[i];
+			ref var plane = ref _game.Units[i];
 			if (
 				plane.Category != UnitCategory.Plane
 				|| plane.Carrier != fleet.Flagship
@@ -1422,7 +1333,7 @@ public unsafe partial class Nspw
 			)
 				continue;
 
-			plane.Side = CpuSide;
+			plane.Side = _game.CpuSide;
 			plane.Position = new WorldPosition(730, 150);
 			plane.Category = UnitCategory.Plane;
 			plane.PlaneState = UnitState.Parked;
@@ -1430,10 +1341,10 @@ public unsafe partial class Nspw
 			plane.DeckPhase = 0;
 			plane.TakeOffRun = 0;
 			plane.Mode = UnitMode.Move;
-			SetParkingPosition(i);
+			_game.SetParkingPosition(i);
 			plane.IsStopping = true;
-			Units[plane.Carrier].PlaneCount++;
-			SetUnitData(i);
+			_game.Units[plane.Carrier].PlaneCount++;
+			_game.SetUnitData(i);
 			planes++;
 		}
 	}
@@ -1444,14 +1355,14 @@ public unsafe partial class Nspw
 		if (fleet.Flagship == 0)
 			return;
 
-		ref var flagship = ref Units[fleet.Flagship];
+		ref var flagship = ref _game.Units[fleet.Flagship];
 		if (flagship.Kind == UnitKind.AirBase)
 			return;
 
 		var supplying = false;
 		for (var k = 0; MemberAt(ref fleet, k) != 0; k++)
 		{
-			if (Units[MemberAt(ref fleet, k)].SupplyTime != 0)
+			if (_game.Units[MemberAt(ref fleet, k)].SupplyTime != 0)
 			{
 				supplying = true;
 				break;
@@ -1470,7 +1381,7 @@ public unsafe partial class Nspw
 			var py = flagship.PathY[0];
 			var leaves = px <= -9600 || !(px < 9600) || !(py < 7200) || py <= -7200;
 			if (atEdge && leaves)
-				StopWhereItIs(ref flagship);
+				_game.StopWhereItIs(ref flagship);
 		}
 
 		if (!supplying && flagship.IsStopping && fleet.Mode != 0)
@@ -1486,9 +1397,9 @@ public unsafe partial class Nspw
 			{
 				fleet.PathX[0] = fleet.AimX;
 				fleet.PathY[0] = fleet.AimY;
-				var a = rand() % 360 * DegreesToRadians;
-				fleet.PathX[0] = (rand() % 150 + 100) * cos(a) + fleet.PathX[0];
-				fleet.PathY[0] = (rand() % 150 + 100) * sin(a) + fleet.PathY[0];
+				var a = _game.rand() % 360 * DegreesToRadians;
+				fleet.PathX[0] = (_game.rand() % 150 + 100) * cos(a) + fleet.PathX[0];
+				fleet.PathY[0] = (_game.rand() % 150 + 100) * sin(a) + fleet.PathY[0];
 			}
 			else
 			{
@@ -1496,7 +1407,7 @@ public unsafe partial class Nspw
 				fleet.PathX[0] = flagship.Position.X;
 				fleet.AimY = flagship.Position.Y;
 				fleet.PathY[0] = flagship.Position.Y;
-				var a = rand() % 360 * DegreesToRadians;
+				var a = _game.rand() % 360 * DegreesToRadians;
 				fleet.PathX[0] = cos(a) * 500 + fleet.PathX[0];
 				fleet.PathY[0] = sin(a) * 500 + fleet.PathY[0];
 			}
@@ -1505,7 +1416,7 @@ public unsafe partial class Nspw
 		{
 			fleet.PathX[0] = fleet.SecondX;
 			fleet.PathY[0] = fleet.SecondY;
-			var a = rand() % 360 * DegreesToRadians;
+			var a = _game.rand() % 360 * DegreesToRadians;
 			fleet.PathX[0] = cos(a) * 300 + fleet.PathX[0];
 			fleet.PathY[0] = sin(a) * 300 + fleet.PathY[0];
 		}
@@ -1525,15 +1436,15 @@ public unsafe partial class Nspw
 			if (!(distance <= 1500))
 				return StrategyFlow.Return;
 
-			var r = rand() % 40;
+			var r = _game.rand() % 40;
 			b = Ftol((double)r + b + 160.0) % 360;
-			length = rand() % 200 + 100;
+			length = _game.rand() % 200 + 100;
 		}
 		else if (!(distance < 800))
 		{
 			var turned = b + 20;
-			b = Ftol(turned - rand() % 40) % 360;
-			length = rand() % 500 + 100;
+			b = Ftol(turned - _game.rand() % 40) % 360;
+			length = _game.rand() % 500 + 100;
 		}
 		else
 		{
@@ -1551,7 +1462,7 @@ public unsafe partial class Nspw
 	// A bearing turned by a random amount: (b - from) plus rand()%range, in whole degrees.
 	private int TurnedFrom(double b, double from, int range)
 	{
-		var r = rand() % range;
+		var r = _game.rand() % range;
 		return Ftol(r + (b - from)) % 360;
 	}
 
@@ -1559,7 +1470,7 @@ public unsafe partial class Nspw
 	private int TurnedBack(double b, double by, int range)
 	{
 		var turned = b + by;
-		return Ftol(turned - rand() % range) % 360;
+		return Ftol(turned - _game.rand() % range) % 360;
 	}
 
 	// Step 9: a battleship's, cruiser's or destroyer's next move, by its distance to the aim and its bearing b.
@@ -1567,7 +1478,7 @@ public unsafe partial class Nspw
 	{
 		if (!(distance < 7000))
 		{
-			var far = (double)(rand() % 3000 + 1500);
+			var far = (double)(_game.rand() % 3000 + 1500);
 			MoveFrom(ref fleet, ref flagship, TurnedFrom(b, 70, 140), far);
 			return;
 		}
@@ -1577,32 +1488,32 @@ public unsafe partial class Nspw
 		if (!(distance < 3000))
 		{
 			direction = TurnedFrom(b, 70, 140);
-			length = rand() % 1000 + 800;
+			length = _game.rand() % 1000 + 800;
 		}
 		else if (!(distance < 1500))
 		{
 			direction = TurnedFrom(b, 45, 90);
-			length = rand() % 300 + 400;
+			length = _game.rand() % 300 + 400;
 		}
 		else if (!(distance < 700))
 		{
-			direction = (rand() % 7) switch
+			direction = (_game.rand() % 7) switch
 			{
 				0 => TurnedFrom(b, 100, 65),
 				1 => TurnedBack(b, 100, 65),
 				_ => TurnedBack(b, 20, 40),
 			};
-			length = rand() % 300 + 200;
+			length = _game.rand() % 300 + 200;
 		}
 		else
 		{
-			direction = (rand() % 3) switch
+			direction = (_game.rand() % 3) switch
 			{
 				0 => TurnedFrom(b, 100, 65),
 				1 => TurnedBack(b, 100, 65),
 				_ => TurnedBack(b, 20, 40),
 			};
-			length = rand() % 200 + 300;
+			length = _game.rand() % 200 + 300;
 		}
 
 		MoveFrom(ref fleet, ref flagship, direction, length);
@@ -1637,11 +1548,11 @@ public unsafe partial class Nspw
 		double b
 	)
 	{
-		for (var i = 1; i <= MaxUnitId; i++)
+		for (var i = 1; i <= _game.MaxUnitId; i++)
 		{
-			ref var plane = ref Units[i];
+			ref var plane = ref _game.Units[i];
 			if (
-				plane.Side == CpuSide
+				plane.Side == _game.CpuSide
 				&& plane.Category == UnitCategory.Plane
 				&& plane.PlaneState == UnitState.Flying
 				&& plane.Carrier == fleet.Flagship
@@ -1656,36 +1567,40 @@ public unsafe partial class Nspw
 			}
 		}
 
-		var japan = CpuSide == Side.Japan ? 800 : 0;
+		var japan = _game.CpuSide == Side.Japan ? 800 : 0;
 		int direction;
 		int length;
 		if (japan + 7000 <= distance)
 		{
 			direction = TurnedBack(b, 20, 40);
-			length = rand() % 500 + 1500;
+			length = _game.rand() % 500 + 1500;
 		}
 		else if (japan + 4500 <= distance)
 		{
 			direction = TurnedFrom(b, 70, 140);
-			length = rand() % 500 + 1300;
+			length = _game.rand() % 500 + 1300;
 		}
 		else if (japan + 3550 <= distance)
 		{
 			direction = TurnedFrom(b, 20, 40);
-			length = rand() % 300 + 800;
+			length = _game.rand() % 300 + 800;
 		}
 		else
 		{
-			var r = rand() % 130;
+			var r = _game.rand() % 130;
 			direction = Ftol((double)r + b + 115) % 360;
-			length = rand() % 500 + 1300;
+			length = _game.rand() % 500 + 1300;
 		}
 
 		MoveFrom(ref fleet, ref flagship, direction, length);
-		for (var j = 1; j <= MaxUnitId; j++)
+		for (var j = 1; j <= _game.MaxUnitId; j++)
 		{
-			ref var facility = ref Units[j];
-			if (!facility.IsUsed || facility.Side == CpuSide || !IsGroundFacility(facility.Kind))
+			ref var facility = ref _game.Units[j];
+			if (
+				!facility.IsUsed
+				|| facility.Side == _game.CpuSide
+				|| !IsGroundFacility(facility.Kind)
+			)
 				continue;
 
 			if (
@@ -1702,8 +1617,8 @@ public unsafe partial class Nspw
 				atan2(fleet.PathY[0] - flagship.Position.Y, fleet.PathX[0] - flagship.Position.X)
 					* RadiansToDegrees
 				- 360;
-			var once = rand() % 10 == 0 ? 1 : 0;
-			var k = once * (rand() % 130) + 45;
+			var once = _game.rand() % 10 == 0 ? 1 : 0;
+			var k = once * (_game.rand() % 130) + 45;
 			var cleared = false;
 			for (; k <= 180 && !cleared; k++)
 				cleared =
@@ -1722,8 +1637,8 @@ public unsafe partial class Nspw
 				bearing = bearing + 360;
 
 			var aside =
-				rand() % 2 == 1 ? TurnedFrom(bearing, 100, 20) : TurnedBack(bearing, 100, 20);
-			MoveFrom(ref fleet, ref flagship, aside, rand() % 800 + 300);
+				_game.rand() % 2 == 1 ? TurnedFrom(bearing, 100, 20) : TurnedBack(bearing, 100, 20);
+			MoveFrom(ref fleet, ref flagship, aside, _game.rand() % 800 + 300);
 		}
 
 		return StrategyFlow.Order;
@@ -1735,7 +1650,7 @@ public unsafe partial class Nspw
 		if (fleet.Flagship == 0)
 			return StrategyFlow.Order;
 
-		ref var flagship = ref Units[fleet.Flagship];
+		ref var flagship = ref _game.Units[fleet.Flagship];
 		var kind = flagship.Kind;
 		if (
 			kind == UnitKind.AirBase
@@ -1748,12 +1663,12 @@ public unsafe partial class Nspw
 
 		if (fleet.Base != 0)
 		{
-			ref var naval = ref Units[fleet.Base];
-			var x = (double)(rand() % 400) + naval.Position.X + 100;
+			ref var naval = ref _game.Units[fleet.Base];
+			var x = (double)(_game.rand() % 400) + naval.Position.X + 100;
 			fleet.AimX = x;
 			fleet.PathX[0] = x;
 			var north = naval.Position.Y - 100;
-			var y = north - rand() % 400;
+			var y = north - _game.rand() % 400;
 			fleet.AimY = y;
 			fleet.PathY[0] = y;
 			return StrategyFlow.Order;
@@ -1774,22 +1689,22 @@ public unsafe partial class Nspw
 			return StrategyFlow.Order;
 		}
 
-		if (flagship.Target != 0 && Units[flagship.Target].IsFound)
+		if (flagship.Target != 0 && _game.Units[flagship.Target].IsFound)
 		{
-			fleet.AimX = Units[flagship.Target].Position.X;
-			fleet.AimY = Units[flagship.Target].Position.Y;
+			fleet.AimX = _game.Units[flagship.Target].Position.X;
+			fleet.AimY = _game.Units[flagship.Target].Position.Y;
 		}
 		else if ((short)near != 0)
 		{
-			fleet.AimX = Units[(short)near].Position.X;
-			fleet.AimY = Units[(short)near].Position.Y;
+			fleet.AimX = _game.Units[(short)near].Position.X;
+			fleet.AimY = _game.Units[(short)near].Position.Y;
 		}
 		else
 		{
-			ref var target = ref Units[TargetAt(ref fleet, first)];
+			ref var target = ref _game.Units[TargetAt(ref fleet, first)];
 			ref var aimed = ref target.Category == UnitCategory.Plane
 			&& target.PlaneState == UnitState.Parked
-				? ref Units[target.Carrier]
+				? ref _game.Units[target.Carrier]
 				: ref target;
 			fleet.AimX = aimed.Position.X;
 			fleet.AimY = aimed.Position.Y;
@@ -1818,8 +1733,8 @@ public unsafe partial class Nspw
 	// The order: the leader flies to the target, with the selected planes.
 	private void OrderStrike(int leader, ref Unit target)
 	{
-		MoveOrders[0].Unit = (short)leader;
-		MoveOrders[0].Destination = target.Position;
+		_game.MoveOrders[0].Unit = (short)leader;
+		_game.MoveOrders[0].Destination = target.Position;
 	}
 
 	// Step 10: the carrier's fighters intercept an enemy plane in the air.
@@ -1828,9 +1743,9 @@ public unsafe partial class Nspw
 		var all = 0;
 		var ready = 0;
 		var leader = 0;
-		for (var c = 1; c <= MaxUnitId; c++)
+		for (var c = 1; c <= _game.MaxUnitId; c++)
 		{
-			ref var plane = ref Units[c];
+			ref var plane = ref _game.Units[c];
 			if (!plane.IsUsed || plane.Kind != UnitKind.Fighter || plane.Carrier != carrier)
 				continue;
 
@@ -1853,9 +1768,9 @@ public unsafe partial class Nspw
 			return false;
 
 		var n = 1;
-		for (var c = 1; c <= MaxUnitId; c++)
+		for (var c = 1; c <= _game.MaxUnitId; c++)
 		{
-			ref var plane = ref Units[c];
+			ref var plane = ref _game.Units[c];
 			if (
 				!plane.IsUsed
 				|| plane.Kind != UnitKind.Fighter
@@ -1867,10 +1782,10 @@ public unsafe partial class Nspw
 			plane.Target = t;
 			plane.AirSuperioritySortie = 1;
 			if (c != leader)
-				Selections[0][c] = (short)n++;
+				_game.Selections[0][c] = (short)n++;
 		}
 
-		ref var target = ref Units[t];
+		ref var target = ref _game.Units[t];
 		OrderStrike(leader, ref target);
 		if (target.Kind is not (UnitKind.AirBase or UnitKind.NavalBase))
 			LeadMoveOrderDestination(ref target, distance * (1.0 / 3) * target.Speed);
@@ -1891,9 +1806,9 @@ public unsafe partial class Nspw
 		var all = 0;
 		var ready = 0;
 		var leader = 0;
-		for (var c = 1; c <= MaxUnitId; c++)
+		for (var c = 1; c <= _game.MaxUnitId; c++)
 		{
-			ref var plane = ref Units[c];
+			ref var plane = ref _game.Units[c];
 			if (
 				!plane.IsUsed
 				|| plane.Category != UnitCategory.Plane
@@ -1915,9 +1830,9 @@ public unsafe partial class Nspw
 			return 0;
 
 		var n = 1;
-		for (var c = 1; c <= MaxUnitId; c++)
+		for (var c = 1; c <= _game.MaxUnitId; c++)
 		{
-			ref var plane = ref Units[c];
+			ref var plane = ref _game.Units[c];
 			if (
 				plane.IsUsed
 				&& plane.Category == UnitCategory.Plane
@@ -1926,7 +1841,7 @@ public unsafe partial class Nspw
 				&& IsReadyToTakeOff(ref plane)
 				&& c != leader
 			)
-				Selections[0][c] = (short)n++;
+				_game.Selections[0][c] = (short)n++;
 		}
 
 		return leader;
@@ -1940,12 +1855,14 @@ public unsafe partial class Nspw
 		if ((short)near != 0)
 			t = (short)near;
 		else
-			t = fleet.Targets[Units[carrier].Kind == UnitKind.AirBase ? rand() % 17 + 1 : 1];
+			t = fleet.Targets[
+				_game.Units[carrier].Kind == UnitKind.AirBase ? _game.rand() % 17 + 1 : 1
+			];
 
-		if (t == 0 || !Units[t].IsUsed || fleet.Flagship == 0)
+		if (t == 0 || !_game.Units[t].IsUsed || fleet.Flagship == 0)
 			return StrategyFlow.Next;
 
-		ref var flagship = ref Units[carrier];
+		ref var flagship = ref _game.Units[carrier];
 		var kind = flagship.Kind;
 		if (
 			flagship.PlanesToLaunch > 0
@@ -1957,14 +1874,14 @@ public unsafe partial class Nspw
 		if ((fleet.Targets[1] == 0 && (short)near == 0) || flagship.SupplyTime != 0)
 			return StrategyFlow.Next;
 
-		ref var target = ref Units[t];
+		ref var target = ref _game.Units[t];
 		var distance = DistanceBetween(ref target, ref flagship);
-		var range = (double)(CpuSide == Side.Japan ? 4350 : 3550);
+		var range = (double)(_game.CpuSide == Side.Japan ? 4350 : 3550);
 		var isNear =
 			distance <= range
 			|| (
 				!(range * 1.5 < distance)
-				&& (kind == UnitKind.AirBase || fleet.Mode == 50 || BattleTime < 8000)
+				&& (kind == UnitKind.AirBase || fleet.Mode == 50 || _game.BattleTime < 8000)
 			);
 		if (
 			isNear
@@ -2003,13 +1920,13 @@ public unsafe partial class Nspw
 			LeadMoveOrderDestination(ref target, distance * 0.25 * target.Speed);
 			if (!(target.Speed > 1.0))
 			{
-				MoveOrders[0].Destination = new WorldPosition(
-					rand() % 800 - 400 + MoveOrders[0].Destination.X,
-					MoveOrders[0].Destination.Y
+				_game.MoveOrders[0].Destination = new WorldPosition(
+					_game.rand() % 800 - 400 + _game.MoveOrders[0].Destination.X,
+					_game.MoveOrders[0].Destination.Y
 				);
-				MoveOrders[0].Destination = new WorldPosition(
-					MoveOrders[0].Destination.X,
-					rand() % 800 - 400 + MoveOrders[0].Destination.Y
+				_game.MoveOrders[0].Destination = new WorldPosition(
+					_game.MoveOrders[0].Destination.X,
+					_game.rand() % 800 - 400 + _game.MoveOrders[0].Destination.Y
 				);
 			}
 		}
@@ -2022,14 +1939,14 @@ public unsafe partial class Nspw
 	private StrategyFlow BombFromAirBase(ref ComputerFleet fleet, int near)
 	{
 		int t = fleet.Targets[1];
-		if (ScenarioNumber == 204 && (short)near != 0)
+		if (_game.ScenarioNumber == 204 && (short)near != 0)
 			t = (short)near;
 
-		if (t == 0 || !Units[t].IsUsed || fleet.Flagship == 0)
+		if (t == 0 || !_game.Units[t].IsUsed || fleet.Flagship == 0)
 			return StrategyFlow.Next;
 
 		int airBase = fleet.Flagship;
-		ref var flagship = ref Units[airBase];
+		ref var flagship = ref _game.Units[airBase];
 		if (
 			flagship.PlanesToLaunch > 0
 			|| flagship.Kind != UnitKind.AirBase
@@ -2038,7 +1955,7 @@ public unsafe partial class Nspw
 		)
 			return StrategyFlow.Next;
 
-		ref var target = ref Units[t];
+		ref var target = ref _game.Units[t];
 		if (
 			!(DistanceBetween(ref target, ref flagship) <= 20000)
 			|| !flagship.IsUsed
@@ -2070,7 +1987,7 @@ public unsafe partial class Nspw
 		for (var k = 1; MemberAt(ref fleet, k) != 0; k++)
 		{
 			int m = MemberAt(ref fleet, k);
-			ref var carrier = ref Units[m];
+			ref var carrier = ref _game.Units[m];
 			if (
 				carrier.Kind is not (UnitKind.Carrier or UnitKind.LightCarrier)
 				|| t == 0
@@ -2081,16 +1998,16 @@ public unsafe partial class Nspw
 
 			if (
 				(fleet.Targets[1] == 0 && (short)near == 0)
-				|| Units[fleet.Flagship].SupplyTime != 0
+				|| _game.Units[fleet.Flagship].SupplyTime != 0
 			)
 				continue;
 
-			ref var target = ref Units[t];
+			ref var target = ref _game.Units[t];
 			var distance = DistanceBetween(ref target, ref carrier);
-			var range = (double)(CpuSide == Side.Japan ? 4350 : 3550);
+			var range = (double)(_game.CpuSide == Side.Japan ? 4350 : 3550);
 			var isNear =
 				distance <= range
-				|| (!(range * 1.5 < distance) && (fleet.Mode == 50 || BattleTime < 8000));
+				|| (!(range * 1.5 < distance) && (fleet.Mode == 50 || _game.BattleTime < 8000));
 			if (!isNear || target.Category == UnitCategory.Plane)
 				continue;
 
@@ -2122,22 +2039,22 @@ public unsafe partial class Nspw
 			return;
 
 		int airBase = fleet.Flagship;
-		ref var flagship = ref Units[airBase];
+		ref var flagship = ref _game.Units[airBase];
 		if (
 			flagship.Kind != UnitKind.AirBase
 			|| flagship.PlanesToLaunch != 0
 			|| flagship.LaunchLock != 0
-			|| Tick % 150 > 50
+			|| _game.Tick % 150 > 50
 		)
 			return;
 
 		var threats = new List<short>();
-		for (var i = 1; i <= MaxUnitId; i++)
+		for (var i = 1; i <= _game.MaxUnitId; i++)
 		{
-			ref var enemy = ref Units[i];
+			ref var enemy = ref _game.Units[i];
 			if (
 				enemy.IsUsed
-				&& enemy.Side != CpuSide
+				&& enemy.Side != _game.CpuSide
 				&& enemy.Kind is UnitKind.Attacker or UnitKind.Bomber
 				&& enemy.PlaneState == UnitState.Flying
 				&& enemy.Ammo != 0
@@ -2162,9 +2079,9 @@ public unsafe partial class Nspw
 			&& plane.Weapon != FireKind.Maintenance;
 
 		var leader = 0;
-		for (var c = 1; c <= MaxUnitId && leader == 0; c++)
+		for (var c = 1; c <= _game.MaxUnitId && leader == 0; c++)
 		{
-			if (IsReadyFighter(ref Units[c], airBase))
+			if (IsReadyFighter(ref _game.Units[c], airBase))
 				leader = c;
 		}
 
@@ -2172,24 +2089,24 @@ public unsafe partial class Nspw
 			return;
 
 		var n = 1;
-		for (var c = 1; c <= MaxUnitId && n < 3; c++)
+		for (var c = 1; c <= _game.MaxUnitId && n < 3; c++)
 		{
-			ref var plane = ref Units[c];
+			ref var plane = ref _game.Units[c];
 			if (!IsReadyFighter(ref plane, fleet.Flagship))
 				continue;
 
-			plane.Target = threats[rand() % threats.Count];
+			plane.Target = threats[_game.rand() % threats.Count];
 			plane.AirSuperioritySortie = 1;
 			if (c != leader)
-				Selections[0][c] = (short)n++;
+				_game.Selections[0][c] = (short)n++;
 		}
 
-		MoveOrders[0].Unit = (short)leader;
-		MoveOrders[0].Destination = flagship.Position;
-		var a = rand() % 360 * DegreesToRadians;
-		MoveOrders[0].Destination = new WorldPosition(
-			cos(a) * 200 + MoveOrders[0].Destination.X,
-			sin(a) * 200 + MoveOrders[0].Destination.Y
+		_game.MoveOrders[0].Unit = (short)leader;
+		_game.MoveOrders[0].Destination = flagship.Position;
+		var a = _game.rand() % 360 * DegreesToRadians;
+		_game.MoveOrders[0].Destination = new WorldPosition(
+			cos(a) * 200 + _game.MoveOrders[0].Destination.X,
+			sin(a) * 200 + _game.MoveOrders[0].Destination.Y
 		);
 	}
 
@@ -2197,19 +2114,19 @@ public unsafe partial class Nspw
 	private short AddReinforcement(UnitKind kind, double x, double y)
 	{
 		PlaceReinforcement(ref x, ref y);
-		return (short)AddUnit(Side.UnitedStates, kind, x, y, 135);
+		return (short)_game.AddUnit(Side.UnitedStates, kind, x, y, 135);
 	}
 
 	// Step 12, scenario 304: fleets 1 and 2 get a new carrier when they have none, and escorts; fleets 3 to 5 new
 	// battleships and cruisers.
 	private void ReinforceScenario304(int f, ref ComputerFleet fleet)
 	{
-		if (ScenarioNumber != 304)
+		if (_game.ScenarioNumber != 304)
 			return;
 
 		if (f is 1 or 2)
 		{
-			if (BattleTime > (f == 1 ? 130000 : 100000))
+			if (_game.BattleTime > (f == 1 ? 130000 : 100000))
 				return;
 
 			short members = 0;
@@ -2219,7 +2136,7 @@ public unsafe partial class Nspw
 			{
 				for (var k = 0; k <= 17; k++)
 				{
-					ref var member = ref Units[fleet.Members[k]];
+					ref var member = ref _game.Units[fleet.Members[k]];
 					if (member.IsUsed)
 					{
 						if (member.Kind == UnitKind.Carrier)
@@ -2232,9 +2149,9 @@ public unsafe partial class Nspw
 			if (carriers == 0)
 			{
 				if (fleet.Base == 0)
-					Units[flag].Ammo = 0;
+					_game.Units[flag].Ammo = 0;
 
-				ref var flagship = ref Units[flag];
+				ref var flagship = ref _game.Units[flag];
 				var nearFlagship = flagship.SupplyTime != 0 && members != 0;
 				if (nearFlagship || members == 0)
 				{
@@ -2247,24 +2164,38 @@ public unsafe partial class Nspw
 					}
 					else
 					{
-						y = rand() % 7200;
+						y = _game.rand() % 7200;
 						x = 10100;
 					}
 
 					var carrier = AddReinforcement(UnitKind.Carrier, x, y);
 					fleet.Flagship = carrier;
 					MemberAt(ref fleet, members) = carrier;
-					AddPlane(Side.UnitedStates, UnitKind.Attacker, 0, carrier, 10, FireKind.Bomb);
-					AddPlane(Side.UnitedStates, UnitKind.Fighter, 0, carrier, 2, FireKind.Unarmed);
+					_game.AddPlane(
+						Side.UnitedStates,
+						UnitKind.Attacker,
+						0,
+						carrier,
+						10,
+						FireKind.Bomb
+					);
+					_game.AddPlane(
+						Side.UnitedStates,
+						UnitKind.Fighter,
+						0,
+						carrier,
+						2,
+						FireKind.Unarmed
+					);
 					fleet.RenewsFlagship = 1;
 					members++;
 					fleet.Mode = 1;
-					AddShipTargets(f);
-					AddTargetsOfKind(f, UnitKind.InfantryBase);
-					ShuffleTargets(f);
+					_game.AddShipTargets(f);
+					_game.AddTargetsOfKind(f, UnitKind.InfantryBase);
+					_game.ShuffleTargets(f);
 					if (f == 1)
 					{
-						ref var fleet1 = ref FleetAt(1);
+						ref var fleet1 = ref _game.FleetAt(1);
 						fleet1.DestinationX = 6640;
 						fleet1.DestinationY = -3760;
 					}
@@ -2274,21 +2205,22 @@ public unsafe partial class Nspw
 			var last = f - (carriers == 0 ? 1 : 0) + 1;
 			for (; members <= last; members++)
 			{
-				var y = (double)(rand() % 7200);
+				var y = (double)(_game.rand() % 7200);
 				var x = 10100.0;
 				PlaceReinforcement(ref x, ref y);
-				var r = rand() % 100;
+				var r = _game.rand() % 100;
 				var kind =
 					r < 60 ? UnitKind.Cruiser
 					: r < 90 ? UnitKind.Destroyer
 					: UnitKind.Battleship;
-				MemberAt(ref fleet, members) = (short)AddUnit(Side.UnitedStates, kind, x, y, 135);
+				MemberAt(ref fleet, members) = (short)
+					_game.AddUnit(Side.UnitedStates, kind, x, y, 135);
 			}
 
 			return;
 		}
 
-		if (!(f is 3 or 4 || (f == 5 && BattleTime <= 100000)))
+		if (!(f is 3 or 4 || (f == 5 && _game.BattleTime <= 100000)))
 			return;
 
 		short count = 0;
@@ -2296,7 +2228,7 @@ public unsafe partial class Nspw
 		{
 			for (var k = 0; k <= 17; k++)
 			{
-				if (Units[fleet.Members[k]].IsUsed)
+				if (_game.Units[fleet.Members[k]].IsUsed)
 					count++;
 			}
 
@@ -2306,27 +2238,27 @@ public unsafe partial class Nspw
 
 		for (; count <= 2; count++)
 		{
-			var y = (double)(rand() % 7200);
+			var y = (double)(_game.rand() % 7200);
 			var x = 10100.0;
 			PlaceReinforcement(ref x, ref y);
-			var kind = rand() % 100 < 60 ? UnitKind.Cruiser : UnitKind.Battleship;
-			var m = (short)AddUnit(Side.UnitedStates, kind, x, y, 135);
+			var kind = _game.rand() % 100 < 60 ? UnitKind.Cruiser : UnitKind.Battleship;
+			var m = (short)_game.AddUnit(Side.UnitedStates, kind, x, y, 135);
 			if (count == 0)
 			{
 				fleet.Flagship = m;
 				fleet.Members[0] = m;
 				fleet.RenewsFlagship = 1;
 				fleet.Mode = 1;
-				AddTargetsOfKind(f, UnitKind.InfantryBase);
-				AddTargetsOfKind(f, UnitKind.Pillboxes);
-				AddTargetsOfKind(f, UnitKind.Fortress);
-				ShuffleTargets(f);
+				_game.AddTargetsOfKind(f, UnitKind.InfantryBase);
+				_game.AddTargetsOfKind(f, UnitKind.Pillboxes);
+				_game.AddTargetsOfKind(f, UnitKind.Fortress);
+				_game.ShuffleTargets(f);
 			}
 
 			fleet.Members[count] = m;
 			if (f == 3)
 			{
-				ref var fleet3 = ref FleetAt(3);
+				ref var fleet3 = ref _game.FleetAt(3);
 				fleet3.DestinationX = 6640;
 				fleet3.DestinationY = -3760;
 			}
@@ -2338,15 +2270,15 @@ public unsafe partial class Nspw
 	private void OrderFleet(int f, ref ComputerFleet fleet)
 	{
 		int flag = fleet.Flagship;
-		if (flag == 0 || Units[flag].Kind == UnitKind.AirBase)
+		if (flag == 0 || _game.Units[flag].Kind == UnitKind.AirBase)
 			return;
 
 		if (fleet.State == 1)
 		{
 			SetFormation(f);
 			int leader = fleet.Flagship;
-			MoveOrders[0].Unit = (short)leader;
-			MoveOrders[0].Destination = Units[leader].Position;
+			_game.MoveOrders[0].Unit = (short)leader;
+			_game.MoveOrders[0].Destination = _game.Units[leader].Position;
 			return;
 		}
 
@@ -2357,13 +2289,13 @@ public unsafe partial class Nspw
 		for (var k = 1; MemberAt(ref fleet, k) != 0; k++)
 		{
 			int m = MemberAt(ref fleet, k);
-			if (Units[m].IsUsed)
-				Selections[0][m] = (short)n++;
+			if (_game.Units[m].IsUsed)
+				_game.Selections[0][m] = (short)n++;
 		}
 
-		MoveOrders[0].Unit = (short)flag;
+		_game.MoveOrders[0].Unit = (short)flag;
 		var y = fleet.PathY[0];
-		MoveOrders[0].Destination = new WorldPosition(
+		_game.MoveOrders[0].Destination = new WorldPosition(
 			Ftol(fleet.PathX[0] * 0.0125) * 80,
 			Ftol(y * 0.0125) * 80
 		);
@@ -2371,19 +2303,19 @@ public unsafe partial class Nspw
 
 	// cpu_strtgy: the computer's order of this frame, in new_pp[0] and slct_unit[0], for its fleet Renderer.FrameCount%10+1
 	// (docs/ComputerPlayer.md, cpu_strtgy).
-	public void PlanComputerStrategy()
+	public void Plan()
 	{
-		var f = Renderer.FrameCount % 10 + 1;
-		Selections[0] = default;
-		MoveOrders[0].Unit = 0;
+		var f = _game.Renderer.FrameCount % 10 + 1;
+		_game.Selections[0] = default;
+		_game.MoveOrders[0].Unit = 0;
 		ApplyComputerEvents();
 
-		ref var fleet = ref FleetAt(f);
+		ref var fleet = ref _game.FleetAt(f);
 		var near = FindComputersTarget(ref fleet);
 		var flow = KeepUpFleet(ref fleet);
 		if (flow == StrategyFlow.NoFleet)
 		{
-			if (ScenarioNumber != 304)
+			if (_game.ScenarioNumber != 304)
 				return;
 			flow = StrategyFlow.Order;
 		}
@@ -2394,7 +2326,7 @@ public unsafe partial class Nspw
 			FlyComputersPlanes();
 			if (fleet.Flagship != 0)
 			{
-				for (var i = 1; i <= MaxUnitId; i++)
+				for (var i = 1; i <= _game.MaxUnitId; i++)
 					ChooseTargetOf(i, f, ref fleet, near);
 				DecideToReturn(ref fleet);
 			}

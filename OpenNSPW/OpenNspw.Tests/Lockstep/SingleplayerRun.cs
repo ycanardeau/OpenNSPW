@@ -1,3 +1,5 @@
+using OpenNspw.ComputerPlayers;
+
 namespace OpenNspw.Tests.Lockstep;
 
 // One whole game playing a single-player scenario against the computer (docs/Singleplayer.md), on a copy of the

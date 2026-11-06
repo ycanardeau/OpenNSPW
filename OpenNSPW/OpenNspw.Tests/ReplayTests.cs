@@ -1,3 +1,4 @@
+using OpenNspw.ComputerPlayers;
 using OpenNspw.Replay;
 using OpenNspw.Tests.Lockstep;
 using Xunit;

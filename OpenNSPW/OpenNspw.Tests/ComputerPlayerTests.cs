@@ -1,11 +1,12 @@
 using System.Runtime.InteropServices;
+using OpenNspw.ComputerPlayers;
 using OpenNspw.Tests.Lockstep;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace OpenNspw.Tests;
 
-// The rewrites of NSPW 1.22's computer player (ComputerPlayer.cs) against the emulated originals, on states of
+// The rewrites of NSPW 1.22's computer player (ComputerPlayer.cs, OpenNspw.ComputerPlayers) against the emulated originals, on states of
 // single-player games (docs/ComputerPlayer.md).
 //
 // The comparisons are long, so they are split into classes, which xUnit runs in parallel: the tests of one class run
@@ -153,7 +154,7 @@ public static class ComputerPlayerTests
 		var emulated = CaptureStrategy(game);
 
 		Reset();
-		game.PlanComputerStrategy();
+		new Strategy122(game).Plan();
 		var rewritten = CaptureStrategy(game);
 
 		Reset();
@@ -904,7 +905,7 @@ public static class ComputerPlayerTests
 		// For each fleet, at a few points of the game, from a few rand() seeds: what cpu_strtgy changes.
 		[Theory]
 		[MemberData(nameof(StrategyScenarios))]
-		public void PlanComputerStrategyIsCpuStrtgy(int scenario)
+		public void Strategy122IsCpuStrtgy(int scenario)
 		{
 			using var run = new SingleplayerRun(scenario);
 			var game = run.Game;
@@ -1273,7 +1274,7 @@ public static class ComputerPlayerTests
 		[InlineData(209)]
 		[InlineData(303)]
 		[InlineData(304)]
-		public void PlanComputerStrategyIsCpuStrtgyOnChangedStates(int scenario)
+		public void Strategy122IsCpuStrtgyOnChangedStates(int scenario)
 		{
 			using var run = new SingleplayerRun(scenario);
 			var game = run.Game;
@@ -1338,7 +1339,7 @@ public static class ComputerPlayerTests
 		[InlineData(208)]
 		[InlineData(209)]
 		[InlineData(304)]
-		public void PlanComputerStrategyStrikesAsCpuStrtgy(int scenario)
+		public void Strategy122StrikesAsCpuStrtgy(int scenario)
 		{
 			using var run = new SingleplayerRun(scenario);
 			var game = run.Game;
@@ -1629,7 +1630,7 @@ public static class ComputerPlayerTests
 						State122.Restore(game, before);
 						Restore(game, unitsBefore);
 						game.Selections[0] = selections;
-						game.SetFormation(f);
+						new Strategy122(game).SetFormation(f);
 						var actual = (
 							UnitBytes(game),
 							FleetBytes(game),
@@ -1685,7 +1686,7 @@ public static class ComputerPlayerTests
 					var (ex, ey) = (x, y);
 					game.RunPlaceReinforcement(ref ex, ref ey);
 					var (ax, ay) = (x, y);
-					game.PlaceReinforcement(ref ax, ref ay);
+					new Strategy122(game).PlaceReinforcement(ref ax, ref ay);
 					Assert.True(ex == ax && ey == ay, $"From ({x},{y}): ({ex},{ey})/({ax},{ay})");
 				}
 			}

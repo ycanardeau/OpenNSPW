@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using OpenNspw.ComputerPlayers;
 using OpenNspw.HostUI;
 using OpenNspw.Tests.Lockstep;
 using Xunit;

@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended.ViewportAdapters;
+using OpenNspw.ComputerPlayers;
 using OpenNspw.HostUI;
 using OpenNspw.Pacing;
 using OpenNspw.Replay;

@@ -550,7 +550,7 @@ public unsafe partial class Nspw
 			: StackLocalsOnWindows.First(local => local.Instruction == instruction).Value;
 	}
 
-	// The emulated cpu_strtgy, which ComputerPlayerTests compares PlanComputerStrategy, its rewrite, with: the computer's
+	// The emulated cpu_strtgy, which ComputerPlayerTests compares Strategy122, its rewrite (OpenNspw.ComputerPlayers), with: the computer's
 	// order of this frame, in new_pp[0] and slct_unit[0]. The locals it reads uninitialized hold what Windows' stack holds
 	// there, or what a trace has given.
 	public void RunCpuStrategy()

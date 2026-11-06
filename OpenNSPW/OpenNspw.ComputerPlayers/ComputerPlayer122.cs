@@ -1,9 +1,9 @@
-namespace OpenNspw;
+namespace OpenNspw.ComputerPlayers;
 
 // NSPW 1.22's computer player: cpu_strtgy, rewritten from its machine code (docs/ComputerPlayer.md, cpu_strtgy).
 public sealed class ComputerPlayer122 : IComputerPlayer
 {
 	public string Id => "1.22";
 
-	public void Plan(Nspw game) => game.PlanComputerStrategy();
+	public void Plan(Nspw game) => new Strategy122(game).Plan();
 }

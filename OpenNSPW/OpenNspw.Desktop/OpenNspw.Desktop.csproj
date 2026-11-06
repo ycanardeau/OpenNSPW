@@ -52,6 +52,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OpenNspw\OpenNspw.csproj" />
+    <ProjectReference Include="..\OpenNspw.ComputerPlayers\OpenNspw.ComputerPlayers.csproj" />
     <ProjectReference Include="..\OpenNspw.DirectPlay\OpenNspw.DirectPlay.csproj" />
     <ProjectReference Include="..\OpenNspw.HostUI\OpenNspw.HostUI.csproj" />
     <ProjectReference Include="..\OpenNspw.Pacing\OpenNspw.Pacing.csproj" />

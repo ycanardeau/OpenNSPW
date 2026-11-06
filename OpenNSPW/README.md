@@ -9,6 +9,7 @@ An exact port of the NSPW NET source ([Original/NSPW_NET](../Original/NSPW_NET))
 | `OpenNspw.Desktop` | The game, on MonoGame: its menus (with [Saruhashi](../Saruhashi), see [docs/UI.md](../docs/UI.md)), which run the port's `WinMain` and show its frames and dialogs. |
 | `OpenNspw.Replay` | Replays of battles, recorded and played as an extension of the game. See [docs/Replays.md](../docs/Replays.md). |
 | `OpenNspw.HostUI` | The commands that the app's own UI gives the battle in place of the mouse's clicks, and what the UI reads of the game, as an extension of the game. See [docs/UI.md](../docs/UI.md). |
+| `OpenNspw.ComputerPlayers` | The computer players of single-player battles: 1.22's (`ComputerPlayer122`), its strategy rewritten from its machine code. See [docs/ComputerPlayersAsExtensions.md](../docs/ComputerPlayersAsExtensions.md). |
 | `OpenNspw.Pacing` | Steady speed: a single-player battle that plays the same at every speed, as an extension of the game. See [docs/SteadySpeed.md](../docs/SteadySpeed.md). |
 | `OpenNspw.Verification` | Traces of NSPW 1.22: their format, the replay that the port follows and checks itself against, and the recorder of the port, as extensions of the game. See [docs/Verification.md](../docs/Verification.md). |
 | `OpenNspw.Porter` | Ports C++ files to the port's conventions, then fixes the compile errors that have a mechanical fix. |

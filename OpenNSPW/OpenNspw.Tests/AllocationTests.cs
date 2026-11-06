@@ -1,4 +1,5 @@
 using Aigamo.Otsuki.Actors;
+using OpenNspw.ComputerPlayers;
 using OpenNspw.DirectPlay;
 using OpenNspw.Replay;
 using OpenNspw.Tests.Lockstep;

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="OpenNspw.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- The C runtime's and the game's math functions, as the ported code calls them. -->
+		<Using Include="OpenNspw.all_head" Static="true" />
+		<Using Include="OpenNspw.crt" Static="true" />
+		<Using Include="OpenNspw.nspw_math" Static="true" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\OpenNspw\OpenNspw.csproj" />
+	</ItemGroup>
+</Project>

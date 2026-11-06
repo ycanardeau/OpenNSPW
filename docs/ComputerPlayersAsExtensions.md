@@ -10,7 +10,8 @@ A design: the strategy of 1.22's computer (`cpu_strtgy`, `ComputerStrategy.cs`) 
 | What | Why |
 | --- | --- |
 | The fleet table (`ComputerFleets`, `ComputerFleet.cs`), cleared as `game_init` clears it (`SetUpSingleplayerScenario`) | The scenarios set it up (`Scenarios122.cs`), `decision` changes it (scenario 303's `TargetSurrenderedPlanes`), and the emulator copies it in and out |
-| The target lists (`AddTargetsOfKind`, `AddNavalBaseTargets`, `AddCarrierTargets`, `AddShipTargets`, `ShuffleTargets`) | The scenarios build their fleets with them, over 300 calls. They become public, for the strategy's events |
+| The target lists (`ComputerFleets.cs`: `AddTargetsOfKind`, `AddNavalBaseTargets`, `AddCarrierTargets`, `AddShipTargets`, `ShuffleTargets`, and `MemberAt`, `TargetAt`, which read on past a list's end as 1.22 does) | The scenarios build their fleets with them, over 300 calls. They become public, for the strategy's events |
+| `Ftol` (`crt.cs`), 1.22's `__ftol` | The scenarios convert with it too |
 | The routes (`PlanComputerRoute`, `SetCpuRoute2`, `ReplanBlockedRoute`, `CheckCourseAheadAs122`) | The movement calls them: when it gives the computer's order its path (`ApplyOrders`), for a ship that follows a leader, and for a blocked ship. They are how 1.22 moves the computer's ships, not what it decides |
 | `decision` (`Decide`) and its events | `CheckResult` calls it, for every scenario, whoever plays |
 | `cpu_strtgy`'s uninitialized local (`StackLocal(0x4050C7)`, `StackLocalsOnWindows` and its BUG(1.22) mark) | The core reads every uninitialized local, and asks the extensions for its value (`UninitializedLocal`); the strategy reads it through a public query |
@@ -27,6 +28,7 @@ What it needs of the core is public already, but for four members, which become 
 | The target lists | Internal |
 | `StopWhereItIs(ref Unit)` (`ComputerPlayer.cs`), which `decision` calls too | Private |
 | `StackLocal(instruction)` | Private |
+| `MemberAt`, `TargetAt`, `Ftol` | Private |
 
 The rest is public: `Units`, `MaxUnitId`, `ComputerFleets`, `MoveOrders`, `Selections`, `CpuSide`, `ScenarioNumber`, `BattleTime`, `Renderer.FrameCount`, `AddUnit`, `AddPlane`, `CountPlanesIn`, `rand()`.
 
@@ -35,7 +37,7 @@ The core's API gets a computer player of its own kind:
 
 - `IComputerPlayer`, with one method, `void Plan(Nspw game)`: the computer's order of the frame, in `MoveOrders[0]` and `Selections[0]`, and its writes to the units and the fleet table.
 - `Nspw.ComputerPlayer`: the one that plays the computer's side, set by the host before the battle starts. One slot rather than a list of extensions: one computer player plays a side, and a replay names it.
-- The game calls it where it calls `PlanComputerStrategy` now (`IssueSingleplayerOrders`), when the computer plays a side and the battle is not held (`IsBattleHeld`).
+- The game calls it where 1.22 runs `cpu_strtgy` (`IssueSingleplayerOrders`), when the computer plays a side and the battle is not held (`IsBattleHeld`).
 - A single-player battle whose computer plays a side does not start without one: the host is told at once, rather than the computer standing still. In scenarios 1 and 2 the computer plays no side, and needs none.
 
 ## The rule for computer players
@@ -72,7 +74,7 @@ A computer player in a network battle, one of the players rather than the comput
 
 ## What the hosts change
 - **The desktop app** sets `ComputerPlayer122` on every single-player battle, and gives the replays' player the computer players it knows.
-- **The tests** set it on every single-player game they make: `SingleplayerTests`, the characterization traces, `Trace122Tests`, `Lockstep/SingleplayerRun`. A helper that makes the tests' games sets it, so that none forgets. `ComputerPlayerTests` compare `RunCpuStrategy` with `ComputerPlayer122`, as they compare it with `PlanComputerStrategy` now.
+- **The tests** set it on every single-player game they make: `SingleplayerTests`, the characterization traces, `Trace122Tests`, `Lockstep/SingleplayerRun`. A helper that makes the tests' games sets it, so that none forgets. `ComputerPlayerTests` compare `RunCpuStrategy` with `ComputerPlayer122`'s strategy (`Strategy122`).
 
 ## Steps
 Each a commit that builds, and keeps the characterization traces, the trace tests and `ComputerPlayerTests` passing.
@@ -80,7 +82,7 @@ Each a commit that builds, and keeps the characterization traces, the trace test
 1. **The seam, in the core:** `IComputerPlayer`, `Nspw.ComputerPlayer`, and `ComputerPlayer122` in the core, whose `Plan` calls `PlanComputerStrategy` unchanged; the battle does not start without one; the hosts and the tests set it.
 2. **Public:** `FleetAt`, the target lists, `StopWhereItIs`, `StackLocal`.
 3. **Replays:** the computer player's id at the start, in the next version, and the replays' player given the computer players by id.
-4. **`OpenNspw.ComputerPlayers`:** `ComputerStrategy.cs`, but for the target lists, moves into `ComputerPlayer122`, reading the game it is given rather than its own fields; the app, the tools and the tests reference the project. `docs/ComputerPlayer.md` names the new place.
+4. **`OpenNspw.ComputerPlayers`:** `ComputerStrategy.cs`, but for the target lists, moves into `ComputerPlayer122`'s strategy, `Strategy122`: a struct over the game it is given, which it reads rather than its own fields, so that a frame's strategy allocates nothing; the app, the tools and the tests reference the project. `docs/ComputerPlayer.md` names the new place.
 5. **The parts:** `ComputerPlayer122` split as above, with nothing changed in what it does.
 6. **Later:** settings of the parts, one at a time; new computer players; scenarios as extensions, a design of their own.
 

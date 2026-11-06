@@ -18,6 +18,7 @@
     <Project Path="OpenNSPW/OpenNspw/OpenNspw.csproj" />
   </Folder>
   <Folder Name="/OpenNSPW/Extensions/">
+    <Project Path="OpenNSPW/OpenNspw.ComputerPlayers/OpenNspw.ComputerPlayers.csproj" />
     <Project Path="OpenNSPW/OpenNspw.HostUI/OpenNspw.HostUI.csproj" />
     <Project Path="OpenNSPW/OpenNspw.Pacing/OpenNspw.Pacing.csproj" />
     <Project Path="OpenNSPW/OpenNspw.Replay/OpenNspw.Replay.csproj" />

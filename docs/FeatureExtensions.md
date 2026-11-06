@@ -5,7 +5,7 @@ A design: the three features that still live in the core, next to the ported cod
 The core is the port: the game as NSPW NET plays it, and NSPW 1.22's single-player game as 1.22 plays it.
 
 - The battle, the setting screens, the network game, the drawing and the sounds.
-- 1.22's single-player game: its scenarios (`Scenarios122.cs`), its computer player (`ComputerPlayer.cs`, `ComputerStrategy.cs`, `ComputerFleet.cs`), its decision, and the rules where it differs (`BattleRules`). The strategy of 1.22's computer (`cpu_strtgy`) is to leave the core later, as a computer player among others, while its fleets, its routes and its decision stay ([ComputerPlayersAsExtensions.md](ComputerPlayersAsExtensions.md)).
+- 1.22's single-player game: its scenarios (`Scenarios122.cs`), its computer player's fleets and routes (`ComputerPlayer.cs`, `ComputerFleet.cs`, `ComputerFleets.cs`), its decision, and the rules where it differs (`BattleRules`). The strategy of 1.22's computer (`cpu_strtgy`) is a computer player of its own, in `OpenNspw.ComputerPlayers` ([ComputerPlayersAsExtensions.md](ComputerPlayersAsExtensions.md)).
 - What 1.22 reads but never sets (its uninitialized locals): the port reads them where 1.22 does, and keeps what Windows' stack holds there by default. Where a value comes from is the API's (below).
 - 1.22's layout of the units and the fires (`WriteStateAs122`), which the port also writes into the emulator.
 - The extension API, and the queries below.
@@ -33,7 +33,7 @@ The three new points read only. In the ported files, `Trace?.Reach(...)` at the 
 The frame's speed (`GameSpeed`) is set at `FrameStarting`, as a replay of the game sets it: once the ticks are given, only the sidebar shows it. `FrameStarting`'s rule says so: the point may set the frame's ticks and the speed.
 
 ### Uninitialized locals
-1.22 reads four locals it never sets (`docs/Verification.md`, StackLocal). The port reads them at the same places, through two calls that stay: `TakeStackLocal(instruction, own)` in the battle (`etc1.cs`, `etc2.cs`), and `StackLocal(0x4050C7)` in the computer's strategy (`ComputerStrategy.cs`, and the emulated `RunCpuStrategy`). What they return comes from the extensions:
+1.22 reads four locals it never sets (`docs/Verification.md`, StackLocal). The port reads them at the same places, through two calls that stay: `TakeStackLocal(instruction, own)` in the battle (`etc1.cs`, `etc2.cs`), and `StackLocal(0x4050C7)` in the computer's strategy (`Strategy122`, and the emulated `RunCpuStrategy`). What they return comes from the extensions:
 
 - `byte[]? UninitializedLocal(Nspw game, uint instruction)`: what Windows' stack held where 1.22 reads the local at that instruction, or null. The first extension that answers wins, as for `StartsFrame`; with no answer, the port keeps its own: the battle's own local, and 0 for `cpu_strtgy`'s, as Windows' stack holds there (`StackLocalsOnWindows`, the BUG(1.22) mark stays on it).
 
