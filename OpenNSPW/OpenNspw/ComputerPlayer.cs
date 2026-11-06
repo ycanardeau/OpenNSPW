@@ -76,7 +76,7 @@ public unsafe partial class Nspw
 	private const int RoutePathLength = 64;
 
 	// Stops unit m where it is: its path is its position alone.
-	private void StopWhereItIs(ref Unit unit)
+	public void StopWhereItIs(ref Unit unit)
 	{
 		unit.PathX[0] = unit.Position.X;
 		unit.PathY[0] = unit.Position.Y;

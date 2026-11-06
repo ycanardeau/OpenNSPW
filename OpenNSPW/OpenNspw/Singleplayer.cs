@@ -543,7 +543,7 @@ public unsafe partial class Nspw
 
 	// What cpu_strtgy reads, at the instruction given, from a local it has not set: what an extension gives
 	// (IGameExtension.UninitializedLocal), such as a trace of 1.22, or else what Windows' stack holds there.
-	private uint StackLocal(uint instruction)
+	public uint StackLocal(uint instruction)
 	{
 		return Extensions.UninitializedLocal(instruction) is { Length: sizeof(uint) } value
 			? BitConverter.ToUInt32(value)
@@ -579,7 +579,7 @@ public unsafe partial class Nspw
 	}
 
 	// Entry f of 1.22's table of the computer's fleets.
-	internal ref ComputerFleet FleetAt(int f)
+	public ref ComputerFleet FleetAt(int f)
 	{
 		return ref ComputerFleets[f];
 	}
