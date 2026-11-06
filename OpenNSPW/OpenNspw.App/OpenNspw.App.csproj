@@ -33,6 +33,7 @@
 
   <!-- The hosts start the app (NspwGame) with what their system gives it (IAppHost). -->
   <ItemGroup>
+    <InternalsVisibleTo Include="OpenNspw.Android" />
     <InternalsVisibleTo Include="OpenNspw.Desktop" />
     <InternalsVisibleTo Include="OpenNspw.Tests" />
   </ItemGroup>
