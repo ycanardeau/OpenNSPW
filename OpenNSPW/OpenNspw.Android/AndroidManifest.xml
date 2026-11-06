@@ -4,5 +4,6 @@
   <uses-permission android:name="android.permission.INTERNET" />
   <uses-feature android:glEsVersion="0x00020000" android:required="true" />
   <!-- Back goes to the activity's callback from Android 13 on (MainActivity.PressEscape), not as a key. -->
-  <application android:label="OpenNSPW" android:allowBackup="true" android:enableOnBackInvokedCallback="true" />
+  <!-- NSPW's icon (Resources/mipmap-anydpi-v26/icon.xml). -->
+  <application android:label="OpenNSPW" android:icon="@mipmap/icon" android:roundIcon="@mipmap/icon" android:allowBackup="true" android:enableOnBackInvokedCallback="true" />
 </manifest>

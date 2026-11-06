@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- The blue of the sea in NSPW's icon, around it. -->
+  <color name="icon_background">#0000FF</color>
+</resources>

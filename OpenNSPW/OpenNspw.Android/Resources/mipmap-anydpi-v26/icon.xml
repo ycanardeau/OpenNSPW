@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The app's icon from Android 8 on: NSPW's icon (OpenNspw.Desktop/Icon.bmp, from Original/NSPW_NET/nspw_icon.ICO) whole,
+     at whole scales of its 32 pixels, small enough that the launcher's round or square mask cuts none of the ship, on the
+     blue of its sea. icon_foreground.png and, before Android 8, icon.png are made from it. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+  <background android:drawable="@color/icon_background" />
+  <foreground android:drawable="@mipmap/icon_foreground" />
+</adaptive-icon>
