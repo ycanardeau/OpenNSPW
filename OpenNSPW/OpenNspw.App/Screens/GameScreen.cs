@@ -244,6 +244,11 @@ internal sealed class GameScreen(
 		// The battle screen takes the room right of the layout on a wide screen; the others stay centered in it.
 		Game.ViewportAdapter.IsLayoutLeft = snapshot.IsBattle;
 		_battleForm.Fit(Game.ViewportAdapter.ExtraWidth);
+		// The question to quit dims the battle screen's column beside the layout too.
+		_confirmQuit.Size = new(
+			snapshot.IsBattle ? _battleForm.Width : all_head.SCRN_WIDTH,
+			all_head.SCRN_HEIGHT
+		);
 		_battleForm.UpdateFrom(snapshot);
 		if (_settingForm.Visible != snapshot.IsSetting)
 		{
