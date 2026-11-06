@@ -47,7 +47,7 @@ public sealed class Peer : IAsyncDisposable
 	/// yet handled. For diagnostics, such as finding where a peer under load falls behind.
 	/// </summary>
 	public PeerQueues Queues =>
-		new(_session.QueueLength, Snapshot.Endpoint?.LoopQueueLengths ?? [], _events.Count);
+		new(_session.QueueLength, _session.LoopQueueLengths, _events.Count);
 
 	public EndPoint? LocalEndPoint => Snapshot.LocalEndPoint;
 
@@ -80,21 +80,23 @@ public sealed class Peer : IAsyncDisposable
 			throw new ObjectDisposedException(nameof(Peer));
 	}
 
-	private Task PostCommandAsync(Func<TaskCompletionSource, SessionMessage> createCommand)
+	// The session completes the task through its outputs (SessionActor), once the command is done and its snapshot
+	// published.
+	private Task PostCommandAsync(Func<Completion, SessionMessage> createCommand)
 	{
 		var completion = new TaskCompletionSource(
 			TaskCreationOptions.RunContinuationsAsynchronously
 		);
-		PostCommand(createCommand(completion));
+		PostCommand(createCommand(new Completion(completion)));
 		return completion.Task;
 	}
 
-	private Task<T> PostCommandAsync<T>(Func<TaskCompletionSource<T>, SessionMessage> createCommand)
+	private Task<T> PostCommandAsync<T>(Func<Completion<T>, SessionMessage> createCommand)
 	{
 		var completion = new TaskCompletionSource<T>(
 			TaskCreationOptions.RunContinuationsAsynchronously
 		);
-		PostCommand(createCommand(completion));
+		PostCommand(createCommand(new Completion<T>(completion)));
 		return completion.Task;
 	}
 
@@ -332,7 +334,7 @@ public sealed class Peer : IAsyncDisposable
 		var completion = new TaskCompletionSource(
 			TaskCreationOptions.RunContinuationsAsynchronously
 		);
-		if (_session.Post(new SessionMessage.Close(completion)))
+		if (_session.Post(new SessionMessage.Close(new Completion(completion))))
 			await completion.Task.ConfigureAwait(false);
 		else
 			await _session.Completion.ConfigureAwait(false);

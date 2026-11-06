@@ -1,6 +1,7 @@
 using System.Net;
 using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Reliable;
+using Aigamo.Otsuki.Session;
 using Aigamo.Otsuki.Transport;
 
 namespace Aigamo.Otsuki;
@@ -58,4 +59,13 @@ public sealed record PeerOptions
 	/// (<see cref="ManualScheduler"/>).
 	/// </summary>
 	public MailboxScheduler? Scheduler { get; init; }
+
+	internal SessionOptions ToSessionOptions() =>
+		new()
+		{
+			JoinTimeout = JoinTimeout,
+			IntegrityCheckTimeout = IntegrityCheckTimeout,
+			RequestTimeout = RequestTimeout,
+			CloseTimeout = CloseTimeout,
+		};
 }

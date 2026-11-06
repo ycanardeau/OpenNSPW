@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Aigamo.Otsuki.Actors\Aigamo.Otsuki.Actors.csproj" />
+    <ProjectReference Include="..\Aigamo.Otsuki.Core\Aigamo.Otsuki.Core.csproj" />
     <ProjectReference Include="..\Aigamo.Otsuki.Messages\Aigamo.Otsuki.Messages.csproj" />
   </ItemGroup>
 

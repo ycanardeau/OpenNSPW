@@ -200,7 +200,7 @@ public class RegressionTests(ITestOutputHelper output) : IAsyncLifetime
 			await client.CloseAsync();
 		}
 		await log.WaitForAsync<PeerEvent.PlayerDestroyed>(20);
-		var session = SessionOf(PeerOf(server));
+		var session = SessionOf(PeerOf(server)).Core;
 		output.WriteLine($"server NameTableLog = {session.NameTableLog.Count}");
 		session.NameTableLog.Count.Should().BeLessThan(10);
 	}
