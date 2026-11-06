@@ -39,7 +39,7 @@ The game writes only through `CreateFile` with `GENERIC_WRITE` (`fileapi.cs`):
 But the game also opens every file it only reads to read and write, `OPEN_ALWAYS`: `load_it2`, `load_it3`, `load_user_map`. `OPEN_ALWAYS` creates a file that does not exist, as on Windows: a map that is missing is created empty, and the original's folder gets it.
 
 ## The files of a game
-`DesktopPlatform` reads and writes the game's files through layers (`GameFileLayers`, in the core, which the tests' platforms use too), by the game's path with `/` separators, its names in any case. `GameData` puts them in order:
+`AppPlatform` reads and writes the game's files through layers (`GameFileLayers`, in the core, which the tests' platforms use too), by the game's path with `/` separators, its names in any case. `GameData` puts them in order:
 
 1. **The user's folder**, `OpenNSPW/Files` beside `settings.json` (`%APPDATA%`, `~/Library/Application Support`, `~/.config`; `GameData.UserDirectory`): written, and read first.
 2. **In a single-player game, 1.22's files**: the bundled ones (`BundledFiles("Nspw122")`).
@@ -77,7 +77,7 @@ With `--data`, the data directory takes the place of the user's folder and of NS
 The app no longer looks for `Original` up from its own directory: a build run from the repository plays the bundled files, as a release does, and leaves `Original` unchanged, which its README asks. `tools/package-linux-appimage.sh` no longer passes the `Original` beside the AppImage, and the release notes no longer ask for one: they say where the user's folder is.
 
 ## The notice
-`OpenNspw.Desktop/OriginalNotice.txt`, in English and Japanese: what is bundled, that it is the work of Ken-ichi Tokumitsu (徳光 健一) / 奈良鹿製作所, all of whose copyrights are his, that it is freeware he permits to redistribute, that it is provided as is, and where his site and the original distributions are. It ships beside the app's executable, as the fonts and their license do, and in `Contents/Resources` in `OpenNSPW.app` (`tools/package-macos-app.sh`); the release notes name it.
+`OpenNspw.App/OriginalNotice.txt`, in English and Japanese: what is bundled, that it is the work of Ken-ichi Tokumitsu (徳光 健一) / 奈良鹿製作所, all of whose copyrights are his, that it is freeware he permits to redistribute, that it is provided as is, and where his site and the original distributions are. It ships beside the app's executable, as the fonts' license does, and in `Contents/Resources` in `OpenNSPW.app` (`tools/package-macos-app.sh`); the release notes name it.
 
 ## Tests
 `BundledDataTests`, of which those that compare with the original need `Original`, as the other tests of whole games do (`GameData`):

@@ -15,6 +15,7 @@
     <Project Path="OpenNSPW/OpenNspw.DirectPlay/OpenNspw.DirectPlay.csproj" />
     <Project Path="OpenNSPW/OpenNspw.Porter/OpenNspw.Porter.csproj" />
     <Project Path="OpenNSPW/OpenNspw.Singleplayer/OpenNspw.Singleplayer.csproj" />
+    <Project Path="OpenNSPW/OpenNspw.App/OpenNspw.App.csproj" />
     <Project Path="OpenNSPW/OpenNspw/OpenNspw.csproj" />
   </Folder>
   <Folder Name="/OpenNSPW/Extensions/">

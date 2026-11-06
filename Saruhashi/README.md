@@ -7,6 +7,8 @@ Saruhashi is a UI framework for [MonoGame](https://github.com/MonoGame/MonoGame)
 PM> Install-Package Aigamo.Saruhashi.MonoGame
 ```
 
+Saruhashi runs on the MonoGame of the game's platform, which the game references itself, such as `MonoGame.Framework.DesktopGL` or `MonoGame.Framework.Android`.
+
 ## Usage
 
 ### Minimal Configuration

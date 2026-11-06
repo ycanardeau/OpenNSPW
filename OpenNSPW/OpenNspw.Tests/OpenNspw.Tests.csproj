@@ -26,7 +26,7 @@
     <ProjectReference Include="..\OpenNspw.Pacing\OpenNspw.Pacing.csproj" />
     <ProjectReference Include="..\OpenNspw.Replay\OpenNspw.Replay.csproj" />
     <ProjectReference Include="..\OpenNspw.Verification\OpenNspw.Verification.csproj" />
-    <ProjectReference Include="..\OpenNspw.Desktop\OpenNspw.Desktop.csproj" />
+    <ProjectReference Include="..\OpenNspw.App\OpenNspw.App.csproj" />
     <ProjectReference Include="..\OpenNspw.Singleplayer\OpenNspw.Singleplayer.csproj" />
   </ItemGroup>
 

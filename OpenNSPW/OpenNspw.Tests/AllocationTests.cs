@@ -219,10 +219,10 @@ public sealed class AllocationTests
 	public void TheAppRasterizesATextOnce()
 	{
 		using var files = GameData.CreateEmpty();
-		var platform = new Desktop.DesktopPlatform(
+		var platform = new App.AppPlatform(
 			new GameFileLayers([], files.Path, []),
-			new Desktop.TextRasterizer(),
-			new Mailbox<Desktop.UIMessage>(),
+			new App.TextRasterizer(),
+			new Mailbox<App.UIMessage>(),
 			new Mailbox<GameMessage>()
 		);
 		var first = platform.RasterizeText("経過時間 12", 12, "ＭＳ ゴシック");

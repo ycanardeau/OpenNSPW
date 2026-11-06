@@ -38,7 +38,7 @@ The warnings, and how each went away:
 
 | Where | What the trimmer cannot follow | Fix |
 | --- | --- | --- |
-| `UISettings.cs`, `DesktopPlatform.cs` (8) | `JsonSerializer` by reflection, for `ui.json` and `settings.json` | A generated `JsonSerializerContext` each: `UISettings.SavedJson`, with the language by its name as before, and `DesktopPlatform.SettingsJson` for `Dictionary<string, string>` |
+| `UISettings.cs`, `AppPlatform.cs` (8) | `JsonSerializer` by reflection, for `ui.json` and `settings.json` | A generated `JsonSerializerContext` each: `UISettings.SavedJson`, with the language by its name as before, and `AppPlatform.SettingsJson` for `Dictionary<string, string>` |
 | `Trace122.cs`, `Trace122Layout.FieldsOf` (1) | `Type.GetFields` on the traced structs and their fields' types, to name a difference of `--replay` | Suppressed (`UnconditionalSuppressMessage`): the types are structs, whose fields trimming always keeps. An annotation could not follow the fields' types |
 | Saruhashi's `DataBindings` (16) | `TypeDescriptor`, for data binding, which the app does not use | `[RequiresUnreferencedCode]` in Saruhashi on the binding classes (`Binding`, the binding managers, `ListBindingHelper`, `Formatter`, `UITypeEditor`) and on where an app starts binding (`ControlBindingsCollection.Add`, `BindingContext`'s indexers and `UpdateBinding`), so that an app that binds is warned where it binds. Suppressed where only an existing binding gets: `Control.UpdateBindings` and `ListBindingConverter`'s designer code. Saruhashi has no trim warning left under the trim analyzer; `RadioButton` finds `Checked` by its type rather than its instance for it |
 
@@ -71,5 +71,5 @@ What the app uses by name and the trimmer could miss, checked on the trimmed `os
 1. The font subsets: the tool, the test, the measurement, then the fonts the app ships. fontTools (`pyftsubset`) has to be installed for it.
 
 ## Open questions
-- **Where the original fonts are kept**, if the subsets replace them in `OpenNspw.Desktop/Fonts`: proposed, a folder of their own beside the tool.
+- **Where the original fonts are kept**, if the subsets replace them in `OpenNspw.App/Fonts`: proposed, a folder of their own beside the tool.
 - **The bundling of the original's files** in the app is not part of this: it makes the app larger, and is a choice of its own.

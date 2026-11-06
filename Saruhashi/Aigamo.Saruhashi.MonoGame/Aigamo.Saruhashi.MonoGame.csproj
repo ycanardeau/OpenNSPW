@@ -8,9 +8,11 @@
     <RepositoryUrl>https://github.com/ycanardeau/Saruhashi</RepositoryUrl>
   </PropertyGroup>
 
+  <!-- MonoGame of no platform in particular: built against DesktopGL's, Saruhashi runs with the one of the game that
+       references it, as MonoGame.Extended does. -->
   <ItemGroup>
     <PackageReference Include="MonoGame.Extended" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

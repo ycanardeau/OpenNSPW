@@ -1,0 +1,574 @@
+using System.Collections.Immutable;
+using Aigamo.Otsuki.Actors;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using MonoGame.Extended.ViewportAdapters;
+using OpenNspw.HostUI;
+using OpenNspw.Pacing;
+using OpenNspw.Replay;
+using OpenNspw.Verification;
+using DrawingPoint = System.Drawing.Point;
+using XnaKeys = Microsoft.Xna.Framework.Input.Keys;
+
+namespace OpenNspw.App;
+
+// A game of the port: its WinMain (win_main.cpp) on its own thread, as the original runs it, its frames, and the
+// keyboard and the mouse turned into DirectInput data and window messages. The game and the UI are actors (docs/Actors.md):
+// the session posts to the game's mailbox, and takes what the game posts to the UI's at the start of each update
+// (TakeMessages), on the UI's thread.
+internal sealed class GameSession : IDisposable
+{
+	// MonoGame keys, with their DirectInput scan codes (DIK_*) and virtual-key codes (VK_*).
+	private static readonly Dictionary<XnaKeys, (uint Dik, int VK)> KeyCodes = new()
+	{
+		[XnaKeys.Escape] = (0x01, 0x1B),
+		[XnaKeys.Enter] = (0x1C, 0x0D),
+		[XnaKeys.Space] = (0x39, 0x20),
+		[XnaKeys.Up] = (0xC8, 0x26),
+		[XnaKeys.Left] = (0xCB, 0x25),
+		[XnaKeys.Right] = (0xCD, 0x27),
+		[XnaKeys.Down] = (0xD0, 0x28),
+		[XnaKeys.D1] = (0x02, '1'),
+		[XnaKeys.D2] = (0x03, '2'),
+		[XnaKeys.D3] = (0x04, '3'),
+		[XnaKeys.D4] = (0x05, '4'),
+		[XnaKeys.D5] = (0x06, '5'),
+		[XnaKeys.D6] = (0x07, '6'),
+		[XnaKeys.D7] = (0x08, '7'),
+		[XnaKeys.D8] = (0x09, '8'),
+		[XnaKeys.D9] = (0x0A, '9'),
+		[XnaKeys.D0] = (0x0B, '0'),
+		[XnaKeys.Q] = (0x10, 'Q'),
+		[XnaKeys.W] = (0x11, 'W'),
+		[XnaKeys.E] = (0x12, 'E'),
+		[XnaKeys.R] = (0x13, 'R'),
+		[XnaKeys.T] = (0x14, 'T'),
+		[XnaKeys.Y] = (0x15, 'Y'),
+		[XnaKeys.U] = (0x16, 'U'),
+		[XnaKeys.I] = (0x17, 'I'),
+		[XnaKeys.O] = (0x18, 'O'),
+		[XnaKeys.P] = (0x19, 'P'),
+		[XnaKeys.A] = (0x1E, 'A'),
+		[XnaKeys.S] = (0x1F, 'S'),
+		[XnaKeys.D] = (0x20, 'D'),
+		[XnaKeys.F] = (0x21, 'F'),
+		[XnaKeys.G] = (0x22, 'G'),
+		[XnaKeys.H] = (0x23, 'H'),
+		[XnaKeys.J] = (0x24, 'J'),
+		[XnaKeys.K] = (0x25, 'K'),
+		[XnaKeys.L] = (0x26, 'L'),
+		[XnaKeys.Z] = (0x2C, 'Z'),
+		[XnaKeys.X] = (0x2D, 'X'),
+		[XnaKeys.C] = (0x2E, 'C'),
+		[XnaKeys.V] = (0x2F, 'V'),
+		[XnaKeys.B] = (0x30, 'B'),
+		[XnaKeys.N] = (0x31, 'N'),
+		[XnaKeys.M] = (0x32, 'M'),
+		[XnaKeys.F1] = (0x3B, 0x70),
+		[XnaKeys.F2] = (0x3C, 0x71),
+		[XnaKeys.F3] = (0x3D, 0x72),
+		[XnaKeys.F4] = (0x3E, 0x73),
+		[XnaKeys.F5] = (0x3F, 0x74),
+		[XnaKeys.F6] = (0x40, 0x75),
+		[XnaKeys.F7] = (0x41, 0x76),
+		[XnaKeys.F8] = (0x42, 0x77),
+		[XnaKeys.F9] = (0x43, 0x78),
+		[XnaKeys.F10] = (0x44, 0x79),
+		[XnaKeys.F11] = (0x57, 0x7A),
+		[XnaKeys.F12] = (0x58, 0x7B),
+		[XnaKeys.NumPad0] = (0x52, 0x60),
+		[XnaKeys.NumPad1] = (0x4F, 0x61),
+		[XnaKeys.NumPad2] = (0x50, 0x62),
+		[XnaKeys.NumPad3] = (0x51, 0x63),
+		[XnaKeys.NumPad4] = (0x4B, 0x64),
+		[XnaKeys.NumPad5] = (0x4C, 0x65),
+		[XnaKeys.NumPad6] = (0x4D, 0x66),
+		[XnaKeys.NumPad7] = (0x47, 0x67),
+		[XnaKeys.NumPad8] = (0x48, 0x68),
+		[XnaKeys.NumPad9] = (0x49, 0x69),
+	};
+
+	private readonly Mailbox<UIMessage> _ui = new();
+	private readonly AppPlatform _platform;
+	private readonly Thread _thread;
+	private readonly GameSnapshot _noFrame;
+	private Color[] _colors = [];
+	private KeyboardState _previousKeyboard;
+	private MouseState _previousMouse;
+
+	// The cursor last posted to the game, which the session posts again only when it moves.
+	private (int X, int Y)? _postedCursor;
+	private bool _hasEnded;
+
+	// The frame the UI shows, its own until a newer one comes, and whether it is new since UpdateFrame last took it.
+	private FrameBuffer? _shown;
+	private bool _isNewFrame;
+
+	private string? _lastMessage;
+	private bool _isDialogFilled;
+	private bool _isDisposed;
+
+	public Nspw Game { get; }
+
+	// The host UI's commands, which the game takes as an extension (docs/UI.md).
+	public UICommands Commands { get; } = new();
+
+	// The trace of 1.22 that the game follows, to watch it (docs/Verification.md), or null.
+	public Trace122Replay? Trace { get; }
+
+	// The replay that the game plays, to watch it (docs/Replays.md), and what its viewer sees; or null.
+	public ReplayPlayer? Replay { get; }
+
+	public ReplayView? View { get; }
+
+	// Whether the game plays a replay, and gives the viewer its battle to watch: until the replay ends or is taken over.
+	public bool IsWatching => Replay is { Progress.HoldsInput: true };
+
+	// What records the game's battles in the user's replays, when it follows no trace: a single-player replay's battle only
+	// once the player takes it over (ReplayRecorder.Replay).
+	private readonly ReplayRecorder? _recorder;
+
+	// The directory that a replay's game writes in, deleted as it ends, or null.
+	private readonly string? _scratchDirectory;
+
+	// What the game takes of the replay's view (View), on its thread, or null.
+	private readonly ReplayViewExtension? _viewExtension;
+
+	// The game's state as it was when it showed the last frame. Read by the UI's thread.
+	public GameSnapshot Snapshot => _shown?.Snapshot ?? _noFrame;
+
+	// Whether the player's keys and buttons are held back from the game: while it follows a trace or plays a replay, which
+	// give it none, as of the last frame.
+	private bool IsInputHeldBack => Snapshot.HoldsInput;
+
+	// The game's windows, as the game last posted them.
+	public ImmutableArray<WindowView> Windows { get; private set; } = [];
+
+	// The game's own window (hwndApp), once it exists, as a key for the messages the UI posts to it.
+	private HWND? AppWindow => Windows.FirstOrDefault(w => w.Kind == "WINDOW")?.Window;
+
+	// A replay's file in the user's replays, named by the battle's date and scenario, opened for a battle that starts; or
+	// none, if it cannot be created, so that the game goes on unrecorded.
+	private static Stream OpenReplayFile(ReplayStart start)
+	{
+		try
+		{
+			Directory.CreateDirectory(GameData.ReplayDirectory);
+			var name = $"{start.Date.ToLocalTime():yyyyMMdd-HHmmss}-{start.Mode}-{start.Scenario}";
+			for (var n = 1; ; n++)
+			{
+				var path = Path.Combine(
+					GameData.ReplayDirectory,
+					(n == 1 ? name : $"{name}-{n}") + ReplayFormat.Extension
+				);
+				if (!File.Exists(path))
+					return new FileStream(path, FileMode.CreateNew, FileAccess.Write);
+			}
+		}
+		catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+		{
+			Console.Error.WriteLine($"The battle cannot be recorded: {e.Message}");
+			return Stream.Null;
+		}
+	}
+
+	private void DeleteScratchDirectory()
+	{
+		try
+		{
+			if (_scratchDirectory is not null)
+				Directory.Delete(_scratchDirectory, recursive: true);
+		}
+		catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
+	}
+
+	private void RunGame()
+	{
+		try
+		{
+			Game.WinMain(null, null, "", winuser.SW_SHOWNORMAL);
+		}
+		catch (Exception e)
+		{
+			_ui.Post(new UIMessage.MessageShown(e.ToString()));
+			Console.Error.WriteLine(e);
+		}
+		finally
+		{
+			// Its sounds stop with it, on its thread, which is the last to use them, and so do the trace it followed, the
+			// replay it played and the one it recorded.
+			_platform.StopSounds();
+			Trace?.Dispose();
+			Replay?.Dispose();
+			_recorder?.Dispose();
+			DeleteScratchDirectory();
+			_ui.Post(new UIMessage.Ended());
+		}
+	}
+
+	// files: the game's files (GameData). singleplayer: a scenario of NSPW 1.22, to play it against the computer
+	// (docs/Singleplayer.md) instead of connecting to a rival. trace: a trace of 1.22 in that scenario, which the game
+	// follows. replay: a replay that the game plays, with what its viewer sees (view), in a game that writes in
+	// scratchDirectory, which is deleted as the game ends. Each battle of a game that plays neither is recorded in the
+	// user's replays, and so is a single-player replay's once it is taken over. The session disposes the trace and the
+	// replay. options: the options of a single-player battle that follows no trace (docs/Options.md); a replay's are
+	// those it was recorded with, and it plays at a steady speed once it is taken over if it was recorded at one.
+	public GameSession(
+		GameFileLayers files,
+		TextRasterizer text,
+		int? singleplayer = null,
+		Trace122Replay? trace = null,
+		ReplayPlayer? replay = null,
+		ReplayView? view = null,
+		string? scratchDirectory = null,
+		BattleOptions? options = null
+	)
+	{
+		var mailbox = new Mailbox<GameMessage>();
+		_platform = new AppPlatform(files, text, _ui, mailbox);
+		Game = new Nspw(_platform, mailbox);
+		Game.Extensions.Add(Commands);
+		View = view;
+		_platform.HidesFrame = () =>
+			GameSnapshot.IsHostScreenOf(Game) || Replay is { IsSeeking: true };
+		_platform.CaptureState = snapshot =>
+			snapshot.CopyFrom(Game, Commands, _viewExtension?.Seen);
+		if (singleplayer is { } scenario)
+		{
+			Game.IsSingleplayer = true;
+			Game.ScenarioNumber = (short)scenario;
+		}
+
+		// Before the first frame, the input is held back if a trace or a replay gives it.
+		_noFrame = new GameSnapshot { HoldsInput = trace is not null || replay is not null };
+		Trace = trace;
+		if (trace is not null)
+			Game.Extensions.Add(trace);
+		if (singleplayer is not null && trace is null && options is not null)
+			Game.Options = options;
+		// Before the recorder, which records the frames' ticks that it sets.
+		var steadySpeed =
+			singleplayer is not null
+			&& trace is null
+			&& (replay?.Start.Options ?? Game.Options).SteadySpeed
+				? new SteadySpeed()
+				: null;
+		Replay = replay;
+		_scratchDirectory = scratchDirectory;
+		if (replay is not null)
+		{
+			if (view is not null)
+			{
+				_viewExtension = new ReplayViewExtension(view, _platform);
+				Game.Extensions.Add(_viewExtension);
+			}
+			Game.Extensions.Add(replay);
+			if (replay.Start.Mode == ReplayMode.Singleplayer)
+			{
+				if (steadySpeed is not null)
+					Game.Extensions.Add(steadySpeed);
+				_recorder = new ReplayRecorder(OpenReplayFile) { Replay = replay };
+				Game.Extensions.Add(_recorder);
+			}
+		}
+		else if (trace is null)
+		{
+			if (steadySpeed is not null)
+				Game.Extensions.Add(steadySpeed);
+			_recorder = new ReplayRecorder(OpenReplayFile);
+			Game.Extensions.Add(_recorder);
+		}
+
+		_thread = new Thread(RunGame) { IsBackground = true, Name = "NSPW" };
+	}
+
+	public void Start()
+	{
+		_thread.Start();
+	}
+
+	// Takes what the game posted: the newest frame, giving the older back, the windows, the message boxes and the end. At
+	// the start of each update of the screen that shows the game.
+	public void TakeMessages()
+	{
+		while (_ui.TryReceive(out var message))
+		{
+			switch (message)
+			{
+				case UIMessage.FrameReady ready:
+					if (_shown is not null)
+						Game.Mailbox.Post(new BufferFree(_shown));
+					_shown = ready.Buffer;
+					_isNewFrame = true;
+					break;
+				case UIMessage.WindowsChanged changed:
+					Windows = changed.Windows;
+					break;
+				case UIMessage.MessageShown shown:
+					_lastMessage = shown.Text;
+					break;
+				case UIMessage.DialogFilled:
+					_isDialogFilled = true;
+					break;
+				case UIMessage.Ended:
+					_hasEnded = true;
+					break;
+			}
+		}
+	}
+
+	// Whether WinMain has returned: the game was closed, or failed to connect. Takes what the game posted, as a screen that
+	// no longer shows the game may ask.
+	public bool HasEnded
+	{
+		get
+		{
+			TakeMessages();
+			return _hasEnded;
+		}
+	}
+
+	// The last message box the game showed, if any.
+	public string? LastMessage()
+	{
+		return _lastMessage;
+	}
+
+	// Posts, from a user's action that has run on the game's thread, that the dialog's fields are to be read again.
+	public void PostDialogFilled()
+	{
+		_ui.Post(new UIMessage.DialogFilled());
+	}
+
+	// Whether a user's action posted that the dialog's fields are to be read again, since this was last asked.
+	public bool TakeDialogFilled()
+	{
+		var isFilled = _isDialogFilled;
+		_isDialogFilled = false;
+		return isFilled;
+	}
+
+	// The keys that close the game (Escape and F12: WM_CLOSE), which the UI asks about first (Quit).
+	private static bool IsQuitKey(XnaKeys key) => key is XnaKeys.Escape or XnaKeys.F12;
+
+	// Whether a key that closes the game was pressed in the last update: it is held back from the game.
+	public bool IsQuitRequested { get; private set; }
+
+	// Whether a key is one of the original's debug keys (DBG_MODE, WndProc) that a single-player game does not get in a
+	// Release build: F5 swaps the side the player plays, which would hand the player the computer's fleet; F6 starts the
+	// scenario again; F9 sinks the selected unit.
+	private bool IsHeldBackDebugKey(XnaKeys key)
+	{
+#if DEBUG
+		return false;
+#else
+		return Game.IsSingleplayer && key is XnaKeys.F5 or XnaKeys.F6 or XnaKeys.F9;
+#endif
+	}
+
+	private void UpdateKeyboard()
+	{
+		var keyboard = Keyboard.GetState();
+		IsQuitRequested = false;
+		foreach (var (key, (dik, vk)) in KeyCodes)
+		{
+			var down = keyboard.IsKeyDown(key);
+			if (IsQuitKey(key))
+			{
+				IsQuitRequested |= down && !_previousKeyboard.IsKeyDown(key);
+			}
+			else if (
+				!IsInputHeldBack
+				&& !IsHeldBackDebugKey(key)
+				&& down != _previousKeyboard.IsKeyDown(key)
+			)
+			{
+				Game.PostKeyboardInput(dik, down);
+				Game.SetKeyState(AppWindow, vk, down);
+			}
+		}
+
+		_previousKeyboard = keyboard;
+	}
+
+	// A button pressed or released: a press on a form (`isOnForm`) is the form's, not the game's; a release goes to the
+	// game anyway, which ignores one it did not see pressed.
+	private void UpdateButton(int button, ButtonState state, ButtonState previous, bool isOnForm)
+	{
+		if (state != previous && (!isOnForm || state == ButtonState.Released))
+		{
+			Game.PostMouseInput(button, state == ButtonState.Pressed);
+		}
+	}
+
+	// The cursor, in game pixels, and the buttons, each on its own. While the input is held back, the cursor still
+	// moves, which changes only what is drawn and the view, which the trace gives back (TheCursorDoesNotChangeTheReplay),
+	// but the buttons are not passed.
+	private void UpdateMouse(
+		ViewportAdapter viewportAdapter,
+		Func<DrawingPoint, bool> isOnForm,
+		DrawingPoint? cursor
+	)
+	{
+		var mouse = Mouse.GetState();
+		var position = viewportAdapter.PointToScreen(mouse.Position);
+		var (x, y) = cursor is { } point ? (point.X, point.Y) : (position.X, position.Y);
+		if (_postedCursor != (x, y))
+		{
+			Game.SetCursorPos(x, y);
+			_postedCursor = (x, y);
+		}
+		if (IsInputHeldBack)
+		{
+			_previousMouse = mouse;
+			return;
+		}
+
+		var onForm = isOnForm(new DrawingPoint(position.X, position.Y));
+		UpdateButton(0, mouse.LeftButton, _previousMouse.LeftButton, onForm);
+		UpdateButton(1, mouse.RightButton, _previousMouse.RightButton, onForm);
+		_previousMouse = mouse;
+	}
+
+	// Passes the keyboard and the mouse to the game: the mouse's buttons but where a form of the UI is (isOnForm), and
+	// its position, or `cursor` in its place.
+	public void UpdateInput(
+		ViewportAdapter viewportAdapter,
+		Func<DrawingPoint, bool> isOnForm,
+		DrawingPoint? cursor = null
+	)
+	{
+		ObjectDisposedException.ThrowIf(_isDisposed, this);
+		UpdateKeyboard();
+		UpdateMouse(viewportAdapter, isOnForm, cursor);
+	}
+
+	private static Color ToColor(ushort pixel)
+	{
+		var r = (pixel >> 11) & 0x1F;
+		var g = (pixel >> 5) & 0x3F;
+		var b = pixel & 0x1F;
+		return new Color((r << 3) | (r >> 2), (g << 2) | (g >> 4), (b << 3) | (b >> 2));
+	}
+
+	// The game's last frame, once it has shown one.
+	public Texture2D? Frame { get; private set; }
+
+	// Whether the last frame is a battle's: the battlefield, the sidebar and the minimap.
+	public bool IsBattleFrame => Snapshot.IsBattle;
+
+	// Takes the game's last frame into `Frame`, if it has shown a new one.
+	public void UpdateFrame(GraphicsDevice graphicsDevice)
+	{
+		ObjectDisposedException.ThrowIf(_isDisposed, this);
+		if (Frame is null)
+		{
+			// Black until the game shows its first frame: a new texture holds whatever its memory held, such as the
+			// screen before.
+			Frame = new Texture2D(graphicsDevice, all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
+			Frame.SetData(new Color[Frame.Width * Frame.Height]);
+		}
+
+		if (
+			!_isNewFrame
+			|| _shown is not { } shown
+			|| shown.Width != Frame.Width
+			|| shown.Height != Frame.Height
+		)
+		{
+			return;
+		}
+
+		_isNewFrame = false;
+
+		// The game's frame is not shown on the screens that the UI draws in its place.
+		if (Snapshot.IsHostScreen)
+		{
+			return;
+		}
+
+		var pixels = shown.Pixels;
+		if (_colors.Length != pixels.Length)
+		{
+			_colors = new Color[pixels.Length];
+		}
+
+		for (var i = 0; i < pixels.Length; i++)
+		{
+			_colors[i] = ToColor(pixels[i]);
+		}
+
+		Frame.SetData(_colors);
+	}
+
+	// Draws the game's last frame, the whole screen.
+	public void Draw(SpriteBatch spriteBatch, ViewportAdapter viewportAdapter)
+	{
+		ObjectDisposedException.ThrowIf(_isDisposed, this);
+		if (Frame is null)
+		{
+			return;
+		}
+
+		spriteBatch.Begin(
+			transformMatrix: viewportAdapter.GetScaleMatrix(),
+			samplerState: SamplerState.PointClamp
+		);
+		spriteBatch.Draw(Frame, Vector2.Zero, Color.White);
+		spriteBatch.End();
+	}
+
+	// Gives the game the press of Escape that was held back (IsQuitRequested): the game closes, as in the original.
+	public void Quit()
+	{
+		var (dik, vk) = KeyCodes[XnaKeys.Escape];
+		Game.PostKeyboardInput(dik, true);
+		Game.SetKeyState(AppWindow, vk, true);
+		Game.PostKeyboardInput(dik, false);
+		Game.SetKeyState(AppWindow, vk, false);
+	}
+
+	// Closes the game, as closing its window or cancelling its dialog does in the original. The game ends on its own
+	// thread, which may take a while, such as while it still waits for a host that does not answer: the UI does not wait.
+	public void Close()
+	{
+		if (!HasEnded && _thread.IsAlive)
+		{
+			// The game chooses on its thread, which owns its dialog and its window.
+			var game = Game;
+			game.PostToGame(() =>
+			{
+				if (game.MainDialog is { } dialog)
+				{
+					game.ClickDlgItem(dialog, windef.IDCANCEL);
+				}
+				else if (game.hwndApp is { } window)
+				{
+					game.PostMessage(window, winuser.WM_CLOSE, 0, 0);
+				}
+			});
+		}
+	}
+
+	// Waits for the game to end, for `timeout` at most: when the app quits, so that the game can say goodbye to its rival.
+	public void WaitForEnd(TimeSpan timeout)
+	{
+		if (_thread.IsAlive)
+		{
+			_thread.Join(timeout);
+		}
+	}
+
+	public void Dispose()
+	{
+		if (_isDisposed)
+		{
+			return;
+		}
+
+		_isDisposed = true;
+		Close();
+		Frame?.Dispose();
+	}
+}

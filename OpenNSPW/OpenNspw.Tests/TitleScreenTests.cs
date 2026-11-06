@@ -11,12 +11,12 @@ using static OpenNspw.winuser;
 namespace OpenNspw.Tests;
 
 // The platform of a whole game in the tests: the game's files in a copy of Original/NSPW_NET, DirectPlay 8 on Otsuki,
-// the frames it shows, and text with the desktop app's rasterizer, where its font exists. No sound. On the game's thread:
+// the frames it shows, and text with the app's rasterizer, where its font exists. No sound. On the game's thread:
 // the test reads it with RunningGame.Ask.
 internal sealed class GameTestPlatform(string dataDirectory) : INspwPlatform
 {
 	private readonly string _dataDirectory = dataDirectory;
-	private readonly OpenNspw.Desktop.TextRasterizer _text = new();
+	private readonly OpenNspw.App.TextRasterizer _text = new();
 	private ushort[] _frame = [];
 
 	public DirectPlay8Factory DirectPlay { get; } = new();
@@ -74,7 +74,7 @@ internal sealed class GameTestPlatform(string dataDirectory) : INspwPlatform
 	public void WriteSetting(string key, string value) { }
 }
 
-// A whole game, running its WinMain (win_main.cpp) on its own thread, as the desktop app does. The game and its
+// A whole game, running its WinMain (win_main.cpp) on its own thread, as the app does. The game and its
 // platform are its thread's: the test asks it what it needs to know (Ask), and posts it what the user does (Do).
 internal sealed class RunningGame : IDisposable
 {

@@ -43,7 +43,7 @@ So 96 bytes a call there, a copy of the list of peers and a new delegate in `DoW
 | `DirectPlay8ThreadPool.DoWork`, `DirectPlay8Peer.DoWork` | The peers by index; the handler's delegate kept | A copy of the peers and a delegate at every call |
 | `crt.Format` ([stdio.cs](../OpenNSPW/OpenNspw/stdio.cs)) | Writes into a buffer of the pool, then into the game's | A list, strings and an array for each conversion |
 | `Gdi.Decode` ([wingdi.cs](../OpenNSPW/OpenNspw/wingdi.cs)) | The game's texts in Shift_JIS decoded once, looked up by their bytes without a copy | A string at each `TextOut` |
-| `DesktopPlatform.RasterizeText` | Each text rasterized once; none on the screens that the UI draws in the game's place, where the game's frame is not shown (`HidesFrame`), as on the battle and the setting screens | A bitmap for every text of every frame, the original's debug lines (`DBG_MODE`) among them, which change every frame |
+| `AppPlatform.RasterizeText` | Each text rasterized once; none on the screens that the UI draws in the game's place, where the game's frame is not shown (`HidesFrame`), as on the battle and the setting screens | A bitmap for every text of every frame, the original's debug lines (`DBG_MODE`) among them, which change every frame |
 | `UICommands.InputSite` | The site's commands taken in place, into a list kept for it; the combat menu's items in a new array only when they change | LINQ and a list at each site, each frame |
 | `ReplayPlayer.Take` | A frame's records taken in place; none, without a list, at a point that has none | LINQ and a list at each point |
 | `SpriteSheetSurface.TryFind` | Its pieces in an array | An enumerator at each blit |

@@ -1,5 +1,5 @@
 # UI
-The desktop app (`OpenNspw.Desktop`) plays the port's games with a UI of its own, built with [Saruhashi](../Saruhashi) controls: a main menu, a browser of NSPW 1.22's scenarios, a form to host or join a game, the setting screens, and the battle screen. The game is the exact port and does not know about the UI: the UI reads its state and gives it the orders that the original's clicks give, so a game played with the UI sends the same network messages as one played with the original's screens.
+The app (`OpenNspw.App`, which the desktop host `OpenNspw.Desktop` starts) plays the port's games with a UI of its own, built with [Saruhashi](../Saruhashi) controls: a main menu, a browser of NSPW 1.22's scenarios, a form to host or join a game, the setting screens, and the battle screen. The game is the exact port and does not know about the UI: the UI reads its state and gives it the orders that the original's clicks give, so a game played with the UI sends the same network messages as one played with the original's screens.
 
 ## The original's frame
 The original mixes drawing, input and the simulation. A battle frame (`UpdateFrame`, `win_main.cpp`) is:
@@ -67,7 +67,7 @@ What the game writes over its screens is drawn by the UI over its own (`GameMess
 
 ## Look
 - **Colors and shapes** (`Controls/Theme.cs`): the navy of a chart table, brass for what can be chosen, and a chart's corner brackets on panels, over a sea chart's grid (`Screens/Backdrop.cs`). Nothing moves: the menus have no animation.
-- **Fonts** (`BundledFonts`): the app comes with its fonts, so that its text is the same on every platform: BIZ UDGothic for the game's own text, fixed-width as the original's, and BIZ UDPGothic for the menus (`UIFonts`), under the SIL Open Font License.
+- **Fonts** (`BundledFonts`): the app comes with its fonts, embedded in it, so that its text is the same on every platform: BIZ UDGothic for the game's own text, fixed-width as the original's, and BIZ UDPGothic for the menus (`UIFonts`), under the SIL Open Font License.
 - **Languages** (`Texts`, `GameTexts`, `SingleplayerTexts`): English and Japanese. The UI starts in the system's language and remembers the one chosen on the main menu (`UISettings`, `ui.json` beside the game's settings). What the game writes stays Japanese in the snapshot and is put into English as the UI draws it, in the words of the game's English edition (its `LNGG_VER` code); the single-player scenarios' titles and briefings, which `NSPW_122.exe` has only in Japanese, are translated.
 - **Keyboard**: the menus, the multiplayer form and the setting screens can be used with the keyboard as well as the mouse; in a battle the keys are the game's.
 
@@ -92,5 +92,5 @@ What is drawn or taken differently:
 ## Not done
 - **The dialogs are read live** (see [Threads and input](#threads-and-input)). The lock keeps the windows consistent, but a dialog changes in several steps, and the UI can read it between them; `MultiplayerScreen.Update` even reads whether hosting is checked and OK is enabled without the lock. The way out is the battle's: the game's thread would publish an immutable copy of each dialog (its fields, checks, enabled states and list items) after `WM_INITDIALOG` and after each message it dispatches, and the UI would read only those copies and keep writing through `PostToGame`. Only the Win32 layer (`winuser.cs`) and the app would change, not the ported game, and the app would no longer take `WindowsLock`.
 - **The title screen and the map editor** are still drawn by the game, and the chat is still typed into the game's dialog.
-- **The controls have no tests of their own**: they live in `OpenNspw.Desktop` and draw with MonoGame. Moving what they compute (which unit a click takes, what a part shows) into a project the tests can use would let a saved snapshot be tested without a window.
+- **The controls have no tests of their own**: they live in `OpenNspw.App` and draw with MonoGame. Moving what they compute (which unit a click takes, what a part shows) into a project the tests can use would let a saved snapshot be tested without a window.
 - **The debug lines** that the original's `DBG_MODE` writes at the top of the screen, and the keys that page them (F3, F4), are shown in every build, as the original's release shows them.
