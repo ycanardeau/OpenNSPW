@@ -7,14 +7,34 @@ namespace Aigamo.Otsuki.Tests;
 
 /// <summary>
 /// A network for the simulation: each datagram is delivered as a step of its own on the scheduler, so that the
-/// scheduler's order mixes deliveries with the actors' messages, and reorders datagrams as UDP may. Binding and
-/// everything else happen at once, on the one thread that drives the simulation.
+/// scheduler's order mixes deliveries with the actors' messages, and reorders datagrams as UDP may. It loses a share of
+/// them, chosen by its seed, and none to or from an address cut off. Binding and everything else happen at once, on
+/// the one thread that drives the simulation.
 /// </summary>
-internal sealed class SimulatedNetwork(ManualScheduler scheduler)
+internal sealed class SimulatedNetwork(ManualScheduler scheduler, Func<TimeSpan> now, int seed)
 {
 	private readonly ManualScheduler _scheduler = scheduler;
+	private readonly Func<TimeSpan> _now = now;
+	private readonly Random _random = new(seed);
 	private readonly Dictionary<IPEndPoint, SimulatedTransport> _transports = [];
+	private readonly HashSet<IPAddress> _cutOff = [];
 	private int _nextPort = 40000;
+
+	/// <summary>
+	/// The share of datagrams lost, from 0 to 1.
+	/// </summary>
+	public double LossRate { get; set; }
+
+	/// <summary>
+	/// What the network did, in order: each datagram delivered, lost or cut off, with the time, the addresses and the
+	/// bytes. Two runs that take the same order have the same trace.
+	/// </summary>
+	public List<string> Trace { get; } = [];
+
+	/// <summary>
+	/// Every datagram to or from <paramref name="address"/> is lost from now on, as if its machine had stopped.
+	/// </summary>
+	public void CutOff(IPAddress address) => _cutOff.Add(address);
 
 	/// <summary>
 	/// Every transport bound so far, closed ones included.
@@ -36,8 +56,25 @@ internal sealed class SimulatedNetwork(ManualScheduler scheduler)
 	public void Send(IPEndPoint source, EndPoint destination, byte[] datagram)
 	{
 		var copy = datagram.ToArray();
+		var entry = $"{_now().Ticks} {source} > {destination} {Convert.ToHexString(copy)}";
+		if (
+			_cutOff.Contains(source.Address)
+			|| destination is IPEndPoint { Address: var address } && _cutOff.Contains(address)
+		)
+		{
+			Trace.Add($"cut {entry}");
+			return;
+		}
+
+		if (LossRate > 0 && _random.NextDouble() < LossRate)
+		{
+			Trace.Add($"lost {entry}");
+			return;
+		}
+
 		_scheduler.Schedule(() =>
 		{
+			Trace.Add($"{_now().Ticks} delivered {entry}");
 			if (
 				destination is IPEndPoint ipEndPoint
 				&& _transports.TryGetValue(ipEndPoint, out var transport)
