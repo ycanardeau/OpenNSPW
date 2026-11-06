@@ -251,13 +251,15 @@ internal sealed class GameScreen(
 				? SettingForm.GameCursor
 				: (System.Drawing.Point?)null;
 			_session.UpdateInput(
+				Game.Pointer.State,
 				Game.ViewportAdapter,
 				point =>
 					_confirmQuit.Visible
 					|| _dialogs.Contains(point)
 					|| _battleForm.Owns(point)
 					|| _settingForm.Owns(point),
-				cursor
+				cursor,
+				Game.Host.IsTouchScreen ? SettingForm.GameCursor : null
 			);
 			if (_session.IsQuitRequested)
 				ToggleConfirmQuit();

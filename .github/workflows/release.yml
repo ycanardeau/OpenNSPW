@@ -3,7 +3,8 @@
 # Pushes use NuGet trusted publishing: a nuget.org policy for this repository and release.yml exchanges the job's OIDC token for a short-lived API key.
 # Once the packages are pushed, publishes the desktop app, self-contained and trimmed (docs/SmallerBuilds.md) in a single-file executable, on a GitHub Release of the tag, a prerelease for prerelease tags:
 # for Windows (win-x64) as a zip, for Apple Silicon Macs (osx-arm64) as OpenNSPW.app, ad-hoc signed, in a zip (tools/package-macos-app.sh),
-# and for Linux (linux-x64) as an AppImage (tools/package-linux-appimage.sh); with their SHA-256 in SHA256SUMS, and build provenance attestations.
+# for Linux (linux-x64) as an AppImage (tools/package-linux-appimage.sh), and for Android as an APK signed with the release key (OpenNspw.Android);
+# with their SHA-256 in SHA256SUMS, and build provenance attestations.
 # The app embeds the original's files that the game reads (docs/BundledData.md), with their author's notice (OriginalNotice.txt).
 
 name: Release
@@ -132,8 +133,65 @@ jobs:
         name: linux
         path: artifacts/*.AppImage
 
+  # An APK of OpenNspw.Android, which is not in the solution, as it needs the android workload. Signed with the release key
+  # from the repository's secrets, the same for every release, so that each installs over the one before: the keystore as
+  # base64 (ANDROID_KEYSTORE_BASE64), its password (ANDROID_KEYSTORE_PASSWORD), the key's alias (ANDROID_KEY_ALIAS), whose
+  # password is the keystore's. Its version code, which goes up with each release, is the run's number.
+  android:
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: 17
+    - name: Install the android workload
+      run: dotnet workload install android
+    # The platform that net10.0-android builds against, beside those of the runner's Android SDK.
+    - name: Install the Android platform
+      run: ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;36.0.0"
+    - name: Set VERSION and NAME variables from tag
+      run: |
+        echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
+        echo "NAME=OpenNSPW-${GITHUB_REF/refs\/tags\/v/}-android" >> $GITHUB_ENV
+    - name: Write the keystore
+      run: |
+        if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+          echo "::error::The release key is not in the repository's secrets (ANDROID_KEYSTORE_BASE64)."
+          exit 1
+        fi
+        echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.keystore"
+      env:
+        ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+    - name: Publish
+      run: >
+        dotnet publish OpenNSPW/OpenNspw.Android --configuration Release --output artifacts/android
+        -p:Version=${VERSION} -p:ApplicationVersion=${{ github.run_number }} -p:AndroidPackageFormat=apk
+        -p:AndroidSdkDirectory=${ANDROID_HOME} -p:JavaSdkDirectory=${JAVA_HOME}
+        -p:AndroidKeyStore=true -p:AndroidSigningKeyStore=$RUNNER_TEMP/release.keystore
+        -p:AndroidSigningKeyAlias=${ANDROID_KEY_ALIAS}
+        -p:AndroidSigningStorePass=env:ANDROID_KEYSTORE_PASSWORD -p:AndroidSigningKeyPass=env:ANDROID_KEYSTORE_PASSWORD
+      env:
+        ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+    - name: Name
+      run: mv artifacts/android/io.github.ycanardeau.opennspw-Signed.apk artifacts/${NAME}.apk
+    - name: Upload
+      uses: actions/upload-artifact@v7
+      with:
+        name: android
+        path: artifacts/${{ env.NAME }}.apk
+
   github-release:
-    needs: [windows, macos, linux]
+    needs: [windows, macos, linux, android]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -163,7 +221,10 @@ jobs:
         OpenNSPW-<version>-win-x64.zip           Windows: extract it, and start OpenNspw.Desktop.exe
         OpenNSPW-<version>-osx-arm64.zip         Macs with Apple silicon: extract OpenNSPW.app, and start it
         OpenNSPW-<version>-linux-x64.AppImage    Linux: make it executable (chmod +x), and start it
+        OpenNSPW-<version>-android.apk           Android 6 or later: open it on the device, allowing installs from where it was opened
         ```
+
+        On Android, the game shows the desktop's screens, played by touch: a touch is a click, and Back is Escape. No text can be typed yet, such as a host's address, so it plays single-player only.
 
         What the game writes, its saves and the scenarios saved with its map editor, is kept in `OpenNSPW/Files` in the user's application data (`%APPDATA%`, `~/Library/Application Support`, `~/.config`). To play your own copy of NSPW NET's files instead, start the app with `--data <the NSPW_NET folder>`.
 

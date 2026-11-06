@@ -23,6 +23,7 @@
 		<PackageVersion Include="FontStashSharp.MonoGame" Version="1.6.1" />
 		<PackageVersion Include="MonoGame.Content.Builder.Task" Version="3.8.5.1" />
 		<PackageVersion Include="MonoGame.Extended" Version="6.1.1" />
+		<PackageVersion Include="MonoGame.Framework.Android" Version="3.8.5.1" />
 		<PackageVersion Include="MonoGame.Framework.DesktopGL" Version="3.8.5.1" />
 	</ItemGroup>
 

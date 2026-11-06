@@ -32,13 +32,17 @@ public sealed class MonoGameGraphics : Graphics
 			_spriteBatch = spriteBatch;
 			_scissorRectangle = spriteBatch.GraphicsDevice.ScissorRectangle;
 
+			// The scissor is in the back buffer's pixels: the clip scaled as the viewport scales the controls, and moved to
+			// where the viewport is, such as between the bars of a boxing viewport.
 			if (viewportAdapter != null)
 			{
+				var viewport = spriteBatch.GraphicsDevice.Viewport;
 				var scale =
 					new Vector2(viewportAdapter.ViewportWidth, viewportAdapter.ViewportHeight)
-					/ new Vector2(viewportAdapter.VirtualWidth, viewportAdapter.ViewportHeight);
+					/ new Vector2(viewportAdapter.VirtualWidth, viewportAdapter.VirtualHeight);
 				scissorRectangle = new XnaRectangleF(
-					scissorRectangle.Location.ToVector2() * scale,
+					scissorRectangle.Location.ToVector2() * scale
+						+ new Vector2(viewport.X, viewport.Y),
 					scissorRectangle.Size.ToVector2() * scale
 				).ToRectangle();
 			}
