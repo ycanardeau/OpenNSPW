@@ -4269,7 +4269,15 @@ public unsafe partial class Nspw
 			DecisionPoints[n] = 0;
 
 		if (IsSingleplayer)
+		{
 			SetUpSingleplayerScenario();
+			if (CpuSide != Side.None && ComputerPlayer is null)
+			{
+				throw new InvalidOperationException(
+					$"Scenario {ScenarioNumber}'s computer plays a side, and the game has no computer player (ComputerPlayer)."
+				);
+			}
+		}
 		else
 			LoadScenarioData();
 

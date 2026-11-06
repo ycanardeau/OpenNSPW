@@ -64,6 +64,20 @@ public sealed class ExtensionTests
 			instruction == _instruction ? _value : null;
 	}
 
+	// Plays the computer's side as 1.22's computer player, and counts the frames it plays.
+	private sealed class CountingComputer : IComputerPlayer
+	{
+		private readonly ComputerPlayer122 _computer = new();
+
+		public int Plans { get; private set; }
+
+		public void Plan(Nspw game)
+		{
+			Plans++;
+			_computer.Plan(game);
+		}
+	}
+
 	private static int PlayersShip(Nspw game) =>
 		Enumerable
 			.Range(1, game.MaxUnitId)
@@ -155,5 +169,30 @@ public sealed class ExtensionTests
 
 		Assert.Equal(270.0, game.TakeStackLocal(0x413D23, 1.5));
 		Assert.Equal(1.5, game.TakeStackLocal(0x4173BF, 1.5));
+	}
+
+	// The game's computer player plays the computer's side, once a frame.
+	[Fact]
+	public void TheComputerPlayerPlaysEachFrame()
+	{
+		var computer = new CountingComputer();
+		using var run = new SingleplayerRun(4, game => game.ComputerPlayer = computer);
+		run.Frames(2);
+		var plans = computer.Plans;
+
+		run.Frames(5);
+
+		Assert.Equal(plans + 5, computer.Plans);
+	}
+
+	// A single-player battle whose computer plays a side does not start without a computer player.
+	[Fact]
+	public void TheBattleDoesNotStartWithoutAComputerPlayer()
+	{
+		using var run = new SingleplayerRun(4, game => game.ComputerPlayer = null);
+
+		var failure = Assert.Throws<InvalidOperationException>(() => run.Frames(1));
+
+		Assert.Contains("ComputerPlayer", failure.InnerException?.Message);
 	}
 }

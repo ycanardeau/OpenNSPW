@@ -1447,6 +1447,7 @@ public class SingleplayerTests
 		using var player = new RunningGame(data.Path, "Alice");
 		player.Game.IsSingleplayer = true;
 		player.Game.ScenarioNumber = 3;
+		player.Game.ComputerPlayer = new ComputerPlayer122();
 		player.Game.SingleplayerExecutable = File.ReadAllBytes(
 			Path.Combine(GameData.FindSingleplayer(), "NSPW_122.exe")
 		);

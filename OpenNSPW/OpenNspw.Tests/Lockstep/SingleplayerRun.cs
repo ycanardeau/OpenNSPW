@@ -36,6 +36,7 @@ internal sealed class SingleplayerRun : IDisposable
 			Player.StartDate = date;
 		Game.IsSingleplayer = true;
 		Game.ScenarioNumber = (short)scenario;
+		Game.ComputerPlayer = new ComputerPlayer122();
 		if (playsBundledFiles)
 		{
 			Player.Files = new GameFileLayers(

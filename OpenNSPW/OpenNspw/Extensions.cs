@@ -268,6 +268,17 @@ public interface IGameExtension
 	void Presented(Nspw game) { }
 }
 
+// The computer player of a single-player game (docs/ComputerPlayersAsExtensions.md), which plays the computer's side
+// (Nspw.CpuSide), once a frame, where the turn's orders are applied. Unlike an extension, it writes the battle itself, as
+// 1.22's computer does: only in Plan, drawing only the game's rand(), and keeping what it needs between frames in the game
+// (the computer's fleets, the units), so that a replay that names it plays the same.
+public interface IComputerPlayer
+{
+	// The computer's order of the frame, in MoveOrders[0] and Selections[0], and what it changes of the units and the
+	// fleets.
+	void Plan(Nspw game);
+}
+
 // The extensions of a game, called in the order they were added. Added and removed on any thread; called on the game's.
 public sealed class GameExtensions(Nspw game)
 {

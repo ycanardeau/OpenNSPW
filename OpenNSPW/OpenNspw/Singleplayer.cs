@@ -123,6 +123,10 @@ public unsafe partial class Nspw
 	// cpu_side of 1.22: the side the computer plays, or None.
 	public Side CpuSide;
 
+	// The computer player that plays CpuSide, which the host sets before the battle starts: a single-player battle whose
+	// computer plays a side does not start without one (InitializeGame).
+	public IComputerPlayer? ComputerPlayer;
+
 	// The table of the computer's fleets of 1.22 (0x4867A0, docs/ComputerPlayer.md, Fleets), which only its single-player
 	// code has: its scenarios set the fleets up, and cpu_strtgy moves them.
 	public Array11<ComputerFleet> ComputerFleets;
@@ -769,7 +773,7 @@ public unsafe partial class Nspw
 
 		// The computer does not play while the battle is held (IsBattleHeld).
 		if (CpuSide != Side.None && !IsBattleHeld)
-			PlanComputerStrategy();
+			ComputerPlayer!.Plan(this);
 
 		if (BufferedArrivedUnits[1] != 0)
 			OnUnitArrived(1, BufferedArrivedUnits[1]);

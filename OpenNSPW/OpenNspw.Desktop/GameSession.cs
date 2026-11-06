@@ -238,6 +238,7 @@ internal sealed class GameSession : IDisposable
 		{
 			Game.IsSingleplayer = true;
 			Game.ScenarioNumber = (short)scenario;
+			Game.ComputerPlayer = new ComputerPlayer122();
 		}
 
 		// Before the first frame, the input is held back if a trace or a replay gives it.
