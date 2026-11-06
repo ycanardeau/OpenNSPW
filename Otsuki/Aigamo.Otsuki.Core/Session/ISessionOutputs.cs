@@ -89,4 +89,10 @@ internal interface ISessionOutputs
 	/// The session is closed: it takes no more inputs.
 	/// </summary>
 	void Stop();
+
+	/// <summary>
+	/// Fills <paramref name="bytes"/> with random bytes, for a new session's GUID: the core draws on no source of its
+	/// own, so that a test can make it repeat.
+	/// </summary>
+	void FillRandom(Span<byte> bytes);
 }

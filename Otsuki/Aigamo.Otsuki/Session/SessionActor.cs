@@ -20,6 +20,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, ISessionOutputs
 	private readonly Mailbox<PeerEvent> _events;
 	private readonly Action<SessionSnapshot> _publish;
 	private readonly LoopAlarm _alarm;
+	private readonly RandomSource _random;
 
 	// The open endpoint, which the peer's queries also read (LoopQueueLengths).
 	private readonly Latest<ReliableEndpoint?> _endpoint = new(null);
@@ -42,6 +43,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, ISessionOutputs
 		_events = events;
 		_publish = publish;
 		_alarm = new LoopAlarm(options.TimeProvider, () => Post(new SessionMessage.TimersDue()));
+		_random = new RandomSource(options.RandomSeed);
 		Core = new SessionCore(options.ToSessionOptions(), this);
 		Start();
 	}
@@ -56,7 +58,8 @@ internal sealed class SessionActor : Actor<SessionMessage>, ISessionOutputs
 				_options.ReliableProfile,
 				Post,
 				_options.ConnectionLoops,
-				_options.Scheduler
+				_options.Scheduler,
+				_options.RandomSeed
 			);
 			_endpoint.Post(endpoint);
 			return endpoint.LocalEndPoint;
@@ -120,6 +123,8 @@ internal sealed class SessionActor : Actor<SessionMessage>, ISessionOutputs
 
 	void ISessionOutputs.Fail<T>(Completion<T> completion, Exception exception) =>
 		((TaskCompletionSource<T>)completion.Waiter).TrySetException(exception);
+
+	void ISessionOutputs.FillRandom(Span<byte> bytes) => _random.Fill(bytes);
 
 	void ISessionOutputs.Stop()
 	{

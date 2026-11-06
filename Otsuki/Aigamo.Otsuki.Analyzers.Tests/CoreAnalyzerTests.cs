@@ -63,6 +63,7 @@ public class CoreAnalyzerTests
 	[InlineData("class C { static ImmutableArray<int> Empty { get; } = []; }")]
 	[InlineData("class C { static readonly Func<int, int> Twice = n => n * 2; }")]
 	[InlineData("class C { static int Count => 3; }")]
+	[InlineData("class C { Guid M(byte[] bytes) => new Guid(bytes); }")]
 	[InlineData("class C { System.Net.Sockets.AddressFamily Family => default; }")]
 	[InlineData(
 		"using System.Net.Sockets; class C { AddressFamily Family => AddressFamily.InterNetwork; }"
@@ -98,6 +99,12 @@ public class CoreAnalyzerTests
 		"Dns"
 	)]
 	[InlineData("class C { object M(int[] items) => items.AsParallel(); }", "items.AsParallel()")]
+	[InlineData("class C { int M() => new Random(1).Next(); }", "Random")]
+	[InlineData(
+		"class C { void M(byte[] b) => System.Security.Cryptography.RandomNumberGenerator.Fill(b); }",
+		"RandomNumberGenerator"
+	)]
+	[InlineData("class C { Guid M() => Guid.NewGuid(); }", "NewGuid")]
 	[InlineData("using System.Threading; class C { }", "System.Threading")]
 	[InlineData("class C { async void M() { } }", "async")]
 	[InlineData("class C { void M() { Action a = async () => { }; } }", "async")]

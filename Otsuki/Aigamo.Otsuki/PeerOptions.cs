@@ -60,6 +60,12 @@ public sealed record PeerOptions
 	/// </summary>
 	public MailboxScheduler? Scheduler { get; init; }
 
+	/// <summary>
+	/// Makes the peer's randomness repeat, for a test: its session and each of its connection loops draw from a
+	/// <see cref="Random"/> of their own, seeded from this. <see langword="null"/>, the system's secure source.
+	/// </summary>
+	internal int? RandomSeed { get; init; }
+
 	internal SessionOptions ToSessionOptions() =>
 		new()
 		{

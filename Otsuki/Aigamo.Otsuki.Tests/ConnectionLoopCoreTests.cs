@@ -19,6 +19,8 @@ public class ConnectionLoopCoreTests
 
 	private sealed class Outputs : IConnectionLoopOutputs
 	{
+		private readonly Random _random = new(0);
+
 		public List<object> Log { get; } = [];
 
 		public Queue<ConnectionLoopItem> Deferred { get; } = [];
@@ -32,6 +34,8 @@ public class ConnectionLoopCoreTests
 			Deferred.Enqueue(new ConnectionLoopItem(connection, message, null));
 
 		public void Done() => Log.Add(new Done());
+
+		public void FillRandom(Span<byte> bytes) => _random.NextBytes(bytes);
 	}
 
 	private sealed class Side(IPEndPoint address)
