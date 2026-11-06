@@ -216,6 +216,7 @@ internal sealed class GameScreen(
 		if (_session.Trace is not null)
 			Game.Window.Title = NspwGame.Title;
 		SoundEffect.MasterVolume = 1;
+		Game.ViewportAdapter.IsLayoutLeft = false;
 		_session.Dispose();
 		_art.Dispose();
 		_backdrop.Dispose();
@@ -239,6 +240,10 @@ internal sealed class GameScreen(
 			UpdateReplay(_watch!, bar);
 		var snapshot = _session.Snapshot;
 		_battleForm.Visible = snapshot.IsBattle;
+
+		// The battle screen takes the room right of the layout on a wide screen; the others stay centered in it.
+		Game.ViewportAdapter.IsLayoutLeft = snapshot.IsBattle;
+		_battleForm.Fit(Game.ViewportAdapter.ExtraWidth);
 		_battleForm.UpdateFrom(snapshot);
 		if (_settingForm.Visible != snapshot.IsSetting)
 		{

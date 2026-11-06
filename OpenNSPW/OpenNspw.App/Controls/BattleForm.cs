@@ -19,6 +19,9 @@ internal sealed class BattleForm : Form
 	private readonly Minimap _minimap;
 	private readonly CommandBar _commandBar;
 
+	// The game pixels of the screen right of the original's layout, on a wide screen (WideViewportAdapter).
+	private int _extraWidth;
+
 	// Puts a part in the sidebar, where it is on the game's screen.
 	private void AddToSidebar(Control part, DrawingRectangle area)
 	{
@@ -29,6 +32,18 @@ internal sealed class BattleForm : Form
 			area.Height
 		);
 		_sidebar.Controls.Add(part);
+	}
+
+	// Fits the battle screen to `extraWidth` right of the original's layout: the command bar there, in a column of its own,
+	// where it fits, and over the battlefield's top right corner otherwise.
+	public void Fit(int extraWidth)
+	{
+		var isBeside = extraWidth >= _commandBar.Width + 16;
+		_extraWidth = isBeside ? extraWidth : 0;
+		Size = new DrawingSize(all_head.SCRN_WIDTH + _extraWidth, all_head.SCRN_HEIGHT);
+		_commandBar.Location = isBeside
+			? new(all_head.SCRN_WIDTH + (extraWidth - _commandBar.Width) / 2, 16)
+			: new(all_head.CMBT_WIDTH - _commandBar.Width - 8, 8);
 	}
 
 	// isTouchScreen: whether the player touches the screen (IAppHost.IsTouchScreen), which the battlefield takes as taps and
@@ -66,11 +81,28 @@ internal sealed class BattleForm : Form
 		_minimap = new Minimap(session, art);
 		AddToSidebar(_minimap, Minimap.Area);
 
-		// Over the battlefield's top right corner, in front of it.
 		_commandBar = new CommandBar(session, fonts);
-		_commandBar.Location = new(all_head.CMBT_WIDTH - _commandBar.Width - 8, 8);
 		Controls.Add(_commandBar);
 		_commandBar.BringToFront();
+		Fit(0);
+	}
+
+	protected override void OnPaint(PaintEventArgs e)
+	{
+		base.OnPaint(e);
+		if (_extraWidth > 0)
+		{
+			Painter.Fill(
+				e.Graphics,
+				new DrawingRectangle(all_head.SCRN_WIDTH, 0, _extraWidth, all_head.SCRN_HEIGHT),
+				Theme.Navy
+			);
+			Painter.Fill(
+				e.Graphics,
+				new DrawingRectangle(all_head.SCRN_WIDTH, 0, 1, all_head.SCRN_HEIGHT),
+				Theme.Alpha(Theme.Line, 0.9f)
+			);
+		}
 	}
 
 	// Shows the game as it was in the last frame: on the UI's thread, each frame.
