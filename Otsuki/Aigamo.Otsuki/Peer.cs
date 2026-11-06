@@ -327,17 +327,17 @@ public sealed class Peer : IAsyncDisposable
 	) => _events.ReadAllAsync(cancellationToken);
 
 	/// <summary>
-	/// Leaves the session, disconnecting gracefully from every peer, and shuts the peer down.
+	/// Leaves the session, disconnecting gracefully from every peer, and shuts the peer down. The task is the one the
+	/// session completes, with no step between, so that it completes as the session answers.
 	/// </summary>
-	public async Task CloseAsync()
+	public Task CloseAsync()
 	{
 		var completion = new TaskCompletionSource(
 			TaskCreationOptions.RunContinuationsAsynchronously
 		);
-		if (_session.Post(new SessionMessage.Close(new Completion(completion))))
-			await completion.Task.ConfigureAwait(false);
-		else
-			await _session.Completion.ConfigureAwait(false);
+		return _session.Post(new SessionMessage.Close(new Completion(completion)))
+			? completion.Task
+			: _session.Completion;
 	}
 
 	public async ValueTask DisposeAsync() => await CloseAsync().ConfigureAwait(false);
