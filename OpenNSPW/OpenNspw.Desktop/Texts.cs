@@ -53,6 +53,14 @@ internal static class Texts
 	public static string SharedEffectRandomDescription =>
 		Pick("Effects never change the battle", "エフェクトが戦闘に影響しません");
 
+	public static string SwitchSides => Pick("Switch sides", "陣営を入れ替える");
+
+	public static string SwitchSidesDescription =>
+		Pick("Command the computer's side", "コンピュータ側を操作します");
+
+	// Beside the side in the scenario's details, while the sides are switched: the briefing is the other side's.
+	public static string SidesSwitched => Pick("switched", "入れ替え");
+
 	public static string BrowserHint =>
 		Pick(
 			"↑↓ Scenario    ←→ Set    PgUp PgDn Briefing    Enter Start    Esc Back",

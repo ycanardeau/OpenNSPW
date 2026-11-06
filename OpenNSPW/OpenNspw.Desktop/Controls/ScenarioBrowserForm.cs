@@ -94,6 +94,7 @@ internal sealed class ScenarioBrowserForm : Form
 		check.CheckedChanged += (_, _) =>
 		{
 			_options = turn(_options, check.IsChecked);
+			_details.AreSidesSwitched = _options.SwitchSides;
 			OptionsChosen?.Invoke(this, _options);
 		};
 		Controls.Add(check);
@@ -137,7 +138,11 @@ internal sealed class ScenarioBrowserForm : Form
 						.ToArray()
 			),
 		];
-		_details = new ScenarioDetails(fonts) { Bounds = new DrawingRectangle(504, 200, 472, 460) };
+		_details = new ScenarioDetails(fonts)
+		{
+			Bounds = new DrawingRectangle(504, 200, 472, 460),
+			AreSidesSwitched = options.SwitchSides,
+		};
 		Controls.Add(_details);
 
 		var back = new ActionButton(fonts)
@@ -170,6 +175,13 @@ internal sealed class ScenarioBrowserForm : Form
 			Texts.SharedEffectRandomDescription,
 			options.SharedEffectRandom,
 			static (options, isOn) => options with { SharedEffectRandom = isOn }
+		);
+		CreateSwitch(
+			148,
+			Texts.SwitchSides,
+			Texts.SwitchSidesDescription,
+			options.SwitchSides,
+			static (options, isOn) => options with { SwitchSides = isOn }
 		);
 
 		var initial = sets.SelectMany(

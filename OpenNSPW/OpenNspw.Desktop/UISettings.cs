@@ -12,7 +12,8 @@ internal static partial class UISettings
 	private sealed record Saved(
 		Language? Language,
 		bool? IsSpeedSteady = null,
-		bool? SharedEffectRandom = null
+		bool? SharedEffectRandom = null,
+		bool? SwitchSides = null
 	);
 
 	// How Saved is read and written, generated, so that trimming keeps what it needs: the language by its name.
@@ -75,7 +76,8 @@ internal static partial class UISettings
 		var saved = Load();
 		return new BattleOptions(
 			SharedEffectRandom: saved.SharedEffectRandom ?? false,
-			SteadySpeed: saved.IsSpeedSteady ?? true
+			SteadySpeed: saved.IsSpeedSteady ?? true,
+			SwitchSides: saved.SwitchSides ?? false
 		);
 	}
 
@@ -86,6 +88,7 @@ internal static partial class UISettings
 			{
 				IsSpeedSteady = options.SteadySpeed,
 				SharedEffectRandom = options.SharedEffectRandom,
+				SwitchSides = options.SwitchSides,
 			}
 		);
 	}

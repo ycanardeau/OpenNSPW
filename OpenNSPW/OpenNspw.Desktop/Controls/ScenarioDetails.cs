@@ -5,7 +5,8 @@ using DrawingRectangle = System.Drawing.Rectangle;
 namespace OpenNspw.Desktop.Controls;
 
 // What NSPW 1.22's setting screen says about a scenario, in a panel framed like a chart: its number, title and side, over
-// its briefing and victory conditions, which scroll (BriefingView).
+// its briefing and victory conditions, which scroll (BriefingView). With the sides switched (BattleOptions.SwitchSides),
+// the side is the other one, which the player then commands, marked as switched: the briefing stays the scenario's.
 internal sealed class ScenarioDetails : Control
 {
 	private const int Padding = 28;
@@ -17,6 +18,9 @@ internal sealed class ScenarioDetails : Control
 	private List<string> _title = [];
 
 	private ScenarioEntry? _scenario;
+
+	// Whether the side shown is the other one than the scenario's.
+	public bool AreSidesSwitched { get; set; }
 
 	public BriefingView Briefing { get; }
 
@@ -69,20 +73,29 @@ internal sealed class ScenarioDetails : Control
 		}
 
 		y += 6;
+		var isJapan = (scenario.Side == ScenarioSide.Japan) != AreSidesSwitched;
 		Painter.Text(g, Texts.PlayerSide, _fonts.Regular(14), Theme.Muted, Padding, y + 1);
 		Painter.Fill(
 			g,
 			new(Padding + 72, (int)y + 6, 10, 10),
-			scenario.Side == ScenarioSide.Japan ? Theme.Japan : Theme.UnitedStates
+			isJapan ? Theme.Japan : Theme.UnitedStates
 		);
-		Painter.Text(
-			g,
-			GameTexts.Of(scenario.SideName),
-			_fonts.Bold(16),
-			Theme.Text,
-			Padding + 90,
-			y
+		var side = GameTexts.Of(
+			AreSidesSwitched ? (isJapan ? "日本海軍" : "合衆国海軍") : scenario.SideName
 		);
+		var sideFont = _fonts.Bold(16);
+		Painter.Text(g, side, sideFont, Theme.Text, Padding + 90, y);
+		if (AreSidesSwitched)
+		{
+			Painter.Text(
+				g,
+				Texts.SidesSwitched,
+				_fonts.Regular(14),
+				Theme.Muted,
+				Padding + 90 + Painter.Measure(g, side, sideFont).Width + 10,
+				y + 1
+			);
+		}
 		y += 36;
 		Painter.Fill(
 			g,
