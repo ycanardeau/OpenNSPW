@@ -37,7 +37,7 @@ internal sealed class MainMenuScreen(NspwGame game) : Screen(game)
 		_form.SingleplayerChosen += (_, _) => Game.ShowScreen(new SingleplayerScreen(Game));
 		_form.MultiplayerChosen += (_, _) => Game.ShowScreen(new MultiplayerScreen(Game));
 		_form.ReplaysChosen += (_, _) => Game.ShowScreen(new ReplaysScreen(Game));
-		_form.QuitChosen += (_, _) => Game.Exit();
+		_form.QuitChosen += (_, _) => Game.Host.Quit(Game);
 		_form.LanguageChosen += (_, language) =>
 		{
 			Texts.Language = language;

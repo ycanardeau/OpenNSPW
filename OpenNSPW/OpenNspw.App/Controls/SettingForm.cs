@@ -18,7 +18,8 @@ internal sealed class SettingForm : Form
 	private const int RuleHeight = 54;
 
 	// The cursor the game is given while the form is shown, as the original's screen takes the cursor's place too: on it,
-	// a scenario of the list is chosen. Away from the original's texts and from the screen's edges, which scroll the map.
+	// a scenario of the list is chosen. Away from the original's texts and from the screen's edges, which scroll the map:
+	// also where the cursor rests on a touch screen, once a touch is lifted (GameScreen).
 	public static readonly DrawingPoint GameCursor = new(1000, 740);
 
 	private readonly GameSession _session;

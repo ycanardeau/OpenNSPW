@@ -99,6 +99,10 @@ internal sealed class GameSession : IDisposable
 
 	// The cursor last posted to the game, which the session posts again only when it moves.
 	private (int X, int Y)? _postedCursor;
+
+	// The frames the game has shown since the left button was let go, up to two: by the second, the game has begun a frame
+	// after it was let go, and taken the cursor and the button with it.
+	private int _framesSinceLetGo = 2;
 	private bool _hasEnded;
 
 	// The frame the UI shows, its own until a newer one comes, and whether it is new since UpdateFrame last took it.
@@ -301,6 +305,7 @@ internal sealed class GameSession : IDisposable
 						Game.Mailbox.Post(new BufferFree(_shown));
 					_shown = ready.Buffer;
 					_isNewFrame = true;
+					_framesSinceLetGo = Math.Min(_framesSinceLetGo + 1, 2);
 					break;
 				case UIMessage.WindowsChanged changed:
 					Windows = changed.Windows;
@@ -404,16 +409,26 @@ internal sealed class GameSession : IDisposable
 
 	// The cursor, in game pixels, and the buttons, each on its own. While the input is held back, the cursor still
 	// moves, which changes only what is drawn and the view, which the trace gives back (TheCursorDoesNotChangeTheReplay),
-	// but the buttons are not passed.
+	// but the buttons are not passed. Once the left button is let go and the game has taken it, the cursor is
+	// `restingCursor`, if there is one.
 	private void UpdateMouse(
+		MouseState mouse,
 		ViewportAdapter viewportAdapter,
 		Func<DrawingPoint, bool> isOnForm,
-		DrawingPoint? cursor
+		DrawingPoint? cursor,
+		DrawingPoint? restingCursor
 	)
 	{
-		var mouse = Mouse.GetState();
+		if (
+			mouse.LeftButton == ButtonState.Released
+			&& _previousMouse.LeftButton == ButtonState.Pressed
+		)
+			_framesSinceLetGo = 0;
+		var isResting = mouse.LeftButton == ButtonState.Released && _framesSinceLetGo >= 2;
 		var position = viewportAdapter.PointToScreen(mouse.Position);
-		var (x, y) = cursor is { } point ? (point.X, point.Y) : (position.X, position.Y);
+		var (x, y) = (cursor ?? (isResting ? restingCursor : null)) is { } point
+			? (point.X, point.Y)
+			: (position.X, position.Y);
 		if (_postedCursor != (x, y))
 		{
 			Game.SetCursorPos(x, y);
@@ -431,17 +446,21 @@ internal sealed class GameSession : IDisposable
 		_previousMouse = mouse;
 	}
 
-	// Passes the keyboard and the mouse to the game: the mouse's buttons but where a form of the UI is (isOnForm), and
-	// its position, or `cursor` in its place.
+	// Passes the keyboard and the pointer (`mouse`, IPointer) to the game: the pointer's buttons but where a form of the UI
+	// is (isOnForm), and its position, or `cursor` in its place. restingCursor: where the cursor rests while no button is
+	// held, as on a touch screen, where the player points only while touching it: away from the screen's edges, which
+	// scroll the map.
 	public void UpdateInput(
+		MouseState mouse,
 		ViewportAdapter viewportAdapter,
 		Func<DrawingPoint, bool> isOnForm,
-		DrawingPoint? cursor = null
+		DrawingPoint? cursor = null,
+		DrawingPoint? restingCursor = null
 	)
 	{
 		ObjectDisposedException.ThrowIf(_isDisposed, this);
 		UpdateKeyboard();
-		UpdateMouse(viewportAdapter, isOnForm, cursor);
+		UpdateMouse(mouse, viewportAdapter, isOnForm, cursor, restingCursor);
 	}
 
 	private static Color ToColor(ushort pixel)

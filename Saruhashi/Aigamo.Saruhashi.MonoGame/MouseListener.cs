@@ -6,10 +6,16 @@ using XnaButtonState = Microsoft.Xna.Framework.Input.ButtonState;
 
 namespace Aigamo.Saruhashi.MonoGame;
 
-public class MouseListener(ViewportAdapter? viewportAdapter = null) : InputListener
+// getState: where the pointer is and which buttons are held, read once each update; MonoGame's mouse when null, or what
+// stands in for it, such as a touch screen's touches.
+public class MouseListener(
+	ViewportAdapter? viewportAdapter = null,
+	Func<MouseState>? getState = null
+) : InputListener
 {
 	public ViewportAdapter? ViewportAdapter { get; } = viewportAdapter;
 
+	private readonly Func<MouseState> _getState = getState ?? Mouse.GetState;
 	private MouseState _state;
 	private MouseState _previousState;
 
@@ -24,7 +30,7 @@ public class MouseListener(ViewportAdapter? viewportAdapter = null) : InputListe
 
 	public override void Update(GameTime gameTime)
 	{
-		_state = Mouse.GetState();
+		_state = _getState();
 
 		if (Position != PreviousPosition)
 		{

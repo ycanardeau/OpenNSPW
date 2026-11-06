@@ -45,6 +45,9 @@ internal sealed class NspwGame : Game
 	// What the system the app runs on gives it (IAppHost).
 	public IAppHost Host { get; }
 
+	// What the player points with, which the UI and the game read in each update: the mouse, or the screen's touches.
+	public IPointer Pointer { get; }
+
 	// Where the games' files come from: the embedded ones, or those given on the command line.
 	public GameData Data { get; }
 
@@ -81,9 +84,10 @@ internal sealed class NspwGame : Game
 		_trace = trace;
 		_watch = watch;
 		Host = host;
+		Pointer = host.IsTouchScreen ? new TouchPointer(Window) : new MousePointer();
 		Data = data;
 		Texts.Language = UISettings.LoadLanguage();
-		IsMouseVisible = true;
+		IsMouseVisible = !host.IsTouchScreen;
 		Window.Title = Title;
 		Window.AllowUserResizing = true;
 		Components.Add(_screenManager);
@@ -158,7 +162,7 @@ internal sealed class NspwGame : Game
 	{
 		SpriteBatch = new SpriteBatch(GraphicsDevice);
 
-		var mouseListener = new SaruhashiMouseListener(ViewportAdapter);
+		var mouseListener = new SaruhashiMouseListener(ViewportAdapter, () => Pointer.State);
 		var keyboardListener = new KeyboardListener(
 			new KeyboardListenerSettings
 			{
@@ -182,7 +186,7 @@ internal sealed class NspwGame : Game
 			WindowManager.OnKeyDown(new KeyEventArgs((SaruhashiKeys)e.Key));
 		keyboardListener.KeyReleased += (_, e) =>
 			WindowManager.OnKeyUp(new KeyEventArgs((SaruhashiKeys)e.Key));
-		Window.TextInput += (_, e) => WindowManager.OnKeyPress(new KeyPressEventArgs(e.Character));
+		Host.ListenToText(Window, c => WindowManager.OnKeyPress(new KeyPressEventArgs(c)));
 
 		if (_watch is not null)
 			Watch(_watch);
@@ -202,6 +206,7 @@ internal sealed class NspwGame : Game
 			_screenManager.ReplaceScreen(screen);
 		}
 
+		Pointer.Update();
 		base.Update(gameTime);
 	}
 
