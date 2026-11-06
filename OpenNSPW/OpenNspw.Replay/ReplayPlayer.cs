@@ -47,6 +47,9 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 
 	private readonly ReplayReader _reader;
 
+	// The computer player that a single-player battle plays again with, or null for none.
+	private readonly IComputerPlayer? _computerPlayer;
+
 	// The records of the frame being played, and then of what the game took after it, that the game has not been given.
 	private readonly List<ReplayItem> _frame = [];
 
@@ -134,10 +137,24 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 	// A network battle's replay starts it (GameStarted).
 	public bool StartsBattle => Start.Network is not null;
 
-	// What the game takes before the first frame: the rival's messages of a network battle that came before it.
-	public ReplayPlayer(Stream stream)
+	// What the game takes before the first frame: the rival's messages of a network battle that came before it. The host
+	// gives the computer players it has (computerPlayers): the replay's plays the computer's side again, and a replay of
+	// another is refused.
+	public ReplayPlayer(Stream stream, params IEnumerable<IComputerPlayer> computerPlayers)
 	{
 		_reader = new ReplayReader(stream);
+		if (Start.ComputerPlayer is { } id)
+		{
+			_computerPlayer = computerPlayers.FirstOrDefault(computer => computer.Id == id);
+			if (_computerPlayer is null)
+			{
+				_reader.Dispose();
+				throw new InvalidDataException(
+					$"A replay of a computer player, {id}, that this app does not have."
+				);
+			}
+		}
+
 		for (
 			_next = _reader.Next();
 			_next.Kind is not (ReplayRecord.Frame or ReplayRecord.End);
@@ -296,7 +313,7 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 		}
 	}
 
-	// A single-player battle starts with the options it was recorded with, not the player's.
+	// A single-player battle starts with the options and the computer player it was recorded with, not the player's.
 	public void BattleStarting(Nspw game)
 	{
 		if (Start.Mode != ReplayMode.Singleplayer)
@@ -304,6 +321,7 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 
 		game.srand(Start.RandomState);
 		game.Options = Start.Options;
+		game.ComputerPlayer = _computerPlayer;
 	}
 
 	public void BattleStarted(Nspw game)

@@ -200,7 +200,10 @@ public sealed class AllocationTests
 			game = run.Game;
 		}
 		recorder.Dispose();
-		using var player = new ReplayPlayer(new MemoryStream(stream.ToArray()))
+		using var player = new ReplayPlayer(
+			new MemoryStream(stream.ToArray()),
+			new ComputerPlayer122()
+		)
 		{
 			IsInitiallyPaused = true,
 		};

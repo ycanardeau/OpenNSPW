@@ -6,7 +6,7 @@ They serve two purposes: watching a battle again, and studying one, such as what
 ## What a replay records
 | Record | When | What |
 | --- | --- | --- |
-| Start | `BattleStarting`, `BattleStarted` | The mode (single-player, network host or guest), the scenario, the date, the app's version; in a single-player battle rand's state, the last seed of `InitializeGame` and its options ([Options.md](Options.md)), which it plays again with, whatever the player's are now; in a network battle its settings (`NetworkBattleSettings`); and the files it started from: the map editor's scenario, or the saved battle it resumes |
+| Start | `BattleStarting`, `BattleStarted` | The mode (single-player, network host or guest), the scenario, the date, the app's version; in a single-player battle rand's state, the last seed of `InitializeGame`, its options ([Options.md](Options.md)) and its computer player's id (`IComputerPlayer.Id`, [ComputerPlayersAsExtensions.md](ComputerPlayersAsExtensions.md)), which it plays again with, whatever the player's are now; in a network battle its settings (`NetworkBattleSettings`); and the files it started from: the map editor's scenario, or the saved battle it resumes |
 | Frame | `FrameStarting` | The milliseconds since the last frame, which pace the replay, the frame's ticks, which cover the speed and Space, the speed shown, which the ticks do not tell at a steady speed ([SteadySpeed.md](SteadySpeed.md)), and whether it holds the battle |
 | Camera | `Drawing` | The view, when it has changed |
 | Action | `PlayerActed` | What the player did (`PlayerAction`), wherever it came from: the mouse, the UI's commands, a computer player, a key; a byte for its case (`ReplayActionCase`), then what the case has |
@@ -15,7 +15,7 @@ They serve two purposes: watching a battle again, and studying one, such as what
 | Note | Any time | A text for the frame, such as what a computer player decided (`ReplayRecorder.Note`) |
 | Result | `FrameEnded` | The battle's result, as it has one |
 
-The file (`.onspwr`) is compressed with gzip, and written as the battle goes, flushed every 100 frames: a game that stops without ending it leaves a replay that plays up to where it stopped. The format is in `ReplayFormat.cs`. Its magic has its version (`ONSPWRP3`): a replay of another version is told to be one, and refused, rather than read wrong, but for version 2, whose frames have no speed: it shows the speed that their ticks tell.
+The file (`.onspwr`) is compressed with gzip, and written as the battle goes, flushed every 100 frames: a game that stops without ending it leaves a replay that plays up to where it stopped. The format is in `ReplayFormat.cs`. Its magic has its version (`ONSPWRP4`): a replay of another version is told to be one, and refused, rather than read wrong, but for versions 2 and 3, which name no computer player, and play with 1.22's, and version 2, whose frames have no speed: it shows the speed that their ticks tell. A replay whose computer player the app does not have is refused too.
 
 **The hash** covers the units, the fires, rand's state and the tick, but not a unit's sprite column (`SpriteColumn`): the drawing sets it for the units it draws, so it follows the camera and the cursor, and the battle never reads it.
 

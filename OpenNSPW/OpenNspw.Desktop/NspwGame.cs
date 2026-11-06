@@ -109,7 +109,7 @@ internal sealed class NspwGame : Game
 	// write in, with the viewer's choices.
 	public GameSession StartReplaySession(ReplayWatch watch, int seekTo)
 	{
-		var player = new ReplayPlayer(File.OpenRead(watch.Path))
+		var player = new ReplayPlayer(File.OpenRead(watch.Path), new ComputerPlayer122())
 		{
 			InitialSpeed = watch.Speed,
 			IsInitiallyPaused = watch.IsPaused,

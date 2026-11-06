@@ -47,7 +47,7 @@ public sealed class ReplayTests
 		BattleOptions? options = null
 	)
 	{
-		var player = new ReplayPlayer(new MemoryStream(replay))
+		var player = new ReplayPlayer(new MemoryStream(replay), new ComputerPlayer122())
 		{
 			InitialSpeed = double.PositiveInfinity,
 		};
@@ -131,7 +131,7 @@ public sealed class ReplayTests
 			}
 		);
 
-		var player = new ReplayPlayer(new MemoryStream(replay))
+		var player = new ReplayPlayer(new MemoryStream(replay), new ComputerPlayer122())
 		{
 			InitialSpeed = double.PositiveInfinity,
 		};
@@ -289,7 +289,7 @@ public sealed class ReplayTests
 	public void ATakenOverReplayIsRecordedAgain(bool takesOver)
 	{
 		var replay = Record(4, run => run.Frames(Frames));
-		var player = new ReplayPlayer(new MemoryStream(replay))
+		var player = new ReplayPlayer(new MemoryStream(replay), new ComputerPlayer122())
 		{
 			InitialSpeed = double.PositiveInfinity,
 		};
@@ -371,7 +371,7 @@ public sealed class ReplayTests
 			}
 		);
 
-		var player = new ReplayPlayer(new MemoryStream(replay))
+		var player = new ReplayPlayer(new MemoryStream(replay), new ComputerPlayer122())
 		{
 			InitialSpeed = double.PositiveInfinity,
 		};
@@ -419,7 +419,10 @@ public sealed class ReplayTests
 	public void ASeekShowsFewFramesAndPlaysTheSame()
 	{
 		var replay = Record(3, run => run.Frames(Frames));
-		var player = new ReplayPlayer(new MemoryStream(replay)) { IsInitiallyPaused = true };
+		var player = new ReplayPlayer(new MemoryStream(replay), new ComputerPlayer122())
+		{
+			IsInitiallyPaused = true,
+		};
 		player.SeekTo(Frames - 1);
 		var shown = new ShownFrames(player);
 		using var run = new SingleplayerRun(
@@ -484,6 +487,45 @@ public sealed class ReplayTests
 		Assert.Contains("another version", exception.Message);
 	}
 
+	// A single-player replay names its computer player, and plays the battle again with it, whatever the game's is.
+	[Fact]
+	public void AReplayPlaysAgainWithItsComputerPlayer()
+	{
+		var replay = Record(3, run => run.Frames(2));
+		var computer = new ComputerPlayer122();
+		using var player = new ReplayPlayer(new MemoryStream(replay), computer)
+		{
+			InitialSpeed = double.PositiveInfinity,
+		};
+		Assert.Equal("1.22", player.Start.ComputerPlayer);
+
+		using var run = new SingleplayerRun(
+			3,
+			game =>
+			{
+				game.ComputerPlayer = null;
+				game.Extensions.Add(player);
+			},
+			startDate: 1_234_567_890
+		);
+		run.Frames(1);
+
+		Assert.Same(computer, run.Game.ComputerPlayer);
+	}
+
+	// A replay whose computer player the host does not have is refused.
+	[Fact]
+	public void AReplayOfAnotherComputerPlayerIsRefused()
+	{
+		var replay = Record(3, run => run.Frames(2));
+
+		var exception = Assert.Throws<InvalidDataException>(() =>
+			new ReplayPlayer(new MemoryStream(replay))
+		);
+
+		Assert.Contains("1.22", exception.Message);
+	}
+
 	// A replay of version 2, whose frames have no speed, shows the speed that their ticks tell: speed + 1 ticks a frame,
 	// and 20 while Space is held, which leaves the speed as it was.
 	[Fact]
@@ -526,6 +568,7 @@ public sealed class ReplayTests
 
 		Assert.Equal(new short[] { 1, 4, 4, 0, 2 }, speeds);
 		Assert.Equal(BattleOptions.None, reader.Start.Options);
+		Assert.Equal(ReplayFormat.ComputerPlayerOfVersion3, reader.Start.ComputerPlayer);
 	}
 
 	// A battle of ミッドウェイ攻略１ between two games, each recorded: the host has a transport land, with the mouse, and
@@ -572,7 +615,7 @@ public sealed class ReplayTests
 	// Plays a network battle's replay in a game of its own, with no rival, to its end.
 	private static ReplayPlayer PlayAlone(byte[] replay)
 	{
-		var player = new ReplayPlayer(new MemoryStream(replay))
+		var player = new ReplayPlayer(new MemoryStream(replay), new ComputerPlayer122())
 		{
 			InitialSpeed = double.PositiveInfinity,
 		};

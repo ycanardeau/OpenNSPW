@@ -29,7 +29,8 @@ public sealed record StartFile(string Path, byte[] Bytes);
 // InitializeGame's last srand, in a single-player battle. HashInterval: the frames between two hashes of the battle
 // (ReplayRecorder.HashInterval). Network: a network battle's settings. Options: a single-player battle's options
 // (BattleOptions), which it plays again with, whatever the player's are now; none in a network battle, and in a replay of
-// version 2. Files: the files it started from.
+// version 2. ComputerPlayer: the id of the computer player of a single-player battle (IComputerPlayer.Id), which it plays
+// again with; 1.22's in a replay of version 2 or 3, none in a network battle. Files: the files it started from.
 public sealed record ReplayStart(
 	ReplayMode Mode,
 	short Scenario,
@@ -40,6 +41,7 @@ public sealed record ReplayStart(
 	int HashInterval,
 	NetworkBattleSettings? Network,
 	BattleOptions Options,
+	string? ComputerPlayer,
 	IReadOnlyList<StartFile> Files
 );
 
@@ -102,10 +104,16 @@ public static class ReplayFormat
 	// The magic of this version of the format, and what every version's starts with: an older replay is told apart, to be
 	// refused (ReplayReader). 2 writes each action by its case (ReplayActionCase); 3 writes a frame's speed, which a frame
 	// of 2 tells by its ticks only, as the frames of a speed may run other ticks (docs/SteadySpeed.md), and whether it
-	// holds the battle, which none of 2 does, and the battle's options (docs/Options.md), which 2 has none of. 3 reads 2.
-	public static ReadOnlySpan<byte> Magic => "ONSPWRP3"u8;
+	// holds the battle, which none of 2 does, and the battle's options (docs/Options.md), which 2 has none of; 4 writes the
+	// computer player of a single-player battle, which 2 and 3 play with 1.22's. 4 reads 2 and 3.
+	public static ReadOnlySpan<byte> Magic => "ONSPWRP4"u8;
 
 	public static ReadOnlySpan<byte> MagicOfVersion2 => "ONSPWRP2"u8;
+
+	public static ReadOnlySpan<byte> MagicOfVersion3 => "ONSPWRP3"u8;
+
+	// The computer player of a single-player battle of version 2 or 3, which only 1.22's played (ComputerPlayer122).
+	public const string ComputerPlayerOfVersion3 = "1.22";
 
 	public static ReadOnlySpan<byte> MagicOfAnyVersion => "ONSPWRP"u8;
 
@@ -198,6 +206,14 @@ public sealed class ReplayWriter : IDisposable
 		_writer.Write(options.SteadySpeed);
 	}
 
+	// Whether the battle has a computer player, then its id.
+	private void WriteComputerPlayer(string? id)
+	{
+		_writer.Write(id is not null);
+		if (id is not null)
+			_writer.Write(id);
+	}
+
 	public ReplayWriter(Stream stream, ReplayStart start)
 	{
 		_writer = new BinaryWriter(new GZipStream(stream, CompressionLevel.Optimal), Encoding.UTF8);
@@ -211,6 +227,7 @@ public sealed class ReplayWriter : IDisposable
 		_writer.Write7BitEncodedInt(start.HashInterval);
 		WriteNetwork(start.Network);
 		WriteOptions(start.Options);
+		WriteComputerPlayer(start.ComputerPlayer);
 		_writer.Write7BitEncodedInt(start.Files.Count);
 		foreach (var file in start.Files)
 		{
@@ -363,8 +380,10 @@ public sealed class ReplayReader : IDisposable
 {
 	private readonly BinaryReader _reader;
 
-	// Whether the replay is of version 2, whose frames have no speed (SpeedOfVersion2).
+	// Whether the replay is of version 2, whose frames have no speed (SpeedOfVersion2), or of 3, which names no computer
+	// player.
 	private readonly bool _isVersion2;
+	private readonly bool _isVersion3;
 
 	// The speed of the last frame of version 2 that was not run with Space held.
 	private short _speedOfVersion2 = 1;
@@ -421,6 +440,15 @@ public sealed class ReplayReader : IDisposable
 		);
 	}
 
+	// The computer player's id; 1.22's in a single-player replay of version 2 or 3.
+	private string? ReadComputerPlayer(ReplayMode mode)
+	{
+		if (_isVersion2 || _isVersion3)
+			return mode == ReplayMode.Singleplayer ? ReplayFormat.ComputerPlayerOfVersion3 : null;
+
+		return _reader.ReadBoolean() ? _reader.ReadString() : null;
+	}
+
 	private StartFile[] ReadFiles()
 	{
 		var files = new StartFile[_reader.Read7BitEncodedInt()];
@@ -445,12 +473,14 @@ public sealed class ReplayReader : IDisposable
 			if (!magic.StartsWith(ReplayFormat.MagicOfAnyVersion))
 				throw new InvalidDataException("Not a replay of OpenNSPW.");
 			_isVersion2 = magic.SequenceEqual(ReplayFormat.MagicOfVersion2);
-			if (!_isVersion2 && !magic.SequenceEqual(ReplayFormat.Magic))
+			_isVersion3 = magic.SequenceEqual(ReplayFormat.MagicOfVersion3);
+			if (!_isVersion2 && !_isVersion3 && !magic.SequenceEqual(ReplayFormat.Magic))
 				throw new InvalidDataException(
 					"A replay of another version of OpenNSPW, which this one does not play."
 				);
+			var mode = (ReplayMode)_reader.ReadByte();
 			Start = new ReplayStart(
-				(ReplayMode)_reader.ReadByte(),
+				mode,
 				_reader.ReadInt16(),
 				DateTimeOffset.FromUnixTimeMilliseconds(_reader.ReadInt64()),
 				_reader.ReadString(),
@@ -459,6 +489,7 @@ public sealed class ReplayReader : IDisposable
 				_reader.Read7BitEncodedInt(),
 				ReadNetwork(),
 				ReadOptions(),
+				ReadComputerPlayer(mode),
 				ReadFiles()
 			);
 		}

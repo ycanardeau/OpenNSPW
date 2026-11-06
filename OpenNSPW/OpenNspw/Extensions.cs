@@ -274,6 +274,9 @@ public interface IGameExtension
 // (the computer's fleets, the units), so that a replay that names it plays the same.
 public interface IComputerPlayer
 {
+	// What a replay names it by, to play the battle again with it.
+	string Id { get; }
+
 	// The computer's order of the frame, in MoveOrders[0] and Selections[0], and what it changes of the units and the
 	// fleets.
 	void Plan(Nspw game);

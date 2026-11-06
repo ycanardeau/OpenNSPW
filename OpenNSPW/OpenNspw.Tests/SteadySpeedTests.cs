@@ -238,7 +238,7 @@ public sealed class SteadySpeedTests
 		Assert.Equal(start, held);
 		Assert.True(sailed.X > start.X);
 
-		var player = new ReplayPlayer(new MemoryStream(stream.ToArray()))
+		var player = new ReplayPlayer(new MemoryStream(stream.ToArray()), new ComputerPlayer122())
 		{
 			InitialSpeed = double.PositiveInfinity,
 		};
@@ -292,7 +292,7 @@ public sealed class SteadySpeedTests
 		}
 		recorder.Dispose();
 
-		var player = new ReplayPlayer(new MemoryStream(stream.ToArray()))
+		var player = new ReplayPlayer(new MemoryStream(stream.ToArray()), new ComputerPlayer122())
 		{
 			InitialSpeed = double.PositiveInfinity,
 		};

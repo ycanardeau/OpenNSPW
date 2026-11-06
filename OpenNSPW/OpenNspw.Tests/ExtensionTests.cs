@@ -69,6 +69,8 @@ public sealed class ExtensionTests
 	{
 		private readonly ComputerPlayer122 _computer = new();
 
+		public string Id => _computer.Id;
+
 		public int Plans { get; private set; }
 
 		public void Plan(Nspw game)

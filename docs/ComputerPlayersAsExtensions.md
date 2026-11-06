@@ -49,7 +49,7 @@ An extension changes the battle only through the player's actions and the points
 A computer player in a network battle, one of the players rather than the computer's side, is another seam: it plays through the player's actions, as the host UI does, and is not this design's.
 
 ## Replays
-- A replay names the computer player at its start, with the scenario: an id (`"1.22"`), in the replay's next version.
+- A replay names the computer player at its start, with the scenario: an id (`"1.22"`), from version 4 of the format.
 - The replay's player plays it again with the same computer player, which the host gives it by id. A replay whose computer player the host does not have is refused, as a replay of another version is; one of an earlier version has none, and plays with 1.22's.
 - The computer's orders are not recorded: the same computer player gives them again. What it decided can still be noted (`ReplayRecorder.Note`).
 
