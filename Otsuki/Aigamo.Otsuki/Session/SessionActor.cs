@@ -753,7 +753,10 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	}
 
 	/// <summary>
-	/// Connects to a new peer as instructed by the host ([MC-DPL8CS] section 3.1.5.2, step 8).
+	/// Connects to a new peer as instructed by the host ([MC-DPL8CS] section 3.1.5.2, step 8). The existing peers
+	/// connect to the new one, so a peer that joined before us is not ours to connect to: when two peers join at once,
+	/// the host instructs each to connect to the other, and the older one connects, while the newer waits for it, as
+	/// it waits for every peer of the name table it joined with.
 	/// </summary>
 	public void ConnectToNewPlayer(Connection hostConnection, Dpnid id)
 	{
@@ -762,6 +765,9 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			ReportInstructedConnectFailed(hostConnection, id, "it is not in the name table");
 			return;
 		}
+
+		if (Players.TryGetValue(LocalPlayer, out var local) && player.Version < local.Version)
+			return;
 
 		player
 			.Url.ToEndPoint()
