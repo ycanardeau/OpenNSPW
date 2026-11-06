@@ -397,6 +397,18 @@ internal sealed class GameSession : IDisposable
 		_previousKeyboard = keyboard;
 	}
 
+	// A key pressed or let go (`down`) by a button of the UI (CommandBar), as the keyboard would: not while the input is held
+	// back, as a replay's.
+	public void PostKey(XnaKeys key, bool down)
+	{
+		if (IsInputHeldBack)
+			return;
+
+		var (dik, vk) = KeyCodes[key];
+		Game.PostKeyboardInput(dik, down);
+		Game.SetKeyState(AppWindow, vk, down);
+	}
+
 	// A button pressed or released: a press on a form (`isOnForm`) is the form's, not the game's; a release goes to the
 	// game anyway, which ignores one it did not see pressed.
 	private void UpdateButton(int button, ButtonState state, ButtonState previous, bool isOnForm)

@@ -25,10 +25,15 @@ internal sealed class MousePointer : IPointer
 }
 
 // A touch screen: the first touch on it holds the left button where it is, and once it is lifted, the pointer stays where
-// it was lifted. The other buttons and the wheel are never held.
+// it was lifted. A second finger turns the touch into the right button, which deselects, until all are lifted. The middle
+// button and the wheel are never used.
 internal sealed class TouchPointer(GameWindow window) : IPointer
 {
 	private readonly GameWindow _window = window;
+
+	// Whether the touch has had a second finger since its first came down: it is then the right button, until all are
+	// lifted.
+	private bool _isTwoFingers;
 
 	public MouseState State { get; private set; }
 
@@ -43,27 +48,30 @@ internal sealed class TouchPointer(GameWindow window) : IPointer
 		TouchPanel.DisplayWidth = _window.ClientBounds.Width;
 		TouchPanel.DisplayHeight = _window.ClientBounds.Height;
 		var position = State.Position;
-		var isTouching = false;
+		var fingers = 0;
 		foreach (var touch in TouchPanel.GetState())
 		{
 			if (touch.State is TouchLocationState.Pressed or TouchLocationState.Moved)
 			{
-				position = ToWindow(touch);
-				isTouching = true;
-				break;
+				if (fingers++ == 0)
+					position = ToWindow(touch);
 			}
-
-			if (touch.State == TouchLocationState.Released)
+			else if (touch.State == TouchLocationState.Released && fingers == 0)
+			{
 				position = ToWindow(touch);
+			}
 		}
+
+		var isTouching = fingers > 0;
+		_isTwoFingers = isTouching && (_isTwoFingers || fingers > 1);
 
 		State = new MouseState(
 			position.X,
 			position.Y,
 			scrollWheel: 0,
-			leftButton: isTouching ? ButtonState.Pressed : ButtonState.Released,
+			leftButton: isTouching && !_isTwoFingers ? ButtonState.Pressed : ButtonState.Released,
 			middleButton: ButtonState.Released,
-			rightButton: ButtonState.Released,
+			rightButton: _isTwoFingers ? ButtonState.Pressed : ButtonState.Released,
 			xButton1: ButtonState.Released,
 			xButton2: ButtonState.Released
 		);

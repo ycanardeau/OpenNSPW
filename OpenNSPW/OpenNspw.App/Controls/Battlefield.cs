@@ -26,23 +26,40 @@ internal sealed class Battlefield : Control
 	private readonly BattleArt _art;
 	private readonly ScrollAhead _scrollAhead;
 
+	// Whether the player touches the screen (IAppHost.IsTouchScreen): a touch on the sea or an enemy is a click once it is
+	// lifted without moving, and pans the battlefield as it moves.
+	private readonly bool _isTouchScreen;
+
+	// How far, in game pixels, a touch moves before it pans rather than clicks.
+	private const int PanDistance = 12;
+
 	// The jitter of smoke and wakes, which the original draws with the game's random numbers: here only for the look.
 	private readonly Random _jitter = new();
 
 	private GameSnapshot _snapshot = new();
 	private DrawingPoint? _mouse;
 
-	// Where a drag with the middle button, which scrolls the battlefield, last was.
+	// Where a drag with the middle button, or a touch's, which scrolls the battlefield, last was.
 	private DrawingPoint? _scrolledTo;
+
+	// Where a touch that is a click unless it moves pressed, until it is lifted or moves.
+	private DrawingPoint? _pressedAt;
 
 	private readonly UnitBrush _brush;
 
-	public Battlefield(GameSession session, UIFonts fonts, BattleArt art, ScrollAhead scrollAhead)
+	public Battlefield(
+		GameSession session,
+		UIFonts fonts,
+		BattleArt art,
+		ScrollAhead scrollAhead,
+		bool isTouchScreen
+	)
 	{
 		_session = session;
 		_fonts = fonts;
 		_art = art;
 		_scrollAhead = scrollAhead;
+		_isTouchScreen = isTouchScreen;
 		_brush = new UnitBrush(session);
 		BackColor = System.Drawing.Color.Transparent;
 	}
@@ -520,10 +537,28 @@ internal sealed class Battlefield : Control
 		_scrolledTo = point;
 	}
 
+	// Whether a point is on one of the player's units, where a touch selects at once, as a click does, and moving it goes on
+	// over other units with the brush (UnitBrush) rather than panning.
+	private bool IsOwnUnit(DrawingPoint point)
+	{
+		return !IsLanding(_snapshot, point)
+			&& HitUnit(_snapshot, point) is { } m
+			&& _snapshot.Units[m].Side == _snapshot.LocalSide;
+	}
+
 	protected override void OnMouseMove(MouseEventArgs e)
 	{
 		base.OnMouseMove(e);
 		_mouse = e.Location;
+		if (
+			_pressedAt is { } pressed
+			&& Math.Abs(e.Location.X - pressed.X) + Math.Abs(e.Location.Y - pressed.Y) > PanDistance
+		)
+		{
+			_pressedAt = null;
+			_scrolledTo = pressed;
+		}
+
 		Scroll(e.Location);
 		_brush.Over(HitUnit(_snapshot, e.Location));
 	}
@@ -538,7 +573,16 @@ internal sealed class Battlefield : Control
 	{
 		base.OnMouseDown(e);
 
-		// A replay takes no clicks while it plays: only its view moves, with the middle button.
+		// A touch on the sea or an enemy waits to tell a click from a pan; a second finger cancels it, for the right button.
+		if (_isTouchScreen && e.Button == MouseButtons.Left && !IsOwnUnit(e.Location))
+		{
+			_pressedAt = e.Location;
+			return;
+		}
+
+		_pressedAt = null;
+
+		// A replay takes no clicks while it plays: only its view moves, with the middle button or a touch.
 		if (_session.IsWatching && e.Button != MouseButtons.Middle)
 			return;
 
@@ -566,6 +610,15 @@ internal sealed class Battlefield : Control
 		}
 		else if (e.Button == MouseButtons.Left)
 		{
+			// A touch lifted where it pressed is a click there; one that moved ends its pan.
+			if (_pressedAt is { } pressed && !_session.IsWatching)
+				TakeClick(pressed);
+			else if (_isTouchScreen)
+				Scroll(e.Location);
+
+			_pressedAt = null;
+			if (_isTouchScreen)
+				_scrolledTo = null;
 			_brush.Release();
 		}
 	}

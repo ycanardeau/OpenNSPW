@@ -172,7 +172,10 @@ internal sealed class GameScreen(
 
 		// Under the dialogs, which are brought to the front as they open.
 		_art = new BattleArt(GraphicsDevice, _session.Game.IsSingleplayer);
-		_battleForm = new BattleForm(_session, Game.Fonts, _art) { Visible = false };
+		_battleForm = new BattleForm(_session, Game.Fonts, _art, Game.Host.IsTouchScreen)
+		{
+			Visible = false,
+		};
 		WindowManager.Root.Controls.Add(_battleForm);
 		_settingForm = new SettingForm(_session, Game.Fonts) { Visible = false };
 		WindowManager.Root.Controls.Add(_settingForm);

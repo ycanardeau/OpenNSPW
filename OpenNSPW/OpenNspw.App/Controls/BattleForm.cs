@@ -6,7 +6,7 @@ using DrawingSize = System.Drawing.Size;
 namespace OpenNspw.App.Controls;
 
 // The battle screen, laid out as the original's: the battlefield on the left, and the sidebar with the deck, the unit's
-// information, the combat menu and the minimap. Each part draws from the snapshot what the game draws there, and takes its
+// information, the combat menu and the minimap; with the buttons of what only the keyboard does (CommandBar). Each part draws from the snapshot what the game draws there, and takes its
 // clicks with the commands of the host's UI (docs/UI.md).
 internal sealed class BattleForm : Form
 {
@@ -17,6 +17,7 @@ internal sealed class BattleForm : Form
 	private readonly InfoPanel _infoPanel;
 	private readonly CombatMenu _combatMenu;
 	private readonly Minimap _minimap;
+	private readonly CommandBar _commandBar;
 
 	// Puts a part in the sidebar, where it is on the game's screen.
 	private void AddToSidebar(Control part, DrawingRectangle area)
@@ -30,13 +31,15 @@ internal sealed class BattleForm : Form
 		_sidebar.Controls.Add(part);
 	}
 
-	public BattleForm(GameSession session, UIFonts fonts, BattleArt art)
+	// isTouchScreen: whether the player touches the screen (IAppHost.IsTouchScreen), which the battlefield takes as taps and
+	// pans.
+	public BattleForm(GameSession session, UIFonts fonts, BattleArt art, bool isTouchScreen)
 	{
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		BackColor = DrawingColor.Transparent;
 
 		_scrollAhead = new ScrollAhead(session);
-		_battlefield = new Battlefield(session, fonts, art, _scrollAhead)
+		_battlefield = new Battlefield(session, fonts, art, _scrollAhead, isTouchScreen)
 		{
 			Bounds = Battlefield.Area,
 		};
@@ -62,6 +65,12 @@ internal sealed class BattleForm : Form
 		AddToSidebar(_combatMenu, CombatMenu.Area);
 		_minimap = new Minimap(session, art);
 		AddToSidebar(_minimap, Minimap.Area);
+
+		// Over the battlefield's top right corner, in front of it.
+		_commandBar = new CommandBar(session, fonts);
+		_commandBar.Location = new(all_head.CMBT_WIDTH - _commandBar.Width - 8, 8);
+		Controls.Add(_commandBar);
+		_commandBar.BringToFront();
 	}
 
 	// Shows the game as it was in the last frame: on the UI's thread, each frame.
