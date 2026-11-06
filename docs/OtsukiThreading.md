@@ -19,8 +19,9 @@ Done so far, each step a commit with Otsuki's tests passing, and measured with t
 | 13. Receiving across the cores | Partly: every socket of the port receives; macOS gives a port's datagrams to one socket, so on macOS one receive loop takes them all. |
 | 14. No allocation per datagram | Partly: the dispatch of every frame and of the data path takes a `switch` ahead of the generated `Match`, whose delegates were made at each call, and acknowledgments take a loop in place of closures; the garbage per datagram fell from about 15 KB to about 1 KB. Pooled buffers are not done. |
 | 15. The data path around the session | Not done: no load that this machine can carry has made the session the bottleneck. |
-| 8. The simulation | Partly, without the core of steps 6 and 7: a `ManualScheduler` (`PeerOptions.Scheduler`) runs the peers' actors one message at a time on the test's thread, in an order a seed chooses, with a manual clock and a simulated network that delivers each datagram as a step of its own ([`SimulationTests`](../Otsuki/Aigamo.Otsuki.Tests/SimulationTests.cs)). It tries 100 orders of a client/server session that joins, sends and closes, and 100 of a rejected join, which must send nothing after its transport is disposed: with the old goodbye race put back, that test fails on its first seed. A seed takes nearly the same order again, not exactly: the session's GUID and the hash order of a set of connections still change from run to run. |
-| 6, 7. Effects as outputs, the core's assembly | Not done. |
+| 8. The simulation | Partly: a `ManualScheduler` (`PeerOptions.Scheduler`) runs the peers' actors one message at a time on the test's thread, in an order a seed chooses, with a manual clock and a simulated network that delivers each datagram as a step of its own ([`SimulationTests`](../Otsuki/Aigamo.Otsuki.Tests/SimulationTests.cs)). It tries 100 orders of a client/server session that joins, sends and closes, and 100 of a rejected join, which must send nothing after its transport is disposed: with the old goodbye race put back, that test fails on its first seed. A seed takes nearly the same order again, not exactly: the session's GUID and the hash order of a set of connections still change from run to run. The cores of steps 6 and 7 are also tested alone, with no thread: [`ConnectionLoopCoreTests`](../Otsuki/Aigamo.Otsuki.Tests/ConnectionLoopCoreTests.cs) give two loops' cores datagrams and times, and check that a goodbye sends every HARD_DISCONNECT before the loop is done; with the goodbye cut short again, it fails. |
+| 6. Effects as outputs | Done, for the session and for each connection loop: [`SessionCore`](../Otsuki/Aigamo.Otsuki.Core/Session/SessionCore.cs) and [`ConnectionLoopCore`](../Otsuki/Aigamo.Otsuki.Core/Reliable/ConnectionLoopCore.cs) take each input with the time, keep their timers as deadlines, and do everything outside through an outputs interface that the actor running them implements ([`ISessionOutputs`](../Otsuki/Aigamo.Otsuki.Core/Session/ISessionOutputs.cs), [`IConnectionLoopOutputs`](../Otsuki/Aigamo.Otsuki.Core/Reliable/ConnectionLoopCore.cs)). A command carries a `Completion` that the core can only name in an answer, given after the snapshot. The session holds a connection only by an immutable handle ([`Connection`](../Otsuki/Aigamo.Otsuki.Core/Reliable/Connection.cs)); the state is the loop's `ReliableConnection`. See [How steps 6 and 7 were done](#how-steps-6-and-7-were-done). |
+| 7. The core's assembly | Done: [`Aigamo.Otsuki.Core`](../Otsuki/Aigamo.Otsuki.Core), which does not reference the actors, and a rule of [the analyzers](../Otsuki/Aigamo.Otsuki.Analyzers/CoreAnalyzer.cs) that reports, in it and in `Aigamo.Otsuki.Messages`, the threads, tasks, timers, sockets and actors, a read of a clock, `async`, and static state that can change (OTSUKI0004, OTSUKI0005). It found a DNS lookup inside the protocol and three static fields of the wire formats that could be reassigned. |
 | 9. `StreamDatagramTransport` without the lock | Done before this plan's steps: its links are an actor's. |
 | 17. The README | Done: its design section describes the loops, the mailbox and its scheduler, the snapshot, the simulation and the load test. |
 | Also | A broadcast is one message per loop, not one per client; a send that reports no completion (`SendFlags.NoComplete`) is no longer followed by the session, and its connections report nothing back. |
@@ -45,10 +46,13 @@ What the measurements found, in the order they found it:
 4. **The machine, not the server.** Past about 2,000 clients at 30 messages a second, or about 9,000 at 3, the clients stopped getting their acknowledgments in time and gave up, while the server's mailboxes stayed empty and it used under 2 cores. The system's own counters show why: in one such run the loopback interface passed 3.15 million packets, and IP received 1.41 million of them; the rest were dropped between the two, with every core busy with the server, five processes of clients and the system. Over loopback, with the clients on the same 8 cores, half of them efficiency cores, the system is what fails first.
 5. **10,000 clients.** At 1 message and 1 update a second each, 10,000 clients joined at 500 a second and stayed for the rest of the minute, none lost: the server used 0.7 of a core, allocated 40 MB a second, kept its mailboxes empty, and the runtime counted 4 contended locks a second in the whole process. Otsuki's code takes none, as the analyzer checks; the runtime's types take theirs (the thread pool, the sockets, the timers), and the trace did not tell them apart ([No locks on the hot path](#no-locks-on-the-hot-path)). The p99 latency of about 0.9 s comes from the starved processes of clients and the system's drops, not from the server's queues.
 
+6. **The core costs nothing measurable.** Steps 6 and 7 were measured against the commit before them, at 1,000 clients, the two runs taking turns twice, while another process used 3.6 of the machine's cores: before, 1.33 and 1.27 server cores and 94 and 87 MB of garbage a second; with the core, 1.25 and 0.94 cores and 90 and 83 MB. The latency of both was in seconds, from the machine's load; the table above was measured on an idle one.
+
 So the architecture carries 10,000 connections on one server here, at the message rates this machine's loopback can carry. Higher rates at 10,000 need the clients on other machines, which the load test supports (`clients --server HOST:PORT`).
 
 ### What is left
-- **Steps 6 and 7**, the core without threads that the compiler keeps so: the certainty of [The proposal](#the-proposal) is not there yet. Today the session and the connection loops are separate mailboxes whose orders are kept by the rules of [Races between loops](#races-between-loops), checked by the simulation in two scenarios; host migration, peer-to-peer meshes and lost datagrams are still to simulate, and a seed should take exactly the same order, which needs the GUIDs and the sets of connections made deterministic.
+- **Between the loops.** Inside each core a race needs code that does not build. Between the session and the connection loops there are mailboxes, whose orders the rules of [Races between loops](#races-between-loops) keep, checked by the simulation in two scenarios: host migration, peer-to-peer meshes and lost datagrams are still to simulate, and a seed should take exactly the same order, which needs the GUIDs and the sets of connections made deterministic. The compiler does not check that what one core hands another is immutable: the handle and the messages are, by review.
+- **The DNS lookup** of a peer's address that is a name, not an IP address, still blocks the session's thread, as it did; it is now an output (`ResolveHostname`), so it shows.
 - **Step 15**, the data path around the session, and **pooled buffers** (14): to do once a load shows the session or the garbage collector as the limit, which needs clients on other machines.
 - **Batched system calls** (16): only if those measurements ask for them.
 
@@ -57,7 +61,7 @@ As it was before the steps of [Progress](#progress). [The README](../Otsuki/Aiga
 
 - [`SessionActor`](../Otsuki/Aigamo.Otsuki/Session/SessionActor.cs) runs the core protocol, and publishes a `SessionSnapshot` that [`Peer`](../Otsuki/Aigamo.Otsuki/Peer.cs) reads from the application's threads.
 - [`ReliableEndpoint`](../Otsuki/Aigamo.Otsuki/Reliable/ReliableEndpoint.cs) owns the transport and the connection table, and routes datagrams.
-- Each [`Connection`](../Otsuki/Aigamo.Otsuki/Reliable/Connection.cs) is an actor of its own, one per partner, and sends its frames by calling the transport directly.
+- Each [`Connection`](../Otsuki/Aigamo.Otsuki.Core/Reliable/ReliableConnection.cs) is an actor of its own, one per partner, and sends its frames by calling the transport directly.
 
 Three kinds of actors, one mailbox each, each on the thread pool.
 
@@ -85,14 +89,14 @@ Fewer, larger actors make fewer such places, but any two mailboxes make at least
 ### The snapshot and the answer
 *Fixed by step 2: the session answers commands only after it has published the snapshot.*
 
-`await peer.ConnectAsync(...)` followed by `peer.LocalEndPoint` must see the endpoint. The session completes the command's `TaskCompletionSource` and publishes the snapshot, and the caller's continuation runs on the thread pool as soon as the task completes, so publishing must come first. It did not once; [`ICanConnect`](../Otsuki/Aigamo.Otsuki/Session/Transitions/ICanConnect.cs) now calls `Publish()` before `TrySetResult()`.
+`await peer.ConnectAsync(...)` followed by `peer.LocalEndPoint` must see the endpoint. The session completes the command's `TaskCompletionSource` and publishes the snapshot, and the caller's continuation runs on the thread pool as soon as the task completes, so publishing must come first. It did not once; [`ICanConnect`](../Otsuki/Aigamo.Otsuki.Core/Session/Transitions/ICanConnect.cs) now calls `Publish()` before `TrySetResult()`.
 
-The order is still a convention that each transition keeps by itself. [`ICanHost`](../Otsuki/Aigamo.Otsuki/Session/Transitions/ICanHost.cs) completes `HostAsync` without calling `Publish()`, and is right only because `MarkCreated` publishes on the way. The `Publish()` at the end of `SessionActor.Receive` runs after every transition, so it is always too late to cover a completion. A new transition that completes a task before anything publishes brings the bug back, and no test is likely to catch it, because the window is a few microseconds.
+The order is still a convention that each transition keeps by itself. [`ICanHost`](../Otsuki/Aigamo.Otsuki.Core/Session/Transitions/ICanHost.cs) completes `HostAsync` without calling `Publish()`, and is right only because `MarkCreated` publishes on the way. The `Publish()` at the end of `SessionActor.Receive` runs after every transition, so it is always too late to cover a completion. A new transition that completes a task before anything publishes brings the bug back, and no test is likely to catch it, because the window is a few microseconds.
 
 ### The goodbye and the socket
 *Fixed: the endpoint keeps its transport until its last connection has terminated, and a connection that is hard-disconnecting finishes its retries before it does; with the loops, the shutdown is posted to every loop after the goodbyes, and the transport is disposed once every loop has reported that its last connection has ended.*
 
-When joining fails, [`FailConnect`](../Otsuki/Aigamo.Otsuki/Session/SessionActor.cs) posts `HardDisconnect` to each connection, then `ShutDown` to the endpoint:
+When joining fails, [`FailConnect`](../Otsuki/Aigamo.Otsuki.Core/Session/SessionCore.cs) posts `HardDisconnect` to each connection, then `ShutDown` to the endpoint:
 
 ```mermaid
 sequenceDiagram
@@ -109,7 +113,7 @@ sequenceDiagram
 
 The connection and the endpoint run on different threads, so the endpoint can dispose the transport before the connection sends HARD_DISCONNECT. The send then fails silently: [`UdpDatagramTransport`](../Otsuki/Aigamo.Otsuki/Transport/UdpDatagramTransport.cs) catches `ObjectDisposedException`, and [`StreamDatagramTransport`](../Otsuki/Aigamo.Otsuki/Transport/StreamDatagramTransport.cs) returns when it is disposed. The partner learns that we left only when its own time-out runs out.
 
-Even when the connection wins, the endpoint's `Abort` follows right behind `HardDisconnect` in the connection's mailbox, so the connection leaves `HardDisconnecting` before its retry timer ([`ICanHardDisconnect`](../Otsuki/Aigamo.Otsuki/Reliable/Transitions/ICanHardDisconnect.cs)) can resend. HARD_DISCONNECT is sent at most once, and not at all when the endpoint wins.
+Even when the connection wins, the endpoint's `Abort` follows right behind `HardDisconnect` in the connection's mailbox, so the connection leaves `HardDisconnecting` before its retry timer ([`ICanHardDisconnect`](../Otsuki/Aigamo.Otsuki.Core/Reliable/Transitions/ICanHardDisconnect.cs)) can resend. HARD_DISCONNECT is sent at most once, and not at all when the endpoint wins.
 
 ### The signing mode
 *Fixed: the session gives `Connect` its own signing mode, and the loops keep theirs for inbound connections.*
@@ -200,6 +204,8 @@ For a session of a few peers, what the structure says ([Measurements](#measureme
 Whether one loop is enough for hundreds or thousands of clients is not known, for today's code either: its path through the session is just as serial. [Scaling to many clients](#scaling-to-many-clients) takes that up.
 
 ### The compiler keeps the core single-threaded
+*Done in step 7, with a rule of Otsuki's own analyzers in place of BannedApiAnalyzers ([How steps 6 and 7 were done](#how-steps-6-and-7-were-done)).*
+
 The core moves to an assembly of its own, `Aigamo.Otsuki.Core`, which the shell references. In it:
 
 - [BannedApiAnalyzers](https://github.com/dotnet/roslyn-analyzers/blob/main/src/Microsoft.CodeAnalysis.BannedApiAnalyzers/BannedApiAnalyzers.Help.md) refuse the types that start or share work across threads: `Task`, `TaskCompletionSource`, `Thread`, `ThreadPool`, `Timer`, `TimeProvider`, `Channel`, `Monitor`, `Interlocked`, `Volatile`, the concurrent collections, and the socket types.
@@ -221,6 +227,8 @@ On top of that:
 The current tests are ported to the simulation. A few stay on real threads and real UDP, to check the shell.
 
 ### From today's code
+*Done in step 6, as [How steps 6 and 7 were done](#how-steps-6-and-7-were-done) says, with the connection loops of step 12 each a core of its own.*
+
 The transitions in `Reliable/Transitions` and `Session/Transitions` do not change: they call methods of `Connection` and `SessionActor`, and those methods change what they do.
 
 | Today | In the core |
@@ -233,6 +241,16 @@ The transitions in `Reliable/Transitions` and `Session/Transitions` do not chang
 | `Connection.Timestamp` reads the `TimeProvider` | Reads the input's `now` |
 | `ReliableEndpoint`'s connection table and routing | Part of the core |
 
+### How steps 6 and 7 were done
+With the loops of step 12, there are cores, not one core: a `SessionCore` that the session's actor runs, and a `ConnectionLoopCore` for each connection loop. Each is the sans-I/O core of [A core without threads](#a-core-without-threads), and each actor is a shell of [One loop](#one-loop). What differs from the proposal:
+
+- **Outputs are calls, not a list.** A core calls an interface that its shell implements, in order, before `Handle` returns, and the shell must not call the core back from one; what comes back, such as a connection's report, is a later input. A list would make that rule structural, at the cost of an allocation or a buffer per input; the calls cost nothing per datagram, and a test implements them as a list (`ConnectionLoopCoreTests`).
+- **Time is a `TimeSpan` on the shell's clock**, given with each input. A core's timers are deadlines in a queue of its own ([`LoopTimer`](../Otsuki/Aigamo.Otsuki.Core/Reliable/LoopTimer.cs)); the shell arms one runtime timer for the nearest ([`LoopAlarm`](../Otsuki/Aigamo.Otsuki/Actors/LoopAlarm.cs)) and gives the core a `TimersDue` input when it rings.
+- **The session holds handles.** Before, the session held each connection's object, whose state another thread changed, and only kept to calling its thread-safe members. Now the connection's state is a `ReliableConnection` of its loop, and the session holds a `Connection`, which nothing changes: its partner, its direction, and the loop that runs it, opaque to the core. So nothing in the session can reach a connection's state but a message.
+- **Answers are named, not given.** A command carries a `Completion`, which holds the shell's task as an `object`; the core can only pass it to `Complete` or `Fail`, which it does once the input is done and its snapshot published.
+- **The endpoint is opened through an output** that returns its address at once (`OpenEndpoint`), as the transitions need it on the spot; a failure to bind comes back as a result, as before.
+- **The analyzer is Otsuki's own** (OTSUKI0004 and OTSUKI0005), beside the lock rule, rather than BannedApiAnalyzers, which is not among the solution's packages: it bans whole namespaces (`System.Threading` and those below it, `System.Timers`, the concurrent collections, the sockets but their enums) and single types (`TimeProvider`, `Stopwatch`, `Dns`, `ParallelEnumerable`), the clock members of `DateTime` and `Environment`, the types of `Aigamo.Otsuki.Actors`, a call that returns one of those without naming it, `async`, a static field that can be assigned, and a static collection. It runs on the wire formats too, which the cores run.
+
 ## Scaling to many clients
 The aim is a server that holds 10,000 active clients and more, and peer-to-peer sessions as large as the mesh allows, with no locks in Otsuki's code: verified by load tests, not claimed. Client/server comes first; it is where large sessions are possible at all.
 
@@ -243,7 +261,7 @@ Found in the code, not yet measured:
 
 - **One serial path.** Every datagram passes the receive loop, then `ReliableEndpoint`, one at a time; every payload then passes `SessionActor`, one at a time. Only the connections run in parallel.
 - **The snapshot is rebuilt after every message.** `SessionActor.Receive` ends with `Publish()`, which builds new immutable dictionaries of every player and group. With 10,000 players, each datagram that reaches the session copies 10,000 entries.
-- **A runtime timer per restart.** `ActorTimer.Start` disposes its timer and creates a new one, and the keep-alive timer restarts on every frame received ([`ReliableChannel`](../Otsuki/Aigamo.Otsuki/Reliable/ReliableChannel.cs)). Each frame allocates a timer and goes through the runtime's timer queue, which takes a lock.
+- **A runtime timer per restart.** `ActorTimer.Start` disposes its timer and creates a new one, and the keep-alive timer restarts on every frame received ([`ReliableChannel`](../Otsuki/Aigamo.Otsuki.Core/Reliable/ReliableChannel.cs)). Each frame allocates a timer and goes through the runtime's timer queue, which takes a lock.
 - **A lock in every post.** The mailbox is a `Channel`, and its `TryWrite` takes a lock even when the channel has a single reader. Otsuki's own code has no lock, but each post takes one inside the runtime.
 - **No backpressure.** The mailboxes are unbounded. A server that falls behind queues datagrams until memory runs out.
 
@@ -283,7 +301,7 @@ In the steady scenario of [Verifying it](#verifying-it), 10,000 clients send abo
 - **No allocation per datagram.** Half a million arrays a second keep the garbage collector busy. Receive buffers come from a pool, the messages between loops are structs or pooled, and frames are written into pooled buffers. The application's API then has to say who returns a received payload to the pool ([open questions](#open-questions)).
 - **The application's events.** With the data path around the session, several loops raise events. Each loop gets its own event queue, without locks, that the application drains; or one queue shared by all, with the same lock-free design as the mailbox.
 - **Broadcast is the application's cost.** Sending every update to 10,000 clients is 10,000 sends, whatever the library. Games limit it by interest, with groups or areas; the library expands a group send in each connection loop, for its own members.
-- **Joins.** A client/server join costs the same at 10,000 as at 10: the joining client receives the server's entry and its own, and clients never hear of each other ([`ICanAdmitPlayers`](../Otsuki/Aigamo.Otsuki/Session/Transitions/ICanAdmitPlayers.cs)). A join storm is then 10,000 small handshakes, spread over the connection loops.
+- **Joins.** A client/server join costs the same at 10,000 as at 10: the joining client receives the server's entry and its own, and clients never hear of each other ([`ICanAdmitPlayers`](../Otsuki/Aigamo.Otsuki.Core/Session/Transitions/ICanAdmitPlayers.cs)). A join storm is then 10,000 small handshakes, spread over the connection loops.
 - **Memory per connection.** Each connection's timers become entries in a wheel, and its send window and reassembly buffers come from pools. The load test reports the bytes per connection.
 - **The operating system's limits.** File descriptors (macOS allows 256 per process by default, so the load generator raises it), socket buffer sizes, and the ports a load generator can bind. The largest tests run on Linux; the server is also measured on macOS and Windows at smaller sizes.
 - **The load generator** has to be as efficient as the server, so it runs on the same loops and pools, over several processes or machines.
@@ -350,7 +368,7 @@ Steps 1 to 3 are small and independent, and could land first. Step 4 alone fixes
 - The Bluetooth connectors ([Bluetooth.md](Bluetooth.md)), which run on the platforms' own threads and run loops. They only open and accept streams, and post them to the transport's loop.
 
 ## Open questions
-- **Waiting for the hard disconnect.** Should a failed join keep the transport open until each connection has resent HARD_DISCONNECT as [`ICanRepeatHardDisconnect`](../Otsuki/Aigamo.Otsuki/Reliable/Transitions/ICanRepeatHardDisconnect.cs) does, or is one send enough before closing?
+- **Waiting for the hard disconnect.** Should a failed join keep the transport open until each connection has resent HARD_DISCONNECT as [`ICanRepeatHardDisconnect`](../Otsuki/Aigamo.Otsuki.Core/Reliable/Transitions/ICanRepeatHardDisconnect.cs) does, or is one send enough before closing?
 - **Snapshots per event.** Today a snapshot is published before each event that needs it. Should the core keep emitting one per event, or one per input, with events carrying what their handlers need?
 - **How far to go.** Steps 1 to 5 fix the known races with the actors' shape mostly kept; steps 6 to 8 are a larger change of `SessionActor` (about 1,600 lines), and phase 2 larger again. Is each worth it now, or after the next feature?
 - **The simulation's reach**: random orders with seeds, or exhaustive orders for small cases, or both?
