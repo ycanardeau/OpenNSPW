@@ -8,7 +8,7 @@ namespace Aigamo.Otsuki.Tests;
 /// <summary>
 /// A network for the simulation: each datagram is delivered as a step of its own on the scheduler, so that the
 /// scheduler's order mixes deliveries with the actors' messages, and reorders datagrams as UDP may. It loses a share of
-/// them, chosen by its seed, and none to or from an address cut off. Binding and everything else happen at once, on
+/// them and delivers another share twice, chosen by its seed, and none to or from an address cut off. Binding and everything else happen at once, on
 /// the one thread that drives the simulation.
 /// </summary>
 internal sealed class SimulatedNetwork(ManualScheduler scheduler, Func<TimeSpan> now, int seed)
@@ -24,6 +24,11 @@ internal sealed class SimulatedNetwork(ManualScheduler scheduler, Func<TimeSpan>
 	/// The share of datagrams lost, from 0 to 1.
 	/// </summary>
 	public double LossRate { get; set; }
+
+	/// <summary>
+	/// The share of datagrams delivered twice, each copy a step of its own, from 0 to 1.
+	/// </summary>
+	public double DuplicateRate { get; set; }
 
 	/// <summary>
 	/// What the network did, in order: each datagram delivered, lost or cut off, with the time, the addresses and the
@@ -72,7 +77,7 @@ internal sealed class SimulatedNetwork(ManualScheduler scheduler, Func<TimeSpan>
 			return;
 		}
 
-		_scheduler.Schedule(() =>
+		void Deliver()
 		{
 			Trace.Add($"{_now().Ticks} delivered {entry}");
 			if (
@@ -80,7 +85,14 @@ internal sealed class SimulatedNetwork(ManualScheduler scheduler, Func<TimeSpan>
 				&& _transports.TryGetValue(ipEndPoint, out var transport)
 			)
 				transport.Deliver(source, copy);
-		});
+		}
+
+		_scheduler.Schedule(Deliver);
+		if (DuplicateRate > 0 && _random.NextDouble() < DuplicateRate)
+		{
+			Trace.Add($"duplicated {entry}");
+			_scheduler.Schedule(Deliver);
+		}
 	}
 
 	public void Unbind(SimulatedTransport transport) => _transports.Remove(transport.LocalEndPoint);
@@ -117,7 +129,8 @@ internal sealed class SimulatedTransport(SimulatedNetwork network, IPEndPoint lo
 
 	public void Send(EndPoint remoteEndPoint, byte[] datagram)
 	{
-		var kind = ReliableMessageSerializer.Default.Deserialize(datagram)?.GetType().Name ?? "Other";
+		var kind =
+			ReliableMessageSerializer.Default.Deserialize(datagram)?.GetType().Name ?? "Other";
 		if (IsDisposed)
 		{
 			// A send after the transport is closed is lost, as a goodbye was before the endpoint waited for it.
