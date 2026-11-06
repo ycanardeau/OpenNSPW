@@ -56,21 +56,21 @@ A computer player in a network battle, one of the players rather than the comput
 - The computer's orders are not recorded: the same computer player gives them again. What it decided can still be noted (`ReplayRecorder.Note`).
 
 ## The parts
-`ComputerPlayer122` is split by the steps of `cpu_strtgy` ([ComputerPlayer.md](ComputerPlayer.md#cpu_strtgy)), each part a class over the game:
+`ComputerPlayer122`'s strategy (`Strategy122`) is split by the steps of `cpu_strtgy` ([ComputerPlayer.md](ComputerPlayer.md#cpu_strtgy)), each part a struct over the game, as the strategy is, so that a frame allocates nothing. The parts call none of each other; what they share is in `StrategyBasics`: the flow between them (`StrategyFlow`), the end of a path, the kinds the code names together, 1.22's distances, and the packing of the fleets' lists.
 
-| Part | Steps | Now |
+| Part | Steps | What it does |
 | --- | --- | --- |
-| The scenarios' events | 1 | `ApplyComputerEvents` |
-| The fleet's upkeep | 3, 4 | `FindComputersTarget`, `KeepUpFleet` |
-| The planes | 5, 6 | `ArmComputersPlanes`, `FlyComputersPlanes` |
-| The targets | 7, 8 | `ChooseTargetOf`: the ships' and the planes' in one loop, as 1.22 draws `rand()` for both in it |
-| Returning and supplying | 9 | `DecideToReturn`, `SupplyAtBase`, `StopAtTheEdge` |
-| The movement | 9 | `MoveFleet`, `MoveWarship`, `MoveCarrier`, `MoveSubmarine`, `MoveByMode` |
-| The strikes | 10, 11 | `StrikeFromFlagship`, `BombFromAirBase`, `StrikeFromOtherCarriers`, `DefendAirBase` |
-| The formation and the order | 9 | `SetFormation`, `OrderFleet` |
-| Scenario 304's reinforcements | 12 | `ReinforceScenario304` |
+| `ScenarioEvents` | 1 | `ApplyComputerEvents` |
+| `FleetUpkeep` | 3, 4 | `FindComputersTarget`, `KeepUpFleet` |
+| `FleetPlanes` | 5, 6 | `ArmComputersPlanes`, `FlyComputersPlanes` |
+| `FleetTargets` | 7, 8 | `ChooseTargetOf`: the ships' and the planes' in one loop, as 1.22 draws `rand()` for both in it |
+| `ReturnAndSupply` | 9 | `DecideToReturn`, `SupplyAtBase`, `StopAtTheEdge` |
+| `FleetMovement` | 9 | `MoveFleet`, and the moves of warships, carriers and submarines it chooses from |
+| `FleetStrikes` | 10, 11 | `StrikeFromFlagship`, `BombFromAirBase`, `StrikeFromOtherCarriers`, `DefendAirBase` |
+| `FleetFormation` | 9 | `SetFormation`, `OrderFleet` |
+| `Scenario304Reinforcements` | 12 | `ReinforceScenario304`, and the placement of reinforcements (`PlaceReinforcement`) |
 
-`ComputerPlayer122.Plan` composes them in 1.22's order, with the flow between them (`StrategyFlow`). The parts keep 1.22's assumptions as they are: unit 23 as the computer's home, Japan's longer ranges, the thresholds of the time left, ten fleets of at most 17 members and targets. A part that a new computer player needs otherwise gets a setting for it, with 1.22's value as its default, one at a time, each tested against the emulated original with 1.22's values.
+`Strategy122.Plan` composes them in 1.22's order, with the flow between them. The parts keep 1.22's assumptions as they are: unit 23 as the computer's home, Japan's longer ranges, the thresholds of the time left, ten fleets of at most 17 members and targets. A part that a new computer player needs otherwise gets a setting for it, with 1.22's value as its default, one at a time, each tested against the emulated original with 1.22's values.
 
 ## What the hosts change
 - **The desktop app** sets `ComputerPlayer122` on every single-player battle, and gives the replays' player the computer players it knows.

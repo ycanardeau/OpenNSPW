@@ -44,7 +44,7 @@ The scenarios build the target lists with these functions, which `cpu_strtgy` al
 Each adds from the first empty element of 1 to 17 (18 when there is none) the units that are not in elements 1 to 17 already, with no limit: past element 17, they are written on into the members. The shuffle counts the targets up to the first empty element, and swaps two random ones (`rand()%n+1` each) `rand()%18+1` times. `sub_403A70(unit, fleet)` (`0x403A70`) tells whether a plane's carrier (`info[1]`) is the fleet's flagship or a member.
 
 ## cpu_strtgy
-`cpu_strtgy` (`0x404E30`), rewritten as `Strategy122` (`OpenNspw.ComputerPlayers`), which 1.22's computer player (`ComputerPlayer122`) runs, first clears the computer's order of the last frame (`cls_all_slct_unit_p2(0)`, `new_pp[0].used=0`). Then:
+`cpu_strtgy` (`0x404E30`), rewritten as `Strategy122` (`OpenNspw.ComputerPlayers`), which 1.22's computer player (`ComputerPlayer122`) runs, in parts by the steps below ([ComputerPlayersAsExtensions.md](ComputerPlayersAsExtensions.md#the-parts)), first clears the computer's order of the last frame (`cls_all_slct_unit_p2(0)`, `new_pp[0].used=0`). Then:
 
 1. **The scenario's events** (`0x404E93` to `0x405554`): a `switch` on `sinario` runs the events of 7 scenarios, each when `rest_time` falls to a threshold, and each once (a flag in the fleet table):
 

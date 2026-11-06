@@ -1630,7 +1630,7 @@ public static class ComputerPlayerTests
 						State122.Restore(game, before);
 						Restore(game, unitsBefore);
 						game.Selections[0] = selections;
-						new Strategy122(game).SetFormation(f);
+						new FleetFormation(game).SetFormation(f);
 						var actual = (
 							UnitBytes(game),
 							FleetBytes(game),
@@ -1686,7 +1686,7 @@ public static class ComputerPlayerTests
 					var (ex, ey) = (x, y);
 					game.RunPlaceReinforcement(ref ex, ref ey);
 					var (ax, ay) = (x, y);
-					new Strategy122(game).PlaceReinforcement(ref ax, ref ay);
+					new Scenario304Reinforcements(game).PlaceReinforcement(ref ax, ref ay);
 					Assert.True(ex == ax && ey == ay, $"From ({x},{y}): ({ex},{ey})/({ax},{ay})");
 				}
 			}
