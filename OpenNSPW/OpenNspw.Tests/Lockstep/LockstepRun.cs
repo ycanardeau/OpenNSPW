@@ -28,8 +28,8 @@ internal sealed class LockstepRun : IDisposable
 			)
 		);
 
-	// drawsFromSpriteFiles: whether the games draw from the desktop app's sprite files (docs/GameSprites.md), rather than
-	// from the sprite sheet's file. playsBundledFiles: whether they play the desktop app's embedded files, with an empty
+	// drawsFromSpriteFiles: whether the games draw from the app's sprite files (docs/GameSprites.md), rather than
+	// from the sprite sheet's file. playsBundledFiles: whether they play the app's embedded files, with an empty
 	// user's folder (docs/BundledData.md), rather than a copy of the original's data; they then draw from the sprite
 	// files, as the app embeds no sheet.
 	public LockstepRun(bool drawsFromSpriteFiles = false, bool playsBundledFiles = false)
@@ -46,7 +46,7 @@ internal sealed class LockstepRun : IDisposable
 				game.Files = new GameFileLayers(
 					[],
 					_user.Path,
-					[new Desktop.BundledFiles("NSPW_NET")]
+					[new App.BundledFiles("NSPW_NET")]
 				);
 			game.Start();
 		}

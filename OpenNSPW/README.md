@@ -6,7 +6,8 @@ An exact port of the NSPW NET source ([Original/NSPW_NET](../Original/NSPW_NET))
 | `OpenNspw` | The C# port. One file per C++ file, plus stand-ins for the platform APIs it calls (Win32, DirectPlay 8, DirectSound), with the original APIs' names. |
 | `OpenNspw.Benchmarks` | Benchmarks of the game's own work in a battle (simulation and drawing), and of copying the state for the emulator. |
 | `OpenNspw.DirectPlay` | The DirectPlay 8 stand-ins implemented on [Otsuki](../Otsuki). |
-| `OpenNspw.Desktop` | The game, on MonoGame: its menus (with [Saruhashi](../Saruhashi), see [docs/UI.md](../docs/UI.md)), which run the port's `WinMain` and show its frames and dialogs. |
+| `OpenNspw.App` | The game, on MonoGame of no platform in particular: its menus (with [Saruhashi](../Saruhashi), see [docs/UI.md](../docs/UI.md)), which run the port's `WinMain` and show its frames and dialogs, and the original's files, sprites and fonts that it embeds. |
+| `OpenNspw.Desktop` | The app on Windows, macOS and Linux: starts `OpenNspw.App` on MonoGame's DesktopGL, with the command line's options. |
 | `OpenNspw.Replay` | Replays of battles, recorded and played as an extension of the game. See [docs/Replays.md](../docs/Replays.md). |
 | `OpenNspw.HostUI` | The commands that the app's own UI gives the battle in place of the mouse's clicks, and what the UI reads of the game, as an extension of the game. See [docs/UI.md](../docs/UI.md). |
 | `OpenNspw.Pacing` | Steady speed: a single-player battle that plays the same at every speed, as an extension of the game. See [docs/SteadySpeed.md](../docs/SteadySpeed.md). |
@@ -54,9 +55,9 @@ To start a single-player scenario without the menus:
 dotnet run --project OpenNspw.Desktop -- --singleplayer 3
 ```
 
-The text is drawn in fonts that come with the game, so that it looks the same on every platform: BIZ UDGothic for the game's own text and BIZ UDPGothic for the menus, under the SIL Open Font License 1.1 ([OpenNspw.Desktop/Fonts/OFL.txt](OpenNspw.Desktop/Fonts/OFL.txt)).
+The text is drawn in fonts that come with the game, so that it looks the same on every platform: BIZ UDGothic for the game's own text and BIZ UDPGothic for the menus, under the SIL Open Font License 1.1 ([OpenNspw.App/Fonts/OFL.txt](OpenNspw.App/Fonts/OFL.txt)).
 
-The battle's pictures and the title are the original's sprites, cut from its sprite sheet into a file each in `OpenNspw.Desktop/Sprites` (see [docs/SpriteSheets.md](../docs/SpriteSheets.md)).
+The battle's pictures and the title are the original's sprites, cut from its sprite sheet into a file each in `OpenNspw.App/Sprites` (see [docs/SpriteSheets.md](../docs/SpriteSheets.md)).
 
 ## Porting a file
 ```bash

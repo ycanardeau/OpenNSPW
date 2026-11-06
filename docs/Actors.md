@@ -77,7 +77,7 @@ Three frame buffers, each the pixels and the snapshot of one frame (`GameSnapsho
 1. The game copies the primary surface's pixels, and its snapshot, into a buffer it holds, and posts `FrameReady(buffer)` to the UI, if it still holds another buffer to fill next. If it does not, it keeps the frame as the one to post. The desktop app's platform does this, given the game's mailbox, which `Nspw` takes as it is made.
 2. The UI, as it drains its mailbox, keeps the newest buffer it got, and posts each older one back to the game (`BufferFree`).
 3. The game takes `BufferFree` before it fills the next frame, and posts the frame it kept, if any. It never waits for the UI: with no buffer back, it fills the kept one again.
-4. While the game sleeps (`WaitMessage`, `GetMessage`), a `BufferFree` wakes it to post the frame it kept, and it sleeps again (`DesktopPlatform.WaitForMessage`): the UI is not left with a stale frame while a dialog is up. This handler changes nothing the battle sees.
+4. While the game sleeps (`WaitMessage`, `GetMessage`), a `BufferFree` wakes it to post the frame it kept, and it sleeps again (`AppPlatform.WaitForMessage`): the UI is not left with a stale frame while a dialog is up. This handler changes nothing the battle sees.
 
 A buffer is the game's or the UI's, never both: no pixels are copied across the threads, and the UI draws the newest whole frame. Now the pixels are copied twice, into the platform's frame and out of it, under `_frameLock`; then once, from the primary surface into the buffer. `CaptureAgain`, as a replay's view changes while it is paused, fills a buffer from the primary surface, which still holds the last frame.
 
@@ -122,7 +122,7 @@ Carrying the snapshot with each event, which would make `Peer` its owner's only,
 ## What goes
 - **The game:** `_messages` and its `Monitor.PulseAll`, `WindowsLock` and `_keyState`'s lock (`winuser.cs`, `fileapi.cs`); DirectInput's `ConcurrentQueue` (`dinput.cs`).
 - **The host UI's commands:** `UICommands`' lock (OpenNspw.HostUI).
-- **The desktop app:** `_frameLock`, `_sounds`' lock and `Messages`' lock (`DesktopPlatform.cs`, `GameSession.cs`); `WindowsLock` in `Dialogs.cs` and `MultiplayerScreen.cs`; `_hasEnded` and `_needsFill`, which are `volatile`; `ReplayView`'s lock.
+- **The desktop app:** `_frameLock`, `_sounds`' lock and `Messages`' lock (`AppPlatform.cs`, `GameSession.cs`); `WindowsLock` in `Dialogs.cs` and `MultiplayerScreen.cs`; `_hasEnded` and `_needsFill`, which are `volatile`; `ReplayView`'s lock.
 - **A replay's player:** the lock on its notes, which come with its progress (`ReplayPlayer.cs`).
 - **Otsuki:** the transport's lock and its `Volatile` handler (`StreamDatagramTransport.cs`); the Bluetooth connectors' locks and `Volatile` handler (`MacBluetoothConnector.cs`, `WindowsBluetoothConnector.cs`); the peer's `Volatile` snapshot and `Interlocked` send handles (`Peer.cs`).
 - **Recorder122:** its gate (`Program.cs`). The debugger waits for its events with a timeout, in place of `INFINITE`, and takes `Close` between them; Ctrl+C cancels the process's end, posts `Close`, and the debugger's thread closes the trace and ends 1.22.

@@ -395,7 +395,7 @@ public class NetworkTests
 		Assert.False(host.Game.GetDlgItem(host.Dialog, IDC_START_GAME)!.Enabled);
 	}
 
-	// The desktop app fills its form from the dialog once it is initialized, so it must not find it with the
+	// The app fills its form from the dialog once it is initialized, so it must not find it with the
 	// template's empty fields, which would make the host listen on DirectPlay's default port.
 	[Fact]
 	public void The_connection_dialog_is_initialized_once_it_has_set_its_fields()

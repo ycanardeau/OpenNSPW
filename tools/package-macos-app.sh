@@ -16,7 +16,7 @@ root=$(dirname "$0")/..
 rm -rf "$app"
 
 # One executable, with only what it reads from its own directory beside it: libSDL2-2.0.0.dylib and libopenal.dylib,
-# which MonoGame loads from there, and Fonts.
+# which MonoGame loads from there.
 dotnet publish "$root/OpenNSPW/OpenNspw.Desktop" --configuration Release --runtime osx-arm64 --self-contained \
 	/p:PublishSingleFile=true /p:DebugType=embedded /p:GenerateDocumentationFile=false /p:Version="$version" \
 	--output "$app/Contents/MacOS"
@@ -30,12 +30,9 @@ sips -z 16 16 "$iconset/icon_32x32.png" --out "$iconset/icon_16x16.png" > /dev/n
 mkdir "$app/Contents/Resources"
 iconutil --convert icns "$iconset" --output "$app/Contents/Resources/OpenNSPW.icns"
 
-# Fonts in Resources, with a link where the app reads them: codesign keeps the signatures of files other than code in
-# MacOS in extended attributes, which most unzipping loses.
+# The fonts' license and the notice of the original's files, which the app does not read, in Resources: codesign keeps
+# the signatures of files other than code in MacOS in extended attributes, which most unzipping loses.
 mv "$app/Contents/MacOS/Fonts" "$app/Contents/Resources/Fonts"
-ln -s ../Resources/Fonts "$app/Contents/MacOS/Fonts"
-
-# The notice of the original's files, which the app does not read, in Resources for the same reason.
 mv "$app/Contents/MacOS/OriginalNotice.txt" "$app/Contents/Resources/OriginalNotice.txt"
 
 # The bundle's versions are numbers only, so a prerelease such as 0.0.1-alpha.4 is 0.0.1.

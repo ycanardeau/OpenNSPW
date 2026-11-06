@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <!-- The game's surfaces and sounds are native memory (OpenNspw/ddraw.cs, dsound.cs). -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The app's fonts (BundledFonts), and their license, beside the app. -->
+    <EmbeddedResource Include="Fonts\*.ttf" LogicalName="Fonts/%(Filename)%(Extension)" />
+    <None Include="Fonts\OFL.txt" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The sprites cut from the original's sprite sheet (SpriteFiles, tools/CutSprites.cs). -->
+    <EmbeddedResource Include="Sprites\**\*.png" />
+    <!-- The notice of the original's files that the app embeds, beside the app. -->
+    <None Include="OriginalNotice.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!--
+    The original's files that the game reads (BundledFiles, docs/BundledData.md), each a resource named by its path
+    under Original, whose author lets them be redistributed (OriginalNotice.txt): NSPW NET's data, and for single-player,
+    the files of NSPW 1.22's directory that differ from NSPW NET's, its two other sounds and its map without the island.
+    A single-player game reads NSPW NET's where 1.22's are not embedded, which are the same. NSPW 1.22's executable is
+    not embedded: a game runs none of its code (docs/Singleplayer.md).
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\Original\NSPW_NET\wav\*.wav" LogicalName="NSPW_NET/wav/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\NSPW_NET\Map\*.dat" LogicalName="NSPW_NET/Map/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\NSPW_NET\Scenario\*.dat" LogicalName="NSPW_NET/Scenario/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\Nspw122\Map\japan_off.dat" LogicalName="Nspw122/Map/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Original\Nspw122\wav\GUN3.wav;..\..\Original\Nspw122\wav\AA_SHL4.wav" LogicalName="Nspw122/wav/%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!-- The hosts start the app (NspwGame) with what their system gives it (IAppHost). -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="OpenNspw.Desktop" />
+    <InternalsVisibleTo Include="OpenNspw.Tests" />
+  </ItemGroup>
+
+  <!-- MonoGame of no platform in particular: the app is built against DesktopGL's, and runs with the one of the host that
+       references it, such as OpenNspw.Desktop's. -->
+  <ItemGroup>
+    <PackageReference Include="FontStashSharp.MonoGame" />
+    <PackageReference Include="MonoGame.Extended" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OpenNspw\OpenNspw.csproj" />
+    <ProjectReference Include="..\OpenNspw.DirectPlay\OpenNspw.DirectPlay.csproj" />
+    <ProjectReference Include="..\OpenNspw.HostUI\OpenNspw.HostUI.csproj" />
+    <ProjectReference Include="..\OpenNspw.Pacing\OpenNspw.Pacing.csproj" />
+    <ProjectReference Include="..\OpenNspw.Replay\OpenNspw.Replay.csproj" />
+    <ProjectReference Include="..\OpenNspw.Verification\OpenNspw.Verification.csproj" />
+    <ProjectReference Include="..\..\Saruhashi\Aigamo.Saruhashi.MonoGame\Aigamo.Saruhashi.MonoGame.csproj" />
+  </ItemGroup>
+
+</Project>

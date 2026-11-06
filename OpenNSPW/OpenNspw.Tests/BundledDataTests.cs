@@ -1,12 +1,12 @@
 using System.Text;
-using OpenNspw.Desktop;
+using OpenNspw.App;
 using OpenNspw.Tests.Lockstep;
 using Xunit;
 using static OpenNspw.Tests.Lockstep.BattleScripts;
 
 namespace OpenNspw.Tests;
 
-// The game's files in layers (GameFileLayers), and the original's files that the desktop app embeds (BundledFiles,
+// The game's files in layers (GameFileLayers), and the original's files that the app embeds (BundledFiles,
 // docs/BundledData.md).
 public class BundledDataTests
 {

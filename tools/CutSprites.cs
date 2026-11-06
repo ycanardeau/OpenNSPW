@@ -1,6 +1,6 @@
 // Cuts the original's sprite sheet into the desktop app's sprites (docs/SpriteSheets.md): NSPW NET's t3.bmp, and 1.22's
 // tst_cg1.bmp for what only 1.22 has. The game draws its own frames from them too (SpriteSheetLayout), so they hold every
-// part of the sheets that it draws from. Writes them to OpenNSPW/OpenNspw.Desktop/Sprites, or with --check, compares them
+// part of the sheets that it draws from. Writes them to OpenNSPW/OpenNspw.App/Sprites, or with --check, compares them
 // with the files there and fails if any differs.
 //
 //     dotnet run tools/CutSprites.cs [--check]
@@ -10,7 +10,7 @@ using System.IO.Compression;
 using System.Runtime.CompilerServices;
 
 var repository = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(SourcePath())!, ".."));
-var output = Path.Combine(repository, "OpenNSPW", "OpenNspw.Desktop", "Sprites");
+var output = Path.Combine(repository, "OpenNSPW", "OpenNspw.App", "Sprites");
 var isCheck = args is ["--check"];
 
 var nspwNet = Sheet.Load(Path.Combine(repository, "Original", "NSPW_NET", "t3.bmp"));

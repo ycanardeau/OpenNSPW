@@ -108,7 +108,7 @@ internal static class GameData
 		}
 	}
 
-	// A new, empty temporary directory, such as the user's folder of a game that plays the desktop app's embedded files.
+	// A new, empty temporary directory, such as the user's folder of a game that plays the app's embedded files.
 	public static TemporaryDirectory CreateEmpty()
 	{
 		var directory = new TemporaryDirectory(

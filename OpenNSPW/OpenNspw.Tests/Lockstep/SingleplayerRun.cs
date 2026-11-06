@@ -13,8 +13,8 @@ internal sealed class SingleplayerRun : IDisposable
 	public Nspw Game => Player.Game;
 
 	// setUp runs before the game starts, to set a trace. startDate: the time it starts at (time(NULL)), which seeds rand.
-	// drawsFromSpriteFiles: whether the game draws from the desktop app's sprite files (docs/GameSprites.md), rather than
-	// from 1.22's sprite sheet. playsBundledFiles: whether it plays the desktop app's embedded files, with an empty user's
+	// drawsFromSpriteFiles: whether the game draws from the app's sprite files (docs/GameSprites.md), rather than
+	// from 1.22's sprite sheet. playsBundledFiles: whether it plays the app's embedded files, with an empty user's
 	// folder and no executable (docs/BundledData.md), rather than a copy of the original's data and Original/Nspw122, with
 	// its executable for the tests' emulator; it then draws from the sprite files, as the app embeds no sheet.
 	// recordsOutput: whether the game's output is hashed and its text kept (LockstepGame.RecordsOutput).
@@ -41,7 +41,7 @@ internal sealed class SingleplayerRun : IDisposable
 			Player.Files = new GameFileLayers(
 				[],
 				_user.Path,
-				[new Desktop.BundledFiles("Nspw122"), new Desktop.BundledFiles("NSPW_NET")]
+				[new App.BundledFiles("Nspw122"), new App.BundledFiles("NSPW_NET")]
 			);
 		}
 		else

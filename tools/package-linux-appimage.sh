@@ -23,7 +23,7 @@ download() {
 }
 
 # One executable, with only what it reads from its own directory beside it: libSDL2-2.0.so.0 and libopenal.so, which
-# MonoGame loads from there, and Fonts.
+# MonoGame loads from there.
 dotnet publish "$root/OpenNSPW/OpenNspw.Desktop" --configuration Release --runtime linux-x64 --self-contained \
 	/p:PublishSingleFile=true /p:DebugType=embedded /p:GenerateDocumentationFile=false /p:Version="$version" \
 	--output "$appdir/usr/bin"

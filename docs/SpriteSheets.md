@@ -1,5 +1,5 @@
 # Sprite sheets
-How the desktop app draws the original's sprites: cut from its one sprite sheet into a file per unit and per part of the screen, in [OpenNspw.Desktop/Sprites](../OpenNSPW/OpenNspw.Desktop/Sprites).
+How the desktop app draws the original's sprites: cut from its one sprite sheet into a file per unit and per part of the screen, in [OpenNspw.App/Sprites](../OpenNSPW/OpenNspw.App/Sprites).
 
 ## Summary
 - **NSPW NET's `t3.bmp` and 1.22's `tst_cg1.bmp` share their layout** (721 by 5756) and 93.6% of their pixels. They differ in three places only: the title, Japan's land-based fighter, and three effect icons that NSPW NET adds.
@@ -103,7 +103,7 @@ The attacker is both the torpedo bomber and the dive bomber: the author merged t
 PNG with transparency where the sheet has its color key. A unit's file is a row of 8 frames of 80×80 (640×80), in the sheet's column order, so that `SpriteColumn` indexes it as before. Each frame keeps the sheet's cell whole, its border too: the UI cuts it as the original does.
 
 ```
-OpenNspw.Desktop/Sprites/
+OpenNspw.App/Sprites/
   title.png                    NSPW NET's, 699×384
   tiles.png                    6×3 frames of 80×80, as on the sheet
   effects.png                  12×10 frames of 40×40, NSPW NET's

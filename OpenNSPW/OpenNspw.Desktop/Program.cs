@@ -1,3 +1,4 @@
+using OpenNspw.App;
 using OpenNspw.Desktop;
 
 // OpenNspw.Desktop [--data <directory>] [--singleplayer <scenario> | --replay <trace.n122 | replay.onspwr>]
@@ -26,7 +27,7 @@ if (dataDirectory is not null && !Directory.Exists(dataDirectory))
 }
 
 OpenNspw.Verification.Trace122Replay? replay = null;
-OpenNspw.Desktop.ReplayWatch? watch = null;
+OpenNspw.App.ReplayWatch? watch = null;
 if (Option(args, "--replay") is { } tracePath)
 {
 	try
@@ -35,7 +36,7 @@ if (Option(args, "--replay") is { } tracePath)
 		{
 			if (OpenNspw.Replay.ReplayFormat.IsReplay(file))
 			{
-				watch = OpenNspw.Desktop.ReplayWatch.Open(tracePath);
+				watch = OpenNspw.App.ReplayWatch.Open(tracePath);
 				if (watch is null)
 					return 1;
 			}
@@ -70,6 +71,12 @@ if (scenarioText is not null)
 	scenario = number;
 }
 
-using var game = new NspwGame(new GameData(dataDirectory), scenario, replay, watch);
+using var game = new NspwGame(
+	new DesktopHost(),
+	new GameData(dataDirectory),
+	scenario,
+	replay,
+	watch
+);
 game.Run();
 return 0;

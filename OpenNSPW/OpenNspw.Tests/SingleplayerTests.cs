@@ -1439,7 +1439,7 @@ public class SingleplayerTests
 		Assert.Equal(draws + 3, game.RandomCount);
 	}
 
-	// A battle as the desktop app shows it, in real time, saved as singleplayer_battle.png next to the test assembly.
+	// A battle as the app shows it, in real time, saved as singleplayer_battle.png next to the test assembly.
 	[Fact]
 	public void TheBattleShows()
 	{

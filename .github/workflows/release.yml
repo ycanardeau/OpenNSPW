@@ -67,7 +67,7 @@ jobs:
       run: |
         echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
         echo "NAME=OpenNSPW-${GITHUB_REF/refs\/tags\/v/}-win-x64" >> $GITHUB_ENV
-    # One exe, with only what it reads from its own directory beside it: SDL2.dll and openal.dll, which MonoGame loads from there, and Fonts.
+    # One exe, with only what it reads from its own directory beside it: SDL2.dll and openal.dll, which MonoGame loads from there.
     - name: Publish
       run: dotnet publish OpenNSPW/OpenNspw.Desktop --configuration Release --runtime win-x64 --self-contained /p:PublishSingleFile=true /p:DebugType=embedded /p:GenerateDocumentationFile=false /p:Version=${VERSION} --output artifacts/${NAME}
     - name: Zip

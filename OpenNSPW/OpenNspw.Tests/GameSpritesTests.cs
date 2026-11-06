@@ -4,7 +4,7 @@ using static OpenNspw.Tests.Lockstep.BattleScripts;
 
 namespace OpenNspw.Tests;
 
-// The game's own frames drawn from the desktop app's sprite files instead of the sprite sheet (docs/GameSprites.md):
+// The game's own frames drawn from the app's sprite files instead of the sprite sheet (docs/GameSprites.md):
 // each piece holds what the sheet holds there, every blit falls in one piece, and the frames are the same.
 public class GameSpritesTests
 {
