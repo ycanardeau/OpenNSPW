@@ -1,4 +1,5 @@
 using System.Net;
+using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Reliable;
 using FluentAssertions;
@@ -31,7 +32,7 @@ public class HostMigrationTests : IAsyncLifetime
 
 	private readonly InMemoryNetwork _network = new();
 	private readonly List<Peer> _peers = [];
-	private int _nextAddress;
+	private readonly Sequence _addresses = new();
 
 	public Task InitializeAsync() => Task.CompletedTask;
 
@@ -55,7 +56,7 @@ public class HostMigrationTests : IAsyncLifetime
 
 	private TestPeer CreatePeer(string name)
 	{
-		var address = IPAddress.Parse($"10.2.0.{Interlocked.Increment(ref _nextAddress)}");
+		var address = IPAddress.Parse($"10.2.0.{_addresses.Next()}");
 		var peer = new Peer(
 			new PeerOptions
 			{

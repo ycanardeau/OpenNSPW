@@ -10,4 +10,17 @@
 	<ItemGroup>
 		<PackageReference Include="Aigamo.MatchGenerator" PrivateAssets="all" />
 	</ItemGroup>
+
+	<!-- Threads share state only through the actors' mailboxes (docs/Actors.md): every project but the analyzers' own, and
+	the mailbox's tests, which race threads against it. -->
+	<ItemGroup
+		Condition="'$(MSBuildProjectName)' != 'Aigamo.Otsuki.Analyzers' and '$(MSBuildProjectName)' != 'Aigamo.Otsuki.Analyzers.Tests' and '$(MSBuildProjectName)' != 'Aigamo.Otsuki.Actors.Tests'"
+	>
+		<ProjectReference
+			Include="$(MSBuildThisFileDirectory)Otsuki/Aigamo.Otsuki.Analyzers/Aigamo.Otsuki.Analyzers.csproj"
+			OutputItemType="Analyzer"
+			ReferenceOutputAssembly="false"
+			PrivateAssets="all"
+		/>
+	</ItemGroup>
 </Project>

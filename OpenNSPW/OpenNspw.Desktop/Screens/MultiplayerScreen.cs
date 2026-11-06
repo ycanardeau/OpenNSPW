@@ -16,29 +16,26 @@ internal sealed class MultiplayerScreen(NspwGame game) : Screen(game)
 	// Whether the game screen has the game, once connected; until then, this screen owns it.
 	private bool _isHandedOver;
 
-	// Set on the game's thread once the dialog has changed its fields.
-	private volatile bool _needsFill = true;
+	// Whether the form reads the dialog's fields again: at first, and once the dialog has changed them (DialogFilled).
+	private bool _needsFill = true;
 
-	// The game's connection dialog, while it exists, once it has set its fields (WM_INITDIALOG).
-	private HWND? FindDialog()
+	// The game's connection dialog, while it exists, once it has set its fields (WM_INITDIALOG), as the game last posted
+	// it.
+	private WindowView? FindDialog()
 	{
-		lock (_session.Game.WindowsLock)
-		{
-			return _session.Game.windows.FirstOrDefault(w =>
-				w.Kind == "DIALOG"
-				&& w.Initialized
-				&& !w.Destroyed
-				&& w.Id == resource.IDD_ADDRESS_OVERRIDE
-			);
-		}
+		return _session.Windows.FirstOrDefault(w =>
+			w.Kind == "DIALOG" && w.Initialized && w.Id == resource.IDD_ADDRESS_OVERRIDE
+		);
 	}
 
-	private string ItemText(HWND dialog, int item)
+	private static WindowView? Item(WindowView dialog, int item)
 	{
-		lock (_session.Game.WindowsLock)
-		{
-			return _session.Game.GetDlgItem(dialog, item)?.Text ?? "";
-		}
+		return dialog.Children.FirstOrDefault(c => c.Id == item);
+	}
+
+	private static string ItemText(WindowView dialog, int item)
+	{
+		return Item(dialog, item)?.Text ?? "";
 	}
 
 	// Switches hosting in the dialog, which sets the address and the port again, as the original's does.
@@ -52,12 +49,13 @@ internal sealed class MultiplayerScreen(NspwGame game) : Screen(game)
 		}
 
 		var playerName = _form.PlayerName;
-		var game = _session.Game;
+		var (session, game, window) = (_session, _session.Game, dialog.Window);
 		game.PostToGame(() =>
 		{
-			game.TypeDlgItemText(dialog, resource.IDC_PLAYER_NAME, playerName);
-			game.ClickDlgItem(dialog, resource.IDC_HOST_SESSION);
-			_needsFill = true;
+			game.TypeDlgItemText(window, resource.IDC_PLAYER_NAME, playerName);
+			game.ClickDlgItem(window, resource.IDC_HOST_SESSION);
+			game.ShowChangedWindows();
+			session.PostDialogFilled();
 		});
 	}
 
@@ -74,21 +72,21 @@ internal sealed class MultiplayerScreen(NspwGame game) : Screen(game)
 			_form.Address,
 			_form.Port
 		);
-		var game = _session.Game;
+		var (game, window) = (_session.Game, dialog.Window);
 		game.PostToGame(() =>
 		{
-			game.TypeDlgItemText(dialog, resource.IDC_PLAYER_NAME, playerName);
+			game.TypeDlgItemText(window, resource.IDC_PLAYER_NAME, playerName);
 			if (
-				(game.IsDlgButtonChecked(dialog, resource.IDC_HOST_SESSION) == winuser.BST_CHECKED)
+				(game.IsDlgButtonChecked(window, resource.IDC_HOST_SESSION) == winuser.BST_CHECKED)
 				!= isHost
 			)
 			{
-				game.ClickDlgItem(dialog, resource.IDC_HOST_SESSION);
+				game.ClickDlgItem(window, resource.IDC_HOST_SESSION);
 			}
 
-			game.TypeDlgItemText(dialog, resource.IDC_ADDRESS_LINE1, address);
-			game.TypeDlgItemText(dialog, resource.IDC_ADDRESS_LINE2, port);
-			game.ClickDlgItem(dialog, windef.IDOK);
+			game.TypeDlgItemText(window, resource.IDC_ADDRESS_LINE1, address);
+			game.TypeDlgItemText(window, resource.IDC_ADDRESS_LINE2, port);
+			game.ClickDlgItem(window, windef.IDOK);
 		});
 	}
 
@@ -96,7 +94,8 @@ internal sealed class MultiplayerScreen(NspwGame game) : Screen(game)
 	{
 		if (FindDialog() is { } dialog)
 		{
-			_session.Game.PostToGame(() => _session.Game.ClickDlgItem(dialog, resource.IDSNROEDIT));
+			var (game, window) = (_session.Game, dialog.Window);
+			game.PostToGame(() => game.ClickDlgItem(window, resource.IDSNROEDIT));
 		}
 	}
 
@@ -128,6 +127,7 @@ internal sealed class MultiplayerScreen(NspwGame game) : Screen(game)
 
 	public override void Update(GameTime gameTime)
 	{
+		_session.TakeMessages();
 		if (_session.HasEnded)
 		{
 			Game.ShowScreen(new MainMenuScreen(Game));
@@ -148,19 +148,18 @@ internal sealed class MultiplayerScreen(NspwGame game) : Screen(game)
 		}
 
 		_hasDialog = true;
-		if (_needsFill)
+		if (_session.TakeDialogFilled() || _needsFill)
 		{
 			_needsFill = false;
 			_form.Fill(
 				ItemText(dialog, resource.IDC_PLAYER_NAME),
-				_session.Game.IsDlgButtonChecked(dialog, resource.IDC_HOST_SESSION)
-					== winuser.BST_CHECKED,
+				Item(dialog, resource.IDC_HOST_SESSION)?.Checked == winuser.BST_CHECKED,
 				ItemText(dialog, resource.IDC_ADDRESS_LINE1),
 				ItemText(dialog, resource.IDC_ADDRESS_LINE2)
 			);
 		}
 
-		_form.CanConnect = _session.Game.GetDlgItem(dialog, windef.IDOK)?.Enabled == true;
+		_form.CanConnect = Item(dialog, windef.IDOK)?.Enabled == true;
 		_form.Status = _session.LastMessage() ?? "";
 	}
 

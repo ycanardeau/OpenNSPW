@@ -1,5 +1,5 @@
 using System.Net;
-using System.Threading.Channels;
+using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Transport;
 using FluentAssertions;
@@ -25,25 +25,21 @@ public class StreamDatagramTransportTests : IDisposable
 			disposable.Dispose();
 	}
 
-	private (StreamDatagramTransport Transport, ChannelReader<(EndPoint, byte[])> Received) Start(
+	private (StreamDatagramTransport Transport, Mailbox<(EndPoint, byte[])> Received) Start(
 		string name
 	)
 	{
 		var transport = _network.CreateTransport(new NamedEndPoint(name));
 		_disposables.Add(transport);
-		var received = Channel.CreateUnbounded<(EndPoint, byte[])>();
-		transport.Start(
-			(remoteEndPoint, datagram) => received.Writer.TryWrite((remoteEndPoint, datagram))
-		);
-		return (transport, received.Reader);
+		var received = new Mailbox<(EndPoint, byte[])>();
+		transport.Start((remoteEndPoint, datagram) => received.Post((remoteEndPoint, datagram)));
+		return (transport, received);
 	}
 
-	private static async Task<(EndPoint, byte[])> ReceiveAsync(
-		ChannelReader<(EndPoint, byte[])> received
-	)
+	private static async Task<(EndPoint, byte[])> ReceiveAsync(Mailbox<(EndPoint, byte[])> received)
 	{
 		using var timeout = new CancellationTokenSource(Timeout);
-		return await received.ReadAsync(timeout.Token);
+		return await received.ReceiveAsync(timeout.Token);
 	}
 
 	/// <summary>
@@ -53,7 +49,7 @@ public class StreamDatagramTransportTests : IDisposable
 		StreamDatagramTransport from,
 		EndPoint to,
 		byte[] datagram,
-		ChannelReader<(EndPoint, byte[])> received
+		Mailbox<(EndPoint, byte[])> received
 	)
 	{
 		using var timeout = new CancellationTokenSource(Timeout);
@@ -64,7 +60,7 @@ public class StreamDatagramTransportTests : IDisposable
 			retry.CancelAfter(TimeSpan.FromMilliseconds(20));
 			try
 			{
-				return await received.ReadAsync(retry.Token);
+				return await received.ReceiveAsync(retry.Token);
 			}
 			catch (OperationCanceledException) when (!timeout.IsCancellationRequested) { }
 		}
@@ -132,7 +128,7 @@ public class StreamDatagramTransportTests : IDisposable
 		(await SendUntilReceivedAsync(a, b.LocalEndPoint, [2], receivedByB))
 			.Item2.Should()
 			.Equal(2);
-		receivedByB.TryRead(out _).Should().BeFalse();
+		receivedByB.TryReceive(out _).Should().BeFalse();
 	}
 
 	[Fact]

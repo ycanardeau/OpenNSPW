@@ -37,7 +37,7 @@ internal sealed class GameScreen(
 
 	// Shows in the window's title how far the game follows its trace of 1.22, and writes how that ended to the console,
 	// with the difference in full.
-	private void ShowReplay(Trace122Replay replay)
+	private void ShowReplay(Trace122Progress replay)
 	{
 		if (replay.Divergence is { } divergence)
 		{
@@ -76,19 +76,26 @@ internal sealed class GameScreen(
 	private void SeekReplay(ReplayWatch watch, double fraction)
 	{
 		var frame = (int)Math.Round(fraction * watch.Summary.Frames);
-		if (frame > _session.Replay!.Frame)
+		if (frame > _session.Replay!.Progress.Frame)
 			_session.Replay.SeekTo(frame);
 		else
 			Game.Watch(watch, frame);
 	}
 
-	// The player takes the single-player battle over from here, from the viewer's camera.
+	// The player takes the single-player battle over from here, from the viewer's camera: the battlefield scrolls there
+	// from the game's camera, which the game reads on its thread.
 	private void TakeOverReplay(ReplayWatch watch)
 	{
-		var snapshot = _session.Snapshot;
+		var viewer = _session.Snapshot.CameraPosition;
 		_session.Replay!.TakeOver();
-		var (game, viewer) = (_session.Game.CameraPosition, snapshot.CameraPosition);
-		_session.Commands.ScrollBattlefield((int)(viewer.X - game.X), (int)(game.Y - viewer.Y), 0);
+		var (game, commands) = (_session.Game, _session.Commands);
+		game.PostToGame(() =>
+			commands.ScrollBattlefield(
+				(int)(viewer.X - game.CameraPosition.X),
+				(int)(game.CameraPosition.Y - viewer.Y),
+				0
+			)
+		);
 		watch.View.FollowsPlayer = true;
 		watch.View.SeesAll = false;
 	}
@@ -120,10 +127,10 @@ internal sealed class GameScreen(
 	// skipping what it passes, but not at any speed it plays at, as the game's are at any of its speeds.
 	private void UpdateReplay(ReplayWatch watch, ReplayBar bar)
 	{
-		var player = _session.Replay!;
-		bar.Visible = _session.Snapshot.IsBattle && !player.IsTakenOver;
+		var progress = _session.Replay!.Progress;
+		bar.Visible = _session.Snapshot.IsBattle && !progress.IsTakenOver;
 		bar.UpdateFrom();
-		SoundEffect.MasterVolume = _session.IsWatching && player.IsSeeking ? 0 : 1;
+		SoundEffect.MasterVolume = _session.IsWatching && progress.IsSeeking ? 0 : 1;
 
 		var keyboard = Keyboard.GetState();
 		bool Pressed(Keys key) => keyboard.IsKeyDown(key) && !_previousKeyboard.IsKeyDown(key);
@@ -170,7 +177,7 @@ internal sealed class GameScreen(
 		_settingForm = new SettingForm(_session, Game.Fonts) { Visible = false };
 		WindowManager.Root.Controls.Add(_settingForm);
 		_backdrop = new Backdrop(GraphicsDevice);
-		_dialogs = new DialogForms(_session.Game, WindowManager, Game.Fonts);
+		_dialogs = new DialogForms(_session, WindowManager, Game.Fonts);
 		if (_watch is { } watch && _session.Replay is { } player)
 		{
 			_replayBar = new ReplayBar(Game.Fonts, watch, player) { Visible = false };
@@ -213,6 +220,7 @@ internal sealed class GameScreen(
 
 	public override void Update(GameTime gameTime)
 	{
+		_session.TakeMessages();
 		if (_session.HasEnded)
 		{
 			Game.ShowScreen(
@@ -223,7 +231,7 @@ internal sealed class GameScreen(
 
 		_session.UpdateFrame(GraphicsDevice);
 		if (_session.Trace is { } trace)
-			ShowReplay(trace);
+			ShowReplay(trace.Progress);
 		if (_replayBar is { } bar)
 			UpdateReplay(_watch!, bar);
 		var snapshot = _session.Snapshot;

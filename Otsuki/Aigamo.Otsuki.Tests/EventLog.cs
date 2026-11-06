@@ -1,14 +1,17 @@
+using System.Collections.Immutable;
+using Aigamo.Otsuki.Actors;
+
 namespace Aigamo.Otsuki.Tests;
 
 /// <summary>
-/// Records the events of a peer, server or client as they stream, so that tests can wait for them.
+/// Records the events of a peer, server or client as they stream, so that tests can wait for them. The task that reads
+/// them posts the events so far after each (Latest), which the tests read from any thread.
 /// </summary>
 internal sealed class EventLog
 {
 	public static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(10);
 
-	private readonly List<PeerEvent> _events = [];
-	private readonly Lock _lock = new();
+	private readonly Latest<ImmutableList<PeerEvent>> _events = new([]);
 
 	public EventLog(Peer peer)
 		: this(peer.ReadEventsAsync()) { }
@@ -16,21 +19,15 @@ internal sealed class EventLog
 	public EventLog(IAsyncEnumerable<PeerEvent> events) =>
 		_ = Task.Run(async () =>
 		{
+			var read = ImmutableList<PeerEvent>.Empty;
 			await foreach (var peerEvent in events)
 			{
-				lock (_lock)
-					_events.Add(peerEvent);
+				read = read.Add(peerEvent);
+				_events.Post(read);
 			}
 		});
 
-	public IReadOnlyList<PeerEvent> Events
-	{
-		get
-		{
-			lock (_lock)
-				return [.. _events];
-		}
-	}
+	public IReadOnlyList<PeerEvent> Events => _events.Value;
 
 	public IReadOnlyList<T> OfType<T>(Func<T, bool>? predicate = null)
 		where T : PeerEvent => [.. Events.OfType<T>().Where(predicate ?? (_ => true))];

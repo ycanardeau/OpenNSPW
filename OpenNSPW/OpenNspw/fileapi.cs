@@ -200,18 +200,15 @@ public unsafe partial class Nspw
 	// Copies the selected item of a list box to a buffer.
 	public int DlgDirSelectEx(HWND hwndDlg, Span<byte> lpString, int chCount, int idListBox)
 	{
-		lock (WindowsLock)
+		if (
+			GetDlgItem(hwndDlg, idListBox) is not { CurSel: >= 0 } list
+			|| list.CurSel >= list.Items.Count
+		)
 		{
-			if (
-				GetDlgItem(hwndDlg, idListBox) is not { CurSel: >= 0 } list
-				|| list.CurSel >= list.Items.Count
-			)
-			{
-				return FALSE;
-			}
-
-			CopyString(list.Items[list.CurSel].Text, lpString, chCount);
-			return TRUE;
+			return FALSE;
 		}
+
+		CopyString(list.Items[list.CurSel].Text, lpString, chCount);
+		return TRUE;
 	}
 }

@@ -1,3 +1,4 @@
+using Aigamo.Otsuki.Actors;
 using OpenNspw;
 using OpenNspw.Recorder122;
 using OpenNspw.Verification;
@@ -149,7 +150,11 @@ var output = Path.GetFullPath(positionalArgs.Length == 2 ? positionalArgs[1] : "
 Directory.CreateDirectory(output);
 
 var state = new byte[Trace122.StateSize];
-var gate = new object();
+
+// Ctrl+C, posted by the console to the debugger's thread, which closes the trace and ends 1.22 between two of its events
+// (TakeCloseRequest), and records no more battles.
+var closeRequests = new Mailbox<CloseRequest>();
+var isClosing = false;
 Trace122Writer? writer = null;
 string? path = null;
 var frames = 0;
@@ -223,14 +228,20 @@ PlayerOrders? ReadPlayerOrders(Debugger debugger)
 
 void Close()
 {
-	lock (gate)
-	{
-		if (writer is null)
-			return;
-		writer.Dispose();
-		writer = null;
-		Console.WriteLine($"Recorded {frames} frames in {path}.");
-	}
+	if (writer is null)
+		return;
+	writer.Dispose();
+	writer = null;
+	Console.WriteLine($"Recorded {frames} frames in {path}.");
+}
+
+void TakeCloseRequest(Debugger debugger)
+{
+	if (isClosing || !closeRequests.TryReceive(out _))
+		return;
+	isClosing = true;
+	Close();
+	debugger.Terminate();
 }
 
 // Plays in place of the player: past the title, the scenario, then the speed of each frame, and the orders. Ends 1.22 at the start of
@@ -291,84 +302,85 @@ void Hit(Debugger debugger, uint address)
 		isChecked = true;
 	}
 
-	lock (gate)
-	{
-		Play(debugger, address);
-		if (writer is null && address != GameInit)
-			return;
+	TakeCloseRequest(debugger);
+	if (isClosing)
+		return;
 
-		var random = debugger.ReadUInt32(RandomState);
-		switch (address)
+	Play(debugger, address);
+	if (writer is null && address != GameInit)
+		return;
+
+	var random = debugger.ReadUInt32(RandomState);
+	switch (address)
+	{
+		case GameInit:
 		{
-			case GameInit:
+			Close();
+			var scenario = debugger.ReadInt16(Scenario);
+			path = Path.Combine(output, $"{scenario}-{DateTime.Now:yyyyMMdd-HHmmss}.n122");
+			writer = new Trace122Writer(File.Create(path), scenario);
+			frames = 0;
+			Array.Clear(recordedSelection);
+			writer.WriteRandom(TracePoint.Start, random);
+			Console.WriteLine($"Scenario {scenario} started; recording to {path}.");
+			break;
+		}
+		case GameInitSeeded:
+			writer!.WriteRandom(TracePoint.Seeded, random);
+			break;
+		case Frame:
+			if (debugger.ReadInt16(Mode) != BattleMode)
+				break;
+			writer!.WriteFrame(debugger.ReadInt16(Speed));
+			frames++;
+			if (frames % 1000 == 0)
+				Console.WriteLine($"{frames} frames.");
+			break;
+		case CharaCont:
+			debugger.Read(Units, Trace122.UnitCount * Trace122.UnitSize).CopyTo(state, 0);
+			debugger
+				.Read(Fires, Trace122.FireCount * Trace122.FireSize)
+				.CopyTo(state, Trace122.UnitCount * Trace122.UnitSize);
+			writer!.WriteTick(
+				debugger.ReadInt32(CcCount),
+				debugger.ReadInt32(DrawnTick) != 0,
+				random,
+				state
+			);
+			break;
+		case Decision:
+			writer!.WriteRandom(TracePoint.Decision, random);
+			break;
+		case var _ when stackLocals.Any(local => local.Instruction == address):
+		{
+			var (_, offset, size) = stackLocals.First(local => local.Instruction == address);
+			writer!.WriteStackLocal(address, debugger.Read(debugger.ReadEsp() + offset, size));
+			break;
+		}
+		case MenuItemApplied:
+			menuOrder = new MenuOrder
 			{
-				Close();
-				var scenario = debugger.ReadInt16(Scenario);
-				path = Path.Combine(output, $"{scenario}-{DateTime.Now:yyyyMMdd-HHmmss}.n122");
-				writer = new Trace122Writer(File.Create(path), scenario);
-				frames = 0;
-				Array.Clear(recordedSelection);
-				writer.WriteRandom(TracePoint.Start, random);
-				Console.WriteLine($"Scenario {scenario} started; recording to {path}.");
-				break;
-			}
-			case GameInitSeeded:
-				writer!.WriteRandom(TracePoint.Seeded, random);
-				break;
-			case Frame:
-				if (debugger.ReadInt16(Mode) != BattleMode)
-					break;
-				writer!.WriteFrame(debugger.ReadInt16(Speed));
-				frames++;
-				if (frames % 1000 == 0)
-					Console.WriteLine($"{frames} frames.");
-				break;
-			case CharaCont:
-				debugger.Read(Units, Trace122.UnitCount * Trace122.UnitSize).CopyTo(state, 0);
-				debugger
-					.Read(Fires, Trace122.FireCount * Trace122.FireSize)
-					.CopyTo(state, Trace122.UnitCount * Trace122.UnitSize);
-				writer!.WriteTick(
-					debugger.ReadInt32(CcCount),
-					debugger.ReadInt32(DrawnTick) != 0,
-					random,
-					state
-				);
-				break;
-			case Decision:
-				writer!.WriteRandom(TracePoint.Decision, random);
-				break;
-			case var _ when stackLocals.Any(local => local.Instruction == address):
-			{
-				var (_, offset, size) = stackLocals.First(local => local.Instruction == address);
-				writer!.WriteStackLocal(address, debugger.Read(debugger.ReadEsp() + offset, size));
-				break;
-			}
-			case MenuItemApplied:
-				menuOrder = new MenuOrder
-				{
-					Menu = (CombatMenuItem)debugger.ReadInt16(MenuItem),
-					SelectedUnit = debugger.ReadInt16(SelectedUnit),
-				};
-				break;
-			case Orders:
-				if (ReadPlayerOrders(debugger) is { } orders)
-					writer!.WritePlayerOrders(orders);
-				menuOrder = new MenuOrder();
-				writer!.WriteRandom(TracePoint.Orders, random);
-				break;
-			case DrawCmbtArea:
-			{
-				var camera = debugger.Read(Camera, 2 * sizeof(double));
-				writer!.WriteDrawing(
-					random,
-					new WorldPosition(
-						BitConverter.ToDouble(camera, 0),
-						BitConverter.ToDouble(camera, sizeof(double))
-					)
-				);
-				break;
-			}
+				Menu = (CombatMenuItem)debugger.ReadInt16(MenuItem),
+				SelectedUnit = debugger.ReadInt16(SelectedUnit),
+			};
+			break;
+		case Orders:
+			if (ReadPlayerOrders(debugger) is { } orders)
+				writer!.WritePlayerOrders(orders);
+			menuOrder = new MenuOrder();
+			writer!.WriteRandom(TracePoint.Orders, random);
+			break;
+		case DrawCmbtArea:
+		{
+			var camera = debugger.Read(Camera, 2 * sizeof(double));
+			writer!.WriteDrawing(
+				random,
+				new WorldPosition(
+					BitConverter.ToDouble(camera, 0),
+					BitConverter.ToDouble(camera, sizeof(double))
+				)
+			);
+			break;
 		}
 	}
 }
@@ -407,7 +419,7 @@ void Run(int? scenario)
 			Commander.Input,
 			Commander.MenuEntryTest,
 		];
-	using (var debugger = new Debugger(executable, breakpoints, Hit))
+	using (var debugger = new Debugger(executable, breakpoints, Hit, TakeCloseRequest))
 	{
 		Console.WriteLine(
 			scenario is null
@@ -420,10 +432,20 @@ void Run(int? scenario)
 	Close();
 }
 
-Console.CancelKeyPress += (_, _) => Close();
+Console.CancelKeyPress += (_, e) =>
+{
+	e.Cancel = true;
+	closeRequests.Post(new CloseRequest());
+};
 
 if (scenarios.Length == 0)
 	Run(null);
 foreach (var scenario in scenarios)
+{
+	if (isClosing)
+		break;
 	Run(scenario);
+}
 return 0;
+
+internal sealed record CloseRequest;

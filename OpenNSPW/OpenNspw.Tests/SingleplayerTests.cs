@@ -1457,23 +1457,22 @@ public class SingleplayerTests
 		player.Start();
 
 		var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
-		while (
-			player.Platform.FrameCount < 200 && player.Error is null && DateTime.UtcNow < deadline
-		)
+		int Frames() => player.Ask((_, platform) => platform.FrameCount, 0);
+		while (Frames() < 200 && player.Error is null && DateTime.UtcNow < deadline)
 		{
 			Thread.Sleep(100);
 		}
 
 		Assert.Null(player.Error);
-		Assert.True(
-			player.Platform.FrameCount >= 200,
-			$"The game showed {player.Platform.FrameCount} frames."
+		var frames = Frames();
+		Assert.True(frames >= 200, $"The game showed {frames} frames.");
+		Assert.Equal(GameMode.Battle, player.Ask((g, _) => (GameMode?)g.Mode, null));
+		Assert.Empty(
+			player.Ask((_, platform) => platform.MessageBoxes.ToList(), ["not answering"])
 		);
-		Assert.Equal(GameMode.Battle, player.Game.Mode);
-		Assert.Empty(player.Platform.MessageBoxes);
 		TitleScreenTests.WritePng(
 			Path.Combine(AppContext.BaseDirectory, "singleplayer_battle.png"),
-			player.Platform.LastFrame(),
+			player.Ask((_, platform) => platform.LastFrame(), []),
 			all_head.SCRN_WIDTH,
 			all_head.SCRN_HEIGHT
 		);

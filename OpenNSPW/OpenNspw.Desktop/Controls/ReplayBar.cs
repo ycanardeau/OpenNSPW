@@ -131,13 +131,15 @@ internal sealed class ReplayBar : Control
 	// Pauses the replay, or plays it again.
 	private void TogglePause()
 	{
-		_player.IsPaused = _watch.IsPaused = !_watch.IsPaused;
+		_watch.IsPaused = !_watch.IsPaused;
+		_player.Pause(_watch.IsPaused);
 	}
 
 	// Plays one frame, paused.
 	public void Step()
 	{
-		_player.IsPaused = _watch.IsPaused = true;
+		_watch.IsPaused = true;
+		_player.Pause(true);
 		_player.Step();
 	}
 
@@ -151,7 +153,7 @@ internal sealed class ReplayBar : Control
 		_sides.Text = Texts.BothSides;
 		_sides.IsPrimary = _watch.View.SeesAll;
 		_timeline.Played =
-			_watch.Summary.Frames == 0 ? 0 : _player.Frame / (double)_watch.Summary.Frames;
+			_watch.Summary.Frames == 0 ? 0 : _player.Progress.Frame / (double)_watch.Summary.Frames;
 	}
 
 	public ReplayBar(UIFonts fonts, ReplayWatch watch, ReplayPlayer player)
@@ -172,7 +174,15 @@ internal sealed class ReplayBar : Control
 
 		_play = AddButton(8, 76, TogglePause);
 		AddButton(90, 72, Step).Text = Texts.Step;
-		_speed = AddButton(168, 52, () => _player.Speed = _watch.Speed = _watch.NextSpeed());
+		_speed = AddButton(
+			168,
+			52,
+			() =>
+			{
+				_watch.Speed = _watch.NextSpeed();
+				_player.ChangeSpeed(_watch.Speed);
+			}
+		);
 		_timeline = new ReplayTimeline { Bounds = new DrawingRectangle(230, 30, 230, 28) };
 		_timeline.Seek += (_, fraction) => Seek?.Invoke(this, fraction);
 		Controls.Add(_timeline);
@@ -189,7 +199,8 @@ internal sealed class ReplayBar : Control
 		base.OnPaint(e);
 		var g = e.Graphics;
 		var font = _fonts.Regular(13);
-		var place = _placeText.Of((_player.Frame, _player.Milliseconds));
+		var progress = _player.Progress;
+		var place = _placeText.Of((progress.Frame, progress.Milliseconds));
 		Painter.Text(g, place, font, Theme.Text, 10, 7);
 
 		// The time at the point of the timeline under the mouse, where a click goes.
@@ -206,10 +217,10 @@ internal sealed class ReplayBar : Control
 			);
 		}
 
-		var notes = _player.Notes();
+		var notes = progress.Notes;
 		var (status, color) =
-			_player.Divergence is { } divergence ? (Texts.ReplayDiffers(divergence), Theme.Alert)
-			: _player.HasEnded ? (Texts.ReplayOver, Theme.Muted)
+			progress.Divergence is { } divergence ? (Texts.ReplayDiffers(divergence), Theme.Alert)
+			: progress.HasEnded ? (Texts.ReplayOver, Theme.Muted)
 			: notes.Count > 0 ? (notes[^1].Text, Theme.Muted)
 			: ("", Theme.Muted);
 		var left = 10 + Painter.Measure(g, place, font).Width + 16;

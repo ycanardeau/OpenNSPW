@@ -1,9 +1,29 @@
+using System.Collections.Immutable;
+using Aigamo.Otsuki.Actors;
+
 namespace OpenNspw.Replay;
+
+// How far a replay has played, for other threads, such as the host's UI (ReplayPlayer.Progress): as of its last change.
+public sealed record ReplayProgress(
+	int Frame,
+	long Milliseconds,
+	bool HasEnded,
+	string? Divergence,
+	bool IsTakenOver,
+	bool IsSeeking,
+	ImmutableList<(int Frame, string Text)> Notes
+)
+{
+	public bool HoldsInput => !HasEnded && !IsTakenOver;
+}
 
 // Plays a replay: starts the battle as it started, and gives it, frame by frame, the ticks, the view, what the player did
 // and, in a network battle, what the rival sent, at the pace it was played (Speed, IsPaused) or as fast as it can up to a
 // frame (SeekTo). It checks the battle's hashes, and keeps the first that differs (Divergence), but plays on. At its end,
 // or once taken over (TakeOver), the game is the player's.
+//
+// The player is the game's, on its thread (docs/Actors.md): another thread, such as the host's UI, controls it by
+// posting (ChangeSpeed, Pause, SeekTo, Step, TakeOver), which it takes as a frame starts, and reads its Progress.
 //
 // The host gives a network replay's game the files it started from (StartFileSource), and a directory of its own to
 // write in.
@@ -30,8 +50,26 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 	// The records of the frame being played, and then of what the game took after it, that the game has not been given.
 	private readonly List<ReplayItem> _frame = [];
 
-	private readonly Lock _lock = new();
-	private readonly List<(int Frame, string Text)> _notes = [];
+	private abstract record Control
+	{
+		private Control() { }
+
+		public sealed record ChangeSpeed(double Speed) : Control;
+
+		public sealed record Pause(bool IsPaused) : Control;
+
+		public sealed record SeekTo(int Frame) : Control;
+
+		public sealed record Step : Control;
+
+		public sealed record TakeOver : Control;
+	}
+
+	private readonly Mailbox<Control> _controls = new();
+	private readonly Latest<ReplayProgress> _progress = new(
+		new ReplayProgress(0, 0, false, null, false, false, [])
+	);
+	private ImmutableList<(int Frame, string Text)> _notes = [];
 	private ReplayItem _next;
 	private uint? _lastNow;
 	private double _playTime;
@@ -65,10 +103,22 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 	// The first frame whose battle is not the one recorded, as its hash or its result says, or null.
 	public string? Divergence { get; private set; }
 
-	// How fast it plays, 1 as it was played; PositiveInfinity as fast as it can.
-	public double Speed { get; set; } = 1;
+	// How fast it plays, 1 as it was played; PositiveInfinity as fast as it can. Set before it plays, then posted
+	// (ChangeSpeed).
+	public double Speed { get; private set; } = 1;
 
-	public bool IsPaused { get; set; }
+	public bool IsPaused { get; private set; }
+
+	// Its speed and whether it is paused, as it starts playing.
+	public double InitialSpeed
+	{
+		init => Speed = value;
+	}
+
+	public bool IsInitiallyPaused
+	{
+		init => IsPaused = value;
+	}
 
 	// Whether it plays as fast as it can, up to a frame: the host mutes it.
 	public bool IsSeeking => _seekTarget is { } target && Frame < target;
@@ -77,6 +127,9 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 	public bool IsTakenOver => _isTakenOver;
 
 	public bool HoldsInput => !HasEnded && !_isTakenOver;
+
+	// How far it has played, from any thread.
+	public ReplayProgress Progress => _progress.Value;
 
 	// A network battle's replay starts it (GameStarted).
 	public bool StartsBattle => Start.Network is not null;
@@ -94,31 +147,82 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 		_nextTime = _next.Time;
 	}
 
-	// The notes of the frames played so far.
-	public IReadOnlyList<(int Frame, string Text)> Notes()
+	// Plays at a speed, from the next frame. From any thread.
+	public void ChangeSpeed(double speed)
 	{
-		lock (_lock)
-		{
-			return [.. _notes];
-		}
+		_controls.Post(new Control.ChangeSpeed(speed));
 	}
 
-	// Plays as fast as it can until `frame` frames are played, then at its pace, paused if it was.
+	// Pauses, or plays again. From any thread.
+	public void Pause(bool isPaused)
+	{
+		_controls.Post(new Control.Pause(isPaused));
+	}
+
+	// Plays as fast as it can until `frame` frames are played, then at its pace, paused if it was. From any thread.
 	public void SeekTo(int frame)
 	{
-		_seekTarget = frame;
+		_controls.Post(new Control.SeekTo(frame));
 	}
 
-	// Plays one frame, while paused.
+	// Plays one frame, while paused. From any thread.
 	public void Step()
 	{
-		_steps = true;
+		_controls.Post(new Control.Step());
 	}
 
-	// Gives the game to the player from here.
+	// Gives the game to the player from the next frame. From any thread.
 	public void TakeOver()
 	{
-		_isTakenOver = true;
+		_controls.Post(new Control.TakeOver());
+	}
+
+	private void Publish()
+	{
+		_progress.Post(
+			new ReplayProgress(
+				Frame,
+				Milliseconds,
+				HasEnded,
+				Divergence,
+				_isTakenOver,
+				IsSeeking,
+				_notes
+			)
+		);
+	}
+
+	// The controls posted since the last frame, and the progress they change. The game asks whether a frame starts each
+	// time round its message loop, millions of times a second (StartsFrame), so that it publishes nothing when none came:
+	// a new progress each time made about 130 MB of garbage a second.
+	private void TakeControls()
+	{
+		var isTaken = false;
+		while (_controls.TryReceive(out var control))
+		{
+			isTaken = true;
+			switch (control)
+			{
+				case Control.ChangeSpeed change:
+					Speed = change.Speed;
+					break;
+				case Control.Pause pause:
+					IsPaused = pause.IsPaused;
+					break;
+				case Control.SeekTo seek:
+					_seekTarget = seek.Frame;
+					break;
+				case Control.Step:
+					_steps = true;
+					break;
+				case Control.TakeOver:
+					_isTakenOver = true;
+					break;
+			}
+		}
+
+		if (isTaken)
+			Publish();
 	}
 
 	// The records of this frame that `matches`, with `state`, in order, which are taken out: in place, and none without
@@ -210,6 +314,7 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 
 	public bool? StartsFrame(Nspw game)
 	{
+		TakeControls();
 		if (!HoldsInput)
 			return null;
 
@@ -290,6 +395,7 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 		if (_next.Kind != ReplayRecord.Frame)
 		{
 			HasEnded = true;
+			Publish();
 			return ticks;
 		}
 
@@ -306,6 +412,7 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 		)
 			_frame.Add(_next);
 		_nextTime += _next.Time;
+		Publish();
 		return ticks;
 	}
 
@@ -351,10 +458,7 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 			switch (item.Kind)
 			{
 				case ReplayRecord.Note:
-					lock (_lock)
-					{
-						_notes.Add((Frame, item.Text!));
-					}
+					_notes = _notes.Add((Frame, item.Text!));
 					break;
 				case ReplayRecord.Result when (GameResult)item.Value != game.Result:
 					Diverge($"the result is {game.Result}, not {(GameResult)item.Value}.");
@@ -364,6 +468,8 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 					break;
 			}
 		}
+
+		Publish();
 	}
 
 	public void Dispose()

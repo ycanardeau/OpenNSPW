@@ -1,5 +1,5 @@
 using System.Net;
-using System.Threading.Channels;
+using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Messages.Reliable;
 using FluentAssertions;
 using Xunit;
@@ -14,8 +14,7 @@ public class ReliableProtocolTests : IAsyncLifetime
 	private static readonly SessionId SampleSessionId = new(0x79C9AEC6);
 
 	private readonly InMemoryNetwork _network = new();
-	private readonly Channel<ReliableMessage> _received =
-		Channel.CreateUnbounded<ReliableMessage>();
+	private readonly Mailbox<ReliableMessage> _received = new();
 	private readonly Peer _host;
 	private InMemoryTransport _remote = null!;
 
@@ -33,7 +32,7 @@ public class ReliableProtocolTests : IAsyncLifetime
 		_remote = _network.Bind(IPAddress.Parse("10.0.0.2"), 5000);
 		_remote.Start(
 			(_, datagram) =>
-				_received.Writer.TryWrite(ReliableMessageSerializer.Default.Deserialize(datagram)!)
+				_received.Post(ReliableMessageSerializer.Default.Deserialize(datagram)!)
 		);
 	}
 
@@ -48,7 +47,7 @@ public class ReliableProtocolTests : IAsyncLifetime
 		using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 		while (true)
 		{
-			var message = await _received.Reader.ReadAsync(cancellation.Token);
+			var message = await _received.ReceiveAsync(cancellation.Token);
 			if (message is T match && (predicate?.Invoke(match) ?? true))
 				return match;
 		}

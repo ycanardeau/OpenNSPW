@@ -123,6 +123,10 @@ internal sealed class GameSnapshot
 	public bool WasHost;
 	public bool HasAutoSave;
 
+	// Whether an extension gives the player's input (IGameExtension.HoldsInput), such as a trace or a replay that the game
+	// follows: the UI holds the player's keys and buttons back.
+	public bool HoldsInput;
+
 	// Whether a frame of `mode` is a battle's, with the battlefield, the sidebar and the minimap: not the map editor's.
 	private static bool IsBattleOf(GameMode mode, bool isEditingMap) =>
 		mode == GameMode.Battle && !isEditingMap;
@@ -163,9 +167,10 @@ internal sealed class GameSnapshot
 	}
 
 	// On the game's thread. view: what the viewer of a replay sees, or null for the player's view.
-	public void CopyFrom(Nspw game, UICommands commands, ReplayView? view = null)
+	public void CopyFrom(Nspw game, UICommands commands, ReplayViewState? view = null)
 	{
 		var camera = view?.CameraFor(game.CameraPosition) ?? game.CameraPosition;
+		HoldsInput = game.Extensions.HoldsInput;
 		SeesAll = view?.SeesAll ?? false;
 		Units = game.Units;
 		Fires = game.Fires;

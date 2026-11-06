@@ -1,7 +1,6 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Net;
-using System.Threading.Channels;
 using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Messages.Enumeration;
@@ -35,12 +34,16 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		ITimer Timer
 	);
 
-	private readonly ChannelWriter<PeerEvent> _events;
+	private readonly Mailbox<PeerEvent> _events;
 	private readonly Action<SessionSnapshot> _publish;
 	private readonly Dictionary<long, PendingSend> _sends = [];
 	private readonly Dictionary<long, long> _sendHandles = [];
 	private SessionState _state = new SessionState.Idle();
 	private ReliableEndpoint? _endpoint;
+
+	// The signing mode the session set its endpoint to (SetSigning), which it gives the connections it opens: the
+	// endpoint's own copy is read on the endpoint's thread only.
+	private PacketSigning _signing;
 	private long _nextSendId;
 	private readonly Dictionary<int, PendingRequest> _requests = [];
 	private int _nextContext;
@@ -112,7 +115,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 
 	public SessionActor(
 		PeerOptions options,
-		ChannelWriter<PeerEvent> events,
+		Mailbox<PeerEvent> events,
 		Action<SessionSnapshot> publish
 	)
 	{
@@ -182,10 +185,9 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			)
 		);
 
-	public void Emit(PeerEvent peerEvent) => _events.TryWrite(peerEvent);
-
 	/// <summary>
-	/// Publishes a snapshot for other threads. Called before raising events that the snapshot must already reflect.
+	/// Publishes a snapshot of the session for other threads (<see cref="Peer"/>'s queries): before each event but data
+	/// (<see cref="Emit"/>), before completing a command that no event follows, and after each message.
 	/// </summary>
 	public void Publish() =>
 		_publish(
@@ -202,6 +204,17 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 					.ToImmutableDictionary(g => g.Id, g => g.ToGroupInfo())
 			)
 		);
+
+	/// <summary>
+	/// Raises an event. A change of the name table or of the session is published first, so that whoever handles the
+	/// event reads the snapshot as of it, as DirectPlay shows its name table in the handler; data changes neither.
+	/// </summary>
+	public void Emit(PeerEvent peerEvent)
+	{
+		if (peerEvent is not (PeerEvent.DataReceived or PeerEvent.SendCompleted))
+			Publish();
+		_events.Post(peerEvent);
+	}
 
 	public Dpnid CreateDpnid(int index, int version) =>
 		new(index, version, Application.GuidInstance);
@@ -224,6 +237,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 				Options.ReliableProfile,
 				this
 			);
+			_signing = PacketSigning.None;
 			return Unit.Default;
 		}
 		catch (Exception e)
@@ -236,18 +250,18 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	/// Makes new inbound connections sign as the session's flags say ([MC-DPL8R] section 3.1.5.1.3). Outbound
 	/// connections sign as their listener offers.
 	/// </summary>
-	public void SetSigning(SessionFlags flags) =>
-		_endpoint?.Post(
-			new ReliableEndpointMessage.SetSigning(
-				flags.HasFlag(SessionFlags.FullSigned) ? PacketSigning.Full
-				: flags.HasFlag(SessionFlags.FastSigned) ? PacketSigning.Fast
-				: PacketSigning.None
-			)
-		);
+	public void SetSigning(SessionFlags flags)
+	{
+		_signing =
+			flags.HasFlag(SessionFlags.FullSigned) ? PacketSigning.Full
+			: flags.HasFlag(SessionFlags.FastSigned) ? PacketSigning.Fast
+			: PacketSigning.None;
+		_endpoint?.Post(new ReliableEndpointMessage.SetSigning(_signing));
+	}
 
 	public Connection Connect(EndPoint remoteEndPoint)
 	{
-		var connection = _endpoint!.Connect(remoteEndPoint);
+		var connection = _endpoint!.Connect(remoteEndPoint, _signing);
 		Connections.Add(connection);
 		return connection;
 	}
@@ -279,7 +293,6 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			return;
 
 		player.Created = true;
-		Publish();
 		Emit(new PeerEvent.PlayerCreated(player.ToPlayerInfo()));
 		foreach (var data in player.PendingData)
 			Emit(new PeerEvent.DataReceived(player.Id, [.. data]));
@@ -414,7 +427,6 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			return;
 
 		group.Created = true;
-		Publish();
 		Emit(new PeerEvent.GroupCreated(group.ToGroupInfo()));
 		foreach (var member in group.Members.OrderBy(m => m.Value).Select(m => m.Key))
 			Emit(new PeerEvent.PlayerAddedToGroup(group.Id, member));
@@ -437,7 +449,6 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		if (!Groups.Remove(id, out var group) || !group.Created)
 			return;
 
-		Publish();
 		Emit(new PeerEvent.GroupDestroyed(id, reason));
 	}
 
@@ -452,7 +463,6 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 
 		if (group.Created)
 		{
-			Publish();
 			Emit(new PeerEvent.PlayerAddedToGroup(groupId, playerId));
 		}
 		return true;
@@ -465,7 +475,6 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 
 		if (group.Created)
 		{
-			Publish();
 			Emit(new PeerEvent.PlayerRemovedFromGroup(groupId, playerId));
 		}
 		return true;
@@ -491,7 +500,6 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 
 		if (player.Created)
 		{
-			Publish();
 			Emit(new PeerEvent.PeerInfoUpdated(player.ToPlayerInfo()));
 		}
 	}
@@ -676,7 +684,6 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 
 		if (player.Created)
 		{
-			Publish();
 			Emit(new PeerEvent.PlayerDestroyed(player.Id, reason));
 		}
 
@@ -707,7 +714,6 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		RemovePlayer(player);
 		if (player.Created)
 		{
-			Publish();
 			Emit(new PeerEvent.PlayerDestroyed(player.Id, reason));
 		}
 	}
@@ -747,7 +753,10 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	}
 
 	/// <summary>
-	/// Connects to a new peer as instructed by the host ([MC-DPL8CS] section 3.1.5.2, step 8).
+	/// Connects to a new peer as instructed by the host ([MC-DPL8CS] section 3.1.5.2, step 8). The existing peers
+	/// connect to the new one, so a peer that joined before us is not ours to connect to: when two peers join at once,
+	/// the host instructs each to connect to the other, and the older one connects, while the newer waits for it, as
+	/// it waits for every peer of the name table it joined with.
 	/// </summary>
 	public void ConnectToNewPlayer(Connection hostConnection, Dpnid id)
 	{
@@ -756,6 +765,9 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			ReportInstructedConnectFailed(hostConnection, id, "it is not in the name table");
 			return;
 		}
+
+		if (Players.TryGetValue(LocalPlayer, out var local) && player.Version < local.Version)
+			return;
 
 		player
 			.Url.ToEndPoint()
@@ -823,7 +835,6 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			connection.Post(new ConnectionMessage.HardDisconnect());
 		ShutDownEndpoint();
 		ClearSession();
-		Publish();
 		Emit(new PeerEvent.ConnectCompleted(result, reply));
 		return new SessionState.Idle();
 	}
@@ -837,7 +848,6 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		var groups = Groups.Values.Where(g => g.Created).ToList();
 		DisconnectAll();
 		ClearSession();
-		Publish();
 		Emit(new PeerEvent.SessionTerminated(result));
 		foreach (var group in groups)
 			Emit(new PeerEvent.GroupDestroyed(group.Id, DestroyGroupReason.SessionTerminated));
@@ -1042,7 +1052,6 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 	public SessionState BecomeHost(Player local, Dpnid oldHost)
 	{
 		local.IsHost = true;
-		Publish();
 		Emit(new PeerEvent.HostMigrated(local.Id));
 
 		var peers = ConnectedPeers.Where(p => p.Created).ToList();
@@ -1088,7 +1097,6 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		if (!newHost.IsHost)
 		{
 			newHost.IsHost = true;
-			Publish();
 			Emit(new PeerEvent.HostMigrated(newHost.Id));
 		}
 
@@ -1150,7 +1158,7 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 		CloseTimer.Cancel();
 		ShutDownEndpoint();
 		ClearSession();
-		_events.TryComplete();
+		_events.Complete();
 		foreach (var completion in completions)
 			completion.TrySetResult();
 		Stop();
@@ -1564,6 +1572,8 @@ internal sealed class SessionActor : Actor<SessionMessage>, IConnectionObserver
 			IntegrityCheckTimedOut: Execute
 		);
 		ReplayDeferred();
+
+		// What changed with no event to show it, such as a session closed, is published as the message is done.
 		Publish();
 	}
 }

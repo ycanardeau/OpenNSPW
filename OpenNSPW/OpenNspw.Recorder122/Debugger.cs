@@ -7,18 +7,23 @@ namespace OpenNspw.Recorder122;
 // Runs a 32-bit program under the debugger API, and calls back at its breakpoints, before the instruction there runs.
 // A breakpoint is an int3 written over its first byte: at a hit, the byte is put back and the thread steps over it once,
 // then the int3 is written again. The callback may read and write the program's memory and the thread's registers, send
-// the thread elsewhere instead of over the breakpoint (Resume), and end the program (Terminate).
+// the thread elsewhere instead of over the breakpoint (Resume), and end the program (Terminate). Between the program's
+// events, at least every WaitMilliseconds, it calls `waiting`, on the same thread, such as to take what other threads
+// posted to it.
 internal sealed class Debugger(
 	string executable,
 	IReadOnlyCollection<uint> breakpoints,
-	Action<Debugger, uint> hit
+	Action<Debugger, uint> hit,
+	Action<Debugger>? waiting = null
 ) : IDisposable
 {
 	private const byte Int3 = 0xCC;
+	private const uint WaitMilliseconds = 100;
 
 	private readonly string _executable = executable;
 	private readonly uint[] _breakpoints = breakpoints.ToArray();
 	private readonly Action<Debugger, uint> _hit = hit;
+	private readonly Action<Debugger>? _waiting = waiting;
 	private readonly Dictionary<uint, byte> _originalBytes = [];
 	private readonly Dictionary<int, nint> _threads = [];
 	private readonly Dictionary<int, uint> _steppingOver = [];
@@ -213,7 +218,14 @@ internal sealed class Debugger(
 
 		while (true)
 		{
-			Check(WaitForDebugEvent(_event, INFINITE), "WaitForDebugEvent");
+			while (!WaitForDebugEvent(_event, WaitMilliseconds))
+			{
+				var error = Marshal.GetLastWin32Error();
+				if (error != ERROR_SEM_TIMEOUT)
+					throw new Win32Exception(error, "WaitForDebugEvent");
+				_waiting?.Invoke(this);
+			}
+
 			var code = Marshal.ReadInt32(_event, 0);
 			var processId = Marshal.ReadInt32(_event, 4);
 			var threadId = Marshal.ReadInt32(_event, 8);

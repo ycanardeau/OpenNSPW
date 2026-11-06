@@ -1,7 +1,7 @@
-using System.Collections.Concurrent;
 using System.IO.Pipelines;
 using System.Net;
 using System.Net.Sockets;
+using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Transport;
 
 namespace Aigamo.Otsuki.Tests;
@@ -88,23 +88,66 @@ internal sealed class DuplexStream(Stream input, Stream output) : Stream
 	}
 }
 
+internal abstract record StreamNetworkMessage
+{
+	private StreamNetworkMessage() { }
+
+	public sealed record Bind(InMemoryStreamConnector Connector, TaskCompletionSource<bool> Bound)
+		: StreamNetworkMessage;
+
+	public sealed record Start(InMemoryStreamConnector Connector, Action<EndPoint, Stream> OnAccept)
+		: StreamNetworkMessage;
+
+	public sealed record Unbind(InMemoryStreamConnector Connector) : StreamNetworkMessage;
+
+	public sealed record Connect(
+		EndPoint Source,
+		EndPoint Destination,
+		TaskCompletionSource<Stream> Connected
+	) : StreamNetworkMessage;
+
+	public sealed record Ask(Action Question) : StreamNetworkMessage;
+}
+
 /// <summary>
 /// A network of <see cref="InMemoryStreamConnector"/>s, which open <see cref="DuplexStream"/>s to each other.
+/// It is an actor, which owns its connectors and what they accept with.
 /// </summary>
-internal sealed class InMemoryStreamNetwork
+internal sealed class InMemoryStreamNetwork : Actor<StreamNetworkMessage>
 {
-	private readonly ConcurrentDictionary<EndPoint, InMemoryStreamConnector> _connectors = new();
+	private readonly Dictionary<
+		EndPoint,
+		(InMemoryStreamConnector Connector, Action<EndPoint, Stream>? OnAccept)
+	> _connectors = [];
 	private int _connectCount;
+
+	public InMemoryStreamNetwork()
+	{
+		Start();
+	}
+
+	private T Ask<T>(Func<T> question)
+	{
+		var answer = new TaskCompletionSource<T>(
+			TaskCreationOptions.RunContinuationsAsynchronously
+		);
+		Post(new StreamNetworkMessage.Ask(() => answer.SetResult(question())));
+		return answer.Task.GetAwaiter().GetResult();
+	}
 
 	/// <summary>
 	/// How many streams were opened.
 	/// </summary>
-	public int ConnectCount => Volatile.Read(ref _connectCount);
+	public int ConnectCount => Ask(() => _connectCount);
 
 	public InMemoryStreamConnector Bind(EndPoint endPoint)
 	{
 		var connector = new InMemoryStreamConnector(this, endPoint);
-		if (!_connectors.TryAdd(endPoint, connector))
+		var bound = new TaskCompletionSource<bool>(
+			TaskCreationOptions.RunContinuationsAsynchronously
+		);
+		Post(new StreamNetworkMessage.Bind(connector, bound));
+		if (!bound.Task.GetAwaiter().GetResult())
 			throw new SocketException((int)SocketError.AddressAlreadyInUse);
 		return connector;
 	}
@@ -113,19 +156,55 @@ internal sealed class InMemoryStreamNetwork
 
 	public Func<EndPoint, IDatagramTransport> CreateFactory() => CreateTransport;
 
-	internal void Unbind(InMemoryStreamConnector connector) =>
-		_connectors.TryRemove(connector.LocalEndPoint, out _);
-
-	internal Stream Connect(EndPoint source, EndPoint destination)
+	// Hands the accepting end of a new stream to the destination's owner, and the connecting end to the source; or
+	// refuses, if the destination is not accepting.
+	private void Connect(
+		EndPoint source,
+		EndPoint destination,
+		TaskCompletionSource<Stream> connected
+	)
 	{
 		if (
-			!_connectors.TryGetValue(destination, out var connector)
-			|| connector.Accept(source) is not { } stream
+			!_connectors.TryGetValue(destination, out var entry)
+			|| entry.OnAccept is not { } onAccept
 		)
-			throw new SocketException((int)SocketError.ConnectionRefused);
+		{
+			connected.SetException(new SocketException((int)SocketError.ConnectionRefused));
+			return;
+		}
 
-		Interlocked.Increment(ref _connectCount);
-		return stream;
+		var (connecting, accepting) = DuplexStream.CreatePair();
+		onAccept(source, accepting);
+		_connectCount++;
+		connected.SetResult(connecting);
+	}
+
+	protected override void Receive(StreamNetworkMessage message)
+	{
+		switch (message)
+		{
+			case StreamNetworkMessage.Bind bind:
+				bind.Bound.SetResult(
+					_connectors.TryAdd(bind.Connector.LocalEndPoint, (bind.Connector, null))
+				);
+				break;
+			case StreamNetworkMessage.Start start
+				when _connectors.TryGetValue(start.Connector.LocalEndPoint, out var entry)
+					&& entry.Connector == start.Connector:
+				_connectors[start.Connector.LocalEndPoint] = (start.Connector, start.OnAccept);
+				break;
+			case StreamNetworkMessage.Unbind unbind
+				when _connectors.TryGetValue(unbind.Connector.LocalEndPoint, out var entry)
+					&& entry.Connector == unbind.Connector:
+				_connectors.Remove(unbind.Connector.LocalEndPoint);
+				break;
+			case StreamNetworkMessage.Connect connect:
+				Connect(connect.Source, connect.Destination, connect.Connected);
+				break;
+			case StreamNetworkMessage.Ask ask:
+				ask.Question();
+				break;
+		}
 	}
 }
 
@@ -133,11 +212,11 @@ internal sealed class InMemoryStreamConnector(InMemoryStreamNetwork network, End
 	: IStreamConnector
 {
 	private readonly InMemoryStreamNetwork _network = network;
-	private Action<EndPoint, Stream>? _onAccept;
 
 	public EndPoint LocalEndPoint { get; } = localEndPoint;
 
-	public void Start(Action<EndPoint, Stream> onAccept) => Volatile.Write(ref _onAccept, onAccept);
+	public void Start(Action<EndPoint, Stream> onAccept) =>
+		_network.Post(new StreamNetworkMessage.Start(this, onAccept));
 
 	public async Task<Stream> ConnectAsync(
 		EndPoint remoteEndPoint,
@@ -146,26 +225,12 @@ internal sealed class InMemoryStreamConnector(InMemoryStreamNetwork network, End
 	{
 		await Task.Yield();
 		cancellationToken.ThrowIfCancellationRequested();
-		return _network.Connect(LocalEndPoint, remoteEndPoint);
+		var connected = new TaskCompletionSource<Stream>(
+			TaskCreationOptions.RunContinuationsAsynchronously
+		);
+		_network.Post(new StreamNetworkMessage.Connect(LocalEndPoint, remoteEndPoint, connected));
+		return await connected.Task;
 	}
 
-	/// <summary>
-	/// Hands the accepting end of a new stream to the owner, and returns the connecting end, or
-	/// <see langword="null"/> if the connector is not accepting.
-	/// </summary>
-	internal Stream? Accept(EndPoint remoteEndPoint)
-	{
-		if (Volatile.Read(ref _onAccept) is not { } onAccept)
-			return null;
-
-		var (connecting, accepting) = DuplexStream.CreatePair();
-		onAccept(remoteEndPoint, accepting);
-		return connecting;
-	}
-
-	public void Dispose()
-	{
-		Volatile.Write(ref _onAccept, null);
-		_network.Unbind(this);
-	}
+	public void Dispose() => _network.Post(new StreamNetworkMessage.Unbind(this));
 }

@@ -7,6 +7,7 @@ internal static class Win32
 {
 	public const uint DEBUG_ONLY_THIS_PROCESS = 0x2;
 	public const uint INFINITE = 0xFFFFFFFF;
+	public const int ERROR_SEM_TIMEOUT = 121;
 
 	public const uint DBG_CONTINUE = 0x00010002;
 	public const uint DBG_EXCEPTION_NOT_HANDLED = 0x80010001;

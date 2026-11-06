@@ -1,6 +1,6 @@
-using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
+using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Transport;
 
 namespace Aigamo.Otsuki.Tests;
@@ -21,17 +21,46 @@ internal sealed class NamedEndPoint(string name) : EndPoint
 	public override string ToString() => Name;
 }
 
-/// <summary>
-/// A lossless datagram network between <see cref="NamedEndPoint"/>s, which delivers every datagram at once.
-/// </summary>
-internal sealed class NamedNetwork
+internal abstract record NamedNetworkMessage
 {
-	private readonly ConcurrentDictionary<NamedEndPoint, NamedTransport> _transports = new();
+	private NamedNetworkMessage() { }
+
+	public sealed record Bind(NamedTransport Transport, TaskCompletionSource<bool> Bound)
+		: NamedNetworkMessage;
+
+	public sealed record Start(NamedTransport Transport, Action<EndPoint, byte[]> OnReceive)
+		: NamedNetworkMessage;
+
+	public sealed record Unbind(NamedTransport Transport) : NamedNetworkMessage;
+
+	public sealed record Send(NamedEndPoint Source, EndPoint Destination, byte[] Datagram)
+		: NamedNetworkMessage;
+}
+
+/// <summary>
+/// A lossless datagram network between <see cref="NamedEndPoint"/>s, which delivers every datagram as it is sent. It
+/// is an actor, which owns its transports and what they receive with.
+/// </summary>
+internal sealed class NamedNetwork : Actor<NamedNetworkMessage>
+{
+	private readonly Dictionary<
+		NamedEndPoint,
+		(NamedTransport Transport, Action<EndPoint, byte[]>? OnReceive)
+	> _transports = [];
+
+	public NamedNetwork()
+	{
+		Start();
+	}
 
 	public NamedTransport Bind(NamedEndPoint endPoint)
 	{
 		var transport = new NamedTransport(this, endPoint);
-		if (!_transports.TryAdd(endPoint, transport))
+		var bound = new TaskCompletionSource<bool>(
+			TaskCreationOptions.RunContinuationsAsynchronously
+		);
+		Post(new NamedNetworkMessage.Bind(transport, bound));
+		if (!bound.Task.GetAwaiter().GetResult())
 			throw new SocketException((int)SocketError.AddressAlreadyInUse);
 		return transport;
 	}
@@ -39,13 +68,31 @@ internal sealed class NamedNetwork
 	public Func<EndPoint, IDatagramTransport> CreateFactory() =>
 		localEndPoint => Bind((NamedEndPoint)localEndPoint);
 
-	internal void Unbind(NamedTransport transport) =>
-		_transports.TryRemove(transport.LocalEndPoint, out _);
-
-	internal void Send(NamedEndPoint source, EndPoint destination, byte[] datagram)
+	protected override void Receive(NamedNetworkMessage message)
 	{
-		if (destination is NamedEndPoint named && _transports.TryGetValue(named, out var transport))
-			transport.Receive(source, datagram.ToArray());
+		switch (message)
+		{
+			case NamedNetworkMessage.Bind bind:
+				bind.Bound.SetResult(
+					_transports.TryAdd(bind.Transport.LocalEndPoint, (bind.Transport, null))
+				);
+				break;
+			case NamedNetworkMessage.Start start
+				when _transports.TryGetValue(start.Transport.LocalEndPoint, out var entry)
+					&& entry.Transport == start.Transport:
+				_transports[start.Transport.LocalEndPoint] = (start.Transport, start.OnReceive);
+				break;
+			case NamedNetworkMessage.Unbind unbind
+				when _transports.TryGetValue(unbind.Transport.LocalEndPoint, out var entry)
+					&& entry.Transport == unbind.Transport:
+				_transports.Remove(unbind.Transport.LocalEndPoint);
+				break;
+			case NamedNetworkMessage.Send send
+				when send.Destination is NamedEndPoint named
+					&& _transports.TryGetValue(named, out var entry):
+				entry.OnReceive?.Invoke(send.Source, send.Datagram);
+				break;
+		}
 	}
 }
 
@@ -53,23 +100,18 @@ internal sealed class NamedTransport(NamedNetwork network, NamedEndPoint localEn
 	: IDatagramTransport
 {
 	private readonly NamedNetwork _network = network;
-	private Action<EndPoint, byte[]>? _onReceive;
 
 	public NamedEndPoint LocalEndPoint { get; } = localEndPoint;
 
 	EndPoint IDatagramTransport.LocalEndPoint => LocalEndPoint;
 
-	public void Start(Action<EndPoint, byte[]> onReceive) => _onReceive = onReceive;
+	public void Start(Action<EndPoint, byte[]> onReceive) =>
+		_network.Post(new NamedNetworkMessage.Start(this, onReceive));
 
 	public void Send(EndPoint remoteEndPoint, byte[] datagram) =>
-		_network.Send(LocalEndPoint, remoteEndPoint, datagram);
+		_network.Post(
+			new NamedNetworkMessage.Send(LocalEndPoint, remoteEndPoint, datagram.ToArray())
+		);
 
-	internal void Receive(EndPoint remoteEndPoint, byte[] datagram) =>
-		_onReceive?.Invoke(remoteEndPoint, datagram);
-
-	public void Dispose()
-	{
-		_onReceive = null;
-		_network.Unbind(this);
-	}
+	public void Dispose() => _network.Post(new NamedNetworkMessage.Unbind(this));
 }

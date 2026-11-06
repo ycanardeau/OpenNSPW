@@ -338,6 +338,8 @@ internal sealed class Connection : Actor<ConnectionMessage>
 			Disconnect: Execute,
 			HardDisconnect: Execute,
 			Abort: m => Abort(m.Result),
+			EndpointShutDown: m =>
+				_state is ConnectionState.HardDisconnecting ? Unit.Default : Abort(m.Result),
 			ConnectRetryTimerElapsed: m => Elapse(ConnectRetryTimer, m.Generation, m),
 			RetryTimerElapsed: m => Elapse(RetryTimer, m.Generation, m),
 			DelayedAcknowledgmentTimerElapsed: m =>

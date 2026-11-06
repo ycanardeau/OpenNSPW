@@ -3,8 +3,13 @@ using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Aigamo.Otsuki.Actors;
 
 namespace OpenNspw.Verification;
+
+// How far a trace of 1.22 has been followed, for other threads, such as the host's UI (Trace122Replay.Progress): as of
+// its last change.
+public sealed record Trace122Progress(int Frames, bool HasEnded, string? Divergence);
 
 // The points of a single-player game that a trace records, in the order 1.22 reaches them: game_init's start and its last
 // srand, then, for each frame, its start, each tick (before chara_cont) and decision, the drawing, the player's orders
@@ -509,6 +514,16 @@ public sealed class Trace122Replay : SingleplayerTrace, IDisposable
 
 	public override bool HoldsInput => !HasEnded && Divergence is null;
 
+	private readonly Latest<Trace122Progress> _progress = new(new Trace122Progress(0, false, null));
+
+	// How far the trace has been followed, from any thread.
+	public Trace122Progress Progress => _progress.Value;
+
+	private void Publish()
+	{
+		_progress.Post(new Trace122Progress(Frames, HasEnded, Divergence));
+	}
+
 	public Trace122Replay(Stream stream)
 	{
 		_reader = new Trace122Reader(stream);
@@ -598,6 +613,7 @@ public sealed class Trace122Replay : SingleplayerTrace, IDisposable
 	private void Diverge(Nspw game, TracePoint point, string what)
 	{
 		Divergence = $"Frame {Frames}, {point} (cc_count {game.Tick}): {what}";
+		Publish();
 	}
 
 	// Keeps what Windows' stack held where 1.22 read a local it had not set, after this point, for the port to read
@@ -644,6 +660,7 @@ public sealed class Trace122Replay : SingleplayerTrace, IDisposable
 		if (_next.Kind == TracePoint.End)
 		{
 			HasEnded = true;
+			Publish();
 			return;
 		}
 		if (_next.Kind != TracePoint.Frame)
@@ -652,6 +669,7 @@ public sealed class Trace122Replay : SingleplayerTrace, IDisposable
 			return;
 		}
 		Frames++;
+		Publish();
 		game.GameSpeed = (short)_next.Value;
 		_frame.Clear();
 		for (

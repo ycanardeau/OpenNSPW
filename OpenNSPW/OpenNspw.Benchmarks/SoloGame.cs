@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using Aigamo.Otsuki.Actors;
 using static OpenNspw.all_head;
 using static OpenNspw.resource;
 using static OpenNspw.windef;
@@ -14,15 +15,20 @@ internal sealed class SoloGame : IDisposable
 {
 	private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(60);
 
+	// What the game's thread posts to the benchmark's (SoloMessage), and what the benchmark took of it.
+	private readonly Mailbox<SoloMessage> _messages = new();
+	private readonly List<string> _messageBoxes = [];
 	private readonly SoloPlatform _platform;
 	private readonly Thread _thread;
 	private Exception? _error;
+	private bool _isParked;
 
+	// The game, the benchmark's once its thread has parked (WaitUntilParked).
 	public Nspw Game { get; }
 
 	private SoloGame(string dataDirectory)
 	{
-		_platform = new SoloPlatform(dataDirectory);
+		_platform = new SoloPlatform(dataDirectory, _messages);
 		Game = new Nspw(_platform);
 		_thread = new Thread(() =>
 		{
@@ -32,7 +38,7 @@ internal sealed class SoloGame : IDisposable
 			}
 			catch (Exception e)
 			{
-				_error = e;
+				_messages.Post(new SoloMessage.Failed(e));
 			}
 		})
 		{
@@ -59,35 +65,39 @@ internal sealed class SoloGame : IDisposable
 		throw new InvalidOperationException("Original/NSPW_NET is not found.");
 	}
 
+	// Takes what the game's thread posted but answers: its message boxes, what it threw, and whether it parked.
+	private void TakeMessages()
+	{
+		while (_messages.TryReceive(m => m is not SoloMessage.Answer, out var message))
+		{
+			switch (message)
+			{
+				case SoloMessage.MessageShown shown:
+					_messageBoxes.Add(shown.Text);
+					break;
+				case SoloMessage.Failed failed:
+					_error = failed.Error;
+					break;
+				case SoloMessage.Parked:
+					_isParked = true;
+					break;
+			}
+		}
+	}
+
 	private void ThrowIfFailed()
 	{
+		TakeMessages();
 		if (_error is not null)
 		{
 			throw new InvalidOperationException("The game failed.", _error);
 		}
 
-		if (_platform.MessageBoxes.Count > 0)
+		if (_messageBoxes.Count > 0)
 		{
 			throw new InvalidOperationException(
-				$"The game showed a message box: {string.Join(", ", _platform.MessageBoxes)}"
+				$"The game showed a message box: {string.Join(", ", _messageBoxes)}"
 			);
-		}
-	}
-
-	private void WaitUntil(Func<bool> condition)
-	{
-		var deadline = DateTime.UtcNow + Timeout;
-		while (!condition())
-		{
-			ThrowIfFailed();
-			if (!_thread.IsAlive || DateTime.UtcNow > deadline)
-			{
-				throw new TimeoutException(
-					$"The game did not reach the state: dialog {Game.MainDialog?.Id}, mode {Game.Mode}, frames {_platform.FrameCount}."
-				);
-			}
-
-			Thread.Sleep(10);
 		}
 	}
 
@@ -95,6 +105,63 @@ internal sealed class SoloGame : IDisposable
 	private void Do(Action<Nspw> action)
 	{
 		Game.PostToGame(() => action(Game));
+	}
+
+	// Asks the game's thread, as its message loop dispatches the question, until the condition holds.
+	private void WaitUntil(Func<bool> condition)
+	{
+		var deadline = DateTime.UtcNow + Timeout;
+		var state = "not answered";
+		while (true)
+		{
+			Do(game =>
+				_messages.Post(
+					new SoloMessage.Answer(
+						condition(),
+						$"dialog {game.MainDialog?.Id}, mode {game.Mode}, frames {_platform.FrameCount}"
+					)
+				)
+			);
+			while (!_messages.WaitFor(m => m is SoloMessage.Answer, TimeSpan.FromMilliseconds(100)))
+			{
+				ThrowIfFailed();
+				if (!_thread.IsAlive || DateTime.UtcNow > deadline)
+				{
+					throw new TimeoutException($"The game did not reach the state: {state}.");
+				}
+			}
+
+			_messages.TryReceive<SoloMessage.Answer>(out var answer);
+			state = answer!.State;
+			if (answer.Value)
+			{
+				return;
+			}
+
+			ThrowIfFailed();
+			Thread.Sleep(10);
+		}
+	}
+
+	// Waits until the game's thread has parked, and handed the game to this one.
+	private void WaitUntilParked()
+	{
+		var deadline = DateTime.UtcNow + Timeout;
+		while (true)
+		{
+			ThrowIfFailed();
+			if (_isParked)
+			{
+				return;
+			}
+
+			if (DateTime.UtcNow > deadline)
+			{
+				throw new TimeoutException("The game did not reach the frame to stop at.");
+			}
+
+			_messages.WaitFor(m => m is not SoloMessage.Answer, TimeSpan.FromMilliseconds(100));
+		}
 	}
 
 	// Clicks the left mouse button at a point of the screen, as the user does.
@@ -132,9 +199,10 @@ internal sealed class SoloGame : IDisposable
 			Game.Mode == GameMode.ConfigSetting && Game.RivalMode == GameMode.ConfigSetting
 		);
 
-		_platform.ParkAfterFrame = () => Game.Mode == GameMode.Battle;
+		var platform = _platform;
+		Do(game => platform.ParkAfterFrame = () => game.Mode == GameMode.Battle);
 		Click(630 - 120 + 10, 700 + 12);
-		_platform.WaitUntilParked(Timeout);
+		WaitUntilParked();
 		ThrowIfFailed();
 	}
 

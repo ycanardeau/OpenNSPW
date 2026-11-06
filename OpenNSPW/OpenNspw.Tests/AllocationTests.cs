@@ -1,4 +1,6 @@
+using Aigamo.Otsuki.Actors;
 using OpenNspw.DirectPlay;
+using OpenNspw.Replay;
 using OpenNspw.Tests.Lockstep;
 using Xunit;
 
@@ -178,6 +180,40 @@ public sealed class AllocationTests
 		Assert.Equal(0, bytes);
 	}
 
+	// A replay's player, which the game asks whether a frame starts each time round its message loop (StartsFrame),
+	// allocates nothing there while no control comes: it once published a new progress each time, about 130 MB a second.
+	[Fact]
+	public void AReplaysPlayerMakesNoGarbageBetweenFrames()
+	{
+		var stream = new MemoryStream();
+		var recorder = new ReplayRecorder(_ => stream);
+		Nspw game;
+		using (
+			var run = new SingleplayerRun(
+				1,
+				setUp => setUp.Extensions.Add(recorder),
+				recordsOutput: false
+			)
+		)
+		{
+			run.Frames(10);
+			game = run.Game;
+		}
+		recorder.Dispose();
+		using var player = new ReplayPlayer(new MemoryStream(stream.ToArray()))
+		{
+			IsInitiallyPaused = true,
+		};
+
+		var bytes = SteadyBytes(() =>
+		{
+			for (var i = 0; i < 10_000; i++)
+				player.StartsFrame(game);
+		});
+
+		Assert.Equal(0, bytes);
+	}
+
 	// The app rasterizes a text that the game writes again, as it writes most of them every frame, only once.
 	[Fact]
 	public void TheAppRasterizesATextOnce()
@@ -185,7 +221,9 @@ public sealed class AllocationTests
 		using var files = GameData.CreateEmpty();
 		var platform = new Desktop.DesktopPlatform(
 			new GameFileLayers([], files.Path, []),
-			new Desktop.TextRasterizer()
+			new Desktop.TextRasterizer(),
+			new Mailbox<Desktop.UIMessage>(),
+			new Mailbox<GameMessage>()
 		);
 		var first = platform.RasterizeText("経過時間 12", 12, "ＭＳ ゴシック");
 		TextBitmap? again = null;

@@ -1,11 +1,12 @@
-using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
+using Aigamo.Otsuki.Actors;
 
 namespace OpenNspw;
 
 // Stand-ins for the DirectInput 8 interfaces, structs and constants that the game uses (dinput.h). Devices are
-// buffered: the platform posts key and mouse button events (PostKeyboardInput, PostMouseInput), and GetDeviceData reads
-// them in order, as DirectInput's buffered data.
+// buffered: the platform posts key and mouse button events to the game's mailbox (PostKeyboardInput, PostMouseInput),
+// and GetDeviceData reads them in order, as DirectInput's buffered data. A device buffers what comes while it is
+// acquired, and drops what comes while it is not, as DirectInput does.
 
 [StructLayout(LayoutKind.Sequential)]
 public struct DIDEVICEOBJECTDATA
@@ -157,29 +158,39 @@ public static class dinput
 	public const uint DIK_SPACE = 0x39;
 }
 
-public sealed unsafe class DirectInputDevice8 : IDirectInputDevice8
+// device: GUID_SysKeyboard or GUID_SysMouse, whose events (GameMessage.DeviceInput) the device takes from the game's
+// mailbox.
+public sealed unsafe class DirectInputDevice8(Mailbox<GameMessage> mailbox, Guid device)
+	: IDirectInputDevice8
 {
-	private readonly ConcurrentQueue<DIDEVICEOBJECTDATA> _data = new();
+	private readonly Mailbox<GameMessage> _mailbox = mailbox;
+	private readonly Func<GameMessage, bool> _isOwn = message =>
+		message is GameMessage.DeviceInput input && input.Device == device;
+	private readonly Queue<DIDEVICEOBJECTDATA> _data = new();
 	private uint _sequence;
 
 	public bool Acquired { get; private set; }
 
 	public DIDATAFORMAT? Format { get; private set; }
 
-	// Adds an event to the device's buffer, if it is acquired.
-	public void Post(uint offset, uint data, uint timeStamp)
+	// Takes the device's events posted so far into its buffer, if it is acquired, or drops them.
+	private void TakeInput()
 	{
-		if (Acquired)
+		while (_mailbox.TryReceive(_isOwn, out var message))
 		{
-			_data.Enqueue(
-				new DIDEVICEOBJECTDATA
-				{
-					dwOfs = offset,
-					dwData = data,
-					dwTimeStamp = timeStamp,
-					dwSequence = ++_sequence,
-				}
-			);
+			var input = (GameMessage.DeviceInput)message;
+			if (Acquired)
+			{
+				_data.Enqueue(
+					new DIDEVICEOBJECTDATA
+					{
+						dwOfs = input.Offset,
+						dwData = input.Data,
+						dwTimeStamp = input.TimeStamp,
+						dwSequence = ++_sequence,
+					}
+				);
+			}
 		}
 	}
 
@@ -201,6 +212,7 @@ public sealed unsafe class DirectInputDevice8 : IDirectInputDevice8
 
 	public int Acquire()
 	{
+		TakeInput();
 		Acquired = true;
 		return dinput.DI_OK;
 	}
@@ -208,6 +220,7 @@ public sealed unsafe class DirectInputDevice8 : IDirectInputDevice8
 	public int Unacquire()
 	{
 		Acquired = false;
+		TakeInput();
 		_data.Clear();
 		return dinput.DI_OK;
 	}
@@ -219,6 +232,7 @@ public sealed unsafe class DirectInputDevice8 : IDirectInputDevice8
 		uint dwFlags
 	)
 	{
+		TakeInput();
 		if (!Acquired)
 		{
 			*pdwInOut = 0;
@@ -247,8 +261,10 @@ public sealed unsafe class DirectInputDevice8 : IDirectInputDevice8
 	}
 }
 
-public sealed class DirectInput8 : IDirectInput8
+public sealed class DirectInput8(Mailbox<GameMessage> mailbox) : IDirectInput8
 {
+	private readonly Mailbox<GameMessage> _mailbox = mailbox;
+
 	public DirectInputDevice8? Keyboard { get; private set; }
 
 	public DirectInputDevice8? Mouse { get; private set; }
@@ -259,7 +275,7 @@ public sealed class DirectInput8 : IDirectInput8
 		object? pUnkOuter
 	)
 	{
-		var device = new DirectInputDevice8();
+		var device = new DirectInputDevice8(_mailbox, rguid);
 		if (rguid == dinput.GUID_SysKeyboard)
 		{
 			Keyboard = device;
@@ -290,24 +306,34 @@ public partial class Nspw
 
 	public int DirectInput8Create(out IDirectInput8? ppvOut)
 	{
-		_directInput = new DirectInput8();
+		_directInput = new DirectInput8(Mailbox);
 		ppvOut = _directInput;
 		return dinput.DI_OK;
 	}
 
-	// A key went down or up, by its DIK_* scan code.
+	// A key went down or up, by its DIK_* scan code. From any thread.
 	public void PostKeyboardInput(uint dik, bool down)
 	{
-		_directInput?.Keyboard?.Post(dik, down ? 0x80u : 0, _platform.timeGetTime());
+		Mailbox.Post(
+			new GameMessage.DeviceInput(
+				dinput.GUID_SysKeyboard,
+				dik,
+				down ? 0x80u : 0,
+				_platform.timeGetTime()
+			)
+		);
 	}
 
-	// A mouse button went down or up: 0 is the left button, 1 the right button.
+	// A mouse button went down or up: 0 is the left button, 1 the right button. From any thread.
 	public void PostMouseInput(int button, bool down)
 	{
-		_directInput?.Mouse?.Post(
-			dinput.DIMOFS_BUTTON0 + (uint)button,
-			down ? 0x80u : 0,
-			_platform.timeGetTime()
+		Mailbox.Post(
+			new GameMessage.DeviceInput(
+				dinput.GUID_SysMouse,
+				dinput.DIMOFS_BUTTON0 + (uint)button,
+				down ? 0x80u : 0,
+				_platform.timeGetTime()
+			)
 		);
 	}
 }

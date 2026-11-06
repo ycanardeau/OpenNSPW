@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+using Aigamo.Otsuki.Actors;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -12,7 +14,9 @@ using XnaKeys = Microsoft.Xna.Framework.Input.Keys;
 namespace OpenNspw.Desktop;
 
 // A game of the port: its WinMain (win_main.cpp) on its own thread, as the original runs it, its frames, and the
-// keyboard and the mouse turned into DirectInput data and window messages.
+// keyboard and the mouse turned into DirectInput data and window messages. The game and the UI are actors (docs/Actors.md):
+// the session posts to the game's mailbox, and takes what the game posts to the UI's at the start of each update
+// (TakeMessages), on the UI's thread.
 internal sealed class GameSession : IDisposable
 {
 	// MonoGame keys, with their DirectInput scan codes (DIK_*) and virtual-key codes (VK_*).
@@ -85,17 +89,24 @@ internal sealed class GameSession : IDisposable
 		[XnaKeys.NumPad9] = (0x49, 0x69),
 	};
 
+	private readonly Mailbox<UIMessage> _ui = new();
 	private readonly DesktopPlatform _platform;
 	private readonly Thread _thread;
-	private ushort[] _pixels = [];
+	private readonly GameSnapshot _noFrame;
 	private Color[] _colors = [];
-	private int _frameNumber = -1;
 	private KeyboardState _previousKeyboard;
 	private MouseState _previousMouse;
-	private volatile bool _hasEnded;
 
-	// The state the game copies as it shows a frame (CaptureState), swapped with Snapshot when the UI takes the frame.
-	private GameSnapshot _captured = new();
+	// The cursor last posted to the game, which the session posts again only when it moves.
+	private (int X, int Y)? _postedCursor;
+	private bool _hasEnded;
+
+	// The frame the UI shows, its own until a newer one comes, and whether it is new since UpdateFrame last took it.
+	private FrameBuffer? _shown;
+	private bool _isNewFrame;
+
+	private string? _lastMessage;
+	private bool _isDialogFilled;
 	private bool _isDisposed;
 
 	public Nspw Game { get; }
@@ -112,7 +123,7 @@ internal sealed class GameSession : IDisposable
 	public ReplayView? View { get; }
 
 	// Whether the game plays a replay, and gives the viewer its battle to watch: until the replay ends or is taken over.
-	public bool IsWatching => Replay is { HoldsInput: true };
+	public bool IsWatching => Replay is { Progress.HoldsInput: true };
 
 	// What records the game's battles in the user's replays, when it follows no trace: a single-player replay's battle only
 	// once the player takes it over (ReplayRecorder.Replay).
@@ -121,12 +132,21 @@ internal sealed class GameSession : IDisposable
 	// The directory that a replay's game writes in, deleted as it ends, or null.
 	private readonly string? _scratchDirectory;
 
-	// Whether the player's keys and buttons are held back from the game: while it follows a trace or plays a replay, which
-	// give it none.
-	private bool IsInputHeldBack => Game.Extensions.HoldsInput;
+	// What the game takes of the replay's view (View), on its thread, or null.
+	private readonly ReplayViewExtension? _viewExtension;
 
-	// Whether WinMain has returned: the game was closed, or failed to connect.
-	public bool HasEnded => _hasEnded;
+	// The game's state as it was when it showed the last frame. Read by the UI's thread.
+	public GameSnapshot Snapshot => _shown?.Snapshot ?? _noFrame;
+
+	// Whether the player's keys and buttons are held back from the game: while it follows a trace or plays a replay, which
+	// give it none, as of the last frame.
+	private bool IsInputHeldBack => Snapshot.HoldsInput;
+
+	// The game's windows, as the game last posted them.
+	public ImmutableArray<WindowView> Windows { get; private set; } = [];
+
+	// The game's own window (hwndApp), once it exists, as a key for the messages the UI posts to it.
+	private HWND? AppWindow => Windows.FirstOrDefault(w => w.Kind == "WINDOW")?.Window;
 
 	// A replay's file in the user's replays, named by the battle's date and scenario, opened for a battle that starts; or
 	// none, if it cannot be created, so that the game goes on unrecorded.
@@ -171,11 +191,7 @@ internal sealed class GameSession : IDisposable
 		}
 		catch (Exception e)
 		{
-			lock (_platform.Messages)
-			{
-				_platform.Messages.Add(e.ToString());
-			}
-
+			_ui.Post(new UIMessage.MessageShown(e.ToString()));
 			Console.Error.WriteLine(e);
 		}
 		finally
@@ -187,7 +203,7 @@ internal sealed class GameSession : IDisposable
 			Replay?.Dispose();
 			_recorder?.Dispose();
 			DeleteScratchDirectory();
-			_hasEnded = true;
+			_ui.Post(new UIMessage.Ended());
 		}
 	}
 
@@ -209,19 +225,23 @@ internal sealed class GameSession : IDisposable
 		BattleOptions? options = null
 	)
 	{
-		_platform = new DesktopPlatform(files, text);
-		Game = new Nspw(_platform);
+		var mailbox = new Mailbox<GameMessage>();
+		_platform = new DesktopPlatform(files, text, _ui, mailbox);
+		Game = new Nspw(_platform, mailbox);
 		Game.Extensions.Add(Commands);
 		View = view;
 		_platform.HidesFrame = () =>
 			GameSnapshot.IsHostScreenOf(Game) || Replay is { IsSeeking: true };
-		_platform.CaptureState = () => _captured.CopyFrom(Game, Commands, View);
+		_platform.CaptureState = snapshot =>
+			snapshot.CopyFrom(Game, Commands, _viewExtension?.Seen);
 		if (singleplayer is { } scenario)
 		{
 			Game.IsSingleplayer = true;
 			Game.ScenarioNumber = (short)scenario;
 		}
 
+		// Before the first frame, the input is held back if a trace or a replay gives it.
+		_noFrame = new GameSnapshot { HoldsInput = trace is not null || replay is not null };
 		Trace = trace;
 		if (trace is not null)
 			Game.Extensions.Add(trace);
@@ -239,7 +259,10 @@ internal sealed class GameSession : IDisposable
 		if (replay is not null)
 		{
 			if (view is not null)
-				Game.Extensions.Add(new ReplayViewExtension(view, _platform));
+			{
+				_viewExtension = new ReplayViewExtension(view, _platform);
+				Game.Extensions.Add(_viewExtension);
+			}
 			Game.Extensions.Add(replay);
 			if (replay.Start.Mode == ReplayMode.Singleplayer)
 			{
@@ -265,13 +288,65 @@ internal sealed class GameSession : IDisposable
 		_thread.Start();
 	}
 
+	// Takes what the game posted: the newest frame, giving the older back, the windows, the message boxes and the end. At
+	// the start of each update of the screen that shows the game.
+	public void TakeMessages()
+	{
+		while (_ui.TryReceive(out var message))
+		{
+			switch (message)
+			{
+				case UIMessage.FrameReady ready:
+					if (_shown is not null)
+						Game.Mailbox.Post(new BufferFree(_shown));
+					_shown = ready.Buffer;
+					_isNewFrame = true;
+					break;
+				case UIMessage.WindowsChanged changed:
+					Windows = changed.Windows;
+					break;
+				case UIMessage.MessageShown shown:
+					_lastMessage = shown.Text;
+					break;
+				case UIMessage.DialogFilled:
+					_isDialogFilled = true;
+					break;
+				case UIMessage.Ended:
+					_hasEnded = true;
+					break;
+			}
+		}
+	}
+
+	// Whether WinMain has returned: the game was closed, or failed to connect. Takes what the game posted, as a screen that
+	// no longer shows the game may ask.
+	public bool HasEnded
+	{
+		get
+		{
+			TakeMessages();
+			return _hasEnded;
+		}
+	}
+
 	// The last message box the game showed, if any.
 	public string? LastMessage()
 	{
-		lock (_platform.Messages)
-		{
-			return _platform.Messages.LastOrDefault();
-		}
+		return _lastMessage;
+	}
+
+	// Posts, from a user's action that has run on the game's thread, that the dialog's fields are to be read again.
+	public void PostDialogFilled()
+	{
+		_ui.Post(new UIMessage.DialogFilled());
+	}
+
+	// Whether a user's action posted that the dialog's fields are to be read again, since this was last asked.
+	public bool TakeDialogFilled()
+	{
+		var isFilled = _isDialogFilled;
+		_isDialogFilled = false;
+		return isFilled;
 	}
 
 	// The keys that close the game (Escape and F12: WM_CLOSE), which the UI asks about first (Quit).
@@ -310,7 +385,7 @@ internal sealed class GameSession : IDisposable
 			)
 			{
 				Game.PostKeyboardInput(dik, down);
-				Game.SetKeyState(Game.hwndApp, vk, down);
+				Game.SetKeyState(AppWindow, vk, down);
 			}
 		}
 
@@ -339,7 +414,11 @@ internal sealed class GameSession : IDisposable
 		var mouse = Mouse.GetState();
 		var position = viewportAdapter.PointToScreen(mouse.Position);
 		var (x, y) = cursor is { } point ? (point.X, point.Y) : (position.X, position.Y);
-		Game.SetCursorPos(x, y);
+		if (_postedCursor != (x, y))
+		{
+			Game.SetCursorPos(x, y);
+			_postedCursor = (x, y);
+		}
 		if (IsInputHeldBack)
 		{
 			_previousMouse = mouse;
@@ -376,9 +455,6 @@ internal sealed class GameSession : IDisposable
 	// The game's last frame, once it has shown one.
 	public Texture2D? Frame { get; private set; }
 
-	// The game's state as it was when it showed the last frame. Read by the UI's thread.
-	public GameSnapshot Snapshot { get; private set; } = new();
-
 	// Whether the last frame is a battle's: the battlefield, the sidebar and the minimap.
 	public bool IsBattleFrame => Snapshot.IsBattle;
 
@@ -394,19 +470,17 @@ internal sealed class GameSession : IDisposable
 			Frame.SetData(new Color[Frame.Width * Frame.Height]);
 		}
 
-		var frameNumber = _platform.CopyFrame(
-			_frameNumber,
-			ref _pixels,
-			out var width,
-			out var height,
-			() => (Snapshot, _captured) = (_captured, Snapshot)
-		);
-		if (frameNumber == _frameNumber || width != Frame.Width || height != Frame.Height)
+		if (
+			!_isNewFrame
+			|| _shown is not { } shown
+			|| shown.Width != Frame.Width
+			|| shown.Height != Frame.Height
+		)
 		{
 			return;
 		}
 
-		_frameNumber = frameNumber;
+		_isNewFrame = false;
 
 		// The game's frame is not shown on the screens that the UI draws in its place.
 		if (Snapshot.IsHostScreen)
@@ -414,14 +488,15 @@ internal sealed class GameSession : IDisposable
 			return;
 		}
 
-		if (_colors.Length != _pixels.Length)
+		var pixels = shown.Pixels;
+		if (_colors.Length != pixels.Length)
 		{
-			_colors = new Color[_pixels.Length];
+			_colors = new Color[pixels.Length];
 		}
 
-		for (var i = 0; i < _pixels.Length; i++)
+		for (var i = 0; i < pixels.Length; i++)
 		{
-			_colors[i] = ToColor(_pixels[i]);
+			_colors[i] = ToColor(pixels[i]);
 		}
 
 		Frame.SetData(_colors);
@@ -449,25 +524,30 @@ internal sealed class GameSession : IDisposable
 	{
 		var (dik, vk) = KeyCodes[XnaKeys.Escape];
 		Game.PostKeyboardInput(dik, true);
-		Game.SetKeyState(Game.hwndApp, vk, true);
+		Game.SetKeyState(AppWindow, vk, true);
 		Game.PostKeyboardInput(dik, false);
-		Game.SetKeyState(Game.hwndApp, vk, false);
+		Game.SetKeyState(AppWindow, vk, false);
 	}
 
 	// Closes the game, as closing its window or cancelling its dialog does in the original. The game ends on its own
 	// thread, which may take a while, such as while it still waits for a host that does not answer: the UI does not wait.
 	public void Close()
 	{
-		if (!_hasEnded && _thread.IsAlive)
+		if (!HasEnded && _thread.IsAlive)
 		{
-			if (Game.MainDialog is { } dialog)
+			// The game chooses on its thread, which owns its dialog and its window.
+			var game = Game;
+			game.PostToGame(() =>
 			{
-				Game.PostToGame(() => Game.ClickDlgItem(dialog, windef.IDCANCEL));
-			}
-			else if (Game.hwndApp is { } window)
-			{
-				Game.PostMessage(window, winuser.WM_CLOSE, 0, 0);
-			}
+				if (game.MainDialog is { } dialog)
+				{
+					game.ClickDlgItem(dialog, windef.IDCANCEL);
+				}
+				else if (game.hwndApp is { } window)
+				{
+					game.PostMessage(window, winuser.WM_CLOSE, 0, 0);
+				}
+			});
 		}
 	}
 

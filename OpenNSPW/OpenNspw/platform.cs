@@ -17,15 +17,17 @@ public interface INspwPlatform
 		Thread.Sleep((int)milliseconds);
 	}
 
-	// Waits until a message may have been posted to the game's message queue, like Monitor.Wait(queue). Called with the
-	// queue's lock held, when the queue is empty.
-	void WaitForMessage(object queue)
+	// Waits until a window message may have been posted to the game's mailbox (GameMessage.Window), when it has none.
+	void WaitForMessage(Aigamo.Otsuki.Actors.Mailbox<GameMessage> mailbox)
 	{
-		Monitor.Wait(queue);
+		mailbox.WaitFor(static message => message is GameMessage.Window);
 	}
 
 	// Shows a frame: what the game flipped or blitted to the primary surface.
 	void Present(DirectDrawSurface7 primary);
+
+	// Shows the windows, as the game gives them each time one has changed (WindowView), on the game's thread.
+	void ShowWindows(System.Collections.Immutable.ImmutableArray<WindowView> windows) { }
 
 	// Rasterizes text in a font of the given height and face (the game uses "", the default Shift_JIS font), or returns
 	// null to draw nothing.
@@ -436,9 +438,14 @@ public partial class Nspw
 
 	public Renderer Renderer { get; }
 
-	public Nspw(INspwPlatform? platform = null)
+	// mailbox: the game's (GameMessage), when the platform posts to it too; a new one by default.
+	public Nspw(
+		INspwPlatform? platform = null,
+		Aigamo.Otsuki.Actors.Mailbox<GameMessage>? mailbox = null
+	)
 	{
 		_platform = platform ?? NullPlatform.Instance;
+		Mailbox = mailbox ?? new();
 		Sound = new Sound(this);
 		Renderer = new Renderer(this);
 	}

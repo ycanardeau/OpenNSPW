@@ -142,8 +142,8 @@ They live in the core, in a file of the API's (`Queries.cs`). An extension calls
 ## What the hosts change
 ### The desktop app
 - References `OpenNspw.Verification` and `OpenNspw.HostUI`.
-- `GameSession` adds the host UI to every game, and keeps it (`Commands`): the screens give their commands through it rather than `Game.Commands`. It adds a trace of 1.22 (`--replay <trace>.n122`) as an extension, as it adds a replay's player; `IsInputHeldBack` is `Extensions.HoldsInput`. A game that follows a trace is still not recorded.
-- The snapshot (`GameSnapshot.CopyFrom`) reads the combat menu's items and the last camera move from the host UI, under the frame's lock as now.
+- `GameSession` adds the host UI to every game, and keeps it (`Commands`): the screens give their commands through it rather than `Game.Commands`. It adds a trace of 1.22 (`--replay <trace>.n122`) as an extension, as it adds a replay's player; `IsInputHeldBack` is `Extensions.HoldsInput`, as the frame's snapshot carries it ([Actors.md](Actors.md)). A game that follows a trace is still not recorded.
+- The snapshot (`GameSnapshot.CopyFrom`) reads the combat menu's items and the last camera move from the host UI, on the game's thread, into the frame buffer it posts the UI ([Actors.md](Actors.md)).
 - `ReplayView` reads the sight from `OpenNspw.HostUI`.
 
 ### The tests
@@ -157,9 +157,9 @@ They live in the core, in a file of the API's (`Queries.cs`). An extension calls
 The tests compare the port's rewrites with 1.22's machine code, through glue in the core (`Singleplayer.cs`): `SingleplayerExecutable`, `Emulator`, copying the units and the shared globals in and out (`CopyIn`, `CopyOut`, `SharedGlobals`), and `RunEmulated` with each function of 1.22 it calls (`RunCpuStrategy`, `RunDecision`, `RunSetFormation`, ...). Only the tests use it. It could move into a project of its own, and the core would then no longer reference the emulator (`OpenNspw.Singleplayer`, Aigamo.Enzan). It needs more of the core than the three features: 1.22's layout read back as well as written, the globals' bytes, and the gas of each unit as it went in. So it is a later change, and only if the core's surface for it stays small.
 
 ## Where this meets the actors
-A later design moves each thread to an actor. This one leaves room for it, and designs none of it:
+Each thread is an actor ([Actors.md](Actors.md)):
 
-- The host UI's queue, given on the UI's thread and taken at the sites on the game's, is a mailbox already. It would become the game's actor's mailbox, and its lock would go.
+- The host UI's queue, given on the UI's thread and taken at the sites on the game's, is a mailbox of the extension, which the game's thread receives from at each site.
 - The input is checked on the game's thread, at the site, not as a command is queued: no extension's state is read from the UI's thread.
 - The points stay synchronous calls within the game's actor: an extension is in step with the battle, so it is part of the game's actor, not one of its own.
 - The snapshot, taken at `Presented`, is the message the game's actor sends the UI's.

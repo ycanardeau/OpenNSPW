@@ -306,14 +306,15 @@ public sealed class GameExtensions(Nspw game)
 		}
 	}
 
+	// Adds or removes an extension: on the game's thread, or before it runs.
 	public void Add(IGameExtension extension)
 	{
-		ImmutableInterlocked.Update(ref _all, all => all.Add(extension));
+		_all = _all.Add(extension);
 	}
 
 	public void Remove(IGameExtension extension)
 	{
-		ImmutableInterlocked.Update(ref _all, all => all.Remove(extension));
+		_all = _all.Remove(extension);
 	}
 
 	internal void GameStarted()

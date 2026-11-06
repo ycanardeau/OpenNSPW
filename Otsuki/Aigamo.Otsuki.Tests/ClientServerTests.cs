@@ -1,4 +1,5 @@
 using System.Net;
+using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Reliable;
 using FluentAssertions;
@@ -31,7 +32,7 @@ public class ClientServerTests : IAsyncLifetime
 
 	private readonly InMemoryNetwork _network = new();
 	private readonly List<Func<Task>> _closers = [];
-	private int _nextAddress;
+	private readonly Sequence _addresses = new();
 
 	public Task InitializeAsync() => Task.CompletedTask;
 
@@ -49,7 +50,7 @@ public class ClientServerTests : IAsyncLifetime
 		{
 			ReliableProfile = FastProfile,
 			TransportFactory = _network.CreateFactory(
-				IPAddress.Parse($"10.3.0.{Interlocked.Increment(ref _nextAddress)}")
+				IPAddress.Parse($"10.3.0.{_addresses.Next()}")
 			),
 			JoinTimeout = TimeSpan.FromSeconds(5),
 			RequestTimeout = TimeSpan.FromSeconds(5),
