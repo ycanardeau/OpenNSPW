@@ -2376,14 +2376,15 @@ public unsafe partial class Nspw
 		var f = Renderer.FrameCount % 10 + 1;
 		Selections[0] = default;
 		MoveOrders[0].Unit = 0;
-		ApplyComputerEvents();
+		if (!AreSidesSwitched)
+			ApplyComputerEvents();
 
 		ref var fleet = ref FleetAt(f);
 		var near = FindComputersTarget(ref fleet);
 		var flow = KeepUpFleet(ref fleet);
 		if (flow == StrategyFlow.NoFleet)
 		{
-			if (ScenarioNumber != 304)
+			if (ScenarioNumber != 304 || AreSidesSwitched)
 				return;
 			flow = StrategyFlow.Order;
 		}
@@ -2414,7 +2415,8 @@ public unsafe partial class Nspw
 				return;
 		}
 
-		ReinforceScenario304(f, ref fleet);
+		if (!AreSidesSwitched)
+			ReinforceScenario304(f, ref fleet);
 		OrderFleet(f, ref fleet);
 	}
 }

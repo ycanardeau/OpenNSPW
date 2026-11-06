@@ -481,16 +481,23 @@ public unsafe partial class Nspw
 		return result;
 	}
 
-	// In place of get_sinario_data: 1.22's scenario (Scenarios122.cs), which places the units, loads the map and sets the
-	// sides, the time limit and the camera.
-	public void SetUpSingleplayerScenario()
+	// game_init clears the computer's fleets, and ends each one's path: its destination is none (0x429C50).
+	private void ClearComputerFleets()
 	{
-		// game_init clears the computer's fleets, and ends each one's path: its destination is none (0x429C50).
 		ComputerFleets = default;
 		for (var f = 0; f < 11; f++)
 			ComputerFleets[f].DestinationX = World.Beyond;
+	}
 
+	// In place of get_sinario_data: 1.22's scenario (Scenarios122.cs), which places the units, loads the map and sets the
+	// sides, the time limit and the camera; then the sides switched, with the option (SwitchedSides.cs).
+	public void SetUpSingleplayerScenario()
+	{
+		ClearComputerFleets();
 		SetUpScenarioAs122(ScenarioNumber);
+		AreSidesSwitched = Options.SwitchSides;
+		if (AreSidesSwitched)
+			SwitchSides();
 	}
 
 	// Starts the battle of ScenarioNumber, without the title and setting screens.

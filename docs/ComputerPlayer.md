@@ -43,6 +43,13 @@ The scenarios build the target lists with these functions, which `cpu_strtgy` al
 
 Each adds from the first empty element of 1 to 17 (18 when there is none) the units that are not in elements 1 to 17 already, with no limit: past element 17, they are written on into the members. The shuffle counts the targets up to the first empty element, and swaps two random ones (`rand()%n+1` each) `rand()%18+1` times. `sub_403A70(unit, fleet)` (`0x403A70`) tells whether a plane's carrier (`info[1]`) is the fleet's flagship or a member.
 
+## Switched sides
+With the sides switched ([Options.md](Options.md#switchsides)), the computer plays the side 1.22's scenario gives the player, which 1.22's computer never plays: the game clears the fleet table as `game_init` does, and forms fleets 1 to 10 of the computer's units (`FormSwitchedFleets`), which `cpu_strtgy` plays as it plays 1.22's.
+
+- Units lead fleets in this order, then by number: carriers, light carriers, air bases with planes, battleships, cruisers, destroyers, transports, submarines. A warship leads the warships within 1200 of it that are in no fleet yet, a transport the transports, up to 13 members, the most of 1.22's fleets (scenario 304); an air base and a submarine lead fleets of their own. Past 10 fleets, a unit joins the nearest fleet of its kind with room, or stays in none, where it still fires and defends itself.
+- Every fleet attacks (mode 1) and renews its flagship. Its targets are the player's carriers first, then the battleships, cruisers, transports, bases, cities and ground units nearest to its flagship, at most 17 (a submarine's, the ships only): `sub_41F230` and the others have no limit, and would write on into the members.
+- A fleet of transports aims at the player's base, city or ground unit nearest to its flagship, where its transports land their cargo, as the scenarios set up the computer's (scenario 103); with none, it holds.
+
 ## cpu_strtgy
 `cpu_strtgy` (`0x404E30`), rewritten as `PlanComputerStrategy` (`ComputerStrategy.cs`), first clears the computer's order of the last frame (`cls_all_slct_unit_p2(0)`, `new_pp[0].used=0`). Then:
 
