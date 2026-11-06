@@ -5,7 +5,7 @@ A design: the three features that still live in the core, next to the ported cod
 The core is the port: the game as NSPW NET plays it, and NSPW 1.22's single-player game as 1.22 plays it.
 
 - The battle, the setting screens, the network game, the drawing and the sounds.
-- 1.22's single-player game: its scenarios (`Scenarios122.cs`), its computer player (`ComputerPlayer.cs`, `ComputerStrategy.cs`, `ComputerFleet.cs`), its decision, and the rules where it differs (`BattleRules`). The computer player of 1.22 is part of the port, as `cpu_strtgy` is part of 1.22; new computer players are extensions.
+- 1.22's single-player game: its scenarios (`Scenarios122.cs`), its computer player (`ComputerPlayer.cs`, `ComputerStrategy.cs`, `ComputerFleet.cs`), its decision, and the rules where it differs (`BattleRules`). The strategy of 1.22's computer (`cpu_strtgy`) is to leave the core later, as a computer player among others, while its fleets, its routes and its decision stay ([ComputerPlayersAsExtensions.md](ComputerPlayersAsExtensions.md)).
 - What 1.22 reads but never sets (its uninitialized locals): the port reads them where 1.22 does, and keeps what Windows' stack holds there by default. Where a value comes from is the API's (below).
 - 1.22's layout of the units and the fires (`WriteStateAs122`), which the port also writes into the emulator.
 - The extension API, and the queries below.
