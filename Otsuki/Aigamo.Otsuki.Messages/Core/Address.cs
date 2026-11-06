@@ -12,9 +12,9 @@ internal class Address
 {
 	public static readonly Guid ServiceProviderTcpIp = new("ebfe7ba0-628d-11d2-ae0f-006097b01411");
 
-	public static string KeyHostname = "hostname";
-	public static string KeyPort = "port";
-	public static string KeyProvider = "provider";
+	public const string KeyHostname = "hostname";
+	public const string KeyPort = "port";
+	public const string KeyProvider = "provider";
 
 	private readonly Dictionary<string, object> _components = new();
 
