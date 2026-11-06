@@ -102,8 +102,11 @@ public static class ReplayFormat
 	// The magic of this version of the format, and what every version's starts with: an older replay is told apart, to be
 	// refused (ReplayReader). 2 writes each action by its case (ReplayActionCase); 3 writes a frame's speed, which a frame
 	// of 2 tells by its ticks only, as the frames of a speed may run other ticks (docs/SteadySpeed.md), and whether it
-	// holds the battle, which none of 2 does, and the battle's options (docs/Options.md), which 2 has none of. 3 reads 2.
-	public static ReadOnlySpan<byte> Magic => "ONSPWRP3"u8;
+	// holds the battle, which none of 2 does, and the battle's options (docs/Options.md), which 2 has none of; 4 writes
+	// SwitchSides, which 3 does not have. 4 reads 3 and 2.
+	public static ReadOnlySpan<byte> Magic => "ONSPWRP4"u8;
+
+	public static ReadOnlySpan<byte> MagicOfVersion3 => "ONSPWRP3"u8;
 
 	public static ReadOnlySpan<byte> MagicOfVersion2 => "ONSPWRP2"u8;
 
@@ -196,6 +199,7 @@ public sealed class ReplayWriter : IDisposable
 	{
 		_writer.Write(options.SharedEffectRandom);
 		_writer.Write(options.SteadySpeed);
+		_writer.Write(options.SwitchSides);
 	}
 
 	public ReplayWriter(Stream stream, ReplayStart start)
@@ -366,6 +370,9 @@ public sealed class ReplayReader : IDisposable
 	// Whether the replay is of version 2, whose frames have no speed (SpeedOfVersion2).
 	private readonly bool _isVersion2;
 
+	// Whether the replay is of version 3, whose options have no SwitchSides.
+	private readonly bool _isVersion3;
+
 	// The speed of the last frame of version 2 that was not run with Space held.
 	private short _speedOfVersion2 = 1;
 
@@ -409,7 +416,7 @@ public sealed class ReplayReader : IDisposable
 		);
 	}
 
-	// The options; none in a replay of version 2.
+	// The options; none in a replay of version 2, and SwitchSides off in one of version 3.
 	private BattleOptions ReadOptions()
 	{
 		if (_isVersion2)
@@ -417,7 +424,8 @@ public sealed class ReplayReader : IDisposable
 
 		return new BattleOptions(
 			SharedEffectRandom: _reader.ReadBoolean(),
-			SteadySpeed: _reader.ReadBoolean()
+			SteadySpeed: _reader.ReadBoolean(),
+			SwitchSides: !_isVersion3 && _reader.ReadBoolean()
 		);
 	}
 
@@ -445,7 +453,8 @@ public sealed class ReplayReader : IDisposable
 			if (!magic.StartsWith(ReplayFormat.MagicOfAnyVersion))
 				throw new InvalidDataException("Not a replay of OpenNSPW.");
 			_isVersion2 = magic.SequenceEqual(ReplayFormat.MagicOfVersion2);
-			if (!_isVersion2 && !magic.SequenceEqual(ReplayFormat.Magic))
+			_isVersion3 = magic.SequenceEqual(ReplayFormat.MagicOfVersion3);
+			if (!_isVersion2 && !_isVersion3 && !magic.SequenceEqual(ReplayFormat.Magic))
 				throw new InvalidDataException(
 					"A replay of another version of OpenNSPW, which this one does not play."
 				);

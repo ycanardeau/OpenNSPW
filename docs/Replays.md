@@ -15,7 +15,7 @@ They serve two purposes: watching a battle again, and studying one, such as what
 | Note | Any time | A text for the frame, such as what a computer player decided (`ReplayRecorder.Note`) |
 | Result | `FrameEnded` | The battle's result, as it has one |
 
-The file (`.onspwr`) is compressed with gzip, and written as the battle goes, flushed every 100 frames: a game that stops without ending it leaves a replay that plays up to where it stopped. The format is in `ReplayFormat.cs`. Its magic has its version (`ONSPWRP3`): a replay of another version is told to be one, and refused, rather than read wrong, but for version 2, whose frames have no speed: it shows the speed that their ticks tell.
+The file (`.onspwr`) is compressed with gzip, and written as the battle goes, flushed every 100 frames: a game that stops without ending it leaves a replay that plays up to where it stopped. The format is in `ReplayFormat.cs`. Its magic has its version (`ONSPWRP4`): a replay of another version is told to be one, and refused, rather than read wrong, but for version 3, whose options have no `SwitchSides`, which it plays off, and version 2, whose frames have no speed: it shows the speed that their ticks tell.
 
 **The hash** covers the units, the fires, rand's state and the tick, but not a unit's sprite column (`SpriteColumn`): the drawing sets it for the units it draws, so it follows the camera and the cursor, and the battle never reads it.
 

@@ -103,6 +103,20 @@ public sealed class ReplayTests
 		Assert.True(player.Frame >= Frames - 1);
 	}
 
+	// A replay of a battle with the sides switched plays them switched, whatever the player's options are.
+	[Fact]
+	public void TheReplayPlaysWithTheSidesSwitched()
+	{
+		var options = new BattleOptions(SwitchSides: true);
+		var replay = Record(3, run => run.Frames(Frames), options: options);
+
+		using var player = Play(replay, Frames, options: BattleOptions.None);
+
+		Assert.Equal(options, player.Start.Options);
+		Assert.Null(player.Divergence);
+		Assert.True(player.Frame >= Frames - 1);
+	}
+
 	// A change to the game shows at the frame's hash.
 	[Fact]
 	public void TheReplayFindsAChange()
@@ -526,6 +540,45 @@ public sealed class ReplayTests
 
 		Assert.Equal(new short[] { 1, 4, 4, 0, 2 }, speeds);
 		Assert.Equal(BattleOptions.None, reader.Start.Options);
+	}
+
+	// A replay of version 3, whose options have no SwitchSides, plays with the sides as the scenario gives them.
+	[Fact]
+	public void AReplayOfVersion3HasTheSidesUnswitched()
+	{
+		var bytes = new MemoryStream();
+		using (
+			var gzip = new System.IO.Compression.GZipStream(
+				bytes,
+				System.IO.Compression.CompressionLevel.Fastest,
+				leaveOpen: true
+			)
+		)
+		using (var writer = new BinaryWriter(gzip))
+		{
+			writer.Write(ReplayFormat.MagicOfVersion3);
+			writer.Write((byte)ReplayMode.Singleplayer);
+			writer.Write((short)3);
+			writer.Write(0L);
+			writer.Write("");
+			writer.Write(0u);
+			writer.Write(0u);
+			writer.Write7BitEncodedInt(10);
+			writer.Write(false);
+			writer.Write(true);
+			writer.Write(true);
+			writer.Write7BitEncodedInt(0);
+			writer.Write((byte)ReplayRecord.End);
+		}
+
+		bytes.Position = 0;
+		using var reader = new ReplayReader(bytes);
+
+		Assert.Equal(
+			new BattleOptions(SharedEffectRandom: true, SteadySpeed: true),
+			reader.Start.Options
+		);
+		Assert.Equal(ReplayRecord.End, reader.Next().Kind);
 	}
 
 	// A battle of ミッドウェイ攻略１ between two games, each recorded: the host has a transport land, with the mouse, and
