@@ -8,8 +8,12 @@ An exact port of the NSPW NET source ([Original/NSPW_NET](../Original/NSPW_NET))
 | `OpenNspw.DirectPlay` | The DirectPlay 8 stand-ins implemented on [Otsuki](../Otsuki). |
 | `OpenNspw.Desktop` | The game, on MonoGame: its menus (with [Saruhashi](../Saruhashi), see [docs/UI.md](../docs/UI.md)), which run the port's `WinMain` and show its frames and dialogs. |
 | `OpenNspw.Replay` | Replays of battles, recorded and played as an extension of the game. See [docs/Replays.md](../docs/Replays.md). |
+| `OpenNspw.HostUI` | The commands that the app's own UI gives the battle in place of the mouse's clicks, and what the UI reads of the game, as an extension of the game. See [docs/UI.md](../docs/UI.md). |
+| `OpenNspw.Pacing` | Steady speed: a single-player battle that plays the same at every speed, as an extension of the game. See [docs/SteadySpeed.md](../docs/SteadySpeed.md). |
+| `OpenNspw.Verification` | Traces of NSPW 1.22: their format, the replay that the port follows and checks itself against, and the recorder of the port, as extensions of the game. See [docs/Verification.md](../docs/Verification.md). |
 | `OpenNspw.Porter` | Ports C++ files to the port's conventions, then fixes the compile errors that have a mechanical fix. |
 | `OpenNspw.Singleplayer` | The emulator of the single-player executable (NSPW 1.22) on [Enzan](../Enzan), and its functions translated by the [Disassembler](../Disassembler). See [docs/Singleplayer.md](../docs/Singleplayer.md). |
+| `OpenNspw.Recorder122` | Records traces of NSPW 1.22: runs `NSPW_122.exe` under the debugger, and records each battle played in it. Windows only. See [docs/Verification.md](../docs/Verification.md). |
 | `OpenNspw.Reference` | The reference: the unmodified C++ source, compiled in place, plus the tools that record what the tests compare against. Windows only, and not part of `OpenNSPW.slnx`. |
 | `OpenNspw.Tests` | Tests that replay the recordings through the port, and play whole games. They run on any platform. |
 
