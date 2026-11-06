@@ -15,7 +15,7 @@ internal interface ICanHost : ISessionTransition<SessionMessage.Host>
 		{
 			GuidInstance =
 				command.Application.GuidInstance == Guid.Empty
-					? Guid.NewGuid()
+					? session.NewGuid()
 					: command.Application.GuidInstance,
 		};
 

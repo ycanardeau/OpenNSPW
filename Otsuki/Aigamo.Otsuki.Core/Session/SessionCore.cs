@@ -302,6 +302,18 @@ internal sealed class SessionCore
 		_outputs.Emit(peerEvent);
 	}
 
+	/// <summary>
+	/// A random GUID (version 4), from the session's source of randomness.
+	/// </summary>
+	public Guid NewGuid()
+	{
+		Span<byte> bytes = stackalloc byte[16];
+		_outputs.FillRandom(bytes);
+		bytes[7] = (byte)((bytes[7] & 0x0F) | 0x40);
+		bytes[8] = (byte)((bytes[8] & 0x3F) | 0x80);
+		return new Guid(bytes);
+	}
+
 	public Dpnid CreateDpnid(int index, int version) =>
 		new(index, version, Application.GuidInstance);
 

@@ -101,6 +101,36 @@ internal sealed class ReliableConnection
 		_state = handle.IsOutbound ? new ConnectionState.Idle() : new ConnectionState.Listening();
 	}
 
+	/// <summary>
+	/// A random nonzero value, for a cookie or a secret, from the loop's source of randomness.
+	/// </summary>
+	public ulong CreateSecret()
+	{
+		Span<byte> bytes = stackalloc byte[8];
+		ulong value;
+		do
+		{
+			_loop.FillRandom(bytes);
+			value = BitConverter.ToUInt64(bytes);
+		} while (value == 0);
+		return value;
+	}
+
+	/// <summary>
+	/// A random session ID for a new outbound connection's CONNECT, never <see cref="SessionId.Empty"/>.
+	/// </summary>
+	public SessionId CreateSessionId()
+	{
+		Span<byte> bytes = stackalloc byte[4];
+		SessionId id;
+		do
+		{
+			_loop.FillRandom(bytes);
+			id = new SessionId(BitConverter.ToInt32(bytes));
+		} while (id.IsEmpty);
+		return id;
+	}
+
 	public override string ToString() =>
 		$"{nameof(ReliableConnection)}({RemoteEndPoint}, {(IsOutbound ? "outbound" : "inbound")})";
 

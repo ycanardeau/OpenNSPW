@@ -82,6 +82,12 @@ internal interface IConnectionLoopOutputs
 	/// The loop is shut down and its last connection has terminated: it takes no more inputs.
 	/// </summary>
 	void Done();
+
+	/// <summary>
+	/// Fills <paramref name="bytes"/> with random bytes, for session IDs, cookies and secrets: the core draws on no
+	/// source of its own, so that a test can make it repeat.
+	/// </summary>
+	void FillRandom(Span<byte> bytes);
 }
 
 /// <summary>
@@ -150,6 +156,8 @@ internal sealed class ConnectionLoopCore(
 
 	public void Defer(Connection connection, ConnectionMessage message) =>
 		_outputs.Defer(connection, message);
+
+	public void FillRandom(Span<byte> bytes) => _outputs.FillRandom(bytes);
 
 	// Done once the loop is shut down and its last connection has terminated.
 	private void ReportWhenDone()

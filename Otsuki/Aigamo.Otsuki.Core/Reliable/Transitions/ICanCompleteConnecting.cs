@@ -64,8 +64,8 @@ internal interface ICanCompleteConnecting
 			RemoteTimestamp = message.Timestamp,
 			Signing = message.SigningOptions,
 			ConnectSignature = message.ConnectSignature,
-			SenderSecret = ICanAcceptConnect.CreateSecret(),
-			ReceiverSecret = ICanAcceptConnect.CreateSecret(),
+			SenderSecret = connection.CreateSecret(),
+			ReceiverSecret = connection.CreateSecret(),
 		};
 		connection.Transmit(handshake.CreateConnectedSigned(poll: false, connection.Timestamp));
 		return connection.Establish(handshake);

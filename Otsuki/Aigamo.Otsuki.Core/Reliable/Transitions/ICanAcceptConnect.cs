@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using Aigamo.Otsuki.Messages.Reliable;
 
 namespace Aigamo.Otsuki.Reliable.Transitions;
@@ -13,21 +12,6 @@ internal interface ICanAcceptConnect : IConnectionTransition<ReliableMessage.Con
 	/// Signing needs protocol version 1.6 on both sides.
 	/// </summary>
 	private const int SigningProtocolVersion = 0x00010006;
-
-	/// <summary>
-	/// A cryptographically secure random nonzero value, for a cookie or a secret.
-	/// </summary>
-	public static ulong CreateSecret()
-	{
-		Span<byte> bytes = stackalloc byte[8];
-		ulong value;
-		do
-		{
-			RandomNumberGenerator.Fill(bytes);
-			value = BitConverter.ToUInt64(bytes);
-		} while (value == 0);
-		return value;
-	}
 
 	ConnectionState IConnectionTransition<ReliableMessage.Connect>.Execute(
 		ReliableConnection connection,
@@ -46,7 +30,7 @@ internal interface ICanAcceptConnect : IConnectionTransition<ReliableMessage.Con
 			RemoteProtocolVersion = message.ProtocolVersion,
 			RemoteMessageId = message.MessageId,
 			Signing = signing,
-			ConnectSignature = signing == PacketSigning.None ? 0 : CreateSecret(),
+			ConnectSignature = signing == PacketSigning.None ? 0 : connection.CreateSecret(),
 		};
 		connection.Transmit(handshake.CreateListenerResponse(connection.Timestamp));
 		connection.ConnectRetryTimer.Start(handshake.RetryInterval);

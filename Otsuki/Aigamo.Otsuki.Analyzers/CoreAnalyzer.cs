@@ -10,10 +10,10 @@ namespace Aigamo.Otsuki.Analyzers;
 /// <summary>
 /// Keeps Aigamo.Otsuki.Core a core: code that runs only on the thread that calls it, at the time it is told, and
 /// keeps its state in its own objects; and Aigamo.Otsuki.Messages, whose wire formats the core runs. In those
-/// assemblies it reports a use of the threads, tasks, timers, sockets and
-/// actors of .NET and of Otsuki, a read of a clock and an <c>async</c> function (<see cref="ThreadDiagnosticId"/>),
-/// and a static field that can change (<see cref="StaticStateDiagnosticId"/>). A race inside the core then needs code
-/// that does not build.
+/// assemblies it reports a use of the threads, tasks, timers, sockets and actors of .NET and of Otsuki, a read of a
+/// clock, a draw of randomness and an <c>async</c> function (<see cref="ThreadDiagnosticId"/>), and a static field
+/// that can change (<see cref="StaticStateDiagnosticId"/>). A race inside the core then needs code that does not
+/// build, and a run given the same inputs does the same.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class CoreAnalyzer : DiagnosticAnalyzer
@@ -50,18 +50,22 @@ public sealed class CoreAnalyzer : DiagnosticAnalyzer
 		"System.TimeProvider",
 		"System.Diagnostics.Stopwatch",
 		"System.Net.Dns",
+		"System.Random",
+		"System.Security.Cryptography.RandomNumberGenerator",
 		"System.Linq.ParallelEnumerable"
 	);
 
-	// Members that read a clock: the core is told the time with each input.
-	private static readonly ImmutableHashSet<string> ClockMemberNames = ImmutableHashSet.Create(
+	// Members that read a clock or draw randomness: the core is told the time with each input, and asks its outputs for
+	// random bytes, so that a test can make it repeat.
+	private static readonly ImmutableHashSet<string> AmbientMemberNames = ImmutableHashSet.Create(
 		"System.DateTime.Now",
 		"System.DateTime.UtcNow",
 		"System.DateTime.Today",
 		"System.DateTimeOffset.Now",
 		"System.DateTimeOffset.UtcNow",
 		"System.Environment.TickCount",
-		"System.Environment.TickCount64"
+		"System.Environment.TickCount64",
+		"System.Guid.NewGuid"
 	);
 
 	// Collections whose static instance would be state shared by every core of the process: these namespaces
@@ -76,7 +80,7 @@ public sealed class CoreAnalyzer : DiagnosticAnalyzer
 	private static readonly DiagnosticDescriptor ThreadRule = new(
 		id: ThreadDiagnosticId,
 		title: "The core runs only on the thread that calls it",
-		messageFormat: "'{0}' is not for the core: it is told the time and gives its effects to its outputs, which its shell carries out",
+		messageFormat: "'{0}' is not for the core: it is told the time, asks for randomness and gives its effects to its outputs, which its shell carries out",
 		category: "Design",
 		defaultSeverity: DiagnosticSeverity.Error,
 		isEnabledByDefault: true
@@ -111,11 +115,10 @@ public sealed class CoreAnalyzer : DiagnosticAnalyzer
 			|| named.ContainingAssembly?.Name == ActorsAssemblyName
 		);
 
-	private static bool IsClockMember(ISymbol symbol) =>
-		symbol is IPropertySymbol property
-		&& ClockMemberNames.Contains(
-			$"{property.ContainingType.OriginalDefinition.ToDisplayString()}.{property.Name}"
-		);
+	private static bool IsAmbientMember(ISymbol symbol) =>
+		symbol is IPropertySymbol or IMethodSymbol
+		&& symbol.ContainingType is { } type
+		&& AmbientMemberNames.Contains($"{type.OriginalDefinition.ToDisplayString()}.{symbol.Name}");
 
 	private static bool IsMutableCollection(ITypeSymbol type) =>
 		type is IArrayTypeSymbol
@@ -156,7 +159,7 @@ public sealed class CoreAnalyzer : DiagnosticAnalyzer
 			case INamedTypeSymbol type when IsThreadType(type):
 				Report(context, ThreadRule, name.GetLocation(), type.ToDisplayString());
 				return;
-			case { } member when IsClockMember(member):
+			case { } member when IsAmbientMember(member):
 				Report(
 					context,
 					ThreadRule,

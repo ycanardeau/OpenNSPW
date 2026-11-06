@@ -50,13 +50,52 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 	/// </summary>
 	public ImmutableArray<int> LoopQueueLengths => [.. _loops.Select(l => l.QueueLength)];
 
+	// A hash of the partner's address that every process computes alike: an endpoint's own hash differs from process
+	// to process, and the same partner would take another loop in each run (FNV-1a of the address, then the port).
+	private static int StableHash(EndPoint remoteEndPoint)
+	{
+		var hash = 2166136261u;
+		void Add(byte value) => hash = (hash ^ value) * 16777619u;
+
+		if (remoteEndPoint is IPEndPoint ip)
+		{
+			foreach (var value in ip.Address.GetAddressBytes())
+				Add(value);
+			Add((byte)ip.Port);
+			Add((byte)(ip.Port >> 8));
+		}
+		else
+		{
+			foreach (var value in remoteEndPoint.ToString() ?? string.Empty)
+			{
+				Add((byte)value);
+				Add((byte)(value >> 8));
+			}
+		}
+
+		return (int)(hash & int.MaxValue);
+	}
+
+	/// <summary>
+	/// The loop, of <paramref name="loops"/>, that runs the connection to <paramref name="remoteEndPoint"/>: the same in
+	/// every process.
+	/// </summary>
+	public static int LoopIndex(EndPoint remoteEndPoint, int loops) =>
+		StableHash(remoteEndPoint) % loops;
+
+	private ConnectionLoop LoopFor(EndPoint remoteEndPoint) =>
+		_loops[LoopIndex(remoteEndPoint, _loops.Length)];
+
+	/// <param name="randomSeed">Seeds the loops' randomness, each its own, for a test that must repeat;
+	/// <see langword="null"/>, the system's secure source.</param>
 	public ReliableEndpoint(
 		IDatagramTransport transport,
 		TimeProvider timeProvider,
 		ReliableProfile profile,
 		Func<SessionMessage, bool> report,
 		int loops = 1,
-		MailboxScheduler? scheduler = null
+		MailboxScheduler? scheduler = null,
+		int? randomSeed = null
 	)
 		: base(scheduler: scheduler)
 	{
@@ -66,13 +105,14 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 		[
 			.. Enumerable
 				.Range(0, Math.Max(1, loops))
-				.Select(_ => new ConnectionLoop(
+				.Select(index => new ConnectionLoop(
 					transport,
 					timeProvider,
 					profile,
 					report,
 					() => Post(new ReliableEndpointMessage.LoopDone()),
-					scheduler
+					scheduler,
+					randomSeed + 1 + index
 				)),
 		];
 		Start();
@@ -82,9 +122,6 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 					.Post(new ConnectionLoopMessage.DatagramReceived(remoteEndPoint, datagram))
 		);
 	}
-
-	private ConnectionLoop LoopFor(EndPoint remoteEndPoint) =>
-		_loops[(remoteEndPoint.GetHashCode() & int.MaxValue) % _loops.Length];
 
 	/// <summary>
 	/// Opens an outbound connection, which signs as <paramref name="signing"/> says, the session's mode, which the

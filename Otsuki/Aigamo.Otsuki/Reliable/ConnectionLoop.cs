@@ -16,24 +16,29 @@ internal sealed class ConnectionLoop : Actor<ConnectionLoopItem>, IConnectionLoo
 	private readonly Func<SessionMessage, bool> _report;
 	private readonly Action _onDone;
 	private readonly LoopAlarm _alarm;
+	private readonly RandomSource _random;
 
 	public ConnectionLoopCore Core { get; }
 
 	/// <param name="report">Posts a connection's report to the session.</param>
 	/// <param name="onDone">Called once the loop is shut down and its last connection has terminated.</param>
+	/// <param name="randomSeed">Seeds the loop's randomness, for a test that must repeat; <see langword="null"/>, the
+	/// system's secure source.</param>
 	public ConnectionLoop(
 		IDatagramTransport transport,
 		TimeProvider timeProvider,
 		ReliableProfile profile,
 		Func<SessionMessage, bool> report,
 		Action onDone,
-		MailboxScheduler? scheduler = null
+		MailboxScheduler? scheduler = null,
+		int? randomSeed = null
 	)
 		: base(scheduler: scheduler)
 	{
 		_transport = transport;
 		_report = report;
 		_onDone = onDone;
+		_random = new RandomSource(randomSeed);
 		_alarm = new LoopAlarm(timeProvider, () => Post(new ConnectionLoopMessage.TimersDue()));
 		Core = new ConnectionLoopCore(this, profile, this);
 		Start();
@@ -59,6 +64,8 @@ internal sealed class ConnectionLoop : Actor<ConnectionLoopItem>, IConnectionLoo
 		Stop();
 		_onDone();
 	}
+
+	void IConnectionLoopOutputs.FillRandom(Span<byte> bytes) => _random.Fill(bytes);
 
 	protected override void Receive(ConnectionLoopItem item)
 	{

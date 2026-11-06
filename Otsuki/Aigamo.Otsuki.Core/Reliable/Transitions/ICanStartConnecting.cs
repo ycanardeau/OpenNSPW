@@ -13,7 +13,7 @@ internal interface ICanStartConnecting : IConnectionTransition<ConnectionMessage
 	)
 	{
 		var handshake = new Handshake(
-			SessionId.NewSessionId(),
+			connection.CreateSessionId(),
 			connection.Profile.ConnectRetryInterval
 		);
 		connection.Transmit(handshake.CreateConnect(connection.Timestamp));
