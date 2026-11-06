@@ -6,15 +6,15 @@ using OpenNspw.App;
 namespace OpenNspw.Android;
 
 // The app on Android, in `activity`: played by touching the screen, and text written in Android's text box, as MonoGame's
-// Android gives no text typed (GameWindow.TextInput). The app's folders are its own, in no file browser.
+// Android gives no text typed (GameWindow.TextInput). Bluetooth is the device's (AndroidBluetooth). The app's folders are
+// its own, in no file browser.
 internal sealed class AndroidHost(Activity activity) : IAppHost
 {
 	private readonly Activity _activity = activity;
 
 	public bool IsTouchScreen => true;
 
-	// No Bluetooth on Android yet.
-	public IBluetoothRadio? Bluetooth => null;
+	public IBluetoothRadio? Bluetooth { get; } = AndroidBluetooth.Create(activity);
 
 	public void ListenToText(GameWindow window, Action<char> typed) { }
 

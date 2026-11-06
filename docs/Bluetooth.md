@@ -144,6 +144,14 @@ Done:
 - **Long names:** an `ActionButton` now cuts text too wide for it with an ellipsis, for long device names.
 - **Checked:** with a fake Bluetooth and scripted clicks, the form was checked through switching between the Internet and Bluetooth, hosting and joining, a wrong address, a paired device, Back while connecting, a second visit, and hosting into the waiting dialog. Nothing went over real Bluetooth.
 
+## Android
+In progress: written, and checked in an emulator up to hosting.
+
+- **The radio:** `AndroidBluetooth` (in `OpenNspw.Android`) is the Android host's `IBluetoothRadio`, given where the device has Bluetooth. Its connector, `AndroidBluetoothConnector`, listens with `ListenUsingRfcommWithServiceRecord` under the service's UUID, which Android publishes in the device's SDP server, and opens channels with `CreateRfcommSocketToServiceRecord`, which looks the channel up with SDP, as Windows does. Android's sockets block, so accepting and connecting run on the thread pool, and the connector is an actor that owns the listening socket, as the Windows one does.
+- **The device's own address:** Android hides it from apps (it reads `02:00:00:00:00:00`). So a host over Bluetooth shows its name instead, under "This device's Bluetooth name", and the guest picks that name among its paired devices.
+- **Permission:** before Android 12, the manifest's `BLUETOOTH` permission is enough. From Android 12 on, the app asks for `BLUETOOTH_CONNECT` the first time Bluetooth is chosen in the form. Until the user allows it, or while Bluetooth is off, the form finds no name and no device, and the screen looks again every second, so the form fills in once the user allows it or turns Bluetooth on. The desktop form does the same while Bluetooth is off.
+- **Checked** in the Android 16 emulator: the form offers Bluetooth, asks for the permission, and once it is allowed shows the device's name; hosting publishes the service ("OpenNSPW", on an RFCOMM channel that Android chooses) and waits in the game's dialog, and leaving it closes the listener. The emulator has no other device to connect to, so no channel was opened or accepted.
+
 ## Steps
 Each step builds and is tested on its own:
 

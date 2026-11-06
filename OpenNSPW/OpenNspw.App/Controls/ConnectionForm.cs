@@ -41,6 +41,9 @@ internal sealed class ConnectionForm : Form
 	private bool _canConnect;
 	private IReadOnlyList<BluetoothDevice> _pairedDevices = [];
 
+	// Whether the form shows the device's own name rather than its address, which the system hides.
+	private bool _showsLocalName;
+
 	// Until the dialog's fields come (Fill), first and after switching hosting or the service provider, which set them
 	// again: what is typed before would be lost, so the fields take nothing.
 	private bool _awaitsFill = true;
@@ -296,12 +299,16 @@ internal sealed class ConnectionForm : Form
 
 	// Shows the computer's own Bluetooth address, which a guest joins, or null if Bluetooth is off, and the paired
 	// devices, which a guest can choose from.
+	// localAddress: the device's own address; or where the system hides it, localName, its name, which guests see among
+	// their paired devices.
 	public void ShowBluetoothDevices(
-		string? localDevice,
+		string? localAddress,
+		string? localName,
 		IReadOnlyList<BluetoothDevice> pairedDevices
 	)
 	{
-		_localDevice.Text = localDevice ?? "";
+		_showsLocalName = localAddress is null && localName is not null;
+		_localDevice.Text = localAddress ?? localName ?? "";
 		_pairedDevices = [.. pairedDevices.Take(MaxDeviceButtons)];
 		UpdateControls();
 	}
@@ -362,7 +369,13 @@ internal sealed class ConnectionForm : Form
 		PaintLabel(g, Texts.PlayerName, 100);
 		if (_overBluetooth)
 		{
-			PaintLabel(g, _isHost ? Texts.ThisDevice : Texts.HostDevice, 182);
+			PaintLabel(
+				g,
+				!_isHost ? Texts.HostDevice
+					: _showsLocalName ? Texts.ThisDeviceName
+					: Texts.ThisDevice,
+				182
+			);
 			if (ShowsPairedDevices)
 				PaintLabel(g, Texts.PairedDevices, 262);
 		}

@@ -30,6 +30,11 @@ internal sealed class DesktopBluetooth : IBluetoothRadio
 		return BluetoothTransport.GetLocalEndPoint();
 	}
 
+	public string? GetLocalName()
+	{
+		return null;
+	}
+
 	public IReadOnlyList<BluetoothDevice> GetPairedDevices()
 	{
 		return BluetoothTransport.GetPairedDevices();

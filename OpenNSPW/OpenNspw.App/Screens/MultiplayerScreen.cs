@@ -24,8 +24,14 @@ internal sealed class MultiplayerScreen(NspwGame game) : Screen(game)
 	private bool _needsFill = true;
 
 	// Whether the form shows the computer's Bluetooth devices: only once Bluetooth is chosen, as the first Bluetooth call
-	// may ask the user for permission.
+	// may ask the user for permission. Until any is found, as while Bluetooth is off or the user has not answered yet,
+	// the screen looks again every second (BluetoothRetryUpdates).
 	private bool _hasBluetoothDevices;
+
+	private const int BluetoothRetryUpdates = 60;
+
+	// The updates until the screen looks for the Bluetooth devices again.
+	private int _bluetoothRetry;
 
 	// What the form found wrong before connecting, shown instead of the game's last message.
 	private string? _error;
@@ -98,11 +104,14 @@ internal sealed class MultiplayerScreen(NspwGame game) : Screen(game)
 			return;
 		}
 
-		_hasBluetoothDevices = true;
-		_form.ShowBluetoothDevices(
+		var (address, name, devices) = (
 			bluetooth.FindLocalEndPoint()?.ToString(),
+			bluetooth.FindLocalName(),
 			bluetooth.GetPairedDevices()
 		);
+		_hasBluetoothDevices = address is not null || name is not null || devices.Count > 0;
+		_bluetoothRetry = BluetoothRetryUpdates;
+		_form.ShowBluetoothDevices(address, name, devices);
 	}
 
 	// Switches hosting in the dialog, which sets the address and the port again, as the original's does.
@@ -261,6 +270,10 @@ internal sealed class MultiplayerScreen(NspwGame game) : Screen(game)
 				ItemText(dialog, resource.IDC_ADDRESS_LINE1),
 				ItemText(dialog, resource.IDC_ADDRESS_LINE2)
 			);
+		}
+		else if (_form.OverBluetooth && !_hasBluetoothDevices && --_bluetoothRetry <= 0)
+		{
+			ShowBluetoothDevices();
 		}
 
 		_form.CanConnect = Item(dialog, windef.IDOK)?.Enabled == true;

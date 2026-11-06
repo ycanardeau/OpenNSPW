@@ -2,6 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
   <!-- Network games: DirectPlay over UDP (OpenNspw.DirectPlay). -->
   <uses-permission android:name="android.permission.INTERNET" />
+  <!-- Bluetooth games (AndroidBluetooth): before Android 12, at install; from then on, connecting to devices, which the
+       app asks the user for the first time it uses Bluetooth. The app plays without Bluetooth too. -->
+  <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+  <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+  <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
   <uses-feature android:glEsVersion="0x00020000" android:required="true" />
   <!-- Back goes to the activity's callback from Android 13 on (MainActivity.PressEscape), not as a key. -->
   <!-- NSPW's icon (Resources/mipmap-anydpi-v26/icon.xml). -->

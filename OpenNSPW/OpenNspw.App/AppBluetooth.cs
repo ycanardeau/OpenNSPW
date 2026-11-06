@@ -8,8 +8,13 @@ namespace OpenNspw.App;
 // own address, the devices paired with it, and channels to a service.
 internal interface IBluetoothRadio
 {
-	// The address of the computer's Bluetooth controller. Fails with IOException if there is none, or it is off.
+	// The address of the computer's Bluetooth controller. Fails with IOException if there is none, it is off, or the
+	// system hides it, as Android does.
 	BluetoothEndPoint GetLocalEndPoint();
+
+	// The name of the device's Bluetooth controller, which guests see among their paired devices, where the system hides
+	// its address (GetLocalEndPoint); null elsewhere, and while the controller is off.
+	string? GetLocalName();
 
 	IReadOnlyList<BluetoothDevice> GetPairedDevices();
 
@@ -55,6 +60,12 @@ internal sealed class AppBluetooth(IBluetoothRadio radio) : IBluetoothProvider
 		{
 			return null;
 		}
+	}
+
+	// The device's own name, where the system hides its address, or null.
+	public string? FindLocalName()
+	{
+		return _radio.GetLocalName();
 	}
 
 	public IReadOnlyList<BluetoothDevice> GetPairedDevices()

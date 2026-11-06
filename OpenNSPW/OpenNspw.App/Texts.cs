@@ -85,6 +85,8 @@ internal static class Texts
 	public static string Bluetooth => "Bluetooth";
 	public static string HostDevice =>
 		Pick("HOST'S BLUETOOTH ADDRESS", "ホストの Bluetooth アドレス");
+	public static string ThisDeviceName =>
+		Pick("THIS DEVICE'S BLUETOOTH NAME", "このデバイスの Bluetooth 名");
 	public static string ThisDevice =>
 		Pick("THIS COMPUTER'S BLUETOOTH ADDRESS", "このコンピューターの Bluetooth アドレス");
 	public static string HostDevicePlaceholder =>
