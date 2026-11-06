@@ -99,6 +99,16 @@ A DirectPlay peer reacts to three independent sources at once: datagrams arrivin
 
 Otsuki uses the actor model instead. Every piece of protocol state belongs to exactly one actor, and nothing else ever touches it. The other threads interact with an actor only by posting a message to its mailbox, and the actor handles its messages one at a time. Each handler therefore reads like plain sequential code, with no locks, no races between a timer and a receive, and no state changing underneath it.
 
+### The core and its shell
+
+Actors keep two threads out of one piece of state, but not two messages out of an order nobody expected, and nothing stops code inside an actor from starting a task or calling another actor's object directly ([docs/OtsukiThreading.md](../../docs/OtsukiThreading.md#why-actors-still-race)). So the protocol itself is not written as actors. It lives in [Aigamo.Otsuki.Core](../Aigamo.Otsuki.Core), as state machines that do nothing by themselves:
+
+* **Inputs** are a message and the time: `SessionCore.Handle(message, now)` and `ConnectionLoopCore.Handle(item, now)`. The core reads no clock; its timers are deadlines in a queue of its own ([`LoopTimer`](../Aigamo.Otsuki.Core/Reliable/LoopTimer.cs)), and the caller wakes it at the nearest.
+* **Outputs** are calls on an interface that the caller implements, made in the order the core decides on, before `Handle` returns: send a datagram, post to a connection, publish the snapshot, raise an event, answer a command ([`ISessionOutputs`](../Aigamo.Otsuki.Core/Session/ISessionOutputs.cs), [`IConnectionLoopOutputs`](../Aigamo.Otsuki.Core/Reliable/ConnectionLoopCore.cs)). The core cannot complete a task: it names a command's `Completion` in an answer, which it gives only once the input is done and its snapshot published.
+* **The compiler keeps it so.** In the core, and in [Aigamo.Otsuki.Messages](../Aigamo.Otsuki.Messages) whose wire formats it runs, an analyzer reports as errors the threads, tasks, timers, sockets and actors of .NET and of Otsuki, a read of a clock, an `async` function, and a static field that can change. A race inside the core needs code that does not build.
+
+This assembly is the *shell*: the actors that run the cores, one message at a time, and carry out their outputs; the timers that wake them; the transports; and the facades. It is the [sans-I/O](https://sans-io.readthedocs.io) style of protocol libraries such as quinn-proto and h11.
+
 ### The actor
 
 [`Actor<TMessage>`](../Aigamo.Otsuki.Actors/Actor.cs) is deliberately small, on a mailbox of its own, [`Mailbox<T>`](../Aigamo.Otsuki.Actors/Mailbox.cs):
@@ -111,7 +121,7 @@ A few rules keep this sound:
 
 * **Handlers never block and never await.** They update state, post messages to other actors, send datagrams (a UDP send does not block) and return.
 * **Messages are immutable records.** Whatever crosses an actor boundary can be read safely by the receiver.
-* **Timers only post.** A connection's timers are deadlines in its loop's queue ([`LoopTimer`](Reliable/LoopTimer.cs)), with one runtime timer per loop for the nearest, which posts to the loop; the session's are [`ActorTimer`](Actors/ActorTimer.cs)s, which post too. A firing carries a generation number, so one that was already on its way when the timer was rescheduled or canceled is dropped (`TryConsume`). No timer callback ever touches state.
+* **Timers only post.** Each actor that runs a core arms one runtime timer for the core's nearest deadline ([`LoopAlarm`](Actors/LoopAlarm.cs)), which posts to the actor; the core then fires the timers that are due. A firing carries a generation number, so one that a later start or a cancel replaced is dropped (`TryConsume`). No timer callback ever touches state.
 * **Other threads read snapshots.** When the application needs to read state, as with `GetPeerInfo` or `Players`, the session publishes an immutable `SessionSnapshot`, updated by the players and groups that changed, which the facade reads ([`Latest<T>`](../Aigamo.Otsuki.Actors/Latest.cs)). No reader ever sees the actor's mutable state. A command's task completes only after the snapshot that shows what it did is published.
 
 ### The actors and how messages flow
@@ -119,33 +129,33 @@ A few rules keep this sound:
 ```mermaid
 flowchart LR
 	App([Application]) -- "HostAsync, ConnectAsync, SendTo, CloseAsync" --> Peer
-	Peer -- SessionMessage --> Session[SessionActor]
+	Peer -- SessionMessage --> Session["SessionActor (SessionCore)"]
 	Session -- "PeerEvent (mailbox)" --> App
 	Session -- "SessionSnapshot (Latest)" --> Peer
-	Session -- "ConnectionMessage (send, disconnect)" --> Loop[ConnectionLoop × N]
-	Loop -- "IConnectionObserver (posts SessionMessage)" --> Session
+	Session -- "ConnectionMessage (send, disconnect)" --> Loop["ConnectionLoop (ConnectionLoopCore) × N"]
+	Loop -- "SessionMessage (a connection's report)" --> Session
 	Socket[(UDP sockets)] -- "datagram, by address hash" --> Loop
 	Loop -- datagram --> Socket
 	Session -- "shut down" --> Endpoint[ReliableEndpoint]
 	Loop -- "done" --> Endpoint
 ```
 
-* [`Peer`](Peer.cs) is the facade the application uses. Its methods turn calls into `SessionMessage`s and post them. Calls that need an answer (`HostAsync`, `ConnectAsync`, `CloseAsync`, the group and info calls) carry a `TaskCompletionSource` that the session completes. [`Server`](Server.cs) and [`Client`](Client.cs) are narrower facades over a `Peer` for client/server sessions, and [`HostEnumerator`](Enumeration/HostEnumerator.cs) runs `EnumHostsAsync` on a transport of its own. `Peer.Queues` tells how many messages wait in each of its mailboxes.
-* [`SessionActor`](Session/SessionActor.cs) runs the core protocol ([MC-DPL8CS]): the name table and its groups, joining and leaving, integrity checks, info updates, host migration, and routing application data to and from players and groups. It raises `PeerEvent`s into a mailbox that the application drains.
-* [`ConnectionLoop`](Reliable/ConnectionLoop.cs) runs the connections whose remote address hashes to it: it keeps their table, decodes each datagram and hands it to the `Connection` for its source address, creating one for a new CONNECT, and runs their timers. A peer has as many loops as `PeerOptions.ConnectionLoops` says, one by default; a server of many clients gives one to each core it can spare.
-* [`Connection`](Reliable/Connection.cs) is one connection of the reliable protocol ([MC-DPL8R]) to one remote address, a state machine that its loop runs one message at a time. It reports to the session through `IConnectionObserver`, which the session implements by posting to its own mailbox. For any one connection, the session receives its notifications in order.
+* [`Peer`](Peer.cs) is the facade the application uses. Its methods turn calls into `SessionMessage`s and post them. Calls that need an answer (`HostAsync`, `ConnectAsync`, `CloseAsync`, the group and info calls) carry a `Completion`, which holds the `TaskCompletionSource` that the session's actor completes when its core answers. [`Server`](Server.cs) and [`Client`](Client.cs) are narrower facades over a `Peer` for client/server sessions, and [`HostEnumerator`](Enumeration/HostEnumerator.cs) runs `EnumHostsAsync` on a transport of its own. `Peer.Queues` tells how many messages wait in each of its mailboxes.
+* [`SessionActor`](Session/SessionActor.cs) runs a [`SessionCore`](../Aigamo.Otsuki.Core/Session/SessionCore.cs), the core protocol ([MC-DPL8CS]): the name table and its groups, joining and leaving, integrity checks, info updates, host migration, and routing application data to and from players and groups. It raises `PeerEvent`s into a mailbox that the application drains.
+* [`ConnectionLoop`](Reliable/ConnectionLoop.cs) runs a [`ConnectionLoopCore`](../Aigamo.Otsuki.Core/Reliable/ConnectionLoopCore.cs), for the connections whose remote address hashes to it: it keeps their table, decodes each datagram and hands it to the connection for its source address, creating one for a new CONNECT, and runs their timers. A peer has as many loops as `PeerOptions.ConnectionLoops` says, one by default; a server of many clients gives one to each core it can spare.
+* [`ReliableConnection`](../Aigamo.Otsuki.Core/Reliable/ReliableConnection.cs) is one connection of the reliable protocol ([MC-DPL8R]) to one remote address, a state machine that its loop runs one message at a time. Its reports go to the session as messages, in order for any one connection. The session knows it only by its handle, a [`Connection`](../Aigamo.Otsuki.Core/Reliable/Connection.cs) that nothing changes, so the two never share the connection's state.
 * [`ReliableEndpoint`](Reliable/ReliableEndpoint.cs) owns the datagram transport, a UDP socket unless [`PeerOptions.TransportFactory`](PeerOptions.cs) says otherwise, and the loops. Its transport's receive loop gives each datagram to the loop of its source address. Shut down, it keeps the transport until every loop has reported that its last connection has ended, so that a connection saying goodbye (HARD_DISCONNECT) is not cut off. A [`UdpDatagramTransport`](Transport/UdpDatagramTransport.cs) may bind several sockets to its port, one for each loop to send on.
 
-For example, a chat message from another peer travels: socket receive loop → `ConnectionLoop` (decode, look up the connection) → `Connection` (sequence, acknowledge, reassemble) → `SessionActor` (map the connection to a player) → `PeerEvent.DataReceived` → the application.
+For example, a chat message from another peer travels: socket receive loop → `ConnectionLoop` (decode, look up the connection) → `ReliableConnection` (sequence, acknowledge, reassemble) → `SessionActor` (map the connection to a player) → `PeerEvent.DataReceived` → the application.
 
 ### State machines
 
-`Connection` and `SessionActor` are state machines:
+`ReliableConnection` and `SessionCore` are state machines:
 
-* The state is a union, a `[GenerateMatch]` abstract record whose cases are the states: [`ConnectionState`](Reliable/ConnectionState.cs) and [`SessionState`](Session/SessionState.cs). Data that only matters in one phase lives on that case. For example, `ConnectionState.Established` holds the [`ReliableChannel`](Reliable/ReliableChannel.cs) that does the sequencing, and `SessionState.Joining` holds the join progress.
+* The state is a union, a `[GenerateMatch]` abstract record whose cases are the states: [`ConnectionState`](../Aigamo.Otsuki.Core/Reliable/ConnectionState.cs) and [`SessionState`](../Aigamo.Otsuki.Core/Session/SessionState.cs). Data that only matters in one phase lives on that case. For example, `ConnectionState.Established` holds the [`ReliableChannel`](../Aigamo.Otsuki.Core/Reliable/ReliableChannel.cs) that does the sequencing, and `SessionState.Joining` holds the join progress.
 * Each case lists the transitions it allows by implementing transition interfaces such as `ICanAcceptConnect`, `ICanRetransmit`, `ICanAdmitPlayers` and `ICanCompleteJoining`. They live one per file in the `Transitions` folders.
-* A transition handles one or more message types in a default interface implementation of `Execute(actor, message)`, which returns the next state.
-* For each message, the actor checks whether its current state implements the transition for that message type. If it does, the actor runs it and stores the returned state. If it does not, the message is ignored, which is what the protocol specifications require of unexpected packets.
+* A transition handles one or more message types in a default interface implementation of `Execute(machine, message)`, which returns the next state.
+* For each message, the machine checks whether its current state implements the transition for that message type. If it does, the machine runs it and stores the returned state. If it does not, the message is ignored, which is what the protocol specifications require of unexpected packets.
 
 The connection's states follow [MC-DPL8R] section 3.1, figure 1:
 
@@ -174,15 +184,16 @@ Every dispatch over a union (mailbox messages, wire messages, peer events) uses 
 | --- | --- |
 | `Peer` methods | the caller's thread; they only post |
 | `SessionActor`, each `ConnectionLoop`, `ReliableEndpoint` | one message at a time, on the thread pool (or `PeerOptions.Scheduler`) |
+| `SessionCore`, each `ConnectionLoopCore` | the thread of the actor that runs it, inside its `Receive`; never by themselves |
 | Timer callbacks, the socket receive loops | the thread pool; they only post |
 | `DoWork` handlers | the thread that calls `DoWork` |
 | `ReadEventsAsync` consumers | wherever the consumer awaits |
 
-Otsuki's code takes no lock: an analyzer reports one as an error, and a volatile field, and the concurrent types of .NET, everywhere but in [Aigamo.Otsuki.Actors](../Aigamo.Otsuki.Actors), where the mailbox and its siblings are. The types of the runtime that it uses, such as the thread pool, the sockets and the timers, take locks of their own.
+Otsuki's code takes no lock: an analyzer reports one as an error, and a volatile field, and the concurrent types of .NET, everywhere but in [Aigamo.Otsuki.Actors](../Aigamo.Otsuki.Actors), where the mailbox and its siblings are. In the core it also reports threads, tasks, timers, sockets, clocks, `async` and static state ([The core and its shell](#the-core-and-its-shell)). The types of the runtime that it uses, such as the thread pool, the sockets and the timers, take locks of their own.
 
 ## Testing
 
-Everything that touches the network goes through `IDatagramTransport`, and all timing through `TimeProvider`. Endpoints need not be IP addresses: [`StreamDatagramTransport`](Transport/StreamDatagramTransport.cs) carries datagrams over the reliable streams of an `IStreamConnector`, such as Bluetooth RFCOMM channels, addressed by the connector's own kind of endpoint. The tests run peers over an in-memory network that can lose, delay, reorder and partition datagrams, and use short protocol timings. They cover meshes of up to six peers, 20% packet loss with reordering, messages larger than a frame, coalescing, fast and full signing across sequence wraps, tampered frames, host enumeration, groups, info updates, host migration (with the new host collecting operations it missed), client/server sessions, peers leaving or dropping off, and rejected joins. Protocol tests replay the sample packets from [MC-DPL8R] section 4 byte for byte, and one test runs two peers over real loopback UDP. The simulation tests run whole sessions on one thread, every actor's messages and every datagram in an order a seed chooses, on a clock that moves only when nothing else can ([`ManualScheduler`](../Aigamo.Otsuki.Actors/MailboxScheduler.cs)), and try a hundred orders each.
+Everything that touches the network goes through `IDatagramTransport`, and all timing through `TimeProvider`, which only the shell reads: the core is told the time. So the core can be tested alone, with no thread at all: [`ConnectionLoopCoreTests`](../Aigamo.Otsuki.Tests/ConnectionLoopCoreTests.cs) give two loops' cores datagrams and times of their choosing, and check the order of what they did, such as every HARD_DISCONNECT of a goodbye coming before the loop is done. Endpoints need not be IP addresses: [`StreamDatagramTransport`](Transport/StreamDatagramTransport.cs) carries datagrams over the reliable streams of an `IStreamConnector`, such as Bluetooth RFCOMM channels, addressed by the connector's own kind of endpoint. The tests run peers over an in-memory network that can lose, delay, reorder and partition datagrams, and use short protocol timings. They cover meshes of up to six peers, 20% packet loss with reordering, messages larger than a frame, coalescing, fast and full signing across sequence wraps, tampered frames, host enumeration, groups, info updates, host migration (with the new host collecting operations it missed), client/server sessions, peers leaving or dropping off, and rejected joins. Protocol tests replay the sample packets from [MC-DPL8R] section 4 byte for byte, and one test runs two peers over real loopback UDP. The simulation tests run whole sessions on one thread, every actor's messages and every datagram in an order a seed chooses, on a clock that moves only when nothing else can ([`ManualScheduler`](../Aigamo.Otsuki.Actors/MailboxScheduler.cs)), and try a hundred orders each.
 
 [Aigamo.Otsuki.LoadTest](../Aigamo.Otsuki.LoadTest) runs a server and processes of clients over UDP, and reports each second the messages and datagrams on both sides, the latency, the CPU, the garbage, the lock contentions and every mailbox's depth. What it measured is in [docs/OtsukiThreading.md](../../docs/OtsukiThreading.md#measurements).
 
