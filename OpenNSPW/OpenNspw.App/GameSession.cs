@@ -438,9 +438,17 @@ internal sealed class GameSession : IDisposable
 			_framesSinceLetGo = 0;
 		var isResting = mouse.LeftButton == ButtonState.Released && _framesSinceLetGo >= 2;
 		var position = viewportAdapter.PointToScreen(mouse.Position);
+
+		// Right of the layout, on a wide screen (WideViewportAdapter), the pointer is not at the screen's edge, which scrolls
+		// the map (ReadInput): the cursor stays left of it.
+		var pointed =
+			position.X >= all_head.SCRN_WIDTH - 1
+			&& viewportAdapter.VirtualWidth > all_head.SCRN_WIDTH
+				? new DrawingPoint(all_head.SCRN_WIDTH - 2, position.Y)
+				: new DrawingPoint(position.X, position.Y);
 		var (x, y) = (cursor ?? (isResting ? restingCursor : null)) is { } point
 			? (point.X, point.Y)
-			: (position.X, position.Y);
+			: (pointed.X, pointed.Y);
 		if (_postedCursor != (x, y))
 		{
 			Game.SetCursorPos(x, y);
