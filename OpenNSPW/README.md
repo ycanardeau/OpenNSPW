@@ -63,7 +63,7 @@ dotnet run --project OpenNspw.Desktop -- --singleplayer 3
 dotnet build OpenNspw.Android -t:Run -p:AndroidSdkDirectory=<Android SDK> -p:JavaSdkDirectory=<JDK 17>
 ```
 
-It shows the desktop's layout, scaled to the screen in landscape. A touch is the mouse's left button, held where the touch is; once it is lifted, the game's cursor rests away from the screen's edges, which would scroll the map. Back is Escape. Touching a field to write in, such as a host's address, opens Android's text box, which fills the field once it is confirmed. What the game writes, such as the settings, the saves and the replays, is in the app's own folder (`files/.config/OpenNSPW`).
+It fills the screen in landscape, as a desktop's wide window does: the battle's command bar and minimap in a column at the right, and the rest of the sidebar in a panel that **Panel** shows. A tap is a click, a drag pans the battlefield, two fingers zoom it, and two fingers lifted without zooming deselect; the command bar gives what only the keyboard does, such as the speed (see [docs/UI.md](../docs/UI.md#differences-from-the-originals-screens)). Once a touch is lifted, the game's cursor rests away from the screen's edges, which would scroll the map. Back is Escape. Touching a field to write in, such as a host's address, opens Android's text box, which fills the field once it is confirmed. What the game writes, such as the settings, the saves and the replays, is in the app's own folder (`files/.config/OpenNSPW`).
 
 The text is drawn in fonts that come with the game, so that it looks the same on every platform: BIZ UDGothic for the game's own text and BIZ UDPGothic for the menus, under the SIL Open Font License 1.1 ([OpenNspw.App/Fonts/OFL.txt](OpenNspw.App/Fonts/OFL.txt)).
 

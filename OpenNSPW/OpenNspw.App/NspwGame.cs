@@ -55,7 +55,7 @@ internal sealed class NspwGame : Game
 
 	public SpriteBatch SpriteBatch { get; private set; } = default!;
 
-	public ViewportAdapter ViewportAdapter { get; private set; } = default!;
+	public WideViewportAdapter ViewportAdapter { get; private set; } = default!;
 
 	public WindowManager WindowManager { get; private set; } = default!;
 
@@ -146,15 +146,15 @@ internal sealed class NspwGame : Game
 
 	protected override void Initialize()
 	{
-		_graphics.PreferredBackBufferWidth = all_head.SCRN_WIDTH;
-		_graphics.PreferredBackBufferHeight = all_head.SCRN_HEIGHT;
+		// A window of the game's screen on a desktop; on a touch screen, the whole screen, in landscape, whose shape the
+		// screen takes (WideViewportAdapter), as MonoGame's Android otherwise keeps the client area to the back buffer's.
+		var display = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode;
+		(_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight) =
+			Host.IsTouchScreen
+				? (Math.Max(display.Width, display.Height), Math.Min(display.Width, display.Height))
+				: (all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		_graphics.ApplyChanges();
-		ViewportAdapter = new BoxingViewportAdapter(
-			Window,
-			GraphicsDevice,
-			all_head.SCRN_WIDTH,
-			all_head.SCRN_HEIGHT
-		);
+		ViewportAdapter = new WideViewportAdapter(GraphicsDevice);
 		base.Initialize();
 	}
 
@@ -173,8 +173,9 @@ internal sealed class NspwGame : Game
 		Components.Add(new InputListenerComponent(this, mouseListener, keyboardListener));
 
 		Fonts = new UIFonts();
+		// Wider than the layout, for the battle screen's controls beside it on a wide screen (WideViewportAdapter).
 		WindowManager = new WindowManager(
-			new DrawingRectangle(0, 0, all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT),
+			new DrawingRectangle(0, 0, all_head.SCRN_WIDTH * 3, all_head.SCRN_HEIGHT),
 			new MonoGameGraphicsFactory(SpriteBatch, ViewportAdapter),
 			Fonts.Regular(14)
 		);
@@ -206,6 +207,7 @@ internal sealed class NspwGame : Game
 			_screenManager.ReplaceScreen(screen);
 		}
 
+		ViewportAdapter.Fit();
 		Pointer.Update();
 		base.Update(gameTime);
 	}

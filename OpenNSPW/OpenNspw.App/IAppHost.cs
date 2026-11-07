@@ -9,6 +9,10 @@ internal interface IAppHost
 	// Whether the player plays by touching the screen (TouchPointer), rather than with a mouse (MousePointer).
 	bool IsTouchScreen { get; }
 
+	// How much the battlefield is magnified at first, until the player zooms it (Battlefield.Zoom): more on a small screen,
+	// where the original's layout, as high as the screen, makes the units too small to touch.
+	float BattleZoom { get; }
+
 	// Passes each character typed in the window to `typed`, as the system composes them: MonoGame's GameWindow.TextInput
 	// on a desktop, which MonoGame's Android does not have.
 	void ListenToText(GameWindow window, Action<char> typed);

@@ -32,18 +32,25 @@ public sealed class MonoGameGraphics : Graphics
 			_spriteBatch = spriteBatch;
 			_scissorRectangle = spriteBatch.GraphicsDevice.ScissorRectangle;
 
-			// The scissor is in the back buffer's pixels: the clip scaled as the viewport scales the controls, and moved to
-			// where the viewport is, such as between the bars of a boxing viewport.
+			// The scissor is in the back buffer's pixels: the clip moved and scaled as the viewport's matrix moves and scales
+			// the controls, and moved to where the viewport is, such as between the bars of a boxing viewport.
 			if (viewportAdapter != null)
 			{
 				var viewport = spriteBatch.GraphicsDevice.Viewport;
-				var scale =
-					new Vector2(viewportAdapter.ViewportWidth, viewportAdapter.ViewportHeight)
-					/ new Vector2(viewportAdapter.VirtualWidth, viewportAdapter.VirtualHeight);
+				var matrix = viewportAdapter.GetScaleMatrix();
+				var offset = new Vector2(viewport.X, viewport.Y);
+				var topLeft =
+					Vector2.Transform(scissorRectangle.Location.ToVector2(), matrix) + offset;
+				var bottomRight =
+					Vector2.Transform(
+						(scissorRectangle.Location + scissorRectangle.Size).ToVector2(),
+						matrix
+					) + offset;
 				scissorRectangle = new XnaRectangleF(
-					scissorRectangle.Location.ToVector2() * scale
-						+ new Vector2(viewport.X, viewport.Y),
-					scissorRectangle.Size.ToVector2() * scale
+					topLeft.X,
+					topLeft.Y,
+					bottomRight.X - topLeft.X,
+					bottomRight.Y - topLeft.Y
 				).ToRectangle();
 			}
 			_spriteBatch.GraphicsDevice.ScissorRectangle = scissorRectangle;
@@ -66,12 +73,44 @@ public sealed class MonoGameGraphics : Graphics
 	private DisposableScissor CreateDisposableScissor() =>
 		new(SpriteBatch, DrawingRectangle.Round(ClipBounds).ToXnaRectangle(), ViewportAdapter);
 
-	private void Begin(SamplerState? samplerState = null) =>
+	// Where the control's client area is on the screen, which its paint is drawn from, at the window manager's scale: the
+	// control's scale (Control.ScreenScale) is drawn by the batch's matrix (Begin).
+	private Vector2 Origin => Control.PointToScreen(DrawingPoint.Empty).ToXnaPoint().ToVector2();
+
+	// A point of the control's client area, on the screen before the control's scale.
+	private Vector2 ToScreen(DrawingPoint point) => Origin + point.ToXnaPoint().ToVector2();
+
+	// A rectangle of the control's client area, on the screen before the control's scale.
+	private XnaRectangle ToScreen(DrawingRectangle rectangle) =>
+		new(
+			(int)Origin.X + rectangle.X,
+			(int)Origin.Y + rectangle.Y,
+			rectangle.Width,
+			rectangle.Height
+		);
+
+	// The control's scale, around where its client area is.
+	private Matrix ControlMatrix()
+	{
+		var scale = Control.ScreenScale;
+		if (scale == 1)
+			return Matrix.Identity;
+
+		var origin = Origin;
+		return Matrix.CreateTranslation(-origin.X, -origin.Y, 0)
+			* Matrix.CreateScale(scale)
+			* Matrix.CreateTranslation(origin.X, origin.Y, 0);
+	}
+
+	// Begins the batch, drawing through `transform` first, if any, then the control's scale and the viewport's matrix.
+	private void Begin(SamplerState? samplerState = null, Matrix? transform = null) =>
 		SpriteBatch.Begin(
 			blendState: BlendState.AlphaBlend,
 			samplerState: samplerState,
 			rasterizerState: s_rasterizerState,
-			transformMatrix: ViewportAdapter?.GetScaleMatrix()
+			transformMatrix: (transform ?? Matrix.Identity)
+				* ControlMatrix()
+				* (ViewportAdapter?.GetScaleMatrix() ?? Matrix.Identity)
 		);
 
 	// Starts drawing on the control: its clip, and the batch.
@@ -133,7 +172,7 @@ public sealed class MonoGameGraphics : Graphics
 		if (image is null)
 			return;
 
-		var position = Control.PointToScreen(point).ToXnaPoint().ToVector2();
+		var position = ToScreen(point);
 		if (image.SamplerState is not SamplerState samplerState)
 		{
 			image.Draw(SpriteBatch, position);
@@ -159,9 +198,20 @@ public sealed class MonoGameGraphics : Graphics
 	/// </summary>
 	public void DrawWith(SamplerState samplerState, Action<SpriteBatch, Vector2> draw)
 	{
+		DrawWith(samplerState, null, draw);
+	}
+
+	// Draws with `draw` as DrawWith does, through `transform` first, such as a zoom, then the viewport's matrix; still
+	// clipped to the control.
+	public void DrawWith(
+		SamplerState samplerState,
+		Matrix? transform,
+		Action<SpriteBatch, Vector2> draw
+	)
+	{
 		SpriteBatch.End();
-		Begin(samplerState);
-		draw(SpriteBatch, Control.PointToScreen(DrawingPoint.Empty).ToXnaPoint().ToVector2());
+		Begin(samplerState, transform);
+		draw(SpriteBatch, Origin);
 		SpriteBatch.End();
 		Begin();
 	}
@@ -174,12 +224,7 @@ public sealed class MonoGameGraphics : Graphics
 		if (pen.Color == DrawingColor.Transparent)
 			return;
 
-		SpriteBatch.DrawLine(
-			Control.PointToScreen(point1).ToXnaPoint().ToVector2(),
-			Control.PointToScreen(point2).ToXnaPoint().ToVector2(),
-			pen.Color.ToXnaColor(),
-			pen.Width
-		);
+		SpriteBatch.DrawLine(ToScreen(point1), ToScreen(point2), pen.Color.ToXnaColor(), pen.Width);
 	}
 
 	public override void DrawLine(Pen pen, DrawingPointF point1, DrawingPointF point2) =>
@@ -196,11 +241,7 @@ public sealed class MonoGameGraphics : Graphics
 		if (pen.Color == DrawingColor.Transparent)
 			return;
 
-		SpriteBatch.DrawRectangle(
-			Control.RectangleToScreen(rectangle).ToXnaRectangle(),
-			pen.Color.ToXnaColor(),
-			pen.Width
-		);
+		SpriteBatch.DrawRectangle(ToScreen(rectangle), pen.Color.ToXnaColor(), pen.Width);
 	}
 
 	public override void DrawRectangle(Pen pen, int x, int y, int width, int height) =>
@@ -226,7 +267,7 @@ public sealed class MonoGameGraphics : Graphics
 				font.Draw(
 					SpriteBatch,
 					text,
-					Control.PointToScreen(DrawingPoint.Round(point)).ToXnaPoint().ToVector2(),
+					ToScreen(DrawingPoint.Round(point)),
 					b.Color.ToXnaColor()
 				);
 				break;
@@ -247,10 +288,7 @@ public sealed class MonoGameGraphics : Graphics
 				if (b.Color == DrawingColor.Transparent)
 					return;
 
-				SpriteBatch.FillRectangle(
-					Control.RectangleToScreen(rectangle).ToXnaRectangle(),
-					b.Color.ToXnaColor()
-				);
+				SpriteBatch.FillRectangle(ToScreen(rectangle), b.Color.ToXnaColor());
 				break;
 
 			default:

@@ -419,6 +419,9 @@ internal sealed class DialogForms(
 		}
 	}
 
+	// Whether a dialog of the game is shown, which takes the keys pressed (GameSession.UpdateInput).
+	public bool IsShown => _forms.Count > 0;
+
 	// Whether a point (in game pixels) is on a dialog.
 	public bool Contains(Point point)
 	{

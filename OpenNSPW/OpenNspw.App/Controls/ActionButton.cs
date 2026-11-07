@@ -2,12 +2,15 @@ using Aigamo.Saruhashi;
 
 namespace OpenNspw.App.Controls;
 
-// A button of a form: a primary one filled with brass, or a secondary one outlined.
+// A button of a form: a primary one filled with brass, or a secondary one outlined, over navy if it is solid.
 internal sealed class ActionButton(UIFonts fonts) : FlatButton
 {
 	private readonly UIFonts _fonts = fonts;
 
 	public bool IsPrimary { get; set; }
+
+	// Whether a secondary button is filled with navy under its outline, to be seen over anything, such as the sea.
+	public bool IsSolid { get; set; }
 
 	public int FontSize { get; set; } = 17;
 
@@ -35,6 +38,8 @@ internal sealed class ActionButton(UIFonts fonts) : FlatButton
 		}
 		else
 		{
+			if (IsSolid)
+				Painter.Fill(g, bounds, Theme.Navy);
 			Painter.Fill(g, bounds, Theme.Alpha(Theme.Brass, 0.06f + 0.12f * Hover));
 			Painter.Frame(g, bounds, Theme.Lerp(Theme.Line, Theme.Brass, 0.4f + 0.6f * Hover));
 			text = Theme.Lerp(Theme.Text, Theme.BrassLight, Hover);
