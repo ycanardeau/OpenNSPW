@@ -458,6 +458,8 @@ public class Control : IDisposable, IBindableComponent
 			return;
 
 		_disposed = true;
+		if (disposing)
+			Disposed?.Invoke(this, EventArgs.Empty);
 	}
 
 	public void Dispose()

@@ -10,19 +10,15 @@ public class ReliableMessageSerializerTests
 	{
 		static IEnumerable<object?[]> TestDataCore()
 		{
-			yield return new object?[] { new byte[] { 0 }, null, false };
-			yield return new object?[] { new byte[] { 0, 1, 2, 3 }, null, false };
-			yield return new object?[] { new byte[] { 1, 2, 3, 4 }, null, false };
+			yield return new object?[] { new byte[] { 0 }, null };
+			yield return new object?[] { new byte[] { 0, 1, 2, 3 }, null };
+			yield return new object?[] { new byte[] { 1, 2, 3, 4 }, null };
 		}
 
 		return DataFrameMessageSerializerTests
 			.TestData()
-			.Concat(
-				ConnectMessageSerializerTests.TestData().Select(x => x.Concat([false]).ToArray())
-			)
-			.Concat(
-				ConnectedMessageSerializerTests.TestData().Select(x => x.Concat([false]).ToArray())
-			)
+			.Concat(ConnectMessageSerializerTests.TestData())
+			.Concat(ConnectedMessageSerializerTests.TestData())
 			.Concat(HardDisconnectMessageSerializerTests.TestData())
 			.Concat(SackMessageSerializerTests.TestData())
 			.Concat(TestDataCore());
@@ -30,7 +26,7 @@ public class ReliableMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, ReliableMessage? expected, bool enableSigning)
+	internal void Deserialize(byte[] data, ReliableMessage? expected)
 	{
 		static byte[]? Serialize(ReliableMessage? message) =>
 			message is not null ? ReliableMessageSerializer.Default.Serialize(message) : null;

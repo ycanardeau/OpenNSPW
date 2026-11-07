@@ -24,7 +24,6 @@ public class DataFrameMessageSerializerTests
 				NextReceive = SequenceId.Empty,
 				SessionId = new SessionId(0x79C9AEC6),
 			},
-			false,
 		};
 
 		yield return new object?[]
@@ -41,7 +40,6 @@ public class DataFrameMessageSerializerTests
 				NextReceive = SequenceId.Empty,
 				SessionId = new SessionId(0x51C5997D),
 			},
-			false,
 		};
 
 		yield return new object?[]
@@ -99,15 +97,15 @@ public class DataFrameMessageSerializerTests
 				EndMessage = true,
 				User1 = true,
 			},
-			false,
 		};
 	}
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, ReliableMessage.DataFrame expected, bool enableSigning)
+	internal void Deserialize(byte[] data, ReliableMessage.DataFrame expected)
 	{
 		var message = DataFrameMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.Command.Should().Be(expected.Command);
 		message.Control.Should().Be(expected.Control);
 		message.SequenceId.Should().Be(expected.SequenceId);
@@ -119,7 +117,7 @@ public class DataFrameMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, ReliableMessage.DataFrame message, bool enableSigning)
+	internal void Serialize(byte[] expected, ReliableMessage.DataFrame message)
 	{
 		DataFrameMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}
@@ -141,7 +139,8 @@ public class DataFrameMessageSerializerTests
 	internal void RoundTrip_PreservesFlagsFromWire(byte[] data)
 	{
 		var message = DataFrameMessageSerializer.Default.Deserialize(data);
-		message!.Control.Should().Be((PacketControl)data[1]);
+		Assert.NotNull(message);
+		message.Control.Should().Be((PacketControl)data[1]);
 		DataFrameMessageSerializer.Default.Serialize(message).Should().Equal(data);
 	}
 }

@@ -20,6 +20,7 @@ public class NameTableVersionMessageSerializerTests
 	internal void Deserialize(byte[] data, CoreMessage.NameTableVersion expected)
 	{
 		var message = NameTableVersionMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.PacketType.Should().Be(expected.PacketType);
 		message.Version.Should().Be(expected.Version);
 		message.VersionNotUsed.Should().Be(expected.VersionNotUsed);

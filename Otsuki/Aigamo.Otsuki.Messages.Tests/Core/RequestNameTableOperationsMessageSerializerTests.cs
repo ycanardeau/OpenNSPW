@@ -20,6 +20,7 @@ public class RequestNameTableOperationsMessageSerializerTests
 	internal void Deserialize(byte[] data, CoreMessage.RequestNameTableOperations expected)
 	{
 		var message = RequestNameTableOperationsMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.PacketType.Should().Be(expected.PacketType);
 		message.Version.Should().Be(expected.Version);
 		message.VersionNotUsed.Should().Be(expected.VersionNotUsed);

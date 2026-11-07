@@ -339,6 +339,7 @@ public class AckNameTableOperationsMessageSerializerTests
 	internal void Deserialize(byte[] data, CoreMessage.AckNameTableOperations expected)
 	{
 		var message = AckNameTableOperationsMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.PacketType.Should().Be(expected.PacketType);
 		message.NumEntries.Should().Be(expected.NumEntries);
 		message
