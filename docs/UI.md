@@ -71,7 +71,7 @@ What the game writes over its screens is drawn by the UI over its own (`GameMess
 - **Colors and shapes** (`Controls/Theme.cs`): the navy of a chart table, brass for what can be chosen, and a chart's corner brackets on panels, over a sea chart's grid (`Screens/Backdrop.cs`). Nothing moves: the menus have no animation.
 - **Fonts** (`BundledFonts`): the app comes with its fonts, embedded in it, so that its text is the same on every platform: BIZ UDGothic for the game's own text, fixed-width as the original's, and BIZ UDPGothic for the menus (`UIFonts`), under the SIL Open Font License.
 - **Languages** (`Texts`, `GameTexts`, `SingleplayerTexts`): English and Japanese. The UI starts in the system's language and remembers the one chosen on the main menu (`UISettings`, `ui.json` beside the game's settings). What the game writes stays Japanese in the snapshot and is put into English as the UI draws it, in the words of the game's English edition (its `LNGG_VER` code); the single-player scenarios' titles and briefings, which `NSPW_122.exe` has only in Japanese, are translated.
-- **Keyboard**: the menus, the multiplayer form and the setting screens can be used with the keyboard as well as the mouse; in a battle the keys are the game's.
+- **Keyboard**: the menus, the multiplayer form and the setting screens can be used with the keyboard as well as the mouse; in a battle the keys are the game's, but while a dialog of the game is shown, such as the chat, which takes the keys pressed, as the original's keyboard reads keys only while its window is the active one (`DISCL_FOREGROUND`).
 
 ## Differences from the original's screens
 What the UI adds, each a way of giving the original's own clicks or of showing what the player already sees:

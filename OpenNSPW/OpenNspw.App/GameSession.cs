@@ -372,7 +372,11 @@ internal sealed class GameSession : IDisposable
 #endif
 	}
 
-	private void UpdateKeyboard()
+	// Passes the keys pressed and let go to the game, but the keys pressed while a dialog of the game is shown
+	// (`isOnDialog`), which are the dialog's, such as what is typed into the chat: the original's keyboard reads keys only
+	// while its window is the active one (DISCL_FOREGROUND), and a dialog takes the activation as it opens. A key let go
+	// goes to the game anyway, which ignores one it did not see pressed, so that none stays held, such as Space.
+	private void UpdateKeyboard(bool isOnDialog)
 	{
 		var keyboard = Keyboard.GetState();
 		IsQuitRequested = false;
@@ -387,6 +391,7 @@ internal sealed class GameSession : IDisposable
 				!IsInputHeldBack
 				&& !IsHeldBackDebugKey(key)
 				&& down != _previousKeyboard.IsKeyDown(key)
+				&& !(down && isOnDialog)
 			)
 			{
 				Game.PostKeyboardInput(dik, down);
@@ -469,17 +474,18 @@ internal sealed class GameSession : IDisposable
 	// Passes the keyboard and the pointer (`mouse`, IPointer) to the game: the pointer's buttons but where a form of the UI
 	// is (isOnForm), and its position, or `cursor` in its place. restingCursor: where the cursor rests while no button is
 	// held, as on a touch screen, where the player points only while touching it: away from the screen's edges, which
-	// scroll the map.
+	// scroll the map. isOnDialog: whether a dialog of the game is shown, which takes the keys pressed (UpdateKeyboard).
 	public void UpdateInput(
 		MouseState mouse,
 		ViewportAdapter viewportAdapter,
 		Func<DrawingPoint, bool> isOnForm,
 		DrawingPoint? cursor = null,
-		DrawingPoint? restingCursor = null
+		DrawingPoint? restingCursor = null,
+		bool isOnDialog = false
 	)
 	{
 		ObjectDisposedException.ThrowIf(_isDisposed, this);
-		UpdateKeyboard();
+		UpdateKeyboard(isOnDialog);
 		UpdateMouse(mouse, viewportAdapter, isOnForm, cursor, restingCursor);
 	}
 

@@ -285,7 +285,8 @@ internal sealed class GameScreen(
 					|| _battleForm.Owns(point)
 					|| _settingForm.Owns(point),
 				cursor,
-				Game.Host.IsTouchScreen ? SettingForm.GameCursor : null
+				Game.Host.IsTouchScreen ? SettingForm.GameCursor : null,
+				isOnDialog: _dialogs.IsShown
 			);
 			if (_session.IsQuitRequested)
 				ToggleConfirmQuit();
