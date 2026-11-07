@@ -21,7 +21,7 @@ ui.Root.Controls.Add(start);
 - **A real control tree.** Controls nest, clip to their parents, take focus and capture the mouse. Input goes to the right control, and every control repaints every frame.
 - **Not tied to a renderer.** `Aigamo.Saruhashi` knows nothing about MonoGame: it draws through `IGraphicsFactory` and `Graphics`. `Aigamo.Saruhashi.MonoGame` is one backend, and you can write another.
 - **Runs wherever MonoGame runs.** The MonoGame package isn't built for one platform: it uses the MonoGame your game references, such as `MonoGame.Framework.DesktopGL` or `MonoGame.Framework.Android`. A touch screen can stand in for the mouse.
-- **Any resolution.** Give it a [MonoGame.Extended](https://github.com/craftworkgames/MonoGame.Extended) `ViewportAdapter`, and pointer positions and clipping scale with the window.
+- **Any resolution.** Give it a [MonoGame.Extended](https://github.com/craftworkgames/MonoGame.Extended) `ViewportAdapter`, and pointer positions and clipping scale with the window. A control can also be drawn larger than its parent (`Control.Scale`), with the pointer taken where it is drawn.
 - **Your look.** Override `OnPaint`, or swap a control's `IButtonRenderer` or `ITextRenderer`.
 
 ## Packages
