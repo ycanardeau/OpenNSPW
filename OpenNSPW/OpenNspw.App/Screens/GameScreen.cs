@@ -27,6 +27,9 @@ internal sealed class GameScreen(
 	private GameSession _session = default!;
 	private BattleArt _art = default!;
 	private BattleForm _battleForm = default!;
+
+	// How much the battlefield was magnified when the game started: the zoom is saved for the next game if it changed.
+	private float _initialZoom;
 	private SettingForm _settingForm = default!;
 	private Backdrop _backdrop = default!;
 	private DialogForms _dialogs = default!;
@@ -176,6 +179,8 @@ internal sealed class GameScreen(
 		{
 			Visible = false,
 		};
+		_initialZoom = UISettings.LoadBattleZoom(Game.Host.BattleZoom);
+		_battleForm.Zoom = _initialZoom;
 		WindowManager.Root.Controls.Add(_battleForm);
 		_settingForm = new SettingForm(_session, Game.Fonts) { Visible = false };
 		WindowManager.Root.Controls.Add(_settingForm);
@@ -217,6 +222,8 @@ internal sealed class GameScreen(
 			Game.Window.Title = NspwGame.Title;
 		SoundEffect.MasterVolume = 1;
 		Game.ViewportAdapter.IsLayoutLeft = false;
+		if (_battleForm.Zoom != _initialZoom)
+			UISettings.SaveBattleZoom(_battleForm.Zoom);
 		_session.Dispose();
 		_art.Dispose();
 		_backdrop.Dispose();

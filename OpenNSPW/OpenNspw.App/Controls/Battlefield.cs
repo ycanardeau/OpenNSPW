@@ -26,8 +26,8 @@ internal sealed class Battlefield : Control
 	private readonly BattleArt _art;
 	private readonly ScrollAhead _scrollAhead;
 
-	// Whether the player touches the screen (IAppHost.IsTouchScreen): a touch on the sea or an enemy is a click once it is
-	// lifted without moving, and pans the battlefield as it moves.
+	// Whether the player touches the screen (IAppHost.IsTouchScreen): a touch is a click once it is lifted without moving;
+	// moving, it brushes over units from one of the player's (UnitBrush), and pans the battlefield from anywhere else.
 	private readonly bool _isTouchScreen;
 
 	// How far, in game pixels, a touch moves before it pans rather than clicks.
@@ -42,8 +42,19 @@ internal sealed class Battlefield : Control
 	// Where a drag with the middle button, or a touch's, which scrolls the battlefield, last was.
 	private DrawingPoint? _scrolledTo;
 
-	// Where a touch that is a click unless it moves pressed, until it is lifted or moves.
+	// Where a touch that is a click unless it moves, or a second finger comes, pressed, until it is lifted or moves.
 	private DrawingPoint? _pressedAt;
+
+	public const float MinZoom = 1;
+	public const float MaxZoom = 2.5f;
+
+	// How much the battlefield is magnified, and where its window into the game's view of the battlefield is, in the view's
+	// pixels: the view is drawn from there, `_zoom` times as large.
+	private float _zoom = MinZoom;
+	private Vector2 _window;
+
+	// What a pan moved the game's camera by but did not give it yet, under a pixel, at a zoom.
+	private Vector2 _unscrolled;
 
 	private readonly UnitBrush _brush;
 
@@ -527,18 +538,55 @@ internal sealed class Battlefield : Control
 			);
 	}
 
-	// The battlefield follows a drag with the middle button, as a chart pushed across the table, at once (ScrollAhead).
+	// The farthest the window goes into the view at the zoom: none at 1.
+	private float WindowRange => Area.Width - Area.Width / _zoom;
+
+	// A point of the control in the view's pixels, through the zoom.
+	private DrawingPoint ToView(DrawingPoint point) =>
+		new((int)(_window.X + point.X / _zoom), (int)(_window.Y + point.Y / _zoom));
+
+	// Moves what is shown by `move`, in the view's pixels: the window first, within the view, and then the game's camera
+	// with what is left, at once (ScrollAhead).
+	private void Pan(Vector2 move)
+	{
+		var target = _window + move;
+		_window = Vector2.Clamp(target, Vector2.Zero, new Vector2(WindowRange));
+		_unscrolled += target - _window;
+		var (dx, dy) = ((int)_unscrolled.X, (int)_unscrolled.Y);
+		if (dx != 0 || dy != 0)
+		{
+			_scrollAhead.Scroll(dx, dy);
+			_unscrolled -= new Vector2(dx, dy);
+		}
+	}
+
+	// How much the battlefield is magnified, from MinZoom to MaxZoom.
+	public float Zoom => _zoom;
+
+	// Magnifies the battlefield by `zoom` around `focus`, a point of the control that stays where it is.
+	public void SetZoom(float zoom, DrawingPoint focus)
+	{
+		var at = new Vector2(_window.X + focus.X / _zoom, _window.Y + focus.Y / _zoom);
+		_zoom = Math.Clamp(zoom, MinZoom, MaxZoom);
+		_window = Vector2.Clamp(
+			at - new Vector2(focus.X, focus.Y) / _zoom,
+			Vector2.Zero,
+			new Vector2(WindowRange)
+		);
+	}
+
+	// The battlefield follows a drag with the middle button, or a touch's, as a chart pushed across the table.
 	private void Scroll(DrawingPoint point)
 	{
 		if (_scrolledTo is not { } from || point == from)
 			return;
 
-		_scrollAhead.Scroll(from.X - point.X, from.Y - point.Y);
+		Pan(new Vector2(from.X - point.X, from.Y - point.Y) / _zoom);
 		_scrolledTo = point;
 	}
 
-	// Whether a point is on one of the player's units, where a touch selects at once, as a click does, and moving it goes on
-	// over other units with the brush (UnitBrush) rather than panning.
+	// Whether a point is on one of the player's units, where a touch that moves brushes over units (UnitBrush) rather than
+	// panning.
 	private bool IsOwnUnit(DrawingPoint point)
 	{
 		return !IsLanding(_snapshot, point)
@@ -546,21 +594,31 @@ internal sealed class Battlefield : Control
 			&& _snapshot.Units[m].Side == _snapshot.LocalSide;
 	}
 
+	// A press of the left button at a point of the view: a click, which starts a brush on one of the player's units.
+	private void Click(DrawingPoint at)
+	{
+		_brush.Press(_snapshot, IsLanding(_snapshot, at) ? null : HitUnit(_snapshot, at));
+		TakeClick(at);
+	}
+
 	protected override void OnMouseMove(MouseEventArgs e)
 	{
 		base.OnMouseMove(e);
-		_mouse = e.Location;
+		_mouse = ToView(e.Location);
 		if (
 			_pressedAt is { } pressed
 			&& Math.Abs(e.Location.X - pressed.X) + Math.Abs(e.Location.Y - pressed.Y) > PanDistance
 		)
 		{
 			_pressedAt = null;
-			_scrolledTo = pressed;
+			if (IsOwnUnit(ToView(pressed)) && !_session.IsWatching)
+				Click(ToView(pressed));
+			else
+				_scrolledTo = pressed;
 		}
 
 		Scroll(e.Location);
-		_brush.Over(HitUnit(_snapshot, e.Location));
+		_brush.Over(HitUnit(_snapshot, ToView(e.Location)));
 	}
 
 	protected override void OnMouseLeave(EventArgs e)
@@ -573,27 +631,24 @@ internal sealed class Battlefield : Control
 	{
 		base.OnMouseDown(e);
 
-		// A touch on the sea or an enemy waits to tell a click from a pan; a second finger cancels it, for the right button.
-		if (_isTouchScreen && e.Button == MouseButtons.Left && !IsOwnUnit(e.Location))
+		// A touch waits to tell a click from a brush, a pan, or the second finger of a pinch.
+		if (_isTouchScreen && e.Button == MouseButtons.Left)
 		{
 			_pressedAt = e.Location;
 			return;
 		}
 
+		// A second finger (XButton1, TouchPointer) makes the touch no click, and pans or zooms instead.
 		_pressedAt = null;
+		if (e.Button == MouseButtons.XButton1)
+			return;
 
 		// A replay takes no clicks while it plays: only its view moves, with the middle button or a touch.
 		if (_session.IsWatching && e.Button != MouseButtons.Middle)
 			return;
 
 		if (e.Button == MouseButtons.Left)
-		{
-			_brush.Press(
-				_snapshot,
-				IsLanding(_snapshot, e.Location) ? null : HitUnit(_snapshot, e.Location)
-			);
-			TakeClick(e.Location);
-		}
+			Click(ToView(e.Location));
 		else if (e.Button == MouseButtons.Right)
 			_session.Commands.RightClick();
 		else if (e.Button == MouseButtons.Middle)
@@ -612,7 +667,7 @@ internal sealed class Battlefield : Control
 		{
 			// A touch lifted where it pressed is a click there; one that moved ends its pan.
 			if (_pressedAt is { } pressed && !_session.IsWatching)
-				TakeClick(pressed);
+				Click(ToView(pressed));
 			else if (_isTouchScreen)
 				Scroll(e.Location);
 
@@ -623,11 +678,24 @@ internal sealed class Battlefield : Control
 		}
 	}
 
+	// The wheel, or two fingers spread or pinched (TouchPointer), zooms around the pointer: a notch, 120, by a quarter.
+	protected override void OnMouseWheel(MouseEventArgs e)
+	{
+		base.OnMouseWheel(e);
+		SetZoom(_zoom * MathF.Pow(1.25f, e.Delta / 120f), e.Location);
+	}
+
 	protected override void OnPaint(PaintEventArgs e)
 	{
 		var snapshot = _snapshot;
+		var at = PointToScreen(DrawingPoint.Empty);
+		var zoom =
+			Matrix.CreateTranslation(-at.X - _window.X, -at.Y - _window.Y, 0)
+			* Matrix.CreateScale(_zoom)
+			* Matrix.CreateTranslation(at.X, at.Y, 0);
 		((MonoGameGraphics)e.Graphics).DrawWith(
 			SamplerState.PointClamp,
+			zoom,
 			(batch, origin) =>
 			{
 				batch.FillRectangle(new RectangleF(origin.X, origin.Y, Width, Height), Fog);

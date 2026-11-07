@@ -73,12 +73,15 @@ public sealed class MonoGameGraphics : Graphics
 	private DisposableScissor CreateDisposableScissor() =>
 		new(SpriteBatch, DrawingRectangle.Round(ClipBounds).ToXnaRectangle(), ViewportAdapter);
 
-	private void Begin(SamplerState? samplerState = null) =>
+	// Begins the batch, drawing through `transform` first, if any, then the viewport's matrix.
+	private void Begin(SamplerState? samplerState = null, Matrix? transform = null) =>
 		SpriteBatch.Begin(
 			blendState: BlendState.AlphaBlend,
 			samplerState: samplerState,
 			rasterizerState: s_rasterizerState,
-			transformMatrix: ViewportAdapter?.GetScaleMatrix()
+			transformMatrix: transform is { } t
+				? t * (ViewportAdapter?.GetScaleMatrix() ?? Matrix.Identity)
+				: ViewportAdapter?.GetScaleMatrix()
 		);
 
 	// Starts drawing on the control: its clip, and the batch.
@@ -166,8 +169,19 @@ public sealed class MonoGameGraphics : Graphics
 	/// </summary>
 	public void DrawWith(SamplerState samplerState, Action<SpriteBatch, Vector2> draw)
 	{
+		DrawWith(samplerState, null, draw);
+	}
+
+	// Draws with `draw` as DrawWith does, through `transform` first, such as a zoom, then the viewport's matrix; still
+	// clipped to the control.
+	public void DrawWith(
+		SamplerState samplerState,
+		Matrix? transform,
+		Action<SpriteBatch, Vector2> draw
+	)
+	{
 		SpriteBatch.End();
-		Begin(samplerState);
+		Begin(samplerState, transform);
 		draw(SpriteBatch, Control.PointToScreen(DrawingPoint.Empty).ToXnaPoint().ToVector2());
 		SpriteBatch.End();
 		Begin();

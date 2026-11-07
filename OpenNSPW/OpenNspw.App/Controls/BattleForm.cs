@@ -34,6 +34,17 @@ internal sealed class BattleForm : Form
 		_sidebar.Controls.Add(part);
 	}
 
+	// How much the battlefield is magnified (Battlefield.Zoom), around its middle when set.
+	public float Zoom
+	{
+		get => _battlefield.Zoom;
+		set =>
+			_battlefield.SetZoom(
+				value,
+				new(Battlefield.Area.Width / 2, Battlefield.Area.Height / 2)
+			);
+	}
+
 	// Fits the battle screen to `extraWidth` right of the original's layout: the command bar there, in a column of its own,
 	// where it fits, and over the battlefield's top right corner otherwise.
 	public void Fit(int extraWidth)
