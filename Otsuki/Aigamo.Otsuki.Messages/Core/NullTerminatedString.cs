@@ -11,17 +11,14 @@ internal abstract class NullTerminatedString<T>(byte[] value, Encoding encoding)
 	private readonly Encoding _encoding = encoding;
 
 	protected NullTerminatedString(Encoding encoding)
-		: this(Array.Empty<byte>(), encoding) { }
+		: this([], encoding) { }
 
 	protected NullTerminatedString(string? value, Encoding encoding)
-		: this(
-			!string.IsNullOrEmpty(value) ? encoding.GetBytes(value + '\0') : Array.Empty<byte>(),
-			encoding
-		) { }
+		: this(!string.IsNullOrEmpty(value) ? encoding.GetBytes(value + '\0') : [], encoding) { }
 
 	public int Length => _value.Count;
 
-	public byte[] ToByteArray() => _value.ToArray();
+	public byte[] ToByteArray() => [.. _value];
 
 	public override string ToString() => _encoding.GetString(ToByteArray()).TrimEnd('\0');
 

@@ -25,7 +25,7 @@ public static class ListBindingHelper
 		{
 			if (browsableAttribute is null)
 			{
-				browsableAttribute = new Attribute[] { new BrowsableAttribute(true) };
+				browsableAttribute = [new BrowsableAttribute(true)];
 			}
 
 			return browsableAttribute;

@@ -188,7 +188,7 @@ public sealed record NameTableEntryInfo
 		builder.AppendLine($"\t{nameof(VersionNotUsed)}: {VersionNotUsed}");
 		builder.AppendLine($"\t{nameof(DnetVersion)}: {DnetVersion}");
 		builder.AppendLine($"\t{nameof(Url)}: {Url}");
-		builder.AppendLine($"\t{nameof(Data)}: {BitConverter.ToString(Data.ToArray())}");
+		builder.AppendLine($"\t{nameof(Data)}: {BitConverter.ToString([.. Data])}");
 		builder.AppendLine($"\t{nameof(Name)}: {Name}");
 		return builder.ToString();
 	}

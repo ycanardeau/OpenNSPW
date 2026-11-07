@@ -38,7 +38,7 @@ internal class AddPlayerMessageSerializer : ICoreMessageSerializer<CoreMessage.A
 		if (dataOffset != 0)
 		{
 			reader.BaseStream.Seek(endOfPacketType + dataOffset, SeekOrigin.Begin);
-			data = reader.ReadBytes(dataSize).ToImmutableArray();
+			data = [.. reader.ReadBytes(dataSize)];
 		}
 
 		var name = Array.Empty<byte>();

@@ -546,39 +546,36 @@ internal class Formatter
 				"Parse",
 				BindingFlags.Public | BindingFlags.Static,
 				null,
-				new Type[] { stringType, typeof(NumberStyles), typeof(IFormatProvider) },
+				[stringType, typeof(NumberStyles), typeof(IFormatProvider)],
 				null
 			);
 			if (mi != null)
 			{
-				return mi.Invoke(
-					null,
-					new object[] { (string)value, NumberStyles.Any, formatInfo }
-				);
+				return mi.Invoke(null, [(string)value, NumberStyles.Any, formatInfo]);
 			}
 
 			mi = targetType.GetMethod(
 				"Parse",
 				BindingFlags.Public | BindingFlags.Static,
 				null,
-				new Type[] { stringType, typeof(IFormatProvider) },
+				[stringType, typeof(IFormatProvider)],
 				null
 			);
 			if (mi != null)
 			{
-				return mi.Invoke(null, new object[] { (string)value, formatInfo });
+				return mi.Invoke(null, [(string)value, formatInfo]);
 			}
 
 			mi = targetType.GetMethod(
 				"Parse",
 				BindingFlags.Public | BindingFlags.Static,
 				null,
-				new Type[] { stringType },
+				[stringType],
 				null
 			);
 			if (mi != null)
 			{
-				return mi.Invoke(null, new object[] { (string)value });
+				return mi.Invoke(null, [(string)value]);
 			}
 
 			return parseMethodNotFound;

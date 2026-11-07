@@ -16,13 +16,5 @@ internal sealed record SessionSnapshot(
 	ImmutableDictionary<Dpnid, GroupInfo> Groups
 )
 {
-	public static SessionSnapshot Empty { get; } =
-		new(
-			ImmutableDictionary<Dpnid, PlayerInfo>.Empty,
-			null,
-			null,
-			Dpnid.Empty,
-			false,
-			ImmutableDictionary<Dpnid, GroupInfo>.Empty
-		);
+	public static SessionSnapshot Empty { get; } = new([], null, null, Dpnid.Empty, false, []);
 }

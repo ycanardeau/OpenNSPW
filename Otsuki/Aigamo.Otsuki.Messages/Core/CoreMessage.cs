@@ -143,10 +143,10 @@ public abstract record CoreMessage
 
 			builder.AppendLine($"\t{nameof(Url)}: {Url}");
 			builder.AppendLine(
-				$"\t{nameof(ConnectData)}: {BitConverter.ToString(ConnectData.ToArray())}"
+				$"\t{nameof(ConnectData)}: {BitConverter.ToString([.. ConnectData])}"
 			);
 			builder.AppendLine($"\t{nameof(Password)}: {Password}");
-			builder.AppendLine($"\t{nameof(Data)}: {BitConverter.ToString(Data.ToArray())}");
+			builder.AppendLine($"\t{nameof(Data)}: {BitConverter.ToString([.. Data])}");
 			builder.AppendLine($"\t{nameof(Name)}: {Name}");
 			return builder.ToString();
 		}
@@ -179,7 +179,7 @@ public abstract record CoreMessage
 			var builder = new StringBuilder();
 			builder.AppendLine($"{nameof(ConnectFailed)}:");
 			builder.AppendLine($"\t{nameof(ResultCode)}: {ResultCode}");
-			builder.AppendLine($"\t{nameof(Reply)}: {BitConverter.ToString(Reply.ToArray())}");
+			builder.AppendLine($"\t{nameof(Reply)}: {BitConverter.ToString([.. Reply])}");
 			return builder.ToString();
 		}
 	}
@@ -345,14 +345,14 @@ public abstract record CoreMessage
 				);
 
 			builder.AppendLine(
-				$"\t{nameof(ApplicationReservedData)}: {BitConverter.ToString(ApplicationReservedData.ToArray())}"
+				$"\t{nameof(ApplicationReservedData)}: {BitConverter.ToString([.. ApplicationReservedData])}"
 			);
 			builder.AppendLine(
-				$"\t{nameof(ReservedData)}: {BitConverter.ToString(ReservedData.ToArray())}"
+				$"\t{nameof(ReservedData)}: {BitConverter.ToString([.. ReservedData])}"
 			);
 			builder.AppendLine($"\t{nameof(Password)}: {Password}");
 			builder.AppendLine($"\t{nameof(SessionName)}: {SessionName}");
-			builder.AppendLine($"\t{nameof(Reply)}: {BitConverter.ToString(Reply.ToArray())}");
+			builder.AppendLine($"\t{nameof(Reply)}: {BitConverter.ToString([.. Reply])}");
 			return builder.ToString();
 		}
 	}
@@ -541,7 +541,7 @@ public abstract record CoreMessage
 			builder.AppendLine($"\t{nameof(VersionNotUsed)}: {VersionNotUsed}");
 			builder.AppendLine($"\t{nameof(DnetClientVersion)}: {DnetClientVersion}");
 			builder.AppendLine($"\t{nameof(Url)}: {Url}");
-			builder.AppendLine($"\t{nameof(Data)}: {BitConverter.ToString(Data.ToArray())}");
+			builder.AppendLine($"\t{nameof(Data)}: {BitConverter.ToString([.. Data])}");
 			builder.AppendLine($"\t{nameof(Name)}: {Name}");
 			return builder.ToString();
 		}
@@ -682,7 +682,7 @@ public abstract record CoreMessage
 			var builder = new StringBuilder();
 			builder.AppendLine($"{nameof(TerminateSession)}:");
 			builder.AppendLine(
-				$"\t{nameof(TerminateData)}: {BitConverter.ToString(TerminateData.ToArray())}"
+				$"\t{nameof(TerminateData)}: {BitConverter.ToString([.. TerminateData])}"
 			);
 			return builder.ToString();
 		}
@@ -955,7 +955,7 @@ public abstract record CoreMessage
 				builder.AppendLine($"{nameof(Entry)}:");
 				builder.AppendLine($"\t{nameof(MessageId)}: {MessageId}");
 				builder.AppendLine(
-					$"\t{nameof(Operation)}: {BitConverter.ToString(Operation.ToArray())}"
+					$"\t{nameof(Operation)}: {BitConverter.ToString([.. Operation])}"
 				);
 				return builder.ToString();
 			}
@@ -973,12 +973,10 @@ public abstract record CoreMessage
 			get =>
 				EntriesInternal
 					.Select(entry =>
-						CoreMessageSerializer.Default.Deserialize(
-							BitConverter
-								.GetBytes((int)entry.MessageId)
-								.Concat(entry.Operation)
-								.ToArray()
-						)
+						CoreMessageSerializer.Default.Deserialize([
+							.. BitConverter.GetBytes((int)entry.MessageId),
+							.. entry.Operation,
+						])
 					)
 					.ToImmutableArray();
 			init =>
@@ -987,10 +985,7 @@ public abstract record CoreMessage
 					{
 						MessageId = entry?.PacketType ?? 0,
 						Operation = entry is not null
-							? CoreMessageSerializer
-								.Default.Serialize(entry)
-								.Skip(4)
-								.ToImmutableArray()
+							? [.. CoreMessageSerializer.Default.Serialize(entry).Skip(4)]
 							: ImmutableArray<byte>.Empty,
 					})
 					.ToImmutableArray();

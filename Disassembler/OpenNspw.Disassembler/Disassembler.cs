@@ -4,8 +4,8 @@ namespace OpenNspw.Disassembler;
 
 internal sealed class Disassembler
 {
-	private static readonly OneByteInstructions _oneByteInstructions = new();
-	private static readonly TwoByteInstructions _twoByteInstructions = new();
+	private static readonly OneByteInstructions _oneByteInstructions = [];
+	private static readonly TwoByteInstructions _twoByteInstructions = [];
 
 	private readonly BinaryReader _reader;
 
@@ -15,8 +15,8 @@ internal sealed class Disassembler
 	private readonly int _endPosition;
 	private readonly ParseContext _parseContext;
 
-	private readonly List<int> _labels = new();
-	private readonly Dictionary<int, IEnumerable<string>> _lines = new();
+	private readonly List<int> _labels = [];
+	private readonly Dictionary<int, IEnumerable<string>> _lines = [];
 
 	public Disassembler(BinaryReader reader, int start, int length, ParseContext parseContext)
 	{
@@ -101,7 +101,7 @@ internal sealed class Disassembler
 		};
 		if (factory is null)
 			throw new NotImplementedException($"{opcode:X2} /{token.Mode.ModRM.Opcode}");
-		_lines.Add(_currentAddress, factory(token).ToArray());
+		_lines.Add(_currentAddress, [.. factory(token)]);
 
 		_operandSizeOverride = token.OperandSizeOverride;
 		if (_operandSizeOverride)

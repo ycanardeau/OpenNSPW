@@ -11,15 +11,10 @@ namespace Aigamo.Otsuki.LoadTest;
 /// </summary>
 internal sealed class RuntimeCounters : EventListener
 {
-	private readonly Latest<ImmutableDictionary<string, double>> _values = new(
-		ImmutableDictionary<string, double>.Empty
-	);
+	private readonly Latest<ImmutableDictionary<string, double>> _values = new([]);
 
 	// Only the runtime's thread that reports the counters writes it.
-	private ImmutableDictionary<string, double> _pending = ImmutableDictionary<
-		string,
-		double
-	>.Empty;
+	private ImmutableDictionary<string, double> _pending = [];
 
 	public ImmutableDictionary<string, double> Values => _values.Value;
 

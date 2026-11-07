@@ -36,7 +36,7 @@ internal class DataFrameMessageSerializer(bool signed = false)
 			return stream.ToArray();
 		}
 		var payload = !control.HasFlag(PacketControl.KeepAliveOrCorrelate)
-			? ReadPayload(reader.BaseStream).ToImmutableArray()
+			? [.. ReadPayload(reader.BaseStream)]
 			: ImmutableArray<byte>.Empty;
 
 		// Control goes last: the mask and session ID setters derive their flags from the value, which would otherwise clobber the flags read from the wire (e.g. SACK1 with a zero mask).

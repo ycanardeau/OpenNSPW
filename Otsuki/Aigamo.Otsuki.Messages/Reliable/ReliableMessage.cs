@@ -283,7 +283,7 @@ public abstract record ReliableMessage
 			+ $"{nameof(SendMask)}={SendMask}, "
 			+ $"{nameof(Signature)}={Signature}, "
 			+ $"{nameof(SessionId)}={SessionId}, "
-			+ $"{nameof(Payload)}={BitConverter.ToString(Payload.ToArray())}]";
+			+ $"{nameof(Payload)}={BitConverter.ToString([.. Payload])}]";
 	}
 
 	// Comments from: https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8r/b3c67ec1-f73c-4c47-bd06-95cd4a3b4219

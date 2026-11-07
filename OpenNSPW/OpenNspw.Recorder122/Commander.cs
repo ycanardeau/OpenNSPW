@@ -91,17 +91,19 @@ internal sealed class Commander(Random random, int interval)
 	{
 		var units = debugger.Read(Units, Trace122.UnitCount * Trace122.UnitSize);
 		var side = debugger.ReadInt16(LocalSide);
-		return Enumerable
-			.Range(1, Trace122.UnitCount - 1)
-			.Where(m =>
-				BitConverter.ToInt16(units, m * Trace122.UnitSize + SideOffset) == side
-				&& IsOrderable(BitConverter.ToInt32(units, m * Trace122.UnitSize + KindOffset))
-				&& (
-					withSupplying
-					|| BitConverter.ToInt32(units, m * Trace122.UnitSize + SupplyOffset) == 0
-				)
-			)
-			.ToArray();
+		return
+		[
+			.. Enumerable
+				.Range(1, Trace122.UnitCount - 1)
+				.Where(m =>
+					BitConverter.ToInt16(units, m * Trace122.UnitSize + SideOffset) == side
+					&& IsOrderable(BitConverter.ToInt32(units, m * Trace122.UnitSize + KindOffset))
+					&& (
+						withSupplying
+						|| BitConverter.ToInt32(units, m * Trace122.UnitSize + SupplyOffset) == 0
+					)
+				),
+		];
 	}
 
 	// As the input starts: in a frame that gives a menu item, has it call the selection of a unit chosen at random, which
