@@ -148,13 +148,13 @@ public class RadioButton : ButtonBase
 		if (Checked && Parent != null)
 		{
 			var radioButtons = Parent
-				.Controls.Where(c => c != this && c is RadioButton)
-				.Select(c => c as RadioButton)
+				.Controls.Where(c => c != this)
+				.OfType<RadioButton>()
 				.Where(b => b.AutoCheck && b.Checked);
 			foreach (var b in radioButtons)
 			{
 				var propDesc = TypeDescriptor.GetProperties(typeof(RadioButton))[nameof(Checked)];
-				propDesc.SetValue(b, false);
+				propDesc!.SetValue(b, false);
 			}
 		}
 	}

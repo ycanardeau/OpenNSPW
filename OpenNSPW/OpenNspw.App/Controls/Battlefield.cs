@@ -852,7 +852,7 @@ internal sealed class Battlefield : Control
 	}
 
 	// A press of the left button at a point of the view: a click, which starts a brush on one of the player's units.
-	private void Click(DrawingPoint at)
+	private void ClickAt(DrawingPoint at)
 	{
 		_brush.Press(_snapshot, IsLanding(_snapshot, at) ? null : HitUnit(_snapshot, at));
 		TakeClick(at);
@@ -912,7 +912,7 @@ internal sealed class Battlefield : Control
 			return;
 
 		if (e.Button == MouseButtons.Left)
-			Click(ToView(e.Location));
+			ClickAt(ToView(e.Location));
 		else if (e.Button == MouseButtons.Right)
 			_session.Commands.RightClick();
 		else if (e.Button == MouseButtons.Middle)

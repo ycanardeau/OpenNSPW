@@ -37,19 +37,15 @@ public class HardDisconnectMessageSerializerTests
 				SessionId = new SessionId(0x22AE0764),
 				Timestamp = 0x0210B3D2,
 			},
-			false,
 		};
 	}
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(
-		byte[] data,
-		ReliableMessage.HardDisconnect expected,
-		bool enableSigning
-	)
+	internal void Deserialize(byte[] data, ReliableMessage.HardDisconnect expected)
 	{
 		var message = HardDisconnectMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.Command.Should().Be(expected.Command);
 		message.Opcode.Should().Be(expected.Opcode);
 		message.MessageId.Should().Be(expected.MessageId);
@@ -62,11 +58,7 @@ public class HardDisconnectMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(
-		byte[] expected,
-		ReliableMessage.HardDisconnect message,
-		bool enableSigning
-	)
+	internal void Serialize(byte[] expected, ReliableMessage.HardDisconnect message)
 	{
 		HardDisconnectMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}

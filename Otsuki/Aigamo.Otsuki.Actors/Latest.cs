@@ -5,7 +5,7 @@ namespace Aigamo.Otsuki.Actors;
 /// players: a message that each reader takes as of the last post, and that no one changes.
 /// </summary>
 public sealed class Latest<T>(T initial)
-	where T : class
+	where T : class?
 {
 	private T _value = initial;
 

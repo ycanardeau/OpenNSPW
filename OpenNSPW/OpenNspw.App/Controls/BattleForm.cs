@@ -140,7 +140,7 @@ internal sealed class BattleForm : Form
 		);
 		_sidebar.Scale = 1;
 		_sidebar.Visible = true;
-		_minimap.SetScale(1);
+		_minimap.SetMapScale(1);
 		_minimap.Location = Minimap.Area.Location;
 		ShowButtons(isWide: false);
 		var right = all_head.CMBT_WIDTH - 8;
@@ -177,7 +177,7 @@ internal sealed class BattleForm : Form
 				(all_head.SCRN_HEIGHT - buttonsBottom - Margin) / (float)Minimap.Area.Height
 			)
 			: 1;
-		_minimap.SetScale(Math.Clamp(minimapScale, 1, 2));
+		_minimap.SetMapScale(Math.Clamp(minimapScale, 1, 2));
 		var rowWidth = layout.ButtonWidth * 2 + CommandBarLayout.Gap;
 		var columnWidth = Math.Max(
 			Math.Max(_commandBar.Width, rowWidth) + Margin * 2,

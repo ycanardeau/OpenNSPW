@@ -11,12 +11,12 @@ using DrawingRectangle = System.Drawing.Rectangle;
 
 namespace OpenNspw.App.Controls;
 
-// The map of the whole battle (DrawMinimap): a pixel a tile of 80, drawn `Scale` times as large, with the player's units,
-// the enemy's it has found, and what the battlefield shows (Shown). A click held on it moves the battlefield there, with
-// the commands of the host's UI. A touch, which a finger makes far less precise and hides what it presses, does as the
-// touch options choose (MinimapTouch): it aims, a box showing what the battlefield would show from where it presses,
-// moving a part of the way the finger moves (AimRatio), and the battlefield moves there once it is lifted; or a tap moves
-// it there and a drag moves it that part of the finger's way; or it does as the mouse.
+// The map of the whole battle (DrawMinimap): a pixel a tile of 80, drawn `MapScale` times as large, with the player's
+// units, the enemy's it has found, and what the battlefield shows (Shown). A click held on it moves the battlefield
+// there, with the commands of the host's UI. A touch, which a finger makes far less precise and hides what it presses,
+// does as the touch options choose (MinimapTouch): it aims, a box showing what the battlefield would show from where
+// it presses, moving a part of the way the finger moves (AimRatio), and the battlefield moves there once it is lifted;
+// or a tap moves it there and a drag moves it that part of the finger's way; or it does as the mouse.
 internal sealed class Minimap : Control
 {
 	// The minimap's top: 199 high, at the bottom of the screen.
@@ -66,15 +66,15 @@ internal sealed class Minimap : Control
 	public RectangleF Shown { get; set; } = new(0, 0, all_head.CMBT_WIDTH, all_head.CMBT_HEIGHT);
 
 	// How many times as large the minimap is drawn: the larger, the less a slip of a finger moves the battlefield.
-	public float Scale { get; private set; } = 1;
+	public float MapScale { get; private set; } = 1;
 
 	// The minimap's size at a scale.
 	public static System.Drawing.Size SizeAt(float scale) =>
 		new((int)(Area.Width * scale), (int)(Area.Height * scale));
 
-	public void SetScale(float scale)
+	public void SetMapScale(float scale)
 	{
-		Scale = scale;
+		MapScale = scale;
 		Size = SizeAt(scale);
 	}
 
@@ -131,7 +131,7 @@ internal sealed class Minimap : Control
 	}
 
 	// A point of the control in the minimap's pixels, through its scale.
-	private Vector2 ToMap(DrawingPoint point) => new(point.X / Scale, point.Y / Scale);
+	private Vector2 ToMap(DrawingPoint point) => new(point.X / MapScale, point.Y / MapScale);
 
 	// The battlefield is moved to where the click is held, if it is on the map: the cursor is the camera's box's
 	// center, 5 from its corner (DrawMinimap). The part of the view the battlefield shows, magnified, is moved to the
@@ -328,7 +328,7 @@ internal sealed class Minimap : Control
 		var at = PointToScreen(DrawingPoint.Empty);
 		var scale =
 			Matrix.CreateTranslation(-at.X, -at.Y, 0)
-			* Matrix.CreateScale(Scale)
+			* Matrix.CreateScale(MapScale)
 			* Matrix.CreateTranslation(at.X, at.Y, 0);
 		((MonoGameGraphics)e.Graphics).DrawWith(
 			SamplerState.PointClamp,

@@ -20,6 +20,7 @@ public class HostMigrateMessageSerializerTests
 	internal void Deserialize(byte[] data, CoreMessage.HostMigrate expected)
 	{
 		var message = HostMigrateMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.PacketType.Should().Be(expected.PacketType);
 		message.DpnidOldHost.Should().Be(expected.DpnidOldHost);
 		message.DpnidNewHost.Should().Be(expected.DpnidNewHost);

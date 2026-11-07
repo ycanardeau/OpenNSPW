@@ -20,6 +20,7 @@ public class AckConnectInfoMessageSerializerTests
 	internal void Deserialize(byte[] data, CoreMessage.AckConnectInfo expected)
 	{
 		var message = AckConnectInfoMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.PacketType.Should().Be(expected.PacketType);
 	}
 
