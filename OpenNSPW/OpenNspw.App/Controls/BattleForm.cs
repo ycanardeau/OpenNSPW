@@ -10,7 +10,7 @@ namespace OpenNspw.App.Controls;
 // draws from the snapshot what the game draws there, and takes its clicks with the commands of the host's UI
 // (docs/UI.md). On a wide screen, the command bar and the minimap are in a column of their own at the right, and the rest
 // of the sidebar is a panel beside it, which a button shows and hides (Fit): the battlefield, magnified, takes the room
-// up to the column, under the panel while it is shown.
+// up to the column, under the panel while it is shown, which is drawn larger on a small screen.
 internal sealed class BattleForm : Form
 {
 	// The room around the column's parts.
@@ -31,6 +31,10 @@ internal sealed class BattleForm : Form
 	// Whether the player touches the screen (IAppHost.IsTouchScreen): the minimap is drawn larger, and the panel is hidden
 	// at first, for the battlefield.
 	private readonly bool _isTouchScreen;
+
+	// How many times as large the panel is drawn on a wide screen: on a small screen, as high as the screen, for its text
+	// to be read and its buttons touched; as the original's otherwise.
+	private readonly float _panelScale;
 
 	// Where the column is, on a wide screen; none on another.
 	private int? _columnLeft;
@@ -70,6 +74,7 @@ internal sealed class BattleForm : Form
 			SidebarWidth,
 			all_head.SCRN_HEIGHT
 		);
+		_sidebar.Scale = 1;
 		_sidebar.Visible = true;
 		_minimap.SetScale(1);
 		_minimap.Location = Minimap.Area.Location;
@@ -103,8 +108,9 @@ internal sealed class BattleForm : Form
 			columnLeft + (columnWidth - _minimap.Width) / 2,
 			all_head.SCRN_HEIGHT - _minimap.Height
 		);
+		_sidebar.Scale = _panelScale;
 		_sidebar.Bounds = new DrawingRectangle(
-			columnLeft - SidebarWidth,
+			columnLeft - (int)MathF.Ceiling(SidebarWidth * _panelScale),
 			0,
 			SidebarWidth,
 			Minimap.Top
@@ -137,6 +143,7 @@ internal sealed class BattleForm : Form
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		BackColor = DrawingColor.Transparent;
 		_isTouchScreen = isTouchScreen;
+		_panelScale = isSmallScreen ? all_head.SCRN_HEIGHT / (float)Minimap.Top : 1;
 		_isPanelOpen = !isTouchScreen;
 
 		_scrollAhead = new ScrollAhead(session);

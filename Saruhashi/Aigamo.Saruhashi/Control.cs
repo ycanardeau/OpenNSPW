@@ -313,8 +313,30 @@ public class Control : IDisposable, IBindableComponent
 	/// </summary>
 	public void BringToFront() => _parent?.Controls.SetChildIndex(this, 0);
 
-	private Point ScreenLocation => (Parent?.ScreenLocation ?? Point.Empty) + (Size)Location;
-	private Rectangle ScreenRectangle => new Rectangle(ScreenLocation, Size);
+	/// <summary>
+	/// How many times as large the control is drawn, with all it holds: its size, what it draws and its children's bounds
+	/// are in pixels of its own, <c>Scale</c> times as large as its parent's, and only its location is in its parent's.
+	/// The mouse is taken where the control is drawn.
+	/// </summary>
+	public float Scale { get; set; } = 1;
+
+	/// <summary>
+	/// How many times as large as the window manager's pixels the control's own are: its <see cref="Scale"/>, times its
+	/// parents'. A backend draws the control's paint this many times as large, around
+	/// <c>PointToScreen(Point.Empty)</c>.
+	/// </summary>
+	public float ScreenScale => (Parent?.ScreenScale ?? 1) * Scale;
+
+	private Point ScreenLocation => Parent?.PointToScreen(Location) ?? Location;
+
+	// A size of the control's pixels in the window manager's.
+	private Size SizeToScreen(Size size, float scale) =>
+		scale == 1
+			? size
+			: new Size((int)MathF.Round(size.Width * scale), (int)MathF.Round(size.Height * scale));
+
+	private Rectangle ScreenRectangle =>
+		new Rectangle(ScreenLocation, SizeToScreen(Size, ScreenScale));
 	public ISite? Site { get; set; }
 
 	public Size Size
@@ -810,15 +832,26 @@ public class Control : IDisposable, IBindableComponent
 		}
 	}
 
-	public Point PointToClient(Point p) => p - (Size)ScreenLocation;
+	public Point PointToClient(Point p)
+	{
+		var scale = ScreenScale;
+		var offset = p - (Size)ScreenLocation;
+		return scale == 1
+			? offset
+			: new Point((int)MathF.Floor(offset.X / scale), (int)MathF.Floor(offset.Y / scale));
+	}
 
-	public Point PointToScreen(Point p) => ScreenLocation + (Size)p;
+	public Point PointToScreen(Point p) => ScreenLocation + SizeToScreen((Size)p, ScreenScale);
 
-	public Rectangle RectangleToClient(Rectangle r) =>
-		new Rectangle(PointToClient(r.Location), r.Size);
+	public Rectangle RectangleToClient(Rectangle r)
+	{
+		var location = PointToClient(r.Location);
+		var end = PointToClient(new Point(r.Right, r.Bottom));
+		return Rectangle.FromLTRB(location.X, location.Y, end.X, end.Y);
+	}
 
 	public Rectangle RectangleToScreen(Rectangle r) =>
-		new Rectangle(PointToScreen(r.Location), r.Size);
+		new Rectangle(PointToScreen(r.Location), SizeToScreen(r.Size, ScreenScale));
 
 	private protected void SetState(States flag, bool value) =>
 		_state = value ? (_state | flag) : (_state & ~flag);
