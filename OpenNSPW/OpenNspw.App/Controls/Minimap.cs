@@ -47,6 +47,7 @@ internal sealed class Minimap : Control
 	private readonly Texture2D _map;
 	private readonly bool _isTouchScreen;
 	private readonly Action<Vector2> _pan;
+	private readonly Action<Vector2> _showWindow;
 	private readonly Color[] _pixels = new Color[Columns * Rows];
 	private readonly ushort[] _tilesShown = new ushort[256 * 256];
 	private bool _hasMap;
@@ -75,13 +76,20 @@ internal sealed class Minimap : Control
 	}
 
 	// isTouchScreen: whether the player touches the screen (IAppHost.IsTouchScreen). pan: moves what the battlefield shows
-	// by so many of its view's pixels (Battlefield.Pan).
-	public Minimap(GameSession session, BattleArt art, bool isTouchScreen, Action<Vector2> pan)
+	// by so many of its view's pixels (Battlefield.Pan). showWindow: shows the view from a point of it (Battlefield.ShowWindow).
+	public Minimap(
+		GameSession session,
+		BattleArt art,
+		bool isTouchScreen,
+		Action<Vector2> pan,
+		Action<Vector2> showWindow
+	)
 	{
 		_session = session;
 		_map = art.MinimapTexture;
 		_isTouchScreen = isTouchScreen;
 		_pan = pan;
+		_showWindow = showWindow;
 		BackColor = DrawingColor.Transparent;
 		Size = Area.Size;
 	}
@@ -120,16 +128,25 @@ internal sealed class Minimap : Control
 	private Vector2 ToMap(DrawingPoint point) => new(point.X / Scale, point.Y / Scale);
 
 	// The battlefield is moved to where the click is held, if it is on the map: the cursor is the camera's box's
-	// center, 5 from its corner (DrawMinimap), or, as the battlefield shows a part of the view, the part's middle.
+	// center, 5 from its corner (DrawMinimap). The part of the view the battlefield shows, magnified, is moved to the
+	// cursor too, within the view, wherever the game puts its camera, which it keeps on the map (ShowMinimapCell).
 	private void ShowPoint(Vector2 at, bool isPressed)
 	{
 		var (x, y) = ((int)at.X, (int)at.Y);
 		if (x < MapLeft || x > MapLeft + Columns || y < MapTop || y > MapTop + Rows)
 			return;
 
+		var (column, row) = (x - 5 - MapLeft, y - 5 - MapTop);
+		var camera = new Vector2(
+			Math.Clamp(World.Left + column * 80, World.Left, World.Right - all_head.CMBT_WIDTH),
+			Math.Clamp(World.Top - row * 80, World.Bottom + all_head.CMBT_HEIGHT, World.Top)
+		);
+		var cursor = new Vector2(
+			World.Left + (x - MapLeft) * 80 - camera.X,
+			camera.Y - (World.Top - (y - MapTop) * 80)
+		);
 		var shown = Shown;
-		var column = x - MapLeft - (int)MathF.Round((shown.X + shown.Width / 2) / 80 + 0.2f);
-		var row = y - MapTop - (int)MathF.Round((shown.Y + shown.Height / 2) / 80 + 0.2f);
+		_showWindow(cursor - new Vector2(shown.Width, shown.Height) / 2);
 
 		// A replay's view moves, not the battle's (ReplayView).
 		if (_session.IsWatching && _session.View is { } view)

@@ -580,6 +580,12 @@ internal sealed class Battlefield : Control
 		);
 	}
 
+	// Shows the view from `at`, in its pixels, as far as the zoom lets it.
+	public void ShowWindow(Vector2 at)
+	{
+		_window = Vector2.Clamp(at, Vector2.Zero, WindowRange);
+	}
+
 	// What is shown, in the view's pixels from the game's camera.
 	public RectangleF Shown => new(_window.X, _window.Y, Width / _zoom, Height / _zoom);
 
