@@ -11,9 +11,9 @@ namespace OpenNspw.App.Controls;
 internal sealed class CommandBar : Control
 {
 	private const int ButtonWidth = 92;
-	private const int ButtonHeight = 40;
+	public const int ButtonHeight = 40;
 	private const int Gap = 6;
-	private const int Padding = 6;
+	public const int Padding = 6;
 	private const int Buttons = 6;
 
 	private readonly GameSession _session;

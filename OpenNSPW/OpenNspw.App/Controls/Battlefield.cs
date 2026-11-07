@@ -538,8 +538,13 @@ internal sealed class Battlefield : Control
 			);
 	}
 
-	// The farthest the window goes into the view at the zoom: none at 1.
-	private float WindowRange => Area.Width - Area.Width / _zoom;
+	// The farthest the window goes into the view at the zoom, which the battlefield, as wide as the view times the zoom at
+	// most (BattleForm.Fit), shows a part of.
+	private Vector2 WindowRange =>
+		Vector2.Max(
+			Vector2.Zero,
+			new Vector2(CMBT_WIDTH - Width / _zoom, CMBT_HEIGHT - Height / _zoom)
+		);
 
 	// A point of the control in the view's pixels, through the zoom.
 	private DrawingPoint ToView(DrawingPoint point) =>
@@ -547,10 +552,10 @@ internal sealed class Battlefield : Control
 
 	// Moves what is shown by `move`, in the view's pixels: the window first, within the view, and then the game's camera
 	// with what is left, at once (ScrollAhead).
-	private void Pan(Vector2 move)
+	public void Pan(Vector2 move)
 	{
 		var target = _window + move;
-		_window = Vector2.Clamp(target, Vector2.Zero, new Vector2(WindowRange));
+		_window = Vector2.Clamp(target, Vector2.Zero, WindowRange);
 		_unscrolled += target - _window;
 		var (dx, dy) = ((int)_unscrolled.X, (int)_unscrolled.Y);
 		if (dx != 0 || dy != 0)
@@ -571,8 +576,18 @@ internal sealed class Battlefield : Control
 		_window = Vector2.Clamp(
 			at - new Vector2(focus.X, focus.Y) / _zoom,
 			Vector2.Zero,
-			new Vector2(WindowRange)
+			WindowRange
 		);
+	}
+
+	// What is shown, in the view's pixels from the game's camera.
+	public RectangleF Shown => new(_window.X, _window.Y, Width / _zoom, Height / _zoom);
+
+	// Makes the battlefield `width` wide, at most the view's width times the zoom, keeping what is shown in the view.
+	public void FitWidth(int width)
+	{
+		Width = width;
+		_window = Vector2.Clamp(_window, Vector2.Zero, WindowRange);
 	}
 
 	// The battlefield follows a drag with the middle button, or a touch's, as a chart pushed across the table.

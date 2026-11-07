@@ -167,6 +167,7 @@ internal static class Texts
 	public static string FastForward => "»";
 	public static string Chat => Pick("Chat", "チャット");
 	public static string Deselect => Pick("Deselect", "選択解除");
+	public static string Panel => Pick("Panel", "パネル");
 	public static string SupplySection => Pick("SUPPLY", "補給");
 	public static string SystemSection => Pick("SYSTEM", "システム");
 

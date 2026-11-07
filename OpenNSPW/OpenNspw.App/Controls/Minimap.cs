@@ -3,6 +3,7 @@ using Aigamo.Saruhashi;
 using Aigamo.Saruhashi.MonoGame;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended;
 using MonoGame.Extended.Graphics;
 using DrawingColor = System.Drawing.Color;
 using DrawingPoint = System.Drawing.Point;
@@ -10,8 +11,10 @@ using DrawingRectangle = System.Drawing.Rectangle;
 
 namespace OpenNspw.App.Controls;
 
-// The map of the whole battle (DrawMinimap): a pixel a tile of 80, with the player's units, the enemy's it has found,
-// and where the battlefield is. A click held on it moves the battlefield there, with the commands of the host's UI.
+// The map of the whole battle (DrawMinimap): a pixel a tile of 80, drawn `Scale` times as large, with the player's units,
+// the enemy's it has found, and what the battlefield shows (Shown). A click held on it moves the battlefield there, with
+// the commands of the host's UI. A touch, which a finger makes far less precise, moves it there only when it is lifted
+// without moving; moving, it drags what is shown, a part of the way the finger goes (DragRatio).
 internal sealed class Minimap : Control
 {
 	// The minimap's top: 199 high, at the bottom of the screen.
@@ -30,22 +33,57 @@ internal sealed class Minimap : Control
 	private const int Columns = 240;
 	private const int Rows = 180;
 
+	// How far a touch moves, in game pixels, before it drags rather than taps.
+	private const int DragDistance = 8;
+
+	// How much of the way a finger drags the minimap the battlefield moves: a third, as a pixel of the minimap is 80 of
+	// the battlefield.
+	private const float DragRatio = 1 / 3f;
+
 	private static readonly Color Sea = new(10, 22, 38);
 	private static readonly Color Land = new(104, 150, 96);
 
 	private readonly GameSession _session;
 	private readonly Texture2D _map;
+	private readonly bool _isTouchScreen;
+	private readonly Action<Vector2> _pan;
 	private readonly Color[] _pixels = new Color[Columns * Rows];
 	private readonly ushort[] _tilesShown = new ushort[256 * 256];
 	private bool _hasMap;
 	private GameSnapshot _snapshot = new();
 	private bool _isHeld;
 
-	public Minimap(GameSession session, BattleArt art)
+	// Where a touch pressed, and where it dragged to last, in the minimap's pixels, until it is lifted.
+	private Vector2? _pressedAt;
+	private Vector2? _draggedTo;
+
+	// What the battlefield shows, in its view's pixels from the game's camera: the view, or a part of it, magnified
+	// (Battlefield.Shown).
+	public RectangleF Shown { get; set; } = new(0, 0, all_head.CMBT_WIDTH, all_head.CMBT_HEIGHT);
+
+	// How many times as large the minimap is drawn: the larger, the less a slip of a finger moves the battlefield.
+	public float Scale { get; private set; } = 1;
+
+	// The minimap's size at a scale.
+	public static System.Drawing.Size SizeAt(float scale) =>
+		new((int)(Area.Width * scale), (int)(Area.Height * scale));
+
+	public void SetScale(float scale)
+	{
+		Scale = scale;
+		Size = SizeAt(scale);
+	}
+
+	// isTouchScreen: whether the player touches the screen (IAppHost.IsTouchScreen). pan: moves what the battlefield shows
+	// by so many of its view's pixels (Battlefield.Pan).
+	public Minimap(GameSession session, BattleArt art, bool isTouchScreen, Action<Vector2> pan)
 	{
 		_session = session;
 		_map = art.MinimapTexture;
+		_isTouchScreen = isTouchScreen;
+		_pan = pan;
 		BackColor = DrawingColor.Transparent;
+		Size = Area.Size;
 	}
 
 	private static ReadOnlySpan<ushort> Tiles(GameSnapshot snapshot)
@@ -78,36 +116,44 @@ internal sealed class Minimap : Control
 		UpdateMap(snapshot);
 	}
 
+	// A point of the control in the minimap's pixels, through its scale.
+	private Vector2 ToMap(DrawingPoint point) => new(point.X / Scale, point.Y / Scale);
+
 	// The battlefield is moved to where the click is held, if it is on the map: the cursor is the camera's box's
-	// center, 5 from its corner (DrawMinimap).
-	private void ShowPoint(DrawingPoint point, bool isPressed)
+	// center, 5 from its corner (DrawMinimap), or, as the battlefield shows a part of the view, the part's middle.
+	private void ShowPoint(Vector2 at, bool isPressed)
 	{
-		if (
-			point.X < MapLeft
-			|| point.X > MapLeft + Columns
-			|| point.Y < MapTop
-			|| point.Y > MapTop + Rows
-		)
+		var (x, y) = ((int)at.X, (int)at.Y);
+		if (x < MapLeft || x > MapLeft + Columns || y < MapTop || y > MapTop + Rows)
 			return;
+
+		var shown = Shown;
+		var column = x - MapLeft - (int)MathF.Round((shown.X + shown.Width / 2) / 80 + 0.2f);
+		var row = y - MapTop - (int)MathF.Round((shown.Y + shown.Height / 2) / 80 + 0.2f);
 
 		// A replay's view moves, not the battle's (ReplayView).
 		if (_session.IsWatching && _session.View is { } view)
-			view.ShowMinimapCell(point.X - 5 - MapLeft, point.Y - 5 - MapTop);
+			view.ShowMinimapCell(column, row);
 		else
-			_session.Commands.ShowMinimapCell(
-				point.X - 5 - MapLeft,
-				point.Y - 5 - MapTop,
-				isPressed
-			);
+			_session.Commands.ShowMinimapCell(column, row, isPressed);
 	}
 
 	protected override void OnMouseDown(MouseEventArgs e)
 	{
 		base.OnMouseDown(e);
-		if (e.Button == MouseButtons.Left)
+		if (e.Button == MouseButtons.Left && _isTouchScreen)
+		{
+			_pressedAt = ToMap(e.Location);
+		}
+		else if (e.Button == MouseButtons.Left)
 		{
 			_isHeld = true;
-			ShowPoint(e.Location, isPressed: true);
+			ShowPoint(ToMap(e.Location), isPressed: true);
+		}
+		else if (e.Button == MouseButtons.XButton1)
+		{
+			// A second finger: the touch is no tap.
+			_pressedAt = null;
 		}
 		else if (e.Button == MouseButtons.Right)
 		{
@@ -120,15 +166,33 @@ internal sealed class Minimap : Control
 	protected override void OnMouseMove(MouseEventArgs e)
 	{
 		base.OnMouseMove(e);
+		var at = ToMap(e.Location);
 		if (_isHeld)
-			ShowPoint(e.Location, isPressed: false);
+			ShowPoint(at, isPressed: false);
+		if (_pressedAt is { } pressed && Vector2.Distance(at, pressed) * Scale > DragDistance)
+		{
+			_pressedAt = null;
+			_draggedTo = pressed;
+		}
+
+		if (_draggedTo is { } from)
+		{
+			_pan((at - from) * 80 * DragRatio);
+			_draggedTo = at;
+		}
 	}
 
 	protected override void OnMouseUp(MouseEventArgs e)
 	{
 		base.OnMouseUp(e);
-		if (e.Button == MouseButtons.Left)
-			_isHeld = false;
+		if (e.Button != MouseButtons.Left)
+			return;
+
+		if (_pressedAt is { } pressed)
+			ShowPoint(pressed, isPressed: true);
+		_isHeld = false;
+		_pressedAt = null;
+		_draggedTo = null;
 	}
 
 	// A unit's tile on the map, from a point of the world, as the original puts its dot (DrawMinimap).
@@ -150,32 +214,37 @@ internal sealed class Minimap : Control
 		);
 	}
 
-	protected override void OnPaint(PaintEventArgs e)
+	// The minimap at its scale, drawn with the sprite batch, its pixels kept sharp.
+	private void Draw(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot)
 	{
-		var g = e.Graphics;
-		var snapshot = _snapshot;
-		Painter.Fill(g, ClientRectangle, Theme.Navy);
-		Painter.Fill(g, new(0, 0, Width, 1), Theme.Alpha(Theme.Line, 0.9f));
-		g.DrawImage(
-			MonoGameImage.Create(
-				new Texture2DRegion(_map, 0, 0, Columns, Rows),
-				Color.White,
-				SamplerState.PointClamp
-			),
-			new DrawingPoint(MapLeft, MapTop)
+		void Fill(float x, float y, float width, float height, DrawingColor color) =>
+			batch.FillRectangle(
+				new RectangleF(origin.X + x, origin.Y + y, width, height),
+				color.ToXnaColor()
+			);
+
+		void Frame(float x, float y, float width, float height, DrawingColor color) =>
+			batch.DrawRectangle(
+				new RectangleF(origin.X + x, origin.Y + y, width, height),
+				color.ToXnaColor()
+			);
+
+		Fill(0, 0, Area.Width, Area.Height, Theme.Navy);
+		Fill(0, 0, Area.Width, 1, Theme.Alpha(Theme.Line, 0.9f));
+		batch.Draw(
+			_map,
+			origin + new Vector2(MapLeft, MapTop),
+			new Rectangle(0, 0, Columns, Rows),
+			Color.White
 		);
 
 		for (var x = 20; x < Columns; x += 20)
-			Painter.Fill(g, new(MapLeft + x, MapTop, 1, Rows), Theme.Alpha(Theme.Line, 0.25f));
+			Fill(MapLeft + x, MapTop, 1, Rows, Theme.Alpha(Theme.Line, 0.25f));
 
 		for (var y = 20; y < Rows; y += 20)
-			Painter.Fill(g, new(MapLeft, MapTop + y, Columns, 1), Theme.Alpha(Theme.Line, 0.25f));
+			Fill(MapLeft, MapTop + y, Columns, 1, Theme.Alpha(Theme.Line, 0.25f));
 
-		Painter.Frame(
-			g,
-			new(MapLeft - 1, MapTop - 1, Columns + 2, Rows + 2),
-			Theme.Alpha(Theme.Line, 0.9f)
-		);
+		Frame(MapLeft - 1, MapTop - 1, Columns + 2, Rows + 2, Theme.Alpha(Theme.Line, 0.9f));
 
 		// The player's units, but parked planes; the enemy's it has found, a submerged submarine where it was found.
 		// Planes blink (DrawMinimap).
@@ -200,17 +269,35 @@ internal sealed class Minimap : Control
 			else
 				cell = Cell(unit.Position.X, unit.Position.Y);
 
-			Painter.Fill(
-				g,
-				new(cell.X, cell.Y, 3, 3),
-				unit.Side == Side.Japan ? Theme.Japan : Theme.UnitedStates
-			);
+			Fill(cell.X, cell.Y, 3, 3, unit.Side == Side.Japan ? Theme.Japan : Theme.UnitedStates);
 		}
 
-		// Where the battlefield is: its top left corner's tile, 10 tiles across.
+		// What the battlefield shows: the view's top left corner's tile, 10 tiles across, or the part of it shown.
 		var camera = snapshot.CameraPosition;
+		var shown = Shown;
 		var left = MapLeft + (Math.Abs(World.Left) + (int)camera.X) / 80;
 		var top = MapTop + (Math.Abs(World.Top) - (int)camera.Y) / 80;
-		Painter.Frame(g, new(left, top, 11, 11), Theme.BrassLight);
+		Frame(
+			left + shown.X / 80,
+			top + shown.Y / 80,
+			shown.Width / 80 + 1.4f,
+			shown.Height / 80 + 1.4f,
+			Theme.BrassLight
+		);
+	}
+
+	protected override void OnPaint(PaintEventArgs e)
+	{
+		var snapshot = _snapshot;
+		var at = PointToScreen(DrawingPoint.Empty);
+		var scale =
+			Matrix.CreateTranslation(-at.X, -at.Y, 0)
+			* Matrix.CreateScale(Scale)
+			* Matrix.CreateTranslation(at.X, at.Y, 0);
+		((MonoGameGraphics)e.Graphics).DrawWith(
+			SamplerState.PointClamp,
+			scale,
+			(batch, origin) => Draw(batch, origin, snapshot)
+		);
 	}
 }
