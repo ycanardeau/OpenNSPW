@@ -578,11 +578,10 @@ internal sealed class ReliableChannel(ReliableConnection connection, Handshake h
 		{
 			ResetReassembly();
 			foreach (
-				var payload in CoalescedPayloadSerializer.Default.Deserialize(
-					frame.Payload.ToArray()
-				) ?? []
+				var payload in CoalescedPayloadSerializer.Default.Deserialize([.. frame.Payload])
+					?? []
 			)
-				Deliver(payload.Payload.ToArray(), payload.User1);
+				Deliver([.. payload.Payload], payload.User1);
 		}
 		else
 		{
@@ -611,7 +610,7 @@ internal sealed class ReliableChannel(ReliableConnection connection, Handshake h
 
 				if (frame.EndMessage)
 				{
-					Deliver(_reassembly.SelectMany(p => p).ToArray(), _reassemblyUser1);
+					Deliver([.. _reassembly.SelectMany(p => p)], _reassemblyUser1);
 					ResetReassembly();
 				}
 			}

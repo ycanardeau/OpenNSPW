@@ -28,7 +28,7 @@ public class BindingsCollection : BaseCollection
 	/// <summary>
 	///  Gets the bindings in the collection as an object.
 	/// </summary>
-	protected override ArrayList List => _list ?? (_list = new ArrayList());
+	protected override ArrayList List => _list ?? (_list = []);
 
 	/// <summary>
 	///  Gets the <see cref='Binding'/> at the specified index.

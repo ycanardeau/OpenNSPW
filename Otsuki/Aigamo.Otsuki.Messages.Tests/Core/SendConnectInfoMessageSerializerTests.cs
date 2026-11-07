@@ -844,11 +844,11 @@ public class SendConnectInfoMessageSerializerTests
 		message
 			.ApplicationReservedData.ToArray()
 			.Should()
-			.Equal(expected.ApplicationReservedData.ToArray());
-		message.ReservedData.ToArray().Should().Equal(expected.ReservedData.ToArray());
+			.Equal([.. expected.ApplicationReservedData]);
+		message.ReservedData.ToArray().Should().Equal([.. expected.ReservedData]);
 		message.Password.Should().Be(expected.Password);
 		message.SessionName.Should().Be(expected.SessionName);
-		message.Reply.ToArray().Should().Equal(expected.Reply.ToArray());
+		message.Reply.ToArray().Should().Equal([.. expected.Reply]);
 	}
 
 	[Theory]

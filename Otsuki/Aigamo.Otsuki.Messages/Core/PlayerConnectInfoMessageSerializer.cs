@@ -49,7 +49,7 @@ internal class PlayerConnectInfoMessageSerializer
 			}
 
 			reader.BaseStream.Seek(endOfPacketType + alternateAddressDataOffset, SeekOrigin.Begin);
-			alternateAddresses = ReadAlternateAddresses().ToImmutableArray();
+			alternateAddresses = [.. ReadAlternateAddresses()];
 		}
 
 		var url = Array.Empty<byte>();
@@ -63,7 +63,7 @@ internal class PlayerConnectInfoMessageSerializer
 		if (connectDataOffset != 0)
 		{
 			reader.BaseStream.Seek(endOfPacketType + connectDataOffset, SeekOrigin.Begin);
-			connectData = reader.ReadBytes(connectDataSize).ToImmutableArray();
+			connectData = [.. reader.ReadBytes(connectDataSize)];
 		}
 
 		var password = Array.Empty<byte>();
@@ -77,7 +77,7 @@ internal class PlayerConnectInfoMessageSerializer
 		if (dataOffset != 0)
 		{
 			reader.BaseStream.Seek(endOfPacketType + dataOffset, SeekOrigin.Begin);
-			data = reader.ReadBytes(dataSize).ToImmutableArray();
+			data = [.. reader.ReadBytes(dataSize)];
 		}
 
 		var name = Array.Empty<byte>();

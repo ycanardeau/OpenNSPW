@@ -6,8 +6,8 @@ namespace Aigamo.Otsuki.Messages.Tests.Core;
 
 public class NullTerminatedUnicodeStringTests
 {
-	private static readonly byte[] _testByteArray = new byte[]
-	{
+	private static readonly byte[] _testByteArray =
+	[
 		0x48,
 		0x00,
 		0x65,
@@ -34,7 +34,7 @@ public class NullTerminatedUnicodeStringTests
 		0x00,
 		0x00,
 		0x00,
-	};
+	];
 	private static readonly string _testString = "Hello World!";
 
 	public static IEnumerable<object?[]> Ctor_ByteArray_TestData()

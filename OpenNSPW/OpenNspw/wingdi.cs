@@ -174,7 +174,7 @@ public sealed class Gdi(INspwPlatform platform)
 
 	private readonly INspwPlatform _platform = platform;
 	private readonly Dictionary<int, object> _objects = [];
-	private readonly Dictionary<byte[], string> _texts = new(TextComparer.Instance);
+	private readonly Dictionary<byte[], string> _texts = [with(TextComparer.Instance)];
 
 	// The surfaces' contexts released (DeleteDC), used again rather than made anew: the game takes a surface's several
 	// times a frame (GetDC), and a frame not shown many times a second.

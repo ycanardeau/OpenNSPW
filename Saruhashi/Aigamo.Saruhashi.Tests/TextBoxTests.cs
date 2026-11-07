@@ -656,12 +656,11 @@ public sealed class TextBoxTests
 		_windowManager.Draw();
 
 		Assert.Equal(
-			new (string, Color)[]
-			{
+			[
 				("h", _textBox.ForeColor),
 				("ell", _textBox.SelectionForeColor),
 				("o", _textBox.ForeColor),
-			},
+			],
 			_factory.Strings.Select(s => (s.Text, s.Color))
 		);
 
@@ -670,7 +669,7 @@ public sealed class TextBoxTests
 		_windowManager.Draw();
 
 		// Scrolled 105 pixels: from the "l" at 110, to the "t", whose right is at 200.
-		Assert.Equal(new[] { "lmnopqrst" }, _factory.Strings.Select(s => s.Text));
+		Assert.Equal(["lmnopqrst"], _factory.Strings.Select(s => s.Text));
 	}
 
 	[Fact]
@@ -681,7 +680,7 @@ public sealed class TextBoxTests
 
 		_windowManager.Draw();
 
-		Assert.Equal(new[] { "hello" }, _factory.Strings.Select(s => s.Text));
+		Assert.Equal(["hello"], _factory.Strings.Select(s => s.Text));
 	}
 
 	[Fact]
@@ -690,7 +689,7 @@ public sealed class TextBoxTests
 		_textBox.PlaceholderText = "Name";
 
 		_windowManager.Draw();
-		Assert.Equal(new[] { "Name" }, _factory.Strings.Select(s => s.Text));
+		Assert.Equal(["Name"], _factory.Strings.Select(s => s.Text));
 
 		_factory.Strings.Clear();
 		_textBox.Focus();

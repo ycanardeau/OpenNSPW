@@ -30,7 +30,7 @@ internal class AckNameTableOperationsMessageSerializer
 				operation = reader.ReadBytes(operationSize);
 			}
 			else
-				operation = Array.Empty<byte>();
+				operation = [];
 
 			reader.BaseStream.Seek(endOfPacketType + 4 + 12 * i, SeekOrigin.Begin);
 			entries[i] = new CoreMessage.AckNameTableOperations.Entry(reader)

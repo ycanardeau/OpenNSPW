@@ -109,9 +109,7 @@ internal sealed class NamedTransport(NamedNetwork network, NamedEndPoint localEn
 		_network.Post(new NamedNetworkMessage.Start(this, onReceive));
 
 	public void Send(EndPoint remoteEndPoint, byte[] datagram) =>
-		_network.Post(
-			new NamedNetworkMessage.Send(LocalEndPoint, remoteEndPoint, datagram.ToArray())
-		);
+		_network.Post(new NamedNetworkMessage.Send(LocalEndPoint, remoteEndPoint, [.. datagram]));
 
 	public void Dispose() => _network.Post(new NamedNetworkMessage.Unbind(this));
 }

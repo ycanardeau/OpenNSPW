@@ -40,7 +40,7 @@ internal interface ICanHost : ISessionTransition<SessionMessage.Host>
 		return new SessionState.Hosting(
 			NextIndex: 3,
 			ResynchronizedVersion: 0,
-			IntegrityChecks: ImmutableDictionary<Dpnid, IntegrityCheck>.Empty
+			IntegrityChecks: []
 		);
 	}
 

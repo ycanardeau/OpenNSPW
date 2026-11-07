@@ -59,5 +59,5 @@ public sealed record CoalescedPayload
 	public override string ToString() =>
 		$"{nameof(CoalescedPayload)} ["
 		+ $"{nameof(Command)}={Command}, "
-		+ $"{nameof(Payload)}={BitConverter.ToString(Payload.ToArray())}]";
+		+ $"{nameof(Payload)}={BitConverter.ToString([.. Payload])}]";
 }

@@ -102,13 +102,14 @@ internal sealed class BattleArt : IDisposable
 			Texture2D? LoadOrNone(string? name) =>
 				name is null ? null : SpriteFiles.Load(graphicsDevice, $"{folder}/{name}.png");
 
-			UnitRows = unitRows.Select(LoadOrNone).ToArray();
-			Facilities = FacilityColumns.Select(LoadOrNone).ToArray();
-			Pictures = BattleArt
-				.Pictures.Select(name =>
+			UnitRows = [.. unitRows.Select(LoadOrNone)];
+			Facilities = [.. FacilityColumns.Select(LoadOrNone)];
+			Pictures =
+			[
+				.. BattleArt.Pictures.Select(name =>
 					SpriteFiles.Load(graphicsDevice, $"{folder}/info/{name}.png")
-				)
-				.ToArray();
+				),
+			];
 			Flag = SpriteFiles.Load(graphicsDevice, $"flag-{folder}.png");
 		}
 

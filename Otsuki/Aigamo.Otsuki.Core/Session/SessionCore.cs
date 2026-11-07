@@ -1167,13 +1167,8 @@ internal sealed class SessionCore
 		var hosting = new SessionState.Hosting(
 			GetNextNameTableIndex(),
 			ResynchronizedVersion,
-			ImmutableDictionary<Dpnid, IntegrityCheck>.Empty,
-			new MigrationProgress(
-				oldHost,
-				[.. peers.Select(p => p.Id)],
-				ImmutableDictionary<Dpnid, int>.Empty,
-				RequestedFrom: null
-			)
+			[],
+			new MigrationProgress(oldHost, [.. peers.Select(p => p.Id)], [], RequestedFrom: null)
 		);
 		MigrationTimer.Start(Options.IntegrityCheckTimeout);
 		return ContinueMigration(hosting);

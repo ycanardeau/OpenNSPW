@@ -49,7 +49,7 @@ public class EnumerationMessageSerializer
 		Encoding.Unicode.GetString(value).TrimEnd('\0');
 
 	private static byte[] ReadAt(byte[] data, int offset, int size) =>
-		offset == 0 || size == 0 ? [] : data.Skip(OffsetBase + offset).Take(size).ToArray();
+		offset == 0 || size == 0 ? [] : [.. data.Skip(OffsetBase + offset).Take(size)];
 
 	private static EnumerationMessage.Query? ReadQuery(BinaryReader reader, byte[] data)
 	{
