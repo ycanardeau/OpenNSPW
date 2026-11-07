@@ -57,7 +57,7 @@ public sealed class ConcurrencyAnalyzer : DiagnosticAnalyzer
 	);
 
 	public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-		ImmutableArray.Create(SharedStateRule);
+	[SharedStateRule];
 
 	private static bool IsSharedStateNamespace(INamespaceSymbol? ns) =>
 		ns is not null && SharedStateNamespaces.Contains(ns.ToDisplayString());

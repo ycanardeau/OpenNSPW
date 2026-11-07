@@ -609,11 +609,11 @@ public class PlayerConnectInfoMessageSerializerTests
 			.AlternateAddresses.SelectMany(a => a.ToByteArray())
 			.ToArray()
 			.Should()
-			.Equal(expected.AlternateAddresses.SelectMany(a => a.ToByteArray()).ToArray());
+			.Equal([.. expected.AlternateAddresses.SelectMany(a => a.ToByteArray())]);
 		message.Url.Should().Be(expected.Url);
-		message.ConnectData.ToArray().Should().Equal(expected.ConnectData.ToArray());
+		message.ConnectData.ToArray().Should().Equal([.. expected.ConnectData]);
 		message.Password.Should().Be(expected.Password);
-		message.Data.ToArray().Should().Equal(expected.Data.ToArray());
+		message.Data.ToArray().Should().Equal([.. expected.Data]);
 		message.Name.Should().Be(expected.Name);
 	}
 

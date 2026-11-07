@@ -53,7 +53,7 @@ public sealed class ImmutableAnalyzer : DiagnosticAnalyzer
 	);
 
 	public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-		ImmutableArray.Create(MutableSetterRule, MutableTypeRule);
+	[MutableSetterRule, MutableTypeRule];
 
 	private static bool IsImmutable(ITypeSymbol type, INamedTypeSymbol immutableAttribute) =>
 		type.GetAttributes()

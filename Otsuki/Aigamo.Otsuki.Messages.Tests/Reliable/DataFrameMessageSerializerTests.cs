@@ -114,7 +114,7 @@ public class DataFrameMessageSerializerTests
 		message.NextReceive.Should().Be(expected.NextReceive);
 		message.SackMask.Should().Be(expected.SackMask);
 		message.SendMask.Should().Be(expected.SendMask);
-		message.Payload.ToArray().Should().Equal(expected.Payload.ToArray());
+		message.Payload.ToArray().Should().Equal([.. expected.Payload]);
 	}
 
 	[Theory]

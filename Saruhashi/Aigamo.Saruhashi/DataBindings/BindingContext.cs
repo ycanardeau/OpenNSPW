@@ -28,7 +28,7 @@ public class BindingContext : ICollection
 	/// </summary>
 	public BindingContext()
 	{
-		_listManagers = new Hashtable();
+		_listManagers = [];
 	}
 
 	/// <summary>
@@ -400,7 +400,7 @@ public class BindingContext : ICollection
 			{
 				if (cleanupList is null)
 				{
-					cleanupList = new ArrayList();
+					cleanupList = [];
 				}
 				cleanupList.Add(de.Key);
 			}

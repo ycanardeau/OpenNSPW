@@ -16,7 +16,7 @@ internal class Address
 	public const string KeyPort = "port";
 	public const string KeyProvider = "provider";
 
-	private readonly Dictionary<string, object> _components = new();
+	private readonly Dictionary<string, object> _components = [];
 
 	public Address() { }
 
@@ -71,7 +71,7 @@ internal class Address
 					_ => throw new ArgumentException(),
 				};
 
-			return $"x-directplay:/{string.Join(";", _components.OrderByDescending(c => c.Key == KeyProvider).Select(c => $"{c.Key}={ComponentToString(c.Value)}").ToArray())}";
+			return $"x-directplay:/{string.Join(";", [.. _components.OrderByDescending(c => c.Key == KeyProvider).Select(c => $"{c.Key}={ComponentToString(c.Value)}")])}";
 		}
 		set
 		{

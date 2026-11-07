@@ -20,7 +20,7 @@ public class Form : Control
 			var bm = base.BindingContext;
 			if (bm is null)
 			{
-				bm = new BindingContext();
+				bm = [];
 				BindingContext = bm;
 			}
 

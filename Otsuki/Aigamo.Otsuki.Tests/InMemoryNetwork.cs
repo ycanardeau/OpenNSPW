@@ -212,7 +212,7 @@ internal sealed class InMemoryTransport(InMemoryNetwork network, IPEndPoint loca
 	public void Send(EndPoint remoteEndPoint, byte[] datagram)
 	{
 		if (remoteEndPoint is IPEndPoint ipEndPoint)
-			_network.Post(new NetworkMessage.Send(LocalEndPoint, ipEndPoint, datagram.ToArray()));
+			_network.Post(new NetworkMessage.Send(LocalEndPoint, ipEndPoint, [.. datagram]));
 	}
 
 	public void Dispose() => _network.Post(new NetworkMessage.Unbind(this));

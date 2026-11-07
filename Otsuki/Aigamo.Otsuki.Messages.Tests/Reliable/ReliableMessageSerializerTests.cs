@@ -18,14 +18,10 @@ public class ReliableMessageSerializerTests
 		return DataFrameMessageSerializerTests
 			.TestData()
 			.Concat(
-				ConnectMessageSerializerTests
-					.TestData()
-					.Select(x => x.Concat(new object?[] { false }).ToArray())
+				ConnectMessageSerializerTests.TestData().Select(x => x.Concat([false]).ToArray())
 			)
 			.Concat(
-				ConnectedMessageSerializerTests
-					.TestData()
-					.Select(x => x.Concat(new object?[] { false }).ToArray())
+				ConnectedMessageSerializerTests.TestData().Select(x => x.Concat([false]).ToArray())
 			)
 			.Concat(HardDisconnectMessageSerializerTests.TestData())
 			.Concat(SackMessageSerializerTests.TestData())

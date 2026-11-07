@@ -21,7 +21,7 @@ internal class ConnectFailedMessageSerializer : ICoreMessageSerializer<CoreMessa
 		if (replyOffset != 0)
 		{
 			reader.BaseStream.Seek(endOfPacketType + replyOffset, SeekOrigin.Begin);
-			reply = reader.ReadBytes(replySize).ToImmutableArray();
+			reply = [.. reader.ReadBytes(replySize)];
 		}
 
 		return new() { ResultCode = resultCode, Reply = reply };

@@ -131,7 +131,7 @@ public abstract class BindingManagerBase
 				{
 					return TypeDescriptor.GetProperties(
 						property.PropertyType,
-						new Attribute[] { new BrowsableAttribute(true) }
+						[new BrowsableAttribute(true)]
 					);
 				}
 			}
@@ -155,7 +155,7 @@ public abstract class BindingManagerBase
 					// get all the properties that are not marked as Browsable(false)
 					itemProps = TypeDescriptor.GetProperties(
 						property.PropertyType,
-						new Attribute[] { new BrowsableAttribute(true) }
+						[new BrowsableAttribute(true)]
 					);
 				}
 			}

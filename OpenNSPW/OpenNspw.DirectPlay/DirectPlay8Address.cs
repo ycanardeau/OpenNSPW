@@ -3,7 +3,10 @@ namespace OpenNspw.DirectPlay;
 // IDirectPlay8Address: a service provider, a device, and components such as the host name and the port.
 public sealed class DirectPlay8Address : IDirectPlay8Address
 {
-	private readonly Dictionary<string, object> _components = new(StringComparer.OrdinalIgnoreCase);
+	private readonly Dictionary<string, object> _components =
+	[
+		with(StringComparer.OrdinalIgnoreCase),
+	];
 
 	public Guid? ServiceProvider { get; private set; }
 

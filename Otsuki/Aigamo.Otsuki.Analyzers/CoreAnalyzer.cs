@@ -38,19 +38,21 @@ public sealed class CoreAnalyzer : DiagnosticAnalyzer
 	// Namespaces whose every type but an enum starts, schedules, waits for or shares work across threads, or talks to
 	// the network; an enum, such as an address family, is only a value. Then single types that do, or that read a
 	// clock.
-	private static readonly ImmutableArray<string> ThreadNamespaces = ImmutableArray.Create(
+	private static readonly ImmutableArray<string> ThreadNamespaces =
+	[
 		typeof(Monitor).Namespace,
 		typeof(System.Timers.Timer).Namespace,
 		typeof(System.Collections.Concurrent.ConcurrentQueue<>).Namespace,
-		typeof(System.Net.Sockets.Socket).Namespace
-	);
+		typeof(System.Net.Sockets.Socket).Namespace,
+	];
 
 	// The namespaces whose using directive is reported: those with no enum the core may need.
-	private static readonly ImmutableArray<string> ThreadOnlyNamespaces = ImmutableArray.Create(
+	private static readonly ImmutableArray<string> ThreadOnlyNamespaces =
+	[
 		typeof(Monitor).Namespace,
 		typeof(System.Timers.Timer).Namespace,
-		typeof(System.Collections.Concurrent.ConcurrentQueue<>).Namespace
-	);
+		typeof(System.Collections.Concurrent.ConcurrentQueue<>).Namespace,
+	];
 
 	private static readonly ImmutableHashSet<string> ThreadTypeNames = ImmutableHashSet.Create(
 		"System.TimeProvider",
@@ -102,7 +104,7 @@ public sealed class CoreAnalyzer : DiagnosticAnalyzer
 	);
 
 	public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-		ImmutableArray.Create(ThreadRule, StaticStateRule);
+	[ThreadRule, StaticStateRule];
 
 	private static bool IsIn(INamespaceSymbol? ns, ImmutableArray<string> namespaces)
 	{

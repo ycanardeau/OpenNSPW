@@ -21,7 +21,7 @@ internal sealed class Debugger(
 	private const uint WaitMilliseconds = 100;
 
 	private readonly string _executable = executable;
-	private readonly uint[] _breakpoints = breakpoints.ToArray();
+	private readonly uint[] _breakpoints = [.. breakpoints];
 	private readonly Action<Debugger, uint> _hit = hit;
 	private readonly Action<Debugger>? _waiting = waiting;
 	private readonly Dictionary<uint, byte> _originalBytes = [];

@@ -42,7 +42,7 @@ internal sealed record DirectPlayUrl(string Value)
 	/// </summary>
 	public IReadOnlyDictionary<string, string> Components =>
 		!Value.StartsWith(Scheme, StringComparison.Ordinal)
-			? new Dictionary<string, string>()
+			? []
 			: Value[Scheme.Length..]
 				.Split(';')
 				.Select(component => component.Split('=', 2))

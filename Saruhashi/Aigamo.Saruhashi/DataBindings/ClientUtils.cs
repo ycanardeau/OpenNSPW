@@ -202,7 +202,7 @@ internal static class ClientUtils
 
 		if (enumValueInfo is null)
 		{
-			enumValueInfo = new Hashtable();
+			enumValueInfo = [];
 		}
 
 		SequentialEnumInfo? sequentialEnumInfo = null;

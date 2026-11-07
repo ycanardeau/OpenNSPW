@@ -11,7 +11,7 @@ public class Control : IDisposable, IBindableComponent
 	{
 		public Control Owner { get; } = owner;
 
-		private protected List<Control> InnerList { get; } = new();
+		private protected List<Control> InnerList { get; } = [];
 
 		public int Count => InnerList.Count;
 

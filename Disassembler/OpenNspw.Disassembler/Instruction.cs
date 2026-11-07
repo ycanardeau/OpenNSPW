@@ -2,7 +2,7 @@ namespace OpenNspw.Disassembler;
 
 internal sealed class Instruction
 {
-	private readonly List<Func<Token, IEnumerable<string>>?> _factories = new();
+	private readonly List<Func<Token, IEnumerable<string>>?> _factories = [];
 	public bool HasModRM { get; }
 
 	public Instruction(Func<Token, IEnumerable<string>> factory, bool hasModRM = false)

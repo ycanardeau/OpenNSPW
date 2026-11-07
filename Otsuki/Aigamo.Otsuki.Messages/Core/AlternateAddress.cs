@@ -36,7 +36,7 @@ internal sealed record AlternateAddress
 		AddressBytes = family switch
 		{
 			AddressFamily.InterNetwork => reader.ReadBytes(4).ToImmutableArray(),
-			AddressFamily.InterNetworkV6 => reader.ReadBytes(16).ToImmutableArray(),
+			AddressFamily.InterNetworkV6 => [.. reader.ReadBytes(16)],
 			_ => throw new InvalidEnumArgumentException(),
 		};
 
@@ -47,7 +47,7 @@ internal sealed record AlternateAddress
 	private IImmutableList<byte> AddressBytes
 	{
 		get => Address.AddressBytes;
-		init => Address = new IPAddress(value.ToArray()).ToImmutableIPAddress();
+		init => Address = new IPAddress([.. value]).ToImmutableIPAddress();
 	}
 
 	public IImmutableEndPoint EndPoint =>

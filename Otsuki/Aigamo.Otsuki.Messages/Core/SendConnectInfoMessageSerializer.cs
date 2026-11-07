@@ -94,7 +94,7 @@ internal class SendConnectInfoMessageSerializer
 				url = reader.ReadBytes(urlSize);
 			}
 			else
-				url = Array.Empty<byte>();
+				url = [];
 
 			byte[] data;
 			if (dataOffset != 0)
@@ -103,7 +103,7 @@ internal class SendConnectInfoMessageSerializer
 				data = reader.ReadBytes(dataSize);
 			}
 			else
-				data = Array.Empty<byte>();
+				data = [];
 
 			byte[] name;
 			if (nameOffset != 0)
@@ -112,7 +112,7 @@ internal class SendConnectInfoMessageSerializer
 				name = reader.ReadBytes(nameSize);
 			}
 			else
-				name = Array.Empty<byte>();
+				name = [];
 
 			reader.BaseStream.Seek(endOfPacketType + 108 + 48 * i, SeekOrigin.Begin);
 			nameTableEntries[i] = ReadNameTableEntryInfo(reader) with
@@ -140,16 +140,14 @@ internal class SendConnectInfoMessageSerializer
 				endOfPacketType + applicationReservedDataOffset,
 				SeekOrigin.Begin
 			);
-			applicationReservedData = reader
-				.ReadBytes(applicationReservedDataSize)
-				.ToImmutableArray();
+			applicationReservedData = [.. reader.ReadBytes(applicationReservedDataSize)];
 		}
 
 		var reservedData = ImmutableArray<byte>.Empty;
 		if (reservedDataOffset != 0)
 		{
 			reader.BaseStream.Seek(endOfPacketType + reservedDataOffset, SeekOrigin.Begin);
-			reservedData = reader.ReadBytes(reservedDataSize).ToImmutableArray();
+			reservedData = [.. reader.ReadBytes(reservedDataSize)];
 		}
 
 		var password = Array.Empty<byte>();
@@ -170,7 +168,7 @@ internal class SendConnectInfoMessageSerializer
 		if (replyOffset != 0)
 		{
 			reader.BaseStream.Seek(endOfPacketType + replyOffset, SeekOrigin.Begin);
-			reply = reader.ReadBytes(replySize).ToImmutableArray();
+			reply = [.. reader.ReadBytes(replySize)];
 		}
 
 		return new()

@@ -21,7 +21,7 @@ internal class TerminateSessionMessageSerializer
 		if (terminateDataOffset != 0)
 		{
 			reader.BaseStream.Seek(endOfPacketType + terminateDataOffset, SeekOrigin.Begin);
-			terminateData = reader.ReadBytes(terminateDataSize).ToImmutableArray();
+			terminateData = [.. reader.ReadBytes(terminateDataSize)];
 		}
 
 		return new() { TerminateData = terminateData };

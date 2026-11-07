@@ -7,7 +7,7 @@ namespace Aigamo.Otsuki.Messages.Tests.Reliable;
 
 public class CoalescedPayloadSerializerTests
 {
-	private static byte[] Bytes(int count, byte value) => Enumerable.Repeat(value, count).ToArray();
+	private static byte[] Bytes(int count, byte value) => [.. Enumerable.Repeat(value, count)];
 
 	public static IEnumerable<object[]> TestData()
 	{
@@ -96,7 +96,7 @@ public class CoalescedPayloadSerializerTests
 		for (var i = 0; i < expected.Length; i++)
 		{
 			payloads[i].Command.Should().Be(expected[i].Command);
-			payloads[i].Payload.ToArray().Should().Equal(expected[i].Payload.ToArray());
+			payloads[i].Payload.ToArray().Should().Equal([.. expected[i].Payload]);
 		}
 	}
 

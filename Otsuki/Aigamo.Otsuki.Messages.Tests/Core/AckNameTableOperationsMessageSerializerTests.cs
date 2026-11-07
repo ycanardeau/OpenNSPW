@@ -345,7 +345,7 @@ public class AckNameTableOperationsMessageSerializerTests
 			.EntriesInternal.SelectMany(e => e.ToByteArray())
 			.ToArray()
 			.Should()
-			.Equal(expected.EntriesInternal.SelectMany(e => e.ToByteArray()).ToArray());
+			.Equal([.. expected.EntriesInternal.SelectMany(e => e.ToByteArray())]);
 	}
 
 	[Theory]

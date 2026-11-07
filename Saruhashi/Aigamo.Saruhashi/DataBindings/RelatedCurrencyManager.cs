@@ -23,8 +23,7 @@ internal class RelatedCurrencyManager : CurrencyManager
 	BindingManagerBase parentManager;
 	string dataField;
 	PropertyDescriptor fieldInfo;
-	static readonly List<BindingManagerBase> IgnoreItemChangedTable =
-		new List<BindingManagerBase>();
+	static readonly List<BindingManagerBase> IgnoreItemChangedTable = [];
 
 	internal RelatedCurrencyManager(BindingManagerBase parentManager, string dataField)
 		: base(null)
@@ -120,7 +119,7 @@ internal class RelatedCurrencyManager : CurrencyManager
 	/// </summary>
 	internal override string GetListName()
 	{
-		string name = GetListName(new ArrayList());
+		string name = GetListName([]);
 		if (name.Length > 0)
 		{
 			return name;
