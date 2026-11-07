@@ -110,6 +110,7 @@ public class ConnectMessageSerializerTests
 	internal void Deserialize(byte[] data, ReliableMessage.Connect expected)
 	{
 		var message = ConnectMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.Command.Should().Be(expected.Command);
 		message.Opcode.Should().Be(expected.Opcode);
 		message.MessageId.Should().Be(expected.MessageId);

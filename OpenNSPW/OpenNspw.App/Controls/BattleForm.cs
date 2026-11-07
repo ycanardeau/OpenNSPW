@@ -102,7 +102,7 @@ internal sealed class BattleForm : Form
 		);
 		_sidebar.Scale = 1;
 		_sidebar.Visible = true;
-		_minimap.SetScale(1);
+		_minimap.SetMapScale(1);
 		_minimap.Location = Minimap.Area.Location;
 		FitCommandBar(all_head.CMBT_WIDTH - _commandBar.Width / 2 - 8, 8, _isTouchScreen);
 		_panelButton.Visible = false;
@@ -116,7 +116,7 @@ internal sealed class BattleForm : Form
 	{
 		var width = all_head.SCRN_WIDTH + extraWidth;
 		Size = new DrawingSize(width, all_head.SCRN_HEIGHT);
-		_minimap.SetScale(
+		_minimap.SetMapScale(
 			_isTouchScreen ? Math.Clamp(extraWidth / (float)Minimap.Area.Width, 1, 2) : 1
 		);
 		var layout = _commandBar.Layout;

@@ -38,6 +38,7 @@ public class InstructConnectMessageSerializerTests
 	internal void Deserialize(byte[] data, CoreMessage.InstructConnect expected)
 	{
 		var message = InstructConnectMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.PacketType.Should().Be(expected.PacketType);
 		message.Dpnid.Should().Be(expected.Dpnid);
 		message.Version.Should().Be(expected.Version);

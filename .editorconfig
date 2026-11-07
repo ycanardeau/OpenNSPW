@@ -24,3 +24,9 @@ dotnet_diagnostic.IDE0303.severity = error
 dotnet_diagnostic.IDE0304.severity = error
 dotnet_diagnostic.IDE0305.severity = error
 dotnet_diagnostic.IDE0306.severity = error
+
+# Warnings
+dotnet_diagnostic.CS0067.severity = error
+dotnet_diagnostic.CS0108.severity = error
+dotnet_diagnostic.CS1570.severity = error
+dotnet_diagnostic.xUnit1026.severity = error

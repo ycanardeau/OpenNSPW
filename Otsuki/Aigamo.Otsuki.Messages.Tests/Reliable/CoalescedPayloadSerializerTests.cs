@@ -91,8 +91,8 @@ public class CoalescedPayloadSerializerTests
 	public void Deserialize(byte[] data, CoalescedPayload[] expected)
 	{
 		var payloads = CoalescedPayloadSerializer.Default.Deserialize(data);
-		payloads.Should().NotBeNull();
-		payloads!.Count.Should().Be(expected.Length);
+		Assert.NotNull(payloads);
+		payloads.Count.Should().Be(expected.Length);
 		for (var i = 0; i < expected.Length; i++)
 		{
 			payloads[i].Command.Should().Be(expected[i].Command);

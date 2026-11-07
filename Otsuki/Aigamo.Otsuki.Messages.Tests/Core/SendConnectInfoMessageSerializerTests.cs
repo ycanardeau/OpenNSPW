@@ -822,6 +822,7 @@ public class SendConnectInfoMessageSerializerTests
 	internal void Deserialize(byte[] data, CoreMessage.SendConnectInfo expected)
 	{
 		var message = SendConnectInfoMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.PacketType.Should().Be(expected.PacketType);
 		message.ReplySize.Should().Be(expected.ReplySize);
 		message.Size.Should().Be(expected.Size);

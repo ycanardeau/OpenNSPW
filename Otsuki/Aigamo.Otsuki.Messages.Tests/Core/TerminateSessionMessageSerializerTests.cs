@@ -20,6 +20,7 @@ public class TerminateSessionMessageSerializerTests
 	internal void Deserialize(byte[] data, CoreMessage.TerminateSession expected)
 	{
 		var message = TerminateSessionMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.PacketType.Should().Be(expected.PacketType);
 		message.TerminateData.Should().Equal(expected.TerminateData);
 	}

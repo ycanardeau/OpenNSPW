@@ -99,6 +99,7 @@ public class ConnectFailedMessageSerializerTests
 	internal void Deserialize(byte[] data, CoreMessage.ConnectFailed expected)
 	{
 		var message = ConnectFailedMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.PacketType.Should().Be(expected.PacketType);
 		message.ResultCode.Should().Be(expected.ResultCode);
 		message.ReplySize.Should().Be(expected.ReplySize);

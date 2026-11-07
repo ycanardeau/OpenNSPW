@@ -20,6 +20,7 @@ public class SendPlayerDpnidMessageSerializerTests
 	internal void Deserialize(byte[] data, CoreMessage.SendPlayerDpnid expected)
 	{
 		var message = SendPlayerDpnidMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.PacketType.Should().Be(expected.PacketType);
 		message.Dpnid.Should().Be(expected.Dpnid);
 	}

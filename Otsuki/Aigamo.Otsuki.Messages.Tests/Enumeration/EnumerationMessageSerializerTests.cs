@@ -32,8 +32,9 @@ public class EnumerationMessageSerializerTests
 			ApplicationPayload = ImmutableArray.Create<byte>(0xAA, 0xBB),
 		};
 
-		var read = (EnumerationMessage.Query)
-			EnumerationMessageSerializer.Default.Deserialize(data)!;
+		var read = Assert.IsType<EnumerationMessage.Query>(
+			EnumerationMessageSerializer.Default.Deserialize(data)
+		);
 		read.EnumPayload.Should().Be(0x1234);
 		read.GuidApplication.Should().Be(GuidApplication);
 		read.ApplicationPayload.Should().Equal(0xAA, 0xBB);
@@ -45,8 +46,9 @@ public class EnumerationMessageSerializerTests
 	{
 		var data = Convert.FromHexString("0002010002");
 
-		var read = (EnumerationMessage.Query)
-			EnumerationMessageSerializer.Default.Deserialize(data)!;
+		var read = Assert.IsType<EnumerationMessage.Query>(
+			EnumerationMessageSerializer.Default.Deserialize(data)
+		);
 		read.EnumPayload.Should().Be(1);
 		read.GuidApplication.Should().BeNull();
 		read.ApplicationPayload.Should().BeEmpty();
@@ -98,8 +100,9 @@ public class EnumerationMessageSerializerTests
 			ApplicationData = ImmutableArray.Create<byte>(0xFF),
 		};
 
-		var read = (EnumerationMessage.Response)
-			EnumerationMessageSerializer.Default.Deserialize(data)!;
+		var read = Assert.IsType<EnumerationMessage.Response>(
+			EnumerationMessageSerializer.Default.Deserialize(data)
+		);
 		read.Should()
 			.BeEquivalentTo(
 				message,
@@ -117,9 +120,10 @@ public class EnumerationMessageSerializerTests
 			new EnumerationMessage.Response { Flags = SessionFlags.NoEnumerations }
 		);
 
-		((EnumerationMessage.Response)EnumerationMessageSerializer.Default.Deserialize(data)!)
-			.Flags.Should()
-			.Be(0);
+		var read = Assert.IsType<EnumerationMessage.Response>(
+			EnumerationMessageSerializer.Default.Deserialize(data)
+		);
+		read.Flags.Should().Be(0);
 	}
 
 	[Theory]

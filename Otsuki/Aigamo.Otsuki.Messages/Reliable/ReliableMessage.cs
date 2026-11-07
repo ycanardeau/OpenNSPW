@@ -555,7 +555,7 @@ public abstract record ReliableMessage
 		public ExtendedOpcode Opcode { get; } = ExtendedOpcode.HardDisconnect;
 
 		/// <summary>
-		/// The message identifier. The value SHOULD be the next&nbsp; incremented value after the <b>bMsgID</b> value used when sending the previous CFRAME message of any type other than <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/a4ef7612-93d2-4d94-a96c-dbe6a1890ed6#gt_04967b3e-cdc6-4a45-a3d5-3e96a02770b9">SACK</see>, but the actual value used by a sender MUST be ignored on receipt.
+		/// The message identifier. The value SHOULD be the next incremented value after the <b>bMsgID</b> value used when sending the previous CFRAME message of any type other than <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/a4ef7612-93d2-4d94-a96c-dbe6a1890ed6#gt_04967b3e-cdc6-4a45-a3d5-3e96a02770b9">SACK</see>, but the actual value used by a sender MUST be ignored on receipt.
 		/// </summary>
 		public byte MessageId { get; init; }
 

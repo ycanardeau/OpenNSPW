@@ -594,6 +594,7 @@ public class PlayerConnectInfoMessageSerializerTests
 	internal void Deserialize(byte[] data, CoreMessage.PlayerConnectInfo expected)
 	{
 		var message = PlayerConnectInfoMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.PacketType.Should().Be(expected.PacketType);
 		message.Flags.Should().Be(expected.Flags);
 		message.DnetVersion.Should().Be(expected.DnetVersion);

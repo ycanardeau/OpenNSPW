@@ -1922,7 +1922,11 @@
             An extended operation code. It MUST be set to the following value:
             </summary>
         </member>
-        <!-- Badly formed XML comment ignored for member "P:Aigamo.Otsuki.Messages.Reliable.ReliableMessage.HardDisconnect.MessageId" -->
+        <member name="P:Aigamo.Otsuki.Messages.Reliable.ReliableMessage.HardDisconnect.MessageId">
+            <summary>
+            The message identifier. The value SHOULD be the next incremented value after the <b>bMsgID</b> value used when sending the previous CFRAME message of any type other than <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/a4ef7612-93d2-4d94-a96c-dbe6a1890ed6#gt_04967b3e-cdc6-4a45-a3d5-3e96a02770b9">SACK</see>, but the actual value used by a sender MUST be ignored on receipt.
+            </summary>
+        </member>
         <member name="P:Aigamo.Otsuki.Messages.Reliable.ReliableMessage.HardDisconnect.ResponseId">
             <summary>
             The response identifier. This value SHOULD be set to zero, unless the connection is using <b>PACKET_SIGNING_FULL</b>; in which case, it MUST be set to the <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/a4ef7612-93d2-4d94-a96c-dbe6a1890ed6#gt_b62c00dd-75c2-47bf-ab93-bd8681b8fee4">sequence ID</see> of the next <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/mc-dpl8cs/a4ef7612-93d2-4d94-a96c-dbe6a1890ed6#gt_2d23f9e2-e672-4706-a346-5ca133d47473">data frame (DFRAME)</see> that would have been sent had HARD_DISCONNECT not occurred.

@@ -133,7 +133,9 @@ public class NameTableOperationSerializerTests
 		);
 
 		CoreMessageSerializer.Default.Serialize(message).Should().Equal(data);
-		var read = (CoreMessage.CreateGroup)CoreMessageSerializer.Default.Deserialize(data)!;
+		var read = Assert.IsType<CoreMessage.CreateGroup>(
+			CoreMessageSerializer.Default.Deserialize(data)
+		);
 		read.DpnidRequesting.Should().Be(message.DpnidRequesting);
 		read.PacketContext.Should().Be(2);
 		read.Group.Dpnid.Should().Be(message.Group.Dpnid);

@@ -5,7 +5,7 @@ namespace Aigamo.Saruhashi;
 public abstract class ButtonBase : Control
 {
 	[Flags]
-	private enum States
+	private new enum States
 	{
 		MouseOver = 0x0001,
 		MouseDown = 0x0002,

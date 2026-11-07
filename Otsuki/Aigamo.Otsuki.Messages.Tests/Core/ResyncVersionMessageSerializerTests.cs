@@ -20,6 +20,7 @@ public class ResyncVersionMessageSerializerTests
 	internal void Deserialize(byte[] data, CoreMessage.ResyncVersion expected)
 	{
 		var message = ResyncVersionMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.PacketType.Should().Be(expected.PacketType);
 		message.Version.Should().Be(expected.Version);
 		message.VersionNotUsed.Should().Be(expected.VersionNotUsed);

@@ -20,6 +20,7 @@ public class RequestIntegrityCheckMessageSerializerTests
 	internal void Deserialize(byte[] data, CoreMessage.RequestIntegrityCheck expected)
 	{
 		var message = RequestIntegrityCheckMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.PacketType.Should().Be(expected.PacketType);
 		message.RequestContext.Should().Be(expected.RequestContext);
 		message.DpnidTarget.Should().Be(expected.DpnidTarget);

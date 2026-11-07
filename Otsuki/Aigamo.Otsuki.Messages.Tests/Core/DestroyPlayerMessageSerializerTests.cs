@@ -47,6 +47,7 @@ public class DestroyPlayerMessageSerializerTests
 	internal void Deserialize(byte[] data, CoreMessage.DestroyPlayer expected)
 	{
 		var message = DestroyPlayerMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.PacketType.Should().Be(expected.PacketType);
 		message.DpnidLeaving.Should().Be(expected.DpnidLeaving);
 		message.Version.Should().Be(expected.Version);

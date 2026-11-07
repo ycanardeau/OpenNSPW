@@ -19,7 +19,6 @@ public class SackMessageSerializerTests
 				NextReceive = new SequenceId(6),
 				Timestamp = 0x00115D07,
 			},
-			false,
 		};
 
 		yield return new object?[]
@@ -33,7 +32,6 @@ public class SackMessageSerializerTests
 				NextReceive = new SequenceId(4),
 				Timestamp = 0x21A2A264,
 			},
-			false,
 		};
 
 		yield return new object?[]
@@ -71,15 +69,15 @@ public class SackMessageSerializerTests
 				SackMask = 4,
 				SendMask = 5,
 			},
-			false,
 		};
 	}
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Deserialize(byte[] data, ReliableMessage.Sack expected, bool enableSigning)
+	internal void Deserialize(byte[] data, ReliableMessage.Sack expected)
 	{
 		var message = SackMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.Command.Should().Be(expected.Command);
 		message.Opcode.Should().Be(expected.Opcode);
 		message.Flags.Should().Be(expected.Flags);
@@ -95,7 +93,7 @@ public class SackMessageSerializerTests
 
 	[Theory]
 	[MemberData(nameof(TestData))]
-	internal void Serialize(byte[] expected, ReliableMessage.Sack message, bool enableSigning)
+	internal void Serialize(byte[] expected, ReliableMessage.Sack message)
 	{
 		SackMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}
@@ -132,7 +130,8 @@ public class SackMessageSerializerTests
 	internal void RoundTrip_PreservesFlagsFromWire(byte[] data)
 	{
 		var message = SackMessageSerializer.Default.Deserialize(data);
-		message!.Flags.Should().Be((SackFlags)data[2]);
+		Assert.NotNull(message);
+		message.Flags.Should().Be((SackFlags)data[2]);
 		SackMessageSerializer.Default.Serialize(message).Should().Equal(data);
 	}
 }

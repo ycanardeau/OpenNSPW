@@ -20,6 +20,7 @@ public class InstructedConnectFailedMessageSerializerTests
 	internal void Deserialize(byte[] data, CoreMessage.InstructedConnectFailed expected)
 	{
 		var message = InstructedConnectFailedMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.PacketType.Should().Be(expected.PacketType);
 		message.Dpnid.Should().Be(expected.Dpnid);
 	}

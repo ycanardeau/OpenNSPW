@@ -20,6 +20,7 @@ public class HostMigrateCompleteMessageSerializerTests
 	internal void Deserialize(byte[] data, CoreMessage.HostMigrateComplete expected)
 	{
 		var message = HostMigrateCompleteMessageSerializer.Default.Deserialize(data);
+		Assert.NotNull(message);
 		message.PacketType.Should().Be(expected.PacketType);
 	}
 
