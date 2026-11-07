@@ -13,7 +13,8 @@ internal static partial class UISettings
 		Language? Language,
 		bool? IsSpeedSteady = null,
 		bool? SharedEffectRandom = null,
-		float? BattleZoom = null
+		float? BattleZoom = null,
+		bool? IsCommandBarShown = null
 	);
 
 	// How Saved is read and written, generated, so that trimming keeps what it needs: the language by its name.
@@ -100,5 +101,16 @@ internal static partial class UISettings
 	public static void SaveBattleZoom(float zoom)
 	{
 		Save(saved => saved with { BattleZoom = zoom });
+	}
+
+	// Whether the battle's command bar was shown last, or `initial` if the player never showed or hid it.
+	public static bool LoadCommandBar(bool initial)
+	{
+		return Load().IsCommandBarShown ?? initial;
+	}
+
+	public static void SaveCommandBar(bool isShown)
+	{
+		Save(saved => saved with { IsCommandBarShown = isShown });
 	}
 }

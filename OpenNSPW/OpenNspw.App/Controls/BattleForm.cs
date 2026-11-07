@@ -6,11 +6,12 @@ using DrawingSize = System.Drawing.Size;
 namespace OpenNspw.App.Controls;
 
 // The battle screen, laid out as the original's: the battlefield on the left, and the sidebar with the deck, the unit's
-// information, the combat menu and the minimap; with the buttons of what only the keyboard does (CommandBar). Each part
-// draws from the snapshot what the game draws there, and takes its clicks with the commands of the host's UI
-// (docs/UI.md). On a wide screen, the command bar and the minimap are in a column of their own at the right, and the rest
-// of the sidebar is a panel beside it, which a button shows and hides (Fit): the battlefield, magnified, takes the room
-// up to the column, under the panel while it is shown, which is drawn larger on a small screen.
+// information, the combat menu and the minimap; with the buttons of what only the keyboard does (CommandBar), which a
+// button shows and hides, shown at first on a touch screen only. Each part draws from the snapshot what the game draws
+// there, and takes its clicks with the commands of the host's UI (docs/UI.md). On a wide screen, the command bar and the
+// minimap are in a column of their own at the right, and the rest of the sidebar is a panel beside it, which a button
+// shows and hides (Fit): the battlefield, magnified, takes the room up to the column, under the panel while it is shown,
+// which is drawn larger on a small screen.
 internal sealed class BattleForm : Form
 {
 	// The room around the column's parts.
@@ -27,6 +28,7 @@ internal sealed class BattleForm : Form
 	private readonly Minimap _minimap;
 	private readonly CommandBar _commandBar;
 	private readonly ActionButton _panelButton;
+	private readonly ActionButton _commandBarButton;
 
 	// Whether the player touches the screen (IAppHost.IsTouchScreen): the minimap is drawn larger, and the panel is hidden
 	// at first, for the battlefield.
@@ -41,6 +43,9 @@ internal sealed class BattleForm : Form
 
 	// Whether the panel of the sidebar is shown, on a wide screen.
 	private bool _isPanelOpen;
+
+	// Whether the command bar is shown, as the player chose last (UISettings.LoadCommandBar).
+	private bool _isCommandBarShown;
 
 	// Puts a part in the sidebar, where it is on the game's screen.
 	private void AddToSidebar(Control part, DrawingRectangle area)
@@ -61,8 +66,29 @@ internal sealed class BattleForm : Form
 		set => _battlefield.SetZoom(value, new(_battlefield.Width / 2, _battlefield.Height / 2));
 	}
 
-	// The original's layout, on a screen with too little room right of it for the column: the command bar over the
-	// battlefield's top right corner.
+	// The command bar's button, and the command bar under it while it is shown, from `top` down, centered on `center`;
+	// neither if `isShown` is false.
+	private void FitCommandBar(int center, int top, bool isShown = true)
+	{
+		var layout = _commandBar.Layout;
+		_commandBarButton.Bounds = new DrawingRectangle(
+			center - layout.ButtonWidth / 2,
+			top,
+			layout.ButtonWidth,
+			layout.ButtonHeight
+		);
+		_commandBarButton.IsPrimary = _isCommandBarShown;
+		_commandBarButton.Visible = isShown;
+		_commandBar.Visible = isShown && _isCommandBarShown;
+		_commandBar.Location = new(
+			center - _commandBar.Width / 2,
+			top + layout.ButtonHeight + CommandBarLayout.Gap
+		);
+	}
+
+	// The original's layout, on a screen with too little room right of it for the column: on a touch screen, the command
+	// bar's button over the battlefield's top right corner, and the command bar under it; elsewhere, neither, for the
+	// original's screen to be whole, as the keyboard and the mouse do what the command bar does.
 	private void FitLayout()
 	{
 		_columnLeft = null;
@@ -78,13 +104,14 @@ internal sealed class BattleForm : Form
 		_sidebar.Visible = true;
 		_minimap.SetScale(1);
 		_minimap.Location = Minimap.Area.Location;
-		_commandBar.Location = new(all_head.CMBT_WIDTH - _commandBar.Width - 8, 8);
+		FitCommandBar(all_head.CMBT_WIDTH - _commandBar.Width / 2 - 8, 8, _isTouchScreen);
 		_panelButton.Visible = false;
 	}
 
-	// The layout of a wide screen, `extraWidth` wider than the original's: the column at the right, with the command bar
-	// at its top, the panel's button under it, and the minimap at its bottom, as large as it fits on a touch screen, twice
-	// as large at most; the panel left of the column; and the battlefield up to the column, as far as its zoom lets it.
+	// The layout of a wide screen, `extraWidth` wider than the original's: the column at the right, with the panel's
+	// button and the command bar's at its top, the command bar under them, and the minimap at its bottom, as large as it
+	// fits on a touch screen, twice as large at most; the panel left of the column; and the battlefield up to the column,
+	// as far as its zoom lets it.
 	private void FitWide(int extraWidth)
 	{
 		var width = all_head.SCRN_WIDTH + extraWidth;
@@ -92,15 +119,25 @@ internal sealed class BattleForm : Form
 		_minimap.SetScale(
 			_isTouchScreen ? Math.Clamp(extraWidth / (float)Minimap.Area.Width, 1, 2) : 1
 		);
-		var columnWidth = Math.Max(_commandBar.Width + Margin * 2, _minimap.Width);
+		var layout = _commandBar.Layout;
+		var buttonsWidth = layout.ButtonWidth * 2 + CommandBarLayout.Gap;
+		var columnWidth = Math.Max(
+			Math.Max(_commandBar.Width, buttonsWidth) + Margin * 2,
+			_minimap.Width
+		);
 		var columnLeft = width - columnWidth;
 		_columnLeft = columnLeft;
-		_commandBar.Location = new(columnLeft + (columnWidth - _commandBar.Width) / 2, Margin);
+		var buttonsLeft = columnLeft + (columnWidth - buttonsWidth) / 2;
 		_panelButton.Bounds = new DrawingRectangle(
-			_commandBar.Bounds.Left + CommandBarLayout.Padding,
-			_commandBar.Bounds.Bottom + Margin / 2,
-			_commandBar.Width - CommandBarLayout.Padding * 2,
-			_commandBar.Layout.ButtonHeight
+			buttonsLeft,
+			Margin,
+			layout.ButtonWidth,
+			layout.ButtonHeight
+		);
+		FitCommandBar(buttonsLeft + buttonsWidth - layout.ButtonWidth / 2, Margin);
+		_commandBar.Location = new(
+			columnLeft + (columnWidth - _commandBar.Width) / 2,
+			_commandBar.Location.Y
 		);
 		_panelButton.Visible = true;
 		_panelButton.IsPrimary = _isPanelOpen;
@@ -145,6 +182,7 @@ internal sealed class BattleForm : Form
 		_isTouchScreen = isTouchScreen;
 		_panelScale = isSmallScreen ? all_head.SCRN_HEIGHT / (float)Minimap.Top : 1;
 		_isPanelOpen = !isTouchScreen;
+		_isCommandBarShown = UISettings.LoadCommandBar(isTouchScreen);
 
 		_scrollAhead = new ScrollAhead(session);
 		_battlefield = new Battlefield(session, fonts, art, _scrollAhead, isTouchScreen)
@@ -196,10 +234,25 @@ internal sealed class BattleForm : Form
 		{
 			Text = Texts.Panel,
 			FontSize = _commandBar.Layout.TextFontSize,
+			IsSolid = true,
 		};
 		_panelButton.Click += (_, _) => _isPanelOpen = !_isPanelOpen;
 		Controls.Add(_panelButton);
 		_panelButton.BringToFront();
+
+		_commandBarButton = new ActionButton(fonts)
+		{
+			Text = Texts.CommandBar,
+			FontSize = _commandBar.Layout.TextFontSize,
+			IsSolid = true,
+		};
+		_commandBarButton.Click += (_, _) =>
+		{
+			_isCommandBarShown = !_isCommandBarShown;
+			UISettings.SaveCommandBar(_isCommandBarShown);
+		};
+		Controls.Add(_commandBarButton);
+		_commandBarButton.BringToFront();
 		Fit(0);
 	}
 
