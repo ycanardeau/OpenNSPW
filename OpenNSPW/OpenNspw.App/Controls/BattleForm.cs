@@ -92,10 +92,10 @@ internal sealed class BattleForm : Form
 		_columnLeft = columnLeft;
 		_commandBar.Location = new(columnLeft + (columnWidth - _commandBar.Width) / 2, Margin);
 		_panelButton.Bounds = new DrawingRectangle(
-			_commandBar.Bounds.Left + CommandBar.Padding,
+			_commandBar.Bounds.Left + CommandBarLayout.Padding,
 			_commandBar.Bounds.Bottom + Margin / 2,
-			_commandBar.Width - CommandBar.Padding * 2,
-			CommandBar.ButtonHeight
+			_commandBar.Width - CommandBarLayout.Padding * 2,
+			_commandBar.Layout.ButtonHeight
 		);
 		_panelButton.Visible = true;
 		_panelButton.IsPrimary = _isPanelOpen;
@@ -124,8 +124,15 @@ internal sealed class BattleForm : Form
 	}
 
 	// isTouchScreen: whether the player touches the screen (IAppHost.IsTouchScreen), which the battlefield takes as taps and
-	// pans, and the minimap too.
-	public BattleForm(GameSession session, UIFonts fonts, BattleArt art, bool isTouchScreen)
+	// pans, and the minimap too. isSmallScreen: whether the screen is small enough for the battlefield to be magnified at
+	// first (IAppHost.BattleZoom), where the buttons are made larger.
+	public BattleForm(
+		GameSession session,
+		UIFonts fonts,
+		BattleArt art,
+		bool isTouchScreen,
+		bool isSmallScreen
+	)
 	{
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		BackColor = DrawingColor.Transparent;
@@ -164,11 +171,19 @@ internal sealed class BattleForm : Form
 		Controls.Add(_minimap);
 		_minimap.BringToFront();
 
-		_commandBar = new CommandBar(session, fonts);
+		_commandBar = new CommandBar(
+			session,
+			fonts,
+			isSmallScreen ? CommandBarLayout.Large : CommandBarLayout.Small
+		);
 		Controls.Add(_commandBar);
 		_commandBar.BringToFront();
 
-		_panelButton = new ActionButton(fonts) { Text = Texts.Panel, FontSize = 15 };
+		_panelButton = new ActionButton(fonts)
+		{
+			Text = Texts.Panel,
+			FontSize = _commandBar.Layout.TextFontSize,
+		};
 		_panelButton.Click += (_, _) => _isPanelOpen = !_isPanelOpen;
 		Controls.Add(_panelButton);
 		_panelButton.BringToFront();
