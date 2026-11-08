@@ -173,6 +173,12 @@ internal sealed class ConnectingGame : IDisposable
 	public IEnumerable<string> ServiceProviders =>
 		Game.GetDlgItem(Dialog, IDC_SP_COMBO)!.Items.Select(i => i.Text);
 
+	// Clicks a control of the dialog, as the player does, with this thread as the game's: what the click awaits resumes in Pump.
+	public void Click(int id)
+	{
+		Game.RunAsGameThread(() => Game.ClickDlgItem(Dialog, id));
+	}
+
 	// Picks a service provider from the connection dialog's list, as the player does.
 	public void SelectServiceProvider(string name)
 	{
@@ -181,31 +187,44 @@ internal sealed class ConnectingGame : IDisposable
 		Game.SelectDlgItem(Dialog, IDC_SP_COMBO, index);
 	}
 
-	// One iteration of WinMain's loop: the queued window messages, then DirectPlay's events.
+	// One iteration of WinMain's loop, with this thread as the game's: the queued window messages, among them what the game
+	// awaited, then DirectPlay's events.
 	public void Pump()
 	{
-		while (Game.PeekMessage(ref _msg, PM_REMOVE) != 0)
+		Game.RunAsGameThread(() =>
 		{
-			if (_msg.message == WM_QUIT)
+			while (Game.PeekMessage(ref _msg, PM_REMOVE) != 0)
 			{
-				WaitingForConnect = false;
-				break;
+				if (_msg.message == WM_QUIT)
+				{
+					WaitingForConnect = false;
+					break;
+				}
+
+				if (Game.IsDialogMessage(Game.MainDialog, ref _msg) == 0)
+				{
+					Game.TranslateMessage();
+					Game.DispatchMessage(ref _msg);
+				}
 			}
 
-			if (Game.IsDialogMessage(Game.MainDialog, ref _msg) == 0)
-			{
-				Game.TranslateMessage();
-				Game.DispatchMessage(ref _msg);
-			}
-		}
-
-		Game.DirectPlayThreadPool!.DoWork(DOWORK_TIMESLICE, 0);
+			Game.DirectPlayThreadPool!.DoWork(DOWORK_TIMESLICE, 0);
+		});
 	}
 
+	// Closes the peer as EndApp does, and runs the game's messages until it has closed, as its thread does at the end.
 	public void Dispose()
 	{
-		Game.DirectPlayPeer?.Close(0);
-		Game.DirectPlayPeer?.Release();
+		Game.RunAsGameThread(() =>
+		{
+			if (Game.DirectPlayPeer is { } peer)
+			{
+				Game.ClosePeer(peer);
+				peer.Release();
+			}
+
+			Game.RunUntilClosed();
+		});
 	}
 }
 
@@ -239,15 +258,15 @@ public class NetworkTests
 		// The host keeps "Host Player" checked, and listens on any free port.
 		Assert.Equal(BST_CHECKED, host.Game.IsDlgButtonChecked(host.Dialog, IDC_HOST_SESSION));
 		host.Game.TypeDlgItemText(host.Dialog, IDC_ADDRESS_LINE2, "0");
-		host.Game.ClickDlgItem(host.Dialog, IDOK);
-		Assert.Equal(IDD_MAIN_GAME, host.Dialog.Id);
+		host.Click(IDOK);
+		PumpUntil(() => host.Dialog.Id == IDD_MAIN_GAME, host);
 
 		// The guest unchecks it and enters the host's address.
-		guest.Game.ClickDlgItem(guest.Dialog, IDC_HOST_SESSION);
+		guest.Click(IDC_HOST_SESSION);
 		Assert.Equal("localhost", guest.DialogText(IDC_ADDRESS_LINE1));
 		guest.Game.TypeDlgItemText(guest.Dialog, IDC_ADDRESS_LINE1, "127.0.0.1");
 		guest.Game.TypeDlgItemText(guest.Dialog, IDC_ADDRESS_LINE2, $"{host.HostPort}");
-		guest.Game.ClickDlgItem(guest.Dialog, IDOK);
+		guest.Click(IDOK);
 
 		PumpUntil(
 			() =>
@@ -279,7 +298,7 @@ public class NetworkTests
 		Assert.Equal(0, guest.Game.IsHostPlayer);
 
 		// The host starts the game; the guest follows when MSG_EXIT_WAITING arrives.
-		host.Game.ClickDlgItem(host.Dialog, IDC_START_GAME);
+		host.Click(IDC_START_GAME);
 		PumpUntil(() => !host.WaitingForConnect && !guest.WaitingForConnect, host, guest);
 		Assert.Null(host.Game.MainDialog);
 		Assert.Null(guest.Game.MainDialog);
@@ -460,14 +479,14 @@ public class NetworkTests
 		// Bluetooth needs no address in the dialog: the address fields are disabled.
 		host.SelectServiceProvider(BluetoothProvider);
 		Assert.False(host.Game.GetDlgItem(host.Dialog, IDC_ADDRESS_LINE2)!.Enabled);
-		host.Game.ClickDlgItem(host.Dialog, IDOK);
-		Assert.Equal(IDD_MAIN_GAME, host.Dialog.Id);
+		host.Click(IDOK);
+		PumpUntil(() => host.Dialog.Id == IDD_MAIN_GAME, host);
 		Assert.Equal(hostBluetooth.Address, host.LocalEndPoint);
 
-		guest.Game.ClickDlgItem(guest.Dialog, IDC_HOST_SESSION);
+		guest.Click(IDC_HOST_SESSION);
 		guest.SelectServiceProvider(BluetoothProvider);
 		Assert.False(guest.Game.GetDlgItem(guest.Dialog, IDC_ADDRESS_LINE1)!.Enabled);
-		guest.Game.ClickDlgItem(guest.Dialog, IDOK);
+		guest.Click(IDOK);
 		return (host, guest, guestBluetooth);
 	}
 
@@ -495,7 +514,7 @@ public class NetworkTests
 			tchar.ShiftJis.GetString(guest.Game.PreferredProvider[..BluetoothProvider.Length])
 		);
 
-		host.Game.ClickDlgItem(host.Dialog, IDC_START_GAME);
+		host.Click(IDC_START_GAME);
 		PumpUntil(() => !host.WaitingForConnect && !guest.WaitingForConnect, host, guest);
 		Assert.Empty(host.Platform.MessageBoxes);
 		Assert.Empty(guest.Platform.MessageBoxes);
@@ -511,9 +530,10 @@ public class NetworkTests
 		);
 		using var guest = new ConnectingGame("Bob", bluetooth);
 
-		guest.Game.ClickDlgItem(guest.Dialog, IDC_HOST_SESSION);
+		guest.Click(IDC_HOST_SESSION);
 		guest.SelectServiceProvider(BluetoothProvider);
-		guest.Game.ClickDlgItem(guest.Dialog, IDOK);
+		guest.Click(IDOK);
+		PumpUntil(() => guest.Platform.MessageBoxes.Count != 0, guest);
 
 		Assert.Equal(1, bluetooth.ChooseHostCount);
 		Assert.Equal(IDD_ADDRESS_OVERRIDE, guest.Dialog.Id);

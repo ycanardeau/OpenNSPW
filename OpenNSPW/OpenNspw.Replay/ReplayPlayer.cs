@@ -516,12 +516,12 @@ internal sealed class ReplayDirectPlay(ReplayPlayer player, Nspw game)
 
 	public int GetSPCaps(Guid? pguidSP, DPN_SP_CAPS pdpspCaps, uint dwFlags) => winerror.S_OK;
 
-	public int SetPeerInfo(
+	public Task<int> SetPeerInfoAsync(
 		DPN_PLAYER_INFO pdpnPlayerInfo,
 		object? pvAsyncContext,
 		object? phAsyncHandle,
 		uint dwFlags
-	) => winerror.S_OK;
+	) => Task.FromResult(winerror.S_OK);
 
 	public int GetPeerInfo(
 		uint dpnid,
@@ -530,7 +530,7 @@ internal sealed class ReplayDirectPlay(ReplayPlayer player, Nspw game)
 		uint dwFlags
 	) => winerror.S_OK;
 
-	public int Host(
+	public Task<int> HostAsync(
 		DPN_APPLICATION_DESC pdnAppDesc,
 		IDirectPlay8Address?[] prgpDeviceInfo,
 		uint cDeviceInfo,
@@ -538,7 +538,7 @@ internal sealed class ReplayDirectPlay(ReplayPlayer player, Nspw game)
 		object? pdnCredentials,
 		object? pvPlayerContext,
 		uint dwFlags
-	) => winerror.S_OK;
+	) => Task.FromResult(winerror.S_OK);
 
 	public int Connect(
 		DPN_APPLICATION_DESC pdnAppDesc,
@@ -564,5 +564,8 @@ internal sealed class ReplayDirectPlay(ReplayPlayer player, Nspw game)
 		uint dwFlags
 	) => winerror.S_OK;
 
+	// The thread pool's.
 	public int Close(uint dwFlags) => winerror.S_OK;
+
+	public Task<int> CloseAsync(uint dwFlags) => Task.FromResult(winerror.S_OK);
 }

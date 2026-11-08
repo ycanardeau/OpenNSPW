@@ -157,6 +157,8 @@ public interface IDirectPlay8ThreadPool : IUnknown
 	int DoWork(uint dwAllowedTimeSlice, uint dwFlags);
 }
 
+// The calls that DirectPlay makes the caller wait for are awaitable (SetPeerInfoAsync, HostAsync, CloseAsync), so that the
+// game's thread goes on with its loop while the peer works, and resumes after them there (GameSynchronizationContext).
 public interface IDirectPlay8Peer : IUnknown
 {
 	int Initialize(object? pvUserContext, PFNDPNMESSAGEHANDLER pfn, uint dwFlags);
@@ -172,7 +174,7 @@ public interface IDirectPlay8Peer : IUnknown
 
 	int GetSPCaps(Guid? pguidSP, DPN_SP_CAPS pdpspCaps, uint dwFlags);
 
-	int SetPeerInfo(
+	Task<int> SetPeerInfoAsync(
 		DPN_PLAYER_INFO pdpnPlayerInfo,
 		object? pvAsyncContext,
 		object? phAsyncHandle,
@@ -181,7 +183,7 @@ public interface IDirectPlay8Peer : IUnknown
 
 	int GetPeerInfo(uint dpnid, DPN_PLAYER_INFO? pdpnPlayerInfo, ref uint pdwSize, uint dwFlags);
 
-	int Host(
+	Task<int> HostAsync(
 		DPN_APPLICATION_DESC pdnAppDesc,
 		IDirectPlay8Address?[] prgpDeviceInfo,
 		uint cDeviceInfo,
@@ -215,7 +217,7 @@ public interface IDirectPlay8Peer : IUnknown
 		uint dwFlags
 	);
 
-	int Close(uint dwFlags);
+	Task<int> CloseAsync(uint dwFlags);
 }
 
 public static class dplay8

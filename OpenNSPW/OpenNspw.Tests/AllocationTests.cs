@@ -163,7 +163,7 @@ public sealed class AllocationTests
 	// DirectPlay's DoWork, which the game's message loop calls without a pause, allocates nothing: it once made a garbage
 	// collection about 170 times a second.
 	[Fact]
-	public void DirectPlaysDoWorkMakesNoGarbage()
+	public async Task DirectPlaysDoWorkMakesNoGarbage()
 	{
 		var factory = new DirectPlay8Factory();
 		factory.CoCreateInstance(dplay8.CLSID_DirectPlay8Peer, default, out var peer);
@@ -176,7 +176,7 @@ public sealed class AllocationTests
 				pool.DoWork(0, 0);
 		});
 
-		((IDirectPlay8Peer)peer!).Close(0);
+		await ((IDirectPlay8Peer)peer!).CloseAsync(0);
 		Assert.Equal(0, bytes);
 	}
 

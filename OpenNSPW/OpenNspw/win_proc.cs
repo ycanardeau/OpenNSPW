@@ -284,7 +284,8 @@ public unsafe partial class Nspw
 		// ダイレクトプレイ
 		if (DirectPlayPeer != null)
 		{
-			DirectPlayPeer.Close(0);
+			// Closed after WinMain returns, by the game's thread before it ends (ClosePeer).
+			ClosePeer(DirectPlayPeer);
 			DirectPlayPeer.Release();
 			DirectPlayPeer = null;
 		}

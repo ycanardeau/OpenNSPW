@@ -191,7 +191,7 @@ internal sealed class GameSession : IDisposable
 	{
 		try
 		{
-			Game.WinMain(null, null, "", winuser.SW_SHOWNORMAL);
+			Game.RunWinMain(null, null, "", winuser.SW_SHOWNORMAL);
 		}
 		catch (Exception e)
 		{

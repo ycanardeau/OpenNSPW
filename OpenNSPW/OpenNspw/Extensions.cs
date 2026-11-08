@@ -557,7 +557,11 @@ public unsafe partial class Nspw
 		IDirectPlay8ThreadPool threadPool
 	)
 	{
-		DirectPlayPeer?.Close(0);
+		if (DirectPlayPeer is { } previous)
+		{
+			ClosePeer(previous);
+		}
+
 		DirectPlayPeer = peer;
 		DirectPlayThreadPool = threadPool;
 		ActivePlayerCount = 2;

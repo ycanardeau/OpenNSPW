@@ -163,7 +163,7 @@ internal sealed class LockstepGame : INspwPlatform
 		{
 			if (!stopping)
 			{
-				Game.WinMain(null, null, "", SW_SHOWNORMAL);
+				Game.RunWinMain(null, null, "", SW_SHOWNORMAL);
 			}
 		}
 		catch (LockstepStoppedException) { }
