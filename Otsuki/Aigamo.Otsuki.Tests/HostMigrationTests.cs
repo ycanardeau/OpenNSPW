@@ -54,7 +54,7 @@ public class HostMigrationTests : IAsyncLifetime
 		public Dpnid Id { get; set; }
 	}
 
-	private TestPeer CreatePeer(string name)
+	private async Task<TestPeer> CreatePeerAsync(string name)
 	{
 		var address = IPAddress.Parse($"10.2.0.{_addresses.Next()}");
 		var peer = new Peer(
@@ -69,7 +69,7 @@ public class HostMigrationTests : IAsyncLifetime
 			}
 		);
 		_peers.Add(peer);
-		_ = peer.SetPeerInfoAsync(name);
+		await peer.SetPeerInfoAsync(name);
 		return new TestPeer(peer, new EventLog(peer), address);
 	}
 
@@ -78,14 +78,14 @@ public class HostMigrationTests : IAsyncLifetime
 	/// </summary>
 	private async Task<List<TestPeer>> MeshAsync(int count, bool migrate = true)
 	{
-		var host = CreatePeer("Host");
+		var host = await CreatePeerAsync("Host");
 		await host.Peer.HostAsync(Application(migrate));
 		await host.Log.WaitForAsync<PeerEvent.PlayerCreated>();
 		host.Id = host.Peer.LocalPlayer;
 		var peers = new List<TestPeer> { host };
 		for (var i = 1; i <= count; i++)
 		{
-			var joiner = CreatePeer($"Peer{i}");
+			var joiner = await CreatePeerAsync($"Peer{i}");
 			await joiner.Peer.ConnectAsync(Application(migrate), host.Peer.LocalEndPoint!);
 			(await joiner.Log.WaitForAsync<PeerEvent.ConnectCompleted>())
 				.Result.Should()
@@ -161,7 +161,7 @@ public class HostMigrationTests : IAsyncLifetime
 		await second.Log.WaitForAsync<PeerEvent.HostMigrated>();
 		await first.Log.WaitForAsync<PeerEvent.HostMigrated>();
 
-		var late = CreatePeer("Late");
+		var late = await CreatePeerAsync("Late");
 		await late.Peer.ConnectAsync(Application(), first.Peer.LocalEndPoint!);
 
 		(await late.Log.WaitForAsync<PeerEvent.ConnectCompleted>())

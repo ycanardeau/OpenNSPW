@@ -66,12 +66,12 @@ public class RegressionTests(ITestOutputHelper output) : IAsyncLifetime
 			CloseTimeout = TimeSpan.FromSeconds(2),
 		};
 
-	private TestPeer CreatePeer(string name)
+	private async Task<TestPeer> CreatePeerAsync(string name)
 	{
 		var address = IPAddress.Parse($"10.9.0.{_addresses.Next()}");
 		var peer = new Peer(Options(address));
 		_closers.Add(peer.CloseAsync);
-		_ = peer.SetPeerInfoAsync(name);
+		await peer.SetPeerInfoAsync(name);
 		return new TestPeer(peer, new EventLog(peer), address);
 	}
 
@@ -80,14 +80,14 @@ public class RegressionTests(ITestOutputHelper output) : IAsyncLifetime
 		SessionFlags flags = SessionFlags.MigrateHost
 	)
 	{
-		var host = CreatePeer("Host");
+		var host = await CreatePeerAsync("Host");
 		await host.Peer.HostAsync(Application(flags));
 		await host.Log.WaitForAsync<PeerEvent.PlayerCreated>();
 		host.Id = host.Peer.LocalPlayer;
 		var peers = new List<TestPeer> { host };
 		for (var i = 1; i <= count; i++)
 		{
-			var joiner = CreatePeer($"Peer{i}");
+			var joiner = await CreatePeerAsync($"Peer{i}");
 			await joiner.Peer.ConnectAsync(Application(flags), host.Peer.LocalEndPoint!);
 			(await joiner.Log.WaitForAsync<PeerEvent.ConnectCompleted>())
 				.Result.Should()
@@ -209,9 +209,9 @@ public class RegressionTests(ITestOutputHelper output) : IAsyncLifetime
 	[Fact]
 	public async Task SetPeerInfo_WhileConnecting_ReachesTheHost()
 	{
-		var host = CreatePeer("Host");
+		var host = await CreatePeerAsync("Host");
 		await host.Peer.HostAsync(Application());
-		var joiner = CreatePeer("Old");
+		var joiner = await CreatePeerAsync("Old");
 		var block = true;
 		_network.Drop = (from, to, datagram) =>
 			block
@@ -375,7 +375,7 @@ public class RegressionTests(ITestOutputHelper output) : IAsyncLifetime
 	{
 		for (var i = 0; i < 20; i++)
 		{
-			var host = CreatePeer($"Host{i}");
+			var host = await CreatePeerAsync($"Host{i}");
 			await host.Peer.HostAsync(Application());
 			host.Peer.LocalEndPoint.Should().NotBeNull();
 			host.Peer.IsHost.Should().BeTrue();
@@ -384,7 +384,7 @@ public class RegressionTests(ITestOutputHelper output) : IAsyncLifetime
 			var group = await host.Peer.CreateGroupAsync($"Group{i}");
 			host.Peer.GetGroupInfo(group).Should().NotBeNull();
 
-			var joiner = CreatePeer($"Joiner{i}");
+			var joiner = await CreatePeerAsync($"Joiner{i}");
 			await joiner.Peer.ConnectAsync(Application(), host.Peer.LocalEndPoint!);
 			joiner.Peer.LocalEndPoint.Should().NotBeNull();
 		}

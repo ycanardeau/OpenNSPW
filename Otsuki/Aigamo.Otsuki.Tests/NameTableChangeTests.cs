@@ -45,7 +45,10 @@ public class NameTableChangeTests : IAsyncLifetime
 	private static ApplicationDescription Application =>
 		new() { GuidApplication = GuidApplication };
 
-	private (Peer Peer, EventLog Log) CreatePeer(string name, TimeSpan? requestTimeout = null)
+	private async Task<(Peer Peer, EventLog Log)> CreatePeerAsync(
+		string name,
+		TimeSpan? requestTimeout = null
+	)
 	{
 		var address = IPAddress.Parse($"10.1.0.{_addresses.Next()}");
 		var peer = new Peer(
@@ -59,13 +62,13 @@ public class NameTableChangeTests : IAsyncLifetime
 			}
 		);
 		_peers.Add(peer);
-		_ = peer.SetPeerInfoAsync(name);
+		await peer.SetPeerInfoAsync(name);
 		return (peer, new EventLog(peer));
 	}
 
 	private async Task<(Peer Peer, EventLog Log)> HostAsync(string name)
 	{
-		var host = CreatePeer(name);
+		var host = await CreatePeerAsync(name);
 		await host.Peer.HostAsync(Application);
 		await host.Log.WaitForAsync<PeerEvent.PlayerCreated>();
 		return host;
@@ -73,7 +76,7 @@ public class NameTableChangeTests : IAsyncLifetime
 
 	private async Task<(Peer Peer, EventLog Log)> JoinAsync(string name, Peer host)
 	{
-		var joiner = CreatePeer(name);
+		var joiner = await CreatePeerAsync(name);
 		await joiner.Peer.ConnectAsync(Application, host.LocalEndPoint!);
 		(await joiner.Log.WaitForAsync<PeerEvent.ConnectCompleted>())
 			.Result.Should()
@@ -145,7 +148,10 @@ public class NameTableChangeTests : IAsyncLifetime
 	public async Task SetPeerInfo_TimesOutWhenTheHostDoesNotAnswer()
 	{
 		var host = await HostAsync("Host");
-		var joiner = CreatePeer("Joiner", requestTimeout: TimeSpan.FromMilliseconds(300));
+		var joiner = await CreatePeerAsync(
+			"Joiner",
+			requestTimeout: TimeSpan.FromMilliseconds(300)
+		);
 		await joiner.Peer.ConnectAsync(Application, host.Peer.LocalEndPoint!);
 		await joiner.Log.WaitForAsync<PeerEvent.ConnectCompleted>();
 
@@ -306,8 +312,9 @@ public class NameTableChangeTests : IAsyncLifetime
 			() => host.Peer.AddPlayerToGroupAsync(group, new Dpnid(42)),
 			ResultCode.InvalidPlayer
 		);
+		var alone = await CreatePeerAsync("Alone");
 		await ShouldFailAsync(
-			() => CreatePeer("Alone").Peer.CreateGroupAsync("Nowhere"),
+			() => alone.Peer.CreateGroupAsync("Nowhere"),
 			ResultCode.NoConnection
 		);
 	}
