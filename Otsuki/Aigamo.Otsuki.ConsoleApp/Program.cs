@@ -347,7 +347,7 @@ internal static class Program
 			? PollEventsAsync(peer, Handle, ended)
 			: StreamEventsAsync(peer, Handle, ended);
 
-		peer.SetPeerInfo(options.Name);
+		await peer.SetPeerInfo(options.Name);
 		try
 		{
 			await StartAsync(peer, options);

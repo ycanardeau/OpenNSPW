@@ -906,7 +906,7 @@ public class PeerTests : IAsyncLifetime
 			TransportFactory = network.CreateFactory(IPAddress.Parse("10.1.0.1")),
 		};
 		await using var host = new Peer(options);
-		host.SetPeerInfo("Host");
+		await host.SetPeerInfo("Host");
 		await host.HostAsync(Application());
 		await using var joiner = new Peer(
 			options with
@@ -914,7 +914,7 @@ public class PeerTests : IAsyncLifetime
 				TransportFactory = network.CreateFactory(IPAddress.Parse("10.1.0.2")),
 			}
 		);
-		joiner.SetPeerInfo("Joiner");
+		await joiner.SetPeerInfo("Joiner");
 		await joiner.ConnectAsync(Application(), host.LocalEndPoint!);
 
 		var events = new List<PeerEvent>();
