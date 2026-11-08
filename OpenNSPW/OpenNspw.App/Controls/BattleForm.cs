@@ -44,6 +44,12 @@ internal sealed class BattleForm : Form
 	// Whether the panel of the sidebar is shown, on a wide screen.
 	private bool _isPanelOpen;
 
+	// Whether the panel was opened by selecting a carrier or an air base (FollowSelection), rather than by its button.
+	private bool _isPanelOpenedBySelection;
+
+	// The unit selected in the last frame.
+	private int _lastSelected;
+
 	// Whether the command bar is shown, as the player chose last (UISettings.LoadCommandBar).
 	private bool _isCommandBarShown;
 
@@ -236,7 +242,11 @@ internal sealed class BattleForm : Form
 			FontSize = _commandBar.Layout.TextFontSize,
 			IsSolid = true,
 		};
-		_panelButton.Click += (_, _) => _isPanelOpen = !_isPanelOpen;
+		_panelButton.Click += (_, _) =>
+		{
+			_isPanelOpen = !_isPanelOpen;
+			_isPanelOpenedBySelection = false;
+		};
 		Controls.Add(_panelButton);
 		_panelButton.BringToFront();
 
@@ -280,6 +290,32 @@ internal sealed class BattleForm : Form
 		);
 	}
 
+	// Opens the panel as one of the player's carriers or air bases is selected, where the player goes on to the planes on
+	// its deck; and closes it again once another unit but a plane is selected, if it opened it. Not as nothing is: the game
+	// lets the selection go as the deck's view is switched to the hangar, and keeps showing the carrier.
+	private void FollowSelection(GameSnapshot snapshot)
+	{
+		var selected = snapshot.SelectedUnit;
+		if (selected == _lastSelected)
+			return;
+
+		_lastSelected = selected;
+		ref var unit = ref snapshot.Units[selected];
+		if (
+			selected != 0
+			&& unit.Side == snapshot.LocalSide
+			&& unit.Kind is UnitKind.Carrier or UnitKind.LightCarrier or UnitKind.AirBase
+		)
+		{
+			_isPanelOpenedBySelection |= !_isPanelOpen;
+			_isPanelOpen = true;
+		}
+		else if (_isPanelOpenedBySelection && selected != 0 && unit.Category != UnitCategory.Plane)
+		{
+			(_isPanelOpen, _isPanelOpenedBySelection) = (false, false);
+		}
+	}
+
 	// How far from a unit a touch takes it, in game pixels (Battlefield.TouchRadius).
 	public float TouchRadius
 	{
@@ -290,6 +326,7 @@ internal sealed class BattleForm : Form
 	// Shows the game as it was in the last frame: on the UI's thread, each frame.
 	public void UpdateFrom(GameSnapshot snapshot)
 	{
+		FollowSelection(snapshot);
 		_scrollAhead.Apply(snapshot);
 		_battlefield.UpdateFrom(snapshot);
 		_deck.UpdateFrom(snapshot);
