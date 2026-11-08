@@ -219,13 +219,7 @@ internal sealed class BattleForm : Form
 		_combatMenu = new CombatMenu(session, fonts, art);
 		AddToSidebar(_combatMenu, CombatMenu.Area);
 
-		_minimap = new Minimap(
-			session,
-			art,
-			isTouchScreen,
-			_battlefield.Pan,
-			_battlefield.ShowWindow
-		);
+		_minimap = new Minimap(session, art, isTouchScreen, _battlefield.ShowWindow);
 		Controls.Add(_minimap);
 		_minimap.BringToFront();
 

@@ -13,8 +13,9 @@ namespace OpenNspw.App.Controls;
 
 // The map of the whole battle (DrawMinimap): a pixel a tile of 80, drawn `Scale` times as large, with the player's units,
 // the enemy's it has found, and what the battlefield shows (Shown). A click held on it moves the battlefield there, with
-// the commands of the host's UI. A touch, which a finger makes far less precise, moves it there only when it is lifted
-// without moving; moving, it drags what is shown, a part of the way the finger goes (DragRatio).
+// the commands of the host's UI. A touch, which a finger makes far less precise and hides what it presses, aims instead:
+// a box shows what the battlefield would show from where it presses, moving a part of the way the finger moves
+// (AimRatio), and the battlefield moves there once it is lifted.
 internal sealed class Minimap : Control
 {
 	// The minimap's top: 199 high, at the bottom of the screen.
@@ -33,12 +34,8 @@ internal sealed class Minimap : Control
 	private const int Columns = 240;
 	private const int Rows = 180;
 
-	// How far a touch moves, in game pixels, before it drags rather than taps.
-	private const int DragDistance = 8;
-
-	// How much of the way a finger drags the minimap the battlefield moves: a third, as a pixel of the minimap is 80 of
-	// the battlefield.
-	private const float DragRatio = 1 / 3f;
+	// How much of the way a finger moves a touch's aim moves: a third, as a pixel of the minimap is 80 of the battlefield.
+	private const float AimRatio = 1 / 3f;
 
 	private static readonly Color Sea = new(10, 22, 38);
 	private static readonly Color Land = new(104, 150, 96);
@@ -46,7 +43,6 @@ internal sealed class Minimap : Control
 	private readonly GameSession _session;
 	private readonly Texture2D _map;
 	private readonly bool _isTouchScreen;
-	private readonly Action<Vector2> _pan;
 	private readonly Action<Vector2> _showWindow;
 	private readonly Color[] _pixels = new Color[Columns * Rows];
 	private readonly ushort[] _tilesShown = new ushort[256 * 256];
@@ -54,9 +50,9 @@ internal sealed class Minimap : Control
 	private GameSnapshot _snapshot = new();
 	private bool _isHeld;
 
-	// Where a touch pressed, and where it dragged to last, in the minimap's pixels, until it is lifted.
-	private Vector2? _pressedAt;
-	private Vector2? _draggedTo;
+	// Where a touch aims, and where its finger was last, in the minimap's pixels, until it is lifted.
+	private Vector2? _aim;
+	private Vector2? _aimedFrom;
 
 	// What the battlefield shows, in its view's pixels from the game's camera: the view, or a part of it, magnified
 	// (Battlefield.Shown).
@@ -75,20 +71,18 @@ internal sealed class Minimap : Control
 		Size = SizeAt(scale);
 	}
 
-	// isTouchScreen: whether the player touches the screen (IAppHost.IsTouchScreen). pan: moves what the battlefield shows
-	// by so many of its view's pixels (Battlefield.Pan). showWindow: shows the view from a point of it (Battlefield.ShowWindow).
+	// isTouchScreen: whether the player touches the screen (IAppHost.IsTouchScreen). showWindow: shows the view from a
+	// point of it (Battlefield.ShowWindow).
 	public Minimap(
 		GameSession session,
 		BattleArt art,
 		bool isTouchScreen,
-		Action<Vector2> pan,
 		Action<Vector2> showWindow
 	)
 	{
 		_session = session;
 		_map = art.MinimapTexture;
 		_isTouchScreen = isTouchScreen;
-		_pan = pan;
 		_showWindow = showWindow;
 		BackColor = DrawingColor.Transparent;
 		Size = Area.Size;
@@ -160,7 +154,7 @@ internal sealed class Minimap : Control
 		base.OnMouseDown(e);
 		if (e.Button == MouseButtons.Left && _isTouchScreen)
 		{
-			_pressedAt = ToMap(e.Location);
+			_aim = _aimedFrom = ToMap(e.Location);
 		}
 		else if (e.Button == MouseButtons.Left)
 		{
@@ -169,8 +163,8 @@ internal sealed class Minimap : Control
 		}
 		else if (e.Button == MouseButtons.XButton1)
 		{
-			// A second finger: the touch is no tap.
-			_pressedAt = null;
+			// A second finger: the touch aims no more.
+			_aim = _aimedFrom = null;
 		}
 		else if (e.Button == MouseButtons.Right)
 		{
@@ -186,16 +180,14 @@ internal sealed class Minimap : Control
 		var at = ToMap(e.Location);
 		if (_isHeld)
 			ShowPoint(at, isPressed: false);
-		if (_pressedAt is { } pressed && Vector2.Distance(at, pressed) * Scale > DragDistance)
+		if (_aim is { } aim && _aimedFrom is { } from)
 		{
-			_pressedAt = null;
-			_draggedTo = pressed;
-		}
-
-		if (_draggedTo is { } from)
-		{
-			_pan((at - from) * 80 * DragRatio);
-			_draggedTo = at;
+			_aim = Vector2.Clamp(
+				aim + (at - from) * AimRatio,
+				new Vector2(MapLeft, MapTop),
+				new Vector2(MapLeft + Columns, MapTop + Rows)
+			);
+			_aimedFrom = at;
 		}
 	}
 
@@ -205,11 +197,10 @@ internal sealed class Minimap : Control
 		if (e.Button != MouseButtons.Left)
 			return;
 
-		if (_pressedAt is { } pressed)
-			ShowPoint(pressed, isPressed: true);
+		if (_aim is { } aim)
+			ShowPoint(aim, isPressed: true);
 		_isHeld = false;
-		_pressedAt = null;
-		_draggedTo = null;
+		_aim = _aimedFrom = null;
 	}
 
 	// A unit's tile on the map, from a point of the world, as the original puts its dot (DrawMinimap).
@@ -294,13 +285,15 @@ internal sealed class Minimap : Control
 		var shown = Shown;
 		var left = MapLeft + (Math.Abs(World.Left) + (int)camera.X) / 80;
 		var top = MapTop + (Math.Abs(World.Top) - (int)camera.Y) / 80;
-		Frame(
-			left + shown.X / 80,
-			top + shown.Y / 80,
-			shown.Width / 80 + 1.4f,
-			shown.Height / 80 + 1.4f,
-			Theme.BrassLight
-		);
+		var (width, height) = (shown.Width / 80 + 1.4f, shown.Height / 80 + 1.4f);
+		Frame(left + shown.X / 80, top + shown.Y / 80, width, height, Theme.BrassLight);
+
+		// Where a touch aims: what the battlefield would show from there, and the point itself.
+		if (_aim is { } aim)
+		{
+			Frame(aim.X - width / 2, aim.Y - height / 2, width, height, DrawingColor.White);
+			Fill(aim.X - 0.5f, aim.Y - 0.5f, 1, 1, DrawingColor.White);
+		}
 	}
 
 	protected override void OnPaint(PaintEventArgs e)
