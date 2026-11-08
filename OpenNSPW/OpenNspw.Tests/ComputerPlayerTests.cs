@@ -159,7 +159,7 @@ public static class ComputerPlayerTests
 		Reset();
 		if (StrategyDifference(emulated, rewritten) is { } difference)
 		{
-			Assert.True(false, $"{label}: {difference}");
+			Assert.Fail($"{label}: {difference}");
 		}
 
 		return emulated;
@@ -252,8 +252,7 @@ public static class ComputerPlayerTests
 
 							return text;
 						};
-						Assert.True(
-							false,
+						Assert.Fail(
 							$"Unit {m} at ({game.Units[m].Position.X:F1},{game.Units[m].Position.Y:F1}) to ({x},{y}): emulated {path(emulated)}, rewritten {path(rewritten)}"
 						);
 					}
@@ -452,7 +451,7 @@ public static class ComputerPlayerTests
 			Restore(game, before);
 			if (Difference(emulated, rewritten) is { } difference)
 			{
-				Assert.True(false, $"{label}: {difference}");
+				Assert.Fail($"{label}: {difference}");
 			}
 
 			return emulated;

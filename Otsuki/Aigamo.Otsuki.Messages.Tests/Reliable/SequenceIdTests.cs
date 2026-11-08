@@ -14,7 +14,7 @@ public class SequenceIdTests
 		SequenceId.Empty.Should().Be(new SequenceId(0));
 	}
 
-	private static IEnumerable<object?[]> CompareTo_TestData()
+	public static IEnumerable<object?[]> CompareTo_TestData()
 	{
 		yield return new object?[] { _testSequenceId, _testSequenceId, 0 };
 
@@ -67,7 +67,7 @@ public class SequenceIdTests
 			Math.Sign(sequenceId1.CompareTo(sequenceId2)).Should().Be(expected);
 	}
 
-	private static IEnumerable<object?[]> Equals_TestData()
+	public static IEnumerable<object?[]> Equals_TestData()
 	{
 		yield return new object?[] { _testSequenceId, _testSequenceId, true };
 		yield return new object?[] { _testSequenceId, new SequenceId(255), true };

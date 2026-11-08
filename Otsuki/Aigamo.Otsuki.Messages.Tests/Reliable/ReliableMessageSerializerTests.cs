@@ -6,7 +6,7 @@ namespace Aigamo.Otsuki.Messages.Tests.Reliable;
 
 public class ReliableMessageSerializerTests
 {
-	private static IEnumerable<object?[]> TestData()
+	public static IEnumerable<object?[]> TestData()
 	{
 		static IEnumerable<object?[]> TestDataCore()
 		{

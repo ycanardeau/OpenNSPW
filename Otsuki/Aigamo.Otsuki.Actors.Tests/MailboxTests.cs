@@ -82,7 +82,7 @@ public sealed class MailboxTests
 	}
 
 	[Fact]
-	public void WaitsForTheKindItWaitsFor()
+	public async Task WaitsForTheKindItWaitsFor()
 	{
 		var mailbox = new Mailbox<Message>();
 		var poster = Task.Run(async () =>
@@ -94,7 +94,7 @@ public sealed class MailboxTests
 		});
 
 		mailbox.WaitFor(m => m is Number, Timeout).Should().BeTrue();
-		poster.Wait(Timeout);
+		await poster.WaitAsync(Timeout);
 
 		ReceiveAll(mailbox).Should().Equal(new Text("a"), new Number(1));
 	}
@@ -111,7 +111,7 @@ public sealed class MailboxTests
 	// Posters race the owner, which sleeps whenever its mailbox is empty: no message is missed, and each poster's are in
 	// its order.
 	[Fact]
-	public void MissesNoMessageOfPostersThatRaceASleepingOwner()
+	public async Task MissesNoMessageOfPostersThatRaceASleepingOwner()
 	{
 		const int Posters = 4;
 		const int Messages = 20_000;
@@ -140,12 +140,12 @@ public sealed class MailboxTests
 			next[message.Poster]++;
 		}
 
-		Task.WaitAll(posters, Timeout).Should().BeTrue();
+		await Task.WhenAll(posters).WaitAsync(Timeout);
 		mailbox.TryReceive(out _).Should().BeFalse();
 	}
 
 	[Fact]
-	public void RunsAPooledHandlerOneMessageAtATime()
+	public async Task RunsAPooledHandlerOneMessageAtATime()
 	{
 		const int Posters = 4;
 		const int Messages = 10_000;
@@ -167,29 +167,28 @@ public sealed class MailboxTests
 		);
 		mailbox.Start();
 
-		Task.WaitAll(
-			Enumerable
-				.Range(0, Posters)
-				.Select(poster =>
-					Task.Run(() =>
-					{
-						for (var i = 0; i < Messages; i++)
-							mailbox.Post((poster, i));
-					})
-				)
-				.ToArray(),
-			Timeout
-		);
+		await Task.WhenAll(
+				Enumerable
+					.Range(0, Posters)
+					.Select(poster =>
+						Task.Run(() =>
+						{
+							for (var i = 0; i < Messages; i++)
+								mailbox.Post((poster, i));
+						})
+					)
+			)
+			.WaitAsync(Timeout);
 		mailbox.Complete();
 
-		mailbox.Completion.Wait(Timeout).Should().BeTrue();
+		await mailbox.Completion.WaitAsync(Timeout);
 		overlapped.Should().BeFalse();
 		outOfOrder.Should().BeFalse();
 		handled.Should().Be(Posters * Messages);
 	}
 
 	[Fact]
-	public void HoldsAPooledMailboxsMessagesUntilItStarts()
+	public async Task HoldsAPooledMailboxsMessagesUntilItStarts()
 	{
 		var handled = new List<int>();
 		var mailbox = new Mailbox<int>(handled.Add, _ => { });
@@ -201,12 +200,12 @@ public sealed class MailboxTests
 		mailbox.Start();
 		mailbox.Complete();
 
-		mailbox.Completion.Wait(Timeout).Should().BeTrue();
+		await mailbox.Completion.WaitAsync(Timeout);
 		handled.Should().Equal(1, 2);
 	}
 
 	[Fact]
-	public void GoesOnAfterAHandlerThrows()
+	public async Task GoesOnAfterAHandlerThrows()
 	{
 		var handled = new List<int>();
 		var errors = new List<Exception>();
@@ -224,13 +223,13 @@ public sealed class MailboxTests
 		mailbox.Post(2);
 		mailbox.Complete();
 
-		mailbox.Completion.Wait(Timeout).Should().BeTrue();
+		await mailbox.Completion.WaitAsync(Timeout);
 		handled.Should().Equal(2);
 		errors.Should().ContainSingle().Which.Should().BeOfType<InvalidOperationException>();
 	}
 
 	[Fact]
-	public void CompletesAPooledMailboxThatHasNoMessages()
+	public async Task CompletesAPooledMailboxThatHasNoMessages()
 	{
 		var mailbox = new Mailbox<int>(_ => { }, _ => { });
 		mailbox.Start();
@@ -238,7 +237,7 @@ public sealed class MailboxTests
 
 		mailbox.Complete();
 
-		mailbox.Completion.Wait(Timeout).Should().BeTrue();
+		await mailbox.Completion.WaitAsync(Timeout);
 	}
 
 	[Fact]

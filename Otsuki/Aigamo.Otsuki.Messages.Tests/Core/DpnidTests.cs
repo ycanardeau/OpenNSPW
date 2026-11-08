@@ -26,7 +26,7 @@ public class DpnidTests
 		dpnid.Value.Should().Be(unchecked((int)0xA112C3D1));
 	}
 
-	private static IEnumerable<object?[]> Equals_TestData()
+	public static IEnumerable<object?[]> Equals_TestData()
 	{
 		yield return new object?[] { _testDpnid, _testDpnid, true };
 		yield return new object?[] { _testDpnid, new Dpnid(index: 2, version: 2, _testGuid), true };

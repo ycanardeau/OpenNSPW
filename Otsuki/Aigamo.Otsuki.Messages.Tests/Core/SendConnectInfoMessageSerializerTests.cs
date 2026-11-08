@@ -7,7 +7,7 @@ namespace Aigamo.Otsuki.Messages.Tests.Core;
 
 public class SendConnectInfoMessageSerializerTests
 {
-	private static IEnumerable<object?[]> TestData()
+	public static IEnumerable<object?[]> TestData()
 	{
 		yield return new object?[]
 		{

@@ -131,7 +131,7 @@ public partial class CompileSwitchTests
 		var switches = OriginalSwitches();
 		var used = ConditionSymbols(Directory.GetFiles(PortDirectory, "*.cs"));
 		used.ExceptWith(["true", "false"]);
-		Assert.Empty(used.Where(s => !switches.ContainsKey(s)));
+		Assert.DoesNotContain(used, s => !switches.ContainsKey(s));
 	}
 
 	// A switch is defined for the port exactly when the original sets it to a value other than 0, so that `#if X` takes

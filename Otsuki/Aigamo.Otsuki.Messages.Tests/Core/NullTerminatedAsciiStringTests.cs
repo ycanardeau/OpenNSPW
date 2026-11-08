@@ -24,7 +24,7 @@ public class NullTerminatedAsciiStringTests
 	};
 	private static readonly string _testString = "Hello World!";
 
-	private static IEnumerable<object?[]> Ctor_ByteArray_TestData()
+	public static IEnumerable<object?[]> Ctor_ByteArray_TestData()
 	{
 		yield return new object?[] { _testByteArray, _testString };
 		yield return new object?[] { Array.Empty<byte>(), string.Empty };
@@ -43,7 +43,7 @@ public class NullTerminatedAsciiStringTests
 		new NullTerminatedAsciiString(_testString).ToString().Should().Be(_testString);
 	}
 
-	private static IEnumerable<object?[]> Equals_TestData()
+	public static IEnumerable<object?[]> Equals_TestData()
 	{
 		yield return new object?[] { _testString, _testString, true };
 		yield return new object?[]
@@ -73,7 +73,7 @@ public class NullTerminatedAsciiStringTests
 		string1.Equals(obj).Should().Be(expected);
 	}
 
-	private static IEnumerable<object?[]> ToByteArray_TestData()
+	public static IEnumerable<object?[]> ToByteArray_TestData()
 	{
 		yield return new object?[] { _testString, _testByteArray };
 		yield return new object?[] { string.Empty, Array.Empty<byte>() };

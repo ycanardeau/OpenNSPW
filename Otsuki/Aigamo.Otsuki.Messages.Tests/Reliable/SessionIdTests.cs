@@ -14,7 +14,7 @@ public class SessionIdTests
 		SessionId.Empty.Should().Be(new SessionId(0));
 	}
 
-	private static IEnumerable<object?[]> Equals_TestData()
+	public static IEnumerable<object?[]> Equals_TestData()
 	{
 		yield return new object?[] { _testSessionId, _testSessionId, true };
 		yield return new object?[] { _testSessionId, new SessionId(0x22AE0764), true };
