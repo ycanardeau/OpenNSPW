@@ -169,6 +169,39 @@ internal static class Texts
 	public static string Deselect => Pick("Deselect", "選択解除");
 	public static string Panel => Pick("Panel", "パネル");
 	public static string CommandBar => Pick("Controls", "操作");
+	public static string MoveMode => Pick("Move", "移動");
+	public static string TouchSettings => Pick("Settings", "設定");
+
+	// The touch settings (TouchSettingsForm).
+	public static string TouchSettingsTitle => Pick("Touch settings", "タッチ操作の設定");
+	public static string TouchSettingsDescription =>
+		Pick(
+			"How taps, scrolling and the minimap work",
+			"タップ・スクロール・ミニマップの操作を選ぶ"
+		);
+	public static string WaypointGestureLabel => Pick("Waypoint", "航路点の指定");
+	public static string WaypointTap => Pick("Tap", "タップ");
+	public static string WaypointHold => Pick("Hold", "長押し");
+	public static string WaypointTwoFingers => Pick("2-finger scroll", "2本指で移動");
+	public static string WaypointMoveButton => Pick("Move button", "移動ボタン");
+	public static string MinimapTouchLabel => Pick("Minimap", "ミニマップ");
+	public static string MinimapAim => Pick("Aim", "狙って移動");
+	public static string MinimapJump => Pick("Tap to jump", "タップで移動");
+	public static string MinimapFollow => Pick("Follow finger", "指に追従");
+	public static string GlideLabel => Pick("Glide after a flick", "フリックの慣性");
+	public static string SlopLabel => Pick("Tap tolerance", "タップの許容範囲");
+	public static string ReachLabel => Pick("Unit touch area", "ユニットの当たり判定");
+	public static string PanelSideLabel => Pick("Panel side", "パネルの位置");
+	public static string PanelFollowsLabel => Pick("Panel for carriers", "空母・基地でパネル");
+	public static string On => Pick("On", "オン");
+	public static string Off => Pick("Off", "オフ");
+	public static string Small => Pick("Small", "小");
+	public static string Medium => Pick("Medium", "中");
+	public static string Large => Pick("Large", "大");
+	public static string Larger => Pick("Larger", "特大");
+	public static string Left => Pick("Left", "左");
+	public static string Right => Pick("Right", "右");
+	public static string Close => Pick("Close", "閉じる");
 
 	public static string SupplySection => Pick("SUPPLY", "補給");
 	public static string SystemSection => Pick("SYSTEM", "システム");

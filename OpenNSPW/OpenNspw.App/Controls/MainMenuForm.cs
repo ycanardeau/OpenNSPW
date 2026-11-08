@@ -11,6 +11,12 @@ internal sealed class MainMenuForm : Form
 {
 	private readonly UIFonts _fonts;
 	private readonly List<MenuItemButton> _items = [];
+
+	// Where the first item is, how far each next one is under it, and how high each is: closer with the touch settings'
+	// item, for five to fit above the footer.
+	private readonly int _itemTop;
+	private readonly int _itemStep;
+	private readonly int _itemHeight;
 	private int _highlighted = -1;
 
 	public event EventHandler? SingleplayerChosen;
@@ -22,6 +28,8 @@ internal sealed class MainMenuForm : Form
 	public event EventHandler? QuitChosen;
 
 	public event EventHandler<Language>? LanguageChosen;
+
+	public event EventHandler? TouchSettingsChosen;
 
 	private void Highlight(int index)
 	{
@@ -35,7 +43,7 @@ internal sealed class MainMenuForm : Form
 		var index = _items.Count;
 		var item = new MenuItemButton(_fonts)
 		{
-			Bounds = new DrawingRectangle(64, 404 + index * 72, 520, 64),
+			Bounds = new DrawingRectangle(64, _itemTop + index * _itemStep, 520, _itemHeight),
 			Text = caption,
 			Description = description,
 		};
@@ -62,9 +70,12 @@ internal sealed class MainMenuForm : Form
 		Controls.Add(tab);
 	}
 
-	public MainMenuForm(UIFonts fonts)
+	// isTouchScreen: whether the player touches the screen (IAppHost.IsTouchScreen), who can choose how, with an item of its
+	// own before Quit (TouchSettingsForm).
+	public MainMenuForm(UIFonts fonts, bool isTouchScreen)
 	{
 		_fonts = fonts;
+		(_itemTop, _itemStep, _itemHeight) = isTouchScreen ? (364, 68, 64) : (404, 72, 64);
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		BackColor = DrawingColor.Transparent;
 		KeyPreview = true;
@@ -72,6 +83,12 @@ internal sealed class MainMenuForm : Form
 		AddItem(Texts.SinglePlayer, Texts.SinglePlayerDescription, () => SingleplayerChosen);
 		AddItem(Texts.Multiplayer, Texts.MultiplayerDescription, () => MultiplayerChosen);
 		AddItem(Texts.Replays, Texts.ReplaysDescription, () => ReplaysChosen);
+		if (isTouchScreen)
+			AddItem(
+				Texts.TouchSettingsTitle,
+				Texts.TouchSettingsDescription,
+				() => TouchSettingsChosen
+			);
 		AddItem(Texts.Quit, Texts.QuitDescription, () => QuitChosen);
 		AddLanguage(Language.English, 0);
 		AddLanguage(Language.Japanese, 1);

@@ -168,6 +168,21 @@ internal sealed class GameScreen(
 		_confirmQuit.Focus();
 	}
 
+	// The touch settings, over the battle, which goes on under them: each takes effect at once (TouchSettings).
+	private void ShowTouchSettings()
+	{
+		var form = new TouchSettingsForm(Game.Fonts, Game.Touch)
+		{
+			// Dimming the battle screen's column beside the layout too.
+			Size = new(Math.Max(all_head.SCRN_WIDTH, _battleForm.Width), all_head.SCRN_HEIGHT),
+		};
+		form.Closed += (_, _) => WindowManager.Root.Controls.Remove(form);
+		WindowManager.Root.Controls.Add(form);
+		form.BringToFront();
+		form.Show();
+		form.Focus();
+	}
+
 	public override void LoadContent()
 	{
 		base.LoadContent();
@@ -180,11 +195,13 @@ internal sealed class GameScreen(
 			Game.Fonts,
 			_art,
 			Game.Host.IsTouchScreen,
-			isSmallScreen: Game.Host.BattleZoom > 1
+			isSmallScreen: Game.Host.BattleZoom > 1,
+			Game.Touch
 		)
 		{
 			Visible = false,
 		};
+		_battleForm.TouchSettingsChosen += (_, _) => ShowTouchSettings();
 		_initialZoom = UISettings.LoadBattleZoom(Game.Host.BattleZoom);
 		_battleForm.Zoom = _initialZoom;
 		WindowManager.Root.Controls.Add(_battleForm);
@@ -258,8 +275,9 @@ internal sealed class GameScreen(
 		Game.ViewportAdapter.IsLayoutLeft = snapshot.IsBattle;
 		_battleForm.Fit(Game.ViewportAdapter.ExtraWidth);
 
-		// A finger's reach: 24 dp, about half a fingertip's width.
-		_battleForm.TouchRadius = 24 * Game.Host.Density / Game.ViewportAdapter.Scale;
+		// A finger's reach: TouchOptions.ReachDp, 24 dp at first, about half a fingertip's width.
+		_battleForm.TouchRadius =
+			Game.Touch.Options.ReachDp * Game.Host.Density / Game.ViewportAdapter.Scale;
 		// The question to quit dims the battle screen's column beside the layout too.
 		_confirmQuit.Size = new(
 			snapshot.IsBattle ? _battleForm.Width : all_head.SCRN_WIDTH,

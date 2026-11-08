@@ -33,7 +33,15 @@ internal sealed class MainMenuScreen(NspwGame game) : Screen(game)
 	// The menu, in the language chosen.
 	private void ShowForm()
 	{
-		_form = new MainMenuForm(Game.Fonts);
+		_form = new MainMenuForm(Game.Fonts, Game.Host.IsTouchScreen);
+		_form.TouchSettingsChosen += (_, _) =>
+		{
+			var settings = new TouchSettingsForm(Game.Fonts, Game.Touch);
+			settings.Closed += (_, _) => WindowManager.Root.Controls.Remove(settings);
+			WindowManager.Root.Controls.Add(settings);
+			settings.BringToFront();
+			settings.Show();
+		};
 		_form.SingleplayerChosen += (_, _) => Game.ShowScreen(new SingleplayerScreen(Game));
 		_form.MultiplayerChosen += (_, _) => Game.ShowScreen(new MultiplayerScreen(Game));
 		_form.ReplaysChosen += (_, _) => Game.ShowScreen(new ReplaysScreen(Game));

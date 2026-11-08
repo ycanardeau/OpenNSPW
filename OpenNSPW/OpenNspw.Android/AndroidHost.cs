@@ -28,8 +28,8 @@ internal sealed class AndroidHost(Activity activity) : IAppHost
 
 	public float Density => _activity.Resources!.DisplayMetrics!.Density;
 
-	// A finger moves 16 dp before it drags, as Android's paging does (ViewConfiguration.ScaledPagingTouchSlop).
-	public IPointer CreatePointer(GameWindow window) => new TouchPointer(window, 16 * Density);
+	public IPointer CreatePointer(GameWindow window, Func<float> slopDp) =>
+		new TouchPointer(window, () => slopDp() * Density);
 
 	// About 1.8 on a phone, and none on a tablet.
 	public float BattleZoom => Math.Clamp(5 / ShortSideInches, 1, 2.5f);

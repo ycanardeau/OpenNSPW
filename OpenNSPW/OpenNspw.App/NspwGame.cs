@@ -45,6 +45,9 @@ internal sealed class NspwGame : Game
 	// What the system the app runs on gives it (IAppHost).
 	public IAppHost Host { get; }
 
+	// How a touch screen is played, as the player chose last (TouchSettingsForm).
+	public TouchSettings Touch { get; } = new(UISettings.LoadTouch());
+
 	// What the player points with, which the UI and the game read in each update: the mouse, or the screen's touches, while
 	// the window is active (ActivePointer).
 	public IPointer Pointer { get; }
@@ -85,7 +88,12 @@ internal sealed class NspwGame : Game
 		_trace = trace;
 		_watch = watch;
 		Host = host;
-		Pointer = new ActivePointer(host.CreatePointer(Window), () => IsActive);
+		// A finger moves TouchOptions.SlopDp before it drags: 16 dp at first, as Android's paging does
+		// (ViewConfiguration.ScaledPagingTouchSlop).
+		Pointer = new ActivePointer(
+			host.CreatePointer(Window, () => Touch.Options.SlopDp),
+			() => IsActive
+		);
 		Data = data;
 		Texts.Language = UISettings.LoadLanguage();
 		IsMouseVisible = !host.IsTouchScreen;

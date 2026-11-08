@@ -9,8 +9,9 @@ internal interface IAppHost
 	// Whether the player plays by touching the screen (TouchPointer), rather than with a mouse.
 	bool IsTouchScreen { get; }
 
-	// What the player points with in `window`: the screen's touches (TouchPointer), or the mouse.
-	IPointer CreatePointer(GameWindow window);
+	// What the player points with in `window`: the screen's touches (TouchPointer), a finger moving `slopDp()`
+	// density-independent pixels before it drags (Density), or the mouse.
+	IPointer CreatePointer(GameWindow window, Func<float> slopDp);
 
 	// How much the battlefield is magnified at first, until the player zooms it (Battlefield.Zoom): more on a small screen,
 	// where the original's layout, as high as the screen, makes the units too small to touch.
