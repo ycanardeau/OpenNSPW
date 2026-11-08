@@ -69,7 +69,7 @@ public class HostMigrationTests : IAsyncLifetime
 			}
 		);
 		_peers.Add(peer);
-		peer.SetPeerInfo(name);
+		_ = peer.SetPeerInfoAsync(name);
 		return new TestPeer(peer, new EventLog(peer), address);
 	}
 
@@ -142,7 +142,7 @@ public class HostMigrationTests : IAsyncLifetime
 		(await first.Log.WaitForAsync<PeerEvent.DataReceived>()).Data.Should().Equal([1]);
 		(await third.Log.WaitForAsync<PeerEvent.DataReceived>()).Data.Should().Equal([1]);
 
-		await third.Peer.SetPeerInfo("Renamed");
+		await third.Peer.SetPeerInfoAsync("Renamed");
 		foreach (var peer in peers.Skip(1))
 			(await peer.Log.WaitForAsync<PeerEvent.PeerInfoUpdated>())
 				.Player.Name.Should()

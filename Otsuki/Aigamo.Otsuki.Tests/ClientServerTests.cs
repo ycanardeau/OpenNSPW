@@ -63,7 +63,7 @@ public class ClientServerTests : IAsyncLifetime
 	{
 		var server = new Server(Options());
 		_closers.Add(server.CloseAsync);
-		await server.SetServerInfo("Server");
+		await server.SetServerInfoAsync("Server");
 		var log = new EventLog(server.ReadEventsAsync());
 		await server.HostAsync(application ?? Application);
 		await log.WaitForAsync<PeerEvent.PlayerCreated>();
@@ -74,7 +74,7 @@ public class ClientServerTests : IAsyncLifetime
 	{
 		var client = new Client(Options());
 		_closers.Add(client.CloseAsync);
-		await client.SetClientInfo(name);
+		await client.SetClientInfoAsync(name);
 		var log = new EventLog(client.ReadEventsAsync());
 		await client.ConnectAsync(Application, server.LocalEndPoint!);
 		(await log.WaitForAsync<PeerEvent.ConnectCompleted>())
@@ -145,14 +145,14 @@ public class ClientServerTests : IAsyncLifetime
 		await serverLog.WaitForAsync<PeerEvent.PlayerCreated>(3);
 
 		// A client's change goes to the server only (DPN_MSGID_CLIENT_INFO).
-		await alice.SetClientInfo("Alicia");
+		await alice.SetClientInfoAsync("Alicia");
 		(await serverLog.WaitForAsync<PeerEvent.PeerInfoUpdated>())
 			.Player.Name.Should()
 			.Be("Alicia");
 		server.GetClientInfo(alice.LocalPlayer)!.Name.Should().Be("Alicia");
 
 		// The server's change goes to every client (DPN_MSGID_SERVER_INFO).
-		await server.SetServerInfo("Big server");
+		await server.SetServerInfoAsync("Big server");
 		(await aliceLog.WaitForAsync<PeerEvent.PeerInfoUpdated>(e => e.Player.Name == "Big server"))
 			.Player.IsHost.Should()
 			.BeTrue();

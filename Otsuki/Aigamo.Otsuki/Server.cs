@@ -43,7 +43,8 @@ public sealed class Server(PeerOptions? options = null) : IAsyncDisposable
 	/// Sets the server's name and data, like IDirectPlay8Server::SetServerInfo. Every client hears of a change in a
 	/// session as <see cref="PeerEvent.PeerInfoUpdated"/> (DPN_MSGID_SERVER_INFO).
 	/// </summary>
-	public Task SetServerInfo(string name, byte[]? data = null) => _peer.SetPeerInfo(name, data);
+	public Task SetServerInfoAsync(string name, byte[]? data = null) =>
+		_peer.SetPeerInfoAsync(name, data);
 
 	/// <summary>
 	/// Creates the session, listening on <paramref name="localEndPoint"/>. <see cref="SessionFlags.ClientServer"/> is

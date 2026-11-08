@@ -59,7 +59,7 @@ public class NameTableChangeTests : IAsyncLifetime
 			}
 		);
 		_peers.Add(peer);
-		peer.SetPeerInfo(name);
+		_ = peer.SetPeerInfoAsync(name);
 		return (peer, new EventLog(peer));
 	}
 
@@ -100,7 +100,7 @@ public class NameTableChangeTests : IAsyncLifetime
 		var peers = await MeshAsync();
 		var (_, first, _) = (peers[0], peers[1], peers[2]);
 
-		await first.Peer.SetPeerInfo("Renamed", [7]);
+		await first.Peer.SetPeerInfoAsync("Renamed", [7]);
 
 		foreach (var (peer, log) in peers)
 		{
@@ -118,7 +118,7 @@ public class NameTableChangeTests : IAsyncLifetime
 		var peers = await MeshAsync();
 		var host = peers[0];
 
-		await host.Peer.SetPeerInfo("New host name");
+		await host.Peer.SetPeerInfoAsync("New host name");
 
 		foreach (var (peer, log) in peers)
 		{
@@ -134,7 +134,7 @@ public class NameTableChangeTests : IAsyncLifetime
 	{
 		var host = await HostAsync("Host");
 		var first = await JoinAsync("First", host.Peer);
-		await first.Peer.SetPeerInfo("Renamed");
+		await first.Peer.SetPeerInfoAsync("Renamed");
 
 		var late = await JoinAsync("Late", host.Peer);
 
@@ -152,7 +152,7 @@ public class NameTableChangeTests : IAsyncLifetime
 		// The host never sees the request.
 		_network.Drop = (_, _, datagram) => datagram.Length > 8 && datagram.Contains((byte)0xD6);
 
-		var update = () => joiner.Peer.SetPeerInfo("Renamed");
+		var update = () => joiner.Peer.SetPeerInfoAsync("Renamed");
 
 		(await update.Should().ThrowAsync<DirectPlayException>())
 			.Which.Result.Should()

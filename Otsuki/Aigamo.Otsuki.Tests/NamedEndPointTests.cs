@@ -23,11 +23,11 @@ public class NamedEndPointTests
 	{
 		await using var host = new Peer(Options);
 		var hostLog = new EventLog(host);
-		await host.SetPeerInfo("Host");
+		await host.SetPeerInfoAsync("Host");
 		await host.HostAsync(Application, new NamedEndPoint("host"));
 		await using var joiner = new Peer(Options);
 		var joinerLog = new EventLog(joiner);
-		await joiner.SetPeerInfo("Joiner");
+		await joiner.SetPeerInfoAsync("Joiner");
 
 		await joiner.ConnectAsync(Application, host.LocalEndPoint!, new NamedEndPoint("joiner"));
 

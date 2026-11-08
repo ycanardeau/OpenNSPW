@@ -239,7 +239,7 @@ internal static class Program
 		}
 
 		// Everyone, us included, sees the change as PeerEvent.PeerInfoUpdated.
-		_ = peer.SetPeerInfo(name);
+		_ = peer.SetPeerInfoAsync(name);
 	}
 
 	/// <summary>
@@ -347,7 +347,7 @@ internal static class Program
 			? PollEventsAsync(peer, Handle, ended)
 			: StreamEventsAsync(peer, Handle, ended);
 
-		await peer.SetPeerInfo(options.Name);
+		await peer.SetPeerInfoAsync(options.Name);
 		try
 		{
 			await StartAsync(peer, options);

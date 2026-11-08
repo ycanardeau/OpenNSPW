@@ -10,7 +10,7 @@ Otsuki is the network of [OpenNSPW](../OpenNSPW), whose DirectPlay calls ([OpenN
 
 ```csharp
 await using var peer = new Peer();
-await peer.SetPeerInfo("Bob");
+await peer.SetPeerInfoAsync("Bob");
 await peer.ConnectAsync(application, "192.168.0.10");
 
 await foreach (var e in peer.ReadEventsAsync())
@@ -48,7 +48,7 @@ using Aigamo.Otsuki.Messages.Core;
 var application = new ApplicationDescription { GuidApplication = guidApp, SessionName = "Lobby", MaxPlayers = 4 };
 
 await using var host = new Peer();
-await host.SetPeerInfo("Alice");
+await host.SetPeerInfoAsync("Alice");
 await host.HostAsync(application);
 
 await foreach (var e in host.ReadEventsAsync())

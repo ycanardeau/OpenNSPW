@@ -71,7 +71,7 @@ public class RegressionTests(ITestOutputHelper output) : IAsyncLifetime
 		var address = IPAddress.Parse($"10.9.0.{_addresses.Next()}");
 		var peer = new Peer(Options(address));
 		_closers.Add(peer.CloseAsync);
-		peer.SetPeerInfo(name);
+		_ = peer.SetPeerInfoAsync(name);
 		return new TestPeer(peer, new EventLog(peer), address);
 	}
 
@@ -196,7 +196,7 @@ public class RegressionTests(ITestOutputHelper output) : IAsyncLifetime
 			(await clientLog.WaitForAsync<PeerEvent.ConnectCompleted>())
 				.Result.Should()
 				.Be(ResultCode.Success);
-			await server.SetServerInfo($"Server {i}");
+			await server.SetServerInfoAsync($"Server {i}");
 			await client.CloseAsync();
 		}
 		await log.WaitForAsync<PeerEvent.PlayerDestroyed>(20);
@@ -221,7 +221,7 @@ public class RegressionTests(ITestOutputHelper output) : IAsyncLifetime
 		await joiner.Peer.ConnectAsync(Application(), host.Peer.LocalEndPoint!);
 		await Task.Delay(100);
 		// The update completes once it is in force, after the join.
-		var update = joiner.Peer.SetPeerInfo("New");
+		var update = joiner.Peer.SetPeerInfoAsync("New");
 		block = false;
 		(await joiner.Log.WaitForAsync<PeerEvent.ConnectCompleted>())
 			.Result.Should()

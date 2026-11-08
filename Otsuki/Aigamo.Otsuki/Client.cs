@@ -34,7 +34,8 @@ public sealed class Client(PeerOptions? options = null) : IAsyncDisposable
 	/// Sets the client's name and data, like IDirectPlay8Client::SetClientInfo. In a session, the server hears of it
 	/// as <see cref="PeerEvent.PeerInfoUpdated"/> (DPN_MSGID_CLIENT_INFO), and the task completes once it confirms.
 	/// </summary>
-	public Task SetClientInfo(string name, byte[]? data = null) => _peer.SetPeerInfo(name, data);
+	public Task SetClientInfoAsync(string name, byte[]? data = null) =>
+		_peer.SetPeerInfoAsync(name, data);
 
 	/// <summary>
 	/// Finds servers, like IDirectPlay8Client::EnumHosts.
