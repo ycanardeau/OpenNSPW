@@ -43,7 +43,7 @@ public class PeerTests : IAsyncLifetime
 	private static ApplicationDescription Application(int maxPlayers = 0) =>
 		new() { GuidApplication = GuidApplication, MaxPlayers = maxPlayers };
 
-	private (Peer Peer, EventLog Log, IPAddress Address) CreatePeer(
+	private async Task<(Peer Peer, EventLog Log, IPAddress Address)> CreatePeerAsync(
 		string name,
 		ReliableProfile? profile = null,
 		TimeSpan? joinTimeout = null
@@ -61,7 +61,7 @@ public class PeerTests : IAsyncLifetime
 			}
 		);
 		_peers.Add(peer);
-		_ = peer.SetPeerInfoAsync(name);
+		await peer.SetPeerInfoAsync(name);
 		return (peer, new EventLog(peer), address);
 	}
 
@@ -71,7 +71,7 @@ public class PeerTests : IAsyncLifetime
 		ReliableProfile? profile = null
 	)
 	{
-		var host = CreatePeer(name, profile);
+		var host = await CreatePeerAsync(name, profile);
 		await host.Peer.HostAsync(application ?? Application());
 		await host.Log.WaitForAsync<PeerEvent.PlayerCreated>();
 		return host;
@@ -83,7 +83,7 @@ public class PeerTests : IAsyncLifetime
 		ApplicationDescription? application = null
 	)
 	{
-		var joiner = CreatePeer(name);
+		var joiner = await CreatePeerAsync(name);
 		await joiner.Peer.ConnectAsync(application ?? Application(), host.LocalEndPoint!);
 		var completed = await joiner.Log.WaitForAsync<PeerEvent.ConnectCompleted>();
 		completed.Result.Should().Be(ResultCode.Success);
@@ -355,7 +355,7 @@ public class PeerTests : IAsyncLifetime
 	{
 		var profile = FastProfile with { CoalesceSends = false };
 		var host = await HostAsync("Host", SignedApplication(signing), profile);
-		var joiner = CreatePeer("Joiner", profile);
+		var joiner = await CreatePeerAsync("Joiner", profile);
 		var unsigned = 0;
 		var offers = new List<PacketSigning>();
 		_network.Observe = (_, _, datagram) =>
@@ -411,7 +411,7 @@ public class PeerTests : IAsyncLifetime
 	{
 		var profile = FastProfile with { CoalesceSends = false };
 		var host = await HostAsync("Host", SignedApplication(SessionFlags.FullSigned), profile);
-		var joiner = CreatePeer("Joiner", profile);
+		var joiner = await CreatePeerAsync("Joiner", profile);
 		await joiner.Peer.ConnectAsync(Application(), host.Peer.LocalEndPoint!);
 		await joiner.Log.WaitForAsync<PeerEvent.ConnectCompleted>();
 		await host.Log.WaitForAsync<PeerEvent.PlayerCreated>(e => !e.Player.IsLocal);
@@ -482,7 +482,7 @@ public class PeerTests : IAsyncLifetime
 	[Fact]
 	public async Task Host_WithBothSigningModesThrows()
 	{
-		var (peer, _, _) = CreatePeer("Host");
+		var (peer, _, _) = await CreatePeerAsync("Host");
 
 		var host = () =>
 			peer.HostAsync(SignedApplication(SessionFlags.FastSigned | SessionFlags.FullSigned));
@@ -525,7 +525,7 @@ public class PeerTests : IAsyncLifetime
 		var host = await HostAsync("Host", application);
 		host.Peer.SetEnumResponseData([9, 8]);
 		var joiner = await JoinAsync("Joiner", host.Peer, application);
-		var seeker = CreatePeer("Seeker");
+		var seeker = await CreatePeerAsync("Seeker");
 
 		var found = await EnumerateAsync(seeker.Peer, host.Peer.LocalEndPoint!, GuidApplication);
 
@@ -555,7 +555,7 @@ public class PeerTests : IAsyncLifetime
 	public async Task EnumHosts_ForAnotherApplicationFindsNothing()
 	{
 		var host = await HostAsync("Host");
-		var seeker = CreatePeer("Seeker");
+		var seeker = await CreatePeerAsync("Seeker");
 
 		(await EnumerateAsync(seeker.Peer, host.Peer.LocalEndPoint!, Guid.NewGuid()))
 			.Should()
@@ -573,7 +573,7 @@ public class PeerTests : IAsyncLifetime
 				Flags = SessionFlags.NoEnumerations,
 			}
 		);
-		var seeker = CreatePeer("Seeker");
+		var seeker = await CreatePeerAsync("Seeker");
 
 		(await EnumerateAsync(seeker.Peer, host.Peer.LocalEndPoint!)).Should().BeEmpty();
 	}
@@ -582,7 +582,7 @@ public class PeerTests : IAsyncLifetime
 	public async Task EnumHosts_ThenConnectJoinsTheSession()
 	{
 		var host = await HostAsync("Host");
-		var joiner = CreatePeer("Joiner");
+		var joiner = await CreatePeerAsync("Joiner");
 
 		var found = await EnumerateAsync(joiner.Peer, host.Peer.LocalEndPoint!, GuidApplication);
 		await joiner.Peer.ConnectAsync(found[0].Application, found[0].HostEndPoint);
@@ -723,7 +723,7 @@ public class PeerTests : IAsyncLifetime
 	public async Task Connect_WithWrongApplicationFails()
 	{
 		var host = await HostAsync("Host");
-		var joiner = CreatePeer("Joiner");
+		var joiner = await CreatePeerAsync("Joiner");
 
 		await joiner.Peer.ConnectAsync(
 			new ApplicationDescription { GuidApplication = Guid.NewGuid() },
@@ -742,7 +742,7 @@ public class PeerTests : IAsyncLifetime
 	{
 		var host = await HostAsync("Host", Application(maxPlayers: 2));
 		await JoinAsync("First", host.Peer, Application(maxPlayers: 2));
-		var second = CreatePeer("Second");
+		var second = await CreatePeerAsync("Second");
 
 		await second.Peer.ConnectAsync(Application(), host.Peer.LocalEndPoint!);
 
@@ -770,7 +770,10 @@ public class PeerTests : IAsyncLifetime
 
 		for (var i = 0; i < 5; i++)
 		{
-			var joiner = CreatePeer($"Joiner{i}", joinTimeout: TimeSpan.FromMilliseconds(200));
+			var joiner = await CreatePeerAsync(
+				$"Joiner{i}",
+				joinTimeout: TimeSpan.FromMilliseconds(200)
+			);
 			var address = joiner.Address;
 			_network.Drop = (from, to, datagram) =>
 				from.Address.Equals(host.Address)
@@ -801,7 +804,7 @@ public class PeerTests : IAsyncLifetime
 			Password = "secret",
 		};
 		var host = await HostAsync("Host", application);
-		var wrong = CreatePeer("Wrong");
+		var wrong = await CreatePeerAsync("Wrong");
 
 		await wrong.Peer.ConnectAsync(
 			application with
@@ -820,7 +823,7 @@ public class PeerTests : IAsyncLifetime
 	[Fact]
 	public async Task Connect_WithoutHostReportsNoResponse()
 	{
-		var joiner = CreatePeer("Joiner");
+		var joiner = await CreatePeerAsync("Joiner");
 
 		await joiner.Peer.ConnectAsync(
 			Application(),
@@ -835,7 +838,7 @@ public class PeerTests : IAsyncLifetime
 	[Fact]
 	public async Task Close_WhileConnectingCancelsAtOnce()
 	{
-		var joiner = CreatePeer("Joiner");
+		var joiner = await CreatePeerAsync("Joiner");
 		await joiner.Peer.ConnectAsync(
 			Application(),
 			new IPEndPoint(IPAddress.Parse("10.9.9.9"), Peer.DefaultPort)
@@ -852,7 +855,7 @@ public class PeerTests : IAsyncLifetime
 	[Fact]
 	public async Task Connect_CanBeRetriedAfterFailure()
 	{
-		var joiner = CreatePeer("Joiner");
+		var joiner = await CreatePeerAsync("Joiner");
 		await joiner.Peer.ConnectAsync(
 			Application(),
 			new IPEndPoint(IPAddress.Parse("10.9.9.9"), Peer.DefaultPort)

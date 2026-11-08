@@ -230,6 +230,19 @@ internal static class Program
 		peer.SendTo(player.Id, Encoding.UTF8.GetBytes($"(whisper) {parts[1]}"), ChatSendFlags);
 	}
 
+	private static async Task ChangeNameAsync(Peer peer, string name)
+	{
+		try
+		{
+			// Everyone, us included, sees the change as PeerEvent.PeerInfoUpdated.
+			await peer.SetPeerInfoAsync(name);
+		}
+		catch (Exception e)
+		{
+			Print($"* {e.Message}");
+		}
+	}
+
 	private static void ChangeName(Peer peer, string name)
 	{
 		if (name.Length == 0)
@@ -238,8 +251,8 @@ internal static class Program
 			return;
 		}
 
-		// Everyone, us included, sees the change as PeerEvent.PeerInfoUpdated.
-		_ = peer.SetPeerInfoAsync(name);
+		// The input goes on while the host answers, and a failure is printed when it comes.
+		_ = ChangeNameAsync(peer, name);
 	}
 
 	/// <summary>
