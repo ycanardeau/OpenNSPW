@@ -21,6 +21,19 @@ function writeVersion(tree, manifestPath, newVersion) {
 	);
 }
 
+const readmePath = 'README.md';
+
+// The download links of the README, which name the release's files, as `oldVersion` that is not part of a longer version
+// (0.0.1-alpha.1 in 0.0.1-alpha.16).
+function writeReadmeVersion(tree, oldVersion, newVersion) {
+	const escaped = oldVersion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	const contents = tree.read(readmePath, 'utf-8');
+	tree.write(
+		readmePath,
+		contents.replace(new RegExp(`(?<![\\d.])${escaped}(?!\\d)`, 'g'), newVersion),
+	);
+}
+
 class MSBuildVersionActions extends VersionActions {
 	validManifestFilenames = ['Directory.Build.props'];
 
@@ -38,10 +51,13 @@ class MSBuildVersionActions extends VersionActions {
 	}
 
 	async updateProjectVersion(tree, newVersion) {
-		return this.manifestsToUpdate.map(({ manifestPath }) => {
+		const oldVersion = readVersion(tree, this.manifestsToUpdate[0].manifestPath);
+		const logs = this.manifestsToUpdate.map(({ manifestPath }) => {
 			writeVersion(tree, manifestPath, newVersion);
 			return `✍️  New version ${newVersion} written to manifest: ${manifestPath}`;
 		});
+		writeReadmeVersion(tree, oldVersion, newVersion);
+		return [...logs, `✍️  New version ${newVersion} written to the download links of ${readmePath}`];
 	}
 
 	async updateProjectDependencies() {
