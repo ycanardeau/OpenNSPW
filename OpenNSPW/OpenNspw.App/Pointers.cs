@@ -115,3 +115,53 @@ internal sealed class TouchPointer(GameWindow window) : IPointer
 		);
 	}
 }
+
+// A pointer whose buttons and wheel are taken only while the window is active (`isActive`): from when it is no longer
+// active until it is again and every button is let go, it holds no button and the wheel turned meanwhile is dropped.
+// MonoGame gives the buttons as they are on the whole screen (Mouse.GetState), and the wheel turned over the window while
+// it is inactive, which the UI and the game, which skip the input while it is inactive (InputListenerComponent,
+// GameScreen), would get at once when it is active again, as the click that activates it.
+internal sealed class ActivePointer(IPointer pointer, Func<bool> isActive) : IPointer
+{
+	private readonly IPointer _pointer = pointer;
+	private readonly Func<bool> _isActive = isActive;
+
+	// Whether the buttons and the wheel are taken.
+	private bool _isTaken;
+
+	// The wheel as the pointer gave it last, and how much of it was turned while not taken.
+	private int _wheel;
+	private int _droppedWheel;
+
+	public MouseState State { get; private set; }
+
+	private static bool IsHeld(MouseState state) =>
+		state.LeftButton == ButtonState.Pressed
+		|| state.MiddleButton == ButtonState.Pressed
+		|| state.RightButton == ButtonState.Pressed
+		|| state.XButton1 == ButtonState.Pressed
+		|| state.XButton2 == ButtonState.Pressed;
+
+	public void Update()
+	{
+		_pointer.Update();
+		var state = _pointer.State;
+		_isTaken = _isActive() && (_isTaken || !IsHeld(state));
+		if (!_isTaken)
+			_droppedWheel += state.ScrollWheelValue - _wheel;
+		_wheel = state.ScrollWheelValue;
+
+		ButtonState Taken(ButtonState button) => _isTaken ? button : ButtonState.Released;
+		State = new MouseState(
+			state.X,
+			state.Y,
+			scrollWheel: state.ScrollWheelValue - _droppedWheel,
+			leftButton: Taken(state.LeftButton),
+			middleButton: Taken(state.MiddleButton),
+			rightButton: Taken(state.RightButton),
+			xButton1: Taken(state.XButton1),
+			xButton2: Taken(state.XButton2),
+			horizontalScrollWheel: state.HorizontalScrollWheelValue
+		);
+	}
+}

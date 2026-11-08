@@ -45,7 +45,8 @@ internal sealed class NspwGame : Game
 	// What the system the app runs on gives it (IAppHost).
 	public IAppHost Host { get; }
 
-	// What the player points with, which the UI and the game read in each update: the mouse, or the screen's touches.
+	// What the player points with, which the UI and the game read in each update: the mouse, or the screen's touches, while
+	// the window is active (ActivePointer).
 	public IPointer Pointer { get; }
 
 	// Where the games' files come from: the embedded ones, or those given on the command line.
@@ -84,7 +85,10 @@ internal sealed class NspwGame : Game
 		_trace = trace;
 		_watch = watch;
 		Host = host;
-		Pointer = host.IsTouchScreen ? new TouchPointer(Window) : new MousePointer();
+		Pointer = new ActivePointer(
+			host.IsTouchScreen ? new TouchPointer(Window) : new MousePointer(),
+			() => IsActive
+		);
 		Data = data;
 		Texts.Language = UISettings.LoadLanguage();
 		IsMouseVisible = !host.IsTouchScreen;
