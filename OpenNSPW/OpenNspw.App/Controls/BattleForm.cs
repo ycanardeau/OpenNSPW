@@ -280,6 +280,13 @@ internal sealed class BattleForm : Form
 		);
 	}
 
+	// How far from a unit a touch takes it, in game pixels (Battlefield.TouchRadius).
+	public float TouchRadius
+	{
+		get => _battlefield.TouchRadius;
+		set => _battlefield.TouchRadius = value;
+	}
+
 	// Shows the game as it was in the last frame: on the UI's thread, each frame.
 	public void UpdateFrom(GameSnapshot snapshot)
 	{

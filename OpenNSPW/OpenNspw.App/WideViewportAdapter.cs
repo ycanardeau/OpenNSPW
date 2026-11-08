@@ -16,6 +16,9 @@ internal sealed class WideViewportAdapter : ViewportAdapter
 
 	private float _scale = 1;
 
+	// The back buffer's pixels in a game pixel.
+	public float Scale => _scale;
+
 	public WideViewportAdapter(GraphicsDevice graphicsDevice)
 		: base(graphicsDevice)
 	{

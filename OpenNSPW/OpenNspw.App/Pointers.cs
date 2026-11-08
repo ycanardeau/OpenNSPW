@@ -14,16 +14,22 @@ internal interface IPointer
 }
 
 // A touch screen. The first finger holds the left button where it is, and once it is lifted, the pointer stays where it
-// was lifted. A second finger, from when it comes down until all are lifted, lets the left button go and holds XButton1,
+// was lifted. It stays where the finger pressed until the finger moves farther than `slop`, in the window's pixels, as a
+// finger trembles: a tap stays a tap, and a drag starts once it is one. A second finger, from when it comes down until all are lifted, lets the left button go and holds XButton1,
 // which tells a tap from what follows; the pointer is then halfway between the two. Spread or pinched, the two fingers
 // turn the wheel, a notch (120) for each quarter of their distance, to zoom (Battlefield); lifted without that, they click
 // the right button, which deselects. The middle button is never used.
-internal sealed class TouchPointer(GameWindow window) : IPointer
+internal sealed class TouchPointer(GameWindow window, float slop) : IPointer
 {
 	// How far the distance between two fingers changes, as a ratio, before they zoom rather than tap.
 	private const float PinchStart = 0.08f;
 
 	private readonly GameWindow _window = window;
+	private readonly float _slop = slop;
+
+	// Where the first finger pressed, until all are lifted, and whether it has moved farther than the slop since.
+	private Vector2? _pressedAt;
+	private bool _hasMoved;
 
 	// Whether the touch has had a second finger since its first came down, until all are lifted.
 	private bool _isTwoFingers;
@@ -79,15 +85,18 @@ internal sealed class TouchPointer(GameWindow window) : IPointer
 		}
 		else if (fingers.Count == 1 && !_isTwoFingers)
 		{
-			position = fingers[0];
+			var pressedAt = _pressedAt ??= fingers[0];
+			_hasMoved |= Vector2.Distance(fingers[0], pressedAt) > _slop;
+			position = _hasMoved ? fingers[0] : pressedAt;
 		}
 		else if (fingers.Count == 0)
 		{
 			if (_isTwoFingers)
 				_isRightClick = !_isPinching;
 			else if (released is { } at)
-				position = at;
+				position = _hasMoved ? at : _pressedAt ?? at;
 			_isTwoFingers = false;
+			(_pressedAt, _hasMoved) = (null, false);
 		}
 
 		State = new MouseState(

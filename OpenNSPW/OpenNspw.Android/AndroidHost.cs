@@ -13,8 +13,6 @@ internal sealed class AndroidHost(Activity activity) : IAppHost
 
 	public bool IsTouchScreen => true;
 
-	public IPointer CreatePointer(GameWindow window) => new TouchPointer(window);
-
 	// The screen's short side, which the layout is as high as, in inches: about 2.8 on a phone, 5 or more on a tablet.
 	private float ShortSideInches
 	{
@@ -27,6 +25,11 @@ internal sealed class AndroidHost(Activity activity) : IAppHost
 			);
 		}
 	}
+
+	public float Density => _activity.Resources!.DisplayMetrics!.Density;
+
+	// A finger moves 16 dp before it drags, as Android's paging does (ViewConfiguration.ScaledPagingTouchSlop).
+	public IPointer CreatePointer(GameWindow window) => new TouchPointer(window, 16 * Density);
 
 	// About 1.8 on a phone, and none on a tablet.
 	public float BattleZoom => Math.Clamp(5 / ShortSideInches, 1, 2.5f);

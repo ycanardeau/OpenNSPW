@@ -16,6 +16,16 @@ namespace OpenNspw.App.Controls;
 // the paths and the targets. A click is taken as the original takes it, and given with the commands of the host's UI.
 internal sealed class Battlefield : Control
 {
+	// What a touch pressed at `At`, a point of the control: the land where the selected transport lands at `View`, a point
+	// of the view, or `Unit`, or else the sea at `World`, where the selected unit goes.
+	private readonly record struct TouchTarget(
+		DrawingPoint At,
+		DrawingPoint View,
+		bool IsLanding,
+		int? Unit,
+		WorldPosition World
+	);
+
 	public static readonly DrawingRectangle Area = new(0, 0, CMBT_WIDTH, CMBT_HEIGHT);
 
 	// The sea out of the player's sight, which the original leaves undrawn.
@@ -42,8 +52,9 @@ internal sealed class Battlefield : Control
 	// Where a drag with the middle button, or a touch's, which scrolls the battlefield, last was.
 	private DrawingPoint? _scrolledTo;
 
-	// Where a touch that is a click unless it moves, or a second finger comes, pressed, until it is lifted or moves.
-	private DrawingPoint? _pressedAt;
+	// What a touch that is a click unless it moves, or a second finger comes, pressed, until it is lifted or moves: taken
+	// as it is pressed, as a moving unit under it may have moved away by the time it is lifted.
+	private TouchTarget? _pressed;
 
 	public const float MinZoom = 1;
 	public const float MaxZoom = 2.5f;
@@ -519,6 +530,40 @@ internal sealed class Battlefield : Control
 			DrawBox(batch, origin + MarkPosition(snapshot, ref snapshot.Units[hit]), 25, MarkLight);
 	}
 
+	// How far from a unit a touch takes it, in the control's pixels: about a finger's half width (GameScreen).
+	public float TouchRadius { get; set; }
+
+	// The unit a touch at a point of the view takes, of those a click takes (HitUnit): the one nearest it, within the
+	// finger's reach or in its sprite's middle, as a finger is far less precise than the mouse.
+	private int? TouchUnit(GameSnapshot snapshot, DrawingPoint point)
+	{
+		if (point.X >= CMBT_WIDTH - 1)
+			return null;
+
+		var reach = TouchRadius / _zoom;
+		var touched = new Vector2(point.X, point.Y);
+		int? nearest = null;
+		var nearestDistance = float.MaxValue;
+		for (var m = 1; m <= snapshot.MaxUnitId; m++)
+		{
+			ref var unit = ref snapshot.Units[m];
+			if (
+				!unit.IsUsed
+				|| !(unit.Side == snapshot.LocalSide || unit.IsFound)
+				|| IsParkedPlane(ref unit)
+				|| !snapshot.Clickable[m]
+			)
+				continue;
+
+			var at = MarkPosition(snapshot, ref unit);
+			var distance = Vector2.Distance(at, touched);
+			if ((distance <= reach || IsInMiddle(at, point)) && distance < nearestDistance)
+				(nearest, nearestDistance) = (m, distance);
+		}
+
+		return nearest;
+	}
+
 	// A left click takes the land where the selected transport lands, then a unit, then gives the selected unit a
 	// destination (DrawBattleArea).
 	private void TakeClick(DrawingPoint point)
@@ -606,13 +651,42 @@ internal sealed class Battlefield : Control
 		_scrolledTo = point;
 	}
 
-	// Whether a point is on one of the player's units, where a touch that moves brushes over units (UnitBrush) rather than
-	// panning.
-	private bool IsOwnUnit(DrawingPoint point)
+	// What a touch at a point of the control takes, as it is pressed.
+	private TouchTarget Touch(DrawingPoint at)
 	{
-		return !IsLanding(_snapshot, point)
-			&& HitUnit(_snapshot, point) is { } m
-			&& _snapshot.Units[m].Side == _snapshot.LocalSide;
+		var snapshot = _snapshot;
+		var view = ToView(at);
+		var isLanding = IsLanding(snapshot, view);
+		return new TouchTarget(
+			at,
+			view,
+			isLanding,
+			isLanding ? null : TouchUnit(snapshot, view),
+			new WorldPosition(
+				view.X + snapshot.CameraPosition.X,
+				snapshot.CameraPosition.Y - view.Y
+			)
+		);
+	}
+
+	// A touch taken as a click, on what it pressed (Touch), which starts a brush on one of the player's units.
+	private void TakeTouch(TouchTarget target)
+	{
+		var commands = _session.Commands;
+		_brush.Press(_snapshot, target.Unit);
+		if (target.IsLanding)
+			commands.ClickLand(target.View.X, target.View.Y);
+		else if (target.Unit is { } m)
+			commands.ClickUnit(m);
+		else
+			commands.SetDestination(target.World);
+	}
+
+	// Whether a touch pressed one of the player's units, where moving it brushes over units (UnitBrush) rather than
+	// panning.
+	private bool IsOwnUnit(TouchTarget target)
+	{
+		return target.Unit is { } m && _snapshot.Units[m].Side == _snapshot.LocalSide;
 	}
 
 	// A press of the left button at a point of the view: a click, which starts a brush on one of the player's units.
@@ -627,15 +701,16 @@ internal sealed class Battlefield : Control
 		base.OnMouseMove(e);
 		_mouse = ToView(e.Location);
 		if (
-			_pressedAt is { } pressed
-			&& Math.Abs(e.Location.X - pressed.X) + Math.Abs(e.Location.Y - pressed.Y) > PanDistance
+			_pressed is { } pressed
+			&& Math.Abs(e.Location.X - pressed.At.X) + Math.Abs(e.Location.Y - pressed.At.Y)
+				> PanDistance
 		)
 		{
-			_pressedAt = null;
-			if (IsOwnUnit(ToView(pressed)) && !_session.IsWatching)
-				Click(ToView(pressed));
+			_pressed = null;
+			if (IsOwnUnit(pressed) && !_session.IsWatching)
+				TakeTouch(pressed);
 			else
-				_scrolledTo = pressed;
+				_scrolledTo = pressed.At;
 		}
 
 		Scroll(e.Location);
@@ -655,12 +730,12 @@ internal sealed class Battlefield : Control
 		// A touch waits to tell a click from a brush, a pan, or the second finger of a pinch.
 		if (_isTouchScreen && e.Button == MouseButtons.Left)
 		{
-			_pressedAt = e.Location;
+			_pressed = Touch(e.Location);
 			return;
 		}
 
 		// A second finger (XButton1, TouchPointer) makes the touch no click, and pans or zooms instead.
-		_pressedAt = null;
+		_pressed = null;
 		if (e.Button == MouseButtons.XButton1)
 			return;
 
@@ -687,12 +762,12 @@ internal sealed class Battlefield : Control
 		else if (e.Button == MouseButtons.Left)
 		{
 			// A touch lifted where it pressed is a click there; one that moved ends its pan.
-			if (_pressedAt is { } pressed && !_session.IsWatching)
-				Click(ToView(pressed));
+			if (_pressed is { } pressed && !_session.IsWatching)
+				TakeTouch(pressed);
 			else if (_isTouchScreen)
 				Scroll(e.Location);
 
-			_pressedAt = null;
+			_pressed = null;
 			if (_isTouchScreen)
 				_scrolledTo = null;
 			_brush.Release();

@@ -16,6 +16,10 @@ internal interface IAppHost
 	// where the original's layout, as high as the screen, makes the units too small to touch.
 	float BattleZoom { get; }
 
+	// The window's pixels in a density-independent pixel (Android's dp), which a touch's sizes are measured in: how far a
+	// finger moves before it drags (TouchPointer), and how far from a unit it takes it (Battlefield.TouchRadius).
+	float Density { get; }
+
 	// Passes each character typed in the window to `typed`, as the system composes them: MonoGame's GameWindow.TextInput
 	// on a desktop, which MonoGame's Android does not have.
 	void ListenToText(GameWindow window, Action<char> typed);

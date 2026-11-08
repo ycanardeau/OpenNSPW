@@ -257,6 +257,9 @@ internal sealed class GameScreen(
 		// The battle screen takes the room right of the layout on a wide screen; the others stay centered in it.
 		Game.ViewportAdapter.IsLayoutLeft = snapshot.IsBattle;
 		_battleForm.Fit(Game.ViewportAdapter.ExtraWidth);
+
+		// A finger's reach: 24 dp, about half a fingertip's width.
+		_battleForm.TouchRadius = 24 * Game.Host.Density / Game.ViewportAdapter.Scale;
 		// The question to quit dims the battle screen's column beside the layout too.
 		_confirmQuit.Size = new(
 			snapshot.IsBattle ? _battleForm.Width : all_head.SCRN_WIDTH,

@@ -13,6 +13,8 @@ internal sealed class DesktopHost : IAppHost
 
 	public float BattleZoom => 1;
 
+	public float Density => 1;
+
 	public void ListenToText(GameWindow window, Action<char> typed)
 	{
 		window.TextInput += (_, e) => typed(e.Character);
