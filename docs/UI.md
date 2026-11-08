@@ -35,7 +35,7 @@ The keyboard goes to the game as it would to the original, but for Escape and F1
 
 ## Screens
 ### Main menu
-Single player, multiplayer, replays, settings and quit, over the title's picture. The settings (`SettingsForm`) have a tab for each of their sections: General, the language, which shows the menus in it again; and on a touch screen, Touch, how a touch screen is played (`TouchSettings`), which the battle's Settings button also shows, over the battle.
+Single player, multiplayer, replays, settings and quit, over the title's picture. The settings (`SettingsForm`) have a tab for each of their sections: General, the language, which shows the menus in it again; on a touch screen, Touch, how a touch screen is played (`TouchSettings`), which the battle's Settings button also shows, over the battle; and in a Debug build, Debug, the options of single-player battles ([Options.md](Options.md)), which a player's battles do not play by.
 
 ### Single player
 NSPW 1.22's scenarios, a set at a time, as its scenario selection screen lists them, with what its setting screen says about the one selected: its side, its briefing and its victory conditions. The strings are `NSPW_122.exe`'s, kept in C# (`ScenarioSelection.Sets`), so that the app needs no executable. Choosing one starts the game as `--singleplayer` does.

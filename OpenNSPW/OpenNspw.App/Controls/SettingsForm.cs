@@ -13,6 +13,10 @@ internal enum SettingsSection
 
 	// How a touch screen is played (TouchSettings): on a touch screen only.
 	Touch,
+
+	// OpenNSPW's options for single-player battles (docs/Options.md), which play them otherwise than 1.22: in a Debug build
+	// only, as a player's battles are 1.22's.
+	Debug,
 }
 
 // The settings, a tab for each of their sections shown, and a row of choices for each setting of the tab chosen, the one
@@ -38,6 +42,7 @@ internal sealed class SettingsForm : Form
 		section switch
 		{
 			SettingsSection.Touch => 7,
+			SettingsSection.Debug => 2,
 			_ => 1,
 		};
 
@@ -58,6 +63,8 @@ internal sealed class SettingsForm : Form
 
 	private readonly UIFonts _fonts;
 	private readonly TouchSettings _touch;
+	private readonly Func<BattleOptions> _options;
+	private readonly Action<BattleOptions> _setOptions;
 	private readonly Dictionary<SettingsSection, TabButton> _tabs = [];
 	private readonly Dictionary<SettingsSection, List<(string Label, int Top)>> _labels = [];
 	private readonly List<(SettingsSection Section, ActionButton Button, Choice Choice)> _choices =
@@ -127,6 +134,14 @@ internal sealed class SettingsForm : Form
 			() => EqualityComparer<T>.Default.Equals(get(_touch.Options), value),
 			() => _touch.Change(set(_touch.Options, value))
 		);
+
+	// A choice of a battle option's value.
+	private Choice Option(
+		string text,
+		bool value,
+		Func<BattleOptions, bool> get,
+		Func<BattleOptions, bool, BattleOptions> set
+	) => new(text, () => get(_options()) == value, () => _setOptions(set(_options(), value)));
 
 	private void AddGeneral()
 	{
@@ -231,6 +246,32 @@ internal sealed class SettingsForm : Form
 		);
 	}
 
+	private void AddDebug()
+	{
+		AddRow(
+			SettingsSection.Debug,
+			Texts.SteadySpeed,
+			Option(Texts.On, true, o => o.SteadySpeed, (o, v) => o with { SteadySpeed = v }),
+			Option(Texts.Off, false, o => o.SteadySpeed, (o, v) => o with { SteadySpeed = v })
+		);
+		AddRow(
+			SettingsSection.Debug,
+			Texts.SharedEffectRandom,
+			Option(
+				Texts.On,
+				true,
+				o => o.SharedEffectRandom,
+				(o, v) => o with { SharedEffectRandom = v }
+			),
+			Option(
+				Texts.Off,
+				false,
+				o => o.SharedEffectRandom,
+				(o, v) => o with { SharedEffectRandom = v }
+			)
+		);
+	}
+
 	private void AddTab(SettingsSection section, string text, int index)
 	{
 		var tab = new TabButton(_fonts)
@@ -244,15 +285,20 @@ internal sealed class SettingsForm : Form
 	}
 
 	// sections: the sections shown, the first at first, or `initial`. touch: the touch options (SettingsSection.Touch).
+	// options, setOptions: the options of single-player battles, and how they are changed (SettingsSection.Debug).
 	public SettingsForm(
 		UIFonts fonts,
 		IReadOnlyList<SettingsSection> sections,
 		TouchSettings touch,
+		Func<BattleOptions> options,
+		Action<BattleOptions> setOptions,
 		SettingsSection? initial = null
 	)
 	{
 		_fonts = fonts;
 		_touch = touch;
+		_options = options;
+		_setOptions = setOptions;
 		_panel = PanelFor(sections);
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		BackColor = DrawingColor.Transparent;
@@ -268,6 +314,10 @@ internal sealed class SettingsForm : Form
 				case SettingsSection.Touch:
 					AddTab(SettingsSection.Touch, Texts.TouchTab, i);
 					AddTouch();
+					break;
+				case SettingsSection.Debug:
+					AddTab(SettingsSection.Debug, Texts.DebugTab, i);
+					AddDebug();
 					break;
 			}
 		}
@@ -309,5 +359,14 @@ internal sealed class SettingsForm : Form
 		var label = _fonts.Regular(16);
 		foreach (var (text, top) in _labels.GetValueOrDefault(_shown) ?? [])
 			Painter.Text(g, text, label, Theme.Text, _panel.X + Padding, top + 11);
+		if (_shown == SettingsSection.Debug)
+			Painter.Text(
+				g,
+				Texts.DebugNote,
+				_fonts.Regular(14),
+				Theme.Muted,
+				_panel.X + Padding,
+				_panel.Bottom - FooterHeight / 2 - 9
+			);
 	}
 }

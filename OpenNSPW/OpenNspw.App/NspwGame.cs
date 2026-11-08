@@ -68,8 +68,10 @@ internal sealed class NspwGame : Game
 	// The single-player scenario chosen last, to select it again in the browser.
 	public int? LastScenario { get; set; }
 
-	// The options of single-player battles (docs/Options.md), as the player chose last.
-	public BattleOptions Options { get; set; } = UISettings.LoadOptions();
+	// The options of single-player battles (docs/Options.md): none, for the battle to be 1.22's, but in a Debug build, where
+	// they are chosen for debugging (SettingsSection.Debug), as chosen last.
+	public BattleOptions Options { get; set; } =
+		AppBuild.IsDebug ? UISettings.LoadOptions() : BattleOptions.None;
 
 	// host: what the system the app runs on gives it. data: where the games' files come from, 1.22's too, to play
 	// single-player (docs/Singleplayer.md). scenario: a scenario of 1.22 to play at once, without the menus. trace: a trace

@@ -27,6 +27,6 @@ Every frame runs 2 ticks, as at speed 1, and a faster speed runs more frames ins
 Above what the game can run, the battle is the same, but slower than the speed shown. The battlefield scrolls once a frame shown, as fast as in 1.22 at every speed.
 
 ## In the app
-The single-player scenario browser has a switch, Steady speed, one of the options ([Options.md](Options.md)), on unless the player turns it off, which the app remembers (`ui.json`). A battle that follows a trace of 1.22 never plays at a steady speed; a single-player replay does once it is taken over, if it was recorded at one.
+Steady speed is one of the options ([Options.md](Options.md)), for debugging: a Debug build of the app has a switch for it in its settings' Debug tab, off unless turned on, which it remembers (`ui.json`); a Release build plays every single-player battle at the original's pace. A battle that follows a trace of 1.22 never plays at a steady speed; a single-player replay does once it is taken over, if it was recorded at one.
 
 Replays record the speed shown in each frame ([Replays.md](Replays.md)), which the ticks no longer tell.

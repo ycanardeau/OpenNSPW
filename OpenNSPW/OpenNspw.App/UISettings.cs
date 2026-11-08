@@ -72,13 +72,13 @@ internal static partial class UISettings
 		Save(saved => saved with { Language = language });
 	}
 
-	// The options of single-player battles, as chosen last: off, but steady speed, unless the player chose otherwise.
+	// The options of single-player battles, as chosen last in a Debug build: off unless chosen otherwise.
 	public static BattleOptions LoadOptions()
 	{
 		var saved = Load();
 		return new BattleOptions(
 			SharedEffectRandom: saved.SharedEffectRandom ?? false,
-			SteadySpeed: saved.IsSpeedSteady ?? true
+			SteadySpeed: saved.IsSpeedSteady ?? false
 		);
 	}
 

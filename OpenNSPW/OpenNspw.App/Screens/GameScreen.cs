@@ -169,10 +169,17 @@ internal sealed class GameScreen(
 	}
 
 	// The touch settings, over the battle, which goes on under them: each takes effect at once (TouchSettings). The other
-	// section is the main menu's: the language, which the battle's texts are made in as it starts.
+	// sections are the main menu's: the language, which the battle's texts are made in as it starts, and the battles'
+	// options, which a battle takes as it starts.
 	private void ShowTouchSettings()
 	{
-		var form = new SettingsForm(Game.Fonts, [SettingsSection.Touch], Game.Touch)
+		var form = new SettingsForm(
+			Game.Fonts,
+			[SettingsSection.Touch],
+			Game.Touch,
+			() => Game.Options,
+			options => Game.Options = options
+		)
 		{
 			// Dimming the battle screen's column beside the layout too.
 			Size = new(Math.Max(all_head.SCRN_WIDTH, _battleForm.Width), all_head.SCRN_HEIGHT),

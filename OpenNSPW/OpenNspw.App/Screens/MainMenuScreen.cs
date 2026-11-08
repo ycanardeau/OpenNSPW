@@ -32,19 +32,33 @@ internal sealed class MainMenuScreen(NspwGame game) : Screen(game)
 		return texture;
 	}
 
-	// The settings' sections the player can change here: the language; the touch options on a touch screen.
+	// The settings' sections the player can change here: the language; the touch options on a touch screen; the battles'
+	// options in a Debug build only (docs/Options.md).
 	private IReadOnlyList<SettingsSection> SettingsSections()
 	{
 		List<SettingsSection> sections = [SettingsSection.General];
 		if (Game.Host.IsTouchScreen)
 			sections.Add(SettingsSection.Touch);
+		if (AppBuild.IsDebug)
+			sections.Add(SettingsSection.Debug);
 		return sections;
 	}
 
 	// The settings, over the menu, from `section`.
 	private void ShowSettings(SettingsSection? section)
 	{
-		_settings = new SettingsForm(Game.Fonts, SettingsSections(), Game.Touch, section);
+		_settings = new SettingsForm(
+			Game.Fonts,
+			SettingsSections(),
+			Game.Touch,
+			() => Game.Options,
+			options =>
+			{
+				Game.Options = options;
+				UISettings.SaveOptions(options);
+			},
+			section
+		);
 		_settings.LanguageChosen += (_, language) =>
 		{
 			if (Texts.Language == language)
