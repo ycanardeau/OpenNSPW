@@ -14,8 +14,10 @@ internal sealed class MainMenuScreen(NspwGame game) : Screen(game)
 	private Texture2D _fadeRight = default!;
 	private MainMenuForm _form = default!;
 
-	// Whether the language has changed since the menu was shown: it is shown again in the next update, after the click.
+	// Whether the language has changed since the menu was shown: it is shown again in the next update, after the click,
+	// and the settings it was chosen in too.
 	private bool _isFormStale;
+	private SettingsForm? _settings;
 
 	// A strip that goes from transparent to the navy of the menus along its length.
 	private Texture2D CreateFade(int width, int height)
@@ -30,28 +32,47 @@ internal sealed class MainMenuScreen(NspwGame game) : Screen(game)
 		return texture;
 	}
 
-	// The menu, in the language chosen.
-	private void ShowForm()
+	// The settings' sections the player can change here: the language; the touch options on a touch screen.
+	private IReadOnlyList<SettingsSection> SettingsSections()
 	{
-		_form = new MainMenuForm(Game.Fonts, Game.Host.IsTouchScreen);
-		_form.TouchSettingsChosen += (_, _) =>
+		List<SettingsSection> sections = [SettingsSection.General];
+		if (Game.Host.IsTouchScreen)
+			sections.Add(SettingsSection.Touch);
+		return sections;
+	}
+
+	// The settings, over the menu, from `section`.
+	private void ShowSettings(SettingsSection? section)
+	{
+		_settings = new SettingsForm(Game.Fonts, SettingsSections(), Game.Touch, section);
+		_settings.LanguageChosen += (_, language) =>
 		{
-			var settings = new TouchSettingsForm(Game.Fonts, Game.Touch);
-			settings.Closed += (_, _) => WindowManager.Root.Controls.Remove(settings);
-			WindowManager.Root.Controls.Add(settings);
-			settings.BringToFront();
-			settings.Show();
-		};
-		_form.SingleplayerChosen += (_, _) => Game.ShowScreen(new SingleplayerScreen(Game));
-		_form.MultiplayerChosen += (_, _) => Game.ShowScreen(new MultiplayerScreen(Game));
-		_form.ReplaysChosen += (_, _) => Game.ShowScreen(new ReplaysScreen(Game));
-		_form.QuitChosen += (_, _) => Game.Host.Quit(Game);
-		_form.LanguageChosen += (_, language) =>
-		{
+			if (Texts.Language == language)
+				return;
+
 			Texts.Language = language;
 			UISettings.SaveLanguage(language);
 			_isFormStale = true;
 		};
+		_settings.Closed += (_, _) =>
+		{
+			WindowManager.Root.Controls.Remove(_settings);
+			_settings = null;
+		};
+		WindowManager.Root.Controls.Add(_settings);
+		_settings.BringToFront();
+		_settings.Show();
+	}
+
+	// The menu, in the language chosen.
+	private void ShowForm()
+	{
+		_form = new MainMenuForm(Game.Fonts);
+		_form.SingleplayerChosen += (_, _) => Game.ShowScreen(new SingleplayerScreen(Game));
+		_form.MultiplayerChosen += (_, _) => Game.ShowScreen(new MultiplayerScreen(Game));
+		_form.ReplaysChosen += (_, _) => Game.ShowScreen(new ReplaysScreen(Game));
+		_form.SettingsChosen += (_, _) => ShowSettings(null);
+		_form.QuitChosen += (_, _) => Game.Host.Quit(Game);
 		WindowManager.Root.Controls.Add(_form);
 		_form.Show();
 		_form.Focus();
@@ -82,7 +103,10 @@ internal sealed class MainMenuScreen(NspwGame game) : Screen(game)
 		{
 			_isFormStale = false;
 			WindowManager.Root.Controls.Remove(_form);
+			if (_settings is { } settings)
+				WindowManager.Root.Controls.Remove(settings);
 			ShowForm();
+			ShowSettings(SettingsSection.General);
 		}
 	}
 

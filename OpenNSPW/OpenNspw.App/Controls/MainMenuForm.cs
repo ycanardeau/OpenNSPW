@@ -6,17 +6,12 @@ using DrawingSize = System.Drawing.Size;
 namespace OpenNspw.App.Controls;
 
 // The main menu's items, chosen with the mouse or with the arrow keys and Enter, over the title's picture that the
-// screen draws; and the switch of the language, in the top right corner.
+// screen draws: the settings, the language among them, are one of them (SettingsForm).
 internal sealed class MainMenuForm : Form
 {
 	private readonly UIFonts _fonts;
 	private readonly List<MenuItemButton> _items = [];
 
-	// Where the first item is, how far each next one is under it, and how high each is: closer with the touch settings'
-	// item, for five to fit above the footer.
-	private readonly int _itemTop;
-	private readonly int _itemStep;
-	private readonly int _itemHeight;
 	private int _highlighted = -1;
 
 	public event EventHandler? SingleplayerChosen;
@@ -27,9 +22,7 @@ internal sealed class MainMenuForm : Form
 
 	public event EventHandler? QuitChosen;
 
-	public event EventHandler<Language>? LanguageChosen;
-
-	public event EventHandler? TouchSettingsChosen;
+	public event EventHandler? SettingsChosen;
 
 	private void Highlight(int index)
 	{
@@ -43,7 +36,7 @@ internal sealed class MainMenuForm : Form
 		var index = _items.Count;
 		var item = new MenuItemButton(_fonts)
 		{
-			Bounds = new DrawingRectangle(64, _itemTop + index * _itemStep, 520, _itemHeight),
+			Bounds = new DrawingRectangle(64, 364 + index * 68, 520, 64),
 			Text = caption,
 			Description = description,
 		};
@@ -53,29 +46,9 @@ internal sealed class MainMenuForm : Form
 		Controls.Add(item);
 	}
 
-	// A tab of the language switch, named in its own language.
-	private void AddLanguage(Language language, int index)
-	{
-		var tab = new TabButton(_fonts)
-		{
-			Bounds = new DrawingRectangle(Width - 64 - (2 - index) * 112, 28, 96, 32),
-			Text = Texts.NameOf(language),
-			IsSelected = Texts.Language == language,
-		};
-		tab.Click += (_, _) =>
-		{
-			if (Texts.Language != language)
-				LanguageChosen?.Invoke(this, language);
-		};
-		Controls.Add(tab);
-	}
-
-	// isTouchScreen: whether the player touches the screen (IAppHost.IsTouchScreen), who can choose how, with an item of its
-	// own before Quit (TouchSettingsForm).
-	public MainMenuForm(UIFonts fonts, bool isTouchScreen)
+	public MainMenuForm(UIFonts fonts)
 	{
 		_fonts = fonts;
-		(_itemTop, _itemStep, _itemHeight) = isTouchScreen ? (364, 68, 64) : (404, 72, 64);
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		BackColor = DrawingColor.Transparent;
 		KeyPreview = true;
@@ -83,15 +56,8 @@ internal sealed class MainMenuForm : Form
 		AddItem(Texts.SinglePlayer, Texts.SinglePlayerDescription, () => SingleplayerChosen);
 		AddItem(Texts.Multiplayer, Texts.MultiplayerDescription, () => MultiplayerChosen);
 		AddItem(Texts.Replays, Texts.ReplaysDescription, () => ReplaysChosen);
-		if (isTouchScreen)
-			AddItem(
-				Texts.TouchSettingsTitle,
-				Texts.TouchSettingsDescription,
-				() => TouchSettingsChosen
-			);
+		AddItem(Texts.SettingsTitle, Texts.SettingsDescription, () => SettingsChosen);
 		AddItem(Texts.Quit, Texts.QuitDescription, () => QuitChosen);
-		AddLanguage(Language.English, 0);
-		AddLanguage(Language.Japanese, 1);
 	}
 
 	// The next item that can be chosen, from the highlighted one, in a direction.

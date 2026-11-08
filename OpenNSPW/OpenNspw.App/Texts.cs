@@ -172,13 +172,13 @@ internal static class Texts
 	public static string MoveMode => Pick("Move", "移動");
 	public static string TouchSettings => Pick("Settings", "設定");
 
-	// The touch settings (TouchSettingsForm).
-	public static string TouchSettingsTitle => Pick("Touch settings", "タッチ操作の設定");
-	public static string TouchSettingsDescription =>
-		Pick(
-			"How taps, scrolling and the minimap work",
-			"タップ・スクロール・ミニマップの操作を選ぶ"
-		);
+	// The settings (SettingsForm).
+	public static string SettingsTitle => Pick("Settings", "設定");
+	public static string SettingsDescription =>
+		Pick("The language, and how the game is played", "言語や操作の方法を選びます");
+	public static string GeneralTab => Pick("General", "全般");
+	public static string TouchTab => Pick("Touch", "タッチ操作");
+	public static string LanguageLabel => Pick("Language", "言語");
 	public static string WaypointGestureLabel => Pick("Waypoint", "航路点の指定");
 	public static string WaypointTap => Pick("Tap", "タップ");
 	public static string WaypointHold => Pick("Hold", "長押し");
