@@ -9,9 +9,12 @@ internal sealed class DesktopHost : IAppHost
 {
 	public bool IsTouchScreen => false;
 
-	public IPointer CreatePointer(GameWindow window) => new WindowMousePointer();
+	public IPointer CreatePointer(GameWindow window, Func<float> slopDp) =>
+		new WindowMousePointer();
 
 	public float BattleZoom => 1;
+
+	public float Density => 1;
 
 	public void ListenToText(GameWindow window, Action<char> typed)
 	{

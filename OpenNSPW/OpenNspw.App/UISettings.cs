@@ -14,7 +14,8 @@ internal static partial class UISettings
 		bool? IsSpeedSteady = null,
 		bool? SharedEffectRandom = null,
 		float? BattleZoom = null,
-		bool? IsCommandBarShown = null
+		bool? IsCommandBarShown = null,
+		TouchOptions? Touch = null
 	);
 
 	// How Saved is read and written, generated, so that trimming keeps what it needs: the language by its name.
@@ -71,13 +72,13 @@ internal static partial class UISettings
 		Save(saved => saved with { Language = language });
 	}
 
-	// The options of single-player battles, as chosen last: off, but steady speed, unless the player chose otherwise.
+	// The options of single-player battles, as chosen last in a Debug build: off unless chosen otherwise.
 	public static BattleOptions LoadOptions()
 	{
 		var saved = Load();
 		return new BattleOptions(
 			SharedEffectRandom: saved.SharedEffectRandom ?? false,
-			SteadySpeed: saved.IsSpeedSteady ?? true
+			SteadySpeed: saved.IsSpeedSteady ?? false
 		);
 	}
 
@@ -112,5 +113,16 @@ internal static partial class UISettings
 	public static void SaveCommandBar(bool isShown)
 	{
 		Save(saved => saved with { IsCommandBarShown = isShown });
+	}
+
+	// How a touch screen is played, as chosen last, or the default.
+	public static TouchOptions LoadTouch()
+	{
+		return Load().Touch ?? new TouchOptions();
+	}
+
+	public static void SaveTouch(TouchOptions options)
+	{
+		Save(saved => saved with { Touch = options });
 	}
 }

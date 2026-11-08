@@ -6,11 +6,12 @@ using DrawingSize = System.Drawing.Size;
 namespace OpenNspw.App.Controls;
 
 // The main menu's items, chosen with the mouse or with the arrow keys and Enter, over the title's picture that the
-// screen draws; and the switch of the language, in the top right corner.
+// screen draws: the settings, the language among them, are one of them (SettingsForm).
 internal sealed class MainMenuForm : Form
 {
 	private readonly UIFonts _fonts;
 	private readonly List<MenuItemButton> _items = [];
+
 	private int _highlighted = -1;
 
 	public event EventHandler? SingleplayerChosen;
@@ -21,7 +22,7 @@ internal sealed class MainMenuForm : Form
 
 	public event EventHandler? QuitChosen;
 
-	public event EventHandler<Language>? LanguageChosen;
+	public event EventHandler? SettingsChosen;
 
 	private void Highlight(int index)
 	{
@@ -35,7 +36,7 @@ internal sealed class MainMenuForm : Form
 		var index = _items.Count;
 		var item = new MenuItemButton(_fonts)
 		{
-			Bounds = new DrawingRectangle(64, 404 + index * 72, 520, 64),
+			Bounds = new DrawingRectangle(64, 364 + index * 68, 520, 64),
 			Text = caption,
 			Description = description,
 		};
@@ -43,23 +44,6 @@ internal sealed class MainMenuForm : Form
 		item.Click += (_, _) => chosen()?.Invoke(this, EventArgs.Empty);
 		_items.Add(item);
 		Controls.Add(item);
-	}
-
-	// A tab of the language switch, named in its own language.
-	private void AddLanguage(Language language, int index)
-	{
-		var tab = new TabButton(_fonts)
-		{
-			Bounds = new DrawingRectangle(Width - 64 - (2 - index) * 112, 28, 96, 32),
-			Text = Texts.NameOf(language),
-			IsSelected = Texts.Language == language,
-		};
-		tab.Click += (_, _) =>
-		{
-			if (Texts.Language != language)
-				LanguageChosen?.Invoke(this, language);
-		};
-		Controls.Add(tab);
 	}
 
 	public MainMenuForm(UIFonts fonts)
@@ -72,9 +56,8 @@ internal sealed class MainMenuForm : Form
 		AddItem(Texts.SinglePlayer, Texts.SinglePlayerDescription, () => SingleplayerChosen);
 		AddItem(Texts.Multiplayer, Texts.MultiplayerDescription, () => MultiplayerChosen);
 		AddItem(Texts.Replays, Texts.ReplaysDescription, () => ReplaysChosen);
+		AddItem(Texts.SettingsTitle, Texts.SettingsDescription, () => SettingsChosen);
 		AddItem(Texts.Quit, Texts.QuitDescription, () => QuitChosen);
-		AddLanguage(Language.English, 0);
-		AddLanguage(Language.Japanese, 1);
 	}
 
 	// The next item that can be chosen, from the highlighted one, in a direction.

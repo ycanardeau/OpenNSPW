@@ -9,12 +9,17 @@ internal interface IAppHost
 	// Whether the player plays by touching the screen (TouchPointer), rather than with a mouse.
 	bool IsTouchScreen { get; }
 
-	// What the player points with in `window`: the screen's touches (TouchPointer), or the mouse.
-	IPointer CreatePointer(GameWindow window);
+	// What the player points with in `window`: the screen's touches (TouchPointer), a finger moving `slopDp()`
+	// density-independent pixels before it drags (Density), or the mouse.
+	IPointer CreatePointer(GameWindow window, Func<float> slopDp);
 
 	// How much the battlefield is magnified at first, until the player zooms it (Battlefield.Zoom): more on a small screen,
 	// where the original's layout, as high as the screen, makes the units too small to touch.
 	float BattleZoom { get; }
+
+	// The window's pixels in a density-independent pixel (Android's dp), which a touch's sizes are measured in: how far a
+	// finger moves before it drags (TouchPointer), and how far from a unit it takes it (Battlefield.TouchRadius).
+	float Density { get; }
 
 	// Passes each character typed in the window to `typed`, as the system composes them: MonoGame's GameWindow.TextInput
 	// on a desktop, which MonoGame's Android does not have.

@@ -16,6 +16,21 @@ namespace OpenNspw.App.Controls;
 // the paths and the targets. A click is taken as the original takes it, and given with the commands of the host's UI.
 internal sealed class Battlefield : Control
 {
+	// What a touch pressed at `At`, a point of the control, at `PressedAt` (Painter.Now): the land where the selected
+	// transport lands at `View`, a point of the view, or `Unit`, or else the sea at `World`, where the selected unit goes.
+	// The land and the sea are orders, which the waypoint gesture gives (TouchOptions.Waypoint).
+	private readonly record struct TouchTarget(
+		DrawingPoint At,
+		float PressedAt,
+		DrawingPoint View,
+		bool IsLanding,
+		int? Unit,
+		WorldPosition World
+	)
+	{
+		public bool IsOrder => Unit is null;
+	}
+
 	public static readonly DrawingRectangle Area = new(0, 0, CMBT_WIDTH, CMBT_HEIGHT);
 
 	// The sea out of the player's sight, which the original leaves undrawn.
@@ -27,8 +42,17 @@ internal sealed class Battlefield : Control
 	private readonly ScrollAhead _scrollAhead;
 
 	// Whether the player touches the screen (IAppHost.IsTouchScreen): a touch is a click once it is lifted without moving;
-	// moving, it brushes over units from one of the player's (UnitBrush), and pans the battlefield from anywhere else.
+	// moving, it brushes over units from one of the player's (UnitBrush), and pans the battlefield from anywhere else; as
+	// the touch options choose (TouchSettings).
 	private readonly bool _isTouchScreen;
+	private readonly TouchSettings _touch;
+
+	// Whether the Move button is on (WaypointGesture.MoveButton), when a tap on the sea is an order and a drag does not
+	// scroll.
+	public bool IsMoveMode { get; set; }
+
+	// Whether two fingers are down, which pan the battlefield as they move, and zoom it as they spread or pinch.
+	private bool _isTwoFingerPan;
 
 	// How far, in game pixels, a touch moves before it pans rather than clicks.
 	private const int PanDistance = 12;
@@ -42,8 +66,27 @@ internal sealed class Battlefield : Control
 	// Where a drag with the middle button, or a touch's, which scrolls the battlefield, last was.
 	private DrawingPoint? _scrolledTo;
 
-	// Where a touch that is a click unless it moves, or a second finger comes, pressed, until it is lifted or moves.
-	private DrawingPoint? _pressedAt;
+	// What a touch that is a click unless it moves, or a second finger comes, pressed, until it is lifted or moves: taken
+	// as it is pressed, as a moving unit under it may have moved away by the time it is lifted.
+	private TouchTarget? _pressed;
+
+	// What a touch took as a click last, and when: marked a moment after, until the game shows what it did (DrawTouched).
+	private (TouchTarget Target, float At)? _taken;
+
+	// How long, in seconds, what a touch took stays marked.
+	private const float TakenMarkTime = 0.4f;
+
+	// A drag's moves in the last GlideSampleTime seconds, in the view's pixels, which give the speed it is let go at; and
+	// the speed the battlefield glides at after a fling, in the view's pixels a second, and when it last moved.
+	private const float GlideSampleTime = 0.1f;
+	private readonly Queue<(float At, Vector2 Move)> _recentMoves = new();
+	private Vector2 _glide;
+	private float _glidedAt;
+
+	// How much of its speed a glide keeps after a second: 0.998 a millisecond, as a scroll view on iOS decelerates; and the
+	// speed it stops under, in the view's pixels a second.
+	private static readonly float GlideKeptPerSecond = MathF.Pow(0.998f, 1000);
+	private const float GlideStop = 10;
 
 	public const float MinZoom = 1;
 	public const float MaxZoom = 2.5f;
@@ -63,7 +106,8 @@ internal sealed class Battlefield : Control
 		UIFonts fonts,
 		BattleArt art,
 		ScrollAhead scrollAhead,
-		bool isTouchScreen
+		bool isTouchScreen,
+		TouchSettings touch
 	)
 	{
 		_session = session;
@@ -71,6 +115,7 @@ internal sealed class Battlefield : Control
 		_art = art;
 		_scrollAhead = scrollAhead;
 		_isTouchScreen = isTouchScreen;
+		_touch = touch;
 		_brush = new UnitBrush(session);
 		BackColor = System.Drawing.Color.Transparent;
 	}
@@ -487,8 +532,48 @@ internal sealed class Battlefield : Control
 			);
 	}
 
+	// What a touch presses, or took as a click a moment ago, marked at once: the game takes a click only in its next frame,
+	// and shows what it did after it. The unit's mark follows it as it moves; the sea's is where the selected unit goes.
+	private void DrawTouched(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot)
+	{
+		var target =
+			_pressed
+			?? (
+				_taken is { } taken && Painter.Now - taken.At < TakenMarkTime ? taken.Target : null
+			);
+		if (target is not { } touched)
+			return;
+
+		// Held on the sea for a waypoint: the mark grows to its size as the hold fills.
+		if (_pressed is { IsOrder: true } held && _touch.Options.Waypoint == WaypointGesture.Hold)
+		{
+			var progress = Math.Clamp(
+				(Painter.Now - held.PressedAt) / TouchOptions.HoldSeconds,
+				0,
+				1
+			);
+			var at = held.IsLanding
+				? SnapToTile(snapshot, held.View)
+				: ToScreen(snapshot, held.World.X, held.World.Y);
+			DrawBox(batch, origin + at, (int)(4 + 21 * progress), MarkLight);
+			return;
+		}
+
+		if (touched.IsLanding)
+			DrawBox(batch, origin + SnapToTile(snapshot, touched.View), 25, MarkLight);
+		else if (touched.Unit is { } m)
+			DrawBox(batch, origin + MarkPosition(snapshot, ref snapshot.Units[m]), 25, MarkLight);
+		else
+			DrawBox(
+				batch,
+				origin + ToScreen(snapshot, touched.World.X, touched.World.Y),
+				10,
+				MarkLight
+			);
+	}
+
 	// The marks: the selection, the directions of the player's units' targets, the selected unit's, and what a click at
-	// the mouse would take.
+	// the mouse would take, or what a touch takes.
 	private void DrawMarks(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot)
 	{
 		for (var m = 1; m <= snapshot.MaxUnitId; m++)
@@ -510,6 +595,12 @@ internal sealed class Battlefield : Control
 		if (snapshot.SelectedUnit != 0 && !snapshot.IsEditingMap)
 			DrawSelected(batch, origin, snapshot);
 
+		if (_isTouchScreen)
+		{
+			DrawTouched(batch, origin, snapshot);
+			return;
+		}
+
 		if (_mouse is not { } mouse)
 			return;
 
@@ -517,6 +608,40 @@ internal sealed class Battlefield : Control
 			DrawBox(batch, origin + SnapToTile(snapshot, mouse), 25, MarkLight);
 		else if (HitUnit(snapshot, mouse) is { } hit)
 			DrawBox(batch, origin + MarkPosition(snapshot, ref snapshot.Units[hit]), 25, MarkLight);
+	}
+
+	// How far from a unit a touch takes it, in the control's pixels: about a finger's half width (GameScreen).
+	public float TouchRadius { get; set; }
+
+	// The unit a touch at a point of the view takes, of those a click takes (HitUnit): the one nearest it, within the
+	// finger's reach or in its sprite's middle, as a finger is far less precise than the mouse.
+	private int? TouchUnit(GameSnapshot snapshot, DrawingPoint point)
+	{
+		if (point.X >= CMBT_WIDTH - 1)
+			return null;
+
+		var reach = TouchRadius / _zoom;
+		var touched = new Vector2(point.X, point.Y);
+		int? nearest = null;
+		var nearestDistance = float.MaxValue;
+		for (var m = 1; m <= snapshot.MaxUnitId; m++)
+		{
+			ref var unit = ref snapshot.Units[m];
+			if (
+				!unit.IsUsed
+				|| !(unit.Side == snapshot.LocalSide || unit.IsFound)
+				|| IsParkedPlane(ref unit)
+				|| !snapshot.Clickable[m]
+			)
+				continue;
+
+			var at = MarkPosition(snapshot, ref unit);
+			var distance = Vector2.Distance(at, touched);
+			if ((distance <= reach || IsInMiddle(at, point)) && distance < nearestDistance)
+				(nearest, nearestDistance) = (m, distance);
+		}
+
+		return nearest;
 	}
 
 	// A left click takes the land where the selected transport lands, then a unit, then gives the selected unit a
@@ -548,7 +673,10 @@ internal sealed class Battlefield : Control
 
 	// A point of the control in the view's pixels, through the zoom.
 	private DrawingPoint ToView(DrawingPoint point) =>
-		new((int)(_window.X + point.X / _zoom), (int)(_window.Y + point.Y / _zoom));
+		new(
+			(int)(_window.X + _unscrolled.X + point.X / _zoom),
+			(int)(_window.Y + _unscrolled.Y + point.Y / _zoom)
+		);
 
 	// Moves what is shown by `move`, in the view's pixels: the window first, within the view, and then the game's camera
 	// with what is left, at once (ScrollAhead).
@@ -562,6 +690,9 @@ internal sealed class Battlefield : Control
 		{
 			_scrollAhead.Scroll(dx, dy);
 			_unscrolled -= new Vector2(dx, dy);
+
+			// Shown in this frame: the pointer is read after the snapshot was moved (UpdateFrom).
+			_scrollAhead.Apply(_snapshot);
 		}
 	}
 
@@ -602,17 +733,122 @@ internal sealed class Battlefield : Control
 		if (_scrolledTo is not { } from || point == from)
 			return;
 
-		Pan(new Vector2(from.X - point.X, from.Y - point.Y) / _zoom);
+		var move = new Vector2(from.X - point.X, from.Y - point.Y) / _zoom;
+		Pan(move);
 		_scrolledTo = point;
+		var now = Painter.Now;
+		_recentMoves.Enqueue((now, move));
+		while (_recentMoves.Peek().At < now - GlideSampleTime)
+			_recentMoves.Dequeue();
 	}
 
-	// Whether a point is on one of the player's units, where a touch that moves brushes over units (UnitBrush) rather than
-	// panning.
-	private bool IsOwnUnit(DrawingPoint point)
+	// Lets the battlefield glide on at the speed a drag was let go at, if it was still moving then, as a fling.
+	private void Fling()
 	{
-		return !IsLanding(_snapshot, point)
-			&& HitUnit(_snapshot, point) is { } m
-			&& _snapshot.Units[m].Side == _snapshot.LocalSide;
+		var now = Painter.Now;
+		var moves = _recentMoves.Where(m => m.At >= now - GlideSampleTime).ToList();
+		_recentMoves.Clear();
+		if (moves.Count < 2 || !_touch.Options.Glides)
+			return;
+
+		var total = moves.Aggregate(Vector2.Zero, (sum, m) => sum + m.Move);
+		_glide = total / Math.Max(now - moves[0].At, 1 / 60f);
+		_glidedAt = now;
+	}
+
+	// Moves a gliding battlefield on, its speed falling exponentially, as a scroll view's on iOS: each frame (BattleForm).
+	public void Glide()
+	{
+		if (_glide == Vector2.Zero)
+			return;
+
+		var now = Painter.Now;
+		var elapsed = now - _glidedAt;
+		_glidedAt = now;
+		Pan(_glide * elapsed);
+		_glide *= MathF.Pow(GlideKeptPerSecond, elapsed);
+		if (_glide.Length() < GlideStop)
+			_glide = Vector2.Zero;
+	}
+
+	// What a touch at a point of the control takes, as it is pressed.
+	private TouchTarget Touch(DrawingPoint at)
+	{
+		var snapshot = _snapshot;
+		var view = ToView(at);
+		var isLanding = IsLanding(snapshot, view);
+		return new TouchTarget(
+			at,
+			Painter.Now,
+			view,
+			isLanding,
+			isLanding ? null : TouchUnit(snapshot, view),
+			new WorldPosition(
+				view.X + snapshot.CameraPosition.X,
+				snapshot.CameraPosition.Y - view.Y
+			)
+		);
+	}
+
+	// A touch taken as a click, on what it pressed (Touch), which starts a brush on one of the player's units.
+	private void TakeTouch(TouchTarget target)
+	{
+		var commands = _session.Commands;
+		_taken = (target, Painter.Now);
+		_brush.Press(_snapshot, target.Unit);
+		if (target.IsLanding)
+			commands.ClickLand(target.View.X, target.View.Y);
+		else if (target.Unit is { } m)
+			commands.ClickUnit(m);
+		else
+			commands.SetDestination(target.World);
+	}
+
+	// Whether a tap on the sea or on the land where a transport lands gives the order, as the touch options choose.
+	private bool TapGivesOrder =>
+		_touch.Options.Waypoint switch
+		{
+			WaypointGesture.Hold => false,
+			WaypointGesture.MoveButton => IsMoveMode,
+			_ => true,
+		};
+
+	// Whether a finger dragged from the sea scrolls the battlefield, as the touch options choose.
+	private bool DragScrolls =>
+		_touch.Options.Waypoint switch
+		{
+			WaypointGesture.TwoFingers => false,
+			WaypointGesture.MoveButton => !IsMoveMode,
+			_ => true,
+		};
+
+	// Gives the order of a touch held still on the sea or the land long enough (WaypointGesture.Hold): once a frame.
+	private void TakeHold()
+	{
+		if (
+			_pressed is { IsOrder: true } held
+			&& _touch.Options.Waypoint == WaypointGesture.Hold
+			&& Painter.Now - held.PressedAt >= TouchOptions.HoldSeconds
+			&& !_session.IsWatching
+		)
+		{
+			TakeTouch(held);
+			_pressed = null;
+		}
+	}
+
+	// Moves the battlefield on with time, each frame (BattleForm): a glide, and the order of a touch held long enough.
+	public void Animate()
+	{
+		Glide();
+		TakeHold();
+	}
+
+	// Whether a touch pressed one of the player's units, where moving it brushes over units (UnitBrush) rather than
+	// panning.
+	private bool IsOwnUnit(TouchTarget target)
+	{
+		return target.Unit is { } m && _snapshot.Units[m].Side == _snapshot.LocalSide;
 	}
 
 	// A press of the left button at a point of the view: a click, which starts a brush on one of the player's units.
@@ -627,15 +863,16 @@ internal sealed class Battlefield : Control
 		base.OnMouseMove(e);
 		_mouse = ToView(e.Location);
 		if (
-			_pressedAt is { } pressed
-			&& Math.Abs(e.Location.X - pressed.X) + Math.Abs(e.Location.Y - pressed.Y) > PanDistance
+			_pressed is { } pressed
+			&& Math.Abs(e.Location.X - pressed.At.X) + Math.Abs(e.Location.Y - pressed.At.Y)
+				> PanDistance
 		)
 		{
-			_pressedAt = null;
-			if (IsOwnUnit(ToView(pressed)) && !_session.IsWatching)
-				Click(ToView(pressed));
-			else
-				_scrolledTo = pressed;
+			_pressed = null;
+			if (IsOwnUnit(pressed) && !_session.IsWatching)
+				TakeTouch(pressed);
+			else if (DragScrolls || _session.IsWatching)
+				_scrolledTo = e.Location;
 		}
 
 		Scroll(e.Location);
@@ -651,18 +888,24 @@ internal sealed class Battlefield : Control
 	protected override void OnMouseDown(MouseEventArgs e)
 	{
 		base.OnMouseDown(e);
+		_glide = Vector2.Zero;
+		_recentMoves.Clear();
 
 		// A touch waits to tell a click from a brush, a pan, or the second finger of a pinch.
 		if (_isTouchScreen && e.Button == MouseButtons.Left)
 		{
-			_pressedAt = e.Location;
+			_pressed = Touch(e.Location);
 			return;
 		}
 
 		// A second finger (XButton1, TouchPointer) makes the touch no click, and pans or zooms instead.
-		_pressedAt = null;
+		_pressed = null;
 		if (e.Button == MouseButtons.XButton1)
+		{
+			_isTwoFingerPan = true;
+			_scrolledTo = e.Location;
 			return;
+		}
 
 		// A replay takes no clicks while it plays: only its view moves, with the middle button or a touch.
 		if (_session.IsWatching && e.Button != MouseButtons.Middle)
@@ -684,16 +927,32 @@ internal sealed class Battlefield : Control
 			Scroll(e.Location);
 			_scrolledTo = null;
 		}
+		else if (e.Button == MouseButtons.XButton1)
+		{
+			// The two fingers lifted: their pan ends, and glides on.
+			Scroll(e.Location);
+			Fling();
+			_scrolledTo = null;
+			_isTwoFingerPan = false;
+		}
 		else if (e.Button == MouseButtons.Left)
 		{
-			// A touch lifted where it pressed is a click there; one that moved ends its pan.
-			if (_pressedAt is { } pressed && !_session.IsWatching)
-				Click(ToView(pressed));
-			else if (_isTouchScreen)
+			// A touch lifted where it pressed is a click there, on a unit, or an order if a tap gives it; one that moved ends
+			// its pan. The left button is let go as a second finger comes too, which goes on panning.
+			if (
+				_pressed is { } pressed
+				&& !_session.IsWatching
+				&& (!pressed.IsOrder || TapGivesOrder)
+			)
+				TakeTouch(pressed);
+			else if (_isTouchScreen && _scrolledTo is not null && !_isTwoFingerPan)
+			{
 				Scroll(e.Location);
+				Fling();
+			}
 
-			_pressedAt = null;
-			if (_isTouchScreen)
+			_pressed = null;
+			if (_isTouchScreen && !_isTwoFingerPan)
 				_scrolledTo = null;
 			_brush.Release();
 		}
@@ -711,7 +970,11 @@ internal sealed class Battlefield : Control
 		var snapshot = _snapshot;
 		var at = PointToScreen(DrawingPoint.Empty);
 		var zoom =
-			Matrix.CreateTranslation(-at.X - _window.X, -at.Y - _window.Y, 0)
+			Matrix.CreateTranslation(
+				-at.X - _window.X - _unscrolled.X,
+				-at.Y - _window.Y - _unscrolled.Y,
+				0
+			)
 			* Matrix.CreateScale(_zoom)
 			* Matrix.CreateTranslation(at.X, at.Y, 0);
 		((MonoGameGraphics)e.Graphics).DrawWith(

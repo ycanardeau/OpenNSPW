@@ -14,16 +14,23 @@ internal interface IPointer
 }
 
 // A touch screen. The first finger holds the left button where it is, and once it is lifted, the pointer stays where it
-// was lifted. A second finger, from when it comes down until all are lifted, lets the left button go and holds XButton1,
-// which tells a tap from what follows; the pointer is then halfway between the two. Spread or pinched, the two fingers
-// turn the wheel, a notch (120) for each quarter of their distance, to zoom (Battlefield); lifted without that, they click
-// the right button, which deselects. The middle button is never used.
-internal sealed class TouchPointer(GameWindow window) : IPointer
+// was lifted. It stays where the finger pressed until the finger moves farther than `slop()`, in the window's pixels, as a
+// finger trembles: a tap stays a tap, and a drag starts once it is one. A second finger, from when it comes down until
+// all are lifted, lets the left button go and holds XButton1, which tells a tap from what follows; the pointer is then
+// halfway between the two, which a drag of both moves (Battlefield). Spread or pinched, the two fingers turn the wheel, a
+// notch (120) for each quarter of their distance, to zoom; lifted without zooming or moving, they click the right button,
+// which deselects. The middle button is never used.
+internal sealed class TouchPointer(GameWindow window, Func<float> slop) : IPointer
 {
 	// How far the distance between two fingers changes, as a ratio, before they zoom rather than tap.
 	private const float PinchStart = 0.08f;
 
 	private readonly GameWindow _window = window;
+	private readonly Func<float> _slop = slop;
+
+	// Where the first finger pressed, until all are lifted, and whether it has moved farther than the slop since.
+	private Vector2? _pressedAt;
+	private bool _hasMoved;
 
 	// Whether the touch has had a second finger since its first came down, until all are lifted.
 	private bool _isTwoFingers;
@@ -32,6 +39,10 @@ internal sealed class TouchPointer(GameWindow window) : IPointer
 	private bool _isPinching;
 	private float _pinchDistance;
 	private int _pinchWheel;
+
+	// Where the two fingers were halfway between as the second came down, and whether they have moved from there since.
+	private Vector2 _twoFingersAt;
+	private bool _haveTwoFingersMoved;
 
 	private int _wheel;
 
@@ -65,29 +76,35 @@ internal sealed class TouchPointer(GameWindow window) : IPointer
 		if (fingers.Count >= 2)
 		{
 			var distance = Vector2.Distance(fingers[0], fingers[1]);
+			var middle = (fingers[0] + fingers[1]) / 2;
 			if (!_isTwoFingers)
 			{
 				(_isTwoFingers, _isPinching) = (true, false);
 				(_pinchDistance, _pinchWheel) = (Math.Max(distance, 1), _wheel);
+				(_twoFingersAt, _haveTwoFingersMoved) = (middle, false);
 			}
 
 			var ratio = distance / _pinchDistance;
 			_isPinching |= Math.Abs(ratio - 1) > PinchStart;
+			_haveTwoFingersMoved |= Vector2.Distance(middle, _twoFingersAt) > _slop();
 			if (_isPinching && ratio > 0)
 				_wheel = _pinchWheel + (int)(120 * MathF.Log(ratio) / MathF.Log(1.25f));
-			position = (fingers[0] + fingers[1]) / 2;
+			position = middle;
 		}
 		else if (fingers.Count == 1 && !_isTwoFingers)
 		{
-			position = fingers[0];
+			var pressedAt = _pressedAt ??= fingers[0];
+			_hasMoved |= Vector2.Distance(fingers[0], pressedAt) > _slop();
+			position = _hasMoved ? fingers[0] : pressedAt;
 		}
 		else if (fingers.Count == 0)
 		{
 			if (_isTwoFingers)
-				_isRightClick = !_isPinching;
+				_isRightClick = !_isPinching && !_haveTwoFingersMoved;
 			else if (released is { } at)
-				position = at;
+				position = _hasMoved ? at : _pressedAt ?? at;
 			_isTwoFingers = false;
+			(_pressedAt, _hasMoved) = (null, false);
 		}
 
 		State = new MouseState(
