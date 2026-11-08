@@ -6,40 +6,43 @@ namespace Aigamo.Otsuki.Messages.Tests.Core;
 
 public class DestroyPlayerMessageSerializerTests
 {
-	public static IEnumerable<object?[]> TestData()
+	public static TheoryData<byte[], CoreMessage.DestroyPlayer> TestData()
 	{
-		yield return new object?[]
+		var data = new TheoryData<byte[], CoreMessage.DestroyPlayer>
 		{
-			new byte[]
 			{
-				0xD1,
-				0x00,
-				0x00,
-				0x00,
-				0xEE,
-				0x99,
-				0x8E,
-				0x11,
-				0x05,
-				0x00,
-				0x00,
-				0x00,
-				0x00,
-				0x00,
-				0x00,
-				0x00,
-				0x02,
-				0x00,
-				0x00,
-				0x00,
-			},
-			new CoreMessage.DestroyPlayer
-			{
-				DpnidLeaving = new Dpnid(0x118E99EE),
-				Version = 5,
-				Reason = DestroyPlayerFlags.ConnectionLost,
+				[
+					0xD1,
+					0x00,
+					0x00,
+					0x00,
+					0xEE,
+					0x99,
+					0x8E,
+					0x11,
+					0x05,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x02,
+					0x00,
+					0x00,
+					0x00,
+				],
+				new CoreMessage.DestroyPlayer
+				{
+					DpnidLeaving = new Dpnid(0x118E99EE),
+					Version = 5,
+					Reason = DestroyPlayerFlags.ConnectionLost,
+				}
 			},
 		};
+
+		return data;
 	}
 
 	[Theory]

@@ -1,6 +1,6 @@
 using Aigamo.Otsuki.Messages.Core;
 
-namespace Aigamo.Otsuki.Reliable.Transitions;
+namespace Aigamo.Otsuki.Core.Reliable.Transitions;
 
 /// <summary>
 /// Abandons a connection that is not established yet.

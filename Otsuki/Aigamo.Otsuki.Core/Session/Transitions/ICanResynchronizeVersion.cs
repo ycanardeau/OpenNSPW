@@ -1,6 +1,6 @@
 using Aigamo.Otsuki.Messages.Core;
 
-namespace Aigamo.Otsuki.Session.Transitions;
+namespace Aigamo.Otsuki.Core.Session.Transitions;
 
 /// <summary>
 /// Tracks the name table versions that peers report ([MC-DPL8CS] section 2.2.6).

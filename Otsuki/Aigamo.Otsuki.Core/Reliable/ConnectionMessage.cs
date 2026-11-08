@@ -2,7 +2,7 @@ using Aigamo.MatchGenerator;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Messages.Reliable;
 
-namespace Aigamo.Otsuki.Reliable;
+namespace Aigamo.Otsuki.Core.Reliable;
 
 [GenerateMatch]
 internal abstract record ConnectionMessage

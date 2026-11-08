@@ -6,16 +6,20 @@ namespace Aigamo.Otsuki.Messages.Tests.Core;
 
 public class SendPlayerDpnidMessageSerializerTests
 {
-	public static IEnumerable<object?[]> TestData()
+	public static TheoryData<byte[], CoreMessage.SendPlayerDpnid> TestData()
 	{
-		yield return new object?[]
+		var data = new TheoryData<byte[], CoreMessage.SendPlayerDpnid>
 		{
-			new byte[] { },
-			new CoreMessage.SendPlayerDpnid { },
+			{
+				[0xC4, 0x00, 0x00, 0x00, 0x05, 0x00, 0x50, 0x00],
+				new CoreMessage.SendPlayerDpnid { Dpnid = new Dpnid(0x00500005) }
+			},
 		};
+
+		return data;
 	}
 
-	[Theory(Skip = "Not implemneted")]
+	[Theory]
 	[MemberData(nameof(TestData))]
 	internal void Deserialize(byte[] data, CoreMessage.SendPlayerDpnid expected)
 	{
@@ -25,7 +29,7 @@ public class SendPlayerDpnidMessageSerializerTests
 		message.Dpnid.Should().Be(expected.Dpnid);
 	}
 
-	[Theory(Skip = "Not implemneted")]
+	[Theory]
 	[MemberData(nameof(TestData))]
 	internal void Serialize(byte[] expected, CoreMessage.SendPlayerDpnid message)
 	{

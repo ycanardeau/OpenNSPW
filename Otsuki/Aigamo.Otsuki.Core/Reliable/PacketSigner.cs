@@ -1,6 +1,6 @@
 using Aigamo.Otsuki.Messages.Reliable;
 
-namespace Aigamo.Otsuki.Reliable;
+namespace Aigamo.Otsuki.Core.Reliable;
 
 /// <summary>
 /// Signs the frames of a connection established with signing and validates the partner's ([MC-DPL8R] section

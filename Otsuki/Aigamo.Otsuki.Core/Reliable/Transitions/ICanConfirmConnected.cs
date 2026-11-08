@@ -1,6 +1,6 @@
 using Aigamo.Otsuki.Messages.Reliable;
 
-namespace Aigamo.Otsuki.Reliable.Transitions;
+namespace Aigamo.Otsuki.Core.Reliable.Transitions;
 
 /// <summary>
 /// Repeats our final CONNECTED or CONNECTED_SIGNED when the listener is still retrying its own ([MC-DPL8R] sections

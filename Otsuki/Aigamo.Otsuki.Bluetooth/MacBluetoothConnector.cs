@@ -440,8 +440,10 @@ internal sealed unsafe partial class MacBluetoothConnector
 		var completion = new TaskCompletionSource<Stream>(
 			TaskCreationOptions.RunContinuationsAsynchronously
 		);
-		if (!Post(new Message.Connect(bluetooth, completion, cancellationToken)))
-			throw new ObjectDisposedException(nameof(MacBluetoothConnector));
+		ObjectDisposedException.ThrowIf(
+			!Post(new Message.Connect(bluetooth, completion, cancellationToken)),
+			this
+		);
 
 		return completion.Task;
 	}

@@ -1,6 +1,6 @@
 using Aigamo.Otsuki.Messages.Core;
 
-namespace Aigamo.Otsuki.Reliable.Transitions;
+namespace Aigamo.Otsuki.Core.Reliable.Transitions;
 
 /// <summary>
 /// Ends the connection when the partner acknowledged our END_STREAM but never sent its own.

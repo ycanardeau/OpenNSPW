@@ -54,9 +54,11 @@ public class AddressTests
 	[Fact]
 	public void Url()
 	{
-		var address = new Address();
-		address.Url =
-			"x-directplay:/provider=%7BEBFE7BA0-628D-11D2-AE0F-006097B01411%7D;hostname=localhost;port=2310";
+		var address = new Address
+		{
+			Url =
+				"x-directplay:/provider=%7BEBFE7BA0-628D-11D2-AE0F-006097B01411%7D;hostname=localhost;port=2310",
+		};
 		address.GetComponentGuid(Address.KeyProvider).Should().Be(Address.ServiceProviderTcpIp);
 		address.GetComponentString(Address.KeyHostname).Should().Be("localhost");
 		address.GetComponentInteger(Address.KeyPort).Should().Be(2310);

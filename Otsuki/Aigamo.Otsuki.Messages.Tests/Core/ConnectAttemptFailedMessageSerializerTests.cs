@@ -6,16 +6,20 @@ namespace Aigamo.Otsuki.Messages.Tests.Core;
 
 public class ConnectAttemptFailedMessageSerializerTests
 {
-	public static IEnumerable<object?[]> TestData()
+	public static TheoryData<byte[], CoreMessage.ConnectAttemptFailed> TestData()
 	{
-		yield return new object?[]
+		var data = new TheoryData<byte[], CoreMessage.ConnectAttemptFailed>
 		{
-			new byte[] { },
-			new CoreMessage.ConnectAttemptFailed { },
+			{
+				[0xC8, 0x00, 0x00, 0x00, 0x05, 0x00, 0x50, 0x00],
+				new CoreMessage.ConnectAttemptFailed { Dpnid = new Dpnid(0x00500005) }
+			},
 		};
+
+		return data;
 	}
 
-	[Theory(Skip = "Not implemneted")]
+	[Theory]
 	[MemberData(nameof(TestData))]
 	internal void Deserialize(byte[] data, CoreMessage.ConnectAttemptFailed expected)
 	{
@@ -25,7 +29,7 @@ public class ConnectAttemptFailedMessageSerializerTests
 		message.Dpnid.Should().Be(expected.Dpnid);
 	}
 
-	[Theory(Skip = "Not implemneted")]
+	[Theory]
 	[MemberData(nameof(TestData))]
 	internal void Serialize(byte[] expected, CoreMessage.ConnectAttemptFailed message)
 	{

@@ -11,7 +11,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 /// <summary>
 ///  Represents a simple binding of a value in a list and the property of a control.
@@ -176,7 +176,7 @@ public class Binding
 	/// </summary>
 	internal static bool IsComponentCreated(IBindableComponent component)
 	{
-		return !(component is Control control) || control.Created;
+		return component is not Control control || control.Created;
 	}
 
 	/// <summary>
@@ -249,14 +249,14 @@ public class Binding
 			{
 				if (_bindingManagerBase is CurrencyManager oldCurrencyManager)
 				{
-					oldCurrencyManager.MetaDataChanged -= new EventHandler(binding_MetaDataChanged);
+					oldCurrencyManager.MetaDataChanged -= new EventHandler(Binding_MetaDataChanged);
 				}
 
 				_bindingManagerBase = value;
 
 				if (value is CurrencyManager newCurrencyManager)
 				{
-					newCurrencyManager.MetaDataChanged += new EventHandler(binding_MetaDataChanged);
+					newCurrencyManager.MetaDataChanged += new EventHandler(Binding_MetaDataChanged);
 				}
 
 				_bindToObject.SetBindingManagerBase(value);
@@ -332,10 +332,7 @@ public class Binding
 		get => _formatString;
 		set
 		{
-			if (value is null)
-			{
-				value = string.Empty;
-			}
+			value ??= string.Empty;
 
 			if (!value.Equals(_formatString))
 			{
@@ -440,12 +437,12 @@ public class Binding
 			{
 				if (_propInfo != null && BindableComponent != null)
 				{
-					EventHandler handler = new EventHandler(Target_PropertyChanged);
+					EventHandler handler = new(Target_PropertyChanged);
 					_propInfo.AddValueChanged(BindableComponent, handler);
 				}
 				if (_validateInfo != null)
 				{
-					CancelEventHandler handler = new CancelEventHandler(Target_Validate);
+					CancelEventHandler handler = new(Target_Validate);
 					_validateInfo.AddEventHandler(BindableComponent, handler);
 				}
 			}
@@ -454,18 +451,18 @@ public class Binding
 		{
 			if (_propInfo != null && BindableComponent != null)
 			{
-				EventHandler handler = new EventHandler(Target_PropertyChanged);
+				EventHandler handler = new(Target_PropertyChanged);
 				_propInfo.RemoveValueChanged(BindableComponent, handler);
 			}
 			if (_validateInfo != null)
 			{
-				CancelEventHandler handler = new CancelEventHandler(Target_Validate);
+				CancelEventHandler handler = new(Target_Validate);
 				_validateInfo.RemoveEventHandler(BindableComponent, handler);
 			}
 		}
 	}
 
-	private void binding_MetaDataChanged(object sender, EventArgs e)
+	private void Binding_MetaDataChanged(object sender, EventArgs e)
 	{
 		Debug.Assert(
 			sender == _bindingManagerBase,
@@ -486,7 +483,7 @@ public class Binding
 
 			// Check Properties
 			string propertyNameIsNull = PropertyName + "IsNull";
-			Type propType = null;
+			Type propType;
 			PropertyDescriptor tempPropInfo = null;
 			PropertyDescriptor tempPropIsNullInfo = null;
 			PropertyDescriptorCollection propInfos;
@@ -558,7 +555,7 @@ public class Binding
 			}
 
 			_propInfo = tempPropInfo;
-			propType = _propInfo.PropertyType;
+			_ = _propInfo.PropertyType;
 			_propInfoConverter = _propInfo.Converter;
 
 			if (
@@ -603,7 +600,7 @@ public class Binding
 
 	internal bool ControlAtDesignTime()
 	{
-		if (!(BindableComponent is IComponent comp))
+		if (BindableComponent is not IComponent comp)
 		{
 			return false;
 		}
@@ -632,7 +629,7 @@ public class Binding
 	)
 	{
 		bool cancel = false;
-		string errorText = string.Empty;
+		string errorText;
 		BindingCompleteState state = BindingCompleteState.Success;
 
 		if (ex != null)
@@ -672,10 +669,7 @@ public class Binding
 				// User code should not be throwing exceptions from this event as a way to signal new error conditions (they should use
 				// things like the Format or Parse events for that). Exceptions thrown here can mess up currency manager behavior big time.
 				// For now, eat any non-critical exceptions and instead just cancel the current push/pull operation.
-				if (e != null)
-				{
-					e.Cancel = true;
-				}
+				e?.Cancel = true;
 			}
 			finally
 			{
@@ -691,7 +685,7 @@ public class Binding
 		if (!_formattingEnabled && cevent != null)
 		{
 			if (
-				!(cevent.Value is DBNull)
+				cevent.Value is not DBNull
 				&& cevent.Value != null
 				&& cevent.DesiredType != null
 				&& !cevent.DesiredType.IsInstanceOfType(cevent.Value)
@@ -714,7 +708,7 @@ public class Binding
 		if (!_formattingEnabled && cevent != null)
 		{
 			if (
-				!(cevent.Value is DBNull)
+				cevent.Value is not DBNull
 				&& cevent.DesiredType != null
 				&& !cevent.DesiredType.IsInstanceOfType(cevent.Value)
 				&& (cevent.Value is IConvertible)
@@ -1043,7 +1037,7 @@ public class Binding
 
 	internal bool PushData(bool force)
 	{
-		object dataSourceValue = null;
+		object dataSourceValue;
 		Exception lastException = null;
 
 		// Don't push if update mode is 'Never' (unless caller is FORCING us to push)
@@ -1273,7 +1267,7 @@ public class Binding
 					return true;
 				}
 
-				if (!(_owner.DataSource is ISupportInitializeNotification ds) || ds.IsInitialized)
+				if (_owner.DataSource is not ISupportInitializeNotification ds || ds.IsInitialized)
 				{
 					_dataSourceInitialized = true;
 					return true;
@@ -1335,7 +1329,7 @@ public class Binding
 				_bindingManager != null
 				&& FieldInfo != null
 				&& _bindingManager.IsBinding
-				&& !(_bindingManager is CurrencyManager)
+				&& _bindingManager is not CurrencyManager
 			)
 			{
 				FieldInfo.RemoveValueChanged(
@@ -1460,7 +1454,7 @@ public class Binding
 				_bindingManager != null
 				&& FieldInfo != null
 				&& _bindingManager.IsBinding
-				&& !(_bindingManager is CurrencyManager)
+				&& _bindingManager is not CurrencyManager
 			)
 			{
 				FieldInfo.RemoveValueChanged(
@@ -1496,7 +1490,7 @@ public class Binding
 				if (
 					FieldInfo != null
 					&& _bindingManager.IsBinding
-					&& !(_bindingManager is CurrencyManager)
+					&& _bindingManager is not CurrencyManager
 				)
 				{
 					FieldInfo.AddValueChanged(

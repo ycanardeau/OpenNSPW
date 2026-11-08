@@ -14,49 +14,42 @@ public class SequenceIdTests
 		SequenceId.Empty.Should().Be(new SequenceId(0));
 	}
 
-	public static IEnumerable<object?[]> CompareTo_TestData()
+	public static TheoryData<SequenceId, object?, int> CompareTo_TestData()
 	{
-		yield return new object?[] { _testSequenceId, _testSequenceId, 0 };
-
-		yield return new object?[]
+		var data = new TheoryData<SequenceId, object?, int>
 		{
-			new SequenceId(0),
-			new SequenceId(128),
-			-1, /* REVIEW */
+			{ _testSequenceId, _testSequenceId, 0 },
+			{
+				new SequenceId(0),
+				new SequenceId(128),
+				-1 /* REVIEW */
+			},
+			{ new SequenceId(128), new SequenceId(0), -1 },
+			{ new SequenceId(0), new SequenceId(255), 1 },
+			{ new SequenceId(255), new SequenceId(0), -1 },
+			{ new SequenceId(1), new SequenceId(255), 1 },
+			{ new SequenceId(255), new SequenceId(1), -1 },
+			{ new SequenceId(1), new SequenceId(0), 1 },
+			{ new SequenceId(0), new SequenceId(1), -1 },
+			{ new SequenceId(127), new SequenceId(0), 1 },
+			{ new SequenceId(0), new SequenceId(127), -1 },
+			{ new SequenceId(127), new SequenceId(1), 1 },
+			{ new SequenceId(1), new SequenceId(127), -1 },
+			{ new SequenceId(128), new SequenceId(1), 1 },
+			{ new SequenceId(1), new SequenceId(128), -1 },
+			{ new SequenceId(128), new SequenceId(127), 1 },
+			{ new SequenceId(127), new SequenceId(128), -1 },
+			{
+				new SequenceId(255),
+				new SequenceId(127),
+				-1 /* REVIEW */
+			},
+			{ new SequenceId(127), new SequenceId(255), -1 },
+			{ new SequenceId(255), new SequenceId(128), 1 },
+			{ new SequenceId(128), new SequenceId(255), -1 },
 		};
-		yield return new object?[] { new SequenceId(128), new SequenceId(0), -1 };
 
-		yield return new object?[] { new SequenceId(0), new SequenceId(255), 1 };
-		yield return new object?[] { new SequenceId(255), new SequenceId(0), -1 };
-
-		yield return new object?[] { new SequenceId(1), new SequenceId(255), 1 };
-		yield return new object?[] { new SequenceId(255), new SequenceId(1), -1 };
-
-		yield return new object?[] { new SequenceId(1), new SequenceId(0), 1 };
-		yield return new object?[] { new SequenceId(0), new SequenceId(1), -1 };
-
-		yield return new object?[] { new SequenceId(127), new SequenceId(0), 1 };
-		yield return new object?[] { new SequenceId(0), new SequenceId(127), -1 };
-
-		yield return new object?[] { new SequenceId(127), new SequenceId(1), 1 };
-		yield return new object?[] { new SequenceId(1), new SequenceId(127), -1 };
-
-		yield return new object?[] { new SequenceId(128), new SequenceId(1), 1 };
-		yield return new object?[] { new SequenceId(1), new SequenceId(128), -1 };
-
-		yield return new object?[] { new SequenceId(128), new SequenceId(127), 1 };
-		yield return new object?[] { new SequenceId(127), new SequenceId(128), -1 };
-
-		yield return new object?[]
-		{
-			new SequenceId(255),
-			new SequenceId(127),
-			-1, /* REVIEW */
-		};
-		yield return new object?[] { new SequenceId(127), new SequenceId(255), -1 };
-
-		yield return new object?[] { new SequenceId(255), new SequenceId(128), 1 };
-		yield return new object?[] { new SequenceId(128), new SequenceId(255), -1 };
+		return data;
 	}
 
 	[Theory]
@@ -67,17 +60,20 @@ public class SequenceIdTests
 			Math.Sign(sequenceId1.CompareTo(sequenceId2)).Should().Be(expected);
 	}
 
-	public static IEnumerable<object?[]> Equals_TestData()
+	public static TheoryData<SequenceId, object?, bool> Equals_TestData()
 	{
-		yield return new object?[] { _testSequenceId, _testSequenceId, true };
-		yield return new object?[] { _testSequenceId, new SequenceId(255), true };
-		yield return new object?[] { _testSequenceId, SequenceId.Empty, false };
+		var data = new TheoryData<SequenceId, object?, bool>
+		{
+			{ _testSequenceId, _testSequenceId, true },
+			{ _testSequenceId, new SequenceId(255), true },
+			{ _testSequenceId, SequenceId.Empty, false },
+			{ new SequenceId(1), new SequenceId(1), true },
+			{ new SequenceId(1), new SequenceId(0), false },
+			{ _testSequenceId, new(), false },
+			{ _testSequenceId, null, false },
+		};
 
-		yield return new object?[] { new SequenceId(1), new SequenceId(1), true };
-		yield return new object?[] { new SequenceId(1), new SequenceId(0), false };
-
-		yield return new object?[] { _testSequenceId, new object(), false };
-		yield return new object?[] { _testSequenceId, null, false };
+		return data;
 	}
 
 	[Theory]

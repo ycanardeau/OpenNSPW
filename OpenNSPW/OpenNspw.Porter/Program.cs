@@ -209,19 +209,11 @@ Dictionary<string, long> ReadConstants()
 			continue;
 		}
 
-		foreach (
-			Match m in Regex.Matches(
-				File.ReadAllText(path),
-				@"const\s+(?:int|uint)\s+(\w+)\s*=\s*([^;]+);"
-			)
-		)
+		foreach (Match m in ConstantRegex().Matches(File.ReadAllText(path)))
 		{
-			var expression = Regex.Replace(
-				m.Groups[2].Value,
-				@"\(\s*0x01\s*<<\s*(\d+)\s*\)",
-				x => (1L << int.Parse(x.Groups[1].Value)).ToString()
-			);
-			if (Regex.IsMatch(expression, @"^[\d\s+\-*/()]+$"))
+			var expression = ShiftedBitRegex()
+				.Replace(m.Groups[2].Value, x => (1L << int.Parse(x.Groups[1].Value)).ToString());
+			if (ArithmeticRegex().IsMatch(expression))
 			{
 				constants[m.Groups[1].Value] = (long)
 					System.Convert.ToDouble(new System.Data.DataTable().Compute(expression, ""));
@@ -237,8 +229,8 @@ void UpdateInlineArrays(IEnumerable<long> lengths)
 {
 	var path = Path.Combine(projectDirectory, "InlineArrays.cs");
 	var text = File.ReadAllText(path);
-	var existing = Regex
-		.Matches(text, @"\[InlineArray\((\d+)\)\]")
+	var existing = InlineArrayRegex()
+		.Matches(text)
 		.Select(m => long.Parse(m.Groups[1].Value))
 		.ToHashSet();
 	foreach (var length in lengths.Where(l => !existing.Contains(l)))
@@ -300,3 +292,18 @@ foreach (var error in left)
 
 Console.WriteLine($"{left.Count} errors left to port by hand.");
 return 0;
+
+internal partial class Program
+{
+	[GeneratedRegex(@"const\s+(?:int|uint)\s+(\w+)\s*=\s*([^;]+);")]
+	private static partial Regex ConstantRegex();
+
+	[GeneratedRegex(@"\(\s*0x01\s*<<\s*(\d+)\s*\)")]
+	private static partial Regex ShiftedBitRegex();
+
+	[GeneratedRegex(@"^[\d\s+\-*/()]+$")]
+	private static partial Regex ArithmeticRegex();
+
+	[GeneratedRegex(@"\[InlineArray\((\d+)\)\]")]
+	private static partial Regex InlineArrayRegex();
+}

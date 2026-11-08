@@ -8,7 +8,7 @@
 
 using System.ComponentModel;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 public interface IBindableComponent : IComponent
 {

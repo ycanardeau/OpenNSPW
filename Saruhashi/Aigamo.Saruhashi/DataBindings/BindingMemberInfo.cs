@@ -6,25 +6,22 @@
 
 #nullable disable
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
-public struct BindingMemberInfo
+public readonly struct BindingMemberInfo
 {
 	private readonly string _dataList;
 	private readonly string _dataField;
 
 	public BindingMemberInfo(string dataMember)
 	{
-		if (dataMember is null)
-		{
-			dataMember = string.Empty;
-		}
+		dataMember ??= string.Empty;
 
 		int lastDot = dataMember.LastIndexOf('.');
 		if (lastDot != -1)
 		{
-			_dataList = dataMember.Substring(0, lastDot);
-			_dataField = dataMember.Substring(lastDot + 1);
+			_dataList = dataMember[..lastDot];
+			_dataField = dataMember[(lastDot + 1)..];
 		}
 		else
 		{
@@ -44,7 +41,7 @@ public struct BindingMemberInfo
 
 	public override bool Equals(object otherObject)
 	{
-		if (!(otherObject is BindingMemberInfo otherMember))
+		if (otherObject is not BindingMemberInfo otherMember)
 		{
 			return false;
 		}

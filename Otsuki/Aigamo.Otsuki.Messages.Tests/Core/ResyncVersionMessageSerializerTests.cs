@@ -6,13 +6,17 @@ namespace Aigamo.Otsuki.Messages.Tests.Core;
 
 public class ResyncVersionMessageSerializerTests
 {
-	public static IEnumerable<object?[]> TestData()
+	public static TheoryData<byte[], CoreMessage.ResyncVersion> TestData()
 	{
-		yield return new object?[]
+		var data = new TheoryData<byte[], CoreMessage.ResyncVersion>
 		{
-			new byte[] { 0xca, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-			new CoreMessage.ResyncVersion { Version = 4 },
+			{
+				[0xca, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+				new CoreMessage.ResyncVersion { Version = 4 }
+			},
 		};
+
+		return data;
 	}
 
 	[Theory]

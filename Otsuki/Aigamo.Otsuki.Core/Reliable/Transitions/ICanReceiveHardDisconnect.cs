@@ -1,7 +1,7 @@
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Messages.Reliable;
 
-namespace Aigamo.Otsuki.Reliable.Transitions;
+namespace Aigamo.Otsuki.Core.Reliable.Transitions;
 
 /// <summary>
 /// Acknowledges the partner's HARD_DISCONNECT and ends the connection ([MC-DPL8R] section 3.1.5.1.4).

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using Aigamo.Otsuki.Bluetooth;
+using Aigamo.Otsuki.Core;
 using Aigamo.Otsuki.Messages.Core;
 
 namespace Aigamo.Otsuki.ConsoleApp;

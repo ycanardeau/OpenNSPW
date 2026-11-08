@@ -6,70 +6,69 @@ namespace Aigamo.Otsuki.Messages.Tests.Reliable;
 
 public class SackMessageSerializerTests
 {
-	public static IEnumerable<object?[]> TestData()
+	public static TheoryData<byte[], ReliableMessage.Sack> TestData()
 	{
-		yield return new object?[]
+		var data = new TheoryData<byte[], ReliableMessage.Sack>
 		{
-			new byte[] { 0x80, 0x06, 0x01, 0x00, 0x03, 0x06, 0x00, 0x00, 0x07, 0x5D, 0x11, 0x00 },
-			new ReliableMessage.Sack
 			{
-				Response = true,
-				Retry = 0,
-				NextSend = new SequenceId(3),
-				NextReceive = new SequenceId(6),
-				Timestamp = 0x00115D07,
+				[0x80, 0x06, 0x01, 0x00, 0x03, 0x06, 0x00, 0x00, 0x07, 0x5D, 0x11, 0x00],
+				new ReliableMessage.Sack
+				{
+					Response = true,
+					Retry = 0,
+					NextSend = new SequenceId(3),
+					NextReceive = new SequenceId(6),
+					Timestamp = 0x00115D07,
+				}
+			},
+			{
+				[0x80, 0x06, 0x01, 0x00, 0x04, 0x04, 0x00, 0x00, 0x64, 0xa2, 0xa2, 0x21],
+				new ReliableMessage.Sack
+				{
+					Response = true,
+					Retry = 0,
+					NextSend = new SequenceId(4),
+					NextReceive = new SequenceId(4),
+					Timestamp = 0x21A2A264,
+				}
+			},
+			{
+				[
+					0x80,
+					0x06,
+					0x0B,
+					0x01,
+					0x02,
+					0x03,
+					0x00,
+					0x00,
+					0x78,
+					0x56,
+					0x34,
+					0x12,
+					0x04,
+					0x00,
+					0x00,
+					0x00,
+					0x05,
+					0x00,
+					0x00,
+					0x00,
+				],
+				new ReliableMessage.Sack
+				{
+					Response = true,
+					Retry = 1,
+					NextSend = new SequenceId(2),
+					NextReceive = new SequenceId(3),
+					Timestamp = 0x12345678,
+					SackMask = 4,
+					SendMask = 5,
+				}
 			},
 		};
 
-		yield return new object?[]
-		{
-			new byte[] { 0x80, 0x06, 0x01, 0x00, 0x04, 0x04, 0x00, 0x00, 0x64, 0xa2, 0xa2, 0x21 },
-			new ReliableMessage.Sack
-			{
-				Response = true,
-				Retry = 0,
-				NextSend = new SequenceId(4),
-				NextReceive = new SequenceId(4),
-				Timestamp = 0x21A2A264,
-			},
-		};
-
-		yield return new object?[]
-		{
-			new byte[]
-			{
-				0x80,
-				0x06,
-				0x0B,
-				0x01,
-				0x02,
-				0x03,
-				0x00,
-				0x00,
-				0x78,
-				0x56,
-				0x34,
-				0x12,
-				0x04,
-				0x00,
-				0x00,
-				0x00,
-				0x05,
-				0x00,
-				0x00,
-				0x00,
-			},
-			new ReliableMessage.Sack
-			{
-				Response = true,
-				Retry = 1,
-				NextSend = new SequenceId(2),
-				NextReceive = new SequenceId(3),
-				Timestamp = 0x12345678,
-				SackMask = 4,
-				SendMask = 5,
-			},
-		};
+		return data;
 	}
 
 	[Theory]
@@ -98,31 +97,35 @@ public class SackMessageSerializerTests
 		SackMessageSerializer.Default.Serialize(message).Should().Equal(expected);
 	}
 
-	public static IEnumerable<object[]> RoundTripData()
+	public static TheoryData<byte[]> RoundTripData()
 	{
-		// SACK_MASK1 set with a zero mask.
-		yield return new object[]
+		var data = new TheoryData<byte[]>
 		{
-			new byte[]
-			{
-				0x80,
-				0x06,
-				0x03,
-				0x00,
-				0x03,
-				0x06,
-				0x00,
-				0x00,
-				0x07,
-				0x5D,
-				0x11,
-				0x00,
-				0x00,
-				0x00,
-				0x00,
-				0x00,
-			},
+			// SACK_MASK1 set with a zero mask.
+			(
+
+				[
+					0x80,
+					0x06,
+					0x03,
+					0x00,
+					0x03,
+					0x06,
+					0x00,
+					0x00,
+					0x07,
+					0x5D,
+					0x11,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+				]
+			),
 		};
+
+		return data;
 	}
 
 	[Theory]

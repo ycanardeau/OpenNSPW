@@ -1,8 +1,8 @@
+using Aigamo.Otsuki.Core.Reliable;
 using Aigamo.Otsuki.Messages.Core;
-using Aigamo.Otsuki.Reliable;
 using Aigamo.Results;
 
-namespace Aigamo.Otsuki.Session.Transitions;
+namespace Aigamo.Otsuki.Core.Session.Transitions;
 
 /// <summary>
 /// The host's side of a peer joining the session ([MC-DPL8CS] section 3.1.5.2).

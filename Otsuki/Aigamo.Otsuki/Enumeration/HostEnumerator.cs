@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Net;
 using System.Runtime.CompilerServices;
 using Aigamo.Otsuki.Actors;
+using Aigamo.Otsuki.Core;
 using Aigamo.Otsuki.Messages.Enumeration;
 using Aigamo.Otsuki.Transport;
 

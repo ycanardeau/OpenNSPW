@@ -9,7 +9,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Numerics;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 internal static class ClientUtils
 {
@@ -200,10 +200,7 @@ internal static class ClientUtils
 	{
 		Type t = value.GetType();
 
-		if (enumValueInfo is null)
-		{
-			enumValueInfo = [];
-		}
+		enumValueInfo ??= [];
 
 		SequentialEnumInfo? sequentialEnumInfo = null;
 

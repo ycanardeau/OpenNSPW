@@ -1,6 +1,6 @@
 using Aigamo.Otsuki.Messages.Core;
 
-namespace Aigamo.Otsuki.Session.Transitions;
+namespace Aigamo.Otsuki.Core.Session.Transitions;
 
 /// <summary>
 /// The new host's side of host migration ([MC-DPL8CS] section 3.2.5.4): installs the operations it asked a peer for

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Net;
+using Aigamo.Otsuki.Core;
 
 namespace Aigamo.Otsuki.LoadTest;
 

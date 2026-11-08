@@ -1,6 +1,6 @@
 using Aigamo.Otsuki.Messages.Core;
 
-namespace Aigamo.Otsuki.Session.Transitions;
+namespace Aigamo.Otsuki.Core.Session.Transitions;
 
 /// <summary>
 /// Sends DN_INTERNAL_MESSAGE_PLAYER_CONNECT_INFO once connected to the host ([MC-DPL8CS] section 3.1.5.2, step 2).

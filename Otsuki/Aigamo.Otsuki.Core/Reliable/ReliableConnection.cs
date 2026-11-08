@@ -1,10 +1,10 @@
 using System.Net;
+using Aigamo.Otsuki.Core.Reliable.Transitions;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Messages.Reliable;
-using Aigamo.Otsuki.Reliable.Transitions;
 using Aigamo.Results;
 
-namespace Aigamo.Otsuki.Reliable;
+namespace Aigamo.Otsuki.Core.Reliable;
 
 /// <summary>
 /// One connection of the DirectPlay 8 reliable protocol ([MC-DPL8R]) to a single remote endpoint. The protocol

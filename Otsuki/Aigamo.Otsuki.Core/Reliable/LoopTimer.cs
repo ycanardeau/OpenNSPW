@@ -1,4 +1,4 @@
-namespace Aigamo.Otsuki.Reliable;
+namespace Aigamo.Otsuki.Core.Reliable;
 
 /// <summary>
 /// The timers of a core: their deadlines in one queue, on a clock that only moves when the caller says what time it

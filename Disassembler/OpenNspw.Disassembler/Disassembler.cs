@@ -94,13 +94,12 @@ internal sealed class Disassembler
 			_labels,
 			_parseContext
 		);
-		var factory = instruction.Factories.Count switch
-		{
-			1 => instruction.Factories[0],
-			_ => instruction.Factories[token.Mode.ModRM.Opcode],
-		};
-		if (factory is null)
-			throw new NotImplementedException($"{opcode:X2} /{token.Mode.ModRM.Opcode}");
+		var factory =
+			instruction.Factories.Count switch
+			{
+				1 => instruction.Factories[0],
+				_ => instruction.Factories[token.Mode.ModRM.Opcode],
+			} ?? throw new NotImplementedException($"{opcode:X2} /{token.Mode.ModRM.Opcode}");
 		_lines.Add(_currentAddress, [.. factory(token)]);
 
 		_operandSizeOverride = token.OperandSizeOverride;

@@ -1,6 +1,6 @@
 using Aigamo.Otsuki.Messages.Reliable;
 
-namespace Aigamo.Otsuki.Reliable;
+namespace Aigamo.Otsuki.Core.Reliable;
 
 /// <summary>
 /// What the CONNECT and CONNECTED exchange established ([MC-DPL8R] sections 3.1.5.1.1 and 3.1.5.1.2).

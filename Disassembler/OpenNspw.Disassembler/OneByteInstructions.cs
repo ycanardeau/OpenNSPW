@@ -689,7 +689,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 		t.Mode.ModRM.Mod == 3 ? fmul_ST_STi(t) : fmul_ST_m32real(t);
 
 	// d8 /1
-	private IEnumerable<string> fmul_ST_STi(Token t)
+	private static IEnumerable<string> fmul_ST_STi(Token t)
 	{
 		yield return t.ToAssignmentLine(
 			Mnemonic.Fmul,
@@ -699,7 +699,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 	}
 
 	// d8 /1
-	private IEnumerable<string> fmul_ST_m32real(Token t)
+	private static IEnumerable<string> fmul_ST_m32real(Token t)
 	{
 		yield return t.ToAssignmentLine(Mnemonic.Fmul, t.GetFpuStackString(0), t.GetM32String());
 	}
@@ -717,7 +717,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 	}
 
 	// d8 /3 d9
-	private IEnumerable<string> fcomp_ST_ST1(Token t)
+	private static IEnumerable<string> fcomp_ST_ST1(Token t)
 	{
 		yield return t.ToStatementLine(Mnemonic.Fcom, t.GetFpuStackString(1));
 		yield return t.ToFpuStackPopLine();
@@ -728,7 +728,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 		t.Mode.ModRM.Mod == 3 ? fsub_ST_STi(t) : throw new NotImplementedException();
 
 	// d8 /4
-	private IEnumerable<string> fsub_ST_STi(Token t)
+	private static IEnumerable<string> fsub_ST_STi(Token t)
 	{
 		yield return t.ToAssignmentLine(
 			Mnemonic.Fsub,
@@ -766,7 +766,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 	}
 
 	// d9 /1 c9
-	private IEnumerable<string> fxch_ST_ST1(Token t)
+	private static IEnumerable<string> fxch_ST_ST1(Token t)
 	{
 		yield return t.ToAssignmentLine(
 			$"({t.GetFpuStackString(0)}, {t.GetFpuStackString(1)})",
@@ -789,7 +789,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 	}
 
 	// d9 /4 e0
-	private IEnumerable<string> fchs_ST(Token t)
+	private static IEnumerable<string> fchs_ST(Token t)
 	{
 		yield return t.ToAssignmentLine(Mnemonic.Fchs, t.GetFpuStackString(0));
 	}
@@ -807,7 +807,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 	}
 
 	// d9 /6 f3
-	private IEnumerable<string> fpatan_ST1_ST(Token t)
+	private static IEnumerable<string> fpatan_ST1_ST(Token t)
 	{
 		yield return t.ToAssignmentLine(
 			Mnemonic.Fpatan,
@@ -831,13 +831,13 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 	}
 
 	// d9 /7 fe
-	private IEnumerable<string> fsin_ST(Token t)
+	private static IEnumerable<string> fsin_ST(Token t)
 	{
 		yield return t.ToAssignmentLine(Mnemonic.Fsin, t.GetFpuStackString(0));
 	}
 
 	// d9 /7 ff
-	private IEnumerable<string> fcos_ST(Token t)
+	private static IEnumerable<string> fcos_ST(Token t)
 	{
 		yield return t.ToAssignmentLine(Mnemonic.Fcos, t.GetFpuStackString(0));
 	}
@@ -847,7 +847,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 		t.Mode.ModRM.Mod == 3 ? throw new NotImplementedException() : fimul_ST_m32int(t);
 
 	// da /1
-	private IEnumerable<string> fimul_ST_m32int(Token t)
+	private static IEnumerable<string> fimul_ST_m32int(Token t)
 	{
 		yield return t.ToAssignmentLine(Mnemonic.Fimul, t.GetFpuStackString(0), t.GetM32String());
 	}
@@ -863,7 +863,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 		t.Mode.ModRM.Mod == 3 ? throw new NotImplementedException() : fild_ST_m32int(t);
 
 	// db /0
-	private IEnumerable<string> fild_ST_m32int(Token t)
+	private static IEnumerable<string> fild_ST_m32int(Token t)
 	{
 		yield return t.ToStatementLine(Mnemonic.Fild, t.GetM32String());
 	}
@@ -873,7 +873,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 		t.Mode.ModRM.Mod == 3 ? throw new NotImplementedException() : fadd_ST_m64real(t);
 
 	// dc /0
-	private IEnumerable<string> fadd_ST_m64real(Token t)
+	private static IEnumerable<string> fadd_ST_m64real(Token t)
 	{
 		yield return t.ToAssignmentLine(Mnemonic.Fadd, t.GetFpuStackString(0), t.GetDoubleString());
 	}
@@ -883,7 +883,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 		t.Mode.ModRM.Mod == 3 ? throw new NotImplementedException() : fmul_ST_m64real(t);
 
 	// dc /1
-	private IEnumerable<string> fmul_ST_m64real(Token t)
+	private static IEnumerable<string> fmul_ST_m64real(Token t)
 	{
 		yield return t.ToAssignmentLine(Mnemonic.Fmul, t.GetFpuStackString(0), t.GetDoubleString());
 	}
@@ -893,7 +893,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 		t.Mode.ModRM.Mod == 3 ? throw new NotImplementedException() : fcom_ST_m64real(t);
 
 	// dc /2
-	private IEnumerable<string> fcom_ST_m64real(Token t)
+	private static IEnumerable<string> fcom_ST_m64real(Token t)
 	{
 		yield return t.ToStatementLine(Mnemonic.Fcom, t.GetDoubleString());
 	}
@@ -903,7 +903,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 		t.Mode.ModRM.Mod == 3 ? throw new NotImplementedException() : fcomp_ST_m64real(t);
 
 	// dc /3
-	private IEnumerable<string> fcomp_ST_m64real(Token t)
+	private static IEnumerable<string> fcomp_ST_m64real(Token t)
 	{
 		yield return t.ToStatementLine(Mnemonic.Fcom, t.GetDoubleString());
 		yield return t.ToFpuStackPopLine();
@@ -914,7 +914,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 		t.Mode.ModRM.Mod == 3 ? throw new NotImplementedException() : fsub_ST_m64real(t);
 
 	// dc /4
-	private IEnumerable<string> fsub_ST_m64real(Token t)
+	private static IEnumerable<string> fsub_ST_m64real(Token t)
 	{
 		yield return t.ToAssignmentLine(Mnemonic.Fsub, t.GetFpuStackString(0), t.GetDoubleString());
 	}
@@ -924,7 +924,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 		t.Mode.ModRM.Mod == 3 ? throw new NotImplementedException() : fsubr_ST_m64real(t);
 
 	// dc /5
-	private IEnumerable<string> fsubr_ST_m64real(Token t)
+	private static IEnumerable<string> fsubr_ST_m64real(Token t)
 	{
 		yield return t.ToAssignmentLine(
 			Mnemonic.Fsubr,
@@ -938,7 +938,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 		t.Mode.ModRM.Mod == 3 ? throw new NotImplementedException() : fld_ST_m64real(t);
 
 	// dd /0
-	private IEnumerable<string> fld_ST_m64real(Token t)
+	private static IEnumerable<string> fld_ST_m64real(Token t)
 	{
 		yield return t.ToStatementLine(Mnemonic.Fld, t.GetDoubleString());
 	}
@@ -948,7 +948,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 		t.Mode.ModRM.Mod == 3 ? fst_ST_STi(t) : fst_m64real_ST(t);
 
 	// dd /2
-	private IEnumerable<string> fst_ST_STi(Token t)
+	private static IEnumerable<string> fst_ST_STi(Token t)
 	{
 		yield return t.ToAssignmentLine(
 			t.GetFpuStackString(0),
@@ -958,7 +958,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 	}
 
 	// dd /2
-	private IEnumerable<string> fst_m64real_ST(Token t)
+	private static IEnumerable<string> fst_m64real_ST(Token t)
 	{
 		yield return t.ToAssignmentLine(t.GetM64String(), Mnemonic.Fst, t.GetFpuStackString(0)); // TODO
 	}
@@ -968,7 +968,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 		t.Mode.ModRM.Mod == 3 ? fstp_ST_STi(t) : fstp_m64real_ST(t);
 
 	// dd /3
-	private IEnumerable<string> fstp_ST_STi(Token t)
+	private static IEnumerable<string> fstp_ST_STi(Token t)
 	{
 		yield return t.ToAssignmentLine(
 			t.GetFpuStackString(0),
@@ -979,7 +979,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 	}
 
 	// dd /3
-	private IEnumerable<string> fstp_m64real_ST(Token t)
+	private static IEnumerable<string> fstp_m64real_ST(Token t)
 	{
 		yield return t.ToAssignmentLine(t.GetM64String(), Mnemonic.Fst, t.GetFpuStackString(0)); // TODO
 		yield return t.ToFpuStackPopLine();
@@ -998,7 +998,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 	}
 
 	// de /0 c1
-	private IEnumerable<string> faddp_ST1_ST(Token t)
+	private static IEnumerable<string> faddp_ST1_ST(Token t)
 	{
 		yield return t.ToAssignmentLine(
 			Mnemonic.Fadd,
@@ -1021,7 +1021,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 	}
 
 	// de /1 c9
-	private IEnumerable<string> fmulp_ST1_ST(Token t)
+	private static IEnumerable<string> fmulp_ST1_ST(Token t)
 	{
 		yield return t.ToAssignmentLine(
 			Mnemonic.Fmul,
@@ -1044,7 +1044,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 	}
 
 	// de /3 d9
-	private IEnumerable<string> fcompp_ST_ST1(Token t)
+	private static IEnumerable<string> fcompp_ST_ST1(Token t)
 	{
 		yield return t.ToStatementLine(Mnemonic.Fcom, t.GetFpuStackString(1));
 		yield return t.ToFpuStackPopLine();
@@ -1063,7 +1063,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 		};
 	}
 
-	private IEnumerable<string> fdivp_ST1_ST(Token t)
+	private static IEnumerable<string> fdivp_ST1_ST(Token t)
 	{
 		yield return t.ToAssignmentLine(
 			Mnemonic.Fdiv,
@@ -1086,7 +1086,7 @@ internal sealed class OneByteInstructions : Dictionary<int, Instruction>
 	}
 
 	// df /4 e0
-	private IEnumerable<string> fnstsw_AX(Token t)
+	private static IEnumerable<string> fnstsw_AX(Token t)
 	{
 		yield return t.ToAssignmentLine(t.GetR16String(RegisterCode.Ax), Mnemonic.Fnstsw);
 	}

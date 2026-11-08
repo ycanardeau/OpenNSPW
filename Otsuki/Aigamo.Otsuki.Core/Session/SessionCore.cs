@@ -1,14 +1,14 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Net;
+using Aigamo.Otsuki.Core.Reliable;
+using Aigamo.Otsuki.Core.Session.Transitions;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Messages.Enumeration;
 using Aigamo.Otsuki.Messages.Reliable;
-using Aigamo.Otsuki.Reliable;
-using Aigamo.Otsuki.Session.Transitions;
 using Aigamo.Results;
 
-namespace Aigamo.Otsuki.Session;
+namespace Aigamo.Otsuki.Core.Session;
 
 /// <summary>
 /// A session of the DirectPlay 8 core protocol ([MC-DPL8CS]), peer-to-peer or client/server. The protocol logic

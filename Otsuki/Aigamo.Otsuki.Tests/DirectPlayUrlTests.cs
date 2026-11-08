@@ -1,4 +1,5 @@
 using System.Net;
+using Aigamo.Otsuki.Core.Session;
 using Aigamo.Otsuki.Session;
 using Aigamo.Results;
 using FluentAssertions;

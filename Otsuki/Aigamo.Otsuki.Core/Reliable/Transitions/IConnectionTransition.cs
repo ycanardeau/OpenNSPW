@@ -1,4 +1,4 @@
-namespace Aigamo.Otsuki.Reliable.Transitions;
+namespace Aigamo.Otsuki.Core.Reliable.Transitions;
 
 internal interface IConnectionTransition
 {

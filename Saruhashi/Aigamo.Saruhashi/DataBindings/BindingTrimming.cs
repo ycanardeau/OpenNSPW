@@ -1,4 +1,4 @@
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 // Why data binding cannot be trimmed: an app that trims, and binds, keeps the types it binds itself.
 internal static class BindingTrimming

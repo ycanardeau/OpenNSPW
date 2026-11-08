@@ -1,4 +1,4 @@
-namespace Aigamo.Otsuki.Reliable;
+namespace Aigamo.Otsuki.Core.Reliable;
 
 /// <summary>
 /// Timing and sizing parameters of the DirectPlay 8 reliable protocol.

@@ -1,4 +1,4 @@
-namespace Aigamo.Otsuki.Session;
+namespace Aigamo.Otsuki.Core.Session;
 
 /// <summary>
 /// What the caller of a command waits on, which the core cannot complete: it only names it in an answer

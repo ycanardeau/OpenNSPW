@@ -46,11 +46,11 @@ public unsafe partial class Nspw
 
 		var drctn = atan2(dy, dx) * RadiansToDegrees;
 		if (drctn < 0)
-			drctn = drctn + 360;
+			drctn += 360;
 		if (dx < 0)
 			dx = -dx;
 		if (drctn >= 180)
-			drctn = drctn - 180;
+			drctn -= 180;
 		if (drctn >= 90)
 			drctn = 90 - (drctn - 90);
 		return dx / cos(drctn * DegreesToRadians);
@@ -212,7 +212,7 @@ public unsafe partial class Nspw
 			};
 			if (PointInRect(ref square, Ftol(x), Ftol(y)))
 			{
-				y = y - 80;
+				y -= 80;
 				i = 0;
 			}
 		}
@@ -623,7 +623,7 @@ public unsafe partial class Nspw
 				};
 				for (var i = 0; i < escorts.Length; i++)
 				{
-					x = x + 150;
+					x += 150;
 					fleet8.Members[i + 1] = (short)AddUnit(
 						Side.UnitedStates,
 						escorts[i],
@@ -1030,16 +1030,16 @@ public unsafe partial class Nspw
 		switch (plane.FormationNumber % 6)
 		{
 			case 1:
-				drctn = drctn + 337.5;
+				drctn += 337.5;
 				break;
 			case 2:
-				drctn = drctn + 22.5;
+				drctn += 22.5;
 				break;
 			case 3:
-				drctn = drctn + 315.0;
+				drctn += 315.0;
 				break;
 			case 4:
-				drctn = drctn + 45.0;
+				drctn += 45.0;
 				break;
 		}
 
@@ -1719,7 +1719,7 @@ public unsafe partial class Nspw
 					facility.Position.X - flagship.Position.X
 				) * RadiansToDegrees;
 			if (bearing < 0)
-				bearing = bearing + 360;
+				bearing += 360;
 
 			var aside =
 				rand() % 2 == 1 ? TurnedFrom(bearing, 100, 20) : TurnedBack(bearing, 100, 20);
@@ -1800,7 +1800,7 @@ public unsafe partial class Nspw
 		var distance = DistanceOf(dx, dy);
 		var b = atan2(dy, dx) * RadiansToDegrees;
 		if (b < 0)
-			b = b + 360;
+			b += 360;
 
 		switch (kind)
 		{

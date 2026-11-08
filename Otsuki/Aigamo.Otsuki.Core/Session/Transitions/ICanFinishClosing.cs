@@ -1,4 +1,4 @@
-namespace Aigamo.Otsuki.Session.Transitions;
+namespace Aigamo.Otsuki.Core.Session.Transitions;
 
 /// <summary>
 /// Finishes closing once every connection has ended, an established one by disconnecting and one still connecting by

@@ -12,6 +12,11 @@ namespace Aigamo.Saruhashi;
 ///  Specifies key codes and modifiers.
 /// </summary>
 [Flags]
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+	"Design",
+	"CA1069:Enums values should not be duplicated",
+	Justification = "WinForms' own aliases, such as CapsLock for Capital, kept so that either name compiles."
+)]
 public enum Keys
 {
 	/// <summary>

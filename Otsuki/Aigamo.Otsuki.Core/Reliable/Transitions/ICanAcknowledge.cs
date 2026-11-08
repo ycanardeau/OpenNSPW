@@ -1,4 +1,4 @@
-namespace Aigamo.Otsuki.Reliable.Transitions;
+namespace Aigamo.Otsuki.Core.Reliable.Transitions;
 
 /// <summary>
 /// Sends a dedicated SACK when no data frame carried our acknowledgment or send mask in time

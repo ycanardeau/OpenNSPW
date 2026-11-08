@@ -33,11 +33,11 @@ internal sealed class ScrollAhead(GameSession session)
 	{
 		_moves.RemoveAll(m => m.Id <= snapshot.LastCameraMove || Painter.Now - m.At > Expiry);
 		var camera = snapshot.GameCameraPosition;
-		foreach (var move in _moves)
+		foreach (var (Id, At, Dx, Dy) in _moves)
 		{
 			camera = new WorldPosition(
-				Math.Clamp(camera.X + move.Dx, World.Left, World.Right - CMBT_WIDTH),
-				Math.Clamp(camera.Y - move.Dy, World.Bottom + CMBT_HEIGHT, World.Top)
+				Math.Clamp(camera.X + Dx, World.Left, World.Right - CMBT_WIDTH),
+				Math.Clamp(camera.Y - Dy, World.Bottom + CMBT_HEIGHT, World.Top)
 			);
 		}
 

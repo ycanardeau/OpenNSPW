@@ -350,7 +350,7 @@ public class NetworkTests
 		Assert.Equal(GameMode.Battle, guest.Game.RivalMode);
 
 		// An order (DP_NEW_PP_SHIP).
-		MoveShipsOrderMessage order = new MoveShipsOrderMessage
+		MoveShipsOrderMessage order = new()
 		{
 			Type = MessageType.MoveShipsOrder,
 			Unit = 1,
@@ -369,7 +369,7 @@ public class NetworkTests
 		Assert.Equal(7, host.Game.BufferedSelections[0][host.Game.JPN_SHIP_END - 1]);
 
 		// A chat message (DP_CHAT_1). CHAT_DSP_TIME (400) does not fit in friend_chat_dsp_time, a BYTE.
-		ChatMessage chat = new ChatMessage { Type = MessageType.Chat };
+		ChatMessage chat = new() { Type = MessageType.Chat };
 		tchar.ShiftJis.GetBytes("こんにちは").CopyTo(chat.Chat);
 		Send(host, chat);
 		PumpUntil(() => guest.Game.RivalChatDisplayTime != 0, host, guest);
@@ -378,7 +378,7 @@ public class NetworkTests
 
 		// The game settings, which the guest only takes in the setting modes.
 		guest.Game.Mode = GameMode.GameSetting;
-		NameMessage settings = new NameMessage { Type = MessageType.SideAndScenario };
+		NameMessage settings = new() { Type = MessageType.SideAndScenario };
 		for (short i = 0; i < 10; i++)
 		{
 			settings.Data[i] = (short)(i + 1);

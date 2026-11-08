@@ -76,7 +76,7 @@ public unsafe partial class Nspw
 	private const int RoutePathLength = 64;
 
 	// Stops unit m where it is: its path is its position alone.
-	private void StopWhereItIs(ref Unit unit)
+	private static void StopWhereItIs(ref Unit unit)
 	{
 		unit.PathX[0] = unit.Position.X;
 		unit.PathY[0] = unit.Position.Y;
@@ -181,15 +181,15 @@ public unsafe partial class Nspw
 
 			pp_drctn = Direction(wrk_x, wrk_y);
 			if (pp_drctn >= 360)
-				pp_drctn = pp_drctn - 360;
+				pp_drctn -= 360;
 
 			if (wrk_x < 0)
 				wrk_x = 0 - wrk_x;
 			if (wrk_y < 0)
-				wrk_y = 0 - wrk_y;
+				_ = 0 - wrk_y;
 			wrk = pp_drctn;
 			if (wrk >= 180)
-				wrk = wrk - 180;
+				wrk -= 180;
 			if (wrk >= 90)
 				wrk = 90 - (wrk - 90);
 			pp_dstc = (wrk_x) / (CosDegrees(wrk));
@@ -227,7 +227,7 @@ public unsafe partial class Nspw
 					{
 						drctn1 += 10;
 						if (drctn1 >= 360)
-							drctn1 = drctn1 - 360;
+							drctn1 -= 360;
 						drctn2 -= 10;
 						if (drctn2 < 0)
 							drctn2 = 360 + drctn2;

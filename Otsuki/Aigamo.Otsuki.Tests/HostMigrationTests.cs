@@ -1,5 +1,7 @@
 using System.Net;
 using Aigamo.Otsuki.Actors;
+using Aigamo.Otsuki.Core;
+using Aigamo.Otsuki.Core.Reliable;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Reliable;
 using FluentAssertions;

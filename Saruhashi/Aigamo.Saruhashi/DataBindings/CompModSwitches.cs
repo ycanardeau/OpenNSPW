@@ -6,7 +6,7 @@
 
 using System.Diagnostics;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 internal static class CompModSwitches
 {
@@ -48,10 +48,7 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (activeX is null)
-			{
-				activeX = new TraceSwitch("ActiveX", "Debug ActiveX sourcing");
-			}
+			activeX ??= new TraceSwitch("ActiveX", "Debug ActiveX sourcing");
 			return activeX;
 		}
 	}
@@ -60,10 +57,7 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (dataCursor is null)
-			{
-				dataCursor = new TraceSwitch("Microsoft.WFC.Data.DataCursor", "DataCursor");
-			}
+			dataCursor ??= new TraceSwitch("Microsoft.WFC.Data.DataCursor", "DataCursor");
 			return dataCursor;
 		}
 	}
@@ -72,10 +66,7 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (dataGridCursor is null)
-			{
-				dataGridCursor = new TraceSwitch("DataGridCursor", "DataGrid cursor tracing");
-			}
+			dataGridCursor ??= new TraceSwitch("DataGridCursor", "DataGrid cursor tracing");
 			return dataGridCursor;
 		}
 	}
@@ -84,13 +75,7 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (dataGridEditing is null)
-			{
-				dataGridEditing = new TraceSwitch(
-					"DataGridEditing",
-					"DataGrid edit related tracing"
-				);
-			}
+			dataGridEditing ??= new TraceSwitch("DataGridEditing", "DataGrid edit related tracing");
 			return dataGridEditing;
 		}
 	}
@@ -99,13 +84,10 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (dataGridKeys is null)
-			{
-				dataGridKeys = new TraceSwitch(
-					"DataGridKeys",
-					"DataGrid keystroke management tracing"
-				);
-			}
+			dataGridKeys ??= new TraceSwitch(
+				"DataGridKeys",
+				"DataGrid keystroke management tracing"
+			);
 			return dataGridKeys;
 		}
 	}
@@ -114,10 +96,7 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (dataGridLayout is null)
-			{
-				dataGridLayout = new TraceSwitch("DataGridLayout", "DataGrid layout tracing");
-			}
+			dataGridLayout ??= new TraceSwitch("DataGridLayout", "DataGrid layout tracing");
 			return dataGridLayout;
 		}
 	}
@@ -126,13 +105,10 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (dataGridPainting is null)
-			{
-				dataGridPainting = new TraceSwitch(
-					"DataGridPainting",
-					"DataGrid Painting related tracing"
-				);
-			}
+			dataGridPainting ??= new TraceSwitch(
+				"DataGridPainting",
+				"DataGrid Painting related tracing"
+			);
 			return dataGridPainting;
 		}
 	}
@@ -141,10 +117,7 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (dataGridParents is null)
-			{
-				dataGridParents = new TraceSwitch("DataGridParents", "DataGrid parent rows");
-			}
+			dataGridParents ??= new TraceSwitch("DataGridParents", "DataGrid parent rows");
 			return dataGridParents;
 		}
 	}
@@ -153,10 +126,7 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (dataGridScrolling is null)
-			{
-				dataGridScrolling = new TraceSwitch("DataGridScrolling", "DataGrid scrolling");
-			}
+			dataGridScrolling ??= new TraceSwitch("DataGridScrolling", "DataGrid scrolling");
 			return dataGridScrolling;
 		}
 	}
@@ -165,13 +135,10 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (dataGridSelection is null)
-			{
-				dataGridSelection = new TraceSwitch(
-					"DataGridSelection",
-					"DataGrid selection management tracing"
-				);
-			}
+			dataGridSelection ??= new TraceSwitch(
+				"DataGridSelection",
+				"DataGrid selection management tracing"
+			);
 			return dataGridSelection;
 		}
 	}
@@ -180,13 +147,10 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (dataObject is null)
-			{
-				dataObject = new TraceSwitch(
-					"DataObject",
-					"Enable tracing for the DataObject class."
-				);
-			}
+			dataObject ??= new TraceSwitch(
+				"DataObject",
+				"Enable tracing for the DataObject class."
+			);
 			return dataObject;
 		}
 	}
@@ -195,10 +159,7 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (dataView is null)
-			{
-				dataView = new TraceSwitch("DataView", "DataView");
-			}
+			dataView ??= new TraceSwitch("DataView", "DataView");
 			return dataView;
 		}
 	}
@@ -207,10 +168,7 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (debugGridView is null)
-			{
-				debugGridView = new TraceSwitch("PSDEBUGGRIDVIEW", "Debug PropertyGridView");
-			}
+			debugGridView ??= new TraceSwitch("PSDEBUGGRIDVIEW", "Debug PropertyGridView");
 			return debugGridView;
 		}
 	}
@@ -219,10 +177,7 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (dgCaptionPaint is null)
-			{
-				dgCaptionPaint = new TraceSwitch("DGCaptionPaint", "DataGridCaption");
-			}
+			dgCaptionPaint ??= new TraceSwitch("DGCaptionPaint", "DataGridCaption");
 			return dgCaptionPaint;
 		}
 	}
@@ -231,13 +186,10 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (dgEditColumnEditing is null)
-			{
-				dgEditColumnEditing = new TraceSwitch(
-					"DGEditColumnEditing",
-					"Editing related tracing"
-				);
-			}
+			dgEditColumnEditing ??= new TraceSwitch(
+				"DGEditColumnEditing",
+				"Editing related tracing"
+			);
 			return dgEditColumnEditing;
 		}
 	}
@@ -246,13 +198,10 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (dgRelationShpRowLayout is null)
-			{
-				dgRelationShpRowLayout = new TraceSwitch(
-					"DGRelationShpRowLayout",
-					"Relationship row layout"
-				);
-			}
+			dgRelationShpRowLayout ??= new TraceSwitch(
+				"DGRelationShpRowLayout",
+				"Relationship row layout"
+			);
 			return dgRelationShpRowLayout;
 		}
 	}
@@ -261,13 +210,10 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (dgRelationShpRowPaint is null)
-			{
-				dgRelationShpRowPaint = new TraceSwitch(
-					"DGRelationShpRowPaint",
-					"Relationship row painting"
-				);
-			}
+			dgRelationShpRowPaint ??= new TraceSwitch(
+				"DGRelationShpRowPaint",
+				"Relationship row painting"
+			);
 			return dgRelationShpRowPaint;
 		}
 	}
@@ -276,10 +222,7 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (dgRowPaint is null)
-			{
-				dgRowPaint = new TraceSwitch("DGRowPaint", "DataGrid Simple Row painting stuff");
-			}
+			dgRowPaint ??= new TraceSwitch("DGRowPaint", "DataGrid Simple Row painting stuff");
 			return dgRowPaint;
 		}
 	}
@@ -288,10 +231,7 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (dragDrop is null)
-			{
-				dragDrop = new TraceSwitch("DragDrop", "Debug OLEDragDrop support in Controls");
-			}
+			dragDrop ??= new TraceSwitch("DragDrop", "Debug OLEDragDrop support in Controls");
 			return dragDrop;
 		}
 	}
@@ -300,10 +240,7 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (flowLayout is null)
-			{
-				flowLayout = new TraceSwitch("FlowLayout", "Debug flow layout");
-			}
+			flowLayout ??= new TraceSwitch("FlowLayout", "Debug flow layout");
 			return flowLayout;
 		}
 	}
@@ -312,10 +249,7 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (imeMode is null)
-			{
-				imeMode = new TraceSwitch("ImeMode", "Debug IME Mode");
-			}
+			imeMode ??= new TraceSwitch("ImeMode", "Debug IME Mode");
 			return imeMode;
 		}
 	}
@@ -324,13 +258,10 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (layoutPerformance is null)
-			{
-				layoutPerformance = new TraceSwitch(
-					"LayoutPerformance",
-					"Tracks layout events which impact performance."
-				);
-			}
+			layoutPerformance ??= new TraceSwitch(
+				"LayoutPerformance",
+				"Tracks layout events which impact performance."
+			);
 			return layoutPerformance;
 		}
 	}
@@ -339,13 +270,10 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (layoutSuspendResume is null)
-			{
-				layoutSuspendResume = new TraceSwitch(
-					"LayoutSuspendResume",
-					"Tracks SuspendLayout/ResumeLayout."
-				);
-			}
+			layoutSuspendResume ??= new TraceSwitch(
+				"LayoutSuspendResume",
+				"Tracks SuspendLayout/ResumeLayout."
+			);
 			return layoutSuspendResume;
 		}
 	}
@@ -354,13 +282,10 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (lifetimeTracing is null)
-			{
-				lifetimeTracing = new BooleanSwitch(
-					"LifetimeTracing",
-					"Track lifetime events. This will cause objects to track the stack at creation and dispose."
-				);
-			}
+			lifetimeTracing ??= new BooleanSwitch(
+				"LifetimeTracing",
+				"Track lifetime events. This will cause objects to track the stack at creation and dispose."
+			);
 			return lifetimeTracing;
 		}
 	}
@@ -369,10 +294,7 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (msaa is null)
-			{
-				msaa = new TraceSwitch("MSAA", "Debug Microsoft Active Accessibility");
-			}
+			msaa ??= new TraceSwitch("MSAA", "Debug Microsoft Active Accessibility");
 			return msaa;
 		}
 	}
@@ -381,13 +303,10 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (msoComponentManager is null)
-			{
-				msoComponentManager = new TraceSwitch(
-					"MSOComponentManager",
-					"Debug MSO Component Manager support"
-				);
-			}
+			msoComponentManager ??= new TraceSwitch(
+				"MSOComponentManager",
+				"Debug MSO Component Manager support"
+			);
 			return msoComponentManager;
 		}
 	}
@@ -396,10 +315,7 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (richLayout is null)
-			{
-				richLayout = new TraceSwitch("RichLayout", "Debug layout in RichControls");
-			}
+			richLayout ??= new TraceSwitch("RichLayout", "Debug layout in RichControls");
 			return richLayout;
 		}
 	}
@@ -408,10 +324,7 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (setBounds is null)
-			{
-				setBounds = new TraceSwitch("SetBounds", "Trace changes to control size/position.");
-			}
+			setBounds ??= new TraceSwitch("SetBounds", "Trace changes to control size/position.");
 			return setBounds;
 		}
 	}
@@ -420,13 +333,10 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (s_handleLeak is null)
-			{
-				s_handleLeak = new TraceSwitch(
-					"HANDLELEAK",
-					"HandleCollector: Track Win32 Handle Leaks"
-				);
-			}
+			s_handleLeak ??= new TraceSwitch(
+				"HANDLELEAK",
+				"HandleCollector: Track Win32 Handle Leaks"
+			);
 			return s_handleLeak;
 		}
 	}
@@ -435,13 +345,10 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (s_traceCollect is null)
-			{
-				s_traceCollect = new BooleanSwitch(
-					"TRACECOLLECT",
-					"HandleCollector: Trace HandleCollector operations"
-				);
-			}
+			s_traceCollect ??= new BooleanSwitch(
+				"TRACECOLLECT",
+				"HandleCollector: Trace HandleCollector operations"
+			);
 			return s_traceCollect;
 		}
 	}
@@ -450,13 +357,10 @@ internal static class CompModSwitches
 	{
 		get
 		{
-			if (s_commonDesignerServices is null)
-			{
-				s_commonDesignerServices = new BooleanSwitch(
-					"CommonDesignerServices",
-					"Assert if any common designer service is not found."
-				);
-			}
+			s_commonDesignerServices ??= new BooleanSwitch(
+				"CommonDesignerServices",
+				"Assert if any common designer service is not found."
+			);
 			return s_commonDesignerServices;
 		}
 	}

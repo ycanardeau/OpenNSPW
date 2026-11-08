@@ -1,10 +1,10 @@
 using System.Collections.Immutable;
 using Aigamo.MatchGenerator;
+using Aigamo.Otsuki.Core.Reliable;
+using Aigamo.Otsuki.Core.Session.Transitions;
 using Aigamo.Otsuki.Messages.Core;
-using Aigamo.Otsuki.Reliable;
-using Aigamo.Otsuki.Session.Transitions;
 
-namespace Aigamo.Otsuki.Session;
+namespace Aigamo.Otsuki.Core.Session;
 
 /// <summary>
 /// A host's check whether <c>Target</c> is still in the session, on behalf of <see cref="Requester"/>

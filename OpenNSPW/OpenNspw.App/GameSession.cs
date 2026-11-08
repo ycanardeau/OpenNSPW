@@ -363,7 +363,7 @@ internal sealed class GameSession : IDisposable
 	// Whether a key is one of the original's debug keys (DBG_MODE, WndProc) that a single-player game does not get in a
 	// Release build: F5 swaps the side the player plays, which would hand the player the computer's fleet; F6 starts the
 	// scenario again; F9 sinks the selected unit.
-	private bool IsHeldBackDebugKey(XnaKeys key)
+	private static bool IsHeldBackDebugKey(XnaKeys key)
 	{
 #if DEBUG
 		return false;

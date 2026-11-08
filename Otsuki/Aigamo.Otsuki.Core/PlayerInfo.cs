@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using Aigamo.Otsuki.Messages.Core;
 
-namespace Aigamo.Otsuki;
+namespace Aigamo.Otsuki.Core;
 
 /// <summary>
 /// A player in the session, like DPN_PLAYER_INFO.

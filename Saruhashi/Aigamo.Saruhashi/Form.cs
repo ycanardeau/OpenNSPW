@@ -1,4 +1,5 @@
 using System.Drawing;
+using Aigamo.Saruhashi.DataBindings;
 
 namespace Aigamo.Saruhashi;
 
@@ -29,7 +30,7 @@ public class Form : Control
 		set => base.BindingContext = value;
 	}
 
-	protected override Size DefaultSize => new Size(300, 300);
+	protected override Size DefaultSize => new(300, 300);
 	public DialogResult DialogResult { get; set; }
 	public bool KeyPreview { get; set; }
 

@@ -1,11 +1,11 @@
 using System.Collections.Immutable;
 using System.Net;
 using Aigamo.MatchGenerator;
+using Aigamo.Otsuki.Core.Reliable;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Messages.Enumeration;
-using Aigamo.Otsuki.Reliable;
 
-namespace Aigamo.Otsuki.Session;
+namespace Aigamo.Otsuki.Core.Session;
 
 [GenerateMatch]
 internal abstract record SessionMessage

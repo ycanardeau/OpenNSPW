@@ -17,6 +17,11 @@ public sealed class DirectPlay8Factory(
 	public IReadOnlyList<DirectPlay8Peer> Peers => _peers;
 
 	// Returns S_OK and the object, or REGDB_E_CLASSNOTREG for a class that is not DirectPlay 8.
+	[System.Diagnostics.CodeAnalysis.SuppressMessage(
+		"Style",
+		"IDE0060:Remove unused parameter",
+		Justification = "CoCreateInstance's signature: each class has the one interface that the game asks it for."
+	)]
 	public int CoCreateInstance(Guid rclsid, Guid riid, out object? ppv)
 	{
 		if (rclsid == dplay8.CLSID_DirectPlay8Peer)

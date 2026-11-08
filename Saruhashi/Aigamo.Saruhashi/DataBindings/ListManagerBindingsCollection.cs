@@ -9,7 +9,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 /// <summary>
 ///  BindingsCollection is a collection of bindings for a Control. It has Add/Remove capabilities,
@@ -35,10 +35,7 @@ internal class ListManagerBindingsCollection : BindingsCollection
 
 	protected override void AddCore(Binding dataBinding)
 	{
-		if (dataBinding is null)
-		{
-			throw new ArgumentNullException(nameof(dataBinding));
-		}
+		ArgumentNullException.ThrowIfNull(dataBinding);
 		if (dataBinding.BindingManagerBase == _bindingManagerBase)
 		{
 			throw new ArgumentException(SR.BindingsCollectionAdd1, nameof(dataBinding));
@@ -65,10 +62,7 @@ internal class ListManagerBindingsCollection : BindingsCollection
 
 	protected override void RemoveCore(Binding dataBinding)
 	{
-		if (dataBinding is null)
-		{
-			throw new ArgumentNullException(nameof(dataBinding));
-		}
+		ArgumentNullException.ThrowIfNull(dataBinding);
 		if (dataBinding.BindingManagerBase != _bindingManagerBase)
 		{
 			throw new ArgumentException(SR.BindingsCollectionForeign, nameof(dataBinding));

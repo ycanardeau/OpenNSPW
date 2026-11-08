@@ -142,7 +142,7 @@ internal sealed class ParameterRemover(
 	// space around them, so that `( a )` becomes `()`.
 	private static IEnumerable<TextSpan> Deletions<T>(
 		SeparatedSyntaxList<T> items,
-		IReadOnlySet<int> removed
+		HashSet<int> removed
 	)
 		where T : SyntaxNode
 	{
@@ -468,7 +468,7 @@ internal sealed class ParameterRemover(
 				parameters.SyntaxTree,
 				Deletions(
 					parameters.Parameters,
-					group.Select(p => parameters.Parameters.IndexOf(p.Declaration)).ToHashSet()
+					[.. group.Select(p => parameters.Parameters.IndexOf(p.Declaration))]
 				)
 			);
 		}

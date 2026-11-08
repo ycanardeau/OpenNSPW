@@ -6,13 +6,14 @@ namespace Aigamo.Otsuki.Messages.Tests.Core;
 
 public class AckConnectInfoMessageSerializerTests
 {
-	public static IEnumerable<object?[]> TestData()
+	public static TheoryData<byte[], CoreMessage.AckConnectInfo> TestData()
 	{
-		yield return new object?[]
+		var data = new TheoryData<byte[], CoreMessage.AckConnectInfo>
 		{
-			new byte[] { 0xC3, 0x00, 0x00, 0x00 },
-			new CoreMessage.AckConnectInfo(),
+			{ [0xC3, 0x00, 0x00, 0x00], new CoreMessage.AckConnectInfo() },
 		};
+
+		return data;
 	}
 
 	[Theory]

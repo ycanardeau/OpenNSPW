@@ -1,6 +1,6 @@
 using Aigamo.Results;
 
-namespace Aigamo.Otsuki.Session.Transitions;
+namespace Aigamo.Otsuki.Core.Session.Transitions;
 
 /// <summary>
 /// Starts joining a session by connecting to its host ([MC-DPL8CS] section 3.1.5.2, step 1).

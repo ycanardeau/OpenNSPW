@@ -118,7 +118,7 @@ internal sealed class Distances(CSharpProject project)
 	}
 
 	// Whether a comment or a directive is between the first and the last statement.
-	private static bool HasTriviaInside(IReadOnlyList<StatementSyntax> statements)
+	private static bool HasTriviaInside(List<StatementSyntax> statements)
 	{
 		var inside = TextSpan.FromBounds(statements[0].SpanStart, statements[^1].Span.End);
 		return statements[0]
@@ -135,7 +135,7 @@ internal sealed class Distances(CSharpProject project)
 
 	// The replacement of the computation that starts at statements[start], if it is one that can be replaced.
 	private static (TextSpan Span, string Text)? Edit(
-		IReadOnlyList<StatementSyntax> statements,
+		SyntaxList<StatementSyntax> statements,
 		int start,
 		SemanticModel model
 	)

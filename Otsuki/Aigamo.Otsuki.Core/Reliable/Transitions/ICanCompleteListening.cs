@@ -1,6 +1,6 @@
 using Aigamo.Otsuki.Messages.Reliable;
 
-namespace Aigamo.Otsuki.Reliable.Transitions;
+namespace Aigamo.Otsuki.Core.Reliable.Transitions;
 
 /// <summary>
 /// Establishes an inbound connection on the connector's final CONNECTED ([MC-DPL8R] section 3.1.5.1.2), or on its

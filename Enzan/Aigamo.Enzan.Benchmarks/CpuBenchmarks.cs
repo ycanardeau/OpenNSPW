@@ -19,12 +19,14 @@ public class CpuBenchmarks
 	[GlobalSetup]
 	public void Setup()
 	{
-		_cpu = new Cpu(new byte[0x10000], Offset);
-		_cpu.Esp = StackTop;
-		_cpu.Eax = new Register32(0x31415926);
-		_cpu.Ebx = new Register32(0x27182818);
-		_cpu.Ecx = Register32.Empty;
-		_cpu.Edx = Register32.Empty;
+		_cpu = new Cpu(new byte[0x10000], Offset)
+		{
+			Esp = StackTop,
+			Eax = new Register32(0x31415926),
+			Ebx = new Register32(0x27182818),
+			Ecx = Register32.Empty,
+			Edx = Register32.Empty,
+		};
 	}
 
 	// mov ecx, N

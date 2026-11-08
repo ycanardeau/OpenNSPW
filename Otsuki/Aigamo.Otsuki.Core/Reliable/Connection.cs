@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace Aigamo.Otsuki.Reliable;
+namespace Aigamo.Otsuki.Core.Reliable;
 
 /// <summary>
 /// A connection as the session knows it: the partner, and the loop that runs it. Nothing in it changes, so the

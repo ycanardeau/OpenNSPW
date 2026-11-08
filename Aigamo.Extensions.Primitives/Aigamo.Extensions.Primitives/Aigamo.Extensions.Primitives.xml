@@ -4,6 +4,11 @@
         <name>Aigamo.Extensions.Primitives</name>
     </assembly>
     <members>
+        <member name="T:Aigamo.Extensions.Primitives.BitExtensions">
+            <summary>
+            The low-order and high-order halves of integers, as Win32's LOBYTE, HIBYTE, LOWORD and HIWORD give them.
+            </summary>
+        </member>
         <member name="M:Aigamo.Extensions.Primitives.BitExtensions.get_LowByte(System.UInt16)">
             <inheritdoc cref="P:Aigamo.Extensions.Primitives.BitExtensions.&lt;G&gt;$B7387B77E15A9DBF0D30EA969A07D0DD.LowByte"/>
         </member>

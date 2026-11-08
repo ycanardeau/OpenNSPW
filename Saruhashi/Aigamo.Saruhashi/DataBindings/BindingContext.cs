@@ -12,7 +12,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 /// <summary>
 ///  Manages the collection of System.Windows.Forms.BindingManagerBase
@@ -65,7 +65,7 @@ public class BindingContext : ICollection
 	/// <summary>
 	///  Gets a value indicating whether the collection is read-only.
 	/// </summary>
-	public bool IsReadOnly => false;
+	public static bool IsReadOnly => false;
 
 	/// <summary>
 	///  Gets a value indicating whether the collection is synchronized.
@@ -118,14 +118,8 @@ public class BindingContext : ICollection
 	/// </remarks>
 	protected virtual void AddCore(object dataSource, BindingManagerBase listManager)
 	{
-		if (dataSource is null)
-		{
-			throw new ArgumentNullException(nameof(dataSource));
-		}
-		if (listManager is null)
-		{
-			throw new ArgumentNullException(nameof(listManager));
-		}
+		ArgumentNullException.ThrowIfNull(dataSource);
+		ArgumentNullException.ThrowIfNull(listManager);
 
 		_listManagers[GetKey(dataSource, string.Empty)] = new WeakReference(listManager, false);
 	}
@@ -181,7 +175,7 @@ public class BindingContext : ICollection
 		return _listManagers.ContainsKey(GetKey(dataSource, dataMember));
 	}
 
-	private HashKey GetKey(object dataSource, string dataMember)
+	private static HashKey GetKey(object dataSource, string dataMember)
 	{
 		return new HashKey(dataSource, dataMember);
 	}
@@ -194,14 +188,8 @@ public class BindingContext : ICollection
 
 		internal HashKey(object dataSource, string dataMember)
 		{
-			if (dataSource is null)
-			{
-				throw new ArgumentNullException(nameof(dataSource));
-			}
-			if (dataMember is null)
-			{
-				dataMember = string.Empty;
-			}
+			ArgumentNullException.ThrowIfNull(dataSource);
+			dataMember ??= string.Empty;
 
 			// The dataMember should be case insensitive, so convert the
 			// dataMember to lower case
@@ -214,7 +202,7 @@ public class BindingContext : ICollection
 
 		public override bool Equals(object target)
 		{
-			if (!(target is HashKey keyTarget))
+			if (target is not HashKey keyTarget)
 			{
 				return false;
 			}
@@ -266,10 +254,7 @@ public class BindingContext : ICollection
 	{
 		BindingManagerBase bindingManagerBase = null;
 
-		if (dataMember is null)
-		{
-			dataMember = string.Empty;
-		}
+		dataMember ??= string.Empty;
 
 		// Check whether data source wants to provide its own binding managers
 		// (but fall through to old logic if it fails to provide us with one)
@@ -312,17 +297,16 @@ public class BindingContext : ICollection
 		{
 			// Data member specified, so get data source's binding manager, and hook a 'related' binding manager to it
 			int lastDot = dataMember.LastIndexOf('.');
-			string dataPath = (lastDot == -1) ? string.Empty : dataMember.Substring(0, lastDot);
-			string dataField = dataMember.Substring(lastDot + 1);
+			string dataPath = (lastDot == -1) ? string.Empty : dataMember[..lastDot];
+			string dataField = dataMember[(lastDot + 1)..];
 
 			BindingManagerBase formerManager = EnsureListManager(dataSource, dataPath);
 
-			PropertyDescriptor prop = formerManager.GetItemProperties().Find(dataField, true);
-			if (prop is null)
-			{
-				throw new ArgumentException(string.Format(SR.RelatedListManagerChild, dataField));
-			}
-
+			PropertyDescriptor prop =
+				formerManager.GetItemProperties().Find(dataField, true)
+				?? throw new ArgumentException(
+					string.Format(SR.RelatedListManagerChild, dataField)
+				);
 			if (typeof(IList).IsAssignableFrom(prop.PropertyType))
 			{
 				bindingManagerBase = new RelatedCurrencyManager(formerManager, dataField);
@@ -398,10 +382,7 @@ public class BindingContext : ICollection
 			WeakReference wRef = (WeakReference)de.Value;
 			if (wRef.Target is null)
 			{
-				if (cleanupList is null)
-				{
-					cleanupList = [];
-				}
+				cleanupList ??= [];
 				cleanupList.Add(de.Key);
 			}
 		}
@@ -423,16 +404,10 @@ public class BindingContext : ICollection
 	[RequiresUnreferencedCode(BindingTrimming.Message)]
 	public static void UpdateBinding(BindingContext newBindingContext, Binding binding)
 	{
-		if (binding is null)
-		{
-			throw new ArgumentNullException(nameof(binding));
-		}
+		ArgumentNullException.ThrowIfNull(binding);
 
 		BindingManagerBase oldManager = binding.BindingManagerBase;
-		if (oldManager != null)
-		{
-			oldManager.Bindings.Remove(binding);
-		}
+		oldManager?.Bindings.Remove(binding);
 
 		if (newBindingContext != null)
 		{

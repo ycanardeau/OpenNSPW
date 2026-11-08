@@ -1,4 +1,5 @@
 using System.Net;
+using Aigamo.Otsuki.Core;
 using Aigamo.Otsuki.Messages.Core;
 using FluentAssertions;
 using Xunit;

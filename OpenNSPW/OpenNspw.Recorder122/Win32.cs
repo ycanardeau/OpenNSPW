@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace OpenNspw.Recorder122;
 
 // The Win32 functions and constants of the debugger API, for a 32-bit debugger of a 32-bit program.
-internal static class Win32
+internal static partial class Win32
 {
 	public const uint DEBUG_ONLY_THIS_PROCESS = 0x2;
 	public const uint INFINITE = 0xFFFFFFFF;
@@ -39,13 +39,14 @@ internal static class Win32
 	public const uint CONTEXT_INTEGER = 0x00010002;
 	public const uint TrapFlag = 0x100;
 
-	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+	// The strings that the recorder leaves out are null pointers, so that the struct is blittable for LibraryImport.
+	[StructLayout(LayoutKind.Sequential)]
 	public struct STARTUPINFO
 	{
 		public int cb;
-		public string? lpReserved;
-		public string? lpDesktop;
-		public string? lpTitle;
+		public nint lpReserved;
+		public nint lpDesktop;
+		public nint lpTitle;
 		public int dwX,
 			dwY,
 			dwXSize,
@@ -71,13 +72,19 @@ internal static class Win32
 			dwThreadId;
 	}
 
-	[DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-	public static extern bool CreateProcess(
+	[LibraryImport(
+		"kernel32.dll",
+		EntryPoint = "CreateProcessW",
+		SetLastError = true,
+		StringMarshalling = StringMarshalling.Utf16
+	)]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	public static partial bool CreateProcess(
 		string? lpApplicationName,
 		string? lpCommandLine,
 		nint lpProcessAttributes,
 		nint lpThreadAttributes,
-		bool bInheritHandles,
+		[MarshalAs(UnmanagedType.Bool)] bool bInheritHandles,
 		uint dwCreationFlags,
 		nint lpEnvironment,
 		string? lpCurrentDirectory,
@@ -85,18 +92,21 @@ internal static class Win32
 		out PROCESS_INFORMATION lpProcessInformation
 	);
 
-	[DllImport("kernel32.dll", SetLastError = true)]
-	public static extern bool WaitForDebugEvent(nint lpDebugEvent, uint dwMilliseconds);
+	[LibraryImport("kernel32.dll", SetLastError = true)]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	public static partial bool WaitForDebugEvent(nint lpDebugEvent, uint dwMilliseconds);
 
-	[DllImport("kernel32.dll", SetLastError = true)]
-	public static extern bool ContinueDebugEvent(
+	[LibraryImport("kernel32.dll", SetLastError = true)]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	public static partial bool ContinueDebugEvent(
 		int dwProcessId,
 		int dwThreadId,
 		uint dwContinueStatus
 	);
 
-	[DllImport("kernel32.dll", SetLastError = true)]
-	public static extern bool ReadProcessMemory(
+	[LibraryImport("kernel32.dll", SetLastError = true)]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	public static partial bool ReadProcessMemory(
 		nint hProcess,
 		nint lpBaseAddress,
 		[Out] byte[] lpBuffer,
@@ -104,8 +114,9 @@ internal static class Win32
 		out nint lpNumberOfBytesRead
 	);
 
-	[DllImport("kernel32.dll", SetLastError = true)]
-	public static extern bool WriteProcessMemory(
+	[LibraryImport("kernel32.dll", SetLastError = true)]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	public static partial bool WriteProcessMemory(
 		nint hProcess,
 		nint lpBaseAddress,
 		byte[] lpBuffer,
@@ -113,18 +124,27 @@ internal static class Win32
 		out nint lpNumberOfBytesWritten
 	);
 
-	[DllImport("kernel32.dll", SetLastError = true)]
-	public static extern bool FlushInstructionCache(nint hProcess, nint lpBaseAddress, nint dwSize);
+	[LibraryImport("kernel32.dll", SetLastError = true)]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	public static partial bool FlushInstructionCache(
+		nint hProcess,
+		nint lpBaseAddress,
+		nint dwSize
+	);
 
-	[DllImport("kernel32.dll", SetLastError = true)]
-	public static extern bool GetThreadContext(nint hThread, nint lpContext);
+	[LibraryImport("kernel32.dll", SetLastError = true)]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	public static partial bool GetThreadContext(nint hThread, nint lpContext);
 
-	[DllImport("kernel32.dll", SetLastError = true)]
-	public static extern bool SetThreadContext(nint hThread, nint lpContext);
+	[LibraryImport("kernel32.dll", SetLastError = true)]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	public static partial bool SetThreadContext(nint hThread, nint lpContext);
 
-	[DllImport("kernel32.dll", SetLastError = true)]
-	public static extern bool CloseHandle(nint hObject);
+	[LibraryImport("kernel32.dll", SetLastError = true)]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	public static partial bool CloseHandle(nint hObject);
 
-	[DllImport("kernel32.dll", SetLastError = true)]
-	public static extern bool TerminateProcess(nint hProcess, uint uExitCode);
+	[LibraryImport("kernel32.dll", SetLastError = true)]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	public static partial bool TerminateProcess(nint hProcess, uint uExitCode);
 }

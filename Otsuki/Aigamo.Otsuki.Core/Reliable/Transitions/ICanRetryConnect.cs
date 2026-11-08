@@ -1,4 +1,4 @@
-namespace Aigamo.Otsuki.Reliable.Transitions;
+namespace Aigamo.Otsuki.Core.Reliable.Transitions;
 
 /// <summary>
 /// Resends CONNECT until the listener answers ([MC-DPL8R] section 3.1.6.1).

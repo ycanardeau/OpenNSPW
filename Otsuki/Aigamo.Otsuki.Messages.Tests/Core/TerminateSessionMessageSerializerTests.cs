@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Aigamo.Otsuki.Messages.Core;
 using FluentAssertions;
 using Xunit;
@@ -6,16 +7,41 @@ namespace Aigamo.Otsuki.Messages.Tests.Core;
 
 public class TerminateSessionMessageSerializerTests
 {
-	public static IEnumerable<object?[]> TestData()
+	public static TheoryData<byte[], CoreMessage.TerminateSession> TestData()
 	{
-		yield return new object?[]
+		var data = new TheoryData<byte[], CoreMessage.TerminateSession>
 		{
-			new byte[] { },
-			new CoreMessage.TerminateSession { },
+			{
+				[0xDF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+				new CoreMessage.TerminateSession { TerminateData = ImmutableArray<byte>.Empty }
+			},
+			{
+				[
+					0xDF,
+					0x00,
+					0x00,
+					0x00,
+					0x08,
+					0x00,
+					0x00,
+					0x00,
+					0x04,
+					0x00,
+					0x00,
+					0x00,
+					0x01,
+					0x02,
+					0x03,
+					0x04,
+				],
+				new CoreMessage.TerminateSession { TerminateData = [1, 2, 3, 4] }
+			},
 		};
+
+		return data;
 	}
 
-	[Theory(Skip = "Not implemneted")]
+	[Theory]
 	[MemberData(nameof(TestData))]
 	internal void Deserialize(byte[] data, CoreMessage.TerminateSession expected)
 	{
@@ -25,7 +51,7 @@ public class TerminateSessionMessageSerializerTests
 		message.TerminateData.Should().Equal(expected.TerminateData);
 	}
 
-	[Theory(Skip = "Not implemneted")]
+	[Theory]
 	[MemberData(nameof(TestData))]
 	internal void Serialize(byte[] expected, CoreMessage.TerminateSession message)
 	{

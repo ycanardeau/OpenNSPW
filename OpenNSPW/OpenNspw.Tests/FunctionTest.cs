@@ -44,10 +44,7 @@ internal static class FunctionTest
 		}
 	}
 
-	private static IReadOnlyList<string> RunCase(
-		FunctionCase c,
-		Func<Nspw, FunctionCase, object?> call
-	)
+	private static List<string> RunCase(FunctionCase c, Func<Nspw, FunctionCase, object?> call)
 	{
 		var game = new Nspw();
 		var before = GameState.Initial.With(c.Before);

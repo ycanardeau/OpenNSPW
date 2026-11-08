@@ -170,7 +170,7 @@ public unsafe partial class Nspw
 	public int SHIP_LIMIT => IsSingleplayer ? 20 : 40;
 	public int PLANE_LIMIT => IsSingleplayer ? 30 : 50;
 
-	public int JPN_SHIP_START => 1;
+	public static int JPN_SHIP_START => 1;
 	public int JPN_SHIP_END => JPN_SHIP_START - 1 + SHIP_LIMIT;
 
 	public int USA_SHIP_START => JPN_SHIP_END + 1;
@@ -304,7 +304,7 @@ public unsafe partial class Nspw
 	}
 
 	// wsprintfA(buffer, format, ...): the arguments, a doubleword each, are read as the format's conversions ask.
-	private void FormatNatively(Emulator emulator)
+	private static void FormatNatively(Emulator emulator)
 	{
 		var buffer = emulator.Argument(0);
 		var format = emulator.Argument(1);
@@ -343,7 +343,7 @@ public unsafe partial class Nspw
 	// and the globals after them, until its first write to the resources, read-only, at 0x4F1000, crashes it. The port
 	// ends the route at point 62, the last whose leg cannot write past the path (point i + 2): from there, 1.22 also ends
 	// it, unless it writes past the path or finds no heading clear.
-	private void SetWindowTextNatively(Emulator emulator)
+	private static void SetWindowTextNatively(Emulator emulator)
 	{
 		if (emulator.Argument(1) == WaypointMessageAddress)
 		{

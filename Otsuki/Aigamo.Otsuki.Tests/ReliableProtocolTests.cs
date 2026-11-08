@@ -1,5 +1,6 @@
 using System.Net;
 using Aigamo.Otsuki.Actors;
+using Aigamo.Otsuki.Core;
 using Aigamo.Otsuki.Messages.Reliable;
 using FluentAssertions;
 using Xunit;

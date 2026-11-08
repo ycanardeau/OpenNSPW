@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using Aigamo.Otsuki.Messages.Core;
 
-namespace Aigamo.Otsuki.Session;
+namespace Aigamo.Otsuki.Core.Session;
 
 /// <summary>
 /// A group in the name table ([MC-DPL8CS] section 1.3.7.2). Owned by the <see cref="SessionCore"/>.

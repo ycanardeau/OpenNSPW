@@ -2,6 +2,7 @@ using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
+using Aigamo.Saruhashi.DataBindings;
 
 namespace Aigamo.Saruhashi;
 
@@ -31,8 +32,7 @@ public class Control : IDisposable, IBindableComponent
 			if (value is null)
 				return;
 
-			if (value._parent is not null)
-				value._parent.Controls.Remove(value);
+			value._parent?.Controls.Remove(value);
 
 			InnerList.Add(value);
 
@@ -62,7 +62,7 @@ public class Control : IDisposable, IBindableComponent
 
 		public virtual void Clear()
 		{
-			while (InnerList.Any())
+			while (InnerList.Count != 0)
 				Remove(InnerList.Last());
 		}
 
@@ -230,7 +230,7 @@ public class Control : IDisposable, IBindableComponent
 	}
 
 	// TODO
-	public Rectangle ClientRectangle => new Rectangle(Point.Empty, Size);
+	public Rectangle ClientRectangle => new(Point.Empty, Size);
 	internal Rectangle ClipRectangle => GetClipRectangle(ScreenRectangle);
 	public ControlCollection Controls => _controls ??= new ControlCollection(this);
 	public bool Created => _state.HasFlag(States.Created);
@@ -330,13 +330,12 @@ public class Control : IDisposable, IBindableComponent
 	private Point ScreenLocation => Parent?.PointToScreen(Location) ?? Location;
 
 	// A size of the control's pixels in the window manager's.
-	private Size SizeToScreen(Size size, float scale) =>
+	private static Size SizeToScreen(Size size, float scale) =>
 		scale == 1
 			? size
 			: new Size((int)MathF.Round(size.Width * scale), (int)MathF.Round(size.Height * scale));
 
-	private Rectangle ScreenRectangle =>
-		new Rectangle(ScreenLocation, SizeToScreen(Size, ScreenScale));
+	private Rectangle ScreenRectangle => new(ScreenLocation, SizeToScreen(Size, ScreenScale));
 	public ISite? Site { get; set; }
 
 	public Size Size
@@ -853,7 +852,7 @@ public class Control : IDisposable, IBindableComponent
 	}
 
 	public Rectangle RectangleToScreen(Rectangle r) =>
-		new Rectangle(PointToScreen(r.Location), SizeToScreen(r.Size, ScreenScale));
+		new(PointToScreen(r.Location), SizeToScreen(r.Size, ScreenScale));
 
 	private protected void SetState(States flag, bool value) =>
 		_state = value ? (_state | flag) : (_state & ~flag);

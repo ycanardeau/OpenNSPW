@@ -4,6 +4,11 @@ using Xunit;
 
 namespace Aigamo.Otsuki.Messages.Tests.Core;
 
+// The data is untyped: its types are internal, and a public TheoryData of them, as xUnit1042 asks, would not compile.
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+	"Usage",
+	"xUnit1042:The member referenced by the MemberData attribute returns untyped data rows"
+)]
 public class AlternateAddressTests
 {
 	public static IEnumerable<object?[]> TestData()

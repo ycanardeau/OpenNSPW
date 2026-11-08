@@ -384,6 +384,11 @@ internal sealed class LoopbackDirectPlayFactory(LoopbackNetwork network, SentHan
 	private readonly SentHandler _sent = sent;
 	private readonly List<LoopbackPeer> _peers = [];
 
+	[System.Diagnostics.CodeAnalysis.SuppressMessage(
+		"Style",
+		"IDE0060:Remove unused parameter",
+		Justification = "CoCreateInstance's signature: each class has the one interface that the game asks it for."
+	)]
 	public int CoCreateInstance(Guid rclsid, Guid riid, out object? ppv)
 	{
 		if (rclsid == dplay8.CLSID_DirectPlay8Peer)

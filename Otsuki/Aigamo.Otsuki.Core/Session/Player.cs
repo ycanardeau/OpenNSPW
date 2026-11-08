@@ -1,8 +1,8 @@
 using System.Collections.Immutable;
+using Aigamo.Otsuki.Core.Reliable;
 using Aigamo.Otsuki.Messages.Core;
-using Aigamo.Otsuki.Reliable;
 
-namespace Aigamo.Otsuki.Session;
+namespace Aigamo.Otsuki.Core.Session;
 
 /// <summary>
 /// A name table entry ([MC-DPL8CS] section 2.2.6). Owned by the <see cref="SessionCore"/>.

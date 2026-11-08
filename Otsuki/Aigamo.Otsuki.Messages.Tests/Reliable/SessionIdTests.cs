@@ -14,17 +14,20 @@ public class SessionIdTests
 		SessionId.Empty.Should().Be(new SessionId(0));
 	}
 
-	public static IEnumerable<object?[]> Equals_TestData()
+	public static TheoryData<SessionId, object?, bool> Equals_TestData()
 	{
-		yield return new object?[] { _testSessionId, _testSessionId, true };
-		yield return new object?[] { _testSessionId, new SessionId(0x22AE0764), true };
-		yield return new object?[] { _testSessionId, SessionId.Empty, false };
+		var data = new TheoryData<SessionId, object?, bool>
+		{
+			{ _testSessionId, _testSessionId, true },
+			{ _testSessionId, new SessionId(0x22AE0764), true },
+			{ _testSessionId, SessionId.Empty, false },
+			{ new SessionId(1), new SessionId(1), true },
+			{ new SessionId(1), new SessionId(0), false },
+			{ _testSessionId, new(), false },
+			{ _testSessionId, null, false },
+		};
 
-		yield return new object?[] { new SessionId(1), new SessionId(1), true };
-		yield return new object?[] { new SessionId(1), new SessionId(0), false };
-
-		yield return new object?[] { _testSessionId, new object(), false };
-		yield return new object?[] { _testSessionId, null, false };
+		return data;
 	}
 
 	[Theory]

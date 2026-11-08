@@ -1,4 +1,6 @@
 using System.Net;
+using Aigamo.Otsuki.Core.Reliable;
+using Aigamo.Otsuki.Core.Session;
 using Aigamo.Otsuki.Messages.Reliable;
 using Aigamo.Otsuki.Reliable;
 using Aigamo.Otsuki.Session;

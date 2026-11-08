@@ -6,13 +6,17 @@ namespace Aigamo.Otsuki.Messages.Tests.Core;
 
 public class RequestNameTableOperationsMessageSerializerTests
 {
-	public static IEnumerable<object?[]> TestData()
+	public static TheoryData<byte[], CoreMessage.RequestNameTableOperations> TestData()
 	{
-		yield return new object?[]
+		var data = new TheoryData<byte[], CoreMessage.RequestNameTableOperations>
 		{
-			new byte[] { 0xCB, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-			new CoreMessage.RequestNameTableOperations { Version = 2 },
+			{
+				[0xCB, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+				new CoreMessage.RequestNameTableOperations { Version = 2 }
+			},
 		};
+
+		return data;
 	}
 
 	[Theory]

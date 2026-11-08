@@ -219,6 +219,15 @@ internal sealed partial class CppToCSharp(IReadOnlyDictionary<string, long> cons
 	[GeneratedRegex("^\\s*#\\s*(\\w+)(.*)$")]
 	private static partial Regex DirectiveRegex();
 
+	[GeneratedRegex(@"\b(\w+)\s*==\s*0\b")]
+	private static partial Regex ZeroComparisonRegex();
+
+	[GeneratedRegex(@"^0\b")]
+	private static partial Regex ZeroConditionRegex();
+
+	[GeneratedRegex(@"^1\b")]
+	private static partial Regex OneConditionRegex();
+
 	private static string RewriteDirective(string directive)
 	{
 		var m = DirectiveRegex().Match(directive);
@@ -229,9 +238,9 @@ internal sealed partial class CppToCSharp(IReadOnlyDictionary<string, long> cons
 
 		var name = m.Groups[1].Value;
 		var rest = m.Groups[2].Value.Trim();
-		rest = Regex.Replace(rest, @"\b(\w+)\s*==\s*0\b", "!$1");
-		rest = Regex.Replace(rest, @"^0\b", "false");
-		rest = Regex.Replace(rest, @"^1\b", "true");
+		rest = ZeroComparisonRegex().Replace(rest, "!$1");
+		rest = ZeroConditionRegex().Replace(rest, "false");
+		rest = OneConditionRegex().Replace(rest, "true");
 		return name switch
 		{
 			"if" or "elif" => $"#{name} {rest}",
@@ -239,6 +248,9 @@ internal sealed partial class CppToCSharp(IReadOnlyDictionary<string, long> cons
 			_ => "//" + directive,
 		};
 	}
+
+	[GeneratedRegex(@"#(if|elif) false\b")]
+	private static partial Regex FalseConditionalRegex();
 
 	// Masks the sections that #if 0 (and #elif 0) excludes, so that they stay as they are, and rewrites the directives.
 	private string MaskDirectives(string text)
@@ -258,7 +270,7 @@ internal sealed partial class CppToCSharp(IReadOnlyDictionary<string, long> cons
 			var directive = Unmask(line[(marker + 1)..]);
 			var rewritten = line[..marker] + RewriteDirective(directive);
 			output.Add(rewritten);
-			if (!Regex.IsMatch(rewritten, @"#(if|elif) false\b"))
+			if (!FalseConditionalRegex().IsMatch(rewritten))
 			{
 				continue;
 			}
@@ -310,9 +322,12 @@ internal sealed partial class CppToCSharp(IReadOnlyDictionary<string, long> cons
 		return string.Join('\n', output);
 	}
 
+	[GeneratedRegex(@"\w+|[-+*/()]")]
+	private static partial Regex ExpressionTokenRegex();
+
 	private long Evaluate(string expression)
 	{
-		var tokens = Regex.Matches(expression, @"\w+|[-+*/()]").Select(m => m.Value).ToList();
+		var tokens = ExpressionTokenRegex().Matches(expression).Select(m => m.Value).ToList();
 		var position = 0;
 
 		long Primary()
@@ -360,9 +375,12 @@ internal sealed partial class CppToCSharp(IReadOnlyDictionary<string, long> cons
 		return Sum();
 	}
 
+	[GeneratedRegex(@"\s+")]
+	private static partial Regex WhitespaceRegex();
+
 	private static string MapType(string cppType)
 	{
-		var type = Regex.Replace(cppType.Trim(), @"\s+", " ");
+		var type = WhitespaceRegex().Replace(cppType.Trim(), " ");
 		foreach (var (cpp, cs) in TypeMap)
 		{
 			type = Regex.Replace(type, $@"(?<![\w]){Regex.Escape(cpp)}(?![\w])", cs);
@@ -397,11 +415,13 @@ internal sealed partial class CppToCSharp(IReadOnlyDictionary<string, long> cons
 	)]
 	private static partial Regex DeclaratorRegex();
 
+	[GeneratedRegex(@"^I[A-Z]\w+$")]
+	private static partial Regex InterfaceNameRegex();
+
 	// A COM interface (IDirectPlay8Peer), whose pointers are references in C#.
 	private static bool IsInterface(string csType)
 	{
-		return InterfaceTypes.Contains(csType)
-			|| System.Text.RegularExpressions.Regex.IsMatch(csType, @"^I[A-Z]\w+$");
+		return InterfaceTypes.Contains(csType) || InterfaceNameRegex().IsMatch(csType);
 	}
 
 	// The C# type of a pointer to a C++ type: a reference for COM interfaces and GUIDs, an unsafe pointer otherwise.
@@ -420,13 +440,25 @@ internal sealed partial class CppToCSharp(IReadOnlyDictionary<string, long> cons
 		return IsInterface(csType) ? csType.TrimEnd('?') + "?" : csType + pointer;
 	}
 
+	[GeneratedRegex(@"^const\s+")]
+	private static partial Regex ConstPrefixRegex();
+
 	private static bool IsDeclarationType(string type)
 	{
-		var bare = Regex.Replace(type, @"^const\s+", "");
+		var bare = ConstPrefixRegex().Replace(type, "");
 		return DeclarationTypes.Contains(bare)
 			|| TypeMap.Any(t => t.Cpp == bare)
 			|| bare.StartsWith("unsigned", StringComparison.Ordinal);
 	}
+
+	[GeneratedRegex(@"^(return|else|case|goto|delete|new|typedef|struct|extern)$")]
+	private static partial Regex StatementKeywordRegex();
+
+	[GeneratedRegex(@"\breturn\b")]
+	private static partial Regex ReturnKeywordRegex();
+
+	[GeneratedRegex(@"\[([^\]]*)\]")]
+	private static partial Regex ArrayDimensionRegex();
 
 	// Rewrites the declarations of a statement: arrays become ArrayN<T> (one statement each), pointer declarators get
 	// their own statement (C# puts the * on the type), and declarations outside functions become public fields.
@@ -435,8 +467,8 @@ internal sealed partial class CppToCSharp(IReadOnlyDictionary<string, long> cons
 		var type = m.Groups["type"].Value;
 		if (
 			!(global || IsDeclarationType(type))
-			|| Regex.IsMatch(type, @"^(return|else|case|goto|delete|new|typedef|struct|extern)$")
-			|| Regex.IsMatch(m.Groups["decls"].Value, @"\breturn\b")
+			|| StatementKeywordRegex().IsMatch(type)
+			|| ReturnKeywordRegex().IsMatch(m.Groups["decls"].Value)
 		)
 		{
 			return m.Value;
@@ -460,8 +492,8 @@ internal sealed partial class CppToCSharp(IReadOnlyDictionary<string, long> cons
 			var pointer = basePointer + d.Groups["ptr"].Value;
 			var name = d.Groups["name"].Value;
 			var init = d.Groups["init"].Value.Trim();
-			var dims = Regex
-				.Matches(d.Groups["dims"].Value, @"\[([^\]]*)\]")
+			var dims = ArrayDimensionRegex()
+				.Matches(d.Groups["dims"].Value)
 				.Select(x => x.Groups[1].Value)
 				.ToList();
 			var elementType = PointerType(csType, pointer);
@@ -528,6 +560,12 @@ internal sealed partial class CppToCSharp(IReadOnlyDictionary<string, long> cons
 		return parts;
 	}
 
+	[GeneratedRegex(@"(\w+)\s*$")]
+	private static partial Regex TrailingNameRegex();
+
+	[GeneratedRegex(@"^(?<type>.*?)(?<ptr>[\s\*]*\*)?\s*(?<name>\w+)\s*(?<dims>(\[\s*\])*)$")]
+	private static partial Regex ParameterRegex();
+
 	private static string MapParameter(string parameter, bool callback, int index)
 	{
 		var p = parameter.Trim();
@@ -538,7 +576,7 @@ internal sealed partial class CppToCSharp(IReadOnlyDictionary<string, long> cons
 
 		if (callback)
 		{
-			var name = Regex.Match(p, @"(\w+)\s*$").Groups[1].Value;
+			var name = TrailingNameRegex().Match(p).Groups[1].Value;
 			return index switch
 			{
 				0 => $"HWND {name}",
@@ -547,10 +585,7 @@ internal sealed partial class CppToCSharp(IReadOnlyDictionary<string, long> cons
 			};
 		}
 
-		var m = Regex.Match(
-			p,
-			@"^(?<type>.*?)(?<ptr>[\s\*]*\*)?\s*(?<name>\w+)\s*(?<dims>(\[\s*\])*)$"
-		);
+		var m = ParameterRegex().Match(p);
 		var type = m.Groups["type"].Value.Trim();
 		var pointer = m.Groups["ptr"].Value.Replace(" ", "").Replace("\t", "");
 		var paramName = m.Groups["name"].Value;
@@ -578,18 +613,27 @@ internal sealed partial class CppToCSharp(IReadOnlyDictionary<string, long> cons
 	)]
 	private static partial Regex PrototypeRegex();
 
+	[GeneratedRegex(@"\b(CALLBACK)\b")]
+	private static partial Regex CallbackRegex();
+
+	[GeneratedRegex(@"\b(CALLBACK|WINAPI|static)\b")]
+	private static partial Regex CallingConventionRegex();
+
+	[GeneratedRegex(@"\*+\s*$")]
+	private static partial Regex TrailingPointerRegex();
+
 	private static string RewriteFunction(Match m)
 	{
 		var ret = m.Groups["ret"].Value;
-		var callback = Regex.IsMatch(ret, @"\b(CALLBACK)\b");
-		ret = Regex.Replace(ret, @"\b(CALLBACK|WINAPI|static)\b", "").Trim();
+		var callback = CallbackRegex().IsMatch(ret);
+		ret = CallingConventionRegex().Replace(ret, "").Trim();
 		var parameters = m.Groups["params"].Value.Split(',');
 		var mapped = parameters
 			.Select((p, i) => MapParameter(p, callback, i))
 			.Where(p => p.Length > 0);
 		var csRet = callback ? "nint" : MapType(ret);
-		var pointer = Regex
-			.Match(m.Value[..(m.Groups["name"].Index - m.Index)], @"\*+\s*$")
+		var pointer = TrailingPointerRegex()
+			.Match(m.Value[..(m.Groups["name"].Index - m.Index)])
 			.Value.Trim();
 		csRet = PointerType(csRet, pointer);
 
@@ -627,13 +671,28 @@ internal sealed partial class CppToCSharp(IReadOnlyDictionary<string, long> cons
 		yield return (text[start..], true);
 	}
 
+	[GeneratedRegex(@"\(\s*(?:void|LPVOID|VOID)\s*\*\s*\*?\s*\)\s*&\s*")]
+	private static partial Regex VoidPointerCastRegex();
+
+	[GeneratedRegex(@"\bwhile\s*\(\s*1\s*\)")]
+	private static partial Regex WhileOneRegex();
+
+	[GeneratedRegex(@"\(\s*(?:LPARAM|WPARAM)\s*\)\s*")]
+	private static partial Regex MessageParameterCastRegex();
+
+	[GeneratedRegex(@"->")]
+	private static partial Regex ArrowRegex();
+
+	[GeneratedRegex(@"\bNULL\b")]
+	private static partial Regex NullRegex();
+
 	private static string RewriteCode(string code)
 	{
-		code = Regex.Replace(code, @"\(\s*(?:void|LPVOID|VOID)\s*\*\s*\*?\s*\)\s*&\s*", "out ");
-		code = Regex.Replace(code, @"\bwhile\s*\(\s*1\s*\)", "while(true)");
-		code = Regex.Replace(code, @"\(\s*(?:LPARAM|WPARAM)\s*\)\s*", "");
-		code = Regex.Replace(code, @"->", ".");
-		code = Regex.Replace(code, @"\bNULL\b", "null");
+		code = VoidPointerCastRegex().Replace(code, "out ");
+		code = WhileOneRegex().Replace(code, "while(true)");
+		code = MessageParameterCastRegex().Replace(code, "");
+		code = ArrowRegex().Replace(code, ".");
+		code = NullRegex().Replace(code, "null");
 		foreach (var (cpp, cs) in TypeMap)
 		{
 			if (cpp.Contains(' ') || cs.EndsWith('?'))
@@ -647,6 +706,9 @@ internal sealed partial class CppToCSharp(IReadOnlyDictionary<string, long> cons
 
 		return code;
 	}
+
+	[GeneratedRegex(@"^//#include.*$", RegexOptions.Multiline)]
+	private static partial Regex IncludeCommentRegex();
 
 	// Ports the C++ source of `fileName` (e.g. "win_main.cpp").
 	public string Port(string source, string fileName)
@@ -671,7 +733,7 @@ internal sealed partial class CppToCSharp(IReadOnlyDictionary<string, long> cons
 		var ported = Unmask(output.ToString());
 
 		// The class, after the #include lines.
-		var includes = Regex.Matches(ported, @"^//#include.*$", RegexOptions.Multiline);
+		var includes = IncludeCommentRegex().Matches(ported);
 		var insertAt = includes.Count > 0 ? includes[^1].Index + includes[^1].Length : 0;
 		var header =
 			$"\n\n// Port of {fileName}.\n\nnamespace OpenNspw;\n\npublic unsafe partial class Nspw\n{{";

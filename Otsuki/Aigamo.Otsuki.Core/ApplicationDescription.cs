@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using Aigamo.Otsuki.Messages.Core;
 
-namespace Aigamo.Otsuki;
+namespace Aigamo.Otsuki.Core;
 
 /// <summary>
 /// Describes a game session, like DPN_APPLICATION_DESC.

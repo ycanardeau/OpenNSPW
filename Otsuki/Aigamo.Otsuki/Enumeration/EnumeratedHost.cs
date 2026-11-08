@@ -1,7 +1,8 @@
 using System.Collections.Immutable;
 using System.Net;
+using Aigamo.Otsuki.Core;
 
-namespace Aigamo.Otsuki;
+namespace Aigamo.Otsuki.Enumeration;
 
 /// <summary>
 /// A host that answered <see cref="Peer.EnumHostsAsync"/>, like DPNMSG_ENUM_HOSTS_RESPONSE.

@@ -6,7 +6,7 @@
 
 #nullable disable
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 public class ConvertEventArgs(object value, Type desiredType) : EventArgs
 {

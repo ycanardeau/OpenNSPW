@@ -1,4 +1,4 @@
-namespace Aigamo.Otsuki.Reliable.Transitions;
+namespace Aigamo.Otsuki.Core.Reliable.Transitions;
 
 /// <summary>
 /// Disconnects gracefully ([MC-DPL8R] section 3.1.4.3).

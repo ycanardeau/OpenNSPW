@@ -2,6 +2,8 @@ using System.Collections.Immutable;
 using System.Net;
 using Aigamo.MatchGenerator;
 using Aigamo.Otsuki.Actors;
+using Aigamo.Otsuki.Core.Reliable;
+using Aigamo.Otsuki.Core.Session;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Messages.Reliable;
 using Aigamo.Otsuki.Session;

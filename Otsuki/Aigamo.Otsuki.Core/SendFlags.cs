@@ -1,4 +1,4 @@
-namespace Aigamo.Otsuki;
+namespace Aigamo.Otsuki.Core;
 
 /// <summary>
 /// Options for <see cref="Peer.SendTo"/>, using the values of the DPNSEND_* flags.

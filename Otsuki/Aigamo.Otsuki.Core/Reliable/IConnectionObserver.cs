@@ -2,7 +2,7 @@ using System.Net;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Messages.Enumeration;
 
-namespace Aigamo.Otsuki.Reliable;
+namespace Aigamo.Otsuki.Core.Reliable;
 
 /// <summary>
 /// The upper layer of a <see cref="Connection"/>. Every method is called from the connection's message loop,

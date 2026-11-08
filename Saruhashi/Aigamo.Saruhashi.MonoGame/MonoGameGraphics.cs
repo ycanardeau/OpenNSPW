@@ -305,7 +305,7 @@ public sealed class MonoGameGraphics : Graphics
 	public override void FillRectangle(Brush brush, float x, float y, float width, float height) =>
 		FillRectangle(brush, new DrawingRectangleF(x, y, width, height));
 
-	private DrawingSizeF MeasureString(string? text, IMonoGameFont? font)
+	private static DrawingSizeF MeasureString(string? text, IMonoGameFont? font)
 	{
 		if (font is null)
 			return DrawingSizeF.Empty;

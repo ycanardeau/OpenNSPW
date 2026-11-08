@@ -6,16 +6,24 @@ namespace Aigamo.Otsuki.Messages.Tests.Core;
 
 public class HostMigrateMessageSerializerTests
 {
-	public static IEnumerable<object?[]> TestData()
+	public static TheoryData<byte[], CoreMessage.HostMigrate> TestData()
 	{
-		yield return new object?[]
+		var data = new TheoryData<byte[], CoreMessage.HostMigrate>
 		{
-			new byte[] { },
-			new CoreMessage.HostMigrate { },
+			{
+				[0xCD, 0x00, 0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x30, 0x00],
+				new CoreMessage.HostMigrate
+				{
+					DpnidOldHost = new Dpnid(0x00100001),
+					DpnidNewHost = new Dpnid(0x00300003),
+				}
+			},
 		};
+
+		return data;
 	}
 
-	[Theory(Skip = "Not implemneted")]
+	[Theory]
 	[MemberData(nameof(TestData))]
 	internal void Deserialize(byte[] data, CoreMessage.HostMigrate expected)
 	{
@@ -26,7 +34,7 @@ public class HostMigrateMessageSerializerTests
 		message.DpnidNewHost.Should().Be(expected.DpnidNewHost);
 	}
 
-	[Theory(Skip = "Not implemneted")]
+	[Theory]
 	[MemberData(nameof(TestData))]
 	internal void Serialize(byte[] expected, CoreMessage.HostMigrate message)
 	{

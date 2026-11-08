@@ -12,7 +12,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 /// <summary>
 ///  Manages the position and bindings of a list.
@@ -35,7 +35,7 @@ public class CurrencyManager : BindingManagerBase
 	private bool suspendPushDataInCurrentChanged;
 	private EventHandler<ItemChangedEventArgs> onItemChanged;
 	private ListChangedEventHandler onListChanged;
-	private readonly ItemChangedEventArgs resetEvent = new ItemChangedEventArgs(-1);
+	private readonly ItemChangedEventArgs resetEvent = new(-1);
 	private EventHandler onMetaDataChangedHandler;
 
 	/// <summary>
@@ -74,9 +74,9 @@ public class CurrencyManager : BindingManagerBase
 	{
 		get
 		{
-			if (list is IBindingList)
+			if (list is IBindingList bindingList)
 			{
-				return ((IBindingList)list).AllowNew;
+				return bindingList.AllowNew;
 			}
 			if (list is null)
 			{
@@ -95,9 +95,9 @@ public class CurrencyManager : BindingManagerBase
 	{
 		get
 		{
-			if (list is IBindingList)
+			if (list is IBindingList bindingList)
 			{
-				return ((IBindingList)list).AllowEdit;
+				return bindingList.AllowEdit;
 			}
 			if (list is null)
 			{
@@ -115,9 +115,9 @@ public class CurrencyManager : BindingManagerBase
 	{
 		get
 		{
-			if (list is IBindingList)
+			if (list is IBindingList bindingList)
 			{
-				return ((IBindingList)list).AllowRemove;
+				return bindingList.AllowRemove;
 			}
 			if (list is null)
 			{
@@ -177,24 +177,21 @@ public class CurrencyManager : BindingManagerBase
 			finalType = null;
 
 			object tempList = dataSource;
-			if (tempList is Array)
+			if (tempList is Array array)
 			{
 				finalType = tempList.GetType();
-				tempList = (Array)tempList;
+				tempList = array;
 			}
 
-			if (tempList is IListSource)
+			if (tempList is IListSource listSource)
 			{
-				tempList = ((IListSource)tempList).GetList();
+				tempList = listSource.GetList();
 			}
 
-			if (tempList is IList)
+			if (tempList is IList iList)
 			{
-				if (finalType is null)
-				{
-					finalType = tempList.GetType();
-				}
-				list = (IList)tempList;
+				finalType ??= tempList.GetType();
+				list = iList;
 				WireEvents(list);
 				if (list.Count > 0)
 				{
@@ -558,9 +555,9 @@ public class CurrencyManager : BindingManagerBase
 	/// </summary>
 	internal void SetSort(PropertyDescriptor property, ListSortDirection sortDirection)
 	{
-		if (list is IBindingList && ((IBindingList)list).SupportsSorting)
+		if (list is IBindingList bindingList && bindingList.SupportsSorting)
 		{
-			((IBindingList)list).ApplySort(property, sortDirection);
+			bindingList.ApplySort(property, sortDirection);
 		}
 	}
 
@@ -569,9 +566,9 @@ public class CurrencyManager : BindingManagerBase
 	/// </summary>
 	internal PropertyDescriptor GetSortProperty()
 	{
-		if ((list is IBindingList) && ((IBindingList)list).SupportsSorting)
+		if (list is IBindingList bindingList && bindingList.SupportsSorting)
 		{
-			return ((IBindingList)list).SortProperty;
+			return bindingList.SortProperty;
 		}
 		return null;
 	}
@@ -581,9 +578,9 @@ public class CurrencyManager : BindingManagerBase
 	/// </summary>
 	internal ListSortDirection GetSortDirection()
 	{
-		if ((list is IBindingList) && ((IBindingList)list).SupportsSorting)
+		if (list is IBindingList bindingList && bindingList.SupportsSorting)
 		{
-			return ((IBindingList)list).SortDirection;
+			return bindingList.SortDirection;
 		}
 		return ListSortDirection.Ascending;
 	}
@@ -591,16 +588,13 @@ public class CurrencyManager : BindingManagerBase
 	/// <summary>
 	///  Find the position of a desired list item.
 	/// </summary>
-	internal int Find(PropertyDescriptor property, object key, bool keepIndex)
+	internal int Find(PropertyDescriptor property, object key)
 	{
-		if (key is null)
-		{
-			throw new ArgumentNullException(nameof(key));
-		}
+		ArgumentNullException.ThrowIfNull(key);
 
-		if (property != null && (list is IBindingList) && ((IBindingList)list).SupportsSearching)
+		if (property != null && list is IBindingList bindingList && bindingList.SupportsSearching)
 		{
-			return ((IBindingList)list).Find(property, key);
+			return bindingList.Find(property, key);
 		}
 
 		if (property != null)
@@ -623,9 +617,9 @@ public class CurrencyManager : BindingManagerBase
 	/// </summary>
 	internal override string GetListName()
 	{
-		if (list is ITypedList)
+		if (list is ITypedList typedList)
 		{
-			return ((ITypedList)list).GetListName(null);
+			return typedList.GetListName(null);
 		}
 		else
 		{
@@ -638,11 +632,11 @@ public class CurrencyManager : BindingManagerBase
 	/// </summary>
 	protected internal override string GetListName(ArrayList listAccessors)
 	{
-		if (list is ITypedList)
+		if (list is ITypedList typedList)
 		{
 			PropertyDescriptor[] properties = new PropertyDescriptor[listAccessors.Count];
 			listAccessors.CopyTo(properties, 0);
-			return ((ITypedList)list).GetListName(properties);
+			return typedList.GetListName(properties);
 		}
 		return "";
 	}
@@ -970,9 +964,9 @@ public class CurrencyManager : BindingManagerBase
 			if (Count > 0)
 			{
 				object item = list[Position];
-				if (item is IEditableObject)
+				if (item is IEditableObject editableObject)
 				{
-					((IEditableObject)item).BeginEdit();
+					editableObject.BeginEdit();
 				}
 			}
 			try
@@ -1135,9 +1129,9 @@ public class CurrencyManager : BindingManagerBase
 
 	internal void UnwireEvents(IList list)
 	{
-		if ((list is IBindingList) && ((IBindingList)list).SupportsChangeNotification)
+		if (list is IBindingList bindingList && bindingList.SupportsChangeNotification)
 		{
-			((IBindingList)list).ListChanged -= new ListChangedEventHandler(List_ListChanged);
+			bindingList.ListChanged -= new ListChangedEventHandler(List_ListChanged);
 		}
 	}
 
@@ -1213,9 +1207,9 @@ public class CurrencyManager : BindingManagerBase
 
 	internal void WireEvents(IList list)
 	{
-		if ((list is IBindingList) && ((IBindingList)list).SupportsChangeNotification)
+		if (list is IBindingList bindingList && bindingList.SupportsChangeNotification)
 		{
-			((IBindingList)list).ListChanged += new ListChangedEventHandler(List_ListChanged);
+			bindingList.ListChanged += new ListChangedEventHandler(List_ListChanged);
 		}
 	}
 }

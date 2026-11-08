@@ -3,6 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Sockets;
 using Aigamo.Otsuki.Actors;
+using Aigamo.Otsuki.Core;
+using Aigamo.Otsuki.Core.Session;
 using Aigamo.Otsuki.Enumeration;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Session;
@@ -76,8 +78,7 @@ public sealed class Peer : IAsyncDisposable
 
 	private void PostCommand(SessionMessage command)
 	{
-		if (!_session.Post(command))
-			throw new ObjectDisposedException(nameof(Peer));
+		ObjectDisposedException.ThrowIf(!_session.Post(command), this);
 	}
 
 	// The session completes the task through its outputs (SessionActor), once the command is done and its snapshot

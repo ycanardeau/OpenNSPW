@@ -327,7 +327,7 @@ internal sealed partial class WindowsBluetoothConnector
 		}
 	}
 
-	private async Task AcceptAsync(
+	private static async Task AcceptAsync(
 		Socket listener,
 		Action<EndPoint, Stream> onAccept,
 		CancellationToken cancellationToken

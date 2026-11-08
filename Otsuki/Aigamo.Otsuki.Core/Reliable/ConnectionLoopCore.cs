@@ -1,13 +1,13 @@
 using System.Collections.Immutable;
 using System.Net;
 using Aigamo.MatchGenerator;
+using Aigamo.Otsuki.Core.Session;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Messages.Enumeration;
 using Aigamo.Otsuki.Messages.Reliable;
-using Aigamo.Otsuki.Session;
 using Aigamo.Results;
 
-namespace Aigamo.Otsuki.Reliable;
+namespace Aigamo.Otsuki.Core.Reliable;
 
 [GenerateMatch]
 internal abstract record ConnectionLoopMessage

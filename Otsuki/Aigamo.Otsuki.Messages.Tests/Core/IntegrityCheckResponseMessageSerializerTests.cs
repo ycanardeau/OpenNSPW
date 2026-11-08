@@ -6,16 +6,20 @@ namespace Aigamo.Otsuki.Messages.Tests.Core;
 
 public class IntegrityCheckResponseMessageSerializerTests
 {
-	public static IEnumerable<object?[]> TestData()
+	public static TheoryData<byte[], CoreMessage.IntegrityCheckResponse> TestData()
 	{
-		yield return new object?[]
+		var data = new TheoryData<byte[], CoreMessage.IntegrityCheckResponse>
 		{
-			new byte[] { },
-			new CoreMessage.IntegrityCheckResponse { },
+			{
+				[0xE4, 0x00, 0x00, 0x00, 0x07, 0x00, 0x20, 0x00],
+				new CoreMessage.IntegrityCheckResponse { DpnidRequesting = new Dpnid(0x00200007) }
+			},
 		};
+
+		return data;
 	}
 
-	[Theory(Skip = "Not implemneted")]
+	[Theory]
 	[MemberData(nameof(TestData))]
 	internal void Deserialize(byte[] data, CoreMessage.IntegrityCheckResponse expected)
 	{
@@ -25,7 +29,7 @@ public class IntegrityCheckResponseMessageSerializerTests
 		message.DpnidRequesting.Should().Be(expected.DpnidRequesting);
 	}
 
-	[Theory(Skip = "Not implemneted")]
+	[Theory]
 	[MemberData(nameof(TestData))]
 	internal void Serialize(byte[] expected, CoreMessage.IntegrityCheckResponse message)
 	{

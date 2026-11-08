@@ -1,4 +1,4 @@
-namespace Aigamo.Otsuki.Reliable.Transitions;
+namespace Aigamo.Otsuki.Core.Reliable.Transitions;
 
 /// <summary>
 /// Resends the polled CONNECTED or CONNECTED_SIGNED until the connector confirms it ([MC-DPL8R] section 3.1.6.1).

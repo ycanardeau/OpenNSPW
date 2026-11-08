@@ -1,4 +1,4 @@
-namespace Aigamo.Otsuki.Session.Transitions;
+namespace Aigamo.Otsuki.Core.Session.Transitions;
 
 /// <summary>
 /// Passes application data to the application ([MC-DPL8CS] section 3.3.5.1).

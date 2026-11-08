@@ -2,6 +2,7 @@ using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Net;
 using Aigamo.Otsuki.Actors;
+using Aigamo.Otsuki.Core;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Reliable;
 using FluentAssertions;
@@ -566,7 +567,7 @@ public class SimulationTests
 					);
 		}
 
-		List<(int Sender, int Number)> Received(SimulatedPeer peer) =>
+		static List<(int Sender, int Number)> Received(SimulatedPeer peer) =>
 			[.. peer.Raised<PeerEvent.DataReceived>().Select(ReadMessage)];
 
 		simulation

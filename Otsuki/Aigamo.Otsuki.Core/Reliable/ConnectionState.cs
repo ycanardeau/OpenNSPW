@@ -1,7 +1,7 @@
 using Aigamo.MatchGenerator;
-using Aigamo.Otsuki.Reliable.Transitions;
+using Aigamo.Otsuki.Core.Reliable.Transitions;
 
-namespace Aigamo.Otsuki.Reliable;
+namespace Aigamo.Otsuki.Core.Reliable;
 
 internal interface IHasHandshake
 {

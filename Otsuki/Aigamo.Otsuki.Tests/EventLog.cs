@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Aigamo.Otsuki.Actors;
+using Aigamo.Otsuki.Core;
 
 namespace Aigamo.Otsuki.Tests;
 

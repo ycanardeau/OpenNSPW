@@ -28,7 +28,7 @@ public abstract class ButtonBase : Control
 		set => _buttonRenderer = value;
 	}
 
-	protected override Size DefaultSize => new Size(75, 23);
+	protected override Size DefaultSize => new(75, 23);
 	internal bool MouseIsPressed => _state.HasFlag(States.MousePressed);
 	internal bool MouseIsDown => _state.HasFlag(States.MouseDown);
 	internal bool MouseIsOver => _state.HasFlag(States.MouseOver);

@@ -8,7 +8,7 @@
 
 using System.ComponentModel;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 [AttributeUsage(AttributeTargets.All)]
 internal sealed class SRCategoryAttribute(string category) : CategoryAttribute(category)

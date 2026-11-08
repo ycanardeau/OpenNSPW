@@ -1,5 +1,7 @@
 using System.Net;
 using Aigamo.Otsuki.Actors;
+using Aigamo.Otsuki.Core;
+using Aigamo.Otsuki.Core.Reliable;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Reliable;
 using FluentAssertions;
@@ -291,7 +293,7 @@ public class NameTableChangeTests : IAsyncLifetime
 		await first.Log.WaitForAsync<PeerEvent.GroupCreated>();
 		await first.Peer.AddPlayerToGroupAsync(group, first.Peer.LocalPlayer);
 
-		async Task ShouldFailAsync(Func<Task> action, ResultCode result) =>
+		static async Task ShouldFailAsync(Func<Task> action, ResultCode result) =>
 			(await action.Should().ThrowAsync<DirectPlayException>())
 				.Which.Result.Should()
 				.Be(result);

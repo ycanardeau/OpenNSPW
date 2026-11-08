@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using System.Net;
 using Aigamo.Otsuki.Messages.Core;
 
-namespace Aigamo.Otsuki.Session;
+namespace Aigamo.Otsuki.Core.Session;
 
 /// <summary>
 /// An immutable view of the session that the <see cref="SessionCore"/> publishes for other threads to read.

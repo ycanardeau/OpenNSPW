@@ -325,7 +325,7 @@ public sealed class Cpu(Memory<byte> memory, Register32 offset, Action<Register3
 	/// Store x87 FPU status word.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Register16 Fnstsw() => new Register16((ushort)Fpu.Status.Flags);
+	public Register16 Fnstsw() => new((ushort)Fpu.Status.Flags);
 
 	/// <summary>
 	/// Partial arctangent.

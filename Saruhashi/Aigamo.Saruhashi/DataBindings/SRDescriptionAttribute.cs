@@ -8,7 +8,7 @@
 
 using System.ComponentModel;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 [AttributeUsage(AttributeTargets.All)]
 internal sealed class SRDescriptionAttribute(string description) : DescriptionAttribute(description)

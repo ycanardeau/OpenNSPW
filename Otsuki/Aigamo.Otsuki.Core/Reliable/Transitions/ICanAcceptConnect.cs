@@ -1,6 +1,6 @@
 using Aigamo.Otsuki.Messages.Reliable;
 
-namespace Aigamo.Otsuki.Reliable.Transitions;
+namespace Aigamo.Otsuki.Core.Reliable.Transitions;
 
 /// <summary>
 /// Answers a new CONNECT with a polled CONNECTED, or with a polled CONNECTED_SIGNED when the endpoint signs

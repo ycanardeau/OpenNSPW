@@ -1,4 +1,4 @@
-namespace Aigamo.Otsuki.Reliable.Transitions;
+namespace Aigamo.Otsuki.Core.Reliable.Transitions;
 
 /// <summary>
 /// Sends a KeepAlive after a period without traffic from the partner ([MC-DPL8R] section 3.1.6.6).

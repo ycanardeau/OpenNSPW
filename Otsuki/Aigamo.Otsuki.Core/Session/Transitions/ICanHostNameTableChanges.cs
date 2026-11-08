@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Results;
 
-namespace Aigamo.Otsuki.Session.Transitions;
+namespace Aigamo.Otsuki.Core.Session.Transitions;
 
 /// <summary>
 /// The host's side of groups and info updates: it carries out its own changes and the ones peers request, and

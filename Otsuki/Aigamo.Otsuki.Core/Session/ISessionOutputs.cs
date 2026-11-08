@@ -1,9 +1,9 @@
 using System.Net;
+using Aigamo.Otsuki.Core.Reliable;
 using Aigamo.Otsuki.Messages.Reliable;
-using Aigamo.Otsuki.Reliable;
 using Aigamo.Results;
 
-namespace Aigamo.Otsuki.Session;
+namespace Aigamo.Otsuki.Core.Session;
 
 /// <summary>
 /// What a <see cref="SessionCore"/> does outside itself, in the order it decides to, on the thread that called it.

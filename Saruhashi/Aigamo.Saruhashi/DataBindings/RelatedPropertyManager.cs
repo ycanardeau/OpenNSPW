@@ -11,7 +11,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 [RequiresUnreferencedCode(BindingTrimming.Message)]
 internal class RelatedPropertyManager : PropertyManager

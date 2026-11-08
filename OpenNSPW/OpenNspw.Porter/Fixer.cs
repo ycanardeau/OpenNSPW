@@ -131,6 +131,12 @@ internal sealed partial class Fixer(string projectDirectory, IReadOnlySet<string
 			: null;
 	}
 
+	[GeneratedRegex("to '([^']+)'")]
+	private static partial Regex ConversionTargetRegex();
+
+	[GeneratedRegex("'(ref|out|in)'")]
+	private static partial Regex ArgumentKeywordRegex();
+
 	// The fix for one error, as a replacement of a span, or null if it has no mechanical fix.
 	private static (TextSpan Span, string Text)? Fix(
 		Diagnostic d,
@@ -174,7 +180,7 @@ internal sealed partial class Fixer(string projectDirectory, IReadOnlySet<string
 				var info = model.GetTypeInfo(expression);
 
 				// The target type, from the message: for a condition, ConvertedType is not bool.
-				var to = Regex.Match(d.GetMessage(), "to '([^']+)'").Groups[1].Value switch
+				var to = ConversionTargetRegex().Match(d.GetMessage()).Groups[1].Value switch
 				{
 					"bool" => model.Compilation.GetSpecialType(SpecialType.System_Boolean),
 					_ => info.ConvertedType,
@@ -287,7 +293,7 @@ internal sealed partial class Fixer(string projectDirectory, IReadOnlySet<string
 			// Argument must be passed with ref or out.
 			case "CS1620" when node.FirstAncestorOrSelf<ArgumentSyntax>() is { } argument:
 			{
-				var keyword = Regex.Match(d.GetMessage(), "'(ref|out|in)'").Groups[1].Value;
+				var keyword = ArgumentKeywordRegex().Match(d.GetMessage()).Groups[1].Value;
 				var value = argument.Expression
 					is PrefixUnaryExpressionSyntax
 					{

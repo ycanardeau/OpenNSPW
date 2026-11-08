@@ -1,4 +1,4 @@
-namespace Aigamo.Otsuki.Reliable.Transitions;
+namespace Aigamo.Otsuki.Core.Reliable.Transitions;
 
 /// <summary>
 /// Retries unacknowledged frames when the retry timer elapses ([MC-DPL8R] section 3.1.6.5).

@@ -1,5 +1,6 @@
 using System.Net;
 using Aigamo.Otsuki.Actors;
+using Aigamo.Otsuki.Core;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Transport;
 using FluentAssertions;
@@ -7,7 +8,7 @@ using Xunit;
 
 namespace Aigamo.Otsuki.Tests;
 
-public class StreamDatagramTransportTests : IDisposable
+public sealed class StreamDatagramTransportTests : IDisposable
 {
 	private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(5);
 

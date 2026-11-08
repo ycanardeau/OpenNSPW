@@ -9,7 +9,7 @@
 using System.Collections;
 using System.ComponentModel;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 /// <summary>
 ///  Provides the base functionality for creating collections.
@@ -32,7 +32,7 @@ public class BaseCollection : MarshalByRefObject, ICollection
 
 	[Browsable(false)]
 	[EditorBrowsable(EditorBrowsableState.Advanced)]
-	public bool IsReadOnly => false;
+	public static bool IsReadOnly => false;
 
 	[Browsable(false)]
 	[EditorBrowsable(EditorBrowsableState.Advanced)]

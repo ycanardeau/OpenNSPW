@@ -85,9 +85,9 @@ public class MathTests
 		if (wrk_x < 0)
 			wrk_x = 0 - wrk_x;
 		if (wrk_y < 0)
-			wrk_y = 0 - wrk_y;
+			_ = 0 - wrk_y;
 		if (drctn >= 180)
-			drctn = drctn - 180;
+			drctn -= 180;
 		if (drctn >= 90)
 			drctn = 90 - (drctn - 90);
 		return (wrk_x) / (nspw_math.CosDegrees(drctn));

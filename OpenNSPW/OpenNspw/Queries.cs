@@ -126,7 +126,7 @@ public unsafe partial class Nspw
 	}
 
 	// How far a unit sees an effect, as UpdateLowerEffects and UpdateUpperEffects test it: less while it is built.
-	private int EffectSightOf(ref Unit unit)
+	private static int EffectSightOf(ref Unit unit)
 	{
 		int size = 0;
 		switch (unit.Kind)

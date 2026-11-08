@@ -237,7 +237,7 @@ public static class ComputerPlayerTests
 					Restore(game, before);
 					if (!emulated.AsSpan().SequenceEqual(rewritten))
 					{
-						var path = (byte[] bytes) =>
+						string PathOf(byte[] bytes)
 						{
 							var unit = MemoryMarshal.Read<Unit>(
 								bytes.AsSpan(
@@ -251,9 +251,9 @@ public static class ComputerPlayerTests
 							}
 
 							return text;
-						};
+						}
 						Assert.Fail(
-							$"Unit {m} at ({game.Units[m].Position.X:F1},{game.Units[m].Position.Y:F1}) to ({x},{y}): emulated {path(emulated)}, rewritten {path(rewritten)}"
+							$"Unit {m} at ({game.Units[m].Position.X:F1},{game.Units[m].Position.Y:F1}) to ({x},{y}): emulated {PathOf(emulated)}, rewritten {PathOf(rewritten)}"
 						);
 					}
 
@@ -945,6 +945,22 @@ public static class ComputerPlayerTests
 	{
 		private readonly ITestOutputHelper _output = output;
 
+		// How far from the center the enemy's planes and bases are placed.
+		private static readonly int[] PlaneDistances =
+		[
+			1000,
+			3000,
+			3540,
+			3560,
+			4340,
+			4360,
+			5300,
+			6000,
+			6600,
+			7000,
+		];
+		private static readonly int[] BaseDistances = [1500, 2100, 2300, 2700];
+
 		// A random enemy (of the computer) unit, or 0.
 		private static short RandomEnemy(Nspw game, Random random)
 		{
@@ -1163,14 +1179,7 @@ public static class ComputerPlayerTests
 				ref var enemy = ref game.Units[e];
 				enemy.PlaneState = UnitState.Flying;
 				enemy.IsFound = true;
-				PlaceFrom(
-					ref enemy,
-					center,
-					new[] { 1000, 3000, 3540, 3560, 4340, 4360, 5300, 6000, 6600, 7000 }[
-						random.Next(10)
-					],
-					random
-				);
+				PlaceFrom(ref enemy, center, PlaneDistances[random.Next(10)], random);
 				fleet.Targets[1] = (short)e;
 
 				// Nothing else near, so that the plane is the target of the flagship's planes.
@@ -1194,12 +1203,7 @@ public static class ComputerPlayerTests
 				}
 				else if (enemy.Kind >= UnitKind.AirBase && enemy.Kind <= UnitKind.Fortress)
 				{
-					PlaceFrom(
-						ref enemy,
-						center,
-						new[] { 1500, 2100, 2300, 2700 }[random.Next(4)],
-						random
-					);
+					PlaceFrom(ref enemy, center, BaseDistances[random.Next(4)], random);
 				}
 			}
 

@@ -14,7 +14,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 public class ListBindingConverter : TypeConverter
 {
@@ -28,20 +28,17 @@ public class ListBindingConverter : TypeConverter
 	{
 		get
 		{
-			if (ctorTypes is null)
-			{
-				ctorTypes =
-				[
-					typeof(string),
-					typeof(object),
-					typeof(string),
-					typeof(bool),
-					typeof(DataSourceUpdateMode),
-					typeof(object),
-					typeof(string),
-					typeof(IFormatProvider),
-				];
-			}
+			ctorTypes ??=
+			[
+				typeof(string),
+				typeof(object),
+				typeof(string),
+				typeof(bool),
+				typeof(DataSourceUpdateMode),
+				typeof(object),
+				typeof(string),
+				typeof(IFormatProvider),
+			];
 			return ctorTypes;
 		}
 	}
@@ -53,20 +50,17 @@ public class ListBindingConverter : TypeConverter
 	{
 		get
 		{
-			if (ctorParamProps is null)
-			{
-				ctorParamProps =
-				[
-					null,
-					null,
-					null,
-					"FormattingEnabled",
-					"DataSourceUpdateMode",
-					"NullValue",
-					"FormatString",
-					"FormatInfo",
-				];
-			}
+			ctorParamProps ??=
+			[
+				null,
+				null,
+				null,
+				"FormattingEnabled",
+				"DataSourceUpdateMode",
+				"NullValue",
+				"FormatString",
+				"FormatInfo",
+			];
 			return ctorParamProps;
 		}
 	}
@@ -98,14 +92,10 @@ public class ListBindingConverter : TypeConverter
 		Type destinationType
 	)
 	{
-		if (destinationType is null)
-		{
-			throw new ArgumentNullException(nameof(destinationType));
-		}
+		ArgumentNullException.ThrowIfNull(destinationType);
 
-		if (destinationType == typeof(InstanceDescriptor) && value is Binding)
+		if (destinationType == typeof(InstanceDescriptor) && value is Binding b)
 		{
-			Binding b = (Binding)value;
 			return GetInstanceDescriptorFromValues(b);
 		}
 
@@ -163,7 +153,7 @@ public class ListBindingConverter : TypeConverter
 		"IL2026",
 		Justification = "The binding was made by a constructor that requires unreferenced code."
 	)]
-	private InstanceDescriptor GetInstanceDescriptorFromValues(Binding b)
+	private static InstanceDescriptor GetInstanceDescriptorFromValues(Binding b)
 	{
 		// The BindingFormattingDialog turns on Binding::FormattingEnabled property.
 		// however, when the user data binds a property using the PropertyBrowser, Binding::FormattingEnabled is set to false
@@ -215,24 +205,14 @@ public class ListBindingConverter : TypeConverter
 
 		for (int i = 0; i < values.Length; i++)
 		{
-			object val = null;
-			switch (i)
+			object val;
+			val = i switch
 			{
-				case 0:
-					val = b.PropertyName;
-					break;
-				case 1:
-					val = b.DataSource;
-					break;
-				case 2:
-					val = b.BindingMemberInfo.BindingMember;
-					break;
-				default:
-					val = TypeDescriptor
-						.GetProperties(b)[ConstructorParameterProperties[i]]
-						.GetValue(b);
-					break;
-			}
+				0 => b.PropertyName,
+				1 => b.DataSource,
+				2 => b.BindingMemberInfo.BindingMember,
+				_ => TypeDescriptor.GetProperties(b)[ConstructorParameterProperties[i]].GetValue(b),
+			};
 			values[i] = val;
 		}
 		return new InstanceDescriptor(ctor, values, isComplete);

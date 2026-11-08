@@ -2,6 +2,9 @@ using System.Runtime.CompilerServices;
 
 namespace Aigamo.Extensions.Primitives;
 
+/// <summary>
+/// The low-order and high-order halves of integers, as Win32's LOBYTE, HIBYTE, LOWORD and HIWORD give them.
+/// </summary>
 public static class BitExtensions
 {
 	/// <param name="value">The value to be converted.</param>

@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Net;
 using Aigamo.Otsuki;
 using Aigamo.Otsuki.Bluetooth;
+using Aigamo.Otsuki.Core;
 using Aigamo.Otsuki.Messages.Core;
 
 namespace OpenNspw.DirectPlay;
@@ -110,7 +111,7 @@ public sealed class DirectPlay8Peer(PeerOptions? options, IBluetoothProvider? bl
 	)
 	{
 		host = null;
-		if ((address as DirectPlay8Address)?.Hostname is { } hostname)
+		if (address is DirectPlay8Address { Hostname: { } hostname })
 		{
 			return BluetoothEndPoint.TryParse(hostname, out host)
 				? winerror.S_OK

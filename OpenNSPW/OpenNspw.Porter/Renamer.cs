@@ -103,7 +103,7 @@ internal sealed class Renamer(
 	// field, on lines of their own. The comment at the end of the line stays after the last one.
 	private Dictionary<string, string> Split(
 		CSharpCompilation compilation,
-		IReadOnlyDictionary<string, string> files
+		Dictionary<string, string> files
 	)
 	{
 		var changed = new Dictionary<string, string>();
@@ -189,7 +189,7 @@ internal sealed class Renamer(
 	// The second pass: renames the declarations and uses of the renamed symbols, and adds [Original].
 	private Dictionary<string, string> Rename(
 		CSharpCompilation compilation,
-		IReadOnlyDictionary<string, string> files
+		Dictionary<string, string> files
 	)
 	{
 		var changed = new Dictionary<string, string>();

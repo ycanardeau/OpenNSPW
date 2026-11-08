@@ -135,7 +135,7 @@ internal sealed class Driver(LoadSettings settings)
 	private static string Ms(long microseconds) =>
 		(microseconds / 1000.0).ToString("0.0", CultureInfo.InvariantCulture);
 
-	private void Print(Report server, Report clients)
+	private static void Print(Report server, Report clients)
 	{
 		Console.WriteLine(
 			string.Create(

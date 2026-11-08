@@ -6,13 +6,17 @@ namespace Aigamo.Otsuki.Messages.Tests.Core;
 
 public class NameTableVersionMessageSerializerTests
 {
-	public static IEnumerable<object?[]> TestData()
+	public static TheoryData<byte[], CoreMessage.NameTableVersion> TestData()
 	{
-		yield return new object?[]
+		var data = new TheoryData<byte[], CoreMessage.NameTableVersion>
 		{
-			new byte[] { 0xc9, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-			new CoreMessage.NameTableVersion { Version = 4 },
+			{
+				[0xc9, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+				new CoreMessage.NameTableVersion { Version = 4 }
+			},
 		};
+
+		return data;
 	}
 
 	[Theory]

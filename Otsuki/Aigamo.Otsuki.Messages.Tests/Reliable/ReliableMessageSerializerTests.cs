@@ -6,22 +6,25 @@ namespace Aigamo.Otsuki.Messages.Tests.Reliable;
 
 public class ReliableMessageSerializerTests
 {
-	public static IEnumerable<object?[]> TestData()
+	public static TheoryData<byte[], ReliableMessage?> TestData()
 	{
-		static IEnumerable<object?[]> TestDataCore()
+		var data = new TheoryData<byte[], ReliableMessage?>();
+		foreach (
+			var row in DataFrameMessageSerializerTests
+				.TestData()
+				.Concat(ConnectMessageSerializerTests.TestData())
+				.Concat(ConnectedMessageSerializerTests.TestData())
+				.Concat(HardDisconnectMessageSerializerTests.TestData())
+				.Concat(SackMessageSerializerTests.TestData())
+		)
 		{
-			yield return new object?[] { new byte[] { 0 }, null };
-			yield return new object?[] { new byte[] { 0, 1, 2, 3 }, null };
-			yield return new object?[] { new byte[] { 1, 2, 3, 4 }, null };
+			data.Add((byte[])row[0]!, (ReliableMessage)row[1]!);
 		}
 
-		return DataFrameMessageSerializerTests
-			.TestData()
-			.Concat(ConnectMessageSerializerTests.TestData())
-			.Concat(ConnectedMessageSerializerTests.TestData())
-			.Concat(HardDisconnectMessageSerializerTests.TestData())
-			.Concat(SackMessageSerializerTests.TestData())
-			.Concat(TestDataCore());
+		data.Add([0], null);
+		data.Add([0, 1, 2, 3], null);
+		data.Add([1, 2, 3, 4], null);
+		return data;
 	}
 
 	[Theory]

@@ -14,7 +14,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Imaging;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 /// <summary>
 ///  Provides a base class for editors that may provide users with a user interface to visually edit the values of the supported type or types.
@@ -25,7 +25,7 @@ public class UITypeEditor
 	static UITypeEditor()
 	{
 		// Our set of intrinsic editors.
-		Hashtable intrinsicEditors = new Hashtable
+		Hashtable intrinsicEditors = new()
 		{
 			// System.ComponentModel type Editors
 			[typeof(DateTime)] =

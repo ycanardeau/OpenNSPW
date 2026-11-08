@@ -6,13 +6,14 @@ namespace Aigamo.Otsuki.Messages.Tests.Core;
 
 public class HostMigrateCompleteMessageSerializerTests
 {
-	public static IEnumerable<object?[]> TestData()
+	public static TheoryData<byte[], CoreMessage.HostMigrateComplete> TestData()
 	{
-		yield return new object?[]
+		var data = new TheoryData<byte[], CoreMessage.HostMigrateComplete>
 		{
-			new byte[] { 0xCE, 0x00, 0x00, 0x00 },
-			new CoreMessage.HostMigrateComplete(),
+			{ [0xCE, 0x00, 0x00, 0x00], new CoreMessage.HostMigrateComplete() },
 		};
+
+		return data;
 	}
 
 	[Theory]

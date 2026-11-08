@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using Aigamo.MatchGenerator;
 using Aigamo.Otsuki.Messages.Core;
 
-namespace Aigamo.Otsuki;
+namespace Aigamo.Otsuki.Core;
 
 /// <summary>
 /// A notification from a <see cref="Peer"/>, like the DPN_MSGID_* messages of DirectPlay.

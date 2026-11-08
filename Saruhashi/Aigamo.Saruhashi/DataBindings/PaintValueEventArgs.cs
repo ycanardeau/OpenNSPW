@@ -9,7 +9,7 @@
 using System.ComponentModel;
 using System.Drawing;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 /// <summary>
 ///  Object passed as an argument to <see cref='UITypeEditor.PaintValue(PaintValueEventArgs)'/> containing information needed by the editor to paint the given value.

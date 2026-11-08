@@ -1,6 +1,6 @@
 using Aigamo.Otsuki.Messages.Reliable;
 
-namespace Aigamo.Otsuki.Reliable.Transitions;
+namespace Aigamo.Otsuki.Core.Reliable.Transitions;
 
 /// <summary>
 /// Confirms the listener's polled CONNECTED or CONNECTED_SIGNED and establishes the connection ([MC-DPL8R] sections

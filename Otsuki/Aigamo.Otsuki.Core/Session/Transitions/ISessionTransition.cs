@@ -1,4 +1,4 @@
-namespace Aigamo.Otsuki.Session.Transitions;
+namespace Aigamo.Otsuki.Core.Session.Transitions;
 
 internal interface ISessionTransition
 {

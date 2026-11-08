@@ -11,7 +11,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 [RequiresUnreferencedCode(BindingTrimming.Message)]
 internal class Formatter
@@ -19,7 +19,7 @@ internal class Formatter
 	private static readonly Type stringType = typeof(string);
 	private static readonly Type booleanType = typeof(bool);
 	private static readonly Type checkStateType = typeof(CheckState);
-	private static readonly object parseMethodNotFound = new object();
+	private static readonly object parseMethodNotFound = new();
 	private static readonly object defaultDataSourceNullValue = System.DBNull.Value;
 
 	/// <summary>
@@ -183,10 +183,7 @@ internal class Formatter
 			}
 			else
 			{
-				if (sourceConverter is null)
-				{
-					sourceConverter = sourceTypeTypeConverter;
-				}
+				sourceConverter ??= sourceTypeTypeConverter;
 				if (sourceConverter != null && sourceConverter.CanConvertTo(booleanType))
 				{
 					return (bool)
@@ -211,15 +208,9 @@ internal class Formatter
 		// If explicit type converters not provided, supply default ones instead
 		//
 
-		if (sourceConverter is null)
-		{
-			sourceConverter = sourceTypeTypeConverter;
-		}
+		sourceConverter ??= sourceTypeTypeConverter;
 
-		if (targetConverter is null)
-		{
-			targetConverter = targetTypeTypeConverter;
-		}
+		targetConverter ??= targetTypeTypeConverter;
 
 		//
 		// Standardized conversions
@@ -281,8 +272,7 @@ internal class Formatter
 		targetType = NullableUnwrap(targetType);
 		sourceConverter = NullableUnwrap(sourceConverter);
 		targetConverter = NullableUnwrap(targetConverter);
-
-		bool isNullableTargetType = (targetType != oldTargetType);
+		_ = (targetType != oldTargetType);
 
 		//
 		// Call the 'real' method to perform the conversion
@@ -391,10 +381,7 @@ internal class Formatter
 			{
 				return (state == CheckState.Checked);
 			}
-			if (targetConverter is null)
-			{
-				targetConverter = targetTypeTypeConverter;
-			}
+			targetConverter ??= targetTypeTypeConverter;
 			if (targetConverter != null && targetConverter.CanConvertFrom(booleanType))
 			{
 				return targetConverter.ConvertFrom(
@@ -414,15 +401,9 @@ internal class Formatter
 		// If explicit type converters not provided, supply default ones instead
 		//
 
-		if (targetConverter is null)
-		{
-			targetConverter = targetTypeTypeConverter;
-		}
+		targetConverter ??= targetTypeTypeConverter;
 
-		if (sourceConverter is null)
-		{
-			sourceConverter = sourceTypeTypeConverter;
-		}
+		sourceConverter ??= sourceTypeTypeConverter;
 
 		//
 		// Standardized conversions
@@ -460,10 +441,7 @@ internal class Formatter
 	{
 		try
 		{
-			if (formatInfo is null)
-			{
-				formatInfo = CultureInfo.CurrentCulture;
-			}
+			formatInfo ??= CultureInfo.CurrentCulture;
 
 			return Convert.ChangeType(value, type, formatInfo);
 		}

@@ -52,7 +52,7 @@ public class AngleTests
 		{
 			var d = degrees;
 			if (d >= 360)
-				d = d - 360;
+				d -= 360;
 			if (d < 0)
 				d = 360 + d;
 			AssertSameBits(d, new Angle(degrees).Wrapped());
@@ -61,7 +61,7 @@ public class AngleTests
 			if (d < 0)
 				d = 360 + d;
 			if (d >= 360)
-				d = d - 360;
+				d -= 360;
 			AssertSameBits(d, new Angle(degrees).WrapNegative().WrapFullTurn());
 
 			AssertSameBits((int)degrees % 360, new Angle(degrees).WholeDegrees());

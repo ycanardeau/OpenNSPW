@@ -10,7 +10,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 /// <summary>
 ///  Represents the collection of data bindings for a control.
@@ -177,10 +177,7 @@ public class ControlBindingsCollection(IBindableComponent control) : BindingsCol
 		IFormatProvider formatInfo
 	)
 	{
-		if (dataSource is null)
-		{
-			throw new ArgumentNullException(nameof(dataSource));
-		}
+		ArgumentNullException.ThrowIfNull(dataSource);
 
 		var binding = new Binding(
 			propertyName,
@@ -205,10 +202,7 @@ public class ControlBindingsCollection(IBindableComponent control) : BindingsCol
 	/// </summary>
 	protected override void AddCore(Binding dataBinding)
 	{
-		if (dataBinding is null)
-		{
-			throw new ArgumentNullException(nameof(dataBinding));
-		}
+		ArgumentNullException.ThrowIfNull(dataBinding);
 		if (dataBinding.BindableComponent == _control)
 		{
 			throw new ArgumentException(SR.BindingsCollectionAdd1, nameof(dataBinding));
@@ -287,10 +281,7 @@ public class ControlBindingsCollection(IBindableComponent control) : BindingsCol
 
 	protected override void RemoveCore(Binding dataBinding)
 	{
-		if (dataBinding is null)
-		{
-			throw new ArgumentNullException(nameof(dataBinding));
-		}
+		ArgumentNullException.ThrowIfNull(dataBinding);
 		if (dataBinding.BindableComponent != _control)
 		{
 			throw new ArgumentException(SR.BindingsCollectionForeign, nameof(dataBinding));

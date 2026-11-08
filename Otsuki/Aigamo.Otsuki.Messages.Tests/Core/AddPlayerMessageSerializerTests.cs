@@ -6,16 +6,157 @@ namespace Aigamo.Otsuki.Messages.Tests.Core;
 
 public class AddPlayerMessageSerializerTests
 {
-	public static IEnumerable<object?[]> TestData()
+	public static TheoryData<byte[], CoreMessage.AddPlayer> TestData()
 	{
-		yield return new object?[]
+		var data = new TheoryData<byte[], CoreMessage.AddPlayer>
 		{
-			new byte[] { },
-			new CoreMessage.AddPlayer { },
+			{
+				[
+					0xD0,
+					0x00,
+					0x00,
+					0x00,
+					0x05,
+					0x00,
+					0x50,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x01,
+					0x00,
+					0x00,
+					0x05,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x07,
+					0x00,
+					0x00,
+					0x00,
+					0x30,
+					0x00,
+					0x00,
+					0x00,
+					0x04,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x41,
+					0x00,
+					0x00,
+					0x00,
+				],
+				new CoreMessage.AddPlayer
+				{
+					Dpnid = new Dpnid(0x00500005),
+					DpnidOwner = Dpnid.Empty,
+					Peer = true,
+					Version = 5,
+					DnetClientVersion = DnetVersion.DirectX90,
+					Name = "A",
+				}
+			},
+			{
+				[
+					0xD0,
+					0x00,
+					0x00,
+					0x00,
+					0x05,
+					0x00,
+					0x50,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x01,
+					0x00,
+					0x00,
+					0x05,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x07,
+					0x00,
+					0x00,
+					0x00,
+					0x32,
+					0x00,
+					0x00,
+					0x00,
+					0x04,
+					0x00,
+					0x00,
+					0x00,
+					0x30,
+					0x00,
+					0x00,
+					0x00,
+					0x02,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0xAA,
+					0xBB,
+					0x41,
+					0x00,
+					0x00,
+					0x00,
+				],
+				new CoreMessage.AddPlayer
+				{
+					Dpnid = new Dpnid(0x00500005),
+					DpnidOwner = Dpnid.Empty,
+					Peer = true,
+					Version = 5,
+					DnetClientVersion = DnetVersion.DirectX90,
+					Data = [0xAA, 0xBB],
+					Name = "A",
+				}
+			},
 		};
+
+		return data;
 	}
 
-	[Theory(Skip = "Not implemneted")]
+	[Theory]
 	[MemberData(nameof(TestData))]
 	internal void Deserialize(byte[] data, CoreMessage.AddPlayer expected)
 	{
@@ -33,7 +174,7 @@ public class AddPlayerMessageSerializerTests
 		message.Name.Should().Be(expected.Name);
 	}
 
-	[Theory(Skip = "Not implemneted")]
+	[Theory]
 	[MemberData(nameof(TestData))]
 	internal void Serialize(byte[] expected, CoreMessage.AddPlayer message)
 	{

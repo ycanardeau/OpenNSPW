@@ -26,17 +26,20 @@ public class DpnidTests
 		dpnid.Value.Should().Be(unchecked((int)0xA112C3D1));
 	}
 
-	public static IEnumerable<object?[]> Equals_TestData()
+	public static TheoryData<Dpnid, object?, bool> Equals_TestData()
 	{
-		yield return new object?[] { _testDpnid, _testDpnid, true };
-		yield return new object?[] { _testDpnid, new Dpnid(index: 2, version: 2, _testGuid), true };
-		yield return new object?[] { _testDpnid, Dpnid.Empty, false };
+		var data = new TheoryData<Dpnid, object?, bool>
+		{
+			{ _testDpnid, _testDpnid, true },
+			{ _testDpnid, new Dpnid(index: 2, version: 2, _testGuid), true },
+			{ _testDpnid, Dpnid.Empty, false },
+			{ new Dpnid(1), new Dpnid(1), true },
+			{ new Dpnid(1), new Dpnid(0), false },
+			{ _testDpnid, new(), false },
+			{ _testDpnid, null, false },
+		};
 
-		yield return new object?[] { new Dpnid(1), new Dpnid(1), true };
-		yield return new object?[] { new Dpnid(1), new Dpnid(0), false };
-
-		yield return new object?[] { _testDpnid, new object(), false };
-		yield return new object?[] { _testDpnid, null, false };
+		return data;
 	}
 
 	[Theory]

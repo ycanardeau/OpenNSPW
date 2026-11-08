@@ -1,7 +1,7 @@
 using System.Net;
 using Aigamo.Results;
 
-namespace Aigamo.Otsuki.Session;
+namespace Aigamo.Otsuki.Core.Session;
 
 internal enum DirectPlayUrlError
 {

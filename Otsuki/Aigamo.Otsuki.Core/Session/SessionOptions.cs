@@ -1,4 +1,4 @@
-namespace Aigamo.Otsuki.Session;
+namespace Aigamo.Otsuki.Core.Session;
 
 /// <summary>
 /// The timings of the session's protocol, from the peer's options.

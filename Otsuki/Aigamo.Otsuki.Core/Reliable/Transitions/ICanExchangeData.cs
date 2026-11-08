@@ -1,6 +1,6 @@
 using Aigamo.Otsuki.Messages.Reliable;
 
-namespace Aigamo.Otsuki.Reliable.Transitions;
+namespace Aigamo.Otsuki.Core.Reliable.Transitions;
 
 /// <summary>
 /// Processes DFRAMEs and SACKs ([MC-DPL8R] sections 3.1.5.1.5 and 3.1.5.2).

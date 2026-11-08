@@ -349,7 +349,7 @@ internal sealed class Declarations(CSharpProject project)
 	// declarators.
 	private static (TextSpan Span, string Text) Remove(
 		LocalDeclarationStatementSyntax statement,
-		IReadOnlySet<VariableDeclaratorSyntax> moved,
+		HashSet<VariableDeclaratorSyntax> moved,
 		SourceText text
 	)
 	{
@@ -384,7 +384,7 @@ internal sealed class Declarations(CSharpProject project)
 	private static (
 		string Text,
 		Dictionary<VariableDeclaratorSyntax, List<(TextSpan Span, string Text)>> Moved
-	) Rewrite(SyntaxTree tree, SemanticModel model, IReadOnlySet<int> leftOut)
+	) Rewrite(SyntaxTree tree, SemanticModel model, HashSet<int> leftOut)
 	{
 		var text = tree.GetText();
 		var moved = new Dictionary<VariableDeclaratorSyntax, List<(TextSpan Span, string Text)>>();
@@ -398,7 +398,7 @@ internal sealed class Declarations(CSharpProject project)
 
 		var removals = moved
 			.Keys.GroupBy(d => (LocalDeclarationStatementSyntax)d.Parent!.Parent!)
-			.Select(g => Remove(g.Key, g.ToHashSet(), text));
+			.Select(g => Remove(g.Key, [.. g], text));
 		return (Apply(text.ToString(), moved.Values.SelectMany(e => e).Concat(removals)), moved);
 	}
 

@@ -85,7 +85,7 @@ public class SingleplayerTests
 	[Fact]
 	public void Scenario208ReadsItsUninitializedCountAsWindowsHoldsIt()
 	{
-		uint RandomStateAfter(uint? emulatorsLeftover)
+		static uint RandomStateAfter(uint? emulatorsLeftover)
 		{
 			using var run = new SingleplayerRun(208);
 			run.Frames(1);

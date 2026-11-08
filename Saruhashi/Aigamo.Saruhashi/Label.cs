@@ -7,7 +7,7 @@ public class Label : Control
 	private ITextRenderer? _textRenderer;
 
 	// TODO
-	protected override Size DefaultSize => new Size(100, 23);
+	protected override Size DefaultSize => new(100, 23);
 
 	// OPTIMIZE
 	public ITextRenderer TextRenderer

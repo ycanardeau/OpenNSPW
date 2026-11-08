@@ -1,6 +1,6 @@
 using Aigamo.Otsuki.Messages.Reliable;
 
-namespace Aigamo.Otsuki.Reliable.Transitions;
+namespace Aigamo.Otsuki.Core.Reliable.Transitions;
 
 /// <summary>
 /// Answers a retried CONNECT, whose CONNECTED was apparently lost ([MC-DPL8R] section 3.1.5.1.1).

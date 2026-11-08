@@ -43,6 +43,7 @@ A host greets each player who joins:
 ```csharp
 using System.Text;
 using Aigamo.Otsuki;
+using Aigamo.Otsuki.Core;
 using Aigamo.Otsuki.Messages.Core;
 
 var application = new ApplicationDescription { GuidApplication = guidApp, SessionName = "Lobby", MaxPlayers = 4 };

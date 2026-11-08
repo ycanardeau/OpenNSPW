@@ -1,6 +1,6 @@
 using Aigamo.Otsuki.Messages.Core;
 
-namespace Aigamo.Otsuki.Reliable.Transitions;
+namespace Aigamo.Otsuki.Core.Reliable.Transitions;
 
 /// <summary>
 /// Spaces out the HARD_DISCONNECT packets and gives up after the last one ([MC-DPL8R] section 3.1.6.4).

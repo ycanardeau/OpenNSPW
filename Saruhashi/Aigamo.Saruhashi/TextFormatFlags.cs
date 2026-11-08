@@ -13,6 +13,11 @@ namespace Aigamo.Saruhashi;
 ///  This is a public enum wrapping the internal <see cref="User32.DT"/>.
 /// </remarks>
 [Flags]
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+	"Design",
+	"CA1069:Enums values should not be duplicated",
+	Justification = "WinForms' own aliases, such as Left and Top for Default, kept so that either name compiles."
+)]
 public enum TextFormatFlags
 {
 	Bottom = 0x00000008,

@@ -10,7 +10,7 @@ using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 [RequiresUnreferencedCode(BindingTrimming.Message)]
 public class PropertyManager : BindingManagerBase

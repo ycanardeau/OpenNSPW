@@ -9,7 +9,7 @@
 using System.Collections;
 using System.ComponentModel;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 /// <summary>
 ///  Represents a collection of data bindings on a control.
@@ -28,7 +28,7 @@ public class BindingsCollection : BaseCollection
 	/// <summary>
 	///  Gets the bindings in the collection as an object.
 	/// </summary>
-	protected override ArrayList List => _list ?? (_list = []);
+	protected override ArrayList List => _list ??= [];
 
 	/// <summary>
 	///  Gets the <see cref='Binding'/> at the specified index.
@@ -48,10 +48,7 @@ public class BindingsCollection : BaseCollection
 	/// </summary>
 	protected virtual void AddCore(Binding dataBinding)
 	{
-		if (dataBinding is null)
-		{
-			throw new ArgumentNullException(nameof(dataBinding));
-		}
+		ArgumentNullException.ThrowIfNull(dataBinding);
 
 		List.Add(dataBinding);
 	}

@@ -4,6 +4,11 @@ using Xunit;
 
 namespace Aigamo.Otsuki.Messages.Tests.Core;
 
+// The data is untyped: its types are internal, and a public TheoryData of them, as xUnit1042 asks, would not compile.
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+	"Usage",
+	"xUnit1042:The member referenced by the MemberData attribute returns untyped data rows"
+)]
 public class NullTerminatedUnicodeStringTests
 {
 	private static readonly byte[] _testByteArray =
@@ -68,7 +73,7 @@ public class NullTerminatedUnicodeStringTests
 		yield return new object?[] { _testString, "Hello World!", true };
 		yield return new object?[] { _testString, string.Empty, false };
 
-		yield return new object?[] { _testString, new object(), false };
+		yield return new object?[] { _testString, new(), false };
 		yield return new object?[] { _testString, null, false };
 	}
 

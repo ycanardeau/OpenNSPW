@@ -1,5 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
+using Aigamo.Otsuki.Core;
+using Aigamo.Otsuki.Enumeration;
 using Aigamo.Otsuki.Messages.Core;
 
 namespace Aigamo.Otsuki;

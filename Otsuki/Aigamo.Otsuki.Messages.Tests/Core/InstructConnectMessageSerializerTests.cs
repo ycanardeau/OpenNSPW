@@ -6,31 +6,34 @@ namespace Aigamo.Otsuki.Messages.Tests.Core;
 
 public class InstructConnectMessageSerializerTests
 {
-	public static IEnumerable<object?[]> TestData()
+	public static TheoryData<byte[], CoreMessage.InstructConnect> TestData()
 	{
-		yield return new object?[]
+		var data = new TheoryData<byte[], CoreMessage.InstructConnect>
 		{
-			new byte[]
 			{
-				0xc6,
-				0x00,
-				0x00,
-				0x00,
-				0x11,
-				0x77,
-				0xeb,
-				0x0f,
-				0x04,
-				0x00,
-				0x00,
-				0x00,
-				0x00,
-				0x00,
-				0x00,
-				0x00,
+				[
+					0xc6,
+					0x00,
+					0x00,
+					0x00,
+					0x11,
+					0x77,
+					0xeb,
+					0x0f,
+					0x04,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+				],
+				new CoreMessage.InstructConnect { Dpnid = new Dpnid(0x0FEB7711), Version = 4 }
 			},
-			new CoreMessage.InstructConnect { Dpnid = new Dpnid(0x0FEB7711), Version = 4 },
 		};
+
+		return data;
 	}
 
 	[Theory]

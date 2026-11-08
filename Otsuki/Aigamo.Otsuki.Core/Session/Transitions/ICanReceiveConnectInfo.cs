@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using Aigamo.Otsuki.Messages.Core;
 
-namespace Aigamo.Otsuki.Session.Transitions;
+namespace Aigamo.Otsuki.Core.Session.Transitions;
 
 /// <summary>
 /// Builds the name table from DN_SEND_CONNECT_INFO and acknowledges it ([MC-DPL8CS] section 3.1.5.2, step 6).

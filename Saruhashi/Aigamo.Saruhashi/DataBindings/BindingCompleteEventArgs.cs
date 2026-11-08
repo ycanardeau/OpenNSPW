@@ -8,7 +8,7 @@
 
 using System.ComponentModel;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 /// <summary>
 ///  Provides information about a Binding Completed event.

@@ -6,7 +6,7 @@
 
 #nullable disable
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 [SRDescription(nameof(SR.ICurrencyManagerProviderDescr))]
 public interface ICurrencyManagerProvider

@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Results;
 
-namespace Aigamo.Otsuki.Session.Transitions;
+namespace Aigamo.Otsuki.Core.Session.Transitions;
 
 /// <summary>
 /// Creates a session with the local player as host ([MC-DPL8CS] section 1.3.3.2).

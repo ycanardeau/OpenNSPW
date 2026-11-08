@@ -12,7 +12,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
-namespace Aigamo.Saruhashi;
+namespace Aigamo.Saruhashi.DataBindings;
 
 [RequiresUnreferencedCode(BindingTrimming.Message)]
 public static class ListBindingHelper
@@ -23,10 +23,7 @@ public static class ListBindingHelper
 	{
 		get
 		{
-			if (browsableAttribute is null)
-			{
-				browsableAttribute = [new BrowsableAttribute(true)];
-			}
+			browsableAttribute ??= [new BrowsableAttribute(true)];
 
 			return browsableAttribute;
 		}
@@ -64,14 +61,11 @@ public static class ListBindingHelper
 		}
 
 		PropertyDescriptorCollection dsProps = ListBindingHelper.GetListItemProperties(dataSource);
-		PropertyDescriptor dmProp = dsProps.Find(dataMember, true);
-		if (dmProp is null)
-		{
-			throw new ArgumentException(
+		PropertyDescriptor dmProp =
+			dsProps.Find(dataMember, true)
+			?? throw new ArgumentException(
 				string.Format(SR.DataSourceDataMemberPropNotFound, dataMember)
 			);
-		}
-
 		object currentItem;
 
 		if (dataSource is ICurrencyManagerProvider)
@@ -178,9 +172,9 @@ public static class ListBindingHelper
 		{
 			return GetListItemProperties(list);
 		}
-		else if (list is Type type)
+		else if (list is Type)
 		{
-			return GetListItemPropertiesByType(type, listAccessors, 0);
+			return GetListItemPropertiesByType(listAccessors, 0);
 		}
 
 		object target = GetList(list);
@@ -378,12 +372,11 @@ public static class ListBindingHelper
 	}
 
 	private static PropertyDescriptorCollection GetListItemPropertiesByType(
-		Type type,
 		PropertyDescriptor[] listAccessors,
 		int startIndex
 	)
 	{
-		PropertyDescriptorCollection pdc = null;
+		PropertyDescriptorCollection pdc;
 		if (listAccessors[startIndex] is null)
 		{
 			return new PropertyDescriptorCollection(null);
@@ -409,7 +402,7 @@ public static class ListBindingHelper
 		else
 		{
 			// Walk down the tree
-			pdc = GetListItemPropertiesByType(subType, listAccessors, startIndex);
+			pdc = GetListItemPropertiesByType(listAccessors, startIndex);
 		}
 		// Return descriptors
 		return pdc;
@@ -421,7 +414,7 @@ public static class ListBindingHelper
 		int startIndex
 	)
 	{
-		PropertyDescriptorCollection pdc = null;
+		PropertyDescriptorCollection pdc;
 		object subList = null;
 		// Walk down the tree - first try and get the value
 		// This is tricky, because we can't do a standard GetValue - we need an instance of one of the
@@ -447,11 +440,7 @@ public static class ListBindingHelper
 		if (null == subList)
 		{
 			// Can't get shape by Instance, try by Type
-			pdc = GetListItemPropertiesByType(
-				listAccessors[startIndex].PropertyType,
-				listAccessors,
-				startIndex
-			);
+			pdc = GetListItemPropertiesByType(listAccessors, startIndex);
 		}
 		else
 		{
@@ -515,11 +504,7 @@ public static class ListBindingHelper
 			if (value is null)
 			{
 				// It's null - we can't walk down by Instance so use Type
-				return GetListItemPropertiesByType(
-					listAccessors[startIndex].PropertyType,
-					listAccessors,
-					startIndex
-				);
+				return GetListItemPropertiesByType(listAccessors, startIndex);
 			}
 			else
 			{
@@ -704,7 +689,7 @@ public static class ListBindingHelper
 			{
 				pdc = TypeDescriptor.GetProperties(instance, BrowsableAttributeList);
 
-				if (!(enumerable is IList) && pdc.Count == 0)
+				if (enumerable is not IList && pdc.Count == 0)
 				{
 					pdc = TypeDescriptor.GetProperties(enumerable, BrowsableAttributeList);
 				}

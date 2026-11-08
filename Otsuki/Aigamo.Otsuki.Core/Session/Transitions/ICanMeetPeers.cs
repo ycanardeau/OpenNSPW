@@ -1,6 +1,6 @@
 using Aigamo.Otsuki.Messages.Core;
 
-namespace Aigamo.Otsuki.Session.Transitions;
+namespace Aigamo.Otsuki.Core.Session.Transitions;
 
 /// <summary>
 /// Connects to the peers that the host instructed us to connect to ([MC-DPL8CS] section 3.1.5.2, steps 8 and 9).

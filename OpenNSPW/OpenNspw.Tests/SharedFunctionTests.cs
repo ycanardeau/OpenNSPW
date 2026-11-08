@@ -53,25 +53,22 @@ public class SharedFunctionTests
 		Func<int> port
 	)
 	{
-		var expected = RunFrom(game, seed, original);
+		var (Units, MaxUnitId, NextRandom, Result) = RunFrom(game, seed, original);
 		var actual = RunFrom(game, seed, port);
 		var size = System.Runtime.CompilerServices.Unsafe.SizeOf<Unit>();
-		var unitByte = expected.Units.AsSpan().CommonPrefixLength(actual.Units);
+		var unitByte = Units.AsSpan().CommonPrefixLength(actual.Units);
 		Assert.True(
-			unitByte == expected.Units.Length,
+			unitByte == Units.Length,
 			$"{label}: unit {unitByte / size}, byte 0x{unitByte % size:X}"
 		);
 		Assert.True(
-			expected.MaxUnitId == actual.MaxUnitId,
-			$"{label}: max_unit {expected.MaxUnitId}/{actual.MaxUnitId}"
+			MaxUnitId == actual.MaxUnitId,
+			$"{label}: max_unit {MaxUnitId}/{actual.MaxUnitId}"
 		);
+		Assert.True(Result == actual.Result, $"{label}: result {Result}/{actual.Result}");
 		Assert.True(
-			expected.Result == actual.Result,
-			$"{label}: result {expected.Result}/{actual.Result}"
-		);
-		Assert.True(
-			expected.NextRandom == actual.NextRandom,
-			$"{label}: rand {expected.NextRandom}/{actual.NextRandom}"
+			NextRandom == actual.NextRandom,
+			$"{label}: rand {NextRandom}/{actual.NextRandom}"
 		);
 	}
 
