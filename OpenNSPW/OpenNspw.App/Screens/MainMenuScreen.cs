@@ -32,7 +32,7 @@ internal sealed class MainMenuScreen(NspwGame game) : Screen(game)
 		return texture;
 	}
 
-	// The settings' sections the player can change here: the language; the touch options on a touch screen; the battles'
+	// The settings' sections the player can change here: the language and the sounds' volume; the touch options on a touch screen; the battles'
 	// options in a Debug build only (docs/Options.md).
 	private IReadOnlyList<SettingsSection> SettingsSections()
 	{
@@ -51,6 +51,7 @@ internal sealed class MainMenuScreen(NspwGame game) : Screen(game)
 			Game.Fonts,
 			SettingsSections(),
 			Game.Touch,
+			Game.Volume,
 			() => Game.Options,
 			options =>
 			{

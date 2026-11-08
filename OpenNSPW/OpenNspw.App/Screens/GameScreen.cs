@@ -133,7 +133,8 @@ internal sealed class GameScreen(
 		var progress = _session.Replay!.Progress;
 		bar.Visible = _session.Snapshot.IsBattle && !progress.IsTakenOver;
 		bar.UpdateFrom();
-		SoundEffect.MasterVolume = _session.IsWatching && progress.IsSeeking ? 0 : 1;
+		SoundEffect.MasterVolume =
+			_session.IsWatching && progress.IsSeeking ? 0 : Game.Volume.Value;
 
 		var keyboard = Keyboard.GetState();
 		bool Pressed(Keys key) => keyboard.IsKeyDown(key) && !_previousKeyboard.IsKeyDown(key);
@@ -169,14 +170,15 @@ internal sealed class GameScreen(
 	}
 
 	// The touch settings, over the battle, which goes on under them: each takes effect at once (TouchSettings). The other
-	// sections are the main menu's: the language, which the battle's texts are made in as it starts, and the battles'
-	// options, which a battle takes as it starts.
+	// sections are the main menu's: the language, which the battle's texts are made in as it starts, beside the sounds'
+	// volume, and the battles' options, which a battle takes as it starts.
 	private void ShowTouchSettings()
 	{
 		var form = new SettingsForm(
 			Game.Fonts,
 			[SettingsSection.Touch],
 			Game.Touch,
+			Game.Volume,
 			() => Game.Options,
 			options => Game.Options = options
 		)
@@ -251,7 +253,7 @@ internal sealed class GameScreen(
 		base.UnloadContent();
 		if (_session.Trace is not null)
 			Game.Window.Title = NspwGame.Title;
-		SoundEffect.MasterVolume = 1;
+		SoundEffect.MasterVolume = Game.Volume.Value;
 		Game.ViewportAdapter.IsLayoutLeft = false;
 		if (_battleForm.Zoom != _initialZoom)
 			UISettings.SaveBattleZoom(_battleForm.Zoom);

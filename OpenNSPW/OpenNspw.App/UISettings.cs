@@ -4,8 +4,8 @@ using System.Text.Json.Serialization;
 
 namespace OpenNspw.App;
 
-// What the UI remembers between runs, beside the game's own settings (AppPlatform): the language chosen, and the
-// options of single-player battles (docs/Options.md).
+// What the UI remembers between runs, beside the game's own settings (AppPlatform): the language chosen, the sounds'
+// volume, and the options of single-player battles (docs/Options.md).
 internal static partial class UISettings
 {
 	// IsSpeedSteady: BattleOptions.SteadySpeed, by the name it was first saved under.
@@ -15,7 +15,8 @@ internal static partial class UISettings
 		bool? SharedEffectRandom = null,
 		float? BattleZoom = null,
 		bool? IsCommandBarShown = null,
-		TouchOptions? Touch = null
+		TouchOptions? Touch = null,
+		float? Volume = null
 	);
 
 	// How Saved is read and written, generated, so that trimming keeps what it needs: the language by its name.
@@ -124,5 +125,16 @@ internal static partial class UISettings
 	public static void SaveTouch(TouchOptions options)
 	{
 		Save(saved => saved with { Touch = options });
+	}
+
+	// How loud the sounds are, as chosen last, or as loud as the game plays them (SoundVolume).
+	public static float LoadVolume()
+	{
+		return Math.Clamp(Load().Volume ?? 1, 0, 1);
+	}
+
+	public static void SaveVolume(float volume)
+	{
+		Save(saved => saved with { Volume = volume });
 	}
 }

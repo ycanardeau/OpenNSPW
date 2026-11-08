@@ -175,7 +175,10 @@ internal static class Texts
 	// The settings (SettingsForm).
 	public static string SettingsTitle => Pick("Settings", "設定");
 	public static string SettingsDescription =>
-		Pick("The language, and how the game is played", "言語や操作の方法を選びます");
+		Pick(
+			"The language, the sound, and how the game is played",
+			"言語や音量、操作の方法を選びます"
+		);
 	public static string GeneralTab => Pick("General", "全般");
 	public static string TouchTab => Pick("Touch", "タッチ操作");
 	public static string DebugTab => Pick("Debug", "デバッグ");
@@ -185,6 +188,7 @@ internal static class Texts
 			"デバッグ用：一人用の戦闘が 1.22 とは異なる展開になります。"
 		);
 	public static string LanguageLabel => Pick("Language", "言語");
+	public static string VolumeLabel => Pick("Volume", "音量");
 	public static string WaypointGestureLabel => Pick("Waypoint", "航路点の指定");
 	public static string WaypointTap => Pick("Tap", "タップ");
 	public static string WaypointHold => Pick("Hold", "長押し");

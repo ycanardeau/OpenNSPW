@@ -8,7 +8,7 @@ namespace OpenNspw.App.Controls;
 // A part of the settings, a tab of their form.
 internal enum SettingsSection
 {
-	// The language.
+	// The language, and the sounds' volume.
 	General,
 
 	// How a touch screen is played (TouchSettings): on a touch screen only.
@@ -30,8 +30,11 @@ internal sealed class SettingsForm : Form
 
 	private const int LabelWidth = 300;
 	private const int ChoiceWidth = 140;
-	private const int ChoiceHeight = 44;
 	private const int Gap = 8;
+
+	// The width of a row's choices together: four of the widest; more are narrower.
+	private const int ChoicesWidth = ChoiceWidth * 4 + Gap * 3;
+	private const int ChoiceHeight = 44;
 	private const int RowHeight = ChoiceHeight + 12;
 	private const int Padding = 28;
 	private const int HeaderHeight = 120;
@@ -42,14 +45,13 @@ internal sealed class SettingsForm : Form
 		section switch
 		{
 			SettingsSection.Touch => 7,
-			SettingsSection.Debug => 2,
-			_ => 1,
+			_ => 2,
 		};
 
 	// The panel, centered, as high as the most rows of the sections shown need.
 	private static DrawingRectangle PanelFor(IReadOnlyList<SettingsSection> sections)
 	{
-		var width = Padding * 2 + LabelWidth + ChoiceWidth * 4 + Gap * 3;
+		var width = Padding * 2 + LabelWidth + ChoicesWidth;
 		var height = HeaderHeight + RowHeight * sections.Max(RowsOf) + FooterHeight;
 		return new(
 			(all_head.SCRN_WIDTH - width) / 2,
@@ -63,6 +65,7 @@ internal sealed class SettingsForm : Form
 
 	private readonly UIFonts _fonts;
 	private readonly TouchSettings _touch;
+	private readonly SoundVolume _volume;
 	private readonly Func<BattleOptions> _options;
 	private readonly Action<BattleOptions> _setOptions;
 	private readonly Dictionary<SettingsSection, TabButton> _tabs = [];
@@ -98,15 +101,19 @@ internal sealed class SettingsForm : Form
 			_labels[section] = labels = [];
 		var top = _panel.Y + HeaderHeight + labels.Count * RowHeight;
 		labels.Add((label, top));
+		var width = Math.Min(
+			ChoiceWidth,
+			(ChoicesWidth - Gap * (choices.Length - 1)) / choices.Length
+		);
 		for (var i = 0; i < choices.Length; i++)
 		{
 			var choice = choices[i];
 			var button = new ActionButton(_fonts)
 			{
 				Bounds = new DrawingRectangle(
-					_panel.X + Padding + LabelWidth + i * (ChoiceWidth + Gap),
+					_panel.X + Padding + LabelWidth + i * (width + Gap),
 					top,
-					ChoiceWidth,
+					width,
 					ChoiceHeight
 				),
 				Text = choice.Text,
@@ -143,6 +150,10 @@ internal sealed class SettingsForm : Form
 		Func<BattleOptions, bool, BattleOptions> set
 	) => new(text, () => get(_options()) == value, () => _setOptions(set(_options(), value)));
 
+	// A choice of the sounds' volume.
+	private Choice Volume(string text, float value) =>
+		new(text, () => _volume.Value == value, () => _volume.Change(value));
+
 	private void AddGeneral()
 	{
 		AddRow(
@@ -158,6 +169,15 @@ internal sealed class SettingsForm : Form
 				() => Texts.Language == Language.Japanese,
 				() => LanguageChosen?.Invoke(this, Language.Japanese)
 			)
+		);
+		AddRow(
+			SettingsSection.General,
+			Texts.VolumeLabel,
+			Volume(Texts.Off, 0),
+			Volume("25%", 0.25f),
+			Volume("50%", 0.5f),
+			Volume("75%", 0.75f),
+			Volume("100%", 1)
 		);
 	}
 
@@ -285,11 +305,13 @@ internal sealed class SettingsForm : Form
 	}
 
 	// sections: the sections shown, the first at first, or `initial`. touch: the touch options (SettingsSection.Touch).
-	// options, setOptions: the options of single-player battles, and how they are changed (SettingsSection.Debug).
+	// volume: the sounds' volume (SettingsSection.General). options, setOptions: the options of single-player battles, and
+	// how they are changed (SettingsSection.Debug).
 	public SettingsForm(
 		UIFonts fonts,
 		IReadOnlyList<SettingsSection> sections,
 		TouchSettings touch,
+		SoundVolume volume,
 		Func<BattleOptions> options,
 		Action<BattleOptions> setOptions,
 		SettingsSection? initial = null
@@ -297,6 +319,7 @@ internal sealed class SettingsForm : Form
 	{
 		_fonts = fonts;
 		_touch = touch;
+		_volume = volume;
 		_options = options;
 		_setOptions = setOptions;
 		_panel = PanelFor(sections);

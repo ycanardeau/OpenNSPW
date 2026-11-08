@@ -2,6 +2,7 @@ using Aigamo.Saruhashi;
 using Aigamo.Saruhashi.MonoGame;
 using FontStashSharp;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended.Input.InputListeners;
 using MonoGame.Extended.ViewportAdapters;
@@ -47,6 +48,9 @@ internal sealed class NspwGame : Game
 
 	// How a touch screen is played, as the player chose last (TouchSettingsForm).
 	public TouchSettings Touch { get; } = new(UISettings.LoadTouch());
+
+	// How loud the sounds are, as the player chose last (SettingsSection.General).
+	public SoundVolume Volume { get; } = new(UISettings.LoadVolume());
 
 	// What the player points with, which the UI and the game read in each update: the mouse, or the screen's touches, while
 	// the window is active (ActivePointer).
@@ -166,6 +170,7 @@ internal sealed class NspwGame : Game
 				: (all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		_graphics.ApplyChanges();
 		ViewportAdapter = new WideViewportAdapter(GraphicsDevice);
+		SoundEffect.MasterVolume = Volume.Value;
 		base.Initialize();
 	}
 
