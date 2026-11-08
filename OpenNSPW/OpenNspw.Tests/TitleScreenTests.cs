@@ -115,7 +115,7 @@ internal sealed class RunningGame : IDisposable
 		{
 			try
 			{
-				Game.WinMain(null, null, "", SW_SHOWNORMAL);
+				Game.RunWinMain(null, null, "", SW_SHOWNORMAL);
 			}
 			catch (Exception e)
 			{

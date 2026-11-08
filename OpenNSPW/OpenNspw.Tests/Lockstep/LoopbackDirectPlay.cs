@@ -143,7 +143,7 @@ internal sealed unsafe class LoopbackPeer(LoopbackNetwork network, SentHandler s
 		return winerror.S_OK;
 	}
 
-	public int SetPeerInfo(
+	public Task<int> SetPeerInfoAsync(
 		DPN_PLAYER_INFO pdpnPlayerInfo,
 		object? pvAsyncContext,
 		object? phAsyncHandle,
@@ -151,7 +151,7 @@ internal sealed unsafe class LoopbackPeer(LoopbackNetwork network, SentHandler s
 	)
 	{
 		Name = pdpnPlayerInfo.pwszName ?? string.Empty;
-		return winerror.S_OK;
+		return Task.FromResult(winerror.S_OK);
 	}
 
 	public int GetPeerInfo(
@@ -181,7 +181,7 @@ internal sealed unsafe class LoopbackPeer(LoopbackNetwork network, SentHandler s
 		return winerror.S_OK;
 	}
 
-	public int Host(
+	public Task<int> HostAsync(
 		DPN_APPLICATION_DESC pdnAppDesc,
 		IDirectPlay8Address?[] prgpDeviceInfo,
 		uint cDeviceInfo,
@@ -193,14 +193,14 @@ internal sealed unsafe class LoopbackPeer(LoopbackNetwork network, SentHandler s
 	{
 		if (_network.Host is not null)
 		{
-			return dplay8.DPNERR_GENERIC;
+			return Task.FromResult(dplay8.DPNERR_GENERIC);
 		}
 
 		_network.Host = this;
 		IsHost = true;
 		Id = _network.NextPlayerId();
 		EnqueueCreatePlayer(Id);
-		return winerror.S_OK;
+		return Task.FromResult(winerror.S_OK);
 	}
 
 	// Joins the host at once: the guest gets its own player, the host's and the completion, in Otsuki's order, and the
@@ -295,7 +295,7 @@ internal sealed unsafe class LoopbackPeer(LoopbackNetwork network, SentHandler s
 		return DPNSUCCESS_PENDING;
 	}
 
-	public int Close(uint dwFlags)
+	public Task<int> CloseAsync(uint dwFlags)
 	{
 		if (Rival is { } rival)
 		{
@@ -324,7 +324,7 @@ internal sealed unsafe class LoopbackPeer(LoopbackNetwork network, SentHandler s
 			_network.Host = null;
 		}
 
-		return winerror.S_OK;
+		return Task.FromResult(winerror.S_OK);
 	}
 
 	public uint Release()

@@ -97,6 +97,9 @@ public struct MSG
 
 	// What a user did, posted by PostToGame; DispatchMessage runs it.
 	internal Action? userAction;
+
+	// Whether userAction resumes what the game awaited (PostContinuation), rather than a user's action.
+	internal bool isContinuation;
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -859,6 +862,14 @@ public partial class Nspw
 	public void PostToGame(Action action)
 	{
 		Mailbox.Post(new GameMessage.Window(new MSG { userAction = action }));
+	}
+
+	// Resumes what the game awaited on the game's thread, when its message loop dispatches it (GameSynchronizationContext).
+	internal void PostContinuation(Action continuation)
+	{
+		Mailbox.Post(
+			new GameMessage.Window(new MSG { userAction = continuation, isContinuation = true })
+		);
 	}
 
 	public void SetCursorPos(int x, int y)

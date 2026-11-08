@@ -630,20 +630,8 @@ public unsafe partial class Nspw
 						// Disable the OK button while we work.
 						EnableWindow(GetDlgItem(hDlg, IDOK), FALSE);
 
-						if (FAILED(hr = LaunchMultiplayerGame(hDlg)))
-						{
-							// 設定された接続は失敗した。
-							DXTRACE_ERR_MSGBOX(hr);
-							MessageBox(
-								null,
-								TEXT("Failed to launch game. "),
-								AppName,
-								MB_OK | MB_ICONERROR
-							);
-
-							// Renable the OK button.
-							EnableWindow(GetDlgItem(hDlg, IDOK), TRUE);
-						}
+						// The launch goes on while the dialog's loop runs, and shows its failure when it comes.
+						LaunchFromDialog(hDlg);
 
 						break;
 
@@ -676,7 +664,7 @@ public unsafe partial class Nspw
 	// Desc: Use the settings in the configuration dialog to launch the session
 	// 設定にしたがって、接続を作るか、接続を探しに行く
 	//-----------------------------------------------------------------------------
-	public int LaunchMultiplayerGame(HWND hDlg)
+	public async Task<int> LaunchMultiplayerGameAsync(HWND hDlg)
 	{
 		int hr = S_OK;
 		bool bOkToQuery = false;
@@ -924,7 +912,9 @@ public unsafe partial class Nspw
 		// Set the peer info, and use the DPNOP_SYNC since by default this
 		// is an async call.  If it is not DPNOP_SYNC, then the peer info may not
 		// be set by the time we call Connect() below.
-		if (FAILED(hr = DirectPlayPeer.SetPeerInfo(dpPlayerInfo, null, null, DPNOP_SYNC)))
+		if (
+			FAILED(hr = await DirectPlayPeer.SetPeerInfoAsync(dpPlayerInfo, null, null, DPNOP_SYNC))
+		)
 		{
 			DXTRACE_ERR_MSGBOX(hr);
 			goto LCleanReturn;
@@ -957,7 +947,7 @@ public unsafe partial class Nspw
 			}
 
 			// Host a game as described by pSettings
-			hr = DirectPlayPeer.Host(
+			hr = await DirectPlayPeer.HostAsync(
 				dpnAppDesc, // the application desc
 				[pDeviceAddress], // array of addresses of the local devices used to connect to the host
 				1, // number in array
@@ -1025,6 +1015,26 @@ public unsafe partial class Nspw
 		SAFE_RELEASE(ref pDeviceAddress);
 
 		return hr;
+	}
+
+	// Launches the session as the connection dialog's OK button does, and shows its failure (OverrideDlgProc). What follows
+	// the peer's calls runs as a message of the dialog's loop (GameSynchronizationContext), and so does an exception in it,
+	// which ends the game's thread as it would have in the call. Not part of the original, whose OK button waited for the
+	// calls.
+#pragma warning disable VSTHRD100 // A handler of the dialog's button, whose exceptions go to the game's thread.
+	private async void LaunchFromDialog(HWND hDlg)
+#pragma warning restore VSTHRD100
+	{
+		int hr;
+		if (FAILED(hr = await LaunchMultiplayerGameAsync(hDlg)))
+		{
+			// 設定された接続は失敗した。
+			DXTRACE_ERR_MSGBOX(hr);
+			MessageBox(null, TEXT("Failed to launch game. "), AppName, MB_OK | MB_ICONERROR);
+
+			// Renable the OK button.
+			EnableWindow(GetDlgItem(hDlg, IDOK), TRUE);
+		}
 	}
 
 	private void ReceiveSideAndScenario(DPNMSG_RECEIVE pReceiveMsg)

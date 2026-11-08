@@ -72,6 +72,14 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options, IBluetoothProvi
 	// Dispatch, as the delegate DoWork gives Otsuki, made once: the game calls DoWork each time round its message loop.
 	private Action<PeerEvent>? _dispatch;
 
+	// How many calls the game awaits: their events wait until the game goes on after them, as the original's calls returned
+	// before DoWork delivered any.
+	private int _awaitedCalls;
+
+	// The start of a join (Connect), until DoWork has seen it end: one that fails, such as for a host name that does not
+	// resolve, is reported as DPN_MSGID_CONNECT_COMPLETE, as DirectPlay reports a join that fails.
+	private Task? _connecting;
+
 	// The local endpoint of the session, once hosting or connected: an IPEndPoint over TCP/IP, and a BluetoothEndPoint
 	// over Bluetooth.
 	public EndPoint? LocalEndPoint => _peer.LocalEndPoint;
@@ -188,15 +196,27 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options, IBluetoothProvi
 		return winerror.S_OK;
 	}
 
-	public int SetPeerInfo(
+	public async Task<int> SetPeerInfoAsync(
 		DPN_PLAYER_INFO pdpnPlayerInfo,
 		object? pvAsyncContext,
 		object? phAsyncHandle,
 		uint dwFlags
 	)
 	{
-		_ = _peer.SetPeerInfoAsync(pdpnPlayerInfo.pwszName ?? string.Empty);
-		return winerror.S_OK;
+		_awaitedCalls++;
+		try
+		{
+			await _peer.SetPeerInfoAsync(pdpnPlayerInfo.pwszName ?? string.Empty);
+			return winerror.S_OK;
+		}
+		catch (Exception)
+		{
+			return dplay8.DPNERR_GENERIC;
+		}
+		finally
+		{
+			_awaitedCalls--;
+		}
 	}
 
 	public int GetPeerInfo(
@@ -226,7 +246,7 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options, IBluetoothProvi
 		return winerror.S_OK;
 	}
 
-	public int Host(
+	public async Task<int> HostAsync(
 		DPN_APPLICATION_DESC pdnAppDesc,
 		IDirectPlay8Address?[] prgpDeviceInfo,
 		uint cDeviceInfo,
@@ -237,19 +257,17 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options, IBluetoothProvi
 	)
 	{
 		var device = prgpDeviceInfo.FirstOrDefault();
+		_awaitedCalls++;
 		try
 		{
 			if (IsBluetooth(device))
 			{
-				_peer
-					.HostAsync(ToApplication(pdnAppDesc), BluetoothEndPoint.Any)
-					.GetAwaiter()
-					.GetResult();
+				await _peer.HostAsync(ToApplication(pdnAppDesc), BluetoothEndPoint.Any);
 			}
 			else
 			{
 				var port = (device as DirectPlay8Address)?.Port ?? Peer.DefaultPort;
-				_peer.HostAsync(ToApplication(pdnAppDesc), port).GetAwaiter().GetResult();
+				await _peer.HostAsync(ToApplication(pdnAppDesc), port);
 			}
 
 			return winerror.S_OK;
@@ -257,6 +275,10 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options, IBluetoothProvi
 		catch (Exception)
 		{
 			return dplay8.DPNERR_GENERIC;
+		}
+		finally
+		{
+			_awaitedCalls--;
 		}
 	}
 
@@ -289,7 +311,7 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options, IBluetoothProvi
 		var localPort = (pDeviceInfo as DirectPlay8Address)?.Port ?? 0;
 		try
 		{
-			var connecting = bluetoothHost is not null
+			_connecting = bluetoothHost is not null
 				? _peer.ConnectAsync(application, bluetoothHost, BluetoothEndPoint.Any)
 				: _peer.ConnectAsync(
 					application,
@@ -297,7 +319,6 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options, IBluetoothProvi
 					host?.Port ?? Peer.DefaultPort,
 					localPort
 				);
-			connecting.GetAwaiter().GetResult();
 		}
 		catch (Exception)
 		{
@@ -328,15 +349,15 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options, IBluetoothProvi
 		return (dwFlags & dplay8.DPNSEND_NOCOMPLETE) != 0 ? winerror.S_OK : DPNSUCCESS_PENDING;
 	}
 
-	public int Close(uint dwFlags)
+	public async Task<int> CloseAsync(uint dwFlags)
 	{
-		_peer.CloseAsync().GetAwaiter().GetResult();
+		await _peer.CloseAsync();
 		return winerror.S_OK;
 	}
 
+	// The game closes the peer before it lets go of it (ClosePeer), and nothing else is left to free.
 	public uint Release()
 	{
-		_peer.DisposeAsync().AsTask().GetAwaiter().GetResult();
 		return 0;
 	}
 
@@ -412,9 +433,27 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options, IBluetoothProvi
 		);
 	}
 
-	// Delivers the queued events to the message handler. Called by DirectPlay8ThreadPool.DoWork.
+	// Delivers the queued events to the message handler, unless the game awaits a call. Called by
+	// DirectPlay8ThreadPool.DoWork.
 	public int DoWork()
 	{
+		if (_awaitedCalls > 0)
+		{
+			return 0;
+		}
+
+		if (_connecting is { IsCompleted: true } connecting)
+		{
+			_connecting = null;
+			if (connecting.Exception is not null || connecting.IsCanceled)
+			{
+				return Handle(
+					dplay8.DPN_MSGID_CONNECT_COMPLETE,
+					new DPNMSG_CONNECT_COMPLETE { hResultCode = dplay8.DPNERR_GENERIC }
+				);
+			}
+		}
+
 		return _peer.DoWork(_dispatch ??= Dispatch);
 	}
 }

@@ -150,7 +150,7 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 		return winerror.S_OK;
 	}
 
-	public int SetPeerInfo(
+	public Task<int> SetPeerInfoAsync(
 		DPN_PLAYER_INFO pdpnPlayerInfo,
 		object? pvAsyncContext,
 		object? phAsyncHandle,
@@ -158,7 +158,7 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 	)
 	{
 		_localName = pdpnPlayerInfo.pwszName ?? string.Empty;
-		return winerror.S_OK;
+		return Task.FromResult(winerror.S_OK);
 	}
 
 	public int GetPeerInfo(
@@ -194,7 +194,7 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 	}
 
 	// The game hosts, and the rival joins at once.
-	public int Host(
+	public Task<int> HostAsync(
 		DPN_APPLICATION_DESC pdnAppDesc,
 		IDirectPlay8Address?[] prgpDeviceInfo,
 		uint cDeviceInfo,
@@ -212,7 +212,7 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 			dplay8.DPN_MSGID_CREATE_PLAYER,
 			new DPNMSG_CREATE_PLAYER { dpnidPlayer = RivalPlayer }
 		);
-		return winerror.S_OK;
+		return Task.FromResult(winerror.S_OK);
 	}
 
 	// The game only hosts.
@@ -256,9 +256,9 @@ internal sealed unsafe class ScriptedRival : IDirectPlay8Peer
 		return (dwFlags & dplay8.DPNSEND_NOCOMPLETE) != 0 ? winerror.S_OK : DPNSUCCESS_PENDING;
 	}
 
-	public int Close(uint dwFlags)
+	public Task<int> CloseAsync(uint dwFlags)
 	{
-		return winerror.S_OK;
+		return Task.FromResult(winerror.S_OK);
 	}
 
 	public uint Release()
