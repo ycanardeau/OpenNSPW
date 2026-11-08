@@ -92,8 +92,7 @@ internal abstract record StreamNetworkMessage
 {
 	private StreamNetworkMessage() { }
 
-	public sealed record Bind(InMemoryStreamConnector Connector, TaskCompletionSource<bool> Bound)
-		: StreamNetworkMessage;
+	public sealed record Bind(InMemoryStreamConnector Connector) : StreamNetworkMessage;
 
 	public sealed record Start(InMemoryStreamConnector Connector, Action<EndPoint, Stream> OnAccept)
 		: StreamNetworkMessage;
@@ -126,29 +125,25 @@ internal sealed class InMemoryStreamNetwork : Actor<StreamNetworkMessage>
 		Start();
 	}
 
-	private T Ask<T>(Func<T> question)
+	private Task<T> AskAsync<T>(Func<T> question)
 	{
 		var answer = new TaskCompletionSource<T>(
 			TaskCreationOptions.RunContinuationsAsynchronously
 		);
 		Post(new StreamNetworkMessage.Ask(() => answer.SetResult(question())));
-		return answer.Task.GetAwaiter().GetResult();
+		return answer.Task;
 	}
 
 	/// <summary>
 	/// How many streams were opened.
 	/// </summary>
-	public int ConnectCount => Ask(() => _connectCount);
+	public Task<int> ConnectCountAsync() => AskAsync(() => _connectCount);
 
 	public InMemoryStreamConnector Bind(EndPoint endPoint)
 	{
 		var connector = new InMemoryStreamConnector(this, endPoint);
-		var bound = new TaskCompletionSource<bool>(
-			TaskCreationOptions.RunContinuationsAsynchronously
-		);
-		Post(new StreamNetworkMessage.Bind(connector, bound));
-		if (!bound.Task.GetAwaiter().GetResult())
-			throw new SocketException((int)SocketError.AddressAlreadyInUse);
+		// Bound at once: an address already bound is reported by the network (OnError), and this one receives nothing.
+		Post(new StreamNetworkMessage.Bind(connector));
 		return connector;
 	}
 
@@ -184,9 +179,8 @@ internal sealed class InMemoryStreamNetwork : Actor<StreamNetworkMessage>
 		switch (message)
 		{
 			case StreamNetworkMessage.Bind bind:
-				bind.Bound.SetResult(
-					_connectors.TryAdd(bind.Connector.LocalEndPoint, (bind.Connector, null))
-				);
+				if (!_connectors.TryAdd(bind.Connector.LocalEndPoint, (bind.Connector, null)))
+					throw new SocketException((int)SocketError.AddressAlreadyInUse);
 				break;
 			case StreamNetworkMessage.Start start
 				when _connectors.TryGetValue(start.Connector.LocalEndPoint, out var entry)

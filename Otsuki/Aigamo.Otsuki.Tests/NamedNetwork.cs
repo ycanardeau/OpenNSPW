@@ -25,8 +25,7 @@ internal abstract record NamedNetworkMessage
 {
 	private NamedNetworkMessage() { }
 
-	public sealed record Bind(NamedTransport Transport, TaskCompletionSource<bool> Bound)
-		: NamedNetworkMessage;
+	public sealed record Bind(NamedTransport Transport) : NamedNetworkMessage;
 
 	public sealed record Start(NamedTransport Transport, Action<EndPoint, byte[]> OnReceive)
 		: NamedNetworkMessage;
@@ -56,12 +55,8 @@ internal sealed class NamedNetwork : Actor<NamedNetworkMessage>
 	public NamedTransport Bind(NamedEndPoint endPoint)
 	{
 		var transport = new NamedTransport(this, endPoint);
-		var bound = new TaskCompletionSource<bool>(
-			TaskCreationOptions.RunContinuationsAsynchronously
-		);
-		Post(new NamedNetworkMessage.Bind(transport, bound));
-		if (!bound.Task.GetAwaiter().GetResult())
-			throw new SocketException((int)SocketError.AddressAlreadyInUse);
+		// Bound at once: an address already bound is reported by the network (OnError), and this one receives nothing.
+		Post(new NamedNetworkMessage.Bind(transport));
 		return transport;
 	}
 
@@ -73,9 +68,8 @@ internal sealed class NamedNetwork : Actor<NamedNetworkMessage>
 		switch (message)
 		{
 			case NamedNetworkMessage.Bind bind:
-				bind.Bound.SetResult(
-					_transports.TryAdd(bind.Transport.LocalEndPoint, (bind.Transport, null))
-				);
+				if (!_transports.TryAdd(bind.Transport.LocalEndPoint, (bind.Transport, null)))
+					throw new SocketException((int)SocketError.AddressAlreadyInUse);
 				break;
 			case NamedNetworkMessage.Start start
 				when _transports.TryGetValue(start.Transport.LocalEndPoint, out var entry)

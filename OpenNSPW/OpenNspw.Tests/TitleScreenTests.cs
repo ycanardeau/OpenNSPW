@@ -75,7 +75,7 @@ internal sealed class GameTestPlatform(string dataDirectory) : INspwPlatform
 }
 
 // A whole game, running its WinMain (win_main.cpp) on its own thread, as the app does. The game and its
-// platform are its thread's: the test asks it what it needs to know (Ask), and posts it what the user does (Do).
+// platform are its thread's: the test asks it what it needs to know (AskAsync), and posts it what the user does (Do).
 internal sealed class RunningGame : IDisposable
 {
 	private static readonly TimeSpan AskTimeout = TimeSpan.FromSeconds(1);
@@ -140,15 +140,22 @@ internal sealed class RunningGame : IDisposable
 		Game.PostToGame(() => action(Game));
 	}
 
-	// Asks the game's thread, as its message loop dispatches the question, and waits for the answer; or answers
-	// `unanswered` if the game does not answer within a second, such as while it waits for DirectPlay.
-	public T Ask<T>(Func<Nspw, GameTestPlatform, T> question, T unanswered)
+	// Asks the game's thread, as its message loop dispatches the question, for the answer; or answers `unanswered` if the
+	// game does not answer within a second, such as while it waits for DirectPlay.
+	public async Task<T> AskAsync<T>(Func<Nspw, GameTestPlatform, T> question, T unanswered)
 	{
 		var answer = new TaskCompletionSource<T>(
 			TaskCreationOptions.RunContinuationsAsynchronously
 		);
 		Do(game => answer.TrySetResult(question(game, Platform)));
-		return answer.Task.Wait(AskTimeout) ? answer.Task.Result : unanswered;
+		try
+		{
+			return await answer.Task.WaitAsync(AskTimeout);
+		}
+		catch (TimeoutException)
+		{
+			return unanswered;
+		}
 	}
 
 	public void Dispose()
@@ -176,26 +183,35 @@ public class TitleScreenTests
 {
 	private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(60);
 
-	private static int? DialogOf(RunningGame game) => game.Ask((g, _) => g.MainDialog?.Id, null);
+	private static Task<int?> DialogOfAsync(RunningGame game) =>
+		game.AskAsync((g, _) => g.MainDialog?.Id, null);
 
-	private static GameMode? ModeOf(RunningGame game) =>
-		game.Ask((g, _) => (GameMode?)g.Mode, null);
+	private static Task<GameMode?> ModeOfAsync(RunningGame game) =>
+		game.AskAsync((g, _) => (GameMode?)g.Mode, null);
 
-	private static int FramesOf(RunningGame game) =>
-		game.Ask((_, platform) => platform.FrameCount, 0);
+	private static Task<int> FramesOfAsync(RunningGame game) =>
+		game.AskAsync((_, platform) => platform.FrameCount, 0);
 
-	private static void WaitUntil(Func<bool> condition, params RunningGame[] games)
+	private static async Task WaitUntilAsync(Func<Task<bool>> condition, params RunningGame[] games)
 	{
-		string Status() =>
-			string.Join(
-				"; ",
-				games.Select(g =>
-					$"{g.PlayerName}: {g.Ask((game, platform) => $"dialog {game.MainDialog?.Id}, players {game.ActivePlayerCount}, mode {game.Mode}, rival mode {game.RivalMode}, frames {platform.FrameCount}, boxes [{string.Join(", ", platform.MessageBoxes)}]", "not answering")}, ended {g.Ended}"
-				)
-			);
+		async Task<string> StatusAsync()
+		{
+			var statuses = new List<string>();
+			foreach (var g in games)
+			{
+				var status = await g.AskAsync(
+					(game, platform) =>
+						$"dialog {game.MainDialog?.Id}, players {game.ActivePlayerCount}, mode {game.Mode}, rival mode {game.RivalMode}, frames {platform.FrameCount}, boxes [{string.Join(", ", platform.MessageBoxes)}]",
+					"not answering"
+				);
+				statuses.Add($"{g.PlayerName}: {status}, ended {g.Ended}");
+			}
+
+			return string.Join("; ", statuses);
+		}
 
 		var deadline = DateTime.UtcNow + Timeout;
-		while (!condition())
+		while (!await condition())
 		{
 			foreach (var game in games)
 			{
@@ -204,11 +220,18 @@ public class TitleScreenTests
 					throw new InvalidOperationException($"{game.PlayerName}'s game failed.", error);
 				}
 
-				Assert.False(game.Ended, $"{game.PlayerName}'s game ended: {Status()}");
+				if (game.Ended)
+				{
+					Assert.Fail($"{game.PlayerName}'s game ended: {await StatusAsync()}");
+				}
 			}
 
-			Assert.True(DateTime.UtcNow < deadline, "Timed out: " + Status());
-			Thread.Sleep(10);
+			if (DateTime.UtcNow >= deadline)
+			{
+				Assert.Fail("Timed out: " + await StatusAsync());
+			}
+
+			await Task.Delay(10);
 		}
 	}
 
@@ -275,19 +298,19 @@ public class TitleScreenTests
 	}
 
 	// Clicks the left mouse button at a point of the screen, as the user does.
-	private static void Click(RunningGame game, int x, int y)
+	private static async Task ClickAsync(RunningGame game, int x, int y)
 	{
 		game.Game.SetCursorPos(x, y);
 		game.Game.PostMouseInput(0, true);
-		Thread.Sleep(100);
+		await Task.Delay(100);
 		game.Game.PostMouseInput(0, false);
 	}
 
-	private static void SaveFrame(RunningGame game, string name)
+	private static async Task SaveFrameAsync(RunningGame game, string name)
 	{
 		WritePng(
 			Path.Combine(AppContext.BaseDirectory, name),
-			game.Ask((_, platform) => platform.LastFrame(), []),
+			await game.AskAsync((_, platform) => platform.LastFrame(), []),
 			SCRN_WIDTH,
 			SCRN_HEIGHT
 		);
@@ -295,15 +318,17 @@ public class TitleScreenTests
 
 	// Starts two games, the host and the guest, on a copy of the original's data, connects them through the connection
 	// dialogs over loopback, starts them from the host and waits for both to show the title screen. Then plays them.
-	private static void PlayTwoGames(Action<RunningGame, RunningGame> play)
+	private static async Task PlayTwoGamesAsync(Func<RunningGame, RunningGame, Task> play)
 	{
 		using var data = GameData.CreateCopy();
 		using var host = new RunningGame(data.Path, "Alice");
 		using var guest = new RunningGame(data.Path, "Bob");
 		host.Start();
 		guest.Start();
-		WaitUntil(
-			() => DialogOf(host) == IDD_ADDRESS_OVERRIDE && DialogOf(guest) == IDD_ADDRESS_OVERRIDE,
+		await WaitUntilAsync(
+			async () =>
+				await DialogOfAsync(host) == IDD_ADDRESS_OVERRIDE
+				&& await DialogOfAsync(guest) == IDD_ADDRESS_OVERRIDE,
 			host,
 			guest
 		);
@@ -313,8 +338,8 @@ public class TitleScreenTests
 			g.TypeDlgItemText(g.MainDialog!, IDC_ADDRESS_LINE2, "0");
 			g.ClickDlgItem(g.MainDialog!, IDOK);
 		});
-		WaitUntil(() => DialogOf(host) == IDD_MAIN_GAME, host, guest);
-		var port = host.Ask(
+		await WaitUntilAsync(async () => await DialogOfAsync(host) == IDD_MAIN_GAME, host, guest);
+		var port = await host.AskAsync(
 			(_, platform) => ((IPEndPoint)platform.DirectPlay.Peers.Single().LocalEndPoint!).Port,
 			0
 		);
@@ -326,37 +351,46 @@ public class TitleScreenTests
 			g.TypeDlgItemText(g.MainDialog!, IDC_ADDRESS_LINE2, $"{port}");
 			g.ClickDlgItem(g.MainDialog!, IDOK);
 		});
-		WaitUntil(
-			() =>
-				host.Ask((g, _) => (int)g.ActivePlayerCount, 0) == 2
-				&& guest.Ask((g, _) => (int)g.ActivePlayerCount, 0) == 2
-				&& DialogOf(guest) == IDD_MAIN_GAME,
+		await WaitUntilAsync(
+			async () =>
+				await host.AskAsync((g, _) => (int)g.ActivePlayerCount, 0) == 2
+				&& await guest.AskAsync((g, _) => (int)g.ActivePlayerCount, 0) == 2
+				&& await DialogOfAsync(guest) == IDD_MAIN_GAME,
 			host,
 			guest
 		);
 
 		host.Do(g => g.ClickDlgItem(g.MainDialog!, IDC_START_GAME));
-		WaitUntil(() => FramesOf(host) > 20 && FramesOf(guest) > 20, host, guest);
+		await WaitUntilAsync(
+			async () => await FramesOfAsync(host) > 20 && await FramesOfAsync(guest) > 20,
+			host,
+			guest
+		);
 
-		play(host, guest);
-		Assert.Empty(host.Ask((_, platform) => platform.MessageBoxes.ToList(), ["not answering"]));
-		Assert.Empty(guest.Ask((_, platform) => platform.MessageBoxes.ToList(), ["not answering"]));
+		await play(host, guest);
+		Assert.Empty(
+			await host.AskAsync((_, platform) => platform.MessageBoxes.ToList(), ["not answering"])
+		);
+		Assert.Empty(
+			await guest.AskAsync((_, platform) => platform.MessageBoxes.ToList(), ["not answering"])
+		);
 	}
 
 	[Fact]
-	public void Two_games_connect_and_reach_the_title_screen()
+	public async Task Two_games_connect_and_reach_the_title_screen()
 	{
-		PlayTwoGames(
-			(host, guest) =>
+		await PlayTwoGamesAsync(
+			async (host, guest) =>
 			{
-				Assert.Equal(GameMode.Title, ModeOf(host));
-				Assert.Equal(GameMode.Title, ModeOf(guest));
-				Assert.Equal(1, host.Ask((g, _) => g.IsHost.Value, -1));
-				Assert.Equal(0, guest.Ask((g, _) => g.IsHost.Value, -1));
+				Assert.Equal(GameMode.Title, await ModeOfAsync(host));
+				Assert.Equal(GameMode.Title, await ModeOfAsync(guest));
+				Assert.Equal(1, await host.AskAsync((g, _) => g.IsHost.Value, -1));
+				Assert.Equal(0, await guest.AskAsync((g, _) => g.IsHost.Value, -1));
 
-				SaveFrame(host, "title_host.png");
+				await SaveFrameAsync(host, "title_host.png");
 				Assert.True(
-					host.Ask((_, platform) => platform.LastFrame().Distinct().Count(), 0) > 16,
+					await host.AskAsync((_, platform) => platform.LastFrame().Distinct().Count(), 0)
+						> 16,
 					"The title screen is drawn."
 				);
 			}
@@ -365,49 +399,54 @@ public class TitleScreenTests
 
 	// The host clicks the title screen, the first scenario and Game Start (demo.cpp), and both games play the battle.
 	[Fact]
-	public void Two_games_start_a_battle()
+	public async Task Two_games_start_a_battle()
 	{
-		PlayTwoGames(
-			(host, guest) =>
+		await PlayTwoGamesAsync(
+			async (host, guest) =>
 			{
-				Click(host, 512, 384);
-				WaitUntil(
-					() =>
-						ModeOf(host) == GameMode.GameSetting
-						&& host.Ask((g, _) => g.RivalMode, default) == GameMode.GameSetting,
+				await ClickAsync(host, 512, 384);
+				await WaitUntilAsync(
+					async () =>
+						await ModeOfAsync(host) == GameMode.GameSetting
+						&& await host.AskAsync((g, _) => g.RivalMode, default)
+							== GameMode.GameSetting,
 					host,
 					guest
 				);
-				SaveFrame(host, "game_setting_host.png");
+				await SaveFrameAsync(host, "game_setting_host.png");
 
-				Click(host, 130, 150 + 12);
-				WaitUntil(
-					() =>
-						ModeOf(host) == GameMode.ConfigSetting
-						&& host.Ask((g, _) => g.RivalMode, default) == GameMode.ConfigSetting,
+				await ClickAsync(host, 130, 150 + 12);
+				await WaitUntilAsync(
+					async () =>
+						await ModeOfAsync(host) == GameMode.ConfigSetting
+						&& await host.AskAsync((g, _) => g.RivalMode, default)
+							== GameMode.ConfigSetting,
 					host,
 					guest
 				);
-				SaveFrame(host, "config_setting_host.png");
+				await SaveFrameAsync(host, "config_setting_host.png");
 
-				Click(host, 630 - 120 + 10, 700 + 12);
-				WaitUntil(
-					() => ModeOf(host) == GameMode.Battle && ModeOf(guest) == GameMode.Battle,
+				await ClickAsync(host, 630 - 120 + 10, 700 + 12);
+				await WaitUntilAsync(
+					async () =>
+						await ModeOfAsync(host) == GameMode.Battle
+						&& await ModeOfAsync(guest) == GameMode.Battle,
 					host,
 					guest
 				);
 
-				var frames = (FramesOf(host), FramesOf(guest));
-				WaitUntil(
-					() =>
-						FramesOf(host) > frames.Item1 + 200 && FramesOf(guest) > frames.Item2 + 200,
+				var frames = (await FramesOfAsync(host), await FramesOfAsync(guest));
+				await WaitUntilAsync(
+					async () =>
+						await FramesOfAsync(host) > frames.Item1 + 200
+						&& await FramesOfAsync(guest) > frames.Item2 + 200,
 					host,
 					guest
 				);
-				SaveFrame(host, "battle_host.png");
-				SaveFrame(guest, "battle_guest.png");
-				Assert.Equal(GameMode.Battle, ModeOf(host));
-				Assert.Equal(GameMode.Battle, ModeOf(guest));
+				await SaveFrameAsync(host, "battle_host.png");
+				await SaveFrameAsync(guest, "battle_guest.png");
+				Assert.Equal(GameMode.Battle, await ModeOfAsync(host));
+				Assert.Equal(GameMode.Battle, await ModeOfAsync(guest));
 			}
 		);
 	}

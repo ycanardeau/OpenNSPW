@@ -81,7 +81,7 @@ public class StreamDatagramTransportTests : IDisposable
 			.BeEquivalentTo((a.LocalEndPoint, new byte[] { 1 }));
 		(await ReceiveAsync(receivedByB)).Item2.Should().Equal(2, 2);
 		(await ReceiveAsync(receivedByB)).Item2.Should().Equal(3, 3, 3);
-		_network.ConnectCount.Should().Be(1);
+		(await _network.ConnectCountAsync()).Should().Be(1);
 	}
 
 	[Fact]
@@ -97,7 +97,7 @@ public class StreamDatagramTransportTests : IDisposable
 		(await ReceiveAsync(receivedByA))
 			.Should()
 			.BeEquivalentTo((b.LocalEndPoint, new byte[] { 2 }));
-		_network.ConnectCount.Should().Be(1);
+		(await _network.ConnectCountAsync()).Should().Be(1);
 	}
 
 	[Fact]
@@ -145,7 +145,7 @@ public class StreamDatagramTransportTests : IDisposable
 		(await SendUntilReceivedAsync(a, newB.LocalEndPoint, [2], receivedByNewB))
 			.Item2.Should()
 			.Equal(2);
-		_network.ConnectCount.Should().Be(2);
+		(await _network.ConnectCountAsync()).Should().Be(2);
 	}
 
 	[Fact]
@@ -176,6 +176,6 @@ public class StreamDatagramTransportTests : IDisposable
 		(await joinerLog.WaitForAsync<PeerEvent.DataReceived>())
 			.Data.Should()
 			.Equal("welcome"u8.ToArray());
-		_network.ConnectCount.Should().Be(1);
+		(await _network.ConnectCountAsync()).Should().Be(1);
 	}
 }

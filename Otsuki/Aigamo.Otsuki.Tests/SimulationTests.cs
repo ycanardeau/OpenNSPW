@@ -602,7 +602,7 @@ public class SimulationTests
 			PeerToPeerMesh(seed);
 	}
 
-	private static void HostMigration(int seed, double lossRate = 0)
+	private static async Task HostMigrationAsync(int seed, double lossRate = 0)
 	{
 		var simulation = new Simulation(seed);
 		simulation.Network.LossRate = lossRate;
@@ -659,11 +659,12 @@ public class SimulationTests
 			)
 			.Should()
 			.BeTrue($"the new host's group reaches every peer (seed {seed})");
+		var created = await creating;
 		foreach (var peer in survivors)
 			peer.Raised<PeerEvent.GroupCreated>()
 				.Single()
 				.Group.Id.Should()
-				.Be(creating.Result, $"seed {seed}");
+				.Be(created, $"seed {seed}");
 
 		CloseAll(simulation, peers);
 	}
@@ -671,10 +672,10 @@ public class SimulationTests
 	// The host of four peers leaves, by closing or by stopping: the three others elect the same new host, each hears
 	// of it once, and the new host's name table changes reach them all.
 	[Fact]
-	public void HostMigration_TheOthersAgreeOnANewHost_InEveryOrderTried()
+	public async Task HostMigration_TheOthersAgreeOnANewHost_InEveryOrderTried()
 	{
 		for (var seed = 0; seed < Seeds; seed++)
-			HostMigration(seed);
+			await HostMigrationAsync(seed);
 	}
 
 	[Fact]
@@ -685,10 +686,10 @@ public class SimulationTests
 	}
 
 	[Fact]
-	public void HostMigration_LosingDatagrams_InEveryOrderTried()
+	public async Task HostMigration_LosingDatagrams_InEveryOrderTried()
 	{
 		for (var seed = 0; seed < Seeds; seed++)
-			HostMigration(seed, lossRate: 0.1);
+			await HostMigrationAsync(seed, lossRate: 0.1);
 	}
 
 	/// <summary>

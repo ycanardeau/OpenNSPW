@@ -246,7 +246,7 @@ public class PeerTests : IAsyncLifetime
 	/// <summary>
 	/// Counts the data frames from <paramref name="source"/>, and those of them that are coalesced.
 	/// </summary>
-	private (Func<int> Frames, Func<int> Coalesced) CountDataFrames(IPAddress source)
+	private (Func<Task<int>> Frames, Func<Task<int>> Coalesced) CountDataFrames(IPAddress source)
 	{
 		var frames = 0;
 		var coalesced = 0;
@@ -264,7 +264,7 @@ public class PeerTests : IAsyncLifetime
 			if (frame.Coalesce)
 				coalesced++;
 		};
-		return (() => _network.Ask(() => frames), () => _network.Ask(() => coalesced));
+		return (() => _network.AskAsync(() => frames), () => _network.AskAsync(() => coalesced));
 	}
 
 	/// <summary>
@@ -310,7 +310,7 @@ public class PeerTests : IAsyncLifetime
 			.Select(e => BitConverter.ToInt32([.. e.Data]))
 			.Should()
 			.BeInAscendingOrder();
-		coalesced().Should().BePositive();
+		(await coalesced()).Should().BePositive();
 		var completed = await host.Log.WaitForAsync<PeerEvent.SendCompleted>(300);
 		completed.Select(e => e.Handle).Should().OnlyHaveUniqueItems();
 	}
@@ -330,7 +330,7 @@ public class PeerTests : IAsyncLifetime
 			e => BitConverter.ToInt32([.. e.Data]) % 3 != 0,
 			TimeSpan.FromSeconds(20)
 		);
-		coalesced().Should().Be(0);
+		(await coalesced()).Should().Be(0);
 	}
 
 	private static ApplicationDescription SignedApplication(SessionFlags signing) =>
@@ -396,9 +396,8 @@ public class PeerTests : IAsyncLifetime
 			.Select(e => BitConverter.ToInt32([.. e.Data]))
 			.Should()
 			.Equal(Enumerable.Range(0, 700).Select(i => -i));
-		_network.Ask(() => unsigned).Should().Be(0);
-		_network
-			.Ask(() => offers.ToList())
+		(await _network.AskAsync(() => unsigned)).Should().Be(0);
+		(await _network.AskAsync(() => offers.ToList()))
 			.Should()
 			.NotBeEmpty()
 			.And.OnlyContain(o =>
@@ -475,7 +474,7 @@ public class PeerTests : IAsyncLifetime
 
 		var received = await joiner.Log.WaitForAsync<PeerEvent.DataReceived>();
 		received.Data.Should().Equal("ABCD"u8.ToArray());
-		_network.Ask(() => tampered).Should().BePositive();
+		(await _network.AskAsync(() => tampered)).Should().BePositive();
 		joiner.Log.OfType<PeerEvent.DataReceived>().Should().ContainSingle();
 	}
 
@@ -629,8 +628,7 @@ public class PeerTests : IAsyncLifetime
 		var received = await second.Log.WaitForAsync<PeerEvent.DataReceived>();
 		received.Should().Be(new PeerEvent.DataReceived(first.Peer.LocalPlayer, received.Data));
 		received.Data.Should().Equal([42]);
-		_network
-			.Ask(() => direct)
+		(await _network.AskAsync(() => direct))
 			.Should()
 			.BePositive("peers talk to each other directly, not through the host");
 	}
@@ -786,10 +784,12 @@ public class PeerTests : IAsyncLifetime
 				.Be(ResultCode.TimedOut);
 
 			var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(2);
-			while (!_network.Ask(() => goodbyes.Contains(address)) && DateTime.UtcNow < deadline)
+			while (
+				!await _network.AskAsync(() => goodbyes.Contains(address))
+				&& DateTime.UtcNow < deadline
+			)
 				await Task.Delay(10);
-			_network
-				.Ask(() => goodbyes.Contains(address))
+			(await _network.AskAsync(() => goodbyes.Contains(address)))
 				.Should()
 				.BeTrue($"attempt {i} said goodbye");
 		}

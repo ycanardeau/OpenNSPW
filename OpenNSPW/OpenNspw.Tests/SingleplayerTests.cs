@@ -1441,7 +1441,7 @@ public class SingleplayerTests
 
 	// A battle as the app shows it, in real time, saved as singleplayer_battle.png next to the test assembly.
 	[Fact]
-	public void TheBattleShows()
+	public async Task TheBattleShows()
 	{
 		using var data = GameData.CreateCopy();
 		using var player = new RunningGame(data.Path, "Alice");
@@ -1457,22 +1457,25 @@ public class SingleplayerTests
 		player.Start();
 
 		var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
-		int Frames() => player.Ask((_, platform) => platform.FrameCount, 0);
-		while (Frames() < 200 && player.Error is null && DateTime.UtcNow < deadline)
+		Task<int> FramesAsync() => player.AskAsync((_, platform) => platform.FrameCount, 0);
+		while (await FramesAsync() < 200 && player.Error is null && DateTime.UtcNow < deadline)
 		{
-			Thread.Sleep(100);
+			await Task.Delay(100);
 		}
 
 		Assert.Null(player.Error);
-		var frames = Frames();
+		var frames = await FramesAsync();
 		Assert.True(frames >= 200, $"The game showed {frames} frames.");
-		Assert.Equal(GameMode.Battle, player.Ask((g, _) => (GameMode?)g.Mode, null));
+		Assert.Equal(GameMode.Battle, await player.AskAsync((g, _) => (GameMode?)g.Mode, null));
 		Assert.Empty(
-			player.Ask((_, platform) => platform.MessageBoxes.ToList(), ["not answering"])
+			await player.AskAsync(
+				(_, platform) => platform.MessageBoxes.ToList(),
+				["not answering"]
+			)
 		);
 		TitleScreenTests.WritePng(
 			Path.Combine(AppContext.BaseDirectory, "singleplayer_battle.png"),
-			player.Ask((_, platform) => platform.LastFrame(), []),
+			await player.AskAsync((_, platform) => platform.LastFrame(), []),
 			all_head.SCRN_WIDTH,
 			all_head.SCRN_HEIGHT
 		);
