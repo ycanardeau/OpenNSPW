@@ -237,7 +237,7 @@ internal sealed unsafe partial class MacBluetoothConnector
 			Post(new Message.Cancel(request));
 			completion.TrySetCanceled(cancellationToken);
 		});
-		completion.Task.ContinueWith(_ => registration.Dispose(), TaskScheduler.Default);
+		_ = completion.Task.ContinueWith(_ => registration.Dispose(), TaskScheduler.Default);
 		var address = remoteEndPoint.ToBytes();
 		fixed (byte* addressBytes = address)
 		fixed (byte* service = _service)

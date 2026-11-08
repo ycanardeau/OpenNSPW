@@ -11,6 +11,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Aigamo.MatchGenerator" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" PrivateAssets="all" />
 	</ItemGroup>
 
 	<!-- Threads share state only through the actors' mailboxes (docs/Actors.md): every project but the analyzers' own, and

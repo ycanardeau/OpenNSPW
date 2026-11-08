@@ -213,7 +213,10 @@ public sealed class CoreAnalyzer : DiagnosticAnalyzer
 			);
 	}
 
-	private static void ReportAsync(SyntaxNodeAnalysisContext context, SyntaxTokenList modifiers)
+	private static void ReportAsyncKeyword(
+		SyntaxNodeAnalysisContext context,
+		SyntaxTokenList modifiers
+	)
 	{
 		foreach (var modifier in modifiers)
 		{
@@ -222,18 +225,18 @@ public sealed class CoreAnalyzer : DiagnosticAnalyzer
 		}
 	}
 
-	private static void AnalyzeAsync(SyntaxNodeAnalysisContext context)
+	private static void AnalyzeAsyncKeyword(SyntaxNodeAnalysisContext context)
 	{
 		switch (context.Node)
 		{
 			case MethodDeclarationSyntax method:
-				ReportAsync(context, method.Modifiers);
+				ReportAsyncKeyword(context, method.Modifiers);
 				break;
 			case LocalFunctionStatementSyntax function:
-				ReportAsync(context, function.Modifiers);
+				ReportAsyncKeyword(context, function.Modifiers);
 				break;
 			case AnonymousFunctionExpressionSyntax function:
-				ReportAsync(context, function.Modifiers);
+				ReportAsyncKeyword(context, function.Modifiers);
 				break;
 		}
 	}
@@ -293,7 +296,7 @@ public sealed class CoreAnalyzer : DiagnosticAnalyzer
 			);
 			startContext.RegisterOperationAction(AnalyzeInvocation, OperationKind.Invocation);
 			startContext.RegisterSyntaxNodeAction(
-				AnalyzeAsync,
+				AnalyzeAsyncKeyword,
 				SyntaxKind.MethodDeclaration,
 				SyntaxKind.LocalFunctionStatement,
 				SyntaxKind.SimpleLambdaExpression,
