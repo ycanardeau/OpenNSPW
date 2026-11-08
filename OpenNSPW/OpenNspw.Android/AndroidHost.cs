@@ -35,14 +35,14 @@ internal sealed class AndroidHost(Activity activity) : IAppHost
 	// comes on the UI's thread, which runs the game's updates.
 	public bool EditText(string title, string text, Action<string> written)
 	{
-		async Task Show()
+		async Task ShowAsync()
 		{
 			if (await KeyboardInput.Show(title, "", text) is { } result)
 				written(result);
 		}
 
 		if (!KeyboardInput.IsVisible)
-			_ = Show();
+			_ = ShowAsync();
 		return true;
 	}
 

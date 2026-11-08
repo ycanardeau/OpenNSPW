@@ -61,7 +61,7 @@ public class PeerTests : IAsyncLifetime
 			}
 		);
 		_peers.Add(peer);
-		peer.SetPeerInfo(name);
+		_ = peer.SetPeerInfoAsync(name);
 		return (peer, new EventLog(peer), address);
 	}
 
@@ -906,7 +906,7 @@ public class PeerTests : IAsyncLifetime
 			TransportFactory = network.CreateFactory(IPAddress.Parse("10.1.0.1")),
 		};
 		await using var host = new Peer(options);
-		await host.SetPeerInfo("Host");
+		await host.SetPeerInfoAsync("Host");
 		await host.HostAsync(Application());
 		await using var joiner = new Peer(
 			options with
@@ -914,7 +914,7 @@ public class PeerTests : IAsyncLifetime
 				TransportFactory = network.CreateFactory(IPAddress.Parse("10.1.0.2")),
 			}
 		);
-		await joiner.SetPeerInfo("Joiner");
+		await joiner.SetPeerInfoAsync("Joiner");
 		await joiner.ConnectAsync(Application(), host.LocalEndPoint!);
 
 		var events = new List<PeerEvent>();

@@ -107,7 +107,7 @@ public sealed class Peer : IAsyncDisposable
 	/// peer; the task completes once the update is in force, and fails with <see cref="DirectPlayException"/> if the
 	/// host does not answer.
 	/// </summary>
-	public Task SetPeerInfo(string name, byte[]? data = null) =>
+	public Task SetPeerInfoAsync(string name, byte[]? data = null) =>
 		PostCommandAsync(completion => new SessionMessage.SetPeerInfo(
 			name,
 			data is null ? [] : [.. data],

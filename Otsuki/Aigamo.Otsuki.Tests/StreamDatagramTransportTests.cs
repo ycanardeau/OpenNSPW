@@ -154,11 +154,11 @@ public class StreamDatagramTransportTests : IDisposable
 		var options = new PeerOptions { TransportFactory = _network.CreateFactory() };
 		await using var host = new Peer(options);
 		var hostLog = new EventLog(host);
-		await host.SetPeerInfo("Host");
+		await host.SetPeerInfoAsync("Host");
 		await host.HostAsync(Application, new NamedEndPoint("host"));
 		await using var joiner = new Peer(options);
 		var joinerLog = new EventLog(joiner);
-		await joiner.SetPeerInfo("Joiner");
+		await joiner.SetPeerInfoAsync("Joiner");
 
 		await joiner.ConnectAsync(Application, host.LocalEndPoint!, new NamedEndPoint("joiner"));
 

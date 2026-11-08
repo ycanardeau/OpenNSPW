@@ -13,11 +13,11 @@ public class UdpPeerTests
 		var application = new ApplicationDescription { GuidApplication = Guid.NewGuid() };
 		await using var host = new Peer();
 		var hostLog = new EventLog(host);
-		await host.SetPeerInfo("Host");
+		await host.SetPeerInfoAsync("Host");
 		await host.HostAsync(application, port: 0);
 		await using var joiner = new Peer();
 		var joinerLog = new EventLog(joiner);
-		await joiner.SetPeerInfo("Joiner");
+		await joiner.SetPeerInfoAsync("Joiner");
 
 		await joiner.ConnectAsync(
 			application,

@@ -195,7 +195,7 @@ public sealed unsafe class DirectPlay8Peer(PeerOptions? options, IBluetoothProvi
 		uint dwFlags
 	)
 	{
-		_peer.SetPeerInfo(pdpnPlayerInfo.pwszName ?? string.Empty);
+		_ = _peer.SetPeerInfoAsync(pdpnPlayerInfo.pwszName ?? string.Empty);
 		return winerror.S_OK;
 	}
 

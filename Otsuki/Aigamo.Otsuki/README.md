@@ -13,7 +13,7 @@ It also speaks [[MC-DPLHP]: DirectPlay 8 Protocol: Host and Port Enumeration](ht
 
 ```csharp
 await using var peer = new Peer();
-await peer.SetPeerInfo("Alice");
+await peer.SetPeerInfoAsync("Alice");
 
 var application = new ApplicationDescription { GuidApplication = guidApp, MaxPlayers = 2 };
 await peer.HostAsync(application);                                    // or:
@@ -62,7 +62,7 @@ await foreach (var host in peer.EnumHostsAsync(new IPEndPoint(IPAddress.Broadcas
 var team = await peer.CreateGroupAsync("Red team", flags: GroupFlags.AutoDestruct);
 await peer.AddPlayerToGroupAsync(team, peer.LocalPlayer);
 peer.SendTo(team, data);                                              // to every member
-await peer.SetPeerInfo("Alice (away)");                               // PeerInfoUpdated on every peer
+await peer.SetPeerInfoAsync("Alice (away)");                          // PeerInfoUpdated on every peer
 ```
 
 Only the host changes the name table, so other peers ask it, and each call completes when the host's answer comes back, or fails with `DirectPlayException` after `PeerOptions.RequestTimeout`. The host can also remove a player with `DestroyPeerAsync`.
