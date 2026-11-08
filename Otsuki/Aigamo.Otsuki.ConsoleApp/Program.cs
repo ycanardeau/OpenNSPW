@@ -398,10 +398,10 @@ internal static class Program
 	/// The chat runs on the thread pool, because on macOS 26 IOBluetooth calls back on the main thread, which turns its
 	/// run loop meanwhile.
 	/// </summary>
-	public static int Main(string[] args)
+	public static async Task<int> Main(string[] args)
 	{
 		var chat = Task.Run(() => RunAsync(args));
 		BluetoothTransport.RunMainLoopUntil(chat);
-		return chat.GetAwaiter().GetResult();
+		return await chat;
 	}
 }

@@ -37,6 +37,15 @@ internal sealed class RfcommChannelStream(MacBluetoothConnector connector, long 
 	/// </summary>
 	public void End() => _received.Complete();
 
+	// Copies what is left of the chunk being read, as much as fits.
+	private int TakePending(Span<byte> buffer)
+	{
+		var count = Math.Min(buffer.Length, _pending.Length);
+		_pending.Span[..count].CopyTo(buffer);
+		_pending = _pending[count..];
+		return count;
+	}
+
 	public override async ValueTask<int> ReadAsync(
 		Memory<byte> buffer,
 		CancellationToken cancellationToken = default
@@ -50,10 +59,7 @@ internal sealed class RfcommChannelStream(MacBluetoothConnector connector, long 
 				return 0;
 		}
 
-		var count = Math.Min(buffer.Length, _pending.Length);
-		_pending[..count].CopyTo(buffer);
-		_pending = _pending[count..];
-		return count;
+		return TakePending(buffer.Span);
 	}
 
 	public override Task<int> ReadAsync(
@@ -63,8 +69,22 @@ internal sealed class RfcommChannelStream(MacBluetoothConnector connector, long 
 		CancellationToken cancellationToken
 	) => ReadAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
 
+	// Sleeps on the queue until something arrives, as a stream's synchronous read does.
+	public override int Read(Span<byte> buffer)
+	{
+		while (_pending.IsEmpty)
+		{
+			if (_received.TryReceive(out var chunk))
+				_pending = chunk;
+			else if (!_received.Wait())
+				return 0;
+		}
+
+		return TakePending(buffer);
+	}
+
 	public override int Read(byte[] buffer, int offset, int count) =>
-		ReadAsync(buffer, offset, count, CancellationToken.None).GetAwaiter().GetResult();
+		Read(buffer.AsSpan(offset, count));
 
 	public override void Write(ReadOnlySpan<byte> buffer) => _connector.Write(Id, buffer);
 

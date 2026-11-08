@@ -24,13 +24,12 @@ public static class BluetoothTransport
 	/// <summary>
 	/// Runs the main thread's run loop until <paramref name="task"/> completes: on macOS 26, IOBluetooth delivers its
 	/// callbacks there, so an app whose main thread runs no run loop of its own, such as a console app, calls this on
-	/// its main thread. Elsewhere, it only waits.
+	/// its main thread, and then awaits it. Elsewhere, it returns at once.
 	/// </summary>
 	public static void RunMainLoopUntil(Task task)
 	{
 		if (!OperatingSystem.IsMacOS())
 		{
-			((IAsyncResult)task).AsyncWaitHandle.WaitOne();
 			return;
 		}
 
