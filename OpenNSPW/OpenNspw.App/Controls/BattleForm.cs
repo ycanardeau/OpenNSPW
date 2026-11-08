@@ -116,8 +116,9 @@ internal sealed class BattleForm : Form
 
 	// The layout of a wide screen, `extraWidth` wider than the original's: the column at the right, with the panel's
 	// button and the command bar's at its top, the command bar under them, and the minimap at its bottom, as large as it
-	// fits on a touch screen, twice as large at most; the panel left of the column; and the battlefield up to the column,
-	// as far as its zoom lets it.
+	// fits on a touch screen, twice as large at most; the panel left of the column, or at the screen's left edge on a touch
+	// screen, for the left thumb as the column is for the right; and the battlefield up to the column, as far as its zoom
+	// lets it.
 	private void FitWide(int extraWidth)
 	{
 		var width = all_head.SCRN_WIDTH + extraWidth;
@@ -153,7 +154,7 @@ internal sealed class BattleForm : Form
 		);
 		_sidebar.Scale = _panelScale;
 		_sidebar.Bounds = new DrawingRectangle(
-			columnLeft - (int)MathF.Ceiling(SidebarWidth * _panelScale),
+			_isTouchScreen ? 0 : columnLeft - (int)MathF.Ceiling(SidebarWidth * _panelScale),
 			0,
 			SidebarWidth,
 			Minimap.Top
@@ -329,6 +330,7 @@ internal sealed class BattleForm : Form
 		FollowSelection(snapshot);
 		_scrollAhead.Apply(snapshot);
 		_battlefield.UpdateFrom(snapshot);
+		_battlefield.Glide();
 		_deck.UpdateFrom(snapshot);
 		_infoPanel.UpdateFrom(snapshot);
 		_combatMenu.UpdateFrom(snapshot);

@@ -56,6 +56,24 @@ internal sealed class Battlefield : Control
 	// as it is pressed, as a moving unit under it may have moved away by the time it is lifted.
 	private TouchTarget? _pressed;
 
+	// What a touch took as a click last, and when: marked a moment after, until the game shows what it did (DrawTouched).
+	private (TouchTarget Target, float At)? _taken;
+
+	// How long, in seconds, what a touch took stays marked.
+	private const float TakenMarkTime = 0.4f;
+
+	// A drag's moves in the last GlideSampleTime seconds, in the view's pixels, which give the speed it is let go at; and
+	// the speed the battlefield glides at after a fling, in the view's pixels a second, and when it last moved.
+	private const float GlideSampleTime = 0.1f;
+	private readonly Queue<(float At, Vector2 Move)> _recentMoves = new();
+	private Vector2 _glide;
+	private float _glidedAt;
+
+	// How much of its speed a glide keeps after a second: 0.998 a millisecond, as a scroll view on iOS decelerates; and the
+	// speed it stops under, in the view's pixels a second.
+	private static readonly float GlideKeptPerSecond = MathF.Pow(0.998f, 1000);
+	private const float GlideStop = 10;
+
 	public const float MinZoom = 1;
 	public const float MaxZoom = 2.5f;
 
@@ -498,8 +516,33 @@ internal sealed class Battlefield : Control
 			);
 	}
 
+	// What a touch presses, or took as a click a moment ago, marked at once: the game takes a click only in its next frame,
+	// and shows what it did after it. The unit's mark follows it as it moves; the sea's is where the selected unit goes.
+	private void DrawTouched(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot)
+	{
+		var target =
+			_pressed
+			?? (
+				_taken is { } taken && Painter.Now - taken.At < TakenMarkTime ? taken.Target : null
+			);
+		if (target is not { } touched)
+			return;
+
+		if (touched.IsLanding)
+			DrawBox(batch, origin + SnapToTile(snapshot, touched.View), 25, MarkLight);
+		else if (touched.Unit is { } m)
+			DrawBox(batch, origin + MarkPosition(snapshot, ref snapshot.Units[m]), 25, MarkLight);
+		else
+			DrawBox(
+				batch,
+				origin + ToScreen(snapshot, touched.World.X, touched.World.Y),
+				10,
+				MarkLight
+			);
+	}
+
 	// The marks: the selection, the directions of the player's units' targets, the selected unit's, and what a click at
-	// the mouse would take.
+	// the mouse would take, or what a touch takes.
 	private void DrawMarks(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot)
 	{
 		for (var m = 1; m <= snapshot.MaxUnitId; m++)
@@ -520,6 +563,12 @@ internal sealed class Battlefield : Control
 
 		if (snapshot.SelectedUnit != 0 && !snapshot.IsEditingMap)
 			DrawSelected(batch, origin, snapshot);
+
+		if (_isTouchScreen)
+		{
+			DrawTouched(batch, origin, snapshot);
+			return;
+		}
 
 		if (_mouse is not { } mouse)
 			return;
@@ -593,7 +642,10 @@ internal sealed class Battlefield : Control
 
 	// A point of the control in the view's pixels, through the zoom.
 	private DrawingPoint ToView(DrawingPoint point) =>
-		new((int)(_window.X + point.X / _zoom), (int)(_window.Y + point.Y / _zoom));
+		new(
+			(int)(_window.X + _unscrolled.X + point.X / _zoom),
+			(int)(_window.Y + _unscrolled.Y + point.Y / _zoom)
+		);
 
 	// Moves what is shown by `move`, in the view's pixels: the window first, within the view, and then the game's camera
 	// with what is left, at once (ScrollAhead).
@@ -607,6 +659,9 @@ internal sealed class Battlefield : Control
 		{
 			_scrollAhead.Scroll(dx, dy);
 			_unscrolled -= new Vector2(dx, dy);
+
+			// Shown in this frame: the pointer is read after the snapshot was moved (UpdateFrom).
+			_scrollAhead.Apply(_snapshot);
 		}
 	}
 
@@ -647,8 +702,42 @@ internal sealed class Battlefield : Control
 		if (_scrolledTo is not { } from || point == from)
 			return;
 
-		Pan(new Vector2(from.X - point.X, from.Y - point.Y) / _zoom);
+		var move = new Vector2(from.X - point.X, from.Y - point.Y) / _zoom;
+		Pan(move);
 		_scrolledTo = point;
+		var now = Painter.Now;
+		_recentMoves.Enqueue((now, move));
+		while (_recentMoves.Peek().At < now - GlideSampleTime)
+			_recentMoves.Dequeue();
+	}
+
+	// Lets the battlefield glide on at the speed a drag was let go at, if it was still moving then, as a fling.
+	private void Fling()
+	{
+		var now = Painter.Now;
+		var moves = _recentMoves.Where(m => m.At >= now - GlideSampleTime).ToList();
+		_recentMoves.Clear();
+		if (moves.Count < 2)
+			return;
+
+		var total = moves.Aggregate(Vector2.Zero, (sum, m) => sum + m.Move);
+		_glide = total / Math.Max(now - moves[0].At, 1 / 60f);
+		_glidedAt = now;
+	}
+
+	// Moves a gliding battlefield on, its speed falling exponentially, as a scroll view's on iOS: each frame (BattleForm).
+	public void Glide()
+	{
+		if (_glide == Vector2.Zero)
+			return;
+
+		var now = Painter.Now;
+		var elapsed = now - _glidedAt;
+		_glidedAt = now;
+		Pan(_glide * elapsed);
+		_glide *= MathF.Pow(GlideKeptPerSecond, elapsed);
+		if (_glide.Length() < GlideStop)
+			_glide = Vector2.Zero;
 	}
 
 	// What a touch at a point of the control takes, as it is pressed.
@@ -673,6 +762,7 @@ internal sealed class Battlefield : Control
 	private void TakeTouch(TouchTarget target)
 	{
 		var commands = _session.Commands;
+		_taken = (target, Painter.Now);
 		_brush.Press(_snapshot, target.Unit);
 		if (target.IsLanding)
 			commands.ClickLand(target.View.X, target.View.Y);
@@ -710,7 +800,7 @@ internal sealed class Battlefield : Control
 			if (IsOwnUnit(pressed) && !_session.IsWatching)
 				TakeTouch(pressed);
 			else
-				_scrolledTo = pressed.At;
+				_scrolledTo = e.Location;
 		}
 
 		Scroll(e.Location);
@@ -726,6 +816,8 @@ internal sealed class Battlefield : Control
 	protected override void OnMouseDown(MouseEventArgs e)
 	{
 		base.OnMouseDown(e);
+		_glide = Vector2.Zero;
+		_recentMoves.Clear();
 
 		// A touch waits to tell a click from a brush, a pan, or the second finger of a pinch.
 		if (_isTouchScreen && e.Button == MouseButtons.Left)
@@ -764,8 +856,11 @@ internal sealed class Battlefield : Control
 			// A touch lifted where it pressed is a click there; one that moved ends its pan.
 			if (_pressed is { } pressed && !_session.IsWatching)
 				TakeTouch(pressed);
-			else if (_isTouchScreen)
+			else if (_isTouchScreen && _scrolledTo is not null)
+			{
 				Scroll(e.Location);
+				Fling();
+			}
 
 			_pressed = null;
 			if (_isTouchScreen)
@@ -786,7 +881,11 @@ internal sealed class Battlefield : Control
 		var snapshot = _snapshot;
 		var at = PointToScreen(DrawingPoint.Empty);
 		var zoom =
-			Matrix.CreateTranslation(-at.X - _window.X, -at.Y - _window.Y, 0)
+			Matrix.CreateTranslation(
+				-at.X - _window.X - _unscrolled.X,
+				-at.Y - _window.Y - _unscrolled.Y,
+				0
+			)
 			* Matrix.CreateScale(_zoom)
 			* Matrix.CreateTranslation(at.X, at.Y, 0);
 		((MonoGameGraphics)e.Graphics).DrawWith(
