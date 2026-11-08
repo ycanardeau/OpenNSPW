@@ -13,17 +13,6 @@ internal interface IPointer
 	void Update();
 }
 
-// The mouse.
-internal sealed class MousePointer : IPointer
-{
-	public MouseState State { get; private set; }
-
-	public void Update()
-	{
-		State = Mouse.GetState();
-	}
-}
-
 // A touch screen. The first finger holds the left button where it is, and once it is lifted, the pointer stays where it
 // was lifted. A second finger, from when it comes down until all are lifted, lets the left button go and holds XButton1,
 // which tells a tap from what follows; the pointer is then halfway between the two. Spread or pinched, the two fingers
@@ -118,9 +107,9 @@ internal sealed class TouchPointer(GameWindow window) : IPointer
 
 // A pointer whose buttons and wheel are taken only while the window is active (`isActive`): from when it is no longer
 // active until it is again and every button is let go, it holds no button and the wheel turned meanwhile is dropped.
-// MonoGame gives the buttons as they are on the whole screen (Mouse.GetState), and the wheel turned over the window while
-// it is inactive, which the UI and the game, which skip the input while it is inactive (InputListenerComponent,
-// GameScreen), would get at once when it is active again, as the click that activates it.
+// MonoGame gives the wheel turned over the window while it is inactive, and the buttons of the click that activates it,
+// which the UI and the game, which skip the input while it is inactive (InputListenerComponent, GameScreen), would get at
+// once when it is active again. On a desktop, the buttons are those of the window (WindowMousePointer).
 internal sealed class ActivePointer(IPointer pointer, Func<bool> isActive) : IPointer
 {
 	private readonly IPointer _pointer = pointer;

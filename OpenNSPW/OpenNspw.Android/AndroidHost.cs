@@ -13,6 +13,8 @@ internal sealed class AndroidHost(Activity activity) : IAppHost
 
 	public bool IsTouchScreen => true;
 
+	public IPointer CreatePointer(GameWindow window) => new TouchPointer(window);
+
 	// The screen's short side, which the layout is as high as, in inches: about 2.8 on a phone, 5 or more on a tablet.
 	private float ShortSideInches
 	{

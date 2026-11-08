@@ -85,10 +85,7 @@ internal sealed class NspwGame : Game
 		_trace = trace;
 		_watch = watch;
 		Host = host;
-		Pointer = new ActivePointer(
-			host.IsTouchScreen ? new TouchPointer(Window) : new MousePointer(),
-			() => IsActive
-		);
+		Pointer = new ActivePointer(host.CreatePointer(Window), () => IsActive);
 		Data = data;
 		Texts.Language = UISettings.LoadLanguage();
 		IsMouseVisible = !host.IsTouchScreen;
