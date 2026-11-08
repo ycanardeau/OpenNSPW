@@ -9,8 +9,7 @@ internal abstract record NetworkMessage
 {
 	private NetworkMessage() { }
 
-	public sealed record Bind(InMemoryTransport Transport, TaskCompletionSource<bool> Bound)
-		: NetworkMessage;
+	public sealed record Bind(InMemoryTransport Transport) : NetworkMessage;
 
 	public sealed record Start(InMemoryTransport Transport, Action<EndPoint, byte[]> OnReceive)
 		: NetworkMessage;
@@ -31,7 +30,7 @@ internal abstract record NetworkMessage
 /// <summary>
 /// A simulated datagram network that can lose, delay and reorder datagrams, and partition hosts. It is an actor: its
 /// settings, and the callbacks it runs (Drop, Observe), are its own, set by posting, and a test reads what they count
-/// with <see cref="Ask"/>.
+/// with <see cref="AskAsync"/>.
 /// </summary>
 internal sealed class InMemoryNetwork : Actor<NetworkMessage>
 {
@@ -94,27 +93,23 @@ internal sealed class InMemoryNetwork : Actor<NetworkMessage>
 	/// <summary>
 	/// Answers a question on the network, such as what its callbacks counted, once what was posted before it is handled.
 	/// </summary>
-	public T Ask<T>(Func<T> question)
+	public Task<T> AskAsync<T>(Func<T> question)
 	{
 		var answer = new TaskCompletionSource<T>(
 			TaskCreationOptions.RunContinuationsAsynchronously
 		);
 		Post(new NetworkMessage.Ask(() => answer.SetResult(question())));
-		return answer.Task.GetAwaiter().GetResult();
+		return answer.Task;
 	}
 
-	public long DeliveredCount => Ask(() => _delivered);
+	public Task<long> DeliveredCountAsync() => AskAsync(() => _delivered);
 
 	public InMemoryTransport Bind(IPAddress address, int port = 0)
 	{
 		var endPoint = new IPEndPoint(address, port == 0 ? 40000 + (int)_ports.Next() : port);
 		var transport = new InMemoryTransport(this, endPoint);
-		var bound = new TaskCompletionSource<bool>(
-			TaskCreationOptions.RunContinuationsAsynchronously
-		);
-		Post(new NetworkMessage.Bind(transport, bound));
-		if (!bound.Task.GetAwaiter().GetResult())
-			throw new SocketException((int)SocketError.AddressAlreadyInUse);
+		// Bound at once: an address already bound is reported by the network (OnError), and this one receives nothing.
+		Post(new NetworkMessage.Bind(transport));
 		return transport;
 	}
 
@@ -166,9 +161,8 @@ internal sealed class InMemoryNetwork : Actor<NetworkMessage>
 		switch (message)
 		{
 			case NetworkMessage.Bind bind:
-				bind.Bound.SetResult(
-					_transports.TryAdd(bind.Transport.LocalEndPoint, (bind.Transport, null))
-				);
+				if (!_transports.TryAdd(bind.Transport.LocalEndPoint, (bind.Transport, null)))
+					throw new SocketException((int)SocketError.AddressAlreadyInUse);
 				break;
 			case NetworkMessage.Start start
 				when _transports.TryGetValue(start.Transport.LocalEndPoint, out var bound)
