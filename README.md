@@ -19,10 +19,10 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.16/OpenNSPW-0.0.1-alpha.16-win-x64.zip"><img src="https://img.shields.io/badge/Windows-x64-0078D4?style=for-the-badge&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0wIDBoMTEuNHYxMS40SDB6TTEyLjYgMEgyNHYxMS40SDEyLjZ6TTAgMTIuNmgxMS40VjI0SDB6TTEyLjYgMTIuNkgyNFYyNEgxMi42eiIvPjwvc3ZnPg==" alt="Download for Windows"></a>
-  <a href="https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.16/OpenNSPW-0.0.1-alpha.16-osx-arm64.zip"><img src="https://img.shields.io/badge/macOS-Apple_silicon-A2AAAD?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS"></a>
-  <a href="https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.16/OpenNSPW-0.0.1-alpha.16-linux-x64.AppImage"><img src="https://img.shields.io/badge/Linux-AppImage-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Download for Linux"></a>
-  <a href="https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.16/OpenNSPW-0.0.1-alpha.16-android.apk"><img src="https://img.shields.io/badge/Android-APK-3DDC84?style=for-the-badge&logo=android&logoColor=black" alt="Download for Android"></a>
+  <a href="https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.17/OpenNSPW-0.0.1-alpha.17-win-x64.zip"><img src="https://img.shields.io/badge/Windows-x64-0078D4?style=for-the-badge&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0wIDBoMTEuNHYxMS40SDB6TTEyLjYgMEgyNHYxMS40SDEyLjZ6TTAgMTIuNmgxMS40VjI0SDB6TTEyLjYgMTIuNkgyNFYyNEgxMi42eiIvPjwvc3ZnPg==" alt="Download for Windows"></a>
+  <a href="https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.17/OpenNSPW-0.0.1-alpha.17-osx-arm64.zip"><img src="https://img.shields.io/badge/macOS-Apple_silicon-A2AAAD?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS"></a>
+  <a href="https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.17/OpenNSPW-0.0.1-alpha.17-linux-x64.AppImage"><img src="https://img.shields.io/badge/Linux-AppImage-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Download for Linux"></a>
+  <a href="https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.17/OpenNSPW-0.0.1-alpha.17-android.apk"><img src="https://img.shields.io/badge/Android-APK-3DDC84?style=for-the-badge&logo=android&logoColor=black" alt="Download for Android"></a>
 </p>
 
 ## The game
@@ -44,10 +44,10 @@ Get the latest build from the buttons above, or every build from [Releases](http
 
 | Platform | Download | To play |
 | --- | --- | --- |
-| Windows (x64) | [`win-x64.zip`](https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.16/OpenNSPW-0.0.1-alpha.16-win-x64.zip) | Extract it, and start `OpenNspw.Desktop.exe`. |
-| macOS (Apple silicon) | [`osx-arm64.zip`](https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.16/OpenNSPW-0.0.1-alpha.16-osx-arm64.zip) | Extract `OpenNSPW.app`, and start it. It isn't notarized, so the first time, click **Open Anyway** in System Settings → Privacy & Security, or run `xattr -dr com.apple.quarantine OpenNSPW.app`. |
-| Linux (x64) | [`linux-x64.AppImage`](https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.16/OpenNSPW-0.0.1-alpha.16-linux-x64.AppImage) | `chmod +x` it, and start it. |
-| Android 6 or later | [`android.apk`](https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.16/OpenNSPW-0.0.1-alpha.16-android.apk) | Open it on the device, allowing installs from where you opened it. |
+| Windows (x64) | [`win-x64.zip`](https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.17/OpenNSPW-0.0.1-alpha.17-win-x64.zip) | Extract it, and start `OpenNspw.Desktop.exe`. |
+| macOS (Apple silicon) | [`osx-arm64.zip`](https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.17/OpenNSPW-0.0.1-alpha.17-osx-arm64.zip) | Extract `OpenNSPW.app`, and start it. It isn't notarized, so the first time, click **Open Anyway** in System Settings → Privacy & Security, or run `xattr -dr com.apple.quarantine OpenNSPW.app`. |
+| Linux (x64) | [`linux-x64.AppImage`](https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.17/OpenNSPW-0.0.1-alpha.17-linux-x64.AppImage) | `chmod +x` it, and start it. |
+| Android 6 or later | [`android.apk`](https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.17/OpenNSPW-0.0.1-alpha.17-android.apk) | Open it on the device, allowing installs from where you opened it. |
 
 Each release lists the SHA-256 of its downloads in `SHA256SUMS`, and GitHub keeps a signed record that this repository's workflow built them: `gh attestation verify <file> --repo ycanardeau/OpenNSPW`.
 
