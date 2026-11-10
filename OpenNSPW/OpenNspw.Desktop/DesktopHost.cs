@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using Aigamo.Saruhashi;
+using Aigamo.Saruhashi.MonoGame;
 using Microsoft.Xna.Framework;
 using OpenNspw.App;
 
@@ -28,6 +30,9 @@ internal sealed class DesktopHost : IAppHost
 		if (Sdl.SDL_SetClipboardText(text) < 0)
 			Console.Error.WriteLine("The text cannot be copied to the clipboard.");
 	}
+
+	// SDL's, which DesktopGL runs on.
+	public IClipboard? Clipboard { get; } = new SdlClipboard();
 
 	public void Quit(Game game)
 	{

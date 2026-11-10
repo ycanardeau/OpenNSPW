@@ -1,3 +1,5 @@
+using MonoGame.Extended.Input;
+using MonoGame.Extended.Input.InputListeners;
 using DrawingColor = System.Drawing.Color;
 using DrawingPoint = System.Drawing.Point;
 using DrawingRectangle = System.Drawing.Rectangle;
@@ -30,4 +32,23 @@ public static class Extensions
 		new(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height);
 
 	public static XnaSizeF ToXnaSize(this DrawingSizeF size) => new(size.Width, size.Height);
+
+	/// <summary>
+	/// Saruhashi's arguments for a key that MonoGame.Extended's <see cref="KeyboardListener"/> reports pressed or released:
+	/// the key, MonoGame's keys being Windows' virtual-key codes, with the modifiers held then, as Ctrl with C to copy.
+	/// </summary>
+	public static KeyEventArgs ToKeyEventArgs(this KeyboardEventArgs e)
+	{
+		var keyData = (Keys)e.Key;
+		if (e.Modifiers.HasFlag(KeyboardModifiers.Shift))
+			keyData |= Keys.Shift;
+
+		if (e.Modifiers.HasFlag(KeyboardModifiers.Control))
+			keyData |= Keys.Control;
+
+		if (e.Modifiers.HasFlag(KeyboardModifiers.Alt))
+			keyData |= Keys.Alt;
+
+		return new KeyEventArgs(keyData);
+	}
 }

@@ -1,6 +1,6 @@
 # Saruhashi
 
-**A WinForms-style UI toolkit for [MonoGame](https://github.com/MonoGame/MonoGame).** Buttons, check boxes, radio buttons, labels and forms, with focus, mouse capture, keyboard input and data binding, drawn with your game's own `SpriteBatch`.
+**A WinForms-style UI toolkit for [MonoGame](https://github.com/MonoGame/MonoGame).** Buttons, check boxes, radio buttons, labels, text boxes and forms, with focus, mouse capture, keyboard input and data binding, drawn with your game's own `SpriteBatch`.
 
 [![NuGet](https://img.shields.io/nuget/dt/Aigamo.Saruhashi.MonoGame?label=NuGet&logo=nuget)](https://www.nuget.org/packages/Aigamo.Saruhashi.MonoGame)
 [![.NET 11](https://img.shields.io/badge/.NET-11-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
@@ -17,7 +17,7 @@ ui.Root.Controls.Add(start);
 
 ## Why Saruhashi
 
-- **You already know it.** `Control`, `Form`, `Button`, `CheckBox`, `RadioButton`, `Label`; `Click`, `MouseEnter`, `KeyPress`, `CheckedChanged`; `Controls.Add`, `BringToFront`, `Focus`, `DataBindings`. Much of it is adapted from [dotnet/winforms](https://github.com/dotnet/winforms), so it behaves the way WinForms does.
+- **You already know it.** `Control`, `Form`, `Button`, `CheckBox`, `RadioButton`, `Label`, `TextBox`; `Click`, `MouseEnter`, `KeyPress`, `CheckedChanged`; `Controls.Add`, `BringToFront`, `Focus`, `DataBindings`. Much of it is adapted from [dotnet/winforms](https://github.com/dotnet/winforms), so it behaves the way WinForms does.
 - **A real control tree.** Controls nest, clip to their parents, take focus and capture the mouse. Input goes to the right control, and every control repaints every frame.
 - **Not tied to a renderer.** `Aigamo.Saruhashi` knows nothing about MonoGame: it draws through `IGraphicsFactory` and `Graphics`. `Aigamo.Saruhashi.MonoGame` is one backend, and you can write another.
 - **Runs wherever MonoGame runs.** The MonoGame package isn't built for one platform: it uses the MonoGame your game references, such as `MonoGame.Framework.DesktopGL` or `MonoGame.Framework.Android`. A touch screen can stand in for the mouse.
@@ -50,7 +50,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended.Input.InputListeners;
 using DrawingRectangle = System.Drawing.Rectangle;
-using SaruhashiKeys = Aigamo.Saruhashi.Keys;
 using SaruhashiMouseListener = Aigamo.Saruhashi.MonoGame.MouseListener;
 
 public class MyGame : Game
@@ -81,9 +80,12 @@ public class MyGame : Game
         mouse.MouseMove += (_, e) => _ui.OnMouseMove(e);
         mouse.MouseUp += (_, e) => _ui.OnMouseUp(e);
         mouse.MouseWheel += (_, e) => _ui.OnMouseWheel(e);
-        keyboard.KeyPressed += (_, e) => _ui.OnKeyDown(new KeyEventArgs((SaruhashiKeys)e.Key));
-        keyboard.KeyReleased += (_, e) => _ui.OnKeyUp(new KeyEventArgs((SaruhashiKeys)e.Key));
+        keyboard.KeyPressed += (_, e) => _ui.OnKeyDown(e.ToKeyEventArgs());
+        keyboard.KeyReleased += (_, e) => _ui.OnKeyUp(e.ToKeyEventArgs());
         Window.TextInput += (_, e) => _ui.OnKeyPress(new KeyPressEventArgs(e.Character));
+
+        // Cut, copy and paste with the system's clipboard, on DesktopGL.
+        _ui.Clipboard = new SdlClipboard();
 
         var quit = new Button { Bounds = new DrawingRectangle(462, 372, 100, 24), Text = "Quit" };
         quit.Click += (_, _) => Exit();
@@ -132,6 +134,19 @@ Radio buttons in the same parent form a group: checking one unchecks the others.
 | `CheckBox` | Toggles `Checked`. Set `Appearance.Button` to draw it as a toggle button. |
 | `RadioButton` | One choice of a group. Set `Appearance.Button` for tab-like buttons. |
 | `Label` | Text, drawn by an `ITextRenderer`. |
+| `TextBox` | A line of text to type, select with the mouse or the keyboard, and cut, copy and paste, with Windows' keys. |
+
+## Text boxes
+
+```csharp
+var name = new TextBox { Bounds = new DrawingRectangle(16, 16, 268, 24), PlaceholderText = "Name", MaxLength = 16 };
+name.Edited += (_, _) => player.Name = name.Text;
+options.Controls.Add(name);
+```
+
+A `TextBox` takes the keys of Windows' edit control: the arrows, Home and End, with Shift to select and Ctrl to go by words; Backspace and Delete, with Ctrl for a word; Ctrl+A, Ctrl+C, Ctrl+X and Ctrl+V, and Ctrl+Insert, Shift+Insert and Shift+Delete. A drag selects, a double-click selects a word, and Shift+click extends the selection. `Edited` is raised when the user changes the text, and `TextChanged` also when your code sets it. `SelectionStart`, `SelectionLength`, `SelectedText`, `Select`, `SelectAll`, `Copy`, `Cut` and `Paste` work as in WinForms, and `ReadOnly` lets the user select and copy only.
+
+The modifiers come from the key events, so send keys with `ToKeyEventArgs()`, as above, and characters with `KeyPressEventArgs`, Backspace included. Text is cut and copied to `WindowManager.Clipboard`: by default a clipboard of the window manager's own, or the system's with `SdlClipboard` on DesktopGL, or your own `IClipboard`. For your look, set the colors (`SelectionBackColor`, `CaretColor`, `PlaceholderForeColor`), override `TextRectangle` for the margins, and paint the frame in `OnPaint` before calling the base.
 
 ## Custom controls
 
@@ -168,7 +183,7 @@ player.Name = "Bob";                          // the label now shows "Bob"
 
 ## Demo
 
-[Aigamo.Saruhashi.MonoGame.Demo](Aigamo.Saruhashi.MonoGame.Demo) shows nested controls, clipping, mouse capture and keyboard input on three screens, and logs their events to the console. Press Escape to quit.
+[Aigamo.Saruhashi.MonoGame.Demo](Aigamo.Saruhashi.MonoGame.Demo) shows nested controls, clipping, mouse capture, keyboard input and text boxes on three screens, and logs their events to the console. Press Escape to quit.
 
 ```bash
 dotnet run --project Saruhashi/Aigamo.Saruhashi.MonoGame.Demo

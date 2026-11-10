@@ -28,6 +28,38 @@ public class MouseListener(
 	private Point PreviousPosition =>
 		ViewportAdapter?.PointToScreen(_previousState.Position) ?? _previousState.Position;
 
+	// Windows' defaults: a second press of a button within 500 ms (GetDoubleClickTime) and in a 4-pixel square around the
+	// first (SM_CXDOUBLECLK, SM_CYDOUBLECLK) is a double click.
+	private static readonly TimeSpan DoubleClickTime = TimeSpan.FromMilliseconds(500);
+	private const int DoubleClickSize = 4;
+
+	private MouseButtons _lastPressed;
+	private TimeSpan _lastPressedAt;
+	private Point _lastPressedPosition;
+	private int _lastClicks;
+
+	// How many times `button`, pressed at `time`, has been clicked in a row: 2 for a double click, and 1 otherwise, also
+	// for the press after a double click, as Windows counts.
+	private int CountClicks(MouseButtons button, TimeSpan time)
+	{
+		var position = Position;
+		var clicks =
+			_lastClicks == 1
+			&& button == _lastPressed
+			&& time - _lastPressedAt <= DoubleClickTime
+			&& Math.Abs(position.X - _lastPressedPosition.X) <= DoubleClickSize / 2
+			&& Math.Abs(position.Y - _lastPressedPosition.Y) <= DoubleClickSize / 2
+				? 2
+				: 1;
+		(_lastPressed, _lastPressedAt, _lastPressedPosition, _lastClicks) = (
+			button,
+			time,
+			position,
+			clicks
+		);
+		return clicks;
+	}
+
 	public override void Update(GameTime gameTime)
 	{
 		_state = _getState();
@@ -65,7 +97,7 @@ public class MouseListener(
 				this,
 				new MouseEventArgs(
 					MouseButtons.Left,
-					clicks: 0,
+					clicks: CountClicks(MouseButtons.Left, gameTime.TotalGameTime),
 					Position.ToDrawingPoint(),
 					delta: 0
 				)
@@ -79,7 +111,7 @@ public class MouseListener(
 				this,
 				new MouseEventArgs(
 					MouseButtons.Right,
-					clicks: 0,
+					clicks: CountClicks(MouseButtons.Right, gameTime.TotalGameTime),
 					Position.ToDrawingPoint(),
 					delta: 0
 				)
@@ -93,7 +125,7 @@ public class MouseListener(
 				this,
 				new MouseEventArgs(
 					MouseButtons.Middle,
-					clicks: 0,
+					clicks: CountClicks(MouseButtons.Middle, gameTime.TotalGameTime),
 					Position.ToDrawingPoint(),
 					delta: 0
 				)
@@ -107,7 +139,7 @@ public class MouseListener(
 				this,
 				new MouseEventArgs(
 					MouseButtons.XButton1,
-					clicks: 0,
+					clicks: CountClicks(MouseButtons.XButton1, gameTime.TotalGameTime),
 					Position.ToDrawingPoint(),
 					delta: 0
 				)
@@ -121,7 +153,7 @@ public class MouseListener(
 				this,
 				new MouseEventArgs(
 					MouseButtons.XButton2,
-					clicks: 0,
+					clicks: CountClicks(MouseButtons.XButton2, gameTime.TotalGameTime),
 					Position.ToDrawingPoint(),
 					delta: 0
 				)
@@ -135,7 +167,7 @@ public class MouseListener(
 				this,
 				new MouseEventArgs(
 					MouseButtons.Left,
-					clicks: 0,
+					clicks: 1,
 					Position.ToDrawingPoint(),
 					delta: 0
 				)
@@ -149,7 +181,7 @@ public class MouseListener(
 				this,
 				new MouseEventArgs(
 					MouseButtons.Right,
-					clicks: 0,
+					clicks: 1,
 					Position.ToDrawingPoint(),
 					delta: 0
 				)
@@ -163,7 +195,7 @@ public class MouseListener(
 				this,
 				new MouseEventArgs(
 					MouseButtons.Middle,
-					clicks: 0,
+					clicks: 1,
 					Position.ToDrawingPoint(),
 					delta: 0
 				)
@@ -177,7 +209,7 @@ public class MouseListener(
 				this,
 				new MouseEventArgs(
 					MouseButtons.XButton1,
-					clicks: 0,
+					clicks: 1,
 					Position.ToDrawingPoint(),
 					delta: 0
 				)
@@ -191,7 +223,7 @@ public class MouseListener(
 				this,
 				new MouseEventArgs(
 					MouseButtons.XButton2,
-					clicks: 0,
+					clicks: 1,
 					Position.ToDrawingPoint(),
 					delta: 0
 				)

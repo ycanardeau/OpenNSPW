@@ -11,7 +11,6 @@ using OpenNspw.App.Screens;
 using OpenNspw.Replay;
 using OpenNspw.Verification;
 using DrawingRectangle = System.Drawing.Rectangle;
-using SaruhashiKeys = Aigamo.Saruhashi.Keys;
 using SaruhashiMouseListener = Aigamo.Saruhashi.MonoGame.MouseListener;
 using Screen = OpenNspw.App.Screens.Screen;
 using ScreenManager = MonoGame.Extended.Screens.ScreenManager;
@@ -195,14 +194,15 @@ internal sealed class NspwGame : Game
 			new MonoGameGraphicsFactory(SpriteBatch, ViewportAdapter),
 			Fonts.Regular(14)
 		);
+		if (Host.Clipboard is { } clipboard)
+			WindowManager.Clipboard = clipboard;
+
 		mouseListener.MouseDown += (_, e) => WindowManager.OnMouseDown(e);
 		mouseListener.MouseMove += (_, e) => WindowManager.OnMouseMove(e);
 		mouseListener.MouseUp += (_, e) => WindowManager.OnMouseUp(e);
 		mouseListener.MouseWheel += (_, e) => WindowManager.OnMouseWheel(e);
-		keyboardListener.KeyPressed += (_, e) =>
-			WindowManager.OnKeyDown(new KeyEventArgs((SaruhashiKeys)e.Key));
-		keyboardListener.KeyReleased += (_, e) =>
-			WindowManager.OnKeyUp(new KeyEventArgs((SaruhashiKeys)e.Key));
+		keyboardListener.KeyPressed += (_, e) => WindowManager.OnKeyDown(e.ToKeyEventArgs());
+		keyboardListener.KeyReleased += (_, e) => WindowManager.OnKeyUp(e.ToKeyEventArgs());
 		Host.ListenToText(Window, c => WindowManager.OnKeyPress(new KeyPressEventArgs(c)));
 
 		if (_watch is not null)

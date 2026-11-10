@@ -53,7 +53,7 @@ internal sealed class ConnectionForm : Form
 		_host.Enabled = _join.Enabled = _canConnect && !_awaitsFill;
 		_name.Enabled = _port.Enabled = !_awaitsFill;
 		_address.Enabled = !_isHost && !_awaitsFill;
-		_address.Placeholder = _isHost
+		_address.PlaceholderText = _isHost
 			? Texts.HostAddressPlaceholder
 			: Texts.JoinAddressPlaceholder;
 		_connect.Enabled = _canConnect && !_awaitsFill;
@@ -188,7 +188,7 @@ internal sealed class ConnectionForm : Form
 	{
 		TextField[] fields = _isHost ? [_name, _port] : [_name, _address, _port];
 		var current = Array.FindIndex(fields, f => f.Focused);
-		WindowManager.SetFocus(fields[(current + 1) % fields.Length]);
+		fields[(current + 1) % fields.Length].Focus();
 	}
 
 	protected override void OnKeyDown(KeyEventArgs e)
