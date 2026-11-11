@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- netstandard2.0, as Aigamo.Saruhashi, for Unity to load. -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>ycanardeau</Authors>
+    <Description>Saruhashi's backend for Unity, drawn with Unity's IMGUI.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ycanardeau/Saruhashi</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ycanardeau/Saruhashi</RepositoryUrl>
+  </PropertyGroup>
+
+  <!-- Unity's assemblies only to compile against: Saruhashi runs with the ones of the Unity that loads it. -->
+  <ItemGroup>
+    <PackageReference Include="UnityEngine.Modules" ExcludeAssets="runtime" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Aigamo.Saruhashi\Aigamo.Saruhashi.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

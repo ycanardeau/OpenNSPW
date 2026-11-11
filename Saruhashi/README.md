@@ -19,7 +19,7 @@ ui.Root.Controls.Add(start);
 
 - **You already know it.** `Control`, `Form`, `Button`, `CheckBox`, `RadioButton`, `Label`, `TextBox`; `Click`, `MouseEnter`, `KeyPress`, `CheckedChanged`; `Controls.Add`, `BringToFront`, `Focus`, `DataBindings`. Much of it is adapted from [dotnet/winforms](https://github.com/dotnet/winforms), so it behaves the way WinForms does.
 - **A real control tree.** Controls nest, clip to their parents, take focus and capture the mouse. Input goes to the right control, and every control repaints every frame.
-- **Not tied to a renderer.** `Aigamo.Saruhashi` knows nothing about MonoGame: it draws through `GraphicsFactory` and `Graphics`. `Aigamo.Saruhashi.MonoGame` is one backend, and you can write another.
+- **Not tied to a renderer.** `Aigamo.Saruhashi` knows nothing about MonoGame: it draws through `GraphicsFactory` and `Graphics`. `Aigamo.Saruhashi.MonoGame` is one backend, `Aigamo.Saruhashi.Unity` another, and you can write your own.
 - **Runs wherever MonoGame runs.** The MonoGame package isn't built for one platform: it uses the MonoGame your game references, such as `MonoGame.Framework.DesktopGL` or `MonoGame.Framework.Android`. A touch screen can stand in for the mouse.
 - **Any resolution.** Give it a [MonoGame.Extended](https://github.com/craftworkgames/MonoGame.Extended) `ViewportAdapter`, and pointer positions and clipping scale with the window. A control can also be drawn larger than its parent (`Control.Scale`), with the pointer taken where it is drawn.
 - **Your look.** Override `OnPaint`, or swap a control's `IButtonRenderer` or `ITextRenderer`.
@@ -30,6 +30,7 @@ ui.Root.Controls.Add(start);
 | --- | --- |
 | [`Aigamo.Saruhashi`](https://www.nuget.org/packages/Aigamo.Saruhashi) | The controls, the window manager and data binding, with no renderer. Built for netstandard2.0. |
 | [`Aigamo.Saruhashi.MonoGame`](https://www.nuget.org/packages/Aigamo.Saruhashi.MonoGame) | Drawing with a `SpriteBatch` and input from MonoGame and MonoGame.Extended. |
+| `Aigamo.Saruhashi.Unity` | Drawing and input with Unity's IMGUI. |
 
 ## Installation
 
@@ -102,6 +103,40 @@ public class MyGame : Game
 ```
 
 To scale the UI with the window, pass the same `ViewportAdapter` to `SaruhashiMouseListener` and `MonoGameGraphicsFactory`. To use something else as the pointer, such as a touch screen's touches, give `SaruhashiMouseListener` a function that returns a `MouseState`.
+
+## Unity
+
+Copy `Aigamo.Saruhashi.dll`, `Aigamo.Saruhashi.Unity.dll` and `Microsoft.Bcl.HashCode.dll` into your project's `Assets/Plugins`. Then create the `WindowManager` in a `MonoBehaviour`, and hand its `OnGUI` to a `UnityGui`, which sends the UI IMGUI's mouse and keyboard and draws it:
+
+```csharp
+using Aigamo.Saruhashi;
+using Aigamo.Saruhashi.Unity;
+using UnityEngine;
+using DrawingRectangle = System.Drawing.Rectangle;
+
+public sealed class Menu : MonoBehaviour
+{
+    private UnityGui _gui;
+
+    private void Start()
+    {
+        var font = new UnityFont(Font.CreateDynamicFontFromOSFont("Arial", 16), 16);
+        var ui = new WindowManager(new DrawingRectangle(0, 0, 1024, 768), new UnityGraphicsFactory(), font);
+
+        var quit = new Button { Bounds = new DrawingRectangle(462, 372, 100, 24), Text = "Quit" };
+        quit.Click += (_, _) => Application.Quit();
+        ui.Root.Controls.Add(quit);
+
+        // Scale the layout to the screen's height.
+        var scale = Screen.height / 768f;
+        _gui = new UnityGui(ui) { Matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1)) };
+    }
+
+    private void OnGUI() => _gui.OnGUI();
+}
+```
+
+`UnityImage.Create` makes an image of a texture, a part of one, or a sprite. On a Mac, Command stands in for Control.
 
 ## Building screens
 

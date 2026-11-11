@@ -48,6 +48,7 @@
     <Project Path="Saruhashi/Aigamo.Saruhashi.MonoGame.Demo/Aigamo.Saruhashi.MonoGame.Demo.csproj" />
     <Project Path="Saruhashi/Aigamo.Saruhashi.MonoGame/Aigamo.Saruhashi.MonoGame.csproj" />
     <Project Path="Saruhashi/Aigamo.Saruhashi.Tests/Aigamo.Saruhashi.Tests.csproj" />
+    <Project Path="Saruhashi/Aigamo.Saruhashi.Unity/Aigamo.Saruhashi.Unity.csproj" />
     <Project Path="Saruhashi/Aigamo.Saruhashi/Aigamo.Saruhashi.csproj" />
   </Folder>
 </Solution>

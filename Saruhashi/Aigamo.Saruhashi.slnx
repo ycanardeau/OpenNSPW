@@ -5,5 +5,6 @@
   <Project Path="Aigamo.Saruhashi.MonoGame.Demo/Aigamo.Saruhashi.MonoGame.Demo.csproj" />
   <Project Path="Aigamo.Saruhashi.MonoGame/Aigamo.Saruhashi.MonoGame.csproj" />
   <Project Path="Aigamo.Saruhashi.Tests/Aigamo.Saruhashi.Tests.csproj" />
+  <Project Path="Aigamo.Saruhashi.Unity/Aigamo.Saruhashi.Unity.csproj" />
   <Project Path="Aigamo.Saruhashi/Aigamo.Saruhashi.csproj" />
 </Solution>
