@@ -1,17 +1,18 @@
 namespace Aigamo.Saruhashi;
 
-public interface IGraphicsFactory
+// A base class rather than an interface with default methods, which netstandard2.0's runtimes do not support.
+public abstract class GraphicsFactory
 {
-	public Graphics Create(Control control);
+	public abstract Graphics Create(Control control);
 
 	/// <summary>
 	/// The graphics that a paint of a control draws with, given back with <see cref="Return"/> once the paint is done. A
 	/// factory may give the same graphics to every paint, as every control paints every frame; by default, a new one.
 	/// </summary>
-	public Graphics Rent(Control control) => Create(control);
+	public virtual Graphics Rent(Control control) => Create(control);
 
 	/// <summary>
 	/// Takes back a graphics of <see cref="Rent"/>: by default, disposes it.
 	/// </summary>
-	public void Return(Graphics graphics) => graphics.Dispose();
+	public virtual void Return(Graphics graphics) => graphics.Dispose();
 }

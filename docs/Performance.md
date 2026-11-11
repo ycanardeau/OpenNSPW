@@ -48,7 +48,7 @@ So 96 bytes a call there, a copy of the list of peers and a new delegate in `DoW
 | `ReplayPlayer.Take` | A frame's records taken in place; none, without a list, at a point that has none | LINQ and a list at each point |
 | `SpriteSheetSurface.TryFind` | Its pieces in an array | An enumerator at each blit |
 | `SolidBrush.Of`, `Pen.Of` (Saruhashi) | A brush and a pen a color | A new one for each fill and line |
-| `Control.Draw` (Saruhashi) | The children by index; the graphics and its paint's arguments borrowed from the factory and given back (`IGraphicsFactory.Rent`, `Return`), which keeps them for the next paint | A copy of the children, a graphics, a scissor, a region and arguments for each control, each frame |
+| `Control.Draw` (Saruhashi) | The children by index; the graphics and its paint's arguments borrowed from the factory and given back (`GraphicsFactory.Rent`, `Return`), which keeps them for the next paint | A copy of the children, a graphics, a scissor, a region and arguments for each control, each frame |
 | `LastText`, `GameTexts.Of` (the app) | The UI's labels, and the English of the game's texts, made again only when their values change | Strings at each paint |
 
 ## How it is guarded

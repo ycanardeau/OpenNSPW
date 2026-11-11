@@ -6,7 +6,7 @@ public sealed class WindowManager
 {
 	public WindowManager(
 		Rectangle bounds,
-		IGraphicsFactory graphicsFactory,
+		GraphicsFactory graphicsFactory,
 		IFont? defaultFont = null
 	)
 	{
@@ -27,7 +27,7 @@ public sealed class WindowManager
 	public IFont? DefaultFont { get; }
 	private Control? Focus { get; set; }
 	private Control FocusOrRoot => Focus ?? Root;
-	public IGraphicsFactory GraphicsFactory { get; }
+	public GraphicsFactory GraphicsFactory { get; }
 
 	/// <summary>
 	/// The modifier keys held (<see cref="Keys.Shift"/>, <see cref="Keys.Control"/>, <see cref="Keys.Alt"/> and

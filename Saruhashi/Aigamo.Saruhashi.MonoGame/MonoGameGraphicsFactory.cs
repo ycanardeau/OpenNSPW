@@ -6,7 +6,7 @@ namespace Aigamo.Saruhashi.MonoGame;
 public sealed class MonoGameGraphicsFactory(
 	SpriteBatch spriteBatch,
 	ViewportAdapter? viewportAdapter = null
-) : IGraphicsFactory
+) : GraphicsFactory
 {
 	// The graphics that paints gave back, closed, for the next paints: every control paints every frame. On the UI's
 	// thread.
@@ -15,10 +15,10 @@ public sealed class MonoGameGraphicsFactory(
 	public SpriteBatch SpriteBatch { get; } = spriteBatch;
 	public ViewportAdapter? ViewportAdapter { get; } = viewportAdapter;
 
-	public Graphics Create(Control control) =>
+	public override Graphics Create(Control control) =>
 		new MonoGameGraphics(control, SpriteBatch, ViewportAdapter);
 
-	public Graphics Rent(Control control)
+	public override Graphics Rent(Control control)
 	{
 		if (!_free.TryPop(out var graphics))
 			return Create(control);
@@ -27,7 +27,7 @@ public sealed class MonoGameGraphicsFactory(
 		return graphics;
 	}
 
-	public void Return(Graphics graphics)
+	public override void Return(Graphics graphics)
 	{
 		if (graphics is MonoGameGraphics own && own.SpriteBatch == SpriteBatch)
 		{
