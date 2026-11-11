@@ -224,6 +224,19 @@ player.Name = "Bob";                          // the label now shows "Bob"
 dotnet run --project Saruhashi/Aigamo.Saruhashi.MonoGame.Demo
 ```
 
+[Aigamo.Saruhashi.Unity.Demo](Aigamo.Saruhashi.Unity.Demo) is a Unity project with the same three screens and a fourth for the rest of the Unity backend: check boxes, radio buttons, images, a control drawn larger, and typing. It logs to Unity's console, and needs no scene: it adds itself to whichever scene plays. To run it:
+
+1. Build `Aigamo.Saruhashi.Unity`, which copies Saruhashi's assemblies and their PDBs into the demo's `Assets/Plugins`:
+
+   ```bash
+   dotnet build Saruhashi/Aigamo.Saruhashi.Unity
+   ```
+
+2. In Unity Hub, choose **Add project from disk** and pick `Saruhashi/Aigamo.Saruhashi.Unity.Demo`. It is made for Unity 2021.3, the oldest Unity that the backend is built against; a later Unity opens it once it has upgraded it.
+3. Press Play.
+
+To debug Saruhashi in it, switch the Editor to Debug Mode (the bug at its bottom right), then attach Visual Studio with **Debug → Attach Unity Debugger**, which the **Game development with Unity** workload adds. Rebuild `Aigamo.Saruhashi.Unity` after each change: Unity reloads the assemblies when its window gets the focus.
+
 ## License
 
 [MIT](LICENSE). The parts adapted from [dotnet/winforms](https://github.com/dotnet/winforms) are under the .NET Foundation's MIT license, as noted in each file.

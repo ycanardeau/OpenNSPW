@@ -1,0 +1,3 @@
+<!-- Stops NuGet from managing the versions of the C# projects Unity generates here with the repository's
+Directory.Packages.props. -->
+<Project />

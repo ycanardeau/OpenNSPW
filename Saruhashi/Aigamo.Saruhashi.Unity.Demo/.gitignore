@@ -1,0 +1,22 @@
+# What Unity makes of the project when it opens it.
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emory[Cc]aptures/
+*.csproj
+*.sln
+
+# Unity's, which Saruhashi's .gitignore ignores as Visual Studio's: the packages the project uses, and the metadata that
+# gives each asset its GUID.
+!/Packages/
+!/Packages/manifest.json
+!/Packages/packages-lock.json
+!*.meta
+
+# Saruhashi's assemblies, which building Aigamo.Saruhashi.Unity copies here.
+/Assets/Plugins/
+/Assets/Plugins.meta

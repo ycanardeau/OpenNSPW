@@ -19,6 +19,20 @@
     <ProjectReference Include="..\Aigamo.Saruhashi\Aigamo.Saruhashi.csproj" />
   </ItemGroup>
 
+  <!-- The demo's Unity project loads Saruhashi from its Assets/Plugins: each build copies the assemblies there, with their
+  PDBs to debug them, and with the packages' own, which a library's output otherwise lacks. -->
+  <PropertyGroup>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <UnityDemoPluginsDir>$(MSBuildThisFileDirectory)..\Aigamo.Saruhashi.Unity.Demo\Assets\Plugins\</UnityDemoPluginsDir>
+  </PropertyGroup>
+
+  <Target Name="CopyToUnityDemo" AfterTargets="Build">
+    <ItemGroup>
+      <_UnityDemoPlugin Include="$(OutDir)*.dll;$(OutDir)*.pdb" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_UnityDemoPlugin)" DestinationFolder="$(UnityDemoPluginsDir)" SkipUnchangedFiles="true" />
+  </Target>
+
   <PropertyGroup>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
