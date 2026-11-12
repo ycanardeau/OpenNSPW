@@ -3,7 +3,7 @@
 **A WinForms-style UI toolkit for [MonoGame](https://github.com/MonoGame/MonoGame).** Buttons, check boxes, radio buttons, labels and forms, with focus, mouse capture, keyboard input and data binding, drawn with your game's own `SpriteBatch`.
 
 [![NuGet](https://img.shields.io/nuget/dt/Aigamo.Saruhashi.MonoGame?label=NuGet&logo=nuget)](https://www.nuget.org/packages/Aigamo.Saruhashi.MonoGame)
-[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![.NET 11](https://img.shields.io/badge/.NET-11-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![MonoGame 3.8](https://img.shields.io/badge/MonoGame-3.8-E73C00)](https://monogame.net/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 

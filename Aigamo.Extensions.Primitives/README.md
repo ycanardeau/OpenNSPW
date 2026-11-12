@@ -77,7 +77,7 @@ The tuple elements must already have the right types. `(0x34, 0x12).ToUInt16()` 
 
 ## Development
 
-Building requires the .NET 10 SDK or newer.
+Building requires the .NET 11 SDK or newer.
 
 ```sh
 dotnet build

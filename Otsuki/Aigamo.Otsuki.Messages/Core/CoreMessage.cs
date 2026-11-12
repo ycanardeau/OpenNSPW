@@ -7,7 +7,7 @@ namespace Aigamo.Otsuki.Messages.Core;
 
 [GenerateMatch]
 [Immutable]
-public abstract record CoreMessage
+public closed record CoreMessage
 {
 	/// <summary>
 	/// A 32-bit field that contains the packet type.

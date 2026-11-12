@@ -27,7 +27,7 @@ public sealed class StreamDatagramTransport : IDatagramTransport
 		public Mailbox<byte[]> Datagrams { get; } = new(MaxWaitingDatagrams);
 	}
 
-	private abstract record LinksMessage
+	private closed record LinksMessage
 	{
 		private LinksMessage() { }
 

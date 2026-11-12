@@ -7,7 +7,7 @@ public sealed class MailboxTests
 {
 	private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
 
-	private abstract record Message;
+	private closed record Message;
 
 	private sealed record Number(int Value) : Message;
 

@@ -9,7 +9,7 @@ namespace Aigamo.Otsuki;
 /// Handle every case with the generated <c>Match</c>.
 /// </summary>
 [GenerateMatch]
-public abstract record PeerEvent
+public closed record PeerEvent
 {
 	private PeerEvent() { }
 

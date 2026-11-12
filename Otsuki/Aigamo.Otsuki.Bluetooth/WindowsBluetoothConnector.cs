@@ -19,7 +19,7 @@ internal sealed partial class WindowsBluetoothConnector
 	: Actor<WindowsBluetoothConnector.Message>,
 		IStreamConnector
 {
-	internal abstract record Message
+	internal closed record Message
 	{
 		private Message() { }
 

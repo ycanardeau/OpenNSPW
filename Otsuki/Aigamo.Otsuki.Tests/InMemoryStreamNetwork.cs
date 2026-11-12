@@ -88,7 +88,7 @@ internal sealed class DuplexStream(Stream input, Stream output) : Stream
 	}
 }
 
-internal abstract record StreamNetworkMessage
+internal closed record StreamNetworkMessage
 {
 	private StreamNetworkMessage() { }
 

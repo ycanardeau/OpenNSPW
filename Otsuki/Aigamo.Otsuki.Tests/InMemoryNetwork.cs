@@ -5,7 +5,7 @@ using Aigamo.Otsuki.Transport;
 
 namespace Aigamo.Otsuki.Tests;
 
-internal abstract record NetworkMessage
+internal closed record NetworkMessage
 {
 	private NetworkMessage() { }
 

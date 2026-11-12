@@ -8,7 +8,7 @@ using Aigamo.Otsuki.Reliable;
 namespace Aigamo.Otsuki.Session;
 
 [GenerateMatch]
-internal abstract record SessionMessage
+internal closed record SessionMessage
 {
 	private SessionMessage() { }
 

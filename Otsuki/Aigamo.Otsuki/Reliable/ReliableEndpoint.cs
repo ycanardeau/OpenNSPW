@@ -11,7 +11,7 @@ using Aigamo.Results;
 namespace Aigamo.Otsuki.Reliable;
 
 [GenerateMatch]
-internal abstract record ReliableEndpointMessage
+internal closed record ReliableEndpointMessage
 {
 	private ReliableEndpointMessage() { }
 

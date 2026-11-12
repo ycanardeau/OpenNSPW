@@ -3,7 +3,7 @@
   <!-- Not part of OpenNSPW.slnx: it needs the android workload (`dotnet workload install android`), which the CI's build of
        the solution does not have. -->
   <PropertyGroup>
-    <TargetFramework>net10.0-android</TargetFramework>
+    <TargetFramework>net11.0-android</TargetFramework>
     <SupportedOSPlatformVersion>23</SupportedOSPlatformVersion>
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>

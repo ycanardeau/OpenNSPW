@@ -17,7 +17,7 @@ internal sealed unsafe partial class MacBluetoothConnector
 	: Actor<MacBluetoothConnector.Message>,
 		IStreamConnector
 {
-	internal abstract record Message
+	internal closed record Message
 	{
 		private Message() { }
 
