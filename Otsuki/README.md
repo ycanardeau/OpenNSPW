@@ -3,7 +3,7 @@
 **DirectPlay 8 for modern .NET.** Otsuki speaks the wire protocol of DirectX 8 and 9 DirectPlay over UDP: host a session, find it, join it and message every peer, with `async`/`await`, on any OS, without Windows or COM.
 
 [![NuGet](https://img.shields.io/nuget/dt/Aigamo.Otsuki?label=NuGet&logo=nuget)](https://www.nuget.org/packages/Aigamo.Otsuki)
-[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![.NET 11](https://img.shields.io/badge/.NET-11-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 Otsuki is the network of [OpenNSPW](../OpenNSPW), whose DirectPlay calls ([OpenNspw.DirectPlay](../OpenNSPW/OpenNspw.DirectPlay)) it carries.

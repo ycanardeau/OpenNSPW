@@ -14,7 +14,7 @@
   <a href="https://github.com/ycanardeau/OpenNSPW/releases"><img src="https://img.shields.io/github/v/release/ycanardeau/OpenNSPW?include_prereleases&sort=semver&label=release&color=D9B45A" alt="Release"></a>
   <a href="https://github.com/ycanardeau/OpenNSPW/releases"><img src="https://img.shields.io/github/downloads/ycanardeau/OpenNSPW/total?color=D9B45A" alt="Downloads"></a>
   <a href="https://github.com/ycanardeau/OpenNSPW/actions/workflows/dotnet.yml"><img src="https://github.com/ycanardeau/OpenNSPW/actions/workflows/dotnet.yml/badge.svg" alt="Build"></a>
-  <a href="https://dotnet.microsoft.com/"><img src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet" alt=".NET 10"></a>
+  <a href="https://dotnet.microsoft.com/"><img src="https://img.shields.io/badge/.NET-11-512BD4?logo=dotnet" alt=".NET 11"></a>
   <a href="https://monogame.net/"><img src="https://img.shields.io/badge/MonoGame-3.8-E73C00" alt="MonoGame 3.8"></a>
 </p>
 
@@ -73,7 +73,7 @@ OpenNSPW is not a remake. It is the original game, ported so closely that it com
 Otsuki, Saruhashi and Enzan are also on NuGet: [Aigamo.Otsuki](https://www.nuget.org/packages/Aigamo.Otsuki), [Aigamo.Saruhashi.MonoGame](https://www.nuget.org/packages/Aigamo.Saruhashi.MonoGame), [Aigamo.Enzan](https://www.nuget.org/packages/Aigamo.Enzan).
 
 ## Building from source
-You need the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0).
+You need the [.NET 11 SDK](https://dotnet.microsoft.com/download/dotnet/11.0).
 
 ```bash
 git clone https://github.com/ycanardeau/OpenNSPW.git
