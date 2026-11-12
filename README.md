@@ -47,7 +47,7 @@ Get the latest build from the buttons above, or every build from [Releases](http
 | Windows (x64) | [`win-x64.zip`](https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.20/OpenNSPW-0.0.1-alpha.20-win-x64.zip) | Extract it, and start `OpenNspw.Desktop.exe`. |
 | macOS (Apple silicon) | [`osx-arm64.zip`](https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.20/OpenNSPW-0.0.1-alpha.20-osx-arm64.zip) | Extract `OpenNSPW.app`, and start it. It isn't notarized, so the first time, click **Open Anyway** in System Settings → Privacy & Security, or run `xattr -dr com.apple.quarantine OpenNSPW.app`. |
 | Linux (x64) | [`linux-x64.AppImage`](https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.20/OpenNSPW-0.0.1-alpha.20-linux-x64.AppImage) | `chmod +x` it, and start it. |
-| Android 6 or later | [`android.apk`](https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.20/OpenNSPW-0.0.1-alpha.20-android.apk) | Open it on the device, allowing installs from where you opened it. |
+| Android 7 or later | [`android.apk`](https://github.com/ycanardeau/OpenNSPW/releases/download/v0.0.1-alpha.20/OpenNSPW-0.0.1-alpha.20-android.apk) | Open it on the device, allowing installs from where you opened it. |
 
 Each release lists the SHA-256 of its downloads in `SHA256SUMS`, and GitHub keeps a signed record that this repository's workflow built them: `gh attestation verify <file> --repo ycanardeau/OpenNSPW`.
 

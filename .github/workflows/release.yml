@@ -221,7 +221,7 @@ jobs:
         OpenNSPW-<version>-win-x64.zip           Windows: extract it, and start OpenNspw.Desktop.exe
         OpenNSPW-<version>-osx-arm64.zip         Macs with Apple silicon: extract OpenNSPW.app, and start it
         OpenNSPW-<version>-linux-x64.AppImage    Linux: make it executable (chmod +x), and start it
-        OpenNSPW-<version>-android.apk           Android 6 or later: open it on the device, allowing installs from where it was opened
+        OpenNSPW-<version>-android.apk           Android 7 or later: open it on the device, allowing installs from where it was opened
         ```
 
         On Android, the game shows the desktop's screens, played by touch: a touch is a click, Back is Escape, and touching a field to write in, such as a host's address, opens Android's text box.

@@ -4,7 +4,7 @@
        the solution does not have. -->
   <PropertyGroup>
     <TargetFramework>net11.0-android</TargetFramework>
-    <SupportedOSPlatformVersion>23</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <ApplicationId>io.github.ycanardeau.opennspw</ApplicationId>
