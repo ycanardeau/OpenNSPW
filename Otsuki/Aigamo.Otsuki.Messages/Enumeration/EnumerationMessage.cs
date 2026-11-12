@@ -12,7 +12,7 @@ namespace Aigamo.Otsuki.Messages.Enumeration;
 /// are told apart from the frames of [MC-DPL8R] by a first byte of 0.
 /// </summary>
 [GenerateMatch]
-public abstract record EnumerationMessage
+public closed record EnumerationMessage
 {
 	private EnumerationMessage() { }
 

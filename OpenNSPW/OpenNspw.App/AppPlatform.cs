@@ -59,7 +59,7 @@ internal sealed class FrameBuffer
 }
 
 // What the game posts to the UI's thread (GameSession), which takes it at the start of each update.
-internal abstract record UIMessage
+internal closed record UIMessage
 {
 	private UIMessage() { }
 

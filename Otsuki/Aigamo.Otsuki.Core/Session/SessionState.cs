@@ -83,7 +83,7 @@ internal interface IHasCloseCompletions
 /// transitions it allows; a message that the current state has no transition for is ignored.
 /// </summary>
 [GenerateMatch]
-internal abstract record SessionState
+internal closed record SessionState
 {
 	private SessionState() { }
 

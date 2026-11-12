@@ -5,7 +5,7 @@ using Aigamo.MatchGenerator;
 namespace Aigamo.Otsuki.Messages.Reliable;
 
 [GenerateMatch]
-public abstract record ReliableMessage
+public closed record ReliableMessage
 {
 	/// <summary>
 	/// A command-code bitmask that contains values that are combined by using the bitwise OR operation.

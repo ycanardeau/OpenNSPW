@@ -18,7 +18,7 @@ internal interface IHasChannel
 /// a message that the current state has no transition for is ignored.
 /// </summary>
 [GenerateMatch]
-internal abstract record ConnectionState
+internal closed record ConnectionState
 {
 	private ConnectionState() { }
 

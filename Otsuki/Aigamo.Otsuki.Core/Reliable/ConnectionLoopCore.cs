@@ -10,7 +10,7 @@ using Aigamo.Results;
 namespace Aigamo.Otsuki.Reliable;
 
 [GenerateMatch]
-internal abstract record ConnectionLoopMessage
+internal closed record ConnectionLoopMessage
 {
 	private ConnectionLoopMessage() { }
 

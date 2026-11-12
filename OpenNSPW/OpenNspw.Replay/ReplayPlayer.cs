@@ -50,7 +50,7 @@ public sealed class ReplayPlayer : IGameExtension, IDisposable
 	// The records of the frame being played, and then of what the game took after it, that the game has not been given.
 	private readonly List<ReplayItem> _frame = [];
 
-	private abstract record Control
+	private closed record Control
 	{
 		private Control() { }
 

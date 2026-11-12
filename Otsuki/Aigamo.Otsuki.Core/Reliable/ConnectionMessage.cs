@@ -5,7 +5,7 @@ using Aigamo.Otsuki.Messages.Reliable;
 namespace Aigamo.Otsuki.Reliable;
 
 [GenerateMatch]
-internal abstract record ConnectionMessage
+internal closed record ConnectionMessage
 {
 	private ConnectionMessage() { }
 

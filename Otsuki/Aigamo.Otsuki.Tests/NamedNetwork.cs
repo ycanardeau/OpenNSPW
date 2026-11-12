@@ -21,7 +21,7 @@ internal sealed class NamedEndPoint(string name) : EndPoint
 	public override string ToString() => Name;
 }
 
-internal abstract record NamedNetworkMessage
+internal closed record NamedNetworkMessage
 {
 	private NamedNetworkMessage() { }
 

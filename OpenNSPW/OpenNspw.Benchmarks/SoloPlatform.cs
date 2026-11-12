@@ -3,7 +3,7 @@ using Aigamo.Otsuki.Actors;
 namespace OpenNspw.Benchmarks;
 
 // What the game's thread posts to the benchmark's (SoloGame).
-internal abstract record SoloMessage
+internal closed record SoloMessage
 {
 	private SoloMessage() { }
 

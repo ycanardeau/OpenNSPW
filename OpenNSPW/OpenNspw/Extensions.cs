@@ -45,7 +45,7 @@ public sealed record PlayerOrders(
 // in the function that they all reach (docs/UI.md). A closed set of cases, each with what its function takes, handled
 // with the generated Match, which a case added makes fail to compile wherever it is not handled.
 [GenerateMatch]
-public abstract record PlayerAction
+public closed record PlayerAction
 {
 	private PlayerAction() { }
 
@@ -102,7 +102,7 @@ public abstract record PlayerAction
 // buttons under it and on the rules, in the functions that the mouse and the host UI's commands both reach. A closed set
 // of cases, as PlayerAction's; a battle has none of them.
 [GenerateMatch]
-public abstract record SettingAction
+public closed record SettingAction
 {
 	private SettingAction() { }
 
