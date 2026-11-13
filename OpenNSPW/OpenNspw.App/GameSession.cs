@@ -115,6 +115,9 @@ internal sealed class GameSession : IDisposable
 
 	public Nspw Game { get; }
 
+	// What the game threw, in full, which ended it, or null.
+	public string? Error { get; private set; }
+
 	// The host UI's commands, which the game takes as an extension (docs/UI.md).
 	public UICommands Commands { get; } = new();
 
@@ -195,7 +198,7 @@ internal sealed class GameSession : IDisposable
 		}
 		catch (Exception e)
 		{
-			_ui.Post(new UIMessage.MessageShown(e.ToString()));
+			_ui.Post(new UIMessage.Failed(e.ToString()));
 			Console.Error.WriteLine(e);
 		}
 		finally
@@ -312,6 +315,10 @@ internal sealed class GameSession : IDisposable
 					break;
 				case UIMessage.MessageShown shown:
 					_lastMessage = shown.Text;
+					break;
+				case UIMessage.Failed failed:
+					_lastMessage = failed.Error;
+					Error = failed.Error;
 					break;
 				case UIMessage.DialogFilled:
 					_isDialogFilled = true;

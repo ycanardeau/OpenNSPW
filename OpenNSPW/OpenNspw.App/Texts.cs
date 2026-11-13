@@ -242,6 +242,10 @@ internal static class Texts
 			"メインメニューに戻ります。対戦中の場合は、相手との接続が切れます。"
 		);
 
+	// The title of what stopped a game (ErrorForm).
+	public static string GameErrorTitle =>
+		Pick("The game stopped with an error", "エラーでゲームが止まりました");
+
 	// The window's title while a game follows a trace of 1.22 (--replay): the frame it is at, then how it ended.
 	public static string ReplayFollowing(int frame) =>
 		Pick($"Following 1.22's trace: frame {frame}", $"1.22 の記録を再生中: フレーム {frame}");

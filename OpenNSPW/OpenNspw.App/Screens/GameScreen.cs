@@ -35,6 +35,9 @@ internal sealed class GameScreen(
 	private DialogForms _dialogs = default!;
 	private ConfirmForm _confirmQuit = default!;
 
+	// What stopped the game, shown until it is closed, or null.
+	private ErrorForm? _errorForm;
+
 	// Whether the end of the trace the game follows, or its first difference, was written to the console.
 	private bool _hasReportedReplay;
 
@@ -262,14 +265,43 @@ internal sealed class GameScreen(
 		_backdrop.Dispose();
 	}
 
+	// The screen that comes back as the game ends: the replays' list after a replay, the main menu otherwise.
+	private void ShowNextScreen()
+	{
+		Game.ShowScreen(_watch is not null ? new ReplaysScreen(Game) : new MainMenuScreen(Game));
+	}
+
+	// Shows what stopped the game, over its last frame, before the next screen comes back.
+	private void ShowError(string error)
+	{
+		if (_errorForm is not null)
+			return;
+
+		_confirmQuit.Visible = false;
+		_errorForm = new ErrorForm(Game.Fonts, error)
+		{
+			// Dimming the battle screen's column beside the layout too, as the question to quit does.
+			Size = new(
+				_session.Snapshot.IsBattle ? _battleForm.Width : all_head.SCRN_WIDTH,
+				all_head.SCRN_HEIGHT
+			),
+		};
+		_errorForm.Closed += (_, _) => ShowNextScreen();
+		WindowManager.Root.Controls.Add(_errorForm);
+		_errorForm.BringToFront();
+		_errorForm.Show();
+		_errorForm.Focus();
+	}
+
 	public override void Update(GameTime gameTime)
 	{
 		_session.TakeMessages();
 		if (_session.HasEnded)
 		{
-			Game.ShowScreen(
-				_watch is not null ? new ReplaysScreen(Game) : new MainMenuScreen(Game)
-			);
+			if (_session.Error is { } error)
+				ShowError(error);
+			else
+				ShowNextScreen();
 			return;
 		}
 

@@ -69,8 +69,11 @@ internal closed record UIMessage
 	// The windows, as they are since one has changed.
 	public sealed record WindowsChanged(ImmutableArray<WindowView> Windows) : UIMessage;
 
-	// A message box the game showed, or what the game threw.
+	// A message box the game showed.
 	public sealed record MessageShown(string Text) : UIMessage;
+
+	// What the game threw, in full, which ended it.
+	public sealed record Failed(string Error) : UIMessage;
 
 	// A user's action on a dialog has run (DialogFilled), after which the form reads the dialog's fields again.
 	public sealed record DialogFilled : UIMessage;
