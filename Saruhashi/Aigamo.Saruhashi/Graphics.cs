@@ -19,7 +19,7 @@ public abstract class Graphics(Control control) : IDisposable
 	public RectangleF ClipBounds => Control.GetClipRectangle(_clipRectangle);
 
 	// The arguments of a paint with this graphics, made once, as a factory may give the same graphics to every paint
-	// (IGraphicsFactory.Rent).
+	// (GraphicsFactory.Rent).
 	internal PaintEventArgs PaintEventArgsFor(Rectangle clipRectangle)
 	{
 		_paintEventArgs ??= new PaintEventArgs(this, clipRectangle);

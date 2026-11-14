@@ -51,11 +51,11 @@ internal sealed class FakeGraphics(
 		new((text?.Length ?? 0) * CharWidth, LineHeight);
 }
 
-internal sealed class FakeGraphicsFactory : IGraphicsFactory
+internal sealed class FakeGraphicsFactory : GraphicsFactory
 {
 	public List<(string Text, Color Color, PointF Point)> Strings { get; } = [];
 
-	public Graphics Create(Control control) => new FakeGraphics(control, Strings);
+	public override Graphics Create(Control control) => new FakeGraphics(control, Strings);
 }
 
 // A clipboard of the test's own, as the system's would be.

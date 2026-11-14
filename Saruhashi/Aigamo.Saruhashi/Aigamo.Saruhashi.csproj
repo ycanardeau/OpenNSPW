@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- netstandard2.0, which .NET, .NET Framework 4.6.2 and later, and Mono load. -->
+    <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>ycanardeau</Authors>
     <Description>Saruhashi is a UI framework for MonoGame.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -8,8 +10,9 @@
     <RepositoryUrl>https://github.com/ycanardeau/Saruhashi</RepositoryUrl>
   </PropertyGroup>
 
+  <!-- What netstandard2.0 lacks of .NET's own API: HashCode. The rest is in Polyfills. -->
   <ItemGroup>
-    <PackageReference Include="System.Drawing.Common" />
+    <PackageReference Include="Microsoft.Bcl.HashCode" />
   </ItemGroup>
 
   <PropertyGroup>

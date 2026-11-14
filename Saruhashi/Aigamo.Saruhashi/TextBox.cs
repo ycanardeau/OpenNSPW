@@ -365,7 +365,7 @@ public class TextBox : Control
 			text = text[..(room > 0 && char.IsHighSurrogate(text[room - 1]) ? room - 1 : room)];
 
 		SetText(
-			string.Concat(Text.AsSpan(0, start), text, Text.AsSpan(start + length)),
+			string.Concat(Text.Substring(0, start), text, Text.Substring(start + length)),
 			start + text.Length
 		);
 	}
@@ -485,7 +485,7 @@ public class TextBox : Control
 	// The text up to its first line break: what a line takes of a pasted text, as Windows' single-line edit control takes.
 	private static string FirstLine(string text)
 	{
-		var end = text.AsSpan().IndexOfAny('\r', '\n');
+		var end = text.IndexOfAny(['\r', '\n']);
 		return end < 0 ? text : text[..end];
 	}
 

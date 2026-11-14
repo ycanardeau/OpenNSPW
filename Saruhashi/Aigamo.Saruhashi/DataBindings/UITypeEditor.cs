@@ -12,7 +12,6 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
-using System.Drawing.Imaging;
 
 namespace Aigamo.Saruhashi;
 
@@ -49,20 +48,9 @@ public class UITypeEditor
 			[typeof(StringCollection)] =
 				"System.Windows.Forms.Design.StringCollectionEditor, " + AssemblyRef.SystemDesign,
 
-			// System.Drawing.Design type Editors
-			[typeof(Bitmap)] =
-				"System.Drawing.Design.BitmapEditor, " + AssemblyRef.SystemDrawingDesign,
+			// System.Drawing.Design type Editors, but for System.Drawing.Common's types, which netstandard2.0 lacks
 			[typeof(Color)] =
 				"System.Drawing.Design.ColorEditor, " + AssemblyRef.SystemDrawingDesign,
-			[typeof(ContentAlignment)] =
-				"System.Drawing.Design.ContentAlignmentEditor, " + AssemblyRef.SystemDrawingDesign,
-			[typeof(Font)] = "System.Drawing.Design.FontEditor, " + AssemblyRef.SystemDrawingDesign,
-			// no way to add Font.Name and associate it with FontNameEditor
-			[typeof(Icon)] = "System.Drawing.Design.IconEditor, " + AssemblyRef.SystemDrawingDesign,
-			[typeof(Image)] =
-				"System.Drawing.Design.ImageEditor, " + AssemblyRef.SystemDrawingDesign,
-			[typeof(Metafile)] =
-				"System.Drawing.Design.MetafileEditor, " + AssemblyRef.SystemDrawingDesign,
 		};
 
 		// Add our intrinsic editors to TypeDescriptor.
