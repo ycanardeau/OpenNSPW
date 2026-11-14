@@ -516,68 +516,7 @@ public unsafe partial class Renderer
 
 						var distance = (eye - effect.Position).Length;
 
-						switch (_game.Units[n].Kind)
-						{
-							case UnitKind.Battleship:
-								size = BB1_SIGHT;
-								break;
-							case UnitKind.Cruiser:
-								size = CA1_SIGHT;
-								break;
-							case UnitKind.Destroyer:
-								size = DD1_SIGHT;
-								break;
-							case UnitKind.Submarine:
-								size = SS1_SIGHT;
-								break;
-							case UnitKind.Carrier:
-								size = CV1_SIGHT;
-								break;
-							case UnitKind.LightCarrier:
-								size = CVL1_SIGHT;
-								break;
-							case UnitKind.Transport:
-								size = TR1_SIGHT;
-								break;
-							case UnitKind.Fighter:
-								size = FT1_SIGHT;
-								break;
-							case UnitKind.Attacker:
-								size = AT1_SIGHT;
-								break;
-							case UnitKind.Bomber:
-								size = BM1_SIGHT;
-								break;
-							case UnitKind.AirBase:
-							case UnitKind.NavalBase:
-								size = AP_SIGHT;
-								break;
-							case UnitKind.City:
-								size = CT1_SIGHT;
-								break;
-							case UnitKind.Mine:
-								size = MN1_SIGHT;
-								break;
-							case UnitKind.InfantryBase:
-								size = GF1_SIGHT;
-								break;
-							case UnitKind.Pillboxes:
-								size = GF2_SIGHT;
-								break;
-							case UnitKind.Fortress:
-								size = GF3_SIGHT;
-								break;
-						}
-
-						if (
-							_game.Units[n].Kind >= UnitKind.AirBase
-							&& _game.Units[n].Kind <= UnitKind.Fortress
-							&& _game.Units[n].BuildTime != 0
-						)
-						{
-							// 工事中は視界を制限
-							size = FT1_SIGHT / 2;
-						}
+						size = _game.EffectSightOf(ref _game.Units[n]);
 
 						// 1.22's ranges, none limited while a base is built (0x40C919).
 						if (_game.Rules.HasSightRangesOf122)
@@ -798,68 +737,7 @@ public unsafe partial class Renderer
 
 							var distance = (eye - effect.Position).Length;
 
-							switch (unit.Kind)
-							{
-								case UnitKind.Battleship:
-									size = BB1_SIGHT;
-									break;
-								case UnitKind.Cruiser:
-									size = CA1_SIGHT;
-									break;
-								case UnitKind.Destroyer:
-									size = DD1_SIGHT;
-									break;
-								case UnitKind.Submarine:
-									size = SS1_SIGHT;
-									break;
-								case UnitKind.Carrier:
-									size = CV1_SIGHT;
-									break;
-								case UnitKind.LightCarrier:
-									size = CVL1_SIGHT;
-									break;
-								case UnitKind.Transport:
-									size = TR1_SIGHT;
-									break;
-								case UnitKind.Fighter:
-									size = FT1_SIGHT;
-									break;
-								case UnitKind.Attacker:
-									size = AT1_SIGHT;
-									break;
-								case UnitKind.Bomber:
-									size = BM1_SIGHT;
-									break;
-								case UnitKind.AirBase:
-								case UnitKind.NavalBase:
-									size = AP_SIGHT;
-									break;
-								case UnitKind.City:
-									size = CT1_SIGHT;
-									break;
-								case UnitKind.Mine:
-									size = MN1_SIGHT;
-									break;
-								case UnitKind.InfantryBase:
-									size = GF1_SIGHT;
-									break;
-								case UnitKind.Pillboxes:
-									size = GF2_SIGHT;
-									break;
-								case UnitKind.Fortress:
-									size = GF3_SIGHT;
-									break;
-							}
-
-							if (
-								unit.Kind >= UnitKind.AirBase
-								&& unit.Kind <= UnitKind.Fortress
-								&& unit.BuildTime != 0
-							)
-							{
-								// 工事中は視界を制限
-								size = FT1_SIGHT / 2;
-							}
+							size = _game.EffectSightOf(ref unit);
 
 							// 1.22's ranges, none limited while a base is built (0x40CF46).
 							if (_game.Rules.HasSightRangesOf122)

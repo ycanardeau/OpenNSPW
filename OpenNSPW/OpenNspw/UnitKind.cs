@@ -1,7 +1,10 @@
+using Aigamo.MatchGenerator;
+
 namespace OpenNspw;
 
 // The kind of a unit (UNIT.kind). The underlying type is the field's. The code compares ranges of kinds (AP to GF3 are
 // the facilities, GF1 to GF3 the fortifications), so the order is part of the type.
+[GenerateMatch]
 public enum UnitKind
 {
 	// An unused unit.

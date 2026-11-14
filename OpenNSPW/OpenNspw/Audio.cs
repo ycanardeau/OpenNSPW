@@ -245,58 +245,8 @@ public unsafe partial class Sound
 
 					var distance = (eye - position).Length;
 
-					switch (_game.Units[n].Kind)
-					{
-						case UnitKind.Battleship:
-							size = BB1_SIGHT;
-							break;
-						case UnitKind.Cruiser:
-							size = CA1_SIGHT;
-							break;
-						case UnitKind.Destroyer:
-							size = DD1_SIGHT;
-							break;
-						case UnitKind.Submarine:
-							size = SS1_SIGHT;
-							break;
-						case UnitKind.Carrier:
-							size = CV1_SIGHT;
-							break;
-						case UnitKind.LightCarrier:
-							size = CVL1_SIGHT;
-							break;
-						case UnitKind.Transport:
-							size = TR1_SIGHT;
-							break;
-						case UnitKind.Fighter:
-							size = FT1_SIGHT;
-							break;
-						case UnitKind.Attacker:
-							size = AT1_SIGHT;
-							break;
-						case UnitKind.Bomber:
-							size = BM1_SIGHT;
-							break;
-						case UnitKind.AirBase:
-						case UnitKind.NavalBase:
-							size = AP_SIGHT;
-							break;
-						case UnitKind.City:
-							size = CT1_SIGHT;
-							break;
-						case UnitKind.Mine:
-							size = MN1_SIGHT;
-							break;
-						case UnitKind.InfantryBase:
-							size = GF1_SIGHT;
-							break;
-						case UnitKind.Pillboxes:
-							size = GF2_SIGHT;
-							break;
-						case UnitKind.Fortress:
-							size = GF3_SIGHT;
-							break;
-					}
+					// Not less while a base is built, unlike the sight of the effects (EffectSightOf).
+					size = GetSightRange(_game.Units[n].Kind);
 
 					if (distance <= size)
 					{
