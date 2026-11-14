@@ -14,12 +14,18 @@ internal sealed class Sound(SoundEffect effect) : ISound, IDisposable
 	private readonly SoundEffect _effect = effect;
 	private readonly SoundEffectInstance _instance = effect.CreateInstance();
 
+	// A sound over MonoGame's limit is not heard. Android's is 32 sounds, counting those that stopped since the UI's last
+	// update (SoundEffectInstancePool), which a replay that seeks passes at once, as it plays many frames an update.
 	public void Play(bool loop)
 	{
 		_instance.IsLooped = loop;
 		if (_instance.State != SoundState.Playing)
 		{
-			_instance.Play();
+			try
+			{
+				_instance.Play();
+			}
+			catch (InstancePlayLimitException) { }
 		}
 	}
 
