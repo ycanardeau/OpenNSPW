@@ -62,4 +62,27 @@ public struct ComputerFleet
 
 	[FieldOffset(0x490)]
 	public double SecondY;
+
+	// AimX and AimY, as a position in the world.
+	public WorldPosition Aim
+	{
+		readonly get => new(AimX, AimY);
+		set
+		{
+			AimX = value.X;
+			AimY = value.Y;
+		}
+	}
+
+	// SecondX and SecondY, as a position in the world.
+	public readonly WorldPosition Second => new(SecondX, SecondY);
+
+	// Path point i, PathX[i] and PathY[i], as a position in the world.
+	public readonly WorldPosition GetPathPoint(int i) => new(PathX[i], PathY[i]);
+
+	public void SetPathPoint(int i, WorldPosition point)
+	{
+		PathX[i] = point.X;
+		PathY[i] = point.Y;
+	}
 }
