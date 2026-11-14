@@ -30,7 +30,8 @@ public sealed class WindowManager
 	public IGraphicsFactory GraphicsFactory { get; }
 
 	/// <summary>
-	/// The modifier keys held (<see cref="Keys.Shift"/>, <see cref="Keys.Control"/> and <see cref="Keys.Alt"/>), as the last
+	/// The modifier keys held (<see cref="Keys.Shift"/>, <see cref="Keys.Control"/>, <see cref="Keys.Alt"/> and
+	/// <see cref="Keys.Command"/>), as the last
 	/// key pressed or released had them, for a click that a modifier changes, such as Shift extending a selection.
 	/// </summary>
 	public Keys ModifierKeys { get; private set; }

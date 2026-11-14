@@ -4,8 +4,9 @@ namespace Aigamo.Saruhashi;
 
 /// <summary>
 /// A line of text that the user types, selects with the mouse or the keyboard, and cuts, copies and pastes through the
-/// window manager's clipboard (<see cref="WindowManager.Clipboard"/>), with the keys of Windows' edit control: the arrows,
-/// Home and End, with Shift to select and Ctrl to go by words; Ctrl+A, Ctrl+C, Ctrl+X and Ctrl+V; Ctrl+Insert, Shift+Insert
+/// window manager's clipboard (<see cref="WindowManager.Clipboard"/>), and undoes and redoes, with the keys of Windows' edit
+/// control and of a Mac's text field: the arrows, Home and End, with Shift to select, Ctrl or Option (Alt) to go by words,
+/// and Command to the ends; Ctrl or Command with A, C, X, V and Z, and with Y or Shift+Z to redo; Ctrl+Insert, Shift+Insert
 /// and Shift+Delete. A double-click selects a word, and Shift+click extends the selection.
 /// </summary>
 /// <remarks>
@@ -17,6 +18,21 @@ public class TextBox : Control
 {
 	// How long the caret is shown, then hidden: Windows' default (GetCaretBlinkTime).
 	private const int CaretBlinkTime = 530;
+
+	// How many edits can be undone.
+	private const int UndoLimit = 100;
+
+	// What an edit is, for joining it to the last one in one step to undo: a run of typing, or of deleting, is one step.
+	private enum EditKind
+	{
+		Other,
+		Typing,
+		DeletingBackward,
+		DeletingForward,
+	}
+
+	// The text, and the selection from the anchor to the caret, as an edit leaves them, to undo and redo.
+	private readonly record struct TextState(string Text, int Anchor, int Caret);
 
 	// The selection runs from the anchor, where it was started, to the caret, which moves as it is extended.
 	private int _anchor;
@@ -37,6 +53,14 @@ public class TextBox : Control
 
 	// How far the text is scrolled to the left, in pixels, to keep the caret in view (KeepCaretInView).
 	private float _scroll;
+
+	// The states before the edits that can be undone, the last last, and before those undone, to redo.
+	private readonly List<TextState> _undo = [];
+	private readonly List<TextState> _redo = [];
+
+	// The kind of the last edit and the state it left, which an edit of the same kind from there joins (Record).
+	private EditKind _lastEditKind;
+	private TextState _afterLastEdit;
 
 	/// <summary>
 	/// Occurs when the user changes the text, by typing, deleting, cutting or pasting; not when <see cref="Text"/> or
@@ -95,8 +119,22 @@ public class TextBox : Control
 	/// </summary>
 	protected virtual Rectangle TextRectangle => new Rectangle(2, 0, Width - 4, Height);
 
+	public bool CanUndo => _undo.Count > 0;
+
+	public bool CanRedo => _redo.Count > 0;
+
 	/// <summary>
-	/// The text. Setting it puts the caret at its start, with nothing selected.
+	/// Forgets the edits, which can no longer be undone or redone.
+	/// </summary>
+	public void ClearUndo()
+	{
+		_undo.Clear();
+		_redo.Clear();
+		_lastEditKind = EditKind.Other;
+	}
+
+	/// <summary>
+	/// The text. Setting it puts the caret at its start, with nothing selected, and forgets the edits (<see cref="ClearUndo"/>).
 	/// </summary>
 	public override string Text
 	{
@@ -109,6 +147,7 @@ public class TextBox : Control
 			_anchor = 0;
 			_caret = 0;
 			_scroll = 0;
+			ClearUndo();
 			base.Text = value;
 		}
 	}
@@ -331,29 +370,89 @@ public class TextBox : Control
 		);
 	}
 
+	private TextState State => new(Text, _anchor, _caret);
+
+	// Remembers `before`, the state before an edit of `kind`, to undo the edit to, which forgets the edits undone: an edit
+	// of the kind of the last one, from where the last left the text and the caret, joins its step instead.
+	private void Record(EditKind kind, TextState before)
+	{
+		if (kind == EditKind.Other || kind != _lastEditKind || before != _afterLastEdit)
+		{
+			if (_undo.Count == UndoLimit)
+				_undo.RemoveAt(0);
+
+			_undo.Add(before);
+		}
+
+		_redo.Clear();
+		_lastEditKind = kind;
+		_afterLastEdit = State;
+	}
+
 	/// <summary>
-	/// The selected text. Setting it puts the text in place of the selection, with the caret after it.
+	/// The selected text. Setting it puts the text in place of the selection, with the caret after it, as a step that
+	/// <see cref="Undo"/> undoes.
 	/// </summary>
 	public string SelectedText
 	{
 		get => Text.Substring(SelectionStart, SelectionLength);
-		set => ReplaceSelection(value);
+		set
+		{
+			var before = State;
+			ReplaceSelection(value);
+			if (Text != before.Text)
+				Record(EditKind.Other, before);
+		}
 	}
 
 	protected virtual void OnEdited(EventArgs e) => Edited?.Invoke(this, e);
 
-	// Puts `text` in place of the selection as the user does, by typing, deleting, cutting or pasting: not in a read-only
-	// text box, and raising Edited if the text changes.
-	private void Edit(string text)
+	// Puts `text` in place of the selection as the user does, by typing, deleting, cutting or pasting, from `before`, the
+	// state before the edit, which Undo takes back: not in a read-only text box, and raising Edited if the text changes.
+	private void Edit(string text, EditKind kind, TextState before)
 	{
 		if (ReadOnly)
 			return;
 
-		var before = Text;
 		ReplaceSelection(text);
+		if (Text == before.Text)
+			return;
+
+		Record(kind, before);
+		OnEdited(EventArgs.Empty);
+	}
+
+	private void Edit(string text, EditKind kind = EditKind.Other) => Edit(text, kind, State);
+
+	// Takes back the last state of `from`, keeping the current one in `to`, as the user undoes or redoes: not in a
+	// read-only text box, and raising Edited if the text changes.
+	private void Step(List<TextState> from, List<TextState> to)
+	{
+		if (ReadOnly || from.Count == 0)
+			return;
+
+		var before = Text;
+		var state = from[^1];
+		from.RemoveAt(from.Count - 1);
+		to.Add(State);
+		_anchor = state.Anchor;
+		_caret = state.Caret;
+		_caretMovedAt = Environment.TickCount64;
+		_lastEditKind = EditKind.Other;
+		base.Text = state.Text;
 		if (Text != before)
 			OnEdited(EventArgs.Empty);
 	}
+
+	/// <summary>
+	/// Takes back the last edit, with the selection as it was before it, if the text box is not read-only.
+	/// </summary>
+	public void Undo() => Step(_undo, _redo);
+
+	/// <summary>
+	/// Makes the last edit undone again, if the text box is not read-only.
+	/// </summary>
+	public void Redo() => Step(_redo, _undo);
 
 	public void SelectAll() => Select(0, Text.Length);
 
@@ -402,80 +501,116 @@ public class TextBox : Control
 
 	public void Clear() => Text = string.Empty;
 
-	// Backspace: deletes the selection, or the character or, with `word`, the word before the caret.
-	private void DeleteBackward(bool word)
+	// Backspace: deletes the selection, or the text from `start` to the caret.
+	private void DeleteBackward(int start)
 	{
 		if (ReadOnly)
 			return;
 
+		var before = State;
 		if (SelectionLength == 0)
-			MoveCaret(word ? PreviousWordPosition(_caret) : PreviousPosition(_caret), extend: true);
+			MoveCaret(start, extend: true);
 
-		Edit(string.Empty);
+		Edit(string.Empty, EditKind.DeletingBackward, before);
 	}
 
-	// Delete: deletes the selection, or the character or, with `word`, the rest of the word after the caret.
-	private void DeleteForward(bool word)
+	// Delete: deletes the selection, or the text from the caret to `end`.
+	private void DeleteForward(int end)
 	{
 		if (ReadOnly)
 			return;
 
+		var before = State;
 		if (SelectionLength == 0)
-			MoveCaret(word ? NextWordPosition(_caret) : NextPosition(_caret), extend: true);
+			MoveCaret(end, extend: true);
 
-		Edit(string.Empty);
+		Edit(string.Empty, EditKind.DeletingForward, before);
 	}
 
-	// Does what a key does in Windows' edit control, and whether it does anything.
+	// Whether the modifiers take a key by words: Ctrl, as Windows does, or Option (Alt), as a Mac does, but not both, which
+	// is AltGr on many keyboards.
+	private static bool IsByWords(Keys modifiers) =>
+		modifiers.HasFlag(Keys.Control) != modifiers.HasFlag(Keys.Alt);
+
+	// Does what a key does in Windows' edit control, or in a Mac's text field, and whether it does anything.
 	private bool ProcessKey(KeyEventArgs e)
 	{
 		var shift = e.Shift;
 
-		// Ctrl, but not with Alt: Ctrl+Alt is AltGr on many keyboards, which types characters.
-		var command = e.Control && !e.Alt;
+		// Ctrl, or Command as on a Mac, for a shortcut, but not with Alt: Ctrl+Alt is AltGr on many keyboards, which types
+		// characters.
+		var shortcut = (e.Control || e.Command) && !e.Alt;
+		var byWords = IsByWords(e.Modifiers);
+
+		// Command goes to the ends, as on a Mac.
+		var toEnds = e.Command;
+		var moves = byWords || toEnds;
 		switch (e.KeyCode)
 		{
-			case Keys.Left when !shift && !command && SelectionLength > 0:
+			case Keys.Left when !shift && !moves && SelectionLength > 0:
 				MoveCaret(SelectionStart, extend: false);
 				return true;
 			case Keys.Left:
-				MoveCaret(command ? PreviousWordPosition(_caret) : PreviousPosition(_caret), shift);
+				MoveCaret(
+					toEnds ? 0
+					: byWords ? PreviousWordPosition(_caret)
+					: PreviousPosition(_caret),
+					shift
+				);
 				return true;
-			case Keys.Right when !shift && !command && SelectionLength > 0:
+			case Keys.Right when !shift && !moves && SelectionLength > 0:
 				MoveCaret(SelectionEnd, extend: false);
 				return true;
 			case Keys.Right:
-				MoveCaret(command ? NextWordPosition(_caret) : NextPosition(_caret), shift);
+				MoveCaret(
+					toEnds ? Text.Length
+					: byWords ? NextWordPosition(_caret)
+					: NextPosition(_caret),
+					shift
+				);
 				return true;
 			case Keys.Home:
+			case Keys.Up when toEnds:
 				MoveCaret(0, shift);
 				return true;
 			case Keys.End:
+			case Keys.Down when toEnds:
 				MoveCaret(Text.Length, shift);
 				return true;
 			case Keys.Delete when shift:
 				Cut();
 				return true;
 			case Keys.Delete:
-				DeleteForward(command);
+				DeleteForward(
+					toEnds ? Text.Length
+					: byWords ? NextWordPosition(_caret)
+					: NextPosition(_caret)
+				);
 				return true;
-			case Keys.Insert when command:
+			case Keys.Insert when shortcut:
 				Copy();
 				return true;
 			case Keys.Insert when shift:
 				Paste();
 				return true;
-			case Keys.A when command:
+			case Keys.A when shortcut:
 				SelectAll();
 				return true;
-			case Keys.C when command:
+			case Keys.C when shortcut:
 				Copy();
 				return true;
-			case Keys.X when command:
+			case Keys.X when shortcut:
 				Cut();
 				return true;
-			case Keys.V when command:
+			case Keys.V when shortcut:
 				Paste();
+				return true;
+			case Keys.Z when shortcut && shift:
+			case Keys.Y when shortcut:
+				Redo();
+				return true;
+			case Keys.Z when shortcut:
+				Undo();
 				return true;
 			default:
 				return false;
@@ -498,15 +633,21 @@ public class TextBox : Control
 		if (e.Handled)
 			return;
 
-		// Ctrl+Backspace deletes a word: the Ctrl was pressed before the Backspace that types the character.
+		// Ctrl+Backspace, or Option+Backspace as on a Mac, deletes a word, and Command+Backspace, as on a Mac, up to the
+		// start: the modifier was pressed before the Backspace that types the character.
 		if (e.KeyChar == '\b')
 		{
-			DeleteBackward(word: WindowManager.ModifierKeys.HasFlag(Keys.Control));
+			var modifiers = WindowManager.ModifierKeys;
+			DeleteBackward(
+				modifiers.HasFlag(Keys.Command) ? 0
+				: IsByWords(modifiers) ? PreviousWordPosition(_caret)
+				: PreviousPosition(_caret)
+			);
 			e.Handled = true;
 		}
 		else if (!char.IsControl(e.KeyChar))
 		{
-			Edit(e.KeyChar.ToString());
+			Edit(e.KeyChar.ToString(), EditKind.Typing);
 			e.Handled = true;
 		}
 	}

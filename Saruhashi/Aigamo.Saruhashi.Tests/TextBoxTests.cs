@@ -170,6 +170,51 @@ public sealed class TextBoxTests
 	}
 
 	[Fact]
+	public void CommandShortcuts_CopyCutAndPaste_AsAMacDoes()
+	{
+		Start("hello");
+
+		Press(Keys.Command | Keys.A);
+		Press(Keys.Command | Keys.X);
+		Assert.Equal("hello", _clipboard.Text);
+		Assert.Equal("", _textBox.Text);
+
+		Press(Keys.Command | Keys.V);
+		Press(Keys.Command | Keys.V);
+		Assert.Equal("hellohello", _textBox.Text);
+
+		Press(Keys.Command | Keys.Z);
+		Assert.Equal("hello", _textBox.Text);
+	}
+
+	[Fact]
+	public void OptionAndCommandArrows_GoByWordsAndToTheEnds_AsAMacDoes()
+	{
+		Start("hello big world");
+
+		Press(Keys.Alt | Keys.Left);
+		Assert.Equal(10, _textBox.SelectionStart);
+
+		Press(Keys.Command | Keys.Shift | Keys.Left);
+		Assert.Equal(0, _textBox.SelectionStart);
+		Assert.Equal(10, _textBox.SelectionLength);
+
+		Press(Keys.Command | Keys.Right);
+		Assert.Equal(15, _textBox.SelectionStart);
+		Assert.Equal(0, _textBox.SelectionLength);
+
+		Press(Keys.Command | Keys.Up);
+		Assert.Equal(0, _textBox.SelectionStart);
+
+		Press(Keys.Command | Keys.Down);
+		Assert.Equal(15, _textBox.SelectionStart);
+
+		// Ctrl+Alt is AltGr, which types characters.
+		Press(Keys.Control | Keys.Alt | Keys.Left);
+		Assert.Equal(14, _textBox.SelectionStart);
+	}
+
+		[Fact]
 	public void InsertAndDelete_CopyCutAndPaste_AsWindowsDoes()
 	{
 		Start("hello");
@@ -273,6 +318,29 @@ public sealed class TextBoxTests
 	}
 
 	[Fact]
+	public void OptionAndCommandBackspaceAndDelete_DeleteWordsAndToTheEnds_AsAMacDoes()
+	{
+		Start("hello big world");
+
+		_windowManager.OnKeyDown(new KeyEventArgs(Keys.Menu | Keys.Alt));
+		Type("\b");
+		_windowManager.OnKeyUp(new KeyEventArgs(Keys.Menu));
+		Assert.Equal("hello big ", _textBox.Text);
+
+		_windowManager.OnKeyDown(new KeyEventArgs(Keys.LWin | Keys.Command));
+		Type("\b");
+		_windowManager.OnKeyUp(new KeyEventArgs(Keys.LWin));
+		Assert.Equal("", _textBox.Text);
+
+		_textBox.Text = "hello big world";
+		Press(Keys.Alt | Keys.Delete);
+		Assert.Equal("big world", _textBox.Text);
+
+		Press(Keys.Command | Keys.Delete);
+		Assert.Equal("", _textBox.Text);
+	}
+
+		[Fact]
 	public void BackspaceAndDelete_DeleteTheSelection()
 	{
 		Start("hello");
@@ -297,6 +365,124 @@ public sealed class TextBoxTests
 	}
 
 	[Fact]
+	public void Undo_TakesBackARunOfTypingInOneStep_AndRedoTypesItAgain()
+	{
+		Start("hello");
+
+		Type(" world");
+		Assert.True(_textBox.CanUndo);
+
+		Press(Keys.Control | Keys.Z);
+		Assert.Equal("hello", _textBox.Text);
+		Assert.Equal(5, _textBox.SelectionStart);
+		Assert.False(_textBox.CanUndo);
+
+		Press(Keys.Control | Keys.Y);
+		Assert.Equal("hello world", _textBox.Text);
+		Assert.Equal(11, _textBox.SelectionStart);
+
+		Press(Keys.Control | Keys.Z);
+		Press(Keys.Control | Keys.Shift | Keys.Z);
+		Assert.Equal("hello world", _textBox.Text);
+		Assert.False(_textBox.CanRedo);
+		Assert.Equal(10, _edits);
+	}
+
+	[Fact]
+	public void MovingTheCaret_EndsARunOfTyping()
+	{
+		Start("hello");
+
+		Type("ab");
+		Press(Keys.Home);
+		Type("x");
+		Press(Keys.Control | Keys.Z);
+
+		Assert.Equal("helloab", _textBox.Text);
+	}
+
+	[Fact]
+	public void Undo_TakesBackEachRun_AndEachPasteOnItsOwn()
+	{
+		Start("hello");
+
+		Type("ab");
+		Type("\b\b\b");
+		Type("x");
+		Press(Keys.Control | Keys.A);
+		Press(Keys.Control | Keys.C);
+		Press(Keys.End);
+		Press(Keys.Control | Keys.V);
+		Press(Keys.Control | Keys.V);
+		Assert.Equal("hellxhellxhellx", _textBox.Text);
+
+		Press(Keys.Control | Keys.Z);
+		Assert.Equal("hellxhellx", _textBox.Text);
+		Press(Keys.Control | Keys.Z);
+		Assert.Equal("hellx", _textBox.Text);
+		Press(Keys.Control | Keys.Z);
+		Assert.Equal("hell", _textBox.Text);
+		Press(Keys.Control | Keys.Z);
+		Assert.Equal("helloab", _textBox.Text);
+		Press(Keys.Control | Keys.Z);
+		Assert.Equal("hello", _textBox.Text);
+		Assert.False(_textBox.CanUndo);
+	}
+
+	[Fact]
+	public void Undo_SelectsWhatWasSelected_BeforeACut()
+	{
+		Start("hello");
+		_textBox.Select(1, 3);
+
+		Press(Keys.Control | Keys.X);
+		Press(Keys.Control | Keys.Z);
+
+		Assert.Equal("hello", _textBox.Text);
+		Assert.Equal(1, _textBox.SelectionStart);
+		Assert.Equal(3, _textBox.SelectionLength);
+	}
+
+	[Fact]
+	public void AnEdit_AfterUndo_ForgetsTheRedo()
+	{
+		Start("hello");
+
+		Type("!");
+		Press(Keys.Control | Keys.Z);
+		Type("?");
+		Press(Keys.Control | Keys.Y);
+
+		Assert.Equal("hello?", _textBox.Text);
+		Assert.False(_textBox.CanRedo);
+	}
+
+	[Fact]
+	public void SettingText_ForgetsTheEdits()
+	{
+		Start("hello");
+		Type("!");
+
+		_textBox.Text = "bye";
+		Press(Keys.Control | Keys.Z);
+
+		Assert.Equal("bye", _textBox.Text);
+		Assert.False(_textBox.CanUndo);
+	}
+
+	[Fact]
+	public void ReadOnly_DoesNotUndo()
+	{
+		Start("hello");
+		Type("!");
+
+		_textBox.ReadOnly = true;
+		Press(Keys.Control | Keys.Z);
+
+		Assert.Equal("hello!", _textBox.Text);
+	}
+
+		[Fact]
 	public void SettingText_PutsTheCaretAtTheStart_WithoutEdited()
 	{
 		var changes = 0;
