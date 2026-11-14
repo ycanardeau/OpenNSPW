@@ -6,6 +6,8 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/ycanardeau/Saruhashi</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ycanardeau/Saruhashi</RepositoryUrl>
+    <!-- SdlClipboard calls SDL through function pointers. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <!-- MonoGame of no platform in particular: built against DesktopGL's, Saruhashi runs with the one of the game that

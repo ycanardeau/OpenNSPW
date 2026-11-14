@@ -9,8 +9,9 @@ using SolidBrush = Aigamo.Saruhashi.SolidBrush;
 
 namespace OpenNspw.App;
 
-// Controls that Saruhashi does not have: an edit box, a combo box, a list box and a group box. They draw the state of
-// the game's dialog control (HWND) and report what the user does.
+// The controls of the game's dialogs: an edit box, on Saruhashi's text box, and those that Saruhashi does not have, a
+// combo box, a list box and a group box. They draw the state of the game's dialog control (HWND) and report what the user
+// does.
 
 internal abstract class DialogControl : Control
 {
@@ -35,67 +36,48 @@ internal abstract class DialogControl : Control
 	}
 }
 
-// Where the system has its own text box (host, IAppHost.EditText), touching the edit box opens it, headed with the
-// dialog's caption (title).
-internal sealed class EditBox(IAppHost host, Func<string> title) : DialogControl
+// An edit box: Saruhashi's text box, drawn as the other dialog controls are. Where the system has its own text box (host,
+// IAppHost.EditText), touching the edit box opens it, headed with the dialog's caption (title).
+internal sealed class EditBox : TextBox
 {
-	private readonly IAppHost _host = host;
-	private readonly Func<string> _title = title;
+	private readonly IAppHost _host;
+	private readonly Func<string> _title;
 
-	public event EventHandler<string>? Edited;
+	// Transparent: it draws what it fills, over the dialog's panel, as DialogControl does.
+	public EditBox(IAppHost host, Func<string> title)
+	{
+		_host = host;
+		_title = title;
+		BackColor = Color.Transparent;
+		ForeColor = Theme.Text;
+		SelectionBackColor = Theme.Brass;
+		SelectionForeColor = Theme.Ink;
+	}
+
+	protected override Rectangle TextRectangle => new(3, 1, Width - 6, Height - 1);
 
 	protected override void OnMouseDown(MouseEventArgs e)
 	{
 		base.OnMouseDown(e);
-		WindowManager.SetFocus(this);
-		if (!Enabled)
-		{
-			return;
-		}
-
 		_host.EditText(
 			_title(),
 			Text,
 			text =>
 			{
 				Text = text;
-				Edited?.Invoke(this, Text);
+				OnEdited(EventArgs.Empty);
 			}
 		);
-	}
-
-	protected override void OnKeyPress(KeyPressEventArgs e)
-	{
-		base.OnKeyPress(e);
-		if (!Enabled)
-		{
-			return;
-		}
-
-		if (e.KeyChar == '\b')
-		{
-			Text = Text.Length > 0 ? Text[..^1] : Text;
-		}
-		else if (!char.IsControl(e.KeyChar))
-		{
-			Text += e.KeyChar;
-		}
-		else
-		{
-			return;
-		}
-
-		Edited?.Invoke(this, Text);
 	}
 
 	protected override void OnPaint(PaintEventArgs e)
 	{
 		e.Graphics.FillRectangle(
-			Enabled ? Window : SolidBrush.Of(Theme.Alpha(Theme.Line, 0.12f)),
+			SolidBrush.Of(Enabled ? Theme.Alpha(Theme.Ink, 0.75f) : Theme.Alpha(Theme.Line, 0.12f)),
 			ClientRectangle
 		);
-		e.Graphics.DrawRectangle(Border, 0, 0, Width - 1, Height - 1);
-		DrawText(e.Graphics, Text + (Focused ? "|" : ""), WindowText, 3, 1);
+		e.Graphics.DrawRectangle(Pen.Of(Theme.Line), 0, 0, Width - 1, Height - 1);
+		base.OnPaint(e);
 	}
 }
 
@@ -284,8 +266,11 @@ internal sealed class DialogForms(
 				break;
 			case "EDITTEXT":
 				var edit = new EditBox(_host, () => caption.Text);
-				edit.Edited += (_, text) =>
+				edit.Edited += (_, _) =>
+				{
+					var text = edit.Text;
 					_game.PostToGame(() => _game.TypeDlgItemText(dialog, item.Id, text));
+				};
 				control = edit;
 				break;
 			case "COMBOBOX":

@@ -983,4 +983,10 @@ public enum Keys
 	///  The ALT modifier key.
 	/// </summary>
 	Alt = 0x00040000,
+
+	/// <summary>
+	///  The COMMAND modifier key of a Mac, which is the Windows key on Windows (<see cref="LWin"/>, <see cref="RWin"/>).
+	///  Not one of WinForms' keys: Saruhashi's own, for the Mac's shortcuts, such as Command+C to copy.
+	/// </summary>
+	Command = 0x00080000,
 }

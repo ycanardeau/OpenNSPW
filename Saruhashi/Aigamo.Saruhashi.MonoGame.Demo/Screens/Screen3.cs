@@ -16,25 +16,25 @@ internal sealed class Screen3(WindowManager windowManager) : ScreenBase(windowMa
 		};
 		WindowManager.Root.Controls.Add(button1);
 
-		/*var textBox1 = new TextBox { Bounds = new DrawingRectangle(10, 40, 300, 24) };
-		textBox1.KeyPress += (sender, e) =>
+		var textBox1 = new TextBox
 		{
-			Console.WriteLine(e.KeyChar);
+			Bounds = new DrawingRectangle(10, 40, 300, 24),
+			PlaceholderText = "Type, select, cut, copy and paste",
 		};
 		textBox1.GotFocus += (sender, e) => Console.WriteLine("GotFocus");
 		textBox1.LostFocus += (sender, e) => Console.WriteLine("LostFocus");
-		_windowManager.Root.Controls.Add(textBox1);
-		var textBox2 = new TextBox { Bounds = new DrawingRectangle(10, 70, 300, 24) };
-		_windowManager.Root.Controls.Add(textBox2);*/
+		textBox1.Edited += (sender, e) => Console.WriteLine($"Edited: {textBox1.Text}");
+		WindowManager.Root.Controls.Add(textBox1);
+		var textBox2 = new TextBox
+		{
+			Bounds = new DrawingRectangle(10, 70, 300, 24),
+			Text = "Read-only: select and copy",
+			ReadOnly = true,
+		};
+		WindowManager.Root.Controls.Add(textBox2);
 
 		var button2 = new Button { Bounds = new DrawingRectangle(10, 100, 64, 24), Text = "Focus" };
-		button2.MouseClick += (sender, e) => {
-			/*Console.WriteLine(textBox1.Focus());
-			Console.WriteLine(textBox1.Focus());
-			Console.WriteLine(textBox1.Focus());
-			Console.WriteLine(textBox1.Focus());
-			Console.WriteLine(textBox1.Focus());*/
-		};
+		button2.MouseClick += (sender, e) => textBox1.Focus();
 		WindowManager.Root.Controls.Add(button2);
 	}
 

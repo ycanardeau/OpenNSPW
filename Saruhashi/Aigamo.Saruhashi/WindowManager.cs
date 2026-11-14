@@ -17,21 +17,44 @@ public sealed class WindowManager
 
 	public Control? Capture { get; set; }
 	private Control CaptureOrRoot => Capture ?? Root;
+
+	/// <summary>
+	/// Where the controls cut, copy and paste text (<see cref="TextBox"/>): one of the window manager's own, which only this
+	/// app pastes from, until the backend gives the system's.
+	/// </summary>
+	public IClipboard Clipboard { get; set; } = new LocalClipboard();
+
 	public IFont? DefaultFont { get; }
 	private Control? Focus { get; set; }
 	private Control FocusOrRoot => Focus ?? Root;
 	public IGraphicsFactory GraphicsFactory { get; }
+
+	/// <summary>
+	/// The modifier keys held (<see cref="Keys.Shift"/>, <see cref="Keys.Control"/>, <see cref="Keys.Alt"/> and
+	/// <see cref="Keys.Command"/>), as the last
+	/// key pressed or released had them, for a click that a modifier changes, such as Shift extending a selection.
+	/// </summary>
+	public Keys ModifierKeys { get; private set; }
+
 	internal Control? MouseOver { get; set; }
 	internal Control? PreviousMouseOver { get; set; }
 	public Control Root { get; }
 
 	public Control? GetFocus() => Focus;
 
-	public void OnKeyDown(KeyEventArgs e) => FocusOrRoot.HandleKeyDown(e);
+	public void OnKeyDown(KeyEventArgs e)
+	{
+		ModifierKeys = e.Modifiers;
+		FocusOrRoot.HandleKeyDown(e);
+	}
 
 	public void OnKeyPress(KeyPressEventArgs e) => FocusOrRoot.HandleKeyPress(e);
 
-	public void OnKeyUp(KeyEventArgs e) => FocusOrRoot.HandleKeyUp(e);
+	public void OnKeyUp(KeyEventArgs e)
+	{
+		ModifierKeys = e.Modifiers;
+		FocusOrRoot.HandleKeyUp(e);
+	}
 
 	public void OnMouseDown(MouseEventArgs e) => CaptureOrRoot.HandleMouseDown(e);
 

@@ -1,3 +1,4 @@
+using Aigamo.Saruhashi;
 using Microsoft.Xna.Framework;
 
 namespace OpenNspw.App;
@@ -32,6 +33,10 @@ internal interface IAppHost
 
 	// Puts `text` on the system's clipboard.
 	void CopyText(string text);
+
+	// The system's clipboard, which the text fields cut, copy and paste through (WindowManager.Clipboard), or null for the
+	// app's own: on Android, the system's text box (EditText) cuts, copies and pastes.
+	IClipboard? Clipboard { get; }
 
 	// Closes the app, from its main menu, where no game is being played.
 	void Quit(Game game);

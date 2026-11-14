@@ -8,7 +8,6 @@ using MonoGame.Extended.Input.InputListeners;
 using MonoGame.Extended.Screens;
 using MonoGame.Extended.ViewportAdapters;
 using DrawingRectangle = System.Drawing.Rectangle;
-using SaruhashiKeys = Aigamo.Saruhashi.Keys;
 using SaruhashiMouseListener = Aigamo.Saruhashi.MonoGame.MouseListener;
 using XnaKeys = Microsoft.Xna.Framework.Input.Keys;
 
@@ -67,14 +66,15 @@ public class MainGame : Game
 			new DrawingRectangle(0, 0, 1024, 768),
 			new MonoGameGraphicsFactory(_spriteBatch, _viewportAdapter),
 			defaultFont
-		);
+		)
+		{
+			Clipboard = new SdlClipboard(),
+		};
 		mouseListener.MouseDown += (sender, e) => _windowManager.OnMouseDown(e);
 		mouseListener.MouseMove += (sender, e) => _windowManager.OnMouseMove(e);
 		mouseListener.MouseUp += (sender, e) => _windowManager.OnMouseUp(e);
-		keyboardListener.KeyPressed += (sender, e) =>
-			_windowManager.OnKeyDown(new KeyEventArgs((SaruhashiKeys)e.Key));
-		keyboardListener.KeyReleased += (sender, e) =>
-			_windowManager.OnKeyUp(new KeyEventArgs((SaruhashiKeys)e.Key));
+		keyboardListener.KeyPressed += (sender, e) => _windowManager.OnKeyDown(e.ToKeyEventArgs());
+		keyboardListener.KeyReleased += (sender, e) => _windowManager.OnKeyUp(e.ToKeyEventArgs());
 		Window.TextInput += (sender, e) =>
 			_windowManager.OnKeyPress(new KeyPressEventArgs(e.Character));
 

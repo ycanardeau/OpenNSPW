@@ -1,3 +1,4 @@
+using Aigamo.Saruhashi;
 using Android.App;
 using Android.Content;
 using Microsoft.Xna.Framework;
@@ -58,6 +59,8 @@ internal sealed class AndroidHost(Activity activity) : IAppHost
 		var clipboard = (ClipboardManager)_activity.GetSystemService(Context.ClipboardService)!;
 		clipboard.PrimaryClip = ClipData.NewPlainText("OpenNSPW", text);
 	}
+
+	public IClipboard? Clipboard => null;
 
 	// MonoGame's Game.Exit on Android only moves the app's task to the back, and the game draws nothing from then on, also
 	// once the app is shown again: the activity is finished and the process ends instead.
