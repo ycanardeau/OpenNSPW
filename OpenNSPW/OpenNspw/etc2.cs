@@ -359,23 +359,51 @@ public unsafe partial class Nspw
 		}
 	}
 
+	// How far a unit of a kind sees, as find_out_size, the drawing of the effects and SoundPlayEffect have it.
+	public static int GetSightRange(UnitKind kind) =>
+		kind.Match(
+			None: static () => 0,
+			Battleship: static () => BB1_SIGHT,
+			Cruiser: static () => CA1_SIGHT,
+			Destroyer: static () => DD1_SIGHT,
+			Submarine: static () => SS1_SIGHT,
+			Carrier: static () => CV1_SIGHT,
+			LightCarrier: static () => CVL1_SIGHT,
+			Fighter: static () => FT1_SIGHT,
+			Attacker: static () => AT1_SIGHT,
+			Bomber: static () => BM1_SIGHT,
+			Transport: static () => TR1_SIGHT,
+			AirBase: static () => AP_SIGHT,
+			NavalBase: static () => AP_SIGHT,
+			City: static () => CT1_SIGHT,
+			Mine: static () => MN1_SIGHT,
+			InfantryBase: static () => GF1_SIGHT,
+			Pillboxes: static () => GF2_SIGHT,
+			Fortress: static () => GF3_SIGHT
+		);
+
 	// How far a unit of a kind sees in 1.22, as find_out_size (0x418080) and the drawing of the effects (0x40C919) have it.
 	public static int GetSightRangeAs122(UnitKind kind) =>
-		kind switch
-		{
-			UnitKind.Battleship => 900,
-			UnitKind.Cruiser or UnitKind.City or UnitKind.Mine => 800,
-			UnitKind.Destroyer or UnitKind.LightCarrier => 700,
-			UnitKind.Submarine or UnitKind.Carrier => 600,
-			UnitKind.Fighter => 500,
-			UnitKind.Attacker or UnitKind.InfantryBase => 1000,
-			UnitKind.Bomber => 1200,
-			UnitKind.Transport => 300,
-			UnitKind.AirBase or UnitKind.NavalBase => 1700,
-			UnitKind.Pillboxes => 1500,
-			UnitKind.Fortress => 2000,
-			_ => 0,
-		};
+		kind.Match(
+			None: static () => 0,
+			Battleship: static () => 900,
+			Cruiser: static () => 800,
+			Destroyer: static () => 700,
+			Submarine: static () => 600,
+			Carrier: static () => 600,
+			LightCarrier: static () => 700,
+			Fighter: static () => 500,
+			Attacker: static () => 1000,
+			Bomber: static () => 1200,
+			Transport: static () => 300,
+			AirBase: static () => 1700,
+			NavalBase: static () => 1700,
+			City: static () => 800,
+			Mine: static () => 800,
+			InfantryBase: static () => 1000,
+			Pillboxes: static () => 1500,
+			Fortress: static () => 2000
+		);
 
 	// 1.22's find_out_size (0x418080): other ranges, none limited while a base is built, and, for a submerged submarine,
 	// 80 for any unit but a destroyer (none for a supplying unit, a plane, a transport, a carrier, a light carrier or a
@@ -426,63 +454,9 @@ public unsafe partial class Nspw
 			return GetDetectionSizeAs122(m, n);
 
 		ref var unit = ref Units[m];
-		int size =
-			0 /* C4701 */
-		;
 
 		// 見る側の追加
-		switch (unit.Kind)
-		{
-			case UnitKind.Battleship:
-				size = BB1_SIGHT;
-				break;
-			case UnitKind.Cruiser:
-				size = CA1_SIGHT;
-				break;
-			case UnitKind.Destroyer:
-				size = DD1_SIGHT;
-				break;
-			case UnitKind.Submarine:
-				size = SS1_SIGHT;
-				break;
-			case UnitKind.Carrier:
-				size = CV1_SIGHT;
-				break;
-			case UnitKind.LightCarrier:
-				size = CVL1_SIGHT;
-				break;
-			case UnitKind.Transport:
-				size = TR1_SIGHT;
-				break;
-			case UnitKind.Fighter:
-				size = FT1_SIGHT;
-				break;
-			case UnitKind.Attacker:
-				size = AT1_SIGHT;
-				break;
-			case UnitKind.Bomber:
-				size = BM1_SIGHT;
-				break;
-			case UnitKind.AirBase:
-			case UnitKind.NavalBase:
-				size = AP_SIGHT;
-				break;
-			case UnitKind.City:
-				size = CT1_SIGHT;
-				break;
-			case UnitKind.Mine:
-				size = MN1_SIGHT;
-				break;
-			case UnitKind.InfantryBase:
-				size = GF1_SIGHT;
-				break;
-			case UnitKind.Pillboxes:
-				size = GF2_SIGHT;
-				break;
-			case UnitKind.Fortress:
-				size = GF3_SIGHT;
-				break;
-		}
+		int size = GetSightRange(unit.Kind);
 
 		if (unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress && unit.BuildTime != 0)
 		{

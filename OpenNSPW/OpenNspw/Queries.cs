@@ -126,61 +126,9 @@ public unsafe partial class Nspw
 	}
 
 	// How far a unit sees an effect, as UpdateLowerEffects and UpdateUpperEffects test it: less while it is built.
-	private int EffectSightOf(ref Unit unit)
+	public int EffectSightOf(ref Unit unit)
 	{
-		int size = 0;
-		switch (unit.Kind)
-		{
-			case UnitKind.Battleship:
-				size = BB1_SIGHT;
-				break;
-			case UnitKind.Cruiser:
-				size = CA1_SIGHT;
-				break;
-			case UnitKind.Destroyer:
-				size = DD1_SIGHT;
-				break;
-			case UnitKind.Submarine:
-				size = SS1_SIGHT;
-				break;
-			case UnitKind.Carrier:
-				size = CV1_SIGHT;
-				break;
-			case UnitKind.LightCarrier:
-				size = CVL1_SIGHT;
-				break;
-			case UnitKind.Transport:
-				size = TR1_SIGHT;
-				break;
-			case UnitKind.Fighter:
-				size = FT1_SIGHT;
-				break;
-			case UnitKind.Attacker:
-				size = AT1_SIGHT;
-				break;
-			case UnitKind.Bomber:
-				size = BM1_SIGHT;
-				break;
-			case UnitKind.AirBase:
-			case UnitKind.NavalBase:
-				size = AP_SIGHT;
-				break;
-			case UnitKind.City:
-				size = CT1_SIGHT;
-				break;
-			case UnitKind.Mine:
-				size = MN1_SIGHT;
-				break;
-			case UnitKind.InfantryBase:
-				size = GF1_SIGHT;
-				break;
-			case UnitKind.Pillboxes:
-				size = GF2_SIGHT;
-				break;
-			case UnitKind.Fortress:
-				size = GF3_SIGHT;
-				break;
-		}
+		int size = GetSightRange(unit.Kind);
 
 		if (unit.Kind >= UnitKind.AirBase && unit.Kind <= UnitKind.Fortress && unit.BuildTime != 0)
 		{
