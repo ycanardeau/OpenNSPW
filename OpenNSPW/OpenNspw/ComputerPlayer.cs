@@ -6,7 +6,7 @@ public unsafe partial class Nspw
 {
 	// set_cpu_route's test for a ship in the way: a ship other than unit m, as in IsShipAt, but only air bases and naval
 	// bases (and submerged submarines) are not in the way.
-	private bool IsShipInComputersWay(int m, double x, double y)
+	private bool IsShipInComputersWay(int m, WorldPosition point)
 	{
 		RECT wrk_r;
 		int f;
@@ -31,7 +31,7 @@ public unsafe partial class Nspw
 					(int)other.Position.Y - (Renderer.Sprites[SpriteId.JapanUnits].Size.Height / 2);
 				wrk_r.left =
 					(int)other.Position.X - (Renderer.Sprites[SpriteId.JapanUnits].Size.Width / 2);
-				if (PointInRect3(ref wrk_r, (int)x, (int)y))
+				if (PointInRect3(ref wrk_r, (int)point.X, (int)point.Y))
 					return true;
 			}
 		}
@@ -41,7 +41,7 @@ public unsafe partial class Nspw
 
 	// set_cpu_route's test of the destination: whether it is in a ship's square (any ship but a submerged submarine,
 	// bases included), as wide as the units' sprite.
-	private bool IsDestinationInAShip(int m, double x, double y)
+	private bool IsDestinationInAShip(int m, WorldPosition point)
 	{
 		RECT wrk_r;
 		int n;
@@ -64,7 +64,7 @@ public unsafe partial class Nspw
 					(int)other.Position.Y - (Renderer.Sprites[SpriteId.JapanUnits].Size.Width / 2);
 				wrk_r.left =
 					(int)other.Position.X - (Renderer.Sprites[SpriteId.JapanUnits].Size.Width / 2);
-				if (PointInRect3(ref wrk_r, (int)x, (int)y))
+				if (PointInRect3(ref wrk_r, (int)point.X, (int)point.Y))
 					return true;
 			}
 		}
@@ -78,9 +78,8 @@ public unsafe partial class Nspw
 	// Stops unit m where it is: its path is its position alone.
 	private void StopWhereItIs(ref Unit unit)
 	{
-		unit.PathX[0] = unit.Position.X;
-		unit.PathY[0] = unit.Position.Y;
-		unit.PathX[1] = World.Beyond;
+		unit.SetPathPoint(0, unit.Position);
+		unit.EndPath(1);
 	}
 
 	// set_cpu_route (0x42DA80): the route of the computer's ship m to the destination of its path, around land and ships,
@@ -91,21 +90,16 @@ public unsafe partial class Nspw
 	{
 		ref var unit = ref Units[m];
 		double add;
-		double pp_drctn,
-			wrk_x,
-			wrk_y,
-			pp_dstc,
+		double pp_dstc,
 			chk_dstc,
-			wrk,
+			min_dstc;
+		Angle pp_drctn,
 			drctn1,
-			drctn2,
-			wrk_x2,
-			wrk_y2,
-			start_x,
-			start_y,
-			min_dstc,
-			s_pp_x,
-			s_pp_y;
+			drctn2;
+		WorldPosition wrk,
+			wrk2,
+			start,
+			s_pp;
 		int n,
 			hit,
 			left,
@@ -122,13 +116,13 @@ public unsafe partial class Nspw
 
 		if (unit.Category == UnitCategory.Ship)
 		{
-			if (IsDestinationInAShip(m, unit.PathX[0], unit.PathY[0]))
+			if (IsDestinationInAShip(m, unit.GetPathPoint(0)))
 			{
 				StopWhereItIs(ref unit);
 				return;
 			}
 
-			if (IsLandAt(new WorldPosition(unit.PathX[0], unit.PathY[0])))
+			if (IsLandAt(unit.GetPathPoint(0)))
 			{
 				StopWhereItIs(ref unit);
 				return;
@@ -136,63 +130,44 @@ public unsafe partial class Nspw
 		}
 
 		min_dstc = 0;
-		s_pp_x = unit.PathX[0];
-		s_pp_y = unit.PathY[0];
+		s_pp = unit.GetPathPoint(0);
 		pp_indx = 0;
 
 		while (pp_indx >= 0)
 		{
 			if (pp_indx == 0)
 			{
-				start_x = unit.Position.X;
-				start_y = unit.Position.Y;
+				start = unit.Position;
 			}
 			else
 			{
-				start_x = unit.PathX[pp_indx - 1];
-				start_y = unit.PathY[pp_indx - 1];
+				start = unit.GetPathPoint(pp_indx - 1);
 			}
 
 			if (min_dstc != 0)
 			{
-				unit.PathX[pp_indx] = s_pp_x;
-				unit.PathY[pp_indx] = s_pp_y;
-				unit.PathX[pp_indx + 1] = World.Beyond;
+				unit.SetPathPoint(pp_indx, s_pp);
+				unit.EndPath(pp_indx + 1);
 
-				wrk_x = unit.PathX[pp_indx] - unit.Position.X;
-				wrk_y = unit.PathY[pp_indx] - unit.Position.Y;
-				if (wrk_x == 0)
-					wrk_x = 1;
-				if (wrk_y == 0)
-					wrk_y = 1;
+				var to_pp = (unit.GetPathPoint(pp_indx) - unit.Position).NonZero();
 
-				pp_drctn = atan2(wrk_y, wrk_x) * RadiansToDegrees;
+				// Not Direction: the angle is not brought into 0 to 360 before its cosine and sine are taken.
+				pp_drctn = atan2(to_pp.Y, to_pp.X) * RadiansToDegrees;
 
-				unit.PathX[pp_indx] += CosDegrees(pp_drctn) * (min_dstc);
-				unit.PathY[pp_indx] += SinDegrees(pp_drctn) * (min_dstc);
+				unit.SetPathPoint(
+					pp_indx,
+					unit.GetPathPoint(pp_indx) + WorldVector.FromDirection(pp_drctn) * (min_dstc)
+				);
 			}
 
-			wrk_x = unit.PathX[pp_indx] - start_x;
-			wrk_y = unit.PathY[pp_indx] - start_y;
-			if (wrk_x == 0)
-				wrk_x = 1;
-			if (wrk_y == 0)
-				wrk_y = 1;
+			var leg = (unit.GetPathPoint(pp_indx) - start).NonZero();
 
-			pp_drctn = Direction(wrk_x, wrk_y);
-			if (pp_drctn >= 360)
-				pp_drctn = pp_drctn - 360;
+			pp_drctn = leg.Direction;
+			pp_drctn = pp_drctn.WrapFullTurn();
 
-			if (wrk_x < 0)
-				wrk_x = 0 - wrk_x;
-			if (wrk_y < 0)
-				wrk_y = 0 - wrk_y;
-			wrk = pp_drctn;
-			if (wrk >= 180)
-				wrk = wrk - 180;
-			if (wrk >= 90)
-				wrk = 90 - (wrk - 90);
-			pp_dstc = (wrk_x) / (CosDegrees(wrk));
+			// Distance folds the direction from 0 to 360, where 1.22 folds pp_drctn, 360 brought to 0: both fold either
+			// to 0.
+			pp_dstc = leg.Length;
 
 			if (unit.Category == UnitCategory.Ship)
 			{
@@ -207,15 +182,12 @@ public unsafe partial class Nspw
 
 					chk_dstc += add;
 
-					wrk_x = start_x;
-					wrk_y = start_y;
-					wrk_x += CosDegrees(pp_drctn) * (chk_dstc);
-					wrk_y += SinDegrees(pp_drctn) * (chk_dstc);
+					wrk = start + WorldVector.FromDirection(pp_drctn) * (chk_dstc);
 
-					if (IsLandAt(new WorldPosition(wrk_x, wrk_y)))
+					if (IsLandAt(wrk))
 						hit = 1;
 
-					if (hit == 0 && IsShipInComputersWay(m, wrk_x, wrk_y))
+					if (hit == 0 && IsShipInComputersWay(m, wrk))
 						hit = 1;
 				}
 
@@ -226,11 +198,9 @@ public unsafe partial class Nspw
 					for (n = 0; n <= 17; n++)
 					{
 						drctn1 += 10;
-						if (drctn1 >= 360)
-							drctn1 = drctn1 - 360;
+						drctn1 = drctn1.WrapFullTurn();
 						drctn2 -= 10;
-						if (drctn2 < 0)
-							drctn2 = 360 + drctn2;
+						drctn2 = drctn2.WrapNegative();
 						chk_dstc = 40;
 						left = 0;
 						right = 0;
@@ -245,26 +215,20 @@ public unsafe partial class Nspw
 
 							if (left == 0)
 							{
-								wrk_x = start_x;
-								wrk_y = start_y;
-								wrk_x += CosDegrees(drctn1) * (chk_dstc);
-								wrk_y += SinDegrees(drctn1) * (chk_dstc);
-								if (IsLandAt(new WorldPosition(wrk_x, wrk_y)))
+								wrk = start + WorldVector.FromDirection(drctn1) * (chk_dstc);
+								if (IsLandAt(wrk))
 									left = 1;
 
-								if (IsShipInComputersWay(m, wrk_x, wrk_y))
+								if (IsShipInComputersWay(m, wrk))
 									left = 1;
 							}
 							if (right == 0)
 							{
-								wrk_x2 = start_x;
-								wrk_y2 = start_y;
-								wrk_x2 += CosDegrees(drctn2) * (chk_dstc);
-								wrk_y2 += SinDegrees(drctn2) * (chk_dstc);
-								if (IsLandAt(new WorldPosition(wrk_x2, wrk_y2)))
+								wrk2 = start + WorldVector.FromDirection(drctn2) * (chk_dstc);
+								if (IsLandAt(wrk2))
 									right = 1;
 
-								if (IsShipInComputersWay(m, wrk_x2, wrk_y2))
+								if (IsShipInComputersWay(m, wrk2))
 									right = 1;
 							}
 						}
@@ -274,14 +238,14 @@ public unsafe partial class Nspw
 							TakeDetour(
 								ref unit,
 								ref pp_indx,
-								new WorldPosition(start_x, start_y),
+								start,
 								chk_dstc,
 								div,
 								drctn2,
 								drctn_ok1,
 								drctn_ok2,
 								ref min_dstc,
-								new WorldPosition(s_pp_x, s_pp_y),
+								s_pp,
 								re_add,
 								ref error
 							);
@@ -293,14 +257,14 @@ public unsafe partial class Nspw
 							TakeDetour(
 								ref unit,
 								ref pp_indx,
-								new WorldPosition(start_x, start_y),
+								start,
 								chk_dstc,
 								div,
 								drctn1,
 								drctn_ok1,
 								drctn_ok2,
 								ref min_dstc,
-								new WorldPosition(s_pp_x, s_pp_y),
+								s_pp,
 								re_add,
 								ref error
 							);
@@ -318,9 +282,8 @@ public unsafe partial class Nspw
 					else
 					{
 						min_dstc = 0;
-						unit.PathX[pp_indx + 1] = s_pp_x;
-						unit.PathY[pp_indx + 1] = s_pp_y;
-						unit.PathX[pp_indx + 2] = World.Beyond;
+						unit.SetPathPoint(pp_indx + 1, s_pp);
+						unit.EndPath(pp_indx + 2);
 						pp_indx++;
 					}
 				}
@@ -437,14 +400,13 @@ public unsafe partial class Nspw
 	// The square of 160 around the unit's position, y downward.
 	private static RECT SquareAround(ref Unit unit)
 	{
-		var x = (int)unit.Position.X;
-		var y = (int)unit.Position.Y;
+		var point = unit.Position.ToPixelPoint();
 		return new RECT
 		{
-			left = x - 80,
-			top = y - 80,
-			right = x + 80,
-			bottom = y + 80,
+			left = point.X - 80,
+			top = point.Y - 80,
+			right = point.X + 80,
+			bottom = point.Y + 80,
 		};
 	}
 

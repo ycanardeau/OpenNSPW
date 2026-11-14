@@ -35,30 +35,13 @@ public unsafe partial class Nspw
 			? 0
 			: (int)(long)value;
 
-	// The distance of (dx, dy) as 1.22 computes it everywhere: the x component over the cosine of the direction folded
-	// into 0 to 90°, with a component of 0 taken as 1.
-	private static double DistanceOf(double dx, double dy)
-	{
-		if (dx == 0)
-			dx = 1;
-		if (dy == 0)
-			dy = 1;
+	// The vector of length 1 at the angle a, in radians: cos(a) and sin(a), as 1.22's code moves a point.
+	private static WorldVector HeadingOf(double a) => new(cos(a), sin(a));
 
-		var drctn = atan2(dy, dx) * RadiansToDegrees;
-		if (drctn < 0)
-			drctn = drctn + 360;
-		if (dx < 0)
-			dx = -dx;
-		if (drctn >= 180)
-			drctn = drctn - 180;
-		if (drctn >= 90)
-			drctn = 90 - (drctn - 90);
-		return dx / cos(drctn * DegreesToRadians);
-	}
-
+	// 1.22 computes the distance as WorldVector.Length does, in the same steps.
 	private static double DistanceBetween(ref Unit to, ref Unit from)
 	{
-		return DistanceOf(to.Position.X - from.Position.X, to.Position.Y - from.Position.Y);
+		return (to.Position - from.Position).Length;
 	}
 
 	// A double whose low 32 bits are replaced: 1.22 stores an int into the low half of a double, and reads the double
@@ -392,20 +375,14 @@ public unsafe partial class Nspw
 	private void MoveOrderDestinationAtRandom()
 	{
 		var a = rand() % 360 * DegreesToRadians;
-		MoveOrders[0].Destination = new WorldPosition(
-			cos(a) * 300 + MoveOrders[0].Destination.X,
-			sin(a) * 300 + MoveOrders[0].Destination.Y
-		);
+		MoveOrders[0].Destination = MoveOrders[0].Destination + HeadingOf(a) * 300;
 	}
 
 	// The order's destination, where the target will be: its position plus its heading times the distance.
 	private void LeadMoveOrderDestination(ref Unit target, double distance)
 	{
 		var a = target.Direction.Degrees * DegreesToRadians;
-		MoveOrders[0].Destination = new WorldPosition(
-			cos(a) * distance + MoveOrders[0].Destination.X,
-			sin(a) * distance + MoveOrders[0].Destination.Y
-		);
+		MoveOrders[0].Destination = MoveOrders[0].Destination + HeadingOf(a) * distance;
 	}
 
 	// The fleet's next move: the point at the direction (in degrees) and distance from its flagship.
@@ -417,8 +394,7 @@ public unsafe partial class Nspw
 	)
 	{
 		var a = direction * DegreesToRadians;
-		fleet.PathY[0] = sin(a) * distance + flagship.Position.Y;
-		fleet.PathX[0] = cos(a) * distance + flagship.Position.X;
+		fleet.SetPathPoint(0, flagship.Position + HeadingOf(a) * distance);
 	}
 
 	// Step 1: the scenario's events.
@@ -860,11 +836,8 @@ public unsafe partial class Nspw
 			if (plane.Kind == UnitKind.Bomber && fleet.Targets[1] != 0)
 			{
 				ref var target = ref Units[fleet.Targets[1]];
-				plane.PathX[0] = target.Position.X;
-				plane.PathY[0] = target.Position.Y;
 				var a = rand() % 360 * DegreesToRadians;
-				plane.PathX[0] = cos(a) * 500 + plane.PathX[0];
-				plane.PathY[0] = sin(a) * 500 + plane.PathY[0];
+				plane.SetPathPoint(0, target.Position + HeadingOf(a) * 500);
 				continue;
 			}
 
@@ -876,21 +849,15 @@ public unsafe partial class Nspw
 				if (distance < 2000)
 				{
 					var lead = distance * 0.5;
-					plane.PathX[0] = target.Position.X;
-					plane.PathY[0] = target.Position.Y;
 					var a = target.Direction.Degrees * DegreesToRadians;
-					plane.PathX[0] = cos(a) * (lead * target.Speed) + plane.PathX[0];
-					plane.PathY[0] = sin(a) * (lead * target.Speed) + plane.PathY[0];
+					plane.SetPathPoint(0, target.Position + HeadingOf(a) * (lead * target.Speed));
 					plane.Target = t;
 				}
 			}
 			else
 			{
-				plane.PathX[0] = plane.Position.X;
-				plane.PathY[0] = plane.Position.Y;
 				var a = rand() % 360 * DegreesToRadians;
-				plane.PathX[0] = cos(a) * 500 + plane.PathX[0];
-				plane.PathY[0] = sin(a) * 500 + plane.PathY[0];
+				plane.SetPathPoint(0, plane.Position + HeadingOf(a) * 500);
 			}
 		}
 	}
@@ -1044,14 +1011,10 @@ public unsafe partial class Nspw
 		}
 
 		var a = WithLowBits(drctn, Ftol(drctn) % 360) * DegreesToRadians;
-		plane.EmergencyDestination = new WorldPosition(
-			cos(a) * 600 + plane.Position.X,
-			sin(a) * 600 + plane.Position.Y
-		);
+		plane.EmergencyDestination = plane.Position + HeadingOf(a) * 600;
 		plane.EmergencyFlags[0] = plane.FormationNumber % 6 * 100 + 120;
-		plane.PathX[0] = target.Position.X;
-		plane.PathY[0] = target.Position.Y;
-		plane.PathX[1] = PathEnd;
+		plane.SetPathPoint(0, target.Position);
+		plane.EndPath(1);
 		plane.IsStopping = false;
 	}
 
@@ -1492,22 +1455,15 @@ public unsafe partial class Nspw
 			}
 			else
 			{
-				fleet.AimX = flagship.Position.X;
-				fleet.PathX[0] = flagship.Position.X;
-				fleet.AimY = flagship.Position.Y;
-				fleet.PathY[0] = flagship.Position.Y;
+				fleet.Aim = flagship.Position;
 				var a = rand() % 360 * DegreesToRadians;
-				fleet.PathX[0] = cos(a) * 500 + fleet.PathX[0];
-				fleet.PathY[0] = sin(a) * 500 + fleet.PathY[0];
+				fleet.SetPathPoint(0, flagship.Position + HeadingOf(a) * 500);
 			}
 		}
 		else if (mode == 50)
 		{
-			fleet.PathX[0] = fleet.SecondX;
-			fleet.PathY[0] = fleet.SecondY;
 			var a = rand() % 360 * DegreesToRadians;
-			fleet.PathX[0] = cos(a) * 300 + fleet.PathX[0];
-			fleet.PathY[0] = sin(a) * 300 + fleet.PathY[0];
+			fleet.SetPathPoint(0, fleet.Second + HeadingOf(a) * 300);
 		}
 	}
 
@@ -1618,14 +1574,8 @@ public unsafe partial class Nspw
 	)
 	{
 		var a = direction * DegreesToRadians;
-		fleet.PathX[0] = flagship.Position.X;
-		fleet.PathY[0] = flagship.Position.Y;
-		fleet.PathX[0] = cos(a) * 500 + fleet.PathX[0];
-		fleet.PathY[0] = sin(a) * 500 + fleet.PathY[0];
-		return DistanceOf(
-				facility.Position.X - fleet.PathX[0],
-				facility.Position.Y - fleet.PathY[0]
-			) > 2150;
+		fleet.SetPathPoint(0, flagship.Position + HeadingOf(a) * 500);
+		return (facility.Position - fleet.GetPathPoint(0)).Length > 2150;
 	}
 
 	// Step 9: a carrier's next move, by its distance to the aim and its bearing b, kept away from enemy ground
@@ -1688,20 +1638,11 @@ public unsafe partial class Nspw
 			if (!facility.IsUsed || facility.Side == CpuSide || !IsGroundFacility(facility.Kind))
 				continue;
 
-			if (
-				!(
-					DistanceOf(
-						facility.Position.X - fleet.PathX[0],
-						facility.Position.Y - fleet.PathY[0]
-					) <= 2150
-				)
-			)
+			if (!((facility.Position - fleet.GetPathPoint(0)).Length <= 2150))
 				continue;
 
-			var away =
-				atan2(fleet.PathY[0] - flagship.Position.Y, fleet.PathX[0] - flagship.Position.X)
-					* RadiansToDegrees
-				- 360;
+			var toPath = fleet.GetPathPoint(0) - flagship.Position;
+			var away = atan2(toPath.Y, toPath.X) * RadiansToDegrees - 360;
 			var once = rand() % 10 == 0 ? 1 : 0;
 			var k = once * (rand() % 130) + 45;
 			var cleared = false;
@@ -1713,13 +1654,7 @@ public unsafe partial class Nspw
 			if (cleared)
 				continue;
 
-			var bearing =
-				atan2(
-					facility.Position.Y - flagship.Position.Y,
-					facility.Position.X - flagship.Position.X
-				) * RadiansToDegrees;
-			if (bearing < 0)
-				bearing = bearing + 360;
+			var bearing = (facility.Position - flagship.Position).Direction.Degrees;
 
 			var aside =
 				rand() % 2 == 1 ? TurnedFrom(bearing, 100, 20) : TurnedBack(bearing, 100, 20);
@@ -1750,12 +1685,10 @@ public unsafe partial class Nspw
 		{
 			ref var naval = ref Units[fleet.Base];
 			var x = (double)(rand() % 400) + naval.Position.X + 100;
-			fleet.AimX = x;
-			fleet.PathX[0] = x;
 			var north = naval.Position.Y - 100;
 			var y = north - rand() % 400;
-			fleet.AimY = y;
-			fleet.PathY[0] = y;
+			fleet.Aim = new WorldPosition(x, y);
+			fleet.SetPathPoint(0, fleet.Aim);
 			return StrategyFlow.Order;
 		}
 
@@ -1776,13 +1709,11 @@ public unsafe partial class Nspw
 
 		if (flagship.Target != 0 && Units[flagship.Target].IsFound)
 		{
-			fleet.AimX = Units[flagship.Target].Position.X;
-			fleet.AimY = Units[flagship.Target].Position.Y;
+			fleet.Aim = Units[flagship.Target].Position;
 		}
 		else if ((short)near != 0)
 		{
-			fleet.AimX = Units[(short)near].Position.X;
-			fleet.AimY = Units[(short)near].Position.Y;
+			fleet.Aim = Units[(short)near].Position;
 		}
 		else
 		{
@@ -1791,16 +1722,12 @@ public unsafe partial class Nspw
 			&& target.PlaneState == UnitState.Parked
 				? ref Units[target.Carrier]
 				: ref target;
-			fleet.AimX = aimed.Position.X;
-			fleet.AimY = aimed.Position.Y;
+			fleet.Aim = aimed.Position;
 		}
 
-		var dx = fleet.AimX - flagship.Position.X;
-		var dy = fleet.AimY - flagship.Position.Y;
-		var distance = DistanceOf(dx, dy);
-		var b = atan2(dy, dx) * RadiansToDegrees;
-		if (b < 0)
-			b = b + 360;
+		var toAim = fleet.Aim - flagship.Position;
+		var distance = toAim.Length;
+		var b = toAim.Direction.Degrees;
 
 		switch (kind)
 		{
@@ -2185,12 +2112,8 @@ public unsafe partial class Nspw
 		}
 
 		MoveOrders[0].Unit = (short)leader;
-		MoveOrders[0].Destination = flagship.Position;
 		var a = rand() % 360 * DegreesToRadians;
-		MoveOrders[0].Destination = new WorldPosition(
-			cos(a) * 200 + MoveOrders[0].Destination.X,
-			sin(a) * 200 + MoveOrders[0].Destination.Y
-		);
+		MoveOrders[0].Destination = flagship.Position + HeadingOf(a) * 200;
 	}
 
 	// Step 12, scenario 304: a new American unit of the kind near the east edge of the map, from the point.
