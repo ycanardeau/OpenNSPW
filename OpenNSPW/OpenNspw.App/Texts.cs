@@ -242,9 +242,11 @@ internal static class Texts
 			"メインメニューに戻ります。対戦中の場合は、相手との接続が切れます。"
 		);
 
-	// The title of what stopped a game (ErrorForm).
+	// The title of what stopped a game (ErrorForm), and its button that copies it.
 	public static string GameErrorTitle =>
 		Pick("The game stopped with an error", "エラーでゲームが止まりました");
+	public static string Copy => Pick("Copy", "コピー");
+	public static string Copied => Pick("Copied", "コピーしました");
 
 	// The window's title while a game follows a trace of 1.22 (--replay): the frame it is at, then how it ended.
 	public static string ReplayFollowing(int frame) =>

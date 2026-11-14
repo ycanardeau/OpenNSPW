@@ -30,6 +30,9 @@ internal interface IAppHost
 	// player types into the field itself, key by key (ListenToText).
 	bool EditText(string title, string text, Action<string> written);
 
+	// Puts `text` on the system's clipboard.
+	void CopyText(string text);
+
 	// Closes the app, from its main menu, where no game is being played.
 	void Quit(Game game);
 

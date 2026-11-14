@@ -5,8 +5,9 @@ using DrawingSize = System.Drawing.Size;
 
 namespace OpenNspw.App.Controls;
 
-// What stopped the game: a panel with its title, the exception in full, as far as it fits, and Close, over the whole
-// screen, dimmed, so that nothing under it takes the mouse. Enter closes it.
+// What stopped the game: a panel with its title, the exception in full, as far as it fits, Copy, which puts all of it on
+// the system's clipboard (host), and Close, over the whole screen, dimmed, so that nothing under it takes the mouse.
+// Enter closes it.
 internal sealed class ErrorForm : Form
 {
 	private static readonly DrawingRectangle PanelBounds = new(
@@ -19,6 +20,7 @@ internal sealed class ErrorForm : Form
 	private const int LineHeight = 18;
 
 	private readonly UIFonts _fonts;
+	private readonly IAppHost _host;
 	private readonly string _error;
 
 	// The error's lines as they fit the panel, wrapped once: measuring them each frame would be slow.
@@ -26,28 +28,36 @@ internal sealed class ErrorForm : Form
 
 	public event EventHandler? Closed;
 
-	public ErrorForm(UIFonts fonts, string error)
+	private ActionButton AddButton(int right, string text, bool isPrimary)
+	{
+		var button = new ActionButton(_fonts)
+		{
+			Bounds = new DrawingRectangle(right - 140, PanelBounds.Bottom - 28 - 40, 140, 40),
+			Text = text,
+			IsPrimary = isPrimary,
+			FontSize = 15,
+		};
+		Controls.Add(button);
+		return button;
+	}
+
+	public ErrorForm(UIFonts fonts, IAppHost host, string error)
 	{
 		_fonts = fonts;
+		_host = host;
 		_error = error;
 		Size = new DrawingSize(all_head.SCRN_WIDTH, all_head.SCRN_HEIGHT);
 		BackColor = DrawingColor.Transparent;
 		KeyPreview = true;
 
-		var close = new ActionButton(_fonts)
+		AddButton(PanelBounds.Right - 28, Texts.Close, true).Click += (_, _) =>
+			Closed?.Invoke(this, EventArgs.Empty);
+		var copy = AddButton(PanelBounds.Right - 28 - 140 - 12, Texts.Copy, false);
+		copy.Click += (_, _) =>
 		{
-			Bounds = new DrawingRectangle(
-				PanelBounds.Right - 28 - 140,
-				PanelBounds.Bottom - 28 - 40,
-				140,
-				40
-			),
-			Text = Texts.Close,
-			IsPrimary = true,
-			FontSize = 15,
+			_host.CopyText(_error);
+			copy.Text = Texts.Copied;
 		};
-		close.Click += (_, _) => Closed?.Invoke(this, EventArgs.Empty);
-		Controls.Add(close);
 	}
 
 	protected override void OnKeyDown(KeyEventArgs e)

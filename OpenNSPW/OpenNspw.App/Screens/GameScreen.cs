@@ -278,7 +278,7 @@ internal sealed class GameScreen(
 			return;
 
 		_confirmQuit.Visible = false;
-		_errorForm = new ErrorForm(Game.Fonts, error)
+		_errorForm = new ErrorForm(Game.Fonts, Game.Host, error)
 		{
 			// Dimming the battle screen's column beside the layout too, as the question to quit does.
 			Size = new(

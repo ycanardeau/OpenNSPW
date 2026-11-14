@@ -52,6 +52,12 @@ internal static class Sdl
 	[DllImport(Library)]
 	public static extern uint SDL_GetMouseState(nint x, nint y);
 
+	// Puts `text` on the clipboard: 0, or a negative error code.
+	[DllImport(Library)]
+	public static extern int SDL_SetClipboardText(
+		[MarshalAs(UnmanagedType.LPUTF8Str)] string text
+	);
+
 	// The subsystems that are initialized among `flags`, or all of them for 0.
 	[DllImport(Library)]
 	public static extern uint SDL_WasInit(uint flags);

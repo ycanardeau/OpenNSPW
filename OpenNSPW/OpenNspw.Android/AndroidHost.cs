@@ -1,4 +1,5 @@
 using Android.App;
+using Android.Content;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using OpenNspw.App;
@@ -49,6 +50,13 @@ internal sealed class AndroidHost(Activity activity) : IAppHost
 		if (!KeyboardInput.IsVisible)
 			_ = Show();
 		return true;
+	}
+
+	// On the UI's thread, which runs the game's updates.
+	public void CopyText(string text)
+	{
+		var clipboard = (ClipboardManager)_activity.GetSystemService(Context.ClipboardService)!;
+		clipboard.PrimaryClip = ClipData.NewPlainText("OpenNSPW", text);
 	}
 
 	// MonoGame's Game.Exit on Android only moves the app's task to the back, and the game draws nothing from then on, also

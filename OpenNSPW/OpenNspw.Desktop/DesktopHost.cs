@@ -23,6 +23,12 @@ internal sealed class DesktopHost : IAppHost
 
 	public bool EditText(string title, string text, Action<string> written) => false;
 
+	public void CopyText(string text)
+	{
+		if (Sdl.SDL_SetClipboardText(text) < 0)
+			Console.Error.WriteLine("The text cannot be copied to the clipboard.");
+	}
+
 	public void Quit(Game game)
 	{
 		game.Exit();
