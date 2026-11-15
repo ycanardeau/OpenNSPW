@@ -2,7 +2,7 @@
 // every order that its threads' steps can take, under a memory model that says which writes each read may see
 // (README.md).
 //
-// Mailbox.cs sha256: 94d6ec94705b06a04827296dff42e1aaeb2ceecc3635f6ed4540752b5779771c
+// Mailbox.cs sha256: f02d4195206de4c986965268ad0d2118290ed5ff78700a73b2cbcbbe5330430e
 //
 // The hash is that of Mailbox.cs as this model follows it, with its lines ended by LF: a test fails when Mailbox.cs
 // changes and the hash does not (MailboxModelTests), so that the model is brought along with the code it checks.

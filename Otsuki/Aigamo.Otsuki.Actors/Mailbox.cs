@@ -121,8 +121,9 @@ public sealed class Mailbox<T>
 		return true;
 	}
 
-	// Gives onError what the handler threw. What onError throws in turn is traced, and goes no further: it would leave Run
-	// with the mailbox marked as scheduled, and its handler would never run again.
+	// Gives onError what the handler threw. What onError throws in turn is traced, and goes no further: out of Run, it
+	// would end the process on the thread pool, and on a test's scheduler leave the mailbox marked as scheduled, its
+	// handler never to run again.
 	private void ReportError(Exception exception)
 	{
 		try
