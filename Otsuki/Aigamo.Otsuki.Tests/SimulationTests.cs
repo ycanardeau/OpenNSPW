@@ -17,7 +17,22 @@ namespace Aigamo.Otsuki.Tests;
 /// </summary>
 public class SimulationTests
 {
-	private const int Seeds = 100;
+	// The seeds of each way of choosing the order: at random, and by PCT's priorities of depth 2 and 3, each of which
+	// finds a bug that takes that many messages in one order with a probability that has a lower bound (OrderOf).
+	private const int SeedsPerOrder = 100;
+
+	private const int Seeds = SeedsPerOrder * 3;
+
+	// About the most steps a scenario takes, among which PCT draws the steps where it changes its priorities.
+	private const int Steps = 1000;
+
+	private static ManualScheduler OrderOf(int seed) =>
+		(seed / SeedsPerOrder) switch
+		{
+			0 => new ManualScheduler(seed),
+			1 => ManualScheduler.WithPriorities(seed, depth: 2, Steps),
+			_ => ManualScheduler.WithPriorities(seed, depth: 3, Steps),
+		};
 
 	private static readonly Guid GuidApplication = new("0c5a1e7d-2b9f-4e61-8d3a-7f4b6c2e9a15");
 
@@ -48,7 +63,7 @@ public class SimulationTests
 		public Simulation(int seed)
 		{
 			Seed = seed;
-			Scheduler = new ManualScheduler(seed);
+			Scheduler = OrderOf(seed);
 			Network = new SimulatedNetwork(Scheduler, () => Clock.Now, seed);
 			Random = new Random(seed ^ 0x5EED);
 		}
