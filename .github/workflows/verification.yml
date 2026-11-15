@@ -1,0 +1,71 @@
+# Checks the actors' mailbox, the only code whose threads share memory (docs/Actors.md), two ways:
+# - model: GenMC checks a model of it in every order its threads' steps can take, under the memory models of x86, Arm64,
+#   C11 and IMM, which stands for every processor (Otsuki/Aigamo.Otsuki.Actors.Verification). The model is of the
+#   program, not of a processor, so it runs on one.
+# - stress: the mailbox's tests, with many more posts, on each processor that the app runs on: x64 and Arm64 (Linux,
+#   macOS on Apple silicon, Windows x64), as the JIT gives each its own fences.
+
+name: Verification
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  model:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      GENMC_VERSION: v0.20.0
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install LLVM
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y llvm-20-dev clang-20 libclang-20-dev libffi-dev zlib1g-dev libzstd-dev g++-14
+    # The whole of it: genmc reads the headers of its source tree, where it was built.
+    - name: Cache GenMC
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: genmc
+        key: genmc-${{ env.GENMC_VERSION }}-llvm-20-${{ runner.os }}
+    - name: Build GenMC
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        git clone --depth 1 --branch "$GENMC_VERSION" https://github.com/MPI-SWS/genmc genmc
+        CC=gcc-14 CXX=g++-14 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/lib/llvm-20/lib/cmake -B genmc/build -S genmc
+        cmake --build genmc/build -j "$(nproc)"
+    - name: Check the model
+      run: Otsuki/Aigamo.Otsuki.Actors.Verification/verify.sh "$PWD/genmc/build/bin/genmc"
+
+  stress:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-24.04, ubuntu-24.04-arm, macos-15, windows-2025 ]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    env:
+      OTSUKI_MAILBOX_STRESS_MESSAGES: 20000000
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 11.0.x
+    - name: Show the processor
+      shell: bash
+      run: uname -m
+    - name: Test the mailbox
+      shell: bash
+      run: |
+        for run in 1 2 3; do
+          dotnet test Otsuki/Aigamo.Otsuki.Actors.Tests --configuration Release
+        done

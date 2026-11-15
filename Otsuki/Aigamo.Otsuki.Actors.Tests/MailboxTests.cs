@@ -191,11 +191,17 @@ public sealed class MailboxTests
 	// A poster posts each message as the handler goes idle after the one before, so that the post races the handler's
 	// letting go of the mailbox: each message is handled without waiting for another post. With the word set back by a
 	// volatile write, about one in a hundred thousand was left in the queue on x64. The poster has a thread of its own,
-	// so that it does not hold back the thread pool that runs the handler.
+	// so that it does not hold back the thread pool that runs the handler. The CI posts more, on each processor
+	// (OTSUKI_MAILBOX_STRESS_MESSAGES).
 	[Fact]
 	public void LeavesNoMessagePostedAsThePooledHandlerGoesIdle()
 	{
-		const int Messages = 1_000_000;
+		var count = int.TryParse(
+			Environment.GetEnvironmentVariable("OTSUKI_MAILBOX_STRESS_MESSAGES"),
+			out var messages
+		)
+			? messages
+			: 1_000_000;
 		long handled = 0;
 		var mailbox = new Mailbox<int>(_ => Interlocked.Increment(ref handled), _ => { });
 		mailbox.Start();
@@ -203,7 +209,7 @@ public sealed class MailboxTests
 
 		var poster = new Thread(() =>
 		{
-			for (var i = 1; i <= Messages; i++)
+			for (var i = 1; i <= count; i++)
 			{
 				mailbox.Post(i);
 				var start = Stopwatch.GetTimestamp();

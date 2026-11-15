@@ -63,7 +63,7 @@ cmake --build genmc/build
 Otsuki/Aigamo.Otsuki.Actors.Verification/verify.sh genmc/build/bin/genmc
 ```
 
-The CI runs it on every push ([verification.yml](../../.github/workflows/verification.yml)). The model is of the program, not of a processor, so it runs on one: `imm` stands for all of them.
+The CI runs it on each push to main and each pull request ([verification.yml](../../.github/workflows/verification.yml)). The model is of the program, not of a processor, so it runs on one: `imm` stands for all of them.
 
 ## What it does not cover
 
