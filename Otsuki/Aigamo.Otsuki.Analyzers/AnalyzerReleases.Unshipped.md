@@ -11,3 +11,4 @@ OTSUKI0003 | Design | Error | ConcurrencyAnalyzer
 OTSUKI0004 | Design | Error | CoreAnalyzer
 OTSUKI0005 | Design | Error | CoreAnalyzer
 OTSUKI0006 | Design | Error | AtomicsAnalyzer
+OTSUKI0007 | Design | Error | ActorStateAnalyzer

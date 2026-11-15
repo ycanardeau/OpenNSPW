@@ -1,4 +1,5 @@
 using System.Net;
+using Aigamo.Otsuki.Actors;
 
 namespace Aigamo.Otsuki.Transport;
 
@@ -14,7 +15,7 @@ public interface IStreamConnector : IDisposable
 	/// Starts accepting streams. <paramref name="onAccept"/> is called with the remote endpoint of each, and must not
 	/// block. It owns the stream from then on.
 	/// </summary>
-	void Start(Action<EndPoint, Stream> onAccept);
+	void Start([CalledOnAnotherThread] Action<EndPoint, Stream> onAccept);
 
 	/// <summary>
 	/// Opens a stream to <paramref name="remoteEndPoint"/>, which the caller owns. Fails if the remote endpoint does

@@ -1,4 +1,5 @@
 using System.Net;
+using Aigamo.Otsuki.Actors;
 
 namespace Aigamo.Otsuki.Transport;
 
@@ -13,7 +14,7 @@ public interface IDatagramTransport : IDisposable
 	/// <summary>
 	/// Starts receiving. <paramref name="onReceive"/> is called for each datagram and must not block.
 	/// </summary>
-	void Start(Action<EndPoint, byte[]> onReceive);
+	void Start([CalledOnAnotherThread] Action<EndPoint, byte[]> onReceive);
 
 	/// <summary>
 	/// Sends a datagram on a best-effort basis. Failures are silently ignored, like packet loss.
