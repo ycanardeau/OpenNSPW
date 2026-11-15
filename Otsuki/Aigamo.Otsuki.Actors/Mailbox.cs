@@ -100,6 +100,14 @@ public sealed class Mailbox<T>
 	/// </summary>
 	public bool IsCompleted => Interlocked.Read(ref _state) == Completed && _passed.Count == 0;
 
+	// Sets the word that a post swaps from 0 to 1 to wake the owner (_isScheduled, _isSignaled) back to 0, before the
+	// owner looks at the queue again. A post enqueues, then swaps the word; the owner sets the word, then looks at the
+	// queue. Each side's write must be seen before its read, or each misses the other's: the post finds the word still 1
+	// and wakes no one, and the owner finds the queue empty and sleeps, with the message in it until the next post. A
+	// volatile write lets a later read go ahead of it (x64 and Arm64 both hold a store in a buffer while a later load
+	// goes on); an interlocked exchange does not, as the post's interlocked swap does not on its side.
+	private static void UnmarkThenLook(ref int word) => Interlocked.Exchange(ref word, 0);
+
 	private void Signal()
 	{
 		if (Interlocked.CompareExchange(ref _isSignaled, 1, 0) == 0)
@@ -147,7 +155,7 @@ public sealed class Mailbox<T>
 				return;
 			}
 
-			Volatile.Write(ref _isScheduled, 0);
+			UnmarkThenLook(ref _isScheduled);
 			if (
 				(_queue.IsEmpty && Interlocked.Read(ref _state) != Completed)
 				|| Interlocked.CompareExchange(ref _isScheduled, 1, 0) != 0
@@ -210,7 +218,7 @@ public sealed class Mailbox<T>
 		if (_receive is null)
 			throw new InvalidOperationException("Only a pooled mailbox is started.");
 
-		Volatile.Write(ref _isScheduled, 0);
+		UnmarkThenLook(ref _isScheduled);
 		if (!_queue.IsEmpty || Interlocked.Read(ref _state) == Completed)
 			Schedule();
 	}
@@ -324,7 +332,7 @@ public sealed class Mailbox<T>
 					return Holds(matches);
 			}
 
-			Volatile.Write(ref _isSignaled, 0);
+			UnmarkThenLook(ref _isSignaled);
 		}
 
 		return true;
@@ -354,7 +362,7 @@ public sealed class Mailbox<T>
 				return false;
 
 			await _signal.WaitAsync(cancellationToken).ConfigureAwait(false);
-			Volatile.Write(ref _isSignaled, 0);
+			UnmarkThenLook(ref _isSignaled);
 		}
 
 		return true;

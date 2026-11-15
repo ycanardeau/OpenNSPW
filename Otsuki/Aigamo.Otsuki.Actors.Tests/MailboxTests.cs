@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using FluentAssertions;
 using Xunit;
 
@@ -185,6 +186,41 @@ public sealed class MailboxTests
 		overlapped.Should().BeFalse();
 		outOfOrder.Should().BeFalse();
 		handled.Should().Be(Posters * Messages);
+	}
+
+	// A poster posts each message as the handler goes idle after the one before, so that the post races the handler's
+	// letting go of the mailbox: each message is handled without waiting for another post. With the word set back by a
+	// volatile write, about one in a hundred thousand was left in the queue on x64. The poster has a thread of its own,
+	// so that it does not hold back the thread pool that runs the handler.
+	[Fact]
+	public void LeavesNoMessagePostedAsThePooledHandlerGoesIdle()
+	{
+		const int Messages = 1_000_000;
+		long handled = 0;
+		var mailbox = new Mailbox<int>(_ => Interlocked.Increment(ref handled), _ => { });
+		mailbox.Start();
+		var left = 0;
+
+		var poster = new Thread(() =>
+		{
+			for (var i = 1; i <= Messages; i++)
+			{
+				mailbox.Post(i);
+				var start = Stopwatch.GetTimestamp();
+				while (Interlocked.Read(ref handled) < i)
+				{
+					if (Stopwatch.GetElapsedTime(start) > Timeout)
+					{
+						left = i;
+						return;
+					}
+				}
+			}
+		});
+		poster.Start();
+		poster.Join();
+
+		left.Should().Be(0, "a message left in the queue waits for the next post");
 	}
 
 	[Fact]
