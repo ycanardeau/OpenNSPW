@@ -253,7 +253,8 @@ internal sealed class SessionCore
 			groups.Count == _published.Groups.Count
 				&& groups.All(g =>
 					_published.Groups.TryGetValue(g.Key, out var info)
-					&& info.Members.OrderBy(m => m.Value).SequenceEqual(g.Value.Members.Keys.OrderBy(m => m.Value))
+					&& info.Members.OrderBy(m => m.Value)
+						.SequenceEqual(g.Value.Members.Keys.OrderBy(m => m.Value))
 				),
 			"The snapshot's groups are not the name table's: a change was not marked (ChangedGroup)."
 		);
@@ -280,7 +281,13 @@ internal sealed class SessionCore
 			return;
 
 		_published = new SessionSnapshot(
-			Update(_published.Players, _changedPlayers, Players, p => p.Created, p => p.ToPlayerInfo()),
+			Update(
+				_published.Players,
+				_changedPlayers,
+				Players,
+				p => p.Created,
+				p => p.ToPlayerInfo()
+			),
 			application,
 			localEndPoint,
 			LocalPlayer,
@@ -848,13 +855,13 @@ internal sealed class SessionCore
 		SendCore(hostConnection, new CoreMessage.InstructedConnectFailed { Dpnid = player });
 	}
 
-	/// <summary>
-	/// Connects to a new peer as instructed by the host ([MC-DPL8CS] section 3.1.5.2, step 8). The existing peers
-	/// connect to the new one, so a peer that joined before us is not ours to connect to: when two peers join at once,
-	/// the host instructs each to connect to the other, and the older one connects, while the newer waits for it, as
-	/// it waits for every peer of the name table it joined with.
-	/// </summary>
-	public void ConnectToNewPlayer(Connection hostConnection, Dpnid id)
+	// Connects to the player at its address, with the address of its host name from resolve; or, with no resolve, looks
+	// a host name up first, away from the session, which goes on and connects once it is resolved (HostnameResolved).
+	private void ConnectToNewPlayer(
+		Connection hostConnection,
+		Dpnid id,
+		Func<string, IPAddress?>? resolve
+	)
 	{
 		if (!Players.TryGetValue(id, out var player))
 		{
@@ -865,8 +872,21 @@ internal sealed class SessionCore
 		if (Players.TryGetValue(LocalPlayer, out var local) && player.Version < local.Version)
 			return;
 
+		if (
+			resolve is null
+			&& player.Url.Components.TryGetValue("hostname", out var hostname)
+			&& !IPAddress.TryParse(hostname, out _)
+		)
+		{
+			_outputs.ResolveHostname(
+				hostname,
+				address => new SessionMessage.HostnameResolved(hostConnection, id, address)
+			);
+			return;
+		}
+
 		player
-			.Url.ToEndPoint(_outputs.ResolveHostname)
+			.Url.ToEndPoint(resolve)
 			.Fold(
 				onOk: remoteEndPoint =>
 				{
@@ -884,6 +904,24 @@ internal sealed class SessionCore
 					return Unit.Default;
 				}
 			);
+	}
+
+	/// <summary>
+	/// Connects to a new peer as instructed by the host ([MC-DPL8CS] section 3.1.5.2, step 8). The existing peers
+	/// connect to the new one, so a peer that joined before us is not ours to connect to: when two peers join at once,
+	/// the host instructs each to connect to the other, and the older one connects, while the newer waits for it, as
+	/// it waits for every peer of the name table it joined with.
+	/// </summary>
+	public void ConnectToNewPlayer(Connection hostConnection, Dpnid id) =>
+		ConnectToNewPlayer(hostConnection, id, resolve: null);
+
+	// Connects to the player whose host name is resolved, if the host that instructed it is still ours: the session may
+	// have closed, or another peer have become its host, while the name was looked up.
+	private Unit HostnameResolved(SessionMessage.HostnameResolved m)
+	{
+		if (_state is IHasHostConnection { HostConnection: var host } && host == m.HostConnection)
+			ConnectToNewPlayer(m.HostConnection, m.Player, _ => m.Address);
+		return Unit.Default;
 	}
 
 	public void DisconnectAll()
@@ -1336,7 +1374,9 @@ internal sealed class SessionCore
 		foreach (var loop in targets.GroupBy(t => t.Loop))
 		{
 			var connections = loop.ToImmutableArray();
-			var sendIds = connections.Select(_ => reportsCompletion ? ++_nextSendId : 0).ToImmutableArray();
+			var sendIds = connections
+				.Select(_ => reportsCompletion ? ++_nextSendId : 0)
+				.ToImmutableArray();
 			if (reportsCompletion)
 			{
 				foreach (var sendId in sendIds)
@@ -1388,7 +1428,9 @@ internal sealed class SessionCore
 		{
 			// A command goes back to the mailbox, so that it runs as it would have, fallback included.
 			_deferred.Add(
-				command is SessionMessage message ? () => _outputs.Defer(message) : () => Execute(command)
+				command is SessionMessage message
+					? () => _outputs.Defer(message)
+					: () => Execute(command)
 			);
 			return Unit.Default;
 		}
@@ -1596,29 +1638,24 @@ internal sealed class SessionCore
 		return Execute(message);
 	}
 
-	private Unit Elapse<TCommand>(
-		LoopTimer timer,
-		long generation,
-		TCommand command
-	) => timer.TryConsume(generation) ? Execute(command) : Unit.Default;
+	private Unit Elapse<TCommand>(LoopTimer timer, long generation, TCommand command) =>
+		timer.TryConsume(generation) ? Execute(command) : Unit.Default;
 
 	private void ReceiveOther(SessionMessage message)
 	{
 		message.Match(
 			SetPeerInfo: SetPeerInfo,
-			CreateGroup: m =>
-				Execute(m, otherwise: () => Fail(m.Completion, NotInSession())),
-			DestroyGroup: m =>
-				Execute(m, otherwise: () => Fail(m.Completion, NotInSession())),
-			AddPlayerToGroup: m =>
-				Execute(m, otherwise: () => Fail(m.Completion, NotInSession())),
+			CreateGroup: m => Execute(m, otherwise: () => Fail(m.Completion, NotInSession())),
+			DestroyGroup: m => Execute(m, otherwise: () => Fail(m.Completion, NotInSession())),
+			AddPlayerToGroup: m => Execute(m, otherwise: () => Fail(m.Completion, NotInSession())),
 			RemovePlayerFromGroup: m =>
 				Execute(m, otherwise: () => Fail(m.Completion, NotInSession())),
 			DestroyPlayer: m =>
 				Execute(
 					m,
 					otherwise: () =>
-						Fail(m.Completion, 
+						Fail(
+							m.Completion,
 							new DirectPlayException(
 								ResultCode.NotHost,
 								"Only the host removes players."
@@ -1630,7 +1667,8 @@ internal sealed class SessionCore
 				Execute(
 					m,
 					otherwise: () =>
-						Fail(m.Completion, 
+						Fail(
+							m.Completion,
 							new InvalidOperationException("The peer is already in a session.")
 						)
 				),
@@ -1638,7 +1676,8 @@ internal sealed class SessionCore
 				Execute(
 					m,
 					otherwise: () =>
-						Fail(m.Completion, 
+						Fail(
+							m.Completion,
 							new InvalidOperationException("The peer is already in a session.")
 						)
 				),
@@ -1676,6 +1715,7 @@ internal sealed class SessionCore
 			MigrationTimedOut: m => Elapse(MigrationTimer, m.Generation, m),
 			PlayerJoinTimedOut: Execute,
 			IntegrityCheckTimedOut: Execute,
+			HostnameResolved: HostnameResolved,
 			TimersDue: _ =>
 			{
 				Timers.FireDue();
