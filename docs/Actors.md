@@ -140,6 +140,8 @@ An analyzer in `Aigamo.Otsuki.Analyzers`, beside its `ImmutableAnalyzer`, report
 
 It reports the names of these types, which any use of them or of their members names, as their instances come only from them.
 
+Within `Aigamo.Otsuki.Actors`, another analyzer, `AtomicsAnalyzer`, reports as an error (`OTSUKI0006`) a word that the threads share, a field that an `Interlocked` method takes by reference, read or written any other way outside its type's constructors, and any `Volatile` or `volatile`. Every `Interlocked` method is a full fence on every architecture that .NET runs on, so every thread sees the shared words in the order of the program, whatever the processor reorders: the mailbox is right on every processor if it is right when its threads' steps are taken one at a time. `Volatile` orders a read or a write only one way, and a write and a read after it may be seen the other way round, which once left a message in the mailbox until the next post.
+
 What the libraries do inside (`Task`, `TaskCompletionSource`, `CancellationTokenSource`, timers, sockets) is theirs. Every project gets the analyzer from `Directory.Build.props`, but the analyzer and its tests, and the mailbox's tests, which race threads against it.
 
 ## Where it meets the extensions

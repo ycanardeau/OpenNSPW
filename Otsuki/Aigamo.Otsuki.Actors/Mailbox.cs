@@ -50,6 +50,12 @@ public sealed class Mailbox<T>
 	// received or looked for another kind. Only the owner touches it.
 	private readonly List<T> _passed = [];
 
+	// The words that the threads share, _state, _isSignaled and _isScheduled, are read and written only with Interlocked
+	// (OTSUKI0006), a full fence on every architecture, so that every thread sees them, and the queue, in the order of the
+	// program. A post enqueues, then swaps a wake word from 0 to 1; the owner sets the word back to 0, then looks at the
+	// queue again. With a volatile write the owner's look could go ahead of its write, as x64 and Arm64 let a load pass a
+	// store still in its buffer: the post would find the word still 1 and wake no one, and the owner the queue empty, and
+	// the message would wait for the next post.
 	private long _state;
 	private int _isSignaled;
 
@@ -100,14 +106,6 @@ public sealed class Mailbox<T>
 	/// </summary>
 	public bool IsCompleted => Interlocked.Read(ref _state) == Completed && _passed.Count == 0;
 
-	// Sets the word that a post swaps from 0 to 1 to wake the owner (_isScheduled, _isSignaled) back to 0, before the
-	// owner looks at the queue again. A post enqueues, then swaps the word; the owner sets the word, then looks at the
-	// queue. Each side's write must be seen before its read, or each misses the other's: the post finds the word still 1
-	// and wakes no one, and the owner finds the queue empty and sleeps, with the message in it until the next post. A
-	// volatile write lets a later read go ahead of it (x64 and Arm64 both hold a store in a buffer while a later load
-	// goes on); an interlocked exchange does not, as the post's interlocked swap does not on its side.
-	private static void UnmarkThenLook(ref int word) => Interlocked.Exchange(ref word, 0);
-
 	private void Signal()
 	{
 		if (Interlocked.CompareExchange(ref _isSignaled, 1, 0) == 0)
@@ -155,7 +153,7 @@ public sealed class Mailbox<T>
 				return;
 			}
 
-			UnmarkThenLook(ref _isScheduled);
+			Interlocked.Exchange(ref _isScheduled, 0);
 			if (
 				(_queue.IsEmpty && Interlocked.Read(ref _state) != Completed)
 				|| Interlocked.CompareExchange(ref _isScheduled, 1, 0) != 0
@@ -218,7 +216,7 @@ public sealed class Mailbox<T>
 		if (_receive is null)
 			throw new InvalidOperationException("Only a pooled mailbox is started.");
 
-		UnmarkThenLook(ref _isScheduled);
+		Interlocked.Exchange(ref _isScheduled, 0);
 		if (!_queue.IsEmpty || Interlocked.Read(ref _state) == Completed)
 			Schedule();
 	}
@@ -332,7 +330,7 @@ public sealed class Mailbox<T>
 					return Holds(matches);
 			}
 
-			UnmarkThenLook(ref _isSignaled);
+			Interlocked.Exchange(ref _isSignaled, 0);
 		}
 
 		return true;
@@ -362,7 +360,7 @@ public sealed class Mailbox<T>
 				return false;
 
 			await _signal.WaitAsync(cancellationToken).ConfigureAwait(false);
-			UnmarkThenLook(ref _isSignaled);
+			Interlocked.Exchange(ref _isSignaled, 0);
 		}
 
 		return true;
