@@ -264,6 +264,29 @@ public sealed class MailboxTests
 		errors.Should().ContainSingle().Which.Should().BeOfType<InvalidOperationException>();
 	}
 
+	// An onError that throws would otherwise leave the mailbox marked as scheduled, with its handler never run again.
+	[Fact]
+	public async Task GoesOnAfterItsErrorHandlerThrows()
+	{
+		var handled = new List<int>();
+		var mailbox = new Mailbox<int>(
+			message =>
+			{
+				if (message == 1)
+					throw new InvalidOperationException();
+				handled.Add(message);
+			},
+			_ => throw new InvalidOperationException()
+		);
+		mailbox.Start();
+		mailbox.Post(1);
+		mailbox.Post(2);
+		mailbox.Complete();
+
+		await mailbox.Completion.WaitAsync(Timeout);
+		handled.Should().Equal(2);
+	}
+
 	[Fact]
 	public async Task CompletesAPooledMailboxThatHasNoMessages()
 	{

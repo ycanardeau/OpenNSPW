@@ -121,6 +121,24 @@ public sealed class Mailbox<T>
 		return true;
 	}
 
+	// Gives onError what the handler threw. What onError throws in turn is traced, and goes no further: it would leave Run
+	// with the mailbox marked as scheduled, and its handler would never run again.
+	private void ReportError(Exception exception)
+	{
+		try
+		{
+			_onError!(exception);
+		}
+		catch (Exception failure)
+		{
+			try
+			{
+				Trace.TraceError($"{nameof(Mailbox<>)}: {failure}");
+			}
+			catch (Exception) { }
+		}
+	}
+
 	// Runs the handler for each message, until the queue is empty; then lets the next post schedule it again, and looks
 	// at the queue once more, so that a message posted in between is not left. A scheduler that runs a few messages at
 	// a time has it scheduled again, still marked as scheduled, after those.
@@ -137,7 +155,7 @@ public sealed class Mailbox<T>
 				}
 				catch (Exception exception)
 				{
-					_onError!(exception);
+					ReportError(exception);
 				}
 
 				if (++handled >= _scheduler.MessagesPerRun)
