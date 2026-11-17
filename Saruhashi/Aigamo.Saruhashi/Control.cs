@@ -254,7 +254,12 @@ public class Control : IDisposable, IBindableComponent
 			SetState(States.Enabled, value);
 
 			if (oldValue != value)
+			{
+				if (!value)
+					LeaveFocus();
+
 				OnEnabledChanged(EventArgs.Empty);
+			}
 		}
 	}
 
@@ -509,6 +514,36 @@ public class Control : IDisposable, IBindableComponent
 		}
 
 		return Focused;
+	}
+
+	// The window manager, or null while the control is not added to one.
+	private WindowManager? FindWindowManager() => _windowManager ?? Parent?.FindWindowManager();
+
+	// Once this control is hidden or disabled, gives the focus, if it or a control in it has it, to the nearest control
+	// around it that can take it: a hidden or disabled control takes no keys (HandleKeyDown), so they would go nowhere.
+	private void LeaveFocus()
+	{
+		if (FindWindowManager() is not { } windowManager || windowManager.GetFocus() is not { } focus)
+			return;
+
+		var c = focus;
+		while (c is not null && c != this)
+			c = c.Parent;
+
+		if (c is null)
+			return;
+
+		var next = Parent;
+		while (next is not null && !next.CanFocus)
+			next = next.Parent;
+
+		if (next is not null)
+			next.Focus();
+		else
+		{
+			focus.OnLostFocus(EventArgs.Empty);
+			windowManager.SetFocus(null);
+		}
 	}
 
 	internal Rectangle GetClipRectangle(Rectangle rectangle)
@@ -871,7 +906,12 @@ public class Control : IDisposable, IBindableComponent
 		var wasVisible = Visible;
 		SetState(States.Visible, value);
 		if (Visible != wasVisible)
+		{
+			if (wasVisible)
+				LeaveFocus();
+
 			OnVisibleChanged(EventArgs.Empty);
+		}
 	}
 
 	public void Show() => Visible = true;
