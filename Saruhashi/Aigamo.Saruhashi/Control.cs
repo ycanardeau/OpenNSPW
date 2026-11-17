@@ -137,7 +137,9 @@ public class Control : IDisposable, IBindableComponent
 	private ControlStyles _controlStyle;
 	private bool _disposed;
 	private IFont? _font;
+	private Control? _parent;
 	private States _state = States.Visible | States.Enabled;
+	private string _text = string.Empty;
 	private WindowManager _windowManager = default!;
 
 	public event EventHandler? BindingContextChanged;
@@ -165,25 +167,232 @@ public class Control : IDisposable, IBindableComponent
 	public event EventHandler? TextChanged;
 	public event EventHandler? VisibleChanged;
 
-	public Control()
-	{
-		GetText = () => Text;
-		IsEnabled = () => Enabled;
-		IsVisible = () => Visible;
-		Size = DefaultSize;
-
-		SetStyle(ControlStyles.StandardClick, true);
-	}
-
-	internal Control(WindowManager windowManager)
-		: this()
-	{
-		_windowManager = windowManager;
-	}
-
-	~Control() => Dispose(false);
-
 	public virtual Color BackColor { get; set; } = Color.FromArgb(37, 37, 38);
+
+	public Rectangle Bounds { get; set; }
+
+	internal virtual bool CanAccessProperties => true;
+
+	protected virtual Size DefaultSize => Size.Empty;
+
+	public virtual Color ForeColor { get; set; } = Color.FromArgb(241, 241, 241);
+
+	protected Func<string> GetText { get; set; }
+
+	protected Func<bool> IsEnabled { get; set; }
+
+	protected Func<bool> IsVisible { get; set; }
+
+	public string Name { get; set; } = string.Empty;
+
+	/// <summary>
+	/// How many times as large the control is drawn, with all it holds: its size, what it draws and its children's bounds
+	/// are in pixels of its own, <c>Scale</c> times as large as its parent's, and only its location is in its parent's.
+	/// The mouse is taken where the control is drawn.
+	/// </summary>
+	public float Scale { get; set; } = 1;
+
+	public ISite? Site { get; set; }
+
+	private protected bool GetState(States flag) => _state.HasFlag(flag);
+
+	protected bool GetStyle(ControlStyles flag) => _controlStyle.HasFlag(flag);
+
+	private protected void SetState(States flag, bool value) =>
+		_state = value ? (_state | flag) : (_state & ~flag);
+
+	protected void SetStyle(ControlStyles flag, bool value) =>
+		_controlStyle = value ? (_controlStyle | flag) : (_controlStyle & ~flag);
+
+	public bool Created => _state.HasFlag(States.Created);
+
+	internal bool DesiredVisibility => GetState(States.Visible);
+
+	public bool CanFocus => IsVisible() && IsEnabled();
+
+	public Size Size
+	{
+		get => Bounds.Size;
+		set => Bounds = new Rectangle(Location, value);
+	}
+
+	public Point Location
+	{
+		get => Bounds.Location;
+		set => Bounds = new Rectangle(value, Size);
+	}
+
+	public int Width
+	{
+		get => Size.Width;
+		set => Size = new Size(value, Height);
+	}
+
+	public int Height
+	{
+		get => Size.Height;
+		set => Size = new Size(Width, value);
+	}
+
+	public int X
+	{
+		get => Location.X;
+		set => Location = new Point(value, Y);
+	}
+
+	public int Y
+	{
+		get => Location.Y;
+		set => Location = new Point(X, value);
+	}
+
+	// TODO
+	public Rectangle ClientRectangle => new Rectangle(Point.Empty, Size);
+
+	// A size of the control's pixels in the window manager's.
+	private Size SizeToScreen(Size size, float scale) =>
+		scale == 1
+			? size
+			: new Size((int)MathF.Round(size.Width * scale), (int)MathF.Round(size.Height * scale));
+
+	public ControlCollection Controls => _controls ??= new ControlCollection(this);
+
+	public ControlBindingsCollection DataBindings =>
+		_bindings ??= new ControlBindingsCollection(this);
+
+	protected virtual void OnControlAdded(ControlEventArgs e) => ControlAdded?.Invoke(this, e);
+
+	protected virtual void OnControlRemoved(ControlEventArgs e) => ControlRemoved?.Invoke(this, e);
+
+	/// <summary>
+	/// Brings the control to the front of its parent's z-order, over its siblings.
+	/// </summary>
+	public void BringToFront() => _parent?.Controls.SetChildIndex(this, 0);
+
+	public Control? Parent
+	{
+		get => _parent;
+		private set
+		{
+			if (_parent != value)
+			{
+				if (value is not null)
+					value.Controls.Add(this);
+				else
+					_parent?.Controls.Remove(this);
+			}
+		}
+	}
+
+	/// <summary>
+	/// How many times as large as the window manager's pixels the control's own are: its <see cref="Scale"/>, times its
+	/// parents'. A backend draws the control's paint this many times as large, around
+	/// <c>PointToScreen(Point.Empty)</c>.
+	/// </summary>
+	public float ScreenScale => (Parent?.ScreenScale ?? 1) * Scale;
+
+	private Point ScreenLocation => Parent?.PointToScreen(Location) ?? Location;
+
+	public Point PointToScreen(Point p) => ScreenLocation + SizeToScreen((Size)p, ScreenScale);
+
+	public Point PointToClient(Point p)
+	{
+		var scale = ScreenScale;
+		var offset = p - (Size)ScreenLocation;
+		return scale == 1
+			? offset
+			: new Point((int)MathF.Floor(offset.X / scale), (int)MathF.Floor(offset.Y / scale));
+	}
+
+	public Rectangle RectangleToClient(Rectangle r)
+	{
+		var location = PointToClient(r.Location);
+		var end = PointToClient(new Point(r.Right, r.Bottom));
+		return Rectangle.FromLTRB(location.X, location.Y, end.X, end.Y);
+	}
+
+	public Rectangle RectangleToScreen(Rectangle r) =>
+		new Rectangle(PointToScreen(r.Location), SizeToScreen(r.Size, ScreenScale));
+
+	private Rectangle ScreenRectangle =>
+		new Rectangle(ScreenLocation, SizeToScreen(Size, ScreenScale));
+
+	internal Rectangle GetClipRectangle(Rectangle rectangle)
+	{
+		var ret = Rectangle.Intersect(rectangle, ScreenRectangle);
+		if (ret.IsEmpty)
+			return ret;
+
+		return Parent?.GetClipRectangle(ret) ?? ret;
+	}
+
+	internal Rectangle ClipRectangle => GetClipRectangle(ScreenRectangle);
+
+	/// <remarks>
+	/// The WindowManager property is available only after the control is added to a window manager.
+	/// This is because it's possible for an application to have more than one window manager.
+	/// </remarks>
+	public WindowManager WindowManager
+	{
+		get
+		{
+			if (_windowManager is not null)
+				return _windowManager;
+
+			return _windowManager = Parent?.WindowManager ?? throw new InvalidOperationException();
+		}
+	}
+
+	// The window manager, or null while the control is not added to one.
+	private WindowManager? FindWindowManager() => _windowManager ?? Parent?.FindWindowManager();
+
+	public virtual bool Focused => WindowManager.GetFocus() == this;
+
+	public virtual IFont? Font
+	{
+		get
+		{
+			if (_font is not null)
+				return _font;
+
+			return _font = Parent?.Font ?? WindowManager.DefaultFont;
+		}
+		set => _font = value;
+	}
+
+	public Graphics CreateGraphics() => WindowManager.GraphicsFactory.Create(this);
+
+	protected virtual void OnMouseCaptureChanged(EventArgs e) =>
+		MouseCaptureChanged?.Invoke(this, e);
+
+	public bool Capture
+	{
+		get => WindowManager.Capture == this;
+		set
+		{
+			WindowManager.Capture = value ? this : null;
+
+			if (!value)
+				OnMouseCaptureChanged(EventArgs.Empty);
+		}
+	}
+
+	protected virtual void OnTextChanged(EventArgs e) => TextChanged?.Invoke(this, e);
+
+	public virtual string Text
+	{
+		get => _text;
+		set
+		{
+			if (_text != value)
+			{
+				_text = value;
+				OnTextChanged(EventArgs.Empty);
+			}
+		}
+	}
+
+	protected virtual void OnParentChanged(EventArgs e) => ParentChanged?.Invoke(this, e);
 
 	public virtual BindingContext? BindingContext
 	{
@@ -213,200 +422,32 @@ public class Control : IDisposable, IBindableComponent
 		}
 	}
 
-	public Rectangle Bounds { get; set; }
-	internal virtual bool CanAccessProperties => true;
-	public bool CanFocus => IsVisible() && IsEnabled();
-
-	public bool Capture
+	[UnconditionalSuppressMessage(
+		"Trimming",
+		"IL2026",
+		Justification = "Each binding in DataBindings was made by a constructor that requires unreferenced code."
+	)]
+	private void UpdateBindings()
 	{
-		get => WindowManager.Capture == this;
-		set
-		{
-			WindowManager.Capture = value ? this : null;
-
-			if (!value)
-				OnMouseCaptureChanged(EventArgs.Empty);
-		}
+		foreach (var b in DataBindings.Cast<Binding>())
+			BindingContext.UpdateBinding(BindingContext, b);
 	}
 
-	// TODO
-	public Rectangle ClientRectangle => new Rectangle(Point.Empty, Size);
-	internal Rectangle ClipRectangle => GetClipRectangle(ScreenRectangle);
-	public ControlCollection Controls => _controls ??= new ControlCollection(this);
-	public bool Created => _state.HasFlag(States.Created);
-	public ControlBindingsCollection DataBindings =>
-		_bindings ??= new ControlBindingsCollection(this);
-	protected virtual Size DefaultSize => Size.Empty;
-	internal bool DesiredVisibility => GetState(States.Visible);
-
-	public bool Enabled
+	protected virtual void OnBindingContextChanged(EventArgs e)
 	{
-		get
-		{
-			if (!GetState(States.Enabled))
-				return false;
+		if (_bindings is not null)
+			UpdateBindings();
 
-			return Parent?.IsEnabled() ?? true;
-		}
-		set
-		{
-			var oldValue = Enabled;
-			SetState(States.Enabled, value);
+		BindingContextChanged?.Invoke(this, e);
 
-			if (oldValue != value)
-			{
-				if (!value)
-					LeaveFocus();
-
-				OnEnabledChanged(EventArgs.Empty);
-			}
-		}
+		foreach (var c in Controls)
+			c.OnParentBindingContextChanged(e);
 	}
 
-	public virtual bool Focused => WindowManager.GetFocus() == this;
-
-	public virtual IFont? Font
+	protected virtual void OnParentBindingContextChanged(EventArgs e)
 	{
-		get
-		{
-			if (_font is not null)
-				return _font;
-
-			return _font = Parent?.Font ?? WindowManager.DefaultFont;
-		}
-		set => _font = value;
-	}
-
-	public virtual Color ForeColor { get; set; } = Color.FromArgb(241, 241, 241);
-	protected Func<string> GetText { get; set; }
-
-	public int Height
-	{
-		get => Size.Height;
-		set => Size = new Size(Width, value);
-	}
-
-	protected Func<bool> IsEnabled { get; set; }
-	protected Func<bool> IsVisible { get; set; }
-
-	public Point Location
-	{
-		get => Bounds.Location;
-		set => Bounds = new Rectangle(value, Size);
-	}
-
-	public string Name { get; set; } = string.Empty;
-
-	private Control? _parent;
-	public Control? Parent
-	{
-		get => _parent;
-		private set
-		{
-			if (_parent != value)
-			{
-				if (value is not null)
-					value.Controls.Add(this);
-				else
-					_parent?.Controls.Remove(this);
-			}
-		}
-	}
-
-	/// <summary>
-	/// Brings the control to the front of its parent's z-order, over its siblings.
-	/// </summary>
-	public void BringToFront() => _parent?.Controls.SetChildIndex(this, 0);
-
-	/// <summary>
-	/// How many times as large the control is drawn, with all it holds: its size, what it draws and its children's bounds
-	/// are in pixels of its own, <c>Scale</c> times as large as its parent's, and only its location is in its parent's.
-	/// The mouse is taken where the control is drawn.
-	/// </summary>
-	public float Scale { get; set; } = 1;
-
-	/// <summary>
-	/// How many times as large as the window manager's pixels the control's own are: its <see cref="Scale"/>, times its
-	/// parents'. A backend draws the control's paint this many times as large, around
-	/// <c>PointToScreen(Point.Empty)</c>.
-	/// </summary>
-	public float ScreenScale => (Parent?.ScreenScale ?? 1) * Scale;
-
-	private Point ScreenLocation => Parent?.PointToScreen(Location) ?? Location;
-
-	// A size of the control's pixels in the window manager's.
-	private Size SizeToScreen(Size size, float scale) =>
-		scale == 1
-			? size
-			: new Size((int)MathF.Round(size.Width * scale), (int)MathF.Round(size.Height * scale));
-
-	private Rectangle ScreenRectangle =>
-		new Rectangle(ScreenLocation, SizeToScreen(Size, ScreenScale));
-	public ISite? Site { get; set; }
-
-	public Size Size
-	{
-		get => Bounds.Size;
-		set => Bounds = new Rectangle(Location, value);
-	}
-
-	private string _text = string.Empty;
-	public virtual string Text
-	{
-		get => _text;
-		set
-		{
-			if (_text != value)
-			{
-				_text = value;
-				OnTextChanged(EventArgs.Empty);
-			}
-		}
-	}
-
-	public bool Visible
-	{
-		get
-		{
-			if (!DesiredVisibility)
-				return false;
-
-			return Parent?.IsVisible() ?? true;
-		}
-		set => SetVisibleCore(value);
-	}
-
-	public int Width
-	{
-		get => Size.Width;
-		set => Size = new Size(value, Height);
-	}
-
-	/// <remarks>
-	/// The WindowManager property is available only after the control is added to a window manager.
-	/// This is because it's possible for an application to have more than one window manager.
-	/// </remarks>
-	public WindowManager WindowManager
-	{
-		get
-		{
-			if (_windowManager is not null)
-				return _windowManager;
-
-			return _windowManager = Parent?.WindowManager ?? throw new InvalidOperationException();
-		}
-	}
-
-	public int X
-	{
-		get => Location.X;
-		set => Location = new Point(value, Y);
-	}
-
-	public int Y
-	{
-		get => Location.Y;
-		set => Location = new Point(X, value);
+		if (_context is null)
+			OnBindingContextChanged(e);
 	}
 
 	internal virtual void AssignParent(Control? value)
@@ -425,6 +466,8 @@ public class Control : IDisposable, IBindableComponent
 			OnParentChanged(EventArgs.Empty);
 		}
 	}
+
+	protected virtual void OnCreateControl() { }
 
 	internal void CreateControl(bool fIgnoreVisible)
 	{
@@ -455,8 +498,6 @@ public class Control : IDisposable, IBindableComponent
 			OnBindingContextChanged(EventArgs.Empty);
 	}
 
-	public Graphics CreateGraphics() => WindowManager.GraphicsFactory.Create(this);
-
 	protected virtual void Dispose(bool disposing)
 	{
 		if (_disposed)
@@ -467,10 +508,21 @@ public class Control : IDisposable, IBindableComponent
 			Disposed?.Invoke(this, EventArgs.Empty);
 	}
 
+	~Control() => Dispose(false);
+
 	public void Dispose()
 	{
 		Dispose(true);
 		GC.SuppressFinalize(this);
+	}
+
+	protected virtual void OnPaint(PaintEventArgs e) => Paint?.Invoke(this, e);
+
+	protected virtual void OnPaintBackground(PaintEventArgs e)
+	{
+		e.Graphics.FillRectangle(SolidBrush.Of(BackColor), ClientRectangle);
+
+		PaintBackground?.Invoke(this, e);
 	}
 
 	internal void Draw()
@@ -499,6 +551,10 @@ public class Control : IDisposable, IBindableComponent
 		}
 	}
 
+	protected virtual void OnGotFocus(EventArgs e) => GotFocus?.Invoke(this, e);
+
+	protected virtual void OnLostFocus(EventArgs e) => LostFocus?.Invoke(this, e);
+
 	public bool Focus()
 	{
 		if (CanFocus)
@@ -516,14 +572,14 @@ public class Control : IDisposable, IBindableComponent
 		return Focused;
 	}
 
-	// The window manager, or null while the control is not added to one.
-	private WindowManager? FindWindowManager() => _windowManager ?? Parent?.FindWindowManager();
-
 	// Once this control is hidden or disabled, gives the focus, if it or a control in it has it, to the nearest control
 	// around it that can take it: a hidden or disabled control takes no keys (HandleKeyDown), so they would go nowhere.
 	private void LeaveFocus()
 	{
-		if (FindWindowManager() is not { } windowManager || windowManager.GetFocus() is not { } focus)
+		if (
+			FindWindowManager() is not { } windowManager
+			|| windowManager.GetFocus() is not { } focus
+		)
 			return;
 
 		var c = focus;
@@ -546,18 +602,145 @@ public class Control : IDisposable, IBindableComponent
 		}
 	}
 
-	internal Rectangle GetClipRectangle(Rectangle rectangle)
-	{
-		var ret = Rectangle.Intersect(rectangle, ScreenRectangle);
-		if (ret.IsEmpty)
-			return ret;
+	protected virtual void OnEnabledChanged(EventArgs e) => EnabledChanged?.Invoke(this, e);
 
-		return Parent?.GetClipRectangle(ret) ?? ret;
+	public bool Enabled
+	{
+		get
+		{
+			if (!GetState(States.Enabled))
+				return false;
+
+			return Parent?.IsEnabled() ?? true;
+		}
+		set
+		{
+			var oldValue = Enabled;
+			SetState(States.Enabled, value);
+
+			if (oldValue != value)
+			{
+				if (!value)
+					LeaveFocus();
+
+				OnEnabledChanged(EventArgs.Empty);
+			}
+		}
 	}
 
-	private protected bool GetState(States flag) => _state.HasFlag(flag);
+	public bool Visible
+	{
+		get
+		{
+			if (!DesiredVisibility)
+				return false;
 
-	protected bool GetStyle(ControlStyles flag) => _controlStyle.HasFlag(flag);
+			return Parent?.IsVisible() ?? true;
+		}
+		set => SetVisibleCore(value);
+	}
+
+	protected virtual void OnVisibleChanged(EventArgs e)
+	{
+		var visible = Visible;
+
+		if (Parent is not null && visible && !Created)
+			CreateControl();
+
+		VisibleChanged?.Invoke(this, e);
+
+		foreach (var c in Controls)
+		{
+			if (c.Visible)
+				c.OnParentVisibleChanged(e);
+		}
+	}
+
+	protected virtual void OnParentVisibleChanged(EventArgs e)
+	{
+		if (DesiredVisibility)
+			OnVisibleChanged(e);
+	}
+
+	protected virtual void SetVisibleCore(bool value)
+	{
+		// The control's own visibility, which a hidden parent does not change: hiding a control while its parent is
+		// hidden keeps it hidden once the parent is shown.
+		if (value == DesiredVisibility)
+			return;
+
+		var wasVisible = Visible;
+		SetState(States.Visible, value);
+		if (Visible != wasVisible)
+		{
+			if (wasVisible)
+				LeaveFocus();
+
+			OnVisibleChanged(EventArgs.Empty);
+		}
+	}
+
+	public void Hide() => Visible = false;
+
+	public void Show() => Visible = true;
+
+	public Control()
+	{
+		GetText = () => Text;
+		IsEnabled = () => Enabled;
+		IsVisible = () => Visible;
+		Size = DefaultSize;
+
+		SetStyle(ControlStyles.StandardClick, true);
+	}
+
+	internal Control(WindowManager windowManager)
+		: this()
+	{
+		_windowManager = windowManager;
+	}
+
+	protected virtual void OnKeyDown(KeyEventArgs e)
+	{
+		var parent = Parent;
+		while (parent is not null)
+		{
+			if (parent is Form form && form.KeyPreview)
+				form.OnKeyDown(e);
+
+			parent = parent.Parent;
+		}
+
+		KeyDown?.Invoke(this, e);
+	}
+
+	protected virtual void OnKeyPress(KeyPressEventArgs e)
+	{
+		var parent = Parent;
+		while (parent is not null)
+		{
+			if (parent is Form form && form.KeyPreview)
+				form.OnKeyPress(e);
+
+			parent = parent.Parent;
+		}
+
+		KeyPress?.Invoke(this, e);
+	}
+
+	protected virtual void OnKeyUp(KeyEventArgs e)
+	{
+		var parent = Parent;
+		while (parent is not null)
+		{
+			if (parent is Form form && form.KeyPreview)
+				form.OnKeyUp(e);
+
+			parent = parent.Parent;
+		}
+
+		KeyUp?.Invoke(this, e);
+	}
 
 	internal Control? HandleKeyDown(KeyEventArgs e)
 	{
@@ -621,6 +804,27 @@ public class Control : IDisposable, IBindableComponent
 
 		return null;
 	}
+
+	protected virtual void OnMouseDown(MouseEventArgs e)
+	{
+		Focus();
+
+		MouseDown?.Invoke(this, e);
+	}
+
+	protected virtual void OnClick(EventArgs e) => Click?.Invoke(this, e);
+
+	protected virtual void OnMouseClick(MouseEventArgs e) => MouseClick?.Invoke(this, e);
+
+	protected virtual void OnMouseEnter(EventArgs e) => MouseEnter?.Invoke(this, e);
+
+	protected virtual void OnMouseLeave(EventArgs e) => MouseLeave?.Invoke(this, e);
+
+	protected virtual void OnMouseMove(MouseEventArgs e) => MouseMove?.Invoke(this, e);
+
+	protected virtual void OnMouseUp(MouseEventArgs e) => MouseUp?.Invoke(this, e);
+
+	protected virtual void OnMouseWheel(MouseEventArgs e) => MouseWheel?.Invoke(this, e);
 
 	internal Control? HandleMouseDown(MouseEventArgs e)
 	{
@@ -735,196 +939,6 @@ public class Control : IDisposable, IBindableComponent
 		}
 
 		return null;
-	}
-
-	public void Hide() => Visible = false;
-
-	protected virtual void OnBindingContextChanged(EventArgs e)
-	{
-		if (_bindings is not null)
-			UpdateBindings();
-
-		BindingContextChanged?.Invoke(this, e);
-
-		foreach (var c in Controls)
-			c.OnParentBindingContextChanged(e);
-	}
-
-	protected virtual void OnClick(EventArgs e) => Click?.Invoke(this, e);
-
-	protected virtual void OnControlAdded(ControlEventArgs e) => ControlAdded?.Invoke(this, e);
-
-	protected virtual void OnControlRemoved(ControlEventArgs e) => ControlRemoved?.Invoke(this, e);
-
-	protected virtual void OnCreateControl() { }
-
-	protected virtual void OnGotFocus(EventArgs e) => GotFocus?.Invoke(this, e);
-
-	protected virtual void OnKeyDown(KeyEventArgs e)
-	{
-		var parent = Parent;
-		while (parent is not null)
-		{
-			if (parent is Form form && form.KeyPreview)
-				form.OnKeyDown(e);
-
-			parent = parent.Parent;
-		}
-
-		KeyDown?.Invoke(this, e);
-	}
-
-	protected virtual void OnEnabledChanged(EventArgs e) => EnabledChanged?.Invoke(this, e);
-
-	protected virtual void OnKeyPress(KeyPressEventArgs e)
-	{
-		var parent = Parent;
-		while (parent is not null)
-		{
-			if (parent is Form form && form.KeyPreview)
-				form.OnKeyPress(e);
-
-			parent = parent.Parent;
-		}
-
-		KeyPress?.Invoke(this, e);
-	}
-
-	protected virtual void OnKeyUp(KeyEventArgs e)
-	{
-		var parent = Parent;
-		while (parent is not null)
-		{
-			if (parent is Form form && form.KeyPreview)
-				form.OnKeyUp(e);
-
-			parent = parent.Parent;
-		}
-
-		KeyUp?.Invoke(this, e);
-	}
-
-	protected virtual void OnLostFocus(EventArgs e) => LostFocus?.Invoke(this, e);
-
-	protected virtual void OnMouseCaptureChanged(EventArgs e) =>
-		MouseCaptureChanged?.Invoke(this, e);
-
-	protected virtual void OnMouseClick(MouseEventArgs e) => MouseClick?.Invoke(this, e);
-
-	protected virtual void OnMouseDown(MouseEventArgs e)
-	{
-		Focus();
-
-		MouseDown?.Invoke(this, e);
-	}
-
-	protected virtual void OnMouseEnter(EventArgs e) => MouseEnter?.Invoke(this, e);
-
-	protected virtual void OnMouseLeave(EventArgs e) => MouseLeave?.Invoke(this, e);
-
-	protected virtual void OnMouseMove(MouseEventArgs e) => MouseMove?.Invoke(this, e);
-
-	protected virtual void OnMouseUp(MouseEventArgs e) => MouseUp?.Invoke(this, e);
-
-	protected virtual void OnMouseWheel(MouseEventArgs e) => MouseWheel?.Invoke(this, e);
-
-	protected virtual void OnPaint(PaintEventArgs e) => Paint?.Invoke(this, e);
-
-	protected virtual void OnPaintBackground(PaintEventArgs e)
-	{
-		e.Graphics.FillRectangle(SolidBrush.Of(BackColor), ClientRectangle);
-
-		PaintBackground?.Invoke(this, e);
-	}
-
-	protected virtual void OnParentBindingContextChanged(EventArgs e)
-	{
-		if (_context is null)
-			OnBindingContextChanged(e);
-	}
-
-	protected virtual void OnParentChanged(EventArgs e) => ParentChanged?.Invoke(this, e);
-
-	protected virtual void OnParentVisibleChanged(EventArgs e)
-	{
-		if (DesiredVisibility)
-			OnVisibleChanged(e);
-	}
-
-	protected virtual void OnTextChanged(EventArgs e) => TextChanged?.Invoke(this, e);
-
-	protected virtual void OnVisibleChanged(EventArgs e)
-	{
-		var visible = Visible;
-
-		if (Parent is not null && visible && !Created)
-			CreateControl();
-
-		VisibleChanged?.Invoke(this, e);
-
-		foreach (var c in Controls)
-		{
-			if (c.Visible)
-				c.OnParentVisibleChanged(e);
-		}
-	}
-
-	public Point PointToClient(Point p)
-	{
-		var scale = ScreenScale;
-		var offset = p - (Size)ScreenLocation;
-		return scale == 1
-			? offset
-			: new Point((int)MathF.Floor(offset.X / scale), (int)MathF.Floor(offset.Y / scale));
-	}
-
-	public Point PointToScreen(Point p) => ScreenLocation + SizeToScreen((Size)p, ScreenScale);
-
-	public Rectangle RectangleToClient(Rectangle r)
-	{
-		var location = PointToClient(r.Location);
-		var end = PointToClient(new Point(r.Right, r.Bottom));
-		return Rectangle.FromLTRB(location.X, location.Y, end.X, end.Y);
-	}
-
-	public Rectangle RectangleToScreen(Rectangle r) =>
-		new Rectangle(PointToScreen(r.Location), SizeToScreen(r.Size, ScreenScale));
-
-	private protected void SetState(States flag, bool value) =>
-		_state = value ? (_state | flag) : (_state & ~flag);
-
-	protected void SetStyle(ControlStyles flag, bool value) =>
-		_controlStyle = value ? (_controlStyle | flag) : (_controlStyle & ~flag);
-
-	protected virtual void SetVisibleCore(bool value)
-	{
-		// The control's own visibility, which a hidden parent does not change: hiding a control while its parent is
-		// hidden keeps it hidden once the parent is shown.
-		if (value == DesiredVisibility)
-			return;
-
-		var wasVisible = Visible;
-		SetState(States.Visible, value);
-		if (Visible != wasVisible)
-		{
-			if (wasVisible)
-				LeaveFocus();
-
-			OnVisibleChanged(EventArgs.Empty);
-		}
-	}
-
-	public void Show() => Visible = true;
-
-	[UnconditionalSuppressMessage(
-		"Trimming",
-		"IL2026",
-		Justification = "Each binding in DataBindings was made by a constructor that requires unreferenced code."
-	)]
-	private void UpdateBindings()
-	{
-		foreach (var b in DataBindings.Cast<Binding>())
-			BindingContext.UpdateBinding(BindingContext, b);
 	}
 
 	internal Control? WindowFromPoint(Point point)
