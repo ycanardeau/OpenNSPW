@@ -6,7 +6,7 @@
 
 <p align="center">
   <b>Naval South Pacific War, reborn.</b><br>
-  Ken-ichi Tokumitsu's real-time naval strategy game of the Pacific War, ported line by line to C#,<br>
+  Ken-ichi Tokumitsu's real-time strategy game of the Pacific War, ported line by line to C#,<br>
   and playable again on Windows, macOS, Linux and Android.
 </p>
 
