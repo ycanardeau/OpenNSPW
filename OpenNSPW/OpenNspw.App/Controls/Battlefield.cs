@@ -42,8 +42,8 @@ internal sealed class Battlefield : Control
 	private readonly ScrollAhead _scrollAhead;
 
 	// Whether the player touches the screen (IAppHost.IsTouchScreen): a touch is a click once it is lifted without moving;
-	// moving, it brushes over units from one of the player's (UnitBrush), and pans the battlefield from anywhere else; as
-	// the touch options choose (TouchSettings).
+	// moving, it pans the battlefield, and brushes over units (UnitBrush) from one of the player's held still for a moment
+	// first, or at once where a drag does not pan; as the touch options choose (TouchSettings).
 	private readonly bool _isTouchScreen;
 	private readonly TouchSettings _touch;
 
@@ -532,6 +532,30 @@ internal sealed class Battlefield : Control
 			);
 	}
 
+	// Whether a finger dragged from the sea scrolls the battlefield, as the touch options choose.
+	private bool DragScrolls =>
+		_touch.Options.Waypoint switch
+		{
+			WaypointGesture.TwoFingers => false,
+			WaypointGesture.MoveButton => !IsMoveMode,
+			_ => true,
+		};
+
+	// Whether a touch pressed one of the player's units, where moving it brushes over units (UnitBrush): at once where a
+	// drag does not scroll, and after a hold where it does (WaitsForHold).
+	private bool IsOwnUnit(TouchTarget target)
+	{
+		return target.Unit is { } m && _snapshot.Units[m].Side == _snapshot.LocalSide;
+	}
+
+	// Whether a touch is taken once held still for a moment (TouchOptions.HoldSeconds): on the sea or the land, the order of
+	// WaypointGesture.Hold; and on one of the player's units where a drag scrolls, a brush, so that a drag from a unit
+	// under the finger scrolls rather than takes it, as a finger is far less precise than the mouse.
+	private bool WaitsForHold(TouchTarget target) =>
+		target.IsOrder
+			? _touch.Options.Waypoint == WaypointGesture.Hold
+			: IsOwnUnit(target) && DragScrolls;
+
 	// What a touch presses, or took as a click a moment ago, marked at once: the game takes a click only in its next frame,
 	// and shows what it did after it. The unit's mark follows it as it moves; the sea's is where the selected unit goes.
 	private void DrawTouched(SpriteBatch batch, Vector2 origin, GameSnapshot snapshot)
@@ -544,16 +568,17 @@ internal sealed class Battlefield : Control
 		if (target is not { } touched)
 			return;
 
-		// Held on the sea for a waypoint: the mark grows to its size as the hold fills.
-		if (_pressed is { IsOrder: true } held && _touch.Options.Waypoint == WaypointGesture.Hold)
+		// Held for a waypoint or a brush: the mark grows to its size as the hold fills.
+		if (_pressed is { } held && WaitsForHold(held))
 		{
 			var progress = Math.Clamp(
 				(Painter.Now - held.PressedAt) / TouchOptions.HoldSeconds,
 				0,
 				1
 			);
-			var at = held.IsLanding
-				? SnapToTile(snapshot, held.View)
+			var at =
+				held.IsLanding ? SnapToTile(snapshot, held.View)
+				: held.Unit is { } u ? MarkPosition(snapshot, ref snapshot.Units[u])
 				: ToScreen(snapshot, held.World.X, held.World.Y);
 			DrawBox(batch, origin + at, (int)(4 + 21 * progress), MarkLight);
 			return;
@@ -813,21 +838,13 @@ internal sealed class Battlefield : Control
 			_ => true,
 		};
 
-	// Whether a finger dragged from the sea scrolls the battlefield, as the touch options choose.
-	private bool DragScrolls =>
-		_touch.Options.Waypoint switch
-		{
-			WaypointGesture.TwoFingers => false,
-			WaypointGesture.MoveButton => !IsMoveMode,
-			_ => true,
-		};
-
-	// Gives the order of a touch held still on the sea or the land long enough (WaypointGesture.Hold): once a frame.
+	// Takes a touch held still long enough (WaypointGesture.Hold, or one of the player's units where a drag scrolls): once a
+	// frame.
 	private void TakeHold()
 	{
 		if (
-			_pressed is { IsOrder: true } held
-			&& _touch.Options.Waypoint == WaypointGesture.Hold
+			_pressed is { } held
+			&& WaitsForHold(held)
 			&& Painter.Now - held.PressedAt >= TouchOptions.HoldSeconds
 			&& !_session.IsWatching
 		)
@@ -837,18 +854,11 @@ internal sealed class Battlefield : Control
 		}
 	}
 
-	// Moves the battlefield on with time, each frame (BattleForm): a glide, and the order of a touch held long enough.
+	// Moves the battlefield on with time, each frame (BattleForm): a glide, and a touch held long enough.
 	public void Animate()
 	{
 		Glide();
 		TakeHold();
-	}
-
-	// Whether a touch pressed one of the player's units, where moving it brushes over units (UnitBrush) rather than
-	// panning.
-	private bool IsOwnUnit(TouchTarget target)
-	{
-		return target.Unit is { } m && _snapshot.Units[m].Side == _snapshot.LocalSide;
 	}
 
 	// A press of the left button at a point of the view: a click, which starts a brush on one of the player's units.
@@ -869,7 +879,7 @@ internal sealed class Battlefield : Control
 		)
 		{
 			_pressed = null;
-			if (IsOwnUnit(pressed) && !_session.IsWatching)
+			if (IsOwnUnit(pressed) && !DragScrolls && !_session.IsWatching)
 				TakeTouch(pressed);
 			else if (DragScrolls || _session.IsWatching)
 				_scrolledTo = e.Location;
