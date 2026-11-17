@@ -50,6 +50,12 @@ public sealed class Mailbox<T>
 	// received or looked for another kind. Only the owner touches it.
 	private readonly List<T> _passed = [];
 
+	// The words that the threads share, _state, _isSignaled and _isScheduled, are read and written only with Interlocked
+	// (OTSUKI0006), a full fence on every architecture, so that every thread sees them, and the queue, in the order of the
+	// program. A post enqueues, then swaps a wake word from 0 to 1; the owner sets the word back to 0, then looks at the
+	// queue again. With a volatile write the owner's look could go ahead of its write, as x64 and Arm64 let a load pass a
+	// store still in its buffer: the post would find the word still 1 and wake no one, and the owner the queue empty, and
+	// the message would wait for the next post.
 	private long _state;
 	private int _isSignaled;
 
@@ -115,6 +121,25 @@ public sealed class Mailbox<T>
 		return true;
 	}
 
+	// Gives onError what the handler threw. What onError throws in turn is traced, and goes no further: out of Run, it
+	// would end the process on the thread pool, and on a test's scheduler leave the mailbox marked as scheduled, its
+	// handler never to run again.
+	private void ReportError(Exception exception)
+	{
+		try
+		{
+			_onError!(exception);
+		}
+		catch (Exception failure)
+		{
+			try
+			{
+				Trace.TraceError($"{nameof(Mailbox<>)}: {failure}");
+			}
+			catch (Exception) { }
+		}
+	}
+
 	// Runs the handler for each message, until the queue is empty; then lets the next post schedule it again, and looks
 	// at the queue once more, so that a message posted in between is not left. A scheduler that runs a few messages at
 	// a time has it scheduled again, still marked as scheduled, after those.
@@ -131,7 +156,7 @@ public sealed class Mailbox<T>
 				}
 				catch (Exception exception)
 				{
-					_onError!(exception);
+					ReportError(exception);
 				}
 
 				if (++handled >= _scheduler.MessagesPerRun)
@@ -147,7 +172,7 @@ public sealed class Mailbox<T>
 				return;
 			}
 
-			Volatile.Write(ref _isScheduled, 0);
+			Interlocked.Exchange(ref _isScheduled, 0);
 			if (
 				(_queue.IsEmpty && Interlocked.Read(ref _state) != Completed)
 				|| Interlocked.CompareExchange(ref _isScheduled, 1, 0) != 0
@@ -210,7 +235,7 @@ public sealed class Mailbox<T>
 		if (_receive is null)
 			throw new InvalidOperationException("Only a pooled mailbox is started.");
 
-		Volatile.Write(ref _isScheduled, 0);
+		Interlocked.Exchange(ref _isScheduled, 0);
 		if (!_queue.IsEmpty || Interlocked.Read(ref _state) == Completed)
 			Schedule();
 	}
@@ -324,7 +349,7 @@ public sealed class Mailbox<T>
 					return Holds(matches);
 			}
 
-			Volatile.Write(ref _isSignaled, 0);
+			Interlocked.Exchange(ref _isSignaled, 0);
 		}
 
 		return true;
@@ -354,7 +379,7 @@ public sealed class Mailbox<T>
 				return false;
 
 			await _signal.WaitAsync(cancellationToken).ConfigureAwait(false);
-			Volatile.Write(ref _isSignaled, 0);
+			Interlocked.Exchange(ref _isSignaled, 0);
 		}
 
 		return true;

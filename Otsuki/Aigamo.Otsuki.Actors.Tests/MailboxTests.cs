@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using FluentAssertions;
 using Xunit;
 
@@ -187,6 +188,47 @@ public sealed class MailboxTests
 		handled.Should().Be(Posters * Messages);
 	}
 
+	// A poster posts each message as the handler goes idle after the one before, so that the post races the handler's
+	// letting go of the mailbox: each message is handled without waiting for another post. With the word set back by a
+	// volatile write, about one in a hundred thousand was left in the queue on x64. The poster has a thread of its own,
+	// so that it does not hold back the thread pool that runs the handler. The CI posts more, on each processor
+	// (OTSUKI_MAILBOX_STRESS_MESSAGES).
+	[Fact]
+	public void LeavesNoMessagePostedAsThePooledHandlerGoesIdle()
+	{
+		var count = int.TryParse(
+			Environment.GetEnvironmentVariable("OTSUKI_MAILBOX_STRESS_MESSAGES"),
+			out var messages
+		)
+			? messages
+			: 1_000_000;
+		long handled = 0;
+		var mailbox = new Mailbox<int>(_ => Interlocked.Increment(ref handled), _ => { });
+		mailbox.Start();
+		var left = 0;
+
+		var poster = new Thread(() =>
+		{
+			for (var i = 1; i <= count; i++)
+			{
+				mailbox.Post(i);
+				var start = Stopwatch.GetTimestamp();
+				while (Interlocked.Read(ref handled) < i)
+				{
+					if (Stopwatch.GetElapsedTime(start) > Timeout)
+					{
+						left = i;
+						return;
+					}
+				}
+			}
+		});
+		poster.Start();
+		poster.Join();
+
+		left.Should().Be(0, "a message left in the queue waits for the next post");
+	}
+
 	[Fact]
 	public async Task HoldsAPooledMailboxsMessagesUntilItStarts()
 	{
@@ -226,6 +268,29 @@ public sealed class MailboxTests
 		await mailbox.Completion.WaitAsync(Timeout);
 		handled.Should().Equal(2);
 		errors.Should().ContainSingle().Which.Should().BeOfType<InvalidOperationException>();
+	}
+
+	// An onError that throws would otherwise leave the mailbox marked as scheduled, with its handler never run again.
+	[Fact]
+	public async Task GoesOnAfterItsErrorHandlerThrows()
+	{
+		var handled = new List<int>();
+		var mailbox = new Mailbox<int>(
+			message =>
+			{
+				if (message == 1)
+					throw new InvalidOperationException();
+				handled.Add(message);
+			},
+			_ => throw new InvalidOperationException()
+		);
+		mailbox.Start();
+		mailbox.Post(1);
+		mailbox.Post(2);
+		mailbox.Complete();
+
+		await mailbox.Completion.WaitAsync(Timeout);
+		handled.Should().Equal(2);
 	}
 
 	[Fact]

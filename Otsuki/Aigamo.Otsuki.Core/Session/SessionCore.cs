@@ -131,6 +131,19 @@ internal sealed class SessionCore
 	public Received<CoreMessage.HostMigrate>? HostClaim { get; set; }
 
 	/// <summary>
+	/// What the peer of <see cref="HostClaim"/> sent after its claim, in order: the operations of a new host, such as
+	/// those it sends as it finishes a migration that stopped waiting for us. They wait with the claim, to run if we
+	/// follow that host.
+	/// </summary>
+	public List<CoreMessage> HeldForClaim { get; } = [];
+
+	/// <summary>
+	/// What the host we just followed sent while its claim waited, to run once the message that made us follow it is
+	/// done.
+	/// </summary>
+	public List<Received<CoreMessage>> FromAcceptedClaim { get; } = [];
+
+	/// <summary>
 	/// The newest name table version that every peer has, from DN_RESYNC_VERSION.
 	/// </summary>
 	public int ResynchronizedVersion { get; private set; }
@@ -253,7 +266,8 @@ internal sealed class SessionCore
 			groups.Count == _published.Groups.Count
 				&& groups.All(g =>
 					_published.Groups.TryGetValue(g.Key, out var info)
-					&& info.Members.OrderBy(m => m.Value).SequenceEqual(g.Value.Members.Keys.OrderBy(m => m.Value))
+					&& info.Members.OrderBy(m => m.Value)
+						.SequenceEqual(g.Value.Members.Keys.OrderBy(m => m.Value))
 				),
 			"The snapshot's groups are not the name table's: a change was not marked (ChangedGroup)."
 		);
@@ -280,7 +294,13 @@ internal sealed class SessionCore
 			return;
 
 		_published = new SessionSnapshot(
-			Update(_published.Players, _changedPlayers, Players, p => p.Created, p => p.ToPlayerInfo()),
+			Update(
+				_published.Players,
+				_changedPlayers,
+				Players,
+				p => p.Created,
+				p => p.ToPlayerInfo()
+			),
 			application,
 			localEndPoint,
 			LocalPlayer,
@@ -848,13 +868,13 @@ internal sealed class SessionCore
 		SendCore(hostConnection, new CoreMessage.InstructedConnectFailed { Dpnid = player });
 	}
 
-	/// <summary>
-	/// Connects to a new peer as instructed by the host ([MC-DPL8CS] section 3.1.5.2, step 8). The existing peers
-	/// connect to the new one, so a peer that joined before us is not ours to connect to: when two peers join at once,
-	/// the host instructs each to connect to the other, and the older one connects, while the newer waits for it, as
-	/// it waits for every peer of the name table it joined with.
-	/// </summary>
-	public void ConnectToNewPlayer(Connection hostConnection, Dpnid id)
+	// Connects to the player at its address, with the address of its host name from resolve; or, with no resolve, looks
+	// a host name up first, away from the session, which goes on and connects once it is resolved (HostnameResolved).
+	private void ConnectToNewPlayer(
+		Connection hostConnection,
+		Dpnid id,
+		Func<string, IPAddress?>? resolve
+	)
 	{
 		if (!Players.TryGetValue(id, out var player))
 		{
@@ -865,8 +885,21 @@ internal sealed class SessionCore
 		if (Players.TryGetValue(LocalPlayer, out var local) && player.Version < local.Version)
 			return;
 
+		if (
+			resolve is null
+			&& player.Url.Components.TryGetValue("hostname", out var hostname)
+			&& !IPAddress.TryParse(hostname, out _)
+		)
+		{
+			_outputs.ResolveHostname(
+				hostname,
+				address => new SessionMessage.HostnameResolved(hostConnection, id, address)
+			);
+			return;
+		}
+
 		player
-			.Url.ToEndPoint(_outputs.ResolveHostname)
+			.Url.ToEndPoint(resolve)
 			.Fold(
 				onOk: remoteEndPoint =>
 				{
@@ -884,6 +917,24 @@ internal sealed class SessionCore
 					return Unit.Default;
 				}
 			);
+	}
+
+	/// <summary>
+	/// Connects to a new peer as instructed by the host ([MC-DPL8CS] section 3.1.5.2, step 8). The existing peers
+	/// connect to the new one, so a peer that joined before us is not ours to connect to: when two peers join at once,
+	/// the host instructs each to connect to the other, and the older one connects, while the newer waits for it, as
+	/// it waits for every peer of the name table it joined with.
+	/// </summary>
+	public void ConnectToNewPlayer(Connection hostConnection, Dpnid id) =>
+		ConnectToNewPlayer(hostConnection, id, resolve: null);
+
+	// Connects to the player whose host name is resolved, if the host that instructed it is still ours: the session may
+	// have closed, or another peer have become its host, while the name was looked up.
+	private Unit HostnameResolved(SessionMessage.HostnameResolved m)
+	{
+		if (_state is IHasHostConnection { HostConnection: var host } && host == m.HostConnection)
+			ConnectToNewPlayer(m.HostConnection, m.Player, _ => m.Address);
+		return Unit.Default;
 	}
 
 	public void DisconnectAll()
@@ -926,6 +977,8 @@ internal sealed class SessionCore
 		NameTableLog.Clear();
 		ResynchronizedVersion = 0;
 		HostClaim = null;
+		HeldForClaim.Clear();
+		FromAcceptedClaim.Clear();
 	}
 
 	/// <summary>
@@ -1175,8 +1228,20 @@ internal sealed class SessionCore
 	}
 
 	/// <summary>
+	/// Keeps a DN_HOST_MIGRATE until we lose the old host too. What another peer sent after a claim of its own goes
+	/// with that claim.
+	/// </summary>
+	public void KeepClaim(Received<CoreMessage.HostMigrate> claim)
+	{
+		if (HostClaim?.Connection != claim.Connection)
+			HeldForClaim.Clear();
+		HostClaim = claim;
+	}
+
+	/// <summary>
 	/// Follows <paramref name="newHost"/>, which announced itself with DN_HOST_MIGRATE (step 2): the old host goes,
-	/// requests sent to another host fail, and the new host gets our name table version.
+	/// requests sent to another host fail, the new host gets our name table version, and what it sent while its claim
+	/// waited runs next.
 	/// </summary>
 	public SessionState AcceptHost(
 		Connection connection,
@@ -1185,7 +1250,12 @@ internal sealed class SessionCore
 		Connection previousHost
 	)
 	{
+		if (HostClaim?.Connection == connection)
+			FromAcceptedClaim.AddRange(
+				HeldForClaim.Select(message => new Received<CoreMessage>(connection, message))
+			);
 		HostClaim = null;
+		HeldForClaim.Clear();
 		if (connection != previousHost)
 			FailRequestsToLostHost();
 
@@ -1336,7 +1406,9 @@ internal sealed class SessionCore
 		foreach (var loop in targets.GroupBy(t => t.Loop))
 		{
 			var connections = loop.ToImmutableArray();
-			var sendIds = connections.Select(_ => reportsCompletion ? ++_nextSendId : 0).ToImmutableArray();
+			var sendIds = connections
+				.Select(_ => reportsCompletion ? ++_nextSendId : 0)
+				.ToImmutableArray();
 			if (reportsCompletion)
 			{
 				foreach (var sendId in sendIds)
@@ -1388,7 +1460,9 @@ internal sealed class SessionCore
 		{
 			// A command goes back to the mailbox, so that it runs as it would have, fallback included.
 			_deferred.Add(
-				command is SessionMessage message ? () => _outputs.Defer(message) : () => Execute(command)
+				command is SessionMessage message
+					? () => _outputs.Defer(message)
+					: () => Execute(command)
 			);
 			return Unit.Default;
 		}
@@ -1564,6 +1638,17 @@ internal sealed class SessionCore
 
 	private Unit Receive(Connection connection, CoreMessage message)
 	{
+		// What a peer sends after its claim to be host waits with the claim.
+		if (
+			HostClaim is { } claim
+			&& claim.Connection == connection
+			&& message is not CoreMessage.HostMigrate
+		)
+		{
+			HeldForClaim.Add(message);
+			return Unit.Default;
+		}
+
 		// Peers keep the host's name table operations, in case they must hand them to a new host.
 		if (
 			_state is IHasHostConnection { HostConnection: var host }
@@ -1596,29 +1681,24 @@ internal sealed class SessionCore
 		return Execute(message);
 	}
 
-	private Unit Elapse<TCommand>(
-		LoopTimer timer,
-		long generation,
-		TCommand command
-	) => timer.TryConsume(generation) ? Execute(command) : Unit.Default;
+	private Unit Elapse<TCommand>(LoopTimer timer, long generation, TCommand command) =>
+		timer.TryConsume(generation) ? Execute(command) : Unit.Default;
 
 	private void ReceiveOther(SessionMessage message)
 	{
 		message.Match(
 			SetPeerInfo: SetPeerInfo,
-			CreateGroup: m =>
-				Execute(m, otherwise: () => Fail(m.Completion, NotInSession())),
-			DestroyGroup: m =>
-				Execute(m, otherwise: () => Fail(m.Completion, NotInSession())),
-			AddPlayerToGroup: m =>
-				Execute(m, otherwise: () => Fail(m.Completion, NotInSession())),
+			CreateGroup: m => Execute(m, otherwise: () => Fail(m.Completion, NotInSession())),
+			DestroyGroup: m => Execute(m, otherwise: () => Fail(m.Completion, NotInSession())),
+			AddPlayerToGroup: m => Execute(m, otherwise: () => Fail(m.Completion, NotInSession())),
 			RemovePlayerFromGroup: m =>
 				Execute(m, otherwise: () => Fail(m.Completion, NotInSession())),
 			DestroyPlayer: m =>
 				Execute(
 					m,
 					otherwise: () =>
-						Fail(m.Completion, 
+						Fail(
+							m.Completion,
 							new DirectPlayException(
 								ResultCode.NotHost,
 								"Only the host removes players."
@@ -1630,7 +1710,8 @@ internal sealed class SessionCore
 				Execute(
 					m,
 					otherwise: () =>
-						Fail(m.Completion, 
+						Fail(
+							m.Completion,
 							new InvalidOperationException("The peer is already in a session.")
 						)
 				),
@@ -1638,7 +1719,8 @@ internal sealed class SessionCore
 				Execute(
 					m,
 					otherwise: () =>
-						Fail(m.Completion, 
+						Fail(
+							m.Completion,
 							new InvalidOperationException("The peer is already in a session.")
 						)
 				),
@@ -1676,6 +1758,7 @@ internal sealed class SessionCore
 			MigrationTimedOut: m => Elapse(MigrationTimer, m.Generation, m),
 			PlayerJoinTimedOut: Execute,
 			IntegrityCheckTimedOut: Execute,
+			HostnameResolved: HostnameResolved,
 			TimersDue: _ =>
 			{
 				Timers.FireDue();
@@ -1707,6 +1790,20 @@ internal sealed class SessionCore
 	}
 
 	/// <summary>
+	/// Runs what the host we now follow sent while its claim waited, as if it arrived now.
+	/// </summary>
+	private void ReplayAcceptedClaim()
+	{
+		while (FromAcceptedClaim.Count > 0)
+		{
+			var replays = FromAcceptedClaim.ToList();
+			FromAcceptedClaim.Clear();
+			foreach (var replay in replays)
+				Receive(replay.Connection, replay.Message);
+		}
+	}
+
+	/// <summary>
 	/// Handles one input at <paramref name="now"/>, on the caller's clock, and everything it causes, timers due by then
 	/// included when the input is <see cref="SessionMessage.TimersDue"/>.
 	/// </summary>
@@ -1714,6 +1811,7 @@ internal sealed class SessionCore
 	{
 		Timers.Advance(now);
 		Receive(message);
+		ReplayAcceptedClaim();
 		ReplayDeferred();
 
 		// What changed with no event to show it, such as a session closed, is published as the message is done; then

@@ -132,6 +132,7 @@ internal closed record SessionState
 			ICanMeetPeers,
 			ICanCompleteJoining,
 			ICanFailJoining,
+			ICanHearOfMigration,
 			ICanReceiveData;
 
 	public sealed record Connected(Connection HostConnection)

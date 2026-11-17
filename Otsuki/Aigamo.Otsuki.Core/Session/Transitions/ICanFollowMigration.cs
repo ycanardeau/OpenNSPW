@@ -28,13 +28,16 @@ internal interface ICanFollowMigration
 		)
 			return Current;
 
-		// While we still hear from the old host, the claim waits: the peer may merely have lost its own link to it.
+		// While we still hear from the old host, or from the host we follow, the claim waits: the peer may merely have
+		// lost its own link to it. The old host that the peer names may be one it elected and lost since, while the host
+		// we follow has not left us yet: following the claim then would leave us two hosts.
 		if (
 			session.Players.TryGetValue(message.DpnidOldHost, out var oldHost)
-			&& oldHost.Connection is not null
+				&& oldHost.Connection is not null
+			|| command.Connection != HostConnection && session.Connections.Contains(HostConnection)
 		)
 		{
-			session.HostClaim = command;
+			session.KeepClaim(command);
 			return Current;
 		}
 

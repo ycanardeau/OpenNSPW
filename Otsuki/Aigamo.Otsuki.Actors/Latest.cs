@@ -7,15 +7,16 @@ namespace Aigamo.Otsuki.Actors;
 public sealed class Latest<T>(T initial)
 	where T : class?
 {
+	// Read and written only with Interlocked (OTSUKI0006).
 	private T _value = initial;
 
 	/// <summary>
 	/// The value posted last, or the initial one.
 	/// </summary>
-	public T Value => Volatile.Read(ref _value);
+	public T Value => Interlocked.CompareExchange(ref _value, null!, null!);
 
 	/// <summary>
 	/// Replaces the value, for the reads that follow.
 	/// </summary>
-	public void Post(T value) => Volatile.Write(ref _value, value);
+	public void Post(T value) => Interlocked.Exchange(ref _value, value);
 }

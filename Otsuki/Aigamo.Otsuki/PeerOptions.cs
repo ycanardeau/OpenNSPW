@@ -66,6 +66,12 @@ public sealed record PeerOptions
 	/// </summary>
 	internal int? RandomSeed { get; init; }
 
+	/// <summary>
+	/// Looks up the addresses of a host name that a peer's address gives: the system's DNS, or a test's.
+	/// </summary>
+	internal Func<string, Task<IPAddress[]>> LookUpHostname { get; init; } =
+		hostname => Dns.GetHostAddressesAsync(hostname);
+
 	internal SessionOptions ToSessionOptions() =>
 		new()
 		{
