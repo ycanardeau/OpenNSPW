@@ -131,6 +131,19 @@ internal sealed class SessionCore
 	public Received<CoreMessage.HostMigrate>? HostClaim { get; set; }
 
 	/// <summary>
+	/// What the peer of <see cref="HostClaim"/> sent after its claim, in order: the operations of a new host, such as
+	/// those it sends as it finishes a migration that stopped waiting for us. They wait with the claim, to run if we
+	/// follow that host.
+	/// </summary>
+	public List<CoreMessage> HeldForClaim { get; } = [];
+
+	/// <summary>
+	/// What the host we just followed sent while its claim waited, to run once the message that made us follow it is
+	/// done.
+	/// </summary>
+	public List<Received<CoreMessage>> FromAcceptedClaim { get; } = [];
+
+	/// <summary>
 	/// The newest name table version that every peer has, from DN_RESYNC_VERSION.
 	/// </summary>
 	public int ResynchronizedVersion { get; private set; }
@@ -964,6 +977,8 @@ internal sealed class SessionCore
 		NameTableLog.Clear();
 		ResynchronizedVersion = 0;
 		HostClaim = null;
+		HeldForClaim.Clear();
+		FromAcceptedClaim.Clear();
 	}
 
 	/// <summary>
@@ -1213,8 +1228,20 @@ internal sealed class SessionCore
 	}
 
 	/// <summary>
+	/// Keeps a DN_HOST_MIGRATE until we lose the old host too. What another peer sent after a claim of its own goes
+	/// with that claim.
+	/// </summary>
+	public void KeepClaim(Received<CoreMessage.HostMigrate> claim)
+	{
+		if (HostClaim?.Connection != claim.Connection)
+			HeldForClaim.Clear();
+		HostClaim = claim;
+	}
+
+	/// <summary>
 	/// Follows <paramref name="newHost"/>, which announced itself with DN_HOST_MIGRATE (step 2): the old host goes,
-	/// requests sent to another host fail, and the new host gets our name table version.
+	/// requests sent to another host fail, the new host gets our name table version, and what it sent while its claim
+	/// waited runs next.
 	/// </summary>
 	public SessionState AcceptHost(
 		Connection connection,
@@ -1223,7 +1250,12 @@ internal sealed class SessionCore
 		Connection previousHost
 	)
 	{
+		if (HostClaim?.Connection == connection)
+			FromAcceptedClaim.AddRange(
+				HeldForClaim.Select(message => new Received<CoreMessage>(connection, message))
+			);
 		HostClaim = null;
+		HeldForClaim.Clear();
 		if (connection != previousHost)
 			FailRequestsToLostHost();
 
@@ -1606,6 +1638,17 @@ internal sealed class SessionCore
 
 	private Unit Receive(Connection connection, CoreMessage message)
 	{
+		// What a peer sends after its claim to be host waits with the claim.
+		if (
+			HostClaim is { } claim
+			&& claim.Connection == connection
+			&& message is not CoreMessage.HostMigrate
+		)
+		{
+			HeldForClaim.Add(message);
+			return Unit.Default;
+		}
+
 		// Peers keep the host's name table operations, in case they must hand them to a new host.
 		if (
 			_state is IHasHostConnection { HostConnection: var host }
@@ -1747,6 +1790,20 @@ internal sealed class SessionCore
 	}
 
 	/// <summary>
+	/// Runs what the host we now follow sent while its claim waited, as if it arrived now.
+	/// </summary>
+	private void ReplayAcceptedClaim()
+	{
+		while (FromAcceptedClaim.Count > 0)
+		{
+			var replays = FromAcceptedClaim.ToList();
+			FromAcceptedClaim.Clear();
+			foreach (var replay in replays)
+				Receive(replay.Connection, replay.Message);
+		}
+	}
+
+	/// <summary>
 	/// Handles one input at <paramref name="now"/>, on the caller's clock, and everything it causes, timers due by then
 	/// included when the input is <see cref="SessionMessage.TimersDue"/>.
 	/// </summary>
@@ -1754,6 +1811,7 @@ internal sealed class SessionCore
 	{
 		Timers.Advance(now);
 		Receive(message);
+		ReplayAcceptedClaim();
 		ReplayDeferred();
 
 		// What changed with no event to show it, such as a session closed, is published as the message is done; then
