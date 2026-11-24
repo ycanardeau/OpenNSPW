@@ -84,11 +84,21 @@ internal class SackMessageSerializer(bool signed = false)
 		return Read(reader);
 	}
 
+	private int Size(ReliableMessage.Sack message) =>
+		12
+		+ (message.Sack1 ? 4 : 0)
+		+ (message.Sack2 ? 4 : 0)
+		+ (message.Send1 ? 4 : 0)
+		+ (message.Send2 ? 4 : 0)
+		+ (_signed ? 8 : 0);
+
+	// Written into an array of the frame's size, which it returns as it is.
 	public virtual byte[] Serialize(ReliableMessage.Sack message)
 	{
-		using var stream = new MemoryStream();
+		var datagram = new byte[Size(message)];
+		using var stream = new MemoryStream(datagram);
 		using var writer = new BinaryWriter(stream);
 		Write(writer, message);
-		return stream.ToArray();
+		return datagram;
 	}
 }

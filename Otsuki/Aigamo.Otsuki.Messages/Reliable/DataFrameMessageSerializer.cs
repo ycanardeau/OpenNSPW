@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Runtime.InteropServices;
 
 namespace Aigamo.Otsuki.Messages.Reliable;
 
@@ -29,15 +30,13 @@ internal class DataFrameMessageSerializer(bool signed = false)
 			? new SessionId(reader.ReadInt32())
 			: SessionId.Empty;
 
-		static byte[] ReadPayload(Stream source)
-		{
-			using var stream = new MemoryStream();
-			source.CopyTo(stream);
-			return stream.ToArray();
-		}
+		// The rest of the datagram, read into the array that the payload then wraps.
+		var stream = reader.BaseStream;
 		var payload = !control.HasFlag(PacketControl.KeepAliveOrCorrelate)
-			? [.. ReadPayload(reader.BaseStream)]
-			: ImmutableArray<byte>.Empty;
+			? ImmutableCollectionsMarshal.AsImmutableArray(
+				reader.ReadBytes((int)(stream.Length - stream.Position))
+			)
+			: [];
 
 		// Control goes last: the mask and session ID setters derive their flags from the value, which would otherwise clobber the flags read from the wire (e.g. SACK1 with a zero mask).
 		return new()
@@ -80,8 +79,10 @@ internal class DataFrameMessageSerializer(bool signed = false)
 
 		if (message.KeepAliveOrCorrelate)
 			writer.Write(message.SessionId.Value);
+		else if (message.Payload is ImmutableArray<byte> payload)
+			writer.Write(ImmutableCollectionsMarshal.AsArray(payload) ?? []);
 		else
-			writer.Write(message.Payload.ToArray());
+			writer.Write([.. message.Payload]);
 	}
 
 	public virtual ReliableMessage.DataFrame? Deserialize(byte[] data)
@@ -91,11 +92,22 @@ internal class DataFrameMessageSerializer(bool signed = false)
 		return Read(reader);
 	}
 
+	private int Size(ReliableMessage.DataFrame message) =>
+		4
+		+ (message.Sack1 ? 4 : 0)
+		+ (message.Sack2 ? 4 : 0)
+		+ (message.Send1 ? 4 : 0)
+		+ (message.Send2 ? 4 : 0)
+		+ (_signed ? 8 : 0)
+		+ (message.KeepAliveOrCorrelate ? 4 : message.Payload.Count);
+
+	// Written into an array of the frame's size, which it returns as it is.
 	public virtual byte[] Serialize(ReliableMessage.DataFrame message)
 	{
-		using var stream = new MemoryStream();
+		var datagram = new byte[Size(message)];
+		using var stream = new MemoryStream(datagram);
 		using var writer = new BinaryWriter(stream);
 		Write(writer, message);
-		return stream.ToArray();
+		return datagram;
 	}
 }
