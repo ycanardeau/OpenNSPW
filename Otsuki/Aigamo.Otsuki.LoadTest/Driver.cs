@@ -162,19 +162,21 @@ internal sealed class Driver(LoadSettings settings)
 		if (steady.Count == 0)
 		{
 			var most = _rows.Count == 0 ? 0 : _rows.Max(r => r.Server.Clients);
-			return $"| {label} | {_settings.Clients} | did not join: {most} at most | | | | | | | | |";
+			return $"| {label} | {_settings.Clients} | did not join: {most} at most | | | | | | | | | |";
 		}
 
-		var p99 = steady.Max(r => r.Server.P99);
-		var updatesP99 = steady.Max(r => r.Clients.P99);
+		// The median second's p99, and the worst second's in brackets.
+		string P99(Func<(Report Server, Report Clients), long> p99) =>
+			$"{Ms((long)Median(steady.Select(r => (double)p99(r))))} ({Ms(steady.Max(p99))})";
+
 		return string.Create(
 			CultureInfo.InvariantCulture,
-			$"| {label} | {_settings.Clients} | {Median(steady.Select(r => (double)r.Server.MessagesIn)):0} | {Median(steady.Select(r => (double)r.Server.MessagesOut)):0} | {Median(steady.Select(r => (double)r.Server.DatagramsIn)):0} / {Median(steady.Select(r => (double)r.Server.DatagramsOut)):0} | {Ms(p99)} | {Ms(updatesP99)} | {Median(steady.Select(r => r.Server.Cores)):0.00} | {Median(steady.Select(r => r.Server.AllocatedMBps)):0} | {steady.Sum(r => r.Server.GcPauseMs) / steady.Count:0.0} | {steady.Sum(r => r.Server.LockContentions) / steady.Count:0.0} |"
+			$"| {label} | {_settings.Clients} | {Median(steady.Select(r => (double)r.Server.MessagesIn)):0} | {Median(steady.Select(r => (double)r.Server.MessagesOut)):0} | {Median(steady.Select(r => (double)r.Server.DatagramsIn)):0} / {Median(steady.Select(r => (double)r.Server.DatagramsOut)):0} | {P99(r => r.Server.P99)} | {P99(r => r.Clients.P99)} | {Median(steady.Select(r => r.Server.Cores)):0.00} | {Median(steady.Select(r => r.Clients.Cores)):0.00} | {Median(steady.Select(r => r.Server.AllocatedMBps)):0} | {steady.Sum(r => r.Server.GcPauseMs) / steady.Count:0.0} | {steady.Sum(r => r.Server.LockContentions) / steady.Count:0.0} |"
 		);
 	}
 
 	public const string Header =
-		"| Run | Clients | Messages in/s | Messages out/s | Datagrams in/out per s | p99 in (ms) | p99 updates (ms) | Server CPU (cores) | Allocated (MB/s) | GC pause (ms/s) | Lock contentions/s |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |";
+		"| Run | Clients | Messages in/s | Messages out/s | Datagrams in/out per s | p99 in (ms) | p99 updates (ms) | Server CPU (cores) | Clients CPU (cores) | Allocated (MB/s) | GC pause (ms/s) | Lock contentions/s |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |";
 
 	public async Task<int> RunAsync()
 	{
