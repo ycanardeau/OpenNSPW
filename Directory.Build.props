@@ -4,7 +4,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<LangVersion>preview</LangVersion>
-		<Version>0.0.1-alpha.26</Version>
+		<Version>0.0.1-alpha.27</Version>
 		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 		<WarningsAsErrors>$(WarningsAsErrors);nullable</WarningsAsErrors>
 	</PropertyGroup>
