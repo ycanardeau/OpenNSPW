@@ -65,9 +65,9 @@ internal sealed class ReliableChannel(ReliableConnection connection, Handshake h
 
 		/// <summary>
 		/// The bytes a full-signed connection derives the secret modifier from: the payload, or the first message of a
-		/// coalesced frame.
+		/// coalesced frame. Copied only for a connection that signs.
 		/// </summary>
-		public byte[]? ModifierPayload { get; init; }
+		public ImmutableArray<byte> ModifierPayload { get; init; }
 
 		/// <summary>
 		/// The sends that complete with this frame: none for a frame that does not end a message, one for a frame
@@ -277,7 +277,9 @@ internal sealed class ReliableChannel(ReliableConnection connection, Handshake h
 	/// the first message of a reliable coalesced frame. KeepAlives and END_STREAM carry none.
 	/// </summary>
 	private static byte[]? GetModifierPayload(OutgoingFrame frame) =>
-		frame.Reliable && !frame.KeepAlive && !frame.EndStream ? frame.ModifierPayload : null;
+		frame.Reliable && !frame.KeepAlive && !frame.EndStream && !frame.ModifierPayload.IsDefault
+			? [.. frame.ModifierPayload]
+			: null;
 
 	/// <summary>
 	/// Takes the next frame to send, combining it with the whole messages queued after it into one coalesced frame
@@ -321,7 +323,7 @@ internal sealed class ReliableChannel(ReliableConnection connection, Handshake h
 			NewMessage = true,
 			EndMessage = true,
 			Coalesce = true,
-			ModifierPayload = [.. first.Payload],
+			ModifierPayload = first.Payload,
 			SendIds = [.. frames.SelectMany(f => f.SendIds)],
 		};
 	}
@@ -358,15 +360,14 @@ internal sealed class ReliableChannel(ReliableConnection connection, Handshake h
 		for (var i = 0; i < count; i++)
 		{
 			var offset = i * size;
+			var part = payload
+				.AsSpan(offset, Math.Min(size, payload.Length - offset))
+				.ToImmutableArray();
 			_pending.Enqueue(
 				new OutgoingFrame
 				{
-					Payload = payload
-						.AsSpan(offset, Math.Min(size, payload.Length - offset))
-						.ToImmutableArray(),
-					ModifierPayload = payload
-						.AsSpan(offset, Math.Min(size, payload.Length - offset))
-						.ToArray(),
+					Payload = part,
+					ModifierPayload = part,
 					// A message split across frames is always sent reliably so that it can be reassembled.
 					Reliable = reliable || count > 1,
 					NewMessage = i == 0,
