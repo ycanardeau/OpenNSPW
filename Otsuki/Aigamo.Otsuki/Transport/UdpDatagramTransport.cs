@@ -17,10 +17,22 @@ namespace Aigamo.Otsuki.Transport;
 /// </remarks>
 public sealed class UdpDatagramTransport : IDatagramTransport
 {
+	// A partner's endpoint as a receive loop made it, once for every datagram from the partner, with its address in the
+	// form that a send takes, so that neither a receive nor a send makes one again. Never changed once made.
+	private sealed class RemoteEndPoint(IPEndPoint endPoint, SocketAddress socketAddress)
+		: IPEndPoint(endPoint.Address, endPoint.Port)
+	{
+		public SocketAddress SocketAddress { get; } = socketAddress;
+	}
+
 	// Stops Windows from reporting ICMP port unreachable as a failure of the next receive.
 	private const int SioUdpConnectionReset = -1744830452;
 
 	private const int MaxDatagramSize = 65535;
+
+	// The partners a receive loop keeps an endpoint for; past this many, it forgets them all and starts again, so that
+	// datagrams from ever new addresses do not grow it without bound.
+	private const int MaxRemoteEndPoints = 1 << 16;
 
 	private readonly ImmutableArray<Socket> _sockets;
 	private readonly CancellationTokenSource _cancellation = new();
@@ -85,6 +97,28 @@ public sealed class UdpDatagramTransport : IDatagramTransport
 
 	public EndPoint LocalEndPoint => _sockets[0].LocalEndPoint!;
 
+	// The endpoint of the partner at address, made once and kept in endPoints, which only the receive loop touches.
+	private static RemoteEndPoint FindRemote(
+		Dictionary<SocketAddress, RemoteEndPoint> endPoints,
+		SocketAddress address
+	)
+	{
+		if (endPoints.TryGetValue(address, out var remote))
+			return remote;
+
+		if (endPoints.Count >= MaxRemoteEndPoints)
+			endPoints.Clear();
+
+		var copy = new SocketAddress(address.Family, address.Size);
+		address.Buffer.CopyTo(copy.Buffer);
+		remote = new RemoteEndPoint(
+			(IPEndPoint)new IPEndPoint(IPAddress.Any, 0).Create(copy),
+			copy
+		);
+		endPoints.Add(copy, remote);
+		return remote;
+	}
+
 	private static async Task ReceiveLoopAsync(
 		Socket socket,
 		Action<EndPoint, byte[]> onReceive,
@@ -92,14 +126,15 @@ public sealed class UdpDatagramTransport : IDatagramTransport
 	)
 	{
 		var buffer = new byte[MaxDatagramSize];
-		var any = new IPEndPoint(IPAddress.Any, 0);
+		var address = new SocketAddress(AddressFamily.InterNetwork);
+		var endPoints = new Dictionary<SocketAddress, RemoteEndPoint>();
 		while (!cancellationToken.IsCancellationRequested)
 		{
-			SocketReceiveFromResult result;
+			int received;
 			try
 			{
-				result = await socket
-					.ReceiveFromAsync(buffer, SocketFlags.None, any, cancellationToken)
+				received = await socket
+					.ReceiveFromAsync(buffer, SocketFlags.None, address, cancellationToken)
 					.ConfigureAwait(false);
 			}
 			catch (SocketException e)
@@ -113,7 +148,7 @@ public sealed class UdpDatagramTransport : IDatagramTransport
 				return;
 			}
 
-			onReceive(result.RemoteEndPoint, buffer.AsSpan(0, result.ReceivedBytes).ToArray());
+			onReceive(FindRemote(endPoints, address), buffer.AsSpan(0, received).ToArray());
 		}
 	}
 
@@ -131,7 +166,10 @@ public sealed class UdpDatagramTransport : IDatagramTransport
 				: _sockets[(remoteEndPoint.GetHashCode() & int.MaxValue) % _sockets.Length];
 		try
 		{
-			socket.SendTo(datagram, remoteEndPoint);
+			if (remoteEndPoint is RemoteEndPoint remote)
+				socket.SendTo(datagram, SocketFlags.None, remote.SocketAddress);
+			else
+				socket.SendTo(datagram, remoteEndPoint);
 		}
 		catch (Exception e) when (e is SocketException or ObjectDisposedException)
 		{

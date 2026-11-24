@@ -59,7 +59,9 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 
 		if (remoteEndPoint is IPEndPoint ip)
 		{
-			foreach (var value in ip.Address.GetAddressBytes())
+			Span<byte> address = stackalloc byte[16];
+			ip.Address.TryWriteBytes(address, out var length);
+			foreach (var value in address[..length])
 				Add(value);
 			Add((byte)ip.Port);
 			Add((byte)(ip.Port >> 8));
