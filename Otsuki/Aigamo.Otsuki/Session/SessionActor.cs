@@ -81,19 +81,31 @@ internal sealed class SessionActor : Actor<SessionMessage>, ISessionOutputs
 	Connection ISessionOutputs.Connect(EndPoint remoteEndPoint, PacketSigning signing) =>
 		_endpoint.Value!.Connect(remoteEndPoint, signing);
 
-	IPAddress? ISessionOutputs.ResolveHostname(string hostname)
+	// Looks the name up on the thread pool, so that a slow lookup does not hold the session, and posts what it found.
+	private async Task ResolveHostnameAsync(
+		string hostname,
+		Func<IPAddress?, SessionMessage> resolved
+	)
 	{
+		IPAddress? address = null;
 		try
 		{
-			return Dns.GetHostAddresses(hostname)
-				.FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork);
+			address = (
+				await _options.LookUpHostname(hostname).ConfigureAwait(false)
+			).FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork);
 		}
-		catch (SocketException)
+		catch (Exception e) when (e is SocketException or ArgumentException)
 		{
 			// Reported like a name without IPv4 addresses.
-			return null;
 		}
+
+		Post(resolved(address));
 	}
+
+	void ISessionOutputs.ResolveHostname(
+		string hostname,
+		Func<IPAddress?, SessionMessage> resolved
+	) => _ = ResolveHostnameAsync(hostname, resolved);
 
 	void ISessionOutputs.Post(Connection connection, ConnectionMessage message) =>
 		((ConnectionLoop)connection.Loop).Post(connection, message);

@@ -119,4 +119,12 @@ internal closed record SessionMessage
 	/// The nearest deadline of the session's timers has come.
 	/// </summary>
 	public sealed record TimersDue : SessionMessage;
+
+	/// <summary>
+	/// The IPv4 address of the host name that <paramref name="Player"/>'s address gives, or <see langword="null"/> if it
+	/// has none, looked up away from the session (<see cref="ISessionOutputs.ResolveHostname"/>) as the host instructed
+	/// over <paramref name="HostConnection"/>.
+	/// </summary>
+	public sealed record HostnameResolved(Connection HostConnection, Dpnid Player, IPAddress? Address)
+		: SessionMessage;
 }

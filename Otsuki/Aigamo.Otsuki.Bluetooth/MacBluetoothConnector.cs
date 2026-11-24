@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
@@ -60,7 +61,8 @@ internal sealed unsafe partial class MacBluetoothConnector
 	// IOReturn's kIOReturnSuccess.
 	private const int Success = 0;
 
-	private readonly byte[] _service;
+	// The service's UUID, which Start reads on its caller's thread, and the actor as it connects: immutable.
+	private readonly ImmutableArray<byte> _service;
 	private readonly string _serviceName;
 	private readonly GCHandle _handle;
 	private readonly nint _host;
@@ -240,7 +242,7 @@ internal sealed unsafe partial class MacBluetoothConnector
 		completion.Task.ContinueWith(_ => registration.Dispose(), TaskScheduler.Default);
 		var address = remoteEndPoint.ToBytes();
 		fixed (byte* addressBytes = address)
-		fixed (byte* service = _service)
+		fixed (byte* service = _service.AsSpan())
 			NativeConnect(_host, request, addressBytes, service);
 	}
 
@@ -398,7 +400,7 @@ internal sealed unsafe partial class MacBluetoothConnector
 
 	public MacBluetoothConnector(Guid service, string serviceName)
 	{
-		_service = service.ToByteArray(bigEndian: true);
+		_service = [.. service.ToByteArray(bigEndian: true)];
 		_serviceName = serviceName;
 		LocalEndPoint = GetLocalEndPoint();
 		_handle = GCHandle.Alloc(this, GCHandleType.Weak);
@@ -420,7 +422,7 @@ internal sealed unsafe partial class MacBluetoothConnector
 	{
 		Post(new Message.Started(onAccept));
 		int status;
-		fixed (byte* service = _service)
+		fixed (byte* service = _service.AsSpan())
 			status = NativeListen(_host, service, _serviceName);
 		if (status != Success)
 			throw new IOException(

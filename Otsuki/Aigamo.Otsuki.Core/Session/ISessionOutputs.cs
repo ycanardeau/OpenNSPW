@@ -34,10 +34,11 @@ internal interface ISessionOutputs
 	Connection Connect(EndPoint remoteEndPoint, PacketSigning signing);
 
 	/// <summary>
-	/// The IPv4 address of a host name that a peer's address gives, or <see langword="null"/> if it has none. Looks it
-	/// up while the session waits: peers give addresses, not names, but for the rare one that is a name.
+	/// Looks up the IPv4 address of a host name that a peer's address gives, away from the session, which goes on
+	/// meanwhile, and gives the session the message that <paramref name="resolved"/> makes of it, or of
+	/// <see langword="null"/> if it has none. Peers give addresses, not names, but for the rare one that is a name.
 	/// </summary>
-	IPAddress? ResolveHostname(string hostname);
+	void ResolveHostname(string hostname, Func<IPAddress?, SessionMessage> resolved);
 
 	/// <summary>
 	/// Gives a connection a message, through its loop.
