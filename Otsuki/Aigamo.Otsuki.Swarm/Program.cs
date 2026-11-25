@@ -10,6 +10,8 @@ using Aigamo.Otsuki.Tests;
 // Usage:
 //   swarm [--seeds N] [--first S] [--scenario NAME[,NAME...]] [--threads K]
 //   replay NAME SEED [--trace FILE]: the network's trace and each peer's events go to FILE if it fails
+//   explore [NAME[,NAME...]] [--delays D] [--runs N]: every order of small cases from their marked point, within D delays
+//   explore NAME --choices STEP:CHOICE,...: one order again, as a failed exploration prints it
 //   list
 
 static Dictionary<string, string> Parse(string[] args, int from)
@@ -66,6 +68,45 @@ switch (args[0])
 		foreach (var scenario in all)
 			Console.WriteLine($"{scenario.Name}{(scenario.MayBeRough ? " (rough)" : "")}");
 		return 0;
+
+	case "explore":
+	{
+		var explorations = args.Length > 1 && !args[1].StartsWith("--", StringComparison.Ordinal)
+			? [.. args[1].Split(',').Select(name => SimulationExplorations.All.Single(e => e.Name == name))]
+			: SimulationExplorations.All;
+		if (options.TryGetValue("choices", out var choices))
+		{
+			SimulationExplorations.Replay(explorations[0], choices);
+			Console.WriteLine("Passed.");
+			return 0;
+		}
+
+		var maxDelays = Int(options, "delays", int.MaxValue);
+		var maxRuns = Int(options, "runs", 1_000_000);
+		var failed = false;
+		foreach (var exploration in explorations)
+		{
+			var clock = Stopwatch.StartNew();
+			try
+			{
+				var (runs, isExhausted, fromStep) = SimulationExplorations.Explore(
+					exploration,
+					maxRuns,
+					maxDelays
+				);
+				Console.WriteLine(
+					$"{exploration.Name}: {runs:N0} orders from step {fromStep}{(maxDelays == int.MaxValue ? "" : $" within {maxDelays} delays")}, {(isExhausted ? "every one" : "not all")}, in {Format(clock.Elapsed)}"
+				);
+			}
+			catch (Exception exception)
+			{
+				failed = true;
+				Console.WriteLine($"FAILED {exception.Message.Split('\n')[0]}");
+			}
+		}
+
+		return failed ? 1 : 0;
+	}
 
 	case "replay":
 	{

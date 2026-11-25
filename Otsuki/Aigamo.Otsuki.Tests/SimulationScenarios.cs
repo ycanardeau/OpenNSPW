@@ -588,6 +588,47 @@ internal static class SimulationScenarios
 		CloseAll(simulation, peers);
 	}
 
+	/// <summary>
+	/// For exploring orders: a session of <paramref name="peers"/>, migrating its host, from which at one moment the
+	/// host leaves if <paramref name="hostLeaves"/>, and <paramref name="othersLeaving"/> of the others, by closing or,
+	/// if <paramref name="crashes"/>, by their machines stopping, while a newcomer joins if <paramref name="joins"/>.
+	/// The peers left must hold together and reach each other. The moment is marked (<see cref="Simulation.Mark"/>):
+	/// the session forms in the order of scheduling, and only what follows is explored.
+	/// </summary>
+	public static void Departures(
+		SimulationConditions conditions,
+		int peers,
+		bool hostLeaves,
+		int othersLeaving,
+		bool crashes,
+		bool joins
+	)
+	{
+		var simulation = new Simulation(0, conditions);
+		var session = Mesh(simulation, joiners: peers - 1, SessionFlags.MigrateHost);
+		simulation.Mark();
+		var leaving = session.Skip(1).TakeLast(othersLeaving).ToList();
+		if (hostLeaves)
+			leaving.Insert(0, session[0]);
+		if (joins)
+		{
+			var joiner = new SimulatedPeer(simulation, IPAddress.Parse("10.8.0.9"));
+			_ = joiner.Peer.ConnectAsync(
+				Application(flags: SessionFlags.MigrateHost),
+				new IPEndPoint(session[0].Address, ServerEndPoint.Port)
+			);
+			session.Add(joiner);
+		}
+		foreach (var peer in leaving)
+			Leave(simulation, peer, crashes);
+
+		var what =
+			$"{string.Join(", ", leaving.Select(p => p.Address))} {(crashes ? "crashed" : "closed")}{(joins ? " as a peer joined" : "")}";
+		var live = Settle(simulation, session, what);
+		if (!joins)
+			live.Should().HaveCount(peers - leaving.Count, $"the others stay ({what})");
+	}
+
 	// One change to the session that Churn makes, by a peer in it; what it did, or null if it could not. A peer leaves,
 	// or the host removes one, only while another would stay, counting those it was asked to remove as gone.
 	private static string? Change(

@@ -76,12 +76,18 @@ internal sealed record SimulationConditions
 	public bool KeepsTrace { get; init; }
 
 	/// <summary>
+	/// The scheduler to run on, in place of one that <see cref="Order"/> makes, such as one that an exploration gives.
+	/// </summary>
+	public ManualScheduler? Scheduler { get; init; }
+
+	/// <summary>
 	/// Called with each simulation as it starts, such as by a replay that prints what it did once it fails.
 	/// </summary>
 	public Action<Simulation>? OnStart { get; init; }
 
 	public ManualScheduler CreateScheduler(int seed) =>
-		Order switch
+		Scheduler
+		?? Order switch
 		{
 			SimulationOrder.Random => new ManualScheduler(seed),
 			SimulationOrder.PrioritiesOfDepth2 => ManualScheduler.WithPriorities(

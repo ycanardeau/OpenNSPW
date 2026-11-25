@@ -193,4 +193,16 @@ public class SimulationTests
 		for (var seed = 0; seed < Seeds; seed++)
 			SimulationScenarios.Churn(seed, SimulationConditions.Draw(seed, mayBeRough: true));
 	}
+
+	// Every order within one delay of what follows the departures of each small case (SimulationExplorations): a host of
+	// three or four leaving, a second peer with it, and a join racing a leave. The swarm's explore command takes more.
+	[Fact]
+	public void SmallCases_InEveryOrderWithinOneDelay()
+	{
+		foreach (var exploration in SimulationExplorations.All)
+			SimulationExplorations
+				.Explore(exploration, maxRuns: 10_000, maxDelays: 1)
+				.IsExhausted.Should()
+				.BeTrue(exploration.Name);
+	}
 }

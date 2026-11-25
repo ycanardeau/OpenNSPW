@@ -47,6 +47,16 @@ internal sealed class Simulation
 	/// </summary>
 	public long Steps { get; private set; }
 
+	/// <summary>
+	/// The scheduler's step at which the scenario marked the point it is about (<see cref="Mark"/>), or -1.
+	/// </summary>
+	public int MarkedStep { get; private set; } = -1;
+
+	/// <summary>
+	/// Marks the point that the scenario is about, such as a peer leaving, from which an exploration takes every order.
+	/// </summary>
+	public void Mark() => MarkedStep = Scheduler.Taken.Count;
+
 	// Cuts the network between one machine and another, or around one, for a while.
 	private void Split(TimeSpan length)
 	{
