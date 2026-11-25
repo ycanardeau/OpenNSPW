@@ -27,7 +27,7 @@ await foreach (var e in peer.ReadEventsAsync())
 - **No locks, by construction.** Every piece of protocol state belongs to one actor, which handles one message at a time. An analyzer reports a lock as a build error.
 - **A sans-I/O core.** The protocol itself is state machines with no threads, timers, clocks or sockets, which the compiler keeps so: a race inside the core is code that does not build.
 - **Tested hard.** Lossy, reordering and partitioned networks; replays of the specification's sample packets byte for byte; and whole sessions in a hundred seeded orders each, where a failing seed repeats.
-- **Scales.** One server held 10,000 clients on 0.7 of a core, at a message and an update a second each ([measurements](../docs/OtsukiThreading.md#measurements)).
+- **Scales.** One server held 10,000 clients, at a message and an update a second each, on 2 cores of an Apple M2 that also ran the clients, or 1.4 with the thread pool's spinning off ([measurements](../docs/OtsukiThreading.md#measurements)).
 - **Any transport.** UDP by default, or any reliable stream, such as Bluetooth RFCOMM channels.
 
 ## Installation

@@ -239,16 +239,21 @@ internal sealed class ReliableConnection
 	/// <summary>
 	/// Stays in <paramref name="state"/> while the channel is open, and closes the connection otherwise.
 	/// </summary>
+	/// <remarks>
+	/// A switch, which every frame takes: Match would make a closure for each status at each call.
+	/// </remarks>
 	public ConnectionState Settle(
 		ConnectionState state,
 		ReliableChannel channel,
 		ChannelStatus status
 	) =>
-		status.Match(
-			Open: () => state,
-			Disconnected: () => Close(channel, ResultCode.Success),
-			Lost: () => Close(channel, ResultCode.ConnectionLost)
-		);
+		status switch
+		{
+			ChannelStatus.Open => state,
+			ChannelStatus.Disconnected => Close(channel, ResultCode.Success),
+			ChannelStatus.Lost => Close(channel, ResultCode.ConnectionLost),
+			_ => throw new ArgumentOutOfRangeException(nameof(status), status, null),
+		};
 
 	private Unit Execute<TCommand>(TCommand command)
 	{

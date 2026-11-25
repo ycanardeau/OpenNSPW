@@ -126,6 +126,9 @@ internal sealed class Driver(LoadSettings settings)
 					Max = Math.Max(sum.Max, r.Max),
 					Cores = sum.Cores + r.Cores,
 					AllocatedMBps = sum.AllocatedMBps + r.AllocatedMBps,
+					Gen0 = sum.Gen0 + r.Gen0,
+					Gen1 = sum.Gen1 + r.Gen1,
+					Gen2 = sum.Gen2 + r.Gen2,
 					GcPauseMs = sum.GcPauseMs + r.GcPauseMs,
 					LockContentions = sum.LockContentions + r.LockContentions,
 					WorkingSetMB = sum.WorkingSetMB + r.WorkingSetMB,
@@ -140,7 +143,7 @@ internal sealed class Driver(LoadSettings settings)
 		Console.WriteLine(
 			string.Create(
 				CultureInfo.InvariantCulture,
-				$"{server.Seconds,6:0} s  clients {server.Clients,6} ({clients.Clients} connected, {clients.Failed} failed, {clients.Terminated} ended)  sent {clients.MessagesOut,8}/s  in {server.MessagesIn,8}/s  out {server.MessagesOut,8}/s  got {clients.MessagesIn,8}/s  dgrams {server.DatagramsIn,8}/{server.DatagramsOut,-8} (clients {clients.DatagramsOut}/{clients.DatagramsIn}, refused {server.SendErrors}/{clients.SendErrors})  p50 {Ms(server.P50),7} p99 {Ms(server.P99),7} ms  updates p99 {Ms(clients.P99),7} ms  cpu {server.Cores,5:0.00}+{clients.Cores,5:0.00}  alloc {server.AllocatedMBps,7:0.0} MB/s  gc {server.Gen0}/{server.Gen1}/{server.Gen2} {server.GcPauseMs,5:0.0} ms  locks {server.LockContentions,4:0}  queues {server.SessionQueue}/{server.LoopQueue}/{server.EventQueue}  pool {server.PoolThreads:0}/{server.PoolQueue:0}  client queues {clients.SessionQueue}/{clients.LoopQueue}/{clients.EventQueue}  ws {server.WorkingSetMB,5:0} MB"
+				$"{server.Seconds,6:0} s  clients {server.Clients,6} ({clients.Clients} connected, {clients.Failed} failed, {clients.Terminated} ended)  sent {clients.MessagesOut,8}/s  in {server.MessagesIn,8}/s  out {server.MessagesOut,8}/s  got {clients.MessagesIn,8}/s  dgrams {server.DatagramsIn,8}/{server.DatagramsOut,-8} (clients {clients.DatagramsOut}/{clients.DatagramsIn}, refused {server.SendErrors}/{clients.SendErrors})  p50 {Ms(server.P50),7} p99 {Ms(server.P99),7} ms  updates p99 {Ms(clients.P99),7} ms  cpu {server.Cores,5:0.00}+{clients.Cores,5:0.00}  alloc {server.AllocatedMBps,7:0.0} MB/s  gc {server.Gen0}/{server.Gen1}/{server.Gen2} {server.GcPauseMs,5:0.0} ms (clients {clients.Gen0}/{clients.Gen1}/{clients.Gen2} {clients.GcPauseMs:0.0} ms)  locks {server.LockContentions,4:0}  queues {server.SessionQueue}/{server.LoopQueue}/{server.EventQueue}  pool {server.PoolThreads:0}/{server.PoolQueue:0}  client queues {clients.SessionQueue}/{clients.LoopQueue}/{clients.EventQueue}  ws {server.WorkingSetMB,5:0} MB"
 			)
 		);
 	}
@@ -159,19 +162,21 @@ internal sealed class Driver(LoadSettings settings)
 		if (steady.Count == 0)
 		{
 			var most = _rows.Count == 0 ? 0 : _rows.Max(r => r.Server.Clients);
-			return $"| {label} | {_settings.Clients} | did not join: {most} at most | | | | | | | | |";
+			return $"| {label} | {_settings.Clients} | did not join: {most} at most | | | | | | | | | |";
 		}
 
-		var p99 = steady.Max(r => r.Server.P99);
-		var updatesP99 = steady.Max(r => r.Clients.P99);
+		// The median second's p99, and the worst second's in brackets.
+		string P99(Func<(Report Server, Report Clients), long> p99) =>
+			$"{Ms((long)Median(steady.Select(r => (double)p99(r))))} ({Ms(steady.Max(p99))})";
+
 		return string.Create(
 			CultureInfo.InvariantCulture,
-			$"| {label} | {_settings.Clients} | {Median(steady.Select(r => (double)r.Server.MessagesIn)):0} | {Median(steady.Select(r => (double)r.Server.MessagesOut)):0} | {Median(steady.Select(r => (double)r.Server.DatagramsIn)):0} / {Median(steady.Select(r => (double)r.Server.DatagramsOut)):0} | {Ms(p99)} | {Ms(updatesP99)} | {Median(steady.Select(r => r.Server.Cores)):0.00} | {Median(steady.Select(r => r.Server.AllocatedMBps)):0} | {steady.Sum(r => r.Server.GcPauseMs) / steady.Count:0.0} | {steady.Sum(r => r.Server.LockContentions) / steady.Count:0.0} |"
+			$"| {label} | {_settings.Clients} | {Median(steady.Select(r => (double)r.Server.MessagesIn)):0} | {Median(steady.Select(r => (double)r.Server.MessagesOut)):0} | {Median(steady.Select(r => (double)r.Server.DatagramsIn)):0} / {Median(steady.Select(r => (double)r.Server.DatagramsOut)):0} | {P99(r => r.Server.P99)} | {P99(r => r.Clients.P99)} | {Median(steady.Select(r => r.Server.Cores)):0.00} | {Median(steady.Select(r => r.Clients.Cores)):0.00} | {Median(steady.Select(r => r.Server.AllocatedMBps)):0} | {steady.Sum(r => r.Server.GcPauseMs) / steady.Count:0.0} | {steady.Sum(r => r.Server.LockContentions) / steady.Count:0.0} |"
 		);
 	}
 
 	public const string Header =
-		"| Run | Clients | Messages in/s | Messages out/s | Datagrams in/out per s | p99 in (ms) | p99 updates (ms) | Server CPU (cores) | Allocated (MB/s) | GC pause (ms/s) | Lock contentions/s |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |";
+		"| Run | Clients | Messages in/s | Messages out/s | Datagrams in/out per s | p99 in (ms) | p99 updates (ms) | Server CPU (cores) | Clients CPU (cores) | Allocated (MB/s) | GC pause (ms/s) | Lock contentions/s |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |";
 
 	public async Task<int> RunAsync()
 	{
