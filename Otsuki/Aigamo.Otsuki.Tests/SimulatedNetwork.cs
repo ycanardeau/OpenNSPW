@@ -7,17 +7,25 @@ namespace Aigamo.Otsuki.Tests;
 
 /// <summary>
 /// A network for the simulation: each datagram is delivered as a step of its own on the scheduler, so that the
-/// scheduler's order mixes deliveries with the actors' messages, and reorders datagrams as UDP may. It loses a share of
-/// them and delivers another share twice, chosen by its seed, and none to or from an address cut off. Binding and everything else happen at once, on
-/// the one thread that drives the simulation.
+/// scheduler's order mixes deliveries with the actors' messages, and reorders datagrams as UDP may. With a latency, a
+/// datagram waits on the clock before that step, and with jitter, for a time of its own. It loses a share of them and
+/// delivers another share twice, chosen by its seed, and none to or from an address cut off, or between two addresses
+/// partitioned. Binding and everything else happen at once, on the one thread that drives the simulation.
 /// </summary>
-internal sealed class SimulatedNetwork(ManualScheduler scheduler, Func<TimeSpan> now, int seed)
+internal sealed class SimulatedNetwork(
+	ManualScheduler scheduler,
+	ManualTimeProvider clock,
+	int seed,
+	bool keepsTrace = true
+)
 {
 	private readonly ManualScheduler _scheduler = scheduler;
-	private readonly Func<TimeSpan> _now = now;
+	private readonly ManualTimeProvider _clock = clock;
 	private readonly Random _random = new(seed);
+	private readonly bool _keepsTrace = keepsTrace;
 	private readonly Dictionary<IPEndPoint, SimulatedTransport> _transports = [];
 	private readonly HashSet<IPAddress> _cutOff = [];
+	private readonly HashSet<(IPAddress, IPAddress)> _partitions = [];
 	private int _nextPort = 40000;
 
 	/// <summary>
@@ -31,10 +39,25 @@ internal sealed class SimulatedNetwork(ManualScheduler scheduler, Func<TimeSpan>
 	public double DuplicateRate { get; set; }
 
 	/// <summary>
+	/// The least time a datagram takes.
+	/// </summary>
+	public TimeSpan Latency { get; set; }
+
+	/// <summary>
+	/// Up to how much longer than <see cref="Latency"/> each datagram takes.
+	/// </summary>
+	public TimeSpan Jitter { get; set; }
+
+	/// <summary>
 	/// What the network did, in order: each datagram delivered, lost or cut off, with the time, the addresses and the
-	/// bytes. Two runs that take the same order have the same trace.
+	/// bytes. Two runs that take the same order have the same trace. Empty if the network keeps none.
 	/// </summary>
 	public List<string> Trace { get; } = [];
+
+	/// <summary>
+	/// Every transport bound so far, closed ones included.
+	/// </summary>
+	public List<SimulatedTransport> Transports { get; } = [];
 
 	/// <summary>
 	/// Every datagram to or from <paramref name="address"/> is lost from now on, as if its machine had stopped.
@@ -42,9 +65,27 @@ internal sealed class SimulatedNetwork(ManualScheduler scheduler, Func<TimeSpan>
 	public void CutOff(IPAddress address) => _cutOff.Add(address);
 
 	/// <summary>
-	/// Every transport bound so far, closed ones included.
+	/// Every datagram between <paramref name="first"/> and <paramref name="second"/> is lost until they are healed.
 	/// </summary>
-	public List<SimulatedTransport> Transports { get; } = [];
+	public void Partition(IPAddress first, IPAddress second)
+	{
+		_partitions.Add((first, second));
+		_partitions.Add((second, first));
+	}
+
+	public void Heal(IPAddress first, IPAddress second)
+	{
+		_partitions.Remove((first, second));
+		_partitions.Remove((second, first));
+	}
+
+	public void HealAll() => _partitions.Clear();
+
+	/// <summary>
+	/// The addresses that have a transport open, in the order they were first bound.
+	/// </summary>
+	public List<IPAddress> Addresses() =>
+		[.. Transports.Where(t => !t.IsDisposed).Select(t => t.LocalEndPoint.Address).Distinct()];
 
 	public SimulatedTransport Bind(IPAddress address, int port)
 	{
@@ -58,28 +99,51 @@ internal sealed class SimulatedNetwork(ManualScheduler scheduler, Func<TimeSpan>
 	public Func<EndPoint, IDatagramTransport> CreateFactory(IPAddress address) =>
 		localEndPoint => Bind(address, ((IPEndPoint)localEndPoint).Port);
 
+	private void Record(string entry)
+	{
+		if (_keepsTrace)
+			Trace.Add(entry);
+	}
+
+	private bool IsCut(IPAddress source, EndPoint destination) =>
+		_cutOff.Contains(source)
+		|| destination is IPEndPoint { Address: var address }
+			&& (_cutOff.Contains(address) || _partitions.Contains((source, address)));
+
+	// A step that delivers the datagram, at once or after the time it takes.
+	private void Arrive(Action deliver)
+	{
+		if (Latency == TimeSpan.Zero && Jitter == TimeSpan.Zero)
+		{
+			_scheduler.Schedule(deliver);
+			return;
+		}
+
+		var delay = Latency + TimeSpan.FromTicks(_random.NextInt64(Jitter.Ticks + 1));
+		_clock.After(delay, () => _scheduler.Schedule(deliver));
+	}
+
 	public void Send(IPEndPoint source, EndPoint destination, byte[] datagram)
 	{
 		var copy = datagram.ToArray();
-		var entry = $"{_now().Ticks} {source} > {destination} {Convert.ToHexString(copy)}";
-		if (
-			_cutOff.Contains(source.Address)
-			|| destination is IPEndPoint { Address: var address } && _cutOff.Contains(address)
-		)
+		var entry = _keepsTrace
+			? $"{_clock.Now.Ticks} {source} > {destination} {Convert.ToHexString(copy)}"
+			: string.Empty;
+		if (IsCut(source.Address, destination))
 		{
-			Trace.Add($"cut {entry}");
+			Record($"cut {entry}");
 			return;
 		}
 
 		if (LossRate > 0 && _random.NextDouble() < LossRate)
 		{
-			Trace.Add($"lost {entry}");
+			Record($"lost {entry}");
 			return;
 		}
 
 		void Deliver()
 		{
-			Trace.Add($"{_now().Ticks} delivered {entry}");
+			Record($"{_clock.Now.Ticks} delivered {entry}");
 			if (
 				destination is IPEndPoint ipEndPoint
 				&& _transports.TryGetValue(ipEndPoint, out var transport)
@@ -87,11 +151,11 @@ internal sealed class SimulatedNetwork(ManualScheduler scheduler, Func<TimeSpan>
 				transport.Deliver(source, copy);
 		}
 
-		_scheduler.Schedule(Deliver);
+		Arrive(Deliver);
 		if (DuplicateRate > 0 && _random.NextDouble() < DuplicateRate)
 		{
-			Trace.Add($"duplicated {entry}");
-			_scheduler.Schedule(Deliver);
+			Record($"duplicated {entry}");
+			Arrive(Deliver);
 		}
 	}
 
