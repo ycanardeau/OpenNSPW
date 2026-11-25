@@ -256,7 +256,7 @@ internal sealed class SessionCore
 				&& groups.All(g =>
 					_published.Groups.TryGetValue(g.Key, out var info)
 					&& info.Members.OrderBy(m => m.Value)
-						.SequenceEqual(g.Value.Members.Keys.OrderBy(m => m.Value))
+						.SequenceEqual(g.Value.Members.Keys.Where(players.ContainsKey).OrderBy(m => m.Value))
 				),
 			"The snapshot's groups are not the name table's: a change was not marked (ChangedGroup)."
 		);
@@ -294,7 +294,13 @@ internal sealed class SessionCore
 			localEndPoint,
 			LocalPlayer,
 			isHost,
-			Update(_published.Groups, _changedGroups, Groups, g => g.Created, g => g.ToGroupInfo())
+			Update(
+				_published.Groups,
+				_changedGroups,
+				Groups,
+				g => g.Created,
+				g => g.ToGroupInfo(IsCreatedPlayer)
+			)
 		);
 		CheckPublished();
 		_outputs.Publish(_published);
@@ -383,8 +389,13 @@ internal sealed class SessionCore
 		return player;
 	}
 
+	// Created, so that the application has heard of it: only such a player is shown as a group's member, in the events
+	// and in the snapshot, whatever came first, the group's join or the player's.
+	private bool IsCreatedPlayer(Dpnid id) => Players.TryGetValue(id, out var player) && player.Created;
+
 	/// <summary>
-	/// Raises <see cref="PeerEvent.PlayerCreated"/>, followed by any data the player sent before that.
+	/// Raises <see cref="PeerEvent.PlayerCreated"/>, followed by the groups it is in, and any data the player sent
+	/// before that.
 	/// </summary>
 	public void MarkCreated(Player player)
 	{
@@ -394,6 +405,15 @@ internal sealed class SessionCore
 		player.Created = true;
 		Changed(player);
 		Emit(new PeerEvent.PlayerCreated(player.ToPlayerInfo()));
+		foreach (
+			var group in Groups
+				.Values.Where(g => g.Created && g.Members.ContainsKey(player.Id))
+				.OrderBy(g => g.Id.Value)
+		)
+		{
+			ChangedGroup(group.Id);
+			Emit(new PeerEvent.PlayerAddedToGroup(group.Id, player.Id));
+		}
 		foreach (var data in player.PendingData)
 			Emit(new PeerEvent.DataReceived(player.Id, [.. data]));
 		player.PendingData.Clear();
@@ -528,8 +548,13 @@ internal sealed class SessionCore
 
 		group.Created = true;
 		ChangedGroup(group.Id);
-		Emit(new PeerEvent.GroupCreated(group.ToGroupInfo()));
-		foreach (var member in group.Members.OrderBy(m => m.Value).Select(m => m.Key))
+		Emit(new PeerEvent.GroupCreated(group.ToGroupInfo(IsCreatedPlayer)));
+		foreach (
+			var member in group
+				.Members.OrderBy(m => m.Value)
+				.Select(m => m.Key)
+				.Where(IsCreatedPlayer)
+		)
 			Emit(new PeerEvent.PlayerAddedToGroup(group.Id, member));
 	}
 
@@ -564,7 +589,7 @@ internal sealed class SessionCore
 			return false;
 
 		ChangedGroup(groupId);
-		if (group.Created)
+		if (group.Created && IsCreatedPlayer(playerId))
 		{
 			Emit(new PeerEvent.PlayerAddedToGroup(groupId, playerId));
 		}
@@ -577,7 +602,7 @@ internal sealed class SessionCore
 			return false;
 
 		ChangedGroup(groupId);
-		if (group.Created)
+		if (group.Created && IsCreatedPlayer(playerId))
 		{
 			Emit(new PeerEvent.PlayerRemovedFromGroup(groupId, playerId));
 		}

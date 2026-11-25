@@ -36,7 +36,11 @@ internal sealed class Group
 	/// </summary>
 	public bool Created { get; set; }
 
-	public GroupInfo ToGroupInfo() => new(Id, Name, Data, Flags, Owner, [.. Members.Keys]);
+	/// <summary>
+	/// The group as the application sees it, with the members that <paramref name="shows"/>: those it has heard of.
+	/// </summary>
+	public GroupInfo ToGroupInfo(Func<Dpnid, bool> shows) =>
+		new(Id, Name, Data, Flags, Owner, [.. Members.Keys.Where(shows)]);
 
 	public NameTableEntryInfo ToNameTableEntryInfo() =>
 		new()
