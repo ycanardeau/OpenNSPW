@@ -162,7 +162,9 @@ internal interface ICanAdmitPlayers
 		SessionCore session,
 		Received<CoreMessage.PlayerConnectInfo> command
 	) =>
+		// A join that waited out a migration may have ended since: its connection is gone, and so is the joiner.
 		session.PlayersByConnection.ContainsKey(command.Connection)
+		|| !session.Connections.Contains(command.Connection)
 			? Current
 			: ValidateJoin(session, command.Message)
 				.Fold(

@@ -106,11 +106,6 @@ internal closed record SessionMessage
 
 	public sealed record CloseTimedOut(long Generation) : SessionMessage;
 
-	/// <summary>
-	/// A new host stops waiting for peers during migration.
-	/// </summary>
-	public sealed record MigrationTimedOut(long Generation) : SessionMessage;
-
 	public sealed record PlayerJoinTimedOut(Dpnid Player) : SessionMessage;
 
 	public sealed record IntegrityCheckTimedOut(Dpnid Target, Dpnid Requester) : SessionMessage;

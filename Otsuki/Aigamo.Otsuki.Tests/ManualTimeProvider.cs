@@ -75,6 +75,24 @@ internal sealed class ManualTimeProvider : TimeProvider
 	}
 
 	/// <summary>
+	/// Runs <paramref name="action"/> once, when the clock has moved <paramref name="delay"/> on, as a timer of its own.
+	/// </summary>
+	public void After(TimeSpan delay, Action action)
+	{
+		ITimer? timer = null;
+		timer = CreateTimer(
+			_ =>
+			{
+				timer!.Dispose();
+				action();
+			},
+			null,
+			delay,
+			Timeout.InfiniteTimeSpan
+		);
+	}
+
+	/// <summary>
 	/// Moves the clock to the nearest deadline, if it is before <paramref name="limit"/>, and fires that timer.
 	/// Returns <see langword="false"/> if no timer is due by then.
 	/// </summary>

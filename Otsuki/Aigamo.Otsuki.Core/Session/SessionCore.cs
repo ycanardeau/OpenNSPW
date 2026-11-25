@@ -81,8 +81,6 @@ internal sealed class SessionCore
 
 	public LoopTimer CloseTimer { get; }
 
-	public LoopTimer MigrationTimer { get; }
-
 	/// <summary>
 	/// The name table ([MC-DPL8CS] section 2.2.6).
 	/// </summary>
@@ -151,10 +149,6 @@ internal sealed class SessionCore
 		CloseTimer = new(
 			Timers,
 			generation => Receive(new SessionMessage.CloseTimedOut(generation))
-		);
-		MigrationTimer = new(
-			Timers,
-			generation => Receive(new SessionMessage.MigrationTimedOut(generation))
 		);
 	}
 
@@ -262,7 +256,7 @@ internal sealed class SessionCore
 				&& groups.All(g =>
 					_published.Groups.TryGetValue(g.Key, out var info)
 					&& info.Members.OrderBy(m => m.Value)
-						.SequenceEqual(g.Value.Members.Keys.OrderBy(m => m.Value))
+						.SequenceEqual(g.Value.Members.Keys.Where(players.ContainsKey).OrderBy(m => m.Value))
 				),
 			"The snapshot's groups are not the name table's: a change was not marked (ChangedGroup)."
 		);
@@ -300,7 +294,13 @@ internal sealed class SessionCore
 			localEndPoint,
 			LocalPlayer,
 			isHost,
-			Update(_published.Groups, _changedGroups, Groups, g => g.Created, g => g.ToGroupInfo())
+			Update(
+				_published.Groups,
+				_changedGroups,
+				Groups,
+				g => g.Created,
+				g => g.ToGroupInfo(IsCreatedPlayer)
+			)
 		);
 		CheckPublished();
 		_outputs.Publish(_published);
@@ -389,8 +389,13 @@ internal sealed class SessionCore
 		return player;
 	}
 
+	// Created, so that the application has heard of it: only such a player is shown as a group's member, in the events
+	// and in the snapshot, whatever came first, the group's join or the player's.
+	private bool IsCreatedPlayer(Dpnid id) => Players.TryGetValue(id, out var player) && player.Created;
+
 	/// <summary>
-	/// Raises <see cref="PeerEvent.PlayerCreated"/>, followed by any data the player sent before that.
+	/// Raises <see cref="PeerEvent.PlayerCreated"/>, followed by the groups it is in, and any data the player sent
+	/// before that.
 	/// </summary>
 	public void MarkCreated(Player player)
 	{
@@ -400,6 +405,15 @@ internal sealed class SessionCore
 		player.Created = true;
 		Changed(player);
 		Emit(new PeerEvent.PlayerCreated(player.ToPlayerInfo()));
+		foreach (
+			var group in Groups
+				.Values.Where(g => g.Created && g.Members.ContainsKey(player.Id))
+				.OrderBy(g => g.Id.Value)
+		)
+		{
+			ChangedGroup(group.Id);
+			Emit(new PeerEvent.PlayerAddedToGroup(group.Id, player.Id));
+		}
 		foreach (var data in player.PendingData)
 			Emit(new PeerEvent.DataReceived(player.Id, [.. data]));
 		player.PendingData.Clear();
@@ -534,8 +548,13 @@ internal sealed class SessionCore
 
 		group.Created = true;
 		ChangedGroup(group.Id);
-		Emit(new PeerEvent.GroupCreated(group.ToGroupInfo()));
-		foreach (var member in group.Members.OrderBy(m => m.Value).Select(m => m.Key))
+		Emit(new PeerEvent.GroupCreated(group.ToGroupInfo(IsCreatedPlayer)));
+		foreach (
+			var member in group
+				.Members.OrderBy(m => m.Value)
+				.Select(m => m.Key)
+				.Where(IsCreatedPlayer)
+		)
 			Emit(new PeerEvent.PlayerAddedToGroup(group.Id, member));
 	}
 
@@ -570,7 +589,7 @@ internal sealed class SessionCore
 			return false;
 
 		ChangedGroup(groupId);
-		if (group.Created)
+		if (group.Created && IsCreatedPlayer(playerId))
 		{
 			Emit(new PeerEvent.PlayerAddedToGroup(groupId, playerId));
 		}
@@ -583,7 +602,7 @@ internal sealed class SessionCore
 			return false;
 
 		ChangedGroup(groupId);
-		if (group.Created)
+		if (group.Created && IsCreatedPlayer(playerId))
 		{
 			Emit(new PeerEvent.PlayerRemovedFromGroup(groupId, playerId));
 		}
@@ -968,7 +987,6 @@ internal sealed class SessionCore
 			)
 		);
 		JoinTimer.Cancel();
-		MigrationTimer.Cancel();
 		LocalPlayer = Dpnid.Empty;
 		Version = 0;
 		NameTableLog.Clear();
@@ -1094,7 +1112,6 @@ internal sealed class SessionCore
 	/// </summary>
 	public SessionState.Hosting FinishMigration(SessionState.Hosting hosting)
 	{
-		MigrationTimer.Cancel();
 		var migration = hosting.Migration!;
 		foreach (var (id, reported) in migration.Reported)
 		{
@@ -1154,16 +1171,31 @@ internal sealed class SessionCore
 		return ResynchronizeVersion(hosting);
 	}
 
+	// Still in the session, and connected: a peer that migration waits for, or asked for operations.
+	private bool IsConnectedPeer(Dpnid id) =>
+		Players.TryGetValue(id, out var player) && player.Connection is not null;
+
 	/// <summary>
 	/// Moves migration on once every peer has reported its name table version (steps 2 to 4): if a peer is ahead of
-	/// us, asks it for what we missed; otherwise finishes.
+	/// us, asks it for what we missed; otherwise finishes. Whom it still waits for follows from the name table, not from
+	/// the messages that removed a peer: of the peers it waits for, or the one it asked, those still in the session
+	/// and connected, however each of the others went (its connection lost, or its join failed and destroyed).
 	/// </summary>
 	public SessionState.Hosting ContinueMigration(SessionState.Hosting hosting)
 	{
-		if (
-			hosting.Migration is not { RequestedFrom: null } migration
-			|| !migration.Awaiting.IsEmpty
-		)
+		if (hosting.Migration is not { } migration)
+			return hosting;
+
+		if (migration.RequestedFrom is { } requested)
+		{
+			if (IsConnectedPeer(requested))
+				return hosting;
+
+			migration = migration with { RequestedFrom = null };
+			hosting = hosting with { Migration = migration };
+		}
+
+		if (migration.Awaiting.Any(IsConnectedPeer))
 			return hosting;
 
 		var newest = migration
@@ -1219,7 +1251,6 @@ internal sealed class SessionCore
 			[],
 			new MigrationProgress(oldHost, [.. peers.Select(p => p.Id)], [], RequestedFrom: null)
 		);
-		MigrationTimer.Start(Options.IntegrityCheckTimeout);
 		return ContinueMigration(hosting);
 	}
 
@@ -1237,8 +1268,8 @@ internal sealed class SessionCore
 
 	/// <summary>
 	/// Follows <paramref name="newHost"/>, which announced itself with DN_HOST_MIGRATE (step 2): the old host goes,
-	/// requests sent to another host fail, the new host gets our name table version, and what it sent while its claim
-	/// waited runs next.
+	/// requests sent to another host fail, the new host gets our name table version and checks of the players we lost,
+	/// and what it sent while its claim waited runs next.
 	/// </summary>
 	public SessionState AcceptHost(
 		Connection connection,
@@ -1265,6 +1296,15 @@ internal sealed class SessionCore
 		}
 
 		SendCore(connection, new CoreMessage.NameTableVersion { Version = Version });
+
+		// The players we lost our connection to, whose integrity checks the old host may have taken with it: the new
+		// host checks them again. What we ask follows from the name table, not from which requests got through.
+		foreach (
+			var player in Players.Values.Where(p =>
+				!p.IsLocal && p != newHost && p.Created && p.Connection is null
+			)
+		)
+			SendCore(connection, new CoreMessage.RequestIntegrityCheck { DpnidTarget = player.Id });
 		return new SessionState.Connected(connection);
 	}
 
@@ -1749,7 +1789,6 @@ internal sealed class SessionCore
 			},
 			JoinTimedOut: m => Elapse(JoinTimer, m.Generation, m),
 			CloseTimedOut: m => Elapse(CloseTimer, m.Generation, m),
-			MigrationTimedOut: m => Elapse(MigrationTimer, m.Generation, m),
 			PlayerJoinTimedOut: Execute,
 			IntegrityCheckTimedOut: Execute,
 			HostnameResolved: HostnameResolved,
@@ -1806,6 +1845,8 @@ internal sealed class SessionCore
 		Timers.Advance(now);
 		Receive(message);
 		ReplayAcceptedClaim();
+		if (_state is SessionState.Hosting { Migration: not null } hosting)
+			_state = ContinueMigration(hosting);
 		ReplayDeferred();
 
 		// What changed with no event to show it, such as a session closed, is published as the message is done; then

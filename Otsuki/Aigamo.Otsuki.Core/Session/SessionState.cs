@@ -169,8 +169,8 @@ internal sealed record Received<TMessage>(Connection Connection, TMessage Messag
 
 /// <summary>
 /// A DN_HOST_MIGRATE that arrived while we still heard from the old host, kept until we lose it too, with what its
-/// peer sent after it, in order: the operations of a new host, such as those it sends as it finishes a migration that
-/// stopped waiting for us. They wait with the claim, to run if we follow that host.
+/// peer sent after it, in order: the operations of a new host that finished its migration without our report. They wait
+/// with the claim, to run if we follow that host.
 /// </summary>
 internal sealed class KeptClaim(Received<CoreMessage.HostMigrate> claim)
 {

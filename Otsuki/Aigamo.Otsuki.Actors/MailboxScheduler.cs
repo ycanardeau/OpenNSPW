@@ -204,8 +204,21 @@ public sealed class ManualScheduler : MailboxScheduler
 	/// Runs <paramref name="test"/> once in each order of its messages, depth first, each time from its start with a
 	/// scheduler of its own, which <paramref name="test"/> runs to its end: every order, if there are at most
 	/// <paramref name="maxRuns"/>. Returns how many orders were run, and whether they are all of them.
+	/// <para>
+	/// The steps before <paramref name="fromStep"/> take the first that waits, every time, so that a test explores only
+	/// what follows a point of its own, such as a peer leaving; that point must come at the same step in that order.
+	/// With <paramref name="maxDelays"/>, the orders are those that pass over at most that many mailboxes in all, each
+	/// step's choice of the one at index i passing over i (delay bounding, Emmi, Qadeer and Rakamarić, "Delay-Bounded
+	/// Scheduling", POPL 2011): every order within the bound, which grows with the steps to that power instead of
+	/// exponentially, and in which a bug that a few messages out of order show is found.
+	/// </para>
 	/// </summary>
-	public static (int Runs, bool IsExhausted) ExploreAll(Action<ManualScheduler> test, int maxRuns)
+	public static (int Runs, bool IsExhausted) ExploreAll(
+		Action<ManualScheduler> test,
+		int maxRuns,
+		int fromStep = 0,
+		int maxDelays = int.MaxValue
+	)
 	{
 		List<int> choices = [];
 		for (var runs = 1; ; runs++)
@@ -213,12 +226,21 @@ public sealed class ManualScheduler : MailboxScheduler
 			var scheduler = Following(choices);
 			test(scheduler);
 
-			// The last step that had a choice not taken yet, taken next, after the same steps before it.
+			// The last step that had a choice not taken yet within the bound, taken next, after the same steps before it.
 			var taken = scheduler.Taken;
+			var delays = new long[taken.Count + 1];
+			for (var i = 0; i < taken.Count; i++)
+				delays[i + 1] = delays[i] + taken[i].Choice;
 			var last = taken.Count - 1;
-			while (last >= 0 && taken[last].Choice + 1 >= taken[last].Of)
+			while (
+				last >= fromStep
+				&& (
+					taken[last].Choice + 1 >= taken[last].Of
+					|| delays[last] + taken[last].Choice + 1 > maxDelays
+				)
+			)
 				last--;
-			if (last < 0)
+			if (last < fromStep)
 				return (runs, true);
 			if (runs >= maxRuns)
 				return (runs, false);
