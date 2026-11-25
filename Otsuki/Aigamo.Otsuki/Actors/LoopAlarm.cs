@@ -28,7 +28,11 @@ internal sealed class LoopAlarm(TimeProvider timeProvider, Action onDue)
 			return;
 
 		_armedAt = at;
-		var due = at - Now;
+
+		// In whole milliseconds, rounded up: the runtime's timer takes whole milliseconds and drops the rest, so a
+		// deadline 0.7 ms away would ring at once, before it is due, find nothing to fire, and arm again, as often as
+		// the loop can run until the deadline has passed.
+		var due = TimeSpan.FromMilliseconds(Math.Ceiling((at - Now).TotalMilliseconds));
 		_timer ??= _timeProvider.CreateTimer(
 			_ => _onDue(),
 			null,
