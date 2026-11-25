@@ -81,8 +81,6 @@ internal sealed class SessionCore
 
 	public LoopTimer CloseTimer { get; }
 
-	public LoopTimer MigrationTimer { get; }
-
 	/// <summary>
 	/// The name table ([MC-DPL8CS] section 2.2.6).
 	/// </summary>
@@ -151,10 +149,6 @@ internal sealed class SessionCore
 		CloseTimer = new(
 			Timers,
 			generation => Receive(new SessionMessage.CloseTimedOut(generation))
-		);
-		MigrationTimer = new(
-			Timers,
-			generation => Receive(new SessionMessage.MigrationTimedOut(generation))
 		);
 	}
 
@@ -968,7 +962,6 @@ internal sealed class SessionCore
 			)
 		);
 		JoinTimer.Cancel();
-		MigrationTimer.Cancel();
 		LocalPlayer = Dpnid.Empty;
 		Version = 0;
 		NameTableLog.Clear();
@@ -1094,7 +1087,6 @@ internal sealed class SessionCore
 	/// </summary>
 	public SessionState.Hosting FinishMigration(SessionState.Hosting hosting)
 	{
-		MigrationTimer.Cancel();
 		var migration = hosting.Migration!;
 		foreach (var (id, reported) in migration.Reported)
 		{
@@ -1234,7 +1226,6 @@ internal sealed class SessionCore
 			[],
 			new MigrationProgress(oldHost, [.. peers.Select(p => p.Id)], [], RequestedFrom: null)
 		);
-		MigrationTimer.Start(Options.IntegrityCheckTimeout);
 		return ContinueMigration(hosting);
 	}
 
@@ -1764,7 +1755,6 @@ internal sealed class SessionCore
 			},
 			JoinTimedOut: m => Elapse(JoinTimer, m.Generation, m),
 			CloseTimedOut: m => Elapse(CloseTimer, m.Generation, m),
-			MigrationTimedOut: m => Elapse(MigrationTimer, m.Generation, m),
 			PlayerJoinTimedOut: Execute,
 			IntegrityCheckTimedOut: Execute,
 			HostnameResolved: HostnameResolved,
