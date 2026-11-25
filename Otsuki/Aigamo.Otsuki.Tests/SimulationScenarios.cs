@@ -589,6 +589,32 @@ internal static class SimulationScenarios
 	}
 
 	/// <summary>
+	/// A session of four, migrating its host or not, in which at a point the seed chooses one peer loses its way to two
+	/// others for good, but not to the host. Each side asks the host to check the other ([MC-DPL8CS] section 3.2.5.3),
+	/// and the host removes whoever asked about a peer that answers, so that which peers stay depends on the order of
+	/// the answers; but the host stays, the cut peer never stays with one it lost, and those left hold together and
+	/// reach each other.
+	/// </summary>
+	public static void PeerCutOffFromTwo(int seed, SimulationConditions conditions)
+	{
+		var simulation = new Simulation(seed, conditions);
+		var flags = seed % 2 == 0 ? SessionFlags.MigrateHost : default;
+		var peers = Mesh(simulation, joiners: 3, flags);
+		var steps = simulation.Random.Next(0, 100);
+		simulation.Run(steps);
+		var (host, cut, others) = (peers[0], peers[3], peers.Skip(1).Take(2).ToList());
+		foreach (var other in others)
+			simulation.Network.Partition(cut.Address, other.Address);
+
+		var what = $"{cut.Address} cut off from {string.Join(" and ", others.Select(o => o.Address))} after {steps} steps";
+		var live = Settle(simulation, peers, what);
+		live.Should().Contain(host, $"seed {seed}, {what}");
+		(live.Contains(cut) && live.Intersect(others).Any())
+			.Should()
+			.BeFalse($"the cut peer does not stay with one it lost (seed {seed}, {what})");
+	}
+
+	/// <summary>
 	/// For exploring orders: a session of <paramref name="peers"/>, migrating its host, from which at one moment the
 	/// host leaves if <paramref name="hostLeaves"/>, and <paramref name="othersLeaving"/> of the others, by closing or,
 	/// if <paramref name="crashes"/>, by their machines stopping, while a newcomer joins if <paramref name="joins"/>.
@@ -762,6 +788,7 @@ internal static class SimulationScenarios
 		new(nameof(HostLeavesWhileAPeerJoins), HostLeavesWhileAPeerJoins),
 		new(nameof(PeerLeavesDuringMigration), PeerLeavesDuringMigration),
 		new(nameof(PeerLeavesWhileAnotherJoins), PeerLeavesWhileAnotherJoins),
+		new(nameof(PeerCutOffFromTwo), PeerCutOffFromTwo),
 		new(nameof(Churn), Churn, MayBeRough: true),
 	];
 }

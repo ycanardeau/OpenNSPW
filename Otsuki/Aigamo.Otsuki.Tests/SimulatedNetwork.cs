@@ -26,7 +26,8 @@ internal sealed class SimulatedNetwork(
 	private readonly bool _keepsTrace = keepsTrace;
 	private readonly Dictionary<IPEndPoint, SimulatedTransport> _transports = [];
 	private readonly HashSet<IPAddress> _cutOff = [];
-	private readonly HashSet<(IPAddress, IPAddress)> _partitions = [];
+	// How many partitions cut each pair of addresses, each way: one that heals leaves the others in force.
+	private readonly Dictionary<(IPAddress, IPAddress), int> _partitions = [];
 	private int _nextPort = 40000;
 
 	/// <summary>
@@ -65,19 +66,29 @@ internal sealed class SimulatedNetwork(
 	/// </summary>
 	public void CutOff(IPAddress address) => _cutOff.Add(address);
 
+	private void Count(IPAddress from, IPAddress to, int change)
+	{
+		var count = _partitions.GetValueOrDefault((from, to)) + change;
+		if (count > 0)
+			_partitions[(from, to)] = count;
+		else
+			_partitions.Remove((from, to));
+	}
+
 	/// <summary>
-	/// Every datagram between <paramref name="first"/> and <paramref name="second"/> is lost until they are healed.
+	/// Every datagram between <paramref name="first"/> and <paramref name="second"/> is lost until the partition heals.
+	/// Partitions of one pair add up: one that heals leaves the others in force.
 	/// </summary>
 	public void Partition(IPAddress first, IPAddress second)
 	{
-		_partitions.Add((first, second));
-		_partitions.Add((second, first));
+		Count(first, second, 1);
+		Count(second, first, 1);
 	}
 
 	public void Heal(IPAddress first, IPAddress second)
 	{
-		_partitions.Remove((first, second));
-		_partitions.Remove((second, first));
+		Count(first, second, -1);
+		Count(second, first, -1);
 	}
 
 	public void HealAll() => _partitions.Clear();
@@ -143,7 +154,7 @@ internal sealed class SimulatedNetwork(
 	private bool IsCut(IPAddress source, EndPoint destination) =>
 		_cutOff.Contains(source)
 		|| destination is IPEndPoint { Address: var address }
-			&& (_cutOff.Contains(address) || _partitions.Contains((source, address)));
+			&& (_cutOff.Contains(address) || _partitions.ContainsKey((source, address)));
 
 	// A step that delivers the datagram, at once or after the time it takes.
 	private void Arrive(Action deliver)
