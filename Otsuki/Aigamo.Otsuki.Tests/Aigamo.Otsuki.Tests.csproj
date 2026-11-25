@@ -19,6 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Aigamo.Otsuki.Swarm" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Aigamo.Otsuki\Aigamo.Otsuki.csproj" />
     <ProjectReference Include="..\Aigamo.Otsuki.Bluetooth\Aigamo.Otsuki.Bluetooth.csproj" />
   </ItemGroup>

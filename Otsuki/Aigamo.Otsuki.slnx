@@ -11,6 +11,7 @@
   <Project Path="Aigamo.Otsuki.Core/Aigamo.Otsuki.Core.csproj" />
   <Project Path="Aigamo.Otsuki.LoadTest/Aigamo.Otsuki.LoadTest.csproj" />
   <Project Path="Aigamo.Otsuki.Messages.Tests/Aigamo.Otsuki.Messages.Tests.csproj" />
+  <Project Path="Aigamo.Otsuki.Swarm/Aigamo.Otsuki.Swarm.csproj" />
   <Project Path="Aigamo.Otsuki.Tests/Aigamo.Otsuki.Tests.csproj" />
   <Project Path="Aigamo.Otsuki/Aigamo.Otsuki.csproj" />
   <Project Path="Aigamo.Otsuki.Messages/Aigamo.Otsuki.Messages.csproj" />
