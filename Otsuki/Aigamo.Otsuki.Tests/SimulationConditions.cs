@@ -65,6 +65,13 @@ internal sealed record SimulationConditions
 	public TimeSpan LongestPartition { get; init; } = TimeSpan.FromSeconds(3);
 
 	/// <summary>
+	/// The connection loops of each peer that does not choose its own (<see cref="PeerOptions.ConnectionLoops"/>):
+	/// with more than one, a peer's connections run on loops of their own, whose messages to the session the scheduler
+	/// orders too.
+	/// </summary>
+	public int Loops { get; init; } = 1;
+
+	/// <summary>
 	/// Whether the faults can be more than the protocol is meant to ride out, so that connections drop and the session
 	/// may split: a scenario then checks only what holds whatever the network did.
 	/// </summary>
@@ -119,12 +126,7 @@ internal sealed record SimulationConditions
 	private static TimeSpan Milliseconds(Random random, int most) =>
 		TimeSpan.FromMilliseconds(random.Next(most + 1));
 
-	/// <summary>
-	/// Draws the conditions of a seed: any order, and faults that the protocol is meant to ride out, losing and
-	/// doubling up to a tenth of the datagrams, delaying them by up to 200 ms, and splitting the network for up to 3 s;
-	/// with <paramref name="mayBeRough"/>, half the seeds far worse (<see cref="IsRough"/>).
-	/// </summary>
-	public static SimulationConditions Draw(int seed, bool mayBeRough = false)
+	private static SimulationConditions DrawFaults(int seed, bool mayBeRough)
 	{
 		var random = new Random(seed ^ 0x0C0FFEE);
 		var order = (SimulationOrder)random.Next(3);
@@ -156,6 +158,19 @@ internal sealed record SimulationConditions
 		};
 	}
 
+	/// <summary>
+	/// Draws the conditions of a seed: any order, and faults that the protocol is meant to ride out, losing and
+	/// doubling up to a tenth of the datagrams, delaying them by up to 200 ms, and splitting the network for up to 3 s;
+	/// with <paramref name="mayBeRough"/>, half the seeds far worse (<see cref="IsRough"/>). With
+	/// <paramref name="mostLoops"/>, each peer has up to that many connection loops, as a draw of its own says, so that
+	/// the other draws, and the runs of one loop, stay what they are.
+	/// </summary>
+	public static SimulationConditions Draw(int seed, bool mayBeRough = false, int mostLoops = 1) =>
+		DrawFaults(seed, mayBeRough) with
+		{
+			Loops = mostLoops > 1 ? new Random(seed ^ 0x100B5).Next(1, mostLoops + 1) : 1,
+		};
+
 	public override string ToString() =>
-		$"{Order}, loss {LossRate:0.###}, doubled {DuplicateRate:0.###}, latency {Latency.TotalMilliseconds} ms + {Jitter.TotalMilliseconds} ms, {Partitions} partitions up to {LongestPartition.TotalSeconds} s{(IsRough ? ", rough" : "")}";
+		$"{Order}, loss {LossRate:0.###}, doubled {DuplicateRate:0.###}, latency {Latency.TotalMilliseconds} ms + {Jitter.TotalMilliseconds} ms, {Partitions} partitions up to {LongestPartition.TotalSeconds} s{(IsRough ? ", rough" : "")}{(Loops > 1 ? $", {Loops} loops" : "")}";
 }

@@ -125,13 +125,13 @@ internal sealed class Simulation
 
 	// Each peer draws its randomness from a seed of its own, which the simulation's seed and the peer's place
 	// choose: two runs of one seed then make the same GUIDs, session IDs and secrets.
-	public PeerOptions Options(IPAddress address, int loops = 1) =>
+	public PeerOptions Options(IPAddress address, int? loops = null) =>
 		new()
 		{
 			Scheduler = Scheduler,
 			TimeProvider = Clock,
 			TransportFactory = Network.CreateFactory(address),
-			ConnectionLoops = loops,
+			ConnectionLoops = loops ?? _conditions.Loops,
 			RandomSeed = Seed * 1000 + _peers++ * 10,
 		};
 

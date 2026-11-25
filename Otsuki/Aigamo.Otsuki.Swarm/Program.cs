@@ -8,8 +8,9 @@ using Aigamo.Otsuki.Tests;
 // its seed draws (SimulationConditions.Draw), on every core; prints each failure with the command that replays it.
 //
 // Usage:
-//   swarm [--seeds N] [--first S] [--scenario NAME[,NAME...]] [--threads K]
-//   replay NAME SEED [--trace FILE]: the network's trace and each peer's events go to FILE if it fails
+//   swarm [--seeds N] [--first S] [--scenario NAME[,NAME...]] [--threads K] [--loops L]: with L, each peer has up to L
+//       connection loops, as its seed draws
+//   replay NAME SEED [--loops L] [--trace FILE]: the network's trace and each peer's events go to FILE if it fails
 //   explore [NAME[,NAME...]] [--delays D] [--runs N]: every order of small cases from their marked point, within D delays
 //   explore NAME --choices STEP:CHOICE,...: one order again, as a failed exploration prints it
 //   list
@@ -35,8 +36,8 @@ static int Int(Dictionary<string, string> options, string name, int fallback) =>
 		? int.Parse(value, CultureInfo.InvariantCulture)
 		: fallback;
 
-static string ReplayCommand(SimulationScenario scenario, int seed) =>
-	$"dotnet run --project Otsuki/Aigamo.Otsuki.Swarm -c Release -- replay {scenario.Name} {seed}";
+static string ReplayCommand(SimulationScenario scenario, int seed, int mostLoops) =>
+	$"dotnet run --project Otsuki/Aigamo.Otsuki.Swarm -c Release -- replay {scenario.Name} {seed}{(mostLoops > 1 ? $" --loops {mostLoops}" : "")}";
 
 // The first line of a failure, with its numbers taken out: failures that differ only in their seeds, times and
 // identifiers share it.
@@ -120,7 +121,11 @@ switch (args[0])
 		var seed = int.Parse(args[2], CultureInfo.InvariantCulture);
 		var trace = options.GetValueOrDefault("trace");
 		Simulation? simulation = null;
-		var conditions = SimulationConditions.Draw(seed, scenario.MayBeRough) with
+		var conditions = SimulationConditions.Draw(
+			seed,
+			scenario.MayBeRough,
+			Int(options, "loops", 1)
+		) with
 		{
 			KeepsTrace = trace is not null,
 			OnStart = started => simulation = started,
@@ -160,6 +165,7 @@ switch (args[0])
 		var seeds = Int(options, "seeds", 10_000);
 		var first = Int(options, "first", 0);
 		var threads = Int(options, "threads", Environment.ProcessorCount);
+		var mostLoops = Int(options, "loops", 1);
 		var scenarios = options.TryGetValue("scenario", out var names)
 			? [.. names.Split(',').Select(name => all.Single(s => s.Name == name))]
 			: all;
@@ -180,7 +186,11 @@ switch (args[0])
 				{
 					var scenario = scenarios[(int)(index % scenarios.Count)];
 					var seed = first + (int)(index / scenarios.Count);
-					var conditions = SimulationConditions.Draw(seed, scenario.MayBeRough);
+					var conditions = SimulationConditions.Draw(
+						seed,
+						scenario.MayBeRough,
+						mostLoops
+					);
 					results.Post(new SwarmResult.Started(start, scenario.Name, seed));
 					Exception? failure = null;
 					try
@@ -225,7 +235,7 @@ switch (args[0])
 								failures.Add((ended.Scenario, ended.Seed, Signature(exception)));
 								var message = exception.Message.Split('\n')[0];
 								Console.WriteLine(
-									$"FAILED {ended.Scenario.Name} {ended.Seed} ({ended.Conditions}): {(message.Length > 600 ? message[..600] + "..." : message)}\n  {ReplayCommand(ended.Scenario, ended.Seed)}"
+									$"FAILED {ended.Scenario.Name} {ended.Seed} ({ended.Conditions}): {(message.Length > 600 ? message[..600] + "..." : message)}\n  {ReplayCommand(ended.Scenario, ended.Seed, mostLoops)}"
 								);
 							}
 							break;

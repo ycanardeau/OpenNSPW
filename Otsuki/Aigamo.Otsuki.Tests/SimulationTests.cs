@@ -73,6 +73,9 @@ public class SimulationTests
 			.. Enumerable
 				.Range(0, 5)
 				.Select(seed => (seed, SimulationConditions.Draw(seed) with { Partitions = 0 })),
+			.. Enumerable
+				.Range(0, 5)
+				.Select(seed => (seed, SimulationConditions.Draw(seed, mostLoops: 3))),
 		];
 		foreach (var (seed, conditions) in runs)
 		{
