@@ -185,6 +185,15 @@ public class SimulationTests
 			SimulationScenarios.PeerLeavesWhileAnotherJoins(seed, Conditions(seed));
 	}
 
+	// One peer of four loses its way to two others but not to the host: the host removes someone on each side of every
+	// link lost, and those left reach each other.
+	[Fact]
+	public void PeerCutOffFromTwo_InEveryOrderTried()
+	{
+		for (var seed = 0; seed < Seeds; seed++)
+			SimulationScenarios.PeerCutOffFromTwo(seed, Conditions(seed));
+	}
+
 	// Peers leave, crash, join, rename themselves, change groups and send at points the seed chooses, under the faults
 	// of the swarm's conditions, rough ones included.
 	[Fact]
