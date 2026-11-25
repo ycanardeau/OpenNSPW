@@ -1243,8 +1243,8 @@ internal sealed class SessionCore
 
 	/// <summary>
 	/// Follows <paramref name="newHost"/>, which announced itself with DN_HOST_MIGRATE (step 2): the old host goes,
-	/// requests sent to another host fail, the new host gets our name table version, and what it sent while its claim
-	/// waited runs next.
+	/// requests sent to another host fail, the new host gets our name table version and checks of the players we lost,
+	/// and what it sent while its claim waited runs next.
 	/// </summary>
 	public SessionState AcceptHost(
 		Connection connection,
@@ -1271,6 +1271,15 @@ internal sealed class SessionCore
 		}
 
 		SendCore(connection, new CoreMessage.NameTableVersion { Version = Version });
+
+		// The players we lost our connection to, whose integrity checks the old host may have taken with it: the new
+		// host checks them again. What we ask follows from the name table, not from which requests got through.
+		foreach (
+			var player in Players.Values.Where(p =>
+				!p.IsLocal && p != newHost && p.Created && p.Connection is null
+			)
+		)
+			SendCore(connection, new CoreMessage.RequestIntegrityCheck { DpnidTarget = player.Id });
 		return new SessionState.Connected(connection);
 	}
 
