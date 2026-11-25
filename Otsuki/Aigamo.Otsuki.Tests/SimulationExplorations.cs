@@ -64,7 +64,8 @@ internal static class SimulationExplorations
 	public static string Choices(IReadOnlyList<(int Choice, int Of)> taken) =>
 		string.Join(
 			",",
-			taken.Select((step, index) => (step.Choice, index))
+			taken
+				.Select((step, index) => (step.Choice, index))
 				.Where(step => step.Choice != 0)
 				.Select(step => $"{step.index}:{step.Choice}")
 		);

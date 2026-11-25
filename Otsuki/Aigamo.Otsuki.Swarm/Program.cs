@@ -71,9 +71,15 @@ switch (args[0])
 
 	case "explore":
 	{
-		var explorations = args.Length > 1 && !args[1].StartsWith("--", StringComparison.Ordinal)
-			? [.. args[1].Split(',').Select(name => SimulationExplorations.All.Single(e => e.Name == name))]
-			: SimulationExplorations.All;
+		var explorations =
+			args.Length > 1 && !args[1].StartsWith("--", StringComparison.Ordinal)
+				?
+				[
+					.. args[1]
+						.Split(',')
+						.Select(name => SimulationExplorations.All.Single(e => e.Name == name)),
+				]
+				: SimulationExplorations.All;
 		if (options.TryGetValue("choices", out var choices))
 		{
 			SimulationExplorations.Replay(explorations[0], choices);
@@ -137,7 +143,8 @@ switch (args[0])
 					[
 						.. simulation.Network.Trace,
 						.. simulation.Peers.SelectMany(p =>
-							p.Events.Select(e => $"{p.Address} {e}").Prepend($"{p.Address} sees {p.View()}")
+							p.Events.Select(e => $"{p.Address} {e}")
+								.Prepend($"{p.Address} sees {p.View()}")
 						),
 					]
 				);
@@ -249,7 +256,11 @@ switch (args[0])
 			Console.WriteLine(
 				$"{byScenario.Key}: {byScenario.Count()} of {seeds:N0} seeds ({100.0 * byScenario.Count() / seeds:0.###}%)"
 			);
-			foreach (var bySignature in byScenario.GroupBy(f => f.Signature).OrderByDescending(g => g.Count()))
+			foreach (
+				var bySignature in byScenario
+					.GroupBy(f => f.Signature)
+					.OrderByDescending(g => g.Count())
+			)
 				Console.WriteLine(
 					$"  {bySignature.Count()} x {bySignature.Key}\n    seeds {string.Join(", ", bySignature.Select(f => f.Seed).Order().Take(10))}"
 				);

@@ -26,6 +26,7 @@ internal sealed class SimulatedNetwork(
 	private readonly bool _keepsTrace = keepsTrace;
 	private readonly Dictionary<IPEndPoint, SimulatedTransport> _transports = [];
 	private readonly HashSet<IPAddress> _cutOff = [];
+
 	// How many partitions cut each pair of addresses, each way: one that heals leaves the others in force.
 	private readonly Dictionary<(IPAddress, IPAddress), int> _partitions = [];
 	private int _nextPort = 40000;
@@ -119,7 +120,10 @@ internal sealed class SimulatedNetwork(
 		if (message is not ReliableMessage.DataFrame frame)
 			return message?.GetType().Name ?? "?";
 
-		List<byte[]> payloads = [[.. frame.Payload]];
+		List<byte[]> payloads =
+		[
+			[.. frame.Payload],
+		];
 		if (frame.Coalesce)
 		{
 			try
@@ -127,7 +131,9 @@ internal sealed class SimulatedNetwork(
 				using var reader = new BinaryReader(new MemoryStream(payloads[0]));
 				payloads =
 				[
-					.. CoalescedPayloadSerializer.Default.Read(reader)?.Select(p => p.Payload.ToArray())
+					.. CoalescedPayloadSerializer
+						.Default.Read(reader)
+						?.Select(p => p.Payload.ToArray())
 						?? [],
 				];
 			}

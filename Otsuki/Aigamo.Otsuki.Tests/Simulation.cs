@@ -369,18 +369,18 @@ internal sealed class SimulatedPeer
 	/// </summary>
 	public string View() =>
 		string.Join(
-				" ",
-				Peer.Players.OrderBy(p => p.Id.Value)
-					.Select(p => $"{p.Id}{(p.IsHost ? "*" : "")}'{p.Name}'")
-			)
-			+ " | "
-			+ string.Join(
-				" ",
-				Peer.Groups.OrderBy(g => g.Id.Value)
-					.Select(g =>
-						$"{g.Id}[{string.Join(",", g.Members.OrderBy(m => m.Value).Select(m => m.ToString()))}]"
-					)
-			);
+			" ",
+			Peer.Players.OrderBy(p => p.Id.Value)
+				.Select(p => $"{p.Id}{(p.IsHost ? "*" : "")}'{p.Name}'")
+		)
+		+ " | "
+		+ string.Join(
+			" ",
+			Peer.Groups.OrderBy(g => g.Id.Value)
+				.Select(g =>
+					$"{g.Id}[{string.Join(",", g.Members.OrderBy(m => m.Value).Select(m => m.ToString()))}]"
+				)
+		);
 
 	/// <summary>
 	/// Whether the events raised so far add up to the snapshot: the same players, groups and members.

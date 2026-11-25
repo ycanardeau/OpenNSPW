@@ -95,11 +95,7 @@ internal static class SimulationScenarios
 		}
 
 		List<(int Sender, int Number)> Received() =>
-			[
-				.. serverEvents
-					.OfType<PeerEvent.DataReceived>()
-					.Select(SimulatedPeer.ReadMessage),
-			];
+			[.. serverEvents.OfType<PeerEvent.DataReceived>().Select(SimulatedPeer.ReadMessage)];
 
 		simulation
 			.RunUntil(
@@ -440,7 +436,9 @@ internal static class SimulationScenarios
 				return false;
 
 			var live = InSession();
-			return live.Count > 0 ? HoldTogether(live, mayDivide, outcasts ?? new HashSet<SimulatedPeer>()) : mayEnd;
+			return live.Count > 0
+				? HoldTogether(live, mayDivide, outcasts ?? new HashSet<SimulatedPeer>())
+				: mayEnd;
 		}
 
 		simulation
@@ -606,7 +604,8 @@ internal static class SimulationScenarios
 		foreach (var other in others)
 			simulation.Network.Partition(cut.Address, other.Address);
 
-		var what = $"{cut.Address} cut off from {string.Join(" and ", others.Select(o => o.Address))} after {steps} steps";
+		var what =
+			$"{cut.Address} cut off from {string.Join(" and ", others.Select(o => o.Address))} after {steps} steps";
 		var live = Settle(simulation, peers, what);
 		live.Should().Contain(host, $"seed {seed}, {what}");
 		(live.Contains(cut) && live.Intersect(others).Any())
