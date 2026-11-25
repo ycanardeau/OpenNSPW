@@ -384,7 +384,7 @@ internal static class SimulationScenarios
 	/// up to its snapshot. Unless the session <paramref name="mayDivide"/>, every peer shows the same, but for
 	/// <paramref name="outcasts"/>, peers the host was asked to remove, which may stand apart: a host that leaves as it
 	/// removes one may tell the others and not it. A session that split may give two players one DPNID, one in each
-	/// part, so the parts go by what they show, not by DPNIDs.
+	/// part, so the parts go by what they show, not by DPNIDs, and two parts may show the same.
 	/// </summary>
 	private static bool HoldTogether(
 		List<SimulatedPeer> live,
@@ -396,14 +396,17 @@ internal static class SimulationScenarios
 		if (!mayDivide && parts.Count(part => !part.All(outcasts.Contains)) > 1)
 			return false;
 
+		// Parts that split from one session can even show the same name table: each player of it then shows it as
+		// often as the others.
 		foreach (var part in parts)
 		{
 			var first = part.First();
-			var hosts = first.Hosts();
+			var copies = part.GroupBy(p => p.Id).Select(g => g.Count()).Distinct().ToList();
 			if (
-				hosts.Count != 1
+				first.Hosts().Count != 1
 				|| !first.Seen().SetEquals(part.Select(p => p.Id))
-				|| part.Count() != first.Seen().Count
+				|| copies.Count != 1
+				|| copies[0] > 1 && !mayDivide
 			)
 				return false;
 		}
@@ -505,7 +508,8 @@ internal static class SimulationScenarios
 	{
 		var first = live.FirstOrDefault(p => outcasts?.Contains(p) != true) ?? live[0];
 		var hostId = first.Peer.Players.Single(p => p.IsHost).Id;
-		var host = live.Single(p => p.Id == hostId && p.View() == first.View());
+		// The host of the first's part, or of one that shows the same.
+		var host = live.First(p => p.Id == hostId && p.View() == first.View());
 		var newcomer = new SimulatedPeer(simulation, IPAddress.Parse("10.8.0.20"));
 		_ = newcomer.Peer.ConnectAsync(
 			Application(flags: host.Peer.ApplicationDescription!.Flags),
