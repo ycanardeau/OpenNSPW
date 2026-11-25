@@ -126,16 +126,11 @@ internal sealed class SessionCore
 	public List<INameTableOperation> NameTableLog { get; } = [];
 
 	/// <summary>
-	/// A DN_HOST_MIGRATE that arrived while we still heard from the old host, kept until we lose it too.
+	/// The claims to be host that wait, by the connection of the peer that claims. Each peer's is kept, not only the
+	/// last: a peer can claim after a host that itself claimed before it, and the two claims, on two connections, can
+	/// arrive in either order. Following the first must leave the second waiting for the first host's loss.
 	/// </summary>
-	public Received<CoreMessage.HostMigrate>? HostClaim { get; set; }
-
-	/// <summary>
-	/// What the peer of <see cref="HostClaim"/> sent after its claim, in order: the operations of a new host, such as
-	/// those it sends as it finishes a migration that stopped waiting for us. They wait with the claim, to run if we
-	/// follow that host.
-	/// </summary>
-	public List<CoreMessage> HeldForClaim { get; } = [];
+	public Dictionary<Connection, KeptClaim> HostClaims { get; } = [];
 
 	/// <summary>
 	/// What the host we just followed sent while its claim waited, to run once the message that made us follow it is
@@ -386,6 +381,7 @@ internal sealed class SessionCore
 	/// </summary>
 	public Player? Unbind(Connection connection)
 	{
+		HostClaims.Remove(connection);
 		if (!PlayersByConnection.Remove(connection, out var player))
 			return null;
 
@@ -745,6 +741,7 @@ internal sealed class SessionCore
 		if (player.Connection is not null)
 		{
 			PlayersByConnection.Remove(player.Connection);
+			HostClaims.Remove(player.Connection);
 			Post(player.Connection, new ConnectionMessage.Disconnect());
 			player.Connection = null;
 		}
@@ -976,8 +973,7 @@ internal sealed class SessionCore
 		Version = 0;
 		NameTableLog.Clear();
 		ResynchronizedVersion = 0;
-		HostClaim = null;
-		HeldForClaim.Clear();
+		HostClaims.Clear();
 		FromAcceptedClaim.Clear();
 	}
 
@@ -1228,14 +1224,15 @@ internal sealed class SessionCore
 	}
 
 	/// <summary>
-	/// Keeps a DN_HOST_MIGRATE until we lose the old host too. What another peer sent after a claim of its own goes
-	/// with that claim.
+	/// Keeps a DN_HOST_MIGRATE until we lose the old host too, in place of an earlier claim of the same peer, whose
+	/// messages since stay with it.
 	/// </summary>
 	public void KeepClaim(Received<CoreMessage.HostMigrate> claim)
 	{
-		if (HostClaim?.Connection != claim.Connection)
-			HeldForClaim.Clear();
-		HostClaim = claim;
+		if (HostClaims.TryGetValue(claim.Connection, out var kept))
+			kept.Claim = claim;
+		else
+			HostClaims.Add(claim.Connection, new KeptClaim(claim));
 	}
 
 	/// <summary>
@@ -1250,12 +1247,10 @@ internal sealed class SessionCore
 		Connection previousHost
 	)
 	{
-		if (HostClaim?.Connection == connection)
+		if (HostClaims.Remove(connection, out var kept))
 			FromAcceptedClaim.AddRange(
-				HeldForClaim.Select(message => new Received<CoreMessage>(connection, message))
+				kept.Held.Select(message => new Received<CoreMessage>(connection, message))
 			);
-		HostClaim = null;
-		HeldForClaim.Clear();
 		if (connection != previousHost)
 			FailRequestsToLostHost();
 
@@ -1293,8 +1288,8 @@ internal sealed class SessionCore
 		if (next.IsLocal)
 			return BecomeHost(next, oldHost.Id);
 
-		return HostClaim is { } claim && claim.Connection == next.Connection
-			? AcceptHost(next.Connection, next, claim.Message.DpnidOldHost, next.Connection)
+		return HostClaims.TryGetValue(next.Connection!, out var kept)
+			? AcceptHost(next.Connection!, next, kept.Claim.Message.DpnidOldHost, next.Connection!)
 			: new SessionState.Connected(next.Connection!);
 	}
 
@@ -1640,12 +1635,11 @@ internal sealed class SessionCore
 	{
 		// What a peer sends after its claim to be host waits with the claim.
 		if (
-			HostClaim is { } claim
-			&& claim.Connection == connection
+			HostClaims.TryGetValue(connection, out var kept)
 			&& message is not CoreMessage.HostMigrate
 		)
 		{
-			HeldForClaim.Add(message);
+			kept.Held.Add(message);
 			return Unit.Default;
 		}
 

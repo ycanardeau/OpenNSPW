@@ -873,6 +873,14 @@ public class SimulationTests
 			PeerLeavesDuringMigration(seed);
 	}
 
+	// Seeds beyond those tried every run, on which a peer once followed a host that had left: it kept one claim to be
+	// host, and a later host's claim, which came first, was replaced by the earlier host's.
+	[Theory]
+	[InlineData(3196)]
+	[InlineData(9204)]
+	public void PeerLeavesDuringMigration_OnSeedsThatOnceLostAClaim(int seed) =>
+		PeerLeavesDuringMigration(seed);
+
 	private static void PeerLeavesWhileAnotherJoins(int seed)
 	{
 		var simulation = new Simulation(seed);
