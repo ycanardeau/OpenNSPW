@@ -1154,16 +1154,31 @@ internal sealed class SessionCore
 		return ResynchronizeVersion(hosting);
 	}
 
+	// Still in the session, and connected: a peer that migration waits for, or asked for operations.
+	private bool IsConnectedPeer(Dpnid id) =>
+		Players.TryGetValue(id, out var player) && player.Connection is not null;
+
 	/// <summary>
 	/// Moves migration on once every peer has reported its name table version (steps 2 to 4): if a peer is ahead of
-	/// us, asks it for what we missed; otherwise finishes.
+	/// us, asks it for what we missed; otherwise finishes. Whom it still waits for follows from the name table, not from
+	/// the messages that removed a peer: of the peers it waits for, or the one it asked, those still in the session
+	/// and connected, however each of the others went (its connection lost, or its join failed and destroyed).
 	/// </summary>
 	public SessionState.Hosting ContinueMigration(SessionState.Hosting hosting)
 	{
-		if (
-			hosting.Migration is not { RequestedFrom: null } migration
-			|| !migration.Awaiting.IsEmpty
-		)
+		if (hosting.Migration is not { } migration)
+			return hosting;
+
+		if (migration.RequestedFrom is { } requested)
+		{
+			if (IsConnectedPeer(requested))
+				return hosting;
+
+			migration = migration with { RequestedFrom = null };
+			hosting = hosting with { Migration = migration };
+		}
+
+		if (migration.Awaiting.Any(IsConnectedPeer))
 			return hosting;
 
 		var newest = migration
@@ -1806,6 +1821,8 @@ internal sealed class SessionCore
 		Timers.Advance(now);
 		Receive(message);
 		ReplayAcceptedClaim();
+		if (_state is SessionState.Hosting { Migration: not null } hosting)
+			_state = ContinueMigration(hosting);
 		ReplayDeferred();
 
 		// What changed with no event to show it, such as a session closed, is published as the message is done; then
