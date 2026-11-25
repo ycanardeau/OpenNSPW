@@ -48,6 +48,46 @@ public sealed class ManualSchedulerTests
 		runs.Should().Be(2);
 	}
 
+	// From the second step on, the first stays what it is in the order of scheduling: "a1".
+	[Fact]
+	public void ExploresOnlyFromTheStepGiven()
+	{
+		var orders = new HashSet<string>();
+
+		var (_, isExhausted) = ManualScheduler.ExploreAll(
+			scheduler => orders.Add(RunTwoMailboxes(scheduler)),
+			maxRuns: 100,
+			fromStep: 1
+		);
+
+		isExhausted.Should().BeTrue();
+		orders.Should().BeEquivalentTo(["a1 b a2", "a1 a2 b"]);
+	}
+
+	// With no delay, only the order of scheduling; with one, also each order that passes over one mailbox once.
+	[Fact]
+	public void ExploresTheOrdersWithinTheDelaysGiven()
+	{
+		var orders = new HashSet<string>();
+
+		var (runs, isExhausted) = ManualScheduler.ExploreAll(
+			scheduler => orders.Add(RunTwoMailboxes(scheduler)),
+			maxRuns: 100,
+			maxDelays: 0
+		);
+
+		isExhausted.Should().BeTrue();
+		runs.Should().Be(1);
+		orders.Should().BeEquivalentTo(["a1 b a2"]);
+
+		ManualScheduler.ExploreAll(
+			scheduler => orders.Add(RunTwoMailboxes(scheduler)),
+			maxRuns: 100,
+			maxDelays: 1
+		);
+		orders.Should().BeEquivalentTo(["a1 b a2", "a1 a2 b", "b a1 a2"]);
+	}
+
 	// A mailbox that has handled a message is scheduled again, after those that wait.
 	[Fact]
 	public void FollowsTheChoicesGiven()
