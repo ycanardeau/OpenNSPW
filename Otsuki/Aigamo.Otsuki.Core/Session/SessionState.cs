@@ -166,3 +166,18 @@ internal closed record SessionState
 /// </summary>
 internal sealed record Received<TMessage>(Connection Connection, TMessage Message)
 	where TMessage : CoreMessage;
+
+/// <summary>
+/// A DN_HOST_MIGRATE that arrived while we still heard from the old host, kept until we lose it too, with what its
+/// peer sent after it, in order: the operations of a new host, such as those it sends as it finishes a migration that
+/// stopped waiting for us. They wait with the claim, to run if we follow that host.
+/// </summary>
+internal sealed class KeptClaim(Received<CoreMessage.HostMigrate> claim)
+{
+	/// <summary>
+	/// The peer's latest claim.
+	/// </summary>
+	public Received<CoreMessage.HostMigrate> Claim { get; set; } = claim;
+
+	public List<CoreMessage> Held { get; } = [];
+}
