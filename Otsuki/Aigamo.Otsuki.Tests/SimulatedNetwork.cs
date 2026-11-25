@@ -1,5 +1,6 @@
 using System.Net;
 using Aigamo.Otsuki.Actors;
+using Aigamo.Otsuki.Messages.Core;
 using Aigamo.Otsuki.Messages.Reliable;
 using Aigamo.Otsuki.Transport;
 
@@ -99,6 +100,40 @@ internal sealed class SimulatedNetwork(
 	public Func<EndPoint, IDatagramTransport> CreateFactory(IPAddress address) =>
 		localEndPoint => Bind(address, ((IPEndPoint)localEndPoint).Port);
 
+	// What a datagram is, for whoever reads the trace: its reliable frame, and the core messages a data frame carries,
+	// or the size of each payload that is not one.
+	private static string Describe(byte[] datagram)
+	{
+		var message = ReliableMessageSerializer.Default.Deserialize(datagram);
+		if (message is not ReliableMessage.DataFrame frame)
+			return message?.GetType().Name ?? "?";
+
+		List<byte[]> payloads = [[.. frame.Payload]];
+		if (frame.Coalesce)
+		{
+			try
+			{
+				using var reader = new BinaryReader(new MemoryStream(payloads[0]));
+				payloads =
+				[
+					.. CoalescedPayloadSerializer.Default.Read(reader)?.Select(p => p.Payload.ToArray())
+						?? [],
+				];
+			}
+			catch (Exception)
+			{
+				return $"DataFrame {frame.SequenceId}/{frame.NextReceive} coalesced";
+			}
+		}
+
+		var carried = payloads.Select(p =>
+			p.Length == 0 ? "keep-alive"
+			: CoreMessageSerializer.Default.Deserialize(p) is { } core ? core.GetType().Name
+			: $"{p.Length} bytes"
+		);
+		return $"DataFrame {frame.SequenceId}/{frame.NextReceive} {string.Join(" ", carried)}";
+	}
+
 	private void Record(string entry)
 	{
 		if (_keepsTrace)
@@ -127,7 +162,7 @@ internal sealed class SimulatedNetwork(
 	{
 		var copy = datagram.ToArray();
 		var entry = _keepsTrace
-			? $"{_clock.Now.Ticks} {source} > {destination} {Convert.ToHexString(copy)}"
+			? $"{_clock.Now.Ticks} {source} > {destination} {Describe(copy)} {Convert.ToHexString(copy)}"
 			: string.Empty;
 		if (IsCut(source.Address, destination))
 		{
