@@ -31,6 +31,8 @@ internal sealed class ServerRole(
 	private readonly DatagramCounts _counts = new();
 	private readonly Histogram _latency = new();
 	private readonly ProcessStats _stats = new();
+	private readonly Wakes _wakes = new();
+	private (long Session, long Loop, long Endpoint, long Timer) _lastWakes;
 	private int _clients;
 	private long _messagesIn;
 	private long _messagesOut;
@@ -60,6 +62,12 @@ internal sealed class ServerRole(
 	{
 		var datagramsIn = _counts.Received.Value;
 		var datagramsOut = _counts.Sent.Value;
+		(long Session, long Loop, long Endpoint, long Timer) wakes = (
+			_wakes.SessionRuns.Value,
+			_wakes.LoopRuns.Value,
+			_wakes.EndpointRuns.Value,
+			_wakes.TimerCallbacks.Value
+		);
 		var report = _stats.Sample(
 			new Report
 			{
@@ -77,6 +85,10 @@ internal sealed class ServerRole(
 				P99 = _latency.Percentile(0.99),
 				P999 = _latency.Percentile(0.999),
 				Max = _latency.Max,
+				SessionRuns = wakes.Session - _lastWakes.Session,
+				LoopRuns = wakes.Loop - _lastWakes.Loop,
+				EndpointRuns = wakes.Endpoint - _lastWakes.Endpoint,
+				TimerCallbacks = wakes.Timer - _lastWakes.Timer,
 			}
 		);
 		Console.Out.WriteLine(report.ToJson());
@@ -85,6 +97,7 @@ internal sealed class ServerRole(
 		_messagesOut = 0;
 		_lastDatagramsIn = datagramsIn;
 		_lastDatagramsOut = datagramsOut;
+		_lastWakes = wakes;
 		_latency.Clear();
 	}
 
@@ -93,6 +106,8 @@ internal sealed class ServerRole(
 		var options = new PeerOptions
 		{
 			ConnectionLoops = _loops,
+			Scheduler = new CountingScheduler(_wakes),
+			TimeProvider = new CountingTimeProvider(_wakes),
 			TransportFactory = localEndPoint =>
 				new CountingTransport(
 					new UdpDatagramTransport((IPEndPoint)localEndPoint, sockets: _loops),
