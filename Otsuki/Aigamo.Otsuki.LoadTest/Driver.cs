@@ -40,6 +40,26 @@ internal sealed record LoadSettings
 	/// </summary>
 	public int ServerLoops { get; init; } = 4;
 
+	/// <summary>
+	/// Whether each client waits on its socket and runs its mailboxes on the thread pool, as Otsuki's peers do by
+	/// default, rather than all of a process's clients on one thread.
+	/// </summary>
+	public bool ClientsOnThreadPool { get; init; }
+
+	/// <summary>
+	/// Whether the server's mailboxes run on the thread that takes its events, receiving on one polled socket, rather
+	/// than on the thread pool.
+	/// </summary>
+	public bool ServerOnOneThread { get; init; }
+
+	/// <summary>
+	/// The <see cref="PollingLoops"/> that the server is spread over, and that each process of clients places its
+	/// clients on; 0, none.
+	/// </summary>
+	public int ServerThreads { get; init; }
+
+	public int ClientThreads { get; init; }
+
 	public string? Label { get; init; }
 
 	public string? Out { get; init; }
@@ -190,7 +210,7 @@ internal sealed class Driver(LoadSettings settings)
 			0,
 			string.Create(
 				CultureInfo.InvariantCulture,
-				$"server --port {s.Port} --server-loops {s.ServerLoops} --server-rate {s.ServerRate} {common}"
+				$"server --port {s.Port} --server-loops {s.ServerLoops} --server-rate {s.ServerRate} {common}{(s.ServerOnOneThread ? " --on-one-thread" : "")}{(s.ServerThreads > 0 ? $" --threads {s.ServerThreads}" : "")}"
 			)
 		);
 		await Task.Delay(1000);
@@ -205,7 +225,7 @@ internal sealed class Driver(LoadSettings settings)
 					i + 1,
 					string.Create(
 						CultureInfo.InvariantCulture,
-						$"clients --id {i + 1} --server 127.0.0.1:{s.Port} --clients {count} --join-rate {joins} --client-rate {s.ClientRate} {common}"
+						$"clients --id {i + 1} --server 127.0.0.1:{s.Port} --clients {count} --join-rate {joins} --client-rate {s.ClientRate} {common}{(s.ClientsOnThreadPool ? " --on-pool" : "")}{(s.ClientThreads > 0 ? $" --threads {s.ClientThreads}" : "")}"
 					)
 				)
 			);

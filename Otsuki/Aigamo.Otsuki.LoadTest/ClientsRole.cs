@@ -1,12 +1,17 @@
 using System.Diagnostics;
 using System.Net;
+using Aigamo.Otsuki.Actors;
+using Aigamo.Otsuki.Transport;
 
 namespace Aigamo.Otsuki.LoadTest;
 
 /// <summary>
 /// Clients of the load, in one process: <paramref name="count"/> of them join the server, <paramref name="joinsPerSecond"/>
 /// a second, and each sends <paramref name="messagesPerSecond"/> messages a second, spread over the second. One thread
-/// drives them all and takes their events. Reports each second.
+/// drives them all, takes their events, receives their datagrams (<see cref="UdpPoller"/>) and runs their mailboxes
+/// (<see cref="CallerScheduler"/>); or, <paramref name="threads"/> above 0, each on one of as many
+/// <see cref="PollingLoops"/>, in turn; or, <paramref name="onThreadPool"/>, each client waits on its socket and runs its
+/// mailboxes on the thread pool, as Otsuki's peers do by default. Reports each second.
 /// </summary>
 internal sealed class ClientsRole(
 	int id,
@@ -16,7 +21,9 @@ internal sealed class ClientsRole(
 	int messagesPerSecond,
 	int size,
 	TimeSpan duration,
-	bool guaranteed
+	bool guaranteed,
+	bool onThreadPool,
+	int threads
 )
 {
 	private sealed class Load(Client client, long phase)
@@ -39,9 +46,13 @@ internal sealed class ClientsRole(
 	private readonly int _messagesPerSecond = messagesPerSecond;
 	private readonly int _size = size;
 	private readonly TimeSpan _duration = duration;
+	private readonly bool _onThreadPool = onThreadPool;
+	private readonly int _threads = threads;
 	private readonly SendFlags _flags =
 		(guaranteed ? SendFlags.Guaranteed : SendFlags.None) | SendFlags.NoComplete;
 	private readonly DatagramCounts _counts = new();
+	private readonly UdpPoller _poller = new();
+	private readonly CallerScheduler _scheduler = new();
 	private readonly Histogram _latency = new();
 	private readonly ProcessStats _stats = new();
 	private readonly List<Load> _loads = [];
@@ -77,7 +88,10 @@ internal sealed class ClientsRole(
 				Failed = _failed,
 				Terminated = _terminated,
 				SessionQueue = _loads.Sum(l => l.Client.Queues.Session),
-				LoopQueue = _loads.Select(l => l.Client.Queues.ConnectionLoops.DefaultIfEmpty().Max()).DefaultIfEmpty().Max(),
+				LoopQueue = _loads
+					.Select(l => l.Client.Queues.ConnectionLoops.DefaultIfEmpty().Max())
+					.DefaultIfEmpty()
+					.Max(),
 				EventQueue = _loads.Sum(l => l.Client.Queues.Events),
 				MessagesIn = _messagesIn,
 				MessagesOut = _messagesOut,
@@ -158,16 +172,53 @@ internal sealed class ClientsRole(
 		}
 	}
 
+	// Receives the clients' datagrams and runs their mailboxes about every millisecond until pause has passed, so that
+	// a datagram, a send or a timer waits about that long for them, while the clients are driven as often as before.
+	private void PollFor(TimeSpan pause)
+	{
+		var until = Stopwatch.GetTimestamp() + (long)(pause.TotalSeconds * Stopwatch.Frequency);
+		do
+		{
+			Thread.Sleep(1);
+			_poller.Poll();
+			_scheduler.RunReady();
+		} while (Stopwatch.GetTimestamp() < until);
+	}
+
 	public async Task RunAsync()
 	{
-		var options = new PeerOptions
-		{
-			TransportFactory = localEndPoint =>
-				new CountingTransport(
+		await using var loops = _threads > 0 ? new PollingLoops(_threads) : null;
+		var options = _onThreadPool
+			? new PeerOptions
+			{
+				TransportFactory = localEndPoint => new CountingTransport(
 					PeerOptions.Default.TransportFactory(localEndPoint),
 					_counts
 				),
-		};
+			}
+			: new PeerOptions
+			{
+				TransportFactory = localEndPoint => new CountingTransport(
+					_poller.CreateTransport(localEndPoint),
+					_counts
+				),
+				Scheduler = _scheduler,
+			};
+
+		// A client on the loops takes the next loop's options, counted.
+		PeerOptions NextOptions()
+		{
+			if (loops is null)
+				return options;
+
+			var placed = loops.OnOneLoop();
+			return placed with
+			{
+				TransportFactory = localEndPoint =>
+					new CountingTransport(placed.TransportFactory(localEndPoint), _counts),
+			};
+		}
+
 		var sendInterval =
 			_messagesPerSecond > 0 ? Stopwatch.Frequency / _messagesPerSecond : long.MaxValue;
 		var start = Stopwatch.GetTimestamp();
@@ -191,7 +242,7 @@ internal sealed class ClientsRole(
 			{
 				var phase =
 					sendInterval == long.MaxValue ? 0 : (long)(random.NextDouble() * sendInterval);
-				var load = new Load(new Client(options), phase);
+				var load = new Load(new Client(NextOptions()), phase);
 				_loads.Add(load);
 				Join(load);
 				nextJoin += joinInterval;
@@ -200,15 +251,26 @@ internal sealed class ClientsRole(
 			foreach (var load in _loads)
 				Drive(load, now, sendInterval);
 
+			_scheduler.RunReady();
+
 			if (now >= nextReport)
 			{
 				nextReport += Stopwatch.Frequency;
 				Report();
 			}
 
-			Thread.Sleep(pause);
+			if (_onThreadPool || loops is not null)
+				Thread.Sleep(pause);
+			else
+				PollFor(pause);
 		}
 
-		await Task.WhenAll(_loads.Select(l => l.Client.DisposeAsync().AsTask()));
+		// Closing takes the server's acknowledgments, which only a poll receives, and the clients' mailboxes, which only
+		// this thread runs.
+		var closing = Task.WhenAll(_loads.Select(l => l.Client.DisposeAsync().AsTask()));
+		while (!closing.IsCompleted)
+			PollFor(pause);
+
+		await closing;
 	}
 }

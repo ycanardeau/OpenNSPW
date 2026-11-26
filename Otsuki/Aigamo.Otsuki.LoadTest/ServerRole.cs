@@ -1,12 +1,16 @@
 using System.Diagnostics;
 using System.Net;
+using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Transport;
 
 namespace Aigamo.Otsuki.LoadTest;
 
 /// <summary>
 /// The server of the load: hosts a client/server session, takes the clients' messages, and sends an update to every
-/// client <paramref name="updatesPerSecond"/> times a second. Reports each second.
+/// client <paramref name="updatesPerSecond"/> times a second. Reports each second. <paramref name="onOneThread"/>, its
+/// mailboxes run on the thread that takes its events, and it receives on one socket that the thread polls, as the
+/// clients do; <paramref name="threads"/> above 0, on as many <see cref="PollingLoops"/>, spread over them; otherwise on
+/// the thread pool, with a receive waiting on each of its sockets.
 /// </summary>
 internal sealed class ServerRole(
 	int port,
@@ -14,7 +18,9 @@ internal sealed class ServerRole(
 	int updatesPerSecond,
 	int size,
 	TimeSpan duration,
-	bool guaranteed
+	bool guaranteed,
+	bool onOneThread,
+	int threads
 )
 {
 	public static readonly Guid Application = new("5b0e2c1d-6a7f-4c55-9d0e-0a1b2c3d4e5f");
@@ -24,6 +30,10 @@ internal sealed class ServerRole(
 	private readonly int _updatesPerSecond = updatesPerSecond;
 	private readonly int _size = size;
 	private readonly TimeSpan _duration = duration;
+	private readonly bool _onOneThread = onOneThread;
+	private readonly int _threads = threads;
+	private readonly UdpPoller _poller = new();
+	private readonly CallerScheduler _scheduler = new();
 	private readonly SendFlags _flags =
 		(guaranteed ? SendFlags.Guaranteed : SendFlags.None)
 		| SendFlags.NoComplete
@@ -101,24 +111,60 @@ internal sealed class ServerRole(
 		_latency.Clear();
 	}
 
+	// Receives the datagrams and runs the mailboxes that wait, on one thread; nothing to do on the thread pool.
+	private int Pump()
+	{
+		if (!_onOneThread)
+			return 0;
+
+		var received = _poller.Poll();
+		_scheduler.RunReady();
+		return received;
+	}
+
+	// Until task completes, which on one thread needs the mailboxes run here.
+	private void PumpUntil(Task task)
+	{
+		while (!task.IsCompleted)
+		{
+			if (Pump() == 0)
+				Thread.Sleep(1);
+		}
+	}
+
 	public async Task RunAsync()
 	{
+		await using var loops = _threads > 0 ? new PollingLoops(_threads) : null;
 		var options = new PeerOptions
 		{
 			ConnectionLoops = _loops,
-			Scheduler = new CountingScheduler(_wakes),
+			Scheduler = _onOneThread ? _scheduler : new CountingScheduler(_wakes),
 			TimeProvider = new CountingTimeProvider(_wakes),
 			TransportFactory = localEndPoint =>
 				new CountingTransport(
-					new UdpDatagramTransport((IPEndPoint)localEndPoint, sockets: _loops),
+					_onOneThread
+						? _poller.CreateTransport(localEndPoint)
+						: new UdpDatagramTransport((IPEndPoint)localEndPoint, sockets: _loops),
 					_counts
 				),
 		};
-		await using var server = new Server(options);
-		await server.HostAsync(
+		if (loops is not null)
+		{
+			var spread = loops.Spread(options);
+			options = spread with
+			{
+				TransportFactory = localEndPoint =>
+					new CountingTransport(spread.TransportFactory(localEndPoint), _counts),
+			};
+		}
+
+		var server = new Server(options);
+		var hosting = server.HostAsync(
 			new ApplicationDescription { GuidApplication = Application, SessionName = "load" },
 			new IPEndPoint(IPAddress.Loopback, _port)
 		);
+		PumpUntil(hosting);
+		await hosting;
 		Console.Error.WriteLine($"server: hosting on {server.LocalEndPoint}");
 
 		var start = Stopwatch.GetTimestamp();
@@ -129,7 +175,8 @@ internal sealed class ServerRole(
 		var end = start + (long)(_duration.TotalSeconds * Stopwatch.Frequency);
 		while (true)
 		{
-			var handled = server.DoWork(Handle, 65536);
+			var handled = Pump();
+			handled += server.DoWork(Handle, 65536);
 			var now = Stopwatch.GetTimestamp();
 			if (now >= end)
 				break;
@@ -141,6 +188,7 @@ internal sealed class ServerRole(
 				{
 					server.SendTo(Peer.AllPlayers, Payload.Create(_size), _flags);
 					_messagesOut += _clients;
+					Pump();
 				}
 			}
 
@@ -153,5 +201,9 @@ internal sealed class ServerRole(
 			if (handled == 0)
 				Thread.Sleep(1);
 		}
+
+		var closing = server.DisposeAsync().AsTask();
+		PumpUntil(closing);
+		await closing;
 	}
 }

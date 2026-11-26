@@ -4,9 +4,12 @@ using Aigamo.Otsuki.LoadTest;
 
 // Usage:
 //   run [--clients N] [--processes K] [--client-rate M] [--server-rate R] [--join-rate J] [--size B] [--seconds S]
-//       [--warmup W] [--port P] [--unreliable] [--server-heaps H] [--server-loops N] [--label L] [--out results.md]
-//   server --port P --server-loops N --server-rate R --size B --seconds S [--unreliable]
+//       [--warmup W] [--port P] [--unreliable] [--server-heaps H] [--server-loops N] [--clients-on-pool]
+//       [--server-on-one-thread] [--server-threads K] [--client-threads K] [--label L] [--out results.md]
+//   server --port P --server-loops N --server-rate R --size B --seconds S [--unreliable] [--on-one-thread]
+//       [--threads K]
 //   clients --id I --server HOST:PORT --clients N --join-rate J --client-rate M --size B --seconds S [--unreliable]
+//       [--on-pool] [--threads K]
 
 static Dictionary<string, string> Parse(string[] args)
 {
@@ -44,7 +47,9 @@ switch (args[0])
 			Int(options, "server-rate", 20),
 			Int(options, "size", 32),
 			seconds,
-			guaranteed
+			guaranteed,
+			options.ContainsKey("on-one-thread"),
+			Int(options, "threads", 0)
 		).RunAsync();
 		return 0;
 	case "clients":
@@ -56,7 +61,9 @@ switch (args[0])
 			Int(options, "client-rate", 30),
 			Int(options, "size", 32),
 			seconds,
-			guaranteed
+			guaranteed,
+			options.ContainsKey("on-pool"),
+			Int(options, "threads", 0)
 		).RunAsync();
 		return 0;
 	case "run":
@@ -76,6 +83,10 @@ switch (args[0])
 				Guaranteed = guaranteed,
 				ServerHeaps = Int(options, "server-heaps", defaults.ServerHeaps),
 				ServerLoops = Int(options, "server-loops", defaults.ServerLoops),
+				ClientsOnThreadPool = options.ContainsKey("clients-on-pool"),
+				ServerOnOneThread = options.ContainsKey("server-on-one-thread"),
+				ServerThreads = Int(options, "server-threads", 0),
+				ClientThreads = Int(options, "client-threads", 0),
 				Label = options.GetValueOrDefault("label"),
 				Out = options.GetValueOrDefault("out"),
 			}
