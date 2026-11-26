@@ -84,6 +84,23 @@ internal sealed record Report
 
 	public double PoolThreads { get; init; }
 
+	/// <summary>
+	/// The work items the thread pool completed, a second: each a wake of a mailbox, a receive or a timer.
+	/// </summary>
+	public double PoolItems { get; init; }
+
+	/// <summary>
+	/// The runs of the session's, the connection loops' and the endpoint's mailboxes, and the timers' callbacks, a
+	/// second (the server).
+	/// </summary>
+	public long SessionRuns { get; init; }
+
+	public long LoopRuns { get; init; }
+
+	public long EndpointRuns { get; init; }
+
+	public long TimerCallbacks { get; init; }
+
 	public double WorkingSetMB { get; init; }
 
 	private static readonly JsonSerializerOptions s_options = new() { WriteIndented = false };
@@ -119,6 +136,7 @@ internal sealed class ProcessStats
 	private int _lastGen1 = GC.CollectionCount(1);
 	private int _lastGen2 = GC.CollectionCount(2);
 	private TimeSpan _lastPause = GC.GetTotalPauseDuration();
+	private long _lastPoolItems = ThreadPool.CompletedWorkItemCount;
 
 	/// <summary>
 	/// Fills the process's part of <paramref name="report"/>.
@@ -134,6 +152,7 @@ internal sealed class ProcessStats
 		var gen1 = GC.CollectionCount(1);
 		var gen2 = GC.CollectionCount(2);
 		var pause = GC.GetTotalPauseDuration();
+		var poolItems = ThreadPool.CompletedWorkItemCount;
 		var sampled = report with
 		{
 			Seconds = Math.Round(Stopwatch.GetElapsedTime(_start, now).TotalSeconds, 1),
@@ -146,6 +165,7 @@ internal sealed class ProcessStats
 			LockContentions = _counters.Get("monitor-lock-contention-count"),
 			PoolQueue = _counters.Get("threadpool-queue-length"),
 			PoolThreads = _counters.Get("threadpool-thread-count"),
+			PoolItems = Math.Round((poolItems - _lastPoolItems) / elapsed, 0),
 			WorkingSetMB = Math.Round(_process.WorkingSet64 / 1e6, 0),
 		};
 		_lastTimestamp = now;
@@ -155,6 +175,7 @@ internal sealed class ProcessStats
 		_lastGen1 = gen1;
 		_lastGen2 = gen2;
 		_lastPause = pause;
+		_lastPoolItems = poolItems;
 		return sampled;
 	}
 }
