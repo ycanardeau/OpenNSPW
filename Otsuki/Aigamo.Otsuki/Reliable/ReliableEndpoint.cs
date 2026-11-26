@@ -90,6 +90,8 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 
 	/// <param name="randomSeed">Seeds the loops' randomness, each its own, for a test that must repeat;
 	/// <see langword="null"/>, the system's secure source.</param>
+	/// <param name="loopSchedulers">Runs each loop, the loop of index i on the scheduler of index i modulo their number;
+	/// empty, every loop on <paramref name="scheduler"/>.</param>
 	public ReliableEndpoint(
 		IDatagramTransport transport,
 		TimeProvider timeProvider,
@@ -97,7 +99,8 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 		Func<SessionMessage, bool> report,
 		int loops = 1,
 		MailboxScheduler? scheduler = null,
-		int? randomSeed = null
+		int? randomSeed = null,
+		ImmutableArray<MailboxScheduler> loopSchedulers = default
 	)
 		: base(scheduler: scheduler)
 	{
@@ -113,7 +116,9 @@ internal sealed class ReliableEndpoint : Actor<ReliableEndpointMessage>
 					profile,
 					report,
 					() => Post(new ReliableEndpointMessage.LoopDone()),
-					scheduler,
+					loopSchedulers.IsDefaultOrEmpty
+						? scheduler
+						: loopSchedulers[index % loopSchedulers.Length],
 					randomSeed + 1 + index
 				)),
 		];

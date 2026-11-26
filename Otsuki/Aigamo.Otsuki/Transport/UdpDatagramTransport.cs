@@ -14,12 +14,16 @@ namespace Aigamo.Otsuki.Transport;
 /// <see cref="PeerOptions.ConnectionLoops"/> chooses a connection's loop: with as many sockets as loops, each loop
 /// sends on a socket of its own. Every socket receives: Linux spreads the remote endpoints over them, macOS gives all
 /// to one. Windows has no such sharing of a port, and takes one socket.
+/// <para>
+/// A transport that a <see cref="UdpPoller"/> made has one socket, which it does not wait on: the poller reads it. One
+/// that <see cref="PollingLoops"/> made has a socket for each loop, which that loop's poller reads.
+/// </para>
 /// </remarks>
 public sealed class UdpDatagramTransport : IDatagramTransport
 {
 	// A partner's endpoint as a receive loop made it, once for every datagram from the partner, with its address in the
 	// form that a send takes, so that neither a receive nor a send makes one again. Never changed once made.
-	private sealed class RemoteEndPoint(IPEndPoint endPoint, SocketAddress socketAddress)
+	internal sealed class RemoteEndPoint(IPEndPoint endPoint, SocketAddress socketAddress)
 		: IPEndPoint(endPoint.Address, endPoint.Port)
 	{
 		public SocketAddress SocketAddress { get; } = socketAddress;
@@ -28,7 +32,7 @@ public sealed class UdpDatagramTransport : IDatagramTransport
 	// Stops Windows from reporting ICMP port unreachable as a failure of the next receive.
 	private const int SioUdpConnectionReset = -1744830452;
 
-	private const int MaxDatagramSize = 65535;
+	internal const int MaxDatagramSize = 65535;
 
 	// The partners a receive loop keeps an endpoint for; past this many, it forgets them all and starts again, so that
 	// datagrams from ever new addresses do not grow it without bound.
@@ -36,6 +40,9 @@ public sealed class UdpDatagramTransport : IDatagramTransport
 
 	private readonly ImmutableArray<Socket> _sockets;
 	private readonly CancellationTokenSource _cancellation = new();
+
+	// The poller of each socket, in their order, for a transport that its sockets' pollers read; empty otherwise.
+	private readonly ImmutableArray<UdpPoller> _pollers = [];
 
 	/// <summary>
 	/// The sends that the system refused, such as for want of buffers, and that were dropped as a lost datagram is: a
@@ -95,10 +102,23 @@ public sealed class UdpDatagramTransport : IDatagramTransport
 		_sockets = builder.MoveToImmutable();
 	}
 
+	/// <summary>
+	/// A transport of a socket for each of <paramref name="pollers"/>, bound to the same port, which that poller reads
+	/// when it is polled; of one socket, which the first reads, where the system does not share a port.
+	/// </summary>
+	internal UdpDatagramTransport(IPEndPoint localEndPoint, ImmutableArray<UdpPoller> pollers)
+		: this(localEndPoint, pollers.Length)
+	{
+		// A poller reads only a socket that has a datagram, but a read must not wait if another thread took it.
+		foreach (var socket in _sockets)
+			socket.Blocking = false;
+		_pollers = pollers;
+	}
+
 	public EndPoint LocalEndPoint => _sockets[0].LocalEndPoint!;
 
-	// The endpoint of the partner at address, made once and kept in endPoints, which only the receive loop touches.
-	private static RemoteEndPoint FindRemote(
+	// The endpoint of the partner at address, made once and kept in endPoints, which only one receive loop, or one poller, touches.
+	internal static RemoteEndPoint FindRemote(
 		Dictionary<SocketAddress, RemoteEndPoint> endPoints,
 		SocketAddress address
 	)
@@ -154,8 +174,13 @@ public sealed class UdpDatagramTransport : IDatagramTransport
 
 	public void Start(Action<EndPoint, byte[]> onReceive)
 	{
-		foreach (var socket in _sockets)
-			_ = ReceiveLoopAsync(socket, onReceive, _cancellation.Token);
+		for (var i = 0; i < _sockets.Length; i++)
+		{
+			if (_pollers.IsEmpty)
+				_ = ReceiveLoopAsync(_sockets[i], onReceive, _cancellation.Token);
+			else
+				_pollers[i].Add(_sockets[i], onReceive);
+		}
 	}
 
 	public void Send(EndPoint remoteEndPoint, byte[] datagram)
@@ -181,7 +206,12 @@ public sealed class UdpDatagramTransport : IDatagramTransport
 	public void Dispose()
 	{
 		_cancellation.Cancel();
-		foreach (var socket in _sockets)
-			socket.Dispose();
+		for (var i = 0; i < _sockets.Length; i++)
+		{
+			// Before the socket is disposed, so that a poll that finds it disposed finds its removal too.
+			if (!_pollers.IsEmpty)
+				_pollers[i].Remove(_sockets[i]);
+			_sockets[i].Dispose();
+		}
 	}
 }

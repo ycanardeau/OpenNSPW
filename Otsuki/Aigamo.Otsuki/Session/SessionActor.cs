@@ -59,7 +59,8 @@ internal sealed class SessionActor : Actor<SessionMessage>, ISessionOutputs
 				Post,
 				_options.ConnectionLoops,
 				_options.Scheduler,
-				_options.RandomSeed
+				_options.RandomSeed,
+				_options.ConnectionLoopSchedulers
 			);
 			_endpoint.Post(endpoint);
 			return endpoint.LocalEndPoint;

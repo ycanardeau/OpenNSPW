@@ -87,6 +87,27 @@ client.Send(data);                                                    // to the 
 
 The server knows every client; a client knows only the server and itself. Groups belong to the server, and a client's information update reaches only the server, while the server's reaches every client. Client/server sessions never migrate.
 
+### Many peers on one thread
+
+By default a peer's actors run on the thread pool, and each message that wakes one wakes a worker. A process of many peers, such as a server of many clients or a load test's clients, can run them all on one thread of its own instead: a `CallerScheduler` runs their mailboxes when that thread asks, and a `UdpPoller` reads all their sockets at once.
+
+```csharp
+var scheduler = new CallerScheduler();
+var poller = new UdpPoller();
+var options = new PeerOptions { Scheduler = scheduler, TransportFactory = poller.CreateTransport };
+var clients = Enumerable.Range(0, 1000).Select(_ => new Client(options)).ToList();
+
+// The application's loop, about once a millisecond:
+poller.Poll();          // hands every datagram that waits to its peer
+scheduler.RunReady();   // runs every mailbox that waits, and those it wakes
+foreach (var client in clients)
+	client.DoWork(handle);
+```
+
+That thread then does all the peers' work, so it keeps calling them while it waits for one of their tasks, such as `ConnectAsync` or `CloseAsync`, which complete only as it runs them. It holds them to one core; [docs/OtsukiThreading.md](../../docs/OtsukiThreading.md#measurements) has what it saved.
+
+`PollingLoops` does the same on threads of its own, so that the application's thread only takes the events and the tasks complete as with the default: `loops.Spread(options)` for one peer of many connections, such as a server, which it spreads over the loops; `loops.OnOneLoop(options)` for each of many peers, each on one loop. Close the peers before disposing of the loops. On macOS more than one loop cost more than one, in every run measured.
+
 ### Packet signing
 
 Host with `SessionFlags.FastSigned` or `SessionFlags.FullSigned` to sign every frame of the session ([MC-DPL8R] section 3.1.5.2.7). Connecting peers sign as the host chose.
@@ -144,7 +165,7 @@ flowchart LR
 * [`SessionActor`](Session/SessionActor.cs) runs a [`SessionCore`](../Aigamo.Otsuki.Core/Session/SessionCore.cs), the core protocol ([MC-DPL8CS]): the name table and its groups, joining and leaving, integrity checks, info updates, host migration, and routing application data to and from players and groups. It raises `PeerEvent`s into a mailbox that the application drains.
 * [`ConnectionLoop`](Reliable/ConnectionLoop.cs) runs a [`ConnectionLoopCore`](../Aigamo.Otsuki.Core/Reliable/ConnectionLoopCore.cs), for the connections whose remote address hashes to it: it keeps their table, decodes each datagram and hands it to the connection for its source address, creating one for a new CONNECT, and runs their timers. A peer has as many loops as `PeerOptions.ConnectionLoops` says, one by default; a server of many clients gives one to each core it can spare.
 * [`ReliableConnection`](../Aigamo.Otsuki.Core/Reliable/ReliableConnection.cs) is one connection of the reliable protocol ([MC-DPL8R]) to one remote address, a state machine that its loop runs one message at a time. Its reports go to the session as messages, in order for any one connection. The session knows it only by its handle, a [`Connection`](../Aigamo.Otsuki.Core/Reliable/Connection.cs) that nothing changes, so the two never share the connection's state.
-* [`ReliableEndpoint`](Reliable/ReliableEndpoint.cs) owns the datagram transport, a UDP socket unless [`PeerOptions.TransportFactory`](PeerOptions.cs) says otherwise, and the loops. Its transport's receive loop gives each datagram to the loop of its source address. Shut down, it keeps the transport until every loop has reported that its last connection has ended, so that a connection saying goodbye (HARD_DISCONNECT) is not cut off. A [`UdpDatagramTransport`](Transport/UdpDatagramTransport.cs) may bind several sockets to its port, one for each loop to send on.
+* [`ReliableEndpoint`](Reliable/ReliableEndpoint.cs) owns the datagram transport, a UDP socket unless [`PeerOptions.TransportFactory`](PeerOptions.cs) says otherwise, and the loops. Its transport's receive loop gives each datagram to the loop of its source address. Shut down, it keeps the transport until every loop has reported that its last connection has ended, so that a connection saying goodbye (HARD_DISCONNECT) is not cut off. A [`UdpDatagramTransport`](Transport/UdpDatagramTransport.cs) may bind several sockets to its port, one for each loop to send on. For many peers in one process, such as a load test's clients, a [`UdpPoller`](Transport/UdpPoller.cs) makes their transports (`TransportFactory = poller.CreateTransport`) and reads all their sockets on the thread that calls `Poll`, so that no receive waits on each socket; a datagram then waits for the next poll.
 
 For example, a chat message from another peer travels: socket receive loop → `ConnectionLoop` (decode, look up the connection) → `ReliableConnection` (sequence, acknowledge, reassemble) → `SessionActor` (map the connection to a player) → `PeerEvent.DataReceived` → the application.
 
@@ -186,6 +207,8 @@ Every dispatch over a union (mailbox messages, wire messages, peer events) uses 
 | `SessionActor`, each `ConnectionLoop`, `ReliableEndpoint` | one message at a time, on the thread pool (or `PeerOptions.Scheduler`) |
 | `SessionCore`, each `ConnectionLoopCore` | the thread of the actor that runs it, inside its `Receive`; never by themselves |
 | Timer callbacks, the socket receive loops | the thread pool; they only post |
+| A `UdpPoller`'s receives | the thread that calls `Poll`; they only post |
+| The actors of peers whose `PeerOptions.Scheduler` is a `CallerScheduler` | the thread that calls `RunReady`, one at a time |
 | `DoWork` handlers | the thread that calls `DoWork` |
 | `ReadEventsAsync` consumers | wherever the consumer awaits |
 
@@ -195,7 +218,7 @@ Otsuki's code takes no lock: an analyzer reports one as an error, and a volatile
 
 Everything that touches the network goes through `IDatagramTransport`, and all timing through `TimeProvider`, which only the shell reads: the core is told the time. So the core can be tested alone, with no thread at all: [`ConnectionLoopCoreTests`](../Aigamo.Otsuki.Tests/ConnectionLoopCoreTests.cs) give two loops' cores datagrams and times of their choosing, and check the order of what they did, such as every HARD_DISCONNECT of a goodbye coming before the loop is done. Endpoints need not be IP addresses: [`StreamDatagramTransport`](Transport/StreamDatagramTransport.cs) carries datagrams over the reliable streams of an `IStreamConnector`, such as Bluetooth RFCOMM channels, addressed by the connector's own kind of endpoint. The tests run peers over an in-memory network that can lose, delay, reorder and partition datagrams, and use short protocol timings. They cover meshes of up to six peers, 20% packet loss with reordering, messages larger than a frame, coalescing, fast and full signing across sequence wraps, tampered frames, host enumeration, groups, info updates, host migration (with the new host collecting operations it missed), client/server sessions, peers leaving or dropping off, and rejected joins. Protocol tests replay the sample packets from [MC-DPL8R] section 4 byte for byte, and one test runs two peers over real loopback UDP. The simulation tests run whole sessions on one thread, every actor's messages and every datagram in an order a seed chooses, on a clock that moves only when nothing else can ([`ManualScheduler`](../Aigamo.Otsuki.Actors/MailboxScheduler.cs)), over a network that loses what the seed says, and try a hundred orders each: client/server sessions with datagrams lost and doubled, a rejected join, peers joining a peer-to-peer session at once, host migration after the host closes or stops, and peers leaving in the middle of a join or a migration, after which the others must agree, reach each other and let a newcomer in. Every peer's events and snapshot are checked after every step. The cores draw their randomness from the shell, which a test seeds, so a seed takes the same order again, to the byte: a failing seed is a test that repeats.
 
-[Aigamo.Otsuki.LoadTest](../Aigamo.Otsuki.LoadTest) runs a server and processes of clients over UDP, and reports each second the messages and datagrams on both sides, the latency, the CPU, the garbage, the lock contentions and every mailbox's depth. What it measured is in [docs/OtsukiThreading.md](../../docs/OtsukiThreading.md#measurements).
+[Aigamo.Otsuki.LoadTest](../Aigamo.Otsuki.LoadTest) runs a server and processes of clients over UDP, and reports each second the messages and datagrams on both sides, the latency, the CPU, the garbage, the lock contentions, the thread pool's work items, the server's mailbox runs by kind and its timers' callbacks, and every mailbox's depth. Its clients run on one thread of their process, which polls their sockets every millisecond and runs their mailboxes (through `PeerOptions.Scheduler`), so that the thousand clients of a process take under a core; `--clients-on-pool` runs them as Otsuki's peers run by default, each waiting on its socket. What it measured is in [docs/OtsukiThreading.md](../../docs/OtsukiThreading.md#measurements).
 
 ## Limitations
 

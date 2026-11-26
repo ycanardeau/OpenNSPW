@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Net;
 using Aigamo.Otsuki.Actors;
 using Aigamo.Otsuki.Reliable;
@@ -59,6 +60,13 @@ public sealed record PeerOptions
 	/// (<see cref="ManualScheduler"/>).
 	/// </summary>
 	public MailboxScheduler? Scheduler { get; init; }
+
+	/// <summary>
+	/// Runs each connection loop, the loop of index i on the scheduler of index i modulo their number, so that one
+	/// peer's loops can run on loops of threads of their own (<see cref="PollingLoops"/>); empty, on
+	/// <see cref="Scheduler"/>.
+	/// </summary>
+	internal ImmutableArray<MailboxScheduler> ConnectionLoopSchedulers { get; init; } = [];
 
 	/// <summary>
 	/// Makes the peer's randomness repeat, for a test: its session and each of its connection loops draw from a
